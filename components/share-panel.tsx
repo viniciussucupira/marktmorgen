@@ -90,7 +90,7 @@ export function SharePanel({ url, title, what = "page" }: { url: string; title: 
             {`Link to this ${what}`}
           </label>
           <div className="flex flex-wrap gap-2">
-            <input id={`${panelId}-share-url`} className="field min-w-0 flex-1 overflow-hidden" readOnly value={url} onFocus={(e) => e.currentTarget.select()} />
+            <textarea rows={2} id={`${panelId}-share-url`} className="field min-w-0 flex-1 resize-y whitespace-pre-wrap [overflow-wrap:anywhere]" readOnly value={url} onFocus={(e) => e.currentTarget.select()} />
             <button type="button" onClick={() => void copy()} className="btn btn-secondary">
               <Icon name="copy" size={16} />
               Copy
@@ -160,7 +160,7 @@ export function SharePanel({ url, title, what = "page" }: { url: string; title: 
           </div>
           {forPost ? (
             <div className="mt-2 flex flex-wrap gap-2">
-              <input aria-label="Campaign link" className="field min-w-0 flex-1 overflow-hidden" readOnly value={forPost} onFocus={(e) => e.currentTarget.select()} />
+              <textarea rows={2} aria-label="Campaign link" className="field min-w-0 flex-1 resize-y whitespace-pre-wrap [overflow-wrap:anywhere]" readOnly value={forPost} onFocus={(e) => e.currentTarget.select()} />
               <button type="button" onClick={() => void copy(forPost)} className="btn btn-secondary">
                 <Icon name="copy" size={16} />
                 Copy

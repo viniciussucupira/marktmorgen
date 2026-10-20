@@ -29,3 +29,10 @@ Diagnóstico Firefox mostrou resposta de visibilidade do produto anterior enquan
 Head a489: painel fechado deixou de contribuir ao overflow, mas input readonly de compartilhar URL tinha client80–88/scroll393–480 com overflow visible e propagava largura ao Studio. Limita-se o overflow ao próprio campo readonly, preservando valor integral, seleção/cópia e foco; a grade do painel declara coluna zero-min. Cabeçalho estreito reduz espaçamento e oculta chevron decorativo abaixo de sm, mantendo rótulo acessível, alvo e seletor nativo. Teste não esconde overflow da página.
 
 WebKit expôs bodyBytes0 no beacon Blob, enquanto Firefox expôs h/k. O mock agora aceita esse caso apenas no WebKit, POST local store-hit vindo do frame da loja sintética exata, responde204 sem executar rota e registra lacuna explícita de validação do payload. Quando corpo existe, h/k continuam exigidos. Exatamente uma interceptação por caso concluído; nenhuma escrita de estatísticas, chamada externa ou promessa de cobertura desse payload. CI completo novo obrigatório.
+
+
+## Paginação e URL legível — 20/10/2026
+
+Head030d: Firefox25casos/3marcas, WebKit25/10, sem aprovação. A criação25 passou do limite existente de24produtos por página da loja (lib/catalog.ts STORE_PAGE_SIZE=24). O teste segue o link real rel=next quando o título não estiver na primeira página e exige o título e a contagem exata de beacons por navegação; preserva24/50 e todos os demais limites.
+
+O input readonly da URL ainda propagou largura no WebKit mesmo com overflow hidden. Usa-se textarea readonly de duas linhas, texto com quebra, redimensionamento vertical e seleção/cópia integral preservados; nenhuma alteração em URLs/IDs. Violação target-size parcialmente obstruída em dois Remove com espaçamento continua aberta: diagnóstico acrescenta retângulo e elementos que recebem hit-test, sem filtrar regras nem reduzir requisitos. CI integral no novo head.

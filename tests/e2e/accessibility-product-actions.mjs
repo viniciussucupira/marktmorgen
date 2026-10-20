@@ -48,7 +48,7 @@ try{
   const context=await browser.newContext({viewport:{width:viewportWidth,height:900},serviceWorkers:"block",reducedMotion:mode==="reduced-motion"?"reduce":"no-preference",forcedColors:mode==="forced-colors"?"active":"none"});
   if(mode==="text-spacing")await context.addInitScript(()=>document.addEventListener("DOMContentLoaded",()=>{const style=document.createElement("style");style.textContent="*{line-height:1.5!important;letter-spacing:.12em!important;word-spacing:.16em!important}p{margin-bottom:2em!important}";document.head.append(style);},{once:true}));
   await context.addCookies([{name:"nl_session",value:fixture.session,url:origin}]);
-  let writes=0,foreign=0,localProductWrites=0,interceptedVisits=0;const errors=[],blockedWrites=[];
+  let writes=0,foreign=0,localProductWrites=0,interceptedVisits=0,expectedVisits=1;const errors=[],blockedWrites=[];
   try{
    const page=await context.newPage();page.on("pageerror",error=>errors.push(String(error)));
    await context.route("**/*",route=>{const r=route.request(),url=new URL(r.url());if(url.origin===origin&&url.pathname==="/api/store/hit"&&r.method()==="POST"){const raw=r.postData(),input=raw?r.postDataJSON():null;const missingWebkit=engine==="webkit"&&!raw&&new URL(r.frame().url()).pathname==="/@activationonboarding";if(missingWebkit)gaps.push({path,width,mode,reason:"WebKit exposes no beacon body to routing. Only same-origin store-hit POST from the exact synthetic storefront is fulfilled204 without executing stats; payload validation remains unverified."});if(!missingWebkit&&(input?.h!=="activationonboarding"||input?.k!=="v")){writes++;blockedWrites.push({method:r.method(),path:url.pathname,handle:input?.h,kind:input?.k,bodyBytes:r.postData()?.length??0});return route.abort();}interceptedVisits++;return route.fulfill({status:204});}if(!["GET","HEAD"].includes(r.method())){if(url.origin===origin&&url.pathname==="/api/store/product"&&r.method()==="POST"&&["add","visibility"].includes(r.postDataJSON()?.action)){localProductWrites++;return route.continue();}writes++;blockedWrites.push({method:r.method(),path:url.pathname});return route.abort();}if(url.origin!==origin){foreign++;return route.abort();}return route.continue();});
@@ -84,7 +84,7 @@ try{
     const selected=window.axe.getRules().filter(rule=>rule.tags.some(tag=>tags.includes(tag)));
     if(!selected.some(rule=>rule.ruleId==="color-contrast-enhanced"))throw Error("AAA enhanced-contrast rule missing");
     const result=await window.axe.run(document,{runOnly:{type:"tag",values:tags}});
-    return {rules:selected.map(rule=>rule.ruleId),violations:result.violations.map(rule=>({id:rule.id,targets:rule.nodes.map(node=>node.target),nodes:rule.nodes.map(node=>({target:node.target,html:node.html.slice(0,600),summary:node.failureSummary}))})),incomplete:result.incomplete.map(rule=>({id:rule.id,targets:rule.nodes.map(node=>node.target)}))};
+    return {rules:selected.map(rule=>rule.ruleId),violations:result.violations.map(rule=>({id:rule.id,targets:rule.nodes.map(node=>node.target),nodes:rule.nodes.map(node=>({target:node.target,html:node.html.slice(0,600),summary:node.failureSummary,geometry:(()=>{const element=document.querySelector(node.target[0]);if(!element)return null;const b=element.getBoundingClientRect();return {x:b.x,y:b.y,width:b.width,height:b.height,viewport:{width:innerWidth,height:innerHeight},hits:[b.top+2,b.top+b.height/2,b.bottom-2].map(y=>{const hit=document.elementFromPoint(b.left+b.width/2,y);return {y,inside:!!hit&&element.contains(hit),html:hit?.outerHTML.slice(0,250)??null};})};})()}))})),incomplete:result.incomplete.map(rule=>({id:rule.id,targets:rule.nodes.map(node=>node.target)}))};
    });
    if(report.incomplete.length)gaps.push({path,width,mode,manualReview:report.incomplete});
    console.log("PRODUCT_MATRIX_CASE:"+JSON.stringify({engine,path,width,mode,viewportWidth,writes,foreign,...report,errors}));
@@ -124,8 +124,12 @@ try{
    await row.getByRole("button",{name:"Unpublish",exact:true}).waitFor();
    await page.waitForLoadState("networkidle");
    await page.goto(origin+"/@activationonboarding",{waitUntil:"networkidle"});
-   if(!await page.getByText(title,{exact:true}).count())throw Error("Published local product absent from actual storefront");
-   if(writes||foreign||localProductWrites!==expectedWrites||interceptedVisits!==1)throw Error("Unexpected operation count "+JSON.stringify({writes,foreign,localProductWrites,expectedWrites,interceptedVisits,blockedWrites}));
+   if(!await page.getByText(title,{exact:true}).count()){
+    const next=page.locator('a[rel="next"]');if(await next.count()!==1)throw Error("Published product absent and no unique next storefront page");
+    await next.click();expectedVisits++;await page.waitForLoadState("networkidle");
+   }
+   if(!await page.getByText(title,{exact:true}).count())throw Error("Published local product absent after following actual storefront pagination");
+   if(writes||foreign||localProductWrites!==expectedWrites||interceptedVisits!==expectedVisits)throw Error("Unexpected operation count "+JSON.stringify({writes,foreign,localProductWrites,expectedWrites,interceptedVisits,expectedVisits,blockedWrites}));
    console.log("PRODUCT_ACTION_PROOF:"+JSON.stringify({engine,width,mode,title,localProductWrites,expectedWrites,interceptedVisits,createdAndReloaded:true,explicitPublication:true,storefrontVisible:true,scope:"Disposable local fixture only; no checkout, email, delivery or real account."}));
   }catch(error){failed++;console.error("PRODUCT_MATRIX_FAILURE:"+JSON.stringify({engine,path,width,mode,error:String(error)}));}
   finally{cases++;await context.close();}
