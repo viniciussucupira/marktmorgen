@@ -110,12 +110,14 @@ async function main(): Promise<void> {
   await setSubscription(homeOwner,{active:true,tier:"pro",cycle:"month",subscriptionId:null,customerId:null,trialEnds:0,period:paidPeriod()});
   await ensureStatsId(homeOwner);
   await setStripeAccount(homeOwner,DEMO_CONNECTED_ACCOUNT);
+  let homeProductId:string|null=null;
   for(const product of [DEMO_PRODUCT,...DEMO_EXTRAS]){
     const added=await addProduct(homeOwner,product.title,product.summary,product.price,null);
     if(!added.ok)throw Error("No local demo product");
+    if(product.title===DEMO_PRODUCT.title)homeProductId=added.product.id;
   }
   const homeStore=await storeForEmail(homeOwner);
-  const homeProduct=homeStore?.catalog.items.find(product=>product.title===DEMO_PRODUCT.title);
+  const homeProduct=homeStore?.catalog.items.find(product=>product.id===homeProductId);
   const homePage=parsePage(DEMO_PAGE);
   if(!homeStore?.statsId||!homeProduct||!homePage)throw Error("No local demo page");
   await writePage(homeStore.statsId,homeProduct.id,homePage,homeStore);
