@@ -2703,7 +2703,7 @@ O CI integral do head d8b5f7c2bc0162f776da886429deb5d05759f7ad encontrou uma oco
 
 193. **[HT15] Reunir os modelos existentes numa biblioteca com filtros, prévia e uso em rascunho**
 
-- Estado: **Em implementação; verificação integral e publicação pendentes**.
+- Estado: **Publicado; verificação integral e READY/domínio/SHA confirmados abaixo**.
 - Registro:20/10/2026 às13:56:53 de Fortaleza. Base remota conferida `47f19942b46348ae36e0d61cce059cc8a5bc0f4c`; implementação `c488f4c03f38634c078331600575f8e957c17b70` (2026-10-20T16:56:53Z).
 - Biblioteca privada em Growth reúne definições existentes de páginas, funnel-starters, mail-starters, layouts de email e saved-blocks; filtros por objetivo/tipo/texto e prévias locais. Sessões salvas só lidas por botão explícito na API privada existente; falha continua desconhecida, nunca vazia por suposição.
 - Usar abre rascunho não salvo no editor existente, sequência pausada ou preview de setup existente do funil; não grava/importa/publica/ativa/envia automaticamente. Páginas, testes, variantes, textos dos criadores, idiomas e IDs persistidos preservados. Sequência existente no mesmo trigger não é substituída; gatilhos, limites, revisão e consentimento existentes mantidos.
@@ -2719,7 +2719,7 @@ As execuções integrais identificaram contraste durante entrada animada no temp
 
 194. **[HT16] Mostrar o studio real, esclarecer confiança e medir renderização móvel antes/depois**
 
-- Estado: **Em implementação; medições e CI integral pendentes**.
+- Estado: **Publicado; verificação integral e READY/domínio/SHA confirmados abaixo**.
 - Registro em Fortaleza:2026-10-20 14:09:21.000 (UTC−3); implementação `9d13587ac912d35c6784ebf600966fcc789ab266` (2026-10-20T17:09:21Z); base remota `36219ed767b8d7ec128d23475c603653f759968a` conferida.
 - Home com cards de categoria limpos e espaçosos, sem8fotos de banco; duas capturas distintas do próprio app com fixture fictícia, data e legenda honesta, sem imagem repetida ou cliente/resultado implícito. Capturas revisadas visualmente: studio/checklist e editor de página; origem verify118743492412/head6e145f31243af004b1feece62cbbb52f7ef7eb2d. Benefício, evidência e CTA existente agrupados. Conteúdo principal visível desde o início, sem entrada por opacidade.
 - Home, preços e recursos compartilham sinais verdadeiros: conta Stripe própria e condições de payout/taxas, exportação dos registros autorizados, cancelamento pelo Account e política de reembolso da plataforma, separada do reembolso do produto do criador. Links aos termos/código existente, nenhuma promessa de ganhos ou vendas abertas.
@@ -2731,7 +2731,7 @@ As execuções integrais identificaram contraste durante entrada animada no temp
 
 195. **[HT17] Dar um próximo passo claro aos textos compartilhados do site e do studio**
 
-- Estado: **Implementado; CI integral e publicação pendentes**.
+- Estado: **Publicado; verificação integral e READY/domínio/SHA confirmados abaixo**.
 - Registro em Fortaleza:2026-10-20 14:12:43.000 (UTC−3); implementação `e168a4071963102057805cb4d8a593db9dbddc42` (2026-10-20T17:12:43Z); base remota `ea90ac789031f02b9661b9509cbfef973557e444` conferida.
 - Registro existenteSTUDIO_MESSAGES revisado para permissão/recuperação/acesso, espaço de arquivo e de registros, upload interrompido, cota horária e indisponibilidade. Frases curtas em inglês americano: o que aconteceu, o que revisar/tentar, condição real. Sem censurar a pessoa nem sugerir aumento de plano indisponível. Todos os códigos persistidos de erro permanecem iguais; recusa não vira sucesso.
 - Página de erro global mantém referência e retry/navegação, sem prometer retorno “shortly”.404 pede conferir o endereço e oferece Home/Help, sem inventar por que a loja sumiu. Introduções compartilhadas de recurso/Growth orientam a ação sem prometer venda ou resultado. Passe em templates compartilhados; conteúdo de criadores, emails/sequências, idiomas de compradores e IDs não foram reescritos.
@@ -2852,3 +2852,41 @@ Os verifies118803842951/118803901027/118804022774 expiraram procurando o nome ex
 #### HT10 — distinguir beacon de visita e evento publicitário com payload estrito
 
 verifies118813493380/118813533888 passaram salvamento/AA/atribuição e bloqueio de fornecedor/GPC, mas o teste contavaPOST/api/store/hit como evento publicitário. StoreBeacon e a rota hit foram lidos: esse contador interno já existe, não define cookie nem encaminha anúncios. Agora o teste intercepta exatamente umPOST dessa rota com h=templatelibraryfixture/k=v e somente os campos string já emitidos (h/k/r/u/m/g), devolvendo204 sem executar a gravação. /api/store/ads-event continua exigido emzero, qualquer outra write reprova e nenhum fornecedor externo é chamado. A fixtureGPC inclui também Sec-GPC:1, além do sinalnavigator e do yes antigo, para coerência cliente/servidor. Não altera código de consentimento/analytics de produção nem dispensa controle: testes sintéticos e suíte completa no novohead obrigatórios. Sem custo/operação/direito/gate novo.
+
+
+### Publicação funcional118
+
+Item193/PR723 incorporado em2026-10-20 15:38:25 de Fortaleza. Commit testado`81694d7deb02cb8f0c66b2e8644a6be339c69a12`; versão`9083909109d09a13dbf77414d00ef09698ba0a3e`, árvore idêntica à verificada. READY`2026-10-20T18:39:46.049Z`, domínio`marktmorgen.com`, deployment`dpl_CmhAHeywCthRZ6XvFtE9XdhUwhMP`.
+
+Product checks39473475144 (verify118803298119, Redis118803297697), Dependency security39473475151: aprovados; 32 verificações específicas. 6 rotas confirmadas com o mesmo deployment (404 sintético esperado quando aplicável). Logs error/fatal sem registros na janela2026-10-20T18:35:15.483Z → 2026-10-20T18:40:15.483Z. Autenticação/erros e writes exercidos somente em fixtures sintéticas, sem conta/pagamento/mensagem real.
+
+
+
+Custo incremental/escopo: Existing canonical templates/editors and explicit saved-section read; no new AI/provider allowance or operation. Recipient counting remains existing read action. No automatic save/send/publish. Piso líquido60% por cliente100%dos direitos no pior mês e global, todos os impostosBrasil/EUA, continua obrigatório; desconhecido reprova. M0 mais oneroso segue reprovado; vendas/PLANS_ON_SALE=false, comissão, preços/limites, tax gate, art.9a e revisão comercial intactos.
+
+
+### Publicação funcional119
+
+Item194/PR724 incorporado em2026-10-20 15:40:40 de Fortaleza. Commit testado`fa46dbf0fd1a1ce507d00f949ef10edd28a5df2e`; versão`3ebd1dfb83e04740cdaf0f3dfa04b13da28dc144`, árvore idêntica à verificada. READY`2026-10-20T18:41:48.706Z`, domínio`marktmorgen.com`, deployment`dpl_5Xd6cUTJEkDymUhcj24zrxKAJwZD`.
+
+Product checks39473574271 (verify118803791089, Redis118803791172, mobile118803790666), Dependency security39473574342: aprovados; 62 verificações específicas. 7 rotas confirmadas com o mesmo deployment (404 sintético esperado quando aplicável). Logs error/fatal sem registros na janela2026-10-20T18:39:25.887Z → 2026-10-20T18:44:25.887Z. Autenticação/erros e writes exercidos somente em fixtures sintéticas, sem conta/pagamento/mensagem real.
+
+Móvel no head exato: 9 amostras, LCPmáx832ms/CLS0/interaçãomáx88ms. Laboratório, não INP real/certificaçãoCWV. Synthetic final-head lab sample only; no field INP/CWV certificate. Later HT14 first-home224ms failure retained and under separate strict full-head correction.
+
+Custo incremental/escopo: Static actual synthetic captures, policy links, opaque reading/native FAQ/fonts; no added image/provider/AI/customer operation or new rights. All financial/sales gates unchanged. Piso líquido60% por cliente100%dos direitos no pior mês e global, todos os impostosBrasil/EUA, continua obrigatório; desconhecido reprova. M0 mais oneroso segue reprovado; vendas/PLANS_ON_SALE=false, comissão, preços/limites, tax gate, art.9a e revisão comercial intactos.
+
+
+### Publicação funcional120
+
+Item195/PR725 incorporado em2026-10-20 15:45:07 de Fortaleza. Commit testado`e273347a3d11602e45dfd409b49ac916953f7fa3`; versão`657e75d05945a07d98e8cd27a4bdb96edd9a854b`, árvore idêntica à verificada. READY`2026-10-20T18:46:30.640Z`, domínio`marktmorgen.com`, deployment`dpl_iEhX5i4kmcG5MyWRGJ29rEHxLfDA`.
+
+Product checks39473551632 (verify118803691463, Redis118803690520, mobile118803691035), Dependency security39473551392: aprovados; 18 verificações específicas. 7 rotas confirmadas com o mesmo deployment (404 sintético esperado quando aplicável). Logs error/fatal sem registros na janela2026-10-20T18:42:16.251Z → 2026-10-20T18:47:16.251Z. Autenticação/erros e writes exercidos somente em fixtures sintéticas, sem conta/pagamento/mensagem real.
+
+Móvel no head exato: 9 amostras, LCPmáx1052ms/CLS0/interaçãomáx152ms. Laboratório, não INP real/certificaçãoCWV. Actual error-boundary render exercised in isolated CI, no deliberate production error; mobile lab proxy is not field INP certification.
+
+Custo incremental/escopo: Shared microcopy only; persisted refusal keys, creator text, buyer languages, quotas, permissions and all gates preserved; no added provider/AI/customer operation. Piso líquido60% por cliente100%dos direitos no pior mês e global, todos os impostosBrasil/EUA, continua obrigatório; desconhecido reprova. M0 mais oneroso segue reprovado; vendas/PLANS_ON_SALE=false, comissão, preços/limites, tax gate, art.9a e revisão comercial intactos.
+
+
+#### HT10 — aguardar relatório confirmado, não só limpar o alerta
+
+verify118824851029 reprovou somente HT10 matching window confirmed1280: save limpa o alerta ao iniciar a tentativa, antes do fetch terminar; desaparecer o erro não é confirmação. O teste agora aguarda o próprio texto within the60daysbefore do relatório antes da mesma asserção estrita. Falha/mismatch continuam reprovando, sem sleep artificial, resposta real, seletor afrouxado ou assert removido. GPC/zero ads/visita interna exata/zero write inesperada passaram. Nova suíte completa no novohead é obrigatória, sem operação/custo/preço/limite/gate alterado.
