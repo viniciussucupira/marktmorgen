@@ -126,6 +126,12 @@ export const MENUS: Menu[] = [
     },
     items: [
       {
+        label: "All comparisons",
+        description: "Prices, limits and honest tradeoffs, with sources.",
+        href: "/proof/comparisons",
+        icon: "scale",
+      },
+      {
         label: "Feature by feature",
         description: "Everything Stan has, and where we stand on each.",
         href: "/proof/everything",

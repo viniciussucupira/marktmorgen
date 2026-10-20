@@ -18,8 +18,8 @@ export async function generateMetadata({
   const page = findPage(SECTION, slug);
   if (!page) return {};
   return {
-    title: `${page.title} ${page.highlight} — Marktmorgen`,
-    description: page.intro,
+    title: page.seo?.title ?? `${page.title} ${page.highlight} — Marktmorgen`,
+    description: page.seo?.description ?? page.intro,
   };
 }
 
