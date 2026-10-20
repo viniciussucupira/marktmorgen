@@ -1112,3 +1112,10 @@ Pedido P5: anexo524cc7f9-78af-42b5-ae37-4c05dc91a193/Texto colado.txt, lido19/10
 - PayoutACH2.50/instant4%+2.50distintosdecadacompra, diretóriorealsemgarantiadetráfego; semalegarisençãofiscaluniversalouMoRcertificado. App-getredirectretornouhome; nãousadocomoprovanativastorelisting.
 - Dadosestáticoscomfontesdatadas, /proof/whop/índice/sitemapexistente, vantagensmesmocorpo, testesfeescondicionais/null/canonicalownpricinge390/1280metadados/axe/teclado/noAPIwrites. Suiteintegralnovohadantesdeincorporar.
 - M0antes/depois: envelopeestáticoexistente, semnovaoperação/endpoint/dependência/provedor/email/IA/storagewrite/telemetria; preços/limites/gatesiguais. M0onerosa12,02–12,21%falha60%,não certificada; PLANS_ON_SALE=false. Não contarpendente/documentocomoentrega.
+
+
+### S1 — correção de espera do navegador Whop
+
+- Primeirohead651d2282fa36d7c0eb4121cb405398c07238101ced9 falhouverify118439360770noProduct39364893214. Lint/regressões/tipos/build/acordos/Redispassaram; testeparouemgoto/proof/kajabi(legado)aguardandonetworkidle60s, apóspassaríndice390axe/keyboard. NãoéprovadefalhaWhopnemlicençaparaapagarassert.
+- Corrigir esperadenavegação de páginaspúblicas para domcontentloaded+H1realvisível. Todasfontes/títulos/descrições/paidclosed/vantagens/axe/overflow/teclado/noAPIwrites eesperadepinturapermanecem. Não aumentar timeout, não suprimiraxe/rota/erros. Suitecompletanovofinalheadobrigatória; semrerunisolado. Propagarfixaosdescendentesapósruncompletoatualdeterminar, antesdeincorporar.
+- Nenhummudançaprodução/custo/preço/limite/gate;M0igualreprovada60,vendasfechadas.
