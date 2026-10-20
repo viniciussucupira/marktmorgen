@@ -1300,3 +1300,5 @@ Pedido P5: anexo524cc7f9-78af-42b5-ae37-4c05dc91a193/Texto colado.txt, lido19/10
 
 ### S11 — ações de criação e demo em quatro pontos intermediários
 - Start your store eSee the live demo após provas, situações, módulos eplanos, preservando topo/fecho. Pares sem pop-up, promessa de gratuidade, especialista ouagendamento. hrefs/signin e/demoexistentes;prefetchfalse,semtelemetria/endpoint/assetnovo. FocoTabentreopções,layout390/1280eaxeexigidos. M0antes/depois mesmoenvelope12,02–12,21%reprovado sob60%;gates/vendasfechadasinalterados.
+
+- Revisão de estilo: novas respostas usam center, conforme guard de inglês americano do produto; sem mudar idiomas ou relaxar testes. Novo head requer suíte integral.
