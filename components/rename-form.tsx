@@ -77,7 +77,7 @@ export function RenameForm({ current }: { current: string }) {
   }
 
   return (
-    <form onSubmit={submit} aria-busy={state.kind === "saving"} className="mt-5 space-y-3" noValidate>
+    <form onSubmit={submit} aria-busy={state.kind === "saving"} className="mt-5 w-full min-w-0 space-y-3" noValidate>
       <label htmlFor="new-handle" className="field-label">
         New address
       </label>

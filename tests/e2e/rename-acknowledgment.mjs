@@ -50,7 +50,9 @@ export async function checkRenameAcknowledgment({browser,LOCAL,session,sid,is}){
      is("failed reply preserves the chosen address "+scenario.name+" "+width,await field.inputValue()," @Synthetic.Path ");
      is("address unlocks after response "+scenario.name+" "+width,await field.isEnabled(),true);
     }
-    is("address controls fit viewport "+scenario.name+" "+width,await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
+    const fits=await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth);
+    if(!fits)console.log("Address overflow diagnostics",await page.evaluate(()=>[...document.querySelectorAll("main *")].map(node=>{const box=node.getBoundingClientRect();return {tag:node.tagName,id:node.id,className:String(node.className),left:box.left,right:box.right,width:box.width};}).filter(box=>box.width>0&&(box.right>innerWidth+1||box.left < -1)).slice(0,12)));
+    is("address controls fit viewport "+scenario.name+" "+width,fits,true);
    }
    is("all address writes stayed intercepted "+width,requests,scenarios.length);
   }finally{await context.close();}
