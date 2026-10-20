@@ -40,6 +40,10 @@ export const FEATURE_MECHANISMS: Record<string,{title:string;body:string}> = {
  cooks:{title:"Show what the download contains",body:"List the meal plans, recipe pages or grocery material actually included in the product. The buyer can inspect the format and contents before paying; no health or nutrition outcome is promised."},
  fitness:{title:"Make the program's contents and access clear",body:"Describe the sessions, supporting files and access schedule that exist in the product. Buyers can review what they receive without treating a training description as a promise about their body or results."},
  designers:{title:"State the files and compatibility",body:"Describe the templates, presets or other files actually delivered and the software they need. The buyer can check whether the product fits their tools before purchasing."},
+ "course-creators":{title:"Connect the lesson to its supporting work",body:"Publish the course contents, access schedule and optional products that actually exist. A learner can inspect that structure before deciding; the page does not predict their outcome."},
+ "community-builders":{title:"Keep the terms beside the place people join",body:"Explain the membership access and recurring terms alongside the community. Members can return to the discussion their access permits, without a promise about participation or retention."},
+ "newsletter-writers":{title:"Separate permission from a purchase",body:"Ask explicitly before marketing email, and describe paid products separately from list subscription. Do not treat store membership as a claim of an equivalent publication paywall."},
+ "consultants-and-mentors":{title:"Make the scope and payment choice inspectable",body:"Use the supported booking, agreement and payment-request tools for the actual work. A due date is not an automatic debit, and a recorded signature is not a guaranteed legal outcome."},
 };
 export function withFeatureMechanisms(pages:TopicPage[]):TopicPage[]{
  return pages.map((page):TopicPage=>{

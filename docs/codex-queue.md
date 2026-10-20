@@ -1014,7 +1014,7 @@ Pedido P5: anexo524cc7f9-78af-42b5-ae37-4c05dc91a193/Texto colado.txt, lido19/10
    - Prova: inventário completo de páginas/links, revisão US English, semântica/390px/contraste. Custo: texto estático, sem novo envelope, M0 igual.
 
 148. **[S7-CREATOR-PAGES] Páginas por situação de criador**
-   - Estado: **a fazer; após S6**.
+   - Estado: **em implementação; PR661/head4f05fc passou integral; integraçãohome/CRM requer CI completo no novo head**.
    - Escopo: course creators, community builders, newsletter writers, consultants and mentors, preservando coaches/cooks/fitness/designers. Padrão existente com ladder e foto única por página; situação descrita, nunca depoimento atribuído. Consultoria: chamadas pagas, pagamentos agendados Stripe, formulários, contratos assinados e lembretes apenas conforme código; sem argumento de parcelamento brasileiro.
    - Prova: capacidades e fontes próprias, imagens únicas/licença/aviso não-cliente, links reais/sitemap/teclado/390px/contraste. Sem novas operações, M0 igual.
 
@@ -1311,3 +1311,9 @@ Pedido P5: anexo524cc7f9-78af-42b5-ae37-4c05dc91a193/Texto colado.txt, lido19/10
 - Product39373120622 verify118465254513: lint/tipos/regressões passaram, navegador parou no teste PathWording já existente na segunda largura antes dos novos38casos. Evidência: botão SSR visível podia receber Enter antes da hidratação; ReactDOM19.2.8 instalado atribui onclick na hidratação (fonte primária react-dom-client.production.js). Esperar esse manipulador DOM real e armar a resposta POST antes do mesmo Enter, mantendo exatamente2requests fake, payload, foco,axe e recusa monetária real. Nenhum sleep, aumento do timeout de resposta, provider real ou mudança no componente/gate de produção. Nova suíte integral obrigatória.
 
 - Integração com homeS4/CRMS5 e históricoentrega71 preservados; novoheadrequerCIintegral. CapturascontinuamsóemCI,bandaaguardandoo dono,semimagemservida.
+
+
+### S7 — quatro situações de criadores, sem depoimentos inventados
+- Acrescenta course-creators, community-builders, newsletter-writers e consultants-and-mentors preservando as quatro páginas anteriores. Ladder com ações reais, newsletter com opt-in e sem equivalência inventada de paywall; consultoria com data de vencimento distinta de débito automático e registro de assinatura sem garantia jurídica.
+- Quatro fotografias diferentes, fonte/autoria/licença verificadas em20/10/2026 em docs/creator-photographs-2026-10-20.md. Mesmo host direto já existente, sem API de imagens, otimizador, nova conta, integração ou operação por cliente. Exemplos não representam clientes nem loja publicada; preços dos produtos são escolhas do criador, não promessas.
+- M0 antes/depois: mesmo envelope vinculante12,02–12,21%, abaixo do mínimo60%; desconhecidos reprovam e vendas continuam fechadas. Não altera preço/franquia/gate. Cobertura dos mecanismos42páginas, sitemap, navegação, imagens e leitura390/1280/axe exigidas no head final.
