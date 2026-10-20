@@ -2573,7 +2573,7 @@ HT1/PR713 incorporado em20/10/2026 às13:09:39 de Fortaleza; READY em13:11:16. H
 
 189. **[HT7] Vitrine com autorização datada e somente demo enquanto não houver permissão real**
 - Estado: **Em implementação; verificação integral pendente**.
-- Registro:20/10/2026 às13:15:00 de Fortaleza. Base conferida `3fdac83c8b70726342035f1c1915a34d4c8916ac`; commit de implementação: pendente.
+- Registro:20/10/2026 às13:15:00 de Fortaleza. Base conferida `3fdac83c8b70726342035f1c1915a34d4c8916ac`; commit de implementação: `fa47ee1c416fd607345833c45f3e3bc092c3c24e` (criado em2026-10-20T16:15:40Z; Fortaleza UTC−3).
 - Home e /proof/creator-showcase reutilizam um registro estático de permissões revisadas. Nenhuma autorização real encontrada: somente Harbor Kitchen, explicitamente demo fictícia, sem foto/resultado/depoimento de cliente adicionado.
 - Uma futura entrada real exige autorização expressa no escopo public-showcase, datas de concessão/registro e referência de evidência. Ausente, revogada, inválida, futura ou fora do escopo fica oculta; a data autorizada aparece, a referência privada não. Nenhuma inferência de resultado financeiro.
 - Componente compartilhado incluído no inventário de acessibilidade; mesma infraestrutura/template/sitemap, sem nova leitura de conta, operação, fornecedor, foto/asset, armazenamento, mensagem ou custo variável por cliente. PLANS_ON_SALE=false, preços/limites, comissão, opt-in, tax gate, art.9a e revisão comercial inalterados.
