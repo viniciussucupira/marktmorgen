@@ -82,11 +82,11 @@ function StoreCard({ block, hero = false }: { block: Extract<Block, { kind: "sto
 function BlockView({ block }: { block: Block }) {
   switch (block.kind) {
     case "lead":
-      return <p className="reveal t-lead measure-wide text-ink-soft">{block.text}</p>;
+      return <p className="t-lead measure-wide text-ink-soft">{block.text}</p>;
 
     case "cards":
       return (
-        <section className="reveal" aria-labelledby={sectionId(block.title)}>
+        <section className="" aria-labelledby={sectionId(block.title)}>
           <h2 id={sectionId(block.title)} className="t-section">{block.title}</h2>
           <div className="mt-6 grid gap-4 sm:grid-cols-2">
             {block.items.map((item) => (
@@ -104,7 +104,7 @@ function BlockView({ block }: { block: Block }) {
 
     case "how":
       return (
-        <section className="reveal" aria-labelledby={sectionId(block.title)}>
+        <section className="" aria-labelledby={sectionId(block.title)}>
           <h2 id={sectionId(block.title)} className="t-section">{block.title}</h2>
           <ol className="mt-6 grid gap-4 md:grid-cols-3">
             {block.items.map((item, i) => (
@@ -122,7 +122,7 @@ function BlockView({ block }: { block: Block }) {
 
     case "features":
       return (
-        <section className="reveal" aria-labelledby={sectionId(block.title)}>
+        <section className="" aria-labelledby={sectionId(block.title)}>
           <h2 id={sectionId(block.title)} className="t-section">{block.title}</h2>
           {block.intro ? <p className="mt-3 max-w-2xl text-ink-soft">{block.intro}</p> : null}
           <ul className="mt-6 grid gap-4 sm:grid-cols-2">
@@ -159,7 +159,7 @@ function BlockView({ block }: { block: Block }) {
 
     case "uses":
       return (
-        <section className="reveal" aria-labelledby={sectionId(block.title)}>
+        <section className="" aria-labelledby={sectionId(block.title)}>
           <h2 id={sectionId(block.title)} className="t-section">{block.title}</h2>
           <ul className="mt-6 grid gap-4 md:grid-cols-3">
             {block.items.map((item) => (
@@ -175,7 +175,7 @@ function BlockView({ block }: { block: Block }) {
 
     case "limits":
       return (
-        <section className="reveal rounded-[var(--r-lg)] border border-line bg-white p-6 sm:p-8" aria-labelledby={sectionId(block.title)}>
+        <section className="rounded-[var(--r-lg)] border border-line bg-white p-6 sm:p-8" aria-labelledby={sectionId(block.title)}>
           <h2 id={sectionId(block.title)} className="t-h3 flex items-center gap-2 text-ink">
             <Icon name="info" size={20} className="text-violet-deep" />
             {block.title}
@@ -194,7 +194,7 @@ function BlockView({ block }: { block: Block }) {
 
     case "faq":
       return (
-        <section className="reveal" aria-labelledby={sectionId(block.title)}>
+        <section className="" aria-labelledby={sectionId(block.title)}>
           <h2 id={sectionId(block.title)} className="t-section">{block.title}</h2>
           <div className="mt-6 divide-y divide-line overflow-hidden rounded-[var(--r-lg)] border border-line bg-white">
             {block.items.map((item) => (
@@ -212,7 +212,7 @@ function BlockView({ block }: { block: Block }) {
 
     case "ladder":
       return (
-        <section className="reveal" aria-labelledby={sectionId(block.title)}>
+        <section className="" aria-labelledby={sectionId(block.title)}>
           <h2 id={sectionId(block.title)} className="t-section">{block.title}</h2>
           {block.intro ? <p className="mt-3 max-w-2xl text-ink-soft">{block.intro}</p> : null}
           <ol className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -241,7 +241,7 @@ function BlockView({ block }: { block: Block }) {
 
     case "steps":
       return (
-        <section className="reveal" aria-labelledby={sectionId(block.title)}>
+        <section className="" aria-labelledby={sectionId(block.title)}>
           <h2 id={sectionId(block.title)} className="t-section">{block.title}</h2>
           <ol className="mt-6 grid gap-3">
             {block.items.map((item, i) => (
@@ -261,7 +261,7 @@ function BlockView({ block }: { block: Block }) {
 
     case "facts":
       return (
-        <section className="reveal" aria-labelledby={sectionId(block.title)}>
+        <section className="" aria-labelledby={sectionId(block.title)}>
           <h2 id={sectionId(block.title)} className="t-section">{block.title}</h2>
           <div className="mt-6 grid gap-4 sm:grid-cols-3">
             {block.items.map((item, i) => (
@@ -278,7 +278,7 @@ function BlockView({ block }: { block: Block }) {
 
     case "table":
       return (
-        <section className="reveal" aria-labelledby={sectionId(block.title)}>
+        <section className="" aria-labelledby={sectionId(block.title)}>
           <h2 id={sectionId(block.title)} className="t-section">{block.title}</h2>
           <div className="mt-6 hidden overflow-hidden rounded-[var(--r-lg)] border border-line bg-white shadow-[var(--shadow-sm)] sm:block">
             <table className="table-clean text-[0.9375rem]">
@@ -327,7 +327,7 @@ function BlockView({ block }: { block: Block }) {
 
     case "quote":
       return (
-        <figure className="reveal border-l-[3px] border-violet-brand py-1 pl-6">
+        <figure className="border-l-[3px] border-violet-brand py-1 pl-6">
           <blockquote className="text-[1.35rem] font-medium leading-snug tracking-[-0.02em] text-ink">
             {block.text}
           </blockquote>
@@ -337,7 +337,7 @@ function BlockView({ block }: { block: Block }) {
 
     case "note":
       return (
-        <section className="reveal rounded-[var(--r-lg)] border border-line bg-sand p-6">
+        <section className="rounded-[var(--r-lg)] border border-line bg-sand p-6">
           <h2 className="flex items-center gap-2 font-semibold text-ink">
             <Icon name="info" size={18} className="text-violet-deep" />
             {block.title}
@@ -348,7 +348,7 @@ function BlockView({ block }: { block: Block }) {
 
     case "storecard":
       return (
-        <section className="reveal" aria-labelledby={sectionId(block.title)}>
+        <section className="" aria-labelledby={sectionId(block.title)}>
           <h2 id={sectionId(block.title)} className="t-section">{block.title}</h2>
           <div className="mt-6">
             <StoreCard block={block} />
