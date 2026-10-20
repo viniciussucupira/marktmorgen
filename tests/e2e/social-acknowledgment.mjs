@@ -1,3 +1,10 @@
+
+async function reportLayout(page,label){
+ const details=await page.evaluate(()=>({viewport:innerWidth,scroll:document.documentElement.scrollWidth,wide:[...document.querySelectorAll("body *")].map(node=>{const r=node.getBoundingClientRect();return {tag:node.tagName,id:node.id,classes:typeof node.className==="string"?node.className:"",left:Math.round(r.left),right:Math.round(r.right),width:Math.round(r.width),text:node.textContent?.replace(/\s+/g," ").slice(0,160)};}).filter(node=>node.width>0&&(node.right>innerWidth+1||node.left< -1)).sort((a,b)=>b.right-a.right).slice(0,24)}));
+ console.log(label+"_LAYOUT_DIAGNOSTIC:"+JSON.stringify(details));
+ const capture=await page.screenshot({type:"jpeg",quality:60});console.log(label+"_LAYOUT_CAPTURE:"+capture.toString("base64"));
+}
+
 /** All profile writes are intercepted. No account, message or external profile request. */
 export async function checkSocialAcknowledgment({browser,LOCAL,fixture,axeSource,is}){
  const profileCases=[
@@ -32,7 +39,7 @@ export async function checkSocialAcknowledgment({browser,LOCAL,fixture,axeSource
   const context=await browser.newContext({viewport:{width,height:900}});
   try{
    await context.addCookies([{name:"nl_session",value:fixture.session,url:LOCAL}]);
-   const page=await context.newPage();let pending=null,requests=0;
+   const page=await context.newPage();let pending=null,requests=0,reported=false;
    await page.route("**/api/store/socials",async route=>{
     if(!pending)throw Error("Unexpected social-profile write");
     const work=pending;requests++;const input=route.request().postDataJSON().socials;
@@ -80,7 +87,8 @@ export async function checkSocialAcknowledgment({browser,LOCAL,fixture,axeSource
      const contrast=await alert.evaluate(async node=>{const r=await window.axe.run(node,{runOnly:{type:"rule",values:["color-contrast-enhanced"]}});return{violations:r.violations.map(v=>v.id),incomplete:r.incomplete.map(v=>v.id),passed:r.passes.some(v=>v.id==="color-contrast-enhanced")};});
      is("profile error enhanced contrast "+name,contrast,{violations:[],incomplete:[],passed:true});
     }
-    is("profile controls fit "+name,await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
+    const fits=await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth);if(!fits&&!reported){await reportLayout(page,"SOCIAL");reported=true;}
+    is("profile controls fit "+name,fits,true);
    }
    is("all profile writes stayed intercepted "+mode+"/"+width,requests,scenarios.length);
   }finally{await context.close();}
