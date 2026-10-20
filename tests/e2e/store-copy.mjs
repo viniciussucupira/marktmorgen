@@ -1,3 +1,4 @@
+import {checkTaxScope} from "./tax-scope.mjs";
 import {checkComposerAmericanEnglish} from "./us-english-composer.mjs";
 import {checkPublicAmericanEnglish,checkStudioAmericanEnglish} from "./public-us-english.mjs";
 import {checkPathCertificates} from "./path-certificates.mjs";
@@ -727,6 +728,7 @@ try {
   await checkPublicAmericanEnglish({browser,LOCAL,is});
   await checkStudioAmericanEnglish({browser,LOCAL,session:growthSession,sid:growthSid,is});
   await checkComposerAmericanEnglish({browser,LOCAL,session:growthSession,sid:growthSid,product:growthProduct,is});
+  await checkTaxScope({browser,LOCAL,session:growthSession,sid:growthSid,is});
   is("no page threw", errors, []);
 } catch (error) {
   failed += 1;
