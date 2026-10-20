@@ -1,3 +1,4 @@
+import { decisionQuestions, type HomeQuestion } from "@/lib/home-faq";
 /** Server-rendered pricing facts. Reads existing rules; never runs billing or provider operations.
  * The future browser calculator reads plan.ts and competitor-prices.ts directly, not this server module.
  */
@@ -92,7 +93,8 @@ export const PRICING_ADDONS=[
  {key:"assistant",title:"Store assistant",price:pricingDollars(ASSISTANT_PRICE_CENTS)+" a month per store",body:count(ASSISTANT_MESSAGES_MONTHLY)+" messages a month in its own allowance. A separate subscription, with its own cancellation and refund terms. Paid availability remains closed with the plans.",href:"/refunds#store-assistant"},
  {key:"captions",title:"AI captions for a lesson video",price:pricingDollars(CENTS_PER_MINUTE)+" per rounded-up minute, per requested language",body:"At least "+pricingDollars(MIN_CENTS)+" per request in total; up to "+MAX_AUTO_LANGUAGES+" languages and "+MAX_AUTO_MINUTES+" minutes of video. The quote is shown before purchase. For example, 10 minutes in two languages is "+pricingDollars(autoCaptionCents(600,2))+".",href:"/platform/courses"},
 ];
-export const PRICING_QUESTIONS=[
+export const PRICING_QUESTIONS: HomeQuestion[]=[
+ ...decisionQuestions(),
  {q:"Can I buy a plan today?",a:PLANS_ON_SALE?"Check the plan's current terms and available features before subscribing.":"Paid plans and paid selling are not open yet. You can prepare a store and inspect the live demo; this page does not activate a paid checkout."},
  {q:"How do monthly and annual billing differ?",a:"Monthly billing charges the published monthly price each billing period. Annual billing is one payment of the published annual price, not twelve monthly payments. Monthly usage allowances still follow their own counter windows."},
  {q:"Does the platform share include payment processing?",a:"No. The platform share and your Stripe processing fees are separate. Your account's country, payment method and enabled Stripe services can affect what Stripe charges."},

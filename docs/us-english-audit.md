@@ -160,7 +160,6 @@ PR644/queue141 reviews `components/pause-editor.tsx` and the existing /api/store
 
 Two dedicated local-only stores with synthetic recurring products exercise both enabling and disabling, leaving prior Path/copy fixtures untouched. Fourteen intercepted replies per initial state at390/1280 give56cases, including lost replies and confirmed values; no pause POST or real membership/provider change occurs. Complete final-head verification remains pending. Source+323characters, same existing request/response; no added runtime operation, cost allowance, price, opt-in or gate. This does not close other unreviewed billing dialogs, first-store onboarding or actual assistive-technology gaps.
 
-
 ## Contact form setting: acknowledged state and honest uncertainty
 
 Queue154 reviews components/contact-box-editor.tsx and its existing contact-box response. Only a successful HTTP reply with boolean ok, no contradictory error, and exact canonical saved on/heading/line values can confirm success. Inputs remain locked while pending; the form announces busy. An uncertain reply asks the creator to reload and check. A confirmed setting does not assert that a form blocked by site email or plan availability is public.
@@ -171,13 +170,13 @@ Client source grows599characters, reusing existing parseJoin and the same POST/r
 
 The selected contact error uses the existing danger-text token; actual rendered alert checks require an enhanced-contrast pass and no incomplete reading. This does not certify every state or page.
 
+Mobile CI also identified the long media-kit address as the document overflow source. The address paragraph now wraps long words locally; no document overflow is hidden and global390px fit checks remain binding.
 
 ## Checkout reminder preference: recorded response, unchanged consent
 
 Queue155 reviews RecoveryEditor against its existing recovery response. Successful HTTP, boolean ok, no contradictory error, exact canonical enabled/address, and boolean server-owned asks are required. Both US/non-US consent flags remain acceptable because the server decides the account-country condition. Pending controls lock and announce busy; unexpected error names use only own message entries; uncertain saves request a reload without asserting nothing changed.
 
 Sixteen intercepted responses at390/1280 for each server consent flag give64synthetic cases, reusing the local fixture and issuing no real POST, email, provider call, subscription or billing change. Existing reminder consent, timing, recipient limits and spending gates are untouched. Full final-head CI required. Client+656characters, same parseRecovery/POST/response, no new cost allowance, price, buyer language or commercial gate; binding M0 still fails60%.
-
 
 ## Social profile settings: canonical order and explicit removal
 

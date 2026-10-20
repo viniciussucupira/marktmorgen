@@ -1030,19 +1030,19 @@ Pedido P5: anexo524cc7f9-78af-42b5-ae37-4c05dc91a193/Texto colado.txt, lido19/10
 
 151. **[S10-HOME-PRICING-FAQ] Perguntas factuais na home e /pricing**
    - Pedido: continuação direta do dono, S10–S12; horário exato da mensagem não fornecido, registro de leitura na continuidade.
-   - Estado: **em implementação; PR663, CI integral do novo head em andamento; ainda não publicado**.
+   - Estado: **em implementação; PR663, head d61038e passou completo; conflito do histórico da fila resolvido preservando main; nova suíte integral obrigatória**.
    - Escopo: preservar perguntas existentes de lib/home-faq.ts; acrescentar How much does it cost? (lib/plan.ts), Is there a contract? Can I cancel anytime? (termos reais), Can I move from Kajabi, Stan or another platform? (contatos/produtos/compradores conforme importadores e /platform/switching-to-marktmorgen), Does it connect to my other tools? (Zapier/webhooks/API reais e /developers), Is there support, and how? (canal real sem SLA inventado), How long does it take to open a store? (somente passos/tempo demonstráveis, sem promessa).
    - Prova: conferir código/main e páginas antes de responder; preços sem duplicação, links, FAQ acessível,390px, lint/tipos/testes integrais. Custo/M0 antes/depois: texto e links no envelope existente; nova chamada/email/IA/banda exige registry/spend-floor, maior custo pago, impostos e teto automático antes. A leitura vinculante continua reprovada, não certificada; vendas fechadas.
 
 152. **[S11-HOME-CTAS] Ações ao longo da home**
    - Pedido: mesma continuação direta S10–S12.
-   - Estado: **em implementação; PR664, CI integral do novo head em andamento; ainda não publicado**.
+   - Estado: **em implementação; PR664/head e91c584 passou integral; integração explícita do pai atual exige novo CI completo**.
    - Escopo: a cada uma ou duas seções, botão Start your store e segunda opção See the live demo, com destinos existentes e nomes consistentes. Sem free no CTA, Talk to an expert ou Book a demo; sem pop-up/urgência.
    - Prova: sequência real de seções, links, foco/teclado, nomes acessíveis e390px sem overflow. Sem telemetria/chamada/custo novo por inserir botões; registrar M0 antes/depois, não mudar preço/limite/gate nem afirmar60% fiscal comprovado.
 
 153. **[S12-HOME-PATH] Jornada factual do Marktmorgen Path na home**
    - Pedido: mesma continuação direta S10–S12.
-   - Estado: **em implementação; PR665, CI integral do novo head em andamento; ainda não publicado**.
+   - Estado: **em implementação; PR665/head7c77a6b passou integral; integração explícita do pai atual exige novo CI completo**.
    - Escopo: seção com passos reais e nomes do código atual, ligada a /platform/path. Cada passo distingue o que o criador faz e o que o produto faz por ele. Não prometer resultado, scale your business, conclusão por clique ou função ausente.
    - Prova: passos/nomes/estados conferidos no main, narrativa US English, link/teclado/390px/contraste, lint/tipos/testes integrais. Texto estático sem novo fato consultado em servidor; eventual operação nova só com conta/teto prévios. M0 antes/depois registrada; piso obrigatório60% não é certificação do modelo atual, vendas continuam fechadas.
 
@@ -1441,6 +1441,33 @@ Pedido P5: anexo524cc7f9-78af-42b5-ae37-4c05dc91a193/Texto colado.txt, lido19/10
 ```
 
 
+### S10 — seis perguntas de decisão na home e no pricing
+- Preços e nomes vêm de lib/plan.ts. Renovação/cancelamento/refundo conforme Terms/Refunds; CSV de contatos consentidos/produtos emrascunho/compradores, com limites de conteúdo e assinatura explícitos; webhooksZapier sem appnativo eAPIcomchavesescopadas/tetos; suporte inglês por email existente semSLA; sem prazo inventado de montagem. Links para fontes próprias, sem fetch/prefetch adicional, mensagem real ou nova operação.
+- Uma função compartilhada alimenta ambasas páginas e o mesmo texto da home continua noFAQschema. Cinco perguntas anteriores preservadas, incluindo correção factualZoomS4. M0antes/depois mesmo envelope12,02–12,21%, abaixo60%;desconhecidoreprova;vendasfechadas;preços/limites/gatesinalterados. Testes sintéticos de fonte depreços, igualdade, links, teclado eaxe390/1280 exigidos noheadfinal.
+
+- Revisão de estilo: novas respostas usam center, conforme guard de inglês americano do produto; sem mudar idiomas ou relaxar testes. Novo head requer suíte integral.
+
+- Revisão tipada de S9: a prova negativa de categoria ainda não criada usa ReadonlySet<string>, sem comparar literais fora da união, sem cast/any/supressão nem enfraquecer verificação. Nova suíte integral obrigatória.
+
+- S10/Product39377984156/verify118480407335: novosFAQs antes dosanterioresquebraramaguardadeaberturacomercialnaprimeirapergunta ebuscafactualStan. Preservaros5FAQsoriginaisnaordem eacrescentaros6depois,conformepedido; nenhumaasserçãosuprimida. Novasuítecompletanoheadcorrigidoobrigatória.
+
+- FAQ headad7661e: lint/regressões/tipos/build passaram; os6FAQsna home390abriram comlinks/foco corretos. NavegadorparounaguardadeanimaçãodaintroforadavistaporterroladoaoúltimoFAQ. Rolarcada .revealrealàvistaantesdeesperaropacidade,comooutrasverificações;nenhumsleep/timeoutmaior/regraoucenárioremovidos. Novasuíteintegralobrigatória.
+
+- d61038e/Product39379613964 verify118485462476,Redis118485462168,segurança39379613965 verdes; ambosFAQs390/1280/teclado/links/axe passaram. Incorporaçãorecusada405porconflitodafila apósS9. Integrarmaincanônicoehistóricossemreset/descarte;mesmocódigo funcional, novoheadexigeCIintegral,nãoreusarverificaçãovelha.
+
+
+### S11 — ações de criação e demo em quatro pontos intermediários
+- Start your store eSee the live demo após provas, situações, módulos eplanos, preservando topo/fecho. Pares sem pop-up, promessa de gratuidade, especialista ouagendamento. hrefs/signin e/demoexistentes;prefetchfalse,semtelemetria/endpoint/assetnovo. FocoTabentreopções,layout390/1280eaxeexigidos. M0antes/depois mesmoenvelope12,02–12,21%reprovado sob60%;gates/vendasfechadasinalterados.
+
+- Head e91c584/Product39379619872,verify118485481773,Redis118485481908,segurança39379619891 passaram. Integrarúltimo headPR663comopai,mesmos4pares/baselines,semperderhistóricocanônico. Nova suíteintegralobrigatória.
+
+
+### S12 — sete missões reais do Path na home
+- Títulos/IDs/ordem lidos de dayMissions(NO_FACTS) em lib/path-rules.ts, sem duplicar nomes e semlerstore. Cadaetapa distingue ação do criador de checagem registrada; testecheckoutnãoverificaacesso/entrega,lojalivenãofazautocompra,leadnãoéconsentimentodemarketing,estornototalremoveconclusão,nenhumavenda/prazogarantidos. Lembretes/compartilhamentoopt-in e disponibilidadepagamentosemantém. Linkreal/platform/path.
+- UmparadicionalStartyourstore/demoapósPathmantémintervalosdeatéduasseções. Semasset/endpoint/provedor/operaçãonovos,prefetchfalse. M0antes/depoismesmoenvelope12,02–12,21%reprovadosob60%;gates/preços/limitesinalterados,vendasfechadas. Testescanônicos/roles/390/1280/foco/axe/semwritesexigidosnoheadfinal.
+
+- Head7c77a6b/Product39379624206 verify118485495851,Redis118485496028,segurança39379624198 verdes. Preservar7missões/5pares eúltimoPR664comopai;filaehistóricoscanônicossemperda. Nova suíteintegralobrigatóriaantesdeincorporar,nãocontarcabeçalhoverdeanteriorcomoconclusãodonovo.
+
 154. **[B2-CONTACT-ACKNOWLEDGMENT] Confirmar a configuração do formulário de contato sem confundir com publicação**
    - Pedido: continuaçãoB2/P0/P3 após implementaçõesS; nenhum número/estado anterior alterado.
    - Estado: **em implementação; branchcodex/contact-acknowledgment; publicar após itensS acionáveis emverificação**.
@@ -1450,6 +1477,30 @@ Pedido P5: anexo524cc7f9-78af-42b5-ae37-4c05dc91a193/Texto colado.txt, lido19/10
 
 - Integração explícita com mainc7370298f145a4682726b95b3872b0c675b8d2f6 preserva CRM eS6,resolveconflitodedocumentação semdescartar histórico. Alerta decontatousa danger-text existente para contraste7:1 emfundosclaros,comaxe-enhancedrealnoalertaeprovanãoincompleta. EscoponãocertificaAAAgeral. Novasuíteintegralnoheadfinal.
 
+- Diagnóstico CI39382404775: o endereço longo no parágrafo do media kit fazia document.scrollWidth436 na janela390. Correção localizada break-words no próprio parágrafo, sem ocultar overflow e sem reduzir verificações; nova suíte integral obrigatória.
+
+### Publicação funcional79 — S12
+```json
+{
+  "number": 79,
+  "pr": 665,
+  "queueItem": 153,
+  "feature": "Home page explains the seven actual Path missions, creator actions and fact checks, with a fifth intermediate self-service action pair",
+  "head": "09f3f611937807fb7306f831cb70774e65d2d5c7",
+  "commit": "51bdab96065a566ee396d61420540bfa8fa4c4c9",
+  "deployment": "dpl_8gRANbeubAz9aJug26MxiagTWhR9",
+  "readyUTC": "2026-10-20T06:55:56.911Z",
+  "readyFortaleza": "2026-10-20 03:55:56",
+  "mergedUTC": "2026-10-20T06:55:06Z",
+  "mergedFortaleza": "2026-10-20 03:55:06",
+  "run": 39381233699,
+  "verify": 118490569308,
+  "redis": 118490568978,
+  "securityRun": 39381233529,
+  "validation": "Full final-head CI passed lint, regressions, typecheck, build, Redis, security and synthetic browser: seven canonical missions, roles, Path link, five CTA groups, keyboard, axe and fit at390/1280. READY exactSHA and marktmorgen.com alias confirmed; six routes200sameDPL and live home content confirmed. Noerror/fatal06:59:16.460–07:04:16.460UTC.",
+  "limitations": "Static factual content; no new endpoint/provider operation or outcome guarantee. Existing opt-in, prices, limits and fiscal gates preserved. Binding M0 unchanged12.02–12.21%,fails60%;PLANS_ON_SALE=false;no margin certification."
+}
+```
 
 155. **[B2-RECOVERY-ACKNOWLEDGMENT] Confirmar preferências de lembrete sem alterar consentimento**
    - Pedido: continuaçãoB2/P0/P3, apósSacionáveis; preservar estados/IDsanteriores.
@@ -1458,14 +1509,9 @@ Pedido P5: anexo524cc7f9-78af-42b5-ae37-4c05dc91a193/Texto colado.txt, lido19/10
    - Prova:16respostasinterceptadas×2larguras×2flagsdeconta,64casos,semPOSTreal/SMTP/provider/assinatura. IncluiHTTP,truthey,camposdivergentes,flaginválida,JSONinválido,errosherdados,perda,recusaconhecidaesucessocanônico. Suíteintegralobrigatórianoheadfinal.
    - Custo: fontecliente+656caracteres,mesmoPOST/resposta/parseRecovery;semnovafranquia/operação/fornecedor/preço/gate. M0antes/depois12,02–12,21%,reprova60%;vendasfechadas.
 
-
 156. **[B2-SOCIAL-PROFILE-ACKNOWLEDGMENT] Confirmar perfis canônicos, ordem e remoção sem perder o rascunho**
    - Pedido: continuaçãoB2/P0/P3, publicar apósS e154/155; números/estadosanteriorespreservados.
    - Estado: **em implementação; branchcodex/social-profile-acknowledgment; CIcompletopendente**.
    - Escopo: HTTP/okbooleano/semcontradição earrayexatocomparseSocials,mesmaordem/URLs/canonicalização/remoçãovazia. Nenhumaentrada inválida édeclaradasalva. Bloquearcampos,reordenar/remover/adicionar/cancelarduranteespera;errosherdadosnãoescolhempropriedades;índicesrejeitadosinteirosválidos;incertezamandaconferir. Alerta/errodecampousadanger-text existente;conteúdooriginalpreservado.
    - Prova:18respostaspara2perfis+6pararemoçãovazia em390/1280=48casos,semPOSTrealouaberturadeperfil/remotemensagem/conta. Incluiordem,rede,URL,contagem,HTTP/truthy,JSON/errosherdados/perda/índicesinválidos,acessibilidadecontrast-enhancedrealdoalerta. Suíteintegralobrigatórianoheadfinal.
    - Custo: fontecliente+1198caracteres,mesmoPOST/resposta/parseSocials;semnovaoperação/fornecedor/franquia/preço/gate. M0antes/depois12,02–12,21%,reprova60%;vendasfechadas.
-
-- Herdardiagnósticomobile154/155: alegibilidademóvelglobalcontinuaobrigatória; DOMlargoeimagemsintéticaproduzidossóemCIsefalhar,semcapturapúblicaourelaxaraasserção. Corrigircausademostradanocódigoeexigirnovasuíteintegral.
-
-- Diagnóstico39380616533/118488736249: client390/scroll436; respostas de perfis/lembretes/contatos válidas, contraste/rascunhosfuncionaram. Primeiralistaincluiunavegação etabelasqueficamcorretamentedentrodesuaprópriarolagem;delimitarpelosancestraisclipping paraencontrarodescendentequerealmenteampliao documento. SemmudarasserçãoglobalouCSSparaesconderconteúdo. Novasuíteintegralcomdiagnósticoboundednecessária.

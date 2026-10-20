@@ -133,7 +133,7 @@ export function KitEditor({
   return (
     <section id="media-kit" aria-labelledby="kit-title" className="card mt-8 scroll-mt-32 p-6 sm:p-8">
       <h2 id="kit-title" className="text-lg font-semibold tracking-[-0.02em] text-ink">Media kit</h2>
-      <p className="mt-2 text-ink-soft">
+      <p className="mt-2 break-words text-ink-soft">
         A page for brands at marktmorgen.com{address}: who you are, your audience, what a collaboration costs and who you have
         worked with, in your store&apos;s look, with a button to save it as a PDF. The numbers are yours to type, and the page says so,
         with the day you last changed them. Beside them it shows what this site counted itself: your products, your buyers&apos;
