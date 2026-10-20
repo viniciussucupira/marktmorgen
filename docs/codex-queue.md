@@ -504,7 +504,7 @@ B3 iniciado em paralelo ao CI da próxima área B2, conforme P3: parser só de d
 
 83. **[C-ANSWER-RECORD] Recusar datas impossíveis também nas respostas fiscais registradas**
    - Pedido: P2 C; mesma falha de normalização encontrada na auditoria de19/10/2026.
-   - Estado: **em andamento; branch codex/tax-answer-calendar; depende de629**.
+   - Estado: **feito; PR #630 incorporado19/10/2026 21:20:13 de Fortaleza, entrega49 confirmada, READY21:21:03, versão4af7f4b**.
    - Evidência: lib/tax-gate.ts e tests/tax-gate.test.ts; lista real de respostas continua vazia, sem protocolo, consulta enviada ou hipótese menos onerosa criada.
    - Custo e margem: Validação local limitada, sem chamadas/registros/mensagens adicionais; todos os custos/margens M0 antes=depois, leitura mais onerosa ainda reprovada.
 
@@ -517,13 +517,20 @@ Correção complementar da fixture #630: a execução integral mostrou que o rel
 
 84. **[C-UE-TAX-SCOPE] Explicar o escopo dos controles fiscais da conta do criador**
    - Pedido: P2 C-UE; contradição encontrada na auditoria da interface em19/10/2026,21h de Fortaleza (aproximado).
-   - Estado: **em andamento; branch codex/tax-control-scope; depende de630**.
+   - Estado: **feito; PR #631 incorporado19/10/2026 21:26:19 de Fortaleza, entrega50 confirmada, READY21:27:13, versão5150f92**.
    - Evidência: components/tax-editor.tsx afirmava de forma absoluta que o criador era quem declarava/pagava; explicar que os controles da conta Stripe não resolvem as obrigações da plataforma, e que coleta/registros de IVA da plataforma ainda não estão construídos. Formulário referencia as explicações; valores/controles/pedidos de gravação preservados. Navegador sintético390/1280, texto real, referências acessíveis e nenhum POST.
    - Custo e margem: Apenas texto/atributos locais: fonte aumenta372caracteres, menos de1KB de conteúdo estático adicional dentro do envelope da página existente; sem leitura/chamada/registro/mensagem extra, sem ampliar limites. M0 antes=depois em todos os planos/intervalos; modelo mais oneroso ainda reprovado. Não é coleta/registro/parecer fiscal concluído.
 
 
 85. **[C-UE-RETENTION-COST] Auditar prazo e pré-condições de financiamento da retenção fiscal**
    - Pedido: P2 C-UE/custos; auditoria em19/10/2026,21h de Fortaleza (aproximado).
-   - Estado: **em andamento; documento de auditoria em branch codex/vat-retention-funding, depende de631**.
+   - Estado: **feito documental; PR #632 incorporado19/10/2026 21:29:03 de Fortaleza; Product39346869385/Redis/security39346869400 completos. Sem incremento de entrega funcional**.
    - Evidência: docs/eu-vat-retention-funding.md; fonte oficial da Comissão:10anos a partir do fim do ano da transação, teto conservador132meses. Preços PAYG oficiais lidos, divisor decimal conservador por unidade GB ainda não comprovada, cópias/limites/correções pendentes. Matriz mensal/anual por plano traz componente ilustrativo e custo total futuro desconhecido/reprovado.
    - Custo e margem: Documento apenas, sem criar operação/registro/agenda/limite. M0 atual antes=depois; não admite retenção nem declara60%. Conta completa/reservas automáticas permanecem obrigatórias antes de dados fiscais reais.
+
+
+86. **[C-TAX-SAVE-CONFIRMATION] Confirmar os valores fiscais antes de anunciar salvamento**
+   - Pedido: auditoria de usabilidade/fiscal autorizada,19/10/2026,21h de Fortaleza (aproximado).
+   - Estado: **em andamento; branch codex/tax-save-confirmation; CI integral pendente**.
+   - Evidência: TaxEditor exige HTTP de sucesso, ok booleano e os quatro valores retornados iguais ao pedido. Respostas incompletas, contraditórias ou perdidas deixam resultado desconhecido e orientam recarregar; controles ficam bloqueados durante confirmação. Onze cenários interceptados em390/1280; nenhum POST fiscal alcança o servidor no teste.
+   - Custo e margem: Mesmo POST existente, sem fornecedor, armazenamento, mensagem, limite ou franquia adicional. Validação local limitada; M0 antes=depois em todos os planos/intervalos, leitura mais onerosa continua reprovada. Não conclui coleta/retenção fiscal nem abre vendas.
