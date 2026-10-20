@@ -2310,6 +2310,15 @@ Pricing FAQ repair history: run39407143422 caught mobile target-size;39409356932
 
 
 175. **[B2-175] Confirm existing membership tier settings accurately.**
-- Estado: **Em implementação**.
+- Estado: **Publicado — entrega101**.
 - Require successful HTTP, strict confirmation, no contradictory error and exact ordered tier IDs from the existing setter response. Lock pending selections, announce busy, preserve uncertain drafts and saved on/off status, and confirm settings without asserting live member switches. No new read, switch, payment, email or operation.
 - Synthetic44 intercepted enable/disable replies plus single-selection refusal planned at390/1280, using an isolated local fixture with2memberships; full final-head CI pending. MIN_TIERS2/MAX_TIERS6, eligibility, product IDs/prices, entitlements and existing member-switch mechanics unchanged. No provider/paid unit/recurring cost added; M0 remains12.02–12.21%, fails60%; sales closed, no H activation.
+
+
+### Publicação funcional101 — 2026-10-20 (Fortaleza)
+
+- **PR#701 incorporado às10:50:18**, merge `35f03221f1c89650575cc934a4c3cf91c2b582d1`, head `ecbc6d801a2e54da73c74eb68647999bafd8e56f`. Configurações existentes de níveis exigem HTTP bem-sucedido, true estrito, ausência de erro e IDs ordenados exatos; bloqueiam seleções pendentes, preservam rascunho/status salvos em incerteza e confirmam configurações sem alegar troca real de membro.
+- CI completo aprovado: Product39431068827/verify118655957361/Redis118655957022/security39431068446, incluindo44casos sintéticos interceptados de ativação/desativação em390/1280 e recusa de seleção única. Fixture local isolada, sem chamada de Stripe, troca de membro, email ou pagamento; MIN_TIERS2/MAX_TIERS6, elegibilidade, preços/IDs e direitos preservados.
+- READY às10:51:14.417, domínio marktmorgen.com, deployment `dpl_3Z4kgFHhBpG2bMEgcAyKhhq8f4vd`, SHA exato do merge. `/`, `/signin`, `/studio` (redirecionamento anônimo esperado), `/platform/path`, `/pricing`, `/privacy` retornaram200 com esse deployment. Nenhum log error/fatal na janela13:47:01.216–13:52:01.216UTC. Fluxo privado verificado somente sinteticamente no CI, sem gravação autenticada em produção.
+- Custos101: mesma requisição/snapshot de configurações, nenhuma leitura/troca/email/pagamento/provedor/unidade paga/custo recorrente adicional. Preços, limites, conteúdo/idiomas/IDs, permissões/opt-in e controles fiscais preservados. PLANS_ON_SALE=false, COMMISSION_LIVE=false; M0 vinculante12.02–12.21% continua reprovado para60%. Desconhecido não é zero; sem certificação geral de margem/acessibilidade ou H ativado.
+- **PR#700 documental incorporado às10:44:46**, merge `07890e4148d9dd4a2213360da0f0e45b70d78d1b`, head `4fb9a6a1ac08bb506026239658ad35dd44c9c949`; Product39430751532/verify118654883245/Redis118654882762/security39430751442 aprovados. Registra100 e não incrementa contador. Este registro101 também é documental.
