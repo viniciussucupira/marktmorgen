@@ -1,3 +1,4 @@
+import { checkStoreActivation } from "./store-activation.mjs";
 import { checkHotmartComparison } from "./hotmart-comparison.mjs";
 import { checkPricingValue } from "./pricing-value.mjs";
 import { checkCreatorJourney } from "./creator-journey.mjs";
@@ -204,7 +205,7 @@ try {
   const seeded = await run(process.execPath, [seedFile]);
   rmSync(out, { recursive: true, force: true });
   if (seeded.status !== 0) throw new Error(`the store could not be made:\n${seeded.said}`);
-  const { packageFixture,tierFixture,exitFixture,homeDemo,pauseFixtures,session, second, abProduct, abStore, contactToken,growthSession,growthSid,growthProduct,returnSession,returnSid,wordingSession,wordingSid,wordingTrialSession,wordingTrialSid } = JSON.parse(seeded.said.trim().split("\n").at(-1));
+  const { activationFixture,packageFixture,tierFixture,exitFixture,homeDemo,pauseFixtures,session, second, abProduct, abStore, contactToken,growthSession,growthSid,growthProduct,returnSession,returnSid,wordingSession,wordingSid,wordingTrialSession,wordingTrialSid } = JSON.parse(seeded.said.trim().split("\n").at(-1));
 
   if (BUILD) {
     const built = await run(process.execPath, [nextCli, "build"]);
@@ -799,6 +800,7 @@ await checkThanksAcknowledgment({browser,LOCAL,fixture:{session:growthSession,si
 await checkNoCountAcknowledgment({browser,LOCAL,fixture:homeDemo,is});
 await checkNudgeAcknowledgment({browser,LOCAL,fixture:pauseFixtures[0],is});
   await captureHomeStudio({browser,LOCAL,fixture:homeDemo,is});
+  await checkStoreActivation({browser,LOCAL,fixture:activationFixture,axeSource,is});
   await checkHotmartComparison({browser,LOCAL,axeSource,is});
   await checkPricingValue({browser,LOCAL,axeSource,is});
   await checkCreatorJourney({browser,LOCAL,axeSource,is});

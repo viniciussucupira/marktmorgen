@@ -1,3 +1,5 @@
+import { funnelLaunchChecklist } from "@/lib/funnel-launch-checklist";
+import { activationTiming } from "@/lib/store-activation";
 import { PathStudioReminder } from "@/components/path-studio-reminder";
 import { UsageMeter } from "@/components/usage-meter";
 import { dataUsed } from "@/lib/store-data";
@@ -1007,7 +1009,8 @@ export default async function StudioPage({
         { key: "address", title: "Your address", hint: `marktmorgen.com/@${store.handle} is yours.`, done: true, href: "#details" },
         { key: "details", title: "Say what your store is", hint: "One line under your name tells a visitor why they are here.", done: Boolean(store.bio), href: "#details" },
         { key: "look", title: "Add your photo and color", hint: "A face and a color make the page yours.", done: Boolean(store.photoId), href: "#look" },
-        { key: "product", title: "Put up the first thing to sell", hint: "A file, a course, a call, a membership, or something free for an email.", done: productCount(store) > 0, href: "#products" },
+        { key: "product", title: "Prepare your first offer", hint: "Keep an AI draft or add one yourself; add the delivery and review its terms.", done: productCount(store) > 0, href: productCount(store) === 0 && ai.on ? "#setup-ai" : "#products" },
+        { key: "publish", title: "Publish your first offer yourself", hint: "Review the product, delivery, price and buyer terms, then choose Publish. Publishing does not open paid selling while sales gates are closed.", done: visibleCount(store) > 0, href: "#products" },
         ...(connectReady
           ? [{ key: "stripe", title: "Connect your Stripe account", hint: "Where your buyers' money goes: yours, not ours.", done: store.stripeChargesEnabled, href: "#stripe" }]
           : []),
@@ -1146,14 +1149,14 @@ export default async function StudioPage({
                 </p>
               </div>
             ) : null}
-            {role === "owner" ? <StudioStart steps={startSteps} /> : null}
+            {/* A store with nothing on it yet: its first draft, written with AI from a few sentences (lib/ai.ts, writeStoreSetup). */}
+            {ai.on && may("page") && may("products") && productCount(store) === 0 ? (
+              <StoreSetupAi currency={store.currency} left={ai.left} hasFaq={store.faq.length > 0} storeName={store.name} />
+            ) : null}
+            {role === "owner" ? <StudioStart steps={startSteps} activation={activationTiming(store)} launchChecklist={funnelLaunchChecklist(store.name, visibleCount(store) > 0, startSteps.map(step => ({title: step.title, open: step.done, product: step.key === "product" || step.key === "publish", free: false})), startSteps.filter(step => !step.done).map(step => ({title: step.title, detail: step.hint})), "store")} /> : null}
             {role === "owner" && !store.suspended ? <PathStudioReminder store={store} role={role} /> : null}
             {/* "How do I…?": answered from the help center's own answers (lib/help-ask.ts). */}
             {ai.on ? <StudioHelp left={ai.left} /> : null}
-            {/* A store with nothing on it yet: its first draft, written with AI from a few sentences (lib/ai.ts, writeStoreSetup). */}
-            {ai.on && may("page") && may("products") && productCount(store) === 0 ? (
-              <StoreSetupAi currency={store.currency} left={ai.left} hasFaq={store.faq.length > 0} />
-            ) : null}
             {/* Once there is something on the store: what else it does to sell, with a score (lib/store-coach.ts). */}
             {may("page") ? (
               <StoreCoach checks={storeChecks(store, { path: (page) => studioPath(store, "", page) })} />

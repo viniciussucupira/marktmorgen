@@ -6,7 +6,7 @@
  * it hands over and publishes it. A membership is made monthly; a course or
  * a call starts as a draft the creator turns into one from its own editor.
  */
-import { MAX_BIO_LENGTH, type Store, addProduct, setFaq, setProductHidden, updateDetails } from "@/lib/store";
+import { MAX_BIO_LENGTH, type Store, addProduct, setFaq, updateDetails } from "@/lib/store";
 import { parseFaq } from "@/lib/store-faq";
 
 export type SetupKept = { bio: boolean; products: number; faq: boolean; refused: string[] };
@@ -22,12 +22,11 @@ export async function keepStoreSetup(ref: string, store: Store, body: Record<str
     const title = text(p.title, 120);
     if (!title.trim()) continue;
     const membership = p.kind === "membership";
-    const made = await addProduct(ref, title, text(p.summary, 200), text(p.price, 20), membership ? { interval: "month", trialDays: 0, payments: 0 } : null);
+    const made = await addProduct(ref, title, text(p.summary, 200), text(p.price, 20), membership ? { interval: "month", trialDays: 0, payments: 0 } : null, null, true);
     if (!made.ok) {
       done.refused.push(title.trim());
       continue;
     }
-    await setProductHidden(ref, made.product.id, true);
     done.products += 1;
   }
   const faq = parseFaq(body.faq);

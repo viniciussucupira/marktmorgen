@@ -23,7 +23,7 @@ const KIND_WORDS: Record<Kind, string> = {
  * line, changes or drops each product, and keeps what they want; products
  * are put up as drafts, never on sale until they add what each hands over.
  */
-export function StoreSetupAi({ currency, left: startLeft, hasFaq }: { currency: string; left: number; hasFaq: boolean }) {
+export function StoreSetupAi({ currency, left: startLeft, hasFaq, storeName }: { currency: string; left: number; hasFaq: boolean; storeName?: string }) {
   const router = useRouter();
   const [about, setAbout] = useState("");
   const [selling, setSelling] = useState("");
@@ -97,11 +97,13 @@ export function StoreSetupAi({ currency, left: startLeft, hasFaq }: { currency: 
         <Icon name="sparkle" size={20} />
         Draft your store with AI
       </h2>
+      {storeName ? <p className="mt-2 font-semibold text-ink">Your store: {storeName}. Keep your name, or edit it in Store details.</p> : null}
       <p className="mt-2 text-ink-soft">
         Say what you make and for whom. AI drafts the line under your name, up to three products with a summary and a suggested
         price, and the questions visitors ask, from your words only. You see it all first, change what you like, and keep only what
-        you want: products start as drafts, on sale only once you add what each one hands over.
+        you want: products stay hidden until you add what each one hands over and choose Publish yourself. Paid selling still follows the sales gates.
       </p>
+      <p className="mt-3 text-sm text-ink-soft">One sentence is enough to start. This uses the existing writing allowance; no draft runs automatically. You can also add your first offer manually in Products.</p>
       <div className="mt-5 grid gap-4">
         <div>
           <label htmlFor="setup-about" className="field-label">What you do, and for whom</label>
