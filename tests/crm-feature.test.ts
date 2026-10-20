@@ -10,7 +10,7 @@ test("public CRM page states real canonical ceilings and their shared record spa
  assert.equal(page.title+" "+page.highlight,"People, deals and pipelines");
  const table=page.blocks.find(block=>block.kind==="table");assert.ok(table&&table.kind==="table");
  assert.equal(table.rows.length,TIERS.length);
- for(const tier of TIERS){const row=table.rows.find(row=>row[0]===PLAN_TITLES[tier]);assert.ok(row);assert.equal(row[1],String(PIPELINES_BY_TIER[tier]));for(const value of [String(MAX_CRM_FIELDS),MAX_DEALS.toLocaleString("en-US"),String(MAX_STAGES),dataWords(DATA_ROOM_BYTES[tier])])assert.ok(row[2].includes(value),tier+" "+value);}
+ for(const tier of TIERS){const matched:[string,string,string]|undefined=table.rows.find(cells=>cells[0]===PLAN_TITLES[tier]);assert.ok(matched);assert.equal(matched[1],String(PIPELINES_BY_TIER[tier]));for(const value of [String(MAX_CRM_FIELDS),MAX_DEALS.toLocaleString("en-US"),String(MAX_STAGES),dataWords(DATA_ROOM_BYTES[tier])])assert.ok(matched[2].includes(value),tier+" "+value);}
  assert.ok(table.note?.includes("byte limit"));
 });
 test("CRM describes recorded facts, scoped email consent and the real channel gap",()=>{

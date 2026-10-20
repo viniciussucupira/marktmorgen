@@ -11,6 +11,7 @@ export type StackLine = {
  otherMonthlyCents:number|null;
  /** They checked the provider/country/cohort conditions linked alongside the result. */
  conditionsConfirmed:boolean;
+ gatewayFeeApplies:boolean|null; recurringFeeMode:"separate"|"included"|null;
 };
 export type LineQuote = {name:string;subscriptionCents:number|null;paymentCents:number|null;otherCents:number|null;monthlyCents:number|null;unknown:string[];sources:OfficialPriceSource[]};
 export const centsInput=(raw:string):number|null=>{
@@ -35,7 +36,7 @@ export function quoteLine(line:StackLine,cycle:Cycle):LineQuote{
  if(line.monthlySalesCents===0&&!invalid){paymentCents=0;}
  else if(!invalid){
   // These inclusive quotes already contain processing; never add a visitor's processor twice.
-  if(line.tool==="kit"||line.tool==="whop"){
+  if(line.tool==="kit"||line.tool==="whop"||(line.tool==="skool"&&line.planIndex===0)){
    if(plan.listedPaymentFeeBps===undefined||plan.listedPaymentFixedCents===undefined)unknown.push("Inclusive payment quote is unverified.");
    else paymentCents=line.monthlySalesCents*plan.listedPaymentFeeBps/10000+line.monthlyOrders*plan.listedPaymentFixedCents;
   }else if(line.tool==="skool"||line.tool==="hotmart"){
@@ -45,7 +46,18 @@ export function quoteLine(line:StackLine,cycle:Cycle):LineQuote{
   }else{
    const bps=line.processingBps,fixed=line.processingFixedCents;
    if(bps===null||fixed===null||!Number.isFinite(bps)||!Number.isFinite(fixed)||bps<0||bps>10000||fixed<0||fixed>100000000)unknown.push("Enter the processor's applicable percentage and fixed fee for this tool.");
-   else paymentCents=line.monthlySalesCents*(plan.platformFeeBps+bps)/10000+line.monthlyOrders*fixed;
+   else {
+    let extraBps=0;let conditionalFeesKnown=true;
+    if(plan.externalProviderFeeBps!==undefined){
+     if(typeof line.gatewayFeeApplies!=="boolean"){unknown.push("Confirm whether the published extra gateway fee applies to your country and provider.");conditionalFeesKnown=false;}
+     else if(line.gatewayFeeApplies)extraBps+=plan.externalProviderFeeBps;
+    }
+    if(plan.usRecurringBillingBps!==undefined){
+     if(line.recurringFeeMode!=="separate"&&line.recurringFeeMode!=="included"){unknown.push("Confirm whether the published recurring Billing fee applies separately or is already in your entered processing quote.");conditionalFeesKnown=false;}
+     else if(line.recurringFeeMode==="separate")extraBps+=plan.usRecurringBillingBps;
+    }
+    paymentCents=conditionalFeesKnown?line.monthlySalesCents*(plan.platformFeeBps+bps+extraBps)/10000+line.monthlyOrders*fixed:null;
+   }
   }
  }
  const otherCents=line.otherMonthlyCents;
