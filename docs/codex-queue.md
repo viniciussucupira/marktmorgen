@@ -2603,3 +2603,8 @@ HT1/PR713 incorporado em20/10/2026 às13:09:39 de Fortaleza; READY em13:11:16. H
 - Nenhuma nova operação, envio, conta, armazenamento, fornecedor, IA ou custo variável por cliente. Preços/limites, PLANS_ON_SALE=false, comissão, tax gate, art.9a e revisão comercial preservados.
 - Testes sintéticos: pagamentos etiquetados/moeda/atribuição ausente/leitura parcial e estado imutável; navegador390/1280 verifica6linhas/ressalvas/sem controles de ativação/sem writes/teclado/axe/largura. Componente incluído no inventário. CI integral e publicação exata pendentes; nenhum pagamento, conta, mensagem ou submissão externa.
 - Documentação: docs/ht9-sales-levers.md. PróximoHT12, seguidoHT15/16/17; só então custosHT10/11/13/14 e depoisB2.
+
+
+#### Correção de regressões públicas compartilhadas — 2026-10-20 17:01:00 UTC
+
+As execuções integrais identificaram contraste durante entrada animada no template público (Hotmart/mostruário) e, emHT7, contagem que incluía o CTA geral da demo além do único criador fictício. Removida a animação de opacidade da primeira dobra das páginas de tópico, mantendo conteúdo visível desde o início; auditoria AA preservada e diagnóstico detalhado adicionado. O teste deHT7 conta o registro na seção de listagens, separado dos CTAs de navegação. Sem exclusão de regra de contraste. CI completo obrigatório no novo head; nenhuma publicação contabilizada enquanto pendente. Sem novas operações, custos, preços, limites ou gates alterados.
