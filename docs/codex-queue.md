@@ -2455,3 +2455,14 @@ Pricing FAQ repair history: run39407143422 caught mobile target-size;39409356932
 - Documentação: docs/ht1-home-hero.md. Próximo item: HT2; nenhum B2 novo antes da sequência HT aprovada.
 
 - Histórico de HT1: head `fb2aab77bdead03f6cb212ae13a09d6b5c75d26e`, Product39450325455/verify118723113197 reprovou em tap-targets.test.ts: link secundário com min-h-11 precisava declarar alinhamento vertical. Corrigido com inline-flex/items-center; nenhuma aprovação anterior presumida. Verificação completa obrigatória no novo head, sem rerun isolado.
+
+
+184. **[HT2] Jornada do criador na página de recursos existente**
+- Estado: **Em implementação; verificação integral pendente**.
+- Registro:20/10/2026 às12:41:40 de Fortaleza. Base conferida `fb2aab77bdead03f6cb212ae13a09d6b5c75d26e`; commit de implementação: `ecb387de5484b68d56d7be6462bc54c17abf45e5` (criado em2026-10-20 12:42:33 de Fortaleza).
+- Reorganiza /platform, sem segunda página paralela: Create→Charge→Deliver→Sell more→Automate→Grow,18links para recursos reais já existentes em lib/feature-pages.ts, catálogo/âncora e escolhas por criador preservados. Texto em inglês americano, sem previsão de vendas; requisitos de Stripe, disponibilidade, plano, consentimento, custos e domínio visíveis nas páginas vinculadas. Aviso explícito de venda fechada enquanto PLANS_ON_SALE=false.
+- Dados estáticos/texto/layout somente; mesmas rotas/assets/serviços, sem nova leitura de conta/provedor, armazenamento, IA, email ou operação. Links de recurso sem prefetch. Sem custo variável adicional por cliente; nenhum preço/limite, comissão, permissão ou gate fiscal/comercial/vendas alterado. Não certifica margem.
+- Testes: resolução de todos os slugs contra as páginas existentes e ordem das seis etapas; navegador local sintético em390/1280 com GET200 dos destinos, teclado/alvos, catálogo/âncora, largura, axe e nenhuma API write. Sem cadastro, conta, checkout, mensagem ou pagamento real. CI integral no head final e publicação READY/domínio/SHA exato pendentes.
+- Documentação: docs/ht2-creator-journey.md. Próximo item: HT3; nenhum B2 novo antes da ordem HT aprovada.
+
+- Verificação HT2: CI integral39451679128 no head `54865f3c02c18bb1f77a866a2e4b1e6ca195c709` reprovou o salto para o catálogo nas duas larguras. O salto usa agora âncora HTML nativa, alvo com margem de rolagem e teste aguarda a navegação e confirma foco no título. Todos os heads derivados exigem CI integral novo; nenhum job isolado declara conclusão.

@@ -7,12 +7,13 @@ import { SiteFooter } from "@/components/site-footer";
 import { SiteNav } from "@/components/site-nav";
 import { PAGES, type TopicPage } from "@/lib/site-pages";
 import { PUBLISHED_PLAN_PRICES as PLAN_PRICES, TRIAL_DAYS } from "@/lib/plan";
-import { startWords } from "@/lib/opening";
+import { CREATOR_JOURNEY } from "@/lib/creator-journey";
+import { PLANS_ON_SALE, startWords } from "@/lib/opening";
 
 export const metadata: Metadata = {
-  title: "Every feature — Marktmorgen",
+  title: "How it works — from your first offer to your next step | Marktmorgen",
   description:
-    "Everything a Marktmorgen store does today — selling, getting paid, delivering and growing — each with its own page, what it does not do yet, and the plan it is on.",
+    "Create, charge, deliver, sell more, automate and grow: follow the creator journey through existing Marktmorgen tools, their requirements and plan limits. Paid selling remains subject to availability.",
 };
 
 const GROUPS: { key: NonNullable<TopicPage["group"]>; title: string; line: string }[] = [
@@ -36,13 +37,14 @@ export default function PlatformIndex() {
       <main id="content" className="flex-1">
         <section className="surface-dawn border-b border-line">
           <div className="container-page py-14 sm:py-20">
-            <p className="eyebrow nb-fade-up">Every feature</p>
+            <p className="eyebrow nb-fade-up">How it works</p>
             <h1 className="t-h1 balance nb-fade-up nb-delay-1 mt-4 max-w-3xl">
-              Everything your store does <span className="serif font-normal text-violet-deep">today</span>
+              From your first offer to <span className="serif font-normal text-violet-deep">what comes next</span>
             </h1>
             <p className="t-lead nb-fade-up nb-delay-2 mt-5 max-w-2xl text-ink-soft">
-              {`Each feature has its own page: how it works, who it is for, what it does not do yet, and the plan it comes with. Everything on the ${dollars(PLAN_PRICES.creator.month)} Store plan is on Studio and Scale too.`}
+              {`Follow the work in six stages: Create, Charge, Deliver, Sell more, Automate and Grow. Each link explains an existing tool, its requirements and the plan it comes with. Store starts at ${dollars(PLAN_PRICES.creator.month)} a month when paid selling is available.`}
             </p>
+            {!PLANS_ON_SALE ? <p className="notice mt-6 max-w-2xl" data-journey-closed>Paid selling is not open yet. You can prepare your store and explore the demo; payment and selling features remain subject to the opening requirements.</p> : null}
             <div className="nb-fade-up nb-delay-3 mt-8 flex flex-wrap items-center gap-3">
               <Link href="/signin" className="btn btn-primary btn-lg">
                 {startWords(TRIAL_DAYS)}
@@ -57,8 +59,23 @@ export default function PlatformIndex() {
         </section>
 
         <div className="container-page space-y-16 py-14 sm:py-18">
+          <section aria-labelledby="creator-journey-title" data-creator-journey>
+            <div className="flex flex-wrap items-end justify-between gap-4">
+              <div><h2 id="creator-journey-title" className="t-h2 balance">Your creator journey</h2><p className="mt-4 max-w-2xl text-ink-soft">Start with the stage you need. Add the rest when it serves your work; every tool keeps its existing limits and permissions.</p></div>
+              <a href="#catalogue-title" className="link inline-flex min-h-11 items-center">Browse every feature</a>
+            </div>
+            <ol className="mt-8 grid gap-5 md:grid-cols-2">
+              {CREATOR_JOURNEY.map((stage,index)=><li key={stage.id} id={`journey-${stage.id}`} className="rounded-2xl border border-line bg-white p-6 sm:p-8">
+                <p className="text-sm font-semibold text-violet-deep">{`Step ${index+1}`}</p>
+                <h3 className="mt-2 text-2xl font-semibold tracking-tight">{stage.title}</h3>
+                <p className="mt-4 text-ink-soft">{stage.body}</p>
+                <ul className="mt-5 space-y-3">{stage.features.map(feature=><li key={feature.slug}><Link href={`/platform/${feature.slug}`} prefetch={false} className="inline-flex min-h-11 items-center gap-2 font-semibold text-violet-deep underline underline-offset-4">{feature.label}<Icon name="arrow-right" size={16}/></Link></li>)}</ul>
+              </li>)}
+            </ol>
+          </section>
+
           <section className="reveal" aria-labelledby="catalogue-title">
-            <h2 id="catalogue-title" className="sr-only">
+            <h2 id="catalogue-title" className="t-h2 mb-8 scroll-mt-32" tabIndex={-1}>
               The feature catalog
             </h2>
             <FeatureCatalogue
