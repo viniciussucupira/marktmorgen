@@ -121,17 +121,17 @@ export function ThanksNoteEditor({ productId, productTitle, storeName, initial }
         </div>
         <div>
           <label htmlFor="note-video" className="field-label">Video (optional)</label>
-          <input id="note-video" className="field" inputMode="url" value={fields.video} placeholder="https://www.youtube.com/watch?v=…" onChange={set("video")} />
+          <input disabled={busy} id="note-video" className="field" inputMode="url" value={fields.video} placeholder="https://www.youtube.com/watch?v=…" onChange={set("video")} />
           <p className="mt-1 text-xs text-ink-soft">From YouTube, Vimeo or Loom. It loads only when the buyer presses play.</p>
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
             <label htmlFor="note-label" className="field-label">Button words (optional)</label>
-            <input id="note-label" className="field" maxLength={MAX_NOTE_LABEL} value={fields.label} placeholder="Join the group" onChange={set("label")} />
+            <input disabled={busy} id="note-label" className="field" maxLength={MAX_NOTE_LABEL} value={fields.label} placeholder="Join the group" onChange={set("label")} />
           </div>
           <div>
             <label htmlFor="note-url" className="field-label">Where the button goes</label>
-            <input id="note-url" className="field" inputMode="url" maxLength={MAX_LINK_LENGTH} value={fields.url} placeholder="https://" onChange={set("url")} />
+            <input disabled={busy} id="note-url" className="field" inputMode="url" maxLength={MAX_LINK_LENGTH} value={fields.url} placeholder="https://" onChange={set("url")} />
           </div>
         </div>
         <p className="text-xs text-ink-soft">The button opens in a new tab, with the site it leads to written under it.</p>
