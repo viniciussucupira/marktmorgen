@@ -47,7 +47,11 @@ export async function checkLayoutAcknowledgment({browser,LOCAL,fixture,is}){
        for(const field of await section.locator("input,select,button").all())is("layout controls lock "+name,await field.isDisabled(),true);
       }finally{release();}
       await page.waitForFunction(()=>document.querySelector("[data-layout-editor]")?.getAttribute("aria-busy")==="false");
-      if(scenario.confirmed)await page.locator(".nb-toast-region [role=status]").getByText(kind==="sections"?"Section settings saved.":"News settings saved.",{exact:true}).first().waitFor({state:"attached"});
+      if(scenario.confirmed){
+       await page.locator(".nb-toast-region [role=status]").getByText(kind==="sections"?"Section settings saved.":"News settings saved.",{exact:true}).first().waitFor({state:"attached"});
+       is("layout confirmed without refusal "+name,await section.getByRole("alert").count(),0);
+       is("layout saved baseline updated "+name,await section.getByRole("button",{name:kind==="sections"?"Save sections":"Save",exact:true}).isDisabled(),true);
+      }
       else{
        const alert=section.getByRole("alert");await alert.waitFor();
        is("layout uncertainty honest "+name,(await alert.innerText()).includes("Reload this page to check before trying again"),true);
