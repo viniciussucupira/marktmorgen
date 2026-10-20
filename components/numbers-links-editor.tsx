@@ -47,7 +47,6 @@ export function NumbersLinksEditor({ links, now }: { links: LinkRow[]; now: numb
 
   async function create() {
     if (busy) return;
-    const started = Math.floor(Date.now() / 1000);
     const expectedLabel = label.replace(/\s+/g, " ").trim().slice(0, 60);
     const duration = Number(days) * 86_400;
     setBusy(true);
@@ -56,8 +55,8 @@ export function NumbersLinksEditor({ links, now }: { links: LinkRow[]; now: numb
       const { confirmed, reply } = await send({ action: "create", label, password, days: Number(days), money });
       const link = reply?.link && typeof reply.link === "object" && !Array.isArray(reply.link) ? reply.link as Record<string, unknown> : null;
       if (confirmed && link && typeof link.id === "string" && /^[a-z0-9]{20}$/.test(link.id) &&
-          link.label === expectedLabel && link.money === money && typeof link.expires === "number" && Number.isSafeInteger(link.expires) && link.expires >= started + duration &&
-          link.expires <= Math.floor(Date.now() / 1000) + duration &&
+          link.label === expectedLabel && link.money === money && typeof link.made === "number" && Number.isSafeInteger(link.made) && link.made > 0 &&
+          typeof link.expires === "number" && Number.isSafeInteger(link.expires) && link.expires === link.made + duration &&
           link.url === `${SITE_URL}/numbers/${link.id}`) {
         setMade({ id: link.id, label: expectedLabel, expires: link.expires, money, url: String(link.url) });
         setLabel("");
