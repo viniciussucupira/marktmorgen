@@ -2262,3 +2262,6 @@ Pricing FAQ repair history: run39407143422 caught mobile target-size;39409356932
 
 
 - **Histórico CI693 — 2026-10-20 09:22:59Fortaleza:** Product39419542924/verify118616870620 falhou em quatro asserções de navegação confirmada (curso/podcast em390/1280); os48envios foram interceptados. O teste aguardava o evento de requisição e consultava o contador antes de o interceptador executar. Corrigido para aguardar a resposta sintética do destino antes da asserção, preservando todas as recusas e comportamento do produto. Correção propagada aos694/695, exigindo CI completo em cada novo head; nenhum job isolado aprova a alteração.
+
+
+- **Histórico CI695 — 2026-10-20 09:41:35Fortaleza:** Product39422031603/verify118625221987 falhou por timeout ao encontrar o editor da oferta, antes dos44novos casos. O teste reutilizava o dono alterado pela suíte de cópia. Substituído por fixture local sintética isolada com produto gratuito e sessão próprios, sem conta externa, pagamento ou mensagem. Fixture de demonstração e testes anteriores preservados. Correção propagada ao696; ambos exigem CI completo nos novos heads, sem contabilizar entrega.

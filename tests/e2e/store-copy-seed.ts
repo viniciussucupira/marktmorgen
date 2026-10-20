@@ -123,6 +123,15 @@ async function main(): Promise<void> {
   await writePage(homeStore.statsId,homeProduct.id,homePage,homeStore);
   if(!(await setProductPage(homeOwner,homeProduct.id,true)).ok)throw Error("No local demo page index");
   const homeDemo={session:await openSession(homeOwner),sid:homeStore.sid,product:homeProduct.id};
-  console.log(JSON.stringify({ homeDemo,pauseFixtures,wordingSession,wordingSid:wordingStore.sid,wordingTrialSession,wordingTrialSid:wordingTrialStore.sid,returnSession,returnSid:returnStore.sid,growthSession,growthSid:growthStore.sid,growthProduct:growthProducts[0],session: await openSession(OWNER), second: second.store.sid, abProduct, abStore:abStore.sid,contactToken }));
+  // Isolated synthetic exit-offer settings: unaffected by the copy suite's owner mutations.
+  const exitOwner="exit-offer-fixture@example.test";
+  if(!(await claimHandle(exitOwner,"exitofferfixture","Exit offer fixture","Synthetic settings only.")).ok)throw Error("No exit offer fixture");
+  await setSubscription(exitOwner,{active:true,tier:"creator",cycle:"month",subscriptionId:null,customerId:null,trialEnds:0});
+  await ensureStatsId(exitOwner);
+  if(!(await addProduct(exitOwner,"Free fixture checklist","Synthetic local checklist.","0",null)).ok)throw Error("No free exit offer fixture");
+  const exitStore=await storeForEmail(exitOwner);
+  if(!exitStore)throw Error("No saved exit offer fixture");
+  const exitFixture={session:await openSession(exitOwner),sid:exitStore.sid};
+  console.log(JSON.stringify({ exitFixture,homeDemo,pauseFixtures,wordingSession,wordingSid:wordingStore.sid,wordingTrialSession,wordingTrialSid:wordingTrialStore.sid,returnSession,returnSid:returnStore.sid,growthSession,growthSid:growthStore.sid,growthProduct:growthProducts[0],session: await openSession(OWNER), second: second.store.sid, abProduct, abStore:abStore.sid,contactToken }));
 }
 main().catch((e) => { console.error(e); process.exit(1); });
