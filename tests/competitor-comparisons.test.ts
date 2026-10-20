@@ -58,7 +58,7 @@ test("the comparison reads every own published price, email limit and catalog ca
   assert.ok(table.rows.find(r => r[0] === "Getting started")![2].includes("not open yet"));
 });
 test("new proof pages are in the existing sitemap and the index links only actual proof pages", () => {
-  for (const slug of ["kajabi", "skool", "clickfunnels", "circle", "kit", "whop", "hotmart", "highlevel", "comparisons"]) {
+  for (const slug of ["kajabi", "skool", "clickfunnels", "circle", "kit", "whop", "hotmart", "highlevel", "teachable", "comparisons"]) {
     assert.equal(sitemap().filter(e => new URL(e.url).pathname === "/proof/" + slug).length, 1);
   }
   const index = findPage("proof", "comparisons");
@@ -177,4 +177,15 @@ test("HighLevel comparison preserves real CRM caps and does not turn unlimited a
  assert.ok(table.rows.find(r=>r[0]==="Usage charges")![1].includes("not an all-in"));
  for(const tier of TIERS)assert.ok(table.rows.find(r=>r[0]==="Monthly subscription")![2].includes(publishedPriceWords(tier,"month")));
  assert.ok(page.blocks.some(b=>b.kind==="limits" && b.title==="Where they are ahead"));
+});
+
+test("Teachable current catalog caps and annual equivalents do not invent an invoice", () => {
+ const h=COMPETITOR_PRICES.teachable;assert.ok(h.plans.every(p=>p.annualCents===null));
+ assert.deepEqual(h.plans.map(p=>p.platformFeeBps),[750,0,0]);assert.equal(h.trial.days,7);
+ const page=findPage("proof","teachable");assert.ok(page && page.seo?.title==="Marktmorgen vs Teachable");
+ const table=page.blocks.find(b=>b.kind==="table");assert.ok(table && table.kind==="table");
+ assert.ok(table.rows.find(r=>r[0]==="Product catalog")![1].includes("Starter: 5; Builder: 10; Growth: 50"));
+ assert.ok(table.rows.find(r=>r[0]==="Product catalog")![2].includes(MAX_PRODUCTS.toLocaleString("en-US")));
+ for(const tier of TIERS)assert.ok(table.rows.find(r=>r[0]==="Monthly subscription")![2].includes(publishedPriceWords(tier,"month")));
+ assert.ok(table.rows.find(r=>r[0]==="Platform and processing fees")![1].includes("not free payment"));
 });
