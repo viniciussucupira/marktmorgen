@@ -512,6 +512,9 @@ B3 iniciado em paralelo ao CI da próxima área B2, conforme P3: parser só de d
 Nota de validação do PR #630: a suíte completa encontrou um teste legado dependente do relógio real às23:59UTC. A regra existente preserva600segundos mínimos, mesmo quando o próximo dia+5min fica mais perto. Fixture agora fixa23:59:37 e testa antes/depois da meia-noite explicitamente; nenhuma espera/limite de produção foi reduzida. Suíte completa no novo head obrigatória.
 
 
+Correção complementar da fixture #630: a execução integral mostrou que o relógio anterior controlava Date.now, mas a contagem diária também usa new Date() sem argumento. Ambos agora usam a mesma data sintética via Proxy da classe Date; construtores com argumentos, parse e UTC mantidos, Date original restaurada. Os testes de mínimo600segundos não foram reduzidos. Produção intocada; nova suíte integral obrigatória.
+
+
 84. **[C-UE-TAX-SCOPE] Explicar o escopo dos controles fiscais da conta do criador**
    - Pedido: P2 C-UE; contradição encontrada na auditoria da interface em19/10/2026,21h de Fortaleza (aproximado).
    - Estado: **em andamento; branch codex/tax-control-scope; depende de630**.

@@ -40,11 +40,19 @@ import { done, is, part } from "./check";
 import { paidPeriod } from "./billing-period-fixture";
 import { ROOM } from "./data-room";
 
-const realNow = Date.now;
+const RealDate = Date;
 // Reproduce the near-midnight boundary without depending on the CI clock.
 const baseNow = Date.UTC(2026, 9, 19, 23, 59, 37);
 let shift = 0;
-Date.now = () => baseNow + shift;
+// Keep Date.now and no-argument Date construction on the same synthetic day.
+globalThis.Date = new Proxy(RealDate, {
+  construct(target, args, newTarget) {
+    return Reflect.construct(target, args.length ? args : [baseNow + shift], newTarget);
+  },
+  get(target, key, receiver) {
+    return key === "now" ? () => baseNow + shift : Reflect.get(target, key, receiver);
+  },
+});
 
 const sent: string[] = [];
 let resendDown = false;
@@ -87,6 +95,7 @@ async function main(): Promise<void> {
   process.env.MARKETING_DAILY_CAP = "1";
 
   part("When a waiting step is tried again");
+  is("the fixture uses one clock for timestamps and UTC day keys", new Date().getTime(), Date.now());
   is("without a known end: 10 minutes, then three times longer each time, a day at the most", [1, 2, 3, 4, 5, 6, 7, 20].map(backoffSeconds), [600, 1800, 5400, 16200, 48600, 86400, 86400, 86400]);
   const t = 1_800_000_000;
   is("the month's emails: once, a minute after the window turns", nextTry("allowance", 1, t, { windowEnd: t + 5 * 86_400 }), t + 5 * 86_400 + 60);
@@ -225,4 +234,4 @@ async function main(): Promise<void> {
 main().catch((error) => {
   console.error(error);
   process.exit(1);
-}).finally(() => { Date.now = realNow; });
+}).finally(() => { globalThis.Date = RealDate; });
