@@ -1004,17 +1004,17 @@ Pedido P5: anexo524cc7f9-78af-42b5-ae37-4c05dc91a193/Texto colado.txt, lido19/10
    - Prova: links/recursos/preços verdadeiros, screenshots sintéticos com origem e sem repetição, layout390px/teclado/contraste/performance. Vídeo só com custo fixo/teto aprovado antes; não é requisito para completar o item. M0/custos explicitados.
 
 146. **[S5-PUBLIC-CRM] People, deals and pipelines**
-   - Estado: **em andamento; PR659, homeS4 ligada à páginaCRM; novo head integrado requer CI integral**.
+   - Estado: **concluído; entrega73, PR659, incorporado2026-10-20 03:07:39Fortaleza, domínio/READY/versão confirmados**.
    - Escopo: página em lib/feature-pages.ts para capacidades reais de app/studio/deals e people; pipelineLimit e demais limites por plano de lib/crm-rules.ts. "What it does not do": sem SMS, WhatsApp ou telefone. Menu/homeS4/comparaçãoHighLevel ligados; sitemap.
    - Prova: regras por plano e permissões existentes, links, leitura acessível/390px. Custo: página estática, sem operação nova de CRM; M0 igual.
 
 147. **[S6-FEATURE-MECHANISMS] Como cada recurso ajuda a vender ou reter**
-   - Estado: **a fazer; após S5**.
+   - Estado: **concluído; entrega74, PR660, incorporado2026-10-20 03:11:56Fortaleza, domínio/READY/versão confirmados**.
    - Escopo: bloco curto em cada página de lib/feature-pages.ts explicando mecanismo factual, por exemplo oferta no checkout e menor barreira inicial de assinatura, sem números/percentuais/promessas de resultado. Não afirmar integração/capacidade que não exista no main.
    - Prova: inventário completo de páginas/links, revisão US English, semântica/390px/contraste. Custo: texto estático, sem novo envelope, M0 igual.
 
 148. **[S7-CREATOR-PAGES] Páginas por situação de criador**
-   - Estado: **em implementação; PR661/head4f05fc passou integral; integraçãohome/CRM requer CI completo no novo head**.
+   - Estado: **concluído; entrega75, PR661, incorporado2026-10-20 03:17:00Fortaleza, domínio/READY/versão confirmados**.
    - Escopo: course creators, community builders, newsletter writers, consultants and mentors, preservando coaches/cooks/fitness/designers. Padrão existente com ladder e foto única por página; situação descrita, nunca depoimento atribuído. Consultoria: chamadas pagas, pagamentos agendados Stripe, formulários, contratos assinados e lembretes apenas conforme código; sem argumento de parcelamento brasileiro.
    - Prova: capacidades e fontes próprias, imagens únicas/licença/aviso não-cliente, links reais/sitemap/teclado/390px/contraste. Sem novas operações, M0 igual.
 
@@ -1024,19 +1024,19 @@ Pedido P5: anexo524cc7f9-78af-42b5-ae37-4c05dc91a193/Texto colado.txt, lido19/10
    - Dependências: PLANS_ON_SALE continua false; exige todos os gates fiscais/comerciais/custos, não apenas ato manual de abertura. Nenhum contato ao criador/Stripe real autorizado neste trabalho. Custo de leitura/armazenamento/modelo/tetos reservado no93 antes de operar; desconhecido reprova. M0 não certificada.
 
 150. **[S9-DECISION-BLOG] Posts úteis para decisão**
-   - Estado: **em implementação; PR662, grafia corrigida e históricohome/CRM preservado; CI integral pendente**.
+   - Estado: **concluído; entrega76, PR662, incorporado2026-10-20 03:19:57Fortaleza, domínio/READY/versão confirmados**.
    - Escopo: textos honestos como How much Kajabi costs in2026, Skool fees explained, Kajabi vs Teachable vs Marktmorgen, com fontes oficiais datadas e links para S1. Conferir posts/categorias atuais no main; criar categoria Courses/Community/Email/Sales apenas com primeiro post real.
    - Prova: nenhum dado inventado/desatualizado, condições de preço/taxa e limites visíveis, links/sitemap/SEO/390px/teclado. Custo: posts estáticos, nenhum pedido externo ao leitor; M0 igual. Depois seguir S10–S12 e a fila acionável sem confirmação.
 
 151. **[S10-HOME-PRICING-FAQ] Perguntas factuais na home e /pricing**
    - Pedido: continuação direta do dono, S10–S12; horário exato da mensagem não fornecido, registro de leitura na continuidade.
-   - Estado: **em implementação; PR663, fontes reais e histórico anteriores integrados; CI completo no novohead obrigatório**.
+   - Estado: **em implementação; PR663, head d61038e passou completo; conflito do histórico da fila resolvido preservando main; nova suíte integral obrigatória**.
    - Escopo: preservar perguntas existentes de lib/home-faq.ts; acrescentar How much does it cost? (lib/plan.ts), Is there a contract? Can I cancel anytime? (termos reais), Can I move from Kajabi, Stan or another platform? (contatos/produtos/compradores conforme importadores e /platform/switching-to-marktmorgen), Does it connect to my other tools? (Zapier/webhooks/API reais e /developers), Is there support, and how? (canal real sem SLA inventado), How long does it take to open a store? (somente passos/tempo demonstráveis, sem promessa).
    - Prova: conferir código/main e páginas antes de responder; preços sem duplicação, links, FAQ acessível,390px, lint/tipos/testes integrais. Custo/M0 antes/depois: texto e links no envelope existente; nova chamada/email/IA/banda exige registry/spend-floor, maior custo pago, impostos e teto automático antes. A leitura vinculante continua reprovada, não certificada; vendas fechadas.
 
 152. **[S11-HOME-CTAS] Ações ao longo da home**
    - Pedido: mesma continuação direta S10–S12.
-   - Estado: **em implementação; PR664, quatro pares intermediários; novo head integrado exige CI completo**.
+   - Estado: **em implementação; PR664/head e91c584 passou integral; integração explícita do pai atual exige novo CI completo**.
    - Escopo: a cada uma ou duas seções, botão Start your store e segunda opção See the live demo, com destinos existentes e nomes consistentes. Sem free no CTA, Talk to an expert ou Book a demo; sem pop-up/urgência.
    - Prova: sequência real de seções, links, foco/teclado, nomes acessíveis e390px sem overflow. Sem telemetria/chamada/custo novo por inserir botões; registrar M0 antes/depois, não mudar preço/limite/gate nem afirmar60% fiscal comprovado.
 
@@ -1325,16 +1325,125 @@ Pedido P5: anexo524cc7f9-78af-42b5-ae37-4c05dc91a193/Texto colado.txt, lido19/10
 
 - Product39376699290/verify118476334404 falhou no guard de inglês americano pela grafia centre na nova prosa. Corrigir para center e personalized, sem alterar política/idioma nem suprimir o teste. Nova suíte integral no head corrigido obrigatória.
 
+- Revisão tipada de S9: a prova negativa de categoria ainda não criada usa ReadonlySet<string>, sem comparar literais fora da união, sem cast/any/supressão nem enfraquecer verificação. Nova suíte integral obrigatória.
+
+
+### Publicações funcionais confirmadas72–76
+
+```json
+{
+  "number": 72,
+  "pr": 658,
+  "queueItem": 145,
+  "feature": "Home now shows fourteen factual modules and calculator discovery, and corrects stale Zoom and email-delivery claims. Partial S4: screenshot serving remains awaiting owner, not published.",
+  "head": "d5d1639796286898f15ee06e8445ae3d90ef7807",
+  "commit": "6df7d8b50c5917caef88e527de72bda9db6db9aa",
+  "deployment": "dpl_6chNGb6kkBAo1tJb7EusyT1dp6gt",
+  "readyUTC": "2026-10-20T05:56:53.803Z",
+  "readyFortaleza": "2026-10-20 02:56:53",
+  "mergedUTC": "2026-10-20T05:55:10Z",
+  "mergedFortaleza": "2026-10-20 02:55:10",
+  "run": 39376337744,
+  "verify": 118475214085,
+  "redis": 118475213947,
+  "securityRun": 39376337732,
+  "validation": "Complete final-head CI passed lint, typecheck/build, regressions, whole synthetic browser including home390/1280 focus/axe/fit/noAPIwrites and real isolated studio captures. READY exactSHA+marktmorgen.com alias;10routes200sameDPL;all14module labels+calculator link and corrected claims present. No screenshots served. Noerror/fatal05:53:22.184–05:58:22.184UTC.",
+  "limitations": "Two captures reviewed,69756/82191bytes; image bandwidth billing setting unconfirmed after>1h, so assets held and S4 remains partial/awaiting owner for assets. No new provider operation or price/allowance/gate. Binding M0 remains12.02–12.21%,fails60%;PLANS_ON_SALE=false;no fiscal/margin/AAA certification."
+}
+```
+
+```json
+{
+  "number": 73,
+  "pr": 659,
+  "queueItem": 146,
+  "feature": "Public /platform/crm explains people, deals and pipelines with canonical2/5/10pipeline limits, shared record-space ceilings, consent boundaries and actual home/menu/HighLevel/sitemap discovery",
+  "head": "5488b650b41eedd1950d75ff84ad3bf120c7726e",
+  "commit": "5253f69124a99251e183a634051b88615f7f075e",
+  "deployment": "dpl_BQ1reNJUemNeEUces7WRCXYWWMbK",
+  "readyUTC": "2026-10-20T06:09:24.468Z",
+  "readyFortaleza": "2026-10-20 03:09:24",
+  "mergedUTC": "2026-10-20T06:07:39Z",
+  "mergedFortaleza": "2026-10-20 03:07:39",
+  "run": 39377432627,
+  "verify": 118478617948,
+  "redis": 118478618078,
+  "securityRun": 39377432578,
+  "validation": "Full final-head CI passed lint/regressions/typecheck/build/whole synthetic browser, CRM390/1280 keyboard/axe/fit/noAPIwrites, actual home link and shared data limits. READY exactSHA+marktmorgen.com alias;8HTMLroutes200exactDPL plus sitemap200;real CRM plan rows2/5/10,home+HighLevel links,scope+closure present. Noerror/fatal06:06:06.772–06:11:06.772UTC.",
+  "limitations": "No new CRM operation/provider/allowance/price/gate; recorded deal values not forecasts; no SMS/WhatsApp/phone sending or SaaS agency equivalence. Binding M0 unchanged12.02–12.21%,fails60%;sales closed. S4 screenshot assets still held for unconfirmed bandwidth billing condition;no fiscal/margin/AAA certification."
+}
+```
+
+```json
+{
+  "number": 74,
+  "pr": 660,
+  "queueItem": 147,
+  "feature": "Distinct factual usage mechanisms added to all38existing feature and creator pages, explaining concrete choices, access, consent and recorded facts without earnings promises",
+  "head": "cf20f30878bb57c1b68a9f7a9c2c310e8df95240",
+  "commit": "c7370298f145a4682726b95b3872b0c675b8d2f6",
+  "deployment": "dpl_33HUnPi5srY9UXAfhpEa8kRVBkDf",
+  "readyUTC": "2026-10-20T06:12:58.827Z",
+  "readyFortaleza": "2026-10-20 03:12:58",
+  "mergedUTC": "2026-10-20T06:11:56Z",
+  "mergedFortaleza": "2026-10-20 03:11:56",
+  "run": 39377503548,
+  "verify": 118478832774,
+  "redis": 118478833263,
+  "securityRun": 39377503389,
+  "validation": "Full final-head CI passed lint/typecheck/build/regressions/whole synthetic browser, all38mechanism blocks390/1280 focus/axe/fit/noAPIwrites; existing Path wording keyboard test waits actual hydration and retains original monetary refusals. READY exactSHA+marktmorgen.com alias;all38actual URLs200sameDPL+newblock, plus home/signin/Path200sameDPL. Noerror/fatal06:11:29.577–06:16:29.577UTC.",
+  "limitations": "Static descriptions only; no new provider/data/message operation, price/allowance/gate or persisted identifier change. Binding M0 unchanged12.02–12.21%,fails60%;PLANS_ON_SALE=false;no fiscal/margin/AAA certification. S4 screenshot serving still awaits confirmed bandwidth billing condition."
+}
+```
+
+```json
+{
+  "number": 75,
+  "pr": 661,
+  "queueItem": 148,
+  "feature": "Four concrete creator pages for course creators, community builders, newsletter writers and consultants/mentors, with canonical capabilities, example offer ladders, distinct licensed photos and clear non-customer disclosures; existing four creator pages preserved",
+  "head": "b5db45ffa40189afcb8d892ae2104c32ff5eb586",
+  "commit": "aecffafd5f86e247a6dd439369ace9a77e90a4a1",
+  "deployment": "dpl_3yyhwpuNRZDtnfcrvEpALUfuHkXM",
+  "readyUTC": "2026-10-20T06:17:59.525Z",
+  "readyFortaleza": "2026-10-20 03:17:59",
+  "mergedUTC": "2026-10-20T06:17:00Z",
+  "mergedFortaleza": "2026-10-20 03:17:00",
+  "run": 39377534521,
+  "verify": 118478930078,
+  "redis": 118478930269,
+  "securityRun": 39377534481,
+  "validation": "Full final-head CI passed lint/regressions/typecheck/build/whole synthetic browser,42mechanism coverage;fournewpages390/1280 actual unique photos/naturalWidth/directhost/nooptimizer,fullmainaxe,fit,keyboard,demo,noAPIwrites. READY exactSHA+marktmorgen.com alias;12HTMLroutes200sameDPL includingnew4andpreserved4 plus sitemap200;realphotoIDs/disclosures/demo/indexingconfirmed. Noerror/fatal06:14:21.544–06:19:21.544UTC.",
+  "limitations": "Illustrative structures, not customers/live stores/testimonials. Newsletter not paid-publication paywall equivalence; invoice due date not automatic debit; signature record not legal guarantee. Existing direct photo host, no new provider account/API/optimizer operation or plan allowance/price/gate. Binding M0 unchanged12.02–12.21%,fails60%;sales closed;no fiscal/margin/AAA certification. S4 screenshot billing condition still unconfirmed."
+}
+```
+
+```json
+{
+  "number": 76,
+  "pr": 662,
+  "queueItem": 150,
+  "feature": "Three sourced decision articles: Kajabi costs2026, Skool fees and Kajabi/Teachable/Marktmorgen selection; actual Courses/Community categories, dated primary sources, payment conditions and comparison links",
+  "head": "a7a7f7127576ce2902d935904da90f295942092c",
+  "commit": "b5feb22242ff6000899ab61b1f21d3d3d8b1ce05",
+  "deployment": "dpl_94GUPsX6m7f9NKzKvTYyZcXzaHCC",
+  "readyUTC": "2026-10-20T06:21:37.374Z",
+  "readyFortaleza": "2026-10-20 03:21:37",
+  "mergedUTC": "2026-10-20T06:19:57Z",
+  "mergedFortaleza": "2026-10-20 03:19:57",
+  "run": 39377979090,
+  "verify": 118480351108,
+  "redis": 118480351402,
+  "securityRun": 39377978959,
+  "validation": "Full corrected final-head CI passed lint/regressions/typecheck/build/whole synthetic browser,3articles390/1280 metadata/canonical/source links/keyboard/axe/fit/category filtering,no API writes or external reader requests. READY exactSHA+marktmorgen.com alias;9HTMLroutes200sameDPL plus sitemap200;actual article sources/date/canonical/limits links/indexingconfirmed. Noerror/fatal06:19:16.766–06:24:16.766UTC.",
+  "limitations": "Dated sources read20Oct2026; annual equivalents not verified invoices; unresolved Skool900boundary stays unknown; TeachableUSgateway fee separate; no earnings/savings/equivalence promise. Nineolderarticles preserved; no emptyEmail/Sales category, new provider/image/operation/price/allowance/gate. Binding M0 unchanged12.02–12.21%,fails60%;salesclosed,no fiscal/margin/AAA certification. S8 awaits real consented case and valid opening;S4 screenshots held."
+}
+```
+
 
 ### S10 — seis perguntas de decisão na home e no pricing
 - Preços e nomes vêm de lib/plan.ts. Renovação/cancelamento/refundo conforme Terms/Refunds; CSV de contatos consentidos/produtos emrascunho/compradores, com limites de conteúdo e assinatura explícitos; webhooksZapier sem appnativo eAPIcomchavesescopadas/tetos; suporte inglês por email existente semSLA; sem prazo inventado de montagem. Links para fontes próprias, sem fetch/prefetch adicional, mensagem real ou nova operação.
 - Uma função compartilhada alimenta ambasas páginas e o mesmo texto da home continua noFAQschema. Cinco perguntas anteriores preservadas, incluindo correção factualZoomS4. M0antes/depois mesmo envelope12,02–12,21%, abaixo60%;desconhecidoreprova;vendasfechadas;preços/limites/gatesinalterados. Testes sintéticos de fonte depreços, igualdade, links, teclado eaxe390/1280 exigidos noheadfinal.
-
-- Revisão de estilo: novas respostas usam center, conforme guard de inglês americano do produto; sem mudar idiomas ou relaxar testes. Novo head requer suíte integral.
-
-
-### S11 — ações de criação e demo em quatro pontos intermediários
-- Start your store eSee the live demo após provas, situações, módulos eplanos, preservando topo/fecho. Pares sem pop-up, promessa de gratuidade, especialista ouagendamento. hrefs/signin e/demoexistentes;prefetchfalse,semtelemetria/endpoint/assetnovo. FocoTabentreopções,layout390/1280eaxeexigidos. M0antes/depois mesmoenvelope12,02–12,21%reprovado sob60%;gates/vendasfechadasinalterados.
 
 - Revisão de estilo: novas respostas usam center, conforme guard de inglês americano do produto; sem mudar idiomas ou relaxar testes. Novo head requer suíte integral.
 
@@ -1343,3 +1452,11 @@ Pedido P5: anexo524cc7f9-78af-42b5-ae37-4c05dc91a193/Texto colado.txt, lido19/10
 - S10/Product39377984156/verify118480407335: novosFAQs antes dosanterioresquebraramaguardadeaberturacomercialnaprimeirapergunta ebuscafactualStan. Preservaros5FAQsoriginaisnaordem eacrescentaros6depois,conformepedido; nenhumaasserçãosuprimida. Novasuítecompletanoheadcorrigidoobrigatória.
 
 - FAQ headad7661e: lint/regressões/tipos/build passaram; os6FAQsna home390abriram comlinks/foco corretos. NavegadorparounaguardadeanimaçãodaintroforadavistaporterroladoaoúltimoFAQ. Rolarcada .revealrealàvistaantesdeesperaropacidade,comooutrasverificações;nenhumsleep/timeoutmaior/regraoucenárioremovidos. Novasuíteintegralobrigatória.
+
+- d61038e/Product39379613964 verify118485462476,Redis118485462168,segurança39379613965 verdes; ambosFAQs390/1280/teclado/links/axe passaram. Incorporaçãorecusada405porconflitodafila apósS9. Integrarmaincanônicoehistóricossemreset/descarte;mesmocódigo funcional, novoheadexigeCIintegral,nãoreusarverificaçãovelha.
+
+
+### S11 — ações de criação e demo em quatro pontos intermediários
+- Start your store eSee the live demo após provas, situações, módulos eplanos, preservando topo/fecho. Pares sem pop-up, promessa de gratuidade, especialista ouagendamento. hrefs/signin e/demoexistentes;prefetchfalse,semtelemetria/endpoint/assetnovo. FocoTabentreopções,layout390/1280eaxeexigidos. M0antes/depois mesmoenvelope12,02–12,21%reprovado sob60%;gates/vendasfechadasinalterados.
+
+- Head e91c584/Product39379619872,verify118485481773,Redis118485481908,segurança39379619891 passaram. Integrarúltimo headPR663comopai,mesmos4pares/baselines,semperderhistóricocanônico. Nova suíteintegralobrigatória.
