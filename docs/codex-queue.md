@@ -3035,3 +3035,8 @@ Custo: até2×45=90minutos Linux adicionais por execução (teto, não consumo o
 A leitura de nome da loja no teste usava innerText de select nativo, que Firefox não expõe como Chromium; agora lê o texto real das opções e mantém a exigência de Second Coaching. Não altera o seletor de produção nem remove a asserção.
 
 WebKit118869615761 expirou na primeira ação de lembrete, antes do retorno de quiet hours. Botão passa a iniciar desabilitado na renderização do servidor e só habilita quando o cliente está pronto, por snapshot de hidratação; o handler também recusa ação antes desse estado. Mesma permissão, single-flight, cotas, horário silencioso e custo. Nova suíte completa em Chromium/Firefox/WebKit, Redis, mobile e segurança obrigatória no novohead; não reexecutar job isolado nem contar publicação antes da prova.
+
+
+#### P0201 — WebKit ainda reprovado, diagnóstico sem afrouxar teste
+
+20/10/2026 17:42 Fortaleza: WebKit118872840013 repetiu o timeout da primeira mensagem quiet no head9a6ca8758d2c86f175cf1665848ee2ad04bf6338. A hipótese de ação antes da hidratação não explica sozinha a falha; não declarar corrigida. O teste agora registra, somente quando essa mesma asserção estrita falha, contador de requests, status de transporte, texto do status, estado do botão e erros da página. Sem remover espera/asserção, trocar motor ou aumentar timeout; nova suíte inteira no novohead obrigatória. Consentimento e demais gates preservados.
