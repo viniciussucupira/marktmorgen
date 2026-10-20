@@ -2356,6 +2356,9 @@ export const FEATURE_PAGES: TopicPage[] = [
           { q: "Which plan is it on, and who can run it?", a: "Every plan. You and your Admins can import; Editors and Support cannot." },
         ],
       },
+      { kind: "features", title: "Compare before moving", items: [
+        { icon: "scale", title: "Marktmorgen vs ClickFunnels", body: "Read the dated comparison of plans, page editing and payment fees alongside this migration guide.", href: "/proof/clickfunnels" },
+      ] },
     ],
   },
   {

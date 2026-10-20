@@ -5,7 +5,7 @@
 export type OfficialPriceSource = { label: string; url: string; readOn: string };
 export type CompetitorPlanPrice = {
   name: string;
-  monthlyCents: number;
+  monthlyCents: number | null;
   annualCents: number | null;
   source: OfficialPriceSource;
   platformFeeBps: number | null;
@@ -23,6 +23,8 @@ const kajabiPricing: OfficialPriceSource = {
 };
 const skoolPricing: OfficialPriceSource = { label: "Skool plans", url: "https://www.skool.com/pricing", readOn: "2026-10-20" };
 const skoolFees: OfficialPriceSource = { label: "Skool payment fees, payouts and Growth Boost", url: "https://help.skool.com/article/86-subscriptions-faq", readOn: "2026-10-20" };
+const cfPricing: OfficialPriceSource = { label: "ClickFunnels plan prices and limits", url: "https://support.myclickfunnels.com/docs/clickfunnels-pricing/", readOn: "2026-10-20" };
+const cfPayments: OfficialPriceSource = { label: "ClickFunnels Stripe and processor fees", url: "https://support.myclickfunnels.com/docs/setting-up-stripe-as-a-payment-gateway-in-clickfunnels/", readOn: "2026-10-20" };
 export const COMPETITOR_PRICES = {
   kajabi: {
     name: "Kajabi",
@@ -49,5 +51,19 @@ export const COMPETITOR_PRICES = {
     discovery: { source: { label: "Skool Discovery eligibility", url: "https://help.skool.com/article/153-discovery-faqs", readOn: "2026-10-20" } },
     live: { source: { label: "Skool native live calls", url: "https://help.skool.com/article/210-how-to-go-live-on-skool", readOn: "2026-10-20" } },
     webinar: { source: { label: "Skool webinars on Pro", url: "https://help.skool.com/article/214-how-to-create-webinar", readOn: "2026-10-20" } },
+  },
+  clickfunnels: {
+    name: "ClickFunnels",
+    currency: "USD",
+    plans: [
+      { name: "Launch", monthlyCents: 9700, annualCents: 97000, source: cfPricing, platformFeeBps: 0, feeSource: cfPayments },
+      { name: "Scale", monthlyCents: 19700, annualCents: 197000, source: cfPricing, platformFeeBps: 0, feeSource: cfPayments },
+      { name: "Optimize", monthlyCents: 29700, annualCents: 297000, source: cfPricing, platformFeeBps: 0, feeSource: cfPayments },
+      { name: "Dominate", monthlyCents: null, annualCents: 599700, source: cfPricing, platformFeeBps: 0, feeSource: cfPayments },
+    ] satisfies CompetitorPlanPrice[],
+    feeScope: "ClickFunnels adds no fee for using Stripe. Processor charges and optional billing, invoicing, tax or Payments AI services can add to your bill; 0% is not free processing.",
+    trial: { days: 14, source: { label: "ClickFunnels trial FAQs", url: "https://support.myclickfunnels.com/docs/clickfunnels-faqs/", readOn: "2026-10-20" } },
+    split: { source: { label: "ClickFunnels page split-test scope", url: "https://support.myclickfunnels.com/docs/managing-ab-split-testing-in-funnel-steps/", readOn: "2026-10-20" } },
+    editor: { source: { label: "ClickFunnels editor and feature overview", url: "https://www.clickfunnels.com/pricing", readOn: "2026-10-20" } },
   },
 } as const;
