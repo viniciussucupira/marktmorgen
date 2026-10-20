@@ -2,8 +2,8 @@ export async function checkTemplateLibrary({browser,LOCAL,fixture,axeSource,is})
  for(const width of [390,1280]){
  const context=await browser.newContext({viewport:{width,height:1000}});try{
  await context.addCookies([{name:"nl_session",value:fixture.session,url:LOCAL}]);
- const page=await context.newPage();let writes=0,sectionReads=0;
- await page.route("**/api/**",route=>{const request=route.request();if(request.url().includes("/saved-blocks")){sectionReads++;return route.fulfill({status:200,contentType:"application/json",body:JSON.stringify({ok:true,sections:[]})});}if(!["GET","HEAD"].includes(request.method())){writes++;return route.abort();}return route.continue();});
+ const page=await context.newPage();let writes=0,sectionReads=0,recipientReads=0;
+ await page.route("**/api/**",route=>{const request=route.request();if(request.url().includes("/saved-blocks")){sectionReads++;return route.fulfill({status:200,contentType:"application/json",body:JSON.stringify({ok:true,sections:[]})});}if(request.method()==="POST"&&new URL(request.url()).pathname==="/api/store/mail"&&request.postDataJSON()?.action==="count"){recipientReads++;return route.fulfill({status:200,contentType:"application/json",body:JSON.stringify({ok:true,count:0,partial:false})});}if(!["GET","HEAD"].includes(request.method())){writes++;console.log("HT15_UNEXPECTED_MUTATION",request.method(),new URL(request.url()).pathname);return route.abort();}return route.continue();});
  await page.goto(LOCAL+"/studio/growth?store="+fixture.sid+"#template-library");
  const library=page.locator("[data-template-library]");await library.waitFor();
  is("HT15 all model families visible "+width,await library.locator("li > h3").count()>15,true);
@@ -25,6 +25,7 @@ export async function checkTemplateLibrary({browser,LOCAL,fixture,axeSource,is})
  page.on("dialog",dialog=>void dialog.accept());
  await page.goto(LOCAL+"/studio/pages?store="+fixture.sid+"&product="+fixture.preservedProduct+"&template=course");
  await page.getByText("Your saved page was preserved. Library templates only start an empty page; use the editor to change existing content.",{exact:true}).waitFor();
+ await page.getByRole("button",{name:/Keep my creator headline/}).click();
  is("HT15 saved creator headline intact "+width,await page.locator("input,textarea").evaluateAll(nodes=>nodes.some(node=>node.value==="Keep my creator headline")),true);
  await page.goto(LOCAL+"/studio/email?store="+fixture.sid+"&emailTemplate=news");
  await page.getByText("Library email opened as an unsaved draft. Replace every placeholder and review consent before saving or sending.",{exact:true}).waitFor();
@@ -33,6 +34,7 @@ export async function checkTemplateLibrary({browser,LOCAL,fixture,axeSource,is})
  await page.getByText("Library sequence opened as an unsaved paused draft. Review every step before saving; activation is a separate action.",{exact:true}).waitFor();
  is("HT15 sequence opens existing editor "+width,await page.getByRole("textbox",{name:"Name, for you",exact:true}).inputValue(),"Welcome");
  is("HT15 sequence remains paused "+width,(await page.locator("main").innerText()).includes("New workflows are saved paused."),true);
+ is("HT15 only existing recipient-count reads "+width,recipientReads,2);
  is("HT15 no save/send/publish/AI write "+width,writes,0);
  }finally{await context.close();}
  }
