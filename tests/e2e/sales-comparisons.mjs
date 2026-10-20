@@ -12,7 +12,10 @@ export async function checkSalesComparisons({browser,LOCAL,axeSource,is}){
     await page.goto(LOCAL+"/proof/"+slug,{waitUntil:"networkidle",timeout:60000});
     await page.locator("main").waitFor();
     // Reveal actual sections before checking their rendered contrast.
-    for(const node of await page.locator("main .reveal").all())await node.scrollIntoViewIfNeeded();
+    for(const node of await page.locator("main .reveal").all()){
+     await node.scrollIntoViewIfNeeded();
+     await page.waitForFunction(element=>getComputedStyle(element).opacity==="1",await node.elementHandle(),{timeout:5000});
+    }
     if(slug!=="comparisons"){
      const name=slug==="kajabi"?"Kajabi":"Skool";
      is(name+" search title "+width,await page.title(),"Marktmorgen vs "+name);
