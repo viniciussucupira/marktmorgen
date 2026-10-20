@@ -1305,3 +1305,5 @@ Pedido P5: anexo524cc7f9-78af-42b5-ae37-4c05dc91a193/Texto colado.txt, lido19/10
 ### S12 — sete missões reais do Path na home
 - Títulos/IDs/ordem lidos de dayMissions(NO_FACTS) em lib/path-rules.ts, sem duplicar nomes e semlerstore. Cadaetapa distingue ação do criador de checagem registrada; testecheckoutnãoverificaacesso/entrega,lojalivenãofazautocompra,leadnãoéconsentimentodemarketing,estornototalremoveconclusão,nenhumavenda/prazogarantidos. Lembretes/compartilhamentoopt-in e disponibilidadepagamentosemantém. Linkreal/platform/path.
 - UmparadicionalStartyourstore/demoapósPathmantémintervalosdeatéduasseções. Semasset/endpoint/provedor/operaçãonovos,prefetchfalse. M0antes/depoismesmoenvelope12,02–12,21%reprovadosob60%;gates/preços/limitesinalterados,vendasfechadas. Testescanônicos/roles/390/1280/foco/axe/semwritesexigidosnoheadfinal.
+
+- Revisão de estilo: novas respostas usam center, conforme guard de inglês americano do produto; sem mudar idiomas ou relaxar testes. Novo head requer suíte integral.
