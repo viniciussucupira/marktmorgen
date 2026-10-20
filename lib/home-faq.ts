@@ -5,12 +5,24 @@
  * page writes them down twice: once for a reader, once in the form a search
  * engine reads. One list, so the two can never say different things.
  */
-import { PUBLISHED_PRICE_CENTS as PRICE_CENTS, REFUND_DAYS, TRIAL_DAYS } from "@/lib/plan";
+import { PUBLISHED_PRICE_CENTS as PRICE_CENTS, REFUND_DAYS, TRIAL_DAYS, PLAN_TITLES, publishedPriceWords } from "@/lib/plan";
 import { MAX_PRODUCTS } from "@/lib/catalog-rules";
 import { PLANS_ON_SALE } from "@/lib/opening";
 import { feeWords } from "@/lib/fee-words";
 
-export function homeQuestions(paypalAvailable = false) {
+export type HomeQuestion = {q:string;a:string;links?:{label:string;href:string}[]};
+
+/** The six decision questions shared by home and pricing; no provider call. */
+export function decisionQuestions(): HomeQuestion[] { return [
+{q:"How much does it cost?",a:(["creator","pro","scale"] as const).map(tier=>PLAN_TITLES[tier]+": "+publishedPriceWords(tier,"month")+" or "+publishedPriceWords(tier,"year")).join("; ")+". Annual billing is one upfront payment. Optional add-ons and Stripe processing are separate; published usage limits apply. "+(PLANS_ON_SALE?"Check availability and terms before subscribing.":"Paid plans and paid selling are not open yet."),links:[{"label":"All prices, limits and optional add-ons","href":"/pricing"}]},
+{"q":"Is there a contract? Can I cancel anytime?","a":"The Terms describe a subscription that renews for the billing interval you choose. You may cancel at any time: future periods are not charged, and access lasts through the period already paid unless a refund applies. Annual billing is paid upfront, not a monthly instalment contract. Trial, refund and store-closing rules still apply.","links":[{"label":"Cancellation and store-closing terms","href":"/terms#closing"},{"label":"Trial and refund policy","href":"/refunds"}]},
+{"q":"Can I move from Kajabi, Stan or another platform?","a":"You can import CSV files for consenting contacts, products as drafts and past buyers, matching the columns and reviewing skipped rows. Products must be set up with their files or lessons before the relevant buyers receive access. Files, course lessons and community posts do not automatically move; subscription cards and renewals need the separate migration process. Permissions, allowances and availability checks still apply.","links":[{"label":"What moves and what needs separate setup","href":"/platform/switching-to-marktmorgen"}]},
+{"q":"Does it connect to my other tools?","a":"Webhooks can send selected events to Zapier, Make or your server. Use Webhooks by Zapier; there is no native Marktmorgen app in its directory. The API uses scoped keys made in the studio, with read access or permitted writes on every plan, subject to its request allowance and endpoint rules. A contact import does not create permission to send marketing.","links":[{"label":"API, keys, webhooks and limits","href":"/developers"}]},
+{"q":"Is there support, and how?","a":"The help center explains the existing features. For support, write in English to support@marktmorgen.com; Marktmorgen's creator handles it in writing. We do not publish a guaranteed response time here.","links":[{"label":"Read the help center","href":"/help"},{"label":"Email support","href":"mailto:support@marktmorgen.com"}]},
+{"q":"How long does it take to open a store?","a":"There is no measured setup-time promise. You choose an address, describe your store, add its appearance and products, and complete the relevant account and payment setup. Your content and provider checks affect the time. The live demo shows an existing example you can inspect now; preparing a store does not open paid selling while plans remain closed.","links":[{"label":"See the live demo","href":"/demo"},{"label":"See the actual Path","href":"/platform/path"}]},
+]; }
+
+export function homeQuestions(paypalAvailable = false): HomeQuestion[] {
 return [
   {
     q: "Can I sign up and start selling today?",
@@ -34,6 +46,7 @@ return [
     q: "Who is behind this?",
     a: "Marktmorgen’s creator also handles support, in English and in writing.",
   },
+  ...decisionQuestions(),
 ];
 }
 
