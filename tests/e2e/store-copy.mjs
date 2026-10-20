@@ -262,7 +262,7 @@ try {
   await open(owner, `${LOCAL}/studio`);
   is("the studio links to the copy", await owner.getByRole("link", { name: "Copy it into another store" }).count(), 1);
   await open(owner, `${LOCAL}/studio/copy`);
-  is("the page names the other store", (await owner.locator("select").innerText()).includes("Second Coaching"), true);
+  is("the page names the other store", (await owner.locator("select option").allTextContents()).some(label=>label.includes("Second Coaching")), true);
   await owner.getByRole("button", { name: "See what it makes" }).click();
   await owner.waitForSelector("ul[aria-label] li");
   is("the preview says what it makes and what never comes across", [(await owner.locator("ul[aria-label]").innerText()).includes("Makes 3 products"), (await owner.locator("ul[aria-label]").innerText()).includes("Never copied: customers")], [true, true]);

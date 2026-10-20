@@ -3026,3 +3026,12 @@ PR727 incorporado em20/10/2026 16:38:48 de Fortaleza, versão9446c5c42209cc5038c
 20/10/2026 17:29 Fortaleza: nova matriz Linux Firefox/WebKit com Playwright-core1.56.1 já fixado no projeto, instalações e dependências apenas no CI remoto. O harness existente inteiro recebe E2E_BROWSER e registra motor/versão; Firefox/WebKit indisponível reprova, nunca usa Chrome como substituto. Chromium e todas as verificações anteriores permanecem. Ainda não cobre todas as oito jornadas×cinco larguras×todos os modos AAA do pedido: esta etapa não encerra201. Correções e verificação completa no novohead são obrigatórias.
 
 Custo: até2×45=90minutos Linux adicionais por execução (teto, não consumo observado); repositório público com runners padrão gratuitos conforme fonte oficial consultada20/10/2026. Sem runner maior, artefato ou serviço pago novo; custo variável por cliente zero. Consumo real será registrado após execução. Eventual mudança de elegibilidade/custo fixo exige novo cálculo antes de operar; não alterar preços/limites/gates. Fontes e lacunas em docs/accessibility-browsers-devices.md.
+
+
+#### P0-BROWSERS-DEVICES — primeiras falhas reais e correções
+
+20/10/2026 17:36 Fortaleza: CI39492672679 no head5e1532292c6caeae28d4ed41ecf87171acf4b232 instalou e lançou Firefox142.0.1/WebKit26.0. Firefox118869615732 reprovou consentimento restaurado após reload; input de participação ganha autocomplete=off, mantendo estado inicial falso e exigência de consentimento explícito. [Documentação oficial Mozilla, consultada20/10/2026](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/input/checkbox) descreve persistência dinâmica do checked no Firefox e controle por autocomplete. Nenhum consentimento é inferido ou gravado automaticamente.
+
+A leitura de nome da loja no teste usava innerText de select nativo, que Firefox não expõe como Chromium; agora lê o texto real das opções e mantém a exigência de Second Coaching. Não altera o seletor de produção nem remove a asserção.
+
+WebKit118869615761 expirou na primeira ação de lembrete, antes do retorno de quiet hours. Botão passa a iniciar desabilitado na renderização do servidor e só habilita quando o cliente está pronto, por snapshot de hidratação; o handler também recusa ação antes desse estado. Mesma permissão, single-flight, cotas, horário silencioso e custo. Nova suíte completa em Chromium/Firefox/WebKit, Redis, mobile e segurança obrigatória no novohead; não reexecutar job isolado nem contar publicação antes da prova.
