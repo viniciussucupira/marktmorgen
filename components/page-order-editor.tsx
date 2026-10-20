@@ -16,11 +16,13 @@ const LABELS = new Map<string, { label: string; note: string }>(PAGE_PARTS.map((
 export function PageOrderEditor({ order, on }: { order: PagePart[]; on: Record<PagePart, boolean> }) {
   const router = useRouter();
   const [list, setList] = useState<PagePart[]>(order);
+  const [saved, setSaved] = useState<PagePart[]>(order);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
-  const changed = list.some((part, i) => part !== order[i]);
+  const changed = list.some((part, i) => part !== saved[i]);
 
   function move(at: number, by: -1 | 1) {
+    if (saving) return;
     const to = at + by;
     if (to < 0 || to >= list.length) return;
     const next = [...list];
@@ -29,6 +31,7 @@ export function PageOrderEditor({ order, on }: { order: PagePart[]; on: Record<P
   }
 
   async function save(next: PagePart[]) {
+    if (saving) return;
     setSaving(true);
     setError("");
     try {
@@ -37,23 +40,25 @@ export function PageOrderEditor({ order, on }: { order: PagePart[]; on: Record<P
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ order: next }),
       });
-      const data = (await response.json().catch(() => ({}))) as { ok?: boolean };
-      if (data.ok) {
-        setList(next);
-        toast(isUsualOrder(next) ? "Your page is back in the usual order." : "Saved. Your page shows its parts in this order.");
+      const raw: unknown = await response.json().catch(() => null);
+      const reply = raw && typeof raw === "object" && !Array.isArray(raw) ? raw as Record<string, unknown> : null;
+      if (response.ok && reply?.ok === true && !("error" in reply) && Array.isArray(reply.order) && JSON.stringify(reply.order) === JSON.stringify(next)) {
+        setList([...next]);
+        setSaved([...next]);
+        toast("Page order settings saved.");
         router.refresh();
         return;
       }
-      setError("It could not be saved just now. Try again in a moment.");
+      setError("We could not confirm this page order. Reload this page to check before trying again.");
     } catch {
-      setError("It could not be saved just now. Try again in a moment.");
+      setError("We could not confirm this page order. Reload this page to check before trying again.");
     } finally {
       setSaving(false);
     }
   }
 
   return (
-    <section id="order" aria-labelledby="order-title" className="card mt-8 scroll-mt-32 p-6 sm:p-8">
+    <section aria-busy={saving} id="order" aria-labelledby="order-title" className="card mt-8 scroll-mt-32 p-6 sm:p-8">
       <h2 id="order-title" className="text-lg font-semibold tracking-[-0.02em] text-ink">
         The order of your page
       </h2>
@@ -67,7 +72,7 @@ export function PageOrderEditor({ order, on }: { order: PagePart[]; on: Record<P
         {list.map((part, i) => {
           const about = LABELS.get(part);
           return (
-            <li key={part} className="flex items-center gap-3 rounded-2xl border border-line bg-paper px-4 py-3">
+            <li data-order-part={part} key={part} className="flex items-center gap-3 rounded-2xl border border-line bg-paper px-4 py-3">
               <span aria-hidden="true" className="w-5 shrink-0 text-center text-sm font-bold text-ink-soft">
                 {i + 1}
               </span>
@@ -103,7 +108,7 @@ export function PageOrderEditor({ order, on }: { order: PagePart[]; on: Record<P
       </ol>
 
       {error ? (
-        <p role="alert" className="mt-3 rounded-2xl bg-danger-soft px-4 py-3 text-sm font-semibold text-ink">
+        <p role="alert" className="notice notice-error mt-3 text-sm">
           {error}
         </p>
       ) : null}
