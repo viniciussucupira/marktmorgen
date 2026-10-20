@@ -1,5 +1,7 @@
+import { checkToolsCalculator } from "./tools-calculator.mjs";
 /** Public pricing only: no account, payment or outbound submission. */
 export async function checkPricing({browser,LOCAL,axeSource,is}){
+ await checkToolsCalculator({browser,LOCAL,is});
  const check=(condition,name)=>is(name,condition,true);
  for(const width of [390,1280]){
   const context=await browser.newContext({viewport:{width,height:900}});

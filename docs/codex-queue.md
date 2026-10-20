@@ -989,12 +989,12 @@ Pedido P5: anexo524cc7f9-78af-42b5-ae37-4c05dc91a193/Texto colado.txt, lido19/10
    - Prova: fontes oficiais datadas e condições de taxas, URLs/SEO/índice/nav/footer/sitemap, teclado/390px/contraste, testes de dados e de páginas reais. Sub-PR por concorrente pode registrar progresso; S1 só fica concluído com os15e índice. Custo: conteúdo estático, sem chamada paga por visita; M0 antes/depois igual se envelope não aumenta.
 
 143. **[S2-PRICING] Página própria /pricing**
-   - Estado: **em andamento; branch codex/pricing-page, após S1 publicado**.
+   - Estado: **concluído; PR656, entrega70, READY20/10/2026 02:13:44Fortaleza, commit02ea6ed454c405dd01aa4728340f4ce90ad0f753**.
    - Escopo: três planos mensal/anual diretamente de lib/plan.ts, todos os limites das respectivas regras, "0% of each sale" com taxa do processador explicada; assistente e legendas de IA com preços reais, FAQ e espaço integrado para S3. Home#pricing liga /pricing; indexável/sitemap.
    - Prova: preços/limites coincidem com fontes canônicas e gates fechados; navegação/semântica/390px. Custo: renderização estática, M0 igual sem novo envelope; S3 é o próximo incremento, não fingir calculadora pronta.
 
 144. **[S3-TOOLS-CALCULATOR] One plan instead of several tools**
-   - Estado: **a fazer; após S2**.
+   - Estado: **em andamento; PR657/codex/tools-calculator, implementação passou no head2d9100; novo head para preservar histórico canônico requer CI completo**.
    - Escopo: calculadora exclusivamente no navegador dentro de /pricing. Seleção de ferramentas e vendas mensais; assinaturas e comissões oficiais aplicáveis contra plano próprio com comissão zero. lib/competitor-prices.ts único, compartilhado com S1, com fonte/data por preço. Estimativa clara, processamento nos dois lados, sem promessa de resultado; não somar taxas inclusas duas vezes nem tratar taxa por transação como percentual sem quantidade.
    - Prova: preços próprios de lib/plan.ts, dados concorrentes sem fonte/data reprovam; condições/volumes/limites explícitos; entradas inválidas e nenhuma chamada de servidor. Custo: cálculo local, sem novo custo operacional por cálculo; M0 preservada.
 
@@ -1212,3 +1212,40 @@ Pedido P5: anexo524cc7f9-78af-42b5-ae37-4c05dc91a193/Texto colado.txt, lido19/10
 - Product39370331078 verify118456593166: lint/regressões/types/build/Redis passaram, navegador detectou18falhas porque next.config.ts ainda redirecionava /pricing para home/#pricing. Remover somente /pricing dos sources e apontar aliases /price,/prices,/plans à rota nova. Cobrir configuração e URL real no navegador; manter todas as18asserções e repetir suíte inteira. Não publicar rota que ainda redireciona.
 
 - Product39371460847 verify118460042973: rota real, preços, comparação, teclado,axe/overflow e tipos passaram;2asserções contavam duas cópias legítimas do aviso fechado (header visível + resposta FAQ). Escopar a verificação ao aviso visível de main/header, sem apagar FAQ/aviso e sem mudar PLANS_ON_SALE. Nova suíte integral no novo head; não concluir por reexecução de job.
+
+
+### S2 — publicação funcional confirmada70
+{
+  "number": 70,
+  "pr": 656,
+  "queueItem": 143,
+  "feature": "Dedicated /pricing with canonical monthly/annual plans, actual allowances, add-on prices, processing separation and cancellation/refund FAQ; home/nav/footer/sitemap and legacy price aliases connected",
+  "head": "94a0a0919fe1a03abd460524e5963879282638a0",
+  "commit": "02ea6ed454c405dd01aa4728340f4ce90ad0f753",
+  "deployment": "dpl_7sHcWYGSC7mfEwNZTx9gT31JM9k7",
+  "readyUTC": "2026-10-20T05:13:44.994Z",
+  "readyFortaleza": "2026-10-20 02:13:44",
+  "mergedUTC": "2026-10-20T05:10:55Z",
+  "mergedFortaleza": "2026-10-20 02:10:55",
+  "run": 39372504529,
+  "verify": 118463290595,
+  "redis": 118463290915,
+  "securityRun": 39372504540,
+  "validation": "Complete corrected-head CI passed lint/regressions/typecheck/build/client bundles/whole browser, pricing390/1280, real route, header closure, all6prices, native FAQ keyboard, skip-content focus, scoped axe, fit, no API writes; Redis/security passed. READY exactSHA+marktmorgen.com alias;14routes200exactDPL incl3legacyaliases and actualprices/addons/limits/closure. Noerror/fatal05:09:55.475–05:14:55.475UTC.",
+  "limitations": "No calculator published yet (S3 pending). No provider operation/new allowance/price/gate; existing static envelope and M0 binding12.02–12.21% below60% unchanged. PLANS_ON_SALE=false; no margin/fiscal/AAA certification."
+}
+
+### S3 — calculadora local e correções
+- PR657/head iniciald0ddb442639cf9ac22e7be8f9227ae52943a24e8: Product39369964688 verify118455370270 falhou em lint por apóstrofo JSX não escapado; Redis e segurança passaram. Reescrever frase e usar feeWords central; incorporar correções de S2 e registrar componente no inventário sem declararAAA. Nova suíte completa obrigatória.
+- Cálculo exclusivamente no navegador, com fonte/data canônicas; faturas anuais desconhecidas, conflitos e bandas por pagamento não viram zero. Volume e quantidade distintos; processamento em ambos os lados, Kit/Whop inclusivo apenas uma vez; outros custos exigem valor explícito inclusive zero verificado. Nenhum total comparativo antes de condições e taxas completos. Testes sintéticos de valores inválidos, fontes, custos fixos por pagamento, annual/unknown e interações reais sem requestsAPI.
+- M0 antes/depois segue mesmo modelo e envelope estático, sem operação paga/dependência/limite novo.12,02–12,21% vinculante abaixo60%; desconhecido reprova; venda fechada, preços/limites/gates preservados. Nenhuma promessa de ganho, equivalência funcional ou certificação fiscal.
+
+- Verificação39370350533 verify118456653258 encontrou ausência de aviso de nova aba em fontes externas. Acrescentar NewTab existente ao próprio link, mantendo a navegação e os idiomas existentes; não suprimir regra nem criar tradução. Testes do cálculo passaram. Nova verificação completa no head corrigido obrigatória.
+
+- Herdar correção S2 do redirect legado de /pricing (af5365b); /price,/prices,/plans apontam à página real. A calculadora só pode ser validada na rota de verdade; repetir suíte completa e exigir URL /pricing no browser.
+
+- Revisão de S3: decidir explicitamente se gateway adicional de Kajabi/Thinkific se aplica ao país/provedor e se Billing recorrente publicado de Substack é separado ou já incluído na cotação digitada. Sem confirmação, paymentCents/total ficam null, não zero. Taxas aplicáveis são somadas uma vez pelos dados oficiais existentes; outros custos não podem repeti-las. Skool Hobby inclusivo10%+valorfixo agora é calculado uma vez; Pro continua bloqueado por bandas/limite exato não verificado. Novos testes unitários e browser para Billing separado/inclusivo e gateway condicional; novo CI integral necessário.
+
+- Herdar teste S2 do aviso visível em main/header, preservando a cópia legítima no FAQ. Closure não pode ser inferida de contagem global de texto; rota real e visibilidade são verificadas no browser. Todo head final continua exigindo suíte completa.
+
+- Rótulos dos selects passam a htmlFor/id separados das opções, com nomes acessíveis estáveis; sem relaxar seletores exatos. Volume/quantidade incoerentes, condições não revistas e overflow não produzem paymentquote/total. Confirmação explicita base de vendas usada para percentuais; bases diferentes ficam sem cotação confirmada, não inferidas. Testes adicionais de números extremos e labels; nenhuma operação/preço/franquia alterada.
