@@ -1903,7 +1903,31 @@ Ao concluir cada item: registrar data, commit e testes; seguir ao próximo. Dado
 
 
 163. **[B2-MEMBER-NUDGE-ACKNOWLEDGMENT] Confirmar configuração de retorno sem prometer envio**
-   - Estado: **em implementação; codex/member-nudge-acknowledgment; CI integral pendente**.
+   - Estado: **concluído; PR680 incorporado20/10/2026 06:42:37 Fortaleza; publicação funcional89 confirmada**.
    - Escopo: parseNudge/snapshotexistentes,HTTP/okbooleano/semcontradição/on/addresscanônicos;bloquearcampos,aria-busy,semduploenvio;errosapenaspróprios;incertezahonesta e sucesso deconfiguração. Nãoalterarenvio/destinatários/consentimento/horários/limites/spend.
    - Prova:28respostasinterceptadas em390/1280 reutilizandopauseFixtures[0]recorrente,semnova conta;campos/errosherdados/JSON/perda/contradição/recusaconhecida/sucesso/globalfit;nenhumPOSTrealouemail. Desativação/envio realnãoalegadoscomocobertos;suíteintegralobrigatória.
    - Custo:cliente+613caracteres,mesmaoperação/resposta/parser;nenhumfornecedor/franquia/preço/gate novo.M0antes/depois12,02–12,21%reprova60%;vendasfechadas.
+
+
+### Publicação funcional89 — confirmação de retorno
+```json
+{
+  "number": 89,
+  "pr": 680,
+  "queueItem": 163,
+  "feature": "Member return email settings confirm canonical saved on/address, lock pending fields and own error mapping without claiming delivery",
+  "head": "b619469789e7393576c46ef5aee2a96a0fb4d908",
+  "commit": "6ae2eda4a76b235546bf3737087f9e008013fd7f",
+  "deployment": "dpl_EMNyWpRudZLy74xnvjtR57wmkrQ6",
+  "readyUTC": "2026-10-20T09:43:36.160Z",
+  "readyFortaleza": "2026-10-20 06:43:36",
+  "mergedUTC": "2026-10-20T09:42:37Z",
+  "mergedFortaleza": "2026-10-20 06:42:37",
+  "run": 39400383090,
+  "verify": 118553321574,
+  "redis": 118553321434,
+  "securityRun": 39400382746,
+  "validation": "Full final-head CI lint/regressions/typecheck/build/security/Redis and synthetic browser passed28intercepted replies at390/1280:canonical on/address,HTTP/boolean/JSON/lostresponse/inheritederror,pendinglock,draft/globalfit;existingrecurringfixture,no newaccount. READY exactSHA/domainalias;6routes200sameDPL,anonymousstudio signinredirect expected. No productionprivatewrite/account/payment/email/provider call. Noerror/fatal09:39:53.996–09:44:53.996UTC.",
+  "limitations": "Disableandrealemailnotbrowsercovered. Client+613characters,sameparseNudge/request/snapshot,no newprovider/operation/price/allowance/gate. Consent/recipients/schedule/spendunchanged. BindingM0 12.02–12.21%fails60%;salesclosed."
+}
+```
