@@ -1,3 +1,4 @@
+import {platformProof,PLATFORM_PROOF_SNAPSHOT} from "@/lib/platform-proof";
 import Link from "next/link";
 import {CREATOR_SHOWCASE,SHOWCASE_REVIEWED_AT} from "@/lib/creator-showcase";
 /** Public proof from the permission registry; demo-only until a real listing is authorized. */
@@ -13,5 +14,13 @@ export function CreatorShowcase(){
  </li>)}</ul>
  <p className="mt-5 text-sm text-ink-soft">Listing review: {SHOWCASE_REVIEWED_AT}. No names, portraits, quotes or results are used as customer proof without permission.</p>
  <Link href="/proof/creator-showcase" prefetch={false} className="link mt-3 inline-flex min-h-11 items-center">About these store listings</Link>
+ </div></section>;
+}
+
+/** Completely absent until a dated, audited, live snapshot reaches each configured floor. */
+export function PlatformProof(){
+ const figures=platformProof(PLATFORM_PROOF_SNAPSHOT);if(!figures.length)return null;
+ return <section aria-labelledby="platform-proof-title" className="section border-b border-line" data-platform-proof><div className="container-page">
+ <h2 id="platform-proof-title" className="t-h2">Measured on Marktmorgen</h2><dl className="mt-7 grid gap-6 sm:grid-cols-3">{figures.map(figure=><div key={figure.key}><dt className="text-ink-soft">{figure.label}</dt><dd className="mt-2 text-3xl font-semibold">{figure.count.toLocaleString("en-US")}</dd><dd className="mt-2 text-sm text-ink-soft">Counted <time dateTime={figure.asOf}>{figure.asOf}</time>. Demo and test records excluded.</dd></div>)}</dl>
  </div></section>;
 }

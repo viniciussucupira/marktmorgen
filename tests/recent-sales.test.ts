@@ -17,7 +17,7 @@
 import { readFileSync } from "node:fs";
 import { recentSales, rememberSale, showable } from "@/lib/recent-sales";
 import { listensToSales } from "@/lib/sale-events";
-import { addProduct, claimHandle, ensureStatsId, storeForEmail } from "@/lib/store";
+import { addProduct, claimHandle, ensureStatsId, storeForEmail, setProductHidden } from "@/lib/store";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
 
@@ -52,6 +52,7 @@ async function main(): Promise<void> {
 
   part("What may be shown");
   is("a live purchase of a product", showable(checkout(1, "p1")), true);
+  for(const created of [undefined,null,0,-1,NaN,Infinity,NOW+3600])is("unknown or future purchase time is never now: "+String(created),showable(checkout(1,"p1",{created})),false);
   is("a test payment, no", showable(checkout(1, "p1", { id: `cs_test_${"a".repeat(24)}` })), false);
   is("a free copy, no", showable(checkout(1, "p1", { amount_total: 0 })), false);
   is("a membership, no", showable(checkout(1, "p1", { mode: "subscription", payment_intent: null })), false);
@@ -102,6 +103,16 @@ async function main(): Promise<void> {
   is("Stripe cannot be asked: nothing shown", await recentSales(on), []);
   stripeDown = false;
   is("and asked again on the next visit, not left empty", (await recentSales(on)).length, 3);
+
+  part("Unknown or stale cached evidence is not public proof");
+  await redis.pipeline([["SET",`nl:recent:feed:${base.statsId}`,JSON.stringify([{product:bread.product.id,title:"Sourdough course",at:NOW+3600,country:"DE"}])]]);
+  is("a future cached purchase is hidden",await recentSales(on),[]);
+  await setProductHidden(OWNER,bread.product.id,true);
+  const current=(await storeForEmail(OWNER))!;
+  await redis.pipeline([["SET",`nl:recent:feed:${base.statsId}`,JSON.stringify([{product:bread.product.id,title:"Sourdough course",at:NOW-3600,country:"DE"}])]]);
+  const beforeHidden=asked;
+  is("a cached hidden product is excluded from the already-loaded catalog",await recentSales({...current,stripeAccountId:on.stripeAccountId,recentSales:true}),[]);
+  is("hiding it requires no additional provider lookup",asked,beforeHidden);
 
   part("On the pages");
   const productPage = readFileSync("app/[handle]/p/[product]/page.tsx", "utf8");

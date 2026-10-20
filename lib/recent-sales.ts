@@ -29,7 +29,7 @@
  */
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { onAccount } from "@/lib/stripe-account";
-import { readListings } from "@/lib/catalog";
+import { KIND, readListings } from "@/lib/catalog";
 import type { Store } from "@/lib/store";
 import { RECENT_DAYS, type RecentSale, SHOWN } from "@/lib/recent-sales-rules";
 
@@ -64,13 +64,14 @@ function intentOf(record: RecentRecord): string {
 }
 
 /** Whether a settled checkout may be shown as a purchase: real money, live, one of the store's own products. */
-export function showable(record: RecentRecord): boolean {
+export function showable(record: RecentRecord, now = Date.now()): boolean {
   const meta = record.metadata ?? {};
   return (
     typeof record.id === "string" &&
     record.id.startsWith("cs_live_") &&
     record.mode === "payment" &&
-    typeof record.amount_total === "number" &&
+    typeof record.created === "number" && Number.isSafeInteger(record.created) && record.created > 0 && record.created <= Math.floor(now / 1000) &&
+    typeof record.amount_total === "number" && Number.isSafeInteger(record.amount_total) &&
     record.amount_total > 0 &&
     intentOf(record) !== "" &&
     typeof meta.product === "string" &&
@@ -86,7 +87,7 @@ export async function rememberSale(store: Pick<Store, "statsId" | "recentSales">
   const country = record.customer_details?.address?.country;
   const kept: Kept = {
     p: (record.metadata ?? {}).product as string,
-    at: typeof record.created === "number" ? record.created : Math.floor(Date.now() / 1000),
+    at: record.created as number,
     c: typeof country === "string" && /^[A-Z]{2}$/.test(country) ? country : "",
     pi: intentOf(record),
   };
@@ -139,10 +140,10 @@ export async function recentSales(store: Store, now = Date.now()): Promise<Recen
     ]);
     if (typeof cached === "string") {
       const read = JSON.parse(cached) as RecentSale[];
-      return Array.isArray(read) ? read.filter((s) => s.at * 1000 >= now - RECENT_DAYS * 86_400_000) : [];
+      return Array.isArray(read) ? read.filter((s) => s && typeof s.product === "string" && typeof s.title === "string" && typeof s.country === "string" && Number.isSafeInteger(s.at) && s.at > 0 && s.at * 1000 >= now - RECENT_DAYS * 86_400_000 && s.at * 1000 <= now && store.catalog.items.some(item => item.id === s.product && (item.kind & KIND.hidden) === 0)).slice(0, SHOWN) : [];
     }
     const since = Math.floor(now / 1000) - RECENT_DAYS * 86_400;
-    const kept = (Array.isArray(list) ? list : []).map(parseKept).filter((k): k is Kept => k !== null && k.at >= since);
+    const kept = (Array.isArray(list) ? list : []).map(parseKept).filter((k): k is Kept => k !== null && Number.isSafeInteger(k.at) && k.at >= since && k.at <= Math.floor(now / 1000));
     let shown: RecentSale[] = [];
     if (kept.length) {
       const refunded = await refundedSince(store.stripeAccountId, Math.min(...kept.map((k) => k.at)));
