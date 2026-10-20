@@ -1143,3 +1143,19 @@ Pedido P5: anexo524cc7f9-78af-42b5-ae37-4c05dc91a193/Texto colado.txt, lido19/10
 - Fontesoficiaispricing/feesbundleslidas20/10/2026:mensais39/89/189USD, equivalentesanuais29/69/139semfaturaanualexatainventada; feesStarter7,5%,Builder/Growth0%separadosprocessing/bundles. Trial7dias, catálogos5/10/50atuais, não1antigo. OwnMAX_PRODUCTS/planpricescanônicos,limitesupload/storage/deliverycontinuam.
 - Preservacursos/quizzes/certificadosClaude,nãoinventarlacuna. Appsalunos/Custommigrationassistancedocumentadoscomescopo,semserviçofictíciopróprio. Página/índice/sitemap,fontesdatadas, vantagensmesmocorpo e testespreços/caps/unknownfee/390/1280axe/keyboard/noAPIwrites, suiteintegralnovofinalhead.
 - M0antes/depois: mesmoenvelopeestático;semnovaoperação/dependência/endpoint/provedor/email/IA/storagewrite/telemetria,nenhumpreço/limite/gatealterado. M0onerosa12,02–12,21%falha60%,não certificada;vendasfechadasPLANS_ON_SALE=false. PublicaçãosóapósCIcompleto+READY/domínio/versão.
+
+
+### S1 — Kit publicado, entrega 64
+
+- PR650, head e375c28284fc0d57b8107b3051d098a5b989b86f: Product 39364559256 (verify 118438288415, Redis 118438288188) e segurança 39364559252 completos e verdes.
+- Incorporado em 20/10/2026 às 00:41:26 de Fortaleza; merge badadc90a80c1f47ad9655ecd8ec532d9a3d836c. Produção dpl_25xJBAkdXcWyik5NCnQZTt538kzU READY às 00:43:02, com SHA exato e alias marktmorgen.com.
+- Quinze rotas responderam 200 com marcador exato dessa implantação; título, fonte, fechamento das vendas e link do índice de Kit confirmados. Sem error/fatal entre 03:39:55.529 e 03:44:55.529 UTC. Contador 63→64 somente após essa prova; próxima entrega 65.
+- Preço promocional não tratado como renovação; taxa inclusiva sem processamento duplicado. M0 permanece reprovada contra o mínimo de 60%; vendas fechadas. S1: quinto de quinze, ainda em andamento.
+
+### S1 — correção de espera do navegador Whop
+
+- Primeirohead651d2282fa36d7c0eb4121cb405398c07238101ced9 falhouverify118439360770noProduct39364893214. Lint/regressões/tipos/build/acordos/Redispassaram; testeparouemgoto/proof/kajabi(legado)aguardandonetworkidle60s, apóspassaríndice390axe/keyboard. NãoéprovadefalhaWhopnemlicençaparaapagarassert.
+- Corrigir esperadenavegação de páginaspúblicas para domcontentloaded+H1realvisível. Todasfontes/títulos/descrições/paidclosed/vantagens/axe/overflow/teclado/noAPIwrites eesperadepinturapermanecem. Não aumentar timeout, não suprimiraxe/rota/erros. Suitecompletanovofinalheadobrigatória; semrerunisolado. Propagarfixaosdescendentesapósruncompletoatualdeterminar, antesdeincorporar.
+- Nenhummudançaprodução/custo/preço/limite/gate;M0igualreprovada60,vendasfechadas.
+
+- Propagação no PR654: depois de o Product39365615875/verify118441669129 terminar, incorporar pai653corrigido571ce044150735da5e833fedcee4e21a75cf3176 com ambos os pais, preservando todas as páginas e provas. Log confirmou timeout de60segundos aguardando networkidle em /proof/kit depois de as páginas anteriores passarem; novo CI completo obrigatório no head corrigido, sem concluir por rerun isolado.

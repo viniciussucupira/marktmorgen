@@ -9,8 +9,8 @@ export async function checkSalesComparisons({browser,LOCAL,axeSource,is}){
     await route.continue();
    });
    for(const slug of ["comparisons","kajabi","skool","clickfunnels","circle","kit","whop","hotmart","highlevel","teachable"]){
-    await page.goto(LOCAL+"/proof/"+slug,{waitUntil:"networkidle",timeout:60000});
-    await page.locator("main").waitFor();
+    await page.goto(LOCAL+"/proof/"+slug,{waitUntil:"domcontentloaded",timeout:60000});
+    await page.locator("main h1").waitFor({state:"visible"});
     // Reveal actual sections before checking their rendered contrast.
     for(const node of await page.locator("main .reveal").all()){
      await node.scrollIntoViewIfNeeded();
@@ -52,7 +52,7 @@ export async function checkSalesComparisons({browser,LOCAL,axeSource,is}){
     await page.keyboard.press("Shift+Tab");await page.keyboard.press("Enter");
     await page.waitForURL(url=>url.pathname==="/signin");
    }
-   await page.goto(LOCAL+"/platform/move-from-clickfunnels",{waitUntil:"networkidle"});
+   await page.goto(LOCAL+"/platform/move-from-clickfunnels",{waitUntil:"domcontentloaded"});
    is("existing migration links the comparison "+width,await page.locator('main a[href="/proof/clickfunnels"]').count(),1);
    is("comparisons never write an API "+width,writes,0);
   }finally{await context.close();}
