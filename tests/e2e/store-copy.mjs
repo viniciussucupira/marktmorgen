@@ -1,3 +1,4 @@
+import { checkHotmartComparison } from "./hotmart-comparison.mjs";
 import { checkPricingValue } from "./pricing-value.mjs";
 import { checkCreatorJourney } from "./creator-journey.mjs";
 import { checkHomeHero } from "./home-hero.mjs";
@@ -798,6 +799,7 @@ await checkThanksAcknowledgment({browser,LOCAL,fixture:{session:growthSession,si
 await checkNoCountAcknowledgment({browser,LOCAL,fixture:homeDemo,is});
 await checkNudgeAcknowledgment({browser,LOCAL,fixture:pauseFixtures[0],is});
   await captureHomeStudio({browser,LOCAL,fixture:homeDemo,is});
+  await checkHotmartComparison({browser,LOCAL,axeSource,is});
   await checkPricingValue({browser,LOCAL,axeSource,is});
   await checkCreatorJourney({browser,LOCAL,axeSource,is});
   await checkHomeHero({browser,LOCAL,axeSource,is});
