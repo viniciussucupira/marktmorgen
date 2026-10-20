@@ -48,10 +48,10 @@ try{
   const context=await browser.newContext({viewport:{width:viewportWidth,height:900},serviceWorkers:"block",reducedMotion:mode==="reduced-motion"?"reduce":"no-preference",forcedColors:mode==="forced-colors"?"active":"none"});
   if(mode==="text-spacing")await context.addInitScript(()=>document.addEventListener("DOMContentLoaded",()=>{const style=document.createElement("style");style.textContent="*{line-height:1.5!important;letter-spacing:.12em!important;word-spacing:.16em!important}p{margin-bottom:2em!important}";document.head.append(style);},{once:true}));
   await context.addCookies([{name:"nl_session",value:fixture.session,url:origin}]);
-  let writes=0,foreign=0,localProductWrites=0;const errors=[];
+  let writes=0,foreign=0,localProductWrites=0;const errors=[],blockedWrites=[];
   try{
    const page=await context.newPage();page.on("pageerror",error=>errors.push(String(error)));
-   await context.route("**/*",route=>{const r=route.request(),url=new URL(r.url());if(!["GET","HEAD"].includes(r.method())){if(url.origin===origin&&url.pathname==="/api/store/product"&&r.method()==="POST"&&["add","visibility"].includes(r.postDataJSON()?.action)){localProductWrites++;return route.continue();}writes++;return route.abort();}if(url.origin!==origin){foreign++;return route.abort();}return route.continue();});
+   await context.route("**/*",route=>{const r=route.request(),url=new URL(r.url());if(!["GET","HEAD"].includes(r.method())){if(url.origin===origin&&url.pathname==="/api/store/product"&&r.method()==="POST"&&["add","visibility"].includes(r.postDataJSON()?.action)){localProductWrites++;return route.continue();}writes++;blockedWrites.push({method:r.method(),path:url.pathname});return route.abort();}if(url.origin!==origin){foreign++;return route.abort();}return route.continue();});
    const response=await page.goto(origin+path,{waitUntil:"networkidle",timeout:60000});if(response.status()!==200)throw Error("HTTP "+response.status());
    if(new URL(page.url()).pathname.startsWith("/signin"))throw Error("Synthetic authenticated journey redirected to sign-in");
    if(!await page.locator("main").count())throw Error("Authenticated main missing");
@@ -92,26 +92,36 @@ try{
    // Only the real disposable local product API is allowed to mutate.
    let expectedWrites=1;
    await form.getByRole("button",{name:"Add it",exact:true}).focus();
+   const creationRefresh=page.waitForResponse(response=>new URL(response.url()).pathname==="/studio"&&response.request().headers()["rsc"]==="1"&&!response.request().headers()["next-router-prefetch"]);creationRefresh.catch(()=>{});
    const creation=page.waitForResponse(response=>new URL(response.url()).pathname==="/api/store/product"&&response.request().method()==="POST");
    await page.keyboard.press("Enter");
    const created=await creation;if(!created.ok()||(await created.json()).ok!==true)throw Error("Local product creation refused");
    await page.locator(".nb-toast-region [role=status]").getByText("Product added.",{exact:true}).waitFor({state:"attached"});
+   const createdRefresh=await creationRefresh;if(!createdRefresh.ok()||await createdRefresh.finished())throw Error("Create RSC refresh failed");
    await page.waitForLoadState("networkidle");
    await page.reload({waitUntil:"networkidle"});
    const row=page.locator("#products li").filter({has:page.getByText(title,{exact:true})}).first();
    await row.waitFor();
+   async function visibility(button,hidden){
+    const refreshed=page.waitForResponse(response=>new URL(response.url()).pathname==="/studio"&&response.request().headers()["rsc"]==="1"&&!response.request().headers()["next-router-prefetch"]);refreshed.catch(()=>{});
+    const reply=page.waitForResponse(response=>new URL(response.url()).pathname==="/api/store/product"&&response.request().method()==="POST"&&response.request().postDataJSON()?.action==="visibility");
+    await button.focus();await page.keyboard.press("Enter");
+    const response=await reply,data=await response.json();
+    if(!response.ok()||data.ok!==true||!data.product||Boolean(data.product.hidden)!==hidden)throw Error("Local visibility refused "+JSON.stringify({status:response.status(),data}));
+    const refresh=await refreshed;if(!refresh.ok()||await refresh.finished())throw Error("Visibility RSC refresh failed");
+    await page.waitForLoadState("networkidle");
+   }
    if(await row.getByRole("button",{name:"Unpublish",exact:true}).count()){
-    await row.getByRole("button",{name:"Unpublish",exact:true}).click();expectedWrites++;
+    await visibility(row.getByRole("button",{name:"Unpublish",exact:true}),true);expectedWrites++;
     await row.getByRole("button",{name:"Publish it",exact:true}).waitFor();
     await page.waitForLoadState("networkidle");
    }
-   await row.getByRole("button",{name:"Publish it",exact:true}).focus();
-   await page.keyboard.press("Enter");expectedWrites++;
+   await visibility(row.getByRole("button",{name:"Publish it",exact:true}),false);expectedWrites++;
    await row.getByRole("button",{name:"Unpublish",exact:true}).waitFor();
    await page.waitForLoadState("networkidle");
    await page.goto(origin+"/@activationonboarding",{waitUntil:"networkidle"});
    if(!await page.getByText(title,{exact:true}).count())throw Error("Published local product absent from actual storefront");
-   if(writes||foreign||localProductWrites!==expectedWrites)throw Error("Unexpected operation count "+JSON.stringify({writes,foreign,localProductWrites,expectedWrites}));
+   if(writes||foreign||localProductWrites!==expectedWrites)throw Error("Unexpected operation count "+JSON.stringify({writes,foreign,localProductWrites,expectedWrites,blockedWrites}));
    console.log("PRODUCT_ACTION_PROOF:"+JSON.stringify({engine,width,mode,title,localProductWrites,expectedWrites,createdAndReloaded:true,explicitPublication:true,storefrontVisible:true,scope:"Disposable local fixture only; no checkout, email, delivery or real account."}));
   }catch(error){failed++;console.error("PRODUCT_MATRIX_FAILURE:"+JSON.stringify({engine,path,width,mode,error:String(error)}));}
   finally{cases++;await context.close();}
