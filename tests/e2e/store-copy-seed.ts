@@ -6,7 +6,7 @@ import { KIND } from "@/lib/catalog";
 import {writePage} from "@/lib/sales-page-store";
 import {parsePage} from "@/lib/sales-page";
 import {redisPipeline} from "@/lib/redis";
-import {setProductPage,setProductFile,setStripeAccount,storeForEmail} from "@/lib/store";
+import {setProductPage,setProductFile,setStripeAccount,storeForEmail,setPauseMonths} from "@/lib/store";
 import { startPath } from "@/lib/path";
 import { localDay,mayNotify } from "@/lib/path-rules";
 /**
@@ -86,6 +86,20 @@ async function main(): Promise<void> {
   const wordingTrialStore=(await ensureStatsId(wordingTrialOwner))!;
   if(!(await startPath(wordingTrialStore,wordingAnswers)).ok)throw Error("No trial Path");
   const wordingTrialSession=await openSession(wordingTrialOwner);
-  console.log(JSON.stringify({ wordingSession,wordingSid:wordingStore.sid,wordingTrialSession,wordingTrialSid:wordingTrialStore.sid,returnSession,returnSid:returnStore.sid,growthSession,growthSid:growthStore.sid,growthProduct:growthProducts[0],session: await openSession(OWNER), second: second.store.sid, abProduct, abStore:abStore.sid,contactToken }));
+  // Isolated local-only recurring stores: test both enabling and disabling pause
+  // without changing existing Path/copy fixtures or touching a payment provider.
+  const pauseFixtures: {session:string;sid:string;initial:number}[]=[];
+  for(const initial of [0,1]){
+    const owner=`pause-fixture-${initial}@example.test`;
+    const claim=await claimHandle(owner,`pausefixture${initial}`,"Pause fixture","Synthetic local settings.");
+    if(!claim.ok)throw Error("No local pause fixture");
+    await setSubscription(owner,{active:true,tier:"creator",cycle:"month",subscriptionId:null,customerId:null,trialEnds:0});
+    await ensureStatsId(owner);
+    const product=await addProduct(owner,"Synthetic monthly membership","Local fixture only.","10",{interval:"month",trialDays:0,payments:0});
+    if(!product.ok)throw Error("No local recurring fixture");
+    if(!(await setPauseMonths(owner,initial)).ok)throw Error("No local pause setting");
+    pauseFixtures.push({session:await openSession(owner),sid:claim.store.sid,initial});
+  }
+  console.log(JSON.stringify({ pauseFixtures,wordingSession,wordingSid:wordingStore.sid,wordingTrialSession,wordingTrialSid:wordingTrialStore.sid,returnSession,returnSid:returnStore.sid,growthSession,growthSid:growthStore.sid,growthProduct:growthProducts[0],session: await openSession(OWNER), second: second.store.sid, abProduct, abStore:abStore.sid,contactToken }));
 }
 main().catch((e) => { console.error(e); process.exit(1); });

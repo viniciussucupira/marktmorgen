@@ -11,7 +11,7 @@ const MESSAGES: Record<string, string> = {
   months: "Pick off, or one, two or three months.",
   none: "This account has no store yet.",
   signed_out: "Your session ended. Log in again.",
-  server_error: "Something went wrong on our side. Nothing was changed; try again in a moment.",
+  server_error: "We could not confirm whether your pause setting was saved. Reload this page to check before trying again.",
 };
 
 /** Whether members may pause instead of canceling, and for how long (lib/membership-pause-rules.ts). */
@@ -22,17 +22,20 @@ export function PauseEditor({ months }: { months: number }) {
   const [error, setError] = useState<string | null>(null);
 
   async function save() {
+    if (busy) return;
     setBusy(true);
     setError(null);
     try {
       const response = await fetch("/api/store/pause", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ months: chosen }) });
-      const data = (await response.json().catch(() => ({}))) as { ok?: boolean; error?: string };
-      if (data.ok) {
+      const raw: unknown = await response.json().catch(() => null);
+      const data = raw && typeof raw === "object" && !Array.isArray(raw)
+        ? raw as Record<string, unknown> : {};
+      if (response.ok && data.ok === true && data.error === undefined && data.pause === chosen) {
         toast(chosen ? "Members can pause now." : "Pausing is off.");
         router.refresh();
         return;
       }
-      setError(MESSAGES[data.error ?? ""] ?? MESSAGES.server_error);
+      setError(typeof data.error === "string" && Object.hasOwn(MESSAGES, data.error) ? MESSAGES[data.error] : MESSAGES.server_error);
     } catch {
       setError(MESSAGES.server_error);
     } finally {
@@ -65,6 +68,7 @@ export function PauseEditor({ months }: { months: number }) {
       </ul>
       <form
         className="mt-5 flex flex-wrap items-end gap-3"
+        aria-busy={busy}
         onSubmit={(event) => {
           event.preventDefault();
           void save();
@@ -72,7 +76,7 @@ export function PauseEditor({ months }: { months: number }) {
       >
         <label className="block" htmlFor="pause-months">
           <span className="field-label">Members may pause for</span>
-          <select id="pause-months" className="field mt-2" value={chosen} onChange={(event) => setChosen(Number(event.target.value))}>
+          <select id="pause-months" className="field mt-2" disabled={busy} value={chosen} onChange={(event) => setChosen(Number(event.target.value))}>
             {PAUSE_CHOICES.map((n) => (
               <option key={n} value={n}>
                 {n === 0 ? "Off: no pausing" : n === 1 ? "Up to 1 month" : `Up to ${n} months`}
