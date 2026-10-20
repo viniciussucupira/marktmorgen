@@ -9,6 +9,8 @@ const before=renderToStaticMarkup(createElement(PathShareCard,{input}));
 is("canonical pre-change negative control",before.includes("Download certificate"),false);
 const html=renderToStaticMarkup(createElement(PathCertificates,{input}));
 is("certificate action is available",html.includes("Download certificate"),true);
+is("server download stays disabled until handler hydration",/<button[^>]*disabled=""[^>]*>Download certificate<\/button>/.test(html),true);
+is("money preference is not restored by the browser",html.includes('autoComplete="off"')||html.includes('autocomplete="off"'),true);
 is("native labeled reached-level choice",html.includes('for="path-certificate-level"')&&html.includes('<select'),true);
 is("four saved levels",html.match(/<option /g)?.length,4);
 is("money defaults off",html.includes("checked"),false);
