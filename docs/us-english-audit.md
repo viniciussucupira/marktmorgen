@@ -134,3 +134,14 @@ PR627 (merge8afa047) scans the current app/components/lib/test source inventory 
 The114bounded-search candidates were read at canonical revisions, beyond the original50. Nineteen company-only email producers were reviewed using EMAIL_SITES; selected hits were comments. Mixed email.ts and inbound-mail.ts were also read with no selected British prose hits; mail.ts was included in the source review. No mail was sent. Continue the manual area/state audit, including dialogs, empty/error variants and accessibility wording; preserve authored creator content and existing buyer languages. Do not replace this remaining work with a claim that a passing guard proves usability, comprehension or actual assistive-technology testing.
 
 PR628's complete future-language design is documentation only, behind the existing owner/sales launch gates. Neither it nor this audit changes prices, visible limits, metered work or commercial/fiscal gates. M0 stays before=after and the binding most-tax margin still fails60%.
+
+
+## Shared form confirmations: actual response states
+
+Sources reviewed in the later B2 pass: `components/tax-editor.tsx`, `signin-form.tsx`, `rename-form.tsx`, `details-form.tsx` and `handle-form.tsx`. This is a bounded form/state review, not completion of B2 or manual assistive-technology testing.
+
+Published evidence: PR633/delivery51 confirms the returned tax-setting snapshot; PR634/delivery52 rejects ambiguous sign-in replies and locks the email while sending; PR635/delivery53 confirms the normalized address and fixes mobile overflow. Their complete final-head suites and exact production versions are retained in codex-queue.md and the continuity record. PR637/delivery54 also removes the public email page's contradiction about its four existing templates.
+
+PR639 is under final complete verification for returned name/description checks, uncertain-save wording and pending-field locks. PR642 continues with store-creation acknowledgment: match the returned handle, validate the existing store-ID contract, reject HTTP/truthy/unknown/inconsistent replies and keep pending fields coherent. Source wording remains US English; no authored creator text or persisted identifier is rewritten. Its browser cases intercept every claim and point a positive response at an existing local fixture, so no store/account or email is created. The other-store flow is covered; the full first-store onboarding remains a separate gap.
+
+These corrections keep the existing request/cost envelopes, prices, visible limits, opt-in and fiscal/commercial gates. No result here certifies all-tax margin, all English prose, AAA or every error/dialog/empty/email state. Continue with the remaining components and actual sent-message templates.

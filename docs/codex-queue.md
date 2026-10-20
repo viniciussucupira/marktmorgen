@@ -60,6 +60,13 @@ A ordem abaixo é de execução dos itens acionáveis. Itens feitos/aguardando/c
    - Estado: **em andamento (branch codex/us-english-composer-copy; áreas públicas/legais, após PR #623)**.
    - Custo e margem: Sem novo fornecedor; medir eventual mudança de payload dentro dos tetos existentes. M0 permanece referência, sem certificação fiscal.
 
+139. **[B2-CLAIM-ACKNOWLEDGMENT] Confirmação coerente ao criar outra loja**
+   - Pedido: B2/P0/P4, revisão de mensagens/estados de formulários.
+   - Estado: **em andamento; branch codex/claim-acknowledgment, após PR641/640/639**.
+   - Escopo: HandleForm exige HTTP bem-sucedido, ok booleano, endereço normalizado igual ao pedido, identificador devolvido no formato já exigido pelo servidor e ausência de erro; nomes de erro desconhecidos não selecionam propriedades herdadas. Campos bloqueados durante confirmação. Resposta incerta manda conferir o estúdio antes de repetir; não afirma que nada foi criado. Identificadores persistidos e limite de cinco lojas preservados.
+   - Prova planejada: doze respostas interceptadas na página real de nova loja em390/1280, valores/campos pendentes, erros, navegação somente após confirmação válida e viewport. Nenhuma criação de loja/conta chega ao servidor; resposta positiva aponta para a fixture sintética já existente. Primeiro cadastro usa o mesmo componente, mas este navegador cobre outra loja, sem alegar prova de todo onboarding.
+   - Custo: mesmo POST existente, nenhuma operação, conta/provedor/mensagem/franquia/preço/gate nova; M0 não muda nem certifica60%, vendas permanecem fechadas.
+
 138. **[P0-BUTTON-CONTRAST] Contraste do texto dos botões das lojas durante interação**
    - Pedido: P0/P4, excelência transversal; não é declaração de AAA do site inteiro.
    - Estado: **em andamento; branch codex/store-button-contrast, após PR639**.
