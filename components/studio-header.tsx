@@ -47,7 +47,7 @@ export function StudioHeader({
         <div className="flex min-w-0 items-center gap-2 sm:gap-3">
           <details className="group relative min-w-0 [&:not([open])>div]:hidden">
             <summary
-              className="flex min-h-11 min-w-0 cursor-pointer list-none items-center gap-2 rounded-full bg-paper px-3 py-1.5 ring-1 ring-line transition hover:ring-violet-brand/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-brand motion-reduce:transition-none [&::-webkit-details-marker]:hidden"
+              className="flex min-h-11 min-w-0 cursor-pointer list-none items-center gap-1 rounded-full bg-paper px-2 py-1.5 sm:gap-2 sm:px-3 ring-1 ring-line transition hover:ring-violet-brand/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-brand motion-reduce:transition-none [&::-webkit-details-marker]:hidden"
               aria-label={`Store: ${current.name}. Switch store`}
             >
               <span
@@ -65,7 +65,7 @@ export function StudioHeader({
               <Icon
                 name="chevron-down"
                 size={16}
-                className="shrink-0 text-ink-mute transition-transform group-open:rotate-180 motion-reduce:transition-none"
+                className="hidden shrink-0 text-ink-mute transition-transform sm:block group-open:rotate-180 motion-reduce:transition-none"
               />
             </summary>
             <div className="fixed inset-x-4 top-[4.25rem] z-50 w-[calc(100vw-2rem)] rounded-2xl bg-white p-2 shadow-lg ring-1 ring-line sm:absolute sm:inset-x-auto sm:right-0 sm:top-auto sm:mt-2 sm:w-80">

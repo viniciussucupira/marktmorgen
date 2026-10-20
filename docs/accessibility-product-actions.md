@@ -22,3 +22,10 @@ Firefox e WebKit falharam; nenhuma prova completa é declarada. O POST bloqueado
 ## Identidade da linha no teste — 20/10/2026
 
 Diagnóstico Firefox mostrou resposta de visibilidade do produto anterior enquanto o caso buscava o recém-criado. O filtro por texto em qualquer descendente da linha também alcançava nomes em seletores de produtos relacionados. O teste passa a vincular a linha ao ID realmente retornado pela criação e ao botão com aria-controls product-panel-ID, exige exatamente uma linha e confere o mesmo ID no pedido e na resposta de visibilidade. Não altera identificadores persistidos nem força a interface a aparentar publicação. Todas as provas de reload, ativação manual, visibilidade, overflow e axe permanecem; CI completo no novo head. Não atribuir as falhas anteriores a bug confirmado de produção.
+
+
+## Largura do campo e beacon WebKit — 20/10/2026
+
+Head a489: painel fechado deixou de contribuir ao overflow, mas input readonly de compartilhar URL tinha client80–88/scroll393–480 com overflow visible e propagava largura ao Studio. Limita-se o overflow ao próprio campo readonly, preservando valor integral, seleção/cópia e foco; a grade do painel declara coluna zero-min. Cabeçalho estreito reduz espaçamento e oculta chevron decorativo abaixo de sm, mantendo rótulo acessível, alvo e seletor nativo. Teste não esconde overflow da página.
+
+WebKit expôs bodyBytes0 no beacon Blob, enquanto Firefox expôs h/k. O mock agora aceita esse caso apenas no WebKit, POST local store-hit vindo do frame da loja sintética exata, responde204 sem executar rota e registra lacuna explícita de validação do payload. Quando corpo existe, h/k continuam exigidos. Exatamente uma interceptação por caso concluído; nenhuma escrita de estatísticas, chamada externa ou promessa de cobertura desse payload. CI completo novo obrigatório.
