@@ -1,3 +1,4 @@
+import {TIERS,publishedPriceWords} from "@/lib/plan";
 import type { CallSetup } from "@/lib/call-setup";
 import { setProductCall } from "@/lib/store";
 import { makeLink } from "@/lib/numbers-links";
@@ -168,6 +169,6 @@ async function main(): Promise<void> {
   await setSubscription(activationOwner,{active:true,tier:"pro",cycle:"month",subscriptionId:null,customerId:null,trialEnds:0,period:paidPeriod()});
   const activationStore=await storeForEmail(activationOwner);if(!activationStore)throw Error("No activation store");
   const activationFixture={session:await openSession(activationOwner),sid:activationStore.sid};
-  console.log(JSON.stringify({ activationFixture,packageFixture,tierFixture,exitFixture,homeDemo,pauseFixtures,wordingSession,wordingSid:wordingStore.sid,wordingTrialSession,wordingTrialSid:wordingTrialStore.sid,returnSession,returnSid:returnStore.sid,growthSession,growthSid:growthStore.sid,growthProduct:growthProducts[0],session: await openSession(OWNER), second: second.store.sid, abProduct, abStore:abStore.sid,contactToken }));
+  console.log(JSON.stringify({ signinPrices:TIERS.map(tier=>({tier,words:publishedPriceWords(tier,"month")})),activationFixture,packageFixture,tierFixture,exitFixture,homeDemo,pauseFixtures,wordingSession,wordingSid:wordingStore.sid,wordingTrialSession,wordingTrialSid:wordingTrialStore.sid,returnSession,returnSid:returnStore.sid,growthSession,growthSid:growthStore.sid,growthProduct:growthProducts[0],session: await openSession(OWNER), second: second.store.sid, abProduct, abStore:abStore.sid,contactToken }));
 }
 main().catch((e) => { console.error(e); process.exit(1); });

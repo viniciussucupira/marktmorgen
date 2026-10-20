@@ -2497,3 +2497,12 @@ Pricing FAQ repair history: run39407143422 caught mobile target-size;39409356932
 - Sem custo variável novo: mesma reserva/limites de dados e IA; uma gravação removida do setup. Nenhum preço, limite visível, PLANS_ON_SALE=false, comissão, permissão/opt-in, tax gate, art.9a, revisão comercial ou idioma alterado. Publicação de cartão não abre checkout nem certifica margem.
 - Testes sintéticos: criação já oculta, primeira publicação/manual/republicação, datas inválidas/históricas, nenhum fornecedor; navegador390/1280 com fixture isolada, resposta da única solicitação manual existente interceptada, checklist/progresso/preview/axe/largura. Nenhuma conta ou pagamento real, mensagem, IA real ou submissão externa. CI integral e publicação exata pendentes.
 - Documentação: docs/ht5-store-activation.md. Próximo itemHT6; B2 continua depois de todos os HT liberados/condicionados.
+
+188. **[HT6] Esclarecer cadastro sem cartão, preços mensais e elegibilidade do teste**
+- Estado: **Em implementação; verificação integral pendente**.
+- Registro:20/10/2026 às13:10:00 de Fortaleza. Base conferida `8af68eadf24ef80262471d3842c0078a8a390b22`; commit de implementação: pendente.
+- Formulário existente já exige somente email visível, sem senha/cartão, com proteção antibot, passkeys, termos e privacidade preservados. CTA Email me a link descreve a ação real. Nenhum campo/request novo.
+- /signin para novos criadores mostra primeiro os preços mensais canônicos de todos os planos e só depois o complemento de setup sem cartão. Pedir link não contrata/cobra. Com vendas fechadas, setup não é teste ativo/plano pago gratuito. Se os gates abrirem futuramente, o teste é qualificado à primeira loja elegível; lojas adicionais/retornantes não recebem promessa genérica. Escolha anual/mensal recebida e login retornante preservados.
+- Texto/layout somente; nenhuma nova operação, email, conta, armazenamento, chamada ou custo variável por cliente. Preços/limites, PLANS_ON_SALE=false, comissão, permissões/opt-in, tax gate, art.9a e revisão comercial inalterados.
+- Navegador sintético390/1280 verifica preços canônicos, um campo humano/email, ausência cartão/senha, CTA/avisos, ordem do preço, login retornante, axe/largura e nenhuma submissão. Sem email, conta, pagamento, mensagem ou submissão externa. CI integral e publicação READY/domínio/SHA exato pendentes.
+- Documentação: docs/ht6-signup-clarity.md. PróximoHT7; nenhum B2 à frente dos HT.
