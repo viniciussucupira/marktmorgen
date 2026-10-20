@@ -22,11 +22,10 @@ export default function NotFound() {
       <main id="content" className="flex-1">
         <section className="container-narrow py-20 sm:py-28">
           <p className="eyebrow">Page not found</p>
-          <h1 className="t-h1 mt-4">Nothing lives at this address</h1>
+          <h1 className="t-h1 mt-4">We couldn&apos;t find this page</h1>
           <p className="t-lead mt-5 max-w-xl text-ink-soft">
-            If you followed a link to a creator&apos;s store, check the spelling after the @. A store that changed its
-            address still answers at the old one, so a store missing here was never opened, or its creator let the
-            address go.
+            Check the address, especially the name after the @. If someone sent you the link, ask them to confirm it.
+            You can also return home or open the Help center to choose your next step.
           </p>
           <div className="mt-9 flex flex-wrap items-center gap-x-6 gap-y-4">
             <Link href="/" className="btn btn-primary">
