@@ -1,6 +1,8 @@
 /** Actual TaxEditor client contract against intercepted responses; no tax write reaches the server. */
 export async function checkTaxSaveAcknowledgment({browser,LOCAL,session,sid,is}){
  const scenarios=[
+  {name:"unknown inherited __proto__",body:()=>({ok:false,error:"__proto__"})},
+  {name:"unknown inherited constructor",body:()=>({ok:false,error:"constructor"})},
   {name:"HTTP failure cannot confirm a save",status:500,body:tax=>({ok:true,tax})},
   {name:"a truthy string is not confirmation",body:tax=>({ok:"true",tax})},
   {name:"a missing settings snapshot is unknown",body:()=>({ok:true})},

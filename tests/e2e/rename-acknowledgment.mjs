@@ -1,6 +1,8 @@
 /** Intercept all address writes: the actual client changes no store record. */
 export async function checkRenameAcknowledgment({browser,LOCAL,session,sid,is}){
  const scenarios=[
+  {name:"unknown inherited __proto__",body:()=>({ok:false,error:"__proto__"})},
+  {name:"unknown inherited constructor",body:()=>({ok:false,error:"constructor"})},
   {name:"HTTP failure",status:500,body:handle=>({ok:true,handle})},
   {name:"truthy confirmation",body:handle=>({ok:"true",handle})},
   {name:"missing address",body:()=>({ok:true})},
