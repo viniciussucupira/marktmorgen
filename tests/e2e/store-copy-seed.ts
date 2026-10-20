@@ -1,3 +1,5 @@
+import type { CallSetup } from "@/lib/call-setup";
+import { setProductCall } from "@/lib/store";
 import { makeLink } from "@/lib/numbers-links";
 import { addNumbersLink } from "@/lib/store";
 import { DEMO_STORE, DEMO_PRODUCT, DEMO_EXTRAS, DEMO_PAGE } from "@/lib/demo-seed";
@@ -150,6 +152,17 @@ async function main(): Promise<void> {
   const tierStore=await storeForEmail(tierOwner);
   if(!tierStore)throw Error("No saved tier fixture");
   const tierFixture={session:await openSession(tierOwner),sid:tierStore.sid,ids:tierProductIds,numbersLinkId:numbersMade.link.id};
-  console.log(JSON.stringify({ tierFixture,exitFixture,homeDemo,pauseFixtures,wordingSession,wordingSid:wordingStore.sid,wordingTrialSession,wordingTrialSid:wordingTrialStore.sid,returnSession,returnSid:returnStore.sid,growthSession,growthSid:growthStore.sid,growthProduct:growthProducts[0],session: await openSession(OWNER), second: second.store.sid, abProduct, abStore:abStore.sid,contactToken }));
+  const packageOwner="package-settings-fixture@example.test";
+  if(!(await claimHandle(packageOwner,"packagesettingsfixture","Package fixture","Synthetic settings only.")).ok)throw Error("No package fixture");
+  await setSubscription(packageOwner,{active:true,tier:"creator",cycle:"month",subscriptionId:null,customerId:null,trialEnds:0});
+  await ensureStatsId(packageOwner);
+  const packageProduct=await addProduct(packageOwner,"Synthetic weekly call","Synthetic local call.","120",null);
+  if(!packageProduct.ok)throw Error("No package fixture product");
+  const weekly:CallSetup={kind:"weekly",minutes:60,tz:"America/New_York",weekly:[[],[[540,1020]],[],[],[],[],[]],noticeHours:12,horizonDays:30,bufferMinutes:0,room:"https://example.test/synthetic-room",video:false,meet:null,seats:1,sessions:[]};
+  if(!(await setProductCall(packageOwner,packageProduct.product.id,weekly)).ok)throw Error("No package fixture call");
+  const packageStore=await storeForEmail(packageOwner);
+  if(!packageStore)throw Error("No package fixture store");
+  const packageFixture={session:await openSession(packageOwner),sid:packageStore.sid,product:packageProduct.product.id};
+  console.log(JSON.stringify({ packageFixture,tierFixture,exitFixture,homeDemo,pauseFixtures,wordingSession,wordingSid:wordingStore.sid,wordingTrialSession,wordingTrialSid:wordingTrialStore.sid,returnSession,returnSid:returnStore.sid,growthSession,growthSid:growthStore.sid,growthProduct:growthProducts[0],session: await openSession(OWNER), second: second.store.sid, abProduct, abStore:abStore.sid,contactToken }));
 }
 main().catch((e) => { console.error(e); process.exit(1); });

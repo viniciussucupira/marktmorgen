@@ -2358,3 +2358,9 @@ Pricing FAQ repair history: run39407143422 caught mobile target-size;39409356932
 - Estado: **Em implementação**.
 - Require successful HTTP, strict true, no contradictory error, canonical label/revenue choice, valid existing20character ID, exact canonical URL and exact server-created lifetime (using the existing record creation time, independent of the creator device clock) before displaying a created link or clearing drafts. Removal confirms the existing requested ID in the same response; no extra read/write. Lock and announce pending controls; preserve uncertain label/password/choices and instruct reload before retry.
 - Synthetic94 intercepted creation/revocation replies at390/1280 planned, with isolated local link fixture; full final-head CI pending. No link opened, password sent, third-party message, real account or payment. Existing5live-link cap,7/30/90days,8–100password bounds,300opens/day, read-only scope/revenue opt-in and settings permissions unchanged. No new provider/unit/operation/cost; M0 binding12.02–12.21% fails60%; sales and H gates closed.
+
+
+179. **[B2-179] Confirm existing session package settings accurately.**
+- Estado: **Em implementação**.
+- Require successful HTTP, strict true, no contradictory error and exact sessions/priceCents/days or explicit null from the existing setter response. Lock and announce pending controls, retain creator drafts and saved summary on uncertainty, and confirm settings without claiming checkout availability. No route change, new booking/payment or additional operation.
+- Synthetic48 intercepted save/stop replies planned at390/1280 with isolated local weekly-call fixture. No real booking, account, message or payment. Existing2–20sessions, allowed use periods, prices/currency and already-bought session entitlements unchanged. No new provider/unit/cost; binding M0 still fails60%; PLANS_ON_SALE=false, COMMISSION_LIVE=false, H gates closed.
