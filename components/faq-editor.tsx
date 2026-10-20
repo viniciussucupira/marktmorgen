@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "@/components/toast";
 import { Icon } from "@/components/icons";
-import { type FaqItem, MAX_FAQ, MAX_FAQ_A, MAX_FAQ_Q } from "@/lib/store-faq";
+import { type FaqItem, MAX_FAQ, MAX_FAQ_A, MAX_FAQ_Q, parseFaq } from "@/lib/store-faq";
 
 type Row = FaqItem & { key: number };
 
@@ -40,6 +40,7 @@ export function FaqEditor({ faq, ai }: { faq: FaqItem[]; ai: { on: boolean; left
     });
 
   async function draft() {
+    if (saving || drafting) return;
     setDrafting(true);
     setNote("");
     try {
@@ -60,33 +61,40 @@ export function FaqEditor({ faq, ai }: { faq: FaqItem[]; ai: { on: boolean; left
   }
 
   async function save() {
+    if (saving || drafting) return;
     setSaving(true);
     setNote("");
     try {
       const response = await fetch("/api/store/faq", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ items: rows.map(({ q, a }) => ({ q, a })) }) });
-      const data = (await response.json().catch(() => ({}))) as { ok?: boolean; faq?: FaqItem[] };
-      if (data.ok) {
-        toast(data.faq?.length ? "Questions saved. They show on your store page." : "Questions removed from your store page.");
+      const raw: unknown = await response.json();
+      const data: Record<string, unknown> = raw && typeof raw === "object" && !Array.isArray(raw) ? raw as Record<string, unknown> : {};
+      const expected = parseFaq(rows.map(({q,a}) => ({q,a})));
+      const saved = data.faq;
+      const matches = Array.isArray(saved) && saved.length === expected.length
+        && saved.every((item, i) => item && typeof item === "object" && !Array.isArray(item)
+          && item.q === expected[i].q && item.a === expected[i].a);
+      if (response.ok && data.ok === true && data.error === undefined && matches) {
+        toast(expected.length ? "Questions saved." : "Questions removed from your store page.");
         router.refresh();
         return;
       }
-      setNote("Something went wrong on our side. Nothing was changed. Try again in a moment.");
+      setNote("We could not confirm whether your questions were saved. Reload this page to check before trying again.");
     } catch {
-      setNote("Something went wrong on our side. Nothing was changed. Try again in a moment.");
+      setNote("We could not confirm whether your questions were saved. Reload this page to check before trying again.");
     } finally {
       setSaving(false);
     }
   }
 
   return (
-    <section id="faq" aria-labelledby="faq-title" className="card mt-8 scroll-mt-32 p-6 sm:p-8">
+    <section id="faq" aria-labelledby="faq-title" aria-busy={saving || drafting} className="card mt-8 scroll-mt-32 p-6 sm:p-8">
       <h2 id="faq-title" className="text-lg font-semibold tracking-[-0.02em] text-ink">Questions on your store page</h2>
       <p className="mt-2 text-ink-soft">
         What visitors ask before buying anything from you — how files arrive, how to pay, how to reach you — answered once, on your store page, and given to search engines as questions and answers. Each product&apos;s page keeps its own questions.
       </p>
       {ai.on ? (
         <div className="mt-4 flex flex-wrap items-center gap-3">
-          <button type="button" onClick={draft} disabled={drafting || rows.length >= MAX_FAQ} aria-busy={drafting} className="btn btn-secondary btn-sm">
+          <button type="button" onClick={draft} disabled={saving || drafting || rows.length >= MAX_FAQ} aria-busy={drafting} className="btn btn-secondary btn-sm">
             <Icon name="sparkle" size={16} />
             {drafting ? "Drafting…" : "Draft them with AI"}
           </button>
@@ -97,13 +105,13 @@ export function FaqEditor({ faq, ai }: { faq: FaqItem[]; ai: { on: boolean; left
         {rows.map((row, index) => (
           <li key={row.key} className="rounded-2xl bg-paper p-4 ring-1 ring-line">
             <label htmlFor={`faq-q-${row.key}`} className="field-label">{`Question ${index + 1}`}</label>
-            <input id={`faq-q-${row.key}`} value={row.q} maxLength={MAX_FAQ_Q} onChange={(e) => change(row.key, { q: e.target.value })} className="field mt-1" />
+            <input id={`faq-q-${row.key}`} value={row.q} disabled={saving || drafting} maxLength={MAX_FAQ_Q} onChange={(e) => change(row.key, { q: e.target.value })} className="field mt-1" />
             <label htmlFor={`faq-a-${row.key}`} className="field-label mt-3 block">Its answer</label>
-            <textarea id={`faq-a-${row.key}`} value={row.a} maxLength={MAX_FAQ_A} rows={3} onChange={(e) => change(row.key, { a: e.target.value })} className="field mt-1" />
+            <textarea id={`faq-a-${row.key}`} value={row.a} disabled={saving || drafting} maxLength={MAX_FAQ_A} rows={3} onChange={(e) => change(row.key, { a: e.target.value })} className="field mt-1" />
             <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm font-bold">
-              <button type="button" disabled={index === 0} onClick={() => move(index, -1)} className="text-ink-soft underline underline-offset-4 disabled:opacity-40">Move up</button>
-              <button type="button" disabled={index === rows.length - 1} onClick={() => move(index, 1)} className="text-ink-soft underline underline-offset-4 disabled:opacity-40">Move down</button>
-              <button type="button" onClick={() => setRows((now) => now.filter((r) => r.key !== row.key))} className="text-ink-soft underline underline-offset-4 hover:text-danger">Remove</button>
+              <button type="button" disabled={saving || drafting || index === 0} onClick={() => move(index, -1)} className="text-ink-soft underline underline-offset-4 disabled:opacity-40">Move up</button>
+              <button type="button" disabled={saving || drafting || index === rows.length - 1} onClick={() => move(index, 1)} className="text-ink-soft underline underline-offset-4 disabled:opacity-40">Move down</button>
+              <button type="button" disabled={saving || drafting} onClick={() => setRows((now) => now.filter((r) => r.key !== row.key))} className="text-ink-soft underline underline-offset-4 hover:text-danger">Remove</button>
             </div>
           </li>
         ))}
@@ -111,12 +119,12 @@ export function FaqEditor({ faq, ai }: { faq: FaqItem[]; ai: { on: boolean; left
       {note ? <p className="mt-4 text-sm text-ink-soft" role="status">{note}</p> : null}
       <div className="mt-5 flex flex-wrap gap-2">
         {rows.length < MAX_FAQ ? (
-          <button type="button" onClick={() => add([{ q: "", a: "" }], false)} className="btn btn-secondary btn-sm">
+          <button type="button" disabled={saving || drafting} onClick={() => add([{ q: "", a: "" }], false)} className="btn btn-secondary btn-sm">
             <Icon name="plus" size={16} />
             Add a question
           </button>
         ) : null}
-        <button type="button" onClick={save} disabled={saving || !changed} className="btn btn-primary btn-sm">
+        <button type="button" onClick={save} disabled={saving || drafting || !changed} className="btn btn-primary btn-sm">
           {saving ? "Saving…" : "Save questions"}
         </button>
       </div>

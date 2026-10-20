@@ -1,3 +1,4 @@
+import { checkFaqAcknowledgment } from "./faq-acknowledgment.mjs";
 import { checkTipsAcknowledgment } from "./support-setting-acknowledgment.mjs";
 import { checkIntroAcknowledgment } from "./intro-acknowledgment.mjs";
 import { checkJoinAcknowledgment } from "./signup-setting-acknowledgment.mjs";
@@ -750,6 +751,7 @@ try {
   await checkJoinAcknowledgment({browser,LOCAL,fixture:homeDemo,axeSource,is});
   await checkIntroAcknowledgment({browser,LOCAL,fixture:homeDemo,axeSource,is});
   await checkTipsAcknowledgment({browser,LOCAL,fixture:homeDemo,axeSource,is});
+  await checkFaqAcknowledgment({browser,LOCAL,fixture:homeDemo,is});
   await captureHomeStudio({browser,LOCAL,fixture:homeDemo,is});
   await checkHomeModules({browser,LOCAL,axeSource,is});
   await checkStudioAmericanEnglish({browser,LOCAL,session:growthSession,sid:growthSid,is});
