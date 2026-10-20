@@ -2234,13 +2234,13 @@ Pricing FAQ repair history: run39407143422 caught mobile target-size;39409356932
 
 
 171. **[B2-171] Confirm existing course/podcast enable acknowledgments before navigation.**
-- Estado: **Em implementação**.
+- Estado: **Publicado — entrega97**.
 - Existing controls must require successful HTTP, strict boolean confirmation, no contradictory error and a valid32hex server course/podcast identity before navigation. Pending guard and own-property error lookup preserve honest uncertainty. No server operation or entitlement is added, no gated H feature is activated.
 - Synthetic48 intercepted replies planned at390/1280, including valid navigation and uncertain/invalid replies remaining in studio. Full final-head CI pending. Same request/response/provider/limits; no recurring cost or paid unit. Binding M0 remains12.02–12.21%, fails60%; sales closed. Existing creator content and persisted identifiers preserved.
 
 
 172. **[B2-172] Confirm existing cart deal settings accurately.**
-- Estado: **Em implementação**.
+- Estado: **Publicado — entrega98**.
 - Require successful HTTP, strict confirmation, no contradictory error and exact existing deal snapshot. Lock pending checkbox/minimum/percentage, preserve uncertain drafts, and confirm settings without claiming live checkout charges. Same request and setter response, no additional read or checkout operation.
 - Synthetic52 intercepted on/off replies at390/1280 planned; full final-head CI pending. Preserve percentage5–50, minimum2/3/4 and MAX_CART4, prices, permissions and opt-in. No new provider/paid unit/recurring cost. Binding M0 remains12.02–12.21%, fails60%; sales closed. No H feature activated.
 
@@ -2274,3 +2274,12 @@ Pricing FAQ repair history: run39407143422 caught mobile target-size;39409356932
 
 
 - **Histórico CI695 — 2026-10-20 09:41:35Fortaleza:** Product39422031603/verify118625221987 falhou por timeout ao encontrar o editor da oferta, antes dos44novos casos. O teste reutilizava o dono alterado pela suíte de cópia. Substituído por fixture local sintética isolada com produto gratuito e sessão próprios, sem conta externa, pagamento ou mensagem. Fixture de demonstração e testes anteriores preservados. Correção propagada ao696; ambos exigem CI completo nos novos heads, sem contabilizar entrega.
+
+
+### Publicações funcionais97–98 — 2026-10-20 (Fortaleza)
+
+- **97 — PR#693 incorporado às09:43:54**, merge `e9d8f37e83c8ed0e466c6de6b587885506b31118`, head `53af2f7a54160fa903151dfd50cff2ffe883ca2e`. Controles existentes de curso/podcast exigem HTTP bem-sucedido, true estrito, ausência de erro e identidade válida antes de navegar; orientação honesta em incerteza, sem nova operação ou direito. Product39422009014/verify118625038444/Redis118625038721/security39422011866 aprovados no head final, incluindo48casos sintéticos interceptados em390/1280. READY às09:45:17.183, deployment `dpl_6Bod5XLuKYwHwdipmKEVGqzd61hT`, domínio marktmorgen.com e SHA exato. Seis rotas200 com o mesmo identificador; nenhum log error/fatal na janela12:40:52.524–12:45:52.524UTC.
+- **98 — PR#694 incorporado às09:46:18**, merge `14e80c33bd44a7bae0e108d0acf0b23ca1cb05ab`, head `c88cae6a5a9e65172a87dec19eb3de098d9c1a5a`. Desconto de carrinho valida snapshot exato, bloqueia campos pendentes e preserva rascunhos incertos; confirma configurações sem alegar cobrança pública. Product39422021091/verify118625199863/Redis118625199507/security39422021082 aprovados, incluindo52casos sintéticos interceptados em390/1280. READY às09:47:20.495, deployment `dpl_AwC8jA5aJhgJXbpGSVZEkhMYDUqH`, domínio marktmorgen.com e SHA exato. Seis rotas200 com o mesmo identificador; nenhum log error/fatal na janela12:43:54.266–12:48:54.266UTC.
+- Rotas: `/`, `/signin`, `/studio` (redirecionamento anônimo esperado), `/platform/path`, `/pricing`, `/privacy`. Fluxos privados testados sinteticamente no CI; sem gravação autenticada ou pagamento em produção. As falhas de localizadores/sincronização anteriores continuam no histórico; foram corrigidas com verificação completa dos novos heads, sem aprovação por job isolado.
+- Custos97/98: mesmas requisições e resultados já existentes, nenhuma operação/leitura/provedor/unidade paga/custo recorrente adicional. Desconto5–50%, mínimo2/3/4 e MAX_CART4 preservados, assim como preços, idiomas/conteúdo/IDs, permissões, opt-in e controles fiscais. PLANS_ON_SALE=false e COMMISSION_LIVE=false. M0 vinculante12.02–12.21% continua reprovado para60%; desconhecido não é zero. Sem certificação geral de margem/acessibilidade nem ativação de H.
+- Registro documental empilhado no696 para preservar o histórico e a fixture corrigida do695; incorporar somente após695/696 passarem nos checks completos dos heads finais e serem incorporados. Não conta como nova publicação funcional.
