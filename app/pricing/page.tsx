@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { feeWords } from "@/lib/fee-words";
 import { SiteNav } from "@/components/site-nav";
 import { SiteFooter } from "@/components/site-footer";
 import { PRICING_PLANS, PRICING_GROUPS, PRICING_ADDONS, PRICING_QUESTIONS, PRICING_OPEN } from "@/lib/pricing-page-data";
@@ -11,11 +12,11 @@ export const metadata: Metadata = {
 };
 
 export default function PricingPage() {
- return <><SiteNav /><main id="main-content" className="mx-auto max-w-6xl px-5 py-16 sm:px-8">
+ return <><SiteNav /><main id="content" tabIndex={-1} className="mx-auto max-w-6xl px-5 py-16 sm:px-8">
   <header className="max-w-3xl">
    <p className="text-sm font-semibold uppercase tracking-widest text-neutral-600">Plans and allowances</p>
    <h1 className="mt-4 text-4xl font-semibold tracking-tight sm:text-6xl">A clear price. Published limits.</h1>
-   <p className="mt-6 text-lg text-neutral-700">Your store, your Stripe account and 0% platform share of each sale. Stripe processing fees are separate. All prices below are in USD.</p>
+   <p className="mt-6 text-lg text-neutral-700">Your store and your Stripe account. {feeWords().feesRow} All prices below are in USD.</p>
    {!PRICING_OPEN && <p className="mt-5 rounded-xl border border-neutral-300 bg-neutral-50 p-4 font-medium">Paid plans and paid selling are not open yet. You can prepare your store and explore the live demo.</p>}
    <div className="mt-6 flex flex-wrap gap-4"><Link className="rounded-full bg-neutral-950 px-6 py-3 font-semibold text-white" href="/signin">Start your store</Link><Link className="rounded-full border border-neutral-400 px-6 py-3 font-semibold" href="/demo">See the live demo</Link></div>
   </header>

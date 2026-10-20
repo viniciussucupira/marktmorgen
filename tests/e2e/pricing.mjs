@@ -8,6 +8,8 @@ export async function checkPricing({browser,LOCAL,axeSource,is}){
    await page.route("**/api/**",async route=>{if(route.request().method()!=="GET"){writes++;await route.abort();}else await route.continue();});
    await page.goto(LOCAL+"/pricing",{waitUntil:"domcontentloaded"});
    await page.locator("main h1").waitFor({state:"visible"});
+   await page.locator('a[href="#content"]').first().focus();await page.keyboard.press("Enter");
+   is(await page.locator("main").evaluate(node=>node===document.activeElement),"skip link focuses content "+width);
    is((await page.title()).includes("Pricing"),"pricing title "+width);
    is(await page.locator("main").getByText("Paid plans and paid selling are not open yet.",{exact:false}).count()===1,"pricing keeps paid selling closed "+width);
    const text=await page.locator("main").innerText();
@@ -17,7 +19,7 @@ export async function checkPricing({browser,LOCAL,axeSource,is}){
     await summary.focus();await page.keyboard.press("Enter");
     is(await summary.evaluate(node=>node.parentElement.open),"FAQ opens by keyboard "+width);
    }
-   is((await page.locator("main").innerText()).includes("Stripe processing fees are separate"),"processing separate "+width);
+   is((await page.locator("main").innerText()).includes("Stripe charges its own processing fee"),"processing separate "+width);
    is(await page.locator("main").evaluate(node=>node.scrollWidth<=node.clientWidth+1),"pricing fits viewport "+width);
    await page.addScriptTag({content:axeSource});
    const audit=await page.evaluate(async()=>await window.axe.run(document.querySelector("main"),{runOnly:{type:"tag",values:["wcag2a","wcag2aa","wcag21aa"]}}));
