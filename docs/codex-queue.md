@@ -91,7 +91,7 @@ A ordem abaixo é de execução dos itens acionáveis. Itens feitos/aguardando/c
 
 89. **[C2-CAPACITY] Calcular o máximo de cada franquia em cada plano e nos dois intervalos**
    - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
-   - Estado: **a fazer**.
+   - Estado: **em andamento; branch codex/capacity-precheck; pré-verificação matemática, auditoria completa de unitários/configuração ainda pendente**.
    - Escopo e prova: Amplia I2 sem substituir seu número/estado. Conferir no código e calcular e-mails, ações de comunidade, visitas, pedidos, GB e horas de vídeo. Baseline fornecida: Store0e-mails/200ações/3.400visitas/200pedidos/5GB/4h; Studio7.000e-mails/1.000ações; Scale10.000e-mails/3.000ações. E-mail informado comoUS$0,90/mil em lib/plan.ts: verificar fornecedor/unidade mais cara. Comparação fornecida: Substack sem limite de envios, Kit grátis até10.000inscritos, Skool/Circle atividade de comunidade sem limite e Teachable alunos ilimitados/até1TB; são insumos do dono, não medição própria. Calcular máximo com60% ou mais no pior caso e comissão zero; subir somente onde ambos intervalos permitirem. Mudança de preço/pacote vai como proposta à seçãoI. M0 atual continua reprovada: nenhuma ampliação presumida.
    - Custo e margem: Antes de construir: conferir capacidade existente no main e preservar Claude. Custo unitário pago mais caro, uso integral simultâneo por plano mensal/anual, taxas de receiving-costs e leitura fiscal mais onerosa (nunca abaixo de27,5%); teto por fornecedor/loja e reserva antes da operação, plan-cost-registry/spend-floor. Desconhecido reprova; sem cortar limite visível, mudar preço ou afrouxar gates.
 
@@ -902,3 +902,6 @@ Item90/P4: quatro modelos conferidos diretamente em MAIL_TEMPLATES (news/launch/
 
 
 Validação637: a primeira execução integral39351868509/security39351868522 passou, inclusive página real /platform/email390/1280, descrição consistente, largura e nenhuma escritaAPI. Após concluir essa execução, integrada a correção de seletor de636 e sua fila atualizada; nova suíte completa obrigatória no novo head antes da incorporação/publicação.
+
+
+Item89/C2: docs/plan-capacity-precheck.md deriva preços e36quantidades de seis casos plano/intervalo do código, com12janelas anuais e storage concorrente preservado. No modelo vigente, nem o contrafactual sem custo de uso passa: antes de todo custo não tributário, o teto é16,82% da receita do modelo, abaixo de60%. Contrafactual não é custo grátis nem proposta de cortar franquia. Nenhum máximo é aprovado (não equivale a máximo zero); taxas/fornecedores desconhecidos continuam reprovados. Validação canônica em CI pendente. Sem operação, preço, limite, registro de custo de produção ou gate alterado; revisar unitários pagos mais caros/configuração e I1/I2 permanece a fazer dentro do item89.
