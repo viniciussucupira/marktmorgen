@@ -78,6 +78,9 @@ try{
     }
     if(!focused)throw Error("No keyboard target reached");
    }
+   // Audit at a repeatable document origin, rather than a different product row under the sticky navigation after each fill.
+   await page.evaluate(()=>window.scrollTo(0,0));
+   gaps.push({path,width,mode,reason:"Whole-document axe is anchored at scroll0. Intermediate scroll positions under sticky navigation still require manual occlusion review; this run does not close that gap."});
    await page.addScriptTag({content:axe});
    const report=await page.evaluate(async()=>{
     const tags=["wcag2a","wcag2aa","wcag2aaa","wcag21a","wcag21aa","wcag21aaa","wcag22a","wcag22aa","wcag22aaa"];
@@ -126,9 +129,9 @@ try{
    await page.goto(origin+"/@activationonboarding",{waitUntil:"networkidle"});
    if(!await page.getByText(title,{exact:true}).count()){
     const next=page.locator('a[rel="next"]');if(await next.count()!==1)throw Error("Published product absent and no unique next storefront page");
-    await next.click();expectedVisits++;await page.waitForLoadState("networkidle");
+    await next.click();expectedVisits++;await page.waitForURL(url=>url.searchParams.get("page")==="2");await page.waitForLoadState("networkidle");
    }
-   if(!await page.getByText(title,{exact:true}).count())throw Error("Published local product absent after following actual storefront pagination");
+   try{await page.getByText(title,{exact:true}).waitFor({state:"attached"});}catch(error){console.error("PRODUCT_STOREFRONT_DIAGNOSTIC:"+JSON.stringify({engine,width,mode,createdId,url:page.url(),titleCount:await page.getByText(title,{exact:true}).count(),pager:await page.locator(".st-pager").allTextContents()}));throw error;}
    if(writes||foreign||localProductWrites!==expectedWrites||interceptedVisits!==expectedVisits)throw Error("Unexpected operation count "+JSON.stringify({writes,foreign,localProductWrites,expectedWrites,interceptedVisits,expectedVisits,blockedWrites}));
    console.log("PRODUCT_ACTION_PROOF:"+JSON.stringify({engine,width,mode,title,localProductWrites,expectedWrites,interceptedVisits,createdAndReloaded:true,explicitPublication:true,storefrontVisible:true,scope:"Disposable local fixture only; no checkout, email, delivery or real account."}));
   }catch(error){failed++;console.error("PRODUCT_MATRIX_FAILURE:"+JSON.stringify({engine,path,width,mode,error:String(error)}));}

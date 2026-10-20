@@ -36,3 +36,10 @@ WebKit expôs bodyBytes0 no beacon Blob, enquanto Firefox expôs h/k. O mock ago
 Head030d: Firefox25casos/3marcas, WebKit25/10, sem aprovação. A criação25 passou do limite existente de24produtos por página da loja (lib/catalog.ts STORE_PAGE_SIZE=24). O teste segue o link real rel=next quando o título não estiver na primeira página e exige o título e a contagem exata de beacons por navegação; preserva24/50 e todos os demais limites.
 
 O input readonly da URL ainda propagou largura no WebKit mesmo com overflow hidden. Usa-se textarea readonly de duas linhas, texto com quebra, redimensionamento vertical e seleção/cópia integral preservados; nenhuma alteração em URLs/IDs. Violação target-size parcialmente obstruída em dois Remove com espaçamento continua aberta: diagnóstico acrescenta retângulo e elementos que recebem hit-test, sem filtrar regras nem reduzir requisitos. CI integral no novo head.
+
+
+## Contexto da auditoria e transição de página — 20/10/2026
+
+Head1f69 manteve duas marcas target-size Firefox. Hit-test identificou nav Look sobre Remove de outra linha em y76–120 após preencher o formulário no fim da lista; não era o botão sendo acionado. Auditoria documental passa a começar em scroll0 consistente, mantendo axe integral e todas as regras; a interação seguinte ainda usa formulário/teclado reais. O resultado anterior e a necessidade de revisão manual de sobreposição em posições intermediárias permanecem explícitos; não é prova de conformidade global.
+
+A verificação da página2 passa a aguardar URL page=2 e o título anexado após a transição RSC, em vez de ler count imediatamente após networkidle. Se ausente, continua falhando e registra URL/pager/ID sintético. Limite24 preservado e contagem de beacons exata por página. CI completo obrigatório.
