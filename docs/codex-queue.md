@@ -923,3 +923,9 @@ Item89/C2: docs/plan-capacity-precheck.md deriva preços e36quantidades de seis 
 - Custo: mesmo POST e payload de servidor; apenas confirmação/local UI, sem nova leitura/gravação/provedor/franquia/preço. Fonte cliente cresce menos de1KB. M0 não muda, não certifica60%; PLANS_ON_SALE=false e gates preservados.
 
 - PR640: primeiro head94cccc93b48ad0b0850a35c5ea6c8e052eeb13ca passou Product39354570541/Redis/segurança39354570545 completos, incluindo estados normal/ponteiro/foco nos40pares de temas/predefinições e propriedades de cores. Integração explícita da revisão final do PR639 em seguida; CI completo novamente no novo head. Critério de contraste de texto: https://www.w3.org/WAI/WCAG22/Understanding/contrast-enhanced.html; prova restrita ao botão opaco, sem declaração geral de AAA.
+
+### C2 — revisão de premissas por fornecedor, continuação do item89
+
+- Estado: em andamento; branch codex/capacity-provider-assumptions. Relatório docs/plan-capacity-provider-review.md coteja código com fontes oficiais de R2, Blob e Resend lidas em19/10/2026. Não é aprovação de orçamento/configuração real nem proposta para cortar direitos de downloads já comprados.
+- Achados: egress R2 gratuito não elimina operações de leitura; fallback de arquivos vendidos para Blob exige envelope próprio, sem reutilizar custo zero de R2. Reserva de upload existente não prova teto de usos posteriores da URL assinada. Classes, regiões/contratos, arredondamento e unidades ainda não verificados como máximo pago. /emails conta destinatários e overage por blocos; não usar apenas preço marginal como custo total.
+- Custo: somente documentação, sem chamada/gravação/provedor/franquia/preço/gate de produção. Não incrementa entrega funcional. Item89 e M0 continuam reprovados/não aprovados; CI integral obrigatório da branch antes da incorporação.
