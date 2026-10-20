@@ -1754,3 +1754,10 @@ Ao concluir cada item: registrar data, commit e testes; seguir ao próximo. Dado
    - Escopo: comparar HTTP, ok booleano, ausência de erro contraditório e provider/id/hash canônicos já devolvidos por /api/store/intro; remoção exige null confirmado. Bloquear entrada durante espera, aria-busy, mensagem honesta e contraste do alerta. Não abrir vídeo nem chamar fornecedor; idiomas/conteúdo preservados.
    - Prova:72respostas interceptadas,12variantes×3provedores×390/1280, incluindo hash Vimeo, JSON inválido, contradição, perda, campos divergentes e sucesso; global fit mantido. Remoção null não está coberta pela matriz atual e não será alegada como testada. Nenhuma conta, vídeo remoto ou POST real.
    - Custo: cliente+798caracteres, mesma operação/resposta/parser, sem fornecedor/franquia/preço/gate novo. M0 antes/depois12,02–12,21%reprova60%;vendas fechadas e nenhuma certificação fiscal.
+
+
+159. **[B2-SUPPORT-SETTING-ACKNOWLEDGMENT] Confirmar configuração e valores de apoio sem alegar publicação**
+   - Estado: **em implementação; codex/support-setting-acknowledgment; CI integral pendente**.
+   - Escopo: reusar parseTips/readTipAmount e snapshot existente; comparar HTTP,okbooleano,ausência de erro,on/heading/line e valores na mesma ordem. Campos bloqueados/aria-busy; índices de erro inteiros válidos; preservar rascunho e mensagem honesta. Sem alterar operação de pagamento,impostos,limites,consentimento ou disponibilidade.
+   - Prova:34respostas sintéticas em390/1280 com requisições interceptadas; padrão USD confirmado em lib/money.ts/store.ts e fixture sem troca de moeda. Valores,ordem,índices,JSON/perda/contradição,campos pendentes,contraste e largura. Nenhum checkout/conta/mensagem/pagamento real. Verificação completa obrigatória.
+   - Custo: cliente+1221caracteres,mesmaoperação/resposta/parser,semfornecedor/franquia/preço/gate novo.M0antes/depois12,02–12,21%reprova60%;vendas fechadas. Revisão B2 existente; não implementação deH.
