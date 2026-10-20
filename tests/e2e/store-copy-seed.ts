@@ -163,6 +163,11 @@ async function main(): Promise<void> {
   const packageStore=await storeForEmail(packageOwner);
   if(!packageStore)throw Error("No package fixture store");
   const packageFixture={session:await openSession(packageOwner),sid:packageStore.sid,product:packageProduct.product.id};
-  console.log(JSON.stringify({ packageFixture,tierFixture,exitFixture,homeDemo,pauseFixtures,wordingSession,wordingSid:wordingStore.sid,wordingTrialSession,wordingTrialSid:wordingTrialStore.sid,returnSession,returnSid:returnStore.sid,growthSession,growthSid:growthStore.sid,growthProduct:growthProducts[0],session: await openSession(OWNER), second: second.store.sid, abProduct, abStore:abStore.sid,contactToken }));
+  const activationOwner="activation-onboarding-fixture@example.test";
+  if(!(await claimHandle(activationOwner,"activationonboarding","Activation fixture","")).ok)throw Error("No activation fixture");
+  await setSubscription(activationOwner,{active:true,tier:"pro",cycle:"month",subscriptionId:null,customerId:null,trialEnds:0,period:paidPeriod()});
+  const activationStore=await storeForEmail(activationOwner);if(!activationStore)throw Error("No activation store");
+  const activationFixture={session:await openSession(activationOwner),sid:activationStore.sid};
+  console.log(JSON.stringify({ activationFixture,packageFixture,tierFixture,exitFixture,homeDemo,pauseFixtures,wordingSession,wordingSid:wordingStore.sid,wordingTrialSession,wordingTrialSid:wordingTrialStore.sid,returnSession,returnSid:returnStore.sid,growthSession,growthSid:growthStore.sid,growthProduct:growthProducts[0],session: await openSession(OWNER), second: second.store.sid, abProduct, abStore:abStore.sid,contactToken }));
 }
 main().catch((e) => { console.error(e); process.exit(1); });

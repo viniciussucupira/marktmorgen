@@ -357,6 +357,10 @@ export type Store = {
    */
   extra: boolean;
   createdAt: string;
+  /** First explicit draft publication observed after activation tracking began; absent for older stores. */
+  firstOfferPublishedAt?: string;
+  /** True only for stores registered after activation tracking was installed. */
+  activationTracked?: boolean;
   /** Addresses this store used before. They lead here until it lets them go. */
   previousHandles: string[];
   /**
@@ -881,6 +885,8 @@ function parseStore(raw: unknown): Store | null {
       sid,
       extra: value.extra === true && sid !== "",
       createdAt: value.createdAt ?? "",
+      activationTracked: value.activationTracked === true,
+      ...(typeof value.firstOfferPublishedAt === "string" && /^\d{4}-\d{2}-\d{2}T/.test(value.firstOfferPublishedAt) && Number.isFinite(Date.parse(value.firstOfferPublishedAt)) ? { firstOfferPublishedAt: value.firstOfferPublishedAt.slice(0, 30) } : {}),
       previousHandles: Array.isArray(value.previousHandles)
         ? value.previousHandles.filter((h) => typeof h === "string")
         : [],
@@ -1128,6 +1134,7 @@ async function freshStore(fields: {
     sid: fields.sid,
     extra: fields.extra,
     createdAt,
+    activationTracked: true,
     previousHandles: [],
     releasedHandles: [],
     renamedAt: "",
@@ -2779,6 +2786,8 @@ export async function addProduct(
   recurring: Recurring | null = null,
   /** The suggested price as typed, when the buyer chooses what to pay. */
   rawSuggested: string | null = null,
+  /** AI setup can create a draft atomically, with no briefly public intermediate product. */
+  asDraft = false,
 ): Promise<ProductResult> {
   const result = await withStore<ProductResult>(email, async (store, save) => {
     // Read in the store's own currency, as the store is under the lock:
@@ -2821,7 +2830,7 @@ export async function addProduct(
       preview: 0,
       page: false,
       bundle: null,
-      hidden: false,
+      hidden: asDraft,
     };
     if (pwywCents !== null) {
       const problem = pwywProblem(product, pwywCents, store.currency);
@@ -2836,6 +2845,7 @@ export async function addProduct(
         // time they give something away, in the creator's own write, so no
         // visitor's request ever has to write the store record.
         listId: store.listId ?? (fields.priceCents === 0 ? newListId() : null),
+        ...(!asDraft && store.activationTracked && !store.firstOfferPublishedAt && !store.catalog.items.some(item => (item.kind & KIND.hidden) === 0) ? { firstOfferPublishedAt: product.createdAt } : {}),
       },
       { put: [product] },
     );
@@ -3738,7 +3748,12 @@ export type HiddenResult =
  * and a bundle that holds it still hands it over.
  */
 export async function setProductHidden(email: string, id: string, hidden: boolean): Promise<HiddenResult> {
-  const done = await onProduct<never>(email, id, (product) => ({ ...product, hidden }));
+  const done = await onProduct<never>(email, id, (product) => ({ ...product, hidden }), (store) => {
+    // Same existing bounded store write: no event table, extra command or provider call.
+    // Older stores with a visible offer have unknown historical timing, never backfilled as now.
+    if (!store.activationTracked || hidden || store.firstOfferPublishedAt || store.catalog.items.some(item => (item.kind & KIND.hidden) === 0)) return {};
+    return { firstOfferPublishedAt: new Date().toISOString() };
+  });
   return done.ok ? { ok: true, store: done.store, product: done.product } : done;
 }
 

@@ -1,3 +1,4 @@
+import type { ActivationTiming } from "@/lib/store-activation";
 import Link from "next/link";
 import { Icon } from "@/components/icons";
 
@@ -14,9 +15,9 @@ export type StartStep = {
  * Every tick is read from the store itself, so nothing here can be ticked by
  * pressing it; it disappears on its own once every step is done.
  */
-export function StudioStart({ steps }: { steps: StartStep[] }) {
+export function StudioStart({ steps, activation, launchChecklist }: { steps: StartStep[]; activation?: ActivationTiming; launchChecklist?: string }) {
   const done = steps.filter((s) => s.done).length;
-  if (steps.length === 0 || done === steps.length) return null;
+  if (steps.length === 0 || (done === steps.length && !activation)) return null;
   const next = steps.find((s) => !s.done);
   const percent = Math.round((done / steps.length) * 100);
 
@@ -38,6 +39,10 @@ export function StudioStart({ steps }: { steps: StartStep[] }) {
           </Link>
         ) : null}
       </div>
+      {activation ? <p className="mt-3 text-sm text-ink-soft" data-activation-timing>
+        {activation.state === "published" ? `First offer published ${activation.minutes} minutes after this store was registered.` : activation.state === "waiting" ? `${activation.minutes} minutes since this store was registered. Your first offer is still in preparation.` : "The original first-publication time is not recorded for this store."}
+        {" "}This measures store registration, not an earlier sign-in or a sale. Drafts do not count as published offers.
+      </p> : null}
       <div
         className="mt-4 h-2 overflow-hidden rounded-full bg-sand"
         role="progressbar"
@@ -48,6 +53,7 @@ export function StudioStart({ steps }: { steps: StartStep[] }) {
       >
         <div className="h-full rounded-full bg-violet-brand transition-[width] duration-500" style={{ width: `${percent}%` }} />
       </div>
+      {launchChecklist ? <details className="mt-5"><summary className="min-h-11 cursor-pointer py-3 font-semibold text-ink">Review the saved launch checklist</summary><pre className="mt-3 whitespace-pre-wrap break-words font-sans text-sm leading-relaxed text-ink-soft">{launchChecklist}</pre></details> : null}
       <ol className="mt-6 grid gap-x-6 gap-y-4 sm:grid-cols-2">
         {steps.map((step, i) => (
           <li key={step.key} className="flex gap-3">
