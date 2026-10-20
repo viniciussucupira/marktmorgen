@@ -21,6 +21,7 @@ test("official comparison prices carry an HTTPS source and a real read date", ()
     const extraSources: OfficialPriceSource[] = [competitor.trial.source];
     if ("brandedApp" in competitor) extraSources.push(competitor.brandedApp.source);
     if ("discovery" in competitor) extraSources.push(competitor.discovery.source);
+    if ("feeDetails" in competitor) extraSources.push(competitor.feeDetails.source);
     if ("sponsorship" in competitor) extraSources.push(competitor.sponsorship.source);
     if ("messaging" in competitor) extraSources.push(competitor.messaging.source);
     if ("live" in competitor) extraSources.push(competitor.live.source);
@@ -55,7 +56,7 @@ test("the comparison reads every own published price, email limit and catalog ca
   assert.ok(table.rows.find(r => r[0] === "Getting started")![2].includes("not open yet"));
 });
 test("new proof pages are in the existing sitemap and the index links only actual proof pages", () => {
-  for (const slug of ["kajabi", "skool", "clickfunnels", "circle", "kit", "whop", "comparisons"]) {
+  for (const slug of ["kajabi", "skool", "clickfunnels", "circle", "kit", "whop", "hotmart", "comparisons"]) {
     assert.equal(sitemap().filter(e => new URL(e.url).pathname === "/proof/" + slug).length, 1);
   }
   const index = findPage("proof", "comparisons");
@@ -147,6 +148,18 @@ test("Whop payment quotes retain conditional additions and unknown platform shar
  assert.ok(whop.feeScope.includes("when enabled") && whop.feeScope.includes("6%"));
  assert.ok(whop.payoutScope.includes("4% + $2.50"));
  const page=findPage("proof","whop");assert.ok(page && page.seo?.title==="Marktmorgen vs Whop");
+ const table=page.blocks.find(b=>b.kind==="table");assert.ok(table && table.kind==="table");
+ for(const tier of TIERS)assert.ok(table.rows.find(r=>r[0]==="Subscription")![2].includes(publishedPriceWords(tier,"month")));
+ assert.ok(page.blocks.some(b=>b.kind==="limits" && b.title==="Where they are ahead"));
+});
+
+test("Hotmart current fixed fee, microtransactions and policy conflict stay explicit", () => {
+ const h=COMPETITOR_PRICES.hotmart;
+ assert.equal(h.plans[0].monthlyCents,0);assert.equal(h.plans[0].platformFeeBps,990);
+ assert.equal(h.plans[0].listedPaymentFixedCents,100);assert.equal(h.trial.days,null);
+ assert.ok(h.feeScope.includes("At or below $15") && h.feeScope.includes("$0.10"));
+ assert.ok(h.policyScope.includes("$0.50") && h.policyScope.includes("$1.00") && h.policyScope.includes("legacy Player"));
+ const page=findPage("proof","hotmart");assert.ok(page && page.seo?.title==="Marktmorgen vs Hotmart");
  const table=page.blocks.find(b=>b.kind==="table");assert.ok(table && table.kind==="table");
  for(const tier of TIERS)assert.ok(table.rows.find(r=>r[0]==="Subscription")![2].includes(publishedPriceWords(tier,"month")));
  assert.ok(page.blocks.some(b=>b.kind==="limits" && b.title==="Where they are ahead"));

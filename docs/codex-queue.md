@@ -1112,3 +1112,11 @@ Pedido P5: anexo524cc7f9-78af-42b5-ae37-4c05dc91a193/Texto colado.txt, lido19/10
 - PayoutACH2.50/instant4%+2.50distintosdecadacompra, diretóriorealsemgarantiadetráfego; semalegarisençãofiscaluniversalouMoRcertificado. App-getredirectretornouhome; nãousadocomoprovanativastorelisting.
 - Dadosestáticoscomfontesdatadas, /proof/whop/índice/sitemapexistente, vantagensmesmocorpo, testesfeescondicionais/null/canonicalownpricinge390/1280metadados/axe/teclado/noAPIwrites. Suiteintegralnovohadantesdeincorporar.
 - M0antes/depois: envelopeestáticoexistente, semnovaoperação/endpoint/dependência/provedor/email/IA/storagewrite/telemetria; preços/limites/gatesiguais. M0onerosa12,02–12,21%falha60%,não certificada; PLANS_ON_SALE=false. Não contarpendente/documentocomoentrega.
+
+
+### S1 — sétimo incremento: Hotmart
+
+- Branchcodex/hotmart-comparison sobreheadd2282fa36d7c0eb4121cb405398c07238101ced9PR651 enquanto pais649/650/651rodam. Mainbef945b72b5342f1e49e8e8c1994d5856f5e894fconsultado;sem edição concorrente dospais.
+- Fontesoficiaispricing, política inglesa21/09/2026 e artigoatualizadofees lidas20/10/2026. USDcompra+comissão:acima15USD9,9%+1.00,até15USD9,9%+.10. Não usar .50antigo: restafraseconflitanteartigo, mas tabelaatual/FAQPlayer/políticaexplicam1.00desde21/09. Não somarPlayerlegado. MoR/isencãouniversalnãoprometidos; entidadelocal/produto/residênciaafetamimpostos.
+- Assinaturamensal/anual0comprovadapricing, nãohátrialinventado. Appcomprador/offlineeafiliadossãofunçõesdocumentadas; nãoprometer tráfego. Própriospreços/taxascanônicos/gatespreservados. Fontescontasdatadas, sitemapviaPAGESexistente, vantagensmesmocorpoe390/1280axe/teclado/metadata/noAPIwrites; testesnovosbandas/conflito/Player/nopaymenttrial.
+- M0antes/depois: mesmoenvelopeestático;semnovaoperação/dependência/endpoint/provedor/email/IA/storagewrite/telemetria, sem franquia/preço/gatealterado. Leituraonerosa12,02–12,21%reprovadaante60%;vendasfechadasPLANS_ON_SALE=false. Exige CI completo finalhead/READY/domínio/SHAantesdecontar/publicar.
