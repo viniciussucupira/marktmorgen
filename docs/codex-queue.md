@@ -1838,3 +1838,10 @@ Ao concluir cada item: registrar data, commit e testes; seguir ao próximo. Dado
   "limitations": "Emptyremoval andcompletedAIdraftnotcovered. Client+802characters,sameparseFaq/request/snapshot;AIrequest/reservation/pool/capsunchanged,no newprovider/price/allowance/gate. BindingM0 12.02–12.21%fails60%;salesclosed."
 }
 ```
+
+
+161. **[B2-PDF-PREVIEW-ACKNOWLEDGMENT] Confirmar páginas de prévia sem prometer disponibilidade**
+   - Estado: **em implementação; codex/pdf-preview-acknowledgment; CI integral pendente**.
+   - Escopo: resposta POST usa id/preview do result.product já retornado pelo setter, sem leitura adicional; cliente exige HTTP/okbooleano/semcontradição/id/páginas exatos,aria-busy,duploenvio bloqueado,incerteza honesta. Sucesso confirma configuração, não geração/disponibilidade.
+   - Prova:24respostas interceptadas em390/1280 com fixturegrowthPDFexistente de metadados;nenhumGETdeprévia/download/geração/upload/pagamento/conta real. Off e geração real não são alegados como cobertos pela matriz. Verificação completa obrigatória.
+   - Custo:cliente+259caracteres,resposta+54caracteres de fonte,campos já retornados;nenhuma operação/leitura/fornecedor/franquia/preço/gate novo. TetosPDF/free-download/spendexistentes preservados.M0antes/depois12,02–12,21%reprova60%;vendas fechadas.

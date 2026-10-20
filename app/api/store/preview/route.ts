@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
   try {
     const result = await setProductPreview(guarded.ref, id, pages);
     if (!result.ok) return Response.json({ ok: false, error: result.reason }, { status: result.reason === "unknown" ? 404 : 400 });
-    return Response.json({ ok: true });
+    return Response.json({ ok: true, id: result.product.id, pages: result.product.preview });
   } catch (error) {
     console.error("changing a PDF preview failed", error);
     return Response.json({ ok: false, error: "server_error" }, { status: 500 });
