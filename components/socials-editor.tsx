@@ -12,6 +12,7 @@ import {
   type SocialNetwork,
   isSocialNetwork,
   networkFor,
+  parseSocials,
   socialShown,
   socialUrl,
   typedOf,
@@ -27,6 +28,8 @@ const PLACEHOLDER: Partial<Record<SocialNetwork, string>> = {
   discord: "https://discord.gg/…",
   substack: "yourname",
 };
+
+const UNCONFIRMED = "We could not confirm whether your profiles were saved. Reload this page to check before trying again.";
 
 const MESSAGES: Record<string, string> = {
   too_many: `A store shows up to ${MAX_SOCIALS} profiles.`,
@@ -103,18 +106,25 @@ export function SocialsEditor({ socials }: { socials: Social[] }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ socials: kept.map((r) => ({ network: r.network, url: r.typed })) }),
       });
-      const data = (await response.json().catch(() => ({}))) as { ok?: boolean; error?: string; bad?: number[] };
-      if (data.ok) {
+      const raw: unknown = await response.json();
+      const data: Record<string, unknown> = raw && typeof raw === "object" && !Array.isArray(raw) ? raw as Record<string, unknown> : {};
+      const expected = parseSocials(kept.map(row=>({network:row.network,url:row.typed})));
+      const matches = Array.isArray(data.socials) && data.socials.length === expected.length && data.socials.every((entry:unknown,index:number)=>{
+        const value = entry && typeof entry === "object" && !Array.isArray(entry) ? entry as Record<string,unknown> : {};
+        return value.network === expected[index].network && value.url === expected[index].url;
+      });
+      if (response.ok && data.ok === true && data.error === undefined && kept.length <= MAX_SOCIALS && kept.every(row=>Boolean(socialUrl(row.network,row.typed))) && matches) {
         setRows(kept);
         setOpen(false);
-        toast(kept.length ? "Profiles saved. They show under your store's name." : "Profiles removed from your store.");
+        toast(kept.length ? "Profiles saved." : "Profiles removed from your store.");
         router.refresh();
         return;
       }
-      if (Array.isArray(data.bad)) setBad(data.bad.map((i) => kept[i]?.key).filter((k): k is number => typeof k === "number"));
-      setError(MESSAGES[data.error ?? ""] ?? "Something went wrong on our side. Try again in a moment.");
+      const rejected = data.error === "not_a_profile" && Array.isArray(data.bad) ? data.bad.slice(0,MAX_SOCIALS).filter((index):index is number=>typeof index === "number" && Number.isSafeInteger(index) && index >= 0 && index < kept.length).map(index=>kept[index].key) : [];
+      setBad(rejected);
+      setError(typeof data.error === "string" && Object.hasOwn(MESSAGES,data.error) && (data.error !== "not_a_profile" || rejected.length > 0) ? MESSAGES[data.error] : UNCONFIRMED);
     } catch {
-      setError("Something went wrong on our side. Try again in a moment.");
+      setError(UNCONFIRMED);
     } finally {
       setSaving(false);
     }
@@ -154,7 +164,7 @@ export function SocialsEditor({ socials }: { socials: Social[] }) {
   }
 
   return (
-    <form onSubmit={save} className="space-y-3" noValidate>
+    <form data-socials-editor onSubmit={save} aria-busy={saving} className="space-y-3" noValidate>
       <p className="text-sm text-ink-soft">Type a handle like @yourname, or paste the address of your profile: the network is picked for you.</p>
       <ol className="space-y-3">
         {rows.map((row, index) => {
@@ -168,6 +178,7 @@ export function SocialsEditor({ socials }: { socials: Social[] }) {
                   <label htmlFor={`${id}-network`} className="field-label">Network</label>
                   <select
                     id={`${id}-network`}
+                    disabled={saving}
                     value={row.network}
                     onChange={(e) => isSocialNetwork(e.target.value) && change(row.key, { network: e.target.value })}
                     className="field mt-1"
@@ -183,6 +194,7 @@ export function SocialsEditor({ socials }: { socials: Social[] }) {
                   </label>
                   <input
                     id={`${id}-value`}
+                    disabled={saving}
                     type={row.network === "email" ? "email" : "text"}
                     autoComplete="off"
                     spellCheck={false}
@@ -195,18 +207,18 @@ export function SocialsEditor({ socials }: { socials: Social[] }) {
                   />
                 </div>
                 <div className="flex gap-1">
-                  <button type="button" onClick={() => move(index, -1)} disabled={index === 0} className="btn btn-ghost btn-sm" aria-label={`Move ${SOCIALS[row.network].label} up`}>
+                  <button type="button" onClick={() => move(index, -1)} disabled={saving || index === 0} className="btn btn-ghost btn-sm" aria-label={`Move ${SOCIALS[row.network].label} up`}>
                     <Icon name="chevron-down" size={16} className="rotate-180" />
                   </button>
-                  <button type="button" onClick={() => move(index, 1)} disabled={index === rows.length - 1} className="btn btn-ghost btn-sm" aria-label={`Move ${SOCIALS[row.network].label} down`}>
+                  <button type="button" onClick={() => move(index, 1)} disabled={saving || index === rows.length - 1} className="btn btn-ghost btn-sm" aria-label={`Move ${SOCIALS[row.network].label} down`}>
                     <Icon name="chevron-down" size={16} />
                   </button>
-                  <button type="button" onClick={() => setRows(rows.filter((r) => r.key !== row.key))} className="btn btn-ghost btn-sm" aria-label={`Remove ${SOCIALS[row.network].label}`}>
+                  <button type="button" onClick={() => setRows(rows.filter((r) => r.key !== row.key))} disabled={saving} className="btn btn-ghost btn-sm" aria-label={`Remove ${SOCIALS[row.network].label}`}>
                     <Icon name="trash" size={16} />
                   </button>
                 </div>
               </div>
-              <p id={`${id}-note`} className={`mt-1.5 break-all text-xs ${wrong ? "font-semibold text-danger" : "text-ink-soft"}`}>
+              <p id={`${id}-note`} className={`mt-1.5 break-all text-xs ${wrong ? "font-semibold text-danger-text" : "text-ink-soft"}`}>
                 {wrong
                   ? problem(row.network)
                   : url
@@ -218,17 +230,17 @@ export function SocialsEditor({ socials }: { socials: Social[] }) {
         })}
       </ol>
       {rows.length < MAX_SOCIALS ? (
-        <button type="button" onClick={add} className="btn btn-secondary btn-sm">
+        <button type="button" onClick={add} disabled={saving} className="btn btn-secondary btn-sm">
           <Icon name="plus" size={16} />
           Add a profile
         </button>
       ) : (
         <p className="text-sm text-ink-soft">{`That is the most a store shows: ${MAX_SOCIALS}.`}</p>
       )}
-      {error ? <p role="alert" className="text-sm font-semibold text-danger">{error}</p> : null}
+      {error ? <p role="alert" className="text-sm font-semibold text-danger-text">{error}</p> : null}
       <div className="flex flex-wrap gap-3">
         <button type="submit" disabled={saving} className="btn btn-primary btn-sm">{saving ? "Saving…" : "Save profiles"}</button>
-        <button type="button" onClick={() => { setOpen(false); setError(""); setBad([]); }} className="btn btn-ghost btn-sm">Cancel</button>
+        <button type="button" onClick={() => { setOpen(false); setError(""); setBad([]); }} disabled={saving} className="btn btn-ghost btn-sm">Cancel</button>
       </div>
     </form>
   );

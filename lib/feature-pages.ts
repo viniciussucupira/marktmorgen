@@ -1,3 +1,4 @@
+import { NEW_CREATOR_PAGES } from "@/lib/creator-situations";
 import { withFeatureMechanisms } from "@/lib/feature-mechanisms";
 import { paidVideoWords, TRIAL_VIDEO_SECONDS } from "@/lib/video-admission-rules";
 import { BUYER_RESERVE_BPS, SETUP_VISITS, VISITS_INCLUDED, countWords, publicVisitLimit } from "@/lib/traffic-rules";
@@ -2752,6 +2753,7 @@ const BASE_CREATOR_PAGES: TopicPage[] = [
       },
     ],
   },
+  ...NEW_CREATOR_PAGES,
 ];
 
 export const FEATURE_PAGES = withFeatureMechanisms(BASE_FEATURE_PAGES);

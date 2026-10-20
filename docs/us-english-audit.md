@@ -177,3 +177,12 @@ The selected contact error uses the existing danger-text token; actual rendered 
 Queue155 reviews RecoveryEditor against its existing recovery response. Successful HTTP, boolean ok, no contradictory error, exact canonical enabled/address, and boolean server-owned asks are required. Both US/non-US consent flags remain acceptable because the server decides the account-country condition. Pending controls lock and announce busy; unexpected error names use only own message entries; uncertain saves request a reload without asserting nothing changed.
 
 Sixteen intercepted responses at390/1280 for each server consent flag give64synthetic cases, reusing the local fixture and issuing no real POST, email, provider call, subscription or billing change. Existing reminder consent, timing, recipient limits and spending gates are untouched. Full final-head CI required. Client+656characters, same parseRecovery/POST/response, no new cost allowance, price, buyer language or commercial gate; binding M0 still fails60%.
+
+
+## Social profile settings: canonical order and explicit removal
+
+Queue156 reviews SocialsEditor against its existing saved socials array. Success requires successful HTTP, exact boolean acknowledgment, no contradictory error and exact canonical networks/URLs/order from parseSocials, including an empty array for deliberate removal. Invalid inputs cannot be declared saved; pending edits, order controls, add/remove and cancel lock. Unexpected error names stay on own messages, and invalid rejected-row indexes cannot falsely mark rows. The creator's typed values remain untouched on refusal.
+
+Synthetic48cases cover18profile replies and6empty-removal replies at390/1280, intercept every POST and open no external profile or real account/message. The selected alert's enhanced contrast requires an actual pass/no incomplete result; existing darker error text also applies to row hints. Full final-head CI required, not whole-product AAA or actual AT proof.
+
+Client+1198characters, existing pure parseSocials and same request/response; no new provider/data/message operation, price, visible limit, buyer language or commercial gate. Binding M0 still12.02–12.21%,fails60%;salesclosed.
