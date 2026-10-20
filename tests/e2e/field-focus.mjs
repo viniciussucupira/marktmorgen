@@ -1,4 +1,4 @@
-/** Quantitative paint check on disposable Chromium only. No screenshot is saved or sent elsewhere. */
+/** Quantitative same-pixel paint check on the selected disposable engine. No screenshot is saved or sent elsewhere. */
 export async function fieldFocusPixels(page,field) {
   await page.evaluate(()=>window.scrollTo({top:0,left:0,behavior:"instant"}));
   await page.mouse.move(0,0);
@@ -56,6 +56,7 @@ export async function fieldFocusPixels(page,field) {
     }
     return {contrastingPixels,minimumArea:Math.ceil(4*(box.width+box.height))};
   },{before:before.toString("base64"),after:after.toString("base64"),box,clip,viewport});
+  if(pixels.contrastingPixels<pixels.minimumArea)console.error("FIELD_FOCUS_DIAGNOSTIC:"+JSON.stringify({...styles,...pixels,tag:await field.evaluate(node=>node.tagName),classes:await field.getAttribute("class"),forcedColors:await page.evaluate(()=>matchMedia("(forced-colors: active)").matches)}));
   return {...styles,...pixels};
 }
 

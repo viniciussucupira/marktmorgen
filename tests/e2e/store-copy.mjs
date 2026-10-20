@@ -235,6 +235,9 @@ try {
   }
 
   browser = await launch();
+  // All helper contexts use intercepted synthetic APIs; workers must not bypass them.
+  const createIsolatedContext = browser.newContext.bind(browser);
+  browser.newContext = (options = {}) => createIsolatedContext({ ...options, serviceWorkers: "block" });
   console.log(`BROWSER_ENGINE_REPORT:${JSON.stringify({ requested: engine, actual: browserType.name(), version: browser.version() })}`);
   const errors = [];
   const watch = (page) => page.on("pageerror", (error) => errors.push(String(error)));
@@ -561,10 +564,9 @@ try {
       await signin.locator("#signin-email").waitFor();
       await checkSecondaryTextContrast(signin,"Sign-in at "+width);
       is("sign-in at "+width+": no horizontal overflow",await signin.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth),0);
-      is("sign-in placeholder has readable colour and full opacity at "+width,await signin.locator("#signin-email").evaluate(input=>{
-        const placeholder=getComputedStyle(input,"::placeholder");
-        return placeholder.color==="rgb(57, 65, 80)"&&placeholder.opacity==="1";
-      }),true);
+      const signinHint=await signin.locator("#signin-email").evaluate(input=>{const style=getComputedStyle(input,"::placeholder");return {color:style.color,opacity:style.opacity};});
+      if(signinHint.color!=="rgb(57, 65, 80)"||signinHint.opacity!=="1")console.error("SIGNIN_PLACEHOLDER_DIAGNOSTIC:"+JSON.stringify({width,...signinHint}));
+      is("sign-in placeholder has readable colour and full opacity at "+width,signinHint.color==="rgb(57, 65, 80)"&&signinHint.opacity==="1",true);
       const focus=await fieldFocusPixels(signin,signin.locator("#signin-email"));
       is("email keyboard focus at "+width+": opaque3px outline",focus.style==="solid"&&parseFloat(focus.width)>=3&&parseFloat(focus.offset)>=3,true);
       is("email keyboard focus at "+width+": rendered3:1 pixel area",focus.contrastingPixels>=focus.minimumArea,true);
@@ -628,6 +630,7 @@ try {
         const oldHintTarget=await mountFieldFocusFixture(signin,{surface:storePaint["--st-bg"],kind:"input",className:"st-field",paint:storePaint});
         const oldHintStyle=await signin.addStyleTag({content:".st-field::placeholder{color:var(--st-muted)!important;opacity:.75!important}"});
         const oldHint=await storePlaceholderContrast(oldHintTarget);
+        console.log("PLACEHOLDER_NEGATIVE_CONTROL:"+JSON.stringify(oldHint));
         is("placeholder guard rejects former faded Night text",oldHint.shown&&oldHint.ratio<7,true);
         await oldHintStyle.evaluate(node=>node.remove());
         const oldStoreTarget=await mountFieldFocusFixture(signin,{surface:storePaint["--st-bg"],kind:"input",className:"st-field",paint:storePaint});
@@ -654,6 +657,7 @@ try {
         is("pixel guard rejects the former suppressed-outline style",baseline.contrastingPixels<baseline.minimumArea,true);
         await oldSuppression.evaluate(node=>node.remove());
         await signin.emulateMedia({forcedColors:"active",reducedMotion:"reduce"});
+        console.log("FORCED_COLORS_ENVIRONMENT:"+JSON.stringify({requested:"active",actual:await signin.evaluate(()=>matchMedia("(forced-colors: active)").matches)}));
         for(const [kind,className] of [["button","btn st-btn"],["button","btn st-btn-ghost"],["a","st-social"]]){
           const target=await mountFieldFocusFixture(signin,{surface:storePaint["--st-bg"],kind,className,paint:storePaint});
           const focus=await fieldFocusPixels(signin,target);

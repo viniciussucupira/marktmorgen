@@ -3050,3 +3050,10 @@ WebKit118869615761 expirou na primeira ação de lembrete, antes do retorno de q
 #### P0201 — mocks alcançados no WebKit; concluir leituras antes de navegação/fechamento
 
 20/10/2026 17:53 Fortaleza: WebKit118878095443 no head3eabe24937e901bda39656864cd60983699a5f3e passou reminder e answers nas duas larguras, e todos os cenários de consentimento/saída do board. O assert final de zero pageerrors reprovou duas leituras RSC de prefetch (/studio e /studio/phone) encerradas durante navegação/fechamento do contexto; log do servidor também registrou destination stream closed early. O teste agora aguarda networkidle antes dos reloads explícitos, da confirmação que provoca reload e do fechamento após sucesso, mantendo a coleta de todos os pageerrors e o mesmo assert vazio. Não ignora erro por regex, não aumenta timeout, não remove cenário/asserção ou altera código do app. Hipótese de aborto de leitura em teardown deve ser confirmada pelo novo CI integral, sem declarar passa antecipadamente.
+
+
+#### P0201 — WebKit avançou; medir falhas de pintura e isolar contextos auxiliares
+
+20/10/2026 18:02 Fortaleza: WebKit118880654986 no headbe741c0f5e7443dd862767f32dca20e9fd22f102 passou a seção do board após concluir leituras antes de navegar/fechar. Detectou31 falhas de placeholder/foco/forced-colors e interrompeu em path-return.mjs após um mock de details em contexto auxiliar com worker permitido. A fábrica de contextos do harness agora aplica serviceWorkers:block também aos helpers, preservando a suíte inteira e o app/SW de produção.
+
+Antes de mudar CSS ou presumir suporte de emulação, registram-se cor/opacidade computadas do placeholder, pixels reais versus área mínima, estilos do foco e correspondência real de forced-colors. As asserções originais, controles negativos, thresholds e zero pageerrors permanecem. Resultados não são dispensa de AAA ou teste em aparelho real. Nova suíte completa obrigatória no novohead; publicação não confirmada.
