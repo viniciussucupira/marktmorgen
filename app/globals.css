@@ -4694,3 +4694,12 @@ fieldset:disabled .cm-poll-row {
 .st-cart-panel:focus {
   outline: none;
 }
+
+/* Public home is readable at once. Avoid scroll-triggered opacity/layer work
+   around long pricing lists; creator/store themes are not in this scope. */
+:root [data-static-reading] .reveal,
+:root [data-static-reading] .reveal.is-in {
+  opacity: 1;
+  transform: none;
+  transition: none;
+}
