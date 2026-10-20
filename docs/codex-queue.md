@@ -496,7 +496,8 @@ B3 iniciado em paralelo ao CI da próxima área B2, conforme P3: parser só de d
 
 82. **[C-UE-RECORD] Recusar datas fiscais impossíveis no registro de tratamentos**
    - Pedido: P2 C-UE; endurecimento encontrado na auditoria de19/10/2026.
-   - Estado: **em andamento; testes sintéticos de calendário e gate completo antes de incorporar**.
+   - Estado: **feito; PR #629 incorporado19/10/2026 20:58:47 de Fortaleza, entrega48 confirmada, READY20:59:41, versão d627988**.
+   - Verificação: Product39344101984/Redis/security39344102072 completos;7rotas de domínio com marcador exato, sem error/fatal23:55:47.963–00:00:47.963UTC. Data impossível recusada, registros reais vazios e vendas fechadas.
    - Evidência: lib/deemed-supplier.ts e tests/tax-gate.test.ts; não cria registro real nem implementa coleta/retenção/OSS.
    - Custo e margem: Apenas validação local constante do registro existente, sem chamada/registro/mensagem adicional. M0 antes=depois para todos os planos/intervalos; leitura mais onerosa ainda reprovada.
 
@@ -506,3 +507,6 @@ B3 iniciado em paralelo ao CI da próxima área B2, conforme P3: parser só de d
    - Estado: **em andamento; branch codex/tax-answer-calendar; depende de629**.
    - Evidência: lib/tax-gate.ts e tests/tax-gate.test.ts; lista real de respostas continua vazia, sem protocolo, consulta enviada ou hipótese menos onerosa criada.
    - Custo e margem: Validação local limitada, sem chamadas/registros/mensagens adicionais; todos os custos/margens M0 antes=depois, leitura mais onerosa ainda reprovada.
+
+
+Nota de validação do PR #630: a suíte completa encontrou um teste legado dependente do relógio real às23:59UTC. A regra existente preserva600segundos mínimos, mesmo quando o próximo dia+5min fica mais perto. Fixture agora fixa23:59:37 e testa antes/depois da meia-noite explicitamente; nenhuma espera/limite de produção foi reduzida. Suíte completa no novo head obrigatória.
