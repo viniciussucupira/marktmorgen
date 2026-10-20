@@ -17,7 +17,7 @@ import { isDomainsConfigured } from "@/lib/domains";
 import { PLANS_ON_SALE } from "@/lib/opening";
 import { feeWords } from "@/lib/fee-words";
 
-const HOME_TITLE = "Marktmorgen — the link-in-bio store that pays into your own Stripe";
+const HOME_TITLE = "Marktmorgen — sell your work, build your business";
 const HOME_DESCRIPTION =
   "A fast store page for creators who sell files, courses, calls and memberships. Buyers pay into your own Stripe account, every handover is checked against Stripe's own record of the payment, and " + feeWords().takes + " Stripe's processing fee applies.";
 
@@ -184,7 +184,7 @@ const CREATORS = [
 
 function HomeActions({place}:{place:string}) {
  return <div data-home-actions={place} role="group" aria-label={"Choose your next step: "+place} className="container-page flex flex-wrap items-center justify-center gap-x-6 gap-y-4 py-8">
-  <Link href="/signin" prefetch={false} className="btn btn-primary">Start your store<Icon name="arrow-right" size={18}/></Link>
+  <Link href="/signin" prefetch={false} className="btn btn-primary btn-lg">Start your store<Icon name="arrow-right" size={18}/></Link>
   <Link href="/demo" prefetch={false} className="link-arrow">See the live demo<Icon name="arrow-right" size={18} className="arrow"/></Link>
  </div>;
 }
@@ -198,19 +198,22 @@ export default function Home() {
 
       <main id="content">
         {/* ------------------------------------------------------------ hero */}
-        <section className="surface-daybreak on-dark overflow-hidden">
+        <section aria-labelledby="home-hero-heading" className="surface-daybreak on-dark overflow-hidden" data-home-hero>
           <div className="container-page grid items-center gap-12 pb-28 pt-12 sm:gap-14 sm:pt-16 lg:grid-cols-[1.04fr_1fr] lg:gap-12 lg:pb-32 lg:pt-20">
             <div className="nb-fade-up">
-              <h1 className="t-display text-white">
-                Your store.
+              <p className="mb-5 text-base font-semibold text-white/85" data-home-pillar>
+                Your store. Your Stripe. Your money.
+              </p>
+              <h1 id="home-hero-heading" className="t-display text-white">
+                Sell your work.
                 <br />
-                Your <span className="serif nb-gradient-text pr-1 text-[1.08em] leading-[0.9]">Stripe.</span>
+                Build your
                 <br />
-                Your money.
+                <span className="serif nb-gradient-text pr-1 text-[1.08em] leading-[0.9]">business.</span>
               </h1>
               <p className="t-lead measure mt-7 text-white/80">
-                Sell digital products, courses, memberships and booked sessions from one well-made storefront.
-                Payments are processed through your own Stripe account.
+                From your first sale to everything you sell next: files, courses, memberships and paid sessions
+                in one storefront. Payments go through your own Stripe account.
               </p>
               {/*
                 On a phone the two calls to action run the width of the
@@ -226,23 +229,12 @@ export default function Home() {
                   would beat the breakpoint that is meant to undo it and the
                   buttons would run the full column on a desktop too.
                 */}
-                <Link href="/signin" className="btn btn-light btn-lg w-full min-[480px]:w-auto">
+                <Link href="/signin" prefetch={false} className="btn btn-light btn-lg w-full min-[480px]:w-auto" data-home-primary>
                   Start your store
                   <Icon name="arrow-right" size={18} />
                 </Link>
-                {/*
-                  A second button, not a sentence with an arrow. The demo is
-                  the strongest thing on this page — a visitor can buy from a
-                  real store with a test card in under a minute — and an
-                  offer that good should not be dressed as a footnote.
-                */}
-                {/*
-                  A link to the store itself, not a window over this page.
-                  The demo is an ordinary store, and a store squeezed into a
-                  frame with a scroll bar of its own is not what a buyer of a
-                  creator's sees.
-                */}
-                <Link href="/demo" className="btn btn-outline-light btn-lg w-full min-[480px]:w-auto">
+                {/* The demo stays available as a secondary link. */}
+                <Link href="/demo" prefetch={false} className="link-arrow on-dark min-h-11 justify-center min-[480px]:justify-start">
                   See the live demo
                   <Icon name="arrow-right" size={18} />
                 </Link>
