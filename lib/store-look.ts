@@ -5,7 +5,8 @@
  * page still has to be readable by everyone who opens it. So the colour they
  * pick is the starting point rather than the final value: every colour the
  * page actually paints is derived here and moved, only as far as needed,
- * until it passes the contrast a reader needs — 4.5:1 for text and 3:1 for
+ * until it passes the contrast a reader needs — 7:1 for button text, 4.5:1
+ * for other accent text and 3:1 for
  * the edge of a button. A pale yellow still reads as yellow; it simply stops
  * being a button nobody can see.
  *
@@ -315,21 +316,15 @@ export function lookColours(look: LookPaint): LookColours {
   const picked = normaliseHex(look.accent) ?? DEFAULT_LOOK.accent;
   const away = palette.dark ? WHITE : BLACK;
 
-  // A button has to stand out from the card it sits on.
-  const accent = nearestPassing(picked, away, (c) => contrast(c, palette.card) >= 3);
-
-  // The words on it take whichever of white and ink reads better. When
-  // neither reaches 4.5, the fill itself moves until white does.
-  let fill = accent;
-  const onAccent = contrast(fill, WHITE) >= contrast(fill, palette.dark ? "#0d0b24" : "#15112e")
-    ? WHITE
-    : palette.dark
-      ? "#0d0b24"
-      : "#15112e";
-  if (contrast(fill, onAccent) < 4.5) {
-    const towards = onAccent === WHITE ? BLACK : WHITE;
-    fill = nearestPassing(fill, towards, (c) => contrast(c, onAccent) >= 4.5);
-  }
+  // Keep the button edge and its words readable together. Choosing dark ink
+  // on a light card can make those constraints incompatible: use white on
+  // light themes and the page's dark ink on Night, then move only the fill.
+  const onAccent = palette.dark ? "#0d0b24" : WHITE;
+  const fill = nearestPassing(
+    picked,
+    away,
+    (c) => contrast(c, palette.card) >= 3 && contrast(c, onAccent) >= 7,
+  );
 
   const accentText = nearestPassing(
     picked,
