@@ -77,7 +77,7 @@ export function PackageEditor({ productId, singleCents, currency, initial }: { p
         </label>
         <label className="block">
           <span className="field-label">To use within</span>
-          <select className="field mt-1" value={days} onChange={(e) => setDays(Number(e.target.value))}>
+          <select disabled={busy} className="field mt-1" value={days} onChange={(e) => setDays(Number(e.target.value))}>
             {PACKAGE_DAYS.map((d) => (
               <option key={d} value={d}>{d ? `${d} days` : "No limit"}</option>
             ))}

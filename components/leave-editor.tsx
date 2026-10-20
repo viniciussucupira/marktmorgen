@@ -94,7 +94,7 @@ export function LeaveEditor({ leaving, pause, tiers }: { leaving: LeaveSetting; 
         <h2 id="leave-question-title" className="text-lg font-semibold tracking-[-0.02em] text-ink">
           Ask why before members cancel
         </h2>
-        <span className={`tag ${savedOn ? "tag-live" : ""}`}>{leaving.on ? "On" : "Off"}</span>
+        <span className={`tag ${savedOn ? "tag-live" : ""}`}>{savedOn ? "On" : "Off"}</span>
       </div>
       <ul className="mt-4 space-y-2 text-sm text-ink-soft">
         {bullets.map((line) => (
