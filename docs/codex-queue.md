@@ -1810,7 +1810,31 @@ Ao concluir cada item: registrar data, commit e testes; seguir ao próximo. Dado
 
 
 160. **[B2-STORE-FAQ-ACKNOWLEDGMENT] Confirmar lista canônica de perguntas e evitar corrida de edição**
-   - Estado: **em implementação; codex/store-faq-acknowledgment; CI integral pendente**.
+   - Estado: **concluído; PR674 incorporado20/10/2026 05:22:36 Fortaleza; publicação funcional86 confirmada**.
    - Escopo: manual save só confirma HTTP/okbooleano/semcontradição e lista exata parseFaq,ordem/perguntas/respostas. Bloquear edição,reordenar,remover,adicionar,rascunhar enquanto salva, e salvar enquanto rascunha; aria-busy; incerteza pede conferir sem alegar nada mudou. Requisição de IA,pool/reserva/tetos/gates intactos.
    - Prova:30respostas manuais interceptadas em390/1280,normalização/ordem/lista/campos/perda/JSON/contradição,draftpreservado,controlesbloqueados,larguraglobal;nenhuma chamada deIAou gravação real. Remoção vazia e conclusão real deIA não estão cobertas nesta matriz.
    - Custo:cliente+802caracteres,mesmoPOST/snapshot/parseFaq;nenhumfornecedor/franquia/preço/gate novo.M0antes/depois12,02–12,21%reprova60%;vendas fechadas. Correção B2, não featureH.
+
+
+### Publicação funcional86 — perguntas da loja
+```json
+{
+  "number": 86,
+  "pr": 674,
+  "queueItem": 160,
+  "feature": "Store questions require exact canonical saved list and order, lock racing edits/save/draft and preserve honest uncertainty",
+  "head": "88209def578339ff85986314840dc71e0f7a4917",
+  "commit": "7d89e212909c90f184d8aafb3ff053e9cf013b27",
+  "deployment": "dpl_F2Kb3EZj2Msw9FHBhwaAhRU54K4y",
+  "readyUTC": "2026-10-20T08:23:36.001Z",
+  "readyFortaleza": "2026-10-20 05:23:36",
+  "mergedUTC": "2026-10-20T08:22:36Z",
+  "mergedFortaleza": "2026-10-20 05:22:36",
+  "run": 39390863658,
+  "verify": 118521765554,
+  "redis": 118521765240,
+  "securityRun": 39390863679,
+  "validation": "Full final-head CI lint/regressions/typecheck/build/security/Redis and synthetic browser passed30intercepted manual replies at390/1280:canonical text/order,pending locks,draft retention,globalfit;AIrequests countedzero. READY exactSHA/domainalias;6routes200sameDPL,anonymous studio signinredirect expected. No productionprivatewrite/account/payment/email/AIcall. Noerror/fatal08:19:49.262–08:24:49.262UTC.",
+  "limitations": "Emptyremoval andcompletedAIdraftnotcovered. Client+802characters,sameparseFaq/request/snapshot;AIrequest/reservation/pool/capsunchanged,no newprovider/price/allowance/gate. BindingM0 12.02–12.21%fails60%;salesclosed."
+}
+```
