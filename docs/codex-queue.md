@@ -520,3 +520,10 @@ Correção complementar da fixture #630: a execução integral mostrou que o rel
    - Estado: **em andamento; branch codex/tax-control-scope; depende de630**.
    - Evidência: components/tax-editor.tsx afirmava de forma absoluta que o criador era quem declarava/pagava; explicar que os controles da conta Stripe não resolvem as obrigações da plataforma, e que coleta/registros de IVA da plataforma ainda não estão construídos. Formulário referencia as explicações; valores/controles/pedidos de gravação preservados. Navegador sintético390/1280, texto real, referências acessíveis e nenhum POST.
    - Custo e margem: Apenas texto/atributos locais: fonte aumenta372caracteres, menos de1KB de conteúdo estático adicional dentro do envelope da página existente; sem leitura/chamada/registro/mensagem extra, sem ampliar limites. M0 antes=depois em todos os planos/intervalos; modelo mais oneroso ainda reprovado. Não é coleta/registro/parecer fiscal concluído.
+
+
+85. **[C-UE-RETENTION-COST] Auditar prazo e pré-condições de financiamento da retenção fiscal**
+   - Pedido: P2 C-UE/custos; auditoria em19/10/2026,21h de Fortaleza (aproximado).
+   - Estado: **em andamento; documento de auditoria em branch codex/vat-retention-funding, depende de631**.
+   - Evidência: docs/eu-vat-retention-funding.md; fonte oficial da Comissão:10anos a partir do fim do ano da transação, teto conservador132meses. Preços PAYG oficiais lidos, divisor decimal conservador por unidade GB ainda não comprovada, cópias/limites/correções pendentes. Matriz mensal/anual por plano traz componente ilustrativo e custo total futuro desconhecido/reprovado.
+   - Custo e margem: Documento apenas, sem criar operação/registro/agenda/limite. M0 atual antes=depois; não admite retenção nem declara60%. Conta completa/reservas automáticas permanecem obrigatórias antes de dados fiscais reais.
