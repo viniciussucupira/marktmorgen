@@ -23,7 +23,8 @@ export async function checkCreatorJourney({browser,LOCAL,axeSource,is}){
    is("HT2 creator choices preserved "+width,await page.getByRole("heading",{name:"By kind of creator",exact:true}).count(),1);
    const browse=journey.getByRole("link",{name:"Browse every feature",exact:true});
    is("HT2 existing catalog anchor "+width,await browse.getAttribute("href"),"#catalogue-title");
-   await browse.click();is("HT2 catalog anchor navigation "+width,new URL(page.url()).hash,"#catalogue-title");
+   await Promise.all([page.waitForURL(url=>url.hash==="#catalogue-title"),browse.click()]);is("HT2 catalog anchor navigation "+width,new URL(page.url()).hash,"#catalogue-title");
+   is("HT2 catalog target receives keyboard focus "+width,await page.locator("#catalogue-title").evaluate(node=>node===document.activeElement),true);
    is("HT2 journey fits "+width,await journey.evaluate(node=>node.scrollWidth<=node.clientWidth+1),true);
    is("HT2 page fits "+width,await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
    await page.addScriptTag({content:axeSource});
