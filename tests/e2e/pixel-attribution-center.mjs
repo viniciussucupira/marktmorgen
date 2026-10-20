@@ -23,7 +23,7 @@ export async function checkPixelAttributionCenter({browser,LOCAL,fixture,axeSour
  is("HT10 rejected window choice retained "+width,await window.inputValue(),"60");
  is("HT10 unknown save not used in report "+width,(await attribution.innerText()).includes("within the 30 days before"),true);
  attrReply={status:200,body:{ok:true,days:60}};
- await attribution.getByRole("button",{name:"Retry window change",exact:true}).click();await attribution.getByRole("alert").waitFor({state:"hidden"});
+ await attribution.getByRole("button",{name:"Retry window change",exact:true}).click();await attribution.getByRole("alert").waitFor({state:"hidden"});await attribution.getByText(/within the 60 days before;/).waitFor();
  is("HT10 matching window confirmed "+width,(await attribution.innerText()).includes("within the 60 days before"),true);
  is("HT10 attribution links same center "+width,await attribution.getByRole("link",{name:"Review pixel IDs and consent",exact:true}).getAttribute("href"),"#pixels-title");
  is("HT10 all center writes intercepted "+width,intercepted,4);
