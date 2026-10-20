@@ -1,3 +1,4 @@
+import { PATH_HOME_STEPS } from "@/lib/path-home";
 import type { Metadata } from "next";
 import { SITE_OG_IMAGE } from "@/lib/site-og";
 import Link from "next/link";
@@ -463,6 +464,22 @@ export default function Home() {
         </section>
 
         <HomeActions place="modules"/>
+
+        <section aria-labelledby="home-path-heading" className="surface-sand section">
+          <div className="container-page">
+            <h2 id="home-path-heading" className="t-h2 balance">Your next step, checked against real facts</h2>
+            <p className="mt-5 max-w-3xl text-ink-soft">The Path names the work to do and checks records your store already keeps. These are its first seven missions, not a promise of a sale in seven days. Paid selling remains subject to availability; reminders and sharing are opt-in.</p>
+            <ol className="mt-10 grid gap-5 md:grid-cols-2">
+              {PATH_HOME_STEPS.map(step=><li key={step.id} className="rounded-2xl border border-line bg-white p-6">
+                <h3 className="text-xl font-semibold">{step.title}</h3>
+                <dl className="mt-4 space-y-4"><div><dt className="font-semibold">What you do</dt><dd className="mt-1 text-ink-soft">{step.creator}</dd></div><div><dt className="font-semibold">What Marktmorgen checks</dt><dd className="mt-1 text-ink-soft">{step.platform}</dd></div></dl>
+              </li>)}
+            </ol>
+            <Link href="/platform/path" prefetch={false} className="link mt-8 inline-block">Read how the Path works</Link>
+          </div>
+        </section>
+
+        <HomeActions place="path"/>
 
         {/* ------------------------------------------------------ why Marktmorgen */}
         <section className="section">
