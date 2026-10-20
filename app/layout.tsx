@@ -8,13 +8,15 @@ import { SITE_OG_IMAGE } from "@/lib/site-og";
 import { REVEAL_ON, REVEAL_WATCH } from "@/lib/reveal-scripts";
 import { feeWords } from "@/lib/fee-words";
 
-/* Two faces, both served from our own domain so the page never waits on
+/* Optional font display avoids a late font swap shifting a cold mobile page.
+   Creator-selected faces below retain their existing choices and behavior.
+   Two faces, both served from our own domain so the page never waits on
    fonts.googleapis.com: Geist for everything a person reads or clicks, and an
    italic serif kept for one or two words in a headline. */
 const geist = Geist({
   variable: "--font-body",
   subsets: ["latin"],
-  display: "swap",
+  display: "optional",
 });
 
 /* Not preloaded (9 October 2026): a creator's store pages never use it, and
@@ -26,7 +28,7 @@ const accent = Instrument_Serif({
   subsets: ["latin"],
   weight: "400",
   style: ["normal", "italic"],
-  display: "swap",
+  display: "optional",
   preload: false,
 });
 
