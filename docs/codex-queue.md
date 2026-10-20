@@ -2799,3 +2799,12 @@ Diagnóstico detalhado deHT7 identificou que os blocos .reveal do corpo ainda es
 #### Janela da verificação integral —20/10/2026
 
 HT6/Product checks39462558715/verify118765503722 foi cancelado pelo limite de25minutos, ainda executando os testes de navegador, sem conclusão integral. A suíte cresceu; limite do verify ajustado para35minutos, mantendo todos os casos/asserts e os demais jobs. Nenhuma reexecução isolada ou redução de cobertura. Nova execução integral no novo head é obrigatória antes de incorporar. Ajuste apenas do limite da execução de desenvolvimento, sem operação/direito/custo variável do cliente, preço ou gate modificado.
+
+
+199. **[HT14] Sugerir preço e estrutura de oferta com regras locais e dados já lidos da própria loja**
+
+- Estado: **Cálculo próprio registrado antes do código; delta operacional zero; implementação pendente**.
+- Registro UTC:2026-10-20 17:34:21 UTC; FortalezaUTC−3. Base remota conferida `2f29aaf4a936dde7b085815246761674fdd9183e`; docs/ht14-cost-review.md define escopo antes de operação.
+- Reutilizar leitura de cards/índices/candidatos/permissões do editor de funis já existente. Planejador determinístico local: preço observado da própria categoria/loja (ou preço atual quando não há comparação), regra/amostra exibidas, estrutura suportada com condições atuais. Aceitar/recusar apenas plano local não salvo/editável; não mudar preço/funil nem salvar/publicar/ativar/enviar automaticamente. Sem previsão de vendas, demanda ou lucro.
+- Nenhuma chamada IA nova, histórico/API/read/write/provedor/retencão/job/cota nova. FunilIA existente e pool/tetos/reserva intactos. Custo incremental explícitoUS$0/mês eUS$0/ano nos6cenários em100%dosdireitos/pior mês; dimensionamento com maior recebimento/taxas/reservas/impostos permanece60,31/60,59%Store,60,38/60,06%Studio,60,46/60,07%Scale (mês/ano). Custo/demanda desconhecidos não viramzero nem projeção; operação fora desse escopo exige cálculo antes de uso.
+- M0 mais oneroso reprovado continua controlando abertura de vendas. PLANS_ON_SALE=false, comissão, preços/limites, opt-in/permissões, tax gate/art.9a/revisão comercial preservados. Nenhum pagamento/conta/mensagem/submissão externa. Commit do cálculo registrado a seguir; código/testes/produção pendentes. Novas revisõesB2 só após esta sequênciaHT.
