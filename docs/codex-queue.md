@@ -2239,4 +2239,20 @@ Pricing FAQ repair history: run39407143422 caught mobile target-size;39409356932
 - Synthetic48 intercepted replies planned at390/1280, including valid navigation and uncertain/invalid replies remaining in studio. Full final-head CI pending. Same request/response/provider/limits; no recurring cost or paid unit. Binding M0 remains12.02–12.21%, fails60%; sales closed. Existing creator content and persisted identifiers preserved.
 
 
+172. **[B2-172] Confirm existing cart deal settings accurately.**
+- Estado: **Em implementação**.
+- Require successful HTTP, strict confirmation, no contradictory error and exact existing deal snapshot. Lock pending checkbox/minimum/percentage, preserve uncertain drafts, and confirm settings without claiming live checkout charges. Same request and setter response, no additional read or checkout operation.
+- Synthetic52 intercepted on/off replies at390/1280 planned; full final-head CI pending. Preserve percentage5–50, minimum2/3/4 and MAX_CART4, prices, permissions and opt-in. No new provider/paid unit/recurring cost. Binding M0 remains12.02–12.21%, fails60%; sales closed. No H feature activated.
+
+
+### Histórico de verificação da pilha691–694 — 2026-10-20
+
+- PR#691, head inicial `e424f83075ceca799bbc7aee6046e15ade854028`: Product39417616258/verify118610363512 falhou às09:02:10Fortaleza. Evidência: timeout de30s no localizador `getByLabel('Pick 1', exact:true)` ao buscar uma opção, em `tests/e2e/pairs-acknowledgment.mjs:29`, antes da primeira requisição dos novos casos. Redis/security passaram, mas isso não aprova o head nem os48casos.
+- Corrigido o localizador dentro do editor de recomendações, verificando três seletores e usando o primeiro controle diretamente. Novo head691 `4e34f1fd316284a96777ebe39f4f6070bb231ecc`; correção incorporada com parentes reais aos heads692 `b1610415b30b4e5204640ed0f4f6df45078fe3b3`,693 `91731a4b9c355961e8dd37b6be0ad018af49ba79` e694 `5aeaeec1132b53af16926ee82f725bf211993a8f`, preservando as alterações de cada PR. Todos exigem CI completo no novo head; nenhum job isolado é usado como aprovação. Este registro cria outro head documental no694, também sujeito a verificações completas.
+- PRs pendentes: [691](https://github.com/viniciussucupira/marktmorgen/pull/691), [692](https://github.com/viniciussucupira/marktmorgen/pull/692), [693](https://github.com/viniciussucupira/marktmorgen/pull/693), [694](https://github.com/viniciussucupira/marktmorgen/pull/694). Nenhum foi contabilizado como publicação funcional. Produção permanece na entrega95 confirmada; próximos números dependem de READY, domínio, SHA e verificações ao vivo.
+
+
+- **Histórico CI694 — 2026-10-20 09:19:37Fortaleza:** Product39419766746/verify118617602063 falhou ao localizar o mínimo do carrinho por texto exato do label. Evidência: timeout30s em `checkCartAcknowledgment:29`, antes dos novos casos. Corrigida a seleção para os IDs explícitos existentes `deal-min`/`deal-percent`, mantendo conteúdo e comportamento do produto. Redis/security passaram, mas não aprovam esse head. Correção propagada ao695; ambos exigem CI completo nos novos heads. Nenhuma publicação contabilizada.
+
+
 - **Histórico CI693 — 2026-10-20 09:22:59Fortaleza:** Product39419542924/verify118616870620 falhou em quatro asserções de navegação confirmada (curso/podcast em390/1280); os48envios foram interceptados. O teste aguardava o evento de requisição e consultava o contador antes de o interceptador executar. Corrigido para aguardar a resposta sintética do destino antes da asserção, preservando todas as recusas e comportamento do produto. Correção propagada aos694/695, exigindo CI completo em cada novo head; nenhum job isolado aprova a alteração.
