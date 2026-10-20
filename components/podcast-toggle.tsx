@@ -50,6 +50,7 @@ export function PodcastToggle({ product }: { product: Product }) {
         aria-busy={busy}
         disabled={busy}
         onClick={async () => {
+          if (busy) return;
           setBusy(true);
           setError(null);
           try {
@@ -58,14 +59,17 @@ export function PodcastToggle({ product }: { product: Product }) {
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ action: "enable", id: product.id }),
             });
-            const data = (await response.json().catch(() => ({}))) as { ok?: boolean; error?: string };
-            if (data.ok) {
+            const data: unknown = await response.json().catch(() => null);
+            const reply = data && typeof data === "object" && !Array.isArray(data) ? data as Record<string, unknown> : null;
+            if (response.ok && reply?.ok === true && !("error" in reply) &&
+                typeof reply.podcastId === "string" && /^[0-9a-f]{32}$/.test(reply.podcastId)) {
               router.push(studioHref(`/studio/podcast/${product.id}`));
               return;
             }
-            setError(MESSAGES[data.error ?? ""] ?? MESSAGES.server_error);
+            const reason = reply?.ok !== true && typeof reply?.error === "string" && Object.hasOwn(MESSAGES, reply.error) ? MESSAGES[reply.error] : null;
+            setError(reason ?? "We could not confirm this podcast setting. Reload this page to check before trying again.");
           } catch {
-            setError(MESSAGES.server_error);
+            setError("We could not confirm this podcast setting. Reload this page to check before trying again.");
           } finally {
             setBusy(false);
           }

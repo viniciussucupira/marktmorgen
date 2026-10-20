@@ -2231,3 +2231,12 @@ Pricing FAQ repair history: run39407143422 caught mobile target-size;39409356932
 - Rotas verificadas em ambas: `/`, `/signin`, `/studio` (redirecionamento anônimo esperado), `/platform/path`, `/pricing`, `/privacy`. Fluxos privados foram verificados sinteticamente no CI, sem gravações autenticadas em produção. Sem certificação geral de acessibilidade ou margem.
 - Custos94/95: nenhum novo provedor, operação, unidade paga ou custo recorrente; snapshots limitados pelos tetos existentes e derivados do resultado já obtido. Preços, limites, permissões, opt-in, conteúdo/idiomas/IDs e controles fiscais preservados. `PLANS_ON_SALE=false`, `COMMISSION_LIVE=false`; M0 vinculante12.02–12.21% continua reprovado para60%. Desconhecido não foi tratado como zero. Este registro documental não incrementa o contador.
 - PR#691 (B2-170) permanece aguardando CI completo;48 casos previstos não são declarados aprovados antes do resultado. Registro empilhado nesse head para preservar a fila; incorporar somente após o PR#691 passar e ser incorporado. Tentativas de anexação de PRs ao chat encontram limite de100identidades; links e histórico são preservados, sem excluir anexos antigos.
+
+
+171. **[B2-171] Confirm existing course/podcast enable acknowledgments before navigation.**
+- Estado: **Em implementação**.
+- Existing controls must require successful HTTP, strict boolean confirmation, no contradictory error and a valid32hex server course/podcast identity before navigation. Pending guard and own-property error lookup preserve honest uncertainty. No server operation or entitlement is added, no gated H feature is activated.
+- Synthetic48 intercepted replies planned at390/1280, including valid navigation and uncertain/invalid replies remaining in studio. Full final-head CI pending. Same request/response/provider/limits; no recurring cost or paid unit. Binding M0 remains12.02–12.21%, fails60%; sales closed. Existing creator content and persisted identifiers preserved.
+
+
+- **Histórico CI693 — 2026-10-20 09:22:59Fortaleza:** Product39419542924/verify118616870620 falhou em quatro asserções de navegação confirmada (curso/podcast em390/1280); os48envios foram interceptados. O teste aguardava o evento de requisição e consultava o contador antes de o interceptador executar. Corrigido para aguardar a resposta sintética do destino antes da asserção, preservando todas as recusas e comportamento do produto. Correção propagada aos694/695, exigindo CI completo em cada novo head; nenhum job isolado aprova a alteração.
