@@ -1,3 +1,4 @@
+import { checkDetailsAcknowledgment } from "./details-acknowledgment.mjs";
 import {checkEmailCapabilities} from "./email-capabilities.mjs";
 import {checkRenameAcknowledgment} from "./rename-acknowledgment.mjs";
 import {checkTaxSaveAcknowledgment} from "./tax-save-acknowledgment.mjs";
@@ -734,6 +735,7 @@ try {
   await checkTaxScope({browser,LOCAL,session:growthSession,sid:growthSid,is});
   await checkTaxSaveAcknowledgment({browser,LOCAL,session:growthSession,sid:growthSid,is});
   await checkRenameAcknowledgment({browser,LOCAL,session:growthSession,sid:growthSid,is});
+  await checkDetailsAcknowledgment({browser,LOCAL,session:growthSession,sid:growthSid,is});
   await checkEmailCapabilities({browser,LOCAL,is});
   is("no page threw", errors, []);
 } catch (error) {

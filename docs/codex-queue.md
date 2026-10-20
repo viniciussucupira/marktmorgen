@@ -97,7 +97,7 @@ A ordem abaixo é de execução dos itens acionáveis. Itens feitos/aguardando/c
 
 90. **[C2-EMAIL-HONESTY] Corrigir imediatamente a contradição pública sobre modelos de e-mail**
    - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
-   - Estado: **em andamento; branch codex/email-template-claims; depende da fila636**.
+   - Estado: **concluído; PR637 incorporado em19/10/2026 às22:31:33Fortaleza; entrega54 verificada**.
    - Escopo e prova: Conferir os quatro modelos reais e o editor em lib/mail-body.ts/components/mail-designer.tsx. Em lib/feature-pages.ts, a seção de recursos anuncia quatro, mas a seção What it does not do yet ainda diz No templates. Corrigir a limitação para descrever o que existe e o que falta, com regressão na página real; sem prometer colunas ou capacidades ausentes.
    - Custo e margem: Texto dentro da página existente, sem novo envio/chamada/armazenamento/franquia. Medir payload; M0 antes=depois somente se o envelope não aumentar. Preços/limites/gates preservados, sem certificação de60%.
 
@@ -905,3 +905,12 @@ Validação637: a primeira execução integral39351868509/security39351868522 pa
 
 
 Item89/C2: docs/plan-capacity-precheck.md deriva preços e36quantidades de seis casos plano/intervalo do código, com12janelas anuais e storage concorrente preservado. No modelo vigente, nem o contrafactual sem custo de uso passa: antes de todo custo não tributário, o teto é16,82% da receita do modelo, abaixo de60%. Contrafactual não é custo grátis nem proposta de cortar franquia. Nenhum máximo é aprovado (não equivale a máximo zero); taxas/fornecedores desconhecidos continuam reprovados. Validação canônica em CI pendente. Sem operação, preço, limite, registro de custo de produção ou gate alterado; revisar unitários pagos mais caros/configuração e I1/I2 permanece a fazer dentro do item89.
+
+
+### B2 — confirmação de nome e descrição, continuação concreta
+
+- PR638: pré-verificação de capacidade incorporada em19/10/2026 às22:34:17Fortaleza, commit fb14bca710f8809de26aae5ffc4220240a42697e. Product39353034782/Redis/security39353034928 completos passaram. Documentação/testes apenas; não incrementa entregas. Item89 permanece em andamento para cotejo de fontes/configurações; nenhum limite/preço/gate mudou.
+- PR637: entrega54 READY em marktmorgen.com, commit50a4a7d59355445ac4d35a37eb7bfa6a5a1d683d, deploy dpl_5kCazfzFsf4zD9aPn9EsTbthpbHr. Product39352607910/Redis/security39352607823 passaram; página real390/1280,8rotas200 com versão exata, texto corrigido servido, sem error/fatal01:28:20.642–01:33:20.642UTC. Texto+28caracteres, sem operação paga nova.
+- Estado B2: em andamento, branch codex/details-acknowledgment. Auditoria do editor de nome/descrição: exigir HTTP bem-sucedido, ok booleano, ausência de erro e os dois valores devolvidos iguais ao pedido normalizado pelas regras existentes do servidor. Resposta incerta não prova ausência de gravação. Bloquear campos/cancelamento durante salvamento e impedir salvamento enquanto a sugestão de texto já iniciada aguarda retorno. Preservar conteúdo dos criadores.
+- Verificação: doze respostas interceptadas no formulário real em390/1280; nenhum POST de detalhes chega ao servidor, nenhum pedido de IA. Primeiro CI completo39354289467/segurança39354289225 passou. Revisão adicional confere normalização na ordem exata do servidor e recusa nomes herdados de erro como __proto__, com casos adicionais de array/erro desconhecido. Nova verificação completa no novo head pendente.
+- Custo: mesmo POST e payload de servidor; apenas confirmação/local UI, sem nova leitura/gravação/provedor/franquia/preço. Fonte cliente cresce menos de1KB. M0 não muda, não certifica60%; PLANS_ON_SALE=false e gates preservados.
