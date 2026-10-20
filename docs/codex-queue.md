@@ -2340,6 +2340,15 @@ Pricing FAQ repair history: run39407143422 caught mobile target-size;39409356932
 
 
 177. **[B2-177] Confirm existing yearly offer email settings accurately.**
-- Estado: **Em implementação**.
+- Estado: **Publicado — entrega103**.
 - Require successful HTTP, strict confirmation, no contradictory error and exact canonical on/address snapshot from existing setter. Reuse browser-safe parseYearlyAsk normalization; lock pending controls and only update saved status/address after confirmation. Preserve uncertain creator drafts; confirm settings without claiming delivery or that nothing changed after uncertainty.
 - Synthetic48 intercepted on/off replies planned at390/1280 using isolated recurring fixture and synthetic French address; full final-head CI pending. No email, yearly price, member switch, Stripe or payment operation occurs. Existing opt-in/list exclusion, once-per-membership cadence, eligibility/affiliate/cost rules and300character cap unchanged. No new provider/paid unit/operation; M0 remains12.02–12.21%, fails60%; sales closed, H gates preserved.
+
+
+### Publicação funcional103 — 2026-10-20 (Fortaleza)
+
+- **PR#705 incorporado às11:38:08**, merge `b94eef4a60c2e74d598792e2ff01242a82e82d4f`, head `ad27ce86cf52ab64d6e315d3c349e5b38621b15b`. Oferta anual existente exige HTTP bem-sucedido, true estrito, ausência de erro e snapshot canônico exato on/address. Bloqueia campos pendentes, atualiza status/endereço salvos somente após confirmação e preserva rascunhos incertos; confirma configurações sem alegar entrega de email.
+- CI completo aprovado: Product39437950639/verify118679892692/Redis118679892402/security39437950979, incluindo48casos sintéticos interceptados em390/1280 com endereço francês sintético. Sem email, preço anual, troca de membro, Stripe ou pagamento; opt-in, exclusão da lista, cadência uma vez por assinatura, elegibilidade e limite300caracteres preservados.
+- READY às11:39:09.857, domínio marktmorgen.com, deployment `dpl_7Hda5pZFex3evGJzMB7y54sBAdQi`, SHA exato do merge. /, /signin, /studio (redirecionamento anônimo esperado), /platform/path, /pricing e /privacy retornaram200 com esse deployment. Nenhum log error/fatal na janela14:36:53.998–14:41:53.998UTC. Fluxo privado somente sintético no CI, sem gravação autenticada em produção.
+- Custos103: mesma requisição/snapshot existente, nenhuma leitura/email/troca/pagamento/provedor/unidade paga/custo recorrente adicional. Preços, limites, conteúdo/idiomas/IDs, permissões/opt-in e controles fiscais preservados. PLANS_ON_SALE=false, COMMISSION_LIVE=false; M0 vinculante12.02–12.21% continua reprovado para60%. Desconhecido não é zero; sem certificação geral ou H ativado.
+- **PR#704 documental incorporado às11:35:50**, merge `a8215c4e8428582fb246be52f91dc570b18f7f70`, head `12e7147870844e7052b0d6126a54b8ccdc0fef72`; Product39437659387/verify118678862784/Redis118678862428/security39437659419 aprovados. Registra102 e não incrementa contador. Este registro103 também é documental.
