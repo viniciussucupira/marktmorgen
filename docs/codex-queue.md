@@ -1073,3 +1073,12 @@ Pedido P5: anexo524cc7f9-78af-42b5-ae37-4c05dc91a193/Texto colado.txt, lido19/10
 - Custo/M0 antes/depois: conteúdo estático, referência de migração sem executá-la, nenhum provedor/API/email/IA/write novo, sem ampliar teto. Preços/limites/gates preservados;12,02–12,21%na leitura fiscal vinculante segue reprovação, nunca60%certificado. Vendas fechadas.
 
 - Publicação60 do PR646 confirmada: READY dpl_6cn3mkhXZhNjVrB8WH9XFGcd23mZ em20/10/2026 às00:11:00Fortaleza, SHA133cadd7f6201d5784bffc809b114b1ce255588f e alias marktmorgen.com,11rotas200/marcadorexato, conteúdo de Kajabi/índice conferido, sem error/fatal03:07:21.119–03:12:21.119UTC. Só então contador59→60. S1continua em andamento.
+
+
+### S1 — quarto incremento: Circle
+
+- Continuação da ordem aprovada, em branch codex/circle-comparison sobre o head explícito7ba32f42d453331dc42a1e44fb36eb9b11674725 do PR648 enquanto647/648terminam CI; nenhuma edição concorrente dessas branches. Main consultado133cadd7f6201d5784bffc809b114b1ce255588f. S1continua em andamento, nenhum item anterior renumerado.
+- Fontes oficiais Circle pricing, paywall transaction fees, live overview e messaging lidas20/10/2026. A página pública apresenta89/199/419USD como equivalentes mensais anuais; cobranças mensais e fatura anual exata não verificadas permanecemnull, não0 nem multiplicação de valor possivelmente arredondado. Pluscotação. Taxas2/1/1/.5 e Stripe/Billingseparadas.
+- Preservação Claude: community-chat.ts e community-dm.ts já implementam sala com consultas periódicas e mensagens privadas textuais; não alegar ausência de chat. Diferenças comprovadas Circle: grupos/multimídia, live/recordingnativo, appscomuns/Plusbranded. Nenhuma implementação nova nesses módulos.
+- Página/proof/circle no catálogo/sitemap existente, linknoíndice, título/descrição próprios, fontesdatadas, vantagens do concorrente mesmo tamanho, CTAexistente epaidclosed. Dadoscentraisdistinguem annualEquivalentMonthlyCents de annualCents. Testes de unknowns/canonicalprices/sitemap e navegador390/1280/axe/teclado/nãoescrita adicionados à suiteintegra.
+- M0 antes/depois: mesmo envelope estático e distribuição existentes; sem dependência/endpoint/chamada ao provedor/email/IA/storagewrite/telemetria nova; nenhum aumento de franquia/preço/limite/gate. A leitura fiscal vinculante continua12,02–12,21%, reprovada contra60%, não certificada; PLANS_ON_SALE=false. Não contar PR/documento como entrega; aguardar suitecompleta+READY/domínio/SHA.
