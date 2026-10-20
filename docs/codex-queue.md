@@ -2715,3 +2715,8 @@ O CI integral do head d8b5f7c2bc0162f776da886429deb5d05759f7ad encontrou uma oco
 #### Correção de regressões públicas compartilhadas — 2026-10-20 17:01:00 UTC
 
 As execuções integrais identificaram contraste durante entrada animada no template público (Hotmart/mostruário) e, emHT7, contagem que incluía o CTA geral da demo além do único criador fictício. Removida a animação de opacidade da primeira dobra das páginas de tópico, mantendo conteúdo visível desde o início; auditoria AA preservada e diagnóstico detalhado adicionado. O teste deHT7 conta o registro na seção de listagens, separado dos CTAs de navegação. Sem exclusão de regra de contraste. CI completo obrigatório no novo head; nenhuma publicação contabilizada enquanto pendente. Sem novas operações, custos, preços, limites ou gates alterados.
+
+
+#### HT15 — verificação de identificador da biblioteca privada
+
+Product checks39462624653/verify118766157526 aprovou regressões mas recusou o build: statsId pode ser null em loja sem histórico. A biblioteca agora só lê uma seção salva quando o identificador existe; ausência preserva a página e apresenta estado não confirmado, sem ler outra loja nem inventar seção vazia. CI integral novamente obrigatório no novo head; sem reexecução isolada ou publicação contada.

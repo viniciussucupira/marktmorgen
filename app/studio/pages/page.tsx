@@ -103,7 +103,7 @@ export default async function StudioPagesPage({ searchParams }: Params) {
       templateDraft = { ...page, blocks: blocksFromTemplate(template.id, { title: selected.title, summary: selected.summary, picture: Boolean(selected.image) }) };
       templateNotice = "Template opened as an unsaved draft. Review every block before saving; nothing has been published.";
     } else {
-      const section = await readSection(store.statsId, sectionId).catch(() => null);
+      const section = store.statsId ? await readSection(store.statsId, sectionId).catch(() => null) : null;
       if (section && fitsPage(section, BLOCK_KINDS.map(item => item.kind).filter(kind => kind !== "form"))) {
         templateDraft = { ...page, blocks: [...blocksFromTemplate(isFree(selected) ? "free" : "guide", {title:selected.title,summary:selected.summary,picture:Boolean(selected.image)}).slice(0,1), ...blocksForPage(section)] };
         templateNotice = "Your saved section opened in an unsaved page draft. The saved section and existing pages remain unchanged.";
