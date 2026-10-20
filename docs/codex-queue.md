@@ -2753,3 +2753,10 @@ Diagnóstico detalhado deHT7 identificou que os blocos .reveal do corpo ainda es
 #### Janela da verificação integral —20/10/2026
 
 HT6/Product checks39462558715/verify118765503722 foi cancelado pelo limite de25minutos, ainda executando os testes de navegador, sem conclusão integral. A suíte cresceu; limite do verify ajustado para35minutos, mantendo todos os casos/asserts e os demais jobs. Nenhuma reexecução isolada ou redução de cobertura. Nova execução integral no novo head é obrigatória antes de incorporar. Ajuste apenas do limite da execução de desenvolvimento, sem operação/direito/custo variável do cliente, preço ou gate modificado.
+
+
+#### HT16 — medidas reais e correção de estabilidade/FAQ
+
+Baseline antes (f9bca29fe6386648f76351de70955d4a93f7aa89), run39467038220/job118781215518:9amostras390×844/CPU4×/150ms/1,6Mbps/cachefrio registradas; homeLCP1156–1948ms, interação216–368ms; preçosCLS atingiu0,1318. CandidatoHT16/run39467038220/job118781215637 teve9amostras sob metas (homeLCP628–812ms/interação56–144ms, preçosCLS0, recursoCLS≤0,0555), mas descendentesHT17/HT13 tiveram oscilaçãoCLS0,1318 e interação200ms, portanto não basta um passe para concluir. Nenhuma amostra falha foi apagada ou tratada comozero.
+
+Fontes principaisGeist/Instrument usamdisplayoptional para impedir troca tardia durante página fria; faces escolhidas pelo criador permanecem como estavam. FAQ passa a disclosure nativo, mantendo perguntas/respostas/links/teclado e dispensando renderização React para abrir. Mesmas metas estritasLCP<2500/CLS<0,1/interação<200; nova coleta inclui fontes de layout-shift para diagnosticar eventual falha. Baseline imutável completo salvo emtests/fixtures/mobile-render-before.json comSHA/run/job; não reconstruir baseline inalterado a cadaPR. Candidato e suíte completa continuam obrigatórios em cada novohead. Proxy sintético não é INP real/p75/certificaçãoCWV. Sem novos requests/fornecedor/custo operacional de cliente ou gates alterados.
