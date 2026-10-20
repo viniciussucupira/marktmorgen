@@ -1,3 +1,4 @@
+import { checkOrderAcknowledgment } from "./order-acknowledgment.mjs";
 import { checkExitAcknowledgment } from "./exit-offer-acknowledgment.mjs";
 import { checkCartAcknowledgment } from "./cart-acknowledgment.mjs";
 import { checkEnableAcknowledgment } from "./enable-acknowledgment.mjs";
@@ -767,7 +768,8 @@ try {
   await checkPdfStampAcknowledgment({browser,LOCAL,fixture:{session:growthSession,sid:growthSid,product:growthProduct},is});
   await checkPdfPreviewAcknowledgment({browser,LOCAL,fixture:{session:growthSession,sid:growthSid,product:growthProduct},is});
   await checkFaqAcknowledgment({browser,LOCAL,fixture:homeDemo,is});
-  await checkExitAcknowledgment({browser,LOCAL,fixture:exitFixture,is});
+  await checkOrderAcknowledgment({browser,LOCAL,fixture:{session:growthSession,sid:growthSid},is});
+await checkExitAcknowledgment({browser,LOCAL,fixture:exitFixture,is});
 await checkCartAcknowledgment({browser,LOCAL,fixture:{session:growthSession,sid:growthSid},is});
 await checkEnableAcknowledgment({browser,LOCAL,fixture:homeDemo,is});
 await checkPairsAcknowledgment({browser,LOCAL,fixture:{session:growthSession,sid:growthSid,product:growthProduct},is});
