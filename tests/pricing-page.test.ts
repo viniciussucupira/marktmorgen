@@ -35,7 +35,7 @@ test("pricing is discoverable and uses a real comparison link, native FAQ and sc
  assert.ok(sitemap().some(page=>page.url.endsWith("/pricing")));
  const page=readFileSync("app/pricing/page.tsx","utf8");
  assert.match(page,/href="\/proof\/comparisons"/);
- assert.match(page,/<summary/);assert.match(page,/scope="col"/);assert.match(page,/scope="row"/);
+ assert.match(page,/id="content" tabIndex=\{-1\}/);assert.match(page,/<summary/);assert.match(page,/scope="col"/);assert.match(page,/scope="row"/);
  for(const path of ["components/site-nav.tsx","components/site-footer.tsx","app/page.tsx"])assert.ok(readFileSync(path,"utf8").includes('"/pricing"'),path);
  assert.doesNotMatch(page,/fetch\(|useEffect|Book a demo|Talk to an expert/);
 });

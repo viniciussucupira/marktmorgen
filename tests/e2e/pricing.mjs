@@ -21,7 +21,7 @@ export async function checkPricing({browser,LOCAL,axeSource,is}){
     await summary.focus();await page.keyboard.press("Enter");
     is(await summary.evaluate(node=>node.parentElement.open),"FAQ opens by keyboard "+width);
    }
-   is((await page.locator("main").innerText()).includes("Stripe processing fees are separate"),"processing separate "+width);
+   is((await page.locator("main").innerText()).includes("Stripe charges its own processing fee"),"processing separate "+width);
    is(await page.locator("main").evaluate(node=>node.scrollWidth<=node.clientWidth+1),"pricing fits viewport "+width);
    await page.addScriptTag({content:axeSource});
    const audit=await page.evaluate(async()=>await window.axe.run(document.querySelector("main"),{runOnly:{type:"tag",values:["wcag2a","wcag2aa","wcag21aa"]}}));

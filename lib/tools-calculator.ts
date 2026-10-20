@@ -1,5 +1,5 @@
 import { COMPETITOR_PRICES, type CompetitorPlanPrice, type OfficialPriceSource } from "@/lib/competitor-prices";
-import { PUBLISHED_PLAN_PRICES, type Tier, type Cycle } from "@/lib/plan";
+import { PUBLISHED_PLAN_PRICES, COMMISSION_PLANS_PUBLISHED, COMMISSION_BPS, type Tier, type Cycle } from "@/lib/plan";
 
 export type ToolId = keyof typeof COMPETITOR_PRICES;
 export const TOOL_IDS = Object.keys(COMPETITOR_PRICES) as ToolId[];
@@ -54,5 +54,5 @@ export function quoteLine(line:StackLine,cycle:Cycle):LineQuote{
 }
 export function quoteOwn(tier:Tier,cycle:Cycle,salesCents:number,orders:number,bps:number|null,fixed:number|null,other:number|null):number|null{
  if(!Number.isSafeInteger(salesCents)||salesCents<0||!Number.isSafeInteger(orders)||orders<0||(salesCents>0&&orders===0)||(salesCents===0&&orders>0)||bps===null||fixed===null||other===null||!Number.isFinite(bps)||bps<0||bps>10000||!Number.isFinite(fixed)||fixed<0||!Number.isSafeInteger(other)||other<0)return null;
- return (cycle==="month"?PUBLISHED_PLAN_PRICES[tier].month:PUBLISHED_PLAN_PRICES[tier].year/12)+salesCents*bps/10000+orders*fixed+other;
+ return (cycle==="month"?PUBLISHED_PLAN_PRICES[tier].month:PUBLISHED_PLAN_PRICES[tier].year/12)+salesCents*(bps+(COMMISSION_PLANS_PUBLISHED?COMMISSION_BPS[tier]:0))/10000+orders*fixed+other;
 }

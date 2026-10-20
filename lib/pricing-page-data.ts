@@ -1,7 +1,8 @@
 /** Server-rendered pricing facts. Reads existing rules; never runs billing or provider operations.
  * The future browser calculator reads plan.ts and competitor-prices.ts directly, not this server module.
  */
-import { TIERS, PLAN_TITLES, PUBLISHED_PLAN_PRICES, publishedPriceWords, monthlyEmails, commissionBps, TRIAL_DAYS, REFUND_DAYS, type Tier } from "@/lib/plan";
+import { TIERS, PLAN_TITLES, PUBLISHED_PLAN_PRICES, publishedPriceWords, monthlyEmails, TRIAL_DAYS, REFUND_DAYS, type Tier } from "@/lib/plan";
+import { planShareWords } from "@/lib/fee-words";
 import { PLANS_ON_SALE } from "@/lib/opening";
 import { MAX_PRODUCTS } from "@/lib/catalog-rules";
 import { MAX_FILE_BYTES } from "@/lib/product-file";
@@ -35,7 +36,7 @@ export const PRICING_PLANS=TIERS.map(tier=>({
  tier,title:PLAN_TITLES[tier],
  monthly:publishedPriceWords(tier,"month"),annual:publishedPriceWords(tier,"year"),
  monthlyCents:PUBLISHED_PLAN_PRICES[tier].month,annualCents:PUBLISHED_PLAN_PRICES[tier].year,
- share:commissionBps(tier)/100+"% of each sale",
+ share:planShareWords(tier),
  purpose:tier==="creator"?"A store for your products, memberships and community.":tier==="pro"?"The store, plus list email and AI writing with published limits.":"Studio's tools with larger usage allowances.",
 }));
 export const PRICING_GROUPS:PricingGroup[]=[
@@ -94,7 +95,7 @@ export const PRICING_ADDONS=[
 export const PRICING_QUESTIONS=[
  {q:"Can I buy a plan today?",a:PLANS_ON_SALE?"Check the plan's current terms and available features before subscribing.":"Paid plans and paid selling are not open yet. You can prepare a store and inspect the live demo; this page does not activate a paid checkout."},
  {q:"How do monthly and annual billing differ?",a:"Monthly billing charges the published monthly price each billing period. Annual billing is one payment of the published annual price, not twelve monthly payments. Monthly usage allowances still follow their own counter windows."},
- {q:"Does 0% of each sale include payment processing?",a:"No. The platform share and your Stripe processing fees are separate. Your account's country, payment method and enabled Stripe services can affect what Stripe charges."},
+ {q:"Does the platform share include payment processing?",a:"No. The platform share and your Stripe processing fees are separate. Your account's country, payment method and enabled Stripe services can affect what Stripe charges."},
  {q:"Can I cancel my subscription?",a:"The Terms allow cancellation at any time. Future billing periods are not charged, and access lasts through the period already paid unless a refund applies. The Refund Policy describes the studio controls and email route."},
  {q:"What are the trial and refund terms?",a:"The published trial is "+TRIAL_DAYS+" days for the first store on an account when plans open. Some trial allowances are smaller and paid AI writing is excluded. The first plan payment on an account can be refunded in full on request within "+REFUND_DAYS+" days. An annual refund later retains started months at the monthly price and Stripe's card fee. The separate Store assistant add-on has different refund terms."},
  {q:"What happens when an allowance is used?",a:"Affected new usage can pause until its counter resets or the plan changes. Other limits, consent, permissions and availability checks still apply. The file-delivery allowance is not a hard stop on already-paid downloads. There is no automatic overage charge for the listed plan allowances."},
