@@ -11,7 +11,7 @@ const MESSAGES: Record<string, string> = {
   dunning: "Pick one, two or three emails.",
   none: "This account has no store yet.",
   signed_out: "Your session ended. Log in again.",
-  server_error: "Something went wrong on our side. Nothing was changed; try again in a moment.",
+  server_error: "We could not confirm these reminder settings. Reload this page to check before trying again.",
 };
 
 const CHOICE_WORDS: Record<ReminderCount, string> = {
@@ -23,13 +23,15 @@ const CHOICE_WORDS: Record<ReminderCount, string> = {
 /** What members are told when a payment fails, and before their card stops working (lib/dunning-rules.ts). */
 export function DunningEditor({ dunning, connected }: { dunning: Dunning; connected: boolean }) {
   const router = useRouter();
+  const [saved, setSaved] = useState(dunning);
   const [reminders, setReminders] = useState<ReminderCount>(dunning.reminders);
   const [cardNotice, setCardNotice] = useState(dunning.cardNotice);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const changed = reminders !== dunning.reminders || cardNotice !== dunning.cardNotice;
+  const changed = reminders !== saved.reminders || cardNotice !== saved.cardNotice;
 
   async function save() {
+    if (busy) return;
     setBusy(true);
     setError(null);
     try {
@@ -38,13 +40,17 @@ export function DunningEditor({ dunning, connected }: { dunning: Dunning; connec
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ reminders, cardNotice }),
       });
-      const data = (await response.json().catch(() => ({}))) as { ok?: boolean; error?: string };
-      if (data.ok) {
-        toast("Saved.");
+      const raw: unknown = await response.json().catch(() => null);
+      const reply = raw && typeof raw === "object" && !Array.isArray(raw) ? raw as Record<string, unknown> : null;
+      const snapshot = reply?.dunning && typeof reply.dunning === "object" && !Array.isArray(reply.dunning) ? reply.dunning as Record<string, unknown> : null;
+      if (response.ok && reply?.ok === true && !("error" in reply) && snapshot?.reminders === reminders && snapshot.cardNotice === cardNotice) {
+        setSaved({ reminders, cardNotice });
+        toast("Payment reminder settings saved.");
         router.refresh();
         return;
       }
-      setError(MESSAGES[data.error ?? ""] ?? MESSAGES.server_error);
+      const problem = reply?.ok !== true && typeof reply?.error === "string" && Object.hasOwn(MESSAGES, reply.error) ? MESSAGES[reply.error] : null;
+      setError(problem ?? MESSAGES.server_error);
     } catch {
       setError(MESSAGES.server_error);
     } finally {
@@ -60,7 +66,7 @@ export function DunningEditor({ dunning, connected }: { dunning: Dunning; connec
   ];
 
   return (
-    <section className="card mt-8 p-6 sm:p-8" aria-labelledby="dunning-title" data-dunning-editor>
+    <section aria-busy={busy} className="card mt-8 p-6 sm:p-8" aria-labelledby="dunning-title" data-dunning-editor>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 id="dunning-title" className="text-lg font-semibold tracking-[-0.02em] text-ink">
           When a member&apos;s payment fails
@@ -86,6 +92,7 @@ export function DunningEditor({ dunning, connected }: { dunning: Dunning; connec
           <span className="field-label">Emails about each failed payment</span>
           <select
             id="dunning-reminders"
+            disabled={busy}
             className="field mt-2"
             value={reminders}
             onChange={(event) => setReminders(Number(event.target.value) as ReminderCount)}
@@ -98,7 +105,7 @@ export function DunningEditor({ dunning, connected }: { dunning: Dunning; connec
           </select>
         </label>
         <label className="flex min-h-11 items-center gap-3 text-sm text-ink" htmlFor="dunning-card">
-          <input id="dunning-card" type="checkbox" className="h-5 w-5" checked={cardNotice} onChange={(event) => setCardNotice(event.target.checked)} />
+          <input disabled={busy} id="dunning-card" type="checkbox" className="h-5 w-5" checked={cardNotice} onChange={(event) => setCardNotice(event.target.checked)} />
           <span>Email a member before their card expires</span>
         </label>
         <button type="submit" className="btn btn-primary" disabled={busy || !changed} aria-busy={busy}>
