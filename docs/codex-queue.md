@@ -3074,3 +3074,8 @@ Em paralelo sem conflito, PR731/branch codex/p0-201-public-access-matrix adicion
 
 
 Leitura de forced-color-adjust passa pela API CSS getPropertyValue, com CSS.supports registrado, em vez de presumir propriedade camelCase exposta no WebKit. Continua exigindo valor auto, mídia ativa, outline e pixels reais: não converte ausência em auto nem ignora falha. Verificação completa no novohead obrigatória.
+
+
+### Item201 — continuidade da verificação (20/10/2026 18:24 Fortaleza)
+
+No head `db7efae4c0e1c227d777a1234f935eec829c8968`, Firefox confirmou contraste real do placeholder e rejeitou o controle negativo desbotado, mas o job118891303465 falhou nos focos em alto contraste e no download do certificado. Permanecem abertos, sem redução de critérios. A falha anterior de growth/contact por prefetch RSC interrompido recebe espera de rede ociosa antes de navegação/reload/fechamento sintéticos; a coleta e a exigência de zero erros permanecem integrais. Nova execução completa obrigatória no novo head; nenhum merge/publicação neste registro. Custo variável por cliente: nenhum; CI padrão público já previsto, minutos efetivos pendentes de consolidação. Gates, preços e limites preservados.

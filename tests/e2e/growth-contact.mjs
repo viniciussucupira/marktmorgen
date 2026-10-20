@@ -12,6 +12,7 @@ export async function checkGrowthAndContact({owner,LOCAL,abStore,second,contactT
   for(const width of [320,390,768,1280]) {
    await growth.setViewportSize({width,height:900});
    for(const goal of ["leads","sales","services","retention"]) {
+    await growth.waitForLoadState("networkidle");
     await growth.goto(LOCAL+"/studio/growth?store="+second+"&goal="+goal,{waitUntil:"domcontentloaded",timeout:60000});
     await growth.getByRole("heading",{name:"Choose your next business goal",exact:true}).waitFor();
     const goals=growth.getByRole("navigation",{name:"Growth goals"});
@@ -50,6 +51,7 @@ export async function checkGrowthAndContact({owner,LOCAL,abStore,second,contactT
         assert.equal(await growth.locator("#starter-goal").inputValue(),goal);
         assert.equal(new URL(growth.url()).searchParams.get("store"),second);
         assert.deepEqual(await growth.locator("#campaign-starters h4").allTextContents(),names,"destination uses the same actual template catalog");
+        await growth.waitForLoadState("networkidle");
         await growth.goBack({waitUntil:"domcontentloaded"});
         await growth.getByRole("heading",{name:"Choose your next business goal",exact:true}).waitFor();
       }
@@ -62,7 +64,7 @@ export async function checkGrowthAndContact({owner,LOCAL,abStore,second,contactT
    console.log("  ok    growth4 goals preserve store/selection/AA/fit at "+width);
   }
   assert.equal(previews,0,"goal discovery and keyboard previews never request metered campaign setup");
- } finally {await growth.close();}
+ } finally {await growth.waitForLoadState("networkidle");await growth.close();}
  for(const width of [390,1280]) {
   const contact=await owner.context().newPage();
   contact.on("pageerror",error=>errors.push(String(error)));
@@ -78,6 +80,7 @@ export async function checkGrowthAndContact({owner,LOCAL,abStore,second,contactT
    await company.fill(savedValue);
    await Promise.all([contact.waitForResponse(response=>response.url().endsWith("/api/store/crm")&&response.request().method()==="POST"),company.press("Tab")]);
    await matched.waitFor();
+   await contact.waitForLoadState("networkidle");
    await contact.reload({waitUntil:"domcontentloaded"});
    await company.waitFor();
    assert.equal(await company.inputValue(),savedValue,"real synthetic API save persists through reload");
@@ -130,7 +133,7 @@ export async function checkGrowthAndContact({owner,LOCAL,abStore,second,contactT
    const violations=await contact.evaluate(async()=>{const result=await window.axe.run(document.querySelector("main"),{runOnly:{type:"tag",values:["wcag2a","wcag2aa","wcag21aa","wcag22aa"]}});return result.violations.map(rule=>rule.id);});
    assert.deepEqual(violations,[]);
    console.log("  ok    contact real-save/reload/refusal/retry/pending/uncertain/leave guard/AA/fit at "+width);
-  } catch(error) {console.error("Synthetic contact recovery state:",await contact.locator("body").innerText().then(text=>text.slice(-6000)).catch(()=>"unreadable"));throw error;} finally {await contact.close({runBeforeUnload:false});}
+  } catch(error) {console.error("Synthetic contact recovery state:",await contact.locator("body").innerText().then(text=>text.slice(-6000)).catch(()=>"unreadable"));throw error;} finally {await contact.waitForLoadState("networkidle");await contact.close({runBeforeUnload:false});}
  }
  assert.deepEqual(errors,[],"growth/contact pages have no uncaught browser errors");
 }
