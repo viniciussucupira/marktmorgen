@@ -536,8 +536,14 @@ Correção complementar da fixture #630: a execução integral mostrou que o rel
    - Custo e margem: Mesmo POST existente, sem fornecedor, armazenamento, mensagem, limite ou franquia adicional. Validação local limitada; M0 antes=depois em todos os planos/intervalos, leitura mais onerosa continua reprovada. Não conclui coleta/retenção fiscal nem abre vendas.
 
 
+Validação633: primeira suíte integral encontrou apenas seletor de sucesso ambíguo entre a região acessível e sua cópia visual aria-hidden. Teste agora verifica ambas separadamente; casos negativos permanecem sem enfraquecimento. Correção somente de teste, nova suíte integral obrigatória.
+
+
 87. **[B2-SIGNIN-ACKNOWLEDGMENT] Manter o endereço de acesso coerente com o pedido pendente**
    - Pedido: revisão contínua B2/usabilidade autorizada; achado19/10/2026,21h de Fortaleza (aproximado).
    - Estado: **em andamento; branch codex/signin-confirmation; dependência explícita633; integra a fila86 sem sobrepor os componentes/testes de633**.
    - Evidência: E-mail bloqueado durante envio; sucesso exige HTTP válido, ok booleano e ausência de erro contraditório. Oito respostas interceptadas em390/1280, endereço, reabertura após erro e cooldown existentes. Nenhum pedido chega ao endpoint de autenticação, nenhuma conta/e-mail real criado.
    - Custo e margem: Mesmo fluxo existente de autenticação, sem novo fornecedor/chamada/dado/teto; validação local constante e335caracteres adicionais de fonte. M0 antes=depois, modelo vinculante ainda reprova60%; PLANS_ON_SALE=false e regras fiscais preservadas.
+
+
+Validação634: a execução integral antiga terminou com a mesma ambiguidade herdada no teste de633; os oito cenários próprios de acesso passaram em390/1280. Integrada a correção de633 por ancestralidade explícita, sem remover nenhum cenário; nova suíte completa no novo head obrigatória.
