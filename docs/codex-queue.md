@@ -2444,3 +2444,14 @@ Pricing FAQ repair history: run39407143422 caught mobile target-size;39409356932
 - M0 mais oneroso governa abertura das vendas, não edições sem custo variável. Nenhuma venda, preço, limite visível, comissão, PLANS_ON_SALE, tax gate, art.9a ou revisão comercial alterados. Nenhuma alegação pública de recurso inexistente ou margem certificada. Documentação apenas, sem custo novo ou incremento do contador funcional107.
 - Verificações de integridade do texto em memória:17estados classificados, ordem/corpo das tarefas preservados, prefixo histórico e IDs antigos intactos. CI integral do head final pendente; incorporação e testes efetivos serão registrados após confirmação.
 - Próxima execução: HT1,HT2,HT3,HT4,HT5,HT6,HT7,HT8,HT9,HT12,HT15,HT16,HT17; depois cálculos HT10/HT11/HT13/HT14; somente então novos B2. Cada HT iniciado recebe registro próprio ao fim com próximo número livre, commit, testes e publicação.
+
+
+183. **[HT1] Hero orientado ao resultado do criador**
+- Estado: **Em implementação; verificação integral pendente**.
+- Início:20/10/2026 às12:36:27 de Fortaleza, após conclusão/publicação dos PRs708/709/710 e implementação documental HT0 no PR712. Base conferida `586e6df03f485e6e0fee68e8a8a86db4b9d1aa9c`; commit de implementação: `04b77e0f1088ef0087ac8d5b388023ead2083321` (criado em2026-10-20 12:38:35 de Fortaleza).
+- Reutiliza a home e HomeActions existentes, sem criar segundo mecanismo. Headline em inglês americano orientada ao trabalho/negócio do criador, subheadline primeira venda→próximas ofertas, pilar exato “Your store. Your Stripe. Your money.” preservado. Um CTA dominante para /signin; demo como link secundário; mesmo CTA grande repetido pela página. Sem promessa de ganhos, vendas garantidas ou recurso inexistente.
+- Texto e hierarquia apenas: mesmas rotas, nenhuma chamada IA/provedor, leitura de dados, imagem, armazenamento, pool ou operação nova; nenhum custo variável por cliente adicional. Todos os preços/limites, PLANS_ON_SALE=false, comissão, tax gate, art.9a e revisão comercial preservados; aviso de venda fechada permanece visível. Não certifica margem de vendas.
+- Teste sintético de navegador planejado em390/1280: CTA dominante único, destino/repetição/tamanho, ordem de teclado e navegação local para cadastro sem submissão/criação de conta, aviso de vendas fechadas, ausência de API write, largura e axe. Suite/compilação/segurança/Redis completas exigidas no head final; publicação só após READY/domínio/SHA exato.
+- Documentação: docs/ht1-home-hero.md. Próximo item: HT2; nenhum B2 novo antes da sequência HT aprovada.
+
+- Histórico de HT1: head `fb2aab77bdead03f6cb212ae13a09d6b5c75d26e`, Product39450325455/verify118723113197 reprovou em tap-targets.test.ts: link secundário com min-h-11 precisava declarar alinhamento vertical. Corrigido com inline-flex/items-center; nenhuma aprovação anterior presumida. Verificação completa obrigatória no novo head, sem rerun isolado.

@@ -1,3 +1,4 @@
+import { checkHomeHero } from "./home-hero.mjs";
 import { checkSitesAcknowledgment } from "./sites-acknowledgment.mjs";
 import { checkLeaveAcknowledgment } from "./leave-acknowledgment.mjs";
 import { checkPackageAcknowledgment } from "./package-acknowledgment.mjs";
@@ -795,6 +796,7 @@ await checkThanksAcknowledgment({browser,LOCAL,fixture:{session:growthSession,si
 await checkNoCountAcknowledgment({browser,LOCAL,fixture:homeDemo,is});
 await checkNudgeAcknowledgment({browser,LOCAL,fixture:pauseFixtures[0],is});
   await captureHomeStudio({browser,LOCAL,fixture:homeDemo,is});
+  await checkHomeHero({browser,LOCAL,axeSource,is});
   await checkHomeModules({browser,LOCAL,axeSource,is});
   await checkStudioAmericanEnglish({browser,LOCAL,session:growthSession,sid:growthSid,is});
   await checkComposerAmericanEnglish({browser,LOCAL,session:growthSession,sid:growthSid,product:growthProduct,is});
