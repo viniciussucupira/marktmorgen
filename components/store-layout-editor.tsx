@@ -4,16 +4,17 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Icon } from "@/components/icons";
 import { toast } from "@/components/toast";
-import { type Announcement, MAX_ANNOUNCEMENT, MAX_SECTIONS, MAX_SECTION_TITLE, type StoreSection } from "@/lib/store-sections";
+import { parseSections, parseAnnouncement, type Announcement, MAX_ANNOUNCEMENT, MAX_SECTIONS, MAX_SECTION_TITLE, type StoreSection } from "@/lib/store-sections";
 
-const FAILED = "It could not be saved just now. Try again in a moment.";
+const FAILED = "We could not confirm these settings. Reload this page to check before trying again.";
 const GONE = "One of those products is no longer in your store. Reload the page and try again.";
 
-async function post(url: string, body: unknown): Promise<string | null> {
+async function post(url: string, body: unknown, matches: (data: Record<string, unknown>) => boolean): Promise<string | null> {
   try {
     const response = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
-    const data = (await response.json().catch(() => ({}))) as { ok?: boolean; error?: string };
-    return data.ok ? null : data.error === "unknown" ? GONE : FAILED;
+    const raw: unknown = await response.json().catch(() => null);
+    const data = raw && typeof raw === "object" && !Array.isArray(raw) ? raw as Record<string, unknown> : null;
+    return response.ok && data?.ok === true && !data.error && matches(data) ? null : data?.ok !== true && data?.error === "unknown" ? GONE : FAILED;
   } catch {
     return FAILED;
   }
@@ -35,6 +36,8 @@ export function StoreLayoutEditor({
   products: { id: string; title: string }[];
 }) {
   const router = useRouter();
+  const [savedRows, setSavedRows] = useState(sections);
+  const [savedNews, setSavedNews] = useState(announcement);
   const [rows, setRows] = useState<StoreSection[]>(sections);
   const [text, setText] = useState(announcement?.text ?? "");
   const [link, setLink] = useState(announcement?.product ?? "");
@@ -44,28 +47,32 @@ export function StoreLayoutEditor({
   const order = new Map(products.map((product, index) => [product.id, index]));
   const taken = new Set(rows.map((row) => row.at));
   const free = products.filter((product) => !taken.has(product.id));
-  const sectionsChanged = JSON.stringify(rows) !== JSON.stringify(sections);
+  const sectionsChanged = JSON.stringify(rows) !== JSON.stringify(savedRows);
   const incomplete = rows.some((row) => !row.title.trim() || !row.at);
-  const newsChanged = text.trim() !== (announcement?.text ?? "") || link !== (announcement?.product ?? "");
+  const newsChanged = text.trim() !== (savedNews?.text ?? "") || link !== (savedNews?.product ?? "");
 
   async function save(what: "sections" | "news") {
+    if (busy !== null) return;
     setBusy(what);
     setError(null);
-    const problem =
-      what === "sections"
-        ? await post("/api/store/sections", { sections: [...rows].sort((a, b) => (order.get(a.at) ?? 0) - (order.get(b.at) ?? 0)) })
-        : await post("/api/store/announcement", { text: text.trim(), product: link || null });
+    const expectedSections = parseSections([...rows].sort((a, b) => (order.get(a.at) ?? 0) - (order.get(b.at) ?? 0)));
+    const expectedNews = parseAnnouncement({ text: text.trim(), product: link || null });
+    const problem = what === "sections"
+      ? await post("/api/store/sections", { sections: [...rows].sort((a, b) => (order.get(a.at) ?? 0) - (order.get(b.at) ?? 0)) }, data => Array.isArray(data.savedSections) && data.sections === expectedSections.length && JSON.stringify(parseSections(data.savedSections)) === JSON.stringify(expectedSections) && data.savedSections.length === expectedSections.length)
+      : await post("/api/store/announcement", { text: text.trim(), product: link || null }, data => Object.prototype.hasOwnProperty.call(data, "announcement") && data.on === (expectedNews !== null) && (expectedNews === null ? data.announcement === null : JSON.stringify(parseAnnouncement(data.announcement)) === JSON.stringify(expectedNews)));
     setBusy(null);
     if (problem) {
       setError({ on: what, text: problem });
       return;
     }
-    toast(what === "sections" ? "Sections saved." : text.trim() ? "Saved. It is on your store now." : "Taken off your store.");
+    if (what === "sections") { setSavedRows(expectedSections); setRows(expectedSections); }
+    else { setSavedNews(expectedNews); setText(expectedNews?.text ?? ""); setLink(expectedNews?.product ?? ""); }
+    toast(what === "sections" ? "Section settings saved." : "News settings saved.");
     router.refresh();
   }
 
   return (
-    <div className="card p-6 sm:p-8">
+    <div data-layout-editor aria-busy={busy !== null} className="card p-6 sm:p-8">
       <p className="text-lg font-semibold tracking-[-0.02em] text-ink">Sections and news on your store</p>
       <p className="mt-2 text-ink-soft">
         Cut a long store into sections with a heading over each, and put one line of your own news across the top.
@@ -85,7 +92,7 @@ export function StoreLayoutEditor({
                 <li key={index} className="flex flex-wrap items-end gap-3 rounded-2xl bg-paper p-3 ring-1 ring-line">
                   <label className="min-w-[12rem] flex-1">
                     <span className="field-label">{`Heading ${index + 1}`}</span>
-                    <input
+                    <input disabled={busy !== null}
                       className="field mt-1"
                       maxLength={MAX_SECTION_TITLE}
                       value={row.title}
@@ -95,7 +102,7 @@ export function StoreLayoutEditor({
                   </label>
                   <label className="min-w-[12rem] flex-1">
                     <span className="field-label">Starts at</span>
-                    <select className="field mt-1" value={row.at} onChange={(event) => setRows((all) => all.map((r, i) => (i === index ? { ...r, at: event.target.value } : r)))}>
+                    <select disabled={busy !== null} className="field mt-1" value={row.at} onChange={(event) => setRows((all) => all.map((r, i) => (i === index ? { ...r, at: event.target.value } : r)))}>
                       {row.at && !order.has(row.at) ? <option value={row.at}>A product that is no longer published</option> : null}
                       {products
                         .filter((product) => product.id === row.at || !taken.has(product.id))
@@ -108,6 +115,7 @@ export function StoreLayoutEditor({
                   </label>
                   <button
                     type="button"
+                    disabled={busy !== null}
                     onClick={() => setRows((all) => all.filter((_, i) => i !== index))}
                     className="inline-flex h-11 w-11 items-center justify-center rounded-full text-ink-soft hover:bg-danger-soft hover:text-danger"
                     aria-label={`Remove heading ${index + 1}`}
@@ -119,7 +127,7 @@ export function StoreLayoutEditor({
             </ul>
             <div className="mt-3 flex flex-wrap items-center gap-3">
               {rows.length < MAX_SECTIONS && free.length > 0 ? (
-                <button type="button" className="btn btn-secondary btn-sm" onClick={() => setRows((all) => [...all, { title: "", at: free[0].id }])}>
+                <button type="button" disabled={busy !== null} className="btn btn-secondary btn-sm" onClick={() => setRows((all) => [...all, { title: "", at: free[0].id }])}>
                   <Icon name="plus" size={15} />
                   {`Add a section (${rows.length} of ${MAX_SECTIONS})`}
                 </button>
@@ -149,11 +157,11 @@ export function StoreLayoutEditor({
               <span className="field-label">What it says</span>
               <span className="text-xs tabular-nums text-ink-mute">{`${text.length}/${MAX_ANNOUNCEMENT}`}</span>
             </span>
-            <input className="field mt-1" maxLength={MAX_ANNOUNCEMENT} value={text} placeholder="New: the spring meal plan is out" onChange={(event) => setText(event.target.value)} />
+            <input disabled={busy !== null} className="field mt-1" maxLength={MAX_ANNOUNCEMENT} value={text} placeholder="New: the spring meal plan is out" onChange={(event) => setText(event.target.value)} />
           </label>
           <label className="min-w-[12rem] flex-1">
             <span className="field-label">Leads to</span>
-            <select className="field mt-1" value={link} onChange={(event) => setLink(event.target.value)}>
+            <select disabled={busy !== null} className="field mt-1" value={link} onChange={(event) => setLink(event.target.value)}>
               <option value="">Nowhere</option>
               {link && !order.has(link) ? <option value={link}>A product that is no longer published</option> : null}
               {products.map((product) => (

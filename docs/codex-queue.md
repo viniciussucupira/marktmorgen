@@ -2204,3 +2204,9 @@ Pricing FAQ repair history: run39407143422 caught mobile target-size;39409356932
   }
 ]
 ```
+
+
+168. **[B2-168] Confirm store sections and news saves/removals accurately.**
+- Estado: **Em implementação**.
+- Require successful HTTP, strict boolean confirmation, no error and exact canonical section/news snapshots. Preserve legacy response count/on fields and add snapshots from the existing setter result, without an additional read. Pending controls lock and announce busy; uncertainty preserves creator drafts and confirms settings rather than public availability.
+- Synthetic96 intercepted save/removal cases at390/1280; full final-head CI pending. Sections remain capped20/title60 and news120characters, same product IDs/permissions. Response snapshots bounded by existing caps, below existing40KB studio request sizing; no new operation/provider/paid unit or recurring cost. Client source growth is not measured bundle cost; binding M0 remains12.02–12.21%, fails60%; sales closed.
