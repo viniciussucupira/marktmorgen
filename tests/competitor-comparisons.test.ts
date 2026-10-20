@@ -21,6 +21,7 @@ test("official comparison prices carry an HTTPS source and a real read date", ()
     const extraSources: OfficialPriceSource[] = [competitor.trial.source];
     if ("brandedApp" in competitor) extraSources.push(competitor.brandedApp.source);
     if ("discovery" in competitor) extraSources.push(competitor.discovery.source);
+    if ("sponsorship" in competitor) extraSources.push(competitor.sponsorship.source);
     if ("messaging" in competitor) extraSources.push(competitor.messaging.source);
     if ("live" in competitor) extraSources.push(competitor.live.source);
     if ("webinar" in competitor) extraSources.push(competitor.webinar.source);
@@ -54,7 +55,7 @@ test("the comparison reads every own published price, email limit and catalog ca
   assert.ok(table.rows.find(r => r[0] === "Getting started")![2].includes("not open yet"));
 });
 test("new proof pages are in the existing sitemap and the index links only actual proof pages", () => {
-  for (const slug of ["kajabi", "skool", "clickfunnels", "circle", "comparisons"]) {
+  for (const slug of ["kajabi", "skool", "clickfunnels", "circle", "kit", "comparisons"]) {
     assert.equal(sitemap().filter(e => new URL(e.url).pathname === "/proof/" + slug).length, 1);
   }
   const index = findPage("proof", "comparisons");
@@ -119,4 +120,20 @@ test("Circle annual equivalents stay distinct from unknown invoices and existing
   assert.ok(page.blocks.some(b=>b.kind==="lead" && b.text.includes("existing chat is not missing")));
   assert.ok(table.rows.find(r=>r[0]==="Private conversations")![2].includes("Text conversations"));
   assert.ok(page.blocks.some(b=>b.kind==="limits" && b.title==="Where they are ahead" && b.items.length>=3));
+});
+
+test("Kit inclusive processing and first-year promotion never become a false renewal quote", () => {
+ const kit=COMPETITOR_PRICES.kit;
+ const pro=kit.plans.find(p=>p.name==="Pro");
+ assert.ok(pro && pro.annualCents===null && pro.monthlyCents===null);
+ assert.ok(kit.plans.every(p=>p.listedPaymentFeeBps===350 && p.listedPaymentFixedCents===30 && p.platformFeeBps===60));
+ assert.ok(kit.feeScope.includes("including card processing"));
+ assert.ok(kit.billingScope.includes("first-year") && kit.billingScope.includes("not verified"));
+ const page=findPage("proof","kit");assert.ok(page && page.seo?.title==="Marktmorgen vs Kit");
+ const table=page.blocks.find(b=>b.kind==="table");assert.ok(table && table.kind==="table");
+ for(const tier of TIERS){
+  assert.ok(table.rows.find(r=>r[0]==="Subscription pricing")![2].includes(publishedPriceWords(tier,"month")));
+  assert.ok(table.rows.find(r=>r[0]==="Email allowance")![2].includes(monthlyEmails(tier).toLocaleString("en-US")));
+ }
+ assert.ok(page.blocks.some(b=>b.kind==="limits" && b.title==="Where they are ahead"));
 });
