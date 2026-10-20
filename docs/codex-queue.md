@@ -2453,3 +2453,12 @@ Pricing FAQ repair history: run39407143422 caught mobile target-size;39409356932
 - Texto e hierarquia apenas: mesmas rotas, nenhuma chamada IA/provedor, leitura de dados, imagem, armazenamento, pool ou operação nova; nenhum custo variável por cliente adicional. Todos os preços/limites, PLANS_ON_SALE=false, comissão, tax gate, art.9a e revisão comercial preservados; aviso de venda fechada permanece visível. Não certifica margem de vendas.
 - Teste sintético de navegador planejado em390/1280: CTA dominante único, destino/repetição/tamanho, ordem de teclado e navegação local para cadastro sem submissão/criação de conta, aviso de vendas fechadas, ausência de API write, largura e axe. Suite/compilação/segurança/Redis completas exigidas no head final; publicação só após READY/domínio/SHA exato.
 - Documentação: docs/ht1-home-hero.md. Próximo item: HT2; nenhum B2 novo antes da sequência HT aprovada.
+
+
+184. **[HT2] Jornada do criador na página de recursos existente**
+- Estado: **Em implementação; verificação integral pendente**.
+- Registro:20/10/2026 às12:41:40 de Fortaleza. Base conferida `fb2aab77bdead03f6cb212ae13a09d6b5c75d26e`; commit de implementação: **A_REGISTRAR_APOS_CRIACAO_HT2**.
+- Reorganiza /platform, sem segunda página paralela: Create→Charge→Deliver→Sell more→Automate→Grow,18links para recursos reais já existentes em lib/feature-pages.ts, catálogo/âncora e escolhas por criador preservados. Texto em inglês americano, sem previsão de vendas; requisitos de Stripe, disponibilidade, plano, consentimento, custos e domínio visíveis nas páginas vinculadas. Aviso explícito de venda fechada enquanto PLANS_ON_SALE=false.
+- Dados estáticos/texto/layout somente; mesmas rotas/assets/serviços, sem nova leitura de conta/provedor, armazenamento, IA, email ou operação. Links de recurso sem prefetch. Sem custo variável adicional por cliente; nenhum preço/limite, comissão, permissão ou gate fiscal/comercial/vendas alterado. Não certifica margem.
+- Testes: resolução de todos os slugs contra as páginas existentes e ordem das seis etapas; navegador local sintético em390/1280 com GET200 dos destinos, teclado/alvos, catálogo/âncora, largura, axe e nenhuma API write. Sem cadastro, conta, checkout, mensagem ou pagamento real. CI integral no head final e publicação READY/domínio/SHA exato pendentes.
+- Documentação: docs/ht2-creator-journey.md. Próximo item: HT3; nenhum B2 novo antes da ordem HT aprovada.
