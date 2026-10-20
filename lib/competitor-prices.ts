@@ -31,6 +31,8 @@ const circlePricing: OfficialPriceSource = { label: "Circle pricing and plan sco
 const circleFees: OfficialPriceSource = { label: "Circle paywall and Stripe fees", url: "https://help.circle.so/p/payments/paywall-setup/paywall-transaction-fees", readOn: "2026-10-20" };
 const kitPricing: OfficialPriceSource = { label: "Kit prices and inclusive commerce fees", url: "https://kit.com/pricing", readOn: "2026-10-20" };
 const whopPricing: OfficialPriceSource = { label: "Whop standard payment and payout prices", url: "https://whop.com/network/pricing/", readOn: "2026-10-20" };
+const hotmartPricing: OfficialPriceSource = { label: "Hotmart subscription and product pricing", url: "https://hotmart.com/en/pricing", readOn: "2026-10-20" };
+const hotmartPolicy: OfficialPriceSource = { label: "Hotmart payment policy updated September 21, 2026", url: "https://hotmart.com/en/legal/payments-policy", readOn: "2026-10-20" };
 export const COMPETITOR_PRICES = {
   kajabi: {
     name: "Kajabi",
@@ -110,5 +112,16 @@ export const COMPETITOR_PRICES = {
     payoutScope: "Next-day US ACH payout: $2.50; instant bank deposit: 4% + $2.50. Other methods have their own rates. This is not a quote for Marktmorgen or a complete tax exemption.",
     trial: { days: null, source: whopPricing },
     discovery: { source: { label: "Whop Discover directory", url: "https://whop.com/discover/", readOn: "2026-10-20" } },
+  },
+  hotmart: {
+    name: "Hotmart",
+    currency: "USD",
+    plans: [
+      { name: "Standard", monthlyCents: 0, annualCents: 0, source: hotmartPricing, platformFeeBps: 990, listedPaymentFixedCents: 100, feeSource: hotmartPolicy },
+    ] satisfies CompetitorPlanPrice[],
+    feeScope: "For a USD purchase with USD commission above $15: 9.9% + $1.00. At or below $15: 9.9% + $0.10. Currency mismatches have different rules. These are platform charges, not a verified all-in payment or tax quote.",
+    policyScope: "The September 21, 2026 English policy lists a $1.00 fixed USD fee. An older $0.50 sentence remains in the help article; its updated table and Player FAQ state $1.00. Confirm the applicable transaction quote. Do not add a separate legacy Player fee.",
+    trial: { days: null, source: hotmartPricing },
+    feeDetails: { source: { label: "Hotmart fee bands and Player fee update", url: "https://suportehotmart.zendesk.com/hc/en-us/articles/208298448-What-are-the-fees-charged-by-Hotmart", readOn: "2026-10-20" } },
   },
 } as const;
