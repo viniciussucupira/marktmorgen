@@ -1467,3 +1467,37 @@ Pedido P5: anexo524cc7f9-78af-42b5-ae37-4c05dc91a193/Texto colado.txt, lido19/10
 - UmparadicionalStartyourstore/demoapósPathmantémintervalosdeatéduasseções. Semasset/endpoint/provedor/operaçãonovos,prefetchfalse. M0antes/depoismesmoenvelope12,02–12,21%reprovadosob60%;gates/preços/limitesinalterados,vendasfechadas. Testescanônicos/roles/390/1280/foco/axe/semwritesexigidosnoheadfinal.
 
 - Head7c77a6b/Product39379624206 verify118485495851,Redis118485496028,segurança39379624198 verdes. Preservar7missões/5pares eúltimoPR664comopai;filaehistóricoscanônicossemperda. Nova suíteintegralobrigatóriaantesdeincorporar,nãocontarcabeçalhoverdeanteriorcomoconclusãodonovo.
+
+154. **[B2-CONTACT-ACKNOWLEDGMENT] Confirmar a configuração do formulário de contato sem confundir com publicação**
+   - Pedido: continuaçãoB2/P0/P3 após implementaçõesS; nenhum número/estado anterior alterado.
+   - Estado: **em implementação; branchcodex/contact-acknowledgment; publicar após itensS acionáveis emverificação**.
+   - Escopo: comparar HTTP/okbooleano/ausênciadeerro/snapshotcontact já devolvido pelo servidor com parseJoin canônico; bloquearcampos enquantoespera,aria-busy,semduplosenvios;perdaderespostamandaconferirsemalegarnadamudou. Sucessoconfirmaconfiguração,nãovisibilidadedependente deemail/plano. Conteúdodocriador/idiomaspreservados.
+   - Prova:14respostasinterceptadasem390/1280,28casos,normalizaçãocanônica,HTTP/truthy/contradição/objetosinválidos/errosherdados/perda/sucesso;nenhumPOSTdecontatochegaaoservidor,nenhummensagemoucontareal. Suíteintegralnocabeçalfinalobrigatória.
+   - Custo: fontecliente+599caracteres,mesmoPOST/resposta/parseJoinexistentes,semnovaoperação/fornecedor/franquia/preço/gate. M0antes/depois12,02–12,21%,reprova60%;vendasfechadas.
+
+- Integração explícita com mainc7370298f145a4682726b95b3872b0c675b8d2f6 preserva CRM eS6,resolveconflitodedocumentação semdescartar histórico. Alerta decontatousa danger-text existente para contraste7:1 emfundosclaros,comaxe-enhancedrealnoalertaeprovanãoincompleta. EscoponãocertificaAAAgeral. Novasuíteintegralnoheadfinal.
+
+- Diagnóstico CI39382404775: o endereço longo no parágrafo do media kit fazia document.scrollWidth436 na janela390. Correção localizada break-words no próprio parágrafo, sem ocultar overflow e sem reduzir verificações; nova suíte integral obrigatória.
+
+### Publicação funcional79 — S12
+```json
+{
+  "number": 79,
+  "pr": 665,
+  "queueItem": 153,
+  "feature": "Home page explains the seven actual Path missions, creator actions and fact checks, with a fifth intermediate self-service action pair",
+  "head": "09f3f611937807fb7306f831cb70774e65d2d5c7",
+  "commit": "51bdab96065a566ee396d61420540bfa8fa4c4c9",
+  "deployment": "dpl_8gRANbeubAz9aJug26MxiagTWhR9",
+  "readyUTC": "2026-10-20T06:55:56.911Z",
+  "readyFortaleza": "2026-10-20 03:55:56",
+  "mergedUTC": "2026-10-20T06:55:06Z",
+  "mergedFortaleza": "2026-10-20 03:55:06",
+  "run": 39381233699,
+  "verify": 118490569308,
+  "redis": 118490568978,
+  "securityRun": 39381233529,
+  "validation": "Full final-head CI passed lint, regressions, typecheck, build, Redis, security and synthetic browser: seven canonical missions, roles, Path link, five CTA groups, keyboard, axe and fit at390/1280. READY exactSHA and marktmorgen.com alias confirmed; six routes200sameDPL and live home content confirmed. Noerror/fatal06:59:16.460–07:04:16.460UTC.",
+  "limitations": "Static factual content; no new endpoint/provider operation or outcome guarantee. Existing opt-in, prices, limits and fiscal gates preserved. Binding M0 unchanged12.02–12.21%,fails60%;PLANS_ON_SALE=false;no margin certification."
+}
+```

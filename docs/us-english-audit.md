@@ -159,3 +159,15 @@ Browser regressions add intercepted __proto__ and constructor error responses at
 PR644/queue141 reviews `components/pause-editor.tsx` and the existing /api/store/pause contract. The server already returns the saved pause value. The client checks HTTP, boolean acknowledgment, absent error and the exact numeric choice, locks its selector while pending and keeps unknown messages on its own safe fallback. A lost reply no longer asserts that nothing changed. No membership/billing policy or existing off/on choice changes.
 
 Two dedicated local-only stores with synthetic recurring products exercise both enabling and disabling, leaving prior Path/copy fixtures untouched. Fourteen intercepted replies per initial state at390/1280 give56cases, including lost replies and confirmed values; no pause POST or real membership/provider change occurs. Complete final-head verification remains pending. Source+323characters, same existing request/response; no added runtime operation, cost allowance, price, opt-in or gate. This does not close other unreviewed billing dialogs, first-store onboarding or actual assistive-technology gaps.
+
+## Contact form setting: acknowledged state and honest uncertainty
+
+Queue154 reviews components/contact-box-editor.tsx and its existing contact-box response. Only a successful HTTP reply with boolean ok, no contradictory error, and exact canonical saved on/heading/line values can confirm success. Inputs remain locked while pending; the form announces busy. An uncertain reply asks the creator to reload and check. A confirmed setting does not assert that a form blocked by site email or plan availability is public.
+
+Synthetic browser coverage intercepts14reply variants at390/1280,28cases, including normalized returned text, contradictory fields, missing/invalid JSON, inherited error names, lost replies and confirmed values. No POST reaches the route and no message, store record or real account changes. The existing local Harbor Kitchen fixture is reused. Original creator input and buyer languages remain unchanged. Full final-head CI required; actual assistive-technology testing and other unreviewed forms remain open.
+
+Client source grows599characters, reusing existing parseJoin and the same POST/response with no provider/data/message/allowance/price/gate change. Binding M0 remains12.02–12.21%, below60%, paid sales closed; no fiscal or AAA certification.
+
+The selected contact error uses the existing danger-text token; actual rendered alert checks require an enhanced-contrast pass and no incomplete reading. This does not certify every state or page.
+
+Mobile CI also identified the long media-kit address as the document overflow source. The address paragraph now wraps long words locally; no document overflow is hidden and global390px fit checks remain binding.
