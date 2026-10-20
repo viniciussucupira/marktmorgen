@@ -1,6 +1,8 @@
 /** All access-link requests are intercepted; no account or email is created. */
 export async function checkSigninAcknowledgment({browser,LOCAL,is}){
  const scenarios=[
+  {name:"unknown inherited __proto__",body:{ok:false,error:"__proto__"}},
+  {name:"unknown inherited constructor",body:{ok:false,error:"constructor"}},
   {name:"HTTP error",status:500,body:{ok:true}},
   {name:"truthy string",body:{ok:"true"}},
   {name:"contradictory error",body:{ok:true,error:"server_error"}},

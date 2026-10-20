@@ -57,19 +57,26 @@ A ordem abaixo é de execução dos itens acionáveis. Itens feitos/aguardando/c
 
 4. **[B2] Revisar inglês americano página por página: mensagens, erros, estados vazios, e-mails, aria-label, alt e textos de testes; manter inventário de áreas e PRs pequenos, sem alterar significado.**
    - Pedido: P2 B2; datas/horas e grau de certeza em Proveniência.
-   - Estado: **em andamento (branch codex/us-english-composer-copy; áreas públicas/legais, após PR #623)**.
+   - Estado: **em andamento; áreas e lacunas em docs/us-english-audit.md; próxima revisão codex/safe-error-messages**.
    - Custo e margem: Sem novo fornecedor; medir eventual mudança de payload dentro dos tetos existentes. M0 permanece referência, sem certificação fiscal.
+
+140. **[B2-SAFE-ERROR-MESSAGES] Mensagens de erro inesperadas não são valores herdados**
+   - Pedido: B2/P0/P4, revisão de estados de falha em formulários.
+   - Estado: **em andamento; branch codex/safe-error-messages**.
+   - Escopo: Login, alteração de endereço e configuração fiscal usam somente mensagens próprias da tabela local. Uma resposta com erro __proto__ ou constructor deve mostrar a explicação genérica existente, sem tratar um objeto/função herdado como texto. Não é alegação de poluição de protótipo; é proteção da interface contra resposta inesperada.
+   - Prova: dois novos erros inesperados interceptados em cada formulário real390/1280, preservando casos de sucesso, recusa específica, HTTP, dados incompletos e controles pendentes. Total: login20, endereço22 e fiscal26 casos; nenhuma mensagem/gravação real. CI completo no novo head pendente.
+   - Custo: fonte cliente+43caracteres em três componentes, sem nova operação/chamada/registro/serviço/franquia/preço/gate. M0 igual, ainda reprova60%; PLANS_ON_SALE=false.
 
 139. **[B2-CLAIM-ACKNOWLEDGMENT] Confirmação coerente ao criar outra loja**
    - Pedido: B2/P0/P4, revisão de mensagens/estados de formulários.
-   - Estado: **em andamento; branch codex/claim-acknowledgment, após PR641/640/639**.
+   - Estado: **feito; PR642 incorporado19/10/2026 às23:04:11Fortaleza, entrega57 confirmada**.
    - Escopo: HandleForm exige HTTP bem-sucedido, ok booleano, endereço normalizado igual ao pedido, identificador devolvido no formato já exigido pelo servidor e ausência de erro; nomes de erro desconhecidos não selecionam propriedades herdadas. Campos bloqueados durante confirmação. Resposta incerta manda conferir o estúdio antes de repetir; não afirma que nada foi criado. Identificadores persistidos e limite de cinco lojas preservados.
    - Prova planejada: doze respostas interceptadas na página real de nova loja em390/1280, valores/campos pendentes, erros, navegação somente após confirmação válida e viewport. Nenhuma criação de loja/conta chega ao servidor; resposta positiva aponta para a fixture sintética já existente. Primeiro cadastro usa o mesmo componente, mas este navegador cobre outra loja, sem alegar prova de todo onboarding.
    - Custo: mesmo POST existente, nenhuma operação, conta/provedor/mensagem/franquia/preço/gate nova; M0 não muda nem certifica60%, vendas permanecem fechadas.
 
 138. **[P0-BUTTON-CONTRAST] Contraste do texto dos botões das lojas durante interação**
    - Pedido: P0/P4, excelência transversal; não é declaração de AAA do site inteiro.
-   - Estado: **em andamento; branch codex/store-button-contrast, após PR639**.
+   - Estado: **feito; PR640 incorporado19/10/2026 às22:58:07Fortaleza, entrega56 confirmada**.
    - Achado: branco sobre violeta #5a36ee tem contraste menor que7:1. O filtro de brilho/saturação ao apontar podia reduzir o contraste derivado. Ajustar preenchimento e texto juntos para7:1 e borda do botão contra o cartão para3:1, preservando a escolha persistida do criador. Manter realce pelo sombreado, sem filtro que altere o par de cores.
    - Prova: propriedades em quatro temas, predefinições e grade RGB; gradiente sem sobreposição; CSS real dos botões em estado normal/ponteiro/foco no navegador sintético. Os testes de foco existentes permanecem. Fotos/sobreposições translúcidas/outros estilos de texto e AT manual não são cobertos por esta prova.
    - Custo: função pura já existente, remove a segunda busca opcional de cor, no máximo quatro buscas de26passos em vez de cinco; fonte total menor, sem rede/registro/provedor/franquia/preço/gate novo. M0 antes=depois, leitura onerosa ainda reprova60%; PLANS_ON_SALE=false.
@@ -936,3 +943,11 @@ Item89/C2: docs/plan-capacity-precheck.md deriva preços e36quantidades de seis 
 - Estado: em andamento; branch codex/capacity-provider-assumptions. Relatório docs/plan-capacity-provider-review.md coteja código com fontes oficiais de R2, Blob e Resend lidas em19/10/2026. Não é aprovação de orçamento/configuração real nem proposta para cortar direitos de downloads já comprados.
 - Achados: egress R2 gratuito não elimina operações de leitura; fallback de arquivos vendidos para Blob exige envelope próprio, sem reutilizar custo zero de R2. Reserva de upload existente não prova teto de usos posteriores da URL assinada. Classes, regiões/contratos, arredondamento e unidades ainda não verificados como máximo pago. /emails conta destinatários e overage por blocos; não usar apenas preço marginal como custo total.
 - Custo: somente documentação, sem chamada/gravação/provedor/franquia/preço/gate de produção. Não incrementa entrega funcional. Item89 e M0 continuam reprovados/não aprovados; CI integral obrigatório da branch antes da incorporação.
+
+### Incorporações e publicações verificadas55–57
+
+- PR639: incorporado19/10/2026 às22:55:18Fortaleza, commitdd6bc839a523d8b28cb0c1e14f7e0c53da27191b. Entrega55, READY22:56:06, deploydpl_46c3fHHG8yWbQFi4DrgjXvNgYYK1; Product39355115740/Redis/segurança39355115737 completos,24casos de nome/descrição390/1280 interceptados,8rotas200/versão exata, sem error/fatal01:51:48.085–01:56:48.085UTC. Nenhuma loja real alterada; mesmo POST, fonte menor que1KB adicional.
+- PR640: incorporado19/10/2026 às22:58:07Fortaleza, commitbc0f5bf89156aea3489a05c24a1c9fa1fb46d34c. Entrega56, READY22:59:38, deploydpl_8aKftShWSJsfULrACAKvV6vxZn2v; Product39355405788/Redis/segurança39355405818 completos,40pares de botão normal/ponteiro/foco7:1 e borda3:1, cores salvas preservadas, grade RGB e testes de foco existentes.9rotas200/exato e CSS servido novo, sem error/fatal01:55:27.251–02:00:27.251UTC. Fonte de produção total114caracteres menor, sem nova operação; não certifica AAA geral.
+- PR641: relatório de premissas incorporado19/10/2026 às23:01:52Fortaleza, commitba84fc60f22218924715e95093bda73e9205ce53; Product39355538964/Redis/segurança39355538931 completos. Somente documentação, sem incrementar contador. Item89 continua em andamento, configurações/tarifas/tetos não aprovados.
+- PR642: incorporado19/10/2026 às23:04:11Fortaleza, commit977b0c00fb52b845c75238d6396585ffd68568c9. Entrega57, READY23:05:08, deploydpl_9ybccusZPuWLVj32ZdHhTbxB3XcY; Product39355867711/Redis/segurança39355867680 completos,24casos da página de outra loja390/1280 interceptados,9rotas200/exato, sem error/fatal02:01:00.346–02:06:00.346UTC. Nenhuma loja/conta criada, sucesso navega à fixture existente; fonte+498caracteres, mesmo POST/limite de cinco lojas.
+- As verificações de domínio foram em marktmorgen.com com SHA/alias/READY e marcador exatos antes de cada contador. Rotas privadas anônimas levam ao login; a prova autenticada é sintética. Custos/M0/gates/limites/preços preservados. Estados antigos em notas de preparação são históricos; esta seção registra o resultado posterior, sem apagar os ensaios.

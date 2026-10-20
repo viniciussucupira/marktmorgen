@@ -90,7 +90,7 @@ export function SignInForm() {
       }
       setState({
         kind: "error",
-        message: typeof data.error === "string" ? MESSAGES[data.error] ?? MESSAGES.server_error : MESSAGES.server_error,
+        message: typeof data.error === "string" && Object.hasOwn(MESSAGES, data.error) ? MESSAGES[data.error] : MESSAGES.server_error,
       });
     } catch {
       setState({ kind: "error", message: MESSAGES.server_error });

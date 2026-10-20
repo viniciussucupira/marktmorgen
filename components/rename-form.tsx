@@ -57,7 +57,7 @@ export function RenameForm({ current }: { current: string }) {
         message:
           data.error === "too_many"
             ? `A store keeps up to ${typeof data.limit === "number" && Number.isSafeInteger(data.limit) && data.limit > 0 && data.limit <= MAX_ADDRESSES ? data.limit : MAX_ADDRESSES} addresses, and yours is full. Going back to one you already had still works.`
-            : (typeof data.error === "string" ? MESSAGES[data.error] ?? MESSAGES.server_error : MESSAGES.server_error),
+            : (typeof data.error === "string" && Object.hasOwn(MESSAGES, data.error) ? MESSAGES[data.error] : MESSAGES.server_error),
       });
     } catch {
       setState({ kind: "error", message: MESSAGES.server_error });

@@ -59,7 +59,7 @@ export function TaxEditor({
         router.refresh();
         return;
       }
-      setError(typeof reply.error === "string" ? MESSAGES[reply.error] ?? MESSAGES.server_error : MESSAGES.server_error);
+      setError(typeof reply.error === "string" && Object.hasOwn(MESSAGES, reply.error) ? MESSAGES[reply.error] : MESSAGES.server_error);
     } catch {
       setError(MESSAGES.server_error);
     } finally {
