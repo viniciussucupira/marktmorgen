@@ -54,6 +54,7 @@ const PRODUCT_GROUPS: { label: string; items: MenuItem[] }[] = [
     label: "Deliver and grow",
     items: [
       item("Instant delivery", "On screen when paid, back by email.", "/platform/instant-delivery", "bolt"),
+      item("People, deals and pipelines", "Contact fields and recorded deals, in pipelines you name.", "/platform/crm", "users"),
       item("Numbers and pixels", "Visits, sources, sales, ad pixels.", "/platform/insights", "chart"),
       item("Affiliates", "A link for each. You pay them.", "/platform/affiliates", "handshake"),
       item("Outreach", "A pitch to a sponsor or a partner.", "/platform/outreach", "target"),
@@ -112,6 +113,10 @@ export const MENUS: Menu[] = [
         href: "/for/designers",
         icon: "palette",
       },
+      item("Course creators", "Lessons, supporting files and booked sessions.", "/for/course-creators", "book"),
+      item("Community builders", "Membership terms and member conversations.", "/for/community-builders", "users"),
+      item("Newsletter writers", "Opt-in email alongside your products.", "/for/newsletter-writers", "mail"),
+      item("Consultants and mentors", "Bookings, scope and agreed work.", "/for/consultants-and-mentors", "handshake"),
     ],
   },
   {
