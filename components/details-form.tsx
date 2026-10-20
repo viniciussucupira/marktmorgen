@@ -89,8 +89,8 @@ export function DetailsForm({
         ? raw as Record<string, unknown> : {};
       if (
         response.ok && data.ok === true && !data.error &&
-        data.name === name.trim().slice(0, MAX_NAME_LENGTH) &&
-        data.bio === bio.trim().slice(0, MAX_BIO_LENGTH)
+        data.name === name.slice(0, MAX_NAME_LENGTH).trim() &&
+        data.bio === bio.slice(0, MAX_BIO_LENGTH).trim()
       ) {
         setState({ kind: "closed" });
         toast("Name and description saved.");
@@ -99,7 +99,8 @@ export function DetailsForm({
       }
       setState({
         kind: "error",
-        message: MESSAGES[typeof data.error === "string" ? data.error : ""] ?? MESSAGES.server_error,
+        message: typeof data.error === "string" && Object.hasOwn(MESSAGES, data.error)
+          ? MESSAGES[data.error] : MESSAGES.server_error,
       });
     } catch {
       setState({ kind: "error", message: MESSAGES.server_error });
