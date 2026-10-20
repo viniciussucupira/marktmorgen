@@ -2489,7 +2489,7 @@ Pricing FAQ repair history: run39407143422 caught mobile target-size;39409356932
 - Documentação: docs/ht4-hotmart-comparison.md. Próximo itemHT5, apenas reaproveitando o rascunho de IA existente com mesmo pool/tetos/reserva e nenhuma chamada nova; B2 continua depois da sequência HT.
 
 187. **[HT5] Reaproveitar o rascunho existente e guiar até a primeira oferta publicada**
-- Estado: **Em implementação; verificação integral pendente**.
+- Estado: **Publicado — publicação funcional112 confirmada**.
 - Registro:20/10/2026 às13:04:00 de Fortaleza. Base conferida `8fdb7d499120e7de70bd05dcfedbe67ea49f98f4`; commit de implementação: `483bfb8d79ded92c62f3efa67e9dcf59ac5c9b71` (criado em2026-10-20T16:04:43Z; Fortaleza UTC−3).
 - O mesmo rascunho aparece antes do checklist, com nome atual preservado, bio/FAQ e até3 produtos propostos revisados pelo criador. Mesma elegibilidade, rota, operação, pool, teto2500 e reserva; nenhuma chamada automática ou geração adicional. Nome continua sob controle do criador em Store details.
 - Corrige a janela add-then-hide: os produtos do setup passam a nascer ocultos na gravação existente, eliminando uma gravação posterior. Nada é publicado automaticamente. Checklist existente orienta preparo e publicação explícita e reutiliza funnel-launch-checklist com rótulos de loja. StoreCoach preservado; store-guide é a operação de IA do comprador e não é chamada/ativada no onboarding.
@@ -2765,3 +2765,19 @@ Product checks39462624653/verify118766157526 aprovou regressões mas recusou o b
 #### Contraste do corpo de páginas de tópico — 2026-10-20 17:24:39 UTC
 
 Diagnóstico detalhado deHT7 identificou que os blocos .reveal do corpo ainda estavam em transição de opacidade (texto efetivo#888c91/#979a9e em fundo#f7f5f0; contraste2,59–3,10:1). O cabeçalho já estava estático. Removidas também as classes de reveal dos blocos desse template: conteúdo legível e opaco desde o início, incluindo navegação entre páginas. Sem aguardar artificialmente para esconder falha, sem desativar regraAA. Execuções anteriores39462581781/39462582467/39462598661/39462608086 reprovadas ficam históricas; nova suíte integral obrigatória em cada head corrigido. Sem nova operação/custo ou gates alterados.
+
+
+### Publicação funcional112
+
+- Item187/HT5, PR717 incorporado emFortaleza 2026-10-20 14:21:34 (UTC−3); head completo `954e08b179c617857f469c8a8820c8514d2ae773`; versão exata `867e2d662deea90815301d1cf3ac0fd0d35e47b9`.
+- READY 2026-10-20T17:24:31.031Z; domíniomarktmorgen.com confirmado noalias; deployment `dpl_6mGWc4g3TKNuPFo95VM2bSSmbrxz`.6rotasHTTP200 na mesma versão;26verificações específicas HT5, regressões/build/lint/rotas, Redis e segurança aprovados. Product checks39462549165, verify118765470574, Redis118765470018, Dependency security39462548934.
+- Runtime:zeroerros/fatais no intervalo 2026-10-20T17:21:11.802Z → 2026-10-20T17:26:11.802Z. Rascunho de IA existente/manual, mesmos pool/tetos/reserva, sem operação automática nova; checklist e tempo até primeira oferta usam gravação existente. Nomes/conteúdo e todos gates preservados, vendas fechadas. Contador112 incrementado apenas após essas provas; aviso112 já enviado.
+
+
+197. **[HT11] Avaliar o custo da comunidade de clientes por estágio antes de abrir o espaço**
+
+- Estado: **Avaliação concluída; reprovado por custo desconhecido; não implementado; aguardando dono para escopo/teto/reserva de operação**.
+- Registro UTC:2026-10-20 17:30:22 UTC; Fortaleza UTC−3. Repositório e custos revistos antes de qualquer operação: comunidade/Discord existentes pertencem ao criador e aos compradores de seus produtos; não há destinoMarktmorgen validado nem mapa de acessoStarting/First sales/Growing para clientes. Bot existente não lê/escreve mensagens. Nenhum espaço, canal, papel, conta ou convite criado.
+- docs/ht11-community-cost-review.md registra os6cenários: custo incremental de operação/moderação/suporte/manutenção/retencão/notificações e reserva é desconhecido em cada plano/intervalo; lucro líquido depois do item é desconhecido e portanto reprovado, nunca zero. Custo de assinatura de fornecedor zero não prova operação sem custo. Não emprestar teto da comunidade vendida por outro criador nem compensar um cliente com outro.
+- Método: uso100%/pior mês/12janelas anuais, maior taxa e reservas/impostos do dimensionamentoStore assistant; ausência de custo/teto bloqueia este item por si, separadamente doM0 mais oneroso para vendas. Comunidade por estágio continua apenas requisito futuro, sem classificação por faturamento declarado ou promessa de resultado. Código/comunidades/permissões/idiomas existentes preservados.
+- Sem operação/teste externo real, nova cobrança, fornecedor, IA, mensagem, conta ou submissão. PLANS_ON_SALE=false, comissão, preços/limites/opt-in e gates fiscais/comerciais inalterados. Revisão documental/fullCI do head final pendente; documento não conta publicação. SeguirHT13 eHT14 sem aguardar.
