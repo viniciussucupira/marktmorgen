@@ -8,8 +8,10 @@ export async function checkPathScripts({browser,LOCAL,session,sid,axeSource,is})
   let writes=0,ai=0;
   page.on("request",request=>{if(request.method()==="POST"&&request.url().includes("/api/store/path"))writes++;if(request.url().includes("/api/store/ai"))ai++;});
   for(const width of [390,1280]){
+   await page.waitForLoadState("networkidle");
    await page.setViewportSize({width,height:900});
    await page.goto(LOCAL+"/studio/path?store="+sid,{waitUntil:"domcontentloaded",timeout:60000});
+   await page.waitForLoadState("networkidle");
    const section=page.locator('section[aria-labelledby="path-scripts-title"]');
    await section.getByRole("heading",{name:"Post scripts you can adapt",exact:true}).waitFor();
    const field=section.getByLabel("Script to adapt",{exact:true});
@@ -36,6 +38,7 @@ export async function checkPathScripts({browser,LOCAL,session,sid,axeSource,is})
    const href=new URL(await section.getByRole("link",{name:"Review products",exact:true}).getAttribute("href"),LOCAL);
    is("product review keeps the own store at "+width,href.searchParams.get("store"),sid);
   }
+  await page.waitForLoadState("networkidle");
   is("script selection/copy never records completion",writes,0);
   is("fixed scripts never request AI",ai,0);
   is("script page errors",errors,[]);
