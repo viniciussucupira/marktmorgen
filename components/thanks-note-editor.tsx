@@ -4,7 +4,7 @@ import { useState } from "react";
 import { toast } from "@/components/toast";
 import { useLeaveGuard } from "@/components/leave-guard";
 import { STUDIO_MESSAGES } from "@/lib/studio-messages";
-import { MAX_NOTE_BODY, MAX_NOTE_HEADING, MAX_NOTE_LABEL, type ThanksNote } from "@/lib/thanks-note";
+import { MAX_NOTE_BODY, MAX_NOTE_HEADING, MAX_NOTE_LABEL, readNote, parseNote, type ThanksNote } from "@/lib/thanks-note";
 import { videoAddress } from "@/lib/sales-page";
 import { MAX_LINK_LENGTH } from "@/lib/product-link";
 
@@ -45,6 +45,12 @@ export function ThanksNoteEditor({ productId, productTitle, storeName, initial }
   useLeaveGuard(dirty && !busy);
 
   async function send(note: Fields | null) {
+    if (busy) return;
+    const expected = note === null ? null : readNote(note);
+    if (typeof expected === "string") {
+      setError(MESSAGES[expected]);
+      return;
+    }
     setBusy(true);
     setError(null);
     try {
@@ -53,18 +59,20 @@ export function ThanksNoteEditor({ productId, productTitle, storeName, initial }
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: productId, note }),
       });
-      const data = (await response.json().catch(() => ({}))) as { ok?: boolean; error?: string; note?: ThanksNote | null };
-      if (!data.ok) {
-        setError(MESSAGES[data.error ?? ""] ?? MESSAGES.server_error);
+      const raw: unknown = await response.json().catch(() => null);
+      const data = raw && typeof raw === "object" && !Array.isArray(raw) ? raw as Record<string, unknown> : null;
+      if (!response.ok || data?.ok !== true || data.error || !Object.prototype.hasOwnProperty.call(data, "note") || (expected === null ? data.note !== null : JSON.stringify(parseNote(data.note)) !== JSON.stringify(expected))) {
+        const problem = data?.error;
+        setError(typeof problem === "string" && Object.prototype.hasOwnProperty.call(MESSAGES, problem) ? MESSAGES[problem] : "We could not confirm this note. Reload this page to check before trying again.");
         return;
       }
-      const kept = fieldsOf(data.note ?? null);
+      const kept = fieldsOf(expected);
       setSaved(kept);
       setFields(kept);
-      setHas(Boolean(data.note));
-      toast(note ? "Note saved. Buyers see it after paying." : "Note removed.");
+      setHas(expected !== null);
+      toast(note ? "After-payment note settings saved." : "Note removed.");
     } catch {
-      setError(MESSAGES.server_error);
+      setError("We could not confirm this note. Reload this page to check before trying again.");
     } finally {
       setBusy(false);
     }
@@ -74,7 +82,7 @@ export function ThanksNoteEditor({ productId, productTitle, storeName, initial }
   const count = (value: string, max: number) => <span className="text-xs tabular-nums text-ink-mute">{`${value.length}/${max}`}</span>;
 
   return (
-    <section id="after-paying" aria-labelledby="after-paying-title" className="card mt-6 scroll-mt-32 p-6 sm:p-8">
+    <section aria-busy={busy} id="after-paying" aria-labelledby="after-paying-title" className="card mt-6 scroll-mt-32 p-6 sm:p-8">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 id="after-paying-title" className="text-lg font-semibold tracking-[-0.02em] text-ink">
@@ -92,7 +100,7 @@ export function ThanksNoteEditor({ productId, productTitle, storeName, initial }
             <label htmlFor="note-heading" className="field-label">Heading (optional)</label>
             {count(fields.heading, MAX_NOTE_HEADING)}
           </div>
-          <input id="note-heading" className="field" maxLength={MAX_NOTE_HEADING} value={fields.heading} placeholder={`A note from ${storeName}`} onChange={set("heading")} />
+          <input disabled={busy} id="note-heading" className="field" maxLength={MAX_NOTE_HEADING} value={fields.heading} placeholder={`A note from ${storeName}`} onChange={set("heading")} />
         </div>
         <div>
           <div className="flex items-baseline justify-between gap-3">
@@ -100,6 +108,7 @@ export function ThanksNoteEditor({ productId, productTitle, storeName, initial }
             {count(fields.body, MAX_NOTE_BODY)}
           </div>
           <textarea
+            disabled={busy}
             id="note-body"
             className="field"
             rows={5}
