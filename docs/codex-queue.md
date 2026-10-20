@@ -2219,7 +2219,7 @@ Pricing FAQ repair history: run39407143422 caught mobile target-size;39409356932
 
 
 170. **[B2-170] Confirm creator product picks accurately.**
-- Estado: **Em implementação**.
+- Estado: **Publicado — entrega96**.
 - Require successful HTTP, strict confirmation, no error, matching product id and exact ordered pairs from the existing setter result. Add only the product id to the existing pairs response, no extra read. Lock pending selections, retain uncertain drafts and confirm settings rather than public availability. Preserve MAX_PAIRS3, identifiers and creator-attribution copy; no buyer/sales evidence is manufactured.
 - Synthetic48 intercepted save/removal cases at390/1280; full final-head CI pending. Same operation/provider unit and visible caps, bounded response64-byte id plus3existing product ids; no new recurring cost. Source+634client characters not measured bundle size; M0 remains12.02–12.21%, fails60%, sales closed.
 
@@ -2262,3 +2262,12 @@ Pricing FAQ repair history: run39407143422 caught mobile target-size;39409356932
 
 
 - **Histórico CI693 — 2026-10-20 09:22:59Fortaleza:** Product39419542924/verify118616870620 falhou em quatro asserções de navegação confirmada (curso/podcast em390/1280); os48envios foram interceptados. O teste aguardava o evento de requisição e consultava o contador antes de o interceptador executar. Corrigido para aguardar a resposta sintética do destino antes da asserção, preservando todas as recusas e comportamento do produto. Correção propagada aos694/695, exigindo CI completo em cada novo head; nenhum job isolado aprova a alteração.
+
+
+### Publicação funcional96 — 2026-10-20 (Fortaleza)
+
+- **PR#691 incorporado às09:23:53**, merge `cc4c4d1e70848a4719c69863b4cc30a57287426f`, head corrigido `4e34f1fd316284a96777ebe39f4f6070bb231ecc`. Recomendações do criador validam HTTP, confirmação estrita, produto e ordem dos IDs; bloqueiam controles pendentes, preservam rascunhos incertos e confirmam configurações sem fabricar prova de compradores.
+- CI completo aprovado: Product39419486390, verify118616577235, Redis118616576882, security39419486266. **48casos sintéticos interceptados** (gravação/remoção em390/1280) aprovados após a correção do localizador documentada acima; a falha anterior permanece no histórico e não aprovou nada.
+- READY às09:24:54.127, domínio marktmorgen.com, deployment `dpl_7RQoAiaPfNv9AZPDN1mCjy2R6YSS`, SHA exato do merge. `/`, `/signin`, `/studio` (redirecionamento anônimo esperado), `/platform/path`, `/pricing`, `/privacy` retornaram200 com o mesmo deployment. Nenhum log error/fatal na janela12:20:47.559–12:25:47.559UTC. Fluxo privado verificado somente em testes sintéticos; sem gravação autenticada em produção.
+- Custos: mesma requisição e resultado do setter, resposta limitada ao ID e MAX_PAIRS3; nenhuma leitura adicional, provedor, unidade paga ou custo recorrente. Preços, limites, conteúdo/idiomas/IDs, permissões/opt-in e controles fiscais preservados. PLANS_ON_SALE=false e COMMISSION_LIVE=false. M0 vinculante12.02–12.21% continua reprovado para60%; desconhecido não é zero, sem certificação de margem/acessibilidade.
+- **PR#692 documental incorporado às09:26:17**, merge `93ec939794d79f3533183a67d08ef99cf7b6d3a0`, head `b1610415b30b4e5204640ed0f4f6df45078fe3b3`; Product39419537108/verify118616842418/Redis118616842611/security39419537668 aprovados. Registra94/95 e não incrementa o contador. Este registro96 está empilhado no695 para preservar correções e histórico; incorporar somente após693–695 passarem em todos os checks dos heads finais e serem incorporados.
