@@ -1219,3 +1219,5 @@ Pedido P5: anexo524cc7f9-78af-42b5-ae37-4c05dc91a193/Texto colado.txt, lido19/10
 - Herdar correção S2 do redirect legado de /pricing (af5365b); /price,/prices,/plans apontam à página real. A calculadora só pode ser validada na rota de verdade; repetir suíte completa e exigir URL /pricing no browser.
 
 - Revisão de S3: decidir explicitamente se gateway adicional de Kajabi/Thinkific se aplica ao país/provedor e se Billing recorrente publicado de Substack é separado ou já incluído na cotação digitada. Sem confirmação, paymentCents/total ficam null, não zero. Taxas aplicáveis são somadas uma vez pelos dados oficiais existentes; outros custos não podem repeti-las. Skool Hobby inclusivo10%+valorfixo agora é calculado uma vez; Pro continua bloqueado por bandas/limite exato não verificado. Novos testes unitários e browser para Billing separado/inclusivo e gateway condicional; novo CI integral necessário.
+
+- Herdar teste S2 do aviso visível em main/header, preservando a cópia legítima no FAQ. Closure não pode ser inferida de contagem global de texto; rota real e visibilidade são verificadas no browser. Todo head final continua exigindo suíte completa.
