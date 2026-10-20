@@ -644,7 +644,7 @@ try {
         is("pixel guard rejects the former suppressed-outline style",baseline.contrastingPixels<baseline.minimumArea,true);
         await oldSuppression.evaluate(node=>node.remove());
         await signin.emulateMedia({forcedColors:"active",reducedMotion:"reduce"});
-        console.log("FORCED_COLORS_ENVIRONMENT:"+JSON.stringify({requested:"active",actual:await signin.evaluate(()=>matchMedia("(forced-colors: active)").matches)}));
+        console.log("FORCED_COLORS_ENVIRONMENT:"+JSON.stringify({requested:"active",actual:await signin.evaluate(()=>matchMedia("(forced-colors: active)").matches),supportsForcedColorAdjust:await signin.evaluate(()=>CSS.supports("forced-color-adjust","auto"))}));
         for(const [kind,className] of [["button","btn st-btn"],["button","btn st-btn-ghost"],["a","st-social"]]){
           const target=await mountFieldFocusFixture(signin,{surface:storePaint["--st-bg"],kind,className,paint:storePaint});
           const focus=await fieldFocusPixels(signin,target);

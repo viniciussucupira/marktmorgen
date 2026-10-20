@@ -3071,3 +3071,6 @@ Em paralelo sem conflito, PR731/branch codex/p0-201-public-access-matrix adicion
 #### P0201 — contraste de placeholder medido na pintura real
 
 20/10/2026 18:15 Fortaleza: WebKit relatou rgb(17,24,39), a cor do input, no pseudo-elemento de sign-in, e ratio17,07 mesmo após injetar o placeholder antigo desbotado. A leitura computada não distinguia o controle negativo. O guard passa a comparar screenshots do mesmo campo sem foco, com e sem somente o texto de placeholder, para isolar os pixels reais dos glifos. Exige pelo menos20pixels alterados, razão mínima7:1 e pelo menos8pixels de núcleo com essa razão; borda, ícones e caret não entram como texto. Restaura imediatamente o atributo; nenhuma gravação/post é feita. Continua exigindo opacidade1, placeholder mostrado e rejeição do controle antigo com ratio<7; ausência de glifos reprova, nunca vira aprovação por campo vazio. Não baixa contraste nem elimina controle negativo/temas/larguras. Nova suíte integral no novohead obrigatória; resultado e conformidade ainda pendentes.
+
+
+Leitura de forced-color-adjust passa pela API CSS getPropertyValue, com CSS.supports registrado, em vez de presumir propriedade camelCase exposta no WebKit. Continua exigindo valor auto, mídia ativa, outline e pixels reais: não converte ausência em auto nem ignora falha. Verificação completa no novohead obrigatória.

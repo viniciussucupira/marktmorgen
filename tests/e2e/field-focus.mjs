@@ -22,7 +22,7 @@ export async function fieldFocusPixels(page,field) {
   if(!afterBox || ["x","y","width","height"].some(key=>Math.abs(afterBox[key]-box[key])>0.1))throw Error("Focus shifted field geometry");
   const styles=await field.evaluate(node=>{
     const style=getComputedStyle(node);
-    return {width:style.outlineWidth,offset:style.outlineOffset,style:style.outlineStyle,color:style.outlineColor,shadow:style.boxShadow,forcedColorAdjust:style.forcedColorAdjust};
+    return {width:style.outlineWidth,offset:style.outlineOffset,style:style.outlineStyle,color:style.outlineColor,shadow:style.boxShadow,forcedColorAdjust:style.getPropertyValue("forced-color-adjust"),supportsForcedColorAdjust:CSS.supports("forced-color-adjust","auto")};
   });
   if(!await page.evaluate(previous=>scrollX===previous.x&&scrollY===previous.y,scroll))throw Error("Focus measurement scrolled after Tab");
   const after=await page.screenshot({animations:"disabled",scale:"css"});
