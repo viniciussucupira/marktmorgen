@@ -2801,6 +2801,24 @@ Diagnóstico detalhado deHT7 identificou que os blocos .reveal do corpo ainda es
 HT6/Product checks39462558715/verify118765503722 foi cancelado pelo limite de25minutos, ainda executando os testes de navegador, sem conclusão integral. A suíte cresceu; limite do verify ajustado para35minutos, mantendo todos os casos/asserts e os demais jobs. Nenhuma reexecução isolada ou redução de cobertura. Nova execução integral no novo head é obrigatória antes de incorporar. Ajuste apenas do limite da execução de desenvolvimento, sem operação/direito/custo variável do cliente, preço ou gate modificado.
 
 
+199. **[HT14] Sugerir preço e estrutura de oferta com regras locais e dados já lidos da própria loja**
+
+- Estado: **Cálculo próprio registrado antes do código; implementado; CI integral e publicação pendentes**.
+- Registro UTC:2026-10-20 17:34:21 UTC; FortalezaUTC−3. Base remota conferida `2f29aaf4a936dde7b085815246761674fdd9183e`; docs/ht14-cost-review.md define escopo antes de operação.
+- Reutilizar leitura de cards/índices/candidatos/permissões do editor de funis já existente. Planejador determinístico local: preço observado da própria categoria/loja (ou preço atual quando não há comparação), regra/amostra exibidas, estrutura suportada com condições atuais. Aceitar/recusar apenas plano local não salvo/editável; não mudar preço/funil nem salvar/publicar/ativar/enviar automaticamente. Sem previsão de vendas, demanda ou lucro.
+- Nenhuma chamada IA nova, histórico/API/read/write/provedor/retencão/job/cota nova. FunilIA existente e pool/tetos/reserva intactos. Custo incremental explícitoUS$0/mês eUS$0/ano nos6cenários em100%dosdireitos/pior mês; dimensionamento com maior recebimento/taxas/reservas/impostos permanece60,31/60,59%Store,60,38/60,06%Studio,60,46/60,07%Scale (mês/ano). Custo/demanda desconhecidos não viramzero nem projeção; operação fora desse escopo exige cálculo antes de uso.
+- M0 mais oneroso reprovado continua controlando abertura de vendas. PLANS_ON_SALE=false, comissão, preços/limites, opt-in/permissões, tax gate/art.9a/revisão comercial preservados. Nenhum pagamento/conta/mensagem/submissão externa. Commit do cálculo registrado a seguir; código/testes/produção pendentes. Novas revisõesB2 só após esta sequênciaHT.
+
+
+#### HT14 — implementação após cálculo prévio
+
+- Cálculo `413a2b676cc52d6cb0bb530ccd9706fb3959e1b0` precede código; implementação `3161f951a0e2d7ee14b71f15ace5a9d600f9f387` (2026-10-20T17:38:02Z; Fortaleza2026-10-20 14:38:02.000,UTC−3). Custo extra de fornecedor/operação permanecezero nos6cenários; nenhuma IA, leitura/gravação/histórico nova ou cota alterada.
+- Planejador por regras locais no editor existente de funis usa somente cards/índice/candidatos já lidos. Preço de referência é o menor valor central observado nos outros produtos publicados elegíveis da mesma categoria geral; sem amostra, preserva preço atual. Regra/amostra/faixa/limitações visíveis; nenhum benchmark/projeção de venda/lucro. Rascunhos, opções, bundles, calls, recorrências e preços inválidos não contaminam a comparação.
+- Estrutura sugere revisar página/checkout/entrega; oferta extra somente quando candidatos já elegíveis e configuraçãoStripe/tax atual permitem, com recusa do comprador. Gates indisponíveis explícitos. Aceitar gera texto local editável não salvo protegido pelo leave guard; recusar/descartar/cópia explícita não mudam preço ou funil. FluxoIA existente preservado, não há gerador duplicado nem chamada automática.
+- Testes: preço observado/categoria, menor central real, comparáveis ausentes, exclusões, dados imutáveis, permissões e gates; navegador390/1280 aceita/recusa/edita/descarta plano, verifica regra/gates/largura/axe/zeroPOST/IA. Suíte integral no head final obrigatória; READY/domínio/SHA antes de entrega funcional. Docs/ht14-offer-planning.md.
+- PLANS_ON_SALE=false, comissão/preços/limites/opt-in/idiomas/conteúdo/IDs/pool/tetos/reserva e gates fiscais/comerciais intactos. Piso60% líquido por cliente/global continua obrigatório. Nenhum pagamento, conta, mensagem ou submissão externa. B2 só após sequênciaHT e verificações/publicações pendentes.
+
+
 #### HT16 — medidas reais e correção de estabilidade/FAQ
 
 Baseline antes (f9bca29fe6386648f76351de70955d4a93f7aa89), run39467038220/job118781215518:9amostras390×844/CPU4×/150ms/1,6Mbps/cachefrio registradas; homeLCP1156–1948ms, interação216–368ms; preçosCLS atingiu0,1318. CandidatoHT16/run39467038220/job118781215637 teve9amostras sob metas (homeLCP628–812ms/interação56–144ms, preçosCLS0, recursoCLS≤0,0555), mas descendentesHT17/HT13 tiveram oscilaçãoCLS0,1318 e interação200ms, portanto não basta um passe para concluir. Nenhuma amostra falha foi apagada ou tratada comozero.
@@ -2876,6 +2894,21 @@ verify118791597731 executou filtros/prévias/AA e identificou duas expectativas 
 #### HT10 — nome acessível dos IDs separado da ajuda
 
 Os verifies118803842951/118803901027/118804022774 expiraram procurando o nome exatoMeta Pixel ID. O label implícito incluía também todo o texto de ajuda, alterando o nome acessível. Os quatro campos agora têm label/htmlFor/id explícitos; a ajuda permanece via aria-describedby. Nenhum seletor foi afrouxado, nenhuma verificação removida e IDs de pixel/consentimento persistidos não mudam. CI integral no novohead obrigatório; sem nova operação/custo/limite/preço/gate.
+
+
+#### HT16/HT14 — isolar layout dos cartões ao expandir benefícios
+
+O novo mobile118813573960/HT14 mediu224ms na primeira interação da home (LCP752ms/CLS0); a amostra reprova e não é descartada. O primeiro disclosure medido é a lista de benefícios do cartão de plano. Os cartões recebem contain:layout, sem corte de pintura/overflow nem tamanho presumido: o conteúdo e as alturas continuam naturais, mas o navegador pode limitar o trabalho interno ao cartão. Diagnóstico de EventTiming passa a incluir tempos de entrada/processamento e long tasks; mesmos3cliques/3amostras/3rotas e limiaresLCP<2500/CLS<0,1/interação<200. Nenhuma espera nova, exclusão ou certificaçãoINP real. Toda a suíte no novohead é obrigatória; zero operação/custo novo e preços/limites/gates preservados.
+
+
+#### HT16/HT14 — preparar formatação estática dos planos antes da interação
+
+A contenção não bastou: mobile118816830403 mediu264ms no primeiro clique da home. EventTiming mostrou pointerdown com33,7ms de espera e125,4ms de processamento; long task de240ms sobre a interação. Mantida a reprovação integral. A renderização dos cartões repetia Number.toLocaleString para dezenas de preços/limites. Agora dois Intl.NumberFormat imutáveis, com a mesma locale e opções originais, são reutilizados, e as figuras canônicas dos três planos são calculadas uma vez no módulo. Preços, strings resultantes, limites, mensal/anual, detalhes nativos e sua ordem permanecem; nenhuma espera/amostra removida ou limiar alterado. Nova suíte completa e medições estritas obrigatórias. Sem IO/fornecedor/operação/direito/custo novo; M0 e todos os gates intactos.
+
+
+#### HT16/HT14 — animar wrapper HTML do ícone
+
+A rotação decorativa do disclosure de benefícios passa doSVG para um wrapper HTML inline-flex (mesmo ícone/tamanho/200ms/estado visual), conforme revisão React: permite composição da transformação sem animar o próprio vetor. Texto/nome acessível, limites e ordem permanecem. Faz parte da correção em verificação; não altera o teste/limiar, e a suíte completa no novohead continua obrigatória. Sem operação/custo/gate novo.
 
 
 #### HT10 — distinguir beacon de visita e evento publicitário com payload estrito

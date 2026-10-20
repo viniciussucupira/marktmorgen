@@ -1,3 +1,4 @@
+import {OfferPlanning} from "@/components/offer-planning";
 import { cachedOfferListings, savedOfferIssues } from "@/lib/funnel-offer-review";
 import type { Metadata } from "next";
 import { BUMP_CHOICES, idsOfKind, readCards, readListings, readProduct } from "@/lib/catalog";
@@ -153,6 +154,8 @@ export default async function StudioFunnelsPage({ searchParams }: Params) {
     }),
   );
   // What a kind of funnel can be built with (lib/funnel-types.ts): every product, and what it is.
+  const courseKinds = new Set(idsOfKind(store,"course"));
+  const bundleKinds = new Set(idsOfKind(store,"bundle"));
   const typeProducts: TypeProduct[] = [...cards.values()].map((p) => ({ id: p.id, title: p.title, free: free.has(p.id), call: calls.has(p.id), draft: drafts.has(p.id) }));
   // Copying, sharing and bringing in funnels (lib/funnel-bundle.ts): the store's links, never their codes.
   const canShare = can(view.role, "page");
@@ -195,6 +198,13 @@ export default async function StudioFunnelsPage({ searchParams }: Params) {
         </p>
 
         {inventory !== null ? <>
+        <OfferPlanning
+          storeId={store.sid} currency={store.currency} initialProduct={selected?.id ?? ""}
+          products={[...cards.values()].map(product=>({id:product.id,title:product.title,priceCents:product.priceCents,category:courseKinds.has(product.id)?"course" as const:"other" as const,eligible:!drafts.has(product.id)&&!notOneOff.has(product.id)&&!withOptions.has(product.id)&&!bundleKinds.has(product.id)&&Number.isSafeInteger(product.priceCents)&&product.priceCents>0}))}
+          candidates={offerable}
+          oneClickAvailable={canSell(store) && !store.tax.enabled}
+          pageAvailable={can(view.role,"page")}
+        />
         <div className="mt-8">
           <FunnelTypePicker
             products={typeProducts}

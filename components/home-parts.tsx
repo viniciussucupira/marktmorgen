@@ -413,10 +413,14 @@ export function HeroFlow() {
  * keep is worse than a shorter list. Each yearly price is the same plan paid
  * once a year, and the studio opens either.
  */
+// Reuse formatters and immutable plan figures across hydration and cycle changes.
+const PLAN_NUMBER_FORMAT = new Intl.NumberFormat("en-US");
+const PLAN_PRICE_FORMAT = new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 });
+
 const INCLUDED = [
   "Your own store address, live the moment you take it",
-  `${VISITS_INCLUDED.creator.toLocaleString("en-US")} counted visits to your store a billing month; public pages pause at ${publicVisitLimit(VISITS_INCLUDED.creator).toLocaleString("en-US")}, and the rest are kept for your buyers' courses, community and podcasts; nothing is billed past it`,
-  `${ORDERS_INCLUDED.creator.toLocaleString("en-US")} orders a billing month${feeWords().ordersShared ? " (an order whose sale paid your plan's share is not counted)" : ""}; at that figure new orders pause until your next billing month, nothing is billed past it, and a buyer already paying always finishes`,
+  `${PLAN_NUMBER_FORMAT.format(VISITS_INCLUDED.creator)} counted visits to your store a billing month; public pages pause at ${PLAN_NUMBER_FORMAT.format(publicVisitLimit(VISITS_INCLUDED.creator))}, and the rest are kept for your buyers' courses, community and podcasts; nothing is billed past it`,
+  `${PLAN_NUMBER_FORMAT.format(ORDERS_INCLUDED.creator)} orders a billing month${feeWords().ordersShared ? " (an order whose sale paid your plan's share is not counted)" : ""}; at that figure new orders pause until your next billing month, nothing is billed past it, and a buyer already paying always finishes`,
   `Each billing month, starting on the day your plan renews: ${allowanceListWords("creator")}; past one, that use waits for the next month or a larger plan, and nothing is billed`,
   "Buyers pay into your own Stripe account",
   "Up to 2,000 products: files, courses, memberships, paid calls and live sessions",
@@ -439,16 +443,16 @@ const INCLUDED = [
 
 const PRO_INCLUDED = [
   `Everything in ${PLAN_TITLES.creator}`,
-  `${VISITS_INCLUDED.pro.toLocaleString("en-US")} visits to your store a month covered, instead of ${VISITS_INCLUDED.creator.toLocaleString("en-US")}`,
-  `${ORDERS_INCLUDED.pro.toLocaleString("en-US")} orders a month covered, instead of ${ORDERS_INCLUDED.creator.toLocaleString("en-US")}`,
+  `${PLAN_NUMBER_FORMAT.format(VISITS_INCLUDED.pro)} visits to your store a month covered, instead of ${PLAN_NUMBER_FORMAT.format(VISITS_INCLUDED.creator)}`,
+  `${PLAN_NUMBER_FORMAT.format(ORDERS_INCLUDED.pro)} orders a month covered, instead of ${PLAN_NUMBER_FORMAT.format(ORDERS_INCLUDED.creator)}`,
   `Each billing month: ${allowanceListWords("pro")}`,
   "One-off emails to your list, now or at a time you choose, to everyone or to the people who have not bought a particular thing yet",
   "Sequences that go out by themselves after someone joins or buys",
-  `Up to ${PRO_MONTHLY_EMAILS.toLocaleString("en-US")} emails a month (${TRIAL_MONTHLY_EMAILS.toLocaleString("en-US")} during the free trial), from your name, with replies coming to you`,
+  `Up to ${PLAN_NUMBER_FORMAT.format(PRO_MONTHLY_EMAILS)} emails a month (${PLAN_NUMBER_FORMAT.format(TRIAL_MONTHLY_EMAILS)} during the free trial), from your name, with replies coming to you`,
   "One-click unsubscribe in every email, honored for good",
   "Community announcements emailed to the members who asked for them, counted in the same monthly allowance",
   "One email that asks each buyer for a review, 3 to 30 days after buying",
-  `Writing help with AI, from your own words and in your store's language: product descriptions, whole sales pages and course outlines, a second opinion on a page, any block rewritten, a page translated, picture descriptions, the line about your store, blog posts, emails, replies to reviews and posts to share — ${AI_MONTHLY.pro} writing jobs and ${ANSWERS_MONTHLY.pro.toLocaleString("en-US")} answers to visitors' questions a month, each request setting aside the most it could cost from the plan's monthly AI budget first; not during the free trial`,
+  `Writing help with AI, from your own words and in your store's language: product descriptions, whole sales pages and course outlines, a second opinion on a page, any block rewritten, a page translated, picture descriptions, the line about your store, blog posts, emails, replies to reviews and posts to share — ${AI_MONTHLY.pro} writing jobs and ${PLAN_NUMBER_FORMAT.format(ANSWERS_MONTHLY.pro)} answers to visitors' questions a month, each request setting aside the most it could cost from the plan's monthly AI budget first; not during the free trial`,
   "Our name off the foot of your page, so it carries yours and nothing of ours",
 ];
 
@@ -493,7 +497,7 @@ function proGroups(domains: boolean): PlanGroup[] {
     {
       icon: "mail",
       title: "Write to your own list from here",
-      body: `A list of up to ${listSizeWords()} people, and the price does not move as it fills. One-off emails and sequences that send themselves after someone joins or buys, up to ${PRO_MONTHLY_EMAILS.toLocaleString("en-US")} sends a month, from your name, with replies coming to you.`,
+      body: `A list of up to ${listSizeWords()} people, and the price does not move as it fills. One-off emails and sequences that send themselves after someone joins or buys, up to ${PLAN_NUMBER_FORMAT.format(PRO_MONTHLY_EMAILS)} sends a month, from your name, with replies coming to you.`,
     },
     domains
       ? {
@@ -536,7 +540,7 @@ function shareShown(tier: Tier): number {
 
 /** "$4,490". */
 function usdWhole(cents: number): string {
-  return `$${(cents / 100).toLocaleString("en-US", { maximumFractionDigits: 2 })}`;
+  return `$${PLAN_PRICE_FORMAT.format(cents / 100)}`;
 }
 
 /**
@@ -546,7 +550,7 @@ function usdWhole(cents: number): string {
  * itself, so these are printed under the price rather than only in the list.
  */
 function planFigures(tier: Tier): string[] {
-  const n = (x: number) => x.toLocaleString("en-US");
+  const n = (x: number) => PLAN_NUMBER_FORMAT.format(x);
   const emails = monthlyEmails(tier);
   return [
     `${n(VISITS_INCLUDED[tier])} visits a month`,
@@ -557,6 +561,8 @@ function planFigures(tier: Tier): string[] {
   ];
 }
 
+const PLAN_FIGURES = Object.fromEntries(TIERS.map(tier => [tier, planFigures(tier)])) as Record<Tier, string[]>;
+
 function PlanTerms({ tier, yearly }: { tier: Tier; yearly: boolean }) {
   const { month, year } = PLAN_PRICES[tier];
   const charged = (yearly ? year : month) / 100;
@@ -566,7 +572,7 @@ function PlanTerms({ tier, yearly }: { tier: Tier; yearly: boolean }) {
     ["Free trial", `${TRIAL_DAYS} days. Your card is taken when it starts, so you can sell before you decide.`],
     [
       "First charge",
-      `$${charged.toLocaleString("en-US")} ${yearly ? "for the year" : "for the month"}, on the day the trial ends. We email you a week before.`,
+      `$${PLAN_NUMBER_FORMAT.format(charged)} ${yearly ? "for the year" : "for the month"}, on the day the trial ends. We email you a week before.`,
     ],
     [
       "Money back",
@@ -608,6 +614,8 @@ function PlanCard({
   const saving = yearSaving(tier) / 100;
   return (
     <div
+      data-pricing-card
+      style={{ contain: "layout" }}
       className={`relative flex flex-col p-7 sm:p-9 ${
         featured
           ? "card border-violet-brand/35 shadow-[var(--shadow-md)] ring-1 ring-violet-brand/15"
@@ -646,7 +654,7 @@ function PlanCard({
           : `Billed every month. Or ${usdWhole(year)} once a year, which is ${usdWhole(saving * 100)} less${year === month * 10 ? ": two months free" : ""}.`}
       </p>
       <ul className="mt-5 space-y-1.5 text-[0.9375rem] text-ink" aria-label={`What ${PLAN_TITLES[tier]} holds`}>
-        {planFigures(tier).map((line) => (
+        {PLAN_FIGURES[tier].map((line) => (
           <li key={line} className="flex gap-2">
             <Icon name="check" size={16} className="mt-1 shrink-0 text-mint-deep" />
             <span>{line}</span>
@@ -678,7 +686,7 @@ function PlanCard({
       </ul>
       <details className="group/perks mt-6">
         <summary className="inline-flex min-h-11 cursor-pointer list-none items-center gap-1.5 rounded-[8px] text-sm font-semibold text-violet-deep [&::-webkit-details-marker]:hidden">
-          <Icon name="plus" size={15} className="transition-transform duration-200 group-open/perks:rotate-45" />
+          <span aria-hidden="true" className="inline-flex shrink-0 transition-transform duration-200 group-open/perks:rotate-45"><Icon name="plus" size={15} /></span>
           <span className="group-open/perks:hidden">{`All ${perks.length} of them, itemized`}</span>
           <span className="hidden group-open/perks:inline">Close the list</span>
         </summary>
@@ -781,10 +789,10 @@ export function Pricing({ domains = false }: { domains?: boolean }) {
           bestFor="For an established business with a larger list, more visits and more orders every month."
           groups={[
             { icon: "check", title: "Everything in Studio", body: "The same selling tools and email features, with larger allowances." },
-            { icon: "mail", title: "More room to grow", body: `Up to ${SCALE_MONTHLY_EMAILS.toLocaleString("en-US")} emails, ${VISITS_INCLUDED.scale.toLocaleString("en-US")} visits and ${ORDERS_INCLUDED.scale.toLocaleString("en-US")} orders a month.` },
-            { icon: "sparkle", title: "More AI and more room", body: `${AI_MONTHLY.scale.toLocaleString("en-US")} AI writing jobs and ${ANSWERS_MONTHLY.scale.toLocaleString("en-US")} visitor answers a month, and ${PAID_STORAGE_BYTES.scale / (1024 ** 3)} GB of storage.` },
+            { icon: "mail", title: "More room to grow", body: `Up to ${PLAN_NUMBER_FORMAT.format(SCALE_MONTHLY_EMAILS)} emails, ${PLAN_NUMBER_FORMAT.format(VISITS_INCLUDED.scale)} visits and ${PLAN_NUMBER_FORMAT.format(ORDERS_INCLUDED.scale)} orders a month.` },
+            { icon: "sparkle", title: "More AI and more room", body: `${PLAN_NUMBER_FORMAT.format(AI_MONTHLY.scale)} AI writing jobs and ${PLAN_NUMBER_FORMAT.format(ANSWERS_MONTHLY.scale)} visitor answers a month, and ${PAID_STORAGE_BYTES.scale / (1024 ** 3)} GB of storage.` },
           ]}
-          perks={[`Everything in ${PLAN_TITLES.pro}`, `${SCALE_MONTHLY_EMAILS.toLocaleString("en-US")} emails a month`, `${VISITS_INCLUDED.scale.toLocaleString("en-US")} visits a month`, `${ORDERS_INCLUDED.scale.toLocaleString("en-US")} orders a month`, `${AI_MONTHLY.scale.toLocaleString("en-US")} AI writing jobs and ${ANSWERS_MONTHLY.scale.toLocaleString("en-US")} visitor answers a month`, `Each billing month: ${allowanceListWords("scale")}`]}
+          perks={[`Everything in ${PLAN_TITLES.pro}`, `${PLAN_NUMBER_FORMAT.format(SCALE_MONTHLY_EMAILS)} emails a month`, `${PLAN_NUMBER_FORMAT.format(VISITS_INCLUDED.scale)} visits a month`, `${PLAN_NUMBER_FORMAT.format(ORDERS_INCLUDED.scale)} orders a month`, `${PLAN_NUMBER_FORMAT.format(AI_MONTHLY.scale)} AI writing jobs and ${PLAN_NUMBER_FORMAT.format(ANSWERS_MONTHLY.scale)} visitor answers a month`, `Each billing month: ${allowanceListWords("scale")}`]}
           featured={false}
           cta="Start on Scale"
           yearly={yearly}

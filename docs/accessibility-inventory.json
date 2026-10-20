@@ -670,6 +670,7 @@
     "components/numbers-ask.tsx",
     "components/numbers-links-editor.tsx",
     "components/numbers-notes.tsx",
+    "components/offer-planning.tsx",
     "components/old-addresses.tsx",
     "components/outreach-studio.tsx",
     "components/package-editor.tsx",
