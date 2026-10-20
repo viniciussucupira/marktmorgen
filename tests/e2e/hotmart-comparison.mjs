@@ -9,6 +9,7 @@ export async function checkHotmartComparison({browser,LOCAL,axeSource,is}){
  is("Hotmart Club source exists "+width,await page.locator('a[href="https://solutions.hotmart.com/update-your-members-area"]').count(),1);
  is("Hotmart comparison fits viewport "+width,await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
  await page.addScriptTag({content:axeSource});const result=await page.evaluate(async()=>await window.axe.run(document.querySelector("main"),{runOnly:{type:"tag",values:["wcag2a","wcag2aa","wcag21aa","wcag22aa"]}}));
+ if(result.violations.length)console.log("HT4_AXE_DETAILS",JSON.stringify(result.violations.map(v=>({id:v.id,nodes:v.nodes.map(n=>({target:n.target,summary:n.failureSummary,html:n.html}))}))));
  is("Hotmart comparison accessibility "+width,result.violations.map(v=>v.id),[]);is("Hotmart comparison performs no API writes "+width,writes,0);await context.close();
  }
 }

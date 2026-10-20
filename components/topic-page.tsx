@@ -434,7 +434,7 @@ function HeroContents({ blocks, light = false }: { blocks: Block[]; light?: bool
   if (titles.length < 2) return null;
   return (
     <div
-      className={`nb-fade-up nb-delay-2 rounded-[var(--r-lg)] border p-6 sm:p-7 ${
+      className={`rounded-[var(--r-lg)] border p-6 sm:p-7 ${
         light ? "border-line bg-white shadow-[var(--shadow-sm)]" : "border-white/14 bg-white/[0.05] backdrop-blur-sm"
       }`}
     >
@@ -510,7 +510,7 @@ export function TopicPageView({ page }: { page: TopicPage }) {
           */}
           <div className="container-page grid items-center gap-12 py-14 sm:py-20 lg:grid-cols-[1.05fr_0.95fr] lg:gap-16">
             <div className={`min-w-0 ${light ? "" : "on-dark"}`}>
-              <p className="eyebrow nb-fade-up">{page.eyebrow}</p>
+              <p className="eyebrow ">{page.eyebrow}</p>
               {/*
                 The expressive face carries a few words, never a clause. Set a
                 long phrase in italic serif at heading size and it stops being
@@ -518,7 +518,7 @@ export function TopicPageView({ page }: { page: TopicPage }) {
                 short phrase the highlight keeps the heading's own face and is
                 separated by colour alone.
               */}
-              <h1 className={`t-h1 balance nb-fade-up nb-delay-1 mt-5 ${light ? "text-ink" : "text-white"}`}>
+              <h1 className={`t-h1 balance mt-5 ${light ? "text-ink" : "text-white"}`}>
                 {page.title}{" "}
                 <span
                   className={`${page.highlight.length <= 26 ? "serif font-normal" : ""} ${
@@ -529,16 +529,16 @@ export function TopicPageView({ page }: { page: TopicPage }) {
                 </span>
               </h1>
               <p
-                className={`t-lead nb-fade-up nb-delay-2 mt-6 max-w-2xl ${light ? "text-ink-soft" : "text-white/80"}`}
+                className={`t-lead mt-6 max-w-2xl ${light ? "text-ink-soft" : "text-white/80"}`}
               >
                 {page.intro}
               </p>
-              <p className="nb-fade-up nb-delay-3 mt-7 flex flex-wrap items-center gap-2">
+              <p className="mt-7 flex flex-wrap items-center gap-2">
                 <span className={BADGE_CLASS[page.badge.tone]}>{page.badge.label}</span>
                 {page.plan ? <span className="tag">{PLAN_LINE[page.plan]}</span> : null}
               </p>
               {page.section !== "proof" ? (
-                <div className="nb-fade-up nb-delay-3 mt-8 flex flex-wrap items-center gap-3">
+                <div className="mt-8 flex flex-wrap items-center gap-3">
                   <Link href="/signin" className={`btn btn-lg ${light ? "btn-primary" : "btn-light"}`}>
                     {startWords(TRIAL_DAYS)}
                     <Icon name="arrow-right" size={18} />
@@ -554,7 +554,7 @@ export function TopicPageView({ page }: { page: TopicPage }) {
               ) : null}
             </div>
             {page.visual ? (
-              <div className="nb-fade-up nb-delay-2 flex min-w-0 justify-center lg:justify-end">
+              <div className="flex min-w-0 justify-center lg:justify-end">
                 <FeatureVisual visual={page.visual} tone={light ? "light" : "dark"} />
               </div>
             ) : heroStore ? (
@@ -565,7 +565,7 @@ export function TopicPageView({ page }: { page: TopicPage }) {
                * they see what the page is actually selling. Neither pretends
                * to be the other, and the line underneath says which is which.
                */
-              <div className="nb-fade-up nb-delay-2 mx-auto w-full max-w-[28rem] lg:mr-0">
+              <div className="mx-auto w-full max-w-[28rem] lg:mr-0">
                 {page.photo ? (
                   // A photograph served at the sizes asked for by its own host, never through the image optimizer, which is billed per image.
                   // eslint-disable-next-line @next/next/no-img-element

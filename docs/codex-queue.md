@@ -2510,3 +2510,8 @@ Pricing FAQ repair history: run39407143422 caught mobile target-size;39409356932
 - Texto/layout somente; nenhuma nova operação, email, conta, armazenamento, chamada ou custo variável por cliente. Preços/limites, PLANS_ON_SALE=false, comissão, permissões/opt-in, tax gate, art.9a e revisão comercial inalterados.
 - Navegador sintético390/1280 verifica preços canônicos, um campo humano/email, ausência cartão/senha, CTA/avisos, ordem do preço, login retornante, axe/largura e nenhuma submissão. Sem email, conta, pagamento, mensagem ou submissão externa. CI integral e publicação READY/domínio/SHA exato pendentes.
 - Documentação: docs/ht6-signup-clarity.md. PróximoHT7; nenhum B2 à frente dos HT.
+
+
+#### Correção de regressões públicas compartilhadas — 2026-10-20 17:01:00 UTC
+
+As execuções integrais identificaram contraste durante entrada animada no template público (Hotmart/mostruário) e, emHT7, contagem que incluía o CTA geral da demo além do único criador fictício. Removida a animação de opacidade da primeira dobra das páginas de tópico, mantendo conteúdo visível desde o início; auditoria AA preservada e diagnóstico detalhado adicionado. O teste deHT7 conta o registro na seção de listagens, separado dos CTAs de navegação. Sem exclusão de regra de contraste. CI completo obrigatório no novo head; nenhuma publicação contabilizada enquanto pendente. Sem novas operações, custos, preços, limites ou gates alterados.
