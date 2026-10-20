@@ -2469,7 +2469,7 @@ Pricing FAQ repair history: run39407143422 caught mobile target-size;39409356932
 
 
 185. **[HT3] Valor antes do preço e comparação honesta do modelo de taxas**
-- Estado: **Em implementação; verificação integral pendente**.
+- Estado: **Publicado — publicação funcional110 confirmada**.
 - Registro:20/10/2026 às12:48:20 de Fortaleza. Base conferida `54865f3c02c18bb1f77a866a2e4b1e6ca195c709`; commit de implementação: `440f43d01e961e2b93f435fb23cd8e92d20926ac` (criado em2026-10-20 12:49:13 de Fortaleza).
 - Home #pricing e /pricing reutilizam um componente estático único, com Checkout, Upsells, Affiliates, Funnels, Email automation, Community, Courses, Video calls, Analytics e CRM antes dos preços. Cada grupo aponta a recurso real já existente; nenhum recurso é ativado. Preços/limites/termos anuais/add-ons preservados.
 - Reutiliza COMPETITOR_PRICES.hotmart, feeWords e a ToolsCalculator existente, sem segundo modelo/calculadora. Fontes oficiais rechecadas20/10: https://hotmart.com/en/pricing ; https://hotmart.com/en/legal/payments-policy (versão21/09/2026, seção5/tabelas); help oficial208298448. Política/tabela/FAQ atuais usam taxa fixaUSD1,00 para faixa geral; trecho antigo do help ainda mencionaUSD0,50. Escopo/limiares/moedas/custos extras e necessidade de orçamento aplicável permanecem explícitos; nenhuma promessa de custo total menor, ganhos ou margem certificada.
@@ -2480,7 +2480,7 @@ Pricing FAQ repair history: run39407143422 caught mobile target-size;39409356932
 - Verificação HT3: CI integral39451939003 no head `6dfd61c1a9b0e3189a0929ebea7107cbebb5b83a` reprovou o inventário de acessibilidade porque o componente compartilhado novo não estava listado. Registro adicionado a docs/accessibility-inventory.json; exige nova execução integral no novo head, sem rerun isolado. HT0 incorporado via PR712, merge `7e5b166093cbcb9737b6900f8abcde2285eb1902`, em20/10/2026 às12:55:08 de Fortaleza; Product39449636974, verify118720699159, Redis118720696721 e security39449637090 aprovados. Alteração documental, sem incrementar publicação funcional.
 
 186. **[HT4] Completar a comparação existente com a Hotmart**
-- Estado: **Em implementação; verificação integral pendente**.
+- Estado: **Publicado — publicação funcional111 confirmada**.
 - Registro:20/10/2026 às12:56:49 de Fortaleza. Base conferida `e19fc44a46ac799088bb70ad05631c081675789d`; commit de implementação: `b1277da95f9586100d11dffa65d8f7f2ce707fef` (criado em2026-10-20T15:57:28Z, UTC; Fortaleza UTC−3).
 - A página existente /proof/hotmart recebe comparação de prazos de saque, marca/domínio e dependências do ecossistema. Preserva preços canônicos, taxas e ressalvas existentes, vantagens reais da Hotmart, SEO, rota e inventário de comparações; nenhuma página duplicada.
 - Fontes oficiais lidas20/10: política/taxas já registradas, artigo Hotmart360028608652 sobre disponibilidade de comissões, página oficial Club update-your-members-area e docs.stripe.com/payouts. Saque internacional pode começar em15 dias corridos, sujeito à garantia/elegibilidade; não confundir com BRL ou prometer saque imediato/mais rápido no Stripe. Hotmart Club tem personalização visual/domínio; não alegar ausência ou white-label completo. Domínio Marktmorgen segue configuração existente, plano, DNS e certificado.
@@ -2503,7 +2503,7 @@ Pricing FAQ repair history: run39407143422 caught mobile target-size;39409356932
 - Documentação: docs/ht5-store-activation.md. Próximo itemHT6; B2 continua depois de todos os HT liberados/condicionados.
 
 188. **[HT6] Esclarecer cadastro sem cartão, preços mensais e elegibilidade do teste**
-- Estado: **Em implementação; verificação integral pendente**.
+- Estado: **Publicado; verificação integral e READY/domínio/SHA confirmados abaixo**.
 - Registro:20/10/2026 às13:10:00 de Fortaleza. Base conferida `8af68eadf24ef80262471d3842c0078a8a390b22`; commit de implementação: `19b7368b4b1a4bbb604e8c7a1a8e9f3abee7979b` (criado em2026-10-20T16:10:27Z; Fortaleza UTC−3).
 - Formulário existente já exige somente email visível, sem senha/cartão, com proteção antibot, passkeys, termos e privacidade preservados. CTA Email me a link descreve a ação real. Nenhum campo/request novo.
 - /signin para novos criadores mostra primeiro os preços mensais canônicos de todos os planos e só depois o complemento de setup sem cartão. Pedir link não contrata/cobra. Com vendas fechadas, setup não é teste ativo/plano pago gratuito. Se os gates abrirem futuramente, o teste é qualificado à primeira loja elegível; lojas adicionais/retornantes não recebem promessa genérica. Escolha anual/mensal recebida e login retornante preservados.
@@ -2576,7 +2576,7 @@ HT1/PR713 incorporado em20/10/2026 às13:09:39 de Fortaleza; READY em13:11:16. H
 ```
 
 189. **[HT7] Vitrine com autorização datada e somente demo enquanto não houver permissão real**
-- Estado: **Em implementação; verificação integral pendente**.
+- Estado: **Publicado; verificação integral e READY/domínio/SHA confirmados abaixo**.
 - Registro:20/10/2026 às13:15:00 de Fortaleza. Base conferida `3fdac83c8b70726342035f1c1915a34d4c8916ac`; commit de implementação: `fa47ee1c416fd607345833c45f3e3bc092c3c24e` (criado em2026-10-20T16:15:40Z; Fortaleza UTC−3).
 - Home e /proof/creator-showcase reutilizam um registro estático de permissões revisadas. Nenhuma autorização real encontrada: somente Harbor Kitchen, explicitamente demo fictícia, sem foto/resultado/depoimento de cliente adicionado.
 - Uma futura entrada real exige autorização expressa no escopo public-showcase, datas de concessão/registro e referência de evidência. Ausente, revogada, inválida, futura ou fora do escopo fica oculta; a data autorizada aparece, a referência privada não. Nenhuma inferência de resultado financeiro.
@@ -2585,7 +2585,7 @@ HT1/PR713 incorporado em20/10/2026 às13:09:39 de Fortaleza; READY em13:11:16. H
 - Documentação: docs/ht7-creator-showcase.md. PróximoHT8; B2 fica depois da sequência HT.
 
 190. **[HT8] Preparar contadores reais ocultos e corrigir datas não comprovadas de compras recentes**
-- Estado: **Em implementação; verificação integral pendente**.
+- Estado: **Publicado; verificação integral e READY/domínio/SHA confirmados abaixo**.
 - Registro:20/10/2026 às13:19:59 de Fortaleza. Base conferida `d6780f8f4afab4f6c3f7dd1c5829d248843b7de3`; commit de implementação: `2011d6a8d6a20eb864dc4cd43b883914978088ea` (criado em2026-10-20T16:20:29Z; Fortaleza UTC−3).
 - Sem conjunto global auditado disponível: snapshot nulo e todos os contadores permanecem ausentes, nunca zero inventado. Preparados limiares configuráveis separados100lojas/1000vendas liquidadas/50criadores ativos30dias, contagem inteira exata e data visível. Evidência real/live, exclusão demo/teste, fonte, definição/janela e data válidas são obrigatórias; desconhecido, abaixo do limiar, fracionário, futuro ou desatualizado permanece oculto. Nenhum "+X", arredondamento para cima ou "vendo agora".
 - Dados futuros somente a partir de exportações operacionais existentes auditadas/deduplicadas, com definição e evidência registradas, sem scan de contas em página pública ou nova operação agendada.
@@ -2595,7 +2595,7 @@ HT1/PR713 incorporado em20/10/2026 às13:09:39 de Fortaleza; READY em13:11:16. H
 - Documentação: docs/ht8-platform-proof.md. PróximoHT9; B2 depois da sequência HT.
 
 191. **[HT9] Reunir alavancas e evidência de pagamentos no studio sem estimativas**
-- Estado: **Em implementação; verificação integral pendente**.
+- Estado: **Publicado; verificação integral e READY/domínio/SHA confirmados abaixo**.
 - Registro:20/10/2026 às13:25:17 de Fortaleza. Base conferida `664147426333d0f87ab2fd4f9ec20c2b214d27c0`; commit de implementação: `12b37c83d560cc241c3b45842bf0e3fe3ed29e9b` (criado em2026-10-20T16:26:13Z; Fortaleza UTC−3).
 - /studio/growth aponta, para quem pode ler estatísticas, à seção Grow your sales do studio. Seis alavancas com estado salvo/limitação da configuração e links existentes: order bump, upsell, downsell, bundles, checkout recovery e next offer. Mesma Store e leitura financeira já carregadas; nenhuma query Redis/provedor extra.
 - Leitura dos últimos30dias UTC na moeda da loja, sem conversão ou projeção. Bump/bundle/recovery identificados mostram pagamentos brutos inteiros associados, explicitamente não receita separada do extra/efeito causal. Pagamentos depois do checkout incluem upsells e downsells; metadados atuais não distinguem receita histórica de downsell. Downsell-only e next-offer-only permanecem desconhecidos, nunca0inventado. Sem tags ou leitura parcial não certifica valor. Linhas podem se sobrepor/não somar; reembolsos, taxas, impostos e custos não são lucro medido.
@@ -2672,7 +2672,7 @@ HT2/PR714 incorporado em20/10/2026 às13:32:08 de Fortaleza. READY em13:33:12.64
 ```
 
 192. **[HT12] Cluster evergreen de guias práticos com FAQ visível e dados estruturados**
-- Estado: **Em implementação; verificação integral pendente**.
+- Estado: **Publicado; verificação integral e READY/domínio/SHA confirmados abaixo**.
 - Registro:20/10/2026 às13:35:31 de Fortaleza. Base conferida `275ef11290de759759efbb2fb5832120ff294bc9`; commit de implementação: `f27debb5147fec8a5824b7446b768ab6768e3af9` (criado em2026-10-20T16:35:30Z; Fortaleza UTC−3).
 - Reutiliza journal/blog estático, template, sitemap e capas existentes. Quatro guias distintos: cursos, memberships, sessões pagas e programas de afiliados; URL e corpo anterior do guia de arquivo digital preservados e aprofundados. Cada guia tem escopo/entrega/aceite/testes específicos, links de recursos reais, interligação do cluster e CTA existente, sem promessas de demanda/ganhos/margem.
 - FAQPage usa exatamente as3perguntas/respostas visíveis de cada um dos5guias, junto do BlogPosting existente; nenhuma promessa de rich result ou conteúdo apenas no schema. Índice facilita encontrar o cluster.
@@ -2687,9 +2687,39 @@ HT2/PR714 incorporado em20/10/2026 às13:32:08 de Fortaleza. READY em13:33:12.64
 O CI integral do head d8b5f7c2bc0162f776da886429deb5d05759f7ad encontrou uma ocorrência de “afterwards” no guia de sessões, incompatível com o padrão en-US vigente. Corrigida para “afterward” no commit f23e100193e76839dc9c8bb9c8faafe10fbf2a81. Product checks 39459453441 / verify 118754920432: falhou; Redis e Dependency security passaram. Nova verificação integral obrigatória no novo head; nenhum job isolado reexecutado para declarar conclusão. Sem mudança de custos, preços, limites ou gates; publicação permanece pendente.
 
 
+### Publicação funcional110
+
+- Item 185; PR #715; incorporação em Fortaleza: 2026-10-20 13:34:10 (UTC−3). Head verificado `6579085b13fae9f93685639dc156b3eeeac14e43`; versão exata publicada `cf2c5a0b92f45186d73c816bf3c661e179ef0da8`.
+- READY 2026-10-20T16:35:12.467Z; domínio marktmorgen.com confirmado no alias e nas rotas; deployment `dpl_F7618e1MiUQGq6H3RSoQu4ovaP8Z`. 6 rotas HTTP200 na mesma versão; 138 verificações específicas sintéticas aprovadas. Product checks 39454883085, verify 118739147060, Redis 118739146674 e Dependency security 39454883042: aprovados no head completo.
+- Runtime: zero erros/fatais no intervalo 2026-10-20T16:31:36.317Z → 2026-10-20T16:36:36.317Z. Custos: sem nova operação/fornecedor ou custo variável; preços, limites, opt-in e gates fiscais/comerciais preservados. PLANS_ON_SALE=false, margem global não certificada. Contador incrementado somente após essas provas; aviso 110 já enviado.
+
+
+### Publicação funcional111
+
+- Item 186; PR #716; incorporação em Fortaleza: 2026-10-20 13:36:57 (UTC−3). Head verificado `45bb035291c19399e86ace7920ab94cafc8bfd05`; versão exata publicada `f9bca29fe6386648f76351de70955d4a93f7aa89`.
+- READY 2026-10-20T16:38:13.894Z; domínio marktmorgen.com confirmado no alias e nas rotas; deployment `dpl_7Vx2JdDbxt5Uc6DyqUjTPe5LF6R1`. 7 rotas HTTP200 na mesma versão; 34 verificações específicas sintéticas aprovadas. Product checks 39454886874, verify 118739165109, Redis 118739164818 e Dependency security 39454887142: aprovados no head completo.
+- Runtime: zero erros/fatais no intervalo 2026-10-20T16:35:33.246Z → 2026-10-20T16:40:33.245Z. Custos: sem nova operação/fornecedor ou custo variável; preços, limites, opt-in e gates fiscais/comerciais preservados. PLANS_ON_SALE=false, margem global não certificada. Contador incrementado somente após essas provas; aviso 111 já enviado.
+
+
+193. **[HT15] Reunir os modelos existentes numa biblioteca com filtros, prévia e uso em rascunho**
+
+- Estado: **Em implementação; verificação integral e publicação pendentes**.
+- Registro:20/10/2026 às13:56:53 de Fortaleza. Base remota conferida `47f19942b46348ae36e0d61cce059cc8a5bc0f4c`; implementação `c488f4c03f38634c078331600575f8e957c17b70` (2026-10-20T16:56:53Z).
+- Biblioteca privada em Growth reúne definições existentes de páginas, funnel-starters, mail-starters, layouts de email e saved-blocks; filtros por objetivo/tipo/texto e prévias locais. Sessões salvas só lidas por botão explícito na API privada existente; falha continua desconhecida, nunca vazia por suposição.
+- Usar abre rascunho não salvo no editor existente, sequência pausada ou preview de setup existente do funil; não grava/importa/publica/ativa/envia automaticamente. Páginas, testes, variantes, textos dos criadores, idiomas e IDs persistidos preservados. Sequência existente no mesmo trigger não é substituída; gatilhos, limites, revisão e consentimento existentes mantidos.
+- Sem chamada de IA ou fornecedor novo, novo pool/teto/reserva, job ou armazenamento. Operações explícitas existentes continuam sujeitas às quotas atuais. Nenhuma mudança de preço, limite visível, comissão, PLANS_ON_SALE=false, tax gate, art.9a ou revisão comercial. Piso líquido de60% continua obrigatório por cliente no pior cenário e global, todos os impostos; não há declaração de margem certificada ou vendas abertas.
+- Testes adicionados: catálogo/filtros/destinos canônicos; fixture sintética isolada com página vazia e página existente; navegador390/1280 verifica filtros/prévias/leitura privada explícita, rascunho de página, conteúdo salvo preservado, placeholders de email, sequência pausada, largura/axe e nenhuma write. CI integral no head final obrigatório; publicação só conta após READY/domínio/SHA. Nenhuma conta real, pagamento, mensagem ou submissão externa.
+- Proveniência: docs/ht15-template-library.md. PróximoHT16/17, depois cálculosHT10/11/13/14; nenhum B2 novo à frente.
+
+
 #### Correção de regressões públicas compartilhadas — 2026-10-20 17:01:00 UTC
 
 As execuções integrais identificaram contraste durante entrada animada no template público (Hotmart/mostruário) e, emHT7, contagem que incluía o CTA geral da demo além do único criador fictício. Removida a animação de opacidade da primeira dobra das páginas de tópico, mantendo conteúdo visível desde o início; auditoria AA preservada e diagnóstico detalhado adicionado. O teste deHT7 conta o registro na seção de listagens, separado dos CTAs de navegação. Sem exclusão de regra de contraste. CI completo obrigatório no novo head; nenhuma publicação contabilizada enquanto pendente. Sem novas operações, custos, preços, limites ou gates alterados.
+
+
+#### HT15 — verificação de identificador da biblioteca privada
+
+Product checks39462624653/verify118766157526 aprovou regressões mas recusou o build: statsId pode ser null em loja sem histórico. A biblioteca agora só lê uma seção salva quando o identificador existe; ausência preserva a página e apresenta estado não confirmado, sem ler outra loja nem inventar seção vazia. CI integral novamente obrigatório no novo head; sem reexecução isolada ou publicação contada.
 
 
 #### Contraste do corpo de páginas de tópico — 2026-10-20 17:24:39 UTC
@@ -2700,3 +2730,58 @@ Diagnóstico detalhado deHT7 identificou que os blocos .reveal do corpo ainda es
 #### Janela da verificação integral —20/10/2026
 
 HT6/Product checks39462558715/verify118765503722 foi cancelado pelo limite de25minutos, ainda executando os testes de navegador, sem conclusão integral. A suíte cresceu; limite do verify ajustado para35minutos, mantendo todos os casos/asserts e os demais jobs. Nenhuma reexecução isolada ou redução de cobertura. Nova execução integral no novo head é obrigatória antes de incorporar. Ajuste apenas do limite da execução de desenvolvimento, sem operação/direito/custo variável do cliente, preço ou gate modificado.
+
+
+#### HT15 — rótulos explícitos dos filtros da biblioteca
+
+Product checks39467027754/verify118781108709 passou build/regressões, mas navegador expirou procurando o rótulo exatoGoal. Cada filtro novo agora usa label/htmlFor e id explícitos separados das opções, mantendo nome acessível curto e inequívoco. Mesmo ajuste nos novos campos do planejadorHT14. Não afrouxar seletor nem ignorar etapa: filtros, teclado/AA e suíte integral devem passar no novohead. Nenhuma operação/custo/permissão/identificador persistido alterado.
+
+
+### Publicação funcional113
+
+Item188/PR718 incorporado em2026-10-20 14:56:03 de Fortaleza. Commit testado `a9a67a28147d33d60a0de457782d07048609994b`; versão incorporada `c20edc97865898ff7e42ae0de1c6bf669405f58a`, árvore idêntica à verificada. READY em`2026-10-20T17:57:45.208Z`, domínio`marktmorgen.com`, deployment`dpl_ByuUqrxxRbhiT16u8mcMKu417bxz`.
+
+CI integral Product checks39466966305 (verify118780763532, Redis118780763289), Dependency security39466966363: aprovados; 32 verificações específicas. 6 rotas responderam200 com o mesmo deployment; logs error/fatal sem registros na janela2026-10-20T17:54:54.976Z → 2026-10-20T17:59:54.976Z. Prova autenticada limitada à fixture sintética do CI, sem conta/pagamento real.
+
+Custo incremental: Static signup clarity using canonical plan prices, same single email form and setup/trial gates; no new variable client/provider operation. Piso líquido60% por cliente no pior mês/100% dos direitos e global, todos os impostosBrasil/EUA, continua obrigatório; desconhecido reprova. M0 pela leitura mais onerosa continua reprovado; PLANS_ON_SALE=false, comissão, preços/limites, tax gate, art.9a e revisão comercial preservados. Nenhuma certificação de margem ou abertura das vendas.
+
+
+### Publicação funcional114
+
+Item189/PR719 incorporado em2026-10-20 15:00:54 de Fortaleza. Commit testado `fb830f118f7efabf77313ffbab2436bbefff20b2`; versão incorporada `a74a6cadcbd02eec8fe41bf6df02a46eca9f48b0`, árvore idêntica à verificada. READY em`2026-10-20T18:02:03.076Z`, domínio`marktmorgen.com`, deployment`dpl_41B1PhrjfWmURHM9vhxjHxH7vqUV`.
+
+CI integral Product checks39466983143 (verify118780950669, Redis118780951171), Dependency security39466983051: aprovados; 26 verificações específicas. 7 rotas responderam200 com o mesmo deployment; logs error/fatal sem registros na janela2026-10-20T17:58:18.600Z → 2026-10-20T18:03:18.600Z. Prova autenticada limitada à fixture sintética do CI, sem conta/pagamento real.
+
+Custo incremental: Existing static site/template/permission registry only, demo clearly fictional; no new provider/customer operation, image, permission use or outcome claim. Piso líquido60% por cliente no pior mês/100% dos direitos e global, todos os impostosBrasil/EUA, continua obrigatório; desconhecido reprova. M0 pela leitura mais onerosa continua reprovado; PLANS_ON_SALE=false, comissão, preços/limites, tax gate, art.9a e revisão comercial preservados. Nenhuma certificação de margem ou abertura das vendas.
+
+
+### Publicação funcional115
+
+Item190/PR720 incorporado em2026-10-20 15:07:24 de Fortaleza. Commit testado `e1000dd9e431af0dafe7971b3a8e23927fd2004b`; versão incorporada `43c9ea81d77c6e06455be01538b13483854e8f46`, árvore idêntica à verificada. READY em`2026-10-20T18:08:28.624Z`, domínio`marktmorgen.com`, deployment`dpl_7YB7ipwnYUDQR9d6TGnXWLuho7ou`.
+
+CI integral Product checks39466987941 (verify118780975734, Redis118780976047), Dependency security39466988069: aprovados; 6 verificações específicas. 6 rotas responderam200 com o mesmo deployment; logs error/fatal sem registros na janela2026-10-20T18:03:58.063Z → 2026-10-20T18:08:58.063Z. Prova autenticada limitada à fixture sintética do CI, sem conta/pagamento real.
+
+Custo incremental: No added provider operation or customer cost; existing sales feed validation and static unaudited aggregate omission. Piso líquido60% por cliente no pior mês/100% dos direitos e global, todos os impostosBrasil/EUA, continua obrigatório; desconhecido reprova. M0 pela leitura mais onerosa continua reprovado; PLANS_ON_SALE=false, comissão, preços/limites, tax gate, art.9a e revisão comercial preservados. Nenhuma certificação de margem ou abertura das vendas.
+
+
+### Publicação funcional116
+
+Item191/PR721 incorporado em2026-10-20 15:09:30 de Fortaleza. Commit testado `5bfbbd501950c7ac5c5e6e262f613902d1ba4eab`; versão incorporada `4e1ffceda46b449b539251eae3392ed0e2d747cf`, árvore idêntica à verificada. READY em`2026-10-20T18:10:58.257Z`, domínio`marktmorgen.com`, deployment`dpl_6vUCDNzJE9vtLWzxUaxN6TzLVsuH`.
+
+CI integral Product checks39467000958 (verify118781013863, Redis118781013464), Dependency security39467000779: aprovados; 26 verificações específicas. 6 rotas responderam200 com o mesmo deployment; logs error/fatal sem registros na janela2026-10-20T18:07:50.381Z → 2026-10-20T18:12:50.381Z. Prova autenticada limitada à fixture sintética do CI, sem conta/pagamento real.
+
+Custo incremental: Existing own-payment read and configuration only; no extra provider operation/query/activation or cost. Piso líquido60% por cliente no pior mês/100% dos direitos e global, todos os impostosBrasil/EUA, continua obrigatório; desconhecido reprova. M0 pela leitura mais onerosa continua reprovado; PLANS_ON_SALE=false, comissão, preços/limites, tax gate, art.9a e revisão comercial preservados. Nenhuma certificação de margem ou abertura das vendas.
+
+
+### Publicação funcional117
+
+Item192/PR722 incorporado em2026-10-20 15:13:26 de Fortaleza. Commit testado `e01a31d7d42dc4ec37581246623982eeeb220206`; versão incorporada `ea82a992a5f531b7a1e2c6a352a50681163b2bb3`, árvore idêntica à verificada. READY em`2026-10-20T18:15:12.268Z`, domínio`marktmorgen.com`, deployment`dpl_Hhz6W2qLQQqQ76R1uzN9fD1Wp2Fm`.
+
+CI integral Product checks39467010347 (verify118781050338, Redis118781050839), Dependency security39467010349: aprovados; 94 verificações específicas. 12 rotas responderam200 com o mesmo deployment; logs error/fatal sem registros na janela2026-10-20T18:11:19.355Z → 2026-10-20T18:16:19.355Z. Prova autenticada limitada à fixture sintética do CI, sem conta/pagamento real.
+
+Custo incremental: Static guides/templates/schema only; existing assets/sitemap; no new AI/provider/customer operation or cost. Piso líquido60% por cliente no pior mês/100% dos direitos e global, todos os impostosBrasil/EUA, continua obrigatório; desconhecido reprova. M0 pela leitura mais onerosa continua reprovado; PLANS_ON_SALE=false, comissão, preços/limites, tax gate, art.9a e revisão comercial preservados. Nenhuma certificação de margem ou abertura das vendas.
+
+
+#### HT15 — conferir conteúdo preservado no painel aberto e distinguir consulta de destinatários
+
+verify118791597731 executou filtros/prévias/AA e identificou duas expectativas incorretas: o hero salvo começa recolhido (seu input não existe até abrir) e o composer existente consulta destinatários por POST action=count. O teste abre o próprio bloco antes de conferir o texto exato do criador; intercepta e conta exatamente as duas consultas conhecidas de destinatários, sem executá-las fora da fixture. Qualquer outro POST/write continua abortado e reprova, com método/caminho de diagnóstico; salvar/enviar/publicar/IA continuam zero. Nenhuma regra de preservação ou mutação é dispensada. Suíte integral obrigatória no novohead; sem custo/limite/preço/gate alterado.

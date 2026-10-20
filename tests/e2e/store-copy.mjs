@@ -1,3 +1,4 @@
+import { checkTemplateLibrary } from "./template-library.mjs";
 import { checkEvergreenGuides } from "./evergreen-guides.mjs";
 import { checkSalesLevers } from "./sales-levers.mjs";
 import { checkPlatformProof } from "./platform-proof.mjs";
@@ -210,7 +211,7 @@ try {
   const seeded = await run(process.execPath, [seedFile]);
   rmSync(out, { recursive: true, force: true });
   if (seeded.status !== 0) throw new Error(`the store could not be made:\n${seeded.said}`);
-  const { signinPrices,activationFixture,packageFixture,tierFixture,exitFixture,homeDemo,pauseFixtures,session, second, abProduct, abStore, contactToken,growthSession,growthSid,growthProduct,returnSession,returnSid,wordingSession,wordingSid,wordingTrialSession,wordingTrialSid } = JSON.parse(seeded.said.trim().split("\n").at(-1));
+  const { libraryFixture,signinPrices,activationFixture,packageFixture,tierFixture,exitFixture,homeDemo,pauseFixtures,session, second, abProduct, abStore, contactToken,growthSession,growthSid,growthProduct,returnSession,returnSid,wordingSession,wordingSid,wordingTrialSession,wordingTrialSid } = JSON.parse(seeded.said.trim().split("\n").at(-1));
 
   if (BUILD) {
     const built = await run(process.execPath, [nextCli, "build"]);
@@ -805,6 +806,7 @@ await checkThanksAcknowledgment({browser,LOCAL,fixture:{session:growthSession,si
 await checkNoCountAcknowledgment({browser,LOCAL,fixture:homeDemo,is});
 await checkNudgeAcknowledgment({browser,LOCAL,fixture:pauseFixtures[0],is});
   await captureHomeStudio({browser,LOCAL,fixture:homeDemo,is});
+  await checkTemplateLibrary({browser,LOCAL,fixture:libraryFixture,axeSource,is});
   await checkEvergreenGuides({browser,LOCAL,is,axeSource});
   await checkSalesLevers({browser,LOCAL,fixture:activationFixture,axeSource,is});
   await checkPlatformProof({browser,LOCAL,is});

@@ -215,6 +215,7 @@ function counter(value: string, max: number) {
 export function PageEditor({
   product,
   initial,
+  templateDraft,
   about,
   look,
   storeName,
@@ -241,6 +242,8 @@ export function PageEditor({
   /** The store's own picture folder (lib/product-image.ts), where a page's pictures go. */
   folder: string;
   initial: SalesPage;
+  /** Unsaved library content; initial remains the saved baseline. */
+  templateDraft?: SalesPage;
   /** The long description, to start a page from. */
   about: string;
   look: StoreLook;
@@ -277,7 +280,7 @@ export function PageEditor({
   site?: { id: string; kinds: readonly BlockKind[]; forms?: { id: string; name: string }[] };
 }) {
   const router = useRouter();
-  const [drafts, setDrafts] = useState<Draft[]>(() => toDrafts(initial));
+  const [drafts, setDrafts] = useState<Draft[]>(() => toDrafts(templateDraft ?? initial));
   const [seoTitle, setSeoTitle] = useState(initial.seoTitle);
   const [seoDescription, setSeoDescription] = useState(initial.seoDescription);
   const [next, setNext] = useState(initial.next ?? "");

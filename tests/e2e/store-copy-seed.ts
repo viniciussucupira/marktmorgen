@@ -169,6 +169,19 @@ async function main(): Promise<void> {
   await setSubscription(activationOwner,{active:true,tier:"pro",cycle:"month",subscriptionId:null,customerId:null,trialEnds:0,period:paidPeriod()});
   const activationStore=await storeForEmail(activationOwner);if(!activationStore)throw Error("No activation store");
   const activationFixture={session:await openSession(activationOwner),sid:activationStore.sid};
-  console.log(JSON.stringify({ signinPrices:TIERS.map(tier=>({tier,words:publishedPriceWords(tier,"month")})),activationFixture,packageFixture,tierFixture,exitFixture,homeDemo,pauseFixtures,wordingSession,wordingSid:wordingStore.sid,wordingTrialSession,wordingTrialSid:wordingTrialStore.sid,returnSession,returnSid:returnStore.sid,growthSession,growthSid:growthStore.sid,growthProduct:growthProducts[0],session: await openSession(OWNER), second: second.store.sid, abProduct, abStore:abStore.sid,contactToken }));
+  const libraryOwner="template-library-fixture@example.test";
+  if(!(await claimHandle(libraryOwner,"templatelibraryfixture","Template library fixture","Synthetic local tests.")).ok)throw Error("No library fixture");
+  await setSubscription(libraryOwner,{active:true,tier:"pro",cycle:"month",subscriptionId:null,customerId:null,trialEnds:0,period:paidPeriod()});
+  await setMailSettings(libraryOwner,{fromName:"Synthetic creator",address:"123 Synthetic Street, Example City, NY 10001"});
+  await ensureStatsId(libraryOwner);
+  const libraryProduct=await addProduct(libraryOwner,"Synthetic template product","Synthetic product summary.","10",null);
+  if(!libraryProduct.ok)throw Error("No library fixture product");
+  const libraryStore=await storeForEmail(libraryOwner);if(!libraryStore)throw Error("No library fixture store");
+  const preservedProduct=await addProduct(libraryOwner,"Saved creator page","Keep this creator content.","20",null);
+  if(!preservedProduct.ok || !libraryStore.statsId)throw Error("No preserved page fixture");
+  await writePage(libraryStore.statsId,preservedProduct.product.id,parsePage({blocks:[{id:"kephero1",kind:"hero",headline:"Keep my creator headline",sub:"Keep my creator wording",media:"none",video:null}]}),libraryStore);
+  if(!(await setProductPage(libraryOwner,preservedProduct.product.id,true)).ok)throw Error("No preserved page index");
+  const libraryFixture={preservedProduct:preservedProduct.product.id,session:await openSession(libraryOwner),sid:libraryStore.sid,product:libraryProduct.product.id};
+  console.log(JSON.stringify({ libraryFixture,signinPrices:TIERS.map(tier=>({tier,words:publishedPriceWords(tier,"month")})),activationFixture,packageFixture,tierFixture,exitFixture,homeDemo,pauseFixtures,wordingSession,wordingSid:wordingStore.sid,wordingTrialSession,wordingTrialSid:wordingTrialStore.sid,returnSession,returnSid:returnStore.sid,growthSession,growthSid:growthStore.sid,growthProduct:growthProducts[0],session: await openSession(OWNER), second: second.store.sid, abProduct, abStore:abStore.sid,contactToken }));
 }
 main().catch((e) => { console.error(e); process.exit(1); });

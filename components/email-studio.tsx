@@ -1,5 +1,6 @@
 "use client";
 
+import type { LibraryEmailDraft, LibrarySequenceDraft } from "@/lib/template-library-intents";
 import { AiAssist, AiOn } from "@/components/ai-assist";
 import { EMAIL_GOALS, type EmailGoal } from "@/lib/ai-rules";
 import { appendSequenceDraft, sequenceDraftSlots, DEFAULT_SEQUENCE_DRAFT, type DraftedStep, SEQUENCE_DRAFT_COUNTS } from "@/lib/sequence-draft";
@@ -285,6 +286,8 @@ function Feedback({ error, done }: { error: string | null; done: string | null }
  * them.
  */
 export function EmailStudio(props: {
+  initialTemplate?: LibraryEmailDraft;
+  initialSequence?: LibrarySequenceDraft;
   email: string;
   name: string;
   mail: MailSettings | null;
@@ -330,6 +333,7 @@ export function EmailStudio(props: {
   accent?: string;
 }) {
   const ready = props.mail !== null;
+  const [libraryEmail, setLibraryEmail] = useState(props.initialTemplate);
   const [broadcastUnconfirmed, setBroadcastUnconfirmed] = useState(false);
   const [draftCleanupUnconfirmed, setDraftCleanupUnconfirmed] = useState(false);
   // The draft open in the composer; a new key starts the composer afresh.
@@ -343,6 +347,7 @@ export function EmailStudio(props: {
       return;
     }
     if (composerState.current?.dirty && !window.confirm("You have email changes that are not saved. Discard them and open another email?")) return;
+    setLibraryEmail(undefined);
     setOpen(draft);
     setComposeRevision((value) => value + 1);
   };
@@ -368,7 +373,8 @@ export function EmailStudio(props: {
                 onBroadcastUnconfirmed={() => setBroadcastUnconfirmed(true)}
                 onDraftCleanupUnconfirmed={() => setDraftCleanupUnconfirmed(true)}
                 draft={open}
-                onDone={() => { setOpen(null); setComposeRevision((value) => value + 1); }}
+                initialTemplate={open ? undefined : libraryEmail}
+                onDone={() => { setLibraryEmail(undefined); setOpen(null); setComposeRevision((value) => value + 1); }}
                 onStartNew={() => openDraft(null)}
                 composerState={composerState}
                 savedDrafts={props.drafts}
@@ -382,7 +388,7 @@ export function EmailStudio(props: {
             <History readFailed={props.broadcastsReadFailed ?? false} writeUnconfirmed={writeUnconfirmed} onWriteUnconfirmed={onWriteUnconfirmed} flowsReadFailed={props.flowsReadFailed ?? false} broadcasts={props.broadcasts} products={props.products} canSend={props.canSend} onOpen={openDraft} currency={props.currency} />
             {props.canSend ? (
               <AiOn value={props.ai ?? { on: false, left: 0 }}>
-                <Flows writeUnconfirmed={writeUnconfirmed} onWriteUnconfirmed={onWriteUnconfirmed} flows={props.flows} readFailed={props.flowsReadFailed ?? false} products={props.products} currency={props.currency} sells={props.sells} courses={props.courses ?? []} paidProducts={props.paidProducts} automation={props.automation} limits={props.workflowLimits} assignees={props.assignees ?? []} />
+                <Flows initialSequence={props.initialSequence} writeUnconfirmed={writeUnconfirmed} onWriteUnconfirmed={onWriteUnconfirmed} flows={props.flows} readFailed={props.flowsReadFailed ?? false} products={props.products} currency={props.currency} sells={props.sells} courses={props.courses ?? []} paidProducts={props.paidProducts} automation={props.automation} limits={props.workflowLimits} assignees={props.assignees ?? []} />
               </AiOn>
             ) : null}
           </>
@@ -560,6 +566,7 @@ function ListCard({
 }
 
 function Compose(props: {
+  initialTemplate?: LibraryEmailDraft;
   broadcastUnconfirmed: boolean;
   onBroadcastUnconfirmed: () => void;
   onDraftCleanupUnconfirmed: () => void;
@@ -583,8 +590,8 @@ function Compose(props: {
   const [refreshingDrafts, startDraftRefresh] = useTransition();
   const [uncertainDrafts, setUncertainDrafts] = useState<DraftRow[] | null>(null);
   const draftSaveBlocked = uncertainDrafts !== null && (uncertainDrafts === props.savedDrafts || props.draftsReadFailed);
-  const [subject, setSubject] = useState(props.draft?.subject ?? "");
-  const [body, setBody] = useState(props.draft?.body ?? "");
+  const [subject, setSubject] = useState(props.draft?.subject ?? props.initialTemplate?.subject ?? "");
+  const [body, setBody] = useState(props.draft?.body ?? props.initialTemplate?.body ?? "");
   // The email's box, so a picture goes where the cursor is.
   const bodyBox = useRef<HTMLTextAreaElement>(null);
   const [productId, setProductId] = useState(props.draft?.productId ?? "");
@@ -642,7 +649,7 @@ function Compose(props: {
   const [about, setAbout] = useState("");
   const draftSubjectTest: DraftSubjectTest | null = testing ? { subjectB, share, hours, by } : null;
   const content = JSON.stringify([subject, body, productId, who, notProductId, spentText, channel, quietDays, draftSubjectTest]);
-  const [savedContent, setSavedContent] = useState(content);
+  const [savedContent, setSavedContent] = useState(!props.draft && props.initialTemplate ? "" : content);
   const dirty = (!draftId && Boolean(props.draft)) || content !== savedContent || later || at !== "";
   useLeaveGuard(dirty || aiBusy);
   useImperativeHandle(props.composerState, () => ({ dirty, busy: locked }), [dirty, locked]);
@@ -1821,6 +1828,7 @@ function goalOf(draft: FlowDraft): FlowGoal | null {
 export type WorkflowLimits = { maxActive: number; dailyRuns: number; runsToday: { started: number; refused: number } | null; held: number | null };
 
 function Flows({
+  initialSequence,
   flows,
   writeUnconfirmed,
   onWriteUnconfirmed,
@@ -1834,6 +1842,7 @@ function Flows({
   limits,
   assignees = [],
 }: {
+  initialSequence?: LibrarySequenceDraft;
   limits?: WorkflowLimits;
   assignees?: string[];
   flows: FlowRow[];
@@ -1852,7 +1861,15 @@ function Flows({
   const router = useRouter();
   const [refreshing, startRefresh] = useTransition();
   const refreshFlows = () => startRefresh(() => router.refresh());
-  const [draft, setDraft] = useState<FlowDraft | null>(null);
+  const [draft, setDraft] = useState<FlowDraft | null>(() => {
+    if (!initialSequence || readFailed || flows.some(flow => flow.trigger === initialSequence.trigger)) return null;
+    return {
+      ...toDraft(null,products), name:initialSequence.name,trigger:initialSequence.trigger,productId:"",active:false,
+      steps:initialSequence.steps.map(step => ({
+        ...blankStep(String(step.delayHours),"hours",""),id:step.id,editorKey:"template-"+step.id,subject:step.subject,body:step.body
+      }))
+    };
+  });
   const [aiBusy, setAiBusy] = useState(false);
   const overCapacity = (draft?.steps.length ?? 0) > MAX_STEPS;
   // A saved workflow being switched on: its preview is shown first (WorkflowPreview), then the explicit button.

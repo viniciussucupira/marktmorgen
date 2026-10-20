@@ -1164,6 +1164,7 @@ export default async function StudioPage({
             ) : null}
             <StudioTools
               tools={[
+                { href: studioPath(store, "", "growth")+"#template-library", title: "Template library", text: "Preview existing pages, funnels, email layouts and paused sequences.", icon: "layout" as const, prefetch: false },
                 { href: studioPath(store, "", "growth"), title: "Growth", text: "Choose a goal and connect the tools for your next action.", icon: "chart" as const, prefetch: false },
                 ...(may("products")
                   ? [
