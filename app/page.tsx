@@ -1,3 +1,5 @@
+import { TrustChecks } from "@/components/trust-checks";
+import { StudioScreens } from "@/components/studio-screens";
 import { CreatorShowcase, PlatformProof } from "@/components/creator-showcase";
 import { PricingValue } from "@/components/pricing-value";
 import { PATH_HOME_STEPS } from "@/lib/path-home";
@@ -202,7 +204,7 @@ export default function Home() {
         {/* ------------------------------------------------------------ hero */}
         <section aria-labelledby="home-hero-heading" className="surface-daybreak on-dark overflow-hidden" data-home-hero>
           <div className="container-page grid items-center gap-12 pb-28 pt-12 sm:gap-14 sm:pt-16 lg:grid-cols-[1.04fr_1fr] lg:gap-12 lg:pb-32 lg:pt-20">
-            <div className="nb-fade-up">
+            <div className="">
               <p className="mb-5 text-base font-semibold text-white/85" data-home-pillar>
                 Your store. Your Stripe. Your money.
               </p>
@@ -256,7 +258,7 @@ export default function Home() {
               </p>
             </div>
 
-            <div className="nb-fade-up nb-delay-2">
+            <div className="">
               <HeroFlow />
             </div>
           </div>
@@ -356,87 +358,20 @@ export default function Home() {
               </Link>
             </div>
 
-            {/*
-              The photograph carries the card, not the caption.
-
-              The words used to sit in a white tray under the picture, which
-              split each card in two and made a grid of eight read as
-              sixteen things. The name and the line now sit on the
-              photograph itself, over a gradient dark enough to hold white
-              text at any crop, so each card is one object: a person, and
-              what they sell.
-
-              The first two run tall and wide; the other six fill a denser
-              grid beside them. Eight equal tiles would be the wallpaper
-              this section is trying to stop being.
-            */}
-            <ul className="mt-12 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-              {CREATORS.map((c, i) => (
-                <li key={c.href} className={`reveal ${i < 2 ? "lg:col-span-2 lg:row-span-2" : ""}`}>
-                  <Link
-                    href={c.href}
-                    className="group relative block h-full overflow-hidden rounded-[var(--r-lg)] bg-sand-deep shadow-[inset_0_0_0_1px_rgba(42,23,144,0.09),0_14px_32px_-16px_rgba(42,23,144,0.22)]"
-                  >
-                    <div className={`relative overflow-hidden ${i < 2 ? "aspect-[4/5] lg:aspect-[1.12]" : "aspect-[4/5]"}`}>
-                      {/* A photograph served at the sizes asked for by its own host, never through the image optimizer, which is billed per image. */}
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={PHOTO(c.photo, 560, 700)}
-                        srcSet={`${PHOTO(c.photo, 400, 500)} 400w, ${PHOTO(c.photo, 560, 700)} 560w, ${PHOTO(c.photo, 900, 1125)} 900w`}
-                        sizes={i < 2 ? "(min-width: 1024px) 45vw, 46vw" : "(min-width: 1024px) 22vw, 46vw"}
-                        alt={c.alt}
-                        width={560}
-                        height={700}
-                        loading="lazy"
-                        decoding="async"
-                        className="h-full w-full object-cover transition-transform duration-700 [transition-timing-function:var(--ease)] group-hover:scale-[1.04]"
-                      />
-                      <span
-                        aria-hidden="true"
-                        className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-transparent"
-                      />
-                      <div className="absolute inset-x-0 bottom-0 p-4 sm:p-5">
-                        <p className={`flex items-center justify-between gap-2 font-semibold leading-snug text-white ${i < 2 ? "text-base sm:text-xl" : "text-[0.9375rem] sm:text-base"}`}>
-                          {c.label}
-                          <Icon
-                            name="arrow-right"
-                            size={18}
-                            className="shrink-0 text-white/70 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:text-white"
-                          />
-                        </p>
-                        <p className={`mt-1 text-white/80 ${i < 2 ? "text-[0.875rem] sm:text-[0.9375rem]" : "text-[0.8125rem]"}`}>
-                          {c.sells}
-                        </p>
-                      </div>
-                    </div>
-                  </Link>
-                </li>
-              ))}
+            <ul className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {CREATORS.map(creator=><li key={creator.href}><Link href={creator.href} prefetch={false} className="card flex h-full min-h-36 flex-col justify-between gap-4 p-6">
+                <h3 className="text-lg font-semibold">{creator.label}</h3><p className="text-sm text-ink-soft">{creator.sells}</p><span className="link inline-flex min-h-11 items-center">Explore this kind of work<Icon name="arrow-right" size={16}/></span>
+              </Link></li>)}
             </ul>
+            <p className="mt-6 max-w-3xl text-sm text-ink-soft">These pages show fictional examples of work you can sell. They are not customer testimonials or evidence of earnings. <Link href="/demo" className="link">Explore the live demo</Link>.</p>
 
-            {/*
-              Said plainly, under the photographs themselves. We have no
-              customers to show yet, and a stock photograph presented as one
-              would be the first lie on a site whose whole argument is that we
-              do not tell them.
-            */}
-            <p className="reveal mt-6 flex items-start gap-2.5 text-[0.875rem] text-ink-mute">
-              <Icon name="info" size={16} className="mt-0.5 shrink-0" />
-              <span className="measure-wide">
-                Licensed photographs of people at work, not customers of ours. Every store behind these links is an
-                example we built, and the one store here you can buy from is the{" "}
-                <Link href="/demo" className="link">
-                  live demo
-                </Link>
-                .
-              </span>
-            </p>
           </div>
         </section>
 
         <HomeActions place="situations"/>
 
         {/* ------------------------------------------------ the buyer's path */}
+        <StudioScreens />
         <BuyerPath />
 
         <section className="section" aria-labelledby="home-modules-heading">
@@ -563,7 +498,8 @@ export default function Home() {
         {/* -------------------------------------------------------- pricing */}
         <section id="pricing" className="surface-sand section scroll-mt-20">
           <div className="container-page">
-            <PricingValue place="home" />
+            <TrustChecks place="home" />
+            <div className="mt-12"><PricingValue place="home" /></div>
             <div className="reveal mx-auto mt-10 max-w-2xl text-center">
               <h2 className="t-h2 balance">Three plans, with the monthly price and sales fee shown together.</h2>
               <p className="mt-5 text-ink-soft">

@@ -1,3 +1,4 @@
+import { TrustChecks } from "@/components/trust-checks";
 import Link from "next/link";
 import { RevealOnScroll } from "@/components/home-parts";
 import { Icon, iconFor } from "@/components/icons";
@@ -610,6 +611,7 @@ export function TopicPageView({ page }: { page: TopicPage }) {
           ))}
         </div>
 
+        {page.section === "platform" ? <div className="container-page pb-16 sm:pb-20"><TrustChecks place="feature" /></div> : null}
         {page.related ? <Related slugs={page.related} /> : null}
 
         <section className="surface-sand">
