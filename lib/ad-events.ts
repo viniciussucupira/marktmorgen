@@ -473,7 +473,8 @@ function cookiesOf(request: { cookies: { get(name: string): { value: string } | 
 }
 
 /** Whether this request carries the buyer's yes to ad measurement on this store (lib/ad-consent.ts). */
-export function allowedBy(request: { cookies: { get(name: string): { value: string } | undefined } }, store: Store, nowSeconds = Date.now() / 1000): boolean {
+export function allowedBy(request: { cookies: { get(name: string): { value: string } | undefined }; headers?: Pick<Headers,"get"> }, store: Pick<Store,"handle">, nowSeconds = Date.now() / 1000): boolean {
+  if (request.headers?.get("sec-gpc") === "1") return false;
   return readAdsCookie(request.cookies.get(adsCookieName(store.handle))?.value, nowSeconds) !== null;
 }
 

@@ -119,3 +119,10 @@ export function needsConsent(country: string | null | undefined): boolean {
   if (!country || !/^[A-Z]{2}$/.test(country)) return true;
   return CONSENT_COUNTRIES.has(country);
 }
+
+/** A browser-wide refusal wins over a previous per-store yes; unknown choices never become consent. */
+export function pixelChoiceState(choice:unknown,askFirst:boolean,gpc:boolean):"on"|"off"|"ask"{
+ if(gpc||choice==="no")return "off";
+ if(choice==="yes")return "on";
+ return askFirst?"ask":"on";
+}
