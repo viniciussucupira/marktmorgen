@@ -1616,14 +1616,35 @@ Pedido P5: anexo524cc7f9-78af-42b5-ae37-4c05dc91a193/Texto colado.txt, lido19/10
 }
 ```
 
-## H — Lições da auditoria da Hotmart (20/10/2026)
+## HT — Lições da auditoria da Hotmart (20/10/2026)
+
+### HT0 — Correções do dono (20/10/2026)
+
+Pedido direto do dono nesta conversa,20/10/2026. Esta correção prevalece sobre a classificação anterior desta seção e sobre referências históricas posteriores que a descreviam integralmente bloqueada. O horário original da mensagem não foi informado; o horário real de aplicação é registrado no item182 ao fim do arquivo. Os antigos itens [H1], [H2], [H3] etc. da fila original permanecem intactos.
+
+**CORREÇÃO 1 — Renomear a seção e os IDs, para evitar conflito.**
+A fila já tinha itens [H1], [H2], [H3] etc. (app nativo, transmissão ao vivo, marketplace). Renomeie o título da seção para "## HT — Lições da auditoria da Hotmart (20/10/2026)" e os subtítulos "### H1 —" a "### H17 —" para "### HT1 —" a "### HT17 —", na mesma ordem e sem alterar o conteúdo. Não altere os itens [H1], [H2], [H3] antigos. Atualize todas as referências a "H1–H17" escritas depois de20/10/2026 04:15 (por exemplo, nas linhas "Origem" dos itens158a179) para "HT1–HT17". As menções aos nomes antigos neste parágrafo são a própria instrução de renomeação, não IDs ativos.
+
+**CORREÇÃO 2 — Separar o que depende do gate de margem.**
+O gate M0 (margem pela leitura com mais imposto) controla a ABERTURA DAS VENDAS, e não a edição de páginas e textos. Um item sem nenhum custo variável por cliente não altera a margem de nenhum plano. Portanto, substitua o "Estado" de cada item da seção HT conforme abaixo:
+
+a) LIBERADOS (sem custo variável por cliente; apenas texto, página, layout ou leitura de dados já existentes): HT1, HT2, HT3, HT4, HT6, HT7, HT8, HT9, HT12, HT15, HT16 e HT17. Novo estado: "liberado; sem custo variável; não depende do gate M0".
+HT5 também fica liberado, desde que reaproveite o rascunho de loja por IA já existente, com o mesmo pool, os mesmos tetos e a mesma reserva de custo, sem nenhuma chamada de IA nova nem custo novo.
+
+b) CONDICIONADOS ao cálculo de margem do próprio item (pela leitura de dimensionamento, com o mesmo método usado no add-on do Store assistant): HT10 (somente se exigir custo novo de fornecedor), HT11, HT13 e HT14. Novo estado: "condicionado ao cálculo de custo no pior caso por cliente". Antes de implementar qualquer um deles, calcule e registre esse custo. Se a margem mínima de60% não for mantida em todos os planos e intervalos, registre o motivo e não o implemente.
+
+c) Nenhum item da seção HT pode colocar nada à venda, alterar PLANS_ON_SALE ou afirmar no site algo que não exista no código. A loja continua fechada até que todos os gates passem.
+
+**Regra de margem preservada:** todo cliente pagante isoladamente, usando100% dos direitos do plano no pior mês, deve manter lucro líquido MÍNIMO de60% após todos os custos e impostos, inclusive brasileiros;60% é piso, não teto. Sem alterar preços, reduzir limites visíveis, ativar comissão ou afrouxar PLANS_ON_SALE, tax gate, art.9a ou revisão comercial. Custo desconhecido reprova; novo custo exige cálculo e reserva/tetos antes da operação. A liberação de edições sem custo novo não certifica margem de vendas.
+
+**Ordem vigente:** concluir o item em andamento e PRs708,709,710; executar HT0; depois HT1,HT2,HT3,HT4,HT5,HT6,HT7,HT8,HT9,HT12,HT15,HT16,HT17; depois calcular HT10,HT11,HT13,HT14 e implementar somente os que atendam ao piso. Só então retomar novas revisões B2. Ao começar cada HT, acrescentar registro próprio no fim com próximo número livre, estado, commit, testes e publicação.180[B2-180] e181[B2-181] já existiam antes deste pedido; são preservados, e HT0 recebe182. Registros anteriores de gate permanecem históricos; esta classificação é a vigente.
 
 Pedido do dono recebido20/10/2026; proveniência: attachment a64d5c80-7b29-4ff0-a7cd-9a03478b9fbf/Texto colado.txt. Executar depois de todos os itens acima, sem interromper154–157. Nenhum número ou estado anterior foi alterado.
 
 REGRA DE MARGEM (obrigatória em todos os itens): todo cliente pagante, considerado isoladamente e usando 100% de todos os direitos do plano no pior mês, deve manter margem de lucro líquido MÍNIMA de 60% após todos os custos e todos os impostos, inclusive os brasileiros. Os 60% são o piso: a margem pode ser maior, nunca menor. Nenhum item pode alterar preços, reduzir limites visíveis, ativar comissão (COMMISSION_LIVE permanece false) nem afrouxar qualquer gate (tax gate, art. 9a e revisão comercial). Todo recurso com IA deve reservar o custo antes da chamada, ter teto de entrada e de saída e recorrer a uma versão sem IA quando o pool se esgotar. Se um item não couber na margem, registre esse fato no próprio item e não o implemente.
 
 
-**Gate vinculante atual:** M0 mais oneroso12,02–12,21%, abaixo de60%. Portanto, registrar a fila não autoriza implementarH1–H17 enquanto não houver comprovação fiscal/custos por cliente, plano e intervalo que atenda ao piso exigido neste pedido. Custo desconhecido reprova. PLANS_ON_SALE=false e COMMISSION_LIVE=false. Registrar bloqueio e evidência no item antes de qualquer implementação que não caiba; não alegar margem certificada. A auditoria externa é contexto fornecido pelo dono, não prova independente: fontes oficiais e código atual devem ser verificados antes de alegações públicas.
+**Gate vinculante atual para abertura das vendas:** M0 mais oneroso12,02–12,21%, abaixo de60%; PLANS_ON_SALE=false e COMMISSION_LIVE=false, com tax gate, art.9a e revisão comercial preservados. Isso não impede editar texto, página ou layout sem custo variável por cliente. A classificação vigente é a correção HT0 acima: itens liberados sem custo novo; itens condicionados exigem cálculo próprio no pior caso por cliente, plano e intervalo, pelo método de dimensionamento do add-on do Store assistant, mantendo piso líquido de60% após todos os custos/impostos. Custo desconhecido reprova; registrar motivo e não implementar item que não caiba. Sem alegar margem certificada. A auditoria externa continua contexto do dono, não prova independente: verificar fontes oficiais e código antes de alegações públicas.
 
 REGRAS DE EXECUÇÃO PARA CADA ITEM
 1. Antes de programar, verifique no repositório (lib/, app/, components/ e docs/) se o recurso já existe. Se existir, aprimore-o; nunca crie um segundo.
@@ -1633,105 +1654,107 @@ REGRAS DE EXECUÇÃO PARA CADA ITEM
 5. Atualize a documentação do recurso e registre, no item da fila, o que foi feito e o commit correspondente.
 
 
-### H1 — Hero orientado a resultado. Reescreva o hero da home (app/page.tsx) para vender o resultado do criador, e não a ferramenta: headline com benefício econômico direto e subheadline no formato "estado atual → estado desejado" (da primeira venda ao negócio completo), sem jargão. Mantenha o pilar "Your store. Your Stripe. Your money." como diferencial. Use um único CTA dominante (Lei de Hick), com botão grande e repetido ao longo da página (Lei de Fitts).
+### HT1 — Hero orientado a resultado. Reescreva o hero da home (app/page.tsx) para vender o resultado do criador, e não a ferramenta: headline com benefício econômico direto e subheadline no formato "estado atual → estado desejado" (da primeira venda ao negócio completo), sem jargão. Mantenha o pilar "Your store. Your Stripe. Your money." como diferencial. Use um único CTA dominante (Lei de Hick), com botão grande e repetido ao longo da página (Lei de Fitts).
 
-- Estado: **na fila, para depois dos itens anteriores; implementação condicionada ao gate de margem desta seção**.
+- Estado: **liberado; sem custo variável; não depende do gate M0**.
 - Evidência de conclusão: data Fortaleza, commit, documentação, testes e CI integral no head final — pendentes.
 
 
-### H2 — Página "How it works" organizada pela jornada. Crie ou reorganize uma página de soluções que siga a sequência mental do criador: Create → Charge → Deliver → Sell more → Automate → Grow. Em cada etapa, apresente os recursos reais do Marktmorgen que a resolvem, com link para a respectiva página de recurso já existente em lib/feature-pages.ts.
+### HT2 — Página "How it works" organizada pela jornada. Crie ou reorganize uma página de soluções que siga a sequência mental do criador: Create → Charge → Deliver → Sell more → Automate → Grow. Em cada etapa, apresente os recursos reais do Marktmorgen que a resolvem, com link para a respectiva página de recurso já existente em lib/feature-pages.ts.
 
-- Estado: **na fila, para depois dos itens anteriores; implementação condicionada ao gate de margem desta seção**.
+- Estado: **liberado; sem custo variável; não depende do gate M0**.
 - Evidência de conclusão: data Fortaleza, commit, documentação, testes e CI integral no head final — pendentes.
 
 
-### H3 — Página de preços que vende valor antes do preço. Na seção #pricing e na página de preços, apresente, antes do preço, o catálogo de recursos organizado por benefício: Checkout, Upsells, Affiliates, Funnels, Email automation, Community, Courses, Video calls, Analytics e CRM. Use o contraste honesto com a Hotmart: ela cobra um percentual sobre cada venda, que cresce à medida que o criador cresce; o Marktmorgen fica com 0% das vendas e cobra um preço fixo. Pode-se incluir uma calculadora do tipo "what a % fee would cost you at X in sales", desde que as taxas dos concorrentes provenham de fonte pública citada, com data. Não altere nenhum preço.
+### HT3 — Página de preços que vende valor antes do preço. Na seção #pricing e na página de preços, apresente, antes do preço, o catálogo de recursos organizado por benefício: Checkout, Upsells, Affiliates, Funnels, Email automation, Community, Courses, Video calls, Analytics e CRM. Use o contraste honesto com a Hotmart: ela cobra um percentual sobre cada venda, que cresce à medida que o criador cresce; o Marktmorgen fica com 0% das vendas e cobra um preço fixo. Pode-se incluir uma calculadora do tipo "what a % fee would cost you at X in sales", desde que as taxas dos concorrentes provenham de fonte pública citada, com data. Não altere nenhum preço.
 
-- Estado: **na fila, para depois dos itens anteriores; implementação condicionada ao gate de margem desta seção**.
+- Estado: **liberado; sem custo variável; não depende do gate M0**.
 - Evidência de conclusão: data Fortaleza, commit, documentação, testes e CI integral no head final — pendentes.
 
 
-### H4 — Página de comparação "Marktmorgen vs Hotmart", em inglês e voltada ao público internacional, no mesmo padrão das páginas de prova já existentes (compare, gumroad e beacons, em lib/site-pages.ts). Compare: taxa por venda versus preço fixo; prazo de recebimento (o dinheiro vai diretamente para a conta Stripe do criador); white-label e domínio próprio; dependência de ecossistema. Use somente fatos verificáveis, com fonte e data, e nenhuma alegação de superioridade sem prova.
+### HT4 — Página de comparação "Marktmorgen vs Hotmart", em inglês e voltada ao público internacional, no mesmo padrão das páginas de prova já existentes (compare, gumroad e beacons, em lib/site-pages.ts). Compare: taxa por venda versus preço fixo; prazo de recebimento (o dinheiro vai diretamente para a conta Stripe do criador); white-label e domínio próprio; dependência de ecossistema. Use somente fatos verificáveis, com fonte e data, e nenhuma alegação de superioridade sem prova.
 
-- Estado: **na fila, para depois dos itens anteriores; implementação condicionada ao gate de margem desta seção**.
+- Estado: **liberado; sem custo variável; não depende do gate M0**.
 - Evidência de conclusão: data Fortaleza, commit, documentação, testes e CI integral no head final — pendentes.
 
 
-### H5 — Ativação "do prompt à loja pronta". O rascunho da loja gerado por IA já existe. Transforme-o no caminho principal do onboarding: o criador descreve em uma frase o que vende e recebe nome, bio, perguntas frequentes e até três produtos em rascunho; em seguida, segue um checklist guiado até a PRIMEIRA OFERTA PUBLICADA (reaproveite funnel-launch-checklist e store-guide). Meça o time-to-value (do cadastro à primeira oferta publicada) e mostre o progresso ao criador. Mantenha a regra atual: nada é colocado à venda sem que o criador o publique.
+### HT5 — Ativação "do prompt à loja pronta". O rascunho da loja gerado por IA já existe. Transforme-o no caminho principal do onboarding: o criador descreve em uma frase o que vende e recebe nome, bio, perguntas frequentes e até três produtos em rascunho; em seguida, segue um checklist guiado até a PRIMEIRA OFERTA PUBLICADA (reaproveite funnel-launch-checklist e store-guide). Meça o time-to-value (do cadastro à primeira oferta publicada) e mostre o progresso ao criador. Mantenha a regra atual: nada é colocado à venda sem que o criador o publique.
 
-- Estado: **na fila, para depois dos itens anteriores; implementação condicionada ao gate de margem desta seção**.
+- Estado: **liberado; sem custo variável; não depende do gate M0**.
+- Condição expressa de HT5: reaproveitar somente o rascunho de loja por IA já existente, com o mesmo pool, tetos e reserva de custo, sem chamada de IA nova nem custo novo.
 - Evidência de conclusão: data Fortaleza, commit, documentação, testes e CI integral no head final — pendentes.
 
 
-### H6 — Reversão de risco e cadastro sem fricção. Revise o fluxo de cadastro: use o menor número possível de campos e não exija cartão para começar, se o modelo atual de teste gratuito permitir. O CTA deve informar exatamente o que acontece ("Start your store" ou "Try it free for X days", se isso for verdade). O texto sobre o que é gratuito e o que é pago deve ser honesto e seguir o padrão Pieter Levels: primeiro o preço mensal; o gratuito, apenas como complemento.
+### HT6 — Reversão de risco e cadastro sem fricção. Revise o fluxo de cadastro: use o menor número possível de campos e não exija cartão para começar, se o modelo atual de teste gratuito permitir. O CTA deve informar exatamente o que acontece ("Start your store" ou "Try it free for X days", se isso for verdade). O texto sobre o que é gratuito e o que é pago deve ser honesto e seguir o padrão Pieter Levels: primeiro o preço mensal; o gratuito, apenas como complemento.
 
-- Estado: **na fila, para depois dos itens anteriores; implementação condicionada ao gate de margem desta seção**.
+- Estado: **liberado; sem custo variável; não depende do gate M0**.
 - Evidência de conclusão: data Fortaleza, commit, documentação, testes e CI integral no head final — pendentes.
 
 
-### H7 — Vitrine de criadores com prova real. Prepare a seção e a página de vitrine de lojas reais, com autorização expressa de cada criador, registrada com data. Até que exista a primeira loja real autorizada, a seção deve exibir apenas a loja de demonstração, identificada como demo. Nunca use nome, foto ou resultado de criador sem autorização; nunca invente nada.
+### HT7 — Vitrine de criadores com prova real. Prepare a seção e a página de vitrine de lojas reais, com autorização expressa de cada criador, registrada com data. Até que exista a primeira loja real autorizada, a seção deve exibir apenas a loja de demonstração, identificada como demo. Nunca use nome, foto ou resultado de criador sem autorização; nunca invente nada.
 
-- Estado: **na fila, para depois dos itens anteriores; implementação condicionada ao gate de margem desta seção**.
+- Estado: **liberado; sem custo variável; não depende do gate M0**.
 - Evidência de conclusão: data Fortaleza, commit, documentação, testes e CI integral no head final — pendentes.
 
 
-### H8 — Prova social quantitativa honesta. Prepare contadores da plataforma (lojas criadas, vendas processadas e criadores ativos) alimentados por dados reais. Cada contador deve permanecer OCULTO até atingir um limiar mínimo configurado e deve exibir a data da contagem. É proibido: arredondar números para cima, usar "+X" sem base e exibir notificações de "pessoas vendo agora" ou de "compras recentes" que não sejam reais e auditáveis (a Hotmart faz isso no checkout; nós não copiaremos essa prática). Se lib/recent-sales.ts já faz isso de forma honesta, apenas revise-o.
+### HT8 — Prova social quantitativa honesta. Prepare contadores da plataforma (lojas criadas, vendas processadas e criadores ativos) alimentados por dados reais. Cada contador deve permanecer OCULTO até atingir um limiar mínimo configurado e deve exibir a data da contagem. É proibido: arredondar números para cima, usar "+X" sem base e exibir notificações de "pessoas vendo agora" ou de "compras recentes" que não sejam reais e auditáveis (a Hotmart faz isso no checkout; nós não copiaremos essa prática). Se lib/recent-sales.ts já faz isso de forma honesta, apenas revise-o.
 
-- Estado: **na fila, para depois dos itens anteriores; implementação condicionada ao gate de margem desta seção**.
+- Estado: **liberado; sem custo variável; não depende do gate M0**.
 - Evidência de conclusão: data Fortaleza, commit, documentação, testes e CI integral no head final — pendentes.
 
 
-### H9 — Alavancas de receita visíveis para o criador. Order bump, upsell, downsell, bundles, recuperação de checkout e "next offer" já existem. Crie no studio uma tela "Grow your sales" (ou aprimore app/grow-sales) que mostre cada alavanca, indique se está ativada e informe quanto ela realmente gerou naquela loja (apenas dados medidos; nenhuma estimativa apresentada como fato). Ative por padrão as alavancas que não têm custo variável e que são opcionais para o comprador.
+### HT9 — Alavancas de receita visíveis para o criador. Order bump, upsell, downsell, bundles, recuperação de checkout e "next offer" já existem. Crie no studio uma tela "Grow your sales" (ou aprimore app/grow-sales) que mostre cada alavanca, indique se está ativada e informe quanto ela realmente gerou naquela loja (apenas dados medidos; nenhuma estimativa apresentada como fato). Ative por padrão as alavancas que não têm custo variável e que são opcionais para o comprador.
 
-- Estado: **na fila, para depois dos itens anteriores; implementação condicionada ao gate de margem desta seção**.
+- Estado: **liberado; sem custo variável; não depende do gate M0**.
 - Evidência de conclusão: data Fortaleza, commit, documentação, testes e CI integral no head final — pendentes.
 
 
-### H10 — Central de pixels e atribuição. lib/pixels.ts e o módulo de atribuição já existem. Garanta uma central única (Meta, Google e TikTok) que respeite o consentimento e um painel de atribuição simples por canal. Não deve haver custo novo de fornecedor; se houver, ele entra no cálculo da margem.
+### HT10 — Central de pixels e atribuição. lib/pixels.ts e o módulo de atribuição já existem. Garanta uma central única (Meta, Google e TikTok) que respeite o consentimento e um painel de atribuição simples por canal. Não deve haver custo novo de fornecedor; se houver, ele entra no cálculo da margem.
 
-- Estado: **na fila, para depois dos itens anteriores; implementação condicionada ao gate de margem desta seção**.
+- Estado: **condicionado ao cálculo de custo no pior caso por cliente**.
+- Condição expressa de HT10: o cálculo é exigido somente se houver custo novo de fornecedor; sem custo novo, preservar o fluxo existente e os controles de consentimento.
 - Evidência de conclusão: data Fortaleza, commit, documentação, testes e CI integral no head final — pendentes.
 
 
-### H11 — Comunidade de criadores do Marktmorgen por estágio. Avalie a criação de um espaço para os criadores clientes, organizado por estágio (Starting, First sales, Growing), e não por faturamento declarado, e só o implemente se a margem permitir, com custo zero ou limitado. Reaproveite a comunidade e o acesso ao Discord já existentes. Objetivo: pertencimento e retenção, sem promessa de resultado.
+### HT11 — Comunidade de criadores do Marktmorgen por estágio. Avalie a criação de um espaço para os criadores clientes, organizado por estágio (Starting, First sales, Growing), e não por faturamento declarado, e só o implemente se a margem permitir, com custo zero ou limitado. Reaproveite a comunidade e o acesso ao Discord já existentes. Objetivo: pertencimento e retenção, sem promessa de resultado.
 
-- Estado: **na fila, para depois dos itens anteriores; implementação condicionada ao gate de margem desta seção**.
+- Estado: **condicionado ao cálculo de custo no pior caso por cliente**.
 - Evidência de conclusão: data Fortaleza, commit, documentação, testes e CI integral no head final — pendentes.
 
 
-### H12 — Educação gratuita como canal de aquisição (SEO de intenção). Use o blog e o learn.ts já existentes. Crie um cluster de guias evergreen em inglês sobre venda de produtos digitais, cursos, memberships, chamadas pagas e afiliados, cada um com perguntas frequentes em dados estruturados (schema FAQPage), links internos para as páginas de recurso e um CTA para começar. Não produza conteúdo raso nem repetido.
+### HT12 — Educação gratuita como canal de aquisição (SEO de intenção). Use o blog e o learn.ts já existentes. Crie um cluster de guias evergreen em inglês sobre venda de produtos digitais, cursos, memberships, chamadas pagas e afiliados, cada um com perguntas frequentes em dados estruturados (schema FAQPage), links internos para as páginas de recurso e um CTA para começar. Não produza conteúdo raso nem repetido.
 
-- Estado: **na fila, para depois dos itens anteriores; implementação condicionada ao gate de margem desta seção**.
+- Estado: **liberado; sem custo variável; não depende do gate M0**.
 - Evidência de conclusão: data Fortaleza, commit, documentação, testes e CI integral no head final — pendentes.
 
 
-### H13 — Tutor ou assistente do aluno. Verifique o que lib/answers-rules.ts já faz. Se fizer sentido, ofereça ao criador um assistente que responda às dúvidas dos alunos exclusivamente com base no conteúdo do curso, no mesmo padrão do Store assistant: rótulo de IA desenhado pela página, resposta restrita aos fatos, encaminhamento ao criador, pool reservado e teto de custo. Implemente-o somente se couber na margem; caso contrário, registre o motivo e não o implemente.
+### HT13 — Tutor ou assistente do aluno. Verifique o que lib/answers-rules.ts já faz. Se fizer sentido, ofereça ao criador um assistente que responda às dúvidas dos alunos exclusivamente com base no conteúdo do curso, no mesmo padrão do Store assistant: rótulo de IA desenhado pela página, resposta restrita aos fatos, encaminhamento ao criador, pool reservado e teto de custo. Implemente-o somente se couber na margem; caso contrário, registre o motivo e não o implemente.
 
-- Estado: **na fila, para depois dos itens anteriores; implementação condicionada ao gate de margem desta seção**.
+- Estado: **condicionado ao cálculo de custo no pior caso por cliente**.
 - Evidência de conclusão: data Fortaleza, commit, documentação, testes e CI integral no head final — pendentes.
 
 
-### H14 — Copiloto de preço e de funil. O funil com IA já existe. Acrescente uma sugestão de preço e de estrutura de oferta baseada apenas nos dados da própria loja e em regras declaradas, sempre como sugestão que o criador aceita ou recusa, com a justificativa exibida. Não apresente projeções do tipo "você venderá X".
+### HT14 — Copiloto de preço e de funil. O funil com IA já existe. Acrescente uma sugestão de preço e de estrutura de oferta baseada apenas nos dados da própria loja e em regras declaradas, sempre como sugestão que o criador aceita ou recusa, com a justificativa exibida. Não apresente projeções do tipo "você venderá X".
 
-- Estado: **na fila, para depois dos itens anteriores; implementação condicionada ao gate de margem desta seção**.
+- Estado: **condicionado ao cálculo de custo no pior caso por cliente**.
 - Evidência de conclusão: data Fortaleza, commit, documentação, testes e CI integral no head final — pendentes.
 
 
-### H15 — Biblioteca de modelos. Reúna em um único lugar os modelos de página, funil, e-mail e sequência que já existem (funnel-starters, mail-starters e saved-blocks), com pré-visualização, filtros por objetivo e opção "usar este modelo" em um clique.
+### HT15 — Biblioteca de modelos. Reúna em um único lugar os modelos de página, funil, e-mail e sequência que já existem (funnel-starters, mail-starters e saved-blocks), com pré-visualização, filtros por objetivo e opção "usar este modelo" em um clique.
 
-- Estado: **na fila, para depois dos itens anteriores; implementação condicionada ao gate de margem desta seção**.
+- Estado: **liberado; sem custo variável; não depende do gate M0**.
 - Evidência de conclusão: data Fortaleza, commit, documentação, testes e CI integral no head final — pendentes.
 
 
-### H16 — Design premium e confiança. Revise a home, a página de preços e as páginas de recurso quanto aos seguintes pontos: espaço em branco generoso; hierarquia "benefício → prova → CTA" em cada seção; cards limpos; mockups reais do produto (capturas do próprio Marktmorgen, sem nenhuma imagem repetida); e sinais de confiança verdadeiros (pagamento direto na conta Stripe do criador, exportação dos dados, cancelamento simples e política de reembolso). Core Web Vitals no celular: LCP inferior a 2,5 s, INP inferior a 200 ms e CLS inferior a 0,1; meça antes e depois.
+### HT16 — Design premium e confiança. Revise a home, a página de preços e as páginas de recurso quanto aos seguintes pontos: espaço em branco generoso; hierarquia "benefício → prova → CTA" em cada seção; cards limpos; mockups reais do produto (capturas do próprio Marktmorgen, sem nenhuma imagem repetida); e sinais de confiança verdadeiros (pagamento direto na conta Stripe do criador, exportação dos dados, cancelamento simples e política de reembolso). Core Web Vitals no celular: LCP inferior a 2,5 s, INP inferior a 200 ms e CLS inferior a 0,1; meça antes e depois.
 
-- Estado: **na fila, para depois dos itens anteriores; implementação condicionada ao gate de margem desta seção**.
+- Estado: **liberado; sem custo variável; não depende do gate M0**.
 - Evidência de conclusão: data Fortaleza, commit, documentação, testes e CI integral no head final — pendentes.
 
 
-### H17 — Tom de voz de parceiro. Padronize a microcopy do site e do studio com tom de parceiro e mentor: frases curtas, orientadas à ação, sem linguagem corporativa e sem promessa de resultado garantido.
+### HT17 — Tom de voz de parceiro. Padronize a microcopy do site e do studio com tom de parceiro e mentor: frases curtas, orientadas à ação, sem linguagem corporativa e sem promessa de resultado garantido.
 
-- Estado: **na fila, para depois dos itens anteriores; implementação condicionada ao gate de margem desta seção**.
+- Estado: **liberado; sem custo variável; não depende do gate M0**.
 - Evidência de conclusão: data Fortaleza, commit, documentação, testes e CI integral no head final — pendentes.
 
 
@@ -1743,14 +1766,14 @@ PRÁTICAS DA HOTMART QUE NÃO DEVEM SER COPIADAS (registre-as na seção, para q
 - Modelo de cobrança por percentual sobre a venda (já está decidido: 0% de comissão).
 
 
-Ao concluir cada item: registrar data, commit e testes; seguir ao próximo. Dados de cadastro/contadores e atribuição exigem minimização e consentimento; ativação por padrão emH9 não substitui o opt-in já exigido. H1 mantém a proibição vigente de promessas de ganhos/resultado garantido. Capturas e mediçõesH16 seguem também os gates de banda/custos, sem certificar Core Web Vitals com dados insuficientes.
+Ao concluir cada item: registrar data, commit e testes; seguir ao próximo. Dados de cadastro/contadores e atribuição exigem minimização e consentimento; ativação por padrão emHT9 não substitui o opt-in já exigido. HT1 mantém a proibição vigente de promessas de ganhos/resultado garantido. Capturas e mediçõesHT16 seguem também os gates de banda/custos, sem certificar Core Web Vitals com dados insuficientes.
 
 
 ## Continuação da revisão de excelência após os itens acionáveis
 
 158. **[B2-WELCOME-VIDEO-ACKNOWLEDGMENT] Confirmar configuração do vídeo sem perder o endereço digitado**
    - Estado: **concluído; PR671 incorporado20/10/2026 04:53:09 Fortaleza; publicação funcional84 confirmada**.
-   - Origem: revisão B2 do editor existente, sem implementar recurso H condicionado à margem. H1–H17 continuam no lugar e sob o gate fiscal.
+   - Origem: revisão B2 do editor existente, sem implementar recurso HT condicionado à margem. HT1–HT17 continuam no lugar e sob o gate fiscal.
    - Escopo: comparar HTTP, ok booleano, ausência de erro contraditório e provider/id/hash canônicos já devolvidos por /api/store/intro; remoção exige null confirmado. Bloquear entrada durante espera, aria-busy, mensagem honesta e contraste do alerta. Não abrir vídeo nem chamar fornecedor; idiomas/conteúdo preservados.
    - Prova:72respostas interceptadas,12variantes×3provedores×390/1280, incluindo hash Vimeo, JSON inválido, contradição, perda, campos divergentes e sucesso; global fit mantido. Remoção null não está coberta pela matriz atual e não será alegada como testada. Nenhuma conta, vídeo remoto ou POST real.
    - Custo: cliente+798caracteres, mesma operação/resposta/parser, sem fornecedor/franquia/preço/gate novo. M0 antes/depois12,02–12,21%reprova60%;vendas fechadas e nenhuma certificação fiscal.
@@ -2235,14 +2258,14 @@ Pricing FAQ repair history: run39407143422 caught mobile target-size;39409356932
 
 171. **[B2-171] Confirm existing course/podcast enable acknowledgments before navigation.**
 - Estado: **Publicado — entrega97**.
-- Existing controls must require successful HTTP, strict boolean confirmation, no contradictory error and a valid32hex server course/podcast identity before navigation. Pending guard and own-property error lookup preserve honest uncertainty. No server operation or entitlement is added, no gated H feature is activated.
+- Existing controls must require successful HTTP, strict boolean confirmation, no contradictory error and a valid32hex server course/podcast identity before navigation. Pending guard and own-property error lookup preserve honest uncertainty. No server operation or entitlement is added, no gated HT feature is activated.
 - Synthetic48 intercepted replies planned at390/1280, including valid navigation and uncertain/invalid replies remaining in studio. Full final-head CI pending. Same request/response/provider/limits; no recurring cost or paid unit. Binding M0 remains12.02–12.21%, fails60%; sales closed. Existing creator content and persisted identifiers preserved.
 
 
 172. **[B2-172] Confirm existing cart deal settings accurately.**
 - Estado: **Publicado — entrega98**.
 - Require successful HTTP, strict confirmation, no contradictory error and exact existing deal snapshot. Lock pending checkbox/minimum/percentage, preserve uncertain drafts, and confirm settings without claiming live checkout charges. Same request and setter response, no additional read or checkout operation.
-- Synthetic52 intercepted on/off replies at390/1280 planned; full final-head CI pending. Preserve percentage5–50, minimum2/3/4 and MAX_CART4, prices, permissions and opt-in. No new provider/paid unit/recurring cost. Binding M0 remains12.02–12.21%, fails60%; sales closed. No H feature activated.
+- Synthetic52 intercepted on/off replies at390/1280 planned; full final-head CI pending. Preserve percentage5–50, minimum2/3/4 and MAX_CART4, prices, permissions and opt-in. No new provider/paid unit/recurring cost. Binding M0 remains12.02–12.21%, fails60%; sales closed. No HT feature activated.
 
 
 ### Histórico de verificação da pilha691–694 — 2026-10-20
@@ -2255,7 +2278,7 @@ Pricing FAQ repair history: run39407143422 caught mobile target-size;39409356932
 173. **[B2-173] Confirm existing exit offer settings accurately.**
 - Estado: **Publicado — entrega99**.
 - Require successful HTTP, strict confirmation, no contradictory error and exact existing exitOffer id/null snapshot. Lock pending selection, preserve uncertain drafts and advance saved baseline only after confirmation. Confirm settings without claiming public delivery. Reuse existing setter response; no new operation.
-- Synthetic44 intercepted enable/removal replies at390/1280 planned; full final-head CI pending. Free-published-product requirement, monthly frequency, desktop timing, unchecked email consent, page permission, prices and all identifiers/content preserved. No visitor/email/payment write in tests. No provider/paid unit/recurring cost added; binding M0 remains12.02–12.21%, fails60%; sales closed, no H activation.
+- Synthetic44 intercepted enable/removal replies at390/1280 planned; full final-head CI pending. Free-published-product requirement, monthly frequency, desktop timing, unchecked email consent, page permission, prices and all identifiers/content preserved. No visitor/email/payment write in tests. No provider/paid unit/recurring cost added; binding M0 remains12.02–12.21%, fails60%; sales closed, no HT activation.
 
 
 - **Histórico CI694 — 2026-10-20 09:19:37Fortaleza:** Product39419766746/verify118617602063 falhou ao localizar o mínimo do carrinho por texto exato do label. Evidência: timeout30s em `checkCartAcknowledgment:29`, antes dos novos casos. Corrigida a seleção para os IDs explícitos existentes `deal-min`/`deal-percent`, mantendo conteúdo e comportamento do produto. Redis/security passaram, mas não aprovam esse head. Correção propagada ao695; ambos exigem CI completo nos novos heads. Nenhuma publicação contabilizada.
@@ -2281,7 +2304,7 @@ Pricing FAQ repair history: run39407143422 caught mobile target-size;39409356932
 - **97 — PR#693 incorporado às09:43:54**, merge `e9d8f37e83c8ed0e466c6de6b587885506b31118`, head `53af2f7a54160fa903151dfd50cff2ffe883ca2e`. Controles existentes de curso/podcast exigem HTTP bem-sucedido, true estrito, ausência de erro e identidade válida antes de navegar; orientação honesta em incerteza, sem nova operação ou direito. Product39422009014/verify118625038444/Redis118625038721/security39422011866 aprovados no head final, incluindo48casos sintéticos interceptados em390/1280. READY às09:45:17.183, deployment `dpl_6Bod5XLuKYwHwdipmKEVGqzd61hT`, domínio marktmorgen.com e SHA exato. Seis rotas200 com o mesmo identificador; nenhum log error/fatal na janela12:40:52.524–12:45:52.524UTC.
 - **98 — PR#694 incorporado às09:46:18**, merge `14e80c33bd44a7bae0e108d0acf0b23ca1cb05ab`, head `c88cae6a5a9e65172a87dec19eb3de098d9c1a5a`. Desconto de carrinho valida snapshot exato, bloqueia campos pendentes e preserva rascunhos incertos; confirma configurações sem alegar cobrança pública. Product39422021091/verify118625199863/Redis118625199507/security39422021082 aprovados, incluindo52casos sintéticos interceptados em390/1280. READY às09:47:20.495, deployment `dpl_AwC8jA5aJhgJXbpGSVZEkhMYDUqH`, domínio marktmorgen.com e SHA exato. Seis rotas200 com o mesmo identificador; nenhum log error/fatal na janela12:43:54.266–12:48:54.266UTC.
 - Rotas: `/`, `/signin`, `/studio` (redirecionamento anônimo esperado), `/platform/path`, `/pricing`, `/privacy`. Fluxos privados testados sinteticamente no CI; sem gravação autenticada ou pagamento em produção. As falhas de localizadores/sincronização anteriores continuam no histórico; foram corrigidas com verificação completa dos novos heads, sem aprovação por job isolado.
-- Custos97/98: mesmas requisições e resultados já existentes, nenhuma operação/leitura/provedor/unidade paga/custo recorrente adicional. Desconto5–50%, mínimo2/3/4 e MAX_CART4 preservados, assim como preços, idiomas/conteúdo/IDs, permissões, opt-in e controles fiscais. PLANS_ON_SALE=false e COMMISSION_LIVE=false. M0 vinculante12.02–12.21% continua reprovado para60%; desconhecido não é zero. Sem certificação geral de margem/acessibilidade nem ativação de H.
+- Custos97/98: mesmas requisições e resultados já existentes, nenhuma operação/leitura/provedor/unidade paga/custo recorrente adicional. Desconto5–50%, mínimo2/3/4 e MAX_CART4 preservados, assim como preços, idiomas/conteúdo/IDs, permissões, opt-in e controles fiscais. PLANS_ON_SALE=false e COMMISSION_LIVE=false. M0 vinculante12.02–12.21% continua reprovado para60%; desconhecido não é zero. Sem certificação geral de margem/acessibilidade nem ativação de HT.
 - Registro documental empilhado no696 para preservar o histórico e a fixture corrigida do695; incorporar somente após695/696 passarem nos checks completos dos heads finais e serem incorporados. Não conta como nova publicação funcional.
 
 
@@ -2290,14 +2313,14 @@ Pricing FAQ repair history: run39407143422 caught mobile target-size;39409356932
 - **PR#695 incorporado às10:01:36**, merge `8ee3fba1af59e3a939cecc9bad6ae6d5e9d5c88c`, head corrigido `0c496a301c19988877c5a64925869cec55f27eb2`. Oferta de saída exige HTTP bem-sucedido, true estrito, ausência de erro e snapshot exato do produto/null; bloqueia seleção pendente, preserva rascunho incerto e atualiza baseline somente após confirmação. Usa o mesmo resultado do setter; nenhuma operação adicional.
 - CI completo aprovado: Product39424410479/verify118633188534/Redis118633188890/security39424410648, incluindo **44casos sintéticos interceptados** de ativação/remoção em390/1280, com fixture local isolada e sem conta externa, mensagem ou pagamento. A falha anterior do fixture compartilhado está preservada acima e não aprovou nada.
 - READY às10:02:32.168, domínio marktmorgen.com, deployment `dpl_HWg3tX5bVprxWjQU9HFkffFvD337`, SHA exato do merge. `/`, `/signin`, `/studio` (redirecionamento anônimo esperado), `/platform/path`, `/pricing`, `/privacy` retornaram200 com o mesmo deployment. Nenhum log error/fatal na janela12:58:51.751–13:03:51.751UTC. Fluxo privado verificado apenas sinteticamente no CI, sem gravação autenticada em produção.
-- Custos99: mesma requisição e snapshot existente, nenhuma leitura/provedor/unidade paga/custo recorrente adicional; exigência de produto gratuito publicado, frequência mensal, contexto desktop, consentimento de email desmarcado e permissão page preservados. Preços, limites, conteúdo/idiomas/IDs, opt-in e controles fiscais inalterados. PLANS_ON_SALE=false, COMMISSION_LIVE=false; M0 vinculante12.02–12.21% continua reprovado para60%. Desconhecido não é zero; sem certificação geral ou H ativado.
+- Custos99: mesma requisição e snapshot existente, nenhuma leitura/provedor/unidade paga/custo recorrente adicional; exigência de produto gratuito publicado, frequência mensal, contexto desktop, consentimento de email desmarcado e permissão page preservados. Preços, limites, conteúdo/idiomas/IDs, opt-in e controles fiscais inalterados. PLANS_ON_SALE=false, COMMISSION_LIVE=false; M0 vinculante12.02–12.21% continua reprovado para60%. Desconhecido não é zero; sem certificação geral ou HT ativado.
 - **PR#696 documental incorporado às10:04:16**, merge `306e3bfc25feafc4a7b046d5faf6c812e4b424b3`, head `44d1c439841452fd61566854860ac7d42ec5933f`; Product39424420869/verify118633337049/Redis118633336821/security39424420844 aprovados, incluindo44casos da fixture corrigida. Registra96 e não incrementa contador. Este registro99 está empilhado no697, aguardando checks completos e incorporação desse PR; documento não é entrega funcional.
 
 
 174. **[B2-174] Confirm existing page-part ordering accurately.**
 - Estado: **Publicado — entrega100**.
 - Require successful HTTP, strict confirmation, no contradictory error and the exact returned order before confirming save/reset. Reuse existing bounded setter snapshot; no new read or operation. Lock and announce pending controls, preserve uncertain draft order and only advance local saved baseline after confirmation. Confirm settings rather than public visibility.
-- Synthetic48 intercepted move-save/usual-reset cases planned at390/1280; full final-head CI pending. Preserve all eight persisted part IDs, usual-order and search-first behavior, creator content, page permissions and visible limits. No provider/paid unit/recurring cost added. M0 remains12.02–12.21%, fails60%; sales closed and no H activated.
+- Synthetic48 intercepted move-save/usual-reset cases planned at390/1280; full final-head CI pending. Preserve all eight persisted part IDs, usual-order and search-first behavior, creator content, page permissions and visible limits. No provider/paid unit/recurring cost added. M0 remains12.02–12.21%, fails60%; sales closed and no HT activated.
 
 
 ### Publicação funcional100 — 2026-10-20 (Fortaleza)
@@ -2305,14 +2328,14 @@ Pricing FAQ repair history: run39407143422 caught mobile target-size;39409356932
 - **PR#699 incorporado às10:25:06**, merge `ae095dfdd9f939927af247321fb7e156295cc4bf`, head `3aa59c45281263cc053b22cef53279dae63a369d`. Salvar/restaurar a ordem da página exige HTTP bem-sucedido, true estrito, ausência de erro e snapshot exato; mantém rascunho incerto, bloqueia controles pendentes e avança baseline somente após confirmação. Mensagem confirma configuração, sem alegar visibilidade pública.
 - CI completo aprovado: Product39427724429/verify118644396730/Redis118644396950/security39427724297, incluindo48casos sintéticos interceptados (mover/salvar e restaurar padrão em390/1280). Nenhuma gravação autenticada em produção; oito IDs persistidos, conteúdo, ordem padrão, precedência dos resultados de busca e permissões preservados.
 - READY às10:26:34.335, domínio marktmorgen.com, deployment `dpl_EuJMzQw6H4QjHAV6QZZvhPRMQ4SV`, SHA exato do merge. `/`, `/signin`, `/studio` (redirecionamento anônimo esperado), `/platform/path`, `/pricing`, `/privacy` retornaram200 com esse deployment. Nenhum log error/fatal na janela13:22:22.657–13:27:22.657UTC. Fluxo privado verificado somente sinteticamente no CI.
-- Custos100: mesmo snapshot limitado do setter, nenhuma leitura/requisição/provedor/unidade paga/custo recorrente adicional. Preços, limites, idiomas/conteúdo/IDs, permissões, opt-in e controles fiscais preservados. PLANS_ON_SALE=false, COMMISSION_LIVE=false; M0 vinculante12.02–12.21% continua reprovado para60%. Desconhecido não é zero; sem certificação geral de margem/acessibilidade ou H ativado.
+- Custos100: mesmo snapshot limitado do setter, nenhuma leitura/requisição/provedor/unidade paga/custo recorrente adicional. Preços, limites, idiomas/conteúdo/IDs, permissões, opt-in e controles fiscais preservados. PLANS_ON_SALE=false, COMMISSION_LIVE=false; M0 vinculante12.02–12.21% continua reprovado para60%. Desconhecido não é zero; sem certificação geral de margem/acessibilidade ou HT ativado.
 - **PR#697 documental incorporado às10:10:16**, merge `3684a5367529349e29324e6eaa8a77a33b56022f`, head `e77d2ea5ed0a038df85888142f90e920ea5edd96`; Product39425357044/verify118636429019/Redis118636429300/security39425357239 aprovados. **PR#698 documental incorporado às10:24:47**, merge `d055b55795c847da1fa2fb74894df05c0078fe1c`, head `d41e8b8b4a8f28f3cc7839912fc68830b9d1a1a6`; Product39427475120/verify118643550999/Redis118643551516/security39427475081 aprovados. Ambos registram entregas anteriores e não incrementam contador. Este registro100 também é documental.
 
 
 175. **[B2-175] Confirm existing membership tier settings accurately.**
 - Estado: **Publicado — entrega101**.
 - Require successful HTTP, strict confirmation, no contradictory error and exact ordered tier IDs from the existing setter response. Lock pending selections, announce busy, preserve uncertain drafts and saved on/off status, and confirm settings without asserting live member switches. No new read, switch, payment, email or operation.
-- Synthetic44 intercepted enable/disable replies plus single-selection refusal planned at390/1280, using an isolated local fixture with2memberships; full final-head CI pending. MIN_TIERS2/MAX_TIERS6, eligibility, product IDs/prices, entitlements and existing member-switch mechanics unchanged. No provider/paid unit/recurring cost added; M0 remains12.02–12.21%, fails60%; sales closed, no H activation.
+- Synthetic44 intercepted enable/disable replies plus single-selection refusal planned at390/1280, using an isolated local fixture with2memberships; full final-head CI pending. MIN_TIERS2/MAX_TIERS6, eligibility, product IDs/prices, entitlements and existing member-switch mechanics unchanged. No provider/paid unit/recurring cost added; M0 remains12.02–12.21%, fails60%; sales closed, no HT activation.
 
 
 ### Publicação funcional101 — 2026-10-20 (Fortaleza)
@@ -2320,14 +2343,14 @@ Pricing FAQ repair history: run39407143422 caught mobile target-size;39409356932
 - **PR#701 incorporado às10:50:18**, merge `35f03221f1c89650575cc934a4c3cf91c2b582d1`, head `ecbc6d801a2e54da73c74eb68647999bafd8e56f`. Configurações existentes de níveis exigem HTTP bem-sucedido, true estrito, ausência de erro e IDs ordenados exatos; bloqueiam seleções pendentes, preservam rascunho/status salvos em incerteza e confirmam configurações sem alegar troca real de membro.
 - CI completo aprovado: Product39431068827/verify118655957361/Redis118655957022/security39431068446, incluindo44casos sintéticos interceptados de ativação/desativação em390/1280 e recusa de seleção única. Fixture local isolada, sem chamada de Stripe, troca de membro, email ou pagamento; MIN_TIERS2/MAX_TIERS6, elegibilidade, preços/IDs e direitos preservados.
 - READY às10:51:14.417, domínio marktmorgen.com, deployment `dpl_3Z4kgFHhBpG2bMEgcAyKhhq8f4vd`, SHA exato do merge. `/`, `/signin`, `/studio` (redirecionamento anônimo esperado), `/platform/path`, `/pricing`, `/privacy` retornaram200 com esse deployment. Nenhum log error/fatal na janela13:47:01.216–13:52:01.216UTC. Fluxo privado verificado somente sinteticamente no CI, sem gravação autenticada em produção.
-- Custos101: mesma requisição/snapshot de configurações, nenhuma leitura/troca/email/pagamento/provedor/unidade paga/custo recorrente adicional. Preços, limites, conteúdo/idiomas/IDs, permissões/opt-in e controles fiscais preservados. PLANS_ON_SALE=false, COMMISSION_LIVE=false; M0 vinculante12.02–12.21% continua reprovado para60%. Desconhecido não é zero; sem certificação geral de margem/acessibilidade ou H ativado.
+- Custos101: mesma requisição/snapshot de configurações, nenhuma leitura/troca/email/pagamento/provedor/unidade paga/custo recorrente adicional. Preços, limites, conteúdo/idiomas/IDs, permissões/opt-in e controles fiscais preservados. PLANS_ON_SALE=false, COMMISSION_LIVE=false; M0 vinculante12.02–12.21% continua reprovado para60%. Desconhecido não é zero; sem certificação geral de margem/acessibilidade ou HT ativado.
 - **PR#700 documental incorporado às10:44:46**, merge `07890e4148d9dd4a2213360da0f0e45b70d78d1b`, head `4fb9a6a1ac08bb506026239658ad35dd44c9c949`; Product39430751532/verify118654883245/Redis118654882762/security39430751442 aprovados. Registra100 e não incrementa contador. Este registro101 também é documental.
 
 
 176. **[B2-176] Confirm existing failed-payment reminder settings accurately.**
 - Estado: **Publicado — entrega102**.
 - Require successful HTTP, strict confirmation, no contradictory error and exact reminder-count/card-notice snapshot from the existing setter result. Lock pending controls, announce busy and update local saved baseline only after confirmation. Preserve uncertain drafts and avoid claiming that nothing changed after an uncertain write.
-- Synthetic48 intercepted settings replies planned at390/1280 for2/3reminders and card notice off/on, reusing the isolated local recurring fixture; full final-head CI pending. No email, Stripe/card mutation or payment occurs. Existing1–3reminder bounds,0/3/7day cadence,10day card horizon, eligibility/stop rules, permissions and costs unchanged. No new provider/paid unit/operation; M0 remains12.02–12.21%, fails60%; sales closed, H gates preserved.
+- Synthetic48 intercepted settings replies planned at390/1280 for2/3reminders and card notice off/on, reusing the isolated local recurring fixture; full final-head CI pending. No email, Stripe/card mutation or payment occurs. Existing1–3reminder bounds,0/3/7day cadence,10day card horizon, eligibility/stop rules, permissions and costs unchanged. No new provider/paid unit/operation; M0 remains12.02–12.21%, fails60%; sales closed, HT gates preserved.
 
 
 ### Publicação funcional102 — 2026-10-20 (Fortaleza)
@@ -2335,14 +2358,14 @@ Pricing FAQ repair history: run39407143422 caught mobile target-size;39409356932
 - **PR#703 incorporado às11:11:46**, merge `658f001a6f388cc09214410228f44d56b5ee440d`, head `f2963b92d65dc204bb056489249e4d9ab8de4cf2`. Configurações existentes de lembretes exigem HTTP bem-sucedido, true estrito, ausência de erro e snapshot exato de quantidade/cardNotice; bloqueiam campos pendentes e atualizam baseline somente após confirmação. Preservam rascunhos incertos e não afirmam que nada mudou após resposta incerta.
 - CI completo aprovado: Product39434615235/verify118668222573/Redis118668222956/security39434615398, incluindo48casos sintéticos interceptados em390/1280. Fixture recorrente local isolada, sem email, alteração de cartão/Stripe ou pagamento. Limites1–3, cadência0/3/7dias, horizonte10dias, elegibilidade e regras de interrupção preservados.
 - READY às11:12:44.221, domínio marktmorgen.com, deployment `dpl_HnmCj2amYAmbtc7j27egBjxZxHao`, SHA exato do merge. `/`, `/signin`, `/studio` (redirecionamento anônimo esperado), `/platform/path`, `/pricing`, `/privacy` retornaram200 com esse deployment. Nenhum log error/fatal na janela14:09:26.102–14:14:26.102UTC. Fluxo privado verificado somente sinteticamente no CI, sem gravação autenticada em produção.
-- Custos102: mesma requisição/snapshot do setter, nenhuma leitura/email/cartão/pagamento/provedor/unidade paga/custo recorrente adicional. Preços, limites, idiomas/conteúdo/IDs, permissões/opt-in e controles fiscais preservados. PLANS_ON_SALE=false, COMMISSION_LIVE=false; M0 vinculante12.02–12.21% continua reprovado para60%. Desconhecido não é zero; sem certificação geral de margem/acessibilidade ou H ativado.
+- Custos102: mesma requisição/snapshot do setter, nenhuma leitura/email/cartão/pagamento/provedor/unidade paga/custo recorrente adicional. Preços, limites, idiomas/conteúdo/IDs, permissões/opt-in e controles fiscais preservados. PLANS_ON_SALE=false, COMMISSION_LIVE=false; M0 vinculante12.02–12.21% continua reprovado para60%. Desconhecido não é zero; sem certificação geral de margem/acessibilidade ou HT ativado.
 - **PR#702 documental incorporado às11:10:45**, merge `87baaad2d491e6292c165bc1865e8f5e032a9546`, head `911b41ec357125058c4d594725a2b71d08e61e74`; Product39434338023/verify118667270828/Redis118667270253/security39434338149 aprovados. Registra101 e não incrementa contador. Este registro102 também é documental.
 
 
 177. **[B2-177] Confirm existing yearly offer email settings accurately.**
 - Estado: **Publicado — entrega103**.
 - Require successful HTTP, strict confirmation, no contradictory error and exact canonical on/address snapshot from existing setter. Reuse browser-safe parseYearlyAsk normalization; lock pending controls and only update saved status/address after confirmation. Preserve uncertain creator drafts; confirm settings without claiming delivery or that nothing changed after uncertainty.
-- Synthetic48 intercepted on/off replies planned at390/1280 using isolated recurring fixture and synthetic French address; full final-head CI pending. No email, yearly price, member switch, Stripe or payment operation occurs. Existing opt-in/list exclusion, once-per-membership cadence, eligibility/affiliate/cost rules and300character cap unchanged. No new provider/paid unit/operation; M0 remains12.02–12.21%, fails60%; sales closed, H gates preserved.
+- Synthetic48 intercepted on/off replies planned at390/1280 using isolated recurring fixture and synthetic French address; full final-head CI pending. No email, yearly price, member switch, Stripe or payment operation occurs. Existing opt-in/list exclusion, once-per-membership cadence, eligibility/affiliate/cost rules and300character cap unchanged. No new provider/paid unit/operation; M0 remains12.02–12.21%, fails60%; sales closed, HT gates preserved.
 
 
 ### Publicação funcional103 — 2026-10-20 (Fortaleza)
@@ -2350,32 +2373,32 @@ Pricing FAQ repair history: run39407143422 caught mobile target-size;39409356932
 - **PR#705 incorporado às11:38:08**, merge `b94eef4a60c2e74d598792e2ff01242a82e82d4f`, head `ad27ce86cf52ab64d6e315d3c349e5b38621b15b`. Oferta anual existente exige HTTP bem-sucedido, true estrito, ausência de erro e snapshot canônico exato on/address. Bloqueia campos pendentes, atualiza status/endereço salvos somente após confirmação e preserva rascunhos incertos; confirma configurações sem alegar entrega de email.
 - CI completo aprovado: Product39437950639/verify118679892692/Redis118679892402/security39437950979, incluindo48casos sintéticos interceptados em390/1280 com endereço francês sintético. Sem email, preço anual, troca de membro, Stripe ou pagamento; opt-in, exclusão da lista, cadência uma vez por assinatura, elegibilidade e limite300caracteres preservados.
 - READY às11:39:09.857, domínio marktmorgen.com, deployment `dpl_7Hda5pZFex3evGJzMB7y54sBAdQi`, SHA exato do merge. /, /signin, /studio (redirecionamento anônimo esperado), /platform/path, /pricing e /privacy retornaram200 com esse deployment. Nenhum log error/fatal na janela14:36:53.998–14:41:53.998UTC. Fluxo privado somente sintético no CI, sem gravação autenticada em produção.
-- Custos103: mesma requisição/snapshot existente, nenhuma leitura/email/troca/pagamento/provedor/unidade paga/custo recorrente adicional. Preços, limites, conteúdo/idiomas/IDs, permissões/opt-in e controles fiscais preservados. PLANS_ON_SALE=false, COMMISSION_LIVE=false; M0 vinculante12.02–12.21% continua reprovado para60%. Desconhecido não é zero; sem certificação geral ou H ativado.
+- Custos103: mesma requisição/snapshot existente, nenhuma leitura/email/troca/pagamento/provedor/unidade paga/custo recorrente adicional. Preços, limites, conteúdo/idiomas/IDs, permissões/opt-in e controles fiscais preservados. PLANS_ON_SALE=false, COMMISSION_LIVE=false; M0 vinculante12.02–12.21% continua reprovado para60%. Desconhecido não é zero; sem certificação geral ou HT ativado.
 - **PR#704 documental incorporado às11:35:50**, merge `a8215c4e8428582fb246be52f91dc570b18f7f70`, head `12e7147870844e7052b0d6126a54b8ccdc0fef72`; Product39437659387/verify118678862784/Redis118678862428/security39437659419 aprovados. Registra102 e não incrementa contador. Este registro103 também é documental.
 
 
 178. **[B2-178] Confirm existing read-only numbers links accurately.**
 - Estado: **Publicado — entrega104**.
 - Require successful HTTP, strict true, no contradictory error, canonical label/revenue choice, valid existing20character ID, exact canonical URL and exact server-created lifetime (using the existing record creation time, independent of the creator device clock) before displaying a created link or clearing drafts. Removal confirms the existing requested ID in the same response; no extra read/write. Lock and announce pending controls; preserve uncertain label/password/choices and instruct reload before retry.
-- Synthetic94 intercepted creation/revocation replies at390/1280 planned, with isolated local link fixture; full final-head CI pending. No link opened, password sent, third-party message, real account or payment. Existing5live-link cap,7/30/90days,8–100password bounds,300opens/day, read-only scope/revenue opt-in and settings permissions unchanged. No new provider/unit/operation/cost; M0 binding12.02–12.21% fails60%; sales and H gates closed.
+- Synthetic94 intercepted creation/revocation replies at390/1280 planned, with isolated local link fixture; full final-head CI pending. No link opened, password sent, third-party message, real account or payment. Existing5live-link cap,7/30/90days,8–100password bounds,300opens/day, read-only scope/revenue opt-in and settings permissions unchanged. No new provider/unit/operation/cost; M0 binding12.02–12.21% fails60%; sales and HT gates closed.
 
 
 179. **[B2-179] Confirm existing session package settings accurately.**
-- Estado: **Em implementação**.
+- Estado: **Publicado — entrega105**.
 - Require successful HTTP, strict true, no contradictory error and exact sessions/priceCents/days or explicit null from the existing setter response. Lock and announce pending controls, retain creator drafts and saved summary on uncertainty, and confirm settings without claiming checkout availability. No route change, new booking/payment or additional operation.
-- Synthetic48 intercepted save/stop replies planned at390/1280 with isolated local weekly-call fixture. No real booking, account, message or payment. Existing2–20sessions, allowed use periods, prices/currency and already-bought session entitlements unchanged. No new provider/unit/cost; binding M0 still fails60%; PLANS_ON_SALE=false, COMMISSION_LIVE=false, H gates closed.
+- Synthetic48 intercepted save/stop replies planned at390/1280 with isolated local weekly-call fixture. No real booking, account, message or payment. Existing2–20sessions, allowed use periods, prices/currency and already-bought session entitlements unchanged. No new provider/unit/cost; binding M0 still fails60%; PLANS_ON_SALE=false, COMMISSION_LIVE=false, HT gates closed.
 
 
 180. **[B2-180] Confirm existing cancellation-question settings and retain reason IDs.**
-- Estado: **Em implementação**.
+- Estado: **Publicado — entrega106**.
 - Require successful HTTP, strict true, no contradictory error and exact canonical on/reasons/creator words, valid unique own-reason IDs and unchanged previously persisted IDs. Adopt newly assigned IDs only after confirmed save, so the next save reuses the same counted reasons. Pending fields lock and announce busy; uncertain drafts and saved status remain; confirmation describes settings only.
-- Synthetic58 intercepted enable/disable replies at390/1280 planned, including refusal to replace a known persisted ID. Existing mandatory other-reason choice,3custom reasons/80characters, opt-in, immediate cancellation route, entitlements, language/content and permissions unchanged. No real member cancellation, Stripe, message, account or payment; no extra read/write/provider/cost. M0 binding12.02–12.21% fails60%; sales and H gates closed.
+- Synthetic58 intercepted enable/disable replies at390/1280 planned, including refusal to replace a known persisted ID. Existing mandatory other-reason choice,3custom reasons/80characters, opt-in, immediate cancellation route, entitlements, language/content and permissions unchanged. No real member cancellation, Stripe, message, account or payment; no extra read/write/provider/cost. M0 binding12.02–12.21% fails60%; sales and HT gates closed.
 
 
 181. **[B2-181] Confirm existing checkout website allowlist accurately.**
-- Estado: **Em implementação**.
+- Estado: **Publicado — entrega107**.
 - Require successful HTTP, strict true, no contradictory error and exact ordered canonical origins from the existing setter snapshot. Preserve raw uncertain drafts and saved allowlist baseline, lock the pending website list and announce busy/error. Confirm settings without claiming an actual checkout. The separate code generator keeps using the last confirmed list.
-- Synthetic48 intercepted save/clear replies planned at390/1280 with existing isolated demo fixture; no listed website visited, checkout opened, signup submitted, third-party message, account or payment. Existing10origin cap, HTTPS-only parsing, strict origin/return-address permissions, buyer opt-in and visible limits unchanged. No new request/read/provider/unit/cost; binding M0 fails60%, sales and H gates closed.
+- Synthetic48 intercepted save/clear replies planned at390/1280 with existing isolated demo fixture; no listed website visited, checkout opened, signup submitted, third-party message, account or payment. Existing10origin cap, HTTPS-only parsing, strict origin/return-address permissions, buyer opt-in and visible limits unchanged. No new request/read/provider/unit/cost; binding M0 fails60%, sales and HT gates closed.
 
 
 ### Publicação funcional104 — 2026-10-20 (Fortaleza)
@@ -2383,5 +2406,41 @@ Pricing FAQ repair history: run39407143422 caught mobile target-size;39409356932
 - **PR#707 incorporado às12:09:56**, merge `78e1d23da2c9f29af55a606c46d31f42b031a533`, head `9210720950381f7f62c4657a94fbe326afaf612f`. Links de números exigem HTTP bem-sucedido, true estrito, ausência de erro, ID válido, endereço canônico e label/receita/validade exatos; usam o horário já existente do servidor para validar duração sem depender do relógio do criador. Revogação confirma o ID solicitado na mesma resposta. Campos pendentes bloqueados; rascunhos/senha preservados em incerteza, com orientação de recarregar antes de repetir.
 - CI completo aprovado: Product39442697854/verify118697230944/Redis118697230395/security39442697859, incluindo94casos sintéticos interceptados em390/1280. Sem abrir link, enviar senha/mensagem, conta ou pagamento real. Mantidos5links vivos,7/30/90dias, senhas8–100caracteres,300aberturas/dia, escopo somente leitura, receita apenas por opção e permissão settings.
 - READY às12:10:56.798, domínio marktmorgen.com, deployment `dpl_2DRL2AzrREfvZbTJHgjBU1yMt3jA`, SHA exato do merge. /, /signin, /studio (redirecionamento anônimo esperado), /platform/path, /pricing e /privacy retornaram200 com esse deployment. Nenhum log error/fatal na janela15:06:37.224–15:11:37.224UTC. Fluxos privados apenas sintéticos no CI, sem gravação autenticada em produção.
-- Custos104: mesmas operações/respostas limitadas já existentes; apenas metadado do registro já criado, sem nova leitura/chamada/provedor/unidade paga/custo recorrente. Preços, limites, idiomas/conteúdo/IDs, permissões/opt-in e controles fiscais preservados. PLANS_ON_SALE=false, COMMISSION_LIVE=false; M0 vinculante12.02–12.21% reprova60%. Desconhecido não é zero; sem certificação geral ou ativação de H.
+- Custos104: mesmas operações/respostas limitadas já existentes; apenas metadado do registro já criado, sem nova leitura/chamada/provedor/unidade paga/custo recorrente. Preços, limites, idiomas/conteúdo/IDs, permissões/opt-in e controles fiscais preservados. PLANS_ON_SALE=false, COMMISSION_LIVE=false; M0 vinculante12.02–12.21% reprova60%. Desconhecido não é zero; sem certificação geral ou ativação de HT.
 - **PR#706 documental incorporado às12:02:47**, merge `d2812b1ea60b1a5f7b27f20a27bb047d52d59c18`, head `af0ed88530ddec12170ebee1cd54a1b5396571c6`; Product39441741219/verify118693079154/Redis118693080798/security39441741299 aprovados. Registra103 e não incrementa contador. Este registro104 é documental, empilhado após710; não antecipar incorporação de708/709/710 ou contar documento como publicação funcional.
+
+
+### Publicação funcional105 — 2026-10-20 (Fortaleza)
+
+- **PR#708 incorporado às12:18:09**, merge `d61c3d7fa07278bfb696164ad29b0a656a4cba46`, head `ce6be80406c09474db933d1ec73dc112b0c9215d`. Pacotes existentes validam HTTP, confirmação estrita e snapshot exato de sessões/preço/prazo ou null; campos pendentes bloqueados, rascunhos e resumo salvos preservados em incerteza. Não altera preços reais ou sessões já compradas.
+- CI completo aprovado: Product39444088624/verify118701444575/Redis118701444984/security39444087718, incluindo48casos sintéticos interceptados em390/1280. Sem mensagem a terceiros, conta, pagamento, checkout/cancelamento real ou gravação autenticada em produção.
+- READY às12:19:11.549, domínio marktmorgen.com, deployment `dpl_3Kr7AVc5Yv7YWZhGcJ8tUYkwhYuH`, SHA exato. /, /signin, /studio (redirecionamento anônimo esperado), /platform/path, /pricing e /privacy retornaram200 com o mesmo deployment. Nenhum log error/fatal na janela2026-10-20T15:15:00.023Z → 2026-10-20T15:20:00.023Z. Fluxos privados somente sintéticos no CI.
+- Custos105: mesmas operações/respostas limitadas já existentes, sem nova leitura/chamada/provedor/unidade paga/custo recorrente. Preços, limites, conteúdo/idiomas/IDs, permissões/opt-in, HTTPS/origens e direitos preservados. PLANS_ON_SALE=false, COMMISSION_LIVE=false; M0 vinculante12.02–12.21% continua reprovando abertura das vendas. Sem certificar margem geral. A classificação HT vigente consta em HT0 acima.
+
+
+### Publicação funcional106 — 2026-10-20 (Fortaleza)
+
+- **PR#709 incorporado às12:20:35**, merge `9fa40d3d12a25a042f8b0c15e41f2b123698336b`, head `47459d914a0ef064806ccb84cb90a664ba83a3d7`. Pergunta de cancelamento valida snapshot canônico e retém IDs atribuídos aos motivos do criador para salvamentos seguintes, sem substituir IDs conhecidos. Campos pendentes bloqueados; status e texto do criador preservados em incerteza. Sem cancelamento real ou alteração do caminho imediato de saída.
+- CI completo aprovado: Product39444104330/verify118701495772/Redis118701496668/security39444104762, incluindo58casos sintéticos interceptados em390/1280. Sem mensagem a terceiros, conta, pagamento, checkout/cancelamento real ou gravação autenticada em produção.
+- READY às12:21:28.037, domínio marktmorgen.com, deployment `dpl_BXp9otMt6kjtXTFw3Us6aMYkhBW7`, SHA exato. /, /signin, /studio (redirecionamento anônimo esperado), /platform/path, /pricing e /privacy retornaram200 com o mesmo deployment. Nenhum log error/fatal na janela2026-10-20T15:17:36.874Z → 2026-10-20T15:22:36.874Z. Fluxos privados somente sintéticos no CI.
+- Custos106: mesmas operações/respostas limitadas já existentes, sem nova leitura/chamada/provedor/unidade paga/custo recorrente. Preços, limites, conteúdo/idiomas/IDs, permissões/opt-in, HTTPS/origens e direitos preservados. PLANS_ON_SALE=false, COMMISSION_LIVE=false; M0 vinculante12.02–12.21% continua reprovando abertura das vendas. Sem certificar margem geral. A classificação HT vigente consta em HT0 acima.
+
+
+### Publicação funcional107 — 2026-10-20 (Fortaleza)
+
+- **PR#710 incorporado às12:29:25**, merge `9b73b2f343bc28f3cf8233c345d01d13cb79cc95`, head `84ff6537fc3d133744b20c26ff8af183abd4a5c2`. Lista de sites do checkout valida exatamente as origens canônicas retornadas, mantém baseline salvo e rascunho incerto e bloqueia edição pendente. Gerador separado continua usando a lista confirmada; nenhuma promessa de checkout disponível ou visita aos sites.
+- CI completo aprovado: Product39445553214/verify118706514838/Redis118706514432/security39445553199, incluindo48casos sintéticos interceptados em390/1280. Sem mensagem a terceiros, conta, pagamento, checkout/cancelamento real ou gravação autenticada em produção.
+- READY às12:30:21.277, domínio marktmorgen.com, deployment `dpl_DBRMZ5U43YdQLN6GqrnuxctKT51q`, SHA exato. /, /signin, /studio (redirecionamento anônimo esperado), /platform/path, /pricing e /privacy retornaram200 com o mesmo deployment. Nenhum log error/fatal na janela2026-10-20T15:26:34.927Z → 2026-10-20T15:31:34.927Z. Fluxos privados somente sintéticos no CI.
+- Custos107: mesmas operações/respostas limitadas já existentes, sem nova leitura/chamada/provedor/unidade paga/custo recorrente. Preços, limites, conteúdo/idiomas/IDs, permissões/opt-in, HTTPS/origens e direitos preservados. PLANS_ON_SALE=false, COMMISSION_LIVE=false; M0 vinculante12.02–12.21% continua reprovando abertura das vendas. Sem certificar margem geral. A classificação HT vigente consta em HT0 acima.
+
+- **PR#711 documental incorporado às12:32:14**, merge `c7e5a802fe4ef750a9b8f946cd6213badc4e2630`, head `13bc4f43365f509a29ce5898b33d063c3cc3f9e8`; Product39446304453/verify118709017805/Redis118709017451/security39446304536 aprovados. Registra104, sem incrementar contador funcional.
+
+182. **[HT0] Renomear a seção da Hotmart e separar os itens sem custo do gate de margem**
+- Estado: **Implementado; aguardando verificação integral e incorporação documental**.
+- Preparação iniciada em20/10/2026 às12:32:40 de Fortaleza (15:32:40UTC). Pedido direto do dono lido nesta conversa; hora original da mensagem não fornecida. Os números180[B2-180] e181[B2-181] já estavam ocupados antes desse pedido e foram preservados;182 era o próximo livre.
+- Commit-base conferido: `c7e5a802fe4ef750a9b8f946cd6213badc4e2630`. Commit das alterações HT0: `d4f1bb01bd4a46d5d3394d6775c8936b38b14b34` (criado em2026-10-20 12:34:08 de Fortaleza).
+- Alterações: seção no mesmo lugar entre publicação83 e continuação B2, renomeada H→HT;17subtítulos HT1–HT17 na mesma ordem e com textos preservados; subseção HT0 imediatamente abaixo do título e antes de Pedido do dono recebido. Referências posteriores da Hotmart passam a HT; os antigos [H1]/[H2]/[H3] e o prefixo histórico anterior à seção ficam intactos.
+- Estados conforme pedido: liberados HT1/2/3/4/6/7/8/9/12/15/16/17; HT5 liberado somente com rascunho/pool/tetos/reserva existentes, sem nova chamada IA/custo. HT10 (se custo novo de fornecedor), HT11,HT13,HT14 condicionados a cálculo próprio no pior caso por cliente, plano e intervalo, pelo método de dimensionamento do add-on Store assistant e piso líquido mínimo60% após todos os custos/impostos; desconhecido reprova, item que não caiba não é implementado.
+- M0 mais oneroso governa abertura das vendas, não edições sem custo variável. Nenhuma venda, preço, limite visível, comissão, PLANS_ON_SALE, tax gate, art.9a ou revisão comercial alterados. Nenhuma alegação pública de recurso inexistente ou margem certificada. Documentação apenas, sem custo novo ou incremento do contador funcional107.
+- Verificações de integridade do texto em memória:17estados classificados, ordem/corpo das tarefas preservados, prefixo histórico e IDs antigos intactos. CI integral do head final pendente; incorporação e testes efetivos serão registrados após confirmação.
+- Próxima execução: HT1,HT2,HT3,HT4,HT5,HT6,HT7,HT8,HT9,HT12,HT15,HT16,HT17; depois cálculos HT10/HT11/HT13/HT14; somente então novos B2. Cada HT iniciado recebe registro próprio ao fim com próximo número livre, commit, testes e publicação.
