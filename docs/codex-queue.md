@@ -1749,7 +1749,7 @@ Ao concluir cada item: registrar data, commit e testes; seguir ao próximo. Dado
 ## Continuação da revisão de excelência após os itens acionáveis
 
 158. **[B2-WELCOME-VIDEO-ACKNOWLEDGMENT] Confirmar configuração do vídeo sem perder o endereço digitado**
-   - Estado: **em implementação; branch codex/welcome-video-acknowledgment; suíte completa pendente**.
+   - Estado: **concluído; PR671 incorporado20/10/2026 04:53:09 Fortaleza; publicação funcional84 confirmada**.
    - Origem: revisão B2 do editor existente, sem implementar recurso H condicionado à margem. H1–H17 continuam no lugar e sob o gate fiscal.
    - Escopo: comparar HTTP, ok booleano, ausência de erro contraditório e provider/id/hash canônicos já devolvidos por /api/store/intro; remoção exige null confirmado. Bloquear entrada durante espera, aria-busy, mensagem honesta e contraste do alerta. Não abrir vídeo nem chamar fornecedor; idiomas/conteúdo preservados.
    - Prova:72respostas interceptadas,12variantes×3provedores×390/1280, incluindo hash Vimeo, JSON inválido, contradição, perda, campos divergentes e sucesso; global fit mantido. Remoção null não está coberta pela matriz atual e não será alegada como testada. Nenhuma conta, vídeo remoto ou POST real.
@@ -1757,7 +1757,53 @@ Ao concluir cada item: registrar data, commit e testes; seguir ao próximo. Dado
 
 
 159. **[B2-SUPPORT-SETTING-ACKNOWLEDGMENT] Confirmar configuração e valores de apoio sem alegar publicação**
-   - Estado: **em implementação; codex/support-setting-acknowledgment; CI integral pendente**.
+   - Estado: **concluído; PR672 incorporado20/10/2026 04:57:39 Fortaleza; publicação funcional85 confirmada**.
    - Escopo: reusar parseTips/readTipAmount e snapshot existente; comparar HTTP,okbooleano,ausência de erro,on/heading/line e valores na mesma ordem. Campos bloqueados/aria-busy; índices de erro inteiros válidos; preservar rascunho e mensagem honesta. Sem alterar operação de pagamento,impostos,limites,consentimento ou disponibilidade.
    - Prova:34respostas sintéticas em390/1280 com requisições interceptadas; padrão USD confirmado em lib/money.ts/store.ts e fixture sem troca de moeda. Valores,ordem,índices,JSON/perda/contradição,campos pendentes,contraste e largura. Nenhum checkout/conta/mensagem/pagamento real. Verificação completa obrigatória.
    - Custo: cliente+1221caracteres,mesmaoperação/resposta/parser,semfornecedor/franquia/preço/gate novo.M0antes/depois12,02–12,21%reprova60%;vendas fechadas. Revisão B2 existente; não implementação deH.
+
+
+### Publicações funcionais84–85 — verificação e custos
+```json
+{
+  "number": 84,
+  "pr": 671,
+  "queueItem": 158,
+  "feature": "Welcome-video editor confirms canonical provider, id and Vimeo hash before reporting saved settings; pending input locked and uncertainty preserves draft",
+  "head": "279e29ce39c708f501f26626e0e677e990e6a17a",
+  "commit": "0dad0238d40c58b47684e5195a0fa3661f0fda6b",
+  "deployment": "dpl_JDwZhsSJcFAt6tmDXB8WiC3cp1wf",
+  "readyUTC": "2026-10-20T07:54:09.927Z",
+  "readyFortaleza": "2026-10-20 04:54:09",
+  "mergedUTC": "2026-10-20T07:53:09Z",
+  "mergedFortaleza": "2026-10-20 04:53:09",
+  "run": 39387565039,
+  "verify": 118510962096,
+  "redis": 118510961678,
+  "securityRun": 39387565552,
+  "validation": "Full final-head CI lint/regressions/typecheck/build/security/Redis and synthetic browser passed72intercepted provider cases acrossYouTube/Vimeo/Loom and390/1280,hash/identity/HTTP/JSON/lostreply checks,pending lock,draft,actual alert contrast,globalfit. READY exactSHA/domainalias,6routes200sameDPL. No production private write/account/payment or external video opens. Noerror/fatal07:49:55.019–07:54:55.019UTC.",
+  "limitations": "Removal-null logic not browser-covered; no claim of tested removal. Client+798characters,sameparser/request/response,no newprovider/price/allowance/gate. BindingM0 12.02–12.21%fails60%;salesclosed."
+}
+```
+
+```json
+{
+  "number": 85,
+  "pr": 672,
+  "queueItem": 159,
+  "feature": "Support settings confirm canonical saved amounts and order, lock pending fields and preserve drafts without claiming public availability",
+  "head": "27eed319309207627f8fccfabb872f8ebb08aaa5",
+  "commit": "aec20253827c53b5dc712ec8ed7a57da517e9715",
+  "deployment": "dpl_FLvjKjaJuBfisTVKVQy2BPTa19f6",
+  "readyUTC": "2026-10-20T07:58:33.668Z",
+  "readyFortaleza": "2026-10-20 04:58:33",
+  "mergedUTC": "2026-10-20T07:57:39Z",
+  "mergedFortaleza": "2026-10-20 04:57:39",
+  "run": 39388241653,
+  "verify": 118513226829,
+  "redis": 118513226686,
+  "securityRun": 39388241646,
+  "validation": "Full final-head CI lint/regressions/typecheck/build/security/Redis and synthetic browser passed34intercepted replies at390/1280:canonical saved amounts/order,pending locks,draft retention,invalid rejected indexes,real enhanced alert contrast,globalfit. READY exactSHA/domainalias,6routes200sameDPL,anonymous studio signinredirect expected. No production privatewrite/account/payment/checkout/email. Noerror/fatal07:54:24.922–07:59:24.922UTC.",
+  "limitations": "Client+1221characters,sameparseTips/readTipAmount/POST/response,no newprovider/price/allowance/gate. Payment/fiscal/Stripeavailability unchanged. BindingM0 12.02–12.21%fails60%;salesclosed."
+}
+```
