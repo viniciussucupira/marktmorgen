@@ -2584,7 +2584,7 @@ HT1/PR713 incorporado em20/10/2026 às13:09:39 de Fortaleza; READY em13:11:16. H
 
 190. **[HT8] Preparar contadores reais ocultos e corrigir datas não comprovadas de compras recentes**
 - Estado: **Em implementação; verificação integral pendente**.
-- Registro:20/10/2026 às13:19:59 de Fortaleza. Base conferida `d6780f8f4afab4f6c3f7dd1c5829d248843b7de3`; commit de implementação: pendente.
+- Registro:20/10/2026 às13:19:59 de Fortaleza. Base conferida `d6780f8f4afab4f6c3f7dd1c5829d248843b7de3`; commit de implementação: `2011d6a8d6a20eb864dc4cd43b883914978088ea` (criado em2026-10-20T16:20:29Z; Fortaleza UTC−3).
 - Sem conjunto global auditado disponível: snapshot nulo e todos os contadores permanecem ausentes, nunca zero inventado. Preparados limiares configuráveis separados100lojas/1000vendas liquidadas/50criadores ativos30dias, contagem inteira exata e data visível. Evidência real/live, exclusão demo/teste, fonte, definição/janela e data válidas são obrigatórias; desconhecido, abaixo do limiar, fracionário, futuro ou desatualizado permanece oculto. Nenhum "+X", arredondamento para cima ou "vendo agora".
 - Dados futuros somente a partir de exportações operacionais existentes auditadas/deduplicadas, com definição e evidência registradas, sem scan de contas em página pública ou nova operação agendada.
 - Revisão recent-sales: eventos liquidados/live/opt-in, sem identidade,7dias/3cards/sem loop e verificação de reembolsos com cache5min preservados. Remove fallback de data ausente para "agora"; bloqueia timestamps/valores inválidos, registros futuros e produtos ocultos/removidos em cache usando catálogo já carregado. Nenhuma consulta Redis/provedor adicional.
