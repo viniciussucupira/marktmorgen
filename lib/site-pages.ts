@@ -1,3 +1,4 @@
+import { CREATOR_SHOWCASE, SHOWCASE_REVIEWED_AT } from "@/lib/creator-showcase";
 // Content for every page behind a menu item. One entry per page, so that
 // each menu item opens something different and real.
 import { AI_PLANS_WORDS } from "@/lib/ai-rules";
@@ -88,6 +89,17 @@ export const PAGES: TopicPage[] = [
   ...FEATURE_PAGES,
   ...CREATOR_PAGES,
   ...FINAL_COMPARISON_PAGES,
+  {
+    slug:"creator-showcase",section:"proof",eyebrow:"Permission before proof",title:"Store",highlight:"showcase",
+    intro:"Explore the demo or a creator listing with recorded permission. No listing is a promise of sales, income or results.",
+    seo:{title:"Creator store showcase — Marktmorgen",description:"Clearly labeled demo and only real creator listings with dated permission. No invented testimonials or earnings claims."},
+    badge:{label:"Permission registry reviewed "+SHOWCASE_REVIEWED_AT,tone:"proof"},accent:"#6d4aff",
+    blocks:[
+      {kind:"lead",text:CREATOR_SHOWCASE.every(entry=>entry.kind==="demo")?"No real creator listing has recorded permission here yet. The only listing below is our fictional demonstration store.":"Each real creator listing below has dated permission in the reviewed registry. Permission to list a store does not authorize a testimonial or a claim about results."},
+      {kind:"features",title:"Explore the store listings",items:CREATOR_SHOWCASE.map(entry=>({icon:"store" as const,title:entry.name+(entry.kind==="demo"?" — demo":" — creator"),body:entry.description+(entry.permissionRecordedAt?" Permission recorded "+entry.permissionRecordedAt+".":""),href:entry.href}))},
+      {kind:"limits",title:"How permission works",items:["A real listing needs explicit permission, its date, scope and an evidence reference before publication. Missing or revoked permission keeps it off this list.","No customer portraits, revenue totals, testimonials or growth figures are inferred from a store listing.","The demo is fictional and demonstrates features; it is not evidence of a real creator's outcome. Paid plans and paid selling remain subject to all opening gates."]},
+    ],
+  },
   {
     slug: "teachable",
     section: "proof",
