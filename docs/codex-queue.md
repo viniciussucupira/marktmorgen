@@ -2006,7 +2006,7 @@ Ao concluir cada item: registrar data, commit e testes; seguir ao próximo. Dado
 
 
 166. **[B2-166] Confirm existing buyer-language settings accurately.**
-- Estado: **Em implementação**.
+- Estado: **Concluído e publicado na entrega 92**.
 - Require successful HTTP, strict boolean confirmation, no error and the exact supported selected language. Lock the selector while pending and retain the draft on uncertainty. Preserve existing en/es/fr/de/it/nl/pt identifiers and creator content; no platform translation, new buyer language, AI call or gate activation.
 - Synthetic26 intercepted cases at390/1280, full final-head CI pending. Existing settings operation only; client source+260 characters is not measured bundle size. M0 12.02–12.21% still fails60%; sales closed and future translations remain deferred under docs/site-languages.md.
 
@@ -2078,6 +2078,129 @@ Prior run39404559381 failed four synthetic contradictory-response wording checks
 
 
 167. **[B2-167] Confirm saved appearance choices accurately.**
-- Estado: **Em implementação**.
+- Estado: **Concluído e publicado na entrega 93**.
 - Require successful HTTP, boolean confirmation, no contradictory error and exact saved theme/accent/badge/sold/font/backdrop. Lock appearance fields and Undo while pending; preserve draft on uncertainty. Existing response already returns look, no additional read or provider operation. Keep photo processing/requests, branding permission, counted-proof opt-in and contrast transforms unchanged.
 - Synthetic32 intercepted appearance replies at390/1280, no photo operation; full final-head CI pending. Source+1086 characters is not a bundle measurement. M0 12.02–12.21% still fails60%; sales remain closed.
+
+
+### Verified functional publications 92 and 93
+
+Pricing FAQ repair history: run39407143422 caught mobile target-size;39409356932 caught summary label alignment;39410000127 caught expanded-indicator overflow. Corrections retained axe,44px actual target checks and fit checks; full final-head Product/Redis/security reruns passed. No isolated rerun or accessibility certification.
+
+```json
+[
+  {
+    "number": 92,
+    "pr": 685,
+    "head": "df9b88af6e4fbe4682e5ae22d438bc63475cda53",
+    "sha": "766a81b34b9c8e813d39f11efb79d0d94ffe66dd",
+    "deployment": "dpl_26FjeFB6q51kRKsy2focZrZr1wwb",
+    "domain": "marktmorgen.com",
+    "mergedAt": "2026-10-20T11:19:13Z",
+    "mergedFortaleza": "2026-10-20 08:19:13",
+    "readyAt": "2026-10-20T11:20:15.074Z",
+    "tests": {
+      "product": 39411931649,
+      "verify": 118591544237,
+      "redis": 118591544671,
+      "security": 39411931821,
+      "languageCases": 26,
+      "faq": "axe,44px target-height and fit pass on home/pricing at390/1280"
+    },
+    "live": [
+      {
+        "path": "/",
+        "status": 200,
+        "marker": "dpl_26FjeFB6q51kRKsy2focZrZr1wwb"
+      },
+      {
+        "path": "/signin",
+        "status": 200,
+        "marker": "dpl_26FjeFB6q51kRKsy2focZrZr1wwb"
+      },
+      {
+        "path": "/studio",
+        "status": 200,
+        "marker": "dpl_26FjeFB6q51kRKsy2focZrZr1wwb"
+      },
+      {
+        "path": "/platform/path",
+        "status": 200,
+        "marker": "dpl_26FjeFB6q51kRKsy2focZrZr1wwb"
+      },
+      {
+        "path": "/pricing",
+        "status": 200,
+        "marker": "dpl_26FjeFB6q51kRKsy2focZrZr1wwb"
+      },
+      {
+        "path": "/privacy",
+        "status": 200,
+        "marker": "dpl_26FjeFB6q51kRKsy2focZrZr1wwb"
+      }
+    ],
+    "runtime": "No error/fatal logs 2026-10-20T11:16:15.177Z–2026-10-20T11:21:15.177Z",
+    "changes": "Exact existing buyer-language confirmation and pending lock; pricing FAQ44px centered targets, separated footer links and bounded plus/minus disclosure.",
+    "costs": "Same operations and existing language identifiers; no translation activation/provider call added; binding M0 still12.02–12.21%, fails60%, sales closed.",
+    "priorFailedRuns": [
+      39407143422,
+      39409356932,
+      39410000127
+    ]
+  },
+  {
+    "number": 93,
+    "pr": 687,
+    "head": "d8aa3a0f0f4716a3364228fedfe83e4fb4317e07",
+    "sha": "016df7653695057bbfaa72b38ed4ba46cae72ee7",
+    "deployment": "dpl_3pifn61QfKyir2BHXNNbweyzrnig",
+    "domain": "marktmorgen.com",
+    "mergedAt": "2026-10-20T11:21:53Z",
+    "mergedFortaleza": "2026-10-20 08:21:53",
+    "readyAt": "2026-10-20T11:23:26.743Z",
+    "tests": {
+      "product": 39412001904,
+      "verify": 118591880785,
+      "redis": 118591881216,
+      "security": 39412002017,
+      "syntheticCases": 32,
+      "photoOperations": 0
+    },
+    "live": [
+      {
+        "path": "/",
+        "status": 200,
+        "marker": "dpl_3pifn61QfKyir2BHXNNbweyzrnig"
+      },
+      {
+        "path": "/signin",
+        "status": 200,
+        "marker": "dpl_3pifn61QfKyir2BHXNNbweyzrnig"
+      },
+      {
+        "path": "/studio",
+        "status": 200,
+        "marker": "dpl_3pifn61QfKyir2BHXNNbweyzrnig"
+      },
+      {
+        "path": "/platform/path",
+        "status": 200,
+        "marker": "dpl_3pifn61QfKyir2BHXNNbweyzrnig"
+      },
+      {
+        "path": "/pricing",
+        "status": 200,
+        "marker": "dpl_3pifn61QfKyir2BHXNNbweyzrnig"
+      },
+      {
+        "path": "/privacy",
+        "status": 200,
+        "marker": "dpl_3pifn61QfKyir2BHXNNbweyzrnig"
+      }
+    ],
+    "runtime": "No error/fatal logs 2026-10-20T11:19:00.840Z–2026-10-20T11:24:00.840Z",
+    "changes": "Exact canonical appearance confirmation; six saved fields, pending controls/Undo locked, draft preserved on uncertainty.",
+    "costs": "Existing appearance operation only; no extra read/provider/photo operation, permissions and limits unchanged; source+1086 characters not bundled size. M0 still12.02–12.21%, fails60%, sales closed."
+  }
+]
+```
