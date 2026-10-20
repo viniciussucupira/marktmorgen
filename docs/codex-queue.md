@@ -1744,3 +1744,13 @@ PRÁTICAS DA HOTMART QUE NÃO DEVEM SER COPIADAS (registre-as na seção, para q
 
 
 Ao concluir cada item: registrar data, commit e testes; seguir ao próximo. Dados de cadastro/contadores e atribuição exigem minimização e consentimento; ativação por padrão emH9 não substitui o opt-in já exigido. H1 mantém a proibição vigente de promessas de ganhos/resultado garantido. Capturas e mediçõesH16 seguem também os gates de banda/custos, sem certificar Core Web Vitals com dados insuficientes.
+
+
+## Continuação da revisão de excelência após os itens acionáveis
+
+158. **[B2-WELCOME-VIDEO-ACKNOWLEDGMENT] Confirmar configuração do vídeo sem perder o endereço digitado**
+   - Estado: **em implementação; branch codex/welcome-video-acknowledgment; suíte completa pendente**.
+   - Origem: revisão B2 do editor existente, sem implementar recurso H condicionado à margem. H1–H17 continuam no lugar e sob o gate fiscal.
+   - Escopo: comparar HTTP, ok booleano, ausência de erro contraditório e provider/id/hash canônicos já devolvidos por /api/store/intro; remoção exige null confirmado. Bloquear entrada durante espera, aria-busy, mensagem honesta e contraste do alerta. Não abrir vídeo nem chamar fornecedor; idiomas/conteúdo preservados.
+   - Prova:72respostas interceptadas,12variantes×3provedores×390/1280, incluindo hash Vimeo, JSON inválido, contradição, perda, campos divergentes e sucesso; global fit mantido. Remoção null não está coberta pela matriz atual e não será alegada como testada. Nenhuma conta, vídeo remoto ou POST real.
+   - Custo: cliente+798caracteres, mesma operação/resposta/parser, sem fornecedor/franquia/preço/gate novo. M0 antes/depois12,02–12,21%reprova60%;vendas fechadas e nenhuma certificação fiscal.
