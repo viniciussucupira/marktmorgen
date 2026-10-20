@@ -1,3 +1,4 @@
+import { withFeatureMechanisms } from "@/lib/feature-mechanisms";
 import { paidVideoWords, TRIAL_VIDEO_SECONDS } from "@/lib/video-admission-rules";
 import { BUYER_RESERVE_BPS, SETUP_VISITS, VISITS_INCLUDED, countWords, publicVisitLimit } from "@/lib/traffic-rules";
 import { hoursWords } from "@/lib/watch-rules";
@@ -44,7 +45,7 @@ const WORKING = { label: "Working today", tone: "live" as const };
 
 /* ------------------------------------------------------------ features ---- */
 
-export const FEATURE_PAGES: TopicPage[] = [
+const BASE_FEATURE_PAGES: TopicPage[] = [
   {
     slug: "crm",
     section: "platform",
@@ -2482,7 +2483,7 @@ export const FEATURE_PAGES: TopicPage[] = [
 
 /* ------------------------------------------------------- for creators ---- */
 
-export const CREATOR_PAGES: TopicPage[] = [
+const BASE_CREATOR_PAGES: TopicPage[] = [
   {
     slug: "coaches",
     section: "for",
@@ -2752,3 +2753,6 @@ export const CREATOR_PAGES: TopicPage[] = [
     ],
   },
 ];
+
+export const FEATURE_PAGES = withFeatureMechanisms(BASE_FEATURE_PAGES);
+export const CREATOR_PAGES = withFeatureMechanisms(BASE_CREATOR_PAGES);
