@@ -3040,3 +3040,8 @@ WebKit118869615761 expirou na primeira ação de lembrete, antes do retorno de q
 #### P0201 — WebKit ainda reprovado, diagnóstico sem afrouxar teste
 
 20/10/2026 17:42 Fortaleza: WebKit118872840013 repetiu o timeout da primeira mensagem quiet no head9a6ca8758d2c86f175cf1665848ee2ad04bf6338. A hipótese de ação antes da hidratação não explica sozinha a falha; não declarar corrigida. O teste agora registra, somente quando essa mesma asserção estrita falha, contador de requests, status de transporte, texto do status, estado do botão e erros da página. Sem remover espera/asserção, trocar motor ou aumentar timeout; nova suíte inteira no novohead obrigatória. Consentimento e demais gates preservados.
+
+
+#### P0201 — evidência do transporte WebKit e isolamento dos mocks
+
+20/10/2026 17:47 Fortaleza: WebKit118875445640 no heade98a70db7a70f8431ee156531019d131e7130dbd registrou requests=0 no interceptor, response200 e mensagem real de devices0, sem erro de página. Portanto o botão funcionou; o mock409quiet não foi usado. StudioApp registra /studio-sw.js e há fetch handler nesse worker. A [documentação oficial Playwright](https://playwright.dev/docs/network), consultada20/10/2026, recomenda serviceWorkers:block para mocks por route que não interceptam requisições de páginas controladas por worker. Os três contextos do harness agora bloqueiam workers apenas no teste, com asserção explícita de controlador ausente antes do cenário sintético. Mantém todos os contadores, replies, quiet409, single-flight, consentimento e limites; não altera SW/app/PWA de produção nem afirma que push/offline foram validados. Nova suíte completa no novohead obrigatória. A hipótese anterior de hidratação não é tratada como causa comprovada.

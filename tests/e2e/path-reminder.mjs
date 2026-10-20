@@ -28,6 +28,7 @@ export async function checkPathReminder({owner,LOCAL,sid,axeSource}){
    await page.goto(url,{waitUntil:"domcontentloaded",timeout:60000});
    const section=page.getByRole("region",{name:"Take your next mission with you",exact:true});
    await section.waitFor();
+   assert.equal(await page.evaluate(()=>navigator.serviceWorker?.controller??null),null,"intercepted synthetic API cases have no service-worker bypass");
    const send=section.getByRole("button",{name:"Send your current mission",exact:true});
    const status=section.getByRole("status");
    assert.equal(await section.getByRole("link",{name:"Choose your devices",exact:true}).getAttribute("href"),"/studio/phone?store="+sid);

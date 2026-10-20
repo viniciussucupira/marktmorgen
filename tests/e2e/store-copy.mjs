@@ -239,7 +239,7 @@ try {
   const errors = [];
   const watch = (page) => page.on("pageerror", (error) => errors.push(String(error)));
   const open = async (page, url) => { const response=await page.goto(url,{waitUntil:"networkidle",timeout:60000}); if(!new URL(url).pathname.startsWith("/@"))is("platform document declares American English",await page.locator("html").getAttribute("lang"),"en-US"); return response; };
-  const studio = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+  const studio = await browser.newContext({ serviceWorkers: "block", viewport: { width: 1280, height: 900 } });
   await studio.addCookies([{ name: "nl_session", value: session, url: LOCAL }]);
   const owner = await studio.newPage();
   watch(owner);
@@ -403,7 +403,7 @@ try {
   is("sales enter the preview only after explicit choice",await owner.getByText("Sales kept after refunds: $0",{exact:true}).isVisible(),true);
   await owner.getByLabel("Include sales kept after refunds",{exact:true}).uncheck();
   for (const width of [390, 1280]) {
-    const ctx = await browser.newContext({ viewport: { width, height: 900 } });
+    const ctx = await browser.newContext({ serviceWorkers: "block", viewport: { width, height: 900 } });
     await ctx.addCookies([{ name: "nl_session", value: session, url: LOCAL }]);
     const page = await ctx.newPage();
     await open(page, `${LOCAL}/studio/copy`);
@@ -552,7 +552,7 @@ try {
   const {lookStyle,THEMES,ACCENTS}=require(paintFile);
   rmSync(paintDir,{recursive:true,force:true});
   for(const width of [320,390,768,1280]){
-    const guest=await browser.newContext({viewport:{width,height:900}});
+    const guest=await browser.newContext({serviceWorkers:"block",viewport:{width,height:900}});
     try{
       const signin=await guest.newPage();
       signin.on("pageerror",error=>errors.push(String(error)));
