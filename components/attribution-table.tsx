@@ -1,5 +1,6 @@
 "use client";
 
+import { attributionSettingsConfirmed } from "@/lib/marketing-settings-response";
 import { useState } from "react";
 import { attributionReport, type ReportPeriod } from "@/lib/channel-reports";
 import { ReportDownload } from "@/components/report-download";
@@ -32,25 +33,26 @@ export function AttributionTable({
   period?: ReportPeriod;
 }) {
   const [days, setDays] = useState(daysGiven);
+  const [confirmedDays,setConfirmedDays] = useState(daysGiven);
+  const [error,setError] = useState("");
   const [busy, setBusy] = useState(false);
 
   async function save(next: number) {
-    const before = days;
+    if (busy) return;
+    setError("");
     setDays(next);
     setBusy(true);
     try {
       const response = await fetch("/api/store/attribution", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ days: next }) });
-      const body = (await response.json().catch(() => ({}))) as { ok?: boolean; days?: number };
-      if (body.ok && typeof body.days === "number") {
-        setDays(body.days);
+      const body = (await response.json().catch(() => ({}))) as { ok?: unknown; days?: number; error?:unknown };
+      if (attributionSettingsConfirmed(response.ok,body,next)) {
+        setConfirmedDays(next);
         toast(`Sales are credited to a visit up to ${body.days} days before. This applies to sales from now on.`);
       } else {
-        setDays(before);
-        toast("That did not save. Try again.");
+        setError("Your selection is still here. The saved attribution window could not be confirmed. Reload to check it before trying again.");
       }
     } catch {
-      setDays(before);
-      toast("That did not save. Check your connection and try again.");
+      setError("Your selection is still here. The saved attribution window could not be confirmed. Reload to check it before trying again.");
     } finally {
       setBusy(false);
     }
@@ -131,9 +133,10 @@ export function AttributionTable({
         </div>
       ) : null}
       <p className="mt-2 text-xs text-ink-soft">
-        {`The same sales read three ways, from your own Stripe account: by the last place each buyer came from before buying, within the ${days} days before; by the first place, within the 90 days before; and by what buyers answered on the page after paying (on the day they answered). Include the no-channel row when summing either visit column. The visit columns are alternative readings of the same purchases and must not be added together. Buyer answers cover only respondents and can fall in different days from their purchases; they must not be added to visit revenue. Where the law asks visitors first, or a browser asks not to be followed, only the tags on the page they bought from count. One-click extras taken after paying are left out.`}
+        {`The same sales read three ways, from your own Stripe account: by the last place each buyer came from before buying, within the ${confirmedDays} days before; by the first place, within the 90 days before; and by what buyers answered on the page after paying (on the day they answered). Include the no-channel row when summing either visit column. The visit columns are alternative readings of the same purchases and must not be added together. Buyer answers cover only respondents and can fall in different days from their purchases; they must not be added to visit revenue. Where the law asks visitors first, or a browser asks not to be followed, only the tags on the page they bought from count. One-click extras taken after paying are left out.`}
       </p>
       {period && hasAny ? <ReportDownload csv={attributionReport(table, period)} filename={"marktmorgen-attribution-" + period.from + "-to-" + period.to + ".csv"}>Download attribution comparison</ReportDownload> : null}
+      {canSet ? <p className="mt-3"><a href="#pixels-title" className="link inline-flex min-h-11 items-center">Review pixel IDs and consent</a></p> : null}
       {canSet ? (
         <label className="mt-3 flex flex-wrap items-center gap-2 text-sm text-ink">
           <span>Credit a sale to a visit up to</span>
@@ -141,6 +144,7 @@ export function AttributionTable({
             className="field w-auto min-h-11 py-1.5"
             value={days}
             disabled={busy}
+            aria-busy={busy}
             onChange={(e) => void save(Number(e.target.value))}
             aria-describedby="attribution-days-note"
           >
@@ -155,6 +159,7 @@ export function AttributionTable({
           </span>
         </label>
       ) : null}
+      {canSet && error ? <div className="mt-3"><p role="alert" className="notice notice-error">{error}</p><button type="button" className="btn btn-secondary mt-3" aria-busy={busy} disabled={busy} onClick={()=>void save(days)}>Retry window change</button></div> : null}
     </div>
   );
 }

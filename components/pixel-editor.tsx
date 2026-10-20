@@ -1,5 +1,7 @@
 "use client";
 
+import { pixelSettingsConfirmed } from "@/lib/marketing-settings-response";
+
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "@/components/toast";
@@ -15,7 +17,7 @@ const MESSAGES: Record<string, string> = {
 };
 
 /** The creator's Meta, Google, TikTok and Pinterest ids, on their store's pages. */
-export function PixelEditor({ pixels }: { pixels: Pixels }) {
+export function PixelEditor({ pixels, canViewAttribution = false }: { pixels: Pixels; canViewAttribution?: boolean }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState<Record<PixelKind, string>>(() => ({
@@ -45,15 +47,15 @@ export function PixelEditor({ pixels }: { pixels: Pixels }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ pixels: local.pixels }),
       });
-      const data = (await response.json().catch(() => ({}))) as { ok?: boolean; error?: string; bad?: PixelKind };
-      if (data.ok) {
+      const data = (await response.json().catch(() => ({}))) as { ok?: unknown; pixels?: unknown; error?: string; bad?: PixelKind };
+      if (pixelSettingsConfirmed(response.ok, data, local.pixels)) {
         setOpen(false);
         toast("Pixels saved.");
         router.refresh();
         return;
       }
-      if (data.error === "format" && data.bad) setBad(data.bad);
-      else setError(MESSAGES[data.error ?? ""] ?? MESSAGES.server_error);
+      if (data.error === "format" && data.bad && PIXEL_KINDS.includes(data.bad)) setBad(data.bad);
+      else setError(MESSAGES[data.error ?? ""] ?? "Your pixel IDs are still here. Saving could not be confirmed. Reload to check the saved IDs before trying again.");
     } catch {
       setError(MESSAGES.server_error);
     } finally {
@@ -71,6 +73,11 @@ export function PixelEditor({ pixels }: { pixels: Pixels }) {
         starts to pay and who buys, with the amount. Included in your plan.
       </p>
 
+      <nav aria-label="Pixels and attribution" className="mt-4 flex flex-wrap gap-x-5 gap-y-2">
+        <a href="#pixels-title" className="link inline-flex min-h-11 items-center">Pixel IDs</a>
+        {canViewAttribution ? <a href="#numbers" className="link inline-flex min-h-11 items-center">Attribution by channel</a> : null}
+      </nav>
+      <p className="mt-3 text-sm text-ink-soft" data-pixel-consent>Saving an ID does not override consent. Visitors in the configured consent regions, including Brazil, or with an unknown country are asked first. A browser’s Global Privacy Control signal prevents advertising pixels. Attribution is a separate reading of existing payment records; it is not proof that an ad caused a sale.</p>
       {!open ? (
         <>
           <p className="mt-4 text-sm font-semibold text-ink">
@@ -83,14 +90,16 @@ export function PixelEditor({ pixels }: { pixels: Pixels }) {
           </button>
         </>
       ) : (
-        <form onSubmit={save} className="mt-5 space-y-4" noValidate>
+        <form onSubmit={save} className="mt-5" noValidate aria-busy={busy}>
+          <fieldset disabled={busy} className="min-w-0 space-y-4"><legend className="sr-only">Advertising pixel IDs</legend>
           {PIXEL_KINDS.map((kind) => {
             const info = PIXEL_INFO[kind];
             const invalid = bad === kind;
             return (
-              <label key={kind} className="block">
-                <span className="field-label">{info.label}</span>
+              <div key={kind} className="block">
+                <label htmlFor={`px-${kind}`} className="field-label">{info.label}</label>
                 <input
+                  id={`px-${kind}`}
                   type="text"
                   inputMode={kind === "meta" || kind === "pinterest" ? "numeric" : "text"}
                   autoComplete="off"
@@ -105,7 +114,7 @@ export function PixelEditor({ pixels }: { pixels: Pixels }) {
                 <span id={`px-${kind}-help`} className={`mt-1 block text-xs ${invalid ? "font-semibold text-danger" : "text-ink-soft"}`}>
                   {invalid ? `That is not a ${info.label}. A ${info.label} looks like ${info.example}. ${info.where}` : `${info.where} Leave it empty to turn it off.`}
                 </span>
-              </label>
+              </div>
             );
           })}
 
@@ -139,6 +148,7 @@ export function PixelEditor({ pixels }: { pixels: Pixels }) {
               Cancel
             </button>
           </div>
+          </fieldset>
         </form>
       )}
     </section>

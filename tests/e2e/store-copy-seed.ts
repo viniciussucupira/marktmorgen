@@ -1,3 +1,4 @@
+import {setPixels} from "@/lib/store";
 import {TIERS,publishedPriceWords} from "@/lib/plan";
 import type { CallSetup } from "@/lib/call-setup";
 import { setProductCall } from "@/lib/store";
@@ -176,11 +177,13 @@ async function main(): Promise<void> {
   await ensureStatsId(libraryOwner);
   const libraryProduct=await addProduct(libraryOwner,"Synthetic template product","Synthetic product summary.","10",null);
   if(!libraryProduct.ok)throw Error("No library fixture product");
+  if(!(await setStripeAccount(libraryOwner,DEMO_CONNECTED_ACCOUNT,true)).ok)throw Error("No local synthetic library Stripe fixture");
   const libraryStore=await storeForEmail(libraryOwner);if(!libraryStore)throw Error("No library fixture store");
   const preservedProduct=await addProduct(libraryOwner,"Saved creator page","Keep this creator content.","20",null);
   if(!preservedProduct.ok || !libraryStore.statsId)throw Error("No preserved page fixture");
   await writePage(libraryStore.statsId,preservedProduct.product.id,parsePage({blocks:[{id:"kephero1",kind:"hero",headline:"Keep my creator headline",sub:"Keep my creator wording",media:"none",video:null}]}),libraryStore);
   if(!(await setProductPage(libraryOwner,preservedProduct.product.id,true)).ok)throw Error("No preserved page index");
+  if(!(await setPixels(libraryOwner,{meta:"123456789012345",google:"G-AB12CD34EF",tiktok:"C4ABCDEFGH1234567890",pinterest:null})).ok)throw Error("No synthetic pixel fixture");
   const libraryFixture={preservedProduct:preservedProduct.product.id,session:await openSession(libraryOwner),sid:libraryStore.sid,product:libraryProduct.product.id};
   console.log(JSON.stringify({ libraryFixture,signinPrices:TIERS.map(tier=>({tier,words:publishedPriceWords(tier,"month")})),activationFixture,packageFixture,tierFixture,exitFixture,homeDemo,pauseFixtures,wordingSession,wordingSid:wordingStore.sid,wordingTrialSession,wordingTrialSid:wordingTrialStore.sid,returnSession,returnSid:returnStore.sid,growthSession,growthSid:growthStore.sid,growthProduct:growthProducts[0],session: await openSession(OWNER), second: second.store.sid, abProduct, abStore:abStore.sid,contactToken }));
 }

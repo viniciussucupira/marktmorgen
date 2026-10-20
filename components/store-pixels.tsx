@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import type { Pixels } from "@/lib/pixels";
+import { pixelChoiceState, type Pixels } from "@/lib/pixels";
 import { ADS_COOKIE_SECONDS, adsCookieName, nextAdsCookie } from "@/lib/ad-consent";
 
 /**
@@ -228,7 +228,7 @@ export function StorePixels({
   useEffect(() => {
     const choice = readChoice(handle);
     const gpc = (navigator as Navigator & { globalPrivacyControl?: boolean }).globalPrivacyControl === true;
-    const next = choice === "yes" ? "on" : choice === "no" ? "off" : gpc ? "off" : askFirst ? "ask" : "on";
+    const next = pixelChoiceState(choice,askFirst,gpc);
     // Read from this browser's storage, which only exists after the page is in it.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setState(next);
@@ -293,6 +293,9 @@ export function StorePixels({
 
   if (state === "unknown") return null;
 
+  if ((navigator as Navigator & {globalPrivacyControl?:boolean}).globalPrivacyControl === true) {
+    return <p className="mt-3 text-center text-xs st-footer-link">Your browser’s Global Privacy Control keeps ad measurement off. Manage this signal in your browser settings.</p>;
+  }
   if (state === "ask") {
     return (
       <section
@@ -312,8 +315,9 @@ export function StorePixels({
             type="button"
             className="btn st-btn"
             onClick={() => {
-              writeChoice(handle, "yes");
-              setState("on");
+              const gpc = (navigator as Navigator & {globalPrivacyControl?:boolean}).globalPrivacyControl === true;
+              writeChoice(handle,gpc ? "no" : "yes");
+              setState(pixelChoiceState("yes",askFirst,gpc));
             }}
           >
             Allow

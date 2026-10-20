@@ -1718,7 +1718,7 @@ export default async function StudioPage({
                   return tiers.length ? <TierEditor initial={store.tiers} memberships={tiers} /> : null;
                 })()}
 
-                <PixelEditor pixels={store.pixels} />
+                <PixelEditor pixels={store.pixels} canViewAttribution={may("stats")} />
                 {hasPixels(store.pixels) ? (
                   <ServerEventsEditor
                     setup={await (async () => {
