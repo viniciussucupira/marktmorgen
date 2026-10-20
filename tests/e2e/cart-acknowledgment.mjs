@@ -26,8 +26,8 @@ export async function checkCartAcknowledgment({browser,LOCAL,fixture,is}){
    await page.locator("main details").evaluateAll(nodes=>nodes.forEach(n=>{n.open=true;}));
    const section=page.locator("#cart-deal");await section.waitFor();
    const check=section.getByRole("checkbox");await check.check();
-   await section.getByLabel("From how many products",{exact:true}).selectOption("3");
-   await section.getByLabel("Percentage off each",{exact:true}).fill("15");
+   await section.locator("#deal-min").selectOption("3");
+   await section.locator("#deal-percent").fill("15");
    for(const on of [true,false]){
     await check.setChecked(on);
     for(const scenario of cases){
@@ -47,8 +47,8 @@ export async function checkCartAcknowledgment({browser,LOCAL,fixture,is}){
       is("cart settings honest uncertainty "+name,(await alert.innerText()).includes("Reload this page to check before trying again"),true);
       is("cart setting draft retained "+name,await check.isChecked(),on);
       if(on){
-       is("cart minimum retained "+name,await section.getByLabel("From how many products",{exact:true}).inputValue(),"3");
-       is("cart percent retained "+name,await section.getByLabel("Percentage off each",{exact:true}).inputValue(),"15");
+       is("cart minimum retained "+name,await section.locator("#deal-min").inputValue(),"3");
+       is("cart percent retained "+name,await section.locator("#deal-percent").inputValue(),"15");
       }
      }
      is("cart settings fit "+name,await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
