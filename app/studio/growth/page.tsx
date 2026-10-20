@@ -41,7 +41,7 @@ export default async function GrowthPage({ searchParams }: Params) {
       <main id="content" className="container-page pb-20 pt-10 sm:pt-14">
         <p className="eyebrow">Growth</p>
         <h1 className="t-h2 mt-3">Choose your next business goal</h1>
-        <p className="mt-3 max-w-2xl text-ink-soft">Connect the tools you already have. These are practical starting points, not forecasts or promises of more sales.</p>
+        <p className="mt-3 max-w-2xl text-ink-soft">Choose one goal, review the steps, then open the tools you need. These are starting points, not forecasts or promises of sales.</p>
         {can(role,"stats") ? <p className="mt-5"><Link href={studioPath(store)+"#grow-your-sales"} prefetch={false} className="link inline-flex min-h-11 items-center">Grow your sales — settings and measured payment records</Link></p> : null}
         <nav aria-label="Growth goals" className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {GROWTH_GOALS.map(item => <Link key={item.id} prefetch={false} href={studioPath(store, "goal=" + item.id, "growth")} aria-current={goal === item.id ? "page" : undefined} className={"card min-h-32 p-5 " + (goal === item.id ? "ring-2 ring-violet-deep" : "")}>

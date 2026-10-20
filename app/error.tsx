@@ -19,8 +19,7 @@ export default function PageError({ error, reset }: { error: Error & { digest?: 
         <p className="eyebrow">Something went wrong</p>
         <h1 className="t-h3 mt-3">This page did not load</h1>
         <p className="mt-3 text-ink-soft">
-          The fault is on our side, not yours. Trying again usually works; if it does not, the page will be back
-          shortly.
+          Try again to reopen the page. If it still does not load, return to the home page and open it from there.
         </p>
         {error.digest ? <p className="mt-3 text-sm text-ink-mute">{`Reference: ${error.digest}`}</p> : null}
         <div className="mt-7 flex flex-wrap items-center gap-4">

@@ -2729,6 +2729,17 @@ As execuções integrais identificaram contraste durante entrada animada no temp
 - PLANS_ON_SALE=false, preços/limites/opt-in/comissão/tax gate/art.9a/revisão comercial preservados;60% líquido por cliente no pior mês e global após todos os impostos permanece obrigatório. Evidência docs/ht16-public-design.md. PróximoHT17; depois custosHT10/11/13/14; nenhum B2 novo.
 
 
+195. **[HT17] Dar um próximo passo claro aos textos compartilhados do site e do studio**
+
+- Estado: **Implementado; CI integral e publicação pendentes**.
+- Registro em Fortaleza:2026-10-20 14:12:43.000 (UTC−3); implementação `e168a4071963102057805cb4d8a593db9dbddc42` (2026-10-20T17:12:43Z); base remota `ea90ac789031f02b9661b9509cbfef973557e444` conferida.
+- Registro existenteSTUDIO_MESSAGES revisado para permissão/recuperação/acesso, espaço de arquivo e de registros, upload interrompido, cota horária e indisponibilidade. Frases curtas em inglês americano: o que aconteceu, o que revisar/tentar, condição real. Sem censurar a pessoa nem sugerir aumento de plano indisponível. Todos os códigos persistidos de erro permanecem iguais; recusa não vira sucesso.
+- Página de erro global mantém referência e retry/navegação, sem prometer retorno “shortly”.404 pede conferir o endereço e oferece Home/Help, sem inventar por que a loja sumiu. Introduções compartilhadas de recurso/Growth orientam a ação sem prometer venda ou resultado. Passe em templates compartilhados; conteúdo de criadores, emails/sequências, idiomas de compradores e IDs não foram reescritos.
+- Testes: chaves de recusa preservadas, próxima ação e sem falso sucesso; boundary real renderizado com referência/retry; navegador390/1280 no404 verifica título, destinos, ausência de motivo inventado, status/largura/axe e zero write. Suíte inteira, build/tipos/lint, Redis/security e medições herdadas deHT16 obrigatórios no head final; READY/domínio/SHA antes de contar publicação.
+- Nenhuma nova IA, fornecedor, operação variável, conta, pagamento, mensagem ou submissão externa. PLANS_ON_SALE=false, comissão, preços/limites, permissões/opt-in, tax gate/art.9a/revisão comercial preservados. Piso líquido60% por cliente usando100% no pior mês e global após todos os impostos Brasil/EUA continua obrigatório, sem certificação de margem.
+- Documentação: docs/ht17-partner-copy.md. Próximos: cálculos própriosHT10,HT11,HT13,HT14, nessa ordem; implementar somente o que couber. Novas revisõesB2 só depois.
+
+
 #### HT15 — verificação de identificador da biblioteca privada
 
 Product checks39462624653/verify118766157526 aprovou regressões mas recusou o build: statsId pode ser null em loja sem histórico. A biblioteca agora só lê uma seção salva quando o identificador existe; ausência preserva a página e apresenta estado não confirmado, sem ler outra loja nem inventar seção vazia. CI integral novamente obrigatório no novo head; sem reexecução isolada ou publicação contada.

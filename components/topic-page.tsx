@@ -616,7 +616,7 @@ export function TopicPageView({ page }: { page: TopicPage }) {
 
         <section className="surface-sand">
           <div className="container-narrow py-16 text-center sm:py-20">
-            <h2 className="t-h2 balance">{pro ? PLAN_TITLES.pro+", when you are ready for it" : "Want this on your own store?"}</h2>
+            <h2 className="t-h2 balance">{pro ? PLAN_TITLES.pro+", when you are ready for it" : "Prepare your own store"}</h2>
             <p className="mx-auto mt-4 max-w-xl text-ink-soft">
               {!PLANS_ON_SALE
                 ? pro

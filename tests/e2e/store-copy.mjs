@@ -1,3 +1,4 @@
+import { checkPartnerCopy } from "./partner-copy.mjs";
 import { checkPublicTrustDesign } from "./public-trust-design.mjs";
 import { checkTemplateLibrary } from "./template-library.mjs";
 import { checkEvergreenGuides } from "./evergreen-guides.mjs";
@@ -807,6 +808,7 @@ await checkThanksAcknowledgment({browser,LOCAL,fixture:{session:growthSession,si
 await checkNoCountAcknowledgment({browser,LOCAL,fixture:homeDemo,is});
 await checkNudgeAcknowledgment({browser,LOCAL,fixture:pauseFixtures[0],is});
   await captureHomeStudio({browser,LOCAL,fixture:homeDemo,is});
+  await checkPartnerCopy({browser,LOCAL,axeSource,is});
   await checkPublicTrustDesign({browser,LOCAL,axeSource,is});
   await checkTemplateLibrary({browser,LOCAL,fixture:libraryFixture,axeSource,is});
   await checkEvergreenGuides({browser,LOCAL,is,axeSource});
