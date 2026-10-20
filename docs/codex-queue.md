@@ -994,12 +994,12 @@ Pedido P5: anexo524cc7f9-78af-42b5-ae37-4c05dc91a193/Texto colado.txt, lido19/10
    - Prova: preços/limites coincidem com fontes canônicas e gates fechados; navegação/semântica/390px. Custo: renderização estática, M0 igual sem novo envelope; S3 é o próximo incremento, não fingir calculadora pronta.
 
 144. **[S3-TOOLS-CALCULATOR] One plan instead of several tools**
-   - Estado: **em andamento; PR657/codex/tools-calculator, implementação passou no head2d9100; novo head para preservar histórico canônico requer CI completo**.
+   - Estado: **concluído; entrega71 em produção confirmada, PR657 incorporado20/10/2026 02:39:00Fortaleza**.
    - Escopo: calculadora exclusivamente no navegador dentro de /pricing. Seleção de ferramentas e vendas mensais; assinaturas e comissões oficiais aplicáveis contra plano próprio com comissão zero. lib/competitor-prices.ts único, compartilhado com S1, com fonte/data por preço. Estimativa clara, processamento nos dois lados, sem promessa de resultado; não somar taxas inclusas duas vezes nem tratar taxa por transação como percentual sem quantidade.
    - Prova: preços próprios de lib/plan.ts, dados concorrentes sem fonte/data reprovam; condições/volumes/limites explícitos; entradas inválidas e nenhuma chamada de servidor. Custo: cálculo local, sem novo custo operacional por cálculo; M0 preservada.
 
 145. **[S4-HOME-SALES] Página inicial com módulos reais**
-   - Estado: **em andamento; PR658/codex/home-real-modules; módulos implementados, capturas e condições de custo pendentes**.
+   - Estado: **parcial implementado; capturas aguardando o dono por condição de faturamento não confirmada após mais de1hora; seguir S5**.
    - Escopo: manter "Your store. Your Stripe. Your money." e "See the live demo". Everything in one place: store page, courses, memberships, community, email, calls, funnels and sales pages, checkout, affiliates, CRM, insights, AI writing, Path, cada um com link e capacidade conferidos. Faixa para calculadora S3; capturas reais do estúdio da demo sem dados reais, únicas e com alt. Fecho honesto: um lugar para vender/ensinar/comunidade/email/chamadas, sem promessa de ganhos.
    - Prova: links/recursos/preços verdadeiros, screenshots sintéticos com origem e sem repetição, layout390px/teclado/contraste/performance. Vídeo só com custo fixo/teto aprovado antes; não é requisito para completar o item. M0/custos explicitados.
 
@@ -1263,3 +1263,31 @@ Pedido P5: anexo524cc7f9-78af-42b5-ae37-4c05dc91a193/Texto colado.txt, lido19/10
 - Product39371518289 verify118460224197: lint/regressões passaram; typecheck encontrou acesso indevido a title no Item compacto do catálogo. A fixture passa a usar o ID retornado por addProduct e conferir a presença desse ID, sem mudar modelo/IDs de produção nem fazer cast. Herdar também guarda de taxas condicionais S3 e aviso S2 visível; novo CI completo requerido. Imagens ainda não publicadas; API de cobrança histórica não confirmou configuraçãoFlatRate e navegador de leitura falhou duas vezes por timeout.
 
 - Product39373093473 verify118465167117: tipos/regressões e os15comparativos passaram; captura recusou localhost porque o guard aceitava só127.0.0.1. Aceitar somente HTTP com porta explícita e hosts locais localhost/127.0.0.1, nunca produção; fixture continua isolada. Corrigir também a mesma ausência falsa de Zoom no FAQ reutilizado pelo HTML/schema e ler catálogo por MAX_PRODUCTS; expansão de perguntas S10 continua posterior. Nenhum email, arquivo, conta ou integração externa real acionado. Nova suíte integral requerida.
+
+
+### Entrega71 — publicação funcional confirmada
+```json
+{
+  "number": 71,
+  "pr": 657,
+  "queueItem": 144,
+  "feature": "Local tool-stack calculator on /pricing with official price dates, monthly/annual selection, applicable processing quotes and explicit unknown fees; no invented savings or feature equivalence",
+  "head": "d05effbb0f4bf76d488e608061778b1074a18f49",
+  "commit": "1f1f4f93a35c6565266a3008077185b2c2e387a9",
+  "deployment": "dpl_EMpxPLvY5MHAWc8eTvkQpmah24nH",
+  "readyUTC": "2026-10-20T05:40:08.127Z",
+  "readyFortaleza": "2026-10-20 02:40:08",
+  "mergedUTC": "2026-10-20T05:39:00Z",
+  "mergedFortaleza": "2026-10-20 02:39:00",
+  "run": 39374412805,
+  "verify": 118469201235,
+  "redis": 118469201023,
+  "securityRun": 39374412828,
+  "validation": "Complete final-head CI successful: lint, regression tests, typecheck/build, whole synthetic browser flow, calculator390/1280 keyboard/axe/fit/no API writes, inclusive fee counting, Substack recurring fee and unconfirmed estimates. READY exactSHA+marktmorgen.com alias;13routes200exactDPL including pricing aliases. Actual calculator heading and all4control IDs present. Noerror/fatal05:36:22.448–05:41:22.448UTC.",
+  "limitations": "Browser-local arithmetic; no new provider operation/allowance/price/gate. Binding M0 remains12.02–12.21%, fails required60%; PLANS_ON_SALE=false. No margin/fiscal/AAA certification."
+}
+```
+
+### S4 — verificação e bloqueio específico dos ativos visuais
+- Head4edb692/Product39374567301, verify118469693032, Redis118469692712 e segurança39374567174 passaram integralmente. Capturas reais sintéticas produzidas e revistas: store69756bytes, sales-page82191bytes, distintas1280x820, sem dados reais. Módulos/links/FAQ podem avançar como entrega parcial; imagens permanecem ausentes.
+- Desde04:38UTC até05:43UTC houve investigação do custo: modelo vigente condiciona bytes inclusos aFlatRateCDN; leitura de cobrança histórica não prova preço máximo nem configuração, e leitura do painel falhou duas vezes por timeout. Sem essa condição confirmada, banda é desconhecida/reprovação, nunca0. Ativos não serão servidos. Pendência específica aguardando o dono; nenhuma permissão de nova conta/custo/upgrade foi inferida, nada cancelado. M0 permanece reprovada, vendas fechadas. Seguir demais itens sem esperar resposta.
