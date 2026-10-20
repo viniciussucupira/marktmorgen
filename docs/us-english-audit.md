@@ -171,3 +171,9 @@ Client source grows599characters, reusing existing parseJoin and the same POST/r
 The selected contact error uses the existing danger-text token; actual rendered alert checks require an enhanced-contrast pass and no incomplete reading. This does not certify every state or page.
 
 Mobile CI also identified the long media-kit address as the document overflow source. The address paragraph now wraps long words locally; no document overflow is hidden and global390px fit checks remain binding.
+
+## Checkout reminder preference: recorded response, unchanged consent
+
+Queue155 reviews RecoveryEditor against its existing recovery response. Successful HTTP, boolean ok, no contradictory error, exact canonical enabled/address, and boolean server-owned asks are required. Both US/non-US consent flags remain acceptable because the server decides the account-country condition. Pending controls lock and announce busy; unexpected error names use only own message entries; uncertain saves request a reload without asserting nothing changed.
+
+Sixteen intercepted responses at390/1280 for each server consent flag give64synthetic cases, reusing the local fixture and issuing no real POST, email, provider call, subscription or billing change. Existing reminder consent, timing, recipient limits and spending gates are untouched. Full final-head CI required. Client+656characters, same parseRecovery/POST/response, no new cost allowance, price, buyer language or commercial gate; binding M0 still fails60%.
