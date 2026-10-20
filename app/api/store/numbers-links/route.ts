@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
       const done = await removeNumbersLink(ref, id);
       await unindexLink(id);
       if (!done.ok) return Response.json({ ok: false, error: done.reason }, { status: 404 });
-      return Response.json({ ok: true });
+      return Response.json({ ok: true, id });
     }
     if (body.action !== "create") return Response.json({ ok: false, error: "invalid" }, { status: 400 });
     if (!store.sid) return Response.json({ ok: false, error: "none" }, { status: 404 });
