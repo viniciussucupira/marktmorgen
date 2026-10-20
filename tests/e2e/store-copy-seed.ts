@@ -132,6 +132,20 @@ async function main(): Promise<void> {
   const exitStore=await storeForEmail(exitOwner);
   if(!exitStore)throw Error("No saved exit offer fixture");
   const exitFixture={session:await openSession(exitOwner),sid:exitStore.sid};
-  console.log(JSON.stringify({ exitFixture,homeDemo,pauseFixtures,wordingSession,wordingSid:wordingStore.sid,wordingTrialSession,wordingTrialSid:wordingTrialStore.sid,returnSession,returnSid:returnStore.sid,growthSession,growthSid:growthStore.sid,growthProduct:growthProducts[0],session: await openSession(OWNER), second: second.store.sid, abProduct, abStore:abStore.sid,contactToken }));
+  // Isolated local membership settings; no subscription checkout or external provider.
+  const tierOwner="tier-settings-fixture@example.test";
+  if(!(await claimHandle(tierOwner,"tiersettingsfixture","Tier settings fixture","Synthetic settings only.")).ok)throw Error("No tier fixture");
+  await setSubscription(tierOwner,{active:true,tier:"creator",cycle:"month",subscriptionId:null,customerId:null,trialEnds:0});
+  await ensureStatsId(tierOwner);
+  const tierProductIds:string[]=[];
+  for(const title of ["First fixture membership","Second fixture membership"]){
+    const added=await addProduct(tierOwner,title,"Synthetic local membership.","10",{interval:"month",trialDays:0,payments:0});
+    if(!added.ok)throw Error("No tier product fixture");
+    tierProductIds.push(added.product.id);
+  }
+  const tierStore=await storeForEmail(tierOwner);
+  if(!tierStore)throw Error("No saved tier fixture");
+  const tierFixture={session:await openSession(tierOwner),sid:tierStore.sid,ids:tierProductIds};
+  console.log(JSON.stringify({ tierFixture,exitFixture,homeDemo,pauseFixtures,wordingSession,wordingSid:wordingStore.sid,wordingTrialSession,wordingTrialSid:wordingTrialStore.sid,returnSession,returnSid:returnStore.sid,growthSession,growthSid:growthStore.sid,growthProduct:growthProducts[0],session: await openSession(OWNER), second: second.store.sid, abProduct, abStore:abStore.sid,contactToken }));
 }
 main().catch((e) => { console.error(e); process.exit(1); });

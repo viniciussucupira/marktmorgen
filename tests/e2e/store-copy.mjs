@@ -1,3 +1,4 @@
+import { checkTierAcknowledgment } from "./tier-acknowledgment.mjs";
 import { checkOrderAcknowledgment } from "./order-acknowledgment.mjs";
 import { checkExitAcknowledgment } from "./exit-offer-acknowledgment.mjs";
 import { checkCartAcknowledgment } from "./cart-acknowledgment.mjs";
@@ -193,7 +194,7 @@ try {
   const seeded = await run(process.execPath, [seedFile]);
   rmSync(out, { recursive: true, force: true });
   if (seeded.status !== 0) throw new Error(`the store could not be made:\n${seeded.said}`);
-  const { exitFixture,homeDemo,pauseFixtures,session, second, abProduct, abStore, contactToken,growthSession,growthSid,growthProduct,returnSession,returnSid,wordingSession,wordingSid,wordingTrialSession,wordingTrialSid } = JSON.parse(seeded.said.trim().split("\n").at(-1));
+  const { tierFixture,exitFixture,homeDemo,pauseFixtures,session, second, abProduct, abStore, contactToken,growthSession,growthSid,growthProduct,returnSession,returnSid,wordingSession,wordingSid,wordingTrialSession,wordingTrialSid } = JSON.parse(seeded.said.trim().split("\n").at(-1));
 
   if (BUILD) {
     const built = await run(process.execPath, [nextCli, "build"]);
@@ -768,7 +769,8 @@ try {
   await checkPdfStampAcknowledgment({browser,LOCAL,fixture:{session:growthSession,sid:growthSid,product:growthProduct},is});
   await checkPdfPreviewAcknowledgment({browser,LOCAL,fixture:{session:growthSession,sid:growthSid,product:growthProduct},is});
   await checkFaqAcknowledgment({browser,LOCAL,fixture:homeDemo,is});
-  await checkOrderAcknowledgment({browser,LOCAL,fixture:{session:growthSession,sid:growthSid},is});
+  await checkTierAcknowledgment({browser,LOCAL,fixture:tierFixture,is});
+await checkOrderAcknowledgment({browser,LOCAL,fixture:{session:growthSession,sid:growthSid},is});
 await checkExitAcknowledgment({browser,LOCAL,fixture:exitFixture,is});
 await checkCartAcknowledgment({browser,LOCAL,fixture:{session:growthSession,sid:growthSid},is});
 await checkEnableAcknowledgment({browser,LOCAL,fixture:homeDemo,is});

@@ -23,18 +23,24 @@ export function TierEditor({ initial, memberships }: { initial: string[]; member
   const on = saved.length >= MIN_TIERS;
 
   async function save(tiers: string[]) {
+    if (busy) return;
+    const expected = [...tiers];
     setBusy(true);
     setError(null);
     try {
-      const response = await fetch("/api/store/tiers", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ tiers }) });
-      const data = (await response.json().catch(() => ({}))) as { ok?: boolean; error?: string; tiers?: string[] };
-      if (data.ok) {
-        setSaved(data.tiers ?? []);
-        setPicked(data.tiers ?? []);
-        toast((data.tiers ?? []).length ? "Members can switch between these now." : "Switching is off. Memberships already switched keep their plan.");
-      } else setError(MESSAGES[data.error ?? ""] ?? MESSAGES.server_error ?? "Something went wrong.");
+      const response = await fetch("/api/store/tiers", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ tiers: expected }) });
+      const raw: unknown = await response.json().catch(() => null);
+      const reply = raw && typeof raw === "object" && !Array.isArray(raw) ? raw as Record<string, unknown> : null;
+      if (response.ok && reply?.ok === true && !("error" in reply) && Array.isArray(reply.tiers) && JSON.stringify(reply.tiers) === JSON.stringify(expected)) {
+        setSaved(expected);
+        setPicked(expected);
+        toast("Membership tier settings saved.");
+      } else {
+        const problem = reply?.ok !== true && typeof reply?.error === "string" && Object.hasOwn(MESSAGES, reply.error) ? MESSAGES[reply.error] : null;
+        setError(problem ?? "We could not confirm these tier settings. Reload this page to check before trying again.");
+      }
     } catch {
-      setError(MESSAGES.server_error ?? "Something went wrong.");
+      setError("We could not confirm these tier settings. Reload this page to check before trying again.");
     } finally {
       setBusy(false);
     }
@@ -43,7 +49,7 @@ export function TierEditor({ initial, memberships }: { initial: string[]; member
   const toggle = (id: string) => setPicked((now) => (now.includes(id) ? now.filter((x) => x !== id) : now.length >= MAX_TIERS ? now : [...now, id]));
 
   return (
-    <section className="card mt-8 p-6 sm:p-8" aria-labelledby="tiers-title">
+    <section data-tier-editor aria-busy={busy} className="card mt-8 p-6 sm:p-8" aria-labelledby="tiers-title">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 id="tiers-title" className="text-lg font-semibold tracking-[-0.02em] text-ink">Membership tiers</h2>
         <span className={`tag ${on ? "tag-live" : ""}`}>{on ? "On" : "Off"}</span>
@@ -60,7 +66,7 @@ export function TierEditor({ initial, memberships }: { initial: string[]; member
         </p>
       ) : (
         <>
-          <fieldset className="mt-4">
+          <fieldset disabled={busy} className="mt-4">
             <legend className="field-label">{`Memberships members can switch between (${MIN_TIERS} to ${MAX_TIERS})`}</legend>
             {memberships.map((m) => (
               <label key={m.id} className="mt-2 flex min-h-[44px] items-center gap-3 text-sm text-ink">
@@ -77,11 +83,11 @@ export function TierEditor({ initial, memberships }: { initial: string[]; member
             A member in a free trial switches without paying; the new price starts when the trial ends.
           </p>
           <div className="mt-4 flex flex-wrap gap-3">
-            <button type="button" className="btn btn-primary btn-sm" disabled={busy || picked.length === 1} onClick={() => void save(picked)}>
+            <button type="button" className="btn btn-primary btn-sm" aria-busy={busy} disabled={busy || picked.length === 1} onClick={() => void save(picked)}>
               {on ? "Save the tiers" : "Let members switch"}
             </button>
             {on ? (
-              <button type="button" className="btn btn-ghost btn-sm" disabled={busy} onClick={() => void save([])}>
+              <button type="button" className="btn btn-ghost btn-sm" aria-busy={busy} disabled={busy} onClick={() => void save([])}>
                 Switch it off
               </button>
             ) : null}
