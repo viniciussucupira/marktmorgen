@@ -2325,6 +2325,15 @@ Pricing FAQ repair history: run39407143422 caught mobile target-size;39409356932
 
 
 176. **[B2-176] Confirm existing failed-payment reminder settings accurately.**
-- Estado: **Em implementação**.
+- Estado: **Publicado — entrega102**.
 - Require successful HTTP, strict confirmation, no contradictory error and exact reminder-count/card-notice snapshot from the existing setter result. Lock pending controls, announce busy and update local saved baseline only after confirmation. Preserve uncertain drafts and avoid claiming that nothing changed after an uncertain write.
 - Synthetic48 intercepted settings replies planned at390/1280 for2/3reminders and card notice off/on, reusing the isolated local recurring fixture; full final-head CI pending. No email, Stripe/card mutation or payment occurs. Existing1–3reminder bounds,0/3/7day cadence,10day card horizon, eligibility/stop rules, permissions and costs unchanged. No new provider/paid unit/operation; M0 remains12.02–12.21%, fails60%; sales closed, H gates preserved.
+
+
+### Publicação funcional102 — 2026-10-20 (Fortaleza)
+
+- **PR#703 incorporado às11:11:46**, merge `658f001a6f388cc09214410228f44d56b5ee440d`, head `f2963b92d65dc204bb056489249e4d9ab8de4cf2`. Configurações existentes de lembretes exigem HTTP bem-sucedido, true estrito, ausência de erro e snapshot exato de quantidade/cardNotice; bloqueiam campos pendentes e atualizam baseline somente após confirmação. Preservam rascunhos incertos e não afirmam que nada mudou após resposta incerta.
+- CI completo aprovado: Product39434615235/verify118668222573/Redis118668222956/security39434615398, incluindo48casos sintéticos interceptados em390/1280. Fixture recorrente local isolada, sem email, alteração de cartão/Stripe ou pagamento. Limites1–3, cadência0/3/7dias, horizonte10dias, elegibilidade e regras de interrupção preservados.
+- READY às11:12:44.221, domínio marktmorgen.com, deployment `dpl_HnmCj2amYAmbtc7j27egBjxZxHao`, SHA exato do merge. `/`, `/signin`, `/studio` (redirecionamento anônimo esperado), `/platform/path`, `/pricing`, `/privacy` retornaram200 com esse deployment. Nenhum log error/fatal na janela14:09:26.102–14:14:26.102UTC. Fluxo privado verificado somente sinteticamente no CI, sem gravação autenticada em produção.
+- Custos102: mesma requisição/snapshot do setter, nenhuma leitura/email/cartão/pagamento/provedor/unidade paga/custo recorrente adicional. Preços, limites, idiomas/conteúdo/IDs, permissões/opt-in e controles fiscais preservados. PLANS_ON_SALE=false, COMMISSION_LIVE=false; M0 vinculante12.02–12.21% continua reprovado para60%. Desconhecido não é zero; sem certificação geral de margem/acessibilidade ou H ativado.
+- **PR#702 documental incorporado às11:10:45**, merge `87baaad2d491e6292c165bc1865e8f5e032a9546`, head `911b41ec357125058c4d594725a2b71d08e61e74`; Product39434338023/verify118667270828/Redis118667270253/security39434338149 aprovados. Registra101 e não incrementa contador. Este registro102 também é documental.
