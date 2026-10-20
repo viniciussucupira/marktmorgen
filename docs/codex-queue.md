@@ -97,7 +97,7 @@ A ordem abaixo é de execução dos itens acionáveis. Itens feitos/aguardando/c
 
 90. **[C2-EMAIL-HONESTY] Corrigir imediatamente a contradição pública sobre modelos de e-mail**
    - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
-   - Estado: **a fazer**.
+   - Estado: **em andamento; branch codex/email-template-claims; depende da fila636 e da correção635**.
    - Escopo e prova: Conferir os quatro modelos reais e o editor em lib/mail-body.ts/components/mail-designer.tsx. Em lib/feature-pages.ts, a seção de recursos anuncia quatro, mas a seção What it does not do yet ainda diz No templates. Corrigir a limitação para descrever o que existe e o que falta, com regressão na página real; sem prometer colunas ou capacidades ausentes.
    - Custo e margem: Texto dentro da página existente, sem novo envio/chamada/armazenamento/franquia. Medir payload; M0 antes=depois somente se o envelope não aumentar. Preços/limites/gates preservados, sem certificação de60%.
 
@@ -891,3 +891,6 @@ Teachable: https://teachable.com/pricing ; https://support.teachable.com/en/arti
 Substack: https://faq.substack.com/p/how-do-paid-subscriptions-on-substack ; https://on.substack.com/p/what-you-get-when-you-start-a-substack ; https://on.substack.com/p/subscriber-referrals
 
 Direito de arrependimento: pedido de conferir EUR-Lex2011/83/UE arts.9/14/16 e2019/2161 antes da implementação. Nenhuma submissão/conta/mensagem/pagamento real autorizado pela atualização.
+
+
+Item90/P4: quatro modelos conferidos diretamente em MAIL_TEMPLATES (news/launch/welcome/spotlight) e no editor MailBodyEditor, sem reescrever conteúdo salvo ou enviar e-mail. Limitação pública corrigida para uma coluna, com quatro modelos/blocos disponíveis. Novo teste da página real390/1280 recusa a contradição e qualquer escritaAPI; suíte integral pendente. Fonte aumenta28caracteres, sem nova operação/franquia e M0 inalterado/reprovado. AGENTS/CLAUDE/cross-product-handoff lidos; guia local Next ausente, orientação oficial de Server/Client consultada, sem mudar fronteira ou introduzir import/runtime.
