@@ -54,7 +54,7 @@ export async function checkPathBoardReplies({owner,axeSource,joined}){
    for(const outcome of ["contradiction","malformed","network"]){
     mode=outcome;
     if(outcome!=="contradiction"){
-     await page.reload({waitUntil:"domcontentloaded"});await action.waitFor();
+     await page.waitForLoadState("networkidle");await page.reload({waitUntil:"domcontentloaded"});await action.waitFor();
      if(!joined){assert.equal(await consent.isChecked(),false);await consent.check();}
     }
     const before=requests;await action.click();
@@ -69,13 +69,16 @@ export async function checkPathBoardReplies({owner,axeSource,joined}){
    const violations=await region.evaluate(async node=>(await window.axe.run(node,{runOnly:{type:"tag",values:["wcag2a","wcag2aa","wcag21aa","wcag22aa"]}})).violations.map(rule=>rule.id));
    assert.deepEqual(violations,[]);
    assert.equal(await region.evaluate(node=>node.scrollWidth<=node.clientWidth),true);
-   mode="confirmed";await page.reload({waitUntil:"domcontentloaded"});await action.waitFor();
+   mode="confirmed";await page.waitForLoadState("networkidle");await page.reload({waitUntil:"domcontentloaded"});await action.waitFor();
    if(!joined)await consent.check();
    const before=requests;
+   await page.waitForLoadState("networkidle");
    await Promise.all([page.waitForNavigation({waitUntil:"domcontentloaded"}),action.click()]);
    await action.waitFor();
    assert.equal(requests,before+1,"one confirmed request then reload");
    if(!joined)assert.equal(await consent.isChecked(),false,"reload does not persist consent");
+   // Keep strict page-error collection active until background navigation reads settle.
+   await page.waitForLoadState("networkidle");
    console.log("  ok    Path board "+(joined?"leave":"join")+" consent/single-flight/refusal/uncertainty/reload/AA/fit at "+width);
   }finally{release?.();await page.close();}
  }
