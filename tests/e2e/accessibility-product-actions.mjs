@@ -46,6 +46,7 @@ try{
  for(const path of ["/studio?store="+fixture.sid])for(const width of [320,390,768,1280,1920])for(const mode of ["baseline","text-spacing","reduced-motion","forced-colors","reflow-320"]){
   const viewportWidth=mode==="reflow-320"?320:width;
   const context=await browser.newContext({viewport:{width:viewportWidth,height:900},serviceWorkers:"block",reducedMotion:mode==="reduced-motion"?"reduce":"no-preference",forcedColors:mode==="forced-colors"?"active":"none"});
+  if(mode==="text-spacing")await context.addInitScript(()=>document.addEventListener("DOMContentLoaded",()=>{const style=document.createElement("style");style.textContent="*{line-height:1.5!important;letter-spacing:.12em!important;word-spacing:.16em!important}p{margin-bottom:2em!important}";document.head.append(style);},{once:true}));
   await context.addCookies([{name:"nl_session",value:fixture.session,url:origin}]);
   let writes=0,foreign=0,localProductWrites=0;const errors=[];
   try{
@@ -60,7 +61,6 @@ try{
    await page.locator("#product-title-new").fill(title);
    await page.locator("#product-summary-new").fill("Disposable local product; no real payment, email or delivery.");
    await page.locator("#product-price-new").fill("0");
-   if(mode==="text-spacing")await page.addStyleTag({content:"*{line-height:1.5!important;letter-spacing:.12em!important;word-spacing:.16em!important}p{margin-bottom:2em!important}"});
    if(mode==="forced-colors"){
     const active=await page.evaluate(()=>matchMedia("(forced-colors: active)").matches);
     if(!active)gaps.push({path,width,mode,reason:"Engine did not activate forced-colors media after emulation request; real OS/device validation remains open."});
