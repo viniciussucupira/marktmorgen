@@ -1,3 +1,4 @@
+import { PricingValue } from "@/components/pricing-value";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { feeWords } from "@/lib/fee-words";
@@ -21,7 +22,8 @@ export default function PricingPage() {
    {!PRICING_OPEN && <p className="mt-5 rounded-xl border border-neutral-300 bg-neutral-50 p-4 font-medium">Paid plans and paid selling are not open yet. You can prepare your store and explore the live demo.</p>}
    <div className="mt-6 flex flex-wrap gap-4"><Link className="rounded-full bg-neutral-950 px-6 py-3 font-semibold text-white" href="/signin">Start your store</Link><Link className="rounded-full border border-neutral-400 px-6 py-3 font-semibold" href="/demo">See the live demo</Link></div>
   </header>
-  <section aria-label="Plan prices" className="mt-12 grid gap-6 md:grid-cols-3">
+  <div className="mt-12"><PricingValue place="plans" /></div>
+  <section data-plan-prices aria-label="Plan prices" className="mt-12 grid gap-6 md:grid-cols-3">
    {PRICING_PLANS.map(plan=><article key={plan.tier} className="rounded-2xl border border-neutral-300 p-6">
     <h2 className="text-2xl font-semibold">{plan.title}</h2><p className="mt-3 text-neutral-700">{plan.purpose}</p>
     <p className="mt-6 text-3xl font-semibold">{plan.monthly}</p><p className="mt-3 text-lg">or {plan.annual}, paid annually</p>

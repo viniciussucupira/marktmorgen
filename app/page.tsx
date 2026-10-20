@@ -1,3 +1,4 @@
+import { PricingValue } from "@/components/pricing-value";
 import { PATH_HOME_STEPS } from "@/lib/path-home";
 import type { Metadata } from "next";
 import { SITE_OG_IMAGE } from "@/lib/site-og";
@@ -561,13 +562,14 @@ export default function Home() {
         {/* -------------------------------------------------------- pricing */}
         <section id="pricing" className="surface-sand section scroll-mt-20">
           <div className="container-page">
+            <PricingValue place="home" />
             <div className="reveal mx-auto mt-10 max-w-2xl text-center">
               <h2 className="t-h2 balance">Three plans, with the monthly price and sales fee shown together.</h2>
               <p className="mt-5 text-ink-soft">
                 {feeWords().costLine}
               </p>
             </div>
-            <div className="reveal mx-auto mt-12 max-w-5xl">
+            <div className="reveal mx-auto mt-12 max-w-5xl" data-plan-prices>
               <Pricing domains={DOMAINS} />
               <p className="mt-6 text-center"><Link href="/pricing" className="link">Compare all plan limits, annual prices and optional add-ons</Link></p>
             </div>
