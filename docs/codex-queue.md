@@ -2909,3 +2909,8 @@ A contenção não bastou: mobile118816830403 mediu264ms no primeiro clique da h
 #### HT16/HT14 — animar wrapper HTML do ícone
 
 A rotação decorativa do disclosure de benefícios passa doSVG para um wrapper HTML inline-flex (mesmo ícone/tamanho/200ms/estado visual), conforme revisão React: permite composição da transformação sem animar o próprio vetor. Texto/nome acessível, limites e ordem permanecem. Faz parte da correção em verificação; não altera o teste/limiar, e a suíte completa no novohead continua obrigatória. Sem operação/custo/gate novo.
+
+
+#### HT10 — distinguir beacon de visita e evento publicitário com payload estrito
+
+verifies118813493380/118813533888 passaram salvamento/AA/atribuição e bloqueio de fornecedor/GPC, mas o teste contavaPOST/api/store/hit como evento publicitário. StoreBeacon e a rota hit foram lidos: esse contador interno já existe, não define cookie nem encaminha anúncios. Agora o teste intercepta exatamente umPOST dessa rota com h=templatelibraryfixture/k=v e somente os campos string já emitidos (h/k/r/u/m/g), devolvendo204 sem executar a gravação. /api/store/ads-event continua exigido emzero, qualquer outra write reprova e nenhum fornecedor externo é chamado. A fixtureGPC inclui também Sec-GPC:1, além do sinalnavigator e do yes antigo, para coerência cliente/servidor. Não altera código de consentimento/analytics de produção nem dispensa controle: testes sintéticos e suíte completa no novohead obrigatórios. Sem custo/operação/direito/gate novo.
