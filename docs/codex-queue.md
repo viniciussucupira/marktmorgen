@@ -2794,3 +2794,8 @@ Diagnóstico detalhado deHT7 identificou que os blocos .reveal do corpo ainda es
 - Nenhuma conta real, pagamento, fornecedor/IA novo, mensagem, submissão externa ou tradução ativada. PLANS_ON_SALE=false, comissão, preços/limites/permissões/opt-in/tax gate/art.9a/revisão comercial intactos. Commit da avaliação e CI integral do head final registrados a seguir; documento não conta publicação. SeguirHT14;B2 só depois.
 
 - Commit da avaliaçãoHT13: `c3ea20f2d81f0c9eedbee819dfcf9dc618a01eca`, criado2026-10-20T17:31:03Z; FortalezaUTC−3. Exige nova revisão de custos antes de futura implementação; nenhuma chamada de teste ao modelo.
+
+
+#### Janela da verificação integral —20/10/2026
+
+HT6/Product checks39462558715/verify118765503722 foi cancelado pelo limite de25minutos, ainda executando os testes de navegador, sem conclusão integral. A suíte cresceu; limite do verify ajustado para35minutos, mantendo todos os casos/asserts e os demais jobs. Nenhuma reexecução isolada ou redução de cobertura. Nova execução integral no novo head é obrigatória antes de incorporar. Ajuste apenas do limite da execução de desenvolvimento, sem operação/direito/custo variável do cliente, preço ou gate modificado.
