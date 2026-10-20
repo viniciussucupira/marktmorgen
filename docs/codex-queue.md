@@ -1807,3 +1807,10 @@ Ao concluir cada item: registrar data, commit e testes; seguir ao próximo. Dado
   "limitations": "Client+1221characters,sameparseTips/readTipAmount/POST/response,no newprovider/price/allowance/gate. Payment/fiscal/Stripeavailability unchanged. BindingM0 12.02–12.21%fails60%;salesclosed."
 }
 ```
+
+
+160. **[B2-STORE-FAQ-ACKNOWLEDGMENT] Confirmar lista canônica de perguntas e evitar corrida de edição**
+   - Estado: **em implementação; codex/store-faq-acknowledgment; CI integral pendente**.
+   - Escopo: manual save só confirma HTTP/okbooleano/semcontradição e lista exata parseFaq,ordem/perguntas/respostas. Bloquear edição,reordenar,remover,adicionar,rascunhar enquanto salva, e salvar enquanto rascunha; aria-busy; incerteza pede conferir sem alegar nada mudou. Requisição de IA,pool/reserva/tetos/gates intactos.
+   - Prova:30respostas manuais interceptadas em390/1280,normalização/ordem/lista/campos/perda/JSON/contradição,draftpreservado,controlesbloqueados,larguraglobal;nenhuma chamada deIAou gravação real. Remoção vazia e conclusão real deIA não estão cobertas nesta matriz.
+   - Custo:cliente+802caracteres,mesmoPOST/snapshot/parseFaq;nenhumfornecedor/franquia/preço/gate novo.M0antes/depois12,02–12,21%reprova60%;vendas fechadas. Correção B2, não featureH.
