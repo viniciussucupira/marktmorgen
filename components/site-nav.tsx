@@ -54,6 +54,7 @@ const PRODUCT_GROUPS: { label: string; items: MenuItem[] }[] = [
     label: "Deliver and grow",
     items: [
       item("Instant delivery", "On screen when paid, back by email.", "/platform/instant-delivery", "bolt"),
+      item("People, deals and pipelines", "Contact fields and recorded deals, in pipelines you name.", "/platform/crm", "users"),
       item("Numbers and pixels", "Visits, sources, sales, ad pixels.", "/platform/insights", "chart"),
       item("Affiliates", "A link for each. You pay them.", "/platform/affiliates", "handshake"),
       item("Outreach", "A pitch to a sponsor or a partner.", "/platform/outreach", "target"),

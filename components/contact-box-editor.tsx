@@ -120,7 +120,7 @@ export function ContactBoxEditor({
         </div>
       </div>
 
-      {error ? <p role="alert" className="mt-4 text-sm font-semibold text-danger">{error}</p> : null}
+      {error ? <p role="alert" className="mt-4 text-sm font-semibold text-danger-text">{error}</p> : null}
       <button type="submit" disabled={saving || !changed} className="btn btn-primary mt-5">
         {saving ? "Saving…" : "Save"}
       </button>

@@ -739,7 +739,7 @@ try {
   await checkPathCertificates({browser,LOCAL,session:growthSession,sid:growthSid,otherSession:wordingSession,axeSource,is});
   await checkPublicAmericanEnglish({browser,LOCAL,is});
   await checkSalesComparisons({browser,LOCAL,axeSource,is});
-  await checkContactAcknowledgment({browser,LOCAL,fixture:homeDemo,is});
+  await checkContactAcknowledgment({browser,LOCAL,fixture:homeDemo,axeSource,is});
   await captureHomeStudio({browser,LOCAL,fixture:homeDemo,is});
   await checkHomeModules({browser,LOCAL,axeSource,is});
   await checkStudioAmericanEnglish({browser,LOCAL,session:growthSession,sid:growthSid,is});
