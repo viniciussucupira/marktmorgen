@@ -24,11 +24,13 @@ export async function checkOrderAcknowledgment({browser,LOCAL,fixture,is}){
     await route.fulfill({status:work.scenario.status??200,contentType:"application/json",body:work.scenario.raw??JSON.stringify(work.scenario.reply({ok:true,order:input.order}))});
    });
    await page.goto(LOCAL+"/studio?store="+fixture.sid,{waitUntil:"domcontentloaded",timeout:60000});
+   await page.waitForLoadState("networkidle");
    await page.locator("main details").evaluateAll(nodes=>nodes.forEach(n=>{n.open=true;}));
    const section=page.locator("#order");await section.waitFor();
    const order=()=>section.locator("[data-order-part]").evaluateAll(nodes=>nodes.map(n=>n.getAttribute("data-order-part")));
    is("order starts with existing identifiers "+width,await order(),usual);
    await section.getByRole("button",{name:"Move What you sell down",exact:true}).click();
+   await page.waitForFunction(expected=>JSON.stringify([...document.querySelectorAll("#order [data-order-part]")].map(node=>node.getAttribute("data-order-part")))===JSON.stringify(expected),moved);
    is("draft order moved "+width,await order(),moved);
    for(const reset of [false,true])for(const scenario of cases){
     const expected=reset?usual:moved,retained=moved;

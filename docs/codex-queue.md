@@ -3124,3 +3124,10 @@ Head9f0bb45e: Firefox calculadora passou em390/1280 após limitar/quebrar legend
 ### P0-201 — diagnóstico 20/10/2026, 20:20 Fortaleza
 
 Head40fb: WebKit público75casos/1falha target-size no CTA Start your store a320; ambos CTAs iniciais passam a inline-flex/min48px. Calculadora: seletor Billing appearance none ainda propagou scroll436/client274 ao pai; limitar overflow somente no próprio select nativo, mantendo opção/valor/teclado e popup nativo, sem cortar seção/página ou mudar fórmula. Recovery falhou ao marcar checkbox durante início domcontentloaded; aguarda rede/hidratação antes de abrir controles, mantendo setChecked e todos os payloads/recusas. Script RSC pageerror continua aberto. Studio3motores/mobile/Redis passaram mas não substituem Product completo. Falhas anteriores preservadas, novo head exige CI integral. Custos de runs cancelados/falhos incluídos em auditoria local detalhada, sem custos operacionais novos.
+
+
+### P0-201 — 20/10/2026, 20:38:17 Fortaleza
+
+Headf59cca: Firefox Product completo passou (job118944158967); público3motores, Studio Chromium/Firefox, mobile eRedis passaram. WebKit Product falhou em390 por reminder-fit (correção compartilhada de cabeçalho/Studio em PR733 ainda não integrada) e primeiro movimento da ordem não observado antes do Save. Teste de ordem passa a aguardar rede/hidratação antes de abrir detalhes e a sequência exata movida antes de verificar/salvar; todos os24pedidos interceptados, payloads, locks e recusas mantidos. Studio WebKit permanece1falha320 spacing; nenhuma publicação/incorporação. Novo head exige CI completo.
+
+Auditoria de duração às23:18:42Z:90runs concluídos das branches730/733,256jobs,59368segundos somados (989,47minutos), incluindo sucesso/falha/cancelamento. São tempos de jobs, não valor de fatura; excluem runs ainda ativos e branches anteriores731/732, portanto subtotal histórico e não total final. Evidência por job preservada na continuidade. Nenhum novo serviço pago/operação por cliente; margem60% mais onerosa continua não certificada e custos desconhecidos não são zero.
