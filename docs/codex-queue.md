@@ -1129,3 +1129,25 @@ Pedido P5: anexo524cc7f9-78af-42b5-ae37-4c05dc91a193/Texto colado.txt, lido19/10
 - CRMprópriojapossui campos/deals/pipelines/IFELSEClaude, fonte lib/crm-rules.tsconsultada. Texto delimitedpipelines usa pipelineLimitWords canônico, nãonúmeroendurado. Nãoequivalerlojaasubaccount,nãoprometernativoSMS/WhatsApp/voz,SocialourevendaSaaS.
 - Página/índice/sitemap,fontesdatadas,custosexplícitos, vantagensmesmocorpoe390/1280axe/metadata/teclado/noAPIwrites. TestesCRMcapscanonical/unknownfees/subscriptions e suitecompletanofinalheadobrigatórios.
 - M0antes/depois: mesmomecanismoestático; nenhumnovocanal/operação/provedor/email/IA/storagewrite/dependência/telemetria. Nenhumapreço/franquia/gatealterado; M0onerosa12,02–12,21%continuafalha60%,nãocertificada; PLANS_ON_SALE=false. PáginaCRMdedicadaS5permaneceposterior, nãofingirconclusãoduplicada.
+
+### S1 — prova final Circle, entrega63
+
+- PR649head8ae6fb16e0bc039d205f2cb0409fbc8d9e7c6805 passou Product39364211790(verify118437145001/Redis118437145249) e segurança39364211735completos. Incorporado20/10/2026 00:36:23Fortaleza, merge7d8fff4e79982eb5eac6d49b831562758b992786.
+- Produçãodpl_Ago96HJXiMNMYP1NEDHYyMWU2pEZREADY00:37:10Fortaleza,SHAexato/aliasmarktmorgen.com,14rotas200marcadordeploymentexato, Circletitle/source/paidclosed/índiceconfirmados. Semerror/fatal03:33:32.279–03:38:32.279UTC. Contador62→63apósprova, próximo64.
+- ChatClaudeexistente preservado, preçosmensais/faturaanualnãoverificadosnullseparadosequivalenteanual. M0igualfalha/vendasfechadas. S1quartode15emandamento.
+
+
+### S1 — Kit publicado, entrega 64
+
+- PR650, head e375c28284fc0d57b8107b3051d098a5b989b86f: Product 39364559256 (verify 118438288415, Redis 118438288188) e segurança 39364559252 completos e verdes.
+- Incorporado em 20/10/2026 às 00:41:26 de Fortaleza; merge badadc90a80c1f47ad9655ecd8ec532d9a3d836c. Produção dpl_25xJBAkdXcWyik5NCnQZTt538kzU READY às 00:43:02, com SHA exato e alias marktmorgen.com.
+- Quinze rotas responderam 200 com marcador exato dessa implantação; título, fonte, fechamento das vendas e link do índice de Kit confirmados. Sem error/fatal entre 03:39:55.529 e 03:44:55.529 UTC. Contador 63→64 somente após essa prova; próxima entrega 65.
+- Preço promocional não tratado como renovação; taxa inclusiva sem processamento duplicado. M0 permanece reprovada contra o mínimo de 60%; vendas fechadas. S1: quinto de quinze, ainda em andamento.
+
+### S1 — correção de espera do navegador Whop
+
+- Primeirohead651d2282fa36d7c0eb4121cb405398c07238101ced9 falhouverify118439360770noProduct39364893214. Lint/regressões/tipos/build/acordos/Redispassaram; testeparouemgoto/proof/kajabi(legado)aguardandonetworkidle60s, apóspassaríndice390axe/keyboard. NãoéprovadefalhaWhopnemlicençaparaapagarassert.
+- Corrigir esperadenavegação de páginaspúblicas para domcontentloaded+H1realvisível. Todasfontes/títulos/descrições/paidclosed/vantagens/axe/overflow/teclado/noAPIwrites eesperadepinturapermanecem. Não aumentar timeout, não suprimiraxe/rota/erros. Suitecompletanovofinalheadobrigatória; semrerunisolado. Propagarfixaosdescendentesapósruncompletoatualdeterminar, antesdeincorporar.
+- Nenhummudançaprodução/custo/preço/limite/gate;M0igualreprovada60,vendasfechadas.
+
+- Propagação no PR653: Product inicial39365428989/verify118441076494 terminou com falha no mesmo networkidle60s, desta vez ao navegar para /proof/skool após Kajabi390 passar título/fonte/paidclosed/axe/teclado. Incorporar pai652corrigido3e749c1941edc4f3d6f82971cf80078d8aa768ce com ambos os pais, DOMContentLoaded+H1visível e todas as assertivas intactas. Novo CI completo obrigatório; não concluir pelo job individual ou por outro head.
