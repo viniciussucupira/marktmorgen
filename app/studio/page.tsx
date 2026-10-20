@@ -1,3 +1,4 @@
+import { SalesLevers } from "@/components/sales-levers";
 import { funnelLaunchChecklist } from "@/lib/funnel-launch-checklist";
 import { activationTiming } from "@/lib/store-activation";
 import { PathStudioReminder } from "@/components/path-studio-reminder";
@@ -1324,6 +1325,7 @@ export default async function StudioPage({
               {may("settings") ? <OldAddresses handles={store.previousHandles} /> : null}
             </div>
 
+            {may("stats") ? <SalesLevers store={store} reading={salesRead?.state === "ok" ? salesRead.value?.levers ?? null : null} canConfigure={may("products") && may("settings")} /> : null}
             {numbers ? (
               <div id="numbers" className="scroll-mt-32">
                 {trouble.week > 0 && trouble.last ? (
