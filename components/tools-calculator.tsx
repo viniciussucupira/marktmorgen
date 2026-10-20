@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { NewTab } from "@/components/new-tab";
 import { feeWords } from "@/lib/fee-words";
 import { COMPETITOR_PRICES } from "@/lib/competitor-prices";
 import { TIERS, PLAN_TITLES, type Tier, type Cycle } from "@/lib/plan";
@@ -41,7 +42,7 @@ export function ToolsCalculator(){
    {"annualScope" in provider&&<p className="mt-3 text-sm text-neutral-700">{provider.annualScope}</p>}
    <div className="mt-4 grid gap-4 sm:grid-cols-2"><Amount label="Monthly gross sales (USD)" value={choice.sales} onChange={sales=>patch(index,{sales})}/><Amount label="Paid transactions per month" whole value={choice.orders} onChange={orders=>patch(index,{orders})}/>{!inclusive&&<><Amount label="Applicable processing percentage (for example 2.9)" value={choice.processing} onChange={processing=>patch(index,{processing})}/><Amount label="Processing fixed fee per payment (USD)" value={choice.fixed} onChange={fixed=>patch(index,{fixed})}/></>}<Amount label="Other applicable fees per month (USD; enter a verified zero if none)" value={choice.other} onChange={other=>patch(index,{other})}/></div>
    {inclusive&&<p className="mt-4 text-sm">The listed inclusive payment quote is used once. Add applicable international, conversion, optional Billing and payout charges in other fees.</p>}
-   <p className="mt-4 text-sm">{quote.sources.map((source,i)=><span key={source.url}>{i>0?" · ":""}<a className="underline" href={source.url} target="_blank" rel="noreferrer">{source.label}</a> (read {source.readOn})</span>)}</p>
+   <p className="mt-4 text-sm">{quote.sources.map((source,i)=><span key={source.url}>{i>0?" · ":""}<a className="underline" href={source.url} target="_blank" rel="noreferrer">{source.label}<NewTab /></a> (read {source.readOn})</span>)}</p>
    <label className="mt-4 flex items-start gap-3"><input type="checkbox" checked={choice.confirmed} onChange={e=>patch(index,{confirmed:e.target.checked})} className="mt-1 h-5 w-5 shrink-0"/><span>I checked that this plan, country, provider, subscriber count and fee conditions apply. Other fees include applicable usage, billing, gateway, payout, conversion and tax charges.</span></label>
    <div className="mt-4"><p>Subscription: {quote.subscriptionCents===null?"Quote unverified":money(quote.subscriptionCents)+"/month equivalent"}</p><p>Payment fees: {quote.paymentCents===null?"Quote incomplete":money(quote.paymentCents)+"/month"}</p>{quote.unknown.length>0&&<ul className="mt-3 list-disc space-y-2 pl-5 text-sm">{quote.unknown.map(reason=><li key={reason}>{reason}</li>)}</ul>}</div>
    <button type="button" className="mt-4 underline" onClick={()=>setChoices(current=>current.filter((_,i)=>i!==index))}>Remove {provider.name}</button>
