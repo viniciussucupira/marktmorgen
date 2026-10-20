@@ -1,3 +1,4 @@
+import { checkSitesAcknowledgment } from "./sites-acknowledgment.mjs";
 import { checkLeaveAcknowledgment } from "./leave-acknowledgment.mjs";
 import { checkPackageAcknowledgment } from "./package-acknowledgment.mjs";
 import { checkNumbersAcknowledgment } from "./numbers-acknowledgment.mjs";
@@ -774,6 +775,7 @@ try {
   await checkPdfStampAcknowledgment({browser,LOCAL,fixture:{session:growthSession,sid:growthSid,product:growthProduct},is});
   await checkPdfPreviewAcknowledgment({browser,LOCAL,fixture:{session:growthSession,sid:growthSid,product:growthProduct},is});
   await checkFaqAcknowledgment({browser,LOCAL,fixture:homeDemo,is});
+  await checkSitesAcknowledgment({browser,LOCAL,fixture:homeDemo,is});
   await checkLeaveAcknowledgment({browser,LOCAL,fixture:tierFixture,is});
   await checkPackageAcknowledgment({browser,LOCAL,fixture:packageFixture,is});
   await checkNumbersAcknowledgment({browser,LOCAL,fixture:tierFixture,is});

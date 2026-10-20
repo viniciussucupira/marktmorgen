@@ -2370,3 +2370,9 @@ Pricing FAQ repair history: run39407143422 caught mobile target-size;39409356932
 - Estado: **Em implementação**.
 - Require successful HTTP, strict true, no contradictory error and exact canonical on/reasons/creator words, valid unique own-reason IDs and unchanged previously persisted IDs. Adopt newly assigned IDs only after confirmed save, so the next save reuses the same counted reasons. Pending fields lock and announce busy; uncertain drafts and saved status remain; confirmation describes settings only.
 - Synthetic58 intercepted enable/disable replies at390/1280 planned, including refusal to replace a known persisted ID. Existing mandatory other-reason choice,3custom reasons/80characters, opt-in, immediate cancellation route, entitlements, language/content and permissions unchanged. No real member cancellation, Stripe, message, account or payment; no extra read/write/provider/cost. M0 binding12.02–12.21% fails60%; sales and H gates closed.
+
+
+181. **[B2-181] Confirm existing checkout website allowlist accurately.**
+- Estado: **Em implementação**.
+- Require successful HTTP, strict true, no contradictory error and exact ordered canonical origins from the existing setter snapshot. Preserve raw uncertain drafts and saved allowlist baseline, lock the pending website list and announce busy/error. Confirm settings without claiming an actual checkout. The separate code generator keeps using the last confirmed list.
+- Synthetic48 intercepted save/clear replies planned at390/1280 with existing isolated demo fixture; no listed website visited, checkout opened, signup submitted, third-party message, account or payment. Existing10origin cap, HTTPS-only parsing, strict origin/return-address permissions, buyer opt-in and visible limits unchanged. No new request/read/provider/unit/cost; binding M0 fails60%, sales and H gates closed.

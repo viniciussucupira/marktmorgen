@@ -16,7 +16,7 @@ const MESSAGES: Record<string, string> = {
   too_many: `A store can list up to ${MAX_EMBED_SITES} sites.`,
   signed_out: "Your session ended. Log in again.",
   unavailable: "Stores are not switched on yet, so nothing was saved.",
-  server_error: "Something went wrong on our side. Nothing was changed; try again in a moment.",
+  server_error: "We could not confirm this website list. Reload this page to check before trying again.",
 };
 
 /**
@@ -47,6 +47,7 @@ export function CheckoutScriptEditor({
   const [sites, setSites] = useState(savedSites);
   const [draft, setDraft] = useState(savedSites.join("\n"));
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [what, setWhat] = useState<string>(products[0]?.id ?? (signup ? "join" : ""));
   const [mode, setMode] = useState<ScriptMode>("overlay");
   const [place, setPlace] = useState("");
@@ -64,23 +65,29 @@ export function CheckoutScriptEditor({
   const changed = typed.ok ? typed.sites.join("\n") !== sites.join("\n") : draft.trim() !== sites.join("\n");
 
   async function save() {
+    if (saving) return;
     if (!typed.ok) {
       toast(typed.reason === "too_many" ? MESSAGES.too_many : `${MESSAGES.invalid}${typed.line ? ` This one is not: ${typed.line}` : ""}`);
       return;
     }
+    const expected = [...typed.sites];
     setSaving(true);
+    setError(null);
     try {
       const response = await fetch("/api/store/embed-sites", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ sites: typed.sites }) });
-      const body = (await response.json().catch(() => ({}))) as { ok?: boolean; sites?: string[]; error?: string };
-      if (body.ok && Array.isArray(body.sites)) {
-        setSites(body.sites);
-        setDraft(body.sites.join("\n"));
-        toast(body.sites.length ? "Saved. Those sites can open your checkout now." : "Saved. No site can open your checkout over its pages now.");
+      const raw: unknown = await response.json().catch(() => null);
+      const reply = raw && typeof raw === "object" && !Array.isArray(raw) ? raw as Record<string, unknown> : null;
+      const matches = Array.isArray(reply?.sites) && reply.sites.length === expected.length && reply.sites.every((site: unknown, i: number) => site === expected[i]);
+      if (response.ok && reply?.ok === true && !("error" in reply) && matches) {
+        setSites(expected);
+        setDraft(expected.join("\n"));
+        toast("Website list saved.");
       } else {
-        toast(MESSAGES[body.error ?? ""] ?? "That did not save. Try again.");
+        const problem = reply?.ok !== true && typeof reply?.error === "string" && Object.hasOwn(MESSAGES, reply.error) ? MESSAGES[reply.error] : null;
+        setError(problem ?? MESSAGES.server_error);
       }
     } catch {
-      toast("That did not save. Check your connection and try again.");
+      setError(MESSAGES.server_error);
     } finally {
       setSaving(false);
     }
@@ -116,7 +123,7 @@ export function CheckoutScriptEditor({
   }
 
   return (
-    <div className="card p-6 sm:p-8" id="checkout-script">
+    <div aria-busy={saving} className="card p-6 sm:p-8" id="checkout-script">
       <p className="text-lg font-semibold tracking-[-0.02em] text-ink">Checkout on your own website</p>
       <p className="mt-2 text-ink-soft">
         A link on any page of yours opens a product&apos;s card, or your sign-up form, over that page. Your buyer pays on Stripe&apos;s page, on
@@ -130,6 +137,7 @@ export function CheckoutScriptEditor({
           <span className="text-xs tabular-nums text-ink-mute">{`${typed.ok ? typed.sites.length : "?"}/${MAX_EMBED_SITES}`}</span>
         </span>
         <textarea
+          disabled={saving}
           className="field mt-1 font-mono text-sm"
           rows={3}
           value={draft}
@@ -148,6 +156,8 @@ export function CheckoutScriptEditor({
           {saving ? "Saving…" : "Save sites"}
         </button>
       </div>
+
+      {error ? <p className="notice notice-error mt-3" role="alert">{error}</p> : null}
 
       {products.length || signup ? (
         <>
