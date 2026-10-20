@@ -645,22 +645,23 @@ try {
         await oldSuppression.evaluate(node=>node.remove());
         await signin.emulateMedia({forcedColors:"active",reducedMotion:"reduce"});
         console.log("FORCED_COLORS_ENVIRONMENT:"+JSON.stringify({requested:"active",actual:await signin.evaluate(()=>matchMedia("(forced-colors: active)").matches),supportsForcedColorAdjust:await signin.evaluate(()=>CSS.supports("forced-color-adjust","auto"))}));
+        if(!await signin.evaluate(()=>CSS.supports("forced-color-adjust","auto")))console.log("FIELD_FOCUS_OPEN_GAP:"+JSON.stringify({engine:browser.browserType().name(),reason:"forced-color-adjust declaration unsupported; no auto computed-value claim. System outline, shadow and actual3:1 painted-area assertions remain required; real OS validation remains open."}));
         for(const [kind,className] of [["button","btn st-btn"],["button","btn st-btn-ghost"],["a","st-social"]]){
           const target=await mountFieldFocusFixture(signin,{surface:storePaint["--st-bg"],kind,className,paint:storePaint});
           const focus=await fieldFocusPixels(signin,target);
-          is("store action "+className+" forced colours: system outline",focus.style==="solid"&&parseFloat(focus.width)>=3&&focus.shadow==="none"&&focus.forcedColorAdjust==="auto",true);
+          is("store action "+className+" forced colours: system outline",focus.style==="solid"&&parseFloat(focus.width)>=3&&focus.shadow==="none"&&(focus.supportsForcedColorAdjust?focus.forcedColorAdjust==="auto":focus.forcedColorAdjust===""),true);
           is("store action "+className+" forced colours: rendered3:1 pixel area",focus.contrastingPixels>=focus.minimumArea,true);
         }
         for(const kind of ["input","select","textarea"]){
           const target=await mountFieldFocusFixture(signin,{surface:storePaint["--st-bg"],kind,className:"st-field",paint:storePaint});
           const reading=await fieldFocusPixels(signin,target);
-          is("store "+kind+" forced colours: system outline",reading.style==="solid"&&parseFloat(reading.width)>=3&&reading.shadow==="none"&&reading.forcedColorAdjust==="auto",true);
+          is("store "+kind+" forced colours: system outline",reading.style==="solid"&&parseFloat(reading.width)>=3&&reading.shadow==="none"&&(reading.supportsForcedColorAdjust?reading.forcedColorAdjust==="auto":reading.forcedColorAdjust===""),true);
           is("store "+kind+" forced colours: rendered3:1 pixel area",reading.contrastingPixels>=reading.minimumArea,true);
         }
         for(const kind of ["input","select","textarea"]){
           const target=await mountFieldFocusFixture(signin,{surface:"#ffffff",kind});
           const forced=await fieldFocusPixels(signin,target);
-          is(kind+" forced-colours focus: system outline remains",forced.style==="solid"&&parseFloat(forced.width)>=3&&forced.shadow==="none"&&forced.forcedColorAdjust==="auto",true);
+          is(kind+" forced-colours focus: system outline remains",forced.style==="solid"&&parseFloat(forced.width)>=3&&forced.shadow==="none"&&(forced.supportsForcedColorAdjust?forced.forcedColorAdjust==="auto":forced.forcedColorAdjust===""),true);
           is(kind+" forced-colours focus: rendered3:1 pixel area",forced.contrastingPixels>=forced.minimumArea,true);
         }
       }

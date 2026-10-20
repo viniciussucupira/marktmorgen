@@ -13,10 +13,12 @@ export async function checkPathCertificates({browser,LOCAL,session,sid,otherSess
    is("certificate money starts off at "+width,await region.getByRole("checkbox").isChecked(),false);
    const select=region.getByLabel("Reached level",{exact:true}),options=await select.locator("option").evaluateAll(nodes=>nodes.map(node=>({value:node.value,text:node.textContent})));
    is("own live Stripe fixture reaches Sunrise",options.map(option=>option.text),["First Light","Sunrise"]);
+   const downloadButton=region.getByRole("button",{name:"Download certificate",exact:true});
+   await page.waitForFunction(()=>{const button=document.querySelector('[aria-labelledby="path-certificates-title"] button');return button instanceof HTMLButtonElement&&!button.disabled;},undefined,{timeout:30000});
    for(const option of options){
     await select.selectOption(option.value);
     const pending=page.waitForEvent("download");
-    await region.getByRole("button",{name:"Download certificate",exact:true}).focus();await page.keyboard.press("Enter");
+    await downloadButton.focus();await page.keyboard.press("Enter");
     const download=await pending,stream=await download.createReadStream(),chunks=[];
     for await(const chunk of stream)chunks.push(chunk);
     const html=Buffer.concat(chunks).toString("utf8");

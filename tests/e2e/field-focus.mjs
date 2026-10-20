@@ -20,12 +20,13 @@ export async function fieldFocusPixels(page,field) {
   if(!await field.evaluate(node=>document.activeElement===node&&node.matches(":focus-visible")))throw Error("Tab did not restore visible field focus");
   const afterBox=await field.boundingBox();
   if(!afterBox || ["x","y","width","height"].some(key=>Math.abs(afterBox[key]-box[key])>0.1))throw Error("Focus shifted field geometry");
+  if(!await page.evaluate(previous=>scrollX===previous.x&&scrollY===previous.y,scroll))throw Error("Focus measurement scrolled after Tab");
+  const after=await page.screenshot({animations:"disabled",scale:"css"});
+  // Screenshot finishes finite CSS transitions; inspect the same painted state.
   const styles=await field.evaluate(node=>{
     const style=getComputedStyle(node);
     return {width:style.outlineWidth,offset:style.outlineOffset,style:style.outlineStyle,color:style.outlineColor,shadow:style.boxShadow,forcedColorAdjust:style.getPropertyValue("forced-color-adjust"),supportsForcedColorAdjust:CSS.supports("forced-color-adjust","auto")};
   });
-  if(!await page.evaluate(previous=>scrollX===previous.x&&scrollY===previous.y,scroll))throw Error("Focus measurement scrolled after Tab");
-  const after=await page.screenshot({animations:"disabled",scale:"css"});
   const pixels=await page.evaluate(async({before,after,box,clip,viewport})=>{
     async function decode(encoded) {
       const bytes=Uint8Array.from(atob(encoded),char=>char.charCodeAt(0));
