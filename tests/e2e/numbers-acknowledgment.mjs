@@ -33,6 +33,7 @@ export async function checkNumbersAcknowledgment({browser,LOCAL,fixture,is}){
     await route.fulfill({status:work.scenario.status??200,contentType:"application/json",body:work.scenario.raw??JSON.stringify(work.scenario.reply(good))});
    });
    await page.goto(LOCAL+"/studio?store="+fixture.sid,{waitUntil:"domcontentloaded",timeout:60000});
+   await page.waitForLoadState("networkidle");
    await page.locator("main details").evaluateAll(nodes=>nodes.forEach(n=>{n.open=true;}));
    const section=page.locator("[data-numbers-links]");await section.waitFor();
    const label=section.locator("#numbers-link-label"),pass=section.locator("#numbers-link-password"),days=section.locator("#numbers-link-days"),money=section.locator("#numbers-link-money");
@@ -62,6 +63,7 @@ export async function checkNumbersAcknowledgment({browser,LOCAL,fixture,is}){
      is("numbers preserves password "+name,await pass.inputValue(),password);
      is("numbers preserves revenue "+name,await money.isChecked(),revenue);
     }
+    if(scenario.confirmed)await page.waitForLoadState("networkidle");
     is("numbers settings fit "+name,await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
    }
    for(const revenue of [false,true]){
