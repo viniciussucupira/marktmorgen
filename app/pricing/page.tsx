@@ -21,7 +21,7 @@ export default function PricingPage() {
    <h1 className="mt-4 text-4xl font-semibold tracking-tight sm:text-6xl">A clear price. Published limits.</h1>
    <p className="mt-6 text-lg text-neutral-700">Your store and your Stripe account. {feeWords().feesRow} All prices below are in USD.</p>
    {!PRICING_OPEN && <p className="mt-5 rounded-xl border border-neutral-300 bg-neutral-50 p-4 font-medium">Paid plans and paid selling are not open yet. You can prepare your store and explore the live demo.</p>}
-   <div className="mt-6 flex flex-wrap gap-4"><Link className="rounded-full bg-neutral-950 px-6 py-3 font-semibold text-white" href="/signin">Start your store</Link><Link className="rounded-full border border-neutral-400 px-6 py-3 font-semibold" href="/demo">See the live demo</Link></div>
+   <div className="mt-6 flex flex-wrap gap-4"><Link className="inline-flex min-h-12 items-center rounded-full bg-neutral-950 px-6 py-3 font-semibold text-white" href="/signin">Start your store</Link><Link className="inline-flex min-h-12 items-center rounded-full border border-neutral-400 px-6 py-3 font-semibold" href="/demo">See the live demo</Link></div>
   </header>
   <div className="mt-12"><PricingValue place="plans" /></div>
   <section data-plan-prices aria-label="Plan prices" className="mt-12 grid gap-6 md:grid-cols-3">

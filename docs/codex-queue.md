@@ -3119,3 +3119,8 @@ Head 2bec53d0: matriz pública passou; studio Chromium/Firefox passaram, WebKit 
 ### P0-201 — evidência e correção, 20/10/2026, 20:09 Fortaleza
 
 Head9f0bb45e: Firefox calculadora passou em390/1280 após limitar/quebrar legendas, sem alterar valores ou limites. FAQ falhou porque alvos44px computados mediram43.999969/43.999996px: aumenta-se altura mínima real para48px; assertion44px preservada. Numbers remove/null não enviou pedido após missing: causa ainda aberta, teste passa a ativação real por foco+Enter e registra estado/botões/foco em falha, mantendo todos os casos e pedidos/payloads/locks/recusas. Studio três motores passou; mobile eRedis passaram; Product completo permanece sem aprovação. Novo head exige todos os workflows completos; nada incorporado/publicado. Sem custo operacional novo e sem mudanças nos gates.
+
+
+### P0-201 — diagnóstico 20/10/2026, 20:20 Fortaleza
+
+Head40fb: WebKit público75casos/1falha target-size no CTA Start your store a320; ambos CTAs iniciais passam a inline-flex/min48px. Calculadora: seletor Billing appearance none ainda propagou scroll436/client274 ao pai; limitar overflow somente no próprio select nativo, mantendo opção/valor/teclado e popup nativo, sem cortar seção/página ou mudar fórmula. Recovery falhou ao marcar checkbox durante início domcontentloaded; aguarda rede/hidratação antes de abrir controles, mantendo setChecked e todos os payloads/recusas. Script RSC pageerror continua aberto. Studio3motores/mobile/Redis passaram mas não substituem Product completo. Falhas anteriores preservadas, novo head exige CI integral. Custos de runs cancelados/falhos incluídos em auditoria local detalhada, sem custos operacionais novos.
