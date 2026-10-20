@@ -263,7 +263,7 @@ export function HeroFlow() {
                 </div>
               </div>
               <div className="mt-3.5 rounded-[12px] border border-line bg-white p-3">
-                <p className="text-[12px] font-semibold" style={{ color: s.tint }}>
+                <p className="text-[12px] font-semibold text-ink">
                   {s.item}
                 </p>
                 <div className="mt-2.5 grid gap-1.5">
@@ -748,7 +748,7 @@ export function Pricing({ domains = false }: { domains?: boolean }) {
                 beside its own price. Here it is one number, the largest, so
                 the switch says what it is for without doing the arithmetic of
                 two plans at once in six words. */}
-            <span className="rounded-full bg-mint-soft px-2 py-0.5 text-[0.75rem] font-semibold text-mint-deep">
+            <span className="rounded-full bg-mint-soft px-2 py-0.5 text-[0.75rem] font-semibold text-ink">
               {`two months free, up to ${usdWhole(Math.max(...TIERS.map(yearSaving)))}`}
             </span>
           </button>
