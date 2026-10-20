@@ -180,6 +180,14 @@ const CREATORS = [
 
 
 
+
+function HomeActions({place}:{place:string}) {
+ return <div data-home-actions={place} role="group" aria-label={"Choose your next step: "+place} className="container-page flex flex-wrap items-center justify-center gap-x-6 gap-y-4 py-8">
+  <Link href="/signin" prefetch={false} className="btn btn-primary">Start your store<Icon name="arrow-right" size={18}/></Link>
+  <Link href="/demo" prefetch={false} className="link-arrow">See the live demo<Icon name="arrow-right" size={18} className="arrow"/></Link>
+ </div>;
+}
+
 export default function Home() {
   const questions = homeQuestions(paypalSalesConfigured());
   return (
@@ -325,6 +333,8 @@ export default function Home() {
           </ul>
         </section>
 
+        <HomeActions place="proof"/>
+
         {/*
           What people sell, running past.
 
@@ -429,6 +439,8 @@ export default function Home() {
           </div>
         </section>
 
+        <HomeActions place="situations"/>
+
         {/* ------------------------------------------------ the buyer's path */}
         <BuyerPath />
 
@@ -449,6 +461,8 @@ export default function Home() {
             </div>
           </div>
         </section>
+
+        <HomeActions place="modules"/>
 
         {/* ------------------------------------------------------ why Marktmorgen */}
         <section className="section">
@@ -550,6 +564,8 @@ export default function Home() {
             </div>
           </div>
         </section>
+
+        <HomeActions place="plans"/>
 
         {/* ------------------------------------------------------------ faq */}
         <section id="faq" className="section scroll-mt-20">

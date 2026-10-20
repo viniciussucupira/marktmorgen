@@ -1,3 +1,4 @@
+import { checkHomeActions } from "./home-actions.mjs";
 import { checkDecisionFaq } from "./decision-faq.mjs";
 import { checkDecisionArticles } from "./decision-articles.mjs";
 import { checkCreatorSituations } from "./creator-situations.mjs";
@@ -6,6 +7,7 @@ import { checkCrmFeature } from "./crm-feature.mjs";
 import { checkPricing } from "./pricing.mjs";
 /** Read-only public comparisons; no accounts, emails, payments or API writes. */
 export async function checkSalesComparisons({browser,LOCAL,axeSource,is}){
+ await checkHomeActions({browser,LOCAL,axeSource,is});
  await checkDecisionFaq({browser,LOCAL,axeSource,is});
  await checkDecisionArticles({browser,LOCAL,axeSource,is});
  await checkCreatorSituations({browser,LOCAL,axeSource,is});
