@@ -2743,3 +2743,12 @@ As execuções integrais identificaram contraste durante entrada animada no temp
 #### HT15 — verificação de identificador da biblioteca privada
 
 Product checks39462624653/verify118766157526 aprovou regressões mas recusou o build: statsId pode ser null em loja sem histórico. A biblioteca agora só lê uma seção salva quando o identificador existe; ausência preserva a página e apresenta estado não confirmado, sem ler outra loja nem inventar seção vazia. CI integral novamente obrigatório no novo head; sem reexecução isolada ou publicação contada.
+
+
+196. **[HT10] Unir navegação de pixels e atribuição preservando consentimento e custo existente**
+
+- Estado: **Cálculo próprio registrado antes da implementação; sem fornecedor/ operação nova; implementação pendente**.
+- Registro UTC:2026-10-20 17:16:50 UTC; Fortaleza UTC−3. Base canônica da sequência conferida `98690ce0ca790bc8ab691e2721890362a4f1b57d`. Revisão antes de código em docs/ht10-cost-review.md.
+- Escopo autorizado sem custo novo: configuraçõesMeta/Google/TikTok/Pinterest e atribuição por canal já existem; apenas navegação entre elas, explicação visível de consentimento/GPC e confirmação local estrita do retorno das duas gravações existentes. Nenhuma nova operação, endpoint, provider/IA, pixel/evento, job, retenção ou direito de uso; mesmo custo nos tetos atuais. Não iniciar anúncios nem conectar conta.
+- Custo adicional de fornecedor por cliente no pior mês:US$0/mês eUS$0/ano em Store/Studio/Scale, ambos intervalos. Leitura de dimensionamento existente, com todos custos/impostos/reservas e maior taxa por cobrança, permanece60,31/60,59/60,38/60,06/60,46/60,07% nos6cenários (Store mês/ano, Studio mês/ano, Scale mês/ano), sem preço/limite/receita nova. Não confundir com gateM0: leitura tributária mais onerosa continua12,02–12,21%, reprovada para vendas. Desconhecido reprova; operação nova exige cálculo antes de uso.
+- PLANS_ON_SALE=false, comissão, preços/limites, permissões/opt-in/GPC, tax gate/art.9a/revisão comercial preservados. Cálculo é de delta zero sob os contadores existentes, não certificação de margem global nem abertura de vendas. Testes/commit funcional/publicação pendentes; nenhum contador incrementado por este registro.
