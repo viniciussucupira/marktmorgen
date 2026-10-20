@@ -1931,3 +1931,9 @@ Ao concluir cada item: registrar data, commit e testes; seguir ao próximo. Dado
   "limitations": "Disableandrealemailnotbrowsercovered. Client+613characters,sameparseNudge/request/snapshot,no newprovider/operation/price/allowance/gate. Consent/recipients/schedule/spendunchanged. BindingM0 12.02–12.21%fails60%;salesclosed."
 }
 ```
+
+
+164. **[B2-164] Confirm the browser visit-exclusion setting accurately.**
+- Estado: **Em implementação**.
+- Existing device setting must require successful HTTP, boolean confirmation, no contradictory error and the exact requested boolean before changing its displayed state. Pending controls lock and announce busy; uncertain replies request reloading to check.
+- Synthetic intercepted cases cover both directions at 390/1280; no real cookie or account writes. Preserve cookie scope/expiry, stats permission and all limits. Same existing operation, no new provider or recurring cost; source +430 characters is not a bundled-byte measurement. Binding M0 remains 12.02–12.21%, fails 60%; sales closed and Hotmart features gated. Full final-head CI required before incorporation.
