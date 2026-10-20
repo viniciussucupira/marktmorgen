@@ -12,6 +12,8 @@ export async function checkNumbersAcknowledgment({browser,LOCAL,fixture,is}){
  {name:"wrong URL",reply:v=>({...v,link:{...v.link,url:"https://example.test/numbers/other"}})},
  {name:"wrong label",reply:v=>({...v,link:{...v.link,label:"Other"}})},
  {name:"wrong revenue",reply:v=>({...v,link:{...v.link,money:!v.link.money}})},
+ {name:"missing creation time",reply:v=>({...v,link:{...v.link,made:undefined}})},
+ {name:"bad creation time",reply:v=>({...v,link:{...v.link,made:"today"}})},
  {name:"wrong expiry",reply:v=>({...v,link:{...v.link,expires:v.link.expires+86400}})},
  {name:"fractional expiry",reply:v=>({...v,link:{...v.link,expires:v.link.expires+0.5}})},
  {name:"confirmed",reply:v=>v,confirmed:true}];
@@ -26,7 +28,8 @@ export async function checkNumbersAcknowledgment({browser,LOCAL,fixture,is}){
     const work=pending,input=route.request().postDataJSON();await work.release;
     if(work.scenario.abort){await route.abort("failed");return;}
     const id="syntheticlink0000001";
-    const good=input.action==="remove"?{ok:true,id:input.id}:{ok:true,link:{id,label:canonical,money:input.money,expires:Math.floor(Date.now()/1000)+input.days*86400,url:"https://marktmorgen.com/numbers/"+id}};
+    const created=Math.floor(Date.now()/1000);
+    const good=input.action==="remove"?{ok:true,id:input.id}:{ok:true,link:{id,label:canonical,money:input.money,made:created,expires:created+input.days*86400,url:"https://marktmorgen.com/numbers/"+id}};
     await route.fulfill({status:work.scenario.status??200,contentType:"application/json",body:work.scenario.raw??JSON.stringify(work.scenario.reply(good))});
    });
    await page.goto(LOCAL+"/studio?store="+fixture.sid,{waitUntil:"domcontentloaded",timeout:60000});

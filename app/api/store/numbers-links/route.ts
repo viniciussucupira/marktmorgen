@@ -33,8 +33,8 @@ export async function POST(request: NextRequest) {
     await indexLink(store.sid, made.link, now);
     // The numbers it shows: read now the first time, then once a day (lib/verified-numbers.ts).
     if (!(await readVerified(added.store).catch(() => null))) await refreshVerified(added.store).catch((error) => console.error("reading the counted numbers failed", error));
-    const { id, label, expires, money } = made.link;
-    return Response.json({ ok: true, link: { id, label, expires, money, url: `${SITE_URL}/numbers/${id}` } });
+    const { id, label, expires, money, made: created } = made.link;
+    return Response.json({ ok: true, link: { id, label, expires, money, made: created, url: `${SITE_URL}/numbers/${id}` } });
   } catch (error) {
     console.error("saving a numbers link failed", error);
     return Response.json({ ok: false, error: "server_error" }, { status: 500 });
