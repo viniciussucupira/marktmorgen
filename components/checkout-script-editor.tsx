@@ -81,7 +81,7 @@ export function CheckoutScriptEditor({
       if (response.ok && reply?.ok === true && !("error" in reply) && matches) {
         setSites(expected);
         setDraft(expected.join("\n"));
-        toast("Website allowlist settings saved.");
+        toast("Website list saved.");
       } else {
         const problem = reply?.ok !== true && typeof reply?.error === "string" && Object.hasOwn(MESSAGES, reply.error) ? MESSAGES[reply.error] : null;
         setError(problem ?? MESSAGES.server_error);
