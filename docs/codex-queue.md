@@ -1291,3 +1291,34 @@ Pedido P5: anexo524cc7f9-78af-42b5-ae37-4c05dc91a193/Texto colado.txt, lido19/10
 ### S4 — verificação e bloqueio específico dos ativos visuais
 - Head4edb692/Product39374567301, verify118469693032, Redis118469692712 e segurança39374567174 passaram integralmente. Capturas reais sintéticas produzidas e revistas: store69756bytes, sales-page82191bytes, distintas1280x820, sem dados reais. Módulos/links/FAQ podem avançar como entrega parcial; imagens permanecem ausentes.
 - Desde04:38UTC até05:43UTC houve investigação do custo: modelo vigente condiciona bytes inclusos aFlatRateCDN; leitura de cobrança histórica não prova preço máximo nem configuração, e leitura do painel falhou duas vezes por timeout. Sem essa condição confirmada, banda é desconhecida/reprovação, nunca0. Ativos não serão servidos. Pendência específica aguardando o dono; nenhuma permissão de nova conta/custo/upgrade foi inferida, nada cancelado. M0 permanece reprovada, vendas fechadas. Seguir demais itens sem esperar resposta.
+
+
+### Entrega72 — módulos funcionais publicados, ativos visuais pendentes
+```json
+{
+  "number": 72,
+  "pr": 658,
+  "queueItem": 145,
+  "feature": "Home now shows fourteen factual modules and calculator discovery, and corrects stale Zoom and email-delivery claims. Partial S4: screenshot serving remains awaiting owner, not published.",
+  "head": "d5d1639796286898f15ee06e8445ae3d90ef7807",
+  "commit": "6df7d8b50c5917caef88e527de72bda9db6db9aa",
+  "deployment": "dpl_6chNGb6kkBAo1tJb7EusyT1dp6gt",
+  "readyUTC": "2026-10-20T05:56:53.803Z",
+  "readyFortaleza": "2026-10-20 02:56:53",
+  "mergedUTC": "2026-10-20T05:55:10Z",
+  "mergedFortaleza": "2026-10-20 02:55:10",
+  "run": 39376337744,
+  "verify": 118475214085,
+  "redis": 118475213947,
+  "securityRun": 39376337732,
+  "validation": "Complete final-head CI passed lint, typecheck/build, regressions, whole synthetic browser including home390/1280 focus/axe/fit/noAPIwrites and real isolated studio captures. READY exactSHA+marktmorgen.com alias;10routes200sameDPL;all14module labels+calculator link and corrected claims present. No screenshots served. Noerror/fatal05:53:22.184–05:58:22.184UTC.",
+  "limitations": "Two captures reviewed,69756/82191bytes; image bandwidth billing setting unconfirmed after>1h, so assets held and S4 remains partial/awaiting owner for assets. No new provider operation or price/allowance/gate. Binding M0 remains12.02–12.21%,fails60%;PLANS_ON_SALE=false;no fiscal/margin/AAA certification."
+}
+```
+
+154. **[B2-CONTACT-ACKNOWLEDGMENT] Confirmar a configuração do formulário de contato sem confundir com publicação**
+   - Pedido: continuaçãoB2/P0/P3 após implementaçõesS; nenhum número/estado anterior alterado.
+   - Estado: **em implementação; branchcodex/contact-acknowledgment; publicar após itensS acionáveis emverificação**.
+   - Escopo: comparar HTTP/okbooleano/ausênciadeerro/snapshotcontact já devolvido pelo servidor com parseJoin canônico; bloquearcampos enquantoespera,aria-busy,semduplosenvios;perdaderespostamandaconferirsemalegarnadamudou. Sucessoconfirmaconfiguração,nãovisibilidadedependente deemail/plano. Conteúdodocriador/idiomaspreservados.
+   - Prova:14respostasinterceptadasem390/1280,28casos,normalizaçãocanônica,HTTP/truthy/contradição/objetosinválidos/errosherdados/perda/sucesso;nenhumPOSTdecontatochegaaoservidor,nenhummensagemoucontareal. Suíteintegralnocabeçalfinalobrigatória.
+   - Custo: fontecliente+594caracteres,mesmoPOST/resposta/parseJoinexistentes,semnovaoperação/fornecedor/franquia/preço/gate. M0antes/depois12,02–12,21%,reprova60%;vendasfechadas.

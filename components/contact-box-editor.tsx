@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "@/components/toast";
-import { MAX_JOIN_HEADING, MAX_JOIN_LINE, type StoreJoin } from "@/lib/store-field-rules";
+import { MAX_JOIN_HEADING, MAX_JOIN_LINE, parseJoin, type StoreJoin } from "@/lib/store-field-rules";
 import { contactWords } from "@/lib/buyer-words/contact";
 
 /**
@@ -42,22 +42,25 @@ export function ContactBoxEditor({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ on, heading, line }),
       });
-      const data = (await response.json().catch(() => ({}))) as { ok?: boolean };
-      if (data.ok) {
-        toast(on ? "The contact form is on your store page." : "The contact form is off.");
+      const raw: unknown = await response.json();
+      const data: Record<string, unknown> = raw && typeof raw === "object" && !Array.isArray(raw) ? raw as Record<string, unknown> : {};
+      const saved = data.contact && typeof data.contact === "object" && !Array.isArray(data.contact) ? data.contact as Record<string, unknown> : {};
+      const expected = parseJoin({on,heading,line});
+      if (response.ok && data.ok === true && data.error === undefined && saved.on === expected.on && saved.heading === expected.heading && saved.line === expected.line) {
+        toast("Contact form settings saved.");
         router.refresh();
         return;
       }
-      setError("Something went wrong on our side. Nothing was changed. Try again in a moment.");
+      setError("We could not confirm whether your contact form settings were saved. Reload this page to check before trying again.");
     } catch {
-      setError("Something went wrong on our side. Nothing was changed. Try again in a moment.");
+      setError("We could not confirm whether your contact form settings were saved. Reload this page to check before trying again.");
     } finally {
       setSaving(false);
     }
   }
 
   return (
-    <form id="contact" onSubmit={save} className="card mt-8 scroll-mt-32 p-6 sm:p-8" noValidate>
+    <form id="contact" onSubmit={save} aria-busy={saving} className="card mt-8 scroll-mt-32 p-6 sm:p-8" noValidate>
       <p className="text-lg font-semibold tracking-[-0.02em] text-ink">Contact form</p>
       <p className="mt-2 text-ink-soft">
         A form on your store page where visitors write to you: a question before buying, a collaboration, a booking. Each message
@@ -66,7 +69,7 @@ export function ContactBoxEditor({
       </p>
 
       <label className="mt-5 flex items-start gap-3 text-ink">
-        <input type="checkbox" checked={on} onChange={(e) => setOn(e.target.checked)} className="mt-1 size-5 shrink-0 accent-violet-brand" />
+        <input type="checkbox" disabled={saving} checked={on} onChange={(e) => setOn(e.target.checked)} className="mt-1 size-5 shrink-0 accent-violet-brand" />
         <span className="font-semibold">Show the contact form on my store page</span>
       </label>
       {on && blocked ? (
@@ -82,6 +85,7 @@ export function ContactBoxEditor({
           <label htmlFor="contact-heading-field" className="field-label">Heading (optional)</label>
           <input
             id="contact-heading-field"
+            disabled={saving}
             type="text"
             maxLength={MAX_JOIN_HEADING}
             value={heading}
@@ -94,6 +98,7 @@ export function ContactBoxEditor({
           <label htmlFor="contact-line-field" className="field-label">One line under it (optional)</label>
           <textarea
             id="contact-line-field"
+            disabled={saving}
             rows={2}
             maxLength={MAX_JOIN_LINE}
             value={line}
