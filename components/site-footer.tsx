@@ -33,6 +33,7 @@ const COLUMNS: { title: string; links: FooterLink[] }[] = [
   {
     title: "Compare",
     links: [
+      { label: "All comparisons", href: "/proof/comparisons" },
       { label: "Marktmorgen and Stan", href: "/proof/compare" },
       { label: "Feature by feature", href: "/proof/everything" },
       { label: "Marktmorgen and Gumroad", href: "/proof/gumroad" },

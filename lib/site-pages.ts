@@ -2,7 +2,10 @@
 // each menu item opens something different and real.
 import { AI_PLANS_WORDS } from "@/lib/ai-rules";
 import { isDomainsConfigured } from "@/lib/domains";
-import { PRO_MONTHLY_EMAILS } from "@/lib/plan";
+import { PRO_MONTHLY_EMAILS, TIERS, PLAN_TITLES, publishedPriceWords, monthlyEmails, commissionBps } from "@/lib/plan";
+import { MAX_PRODUCTS } from "@/lib/catalog-rules";
+import { COMPETITOR_PRICES } from "@/lib/competitor-prices";
+import { PLANS_ON_SALE } from "@/lib/opening";
 import { paypalSalesConfigured } from "@/lib/paypal-sales";
 import type { IconName } from "@/components/icons";
 import type { VisualKey } from "@/components/feature-visuals";
@@ -57,6 +60,8 @@ export type TopicPage = {
   badge: { label: string; tone: "live" | "building" | "proof" };
   accent: string;
   blocks: Block[];
+  /** An exact search title and description when the visible heading is editorial. */
+  seo?: { title: string; description: string };
   /** The drawing of the real screen shown beside the heading. */
   visual?: VisualKey;
   /** The plan it comes with: on $29 (and so on Studio too), or on Studio only. */
@@ -80,6 +85,65 @@ const PROOF = { label: "Checked and dated", tone: "proof" as const };
 export const PAGES: TopicPage[] = [
   ...FEATURE_PAGES,
   ...CREATOR_PAGES,
+  {
+    slug: "comparisons",
+    section: "proof",
+    eyebrow: "Compare before choosing",
+    title: "Compare",
+    highlight: "the platforms.",
+    intro: "Published prices, payment fees and practical limits, with official sources and an honest account of where another platform is ahead.",
+    seo: { title: "Compare Marktmorgen with other creator platforms", description: "Compare Marktmorgen with Kajabi, Stan, Gumroad and Beacons using dated official sources, published limits and honest tradeoffs." },
+    badge: PROOF,
+    accent: "#6d4aff",
+    blocks: [
+      { kind: "features", title: "Read a comparison", items: [
+        { icon: "scale", title: "Marktmorgen vs Kajabi", body: "Plans, email, card fees and branded apps.", href: "/proof/kajabi" },
+        { icon: "scale", title: "Marktmorgen and Stan", body: "The existing side-by-side comparison and its sources.", href: "/proof/compare" },
+        { icon: "calculator", title: "Marktmorgen and Gumroad", body: "Subscription costs, sales fees and tax responsibilities.", href: "/proof/gumroad" },
+        { icon: "scale", title: "Marktmorgen and Beacons", body: "Its plans and sales fees, and when they are a better fit.", href: "/proof/beacons" },
+      ] },
+      { kind: "note", title: "Availability matters as much as price", body: PLANS_ON_SALE ? "Check each plan's limits and the payment provider's own fees before choosing." : "Marktmorgen's paid plans are not on sale yet. You can set up a store and inspect the live demo; these comparisons do not mean paid selling is open." },
+    ],
+  },
+  {
+    slug: "kajabi",
+    section: "proof",
+    eyebrow: "A sourced comparison",
+    title: "Marktmorgen vs",
+    highlight: "Kajabi",
+    intro: "A Kajabi alternative where your store, products and direct Stripe payments share one studio. Compare the published limits as well as the subscription price.",
+    seo: { title: "Marktmorgen vs Kajabi", description: "A Kajabi alternative where store setup and direct Stripe payments share one studio. Compare prices, email limits and branded apps. Paid plans are not on sale yet." },
+    badge: { label: "Sources read October 19, 2026", tone: "proof" },
+    accent: "#6d4aff",
+    blocks: [
+      { kind: "lead", text: "Choose by the features you need. Marktmorgen starts at " + publishedPriceWords("creator", "month") + "; list email starts on " + PLAN_TITLES.pro + " at " + publishedPriceWords("pro", "month") + ". Kajabi Basic includes marketing email. A lower entry price does not mean every plan is cheaper or every allowance matches." },
+      { kind: "table", title: "Prices, limits and payment fees", head: ["Compare", "Kajabi", "Marktmorgen"], note: "USD. Official Kajabi sources were read October 19, 2026 and are linked below. Annual prices require annual payment. Processing, applicable taxes and optional services can add to either side.", rows: [
+        ["Monthly subscription", COMPETITOR_PRICES.kajabi.plans.map(p => p.name + ": $" + p.monthlyCents / 100).join("; "), TIERS.map(t => PLAN_TITLES[t] + ": " + publishedPriceWords(t, "month")).join("; ")],
+        ["Annual subscription", COMPETITOR_PRICES.kajabi.plans.map(p => p.name + ": $" + (p.annualCents / 100).toLocaleString("en-US") + "/year").join("; "), TIERS.map(t => PLAN_TITLES[t] + ": " + publishedPriceWords(t, "year")).join("; ")],
+        ["Product catalog", "Basic: 5; Growth: 50; Pro: unlimited.", "Up to " + MAX_PRODUCTS.toLocaleString("en-US") + " products per store. Storage, traffic, order and other plan limits still apply."],
+        ["Marketing email", "Unlimited marketing emails on all three plans.", TIERS.map(t => PLAN_TITLES[t] + ": " + monthlyEmails(t).toLocaleString("en-US") + " list emails/month").join("; ") + ". Transactional notices are a separate allowance."],
+        ["Platform share and processing", COMPETITOR_PRICES.kajabi.feeScope, TIERS.map(t => PLAN_TITLES[t] + ": " + commissionBps(t) / 100 + "% of each sale").join("; ") + ". Stripe charges its own processing fees on your account; your location and payment method affect them."],
+        ["US Kajabi Payments card rates", COMPETITOR_PRICES.kajabi.plans.map(p => p.name + ": " + p.usCardProcessingBps / 100 + "% + $" + (p.usCardProcessingFixedCents / 100).toFixed(2)).join("; "), "Your own Stripe pricing applies; Kajabi's card rates are not a quote for Marktmorgen."],
+        ["Branded app-store listing", "Included on Pro; $" + COMPETITOR_PRICES.kajabi.brandedApp.monthlyAddOnCents / 100 + "/month extra on Basic or Growth.", "Browser-based store and studio. No Marktmorgen app-store app."],
+        ["Getting started", "Standard " + COMPETITOR_PRICES.kajabi.trial.days + "-day trial; some features require a paid plan.", PLANS_ON_SALE ? "Check the current plan terms before starting." : "Store setup is available. Paid plans and paid selling are not open yet."],
+      ] },
+      { kind: "features", title: "Where Marktmorgen may fit", items: [
+        { icon: "bank", title: "Use your own Stripe account", body: "Direct charges and payouts follow your Stripe settings. This does not remove any tax duties the creator or Marktmorgen has.", href: "/platform/your-stripe" },
+        { icon: "store", title: "Inspect the store before deciding", body: "The live demo shows the buyer's route. Compare its behavior with your own product and delivery needs.", href: "/demo" },
+      ] },
+      { kind: "limits", title: "Where they are ahead", items: [
+        "Kajabi offers branded iOS and Android listings, included on Pro or as a paid add-on. Marktmorgen has no app-store app.",
+        "Kajabi includes marketing email on Basic and publishes unlimited marketing emails on its plans. Marktmorgen's Store plan has no list email, and Studio and Scale have the monthly send limits above.",
+        "Kajabi sells paid plans today. Marktmorgen's paid plans are still closed; a prepared store is not an open paid checkout.",
+      ] },
+      { kind: "features", title: "Official sources and scope", intro: "Read October 19, 2026. These are public USD quotes, not a negotiated offer or a promise that every payment method is available in every country.", items: [
+        { icon: "list", title: COMPETITOR_PRICES.kajabi.plans[0].source.label, body: "Monthly and annual subscriptions, products, marketing email and regional payment-fee conditions.", href: COMPETITOR_PRICES.kajabi.plans[0].source.url },
+        { icon: "info", title: COMPETITOR_PRICES.kajabi.trial.source.label, body: "The standard trial is 14 days; its exact term and locked features are described by Kajabi.", href: COMPETITOR_PRICES.kajabi.trial.source.url },
+        { icon: "info", title: COMPETITOR_PRICES.kajabi.brandedApp.source.label, body: "Branded listings on Apple App Store and Google Play, plan inclusion and the Basic/Growth add-on.", href: COMPETITOR_PRICES.kajabi.brandedApp.source.url },
+        { icon: "scale", title: "All published comparisons", body: "Read the other comparisons and their own dated sources.", href: "/proof/comparisons" },
+      ] },
+    ],
+  },
 
   /* ------------------------------------------------ proof ------------- */
   {
