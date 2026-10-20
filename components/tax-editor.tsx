@@ -14,7 +14,7 @@ const MESSAGES: Record<string, string> = {
   none: "This account has no store yet.",
   signed_out: "Your session ended. Log in again.",
   unavailable: "Stores are not switched on yet, so nothing was saved.",
-  server_error: "Something went wrong on our side, or Stripe did not answer. Nothing was changed; try again in a moment.",
+  server_error: "We could not confirm whether your tax settings were saved. Reload this page to check before trying again.",
 };
 
 const STRIPE_TAX_SETTINGS = "https://dashboard.stripe.com/settings/tax";
@@ -41,21 +41,25 @@ export function TaxEditor({
 
   async function save(event: React.FormEvent) {
     event.preventDefault();
+    if (busy) return;
     setBusy(true);
     setError(null);
     try {
+      const requested = { enabled, included, ids, invoices };
       const response = await fetch("/api/store/tax", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ enabled, included, ids, invoices }),
+        body: JSON.stringify(requested),
       });
-      const data = (await response.json().catch(() => ({}))) as { ok?: boolean; error?: string };
-      if (data.ok) {
+      const data: unknown = await response.json().catch(() => null);
+      const reply: Record<string, unknown> = data && typeof data === "object" && !Array.isArray(data) ? data as Record<string, unknown> : {};
+      const saved = reply.tax && typeof reply.tax === "object" && !Array.isArray(reply.tax) ? reply.tax as Record<string, unknown> : null;
+      if (response.ok && reply.ok === true && reply.error === undefined && saved && Object.entries(requested).every(([key, value]) => saved[key] === value)) {
         toast("Sales tax settings saved.");
         router.refresh();
         return;
       }
-      setError(MESSAGES[data.error ?? ""] ?? MESSAGES.server_error);
+      setError(typeof reply.error === "string" ? MESSAGES[reply.error] ?? MESSAGES.server_error : MESSAGES.server_error);
     } catch {
       setError(MESSAGES.server_error);
     } finally {
@@ -82,7 +86,7 @@ export function TaxEditor({
       {!connected ? (
         <p className="mt-4 text-sm text-ink-soft">Connect your Stripe account first, and this can be switched on.</p>
       ) : (
-        <form onSubmit={save} aria-describedby="tax-account-scope tax-platform-scope" className="mt-5 space-y-4">
+        <form onSubmit={save} aria-describedby="tax-account-scope tax-platform-scope" aria-busy={busy} className="mt-5 space-y-4">
           <p className="text-sm">
             {status === "active" ? (
               <span className="font-semibold text-ink">Stripe Tax is set up on your account.</span>
@@ -106,13 +110,14 @@ export function TaxEditor({
             <input
               type="checkbox"
               checked={enabled}
+                disabled={busy}
               onChange={(e) => setEnabled(e.target.checked)}
               className="mt-0.5 h-4 w-4 accent-violet-brand"
             />
             Add sales tax at checkout
           </label>
 
-          <fieldset className="space-y-2" disabled={!enabled}>
+          <fieldset className="space-y-2" disabled={!enabled || busy}>
             <legend className="field-label">Your prices</legend>
             <label className="flex items-start gap-3 text-sm text-ink">
               <input type="radio" name="tax-included" checked={!included} onChange={() => setIncluded(false)} className="mt-0.5 h-4 w-4" />
@@ -124,12 +129,13 @@ export function TaxEditor({
             </label>
           </fieldset>
 
-          <fieldset className="space-y-3 border-t border-line pt-4">
+          <fieldset className="space-y-3 border-t border-line pt-4" disabled={busy}>
             <legend className="field-label">Business buyers</legend>
             <label className="flex items-start gap-3 text-sm font-semibold text-ink">
               <input
                 type="checkbox"
                 checked={ids}
+                disabled={busy}
                 onChange={(e) => setIds(e.target.checked)}
                 className="mt-0.5 h-4 w-4 accent-violet-brand"
               />
@@ -146,6 +152,7 @@ export function TaxEditor({
               <input
                 type="checkbox"
                 checked={invoices}
+                disabled={busy}
                 onChange={(e) => setInvoices(e.target.checked)}
                 className="mt-0.5 h-4 w-4 accent-violet-brand"
               />
