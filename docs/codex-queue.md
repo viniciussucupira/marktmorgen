@@ -1208,3 +1208,5 @@ Pedido P5: anexo524cc7f9-78af-42b5-ae37-4c05dc91a193/Texto colado.txt, lido19/10
 
 ### S2 — correção após verificação completa inicial
 - Product39369571852 verify118454148405: testes de preços novos passaram; suíte completa detectou2arquivos com falha: inventário de acessibilidade não listava a nova página e fee-words exigiu texto centralizado. Redis passou. Registrar a página como revisãoAAA não concluída; não remover o teste nem declarar conformidade global. Centralizar cada plano com planShareWords e cabeçalho com feeWords, mantendo a diferença entre oferta publicada e cobrança habilitada. Corrigir também destino/foco do skip link #content e cobrir por teclado. Novo head recebe suíte completa, sem reexecutar somente um job.
+
+- Product39370331078 verify118456593166: lint/regressões/types/build/Redis passaram, navegador detectou18falhas porque next.config.ts ainda redirecionava /pricing para home/#pricing. Remover somente /pricing dos sources e apontar aliases /price,/prices,/plans à rota nova. Cobrir configuração e URL real no navegador; manter todas as18asserções e repetir suíte inteira. Não publicar rota que ainda redireciona.

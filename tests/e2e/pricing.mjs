@@ -9,6 +9,7 @@ export async function checkPricing({browser,LOCAL,axeSource,is}){
    await page.route("**/api/**",async route=>{if(route.request().method()!=="GET"){writes++;await route.abort();}else await route.continue();});
    await page.goto(LOCAL+"/pricing",{waitUntil:"domcontentloaded"});
    await page.locator("main h1").waitFor({state:"visible"});
+   check(new URL(page.url()).pathname==="/pricing","pricing route is not redirected "+width);
    await page.locator('a[href="#content"]').first().focus();await page.keyboard.press("Enter");
    check(await page.locator("main").evaluate(node=>node===document.activeElement),"skip link focuses content "+width);
    check((await page.title()).includes("Pricing"),"pricing title "+width);
