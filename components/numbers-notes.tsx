@@ -82,17 +82,17 @@ export function NumbersNotes({
         </ul>
       ) : null}
       <form
-        className="mt-2 flex flex-wrap items-end gap-2"
+        className="mt-2 grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:items-end"
         onSubmit={async (event) => {
           event.preventDefault();
           if (await send({ action: "add", day, text }, "Note added.")) setText("");
         }}
       >
-        <label className="text-sm">
+        <label className="min-w-0 text-sm">
           <span className="field-label">Day</span>
-          <input type="date" required className="field mt-1 w-auto py-2" value={day} max={today} onChange={(e) => setDay(e.target.value)} />
+          <input type="date" required className="field mt-1 min-w-0 max-w-full py-2 sm:w-auto" value={day} max={today} onChange={(e) => setDay(e.target.value)} />
         </label>
-        <label className="min-w-0 flex-1 text-sm">
+        <label className="min-w-0 text-sm">
           <span className="field-label">What happened</span>
           <input
             required
@@ -103,7 +103,7 @@ export function NumbersNotes({
             onChange={(e) => setText(e.target.value)}
           />
         </label>
-        <button type="submit" className="btn btn-secondary btn-sm" disabled={busy}>
+        <button type="submit" className="btn btn-secondary btn-sm justify-self-start" disabled={busy}>
           Add note
         </button>
       </form>

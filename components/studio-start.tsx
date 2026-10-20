@@ -54,9 +54,9 @@ export function StudioStart({ steps, activation, launchChecklist }: { steps: Sta
         <div className="h-full rounded-full bg-violet-brand transition-[width] duration-500" style={{ width: `${percent}%` }} />
       </div>
       {launchChecklist ? <details className="group mt-5"><summary className="flex min-h-11 cursor-pointer items-center gap-2 py-3 font-semibold text-ink"><span aria-hidden="true" className="transition-transform group-open:rotate-90">▸</span>Review the saved launch checklist</summary><pre className="mt-3 whitespace-pre-wrap break-words font-sans text-sm leading-relaxed text-ink-soft">{launchChecklist}</pre></details> : null}
-      <ol className="mt-6 grid gap-x-6 gap-y-4 sm:grid-cols-2">
+      <ol className="mt-6 grid min-w-0 grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2">
         {steps.map((step, i) => (
-          <li key={step.key} className="flex gap-3">
+          <li key={step.key} className="flex min-w-0 gap-3">
             <span
               className={`mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full text-[0.75rem] font-semibold ${
                 step.done ? "bg-mint-soft text-mint-deep" : step === next ? "bg-violet-brand text-white" : "bg-sand text-ink-soft"
@@ -65,7 +65,7 @@ export function StudioStart({ steps, activation, launchChecklist }: { steps: Sta
               {step.done ? <Icon name="check" size={14} strokeWidth={2.6} /> : i + 1}
               <span className="sr-only">{step.done ? " (done)" : ""}</span>
             </span>
-            <span className="min-w-0">
+            <span className="min-w-0 [overflow-wrap:anywhere]">
               {step.done ? (
                 <span className="font-semibold text-ink-mute line-through decoration-ink-mute/40">{step.title}</span>
               ) : (
