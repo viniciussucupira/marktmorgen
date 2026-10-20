@@ -2671,7 +2671,7 @@ HT2/PR714 incorporado em20/10/2026 às13:32:08 de Fortaleza. READY em13:33:12.64
 
 192. **[HT12] Cluster evergreen de guias práticos com FAQ visível e dados estruturados**
 - Estado: **Em implementação; verificação integral pendente**.
-- Registro:20/10/2026 às13:34:30 de Fortaleza. Base conferida `275ef11290de759759efbb2fb5832120ff294bc9`; commit de implementação: pendente.
+- Registro:20/10/2026 às13:35:31 de Fortaleza. Base conferida `275ef11290de759759efbb2fb5832120ff294bc9`; commit de implementação: `f27debb5147fec8a5824b7446b768ab6768e3af9` (criado em2026-10-20T16:35:30Z; Fortaleza UTC−3).
 - Reutiliza journal/blog estático, template, sitemap e capas existentes. Quatro guias distintos: cursos, memberships, sessões pagas e programas de afiliados; URL e corpo anterior do guia de arquivo digital preservados e aprofundados. Cada guia tem escopo/entrega/aceite/testes específicos, links de recursos reais, interligação do cluster e CTA existente, sem promessas de demanda/ganhos/margem.
 - FAQPage usa exatamente as3perguntas/respostas visíveis de cada um dos5guias, junto do BlogPosting existente; nenhuma promessa de rich result ou conteúdo apenas no schema. Índice facilita encontrar o cluster.
 - CTA do blog qualifica teste da primeira loja elegível e respeita vendas fechadas; preparar loja não é teste ativo. learn.ts foi lido: é acesso/progresso de aluno pago, não CMS público de educação; apenas seu comportamento real informa o guia, sem alterar acesso/idiomas/identificadores.
