@@ -43,3 +43,10 @@ O input readonly da URL ainda propagou largura no WebKit mesmo com overflow hidd
 Head1f69 manteve duas marcas target-size Firefox. Hit-test identificou nav Look sobre Remove de outra linha em y76–120 após preencher o formulário no fim da lista; não era o botão sendo acionado. Auditoria documental passa a começar em scroll0 consistente, mantendo axe integral e todas as regras; a interação seguinte ainda usa formulário/teclado reais. O resultado anterior e a necessidade de revisão manual de sobreposição em posições intermediárias permanecem explícitos; não é prova de conformidade global.
 
 A verificação da página2 passa a aguardar URL page=2 e o título anexado após a transição RSC, em vez de ler count imediatamente após networkidle. Se ausente, continua falhando e registra URL/pager/ID sintético. Limite24 preservado e contagem de beacons exata por página. CI completo obrigatório.
+
+
+## Conteúdo recolhido e visita por documento — 20/10/2026
+
+Head7169 Firefox25casos/1falha: título do produto25 apareceu após esperar página2; contagem2 era expectativa incorreta. StoreBeacon tem efeito por handle/front/product, sem dependência da query page, portanto navegação cliente não cria novo beacon de documento. Mantém-se exatamente1interceptação, sem alterar rastreamento ou cotas.
+
+WebKit25casos/9falhas: retirados os inputs da evidência, a largura ainda veio de conteúdo do SharePanel dentro de details fechado (retângulos visuais zero, descendentes com scroll interno). O main do Studio explicita display none só para filhos não-summary de details sem open, reproduzindo a semântica nativa; quando open, conteúdo reaparece normalmente. Não aplica clipping à página nem suprime texto aberto. Diagnóstico de overflow prioriza caixas visíveis com largura maior que1, excluindo caixas já contidas e sr-only; assertion raiz continua integral. CI completo novo, revisão manual de rolagem permanece aberta.
