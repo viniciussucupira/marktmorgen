@@ -178,7 +178,7 @@ export const MENUS: Menu[] = [
 ];
 
 const PLAIN_LINKS = [
-  { href: "/#pricing", label: "Pricing" },
+  { href: "/pricing", label: "Pricing" },
   { href: "/blog", label: "Blog" },
 ];
 

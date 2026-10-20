@@ -529,6 +529,7 @@ export default function Home() {
             </div>
             <div className="reveal mx-auto mt-12 max-w-5xl">
               <Pricing domains={DOMAINS} />
+              <p className="mt-6 text-center"><Link href="/pricing" className="link">Compare all plan limits, annual prices and optional add-ons</Link></p>
             </div>
           </div>
         </section>

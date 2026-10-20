@@ -30,6 +30,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
   const fixed: { path: string; priority: number }[] = [
     { path: "/", priority: 1 },
+    { path: "/pricing", priority: 0.8 },
     { path: "/blog", priority: 0.8 },
     { path: "/platform", priority: 0.8 },
     { path: "/grow-sales", priority: 0.8 },
