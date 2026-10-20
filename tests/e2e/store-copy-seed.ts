@@ -93,12 +93,14 @@ async function main(): Promise<void> {
     const owner=`pause-fixture-${initial}@example.test`;
     const claim=await claimHandle(owner,`pausefixture${initial}`,"Pause fixture","Synthetic local settings.");
     if(!claim.ok)throw Error("No local pause fixture");
-    await setSubscription(owner,{active:true,tier:"creator",cycle:"month",subscriptionId:null,customerId:null,trialEnds:0});
+    await setSubscription(owner,{active:true,tier:"creator",cycle:"month",subscriptionId:null,customerId:null,trialEnds:0,period:paidPeriod()});
     await ensureStatsId(owner);
     const product=await addProduct(owner,"Synthetic monthly membership","Local fixture only.","10",{interval:"month",trialDays:0,payments:0});
     if(!product.ok)throw Error("No local recurring fixture");
     if(!(await setPauseMonths(owner,initial)).ok)throw Error("No local pause setting");
-    pauseFixtures.push({session:await openSession(owner),sid:claim.store.sid,initial});
+    const saved=await storeForEmail(owner);
+    if(!saved?.period || saved.pause!==initial || !saved.catalog.items.some(item=>(item.kind & KIND.recurring)!==0))throw Error("Incomplete local pause fixture");
+    pauseFixtures.push({session:await openSession(owner),sid:saved.sid,initial});
   }
   console.log(JSON.stringify({ pauseFixtures,wordingSession,wordingSid:wordingStore.sid,wordingTrialSession,wordingTrialSid:wordingTrialStore.sid,returnSession,returnSid:returnStore.sid,growthSession,growthSid:growthStore.sid,growthProduct:growthProducts[0],session: await openSession(OWNER), second: second.store.sid, abProduct, abStore:abStore.sid,contactToken }));
 }
