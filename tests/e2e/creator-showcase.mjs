@@ -14,10 +14,10 @@ export async function checkCreatorShowcase({browser,LOCAL,axeSource,is}){
  const more=showcase.getByRole("link",{name:"About these store listings",exact:true});
  await more.click();await page.waitForURL(url=>url.pathname==="/proof/creator-showcase");
  const main=await page.locator("main").innerText();is("HT7 page permission condition "+width,main.includes("No real creator listing has recorded permission"),true);
- is("HT7 page demo-only listing "+width,await page.locator('main a[href="/demo"]').count(),1);
+ is("HT7 page demo-only listing "+width,await page.locator('section[aria-labelledby="explore-the-store-listings"] a[href="/demo"]').count(),1);
  is("HT7 no invented result "+width,/earned \$|made \$|customers earned|guaranteed sales/i.test(main),false);
  is("HT7 showcase fits "+width,await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
- await page.addScriptTag({content:axeSource});const audit=await page.evaluate(async()=>await window.axe.run(document.querySelector("main"),{runOnly:{type:"tag",values:["wcag2a","wcag2aa","wcag21aa","wcag22aa"]}}));is("HT7 page accessibility "+width,audit.violations.map(v=>v.id),[]);
+ await page.addScriptTag({content:axeSource});const audit=await page.evaluate(async()=>await window.axe.run(document.querySelector("main"),{runOnly:{type:"tag",values:["wcag2a","wcag2aa","wcag21aa","wcag22aa"]}}));if(audit.violations.length)console.log("HT7_AXE_DETAILS",JSON.stringify(audit.violations.map(v=>({id:v.id,nodes:v.nodes.map(n=>({target:n.target,summary:n.failureSummary,html:n.html}))}))));is("HT7 page accessibility "+width,audit.violations.map(v=>v.id),[]);
  is("HT7 showcase no API writes "+width,writes,0);
  }finally{await context.close();}
  }
