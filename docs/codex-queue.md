@@ -2253,7 +2253,7 @@ Pricing FAQ repair history: run39407143422 caught mobile target-size;39409356932
 
 
 173. **[B2-173] Confirm existing exit offer settings accurately.**
-- Estado: **Em implementação**.
+- Estado: **Publicado — entrega99**.
 - Require successful HTTP, strict confirmation, no contradictory error and exact existing exitOffer id/null snapshot. Lock pending selection, preserve uncertain drafts and advance saved baseline only after confirmation. Confirm settings without claiming public delivery. Reuse existing setter response; no new operation.
 - Synthetic44 intercepted enable/removal replies at390/1280 planned; full final-head CI pending. Free-published-product requirement, monthly frequency, desktop timing, unchecked email consent, page permission, prices and all identifiers/content preserved. No visitor/email/payment write in tests. No provider/paid unit/recurring cost added; binding M0 remains12.02–12.21%, fails60%; sales closed, no H activation.
 
@@ -2283,3 +2283,12 @@ Pricing FAQ repair history: run39407143422 caught mobile target-size;39409356932
 - Rotas: `/`, `/signin`, `/studio` (redirecionamento anônimo esperado), `/platform/path`, `/pricing`, `/privacy`. Fluxos privados testados sinteticamente no CI; sem gravação autenticada ou pagamento em produção. As falhas de localizadores/sincronização anteriores continuam no histórico; foram corrigidas com verificação completa dos novos heads, sem aprovação por job isolado.
 - Custos97/98: mesmas requisições e resultados já existentes, nenhuma operação/leitura/provedor/unidade paga/custo recorrente adicional. Desconto5–50%, mínimo2/3/4 e MAX_CART4 preservados, assim como preços, idiomas/conteúdo/IDs, permissões, opt-in e controles fiscais. PLANS_ON_SALE=false e COMMISSION_LIVE=false. M0 vinculante12.02–12.21% continua reprovado para60%; desconhecido não é zero. Sem certificação geral de margem/acessibilidade nem ativação de H.
 - Registro documental empilhado no696 para preservar o histórico e a fixture corrigida do695; incorporar somente após695/696 passarem nos checks completos dos heads finais e serem incorporados. Não conta como nova publicação funcional.
+
+
+### Publicação funcional99 — 2026-10-20 (Fortaleza)
+
+- **PR#695 incorporado às10:01:36**, merge `8ee3fba1af59e3a939cecc9bad6ae6d5e9d5c88c`, head corrigido `0c496a301c19988877c5a64925869cec55f27eb2`. Oferta de saída exige HTTP bem-sucedido, true estrito, ausência de erro e snapshot exato do produto/null; bloqueia seleção pendente, preserva rascunho incerto e atualiza baseline somente após confirmação. Usa o mesmo resultado do setter; nenhuma operação adicional.
+- CI completo aprovado: Product39424410479/verify118633188534/Redis118633188890/security39424410648, incluindo **44casos sintéticos interceptados** de ativação/remoção em390/1280, com fixture local isolada e sem conta externa, mensagem ou pagamento. A falha anterior do fixture compartilhado está preservada acima e não aprovou nada.
+- READY às10:02:32.168, domínio marktmorgen.com, deployment `dpl_HWg3tX5bVprxWjQU9HFkffFvD337`, SHA exato do merge. `/`, `/signin`, `/studio` (redirecionamento anônimo esperado), `/platform/path`, `/pricing`, `/privacy` retornaram200 com o mesmo deployment. Nenhum log error/fatal na janela12:58:51.751–13:03:51.751UTC. Fluxo privado verificado apenas sinteticamente no CI, sem gravação autenticada em produção.
+- Custos99: mesma requisição e snapshot existente, nenhuma leitura/provedor/unidade paga/custo recorrente adicional; exigência de produto gratuito publicado, frequência mensal, contexto desktop, consentimento de email desmarcado e permissão page preservados. Preços, limites, conteúdo/idiomas/IDs, opt-in e controles fiscais inalterados. PLANS_ON_SALE=false, COMMISSION_LIVE=false; M0 vinculante12.02–12.21% continua reprovado para60%. Desconhecido não é zero; sem certificação geral ou H ativado.
+- **PR#696 documental incorporado às10:04:16**, merge `306e3bfc25feafc4a7b046d5faf6c812e4b424b3`, head `44d1c439841452fd61566854860ac7d42ec5933f`; Product39424420869/verify118633337049/Redis118633336821/security39424420844 aprovados, incluindo44casos da fixture corrigida. Registra96 e não incrementa contador. Este registro99 está empilhado no697, aguardando checks completos e incorporação desse PR; documento não é entrega funcional.
