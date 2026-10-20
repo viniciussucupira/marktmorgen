@@ -1,6 +1,8 @@
+import { checkCrmFeature } from "./crm-feature.mjs";
 import { checkPricing } from "./pricing.mjs";
 /** Read-only public comparisons; no accounts, emails, payments or API writes. */
 export async function checkSalesComparisons({browser,LOCAL,axeSource,is}){
+ await checkCrmFeature({browser,LOCAL,axeSource,is});
  await checkPricing({browser,LOCAL,axeSource,is});
  for(const width of [390,1280]){
   const context=await browser.newContext({viewport:{width,height:900}});

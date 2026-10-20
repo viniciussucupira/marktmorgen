@@ -1004,7 +1004,7 @@ Pedido P5: anexo524cc7f9-78af-42b5-ae37-4c05dc91a193/Texto colado.txt, lido19/10
    - Prova: links/recursos/preços verdadeiros, screenshots sintéticos com origem e sem repetição, layout390px/teclado/contraste/performance. Vídeo só com custo fixo/teto aprovado antes; não é requisito para completar o item. M0/custos explicitados.
 
 146. **[S5-PUBLIC-CRM] People, deals and pipelines**
-   - Estado: **a fazer; após S4**.
+   - Estado: **em andamento; branch codex/public-crm preparada enquanto S4 verifica capturas/custos; publicar após itens anteriores ou bloqueio registrado conforme regra do dono**.
    - Escopo: página em lib/feature-pages.ts para capacidades reais de app/studio/deals e people; pipelineLimit e demais limites por plano de lib/crm-rules.ts. "What it does not do": sem SMS, WhatsApp ou telefone. Menu/homeS4/comparaçãoHighLevel ligados; sitemap.
    - Prova: regras por plano e permissões existentes, links, leitura acessível/390px. Custo: página estática, sem operação nova de CRM; M0 igual.
 
@@ -1217,3 +1217,7 @@ Pedido P5: anexo524cc7f9-78af-42b5-ae37-4c05dc91a193/Texto colado.txt, lido19/10
 - Verificação39370350533 verify118456653258 encontrou ausência de aviso de nova aba em fontes externas. Acrescentar NewTab existente ao próprio link, mantendo a navegação e os idiomas existentes; não suprimir regra nem criar tradução. Testes do cálculo passaram. Nova verificação completa no head corrigido obrigatória.
 
 - Herdar correção S2 do redirect legado de /pricing (af5365b); /price,/prices,/plans apontam à página real. A calculadora só pode ser validada na rota de verdade; repetir suíte completa e exigir URL /pricing no browser.
+
+### S5 — página pública de CRM
+- People, deals and pipelines usa lib/crm-rules e record-space para2/5/10pipelines, campos/stages/deals e limites compartilhados. Registro de valor não é previsão. Campos/etapas privados para a equipe, email/workflows condicionados a opt-in, permissões e franquias; não prometer SMS/WhatsApp/telefone ou agênciaSaaS. Navegação e HighLevel ligados à página; sitemap vem de PAGES. HomeS4 será ligado ao publicar a página e preservar o head final de S4.
+- Testes de fatos/caps por plano, sitemap e links recíprocos; leitura390/1280,axe,teclado e nenhuma APIwrite. Conteúdo estático no renderer existente, sem endpoint/execuçãoCRM/dependência/imagem paga/operação nova, sem preço/limite/gate novo. M0 antes/depois mesmo modelo;12,02–12,21% vinculante abaixo60%, desconhecido reprova, PLANS_ON_SALE=false. Nenhuma certificação fiscal/margem; versão final exige CI completo.
