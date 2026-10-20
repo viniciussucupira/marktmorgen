@@ -62,7 +62,7 @@ export default function PlatformIndex() {
           <section aria-labelledby="creator-journey-title" data-creator-journey>
             <div className="flex flex-wrap items-end justify-between gap-4">
               <div><h2 id="creator-journey-title" className="t-h2 balance">Your creator journey</h2><p className="mt-4 max-w-2xl text-ink-soft">Start with the stage you need. Add the rest when it serves your work; every tool keeps its existing limits and permissions.</p></div>
-              <Link href="#catalogue-title" className="link">Browse every feature</Link>
+              <a href="#catalogue-title" className="link inline-flex min-h-11 items-center">Browse every feature</a>
             </div>
             <ol className="mt-8 grid gap-5 md:grid-cols-2">
               {CREATOR_JOURNEY.map((stage,index)=><li key={stage.id} id={`journey-${stage.id}`} className="rounded-2xl border border-line bg-white p-6 sm:p-8">
@@ -75,7 +75,7 @@ export default function PlatformIndex() {
           </section>
 
           <section className="reveal" aria-labelledby="catalogue-title">
-            <h2 id="catalogue-title" className="t-h2 mb-8" tabIndex={-1}>
+            <h2 id="catalogue-title" className="t-h2 mb-8 scroll-mt-32" tabIndex={-1}>
               The feature catalog
             </h2>
             <FeatureCatalogue
