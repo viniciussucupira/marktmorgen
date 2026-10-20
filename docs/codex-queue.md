@@ -2479,7 +2479,7 @@ Pricing FAQ repair history: run39407143422 caught mobile target-size;39409356932
 
 186. **[HT4] Completar a comparação existente com a Hotmart**
 - Estado: **Em implementação; verificação integral pendente**.
-- Registro:20/10/2026 às12:56:49 de Fortaleza. Base conferida `e19fc44a46ac799088bb70ad05631c081675789d`; commit de implementação: pendente.
+- Registro:20/10/2026 às12:56:49 de Fortaleza. Base conferida `e19fc44a46ac799088bb70ad05631c081675789d`; commit de implementação: `b1277da95f9586100d11dffa65d8f7f2ce707fef` (criado em2026-10-20T15:57:28Z, UTC; Fortaleza UTC−3).
 - A página existente /proof/hotmart recebe comparação de prazos de saque, marca/domínio e dependências do ecossistema. Preserva preços canônicos, taxas e ressalvas existentes, vantagens reais da Hotmart, SEO, rota e inventário de comparações; nenhuma página duplicada.
 - Fontes oficiais lidas20/10: política/taxas já registradas, artigo Hotmart360028608652 sobre disponibilidade de comissões, página oficial Club update-your-members-area e docs.stripe.com/payouts. Saque internacional pode começar em15 dias corridos, sujeito à garantia/elegibilidade; não confundir com BRL ou prometer saque imediato/mais rápido no Stripe. Hotmart Club tem personalização visual/domínio; não alegar ausência ou white-label completo. Domínio Marktmorgen segue configuração existente, plano, DNS e certificado.
 - Somente conteúdo estático e links; sem novo fornecedor, chamada de IA/provedor, leitura de conta ou custo variável por cliente. PLANS_ON_SALE=false, preços/limites, comissão, permissões/opt-in, tax gate, art.9a e revisão comercial preservados. Nenhuma promessa de ganhos, custo total menor ou margem certificada.
