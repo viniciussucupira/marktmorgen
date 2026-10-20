@@ -1042,7 +1042,7 @@ Pedido P5: anexo524cc7f9-78af-42b5-ae37-4c05dc91a193/Texto colado.txt, lido19/10
 
 153. **[S12-HOME-PATH] Jornada factual do Marktmorgen Path na home**
    - Pedido: mesma continuação direta S10–S12.
-   - Estado: **a fazer; após S11**.
+   - Estado: **em implementação; PR665/head7c77a6b passou integral; integração explícita do pai atual exige novo CI completo**.
    - Escopo: seção com passos reais e nomes do código atual, ligada a /platform/path. Cada passo distingue o que o criador faz e o que o produto faz por ele. Não prometer resultado, scale your business, conclusão por clique ou função ausente.
    - Prova: passos/nomes/estados conferidos no main, narrativa US English, link/teclado/390px/contraste, lint/tipos/testes integrais. Texto estático sem novo fato consultado em servidor; eventual operação nova só com conta/teto prévios. M0 antes/depois registrada; piso obrigatório60% não é certificação do modelo atual, vendas continuam fechadas.
 
@@ -1460,3 +1460,10 @@ Pedido P5: anexo524cc7f9-78af-42b5-ae37-4c05dc91a193/Texto colado.txt, lido19/10
 - Start your store eSee the live demo após provas, situações, módulos eplanos, preservando topo/fecho. Pares sem pop-up, promessa de gratuidade, especialista ouagendamento. hrefs/signin e/demoexistentes;prefetchfalse,semtelemetria/endpoint/assetnovo. FocoTabentreopções,layout390/1280eaxeexigidos. M0antes/depois mesmoenvelope12,02–12,21%reprovado sob60%;gates/vendasfechadasinalterados.
 
 - Head e91c584/Product39379619872,verify118485481773,Redis118485481908,segurança39379619891 passaram. Integrarúltimo headPR663comopai,mesmos4pares/baselines,semperderhistóricocanônico. Nova suíteintegralobrigatória.
+
+
+### S12 — sete missões reais do Path na home
+- Títulos/IDs/ordem lidos de dayMissions(NO_FACTS) em lib/path-rules.ts, sem duplicar nomes e semlerstore. Cadaetapa distingue ação do criador de checagem registrada; testecheckoutnãoverificaacesso/entrega,lojalivenãofazautocompra,leadnãoéconsentimentodemarketing,estornototalremoveconclusão,nenhumavenda/prazogarantidos. Lembretes/compartilhamentoopt-in e disponibilidadepagamentosemantém. Linkreal/platform/path.
+- UmparadicionalStartyourstore/demoapósPathmantémintervalosdeatéduasseções. Semasset/endpoint/provedor/operaçãonovos,prefetchfalse. M0antes/depoismesmoenvelope12,02–12,21%reprovadosob60%;gates/preços/limitesinalterados,vendasfechadas. Testescanônicos/roles/390/1280/foco/axe/semwritesexigidosnoheadfinal.
+
+- Head7c77a6b/Product39379624206 verify118485495851,Redis118485496028,segurança39379624198 verdes. Preservar7missões/5pares eúltimoPR664comopai;filaehistóricoscanônicossemperda. Nova suíteintegralobrigatóriaantesdeincorporar,nãocontarcabeçalhoverdeanteriorcomoconclusãodonovo.

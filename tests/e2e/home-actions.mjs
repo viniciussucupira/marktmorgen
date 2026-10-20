@@ -5,7 +5,7 @@ export async function checkHomeActions({browser,LOCAL,axeSource,is}){
    const page=await context.newPage();let writes=0;
    await page.route("**/api/**",async route=>{if(route.request().method()!=="GET"){writes++;await route.abort();}else await route.continue();});
    await page.goto(LOCAL+"/",{waitUntil:"domcontentloaded",timeout:60000});
-   is("home has four intermediate action pairs "+width,await page.locator("[data-home-actions]").count(),4);
+   is("home has five intermediate action pairs "+width,await page.locator("[data-home-actions]").count(),5);
    for(const group of await page.locator("[data-home-actions]").all()){
     await group.scrollIntoViewIfNeeded();const start=group.getByRole("link",{name:"Start your store",exact:true});const demo=group.getByRole("link",{name:"See the live demo",exact:true});
     is("start destination "+width,await start.getAttribute("href"),"/signin");is("demo destination "+width,await demo.getAttribute("href"),"/demo");
