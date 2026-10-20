@@ -14,6 +14,9 @@ Estado registrado em19/10/2026, após mesclagens623–625 (horários exatos nas 
 - Avisos curtos ao terminar; não esperar resposta para avançar. Somente publicação confirmada no domínio/versão incrementa o contador de entregas. PR mesclado e publicação são evidências distintas. Hora de mesclagem só é preenchida após GitHub fornecê-la; nunca antecipar um feito ou inventar horário futuro.
 - Mensagens/inscrições/aprovações externas, criação de conta e pagamentos reais continuam proibidos sem instrução explícita. Autorizar a fila não substitui as aprovações específicas que o próprio pedido reservou ao dono.
 
+- **P4:** atualização do dono no anexo70946172-40e4-4720-9329-d64271855eb4/Texto colado.txt, lida em19/10/2026,22h de Fortaleza (aproximado; hora original não fornecida). Preservar números/estados/detalhes existentes e inserir C2/D2/E2/F2/H/I/J/X nos pontos indicados. O levantamento de Skool/Kit/Circle/Teachable/Substack foi informado como oficial e comparado com main em19/10; não é pesquisa refeita pelo agente. Conferir cada capacidade no código antes de construir. Não alterar preço sem aprovação. Padrão de excelência e honestidade transversal reforçado; testes reais de AT/usuários/dispositivos não realizados continuam como lacuna a registrar em accessibility-programme.md. Nenhuma alegação AAA/superioridade sem prova.
+- IDs89–137 são novos e estão inseridos por seção; a ordem visual de execução prevalece, sem renumerar1–88. Juntar itens expressamente indicados (E11/E7/F5/H1/H2/I2), sem duplicar custo ou implementação. A expressão mínimo60% não certifica o M0 que ainda reprova.
+
 ## M0 — margem e custo antes/depois
 
 Fonte: [conta gerada](margin-alignment-2026-10-18.md), [modelo de recebimento](../lib/receiving-costs.ts), [registro de custos](../tests/plan-cost-registry.ts) e [piso](../tests/spend-floor.test.ts). Valores do modelo no main f2d044c, não uma revisão fiscal independente. Comissão=zero, uso integral simultâneo no pior mês e intervalos completos. Franquias grátis de fornecedor não valem custo zero.
@@ -84,6 +87,20 @@ A ordem abaixo é de execução dos itens acionáveis. Itens feitos/aguardando/c
    - Estado: **a fazer**.
    - Custo e margem: Ainda não calculado; leitura fiscal mais onerosa, custos de obrigação/registro e teto por fornecedor/loja precisam de prova antes de custo novo.
 
+### C2 — Capacidade dos planos (novos IDs estáveis)
+
+89. **[C2-CAPACITY] Calcular o máximo de cada franquia em cada plano e nos dois intervalos**
+   - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
+   - Estado: **a fazer**.
+   - Escopo e prova: Amplia I2 sem substituir seu número/estado. Conferir no código e calcular e-mails, ações de comunidade, visitas, pedidos, GB e horas de vídeo. Baseline fornecida: Store0e-mails/200ações/3.400visitas/200pedidos/5GB/4h; Studio7.000e-mails/1.000ações; Scale10.000e-mails/3.000ações. E-mail informado comoUS$0,90/mil em lib/plan.ts: verificar fornecedor/unidade mais cara. Comparação fornecida: Substack sem limite de envios, Kit grátis até10.000inscritos, Skool/Circle atividade de comunidade sem limite e Teachable alunos ilimitados/até1TB; são insumos do dono, não medição própria. Calcular máximo com60% ou mais no pior caso e comissão zero; subir somente onde ambos intervalos permitirem. Mudança de preço/pacote vai como proposta à seçãoI. M0 atual continua reprovada: nenhuma ampliação presumida.
+   - Custo e margem: Antes de construir: conferir capacidade existente no main e preservar Claude. Custo unitário pago mais caro, uso integral simultâneo por plano mensal/anual, taxas de receiving-costs e leitura fiscal mais onerosa (nunca abaixo de27,5%); teto por fornecedor/loja e reserva antes da operação, plan-cost-registry/spend-floor. Desconhecido reprova; sem cortar limite visível, mudar preço ou afrouxar gates.
+
+90. **[C2-EMAIL-HONESTY] Corrigir imediatamente a contradição pública sobre modelos de e-mail**
+   - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
+   - Estado: **a fazer**.
+   - Escopo e prova: Conferir os quatro modelos reais e o editor em lib/mail-body.ts/components/mail-designer.tsx. Em lib/feature-pages.ts, a seção de recursos anuncia quatro, mas a seção What it does not do yet ainda diz No templates. Corrigir a limitação para descrever o que existe e o que falta, com regressão na página real; sem prometer colunas ou capacidades ausentes.
+   - Custo e margem: Texto dentro da página existente, sem novo envio/chamada/armazenamento/franquia. Medir payload; M0 antes=depois somente se o envelope não aumentar. Preços/limites/gates preservados, sem certificação de60%.
+
 10. **[D7] Path para migração: produtos e páginas importados podem cumprir fatos correspondentes; importação nunca cria lead confirmado nem venda.**
    - Pedido: P1 item7; P2 D7; datas/horas e grau de certeza em Proveniência.
    - Estado: **a fazer**.
@@ -123,6 +140,56 @@ A ordem abaixo é de execução dos itens acionáveis. Itens feitos/aguardando/c
    - Pedido: P1 item15; P2 D15; datas/horas e grau de certeza em Proveniência.
    - Estado: **a fazer**.
    - Custo e margem: Sem fornecedor novo autorizado. Verificar disponibilidade operacional; se execução real depender de dispositivo/pessoa, registrar exatamente quem/o quê e seguir itens independentes.
+
+### D2 — Diferenciais exclusivos (após o Path)
+
+91. **[D2-EU-WITHDRAWAL] Consentimento europeu para entrega digital imediata**
+   - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
+   - Estado: **a fazer**.
+   - Escopo e prova: Urgente antes de venda digital a consumidor da UE. Conferir no EUR-Lex a Diretiva2011/83/UE arts.9,14,16 com a redação2019/2161. Consentimento expresso para entrega imediata e reconhecimento da perda do direito, texto versionado e horário guardados, confirmação no e-mail da compra. Atualizar Termos/reembolso/privacidade juntos. Cobrir os checkouts aplicáveis, sem inferir consentimento nem abrir vendas ou declarar conformidade antes de prova.
+   - Custo e margem: Antes de construir: conferir capacidade existente no main e preservar Claude. Custo unitário pago mais caro, uso integral simultâneo por plano mensal/anual, taxas de receiving-costs e leitura fiscal mais onerosa (nunca abaixo de27,5%); teto por fornecedor/loja e reserva antes da operação, plan-cost-registry/spend-floor. Desconhecido reprova; sem cortar limite visível, mudar preço ou afrouxar gates.
+
+92. **[D2-PREORDER-GOAL] Meta de pré-venda com reembolso automático**
+   - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
+   - Estado: **a fazer**.
+   - Escopo e prova: Conferir/reaproveitar lib/preorders.ts. Criador define mínimo de pedidos e data; meta não atingida reembolsa automaticamente pela própria conta Stripe e avisa compradores. Contagem real de pedidos, sem urgência/escassez falsa. Antes de ligar, informar que o Stripe não devolve sua taxa. Orçar reembolsos, avisos, concorrência, retries/idempotência e retenção.
+   - Custo e margem: Antes de construir: conferir capacidade existente no main e preservar Claude. Custo unitário pago mais caro, uso integral simultâneo por plano mensal/anual, taxas de receiving-costs e leitura fiscal mais onerosa (nunca abaixo de27,5%); teto por fornecedor/loja e reserva antes da operação, plan-cost-registry/spend-floor. Desconhecido reprova; sem cortar limite visível, mudar preço ou afrouxar gates.
+
+93. **[D2-VERIFIED-SOCIAL] Prova social calculada e verificável**
+   - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
+   - Estado: **a fazer**.
+   - Escopo e prova: Opt-in desligado por padrão. Números reais da conta Stripe e registros da própria loja: compradores e conclusão de cursos, reembolsos descontados, sem arredondar para cima. Selo Verified by Marktmorgen e página pública de verificação com escopo e data; nunca números editáveis/inventados nem certificação geral implícita.
+   - Custo e margem: Antes de construir: conferir capacidade existente no main e preservar Claude. Custo unitário pago mais caro, uso integral simultâneo por plano mensal/anual, taxas de receiving-costs e leitura fiscal mais onerosa (nunca abaixo de27,5%); teto por fornecedor/loja e reserva antes da operação, plan-cost-registry/spend-floor. Desconhecido reprova; sem cortar limite visível, mudar preço ou afrouxar gates.
+
+94. **[D2-BUYER-TRUST] Cartão de confiança factual para o comprador**
+   - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
+   - Estado: **a fazer**.
+   - Escopo e prova: Sistema calcula política de reembolso, entregas recentes bem-sucedidas, tempo médio de resposta, idade da loja e identidade verificada pelo Stripe, somente quando comprováveis. Nada preenchido manualmente pelo criador como se fosse verificação; privacidade, períodos, amostra/indisponibilidade e custo de leitura precisam de definição.
+   - Custo e margem: Antes de construir: conferir capacidade existente no main e preservar Claude. Custo unitário pago mais caro, uso integral simultâneo por plano mensal/anual, taxas de receiving-costs e leitura fiscal mais onerosa (nunca abaixo de27,5%); teto por fornecedor/loja e reserva antes da operação, plan-cost-registry/spend-floor. Desconhecido reprova; sem cortar limite visível, mudar preço ou afrouxar gates.
+
+95. **[D2-DEMAND-RADAR] Radar mensal do que o público solicita**
+   - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
+   - Estado: **a fazer**.
+   - Escopo e prova: A partir das perguntas no assistente/chat, perguntas sem resposta, motivos de reembolso e waitlists da própria loja. Sugestão por IA somente quando o criador pedir, paga pela franquia com reserva. Definir consentimento, retenção, agregação e acesso; sem expor compradores ou dados de outra loja.
+   - Custo e margem: Antes de construir: conferir capacidade existente no main e preservar Claude. Custo unitário pago mais caro, uso integral simultâneo por plano mensal/anual, taxas de receiving-costs e leitura fiscal mais onerosa (nunca abaixo de27,5%); teto por fornecedor/loja e reserva antes da operação, plan-cost-registry/spend-floor. Desconhecido reprova; sem cortar limite visível, mudar preço ou afrouxar gates.
+
+96. **[D2-LESSON-DROPOFF] Mapa de abandono das aulas**
+   - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
+   - Estado: **a fazer**.
+   - Escopo e prova: Mostrar em qual aula alunos param, cruzado com reembolsos e sugestões de melhoria. Conferir medição real do servidor e registros existentes, denominadores/janela e privacidade; não apresentar correlação como causa nem inventar conclusão/tempo assistido.
+   - Custo e margem: Antes de construir: conferir capacidade existente no main e preservar Claude. Custo unitário pago mais caro, uso integral simultâneo por plano mensal/anual, taxas de receiving-costs e leitura fiscal mais onerosa (nunca abaixo de27,5%); teto por fornecedor/loja e reserva antes da operação, plan-cost-registry/spend-floor. Desconhecido reprova; sem cortar limite visível, mudar preço ou afrouxar gates.
+
+97. **[D2-OPEN-EXIT] Saída com exportação aberta e redirecionamento por90dias**
+   - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
+   - Estado: **a fazer**.
+   - Escopo e prova: Exportar produtos, arquivos, cursos, lista com consentimento e páginas em formatos abertos com um clique. Redirecionar links da loja90dias após saída, compromisso nos Termos somente depois de implementação/prova/funding. Orçar tamanho, storage/banda, limite de ocorrência e exposição pós-cancelamento antes da promessa; preservar direitos de exportação/exclusão.
+   - Custo e margem: Antes de construir: conferir capacidade existente no main e preservar Claude. Custo unitário pago mais caro, uso integral simultâneo por plano mensal/anual, taxas de receiving-costs e leitura fiscal mais onerosa (nunca abaixo de27,5%); teto por fornecedor/loja e reserva antes da operação, plan-cost-registry/spend-floor. Desconhecido reprova; sem cortar limite visível, mudar preço ou afrouxar gates.
+
+98. **[D2-COMPLIANCE-REVIEW] Checagem factual de conformidade da loja**
+   - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
+   - Estado: **a fazer**.
+   - Escopo e prova: Reunir arrependimento do item91, IVA da seçãoC, divulgação FTC automática nos links de afiliado e checagens de alt/contraste/legendas em páginas/arquivos do criador. Mostrar o que falta e como corrigir, com limites de verificação; não dizer AAA/conformidade legal por causa de uma nota ou teste automatizado.
+   - Custo e margem: Antes de construir: conferir capacidade existente no main e preservar Claude. Custo unitário pago mais caro, uso integral simultâneo por plano mensal/anual, taxas de receiving-costs e leitura fiscal mais onerosa (nunca abaixo de27,5%); teto por fornecedor/loja e reserva antes da operação, plan-cost-registry/spend-floor. Desconhecido reprova; sem cortar limite visível, mudar preço ou afrouxar gates.
 
 18. **[E1] Tutor por IA nas aulas, só conteúdo do curso, reaproveitando pool/heldToFacts e encaminhamento ao criador; add-on ou franquia, nunca trial.**
    - Pedido: P2 E1; datas/horas e grau de certeza em Proveniência.
@@ -194,6 +261,110 @@ A ordem abaixo é de execução dos itens acionáveis. Itens feitos/aguardando/c
    - Estado: **a fazer**.
    - Custo e margem: Proposta e conta primeiro; alteração de preço de plano exige aprovação explícita, sem usar preços para fazer teste passar.
 
+### E2 — Novos ganhos rápidos (ordem aprovada P4)
+
+99. **[E2-TAG-BROADCAST] Enviar e-mail a etiqueta ou segmento**
+   - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
+   - Estado: **a fazer**.
+   - Escopo e prova: Conferir lib/broadcasts.ts e seleção atual: etiqueta/segmento além de todos/compradores/leads, sempre dentro da franquia e consentimento.
+   - Custo e margem: Antes de construir: conferir capacidade existente no main e preservar Claude. Custo unitário pago mais caro, uso integral simultâneo por plano mensal/anual, taxas de receiving-costs e leitura fiscal mais onerosa (nunca abaixo de27,5%); teto por fornecedor/loja e reserva antes da operação, plan-cost-registry/spend-floor. Desconhecido reprova; sem cortar limite visível, mudar preço ou afrouxar gates.
+
+100. **[E2-MEMBER-PUBLICATIONS] Posts e edições publicados só para membros**
+   - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
+   - Estado: **a fazer**.
+   - Escopo e prova: Juntar a E11, sem duplicar implementação: blog e /letters restritos a quem tem produto escolhido, com arquivo de edições para membros. Autorização no servidor e retirada de acesso/refundos em todos os caminhos.
+   - Custo e margem: Antes de construir: conferir capacidade existente no main e preservar Claude. Custo unitário pago mais caro, uso integral simultâneo por plano mensal/anual, taxas de receiving-costs e leitura fiscal mais onerosa (nunca abaixo de27,5%); teto por fornecedor/loja e reserva antes da operação, plan-cost-registry/spend-floor. Desconhecido reprova; sem cortar limite visível, mudar preço ou afrouxar gates.
+
+101. **[E2-PUBLICATION-REACTIONS] Comentários e curtidas no blog e nas edições**
+   - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
+   - Estado: **a fazer**.
+   - Escopo e prova: Reaproveitar lib/lesson-comments.ts com moderação, permissões, exclusão e tetos; não publicar contatos ou aumentar atividade fora da franquia.
+   - Custo e margem: Antes de construir: conferir capacidade existente no main e preservar Claude. Custo unitário pago mais caro, uso integral simultâneo por plano mensal/anual, taxas de receiving-costs e leitura fiscal mais onerosa (nunca abaixo de27,5%); teto por fornecedor/loja e reserva antes da operação, plan-cost-registry/spend-floor. Desconhecido reprova; sem cortar limite visível, mudar preço ou afrouxar gates.
+
+102. **[E2-COURSE-COMPLIANCE] Ordem de aulas e90% de vídeo medidos no servidor**
+   - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
+   - Estado: **a fazer**.
+   - Escopo e prova: Conferir o que já existe. Pré-requisitos obrigatórios e regra assistir90% antes de liberar a próxima, sem aceitar afirmação arbitrária do navegador como prova. Considerar acessibilidade e alternativas equivalentes sem certificar presença fictícia.
+   - Custo e margem: Antes de construir: conferir capacidade existente no main e preservar Claude. Custo unitário pago mais caro, uso integral simultâneo por plano mensal/anual, taxas de receiving-costs e leitura fiscal mais onerosa (nunca abaixo de27,5%); teto por fornecedor/loja e reserva antes da operação, plan-cost-registry/spend-floor. Desconhecido reprova; sem cortar limite visível, mudar preço ou afrouxar gates.
+
+103. **[E2-LESSON-MEDIA] Áudio, PDF na aula e blocos de código/HTML**
+   - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
+   - Estado: **a fazer**.
+   - Escopo e prova: Dentro do storage e demais limites existentes; PDF acessível, código legível por teclado/leitor e HTML isolado/sanitizado, sem script/conteúdo perigoso ou capacidade não comprovada.
+   - Custo e margem: Antes de construir: conferir capacidade existente no main e preservar Claude. Custo unitário pago mais caro, uso integral simultâneo por plano mensal/anual, taxas de receiving-costs e leitura fiscal mais onerosa (nunca abaixo de27,5%); teto por fornecedor/loja e reserva antes da operação, plan-cost-registry/spend-floor. Desconhecido reprova; sem cortar limite visível, mudar preço ou afrouxar gates.
+
+104. **[E2-MODULE-PUSH] Push quando um módulo do curso libera**
+   - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
+   - Estado: **a fazer**.
+   - Escopo e prova: Conferir lib/web-push.ts; opt-in/dispositivos, retirada, fuso/silêncio e franquias existentes. Sem push real nos testes.
+   - Custo e margem: Antes de construir: conferir capacidade existente no main e preservar Claude. Custo unitário pago mais caro, uso integral simultâneo por plano mensal/anual, taxas de receiving-costs e leitura fiscal mais onerosa (nunca abaixo de27,5%); teto por fornecedor/loja e reserva antes da operação, plan-cost-registry/spend-floor. Desconhecido reprova; sem cortar limite visível, mudar preço ou afrouxar gates.
+
+105. **[E2-COURSE-AI-DRAFT] Rascunho de aulas e página de venda a partir do esboço**
+   - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
+   - Estado: **a fazer**.
+   - Escopo e prova: IA somente por pedido do criador, paga pela franquia com hold prévio; revisão humana, fatos próprios, sem ganho/depoimento/escassez inventados, nunca trial.
+   - Custo e margem: Antes de construir: conferir capacidade existente no main e preservar Claude. Custo unitário pago mais caro, uso integral simultâneo por plano mensal/anual, taxas de receiving-costs e leitura fiscal mais onerosa (nunca abaixo de27,5%); teto por fornecedor/loja e reserva antes da operação, plan-cost-registry/spend-floor. Desconhecido reprova; sem cortar limite visível, mudar preço ou afrouxar gates.
+
+106. **[E2-CHECKOUT-EXTRAS] Até10compras adicionais no checkout**
+   - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
+   - Estado: **a fazer**.
+   - Escopo e prova: Hoje informado como3, Teachable10: conferir código. Aumento só com custo e60% nos dois intervalos, preço/total claro, nenhuma caixa pré-marcada e todas as combinações/caminhos fiscais testados.
+   - Custo e margem: Antes de construir: conferir capacidade existente no main e preservar Claude. Custo unitário pago mais caro, uso integral simultâneo por plano mensal/anual, taxas de receiving-costs e leitura fiscal mais onerosa (nunca abaixo de27,5%); teto por fornecedor/loja e reserva antes da operação, plan-cost-registry/spend-floor. Desconhecido reprova; sem cortar limite visível, mudar preço ou afrouxar gates.
+
+107. **[E2-BROADCAST-CONTENT-AB] A/B do conteúdo de envios de e-mail**
+   - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
+   - Estado: **a fazer**.
+   - Escopo e prova: Além das sequências: seleção aleatória, denominadores, contagem factual de visitas/vendas, consentimento de cliques, nunca aberturas/pixels. Todos os envios dentro da franquia.
+   - Custo e margem: Antes de construir: conferir capacidade existente no main e preservar Claude. Custo unitário pago mais caro, uso integral simultâneo por plano mensal/anual, taxas de receiving-costs e leitura fiscal mais onerosa (nunca abaixo de27,5%); teto por fornecedor/loja e reserva antes da operação, plan-cost-registry/spend-floor. Desconhecido reprova; sem cortar limite visível, mudar preço ou afrouxar gates.
+
+108. **[E2-BLOG-RSS-MAIL] Enviar novos posts à lista por RSS**
+   - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
+   - Estado: **a fazer**.
+   - Escopo e prova: Conferir publicações e filas existentes; envios automáticos só com configuração/consentimento, idempotência, limite de polling e franquia de e-mails.
+   - Custo e margem: Antes de construir: conferir capacidade existente no main e preservar Claude. Custo unitário pago mais caro, uso integral simultâneo por plano mensal/anual, taxas de receiving-costs e leitura fiscal mais onerosa (nunca abaixo de27,5%); teto por fornecedor/loja e reserva antes da operação, plan-cost-registry/spend-floor. Desconhecido reprova; sem cortar limite visível, mudar preço ou afrouxar gates.
+
+109. **[E2-EVENTS] Eventos recorrentes, waitlist, ingressos, cupons e presença pública**
+   - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
+   - Estado: **a fazer**.
+   - Escopo e prova: Juntar a F5 ingressos presenciais/QR. Presença pode virar contato somente com consentimento pertinente; conferir recorrência/fuso/cancelamento/reembolso, capacidade real e permissões de publicação.
+   - Custo e margem: Antes de construir: conferir capacidade existente no main e preservar Claude. Custo unitário pago mais caro, uso integral simultâneo por plano mensal/anual, taxas de receiving-costs e leitura fiscal mais onerosa (nunca abaixo de27,5%); teto por fornecedor/loja e reserva antes da operação, plan-cost-registry/spend-floor. Desconhecido reprova; sem cortar limite visível, mudar preço ou afrouxar gates.
+
+110. **[E2-MEMBER-PROFILES] Campos de perfil, etiquetas, grupos de acesso e mapa de membros**
+   - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
+   - Estado: **a fazer**.
+   - Escopo e prova: Conferir perfis atuais; controle do próprio membro, opt-in/localização aproximada, visibilidade, retirada/exclusão e acesso no servidor. Nada de endereço preciso público ou inferência de consentimento.
+   - Custo e margem: Antes de construir: conferir capacidade existente no main e preservar Claude. Custo unitário pago mais caro, uso integral simultâneo por plano mensal/anual, taxas de receiving-costs e leitura fiscal mais onerosa (nunca abaixo de27,5%); teto por fornecedor/loja e reserva antes da operação, plan-cost-registry/spend-floor. Desconhecido reprova; sem cortar limite visível, mudar preço ou afrouxar gates.
+
+111. **[E2-COMMUNITY-AUTOMATION] Gatilhos, webhooks e DM da comunidade**
+   - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
+   - Estado: **a fazer**.
+   - Escopo e prova: Post publicado, membro entrou, presença confirmada e nível alcançado. Resposta automática por DM só autorizada/opt-in, dentro de tetos, sem duplicatas e sem mensagens reais no teste.
+   - Custo e margem: Antes de construir: conferir capacidade existente no main e preservar Claude. Custo unitário pago mais caro, uso integral simultâneo por plano mensal/anual, taxas de receiving-costs e leitura fiscal mais onerosa (nunca abaixo de27,5%); teto por fornecedor/loja e reserva antes da operação, plan-cost-registry/spend-floor. Desconhecido reprova; sem cortar limite visível, mudar preço ou afrouxar gates.
+
+112. **[E2-POINTS] Pontos por posts, comentários e aulas concluídas**
+   - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
+   - Estado: **a fazer**.
+   - Escopo e prova: Juntar a E7 e lib/community-points.ts; níveis e limites definidos pelo criador, fatos válidos do servidor, antirrepetição e reversão pertinente, sem premiar eventos inventados.
+   - Custo e margem: Antes de construir: conferir capacidade existente no main e preservar Claude. Custo unitário pago mais caro, uso integral simultâneo por plano mensal/anual, taxas de receiving-costs e leitura fiscal mais onerosa (nunca abaixo de27,5%); teto por fornecedor/loja e reserva antes da operação, plan-cost-registry/spend-floor. Desconhecido reprova; sem cortar limite visível, mudar preço ou afrouxar gates.
+
+113. **[E2-COMMUNITY-MODERATION] Filtro de palavras e moderação automática de spam**
+   - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
+   - Estado: **a fazer**.
+   - Escopo e prova: Conferir moderação atual; regras/limites, revisão/recursos, falsos positivos e privacidade. IA, se vier a ser proposta, exige pool/reserva/custo próprios e autorização do escopo.
+   - Custo e margem: Antes de construir: conferir capacidade existente no main e preservar Claude. Custo unitário pago mais caro, uso integral simultâneo por plano mensal/anual, taxas de receiving-costs e leitura fiscal mais onerosa (nunca abaixo de27,5%); teto por fornecedor/loja e reserva antes da operação, plan-cost-registry/spend-floor. Desconhecido reprova; sem cortar limite visível, mudar preço ou afrouxar gates.
+
+114. **[E2-AFFILIATE-TAX-FORMS] W-9/W-8BEN e exportação para1099**
+   - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
+   - Estado: **a fazer**.
+   - Escopo e prova: Conferir obrigações aplicáveis e implementação antes de construir. Números criptografados, acesso mínimo, gestão de chaves, retenção/exclusão, custo e exportação segura; nenhum documento real ou submissão fiscal nos testes.
+   - Custo e margem: Antes de construir: conferir capacidade existente no main e preservar Claude. Custo unitário pago mais caro, uso integral simultâneo por plano mensal/anual, taxas de receiving-costs e leitura fiscal mais onerosa (nunca abaixo de27,5%); teto por fornecedor/loja e reserva antes da operação, plan-cost-registry/spend-floor. Desconhecido reprova; sem cortar limite visível, mudar preço ou afrouxar gates.
+
+115. **[E2-FOUNDING-MEMBERS] Plano fundador de preço maior nas assinaturas**
+   - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
+   - Estado: **a fazer**.
+   - Escopo e prova: Opção de preço do produto/membro definida pelo criador; não altera preço dos planos Marktmorgen, assinaturas existentes ou cobranças sem escolha. Conferir Stripe, avisos, direitos e custos fiscais.
+   - Custo e margem: Antes de construir: conferir capacidade existente no main e preservar Claude. Custo unitário pago mais caro, uso integral simultâneo por plano mensal/anual, taxas de receiving-costs e leitura fiscal mais onerosa (nunca abaixo de27,5%); teto por fornecedor/loja e reserva antes da operação, plan-cost-registry/spend-floor. Desconhecido reprova; sem cortar limite visível, mudar preço ou afrouxar gates.
+
 32. **[F1] Construtor de páginas mais livre, preservando acessibilidade, desempenho e honestidade.**
    - Pedido: P2 F1; datas/horas e grau de certeza em Proveniência.
    - Estado: **a fazer**.
@@ -229,6 +400,74 @@ A ordem abaixo é de execução dos itens acionáveis. Itens feitos/aguardando/c
    - Estado: **a fazer**.
    - Custo e margem: Sem alegações comparativas antes de metodologia, ambiente e evidência reproduzível; custo de ferramentas precisa de aprovação se novo.
 
+### F2 — Novos itens maiores (ordem aprovada P4)
+
+116. **[F2-COMMUNITY-CHANNELS] Vários chats, grupos, reações e atualização ao vivo**
+   - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
+   - Estado: **a fazer**.
+   - Escopo e prova: Conferir sala atual de polling5–30segundos. Orçar conexões, mensagens, concorrência, leitura e banda em uso integral; permissões entre grupos, moderação e acessibilidade.
+   - Custo e margem: Antes de construir: conferir capacidade existente no main e preservar Claude. Custo unitário pago mais caro, uso integral simultâneo por plano mensal/anual, taxas de receiving-costs e leitura fiscal mais onerosa (nunca abaixo de27,5%); teto por fornecedor/loja e reserva antes da operação, plan-cost-registry/spend-floor. Desconhecido reprova; sem cortar limite visível, mudar preço ou afrouxar gates.
+
+117. **[F2-COMMUNITY-MAIL] E-mails de resposta/menção e resumo periódico**
+   - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
+   - Estado: **a fazer**.
+   - Escopo e prova: Só para quem optou por receber, dentro da franquia; agregação/fuso/silêncio, supressão/unsubscribe, teto automático, sem novo envio real.
+   - Custo e margem: Antes de construir: conferir capacidade existente no main e preservar Claude. Custo unitário pago mais caro, uso integral simultâneo por plano mensal/anual, taxas de receiving-costs e leitura fiscal mais onerosa (nunca abaixo de27,5%); teto por fornecedor/loja e reserva antes da operação, plan-cost-registry/spend-floor. Desconhecido reprova; sem cortar limite visível, mudar preço ou afrouxar gates.
+
+118. **[F2-READER-REFERRALS] Indicação de leitores/alunos com meses ou produto**
+   - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
+   - Estado: **a fazer**.
+   - Escopo e prova: Recompensa por cupom na conta Stripe do criador, com teto de confirmações e antiabuso/idempotência. Nenhum dinheiro sob custódia do Marktmorgen; custo de e-mails e exposição de recompensa antes de ativar.
+   - Custo e margem: Antes de construir: conferir capacidade existente no main e preservar Claude. Custo unitário pago mais caro, uso integral simultâneo por plano mensal/anual, taxas de receiving-costs e leitura fiscal mais onerosa (nunca abaixo de27,5%); teto por fornecedor/loja e reserva antes da operação, plan-cost-registry/spend-floor. Desconhecido reprova; sem cortar limite visível, mudar preço ou afrouxar gates.
+
+119. **[F2-FREE-RECOMMENDATIONS] Recomendações gratuitas entre lojas**
+   - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
+   - Estado: **a fazer**.
+   - Escopo e prova: Escolha transparente do criador na confirmação de inscrição, sem pagamento, sem inscrição automática em outra lista; versão paga fora do escopo, privacidade/consentimento e teto de leituras.
+   - Custo e margem: Antes de construir: conferir capacidade existente no main e preservar Claude. Custo unitário pago mais caro, uso integral simultâneo por plano mensal/anual, taxas de receiving-costs e leitura fiscal mais onerosa (nunca abaixo de27,5%); teto por fornecedor/loja e reserva antes da operação, plan-cost-registry/spend-floor. Desconhecido reprova; sem cortar limite visível, mudar preço ou afrouxar gates.
+
+120. **[F2-IMPORTS] Imports de Substack, Kit e Teachable**
+   - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
+   - Estado: **a fazer**.
+   - Escopo e prova: Substack/Kit: inscritos e posts; Teachable: aulas, vídeos e provas. Dentro de importação/storage, validação do export real, consentimento, limites por arquivo, preview e isolamento. Teste sintético não é prova de export real.
+   - Custo e margem: Antes de construir: conferir capacidade existente no main e preservar Claude. Custo unitário pago mais caro, uso integral simultâneo por plano mensal/anual, taxas de receiving-costs e leitura fiscal mais onerosa (nunca abaixo de27,5%); teto por fornecedor/loja e reserva antes da operação, plan-cost-registry/spend-floor. Desconhecido reprova; sem cortar limite visível, mudar preço ou afrouxar gates.
+
+121. **[F2-SUBSCRIPTION-GIFTS] Presentes e grupo para assinaturas/membros**
+   - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
+   - Estado: **a fazer**.
+   - Escopo e prova: Conferir suporte atual a pagamento único; orçar direitos recorrentes, cancelamento/reembolso, cobrança e convites com consentimento, sem duplicar lugares ou vender acesso não confirmado.
+   - Custo e margem: Antes de construir: conferir capacidade existente no main e preservar Claude. Custo unitário pago mais caro, uso integral simultâneo por plano mensal/anual, taxas de receiving-costs e leitura fiscal mais onerosa (nunca abaixo de27,5%); teto por fornecedor/loja e reserva antes da operação, plan-cost-registry/spend-floor. Desconhecido reprova; sem cortar limite visível, mudar preço ou afrouxar gates.
+
+122. **[F2-COMMUNITY-AI] Agente de comunidade com resumo/moderação**
+   - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
+   - Estado: **a fazer**.
+   - Escopo e prova: Add-on pago proposto, com reserva antes do modelo, conteúdo da própria comunidade, privacidade/moderação humana, tetos e60% por unidade/intervalo. Preço proposto precisa do dono; nunca trial.
+   - Custo e margem: Antes de construir: conferir capacidade existente no main e preservar Claude. Custo unitário pago mais caro, uso integral simultâneo por plano mensal/anual, taxas de receiving-costs e leitura fiscal mais onerosa (nunca abaixo de27,5%); teto por fornecedor/loja e reserva antes da operação, plan-cost-registry/spend-floor. Desconhecido reprova; sem cortar limite visível, mudar preço ou afrouxar gates.
+
+123. **[F2-COMMUNITY-DIRECTORY] Diretório público e avaliações de comunidades**
+   - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
+   - Estado: **a fazer**.
+   - Escopo e prova: Gratuito e opt-in somente com lojas suficientes, como diretório de afiliados; definir critério/base mínima, moderação, verificação de avaliações, exposição financiada e privacidade.
+   - Custo e margem: Antes de construir: conferir capacidade existente no main e preservar Claude. Custo unitário pago mais caro, uso integral simultâneo por plano mensal/anual, taxas de receiving-costs e leitura fiscal mais onerosa (nunca abaixo de27,5%); teto por fornecedor/loja e reserva antes da operação, plan-cost-registry/spend-floor. Desconhecido reprova; sem cortar limite visível, mudar preço ou afrouxar gates.
+
+124. **[F2-EDIT-SENT-LINKS] Editar destino de links de e-mail enviado**
+   - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
+   - Estado: **a fazer**.
+   - Escopo e prova: Redirecionamento por link, com autorização, destinos seguros, história/retirada, retenção e custo de leitura/alteração. Preservar ausência de tracking de abertura e consentimento de cliques.
+   - Custo e margem: Antes de construir: conferir capacidade existente no main e preservar Claude. Custo unitário pago mais caro, uso integral simultâneo por plano mensal/anual, taxas de receiving-costs e leitura fiscal mais onerosa (nunca abaixo de27,5%); teto por fornecedor/loja e reserva antes da operação, plan-cost-registry/spend-floor. Desconhecido reprova; sem cortar limite visível, mudar preço ou afrouxar gates.
+
+125. **[F2-EMAIL-POLLS] Enquetes por clique em e-mail**
+   - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
+   - Estado: **a fazer**.
+   - Escopo e prova: Consentimento explícito por clique, antiscanner, autenticação/antirrepetição, opção de retirada e privacidade; não inferir voto da mera abertura.
+   - Custo e margem: Antes de construir: conferir capacidade existente no main e preservar Claude. Custo unitário pago mais caro, uso integral simultâneo por plano mensal/anual, taxas de receiving-costs e leitura fiscal mais onerosa (nunca abaixo de27,5%); teto por fornecedor/loja e reserva antes da operação, plan-cost-registry/spend-floor. Desconhecido reprova; sem cortar limite visível, mudar preço ou afrouxar gates.
+
+126. **[F2-MULTIPLE-COMMUNITIES] Mais de uma comunidade por loja**
+   - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
+   - Estado: **a fazer**.
+   - Escopo e prova: Conferir arquitetura atual; isolamento de membros, acessos, cotas, moderação, retenção, custos e sem reduzir direitos/limites existentes.
+   - Custo e margem: Antes de construir: conferir capacidade existente no main e preservar Claude. Custo unitário pago mais caro, uso integral simultâneo por plano mensal/anual, taxas de receiving-costs e leitura fiscal mais onerosa (nunca abaixo de27,5%); teto por fornecedor/loja e reserva antes da operação, plan-cost-registry/spend-floor. Desconhecido reprova; sem cortar limite visível, mudar preço ou afrouxar gates.
+
 39. **[G1] Documentar requisitos Meta para AutoDM, comentários, inbox Instagram/Messenger e WhatsApp; depois código pronto e desligado até aprovação.**
    - Pedido: P2 G1; datas/horas e grau de certeza em Proveniência.
    - Estado: **a fazer**.
@@ -259,10 +498,14 @@ A ordem abaixo é de execução dos itens acionáveis. Itens feitos/aguardando/c
    - Estado: **a fazer**.
    - Custo e margem: SOMENTE DOCUMENTO agora. Custos/franquias e margens antes/depois por plano mensal/anual ainda não calculados; qualquer custo desconhecido reprova implementação. Sem conta, contrato ou fornecedor novo.
 
+   - Ampliação P4 de H1: incluir aulas offline no celular (Teachable), como estudo documental, junto da avaliação de app/PWA; sem downloads offline/licenças/armazenamento novo agora.
+
 45. **[H2] Transmissão ao vivo hospedada, preço por minuto e teto automático.**
    - Pedido: P2 H2; datas/horas e grau de certeza em Proveniência.
    - Estado: **a fazer**.
    - Custo e margem: SOMENTE DOCUMENTO agora. Custos/franquias e margens antes/depois por plano mensal/anual ainda não calculados; qualquer custo desconhecido reprova implementação. Sem conta, contrato ou fornecedor novo.
+
+   - Ampliação P4 de H2: incluir chamadas gravadas e transmissão própria com gravação e salas paralelas (Skool/Circle/Substack), juntas neste estudo. Continua somente documento; não reabre a implementação excluída em X6.
 
 46. **[H3] Marketplace com produtos de todos os criadores: moderação, consumo e condição de muitas lojas antes de valer.**
    - Pedido: P2 H3; datas/horas e grau de certeza em Proveniência.
@@ -284,15 +527,25 @@ A ordem abaixo é de execução dos itens acionáveis. Itens feitos/aguardando/c
    - Estado: **a fazer**.
    - Custo e margem: SOMENTE DOCUMENTO agora. Custos/franquias e margens antes/depois por plano mensal/anual ainda não calculados; qualquer custo desconhecido reprova implementação. Sem conta, contrato ou fornecedor novo.
 
+127. **[H7-CUSTOM-CSS] Estudo de CSS personalizado, por último em H**
+   - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
+   - Estado: **a fazer**.
+   - Escopo e prova: Somente documento: riscos às regras de design, contraste, foco, legibilidade, injeção/recursos externos, suporte, desempenho e orçamento; nenhuma liberação de CSS agora.
+   - Custo e margem: SOMENTE DOCUMENTO. Nenhuma nova operação/conta/fornecedor. Custos futuros e limites ainda precisam do cálculo completo; desconhecido reprova.
+
 50. **[I1] Escrever docs/packaging-vs-competitors.md comparando Store69/Studio449/Scale999 com os preços/fontes fornecidos de Stan/Kajabi/Hotmart/ClickFunnels/HighLevel, recurso por recurso.**
    - Pedido: P2 I1; datas/horas e grau de certeza em Proveniência.
    - Estado: **a fazer**.
    - Custo e margem: SOMENTE PROPOSTA. Nenhum preço/pacote/limite/pagamento muda sem aprovação do dono; custo unitário pago mais caro, franquias/tetos e leitura fiscal mais onerosa antes/depois são obrigatórios. Enquanto M0 reprovar, não declarar proposta financeiramente aprovada.
 
+   - Ampliação P4 de I1 (proposta, dados fornecidos em19/10/2026, não cotação própria): Skool HobbyUS$9/mês+10%+30¢ e ProUS$99+2,9%+30¢; Kit grátis até10.000inscritos, CreatorUS$33, ProUS$66, vendas3,5%+30¢; CircleUS$89/199/419 por mês no anual+2%/1%/0,5%; TeachableUS$39/89/189+7,5% no Starter; Substack10% das assinaturas+0,5% recorrente. Incluir domínio próprio no Store como proposta (Circle informado em todos os planos), sem ativar nem alterar preço/pacote. Conferir termos/unidade/cadência antes de comparação pública.
+
 51. **[I2] Propor quantos e-mails Store pode incluir nos intervalos mensal/anual mantendo piso na leitura fiscal vinculante, sem reduzir limite visível.**
    - Pedido: P2 I2; datas/horas e grau de certeza em Proveniência.
    - Estado: **a fazer**.
    - Custo e margem: SOMENTE PROPOSTA. Nenhum preço/pacote/limite/pagamento muda sem aprovação do dono; custo unitário pago mais caro, franquias/tetos e leitura fiscal mais onerosa antes/depois são obrigatórios. Enquanto M0 reprovar, não declarar proposta financeiramente aprovada.
+
+   - Ampliação P4 de I2: incorporar a matriz completa da nova entrada89/C2; todo aumento exige60% nos dois intervalos sob a leitura vinculante. Quando depender de preço/pacote, somente proposta ao dono.
 
 52. **[I3] Comparar indicação entre criadores já pronta/pausada (50% em crédito) com20% em dinheiro e propor após conta de margem.**
    - Pedido: P2 I3; datas/horas e grau de certeza em Proveniência.
@@ -304,10 +557,44 @@ A ordem abaixo é de execução dos itens acionáveis. Itens feitos/aguardando/c
    - Estado: **a fazer**.
    - Custo e margem: Documentação/teste; sem custo de fornecedor. Preços externos fornecidos são referência de19/10/2026, não cotação atual garantida.
 
+### J1 — Matrizes adicionais do levantamento P4
+
+128. **[J1-SKOOL] Matriz skool em Markdown e JSON**
+   - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
+   - Estado: **a fazer**.
+   - Escopo e prova: Criar docs/skool-gap-matrix.md e docs/skool-gap-matrix.json, formato compatível com HighLevel; usar os itens/fontes P4, conferir main por capacidade antes de construir e separar existente/testado/publicado/pendente/fora de escopo. Sem tratar preço fornecido, teste sintético ou promessa de fornecedor como prova própria.
+   - Custo e margem: Documentação/teste, sem fornecedor novo. Preços externos são pesquisa fornecida de19/10/2026; capacidade futura com custo depende da conta completa e reservas, não da matriz.
+
+129. **[J1-KIT] Matriz kit em Markdown e JSON**
+   - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
+   - Estado: **a fazer**.
+   - Escopo e prova: Criar docs/kit-gap-matrix.md e docs/kit-gap-matrix.json, formato compatível com HighLevel; usar os itens/fontes P4, conferir main por capacidade antes de construir e separar existente/testado/publicado/pendente/fora de escopo. Sem tratar preço fornecido, teste sintético ou promessa de fornecedor como prova própria.
+   - Custo e margem: Documentação/teste, sem fornecedor novo. Preços externos são pesquisa fornecida de19/10/2026; capacidade futura com custo depende da conta completa e reservas, não da matriz.
+
+130. **[J1-CIRCLE] Matriz circle em Markdown e JSON**
+   - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
+   - Estado: **a fazer**.
+   - Escopo e prova: Criar docs/circle-gap-matrix.md e docs/circle-gap-matrix.json, formato compatível com HighLevel; usar os itens/fontes P4, conferir main por capacidade antes de construir e separar existente/testado/publicado/pendente/fora de escopo. Sem tratar preço fornecido, teste sintético ou promessa de fornecedor como prova própria.
+   - Custo e margem: Documentação/teste, sem fornecedor novo. Preços externos são pesquisa fornecida de19/10/2026; capacidade futura com custo depende da conta completa e reservas, não da matriz.
+
+131. **[J1-TEACHABLE] Matriz teachable em Markdown e JSON**
+   - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
+   - Estado: **a fazer**.
+   - Escopo e prova: Criar docs/teachable-gap-matrix.md e docs/teachable-gap-matrix.json, formato compatível com HighLevel; usar os itens/fontes P4, conferir main por capacidade antes de construir e separar existente/testado/publicado/pendente/fora de escopo. Sem tratar preço fornecido, teste sintético ou promessa de fornecedor como prova própria.
+   - Custo e margem: Documentação/teste, sem fornecedor novo. Preços externos são pesquisa fornecida de19/10/2026; capacidade futura com custo depende da conta completa e reservas, não da matriz.
+
+132. **[J1-SUBSTACK] Matriz substack em Markdown e JSON**
+   - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
+   - Estado: **a fazer**.
+   - Escopo e prova: Criar docs/substack-gap-matrix.md e docs/substack-gap-matrix.json, formato compatível com HighLevel; usar os itens/fontes P4, conferir main por capacidade antes de construir e separar existente/testado/publicado/pendente/fora de escopo. Sem tratar preço fornecido, teste sintético ou promessa de fornecedor como prova própria.
+   - Custo e margem: Documentação/teste, sem fornecedor novo. Preços externos são pesquisa fornecida de19/10/2026; capacidade futura com custo depende da conta completa e reservas, não da matriz.
+
 54. **[J2] Registrar diferenças favoráveis já existentes somente com prova no código: Stripe direto, domínio, lojas/equipe/opções, presentes/equipe/waitlist/pré-venda/avaliações, podcast privado/licenças/PDF/Discord/provas, ofertas/API/Zapier/e-mail/importação/A-B e recursos do plano69. Velocidade comparativa exige metodologia/evidência real.**
    - Pedido: P2 J2; datas/horas e grau de certeza em Proveniência.
    - Estado: **a fazer**.
    - Custo e margem: Não repetir números PageSpeed fornecidos como medição própria ou alegar superioridade sem prova.
+
+   - Ampliação P4 de J2: conferir e documentar 0% de comissão da plataforma frente às taxas fornecidas de Substack/Kit/Circle/SkoolHobby/TeachableStarter; conta Stripe/PayPal direta frente ao relato sobre Skool/Teachable;15moedas frente ao relato de dólar no Skool; e-mail sem pixel como vantagem de privacidade; API/webhooks em todos os planos; certificados/5lugares/API na entrada; loja com arquivos/chamadas/afiliados/funis/pausa/oferta antes de cancelar/oferta de volta em torno da comunidade. São hipóteses de comparação a provar, não anúncio de superioridade. Custos do processador e obrigações fiscais continuam existindo, vendas continuam fechadas.
 
 55. **[K1] Validar importação ClickFunnels com exportação real.**
    - Pedido: P2 K1; datas/horas e grau de certeza em Proveniência.
@@ -378,6 +665,38 @@ A ordem abaixo é de execução dos itens acionáveis. Itens feitos/aguardando/c
    - Pedido: P2 fora do escopo; datas/horas e grau de certeza em Proveniência.
    - Estado: **cancelado (fora do escopo por decisão explícita do dono)**.
    - Custo e margem: Nenhum custo autorizado; manter motivo nas matrizes, não construir.
+
+### X — Acréscimos fora do escopo por P4
+
+133. **[X9-OPEN-ENGAGEMENT] Pontuação por abertura de e-mail**
+   - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
+   - Estado: **cancelado (fora do escopo por decisão explícita do dono)**.
+   - Escopo e prova: Excluída por contrariar a política de não rastrear aberturas. Não implementar pixel nem score de abertura.
+   - Custo e margem: Nenhum custo/operação autorizado. Preservar a justificativa nas matrizes e os gates legais/comerciais existentes.
+
+134. **[X10-PAID-RECOMMENDATIONS] Rede paga Kit e Growth Boost do Skool**
+   - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
+   - Estado: **cancelado (fora do escopo por decisão explícita do dono)**.
+   - Escopo e prova: Excluídos por exigirem custódia/intermediação de dinheiro no modelo recusado. Não confundir com recomendações gratuitas F2.
+   - Custo e margem: Nenhum custo/operação autorizado. Preservar a justificativa nas matrizes e os gates legais/comerciais existentes.
+
+135. **[X11-SKOOL-GAMES] Concurso Skool Games**
+   - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
+   - Estado: **cancelado (fora do escopo por decisão explícita do dono)**.
+   - Escopo e prova: Fora do escopo por decisão do dono; sem concurso, premiação ou gamificação de ganhos.
+   - Custo e margem: Nenhum custo/operação autorizado. Preservar a justificativa nas matrizes e os gates legais/comerciais existentes.
+
+136. **[X12-MOR-PRODUCT] Modelo comercial de vendedor responsável como Skool/Teachable**
+   - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
+   - Estado: **cancelado (fora do escopo por decisão explícita do dono)**.
+   - Escopo e prova: Produto de custódia/MoR excluído; isso não é conclusão de isenção legal. IVA/art.9a/marketplace e demais obrigações continuam integralmente na seçãoC, mesmo com cobrança direta/sem segurar dinheiro. Não diminuir imposto nem abrir gates com essa exclusão.
+   - Custo e margem: Nenhum custo/operação autorizado. Preservar a justificativa nas matrizes e os gates legais/comerciais existentes.
+
+137. **[X13-SSO-WHITE-LABEL] SSO e marca branca**
+   - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
+   - Estado: **cancelado (fora do escopo por decisão explícita do dono)**.
+   - Escopo e prova: Fora do escopo; marca branca para agências já consta de X1 e permanece excluída. Não refazer autorização, identidade ou revenda para simular esses produtos.
+   - Custo e margem: Nenhum custo/operação autorizado. Preservar a justificativa nas matrizes e os gates legais/comerciais existentes.
 
 69. **[PATH-FEITO-612] Align Path High Sun documentation and guard the display name**
    - Pedido: P1 itens1–5; P2 A/D; datas/horas e grau de certeza em Proveniência.
@@ -557,3 +876,23 @@ Validação634: a execução integral antiga terminou com a mesma ambiguidade he
 
 
 Validação635: execução integral39350012931 terminou com os nove contratos corretos em390/1280, mas oito estados abertos excediam a largura móvel. Formulário era um item flex sem largura limitada; agora ocupa a linha disponível com min-width zero, sem esconder conteúdo. Mantida a reprovação por rolagem lateral e adicionada geometria de diagnóstico; nova suíte integral obrigatória no novo head. Sem incorporação/publicação de635 até passar.
+
+
+## Fontes adicionais fornecidas em P4 (pesquisa do dono,19/10/2026)
+
+Skool: https://skool.com/pricing ; https://help.skool.com/article/86-subscriptions-faq ; https://help.skool.com/article/183-how-do-points-and-level-work ; https://help.skool.com/article/226-traffic-sources
+
+Kit: https://kit.com/pricing ; https://kit.com/features ; https://help.kit.com/en/articles/4199324-kit-commerce-overview-faqs ; https://help.kit.com/en/articles/7240475-what-is-the-creator-network
+
+Circle: https://circle.so/pricing ; https://circle.so/product-updates ; https://circle.so/payments ; https://circle.so/ai-agents
+
+Teachable: https://teachable.com/pricing ; https://support.teachable.com/en/articles/11682463-course-compliance ; https://support.teachable.com/en/articles/11682550-comparing-teachable-gateways ; https://teachable.com/ai-hub
+
+Substack: https://faq.substack.com/p/how-do-paid-subscriptions-on-substack ; https://on.substack.com/p/what-you-get-when-you-start-a-substack ; https://on.substack.com/p/subscriber-referrals
+
+Direito de arrependimento: pedido de conferir EUR-Lex2011/83/UE arts.9/14/16 e2019/2161 antes da implementação. Nenhuma submissão/conta/mensagem/pagamento real autorizado pela atualização.
+
+
+Validação636: a execução integral39351663737 terminou com seletor global de alerta ambíguo entre signin-error e o anunciador de rotas do Next. O teste agora procura o alerta dentro do formulário real; nenhuma asserção/cenário ou comportamento de produção foi removido. Novo head exige suíte integral. Atualização documental/teste, sem entrega funcional própria.
+
+Publicação posterior à inserção da fila: item88/PR635 incorporado19/10/2026 22:12:37 de Fortaleza, entrega53 confirmada READY22:13:24, versão4eabb47; Product39351259991/Redis/security39351260069 completos, nove cenários390/1280 com largura correta, sete rotas do domínio exatas e sem error/fatal01:10:20.439–01:15:20.439UTC. O registro original do item88 acima foi preservado no acréscimo P4; esta evidência posterior registra sua conclusão.

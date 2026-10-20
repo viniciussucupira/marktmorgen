@@ -38,7 +38,7 @@ export async function checkSigninAcknowledgment({browser,LOCAL,is}){
      is("confirmed screen names the requested inbox "+width,await page.getByText("synthetic-access@example.com",{exact:true}).count(),1);
      is("existing resend cooldown remains in place "+width,await page.getByRole("button",{name:/Send it again in/}).isDisabled(),true);
     }else{
-     await page.getByRole("alert").waitFor();
+     await page.locator("form").getByRole("alert").waitFor();
      is("unconfirmed reply never announces inbox success "+scenario.name+" "+width,await page.getByText("Check that inbox",{exact:true}).count(),0);
      await field.waitFor();
      is("email unlocks after refusal "+scenario.name+" "+width,await field.isEnabled(),true);
