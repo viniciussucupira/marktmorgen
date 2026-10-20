@@ -13,6 +13,7 @@ export async function checkPublicTrustDesign({browser,LOCAL,axeSource,is}){
  const screens=page.locator("[data-studio-screens]");is("HT16 two distinct actual captures "+width,await screens.locator("img").evaluateAll(nodes=>nodes.length===2&&new Set(nodes.map(node=>node.src)).size===2&&nodes.every(node=>node.src.startsWith("data:image/jpeg;base64,")&&node.width>0)),true);
  for(const img of await screens.locator("img").all()){await img.scrollIntoViewIfNeeded();await img.evaluate(node=>node.decode());is("HT16 captured pixels decode "+width,await img.evaluate(node=>node.naturalWidth===1280&&node.naturalHeight===820),true);}
  is("HT16 captures synthetic and dated "+width,(await screens.innerText()).includes("isolated fictional test content"),true);
+ is("HT16 home content stays fully readable "+width,await page.locator("[data-static-reading] .reveal").evaluateAll(nodes=>nodes.every(node=>getComputedStyle(node).opacity==="1")),true);
  is("HT16 no first-fold opacity entrance "+width,await page.locator("[data-home-hero] .nb-fade-up").count(),0);
  }
  }
