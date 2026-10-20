@@ -62,7 +62,7 @@ export function ThanksNoteEditor({ productId, productTitle, storeName, initial }
       const raw: unknown = await response.json().catch(() => null);
       const data = raw && typeof raw === "object" && !Array.isArray(raw) ? raw as Record<string, unknown> : null;
       if (!response.ok || data?.ok !== true || data.error || !Object.prototype.hasOwnProperty.call(data, "note") || (expected === null ? data.note !== null : JSON.stringify(parseNote(data.note)) !== JSON.stringify(expected))) {
-        const problem = data?.error;
+        const problem = data?.ok === true ? undefined : data?.error;
         setError(typeof problem === "string" && Object.prototype.hasOwnProperty.call(MESSAGES, problem) ? MESSAGES[problem] : "We could not confirm this note. Reload this page to check before trying again.");
         return;
       }
