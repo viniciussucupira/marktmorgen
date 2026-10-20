@@ -30,6 +30,7 @@ const cfPayments: OfficialPriceSource = { label: "ClickFunnels Stripe and proces
 const circlePricing: OfficialPriceSource = { label: "Circle pricing and plan scope", url: "https://circle.so/pricing", readOn: "2026-10-20" };
 const circleFees: OfficialPriceSource = { label: "Circle paywall and Stripe fees", url: "https://help.circle.so/p/payments/paywall-setup/paywall-transaction-fees", readOn: "2026-10-20" };
 const kitPricing: OfficialPriceSource = { label: "Kit prices and inclusive commerce fees", url: "https://kit.com/pricing", readOn: "2026-10-20" };
+const whopPricing: OfficialPriceSource = { label: "Whop standard payment and payout prices", url: "https://whop.com/network/pricing/", readOn: "2026-10-20" };
 export const COMPETITOR_PRICES = {
   kajabi: {
     name: "Kajabi",
@@ -98,5 +99,16 @@ export const COMPETITOR_PRICES = {
     trial: { days: 14, source: kitPricing },
     discovery: { source: { label: "Kit creator recommendations", url: "https://kit.com/features/recommendations", readOn: "2026-10-20" } },
     sponsorship: { source: { label: "Kit newsletter sponsorships", url: "https://kit.com/features/newsletter-sponsorships", readOn: "2026-10-20" } },
+  },
+  whop: {
+    name: "Whop",
+    currency: "USD",
+    plans: [
+      { name: "Standard pay-as-you-go", monthlyCents: 0, annualCents: 0, source: whopPricing, platformFeeBps: null, listedPaymentFeeBps: 270, listedPaymentFixedCents: 30 },
+    ] satisfies CompetitorPlanPrice[],
+    feeScope: "Domestic cards: 2.7% + $0.30. International cards add 1.5%; currency conversion adds 1%. Optional orchestration adds 0.8%, Billing 0.5%, and tax/remittance 2% when enabled and tax is collected; all three enabled gives 6% + $0.30 before international/FX extras.",
+    payoutScope: "Next-day US ACH payout: $2.50; instant bank deposit: 4% + $2.50. Other methods have their own rates. This is not a quote for Marktmorgen or a complete tax exemption.",
+    trial: { days: null, source: whopPricing },
+    discovery: { source: { label: "Whop Discover directory", url: "https://whop.com/discover/", readOn: "2026-10-20" } },
   },
 } as const;

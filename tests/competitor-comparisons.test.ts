@@ -55,7 +55,7 @@ test("the comparison reads every own published price, email limit and catalog ca
   assert.ok(table.rows.find(r => r[0] === "Getting started")![2].includes("not open yet"));
 });
 test("new proof pages are in the existing sitemap and the index links only actual proof pages", () => {
-  for (const slug of ["kajabi", "skool", "clickfunnels", "circle", "kit", "comparisons"]) {
+  for (const slug of ["kajabi", "skool", "clickfunnels", "circle", "kit", "whop", "comparisons"]) {
     assert.equal(sitemap().filter(e => new URL(e.url).pathname === "/proof/" + slug).length, 1);
   }
   const index = findPage("proof", "comparisons");
@@ -135,5 +135,19 @@ test("Kit inclusive processing and first-year promotion never become a false ren
   assert.ok(table.rows.find(r=>r[0]==="Subscription pricing")![2].includes(publishedPriceWords(tier,"month")));
   assert.ok(table.rows.find(r=>r[0]==="Email allowance")![2].includes(monthlyEmails(tier).toLocaleString("en-US")));
  }
+ assert.ok(page.blocks.some(b=>b.kind==="limits" && b.title==="Where they are ahead"));
+});
+
+test("Whop payment quotes retain conditional additions and unknown platform share", () => {
+ const whop=COMPETITOR_PRICES.whop;
+ assert.equal(whop.plans[0].monthlyCents,0);
+ assert.equal(whop.plans[0].platformFeeBps,null);
+ assert.equal(whop.trial.days,null);
+ assert.equal(whop.plans[0].listedPaymentFeeBps,270);
+ assert.ok(whop.feeScope.includes("when enabled") && whop.feeScope.includes("6%"));
+ assert.ok(whop.payoutScope.includes("4% + $2.50"));
+ const page=findPage("proof","whop");assert.ok(page && page.seo?.title==="Marktmorgen vs Whop");
+ const table=page.blocks.find(b=>b.kind==="table");assert.ok(table && table.kind==="table");
+ for(const tier of TIERS)assert.ok(table.rows.find(r=>r[0]==="Subscription")![2].includes(publishedPriceWords(tier,"month")));
  assert.ok(page.blocks.some(b=>b.kind==="limits" && b.title==="Where they are ahead"));
 });
