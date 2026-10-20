@@ -3057,3 +3057,12 @@ WebKit118869615761 expirou na primeira ação de lembrete, antes do retorno de q
 20/10/2026 18:02 Fortaleza: WebKit118880654986 no headbe741c0f5e7443dd862767f32dca20e9fd22f102 passou a seção do board após concluir leituras antes de navegar/fechar. Detectou31 falhas de placeholder/foco/forced-colors e interrompeu em path-return.mjs após um mock de details em contexto auxiliar com worker permitido. A fábrica de contextos do harness agora aplica serviceWorkers:block também aos helpers, preservando a suíte inteira e o app/SW de produção.
 
 Antes de mudar CSS ou presumir suporte de emulação, registram-se cor/opacidade computadas do placeholder, pixels reais versus área mínima, estilos do foco e correspondência real de forced-colors. As asserções originais, controles negativos, thresholds e zero pageerrors permanecem. Resultados não são dispensa de AAA ou teste em aparelho real. Nova suíte completa obrigatória no novohead; publicação não confirmada.
+
+
+#### P0201 — correções de pintura baseadas em pixels WebKit
+
+20/10/2026 18:11 Fortaleza: job118885614124 mediu698pixels de foco3:1 para mínimo702 em links sociais arredondados; outline social passa a4px, sem reduzir área/contraste exigidos. Selects nativos reportavam outline3px mas pintavam0pixels e descartavam box-shadow no WebKit. Controles select.field/st-field de seleção única passam a aparência CSS com seta em currentColor; mantêm o elemento nativo, opções, valores, teclado e nomes acessíveis. Não muda conteúdo, identificadores, limites, permissões ou operações. Nova suíte inteira deve comprovar pintura e ausência de regressões.
+
+Outros achados continuam abertos: WebKit relata placeholder como cor do input inclusive no controle negativo; forced-colors media ativa, mas propriedade forcedColorAdjust ausente. Não presumir falha visual nem dispensar critério: ampliar evidência por pintura e suporte da API antes de ajustar o teste. Móvel118885613625 reprovou primeira interação da home248ms, preservada para correção e verificação completa posterior; nenhum head reprovado será incorporado.
+
+Em paralelo sem conflito, PR731/branch codex/p0-201-public-access-matrix adiciona225casos reais de páginas públicas, sem editar arquivos desta branch:75/motor, cinco larguras e cinco modos. Teto adicional90min Linux/execução, elegibilidade pública atual USD0 cobrado, sem serviço/cliente/operação novo. Não encerra201 nem adianta202/B2.
