@@ -2489,7 +2489,7 @@ Pricing FAQ repair history: run39407143422 caught mobile target-size;39409356932
 - Documentação: docs/ht4-hotmart-comparison.md. Próximo itemHT5, apenas reaproveitando o rascunho de IA existente com mesmo pool/tetos/reserva e nenhuma chamada nova; B2 continua depois da sequência HT.
 
 187. **[HT5] Reaproveitar o rascunho existente e guiar até a primeira oferta publicada**
-- Estado: **Em implementação; verificação integral pendente**.
+- Estado: **Publicado — publicação funcional112 confirmada**.
 - Registro:20/10/2026 às13:04:00 de Fortaleza. Base conferida `8fdb7d499120e7de70bd05dcfedbe67ea49f98f4`; commit de implementação: `483bfb8d79ded92c62f3efa67e9dcf59ac5c9b71` (criado em2026-10-20T16:04:43Z; Fortaleza UTC−3).
 - O mesmo rascunho aparece antes do checklist, com nome atual preservado, bio/FAQ e até3 produtos propostos revisados pelo criador. Mesma elegibilidade, rota, operação, pool, teto2500 e reserva; nenhuma chamada automática ou geração adicional. Nome continua sob controle do criador em Store details.
 - Corrige a janela add-then-hide: os produtos do setup passam a nascer ocultos na gravação existente, eliminando uma gravação posterior. Nada é publicado automaticamente. Checklist existente orienta preparo e publicação explícita e reutiliza funnel-launch-checklist com rótulos de loja. StoreCoach preservado; store-guide é a operação de IA do comprador e não é chamada/ativada no onboarding.
@@ -2765,6 +2765,35 @@ Product checks39462624653/verify118766157526 aprovou regressões mas recusou o b
 #### Contraste do corpo de páginas de tópico — 2026-10-20 17:24:39 UTC
 
 Diagnóstico detalhado deHT7 identificou que os blocos .reveal do corpo ainda estavam em transição de opacidade (texto efetivo#888c91/#979a9e em fundo#f7f5f0; contraste2,59–3,10:1). O cabeçalho já estava estático. Removidas também as classes de reveal dos blocos desse template: conteúdo legível e opaco desde o início, incluindo navegação entre páginas. Sem aguardar artificialmente para esconder falha, sem desativar regraAA. Execuções anteriores39462581781/39462582467/39462598661/39462608086 reprovadas ficam históricas; nova suíte integral obrigatória em cada head corrigido. Sem nova operação/custo ou gates alterados.
+
+
+### Publicação funcional112
+
+- Item187/HT5, PR717 incorporado emFortaleza 2026-10-20 14:21:34 (UTC−3); head completo `954e08b179c617857f469c8a8820c8514d2ae773`; versão exata `867e2d662deea90815301d1cf3ac0fd0d35e47b9`.
+- READY 2026-10-20T17:24:31.031Z; domíniomarktmorgen.com confirmado noalias; deployment `dpl_6mGWc4g3TKNuPFo95VM2bSSmbrxz`.6rotasHTTP200 na mesma versão;26verificações específicas HT5, regressões/build/lint/rotas, Redis e segurança aprovados. Product checks39462549165, verify118765470574, Redis118765470018, Dependency security39462548934.
+- Runtime:zeroerros/fatais no intervalo 2026-10-20T17:21:11.802Z → 2026-10-20T17:26:11.802Z. Rascunho de IA existente/manual, mesmos pool/tetos/reserva, sem operação automática nova; checklist e tempo até primeira oferta usam gravação existente. Nomes/conteúdo e todos gates preservados, vendas fechadas. Contador112 incrementado apenas após essas provas; aviso112 já enviado.
+
+
+197. **[HT11] Avaliar o custo da comunidade de clientes por estágio antes de abrir o espaço**
+
+- Estado: **Avaliação concluída; reprovado por custo desconhecido; não implementado; aguardando dono para escopo/teto/reserva de operação**.
+- Registro UTC:2026-10-20 17:30:22 UTC; Fortaleza UTC−3. Repositório e custos revistos antes de qualquer operação: comunidade/Discord existentes pertencem ao criador e aos compradores de seus produtos; não há destinoMarktmorgen validado nem mapa de acessoStarting/First sales/Growing para clientes. Bot existente não lê/escreve mensagens. Nenhum espaço, canal, papel, conta ou convite criado.
+- docs/ht11-community-cost-review.md registra os6cenários: custo incremental de operação/moderação/suporte/manutenção/retencão/notificações e reserva é desconhecido em cada plano/intervalo; lucro líquido depois do item é desconhecido e portanto reprovado, nunca zero. Custo de assinatura de fornecedor zero não prova operação sem custo. Não emprestar teto da comunidade vendida por outro criador nem compensar um cliente com outro.
+- Método: uso100%/pior mês/12janelas anuais, maior taxa e reservas/impostos do dimensionamentoStore assistant; ausência de custo/teto bloqueia este item por si, separadamente doM0 mais oneroso para vendas. Comunidade por estágio continua apenas requisito futuro, sem classificação por faturamento declarado ou promessa de resultado. Código/comunidades/permissões/idiomas existentes preservados.
+- Sem operação/teste externo real, nova cobrança, fornecedor, IA, mensagem, conta ou submissão. PLANS_ON_SALE=false, comissão, preços/limites/opt-in e gates fiscais/comerciais inalterados. Revisão documental/fullCI do head final pendente; documento não conta publicação. SeguirHT13 eHT14 sem aguardar.
+
+- Commit da avaliaçãoHT11: `eb0415faddb561c3f8c5ffd9bd4cc3ec283fa057`, criado2026-10-20T17:30:24Z; FortalezaUTC−3. Não houve implementação operacional nem alteração de direito.
+
+198. **[HT13] Calcular o custo e verificar fontes privadas antes de oferecer tutor de aluno**
+
+- Estado: **Avaliação concluída; custo completo/teto de recuperação de curso desconhecido; reprovado; tutor não implementado; aguardando dono para escopo/reserva precificados**.
+- Fontes: answers-rules/answers atuais respondem pré-compra com fatos públicos; não carregam lições nem provam acesso ao curso. Store0/Studio250/Scale400 respostas incluídas já são direitos existentes no pior mês; não podem financiar tutor novo quando100%já é usado. Store assistant é add-on separado, não autorização implícita de novas leituras privadas/transcrição.
+- Referência de dimensionamento, não oferta/limite novo:700respostas adicionais×US$0,003539 dáUS$2,4773, arredondado conservadoramenteUS$2,48/mês eUS$29,76/ano, antes de recuperação/acesso/transcrição. Com custos/taxas/reservas e27,5% de imposto de lucro do dimensionamento existente, líquido de referência:Store mês57,71%, ano57,47%;Studio mês59,99%, ano59,59%;Scale mês60,29%, ano59,86%. Cinco de6já ficam abaixo de60%; os custos completos desconhecidos reprovam todos. Valores usam linhas em centavos da tabela vigente; não são cotação de um tutor ou certificação tributária.
+- docs/ht13-student-tutor-cost-review.md registra ausência de método revisado para todos bytes/leituras/permissões/revalidação/cache/retenção e fontes autorizadas por curso. Vídeo sem transcrição existente não autoriza operação nova de legenda nem resposta por conhecimento geral. Não reduzir limites visíveis, inventar cota minúscula para forçar aprovação, mudar preço ou consumir reserva de outro direito/cliente.
+- Tutor novo, endpoint, toggle, chamadas e alegações públicas não implementados. Q&A público, Store assistant, encaminhamento e acesso do aluno existentes preservados; futuro design exige custo por plano/intervalo e reserva antes de operar, fonte exclusiva do curso, rótulo desenhado pela página e fallback ao criador. M0 mais oneroso continua vinculante para vendas, separadamente desta reprovação própria.
+- Nenhuma conta real, pagamento, fornecedor/IA novo, mensagem, submissão externa ou tradução ativada. PLANS_ON_SALE=false, comissão, preços/limites/permissões/opt-in/tax gate/art.9a/revisão comercial intactos. Commit da avaliação e CI integral do head final registrados a seguir; documento não conta publicação. SeguirHT14;B2 só depois.
+
+- Commit da avaliaçãoHT13: `c3ea20f2d81f0c9eedbee819dfcf9dc618a01eca`, criado2026-10-20T17:31:03Z; FortalezaUTC−3. Exige nova revisão de custos antes de futura implementação; nenhuma chamada de teste ao modelo.
 
 
 #### Janela da verificação integral —20/10/2026
