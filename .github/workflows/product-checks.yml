@@ -154,8 +154,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - label: before
-            ref: f9bca29fe6386648f76351de70955d4a93f7aa89
           - label: candidate
             ref: ${{ github.event.pull_request.head.sha || github.sha }}
     env:
