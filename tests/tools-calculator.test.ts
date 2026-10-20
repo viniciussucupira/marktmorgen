@@ -9,6 +9,7 @@ test("calculator rejects invalid money and transaction counts without turning th
  for(const value of ["","1.5","-2","1e4"])assert.equal(countInput(value),null,value);
  assert.equal(countInput("10"),10);
  assert.equal(quoteLine(line({monthlyOrders:0}),"month").monthlyCents,null);
+ assert.equal(quoteLine(line({monthlyOrders:0}),"month").paymentCents,null);
  assert.equal(quoteLine(line({monthlySalesCents:-1}),"month").monthlyCents,null);
 });
 test("calculator counts fixed processing charges by transactions and uses actual annual invoices",()=>{
@@ -49,4 +50,11 @@ test("conditional gateway and recurring Billing fees require a choice and are co
  assert.equal(separate.paymentCents,13900);assert.equal(included.paymentCents,separate.paymentCents);
  const hobby=quoteLine(line({tool:"skool",processingBps:9999,processingFixedCents:9999}),"month");
  assert.equal(hobby.paymentCents,10300);assert.equal(hobby.monthlyCents,11200);
+});
+
+test("unreviewed conditions and numeric overflow cannot produce a payment quote",()=>{
+ assert.equal(quoteLine(line({conditionsConfirmed:false}),"month").paymentCents,null);
+ assert.equal(quoteLine(line({monthlySalesCents:10000000000,monthlyOrders:100000000,processingFixedCents:100000000}),"month").monthlyCents,null);
+ assert.equal(quoteOwn("creator","month",10000000000,100000000,10000,100000000,0),null);
+ assert.equal(quoteOwn("creator","month",100000,10,290,100000001,0),null);
 });
