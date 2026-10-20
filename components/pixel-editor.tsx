@@ -96,9 +96,10 @@ export function PixelEditor({ pixels, canViewAttribution = false }: { pixels: Pi
             const info = PIXEL_INFO[kind];
             const invalid = bad === kind;
             return (
-              <label key={kind} className="block">
-                <span className="field-label">{info.label}</span>
+              <div key={kind} className="block">
+                <label htmlFor={`px-${kind}`} className="field-label">{info.label}</label>
                 <input
+                  id={`px-${kind}`}
                   type="text"
                   inputMode={kind === "meta" || kind === "pinterest" ? "numeric" : "text"}
                   autoComplete="off"
@@ -113,7 +114,7 @@ export function PixelEditor({ pixels, canViewAttribution = false }: { pixels: Pi
                 <span id={`px-${kind}-help`} className={`mt-1 block text-xs ${invalid ? "font-semibold text-danger" : "text-ink-soft"}`}>
                   {invalid ? `That is not a ${info.label}. A ${info.label} looks like ${info.example}. ${info.where}` : `${info.where} Leave it empty to turn it off.`}
                 </span>
-              </label>
+              </div>
             );
           })}
 

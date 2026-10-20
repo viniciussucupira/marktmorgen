@@ -2889,3 +2889,8 @@ Custo incremental: Static guides/templates/schema only; existing assets/sitemap;
 #### HT15 — conferir conteúdo preservado no painel aberto e distinguir consulta de destinatários
 
 verify118791597731 executou filtros/prévias/AA e identificou duas expectativas incorretas: o hero salvo começa recolhido (seu input não existe até abrir) e o composer existente consulta destinatários por POST action=count. O teste abre o próprio bloco antes de conferir o texto exato do criador; intercepta e conta exatamente as duas consultas conhecidas de destinatários, sem executá-las fora da fixture. Qualquer outro POST/write continua abortado e reprova, com método/caminho de diagnóstico; salvar/enviar/publicar/IA continuam zero. Nenhuma regra de preservação ou mutação é dispensada. Suíte integral obrigatória no novohead; sem custo/limite/preço/gate alterado.
+
+
+#### HT10 — nome acessível dos IDs separado da ajuda
+
+Os verifies118803842951/118803901027/118804022774 expiraram procurando o nome exatoMeta Pixel ID. O label implícito incluía também todo o texto de ajuda, alterando o nome acessível. Os quatro campos agora têm label/htmlFor/id explícitos; a ajuda permanece via aria-describedby. Nenhum seletor foi afrouxado, nenhuma verificação removida e IDs de pixel/consentimento persistidos não mudam. CI integral no novohead obrigatório; sem nova operação/custo/limite/preço/gate.
