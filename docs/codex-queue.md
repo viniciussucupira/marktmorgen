@@ -1296,3 +1296,5 @@ Pedido P5: anexo524cc7f9-78af-42b5-ae37-4c05dc91a193/Texto colado.txt, lido19/10
 ### S10 — seis perguntas de decisão na home e no pricing
 - Preços e nomes vêm de lib/plan.ts. Renovação/cancelamento/refundo conforme Terms/Refunds; CSV de contatos consentidos/produtos emrascunho/compradores, com limites de conteúdo e assinatura explícitos; webhooksZapier sem appnativo eAPIcomchavesescopadas/tetos; suporte inglês por email existente semSLA; sem prazo inventado de montagem. Links para fontes próprias, sem fetch/prefetch adicional, mensagem real ou nova operação.
 - Uma função compartilhada alimenta ambasas páginas e o mesmo texto da home continua noFAQschema. Cinco perguntas anteriores preservadas, incluindo correção factualZoomS4. M0antes/depois mesmo envelope12,02–12,21%, abaixo60%;desconhecidoreprova;vendasfechadas;preços/limites/gatesinalterados. Testes sintéticos de fonte depreços, igualdade, links, teclado eaxe390/1280 exigidos noheadfinal.
+
+- Revisão de estilo: novas respostas usam center, conforme guard de inglês americano do produto; sem mudar idiomas ou relaxar testes. Novo head requer suíte integral.
