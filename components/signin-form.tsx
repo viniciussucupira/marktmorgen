@@ -67,6 +67,7 @@ export function SignInForm() {
       : null;
 
   async function send() {
+    if (state.kind === "sending") return;
     setState({ kind: "sending" });
 
     try {
@@ -80,15 +81,16 @@ export function SignInForm() {
         if (!plainFetch) throw error;
         return ask(plainFetch);
       });
-      const data = (await response.json()) as { ok?: boolean; error?: string };
-      if (data.ok) {
+      const raw: unknown = await response.json();
+      const data: Record<string, unknown> = raw && typeof raw === "object" && !Array.isArray(raw) ? raw as Record<string, unknown> : {};
+      if (response.ok && data.ok === true && data.error === undefined) {
         setState({ kind: "sent" });
         setWait(RESEND_AFTER_SECONDS);
         return;
       }
       setState({
         kind: "error",
-        message: MESSAGES[data.error ?? ""] ?? MESSAGES.server_error,
+        message: typeof data.error === "string" ? MESSAGES[data.error] ?? MESSAGES.server_error : MESSAGES.server_error,
       });
     } catch {
       setState({ kind: "error", message: MESSAGES.server_error });
@@ -131,7 +133,7 @@ export function SignInForm() {
   }
 
   return (
-    <form method="post" onSubmit={submit} className="space-y-4" noValidate>
+    <form method="post" onSubmit={submit} aria-busy={state.kind === "sending"} className="space-y-4" noValidate>
       <div>
         <label htmlFor="signin-email" className="field-label">
           Your email
@@ -143,6 +145,7 @@ export function SignInForm() {
           autoComplete="email"
           required
           value={email}
+          disabled={state.kind === "sending"}
           onChange={(event) => {
             setEmail(event.target.value);
             if (state.kind === "error") setState({ kind: "idle" });

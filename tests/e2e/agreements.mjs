@@ -46,6 +46,7 @@
  * (lib/agreement-store.ts) or the studio check (the signing route) switched
  * off, it fails; put back, it passes.
  */
+import { checkSigninAcknowledgment } from "./signin-acknowledgment.mjs";
 import { spawn } from "node:child_process";
 import { createHash } from "node:crypto";
 import { mkdtempSync, readFileSync, rmSync } from "node:fs";
@@ -331,6 +332,7 @@ try {
   await audit(local(link), "signed, with its record");
   await audit(`${LOCAL}/studio/agreements`, "the studio's list and form", [{ name: "nl_session", value: session, url: LOCAL }]);
 
+  await checkSigninAcknowledgment({browser,LOCAL,is});
   is("no page threw", errors, []);
 } catch (error) {
   failed += 1;
