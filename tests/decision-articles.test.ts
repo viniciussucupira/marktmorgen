@@ -9,8 +9,9 @@ test("decision articles are indexed, dated and preserve the existing nine articl
  assert.equal(new Set(BLOG_POSTS.map(p=>p.slug)).size,BLOG_POSTS.length);
  for(const slug of ["what-selling-on-gumroad-costs","sell-a-digital-file-from-your-bio","what-it-costs-to-sell-a-27-dollar-file","your-own-stripe-account","three-prices-for-one-product","product-page-that-sells-a-file","link-in-bio-is-not-the-product","how-marktmorgen-compares-with-stan","why-we-skipped-the-app-stores"])assert.ok(postBySlug(slug));
  for(const slug of slugs){const p=postBySlug(slug)!;assert.ok(p);assert.equal(p.date,"2026-10-20");assert.ok(sitemap().some(x=>x.url.endsWith("/blog/"+slug)));assert.ok(p.body.filter(b=>b.type==="h2").length>=3);}
- for(const category of ["Courses","Community"])assert.ok(BLOG_CATEGORIES.includes(category as typeof BLOG_CATEGORIES[number])&&BLOG_POSTS.some(p=>p.category===category));
- assert.ok(!BLOG_CATEGORIES.some(c=>c==="Email"||c==="Sales"));
+ const categories: ReadonlySet<string> = new Set(BLOG_CATEGORIES);
+ for(const category of ["Courses","Community"])assert.ok(categories.has(category)&&BLOG_POSTS.some(p=>p.category===category));
+ assert.ok(!categories.has("Email")&&!categories.has("Sales"));
 });
 test("article sources and comparison links are explicit and real",()=>{
  for(const slug of slugs){const p=postBySlug(slug)!;const links=p.body.filter(b=>b.type==="links").flatMap(b=>b.items);assert.ok(links.some(l=>l.href.startsWith("https://")));assert.ok(links.some(l=>l.href.startsWith("/proof/")));assert.ok(links.some(l=>l.href==="/pricing"));
