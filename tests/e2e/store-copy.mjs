@@ -1,3 +1,4 @@
+import { checkRecoveryAcknowledgment } from "./recovery-acknowledgment.mjs";
 import { checkContactAcknowledgment } from "./contact-acknowledgment.mjs";
 import { checkHomeModules } from "./home-modules.mjs";
 import { captureHomeStudio } from "./home-studio-capture.mjs";
@@ -739,6 +740,7 @@ try {
   await checkPathCertificates({browser,LOCAL,session:growthSession,sid:growthSid,otherSession:wordingSession,axeSource,is});
   await checkPublicAmericanEnglish({browser,LOCAL,is});
   await checkSalesComparisons({browser,LOCAL,axeSource,is});
+  await checkRecoveryAcknowledgment({browser,LOCAL,fixture:homeDemo,is});
   await checkContactAcknowledgment({browser,LOCAL,fixture:homeDemo,is});
   await captureHomeStudio({browser,LOCAL,fixture:homeDemo,is});
   await checkHomeModules({browser,LOCAL,axeSource,is});

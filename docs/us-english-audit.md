@@ -168,3 +168,10 @@ Queue154 reviews components/contact-box-editor.tsx and its existing contact-box 
 Synthetic browser coverage intercepts14reply variants at390/1280,28cases, including normalized returned text, contradictory fields, missing/invalid JSON, inherited error names, lost replies and confirmed values. No POST reaches the route and no message, store record or real account changes. The existing local Harbor Kitchen fixture is reused. Original creator input and buyer languages remain unchanged. Full final-head CI required; actual assistive-technology testing and other unreviewed forms remain open.
 
 Client source grows594characters, reusing existing parseJoin and the same POST/response with no provider/data/message/allowance/price/gate change. Binding M0 remains12.02–12.21%, below60%, paid sales closed; no fiscal or AAA certification.
+
+
+## Checkout reminder preference: recorded response, unchanged consent
+
+Queue155 reviews RecoveryEditor against its existing recovery response. Successful HTTP, boolean ok, no contradictory error, exact canonical enabled/address, and boolean server-owned asks are required. Both US/non-US consent flags remain acceptable because the server decides the account-country condition. Pending controls lock and announce busy; unexpected error names use only own message entries; uncertain saves request a reload without asserting nothing changed.
+
+Sixteen intercepted responses at390/1280 for each server consent flag give64synthetic cases, reusing the local fixture and issuing no real POST, email, provider call, subscription or billing change. Existing reminder consent, timing, recipient limits and spending gates are untouched. Full final-head CI required. Client+656characters, same parseRecovery/POST/response, no new cost allowance, price, buyer language or commercial gate; binding M0 still fails60%.

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "@/components/toast";
-import { MAX_RECOVERY_ADDRESS, type RecoverySetting } from "@/lib/recovery-setting-rules";
+import { MAX_RECOVERY_ADDRESS, parseRecovery, type RecoverySetting } from "@/lib/recovery-setting-rules";
 import { STUDIO_MESSAGES } from "@/lib/studio-messages";
 
 const MESSAGES: Record<string, string> = {
@@ -15,7 +15,7 @@ const MESSAGES: Record<string, string> = {
   none: "This account has no store yet.",
   signed_out: "Your session ended. Log in again.",
   invalid: "That could not be read. Nothing was changed.",
-  server_error: "Something went wrong on our side, or Stripe did not answer. Nothing was changed; try again in a moment.",
+  server_error: "We could not confirm whether your checkout reminder settings were saved. Reload this page to check before trying again.",
 };
 
 /** One reminder after an abandoned checkout, to buyers who asked for it or agreed to it. */
@@ -37,6 +37,7 @@ export function RecoveryEditor({
 
   async function save(event: React.FormEvent) {
     event.preventDefault();
+    if (busy) return;
     setBusy(true);
     setError(null);
     try {
@@ -45,13 +46,16 @@ export function RecoveryEditor({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ enabled, address }),
       });
-      const data = (await response.json().catch(() => ({}))) as { ok?: boolean; error?: string };
-      if (data.ok) {
+      const raw: unknown = await response.json();
+      const data: Record<string, unknown> = raw && typeof raw === "object" && !Array.isArray(raw) ? raw as Record<string, unknown> : {};
+      const saved = data.recovery && typeof data.recovery === "object" && !Array.isArray(data.recovery) ? data.recovery as Record<string, unknown> : {};
+      const expected = parseRecovery({enabled,address});
+      if (response.ok && data.ok === true && data.error === undefined && saved.enabled === expected.enabled && saved.address === expected.address && typeof saved.asks === "boolean") {
         toast(enabled ? "Checkout reminders are on." : "Checkout reminders are off.");
         router.refresh();
         return;
       }
-      setError(MESSAGES[data.error ?? ""] ?? MESSAGES.server_error);
+      setError(typeof data.error === "string" && Object.hasOwn(MESSAGES,data.error) ? MESSAGES[data.error] : MESSAGES.server_error);
     } catch {
       setError(MESSAGES.server_error);
     } finally {
@@ -114,10 +118,11 @@ export function RecoveryEditor({
       {!connected ? (
         <p className="mt-5 text-sm text-ink-soft">Connect your Stripe account first, and this can be switched on.</p>
       ) : (
-        <form onSubmit={save} className="mt-5 space-y-4">
+        <form onSubmit={save} aria-busy={busy} className="mt-5 space-y-4">
           <label className="flex min-h-11 cursor-pointer items-start gap-3 text-sm font-semibold text-ink">
             <input
               type="checkbox"
+              disabled={busy}
               checked={enabled}
               onChange={(e) => setEnabled(e.target.checked)}
               className="mt-0.5 h-4 w-4 accent-violet-brand"
@@ -131,6 +136,7 @@ export function RecoveryEditor({
             </label>
             <input
               id="recovery-address"
+              disabled={busy}
               type="text"
               value={address}
               onChange={(e) => setAddress(e.target.value)}
