@@ -1,3 +1,5 @@
+import { checkHomeModules } from "./home-modules.mjs";
+import { captureHomeStudio } from "./home-studio-capture.mjs";
 import { checkSalesComparisons } from "./sales-comparisons.mjs";
 import { checkPauseAcknowledgment } from "./pause-acknowledgment.mjs";
 import { checkClaimAcknowledgment } from "./claim-acknowledgment.mjs";
@@ -170,7 +172,7 @@ try {
   const seeded = await run(process.execPath, [seedFile]);
   rmSync(out, { recursive: true, force: true });
   if (seeded.status !== 0) throw new Error(`the store could not be made:\n${seeded.said}`);
-  const { pauseFixtures,session, second, abProduct, abStore, contactToken,growthSession,growthSid,growthProduct,returnSession,returnSid,wordingSession,wordingSid,wordingTrialSession,wordingTrialSid } = JSON.parse(seeded.said.trim().split("\n").at(-1));
+  const { homeDemo,pauseFixtures,session, second, abProduct, abStore, contactToken,growthSession,growthSid,growthProduct,returnSession,returnSid,wordingSession,wordingSid,wordingTrialSession,wordingTrialSid } = JSON.parse(seeded.said.trim().split("\n").at(-1));
 
   if (BUILD) {
     const built = await run(process.execPath, [nextCli, "build"]);
@@ -736,6 +738,8 @@ try {
   await checkPathCertificates({browser,LOCAL,session:growthSession,sid:growthSid,otherSession:wordingSession,axeSource,is});
   await checkPublicAmericanEnglish({browser,LOCAL,is});
   await checkSalesComparisons({browser,LOCAL,axeSource,is});
+  await captureHomeStudio({browser,LOCAL,fixture:homeDemo,is});
+  await checkHomeModules({browser,LOCAL,axeSource,is});
   await checkStudioAmericanEnglish({browser,LOCAL,session:growthSession,sid:growthSid,is});
   await checkComposerAmericanEnglish({browser,LOCAL,session:growthSession,sid:growthSid,product:growthProduct,is});
   await checkTaxScope({browser,LOCAL,session:growthSession,sid:growthSid,is});

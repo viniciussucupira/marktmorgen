@@ -16,6 +16,8 @@ export async function checkCrmFeature({browser,LOCAL,axeSource,is}){
    is("CRM accessibility "+width,audit,[]);
    for(const link of await page.locator('main a[href="/proof/highlevel"],main a[href="/pricing"]').all()){await link.focus();is("CRM related link focus "+width,await link.evaluate(node=>node===document.activeElement),true);}
    is("CRM reading makes no API write "+width,writes,0);
+   await page.goto(LOCAL+"/",{waitUntil:"domcontentloaded",timeout:60000});
+   is("home links the actual CRM page "+width,await page.locator('[aria-labelledby="home-modules-heading"] a[href="/platform/crm"]').count(),1);
   }finally{await context.close();}
  }
 }

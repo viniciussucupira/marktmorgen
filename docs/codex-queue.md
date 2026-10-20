@@ -994,17 +994,17 @@ Pedido P5: anexo524cc7f9-78af-42b5-ae37-4c05dc91a193/Texto colado.txt, lido19/10
    - Prova: preços/limites coincidem com fontes canônicas e gates fechados; navegação/semântica/390px. Custo: renderização estática, M0 igual sem novo envelope; S3 é o próximo incremento, não fingir calculadora pronta.
 
 144. **[S3-TOOLS-CALCULATOR] One plan instead of several tools**
-   - Estado: **em andamento; PR657/codex/tools-calculator, implementação passou no head2d9100; novo head para preservar histórico canônico requer CI completo**.
+   - Estado: **concluído; entrega71 em produção confirmada, PR657 incorporado20/10/2026 02:39:00Fortaleza**.
    - Escopo: calculadora exclusivamente no navegador dentro de /pricing. Seleção de ferramentas e vendas mensais; assinaturas e comissões oficiais aplicáveis contra plano próprio com comissão zero. lib/competitor-prices.ts único, compartilhado com S1, com fonte/data por preço. Estimativa clara, processamento nos dois lados, sem promessa de resultado; não somar taxas inclusas duas vezes nem tratar taxa por transação como percentual sem quantidade.
    - Prova: preços próprios de lib/plan.ts, dados concorrentes sem fonte/data reprovam; condições/volumes/limites explícitos; entradas inválidas e nenhuma chamada de servidor. Custo: cálculo local, sem novo custo operacional por cálculo; M0 preservada.
 
 145. **[S4-HOME-SALES] Página inicial com módulos reais**
-   - Estado: **a fazer; após S3**.
+   - Estado: **parcial implementado; capturas aguardando o dono por condição de faturamento não confirmada após mais de1hora; seguir S5**.
    - Escopo: manter "Your store. Your Stripe. Your money." e "See the live demo". Everything in one place: store page, courses, memberships, community, email, calls, funnels and sales pages, checkout, affiliates, CRM, insights, AI writing, Path, cada um com link e capacidade conferidos. Faixa para calculadora S3; capturas reais do estúdio da demo sem dados reais, únicas e com alt. Fecho honesto: um lugar para vender/ensinar/comunidade/email/chamadas, sem promessa de ganhos.
    - Prova: links/recursos/preços verdadeiros, screenshots sintéticos com origem e sem repetição, layout390px/teclado/contraste/performance. Vídeo só com custo fixo/teto aprovado antes; não é requisito para completar o item. M0/custos explicitados.
 
 146. **[S5-PUBLIC-CRM] People, deals and pipelines**
-   - Estado: **em andamento; PR659/codex/public-crm; implementação passou no head47600a, integração da home e ordem da fila pendentes**.
+   - Estado: **em andamento; PR659, homeS4 ligada à páginaCRM; novo head integrado requer CI integral**.
    - Escopo: página em lib/feature-pages.ts para capacidades reais de app/studio/deals e people; pipelineLimit e demais limites por plano de lib/crm-rules.ts. "What it does not do": sem SMS, WhatsApp ou telefone. Menu/homeS4/comparaçãoHighLevel ligados; sitemap.
    - Prova: regras por plano e permissões existentes, links, leitura acessível/390px. Custo: página estática, sem operação nova de CRM; M0 igual.
 
@@ -1251,8 +1251,52 @@ Pedido P5: anexo524cc7f9-78af-42b5-ae37-4c05dc91a193/Texto colado.txt, lido19/10
 - Rótulos dos selects passam a htmlFor/id separados das opções, com nomes acessíveis estáveis; sem relaxar seletores exatos. Volume/quantidade incoerentes, condições não revistas e overflow não produzem paymentquote/total. Confirmação explicita base de vendas usada para percentuais; bases diferentes ficam sem cotação confirmada, não inferidas. Testes adicionais de números extremos e labels; nenhuma operação/preço/franquia alterada.
 
 
+### S4 — módulos reais e prova visual do estúdio
+- Seção14módulos com links e capacidades existentes, headline/demo preservados, faixa de calculadora S3. Corrigidas ausência falsa de Zoom e promessa de email em minutos. CRM usa comparação pública HighLevel enquanto S5 prepara página própria; não criar link morto.
+- Capturas somente do app real em127.0.0.1, fixture isolada HarborKitchen a partir de DEMO_STORE/DEMO_PRODUCT/DEMO_EXTRAS/DEMO_PAGE, sem conta externa, dados reais, pagamentos, email, fotos remotas ou submissão. Capturas distintas store/sales-page1280x820, teto140000bytes por JPEG, origem/log/commit a registrar antes de incluir em produção. Não publicar imagens ausentes nem substituí-las por desenho que finja screenshot.
+- Antes de servir: imagens serão embutidas em HTML estático existente (dataURI), sem novos pedidosCDN/transformação/endpoint/provedor; confirmar build estático e teto total280000bytes. Modelo vigente FlatRateCDN2USD/milhão de pedidos já inclui bytes; delta de pedidos0 no mesmo documento. Se a condição de faturamento não for confirmada ou houver função/egress novo, isso é custo desconhecido/reprovação, nunca zero, e ativos não são publicados. Cálculo não certifica margem; M0vinculante12,02–12,21% permanece abaixo60%, venda fechada. Imagens/custo/prova final ainda pendentes neste head.
+
+- Herdar correção S3 de NewTab no link de fonte, sem mudar idiomas; novo CI integral de S4 inclui o head corrigido pai. Tipar as seções de links do teste de home sem ampliar a união de TopicPage.
+
+- S4/Product39371000713 verify118458675571 falhou em lint por nome de variável module no teste; renomear para capability sem alterar regra. Conferir Path pela rota própria existente (não faz parte de PAGES) e desativar prefetch dos14novoslinks e da calculadora para não introduzir pedidos ao apenas percorrer a seção. Herdar correções S3 NewTab e S2 rota real/pricing. Novo CI completo obrigatório.
+
+- Product39371518289 verify118460224197: lint/regressões passaram; typecheck encontrou acesso indevido a title no Item compacto do catálogo. A fixture passa a usar o ID retornado por addProduct e conferir a presença desse ID, sem mudar modelo/IDs de produção nem fazer cast. Herdar também guarda de taxas condicionais S3 e aviso S2 visível; novo CI completo requerido. Imagens ainda não publicadas; API de cobrança histórica não confirmou configuraçãoFlatRate e navegador de leitura falhou duas vezes por timeout.
+
+- Product39373093473 verify118465167117: tipos/regressões e os15comparativos passaram; captura recusou localhost porque o guard aceitava só127.0.0.1. Aceitar somente HTTP com porta explícita e hosts locais localhost/127.0.0.1, nunca produção; fixture continua isolada. Corrigir também a mesma ausência falsa de Zoom no FAQ reutilizado pelo HTML/schema e ler catálogo por MAX_PRODUCTS; expansão de perguntas S10 continua posterior. Nenhum email, arquivo, conta ou integração externa real acionado. Nova suíte integral requerida.
+
+
+### Entrega71 — publicação funcional confirmada
+```json
+{
+  "number": 71,
+  "pr": 657,
+  "queueItem": 144,
+  "feature": "Local tool-stack calculator on /pricing with official price dates, monthly/annual selection, applicable processing quotes and explicit unknown fees; no invented savings or feature equivalence",
+  "head": "d05effbb0f4bf76d488e608061778b1074a18f49",
+  "commit": "1f1f4f93a35c6565266a3008077185b2c2e387a9",
+  "deployment": "dpl_EMpxPLvY5MHAWc8eTvkQpmah24nH",
+  "readyUTC": "2026-10-20T05:40:08.127Z",
+  "readyFortaleza": "2026-10-20 02:40:08",
+  "mergedUTC": "2026-10-20T05:39:00Z",
+  "mergedFortaleza": "2026-10-20 02:39:00",
+  "run": 39374412805,
+  "verify": 118469201235,
+  "redis": 118469201023,
+  "securityRun": 39374412828,
+  "validation": "Complete final-head CI successful: lint, regression tests, typecheck/build, whole synthetic browser flow, calculator390/1280 keyboard/axe/fit/no API writes, inclusive fee counting, Substack recurring fee and unconfirmed estimates. READY exactSHA+marktmorgen.com alias;13routes200exactDPL including pricing aliases. Actual calculator heading and all4control IDs present. Noerror/fatal05:36:22.448–05:41:22.448UTC.",
+  "limitations": "Browser-local arithmetic; no new provider operation/allowance/price/gate. Binding M0 remains12.02–12.21%, fails required60%; PLANS_ON_SALE=false. No margin/fiscal/AAA certification."
+}
+```
+
+### S4 — verificação e bloqueio específico dos ativos visuais
+- Head4edb692/Product39374567301, verify118469693032, Redis118469692712 e segurança39374567174 passaram integralmente. Capturas reais sintéticas produzidas e revistas: store69756bytes, sales-page82191bytes, distintas1280x820, sem dados reais. Módulos/links/FAQ podem avançar como entrega parcial; imagens permanecem ausentes.
+- Desde04:38UTC até05:43UTC houve investigação do custo: modelo vigente condiciona bytes inclusos aFlatRateCDN; leitura de cobrança histórica não prova preço máximo nem configuração, e leitura do painel falhou duas vezes por timeout. Sem essa condição confirmada, banda é desconhecida/reprovação, nunca0. Ativos não serão servidos. Pendência específica aguardando o dono; nenhuma permissão de nova conta/custo/upgrade foi inferida, nada cancelado. M0 permanece reprovada, vendas fechadas. Seguir demais itens sem esperar resposta.
+
+
 ### S5 — página pública de CRM
 - People, deals and pipelines usa lib/crm-rules e record-space para2/5/10pipelines, campos/stages/deals e limites compartilhados. Registro de valor não é previsão. Campos/etapas privados para a equipe, email/workflows condicionados a opt-in, permissões e franquias; não prometer SMS/WhatsApp/telefone ou agênciaSaaS. Navegação e HighLevel ligados à página; sitemap vem de PAGES. HomeS4 será ligado ao publicar a página e preservar o head final de S4.
 - Testes de fatos/caps por plano, sitemap e links recíprocos; leitura390/1280,axe,teclado e nenhuma APIwrite. Conteúdo estático no renderer existente, sem endpoint/execuçãoCRM/dependência/imagem paga/operação nova, sem preço/limite/gate novo. M0 antes/depois mesmo modelo;12,02–12,21% vinculante abaixo60%, desconhecido reprova, PLANS_ON_SALE=false. Nenhuma certificação fiscal/margem; versão final exige CI completo.
 
 - Product39371589383 verify118460446530: lint/regressões passaram; TypeScript detectou inferência autorreferente de row no teste da tabela. Declarar matched como tupla exata [string,string,string]|undefined e callback cells, sem any/cast/supressão nem mudança do contrato. S6 herdou o mesmo erro em39371922139/118461472562; propagar correção e todos os guards/avisos atuais de S2/S3, exigir nova suíte integral em ambos.
+
+- Integração explícita dos módulosS4 com a páginaCRM; homeagoraaponta/platform/crm. Preserva fixture/capturas somenteemCI ependência específica de banda dasimagens aguardandoo dono; nenhumativo novo servido. Herda entrega71 eexigenovasuíteintegral nestehead, semreutilizarsuíteantigaparadeclararconclusão.
