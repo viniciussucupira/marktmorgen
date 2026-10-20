@@ -1,3 +1,4 @@
+import { checkNudgeAcknowledgment } from "./nudge-acknowledgment.mjs";
 import { checkPdfStampAcknowledgment } from "./pdf-stamp-acknowledgment.mjs";
 import { checkPdfPreviewAcknowledgment } from "./pdf-preview-acknowledgment.mjs";
 import { checkFaqAcknowledgment } from "./faq-acknowledgment.mjs";
@@ -756,6 +757,7 @@ try {
   await checkPdfStampAcknowledgment({browser,LOCAL,fixture:{session:growthSession,sid:growthSid,product:growthProduct},is});
   await checkPdfPreviewAcknowledgment({browser,LOCAL,fixture:{session:growthSession,sid:growthSid,product:growthProduct},is});
   await checkFaqAcknowledgment({browser,LOCAL,fixture:homeDemo,is});
+  await checkNudgeAcknowledgment({browser,LOCAL,fixture:pauseFixtures[0],is});
   await captureHomeStudio({browser,LOCAL,fixture:homeDemo,is});
   await checkHomeModules({browser,LOCAL,axeSource,is});
   await checkStudioAmericanEnglish({browser,LOCAL,session:growthSession,sid:growthSid,is});

@@ -1900,3 +1900,10 @@ Ao concluir cada item: registrar data, commit e testes; seguir ao próximo. Dado
   "limitations": "Off andactualprocessingnotbrowsercovered. Client+416characters,route+49sourcecharacters;id/onfromexistingresult.product,no newread/provider/operation/price/allowance/gate. ExistingGET/effect,size/password/unreadablefallbackunchanged. BindingM0 12.02–12.21%fails60%;salesclosed."
 }
 ```
+
+
+163. **[B2-MEMBER-NUDGE-ACKNOWLEDGMENT] Confirmar configuração de retorno sem prometer envio**
+   - Estado: **em implementação; codex/member-nudge-acknowledgment; CI integral pendente**.
+   - Escopo: parseNudge/snapshotexistentes,HTTP/okbooleano/semcontradição/on/addresscanônicos;bloquearcampos,aria-busy,semduploenvio;errosapenaspróprios;incertezahonesta e sucesso deconfiguração. Nãoalterarenvio/destinatários/consentimento/horários/limites/spend.
+   - Prova:28respostasinterceptadas em390/1280 reutilizandopauseFixtures[0]recorrente,semnova conta;campos/errosherdados/JSON/perda/contradição/recusaconhecida/sucesso/globalfit;nenhumPOSTrealouemail. Desativação/envio realnãoalegadoscomocobertos;suíteintegralobrigatória.
+   - Custo:cliente+613caracteres,mesmaoperação/resposta/parser;nenhumfornecedor/franquia/preço/gate novo.M0antes/depois12,02–12,21%reprova60%;vendasfechadas.

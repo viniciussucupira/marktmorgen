@@ -209,3 +209,7 @@ Queue161 returns id/pages from the setter's existing result.product, without ano
 
 ## PDF marking setting: honest acknowledgment and own error messages
 Queue162 returns id/on from existing result.product without another read. The client requires successful HTTP, boolean ok, no contradictory error and exact identity/choice; error mapping uses own properties only. Pending control locks and announces busy. Success confirms the setting, preserving size/password/unreadable fallback. Existing GET notes/effect unchanged.26intercepted cases at390/1280 reuse growth PDF metadata and block stamp GETs; off and actual stamping are not claimed covered. FullCIpending. Client+416characters,route+49characters,sameoperation,no newprovider/read/price/allowance/gate;bindingM0 below60%,salesclosed.
+
+
+## Member return setting: saved state rather than delivery claims
+Queue163 reuses parseNudge and existing returned on/address snapshot. Successful HTTP, exact boolean acknowledgment and no contradictory error are required. Pending fields lock, section announces busy, own error messages only, and uncertain replies request checking. Success confirms settings rather than email delivery.28intercepted replies at390/1280 reuse the existing recurring pause fixture, without new accounts or actual sending. FullCIpending; disabling and real delivery not claimed covered. Client+613characters,sameoperation/parser,no newprovider/price/allowance/gate;consent/recipients/schedule/spendunchanged,bindingM0 below60%,salesclosed.
