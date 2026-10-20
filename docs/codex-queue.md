@@ -510,3 +510,10 @@ B3 iniciado em paralelo ao CI da próxima área B2, conforme P3: parser só de d
 
 
 Nota de validação do PR #630: a suíte completa encontrou um teste legado dependente do relógio real às23:59UTC. A regra existente preserva600segundos mínimos, mesmo quando o próximo dia+5min fica mais perto. Fixture agora fixa23:59:37 e testa antes/depois da meia-noite explicitamente; nenhuma espera/limite de produção foi reduzida. Suíte completa no novo head obrigatória.
+
+
+84. **[C-UE-TAX-SCOPE] Explicar o escopo dos controles fiscais da conta do criador**
+   - Pedido: P2 C-UE; contradição encontrada na auditoria da interface em19/10/2026,21h de Fortaleza (aproximado).
+   - Estado: **em andamento; branch codex/tax-control-scope; depende de630**.
+   - Evidência: components/tax-editor.tsx afirmava de forma absoluta que o criador era quem declarava/pagava; explicar que os controles da conta Stripe não resolvem as obrigações da plataforma, e que coleta/registros de IVA da plataforma ainda não estão construídos. Formulário referencia as explicações; valores/controles/pedidos de gravação preservados. Navegador sintético390/1280, texto real, referências acessíveis e nenhum POST.
+   - Custo e margem: Apenas texto/atributos locais: fonte aumenta372caracteres, menos de1KB de conteúdo estático adicional dentro do envelope da página existente; sem leitura/chamada/registro/mensagem extra, sem ampliar limites. M0 antes=depois em todos os planos/intervalos; modelo mais oneroso ainda reprovado. Não é coleta/registro/parecer fiscal concluído.

@@ -68,16 +68,21 @@ export function TaxEditor({
       <h2 id="tax-title" className="text-lg font-semibold tracking-[-0.02em] text-ink">
         Tax and invoices
       </h2>
-      <p className="mt-2 text-ink-soft">
+      <p id="tax-account-scope" className="mt-2 text-ink-soft">
         Stripe Tax works out sales tax or VAT from each buyer&apos;s address, for the places where you have told Stripe
-        you are registered, and adds it at checkout, on your own Stripe account. You remain the seller who files and pays it, with Stripe&apos;s reports of what was collected. Stripe
+        you are registered, and adds it at checkout, on your own Stripe account. These controls configure your account; they do not establish who owes tax under platform or marketplace rules. Stripe
         charges for Stripe Tax on your account, at the price on its own pricing page.
+      </p>
+
+      <p id="tax-platform-scope" className="mt-3 text-sm text-ink-soft">
+        Marktmorgen&apos;s platform VAT collection and records are still being built. Setting up Stripe Tax on your account
+        does not complete that work or open sales.
       </p>
 
       {!connected ? (
         <p className="mt-4 text-sm text-ink-soft">Connect your Stripe account first, and this can be switched on.</p>
       ) : (
-        <form onSubmit={save} className="mt-5 space-y-4">
+        <form onSubmit={save} aria-describedby="tax-account-scope tax-platform-scope" className="mt-5 space-y-4">
           <p className="text-sm">
             {status === "active" ? (
               <span className="font-semibold text-ink">Stripe Tax is set up on your account.</span>
@@ -134,8 +139,8 @@ export function TaxEditor({
               Stripe shows the box in the countries where it supports one. The number is saved on the buyer&apos;s record
               in your own Stripe account and printed on their invoice. With sales tax switched on above, Stripe applies
               the reverse charge or the zero rate where the law says so; with it off, the number is recorded and nothing
-              else changes. Stripe checks the number&apos;s format, and you remain the seller who decides whether to
-              accept it. A buyer without a number is never stopped.
+              else changes. Stripe checks the number&apos;s format. Entering a number does not by itself establish a buyer&apos;s
+              tax treatment. A buyer without a number is never stopped.
             </p>
             <label className="flex items-start gap-3 text-sm font-semibold text-ink">
               <input
