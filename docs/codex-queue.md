@@ -3114,3 +3114,8 @@ Item201: no heade8e640, job118924958225, o Path voltou a cancelar goto apenas46m
 ### P0-201 — verificação completa de 20/10/2026, 19:54 Fortaleza
 
 Head 2bec53d0: matriz pública passou; studio Chromium/Firefox passaram, WebKit 50 casos/1 falha (320px com espaçamento: scroll355/client320, nenhum elemento geométrico excedente). Product WebKit falhou: calculadora scroll502/client348 sem elemento excedente; Save sites desabilitado antes do pedido. Mantidas as falhas e limites originais. Próxima correção limita e permite quebra das legendas longas da calculadora; diagnóstico inclui overflow interno, inclusive caixas anônimas/texto, e o teste de allowlist aguarda hidratação/rede antes de abrir os controles. Hipóteses ainda dependem do CI completo no novo head; nenhuma certificação, incorporação ou publicação. Sem custo novo de operação; incluir minutos falhos/cancelados no total do CI. PLANS_ON_SALE=false e gates comerciais/fiscais preservados.
+
+
+### P0-201 — evidência e correção, 20/10/2026, 20:09 Fortaleza
+
+Head9f0bb45e: Firefox calculadora passou em390/1280 após limitar/quebrar legendas, sem alterar valores ou limites. FAQ falhou porque alvos44px computados mediram43.999969/43.999996px: aumenta-se altura mínima real para48px; assertion44px preservada. Numbers remove/null não enviou pedido após missing: causa ainda aberta, teste passa a ativação real por foco+Enter e registra estado/botões/foco em falha, mantendo todos os casos e pedidos/payloads/locks/recusas. Studio três motores passou; mobile eRedis passaram; Product completo permanece sem aprovação. Novo head exige todos os workflows completos; nada incorporado/publicado. Sem custo operacional novo e sem mudanças nos gates.

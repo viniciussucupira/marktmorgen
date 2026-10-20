@@ -43,11 +43,12 @@ export async function checkNumbersAcknowledgment({browser,LOCAL,fixture,is}){
     const name=action+"/"+revenue+"/"+scenario.name+"/"+width;
     const seen=page.waitForRequest(r=>r.method()==="POST"&&new URL(r.url()).pathname==="/api/store/numbers-links");seen.catch(()=>{});
     try{
-     await section.getByRole("button",{name:action==="create"?"Make the link":"Take it back",exact:true}).click();
+     const button=section.getByRole("button",{name:action==="create"?"Make the link":"Take it back",exact:true});
+     await button.focus();await page.keyboard.press("Enter");
      is("numbers exact request "+name,(await seen).postDataJSON(),action==="create"?{action,label:draft,password,days:7,money:revenue}:{action,id:fixture.numbersLinkId});
      is("numbers pending announced "+name,await section.getAttribute("aria-busy"),"true");
      for(const field of await section.locator("input,select,button").all())is("numbers pending locked "+name,await field.isDisabled(),true);
-    }finally{release();}
+    }catch(error){console.error("NUMBERS_ACTIVATION_DIAGNOSTIC:"+JSON.stringify({name,requests,busy:await section.getAttribute("aria-busy"),buttons:await section.getByRole("button").allTextContents(),active:await page.evaluate(()=>({tag:document.activeElement?.tagName,text:document.activeElement?.textContent?.slice(0,80)}))}));throw error;}finally{release();}
     await page.waitForFunction(()=>document.querySelector("[data-numbers-links]")?.getAttribute("aria-busy")==="false");
     if(scenario.confirmed){
      is("numbers confirms "+name,await section.getByRole("alert").count(),0);
