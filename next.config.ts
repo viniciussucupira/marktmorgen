@@ -63,8 +63,9 @@ const nextConfig: NextConfig = {
     const to = (destination: string, ...sources: string[]) =>
       sources.map((source) => ({ source, destination, permanent: true }));
 
+    // /pricing is now a real page. Only the older aliases redirect to it.
     return [
-      ...to("/#pricing", "/pricing", "/price", "/prices", "/plans"),
+      ...to("/pricing", "/price", "/prices", "/plans"),
       ...to("/#compare", "/compare", "/comparison"),
       ...to("/proof/compare", "/vs-stan", "/stan", "/stan-store", "/alternatives"),
       ...to("/platform", "/features", "/feature", "/product"),
