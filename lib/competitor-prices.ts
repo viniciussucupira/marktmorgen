@@ -33,6 +33,8 @@ const kitPricing: OfficialPriceSource = { label: "Kit prices and inclusive comme
 const whopPricing: OfficialPriceSource = { label: "Whop standard payment and payout prices", url: "https://whop.com/network/pricing/", readOn: "2026-10-20" };
 const hotmartPricing: OfficialPriceSource = { label: "Hotmart subscription and product pricing", url: "https://hotmart.com/en/pricing", readOn: "2026-10-20" };
 const hotmartPolicy: OfficialPriceSource = { label: "Hotmart payment policy updated September 21, 2026", url: "https://hotmart.com/en/legal/payments-policy", readOn: "2026-10-20" };
+const hlPricing: OfficialPriceSource = { label: "HighLevel subscription prices and scope", url: "https://www.gohighlevel.com/pricing", readOn: "2026-10-20" };
+const hlUsage: OfficialPriceSource = { label: "HighLevel usage costs and rebilling guide", url: "https://help.gohighlevel.com/support/solutions/articles/155000001156-highlevel-pricing-guide", readOn: "2026-10-20" };
 export const COMPETITOR_PRICES = {
   kajabi: {
     name: "Kajabi",
@@ -123,5 +125,17 @@ export const COMPETITOR_PRICES = {
     policyScope: "The September 21, 2026 English policy lists a $1.00 fixed USD fee. An older $0.50 sentence remains in the help article; its updated table and Player FAQ state $1.00. Confirm the applicable transaction quote. Do not add a separate legacy Player fee.",
     trial: { days: null, source: hotmartPricing },
     feeDetails: { source: { label: "Hotmart fee bands and Player fee update", url: "https://suportehotmart.zendesk.com/hc/en-us/articles/208298448-What-are-the-fees-charged-by-Hotmart", readOn: "2026-10-20" } },
+  },
+  highlevel: {
+    name: "HighLevel",
+    currency: "USD",
+    plans: [
+      { name: "Starter", monthlyCents: 9700, annualCents: 97000, source: hlPricing, platformFeeBps: null },
+      { name: "Unlimited", monthlyCents: 29700, annualCents: 297000, source: hlPricing, platformFeeBps: null },
+      { name: "Agency Pro", monthlyCents: 49700, annualCents: 497000, source: hlPricing, platformFeeBps: null },
+    ] satisfies CompetitorPlanPrice[],
+    feeScope: "The subscription is not an all-in usage quote: phone numbers, calls, SMS, email sends and AI can cost extra. Rebilling does not make usage free. Provider, method and enabled services determine payment costs; no universal transaction fee is assumed here.",
+    trial: { days: 14, source: hlPricing },
+    usage: { source: hlUsage },
   },
 } as const;

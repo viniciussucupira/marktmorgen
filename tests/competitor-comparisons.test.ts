@@ -4,6 +4,7 @@ import sitemap from "@/app/sitemap";
 import { findPage, type TopicPage } from "@/lib/site-pages";
 import { COMPETITOR_PRICES, type OfficialPriceSource } from "@/lib/competitor-prices";
 import { TIERS, PLAN_TITLES, publishedPriceWords, monthlyEmails } from "@/lib/plan";
+import { pipelineLimitWords } from "@/lib/crm-rules";
 import { MAX_PRODUCTS } from "@/lib/catalog-rules";
 
 test("official comparison prices carry an HTTPS source and a real read date", () => {
@@ -21,6 +22,7 @@ test("official comparison prices carry an HTTPS source and a real read date", ()
     const extraSources: OfficialPriceSource[] = [competitor.trial.source];
     if ("brandedApp" in competitor) extraSources.push(competitor.brandedApp.source);
     if ("discovery" in competitor) extraSources.push(competitor.discovery.source);
+    if ("usage" in competitor) extraSources.push(competitor.usage.source);
     if ("feeDetails" in competitor) extraSources.push(competitor.feeDetails.source);
     if ("sponsorship" in competitor) extraSources.push(competitor.sponsorship.source);
     if ("messaging" in competitor) extraSources.push(competitor.messaging.source);
@@ -56,7 +58,7 @@ test("the comparison reads every own published price, email limit and catalog ca
   assert.ok(table.rows.find(r => r[0] === "Getting started")![2].includes("not open yet"));
 });
 test("new proof pages are in the existing sitemap and the index links only actual proof pages", () => {
-  for (const slug of ["kajabi", "skool", "clickfunnels", "circle", "kit", "whop", "hotmart", "comparisons"]) {
+  for (const slug of ["kajabi", "skool", "clickfunnels", "circle", "kit", "whop", "hotmart", "highlevel", "comparisons"]) {
     assert.equal(sitemap().filter(e => new URL(e.url).pathname === "/proof/" + slug).length, 1);
   }
   const index = findPage("proof", "comparisons");
@@ -162,5 +164,17 @@ test("Hotmart current fixed fee, microtransactions and policy conflict stay expl
  const page=findPage("proof","hotmart");assert.ok(page && page.seo?.title==="Marktmorgen vs Hotmart");
  const table=page.blocks.find(b=>b.kind==="table");assert.ok(table && table.kind==="table");
  for(const tier of TIERS)assert.ok(table.rows.find(r=>r[0]==="Subscription")![2].includes(publishedPriceWords(tier,"month")));
+ assert.ok(page.blocks.some(b=>b.kind==="limits" && b.title==="Where they are ahead"));
+});
+
+test("HighLevel comparison preserves real CRM caps and does not turn unlimited accounts into free usage", () => {
+ const h=COMPETITOR_PRICES.highlevel;assert.ok(h.plans.every(p=>p.platformFeeBps===null));
+ assert.deepEqual(h.plans.map(p=>p.annualCents),[97000,297000,497000]);
+ const page=findPage("proof","highlevel");assert.ok(page && page.seo?.title==="Marktmorgen vs HighLevel");
+ const table=page.blocks.find(b=>b.kind==="table");assert.ok(table && table.kind==="table");
+ assert.ok(table.rows.find(r=>r[0]==="CRM and accounts")![2].includes(pipelineLimitWords()));
+ assert.ok(table.rows.find(r=>r[0]==="Communication channels")![2].includes("no SMS, WhatsApp"));
+ assert.ok(table.rows.find(r=>r[0]==="Usage charges")![1].includes("not an all-in"));
+ for(const tier of TIERS)assert.ok(table.rows.find(r=>r[0]==="Monthly subscription")![2].includes(publishedPriceWords(tier,"month")));
  assert.ok(page.blocks.some(b=>b.kind==="limits" && b.title==="Where they are ahead"));
 });

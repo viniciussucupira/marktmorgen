@@ -1120,3 +1120,12 @@ Pedido P5: anexo524cc7f9-78af-42b5-ae37-4c05dc91a193/Texto colado.txt, lido19/10
 - Fontesoficiaispricing, política inglesa21/09/2026 e artigoatualizadofees lidas20/10/2026. USDcompra+comissão:acima15USD9,9%+1.00,até15USD9,9%+.10. Não usar .50antigo: restafraseconflitanteartigo, mas tabelaatual/FAQPlayer/políticaexplicam1.00desde21/09. Não somarPlayerlegado. MoR/isencãouniversalnãoprometidos; entidadelocal/produto/residênciaafetamimpostos.
 - Assinaturamensal/anual0comprovadapricing, nãohátrialinventado. Appcomprador/offlineeafiliadossãofunçõesdocumentadas; nãoprometer tráfego. Própriospreços/taxascanônicos/gatespreservados. Fontescontasdatadas, sitemapviaPAGESexistente, vantagensmesmocorpoe390/1280axe/teclado/metadata/noAPIwrites; testesnovosbandas/conflito/Player/nopaymenttrial.
 - M0antes/depois: mesmoenvelopeestático;semnovaoperação/dependência/endpoint/provedor/email/IA/storagewrite/telemetria, sem franquia/preço/gatealterado. Leituraonerosa12,02–12,21%reprovadaante60%;vendasfechadasPLANS_ON_SALE=false. Exige CI completo finalhead/READY/domínio/SHAantesdecontar/publicar.
+
+
+### S1 — oitavo incremento: HighLevel
+
+- Branchcodex/highlevel-comparison sobreheada7c17e0b9afdc1d08123057aea2eee963627e3bePR652, main7d8fff4e79982eb5eac6d49b831562758b992786consultado. Pais650/651/652CI e649aguardaprovaprodução; nãocontarincorporaçãosemREADY/domínio/SHA.
+- Pricing/guideoficiaisHighLevellidos20/10/2026:97/297/497USDmês;970/2970/4970anoexatos. Starter3subaccounts, Unlimited/Prosemcapdecontasnãoequivaleconsumográtis. Telefone/SMS/email/IAusageextra, SaaSModePro. Taxauniversalpagamentonãoverificadanull.
+- CRMprópriojapossui campos/deals/pipelines/IFELSEClaude, fonte lib/crm-rules.tsconsultada. Texto delimitedpipelines usa pipelineLimitWords canônico, nãonúmeroendurado. Nãoequivalerlojaasubaccount,nãoprometernativoSMS/WhatsApp/voz,SocialourevendaSaaS.
+- Página/índice/sitemap,fontesdatadas,custosexplícitos, vantagensmesmocorpoe390/1280axe/metadata/teclado/noAPIwrites. TestesCRMcapscanonical/unknownfees/subscriptions e suitecompletanofinalheadobrigatórios.
+- M0antes/depois: mesmomecanismoestático; nenhumnovocanal/operação/provedor/email/IA/storagewrite/dependência/telemetria. Nenhumapreço/franquia/gatealterado; M0onerosa12,02–12,21%continuafalha60%,nãocertificada; PLANS_ON_SALE=false. PáginaCRMdedicadaS5permaneceposterior, nãofingirconclusãoduplicada.

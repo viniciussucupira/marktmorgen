@@ -8,7 +8,7 @@ export async function checkSalesComparisons({browser,LOCAL,axeSource,is}){
     if(route.request().method()!=="GET"){writes++;await route.abort();return;}
     await route.continue();
    });
-   for(const slug of ["comparisons","kajabi","skool","clickfunnels","circle","kit","whop","hotmart"]){
+   for(const slug of ["comparisons","kajabi","skool","clickfunnels","circle","kit","whop","hotmart","highlevel"]){
     await page.goto(LOCAL+"/proof/"+slug,{waitUntil:"networkidle",timeout:60000});
     await page.locator("main").waitFor();
     // Reveal actual sections before checking their rendered contrast.
@@ -17,7 +17,7 @@ export async function checkSalesComparisons({browser,LOCAL,axeSource,is}){
      await page.waitForFunction(element=>getComputedStyle(element).opacity==="1",await node.elementHandle(),{timeout:5000});
     }
     if(slug!=="comparisons"){
-     const name={kajabi:"Kajabi",skool:"Skool",clickfunnels:"ClickFunnels",circle:"Circle",kit:"Kit",whop:"Whop",hotmart:"Hotmart"}[slug];
+     const name={kajabi:"Kajabi",skool:"Skool",clickfunnels:"ClickFunnels",circle:"Circle",kit:"Kit",whop:"Whop",hotmart:"Hotmart",highlevel:"HighLevel"}[slug];
      is(name+" search title "+width,await page.title(),"Marktmorgen vs "+name);
      is(name+" search description "+width,(await page.locator('meta[name="description"]').getAttribute("content")).startsWith("A "+name+" alternative where"),true);
      await page.getByRole("heading",{name:"Where they are ahead",exact:true}).scrollIntoViewIfNeeded();
@@ -28,8 +28,8 @@ export async function checkSalesComparisons({browser,LOCAL,axeSource,is}){
      });
      is("competitor advantages have the comparison's text size "+width,sameSize.ahead,sameSize.row);
      is("paid selling closure is visible "+width,(await page.locator("main").innerText()).includes("paid selling are not open yet"),true);
-     const source=page.getByRole("link",{name:{kajabi:/Kajabi pricing and payment fees/,skool:/Skool plans/,clickfunnels:/ClickFunnels plan prices and limits/,circle:/Circle pricing and plan scope/,kit:/Kit prices and inclusive commerce fees/,whop:/Whop standard payment and payout prices/,hotmart:/Hotmart subscription and product pricing/}[slug]});
-     is("official source is linked "+width,await source.getAttribute("href"),{kajabi:"https://www.kajabi.com/pricing",skool:"https://www.skool.com/pricing",clickfunnels:"https://support.myclickfunnels.com/docs/clickfunnels-pricing/",circle:"https://circle.so/pricing",kit:"https://kit.com/pricing",whop:"https://whop.com/network/pricing/",hotmart:"https://hotmart.com/en/pricing"}[slug]);
+     const source=page.getByRole("link",{name:{kajabi:/Kajabi pricing and payment fees/,skool:/Skool plans/,clickfunnels:/ClickFunnels plan prices and limits/,circle:/Circle pricing and plan scope/,kit:/Kit prices and inclusive commerce fees/,whop:/Whop standard payment and payout prices/,hotmart:/Hotmart subscription and product pricing/,highlevel:/HighLevel subscription prices and scope/}[slug]});
+     is("official source is linked "+width,await source.getAttribute("href"),{kajabi:"https://www.kajabi.com/pricing",skool:"https://www.skool.com/pricing",clickfunnels:"https://support.myclickfunnels.com/docs/clickfunnels-pricing/",circle:"https://circle.so/pricing",kit:"https://kit.com/pricing",whop:"https://whop.com/network/pricing/",hotmart:"https://hotmart.com/en/pricing",highlevel:"https://www.gohighlevel.com/pricing"}[slug]);
     }else{
      is("index links the real Kajabi page "+width,await page.locator('main a[href="/proof/kajabi"]').count(),1);
      is("index links the real Skool page "+width,await page.locator('main a[href="/proof/skool"]').count(),1);
@@ -38,6 +38,7 @@ export async function checkSalesComparisons({browser,LOCAL,axeSource,is}){
      is("index links the real Kit page "+width,await page.locator('main a[href="/proof/kit"]').count(),1);
      is("index links the real Whop page "+width,await page.locator('main a[href="/proof/whop"]').count(),1);
      is("index links the real Hotmart page "+width,await page.locator('main a[href="/proof/hotmart"]').count(),1);
+     is("index links the real HighLevel page "+width,await page.locator('main a[href="/proof/highlevel"]').count(),1);
      is("footer links comparison index "+width,await page.locator('footer a[href="/proof/comparisons"]').count(),1);
     }
     await page.addScriptTag({content:axeSource});
