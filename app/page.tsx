@@ -234,7 +234,7 @@ export default function Home() {
                   <Icon name="arrow-right" size={18} />
                 </Link>
                 {/* The demo stays available as a secondary link. */}
-                <Link href="/demo" prefetch={false} className="link-arrow on-dark min-h-11 justify-center min-[480px]:justify-start">
+                <Link href="/demo" prefetch={false} className="link-arrow on-dark inline-flex min-h-11 items-center justify-center min-[480px]:justify-start">
                   See the live demo
                   <Icon name="arrow-right" size={18} />
                 </Link>
