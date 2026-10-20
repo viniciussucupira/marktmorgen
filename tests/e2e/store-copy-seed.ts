@@ -1,3 +1,4 @@
+import { DEMO_STORE, DEMO_PRODUCT, DEMO_EXTRAS, DEMO_PAGE } from "@/lib/demo-seed";
 import {paidPeriod} from "../billing-period-fixture";
 import {DEMO_CONNECTED_ACCOUNT} from "@/lib/demo-account";
 import { readFields, writeFields } from "@/lib/crm";
@@ -102,6 +103,24 @@ async function main(): Promise<void> {
     if(!saved?.period || saved.pause!==initial || !saved.catalog.items.some(item=>(item.kind & KIND.recurring)!==0))throw Error("Incomplete local pause fixture");
     pauseFixtures.push({session:await openSession(owner),sid:saved.sid,initial});
   }
-  console.log(JSON.stringify({ pauseFixtures,wordingSession,wordingSid:wordingStore.sid,wordingTrialSession,wordingTrialSid:wordingTrialStore.sid,returnSession,returnSid:returnStore.sid,growthSession,growthSid:growthStore.sid,growthProduct:growthProducts[0],session: await openSession(OWNER), second: second.store.sid, abProduct, abStore:abStore.sid,contactToken }));
+  // Isolated local Harbor Kitchen fixture: canonical demo content, no external account or upload.
+  const homeOwner="home-demo@example.test";
+  const homeClaim=await claimHandle(homeOwner,"harborkitchenpreview",DEMO_STORE.name,DEMO_STORE.bio);
+  if(!homeClaim.ok||DEMO_STORE.tier!=="pro")throw Error("No local demo studio fixture");
+  await setSubscription(homeOwner,{active:true,tier:"pro",cycle:"month",subscriptionId:null,customerId:null,trialEnds:0,period:paidPeriod()});
+  await ensureStatsId(homeOwner);
+  await setStripeAccount(homeOwner,DEMO_CONNECTED_ACCOUNT);
+  for(const product of [DEMO_PRODUCT,...DEMO_EXTRAS]){
+    const added=await addProduct(homeOwner,product.title,product.summary,product.price,null);
+    if(!added.ok)throw Error("No local demo product");
+  }
+  const homeStore=await storeForEmail(homeOwner);
+  const homeProduct=homeStore?.catalog.items.find(product=>product.title===DEMO_PRODUCT.title);
+  const homePage=parsePage(DEMO_PAGE);
+  if(!homeStore?.statsId||!homeProduct||!homePage)throw Error("No local demo page");
+  await writePage(homeStore.statsId,homeProduct.id,homePage,homeStore);
+  if(!(await setProductPage(homeOwner,homeProduct.id,true)).ok)throw Error("No local demo page index");
+  const homeDemo={session:await openSession(homeOwner),sid:homeStore.sid,product:homeProduct.id};
+  console.log(JSON.stringify({ homeDemo,pauseFixtures,wordingSession,wordingSid:wordingStore.sid,wordingTrialSession,wordingTrialSid:wordingTrialStore.sid,returnSession,returnSid:returnStore.sid,growthSession,growthSid:growthStore.sid,growthProduct:growthProducts[0],session: await openSession(OWNER), second: second.store.sid, abProduct, abStore:abStore.sid,contactToken }));
 }
 main().catch((e) => { console.error(e); process.exit(1); });
