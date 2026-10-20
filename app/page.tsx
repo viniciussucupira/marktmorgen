@@ -7,6 +7,7 @@ import { SiteNav } from "@/components/site-nav";
 import { Icon, type IconName } from "@/components/icons";
 import { FeatureVisual, type VisualKey } from "@/components/feature-visuals";
 import { Faq, HeroFlow, Pricing, RevealOnScroll, SoldMarquee } from "@/components/home-parts";
+import { HOME_MODULES } from "@/lib/home-modules";
 import { HomeData } from "@/components/structured-data";
 import { homeQuestions } from "@/lib/home-faq";
 import { paypalSalesConfigured } from "@/lib/paypal-sales";
@@ -82,7 +83,7 @@ const REASONS: {
   {
     icon: "bolt",
     title: "Reliable access after payment",
-    body: "A file downloads, a course opens, a booked call lands on both calendars — but only after we ask Stripe's own record whether the payment settled, and we ask again on every download. A link somebody guesses or forwards opens nothing. If the buyer never comes back from checkout, the confirmation reaches them by email within minutes.",
+    body: "A file downloads, a course opens, a booked call lands on both calendars — but only after we ask Stripe's own record whether the payment settled, and we ask again on every download. A link somebody guesses or forwards opens nothing. The confirmation email links back to the purchase when the buyer leaves checkout.",
     example:
       "A buyer on a new phone types the email address they paid with, and every purchase from that store comes back to them — a month or a year later, for as long as the store is open and the product is still there.",
     visual: "delivery",
@@ -100,9 +101,7 @@ const DOMAINS = isDomainsConfigured();
  */
 const NOT_YET = [
   "Automatic replies on Instagram",
-  "PayPal at checkout",
   "An iPhone app from the App Store",
-  "Zoom links made for each booking",
   "Paying affiliates without a PayPal account of your own",
 ];
 
@@ -432,6 +431,24 @@ export default function Home() {
 
         {/* ------------------------------------------------ the buyer's path */}
         <BuyerPath />
+
+        <section className="section" aria-labelledby="home-modules-heading">
+          <div className="container-page">
+            <h2 id="home-modules-heading" className="t-h2 balance">Everything in one place</h2>
+            <p className="mt-5 max-w-3xl text-ink-soft">Choose the tools your work needs, with the limits and conditions shown before you commit. {PLANS_ON_SALE ? "The live demo shows the buyer experience." : "Paid selling remains closed; the live demo shows the buyer experience."}</p>
+            <ul className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {HOME_MODULES.map(capability=><li key={capability.name} className="rounded-2xl border border-line bg-white p-6">
+                <h3 className="text-xl font-semibold"><Link href={capability.href} prefetch={false} className="underline decoration-line underline-offset-4">{capability.name}</Link></h3>
+                <p className="mt-3 text-ink-soft">{capability.body}</p>
+              </li>)}
+            </ul>
+            <div className="mt-8 rounded-2xl bg-lilac p-6">
+              <h3 className="text-xl font-semibold">Compare your current tools and their costs</h3>
+              <p className="mt-3 text-ink-soft">Use published subscription prices, your sales volume and your applicable fee quotes. Unknown costs stay unconfirmed; the calculator makes no promise of earnings or identical features.</p>
+              <Link href="/pricing#calculator-heading" prefetch={false} className="link mt-4 inline-block">Open the browser-only cost calculator</Link>
+            </div>
+          </div>
+        </section>
 
         {/* ------------------------------------------------------ why Marktmorgen */}
         <section className="section">
