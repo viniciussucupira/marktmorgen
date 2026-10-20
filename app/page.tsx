@@ -11,7 +11,7 @@ import { BuyerPath } from "@/components/buyer-path";
 import { SiteNav } from "@/components/site-nav";
 import { Icon, type IconName } from "@/components/icons";
 import { FeatureVisual, type VisualKey } from "@/components/feature-visuals";
-import { Faq, HeroFlow, Pricing, RevealOnScroll, SoldMarquee } from "@/components/home-parts";
+import { Faq, HeroFlow, Pricing, SoldMarquee } from "@/components/home-parts";
 import { HOME_MODULES } from "@/lib/home-modules";
 import { HomeData } from "@/components/structured-data";
 import { homeQuestions } from "@/lib/home-faq";
@@ -197,10 +197,9 @@ export default function Home() {
   const questions = homeQuestions(paypalSalesConfigured());
   return (
     <div className="min-h-screen bg-paper text-ink">
-      <RevealOnScroll />
       <SiteNav />
 
-      <main id="content">
+      <main id="content" data-static-reading>
         {/* ------------------------------------------------------------ hero */}
         <section aria-labelledby="home-hero-heading" className="surface-daybreak on-dark overflow-hidden" data-home-hero>
           <div className="container-page grid items-center gap-12 pb-28 pt-12 sm:gap-14 sm:pt-16 lg:grid-cols-[1.04fr_1fr] lg:gap-12 lg:pb-32 lg:pt-20">
@@ -314,7 +313,7 @@ export default function Home() {
                 body: "Files up to 5 GB each. Past it we write to you rather than cutting anything off.",
               },
             ].map((f) => (
-              <li key={f.title} className="reveal flex gap-3.5">
+              <li key={f.title} className="flex gap-3.5">
                 <span className="icon-tile icon-tile-sm">
                   <Icon name={f.icon} size={18} />
                 </span>
@@ -348,7 +347,7 @@ export default function Home() {
         {/* ------------------------------------------------------ who it's for */}
         <section className="surface-sand section">
           <div className="container-page">
-            <div className="reveal flex flex-col justify-between gap-6 md:flex-row md:items-end">
+            <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
               <div className="max-w-2xl">
                 <h2 className="t-h2 balance">People who sell what they know</h2>
               </div>
@@ -413,13 +412,13 @@ export default function Home() {
         {/* ------------------------------------------------------ why Marktmorgen */}
         <section className="section">
           <div className="container-page">
-            <div className="reveal max-w-2xl">
+            <div className="max-w-2xl">
               <h2 className="t-h2 balance">Built for the people who use it</h2>
             </div>
 
             <div className="mt-14 space-y-16 sm:mt-16 sm:space-y-20">
               {REASONS.map((r, i) => (
-                <article key={r.title} className="reveal grid items-center gap-10 lg:grid-cols-2 lg:gap-16">
+                <article key={r.title} className="grid items-center gap-10 lg:grid-cols-2 lg:gap-16">
                   <div className={i % 2 === 1 ? "lg:order-2" : ""}>
                     <span className="icon-tile">
                       <Icon name={r.icon} size={22} />
@@ -469,7 +468,7 @@ export default function Home() {
               only what works is worth nothing unless it also names what
               does not. One row, five names, no padding around them.
             */}
-            <div className="reveal mt-14 flex flex-col gap-4 rounded-[var(--r-lg)] bg-white/70 p-6 shadow-[inset_0_0_0_1px_rgba(42,23,144,0.09)] sm:p-7 lg:flex-row lg:items-center lg:gap-8">
+            <div className="mt-14 flex flex-col gap-4 rounded-[var(--r-lg)] bg-white/70 p-6 shadow-[inset_0_0_0_1px_rgba(42,23,144,0.09)] sm:p-7 lg:flex-row lg:items-center lg:gap-8">
               <div className="lg:w-[17rem] lg:shrink-0">
                 <span className="tag tag-next">Not here yet</span>
                 <p className="mt-3 text-[0.9375rem] text-ink-soft">
@@ -500,13 +499,13 @@ export default function Home() {
           <div className="container-page">
             <TrustChecks place="home" />
             <div className="mt-12"><PricingValue place="home" /></div>
-            <div className="reveal mx-auto mt-10 max-w-2xl text-center">
+            <div className="mx-auto mt-10 max-w-2xl text-center">
               <h2 className="t-h2 balance">Three plans, with the monthly price and sales fee shown together.</h2>
               <p className="mt-5 text-ink-soft">
                 {feeWords().costLine}
               </p>
             </div>
-            <div className="reveal mx-auto mt-12 max-w-5xl" data-plan-prices>
+            <div className="mx-auto mt-12 max-w-5xl" data-plan-prices>
               <Pricing domains={DOMAINS} />
               <p className="mt-6 text-center"><Link href="/pricing" className="link">Compare all plan limits, annual prices and optional add-ons</Link></p>
             </div>
@@ -520,7 +519,7 @@ export default function Home() {
         {/* ------------------------------------------------------------ faq */}
         <section id="faq" className="section scroll-mt-20">
           <div className="container-page grid gap-10 lg:grid-cols-[1fr_1.6fr]">
-            <div className="reveal">
+            <div className="">
               <h2 className="t-h2 balance">Questions</h2>
               <p className="mt-5 text-ink-soft">
                 Something else?{" "}
@@ -530,7 +529,7 @@ export default function Home() {
                 answers the rest, in writing.
               </p>
             </div>
-            <div className="reveal">
+            <div className="">
               <Faq questions={questions} />
             </div>
           </div>
