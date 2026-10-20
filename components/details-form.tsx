@@ -13,7 +13,7 @@ const MESSAGES: Record<string, string> = {
   none: "This account has no store yet.",
   signed_out: "Your session ended. Log in again.",
   unavailable: "Stores are not switched on yet, so nothing was saved.",
-  server_error: "Something went wrong on our side. Try again in a moment.",
+  server_error: "We could not confirm whether your name and description changed. Check your page before trying again.",
 };
 
 type State =
@@ -75,7 +75,7 @@ export function DetailsForm({
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
-    if (state.kind === "saving") return;
+    if (state.kind === "saving" || writing) return;
     setState({ kind: "saving" });
 
     try {
@@ -84,8 +84,14 @@ export function DetailsForm({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, bio }),
       });
-      const data = (await response.json()) as { ok?: boolean; error?: string };
-      if (data.ok) {
+      const raw: unknown = await response.json().catch(() => null);
+      const data = raw && typeof raw === "object" && !Array.isArray(raw)
+        ? raw as Record<string, unknown> : {};
+      if (
+        response.ok && data.ok === true && !data.error &&
+        data.name === name.trim().slice(0, MAX_NAME_LENGTH) &&
+        data.bio === bio.trim().slice(0, MAX_BIO_LENGTH)
+      ) {
         setState({ kind: "closed" });
         toast("Name and description saved.");
         router.refresh();
@@ -93,7 +99,7 @@ export function DetailsForm({
       }
       setState({
         kind: "error",
-        message: MESSAGES[data.error ?? ""] ?? MESSAGES.server_error,
+        message: MESSAGES[typeof data.error === "string" ? data.error : ""] ?? MESSAGES.server_error,
       });
     } catch {
       setState({ kind: "error", message: MESSAGES.server_error });
@@ -117,7 +123,8 @@ export function DetailsForm({
   }
 
   return (
-    <form onSubmit={submit} className="mt-2 space-y-4" noValidate>
+    <form onSubmit={submit} className="mt-2" aria-busy={state.kind === "saving"} noValidate>
+      <fieldset disabled={state.kind === "saving"} className="min-w-0 space-y-4">
       <div>
         <label
           htmlFor="store-name"
@@ -206,7 +213,7 @@ export function DetailsForm({
       <div className="flex flex-wrap gap-2">
         <button
           type="submit"
-          disabled={state.kind === "saving"}
+          disabled={state.kind === "saving" || writing}
           className="btn btn-primary"
         >
           {state.kind === "saving" ? "Saving…" : "Save"}
@@ -219,6 +226,7 @@ export function DetailsForm({
           Cancel
         </button>
       </div>
+      </fieldset>
     </form>
   );
 }
