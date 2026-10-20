@@ -2207,13 +2207,13 @@ Pricing FAQ repair history: run39407143422 caught mobile target-size;39409356932
 
 
 168. **[B2-168] Confirm store sections and news saves/removals accurately.**
-- Estado: **Em implementação**.
+- Estado: **Publicado — entrega94**.
 - Require successful HTTP, strict boolean confirmation, no error and exact canonical section/news snapshots. Preserve legacy response count/on fields and add snapshots from the existing setter result, without an additional read. Pending controls lock and announce busy; uncertainty preserves creator drafts and confirms settings rather than public availability.
 - Synthetic96 intercepted save/removal cases at390/1280; full final-head CI pending. Sections remain capped20/title60 and news120characters, same product IDs/permissions. Response snapshots bounded by existing caps, below existing40KB studio request sizing; no new operation/provider/paid unit or recurring cost. Client source growth is not measured bundle cost; binding M0 remains12.02–12.21%, fails60%; sales closed.
 
 
 169. **[B2-169] Confirm collection content and persistent identifiers accurately.**
-- Estado: **Em implementação**.
+- Estado: **Publicado — entrega95**.
 - Require successful HTTP, strict confirmation, no contradictory error and matching canonical collections/order. Existing IDs must match; new server IDs must be valid, unique and not reuse existing IDs. No browser ID is created for storage. Lock pending controls, retain uncertain drafts, update saved baseline after confirmation and confirm settings rather than public visibility. Wrap long collection addresses without hiding content.
 - Synthetic84 intercepted create/edit/removal replies at390/1280; full final-head CI pending. Existing snapshot and parser, same operation/provider cost;12collections/24products/title60/blurb200 caps preserved. M0 remains12.02–12.21%, fails60%; sales closed.
 
@@ -2222,3 +2222,12 @@ Pricing FAQ repair history: run39407143422 caught mobile target-size;39409356932
 - Estado: **Em implementação**.
 - Require successful HTTP, strict confirmation, no error, matching product id and exact ordered pairs from the existing setter result. Add only the product id to the existing pairs response, no extra read. Lock pending selections, retain uncertain drafts and confirm settings rather than public availability. Preserve MAX_PAIRS3, identifiers and creator-attribution copy; no buyer/sales evidence is manufactured.
 - Synthetic48 intercepted save/removal cases at390/1280; full final-head CI pending. Same operation/provider unit and visible caps, bounded response64-byte id plus3existing product ids; no new recurring cost. Source+634client characters not measured bundle size; M0 remains12.02–12.21%, fails60%, sales closed.
+
+
+### Registro de publicações funcionais94–95 — 2026-10-20 (Fortaleza)
+
+- **94 — PR#689**, incorporado às08:49:09; merge `ac522e01b741e5e12579729194cf2ff59f04cc47`. Seções e notícias validam snapshots canônicos antes de confirmar, bloqueiam controles pendentes e preservam rascunhos incertos. CI completo no head `4430c6096d8dd74b3aab442c25cb9499e279c557`: Product39415463727, verify118603369720, Redis118603369300 e security39415463644 aprovados, incluindo96 casos sintéticos de gravação/remoção em390/1280. READY às08:50:27.069, domínio marktmorgen.com, deployment `dpl_GQLppzHUJk8CAAUrPTijYGqjE47M`; seis rotas retornaram200 com esse identificador. Nenhum log error/fatal na janela11:46:13.926–11:51:13.926UTC.
+- **95 — PR#690**, incorporado às08:51:41; merge `5a173ac3e581f92e39d3f5af8f110d93e950626a`. Coleções validam conteúdo/ordem e IDs persistentes, atualizam o baseline somente após confirmação e quebram endereços longos. CI completo no head `57c0d0640ab7119572aab2e478bece65b5f4a265`: Product39415926743, verify118604795201, Redis118604795371 e security39415926759 aprovados, incluindo84 casos sintéticos de criação/edição/remoção em390/1280. READY às08:52:43.525, domínio marktmorgen.com, deployment `dpl_HSh3UrVJmvCXQMKCefU2fFzpoPV5`; seis rotas retornaram200 com esse identificador. Nenhum log error/fatal na janela11:50:47.367–11:55:47.367UTC.
+- Rotas verificadas em ambas: `/`, `/signin`, `/studio` (redirecionamento anônimo esperado), `/platform/path`, `/pricing`, `/privacy`. Fluxos privados foram verificados sinteticamente no CI, sem gravações autenticadas em produção. Sem certificação geral de acessibilidade ou margem.
+- Custos94/95: nenhum novo provedor, operação, unidade paga ou custo recorrente; snapshots limitados pelos tetos existentes e derivados do resultado já obtido. Preços, limites, permissões, opt-in, conteúdo/idiomas/IDs e controles fiscais preservados. `PLANS_ON_SALE=false`, `COMMISSION_LIVE=false`; M0 vinculante12.02–12.21% continua reprovado para60%. Desconhecido não foi tratado como zero. Este registro documental não incrementa o contador.
+- PR#691 (B2-170) permanece aguardando CI completo;48 casos previstos não são declarados aprovados antes do resultado. Registro empilhado nesse head para preservar a fila; incorporar somente após o PR#691 passar e ser incorporado. Tentativas de anexação de PRs ao chat encontram limite de100identidades; links e histórico são preservados, sem excluir anexos antigos.
