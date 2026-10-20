@@ -1,3 +1,4 @@
+import {measureSalesLevers,type LeverReading} from "@/lib/sales-levers";
 import { rangeTrafficCoverage, statsTrafficCoverage } from "@/lib/range-traffic-coverage";
 import { creativeRowsFrom } from "@/lib/creative-results";
 /**
@@ -741,6 +742,8 @@ async function readLife(store: Store, now: number): Promise<(WindowStats & { sin
 type SalesWindow = { sales: number; cents: number };
 
 export type SalesStats = {
+  /** Existing paid-record subsets only; no additional provider reads. */
+  levers?: LeverReading;
   /** Paid checkouts per day, same days as the visits. */
   byDay: Record<string, SalesWindow>;
   byProduct: Record<string, { d7: SalesWindow; d30: SalesWindow; d90: SalesWindow }>;
@@ -1567,6 +1570,7 @@ export async function readSales(store: Store, now = Date.now()): Promise<SalesSt
   out.paymentsComplete = !partial && (!store.stripeAccountId || Boolean(renewals && !renewals.partial));
   out.cashflowComplete = out.paymentsComplete && !readPartial && refundRead !== null && !refundRead.partial &&
     !(out.refundsIn?.d90 ?? []).some((r) => r.source === UNRECORDED);
+  out.levers = measureSalesLevers(read,store.currency,readPartial,now);
   out.hours = hoursOfWeek(own.filter((sale) => !sale.upsell));
   out.discounts = {
     rows: discountImpact(read, new Set((refundRows ?? []).map((r) => r.paymentIntent).filter(Boolean)), store.currency, now, STATS_DAYS),
