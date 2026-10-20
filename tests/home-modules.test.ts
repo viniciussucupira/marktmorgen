@@ -5,7 +5,7 @@ import { HOME_MODULES } from "@/lib/home-modules";
 import { findPage } from "@/lib/site-pages";
 test("home modules point to existing factual pages for all fourteen requested capabilities",()=>{
  assert.equal(HOME_MODULES.length,14);assert.equal(new Set(HOME_MODULES.map(module=>module.name)).size,14);
- for(const module of HOME_MODULES){const parts=module.href.split("/");assert.ok(findPage(parts[1],parts[2]),module.href);assert.ok(module.body.length>30);}
+ for(const module of HOME_MODULES){const parts=module.href.split("/");const section=parts[1];if(section!=="platform"&&section!=="proof"&&section!=="for")throw Error("Unexpected section");assert.ok(findPage(section,parts[2]),module.href);assert.ok(module.body.length>30);}
 });
 test("home keeps the real headline and demo, removes stale Zoom gap and delivery deadline",()=>{
  const page=readFileSync("app/page.tsx","utf8");
