@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { LANGUAGES, LANGUAGE_CODES, type LanguageCode } from "@/lib/store-language";
+import { LANGUAGES, LANGUAGE_CODES, isLanguage, type LanguageCode } from "@/lib/store-language";
 import { NewTab } from "@/components/new-tab";
 
 /**
@@ -33,23 +33,24 @@ export function StoreLanguageEditor({ language, handle }: { language: LanguageCo
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ language: chosen }),
       });
-      const data = (await response.json().catch(() => ({}))) as { ok?: boolean; language?: LanguageCode };
-      if (!data.ok || !data.language) {
-        setStatus({ ok: false, text: "That was not saved. Try again in a moment." });
+      const raw: unknown = await response.json().catch(() => null);
+      const data = raw && typeof raw === "object" && !Array.isArray(raw) ? raw as Record<string, unknown> : null;
+      if (!response.ok || data?.ok !== true || data.error || !isLanguage(data.language) || data.language !== chosen) {
+        setStatus({ ok: false, text: "We could not confirm this setting. Reload this page to check before trying again." });
         return;
       }
       setSaved(data.language);
-      setStatus({ ok: true, text: `Saved. Your store now speaks ${LANGUAGES[data.language].english} to your buyers.` });
+      setStatus({ ok: true, text: `Buyer language setting saved: ${LANGUAGES[data.language].english}.` });
       router.refresh();
     } catch {
-      setStatus({ ok: false, text: "That was not saved. Check your connection and try again." });
+      setStatus({ ok: false, text: "We could not confirm this setting. Reload this page to check before trying again." });
     } finally {
       setBusy(false);
     }
   }
 
   return (
-    <section className="card mt-8 p-6 sm:p-8" aria-labelledby="language-title">
+    <section aria-busy={busy} className="card mt-8 p-6 sm:p-8" aria-labelledby="language-title">
       <h2 id="language-title" className="text-lg font-semibold tracking-[-0.02em] text-ink">
         <label htmlFor="store-language">Your store&apos;s language</label>
       </h2>
@@ -64,6 +65,7 @@ export function StoreLanguageEditor({ language, handle }: { language: LanguageCo
       </p>
       <form className="mt-4 flex flex-wrap items-end gap-3" onSubmit={save}>
         <select
+          disabled={busy}
           id="store-language"
           value={chosen}
           onChange={(event) => {
@@ -83,7 +85,7 @@ export function StoreLanguageEditor({ language, handle }: { language: LanguageCo
         </button>
       </form>
       {status ? (
-        <p className={`mt-3 text-sm ${status.ok ? "text-ink" : "notice notice-warn"}`} role="status">
+        <p className={`mt-3 text-sm ${status.ok ? "text-ink" : "notice notice-error"}`} role="status">
           {status.text}{" "}
           {status.ok ? (
             <a href={`/@${handle}`} target="_blank" rel="noopener" className="font-semibold underline underline-offset-4">
