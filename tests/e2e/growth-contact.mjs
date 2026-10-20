@@ -77,9 +77,11 @@ export async function checkGrowthAndContact({owner,LOCAL,abStore,second,contactT
    await company.waitFor();
    const matched=contact.getByText("Contact fields match the last confirmed values.",{exact:true});
    const savedValue="Confirmed company "+width;
+   await contact.waitForLoadState("networkidle");
    await company.fill(savedValue);
-   await Promise.all([contact.waitForResponse(response=>response.url().endsWith("/api/store/crm")&&response.request().method()==="POST"),company.press("Tab")]);
-   await matched.waitFor();
+   await contact.getByText("1 contact field has unsaved changes.",{exact:true}).waitFor();
+   const [savedResponse]=await Promise.all([contact.waitForResponse(response=>response.url().endsWith("/api/store/crm")&&response.request().method()==="POST"),company.press("Tab")]);
+   try{await matched.waitFor();}catch(error){console.error("CONTACT_FIRST_SAVE_DIAGNOSTIC:"+JSON.stringify({width,status:savedResponse.status(),request:savedResponse.request().postDataJSON(),response:await savedResponse.json().catch(()=>null),actualValue:await company.inputValue(),expectedValue:savedValue,statuses:await contact.getByRole("status").allTextContents()}));throw error;}
    await contact.waitForLoadState("networkidle");
    await contact.reload({waitUntil:"domcontentloaded"});
    await company.waitFor();
