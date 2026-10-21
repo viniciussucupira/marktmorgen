@@ -88,7 +88,7 @@ function FooterAnchor({ link, className }: { link: FooterLink; className: string
       {link.label}
     </a>
   ) : (
-    <Link href={link.href} className={className}>
+    <Link prefetch={false} href={link.href} className={className}>
       {link.label}
     </Link>
   );
