@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { toast } from "@/components/toast";
 import { NewTab } from "@/components/new-tab";
+import { readShipmentConfirmation, readShippedRecord } from "@/lib/shipment-record";
 
 const MESSAGES: Record<string, string> = {
   tracking: "Paste a tracking link that starts with https://, or leave it empty.",
@@ -27,7 +28,7 @@ export function MarkShipped({
   to: { name: string; lines: string[] } | null;
   shipped: { at: number; tracking: string } | null;
 }) {
-  const [done, setDone] = useState(shipped);
+  const [done, setDone] = useState(() => readShippedRecord(shipped));
   const [tracking, setTracking] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -46,7 +47,7 @@ export function MarkShipped({
       )}
       {done ? (
         <p className="mt-2 font-semibold text-ink" role="status">
-          {`Marked as shipped on ${day(done.at)}. The buyer was told.`}
+          {`Marked as shipped on ${day(done.at)}.`}
           {done.tracking ? (
             <>
               {" "}
@@ -67,13 +68,15 @@ export function MarkShipped({
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ session, tracking }),
               });
-              const data = (await response.json().catch(() => ({}))) as { ok?: boolean; error?: string; shipped?: { at: number; tracking: string } };
-              if (data.ok && data.shipped) {
-                setDone(data.shipped);
-                toast("Marked as shipped. The buyer gets an email.");
+              const data: unknown = await response.json().catch(() => null);
+              const confirmed = readShipmentConfirmation(data, response.ok);
+              if (confirmed) {
+                setDone(confirmed.shipped);
+                toast(confirmed.emailed ? "Marked as shipped. The buyer was emailed." : "Marked as shipped. No new email was confirmed.");
                 return;
               }
-              setError(MESSAGES[data.error ?? ""] ?? "Something went wrong on our side. Try again in a moment.");
+              const reason = data && typeof data === "object" && Object.hasOwn(data, "error") ? (data as { error?: unknown }).error : null;
+              setError(typeof reason === "string" && Object.hasOwn(MESSAGES, reason) ? MESSAGES[reason] : "The shipment was not confirmed. Reload to check its status before trying again.");
             } catch {
               setError("Something went wrong on our side. Try again in a moment.");
             } finally {

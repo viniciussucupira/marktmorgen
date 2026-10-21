@@ -189,6 +189,29 @@ async function main(): Promise<void> {
     };
     is("claim transport failure refuses before mail", [(await markShipped(store, session.id as string, "")).ok, emails.length], [false, 0]);
   } finally { redis.pipeline = originalPipeline; }
+  part("An occupied shipment claim needs a readable existing record");
+  const badRecords: unknown[] = [undefined, null, "broken", "null", "[]", JSON.stringify({ at: -1, tracking: "" }), JSON.stringify({ at: 1.5, tracking: "" }), JSON.stringify({ at: 1, tracking: "https://user:secret@example.com/track" }), JSON.stringify({ at: 1, tracking: 7 })];
+  const beforeClaimEmails = emails.length;
+  for (const badRecord of badRecords) {
+    try {
+      redis.pipeline = async (commands) => {
+        if (commands.some(command => String(command[1]).startsWith("nl:ship:done:"))) return commands.map(command => command[0] === "SET" ? null : badRecord);
+        return originalPipeline(commands);
+      };
+      const refusedClaim: Awaited<ReturnType<typeof markShipped>> = await markShipped(store, session.id as string, "");
+      is("an unreadable occupied claim never fabricates shipment success", [refusedClaim.ok ? "marked" : refusedClaim.reason, emails.length], ["unknown", beforeClaimEmails]);
+    } finally { redis.pipeline = originalPipeline; }
+  }
+  try {
+    const keptShipment = { at: 1_790_000_000, tracking: "https://example.com/old-tracking" };
+    redis.pipeline = async (commands) => {
+      if (commands.some(command => String(command[1]).startsWith("nl:ship:done:"))) return commands.map(command => command[0] === "SET" ? null : JSON.stringify(keptShipment));
+      return originalPipeline(commands);
+    };
+    const keptClaim = await markShipped(store, session.id as string, "https://example.com/new-tracking");
+    is("a readable occupied claim returns its original record without another email", [keptClaim.ok ? keptClaim.shipped : null, keptClaim.ok ? keptClaim.emailed : null, emails.length], [keptShipment, false, beforeClaimEmails]);
+  } finally { redis.pipeline = originalPipeline; }
+
   const marked = await markShipped(store, session.id as string, "https://tools.usps.com/go?x=1");
   const mail = emails.at(-1)!;
   is("the buyer gets one email, with the tracking link and the address", [marked.ok && marked.emailed, mail.to, mail.subject, mail.text.includes("https://tools.usps.com/go?x=1"), mail.text.includes("Austin, TX 78701")], [true, "ana@example.com", "The Supper Book is on its way", true, true]);
