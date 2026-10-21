@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   CODE_PROBLEMS,
   type CodeProblem,
@@ -66,6 +66,9 @@ const whenLabel = (seconds: number) =>
  * Stripe just to draw a page that is mostly about something else.
  */
 export function DiscountEditor({ selling, currency = "usd", address = "" }: { selling: boolean; currency?: Currency; address?: string }) {
+  const [ready, setReady] = useState(false);
+  useEffect(() => { setReady(true); }, []);
+
   const [codes, setCodes] = useState<DiscountCode[] | null>(null);
   const [adding, setAdding] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -125,7 +128,7 @@ export function DiscountEditor({ selling, currency = "usd", address = "" }: { se
             they leave with you.
           </p>
 
-          <button type="button" className="btn btn-secondary btn-sm mt-4" aria-busy={busy} disabled={busy} onClick={loadCodes}>
+          <button type="button" className="btn btn-secondary btn-sm mt-4" aria-busy={busy} disabled={!ready || busy} onClick={loadCodes}>
             {busy ? "Loading…" : codes === null ? "Load discount codes" : "Refresh discount codes"}
           </button>
 

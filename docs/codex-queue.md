@@ -4054,6 +4054,10 @@ Entrega147: PR773 merge2cc72957b9a388b0dfe0d7d785017ac62c17feae em21/10/2026 às
 
 stopCode considerava qualquer respostaHTTP2xx prova de desativação, mesmo semID/active ou com outro código. Exigir ID próprio igual ao solicitado, active próprio=false booleano e ausência de error contraditório antes de confirmar. Respostas parciais/ilegíveis permanecem erro; sem nova chamada ou repetição automática. Testes sintéticos cobrem nove respostas inválidas, confirmação exata e HTTP500, verificando método/corpo/alvo e uma chamada por tentativa. PreservaIDs, grafia, opt-in, preços, limites e PLANS_ON_SALE=false. Sem mudança de fornecedor/chaves/TTL/tetos e incremento máximo operacional mensal/anual por plano0/0; custos reaisCI/deploy desconhecidos, não zero. Verificação remota integral obrigatória, sem execução local.
 
+### Verificação integral PR774 — hidratação do carregamento explícito
+
+Job119512455236 no head143290c9385af409e03bfbfa696584274133b211:21/22 checks aprovados; WebKit aguardou KEPT20 após o primeiro clique em Load discount codes390px, sem chegar à matriz negativa. Os demais navegadores passaram. O botão era habilitado no HTML antes de o componente montar seus handlers; agora permanece desabilitado até o efeito local de montagem, sem requisição automática ou retry. A matriz permanece inteira e a nova versão exige novamente todos os checks; se falhar, investigar evidência adicional em vez de declarar causa encerrada. Sem publicação/contador ou aumento de chamadas/tetos.
+
 ## SEO — Visibilidade do Marktmorgen no Google (21/10/2026)
 
 271. [SEO1] Auditar, corrigir e melhorar presença orgânica na busca do Google
