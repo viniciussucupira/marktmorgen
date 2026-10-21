@@ -3853,6 +3853,16 @@ Registro: somente inclusão documental. Dupla confirmação, privacidade das ind
 - Item203 permanece incompleto e desligado. PR751 corrigiu custeio e ciclo de exclusão do estado temporário, head95b6fac4c0a33cff3bb5ccf5d7ec2d7cff809660; suíte completa em andamento. A correção de navegação do PR750 passou no teste móvel, mas a suíte Firefox de9a3eb92f7d76917e5420fb33b21e371bf531472a reprovou HT2 por `target-size` em1280; nenhum critério removido. PR754 acrescenta identificação do alvo e geometria, sem afrouxar o teste; não é correção comprovada nem entrega funcional.
 - Contador funcional permanece130, próximo131. Nenhuma incorporação/publicação nova declarada; preços, franquias, opt-in, PLANS_ON_SALE=false, comissão desligada e gates fiscais/comerciais preservados.
 
+### Entrega funcional131 — produção confirmada em21/10/2026
+
+PR751 incorporado em `2026-10-21T07:54:08Z` (**04h54m08s de Fortaleza**), commit `68c58efae971535befb8b49750c241fe7ccd311d`. As22 verificações passaram no head `95b6fac4c0a33cff3bb5ccf5d7ec2d7cff809660`; árvore prevista e efetiva iguais à testada: `75c3b7fe5806e052ee6aa87473ba2795a9ceb244`.
+
+Mudança funcional: o SiteNav só acompanha cliques externos enquanto um painel está aberto, evitando trabalho desnecessário nos cliques das demais partes da página quando o menu já está fechado. Teste móvel e matrizes completas Chromium/Firefox/WebKit passaram sem descartar amostras ou reduzir critérios. A falha anterior de HT2 permanece no histórico; o head corrigido foi verificado integralmente.
+
+Produção **READY** em `2026-10-21T07:55:00.476Z`, domínio `marktmorgen.com`, versão exata acima, deployment `dpl_CJBF7mTssFqA3YDjxecvYNMDmF9T`. Rotas `/`, `/platform`, `/pricing`, `/mission`, `/library`: HTTP200, todas identificando esse deployment. Logs error/fatal: nenhum no intervalo limitado `07:50:43.937Z–07:55:43.937Z`; não é garantia além desse intervalo.
+
+Contador131 confirmado; próximo132. Os helpers de autorização do item203 também foram incorporados, mas **Teams continua desligado, sem conexão real e incompleto**: não é anunciado como recurso entregue. Sem novos pedidos de rede/armazenamento na correção de navegação; custeio do estado Teams permanece condicionado à integração real dos limites. Fatura de CI desconhecida não é zero. PLANS_ON_SALE=false, preços, limites, comissão desligada, consentimentos e gates fiscais/comerciais preservados. Pedidos252–270 continuam preservados nesta fila, pendentes de incorporação própria.
+
 ## GR — Lições da auditoria do Gumroad (21/10/2026)
 
 Proveniência: pedido direto do dono nesta conversa, 21/10/2026, 04h13 de Fortaleza. Ordem: depois do item 269 [KT3] e de todos os itens já em andamento; não bloqueia nenhum outro item. Itens 203–269 dos pedidos abertos preservados integralmente na ancestralidade desta fila. As afirmações sobre Gumroad abaixo são insumos da auditoria, ainda sujeitas a conferência oficial datada antes de qualquer uso público.
