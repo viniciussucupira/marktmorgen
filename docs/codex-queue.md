@@ -3157,3 +3157,8 @@ Funcional: grade/seletores nativos doStudio contêm títulos longos em telas est
 Custos: nenhum provedor/serviço novo nem custo variável porcliente. CIação teto120min/execução,120Rmensal/1440Ranual;subtotal histórico989,47min/90runs nãoé total final. Durações posteriores/canceladas devem ser reconciliadas; custo desconhecido nãoézero e não há fatura/margemcertificada. Meta60%individual/global,leitura mais onerosa,reprovação fiscal ePLANS_ON_SALE=false preservados.
 
 PR730 integra agora exatamente os11arquivos doPR733 mais este registro, mantendo seus demais arquivos e histórico,com commit de dois pais e novaCI completa. PR730fc9d3f teveverify/Firefox aprovados eWebKit31falhas (lembrete390,HT10beacon,HT15leitura tardia,errosRSC); correções compartilhadas integradas não significam aprovação antecipada. Próximos achados precisamcorreção eCI integral.
+
+
+###201 — HT10 payload real e HT15 leituras explícitas,20/10/2026 Fortaleza
+
+WebKitfc9d3f: HT10beacon não expunha Blob no route; teste agora captura cópia do corpo sendBeacon real no navegador antes de chamar método nativo. SomentePOSTlocal/store/hit doframe/@templatelibraryfixture noWebKit com metadata ausente usa captura; h/k/chaves/tipos continuam todos validados,zeroeventosads ezeroescritas inesperadas mantidos. Não aceita corpo desconhecido nem executaestatísticas; nada muda no produto/optin. HT15esperado2/obtido1 era navegação antes da leitura de destinatários: registra waitForResponse count antes das duas navegações e aguarda cada resposta exata,sem diminuir contagem2/limites. NovoCI integral,sem rerun isolado; demais falhasRSC permanecem abertas. CustosfixosCI históricos mantidos,nenhumserviçonovo;entrega126 já confirmada,próxima127.
