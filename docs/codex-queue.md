@@ -4010,6 +4010,10 @@ Continuação concreta: enquanto a confirmação de envio está pendente, travar
 
 Custos: mesmos comandos, fornecedores, chaves, TTLs e limites; nenhum aumento de teto operacional mensal/anual por plano (incremento0/0, não fatura zero). CI e publicação efetivos têm custos ainda desconhecidos. PLANS_ON_SALE=false, preços, limites visíveis, opt-in e gates fiscais permanecem. SKU histórico por pedido segue em auditoria de envelope de campos/bytes antes de qualquer nova operação; não inferir custo zero só de não adicionar chamadas. Quantidades por variante e reserva atômica continuam não concluídas.
 
+### Correção integral após falha do comprador no WebKit — PR771
+
+Head51e9d41c916f8e0a3a58d30b77cfb4fdac606f51, job119440695820:25casos/125auditorias, uma falha no320px baseline por duas requisições especulativas /privacy?_rsc com erro de access-control/cancelamento acumulado na navegação; foreign=0 e somente os POSTs sintéticos esperados de checkout/library. O link /privacy#library da biblioteca ainda iniciava prefetch automático (o rodapé já não o fazia). Desativado apenas esse prefetch; href, clique, foco e conteúdo preservados. Não ignorar pageerrors nem retirar casos: verificação completa de novo head, sem rerun isolado. Sem chamada adicional, fornecedor ou teto novo; custos efetivos de CI desconhecidos.
+
 ## SEO — Visibilidade do Marktmorgen no Google (21/10/2026)
 
 271. [SEO1] Auditar, corrigir e melhorar presença orgânica na busca do Google
