@@ -49,7 +49,7 @@ export async function checkShipmentAcknowledgment({browser,LOCAL,fixture,shipmen
      const status=page.locator("#sales").getByRole("status");await status.waitFor();
      is("confirmed shipment has truthful persistent status "+scenario.name+"/"+width,(await status.innerText()).includes("Marked as shipped on"),true);
      is("persistent shipment never asserts email delivery "+scenario.name+"/"+width,/told|emailed/.test(await status.innerText()),false);
-     await page.getByText(scenario.emailed?"Marked as shipped. The buyer was emailed.":"Marked as shipped. No new email was confirmed.",{exact:true}).waitFor();
+     await page.locator('.nb-toast-region [role="status"]').getByText(scenario.emailed?"Marked as shipped. The buyer was emailed.":"Marked as shipped. No new email was confirmed.",{exact:true}).waitFor();
      is("confirmed tracking remains safe "+scenario.name+"/"+width,await status.getByRole("link").getAttribute("href"),shipped.tracking);
     }else{
      const alert=form.getByRole("alert");await alert.waitFor();

@@ -76,7 +76,7 @@ export function MarkShipped({
                 toast(confirmed.emailed ? "Marked as shipped. The buyer was emailed." : "Marked as shipped. No new email was confirmed.");
                 return;
               }
-              const reason = data && typeof data === "object" && Object.hasOwn(data, "error") ? (data as { error?: unknown }).error : null;
+              const reason = data && typeof data === "object" && Object.hasOwn(data, "ok") && (data as { ok?: unknown }).ok === false && Object.hasOwn(data, "error") ? (data as { error?: unknown }).error : null;
               setError(typeof reason === "string" && Object.hasOwn(MESSAGES, reason) ? MESSAGES[reason] : "The shipment was not confirmed. Reload to check its status before trying again.");
             } catch {
               setError("The shipment was not confirmed. Reload to check its status before trying again.");

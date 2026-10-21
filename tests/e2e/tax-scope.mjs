@@ -3,8 +3,9 @@ export async function checkTaxScope({browser,LOCAL,session,sid,is}){
  const context=await browser.newContext();
  try{
   await context.addCookies([{name:"nl_session",value:session,url:LOCAL}]);
-  const page=await context.newPage();let writes=0;
-  page.on("request",request=>{if(request.method()==="POST")writes++;});
+  const page=await context.newPage();let writes=0;const writePaths=[];
+  page.on("request",request=>{if(request.method()==="POST"){writes++;writePaths.push(new URL(request.url()).pathname);}});
+  await page.route("**/api/**",route=>["GET","HEAD"].includes(route.request().method())?route.continue():route.abort());
   for(const width of [390,1280]){
    await page.setViewportSize({width,height:900});
    await page.goto(LOCAL+"/studio?store="+sid,{waitUntil:"domcontentloaded",timeout:60000});
@@ -23,6 +24,7 @@ export async function checkTaxScope({browser,LOCAL,session,sid,is}){
    }
    is("tax section fits its viewport "+width,await section.evaluate(node=>node.scrollWidth<=node.clientWidth),true);
   }
+  if(writes)console.error("TAX_SCOPE_UNEXPECTED_WRITES:"+JSON.stringify(writePaths));
   is("reading tax explanations never writes settings",writes,0);
  }finally{await context.close();}
 }

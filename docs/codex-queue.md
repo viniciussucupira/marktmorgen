@@ -4018,6 +4018,10 @@ Head51e9d41c916f8e0a3a58d30b77cfb4fdac606f51, job119440695820:25casos/125auditor
 
 A verificação integral do head a0c895165c449cea8bf5022617056d5632a76253 falhou no job119443885469 antes de qualquer POST de envio: campo de tracking ausente. O harness configurava somente STRIPE_DEMO_SECRET_KEY; listSales exige platformKey configurada e devolvia unavailable antes de ler a venda sintética. Acrescentada somente no processo de teste a chave falsa sk_test_local_only_a_stand_in_0000; STRIPE_CONNECT_API_BASE continua no serviço127.0.0.1. Nenhuma chave real, mudança do gate de produção ou submissão externa. A matriz agora também exige explicitamente a linha sintética antes de operar os controles. Exigir novamente todos os checks no novo head, sem remover casos.
 
+### Nova verificação integral — recusa contraditória e evidência de operações no teste
+
+Head7d2beff76aad59a2d3fb8033742b709e2c3f3325, job119453402625: a fixture passou a mostrar o pedido e executar os controles. Uma resposta contraditória com ok=true/error=unknown era recusada corretamente, porém a UI exibia o motivo específico em vez da incerteza; agora motivo específico exige ok=false exato. A matriz mira o texto no live region do toast, evitando ambiguidade com a cópia visual aria-hidden, sem deixar de verificar o texto anunciado. O teste fiscal detectou dois POSTs após configurar a chave falsa no harness; causa ainda não estabelecida, mantém a asserção zero, bloqueia operações não-GET em /api e registra os caminhos para diagnóstico. Não marcar resolvido até evidência completa. Nova execução integral obrigatória; sem redução de regras, casos ou exigências.
+
 ## SEO — Visibilidade do Marktmorgen no Google (21/10/2026)
 
 271. [SEO1] Auditar, corrigir e melhorar presença orgânica na busca do Google
