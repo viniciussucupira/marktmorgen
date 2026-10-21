@@ -3281,6 +3281,21 @@ A matriz de cadastro anterior terminava no Studio vazio; a matriz de produto usa
 - Heade620bc3 reprovou signup com ReferenceError:viewportWidth: uma edição deste agente gravou sequências literais de quebra de linha no comentário e deixou a declaração da variável comentada. Corrigida a montagem com quebras reais, sem alterar a lógica, os gates ou relaxar assertions. Nenhum resultado desse head conta como aprovação.
 - ProductFirefox job119064131486 também abortou com assertion interna de Playwright FrameManager.frameAttached/FFPage._onFrameAttached ao criar produto; evidência preservada, sem suprimir erro. A nova execução é integral no novo head e exigirá investigar qualquer recorrência; não reexecutar somente o job.
 
+###203 — estado de autorização selado, ainda desligado (21/10/2026)
+
+- BasePR746 incorporadaàs03:59:46Fortaleza/06:59:46Z, merge40436f92f80e89b9189ead31978a9c34ec92cd12 após22checks noheadfcb3ff1, árvoreb1d063ff9f55df6be095a9212e9b5f5672e7dbc9 igual à testada/incorporada. Política e transporteGraphpreparados; nenhumproviderofertado/callback/conta/operaçãoMicrosoftativados. Não é entrega funcional;contador130inalterado.
+- Próximaetapa: helperpurodeestadoaleatório/nonce/PKCES256, envelopeAES256GCMdoexistingsecretbox vinculadoàloja/sessão/ator/estado,TTL600s, recusadealteração/troca/expiração. Testes sintéticos; não simulamprova deOIDC/GETDEL/rechecagemdepermissão ainda ausentes. Tudo isso permanece obrigatório antes de callback/conexão/reservas.203em andamento;custosdesconhecidosreprovam,TEAMS_APPROVED=false e todos os gates preservados. PedidosWH/KJ/CIcontinuampreservados emPR747–749, não descartados por esta branchbaseada emmain.
+
+### Desempenho móvel — remover trabalho do menu fechado (21/10/2026)
+
+-750head30b10fd6reprovouMobilejob119086310213: amostra1da home224ms, limite200ms;9amostras preservadas, sem descarte/outlier/relaxamento. LCPmáx944ms,CLS0nessarodada. Alvo:summarynativodalistadepreços,scroll22890, não o menu móvel. Longframe205,3ms incluiReactpointerdown92,1ms ewindowonclick25,3ms; não é certificaçãoINPde campo.
+- SiteNav mantinha listenerglobaldeclickeagendavasetOpenMenu(null) mesmo com painel já fechado. O listener agora existe apenas enquanto há paineldesktopaberto; clicarfora ainda fecha,Escape/scroll/menu móvel preservados. Isso remove trabalho identificado, mas não declara resolvidotodocustodehidratação; novasuítecompleta/9amostras no novohead devem comprovar. Mesmoslimiares,semocultarcomponentes ou atrasar interação no teste. Sem mudança depreços/limites/gates,PLANS_ON_SALE=false.
+
+###203 — registro de armazenamento do estado pendente (21/10/2026)
+
+-751head088d7e9ereprovouverify119087461499porque a nova família nl:teams:state:não estava notests/store-data-registry.ts. Os testesfuncionaisdeestadoatômico passaram, mas isso não aprova suíte. Corrigido: envelope seladolimitado2048bytes e registroconservador4096bytes porunidadeintegraçãoreservada,TTL600s; precifica-se o pioruso100%/retenção pelo registroexistente. Nenhumaexceçãonoteste, custoignorado ou tetoalterado. Conexãoprodutiva segueinativa atéorçamento/autorização/OIDC/revisãotributáriacompletos;desconhecidoreprova.
+- Mesmoh eadWebKit119087461495tambémreprovou emstore-copy.mjs:417aguardandoWhat do you want to do?; evidênciapreservada, semsuprimir/relaxar. Novoheadintegra correçãoSiteNavde750 e exigeverificaçãocompleta;não repetirapenasjob. Ainda nãoé203completo/novaentrega.
+
 ## 203 — Teams automático para chamadas pagas (execução futura)
 
 203. [TEAMS] Links automáticos do Microsoft Teams para as chamadas pagas, construídos agora e DESLIGADOS

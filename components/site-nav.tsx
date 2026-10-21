@@ -209,20 +209,27 @@ export function SiteNav() {
         closeAll();
       }
     };
-    const onClick = (e: MouseEvent) => {
-      if (!headerRef.current?.contains(e.target as Node)) setOpenMenu(null);
-    };
     const onScroll = () => setScrolled(window.scrollY > 8);
     window.addEventListener("keydown", onKey);
-    window.addEventListener("click", onClick);
     window.addEventListener("scroll", onScroll, { passive: true });
     onScroll();
     return () => {
       window.removeEventListener("keydown", onKey);
-      window.removeEventListener("click", onClick);
       window.removeEventListener("scroll", onScroll);
     };
   }, [closeAll, drawerOpen]);
+
+  // Outside clicks matter only while a desktop panel is open. A permanent
+  // window handler otherwise schedules a React update for every page action,
+  // including native pricing details far below this navigation.
+  useEffect(() => {
+    if (openMenu === null) return;
+    const onClick = (event: MouseEvent) => {
+      if (!headerRef.current?.contains(event.target as Node)) setOpenMenu(null);
+    };
+    window.addEventListener("click", onClick);
+    return () => window.removeEventListener("click", onClick);
+  }, [openMenu]);
 
   useEffect(() => {
     document.body.style.overflow = drawerOpen ? "hidden" : "";
