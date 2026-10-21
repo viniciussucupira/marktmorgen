@@ -3271,6 +3271,11 @@ A matriz de cadastro anterior terminava no Studio vazio; a matriz de produto usa
 - Os três engines do headf43eb7 concluíram cadastro com10jornadas de primeira loja comprovadas por engine, mas15/25casos por engine falharam a partir de768px ao aguardar o título do Studio após claim200. Chromium:95auditorias/25casos/15falhas, job119058888046; Firefox119058888214 e WebKit119058888249 também reprovados. Isso não é prova de publicação integral nem falha de acessibilidade automaticamente atribuível ao layout.
 - Acrescentado diagnóstico estritamente sintético e limitado de caminho, títulos, texto visível e erros do servidor para identificar o estado real que substituiu o Studio. Mantidos todos os asserts, limites,25casos, regras e recusas; nenhum timeout foi ampliado, erro filtrado ou resultado relaxado. Nova verificação completa no novo head.201 segue ativo; sem incorporação/publicação/contador.
 
+### P0-201 — isolamento correto da matriz de primeira loja (21/10/2026)
+
+- Leitura da causa emlib/free-pool-rules.ts e lib/free-pool.ts: FREE_POOL_BASE_STORES=10, sem pagantes a11ªloja sem plano é recusada antes de operações custosas. Os25cenários compartilhavam uma única base falsa e esgotavam corretamente esse teto após10sucessos. A recusa não autoriza ampliar limite, simular pagamento ou remover o gate.
+- Cada cenário viewport/modo agora reinicia apenas os serviços locais falsos com uma base em memória vazia, como uma instalação isolada. O app e todos os gates continuam reais; cadastro, sessão, claim, reload anônimo, asserts e25cenários/375auditorias pretendidas permanecem. Nenhuma conta/loja real é criada, nenhum teto produtivo é alterado; testes existentes de pool continuam obrigatórios na suíte completa. Diagnósticos limitados preservados. Nova execução completa no novo head;201não concluído até passar. Custo de CI continua fixo no teto do job existente; fatura desconhecida não é zero.
+
 ## 203 — Teams automático para chamadas pagas (execução futura)
 
 203. [TEAMS] Links automáticos do Microsoft Teams para as chamadas pagas, construídos agora e DESLIGADOS
