@@ -3984,6 +3984,10 @@ PR768 incorporado em2026-10-21T17:43:40Z /14:43:40Fortaleza como `ed74dff71459da
 
 Inclui SKU opcional por tamanho/versão física no editor/API/registro, preservação deIDs/caixa/Unicode/edições antigas, limpeza explícita e recusa integral de entrada inválida/SKU em opção digital. Sem novaschaves/índices/comandos/fornecedores/dependências ou tetos de registro/plano; custos reais de fatura/impostos seguem desconhecidos, nãozero. Quantidades porvariante e reserva atômica continuam incompletas noitem205; nenhuma certificação de margem/AAA/INP de campo. Esta seçãoSEO posterior somente registra o pedido do dono, sem iniciar a auditoria ou alterar a entrega142.
 
+### PR769 — Buyer WebKit prefetch failure and correction candidate (21/10/2026)
+
+Integrated head `bb8f1bdc790eb698aa557eca60749dd1d0fa726e`, Buyer action WebKit job119385412412:25cases125audits,1failure at320px text-spacing, observed inbuyer-orders. Pageerror contains canceled/access-control RSC fetches for `/mission` twice and `/` once;foreign0, only the expected synthetic checkoutPOST. These errors are accumulated over the library journey, so the final phase does not prove orders page origin. The library renders SiteNav; its always-visible preview/mission and home/logo links still automatically prefetched those exact destinations. Candidate sets prefetch=false on those two links, preserving click navigation, labels, URLs and keyboard behavior while avoiding speculative marketing fetches during buyer recovery. Tests retain every case/assertion and error capture; no ignored errors, no rerun-only approval. Full remote CI required on new head. This runtime correction changes PR769 from documentation-only to mixed runtime+queue; count only after22checks and exact production proof. No new requests/provider/dependency or cost ceiling; two speculative fetches removed, actual invoice/cost unknown notzero; all commercial/tax/opt-in/language gates preserved.
+
 ## SEO — Visibilidade do Marktmorgen no Google (21/10/2026)
 
 271. [SEO1] Auditar, corrigir e melhorar presença orgânica na busca do Google
