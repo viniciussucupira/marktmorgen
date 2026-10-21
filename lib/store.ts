@@ -3249,7 +3249,7 @@ export type OptionResult =
   | { ok: true; store: Store; removed: ProductFile[] }
   | {
       ok: false;
-      reason: "none" | "label" | "price" | "free" | "too_many" | "store_too_many" | "unknown" | "call" | "course" | "pwyw" | "bundle";
+      reason: "none" | "label" | "price" | "free" | "too_many" | "store_too_many" | "unknown" | "call" | "course" | "pwyw" | "bundle" | "sku" | "sku_kind";
       limit?: number;
     };
 
@@ -3273,7 +3273,7 @@ export async function addOption(
   productId: string,
   rawLabel: string,
   rawPrice: string,
-  more: { details?: unknown; best?: boolean } = {},
+  more: { details?: unknown; best?: boolean; sku?: unknown } = {},
 ): Promise<OptionResult> {
   const result = await withStore<OptionResult>(email, async (store, save) => {
     const fields = readOption(rawLabel, rawPrice, store.currency);
@@ -3301,10 +3301,14 @@ export async function addOption(
     if (held >= MAX_STORE_OPTIONS) {
       return { ok: false, reason: "store_too_many", limit: MAX_STORE_OPTIONS };
     }
+    const sku = readShippingSku(more.sku);
+    if (sku === null) return { ok: false, reason: "sku" };
+    if (sku && !product.shipping) return { ok: false, reason: "sku_kind" };
     const option: ProductOption = {
       id: freshId(store),
       label: fields.label,
       priceCents: fields.priceCents,
+      ...(sku ? { sku } : {}),
       file: null,
       link: null,
       details: parseDetails(more.details),
@@ -3350,18 +3354,22 @@ export async function editOption(
   id: string,
   rawLabel: string,
   rawPrice: string,
-  more: { details?: unknown; best?: boolean } = {},
+  more: { details?: unknown; best?: boolean; sku?: unknown } = {},
 ): Promise<OptionResult> {
   return onOption(email, id, (product, at, store) => {
     // Read in the store's own currency, as the store is under the lock.
     const fields = readOption(rawLabel, rawPrice, store.currency);
     if (typeof fields === "string") return { ok: false, reason: fields };
+    const sku = more.sku === undefined ? product.options[at].sku : readShippingSku(more.sku);
+    if (sku === null) return { ok: false, reason: "sku" };
+    if (more.sku !== undefined && sku && !product.shipping) return { ok: false, reason: "sku_kind" };
     const best = more.best ?? product.options[at].best;
     const options = product.options.map((option, index) =>
       index === at
         ? {
             ...option,
             label: fields.label,
+            sku: sku || undefined,
             priceCents: fields.priceCents,
             details: more.details === undefined ? option.details : parseDetails(more.details),
             best,

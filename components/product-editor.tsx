@@ -18,6 +18,7 @@ import type { ExtraNotes } from "@/lib/extras-notes";
 import type { BumpChoice, ProductPaging } from "@/lib/catalog";
 import { ProductUpdateBox } from "@/components/product-update-box";
 import { ShippingEditor } from "@/components/shipping-editor";
+import { MAX_SHIPPING_SKU } from "@/lib/shipping";
 import { CheckoutFieldsEditor } from "@/components/checkout-fields-editor";
 import { ProductImageEditor } from "@/components/product-image-editor";
 import type { CoverLook } from "@/components/cover-maker";
@@ -85,6 +86,8 @@ const pwywSuggested = (currency: Currency) =>
 
 /** What to say when a price option is refused, over and above the shared set. */
 const OPTION_MESSAGES: Record<string, string> = {
+  sku: "Use up to 64 characters for the inventory reference, without line breaks or control characters.",
+  sku_kind: "Inventory references are available for physical products that you ship.",
   free: "This one is free, so it has no prices to add. Give it a price first.",
   unknown: "That price is no longer on this product.",
   none: "This account has no store yet.",
@@ -739,6 +742,7 @@ function OptionsBlock({
   const [label, setLabel] = useState("");
   const [price, setPrice] = useState("");
   const [details, setDetails] = useState("");
+  const [sku, setSku] = useState("");
   const [best, setBest] = useState(false);
   const [busy, setBusy] = useState(false);
   // A course or private podcast is its own delivery: every price opens it,
@@ -831,6 +835,12 @@ function OptionsBlock({
           />
         </div>
       </div>
+
+      {shipped ? <div>
+        <label htmlFor={`option-sku-${product.id}`} className="field-label">Inventory reference (SKU, optional)</label>
+        <input id={`option-sku-${product.id}`} type="text" maxLength={MAX_SHIPPING_SKU} value={sku} onChange={event => setSku(event.target.value)} aria-describedby={`option-sku-help-${product.id}`} className="field mt-1" />
+        <p id={`option-sku-help-${product.id}`} className="mt-1 text-sm text-ink-soft">Your code for this size or version. Its price ID stays the same; this does not set a stock quantity.</p>
+      </div> : null}
 
       <div>
         <label htmlFor={`option-details-${product.id}`} className="field-label">
@@ -932,7 +942,7 @@ function OptionsBlock({
                 "Save",
                 () =>
                   run(
-                    { action: "edit", id: option.id, label, price, details, best },
+                    { action: "edit", id: option.id, label, price, details, best, ...(shipped ? { sku } : {}) },
                     () => setEditingId(null),
                     "Price saved.",
                   ),
@@ -954,6 +964,8 @@ function OptionsBlock({
                     {formatMoney(option.priceCents, currency)}
                   </p>
                 </div>
+
+                {shipped && option.sku ? <p className="mt-1 break-all text-sm text-ink-soft">SKU: {option.sku}</p> : null}
 
                 {option.details.length > 0 ? (
                   <ul className="mt-1 list-disc space-y-0.5 pl-5 text-sm text-ink-soft">
@@ -979,6 +991,7 @@ function OptionsBlock({
                   <button
                     type="button"
                     onClick={() => {
+                      setSku(option.sku ?? "");
                       setLabel(option.label);
                       setPrice(moneyField(option.priceCents, currency));
                       setDetails(option.details.join("\n"));
@@ -1090,7 +1103,7 @@ function OptionsBlock({
             "Add this price",
             () =>
               run(
-                { action: "add", id: product.id, label, price, details, best },
+                { action: "add", id: product.id, label, price, details, best, ...(shipped ? { sku } : {}) },
                 () => setAdding(false),
                 "Price added.",
               ),
@@ -1105,6 +1118,7 @@ function OptionsBlock({
             <button
               type="button"
               onClick={() => {
+                setSku("");
                 setLabel("");
                 setPrice("");
                 setDetails("");
