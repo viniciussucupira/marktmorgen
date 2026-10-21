@@ -66,3 +66,9 @@ A pure helper now generates random32byte state and nonce plus48byte PKCE verifie
 This helper does not consume state or grant permission. The eventual connection flow must atomically GETDEL the server-side envelope once, recheck the actor's current settings permission on that store, verify the Microsoft OIDC signature/issuer/audience/nonce and organizational tenant, and only then save an encrypted connection. None of those missing integration checks may be inferred from these pure cryptography tests. Production approval remains false; no environment override or account operation is added.
 
 Protocol reference checked21October2026: https://learn.microsoft.com/en-us/entra/identity-platform/v2-oauth2-auth-code-flow . Microsoft recommends a supported authentication library; the final adapter/library choice and its bounded requests/security review remain open. No raw hand-written token verifier is approved by this increment.
+
+## Atomic pending-state repository — 21 October 2026
+
+The unconnected pending-state helper stores only the sealed envelope with NX/EX600, after injected current-settings permission and funding checks. Callback consumption uses atomic GETDEL before opening; wrong session/actor, expiry or revoked permission burns the pending state and refuses. Tests exercise simultaneous consumption, replay, session mismatch, permission revocation, insufficient funding and Redis TTL against the existing memory Redis.
+
+This is not a live callback. Future routes must still enforce TEAMS_APPROVED=false, authenticated identity, origin/rate limits and the real store allowance before calling these helpers. Injected checks are not permission proof until wired to the existing authorization/budget services. OIDC verification and encrypted connection/refresh/disconnect/booking integration remain incomplete. No provider request or activation.
