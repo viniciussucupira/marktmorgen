@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import {
   CODE_PROBLEMS,
   type CodeProblem,
@@ -51,6 +51,10 @@ async function send(payload: Record<string, unknown>, currency: Currency): Promi
   }
 }
 
+const subscribeReady = () => () => {};
+const clientReady = () => true;
+const serverReady = () => false;
+
 const whenLabel = (seconds: number) =>
   new Date(seconds * 1000).toLocaleDateString("en-US", {
     day: "numeric",
@@ -66,6 +70,8 @@ const whenLabel = (seconds: number) =>
  * Stripe just to draw a page that is mostly about something else.
  */
 export function DiscountEditor({ selling, currency = "usd", address = "" }: { selling: boolean; currency?: Currency; address?: string }) {
+  const ready = useSyncExternalStore(subscribeReady, clientReady, serverReady);
+
   const [codes, setCodes] = useState<DiscountCode[] | null>(null);
   const [adding, setAdding] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -125,7 +131,7 @@ export function DiscountEditor({ selling, currency = "usd", address = "" }: { se
             they leave with you.
           </p>
 
-          <button type="button" className="btn btn-secondary btn-sm mt-4" aria-busy={busy} disabled={busy} onClick={loadCodes}>
+          <button type="button" className="btn btn-secondary btn-sm mt-4" aria-busy={busy} disabled={!ready || busy} onClick={loadCodes}>
             {busy ? "Loading…" : codes === null ? "Load discount codes" : "Refresh discount codes"}
           </button>
 

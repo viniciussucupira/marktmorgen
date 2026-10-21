@@ -292,14 +292,19 @@ export async function stopCode(
   id: string,
 ): Promise<boolean> {
   try {
-    await onAccount(
+    const row = await onAccount(
       "POST",
       account,
       `/promotion_codes/${encodeURIComponent(id)}`,
       new URLSearchParams({ active: "false" }),
       API_VERSION,
     );
-    return true;
+    // HTTP success alone does not prove this specific code was switched off.
+    // Preserve uncertainty on partial, contradictory or mismatched replies.
+    return !!row && typeof row === "object" && !Array.isArray(row)
+      && Object.hasOwn(row, "id") && row.id === id
+      && Object.hasOwn(row, "active") && row.active === false
+      && !Object.hasOwn(row, "error");
   } catch (error) {
     console.error("switching a discount code off failed", error);
     return false;
