@@ -58,3 +58,11 @@ Moves patch only start/end, preserving the provider meeting body/blob and attend
 - https://learn.microsoft.com/en-us/graph/api/event-delete?view=graph-rest-1.0
 
 These endpoints may notify existing attendees when used for a real meeting. That behavior must be explained and checked in the future creator-approved booking lifecycle; no claim of notification-free production deletion is made. OAuth, credential lifecycle, connection binding, real allowance wiring and end-to-end booking are still incomplete. All cost/license/tax gates above remain failing or unknown, not zero. No activation or functional-delivery count.
+
+## Authorization-state cryptography increment — 21 October 2026
+
+A pure helper now generates random32byte state and nonce plus48byte PKCE verifier/S256 challenge. The pending envelope is sealed by the existing AES256GCM secret box, bound to the state, store, hashed signed-in session and hashed actor, and expires after600seconds. Tests cover wrong store/session/actor/state, tampering, expiry and future-time refusal. No provider request, new callback or public offer exists.
+
+This helper does not consume state or grant permission. The eventual connection flow must atomically GETDEL the server-side envelope once, recheck the actor's current settings permission on that store, verify the Microsoft OIDC signature/issuer/audience/nonce and organizational tenant, and only then save an encrypted connection. None of those missing integration checks may be inferred from these pure cryptography tests. Production approval remains false; no environment override or account operation is added.
+
+Protocol reference checked21October2026: https://learn.microsoft.com/en-us/entra/identity-platform/v2-oauth2-auth-code-flow . Microsoft recommends a supported authentication library; the final adapter/library choice and its bounded requests/security review remain open. No raw hand-written token verifier is approved by this increment.
