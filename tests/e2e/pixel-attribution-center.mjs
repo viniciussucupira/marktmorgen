@@ -31,8 +31,23 @@ export async function checkPixelAttributionCenter({browser,LOCAL,fixture,axeSour
  const gpc=await browser.newContext({viewport:{width,height:1000},extraHTTPHeaders:{"Sec-GPC":"1"}});try{
  await gpc.addInitScript(()=>{Object.defineProperty(navigator,"globalPrivacyControl",{configurable:true,get:()=>true});localStorage.setItem("nl_px_consent:templatelibraryfixture","yes");});
  await gpc.addCookies([{name:"nl_ads_templatelibraryfixture",value:"y",url:LOCAL}]);
+ await gpc.addInitScript(()=>{
+  window.__mmVisitBodies=[];
+  const send=navigator.sendBeacon.bind(navigator);
+  navigator.sendBeacon=(url,body)=>{
+   if(new URL(url,location.href).origin===location.origin&&new URL(url,location.href).pathname==="/api/store/hit"){
+    window.__mmVisitBodies.push(body instanceof Blob?body.text():Promise.resolve(String(body)));
+   }
+   return send(url,body);
+  };
+ });
  const page=await gpc.newPage();let vendor=0,adWrites=0,visitHits=0;const unexpectedWrites=[];
- await page.route("**/*",route=>{const request=route.request(),url=new URL(request.url());if(url.origin!==new URL(LOCAL).origin){if(/facebook|google-analytics|googletagmanager|tiktok|pinterest/.test(url.hostname))vendor++;return route.abort();}if(!["GET","HEAD"].includes(request.method())){let payload;try{payload=request.postDataJSON();}catch{}if(url.pathname==="/api/store/hit"&&request.method()==="POST"&&payload?.h==="templatelibraryfixture"&&payload?.k==="v"&&Object.keys(payload).every(key=>["h","k","r","u","m","g"].includes(key)&&typeof payload[key]==="string")){visitHits++;return route.fulfill({status:204,body:""});}if(url.pathname==="/api/store/ads-event")adWrites++;else unexpectedWrites.push({method:request.method(),path:url.pathname});return route.abort();}return route.continue();});
+ await page.route("**/*",async route=>{const request=route.request(),url=new URL(request.url());if(url.origin!==new URL(LOCAL).origin){if(/facebook|google-analytics|googletagmanager|tiktok|pinterest/.test(url.hostname))vendor++;return route.abort();}if(!["GET","HEAD"].includes(request.method())){let payload;try{payload=request.postDataJSON();}catch{}
+ if(!request.postData()&&browser.browserType().name()==="webkit"&&url.pathname==="/api/store/hit"&&request.method()==="POST"&&new URL(request.frame().url()).pathname==="/@templatelibraryfixture"){
+  const captured=await page.evaluate(async()=>await window.__mmVisitBodies.at(-1));
+  if(captured)payload=JSON.parse(captured);
+ }
+ if(url.pathname==="/api/store/hit"&&request.method()==="POST"&&payload?.h==="templatelibraryfixture"&&payload?.k==="v"&&Object.keys(payload).every(key=>["h","k","r","u","m","g"].includes(key)&&typeof payload[key]==="string")){visitHits++;return route.fulfill({status:204,body:""});}if(url.pathname==="/api/store/ads-event")adWrites++;else unexpectedWrites.push({method:request.method(),path:url.pathname});return route.abort();}return route.continue();});
  await page.goto(LOCAL+"/@templatelibraryfixture");await page.getByText("Your browser’s Global Privacy Control keeps ad measurement off. Manage this signal in your browser settings.",{exact:true}).waitFor();
  is("HT10 GPC beats previous yes "+width,await page.getByRole("button",{name:"Allow",exact:true}).count(),0);
  is("HT10 GPC clears server yes "+width,(await gpc.cookies()).some(cookie=>cookie.name==="nl_ads_templatelibraryfixture"),false);

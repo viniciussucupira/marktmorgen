@@ -28,7 +28,7 @@ export async function checkTaxSaveAcknowledgment({browser,LOCAL,session,sid,is})
     if(work.scenario.abort){await route.abort("failed");return;}
     await route.fulfill({status:work.scenario.status??200,contentType:"application/json",body:work.scenario.raw??JSON.stringify(work.scenario.body(tax))});
    });
-   await page.goto(LOCAL+"/studio?store="+sid,{waitUntil:"domcontentloaded",timeout:60000});
+   await page.goto(LOCAL+"/studio?store="+sid,{waitUntil:"networkidle",timeout:60000});
    await page.locator("main details").evaluateAll(nodes=>nodes.forEach(node=>{node.open=true;}));
    const section=page.locator('[aria-labelledby="tax-title"]'),form=section.locator("form");
    const before=await form.locator("input").evaluateAll(nodes=>nodes.map(node=>node.checked));

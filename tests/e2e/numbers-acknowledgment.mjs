@@ -32,7 +32,8 @@ export async function checkNumbersAcknowledgment({browser,LOCAL,fixture,is}){
     const good=input.action==="remove"?{ok:true,id:input.id}:{ok:true,link:{id,label:canonical,money:input.money,made:created,expires:created+input.days*86400,url:"https://marktmorgen.com/numbers/"+id}};
     await route.fulfill({status:work.scenario.status??200,contentType:"application/json",body:work.scenario.raw??JSON.stringify(work.scenario.reply(good))});
    });
-   await page.goto(LOCAL+"/studio?store="+fixture.sid,{waitUntil:"domcontentloaded",timeout:60000});
+   await page.goto(LOCAL+"/studio?store="+fixture.sid,{waitUntil:"networkidle",timeout:60000});
+   await page.waitForLoadState("networkidle");
    await page.locator("main details").evaluateAll(nodes=>nodes.forEach(n=>{n.open=true;}));
    const section=page.locator("[data-numbers-links]");await section.waitFor();
    const label=section.locator("#numbers-link-label"),pass=section.locator("#numbers-link-password"),days=section.locator("#numbers-link-days"),money=section.locator("#numbers-link-money");
@@ -42,11 +43,12 @@ export async function checkNumbersAcknowledgment({browser,LOCAL,fixture,is}){
     const name=action+"/"+revenue+"/"+scenario.name+"/"+width;
     const seen=page.waitForRequest(r=>r.method()==="POST"&&new URL(r.url()).pathname==="/api/store/numbers-links");seen.catch(()=>{});
     try{
-     await section.getByRole("button",{name:action==="create"?"Make the link":"Take it back",exact:true}).click();
+     const button=section.getByRole("button",{name:action==="create"?"Make the link":"Take it back",exact:true});
+     await button.focus();await page.keyboard.press("Enter");
      is("numbers exact request "+name,(await seen).postDataJSON(),action==="create"?{action,label:draft,password,days:7,money:revenue}:{action,id:fixture.numbersLinkId});
      is("numbers pending announced "+name,await section.getAttribute("aria-busy"),"true");
      for(const field of await section.locator("input,select,button").all())is("numbers pending locked "+name,await field.isDisabled(),true);
-    }finally{release();}
+    }catch(error){console.error("NUMBERS_ACTIVATION_DIAGNOSTIC:"+JSON.stringify({name,requests,busy:await section.getAttribute("aria-busy"),buttons:await section.getByRole("button").allTextContents(),active:await page.evaluate(()=>({tag:document.activeElement?.tagName,text:document.activeElement?.textContent?.slice(0,80)}))}));throw error;}finally{release();}
     await page.waitForFunction(()=>document.querySelector("[data-numbers-links]")?.getAttribute("aria-busy")==="false");
     if(scenario.confirmed){
      is("numbers confirms "+name,await section.getByRole("alert").count(),0);
@@ -62,6 +64,7 @@ export async function checkNumbersAcknowledgment({browser,LOCAL,fixture,is}){
      is("numbers preserves password "+name,await pass.inputValue(),password);
      is("numbers preserves revenue "+name,await money.isChecked(),revenue);
     }
+    if(scenario.confirmed)await page.waitForLoadState("networkidle");
     is("numbers settings fit "+name,await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
    }
    for(const revenue of [false,true]){

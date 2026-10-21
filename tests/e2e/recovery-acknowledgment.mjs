@@ -31,7 +31,8 @@ export async function checkRecoveryAcknowledgment({browser,LOCAL,fixture,is}){
     await work.release;if(work.scenario.abort){await route.abort("failed");return;}
     await route.fulfill({status:work.scenario.status??200,contentType:"application/json",body:work.scenario.raw??JSON.stringify(work.scenario.body(value))});
    });
-   await page.goto(LOCAL+"/studio?store="+fixture.sid,{waitUntil:"domcontentloaded",timeout:60000});
+   await page.goto(LOCAL+"/studio?store="+fixture.sid,{waitUntil:"networkidle",timeout:60000});
+   await page.waitForLoadState("networkidle");
    await page.locator("main details").evaluateAll(nodes=>nodes.forEach(n=>{n.open=true;}));
    const section=page.locator("#checkout-reminders"),form=section.locator("form");await form.waitFor({state:"visible"});
    const toggle=form.getByRole("checkbox",{name:"Send one reminder after an abandoned checkout",exact:true}),address=form.getByLabel("Your postal address",{exact:true});

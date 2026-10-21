@@ -25,7 +25,7 @@ export async function checkRenameAcknowledgment({browser,LOCAL,session,sid,is}){
     await work.release;
     await route.fulfill({status:work.scenario.status??200,contentType:"application/json",body:work.scenario.raw??JSON.stringify(work.scenario.body(handle))});
    });
-   await page.goto(LOCAL+"/studio?store="+sid,{waitUntil:"domcontentloaded",timeout:60000});
+   await page.goto(LOCAL+"/studio?store="+sid,{waitUntil:"networkidle",timeout:60000});
    await page.locator("main details").evaluateAll(nodes=>nodes.forEach(node=>{node.open=true;}));
    await page.getByRole("button",{name:"Change my address",exact:true}).click();
    const form=page.locator("form:has(#new-handle)"),field=form.getByLabel("New address",{exact:true});

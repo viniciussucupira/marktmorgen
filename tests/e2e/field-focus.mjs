@@ -1,4 +1,4 @@
-/** Quantitative paint check on disposable Chromium only. No screenshot is saved or sent elsewhere. */
+/** Quantitative same-pixel paint check on the selected disposable engine. No screenshot is saved or sent elsewhere. */
 export async function fieldFocusPixels(page,field) {
   await page.evaluate(()=>window.scrollTo({top:0,left:0,behavior:"instant"}));
   await page.mouse.move(0,0);
@@ -20,12 +20,13 @@ export async function fieldFocusPixels(page,field) {
   if(!await field.evaluate(node=>document.activeElement===node&&node.matches(":focus-visible")))throw Error("Tab did not restore visible field focus");
   const afterBox=await field.boundingBox();
   if(!afterBox || ["x","y","width","height"].some(key=>Math.abs(afterBox[key]-box[key])>0.1))throw Error("Focus shifted field geometry");
-  const styles=await field.evaluate(node=>{
-    const style=getComputedStyle(node);
-    return {width:style.outlineWidth,offset:style.outlineOffset,style:style.outlineStyle,color:style.outlineColor,shadow:style.boxShadow,forcedColorAdjust:style.forcedColorAdjust};
-  });
   if(!await page.evaluate(previous=>scrollX===previous.x&&scrollY===previous.y,scroll))throw Error("Focus measurement scrolled after Tab");
   const after=await page.screenshot({animations:"disabled",scale:"css"});
+  // Screenshot finishes finite CSS transitions; inspect the same painted state.
+  const styles=await field.evaluate(node=>{
+    const style=getComputedStyle(node);
+    return {width:style.outlineWidth,offset:style.outlineOffset,style:style.outlineStyle,color:style.outlineColor,shadow:style.boxShadow,forcedColorAdjust:style.getPropertyValue("forced-color-adjust"),supportsForcedColorAdjust:CSS.supports("forced-color-adjust","auto")};
+  });
   const pixels=await page.evaluate(async({before,after,box,clip,viewport})=>{
     async function decode(encoded) {
       const bytes=Uint8Array.from(atob(encoded),char=>char.charCodeAt(0));
@@ -56,6 +57,7 @@ export async function fieldFocusPixels(page,field) {
     }
     return {contrastingPixels,minimumArea:Math.ceil(4*(box.width+box.height))};
   },{before:before.toString("base64"),after:after.toString("base64"),box,clip,viewport});
+  if(pixels.contrastingPixels<pixels.minimumArea)console.error("FIELD_FOCUS_DIAGNOSTIC:"+JSON.stringify({...styles,...pixels,tag:await field.evaluate(node=>node.tagName),classes:await field.getAttribute("class"),forcedColors:await page.evaluate(()=>matchMedia("(forced-colors: active)").matches)}));
   return {...styles,...pixels};
 }
 

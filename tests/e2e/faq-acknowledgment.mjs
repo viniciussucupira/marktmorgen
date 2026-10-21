@@ -30,7 +30,7 @@ export async function checkFaqAcknowledgment({browser,LOCAL,fixture,is}){
     if(pending.scenario.abort){await route.abort("failed");return;}
     await route.fulfill({status:pending.scenario.status??200,contentType:"application/json",body:pending.scenario.raw??JSON.stringify(pending.scenario.reply(value))});
    });
-   await page.goto(LOCAL+"/studio?store="+fixture.sid,{waitUntil:"domcontentloaded",timeout:60000});
+   await page.goto(LOCAL+"/studio?store="+fixture.sid,{waitUntil:"networkidle",timeout:60000});
    await page.locator("main details").evaluateAll(nodes=>nodes.forEach(n=>{n.open=true;}));
    const section=page.locator("section#faq");await section.waitFor({state:"visible"});
    while(await section.getByRole("button",{name:"Remove",exact:true}).count())await section.getByRole("button",{name:"Remove",exact:true}).first().click();

@@ -25,7 +25,7 @@ export async function checkEnableAcknowledgment({browser,LOCAL,fixture,is}){
     if(reply && typeof reply==="object" && "IDENTITY" in reply){reply[kind+"Id"]=reply.IDENTITY;delete reply.IDENTITY;}
     await route.fulfill({status:work.scenario.status??200,contentType:"application/json",body:work.scenario.raw??JSON.stringify(reply)});
    });
-   await page.goto(LOCAL+"/studio?store="+fixture.sid,{waitUntil:"domcontentloaded",timeout:60000});
+   await page.goto(LOCAL+"/studio?store="+fixture.sid,{waitUntil:"networkidle",timeout:60000});
    await page.locator("main details").evaluateAll(nodes=>nodes.forEach(n=>{n.open=true;}));
    const toggle=page.locator('button[aria-controls="product-panel-'+fixture.product+'"]');
    await toggle.waitFor();await page.waitForFunction(el=>typeof el.onclick==="function",await toggle.elementHandle());

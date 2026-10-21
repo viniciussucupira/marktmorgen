@@ -33,7 +33,7 @@ export async function checkTipsAcknowledgment({browser,LOCAL,fixture,axeSource,i
     if(work.scenario.abort){await route.abort("failed");return;}
     await route.fulfill({status:work.scenario.status??200,contentType:"application/json",body:work.scenario.raw??JSON.stringify(work.scenario.body(value))});
    });
-   await page.goto(LOCAL+"/studio?store="+fixture.sid,{waitUntil:"domcontentloaded",timeout:60000});
+   await page.goto(LOCAL+"/studio?store="+fixture.sid,{waitUntil:"networkidle",timeout:60000});
    await page.locator("main details").evaluateAll(nodes=>nodes.forEach(n=>{n.open=true;}));
    const form=page.locator("form#support");await form.waitFor({state:"visible"});await page.addScriptTag({content:axeSource});
    const toggle=form.getByRole("checkbox",{name:"Show Support my work on my store page",exact:true});

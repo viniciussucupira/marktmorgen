@@ -1,3 +1,4 @@
+import {placeholderPaint} from "./placeholder-paint.mjs";
 import {checkOfferPlanning} from "./offer-planning.mjs";
 import { checkPixelAttributionCenter } from "./pixel-attribution-center.mjs";
 import { checkPartnerCopy } from "./partner-copy.mjs";
@@ -88,22 +89,8 @@ import {checkReturnPath} from "./path-return.mjs";
 import {checkPostSalePath} from "./path-growth.mjs";
 import { checkPathCardText } from "./path-card-text.mjs";
 
-async function storePlaceholderContrast(field){
-  return field.evaluate(node=>{
-    const style=getComputedStyle(node),placeholder=getComputedStyle(node,"::placeholder");
-    const channels=color=>{
-      const values=color.match(/[0-9.]+/g)?.map(Number);
-      if(!values||values.length<3)throw Error("Unreadable computed colour: "+color);
-      return values;
-    };
-    const background=channels(style.backgroundColor),text=channels(placeholder.color);
-    if((background[3]??1)!==1)throw Error("Placeholder needs an opaque measured field background");
-    const opacity=Number(placeholder.opacity)*(text[3]??1);
-    const painted=text.slice(0,3).map((value,index)=>value*opacity+background[index]*(1-opacity));
-    const luminance=rgb=>rgb.slice(0,3).map(value=>value/255).map(value=>value<=0.04045?value/12.92:((value+0.055)/1.055)**2.4).reduce((total,value,index)=>total+value*[0.2126,0.7152,0.0722][index],0);
-    const a=luminance(painted),b=luminance(background);
-    return {ratio:(Math.max(a,b)+0.05)/(Math.min(a,b)+0.05),opacity,shown:node.matches(":placeholder-shown")};
-  });
+async function storePlaceholderContrast(page,field){
+  return placeholderPaint(page,field);
 }
 
 async function checkSignInErrorContrast(page,selector,label){
@@ -158,26 +145,30 @@ const env = {
 };
 
 const require = createRequire(join(root, "package.json"));
-let chromium;
+const engine = process.env.E2E_BROWSER ?? "chromium";
+if (!["chromium", "firefox", "webkit"].includes(engine)) throw new Error(`Unsupported E2E_BROWSER: ${engine}`);
+let browserType;
 for (const name of ["playwright", "playwright-core", process.env.PLAYWRIGHT_CORE].filter(Boolean)) {
   try {
-    ({ chromium } = require(name));
+    browserType = require(name)[engine];
     break;
   } catch {}
 }
-if (!chromium) {
+if (!browserType) {
   console.error("This needs Playwright or playwright-core on the machine (PLAYWRIGHT_CORE=<its folder> to name one). Nothing was run.");
   process.exit(2);
 }
 const axeSource = readFileSync(require.resolve("axe-core/axe.min.js"), "utf8");
 
 async function launch() {
-  if (process.env.CHROMIUM) return chromium.launch({ executablePath: process.env.CHROMIUM });
+  // Firefox/WebKit must fail visibly if unavailable; never substitute Chromium.
+  if (engine !== "chromium") return browserType.launch();
+  if (process.env.CHROMIUM) return browserType.launch({ executablePath: process.env.CHROMIUM });
   try {
-    return await chromium.launch();
+    return await browserType.launch();
   } catch (first) {
     try {
-      return await chromium.launch({ channel: "chrome" });
+      return await browserType.launch({ channel: "chrome" });
     } catch {
       throw first;
     }
@@ -231,10 +222,63 @@ try {
   }
 
   browser = await launch();
+  // All helper contexts use intercepted synthetic APIs; workers must not bypass them.
+  const createIsolatedContext = browser.newContext.bind(browser);
+  browser.newContext = async (options = {}) => {
+    const context = await createIsolatedContext({ ...options, serviceWorkers: "block" });
+    await context.addInitScript(() => {
+      window.__mmNavigationRsc = [];
+      const original = window.fetch;
+      window.fetch = async function (...args) {
+        const input = args[0], url = new URL(typeof input === "string" || input instanceof URL ? input : input.url, location.href);
+        const entry = url.origin === location.origin && url.searchParams.has("_rsc") ? {done:false} : null;
+        if (entry) window.__mmNavigationRsc.push(entry);
+        try {
+          const response = await original.apply(this,args);
+          if (entry) response.clone().text().then(() => {entry.done=true;},() => {entry.done=true;});
+          return response;
+        } catch(error) {if(entry)entry.done=true;throw error;}
+      };
+    });
+    const newPage = context.newPage.bind(context);
+    context.newPage = async (...args) => {
+      const page = await newPage(...args);
+      const settle = async () => {
+        if(page.isClosed() || page.url()==="about:blank")return;
+        await page.waitForFunction(()=>{
+          if(window.__mmNavigationRsc?.some(entry=>!entry.done)){delete window.__mmRscIdleSince;return false;}
+          window.__mmRscIdleSince??=performance.now();
+          return performance.now()-window.__mmRscIdleSince>=200;
+        },undefined,{timeout:60000});
+        await page.evaluate(()=>{delete window.__mmRscIdleSince;});
+      };
+      const goto=page.goto.bind(page),reload=page.reload.bind(page),resize=page.setViewportSize.bind(page),close=page.close.bind(page);
+      page.goto=async (...args)=>{await settle();return goto(...args);};
+      page.reload=async (...args)=>{await settle();return reload(...args);};
+      page.setViewportSize=async (...args)=>{await settle();const result=await resize(...args);await settle();return result;};
+      page.close=async (...args)=>{await settle();return close(...args);};
+      return page;
+    };
+    const closeContext=context.close.bind(context);
+    context.close=async (...args)=>{
+      for(const page of context.pages()){
+        if(page.isClosed()||page.url()==="about:blank")continue;
+        await page.waitForFunction(()=>{
+          if(window.__mmNavigationRsc?.some(entry=>!entry.done)){delete window.__mmRscIdleSince;return false;}
+          window.__mmRscIdleSince??=performance.now();
+          return performance.now()-window.__mmRscIdleSince>=200;
+        },undefined,{timeout:60000});
+        await page.evaluate(()=>{delete window.__mmRscIdleSince;});
+      }
+      return closeContext(...args);
+    };
+    return context;
+  };
+  console.log(`BROWSER_ENGINE_REPORT:${JSON.stringify({ requested: engine, actual: browserType.name(), version: browser.version() })}`);
   const errors = [];
-  const watch = (page) => page.on("pageerror", (error) => errors.push(String(error)));
+  const watch = (page) => page.on("pageerror", (error) => {console.error("WATCHED_PAGE_ERROR:"+JSON.stringify({url:page.url(),error:String(error),stack:error.stack}));errors.push(String(error));});
   const open = async (page, url) => { const response=await page.goto(url,{waitUntil:"networkidle",timeout:60000}); if(!new URL(url).pathname.startsWith("/@"))is("platform document declares American English",await page.locator("html").getAttribute("lang"),"en-US"); return response; };
-  const studio = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+  const studio = await browser.newContext({ serviceWorkers: "block", viewport: { width: 1280, height: 900 } });
   await studio.addCookies([{ name: "nl_session", value: session, url: LOCAL }]);
   const owner = await studio.newPage();
   watch(owner);
@@ -257,7 +301,7 @@ try {
   await open(owner, `${LOCAL}/studio`);
   is("the studio links to the copy", await owner.getByRole("link", { name: "Copy it into another store" }).count(), 1);
   await open(owner, `${LOCAL}/studio/copy`);
-  is("the page names the other store", (await owner.locator("select").innerText()).includes("Second Coaching"), true);
+  is("the page names the other store", (await owner.locator("select option").allTextContents()).some(label=>label.includes("Second Coaching")), true);
   await owner.getByRole("button", { name: "See what it makes" }).click();
   await owner.waitForSelector("ul[aria-label] li");
   is("the preview says what it makes and what never comes across", [(await owner.locator("ul[aria-label]").innerText()).includes("Makes 3 products"), (await owner.locator("ul[aria-label]").innerText()).includes("Never copied: customers")], [true, true]);
@@ -398,7 +442,7 @@ try {
   is("sales enter the preview only after explicit choice",await owner.getByText("Sales kept after refunds: $0",{exact:true}).isVisible(),true);
   await owner.getByLabel("Include sales kept after refunds",{exact:true}).uncheck();
   for (const width of [390, 1280]) {
-    const ctx = await browser.newContext({ viewport: { width, height: 900 } });
+    const ctx = await browser.newContext({ serviceWorkers: "block", viewport: { width, height: 900 } });
     await ctx.addCookies([{ name: "nl_session", value: session, url: LOCAL }]);
     const page = await ctx.newPage();
     await open(page, `${LOCAL}/studio/copy`);
@@ -547,7 +591,7 @@ try {
   const {lookStyle,THEMES,ACCENTS}=require(paintFile);
   rmSync(paintDir,{recursive:true,force:true});
   for(const width of [320,390,768,1280]){
-    const guest=await browser.newContext({viewport:{width,height:900}});
+    const guest=await browser.newContext({serviceWorkers:"block",viewport:{width,height:900}});
     try{
       const signin=await guest.newPage();
       signin.on("pageerror",error=>errors.push(String(error)));
@@ -556,10 +600,9 @@ try {
       await signin.locator("#signin-email").waitFor();
       await checkSecondaryTextContrast(signin,"Sign-in at "+width);
       is("sign-in at "+width+": no horizontal overflow",await signin.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth),0);
-      is("sign-in placeholder has readable colour and full opacity at "+width,await signin.locator("#signin-email").evaluate(input=>{
-        const placeholder=getComputedStyle(input,"::placeholder");
-        return placeholder.color==="rgb(57, 65, 80)"&&placeholder.opacity==="1";
-      }),true);
+      const signinHint=await placeholderPaint(signin,signin.locator("#signin-email"));
+      console.log("SIGNIN_PLACEHOLDER_PAINT:"+JSON.stringify({width,...signinHint}));
+      is("sign-in placeholder has readable colour and full opacity at "+width,signinHint.ratio>=7&&signinHint.corePixels>=8&&signinHint.opacity===1,true);
       const focus=await fieldFocusPixels(signin,signin.locator("#signin-email"));
       is("email keyboard focus at "+width+": opaque3px outline",focus.style==="solid"&&parseFloat(focus.width)>=3&&parseFloat(focus.offset)>=3,true);
       is("email keyboard focus at "+width+": rendered3:1 pixel area",focus.contrastingPixels>=focus.minimumArea,true);
@@ -568,13 +611,13 @@ try {
       const storeTarget=await mountFieldFocusFixture(signin,{surface:storePaint["--st-bg"],kind:"input",className:"st-field",paint:storePaint});
       const storeFocus=await fieldFocusPixels(signin,storeTarget);
       is("store input focus at "+width+": rendered3:1 pixel area",storeFocus.contrastingPixels>=storeFocus.minimumArea,true);
-      const storeHint=await storePlaceholderContrast(storeTarget);
+      const storeHint=await storePlaceholderContrast(signin,storeTarget);
       for(const [kind,className] of [["button","btn st-btn"],["button","btn st-btn-ghost"],["a","st-social"]]){
         const target=await mountFieldFocusFixture(signin,{surface:storePaint["--st-bg"],kind,className,paint:storePaint});
         const reading=await fieldFocusPixels(signin,target);
         is("store action "+className+" at "+width+": rendered3:1 pixel area",reading.contrastingPixels>=reading.minimumArea,true);
       }
-      is("store placeholder at "+width+": enhanced contrast",storeHint.shown&&storeHint.ratio>=7&&storeHint.opacity===1,true);
+      is("store placeholder at "+width+": enhanced contrast",storeHint.shown&&storeHint.ratio>=7&&storeHint.corePixels>=8&&storeHint.opacity===1,true);
 
       if(width===390){
         for(const theme of THEMES){
@@ -583,9 +626,9 @@ try {
             const target=await mountFieldFocusFixture(signin,{surface:paint["--st-bg"],kind:"input",className:"st-field",paint});
             const reading=await fieldFocusPixels(signin,target);
             is("store input "+theme.id+"/"+accent.label+": rendered3:1 pixel area",reading.contrastingPixels>=reading.minimumArea,true);
-            const hint=await storePlaceholderContrast(target);
+            const hint=await storePlaceholderContrast(signin,target);
             is("store placeholder "+theme.id+"/"+accent.label+": actually shown",hint.shown,true);
-            is("store placeholder "+theme.id+"/"+accent.label+": enhanced contrast",hint.ratio>=7,true);
+            is("store placeholder "+theme.id+"/"+accent.label+": enhanced contrast",hint.ratio>=7&&hint.corePixels>=8,true);
             is("store placeholder "+theme.id+"/"+accent.label+": opaque",hint.opacity,1);
             for(const [kind,className] of [["button","btn st-btn"],["button","btn st-btn-ghost"],["a","st-social"]]){
               const action=await mountFieldFocusFixture(signin,{surface:paint["--st-bg"],kind,className,paint});
@@ -602,8 +645,8 @@ try {
             is("store "+kind+" "+theme.id+"/custom yellow card: rendered3:1 pixel area",reading.contrastingPixels>=reading.minimumArea,true);
             if(kind==="textarea"){
               await target.evaluate(node=>{node.readOnly=false;node.value="";node.placeholder="Write a question";});
-              const hint=await storePlaceholderContrast(target);
-              is("store textarea placeholder "+theme.id+": visible enhanced contrast",hint.shown&&hint.ratio>=7&&hint.opacity===1,true);
+              const hint=await storePlaceholderContrast(signin,target);
+              is("store textarea placeholder "+theme.id+": visible enhanced contrast",hint.shown&&hint.ratio>=7&&hint.corePixels>=8&&hint.opacity===1,true);
               await target.fill("A synthetic question");
               is("typed textarea text replaces the example "+theme.id,await target.evaluate(node=>node.value==="A synthetic question"&&!node.matches(":placeholder-shown")),true);
             }
@@ -622,7 +665,8 @@ try {
         is("restored social focus passes",socialRestored.contrastingPixels>=socialRestored.minimumArea,true);
         const oldHintTarget=await mountFieldFocusFixture(signin,{surface:storePaint["--st-bg"],kind:"input",className:"st-field",paint:storePaint});
         const oldHintStyle=await signin.addStyleTag({content:".st-field::placeholder{color:var(--st-muted)!important;opacity:.75!important}"});
-        const oldHint=await storePlaceholderContrast(oldHintTarget);
+        const oldHint=await storePlaceholderContrast(signin,oldHintTarget);
+        console.log("PLACEHOLDER_NEGATIVE_CONTROL:"+JSON.stringify(oldHint));
         is("placeholder guard rejects former faded Night text",oldHint.shown&&oldHint.ratio<7,true);
         await oldHintStyle.evaluate(node=>node.remove());
         const oldStoreTarget=await mountFieldFocusFixture(signin,{surface:storePaint["--st-bg"],kind:"input",className:"st-field",paint:storePaint});
@@ -649,22 +693,24 @@ try {
         is("pixel guard rejects the former suppressed-outline style",baseline.contrastingPixels<baseline.minimumArea,true);
         await oldSuppression.evaluate(node=>node.remove());
         await signin.emulateMedia({forcedColors:"active",reducedMotion:"reduce"});
+        console.log("FORCED_COLORS_ENVIRONMENT:"+JSON.stringify({requested:"active",actual:await signin.evaluate(()=>matchMedia("(forced-colors: active)").matches),supportsForcedColorAdjust:await signin.evaluate(()=>CSS.supports("forced-color-adjust","auto"))}));
+        if(!await signin.evaluate(()=>CSS.supports("forced-color-adjust","auto")))console.log("FIELD_FOCUS_OPEN_GAP:"+JSON.stringify({engine:browser.browserType().name(),reason:"forced-color-adjust declaration unsupported; no auto computed-value claim. System outline, shadow and actual3:1 painted-area assertions remain required; real OS validation remains open."}));
         for(const [kind,className] of [["button","btn st-btn"],["button","btn st-btn-ghost"],["a","st-social"]]){
           const target=await mountFieldFocusFixture(signin,{surface:storePaint["--st-bg"],kind,className,paint:storePaint});
           const focus=await fieldFocusPixels(signin,target);
-          is("store action "+className+" forced colours: system outline",focus.style==="solid"&&parseFloat(focus.width)>=3&&focus.shadow==="none"&&focus.forcedColorAdjust==="auto",true);
+          is("store action "+className+" forced colours: system outline",focus.style==="solid"&&parseFloat(focus.width)>=3&&focus.shadow==="none"&&(focus.supportsForcedColorAdjust?focus.forcedColorAdjust==="auto":focus.forcedColorAdjust===""),true);
           is("store action "+className+" forced colours: rendered3:1 pixel area",focus.contrastingPixels>=focus.minimumArea,true);
         }
         for(const kind of ["input","select","textarea"]){
           const target=await mountFieldFocusFixture(signin,{surface:storePaint["--st-bg"],kind,className:"st-field",paint:storePaint});
           const reading=await fieldFocusPixels(signin,target);
-          is("store "+kind+" forced colours: system outline",reading.style==="solid"&&parseFloat(reading.width)>=3&&reading.shadow==="none"&&reading.forcedColorAdjust==="auto",true);
+          is("store "+kind+" forced colours: system outline",reading.style==="solid"&&parseFloat(reading.width)>=3&&reading.shadow==="none"&&(reading.supportsForcedColorAdjust?reading.forcedColorAdjust==="auto":reading.forcedColorAdjust===""),true);
           is("store "+kind+" forced colours: rendered3:1 pixel area",reading.contrastingPixels>=reading.minimumArea,true);
         }
         for(const kind of ["input","select","textarea"]){
           const target=await mountFieldFocusFixture(signin,{surface:"#ffffff",kind});
           const forced=await fieldFocusPixels(signin,target);
-          is(kind+" forced-colours focus: system outline remains",forced.style==="solid"&&parseFloat(forced.width)>=3&&forced.shadow==="none"&&forced.forcedColorAdjust==="auto",true);
+          is(kind+" forced-colours focus: system outline remains",forced.style==="solid"&&parseFloat(forced.width)>=3&&forced.shadow==="none"&&(forced.supportsForcedColorAdjust?forced.forcedColorAdjust==="auto":forced.forcedColorAdjust===""),true);
           is(kind+" forced-colours focus: rendered3:1 pixel area",forced.contrastingPixels>=forced.minimumArea,true);
         }
       }

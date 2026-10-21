@@ -25,7 +25,7 @@ export async function checkLanguageAcknowledgment({browser,LOCAL,fixture,is}){
     const work=pending;await work.release;if(work.scenario.abort){await route.abort("failed");return;}
     await route.fulfill({status:work.scenario.status??200,contentType:"application/json",body:work.scenario.raw??JSON.stringify(work.scenario.body)});
    });
-   await page.goto(LOCAL+"/studio?store="+fixture.sid,{waitUntil:"domcontentloaded",timeout:60000});
+   await page.goto(LOCAL+"/studio?store="+fixture.sid,{waitUntil:"networkidle",timeout:60000});
    await page.locator("main details").evaluateAll(nodes=>nodes.forEach(n=>{n.open=true;}));
    const select=page.locator("#store-language"),section=select.locator("xpath=ancestor::section[1]");
    await select.waitFor();await select.selectOption("fr");

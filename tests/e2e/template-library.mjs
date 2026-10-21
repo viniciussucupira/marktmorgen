@@ -27,10 +27,14 @@ export async function checkTemplateLibrary({browser,LOCAL,fixture,axeSource,is})
  await page.getByText("Your saved page was preserved. Library templates only start an empty page; use the editor to change existing content.",{exact:true}).waitFor();
  await page.getByRole("button",{name:/Keep my creator headline/}).click();
  is("HT15 saved creator headline intact "+width,await page.locator("input,textarea").evaluateAll(nodes=>nodes.some(node=>node.value==="Keep my creator headline")),true);
+ const mailCount=page.waitForResponse(response=>new URL(response.url()).pathname==="/api/store/mail"&&response.request().method()==="POST"&&response.request().postDataJSON()?.action==="count");
  await page.goto(LOCAL+"/studio/email?store="+fixture.sid+"&emailTemplate=news");
+ await mailCount;
  await page.getByText("Library email opened as an unsaved draft. Replace every placeholder and review consent before saving or sending.",{exact:true}).waitFor();
  is("HT15 mail placeholders preserved "+width,await page.locator("textarea").evaluateAll(nodes=>nodes.some(node=>node.value.includes("What this issue is about"))),true);
+ const sequenceCount=page.waitForResponse(response=>new URL(response.url()).pathname==="/api/store/mail"&&response.request().method()==="POST"&&response.request().postDataJSON()?.action==="count");
  await page.goto(LOCAL+"/studio/email?store="+fixture.sid+"&sequenceTemplate=welcome");
+ await sequenceCount;
  await page.getByText("Library sequence opened as an unsaved paused draft. Review every step before saving; activation is a separate action.",{exact:true}).waitFor();
  is("HT15 sequence opens existing editor "+width,await page.getByRole("textbox",{name:"Name, for you",exact:true}).inputValue(),"Welcome");
  is("HT15 sequence remains paused "+width,(await page.locator("main").innerText()).includes("New workflows are saved paused."),true);

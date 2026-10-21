@@ -20,7 +20,7 @@ export async function checkCollectionsAcknowledgment({browser,LOCAL,fixture,is})
     await work.release;if(work.scenario.abort){await route.abort("failed");return;}
     await route.fulfill({status:work.scenario.status??200,contentType:"application/json",body:work.scenario.raw??JSON.stringify(work.scenario.reply(value,work.phase))});
    });
-   await page.goto(LOCAL+"/studio?store="+fixture.sid,{waitUntil:"domcontentloaded",timeout:60000});
+   await page.goto(LOCAL+"/studio?store="+fixture.sid,{waitUntil:"networkidle",timeout:60000});
    await page.locator("main details").evaluateAll(nodes=>nodes.forEach(n=>{n.open=true;}));
    const section=page.locator("[data-collections-editor]");await section.waitFor();
    await section.getByRole("button",{name:/Add a collection/}).click();
