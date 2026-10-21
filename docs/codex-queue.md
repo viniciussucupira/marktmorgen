@@ -3255,6 +3255,11 @@ Mudanças: landmarkbanner na biblioteca e reflow320px/text-spacing com links que
 Custos fixosCI reconciliados emmarktmorgen-ci-cost-20261021-0512.json:371runs concluídos,1069jobs,306695segundos (5111,58job-min), incluindo falhas/cancelamentos; ativos/posteriores e faturas/provedores não incluídos. Fatura desconhecida nãozero. Nenhum novo provedor/custo variável/operação comercial. Contador129,próximo130, após READY/domínio/versão exatos. Item201 mantém lacunas manuais e a prova autônoma da publicação inicial abertas, não certificação AAA.
 
 
+### P0-201 — prova da primeira loja após cadastro (21/10/2026)
+
+A matriz de cadastro anterior terminava no Studio vazio; a matriz de produto usa loja semeada e não fecha essa lacuna. Novo head estende os25casos por motor atéPOST real local/api/store/claim, confirmahandle/SID, aguardaStudio criado, ativa pelo teclado o link real da loja, remove sessão e recarrega como visitante anônimo. Exige200 e nome real apósreload. Cinco estados auditados porcaso (125por motor/375total pretendidos), antes de declarar aprovação. TrêsPOSTs permitidos porcaso; visitas sintéticas exatas interceptadas sem gravação de estatísticas, com lacuna WebKit de payload declarada. GPC sintético impede publicidade. Mesmos cinco modos/larguras, fakeinbox/Redis e HTTPSlocal; nada real. Suíte completa obrigatória. Custo fixoCI dentro do teto existente3x30min,90Rmensal/1080Ranual, sem novo provedor/custo variável/gates. Item201 permanece em andamento até fechar esta prova autônoma e registrar as lacunas restantes.
+
+
 ## 203 — Teams automático para chamadas pagas (execução futura)
 
 203. [TEAMS] Links automáticos do Microsoft Teams para as chamadas pagas, construídos agora e DESLIGADOS
