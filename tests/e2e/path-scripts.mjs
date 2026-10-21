@@ -10,6 +10,7 @@ export async function checkPathScripts({browser,LOCAL,session,sid,axeSource,is})
   for(const width of [390,1280]){
    await page.waitForLoadState("networkidle");
    await page.setViewportSize({width,height:900});
+   await page.waitForLoadState("networkidle");
    await page.goto(LOCAL+"/studio/path?store="+sid,{waitUntil:"domcontentloaded",timeout:60000});
    await page.waitForLoadState("networkidle");
    const section=page.locator('section[aria-labelledby="path-scripts-title"]');
