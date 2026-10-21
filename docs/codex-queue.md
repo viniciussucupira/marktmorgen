@@ -3847,6 +3847,12 @@ Estado inicial de todos os itens: na fila.
 
 Registro: somente inclusão documental. Dupla confirmação, privacidade das indicações, ausência de dinheiro e dados de terceiros, franquias reais de e-mail/armazenamento e todos os gates SH permanecem vinculantes. Sem conta, gasto, aceite, aprovação, operação externa, ativação ou mudança de preços/limites/nomes/número de planos. Não é entrega funcional.
 
+### Registro operacional — 21/10/2026, 04h37 de Fortaleza
+
+- Reconciliação de CI concluído: 537 execuções únicas, 1.561 jobs, 449.820 segundos (7.497 minutos de jobs). Acrescentadas 166 execuções/492 jobs/143.125 segundos à evidência anterior de 371 execuções, deduplicando por ID. Falhas e cancelamentos incluídos; execuções ativas/posteriores e execuções antigas fora do escopo continuam excluídas. Não somar novamente o delta separado do PR744, pois há sobreposição de IDs. Fonte local: `work/marktmorgen-ci-cost-20261021-0732.json`, preservada na continuidade. Duração não é fatura: custo faturado desconhecido continua desconhecido, nunca zero.
+- Item203 permanece incompleto e desligado. PR751 corrigiu custeio e ciclo de exclusão do estado temporário, head95b6fac4c0a33cff3bb5ccf5d7ec2d7cff809660; suíte completa em andamento. A correção de navegação do PR750 passou no teste móvel, mas a suíte Firefox de9a3eb92f7d76917e5420fb33b21e371bf531472a reprovou HT2 por `target-size` em1280; nenhum critério removido. PR754 acrescenta identificação do alvo e geometria, sem afrouxar o teste; não é correção comprovada nem entrega funcional.
+- Contador funcional permanece130, próximo131. Nenhuma incorporação/publicação nova declarada; preços, franquias, opt-in, PLANS_ON_SALE=false, comissão desligada e gates fiscais/comerciais preservados.
+
 ## GR — Lições da auditoria do Gumroad (21/10/2026)
 
 Proveniência: pedido direto do dono nesta conversa, 21/10/2026, 04h13 de Fortaleza. Ordem: depois do item 269 [KT3] e de todos os itens já em andamento; não bloqueia nenhum outro item. Itens 203–269 dos pedidos abertos preservados integralmente na ancestralidade desta fila. As afirmações sobre Gumroad abaixo são insumos da auditoria, ainda sujeitas a conferência oficial datada antes de qualquer uso público.
