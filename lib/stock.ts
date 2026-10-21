@@ -102,7 +102,8 @@ export async function withStockHold<T extends { id: string }>(
   let locked = false;
   for (let attempt = 0; attempt < 6 && !locked; attempt += 1) {
     const [got] = await redisPipeline([["SET", lock, "1", "NX", "EX", 15]]);
-    locked = got !== null;
+    if (got !== null && got !== "OK") return { ok: false, reason: "busy" };
+    locked = got === "OK";
     if (!locked) await new Promise((resolve) => setTimeout(resolve, 250));
   }
   if (!locked) return { ok: false, reason: "busy" };
