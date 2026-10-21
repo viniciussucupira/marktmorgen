@@ -35,7 +35,7 @@ async function main() {
   assert.equal(await takeTeamsAuthorization(revoked.state, binding, permit, now + 2), null);
   for (const acknowledgement of [undefined, null, 0, 1, "true", { ok: true }, []] as unknown[]) {
     const malformed = async () => acknowledgement as boolean;
-    const beforeFunding = reserves;
+    const beforeFunding: number = reserves;
     assert.equal(await keepTeamsAuthorization(binding, malformed, reserve, now), null);
     assert.equal(reserves, beforeFunding, "unknown permission must not spend");
     assert.equal(await keepTeamsAuthorization(binding, permit, malformed, now), null);
