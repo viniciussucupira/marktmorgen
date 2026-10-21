@@ -3281,6 +3281,14 @@ A matriz de cadastro anterior terminava no Studio vazio; a matriz de produto usa
 - Heade620bc3 reprovou signup com ReferenceError:viewportWidth: uma edição deste agente gravou sequências literais de quebra de linha no comentário e deixou a declaração da variável comentada. Corrigida a montagem com quebras reais, sem alterar a lógica, os gates ou relaxar assertions. Nenhum resultado desse head conta como aprovação.
 - ProductFirefox job119064131486 também abortou com assertion interna de Playwright FrameManager.frameAttached/FFPage._onFrameAttached ao criar produto; evidência preservada, sem suprimir erro. A nova execução é integral no novo head e exigirá investigar qualquer recorrência; não reexecutar somente o job.
 
+### Entrega130 — primeira loja comprovada e retorno às compras (21/10/2026)
+
+- PR744 incorporado21/10/2026às03:23:43Fortaleza (06:23:43Z), mergef46bb5f974f5ed6252c5f138bb06bfd6966934e9.22checks aprovados nohead08b948a34b0d2b3d8961b2bc1079e871b5cacfde; árvore05425522dd8791484d5008aaa4d33b991fb1b7d2 igual à prevista e incorporada.
+- READY06:24:36.395Z, domínio marktmorgen.com confirmado na versão exataf46bb5f; deploymentdpl_AWTgxAeFXAEsWA1atuvnmXDrNrKA. Sete GETs/,/library,/signin,/signin/confirm,/pricing,/privacy,/refunds:200com mesmo deployment. Runtimeerror/fatal0somente na janela06:20:28.459–06:25:28.459Z.
+- Mudança funcional: link de retorno da página de compras só busca a loja quando acionado, evitando RSC especulativo desnecessário; destino, idioma, acesso e compras preservados. Matriz de cadastro/claimreal/Studio/linkreal/removersessão/reloadpúblicoanônimo:75casos/375auditorias,0falhas nos3engines. Cada cenário usa base falsa isolada; teto real10lojas sem plano intacto. Histórico de reprovações preservado acima; não houve relaxamento de assert/regra nem repetição isolada para aprovação.
+-201: lacuna autônoma de primeira loja fechada. Restam aparelhos/AT/zoomreal400% e revisão manual, aguardando o dono conforme evidência anterior; testes sintéticos não são certificaçãoAAA.202: plano de pesquisa incorporado emdocs/accessibility-real-people-plan.md; não houve recrutamento, estudo com pessoas, contato ou gasto. Seguir203acionável, sem ativação.
+- Contador130confirmado; próximo131. Custos fixos de CI: evidência localwork/marktmorgen-ci-cost-744-20261021-0604.json com30execuções concluídas/88jobs/19522segundos, subconjunto separado sem soma aos totais anteriores; exclui posteriores/emcurso/fatura. Fatura desconhecida não é zero. Nenhum novo provedor/custo variável produtivo; preços/limites/permissões/gates preservados,PLANS_ON_SALE=false. Leitura fiscal mais onerosa e meta60% continuam vinculantes, sem margem certificada.
+
 ## 203 — Teams automático para chamadas pagas (execução futura)
 
 203. [TEAMS] Links automáticos do Microsoft Teams para as chamadas pagas, construídos agora e DESLIGADOS
