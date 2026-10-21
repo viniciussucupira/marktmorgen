@@ -3446,3 +3446,34 @@ Estado inicial de todos os itens: na fila.
 **Ordem vinculante e estado:** itens220–230 **na fila**, depois do219[OP5] e de todos os trabalhos já em andamento; não bloqueiam nenhum outro. Nenhuma implementação ou ativação nesta inclusão. Reutilizar o que existe e coordenarHL1/OP2,HL5/HT16–HT17 eHL6/OP4, sem duplicação.
 
 **Proveniência:** pedido direto do dono,21/10/2026,00h56Fortaleza; anexo289c4b29-4eea-4510-a5fa-bf8cc5fe0293/Texto colado.txt, com auditoria pública atribuída pelo dono aoCopilot. Valores, fatos, interpretações e lacunas do levantamento são escopo a conferir em fontes oficiais datadas durante a execução, não afirmações verificadas por esta inclusão. Todos os itens203–219 e o texto integral mais recente deOP5 permanecem preservados. Nenhuma conta, contato, aceite, pagamento, aprovação, publicação externa, operação real, mudança de preço/limite/comissão/gate ou contratação autorizada. Margem mínima60% por cliente isolado100%direitos/pior-mês e consolidado após todosos custos/impostosBrasil/EUA; comissões/créditos/prêmios são custos variáveis do cliente indicado; desconhecido reprova, leitura fiscal mais onerosa vinculante. Novos recursos desligados até decisão do dono, com testes que impeçam oferta pública enquanto desligados.
+
+
+## EQ — Venda de cursos dos criadores para equipes de empresas (21/10/2026)
+
+### 231. [EQ1] Venda de cursos para equipes de empresas, 100% autoatendida
+
+**Estado:** na fila. **Ordem:** depois do item230 [HL11] e de todos os trabalhos em andamento; não bloqueia nenhum outro item. Implementação futura, sem iniciar este recurso nesta inclusão.
+
+Pedido: dono, 21/10/2026, 01h24 de Fortaleza. Da análise da Coursera (segmento de empresas: US$ 140,0 milhões de receita no 2º trimestre de 2026, segundo o Form 8-K da Coursera na SEC), aproveitar apenas a venda de cursos para equipes de empresas, sem copiar a assinatura de catálogo (Coursera Plus), que exigiria que o Marktmorgen recebesse o dinheiro dos alunos e o repartisse entre os criadores, contra a decisão do dono de 29/09/2026 de nunca movimentar dinheiro de terceiros.
+
+231. [EQ1] Venda de cursos para equipes de empresas, 100% autoatendida
+
+O que já existe e deve ser reutilizado, sem duplicar: a compra para várias pessoas, de 2 a 200 vagas (lib/group-buy.ts e lib/group-rules.ts); o campo de número de IVA e as faturas para compradores empresariais (lib/tax.ts e a página de checkout); os presentes (lib/gifts.ts); os cursos com provas e certificados; as assinaturas; e os papéis de equipe. Verifique o que cada um faz antes de construir.
+
+Escopo:
+1. Preço por quantidade: o criador pode definir faixas de desconto por número de vagas (por exemplo, 5% a partir de 10 vagas e 15% a partir de 50), exibidas com clareza na página do produto antes do pagamento.
+2. Assinatura por vaga: além da compra única, o criador pode vender acesso anual ou mensal por vaga, cobrado na conta Stripe dele com a quantidade de vagas da assinatura. O comprador aumenta ou diminui o número de vagas sozinho, vendo antes o valor exato calculado pela Stripe.
+3. Painel do responsável pela equipe: quem comprou vê as vagas usadas e as livres, convida pessoas por e-mail, transfere uma vaga ainda não usada, compra mais vagas pelo mesmo preço e acompanha o progresso de cada pessoa (aulas concluídas, provas e certificados), com exportação em planilha. Uma vaga já usada só pode ser transferida se o criador permitir.
+4. Entrada pelo domínio da empresa: o responsável pode permitir que qualquer pessoa com e-mail confirmado do domínio da empresa (por exemplo, @empresa.com) ocupe uma vaga livre, até o limite comprado.
+5. Pagamento por fatura: o criador pode permitir que a empresa pague por fatura emitida na conta Stripe dele (Stripe Invoicing, com prazo definido pelo criador). O acesso só é liberado quando a fatura for paga, salvo se o criador escolher liberar antes, e o risco de falta de pagamento é do criador, nunca do Marktmorgen. Gere automaticamente um orçamento em PDF para a empresa aprovar internamente, sem ligação nem reunião.
+6. Página "For teams": uma seção opcional na loja do criador, em inglês americano, explicando como a equipe compra e usa o curso, sem números de clientes, logotipos ou depoimentos que o criador não tenha comprovado.
+7. Privacidade: cada pessoa da equipe é informada, antes de começar, de que o responsável vê o progresso dela. A política de privacidade e os termos devem dizer isso, e os textos entram em vigor junto com o recurso.
+8. Estudo, sem construir: verifique se vale exportar os cursos em SCORM ou xAPI para o sistema de treinamento da empresa (LMS), e registre o resultado em docs/team-sales.md com custos e riscos de cópia do conteúdo.
+
+Custo e margem: cada vaga ocupada conta como pedido da loja, e cada convite conta como e-mail da loja, dentro dos limites do plano que já existem. Calcule o custo de leitura do painel, de armazenamento e dos PDFs, e coloque teto automático. A margem líquida mínima é de 60% (ela pode ser maior, mas nunca menor) por cliente isolado, com 100% dos direitos usados no pior mês, e também no consolidado, depois de todos os custos e de todos os impostos, inclusive os brasileiros; use a leitura que der MAIS imposto, inclusive para vendas a empresas no exterior. Custo desconhecido não pode ser considerado zero.
+
+Regras: interruptor no código, desligado, no mesmo padrão de ZOOM_APPROVED; os testes devem falhar se alguma página oferecer o recurso enquanto ele estiver desligado. É proibido criar contas, aceitar termos, contratar serviço, ligar o interruptor e alterar preços, limites visíveis, comissão, PLANS_ON_SALE, tax gate, art. 9a ou a revisão comercial. Testes somente com a Stripe simulada: nenhuma cobrança real, nenhum e-mail real e nenhum registro real de cliente alterado. Inglês americano e as exigências de acessibilidade em vigor (WCAG 2.2 AAA como ponto de partida).
+
+Estado: na fila. Ao concluir, registre o commit, o resultado da suíte completa e a publicação, e altere o estado para "pronto e desligado, aguardando o dono".
+
+**Proveniência:** instrução direta do dono,21/10/2026,01h24 Fortaleza; anexo fd80d5da-05d5-4aa5-a0e5-3d91f657de74/Texto colado.txt. Escopo preservado integralmente acima. A receita da Coursera/SEC é contexto atribuído ao pedido e exige verificação oficial datada durante a execução; não é fato conferido nesta inclusão. Preservados integralmente os itens203–230 e a revisão mais recente do OP5. Sem nova despesa operacional; custos futuros exigem cálculo e tetos antes da operação. Commit, suíte completa e publicação serão registrados quando executado; esta inclusão documental não é entrega funcional.
