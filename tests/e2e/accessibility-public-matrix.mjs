@@ -39,12 +39,25 @@ try{
      const state=await page.evaluate(()=>{const node=document.activeElement;if(!node||node===document.body)return null;const b=node.getBoundingClientRect();return {tag:node.tagName,visible:node.matches(":focus-visible"),width:b.width,height:b.height};});
      if(state){
       focused++;if(!state.visible||state.width<=0||state.height<=0)throw Error("Keyboard focus not visible "+JSON.stringify(state));
-      await page.waitForFunction(()=>{
-       const node=document.activeElement;if(!node||node===document.body)return false;
-       const r=node.getBoundingClientRect(),x=r.left+r.width/2,y=r.top+r.height/2;
-       if(x<0||x>=innerWidth||y<0||y>=innerHeight)return false;
-       const hit=document.elementFromPoint(x,y);return Boolean(hit&&(hit===node||node.contains(hit)));
-      },undefined,{timeout:5000});
+      try{
+       await page.waitForFunction(()=>{
+        const node=document.activeElement;if(!node||node===document.body)return false;
+        // An inline link can occupy several lines: the center of its union
+        // box may be empty space. Check every actual rendered fragment.
+        const rects=[...node.getClientRects()].filter(r=>r.width>0&&r.height>0);
+        return rects.length>0&&rects.every(r=>{
+         const x=r.left+r.width/2,y=r.top+r.height/2;
+         if(x<0||x>=innerWidth||y<0||y>=innerHeight)return false;
+         const hit=document.elementFromPoint(x,y);return Boolean(hit&&(hit===node||node.contains(hit)));
+        });
+       },undefined,{timeout:5000});
+      }catch(error){
+       console.error("PUBLIC_FOCUS_DIAGNOSTIC:"+JSON.stringify({engine,path,width,tab:n+1,...await page.evaluate(()=>{
+        const node=document.activeElement;if(!node)return {};
+        return {tag:node.tagName,classes:typeof node.className==="string"?node.className:"",scrollY,
+         fragments:[...node.getClientRects()].map(r=>{const x=r.left+r.width/2,y=r.top+r.height/2,hit=document.elementFromPoint(x,y);return {left:r.left,top:r.top,width:r.width,height:r.height,hitTag:hit?.tagName,hitClasses:typeof hit?.className==="string"?hit.className:"",inside:Boolean(hit&&(hit===node||node.contains(hit)))};})};
+       })}));throw error;
+      }
      }
     }
     if(!focused)throw Error("No keyboard target reached");

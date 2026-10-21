@@ -3220,6 +3220,11 @@ PR734incorporado21/10/2026 01:11:03Fortaleza(04:11:03Z),merge2439929afa780929eae
 READY21/10/2026 01:11:55.470Fortaleza(04:11:55.470Z),marktmorgen.com versãoexata2439929,dpl_A7PG69tBwdBkP868tUKuBX9tBZe9. Probes/,/signin,/signin/confirm,/pricing,/library,/privacy,/refunds200mesmoDPL,sem criar conta/mensagem/operação real;confirmaçãosemtoken é apenasleitura,fluxoautenticado testado localmente. Runtimeerror/fatal0 sójanela04:07:50.978–04:12:50.978UTC. Contador128,próximo129,avisadoapósconfirmação. Sem novo provedor/custo variável;CIcadastroteto90job-min/run,apuração completa/fatura continuamobrigatórias,desconhecido nãozero. Gates/preços/limites/optin/fiscal preservados,vendasfechadas. SemcertificarAAA/INPdecampo/margemfiscal60%.
 
 
+### Geometria de foco em links multilinha
+
+C876d675PublicFirefox119035858315 falhou2/75casos,signin320e390baseline, no novo hit-test de5s. A implementação usava o centro da caixa que une todas as linhas de um linkinline; esse ponto pode ser espaço vazio entre fragmentos,mesmo que cada fragmento seja clicável. A checagem passa a exigir centro visível/desobstruído de **cada**getClientRects comárea, mantendo timeout5s, foco real e todos os10Tabs. Não se usaum ponto arbitrário da união nem ignora timeout. Uma falha restante agora registra índiceTab,tag/classes,scroll e todos osfragmentos/hit-test,semHTML/hrefs/tokens. Causa específica de cada timeout depende dessa prova; sem declarar correção antes doCI. Scrollpaddingproduto eorigem estávelaxe mantidos,sem baixar regra/limiar ou filtrarcaso. Suíteinteira obrigatória no novohead.
+
+
 ## 203 — Teams automático para chamadas pagas (execução futura)
 
 203. [TEAMS] Links automáticos do Microsoft Teams para as chamadas pagas, construídos agora e DESLIGADOS
