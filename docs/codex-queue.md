@@ -3212,3 +3212,63 @@ Custo e margem: confirme na documentação oficial que as chamadas do Graph util
 Estado inicial: na fila. Ao concluir o item, registre o commit, o resultado da suíte completa e a publicação, e altere o estado para "pronto e desligado, aguardando a LLC e a verificação da Microsoft".
 
 **Estado: na fila.** Ordem: depois do item202 [P0-REAL-PEOPLE] e de todos os itens já em andamento; não bloqueia nenhum outro item. Esta entrada foi acrescentada ao fim do arquivo, preservando a ordem e o histórico. Proveniência integral: pedido direto do dono,20/10/2026,23h03Fortaleza, anexo3b412ee8-c4d7-4231-919b-2c9b2d11e8aa/Texto colado.txt. Fatos listados no pedido são requisitos a conferir nas fontes oficiais durante a execução, não conclusões já verificadas por este registro. Não iniciar cadastro, chamada real, aceite, verificação, custo ou ativação por causa desta inclusão. Resultado futuro exigido: commit, suíte completa, publicação e estado “pronto e desligado, aguardando a LLC e a verificação da Microsoft”.
+
+
+## SH — Superar a Shopify no mercado dos criadores (20/10/2026)
+
+Pedido: dono, 20/10/2026, 23h49 de Fortaleza: "quero superar a Shopify no mercado dos criadores e onde mais você achar bom que possa aumentar o meu lucro com segurança".
+
+Contexto já levantado (confira cada fato nas fontes oficiais antes de construir e registre as fontes com a data da consulta):
+- Planos da Shopify em 2026: Starter US$ 5, Basic US$ 39, Grow US$ 105 e Advanced US$ 399 por mês, além de 2,5% a 2,9% + 30¢ por venda com cartão online.
+- No Shopify Editions Summer '26 (junho de 2026), a Shopify ligou por padrão a venda por agentes de IA: o Universal Commerce Protocol, criado com o Google, leva os produtos ao ChatGPT, ao Copilot, ao Google AI Mode, ao Gemini e ao app Shop, onde o agente encontra o produto e conclui a compra.
+- O Marktmorgen já tem, sem aplicativo de terceiros, cursos, assinaturas, comunidade, chamadas pagas, afiliados, e-mail, funis, oferta extra no checkout, recuperação de checkout, assistente de IA, servidor MCP (que hoje só lê os números da loja para o criador), API pública com webhooks, blog, teste A/B de títulos, vários idiomas, equipe com permissões e 0% de comissão.
+- O produto enviado pelo correio tem hoje um preço só, sem opções, frete por região e envio marcado à mão; a página do recurso diz "No print-on-demand". A loja cobra numa moeda só.
+
+Regras que valem para TODOS os itens desta seção:
+1. Antes de construir, verifique no código o que já existe e reutilize os mecanismos compatíveis, sem refazer nem duplicar.
+2. Margem líquida mínima de 60% (ela pode ser maior, mas nunca menor) por cliente isolado, com 100% dos direitos usados no pior mês, e também no consolidado, depois de todos os custos e de todos os impostos, inclusive os brasileiros. Custo desconhecido não pode ser considerado zero. Nenhum custo de fornecedor pode recair sobre a plataforma sem teto automático; o custo que for do criador (etiqueta de frete, impressão sob demanda, taxa de conversão de moeda, entre outros) deve ser cobrado diretamente na conta do próprio criador, nunca na do Marktmorgen.
+3. Impostos: aplique a leitura que der MAIS imposto (docs/tax-uncertainty.md). Qualquer item que envolva venda de bens físicos deve passar pela análise de plataforma intermediária e de fornecedor presumido para bens (lei americana de marketplace facilitator, art. 14a da Diretiva do IVA da União Europeia e regras do Reino Unido), registrada em docs/eu-vat-article-9a.md e em lib/deemed-supplier.ts. Enquanto essa análise não estiver completa, o recurso fica desligado.
+4. Cada recurso novo nasce com um interruptor no código, desligado, no mesmo padrão de ZOOM_APPROVED. Enquanto ele estiver desligado, nenhuma página poderá oferecer o recurso nem apresentá-lo como disponível, e os testes devem falhar se isso acontecer.
+5. É proibido: criar contas em fornecedores, aceitar termos, contratar serviço, pedir aprovação a terceiros, ligar interruptores, alterar preços, limites visíveis, comissão, PLANS_ON_SALE, tax gate, art. 9a ou a revisão comercial. Tudo isso depende do dono.
+6. Faça os testes somente com fornecedores simulados: nenhuma chamada real, nenhum e-mail real e nenhuma alteração em registros reais de clientes.
+7. Todo texto público em inglês americano, com as exigências de acessibilidade em vigor (WCAG 2.2 AAA como ponto de partida). Não invente depoimentos, números, escassez nem urgência, e não afirme superioridade sobre a Shopify ou sobre qualquer concorrente sem fonte oficial datada.
+8. Ao concluir cada item, registre o commit, o resultado da suíte completa e a publicação, e deixe o estado como "pronto e desligado, aguardando o dono" quando houver interruptor.
+
+204. [SH1] Venda por agentes de IA (ChatGPT, Google AI Mode, Gemini e outros)
+Estude, nas fontes oficiais, os protocolos de compra por agentes que estejam em vigor (o Universal Commerce Protocol, o protocolo de comércio da OpenAI, o que a Stripe oferece para pagamentos iniciados por agentes e o que o Google exige). Em seguida, construa para cada loja um catálogo legível por máquina, apenas com dados publicados pelo criador (nome, descrição, preço, moeda, disponibilidade, termos e política de reembolso), e, se os protocolos permitirem, a conclusão da compra pelo agente com pagamento direto na conta Stripe do criador, como já acontece no checkout. O criador decide se a loja participa; o padrão é desligado. Nada de dado pessoal no catálogo. Registre em docs/agentic-commerce.md o desenho, as fontes, os custos e os passos que só o dono pode executar.
+
+205. [SH2] Produtos de marca do criador com tamanhos e cores
+Permita opções (por exemplo, tamanho e cor) nos produtos enviados pelo correio, com preço, estoque e código próprios para cada combinação, estoque baixado de forma atômica na compra e nunca vendido abaixo de zero. Acrescente o código de rastreio informado pelo criador, o aviso de envio ao comprador e um fluxo de devolução simples, com prazo e condições definidos pelo criador e coerentes com a política de reembolso. Não altere as regras atuais de frete por região sem necessidade. Verifique o efeito nos custos por plano (armazenamento, comandos e e-mails) e mantenha os limites visíveis.
+
+206. [SH3] Impressão sob demanda (Printful, Printify ou equivalentes)
+Estude as APIs oficiais e os termos de uso dos principais fornecedores de impressão sob demanda. Construa a ligação com a conta do PRÓPRIO criador (OAuth ou chave do criador, guardada com a mesma proteção dos demais tokens), o envio automático do pedido pago ao fornecedor, a atualização do rastreio e o tratamento de falhas sem perder pedidos. O fornecedor cobra o criador diretamente; o Marktmorgen nunca paga nem adianta valores. Depende do item 205 e da regra 3 (impostos sobre bens físicos). Corrija o texto "No print-on-demand" somente quando o interruptor for ligado.
+
+207. [SH4] Catálogo nos canais de venda
+Gere, para cada loja que o criador escolher, os feeds de produtos aceitos pelo Google Merchant Center, pelo catálogo da Meta (Instagram e Facebook), pelo Pinterest e, se os termos permitirem, pelo TikTok Shop e pelo YouTube Shopping, com endereço próprio que o criador cola em cada canal. Somente dados publicados; preço e disponibilidade sempre iguais aos da loja. Calcule o custo de leitura desses endereços pelos canais (requisições e comandos) e coloque teto automático.
+
+208. [SH5] Preço na moeda do comprador
+Estude, nas fontes oficiais da Stripe, a conversão automática de preço no checkout (por exemplo, o Adaptive Pricing) com cobranças diretas em contas Standard conectadas: quem paga a taxa de conversão, em que países funciona e como os reembolsos ficam. Construa somente se a taxa recair sobre o comprador ou sobre o criador, nunca sobre a plataforma, e se o criador puder ligar e desligar. Se a resposta depender da Stripe, acrescente a pergunta à cobrança diária que o dono já faz à Stripe, sem enviar nada por conta própria.
+
+209. [SH6] Cartão-presente e crédito na loja (primeiro o estudo, depois a decisão)
+Estude a legislação aplicável (Credit CARD Act e leis estaduais americanas de saldo não reclamado, regras da União Europeia, do Reino Unido e do Canadá) e registre em docs/gift-cards-study.md o que seria exigido, os riscos e os custos. Não construa nada neste item: a construção depende da decisão do dono, a partir desse estudo.
+
+210. [SH7] Importação de lojas da Shopify
+Verifique os importadores que já existem e acrescente a importação a partir dos arquivos de exportação da Shopify (produtos, opções, imagens, coleções e clientes com consentimento comprovado para receber e-mail), com pré-visualização, validação no servidor e respeito aos limites do plano, como já se exige dos outros importadores. Clientes sem consentimento comprovado entram somente como compradores, nunca na lista de e-mails.
+
+211. [SH8] Compra com um toque e conta do comprador
+Verifique se o Link, o Apple Pay e o Google Pay estão disponíveis no checkout com cobrança direta na conta do criador e se a biblioteca do comprador reúne as compras feitas em todas as lojas Marktmorgen. Corrija o que faltar, sem custo novo para a plataforma.
+
+212. [SH9] Assistente que executa tarefas do criador (comparação com o Sidekick da Shopify)
+Compare o que o Sidekick da Shopify faz com o que o assistente e as ferramentas de IA do Marktmorgen já fazem. Proponha, em docs/creator-copilot.md, as tarefas que o criador poderia pedir em linguagem natural, sempre com confirmação antes de qualquer alteração. Construa somente o que couber nos orçamentos de IA que já existem (reserva antes da chamada, teto automático e margem de 60%).
+
+213. [SH10] Página honesta "Marktmorgen vs Shopify para criadores"
+Crie uma página de comparação, em inglês americano, somente com fatos verificáveis e fontes oficiais datadas: o que cada plataforma inclui sem aplicativo pago, preços, taxas por venda e o que cada uma não faz. Publique-a apenas com o que estiver no ar e ligado; recursos desligados não aparecem. Siga as regras de SEO e de design já adotadas no site.
+
+214. [SH11] Proposta de complementos pagos que aumentem o lucro com segurança
+Com base no código de margem que já existe (lib/receiving-costs.ts e tests/margin-alignment-table.ts), calcule quais dos recursos acima poderiam ser vendidos como complementos pagos, no mesmo padrão do Store assistant, com o preço mínimo que mantém 60% em cada unidade, isoladamente, no pior caso. Registre o cálculo em docs/addon-proposals-2026-10-20.md como PROPOSTA: nenhum preço, limite ou interruptor muda sem a decisão do dono.
+
+Estado inicial de todos os itens: na fila.
+
+**Ordem vinculante:** depois do item203 [TEAMS] e de todos os itens já em andamento; não bloqueia nenhum outro. Todos permanecem **na fila**. Inclusão exclusivamente de planejamento futuro, sem implementação, contratação, conta, aceite, mensagem, aprovação ou ativação. O contexto e os fatos do pedido serão conferidos em fontes oficiais datadas antes de construir; esta inclusão não os apresenta como verificados.
+
+**Proveniência:** pedido direto do dono,20/10/2026,23h49Fortaleza; anexo51862cf3-939a-48bf-89cb-c226aa2d05cc/Texto colado.txt. Escopo integral e restrições preservados. Gift cards é somente estudo; complementos são somente proposta; Teams203 anterior permanece integralmente preservado. Recursos novos somente construídos quando chegar sua vez e com gates desligados, custos conhecidos/tetos/reserva e leitura fiscal mais onerosa; nenhuma mudança comercial autorizada por esta inclusão.
