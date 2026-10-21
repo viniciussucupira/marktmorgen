@@ -69,7 +69,7 @@ export default function PlatformIndex() {
                 <p className="text-sm font-semibold text-violet-deep">{`Step ${index+1}`}</p>
                 <h3 className="mt-2 text-2xl font-semibold tracking-tight">{stage.title}</h3>
                 <p className="mt-4 text-ink-soft">{stage.body}</p>
-                <ul className="mt-5 space-y-3">{stage.features.map(feature=><li key={feature.slug}><Link href={`/platform/${feature.slug}`} prefetch={false} className="inline-flex min-h-11 items-center gap-2 font-semibold text-violet-deep underline underline-offset-4">{feature.label}<Icon name="arrow-right" size={16}/></Link></li>)}</ul>
+                <ul className="mt-5 space-y-3">{stage.features.map(feature=><li key={feature.slug}><Link href={`/platform/${feature.slug}`} prefetch={false} className="inline-flex min-h-11 scroll-mt-32 items-center gap-2 font-semibold text-violet-deep underline underline-offset-4">{feature.label}<Icon name="arrow-right" size={16}/></Link></li>)}</ul>
               </li>)}
             </ol>
           </section>
