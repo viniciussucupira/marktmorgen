@@ -3179,6 +3179,17 @@ Head5d209df: verify/Firefox/mobile aprovados; WebKit119000075245 reprovou26asser
 Headfb9b4ee verify119005919880 expôs incompatibilidade da nova espera global networkidle com a página deexperimentos que faz leituras recorrentes: após falha503 validada390,resize ficou60s aguardando toda rede. A preparação de navegação/resize/fechamento passa a exigir apenas leiturasRSC completadas e conjunto estável200ms,com mesmo timeout60s. Leituras periódicas deAPI não são respostasRSC pendentes e continuam sujeitas às suas assertions. Nenhum pageerror,caso,contagem ou limiar deproduto é removido. Esse ajuste corrige a espera adicionada noheadanterior,sem declarar as falhasWebKit resolvidas; diagnóstico expandedStudio preservado. CI integral novo obrigatório;sem novo provedor/custo porcliente. Item203preservadoao fim.
 
 
+### Item201 — correção após head90613a7 e integração explícita de735
+
+WebKit119014702042 terminou com25falhas:24fitreminders390 e3errosRSC acumulados em umaassertiva. O diagnóstico inicial não registrouoverflow antes de escolher2/3emails; após seleção, todos24casos390falharam e1280passou. O select nativoDunning passa ao mesmo padrão limitado/appearance-none comchevron decorativo dos seletores já corrigidos, preservando opções,teclado,POST,locks e confirmação. Diagnóstico apósseleção registra medidas reais; nenhum limite de teste reduzido.
+
+A barreira deRSC já aplicada agoto/resize/close não cobria3reloads reais do owner. Reload agora também aguarda leitura dos corposRSC pendentes, commesmo timeout60s; erros de página continuam reprovando e recebem URL/stack para localizar qualquer falha restante. Verify eFirefox906passaram;mobile906falhou240ms,sem exclusão de amostras.
+
+Integração explícita do head73546afa12:prefetch dos3CTAs deplanos desativado,diagLongAnimationFrames e substituição exclusiva219OP5 preservados. Mobile119019895934 no46afa12 passou9amostras:home64/40/40ms,pricing32/32/32ms,salespages32/32/32ms;LCP564–744ms,CLS0. Isso não certificaINPdecampo nem apaga falhas240/272ms. Novohead exige suíteintegral; sem entrega antecipada.
+
+Custos reconciliados em21/10/2026~03h28UTC:231execuçõesconcluídas/653jobs/178442segundos=2974,03job-min, incluindo falhas/cancelamentos, dados anteriores730/733 e acréscimos730/734/735. Execuçõesativas/pendentes,branches731/732efaturareal não incluídas;custosdesconhecidos nãozero. Evidência localmarktmorgen-ci-cost-20261021-0328.json. Nenhum custo variável/provedor/operação/comercial novo.
+
+
 ## 203 — Teams automático para chamadas pagas (execução futura)
 
 203. [TEAMS] Links automáticos do Microsoft Teams para as chamadas pagas, construídos agora e DESLIGADOS
@@ -3292,8 +3303,52 @@ Estude os requisitos oficiais para publicar um aplicativo público no Zapier e n
 218. [OP4] Calculadora pública "quanto custa a sua Shopify com aplicativos"
 Crie, em inglês americano, uma calculadora pública que some a mensalidade da Shopify, os aplicativos de curso, comunidade, assinatura, e-mail e agendamento mais usados e as taxas por venda, e compare a soma com o plano do Marktmorgen que entrega o mesmo. Use somente preços de fontes oficiais, com a data da consulta exibida na página e uma rotina que acuse preços com mais de 90 dias sem revisão. Nada de valores inventados ou de afirmação de superioridade sem fonte. Siga as regras de SEO e de design já adotadas no site e mostre apenas recursos que estejam ligados.
 
-219. [OP5] Loja montada pela IA em minutos
-Verifique o que o cadastro, o Marktmorgen Path e as ferramentas de IA já fazem. Permita que o criador cole o endereço público do próprio Instagram, Linktree ou loja Shopify e receba um rascunho de loja (nome, descrição, produtos e preços) para revisar e aprovar antes de qualquer publicação. Leia somente páginas públicas, respeitando os termos de uso de cada site e o robots.txt; se algum site proibir a leitura, aceite apenas o texto colado pelo criador. Nada é publicado sem a confirmação dele. A chamada à IA deve ser reservada antes, com teto automático, dentro dos orçamentos de IA que já existem e mantendo os 60%.
+219. [OP5] Loja completa montada pela IA a partir do que o criador já tem: muito superior à de todos os concorrentes e extremamente fácil de usar
+
+Pedido: dono, 21/10/2026, 00h12, 00h16 e 00h19 de Fortaleza: "quero coisa super excelente, melhor que todos os concorrentes e que aumente o meu lucro" e "compare com HighLevel, Hotmart, ClickFunnels, Kajabi, Shopify e outros; faça muito mais superior, infinitamente superior e fácil de usar, super fácil".
+
+Onde a loja é montada: no próprio Marktmorgen, no studio do criador, inteiramente como rascunho oculto. Ela só vai ao ar (em marktmorgen.com/@nome ou no domínio próprio do criador) depois que ele aprovar. Nada é alterado no Instagram, no Linktree, na Shopify nem em qualquer outro site.
+
+Concorrentes (levantamento de 21/10/2026; confira cada fato nas fontes oficiais e registre-as com a data da consulta):
+- HighLevel (Funnels & Websites AI): começa por perguntas guiadas, por texto livre ou por um link ou imagem usados apenas como referência; gera página de funil ou site com textos, imagens e SEO; permite edição por conversa e continua a geração se o navegador for fechado. Não monta produtos, checkout nem e-mails, e o link não importa conteúdo.
+- ClickFunnels AI (beta): começa pela descrição do negócio, em modo rápido ou em modo pesquisa (avatar do cliente e tipo de funil); gera páginas do funil, textos e imagens. O anúncio não menciona produtos nem e-mails.
+- Kajabi Cofounder: conversa no painel e, opcionalmente, analisa a presença on-line do criador a partir do e-mail dele; gera rascunhos de cursos, ofertas, páginas e e-mails e um plano de 3 a 6 passos. Não publica, não cria imagens e não monta automações: segundo o próprio Kajabi, o criador constrói, configura e publica tudo.
+- Hotmart: o Launchpad (beta desde 10/09/2026) cria aplicativos e páginas a partir de texto. No Hotmart Pages, a página de vendas com IA (artigo da Central de Ajuda lido em 21/10/2026) exige um produto já cadastrado e aprovado; o produtor escolhe um modelo, o produto e a oferta, e a IA gera a estrutura inicial de UMA página de vendas (títulos, textos e seções), revisada em cinco etapas (cores, apresentação do produto, descrição com vídeo opcional, autor e oferta), com edição manual ou nova geração por IA. Garantia, parcelamento e perguntas frequentes são configurados depois, à mão, no editor, e a própria Hotmart avisa que a página "não substitui a revisão manual". Não monta a loja, os produtos, o checkout nem os e-mails.
+- Shopify: gera uma vitrine a partir de palavras-chave, que o lojista ajusta à mão no editor; o foco é produto físico.
+- Wix (por conversa) e Squarespace Blueprint (5 passos guiados): geram sites completos, não lojas de criador.
+- Stan: a IA dela (Stanley) ajuda a criar posts para redes sociais; não foi encontrado construtor de loja.
+- Beacons: tem configuração guiada por IA, sem detalhes publicados.
+Verifique também Systeme.io, Kartra, Teachable, Thinkific, Podia, Gumroad, Whop e os demais da lista dos 30 concorrentes. Registre a comparação completa em docs/ai-store-builder.md.
+
+O Marktmorgen já tem writeStoreSetup (lib/ai.ts, lib/store-setup.ts e components/store-setup-ai.tsx), que gera, a partir de algumas frases, três opções de apresentação, até três produtos em rascunho e as perguntas frequentes. Reutilize esse mecanismo, os importadores de lib/imports.ts, os modelos de funil e de e-mail e o Marktmorgen Path; não duplique a lógica.
+
+Objetivo: ser, comprovadamente, o único construtor que (1) começa pelo conteúdo real que o criador já tem, (2) entrega o negócio inteiro pronto para vender, e não só páginas ou textos, (3) exige uma única aprovação para publicar e (4) é o mais fácil de usar, com a facilidade medida.
+
+Escopo:
+1. Entradas: um único campo, "Paste your link or tell us what you sell", e o botão "Continue with Instagram". Aceite o Instagram somente pelo login oficial do próprio criador, por meio da API oficial da Meta (verifique nas regras da Meta quais contas são aceitas, como a conta profissional, e quais dados podem ser lidos); o endereço público da página do criador no Linktree, na Stan, na Beacons, na Gumroad, na Shopify, no YouTube ou no site próprio; e o texto colado por ele. Antes de ler qualquer site, verifique os termos de uso e o robots.txt; onde a leitura automática não for permitida, aceite somente o texto colado ou o arquivo de exportação oficial do criador. Leia apenas páginas do próprio criador, com a declaração dele de que são dele.
+2. Perguntas: no máximo 3, respondidas com botões, e somente quando faltar algo indispensável.
+3. Saída: o negócio completo em rascunho, com:
+   - o nome e três opções de apresentação;
+   - cores e estilo derivados da foto ou do logotipo enviados pelo criador;
+   - os produtos que ele já vende, com os preços que ele já pratica (sem preço inventado: na falta dele, o campo fica vazio);
+   - o checkout com a sugestão de oferta extra;
+   - um brinde gratuito em troca do e-mail, quando fizer sentido;
+   - a sequência de e-mails de boas-vindas;
+   - as perguntas frequentes e a escolha da política de reembolso;
+   - os primeiros passos do Marktmorgen Path até a primeira venda;
+   - a loja já traduzida para os idiomas que o criador escolher, entre os que o site já oferece.
+4. Montagem: o progresso real aparece passo a passo, sem barra falsa. A montagem continua se o criador fechar o navegador, e ele é avisado quando terminar.
+5. Revisão: prévia na largura de celular, ao lado da página antiga do criador. Cada parte tem os botões "Keep", "Change" e "Remove". "Change" aceita edição à mão ou um pedido em linguagem natural (por exemplo, "make it warmer" ou "change the course price"). Ofereça "Undo" em tudo e histórico de versões.
+6. Publicação: um único botão, "Publish my store", que mostra o que ainda falta (por exemplo, ligar o Stripe ou enviar o arquivo do produto) e leva direto a cada etapa. Nada é publicado, e nenhum e-mail é enviado, sem a aprovação explícita do criador.
+7. Facilidade medida: meça, em testes automatizados com fornecedores simulados, o tempo e o número de cliques desde o envio das fontes até a loja pronta para revisão e até a publicação, e registre os resultados. Inclua estes fluxos no plano de testes com pessoas reais do item 202. Nenhuma página pública pode afirmar que o recurso é mais rápido ou mais fácil que o de um concorrente sem uma comparação medida e registrada; a expressão "in minutes", ou qualquer número de minutos, só pode aparecer se a medição comprovar.
+8. Honestidade: nenhum depoimento, número de seguidores, alunos ou compradores, resultado, garantia, prazo, bônus, escassez ou urgência que o criador não tenha publicado. Todo texto da IA passa pelos filtros que já existem (honesty e heldToFacts, ou equivalentes).
+9. Lucro: o objetivo é que mais criadores terminem a loja durante o teste grátis e passem a pagar, e que a loja já nasça com lista de e-mails e oferta extra, para que o criador venda mais e cancele menos. Quando o rascunho usar um recurso que só existe num plano acima do atual, a loja deve informar isso com clareza e honestidade, sem pressão.
+10. Custo: cada chamada à IA é reservada antes, com teto automático, dentro dos orçamentos de IA que já existem; as leituras de páginas têm limite por loja e por dia. A margem líquida mínima é de 60% (ela pode ser maior, mas nunca menor) por cliente isolado, com 100% dos direitos usados no pior mês, e também no consolidado, depois de todos os custos e de todos os impostos, inclusive os brasileiros. Custo desconhecido não pode ser considerado zero.
+11. Privacidade: guarde apenas o que entrar na loja aprovada; o restante do que foi lido é apagado logo após a revisão. A política de privacidade deve dizer isso, e o texto entra em vigor junto com o recurso.
+12. Interruptor no código, desligado, no mesmo padrão de ZOOM_APPROVED. É proibido criar contas, registrar aplicativo na Meta, aceitar termos, pedir aprovações ou ligar o interruptor: isso depende do dono.
+13. Inglês americano e as mesmas exigências de acessibilidade (WCAG 2.2 AAA como ponto de partida) das demais telas, incluindo uso completo por teclado e por leitor de tela. Testes somente com fornecedores e páginas simulados.
+
+Estado: na fila. Ao concluir, registre o commit, o resultado da suíte completa e a publicação, e altere o estado para "pronto e desligado, aguardando o dono".
 
 Estado inicial de todos os itens: na fila.
 

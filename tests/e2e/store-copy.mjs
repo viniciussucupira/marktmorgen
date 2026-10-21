@@ -252,8 +252,9 @@ try {
         },undefined,{timeout:60000});
         await page.evaluate(()=>{delete window.__mmRscIdleSince;});
       };
-      const goto=page.goto.bind(page),resize=page.setViewportSize.bind(page),close=page.close.bind(page);
+      const goto=page.goto.bind(page),reload=page.reload.bind(page),resize=page.setViewportSize.bind(page),close=page.close.bind(page);
       page.goto=async (...args)=>{await settle();return goto(...args);};
+      page.reload=async (...args)=>{await settle();return reload(...args);};
       page.setViewportSize=async (...args)=>{await settle();const result=await resize(...args);await settle();return result;};
       page.close=async (...args)=>{await settle();return close(...args);};
       return page;
@@ -275,7 +276,7 @@ try {
   };
   console.log(`BROWSER_ENGINE_REPORT:${JSON.stringify({ requested: engine, actual: browserType.name(), version: browser.version() })}`);
   const errors = [];
-  const watch = (page) => page.on("pageerror", (error) => errors.push(String(error)));
+  const watch = (page) => page.on("pageerror", (error) => {console.error("WATCHED_PAGE_ERROR:"+JSON.stringify({url:page.url(),error:String(error),stack:error.stack}));errors.push(String(error));});
   const open = async (page, url) => { const response=await page.goto(url,{waitUntil:"networkidle",timeout:60000}); if(!new URL(url).pathname.startsWith("/@"))is("platform document declares American English",await page.locator("html").getAttribute("lang"),"en-US"); return response; };
   const studio = await browser.newContext({ serviceWorkers: "block", viewport: { width: 1280, height: 900 } });
   await studio.addCookies([{ name: "nl_session", value: session, url: LOCAL }]);

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Icon } from "@/components/icons";
 import { toast } from "@/components/toast";
 import { CARD_NOTICE_DAYS, type Dunning, REMINDER_CHOICES, REMINDER_DAYS, type ReminderCount } from "@/lib/dunning-rules";
 import { STUDIO_MESSAGES } from "@/lib/studio-messages";
@@ -88,12 +89,13 @@ export function DunningEditor({ dunning, connected }: { dunning: Dunning; connec
           void save();
         }}
       >
-        <label className="block" htmlFor="dunning-reminders">
+        <label className="block min-w-0" htmlFor="dunning-reminders">
           <span className="field-label">Emails about each failed payment</span>
+          <span className="relative mt-2 block min-w-0">
           <select
             id="dunning-reminders"
             disabled={busy}
-            className="field mt-2"
+            className="field block w-full min-w-0 max-w-full appearance-none overflow-hidden pr-10"
             value={reminders}
             onChange={(event) => setReminders(Number(event.target.value) as ReminderCount)}
           >
@@ -103,6 +105,8 @@ export function DunningEditor({ dunning, connected }: { dunning: Dunning; connec
               </option>
             ))}
           </select>
+          <Icon name="chevron-down" size={16} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-ink-soft" />
+          </span>
         </label>
         <label className="flex min-h-11 items-center gap-3 text-sm text-ink" htmlFor="dunning-card">
           <input disabled={busy} id="dunning-card" type="checkbox" className="h-5 w-5" checked={cardNotice} onChange={(event) => setCardNotice(event.target.checked)} />
