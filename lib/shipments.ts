@@ -33,7 +33,7 @@ export function readTracking(raw: unknown): string | null {
   if (typed.length > 500) return null;
   try {
     const url = new URL(typed);
-    return url.protocol === "https:" && url.hostname.includes(".") ? url.toString() : null;
+    return url.protocol === "https:" && url.hostname.includes(".") && !url.username && !url.password ? url.toString() : null;
   } catch {
     return null;
   }
@@ -75,11 +75,16 @@ export async function markShipped(store: Store, session: string, rawTracking: un
   if (!saleHandles(store).has(meta.store ?? "") || !wasShipped(row) || !isSettled(row as never)) return { ok: false, reason: "unknown" };
   const shipped: Shipped = { at: nowSeconds, tracking };
   // Taken first: two presses, two tabs, one email.
-  const [claimed] = await redisPipeline([["SET", doneKey(session), JSON.stringify(shipped), "NX", "EX", KEEP_SECONDS]]);
+  let claimed: unknown;
+  try {
+    [claimed] = await redisPipeline([["SET", doneKey(session), JSON.stringify(shipped), "NX", "EX", KEEP_SECONDS]]);
+  } catch { return { ok: false, reason: "unknown" }; }
   if (claimed === null) {
     const kept = (await readShipped([session])).get(session);
     return { ok: true, shipped: kept ?? shipped, emailed: false };
   }
+  // Only an explicit storage acknowledgment grants the right to send.
+  if (claimed !== "OK") return { ok: false, reason: "unknown" };
   const email = (row.customer_details as { email?: unknown } | null | undefined)?.email;
   if (typeof email !== "string" || !email.includes("@")) return { ok: true, shipped, emailed: false };
   const sw = shippingWords(store.language);

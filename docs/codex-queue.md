@@ -3913,6 +3913,13 @@ PR #758 incorporado às 07:29:57 de Fortaleza (10:29:57Z), commit5b1bbec1154e1bd
 
 Próximo incremento204: adaptador interno de lote parcial ACP2026-04-17, fonte canônica fixada7fdd78df677a94dce04c770644b0fbbb1401272b. Lista explícita de campos, IDs exportados com escopo da loja sem mudar IDs persistidos, limites24entradas/64.000bytes UTF-8, políticas HTTPS e estoque desconhecido recusado. Testes somente fictícios; sem endpoint/upload externo/checkout/ativação. Item204 incompleto, AGENTIC_COMMERCE_APPROVED=false. Custos operacionais desconhecidos continuam reprovando; função pura sem provedor, rede, armazenamento ou dependência nova. CI permanece custo da empresa com fatura desconhecida, não zero. SH/preços/limites/PLANS_ON_SALE/tax gate/art.9a/opt-in preservados.
 
+
+### SH2/205 — reutilização de envio e proteção de confirmação (21/10/2026)
+
+Frete regional, opções de preço e rastreio já existem; não serão refeitos. Revisão encontrou que markShipped prosseguia para e-mail após resposta de gravação diferente de null sem exigir confirmação OK. Correção exige OK literal antes do envio; falha de transporte ou confirmação desconhecida retorna erro existente e não envia. URLs de rastreio com credenciais são recusadas. Testes simulados cobrem respostas malformadas, falha de armazenamento, zero e-mails nesses casos e preservam o envio normal único. Nenhuma mensagem real, conta, pagamento ou operação externa. Sem novo provedor, dependência, armazenamento ou preço/limite; CI é custo da empresa, fatura desconhecida não é zero. Item205 continua incompleto quanto a SKU/estoque por combinação e devoluções; controles fiscais e SH preservados.
+
+PR #759 incorporado em21/10/2026 às08:01:05 de Fortaleza (11:01:05Z), commitfb3aa98b2f9d6316cd554d5a4c3fa18eaabad2d1; headccd8ee400f2b69104ba308d5235595c9757da8fd aprovado22/22, árvore prevista/incorporada igual à testadacb6ca340a89b682c5c32cb35fa9feae23be6b281. Adaptador interno sem rota ou ativação, não é entrega funcional; contador134 preservado. READY e domínio na versão exata confirmados, deploymentdpl_FC29r8Y3KTTwsEGPogs6LuejPqUj.
+
 ## GR — Lições da auditoria do Gumroad (21/10/2026)
 
 Proveniência: pedido direto do dono nesta conversa, 21/10/2026, 04h13 de Fortaleza. Ordem: depois do item 269 [KT3] e de todos os itens já em andamento; não bloqueia nenhum outro item. Itens 203–269 dos pedidos abertos preservados integralmente na ancestralidade desta fila. As afirmações sobre Gumroad abaixo são insumos da auditoria, ainda sujeitas a conferência oficial datada antes de qualquer uso público.
