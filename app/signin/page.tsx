@@ -285,11 +285,11 @@ export default async function SignInPage({
 
         <p className="mx-auto mt-12 w-full max-w-md text-sm text-ink-mute">
           By continuing you agree to the{" "}
-          <Link href="/terms" className="link font-medium">
+          <Link prefetch={false} href="/terms" className="link font-medium">
             Terms
           </Link>{" "}
           and the{" "}
-          <Link href="/privacy" className="link font-medium">
+          <Link prefetch={false} href="/privacy" className="link font-medium">
             Privacy Policy
           </Link>
           .
