@@ -3901,6 +3901,11 @@ PR #757: permissões e reservas de custo do Teams exigem confirmação booleana 
 
 Custos CI: reconciliação local marktmorgen-ci-cost-20261021-0855.json cobre 636 execuções completas únicas, 1.862 jobs, 558.191 segundos; 99 execuções/301 jobs/108.371 segundos adicionais observados em relação ao snapshot 0732, sem somar novamente deltas sobrepostos. Duração não equivale a cobrança; fatura efetiva desconhecida, nunca zero. Sem novo provedor, dependência, armazenamento ou operação de produção nesta alteração. Todos os gates SH, PLANS_ON_SALE=false, preços, limites, opt-in e controles fiscais permanecem vinculantes.
 
+
+### SH1/204 — catálogo interno em implementação (21/10/2026)
+
+Projeção pura por lista explícita de campos públicos e testes sintéticos de privacidade, consentimento, disponibilidade desconhecida e URLs preparados. Sem endpoint, importação externa, checkout por agente ou integração ativada; AGENTIC_COMMERCE_APPROVED=false. Desenho, fontes oficiais consultadas em 21/10 e pendências em docs/agentic-commerce.md. Custos operacionais desconhecidos reprovam; sem novos custos de provedor nesta função pura. Item 204 continua incompleto. PR #757 incorporado às 06:47:58 de Fortaleza (09:47:58Z), commit 29e785f25d28323385d8e97a81d7ac9fbf26e8fe, 22/22 checks completos, árvore testada igual à incorporada; Teams permanece incompleto/desligado e não incrementa entrega funcional. Contador133 preservado.
+
 ## GR — Lições da auditoria do Gumroad (21/10/2026)
 
 Proveniência: pedido direto do dono nesta conversa, 21/10/2026, 04h13 de Fortaleza. Ordem: depois do item 269 [KT3] e de todos os itens já em andamento; não bloqueia nenhum outro item. Itens 203–269 dos pedidos abertos preservados integralmente na ancestralidade desta fila. As afirmações sobre Gumroad abaixo são insumos da auditoria, ainda sujeitas a conferência oficial datada antes de qualquer uso público.
