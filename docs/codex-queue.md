@@ -3230,6 +3230,10 @@ C876d675PublicFirefox119035858315 falhou2/75casos,signin320e390baseline, no novo
 Head2d791: Public Chromium119037760183 falhou11/75 por timeout10s ao exigir origem estável após Tab; Firefox/WebKit passaram. O hit-test dos fragmentos não foi a falha observada. O navegador pode continuar o scroll suave iniciado pelo foco após o pedido de retorno à origem. O harness agora aguarda primeiro200ms sem mudança real de scroll, com limite10s, e só então pede origem instantânea; mantém a exigência de origem0,0 estável200ms, todos os10Tabs, hit-tests e regras axe. Sem reduzir critérios, ignorar casos ou reexecutar job isolado: suíte completa no novo head. Sem novo provedor/custo operacional; minutos CI continuam custo fixo da empresa com fatura desconhecida não considerada zero.
 
 
+### P0-201 — diagnóstico explícito da origem de scroll (21/10/2026)
+
+Headb7a5: Chromium público passou; Firefox119039947008 falhou1/75 em/signin1280baseline por timeout10s, sem diagnóstico de foco. Os dois waits de scroll usavam a mesma mensagem e não permitem distinguir estabilização do teclado de retorno à origem. Acrescentado diagnóstico por etapa, posição real, estado do relógio e elemento ativo, sem conteúdo pessoal. Nenhum timeout, limiar, caso ou regra alterado; investigação continua com suíte completa no novo head. Não declarado concluído nem publicado.
+
 ## 203 — Teams automático para chamadas pagas (execução futura)
 
 203. [TEAMS] Links automáticos do Microsoft Teams para as chamadas pagas, construídos agora e DESLIGADOS

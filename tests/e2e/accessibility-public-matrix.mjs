@@ -67,16 +67,16 @@ try{
    // Native focus may still be animating a smooth scroll in Chromium.
    // Wait for the real keyboard scroll to finish before requesting audit origin.
    await page.evaluate(()=>{document.activeElement?.blur?.();});
-   await page.waitForFunction(()=>{
+   try{await page.waitForFunction(()=>{
     const key=scrollX+","+scrollY,previous=window.__publicKeyboardScroll;
     if(!previous||previous.key!==key){window.__publicKeyboardScroll={key,since:performance.now()};return false;}
     return performance.now()-previous.since>=200;
-   },undefined,{timeout:10000});
+   },undefined,{timeout:10000});}catch(error){console.error("PUBLIC_SCROLL_DIAGNOSTIC:"+JSON.stringify({engine,path,width,stage:"keyboard-settlement",...await page.evaluate(()=>({x:scrollX,y:scrollY,state:window.__publicKeyboardScroll,active:document.activeElement?.tagName}))}));throw error;}
    await page.evaluate(()=>{delete window.__publicKeyboardScroll;window.scrollTo({top:0,left:0,behavior:"instant"});});
-   await page.waitForFunction(()=>{
+   try{await page.waitForFunction(()=>{
     if(scrollX!==0||scrollY!==0){delete window.__publicOriginSince;return false;}
     window.__publicOriginSince??=performance.now();return performance.now()-window.__publicOriginSince>=200;
-   },undefined,{timeout:10000});
+   },undefined,{timeout:10000});}catch(error){console.error("PUBLIC_SCROLL_DIAGNOSTIC:"+JSON.stringify({engine,path,width,stage:"audit-origin",...await page.evaluate(()=>({x:scrollX,y:scrollY,originSince:window.__publicOriginSince,active:document.activeElement?.tagName,scrollBehavior:getComputedStyle(document.documentElement).scrollBehavior}))}));throw error;}
    await page.evaluate(()=>{delete window.__publicOriginSince;});
    await page.addScriptTag({content:axe});
    const report=await page.evaluate(async()=>{
