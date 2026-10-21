@@ -48,3 +48,13 @@ All checked21October2026; recheck before implementation or activation:
 - https://learn.microsoft.com/entra/identity-platform/howto-update-permissions — user/admin consent-management distinction.
 
 Status: foundation under verification; not “ready and disabled” until adapter, full synthetic flows and cost gates are completed.
+
+## Graph transport increment — 21 October 2026
+
+lib/microsoft-teams-graph.ts now prepares default-calendar capability/create and owned-event move/delete operations. Production network access is blocked by TEAMS_APPROVED=false before allowance reservation. Only an explicit127.0.0.1 fixture in a non-production process is accepted for synthetic verification; arbitrary endpoints and production loopback overrides are refused. Each actual request requires an allowance reservation, has8s timeout,1MB streamed response bound, no redirect following, no automatic retries and no provider-body/token error disclosure. Caller integration must supply the real store allowance and encrypted connection token; those connections/routes are not implemented here.
+
+Moves patch only start/end, preserving the provider meeting body/blob and attendees. Synthetic creation has no attendees, and tests send no external invitation. Official update/delete documentation checked21October2026:
+- https://learn.microsoft.com/en-us/graph/api/event-update?view=graph-rest-1.0
+- https://learn.microsoft.com/en-us/graph/api/event-delete?view=graph-rest-1.0
+
+These endpoints may notify existing attendees when used for a real meeting. That behavior must be explained and checked in the future creator-approved booking lifecycle; no claim of notification-free production deletion is made. OAuth, credential lifecycle, connection binding, real allowance wiring and end-to-end booking are still incomplete. All cost/license/tax gates above remain failing or unknown, not zero. No activation or functional-delivery count.
