@@ -130,6 +130,21 @@ async function main(): Promise<void> {
   part("Marked as shipped");
   is("a tracking link is an https address, or nothing", [readTracking(""), readTracking("http://x.com"), readTracking("https://tools.usps.com/go?x=1")], ["", null, "https://tools.usps.com/go?x=1"]);
   is("a link that is not one is refused", (await markShipped(store, session.id as string, "javascript:alert(1)")).ok ? "marked" : "refused", "refused");
+  is("tracking URLs cannot carry credentials", readTracking("https://user:secret@tools.usps.com/go"), null);
+  const originalPipeline: typeof redis.pipeline = redis.pipeline.bind(redis);
+  try {
+    for (const acknowledgement of [undefined, false, 0, 1, "true", {}, []]) {
+      redis.pipeline = async (commands) => commands.some(command => command[0] === "SET" && String(command[1]).startsWith("nl:ship:done:"))
+        ? [acknowledgement] : originalPipeline(commands);
+      const refusedClaim = await markShipped(store, session.id as string, "");
+      is("unknown claim acknowledgment refuses before mail", [refusedClaim.ok, emails.length], [false, 0]);
+    }
+    redis.pipeline = async (commands) => {
+      if (commands.some(command => command[0] === "SET" && String(command[1]).startsWith("nl:ship:done:"))) throw new Error("synthetic storage outage");
+      return originalPipeline(commands);
+    };
+    is("claim transport failure refuses before mail", [(await markShipped(store, session.id as string, "")).ok, emails.length], [false, 0]);
+  } finally { redis.pipeline = originalPipeline; }
   const marked = await markShipped(store, session.id as string, "https://tools.usps.com/go?x=1");
   const mail = emails.at(-1)!;
   is("the buyer gets one email, with the tracking link and the address", [marked.ok && marked.emailed, mail.to, mail.subject, mail.text.includes("https://tools.usps.com/go?x=1"), mail.text.includes("Austin, TX 78701")], [true, "ana@example.com", "The Supper Book is on its way", true, true]);
