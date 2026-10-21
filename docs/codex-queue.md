@@ -4030,6 +4030,10 @@ A matriz de envio já confirmou os casos negativos e confirmação sem e-mail; f
 
 Apuração de CI em21/10/2026 às20:16:12.911Z:858execuções concluídas únicas,2528jobs,786498segundos,0durações desconhecidas; delta77execuções/231jobs/78260segundos desde a evidência781/2297/708238. Inclui falhas/cancelamentos, exclui ativos/posteriores/não listados; duração não é fatura, cobrança real desconhecida. Arquivo local marktmorgen-ci-cost-20261021-2020.json e continuidade preservam evidência. Gates fiscais/comerciais e limites permanecem.
 
+### Leitura da lista de descontos do provedor — correção independente
+
+Auditoria após a entrega145: listCodes convertia data ausente/não-array em [] com state=ok e descartava silenciosamente linhas semID/código. A rota usa essa lista para reconciliar hasDiscounts, portanto uma resposta ilegível podia esconder o campo de código no checkout. Próxima correção em branch própria: exigir data próprio=array e todas as linhas legíveis comIDs únicos antes de permitir reconciliação. Lista vazia explícita continua válida; IDs/grafia/percentuais do criador preservados. Testes substituem fetch integralmente, exigem origem127.0.0.1 e cobrem resposta ilegível, linha parcial, duplicatas, vazio explícito, registro válido e erroHTTP. Nenhuma requisição/fornecedor/chave/TTL/teto novo; incremento máximo operacional mensal/anual por plano0/0, não fatura0. Sem Stripe real, conta, pagamento ou e-mail. CI remoto completo necessário; PR772 de confirmação no navegador continua independente e deve ser integrado explicitamente antes da incorporação se main avançar. Gates/preços/limites/opt-in preservados.
+
 ## SEO — Visibilidade do Marktmorgen no Google (21/10/2026)
 
 271. [SEO1] Auditar, corrigir e melhorar presença orgânica na busca do Google
