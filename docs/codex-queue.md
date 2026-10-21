@@ -3927,6 +3927,13 @@ PR #760 incorporado em21/10/2026 às08:25:07 de Fortaleza (11:25:07Z), commite71
 
 Próxima proteção205: takeLock compartilhado e trava de estoque exigem confirmação OK literal; resposta desconhecida não autoriza propriedade nem abertura de checkout. Contenção null mantém comportamento existente. Testes simulados verificam rejeição, aquisição/liberação normal e zero abertura no estoque com respostas malformadas. Sem novos comandos/provedor/armazenamento/dependências ou alterações de preços/limites. CI segue custo da empresa com fatura desconhecida, não zero. Auditoria de expiração/fencing, leituras de estoque malformadas, variantes/SKU e devoluções permanece pendente; não declarar item205 completo ou atomicidade certificada. Gates SH/fiscais/opt-in preservados.
 
+
+### Registro operacional — publicação 136 e leitura de estoque (21/10/2026)
+
+PR #761 incorporado em 21/10/2026 às 09:03:04 de Fortaleza (12:03:04Z), commit `873d508c0d2c8a9cc52da5ca4672d8a1ec1ddf1a`; head `ae2ef1cb3170f7e9cd97ae781e6f457111ba0afb` aprovado em 22/22 checks. Árvore prevista/incorporada igual à testada `03390da998f447edd826acd687f1910e2bc1e941`. Publicação 136 READY às 12:04:13.316Z, domínio marktmorgen.com na versão exata, deployment `dpl_799ZqExQoa63HPAxFunZMZd7ApkC`. Cinco rotas /, /platform, /pricing, /mission e /library responderam 200 no mesmo deployment. Zero error/fatal somente na janela 11:59:45.258Z–12:04:45.258Z. Respostas desconhecidas não adquirem trava nem abrem checkout. Falha inicial TS7022 no teste corrigida com tipo explícito; verificação completa repetida no novo head, sem job isolado.
+
+Próxima correção 205: leitura de holds inválida ou desconhecida não equivale a conjunto vazio. Respostas não-array, pares incompletos, IDs duplicados e registros JSON inválidos recusam antes de abrir checkout, com erro sanitizado. Testes fictícios cobrem respostas malformadas e zero aberturas, preservando estoque realmente vazio e hold pago. Sem novo comando, armazenamento, provedor ou dependência; fatura CI desconhecida, nunca zero. Preços, limites visíveis, conteúdo/idiomas/IDs, opt-in, PLANS_ON_SALE e gates fiscais/SH preservados. Expiração/fencing, SKU/estoque por combinação e devoluções continuam pendentes; item 205 não concluído.
+
 ## GR — Lições da auditoria do Gumroad (21/10/2026)
 
 Proveniência: pedido direto do dono nesta conversa, 21/10/2026, 04h13 de Fortaleza. Ordem: depois do item 269 [KT3] e de todos os itens já em andamento; não bloqueia nenhum outro item. Itens 203–269 dos pedidos abertos preservados integralmente na ancestralidade desta fila. As afirmações sobre Gumroad abaixo são insumos da auditoria, ainda sujeitas a conferência oficial datada antes de qualquer uso público.
