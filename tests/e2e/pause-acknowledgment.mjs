@@ -31,7 +31,7 @@ export async function checkPauseAcknowledgment({browser,LOCAL,fixtures,is}){
     if(work.scenario.abort){await route.abort("failed");return;}
     await route.fulfill({status:work.scenario.status??200,contentType:"application/json",body:work.scenario.raw??JSON.stringify(work.scenario.body(chosen))});
    });
-   await page.goto(LOCAL+"/studio?store="+fixture.sid,{waitUntil:"domcontentloaded",timeout:60000});
+   await page.goto(LOCAL+"/studio?store="+fixture.sid,{waitUntil:"networkidle",timeout:60000});
    const section=page.locator("[data-pause-editor]"),form=section.locator("form"),field=section.getByRole("combobox",{name:/Members may pause for/});
    try{await section.waitFor({state:"attached",timeout:15000});}
    catch(error){console.log("Pause fixture page",page.url(),(await page.locator("main").innerText()).slice(0,6000));throw error;}

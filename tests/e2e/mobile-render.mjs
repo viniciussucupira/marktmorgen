@@ -21,12 +21,19 @@ try{
    await cdp.send("Network.emulateNetworkConditions",{offline:false,latency:150,downloadThroughput:1600000/8,uploadThroughput:750000/8});
    let writes=0;await page.route("**/*",route=>{const request=route.request(),url=new URL(request.url());if(!["GET","HEAD"].includes(request.method())){writes++;return route.abort();}if(url.pathname.startsWith("/api/")||url.origin!==LOCAL)return route.abort();return route.continue();});
    await page.addInitScript(()=>{
-    window.__renderLab={lcp:null,cls:0,lastShift:0,windowStart:0,windowScore:0,paint:[],events:[],shifts:[],longTasks:[]};
+    window.__renderLab={lcp:null,cls:0,lastShift:0,windowStart:0,windowScore:0,paint:[],events:[],shifts:[],longTasks:[],animationFrames:[],inputTargets:[]};
     new PerformanceObserver(list=>{for(const entry of list.getEntries())window.__renderLab.lcp=entry.startTime;}).observe({type:"largest-contentful-paint",buffered:true});
     new PerformanceObserver(list=>{const state=window.__renderLab;for(const entry of list.getEntries()){if(entry.hadRecentInput)continue;state.shifts.push({value:entry.value,at:entry.startTime,sources:(entry.sources??[]).map(source=>({node:source.node?.outerHTML?.slice(0,220),previous:source.previousRect,current:source.currentRect}))});if(!state.windowStart||entry.startTime-state.lastShift>1000||entry.startTime-state.windowStart>5000){state.windowStart=entry.startTime;state.windowScore=0;}state.lastShift=entry.startTime;state.windowScore+=entry.value;state.cls=Math.max(state.cls,state.windowScore);}}).observe({type:"layout-shift",buffered:true});
     if(PerformanceObserver.supportedEntryTypes.includes("event"))new PerformanceObserver(list=>{for(const entry of list.getEntries())if(entry.interactionId)window.__renderLab.events.push({id:entry.interactionId,duration:entry.duration,name:entry.name,startTime:entry.startTime,processingStart:entry.processingStart,processingEnd:entry.processingEnd});}).observe({type:"event",buffered:true,durationThreshold:16});
     if(PerformanceObserver.supportedEntryTypes.includes("longtask"))new PerformanceObserver(list=>{for(const entry of list.getEntries())window.__renderLab.longTasks.push({startTime:entry.startTime,duration:entry.duration});}).observe({type:"longtask",buffered:true});
-    document.addEventListener("pointerdown",event=>{if(!event.isTrusted)return;const start=performance.now();requestAnimationFrame(()=>requestAnimationFrame(()=>window.__renderLab.paint.push(performance.now()-start)));},{capture:true});
+    if(PerformanceObserver.supportedEntryTypes.includes("long-animation-frame"))new PerformanceObserver(list=>{
+     for(const frame of list.getEntries())window.__renderLab.animationFrames.push({
+      startTime:frame.startTime,duration:frame.duration,blockingDuration:frame.blockingDuration,
+      firstUIEventTimestamp:frame.firstUIEventTimestamp,renderStart:frame.renderStart,styleAndLayoutStart:frame.styleAndLayoutStart,
+      scripts:frame.scripts.map(script=>({sourceURL:script.sourceURL,sourceFunctionName:script.sourceFunctionName,sourceCharPosition:script.sourceCharPosition,invoker:script.invoker,invokerType:script.invokerType,duration:script.duration,executionStart:script.executionStart,forcedStyleAndLayoutDuration:script.forcedStyleAndLayoutDuration}))
+     });
+    }).observe({type:"long-animation-frame",buffered:true});
+    document.addEventListener("pointerdown",event=>{if(!event.isTrusted)return;window.__renderLab.inputTargets.push({at:performance.now(),target:event.target?.closest?.("summary,button")?.outerHTML?.slice(0,450),scrollY});const start=performance.now();requestAnimationFrame(()=>requestAnimationFrame(()=>window.__renderLab.paint.push(performance.now()-start)));},{capture:true});
    });
    const reply=await page.goto(LOCAL+path,{waitUntil:"load",timeout:60000});if(reply.status()!==200)throw Error("HTTP "+reply.status()+" "+path);
    await page.evaluate(()=>document.fonts.ready);
@@ -36,9 +43,9 @@ try{
    const before=await page.evaluate(()=>({lcp:window.__renderLab.lcp,cls:window.__renderLab.cls,shifts:window.__renderLab.shifts}));
    const control=page.locator("main summary,main button[aria-expanded]").first();
    if(await control.count())for(let interaction=0;interaction<3;interaction++){await control.click();await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));}
-   const interaction=await page.evaluate(()=>{const state=window.__renderLab;return {paint:state.paint,event:state.events,longTasks:state.longTasks};});
+   const interaction=await page.evaluate(()=>{const state=window.__renderLab;return {paint:state.paint,event:state.events,longTasks:state.longTasks,animationFrames:state.animationFrames,inputTargets:state.inputTargets};});
    const interactionMs=interaction.paint.length?Math.max(...interaction.paint,...interaction.event.map(item=>item.duration)):null;
-   const result={label,version,path,sample,viewport:390,cpuSlowdown:4,latencyMs:150,downloadMbps:1.6,cache:"cold",thirdPartyRequests:"blocked",apiWrites:writes,lcpMs:before.lcp,cls:before.cls,interactionToPaintMs:interactionMs,eventTiming:interaction.event,longTasks:interaction.longTasks,fieldINP:null,layoutShiftSources:before.shifts};
+   const result={label,version,path,sample,viewport:390,cpuSlowdown:4,latencyMs:150,downloadMbps:1.6,cache:"cold",thirdPartyRequests:"blocked",apiWrites:writes,lcpMs:before.lcp,cls:before.cls,interactionToPaintMs:interactionMs,eventTiming:interaction.event,longTasks:interaction.longTasks,longAnimationFrames:interaction.animationFrames,inputTargets:interaction.inputTargets,fieldINP:null,layoutShiftSources:before.shifts};
    result.targets={lcp:typeof before.lcp==="number"&&before.lcp<2500,cls:before.cls<0.1,interaction:interactionMs!==null&&interactionMs<200};
    console.log("MOBILE_RENDER_MEASUREMENT:"+JSON.stringify(result));results.push(result);
    if(writes||!Number.isFinite(before.lcp)||!Number.isFinite(before.cls)||interactionMs===null)failed=true;

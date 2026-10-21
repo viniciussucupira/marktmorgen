@@ -7,6 +7,9 @@ export async function checkPathReminder({owner,LOCAL,sid,axeSource}){
   const page=await owner.context().newPage();
   page.on("pageerror",error=>errors.push(String(error)));
   let mode="quiet",requests=0,release;
+  const transport=[];
+  page.on("requestfailed",request=>{if(request.url().includes("/api/store/path"))transport.push({kind:"failed",method:request.method(),error:request.failure()?.errorText});});
+  page.on("response",response=>{if(response.url().includes("/api/store/path"))transport.push({kind:"response",status:response.status()});});
   const pending=new Promise(resolve=>{release=resolve;});
   try{
    await page.setViewportSize({width,height:900});
@@ -25,11 +28,17 @@ export async function checkPathReminder({owner,LOCAL,sid,axeSource}){
    await page.goto(url,{waitUntil:"domcontentloaded",timeout:60000});
    const section=page.getByRole("region",{name:"Take your next mission with you",exact:true});
    await section.waitFor();
+   assert.equal(await page.evaluate(()=>navigator.serviceWorker?.controller??null),null,"intercepted synthetic API cases have no service-worker bypass");
    const send=section.getByRole("button",{name:"Send your current mission",exact:true});
    const status=section.getByRole("status");
    assert.equal(await section.getByRole("link",{name:"Choose your devices",exact:true}).getAttribute("href"),"/studio/phone?store="+sid);
    await send.click();
+   try {
    await page.getByText("Your Path is quiet from 9 p.m. until 8 a.m. in your time zone. Please return after quiet hours.",{exact:true}).waitFor();
+   } catch(error) {
+    console.error("PATH_REMINDER_FIRST_ACTION_DIAGNOSTIC:"+JSON.stringify({width,mode,requests,transport,errors,status:await status.textContent(),button:await send.evaluate(node=>node.outerHTML),url:page.url()}));
+    throw error;
+   }
    assert.equal(await send.isEnabled(),true,"known pre-dispatch refusal permits an explicit retry");
    mode="pending";
    await Promise.all([

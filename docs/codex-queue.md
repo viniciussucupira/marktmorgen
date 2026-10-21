@@ -2958,7 +2958,7 @@ verify118824851029 reprovou somente HT10 matching window confirmed1280: save lim
 
 Pedido: revisão em andamento antes do pedido P0 de 20/10/2026; registro em 20/10/2026 16:51 de Fortaleza.
 
-Estado: implementado em `fd970c191f68431c0f7b4ed73bde7c6fd46fd529`; suíte completa e publicação pendentes.
+Estado: concluído; PR729 incorporado em20/10/2026 17:25:41 de Fortaleza, publicação123 confirmada. Implementação inicial preservada no histórico; head integralmente testado b21710d58b1b4a346cd6c79a47e2c4c55770b30a.
 
 Escopo e prova: o editor conserva o rascunho quando não confirma um título e explica que tentativas iniciadas contam na franquia. Mensagem anunciada por status acessível. Mesma chamada, reserva, tetos e tratamento de respostas; remove a afirmação incorreta “nothing was counted”. Verificação completa no novo head obrigatória.
 
@@ -2968,7 +2968,7 @@ Custo e margem: apenas texto e status, sem operação ou custo variável novo. P
 
 Pedido: P0, pedido de excelência/acessibilidade de 19/10/2026; acrescentado por pedido do dono em 20/10/2026, às16:51 de Fortaleza.
 
-Estado: na fila; executar após concluir o item200 e os PRs HT, antes do item202 e de qualquer novo B2.
+Estado: em andamento, iniciado em20/10/2026 17:29 de Fortaleza após publicação123. Primeira etapa: executar a suíte existente também emFirefox/WebKit, sem substituir motores silenciosamente. Matriz completa de jornadas/larguras/modos AAA ainda pendente; item não concluído. Antes do item202 e de qualquer novo B2.
 
 Escopo e prova: acrescentar Firefox e WebKit (Safari) aos testes Playwright existentes, sem serviço pago; se a instalação não for possível, registrar motivo exato e requisitos. Exercitar home, preços, cadastro, criação de produto, publicação da loja, página da loja, checkout e área do comprador nas larguras320,390,768,1280 e1920px: axe incluindo regras AAA, teclado, zoom400% com reflow, espaçamento WCAG1.4.12, movimento reduzido e alto contraste. Corrigir falhas em PRs pequenos com prova de falha antes e aprovação depois. Inventariar lacunas de aparelhos reais (iPhone, Android, Windows/Edge, tablets), custos de aparelhos ou nuvem como BrowserStack/Sauce Labs com fonte oficial e data. Não contratar, criar conta nem realizar submissão externa. Ao concluir registrar data/hora Fortaleza, commits, testes, publicação e lacunas; evidência sintética não equivale a aparelho real.
 
@@ -2988,3 +2988,370 @@ Custo e margem: nenhum gasto autorizado; apenas calcular e registrar. Custo desc
 #### B2-200 — corrigir a regressão móvel antes da conclusão
 
 20/10/2026 16:59 Fortaleza: mobile118850448202 reprovou a primeira amostra fria da home no head145d59a81ac417f20cb6c9cefebf57dbc692780f: LCP2936ms e interação448ms (demais oito amostras preservadas). Sem excluir amostra ou mudar limiar: FAQ nativo e faixa CSS estática saem do módulo cliente para componente de servidor, com o mesmo conteúdo/markup/comportamento. Reduz código e execução do cliente na home. Nova suíte completa obrigatória no novohead; não é entrega ainda. Sem serviço, operação, preço, limite ou gate alterado. P0s201/202 continuam antes de qualquer novo B2.
+
+
+### Publicação funcional121
+
+Item196/PR726 incorporado em2026-10-20 16:35:15 de Fortaleza. Head testado `29a240e18bd5e7fd35e0341a62f4b2bee50ab2bf`; versão `c52c70f08037fd2c180569782e98acc0bb4e748b`, árvore idêntica à verificada. READY `2026-10-20T19:37:12.852Z`, domínio marktmorgen.com, deployment `dpl_E3Dqe8yv39iy686orEFx8xDZ1cLZ`.
+
+CI completo aprovado: {"product":39482139984,"verify":118833735036,"redis":118833734875,"mobile":118833734449,"security":39482139975}. 6 rotas com o mesmo deployment; runtime error/fatal zero somente na janela 2026-10-20T19:32:55.874Z → 2026-10-20T19:37:55.874Z. Medição móvel sintética: {"samples":9,"lcpMax":908,"clsMax":0,"interactionMax":104,"fieldINP":null}. Não é INP real/certificação CWV.
+
+Custo/escopo: Own cost review committed before code: zero incremental supplier/read/write/model entitlement in all6 plan/interval cases, existing counters/reserves unchanged; most-tax M0 stays failed. No sale opening.. Piso líquido mínimo60% por cliente100% dos direitos no pior mês e global, após todos os custos e impostos Brasil/EUA, obrigatório; desconhecido reprova. M0 mais oneroso, PLANS_ON_SALE=false, comissão, preços, limites, permissões e todos os gates preservados.
+
+
+### Publicação funcional122
+
+Item199/PR728 incorporado em2026-10-20 16:39:39 de Fortaleza. Head testado `c0def34523d30289be3ee7e733405683c79751a9`; versão `7002c8835a12a4fee76780d1cf31b5bacec68240`, árvore idêntica à verificada. READY `2026-10-20T19:40:43.848Z`, domínio marktmorgen.com, deployment `dpl_zWqSgmGSRTybihJ4K4X7jWnd6Uov`.
+
+CI completo aprovado: {"product":39482166907,"verify":118833227853,"redis":118833228144,"mobile":118833227589,"security":39482166896}. 8 rotas com o mesmo deployment; runtime error/fatal zero somente na janela 2026-10-20T19:36:47.629Z → 2026-10-20T19:41:47.629Z. Medição móvel sintética: {"samples":9,"lcpMax":700,"clsMax":0,"interactionMax":64,"fieldINP":null}. Não é INP real/certificação CWV.
+
+Custo/escopo: Own six-scenario cost decision before code: deterministic planner reuses already-read catalog, no extra AI/provider/query/write/job/budget. Accept/reject/edit stays local unsaved; prices/rights/gates unchanged; M0 most-tax sales gate remains failed.. Piso líquido mínimo60% por cliente100% dos direitos no pior mês e global, após todos os custos e impostos Brasil/EUA, obrigatório; desconhecido reprova. M0 mais oneroso, PLANS_ON_SALE=false, comissão, preços, limites, permissões e todos os gates preservados.
+
+
+### Publicação funcional123
+
+Item200/PR729 incorporado em2026-10-20 17:25:41 de Fortaleza. Head testado `b21710d58b1b4a346cd6c79a47e2c4c55770b30a`; versão `3e56a89c3943f4545aae004c75a63820f42beb46`, árvore idêntica à verificada. READY `2026-10-20T20:26:57.457Z`, domínio marktmorgen.com, deployment `dpl_FVF8sD5qNx1RDHNBXcYT59dpQxoj`.
+
+CI completo aprovado: {"product":39489155558,"security":39489155836,"verify":118857331098,"redis":118857330724,"mobile":118857331064}. 6 rotas com o mesmo deployment; runtime error/fatal zero somente na janela 2026-10-20T20:22:50.682Z → 2026-10-20T20:27:50.682Z. Medição móvel sintética: {"samples":9,"maxLCP":952,"maxCLS":0,"maxInteraction":104,"fieldINP":null}. Não é INP real/certificação CWV.
+
+Custo/escopo: No new customer/provider/AI operation, rights, prices or limits. Existing public standard CI; no paid service/account. All financial and sales gates unchanged.. Piso líquido mínimo60% por cliente100% dos direitos no pior mês e global, após todos os custos e impostos Brasil/EUA, obrigatório; desconhecido reprova. M0 mais oneroso, PLANS_ON_SALE=false, comissão, preços, limites, permissões e todos os gates preservados.
+
+
+#### HT11/HT13 — registro de custo incorporado, sem implantação das funcionalidades
+
+PR727 incorporado em20/10/2026 16:38:48 de Fortaleza, versão9446c5c42209cc5038c984eaafe6e5b51aa762f4, head974259fdda495ca6019da36629a70b7eb0726d6f integralmente verificado. Comunidade compartilhada/novo tutor permanecem não implementados: custos completos desconhecidos reprovam todos os cenários; aguardam custos limitados/revisão do dono. Documentos docs/ht11-community-cost-review.md e docs/ht13-student-tutor-cost-review.md. PR documental não incrementou contador.
+
+#### P0-BROWSERS-DEVICES — etapa inicial de compatibilidade
+
+20/10/2026 17:29 Fortaleza: nova matriz Linux Firefox/WebKit com Playwright-core1.56.1 já fixado no projeto, instalações e dependências apenas no CI remoto. O harness existente inteiro recebe E2E_BROWSER e registra motor/versão; Firefox/WebKit indisponível reprova, nunca usa Chrome como substituto. Chromium e todas as verificações anteriores permanecem. Ainda não cobre todas as oito jornadas×cinco larguras×todos os modos AAA do pedido: esta etapa não encerra201. Correções e verificação completa no novohead são obrigatórias.
+
+Custo: até2×45=90minutos Linux adicionais por execução (teto, não consumo observado); repositório público com runners padrão gratuitos conforme fonte oficial consultada20/10/2026. Sem runner maior, artefato ou serviço pago novo; custo variável por cliente zero. Consumo real será registrado após execução. Eventual mudança de elegibilidade/custo fixo exige novo cálculo antes de operar; não alterar preços/limites/gates. Fontes e lacunas em docs/accessibility-browsers-devices.md.
+
+
+#### P0-BROWSERS-DEVICES — primeiras falhas reais e correções
+
+20/10/2026 17:36 Fortaleza: CI39492672679 no head5e1532292c6caeae28d4ed41ecf87171acf4b232 instalou e lançou Firefox142.0.1/WebKit26.0. Firefox118869615732 reprovou consentimento restaurado após reload; input de participação ganha autocomplete=off, mantendo estado inicial falso e exigência de consentimento explícito. [Documentação oficial Mozilla, consultada20/10/2026](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/input/checkbox) descreve persistência dinâmica do checked no Firefox e controle por autocomplete. Nenhum consentimento é inferido ou gravado automaticamente.
+
+A leitura de nome da loja no teste usava innerText de select nativo, que Firefox não expõe como Chromium; agora lê o texto real das opções e mantém a exigência de Second Coaching. Não altera o seletor de produção nem remove a asserção.
+
+WebKit118869615761 expirou na primeira ação de lembrete, antes do retorno de quiet hours. Botão passa a iniciar desabilitado na renderização do servidor e só habilita quando o cliente está pronto, por snapshot de hidratação; o handler também recusa ação antes desse estado. Mesma permissão, single-flight, cotas, horário silencioso e custo. Nova suíte completa em Chromium/Firefox/WebKit, Redis, mobile e segurança obrigatória no novohead; não reexecutar job isolado nem contar publicação antes da prova.
+
+
+#### P0201 — WebKit ainda reprovado, diagnóstico sem afrouxar teste
+
+20/10/2026 17:42 Fortaleza: WebKit118872840013 repetiu o timeout da primeira mensagem quiet no head9a6ca8758d2c86f175cf1665848ee2ad04bf6338. A hipótese de ação antes da hidratação não explica sozinha a falha; não declarar corrigida. O teste agora registra, somente quando essa mesma asserção estrita falha, contador de requests, status de transporte, texto do status, estado do botão e erros da página. Sem remover espera/asserção, trocar motor ou aumentar timeout; nova suíte inteira no novohead obrigatória. Consentimento e demais gates preservados.
+
+
+#### P0201 — evidência do transporte WebKit e isolamento dos mocks
+
+20/10/2026 17:47 Fortaleza: WebKit118875445640 no heade98a70db7a70f8431ee156531019d131e7130dbd registrou requests=0 no interceptor, response200 e mensagem real de devices0, sem erro de página. Portanto o botão funcionou; o mock409quiet não foi usado. StudioApp registra /studio-sw.js e há fetch handler nesse worker. A [documentação oficial Playwright](https://playwright.dev/docs/network), consultada20/10/2026, recomenda serviceWorkers:block para mocks por route que não interceptam requisições de páginas controladas por worker. Os três contextos do harness agora bloqueiam workers apenas no teste, com asserção explícita de controlador ausente antes do cenário sintético. Mantém todos os contadores, replies, quiet409, single-flight, consentimento e limites; não altera SW/app/PWA de produção nem afirma que push/offline foram validados. Nova suíte completa no novohead obrigatória. A hipótese anterior de hidratação não é tratada como causa comprovada.
+
+
+#### P0201 — mocks alcançados no WebKit; concluir leituras antes de navegação/fechamento
+
+20/10/2026 17:53 Fortaleza: WebKit118878095443 no head3eabe24937e901bda39656864cd60983699a5f3e passou reminder e answers nas duas larguras, e todos os cenários de consentimento/saída do board. O assert final de zero pageerrors reprovou duas leituras RSC de prefetch (/studio e /studio/phone) encerradas durante navegação/fechamento do contexto; log do servidor também registrou destination stream closed early. O teste agora aguarda networkidle antes dos reloads explícitos, da confirmação que provoca reload e do fechamento após sucesso, mantendo a coleta de todos os pageerrors e o mesmo assert vazio. Não ignora erro por regex, não aumenta timeout, não remove cenário/asserção ou altera código do app. Hipótese de aborto de leitura em teardown deve ser confirmada pelo novo CI integral, sem declarar passa antecipadamente.
+
+
+#### P0201 — WebKit avançou; medir falhas de pintura e isolar contextos auxiliares
+
+20/10/2026 18:02 Fortaleza: WebKit118880654986 no headbe741c0f5e7443dd862767f32dca20e9fd22f102 passou a seção do board após concluir leituras antes de navegar/fechar. Detectou31 falhas de placeholder/foco/forced-colors e interrompeu em path-return.mjs após um mock de details em contexto auxiliar com worker permitido. A fábrica de contextos do harness agora aplica serviceWorkers:block também aos helpers, preservando a suíte inteira e o app/SW de produção.
+
+Antes de mudar CSS ou presumir suporte de emulação, registram-se cor/opacidade computadas do placeholder, pixels reais versus área mínima, estilos do foco e correspondência real de forced-colors. As asserções originais, controles negativos, thresholds e zero pageerrors permanecem. Resultados não são dispensa de AAA ou teste em aparelho real. Nova suíte completa obrigatória no novohead; publicação não confirmada.
+
+
+#### P0201 — correções de pintura baseadas em pixels WebKit
+
+20/10/2026 18:11 Fortaleza: job118885614124 mediu698pixels de foco3:1 para mínimo702 em links sociais arredondados; outline social passa a4px, sem reduzir área/contraste exigidos. Selects nativos reportavam outline3px mas pintavam0pixels e descartavam box-shadow no WebKit. Controles select.field/st-field de seleção única passam a aparência CSS com seta em currentColor; mantêm o elemento nativo, opções, valores, teclado e nomes acessíveis. Não muda conteúdo, identificadores, limites, permissões ou operações. Nova suíte inteira deve comprovar pintura e ausência de regressões.
+
+Outros achados continuam abertos: WebKit relata placeholder como cor do input inclusive no controle negativo; forced-colors media ativa, mas propriedade forcedColorAdjust ausente. Não presumir falha visual nem dispensar critério: ampliar evidência por pintura e suporte da API antes de ajustar o teste. Móvel118885613625 reprovou primeira interação da home248ms, preservada para correção e verificação completa posterior; nenhum head reprovado será incorporado.
+
+Em paralelo sem conflito, PR731/branch codex/p0-201-public-access-matrix adiciona225casos reais de páginas públicas, sem editar arquivos desta branch:75/motor, cinco larguras e cinco modos. Teto adicional90min Linux/execução, elegibilidade pública atual USD0 cobrado, sem serviço/cliente/operação novo. Não encerra201 nem adianta202/B2.
+
+
+#### P0201 — contraste de placeholder medido na pintura real
+
+20/10/2026 18:15 Fortaleza: WebKit relatou rgb(17,24,39), a cor do input, no pseudo-elemento de sign-in, e ratio17,07 mesmo após injetar o placeholder antigo desbotado. A leitura computada não distinguia o controle negativo. O guard passa a comparar screenshots do mesmo campo sem foco, com e sem somente o texto de placeholder, para isolar os pixels reais dos glifos. Exige pelo menos20pixels alterados, razão mínima7:1 e pelo menos8pixels de núcleo com essa razão; borda, ícones e caret não entram como texto. Restaura imediatamente o atributo; nenhuma gravação/post é feita. Continua exigindo opacidade1, placeholder mostrado e rejeição do controle antigo com ratio<7; ausência de glifos reprova, nunca vira aprovação por campo vazio. Não baixa contraste nem elimina controle negativo/temas/larguras. Nova suíte integral no novohead obrigatória; resultado e conformidade ainda pendentes.
+
+
+Leitura de forced-color-adjust passa pela API CSS getPropertyValue, com CSS.supports registrado, em vez de presumir propriedade camelCase exposta no WebKit. Continua exigindo valor auto, mídia ativa, outline e pixels reais: não converte ausência em auto nem ignora falha. Verificação completa no novohead obrigatória.
+
+
+### Item201 — continuidade da verificação (20/10/2026 18:24 Fortaleza)
+
+No head `db7efae4c0e1c227d777a1234f935eec829c8968`, Firefox confirmou contraste real do placeholder e rejeitou o controle negativo desbotado, mas o job118891303465 falhou nos focos em alto contraste e no download do certificado. Permanecem abertos, sem redução de critérios. A falha anterior de growth/contact por prefetch RSC interrompido recebe espera de rede ociosa antes de navegação/reload/fechamento sintéticos; a coleta e a exigência de zero erros permanecem integrais. Nova execução completa obrigatória no novo head; nenhum merge/publicação neste registro. Custo variável por cliente: nenhum; CI padrão público já previsto, minutos efetivos pendentes de consolidação. Gates, preços e limites preservados.
+
+Certificado privado: controles de escolha, consentimento e download aguardam a hidratação do manipulador; preferência monetária usa autocomplete off. A regressão SSR exige botão desabilitado antes da hidratação (falha no código anterior), e a jornada existente mantém download real por Enter nas duas larguras. O timeout Firefox continua apenas hipótese de interação antes da hidratação até a prova no CI completo; não declarado resolvido. Sem escrita de servidor ou custo novo.
+
+Foco: WebKit confirmou que engrossar só a borda preta não aumenta os698 pixels da banda branca no fundo escuro (mínimo702); a banda branca passa a4px, com deslocamento correspondente. Alto contraste usa CanvasText, cor de texto do sistema, em vez de Highlight azul que não alcançou3:1 no Firefox. Nenhum limiar reduzido. WebKit informa CSS.supports(forced-color-adjust)=false: lacuna de suporte deve ficar explícita, sem inventar valor auto. Matriz pública do PR731 passou225casos nos três motores; incompletos e jornadas autenticadas continuam abertos. Sem publicação neste registro.
+
+Medição de foco: estilos calculados passam a ser lidos depois da captura que conclui transições finitas, correspondendo ao estado pintado medido. Todos os controles continuam exigindo área mínima, contraste3:1, borda sólida e sombra ausente no alto contraste. Declaração forced-color-adjust só exige auto quando suportada; WebKit sem suporte exige valor vazio e registra FIELD_FOCUS_OPEN_GAP, sem alegar auto ou validação real do sistema. Certificado aguarda botão realmente habilitado antes de Enter, com timeout30s e download/conteúdo/zero escritas preservados. Nova verificação completa, sem publicação nem conclusão do201.
+
+
+### Publicação funcional124
+
+Item201 permanece em andamento. PR#731 incorporado em20/10/2026 às18:35:44 Fortaleza; head verificado `97085c90b21354ec29e510d90842b9a0bbf1ebca`, merge `4704f434632af93651a037cdc5d69963f7ea98bf`, árvores idênticas. Produção READY às18:36:40.209 Fortaleza, domínio `marktmorgen.com` ligado exatamente ao merge, deployment `dpl_74bxw9mLcxx478cEeZm44J8SGiVN`. Home, signin, studio anônimo (entrada esperada), Path, preços e privacidade responderam200 no mesmo deployment; marcação publicada confirmou as correções.
+
+Mudanças: três textos pequenos públicos com contraste reforçado; cadastro permite quebra e encolhimento com espaçamento ampliado em320px sem esconder conteúdo. Preços, limites, conteúdo e gates preservados. Product39499142087, segurança39499141879 e matriz pública39499141618 aprovados no head exato.225casos (75 por Chromium/Firefox/WebKit), zero violações automáticas;175registros por caso de incompletos/lacunas continuam abertos, sem alegação de conformidade integral. Laboratório móvel:9amostras, máximo LCP1216ms, CLS0 e interação96ms, sem certificação INP de campo. Erros/fatais de runtime:0 somente na janela21:32:12.504–21:37:12.504UTC. Custo variável novo: nenhum; CI público Linux padrão, sem compra/conta/serviço novo. Item201 e PR730 continuam,202 depois, nenhum B2 novo à frente.
+
+Item201, continuidade20/10/2026: WebKit no headccb7711 aprovou os controles quantitativos positivos de foco e placeholder; ausência de suporte forced-color-adjust registrada sem fingir auto. A primeira gravação sintética de Company deixou1campo não salvo após POST, causando timeout do estado confirmado. O teste agora exige o estado visual de alteração antes do Tab, aguarda rede ociosa antes da entrada e registra pedido/resposta/valor sintéticos se continuar falhando; nenhuma conclusão de causa/fix ainda. Sem reduzir assertivas. PR#732 amplia150casos autenticados; primeiro head teve36falhas Chromium e13Firefox, incluindo CSP rolável sem foco, contraste do status e overflow. Correções CSP/status submetidas no headad708798; overflow permanece aberto. Custos fixos de CI incluem falhas/cancelamentos; nenhum custo por cliente ou compra nova. Toda nova alteração exigeCIcompleto.
+
+Item201: WebKit job118907556999 no heade9485f2 confirmou a gravação real/reload/recusa/retry/incerteza de contato nas duas larguras. Próxima falha: page.goto cancelado em path-return linha53, após o toast do DetailsForm que chama router.refresh(). O teste aguarda rede ociosa após esse toast e antes da navegação seguinte, preservando a prova de que resposta interceptada não conclui a missão e somente persistência real muda o foco. Não ignora erros nem muda timeouts/limiares. Nova execução completa obrigatória. Publicação permanece124.
+
+Item201: WebKit no head3501f9 avançou pela persistência real do retorno, mas revelou overflow do calculador de custos após selecionar Billing separado (390px) e botão Intro ainda desabilitado após fill. Calculador limita fieldsets/controles e colunas a mínimo0, sem alterar fórmulas, preços, dados ou tratamento de desconhecido; mantém teste de largura e acrescenta diagnóstico se falhar. Intro aguarda rede ociosa e mensagem real de vídeo reconhecido após entrada antes do clique, preservando12cenários/3provedores/2larguras e todos osPOSTs interceptados. NovoCIcompleto; sem conclusão antecipada ou nova publicação.
+
+
+### Publicação funcional125
+
+Item201 segue em andamento. PR#732 incorporado em20/10/2026 às19:26:26 Fortaleza, head verificado `09a63a48431a823f7133484cd6091c33c978dcd3`, merge `6d66283672775ab1d8f492357d7ab5a3114d4579`, árvores idênticas. READY às19:27:40.453 Fortaleza, domínio `marktmorgen.com` na versão exata, deployment `dpl_HQi1Auj72oKuC9AvsLjQiEkWUemw`. Sete rotas baseline responderam200 no mesmo deployment; studio e editor anônimos levaram à entrada esperada. Fluxos privados comprovados somente peloCI sintético, sem conta real.
+
+Mudanças: região rolável de diretivasCSP acessível por teclado/nome; contraste do status de página; reflow do checklist/URL longa, gasto, promoção e campo de notas ao lado de datas nativas, sem esconder conteúdo nem alterar identificadores/valores/limites. Product39505689751, segurança39505689796, matriz pública39505689746 e studio39505689696 aprovados no head exato:225casos públicos e150autenticados somente de leitura, três motores.142registros por caso de incompletos/manuais do studio permanecem abertos; sem alegação de conformidade integral ou zoom/aparelho real. Erros/fatais:0 apenas na janela22:23:40.975–22:28:40.975UTC. Custo variável novo: nenhum; nenhum serviço/conta/contratação. CI Linux padrão público continua com elegibilidade atual sem cobrança incremental; teto adicional90minutos/execução e falhas/cancelamentos contabilizáveis. Gates e piso60%preservados. Criação/publicação/checkout/comprador e demais lacunas do201 ainda abertos;202depois e nenhumB2àfrente.
+
+Item201, após integração da publicação125: casos de PDF aguardam rede ociosa antes de abrir detalhes; links dos números aguardam também o router.refresh após respostas confirmadas antes do próximo cenário. Todos os cenários e requisições exigidos permanecem. Calculador Firefox reportou scroll502/client348 sem descendente pintado fora da caixa: diagnóstico acrescenta largura da raiz e controles nativos antes de atribuir causa ou mudar guardas. AlturaFAQ WebKit em1280 recebe dimensões e estilos exatos nas falhas; critério44px permanece. Nova execução completa obrigatória; nenhuma falha dispensada nem nova publicação.
+
+Item201: no heade8e640, job118924958225, o Path voltou a cancelar goto apenas46ms após resposta do save; networkidle ainda descrevia a rede anterior antes de React iniciar refresh. A correção espera explicitamente o GET RSC de /studio sem prefetch, exige respostaOK e término do corpo, e só então rede ociosa/navegação. Não captura/ignora cancelamento nem remove a prova de persistência real. PR#733 separado adiciona75casos sintéticos de criação/reload/publicação manual/loja local, sem checkout/email/IA; tetoCIadicional120min/run,120R/mês1440R/ano, elegibilidade pública padrão atual sem cobrança incremental. Ainda sem resultados e sem conclusão do201. Publicação permanece125.
+
+
+### P0-201 — verificação completa de 20/10/2026, 19:54 Fortaleza
+
+Head 2bec53d0: matriz pública passou; studio Chromium/Firefox passaram, WebKit 50 casos/1 falha (320px com espaçamento: scroll355/client320, nenhum elemento geométrico excedente). Product WebKit falhou: calculadora scroll502/client348 sem elemento excedente; Save sites desabilitado antes do pedido. Mantidas as falhas e limites originais. Próxima correção limita e permite quebra das legendas longas da calculadora; diagnóstico inclui overflow interno, inclusive caixas anônimas/texto, e o teste de allowlist aguarda hidratação/rede antes de abrir os controles. Hipóteses ainda dependem do CI completo no novo head; nenhuma certificação, incorporação ou publicação. Sem custo novo de operação; incluir minutos falhos/cancelados no total do CI. PLANS_ON_SALE=false e gates comerciais/fiscais preservados.
+
+
+### P0-201 — evidência e correção, 20/10/2026, 20:09 Fortaleza
+
+Head9f0bb45e: Firefox calculadora passou em390/1280 após limitar/quebrar legendas, sem alterar valores ou limites. FAQ falhou porque alvos44px computados mediram43.999969/43.999996px: aumenta-se altura mínima real para48px; assertion44px preservada. Numbers remove/null não enviou pedido após missing: causa ainda aberta, teste passa a ativação real por foco+Enter e registra estado/botões/foco em falha, mantendo todos os casos e pedidos/payloads/locks/recusas. Studio três motores passou; mobile eRedis passaram; Product completo permanece sem aprovação. Novo head exige todos os workflows completos; nada incorporado/publicado. Sem custo operacional novo e sem mudanças nos gates.
+
+
+### P0-201 — diagnóstico 20/10/2026, 20:20 Fortaleza
+
+Head40fb: WebKit público75casos/1falha target-size no CTA Start your store a320; ambos CTAs iniciais passam a inline-flex/min48px. Calculadora: seletor Billing appearance none ainda propagou scroll436/client274 ao pai; limitar overflow somente no próprio select nativo, mantendo opção/valor/teclado e popup nativo, sem cortar seção/página ou mudar fórmula. Recovery falhou ao marcar checkbox durante início domcontentloaded; aguarda rede/hidratação antes de abrir controles, mantendo setChecked e todos os payloads/recusas. Script RSC pageerror continua aberto. Studio3motores/mobile/Redis passaram mas não substituem Product completo. Falhas anteriores preservadas, novo head exige CI integral. Custos de runs cancelados/falhos incluídos em auditoria local detalhada, sem custos operacionais novos.
+
+
+### P0-201 — 20/10/2026, 20:38:17 Fortaleza
+
+Headf59cca: Firefox Product completo passou (job118944158967); público3motores, Studio Chromium/Firefox, mobile eRedis passaram. WebKit Product falhou em390 por reminder-fit (correção compartilhada de cabeçalho/Studio em PR733 ainda não integrada) e primeiro movimento da ordem não observado antes do Save. Teste de ordem passa a aguardar rede/hidratação antes de abrir detalhes e a sequência exata movida antes de verificar/salvar; todos os24pedidos interceptados, payloads, locks e recusas mantidos. Studio WebKit permanece1falha320 spacing; nenhuma publicação/incorporação. Novo head exige CI completo.
+
+Auditoria de duração às23:18:42Z:90runs concluídos das branches730/733,256jobs,59368segundos somados (989,47minutos), incluindo sucesso/falha/cancelamento. São tempos de jobs, não valor de fatura; excluem runs ainda ativos e branches anteriores731/732, portanto subtotal histórico e não total final. Evidência por job preservada na continuidade. Nenhum novo serviço pago/operação por cliente; margem60% mais onerosa continua não certificada e custos desconhecidos não são zero.
+
+
+### P0-201 — sincronização dos cenários de confirmação (2026-10-20 23:57:40 UTC)
+
+Head9cd: Firefox completo passou novamente; WebKit passou movimento inicial da ordem, mas parou no checkbox inicial de cart-deal (clique antes de estado confirmado), após reminder-fit390 ainda aberto e dependente das correções733. Para corrigir a preparação comum em vez de avançar uma falha inicial por vez, os34helpers acknowledgment aguardam networkidle em suas navegações, em vez de apenas domcontentloaded. Mudança mecânica do estado de espera; permanecem todos os cenários, quantidades, payloads, recusas, locks, pageerrors e limites de largura. Não há escrita nova, retry de job isolado ou execução local. Novo head exige CI integral. Custos cancelados/falhos preservados no subtotal histórico e futura atualização; sem serviço pago novo.
+
+
+###201 — diagnóstico Chromium/RSC e WebKit,20/10/2026 Fortaleza
+
+PR730 head291cc: Firefox118956071355 passou completo; WebKit118956071405 terminou com31assertions reprovadas:28ajustes de lembrete390, script com prefetch /studio/phone abortado e erros globais RSC. As34preparações de acknowledgment avançaram sem falha inicial de controle. verify118956071434 atingiu35min logo após “details RSC refresh responds”; não é sucesso. Pathreturn passa a limite30s por ação e60s na conclusão do RSC, timeout reprova; script aguarda idle após redimensionamento antes de navegar. Não remove erros, regras ou cenários, não amplia teto. Layout compartilhado dependePR733; nova CI completa exigida. PR733d3b: Firefox/WebKit25/0,Chromium cancelado40min; novo c8e559 aguarda CI completa após limites/diagnóstico. Sem entrega funcional nova; contador125/próxima126 mantido. Custos incluem cancelados, subtotal989,47min histórico não é total atual nem fatura certificada. Nenhum serviço/operacão real;PLANS_ON_SALE=false e controles60% preservados.
+
+
+###201 — leitura efetiva do RSC,20/10/2026 Fortaleza
+
+PR7308dc9cada verify118978511034 falhou no limite60s de Response.finished; Firefox118978511353 passou,WebKit118978511403 terminou30assertions reprovadas incluindo lembrete390,HT10beacon e erros RSC acumulados. PR73348d3f8 já passou Chromium118985684113 após trocar conclusão instrumentada por corpo fetch real clonado e completamente lido no navegador; Firefox118985684364 também passou,WebKit/CI integral ainda pendentes. Pathreturn usa a mesma prova completa,não vazia,sem erro,60s, antes de navegar, preservando confirmação falsa versus persistência real,isolamento e zero conclusão manual. Não ignora stream pendente nem remove assertions; nenhum request extra/serviço novo. Novo CI integral obrigatório. Contador125/próxima126 mantido atéREADY+domínio+SHA.
+
+
+###Entrega funcional126 —PR733,20/10/2026 Fortaleza
+
+Incorporado em23:02:23Fortaleza (2026-10-21T02:02:23Z),mergeed622e1d92866a639a99d5906f55056790c061bc; árvore15af49d9c24aba9b98c2ad2cd3bdef620fbc56d5 idêntica ao headf5ff1d504ccaf0518b0f299cc334d775804299f4 integralmente aprovado. READY2026-10-21T02:03:27.794Z,dpl_nUyMec9DXJCZDCb4NYrTfkDBsDYe,domíniomarktmorgen.com confirmouSHA exato; sete rotas200 com mesmo deployment, incluindoPricing com novos alvos48px. Studio privado redireciona visitante para entrada; ações privadas comprovadas somente noCI sintético. Runtime semerror/fatal somente na janela01:59:14.984–02:04:14.984Z,sem promessa de ausência futura.
+
+Funcional: grade/seletores nativos doStudio contêm títulos longos em telas estreitas e espaçamento; campos compartilháveis quebramlinhas; detalhes fechados deixam de expandir layout; controles de edição/remover eCTA/FAQPricing48px. Preços,IDs,conteúdo,flags,optin econtroles fiscais/custos preservados. Product39528716793 (verify118989652677,Redis118989652912,mobile118989652893),segurança39528716826,public39528716734 225casos,studio39528716869 150casos,ações39528716759 75casos,todosaprovados. Matriz nova comprova criação local,reload,publicação explícita eproduto visível; não checkout/buyer/contareal. Histórico anterior de falhas/cancelamentos mantido. Contador126,próxima127. Item201permanece aberto.
+
+Custos: nenhum provedor/serviço novo nem custo variável porcliente. CIação teto120min/execução,120Rmensal/1440Ranual;subtotal histórico989,47min/90runs nãoé total final. Durações posteriores/canceladas devem ser reconciliadas; custo desconhecido nãoézero e não há fatura/margemcertificada. Meta60%individual/global,leitura mais onerosa,reprovação fiscal ePLANS_ON_SALE=false preservados.
+
+PR730 integra agora exatamente os11arquivos doPR733 mais este registro, mantendo seus demais arquivos e histórico,com commit de dois pais e novaCI completa. PR730fc9d3f teveverify/Firefox aprovados eWebKit31falhas (lembrete390,HT10beacon,HT15leitura tardia,errosRSC); correções compartilhadas integradas não significam aprovação antecipada. Próximos achados precisamcorreção eCI integral.
+
+
+###201 — HT10 payload real e HT15 leituras explícitas,20/10/2026 Fortaleza
+
+WebKitfc9d3f: HT10beacon não expunha Blob no route; teste agora captura cópia do corpo sendBeacon real no navegador antes de chamar método nativo. SomentePOSTlocal/store/hit doframe/@templatelibraryfixture noWebKit com metadata ausente usa captura; h/k/chaves/tipos continuam todos validados,zeroeventosads ezeroescritas inesperadas mantidos. Não aceita corpo desconhecido nem executaestatísticas; nada muda no produto/optin. HT15esperado2/obtido1 era navegação antes da leitura de destinatários: registra waitForResponse count antes das duas navegações e aguarda cada resposta exata,sem diminuir contagem2/limites. NovoCI integral,sem rerun isolado; demais falhasRSC permanecem abertas. CustosfixosCI históricos mantidos,nenhumserviçonovo;entrega126 já confirmada,próxima127.
+
+
+###201/B2-200 — reduzir trabalho fora da tela após reprovação móvel,20/10/2026 Fortaleza
+
+Head1f8ab84 mobile118998070721 reprovou Home sample1: interação200ms,metaestrita<200,LCP772ms/CLS0;outras8amostraspassaram. Evento ocorreu junto de longtask166ms; não se elimina amostra nem relaxa gate, e não se declara causa exclusiva. Revisão identificou HeroFlow com timer5s ativo mesmo fora da tela/enquanto abaoculta. Agora IntersectionObserver+visibilitychange pausam esse timer fora da área visível/abaoculta e retomam ao voltar;conteúdo e escolha manual/reducedmotion preservados,sem gatilho comercial/custo. É redução concreta de trabalho desnecessário,hipótese de contribuição à primeira interação; exige suíte integral/móvel no novohead e conservaoutlier248ms histórico. Item203Teams permanece ao fim; ordem depois202 eativos,sem bloqueio.
+
+
+###201 — navegação sem interromper leituraRSC,20/10/2026 Fortaleza
+
+Head5d209df: verify/Firefox/mobile aprovados; WebKit119000075245 reprovou26assertions:24“reminder settings fit”390 no helperDunning,script/globalRSCerrors. HT10beacon eHT15leituras passaram após correção. O helperDunning abre todos os details deStudio; porisso a largura é da página completa com todos painéis expandidos, não diagnóstico exclusivo deDunning. Novo diagnóstico preserva assertion e identifica geometrias/scroll interno dessa situação. Contextos da suíte agora aguardam networkidle e leitura completa deRSCantes de navegação direta,resize e pageclose,sem filtrar pageerrors ou retirar respostas do relatório; impede que próprio teste interrompa prefetch/RSC pendente. Métodos nativos permanecem e controles/POSTs/contagens não mudam. Corpo é lido por clone local,sem rede extra; falha deespera continua reprovação. NovoCI integral exigido,nenhum provedor/custo variável novo. Histórico200ms/248ms mantido; item203Teams continua ao fim,sem antecipação.
+
+
+###201 — aguardar somenteRSC,20/10/2026 Fortaleza
+
+Headfb9b4ee verify119005919880 expôs incompatibilidade da nova espera global networkidle com a página deexperimentos que faz leituras recorrentes: após falha503 validada390,resize ficou60s aguardando toda rede. A preparação de navegação/resize/fechamento passa a exigir apenas leiturasRSC completadas e conjunto estável200ms,com mesmo timeout60s. Leituras periódicas deAPI não são respostasRSC pendentes e continuam sujeitas às suas assertions. Nenhum pageerror,caso,contagem ou limiar deproduto é removido. Esse ajuste corrige a espera adicionada noheadanterior,sem declarar as falhasWebKit resolvidas; diagnóstico expandedStudio preservado. CI integral novo obrigatório;sem novo provedor/custo porcliente. Item203preservadoao fim.
+
+
+### Item201 — correção após head90613a7 e integração explícita de735
+
+WebKit119014702042 terminou com25falhas:24fitreminders390 e3errosRSC acumulados em umaassertiva. O diagnóstico inicial não registrouoverflow antes de escolher2/3emails; após seleção, todos24casos390falharam e1280passou. O select nativoDunning passa ao mesmo padrão limitado/appearance-none comchevron decorativo dos seletores já corrigidos, preservando opções,teclado,POST,locks e confirmação. Diagnóstico apósseleção registra medidas reais; nenhum limite de teste reduzido.
+
+A barreira deRSC já aplicada agoto/resize/close não cobria3reloads reais do owner. Reload agora também aguarda leitura dos corposRSC pendentes, commesmo timeout60s; erros de página continuam reprovando e recebem URL/stack para localizar qualquer falha restante. Verify eFirefox906passaram;mobile906falhou240ms,sem exclusão de amostras.
+
+Integração explícita do head73546afa12:prefetch dos3CTAs deplanos desativado,diagLongAnimationFrames e substituição exclusiva219OP5 preservados. Mobile119019895934 no46afa12 passou9amostras:home64/40/40ms,pricing32/32/32ms,salespages32/32/32ms;LCP564–744ms,CLS0. Isso não certificaINPdecampo nem apaga falhas240/272ms. Novohead exige suíteintegral; sem entrega antecipada.
+
+Custos reconciliados em21/10/2026~03h28UTC:231execuçõesconcluídas/653jobs/178442segundos=2974,03job-min, incluindo falhas/cancelamentos, dados anteriores730/733 e acréscimos730/734/735. Execuçõesativas/pendentes,branches731/732efaturareal não incluídas;custosdesconhecidos nãozero. Evidência localmarktmorgen-ci-cost-20261021-0328.json. Nenhum custo variável/provedor/operação/comercial novo.
+
+
+## 203 — Teams automático para chamadas pagas (execução futura)
+
+203. [TEAMS] Links automáticos do Microsoft Teams para as chamadas pagas, construídos agora e DESLIGADOS
+
+Pedido: dono, 20/10/2026, 23h03 de Fortaleza.
+
+Objetivo: oferecer ao criador, ao lado do Google Meet e do Zoom, a criação automática de uma reunião do Microsoft Teams para cada chamada vendida. O recurso é útil sobretudo para coaches, consultores e mentores cujos clientes são empresas que só usam o Teams.
+
+Fatos já verificados (confira cada um deles nas fontes oficiais da Microsoft antes de construir e registre as fontes com a data da consulta):
+1. A criação automática de reuniões do Teams pela API só funciona com contas pagas do Microsoft 365 de empresa ou de escola. Contas pessoais gratuitas (outlook.com, hotmail.com e live.com) não conseguem criá-las.
+2. Para que usuários de outras empresas possam autorizar o aplicativo, a Microsoft exige a "publisher verification". Ela depende de uma conta verificada no Microsoft AI Cloud Partner Program, e essa verificação exige uma empresa legalmente registrada. Portanto, ela só será possível depois que a LLC de Delaware existir.
+3. A Microsoft não cobra pela verificação do editor, e a conta de parceiro é gratuita.
+
+Escopo:
+1. Reutilize o mecanismo que já existe para o Google Meet e para o Zoom (lib/meet-providers.ts, lib/meet-connect.ts, lib/meet-links.ts, lib/call-meetings.ts, lib/host-calendar.ts e os demais módulos relacionados), sem duplicar a lógica, e acrescente o provedor "teams".
+2. Use o Microsoft identity platform (OAuth 2.0, aplicativo multilocatário e endpoint "organizations", que aceita apenas contas de empresa ou de escola) e o Microsoft Graph. Para cada agendamento, crie um evento no calendário principal do criador, com o comprador como convidado e com reunião do Teams (isOnlineMeeting = true e onlineMeetingProvider = "teamsForBusiness"). Mova o evento quando o comprador remarcar a chamada e apague-o após o reembolso total. Altere apenas os eventos que o próprio Marktmorgen criou.
+3. Peça o menor conjunto de permissões que funcione (por exemplo, openid, email, offline_access e Calendars.ReadWrite). Confirme na documentação oficial se essas permissões bastam e não peça a permissão OnlineMeetings.ReadWrite, a menos que ela seja necessária. Se fizer sentido, use a mesma conexão para ler os horários ocupados do calendário do Outlook do criador, com as mesmas regras de escolha de calendário que valem para o Google.
+4. No momento da conexão, ofereça um botão de teste semelhante ao que já existe para o Zoom. Se a conta for pessoal ou não tiver licença do Teams, recuse a conexão com uma mensagem clara, em inglês americano, e indique o Google Meet como alternativa. Nunca falhe em silêncio no momento de um agendamento: se não houver link do Teams, aplique o mesmo comportamento seguro que já existe para os outros provedores.
+5. Guarde os tokens com a mesma proteção aplicada aos tokens do Google. Ao desconectar, apague os tokens. Uma revogação feita na Microsoft deve ser detectada e tratada.
+6. Crie no código o interruptor TEAMS_APPROVED = false, no mesmo padrão de ZOOM_APPROVED em lib/meet-providers.ts. Enquanto ele for false, nenhuma página poderá oferecer o Teams ao criador, nenhuma página pública poderá apresentá-lo como disponível e nenhuma chamada poderá ser feita à Microsoft. Os testes devem falhar se qualquer uma dessas coisas acontecer.
+7. Prepare, sem publicá-lo enquanto o interruptor estiver desligado, o texto da política de privacidade e dos termos de uso que menciona a Microsoft como fornecedora. Esse texto deve entrar em vigor quando o interruptor for ligado.
+8. Crie o arquivo docs/microsoft-teams.md com o desenho da solução, as fontes oficiais e os passos que só o dono poderá executar depois de abrir a LLC: criar o locatário do Microsoft Entra; registrar o aplicativo multilocatário, com o domínio de editor marktmorgen.com e o endereço de retorno; criar e verificar a conta no Partner Center em nome da LLC; concluir a publisher verification; e, por último, ligar o interruptor. Indique também os nomes das variáveis de ambiente que ele deverá cadastrar na Vercel.
+9. Verifique, com fontes oficiais datadas, quais concorrentes oferecem o Teams nas chamadas agendadas (Calendly, Kajabi, Stan, Hotmart, Teachable e os demais da lista dos 30 concorrentes) e registre essa comparação. Não afirme superioridade sem fonte.
+10. Aplique as mesmas exigências de acessibilidade (WCAG 2.2 AAA como ponto de partida) e de inglês americano que valem para as demais telas do studio.
+11. Faça os testes somente com o Graph simulado: nenhuma chamada real à Microsoft, nenhum e-mail real e nenhuma alteração em registros reais de clientes.
+
+É proibido, neste item: registrar aplicativo no Microsoft Entra, criar conta no Partner Center ou na Microsoft, aceitar termos, pedir verificação ou ligar o interruptor. Tudo isso depende do dono e da existência da LLC.
+
+Custo e margem: confirme na documentação oficial que as chamadas do Graph utilizadas não são cobradas (consulte a lista de APIs medidas da Microsoft) e registre a fonte. Some ao registro de custos por plano o custo dos comandos do Upstash e qualquer outro custo por agendamento. Custo desconhecido não pode ser considerado zero. A margem líquida mínima é de 60% (ela pode ser maior, mas nunca menor) por cliente isolado, com 100% dos direitos usados no pior mês, e também no consolidado, depois de todos os custos e de todos os impostos, inclusive os brasileiros. Não altere preços, limites visíveis, comissão, PLANS_ON_SALE, tax gate, art. 9a nem a revisão comercial.
+
+Estado inicial: na fila. Ao concluir o item, registre o commit, o resultado da suíte completa e a publicação, e altere o estado para "pronto e desligado, aguardando a LLC e a verificação da Microsoft".
+
+**Estado: na fila.** Ordem: depois do item202 [P0-REAL-PEOPLE] e de todos os itens já em andamento; não bloqueia nenhum outro item. Esta entrada foi acrescentada ao fim do arquivo, preservando a ordem e o histórico. Proveniência integral: pedido direto do dono,20/10/2026,23h03Fortaleza, anexo3b412ee8-c4d7-4231-919b-2c9b2d11e8aa/Texto colado.txt. Fatos listados no pedido são requisitos a conferir nas fontes oficiais durante a execução, não conclusões já verificadas por este registro. Não iniciar cadastro, chamada real, aceite, verificação, custo ou ativação por causa desta inclusão. Resultado futuro exigido: commit, suíte completa, publicação e estado “pronto e desligado, aguardando a LLC e a verificação da Microsoft”.
+
+
+## SH — Superar a Shopify no mercado dos criadores (20/10/2026)
+
+Pedido: dono, 20/10/2026, 23h49 de Fortaleza: "quero superar a Shopify no mercado dos criadores e onde mais você achar bom que possa aumentar o meu lucro com segurança".
+
+Contexto já levantado (confira cada fato nas fontes oficiais antes de construir e registre as fontes com a data da consulta):
+- Planos da Shopify em 2026: Starter US$ 5, Basic US$ 39, Grow US$ 105 e Advanced US$ 399 por mês, além de 2,5% a 2,9% + 30¢ por venda com cartão online.
+- No Shopify Editions Summer '26 (junho de 2026), a Shopify ligou por padrão a venda por agentes de IA: o Universal Commerce Protocol, criado com o Google, leva os produtos ao ChatGPT, ao Copilot, ao Google AI Mode, ao Gemini e ao app Shop, onde o agente encontra o produto e conclui a compra.
+- O Marktmorgen já tem, sem aplicativo de terceiros, cursos, assinaturas, comunidade, chamadas pagas, afiliados, e-mail, funis, oferta extra no checkout, recuperação de checkout, assistente de IA, servidor MCP (que hoje só lê os números da loja para o criador), API pública com webhooks, blog, teste A/B de títulos, vários idiomas, equipe com permissões e 0% de comissão.
+- O produto enviado pelo correio tem hoje um preço só, sem opções, frete por região e envio marcado à mão; a página do recurso diz "No print-on-demand". A loja cobra numa moeda só.
+
+Regras que valem para TODOS os itens desta seção:
+1. Antes de construir, verifique no código o que já existe e reutilize os mecanismos compatíveis, sem refazer nem duplicar.
+2. Margem líquida mínima de 60% (ela pode ser maior, mas nunca menor) por cliente isolado, com 100% dos direitos usados no pior mês, e também no consolidado, depois de todos os custos e de todos os impostos, inclusive os brasileiros. Custo desconhecido não pode ser considerado zero. Nenhum custo de fornecedor pode recair sobre a plataforma sem teto automático; o custo que for do criador (etiqueta de frete, impressão sob demanda, taxa de conversão de moeda, entre outros) deve ser cobrado diretamente na conta do próprio criador, nunca na do Marktmorgen.
+3. Impostos: aplique a leitura que der MAIS imposto (docs/tax-uncertainty.md). Qualquer item que envolva venda de bens físicos deve passar pela análise de plataforma intermediária e de fornecedor presumido para bens (lei americana de marketplace facilitator, art. 14a da Diretiva do IVA da União Europeia e regras do Reino Unido), registrada em docs/eu-vat-article-9a.md e em lib/deemed-supplier.ts. Enquanto essa análise não estiver completa, o recurso fica desligado.
+4. Cada recurso novo nasce com um interruptor no código, desligado, no mesmo padrão de ZOOM_APPROVED. Enquanto ele estiver desligado, nenhuma página poderá oferecer o recurso nem apresentá-lo como disponível, e os testes devem falhar se isso acontecer.
+5. É proibido: criar contas em fornecedores, aceitar termos, contratar serviço, pedir aprovação a terceiros, ligar interruptores, alterar preços, limites visíveis, comissão, PLANS_ON_SALE, tax gate, art. 9a ou a revisão comercial. Tudo isso depende do dono.
+6. Faça os testes somente com fornecedores simulados: nenhuma chamada real, nenhum e-mail real e nenhuma alteração em registros reais de clientes.
+7. Todo texto público em inglês americano, com as exigências de acessibilidade em vigor (WCAG 2.2 AAA como ponto de partida). Não invente depoimentos, números, escassez nem urgência, e não afirme superioridade sobre a Shopify ou sobre qualquer concorrente sem fonte oficial datada.
+8. Ao concluir cada item, registre o commit, o resultado da suíte completa e a publicação, e deixe o estado como "pronto e desligado, aguardando o dono" quando houver interruptor.
+
+204. [SH1] Venda por agentes de IA (ChatGPT, Google AI Mode, Gemini e outros)
+Estude, nas fontes oficiais, os protocolos de compra por agentes que estejam em vigor (o Universal Commerce Protocol, o protocolo de comércio da OpenAI, o que a Stripe oferece para pagamentos iniciados por agentes e o que o Google exige). Em seguida, construa para cada loja um catálogo legível por máquina, apenas com dados publicados pelo criador (nome, descrição, preço, moeda, disponibilidade, termos e política de reembolso), e, se os protocolos permitirem, a conclusão da compra pelo agente com pagamento direto na conta Stripe do criador, como já acontece no checkout. O criador decide se a loja participa; o padrão é desligado. Nada de dado pessoal no catálogo. Registre em docs/agentic-commerce.md o desenho, as fontes, os custos e os passos que só o dono pode executar.
+
+205. [SH2] Produtos de marca do criador com tamanhos e cores
+Permita opções (por exemplo, tamanho e cor) nos produtos enviados pelo correio, com preço, estoque e código próprios para cada combinação, estoque baixado de forma atômica na compra e nunca vendido abaixo de zero. Acrescente o código de rastreio informado pelo criador, o aviso de envio ao comprador e um fluxo de devolução simples, com prazo e condições definidos pelo criador e coerentes com a política de reembolso. Não altere as regras atuais de frete por região sem necessidade. Verifique o efeito nos custos por plano (armazenamento, comandos e e-mails) e mantenha os limites visíveis.
+
+206. [SH3] Impressão sob demanda (Printful, Printify ou equivalentes)
+Estude as APIs oficiais e os termos de uso dos principais fornecedores de impressão sob demanda. Construa a ligação com a conta do PRÓPRIO criador (OAuth ou chave do criador, guardada com a mesma proteção dos demais tokens), o envio automático do pedido pago ao fornecedor, a atualização do rastreio e o tratamento de falhas sem perder pedidos. O fornecedor cobra o criador diretamente; o Marktmorgen nunca paga nem adianta valores. Depende do item 205 e da regra 3 (impostos sobre bens físicos). Corrija o texto "No print-on-demand" somente quando o interruptor for ligado.
+
+207. [SH4] Catálogo nos canais de venda
+Gere, para cada loja que o criador escolher, os feeds de produtos aceitos pelo Google Merchant Center, pelo catálogo da Meta (Instagram e Facebook), pelo Pinterest e, se os termos permitirem, pelo TikTok Shop e pelo YouTube Shopping, com endereço próprio que o criador cola em cada canal. Somente dados publicados; preço e disponibilidade sempre iguais aos da loja. Calcule o custo de leitura desses endereços pelos canais (requisições e comandos) e coloque teto automático.
+
+208. [SH5] Preço na moeda do comprador
+Estude, nas fontes oficiais da Stripe, a conversão automática de preço no checkout (por exemplo, o Adaptive Pricing) com cobranças diretas em contas Standard conectadas: quem paga a taxa de conversão, em que países funciona e como os reembolsos ficam. Construa somente se a taxa recair sobre o comprador ou sobre o criador, nunca sobre a plataforma, e se o criador puder ligar e desligar. Se a resposta depender da Stripe, acrescente a pergunta à cobrança diária que o dono já faz à Stripe, sem enviar nada por conta própria.
+
+209. [SH6] Cartão-presente e crédito na loja (primeiro o estudo, depois a decisão)
+Estude a legislação aplicável (Credit CARD Act e leis estaduais americanas de saldo não reclamado, regras da União Europeia, do Reino Unido e do Canadá) e registre em docs/gift-cards-study.md o que seria exigido, os riscos e os custos. Não construa nada neste item: a construção depende da decisão do dono, a partir desse estudo.
+
+210. [SH7] Importação de lojas da Shopify
+Verifique os importadores que já existem e acrescente a importação a partir dos arquivos de exportação da Shopify (produtos, opções, imagens, coleções e clientes com consentimento comprovado para receber e-mail), com pré-visualização, validação no servidor e respeito aos limites do plano, como já se exige dos outros importadores. Clientes sem consentimento comprovado entram somente como compradores, nunca na lista de e-mails.
+
+211. [SH8] Compra com um toque e conta do comprador
+Verifique se o Link, o Apple Pay e o Google Pay estão disponíveis no checkout com cobrança direta na conta do criador e se a biblioteca do comprador reúne as compras feitas em todas as lojas Marktmorgen. Corrija o que faltar, sem custo novo para a plataforma.
+
+212. [SH9] Assistente que executa tarefas do criador (comparação com o Sidekick da Shopify)
+Compare o que o Sidekick da Shopify faz com o que o assistente e as ferramentas de IA do Marktmorgen já fazem. Proponha, em docs/creator-copilot.md, as tarefas que o criador poderia pedir em linguagem natural, sempre com confirmação antes de qualquer alteração. Construa somente o que couber nos orçamentos de IA que já existem (reserva antes da chamada, teto automático e margem de 60%).
+
+213. [SH10] Página honesta "Marktmorgen vs Shopify para criadores"
+Crie uma página de comparação, em inglês americano, somente com fatos verificáveis e fontes oficiais datadas: o que cada plataforma inclui sem aplicativo pago, preços, taxas por venda e o que cada uma não faz. Publique-a apenas com o que estiver no ar e ligado; recursos desligados não aparecem. Siga as regras de SEO e de design já adotadas no site.
+
+214. [SH11] Proposta de complementos pagos que aumentem o lucro com segurança
+Com base no código de margem que já existe (lib/receiving-costs.ts e tests/margin-alignment-table.ts), calcule quais dos recursos acima poderiam ser vendidos como complementos pagos, no mesmo padrão do Store assistant, com o preço mínimo que mantém 60% em cada unidade, isoladamente, no pior caso. Registre o cálculo em docs/addon-proposals-2026-10-20.md como PROPOSTA: nenhum preço, limite ou interruptor muda sem a decisão do dono.
+
+Estado inicial de todos os itens: na fila.
+
+**Ordem vinculante:** depois do item203 [TEAMS] e de todos os itens já em andamento; não bloqueia nenhum outro. Todos permanecem **na fila**. Inclusão exclusivamente de planejamento futuro, sem implementação, contratação, conta, aceite, mensagem, aprovação ou ativação. O contexto e os fatos do pedido serão conferidos em fontes oficiais datadas antes de construir; esta inclusão não os apresenta como verificados.
+
+**Proveniência:** pedido direto do dono,20/10/2026,23h49Fortaleza; anexo51862cf3-939a-48bf-89cb-c226aa2d05cc/Texto colado.txt. Escopo integral e restrições preservados. Gift cards é somente estudo; complementos são somente proposta; Teams203 anterior permanece integralmente preservado. Recursos novos somente construídos quando chegar sua vez e com gates desligados, custos conhecidos/tetos/reserva e leitura fiscal mais onerosa; nenhuma mudança comercial autorizada por esta inclusão.
+
+
+## OP — Novas oportunidades de lucro a partir da análise da Shopify (20/10/2026)
+
+Pedido: dono, 20/10/2026, 23h58 de Fortaleza: "tem como pegar mais oportunidade de construção de lucro para mim?", a partir dos pontos fracos da Shopify (produto digital, curso e comunidade dependem de aplicativos pagos; o custo total sobe com aplicativos e taxas; o suporte é genérico; a configuração é complexa para o criador individual).
+
+Valem para estes itens todas as regras da seção SH (itens 204 a 214), sem exceção: verificar e reutilizar o que já existe; margem líquida mínima de 60% (ela pode ser maior, mas nunca menor) por cliente isolado, com 100% dos direitos usados no pior mês, e também no consolidado, depois de todos os custos e de todos os impostos, inclusive os brasileiros; custo desconhecido não pode ser considerado zero; leitura que der MAIS imposto; interruptor no código, desligado; proibição de criar contas, pagar taxas, aceitar termos, pedir aprovações, ligar interruptores e alterar preços, limites visíveis, comissão, PLANS_ON_SALE, tax gate, art. 9a ou a revisão comercial; testes somente com fornecedores simulados; inglês americano, acessibilidade e nenhuma afirmação sem fonte oficial datada.
+
+215. [OP1] Aplicativo do Marktmorgen na Shopify App Store
+Estude, nas fontes oficiais da Shopify (shopify.dev), os requisitos para publicar um aplicativo público: conta de parceiro, possibilidade de registro por pessoa física ou exigência de empresa, taxa única de registro (hoje US$ 19), participação da Shopify na receita (hoje 0% sobre o primeiro US$ 1 milhão de receita bruta acumulada na vida e 15% acima disso, contando a partir de 01/01/2025), obrigatoriedade da Shopify Billing API, revisão do aplicativo, requisitos de privacidade e de dados (incluindo os webhooks obrigatórios de dados pessoais) e quem recolhe os impostos sobre a cobrança. Em seguida, desenhe em docs/shopify-app.md um aplicativo que leve aos lojistas da Shopify os cursos, as assinaturas, a comunidade e as chamadas pagas do Marktmorgen, reutilizando o motor existente. Calcule o preço mínimo de cada plano do aplicativo que mantém 60% no pior caso, já com os 15% da Shopify e com a leitura que der mais imposto, e registre-o como PROPOSTA. Construa somente a parte que não depende de conta nem de aprovação, desligada. Os passos que só o dono pode executar (criar a conta de parceiro, pagar o registro, aceitar os termos e enviar para revisão) devem ficar listados no documento.
+
+216. [OP2] Programa de indicação do próprio Marktmorgen
+Verifique o que já existe (lib/affiliate-setting.ts menciona um diretório de programas de afiliados "if one ever opens"). Construa um programa em que um criador indica outro e recebe crédito na própria mensalidade somente depois que o indicado pagar, com o crédito limitado de modo que cada cliente, isoladamente, mantenha 60% no pior caso. Nada de dinheiro em espécie, pagamento por cadastro sem compra ou recompensa por autoindicação. Proteja contra fraude (mesma pessoa, mesmo cartão, mesmo dispositivo). Desligado até a decisão do dono.
+
+217. [OP3] Aplicativos oficiais no Zapier e no Make
+Estude os requisitos oficiais para publicar um aplicativo público no Zapier e no Make (custos, revisão, termos e exigência de empresa). Construa, sobre a API v1 e os webhooks que já existem, as definições dos gatilhos e das ações (por exemplo, nova venda, novo comprador, novo membro, novo agendamento, criar cupom), com testes simulados. Não publique nada: registre em docs/zapier-make.md os passos que só o dono pode executar.
+
+218. [OP4] Calculadora pública "quanto custa a sua Shopify com aplicativos"
+Crie, em inglês americano, uma calculadora pública que some a mensalidade da Shopify, os aplicativos de curso, comunidade, assinatura, e-mail e agendamento mais usados e as taxas por venda, e compare a soma com o plano do Marktmorgen que entrega o mesmo. Use somente preços de fontes oficiais, com a data da consulta exibida na página e uma rotina que acuse preços com mais de 90 dias sem revisão. Nada de valores inventados ou de afirmação de superioridade sem fonte. Siga as regras de SEO e de design já adotadas no site e mostre apenas recursos que estejam ligados.
+
+219. [OP5] Loja completa montada pela IA a partir do que o criador já tem: muito superior à de todos os concorrentes e extremamente fácil de usar
+
+Pedido: dono, 21/10/2026, 00h12, 00h16 e 00h19 de Fortaleza: "quero coisa super excelente, melhor que todos os concorrentes e que aumente o meu lucro" e "compare com HighLevel, Hotmart, ClickFunnels, Kajabi, Shopify e outros; faça muito mais superior, infinitamente superior e fácil de usar, super fácil".
+
+Onde a loja é montada: no próprio Marktmorgen, no studio do criador, inteiramente como rascunho oculto. Ela só vai ao ar (em marktmorgen.com/@nome ou no domínio próprio do criador) depois que ele aprovar. Nada é alterado no Instagram, no Linktree, na Shopify nem em qualquer outro site.
+
+Concorrentes (levantamento de 21/10/2026; confira cada fato nas fontes oficiais e registre-as com a data da consulta):
+- HighLevel (Funnels & Websites AI): começa por perguntas guiadas, por texto livre ou por um link ou imagem usados apenas como referência; gera página de funil ou site com textos, imagens e SEO; permite edição por conversa e continua a geração se o navegador for fechado. Não monta produtos, checkout nem e-mails, e o link não importa conteúdo.
+- ClickFunnels AI (beta): começa pela descrição do negócio, em modo rápido ou em modo pesquisa (avatar do cliente e tipo de funil); gera páginas do funil, textos e imagens. O anúncio não menciona produtos nem e-mails.
+- Kajabi Cofounder: conversa no painel e, opcionalmente, analisa a presença on-line do criador a partir do e-mail dele; gera rascunhos de cursos, ofertas, páginas e e-mails e um plano de 3 a 6 passos. Não publica, não cria imagens e não monta automações: segundo o próprio Kajabi, o criador constrói, configura e publica tudo.
+- Hotmart: o Launchpad (beta desde 10/09/2026) cria aplicativos e páginas a partir de texto. No Hotmart Pages, a página de vendas com IA (artigo da Central de Ajuda lido em 21/10/2026) exige um produto já cadastrado e aprovado; o produtor escolhe um modelo, o produto e a oferta, e a IA gera a estrutura inicial de UMA página de vendas (títulos, textos e seções), revisada em cinco etapas (cores, apresentação do produto, descrição com vídeo opcional, autor e oferta), com edição manual ou nova geração por IA. Garantia, parcelamento e perguntas frequentes são configurados depois, à mão, no editor, e a própria Hotmart avisa que a página "não substitui a revisão manual". Não monta a loja, os produtos, o checkout nem os e-mails.
+- Shopify: gera uma vitrine a partir de palavras-chave, que o lojista ajusta à mão no editor; o foco é produto físico.
+- Wix (por conversa) e Squarespace Blueprint (5 passos guiados): geram sites completos, não lojas de criador.
+- Stan: a IA dela (Stanley) ajuda a criar posts para redes sociais; não foi encontrado construtor de loja.
+- Beacons: tem configuração guiada por IA, sem detalhes publicados.
+Verifique também Systeme.io, Kartra, Teachable, Thinkific, Podia, Gumroad, Whop e os demais da lista dos 30 concorrentes. Registre a comparação completa em docs/ai-store-builder.md.
+
+O Marktmorgen já tem writeStoreSetup (lib/ai.ts, lib/store-setup.ts e components/store-setup-ai.tsx), que gera, a partir de algumas frases, três opções de apresentação, até três produtos em rascunho e as perguntas frequentes. Reutilize esse mecanismo, os importadores de lib/imports.ts, os modelos de funil e de e-mail e o Marktmorgen Path; não duplique a lógica.
+
+Objetivo: ser, comprovadamente, o único construtor que (1) começa pelo conteúdo real que o criador já tem, (2) entrega o negócio inteiro pronto para vender, e não só páginas ou textos, (3) exige uma única aprovação para publicar e (4) é o mais fácil de usar, com a facilidade medida.
+
+Escopo:
+1. Entradas: um único campo, "Paste your link or tell us what you sell", e o botão "Continue with Instagram". Aceite o Instagram somente pelo login oficial do próprio criador, por meio da API oficial da Meta (verifique nas regras da Meta quais contas são aceitas, como a conta profissional, e quais dados podem ser lidos); o endereço público da página do criador no Linktree, na Stan, na Beacons, na Gumroad, na Shopify, no YouTube ou no site próprio; e o texto colado por ele. Antes de ler qualquer site, verifique os termos de uso e o robots.txt; onde a leitura automática não for permitida, aceite somente o texto colado ou o arquivo de exportação oficial do criador. Leia apenas páginas do próprio criador, com a declaração dele de que são dele.
+2. Perguntas: no máximo 3, respondidas com botões, e somente quando faltar algo indispensável.
+3. Saída: o negócio completo em rascunho, com:
+   - o nome e três opções de apresentação;
+   - cores e estilo derivados da foto ou do logotipo enviados pelo criador;
+   - os produtos que ele já vende, com os preços que ele já pratica (sem preço inventado: na falta dele, o campo fica vazio);
+   - o checkout com a sugestão de oferta extra;
+   - um brinde gratuito em troca do e-mail, quando fizer sentido;
+   - a sequência de e-mails de boas-vindas;
+   - as perguntas frequentes e a escolha da política de reembolso;
+   - os primeiros passos do Marktmorgen Path até a primeira venda;
+   - a loja já traduzida para os idiomas que o criador escolher, entre os que o site já oferece.
+4. Montagem: o progresso real aparece passo a passo, sem barra falsa. A montagem continua se o criador fechar o navegador, e ele é avisado quando terminar.
+5. Revisão: prévia na largura de celular, ao lado da página antiga do criador. Cada parte tem os botões "Keep", "Change" e "Remove". "Change" aceita edição à mão ou um pedido em linguagem natural (por exemplo, "make it warmer" ou "change the course price"). Ofereça "Undo" em tudo e histórico de versões.
+6. Publicação: um único botão, "Publish my store", que mostra o que ainda falta (por exemplo, ligar o Stripe ou enviar o arquivo do produto) e leva direto a cada etapa. Nada é publicado, e nenhum e-mail é enviado, sem a aprovação explícita do criador.
+7. Facilidade medida: meça, em testes automatizados com fornecedores simulados, o tempo e o número de cliques desde o envio das fontes até a loja pronta para revisão e até a publicação, e registre os resultados. Inclua estes fluxos no plano de testes com pessoas reais do item 202. Nenhuma página pública pode afirmar que o recurso é mais rápido ou mais fácil que o de um concorrente sem uma comparação medida e registrada; a expressão "in minutes", ou qualquer número de minutos, só pode aparecer se a medição comprovar.
+8. Honestidade: nenhum depoimento, número de seguidores, alunos ou compradores, resultado, garantia, prazo, bônus, escassez ou urgência que o criador não tenha publicado. Todo texto da IA passa pelos filtros que já existem (honesty e heldToFacts, ou equivalentes).
+9. Lucro: o objetivo é que mais criadores terminem a loja durante o teste grátis e passem a pagar, e que a loja já nasça com lista de e-mails e oferta extra, para que o criador venda mais e cancele menos. Quando o rascunho usar um recurso que só existe num plano acima do atual, a loja deve informar isso com clareza e honestidade, sem pressão.
+10. Custo: cada chamada à IA é reservada antes, com teto automático, dentro dos orçamentos de IA que já existem; as leituras de páginas têm limite por loja e por dia. A margem líquida mínima é de 60% (ela pode ser maior, mas nunca menor) por cliente isolado, com 100% dos direitos usados no pior mês, e também no consolidado, depois de todos os custos e de todos os impostos, inclusive os brasileiros. Custo desconhecido não pode ser considerado zero.
+11. Privacidade: guarde apenas o que entrar na loja aprovada; o restante do que foi lido é apagado logo após a revisão. A política de privacidade deve dizer isso, e o texto entra em vigor junto com o recurso.
+12. Interruptor no código, desligado, no mesmo padrão de ZOOM_APPROVED. É proibido criar contas, registrar aplicativo na Meta, aceitar termos, pedir aprovações ou ligar o interruptor: isso depende do dono.
+13. Inglês americano e as mesmas exigências de acessibilidade (WCAG 2.2 AAA como ponto de partida) das demais telas, incluindo uso completo por teclado e por leitor de tela. Testes somente com fornecedores e páginas simulados.
+
+Estado: na fila. Ao concluir, registre o commit, o resultado da suíte completa e a publicação, e altere o estado para "pronto e desligado, aguardando o dono".
+
+Estado inicial de todos os itens: na fila.
+
+**Ordem vinculante:** depois do item214 [SH11] e de todos os trabalhos já em andamento; não bloqueia nenhum outro. Itens215–219: **na fila**. Os itens203–214 e todo o histórico anterior permanecem integralmente preservados. A implementação atual continua prioritária.
+
+**Proveniência:** pedido direto do dono,20/10/2026,23h58Fortaleza; anexo3cf3422c-a75f-41f6-a483-ebb523fa8b91/Texto colado.txt. Inclusão de escopo futuro; preços, taxas, requisitos e comparações descritos no pedido exigem conferência oficial datada quando cada item for executado e não são apresentados aqui como fatos verificados. Nenhuma conta, aceite, pagamento, publicação externa, ativação ou mudança comercial nesta inclusão. OP1 preços somente PROPOSTA; OP3 sem publicar integrações; OP5 exige revisão e confirmação do criador antes de qualquer publicação.

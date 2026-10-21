@@ -28,7 +28,7 @@ export async function checkDetailsAcknowledgment({browser,LOCAL,session,sid,is})
     await work.release;
     await route.fulfill({status:work.scenario.status??200,contentType:"application/json",body:work.scenario.raw??JSON.stringify(work.scenario.body(value))});
    });
-   await page.goto(LOCAL+"/studio?store="+sid,{waitUntil:"domcontentloaded",timeout:60000});
+   await page.goto(LOCAL+"/studio?store="+sid,{waitUntil:"networkidle",timeout:60000});
    await page.locator("main details").evaluateAll(nodes=>nodes.forEach(node=>{node.open=true;}));
    await page.getByRole("button",{name:"Edit name and description",exact:true}).click();
    const form=page.locator("form:has(#store-name)"),field=form.getByLabel("Store name",{exact:true}),bio=form.getByLabel("One line about it",{exact:true});

@@ -21,12 +21,21 @@ export async function checkDunningAcknowledgment({browser,LOCAL,fixture,is}){
     if(work.scenario.abort){await route.abort("failed");return;}
     await route.fulfill({status:work.scenario.status??200,contentType:"application/json",body:work.scenario.raw??JSON.stringify(work.scenario.reply({ok:true,dunning:input}))});
    });
-   await page.goto(LOCAL+"/studio?store="+fixture.sid,{waitUntil:"domcontentloaded",timeout:60000});
+   await page.goto(LOCAL+"/studio?store="+fixture.sid,{waitUntil:"networkidle",timeout:60000});
    await page.locator("main details").evaluateAll(nodes=>nodes.forEach(n=>{n.open=true;}));
    const section=page.locator("[data-dunning-editor]");await section.waitFor();
+   const layout=await page.evaluate(()=>{
+    const root=document.documentElement;
+    if(root.scrollWidth<=innerWidth)return null;
+    return {scroll:root.scrollWidth,client:root.clientWidth,viewport:innerWidth,
+     geometric:[...document.body.querySelectorAll("*")].filter(n=>{const r=n.getBoundingClientRect();return r.width>1&&r.height>1&&r.right>innerWidth+1&&getComputedStyle(n).position!=="absolute";}).slice(0,20).map(n=>({html:n.outerHTML.slice(0,450),right:n.getBoundingClientRect().right,width:n.getBoundingClientRect().width})),
+     internal:[...document.body.querySelectorAll("*")].filter(n=>n.clientWidth>1&&n.scrollWidth>n.clientWidth+1&&getComputedStyle(n).overflowX==="visible").slice(0,35).map(n=>({html:n.outerHTML.slice(0,450),scroll:n.scrollWidth,client:n.clientWidth}))};
+   });
+   if(layout)console.error("DUNNING_OPEN_LAYOUT_DIAGNOSTIC:"+JSON.stringify({width,...layout}));
    const check=section.locator("#dunning-card"),count=section.locator("#dunning-reminders");
    for(const on of [false,true]){
     await count.selectOption(on?"3":"2");await check.setChecked(on);
+    if(width===390)console.log("DUNNING_SELECTED_LAYOUT:"+JSON.stringify(await page.evaluate(()=>({viewport:innerWidth,scroll:document.documentElement.scrollWidth,select:(()=>{const n=document.querySelector("#dunning-reminders");return {client:n.clientWidth,scroll:n.scrollWidth,width:n.getBoundingClientRect().width,value:n.value};})()}))));
     for(const scenario of cases){
      let release;const held=new Promise(resolve=>{release=resolve;});pending={scenario,release:held};
      const name=on+"/"+scenario.name+"/"+width;

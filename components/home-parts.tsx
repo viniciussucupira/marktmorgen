@@ -4,7 +4,7 @@ import { AI_MONTHLY } from "@/lib/ai-rules";
 import { ANSWERS_MONTHLY } from "@/lib/answers-rules";
 import { MAX_OPTIONS } from "@/lib/product-option";
 import Link from "next/link";
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { Icon } from "@/components/icons";
 import { listSizeWords } from "@/lib/contact-rules";
 import { PAID_STORAGE_BYTES } from "@/lib/storage-rules";
@@ -175,11 +175,30 @@ const FACE = (id: string, s = 96) =>
 export function HeroFlow() {
   const [store, setStore] = useState(0);
   const [picked, setPicked] = useState(false);
+  const root = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(false);
   const reduce = useSyncExternalStore(
     subscribeReduce,
     () => window.matchMedia(REDUCE).matches,
     () => false,
   );
+
+  useEffect(() => {
+    const node = root.current;
+    if (!node || !("IntersectionObserver" in window)) return;
+    let inView = false;
+    const update = () => setVisible(inView && !document.hidden);
+    const observer = new IntersectionObserver(([entry]) => {
+      inView = entry.isIntersecting;
+      update();
+    });
+    observer.observe(node);
+    document.addEventListener("visibilitychange", update);
+    return () => {
+      observer.disconnect();
+      document.removeEventListener("visibilitychange", update);
+    };
+  }, []);
 
   /*
    * One store at a time, changing every five seconds.
@@ -200,10 +219,10 @@ export function HeroFlow() {
    * of the page talks about.
    */
   useEffect(() => {
-    if (reduce || picked) return;
+    if (reduce || picked || !visible) return;
     const t = setInterval(() => setStore((s) => (s + 1) % STORES.length), 5000);
     return () => clearInterval(t);
-  }, [reduce, picked]);
+  }, [reduce, picked, visible]);
 
   /*
    * Choosing a store stops the rotation for good. Somebody who has just
@@ -218,7 +237,7 @@ export function HeroFlow() {
   const s = STORES[store];
 
   return (
-    <div className="relative mx-auto w-full max-w-[32rem]">
+    <div ref={root} className="relative mx-auto w-full max-w-[32rem]">
       <div className="relative mx-auto w-[17rem] sm:w-[19rem]">
         {/*
           The light the phone sits in. One soft source behind it, the
@@ -716,6 +735,7 @@ function PlanCard({
         */}
         <Link
           href={`/signin?plan=${tier}&billing=${yearly ? "year" : "month"}`}
+          prefetch={false}
           className={`btn ${featured ? "btn-primary" : "btn-secondary"} btn-lg btn-block`}
         >
           {cta}

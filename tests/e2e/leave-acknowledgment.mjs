@@ -24,7 +24,7 @@ export async function checkLeaveAcknowledgment({browser,LOCAL,fixture,is}){
     const good={ok:true,leaving:{on:input.on,reasons,own:[{id:"own_abcdef",text:canonical}]}};
     await route.fulfill({status:work.scenario.status??200,contentType:"application/json",body:work.scenario.raw??JSON.stringify(work.scenario.reply(good))});
    });
-   await page.goto(LOCAL+"/studio?store="+fixture.sid,{waitUntil:"domcontentloaded",timeout:60000});
+   await page.goto(LOCAL+"/studio?store="+fixture.sid,{waitUntil:"networkidle",timeout:60000});
    await page.locator("main details").evaluateAll(nodes=>nodes.forEach(n=>{n.open=true;}));
    const section=page.locator("[data-leave-editor]");await section.waitFor();
    const onField=section.locator("#leave-on"),own=section.getByRole("textbox",{name:"Reason of your own 1",exact:true});

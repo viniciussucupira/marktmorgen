@@ -43,7 +43,9 @@ export async function checkToolsCalculator({browser,LOCAL,is}){
    await substack.getByLabel("How does recurring Billing apply to your quote?",{exact:true}).selectOption("separate");
    check((await substack.innerText()).includes("$139.00/month"),"separate recurring Billing is included once "+width);
    check(apiRequests===0,"all calculation interactions stay in browser "+width);
-   check(await calculator.evaluate(node=>node.scrollWidth<=node.clientWidth+1),"calculator fits viewport "+width);
+   const fit=await calculator.evaluate(node=>({scroll:node.scrollWidth,client:node.clientWidth,rootScroll:document.documentElement.scrollWidth,rootClient:document.documentElement.clientWidth,internalOverflow:[...node.querySelectorAll("*")].filter(child=>child.scrollWidth>child.clientWidth+1).slice(0,12).map(child=>({tag:child.tagName,html:child.outerHTML.slice(0,300),scroll:child.scrollWidth,client:child.clientWidth,whiteSpace:getComputedStyle(child).whiteSpace})),nativeSelects:[...node.querySelectorAll("select")].map(select=>({id:select.id,width:select.getBoundingClientRect().width,scroll:select.scrollWidth,client:select.clientWidth,appearance:getComputedStyle(select).appearance,overflow:getComputedStyle(select).overflowX})),offenders:[...node.querySelectorAll("*")].filter(child=>child.getBoundingClientRect().right>node.getBoundingClientRect().right).slice(0,8).map(child=>({html:child.outerHTML.slice(0,400),right:child.getBoundingClientRect().right}))}));
+   if(fit.scroll>fit.client+1)console.error("CALCULATOR_OVERFLOW_DIAGNOSTIC:"+JSON.stringify({width,...fit}));
+   check(fit.scroll<=fit.client+1,"calculator fits viewport "+width);
   }finally{await context.close();}
  }
 }
