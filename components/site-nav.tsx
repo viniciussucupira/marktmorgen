@@ -286,7 +286,7 @@ export function SiteNav() {
         <div className="bg-ink text-white" data-preview-bar="">
           <p className="container-page py-2.5 text-center text-[0.8125rem] leading-snug sm:text-sm">
             {PREVIEW_LINE}{" "}
-            <Link href={PREVIEW_LINK.href} className="whitespace-nowrap font-semibold underline underline-offset-2">
+            <Link prefetch={false} href={PREVIEW_LINK.href} className="whitespace-nowrap font-semibold underline underline-offset-2">
               {PREVIEW_LINK.label}
             </Link>
           </p>
@@ -305,6 +305,7 @@ export function SiteNav() {
       >
         <div className="container-page flex h-16 items-center justify-between gap-2 sm:gap-4">
           <Link
+            prefetch={false}
             href="/"
             onClick={closeAll}
             className="shrink-0 rounded-[10px] py-1 pr-1"
