@@ -3174,6 +3174,11 @@ Head1f8ab84 mobile118998070721 reprovou Home sample1: interação200ms,metaestri
 Head5d209df: verify/Firefox/mobile aprovados; WebKit119000075245 reprovou26assertions:24“reminder settings fit”390 no helperDunning,script/globalRSCerrors. HT10beacon eHT15leituras passaram após correção. O helperDunning abre todos os details deStudio; porisso a largura é da página completa com todos painéis expandidos, não diagnóstico exclusivo deDunning. Novo diagnóstico preserva assertion e identifica geometrias/scroll interno dessa situação. Contextos da suíte agora aguardam networkidle e leitura completa deRSCantes de navegação direta,resize e pageclose,sem filtrar pageerrors ou retirar respostas do relatório; impede que próprio teste interrompa prefetch/RSC pendente. Métodos nativos permanecem e controles/POSTs/contagens não mudam. Corpo é lido por clone local,sem rede extra; falha deespera continua reprovação. NovoCI integral exigido,nenhum provedor/custo variável novo. Histórico200ms/248ms mantido; item203Teams continua ao fim,sem antecipação.
 
 
+###201 — aguardar somenteRSC,20/10/2026 Fortaleza
+
+Headfb9b4ee verify119005919880 expôs incompatibilidade da nova espera global networkidle com a página deexperimentos que faz leituras recorrentes: após falha503 validada390,resize ficou60s aguardando toda rede. A preparação de navegação/resize/fechamento passa a exigir apenas leiturasRSC completadas e conjunto estável200ms,com mesmo timeout60s. Leituras periódicas deAPI não são respostasRSC pendentes e continuam sujeitas às suas assertions. Nenhum pageerror,caso,contagem ou limiar deproduto é removido. Esse ajuste corrige a espera adicionada noheadanterior,sem declarar as falhasWebKit resolvidas; diagnóstico expandedStudio preservado. CI integral novo obrigatório;sem novo provedor/custo porcliente. Item203preservadoao fim.
+
+
 ## 203 — Teams automático para chamadas pagas (execução futura)
 
 203. [TEAMS] Links automáticos do Microsoft Teams para as chamadas pagas, construídos agora e DESLIGADOS

@@ -245,8 +245,12 @@ try {
       const page = await newPage(...args);
       const settle = async () => {
         if(page.isClosed() || page.url()==="about:blank")return;
-        await page.waitForLoadState("networkidle",{timeout:60000});
-        await page.waitForFunction(() => !window.__mmNavigationRsc?.some(entry=>!entry.done),undefined,{timeout:60000});
+        await page.waitForFunction(()=>{
+          if(window.__mmNavigationRsc?.some(entry=>!entry.done)){delete window.__mmRscIdleSince;return false;}
+          window.__mmRscIdleSince??=performance.now();
+          return performance.now()-window.__mmRscIdleSince>=200;
+        },undefined,{timeout:60000});
+        await page.evaluate(()=>{delete window.__mmRscIdleSince;});
       };
       const goto=page.goto.bind(page),resize=page.setViewportSize.bind(page),close=page.close.bind(page);
       page.goto=async (...args)=>{await settle();return goto(...args);};
@@ -258,8 +262,12 @@ try {
     context.close=async (...args)=>{
       for(const page of context.pages()){
         if(page.isClosed()||page.url()==="about:blank")continue;
-        await page.waitForLoadState("networkidle",{timeout:60000});
-        await page.waitForFunction(()=>!window.__mmNavigationRsc?.some(entry=>!entry.done),undefined,{timeout:60000});
+        await page.waitForFunction(()=>{
+          if(window.__mmNavigationRsc?.some(entry=>!entry.done)){delete window.__mmRscIdleSince;return false;}
+          window.__mmRscIdleSince??=performance.now();
+          return performance.now()-window.__mmRscIdleSince>=200;
+        },undefined,{timeout:60000});
+        await page.evaluate(()=>{delete window.__mmRscIdleSince;});
       }
       return closeContext(...args);
     };
