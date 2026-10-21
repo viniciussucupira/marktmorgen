@@ -4050,9 +4050,21 @@ Entrega146 confirmada: PR772 incorporado21/10/2026 às18:31:37Fortaleza (21:31:3
 
 Entrega147: PR773 merge2cc72957b9a388b0dfe0d7d785017ac62c17feae em21/10/2026 às19:00:03Fortaleza (22:00:03Z),22/22 no head combinado4139dd066f13e0d01e3d26ded70c3c6b98e915fc, árvore954f9f2c67b4a0a1be8d9a49deb73a444270c902 prevista/real/testada iguais. Produção dpl_HzYSw7c9KgB8K4HNMY3P1iT5BqcF READY22:01:24.774Z; domínio exato e5rotas200mesmoDPL; error/fatal0somente21:57:19.256Z–22:02:19.256Z. Resposta parcial/ilegível do provedor não desliga campo de desconto; vazio explícito válido, grafia/IDs preservados. Incremento teto operacional mensal/anual0/0porplano; CI/deploy reais desconhecidos. Contador147próxima148. Registrar na próxima mudança necessária da fila, sem reiniciar CI saudável só por documento.
 
+### Confirmação da desativação de códigos — próxima correção concreta
+
+stopCode considerava qualquer respostaHTTP2xx prova de desativação, mesmo semID/active ou com outro código. Exigir ID próprio igual ao solicitado, active próprio=false booleano e ausência de error contraditório antes de confirmar. Respostas parciais/ilegíveis permanecem erro; sem nova chamada ou repetição automática. Testes sintéticos cobrem nove respostas inválidas, confirmação exata e HTTP500, verificando método/corpo/alvo e uma chamada por tentativa. PreservaIDs, grafia, opt-in, preços, limites e PLANS_ON_SALE=false. Sem mudança de fornecedor/chaves/TTL/tetos e incremento máximo operacional mensal/anual por plano0/0; custos reaisCI/deploy desconhecidos, não zero. Verificação remota integral obrigatória, sem execução local.
+
+### Verificação integral PR774 — hidratação do carregamento explícito
+
+Job119512455236 no head143290c9385af409e03bfbfa696584274133b211:21/22 checks aprovados; WebKit aguardou KEPT20 após o primeiro clique em Load discount codes390px, sem chegar à matriz negativa. Os demais navegadores passaram. O botão era habilitado no HTML antes de o componente montar seus handlers; agora permanece desabilitado até o efeito local de montagem, sem requisição automática ou retry. A matriz permanece inteira e a nova versão exige novamente todos os checks; se falhar, investigar evidência adicional em vez de declarar causa encerrada. Sem publicação/contador ou aumento de chamadas/tetos.
+
+PR774, job119524421731: lint recusou setState síncrono no efeito de montagem. Substituído pelo contrato SSR/client de useSyncExternalStore, com funções estáveis e sem escrita em efeito. Gate de hidratação preservado; nova verificação integral em novo head, sem supressão da regra ou rerun isolado.
+
 ### Confirmação das configurações de frete — continuação205
 
 ShippingEditor aceitava ok truthy semHTTPválido nem evidência do produto/frete e dizia Nothing was saved após perda de resposta. Agora exige confirmação própria/exata e frete normalizado igual ao enviado (ou null explícito ao parar), preserva escolhas e orienta conferir o estado quando incerto. Campos, cancelamento e troca ficam bloqueados enquanto há envio; formulário anuncia aria-busy. Testes puros cobrem corpo incompleto/contraditório, produto divergente, valor/SKU divergente,HTTPfalho, sucesso e remoção explícita. Sem nova chamada, fornecedor, chave,TTL ou teto; incremento máximo operacional mensal/anual por plano0/0, custos reaisCI/deploy desconhecidos. Preserva preços/limites/opt-in/gates eSKUUnicodeIDs. Branch independente de774, deve integrar774 explicitamente se main avançar e repetirCIcompleto. Nenhuma operação real/conta/pagamento/email/teste local. Ainda não é entrega funcional.
+
+Integração explícita do PR774 merge d654f8d2290ef572c7afebbb8cd4d56c8d8fc58d em21/10/2026 às20:02:37Fortaleza (23:02:37Z),22/22 checks no head156860f95303695ec99fd6fd5ebb3fea4cbedec8; árvore prevista/real/testada36306c3a93984fd32745416fdd416b39e24d50ae iguais. Todas as correções e históricos de falha preservados; PR775 exige nova verificação integral no head combinado. Publicação774 ainda em confirmação, contador147.
 
 ## SEO — Visibilidade do Marktmorgen no Google (21/10/2026)
 
