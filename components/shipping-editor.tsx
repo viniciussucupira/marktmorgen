@@ -4,9 +4,13 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "@/components/toast";
 import type { Product } from "@/lib/store";
-import { fieldPrefix, formatMoney, moneyField } from "@/lib/money";
+import { fieldPrefix, formatMoney, moneyField, readMoney } from "@/lib/money";
 import { useStoreCurrency } from "@/components/store-currency";
-import { MAX_SHIP_NOTE, MAX_SHIPPING_SKU, SHIP_REGIONS, type ShipRegion, readCountries, shipProblem } from "@/lib/shipping";
+import { MAX_SHIP_NOTE, MAX_SHIPPING_SKU, SHIP_REGIONS, type ShipRegion, readCountries, shipProblem, parseShipping } from "@/lib/shipping";
+
+import { confirmsShipping } from "@/lib/shipping-confirmation";
+
+const UNKNOWN_SAVE = "Shipping was not confirmed. Reload to check its status before trying again.";
 
 const MESSAGES: Record<string, string> = {
   ship_sku: "Use up to 64 characters for the inventory reference, without line breaks or control characters.",
@@ -58,16 +62,18 @@ export function ShippingEditor({ product }: { product: Product }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: product.id, shipping }),
       });
-      const data = (await response.json().catch(() => ({}))) as { ok?: boolean; error?: string };
-      if (data.ok) {
+      const data: unknown = await response.json().catch(() => null);
+      const expected = shipping === null ? null : parseShipping({ ...shipping, cents: readMoney(String(shipping.price), currency) });
+      if ((shipping === null || expected !== null) && confirmsShipping(data, response.ok, product.id, expected)) {
         setOpen(false);
         toast(said);
         router.refresh();
         return;
       }
-      setError(MESSAGES[data.error ?? ""] ?? "Something went wrong on our side. Nothing was saved. Try again in a moment.");
+      const refusal = data && typeof data === "object" && Object.hasOwn(data, "ok") && (data as {ok?:unknown}).ok === false && Object.hasOwn(data,"error") ? (data as {error?:unknown}).error : null;
+      setError(typeof refusal === "string" && Object.hasOwn(MESSAGES,refusal) ? MESSAGES[refusal] : UNKNOWN_SAVE);
     } catch {
-      setError("Something went wrong on our side. Nothing was saved. Try again in a moment.");
+      setError(UNKNOWN_SAVE);
     } finally {
       setBusy(false);
     }
@@ -83,7 +89,7 @@ export function ShippingEditor({ product }: { product: Product }) {
             </span>
             {current.sku ? <span className="ml-2 break-all">{`SKU: ${current.sku}`}</span> : null}
             {" · "}
-            <button type="button" className={link} onClick={() => setOpen(true)}>Change</button>
+            <button type="button" className={link} disabled={busy} onClick={() => setOpen(true)}>Change</button>
             {" · "}
             <button type="button" className={link} aria-busy={busy} disabled={busy} onClick={() => send(null, "It is no longer shipped.")}>Stop shipping it</button>
           </p>
@@ -99,13 +105,15 @@ export function ShippingEditor({ product }: { product: Product }) {
 
   return (
     <form
+      aria-busy={busy}
       className="mt-3 rounded-[var(--r-sm)] border border-line bg-white p-4"
       onSubmit={(event) => {
         event.preventDefault();
         send({ price: price.trim(), region, countries: region === "custom" ? readCountries(codes) : [], note: note.trim(), sku }, "Shipping saved.");
       }}
     >
-      <p className="text-sm font-bold text-ink">Shipping</p>
+      <fieldset disabled={busy}>
+      <legend className="text-sm font-bold text-ink">Shipping</legend>
       <div className="mt-3 grid gap-3 sm:grid-cols-2">
         <label className="block" htmlFor={`${id}-p`}>
           <span className="field-label">{currency === "usd" ? "Shipping cost per order, in dollars" : `Shipping cost per order, ${fieldPrefix(currency)}`}</span>
@@ -146,6 +154,7 @@ export function ShippingEditor({ product }: { product: Product }) {
         <button type="submit" aria-busy={busy} disabled={busy} className="btn btn-primary btn-sm">{busy ? "Saving…" : "Save shipping"}</button>
         <button type="button" className="btn btn-ghost btn-sm" onClick={() => { setOpen(false); setError(null); }}>Cancel</button>
       </div>
+      </fieldset>
     </form>
   );
 }
