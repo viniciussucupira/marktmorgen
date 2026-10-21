@@ -47,7 +47,7 @@ export class LockBusyError extends Error {
 async function script(source: string, keys: string[], args: (string | number)[], fallback: () => Promise<number>): Promise<number> {
   try {
     const [result] = await redisPipeline([["EVAL", source, keys.length, ...keys, ...args]]);
-    return Number(result);
+    return result === 1 ? 1 : 0;
   } catch {
     return fallback();
   }
@@ -89,8 +89,8 @@ export async function holdLock(held: Held): Promise<boolean> {
   const kept = await script(EXTEND, [held.key], [held.token, held.ttlSeconds], async () => {
     const [now] = await redisPipeline([["GET", held.key]]);
     if (now !== held.token) return 0;
-    await redisPipeline([["EXPIRE", held.key, held.ttlSeconds]]);
-    return 1;
+    const [renewed] = await redisPipeline([["EXPIRE", held.key, held.ttlSeconds]]);
+    return renewed === 1 ? 1 : 0;
   });
   return kept === 1;
 }
@@ -103,9 +103,9 @@ export async function holdLock(held: Held): Promise<boolean> {
 export async function setIfHeld(held: Held, key: string, value: string, options: { absent?: boolean } = {}): Promise<boolean> {
   const done = await script(options.absent ? FENCED_SET_NEW : FENCED_SET, [held.key, key], [held.token, value], async () => {
     const [now, there] = await redisPipeline([["GET", held.key], ["EXISTS", key]]);
-    if (now !== held.token || (options.absent && Number(there) === 1)) return 0;
-    await redisPipeline([["SET", key, value]]);
-    return 1;
+    if (now !== held.token || (options.absent && there !== 0)) return 0;
+    const [written] = await redisPipeline([["SET", key, value]]);
+    return written === "OK" ? 1 : 0;
   });
   return done === 1;
 }

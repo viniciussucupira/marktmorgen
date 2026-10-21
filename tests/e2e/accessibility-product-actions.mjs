@@ -134,6 +134,12 @@ try{
    const row=page.locator("#products li").filter({has:page.locator('button[aria-controls="product-panel-'+createdId+'"]')});
    if(await row.count()!==1)throw Error("Created product row is not unique");
    await row.waitFor();
+   const embedPreview=page.locator('#buy-button iframe');
+   if(await embedPreview.count())throw Error("Card preview loaded before explicit request");
+   await page.getByRole("button",{name:"Show card preview",exact:true}).click();
+   await embedPreview.waitFor();
+   await page.waitForFunction(()=>document.querySelector('#buy-button iframe')?.contentDocument?.querySelector("[data-card-height]"));
+
    async function visibility(button,hidden){
     const refreshed=page.waitForResponse(response=>new URL(response.url()).pathname==="/studio"&&response.request().headers()["rsc"]==="1"&&!response.request().headers()["next-router-prefetch"]);refreshed.catch(()=>{});
     const reply=page.waitForResponse(response=>new URL(response.url()).pathname==="/api/store/product"&&response.request().method()==="POST"&&response.request().postDataJSON()?.action==="visibility");
