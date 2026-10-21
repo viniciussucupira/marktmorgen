@@ -3206,6 +3206,20 @@ Headd56550b:matrizcomprador75jornadas/375auditoriaspassou nas3engines,masverify1
 O cenárioGoogle usaagora13h, separado dosholds10h/11h; assert explícita exigeBdistintodeS/G. Mantidos busy real, dono livre, recusaMaya,cap/permissões/scopes/estorno e todos os demaisoráculos. Sem alterar produção nem descartar falha. Nova suítecompleta no novoheadobrigatória;rerunisoladonãoresolve. Integração explícita da seçãoHL220–230 do737 nafilaaoEOF, preservando203–219 eprova127; itensfuturosdesligados/nãoiniciados.
 
 
+### Matriz pública — teclado, cabeçalho e geometria estável
+
+No0a957ea, WebKit119033252671 reprovou1/75casos:pricing390/baseline,target-size em.bg-neutral-950; oCTAjátemmin48px. A matriz fazia10Tabs reais e depoisaxe sem restaurar origem, misturando geometria de alvo fora da tela com estado de rolagem criado por teclado; não há prova capturada de dimensão menorque48px. Falha preservada,semexcluir regra/amostra.
+
+O produto ganha scroll-padding-top5rem para destinos de teclado/âncora ficarem abaixo do cabeçalho sticky64px. A prova de teclado agora também exige centro do alvo realmente visível/desobstruído por hit-test no estado de rolagem real,com espera limitada5s e semforçar foco. Depois, a avaliaçãoaxe integral voltaàorigem estável200ms,como asmatrizesStudio/ações,sem esconderheader ou alterar CSS para auditoria. Isso separa duas medições e fortalece oteste deoclusão em vez de ignorá-lo. Manualscroll/AT/zoomreal continuam lacunas. Nova suítecompleta noheadcorrigido obrigatória; não é alegação antecipada de correção.
+
+
+### Entrega128 — cadastro e links informativos publicados
+
+PR734incorporado21/10/2026 01:11:03Fortaleza(04:11:03Z),merge2439929afa780929eaefd508196047ca0a35abb9;headverificadoa877384d51ab784255cca92cd37944a85b2de64a,árvoreb525467c4f217bf94d6eca47308cb765c0573a32idêntica. As19verificaçõespassaram, incluindo cadastro75jornadas/225auditoriasnas3engines,verify,Firefox/WebKit,mobile,Redis,segurança eoutrasmatrizes. Rodapé eTerms/Privacy do cadastro evitam prefetch especulativo,preservandoURLs/texto/consentimento/teclado.
+
+READY21/10/2026 01:11:55.470Fortaleza(04:11:55.470Z),marktmorgen.com versãoexata2439929,dpl_A7PG69tBwdBkP868tUKuBX9tBZe9. Probes/,/signin,/signin/confirm,/pricing,/library,/privacy,/refunds200mesmoDPL,sem criar conta/mensagem/operação real;confirmaçãosemtoken é apenasleitura,fluxoautenticado testado localmente. Runtimeerror/fatal0 sójanela04:07:50.978–04:12:50.978UTC. Contador128,próximo129,avisadoapósconfirmação. Sem novo provedor/custo variável;CIcadastroteto90job-min/run,apuração completa/fatura continuamobrigatórias,desconhecido nãozero. Gates/preços/limites/optin/fiscal preservados,vendasfechadas. SemcertificarAAA/INPdecampo/margemfiscal60%.
+
+
 ## 203 — Teams automático para chamadas pagas (execução futura)
 
 203. [TEAMS] Links automáticos do Microsoft Teams para as chamadas pagas, construídos agora e DESLIGADOS

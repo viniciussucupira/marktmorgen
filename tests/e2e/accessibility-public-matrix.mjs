@@ -37,10 +37,26 @@ try{
     for(let n=0;n<10;n++){
      await page.keyboard.press("Tab");
      const state=await page.evaluate(()=>{const node=document.activeElement;if(!node||node===document.body)return null;const b=node.getBoundingClientRect();return {tag:node.tagName,visible:node.matches(":focus-visible"),width:b.width,height:b.height};});
-     if(state){focused++;if(!state.visible||state.width<=0||state.height<=0)throw Error("Keyboard focus not visible "+JSON.stringify(state));}
+     if(state){
+      focused++;if(!state.visible||state.width<=0||state.height<=0)throw Error("Keyboard focus not visible "+JSON.stringify(state));
+      await page.waitForFunction(()=>{
+       const node=document.activeElement;if(!node||node===document.body)return false;
+       const r=node.getBoundingClientRect(),x=r.left+r.width/2,y=r.top+r.height/2;
+       if(x<0||x>=innerWidth||y<0||y>=innerHeight)return false;
+       const hit=document.elementFromPoint(x,y);return Boolean(hit&&(hit===node||node.contains(hit)));
+      },undefined,{timeout:5000});
+     }
     }
     if(!focused)throw Error("No keyboard target reached");
    }
+   // Keyboard proof above retains its real scrolled positions. Whole-document
+   // target geometry is evaluated at a stable origin, like the Studio/action matrices.
+   await page.evaluate(()=>{document.activeElement?.blur?.();window.scrollTo({top:0,left:0,behavior:"instant"});});
+   await page.waitForFunction(()=>{
+    if(scrollX!==0||scrollY!==0){delete window.__publicOriginSince;return false;}
+    window.__publicOriginSince??=performance.now();return performance.now()-window.__publicOriginSince>=200;
+   },undefined,{timeout:10000});
+   await page.evaluate(()=>{delete window.__publicOriginSince;});
    await page.addScriptTag({content:axe});
    const report=await page.evaluate(async()=>{
     const tags=["wcag2a","wcag2aa","wcag2aaa","wcag21a","wcag21aa","wcag21aaa","wcag22a","wcag22aa","wcag22aaa"];
