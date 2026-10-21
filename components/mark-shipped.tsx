@@ -58,6 +58,7 @@ export function MarkShipped({
       ) : (
         <form
           className="mt-2 flex flex-wrap items-end gap-2"
+          aria-busy={busy}
           onSubmit={async (event) => {
             event.preventDefault();
             setBusy(true);
@@ -75,10 +76,10 @@ export function MarkShipped({
                 toast(confirmed.emailed ? "Marked as shipped. The buyer was emailed." : "Marked as shipped. No new email was confirmed.");
                 return;
               }
-              const reason = data && typeof data === "object" && Object.hasOwn(data, "error") ? (data as { error?: unknown }).error : null;
+              const reason = data && typeof data === "object" && Object.hasOwn(data, "ok") && (data as { ok?: unknown }).ok === false && Object.hasOwn(data, "error") ? (data as { error?: unknown }).error : null;
               setError(typeof reason === "string" && Object.hasOwn(MESSAGES, reason) ? MESSAGES[reason] : "The shipment was not confirmed. Reload to check its status before trying again.");
             } catch {
-              setError("Something went wrong on our side. Try again in a moment.");
+              setError("The shipment was not confirmed. Reload to check its status before trying again.");
             } finally {
               setBusy(false);
             }
@@ -86,7 +87,7 @@ export function MarkShipped({
         >
           <label className="min-w-[12rem] flex-1" htmlFor={id}>
             <span className="text-xs font-semibold text-ink-soft">Tracking link (optional)</span>
-            <input id={id} type="url" inputMode="url" className="field mt-1" placeholder="https://" value={tracking} onChange={(e) => setTracking(e.target.value)} />
+            <input id={id} type="url" inputMode="url" className="field mt-1" placeholder="https://" value={tracking} disabled={busy} onChange={(e) => setTracking(e.target.value)} />
           </label>
           <button type="submit" aria-busy={busy} disabled={busy} className="btn btn-secondary btn-sm">
             {busy ? "Marking…" : "Mark as shipped"}

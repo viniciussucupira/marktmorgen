@@ -47,6 +47,7 @@ import { captureHomeStudio } from "./home-studio-capture.mjs";
 import { checkSalesComparisons } from "./sales-comparisons.mjs";
 import { checkPauseAcknowledgment } from "./pause-acknowledgment.mjs";
 import { checkClaimAcknowledgment } from "./claim-acknowledgment.mjs";
+import { checkShipmentAcknowledgment } from "./shipment-acknowledgment.mjs";
 import { checkButtonContrast } from "./button-contrast.mjs";
 import { checkDetailsAcknowledgment } from "./details-acknowledgment.mjs";
 import {checkEmailCapabilities} from "./email-capabilities.mjs";
@@ -138,6 +139,8 @@ const env = {
   ANTHROPIC_API_KEY: "sk-ant-local_only_"+"x".repeat(30),
   ANTHROPIC_API_BASE: FAKE,
   STRIPE_DEMO_SECRET_KEY: "sk_test_local_only_a_stand_in",
+  // listSales checks that platform selling is configured; every API call still uses FAKE.
+  STRIPE_SECRET_KEY: "sk_test_local_only_a_stand_in_0000",
   STRIPE_CONNECT_API_BASE: FAKE,
   NEXT_FONT_GOOGLE_MOCKED_RESPONSES: join(here, "google-fonts-mock.cjs"),
   E2E_FONT_ORIGIN: FAKE,
@@ -881,6 +884,8 @@ await checkNudgeAcknowledgment({browser,LOCAL,fixture:pauseFixtures[0],is});
   await checkClaimAcknowledgment({browser,LOCAL,session:growthSession,sid:growthSid,is});
   await checkPauseAcknowledgment({browser,LOCAL,fixtures:pauseFixtures,is});
   await checkEmailCapabilities({browser,LOCAL,is});
+  const shipment=services.seedShipment("templatelibraryfixture",libraryFixture.product);
+  await checkShipmentAcknowledgment({browser,LOCAL,fixture:libraryFixture,shipment,is});
   is("no page threw", errors, []);
 } catch (error) {
   failed += 1;

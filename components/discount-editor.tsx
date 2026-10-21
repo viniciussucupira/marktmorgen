@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   CODE_PROBLEMS,
   type CodeProblem,
@@ -82,23 +82,18 @@ export function DiscountEditor({ selling, currency = "usd", address = "" }: { se
   const [amount, setAmount] = useState("10");
   const [uses, setUses] = useState("");
 
-  // Nothing has come back from Stripe yet, and nothing went wrong: that is
-  // what waiting looks like, so it is read from the two states that already
-  // exist rather than kept as a third one an effect has to set on first paint.
-  const loading = selling && codes === null && error === null;
+  const loading = busy && codes === null && error === null;
 
-  useEffect(() => {
-    if (!selling) return;
-    let alive = true;
-    send({ action: "list" }, currency).then((answer) => {
-      if (!alive) return;
-      if (answer.codes) setCodes(answer.codes);
-      else setError(answer.problem ?? MESSAGES.server_error);
-    });
-    return () => {
-      alive = false;
-    };
-  }, [selling, currency]);
+  // Listing also reconciles the checkout's discount-box flag. Only ask after
+  // the creator chooses to load it, never just because settings were opened.
+  async function loadCodes() {
+    setBusy(true);
+    setError(null);
+    const answer = await send({ action: "list" }, currency);
+    setBusy(false);
+    if (answer.codes) setCodes(answer.codes);
+    else setError(answer.problem ?? MESSAGES.server_error);
+  }
 
   async function run(payload: Record<string, unknown>, done: () => void, confirmation: string) {
     setBusy(true);
@@ -134,6 +129,10 @@ export function DiscountEditor({ selling, currency = "usd", address = "" }: { se
             been used is Stripe&apos;s count, not ours — and if you ever leave,
             they leave with you.
           </p>
+
+          <button type="button" className="btn btn-secondary btn-sm mt-4" aria-busy={busy} disabled={busy} onClick={loadCodes}>
+            {busy ? "Loading…" : codes === null ? "Load discount codes" : "Refresh discount codes"}
+          </button>
 
           {loading ? (
             <p className="mt-5 text-sm text-ink-soft">Asking Stripe…</p>

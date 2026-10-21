@@ -132,7 +132,7 @@ export default async function LibraryPage({ searchParams }: Params) {
                 </p>
               </form>
               <p className="mt-6 text-sm text-ink-soft">
-                Purchases count from October 11, 2026, when the library opened. For anything bought before, open the store and use its own link to your purchases. <Link href="/privacy#library" className="underline underline-offset-4">What is kept for this</Link>.
+                Purchases count from October 11, 2026, when the library opened. For anything bought before, open the store and use its own link to your purchases. <Link prefetch={false} href="/privacy#library" className="underline underline-offset-4">What is kept for this</Link>.
               </p>
             </div>
           )}

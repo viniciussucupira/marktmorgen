@@ -498,6 +498,12 @@ export async function startServices(port) {
   return {
     emails: () => [...emails],
     checkouts: () => [...sessions.values()],
+    /** Local-only fulfillment row; no checkout or payment is submitted. */
+    seedShipment: (handle,product) => {
+      const id="cs_test_shipmentproof000001";
+      sessions.set(id,{id,object:"checkout.session",status:"complete",payment_status:"paid",livemode:true,amount_total:1000,currency:"usd",created:Math.floor(Date.now()/1000),metadata:{store:handle,product,title:"Synthetic shipment",ship:"yes"},customer_details:{email:"shipment-buyer@example.test"},collected_information:{shipping_details:{name:"Synthetic buyer",address:{line1:"1 Synthetic Street",city:"Example City",state:"NY",postal_code:"10001",country:"US"}}}});
+      return id;
+    },
     /** Local-only synthetic list evidence, added after unrelated checkout assertions. */
     seedPathGrowth: (handle,product) => {
       for(let n=1;n<=2;n++){
