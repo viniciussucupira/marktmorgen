@@ -4030,6 +4030,14 @@ A matriz de envio já confirmou os casos negativos e confirmação sem e-mail; f
 
 Apuração de CI em21/10/2026 às20:16:12.911Z:858execuções concluídas únicas,2528jobs,786498segundos,0durações desconhecidas; delta77execuções/231jobs/78260segundos desde a evidência781/2297/708238. Inclui falhas/cancelamentos, exclui ativos/posteriores/não listados; duração não é fatura, cobrança real desconhecida. Arquivo local marktmorgen-ci-cost-20261021-2020.json e continuidade preservam evidência. Gates fiscais/comerciais e limites permanecem.
 
+### Entrega145 confirmada e validação das respostas de desconto — 21/10/2026
+
+PR771 incorporado em21/10/2026 às18:03:14 de Fortaleza (21:03:14Z), merge1495002f30fc5b265733dc34ef88de71675ced7e, após22/22 checks no headc06d59e80e6c0a7dcf1f5e140f08a13960101eda; árvores prevista/real/testada f464116b4b95c67a97ec26e598c1b9722be373a8 iguais. Produção dpl_J6w83rG4S5wThJKgzmUDfYWKAgjr READY21:04:22.125Z, marktmorgen.com no SHA exato, cinco rotas /,/platform,/pricing,/mission,/library HTTP200 com mesmo deployment. Logs error/fatal ausentes somente na janela delimitada20:59:57.794Z–21:04:57.794Z. Entrega145 avisada, próxima146. Carregamento de descontos agora explícito; campo de envio bloqueado durante confirmação; respostas perdidas/contraditórias incertas; prefetch de privacidade da biblioteca desativado. Todas as falhas/correções anteriores preservadas acima.
+
+Próxima correção concreta: DiscountEditor.send aceitava ok truthy sem HTTP bem-sucedido e convertia codes ausente em lista vazia, além de indexar erros herdados. Novo leitor compartilhado exige HTTPok, ok=true exato, codes=array de registros próprios válidos e sem erro contraditório/IDs duplicados; preserva identificadores, grafia dos códigos do criador, percentuais fracionários e códigos externos sem detalhes. Lista ilegível não apaga a lista conhecida nem confirma sucesso. Motivos específicos só com ok=false e propriedades próprias, transporte desconhecido orienta conferir antes de repetir. Testes negativos/positivos do leitor e matriz real de navegador390/1280 com todos os POSTs interceptados; nenhum código enviado ao Stripe, cobrança ou e-mail real. Verificação completa remota antes de incorporar; execução local não usada.
+
+Custos operacionais: mesmas chamadas, fornecedores, chaves, TTLs e limites; máximo mensal/anual incremental por plano0/0, não fatura0. Preços Store69/690,Studio449/4490,Scale999/9990 e limites visíveis/opt-in/idiomas/IDs preservados. PLANS_ON_SALE=false e gates fiscais/margem/comissão permanecem. Item205 SKU histórico/quantidades por variante/reserva atômica continuam incompletos; esta correção não certifica margem ou atomicidade.
+
 ## SEO — Visibilidade do Marktmorgen no Google (21/10/2026)
 
 271. [SEO1] Auditar, corrigir e melhorar presença orgânica na busca do Google
