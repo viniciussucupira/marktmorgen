@@ -4046,6 +4046,14 @@ Verificação PR773 em 2026-10-21: o job119493398832 reprovou somente a compara�
 
 Integração explícita do PR772 incorporado em21/10/2026 às18:31:37 de Fortaleza (21:31:37Z), mergefb43f43cd5e91535e9d06bc0cde1f377e6261515, com22/22 checks e árvore real igual à testada a9e0eb972c8c90712a68a039ad0f1b5ba13f3b93. PR773 preserva as duas correções e exige nova verificação integral no head combinado. Publicação ainda em confirmação; contador145 inalterado.
 
+Entrega146 confirmada: PR772 incorporado21/10/2026 às18:31:37Fortaleza (21:31:37Z), mergefb43f43cd5e91535e9d06bc0cde1f377e6261515,22/22 checks no head8fc22af1136125d006322fa9d650ad0c044d0229, árvore prevista/real/testada a9e0eb972c8c90712a68a039ad0f1b5ba13f3b93 iguais. Produção dpl_Aqojs139N48dpb1YgsHzbFRnPCD8 READY21:32:41.807Z, domínio marktmorgen.com no SHA exato, cinco rotas200/mesmoDPL; logs error/fatal0 somente na janela21:28:15.584Z–21:33:15.584Z. Confirmação de descontos exige resposta legível/HTTPválido antes de substituir códigos conhecidos; testes sintéticos390/1280 e suitecompleta. Sem incremento operacional mensal/anual por plano; cobrança realCI/deploy desconhecida, não zero. Contador146, próxima147. Publicação anunciada; próxima atualização de fila deve preservar esta evidência.
+
+Entrega147: PR773 merge2cc72957b9a388b0dfe0d7d785017ac62c17feae em21/10/2026 às19:00:03Fortaleza (22:00:03Z),22/22 no head combinado4139dd066f13e0d01e3d26ded70c3c6b98e915fc, árvore954f9f2c67b4a0a1be8d9a49deb73a444270c902 prevista/real/testada iguais. Produção dpl_HzYSw7c9KgB8K4HNMY3P1iT5BqcF READY22:01:24.774Z; domínio exato e5rotas200mesmoDPL; error/fatal0somente21:57:19.256Z–22:02:19.256Z. Resposta parcial/ilegível do provedor não desliga campo de desconto; vazio explícito válido, grafia/IDs preservados. Incremento teto operacional mensal/anual0/0porplano; CI/deploy reais desconhecidos. Contador147próxima148. Registrar na próxima mudança necessária da fila, sem reiniciar CI saudável só por documento.
+
+### Confirmação da desativação de códigos — próxima correção concreta
+
+stopCode considerava qualquer respostaHTTP2xx prova de desativação, mesmo semID/active ou com outro código. Exigir ID próprio igual ao solicitado, active próprio=false booleano e ausência de error contraditório antes de confirmar. Respostas parciais/ilegíveis permanecem erro; sem nova chamada ou repetição automática. Testes sintéticos cobrem nove respostas inválidas, confirmação exata e HTTP500, verificando método/corpo/alvo e uma chamada por tentativa. PreservaIDs, grafia, opt-in, preços, limites e PLANS_ON_SALE=false. Sem mudança de fornecedor/chaves/TTL/tetos e incremento máximo operacional mensal/anual por plano0/0; custos reaisCI/deploy desconhecidos, não zero. Verificação remota integral obrigatória, sem execução local.
+
 ## SEO — Visibilidade do Marktmorgen no Google (21/10/2026)
 
 271. [SEO1] Auditar, corrigir e melhorar presença orgânica na busca do Google
