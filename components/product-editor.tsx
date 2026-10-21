@@ -997,7 +997,7 @@ function OptionsBlock({
                     onClick={() =>
                       run({ action: "move", id: option.id, direction: "up" }, () => {})
                     }
-                    className="text-ink-soft underline underline-offset-4 transition hover:text-violet-deep disabled:no-underline disabled:opacity-40"
+                    className="inline-flex min-h-12 items-center text-ink-soft underline underline-offset-4 transition hover:text-violet-deep disabled:no-underline disabled:opacity-40"
                   >
                     Move up
                   </button>
@@ -1010,7 +1010,7 @@ function OptionsBlock({
                         () => {},
                       )
                     }
-                    className="text-ink-soft underline underline-offset-4 transition hover:text-violet-deep disabled:no-underline disabled:opacity-40"
+                    className="inline-flex min-h-12 items-center text-ink-soft underline underline-offset-4 transition hover:text-violet-deep disabled:no-underline disabled:opacity-40"
                   >
                     Move down
                   </button>
@@ -1021,7 +1021,7 @@ function OptionsBlock({
                         setRemovingId(option.id);
                         setError(null);
                       }}
-                      className="text-ink-soft underline underline-offset-4 transition hover:text-danger"
+                      className="inline-flex min-h-12 items-center text-ink-soft underline underline-offset-4 transition hover:text-danger"
                     >
                       Remove
                     </button>
@@ -1231,7 +1231,7 @@ function FileBlock({
             <button
               type="button"
               onClick={onDetach}
-              className="text-ink-soft underline underline-offset-4 transition hover:text-danger"
+              className="inline-flex min-h-12 items-center text-ink-soft underline underline-offset-4 transition hover:text-danger"
             >
               Take it off
             </button>
@@ -1275,7 +1275,7 @@ function FileBlock({
             <button
               type="button"
               onClick={onUnlink}
-              className="text-ink-soft underline underline-offset-4 transition hover:text-danger"
+              className="inline-flex min-h-12 items-center text-ink-soft underline underline-offset-4 transition hover:text-danger"
             >
               Take it off
             </button>
@@ -1778,7 +1778,7 @@ export function ProductEditor({
     }
   }
 
-  const quiet = "text-ink-soft underline underline-offset-4 transition hover:text-violet-deep disabled:no-underline disabled:opacity-40";
+  const quiet = "inline-flex min-h-12 items-center text-ink-soft underline underline-offset-4 transition hover:text-violet-deep disabled:no-underline disabled:opacity-40";
 
   return (
     <StoreCurrency value={currency}>
@@ -2014,7 +2014,7 @@ export function ProductEditor({
                         setRemovingId(product.id);
                         setError(null);
                       }}
-                      className="text-ink-soft underline underline-offset-4 transition hover:text-danger"
+                      className="inline-flex min-h-12 items-center text-ink-soft underline underline-offset-4 transition hover:text-danger"
                     >
                       Remove
                     </button>

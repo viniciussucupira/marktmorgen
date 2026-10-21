@@ -75,7 +75,7 @@ export function BuyButtonEditor({
 
   if (!product) {
     return (
-      <div className="card p-6 sm:p-8">
+      <div className="card min-w-0 p-6 sm:p-8">
         <p className="text-lg font-semibold tracking-[-0.02em] text-ink">Sell from your own website</p>
         <p className="mt-2 text-ink-soft">Add a product and you can put a card or a buy button for it on any website of yours.</p>
       </div>
@@ -101,25 +101,28 @@ export function BuyButtonEditor({
   }
 
   return (
-    <div className="card p-6 sm:p-8" id="buy-button">
+    <div className="card min-w-0 p-6 sm:p-8" id="buy-button">
       <p className="text-lg font-semibold tracking-[-0.02em] text-ink">Sell from your own website</p>
       <p className="mt-2 text-ink-soft">
         Put one of your products on your blog, portfolio or any other site: a card with its picture, price and buy button, or a plain button
         in your color. Paste the code into a block that takes HTML, called Embed, Code or Custom HTML in most website builders.
       </p>
 
-      <div className="mt-6 grid gap-4 sm:grid-cols-2">
-        <label>
+      <div className="mt-6 grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2">
+        <label className="min-w-0">
           <span className="field-label">Product</span>
-          <select className="field mt-1" value={product.id} onChange={(event) => setProductId(event.target.value)}>
+          <span className="relative mt-1 block min-w-0">
+              <select className="field min-w-0 max-w-full appearance-none overflow-hidden pr-10" value={product.id} onChange={(event) => setProductId(event.target.value)}>
             {products.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.title}
               </option>
             ))}
           </select>
+              <span aria-hidden="true" className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2"><Icon name="chevron-down" size={16} /></span>
+            </span>
         </label>
-        <label>
+        <label className="min-w-0">
           <span className="flex items-baseline justify-between gap-3">
             <span className="field-label">Where it goes</span>
             <span className="text-xs text-ink-mute">Optional</span>
@@ -137,9 +140,9 @@ export function BuyButtonEditor({
         {`Sales made through it are listed as “${embedPlace(place)}” under Where the money came from, in your numbers, so two codes on two sites can be told apart.`}
       </p>
 
-      <fieldset className="mt-5">
+      <fieldset className="mt-5 min-w-0">
         <legend className="field-label">What to put there</legend>
-        <div className="mt-2 grid gap-3 sm:grid-cols-2">
+        <div className="mt-2 grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2">
           {(
             [
               ["card", "A card", "Picture, price, rating and the buy button. A new price, a sale or a sell-out shows on your site at once."],

@@ -123,7 +123,7 @@ export function CheckoutScriptEditor({
   }
 
   return (
-    <div aria-busy={saving} className="card p-6 sm:p-8" id="checkout-script">
+    <div aria-busy={saving} className="card min-w-0 p-6 sm:p-8" id="checkout-script">
       <p className="text-lg font-semibold tracking-[-0.02em] text-ink">Checkout on your own website</p>
       <p className="mt-2 text-ink-soft">
         A link on any page of yours opens a product&apos;s card, or your sign-up form, over that page. Your buyer pays on Stripe&apos;s page, on
@@ -161,10 +161,11 @@ export function CheckoutScriptEditor({
 
       {products.length || signup ? (
         <>
-          <div className="mt-8 grid gap-4 sm:grid-cols-2">
-            <label>
+          <div className="mt-8 grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2">
+            <label className="min-w-0">
               <span className="field-label">What it opens</span>
-              <select className="field mt-1" value={what} onChange={(event) => setWhat(event.target.value)}>
+              <span className="relative mt-1 block min-w-0">
+              <select className="field min-w-0 max-w-full appearance-none overflow-hidden pr-10" value={what} onChange={(event) => setWhat(event.target.value)}>
                 {products.map((p) => (
                   <option key={p.id} value={p.id}>
                     {p.title}
@@ -172,22 +173,24 @@ export function CheckoutScriptEditor({
                 ))}
                 {signup ? <option value="join">Your email list&apos;s sign-up form</option> : null}
               </select>
+              <span aria-hidden="true" className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2"><Icon name="chevron-down" size={16} /></span>
+            </span>
             </label>
-            <label>
+            <label className="min-w-0">
               <span className="flex items-baseline justify-between gap-3">
                 <span className="field-label">What the link says</span>
                 <span className="text-xs tabular-nums text-ink-mute">{`${text.length}/${MAX_LINK_TEXT}`}</span>
               </span>
               <input className="field mt-1" maxLength={MAX_LINK_TEXT} value={text} placeholder={product ? `Buy ${product.title}` : "Join my list"} onChange={(event) => setText(event.target.value)} />
             </label>
-            <label>
+            <label className="min-w-0">
               <span className="flex items-baseline justify-between gap-3">
                 <span className="field-label">Where it goes</span>
                 <span className="text-xs text-ink-mute">Optional</span>
               </span>
               <input className="field mt-1" maxLength={MAX_PLACE} value={place} placeholder={`For example: blog (empty: ${DEFAULT_PLACE})`} onChange={(event) => setPlace(event.target.value)} />
             </label>
-            <label>
+            <label className="min-w-0">
               <span className="flex items-baseline justify-between gap-3">
                 <span className="field-label">Campaign</span>
                 <span className="text-xs text-ink-mute">Optional</span>
@@ -214,9 +217,9 @@ export function CheckoutScriptEditor({
               : "That page is not on one of your saved sites, so the code leaves it out. Add its site above and save first."}
           </p>
 
-          <fieldset className="mt-5">
+          <fieldset className="mt-5 min-w-0">
             <legend className="field-label">Opens</legend>
-            <div className="mt-2 grid gap-3 sm:grid-cols-2">
+            <div className="mt-2 grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2">
               {(
                 [
                   ["overlay", "Over your page", "Your page stays where it is. Stripe's checkout opens in a new tab."],

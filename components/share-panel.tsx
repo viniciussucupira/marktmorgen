@@ -83,14 +83,14 @@ export function SharePanel({ url, title, what = "page" }: { url: string; title: 
   }
 
   return (
-    <div className="grid gap-5 sm:grid-cols-[1fr_auto]">
+    <div className="grid min-w-0 grid-cols-1 gap-5 sm:grid-cols-[minmax(0,1fr)_auto]">
       <div className="min-w-0 space-y-4">
         <div>
           <label htmlFor={`${panelId}-share-url`} className="field-label">
             {`Link to this ${what}`}
           </label>
           <div className="flex flex-wrap gap-2">
-            <input id={`${panelId}-share-url`} className="field min-w-0 flex-1" readOnly value={url} onFocus={(e) => e.currentTarget.select()} />
+            <textarea rows={2} id={`${panelId}-share-url`} className="field min-w-0 flex-1 resize-y whitespace-pre-wrap [overflow-wrap:anywhere]" readOnly value={url} onFocus={(e) => e.currentTarget.select()} />
             <button type="button" onClick={() => void copy()} className="btn btn-secondary">
               <Icon name="copy" size={16} />
               Copy
@@ -160,7 +160,7 @@ export function SharePanel({ url, title, what = "page" }: { url: string; title: 
           </div>
           {forPost ? (
             <div className="mt-2 flex flex-wrap gap-2">
-              <input aria-label="Campaign link" className="field min-w-0 flex-1" readOnly value={forPost} onFocus={(e) => e.currentTarget.select()} />
+              <textarea rows={2} aria-label="Campaign link" className="field min-w-0 flex-1 resize-y whitespace-pre-wrap [overflow-wrap:anywhere]" readOnly value={forPost} onFocus={(e) => e.currentTarget.select()} />
               <button type="button" onClick={() => void copy(forPost)} className="btn btn-secondary">
                 <Icon name="copy" size={16} />
                 Copy
