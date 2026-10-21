@@ -4058,6 +4058,8 @@ stopCode considerava qualquer respostaHTTP2xx prova de desativação, mesmo semI
 
 Job119512455236 no head143290c9385af409e03bfbfa696584274133b211:21/22 checks aprovados; WebKit aguardou KEPT20 após o primeiro clique em Load discount codes390px, sem chegar à matriz negativa. Os demais navegadores passaram. O botão era habilitado no HTML antes de o componente montar seus handlers; agora permanece desabilitado até o efeito local de montagem, sem requisição automática ou retry. A matriz permanece inteira e a nova versão exige novamente todos os checks; se falhar, investigar evidência adicional em vez de declarar causa encerrada. Sem publicação/contador ou aumento de chamadas/tetos.
 
+PR774, job119524421731: lint recusou setState síncrono no efeito de montagem. Substituído pelo contrato SSR/client de useSyncExternalStore, com funções estáveis e sem escrita em efeito. Gate de hidratação preservado; nova verificação integral em novo head, sem supressão da regra ou rerun isolado.
+
 ## SEO — Visibilidade do Marktmorgen no Google (21/10/2026)
 
 271. [SEO1] Auditar, corrigir e melhorar presença orgânica na busca do Google
