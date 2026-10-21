@@ -63,7 +63,8 @@ export async function takeLock(key: string, ttlSeconds: number, waitMs: number):
   const giveUpAt = Date.now() + waitMs;
   for (let wait = 20; ; wait = Math.min(wait * 2, 250)) {
     const [got] = await redisPipeline([["SET", key, token, "NX", "EX", ttlSeconds]]);
-    if (got !== null) return { key, token, ttlSeconds };
+    if (got === "OK") return { key, token, ttlSeconds };
+    if (got !== null) throw new LockBusyError();
     if (Date.now() + wait > giveUpAt) throw new LockBusyError();
     await new Promise((resolve) => setTimeout(resolve, wait + Math.floor(Math.random() * 20)));
   }

@@ -3920,6 +3920,13 @@ Frete regional, opções de preço e rastreio já existem; não serão refeitos.
 
 PR #759 incorporado em21/10/2026 às08:01:05 de Fortaleza (11:01:05Z), commitfb3aa98b2f9d6316cd554d5a4c3fa18eaabad2d1; headccd8ee400f2b69104ba308d5235595c9757da8fd aprovado22/22, árvore prevista/incorporada igual à testadacb6ca340a89b682c5c32cb35fa9feae23be6b281. Adaptador interno sem rota ou ativação, não é entrega funcional; contador134 preservado. READY e domínio na versão exata confirmados, deploymentdpl_FC29r8Y3KTTwsEGPogs6LuejPqUj.
 
+
+### Registro operacional — publicação135 e aquisição de travas (21/10/2026)
+
+PR #760 incorporado em21/10/2026 às08:25:07 de Fortaleza (11:25:07Z), commite71be3e865ef939c8f798a8f1e8eb616face2d55; head52320202ae992ea533f54d131a01ee9ebc170ea8 aprovado22/22, árvore prevista/incorporada igual à testada93afd54d47e64dca2e6c64f56f19cad64ded9c37. Publicação135 READY às11:26:19.264Z, domínio marktmorgen.com na versão exata, deploymentdpl_GYpyQYcsGDWGBwkpmNMWaztL8tdt. /, /platform, /pricing, /mission e /library responderam200 no mesmo deployment. Zero error/fatal somente na janela11:22:39.358Z–11:27:39.358Z. Aviso de envio exige OK de gravação; respostas desconhecidas/falha de armazenamento não enviam; rastreio não aceita credenciais. Testes fictícios, nenhum e-mail real.
+
+Próxima proteção205: takeLock compartilhado e trava de estoque exigem confirmação OK literal; resposta desconhecida não autoriza propriedade nem abertura de checkout. Contenção null mantém comportamento existente. Testes simulados verificam rejeição, aquisição/liberação normal e zero abertura no estoque com respostas malformadas. Sem novos comandos/provedor/armazenamento/dependências ou alterações de preços/limites. CI segue custo da empresa com fatura desconhecida, não zero. Auditoria de expiração/fencing, leituras de estoque malformadas, variantes/SKU e devoluções permanece pendente; não declarar item205 completo ou atomicidade certificada. Gates SH/fiscais/opt-in preservados.
+
 ## GR — Lições da auditoria do Gumroad (21/10/2026)
 
 Proveniência: pedido direto do dono nesta conversa, 21/10/2026, 04h13 de Fortaleza. Ordem: depois do item 269 [KT3] e de todos os itens já em andamento; não bloqueia nenhum outro item. Itens 203–269 dos pedidos abertos preservados integralmente na ancestralidade desta fila. As afirmações sobre Gumroad abaixo são insumos da auditoria, ainda sujeitas a conferência oficial datada antes de qualquer uso público.
