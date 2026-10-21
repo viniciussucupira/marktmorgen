@@ -28,7 +28,12 @@ const env = {
   NEXT_TELEMETRY_DISABLED: "1",
 };
 
-async function completedResponse(response){let timer;try{return await Promise.race([response.finished(),new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error("RSC response did not finish within60000ms: "+response.url())),60000);})]);}finally{clearTimeout(timer);}}
+async function completedResponse(page,response){
+ await page.waitForFunction(url=>window.__mmRscBodies?.some(entry=>entry.url===url&&entry.done),response.url(),{timeout:60000});
+ const body=await page.evaluate(url=>window.__mmRscBodies.findLast(entry=>entry.url===url&&entry.done),response.url());
+ if(body.error||!body.bytes)throw Error("Browser RSC body failed "+JSON.stringify(body));
+ return body;
+}
 const services=await startServices(4497);
 const folder=mkdtempSync(join(tmpdir(),"mm-studio-matrix-")),seedFile=join(folder,"seed.cjs");
 let fixture;
@@ -48,6 +53,18 @@ try{
   const viewportWidth=mode==="reflow-320"?320:width;
   const context=await browser.newContext({viewport:{width:viewportWidth,height:900},serviceWorkers:"block",reducedMotion:mode==="reduced-motion"?"reduce":"no-preference",forcedColors:mode==="forced-colors"?"active":"none"});
   if(mode==="text-spacing")await context.addInitScript(()=>document.addEventListener("DOMContentLoaded",()=>{const style=document.createElement("style");style.textContent="*{line-height:1.5!important;letter-spacing:.12em!important;word-spacing:.16em!important}p{margin-bottom:2em!important}";document.head.append(style);},{once:true}));
+  await context.addInitScript(()=>{
+   window.__mmRscBodies=[];
+   const original=window.fetch;
+   window.fetch=async function(...args){
+    const response=await original.apply(this,args);
+    if(new URL(response.url).searchParams.has("_rsc")){
+     const entry={url:response.url,done:false,bytes:0,error:null,text:""};window.__mmRscBodies.push(entry);
+     response.clone().text().then(text=>{entry.bytes=text.length;entry.text=text;entry.done=true;},error=>{entry.error=String(error);entry.done=true;});
+    }
+    return response;
+   };
+  });
   await context.addCookies([{name:"nl_session",value:fixture.session,url:origin}]);
   let writes=0,foreign=0,localProductWrites=0,interceptedVisits=0,expectedVisits=1;const errors=[],blockedWrites=[];
   try{
@@ -106,7 +123,7 @@ try{
    const created=await creation,creationData=await created.json();if(!created.ok()||creationData.ok!==true||!creationData.product||creationData.product.title!==title||!/^[a-z0-9]+$/.test(creationData.product.id))throw Error("Local product creation refused");
    const createdId=creationData.product.id;
    await page.locator(".nb-toast-region [role=status]").getByText("Product added.",{exact:true}).waitFor({state:"attached"});
-   const createdRefresh=await creationRefresh;if(!createdRefresh.ok()||await completedResponse(createdRefresh))throw Error("Create RSC refresh failed");
+   const createdRefresh=await creationRefresh;if(!createdRefresh.ok()||(await completedResponse(page,createdRefresh)).error)throw Error("Create RSC refresh failed");
    await page.waitForLoadState("networkidle");
    await page.reload({waitUntil:"networkidle"});
    const row=page.locator("#products li").filter({has:page.locator('button[aria-controls="product-panel-'+createdId+'"]')});
@@ -118,8 +135,8 @@ try{
     await button.focus();await page.keyboard.press("Enter");
     const response=await reply,data=await response.json();
     if(response.request().postDataJSON()?.id!==createdId||!response.ok()||data.ok!==true||!data.product||data.product.id!==createdId||Boolean(data.product.hidden)!==hidden)throw Error("Local visibility refused "+JSON.stringify({status:response.status(),data}));
-    const refresh=await refreshed;if(!refresh.ok()||await completedResponse(refresh))throw Error("Visibility RSC refresh failed");
-    const flight=await refresh.text();const savedAt=flight.indexOf('"id":"'+data.product.id+'"');console.log("PRODUCT_VISIBILITY_RESPONSE:"+JSON.stringify({engine,width,mode,hidden,url:refresh.url(),productFragment:savedAt<0?"not found":flight.slice(savedAt,savedAt+1600)}));
+    const refresh=await refreshed;if(!refresh.ok()||(await completedResponse(page,refresh)).error)throw Error("Visibility RSC refresh failed");
+    const flight=(await completedResponse(page,refresh)).text;const savedAt=flight.indexOf('"id":"'+data.product.id+'"');console.log("PRODUCT_VISIBILITY_RESPONSE:"+JSON.stringify({engine,width,mode,hidden,url:refresh.url(),productFragment:savedAt<0?"not found":flight.slice(savedAt,savedAt+1600)}));
     await page.waitForLoadState("networkidle");
     console.log("PRODUCT_VISIBILITY_RENDER:"+JSON.stringify({engine,width,mode,hidden,buttons:await row.getByRole("button").allTextContents()}));
    }

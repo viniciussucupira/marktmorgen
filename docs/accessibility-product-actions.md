@@ -74,3 +74,8 @@ Head d310: Firefox25 casos sem falhas; WebKit25/9 falhas de largura, todas na ra
 ## Chromium interrompido pelo teto — 20/10/2026 Fortaleza
 
 Headd3b: Firefox25/0 e WebKit25/0 (75 registros de lacunas no WebKit, sem certificação). Chromium job118961810682 foi cancelado no teto40min após imprimir a primeira auditoria, sem prova de ação nem resumo final; não é sucesso. O harness passa a timeouts explícitos30s de ações/60s navegação e conclusão de RSC limitada60s, com fase focus-add/await-create no log. Timeout reprova e preserva erro; nenhuma assertion é removida e nenhum teto de CI é ampliado. Exige toda a CI no novo head; custo inclui o job cancelado. Sem operação real ou novo serviço.
+
+
+## Leitura do corpo no próprio navegador —20/10/2026 Fortaleza
+
+Headc8e559: Chromium25/25 falharam exatamente na promessa Playwright Response.finished após criação; Firefox/WebKit25/0. Deadline revelou falha repetida sem timeout global. O teste agora observa fetch real do documento: clona somente respostas RSC locais, exige corpo completo não vazio em60s e erro ausente antes de continuar. Isso verifica conclusão de stream por leitura efetiva no navegador, sem depender da promessa de instrumentação Chromium. Se a resposta real não terminar, o caso continua reprovado; nenhuma tolerância/ação/persistência/contagem é removida. Fragmento diagnóstico vem desse corpo completo. Clone apenas em fixture local, sem rede extra, sem mudar aplicação ou custos por cliente. Novo CI integral obrigatório; causa exata Playwright versus servidor ainda hipótese até evidência.
