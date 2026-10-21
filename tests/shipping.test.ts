@@ -16,8 +16,9 @@
 import { activeShipping, parseShipping, readShippingSku, readCountries, shipProblem, shipsToWords } from "@/lib/shipping";
 import { shippingAddressOf } from "@/lib/shipping-address";
 import { SHIPPING_WORDS } from "@/lib/buyer-words/shipping";
-import { addOption, addProduct, claimHandle, ensureStatsId, setProductLink, setProductShipping, setStripeAccount, setSubscription, setTax, storeForEmail } from "@/lib/store";
+import { addOption, editOption, addProduct, claimHandle, ensureStatsId, setProductLink, setProductShipping, setStripeAccount, setSubscription, setTax, storeForEmail } from "@/lib/store";
 import { readProduct } from "@/lib/catalog";
+import { parseOptions } from "@/lib/product-option";
 import { canSellProduct, createCheckout } from "@/lib/store-checkout";
 import { confirmationFor } from "@/lib/purchase-email";
 import { markShipped, readTracking } from "@/lib/shipments";
@@ -77,7 +78,7 @@ async function main(): Promise<void> {
   const saved = await setProductShipping(OWNER, book.product.id, shipping);
   is("saved on a product with nothing else", saved.ok ? saved.product.shipping : null, shipping);
   is("then no link can be put on it", (await setProductLink(OWNER, book.product.id, "https://example.com/x")).ok ? "attached" : "refused", "refused");
-  const signed = await addOption(OWNER, book.product.id, "Signed", "45");
+  const signed = await addOption(OWNER, book.product.id, "Signed", "45", { sku: "Signed-01" });
   await addOption(OWNER, book.product.id, "Unsigned", "35");
   is("its prices are versions of the same thing, each shipped", signed.ok, true);
   const withOptions = (await readProduct((await storeForEmail(OWNER))!, book.product.id))!;
@@ -101,6 +102,30 @@ async function main(): Promise<void> {
   await setProductShipping(OWNER, book.product.id, { ...shipping, sku: "" });
   const clearedSku = (await readProduct((await storeForEmail(OWNER))!, book.product.id))!;
   is("an explicit empty reference clears it without disabling shipping", [clearedSku.shipping?.sku, activeShipping(clearedSku)?.cents, clearedSku.id, clearedSku.options.map(option => option.id)], [undefined, 600, withOptions.id, withOptions.options.map(option => option.id)]);
+
+  part("Physical variant references keep each existing price ID");
+  is("a new physical variant stores its reference", withOptions.options[0].sku, "Signed-01");
+  const optionId = withOptions.options[0].id;
+  const variantSaved = await editOption(OWNER, optionId, "Signed", "45", { sku: "  Book-藍-Signed  " });
+  is("a physical variant accepts its own inventory reference", variantSaved.ok, true);
+  let variantProduct = (await readProduct((await storeForEmail(OWNER))!, book.product.id))!;
+  is("variant reference survives storage with the same IDs and price", [variantProduct.options[0].sku, variantProduct.id, variantProduct.options.map(option => option.id), variantProduct.options[0].priceCents], ["Book-藍-Signed", withOptions.id, withOptions.options.map(option => option.id), 4500]);
+  await editOption(OWNER, optionId, "Signed", "45", { details: "Signed by the author" });
+  variantProduct = (await readProduct((await storeForEmail(OWNER))!, book.product.id))!;
+  is("older option edits preserve a variant reference", variantProduct.options[0].sku, "Book-藍-Signed");
+  const badVariant = await editOption(OWNER, optionId, "Changed", "46", { sku: "x".repeat(65) });
+  is("an oversized variant reference refuses the whole edit", badVariant.ok ? "saved" : badVariant.reason, "sku");
+  variantProduct = (await readProduct((await storeForEmail(OWNER))!, book.product.id))!;
+  is("refused variant edits preserve label price and reference", [variantProduct.options[0].label, variantProduct.options[0].priceCents, variantProduct.options[0].sku], ["Signed", 4500, "Book-藍-Signed"]);
+  const badAddedVariant = await addOption(OWNER, book.product.id, "Another", "45", { sku: null });
+  is("unknown reference input does not create another variant", [badAddedVariant.ok ? "saved" : badAddedVariant.reason, (await readProduct((await storeForEmail(OWNER))!, book.product.id))!.options.length], ["sku", 2]);
+  const digitalSku = await addOption(OWNER, pdf.product.id, "PDF", "12", { sku: "Physical-only" });
+  is("a digital price cannot acquire a physical inventory reference", digitalSku.ok ? "saved" : digitalSku.reason, "sku_kind");
+  const corruptVariant = parseOptions([{ ...variantProduct.options[0], sku: { unknown: true } }]);
+  is("bad optional variant metadata preserves the price option", [corruptVariant.length, corruptVariant[0]?.id, corruptVariant[0]?.sku], [1, optionId, undefined]);
+  await editOption(OWNER, optionId, "Signed", "45", { sku: "" });
+  variantProduct = (await readProduct((await storeForEmail(OWNER))!, book.product.id))!;
+  is("explicitly clearing a variant reference keeps shipping and all IDs", [variantProduct.options[0].sku, activeShipping(variantProduct)?.cents, variantProduct.options.map(option => option.id)], [undefined, 600, withOptions.options.map(option => option.id)]);
 
   part("Its checkout");
   const load = async () => {

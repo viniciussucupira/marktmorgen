@@ -28,6 +28,7 @@
  */
 import { type ProductFile, parseProductFile } from "@/lib/product-file";
 import { MAX_LINK_LENGTH } from "@/lib/product-link";
+import { readShippingSku } from "@/lib/shipping";
 
 /**
  * How many prices one product may carry: fifty.
@@ -117,6 +118,8 @@ export type ProductOption = {
   /** What the buyer reads on the button: "1 week", "Commercial licence". */
   label: string;
   priceCents: number;
+  /** Optional inventory reference for this physical size or version; its ID stays unchanged. */
+  sku?: string;
   /** What this option hands over. One or the other, never both. */
   file: ProductFile | null;
   link: string | null;
@@ -163,10 +166,12 @@ export function parseOptions(raw: unknown): ProductOption[] {
     if (typeof value.label !== "string" || !value.label) continue;
     if (typeof value.priceCents !== "number") continue;
     if (!Number.isInteger(value.priceCents) || value.priceCents < 0) continue;
+    const sku = readShippingSku(value.sku);
     options.push({
       id: value.id,
       label: value.label.slice(0, MAX_OPTION_LABEL_LENGTH),
       priceCents: value.priceCents,
+      ...(sku ? { sku } : {}),
       file: parseProductFile(value.file),
       link:
         typeof value.link === "string" && value.link

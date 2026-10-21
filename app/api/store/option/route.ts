@@ -58,10 +58,11 @@ export async function POST(request: NextRequest) {
         ? body.details.slice(0, MAX_OPTION_DETAILS * (MAX_OPTION_DETAIL_LENGTH + 1))
         : undefined;
     const best = typeof body.best === "boolean" ? body.best : undefined;
+    const sku = Object.hasOwn(body, "sku") ? body.sku : undefined;
     if (action === "add") {
-      result = await addOption(ref, id, label, price, { details, best });
+      result = await addOption(ref, id, label, price, { details, best, sku });
     } else if (action === "edit") {
-      result = await editOption(ref, id, label, price, { details, best });
+      result = await editOption(ref, id, label, price, { details, best, sku });
     } else if (action === "remove") {
       result = await removeOption(ref, id);
     } else {
