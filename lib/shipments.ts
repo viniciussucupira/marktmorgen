@@ -20,24 +20,13 @@ import { shippingWords } from "@/lib/buyer-words/shipping";
 import { speech } from "@/lib/buyer-words";
 import { shippingAddressOf, wasShipped } from "@/lib/shipping-address";
 
-export type Shipped = { at: number; tracking: string };
+import { readTracking, readShippedRecord, type Shipped } from "@/lib/shipment-record";
+export { readTracking };
+export type { Shipped };
 
 const SESSION = /^cs_(test|live)_[A-Za-z0-9]{10,200}$/;
 const KEEP_SECONDS = 400 * 86_400;
 export const doneKey = (session: string) => `nl:ship:done:${session}`;
-
-/** A tracking link as typed: an https address of at most 500 characters, or "" for none; null when it is not one. */
-export function readTracking(raw: unknown): string | null {
-  const typed = typeof raw === "string" ? raw.trim() : "";
-  if (!typed) return "";
-  if (typed.length > 500) return null;
-  try {
-    const url = new URL(typed);
-    return url.protocol === "https:" && url.hostname.includes(".") && !url.username && !url.password ? url.toString() : null;
-  } catch {
-    return null;
-  }
-}
 
 /** When each of these orders was marked as shipped, by session id. */
 export async function readShipped(sessions: string[]): Promise<Map<string, Shipped>> {
@@ -49,8 +38,8 @@ export async function readShipped(sessions: string[]): Promise<Map<string, Shipp
     const raw = rows[i];
     if (typeof raw !== "string") return;
     try {
-      const value = JSON.parse(raw) as Shipped;
-      if (typeof value.at === "number") out.set(id, { at: value.at, tracking: typeof value.tracking === "string" ? value.tracking : "" });
+      const value = readShippedRecord(JSON.parse(raw));
+      if (value) out.set(id, value);
     } catch {
       // Unreadable is not marked.
     }
@@ -81,7 +70,7 @@ export async function markShipped(store: Store, session: string, rawTracking: un
   } catch { return { ok: false, reason: "unknown" }; }
   if (claimed === null) {
     const kept = (await readShipped([session])).get(session);
-    return { ok: true, shipped: kept ?? shipped, emailed: false };
+    return kept ? { ok: true, shipped: kept, emailed: false } : { ok: false, reason: "unknown" };
   }
   // Only an explicit storage acknowledgment grants the right to send.
   if (claimed !== "OK") return { ok: false, reason: "unknown" };
