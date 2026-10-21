@@ -11,6 +11,7 @@ import {
 import { type Currency, fieldPrefix } from "@/lib/money";
 import { toast } from "@/components/toast";
 import { STUDIO_MESSAGES } from "@/lib/studio-messages";
+import { readDiscountConfirmation } from "@/lib/discount-confirmation";
 
 const MESSAGES: Record<string, string> = {
   ...STUDIO_MESSAGES,
@@ -33,26 +34,20 @@ async function send(payload: Record<string, unknown>, currency: Currency): Promi
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
-    const data = (await response.json()) as {
-      ok?: boolean;
-      error?: string;
-      reason?: string;
-      codes?: DiscountCode[];
-    };
-    if (data.ok) return { codes: data.codes ?? [] };
-    if (data.error === "code") {
-      // The server says which way it was wrong; the creator gets that sentence
-      // rather than a failure they cannot act on.
-      return {
-        problem:
-          data.reason === "amount"
-            ? amountProblem(currency)
-            : CODE_PROBLEMS[data.reason as CodeProblem] ?? CODE_PROBLEMS.shape,
-      };
+    const data: unknown = await response.json().catch(() => null);
+    const codes = readDiscountConfirmation(data, response.ok);
+    if (codes !== null) return { codes };
+    if (data && typeof data === "object" && Object.hasOwn(data,"ok") && (data as {ok?: unknown}).ok === false && Object.hasOwn(data,"error")) {
+      const refusal = data as {error?: unknown;reason?: unknown};
+      if (refusal.error === "code" && Object.hasOwn(data,"reason")) {
+        const reason = refusal.reason;
+        return {problem: reason === "amount" ? amountProblem(currency) : typeof reason === "string" && Object.hasOwn(CODE_PROBLEMS,reason) ? CODE_PROBLEMS[reason as CodeProblem] : CODE_PROBLEMS.shape};
+      }
+      if (typeof refusal.error === "string" && Object.hasOwn(MESSAGES,refusal.error)) return {problem:MESSAGES[refusal.error]};
     }
-    return { problem: MESSAGES[data.error ?? ""] ?? MESSAGES.server_error };
+    return {problem:"We could not confirm the discount codes. Reload to check their status before trying again."};
   } catch {
-    return { problem: MESSAGES.server_error };
+    return {problem:"We could not confirm the discount codes. Reload to check their status before trying again."};
   }
 }
 
