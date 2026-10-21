@@ -3289,6 +3289,11 @@ A matriz de cadastro anterior terminava no Studio vazio; a matriz de produto usa
 -201: lacuna autônoma de primeira loja fechada. Restam aparelhos/AT/zoomreal400% e revisão manual, aguardando o dono conforme evidência anterior; testes sintéticos não são certificaçãoAAA.202: plano de pesquisa incorporado emdocs/accessibility-real-people-plan.md; não houve recrutamento, estudo com pessoas, contato ou gasto. Seguir203acionável, sem ativação.
 - Contador130confirmado; próximo131. Custos fixos de CI: evidência localwork/marktmorgen-ci-cost-744-20261021-0604.json com30execuções concluídas/88jobs/19522segundos, subconjunto separado sem soma aos totais anteriores; exclui posteriores/emcurso/fatura. Fatura desconhecida não é zero. Nenhum novo provedor/custo variável produtivo; preços/limites/permissões/gates preservados,PLANS_ON_SALE=false. Leitura fiscal mais onerosa e meta60% continuam vinculantes, sem margem certificada.
 
+### Verificação das filas745/747 — falhas preservadas e diagnóstico (21/10/2026)
+
+-745head7136c25: Firefoxfullsuite job119069477911 reprovou emtests/e2e/package-acknowledgment.mjs:38: espera30s pela requisição após save/missing/1280.747head826594b: ProductFirefox job119074226785 abortou no primeirocreate com assertion internaPlaywright FrameManager.frameAttached/FFPage._onFrameAttached. São reprovações; nenhum desses heads será incorporado como aprovado. Entrega130 permanece nohead anteriormente validado por22checks.
+- Acrescentado diagnóstico limitado do editor sintético de pacote no ponto de falha: caminho,contador de requisições,estadoopen/busy,botões/campos e aviso. Erro original relançado,release sempre executado,mesmoscenários/timeouts/asserts/recusas; sem ignorar erro ou reexecutar sójob. Nova execução completa no novohead. Diagnóstico não é correção conclusiva nem entrega funcional.
+
 ## 203 — Teams automático para chamadas pagas (execução futura)
 
 203. [TEAMS] Links automáticos do Microsoft Teams para as chamadas pagas, construídos agora e DESLIGADOS
