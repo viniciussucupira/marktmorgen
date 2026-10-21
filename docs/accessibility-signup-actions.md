@@ -15,3 +15,9 @@ No head398bb66, Chromium eFirefox concluíram;WebKit falhou nas25confirmações:
 ## Integração explícita para nova verificação completa
 
 Head730a7b7ec0 incorporado na branch de cadastro, mantendo integralmente o harnessHTTPS,workflow e225auditorias anteriores; traz as correções de desempenho, seletorDunning e settlement antes de reload. Integração somente para testar o conjunto enquanto730éverificado, sem merge emmain ou publicação antecipada. O head030c1a3 passou75jornadas/225auditorias de cadastro mas reprovoumobile272ms; não pode ser declarado concluído. Toda a suíte deve rodar novamente no novohead, inclusive cadastro nas3engines. Nenhuma operação/provedor/custo variável novo; todos os jobs adicionais fixos devem ser reconciliados, incluindo cancelados/falhos. Preços/limites/gates e fila203–219 preservados.
+
+## Prefetch de links informativos
+
+No headdbe95fa, WebKit119024282128 concluiu25jornadas/75auditorias mas reprovou1caso390/forced-colors por3pageerrors deRSC para/terms,/privacy,/refunds; Chromium/Firefox passaram. Toda a evidência é mantida e não se filtra esse erro. FooterAnchor passa a não buscar antecipadamente cada destino informativo; os linksTerms/Privacy do cadastro também usam prefetchfalse. Permanecem linksnativosNext com mesmosendereços,textos,foco e navegação real ao clique. Ler/concluir cadastro não precisa solicitar páginaslegais especulativas; reduz concorrência desnecessária de rede/browser, sem remover acesso aos termos ou consentimento. Não é prova antecipada de resolver oWebKit: nova suíte completa no novohead obrigatória.
+
+Esta alteração compartilha components/site-footer.tsx eapp/signin/page.tsx; ownership desta branch até integração explícita com730/736. Nenhum preço/limite/gate/optin/custo deprovedor novo.

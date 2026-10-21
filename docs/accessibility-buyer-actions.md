@@ -11,3 +11,9 @@ Reflow320 não é zoomreal400%. Aparelhos físicos, AT/participantes, teclado vi
 Custo fixo adicional CI:3jobs×30min=90job-min/execução;Rexecuções/mês teto90Rmensal/1080Ranual. Sem serviço/assinatura/conta/provedor novo, sem custo variável porcliente. Minutos reais, falhas/cancelamentos e elegibilidade/fatura devem ser reconciliados; desconhecido nãozero. Preservados preços/limites,PLANS_ON_SALE=false,comissão,permissões/opt-in,taxgate/art9a/revisãocomercial e mínimo60%isolado100%direitos/pior-mês+consolidado após todosos custos/impostosBrasil/EUA. Nenhum gasto ou ativação autorizado.
 
 Estado: implementação para verificação integral remota; nenhum resultado ou entrega funcional antecipado. Fila203–219 preservada e não iniciada.
+
+## Primeira falha e correção de landmark
+
+Head7b0e048:os3jobs119025543726/119025543892/119025544083 reprovam25casos cada no formulário da biblioteca. Checkout e recibo passaram; a regraregion detectou.bg-ink e.py-1 fora de landmark,semoverflow. A biblioteca chamavaSiteNav diretamente, sem oheader usado nas páginas públicas já verificadas. app/library/page.tsx passa a envolver a navegação emheader, dando landmarkbanner ao aviso e identidade do site, sem duplicar menu ou alterar texto/ações. Regraregion permanece integral,sem exceção ou filtro. Atéaqui3estados/caso75auditorias/engineforam executados, não125; as etapas seguintes ainda precisam passar.
+
+Integração explícita do734a877384 preservaHTTPS/cadastro e desativa prefetch informativo deFooterAnchor/Terms/Privacy; parent registrado. Correção exige toda a suíte no novohead, não rerun isolado. Custos fixos dosjobsfalhos/cancelados devem ser reconciliados, nenhuma operação real ou mudança comercial/fiscal. Ownership deapp/library/page.tsx desta branch até integração posterior; sem editor concorrente.
