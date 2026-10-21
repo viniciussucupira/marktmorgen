@@ -3286,6 +3286,11 @@ A matriz de cadastro anterior terminava no Studio vazio; a matriz de produto usa
 - BasePR746 incorporadaàs03:59:46Fortaleza/06:59:46Z, merge40436f92f80e89b9189ead31978a9c34ec92cd12 após22checks noheadfcb3ff1, árvoreb1d063ff9f55df6be095a9212e9b5f5672e7dbc9 igual à testada/incorporada. Política e transporteGraphpreparados; nenhumproviderofertado/callback/conta/operaçãoMicrosoftativados. Não é entrega funcional;contador130inalterado.
 - Próximaetapa: helperpurodeestadoaleatório/nonce/PKCES256, envelopeAES256GCMdoexistingsecretbox vinculadoàloja/sessão/ator/estado,TTL600s, recusadealteração/troca/expiração. Testes sintéticos; não simulamprova deOIDC/GETDEL/rechecagemdepermissão ainda ausentes. Tudo isso permanece obrigatório antes de callback/conexão/reservas.203em andamento;custosdesconhecidosreprovam,TEAMS_APPROVED=false e todos os gates preservados. PedidosWH/KJ/CIcontinuampreservados emPR747–749, não descartados por esta branchbaseada emmain.
 
+### Desempenho móvel — remover trabalho do menu fechado (21/10/2026)
+
+-750head30b10fd6reprovouMobilejob119086310213: amostra1da home224ms, limite200ms;9amostras preservadas, sem descarte/outlier/relaxamento. LCPmáx944ms,CLS0nessarodada. Alvo:summarynativodalistadepreços,scroll22890, não o menu móvel. Longframe205,3ms incluiReactpointerdown92,1ms ewindowonclick25,3ms; não é certificaçãoINPde campo.
+- SiteNav mantinha listenerglobaldeclickeagendavasetOpenMenu(null) mesmo com painel já fechado. O listener agora existe apenas enquanto há paineldesktopaberto; clicarfora ainda fecha,Escape/scroll/menu móvel preservados. Isso remove trabalho identificado, mas não declara resolvidotodocustodehidratação; novasuítecompleta/9amostras no novohead devem comprovar. Mesmoslimiares,semocultarcomponentes ou atrasar interação no teste. Sem mudança depreços/limites/gates,PLANS_ON_SALE=false.
+
 ## 203 — Teams automático para chamadas pagas (execução futura)
 
 203. [TEAMS] Links automáticos do Microsoft Teams para as chamadas pagas, construídos agora e DESLIGADOS
