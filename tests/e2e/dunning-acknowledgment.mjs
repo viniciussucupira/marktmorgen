@@ -24,6 +24,14 @@ export async function checkDunningAcknowledgment({browser,LOCAL,fixture,is}){
    await page.goto(LOCAL+"/studio?store="+fixture.sid,{waitUntil:"networkidle",timeout:60000});
    await page.locator("main details").evaluateAll(nodes=>nodes.forEach(n=>{n.open=true;}));
    const section=page.locator("[data-dunning-editor]");await section.waitFor();
+   const layout=await page.evaluate(()=>{
+    const root=document.documentElement;
+    if(root.scrollWidth<=innerWidth)return null;
+    return {scroll:root.scrollWidth,client:root.clientWidth,viewport:innerWidth,
+     geometric:[...document.body.querySelectorAll("*")].filter(n=>{const r=n.getBoundingClientRect();return r.width>1&&r.height>1&&r.right>innerWidth+1&&getComputedStyle(n).position!=="absolute";}).slice(0,20).map(n=>({html:n.outerHTML.slice(0,450),right:n.getBoundingClientRect().right,width:n.getBoundingClientRect().width})),
+     internal:[...document.body.querySelectorAll("*")].filter(n=>n.clientWidth>1&&n.scrollWidth>n.clientWidth+1&&getComputedStyle(n).overflowX==="visible").slice(0,35).map(n=>({html:n.outerHTML.slice(0,450),scroll:n.scrollWidth,client:n.clientWidth}))};
+   });
+   if(layout)console.error("DUNNING_OPEN_LAYOUT_DIAGNOSTIC:"+JSON.stringify({width,...layout}));
    const check=section.locator("#dunning-card"),count=section.locator("#dunning-reminders");
    for(const on of [false,true]){
     await count.selectOption(on?"3":"2");await check.setChecked(on);

@@ -224,7 +224,47 @@ try {
   browser = await launch();
   // All helper contexts use intercepted synthetic APIs; workers must not bypass them.
   const createIsolatedContext = browser.newContext.bind(browser);
-  browser.newContext = (options = {}) => createIsolatedContext({ ...options, serviceWorkers: "block" });
+  browser.newContext = async (options = {}) => {
+    const context = await createIsolatedContext({ ...options, serviceWorkers: "block" });
+    await context.addInitScript(() => {
+      window.__mmNavigationRsc = [];
+      const original = window.fetch;
+      window.fetch = async function (...args) {
+        const input = args[0], url = new URL(typeof input === "string" || input instanceof URL ? input : input.url, location.href);
+        const entry = url.origin === location.origin && url.searchParams.has("_rsc") ? {done:false} : null;
+        if (entry) window.__mmNavigationRsc.push(entry);
+        try {
+          const response = await original.apply(this,args);
+          if (entry) response.clone().text().then(() => {entry.done=true;},() => {entry.done=true;});
+          return response;
+        } catch(error) {if(entry)entry.done=true;throw error;}
+      };
+    });
+    const newPage = context.newPage.bind(context);
+    context.newPage = async (...args) => {
+      const page = await newPage(...args);
+      const settle = async () => {
+        if(page.isClosed() || page.url()==="about:blank")return;
+        await page.waitForLoadState("networkidle",{timeout:60000});
+        await page.waitForFunction(() => !window.__mmNavigationRsc?.some(entry=>!entry.done),undefined,{timeout:60000});
+      };
+      const goto=page.goto.bind(page),resize=page.setViewportSize.bind(page),close=page.close.bind(page);
+      page.goto=async (...args)=>{await settle();return goto(...args);};
+      page.setViewportSize=async (...args)=>{await settle();const result=await resize(...args);await settle();return result;};
+      page.close=async (...args)=>{await settle();return close(...args);};
+      return page;
+    };
+    const closeContext=context.close.bind(context);
+    context.close=async (...args)=>{
+      for(const page of context.pages()){
+        if(page.isClosed()||page.url()==="about:blank")continue;
+        await page.waitForLoadState("networkidle",{timeout:60000});
+        await page.waitForFunction(()=>!window.__mmNavigationRsc?.some(entry=>!entry.done),undefined,{timeout:60000});
+      }
+      return closeContext(...args);
+    };
+    return context;
+  };
   console.log(`BROWSER_ENGINE_REPORT:${JSON.stringify({ requested: engine, actual: browserType.name(), version: browser.version() })}`);
   const errors = [];
   const watch = (page) => page.on("pageerror", (error) => errors.push(String(error)));

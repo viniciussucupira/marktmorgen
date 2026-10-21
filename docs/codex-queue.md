@@ -3169,6 +3169,11 @@ WebKitfc9d3f: HT10beacon não expunha Blob no route; teste agora captura cópia 
 Head1f8ab84 mobile118998070721 reprovou Home sample1: interação200ms,metaestrita<200,LCP772ms/CLS0;outras8amostraspassaram. Evento ocorreu junto de longtask166ms; não se elimina amostra nem relaxa gate, e não se declara causa exclusiva. Revisão identificou HeroFlow com timer5s ativo mesmo fora da tela/enquanto abaoculta. Agora IntersectionObserver+visibilitychange pausam esse timer fora da área visível/abaoculta e retomam ao voltar;conteúdo e escolha manual/reducedmotion preservados,sem gatilho comercial/custo. É redução concreta de trabalho desnecessário,hipótese de contribuição à primeira interação; exige suíte integral/móvel no novohead e conservaoutlier248ms histórico. Item203Teams permanece ao fim; ordem depois202 eativos,sem bloqueio.
 
 
+###201 — navegação sem interromper leituraRSC,20/10/2026 Fortaleza
+
+Head5d209df: verify/Firefox/mobile aprovados; WebKit119000075245 reprovou26assertions:24“reminder settings fit”390 no helperDunning,script/globalRSCerrors. HT10beacon eHT15leituras passaram após correção. O helperDunning abre todos os details deStudio; porisso a largura é da página completa com todos painéis expandidos, não diagnóstico exclusivo deDunning. Novo diagnóstico preserva assertion e identifica geometrias/scroll interno dessa situação. Contextos da suíte agora aguardam networkidle e leitura completa deRSCantes de navegação direta,resize e pageclose,sem filtrar pageerrors ou retirar respostas do relatório; impede que próprio teste interrompa prefetch/RSC pendente. Métodos nativos permanecem e controles/POSTs/contagens não mudam. Corpo é lido por clone local,sem rede extra; falha deespera continua reprovação. NovoCI integral exigido,nenhum provedor/custo variável novo. Histórico200ms/248ms mantido; item203Teams continua ao fim,sem antecipação.
+
+
 ## 203 — Teams automático para chamadas pagas (execução futura)
 
 203. [TEAMS] Links automáticos do Microsoft Teams para as chamadas pagas, construídos agora e DESLIGADOS
