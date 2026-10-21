@@ -33,6 +33,17 @@ async function main() {
   assert.equal(await takeTeamsAuthorization(revoked.state, binding, permit, now + 1), null);
   allowed = true;
   assert.equal(await takeTeamsAuthorization(revoked.state, binding, permit, now + 2), null);
+  for (const acknowledgement of [undefined, null, 0, 1, "true", { ok: true }, []] as unknown[]) {
+    const malformed = async () => acknowledgement as boolean;
+    const beforeFunding: number = reserves;
+    assert.equal(await keepTeamsAuthorization(binding, malformed, reserve, now), null);
+    assert.equal(reserves, beforeFunding, "unknown permission must not spend");
+    assert.equal(await keepTeamsAuthorization(binding, permit, malformed, now), null);
+    const consumed = await keepTeamsAuthorization(binding, permit, reserve, now);
+    assert.ok(consumed);
+    assert.equal(await takeTeamsAuthorization(consumed.state, binding, malformed, now + 1), null);
+    assert.equal(await takeTeamsAuthorization(consumed.state, binding, permit, now + 2), null, "unknown permission consumes state once");
+  }
   const expired = await keepTeamsAuthorization(binding, permit, reserve, now);
   assert.ok(expired); advance(601000);
   assert.equal(await takeTeamsAuthorization(expired.state, binding, permit, now + 601000), null);

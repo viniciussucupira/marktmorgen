@@ -16,7 +16,7 @@ export async function keepTeamsAuthorization(binding: TeamsBinding, mayManage: P
   const prepared = prepareTeamsAuthorization(binding, now);
   if (!prepared) return null;
   try {
-    if (!(await mayManage(binding.storeId, binding.actor)) || !(await reserve())) return null;
+    if ((await mayManage(binding.storeId, binding.actor)) !== true || (await reserve()) !== true) return null;
     if (Buffer.byteLength(prepared.sealed, "utf8") > TEAMS_PENDING_BYTES) return null;
     const [written] = await redisPipeline([["SET", key(prepared.state), prepared.sealed, "NX", "EX", TEAMS_STATE_TTL_SECONDS]]);
     if (written !== "OK") return null;
@@ -31,7 +31,7 @@ export async function takeTeamsAuthorization(state: string, binding: TeamsBindin
     const [sealed] = await redisPipeline([["GETDEL", key(state)]]);
     if (typeof sealed !== "string") return null;
     const opened = openConsumedTeamsAuthorization(state, sealed, binding, now);
-    if (!opened || !(await mayManage(binding.storeId, binding.actor))) return null;
+    if (!opened || (await mayManage(binding.storeId, binding.actor)) !== true) return null;
     return opened;
   } catch { return null; }
 }

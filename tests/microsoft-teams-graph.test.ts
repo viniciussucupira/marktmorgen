@@ -45,6 +45,14 @@ async function main() {
     await assert.rejects(client.remove(record), (e: unknown) => e instanceof TeamsGraphError && e.kind === "budget");
     assert.equal(requests.length, before);
     admitted = true;
+    for (const acknowledgement of [undefined, null, 0, 1, "true", { ok: true }, []] as unknown[]) {
+      const malformed = new TeamsGraph({ accessToken: "synthetic-token", owner, reserve: async () => acknowledgement as boolean, localBase: "http://127.0.0.1:" + address.port });
+      await assert.rejects(malformed.remove(record), (e: unknown) => e instanceof TeamsGraphError && e.kind === "budget");
+      assert.equal(requests.length, before);
+    }
+    const unavailable = new TeamsGraph({ accessToken: "synthetic-token", owner, reserve: async () => { throw Error("synthetic credential must not escape"); }, localBase: "http://127.0.0.1:" + address.port });
+    await assert.rejects(unavailable.remove(record), (e: unknown) => e instanceof TeamsGraphError && e.kind === "budget" && !e.message.includes("credential"));
+    assert.equal(requests.length, before);
     for (const [code, kind] of [[401, "auth"], [403, "scope"], [404, "gone"], [429, "limit"], [302, "provider"]] as const) {
       status = code;
       await assert.rejects(client.capability("organizational"), (e: unknown) => e instanceof TeamsGraphError && e.kind === kind && !e.message.includes("synthetic-token"));

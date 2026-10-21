@@ -3892,6 +3892,15 @@ A suíte completa WebKit de `76f4f3bb43db6f9e2da607d7248d7a6b748a4035`, job11912
 
 O novo head arma a espera da resposta204 da rota local estritamente validada **antes** de navegar e aguarda essa confirmação antes de ler a contagem. Continuam obrigatórios exatamente um beacon com campos permitidos, GPC prioritário, zero anúncios/eventos/escritas inesperadas. Sem mudar StoreBeacon, StorePixels, consentimentos, prazo padrão, cenários ou critérios. Não é reexecução isolada: nova suíte completa obrigatória; nenhuma entrega ou aprovação inferida do head reprovado.
 
+
+### Registro operacional — publicação funcional 133 e Teams 203 (21/10/2026)
+
+PR #753 incorporado em 21/10/2026 às 06:18:03 de Fortaleza (09:18:03Z), commit `423e3c783ddc6ce652c4809e81e82e402d961f32`. Head verificado `92fbf3e702f1c4e81148d57a198a724a0936753f`: 22/22 checks aprovados; árvore prevista e incorporada iguais à testada (`cd6bba017530492078e97b1f07fc3f0a4bfca1cf`). Publicação 133 READY às 09:19:09.782Z, domínio marktmorgen.com confirmado na versão exata, deployment `dpl_91aoyvk5DhE9y3fAuNpsRnz7iBPr`; /, /platform, /pricing, /mission e /library responderam 200 com o mesmo deployment. Logs error/fatal: zero somente na janela 09:14:40.275Z–09:19:40.275Z. Correções funcionais: rolagem nativa por teclado imediata e progresso de configuração com linguagem factual e semântica acessível. Testes sintéticos; nenhuma certificação AAA ou de margem.
+
+PR #757: permissões e reservas de custo do Teams exigem confirmação booleana literal true; respostas desconhecidas e falhas de consulta recusam antes da operação. Cobertura sintética de respostas malformadas e consumo único. O head inicial falhou no TypeScript TS7022; corrigido com anotação explícita, sem remover asserções. Integração com a publicação 133 exige verificação completa no novo head. Teams continua incompleto, desconectado e com TEAMS_APPROVED=false; esta proteção inativa não é entrega funcional.
+
+Custos CI: reconciliação local marktmorgen-ci-cost-20261021-0855.json cobre 636 execuções completas únicas, 1.862 jobs, 558.191 segundos; 99 execuções/301 jobs/108.371 segundos adicionais observados em relação ao snapshot 0732, sem somar novamente deltas sobrepostos. Duração não equivale a cobrança; fatura efetiva desconhecida, nunca zero. Sem novo provedor, dependência, armazenamento ou operação de produção nesta alteração. Todos os gates SH, PLANS_ON_SALE=false, preços, limites, opt-in e controles fiscais permanecem vinculantes.
+
 ## GR — Lições da auditoria do Gumroad (21/10/2026)
 
 Proveniência: pedido direto do dono nesta conversa, 21/10/2026, 04h13 de Fortaleza. Ordem: depois do item 269 [KT3] e de todos os itens já em andamento; não bloqueia nenhum outro item. Itens 203–269 dos pedidos abertos preservados integralmente na ancestralidade desta fila. As afirmações sobre Gumroad abaixo são insumos da auditoria, ainda sujeitas a conferência oficial datada antes de qualquer uso público.
