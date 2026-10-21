@@ -2,6 +2,8 @@ import { createHash } from "node:crypto";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { prepareTeamsAuthorization, openConsumedTeamsAuthorization, TEAMS_STATE_TTL_SECONDS, type TeamsBinding } from "./microsoft-teams-authorization-state";
 
+export const TEAMS_PENDING_BYTES = 2048;
+
 type Permission = (storeId: string, actor: string) => Promise<boolean>;
 const key = (state: string) => "nl:teams:state:" + createHash("sha256").update(state).digest("hex");
 /**
@@ -15,6 +17,7 @@ export async function keepTeamsAuthorization(binding: TeamsBinding, mayManage: P
   if (!prepared) return null;
   try {
     if (!(await mayManage(binding.storeId, binding.actor)) || !(await reserve())) return null;
+    if (Buffer.byteLength(prepared.sealed, "utf8") > TEAMS_PENDING_BYTES) return null;
     const [written] = await redisPipeline([["SET", key(prepared.state), prepared.sealed, "NX", "EX", TEAMS_STATE_TTL_SECONDS]]);
     if (written !== "OK") return null;
     return { state: prepared.state, nonce: prepared.nonce, challenge: prepared.challenge, expires: prepared.expires };
