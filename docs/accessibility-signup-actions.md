@@ -7,3 +7,7 @@ Três engines reais Playwright1.56.1,5larguras320/390/768/1280/1920 e5modos,25jo
 Custo fixo CI adicional:3jobs×30min=90job-min/execução;Rexecuções/mês teto90Rmensal/1080Ranual. Não é custo porcliente. Nenhum provedor/serviço novo,nenhuma operação real; elegibilidade de runner público e fatura devem ser reconciliadas com todos os jobs,inclusivefalhas/cancelados. Desconhecido não ézero nem margemcertificada. Preservados preços/limites,PLANS_ON_SALE=false,comissão,optin,taxgate/art9a/revisãocomercial e mínimo60%individual/consolidado após custos/impostosBrazil/EUA.
 
 Estado inicial: implementação submetida aCIintegral; sem resultado ou entrega antecipados. Item202 e203Teamsmantêm ordem; este teste integra201ativo.
+
+## Correção de ambiente em21/10/2026
+
+No head398bb66, Chromium eFirefox concluíram;WebKit falhou nas25confirmações:callback303 seguido de retorno a/signin, sem sessão aceita. A aplicação deprodução emite cookieSecure; HTTP localhost não reproduz consistentemente sua aceitação entre engines. A matriz passa a usar HTTPSlocal3199 com proxy paraNext3198, certificado descartável gerado somente no runner e host/protocolo encaminhados coerentemente. IgnoreHTTPSErrors é limitado ao contexto sintético, sem alterar TLS ou autenticação deprodução. A exigência de cookie agora incluiSecure além deHttpOnly/SameSiteLax; nenhum cookie é injetado e o fluxo real de confirmação continua obrigatório. Hipótese depende da nova execução completa, sem declaração antecipada de correção. Custos/tetos anteriores mantidos, histórico de falhas preservado.
