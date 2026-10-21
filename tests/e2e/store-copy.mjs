@@ -47,6 +47,7 @@ import { captureHomeStudio } from "./home-studio-capture.mjs";
 import { checkSalesComparisons } from "./sales-comparisons.mjs";
 import { checkPauseAcknowledgment } from "./pause-acknowledgment.mjs";
 import { checkClaimAcknowledgment } from "./claim-acknowledgment.mjs";
+import { checkShipmentAcknowledgment } from "./shipment-acknowledgment.mjs";
 import { checkButtonContrast } from "./button-contrast.mjs";
 import { checkDetailsAcknowledgment } from "./details-acknowledgment.mjs";
 import {checkEmailCapabilities} from "./email-capabilities.mjs";
@@ -881,6 +882,8 @@ await checkNudgeAcknowledgment({browser,LOCAL,fixture:pauseFixtures[0],is});
   await checkClaimAcknowledgment({browser,LOCAL,session:growthSession,sid:growthSid,is});
   await checkPauseAcknowledgment({browser,LOCAL,fixtures:pauseFixtures,is});
   await checkEmailCapabilities({browser,LOCAL,is});
+  const shipment=services.seedShipment("templatelibraryfixture",libraryFixture.product);
+  await checkShipmentAcknowledgment({browser,LOCAL,fixture:libraryFixture,shipment,is});
   is("no page threw", errors, []);
 } catch (error) {
   failed += 1;
