@@ -3162,3 +3162,38 @@ PR730 integra agora exatamente os11arquivos doPR733 mais este registro, mantendo
 ###201 — HT10 payload real e HT15 leituras explícitas,20/10/2026 Fortaleza
 
 WebKitfc9d3f: HT10beacon não expunha Blob no route; teste agora captura cópia do corpo sendBeacon real no navegador antes de chamar método nativo. SomentePOSTlocal/store/hit doframe/@templatelibraryfixture noWebKit com metadata ausente usa captura; h/k/chaves/tipos continuam todos validados,zeroeventosads ezeroescritas inesperadas mantidos. Não aceita corpo desconhecido nem executaestatísticas; nada muda no produto/optin. HT15esperado2/obtido1 era navegação antes da leitura de destinatários: registra waitForResponse count antes das duas navegações e aguarda cada resposta exata,sem diminuir contagem2/limites. NovoCI integral,sem rerun isolado; demais falhasRSC permanecem abertas. CustosfixosCI históricos mantidos,nenhumserviçonovo;entrega126 já confirmada,próxima127.
+
+
+## 203 — Teams automático para chamadas pagas (execução futura)
+
+203. [TEAMS] Links automáticos do Microsoft Teams para as chamadas pagas, construídos agora e DESLIGADOS
+
+Pedido: dono, 20/10/2026, 23h03 de Fortaleza.
+
+Objetivo: oferecer ao criador, ao lado do Google Meet e do Zoom, a criação automática de uma reunião do Microsoft Teams para cada chamada vendida. O recurso é útil sobretudo para coaches, consultores e mentores cujos clientes são empresas que só usam o Teams.
+
+Fatos já verificados (confira cada um deles nas fontes oficiais da Microsoft antes de construir e registre as fontes com a data da consulta):
+1. A criação automática de reuniões do Teams pela API só funciona com contas pagas do Microsoft 365 de empresa ou de escola. Contas pessoais gratuitas (outlook.com, hotmail.com e live.com) não conseguem criá-las.
+2. Para que usuários de outras empresas possam autorizar o aplicativo, a Microsoft exige a "publisher verification". Ela depende de uma conta verificada no Microsoft AI Cloud Partner Program, e essa verificação exige uma empresa legalmente registrada. Portanto, ela só será possível depois que a LLC de Delaware existir.
+3. A Microsoft não cobra pela verificação do editor, e a conta de parceiro é gratuita.
+
+Escopo:
+1. Reutilize o mecanismo que já existe para o Google Meet e para o Zoom (lib/meet-providers.ts, lib/meet-connect.ts, lib/meet-links.ts, lib/call-meetings.ts, lib/host-calendar.ts e os demais módulos relacionados), sem duplicar a lógica, e acrescente o provedor "teams".
+2. Use o Microsoft identity platform (OAuth 2.0, aplicativo multilocatário e endpoint "organizations", que aceita apenas contas de empresa ou de escola) e o Microsoft Graph. Para cada agendamento, crie um evento no calendário principal do criador, com o comprador como convidado e com reunião do Teams (isOnlineMeeting = true e onlineMeetingProvider = "teamsForBusiness"). Mova o evento quando o comprador remarcar a chamada e apague-o após o reembolso total. Altere apenas os eventos que o próprio Marktmorgen criou.
+3. Peça o menor conjunto de permissões que funcione (por exemplo, openid, email, offline_access e Calendars.ReadWrite). Confirme na documentação oficial se essas permissões bastam e não peça a permissão OnlineMeetings.ReadWrite, a menos que ela seja necessária. Se fizer sentido, use a mesma conexão para ler os horários ocupados do calendário do Outlook do criador, com as mesmas regras de escolha de calendário que valem para o Google.
+4. No momento da conexão, ofereça um botão de teste semelhante ao que já existe para o Zoom. Se a conta for pessoal ou não tiver licença do Teams, recuse a conexão com uma mensagem clara, em inglês americano, e indique o Google Meet como alternativa. Nunca falhe em silêncio no momento de um agendamento: se não houver link do Teams, aplique o mesmo comportamento seguro que já existe para os outros provedores.
+5. Guarde os tokens com a mesma proteção aplicada aos tokens do Google. Ao desconectar, apague os tokens. Uma revogação feita na Microsoft deve ser detectada e tratada.
+6. Crie no código o interruptor TEAMS_APPROVED = false, no mesmo padrão de ZOOM_APPROVED em lib/meet-providers.ts. Enquanto ele for false, nenhuma página poderá oferecer o Teams ao criador, nenhuma página pública poderá apresentá-lo como disponível e nenhuma chamada poderá ser feita à Microsoft. Os testes devem falhar se qualquer uma dessas coisas acontecer.
+7. Prepare, sem publicá-lo enquanto o interruptor estiver desligado, o texto da política de privacidade e dos termos de uso que menciona a Microsoft como fornecedora. Esse texto deve entrar em vigor quando o interruptor for ligado.
+8. Crie o arquivo docs/microsoft-teams.md com o desenho da solução, as fontes oficiais e os passos que só o dono poderá executar depois de abrir a LLC: criar o locatário do Microsoft Entra; registrar o aplicativo multilocatário, com o domínio de editor marktmorgen.com e o endereço de retorno; criar e verificar a conta no Partner Center em nome da LLC; concluir a publisher verification; e, por último, ligar o interruptor. Indique também os nomes das variáveis de ambiente que ele deverá cadastrar na Vercel.
+9. Verifique, com fontes oficiais datadas, quais concorrentes oferecem o Teams nas chamadas agendadas (Calendly, Kajabi, Stan, Hotmart, Teachable e os demais da lista dos 30 concorrentes) e registre essa comparação. Não afirme superioridade sem fonte.
+10. Aplique as mesmas exigências de acessibilidade (WCAG 2.2 AAA como ponto de partida) e de inglês americano que valem para as demais telas do studio.
+11. Faça os testes somente com o Graph simulado: nenhuma chamada real à Microsoft, nenhum e-mail real e nenhuma alteração em registros reais de clientes.
+
+É proibido, neste item: registrar aplicativo no Microsoft Entra, criar conta no Partner Center ou na Microsoft, aceitar termos, pedir verificação ou ligar o interruptor. Tudo isso depende do dono e da existência da LLC.
+
+Custo e margem: confirme na documentação oficial que as chamadas do Graph utilizadas não são cobradas (consulte a lista de APIs medidas da Microsoft) e registre a fonte. Some ao registro de custos por plano o custo dos comandos do Upstash e qualquer outro custo por agendamento. Custo desconhecido não pode ser considerado zero. A margem líquida mínima é de 60% (ela pode ser maior, mas nunca menor) por cliente isolado, com 100% dos direitos usados no pior mês, e também no consolidado, depois de todos os custos e de todos os impostos, inclusive os brasileiros. Não altere preços, limites visíveis, comissão, PLANS_ON_SALE, tax gate, art. 9a nem a revisão comercial.
+
+Estado inicial: na fila. Ao concluir o item, registre o commit, o resultado da suíte completa e a publicação, e altere o estado para "pronto e desligado, aguardando a LLC e a verificação da Microsoft".
+
+**Estado: na fila.** Ordem: depois do item202 [P0-REAL-PEOPLE] e de todos os itens já em andamento; não bloqueia nenhum outro item. Esta entrada foi acrescentada ao fim do arquivo, preservando a ordem e o histórico. Proveniência integral: pedido direto do dono,20/10/2026,23h03Fortaleza, anexo3b412ee8-c4d7-4231-919b-2c9b2d11e8aa/Texto colado.txt. Fatos listados no pedido são requisitos a conferir nas fontes oficiais durante a execução, não conclusões já verificadas por este registro. Não iniciar cadastro, chamada real, aceite, verificação, custo ou ativação por causa desta inclusão. Resultado futuro exigido: commit, suíte completa, publicação e estado “pronto e desligado, aguardando a LLC e a verificação da Microsoft”.
