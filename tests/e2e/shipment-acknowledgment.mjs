@@ -30,7 +30,7 @@ export async function checkShipmentAcknowledgment({browser,LOCAL,fixture,shipmen
     await route.fulfill({status:work.scenario.status??200,contentType:"application/json",body:work.scenario.raw??JSON.stringify(work.scenario.body)});
    });
    for(const scenario of scenarios){
-    await page.goto(LOCAL+"/studio?store="+fixture.sid+"#sales",{waitUntil:"networkidle",timeout:60000});
+    await page.goto(LOCAL+"/studio?store="+fixture.sid+"&shipment_case="+encodeURIComponent(scenario.name)+"#sales",{waitUntil:"networkidle",timeout:60000});
     is("synthetic shipment row is visible "+scenario.name+"/"+width,await page.locator("#sales").getByText("Synthetic shipment",{exact:true}).count(),1);
     const form=page.locator('#sales form').filter({has:page.getByLabel("Tracking link (optional)",{exact:true})});
     const field=form.getByLabel("Tracking link (optional)",{exact:true});

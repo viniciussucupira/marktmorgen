@@ -26,5 +26,15 @@ export async function checkTaxScope({browser,LOCAL,session,sid,is}){
   }
   if(writes)console.error("TAX_SCOPE_UNEXPECTED_WRITES:"+JSON.stringify(writePaths));
   is("reading tax explanations never writes settings",writes,0);
+  let listed=0;
+  await page.route("**/api/store/discount",async route=>{
+   const sent=route.request().postDataJSON();
+   is("explicit discount read sends only list action",sent,{action:"list"});
+   listed++;
+   await route.fulfill({status:200,contentType:"application/json",body:JSON.stringify({ok:true,codes:[]})});
+  });
+  await page.getByRole("button",{name:"Load discount codes",exact:true}).click();
+  await page.getByRole("button",{name:"Refresh discount codes",exact:true}).waitFor();
+  is("discount list requires one explicit action",listed,1);
  }finally{await context.close();}
 }

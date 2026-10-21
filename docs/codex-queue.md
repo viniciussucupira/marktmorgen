@@ -4022,6 +4022,14 @@ A verificação integral do head a0c895165c449cea8bf5022617056d5632a76253 falhou
 
 Head7d2beff76aad59a2d3fb8033742b709e2c3f3325, job119453402625: a fixture passou a mostrar o pedido e executar os controles. Uma resposta contraditória com ok=true/error=unknown era recusada corretamente, porém a UI exibia o motivo específico em vez da incerteza; agora motivo específico exige ok=false exato. A matriz mira o texto no live region do toast, evitando ambiguidade com a cópia visual aria-hidden, sem deixar de verificar o texto anunciado. O teste fiscal detectou dois POSTs após configurar a chave falsa no harness; causa ainda não estabelecida, mantém a asserção zero, bloqueia operações não-GET em /api e registra os caminhos para diagnóstico. Não marcar resolvido até evidência completa. Nova execução integral obrigatória; sem redução de regras, casos ou exigências.
 
+### Causa confirmada dos POSTs e correção — PR771
+
+Job119463059222, head32d687b3737006211394cbe2571220575a7e5ce1: TAX_SCOPE_UNEXPECTED_WRITES mostrou /api/store/discount duas vezes (uma por viewport). DiscountEditor executava action=list no useEffect ao montar; esse endpoint também reconcilia o bit hasDiscounts, portanto abrir configurações podia causar escrita e chamada a Stripe. Agora requer Load discount codes explícito, depois Refresh discount codes, com botão bloqueado e aria-busy enquanto aguarda. Criar/desativar códigos continua na ação do dono. A asserção fiscal zeroPOST permanece; acrescentada prova positiva de que uma ação explícita manda exatamente {action:list} uma vez e exibe estado carregado. Sem novas chamadas/fornecedores/tetos: remove trabalho automático, reutiliza operação existente.
+
+A matriz de envio já confirmou os casos negativos e confirmação sem e-mail; falhava na segunda confirmação porque page.goto da mesma URL com fragmento preservava o estado concluído. Cada caso agora usa parâmetro sintético distinto, forçando uma nova leitura real; nenhum caso removido. Verificação integral no novo head é obrigatória, sem rerun isolado.
+
+Apuração de CI em21/10/2026 às20:16:12.911Z:858execuções concluídas únicas,2528jobs,786498segundos,0durações desconhecidas; delta77execuções/231jobs/78260segundos desde a evidência781/2297/708238. Inclui falhas/cancelamentos, exclui ativos/posteriores/não listados; duração não é fatura, cobrança real desconhecida. Arquivo local marktmorgen-ci-cost-20261021-2020.json e continuidade preservam evidência. Gates fiscais/comerciais e limites permanecem.
+
 ## SEO — Visibilidade do Marktmorgen no Google (21/10/2026)
 
 271. [SEO1] Auditar, corrigir e melhorar presença orgânica na busca do Google
