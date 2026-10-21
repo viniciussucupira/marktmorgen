@@ -79,3 +79,8 @@ Headd3b: Firefox25/0 e WebKit25/0 (75 registros de lacunas no WebKit, sem certif
 ## Leitura do corpo no próprio navegador —20/10/2026 Fortaleza
 
 Headc8e559: Chromium25/25 falharam exatamente na promessa Playwright Response.finished após criação; Firefox/WebKit25/0. Deadline revelou falha repetida sem timeout global. O teste agora observa fetch real do documento: clona somente respostas RSC locais, exige corpo completo não vazio em60s e erro ausente antes de continuar. Isso verifica conclusão de stream por leitura efetiva no navegador, sem depender da promessa de instrumentação Chromium. Se a resposta real não terminar, o caso continua reprovado; nenhuma tolerância/ação/persistência/contagem é removida. Fragmento diagnóstico vem desse corpo completo. Clone apenas em fixture local, sem rede extra, sem mudar aplicação ou custos por cliente. Novo CI integral obrigatório; causa exata Playwright versus servidor ainda hipótese até evidência.
+
+
+## Integração idêntica dos alvos de Pricing —20/10/2026 Fortaleza
+
+Head48d3f8: matriz de ações75/0 (25por engine); registros de lacunas Chromium50/Firefox50/WebKit75, sem fechamento integral201. PublicWebKit118985683881 reprovou1/75, target-size no Start your store390baseline. Integra-se exatamente app/pricing/page.tsx já preparado emPR730fc9d3f: CTAs inline-flex/mínimo48px e FAQlinks/summary48px, sem mudança de copy/preços/flags. Não são edições concorrentes: único editor,heads consultados, arquivo idêntico entre branches para integração sem descarte. Nova CI integral obrigatória, não rerun isolado. Nenhum custo variável/serviço novo; todas execuções anteriores permanecem no histórico.
