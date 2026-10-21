@@ -555,6 +555,7 @@ export const FAMILIES: Record<string, Family> = {
   "nl:meet:log:@lib/meet-connect.ts": { what: "The store's last problems", parts: [capped(20 * KB, "The newest LOG_SIZE.", src("lib/meet-connect.ts", "LOG_SIZE"))] },
   "nl:meet:refresh:@lib/meet-connect.ts": short("A token being refreshed", "integration", 1, 128),
   "nl:meet:state:@lib/meet-connect.ts": short("A consent in progress, ten minutes", "integration", 1, 512),
+  "nl:teams:state:@lib/microsoft-teams-pending-state.ts": short("Teams consent pending: sealed at most2048bytes plus key/Redis overhead, TTL600seconds; one reserved integration unit before each write; inactive until real budget wiring", "integration", 1, 4096),
   "nl:meet:test:@lib/meet-connect.ts": short("A connection tested", "integration", 1),
   "nl:meet:user:@lib/meet-connect.ts": company("The stores a Zoom user connected", "Per Zoom user, for Zoom's uninstall notice."),
   "nl:meet:lock:@lib/meet-links.ts": short("A meeting being made", "integration", 1, 128),
