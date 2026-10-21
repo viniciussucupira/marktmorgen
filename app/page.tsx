@@ -4,6 +4,7 @@ import { CreatorShowcase, PlatformProof } from "@/components/creator-showcase";
 import { PricingValue } from "@/components/pricing-value";
 import { PATH_HOME_STEPS } from "@/lib/path-home";
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { SITE_OG_IMAGE } from "@/lib/site-og";
 import Link from "next/link";
 import { SiteFooter } from "@/components/site-footer";
@@ -507,7 +508,9 @@ export default function Home() {
               </p>
             </div>
             <div className="mx-auto mt-12 max-w-5xl" data-plan-prices>
-              <Pricing domains={DOMAINS} />
+              <Suspense fallback={null}>
+                <Pricing domains={DOMAINS} />
+              </Suspense>
               <p className="mt-6 text-center"><Link href="/pricing" className="link">Compare all plan limits, annual prices and optional add-ons</Link></p>
             </div>
           </div>
