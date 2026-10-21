@@ -57,3 +57,10 @@ WebKit25casos/9falhas: retirados os inputs da evidência, a largura ainda veio d
 Head7bec preservado: Firefox25/2marcas target-size; WebKit continuou overflow. Diagnóstico mais profundo mostrou PromotionPlanner com coluna implícita, label Product client206/scroll386 e nome de produto longo no select. O painel declara grid-cols-1/minmax0, labels/controles min-width0 e limites nativos, sem mudar escolha, URL, limites50, métricas, fórmulas ou custos. Texto comum do Studio pode quebrar palavras longas em colunas estreitas. Os controles Edit/mover/remover passam a mínimo48px; antes To the top media21px.
 
 scrollTo(0,0) seguia CSS smooth e não concluía antes de axe; há evidência de retângulos parcialmente sob cabeçalho após o pedido. Preparação passa a desfocar o campo, rolar instantaneamente e esperar dois frames, exigindo scrollX/Y0 antes da auditoria integral; posição após axe é registrada. Nenhuma regra/falha removida; lacuna de sobreposição intermediária permanece. Alterações anteriores de SharePanel/details não resolveram sozinhas a largura e não são declaradas causa exclusiva. CI integral novo obrigatório.
+
+
+## Renderização nativa e espera limitada — 20/10/2026 Fortaleza
+
+Head6c: Firefox25/5falhas na preparação nova de origem0, antes de axe; dois frames não bastaram para scroll/foco. Mantém-se origem0 e aguarda-se condição real estável200ms dentro do timeout existente, sem aumentar tolerância nem remover falha se origem mudar.
+
+WebKit continuou a propagar a largura de opções dos selects do PromotionPlanner com aparência nativa, mesmo com grade e limites. Os três selects permanecem HTML nativo com aparência controlada e chevron decorativo em SVG, sem trocar opções, valores, handlers ou teclado; aplica-se o mesmo princípio de renderização já usado nos campos compartilhados. Sem clipping da seção/página. As hipóteses anteriores permanecem no histórico; novo head requer CI integral.

@@ -79,7 +79,9 @@ try{
     if(!focused)throw Error("No keyboard target reached");
    }
    // Audit at a repeatable document origin, rather than a different product row under the sticky navigation after each fill.
-   await page.evaluate(async()=>{document.activeElement?.blur?.();window.scrollTo({top:0,left:0,behavior:"instant"});await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));if(scrollX!==0||scrollY!==0)throw Error("Audit viewport did not settle at document origin");});
+   await page.evaluate(()=>{document.activeElement?.blur?.();delete window.__mmAuditOriginSince;});
+   await page.waitForFunction(()=>{if(scrollX!==0||scrollY!==0){window.scrollTo({top:0,left:0,behavior:"instant"});delete window.__mmAuditOriginSince;return false;}window.__mmAuditOriginSince??=performance.now();return performance.now()-window.__mmAuditOriginSince>=200;});
+   await page.evaluate(()=>{delete window.__mmAuditOriginSince;if(scrollX!==0||scrollY!==0)throw Error("Audit viewport origin changed after settlement");});
    gaps.push({path,width,mode,reason:"Whole-document axe is anchored at scroll0. Intermediate scroll positions under sticky navigation still require manual occlusion review; this run does not close that gap."});
    await page.addScriptTag({content:axe});
    const report=await page.evaluate(async()=>{

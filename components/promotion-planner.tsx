@@ -1,6 +1,7 @@
 "use client";
 
 import { useId, useRef, useState } from "react";
+import { Icon } from "@/components/icons";
 import type { StatsData } from "@/lib/stats";
 import { promotionChoices, promotionLink, promotionMedium, type PromotionProduct, type PromotionWindow } from "@/lib/promotion-plan";
 import { CAMPAIGN_MEDIA, POST_PLACES, type CampaignMedium } from "@/lib/share-links";
@@ -36,14 +37,14 @@ export function PromotionPlanner({ data, range, products }: { data: StatsData; r
     <p className="mt-1 text-sm text-ink-soft">Choose a product and copy a campaign link without leaving your numbers. Nothing is posted or sent for you.</p>
     <div className="mt-3 grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2">
       <label className="min-w-0 text-xs font-semibold text-ink-soft" htmlFor={id + "-product"}>Product
-        <select id={id + "-product"} className="field overflow-hidden mt-1 w-full min-w-0 max-w-full" value={product.id} onChange={event => { setSelected(event.target.value); copyRequest.current += 1; setCopied(""); }}>
+        <span className="relative mt-1 block min-w-0"><select id={id + "-product"} className="field overflow-hidden w-full min-w-0 max-w-full appearance-none pr-10" value={product.id} onChange={event => { setSelected(event.target.value); copyRequest.current += 1; setCopied(""); }}>
           {plan.products.map(item => <option key={item.id} value={item.id}>{item.title}</option>)}
-        </select>
+        </select><Icon name="chevron-down" size={16} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-ink" /></span>
       </label>
       <label className="min-w-0 text-xs font-semibold text-ink-soft" htmlFor={id + "-channel"}>Where you will share it
-        <select id={id + "-channel"} className="field overflow-hidden mt-1 w-full min-w-0 max-w-full" value={channel} onChange={event => { setSource(event.target.value); copyRequest.current += 1; setCopied(""); }}>
+        <span className="relative mt-1 block min-w-0"><select id={id + "-channel"} className="field overflow-hidden w-full min-w-0 max-w-full appearance-none pr-10" value={channel} onChange={event => { setSource(event.target.value); copyRequest.current += 1; setCopied(""); }}>
           {POST_PLACES.map(place => <option key={place.place} value={place.place}>{place.label}</option>)}
-        </select>
+        </select><Icon name="chevron-down" size={16} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-ink" /></span>
       </label>
     </div>
     <p className="mt-2 text-xs text-ink-soft">{plan.known ? "Products are ordered by recorded gross revenue, then page views." : "Paid figures are unavailable. Products are ordered by page views."} This list includes up to 50 published products with recorded activity, not your entire catalog.</p>
@@ -56,9 +57,9 @@ export function PromotionPlanner({ data, range, products }: { data: StatsData; r
         <input id={id + "-campaign"} className="field mt-1 w-full min-w-0 max-w-full" maxLength={60} value={campaign} onChange={event => { setCampaign(event.target.value); copyRequest.current += 1; setCopied(""); }} />
       </label>
       <label className="min-w-0 text-xs font-semibold text-ink-soft" htmlFor={id + "-medium"}>Promotion type
-        <select id={id + "-medium"} className="field overflow-hidden mt-1 w-full min-w-0 max-w-full" value={medium} onChange={event => { setMediumOverride(event.target.value as CampaignMedium); copyRequest.current += 1; setCopied(""); }}>
+        <span className="relative mt-1 block min-w-0"><select id={id + "-medium"} className="field overflow-hidden w-full min-w-0 max-w-full appearance-none pr-10" value={medium} onChange={event => { setMediumOverride(event.target.value as CampaignMedium); copyRequest.current += 1; setCopied(""); }}>
           {CAMPAIGN_MEDIA.map(item => <option key={item.value} value={item.value}>{item.label}</option>)}
-        </select>
+        </select><Icon name="chevron-down" size={16} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-ink" /></span>
       </label>
       <label className="min-w-0 text-xs font-semibold text-ink-soft" htmlFor={id + "-variant"}>Post or ad variant (optional)
         <input id={id + "-variant"} className="field mt-1 w-full min-w-0 max-w-full" maxLength={60} value={variant} onChange={event => { setVariant(event.target.value); copyRequest.current += 1; setCopied(""); }} />
