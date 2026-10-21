@@ -3225,6 +3225,11 @@ READY21/10/2026 01:11:55.470Fortaleza(04:11:55.470Z),marktmorgen.com versãoexat
 C876d675PublicFirefox119035858315 falhou2/75casos,signin320e390baseline, no novo hit-test de5s. A implementação usava o centro da caixa que une todas as linhas de um linkinline; esse ponto pode ser espaço vazio entre fragmentos,mesmo que cada fragmento seja clicável. A checagem passa a exigir centro visível/desobstruído de **cada**getClientRects comárea, mantendo timeout5s, foco real e todos os10Tabs. Não se usaum ponto arbitrário da união nem ignora timeout. Uma falha restante agora registra índiceTab,tag/classes,scroll e todos osfragmentos/hit-test,semHTML/hrefs/tokens. Causa específica de cada timeout depende dessa prova; sem declarar correção antes doCI. Scrollpaddingproduto eorigem estávelaxe mantidos,sem baixar regra/limiar ou filtrarcaso. Suíteinteira obrigatória no novohead.
 
 
+### P0-201 — estabilização do scroll após navegação real por teclado (21/10/2026)
+
+Head2d791: Public Chromium119037760183 falhou11/75 por timeout10s ao exigir origem estável após Tab; Firefox/WebKit passaram. O hit-test dos fragmentos não foi a falha observada. O navegador pode continuar o scroll suave iniciado pelo foco após o pedido de retorno à origem. O harness agora aguarda primeiro200ms sem mudança real de scroll, com limite10s, e só então pede origem instantânea; mantém a exigência de origem0,0 estável200ms, todos os10Tabs, hit-tests e regras axe. Sem reduzir critérios, ignorar casos ou reexecutar job isolado: suíte completa no novo head. Sem novo provedor/custo operacional; minutos CI continuam custo fixo da empresa com fatura desconhecida não considerada zero.
+
+
 ## 203 — Teams automático para chamadas pagas (execução futura)
 
 203. [TEAMS] Links automáticos do Microsoft Teams para as chamadas pagas, construídos agora e DESLIGADOS

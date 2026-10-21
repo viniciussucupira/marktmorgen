@@ -64,7 +64,15 @@ try{
    }
    // Keyboard proof above retains its real scrolled positions. Whole-document
    // target geometry is evaluated at a stable origin, like the Studio/action matrices.
-   await page.evaluate(()=>{document.activeElement?.blur?.();window.scrollTo({top:0,left:0,behavior:"instant"});});
+   // Native focus may still be animating a smooth scroll in Chromium.
+   // Wait for the real keyboard scroll to finish before requesting audit origin.
+   await page.evaluate(()=>{document.activeElement?.blur?.();});
+   await page.waitForFunction(()=>{
+    const key=scrollX+","+scrollY,previous=window.__publicKeyboardScroll;
+    if(!previous||previous.key!==key){window.__publicKeyboardScroll={key,since:performance.now()};return false;}
+    return performance.now()-previous.since>=200;
+   },undefined,{timeout:10000});
+   await page.evaluate(()=>{delete window.__publicKeyboardScroll;window.scrollTo({top:0,left:0,behavior:"instant"});});
    await page.waitForFunction(()=>{
     if(scrollX!==0||scrollY!==0){delete window.__publicOriginSince;return false;}
     window.__publicOriginSince??=performance.now();return performance.now()-window.__publicOriginSince>=200;
