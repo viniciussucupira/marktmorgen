@@ -51,7 +51,7 @@ async function readEntries(store: Store, product: Listing): Promise<Map<string, 
 export async function stockLeft(store: Store, product: Listing, now = Date.now()): Promise<number | null> {
   const limit = limitedStock(product);
   if (limit === null) return null;
-  if (!store.statsId || !isRedisConfigured()) return limit;
+  if (!store.statsId || !isRedisConfigured()) throw new Error("Stock reading unavailable");
   const entries = await readEntries(store, product);
   let used = 0;
   let checks = 0;
@@ -100,9 +100,10 @@ export async function withStockHold<T extends { id: string }>(
   product: Listing,
   open: (held: boolean) => Promise<T>,
 ): Promise<StockHold<T>> {
-  if (limitedStock(product) === null || !store.statsId || !isRedisConfigured()) {
+  if (limitedStock(product) === null) {
     return { ok: true, value: await open(false) };
   }
+  if (!store.statsId || !isRedisConfigured()) return { ok: false, reason: "busy" };
   const lock = lockKey(store.statsId, product.id);
   let locked = false;
   for (let attempt = 0; attempt < 6 && !locked; attempt += 1) {
