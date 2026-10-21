@@ -3190,6 +3190,60 @@ Integração explícita do head73546afa12:prefetch dos3CTAs deplanos desativado,
 Custos reconciliados em21/10/2026~03h28UTC:231execuçõesconcluídas/653jobs/178442segundos=2974,03job-min, incluindo falhas/cancelamentos, dados anteriores730/733 e acréscimos730/734/735. Execuçõesativas/pendentes,branches731/732efaturareal não incluídas;custosdesconhecidos nãozero. Evidência localmarktmorgen-ci-cost-20261021-0328.json. Nenhum custo variável/provedor/operação/comercial novo.
 
 
+### Entrega127 — publicação funcional confirmada, PR730
+
+Incorporação real21/10/2026 00:51:39Fortaleza(03:51:39Z),merge6425aed18058f20d79b15902ebb5824e6ab87b6d;headverificadoa7b7ec00554bdca522bcafb2aa46b76d6400763c,árvoreidêntica14fdbe3a9f9457d1c9388c7a150442dc20ec7f2c. As16verificações passaram noheadcompleto,sem rerunisolado:verify,Redis,mobile,Firefox/WebKitsuíteinteira,segurança,matrizespublic225/studio150/ações75echeckpreview.
+
+VercelREADY21/10/2026 00:52:38.597Fortaleza(03:52:38.597Z),dpl_4CQ172fei1TJHZfJ3mdw9W88cdZ3,marktmorgen.comassociado a6425aedexato. Probes/,/pricing,/signin,/studio,/studio/pages,/platform/path,/privacy responderam200com mesmoDPL;rotasprivadas semsessão são redirecionamentos anônimos,nãoprova deaçãoautenticada emprodução. Runtimeerror/fatal0 somente janela03:48:42.775–03:53:42.775UTC. Contador127,próximo128,avisadoapósconfirmação. Correções concretas:Pathpersistência/retorno,seletores/layoutStudio/foco/contraste,calculadora/Pricing estreitos,pausaHeroFlow fora da tela/aba eCTAplanos semprefetch especulativo.
+
+Custos históricos231execuçõesconcluídas/653jobs/178442segundos, incluindo falhas/cancelados; posteriores/ativas e fatura excluídos,desconhecido nãozero. Nenhumprovedor/operação/custo variável novo,gates/preços/limites/comissão/optinpreservados ePLANS_ON_SALE=false. Não certificaAAAglobal,INPdecampo ou60%apósleiturafiscalmais onerosa. Item201continua:734a877384 cadastro75jornadas/225auditoriaspassou nas3engines,masaguarda suíteintegral;736corrigebanner/reflowbiblioteca eaguarda novoheadintegral. Checkout/Stripehospedado,entregaexterna,zoomreal400%,aparelhos/AT/manualscroll não declarados concluídos. Itens203–219incluindonovoOP5agorapreservados emmain,continuam nafilasemativação.
+
+
+### Suíte integral do comprador — isolamento da agenda sintética
+
+Headd56550b:matrizcomprador75jornadas/375auditoriaspassou nas3engines,masverify119029961232 reprovoutests/team-scheduling.test.ts:busycalendar expected[true,true,false],got[false,true,true]. O helperweekdayAt arredonda finsdesemana: numaquarta-feira,days3e5 caem na mesma segunda às10h, repetindoS emB; amboshosts já haviam sido ocupados no cenárioanterior, e oproduto corretamente recusou novo hold. Falha defixturedependente dodia,semrelação com regra depermissão/agendaalterada.
+
+O cenárioGoogle usaagora13h, separado dosholds10h/11h; assert explícita exigeBdistintodeS/G. Mantidos busy real, dono livre, recusaMaya,cap/permissões/scopes/estorno e todos os demaisoráculos. Sem alterar produção nem descartar falha. Nova suítecompleta no novoheadobrigatória;rerunisoladonãoresolve. Integração explícita da seçãoHL220–230 do737 nafilaaoEOF, preservando203–219 eprova127; itensfuturosdesligados/nãoiniciados.
+
+
+### Matriz pública — teclado, cabeçalho e geometria estável
+
+No0a957ea, WebKit119033252671 reprovou1/75casos:pricing390/baseline,target-size em.bg-neutral-950; oCTAjátemmin48px. A matriz fazia10Tabs reais e depoisaxe sem restaurar origem, misturando geometria de alvo fora da tela com estado de rolagem criado por teclado; não há prova capturada de dimensão menorque48px. Falha preservada,semexcluir regra/amostra.
+
+O produto ganha scroll-padding-top5rem para destinos de teclado/âncora ficarem abaixo do cabeçalho sticky64px. A prova de teclado agora também exige centro do alvo realmente visível/desobstruído por hit-test no estado de rolagem real,com espera limitada5s e semforçar foco. Depois, a avaliaçãoaxe integral voltaàorigem estável200ms,como asmatrizesStudio/ações,sem esconderheader ou alterar CSS para auditoria. Isso separa duas medições e fortalece oteste deoclusão em vez de ignorá-lo. Manualscroll/AT/zoomreal continuam lacunas. Nova suítecompleta noheadcorrigido obrigatória; não é alegação antecipada de correção.
+
+
+### Entrega128 — cadastro e links informativos publicados
+
+PR734incorporado21/10/2026 01:11:03Fortaleza(04:11:03Z),merge2439929afa780929eaefd508196047ca0a35abb9;headverificadoa877384d51ab784255cca92cd37944a85b2de64a,árvoreb525467c4f217bf94d6eca47308cb765c0573a32idêntica. As19verificaçõespassaram, incluindo cadastro75jornadas/225auditoriasnas3engines,verify,Firefox/WebKit,mobile,Redis,segurança eoutrasmatrizes. Rodapé eTerms/Privacy do cadastro evitam prefetch especulativo,preservandoURLs/texto/consentimento/teclado.
+
+READY21/10/2026 01:11:55.470Fortaleza(04:11:55.470Z),marktmorgen.com versãoexata2439929,dpl_A7PG69tBwdBkP868tUKuBX9tBZe9. Probes/,/signin,/signin/confirm,/pricing,/library,/privacy,/refunds200mesmoDPL,sem criar conta/mensagem/operação real;confirmaçãosemtoken é apenasleitura,fluxoautenticado testado localmente. Runtimeerror/fatal0 sójanela04:07:50.978–04:12:50.978UTC. Contador128,próximo129,avisadoapósconfirmação. Sem novo provedor/custo variável;CIcadastroteto90job-min/run,apuração completa/fatura continuamobrigatórias,desconhecido nãozero. Gates/preços/limites/optin/fiscal preservados,vendasfechadas. SemcertificarAAA/INPdecampo/margemfiscal60%.
+
+
+### Geometria de foco em links multilinha
+
+C876d675PublicFirefox119035858315 falhou2/75casos,signin320e390baseline, no novo hit-test de5s. A implementação usava o centro da caixa que une todas as linhas de um linkinline; esse ponto pode ser espaço vazio entre fragmentos,mesmo que cada fragmento seja clicável. A checagem passa a exigir centro visível/desobstruído de **cada**getClientRects comárea, mantendo timeout5s, foco real e todos os10Tabs. Não se usaum ponto arbitrário da união nem ignora timeout. Uma falha restante agora registra índiceTab,tag/classes,scroll e todos osfragmentos/hit-test,semHTML/hrefs/tokens. Causa específica de cada timeout depende dessa prova; sem declarar correção antes doCI. Scrollpaddingproduto eorigem estávelaxe mantidos,sem baixar regra/limiar ou filtrarcaso. Suíteinteira obrigatória no novohead.
+
+
+### P0-201 — estabilização do scroll após navegação real por teclado (21/10/2026)
+
+Head2d791: Public Chromium119037760183 falhou11/75 por timeout10s ao exigir origem estável após Tab; Firefox/WebKit passaram. O hit-test dos fragmentos não foi a falha observada. O navegador pode continuar o scroll suave iniciado pelo foco após o pedido de retorno à origem. O harness agora aguarda primeiro200ms sem mudança real de scroll, com limite10s, e só então pede origem instantânea; mantém a exigência de origem0,0 estável200ms, todos os10Tabs, hit-tests e regras axe. Sem reduzir critérios, ignorar casos ou reexecutar job isolado: suíte completa no novo head. Sem novo provedor/custo operacional; minutos CI continuam custo fixo da empresa com fatura desconhecida não considerada zero.
+
+
+### P0-201 — diagnóstico explícito da origem de scroll (21/10/2026)
+
+Headb7a5: Chromium público passou; Firefox119039947008 falhou1/75 em/signin1280baseline por timeout10s, sem diagnóstico de foco. Os dois waits de scroll usavam a mesma mensagem e não permitem distinguir estabilização do teclado de retorno à origem. Acrescentado diagnóstico por etapa, posição real, estado do relógio e elemento ativo, sem conteúdo pessoal. Nenhum timeout, limiar, caso ou regra alterado; investigação continua com suíte completa no novo head. Não declarado concluído nem publicado.
+
+### P0-201 — custos de verificação reconciliados (21/10/2026)
+
+Recorte ampliado:310execuções concluídas,892jobs,252137segundos (4202,28job-min), incluindo falhas e cancelamentos. Evidência localmarktmorgen-ci-cost-20261021-0443.json preserva IDs/durações, base0328 e acréscimos concluídos730/734/735/736/737. Execuções ativas/posteriores e branches não listadas, inclusive738/739, não incluídas. Duração não equivale à fatura: custo efetivamente faturado continua desconhecido e não vale zero. CI é custo fixo da empresa; nenhum serviço/uso variável/preço/limite/gate alterado.
+
+
+### P0-201 — causas observadas no head documental integrado (21/10/2026)
+
+PR7390364816: Public Firefox119044516710 identificou audit-origin comscrollY714/BODY/scroll-behavior smooth após pedido instantâneo. O harness mantém o teclado real e todos os hit-tests; somente na auditoria posterior força temporariamente scroll-behavior:auto!important e pede retornoauto, exige origem0,0 estável200ms e restaura o estilo original depois deaxe. Nenhum scroll de teclado normalizado nem critério relaxado. Signup WebKit119044516508 fez75auditorias mas falhou1/25 por RSC abortado das rotas home e/signin/lost. Links informativos restantes da página de entrada (home/demo/recuperação) recebem prefetch=false; URLs, conteúdo, consentimento e ações permanecem. Sem filtro de erros. Correção em739 para preservar a execução saudável de736; suíte completa no novo head obrigatória antes de qualquer incorporação. Nenhum novo provedor/custo variável/preço/limite/gate.
+
+
 ## 203 — Teams automático para chamadas pagas (execução futura)
 
 203. [TEAMS] Links automáticos do Microsoft Teams para as chamadas pagas, construídos agora e DESLIGADOS
@@ -3355,3 +3409,123 @@ Estado inicial de todos os itens: na fila.
 **Ordem vinculante:** depois do item214 [SH11] e de todos os trabalhos já em andamento; não bloqueia nenhum outro. Itens215–219: **na fila**. Os itens203–214 e todo o histórico anterior permanecem integralmente preservados. A implementação atual continua prioritária.
 
 **Proveniência:** pedido direto do dono,20/10/2026,23h58Fortaleza; anexo3cf3422c-a75f-41f6-a483-ebb523fa8b91/Texto colado.txt. Inclusão de escopo futuro; preços, taxas, requisitos e comparações descritos no pedido exigem conferência oficial datada quando cada item for executado e não são apresentados aqui como fatos verificados. Nenhuma conta, aceite, pagamento, publicação externa, ativação ou mudança comercial nesta inclusão. OP1 preços somente PROPOSTA; OP3 sem publicar integrações; OP5 exige revisão e confirmação do criador antes de qualquer publicação.
+
+
+## HL — Lições da auditoria da HighLevel (21/10/2026)
+
+Pedido: dono, 21/10/2026, 00h56 de Fortaleza: gerar coisas boas no Marktmorgen a partir de uma auditoria pública da HighLevel feita pelo Copilot.
+
+Lição principal da auditoria: a HighLevel não cresceu por ter mais recursos, e sim porque transformou produto, educação, comunidade, certificação e afiliados num único sistema de aquisição de clientes. Os recursos de produto citados na auditoria já existem no Marktmorgen ou já estão na fila (oferta extra, oferta depois do pagamento, combos, assinaturas, comunidade, afiliados do criador, recuperação de checkout, pixels e atribuição, biblioteca de modelos, páginas "vs", importação, assistente de IA e montagem da loja por IA); a comparação recurso por recurso já está em docs/highlevel-gap-matrix.md. NÃO duplique nada disso: verifique o que existe e acrescente somente o que falta. Fatos da auditoria a conferir nas fontes oficiais, com a data da consulta: teste grátis de 14 dias; planos de US$ 97, US$ 297 (o mais popular) e US$ 497; programa de afiliados com 40% de comissão recorrente; Academy com cursos, eventos, certificações e comunidade.
+
+Regras que valem para TODOS os itens desta seção (as mesmas da seção SH):
+1. Verifique e reutilize o que já existe, sem refazer nem duplicar.
+2. Margem líquida mínima de 60% (ela pode ser maior, mas nunca menor) por cliente isolado, com 100% dos direitos usados no pior mês, e também no consolidado, depois de todos os custos e de todos os impostos, inclusive os brasileiros. Toda comissão, crédito ou prêmio pago por um cliente indicado é custo variável desse cliente e entra no cálculo dele. Custo desconhecido não pode ser considerado zero.
+3. Leitura que der MAIS imposto (docs/tax-uncertainty.md), inclusive para pagamentos a afiliados e parceiros no exterior.
+4. Cada recurso nasce com um interruptor no código, desligado, no mesmo padrão de ZOOM_APPROVED; os testes devem falhar se uma página o oferecer enquanto estiver desligado.
+5. É proibido criar contas, aceitar termos, contratar serviço, pagar qualquer valor, publicar fora do site, pedir aprovações, ligar interruptores e alterar preços, limites visíveis, comissão, PLANS_ON_SALE, tax gate, art. 9a ou a revisão comercial. Tudo isso depende do dono.
+6. Testes somente com fornecedores simulados: nenhuma chamada real, nenhum e-mail real e nenhum registro real de cliente alterado.
+7. Inglês americano e as exigências de acessibilidade em vigor (WCAG 2.2 AAA como ponto de partida). Nada de depoimento, número, resultado, escassez ou urgência inventados, nem promessa de ganho garantido; nenhuma afirmação sobre concorrente sem fonte oficial datada.
+8. Ao concluir cada item, registre o commit, o resultado da suíte completa e a publicação, e deixe o estado como "pronto e desligado, aguardando o dono" quando houver interruptor.
+
+220. [HL1] Programa de afiliados do próprio Marktmorgen, com comissão recorrente
+Construa um programa em que qualquer pessoa (cliente ou não) divulga o Marktmorgen e recebe comissão recorrente sobre as mensalidades pagas pelos clientes que indicar. Calcule, com lib/receiving-costs.ts e tests/margin-alignment-table.ts, a maior comissão que ainda mantém 60% em cada plano e intervalo, isoladamente, no pior caso, e registre-a como PROPOSTA em docs/marktmorgen-affiliates.md; nenhuma porcentagem entra em vigor sem a decisão do dono. A comissão só é devida depois que o cliente pagar e que o prazo de reembolso de 30 dias terminar, e é estornada em caso de reembolso ou de contestação. Proteja contra fraude e autoindicação (mesma pessoa, cartão, dispositivo ou endereço). Estude, nas fontes oficiais, como pagar afiliados no exterior (PayPal, Stripe ou outro), os formulários fiscais exigidos (por exemplo, W-8BEN e W-9) e os custos de cada pagamento. Coordene com o item 216 [OP2] (crédito para clientes que indicam), sem duplicar a lógica, e reutilize os mecanismos de afiliados dos criadores que já existem.
+
+221. [HL2] Marktmorgen Academy, como canal de aquisição
+Crie uma academia gratuita para criadores, hospedada numa loja do próprio Marktmorgen, usando os recursos de curso e de comunidade da plataforma (para que ela também sirva de demonstração ao vivo). Prepare a estrutura e o roteiro dos primeiros cursos (por exemplo, "how to sell your first digital product", "pricing your course", "building an email list"), escritos com base em fatos verificáveis e no que a plataforma realmente faz, sem promessa de ganho. A inscrição pede consentimento explícito para receber e-mails. Cada aula tem página própria, otimizada para busca. Calcule o custo de vídeo, armazenamento e e-mails da academia e coloque teto automático; esse custo entra nos custos fixos da empresa.
+
+222. [HL3] Certificação "Marktmorgen Certified"
+Verifique o que lib/path-certificate.ts já faz. Ofereça um certificado gratuito, com página pública verificável e link permanente, a quem concluir a academia e passar numa avaliação, e um selo opcional para o perfil do criador. O certificado atesta somente o conhecimento avaliado, nunca resultados de vendas. Sem custo novo para a plataforma.
+
+223. [HL4] Programa de parceiros e especialistas ("Marktmorgen Experts")
+Permita que freelancers e agências que montam lojas para criadores administrem várias lojas, sempre com a autorização de cada criador, usando os papéis e permissões de equipe que já existem. Crie um diretório público de especialistas verificados, em que só aparece quem concluir a certificação do item 222, com informações fornecidas pelo próprio especialista e sem avaliações inventadas. Os especialistas podem participar do programa de afiliados do item 220. Não inclua revenda com marca própria (white label), que está fora do plano.
+
+224. [HL5] Mensagem de resultado e narrativa de substituição de ferramentas
+Revise os títulos e subtítulos da página inicial, da página de preços e das páginas de recursos para que falem do resultado que o criador busca (por exemplo, vender o primeiro produto ou não perder compradores fora do horário), e não só da lista de recursos, sempre sem promessa de resultado garantido e somente com recursos que existem e estão ligados. Mostre, com fatos verificáveis, quais ferramentas separadas o Marktmorgen substitui (loja, cursos, comunidade, agendamento, e-mail, afiliados e funis), com um único login. Mantenha uma chamada para ação dominante por página e destaque, na página de preços, o plano mais indicado, sem alterar preços nem limites. Coordene com os itens HT16 e HT17, sem duplicar o que eles já fizeram, e meça o desempenho antes e depois.
+
+225. [HL6] Calculadora de custo da pilha de ferramentas
+Amplie a calculadora do item 218 [OP4] (que compara apenas com a Shopify) para uma única ferramenta pública que some o que o criador paga hoje em ferramentas separadas (por exemplo, Kajabi, Teachable, Skool, Circle, Linktree, Stan, Calendly, Kit, Mailchimp, ClickFunnels, HighLevel e Shopify com aplicativos) e compare a soma com o plano do Marktmorgen que entrega o mesmo. Use somente preços de fontes oficiais, com a data da consulta exibida e uma rotina que acuse preços com mais de 90 dias sem revisão. Não crie calculadora de "quanto você vai ganhar": nada de projeção de receita.
+
+226. [HL7] Painéis de valor do comprador ao longo do tempo (LTV) e de coortes para o criador
+Verifique o que os relatórios e lib/stats já mostram. Acrescente, a partir dos dados que a loja já guarda, o valor médio gerado por comprador ao longo do tempo e a retenção por coorte de mês de compra (especialmente para assinaturas e comunidades), com explicação simples de cada número. Calcule o custo de leitura e de armazenamento e mantenha os limites do plano.
+
+227. [HL8] Automação recomendada a partir de um objetivo
+Na matriz docs/highlevel-gap-matrix.md, o item H22 (Workflow AI) está como lacuna. Permita que o criador descreva um objetivo em linguagem natural (por exemplo, "lembrar quem não terminou a compra" ou "dar boas-vindas a novos membros") e receba uma proposta de automação montada somente com os blocos que já existem, explicada passo a passo. Nada é ligado sem a confirmação dele. A chamada à IA é reservada antes, com teto automático, dentro dos orçamentos de IA que já existem.
+
+228. [HL9] Agendador de posts nas redes sociais (primeiro o estudo)
+Na mesma matriz, o item H14 (planejador de redes sociais) está como lacuna. Estude, nas fontes oficiais, as APIs, as revisões de aplicativo, os termos e os custos do Instagram, do Facebook, do TikTok, do YouTube, do Pinterest, do LinkedIn e do X para agendar e publicar posts com a conta do próprio criador, e registre em docs/social-scheduler-study.md o que seria possível, o que exige aprovação e quanto custaria. Construa somente o que couber na margem, sem depender de aprovação, e desligado; o restante depende da decisão do dono.
+
+229. [HL10] Biblioteca de casos reais e pedidos de avaliação
+Verifique o que já existe sobre casos e vitrines. Prepare uma biblioteca pública de casos que só aceite lojas reais, com autorização escrita do criador e com números conferidos nos dados da própria loja; enquanto não houver casos reais, a página não é publicada. Prepare também, desligado, o convite para que clientes reais avaliem o Marktmorgen no G2, no Capterra ou no Trustpilot, sem recompensa condicionada a avaliação positiva e respeitando as regras de cada site.
+
+230. [HL11] Páginas por nicho de criador, com conteúdo útil e único
+Verifique as páginas que já existem em app/for. Amplie-as para os nichos mais valiosos (por exemplo, coaches, professores de ioga, fotógrafos, músicos e consultores), cada uma com conteúdo realmente útil e diferente (exemplos de produtos, preços praticados no nicho com fonte, passos de montagem e perguntas frequentes), e não páginas repetidas com o nome do nicho trocado, para cumprir as políticas do Google contra conteúdo produzido em escala sem valor. Siga as regras de SEO e de design já adotadas no site.
+
+Estado inicial de todos os itens: na fila.
+
+**Ordem vinculante e estado:** itens220–230 **na fila**, depois do219[OP5] e de todos os trabalhos já em andamento; não bloqueiam nenhum outro. Nenhuma implementação ou ativação nesta inclusão. Reutilizar o que existe e coordenarHL1/OP2,HL5/HT16–HT17 eHL6/OP4, sem duplicação.
+
+**Proveniência:** pedido direto do dono,21/10/2026,00h56Fortaleza; anexo289c4b29-4eea-4510-a5fa-bf8cc5fe0293/Texto colado.txt, com auditoria pública atribuída pelo dono aoCopilot. Valores, fatos, interpretações e lacunas do levantamento são escopo a conferir em fontes oficiais datadas durante a execução, não afirmações verificadas por esta inclusão. Todos os itens203–219 e o texto integral mais recente deOP5 permanecem preservados. Nenhuma conta, contato, aceite, pagamento, aprovação, publicação externa, operação real, mudança de preço/limite/comissão/gate ou contratação autorizada. Margem mínima60% por cliente isolado100%direitos/pior-mês e consolidado após todosos custos/impostosBrasil/EUA; comissões/créditos/prêmios são custos variáveis do cliente indicado; desconhecido reprova, leitura fiscal mais onerosa vinculante. Novos recursos desligados até decisão do dono, com testes que impeçam oferta pública enquanto desligados.
+
+
+## EQ — Venda de cursos dos criadores para equipes de empresas (21/10/2026)
+
+### 231. [EQ1] Venda de cursos para equipes de empresas, 100% autoatendida
+
+**Estado:** na fila. **Ordem:** depois do item230 [HL11] e de todos os trabalhos em andamento; não bloqueia nenhum outro item. Implementação futura, sem iniciar este recurso nesta inclusão.
+
+Pedido: dono, 21/10/2026, 01h24 de Fortaleza. Da análise da Coursera (segmento de empresas: US$ 140,0 milhões de receita no 2º trimestre de 2026, segundo o Form 8-K da Coursera na SEC), aproveitar apenas a venda de cursos para equipes de empresas, sem copiar a assinatura de catálogo (Coursera Plus), que exigiria que o Marktmorgen recebesse o dinheiro dos alunos e o repartisse entre os criadores, contra a decisão do dono de 29/09/2026 de nunca movimentar dinheiro de terceiros.
+
+231. [EQ1] Venda de cursos para equipes de empresas, 100% autoatendida
+
+O que já existe e deve ser reutilizado, sem duplicar: a compra para várias pessoas, de 2 a 200 vagas (lib/group-buy.ts e lib/group-rules.ts); o campo de número de IVA e as faturas para compradores empresariais (lib/tax.ts e a página de checkout); os presentes (lib/gifts.ts); os cursos com provas e certificados; as assinaturas; e os papéis de equipe. Verifique o que cada um faz antes de construir.
+
+Escopo:
+1. Preço por quantidade: o criador pode definir faixas de desconto por número de vagas (por exemplo, 5% a partir de 10 vagas e 15% a partir de 50), exibidas com clareza na página do produto antes do pagamento.
+2. Assinatura por vaga: além da compra única, o criador pode vender acesso anual ou mensal por vaga, cobrado na conta Stripe dele com a quantidade de vagas da assinatura. O comprador aumenta ou diminui o número de vagas sozinho, vendo antes o valor exato calculado pela Stripe.
+3. Painel do responsável pela equipe: quem comprou vê as vagas usadas e as livres, convida pessoas por e-mail, transfere uma vaga ainda não usada, compra mais vagas pelo mesmo preço e acompanha o progresso de cada pessoa (aulas concluídas, provas e certificados), com exportação em planilha. Uma vaga já usada só pode ser transferida se o criador permitir.
+4. Entrada pelo domínio da empresa: o responsável pode permitir que qualquer pessoa com e-mail confirmado do domínio da empresa (por exemplo, @empresa.com) ocupe uma vaga livre, até o limite comprado.
+5. Pagamento por fatura: o criador pode permitir que a empresa pague por fatura emitida na conta Stripe dele (Stripe Invoicing, com prazo definido pelo criador). O acesso só é liberado quando a fatura for paga, salvo se o criador escolher liberar antes, e o risco de falta de pagamento é do criador, nunca do Marktmorgen. Gere automaticamente um orçamento em PDF para a empresa aprovar internamente, sem ligação nem reunião.
+6. Página "For teams": uma seção opcional na loja do criador, em inglês americano, explicando como a equipe compra e usa o curso, sem números de clientes, logotipos ou depoimentos que o criador não tenha comprovado.
+7. Privacidade: cada pessoa da equipe é informada, antes de começar, de que o responsável vê o progresso dela. A política de privacidade e os termos devem dizer isso, e os textos entram em vigor junto com o recurso.
+8. Estudo, sem construir: verifique se vale exportar os cursos em SCORM ou xAPI para o sistema de treinamento da empresa (LMS), e registre o resultado em docs/team-sales.md com custos e riscos de cópia do conteúdo.
+
+Custo e margem: cada vaga ocupada conta como pedido da loja, e cada convite conta como e-mail da loja, dentro dos limites do plano que já existem. Calcule o custo de leitura do painel, de armazenamento e dos PDFs, e coloque teto automático. A margem líquida mínima é de 60% (ela pode ser maior, mas nunca menor) por cliente isolado, com 100% dos direitos usados no pior mês, e também no consolidado, depois de todos os custos e de todos os impostos, inclusive os brasileiros; use a leitura que der MAIS imposto, inclusive para vendas a empresas no exterior. Custo desconhecido não pode ser considerado zero.
+
+Regras: interruptor no código, desligado, no mesmo padrão de ZOOM_APPROVED; os testes devem falhar se alguma página oferecer o recurso enquanto ele estiver desligado. É proibido criar contas, aceitar termos, contratar serviço, ligar o interruptor e alterar preços, limites visíveis, comissão, PLANS_ON_SALE, tax gate, art. 9a ou a revisão comercial. Testes somente com a Stripe simulada: nenhuma cobrança real, nenhum e-mail real e nenhum registro real de cliente alterado. Inglês americano e as exigências de acessibilidade em vigor (WCAG 2.2 AAA como ponto de partida).
+
+Estado: na fila. Ao concluir, registre o commit, o resultado da suíte completa e a publicação, e altere o estado para "pronto e desligado, aguardando o dono".
+
+**Proveniência:** instrução direta do dono,21/10/2026,01h24 Fortaleza; anexo fd80d5da-05d5-4aa5-a0e5-3d91f657de74/Texto colado.txt. Escopo preservado integralmente acima. A receita da Coursera/SEC é contexto atribuído ao pedido e exige verificação oficial datada durante a execução; não é fato conferido nesta inclusão. Preservados integralmente os itens203–230 e a revisão mais recente do OP5. Sem nova despesa operacional; custos futuros exigem cálculo e tetos antes da operação. Commit, suíte completa e publicação serão registrados quando executado; esta inclusão documental não é entrega funcional.
+
+
+## CA — Nenhum calote dos criadores (21/10/2026)
+
+### 232. [CA1] Fechamento de toda possibilidade de calote dos criadores ao Marktmorgen
+
+**Estado:** na fila. **Ordem:** depois do item231 [EQ1] e de todos os trabalhos em andamento; não bloqueia nenhum outro. Escopo futuro, sem iniciar a implementação nesta inclusão.
+
+Pedido: dono, 21/10/2026, 01h26, 01h28 e 01h32 de Fortaleza: "eu vou querer ter modelo em que não tem como levar calote dos criadores" e "veja como faz Stan, Hotmart".
+
+Comparação (confira cada fato nas fontes oficiais e registre-as com a data da consulta): a Hotmart é intermediária, recebe o pagamento do comprador, desconta a própria taxa antes de liberar o saldo ao produtor, estorna do saldo as comissões de vendas contestadas e, acima de 0,9% de contestações por região, retém parte do saldo por até 90 dias e pode pausar vendas (Central de Ajuda Hotmart, cláusula 11.3.1 dos Termos de Uso). A Stan cria e administra as contas Stripe dos criadores, controla o saldo e pode suspender a conta. O Kajabi tenta cobrar o cartão de novo, depois suspende o painel e, por fim, cancela a conta e tira o site do ar. O Marktmorgen é diferente por decisão do dono de 29/09/2026: cada criador recebe na própria conta Stripe, e o Marktmorgen nunca movimenta o dinheiro dele.
+
+Já confirmado em 21/10/2026, na documentação oficial da Stripe e no código: lib/stripe-connect.ts cria cada conta de criador com dashboard "full", fees_collector "stripe" e losses_collector "stripe". Pela documentação da Stripe (docs.stripe.com/connect/disputes, docs.stripe.com/connect/risk-management e docs.stripe.com/connect/account-balances), nas cobranças diretas o valor contestado e o reembolso saem da conta do criador; com fees_collector "stripe", a taxa de contestação é paga pelo criador; e com losses_collector "stripe", é a Stripe, e não a plataforma, que cobre as perdas por saldo negativo do criador. Portanto, o Marktmorgen não responde pelo prejuízo dos criadores com os compradores deles. O único calote possível é o criador não pagar ao próprio Marktmorgen (mensalidade, complementos ou uso extra).
+
+232. [CA1] Fechamento de toda possibilidade de calote dos criadores ao Marktmorgen
+
+Escopo:
+1. Proteja a configuração já confirmada: acrescente um teste que falhe se lib/stripe-connect.ts deixar de criar as contas com dashboard "full", fees_collector "stripe" e losses_collector "stripe", ou se qualquer cobrança de venda deixar de ser cobrança direta na conta do criador. Registre a confirmação, com as fontes e a data, em docs/no-creator-default.md.
+2. Liste em docs/no-creator-default.md TODA cobrança que o Marktmorgen faz ao criador (planos mensais e anuais, Store assistant, legendas por IA, pacotes de uso e qualquer outra) e, para cada uma, se ela é paga ANTES ou DEPOIS do uso.
+3. Nenhum uso pago depois: verifique cada chamada de addToNextInvoice (lib/billing.ts) e qualquer outra cobrança posterior. Todo uso além da franquia passa a ser vendido somente como crédito pré-pago, consumido antes de o custo ocorrer e bloqueado quando o crédito acaba (regra do dono de 18/10/2026: "primeiro o cliente paga, depois recebe"). Se alguma cobrança posterior for indispensável, demonstre que ela tem teto automático inferior ao que já foi pago e registre a justificativa.
+4. Teste grátis: confirme que ele exige cartão confirmado na Stripe no início e que o custo máximo dele continua dentro do teto de exposição já revisado (docs/funded-exposure-review.md).
+5. Cobrança recusada: no primeiro dia em que uma renovação falhar, todo recurso que gera custo para o Marktmorgen (IA, e-mails além da franquia, vídeo, armazenamento novo, envios) para automaticamente. A loja continua no ar apenas para que os compradores recebam o que já pagaram ao criador, nada é apagado, e o criador vê com clareza o que fazer para regularizar. Defina, com base nos custos, o prazo máximo até a suspensão do painel e o prazo até o fechamento da loja, sempre preservando os direitos de exportação e de exclusão.
+6. Contestação do pagamento pelo criador: ao receber da Stripe o aviso de contestação de uma cobrança do Marktmorgen, suspenda na hora os recursos cobertos por ela, aplique a regra que já existe para o Store assistant (nunca mais vender o complemento contestado à mesma loja) e registre o caso. Contestação perdida pelo Marktmorgen entra como custo no pior caso.
+7. Reembolso de 30 dias: confirme que o reembolso da garantia nunca devolve mais do que foi pago e que o custo já consumido até o pedido está dentro do teto de exposição.
+8. Testes automatizados, somente com a Stripe simulada, que falhem se: algum custo puder ocorrer antes do pagamento correspondente; algum recurso que gera custo continuar ativo depois de uma cobrança recusada ou contestada; ou algum uso for cobrado depois de consumido sem teto demonstrado.
+
+Custo e margem: margem líquida mínima de 60% (ela pode ser maior, mas nunca menor) por cliente isolado, com 100% dos direitos usados no pior mês, e também no consolidado, depois de todos os custos e de todos os impostos, inclusive os brasileiros; use a leitura que der MAIS imposto. Custo desconhecido não pode ser considerado zero.
+
+Regras: é proibido criar contas, aceitar termos, contratar serviço e alterar preços, limites visíveis, comissão, PLANS_ON_SALE, tax gate, art. 9a ou a revisão comercial. Testes somente com fornecedores simulados: nenhuma cobrança real, nenhum e-mail real e nenhum registro real de cliente alterado. Textos ao criador em inglês americano, claros, sem ameaça nem linguagem enganosa, e com as exigências de acessibilidade em vigor. Atualize os termos de uso e a política de reembolso quando o comportamento mudar, e os textos entram em vigor junto com o recurso.
+
+Estado: na fila. Ao concluir, registre o commit, o resultado da suíte completa e a publicação.
+
+**Proveniência:** instrução direta do dono,21/10/2026,01h26/01h28/01h32 Fortaleza; anexo429ce754-8927-43eb-bf5f-99a2b9903fac/Texto colado.txt. Pedido integral preservado acima. Afirmações sobre concorrentes, Stripe e configuração do código são atribuídas ao pedido; conferir fontes oficiais datadas e código vigente durante a execução, sem transformar a intenção de eliminar calote em promessa absoluta ou certificação jurídica/financeira. Preservados203–231 e OP5 vigente. Nenhuma operação real, contratação, ativação ou mudança comercial nesta inclusão. Custos futuros exigem análise e tetos antes de operar; desconhecido reprova. Esta inclusão documental não é entrega funcional.

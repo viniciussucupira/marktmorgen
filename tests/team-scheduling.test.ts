@@ -336,7 +336,10 @@ async function main(): Promise<void> {
   process.env.GOOGLE_CALENDAR_SYNC_SCOPES = "1";
   is("Maya connects her own, with the host scopes", await connectGoogle(first.store, MAYA), true);
   is("she picks it as her source, a second calendar to read and one to write to", [await setHostSource(first.store, MAYA, "google"), await setHostCalendars(first.store, MAYA, ["maya@example.com", "team@group.calendar.google.com"], "team@group.calendar.google.com")], [null, null]);
-  const B = weekdayAt(5, 600);
+  // Weekend rounding can put days 3 and 5 on the same Monday. Keep this
+  // scenario at a distinct hour so earlier claims do not pre-book its hosts.
+  const B = weekdayAt(5, 780);
+  is("calendar busy fixture is distinct from earlier host claims", [B === S, B === G], [false, false]);
   busyFor = { "team@group.calendar.google.com": [[B, B + HOUR]] };
   const synced = await hostSync(first.store, MAYA, NY, { refresh: true });
   is("her busy time is read from both calendars, by free/busy only", [synced.state, synced.busy.some((b) => b.start === B), google.some((g) => g.path.endsWith("/freeBusy") && g.body.includes("team@group.calendar.google.com"))], ["ok", true, true]);

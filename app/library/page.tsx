@@ -48,7 +48,9 @@ export default async function LibraryPage({ searchParams }: Params) {
 
   return (
     <div className="flex min-h-screen flex-col bg-paper text-ink">
-      <SiteNav />
+      <header>
+        <SiteNav />
+      </header>
       <main id="content" className="flex-1">
         <section className="surface-dawn border-b border-line">
           <div className="container-page py-14 sm:py-20">
@@ -67,9 +69,9 @@ export default async function LibraryPage({ searchParams }: Params) {
                 What you bought from a store is here while that store is open on Marktmorgen. A store whose creator closes it takes what was bought from it along, so download the files you want to keep. <Link href="/terms#closing" className="underline underline-offset-4">How a store closes</Link>.
               </p>
               {shelves.length ? (
-                <ul className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <ul className="mt-6 grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   {shelves.map(({ store, open }) => (
-                    <li key={store.sid} className="card flex flex-col p-5" data-library-store={store.handle}>
+                    <li key={store.sid} className="card flex min-w-0 flex-col p-5" data-library-store={store.handle}>
                       <div className="flex items-center gap-3">
                         {store.photoId ? (
                           // eslint-disable-next-line @next/next/no-img-element
@@ -81,15 +83,15 @@ export default async function LibraryPage({ searchParams }: Params) {
                         )}
                         <p className="min-w-0 truncate text-lg font-semibold">{store.name}</p>
                       </div>
-                      <div className="mt-5 flex flex-wrap gap-3">
+                      <div className="mt-5 flex min-w-0 flex-wrap gap-3">
                         {open ? (
-                          <a href={open} className="btn btn-primary btn-sm">
-                            <Icon name="download" size={16} />
-                            Open your purchases
+                          <a href={open} className="btn btn-primary btn-sm btn-wrap min-w-0">
+                            <Icon name="download" size={16} className="shrink-0" />
+                            <span className="min-w-0 [overflow-wrap:anywhere]">Open your purchases</span>
                           </a>
                         ) : null}
-                        <a href={storeBase(store)} className="btn btn-secondary btn-sm">
-                          Visit the store
+                        <a href={storeBase(store)} className="btn btn-secondary btn-sm btn-wrap min-w-0">
+                          <span className="min-w-0 [overflow-wrap:anywhere]">Visit the store</span>
                         </a>
                       </div>
                     </li>

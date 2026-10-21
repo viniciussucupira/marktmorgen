@@ -201,6 +201,8 @@
 
 html {
   scroll-behavior: smooth;
+  /* Keep keyboard and anchor destinations clear of the 64px sticky site header. */
+  scroll-padding-top: 5rem;
   -webkit-text-size-adjust: 100%;
 }
 

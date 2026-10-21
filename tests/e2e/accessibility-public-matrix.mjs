@@ -37,10 +37,55 @@ try{
     for(let n=0;n<10;n++){
      await page.keyboard.press("Tab");
      const state=await page.evaluate(()=>{const node=document.activeElement;if(!node||node===document.body)return null;const b=node.getBoundingClientRect();return {tag:node.tagName,visible:node.matches(":focus-visible"),width:b.width,height:b.height};});
-     if(state){focused++;if(!state.visible||state.width<=0||state.height<=0)throw Error("Keyboard focus not visible "+JSON.stringify(state));}
+     if(state){
+      focused++;if(!state.visible||state.width<=0||state.height<=0)throw Error("Keyboard focus not visible "+JSON.stringify(state));
+      try{
+       await page.waitForFunction(()=>{
+        const node=document.activeElement;if(!node||node===document.body)return false;
+        // An inline link can occupy several lines: the center of its union
+        // box may be empty space. Check every actual rendered fragment.
+        const rects=[...node.getClientRects()].filter(r=>r.width>0&&r.height>0);
+        return rects.length>0&&rects.every(r=>{
+         const x=r.left+r.width/2,y=r.top+r.height/2;
+         if(x<0||x>=innerWidth||y<0||y>=innerHeight)return false;
+         const hit=document.elementFromPoint(x,y);return Boolean(hit&&(hit===node||node.contains(hit)));
+        });
+       },undefined,{timeout:5000});
+      }catch(error){
+       console.error("PUBLIC_FOCUS_DIAGNOSTIC:"+JSON.stringify({engine,path,width,tab:n+1,...await page.evaluate(()=>{
+        const node=document.activeElement;if(!node)return {};
+        return {tag:node.tagName,classes:typeof node.className==="string"?node.className:"",scrollY,
+         fragments:[...node.getClientRects()].map(r=>{const x=r.left+r.width/2,y=r.top+r.height/2,hit=document.elementFromPoint(x,y);return {left:r.left,top:r.top,width:r.width,height:r.height,hitTag:hit?.tagName,hitClasses:typeof hit?.className==="string"?hit.className:"",inside:Boolean(hit&&(hit===node||node.contains(hit)))};})};
+       })}));throw error;
+      }
+     }
     }
     if(!focused)throw Error("No keyboard target reached");
    }
+   // Keyboard proof above retains its real scrolled positions. Whole-document
+   // target geometry is evaluated at a stable origin, like the Studio/action matrices.
+   // Native focus may still be animating a smooth scroll in Chromium.
+   // Wait for the real keyboard scroll to finish before requesting audit origin.
+   await page.evaluate(()=>{document.activeElement?.blur?.();});
+   try{await page.waitForFunction(()=>{
+    const key=scrollX+","+scrollY,previous=window.__publicKeyboardScroll;
+    if(!previous||previous.key!==key){window.__publicKeyboardScroll={key,since:performance.now()};return false;}
+    return performance.now()-previous.since>=200;
+   },undefined,{timeout:10000});}catch(error){console.error("PUBLIC_SCROLL_DIAGNOSTIC:"+JSON.stringify({engine,path,width,stage:"keyboard-settlement",...await page.evaluate(()=>({x:scrollX,y:scrollY,state:window.__publicKeyboardScroll,active:document.activeElement?.tagName}))}));throw error;}
+   await page.evaluate(()=>{
+    delete window.__publicKeyboardScroll;
+    const root=document.documentElement;
+    window.__publicScrollStyle={value:root.style.getPropertyValue("scroll-behavior"),priority:root.style.getPropertyPriority("scroll-behavior")};
+    // Firefox may retain CSS smooth scrolling despite an "instant" request.
+    // Keyboard proof is already complete; only normalize whole-document audit geometry.
+    root.style.setProperty("scroll-behavior","auto","important");
+    window.scrollTo({top:0,left:0,behavior:"auto"});
+   });
+   try{await page.waitForFunction(()=>{
+    if(scrollX!==0||scrollY!==0){delete window.__publicOriginSince;return false;}
+    window.__publicOriginSince??=performance.now();return performance.now()-window.__publicOriginSince>=200;
+   },undefined,{timeout:10000});}catch(error){console.error("PUBLIC_SCROLL_DIAGNOSTIC:"+JSON.stringify({engine,path,width,stage:"audit-origin",...await page.evaluate(()=>({x:scrollX,y:scrollY,originSince:window.__publicOriginSince,active:document.activeElement?.tagName,scrollBehavior:getComputedStyle(document.documentElement).scrollBehavior}))}));throw error;}
+   await page.evaluate(()=>{delete window.__publicOriginSince;});
    await page.addScriptTag({content:axe});
    const report=await page.evaluate(async()=>{
     const tags=["wcag2a","wcag2aa","wcag2aaa","wcag21a","wcag21aa","wcag21aaa","wcag22a","wcag22aa","wcag22aaa"];
@@ -48,6 +93,12 @@ try{
     if(!selected.some(rule=>rule.ruleId==="color-contrast-enhanced"))throw Error("AAA enhanced-contrast rule missing");
     const result=await window.axe.run(document,{runOnly:{type:"tag",values:tags}});
     return {rules:selected.map(rule=>rule.ruleId),violations:result.violations.map(rule=>({id:rule.id,targets:rule.nodes.map(node=>node.target)})),incomplete:result.incomplete.map(rule=>({id:rule.id,targets:rule.nodes.map(node=>node.target)}))};
+   });
+   await page.evaluate(()=>{
+    const previous=window.__publicScrollStyle,root=document.documentElement;
+    if(previous?.value)root.style.setProperty("scroll-behavior",previous.value,previous.priority);
+    else root.style.removeProperty("scroll-behavior");
+    delete window.__publicScrollStyle;
    });
    if(report.incomplete.length)gaps.push({path,width,mode,manualReview:report.incomplete});
    console.log("PUBLIC_MATRIX_CASE:"+JSON.stringify({engine,path,width,mode,viewportWidth,writes,foreign,...report,errors}));
