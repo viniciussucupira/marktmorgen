@@ -48,7 +48,11 @@ export async function checkPixelAttributionCenter({browser,LOCAL,fixture,axeSour
   if(captured)payload=JSON.parse(captured);
  }
  if(url.pathname==="/api/store/hit"&&request.method()==="POST"&&payload?.h==="templatelibraryfixture"&&payload?.k==="v"&&Object.keys(payload).every(key=>["h","k","r","u","m","g"].includes(key)&&typeof payload[key]==="string")){visitHits++;return route.fulfill({status:204,body:""});}if(url.pathname==="/api/store/ads-event")adWrites++;else unexpectedWrites.push({method:request.method(),path:url.pathname});return route.abort();}return route.continue();});
+ const visitAcknowledged=page.waitForResponse(response=>new URL(response.url()).origin===new URL(LOCAL).origin&&new URL(response.url()).pathname==="/api/store/hit"&&response.request().method()==="POST"&&response.status()===204);visitAcknowledged.catch(()=>{});
  await page.goto(LOCAL+"/@templatelibraryfixture");await page.getByText("Your browser’s Global Privacy Control keeps ad measurement off. Manage this signal in your browser settings.",{exact:true}).waitFor();
+ // Consent rendering and the cookieless visit hydrate independently. Wait for
+ // the strictly validated local route acknowledgement before reading its count.
+ await visitAcknowledged;
  is("HT10 GPC beats previous yes "+width,await page.getByRole("button",{name:"Allow",exact:true}).count(),0);
  is("HT10 GPC clears server yes "+width,(await gpc.cookies()).some(cookie=>cookie.name==="nl_ads_templatelibraryfixture"),false);
  is("HT10 no ad platform request "+width,vendor,0);is("HT10 no ad event write "+width,adWrites,0);is("HT10 existing cookieless visit intercepted "+width,visitHits,1);is("HT10 no unexpected write "+width,unexpectedWrites,[]);

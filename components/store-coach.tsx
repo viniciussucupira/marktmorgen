@@ -3,7 +3,7 @@ import { Icon } from "@/components/icons";
 import { type StoreCheck, nextChecks, storeScore } from "@/lib/store-coach";
 
 /**
- * "Help your store sell more" in the studio (lib/store-coach.ts): a score out
+ * Store setup checklist in the studio (lib/store-coach.ts): a score out
  * of 100, the next few things to do, each with where it is done, and the
  * rest folded away.
  */
@@ -17,15 +17,15 @@ export function StoreCoach({ checks }: { checks: StoreCheck[] }) {
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h2 id="coach-title" className="text-lg font-semibold tracking-[-0.02em] text-ink">
-            Help your store sell more
+            Set up your store
           </h2>
           <p className="mt-1 text-sm text-ink-soft">
             {next.length
-              ? `${done.length} of ${checks.length} things stores that sell well have. Each one below is a few minutes.`
-              : `All ${checks.length} things stores that sell well have. Keep going: a new product, a new post, a new page.`}
+              ? `${done.length} of ${checks.length} setup checks complete. Choose a next step below.`
+              : `All ${checks.length} setup checks complete. Review your products and pages as your store changes.`}
           </p>
         </div>
-        <p className="text-3xl font-semibold tabular-nums tracking-[-0.03em] text-violet-deep" aria-label={`Score: ${score} out of 100`}>
+        <p className="text-3xl font-semibold tabular-nums tracking-[-0.03em] text-violet-deep">
           {score}
           <span className="text-base text-ink-soft">/100</span>
         </p>
@@ -33,7 +33,7 @@ export function StoreCoach({ checks }: { checks: StoreCheck[] }) {
       <div
         className="mt-4 h-2 overflow-hidden rounded-full bg-sand"
         role="progressbar"
-        aria-label="Store score"
+        aria-label="Store setup progress"
         aria-valuemin={0}
         aria-valuemax={100}
         aria-valuenow={score}

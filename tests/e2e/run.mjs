@@ -1490,7 +1490,7 @@ try {
   part("The creator's profiles elsewhere, under the store's name");
   {
     await open(studio, `${LOCAL}/studio`);
-    const coach = studio.getByRole("region", { name: "Help your store sell more" });
+    const coach = studio.getByRole("region", { name: "Set up your store" });
     is("the studio coaches a store that is set up: a score, and what to do next, each with where", [
       await coach.count(),
       /\d+\/100/.test(await words(coach)),

@@ -4727,3 +4727,9 @@ fieldset:disabled .cm-poll-row {
   transform: none;
   transition: none;
 }
+
+/* Keyboard focus must not inherit an unfinished smooth anchor scroll. Keep
+ * native focus scrolling immediate; pointer-led anchor navigation stays smooth. */
+html:has(:focus-visible) {
+  scroll-behavior: auto;
+}
