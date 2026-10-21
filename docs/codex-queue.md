@@ -3960,6 +3960,10 @@ Custo marginal máximo da referência: nenhum novo comando, chave, índice, cons
 
 Auditoria de lease205 aberta: valor constante1,expiração15s eDEL incondicional exigem correção com propriedade/fencing; fallbackGET+DEL não é atômico. Fontes oficiais consultadas21/10/2026: https://upstash.com/pricing/redis e https://upstash.com/blog/lua-scripting-on-upstash-redis-atomic-operations-over-http (23/06/2026). PAYG0.20USD/100milcomandos,storage0.25USD/GB,banda0.03USD/GB após franquia; franquia gratuita não presumida. Contagem faturada de comandos internosLua e reserva por plano ainda não demonstradas; nenhuma operação paga adicional ativada nem garantia de não sobre-venda certificada.
 
+### PR 767 — mobile failure and correction candidate (2026-10-21)
+
+Head `3ee5934217d3d6537236a85db9e83b8f9414e746`, job `119338097317`: first home sample interaction 248 ms exceeds unchanged 200 ms gate; LCP 960 ms, CLS 0. Other eight samples passed interaction at 32–80 ms. The document pointerdown handler spent 134.7 ms hydrating when the native plan-perks summary was pressed. Candidate correction gives the initially closed itemized list its own Suspense boundary, inside each existing card boundary, so pressing the summary need not hydrate every hidden perk first. All wording, limits, prices, native keyboard behavior and existing measurements remain. This is a diagnosis/candidate, not a passing performance claim. Full remote verification is required on the new head; no isolated job rerun or discarded sample. No added runtime service, dependency, request or storage; monthly/annual incremental operation ceilings remain unchanged for all plans, actual invoices/taxes unknown and opening remains closed.
+
 ## GR — Lições da auditoria do Gumroad (21/10/2026)
 
 Proveniência: pedido direto do dono nesta conversa, 21/10/2026, 04h13 de Fortaleza. Ordem: depois do item 269 [KT3] e de todos os itens já em andamento; não bloqueia nenhum outro item. Itens 203–269 dos pedidos abertos preservados integralmente na ancestralidade desta fila. As afirmações sobre Gumroad abaixo são insumos da auditoria, ainda sujeitas a conferência oficial datada antes de qualquer uso público.
