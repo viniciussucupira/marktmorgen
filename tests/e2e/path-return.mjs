@@ -2,6 +2,17 @@
 export async function checkReturnPath({browser,LOCAL,session,sid,otherSid,axeSource,is}){
  const context=await browser.newContext({viewport:{width:1280,height:900}});
  try{
+  await context.addInitScript(()=>{
+   window.__mmRscBodies=[];const original=window.fetch;
+   window.fetch=async function(...args){
+    const response=await original.apply(this,args);
+    if(new URL(response.url).searchParams.has("_rsc")){
+     const entry={url:response.url,done:false,bytes:0,error:null};window.__mmRscBodies.push(entry);
+     response.clone().text().then(text=>{entry.bytes=text.length;entry.done=true;},error=>{entry.error=String(error);entry.done=true;});
+    }
+    return response;
+   };
+  });
   await context.addCookies([{name:"nl_session",value:session,url:LOCAL}]);
   const page=await context.newPage(),errors=[];page.setDefaultTimeout(30000);page.setDefaultNavigationTimeout(60000);page.on("pageerror",error=>errors.push(String(error)));
   const path=LOCAL+"/studio/path?store="+sid;
@@ -48,8 +59,9 @@ export async function checkReturnPath({browser,LOCAL,session,sid,otherSid,axeSou
    await page.locator(".nb-toast-text").filter({hasText:"Name and description saved."}).waitFor();
    // Idle can still describe the previous request set before React starts refresh.
    const refreshed=await refresh;is("details RSC refresh responds",refreshed.ok(),true);
-   let finishTimer;
-   try{if(await Promise.race([refreshed.finished(),new Promise((_,reject)=>{finishTimer=setTimeout(()=>reject(Error("Details RSC refresh did not finish within60000ms")),60000);})]))throw Error("Details RSC refresh did not finish");}finally{clearTimeout(finishTimer);}
+   await page.waitForFunction(url=>window.__mmRscBodies.some(entry=>entry.url===url&&entry.done),refreshed.url(),{timeout:60000});
+   const body=await page.evaluate(url=>window.__mmRscBodies.findLast(entry=>entry.url===url&&entry.done),refreshed.url());
+   if(body.error||!body.bytes)throw Error("Details browser RSC body incomplete "+JSON.stringify(body));
    await page.waitForLoadState("networkidle");
   };
   await page.route("**/api/store/details",route=>route.fulfill({status:200,contentType:"application/json",body:JSON.stringify({ok:true,name:"Return Path",bio:"A reply that never reached storage."})}));
