@@ -17,3 +17,9 @@ Estado: implementação para verificação integral remota; nenhum resultado ou 
 Head7b0e048:os3jobs119025543726/119025543892/119025544083 reprovam25casos cada no formulário da biblioteca. Checkout e recibo passaram; a regraregion detectou.bg-ink e.py-1 fora de landmark,semoverflow. A biblioteca chamavaSiteNav diretamente, sem oheader usado nas páginas públicas já verificadas. app/library/page.tsx passa a envolver a navegação emheader, dando landmarkbanner ao aviso e identidade do site, sem duplicar menu ou alterar texto/ações. Regraregion permanece integral,sem exceção ou filtro. Atéaqui3estados/caso75auditorias/engineforam executados, não125; as etapas seguintes ainda precisam passar.
 
 Integração explícita do734a877384 preservaHTTPS/cadastro e desativa prefetch informativo deFooterAnchor/Terms/Privacy; parent registrado. Correção exige toda a suíte no novohead, não rerun isolado. Custos fixos dosjobsfalhos/cancelados devem ser reconciliados, nenhuma operação real ou mudança comercial/fiscal. Ownership deapp/library/page.tsx desta branch até integração posterior; sem editor concorrente.
+
+## Reflow da biblioteca autenticada
+
+No2dba6b5, Chromium eWebKit passaram25jornadas/125auditoriascada. Firefox119027277516 concluiu25jornadas/124auditorias,mas1caso320/text-spacing reprovou:largura347contra320,semviolaçãoaxe; shelf autenticada antes dospedidos. Nenhumaamostra descartada.
+
+A grade da biblioteca ganha coluna base minmax(0,1fr) e cardsmin-w-0; ações reutilizam.btn-wrap e isolam rótulo emspanmin-w-0/com quebra de palavras,ícone semencolher. O tamanho mínimo implícito de grade/flex não deve impor a largura do textoespaçado ao viewport. Mesmosrótulos,URLs,tokens e conteúdo; sem clipping ou esconder informação. Auditoria passa a registrar medidas de elementos que ultrapassarem,semHTML/hrefs/tokens/dadospessoais. Overflow estrito continua. Suítecompleta novamenteobrigatória.

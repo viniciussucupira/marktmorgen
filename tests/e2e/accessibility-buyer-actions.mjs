@@ -75,7 +75,7 @@ try{
     await page.addScriptTag({content:axe});
     const result=await page.evaluate(async()=>{
      const root=document.documentElement,result=await window.axe.run(document,{rules:{"color-contrast-enhanced":{enabled:true}}});
-     return {scroll:root.scrollWidth,client:root.clientWidth,violations:result.violations.map(r=>({id:r.id,targets:r.nodes.map(n=>n.target)})),incomplete:result.incomplete.map(r=>({id:r.id,targets:r.nodes.map(n=>n.target)}))};
+     return {scroll:root.scrollWidth,client:root.clientWidth,overflow:root.scrollWidth>root.clientWidth?[...document.querySelectorAll("main *")].filter(n=>{const r=n.getBoundingClientRect();return r.width>1&&r.height>1&&r.right>root.clientWidth+1;}).slice(0,12).map(n=>({tag:n.tagName,classes:typeof n.className==="string"?n.className:"",width:n.getBoundingClientRect().width,right:n.getBoundingClientRect().right,client:n.clientWidth,scroll:n.scrollWidth})):[],violations:result.violations.map(r=>({id:r.id,targets:r.nodes.map(n=>n.target)})),incomplete:result.incomplete.map(r=>({id:r.id,targets:r.nodes.map(n=>n.target)}))};
     });
     audits++;console.log("BUYER_MATRIX_AUDIT:"+JSON.stringify({engine,width,mode,state,...result}));
     if(result.scroll>result.client||result.violations.length)throw Error("Accessibility/overflow failure at "+state);

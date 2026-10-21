@@ -3190,6 +3190,15 @@ Integração explícita do head73546afa12:prefetch dos3CTAs deplanos desativado,
 Custos reconciliados em21/10/2026~03h28UTC:231execuçõesconcluídas/653jobs/178442segundos=2974,03job-min, incluindo falhas/cancelamentos, dados anteriores730/733 e acréscimos730/734/735. Execuçõesativas/pendentes,branches731/732efaturareal não incluídas;custosdesconhecidos nãozero. Evidência localmarktmorgen-ci-cost-20261021-0328.json. Nenhum custo variável/provedor/operação/comercial novo.
 
 
+### Entrega127 — publicação funcional confirmada, PR730
+
+Incorporação real21/10/2026 00:51:39Fortaleza(03:51:39Z),merge6425aed18058f20d79b15902ebb5824e6ab87b6d;headverificadoa7b7ec00554bdca522bcafb2aa46b76d6400763c,árvoreidêntica14fdbe3a9f9457d1c9388c7a150442dc20ec7f2c. As16verificações passaram noheadcompleto,sem rerunisolado:verify,Redis,mobile,Firefox/WebKitsuíteinteira,segurança,matrizespublic225/studio150/ações75echeckpreview.
+
+VercelREADY21/10/2026 00:52:38.597Fortaleza(03:52:38.597Z),dpl_4CQ172fei1TJHZfJ3mdw9W88cdZ3,marktmorgen.comassociado a6425aedexato. Probes/,/pricing,/signin,/studio,/studio/pages,/platform/path,/privacy responderam200com mesmoDPL;rotasprivadas semsessão são redirecionamentos anônimos,nãoprova deaçãoautenticada emprodução. Runtimeerror/fatal0 somente janela03:48:42.775–03:53:42.775UTC. Contador127,próximo128,avisadoapósconfirmação. Correções concretas:Pathpersistência/retorno,seletores/layoutStudio/foco/contraste,calculadora/Pricing estreitos,pausaHeroFlow fora da tela/aba eCTAplanos semprefetch especulativo.
+
+Custos históricos231execuçõesconcluídas/653jobs/178442segundos, incluindo falhas/cancelados; posteriores/ativas e fatura excluídos,desconhecido nãozero. Nenhumprovedor/operação/custo variável novo,gates/preços/limites/comissão/optinpreservados ePLANS_ON_SALE=false. Não certificaAAAglobal,INPdecampo ou60%apósleiturafiscalmais onerosa. Item201continua:734a877384 cadastro75jornadas/225auditoriaspassou nas3engines,masaguarda suíteintegral;736corrigebanner/reflowbiblioteca eaguarda novoheadintegral. Checkout/Stripehospedado,entregaexterna,zoomreal400%,aparelhos/AT/manualscroll não declarados concluídos. Itens203–219incluindonovoOP5agorapreservados emmain,continuam nafilasemativação.
+
+
 ## 203 — Teams automático para chamadas pagas (execução futura)
 
 203. [TEAMS] Links automáticos do Microsoft Teams para as chamadas pagas, construídos agora e DESLIGADOS
