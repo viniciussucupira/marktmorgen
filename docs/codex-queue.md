@@ -3164,6 +3164,11 @@ PR730 integra agora exatamente os11arquivos doPR733 mais este registro, mantendo
 WebKitfc9d3f: HT10beacon não expunha Blob no route; teste agora captura cópia do corpo sendBeacon real no navegador antes de chamar método nativo. SomentePOSTlocal/store/hit doframe/@templatelibraryfixture noWebKit com metadata ausente usa captura; h/k/chaves/tipos continuam todos validados,zeroeventosads ezeroescritas inesperadas mantidos. Não aceita corpo desconhecido nem executaestatísticas; nada muda no produto/optin. HT15esperado2/obtido1 era navegação antes da leitura de destinatários: registra waitForResponse count antes das duas navegações e aguarda cada resposta exata,sem diminuir contagem2/limites. NovoCI integral,sem rerun isolado; demais falhasRSC permanecem abertas. CustosfixosCI históricos mantidos,nenhumserviçonovo;entrega126 já confirmada,próxima127.
 
 
+###201/B2-200 — reduzir trabalho fora da tela após reprovação móvel,20/10/2026 Fortaleza
+
+Head1f8ab84 mobile118998070721 reprovou Home sample1: interação200ms,metaestrita<200,LCP772ms/CLS0;outras8amostraspassaram. Evento ocorreu junto de longtask166ms; não se elimina amostra nem relaxa gate, e não se declara causa exclusiva. Revisão identificou HeroFlow com timer5s ativo mesmo fora da tela/enquanto abaoculta. Agora IntersectionObserver+visibilitychange pausam esse timer fora da área visível/abaoculta e retomam ao voltar;conteúdo e escolha manual/reducedmotion preservados,sem gatilho comercial/custo. É redução concreta de trabalho desnecessário,hipótese de contribuição à primeira interação; exige suíte integral/móvel no novohead e conservaoutlier248ms histórico. Item203Teams permanece ao fim; ordem depois202 eativos,sem bloqueio.
+
+
 ## 203 — Teams automático para chamadas pagas (execução futura)
 
 203. [TEAMS] Links automáticos do Microsoft Teams para as chamadas pagas, construídos agora e DESLIGADOS
