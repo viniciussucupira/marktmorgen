@@ -3878,6 +3878,14 @@ Produção **READY** em `2026-10-21T07:55:00.476Z`, domínio `marktmorgen.com`, 
 
 Contador131 confirmado; próximo132. Os helpers de autorização do item203 também foram incorporados, mas **Teams continua desligado, sem conexão real e incompleto**: não é anunciado como recurso entregue. Sem novos pedidos de rede/armazenamento na correção de navegação; custeio do estado Teams permanece condicionado à integração real dos limites. Fatura de CI desconhecida não é zero. PLANS_ON_SALE=false, preços, limites, comissão desligada, consentimentos e gates fiscais/comerciais preservados. Pedidos252–270 continuam preservados nesta fila, pendentes de incorporação própria.
 
+### Entrega funcional132 — produção confirmada em21/10/2026
+
+PR755 incorporado às **05h27m31s de Fortaleza** (`2026-10-21T08:27:31Z`), commit `b3336be9a65542ffafec594f8b8996a6db155662`.22checks passaram no head `2073d49c74b71c9cc2972ebe7502eb7ec5f38eb4`; árvores prevista/efetiva iguais à testada `752f98cf86972517f25e91a4fe7d19a35b2845b7`. As três prévias do Studio (cadastro, apoio e contato) agora têm `role=group` compatível com o rótulo Preview. Preservados conteúdo dos criadores, amostras no idioma da loja, layout e salvamento. Os25casos Firefox não apresentam mais os três alvos antigos em `aria-prohibited-attr`; achados distintos e lacunas manuais continuam abertos, sem certificação AAA.
+
+**READY** em `2026-10-21T08:28:30.520Z`, domínio `marktmorgen.com`, versão exata acima, deployment `dpl_6SicPfCwV4CJSG3RGAvLwQPLoefy`. Rotas `/`, `/platform`, `/pricing`, `/mission`, `/library`: HTTP200 com esse deployment. Logs error/fatal: nenhum apenas no intervalo `08:24:19.141Z–08:29:19.140Z`. Contador132, próximo133. Sem custo variável novo; fatura CI desconhecida não é zero.
+
+Estado posterior: a fila consolidada de705e reprovou no WebKit público, job119111608666, `/pricing`390baseline, Tab10: cartão focado abaixo da viewport após5segundos (top911,78; altura206; viewport900; scrollY439). CSS do novo head torna rolagem nativa imediata durante `:focus-visible`, sem alterar eventos Tab, prazo, critérios ou contorno de foco. Hipótese de interferência de smooth scroll ainda exige nova verificação completa; não é correção comprovada. O mesmo pacote incorpora o ajuste de clareza/semântica de progresso do PR756 e todos os pedidos203–270. Nada desses ajustes pendentes incrementa o contador. Teams203 continua desligado/incompleto; preços, franquias, consentimentos e gates preservados.
+
 ## GR — Lições da auditoria do Gumroad (21/10/2026)
 
 Proveniência: pedido direto do dono nesta conversa, 21/10/2026, 04h13 de Fortaleza. Ordem: depois do item 269 [KT3] e de todos os itens já em andamento; não bloqueia nenhum outro item. Itens 203–269 dos pedidos abertos preservados integralmente na ancestralidade desta fila. As afirmações sobre Gumroad abaixo são insumos da auditoria, ainda sujeitas a conferência oficial datada antes de qualquer uso público.

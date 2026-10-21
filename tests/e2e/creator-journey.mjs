@@ -28,7 +28,9 @@ export async function checkCreatorJourney({browser,LOCAL,axeSource,is}){
    is("HT2 journey fits "+width,await journey.evaluate(node=>node.scrollWidth<=node.clientWidth+1),true);
    is("HT2 page fits "+width,await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
    await page.addScriptTag({content:axeSource});
-   const audit=await journey.evaluate(async node=>(await window.axe.run(node,{runOnly:{type:"tag",values:["wcag2a","wcag2aa","wcag21aa","wcag22aa"]}})).violations.map(v=>v.id));
+   const violations=await journey.evaluate(async node=>(await window.axe.run(node,{runOnly:{type:"tag",values:["wcag2a","wcag2aa","wcag21aa","wcag22aa"]}})).violations.map(v=>({id:v.id,nodes:v.nodes.slice(0,20).map(n=>({target:n.target,summary:n.failureSummary}))})));
+   if(violations.length)console.error("HT2_ACCESSIBILITY_DIAGNOSTIC:"+JSON.stringify({width,scroll:await page.evaluate(()=>({x:scrollX,y:scrollY})),violations,targets:await journey.locator("a").evaluateAll(nodes=>nodes.map(node=>{const r=node.getBoundingClientRect();return {label:node.textContent?.trim(),x:r.x,y:r.y,width:r.width,height:r.height};}))}));
+   const audit=violations.map(v=>v.id);
    is("HT2 journey accessibility "+width,audit,[]);
    is("HT2 no API write "+width,writes,0);
   }finally{await context.close();}
