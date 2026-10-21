@@ -1,0 +1,9 @@
+# Cadastro sintético com confirmação explícita
+
+Item201,20/10/2026 Fortaleza. Esta matriz amplia a jornada de cadastro sem criar conta real: formulário usa o endpoint local real, envia para Resend simulado em memória, lê o link somente da caixa sintética, comprova queGET não abre sessão, confirma com teclado e exige cookieHttpOnly/SameSiteLax e entrada no primeiroStudio. Todo request de navegador fora do host local é bloqueado; somentePOSTauth/request eauth/callback são permitidos. Dados descartáveis@example.test, serviçosRedis/e-mail/Stripe/AI locais. VERCEL=0 mantém somente o bypass local já existente em bot-check, sem mudar código nem gate deprodução; BotIDreal permanece lacuna.
+
+Três engines reais Playwright1.56.1,5larguras320/390/768/1280/1920 e5modos,25jornadas/engine75total. Três estados auditados por jornada: formulário,confirmação antesdoPOST,primeiroStudio. Axeintegral comAAAcontraste,teclado,nãooverflow,espaçamento persistido,movimento reduzido ecoresforçadas. Reflow320 não equivale zoomreal400%;dispositivos/AT/manualscroll permanecemabertos. Falhas e incompletes são registrados,sem certificaçãoAAAdoproduto. Nenhum token/corpo de e-mail é escrito no log.
+
+Custo fixo CI adicional:3jobs×30min=90job-min/execução;Rexecuções/mês teto90Rmensal/1080Ranual. Não é custo porcliente. Nenhum provedor/serviço novo,nenhuma operação real; elegibilidade de runner público e fatura devem ser reconciliadas com todos os jobs,inclusivefalhas/cancelados. Desconhecido não ézero nem margemcertificada. Preservados preços/limites,PLANS_ON_SALE=false,comissão,optin,taxgate/art9a/revisãocomercial e mínimo60%individual/consolidado após custos/impostosBrazil/EUA.
+
+Estado inicial: implementação submetida aCIintegral; sem resultado ou entrega antecipados. Item202 e203Teamsmantêm ordem; este teste integra201ativo.

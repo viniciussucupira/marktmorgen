@@ -1,0 +1,35 @@
+name: Signup action accessibility matrix
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+concurrency:
+  group: signup-action-accessibility-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  signup-actions:
+    name: Signup action AAA (${{ matrix.browser }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox, webkit]
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+      E2E_BROWSER: ${{ matrix.browser }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: "24"
+          cache: npm
+      - run: npm ci
+      - run: node node_modules/playwright-core/cli.js install --with-deps ${{ matrix.browser }}
+      - run: npm run build
+      - name: Synthetic local signup and explicit confirmation at five widths and access modes
+        run: node tests/e2e/accessibility-signup-actions.mjs
