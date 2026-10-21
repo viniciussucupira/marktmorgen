@@ -19,3 +19,21 @@ Open work: verify the exact current ACP specification and provider feed schemas,
 Costs and gates: current pure helper has no network, storage, provider usage or dependency. Operational costs are unknown and therefore fail approval. Before any operation, calculate each Store/Studio/Scale monthly and annual plan at 100% rights in the worst month, with highest paid provider rates, reads, bytes, refresh cadence, hooks, support, all Brazil/US taxes under the most onerous reading, per-client and consolidated 60% minimum, automatic caps and advance reservation. Stripe's suggested periodic updates are not a free budget. Existing prices, visible limits, commission, PLANS_ON_SALE, tax gate, art. 9a and commercial review remain unchanged.
 
 Owner-only prerequisites, recorded without requesting or executing them: provider eligibility and onboarding, contracts/terms, approval and verified commercial/tax review. Do not create accounts, join waitlists, accept terms, pay, submit catalogs or enable switches. Further internal implementation can continue with simulated providers.
+
+## Pinned ACP feed adapter (2026-10-21)
+
+Canonical source: [ACP repository](https://github.com/agentic-commerce-protocol/agentic-commerce-protocol/tree/7fdd78df677a94dce04c770644b0fbbb1401272b/spec/2026-04-17), commit 7fdd78df677a94dce04c770644b0fbbb1401272b (2026-07-18). The released snapshot is 2026-04-17; its changelog deprecates January. The website changelog and some checkout examples lag behind this revision. Do not infer the active wire format from those examples.
+
+The pinned feed is an agent-hosted push interface. Merchants send partial upserts to agents; offline metadata.json/products.jsonl ingestion replaces the entire set. A merchant-hosted public JSON endpoint does not by itself implement ACP feed ingestion. No external submission or agent account was created.
+
+lib/agentic-feed.ts maps only checked projection fields into a partial-upsert payload: product plus one simple variant, plain descriptions, uppercase currency and integer minor units, availability and published seller policy links. Exported IDs are storeId:productId to avoid cross-store collisions; persisted IDs remain untouched. Same-origin HTTPS links, duplicate rejection, 24-entry and 64,000 UTF-8-byte caps apply before return. Invalid batches are rejected whole. Out-of-stock entries remain present to update stale offers. This payload is never a full replacement and never deletes products omitted from a page.
+
+The adapter has no route, reads, writes, network or new dependency. Tests use fictional fixtures only. AGENTIC_COMMERCE_APPROVED remains false; no public page advertises it. Operational approval, creator opt-in persistence, budget reservations, bounded refresh orchestration, actual upstream validation, deletion lifecycle, checkout, payment handlers and eligibility remain incomplete. Conforming to this selected data shape is not end-to-end protocol or provider certification.
+
+ACP security/capability/checkout references consulted 2026-10-21:
+- https://www.agenticcommerce.dev/docs/concepts/architecture
+- https://www.agenticcommerce.dev/docs/concepts/security
+- https://www.agenticcommerce.dev/docs/reference/checkout
+- https://www.agenticcommerce.dev/docs/changelog
+
+Bearer authentication, signed operations, supported-version negotiation, current payment handlers and constrained delegated credentials need separate implementation and verification against the pinned release. Existing creator direct-charge, tax, order admission and opt-in requirements remain binding. No new operational costs are assumed zero.
