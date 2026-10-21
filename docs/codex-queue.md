@@ -4038,6 +4038,14 @@ Próxima correção concreta: DiscountEditor.send aceitava ok truthy sem HTTP be
 
 Custos operacionais: mesmas chamadas, fornecedores, chaves, TTLs e limites; máximo mensal/anual incremental por plano0/0, não fatura0. Preços Store69/690,Studio449/4490,Scale999/9990 e limites visíveis/opt-in/idiomas/IDs preservados. PLANS_ON_SALE=false e gates fiscais/margem/comissão permanecem. Item205 SKU histórico/quantidades por variante/reserva atômica continuam incompletos; esta correção não certifica margem ou atomicidade.
 
+### Leitura da lista de descontos do provedor — correção independente
+
+Auditoria após a entrega145: listCodes convertia data ausente/não-array em [] com state=ok e descartava silenciosamente linhas semID/código. A rota usa essa lista para reconciliar hasDiscounts, portanto uma resposta ilegível podia esconder o campo de código no checkout. Próxima correção em branch própria: exigir data próprio=array e todas as linhas legíveis comIDs únicos antes de permitir reconciliação. Lista vazia explícita continua válida; IDs/grafia/percentuais do criador preservados. Testes substituem fetch integralmente, exigem origem127.0.0.1 e cobrem resposta ilegível, linha parcial, duplicatas, vazio explícito, registro válido e erroHTTP. Nenhuma requisição/fornecedor/chave/TTL/teto novo; incremento máximo operacional mensal/anual por plano0/0, não fatura0. Sem Stripe real, conta, pagamento ou e-mail. CI remoto completo necessário; PR772 de confirmação no navegador continua independente e deve ser integrado explicitamente antes da incorporação se main avançar. Gates/preços/limites/opt-in preservados.
+
+Verificação PR773 em 2026-10-21: o job119493398832 reprovou somente a comparação do objeto válido porque o helper de testes compara JSON com ordem de propriedades; valores e preservação estavam corretos. Corrigida a asserção com igualdade profunda estrutural, mantendo todos os casos e campos. Nova verificação completa obrigatória no novo head; nenhum job isolado reexecutado. Sem publicação ou incremento do contador.
+
+Integração explícita do PR772 incorporado em21/10/2026 às18:31:37 de Fortaleza (21:31:37Z), mergefb43f43cd5e91535e9d06bc0cde1f377e6261515, com22/22 checks e árvore real igual à testada a9e0eb972c8c90712a68a039ad0f1b5ba13f3b93. PR773 preserva as duas correções e exige nova verificação integral no head combinado. Publicação ainda em confirmação; contador145 inalterado.
+
 ## SEO — Visibilidade do Marktmorgen no Google (21/10/2026)
 
 271. [SEO1] Auditar, corrigir e melhorar presença orgânica na busca do Google

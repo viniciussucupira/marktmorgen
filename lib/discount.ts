@@ -180,12 +180,18 @@ export async function listCodes(account: string): Promise<CodeList> {
       undefined,
       API_VERSION,
     );
-    const rows = Array.isArray(page.data)
-      ? (page.data as Record<string, unknown>[])
-      : [];
-    const codes = rows
-      .map(readRow)
-      .filter((entry): entry is DiscountCode => entry !== null);
+    // An absent/unreadable provider list is not evidence that no live code
+    // exists. The route reconciles hasDiscounts only after a confirmed list.
+    if (!Object.hasOwn(page,"data") || !Array.isArray(page.data)) return { state:"error" };
+    const codes: DiscountCode[] = [];
+    const ids = new Set<string>();
+    for (const raw of page.data) {
+      if (!raw || typeof raw !== "object" || Array.isArray(raw) || !Object.hasOwn(raw,"id") || !Object.hasOwn(raw,"code")) return { state:"error" };
+      const entry = readRow(raw as Record<string,unknown>);
+      if (!entry || ids.has(entry.id)) return { state:"error" };
+      ids.add(entry.id);
+      codes.push(entry);
+    }
     return { state: "ok", codes };
   } catch (error) {
     console.error("listing discount codes failed", error);
