@@ -1,4 +1,5 @@
 import { done,is,part } from "./check";
+import { isDeepStrictEqual } from "node:util";
 
 const originalFetch=globalThis.fetch;
 const priorKey=process.env.STRIPE_SECRET_KEY;
@@ -24,7 +25,7 @@ try{
  const row={id:"promo_preserved",code:"Creator-Édition",active:true,times_redeemed:3,max_redemptions:null,expires_at:null,promotion:{coupon:{percent_off:12.5}}};
  body={data:[row]};
  const expected={id:row.id,code:row.code,active:true,timesRedeemed:3,maxRedemptions:null,expiresAt:null,off:{kind:"percent",percent:12.5}};
- is("valid creator spelling and IDs remain unchanged",await listCodes("acct_synthetic_discount"),{state:"ok",codes:[expected]});
+ is("valid creator spelling and IDs remain unchanged",isDeepStrictEqual(await listCodes("acct_synthetic_discount"),{state:"ok",codes:[expected]}),true);
  body={data:[row,{...row,id:""}]};
  is("one unreadable row refuses whole reconciliation",await listCodes("acct_synthetic_discount"),{state:"error"});
  body={data:[row,row]};

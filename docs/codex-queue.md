@@ -4034,6 +4034,8 @@ Apuração de CI em21/10/2026 às20:16:12.911Z:858execuções concluídas única
 
 Auditoria após a entrega145: listCodes convertia data ausente/não-array em [] com state=ok e descartava silenciosamente linhas semID/código. A rota usa essa lista para reconciliar hasDiscounts, portanto uma resposta ilegível podia esconder o campo de código no checkout. Próxima correção em branch própria: exigir data próprio=array e todas as linhas legíveis comIDs únicos antes de permitir reconciliação. Lista vazia explícita continua válida; IDs/grafia/percentuais do criador preservados. Testes substituem fetch integralmente, exigem origem127.0.0.1 e cobrem resposta ilegível, linha parcial, duplicatas, vazio explícito, registro válido e erroHTTP. Nenhuma requisição/fornecedor/chave/TTL/teto novo; incremento máximo operacional mensal/anual por plano0/0, não fatura0. Sem Stripe real, conta, pagamento ou e-mail. CI remoto completo necessário; PR772 de confirmação no navegador continua independente e deve ser integrado explicitamente antes da incorporação se main avançar. Gates/preços/limites/opt-in preservados.
 
+Verificação PR773 em 2026-10-21: o job119493398832 reprovou somente a comparação do objeto válido porque o helper de testes compara JSON com ordem de propriedades; valores e preservação estavam corretos. Corrigida a asserção com igualdade profunda estrutural, mantendo todos os casos e campos. Nova verificação completa obrigatória no novo head; nenhum job isolado reexecutado. Sem publicação ou incremento do contador.
+
 ## SEO — Visibilidade do Marktmorgen no Google (21/10/2026)
 
 271. [SEO1] Auditar, corrigir e melhorar presença orgânica na busca do Google
