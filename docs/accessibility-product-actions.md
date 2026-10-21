@@ -69,3 +69,8 @@ WebKit continuou a propagar a largura de opções dos selects do PromotionPlanne
 ## Próximos selects revelados pelo produto publicado — 20/10/2026 Fortaleza
 
 Head d310: Firefox25 casos sem falhas; WebKit25/9 falhas de largura, todas na raiz estreita ou text-spacing. PromotionPlanner deixou de aparecer como ancestral expansivo; os controles Product de BuyButtonEditor e What it opens de CheckoutScriptEditor propagaram opções longas (label client238/scroll372 com espaçamento; raiz413/client320). Ambos passam a grade explícita com mínimos0 e select HTML nativo com aparência controlada/chevron decorativo, preservando opções, teclado, estado, limites, código e permissões. Não se oculta overflow da seção/página. Inputs com texto rolável continuam disponíveis. A medição de origem estável passou no Firefox; não certifica rolagem intermediária. CI integral no novo head é obrigatório; resultados anteriores e lacunas permanecem. Nenhum serviço novo ou custo operacional por cliente; teto CI120min/execução já registrado, custo real final ainda exige duração de todos os jobs.
+
+
+## Chromium interrompido pelo teto — 20/10/2026 Fortaleza
+
+Headd3b: Firefox25/0 e WebKit25/0 (75 registros de lacunas no WebKit, sem certificação). Chromium job118961810682 foi cancelado no teto40min após imprimir a primeira auditoria, sem prova de ação nem resumo final; não é sucesso. O harness passa a timeouts explícitos30s de ações/60s navegação e conclusão de RSC limitada60s, com fase focus-add/await-create no log. Timeout reprova e preserva erro; nenhuma assertion é removida e nenhum teto de CI é ampliado. Exige toda a CI no novo head; custo inclui o job cancelado. Sem operação real ou novo serviço.

@@ -28,6 +28,7 @@ const env = {
   NEXT_TELEMETRY_DISABLED: "1",
 };
 
+async function completedResponse(response){let timer;try{return await Promise.race([response.finished(),new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error("RSC response did not finish within60000ms: "+response.url())),60000);})]);}finally{clearTimeout(timer);}}
 const services=await startServices(4497);
 const folder=mkdtempSync(join(tmpdir(),"mm-studio-matrix-")),seedFile=join(folder,"seed.cjs");
 let fixture;
@@ -50,7 +51,7 @@ try{
   await context.addCookies([{name:"nl_session",value:fixture.session,url:origin}]);
   let writes=0,foreign=0,localProductWrites=0,interceptedVisits=0,expectedVisits=1;const errors=[],blockedWrites=[];
   try{
-   const page=await context.newPage();page.on("pageerror",error=>errors.push(String(error)));
+   const page=await context.newPage();page.setDefaultTimeout(30000);page.setDefaultNavigationTimeout(60000);page.on("pageerror",error=>errors.push(String(error)));
    await context.route("**/*",route=>{const r=route.request(),url=new URL(r.url());if(url.origin===origin&&url.pathname==="/api/store/hit"&&r.method()==="POST"){const raw=r.postData(),input=raw?r.postDataJSON():null;const missingWebkit=engine==="webkit"&&!raw&&new URL(r.frame().url()).pathname==="/@activationonboarding";if(missingWebkit)gaps.push({path,width,mode,reason:"WebKit exposes no beacon body to routing. Only same-origin store-hit POST from the exact synthetic storefront is fulfilled204 without executing stats; payload validation remains unverified."});if(!missingWebkit&&(input?.h!=="activationonboarding"||input?.k!=="v")){writes++;blockedWrites.push({method:r.method(),path:url.pathname,handle:input?.h,kind:input?.k,bodyBytes:r.postData()?.length??0});return route.abort();}interceptedVisits++;return route.fulfill({status:204});}if(!["GET","HEAD"].includes(r.method())){if(url.origin===origin&&url.pathname==="/api/store/product"&&r.method()==="POST"&&["add","visibility"].includes(r.postDataJSON()?.action)){localProductWrites++;return route.continue();}writes++;blockedWrites.push({method:r.method(),path:url.pathname});return route.abort();}if(url.origin!==origin){foreign++;return route.abort();}return route.continue();});
    const response=await page.goto(origin+path,{waitUntil:"networkidle",timeout:60000});if(response.status()!==200)throw Error("HTTP "+response.status());
    if(new URL(page.url()).pathname.startsWith("/signin"))throw Error("Synthetic authenticated journey redirected to sign-in");
@@ -96,14 +97,16 @@ try{
    if(report.violations.length||errors.length||writes)failed++;
    // Only the real disposable local product API is allowed to mutate.
    let expectedWrites=1;
+   console.log("PRODUCT_ACTION_PHASE:"+JSON.stringify({engine,width,mode,phase:"focus-add"}));
    await form.getByRole("button",{name:"Add it",exact:true}).focus();
    const creationRefresh=page.waitForResponse(response=>new URL(response.url()).pathname==="/studio"&&response.request().headers()["rsc"]==="1"&&!response.request().headers()["next-router-prefetch"]);creationRefresh.catch(()=>{});
    const creation=page.waitForResponse(response=>new URL(response.url()).pathname==="/api/store/product"&&response.request().method()==="POST");
    await page.keyboard.press("Enter");
+   console.log("PRODUCT_ACTION_PHASE:"+JSON.stringify({engine,width,mode,phase:"await-create"}));
    const created=await creation,creationData=await created.json();if(!created.ok()||creationData.ok!==true||!creationData.product||creationData.product.title!==title||!/^[a-z0-9]+$/.test(creationData.product.id))throw Error("Local product creation refused");
    const createdId=creationData.product.id;
    await page.locator(".nb-toast-region [role=status]").getByText("Product added.",{exact:true}).waitFor({state:"attached"});
-   const createdRefresh=await creationRefresh;if(!createdRefresh.ok()||await createdRefresh.finished())throw Error("Create RSC refresh failed");
+   const createdRefresh=await creationRefresh;if(!createdRefresh.ok()||await completedResponse(createdRefresh))throw Error("Create RSC refresh failed");
    await page.waitForLoadState("networkidle");
    await page.reload({waitUntil:"networkidle"});
    const row=page.locator("#products li").filter({has:page.locator('button[aria-controls="product-panel-'+createdId+'"]')});
@@ -115,7 +118,7 @@ try{
     await button.focus();await page.keyboard.press("Enter");
     const response=await reply,data=await response.json();
     if(response.request().postDataJSON()?.id!==createdId||!response.ok()||data.ok!==true||!data.product||data.product.id!==createdId||Boolean(data.product.hidden)!==hidden)throw Error("Local visibility refused "+JSON.stringify({status:response.status(),data}));
-    const refresh=await refreshed;if(!refresh.ok()||await refresh.finished())throw Error("Visibility RSC refresh failed");
+    const refresh=await refreshed;if(!refresh.ok()||await completedResponse(refresh))throw Error("Visibility RSC refresh failed");
     const flight=await refresh.text();const savedAt=flight.indexOf('"id":"'+data.product.id+'"');console.log("PRODUCT_VISIBILITY_RESPONSE:"+JSON.stringify({engine,width,mode,hidden,url:refresh.url(),productFragment:savedAt<0?"not found":flight.slice(savedAt,savedAt+1600)}));
     await page.waitForLoadState("networkidle");
     console.log("PRODUCT_VISIBILITY_RENDER:"+JSON.stringify({engine,width,mode,hidden,buttons:await row.getByRole("button").allTextContents()}));
