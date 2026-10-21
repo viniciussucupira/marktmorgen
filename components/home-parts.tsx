@@ -735,6 +735,7 @@ function PlanCard({
         */}
         <Link
           href={`/signin?plan=${tier}&billing=${yearly ? "year" : "month"}`}
+          prefetch={false}
           className={`btn ${featured ? "btn-primary" : "btn-secondary"} btn-lg btn-block`}
         >
           {cta}
