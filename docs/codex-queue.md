@@ -3266,6 +3266,11 @@ A matriz de cadastro anterior terminava no Studio vazio; a matriz de produto usa
 - O link de retorno da página de compras agora solicita a loja somente ao ser acionado (`prefetch={false}`), preservando destino, texto, idiomas, autorização e compras. Evita a requisição especulativa desnecessária; navegação real continua exigida pelos testes.
 - Verificação: nova execução completa de todos os checks no novo head, sem repetir apenas o job reprovado. Não incorporado/publicado até aprovação integral. Matrizes de cadastro/primeira loja ainda sem resultado conclusivo;201 continua em andamento. Sem novo serviço/custo variável, preços/limites e gates inalterados; CI é custo fixo, fatura efetiva desconhecida não é zero.
 
+### P0-201 — diagnóstico da atualização após criar a primeira loja (21/10/2026)
+
+- Os três engines do headf43eb7 concluíram cadastro com10jornadas de primeira loja comprovadas por engine, mas15/25casos por engine falharam a partir de768px ao aguardar o título do Studio após claim200. Chromium:95auditorias/25casos/15falhas, job119058888046; Firefox119058888214 e WebKit119058888249 também reprovados. Isso não é prova de publicação integral nem falha de acessibilidade automaticamente atribuível ao layout.
+- Acrescentado diagnóstico estritamente sintético e limitado de caminho, títulos, texto visível e erros do servidor para identificar o estado real que substituiu o Studio. Mantidos todos os asserts, limites,25casos, regras e recusas; nenhum timeout foi ampliado, erro filtrado ou resultado relaxado. Nova verificação completa no novo head.201 segue ativo; sem incorporação/publicação/contador.
+
 ## 203 — Teams automático para chamadas pagas (execução futura)
 
 203. [TEAMS] Links automáticos do Microsoft Teams para as chamadas pagas, construídos agora e DESLIGADOS
