@@ -110,7 +110,7 @@ export function ContactBoxEditor({
         </div>
       </div>
 
-      <div className="mt-5 rounded-2xl bg-paper p-5 ring-1 ring-line" aria-label="Preview">
+      <div className="mt-5 rounded-2xl bg-paper p-5 ring-1 ring-line" role="group" aria-label="Preview">
         <p className="text-xs font-bold uppercase tracking-wide text-ink-soft">Preview</p>
         <p className="mt-2 text-lg font-semibold text-ink">{heading.trim() || w.heading}</p>
         <p className="mt-1 text-sm text-ink-soft">{line.trim() || w.line(storeName)}</p>
