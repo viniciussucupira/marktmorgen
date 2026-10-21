@@ -149,7 +149,7 @@ export default async function SignInPage({
   return (
     <div className="min-h-screen bg-paper text-ink lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
       <aside className="surface-night nb-grid-lines on-dark hidden flex-col justify-between p-10 lg:flex xl:p-14">
-        <Link href="/" className="w-fit rounded-[10px]" aria-label="Marktmorgen, home">
+        <Link prefetch={false} href="/" className="w-fit rounded-[10px]" aria-label="Marktmorgen, home">
           <Logo tone="light" />
         </Link>
         <div className="max-w-md">
@@ -171,14 +171,14 @@ export default async function SignInPage({
             ))}
           </ul>
         </div>
-        <Link href="/demo" className="link-arrow on-dark w-fit text-[0.9375rem]">
+        <Link prefetch={false} href="/demo" className="link-arrow on-dark w-fit text-[0.9375rem]">
           See the live demo store first
           <Icon name="arrow-right" size={16} className="arrow" />
         </Link>
       </aside>
 
       <main id="content" className="flex min-h-screen min-w-0 flex-col px-4 py-8 [overflow-wrap:anywhere] sm:px-8 lg:min-h-0 lg:justify-center lg:py-16">
-        <Link href="/" className="inline-flex min-h-11 w-fit items-center rounded-[10px] lg:hidden" aria-label="Marktmorgen, home">
+        <Link prefetch={false} href="/" className="inline-flex min-h-11 w-fit items-center rounded-[10px] lg:hidden" aria-label="Marktmorgen, home">
           <Logo />
         </Link>
 
@@ -221,7 +221,7 @@ export default async function SignInPage({
             <PasskeySignIn />
             {/* Lost the inbox this account logs in with (lib/recovery-address.ts). */}
             <p className="mt-4 text-sm text-ink-soft">
-              <Link href="/signin/lost" className="link inline-flex min-h-11 items-center">
+              <Link prefetch={false} href="/signin/lost" className="link inline-flex min-h-11 items-center">
                 Cannot open your email any more?
               </Link>
             </p>
@@ -274,7 +274,7 @@ export default async function SignInPage({
               <Icon name="store" size={18} className="mt-0.5 shrink-0 text-violet-deep" />
               <span>
                 Not ready yet?{" "}
-                <Link href="/demo" className="link">
+                <Link prefetch={false} href="/demo" className="link">
                   Open the live demo store
                 </Link>{" "}
                 and buy something with a test card.

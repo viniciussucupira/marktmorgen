@@ -72,7 +72,15 @@ try{
     if(!previous||previous.key!==key){window.__publicKeyboardScroll={key,since:performance.now()};return false;}
     return performance.now()-previous.since>=200;
    },undefined,{timeout:10000});}catch(error){console.error("PUBLIC_SCROLL_DIAGNOSTIC:"+JSON.stringify({engine,path,width,stage:"keyboard-settlement",...await page.evaluate(()=>({x:scrollX,y:scrollY,state:window.__publicKeyboardScroll,active:document.activeElement?.tagName}))}));throw error;}
-   await page.evaluate(()=>{delete window.__publicKeyboardScroll;window.scrollTo({top:0,left:0,behavior:"instant"});});
+   await page.evaluate(()=>{
+    delete window.__publicKeyboardScroll;
+    const root=document.documentElement;
+    window.__publicScrollStyle={value:root.style.getPropertyValue("scroll-behavior"),priority:root.style.getPropertyPriority("scroll-behavior")};
+    // Firefox may retain CSS smooth scrolling despite an "instant" request.
+    // Keyboard proof is already complete; only normalize whole-document audit geometry.
+    root.style.setProperty("scroll-behavior","auto","important");
+    window.scrollTo({top:0,left:0,behavior:"auto"});
+   });
    try{await page.waitForFunction(()=>{
     if(scrollX!==0||scrollY!==0){delete window.__publicOriginSince;return false;}
     window.__publicOriginSince??=performance.now();return performance.now()-window.__publicOriginSince>=200;
@@ -85,6 +93,12 @@ try{
     if(!selected.some(rule=>rule.ruleId==="color-contrast-enhanced"))throw Error("AAA enhanced-contrast rule missing");
     const result=await window.axe.run(document,{runOnly:{type:"tag",values:tags}});
     return {rules:selected.map(rule=>rule.ruleId),violations:result.violations.map(rule=>({id:rule.id,targets:rule.nodes.map(node=>node.target)})),incomplete:result.incomplete.map(rule=>({id:rule.id,targets:rule.nodes.map(node=>node.target)}))};
+   });
+   await page.evaluate(()=>{
+    const previous=window.__publicScrollStyle,root=document.documentElement;
+    if(previous?.value)root.style.setProperty("scroll-behavior",previous.value,previous.priority);
+    else root.style.removeProperty("scroll-behavior");
+    delete window.__publicScrollStyle;
    });
    if(report.incomplete.length)gaps.push({path,width,mode,manualReview:report.incomplete});
    console.log("PUBLIC_MATRIX_CASE:"+JSON.stringify({engine,path,width,mode,viewportWidth,writes,foreign,...report,errors}));

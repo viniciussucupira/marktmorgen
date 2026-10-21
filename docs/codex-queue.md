@@ -3239,6 +3239,11 @@ Headb7a5: Chromium público passou; Firefox119039947008 falhou1/75 em/signin1280
 Recorte ampliado:310execuções concluídas,892jobs,252137segundos (4202,28job-min), incluindo falhas e cancelamentos. Evidência localmarktmorgen-ci-cost-20261021-0443.json preserva IDs/durações, base0328 e acréscimos concluídos730/734/735/736/737. Execuções ativas/posteriores e branches não listadas, inclusive738/739, não incluídas. Duração não equivale à fatura: custo efetivamente faturado continua desconhecido e não vale zero. CI é custo fixo da empresa; nenhum serviço/uso variável/preço/limite/gate alterado.
 
 
+### P0-201 — causas observadas no head documental integrado (21/10/2026)
+
+PR7390364816: Public Firefox119044516710 identificou audit-origin comscrollY714/BODY/scroll-behavior smooth após pedido instantâneo. O harness mantém o teclado real e todos os hit-tests; somente na auditoria posterior força temporariamente scroll-behavior:auto!important e pede retornoauto, exige origem0,0 estável200ms e restaura o estilo original depois deaxe. Nenhum scroll de teclado normalizado nem critério relaxado. Signup WebKit119044516508 fez75auditorias mas falhou1/25 por RSC abortado das rotas home e/signin/lost. Links informativos restantes da página de entrada (home/demo/recuperação) recebem prefetch=false; URLs, conteúdo, consentimento e ações permanecem. Sem filtro de erros. Correção em739 para preservar a execução saudável de736; suíte completa no novo head obrigatória antes de qualquer incorporação. Nenhum novo provedor/custo variável/preço/limite/gate.
+
+
 ## 203 — Teams automático para chamadas pagas (execução futura)
 
 203. [TEAMS] Links automáticos do Microsoft Teams para as chamadas pagas, construídos agora e DESLIGADOS
