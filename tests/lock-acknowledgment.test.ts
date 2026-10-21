@@ -30,7 +30,7 @@ test("unknown stock lock acknowledgment cannot open checkout", async () => {
   try {
     for (const acknowledgement of [undefined, false, 0, 1, "true", {}, []]) {
       store.pipeline = async () => [acknowledgement];
-      const result = await withStockHold(fakeStore, product, async () => { opened += 1; return { id: "cs_test_synthetic" }; });
+      const result: { ok: boolean; reason?: string } = await withStockHold(fakeStore, product, async () => { opened += 1; return { id: "cs_test_synthetic" }; });
       assert.deepEqual(result, { ok: false, reason: "busy" });
     }
   } finally { store.pipeline = original; }
