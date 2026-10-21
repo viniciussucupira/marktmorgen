@@ -4060,6 +4060,12 @@ Job119512455236 no head143290c9385af409e03bfbfa696584274133b211:21/22 checks apr
 
 PR774, job119524421731: lint recusou setState síncrono no efeito de montagem. Substituído pelo contrato SSR/client de useSyncExternalStore, com funções estáveis e sem escrita em efeito. Gate de hidratação preservado; nova verificação integral em novo head, sem supressão da regra ou rerun isolado.
 
+### Confirmação das configurações de frete — continuação205
+
+ShippingEditor aceitava ok truthy semHTTPválido nem evidência do produto/frete e dizia Nothing was saved após perda de resposta. Agora exige confirmação própria/exata e frete normalizado igual ao enviado (ou null explícito ao parar), preserva escolhas e orienta conferir o estado quando incerto. Campos, cancelamento e troca ficam bloqueados enquanto há envio; formulário anuncia aria-busy. Testes puros cobrem corpo incompleto/contraditório, produto divergente, valor/SKU divergente,HTTPfalho, sucesso e remoção explícita. Sem nova chamada, fornecedor, chave,TTL ou teto; incremento máximo operacional mensal/anual por plano0/0, custos reaisCI/deploy desconhecidos. Preserva preços/limites/opt-in/gates eSKUUnicodeIDs. Branch independente de774, deve integrar774 explicitamente se main avançar e repetirCIcompleto. Nenhuma operação real/conta/pagamento/email/teste local. Ainda não é entrega funcional.
+
+Integração explícita do PR774 merge d654f8d2290ef572c7afebbb8cd4d56c8d8fc58d em21/10/2026 às20:02:37Fortaleza (23:02:37Z),22/22 checks no head156860f95303695ec99fd6fd5ebb3fea4cbedec8; árvore prevista/real/testada36306c3a93984fd32745416fdd416b39e24d50ae iguais. Todas as correções e históricos de falha preservados; PR775 exige nova verificação integral no head combinado. Publicação774 ainda em confirmação, contador147.
+
 ## SEO — Visibilidade do Marktmorgen no Google (21/10/2026)
 
 271. [SEO1] Auditar, corrigir e melhorar presença orgânica na busca do Google
