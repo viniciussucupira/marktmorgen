@@ -49,13 +49,14 @@ export function BuyButtonEditor({
   const [place, setPlace] = useState("");
   const [text, setText] = useState("");
   const [copied, setCopied] = useState(false);
+  const [previewShown, setPreviewShown] = useState(false);
   // The height the card asks for, read off the preview as soon as its page
   // has arrived (it is this site's own page, so the studio may read it).
   // Not on its load event: that waits for the picture to arrive as well.
   const [heights, setHeights] = useState<Record<string, number>>({});
   const preview = useRef<HTMLIFrameElement>(null);
   const product = products.find((p) => p.id === productId) ?? products[0];
-  const measuring = kind === "card" && product && !(product.id in heights) ? product.id : null;
+  const measuring = previewShown && kind === "card" && product && !(product.id in heights) ? product.id : null;
   useEffect(() => {
     if (!measuring) return;
     let tries = 0;
@@ -174,7 +175,12 @@ export function BuyButtonEditor({
         <p className="field-label">How it looks</p>
         <div className="mt-2 rounded-2xl bg-paper p-4 ring-1 ring-line">
           {kind === "card" ? (
-            <iframe
+            <div>
+              <button type="button" className="btn btn-secondary btn-sm mb-3" aria-expanded={previewShown} aria-controls="buy-card-preview" onClick={() => setPreviewShown((shown) => !shown)}>
+                {previewShown ? "Hide card preview" : "Show card preview"}
+              </button>
+              <div id="buy-card-preview">
+              {previewShown ? <iframe
               key={product.id}
               ref={preview}
               src={embedPath(handle, product.id)}
@@ -182,7 +188,9 @@ export function BuyButtonEditor({
               width={CARD_WIDTH}
               height={height}
               style={{ display: "block", width: "100%", maxWidth: CARD_WIDTH, height, border: 0, borderRadius: 24 }}
-            />
+            /> : null}
+              </div>
+            </div>
           ) : (
             <a href={tagged(`/@${handle}/p/${productSegment(product)}`, place)} target="_blank" rel="noopener" style={buttonStyle(fill, onFill)}>
               {words}

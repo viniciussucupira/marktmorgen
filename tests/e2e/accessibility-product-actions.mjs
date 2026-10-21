@@ -65,29 +65,10 @@ try{
     return response;
    };
   });
-  // Locate unexpected blank-frame creation without removing frames or changing navigation.
-  if(engine==="firefox")await context.addInitScript(()=>{
-   let reported=0;
-   const original=document.createElement;
-   document.createElement=function(...args){
-    const element=Reflect.apply(original,this,args);
-    if(String(args[0]).toLowerCase()==="iframe"&&reported++<12){
-     console.info("PRODUCT_IFRAME_CREATED:"+JSON.stringify({path:location.pathname,stack:new Error("iframe creation").stack?.slice(0,2400)}));
-    }
-    return element;
-   };
-   new MutationObserver(records=>{
-    for(const record of records)for(const node of record.addedNodes){
-     if(node.nodeType!==1)continue;
-     const frames=[...(node.tagName==="IFRAME"?[node]:[]),...node.querySelectorAll("iframe")];
-     for(const frame of frames)if(reported++<24)console.info("PRODUCT_IFRAME_INSERTED:"+JSON.stringify({path:location.pathname,id:frame.id,title:frame.title,src:frame.getAttribute("src"),srcdoc:frame.hasAttribute("srcdoc"),hidden:frame.hidden}));
-    }
-   }).observe(document,{childList:true,subtree:true});
-  });
   await context.addCookies([{name:"nl_session",value:fixture.session,url:origin}]);
   let writes=0,foreign=0,localProductWrites=0,interceptedVisits=0,expectedVisits=1;const errors=[],blockedWrites=[];
   try{
-   const page=await context.newPage();if(engine==="firefox")page.on("console",message=>{if(/^PRODUCT_IFRAME_(CREATED|INSERTED):/.test(message.text()))console.log(message.text());});page.setDefaultTimeout(30000);page.setDefaultNavigationTimeout(60000);page.on("pageerror",error=>errors.push(String(error)));
+   const page=await context.newPage();page.setDefaultTimeout(30000);page.setDefaultNavigationTimeout(60000);page.on("pageerror",error=>errors.push(String(error)));
    // Observe frame lifecycles without changing browser execution or swallowing failures.
    const frameIds=new WeakMap();let frameSequence=0,frameEvents=0;
    const describeFrame=frame=>{try{if(!frameIds.has(frame))frameIds.set(frame,++frameSequence);const u=new URL(frame.url()||"about:blank"),parent=frame.parentFrame();if(parent&&!frameIds.has(parent))frameIds.set(parent,++frameSequence);return {id:frameIds.get(frame),parent:parent?frameIds.get(parent):null,origin:u.origin,path:u.pathname};}catch{return {unavailable:true};}};
@@ -153,6 +134,12 @@ try{
    const row=page.locator("#products li").filter({has:page.locator('button[aria-controls="product-panel-'+createdId+'"]')});
    if(await row.count()!==1)throw Error("Created product row is not unique");
    await row.waitFor();
+   const embedPreview=page.locator('#buy-button iframe');
+   if(await embedPreview.count())throw Error("Card preview loaded before explicit request");
+   await page.getByRole("button",{name:"Show card preview",exact:true}).click();
+   await embedPreview.waitFor();
+   await page.waitForFunction(()=>document.querySelector('#buy-button iframe')?.contentDocument?.querySelector("[data-card-height]"));
+
    async function visibility(button,hidden){
     const refreshed=page.waitForResponse(response=>new URL(response.url()).pathname==="/studio"&&response.request().headers()["rsc"]==="1"&&!response.request().headers()["next-router-prefetch"]);refreshed.catch(()=>{});
     const reply=page.waitForResponse(response=>new URL(response.url()).pathname==="/api/store/product"&&response.request().method()==="POST"&&response.request().postDataJSON()?.action==="visibility");
