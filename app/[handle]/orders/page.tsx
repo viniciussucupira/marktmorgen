@@ -516,7 +516,7 @@ export default async function OrdersPage({ params, searchParams }: Params) {
           <p className="st-muted mx-auto mb-4 max-w-xl text-sm" data-while-open>
             {words.whileOpen}
           </p>
-          <Link href={`/@${store.handle}`} className="st-footer-link text-sm font-semibold">
+          <Link prefetch={false} href={`/@${store.handle}`} className="st-footer-link text-sm font-semibold">
             {said.w.backTo(store.name)}
           </Link>
           {/* Every store this address bought from, in one place (lib/buyer-library.ts). Never on the demo store. */}

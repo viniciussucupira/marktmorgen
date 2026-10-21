@@ -34,7 +34,7 @@ const proxy=createServer({key:readFileSync(process.env.SIGNUP_TLS_KEY),cert:read
  incoming.on("aborted",()=>forwarded.destroy());
  incoming.pipe(forwarded);
 });
-const services=await startServices(4498);
+let services=await startServices(4498);
 const app=spawn(process.execPath,[join(root,"node_modules/next/dist/bin/next"),"start","-p",String(port)],{env,stdio:["ignore","pipe","pipe"]});
 let output="";for(const stream of [app.stdout,app.stderr])stream.on("data",chunk=>output=(output+chunk).slice(-6000));
 let browser,cases=0,failed=0,audits=0;const gaps=[];
@@ -44,19 +44,31 @@ try{
  if(!up)throw Error("Local app did not start");
  browser=await driver.launch();console.log("SIGNUP_MATRIX_ENGINE:"+JSON.stringify({requested:engine,actual:driver.name(),version:browser.version()}));
  for(const width of [320,390,768,1280,1920])for(const mode of ["baseline","text-spacing","reduced-motion","forced-colors","reflow-320"]){
+  // Each viewport/mode is a separate fresh deployment fixture. Reusing the
+  // fake database would exhaust the real ten-store company-funded pool.
+  // Keep that production ceiling intact; never seed paying stores or enlarge it.
+  if(cases>0){await services.close();services=await startServices(4498);}
   const index=cases+1,viewportWidth=mode==="reflow-320"?320:width;
-  const context=await browser.newContext({ignoreHTTPSErrors:true,viewport:{width:viewportWidth,height:900},serviceWorkers:"block",reducedMotion:mode==="reduced-motion"?"reduce":"no-preference",forcedColors:mode==="forced-colors"?"active":"none",extraHTTPHeaders:{"x-forwarded-for":"192.0.2."+index}});
-  let phase="open",foreign=0;const mutations=[],errors=[];const inbox="matrix-"+engine+"-"+index+"@example.test",before=services.emails().length;
+  const context=await browser.newContext({ignoreHTTPSErrors:true,viewport:{width:viewportWidth,height:900},serviceWorkers:"block",reducedMotion:mode==="reduced-motion"?"reduce":"no-preference",forcedColors:mode==="forced-colors"?"active":"none",extraHTTPHeaders:{"x-forwarded-for":"192.0.2."+index,"Sec-GPC":"1"}});
+  let page;let phase="open",foreign=0,interceptedVisits=0;const mutations=[],errors=[];const handle="matrix-"+engine[0]+"-"+index,storeName="Matrix "+engine+" "+index;const inbox="matrix-"+engine+"-"+index+"@example.test",before=services.emails().length;
   try{
+   await context.addInitScript(()=>Object.defineProperty(navigator,"globalPrivacyControl",{configurable:true,get:()=>true}));
    if(mode==="text-spacing")await context.addInitScript(()=>document.addEventListener("DOMContentLoaded",()=>{const style=document.createElement("style");style.textContent="*{line-height:1.5!important;letter-spacing:.12em!important;word-spacing:.16em!important}p{margin-bottom:2em!important}";document.head.append(style);},{once:true}));
-   const page=await context.newPage();page.setDefaultTimeout(30000);page.setDefaultNavigationTimeout(60000);
+   page=await context.newPage();page.setDefaultTimeout(30000);page.setDefaultNavigationTimeout(60000);
    page.on("pageerror",error=>errors.push(String(error).replace(/token=[^&\s"']+/g,"token=redacted")));
    await context.route("**/*",route=>{
     const request=route.request(),url=new URL(request.url());
     if(url.origin!==origin){foreign++;return route.abort();}
+    if(url.pathname==="/api/store/hit"&&request.method()==="POST"){
+     const raw=request.postData(),input=raw?request.postDataJSON():null;
+     const missingWebkit=engine==="webkit"&&!raw&&new URL(request.frame().url()).pathname==="/@"+handle;
+     if(missingWebkit)gaps.push({width,mode,reason:"WebKit exposes no beacon body; only exact synthetic storefront stats are fulfilled204 without executing writes. Payload proof remains manual."});
+     if(!missingWebkit&&(input?.h!==handle||input?.k!=="v")){mutations.push({method:request.method(),path:"unexpected-store-hit"});return route.abort();}
+     interceptedVisits++;return route.fulfill({status:204});
+    }
     if(!["GET","HEAD"].includes(request.method())){
      mutations.push({method:request.method(),path:url.pathname});
-     if(request.method()!=="POST"||!["/api/auth/request","/api/auth/callback"].includes(url.pathname))return route.abort();
+     if(request.method()!=="POST"||!["/api/auth/request","/api/auth/callback","/api/store/claim"].includes(url.pathname))return route.abort();
     }
     return route.continue();
    });
@@ -101,13 +113,36 @@ try{
    await page.waitForURL(url=>url.pathname==="/studio");await page.waitForLoadState("networkidle");
    if(!(await context.cookies()).some(c=>c.name==="nl_session"&&c.secure&&c.httpOnly&&c.sameSite==="Lax"))throw Error("Local authenticated session missing");
    phase="empty-studio";await audit("authenticated-first-setup");
-   if(foreign||errors.length||mutations.length!==2||mutations[0].path!=="/api/auth/request"||mutations[1].path!=="/api/auth/callback")throw Error("Unexpected operation or page error "+JSON.stringify({foreign,errors,mutations}));
-   gaps.push({width,mode,reason:"Synthetic disposable local inbox/session only; no real email/account, physical device, assistive user or actual browser400% zoom. Production BotID behavior and manual sticky-scroll review remain open."});
-   console.log("SIGNUP_ACTION_PROOF:"+JSON.stringify({engine,width,mode,actualLocalRequest:true,capturedEmails:mail.length,confirmationGetDidNotSignIn:true,explicitConfirmation:true,authenticatedFirstSetup:true,foreign,mutations}));
-  }catch(error){failed++;console.error("SIGNUP_MATRIX_FAILURE:"+JSON.stringify({engine,width,mode,phase,error:String(error).replace(/token=[^&\s"']+/g,"token=redacted")}));}
+   phase="claim-first-store";
+   await page.getByLabel("Your address",{exact:true}).fill(handle);
+   await page.getByLabel("Store name",{exact:true}).fill(storeName);
+   await page.getByLabel("One line about it",{exact:false}).fill("Disposable local accessibility fixture.");
+   const claim=page.waitForResponse(r=>new URL(r.url()).pathname==="/api/store/claim"&&r.request().method()==="POST");
+   await page.getByRole("button",{name:"Create my store",exact:true}).focus();await page.keyboard.press("Enter");
+   const claimed=await claim,claimBody=claimed.request().postDataJSON(),created=await claimed.json();
+   if(!claimed.ok()||created.ok!==true||created.handle!==handle||typeof created.store!=="string"||!/^[0-9a-f]{32}$/.test(created.store)||claimBody.handle!==handle||claimBody.name!==storeName||claimBody.another!==false)throw Error("Initial local store claim refused or mismatched");
+   await page.getByRole("heading",{name:"Your store",exact:true}).waitFor();
+   if(await page.getByLabel("Your address",{exact:true}).count())throw Error("Initial setup did not refresh into created store");
+   phase="created-studio";await audit("created-first-store-studio");
+   const publicLink=page.locator('header a[href="/@'+handle+'"]');
+   if(await publicLink.count()!==1)throw Error("Actual first-store link missing or ambiguous");
+   await publicLink.focus();await page.keyboard.press("Enter");
+   await page.waitForURL(url=>url.pathname==="/@"+handle);await page.waitForLoadState("networkidle");
+   // An owner-only preview is insufficient: discard the browser session and
+   // reload the actual newly claimed address as an anonymous visitor.
+   await context.clearCookies();
+   phase="anonymous-first-store";const publicReply=await page.reload({waitUntil:"networkidle"});
+   if(publicReply?.status()!==200)throw Error("New store is not publicly available");
+   if((await context.cookies()).some(c=>c.name==="nl_session"))throw Error("Public proof retained creator session");
+   await page.getByRole("heading",{name:storeName,exact:true}).waitFor();
+   await audit("anonymous-first-store-after-reload");
+   if(foreign||errors.length||mutations.length!==3||mutations[0].path!=="/api/auth/request"||mutations[1].path!=="/api/auth/callback"||mutations[2].path!=="/api/store/claim")throw Error("Unexpected operation or page error "+JSON.stringify({foreign,errors,mutations}));
+   gaps.push({width,mode,reason:"Synthetic disposable local inbox/session/store claim only; no real email/account/store, physical device, assistive user or actual browser400% zoom. Production BotID behavior and manual sticky-scroll review remain open."});
+   console.log("SIGNUP_ACTION_PROOF:"+JSON.stringify({engine,width,mode,actualLocalRequest:true,capturedEmails:mail.length,confirmationGetDidNotSignIn:true,explicitConfirmation:true,authenticatedFirstSetup:true,actualFirstStoreClaim:true,anonymousPublicStoreAfterReload:true,interceptedVisits,foreign,mutations}));
+  }catch(error){failed++;const diagnostic=page?await page.evaluate(()=>({path:location.pathname,headings:[...document.querySelectorAll("h1,h2")].map(n=>n.textContent),body:document.body.innerText.slice(0,4000)})).catch(()=>null):null;console.error("SIGNUP_MATRIX_FAILURE:"+JSON.stringify({engine,width,mode,phase,diagnostic,errors,error:String(error).replace(/token=[^&\s"']+/g,"token=redacted")}));console.error("SIGNUP_SERVER_DIAGNOSTIC:"+output.replace(/token=[^&\s"']+/g,"token=redacted"));}
   finally{cases++;await context.close();}
  }
  console.log("SIGNUP_MATRIX_OPEN_GAPS:"+JSON.stringify(gaps));
- console.log("SIGNUP_MATRIX_SUMMARY:"+JSON.stringify({engine,cases,audits,failed,scope:"Real local request/captured fake email/explicit confirmation/new empty authenticated studio. Synthetic services only; no production signup, payment, store publication, checkout or buyer proof."}));
+ console.log("SIGNUP_MATRIX_SUMMARY:"+JSON.stringify({engine,cases,audits,failed,scope:"Real local request/captured fake email/explicit confirmation/new empty studio/actual initial claim/anonymous public store after session removal and reload. Synthetic services only; no production signup/store/payment/message/checkout or buyer proof."}));
 }finally{if(browser)await browser.close();app.kill("SIGTERM");proxy.closeAllConnections();await new Promise(r=>proxy.close(r));await services.close();}
 process.exitCode=failed?1:0;
