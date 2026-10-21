@@ -34,7 +34,7 @@
 import { MAX_NAME_LENGTH, MAX_BIO_LENGTH, MAX_ADDRESSES, isFree, type StoreJoin, MAX_JOIN_HEADING, MAX_JOIN_LINE, parseJoin } from "@/lib/store-field-rules";
 export { MAX_NAME_LENGTH, MAX_BIO_LENGTH, MAX_ADDRESSES, isFree, type StoreJoin, MAX_JOIN_HEADING, MAX_JOIN_LINE, parseJoin } from "@/lib/store-field-rules";
 import { MAX_LINKS, type NumbersLink, parseLinks } from "@/lib/numbers-links";
-import { type ShipProblem, type Shipping, shipProblem } from "@/lib/shipping";
+import { type ShipProblem, type Shipping, shipProblem, readShippingSku } from "@/lib/shipping";
 import { type CartDeal, NO_DEAL, parseCartDeal } from "@/lib/cart-rules";
 import { type Video, parseVideo } from "@/lib/sales-page";
 import { type FaqItem, parseFaq } from "@/lib/store-faq";
@@ -3713,7 +3713,7 @@ export async function setProductYearly(email: string, id: string, yearly: Yearly
 
 export type ShippingResult =
   | { ok: true; store: Store; product: Product }
-  | { ok: false; reason: "none" | "unknown" | `ship_${ShipProblem}` | "ship_price" };
+  | { ok: false; reason: "none" | "unknown" | `ship_${ShipProblem}` | "ship_price" | "ship_sku" };
 
 /**
  * Makes a product a physical one the creator ships (lib/shipping.ts), changes
@@ -3721,13 +3721,17 @@ export type ShippingResult =
  * (null). Checked under the store's lock against the product as it is.
  */
 export async function setProductShipping(email: string, id: string, shipping: Shipping | null): Promise<ShippingResult> {
-  const done = await onProduct<`ship_${ShipProblem}` | "ship_price">(email, id, (product, store) => {
+  const done = await onProduct<`ship_${ShipProblem}` | "ship_price" | "ship_sku">(email, id, (product, store) => {
     if (shipping === null) return { ...product, shipping: null };
     const problem = shipProblem(product);
     if (problem) return { ok: false, reason: `ship_${problem}` };
     // Free, or at least what Stripe charges in the store's currency.
     if (shipping.cents > 0 && shipping.cents < currencyRule(store.currency).minCharge) return { ok: false, reason: "ship_price" };
-    return { ...product, shipping: { cents: shipping.cents, region: shipping.region, countries: [...shipping.countries], note: shipping.note } };
+    const sku = readShippingSku(shipping.sku);
+    if (sku === null) return { ok: false, reason: "ship_sku" };
+    // Older clients changing shipping omit this field; preserve their existing reference.
+    const keptSku = shipping.sku === undefined ? product.shipping?.sku : sku;
+    return { ...product, shipping: { cents: shipping.cents, region: shipping.region, countries: [...shipping.countries], note: shipping.note, ...(keptSku ? { sku: keptSku } : {}) } };
   });
   return done.ok ? { ok: true, store: done.store, product: done.product } : done;
 }

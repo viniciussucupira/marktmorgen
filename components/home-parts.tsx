@@ -708,6 +708,8 @@ function PlanCard({
           <span className="group-open/perks:hidden">{`All ${perks.length} of them, itemized`}</span>
           <span className="hidden group-open/perks:inline">Close the list</span>
         </summary>
+        {/* Keep the native summary responsive while the long, initially closed list hydrates independently. */}
+        <Suspense fallback={null}>
         <ul className="mt-4 space-y-3">
           {perks.map((perk) => (
             <li key={perk} className="flex gap-3 text-[0.9375rem] text-ink-soft">
@@ -716,6 +718,7 @@ function PlanCard({
             </li>
           ))}
         </ul>
+        </Suspense>
       </details>
 
       <p className="mt-5 text-sm text-ink-soft">{uploadAllowanceWords(tier)}</p>

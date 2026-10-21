@@ -39,6 +39,8 @@ export type Shipping = {
   countries: string[];
   /** When it ships, in the creator's words: "Ships within 3 business days". */
   note: string;
+  /** Optional creator inventory reference; never replaces a product or price ID. */
+  sku?: string;
 };
 
 /** The countries Stripe's checkout will take a shipping address in. */
@@ -66,6 +68,15 @@ export const SHIP_REGIONS: Record<Exclude<ShipRegion, "custom">, { label: string
 /** The most a shipping charge may be, in the currency's smallest unit (a thousand dollars, a hundred thousand yen). */
 export const MAX_SHIPPING_CENTS = 100_000;
 export const MAX_SHIP_NOTE = 80;
+export const MAX_SHIPPING_SKU = 64;
+
+/** Keep inventory references as typed, including case and Unicode; reject controls or oversized values. */
+export function readShippingSku(raw: unknown): string | null {
+  if (raw === undefined) return "";
+  if (typeof raw !== "string" || /[\u0000-\u001f\u007f-\u009f]/.test(raw)) return null;
+  const value = raw.trim();
+  return value.length <= MAX_SHIPPING_SKU ? value : null;
+}
 
 const allowed = new Set(SHIP_COUNTRIES);
 
@@ -90,7 +101,9 @@ export function parseShipping(raw: unknown): Shipping | null {
   const countries = region === "custom" ? readCountries(value.countries) : SHIP_REGIONS[region].countries;
   if (countries.length === 0) return null;
   const note = typeof value.note === "string" ? value.note.replace(/\s+/g, " ").trim().slice(0, MAX_SHIP_NOTE) : "";
-  return { cents, region, countries, note };
+  const sku = readShippingSku(value.sku);
+  // Corrupt optional metadata must not turn a physical product into an unshipped one.
+  return { cents, region, countries, note, ...(typeof value.sku === "string" && sku !== null ? { sku } : {}) };
 }
 
 /** The facts about a product that decide whether it can be shipped. */
