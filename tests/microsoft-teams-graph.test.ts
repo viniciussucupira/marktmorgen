@@ -21,7 +21,7 @@ async function main() {
   const address = server.address();
   if (!address || typeof address === "string") throw Error("Local fixture failed");
   const original = process.env.NODE_ENV;
-  process.env.NODE_ENV = "test";
+  Reflect.set(process.env, "NODE_ENV", "test");
   try {
     const reserve = async () => { reservations++; return admitted; };
     const client = new TeamsGraph({ accessToken: "synthetic-token", owner, reserve, localBase: "http://127.0.0.1:" + address.port });
@@ -57,11 +57,11 @@ async function main() {
     assert.equal(requests.length, last);
     assert.equal(reservations, reserved);
     assert.throws(() => new TeamsGraph({ accessToken: "synthetic-token", owner, reserve, localBase: "https://example.invalid" }));
-    process.env.NODE_ENV = "production";
+    Reflect.set(process.env, "NODE_ENV", "production");
     assert.throws(() => new TeamsGraph({ accessToken: "synthetic-token", owner, reserve, localBase: "http://127.0.0.1:" + address.port }));
     console.log("Teams loopback create/move/delete, no attendees, ownership/budget refusals, redirects, response bound and disabled-production checks passed.");
   } finally {
-    if (original === undefined) delete process.env.NODE_ENV; else process.env.NODE_ENV = original;
+    if (original === undefined) Reflect.deleteProperty(process.env, "NODE_ENV"); else Reflect.set(process.env, "NODE_ENV", original);
     server.closeAllConnections();
     await new Promise<void>(resolve => server.close(() => resolve()));
   }
