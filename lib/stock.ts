@@ -26,14 +26,17 @@ const lockKey = (id: string, productId: string) => `nl:stock:lock:${id}:${produc
 
 async function readEntries(store: Store, product: Listing): Promise<Map<string, Entry>> {
   const [raw] = await redisPipeline([["HGETALL", stockKey(store.statsId!, product.id)]]);
-  const flat = Array.isArray(raw) ? (raw as string[]) : [];
+  if (!Array.isArray(raw) || raw.length % 2 !== 0) throw new Error("Stock reading unavailable");
   const entries = new Map<string, Entry>();
-  for (let i = 0; i + 1 < flat.length; i += 2) {
-    try {
-      entries.set(flat[i], JSON.parse(flat[i + 1]) as Entry);
-    } catch {
-      // A broken entry counts as nothing.
-    }
+  for (let i = 0; i < raw.length; i += 2) {
+    const session = raw[i], encoded = raw[i + 1];
+    if (typeof session !== "string" || !session || typeof encoded !== "string" || entries.has(session)) throw new Error("Stock reading unavailable");
+    let value: unknown;
+    try { value = JSON.parse(encoded); } catch { throw new Error("Stock reading unavailable"); }
+    if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("Stock reading unavailable");
+    const entry = value as Partial<Entry>;
+    if (!Number.isSafeInteger(entry.until) || (entry.until as number) < 0 || (entry.paid !== undefined && typeof entry.paid !== "boolean")) throw new Error("Stock reading unavailable");
+    entries.set(session, { until: entry.until as number, ...(entry.paid !== undefined ? { paid: entry.paid } : {}) });
   }
   return entries;
 }

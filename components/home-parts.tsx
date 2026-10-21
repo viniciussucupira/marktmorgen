@@ -4,7 +4,7 @@ import { AI_MONTHLY } from "@/lib/ai-rules";
 import { ANSWERS_MONTHLY } from "@/lib/answers-rules";
 import { MAX_OPTIONS } from "@/lib/product-option";
 import Link from "next/link";
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { Suspense, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { Icon } from "@/components/icons";
 import { listSizeWords } from "@/lib/contact-rules";
 import { PAID_STORAGE_BYTES } from "@/lib/storage-rules";
@@ -785,6 +785,7 @@ export function Pricing({ domains = false }: { domains?: boolean }) {
         them is the actual difference between them.
       */}
       <div className="grid gap-6 lg:grid-cols-3 lg:items-stretch">
+        <Suspense fallback={null}>
         <PlanCard
           tier="creator"
           bestFor={"For selling what you make to the audience you already reach — wherever you reach them now."}
@@ -794,6 +795,8 @@ export function Pricing({ domains = false }: { domains?: boolean }) {
           cta="Start on Store"
           yearly={yearly}
         />
+        </Suspense>
+        <Suspense fallback={null}>
         <PlanCard
           tier="pro"
           bestFor={"For selling and writing to your own list from the same place, so a buyer hears from you again."}
@@ -803,6 +806,8 @@ export function Pricing({ domains = false }: { domains?: boolean }) {
           cta="Start on Studio"
           yearly={yearly}
         />
+        </Suspense>
+        <Suspense fallback={null}>
         <PlanCard
           tier="scale"
           bestFor="For an established business with a larger list, more visits and more orders every month."
@@ -816,6 +821,7 @@ export function Pricing({ domains = false }: { domains?: boolean }) {
           cta="Start on Scale"
           yearly={yearly}
         />
+        </Suspense>
       </div>
       {/*
         What is true of every plan, and belongs to neither card: the two

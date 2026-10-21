@@ -39,7 +39,10 @@ test("fallback renewal and writes require explicit storage acknowledgment and kn
       acknowledgment = unknown;
       assert.equal(await holdLock(held), false);
       assert.equal(await setIfHeld(held, "synthetic:record", "value"), false);
-      existence = unknown;
+    }
+    for (const unknownExistence of [undefined, null, false, true, 1, 2, "0", "1", {}, []]) {
+      existence = unknownExistence;
+      acknowledgment = "OK";
       const before: number = writes;
       assert.equal(await setIfHeld(held, "synthetic:record", "value", { absent: true }), false);
       assert.equal(writes, before);
