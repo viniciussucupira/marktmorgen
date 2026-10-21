@@ -3998,6 +3998,10 @@ Reservaowned/atômica doestoque: aguardando odono somente quanto a custeioespec�
 
 Entrega143 já publicada/avisada: PR769 merge `ab77e69f83800c0accf2932cca9913c7869c1f46` em2026-10-21T18:22:45Z /15:22:45Fortaleza, headvalidado `851c8876086cb206b3fbeeaa3fef132ebd0bd972`,22/22checks, árvoreprevista/real `85010eb43ea890ff384342f3874e4cc8f1ea45f8`. DPL `dpl_E1urrjcKrZWYqQTmMvC8WuUJZeL2` READY2026-10-21T18:23:50.047Z /15:23:50.047Fortaleza; marktmorgen.com naversãoexata, cinco rotas `/`,`/platform`,`/pricing`,`/mission`,`/library`200mesmoDPL. Error/fatal0 apenas18:19:25.350Z→18:24:25.350Z. Contador142→143,próximo144. Funcional: navegação home/mission semprefetchespeculativo durantebiblioteca; SEO271/Gmail072 são fila, nãoauditoriaexecutada nem outraentrega.
 
+### Correção da verificação integral do PR770 — 21/10/2026
+
+O head46adc59e178f40a86bbd48c1cb4442d0410a2be6 teve21/22 verificações aprovadas e falhou no WebKit (job119409056229): HT2,1280px, target-size do link Course access com11,8px visíveis durante a navegação suave ao catálogo. O teste aguardava hash/foco, que mudam antes do término da animação, e auditava o caminho intermediário sob o cabeçalho. A correção aguarda oito quadros consecutivos estáveis, com o destino inteiro visível e abaixo dos64px do cabeçalho, com prazo5s e nova asserção obrigatória; mantém a animação real, todos os nós/regras e o limite24px. Nenhuma regra ignorada nem rerun isolado: verificação completa no novo head. Sem alteração de chamadas, preços, limites, permissões, provedores ou custo operacional mensal/anual por plano (incremento0/0); custo efetivo de CI continua desconhecido, não zero. Não é publicação.
+
 ## SEO — Visibilidade do Marktmorgen no Google (21/10/2026)
 
 271. [SEO1] Auditar, corrigir e melhorar presença orgânica na busca do Google

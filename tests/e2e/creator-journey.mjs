@@ -27,6 +27,20 @@ export async function checkCreatorJourney({browser,LOCAL,axeSource,is}){
    is("HT2 catalog target receives keyboard focus "+width,await page.locator("#catalogue-title").evaluate(node=>node===document.activeElement),true);
    is("HT2 journey fits "+width,await journey.evaluate(node=>node.scrollWidth<=node.clientWidth+1),true);
    is("HT2 page fits "+width,await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
+   // The fragment and focus change before a pointer-led smooth scroll finishes.
+   // Audit the settled destination, rather than a frame moving under the sticky header.
+   const settled=await page.evaluate(async()=>{
+    const target=document.getElementById("catalogue-title");if(!target)return false;
+    const deadline=performance.now()+5000;let lastY=NaN,stable=0;
+    while(performance.now()<deadline){
+     await new Promise(resolve=>requestAnimationFrame(resolve));
+     const rect=target.getBoundingClientRect();
+     stable=Math.abs(scrollY-lastY)<0.5&&rect.top>=64&&rect.bottom<=innerHeight?stable+1:0;
+     lastY=scrollY;if(stable>=8)return true;
+    }
+    return false;
+   });
+   is("HT2 catalog scroll settles clear of header "+width,settled,true);
    await page.addScriptTag({content:axeSource});
    const violations=await journey.evaluate(async node=>(await window.axe.run(node,{runOnly:{type:"tag",values:["wcag2a","wcag2aa","wcag21aa","wcag22aa"]}})).violations.map(v=>({id:v.id,nodes:v.nodes.slice(0,20).map(n=>({target:n.target,summary:n.failureSummary}))})));
    if(violations.length)console.error("HT2_ACCESSIBILITY_DIAGNOSTIC:"+JSON.stringify({width,scroll:await page.evaluate(()=>({x:scrollX,y:scrollY})),violations,targets:await journey.locator("a").evaluateAll(nodes=>nodes.map(node=>{const r=node.getBoundingClientRect();return {label:node.textContent?.trim(),x:r.x,y:r.y,width:r.width,height:r.height};}))}));
