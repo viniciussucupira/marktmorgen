@@ -48,6 +48,7 @@ import { checkSalesComparisons } from "./sales-comparisons.mjs";
 import { checkPauseAcknowledgment } from "./pause-acknowledgment.mjs";
 import { checkClaimAcknowledgment } from "./claim-acknowledgment.mjs";
 import { checkShipmentAcknowledgment } from "./shipment-acknowledgment.mjs";
+import { checkDiscountAcknowledgment } from "./discount-acknowledgment.mjs";
 import { checkButtonContrast } from "./button-contrast.mjs";
 import { checkDetailsAcknowledgment } from "./details-acknowledgment.mjs";
 import {checkEmailCapabilities} from "./email-capabilities.mjs";
@@ -886,6 +887,7 @@ await checkNudgeAcknowledgment({browser,LOCAL,fixture:pauseFixtures[0],is});
   await checkEmailCapabilities({browser,LOCAL,is});
   const shipment=services.seedShipment("templatelibraryfixture",libraryFixture.product);
   await checkShipmentAcknowledgment({browser,LOCAL,fixture:libraryFixture,shipment,is});
+  await checkDiscountAcknowledgment({browser,LOCAL,fixture:libraryFixture,is});
   is("no page threw", errors, []);
 } catch (error) {
   failed += 1;
