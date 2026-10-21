@@ -71,10 +71,12 @@ export async function stockLeft(store: Store, product: Listing, now = Date.now()
       if (isSettled(found)) {
         writes.push(["HSET", stockKey(store.statsId, product.id), session, JSON.stringify({ until: 0, paid: true })]);
         used += 1;
-      } else if (found.status === "open") {
-        used += 1;
-      } else {
+      } else if (found.status === "expired") {
         writes.push(["HDEL", stockKey(store.statsId, product.id), session]);
+      } else {
+        // An unknown or completed-but-unsettled response is not proof that
+        // this unit can be sold again.
+        used += 1;
       }
     } catch {
       used += 1;
