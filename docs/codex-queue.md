@@ -3260,6 +3260,12 @@ Custos fixosCI reconciliados emmarktmorgen-ci-cost-20261021-0512.json:371runs co
 A matriz de cadastro anterior terminava no Studio vazio; a matriz de produto usa loja semeada e não fecha essa lacuna. Novo head estende os25casos por motor atéPOST real local/api/store/claim, confirmahandle/SID, aguardaStudio criado, ativa pelo teclado o link real da loja, remove sessão e recarrega como visitante anônimo. Exige200 e nome real apósreload. Cinco estados auditados porcaso (125por motor/375total pretendidos), antes de declarar aprovação. TrêsPOSTs permitidos porcaso; visitas sintéticas exatas interceptadas sem gravação de estatísticas, com lacuna WebKit de payload declarada. GPC sintético impede publicidade. Mesmos cinco modos/larguras, fakeinbox/Redis e HTTPSlocal; nada real. Suíte completa obrigatória. Custo fixoCI dentro do teto existente3x30min,90Rmensal/1080Ranual, sem novo provedor/custo variável/gates. Item201 permanece em andamento até fechar esta prova autônoma e registrar as lacunas restantes.
 
 
+### P0-201 — correção do retorno à loja nas compras (21/10/2026)
+
+- Head f43eb7162b06f9f20703891b90bc513177dcf7f7 reprovou Buyer WebKit, job119058888135/run39550670710:25casos/125auditorias,1falha em320px/text-spacing na etapa buyer-orders. O erro foi o prefetch RSC de /@localshop abortado durante a navegação; não houve violação axe/overflow nesse diagnóstico. Nenhum erro foi filtrado ou descartado.
+- O link de retorno da página de compras agora solicita a loja somente ao ser acionado (`prefetch={false}`), preservando destino, texto, idiomas, autorização e compras. Evita a requisição especulativa desnecessária; navegação real continua exigida pelos testes.
+- Verificação: nova execução completa de todos os checks no novo head, sem repetir apenas o job reprovado. Não incorporado/publicado até aprovação integral. Matrizes de cadastro/primeira loja ainda sem resultado conclusivo;201 continua em andamento. Sem novo serviço/custo variável, preços/limites e gates inalterados; CI é custo fixo, fatura efetiva desconhecida não é zero.
+
 ## 203 — Teams automático para chamadas pagas (execução futura)
 
 203. [TEAMS] Links automáticos do Microsoft Teams para as chamadas pagas, construídos agora e DESLIGADOS
