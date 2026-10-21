@@ -23,3 +23,10 @@ Integração explícita do734a877384 preservaHTTPS/cadastro e desativa prefetch 
 No2dba6b5, Chromium eWebKit passaram25jornadas/125auditoriascada. Firefox119027277516 concluiu25jornadas/124auditorias,mas1caso320/text-spacing reprovou:largura347contra320,semviolaçãoaxe; shelf autenticada antes dospedidos. Nenhumaamostra descartada.
 
 A grade da biblioteca ganha coluna base minmax(0,1fr) e cardsmin-w-0; ações reutilizam.btn-wrap e isolam rótulo emspanmin-w-0/com quebra de palavras,ícone semencolher. O tamanho mínimo implícito de grade/flex não deve impor a largura do textoespaçado ao viewport. Mesmosrótulos,URLs,tokens e conteúdo; sem clipping ou esconder informação. Auditoria passa a registrar medidas de elementos que ultrapassarem,semHTML/hrefs/tokens/dadospessoais. Overflow estrito continua. Suítecompleta novamenteobrigatória.
+
+
+### Suíte integral do comprador — isolamento da agenda sintética
+
+Headd56550b:matrizcomprador75jornadas/375auditoriaspassou nas3engines,masverify119029961232 reprovoutests/team-scheduling.test.ts:busycalendar expected[true,true,false],got[false,true,true]. O helperweekdayAt arredonda finsdesemana: numaquarta-feira,days3e5 caem na mesma segunda às10h, repetindoS emB; amboshosts já haviam sido ocupados no cenárioanterior, e oproduto corretamente recusou novo hold. Falha defixturedependente dodia,semrelação com regra depermissão/agendaalterada.
+
+O cenárioGoogle usaagora13h, separado dosholds10h/11h; assert explícita exigeBdistintodeS/G. Mantidos busy real, dono livre, recusaMaya,cap/permissões/scopes/estorno e todos os demaisoráculos. Sem alterar produção nem descartar falha. Nova suítecompleta no novoheadobrigatória;rerunisoladonãoresolve. Integração explícita da seçãoHL220–230 do737 nafilaaoEOF, preservando203–219 eprova127; itensfuturosdesligados/nãoiniciados.
