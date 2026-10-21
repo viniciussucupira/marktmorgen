@@ -44,7 +44,11 @@ try{
  if(!up)throw Error("Local app did not start");
  browser=await driver.launch();console.log("SIGNUP_MATRIX_ENGINE:"+JSON.stringify({requested:engine,actual:driver.name(),version:browser.version()}));
  for(const width of [320,390,768,1280,1920])for(const mode of ["baseline","text-spacing","reduced-motion","forced-colors","reflow-320"]){
-  // Each viewport/mode is a separate fresh deployment fixture. Reusing the\n  // fake database would exhaust the real ten-store company-funded pool.\n  // Keep that production ceiling intact; never seed paying stores or enlarge it.\n  if(cases>0){await services.close();services=await startServices(4498);}\n  const index=cases+1,viewportWidth=mode==="reflow-320"?320:width;
+  // Each viewport/mode is a separate fresh deployment fixture. Reusing the
+  // fake database would exhaust the real ten-store company-funded pool.
+  // Keep that production ceiling intact; never seed paying stores or enlarge it.
+  if(cases>0){await services.close();services=await startServices(4498);}
+  const index=cases+1,viewportWidth=mode==="reflow-320"?320:width;
   const context=await browser.newContext({ignoreHTTPSErrors:true,viewport:{width:viewportWidth,height:900},serviceWorkers:"block",reducedMotion:mode==="reduced-motion"?"reduce":"no-preference",forcedColors:mode==="forced-colors"?"active":"none",extraHTTPHeaders:{"x-forwarded-for":"192.0.2."+index,"Sec-GPC":"1"}});
   let page;let phase="open",foreign=0,interceptedVisits=0;const mutations=[],errors=[];const handle="matrix-"+engine[0]+"-"+index,storeName="Matrix "+engine+" "+index;const inbox="matrix-"+engine+"-"+index+"@example.test",before=services.emails().length;
   try{

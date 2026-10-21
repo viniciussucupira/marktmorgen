@@ -3276,6 +3276,11 @@ A matriz de cadastro anterior terminava no Studio vazio; a matriz de produto usa
 - Leitura da causa emlib/free-pool-rules.ts e lib/free-pool.ts: FREE_POOL_BASE_STORES=10, sem pagantes a11ªloja sem plano é recusada antes de operações custosas. Os25cenários compartilhavam uma única base falsa e esgotavam corretamente esse teto após10sucessos. A recusa não autoriza ampliar limite, simular pagamento ou remover o gate.
 - Cada cenário viewport/modo agora reinicia apenas os serviços locais falsos com uma base em memória vazia, como uma instalação isolada. O app e todos os gates continuam reais; cadastro, sessão, claim, reload anônimo, asserts e25cenários/375auditorias pretendidas permanecem. Nenhuma conta/loja real é criada, nenhum teto produtivo é alterado; testes existentes de pool continuam obrigatórios na suíte completa. Diagnósticos limitados preservados. Nova execução completa no novo head;201não concluído até passar. Custo de CI continua fixo no teto do job existente; fatura desconhecida não é zero.
 
+### P0-201 — correção da montagem do script sintético (21/10/2026)
+
+- Heade620bc3 reprovou signup com ReferenceError:viewportWidth: uma edição deste agente gravou sequências literais de quebra de linha no comentário e deixou a declaração da variável comentada. Corrigida a montagem com quebras reais, sem alterar a lógica, os gates ou relaxar assertions. Nenhum resultado desse head conta como aprovação.
+- ProductFirefox job119064131486 também abortou com assertion interna de Playwright FrameManager.frameAttached/FFPage._onFrameAttached ao criar produto; evidência preservada, sem suprimir erro. A nova execução é integral no novo head e exigirá investigar qualquer recorrência; não reexecutar somente o job.
+
 ## 203 — Teams automático para chamadas pagas (execução futura)
 
 203. [TEAMS] Links automáticos do Microsoft Teams para as chamadas pagas, construídos agora e DESLIGADOS
