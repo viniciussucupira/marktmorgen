@@ -41,6 +41,9 @@ export async function checkPackageAcknowledgment({browser,LOCAL,fixture,is}){
       is("package exact request "+name,(await seen).postDataJSON(),action==="save"?{id:fixture.product,sessions:5,price:"500.00",days:90}:{id:fixture.product,sessions:0});
       is("package busy "+name,await section.getAttribute("aria-busy"),"true");
       for(const field of await section.locator("select,input,button").all())is("package locked "+name,await field.isDisabled(),true);
+     }catch(error){
+      console.error("PACKAGE_ACTION_DIAGNOSTIC:"+JSON.stringify({name,requests,path:new URL(page.url()).pathname,section:await section.evaluate(node=>({open:node.open,busy:node.getAttribute("aria-busy"),buttons:[...node.querySelectorAll("button")].map(button=>({text:button.textContent,disabled:button.disabled})),fields:[...node.querySelectorAll("input,select")].map(field=>({tag:field.tagName,value:field.value,disabled:field.disabled})),alert:node.querySelector('[role="alert"]')?.textContent})).catch(()=>null)}));
+      throw error;
      }finally{release();}
      await page.waitForFunction(id=>document.querySelector('[data-package-editor="'+id+'"]')?.getAttribute("aria-busy")==="false",fixture.product);
      if(scenario.confirmed){
