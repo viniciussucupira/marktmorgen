@@ -31,6 +31,7 @@ export async function checkShipmentAcknowledgment({browser,LOCAL,fixture,shipmen
    });
    for(const scenario of scenarios){
     await page.goto(LOCAL+"/studio?store="+fixture.sid+"#sales",{waitUntil:"networkidle",timeout:60000});
+    is("synthetic shipment row is visible "+scenario.name+"/"+width,await page.locator("#sales").getByText("Synthetic shipment",{exact:true}).count(),1);
     const form=page.locator('#sales form').filter({has:page.getByLabel("Tracking link (optional)",{exact:true})});
     const field=form.getByLabel("Tracking link (optional)",{exact:true});
     await field.fill("https://example.test/chosen");

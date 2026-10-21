@@ -4014,6 +4014,10 @@ Custos: mesmos comandos, fornecedores, chaves, TTLs e limites; nenhum aumento de
 
 Head51e9d41c916f8e0a3a58d30b77cfb4fdac606f51, job119440695820:25casos/125auditorias, uma falha no320px baseline por duas requisições especulativas /privacy?_rsc com erro de access-control/cancelamento acumulado na navegação; foreign=0 e somente os POSTs sintéticos esperados de checkout/library. O link /privacy#library da biblioteca ainda iniciava prefetch automático (o rodapé já não o fazia). Desativado apenas esse prefetch; href, clique, foco e conteúdo preservados. Não ignorar pageerrors nem retirar casos: verificação completa de novo head, sem rerun isolado. Sem chamada adicional, fornecedor ou teto novo; custos efetivos de CI desconhecidos.
 
+### Fixture de pedidos existentes corrigida — PR771
+
+A verificação integral do head a0c895165c449cea8bf5022617056d5632a76253 falhou no job119443885469 antes de qualquer POST de envio: campo de tracking ausente. O harness configurava somente STRIPE_DEMO_SECRET_KEY; listSales exige platformKey configurada e devolvia unavailable antes de ler a venda sintética. Acrescentada somente no processo de teste a chave falsa sk_test_local_only_a_stand_in_0000; STRIPE_CONNECT_API_BASE continua no serviço127.0.0.1. Nenhuma chave real, mudança do gate de produção ou submissão externa. A matriz agora também exige explicitamente a linha sintética antes de operar os controles. Exigir novamente todos os checks no novo head, sem remover casos.
+
 ## SEO — Visibilidade do Marktmorgen no Google (21/10/2026)
 
 271. [SEO1] Auditar, corrigir e melhorar presença orgânica na busca do Google

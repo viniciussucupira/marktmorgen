@@ -139,6 +139,8 @@ const env = {
   ANTHROPIC_API_KEY: "sk-ant-local_only_"+"x".repeat(30),
   ANTHROPIC_API_BASE: FAKE,
   STRIPE_DEMO_SECRET_KEY: "sk_test_local_only_a_stand_in",
+  // listSales checks that platform selling is configured; every API call still uses FAKE.
+  STRIPE_SECRET_KEY: "sk_test_local_only_a_stand_in_0000",
   STRIPE_CONNECT_API_BASE: FAKE,
   NEXT_FONT_GOOGLE_MOCKED_RESPONSES: join(here, "google-fonts-mock.cjs"),
   E2E_FONT_ORIGIN: FAKE,
