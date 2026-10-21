@@ -3225,6 +3225,20 @@ READY21/10/2026 01:11:55.470Fortaleza(04:11:55.470Z),marktmorgen.com versãoexat
 C876d675PublicFirefox119035858315 falhou2/75casos,signin320e390baseline, no novo hit-test de5s. A implementação usava o centro da caixa que une todas as linhas de um linkinline; esse ponto pode ser espaço vazio entre fragmentos,mesmo que cada fragmento seja clicável. A checagem passa a exigir centro visível/desobstruído de **cada**getClientRects comárea, mantendo timeout5s, foco real e todos os10Tabs. Não se usaum ponto arbitrário da união nem ignora timeout. Uma falha restante agora registra índiceTab,tag/classes,scroll e todos osfragmentos/hit-test,semHTML/hrefs/tokens. Causa específica de cada timeout depende dessa prova; sem declarar correção antes doCI. Scrollpaddingproduto eorigem estávelaxe mantidos,sem baixar regra/limiar ou filtrarcaso. Suíteinteira obrigatória no novohead.
 
 
+### P0-201 — estabilização do scroll após navegação real por teclado (21/10/2026)
+
+Head2d791: Public Chromium119037760183 falhou11/75 por timeout10s ao exigir origem estável após Tab; Firefox/WebKit passaram. O hit-test dos fragmentos não foi a falha observada. O navegador pode continuar o scroll suave iniciado pelo foco após o pedido de retorno à origem. O harness agora aguarda primeiro200ms sem mudança real de scroll, com limite10s, e só então pede origem instantânea; mantém a exigência de origem0,0 estável200ms, todos os10Tabs, hit-tests e regras axe. Sem reduzir critérios, ignorar casos ou reexecutar job isolado: suíte completa no novo head. Sem novo provedor/custo operacional; minutos CI continuam custo fixo da empresa com fatura desconhecida não considerada zero.
+
+
+### P0-201 — diagnóstico explícito da origem de scroll (21/10/2026)
+
+Headb7a5: Chromium público passou; Firefox119039947008 falhou1/75 em/signin1280baseline por timeout10s, sem diagnóstico de foco. Os dois waits de scroll usavam a mesma mensagem e não permitem distinguir estabilização do teclado de retorno à origem. Acrescentado diagnóstico por etapa, posição real, estado do relógio e elemento ativo, sem conteúdo pessoal. Nenhum timeout, limiar, caso ou regra alterado; investigação continua com suíte completa no novo head. Não declarado concluído nem publicado.
+
+### P0-201 — custos de verificação reconciliados (21/10/2026)
+
+Recorte ampliado:310execuções concluídas,892jobs,252137segundos (4202,28job-min), incluindo falhas e cancelamentos. Evidência localmarktmorgen-ci-cost-20261021-0443.json preserva IDs/durações, base0328 e acréscimos concluídos730/734/735/736/737. Execuções ativas/posteriores e branches não listadas, inclusive738/739, não incluídas. Duração não equivale à fatura: custo efetivamente faturado continua desconhecido e não vale zero. CI é custo fixo da empresa; nenhum serviço/uso variável/preço/limite/gate alterado.
+
+
 ## 203 — Teams automático para chamadas pagas (execução futura)
 
 203. [TEAMS] Links automáticos do Microsoft Teams para as chamadas pagas, construídos agora e DESLIGADOS
