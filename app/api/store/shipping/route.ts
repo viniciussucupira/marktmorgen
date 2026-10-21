@@ -2,7 +2,7 @@ import type { NextRequest } from "next/server";
 import { guardStoreWrite, text } from "@/lib/store-request";
 import { StoreFullError, setProductShipping } from "@/lib/store";
 import { readMoney } from "@/lib/money";
-import { parseShipping } from "@/lib/shipping";
+import { parseShipping, readShippingSku } from "@/lib/shipping";
 
 /**
  * Makes a product a physical one the creator ships, or an ordinary one again
@@ -23,7 +23,9 @@ export async function POST(request: NextRequest) {
     const typed = text(raw.price, 12).trim();
     const cents = typed === "" ? 0 : readMoney(typed, store.currency);
     if (cents === null) return Response.json({ ok: false, error: "ship_price" }, { status: 400 });
-    shipping = parseShipping({ cents, region: raw.region, countries: raw.countries, note: raw.note });
+    const sku = readShippingSku(raw.sku);
+    if (sku === null) return Response.json({ ok: false, error: "ship_sku" }, { status: 400 });
+    shipping = parseShipping({ cents, region: raw.region, countries: raw.countries, note: raw.note, ...(Object.hasOwn(raw, "sku") ? { sku } : {}) });
     if (!shipping) return Response.json({ ok: false, error: "ship_countries" }, { status: 400 });
   }
   try {

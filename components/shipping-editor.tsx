@@ -6,9 +6,10 @@ import { toast } from "@/components/toast";
 import type { Product } from "@/lib/store";
 import { fieldPrefix, formatMoney, moneyField } from "@/lib/money";
 import { useStoreCurrency } from "@/components/store-currency";
-import { MAX_SHIP_NOTE, SHIP_REGIONS, type ShipRegion, readCountries, shipProblem } from "@/lib/shipping";
+import { MAX_SHIP_NOTE, MAX_SHIPPING_SKU, SHIP_REGIONS, type ShipRegion, readCountries, shipProblem } from "@/lib/shipping";
 
 const MESSAGES: Record<string, string> = {
+  ship_sku: "Use up to 64 characters for the inventory reference, without line breaks or control characters.",
   ship_price: "Type a shipping cost of 0 for free shipping, or at least the least your currency can charge.",
   ship_countries: "Pick where it ships, or type the two-letter codes of the countries, like US, CA, GB.",
   ship_free: "A product you ship needs a price.",
@@ -40,6 +41,7 @@ export function ShippingEditor({ product }: { product: Product }) {
   const [price, setPrice] = useState(current ? (current.cents ? moneyField(current.cents, currency) : "0") : "");
   const [region, setRegion] = useState<ShipRegion>(current?.region ?? "us");
   const [codes, setCodes] = useState(current?.region === "custom" ? current.countries.join(", ") : "");
+  const [sku, setSku] = useState(current?.sku ?? "");
   const [note, setNote] = useState(current?.note ?? "");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -79,6 +81,7 @@ export function ShippingEditor({ product }: { product: Product }) {
             <span className="font-semibold text-ink">
               {`Shipped by you: ${current.cents ? `${formatMoney(current.cents, currency)} shipping` : "free shipping"} · ${current.region === "custom" ? current.countries.join(", ") : SHIP_REGIONS[current.region].label}`}
             </span>
+            {current.sku ? <span className="ml-2 break-all">{`SKU: ${current.sku}`}</span> : null}
             {" · "}
             <button type="button" className={link} onClick={() => setOpen(true)}>Change</button>
             {" · "}
@@ -99,7 +102,7 @@ export function ShippingEditor({ product }: { product: Product }) {
       className="mt-3 rounded-[var(--r-sm)] border border-line bg-white p-4"
       onSubmit={(event) => {
         event.preventDefault();
-        send({ price: price.trim(), region, countries: region === "custom" ? readCountries(codes) : [], note: note.trim() }, "Shipping saved.");
+        send({ price: price.trim(), region, countries: region === "custom" ? readCountries(codes) : [], note: note.trim(), sku }, "Shipping saved.");
       }}
     >
       <p className="text-sm font-bold text-ink">Shipping</p>
@@ -124,6 +127,11 @@ export function ShippingEditor({ product }: { product: Product }) {
           <span className="mt-1 block text-xs text-ink-soft">{`${readCountries(codes).length} recognized`}</span>
         </label>
       ) : null}
+      <label className="mt-3 block" htmlFor={`${id}-sku`}>
+        <span className="field-label">Inventory reference (SKU, optional)</span>
+        <input id={`${id}-sku`} type="text" maxLength={MAX_SHIPPING_SKU} className="field mt-1" value={sku} onChange={(event) => setSku(event.target.value)} aria-describedby={`${id}-sku-help`} />
+        <span id={`${id}-sku-help`} className="mt-1 block text-xs text-ink-soft">Your code for this physical product. Its product and price IDs stay the same.</span>
+      </label>
       <label className="mt-3 block" htmlFor={`${id}-n`}>
         <span className="field-label">When it ships (optional)</span>
         <input id={`${id}-n`} type="text" maxLength={MAX_SHIP_NOTE} className="field mt-1" value={note} placeholder="Ships within 3 business days" onChange={(e) => setNote(e.target.value)} />

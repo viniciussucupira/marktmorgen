@@ -13,7 +13,7 @@
  *     paying and in the confirmation email;
  *   - marking it as shipped emails the buyer once, with the tracking link.
  */
-import { activeShipping, parseShipping, readCountries, shipProblem, shipsToWords } from "@/lib/shipping";
+import { activeShipping, parseShipping, readShippingSku, readCountries, shipProblem, shipsToWords } from "@/lib/shipping";
 import { shippingAddressOf } from "@/lib/shipping-address";
 import { SHIPPING_WORDS } from "@/lib/buyer-words/shipping";
 import { addOption, addProduct, claimHandle, ensureStatsId, setProductLink, setProductShipping, setStripeAccount, setSubscription, setTax, storeForEmail } from "@/lib/store";
@@ -82,6 +82,25 @@ async function main(): Promise<void> {
   is("its prices are versions of the same thing, each shipped", signed.ok, true);
   const withOptions = (await readProduct((await storeForEmail(OWNER))!, book.product.id))!;
   is("and nothing can be attached to one of them either", (await setProductLink(OWNER, withOptions.options[0].id, "https://example.com/x")).ok ? "attached" : "refused", "refused");
+
+  part("Inventory references preserve product and price identifiers");
+  is("inventory references retain case and creator language", readShippingSku("  Book-藍-01  "), "Book-藍-01");
+  is("unknown, oversized or multiline references are refused", [readShippingSku(null), readShippingSku(7), readShippingSku("x".repeat(65)), readShippingSku("two\nlines")], [null, null, null, null]);
+  const corruptMetadata = parseShipping({ cents: 600, region: "na", note: "", sku: 7 });
+  is("bad optional metadata does not disable physical shipping", [corruptMetadata?.cents, corruptMetadata?.countries, corruptMetadata?.sku], [600, ["US", "CA"], undefined]);
+  const skuSaved = await setProductShipping(OWNER, book.product.id, { ...shipping, sku: "Book-藍-01" });
+  is("reference is saved", skuSaved.ok ? skuSaved.product.shipping?.sku : null, "Book-藍-01");
+  const skuRoundTrip = (await readProduct((await storeForEmail(OWNER))!, book.product.id))!;
+  is("reference survives a catalog round trip without changing IDs", [skuRoundTrip.shipping?.sku, skuRoundTrip.id, skuRoundTrip.options.map(option => option.id)], ["Book-藍-01", withOptions.id, withOptions.options.map(option => option.id)]);
+  const olderEdit = await setProductShipping(OWNER, book.product.id, { ...shipping, note: "Ships tomorrow" });
+  is("older clients may edit shipping without erasing a reference", olderEdit.ok ? [olderEdit.product.shipping?.sku, olderEdit.product.shipping?.note] : null, ["Book-藍-01", "Ships tomorrow"]);
+  const rejectedSku = await setProductShipping(OWNER, book.product.id, { ...shipping, sku: "x".repeat(65) });
+  is("invalid write is refused", rejectedSku.ok ? "saved" : rejectedSku.reason, "ship_sku");
+  const afterRefusal = (await readProduct((await storeForEmail(OWNER))!, book.product.id))!;
+  is("refused edit leaves the existing shipping unchanged", [afterRefusal.shipping?.sku, afterRefusal.shipping?.note], ["Book-藍-01", "Ships tomorrow"]);
+  await setProductShipping(OWNER, book.product.id, { ...shipping, sku: "" });
+  const clearedSku = (await readProduct((await storeForEmail(OWNER))!, book.product.id))!;
+  is("an explicit empty reference clears it without disabling shipping", [clearedSku.shipping?.sku, activeShipping(clearedSku)?.cents, clearedSku.id, clearedSku.options.map(option => option.id)], [undefined, 600, withOptions.id, withOptions.options.map(option => option.id)]);
 
   part("Its checkout");
   const load = async () => {
