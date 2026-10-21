@@ -30,7 +30,9 @@ export class TeamsGraph {
     if (!/^\/me\/(calendar|events(?:\/[^/?#]+)?)(?:\?\$select=[A-Za-z,]+)?$/.test(path)) throw new TeamsGraphError("invalid");
     const token = this.options.accessToken;
     if (!token || token.length > 4000 || /[\r\n]/.test(token)) throw new TeamsGraphError("invalid");
-    if (!(await this.options.reserve())) throw new TeamsGraphError("budget");
+    let reserved = false;
+    try { reserved = (await this.options.reserve()) === true; } catch { /* Unknown funding refuses without exposing provider details. */ }
+    if (!reserved) throw new TeamsGraphError("budget");
     let response: Response;
     try {
       response = await fetch(this.base + path, {
