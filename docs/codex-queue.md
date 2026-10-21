@@ -3886,6 +3886,12 @@ PR755 incorporado às **05h27m31s de Fortaleza** (`2026-10-21T08:27:31Z`), commi
 
 Estado posterior: a fila consolidada de705e reprovou no WebKit público, job119111608666, `/pricing`390baseline, Tab10: cartão focado abaixo da viewport após5segundos (top911,78; altura206; viewport900; scrollY439). CSS do novo head torna rolagem nativa imediata durante `:focus-visible`, sem alterar eventos Tab, prazo, critérios ou contorno de foco. Hipótese de interferência de smooth scroll ainda exige nova verificação completa; não é correção comprovada. O mesmo pacote incorpora o ajuste de clareza/semântica de progresso do PR756 e todos os pedidos203–270. Nada desses ajustes pendentes incrementa o contador. Teams203 continua desligado/incompleto; preços, franquias, consentimentos e gates preservados.
 
+### Registro de falha HT10 e sincronização do teste
+
+A suíte completa WebKit de `76f4f3bb43db6f9e2da607d7248d7a6b748a4035`, job119121200592, reprovou em `08:46:06Z`: o teste HT10 em1280 leu zero visitas interceptadas onde exigia exatamente uma. Os controles GPC (recusa, limpeza do sim anterior, zero pedidos/eventos publicitários e zero escrita inesperada) passaram. A mensagem de GPC e o beacon sem cookies vêm de componentes com efeitos independentes; a presença da mensagem não comprova que a interceptação assíncrona do beacon terminou.
+
+O novo head arma a espera da resposta204 da rota local estritamente validada **antes** de navegar e aguarda essa confirmação antes de ler a contagem. Continuam obrigatórios exatamente um beacon com campos permitidos, GPC prioritário, zero anúncios/eventos/escritas inesperadas. Sem mudar StoreBeacon, StorePixels, consentimentos, prazo padrão, cenários ou critérios. Não é reexecução isolada: nova suíte completa obrigatória; nenhuma entrega ou aprovação inferida do head reprovado.
+
 ## GR — Lições da auditoria do Gumroad (21/10/2026)
 
 Proveniência: pedido direto do dono nesta conversa, 21/10/2026, 04h13 de Fortaleza. Ordem: depois do item 269 [KT3] e de todos os itens já em andamento; não bloqueia nenhum outro item. Itens 203–269 dos pedidos abertos preservados integralmente na ancestralidade desta fila. As afirmações sobre Gumroad abaixo são insumos da auditoria, ainda sujeitas a conferência oficial datada antes de qualquer uso público.
