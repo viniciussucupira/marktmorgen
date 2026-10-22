@@ -135,11 +135,15 @@ export async function createAgreement(store: Store, draft: AgreementDraft, now =
   const person = personSet(store.sid, draft.email);
   try {
     // A person's agreements that are no longer kept leave their count first.
-    const [members] = await redisPipeline([["SMEMBERS", person]]);
-    const ids = Array.isArray(members) ? members.map(String).filter((id) => ID_PATTERN.test(id)) : [];
+    const membership = await redisPipeline([["SMEMBERS", person]]);
+    if (!Array.isArray(membership) || membership.length !== 1 || !Array.isArray(membership[0])) return unavailable();
+    const members: unknown[] = membership[0];
+    if (new Set(members).size !== members.length || !members.every((id) => typeof id === "string" && ID_PATTERN.test(id))) return unavailable();
+    const ids = members as string[];
     if (ids.length) {
       const alive = await redisPipeline(ids.map((id) => ["EXISTS", recordKey(id)]));
-      const gone = ids.filter((_, i) => Number(alive[i]) !== 1);
+      if (!Array.isArray(alive) || alive.length !== ids.length || !Array.from(alive).every((value) => value === 0 || value === 1)) return unavailable();
+      const gone = ids.filter((_, i) => alive[i] === 0);
       if (gone.length) await redisPipeline([["SREM", person, ...gone]]);
     }
     const keep = Math.ceil(KEEP_MS / 1000);
