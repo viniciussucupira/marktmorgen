@@ -41,3 +41,30 @@ test("checkout is not returned without a confirmed stock hold write", async () =
     assert.equal(writes, 12);
   } finally { redis.pipeline = original; }
 });
+
+test("inconsistent hold-write envelopes never return the opened checkout as confirmed", async () => {
+  const product = parseProduct({ id: "limited123", title: "Limited", summary: "", priceCents: 100, stock: 1 });
+  assert.ok(product);
+  const creator = { statsId: "a".repeat(32) } as Store;
+  const original: typeof redis.pipeline = redis.pipeline.bind(redis);
+  let opened = 0;
+  const replies: unknown[] = [null, undefined, false, 0, 1, "OK", {}, [], Array(1), [1, null], [0, 1], { 0: 1, length: 1 }];
+  try {
+    for (const reply of replies) {
+      const commands: unknown[][] = [];
+      redis.pipeline = async batch => {
+        commands.push(...batch);
+        if (batch.length === 1 && batch[0][0] === "HSET") return reply as unknown[];
+        return batch.map(command => command[0] === "SET" ? "OK" : command[0] === "HGETALL" ? [] : 1);
+      };
+      const result: { ok: boolean; reason?: string } = await withStockHold(creator, product, async held => {
+        assert.equal(held, true);
+        opened += 1;
+        return { id: "cs_test_synthetic" };
+      });
+      assert.deepEqual(result, { ok: false, reason: "busy" });
+      assert.deepEqual(commands.map(command => command[0]), ["SET", "HGETALL", "HSET", "DEL"]);
+    }
+  } finally { redis.pipeline = original; }
+  assert.equal(opened, replies.length);
+});

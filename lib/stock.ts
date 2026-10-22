@@ -123,9 +123,11 @@ export async function withStockHold<T extends { id: string }>(
     if (left !== null && left <= 0) return { ok: false, reason: "soldout" };
     const value = await open(true);
     // Counted from after the checkout exists, so the hold outlasts it.
-    const [recorded] = await redisPipeline([
+    const receipt = await redisPipeline([
       ["HSET", stockKey(store.statsId, product.id), value.id, JSON.stringify({ until: Date.now() + HOLD_MS })],
     ]);
+    if (!Array.isArray(receipt) || receipt.length !== 1) return { ok: false, reason: "busy" };
+    const recorded: unknown = receipt[0];
     if (recorded !== 0 && recorded !== 1) return { ok: false, reason: "busy" };
     return { ok: true, value };
   } finally {
