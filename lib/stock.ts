@@ -107,7 +107,10 @@ export async function withStockHold<T extends { id: string }>(
   const lock = lockKey(store.statsId, product.id);
   let locked = false;
   for (let attempt = 0; attempt < 6 && !locked; attempt += 1) {
-    const [got] = await redisPipeline([["SET", lock, "1", "NX", "EX", 15]]);
+    const receipt = await redisPipeline([["SET", lock, "1", "NX", "EX", 15]]);
+    // Unknown acquisition evidence cannot open a checkout or release the lock.
+    if (!Array.isArray(receipt) || receipt.length !== 1) return { ok: false, reason: "busy" };
+    const got: unknown = receipt[0];
     if (got !== null && got !== "OK") return { ok: false, reason: "busy" };
     locked = got === "OK";
     if (!locked) await new Promise((resolve) => setTimeout(resolve, 250));
