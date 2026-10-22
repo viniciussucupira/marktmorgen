@@ -138,7 +138,7 @@ export async function createAgreement(store: Store, draft: AgreementDraft, now =
     const membership = await redisPipeline([["SMEMBERS", person]]);
     if (!Array.isArray(membership) || membership.length !== 1 || !Array.isArray(membership[0])) return unavailable();
     const members: unknown[] = membership[0];
-    if (new Set(members).size !== members.length || !members.every((id) => typeof id === "string" && ID_PATTERN.test(id))) return unavailable();
+    if (new Set(members).size !== members.length || !Array.from(members).every((id) => typeof id === "string" && ID_PATTERN.test(id))) return unavailable();
     const ids = members as string[];
     if (ids.length) {
       const alive = await redisPipeline(ids.map((id) => ["EXISTS", recordKey(id)]));
