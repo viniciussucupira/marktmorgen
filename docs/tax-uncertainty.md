@@ -142,3 +142,8 @@ Under (c) no unit of Marktmorgen keeps 60% at any limit, even with nothing used 
 7. Marktmorgen's own copy of its invoices and fees for 10 years (13): to be built before the first paid sale.
 
 When an answer arrives: record it in [tax-consultations.md](tax-consultations.md) and in `CONSULTATION_ANSWERS` (`lib/tax-gate.ts`) with its date and source, change the reading it closes, then recompute; never before.
+
+
+## FX275 allocation supersession — 22 October2026
+
+Owner22/10/2026 05:10Fortaleza: "esqueça Hazelsong". All LLC fixed taxes/costs are100% Marktmorgen, superseding every earlier50/50/half amount in this historical research. INSS fullBRL1695.11/month,20341.32/year; Delaware fullUSD400/year; California fullUSD800/year plus entire applicable income-tierLLCfee (up toUSD11790 under the official schedule). Earlier USD conversion at4.50BRL/USD is historical, not a verified future currency ceiling. Registered agent, domains, tools, mailbox andEU/UK representatives are entire company costs too. Current dated sources, native prices, unknown ceilings and rejected minimum-base result: [full fixed costs](llc-fixed-costs-2026-10-22.md). No tax reading, consultation status, gate or commercial review changes. Unknown never becomes zero; no finite base or60% certification.
