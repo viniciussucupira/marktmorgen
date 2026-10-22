@@ -1,11 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "@/components/toast";
 import { Icon } from "@/components/icons";
 import { MAX_BIO_LENGTH, MAX_NAME_LENGTH } from "@/lib/store-field-rules";
 import { STUDIO_MESSAGES } from "@/lib/studio-messages";
+
+const subscribeReady = () => () => {};
+const clientReady = () => true;
+const serverReady = () => false;
 
 const MESSAGES: Record<string, string> = {
   ...STUDIO_MESSAGES,
@@ -34,6 +38,7 @@ export function DetailsForm({
   ai?: { on: boolean; left: number };
 }) {
   const router = useRouter();
+  const ready = useSyncExternalStore(subscribeReady, clientReady, serverReady);
   const [name, setName] = useState(current);
   const [bio, setBio] = useState(currentBio);
   const [state, setState] = useState<State>({ kind: "closed" });
@@ -111,6 +116,7 @@ export function DetailsForm({
     return (
       <button
         type="button"
+        disabled={!ready}
         onClick={() => {
           setName(current);
           setBio(currentBio);
