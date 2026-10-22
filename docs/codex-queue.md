@@ -4256,3 +4256,6 @@ Estado: na fila, com prioridade sobre os recursos novos ainda não iniciados. Ao
 ### BK273 prerequisite — offline encrypted restore codec
 
 Inventory and cost/tax failure documented in docs/backup.md. Offline-only bounded AES256GCM/gzip codec plus synthetic in-memory restore tests prepared; no cron/provider adapter/bucket/key/environment lookup or active privacy change. Full BK1 remains incomplete, not pronto e desligado: daily export, exact Redis restore, repository bundles, retention/reporting and funded caps remain missing. No production backup exists from this change. No functional delivery count for a codec/document alone. Actual CI costs unknown, not zero.
+
+
+PR785 falha de verificação: verify119647705153 no heada7bbb8bcd76543eac68156c961918cd8bede9bcc detectou prefixo nl: do filtro offline ausente do registro estático. Os21 testes do codec passaram. Corrigido com entrada explícita em tests/store-data-registry.ts como filtro sem chave/escrita, preservando scanner e todos os testes. Verificação integral exigida no novo head; nenhuma incorporação, publicação ou aprovação por job isolado.
