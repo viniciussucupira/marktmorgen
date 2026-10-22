@@ -162,9 +162,13 @@ async function LatestBuyers({ store }: { store: Store }) {
   }
   const sold = await listSales(store).catch(() => ({ state: "error" as const }));
   if (sold.state !== "ok") {
-    return sold.state === "error" ? (
-      <p className="notice notice-warn mt-8">Stripe did not answer just now, so your latest buyers are not showing.</p>
-    ) : null;
+    return (
+      <p className="notice notice-warn mt-8">
+        {sold.state === "error"
+          ? "This recent buyer list could not be verified. Check your Stripe dashboard before acting on a purchase."
+          : "Recent buyers are unavailable with this store’s current payment setup. Earlier purchases may still be on your Stripe account."}
+      </p>
+    );
   }
   const seen = new Set<string>();
   const buyers = sold.sales.filter((s) => {
@@ -177,8 +181,12 @@ async function LatestBuyers({ store }: { store: Store }) {
   return (
     <section aria-labelledby="latest-title" className="card mt-8 p-6 sm:p-8">
       <h2 id="latest-title" className="text-lg font-semibold tracking-[-0.02em] text-ink">Your latest buyers</h2>
+      <p className="mt-2 text-sm text-ink-soft">
+        A recent view of buyers whose orders include an email address.
+        Check your Stripe dashboard for the full history.
+      </p>
       {buyers.length === 0 ? (
-        <p className="mt-2 text-sm text-ink-soft">Nobody has bought yet. When someone does, they are listed here.</p>
+        <p className="mt-2 text-sm text-ink-soft">No buyer email addresses are available in this recent view. Check your Stripe dashboard for earlier purchases.</p>
       ) : (
         <ul className="mt-4 divide-y divide-line">
           {buyers.map((s) => (
