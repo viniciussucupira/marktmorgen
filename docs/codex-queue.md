@@ -4296,6 +4296,10 @@ Entrega159 confirmada: PR787 incorporado22/10/2026 04:02:17Fortaleza,commit e25b
 PR791 incorporado22/10/2026 04:35:00Fortaleza(07:35:00UTC),commit e91aeb85dcb695c0ec85b7c9a4145c58ef4ed7ca,árvore11ff31230fbb75bfb75ef3b995b6e617ab1db9c0 igual à testada e prevista;22verificações completas no head5a1ba29bbc588f30d95708b4138e6a88a5623b92. READY07:36:09.138UTC,dpl_5qBh7s9ZYWNcSXVz3gBuRqBcmPCF,marktmorgen.comSHAexato,cinco rotas200mesmoDPL. Error/fatal0 somente07:31:43.170–07:36:43.170UTC. Contagem desconhecida não vira zero,Studio mostra indisponibilidade e índice de acompanhamento fica preservado sem zero comprovado. Custos efetivosCI/deploy desconhecidos,não zero;sem nova operação/chave/TTL/mensagem. Contador160,próxima161.
 
 
+### Payment request person references — prove absence before cleanup
+
+Before: createRequest treated every EXISTS result other than numeric1 as missing and converted unverified SMEMBERS to empty, potentially clearing a person's cap references. Now require exact member array, unique valid IDs and one explicit numeric0/1 per existence check; unknown returns unavailable before reservations, and only verified0 permits existing SREM. Synthetic real createRequest tests cover malformed membership/existence, live/absent references and verified-empty admission path; full CI required. No extra supplier commands, keys, TTLs or emails. Count-coercion admission and write acknowledgements remain unresolved, not certified. Existing unavailable message/HTTP refusal is retained. Accessibility: no UI/creator content change; failed proof uses existing refusal rather than false success. No all-AAA/assistive-tech/legal certification. Actual CI/deploy cost unknown,not zero.
+
 ## AX — Excelência máxima de acessibilidade em todo o site (22/10/2026)
 
 Pedido do dono, 22/10/2026, 04h28 e 04h30 de Fortaleza: tudo o que você fizer tem de ser feito com excelência de acessibilidade, respeitando todas as regulações governamentais de acessibilidade; todas as páginas, subpáginas e tudo no site têm de ter acessibilidade no grau máximo, superando muito o que é exigido. Isto é uma regra permanente, e não uma tarefa única.
