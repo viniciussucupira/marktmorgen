@@ -703,11 +703,14 @@ function PlanCard({
         ))}
       </ul>
       <details className="group/perks mt-6">
+        {/* The native summary has its own small hydration boundary, separate from the card and long list. */}
+        <Suspense fallback={null}>
         <summary className="inline-flex min-h-11 cursor-pointer list-none items-center gap-1.5 rounded-[8px] text-sm font-semibold text-violet-deep [&::-webkit-details-marker]:hidden">
           <span aria-hidden="true" className="inline-flex shrink-0 transition-transform duration-200 group-open/perks:rotate-45"><Icon name="plus" size={15} /></span>
           <span className="group-open/perks:hidden">{`All ${perks.length} of them, itemized`}</span>
           <span className="hidden group-open/perks:inline">Close the list</span>
         </summary>
+        </Suspense>
         {/* Keep the native summary responsive while the long, initially closed list hydrates independently. */}
         <Suspense fallback={null}>
         <ul className="mt-4 space-y-3">

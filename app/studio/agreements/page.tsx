@@ -63,15 +63,17 @@ export default async function StudioAgreementsPage({ searchParams }: Params) {
             It is not a law firm and gives no legal advice: whether an agreement can be enforced depends on the law where you and they are, and on
             what it says.
           </p>
-          <AgreementsStudio
-            rows={(rows ?? []).map((r) => ({ ...r, link: agreementLink(store, r) }))}
+          {rows === null || requests === null ? (
+            <p className="notice mt-8" role="status">Agreements or payment requests could not be verified. Reload to check them; an unavailable list does not mean there are none.</p>
+          ) : <AgreementsStudio
+            rows={rows.map((r) => ({ ...r, link: agreementLink(store, r) }))}
             now={now}
             currency={store.currency}
             canSend={can(view.role, "send")}
             open={agreementsAllowed(store, now / 1000)}
             emails={{ used, limit: allowanceFor(store, "email", now / 1000) }}
             payChoices={payChoices}
-          />
+          />}
         </main>
       </StudioStorePin>
     </div>
