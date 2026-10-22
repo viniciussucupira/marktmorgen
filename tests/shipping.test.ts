@@ -205,6 +205,24 @@ async function main(): Promise<void> {
     };
     is("claim transport failure refuses before mail", [(await markShipped(store, session.id as string, "")).ok, emails.length], [false, 0]);
   } finally { redis.pipeline = originalPipeline; }
+  part("A single shipment claim requires exactly one reply");
+  const malformedClaimReplies: unknown[] = [null,undefined,false,0,"OK",{},[],Array(1),["OK",null],[null,"OK"],{0:"OK",length:1}];
+  for (const receipt of malformedClaimReplies) {
+    const shipmentCommands: (string | number)[][] = [];
+    const emailsBefore = emails.length;
+    try {
+      redis.pipeline = async (commands) => {
+        if (commands.some(command => String(command[1]).startsWith("nl:ship:done:"))) {
+          shipmentCommands.push(...commands);
+          return receipt as unknown[];
+        }
+        return originalPipeline(commands);
+      };
+      const result = await markShipped(store, session.id as string, "");
+      is("an unknown outer claim cannot grant success or email", [result.ok ? "marked" : result.reason,emails.length], ["unknown",emailsBefore]);
+      is("unknown claims are neither reread nor destructively removed",shipmentCommands.map(command => command[0]),["SET"]);
+    } finally { redis.pipeline = originalPipeline; }
+  }
   part("An occupied shipment claim needs a readable existing record");
   const badRecords: unknown[] = [undefined, null, "broken", "null", "[]", JSON.stringify({ at: -1, tracking: "" }), JSON.stringify({ at: 1.5, tracking: "" }), JSON.stringify({ at: 1, tracking: "https://user:secret@example.com/track" }), JSON.stringify({ at: 1, tracking: 7 })];
   const beforeClaimEmails = emails.length;
