@@ -4300,3 +4300,6 @@ PR787 incorporado22/10/2026 04:02:17Fortaleza(07:02:17UTC),commit e25bacb7ef0be7
 
 
 PR789 auditoria indisponível: head3ad0cf894c498b6e33fcef8cc977b7cec6b73737,job119687697209,07:08:22UTC: npm produção POST registry.npmjs.org/-/npm/v1/security/advisories/bulk HTTP503;8testes do parser passaram,mas parser recusou aprovação. Não alterar gate/nem rerodar job isolado. Evidência independente posterior: PR791audit119688858111 passou07:10:59UTC,produção high/critical0 e5achadosdevretidos na cadeia já revisada,sem alegar ausência completa de vulnerabilidades ou recuperação global. Este registro cria novo head e exige suíte completa de22checks;aprovação do outroPR não substitui auditoria própria. CustosCI/deploy reais desconhecidos,não zero.
+
+
+PR789 Mobile render119691251480 falhou no head79720b93a4b070ec46e342cd82ccdceff37df685: homepage amostra1,proxy interação208ms acima200ms;demais8amostras passaram. Fonte mediu pointerdown no summary nativo de benefícios,React hidratação fI44.6ms dentroframe168.6ms,semCLS(0),LCP816ms. Correção: boundary Suspense pequeno em torno apenas do summary,separado do cartão e lista longa já isolada;sem remover benefícios,preços,interações ou mudar budgets/amostras/roteiro. Exigir suíte completa no novo head; nenhum job isolado. Não certificar INPde campo. Falha npm503 anterior preservada; custosCI/deploy desconhecidos,não zero.
