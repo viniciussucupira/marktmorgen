@@ -7,9 +7,9 @@ from pathlib import Path
 ADVISORY = "https://github.com/advisories/GHSA-vfj7-8cjw-p6xm"
 EXPIRES = datetime.date(2026, 11, 18)
 REVIEWED = {
-    "@next/eslint-plugin-next": "16.3.8",
+    "@next/eslint-plugin-next": "16.4.2",
     "braces": "3.0.3",
-    "eslint-config-next": "16.3.8",
+    "eslint-config-next": "16.4.2",
     "fast-glob": "3.3.1",
     "micromatch": "4.0.8",
 }
