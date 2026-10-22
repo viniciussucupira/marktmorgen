@@ -25,3 +25,28 @@ test("unknown or malformed inventory never becomes an empty set of holds", async
     assert.equal(await stockLeft(store, product), 0);
   } finally { redis.pipeline = original; }
 });
+
+test("unknown outer inventory receipts cannot advertise availability or open checkout", async () => {
+  const product = parseProduct({ id: "limited123", title: "Limited", summary: "", priceCents: 100, stock: 1 });
+  assert.ok(product);
+  const store = { statsId: "a".repeat(32) } as Store;
+  const original: typeof redis.pipeline = redis.pipeline.bind(redis);
+  let opened = 0;
+  const replies: unknown[] = [null, undefined, false, 0, "OK", {}, [], Array(1), [[], null], [[], []], { 0: [], length: 1 }];
+  try {
+    for (const reply of replies) {
+      const commands: unknown[][] = [];
+      redis.pipeline = async (batch) => {
+        commands.push(...batch);
+        if (batch.length === 1 && batch[0][0] === "HGETALL") return reply as unknown[];
+        return batch.map(command => command[0] === "SET" ? "OK" : 1);
+      };
+      await assert.rejects(stockLeft(store, product), /Stock reading unavailable/);
+      assert.deepEqual(commands.map(command => command[0]), ["HGETALL"]);
+      commands.length = 0;
+      await assert.rejects(withStockHold(store, product, async () => { opened += 1; return { id: "cs_test_synthetic" }; }), /Stock reading unavailable/);
+      assert.deepEqual(commands.map(command => command[0]), ["SET", "HGETALL", "DEL"]);
+    }
+  } finally { redis.pipeline = original; }
+  assert.equal(opened, 0);
+});

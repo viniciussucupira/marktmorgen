@@ -25,7 +25,9 @@ const stockKey = (id: string, productId: string) => `nl:stock:${id}:${productId}
 const lockKey = (id: string, productId: string) => `nl:stock:lock:${id}:${productId}`;
 
 async function readEntries(store: Store, product: Listing): Promise<Map<string, Entry>> {
-  const [raw] = await redisPipeline([["HGETALL", stockKey(store.statsId!, product.id)]]);
+  const receipt = await redisPipeline([["HGETALL", stockKey(store.statsId!, product.id)]]);
+  if (!Array.isArray(receipt) || receipt.length !== 1) throw new Error("Stock reading unavailable");
+  const raw: unknown = receipt[0];
   if (!Array.isArray(raw) || raw.length % 2 !== 0) throw new Error("Stock reading unavailable");
   const entries = new Map<string, Entry>();
   for (let i = 0; i < raw.length; i += 2) {
