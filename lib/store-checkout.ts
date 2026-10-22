@@ -1120,7 +1120,13 @@ export async function listSales(store: Store): Promise<SaleList> {
     return { state: "error" };
   }
 
-  const rows = Array.isArray(page.data) ? (page.data as SessionRecord[]) : [];
+  // An unreadable provider list is unknown, never proof of an empty history.
+  if (typeof page !== "object" || page === null || Array.isArray(page)
+    || !Object.hasOwn(page, "data") || !Array.isArray(page.data)
+    || page.data.some((row) => typeof row !== "object" || row === null || Array.isArray(row))) {
+    return { state: "error" };
+  }
+  const rows = page.data as SessionRecord[];
   const now = Date.now() / 1000;
 
   const titles = new Map((await listingsNamedIn(store, rows)).map((p) => [p.id, p.title]));

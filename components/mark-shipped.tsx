@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState, useSyncExternalStore } from "react";
 import { toast } from "@/components/toast";
 import { NewTab } from "@/components/new-tab";
 import { readShipmentConfirmation, readShippedRecord } from "@/lib/shipment-record";
@@ -12,6 +12,10 @@ const MESSAGES: Record<string, string> = {
   role: "Your role on this store does not include orders.",
   signed_out: "Your session ended. Log in again.",
 };
+
+const subscribeReady = () => () => {};
+const clientReady = () => true;
+const serverReady = () => false;
 
 const day = (seconds: number) => new Date(seconds * 1000).toLocaleDateString("en-US", { day: "numeric", month: "long", year: "numeric" });
 
@@ -28,6 +32,8 @@ export function MarkShipped({
   to: { name: string; lines: string[] } | null;
   shipped: { at: number; tracking: string } | null;
 }) {
+  const ready = useSyncExternalStore(subscribeReady, clientReady, serverReady);
+  const inFlight = useRef(false);
   const [done, setDone] = useState(() => readShippedRecord(shipped));
   const [tracking, setTracking] = useState("");
   const [busy, setBusy] = useState(false);
@@ -61,6 +67,8 @@ export function MarkShipped({
           aria-busy={busy}
           onSubmit={async (event) => {
             event.preventDefault();
+            if (!ready || inFlight.current) return;
+            inFlight.current = true;
             setBusy(true);
             setError(null);
             try {
@@ -81,15 +89,16 @@ export function MarkShipped({
             } catch {
               setError("The shipment was not confirmed. Reload to check its status before trying again.");
             } finally {
+              inFlight.current = false;
               setBusy(false);
             }
           }}
         >
           <label className="min-w-[12rem] flex-1" htmlFor={id}>
             <span className="text-xs font-semibold text-ink-soft">Tracking link (optional)</span>
-            <input id={id} type="url" inputMode="url" className="field mt-1" placeholder="https://" value={tracking} disabled={busy} onChange={(e) => setTracking(e.target.value)} />
+            <input id={id} type="url" inputMode="url" className="field mt-1" placeholder="https://" value={tracking} disabled={!ready || busy} onChange={(e) => setTracking(e.target.value)} />
           </label>
-          <button type="submit" aria-busy={busy} disabled={busy} className="btn btn-secondary btn-sm">
+          <button type="submit" aria-busy={busy} disabled={!ready || busy} className="btn btn-secondary btn-sm">
             {busy ? "Marking…" : "Mark as shipped"}
           </button>
           {error ? <p className="notice notice-error w-full" role="alert">{error}</p> : null}
