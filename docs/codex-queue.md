@@ -4282,3 +4282,10 @@ Client now requires successful HTTP and own explicit ok:true. Create also requir
 
 
 PR788 incorporado22/10/2026 03:38:22Fortaleza(06:38:22UTC),a7cb4270054a51572d91e30a4c5f9eebfd277fed,árvore ad8d0bef4b86281a954e701e991b956b673735a0 igual à testada e prevista;22verificações completas no head2b20e8b2de36b715a95b1d51ea005fe5cd1b2b06. Publicação funcional ainda depende de READY/domínio/versão exata; contador não incrementado aqui. Integração no PR787 exige nova suíte completa, sem reutilizar aprovação anterior. CI/deploy custos efetivos desconhecidos, não zero.
+
+
+### Open payment request counts — unknown is not zero
+
+openCount requires exactly two nonnegative safe-integer Redis results, including cleanup acknowledgement and count; no coercion or zero fallback on unavailable service/identity. The Requests page withholds its form and shows unavailable status on an unknown count. settleStoreList keeps sweep membership on unknown counts; only verified zero permits its existing SREM. Synthetic real count/settlement tests cover null/partial/coerced/negative/fractional replies and verified zero/nonzero; full CI required. No new commands, keys, TTLs or messages. createRequest person cleanup/count admission and write acknowledgements remain separate unresolved review; this does not certify them. Actual CI/deploy expenses unknown, not zero.
+
+Entrega159 confirmada: PR787 incorporado22/10/2026 04:02:17Fortaleza,commit e25bacb7ef0be7ac37848e87a172e2ab8cb9e20f,tree c762ac90314125070d02ce930d554f903dca78ed igual à testada e prevista;22/22checks no headefd309f76a392f1f9507818a76997e9955c0cc76. READY07:03:32.586UTC,dpl_ADEmQSY4TGJ2oCXVQyxESEhKxLUr,marktmorgen.comSHAexato,cinco rotas200mesmoDPL;error/fatal0 somente06:59:10.769–07:04:10.769UTC. Leitura estrita de cobranças e aviso de indisponibilidade publicados. Custos efetivosCI/deploy desconhecidos, não zero. Contador159,próxima160;sem certificação de margem.
