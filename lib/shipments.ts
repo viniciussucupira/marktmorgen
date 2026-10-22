@@ -74,7 +74,11 @@ export async function markShipped(store: Store, session: string, rawTracking: un
   // Taken first: two presses, two tabs, one email.
   let claimed: unknown;
   try {
-    [claimed] = await redisPipeline([["SET", doneKey(session), JSON.stringify(shipped), "NX", "EX", KEEP_SECONDS]]);
+    const receipt = await redisPipeline([["SET", doneKey(session), JSON.stringify(shipped), "NX", "EX", KEEP_SECONDS]]);
+    // Only one reply belongs to this one command. An extra result makes
+    // even an apparent OK or occupied claim unverified; never email or retry it.
+    if (!Array.isArray(receipt) || receipt.length !== 1) return { ok: false, reason: "unknown" };
+    claimed = receipt[0];
   } catch { return { ok: false, reason: "unknown" }; }
   if (claimed === null) {
     try {
