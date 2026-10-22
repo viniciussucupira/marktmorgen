@@ -2,6 +2,10 @@
 
 Estado registrado em19/10/2026, após mesclagens623–625 (horários exatos nas entradas). Esta é uma fila de execução e evidência, não uma promessa de resultado, conformidade AAA ou margem fiscal certificada. Código remoto é a fonte canônica. Não refazer trabalho do Claude.
 
+## Continuidade técnica — direção explícita dos preços (22/10/2026 UTC)
+
+Item205 em andamento, branch independente da interface PR778: a rota de opções convertia direção ausente, desconhecida ou malformada em mover para baixo. Agora somente campos próprios exatamente `up` ou `down` são aceitos; o resto recebe400antes de `moveOption`, sem escrever nem apagar arquivos. Chamadas válidas, IDs, SKU, ordem existente e limites preservados. Testes sintéticos cobrem ausência, tipos errados, propriedades herdadas, caixa e espaços indevidos; CI completo remoto obrigatório, pendente. Não certifica estoque atômico nem SKU histórico. Sem nova operação de fornecedor; incremento máximo mensal/anual0/0por plano; custos reais de CI/deploy desconhecidos. Não é publicação confirmada.
+
 ## Proveniência e prioridade
 
 - **P0:** pedido de excelência/acessibilidade de19/10/2026, anexo bcc471cb-e0ea-4bd0-9b09-26c1d19e0ed5. Hora original não fornecida no arquivo.

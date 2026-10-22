@@ -11,6 +11,7 @@ import { MAX_OPTION_DETAILS, MAX_OPTION_DETAIL_LENGTH, MAX_OPTION_LABEL_LENGTH }
 import { guardStoreWrite, text } from "@/lib/store-request";
 import { StoreFullError } from "@/lib/store";
 import { dropStamped } from "@/lib/pdf-stamp";
+import { readOptionDirection } from "@/lib/option-request";
 
 const ACTIONS = new Set(["add", "edit", "remove", "move"]);
 
@@ -66,7 +67,10 @@ export async function POST(request: NextRequest) {
     } else if (action === "remove") {
       result = await removeOption(ref, id);
     } else {
-      const direction = body.direction === "up" ? "up" : "down";
+      const direction = readOptionDirection(body);
+      if (direction === null) {
+        return Response.json({ ok: false, error: "invalid" }, { status: 400 });
+      }
       result = await moveOption(ref, id, direction);
     }
 
