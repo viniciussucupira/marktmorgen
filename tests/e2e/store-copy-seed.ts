@@ -1,4 +1,4 @@
-import {setPixels} from "@/lib/store";
+import {setProductShipping,setPixels} from "@/lib/store";
 import {TIERS,publishedPriceWords} from "@/lib/plan";
 import type { CallSetup } from "@/lib/call-setup";
 import { setProductCall } from "@/lib/store";
@@ -185,6 +185,14 @@ async function main(): Promise<void> {
   if(!(await setProductPage(libraryOwner,preservedProduct.product.id,true)).ok)throw Error("No preserved page index");
   if(!(await setPixels(libraryOwner,{meta:"123456789012345",google:"G-AB12CD34EF",tiktok:"C4ABCDEFGH1234567890",pinterest:null})).ok)throw Error("No synthetic pixel fixture");
   const libraryFixture={preservedProduct:preservedProduct.product.id,session:await openSession(libraryOwner),sid:libraryStore.sid,product:libraryProduct.product.id};
-  console.log(JSON.stringify({ libraryFixture,signinPrices:TIERS.map(tier=>({tier,words:publishedPriceWords(tier,"month")})),activationFixture,packageFixture,tierFixture,exitFixture,homeDemo,pauseFixtures,wordingSession,wordingSid:wordingStore.sid,wordingTrialSession,wordingTrialSid:wordingTrialStore.sid,returnSession,returnSid:returnStore.sid,growthSession,growthSid:growthStore.sid,growthProduct:growthProducts[0],session: await openSession(OWNER), second: second.store.sid, abProduct, abStore:abStore.sid,contactToken }));
+  const shippingOwner="shipping-proof@example.test";
+  if(!(await claimHandle(shippingOwner,"shippingprooffixture","Shipping proof fixture","Synthetic local tests.")).ok)throw Error("No shipping fixture");
+  await setSubscription(shippingOwner,{active:true,tier:"pro",cycle:"month",subscriptionId:null,customerId:null,trialEnds:0,period:paidPeriod()});
+  const shippingProduct=await addProduct(shippingOwner,"Synthetic physical product","Synthetic shipping proof.","10",null);
+  if(!shippingProduct.ok)throw Error("No shipping product");
+  if(!(await setProductShipping(shippingOwner,shippingProduct.product.id,{cents:500,region:"us",countries:["US"],note:"Ships later",sku:"Synthetic-SKU"})).ok)throw Error("No saved shipping");
+  const shippingStore=await storeForEmail(shippingOwner);if(!shippingStore)throw Error("No shipping store");
+  const shippingFixture={session:await openSession(shippingOwner),sid:shippingStore.sid,product:shippingProduct.product.id};
+  console.log(JSON.stringify({ shippingFixture,libraryFixture,signinPrices:TIERS.map(tier=>({tier,words:publishedPriceWords(tier,"month")})),activationFixture,packageFixture,tierFixture,exitFixture,homeDemo,pauseFixtures,wordingSession,wordingSid:wordingStore.sid,wordingTrialSession,wordingTrialSid:wordingTrialStore.sid,returnSession,returnSid:returnStore.sid,growthSession,growthSid:growthStore.sid,growthProduct:growthProducts[0],session: await openSession(OWNER), second: second.store.sid, abProduct, abStore:abStore.sid,contactToken }));
 }
 main().catch((e) => { console.error(e); process.exit(1); });

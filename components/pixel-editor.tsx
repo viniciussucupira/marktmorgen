@@ -2,7 +2,7 @@
 
 import { pixelSettingsConfirmed } from "@/lib/marketing-settings-response";
 
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "@/components/toast";
 import { PIXEL_INFO, PIXEL_KINDS, type PixelKind, type Pixels, hasPixels, readPixels } from "@/lib/pixels";
@@ -16,9 +16,14 @@ const MESSAGES: Record<string, string> = {
   server_error: "Something went wrong on our side. Try again in a moment.",
 };
 
+const subscribeReady = () => () => {};
+const clientReady = () => true;
+const serverReady = () => false;
+
 /** The creator's Meta, Google, TikTok and Pinterest ids, on their store's pages. */
 export function PixelEditor({ pixels, canViewAttribution = false }: { pixels: Pixels; canViewAttribution?: boolean }) {
   const router = useRouter();
+  const ready = useSyncExternalStore(subscribeReady, clientReady, serverReady);
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState<Record<PixelKind, string>>(() => ({
     meta: pixels.meta ?? "",
@@ -85,7 +90,7 @@ export function PixelEditor({ pixels, canViewAttribution = false }: { pixels: Pi
               ? `On: ${on.map((kind) => `${PIXEL_INFO[kind].name} (${pixels[kind]})`).join(", ")}`
               : "No pixel on your store."}
           </p>
-          <button type="button" onClick={() => setOpen(true)} className="btn btn-secondary mt-4">
+          <button type="button" disabled={!ready} onClick={() => setOpen(true)} className="btn btn-secondary mt-4">
             {hasPixels(pixels) ? "Change pixels" : "Add a pixel"}
           </button>
         </>
