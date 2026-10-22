@@ -4264,3 +4264,8 @@ PR785 falhas preservadas: verify119647705153 detectou filtro de namespace ausent
 ### BK273 — synthetic verified object roundtrip prerequisite
 
 Create-only injected storage, unique object identities, bounded authenticated read-back and exact snapshot comparison, prior object retained on failure; synthetic only, no real provider adapter/cron/credentials/retention action. Full CI pending; not BK1 completion or functional delivery. Delivery157 proof: PR785 merged22October02:34:54Fortaleza,4722c925e366f9b8cbe3b0446c522c8f7a54bb98,tree0dc54c9916e5cbe929cb049abc00fdb8f6330ac3 equals tested;22/22 checks passed, READY05:36:14.905UTC,dpl_939vCypcyPaQTPioAJbjrx2MrNpR,domain exactSHA,five routes200sameDPL; error/fatal0 only05:32:02.147–05:37:02.147UTC. Functional scope was DetailsForm hydration fix; backup remains incomplete. Actual CI/deploy cost unknown, not zero.
+
+
+### Payment request action receipt review
+
+Client now requires successful HTTP and own explicit ok:true. Create also requires a valid persisted request ID; create/remind require an explicit boolean sent receipt. Malformed or ambiguous replies preserve form values and cannot claim sent/canceled/deleted. Unknown-result copy asks to reload before retrying, without claiming nothing was sent. Synthetic parser tests cover HTTP errors with success bodies, invalid/missing/inherited receipts and true/false send outcomes; full CI required before incorporation. Separate component/helper files avoid PR787 reader edits. No new supplier call, email, key, TTL or visible limit; actual CI/deploy cost remains unknown, not zero. No certification of backend admission, locks or tax/margin.

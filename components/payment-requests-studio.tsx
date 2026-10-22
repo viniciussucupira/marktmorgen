@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { paymentRequestReply, type RequestAction } from "@/lib/payment-request-reply";
 import { toast } from "@/components/toast";
 import { Icon } from "@/components/icons";
 import { type Currency, fieldPrefix, formatMoney, readMoney } from "@/lib/money";
@@ -95,11 +96,11 @@ export function PaymentRequestsStudio({
     return cents !== null && Number.isSafeInteger(quantity) && quantity > 0 ? sum + cents * quantity : sum;
   }, 0);
 
-  async function call(body: Record<string, unknown>): Promise<{ ok: boolean; message?: string; sent?: boolean }> {
+  async function call(body: Record<string, unknown> & { action: RequestAction }): Promise<{ ok: boolean; message?: string; sent?: boolean }> {
     try {
       const response = await fetch("/api/store/payment-requests", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
-      const data = (await response.json().catch(() => ({}))) as { ok?: boolean; message?: string; sent?: boolean };
-      return { ok: data.ok === true, message: data.message, sent: data.sent };
+      const data: unknown = await response.json().catch(() => null);
+      return paymentRequestReply(response.ok, data, body.action);
     } catch {
       return { ok: false };
     }
@@ -113,7 +114,7 @@ export function PaymentRequestsStudio({
     const answer = await call({ action: "create", email, name, lines, note, dueDate, autoReminders: reminders, consent });
     setBusy("");
     if (!answer.ok) {
-      setError(answer.message ?? "Something went wrong on our side. Nothing was sent. Try again in a moment.");
+      setError(answer.message ?? "The result could not be confirmed. Reload to check the request before trying again.");
       return;
     }
     toast(answer.sent ? "Request sent." : "Request saved, but its email did not go. Send it again from the list.");
@@ -132,7 +133,7 @@ export function PaymentRequestsStudio({
     const answer = await call({ action, id });
     setBusy("");
     if (!answer.ok) {
-      toast(answer.message ?? "That could not be done right now. Try again in a moment.");
+      toast(answer.message ?? "The result could not be confirmed. Reload to check the request before trying again.");
       return;
     }
     toast(action === "remind" && answer.sent === false ? "The reminder did not go. Your store's emails for this month may be used." : done);
