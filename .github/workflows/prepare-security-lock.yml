@@ -1,0 +1,26 @@
+name: Prepare exact Next security lock
+on:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  prepare-security-lock:
+    if: github.head_ref == 'codex/agreement-person-reference-proof'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: "24"
+      - name: Prepare lock only without lifecycle scripts
+        run: |
+          cp package-lock.json /tmp/marktmorgen-security-lock-before.json
+          node -e "const fs=require('fs');const p=JSON.parse(fs.readFileSync('package.json','utf8'));p.dependencies.next='16.4.2';p.devDependencies['eslint-config-next']='16.4.2';fs.writeFileSync('package.json',JSON.stringify(p,null,2)+'\n')"
+          npm install --package-lock-only --ignore-scripts --no-audit --no-fund --include=optional
+          node -e "const fs=require('fs');const a=JSON.parse(fs.readFileSync('/tmp/marktmorgen-security-lock-before.json','utf8'));const b=JSON.parse(fs.readFileSync('package-lock.json','utf8'));console.log('SECURITY_MANIFEST:'+fs.readFileSync('package.json','utf8').replace(/\n/g,''));for(const k of new Set([...Object.keys(a.packages),...Object.keys(b.packages)])){if(JSON.stringify(a.packages[k])!==JSON.stringify(b.packages[k]))console.log('SECURITY_LOCK_DELTA:'+JSON.stringify([k,b.packages[k]??null]));}console.log('SECURITY_LOCK_META:'+JSON.stringify(Object.fromEntries(Object.entries(b).filter(([k])=>k!=='packages'))))"
+      - name: Preparation never authorizes publication
+        run: |
+          echo "Generated lock must be reviewed and committed; all ordinary checks still apply."
