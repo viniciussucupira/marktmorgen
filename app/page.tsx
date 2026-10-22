@@ -373,7 +373,7 @@ export default function Home() {
 
         {/* ------------------------------------------------ the buyer's path */}
         <Suspense fallback={null}><StudioScreens /></Suspense>
-        <BuyerPath />
+        <Suspense fallback={null}><BuyerPath /></Suspense>
 
         <section className="section" aria-labelledby="home-modules-heading">
           <div className="container-page">

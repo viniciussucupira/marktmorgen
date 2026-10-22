@@ -229,7 +229,7 @@ export function BuyerPath() {
               card to see each one for real.
             </p>
           </div>
-          <Link href="/demo" className="btn btn-secondary shrink-0">
+          <Link href="/demo" prefetch={false} className="btn btn-secondary shrink-0">
             Open the demo store
             <Icon name="arrow-up-right" size={18} />
           </Link>
