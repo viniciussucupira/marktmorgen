@@ -4296,6 +4296,31 @@ Entrega159 confirmada: PR787 incorporado22/10/2026 04:02:17Fortaleza,commit e25b
 PR791 incorporado22/10/2026 04:35:00Fortaleza(07:35:00UTC),commit e91aeb85dcb695c0ec85b7c9a4145c58ef4ed7ca,árvore11ff31230fbb75bfb75ef3b995b6e617ab1db9c0 igual à testada e prevista;22verificações completas no head5a1ba29bbc588f30d95708b4138e6a88a5623b92. READY07:36:09.138UTC,dpl_5qBh7s9ZYWNcSXVz3gBuRqBcmPCF,marktmorgen.comSHAexato,cinco rotas200mesmoDPL. Error/fatal0 somente07:31:43.170–07:36:43.170UTC. Contagem desconhecida não vira zero,Studio mostra indisponibilidade e índice de acompanhamento fica preservado sem zero comprovado. Custos efetivosCI/deploy desconhecidos,não zero;sem nova operação/chave/TTL/mensagem. Contador160,próxima161.
 
 
+
+
+### Agreement page — unknown lists remain unknown
+
+Agreements Studio no longer renders an empty list/send form when either agreement or payment request reading returns null. It shows an accessible unavailable notice and asks to reload. Known-empty lists keep their original form. This addresses page fallback only; agreement-store parser/index cleanup remains a separate finding and is not certified. No provider operation, message, key, TTL or visible limit added. Full CI required; actual CI/deploy expenses unknown, not zero.
+
+Entrega158 confirmada: PR788 incorporado22/10/2026 03:38:22Fortaleza,commit a7cb4270054a51572d91e30a4c5f9eebfd277fed,tree ad8d0bef4b86281a954e701e991b956b673735a0 igual à testada/prevista;22/22 verificações no head2b20e8b2de36b715a95b1d51ea005fe5cd1b2b06. READY06:39:16.130UTC,dpl_G4RbHRxMNjuoskH5muYV11oST2sz,marktmorgen.com versão exata,cinco rotas200mesmoDPL. Error/fatal0 somente06:35:11.558–06:40:11.558UTC. Confirmações estritas de ações de cobrança publicadas; nenhum novo custo operacional, faturasCI/deploy desconhecidas, não zero. Contador158,próxima159; nenhuma margem certificada.
+
+
+### Agreement records — preserve references on unreadable storage
+
+listAgreements now requires exact bounded unique valid index and complete MGET response. Invalid JSON, mismatched store/id and incomplete replies return unavailable with no index cleanup, including mixed absent and unreadable records. Only explicit null in a complete, otherwise verified result permits existing bounded ZREM. Synthetic tests call the real reader with simulated Redis; no external service. No new keys/TTL/provider calls/messages, no signature/financial-parser certification. Full CI required; actual CI/deploy expense unknown, not zero. Agreement-page unavailable notice remains separate PR789.
+
+
+PR787 incorporado22/10/2026 04:02:17Fortaleza(07:02:17UTC),commit e25bacb7ef0be7ac37848e87a172e2ab8cb9e20f,árvore c762ac90314125070d02ce930d554f903dca78ed igual à testada e prevista;22/22verificações no headefd309f76a392f1f9507818a76997e9955c0cc76. Produção ainda não confirmada, sem incremento aqui. PR789 integra main e código/testes do PR790 num head com suíte completa nova obrigatória. Não usar checks antigos. Nenhum novo custo operacional, CI/deploy real desconhecido, não zero.
+
+
+PR789 auditoria indisponível: head3ad0cf894c498b6e33fcef8cc977b7cec6b73737,job119687697209,07:08:22UTC: npm produção POST registry.npmjs.org/-/npm/v1/security/advisories/bulk HTTP503;8testes do parser passaram,mas parser recusou aprovação. Não alterar gate/nem rerodar job isolado. Evidência independente posterior: PR791audit119688858111 passou07:10:59UTC,produção high/critical0 e5achadosdevretidos na cadeia já revisada,sem alegar ausência completa de vulnerabilidades ou recuperação global. Este registro cria novo head e exige suíte completa de22checks;aprovação do outroPR não substitui auditoria própria. CustosCI/deploy reais desconhecidos,não zero.
+
+
+PR789 Mobile render119691251480 falhou no head79720b93a4b070ec46e342cd82ccdceff37df685: homepage amostra1,proxy interação208ms acima200ms;demais8amostras passaram. Fonte mediu pointerdown no summary nativo de benefícios,React hidratação fI44.6ms dentroframe168.6ms,semCLS(0),LCP816ms. Correção: boundary Suspense pequeno em torno apenas do summary,separado do cartão e lista longa já isolada;sem remover benefícios,preços,interações ou mudar budgets/amostras/roteiro. Exigir suíte completa no novo head; nenhum job isolado. Não certificar INPde campo. Falha npm503 anterior preservada; custosCI/deploy desconhecidos,não zero.
+
+
+Integração posterior à regra AX274: PR792 incorporado22/10/2026 05:03:41Fortaleza,398a9249c5c4b7840f0db39425885cc45070d4cc,22/22checks no head79b6af9b54e78a85902d948908395c21116d14ab,árvore6818bc7773db8e4088072b17cf2465944a4de437 igual à testada/prevista. AGENTS Parte A em vigor;B/C seguem na fila. Integração preserva regra,anotação59,AXfisicamenteúltimo e contadores/entrega160. PR789head anterior dd5fb883c1dd069064350fbc64d108e5790eefd0 passou22checks,Mobile119693208999 após correção:homepage88/72/64ms,demais6amostras32–56ms,CLS0,todosgatespassaram;isso não aprova novohead nem certificaINPde campo. Nova suíte completa obrigatória apósmain atual,sem jobisolado,sem novos custos operacionais;faturasCI/deploy desconhecidas,não zero.
+
 ## AX — Excelência máxima de acessibilidade em todo o site (22/10/2026)
 
 Pedido do dono, 22/10/2026, 04h28 e 04h30 de Fortaleza: tudo o que você fizer tem de ser feito com excelência de acessibilidade, respeitando todas as regulações governamentais de acessibilidade; todas as páginas, subpáginas e tudo no site têm de ter acessibilidade no grau máximo, superando muito o que é exigido. Isto é uma regra permanente, e não uma tarefa única.
