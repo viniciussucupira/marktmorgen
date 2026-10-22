@@ -4795,6 +4795,16 @@ Publicação `dpl_DwEbVxaYfCB5KUXB32gpXvTinRjv` READY às19h05min06,423s de Fort
 
 Custos incrementais máximos mensais/anuais por Store, Studio e Scale:0/0, sem novas operações pagas, chaves, retenção ou direitos. Esse incremento não declara faturas existentes iguais a zero: custos reais CI/publicação/provedores continuam desconhecidos e reprovam onde necessários. Todos os custos fixos LLC permanecem100%Marktmorgen; leitura fiscal mais onerosa e margem mínima60% por cliente isolado e global mantidas, sem certificação. PLANS_ON_SALE=false, preços, limites, idiomas, identificadores, permissões e gates preservados. H3276–280 e SF281 permanecem na fila com suas posições aprovadas.
 
+### Registro operacional — publicação 171 (22/10/2026)
+
+PR #812 incorporado às19h53min29s de Fortaleza (22:53:29Z), commit `1eacbc27a8314a00036f33fd5399dd629e75e214`; head `3c7059e20bad821cb8bb1cd8b142bbb6f2fcf2d7`, suíte completa22/22 aprovada, árvores testada/prevista/incorporada idênticas `689087cd4b4978b91f7f116e2328a578d3a27748`. Após falha de compilação TS7022 no teste novo (head2cbc6f1, job120117006426), anotação explícita corrigida; integração no headc1a7b223 encontrou aquisição separada em withStockHold (job120118225927), corrigida no código sem retirar teste. Integração posterior da main811 preservada e suíte completa passou no novo head, sem aprovação por reexecução isolada.
+
+`takeLock` e a aquisição separada do estoque exigem uma resposta externa com exatamente um elemento para o único SET NX. Respostas malformadas não concedem trabalho, checkout, repetição ou exclusão de trava incerta. Teste sintético cobre aquisição direta e withStockHold real, sem chamada ao fornecedor, sem checkout aberto e com apenas um SET em cada recusa; caminho normal de aquisição/liberação mantido. Item205 continua incompleto quanto a estoque/quantidades por variante e reserva atômica; não há certificação do mecanismo de expiração/fencing existente.
+
+Publicação `dpl_95u8WJv8GMWu4dMGKnFJzim4rzXV` READY às19h54min48,988s de Fortaleza (22:54:48.988Z), domínio `marktmorgen.com` no commit exato; `/`, `/platform`, `/pricing`, `/mission` e `/library` responderam200 com o mesmo identificador. Contador170→171 uma vez; próxima172. Logs de execução não inspecionados; nenhuma afirmação de zero erros em produção. Prova documental da entrega170 incorporada pelo PR811 às19h28min30s de Fortaleza, commit `7e09c73a7bcfeaf1342d5f91917a0aae6d9ec78a`,22/22 e árvores iguais, sem incremento funcional.
+
+Custos máximos incrementais mensais/anuais Store, Studio e Scale:0/0 cada, sem operação paga, chave, retenção ou direito novo. Faturas existentes CI/publicação/provedores desconhecidas não equivalem a zero; LLC100%Marktmorgen e leitura fiscal mais onerosa mantidas. Margem mínima60% individual com todos os direitos no pior mês e global permanece obrigatória e não certificada. Preços, limites, PLANS_ON_SALE=false, permissões, idiomas, IDs persistidos e gates fiscais/comerciais preservados. H3276–280/SF281 continuam na fila nas posições aprovadas.
+
 ## OR — Posição dos pendentes antigos de 19/10/2026 (22/10/2026)
 
 Decisão do dono: 22/10/2026, 14h45 de Fortaleza. Registro documental preparado em 22/10/2026 às 15:18:31 de Fortaleza, após concluir a entrega 165. Esta seção prevalece sobre posições antigas incompatíveis; preserva o histórico e não cria itens nem números.
