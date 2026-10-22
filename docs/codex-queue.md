@@ -2,6 +2,12 @@
 
 Estado registrado em19/10/2026, após mesclagens623–625 (horários exatos nas entradas). Esta é uma fila de execução e evidência, não uma promessa de resultado, conformidade AAA ou margem fiscal certificada. Código remoto é a fonte canônica. Não refazer trabalho do Claude.
 
+## Continuidade técnica — histórico de pedidos legível (22/10/2026 UTC)
+
+Item205 em andamento: `listSales` tratava uma resposta Stripe sem `data` ou com `data` malformado como histórico vazio. Agora essas formas, linhas nulas/primitivas/arrays e um invólucro inválido retornam estado de erro antes das leituras subsequentes; somente um array explícito de registros pode sustentar a lista. Não se alteram IDs, títulos históricos, idiomas, preços, limites, permissões ou reservas de estoque. Testes sintéticos percorrem a função real com provedor local simulado, verificam ausência de leitura adicional após erro, histórico explicitamente vazio, pedido pago preservado e HTTP500. Verificação completa no novo head é obrigatória e está pendente; nada incorporado/publicado por esta entrada. A parte opcional de vendas após pagamento mantém seu comportamento anterior; não alegar que esta correção tornou toda a listagem integralmente verificável.
+
+Reconciliação CI em22/10/202601:26:12.190Z:966execuções concluídas únicas,2850jobs,902658segundos registrados, nenhum tempo ausente entre os jobs incluídos; acréscimo108execuções/322jobs/116160segundos sobre858/2528/786498. Evidência local `work/marktmorgen-ci-cost-20261022-0125.json`; últimos200runs consultados, somente `codex/*` concluídos e não contabilizados. Duração não é fatura, execuções ativas/fora da janela e cobranças de fornecedores/deploy não estão incluídas. Custos monetários reais continuam desconhecidos, não zero, e os gates comerciais permanecem fechados. Correção não adiciona operações/tetos de fornecedor; incremento máximo mensal/anual0/0por plano, sem certificação de margem.
+
 ## Proveniência e prioridade
 
 - **P0:** pedido de excelência/acessibilidade de19/10/2026, anexo bcc471cb-e0ea-4bd0-9b09-26c1d19e0ed5. Hora original não fornecida no arquivo.
