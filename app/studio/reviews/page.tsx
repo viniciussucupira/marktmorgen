@@ -48,15 +48,17 @@ export default async function StudioReviewsPage({ searchParams }: Params) {
   const asked = Number(typeof query.page === "string" ? query.page : "1");
   const page = Number.isInteger(asked) && asked >= 1 ? asked : 1;
   const [list, numbers] = await Promise.all([
-    studioReviews(store.statsId, { queue, offset: (page - 1) * PAGE_SIZE, limit: PAGE_SIZE }),
+    studioReviews(store.statsId, { queue, offset: (page - 1) * PAGE_SIZE, limit: PAGE_SIZE }).catch(() => null),
     summaries(store.statsId),
   ]);
+  const listKnown = list !== null;
+  const current = list ?? { rows: [], total: 0, unseen: 0 };
   // Only the products that have reviews, or are on this page of them, are
   // read (lib/catalog.ts), in the store's own order.
-  const wanted = new Set([...numbers.keys(), ...list.rows.map((r: StudioRow) => r.productId)]);
+  const wanted = new Set([...numbers.keys(), ...current.rows.map((r: StudioRow) => r.productId)]);
   const named = await readListings(store, productIds(store).filter((id) => wanted.has(id)));
   const titles = new Map(named.map((p) => [p.id, p.title]));
-  const rows: StudioReview[] = list.rows.map((r: StudioRow) => ({
+  const rows: StudioReview[] = current.rows.map((r: StudioRow) => ({
     id: r.id,
     productId: r.productId,
     productTitle: titles.get(r.productId) ?? "A product no longer in the store",
@@ -72,7 +74,7 @@ export default async function StudioReviewsPage({ searchParams }: Params) {
     unseen: r.unseen,
     photo: r.photo ? imageUrl(r.photo) : null,
   }));
-  const pages = Math.max(1, Math.ceil(list.total / PAGE_SIZE));
+  const pages = Math.max(1, Math.ceil(current.total / PAGE_SIZE));
   const reviewed = named.filter((p) => (numbers.get(p.id)?.visible ?? 0) + (numbers.get(p.id)?.hidden ?? 0) > 0);
   const tab = (view: "new" | "all", label: string) => (
     <Link
@@ -113,17 +115,24 @@ export default async function StudioReviewsPage({ searchParams }: Params) {
                 {queue ? "New reviews" : "Every review"}
               </h2>
               <div className="inline-flex rounded-full bg-sand/60 p-1 ring-1 ring-line">
-                {tab("new", list.unseen ? `New (${list.unseen})` : "New")}
+                {tab("new", current.unseen ? `New (${current.unseen})` : "New")}
                 {tab("all", "Every review")}
               </div>
-              {queue ? <SeenAllButton count={list.unseen} /> : null}
+              {queue && listKnown ? <SeenAllButton count={current.unseen} /> : null}
             </div>
 
-            {rows.length === 0 ? (
+            {!listKnown ? (
+              <div role="status" className="card mt-5 p-6 sm:p-8">
+                <p className="text-lg font-semibold text-ink">Reviews could not be verified</p>
+                <p className="mt-2 text-ink-soft">Reload to check your reviews. An unavailable list does not mean there are no reviews or that every review has been seen.</p>
+              </div>
+            ) : rows.length === 0 ? (
               <div className="card mt-5 p-6 sm:p-8">
-                <p className="text-lg font-semibold tracking-[-0.02em] text-ink">{queue ? "Nothing new" : "No reviews yet"}</p>
+                <p className="text-lg font-semibold tracking-[-0.02em] text-ink">{current.total > 0 ? "No reviews on this page" : queue ? "Nothing new" : "No reviews yet"}</p>
                 <p className="mt-2 text-ink-soft">
-                  {queue
+                  {current.total > 0
+                    ? "Choose an earlier page to see the reviews in this list."
+                    : queue
                     ? "Every review has been seen. New ones, and reviews their buyers change, come back here."
                     : "When a buyer reviews something, it appears here and on the product's page at the same moment."}
                 </p>
@@ -138,7 +147,7 @@ export default async function StudioReviewsPage({ searchParams }: Params) {
               </AiOn>
             )}
 
-            {pages > 1 ? (
+            {listKnown && pages > 1 ? (
               <nav aria-label="Pages" className="mt-6 flex items-center justify-between gap-3 text-sm font-semibold">
                 {page > 1 ? (
                   <Link href={studioPath(store, new URLSearchParams({ ...(queue ? {} : { view: "all" }), page: String(page - 1) }).toString(), "reviews")} className="btn btn-secondary btn-sm">
@@ -171,7 +180,7 @@ export default async function StudioReviewsPage({ searchParams }: Params) {
             <div className="card p-5 sm:p-6">
               <p className="font-semibold text-ink">By product</p>
               {reviewed.length === 0 ? (
-                <p className="mt-2 text-sm text-ink-soft">No reviews yet.</p>
+                <p className="mt-2 text-sm text-ink-soft">No product review totals are available in this view.</p>
               ) : (
                 <ul className="mt-3 space-y-3">
                   {reviewed.map((p) => {

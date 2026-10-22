@@ -495,14 +495,26 @@ export async function studioReviews(
   statsId: string | null,
   options: { queue: boolean; offset: number; limit: number },
 ): Promise<{ rows: StudioRow[]; total: number; unseen: number }> {
-  if (!statsId || !STATS_ID_PATTERN.test(statsId) || !isRedisConfigured()) return { rows: [], total: 0, unseen: 0 };
+  if (!statsId || !STATS_ID_PATTERN.test(statsId) || !isRedisConfigured()) throw new Error("Review list unavailable");
   const source = options.queue ? newKey(statsId) : allKey(statsId);
-  const [members, total, unseen] = await redisPipeline([
+  const index = await redisPipeline([
     ["ZREVRANGEBYSCORE", source, "+inf", "-inf", "LIMIT", options.offset, options.limit],
     ["ZCARD", source],
     ["ZCARD", newKey(statsId)],
   ]);
-  const list = Array.isArray(members) ? (members as string[]) : [];
+  if (!Array.isArray(index) || index.length !== 3) throw new Error("Review index incomplete");
+  const [members, total, unseen] = index;
+  if (!Array.isArray(members) || members.length > options.limit || new Set(members).size !== members.length ||
+      !Number.isSafeInteger(total) || Number(total) < 0 || !Number.isSafeInteger(unseen) || Number(unseen) < 0 ||
+      (options.queue && total !== unseen) || members.length > Number(total)) throw new Error("Review index unavailable");
+  const list: string[] = [];
+  for (const member of members) {
+    if (typeof member !== "string") throw new Error("Review index unreadable");
+    const [product, id, ...extra] = member.split("|");
+    if (extra.length || !PRODUCT_ID_PATTERN.test(product) || !REVIEW_ID_PATTERN.test(id)) throw new Error("Review reference unreadable");
+    list.push(member);
+  }
+  if (options.offset < Number(total) && list.length !== Math.min(options.limit, Number(total) - options.offset)) throw new Error("Review page incomplete");
   const byProduct = new Map<string, string[]>();
   for (const member of list) {
     const [productId, id] = member.split("|");
@@ -514,14 +526,20 @@ export async function studioReviews(
     ? await redisPipeline(products.map(([productId, ids]) => ["HMGET", productKey(statsId, productId), ...ids]))
     : [];
   const found = new Map<string, Review>();
-  read.forEach((rows) => {
-    for (const row of Array.isArray(rows) ? rows : []) {
-      const review = parseReview(row);
-      if (review) found.set(`${review.productId}|${review.id}`, review);
-    }
+  if (!Array.isArray(read) || read.length !== products.length) throw new Error("Review records incomplete");
+  read.forEach((values, group) => {
+    const [productId, ids] = products[group];
+    if (!Array.isArray(values) || values.length !== ids.length) throw new Error("Review records incomplete");
+    values.forEach((value, i) => {
+      const review = parseReview(value);
+      if (!review || review.productId !== productId || review.id !== ids[i]) throw new Error("Review record unreadable");
+      found.set(`${review.productId}|${review.id}`, review);
+    });
   });
   // Which of these are still in the queue: one score each, in one round trip.
   const flags = options.queue || list.length === 0 ? [] : await redisPipeline(list.map((member) => ["ZSCORE", newKey(statsId), member]));
+  if (!options.queue && list.length && (!Array.isArray(flags) || flags.length !== list.length ||
+      flags.some((flag) => flag !== null && !(typeof flag === "number" && Number.isFinite(flag)) && !(typeof flag === "string" && flag.trim() !== "" && Number.isFinite(Number(flag)))))) throw new Error("Review flags unreadable");
   const rows: StudioRow[] = [];
   list.forEach((member, i) => {
     const review = found.get(member);
