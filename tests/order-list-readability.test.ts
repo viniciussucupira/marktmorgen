@@ -5,9 +5,9 @@ import { paidPeriod } from "./billing-period-fixture";
 async function main(): Promise<void> {
   const previousFetch = globalThis.fetch;
   const previousKey = process.env.STRIPE_SECRET_KEY;
-  const previousApi = process.env.STRIPE_API;
+  const previousApi = process.env.STRIPE_CONNECT_API_BASE;
   process.env.STRIPE_SECRET_KEY = "sk_test_order_list_only_a_stand_in";
-  process.env.STRIPE_API = "http://127.0.0.1:4999/v1";
+  process.env.STRIPE_CONNECT_API_BASE = "http://127.0.0.1:4999";
   let reply: unknown = {};
   let status = 200;
   const calls: string[] = [];
@@ -61,7 +61,7 @@ async function main(): Promise<void> {
   } finally {
     globalThis.fetch=previousFetch;
     if(previousKey===undefined)delete process.env.STRIPE_SECRET_KEY;else process.env.STRIPE_SECRET_KEY=previousKey;
-    if(previousApi===undefined)delete process.env.STRIPE_API;else process.env.STRIPE_API=previousApi;
+    if(previousApi===undefined)delete process.env.STRIPE_CONNECT_API_BASE;else process.env.STRIPE_CONNECT_API_BASE=previousApi;
   }
 }
 void main();
