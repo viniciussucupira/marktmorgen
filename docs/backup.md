@@ -34,3 +34,9 @@ tests/backup-codec.test.ts restores synthetic rows into an in-memory map and che
 
 ## Restoration runbook — prerequisite, not operational
 In an isolated simulated database, supply synthetic key, authenticate/decrypt with openBackup, validate version and all rows, exclude expired rows using restoreRows, and compare exact dump bytes and absolute expiries. Never apply these rows to production by default. Real recovery additionally needs provider-supported RESTORE/type/TTL checks, clean isolated destination, full manifest/checksum verification, permissions and application validation before switching traffic. These missing steps block production readiness.
+
+
+## Verified storage roundtrip prerequisite
+lib/backup-roundtrip.ts accepts an explicitly injected synthetic create-only store. It seals a bounded snapshot, creates a unique object, reads it back under the same byte cap, authenticates and compares every row and expiry before returning a verified count. Its interface has no deletion method. A failed write/read/authentication never authorizes retention deletion or replacement of a prior verified object. No real storage adapter, scheduler, cost admission or daily report is added. Synthetic tests are pending full CI; this does not complete BK1.
+
+Provider research22October2026: [Upstash backup](https://upstash.com/docs/redis/features/backup) documents daily1or3day provider retention; [RDB export](https://upstash.com/docs/redis/howto/importexport) documents console export/download and excludes Redis Functions. Neither proves configured backup, automatic REST export support, independent account-loss protection or complete export costs. No live export/import performed.

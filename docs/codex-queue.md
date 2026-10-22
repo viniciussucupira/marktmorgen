@@ -4259,3 +4259,8 @@ Inventory and cost/tax failure documented in docs/backup.md. Offline-only bounde
 
 
 PR785 falhas preservadas: verify119647705153 detectou filtro de namespace ausente do registro, corrigido por entrada sem chave/escrita. Depois WebKit119649672108 no heada65d84fed5163fde3d454407827cf3ea28a7537b detectou segundo clique Edit name and description antes de hidratação, sem campo One line about it. DetailsForm agora mantém esse controle indisponível até hidratação via useSyncExternalStore, sem alterar roteiro, timeout ou asserções. Exigir suíte completa no novo head. Nenhum backup ativo ou entrega funcional por codec apenas.
+
+
+### BK273 — synthetic verified object roundtrip prerequisite
+
+Create-only injected storage, unique object identities, bounded authenticated read-back and exact snapshot comparison, prior object retained on failure; synthetic only, no real provider adapter/cron/credentials/retention action. Full CI pending; not BK1 completion or functional delivery. Delivery157 proof: PR785 merged22October02:34:54Fortaleza,4722c925e366f9b8cbe3b0446c522c8f7a54bb98,tree0dc54c9916e5cbe929cb049abc00fdb8f6330ac3 equals tested;22/22 checks passed, READY05:36:14.905UTC,dpl_939vCypcyPaQTPioAJbjrx2MrNpR,domain exactSHA,five routes200sameDPL; error/fatal0 only05:32:02.147–05:37:02.147UTC. Functional scope was DetailsForm hydration fix; backup remains incomplete. Actual CI/deploy cost unknown, not zero.
