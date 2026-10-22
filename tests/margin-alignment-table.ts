@@ -16,6 +16,7 @@ import {
   FLOOR_BPS, PROVIDER_FEES, READINGS, REFUND_RESERVE_BPS, DISPUTE_RESERVE_BPS, DISPUTE_FEE_CENTS, DISPUTE_COUNTER_FEE_CENTS,
   SIZING_READING, STRIPE_TOTAL_BPS, unitUnder, type Reading, type UnitResult,
 } from "@/lib/receiving-costs";
+import { renderLlcFixedCostStatus } from "../lib/llc-fixed-costs";
 import { COST_LINES, perPaymentCost } from "./plan-cost-registry";
 
 /** The lines of the worst month whose figure is printed on the pricing and plan pages: visits, orders, video hours, storage, AI drafts and emails. */
@@ -168,6 +169,7 @@ export function renderMarginAlignment(plansOnSale: boolean, assistantOnSale: boo
   out.push(`| --- | ${READINGS.map(() => "---").join(" | ")} |`);
   for (const unit of units) out.push(`| ${unit.name} | ${READINGS.map((r) => pctOf(evaluate(unit, r).netBps)).join(" | ")} |`);
   out.push("");
+  out.push(renderLlcFixedCostStatus());
   out.push("## For the owner");
   out.push("");
   out.push("- Nothing here opens a sale. The plans, the add-on and AI captions stay closed: the gate reading is the most-tax one (every unit far below 60%), EU art. 9a is not built (lib/deemed-supplier.ts), and the commercial review is still absent (lib/commercial-margin.ts).");

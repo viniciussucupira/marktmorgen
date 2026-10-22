@@ -58,3 +58,8 @@ None yet. Each answer is recorded here as: consultation number, authority, date 
 The answer registry now rejects impossible calendar dates, including February31 and non-leap February29, instead of accepting JavaScript's normalization into a later month. Valid leap days remain valid. This is structural evidence validation, not an authority/source verification or an answer to a consultation. No consultation was filed, no message sent, no actual answer added and no question closed. The most-tax reading and closed sales gate remain unchanged.
 
 Synthetic tests exercise invalid/valid calendar boundaries against the actual consultationProblems function and show that the actual answer list stays empty. No added provider, database, storage or message operation, price, allowance or entitlement; only bounded local date validation. M0 before/after is unchanged for every plan and billing interval, and the binding most-tax model still fails60%.
+
+
+## FX275 — current allocation,22 October2026
+
+Owner05:10Fortaleza: "esqueça Hazelsong". Historical references above to half the INSS or shared LLC costs are superseded:100% of every fixed cost/tax is Marktmorgen's. A future official consultation outcome would remove or change the entire applicable amount, never one half. This changes allocation only; no consultation answer, tax reading or gate was changed. Current full native amounts and unknown ceilings: [fixed-cost evidence](llc-fixed-costs-2026-10-22.md). Missing cost/FX/reserve evidence still rejects a finite minimum and consolidated approval.

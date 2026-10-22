@@ -64,6 +64,28 @@ The candidate design choices, each applied on its own and together. EU hosting r
 | AI captions, 2 languages (3 min, $36.00) | 60.61% | 61.25% | 12.20% | 54.61% | 59.61% | 55.25% | 60.25% |
 | AI captions, 3 languages (2 min, $36.00) | 60.80% | 61.44% | 12.27% | 54.80% | 59.80% | 55.44% | 60.44% |
 
+## LLC fixed costs — owner decision22 October2026
+
+Allocation:100% Marktmorgen;0% Hazelsong. Owner22/10/2026 05:10 Fortaleza: "esqueça Hazelsong". Historical shared allocations are superseded.
+
+| Required full LLC cost | Reviewed monthly USD ceiling | Reviewed annual USD ceiling |
+| --- | --- | --- |
+| delaware | unknown | unknown |
+| california-tax | unknown | unknown |
+| california-fee | unknown | unknown |
+| registered-agent | unknown | unknown |
+| owner-inss | unknown | unknown |
+| domains | unknown | unknown |
+| tools | unknown | unknown |
+| us-mailbox | unknown | unknown |
+| eu-gdpr-representative | unknown | unknown |
+| eu-dsa-representative | unknown | unknown |
+| uk-gdpr-representative | unknown | unknown |
+
+Complete fixed-cost total: unknown; rejected, never zero. Minimum paying customer base: not established. Consolidated net margin: not approved.
+The most-tax reading already fails every paid unit; no finite customer base repairs an individual unit below60%. The commercial review remains absent. No price, visible limit, commission or launch/tax gate changes.
+Native-currency public prices, taxes, eligibility, exchange-rate ceilings and reserve gaps: docs/llc-fixed-costs-2026-10-22.md. A quote or temporary discount is not an approved operating ceiling.
+
 ## For the owner
 
 - Nothing here opens a sale. The plans, the add-on and AI captions stay closed: the gate reading is the most-tax one (every unit far below 60%), EU art. 9a is not built (lib/deemed-supplier.ts), and the commercial review is still absent (lib/commercial-margin.ts).
