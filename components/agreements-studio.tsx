@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { agreementReply, type AgreementAction, type AgreementReply } from "@/lib/agreement-reply";
+import { agreementEditorVersion } from "@/lib/agreement-editor-version";
 import { toast } from "@/components/toast";
 import { Icon } from "@/components/icons";
 import { type Currency, fieldPrefix, formatMoney, readMoney } from "@/lib/money";
@@ -84,11 +86,10 @@ export function AgreementsStudio({
     return cents !== null && Number.isSafeInteger(quantity) && quantity > 0 ? sum + cents * quantity : sum;
   }, 0);
 
-  async function call(payload: Record<string, unknown>): Promise<Record<string, unknown> & { ok: boolean; message?: string; sent?: boolean }> {
+  async function call(payload: Record<string, unknown> & { action: AgreementAction }): Promise<AgreementReply> {
     try {
       const response = await fetch("/api/store/agreements", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
-      const data = (await response.json().catch(() => ({}))) as Record<string, unknown>;
-      return { ...data, ok: data.ok === true, message: typeof data.message === "string" ? data.message : undefined, sent: data.sent === true ? true : data.sent === false ? false : undefined };
+      return agreementReply(response.ok, await response.json().catch(() => null), payload.action);
     } catch {
       return { ok: false };
     }
@@ -112,8 +113,9 @@ export function AgreementsStudio({
     setBusy(`read:${row.id}`);
     const answer = await call({ action: "read", id: row.id });
     setBusy("");
-    const v = answer.version as { title: string; body: string; lines: LineDraft[] } | undefined;
-    if (!answer.ok || !v) {
+    const latest = latestOf(row);
+    const v = agreementEditorVersion(answer.version, currency, latest?.n ?? 0);
+    if (!answer.ok || !v || v.sha256 !== latest?.sha256) {
       toast(answer.message ?? "That agreement can't be read right now. Try again in a moment.");
       return;
     }
@@ -139,7 +141,7 @@ export function AgreementsStudio({
       : await call({ action: "create", kind, email, name, title, body, lines, payRequest, consent });
     setBusy("");
     if (!answer.ok) {
-      setError(answer.message ?? "Something went wrong on our side. Nothing was sent. Try again in a moment.");
+      setError(answer.message ?? "We couldn't confirm whether the agreement was saved or emailed. Your text is still here. Reload to check before trying again.");
       return;
     }
     toast(answer.sent ? (editing ? "New version sent. It needs a new signature." : "Sent for signature.") : "Saved, but its email did not go. Send it again from the list.");
@@ -153,7 +155,7 @@ export function AgreementsStudio({
     const answer = await call({ action, id });
     setBusy("");
     if (!answer.ok) {
-      toast(answer.message ?? "That could not be done right now. Try again in a moment.");
+      toast(answer.message ?? "We couldn't confirm the result. Reload to check before trying again.");
       return;
     }
     toast((action === "resend" || action === "copy") && answer.sent === false ? "The email did not go. Your store's emails for this month may be used." : done);
