@@ -2,6 +2,12 @@
 
 Estado registrado em19/10/2026, após mesclagens623–625 (horários exatos nas entradas). Esta é uma fila de execução e evidência, não uma promessa de resultado, conformidade AAA ou margem fiscal certificada. Código remoto é a fonte canônica. Não refazer trabalho do Claude.
 
+## Continuidade técnica — opções de preço (22/10/2026 UTC)
+
+Entrega151 confirmada: PR777 merge91cb82fff5c93bc2f5a802865b6215980d4238b3 em21/10/2026 às22:12:41Fortaleza(22/10/202601:12:41Z),22/22headcfaec8bec60e774cb923e5b3dba4e91794105e7d,árvored00adc18389cbf6022c77208b99c05851fd2dd20prevista/real/testadaiguais. Produção dpl_E2F3dEvbwfgEXeMmXdZ5RtdkkSWA READY22/10/202601:13:56.464Z,domínioSHAexato,5rotas200mesmoDPL,error/fatal0somente01:09:56.860Z–01:14:56.859Z. Correçãofuncionalaberturapixelsaguardaclientepronto; provafrete390/1280econsentimento/GPCcompletospassaram,semcertificaçãoAAA/manual. Semnovoscomandos/tetos,incrementomáximomensal/anual0/0porplano,custosCI/deployreaisdesconhecidos. Contador151próxima152; registrar próxima mudança necessária dafila.
+
+Item205 em andamento: a edição de tamanhos/versões aceitava qualquer `ok` verdadeiro mesmo com HTTP de erro, e Cancelar/Editar/Remover continuavam disponíveis durante uma gravação. Correção: exigir HTTP bem-sucedido e `ok: true` próprio sem erro contraditório; resposta inválida/perdida mantém o formulário e pede recarregar para conferir; um bloqueio síncrono impede gravações sobrepostas e um fieldset desabilita os controles até a resposta. O contrato atual da rota confirma apenas a gravação, não devolve o produto: não alegar verificação dos fatos persistidos ou prevenção de excesso de estoque. Teste sintético de respostas inválidas, herdadas, contraditórias e HTTP de erro incluído; CI completo remoto obrigatório no novo head, ainda pendente. Sem chamadas adicionais de fornecedor, mudança de preço/limite/opt-in ou ativação: incremento máximo mensal/anual por plano0/0; custos reais CI/deploy continuam desconhecidos, não zero. SKU histórico e reserva atômica continuam incompletos. Nenhuma nova entrega contada.
+
 ## Proveniência e prioridade
 
 - **P0:** pedido de excelência/acessibilidade de19/10/2026, anexo bcc471cb-e0ea-4bd0-9b09-26c1d19e0ed5. Hora original não fornecida no arquivo.
