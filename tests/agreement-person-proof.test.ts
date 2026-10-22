@@ -50,6 +50,28 @@ async function main() {
  await attempt([[]]);
  is("verified empty membership reaches ordinary admission",calls.some(c=>c[0]==="ZADD"),true);
  redis.pipeline=original;
+ part("Both agreement records need explicit write acknowledgments");
+ const writeAttempt=async (receipt:unknown) => {
+  calls=[];
+  redis.pipeline=async commands=>{
+   calls.push(...commands);
+   if(commands[0]?.[0]==="SMEMBERS")return [[]];
+   if(commands[0]?.[0]==="ZREMRANGEBYSCORE")return [0,1,1,1,1,1,1];
+   if(commands[0]?.[0]==="SET" && String(commands[0]?.[1]).startsWith("nl:agree:v:"))return receipt as unknown[];
+   return original(commands);
+  };
+  try { return await createAgreement(store,draft); }
+  finally { redis.pipeline=original; }
+ };
+ for(const receipt of [null,undefined,[],["OK"],["OK","OK","OK"],[null,"OK"],["OK",null],[undefined,"OK"],["OK",undefined],[true,"OK"],["OK",1],["ok","OK"],Array(2)]) {
+  const result=await writeAttempt(receipt);
+  is("unverified record receipt refuses success",result.ok?"accepted":result.reason,"unavailable");
+  is("both existing writes attempted once",calls.filter(c=>c[0]==="SET" && String(c[1]).startsWith("nl:agree:")).length,2);
+  is("uncertain persistence retains references",calls.some(c=>c[0]==="ZREM" || c[0]==="SREM" || c[0]==="DEL"),false);
+ }
+ const confirmed=await writeAttempt(["OK","OK"]);
+ is("two confirmed records return saved agreement",confirmed.ok,true);
+ is("confirmed agreement retains exact first-version fingerprint",confirmed.ok && confirmed.agreement.versions[0]?.sha256===confirmed.version.sha256,true);
  done();
 }
 main().catch(error=>{console.error(error);process.exitCode=1;});

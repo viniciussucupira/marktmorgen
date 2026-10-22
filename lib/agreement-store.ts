@@ -176,10 +176,13 @@ export async function createAgreement(store: Store, draft: AgreementDraft, now =
       return room.reason === "full" ? { ok: false, reason: "full", message: room.message } : unavailable();
     }
     const ttl = keepSeconds(agreement, now);
-    await redisPipeline([
+    const written = await redisPipeline([
       ["SET", versionKey(agreement.id, 1), JSON.stringify(version), "NX", "EX", ttl],
       ["SET", recordKey(agreement.id), JSON.stringify(agreement), "EX", ttl],
     ]);
+    // An unknown receipt may still have persisted either record. Keep its
+    // indexes and funded data room; never report a verified save or erase it.
+    if (!Array.isArray(written) || written.length !== 2 || !Array.from(written).every((value) => value === "OK")) return unavailable();
     return { ok: true, agreement, version };
   } catch (error) {
     console.error("keeping an agreement failed", error);
