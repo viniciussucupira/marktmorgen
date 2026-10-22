@@ -4184,3 +4184,12 @@ Calcule, para cada comprador da loja, os três indicadores clássicos da segment
 Estado: na fila.
 
 Registro: item 270 [GR1] na fila; somente inclusão documental, sem implementação ou ativação de RFM. Reutilização dos itens 268 [KT2] e 226 [HL7], consentimento de contato, critérios explicados, lotes com teto e custeio de leitura/armazenamento por plano são obrigatórios. Todos os gates SH permanecem vinculantes. Não é entrega funcional.
+
+
+### PR 783 — bloqueio externo superior a uma hora — 22/10/2026 01:00 Fortaleza
+
+Estado: aguardando o dono, conforme regra de bloqueio superior a uma hora; causa externa npm, sem necessidade de nova autorização comercial. Primeiro bloqueio observado em 22/10/2026 02:59:16 UTC (21/10 23:59:16 Fortaleza). Head f6a89a8dc07cf01379abadef1c817e26ae01d181: 21 de 22 verificações aprovadas; audit 119617546588 reprovado por timeout do endpoint de advisory bulk em 03:20:26 UTC, seguido de recusa correta do relatório indisponível pelo parser. Falhas anteriores e correções permanecem no histórico. Nenhuma incorporação ou entrega 155.
+
+Evidência externa: https://status.npmjs.org/ registra incidente Degraded Package Install and Publishing, identificado às 03:07 UTC, ainda sem resolução confirmada na consulta de 03:57 UTC. O indicador Security Audit operacional não comprova recuperação do endpoint que falhou. Não reduzir gates, não tratar desconhecido como aprovado e não repetir apenas um job. Este registro cria novo head com verificação integral; se a indisponibilidade persistir, preservar o PR e avançar em trabalho independente, evitando novas execuções repetitivas sem evidência de recuperação.
+
+Custos: reconciliação de 03:18:54 UTC registrou 1034 execuções codex/* concluídas únicas, 3058 jobs, 996252 segundos, zero durações desconhecidas; incremento sobre 01:26:12 UTC de 68 execuções, 208 jobs e 93594 segundos. Duração não é fatura; custos efetivos de CI e publicação continuam desconhecidos, não zero. Sem certificação de margem. Registro local marktmorgen-ci-cost-20261022-0318.json. Nenhuma operação comercial nova. Pedido HM1 preservado para inclusão após conclusão da tarefa atual, conforme ordem direta do dono.
