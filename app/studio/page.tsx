@@ -2856,32 +2856,29 @@ export default async function StudioPage({
             ) : null}
 
             {sold ? (
-              <div id="sales" className="card mt-8 scroll-mt-32 p-6 sm:p-8">
-                <p className="text-lg font-semibold tracking-[-0.02em] text-ink">
+              <section id="sales" aria-labelledby="sales-title" className="card mt-8 scroll-mt-32 p-6 sm:p-8">
+                <h2 id="sales-title" className="text-lg font-semibold tracking-[-0.02em] text-ink">
                   {role === "owner" ? "What you have sold" : "What the store has sold"}
-                </p>
+                </h2>
                 <p className="mt-2 text-ink-soft">
-                  Read from your own Stripe account each time you open this
-                  page. We keep no second copy of it, so there is nothing here
-                  to go stale or go missing.
+                  A recent view from your Stripe account, refreshed when you
+                  open this page. Your Stripe dashboard holds the full sales history.
                 </p>
 
                 {sold.state === "error" ? (
                   <p className="mt-5 notice notice-warn">
-                    Stripe did not answer just now, so this list is not showing.
-                    Nothing is lost — your sales are on your Stripe account
-                    whether this page can reach it or not.
+                    This recent order history could not be verified. Check your
+                    Stripe dashboard before acting on an order.
                   </p>
                 ) : sold.state === "unavailable" ? (
                   <p className="mt-5 rounded-[var(--r-md)] bg-sand p-5 text-sm text-ink-soft">
-                    Nothing can have sold yet, because Stripe has not cleared
-                    your account to take payments. Finish what it asks for
-                    above, and your sales will appear here.
+                    Order history is unavailable with this store’s current payment
+                    setup. Earlier sales may still be on your Stripe account.
                   </p>
                 ) : sold.sales.length === 0 ? (
                   <p className="mt-5 rounded-[var(--r-md)] bg-sand p-5 text-sm text-ink-soft">
-                    Nothing sold yet. When someone buys, the sale shows up here
-                    with who bought it, so you can answer them.
+                    No orders are available in this recent view. Check your Stripe
+                    dashboard for the full history.
                   </p>
                 ) : (
                   <>
@@ -2966,13 +2963,12 @@ export default async function StudioPage({
                       ))}
                     </ul>
                     <p className="mt-4 text-sm text-ink-soft">
-                      The {ORDERS_PAGE_SIZE} most recent. Every sale you have
-                      ever made is in your own Stripe dashboard, which is the
-                      real record.
+                      Up to {ORDERS_PAGE_SIZE} matching recent orders. For the full
+                      history, open your Stripe dashboard.
                     </p>
                   </>
                 )}
-              </div>
+              </section>
             ) : null}
 
             <div id="account" className="card mt-8 scroll-mt-32 p-6 sm:p-8">
