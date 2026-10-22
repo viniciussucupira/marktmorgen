@@ -29,8 +29,10 @@ export async function checkDetailsAcknowledgment({browser,LOCAL,session,sid,is})
     await route.fulfill({status:work.scenario.status??200,contentType:"application/json",body:work.scenario.raw??JSON.stringify(work.scenario.body(value))});
    });
    await page.goto(LOCAL+"/studio?store="+sid,{waitUntil:"networkidle",timeout:60000});
-   await page.locator("main details").evaluateAll(nodes=>nodes.forEach(node=>{node.open=true;}));
-   await page.getByRole("button",{name:"Edit name and description",exact:true}).click();
+   await page.locator("main details").evaluateAll(nodes=>nodes.forEach(node=>{if(!node.querySelector("#store-name"))node.open=true;}));
+   const editor=page.locator("#details details").filter({has:page.locator("#store-name")});
+   await editor.locator(":scope > summary").click();
+   is("one action opens native details editor "+width,await editor.evaluate(node=>node.open),true);
    const form=page.locator("form:has(#store-name)"),field=form.getByLabel("Store name",{exact:true}),bio=form.getByLabel("One line about it",{exact:true});
    for(const scenario of scenarios){
     await field.fill(" Synthetic store ");await bio.fill(" A synthetic description. ");
@@ -48,7 +50,8 @@ export async function checkDetailsAcknowledgment({browser,LOCAL,session,sid,is})
     if(scenario.confirmed){
      await page.locator(".nb-toast-region [role=status]").getByText("Name and description saved.",{exact:true}).waitFor({state:"attached"});
      await page.locator(".nb-toast-text").filter({hasText:"Name and description saved."}).waitFor();
-     is("only matching confirmation closes details form "+width,await page.locator("#store-name").count(),0);
+     is("only matching confirmation closes details disclosure "+width,await editor.evaluate(node=>node.open),false);
+     is("confirmed details fields are hidden "+width,await field.isVisible(),false);
     }else{
      const alert=form.getByRole("alert");await alert.waitFor();
      is("details refusal stays honest "+scenario.name+" "+width,(await alert.innerText()).includes(scenario.specific?"Give the store a name":"We could not confirm whether your name and description changed"),true);
