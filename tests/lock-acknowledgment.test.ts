@@ -36,3 +36,27 @@ test("unknown stock lock acknowledgment cannot open checkout", async () => {
   } finally { store.pipeline = original; }
   assert.equal(opened, 0);
 });
+
+test("malformed lock receipt never grants ownership or retries an uncertain acquisition", async () => {
+  const { withStockHold } = await import("@/lib/stock");
+  const { parseProduct } = await import("@/lib/catalog");
+  const product = parseProduct({ id: "limited123", title: "Limited", summary: "", priceCents: 100, stock: 1 });
+  assert.ok(product);
+  const fakeStore = { statsId: "a".repeat(32) } as import("@/lib/store").Store;
+  const original: typeof store.pipeline = store.pipeline.bind(store);
+  let opened = 0;
+  const replies: unknown[] = [null, undefined, false, 0, "OK", {}, [], Array(1), ["OK", null], [null, "OK"], { 0: "OK", length: 1 }];
+  try {
+    for (const reply of replies) {
+      const commands: unknown[][] = [];
+      store.pipeline = async (batch) => { commands.push(...batch); return reply as unknown[]; };
+      await assert.rejects(takeLock("synthetic:lock", 15, 1000), LockBusyError);
+      assert.deepEqual(commands.map((command) => command[0]), ["SET"]);
+      commands.length = 0;
+      const result: { ok: boolean; reason?: string } = await withStockHold(fakeStore, product, async () => { opened += 1; return { id: "cs_test_synthetic" }; });
+      assert.deepEqual(result, { ok: false, reason: "busy" });
+      assert.deepEqual(commands.map((command) => command[0]), ["SET"]);
+    }
+  } finally { store.pipeline = original; }
+  assert.equal(opened, 0);
+});

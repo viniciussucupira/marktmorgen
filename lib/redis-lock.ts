@@ -62,7 +62,10 @@ export async function takeLock(key: string, ttlSeconds: number, waitMs: number):
   const token = crypto.randomUUID();
   const giveUpAt = Date.now() + waitMs;
   for (let wait = 20; ; wait = Math.min(wait * 2, 250)) {
-    const [got] = await redisPipeline([["SET", key, token, "NX", "EX", ttlSeconds]]);
+    const receipt = await redisPipeline([["SET", key, token, "NX", "EX", ttlSeconds]]);
+    // One acquisition command needs exactly one reply before work can start.
+    if (!Array.isArray(receipt) || receipt.length !== 1) throw new LockBusyError();
+    const got: unknown = receipt[0];
     if (got === "OK") return { key, token, ttlSeconds };
     if (got !== null) throw new LockBusyError();
     if (Date.now() + wait > giveUpAt) throw new LockBusyError();
