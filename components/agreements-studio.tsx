@@ -128,7 +128,7 @@ export function AgreementsStudio({
     setLines(v.lines);
     setPayRequest(row.payRequest);
     setError("");
-    if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
+    if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "instant" });
   }
 
   async function submit(event: React.FormEvent) {

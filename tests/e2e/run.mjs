@@ -1793,7 +1793,7 @@ try {
   part("The line under the store's name, written with AI");
   {
     await open(studio, `${LOCAL}/studio`);
-    await studio.getByRole("button", { name: "Edit name and description" }).click();
+    await studio.locator("#details summary").filter({ hasText: "Edit name and description" }).click();
     await studio.getByRole("button", { name: "Suggest three lines" }).click();
     const lines = studio.getByRole("list", { name: "Suggested lines" });
     await lines.waitFor({ timeout: 30_000 });

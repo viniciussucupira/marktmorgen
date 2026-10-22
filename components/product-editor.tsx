@@ -6,7 +6,7 @@ import { WaitlistPanel } from "@/components/waitlist-panel";
 import type { PreorderView } from "@/lib/preorders";
 import { hasContent, preorderProblem } from "@/lib/preorder-rules";
 import type { WaitlistView } from "@/lib/waitlist";
-import { useRef, useState } from "react";
+import { useRef, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { TeamEventEditor } from "@/components/team-event-editor";
 import { CallEditor, type MeetAccount } from "@/components/call-editor";
@@ -1514,6 +1514,10 @@ function Pager({ paging }: { paging: ProductPaging }) {
   );
 }
 
+const subscribeEditorReady = () => () => {};
+const editorClientReady = () => true;
+const editorServerReady = () => false;
+
 export function ProductEditor({
   products,
   total: totalGiven,
@@ -1587,6 +1591,7 @@ export function ProductEditor({
 }) {
   const router = useRouter();
   const sid = useStudioStore();
+  const editorReady = useSyncExternalStore(subscribeEditorReady, editorClientReady, editorServerReady);
   const [adding, setAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [removingId, setRemovingId] = useState<string | null>(null);
@@ -2227,7 +2232,7 @@ export function ProductEditor({
       ) : (
         <button
           type="button"
-          disabled={full}
+          disabled={full || !editorReady}
           onClick={startAdding}
           className="btn btn-primary mt-5"
         >

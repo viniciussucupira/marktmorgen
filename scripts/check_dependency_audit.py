@@ -7,9 +7,9 @@ from pathlib import Path
 ADVISORY = "https://github.com/advisories/GHSA-vfj7-8cjw-p6xm"
 EXPIRES = datetime.date(2026, 11, 18)
 REVIEWED = {
-    "@next/eslint-plugin-next": "16.3.8",
+    "@next/eslint-plugin-next": "16.4.2",
     "braces": "3.0.3",
-    "eslint-config-next": "16.3.8",
+    "eslint-config-next": "16.4.2",
     "fast-glob": "3.3.1",
     "micromatch": "4.0.8",
 }
@@ -32,8 +32,11 @@ def findings(report):
 def review(all_report, production_report, lock, today):
     all_findings = findings(all_report)
     production = findings(production_report)
-    if any(item.get("severity") in ["high", "critical"] for item in production.values()):
-        raise ValueError("High or critical production dependency finding")
+    blocked = {name: {"severity": item.get("severity"), "range": item.get("range"),
+                      "via": item.get("via"), "fixAvailable": item.get("fixAvailable")}
+               for name, item in production.items() if item.get("severity") in ["high", "critical"]}
+    if blocked:
+        raise ValueError("High or critical production dependency finding: " + json.dumps(blocked, sort_keys=True))
     packages = lock.get("packages", {})
 
     def reviewed_chain(name, seen=()):
