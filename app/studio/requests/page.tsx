@@ -38,8 +38,8 @@ export default async function StudioRequestsPage({ searchParams }: Params) {
   const { view } = found;
   const { store } = view;
   const now = new Date().getTime();
-  const listed = (await listRequests(store, now)) ?? [];
-  const [requests, used, openNow] = await Promise.all([refreshRefunds(store, listed, now), allowanceUsed(store, "email", now), openCount(store.sid, now).catch(() => 0)]);
+  const listed = await listRequests(store, now);
+  const [requests, used, openNow] = await Promise.all([listed === null ? Promise.resolve([]) : refreshRefunds(store, listed, now), allowanceUsed(store, "email", now), openCount(store.sid, now).catch(() => 0)]);
   const open = requestsOpen(store);
   const read = (name: string, max: number) => (typeof query[name] === "string" ? (query[name] as string).slice(0, max) : "");
   const typed = read("amount", 20);
@@ -65,7 +65,7 @@ export default async function StudioRequestsPage({ searchParams }: Params) {
             A custom amount for work you agreed on, as an invoice with lines, a due date if you want one, and its receipt. Each is paid like any
             sale here: on your own Stripe account, listed with your sales, and refunded from Stripe the same way.
           </p>
-          <PaymentRequestsStudio
+          {listed === null ? <div role="status" className="notice mt-8">Payment requests could not be verified. Reload to check them; an unavailable list does not mean there are no requests.</div> : <PaymentRequestsStudio
             rows={requests.map((r) => ({ ...r, link: requestLink(store, r) }))}
             now={now}
             currency={store.currency}
@@ -80,7 +80,7 @@ export default async function StudioRequestsPage({ searchParams }: Params) {
             prefill={prefill}
             dueFirst={first}
             dueLast={last}
-          />
+          />}
         </main>
       </StudioStorePin>
     </div>

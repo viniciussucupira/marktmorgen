@@ -4266,9 +4266,22 @@ PR785 falhas preservadas: verify119647705153 detectou filtro de namespace ausent
 Create-only injected storage, unique object identities, bounded authenticated read-back and exact snapshot comparison, prior object retained on failure; synthetic only, no real provider adapter/cron/credentials/retention action. Full CI pending; not BK1 completion or functional delivery. Delivery157 proof: PR785 merged22October02:34:54Fortaleza,4722c925e366f9b8cbe3b0446c522c8f7a54bb98,tree0dc54c9916e5cbe929cb049abc00fdb8f6330ac3 equals tested;22/22 checks passed, READY05:36:14.905UTC,dpl_939vCypcyPaQTPioAJbjrx2MrNpR,domain exactSHA,five routes200sameDPL; error/fatal0 only05:32:02.147–05:37:02.147UTC. Functional scope was DetailsForm hydration fix; backup remains incomplete. Actual CI/deploy cost unknown, not zero.
 
 
+### Revisão da leitura de cobranças — preservação de referências
+
+listRequests não deve transformar índice/resposta incompleta em ausência nem remover referências de registros ilegíveis ou de outro sid/id. Limpeza limitada a null explícito após resposta MGET completa; erro vira null e página mostra indisponibilidade, sem formulário de envio baseado em lista desconhecida. Testes sintéticos do leitor real para índices inválidos, duplicados, registros parciais, identidades erradas, próprio válido e expiração confirmada. Nenhuma nova operação/chave/TTL/mensagem; chamadas existentes preservadas. openCount/admissão concorrente e parseRequest financeiro não certificados por esta mudança; permanecem revisão separada.
+
+BK273: aguardando o dono após mais de1hora de bloqueio observado04:52:23.603UTC. MOST_TAX_READING7818bps sobre lucro e demais custos impede60% mesmo sem custo operacional. Credenciais/bucket independentes não provisionados e criação pelo agente proibida; não ativar por mera presença de variáveis. Codec PR785 incorporado; roundtrip sintético PR786 pendente. Backup diário incompleto, não pronto e desligado. Evidências em docs/backup.md e continuidade. Avançar itens acionáveis sem reduzir impostos/gates. Faturas reais CI/deploy desconhecidas, não zero.
+
+
+PR786 incorporado em22/10/2026 03:11:21 Fortaleza (06:11:21UTC), commit58f14c23db3f4cddd750b2b0d96e20b9f8752811, árvore f7ea72988840eb984559cc2eb2b3113064d75d6b igual à testada e prevista;22 verificações completas aprovadas no heada0e54af8dd1b75aa7497cd597f230c8b8c029051. Roundtrip sintético interno, sem ativação nem incremento funcional. Integração explícita de main no PR787 exige suíte completa no novo head. Histórico e bloqueio BK273 preservados; custo efetivo de CI/deploy desconhecido, não zero.
+
+
 ### Payment request action receipt review
 
 Client now requires successful HTTP and own explicit ok:true. Create also requires a valid persisted request ID; create/remind require an explicit boolean sent receipt. Malformed or ambiguous replies preserve form values and cannot claim sent/canceled/deleted. Unknown-result copy asks to reload before retrying, without claiming nothing was sent. Synthetic parser tests cover HTTP errors with success bodies, invalid/missing/inherited receipts and true/false send outcomes; full CI required before incorporation. Separate component/helper files avoid PR787 reader edits. No new supplier call, email, key, TTL or visible limit; actual CI/deploy cost remains unknown, not zero. No certification of backend admission, locks or tax/margin.
+
+
+PR788 incorporado22/10/2026 03:38:22Fortaleza(06:38:22UTC),a7cb4270054a51572d91e30a4c5f9eebfd277fed,árvore ad8d0bef4b86281a954e701e991b956b673735a0 igual à testada e prevista;22verificações completas no head2b20e8b2de36b715a95b1d51ea005fe5cd1b2b06. Publicação funcional ainda depende de READY/domínio/versão exata; contador não incrementado aqui. Integração no PR787 exige nova suíte completa, sem reutilizar aprovação anterior. CI/deploy custos efetivos desconhecidos, não zero.
 
 
 ### Agreement page — unknown lists remain unknown
@@ -4276,3 +4289,11 @@ Client now requires successful HTTP and own explicit ok:true. Create also requir
 Agreements Studio no longer renders an empty list/send form when either agreement or payment request reading returns null. It shows an accessible unavailable notice and asks to reload. Known-empty lists keep their original form. This addresses page fallback only; agreement-store parser/index cleanup remains a separate finding and is not certified. No provider operation, message, key, TTL or visible limit added. Full CI required; actual CI/deploy expenses unknown, not zero.
 
 Entrega158 confirmada: PR788 incorporado22/10/2026 03:38:22Fortaleza,commit a7cb4270054a51572d91e30a4c5f9eebfd277fed,tree ad8d0bef4b86281a954e701e991b956b673735a0 igual à testada/prevista;22/22 verificações no head2b20e8b2de36b715a95b1d51ea005fe5cd1b2b06. READY06:39:16.130UTC,dpl_G4RbHRxMNjuoskH5muYV11oST2sz,marktmorgen.com versão exata,cinco rotas200mesmoDPL. Error/fatal0 somente06:35:11.558–06:40:11.558UTC. Confirmações estritas de ações de cobrança publicadas; nenhum novo custo operacional, faturasCI/deploy desconhecidas, não zero. Contador158,próxima159; nenhuma margem certificada.
+
+
+### Agreement records — preserve references on unreadable storage
+
+listAgreements now requires exact bounded unique valid index and complete MGET response. Invalid JSON, mismatched store/id and incomplete replies return unavailable with no index cleanup, including mixed absent and unreadable records. Only explicit null in a complete, otherwise verified result permits existing bounded ZREM. Synthetic tests call the real reader with simulated Redis; no external service. No new keys/TTL/provider calls/messages, no signature/financial-parser certification. Full CI required; actual CI/deploy expense unknown, not zero. Agreement-page unavailable notice remains separate PR789.
+
+
+PR787 incorporado22/10/2026 04:02:17Fortaleza(07:02:17UTC),commit e25bacb7ef0be7ac37848e87a172e2ab8cb9e20f,árvore c762ac90314125070d02ce930d554f903dca78ed igual à testada e prevista;22/22verificações no headefd309f76a392f1f9507818a76997e9955c0cc76. Produção ainda não confirmada, sem incremento aqui. PR789 integra main e código/testes do PR790 num head com suíte completa nova obrigatória. Não usar checks antigos. Nenhum novo custo operacional, CI/deploy real desconhecido, não zero.

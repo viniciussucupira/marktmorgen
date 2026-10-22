@@ -333,22 +333,24 @@ export async function signAgreement(store: Store, id: string, input: SignInput, 
 export async function listAgreements(store: Store): Promise<Agreement[] | null> {
   if (!isRedisConfigured() || !store.sid) return null;
   try {
-    const [ids] = await redisPipeline([["ZREVRANGE", storeKey(store.sid), 0, MAX_KEPT_AGREEMENTS - 1]]);
-    const list = Array.isArray(ids) ? ids.map(String).filter((id) => ID_PATTERN.test(id)) : [];
+    const index = await redisPipeline([["ZREVRANGE", storeKey(store.sid), 0, MAX_KEPT_AGREEMENTS - 1]]);
+    if (!Array.isArray(index) || index.length !== 1 || !Array.isArray(index[0])) return null;
+    const list: unknown[] = index[0];
+    if (list.length > MAX_KEPT_AGREEMENTS || new Set(list).size !== list.length || !list.every((id) => typeof id === "string" && ID_PATTERN.test(id))) return null;
     if (!list.length) return [];
-    const [raws] = await redisPipeline([["MGET", ...list.map(recordKey)]]);
-    const values = Array.isArray(raws) ? raws : [];
+    const ids = list as string[];
+    const records = await redisPipeline([["MGET", ...ids.map(recordKey)]]);
+    if (!Array.isArray(records) || records.length !== 1 || !Array.isArray(records[0]) || records[0].length !== ids.length) return null;
+    const values: unknown[] = records[0];
     const out: Agreement[] = [];
     const gone: string[] = [];
-    list.forEach((id, i) => {
-      let a: Agreement | null = null;
-      try {
-        a = typeof values[i] === "string" ? parseAgreement(JSON.parse(values[i] as string)) : null;
-      } catch {
-        a = null;
-      }
-      if (a && a.sid === store.sid) out.push(a);
-      else gone.push(id);
+    ids.forEach((id, i) => {
+      const raw = values[i];
+      if (raw === null) { gone.push(id); return; }
+      let agreement: Agreement | null = null;
+      try { agreement = typeof raw === "string" ? parseAgreement(JSON.parse(raw)) : null; } catch { agreement = null; }
+      if (!agreement || agreement.sid !== store.sid || agreement.id !== id) throw new Error("Agreement record could not be verified");
+      out.push(agreement);
     });
     if (gone.length) await redisPipeline([["ZREM", storeKey(store.sid), ...gone]]);
     return out;
