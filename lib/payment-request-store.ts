@@ -106,11 +106,15 @@ export async function createRequest(store: Store, draft: RequestDraft, now = Dat
   const person = personSet(store.sid, draft.email);
   try {
     // A person's requests that are no longer kept leave their count first.
-    const [members] = await redisPipeline([["SMEMBERS", person]]);
-    const ids = Array.isArray(members) ? members.map(String).filter((id) => ID_PATTERN.test(id)) : [];
+    const memberReply = await redisPipeline([["SMEMBERS", person]]);
+    if (!Array.isArray(memberReply) || memberReply.length !== 1 || !Array.isArray(memberReply[0])) return unavailable();
+    const members: unknown[] = memberReply[0];
+    if (new Set(members).size !== members.length || !members.every((id) => typeof id === "string" && ID_PATTERN.test(id))) return unavailable();
+    const ids = members as string[];
     if (ids.length) {
       const alive = await redisPipeline(ids.map((id) => ["EXISTS", recordKey(id)]));
-      const gone = ids.filter((_, i) => Number(alive[i]) !== 1);
+      if (!Array.isArray(alive) || alive.length !== ids.length || !alive.every((value) => value === 0 || value === 1)) return unavailable();
+      const gone = ids.filter((_, i) => alive[i] === 0);
       if (gone.length) await redisPipeline([["SREM", person, ...gone]]);
     }
     const keep = KEEP_DAYS * 86_400;
