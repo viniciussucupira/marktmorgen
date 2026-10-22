@@ -4745,6 +4745,9 @@ O head documental anterior do PR #803 (`5d16c5800ac80667ed21be740b14ec5b0d5c7534
 
 Custos: sem comando/chave/TTL/provedor/direito novo; máximo mensal/anual incremental por plano0/0 dentro do envelope existente, não fatura zero. Custos efetivos CI/deploy e tributos desconhecidos seguem reprovados; nenhuma certificação60%, preço/limite/gate alterado. Sem mensagem/pagamento/fornecedor real nos testes. PRs #805 (frete) e #806 (ambiente) permanecem independentes, sem incorporar seus recursos neste PR documental.
 
+
+Confirmação posterior da entrega funcional166 — verificada em22/10/2026 às16:11:02 de Fortaleza: deployment `dpl_HdG5CgojcvZg5fiEYkZ3PrXGvzKq` READY às16:09:58.937 de Fortaleza (19:09:58.937Z); marktmorgen.com aponta exatamente ao commit `ed12137b2356ea271c76a34d8a55acff0f22bab5`. /, /platform, /pricing, /mission e /library responderam200 com o mesmo deployment. Após22/22 verificações e igualdade da árvore testada/prevista/incorporada, contador165→166 uma única vez; próximo167. Nenhuma varredura de logs de runtime nesta entrega; não afirmar zero erros. FaturasCI/deploy desconhecidas, nãozero; nenhum gate aberto. O registro anterior de publicação pendente fica preservado como estado daquele momento.
+
 ## OR — Posição dos pendentes antigos de 19/10/2026 (22/10/2026)
 
 Decisão do dono: 22/10/2026, 14h45 de Fortaleza. Registro documental preparado em 22/10/2026 às 15:18:31 de Fortaleza, após concluir a entrega 165. Esta seção prevalece sobre posições antigas incompatíveis; preserva o histórico e não cria itens nem números.
