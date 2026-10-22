@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { agreementReply, type AgreementAction, type AgreementReply } from "@/lib/agreement-reply";
+import { agreementEditorVersion } from "@/lib/agreement-editor-version";
 import { toast } from "@/components/toast";
 import { Icon } from "@/components/icons";
 import { type Currency, fieldPrefix, formatMoney, readMoney } from "@/lib/money";
@@ -112,8 +113,9 @@ export function AgreementsStudio({
     setBusy(`read:${row.id}`);
     const answer = await call({ action: "read", id: row.id });
     setBusy("");
-    const v = answer.version as { title: string; body: string; lines: LineDraft[] } | undefined;
-    if (!answer.ok || !v) {
+    const latest = latestOf(row);
+    const v = agreementEditorVersion(answer.version, currency, latest?.n ?? 0);
+    if (!answer.ok || !v || v.sha256 !== latest?.sha256) {
       toast(answer.message ?? "That agreement can't be read right now. Try again in a moment.");
       return;
     }
