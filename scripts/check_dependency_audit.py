@@ -32,8 +32,11 @@ def findings(report):
 def review(all_report, production_report, lock, today):
     all_findings = findings(all_report)
     production = findings(production_report)
-    if any(item.get("severity") in ["high", "critical"] for item in production.values()):
-        raise ValueError("High or critical production dependency finding")
+    blocked = {name: {"severity": item.get("severity"), "range": item.get("range"),
+                      "via": item.get("via"), "fixAvailable": item.get("fixAvailable")}
+               for name, item in production.items() if item.get("severity") in ["high", "critical"]}
+    if blocked:
+        raise ValueError("High or critical production dependency finding: " + json.dumps(blocked, sort_keys=True))
     packages = lock.get("packages", {})
 
     def reviewed_chain(name, seen=()):
