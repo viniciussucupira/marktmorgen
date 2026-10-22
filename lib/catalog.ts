@@ -362,6 +362,10 @@ export function parseProduct(entry: unknown): Product | null {
   if (typeof value.title !== "string" || !value.title) return null;
   if (typeof value.priceCents !== "number") return null;
   if (!Number.isInteger(value.priceCents) || value.priceCents < 0) return null;
+  const shipping = parseShipping(value.shipping);
+  // An unreadable physical record must not become a digital product or free shipping.
+  // Leave the stored creator record intact and refuse to offer this product.
+  if (value.shipping !== undefined && value.shipping !== null && !shipping) return null;
   return {
     id: value.id,
     title: value.title.slice(0, MAX_TITLE_LENGTH),
@@ -401,7 +405,7 @@ export function parseProduct(entry: unknown): Product | null {
     intro: parseIntro(value.intro),
     yearly: parseYearly(value.yearly),
     note: value.note === true,
-    shipping: parseShipping(value.shipping),
+    shipping,
     hidden: value.hidden === true,
   };
 }

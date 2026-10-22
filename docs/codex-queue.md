@@ -4748,6 +4748,21 @@ Custos: sem comando/chave/TTL/provedor/direito novo; máximo mensal/anual increm
 
 Confirmação posterior da entrega funcional166 — verificada em22/10/2026 às16:11:02 de Fortaleza: deployment `dpl_HdG5CgojcvZg5fiEYkZ3PrXGvzKq` READY às16:09:58.937 de Fortaleza (19:09:58.937Z); marktmorgen.com aponta exatamente ao commit `ed12137b2356ea271c76a34d8a55acff0f22bab5`. /, /platform, /pricing, /mission e /library responderam200 com o mesmo deployment. Após22/22 verificações e igualdade da árvore testada/prevista/incorporada, contador165→166 uma única vez; próximo167. Nenhuma varredura de logs de runtime nesta entrega; não afirmar zero erros. FaturasCI/deploy desconhecidas, nãozero; nenhum gate aberto. O registro anterior de publicação pendente fica preservado como estado daquele momento.
 
+
+### Entrega funcional167 confirmada — frete físico e ambiente de testes (22/10/2026)
+
+PR #805 incorporado às16:34:41 de Fortaleza (19:34:41Z), commit `b45c321dbf4b869877d90a33b9b44c39588545e6`; head `3b0b274762d4852ce2e87dae26194ecd0ef2d1d0`,22/22 verificações e árvore testada/prevista/incorporada idêntica `700d194975f1e1eef5e22558e011e53be424b025`. Preserva explicitamente o commit do PR #806 e o main804, sem aprovar checks parciais de nenhum ancestral. #806 incorporado por essa ancestralidade, sem publicação/contador separado.
+
+Quantia de frete armazenada exige número seguro; null/boolean/string não viram frete grátis. Produto com frete físico não verificável é recusado integralmente na leitura, preservando o registro bruto do criador; não vira digital. Zero numérico explícito, produtos digitais antigos sem frete, SKU opcional corrompido, preços, IDs e idiomas preservados. Integração sintética cobre malformados e caminhos normais, sem fornecedor/pagamento/mensagem reais. Quantidades por variante e reserva atômica do item205 continuam pendentes, não certificadas.
+
+Ambiente do produto usa a mesma imagem oficial Playwright1.56.1noble/pwuser e verificação exata da versão já usada nas outras matrizes; remove instalação repetida de browser/apt. Três motores, cinco larguras, modos, todas as asserções e teto40min mantidos. Testes automáticos não certificam AAA nem testes reais de AT.
+
+Deployment `dpl_Dw4TghB4EP32fAxgKhkkFQzhMC5s` READY às16:36:43.978 de Fortaleza (19:36:43.978Z), marktmorgen.com no SHA exato acima; /, /platform, /pricing, /mission e /library retornaram200 com o mesmo deployment. Contador166→167 uma única vez; próximo168. Nenhuma varredura de logs de runtime: não afirmar zero erros.
+
+Custo operacional incremental máximo mensal/anual por plano0/0 no envelope existente, sem novo comando/chave/TTL/provedor/franquia; isso não é fatura zero. Custos reais CI/deploy/impostos desconhecidos continuam reprovados, nenhuma margem60% certificada. PLANS_ON_SALE=false, preços, limites visíveis, comissão, opt-in, tax gate, art.9a e revisão comercial preservados.
+
+PR #803 permanece exclusivamente documental; sua base agora incorpora explicitamente main805 e exige suíte integral no novo head, sem reutilizar17/22 do head anterior77c17bba. PR #807 (admissão estrita de acordos) preservado em branch sem conflito; atualizado com o mesmo main805 e CI integral pendente, sem alegação de atomicidade. A seção OR continua no fim e a ordem do dono não muda por este registro.
+
 ## OR — Posição dos pendentes antigos de 19/10/2026 (22/10/2026)
 
 Decisão do dono: 22/10/2026, 14h45 de Fortaleza. Registro documental preparado em 22/10/2026 às 15:18:31 de Fortaleza, após concluir a entrega 165. Esta seção prevalece sobre posições antigas incompatíveis; preserva o histórico e não cria itens nem números.
