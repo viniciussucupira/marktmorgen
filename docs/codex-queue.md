@@ -4080,6 +4080,10 @@ Entrega150 confirmada: PR776 merge8f436801eaec0c948e7998ddaf02e56ea35c1164 em21/
 
 Matriz adicional no navegador390/1280 usa uma loja/produto físicos locais exclusivos, sem alterar fixtures de conteúdo dos criadores. Intercepta todoPOST, segura a resposta para conferir aria-busy/campos eCancelbloqueados e testaHTTP500,oktruthy,produtodiferente,frete0divergente,camposausentes,errocontraditório,JSONinválido,respostaperdida econfirmaçãoexata. VerificaSKU/preço preservados,nenhumaescritaalheia eumaúnicachamadaporcaso. Nenhumaoperaçãoexterna/pagamento/email. É prova adicional daentrega149,não nova entrega funcional. Mesmoslimites/custosoperacionais; CIrealdesconhecido,nãozero. Verificação remota completa exigida.
 
+### Falha WebKit PR777 antes da matriz de frete
+
+Job119559473143 no head339221736df63b8fb87031f79885f20d4424d72a: checkPixelAttributionCenter clicou Change pixels390px, mas formulário Meta Pixel ID não apareceu. Esse botão também era habilitado noHTMLantesdoshandlersclientes. Agora usa o mesmo snapshot estável SSR/client de prontidão que já passou no editor de descontos, sem efeito comsetState/requisição/retry. Provas completas de pixels/consentimento/GPC e frete permanecem; nova verificação integral em novo head. Diagnóstico será confirmado pelo resultado, não assumido concluído. O escopo agora inclui correção funcional do botão de pixels; só contar entrega apósCI/produção/domínio exatos, nunca pelos testes adicionados. Sem novo fornecedor/chamada/teto ou ativação de pixels/consentimento.
+
 ## SEO — Visibilidade do Marktmorgen no Google (21/10/2026)
 
 271. [SEO1] Auditar, corrigir e melhorar presença orgânica na busca do Google
