@@ -103,3 +103,14 @@ PARTE A — Regra permanente (gravar já em AGENTS.md, no mesmo PR que inclui es
 
 
 Implementation boundaries: Parts B and C remain queued in docs/codex-queue.md. No accounts, terms acceptance, paid services, payments, external contacts or recruitment; synthetic services only, no real email/payment/customer mutation. No price/visible-limit/commission/PLANS_ON_SALE/tax/art.9a/commercial-review changes for AX274. Variable accessibility costs require each plan's maximum monthly/yearly and worst-customer calculation and automatic funded caps before expense; fixed tools/audits/interpreters/participant tests belong in fixed costs and minimum customer base, under the most-tax reading. Unknown fails; passing automation never certifies all-tax margin, legal conformity, real assistive-technology testing or complete accessibility.
+
+
+## FX275 — All LLC fixed costs belong to Marktmorgen (22 October 2026)
+
+Owner decision,22/10/2026 at05:10 Fortaleza, verbatim: "esqueça Hazelsong". "A partir de agora, a Hazelsong não divide nenhum custo da empresa: todos os custos fixos da Solrenning LLC são atribuídos 100% ao Marktmorgen."
+
+This dated decision supersedes every earlier 50/50 fixed-cost allocation above or in linked history. Earlier decisions and literal quotations remain as history, not current calculation instructions. Allocate each entire LLC fixed cost and fixed tax to Marktmorgen: Delaware, California annual tax and LLC fee, registered agent, owner's INSS, domains, tools, US business mailbox, EU GDPR Article27 and DSA Article13 representatives and UK GDPR Article27 representative. No Hazelsong revenue or contribution reduces these costs.
+
+Every paying customer individually at full rights in the worst month and annual term, and the company as a whole, must keep at least60% net after all costs and US/Brazilian taxes. Use the most-tax reading in docs/tax-uncertainty.md. Unknown cost, tax, exchange-rate ceiling or supplier coverage fails; it never becomes zero. A public starting price or temporary discount is not a verified worst-case ceiling. Annual invoices need a reviewed reserve/accrual policy before monthly normalization. No finite minimum customer base or consolidated margin may be claimed while the complete review is missing or individual units fail.
+
+FX275 does not authorize changing prices, visible limits, commission, PLANS_ON_SALE, the tax gate, Article9a or the commercial review, or relaxing any protection. No account, contract, signature, payment or supplier contact; synthetic tests only. Implementation and official dated cost evidence remain tracked in docs/codex-queue.md item275; this policy records the binding allocation, not completed recalculation or certified profitability.
