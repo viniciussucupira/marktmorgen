@@ -17,7 +17,7 @@ import { activeShipping, parseShipping, readShippingSku, readCountries, shipProb
 import { shippingAddressOf } from "@/lib/shipping-address";
 import { SHIPPING_WORDS } from "@/lib/buyer-words/shipping";
 import { addOption, editOption, addProduct, claimHandle, ensureStatsId, setProductLink, setProductShipping, setStripeAccount, setSubscription, setTax, storeForEmail } from "@/lib/store";
-import { readProduct } from "@/lib/catalog";
+import { parseProduct, readProduct } from "@/lib/catalog";
 import { parseOptions } from "@/lib/product-option";
 import { canSellProduct, createCheckout } from "@/lib/store-checkout";
 import { confirmationFor } from "@/lib/purchase-email";
@@ -61,6 +61,22 @@ async function main(): Promise<void> {
   is("a list of countries, kept to those Stripe ships to, once each", readCountries("us, ca, CA, xx, KP, gb"), ["US", "CA", "GB"]);
   is("nothing else is shipping", [parseShipping(null), parseShipping({ cents: -1, region: "us" }), parseShipping({ cents: 0, region: "custom", countries: ["XX"] })], [null, null, null]);
   is("where it goes, in the reader's language", [shipsToWords({ region: "na", countries: ["US", "CA"] }, "en-US", SHIPPING_WORDS.en), shipsToWords({ region: "world", countries: [] }, "de-DE", SHIPPING_WORDS.de)], ["United States and Canada", "die meisten Länder"]);
+
+  part("Unknown stored shipping never becomes free or digital");
+  const rawPhysical={id:"physical-proof",title:"Synthetic physical product",priceCents:3500,shipping:{cents:600,region:"us",note:"Ships tomorrow",sku:"Book-藍-01"}};
+  for(const cents of [undefined,null,false,true,"0","600",[],[0],{},NaN,Infinity,-1,0.5]) {
+    const unknown={...rawPhysical.shipping,cents};
+    is("unverified charge is not shipping",parseShipping(unknown),null);
+    is("unverified physical product is not offered as digital",parseProduct({...rawPhysical,shipping:unknown}),null);
+  }
+  for(const unknown of [false,0,"",[],{}, {cents:600,region:"custom",countries:[]}]) {
+    is("malformed physical record refuses the product",parseProduct({...rawPhysical,shipping:unknown}),null);
+  }
+  const physical=parseProduct(rawPhysical);
+  is("verified physical facts retain identifier price and creator reference",[physical?.id,physical?.priceCents,physical?.shipping?.cents,physical?.shipping?.sku],["physical-proof",3500,600,"Book-藍-01"]);
+  const freeShipping=parseProduct({...rawPhysical,shipping:{...rawPhysical.shipping,cents:0}});
+  is("explicit numeric zero remains free physical shipping",[freeShipping?.shipping?.cents,freeShipping?.shipping?.countries],[0,["US"]]);
+  is("older digital records still read without shipping",[parseProduct({...rawPhysical,shipping:undefined})?.id,parseProduct({...rawPhysical,shipping:null})?.id],["physical-proof","physical-proof"]);
 
   part("Only on something sold once that hands over nothing else");
   await claimHandle(OWNER, "harbor", "Harbor Kitchen", "");
