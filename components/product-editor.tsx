@@ -1449,7 +1449,6 @@ function PagedSearch({ paging, total }: { paging: ProductPaging; total: number }
   const { query, matches, from, size } = paging;
   const upTo = Math.min(from + size, matches);
   const sid = useStudioStore();
-  const editorReady = useSyncExternalStore(subscribeEditorReady, editorClientReady, editorServerReady);
   return (
     <div className="mt-5">
       <form action="/studio#products" method="get" role="search" className="flex flex-wrap items-center gap-3">
@@ -1592,6 +1591,7 @@ export function ProductEditor({
 }) {
   const router = useRouter();
   const sid = useStudioStore();
+  const editorReady = useSyncExternalStore(subscribeEditorReady, editorClientReady, editorServerReady);
   const [adding, setAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [removingId, setRemovingId] = useState<string | null>(null);
