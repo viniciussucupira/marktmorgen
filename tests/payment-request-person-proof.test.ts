@@ -1,6 +1,6 @@
 import { createRequest } from "@/lib/payment-request-store";
 import { claimHandle, ensureStatsId, ensureStoreId, setStripeAccount, setSubscription, storeForEmail } from "@/lib/store";
-import { type RequestDraft } from "@/lib/payment-request-rules";
+import { requestLimitsFor, type RequestDraft } from "@/lib/payment-request-rules";
 import { store as redis } from "./redis-stub";
 import { paidPeriod } from "./billing-period-fixture";
 import { done, is, part } from "./check";
@@ -10,8 +10,10 @@ async function main() {
  await claimHandle(owner,"personproof","Synthetic store","");
  await ensureStatsId(owner);await ensureStoreId(owner);
  await setStripeAccount(owner,"acct_1PersonProofxxxxxxxx",true);
- await setSubscription(owner,{customerId:"cus_person_proof",subscriptionId:"sub_person_proof",active:true,tier:"creator",period:paidPeriod()});
+ const paid=await setSubscription(owner,{customerId:"cus_personproof",subscriptionId:"sub_personproof",active:true,tier:"creator",period:paidPeriod()});
+ if (!paid?.subscriptionActive) throw new Error("Synthetic subscription fixture was not accepted");
  const store=(await storeForEmail(owner))!;
+ if (requestLimitsFor(store).open <= 0) throw new Error("Synthetic paid fixture cannot exercise admission");
  const original=redis.pipeline;
  const id="a".repeat(32);
  const draft={email:"synthetic-recipient@example.com",name:"Synthetic",lines:[{text:"Synthetic work",quantity:1,cents:100}],total:100,note:"",dueDate:"",autoReminders:0} as RequestDraft;
