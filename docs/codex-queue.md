@@ -4074,6 +4074,12 @@ Entrega149 confirmada: PR775 merge d1d3656b350cd7d11552fd396ec357e62602321a em21
 
 A rota de frete convertia price ausente/não-string em texto vazio e depois zero: corpo parcial com região podia substituir cobrança existente por frete grátis. Novo leitor exige objeto/campo próprio price string no limite12 e região própria reconhecida; null explícito continua removendo frete, vazio/0 explícitos continuam grátis. SKU omitido mantém compatibilidade de preservação; vazio explícito limpa; Unicode/IDs preservados. Leitura falha antes de setProductShipping, sem comando/chamada extra. Testes sintéticos de corpos incompletos, tipos inválidos, destinos, valores pagos/grátis, remoção eSKU. Mesmo limite8kdaAPI,mesmaschaves/TTL/fornecedores/tetos: incremento máximo operacional mensal/anual0/0porplano; custosCI/deployreaisdesconhecidos,nãozero. Todos os gates/preços/limites/opt-in preservados. CIremotocompleto obrigatório, sem testes locais ou submissão externa.
 
+Entrega150 confirmada: PR776 merge8f436801eaec0c948e7998ddaf02e56ea35c1164 em21/10/2026 às21:02:36Fortaleza(22/10/202600:02:36Z),22/22head9f6ca911966a33cbca418ce4e170e88b0092a2d0; árvore005690cefa81a7930bfb0419ec8e4326266b1a64 prevista/real/testada iguais. Produção dpl_EWZwRhU9CUAX1bUiDoLyJWZFkwsu READY22/10/202600:03:45.323Z,domínioSHAexato,5rotas200mesmoDPL,error/fatal0somente00:00:27.961Z–00:05:27.961Z. Corpo incompleto não transforma frete existente emzero; preço/destino explícitos, grátis/null/SKUomitidocompatíveis. Semnovoscomandos/tetos,incrementomáximomensal/anual0/0porplano,custosreaisCI/deploydesconhecidos. Contador150próxima151; próxima mudança necessária da fila preserva evidência.
+
+### Prova sintética do editor de frete em navegadores
+
+Matriz adicional no navegador390/1280 usa uma loja/produto físicos locais exclusivos, sem alterar fixtures de conteúdo dos criadores. Intercepta todoPOST, segura a resposta para conferir aria-busy/campos eCancelbloqueados e testaHTTP500,oktruthy,produtodiferente,frete0divergente,camposausentes,errocontraditório,JSONinválido,respostaperdida econfirmaçãoexata. VerificaSKU/preço preservados,nenhumaescritaalheia eumaúnicachamadaporcaso. Nenhumaoperaçãoexterna/pagamento/email. É prova adicional daentrega149,não nova entrega funcional. Mesmoslimites/custosoperacionais; CIrealdesconhecido,nãozero. Verificação remota completa exigida.
+
 ## SEO — Visibilidade do Marktmorgen no Google (21/10/2026)
 
 271. [SEO1] Auditar, corrigir e melhorar presença orgânica na busca do Google
