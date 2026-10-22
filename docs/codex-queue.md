@@ -4297,3 +4297,6 @@ listAgreements now requires exact bounded unique valid index and complete MGET r
 
 
 PR787 incorporado22/10/2026 04:02:17Fortaleza(07:02:17UTC),commit e25bacb7ef0be7ac37848e87a172e2ab8cb9e20f,árvore c762ac90314125070d02ce930d554f903dca78ed igual à testada e prevista;22/22verificações no headefd309f76a392f1f9507818a76997e9955c0cc76. Produção ainda não confirmada, sem incremento aqui. PR789 integra main e código/testes do PR790 num head com suíte completa nova obrigatória. Não usar checks antigos. Nenhum novo custo operacional, CI/deploy real desconhecido, não zero.
+
+
+PR789 auditoria indisponível: head3ad0cf894c498b6e33fcef8cc977b7cec6b73737,job119687697209,07:08:22UTC: npm produção POST registry.npmjs.org/-/npm/v1/security/advisories/bulk HTTP503;8testes do parser passaram,mas parser recusou aprovação. Não alterar gate/nem rerodar job isolado. Evidência independente posterior: PR791audit119688858111 passou07:10:59UTC,produção high/critical0 e5achadosdevretidos na cadeia já revisada,sem alegar ausência completa de vulnerabilidades ou recuperação global. Este registro cria novo head e exige suíte completa de22checks;aprovação do outroPR não substitui auditoria própria. CustosCI/deploy reais desconhecidos,não zero.
