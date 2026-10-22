@@ -353,7 +353,7 @@ export default function Home() {
               <div className="max-w-2xl">
                 <h2 className="t-h2 balance">People who sell what they know</h2>
               </div>
-              <Link href="/creators" className="link-arrow">
+              <Link prefetch={false} href="/creators" className="link-arrow">
                 Tell us what you sell
                 <Icon name="arrow-right" size={16} className="arrow" />
               </Link>
@@ -364,7 +364,7 @@ export default function Home() {
                 <h3 className="text-lg font-semibold">{creator.label}</h3><p className="text-sm text-ink-soft">{creator.sells}</p><span className="link inline-flex min-h-11 items-center">Explore this kind of work<Icon name="arrow-right" size={16}/></span>
               </Link></li>)}
             </ul>
-            <p className="mt-6 max-w-3xl text-sm text-ink-soft">These pages show fictional examples of work you can sell. They are not customer testimonials or evidence of earnings. <Link href="/demo" className="link">Explore the live demo</Link>.</p>
+            <p className="mt-6 max-w-3xl text-sm text-ink-soft">These pages show fictional examples of work you can sell. They are not customer testimonials or evidence of earnings. <Link prefetch={false} href="/demo" className="link">Explore the live demo</Link>.</p>
 
           </div>
         </section>
@@ -431,7 +431,7 @@ export default function Home() {
                       <Icon name="check" size={16} strokeWidth={2.4} className="mt-0.5 shrink-0 text-mint-deep" />
                       <span>{r.example}</span>
                     </p>
-                    <Link href={r.href} className="link-arrow mt-6 text-[0.9375rem]">
+                    <Link prefetch={false} href={r.href} className="link-arrow mt-6 text-[0.9375rem]">
                       {r.link}
                       <Icon name="arrow-right" size={16} className="arrow" />
                     </Link>
@@ -488,7 +488,7 @@ export default function Home() {
                   </li>
                 ))}
               </ul>
-              <Link href="/proof/everything" className="link-arrow shrink-0 text-[0.9375rem]">
+              <Link prefetch={false} href="/proof/everything" className="link-arrow shrink-0 text-[0.9375rem]">
                 Feature by feature
                 <Icon name="arrow-right" size={16} className="arrow" />
               </Link>
@@ -511,7 +511,7 @@ export default function Home() {
               <Suspense fallback={null}>
                 <Pricing domains={DOMAINS} />
               </Suspense>
-              <p className="mt-6 text-center"><Link href="/pricing" className="link">Compare all plan limits, annual prices and optional add-ons</Link></p>
+              <p className="mt-6 text-center"><Link prefetch={false} href="/pricing" className="link">Compare all plan limits, annual prices and optional add-ons</Link></p>
             </div>
           </div>
         </section>
@@ -527,7 +527,7 @@ export default function Home() {
               <h2 className="t-h2 balance">Questions</h2>
               <p className="mt-5 text-ink-soft">
                 Something else?{" "}
-                <Link href="/help" className="link">
+                <Link prefetch={false} href="/help" className="link">
                   The help center
                 </Link>{" "}
                 answers the rest, in writing.
@@ -580,11 +580,11 @@ export default function Home() {
                 : `Take your address, connect Stripe, list what you sell. The plan is not on sale yet: $${PRICE} a month when it is.`}
             </p>
             <div className="mt-10 flex flex-wrap items-center justify-center gap-x-6 gap-y-4">
-              <Link href="/signin" className="btn btn-light btn-lg">
+              <Link prefetch={false} href="/signin" className="btn btn-light btn-lg">
                 Start your store
                 <Icon name="arrow-right" size={18} />
               </Link>
-              <Link href="/demo" className="link-arrow on-dark">
+              <Link prefetch={false} href="/demo" className="link-arrow on-dark">
                 See the live demo
                 <Icon name="arrow-right" size={18} className="arrow" />
               </Link>

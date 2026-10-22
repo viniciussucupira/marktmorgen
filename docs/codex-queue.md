@@ -4734,6 +4734,17 @@ Security updateprepared22Oct2026 fromsuccessfulreadonlyCIjob119983869856: npm-ge
 
 PR #802 incorporado em 22/10/2026 às 15:09:38 de Fortaleza, commit `5270327c3d09e02bcef2a6b65224c9561ec8c3a9`. Head `19e605d6d667cb71757031f0330e5bb739e86c0f`: 22/22 verificações completas aprovadas e árvore testada/incorporada idêntica `bde8f7e45198ee068269ca6750d003c12e0f4f83`. Next.js 16.4.2, confirmação de referências de acordos e edição nativa dos detalhes, prontidão do editor e navegação privada sem prefetch. Deployment `dpl_FKY8uw13CoK7TM4cLzSJBJmRZmM4` READY às 15:12:33.140 de Fortaleza, versão exata em marktmorgen.com; /, /platform, /pricing, /mission e /library responderam 200 com o mesmo deployment. Contador 165, próximo 166. Não houve varredura de logs de runtime nesta entrega; não afirmar zero erros. Custos efetivamente faturados de CI/deploy ainda desconhecidos, nunca zero; nenhuma margem certificada ou gate aberto. Tarefa atual concluída antes de iniciar OR.
 
+
+### Incorporação do PR #804 e atualização da base documental OR — 22/10/2026
+
+PR #804 incorporado às 16:08:53 de Fortaleza (19:08:53Z), commit `ed12137b2356ea271c76a34d8a55acff0f22bab5`. Head `b90a9493a0db627d1b6d172349e79c4412c4dbd3` passou 22/22 verificações; árvore testada/prevista/incorporada idêntica `896f4bec139a4755ab8f3af87fd3cd725e42e020`. createAgreement só confirma salvamento com dois retornos OK; resposta incerta preserva referências e reserva. Links restantes da home deixam de antecipar rotas, preservando nomes e destinos. Testes sintéticos incluem recibos ausentes/parciais/extras/esparsos/inválidos e sucesso confirmado.
+
+Falha histórica mantida: head c17bc2a, job120007453626, 18:28:37Z, primeira interação da home272ms acima do teto200ms; demais amostras80/88ms e CLS0. Documento registra inputdelay105,1ms e processamento94,7ms; causa exclusiva não demonstrada. Correção e suíte completa no novo head, sem reexecução isolada nem alteração de teto/amostragem. Publicação do804 ainda em verificação; não incrementar contador até READY/domínio/SHA e rotas confirmados.
+
+O head documental anterior do PR #803 (`5d16c5800ac80667ed21be740b14ec5b0d5c7534`) tinha21/22 sucessos formais e WebKit ainda em execução, embora o log de encerramento fosse de18:46:44Z; isso não foi tratado como aprovação. Nova base inclui explicitamente o main incorporado804; o diff do PR OR continua somente documental. A nova árvore exige suíte integral própria. Não atribuir a espera a uma falha global do GitHub: status oficial consultado19:02Z dizia Actions operacional; incidente anterior não prova a causa atual.
+
+Custos: sem comando/chave/TTL/provedor/direito novo; máximo mensal/anual incremental por plano0/0 dentro do envelope existente, não fatura zero. Custos efetivos CI/deploy e tributos desconhecidos seguem reprovados; nenhuma certificação60%, preço/limite/gate alterado. Sem mensagem/pagamento/fornecedor real nos testes. PRs #805 (frete) e #806 (ambiente) permanecem independentes, sem incorporar seus recursos neste PR documental.
+
 ## OR — Posição dos pendentes antigos de 19/10/2026 (22/10/2026)
 
 Decisão do dono: 22/10/2026, 14h45 de Fortaleza. Registro documental preparado em 22/10/2026 às 15:18:31 de Fortaleza, após concluir a entrega 165. Esta seção prevalece sobre posições antigas incompatíveis; preserva o histórico e não cria itens nem números.
