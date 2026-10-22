@@ -4084,6 +4084,8 @@ Matriz adicional no navegador390/1280 usa uma loja/produto físicos locais exclu
 
 Job119559473143 no head339221736df63b8fb87031f79885f20d4424d72a: checkPixelAttributionCenter clicou Change pixels390px, mas formulário Meta Pixel ID não apareceu. Esse botão também era habilitado noHTMLantesdoshandlersclientes. Agora usa o mesmo snapshot estável SSR/client de prontidão que já passou no editor de descontos, sem efeito comsetState/requisição/retry. Provas completas de pixels/consentimento/GPC e frete permanecem; nova verificação integral em novo head. Diagnóstico será confirmado pelo resultado, não assumido concluído. O escopo agora inclui correção funcional do botão de pixels; só contar entrega apósCI/produção/domínio exatos, nunca pelos testes adicionados. Sem novo fornecedor/chamada/teto ou ativação de pixels/consentimento.
 
+PR777 job119565105241: a matriz chegou ao formulário de frete, mas o seletor de teste getByLabel Ships to exact não encontrou o select aninhado em label com opções textuais. Usar o único combobox do formulário já delimitado peloSKU/produto, preservando escolha na e todas as asserções/casos. Sem alteração da interface/regra, sem redução de cobertura; nova verificação completa em novo head, não rerun isolado. Falha original dos pixels permanece no histórico.
+
 ## SEO — Visibilidade do Marktmorgen no Google (21/10/2026)
 
 271. [SEO1] Auditar, corrigir e melhorar presença orgânica na busca do Google

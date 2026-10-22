@@ -38,7 +38,7 @@ export async function checkShippingSave({browser,LOCAL,fixture,is}){
     const sku=page.locator("#ship-"+fixture.product+"-sku");
     const form=page.locator("form").filter({has:sku});
     await form.getByLabel("Shipping cost per order, in dollars",{exact:true}).fill("7.50");
-    await form.getByLabel("Ships to",{exact:true}).selectOption("na");
+    await form.getByRole("combobox").selectOption("na");
     await sku.fill(saved.sku);
     await form.getByLabel("When it ships (optional)",{exact:true}).fill(saved.note);
     let requestTimer;
