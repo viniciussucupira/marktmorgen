@@ -4785,6 +4785,16 @@ Deployment `dpl_FVVVxGnmaGE4kAVNt184VkTbAzNA` READY às18:12:27.315deFortaleza(2
 
 Sem novo comando/chave/TTL/provedor/franquia; incremento máximo operacional mensal/anual porplano0/0no envelope existente não é fatura0. CI/deploy/impostos efetivos desconhecidos continuam reprovados,60%não certificado. Preços,limitesvisíveis,comissão,opt-in,conteúdodoscriadores,idiomas/IDs,gatesvenda/tax/art9a/revisãocomercial preservados. PR #809somentedocumentalH3/SF preservado; sua integração do main807 exige suítecompleta nova,21/22anterioresnãoaprovação.
 
+### Registro operacional — publicação 170 (22/10/2026)
+
+PR #810 incorporado em22/10/2026 às19h03min29s de Fortaleza (22:03:29Z), commit `bfc4d675c450c83f76b9e18876a0d6de9ec9adf1`. Head testado `d16aa4048c3ca09b83dc7d73f4f0bbd56e7cdff4`: suíte completa22/22 aprovada, árvores testada/prevista/incorporada idênticas `3ac11dc24f99cabe1b3844e904ba98e29b0fabc8`; nenhuma reexecução isolada usada como conclusão.
+
+`markShipped` exige exatamente uma resposta para o único SET NX: resposta externa malformada não autoriza e-mail, releitura, exclusão ou repetição. Testes sintéticos integram respostas malformadas, caminho normal e pedido já marcado. Controles do quadro Mission aguardam os manipuladores do cliente antes de aceitar entrada; consentimento e proteção contra ações simultâneas preservados. A falha anterior do navegador no head690558e foi corrigida e a suíte completa passou no novo head; não se afirma causa histórica exclusiva. Item205 continua incompleto quanto a estoque/quantidades por variante e reserva atômica.
+
+Publicação `dpl_DwEbVxaYfCB5KUXB32gpXvTinRjv` READY às19h05min06,423s de Fortaleza (22:05:06.423Z), domínio `marktmorgen.com` confirmado no commit exato; `/`, `/platform`, `/pricing`, `/mission` e `/library` responderam200 com o mesmo identificador de publicação. Contador169→170 uma única vez; próxima entrega funcional171. Logs de execução não foram inspecionados; não há afirmação de zero erros em produção.
+
+Custos incrementais máximos mensais/anuais por Store, Studio e Scale:0/0, sem novas operações pagas, chaves, retenção ou direitos. Esse incremento não declara faturas existentes iguais a zero: custos reais CI/publicação/provedores continuam desconhecidos e reprovam onde necessários. Todos os custos fixos LLC permanecem100%Marktmorgen; leitura fiscal mais onerosa e margem mínima60% por cliente isolado e global mantidas, sem certificação. PLANS_ON_SALE=false, preços, limites, idiomas, identificadores, permissões e gates preservados. H3276–280 e SF281 permanecem na fila com suas posições aprovadas.
+
 ## OR — Posição dos pendentes antigos de 19/10/2026 (22/10/2026)
 
 Decisão do dono: 22/10/2026, 14h45 de Fortaleza. Registro documental preparado em 22/10/2026 às 15:18:31 de Fortaleza, após concluir a entrega 165. Esta seção prevalece sobre posições antigas incompatíveis; preserva o histórico e não cria itens nem números.
