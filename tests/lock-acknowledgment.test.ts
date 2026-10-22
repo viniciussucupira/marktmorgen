@@ -53,7 +53,7 @@ test("malformed lock receipt never grants ownership or retries an uncertain acqu
       await assert.rejects(takeLock("synthetic:lock", 15, 1000), LockBusyError);
       assert.deepEqual(commands.map((command) => command[0]), ["SET"]);
       commands.length = 0;
-      const result = await withStockHold(fakeStore, product, async () => { opened += 1; return { id: "cs_test_synthetic" }; });
+      const result: { ok: boolean; reason?: string } = await withStockHold(fakeStore, product, async () => { opened += 1; return { id: "cs_test_synthetic" }; });
       assert.deepEqual(result, { ok: false, reason: "busy" });
       assert.deepEqual(commands.map((command) => command[0]), ["SET"]);
     }
