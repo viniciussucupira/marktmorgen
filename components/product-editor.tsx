@@ -6,7 +6,7 @@ import { WaitlistPanel } from "@/components/waitlist-panel";
 import type { PreorderView } from "@/lib/preorders";
 import { hasContent, preorderProblem } from "@/lib/preorder-rules";
 import type { WaitlistView } from "@/lib/waitlist";
-import { useRef, useState } from "react";
+import { useRef, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { TeamEventEditor } from "@/components/team-event-editor";
 import { CallEditor, type MeetAccount } from "@/components/call-editor";
@@ -1449,6 +1449,7 @@ function PagedSearch({ paging, total }: { paging: ProductPaging; total: number }
   const { query, matches, from, size } = paging;
   const upTo = Math.min(from + size, matches);
   const sid = useStudioStore();
+  const editorReady = useSyncExternalStore(subscribeEditorReady, editorClientReady, editorServerReady);
   return (
     <div className="mt-5">
       <form action="/studio#products" method="get" role="search" className="flex flex-wrap items-center gap-3">
@@ -1513,6 +1514,10 @@ function Pager({ paging }: { paging: ProductPaging }) {
     </nav>
   );
 }
+
+const subscribeEditorReady = () => () => {};
+const editorClientReady = () => true;
+const editorServerReady = () => false;
 
 export function ProductEditor({
   products,
@@ -2227,7 +2232,7 @@ export function ProductEditor({
       ) : (
         <button
           type="button"
-          disabled={full}
+          disabled={full || !editorReady}
           onClick={startAdding}
           className="btn btn-primary mt-5"
         >
