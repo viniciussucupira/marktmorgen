@@ -93,9 +93,10 @@ export function readCountries(raw: unknown): string[] {
 
 /** Whatever came back from storage, made safe to use; null is not shipped. */
 export function parseShipping(raw: unknown): Shipping | null {
-  if (!raw || typeof raw !== "object") return null;
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
   const value = raw as Record<string, unknown>;
-  const cents = Number(value.cents);
+  if (typeof value.cents !== "number") return null;
+  const cents = value.cents;
   if (!Number.isSafeInteger(cents) || cents < 0 || cents > MAX_SHIPPING_CENTS) return null;
   const region: ShipRegion = value.region === "us" || value.region === "na" || value.region === "eu" || value.region === "europe" || value.region === "world" ? value.region : "custom";
   const countries = region === "custom" ? readCountries(value.countries) : SHIP_REGIONS[region].countries;
