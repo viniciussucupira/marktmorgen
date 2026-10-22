@@ -19,6 +19,7 @@ import type { BumpChoice, ProductPaging } from "@/lib/catalog";
 import { ProductUpdateBox } from "@/components/product-update-box";
 import { ShippingEditor } from "@/components/shipping-editor";
 import { MAX_SHIPPING_SKU } from "@/lib/shipping";
+import { confirmsOptionWrite } from "@/lib/option-confirmation";
 import { CheckoutFieldsEditor } from "@/components/checkout-fields-editor";
 import { ProductImageEditor } from "@/components/product-image-editor";
 import type { CoverLook } from "@/components/cover-maker";
@@ -745,6 +746,7 @@ function OptionsBlock({
   const [sku, setSku] = useState("");
   const [best, setBest] = useState(false);
   const [busy, setBusy] = useState(false);
+  const inFlight = useRef(false);
   // A course or private podcast is its own delivery: every price opens it,
   // and a file or link on one is something extra that price includes.
   const opens = Boolean(product.course || product.podcast || product.shipping);
@@ -753,6 +755,8 @@ function OptionsBlock({
   const [error, setError] = useState<string | null>(null);
 
   async function run(payload: Record<string, unknown>, done: () => void, confirmation?: string) {
+    if (inFlight.current) return;
+    inFlight.current = true;
     setBusy(true);
     setError(null);
     try {
@@ -761,20 +765,23 @@ function OptionsBlock({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      const data = (await response.json()) as {
-        ok?: boolean;
-        error?: string;
-        limit?: number;
-      };
-      if (!data.ok) {
+      const data: unknown = await response.json().catch(() => null);
+      if (!confirmsOptionWrite(data, response.ok)) {
+        const refusal = typeof data === "object" && data !== null && !Array.isArray(data)
+          && Object.hasOwn(data, "ok") && (data as { ok?: unknown }).ok === false;
+        const reason = refusal && typeof data === "object" && data !== null
+          && Object.hasOwn(data, "error") && typeof (data as { error?: unknown }).error === "string"
+          ? (data as { error: string }).error : null;
         setError(
-          data.error === "too_many"
-            ? `A product carries up to ${data.limit ?? MAX_OPTIONS} prices.`
-            : data.error === "label"
+          reason === "too_many"
+            ? `A product carries up to ${MAX_OPTIONS} prices.`
+            : reason === "label"
               ? "Give this price a name the buyer will read, like “5 weeks.”"
-              : data.error === "price"
+              : reason === "price"
                 ? optionPrice(currency)
-                : (OPTION_MESSAGES[data.error ?? ""] ?? MESSAGES.server_error),
+                : reason && Object.hasOwn(OPTION_MESSAGES, reason)
+                  ? OPTION_MESSAGES[reason]
+                  : "The price change was not confirmed. Reload to check its status before trying again.",
         );
         return;
       }
@@ -782,8 +789,9 @@ function OptionsBlock({
       if (confirmation) toast(confirmation);
       router.refresh();
     } catch {
-      setError(MESSAGES.server_error);
+      setError("The price change was not confirmed. Reload to check its status before trying again.");
     } finally {
+      inFlight.current = false;
       setBusy(false);
     }
   }
@@ -905,7 +913,8 @@ function OptionsBlock({
   );
 
   return (
-    <div className="mt-3 rounded-2xl border-2 border-dashed border-ink/10 p-3">
+    <fieldset disabled={busy} aria-busy={busy} className="mt-3 min-w-0 rounded-2xl border-2 border-dashed border-ink/10 p-3">
+      <legend className="sr-only">Product prices</legend>
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <p className="text-sm font-bold text-ink">
           {product.options.length === 0
@@ -1143,7 +1152,7 @@ function OptionsBlock({
           {error}
         </p>
       ) : null}
-    </div>
+    </fieldset>
   );
 }
 
