@@ -156,12 +156,12 @@ export async function createAgreement(store: Store, draft: AgreementDraft, now =
       ["EXPIRE", storeKey(store.sid), keep],
       ["EXPIRE", person, keep],
     ]);
-    const [kept, mine] = [Number(counts[3]), Number(counts[4])];
+    // Unknown admission may have changed either index. Retain those references
+    // instead of removing memberships we cannot prove this attempt created.
+    if (!Array.isArray(counts) || counts.length !== 7 || !Array.from(counts).every((value) => typeof value === "number" && Number.isSafeInteger(value) && value >= 0)
+      || counts[1] !== 1 || counts[2] !== 1 || counts[3] < 1 || counts[4] < 1 || counts[5] !== 1 || counts[6] !== 1) return unavailable();
+    const [kept, mine] = [counts[3], counts[4]];
     const undo = () => redisPipeline([["ZREM", storeKey(store.sid), agreement.id], ["SREM", person, agreement.id]]).catch(() => undefined);
-    if (![kept, mine].every(Number.isSafeInteger)) {
-      await undo();
-      return unavailable();
-    }
     if (kept > MAX_KEPT_AGREEMENTS) {
       await undo();
       return { ok: false, reason: "kept", message: `Your store keeps ${MAX_KEPT_AGREEMENTS} agreements at most. Delete some you no longer need.` };
