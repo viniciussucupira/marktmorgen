@@ -115,19 +115,22 @@ A ordem abaixo é de execução dos itens acionáveis. Itens feitos/aguardando/c
 
 4. **[B2] Revisar inglês americano página por página: mensagens, erros, estados vazios, e-mails, aria-label, alt e textos de testes; manter inventário de áreas e PRs pequenos, sem alterar significado.**
    - Pedido: P2 B2; datas/horas e grau de certeza em Proveniência.
-   - Estado: **em andamento; áreas e lacunas em docs/us-english-audit.md; próxima revisão codex/safe-error-messages**.
+   - Estado: **em andamento; áreas e lacunas em docs/us-english-audit.md; próxima revisão codex/safe-error-messages**. Posição vigente: OR: andamento prioritário preservado, antes de 273 [BK1] e 275 [FX1]; conferir o histórico de publicações e executar somente o remanescente acionável.
+   - Histórico OR — estado anterior à atualização documental: - Estado: **em andamento; áreas e lacunas em docs/us-english-audit.md; próxima revisão codex/safe-error-messages**.
    - Custo e margem: Sem novo fornecedor; medir eventual mudança de payload dentro dos tetos existentes. M0 permanece referência, sem certificação fiscal.
 
 140. **[B2-SAFE-ERROR-MESSAGES] Mensagens de erro inesperadas não são valores herdados**
    - Pedido: B2/P0/P4, revisão de estados de falha em formulários.
-   - Estado: **em andamento; branch codex/safe-error-messages**.
+   - Estado: **em andamento; branch codex/safe-error-messages**. Posição vigente: OR: andamento prioritário preservado, antes de 273 [BK1] e 275 [FX1]; conferir o histórico de publicações e executar somente o remanescente acionável.
+   - Histórico OR — estado anterior à atualização documental: - Estado: **em andamento; branch codex/safe-error-messages**.
    - Escopo: Login, alteração de endereço e configuração fiscal usam somente mensagens próprias da tabela local. Uma resposta com erro __proto__ ou constructor deve mostrar a explicação genérica existente, sem tratar um objeto/função herdado como texto. Não é alegação de poluição de protótipo; é proteção da interface contra resposta inesperada.
    - Prova: dois novos erros inesperados interceptados em cada formulário real390/1280, preservando casos de sucesso, recusa específica, HTTP, dados incompletos e controles pendentes. Total: login20, endereço22 e fiscal26 casos; nenhuma mensagem/gravação real. CI completo no novo head pendente.
    - Custo: fonte cliente+43caracteres em três componentes, sem nova operação/chamada/registro/serviço/franquia/preço/gate. M0 igual, ainda reprova60%; PLANS_ON_SALE=false.
 
 141. **[B2-PAUSE-ACKNOWLEDGMENT] Confirmar a configuração de pausa sem prometer gravação incerta**
    - Pedido: B2/P0/P4, revisão de mensagens/estados de preferências de assinatura.
-   - Estado: **em andamento; branch codex/pause-acknowledgment, após PR643**.
+   - Estado: **em andamento; branch codex/pause-acknowledgment, após PR643**. Posição vigente: OR: andamento prioritário preservado, antes de 273 [BK1] e 275 [FX1]; conferir o histórico de publicações e executar somente o remanescente acionável.
+   - Histórico OR — estado anterior à atualização documental: - Estado: **em andamento; branch codex/pause-acknowledgment, após PR643**.
    - Escopo: o servidor já devolve pause; o cliente exige HTTP bem-sucedido, ok booleano, ausência de erro e pause numérico igual ao escolhido. Bloquear seletor durante espera, anunciar aria-busy, recusar submissão duplicada e usar só mensagens próprias. Resposta incerta manda conferir a página; não afirma que nada mudou.
    - Prova:14respostas interceptadas por estado inicial em390/1280, com duas fixtures exclusivamente locais para ativar e desativar:56casos. Inclui valores ausentes/diferentes/em texto, HTTP, JSON inválido, erros herdados, perda de resposta, recusa conhecida e sucesso; nenhum POST de pausa chega ao servidor, nenhuma assinatura/cobrança real é alterada.
    - Custo: fonte cliente+323caracteres; mesmo POST/resposta existentes. Novas fixtures somente em desenvolvimento. Nenhuma chamada/gravação/provedor/franquia/preço/gate de produção novo; M0 igual e ainda reprova60%, PLANS_ON_SALE=false.
@@ -160,24 +163,28 @@ A ordem abaixo é de execução dos itens acionáveis. Itens feitos/aguardando/c
 
 7. **[C-UE] Construir tratamento de IVA europeu do art.9a em docs/eu-vat-article-9a.md: OSS não-UE desde a primeira venda, duas provas de localização coerentes (24b/24f), retenção art.63c por10anos; imposto no comprador ou repasse, nunca na comissão. Dividir em PRs por caminho de checkout e prova.**
    - Pedido: P2 C1/C2; datas/horas e grau de certeza em Proveniência.
-   - Estado: **em andamento; auditoria de13caminhos e registro, primeiro endurecimento de data no PR #629; coleta/duas provas/retenção/OSS ainda não implementados**.
+   - Estado: **em andamento; auditoria de13caminhos e registro, primeiro endurecimento de data no PR #629; coleta/duas provas/retenção/OSS ainda não implementados**. Posição vigente: OR: permanece nos andamentos prioritários; se ainda incompleto, concluir também como primeiro do Bloco A, sem execução duplicada.
+   - Histórico OR — estado anterior à atualização documental: - Estado: **em andamento; auditoria de13caminhos e registro, primeiro endurecimento de data no PR #629; coleta/duas provas/retenção/OSS ainda não implementados**.
    - Custo e margem: Custo de cálculo, registros10anos, evidências e operação ainda não calculado/integrado: calcular fornecedor pago mais caro, mensal/anual por plano, antes/depois; registrar no plan-cost-registry e spend-floor, reservar tetos antes do trabalho. Falta de conta é reprovação, não zero.
 
 8. **[C-UK] Depois da UE, implementar tratamento do Reino Unido pela leitura com mais imposto, em todos os caminhos aplicáveis.**
    - Pedido: P2 C1/C2; datas/horas e grau de certeza em Proveniência.
-   - Estado: **a fazer**.
+   - Estado: **a fazer**. Posição vigente: OR: Bloco A, posição 2/8, após 275 [FX1] e antes de 206 [SH3].
+   - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Custo e margem: Ainda não calculado: orçamento por plano/intervalo e teto automático são pré-condições; não registrar tratamento como concluído antes de testes.
 
 9. **[C-US] Depois do Reino Unido, implementar regras estaduais dos EUA de marketplace facilitator e registros necessários, por jurisdição e caminho de checkout.**
    - Pedido: P2 C1/C2; datas/horas e grau de certeza em Proveniência.
-   - Estado: **a fazer**.
+   - Estado: **a fazer**. Posição vigente: OR: Bloco A, posição 3/8, após 275 [FX1] e antes de 206 [SH3].
+   - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Custo e margem: Ainda não calculado; leitura fiscal mais onerosa, custos de obrigação/registro e teto por fornecedor/loja precisam de prova antes de custo novo.
 
 ### C2 — Capacidade dos planos (novos IDs estáveis)
 
 89. **[C2-CAPACITY] Calcular o máximo de cada franquia em cada plano e nos dois intervalos**
    - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
-   - Estado: **em andamento; branch codex/capacity-precheck; pré-verificação matemática, auditoria completa de unitários/configuração ainda pendente**.
+   - Estado: **em andamento; branch codex/capacity-precheck; pré-verificação matemática, auditoria completa de unitários/configuração ainda pendente**. Posição vigente: OR: andamento prioritário preservado, antes de 273 [BK1] e 275 [FX1]; conferir o histórico de publicações e executar somente o remanescente acionável.
+   - Histórico OR — estado anterior à atualização documental: - Estado: **em andamento; branch codex/capacity-precheck; pré-verificação matemática, auditoria completa de unitários/configuração ainda pendente**.
    - Escopo e prova: Amplia I2 sem substituir seu número/estado. Conferir no código e calcular e-mails, ações de comunidade, visitas, pedidos, GB e horas de vídeo. Baseline fornecida: Store0e-mails/200ações/3.400visitas/200pedidos/5GB/4h; Studio7.000e-mails/1.000ações; Scale10.000e-mails/3.000ações. E-mail informado comoUS$0,90/mil em lib/plan.ts: verificar fornecedor/unidade mais cara. Comparação fornecida: Substack sem limite de envios, Kit grátis até10.000inscritos, Skool/Circle atividade de comunidade sem limite e Teachable alunos ilimitados/até1TB; são insumos do dono, não medição própria. Calcular máximo com60% ou mais no pior caso e comissão zero; subir somente onde ambos intervalos permitirem. Mudança de preço/pacote vai como proposta à seçãoI. M0 atual continua reprovada: nenhuma ampliação presumida.
    - Custo e margem: Antes de construir: conferir capacidade existente no main e preservar Claude. Custo unitário pago mais caro, uso integral simultâneo por plano mensal/anual, taxas de receiving-costs e leitura fiscal mais onerosa (nunca abaixo de27,5%); teto por fornecedor/loja e reserva antes da operação, plan-cost-registry/spend-floor. Desconhecido reprova; sem cortar limite visível, mudar preço ou afrouxar gates.
 
@@ -189,389 +196,458 @@ A ordem abaixo é de execução dos itens acionáveis. Itens feitos/aguardando/c
 
 10. **[D7] Path para migração: produtos e páginas importados podem cumprir fatos correspondentes; importação nunca cria lead confirmado nem venda.**
    - Pedido: P1 item7; P2 D7; datas/horas e grau de certeza em Proveniência.
-   - Estado: **a fazer**.
+   - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 1/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
+   - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Custo e margem: Sem custo novo autorizado; conferir o código antes de construir.
 
 11. **[D8] Resumo semanal factual no estúdio no fuso salvo do criador; e-mail somente se justificado, dentro da franquia e de mayNotify/margem de despacho.**
    - Pedido: P1 item8; P2 D8; datas/horas e grau de certeza em Proveniência.
-   - Estado: **a fazer**.
+   - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 2/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
+   - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Custo e margem: Leituras agregadas e eventual e-mail ainda não calculados; definir escopo/franquia/tetos e M0 antes/depois antes de adicionar custo.
 
 12. **[D9] PayPal no dia7 e níveis somente com confirmação do servidor da própria loja, modo real e reembolsos descontados; não confundir com aprovação de PayPal como plataforma.**
    - Pedido: P1 item9; P2 D9; datas/horas e grau de certeza em Proveniência.
-   - Estado: **a fazer**.
+   - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 3/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
+   - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Custo e margem: Leituras PayPal, cache e custos ainda não calculados; nenhuma chamada sem admissão/teto. Não abrir integração pausada por aprovação ausente.
 
 13. **[D10] Lead do Path apenas quando o endereço usa o link de confirmação, nunca só pelo envio da mensagem.**
    - Pedido: P1 item10; P2 D10; datas/horas e grau de certeza em Proveniência.
-   - Estado: **a fazer**.
+   - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 4/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
+   - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Custo e margem: Sem custo novo autorizado; conferir o código antes de construir.
 
 14. **[D11] Selo Made with Marktmorgen opcional na loja, desligado por padrão e controlado pelo criador.**
    - Pedido: P1 item11; P2 D11; datas/horas e grau de certeza em Proveniência.
-   - Estado: **a fazer**.
+   - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 5/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
+   - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Custo e margem: Sem custo novo autorizado; conferir o código antes de construir.
 
 15. **[D12] Painel privado do dono com ativação diária e tempo até primeira venda, apenas agregados sem identidades de criadores.**
    - Pedido: P1 item12; P2 D12; datas/horas e grau de certeza em Proveniência.
-   - Estado: **a fazer**.
+   - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 6/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
+   - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Custo e margem: Leitura/agregação/retenção ainda não calculadas; definir orçamento, tamanho mínimo de grupo e privacidade antes do código.
 
 16. **[D13] Grupos opcionais de até6criadores por nicho/fuso aproximado, pseudônimos, check-in assíncrono só com missões, sem dinheiro; moderação, saída, exclusão e avisos com silêncio individual.**
    - Pedido: P1 item13; P2 D13; datas/horas e grau de certeza em Proveniência.
-   - Estado: **a fazer**.
+   - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 7/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
+   - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Custo e margem: Custos de moderação, registros, leitura e avisos ainda não calculados; franquias por plano, tetos automáticos e reserva antes de fornecedor obrigatórios. Nenhuma IA no trial.
 
 17. **[D15] Executar testes reais do Path com NVDA, VoiceOver e TalkBack; registrar evidência e lacunas em docs/accessibility-programme.md, sem confundir axe/Playwright com leitor de tela.**
    - Pedido: P1 item15; P2 D15; datas/horas e grau de certeza em Proveniência.
-   - Estado: **a fazer**.
+   - Estado: **aguardando o dono; OR: junto ao plano do item 202, depende de pessoas e aparelhos reais para NVDA, VoiceOver e TalkBack; provas sintéticas não encerram este item**.
+   - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Custo e margem: Sem fornecedor novo autorizado. Verificar disponibilidade operacional; se execução real depender de dispositivo/pessoa, registrar exatamente quem/o quê e seguir itens independentes.
 
 ### D2 — Diferenciais exclusivos (após o Path)
 
 91. **[D2-EU-WITHDRAWAL] Consentimento europeu para entrega digital imediata**
    - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
-   - Estado: **a fazer**.
+   - Estado: **a fazer**. Posição vigente: OR: Bloco A, posição 5/8, após 275 [FX1] e antes de 206 [SH3].
+   - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Escopo e prova: Urgente antes de venda digital a consumidor da UE. Conferir no EUR-Lex a Diretiva2011/83/UE arts.9,14,16 com a redação2019/2161. Consentimento expresso para entrega imediata e reconhecimento da perda do direito, texto versionado e horário guardados, confirmação no e-mail da compra. Atualizar Termos/reembolso/privacidade juntos. Cobrir os checkouts aplicáveis, sem inferir consentimento nem abrir vendas ou declarar conformidade antes de prova.
    - Custo e margem: Antes de construir: conferir capacidade existente no main e preservar Claude. Custo unitário pago mais caro, uso integral simultâneo por plano mensal/anual, taxas de receiving-costs e leitura fiscal mais onerosa (nunca abaixo de27,5%); teto por fornecedor/loja e reserva antes da operação, plan-cost-registry/spend-floor. Desconhecido reprova; sem cortar limite visível, mudar preço ou afrouxar gates.
 
 92. **[D2-PREORDER-GOAL] Meta de pré-venda com reembolso automático**
    - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
-   - Estado: **a fazer**.
+   - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 8/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
+   - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Escopo e prova: Conferir/reaproveitar lib/preorders.ts. Criador define mínimo de pedidos e data; meta não atingida reembolsa automaticamente pela própria conta Stripe e avisa compradores. Contagem real de pedidos, sem urgência/escassez falsa. Antes de ligar, informar que o Stripe não devolve sua taxa. Orçar reembolsos, avisos, concorrência, retries/idempotência e retenção.
    - Custo e margem: Antes de construir: conferir capacidade existente no main e preservar Claude. Custo unitário pago mais caro, uso integral simultâneo por plano mensal/anual, taxas de receiving-costs e leitura fiscal mais onerosa (nunca abaixo de27,5%); teto por fornecedor/loja e reserva antes da operação, plan-cost-registry/spend-floor. Desconhecido reprova; sem cortar limite visível, mudar preço ou afrouxar gates.
 
 93. **[D2-VERIFIED-SOCIAL] Prova social calculada e verificável**
    - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
-   - Estado: **a fazer**.
+   - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 9/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
+   - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Escopo e prova: Opt-in desligado por padrão. Números reais da conta Stripe e registros da própria loja: compradores e conclusão de cursos, reembolsos descontados, sem arredondar para cima. Selo Verified by Marktmorgen e página pública de verificação com escopo e data; nunca números editáveis/inventados nem certificação geral implícita.
    - Custo e margem: Antes de construir: conferir capacidade existente no main e preservar Claude. Custo unitário pago mais caro, uso integral simultâneo por plano mensal/anual, taxas de receiving-costs e leitura fiscal mais onerosa (nunca abaixo de27,5%); teto por fornecedor/loja e reserva antes da operação, plan-cost-registry/spend-floor. Desconhecido reprova; sem cortar limite visível, mudar preço ou afrouxar gates.
 
 94. **[D2-BUYER-TRUST] Cartão de confiança factual para o comprador**
    - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
-   - Estado: **a fazer**.
+   - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 10/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
+   - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Escopo e prova: Sistema calcula política de reembolso, entregas recentes bem-sucedidas, tempo médio de resposta, idade da loja e identidade verificada pelo Stripe, somente quando comprováveis. Nada preenchido manualmente pelo criador como se fosse verificação; privacidade, períodos, amostra/indisponibilidade e custo de leitura precisam de definição.
    - Custo e margem: Antes de construir: conferir capacidade existente no main e preservar Claude. Custo unitário pago mais caro, uso integral simultâneo por plano mensal/anual, taxas de receiving-costs e leitura fiscal mais onerosa (nunca abaixo de27,5%); teto por fornecedor/loja e reserva antes da operação, plan-cost-registry/spend-floor. Desconhecido reprova; sem cortar limite visível, mudar preço ou afrouxar gates.
 
 95. **[D2-DEMAND-RADAR] Radar mensal do que o público solicita**
    - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
-   - Estado: **a fazer**.
+   - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 11/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
+   - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Escopo e prova: A partir das perguntas no assistente/chat, perguntas sem resposta, motivos de reembolso e waitlists da própria loja. Sugestão por IA somente quando o criador pedir, paga pela franquia com reserva. Definir consentimento, retenção, agregação e acesso; sem expor compradores ou dados de outra loja.
    - Custo e margem: Antes de construir: conferir capacidade existente no main e preservar Claude. Custo unitário pago mais caro, uso integral simultâneo por plano mensal/anual, taxas de receiving-costs e leitura fiscal mais onerosa (nunca abaixo de27,5%); teto por fornecedor/loja e reserva antes da operação, plan-cost-registry/spend-floor. Desconhecido reprova; sem cortar limite visível, mudar preço ou afrouxar gates.
 
 96. **[D2-LESSON-DROPOFF] Mapa de abandono das aulas**
    - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
-   - Estado: **a fazer**.
+   - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 12/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
+   - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Escopo e prova: Mostrar em qual aula alunos param, cruzado com reembolsos e sugestões de melhoria. Conferir medição real do servidor e registros existentes, denominadores/janela e privacidade; não apresentar correlação como causa nem inventar conclusão/tempo assistido.
    - Custo e margem: Antes de construir: conferir capacidade existente no main e preservar Claude. Custo unitário pago mais caro, uso integral simultâneo por plano mensal/anual, taxas de receiving-costs e leitura fiscal mais onerosa (nunca abaixo de27,5%); teto por fornecedor/loja e reserva antes da operação, plan-cost-registry/spend-floor. Desconhecido reprova; sem cortar limite visível, mudar preço ou afrouxar gates.
 
 97. **[D2-OPEN-EXIT] Saída com exportação aberta e redirecionamento por90dias**
    - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
-   - Estado: **a fazer**.
+   - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 13/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
+   - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Escopo e prova: Exportar produtos, arquivos, cursos, lista com consentimento e páginas em formatos abertos com um clique. Redirecionar links da loja90dias após saída, compromisso nos Termos somente depois de implementação/prova/funding. Orçar tamanho, storage/banda, limite de ocorrência e exposição pós-cancelamento antes da promessa; preservar direitos de exportação/exclusão.
    - Custo e margem: Antes de construir: conferir capacidade existente no main e preservar Claude. Custo unitário pago mais caro, uso integral simultâneo por plano mensal/anual, taxas de receiving-costs e leitura fiscal mais onerosa (nunca abaixo de27,5%); teto por fornecedor/loja e reserva antes da operação, plan-cost-registry/spend-floor. Desconhecido reprova; sem cortar limite visível, mudar preço ou afrouxar gates.
 
 98. **[D2-COMPLIANCE-REVIEW] Checagem factual de conformidade da loja**
    - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
-   - Estado: **a fazer**.
+   - Estado: **a fazer**. Posição vigente: OR: Bloco A, posição 6/8, após 275 [FX1] e antes de 206 [SH3].
+   - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Escopo e prova: Reunir arrependimento do item91, IVA da seçãoC, divulgação FTC automática nos links de afiliado e checagens de alt/contraste/legendas em páginas/arquivos do criador. Mostrar o que falta e como corrigir, com limites de verificação; não dizer AAA/conformidade legal por causa de uma nota ou teste automatizado.
    - Custo e margem: Antes de construir: conferir capacidade existente no main e preservar Claude. Custo unitário pago mais caro, uso integral simultâneo por plano mensal/anual, taxas de receiving-costs e leitura fiscal mais onerosa (nunca abaixo de27,5%); teto por fornecedor/loja e reserva antes da operação, plan-cost-registry/spend-floor. Desconhecido reprova; sem cortar limite visível, mudar preço ou afrouxar gates.
 
 18. **[E1] Tutor por IA nas aulas, só conteúdo do curso, reaproveitando pool/heldToFacts e encaminhamento ao criador; add-on ou franquia, nunca trial.**
    - Pedido: P2 E1; datas/horas e grau de certeza em Proveniência.
-   - Estado: **a fazer**.
+   - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 14/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
+   - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Custo e margem: Pool/modelo ainda não dimensionados para esta finalidade; unitário mais caro, franquias/tetos e margens por plano/intervalo antes do código.
 
 19. **[E2] Desafios na comunidade com início/fim, tarefas diárias, check-ins e pontos ligados a lib/community-points.ts.**
    - Pedido: P2 E2; datas/horas e grau de certeza em Proveniência.
-   - Estado: **a fazer**.
+   - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 15/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
+   - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Custo e margem: Calcular leituras/escritas, retenção e teto dentro das franquias antes de acrescentar custo.
 
 20. **[E3] Criar rascunho de automação por IA a partir do objetivo; revisão humana antes de ligar; franquia de escrita existente.**
    - Pedido: P2 E3; datas/horas e grau de certeza em Proveniência.
-   - Estado: **a fazer**.
+   - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 16/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
+   - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Custo e margem: Calcular envelope de chamada, contador e hold prévio; não aumentar chamadas por job ou franquia sem análise.
 
 21. **[E4] Coach de conteúdo por IA como add-on: reels/carrosséis/ideias/plano a partir dos próprios produtos/página/respostas; sem ler Instagram inicialmente; nunca trial.**
    - Pedido: P2 E4; datas/horas e grau de certeza em Proveniência.
-   - Estado: **a fazer**.
+   - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 17/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
+   - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Custo e margem: Preço proposto precisa de aprovação; dimensionar franquia/pool/tetos e60% na leitura mais onerosa mensal/anual antes de implementação que custe.
 
 22. **[E5] Checkout escolhe idioma do navegador entre idiomas já oferecidos pela loja; preços em várias moedas definidos pelo criador, sem conversão automática.**
    - Pedido: P2 E5; datas/horas e grau de certeza em Proveniência.
-   - Estado: **a fazer**.
+   - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 18/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
+   - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Custo e margem: Conferir suporte atual primeiro; nenhum custo de câmbio permitido.
 
 23. **[E6] Perguntas de telefone e checkbox no checkout.**
    - Pedido: P2 E6; datas/horas e grau de certeza em Proveniência.
-   - Estado: **a fazer**.
+   - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 19/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
+   - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Custo e margem: Conferir campos existentes; calcular bytes/validação nas franquias atuais, sem custo de fornecedor novo.
 
 24. **[E7] Expiração de acesso a curso em data escolhida pelo criador e pontos por concluir aulas.**
    - Pedido: P2 E7; datas/horas e grau de certeza em Proveniência.
-   - Estado: **a fazer**.
+   - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 20/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
+   - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Custo e margem: Dimensionar leituras/escritas e recorrência dentro dos tetos antes de código com custo.
 
 25. **[E8] Relatórios personalizados com envio agendado por e-mail dentro da franquia.**
    - Pedido: P2 E8; datas/horas e grau de certeza em Proveniência.
-   - Estado: **a fazer**.
+   - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 21/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
+   - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Custo e margem: Calcular consulta/agendamento/armazenamento/e-mails; teto e admissão por loja/fornecedor antes do envio.
 
 26. **[E9] Explicações opcionais por IA nas revisões de página e funil, com checagens fixas autoritativas e franquia de IA.**
    - Pedido: P2 E9; datas/horas e grau de certeza em Proveniência.
-   - Estado: **a fazer**.
+   - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 22/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
+   - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Custo e margem: Orçar envelope, quota e hold antes do modelo; nunca no trial.
 
 27. **[E10] Ações de escrita no MCP criam rascunhos de páginas/e-mails/produtos reutilizando lib/api-write.ts.**
    - Pedido: P2 E10; datas/horas e grau de certeza em Proveniência.
-   - Estado: **a fazer**.
+   - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 23/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
+   - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Custo e margem: Conferir capacidade e autorização atuais; orçar gravações/bytes nos tetos existentes.
 
 28. **[E11] Edições pagas da newsletter restritas a membros.**
    - Pedido: P2 E11; datas/horas e grau de certeza em Proveniência.
-   - Estado: **a fazer**.
+   - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 24/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
+   - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Custo e margem: Orçar e-mails, direitos de acesso, registros e custos fiscais por checkout; não abrir vendas.
 
 29. **[E12] Mais lugares na equipe da loja, hoje5, somente se custo quase zero e margem permitir.**
    - Pedido: P2 E12; datas/horas e grau de certeza em Proveniência.
-   - Estado: **a fazer**.
+   - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 25/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
+   - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Custo e margem: Quantificar pior caso por lugar, RBAC/retencão e tetos; aumento de limite só se ambos intervalos permitirem.
 
 30. **[E13] Aviso ao sair do checkout, sem urgência falsa nem desconto inventado.**
    - Pedido: P2 E13; datas/horas e grau de certeza em Proveniência.
-   - Estado: **a fazer**.
+   - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 26/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
+   - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Custo e margem: Sem fornecedor novo; demonstrar acessibilidade e ausência de bloqueio/coerção antes de publicar.
 
 31. **[E14] Completar preços por país sem nenhum preço deixar o plano abaixo do piso.**
    - Pedido: P2 E14; datas/horas e grau de certeza em Proveniência.
-   - Estado: **a fazer**.
+   - Estado: **a fazer**. Posição vigente: OR: Bloco A, posição 8/8, após 275 [FX1] e antes de 206 [SH3].
+   - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Custo e margem: Proposta e conta primeiro; alteração de preço de plano exige aprovação explícita, sem usar preços para fazer teste passar.
 
 ### E2 — Novos ganhos rápidos (ordem aprovada P4)
 
 99. **[E2-TAG-BROADCAST] Enviar e-mail a etiqueta ou segmento**
    - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
-   - Estado: **a fazer**.
+   - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 27/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
+   - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Escopo e prova: Conferir lib/broadcasts.ts e seleção atual: etiqueta/segmento além de todos/compradores/leads, sempre dentro da franquia e consentimento.
    - Custo e margem: Antes de construir: conferir capacidade existente no main e preservar Claude. Custo unitário pago mais caro, uso integral simultâneo por plano mensal/anual, taxas de receiving-costs e leitura fiscal mais onerosa (nunca abaixo de27,5%); teto por fornecedor/loja e reserva antes da operação, plan-cost-registry/spend-floor. Desconhecido reprova; sem cortar limite visível, mudar preço ou afrouxar gates.
 
 100. **[E2-MEMBER-PUBLICATIONS] Posts e edições publicados só para membros**
    - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
-   - Estado: **a fazer**.
+   - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 28/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
+   - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Escopo e prova: Juntar a E11, sem duplicar implementação: blog e /letters restritos a quem tem produto escolhido, com arquivo de edições para membros. Autorização no servidor e retirada de acesso/refundos em todos os caminhos.
    - Custo e margem: Antes de construir: conferir capacidade existente no main e preservar Claude. Custo unitário pago mais caro, uso integral simultâneo por plano mensal/anual, taxas de receiving-costs e leitura fiscal mais onerosa (nunca abaixo de27,5%); teto por fornecedor/loja e reserva antes da operação, plan-cost-registry/spend-floor. Desconhecido reprova; sem cortar limite visível, mudar preço ou afrouxar gates.
 
 101. **[E2-PUBLICATION-REACTIONS] Comentários e curtidas no blog e nas edições**
    - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
-   - Estado: **a fazer**.
+   - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 29/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
+   - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Escopo e prova: Reaproveitar lib/lesson-comments.ts com moderação, permissões, exclusão e tetos; não publicar contatos ou aumentar atividade fora da franquia.
    - Custo e margem: Antes de construir: conferir capacidade existente no main e preservar Claude. Custo unitário pago mais caro, uso integral simultâneo por plano mensal/anual, taxas de receiving-costs e leitura fiscal mais onerosa (nunca abaixo de27,5%); teto por fornecedor/loja e reserva antes da operação, plan-cost-registry/spend-floor. Desconhecido reprova; sem cortar limite visível, mudar preço ou afrouxar gates.
 
 102. **[E2-COURSE-COMPLIANCE] Ordem de aulas e90% de vídeo medidos no servidor**
    - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
-   - Estado: **a fazer**.
+   - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 30/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
+   - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Escopo e prova: Conferir o que já existe. Pré-requisitos obrigatórios e regra assistir90% antes de liberar a próxima, sem aceitar afirmação arbitrária do navegador como prova. Considerar acessibilidade e alternativas equivalentes sem certificar presença fictícia.
    - Custo e margem: Antes de construir: conferir capacidade existente no main e preservar Claude. Custo unitário pago mais caro, uso integral simultâneo por plano mensal/anual, taxas de receiving-costs e leitura fiscal mais onerosa (nunca abaixo de27,5%); teto por fornecedor/loja e reserva antes da operação, plan-cost-registry/spend-floor. Desconhecido reprova; sem cortar limite visível, mudar preço ou afrouxar gates.
 
 103. **[E2-LESSON-MEDIA] Áudio, PDF na aula e blocos de código/HTML**
    - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
-   - Estado: **a fazer**.
+   - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 31/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
+   - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Escopo e prova: Dentro do storage e demais limites existentes; PDF acessível, código legível por teclado/leitor e HTML isolado/sanitizado, sem script/conteúdo perigoso ou capacidade não comprovada.
    - Custo e margem: Antes de construir: conferir capacidade existente no main e preservar Claude. Custo unitário pago mais caro, uso integral simultâneo por plano mensal/anual, taxas de receiving-costs e leitura fiscal mais onerosa (nunca abaixo de27,5%); teto por fornecedor/loja e reserva antes da operação, plan-cost-registry/spend-floor. Desconhecido reprova; sem cortar limite visível, mudar preço ou afrouxar gates.
 
 104. **[E2-MODULE-PUSH] Push quando um módulo do curso libera**
    - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
-   - Estado: **a fazer**.
+   - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 32/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
+   - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Escopo e prova: Conferir lib/web-push.ts; opt-in/dispositivos, retirada, fuso/silêncio e franquias existentes. Sem push real nos testes.
    - Custo e margem: Antes de construir: conferir capacidade existente no main e preservar Claude. Custo unitário pago mais caro, uso integral simultâneo por plano mensal/anual, taxas de receiving-costs e leitura fiscal mais onerosa (nunca abaixo de27,5%); teto por fornecedor/loja e reserva antes da operação, plan-cost-registry/spend-floor. Desconhecido reprova; sem cortar limite visível, mudar preço ou afrouxar gates.
 
 105. **[E2-COURSE-AI-DRAFT] Rascunho de aulas e página de venda a partir do esboço**
    - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
-   - Estado: **a fazer**.
+   - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 33/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
+   - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Escopo e prova: IA somente por pedido do criador, paga pela franquia com hold prévio; revisão humana, fatos próprios, sem ganho/depoimento/escassez inventados, nunca trial.
    - Custo e margem: Antes de construir: conferir capacidade existente no main e preservar Claude. Custo unitário pago mais caro, uso integral simultâneo por plano mensal/anual, taxas de receiving-costs e leitura fiscal mais onerosa (nunca abaixo de27,5%); teto por fornecedor/loja e reserva antes da operação, plan-cost-registry/spend-floor. Desconhecido reprova; sem cortar limite visível, mudar preço ou afrouxar gates.
 
 106. **[E2-CHECKOUT-EXTRAS] Até10compras adicionais no checkout**
    - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
-   - Estado: **a fazer**.
+   - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 34/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
+   - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Escopo e prova: Hoje informado como3, Teachable10: conferir código. Aumento só com custo e60% nos dois intervalos, preço/total claro, nenhuma caixa pré-marcada e todas as combinações/caminhos fiscais testados.
    - Custo e margem: Antes de construir: conferir capacidade existente no main e preservar Claude. Custo unitário pago mais caro, uso integral simultâneo por plano mensal/anual, taxas de receiving-costs e leitura fiscal mais onerosa (nunca abaixo de27,5%); teto por fornecedor/loja e reserva antes da operação, plan-cost-registry/spend-floor. Desconhecido reprova; sem cortar limite visível, mudar preço ou afrouxar gates.
 
 107. **[E2-BROADCAST-CONTENT-AB] A/B do conteúdo de envios de e-mail**
    - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
-   - Estado: **a fazer**.
+   - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 35/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
+   - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Escopo e prova: Além das sequências: seleção aleatória, denominadores, contagem factual de visitas/vendas, consentimento de cliques, nunca aberturas/pixels. Todos os envios dentro da franquia.
    - Custo e margem: Antes de construir: conferir capacidade existente no main e preservar Claude. Custo unitário pago mais caro, uso integral simultâneo por plano mensal/anual, taxas de receiving-costs e leitura fiscal mais onerosa (nunca abaixo de27,5%); teto por fornecedor/loja e reserva antes da operação, plan-cost-registry/spend-floor. Desconhecido reprova; sem cortar limite visível, mudar preço ou afrouxar gates.
 
 108. **[E2-BLOG-RSS-MAIL] Enviar novos posts à lista por RSS**
    - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
-   - Estado: **a fazer**.
+   - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 36/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
+   - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Escopo e prova: Conferir publicações e filas existentes; envios automáticos só com configuração/consentimento, idempotência, limite de polling e franquia de e-mails.
    - Custo e margem: Antes de construir: conferir capacidade existente no main e preservar Claude. Custo unitário pago mais caro, uso integral simultâneo por plano mensal/anual, taxas de receiving-costs e leitura fiscal mais onerosa (nunca abaixo de27,5%); teto por fornecedor/loja e reserva antes da operação, plan-cost-registry/spend-floor. Desconhecido reprova; sem cortar limite visível, mudar preço ou afrouxar gates.
 
 109. **[E2-EVENTS] Eventos recorrentes, waitlist, ingressos, cupons e presença pública**
    - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
-   - Estado: **a fazer**.
+   - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 37/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
+   - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Escopo e prova: Juntar a F5 ingressos presenciais/QR. Presença pode virar contato somente com consentimento pertinente; conferir recorrência/fuso/cancelamento/reembolso, capacidade real e permissões de publicação.
    - Custo e margem: Antes de construir: conferir capacidade existente no main e preservar Claude. Custo unitário pago mais caro, uso integral simultâneo por plano mensal/anual, taxas de receiving-costs e leitura fiscal mais onerosa (nunca abaixo de27,5%); teto por fornecedor/loja e reserva antes da operação, plan-cost-registry/spend-floor. Desconhecido reprova; sem cortar limite visível, mudar preço ou afrouxar gates.
 
 110. **[E2-MEMBER-PROFILES] Campos de perfil, etiquetas, grupos de acesso e mapa de membros**
    - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
-   - Estado: **a fazer**.
+   - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 38/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
+   - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Escopo e prova: Conferir perfis atuais; controle do próprio membro, opt-in/localização aproximada, visibilidade, retirada/exclusão e acesso no servidor. Nada de endereço preciso público ou inferência de consentimento.
    - Custo e margem: Antes de construir: conferir capacidade existente no main e preservar Claude. Custo unitário pago mais caro, uso integral simultâneo por plano mensal/anual, taxas de receiving-costs e leitura fiscal mais onerosa (nunca abaixo de27,5%); teto por fornecedor/loja e reserva antes da operação, plan-cost-registry/spend-floor. Desconhecido reprova; sem cortar limite visível, mudar preço ou afrouxar gates.
 
 111. **[E2-COMMUNITY-AUTOMATION] Gatilhos, webhooks e DM da comunidade**
    - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
-   - Estado: **a fazer**.
+   - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 39/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
+   - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Escopo e prova: Post publicado, membro entrou, presença confirmada e nível alcançado. Resposta automática por DM só autorizada/opt-in, dentro de tetos, sem duplicatas e sem mensagens reais no teste.
    - Custo e margem: Antes de construir: conferir capacidade existente no main e preservar Claude. Custo unitário pago mais caro, uso integral simultâneo por plano mensal/anual, taxas de receiving-costs e leitura fiscal mais onerosa (nunca abaixo de27,5%); teto por fornecedor/loja e reserva antes da operação, plan-cost-registry/spend-floor. Desconhecido reprova; sem cortar limite visível, mudar preço ou afrouxar gates.
 
 112. **[E2-POINTS] Pontos por posts, comentários e aulas concluídas**
    - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
-   - Estado: **a fazer**.
+   - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 40/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
+   - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Escopo e prova: Juntar a E7 e lib/community-points.ts; níveis e limites definidos pelo criador, fatos válidos do servidor, antirrepetição e reversão pertinente, sem premiar eventos inventados.
    - Custo e margem: Antes de construir: conferir capacidade existente no main e preservar Claude. Custo unitário pago mais caro, uso integral simultâneo por plano mensal/anual, taxas de receiving-costs e leitura fiscal mais onerosa (nunca abaixo de27,5%); teto por fornecedor/loja e reserva antes da operação, plan-cost-registry/spend-floor. Desconhecido reprova; sem cortar limite visível, mudar preço ou afrouxar gates.
 
 113. **[E2-COMMUNITY-MODERATION] Filtro de palavras e moderação automática de spam**
    - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
-   - Estado: **a fazer**.
+   - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 41/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
+   - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Escopo e prova: Conferir moderação atual; regras/limites, revisão/recursos, falsos positivos e privacidade. IA, se vier a ser proposta, exige pool/reserva/custo próprios e autorização do escopo.
    - Custo e margem: Antes de construir: conferir capacidade existente no main e preservar Claude. Custo unitário pago mais caro, uso integral simultâneo por plano mensal/anual, taxas de receiving-costs e leitura fiscal mais onerosa (nunca abaixo de27,5%); teto por fornecedor/loja e reserva antes da operação, plan-cost-registry/spend-floor. Desconhecido reprova; sem cortar limite visível, mudar preço ou afrouxar gates.
 
 114. **[E2-AFFILIATE-TAX-FORMS] W-9/W-8BEN e exportação para1099**
    - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
-   - Estado: **a fazer**.
+   - Estado: **a fazer**. Posição vigente: OR: Bloco A, posição 7/8, após 275 [FX1] e antes de 206 [SH3].
+   - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Escopo e prova: Conferir obrigações aplicáveis e implementação antes de construir. Números criptografados, acesso mínimo, gestão de chaves, retenção/exclusão, custo e exportação segura; nenhum documento real ou submissão fiscal nos testes.
    - Custo e margem: Antes de construir: conferir capacidade existente no main e preservar Claude. Custo unitário pago mais caro, uso integral simultâneo por plano mensal/anual, taxas de receiving-costs e leitura fiscal mais onerosa (nunca abaixo de27,5%); teto por fornecedor/loja e reserva antes da operação, plan-cost-registry/spend-floor. Desconhecido reprova; sem cortar limite visível, mudar preço ou afrouxar gates.
 
 115. **[E2-FOUNDING-MEMBERS] Plano fundador de preço maior nas assinaturas**
    - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
-   - Estado: **a fazer**.
+   - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 42/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
+   - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Escopo e prova: Opção de preço do produto/membro definida pelo criador; não altera preço dos planos Marktmorgen, assinaturas existentes ou cobranças sem escolha. Conferir Stripe, avisos, direitos e custos fiscais.
    - Custo e margem: Antes de construir: conferir capacidade existente no main e preservar Claude. Custo unitário pago mais caro, uso integral simultâneo por plano mensal/anual, taxas de receiving-costs e leitura fiscal mais onerosa (nunca abaixo de27,5%); teto por fornecedor/loja e reserva antes da operação, plan-cost-registry/spend-floor. Desconhecido reprova; sem cortar limite visível, mudar preço ou afrouxar gates.
 
 32. **[F1] Construtor de páginas mais livre, preservando acessibilidade, desempenho e honestidade.**
    - Pedido: P2 F1; datas/horas e grau de certeza em Proveniência.
-   - Estado: **a fazer**.
+   - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 43/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
+   - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Custo e margem: Dimensionar payload, storage, renderização e limites antes de expandir envelope.
 
 33. **[F2] Podcast público Apple/Spotify e importação RSS de podcast existente.**
    - Pedido: P2 F2; datas/horas e grau de certeza em Proveniência.
-   - Estado: **a fazer**.
+   - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 44/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
+   - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Custo e margem: Preço pago mais caro de banda/storage/ingestão; teto de banda por plano, admissão e antes/depois mensal/anual antes de fornecedor.
 
 34. **[F3] Portal individual de mentoria sobre chamadas/tarefas/notas existentes, resumo de sessão por IA medido/cobrado como legendas.**
    - Pedido: P2 F3; datas/horas e grau de certeza em Proveniência.
-   - Estado: **a fazer**.
+   - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 45/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
+   - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Custo e margem: Orçar direitos, registros e resumo por uso; preço novo em proposta para aprovação, não ativar cobrança.
 
 35. **[F4] Mais idiomas de legenda e dublagem por IA, cobrados por uso, se fornecedor oferecer.**
    - Pedido: P2 F4; datas/horas e grau de certeza em Proveniência.
-   - Estado: **a fazer**.
+   - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 46/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
+   - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Custo e margem: Verificar capacidade oficial e custo mais caro por minuto/idioma; teto e reserva prévios; não prometer idioma sem prova.
 
 36. **[F5] Ingressos presenciais e check-in por QR code.**
    - Pedido: P2 F5; datas/horas e grau de certeza em Proveniência.
-   - Estado: **a fazer**.
+   - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 47/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
+   - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Custo e margem: Orçar emissão/validação/offline/retenção/checkout fiscal e admissão antes de custo novo.
 
 37. **[F6] Exportar vendas para Xero e QuickBooks.**
    - Pedido: P2 F6; datas/horas e grau de certeza em Proveniência.
-   - Estado: **a fazer**.
+   - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 48/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
+   - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Custo e margem: Conferir APIs/aprovações; orçar exportações/filas/retenção/tetos, sem criar conta nem solicitar aprovação.
 
 38. **[F7] Comparar velocidade e uso móvel com ClickFunnels/Kajabi/Hotmart/Stan por medições reais e registrar o que não puder medir.**
    - Pedido: P2 F7; datas/horas e grau de certeza em Proveniência.
-   - Estado: **a fazer**.
+   - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 49/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
+   - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Custo e margem: Sem alegações comparativas antes de metodologia, ambiente e evidência reproduzível; custo de ferramentas precisa de aprovação se novo.
 
 ### F2 — Novos itens maiores (ordem aprovada P4)
 
 116. **[F2-COMMUNITY-CHANNELS] Vários chats, grupos, reações e atualização ao vivo**
    - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
-   - Estado: **a fazer**.
+   - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 50/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
+   - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Escopo e prova: Conferir sala atual de polling5–30segundos. Orçar conexões, mensagens, concorrência, leitura e banda em uso integral; permissões entre grupos, moderação e acessibilidade.
    - Custo e margem: Antes de construir: conferir capacidade existente no main e preservar Claude. Custo unitário pago mais caro, uso integral simultâneo por plano mensal/anual, taxas de receiving-costs e leitura fiscal mais onerosa (nunca abaixo de27,5%); teto por fornecedor/loja e reserva antes da operação, plan-cost-registry/spend-floor. Desconhecido reprova; sem cortar limite visível, mudar preço ou afrouxar gates.
 
 117. **[F2-COMMUNITY-MAIL] E-mails de resposta/menção e resumo periódico**
    - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
-   - Estado: **a fazer**.
+   - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 51/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
+   - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Escopo e prova: Só para quem optou por receber, dentro da franquia; agregação/fuso/silêncio, supressão/unsubscribe, teto automático, sem novo envio real.
    - Custo e margem: Antes de construir: conferir capacidade existente no main e preservar Claude. Custo unitário pago mais caro, uso integral simultâneo por plano mensal/anual, taxas de receiving-costs e leitura fiscal mais onerosa (nunca abaixo de27,5%); teto por fornecedor/loja e reserva antes da operação, plan-cost-registry/spend-floor. Desconhecido reprova; sem cortar limite visível, mudar preço ou afrouxar gates.
 
 118. **[F2-READER-REFERRALS] Indicação de leitores/alunos com meses ou produto**
    - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
-   - Estado: **a fazer**.
+   - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 52/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
+   - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Escopo e prova: Recompensa por cupom na conta Stripe do criador, com teto de confirmações e antiabuso/idempotência. Nenhum dinheiro sob custódia do Marktmorgen; custo de e-mails e exposição de recompensa antes de ativar.
    - Custo e margem: Antes de construir: conferir capacidade existente no main e preservar Claude. Custo unitário pago mais caro, uso integral simultâneo por plano mensal/anual, taxas de receiving-costs e leitura fiscal mais onerosa (nunca abaixo de27,5%); teto por fornecedor/loja e reserva antes da operação, plan-cost-registry/spend-floor. Desconhecido reprova; sem cortar limite visível, mudar preço ou afrouxar gates.
 
 119. **[F2-FREE-RECOMMENDATIONS] Recomendações gratuitas entre lojas**
    - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
-   - Estado: **a fazer**.
+   - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 53/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
+   - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Escopo e prova: Escolha transparente do criador na confirmação de inscrição, sem pagamento, sem inscrição automática em outra lista; versão paga fora do escopo, privacidade/consentimento e teto de leituras.
    - Custo e margem: Antes de construir: conferir capacidade existente no main e preservar Claude. Custo unitário pago mais caro, uso integral simultâneo por plano mensal/anual, taxas de receiving-costs e leitura fiscal mais onerosa (nunca abaixo de27,5%); teto por fornecedor/loja e reserva antes da operação, plan-cost-registry/spend-floor. Desconhecido reprova; sem cortar limite visível, mudar preço ou afrouxar gates.
 
 120. **[F2-IMPORTS] Imports de Substack, Kit e Teachable**
    - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
-   - Estado: **a fazer**.
+   - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 54/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
+   - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Escopo e prova: Substack/Kit: inscritos e posts; Teachable: aulas, vídeos e provas. Dentro de importação/storage, validação do export real, consentimento, limites por arquivo, preview e isolamento. Teste sintético não é prova de export real.
    - Custo e margem: Antes de construir: conferir capacidade existente no main e preservar Claude. Custo unitário pago mais caro, uso integral simultâneo por plano mensal/anual, taxas de receiving-costs e leitura fiscal mais onerosa (nunca abaixo de27,5%); teto por fornecedor/loja e reserva antes da operação, plan-cost-registry/spend-floor. Desconhecido reprova; sem cortar limite visível, mudar preço ou afrouxar gates.
 
 121. **[F2-SUBSCRIPTION-GIFTS] Presentes e grupo para assinaturas/membros**
    - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
-   - Estado: **a fazer**.
+   - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 55/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
+   - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Escopo e prova: Conferir suporte atual a pagamento único; orçar direitos recorrentes, cancelamento/reembolso, cobrança e convites com consentimento, sem duplicar lugares ou vender acesso não confirmado.
    - Custo e margem: Antes de construir: conferir capacidade existente no main e preservar Claude. Custo unitário pago mais caro, uso integral simultâneo por plano mensal/anual, taxas de receiving-costs e leitura fiscal mais onerosa (nunca abaixo de27,5%); teto por fornecedor/loja e reserva antes da operação, plan-cost-registry/spend-floor. Desconhecido reprova; sem cortar limite visível, mudar preço ou afrouxar gates.
 
 122. **[F2-COMMUNITY-AI] Agente de comunidade com resumo/moderação**
    - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
-   - Estado: **a fazer**.
+   - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 56/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
+   - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Escopo e prova: Add-on pago proposto, com reserva antes do modelo, conteúdo da própria comunidade, privacidade/moderação humana, tetos e60% por unidade/intervalo. Preço proposto precisa do dono; nunca trial.
    - Custo e margem: Antes de construir: conferir capacidade existente no main e preservar Claude. Custo unitário pago mais caro, uso integral simultâneo por plano mensal/anual, taxas de receiving-costs e leitura fiscal mais onerosa (nunca abaixo de27,5%); teto por fornecedor/loja e reserva antes da operação, plan-cost-registry/spend-floor. Desconhecido reprova; sem cortar limite visível, mudar preço ou afrouxar gates.
 
 123. **[F2-COMMUNITY-DIRECTORY] Diretório público e avaliações de comunidades**
    - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
-   - Estado: **a fazer**.
+   - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 57/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
+   - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Escopo e prova: Gratuito e opt-in somente com lojas suficientes, como diretório de afiliados; definir critério/base mínima, moderação, verificação de avaliações, exposição financiada e privacidade.
    - Custo e margem: Antes de construir: conferir capacidade existente no main e preservar Claude. Custo unitário pago mais caro, uso integral simultâneo por plano mensal/anual, taxas de receiving-costs e leitura fiscal mais onerosa (nunca abaixo de27,5%); teto por fornecedor/loja e reserva antes da operação, plan-cost-registry/spend-floor. Desconhecido reprova; sem cortar limite visível, mudar preço ou afrouxar gates.
 
 124. **[F2-EDIT-SENT-LINKS] Editar destino de links de e-mail enviado**
    - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
-   - Estado: **a fazer**.
+   - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 58/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
+   - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Escopo e prova: Redirecionamento por link, com autorização, destinos seguros, história/retirada, retenção e custo de leitura/alteração. Preservar ausência de tracking de abertura e consentimento de cliques.
    - Custo e margem: Antes de construir: conferir capacidade existente no main e preservar Claude. Custo unitário pago mais caro, uso integral simultâneo por plano mensal/anual, taxas de receiving-costs e leitura fiscal mais onerosa (nunca abaixo de27,5%); teto por fornecedor/loja e reserva antes da operação, plan-cost-registry/spend-floor. Desconhecido reprova; sem cortar limite visível, mudar preço ou afrouxar gates.
 
 125. **[F2-EMAIL-POLLS] Enquetes por clique em e-mail**
    - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
-   - Estado: **a fazer**.
+   - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 59/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
+   - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Escopo e prova: Consentimento explícito por clique, antiscanner, autenticação/antirrepetição, opção de retirada e privacidade; não inferir voto da mera abertura.
    - Custo e margem: Antes de construir: conferir capacidade existente no main e preservar Claude. Custo unitário pago mais caro, uso integral simultâneo por plano mensal/anual, taxas de receiving-costs e leitura fiscal mais onerosa (nunca abaixo de27,5%); teto por fornecedor/loja e reserva antes da operação, plan-cost-registry/spend-floor. Desconhecido reprova; sem cortar limite visível, mudar preço ou afrouxar gates.
 
 126. **[F2-MULTIPLE-COMMUNITIES] Mais de uma comunidade por loja**
    - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
-   - Estado: **a fazer**.
+   - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 60/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
+   - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Escopo e prova: Conferir arquitetura atual; isolamento de membros, acessos, cotas, moderação, retenção, custos e sem reduzir direitos/limites existentes.
    - Custo e margem: Antes de construir: conferir capacidade existente no main e preservar Claude. Custo unitário pago mais caro, uso integral simultâneo por plano mensal/anual, taxas de receiving-costs e leitura fiscal mais onerosa (nunca abaixo de27,5%); teto por fornecedor/loja e reserva antes da operação, plan-cost-registry/spend-floor. Desconhecido reprova; sem cortar limite visível, mudar preço ou afrouxar gates.
 
 39. **[G1] Documentar requisitos Meta para AutoDM, comentários, inbox Instagram/Messenger e WhatsApp; depois código pronto e desligado até aprovação.**
    - Pedido: P2 G1; datas/horas e grau de certeza em Proveniência.
-   - Estado: **a fazer**.
+   - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 61/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
+   - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Custo e margem: Documentar custo por mensagem/conversa conforme unidade oficial vigente, prazos e franquia/tetos que sustentem margem; nenhuma conta ou pedido de aprovação autorizado.
 
 40. **[G2] Documentar e preparar agendamento de posts Meta/TikTok, desligado até aprovação.**
    - Pedido: P2 G2; datas/horas e grau de certeza em Proveniência.
-   - Estado: **a fazer**.
+   - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 62/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
+   - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Custo e margem: Calcular postagem/renovação/token/filas/franquia e teto antes de fornecedor; nenhuma solicitação de aprovação.
 
 41. **[G3] Documentar Google Business Profile e preparar resposta a avaliações, desligada até aprovação.**
    - Pedido: P2 G3; datas/horas e grau de certeza em Proveniência.
-   - Estado: **a fazer**.
+   - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 63/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
+   - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Custo e margem: Calcular quotas, custos, aprovação e armazenamento; não pedir aprovação sem dono.
 
 42. **[G4] Documentar e preparar criação de anúncios dentro do produto, desligada.**
    - Pedido: P2 G4; datas/horas e grau de certeza em Proveniência.
-   - Estado: **a fazer**.
+   - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 64/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
+   - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Custo e margem: Não criar campanhas, conta ou gasto de anúncio; separar verba do criador e todos os custos/obrigações antes de código.
 
 43. **[G5] Manter PayPal plataforma e links Zoom prontos e desligados; auditar implementação já existente sem refazer.**
@@ -581,103 +657,120 @@ A ordem abaixo é de execução dos itens acionáveis. Itens feitos/aguardando/c
 
 44. **[H1] Aplicativo nativo iPhone/Android: App Store/Google Play, venda digital fora do app, anuidades/manutenção; avaliar manter PWA instalável.**
    - Pedido: P2 H1; datas/horas e grau de certeza em Proveniência.
-   - Estado: **a fazer**.
+   - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 65/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
+   - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Custo e margem: SOMENTE DOCUMENTO agora. Custos/franquias e margens antes/depois por plano mensal/anual ainda não calculados; qualquer custo desconhecido reprova implementação. Sem conta, contrato ou fornecedor novo.
 
    - Ampliação P4 de H1: incluir aulas offline no celular (Teachable), como estudo documental, junto da avaliação de app/PWA; sem downloads offline/licenças/armazenamento novo agora.
 
 45. **[H2] Transmissão ao vivo hospedada, preço por minuto e teto automático.**
    - Pedido: P2 H2; datas/horas e grau de certeza em Proveniência.
-   - Estado: **a fazer**.
+   - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 66/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
+   - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Custo e margem: SOMENTE DOCUMENTO agora. Custos/franquias e margens antes/depois por plano mensal/anual ainda não calculados; qualquer custo desconhecido reprova implementação. Sem conta, contrato ou fornecedor novo.
 
    - Ampliação P4 de H2: incluir chamadas gravadas e transmissão própria com gravação e salas paralelas (Skool/Circle/Substack), juntas neste estudo. Continua somente documento; não reabre a implementação excluída em X6.
 
 46. **[H3] Marketplace com produtos de todos os criadores: moderação, consumo e condição de muitas lojas antes de valer.**
    - Pedido: P2 H3; datas/horas e grau de certeza em Proveniência.
-   - Estado: **a fazer**.
+   - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 67/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
+   - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Custo e margem: SOMENTE DOCUMENTO agora. Custos/franquias e margens antes/depois por plano mensal/anual ainda não calculados; qualquer custo desconhecido reprova implementação. Sem conta, contrato ou fornecedor novo.
 
 47. **[H4] Compra de domínio dentro do produto.**
    - Pedido: P2 H4; datas/horas e grau de certeza em Proveniência.
-   - Estado: **a fazer**.
+   - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 68/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
+   - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Custo e margem: SOMENTE DOCUMENTO agora. Custos/franquias e margens antes/depois por plano mensal/anual ainda não calculados; qualquer custo desconhecido reprova implementação. Sem conta, contrato ou fornecedor novo.
 
 48. **[H5] SMS, ligações e atendente de voz por IA: preços mais caros, registro em operadoras, franquia/teto; nenhum código antes das vendas abrirem.**
    - Pedido: P2 H5; datas/horas e grau de certeza em Proveniência.
-   - Estado: **a fazer**.
+   - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 69/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
+   - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Custo e margem: SOMENTE DOCUMENTO agora. Custos/franquias e margens antes/depois por plano mensal/anual ainda não calculados; qualquer custo desconhecido reprova implementação. Sem conta, contrato ou fornecedor novo.
 
 49. **[H6] Compra com dois cartões: efeitos em reembolsos e disputas.**
    - Pedido: P2 H6; datas/horas e grau de certeza em Proveniência.
-   - Estado: **a fazer**.
+   - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 70/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
+   - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Custo e margem: SOMENTE DOCUMENTO agora. Custos/franquias e margens antes/depois por plano mensal/anual ainda não calculados; qualquer custo desconhecido reprova implementação. Sem conta, contrato ou fornecedor novo.
 
 127. **[H7-CUSTOM-CSS] Estudo de CSS personalizado, por último em H**
    - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
-   - Estado: **a fazer**.
+   - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 71/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
+   - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Escopo e prova: Somente documento: riscos às regras de design, contraste, foco, legibilidade, injeção/recursos externos, suporte, desempenho e orçamento; nenhuma liberação de CSS agora.
    - Custo e margem: SOMENTE DOCUMENTO. Nenhuma nova operação/conta/fornecedor. Custos futuros e limites ainda precisam do cálculo completo; desconhecido reprova.
 
 50. **[I1] Escrever docs/packaging-vs-competitors.md comparando Store69/Studio449/Scale999 com os preços/fontes fornecidos de Stan/Kajabi/Hotmart/ClickFunnels/HighLevel, recurso por recurso.**
    - Pedido: P2 I1; datas/horas e grau de certeza em Proveniência.
-   - Estado: **a fazer**.
+   - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 72/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
+   - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Custo e margem: SOMENTE PROPOSTA. Nenhum preço/pacote/limite/pagamento muda sem aprovação do dono; custo unitário pago mais caro, franquias/tetos e leitura fiscal mais onerosa antes/depois são obrigatórios. Enquanto M0 reprovar, não declarar proposta financeiramente aprovada.
 
    - Ampliação P4 de I1 (proposta, dados fornecidos em19/10/2026, não cotação própria): Skool HobbyUS$9/mês+10%+30¢ e ProUS$99+2,9%+30¢; Kit grátis até10.000inscritos, CreatorUS$33, ProUS$66, vendas3,5%+30¢; CircleUS$89/199/419 por mês no anual+2%/1%/0,5%; TeachableUS$39/89/189+7,5% no Starter; Substack10% das assinaturas+0,5% recorrente. Incluir domínio próprio no Store como proposta (Circle informado em todos os planos), sem ativar nem alterar preço/pacote. Conferir termos/unidade/cadência antes de comparação pública.
 
 51. **[I2] Propor quantos e-mails Store pode incluir nos intervalos mensal/anual mantendo piso na leitura fiscal vinculante, sem reduzir limite visível.**
    - Pedido: P2 I2; datas/horas e grau de certeza em Proveniência.
-   - Estado: **a fazer**.
+   - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 73/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
+   - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Custo e margem: SOMENTE PROPOSTA. Nenhum preço/pacote/limite/pagamento muda sem aprovação do dono; custo unitário pago mais caro, franquias/tetos e leitura fiscal mais onerosa antes/depois são obrigatórios. Enquanto M0 reprovar, não declarar proposta financeiramente aprovada.
 
    - Ampliação P4 de I2: incorporar a matriz completa da nova entrada89/C2; todo aumento exige60% nos dois intervalos sob a leitura vinculante. Quando depender de preço/pacote, somente proposta ao dono.
 
 52. **[I3] Comparar indicação entre criadores já pronta/pausada (50% em crédito) com20% em dinheiro e propor após conta de margem.**
    - Pedido: P2 I3; datas/horas e grau de certeza em Proveniência.
-   - Estado: **a fazer**.
+   - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 74/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
+   - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Custo e margem: SOMENTE PROPOSTA. Nenhum preço/pacote/limite/pagamento muda sem aprovação do dono; custo unitário pago mais caro, franquias/tetos e leitura fiscal mais onerosa antes/depois são obrigatórios. Enquanto M0 reprovar, não declarar proposta financeiramente aprovada.
 
 53. **[J1] Criar matrizes Kajabi/Hotmart/Stan em .md e .json no formato HighLevel, usando levantamento oficial fornecido e conferindo cada capacidade no código; manter ClickFunnels/HighLevel atualizados em cada entrega.**
    - Pedido: P2 J1; datas/horas e grau de certeza em Proveniência.
-   - Estado: **a fazer**.
+   - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 75/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
+   - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Custo e margem: Documentação/teste; sem custo de fornecedor. Preços externos fornecidos são referência de19/10/2026, não cotação atual garantida.
 
 ### J1 — Matrizes adicionais do levantamento P4
 
 128. **[J1-SKOOL] Matriz skool em Markdown e JSON**
    - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
-   - Estado: **a fazer**.
+   - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 77/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
+   - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Escopo e prova: Criar docs/skool-gap-matrix.md e docs/skool-gap-matrix.json, formato compatível com HighLevel; usar os itens/fontes P4, conferir main por capacidade antes de construir e separar existente/testado/publicado/pendente/fora de escopo. Sem tratar preço fornecido, teste sintético ou promessa de fornecedor como prova própria.
    - Custo e margem: Documentação/teste, sem fornecedor novo. Preços externos são pesquisa fornecida de19/10/2026; capacidade futura com custo depende da conta completa e reservas, não da matriz.
 
 129. **[J1-KIT] Matriz kit em Markdown e JSON**
    - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
-   - Estado: **a fazer**.
+   - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 78/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
+   - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Escopo e prova: Criar docs/kit-gap-matrix.md e docs/kit-gap-matrix.json, formato compatível com HighLevel; usar os itens/fontes P4, conferir main por capacidade antes de construir e separar existente/testado/publicado/pendente/fora de escopo. Sem tratar preço fornecido, teste sintético ou promessa de fornecedor como prova própria.
    - Custo e margem: Documentação/teste, sem fornecedor novo. Preços externos são pesquisa fornecida de19/10/2026; capacidade futura com custo depende da conta completa e reservas, não da matriz.
 
 130. **[J1-CIRCLE] Matriz circle em Markdown e JSON**
    - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
-   - Estado: **a fazer**.
+   - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 79/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
+   - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Escopo e prova: Criar docs/circle-gap-matrix.md e docs/circle-gap-matrix.json, formato compatível com HighLevel; usar os itens/fontes P4, conferir main por capacidade antes de construir e separar existente/testado/publicado/pendente/fora de escopo. Sem tratar preço fornecido, teste sintético ou promessa de fornecedor como prova própria.
    - Custo e margem: Documentação/teste, sem fornecedor novo. Preços externos são pesquisa fornecida de19/10/2026; capacidade futura com custo depende da conta completa e reservas, não da matriz.
 
 131. **[J1-TEACHABLE] Matriz teachable em Markdown e JSON**
    - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
-   - Estado: **a fazer**.
+   - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 80/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
+   - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Escopo e prova: Criar docs/teachable-gap-matrix.md e docs/teachable-gap-matrix.json, formato compatível com HighLevel; usar os itens/fontes P4, conferir main por capacidade antes de construir e separar existente/testado/publicado/pendente/fora de escopo. Sem tratar preço fornecido, teste sintético ou promessa de fornecedor como prova própria.
    - Custo e margem: Documentação/teste, sem fornecedor novo. Preços externos são pesquisa fornecida de19/10/2026; capacidade futura com custo depende da conta completa e reservas, não da matriz.
 
 132. **[J1-SUBSTACK] Matriz substack em Markdown e JSON**
    - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
-   - Estado: **a fazer**.
+   - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 81/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
+   - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Escopo e prova: Criar docs/substack-gap-matrix.md e docs/substack-gap-matrix.json, formato compatível com HighLevel; usar os itens/fontes P4, conferir main por capacidade antes de construir e separar existente/testado/publicado/pendente/fora de escopo. Sem tratar preço fornecido, teste sintético ou promessa de fornecedor como prova própria.
    - Custo e margem: Documentação/teste, sem fornecedor novo. Preços externos são pesquisa fornecida de19/10/2026; capacidade futura com custo depende da conta completa e reservas, não da matriz.
 
 54. **[J2] Registrar diferenças favoráveis já existentes somente com prova no código: Stripe direto, domínio, lojas/equipe/opções, presentes/equipe/waitlist/pré-venda/avaliações, podcast privado/licenças/PDF/Discord/provas, ofertas/API/Zapier/e-mail/importação/A-B e recursos do plano69. Velocidade comparativa exige metodologia/evidência real.**
    - Pedido: P2 J2; datas/horas e grau de certeza em Proveniência.
-   - Estado: **a fazer**.
+   - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 76/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
+   - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Custo e margem: Não repetir números PageSpeed fornecidos como medição própria ou alegar superioridade sem prova.
 
    - Ampliação P4 de J2: conferir e documentar 0% de comissão da plataforma frente às taxas fornecidas de Substack/Kit/Circle/SkoolHobby/TeachableStarter; conta Stripe/PayPal direta frente ao relato sobre Skool/Teachable;15moedas frente ao relato de dólar no Skool; e-mail sem pixel como vantagem de privacidade; API/webhooks em todos os planos; certificados/5lugares/API na entrada; loja com arquivos/chamadas/afiliados/funis/pausa/oferta antes de cancelar/oferta de volta em torno da comunidade. São hipóteses de comparação a provar, não anúncio de superioridade. Custos do processador e obrigações fiscais continuam existindo, vendas continuam fechadas.
@@ -704,7 +797,8 @@ A ordem abaixo é de execução dos itens acionáveis. Itens feitos/aguardando/c
 
 59. **[EXCELENCIA] Revisão contínua de todo site/estúdio por área após fila e como critério transversal em cada item: AAA como ponto de partida, teclado, baixa visão, audição, motor, cognição, dispositivos, navegadores e desempenho; referência GOV.UK/Apple; PRs pequenos e evidência em accessibility-programme.** ampliado pelo item 274 [AX1]
    - Pedido: P0; P2 padrão1–11; P3 regra4; datas/horas e grau de certeza em Proveniência.
-   - Estado: **a fazer**.
+   - Estado: **absorvido pelo item 274 [AX1]; OR: decisão expressa do dono de 22/10/2026 às 14h45 de Fortaleza; Parte A transversal e Partes B/C após o Bloco B**.
+   - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Custo e margem: Sem ferramenta, usuário contratado ou fornecedor novo sem orçamento. Registrar precisamente o que requer pessoas/dispositivos; não alegar AAA/superioridade sem evidência.
 
 60. **[ABERTURA-DONO] Constituir LLC e obter conta Stripe dos EUA; decidir abertura comercial somente depois das demais provas fiscais/comerciais.**
@@ -956,7 +1050,8 @@ Validação634: a execução integral antiga terminou com a mesma ambiguidade he
 
 88. **[B2-ADDRESS-ACKNOWLEDGMENT] Confirmar endereço retornado e preservar o pedido pendente**
    - Pedido: revisão contínua B2/usabilidade autorizada; achado19/10/2026,21h de Fortaleza (aproximado).
-   - Estado: **em andamento; branch codex/address-confirmation; depende explicitamente634; alterações próprias em RenameForm e suíte store-copy, sem editar SignInForm/agreements**.
+   - Estado: **em andamento; branch codex/address-confirmation; depende explicitamente634; alterações próprias em RenameForm e suíte store-copy, sem editar SignInForm/agreements**. Posição vigente: OR: andamento prioritário preservado, antes de 273 [BK1] e 275 [FX1]; conferir o histórico de publicações e executar somente o remanescente acionável.
+   - Histórico OR — estado anterior à atualização documental: - Estado: **em andamento; branch codex/address-confirmation; depende explicitamente634; alterações próprias em RenameForm e suíte store-copy, sem editar SignInForm/agreements**.
    - Evidência: A interface exigirá HTTP válido, ok booleano, ausência de erro e endereço normalizado igual ao solicitado; edição/cancelamento ficam bloqueados durante pedido. Campos passam a poder encolher no celular. Nove respostas interceptadas em390/1280; não renomeia nenhuma loja real. CI integral pendente.
    - Custo e margem: Validação local limitada dentro da página existente; sem chamada, armazenamento, mensagem ou franquia adicional. M0 antes=depois em todos os planos/intervalos, modelo vinculante continua reprovando60%; nenhum gate de vendas/fiscal alterado.
 
@@ -1088,19 +1183,22 @@ Pedido P5: anexo524cc7f9-78af-42b5-ae37-4c05dc91a193/Texto colado.txt, lido19/10
 
 151. **[S10-HOME-PRICING-FAQ] Perguntas factuais na home e /pricing**
    - Pedido: continuação direta do dono, S10–S12; horário exato da mensagem não fornecido, registro de leitura na continuidade.
-   - Estado: **em implementação; PR663, head d61038e passou completo; conflito do histórico da fila resolvido preservando main; nova suíte integral obrigatória**.
+   - Estado: **em implementação; PR663, head d61038e passou completo; conflito do histórico da fila resolvido preservando main; nova suíte integral obrigatória**. Posição vigente: OR: andamento prioritário preservado, antes de 273 [BK1] e 275 [FX1]; conferir o histórico de publicações e executar somente o remanescente acionável.
+   - Histórico OR — estado anterior à atualização documental: - Estado: **em implementação; PR663, head d61038e passou completo; conflito do histórico da fila resolvido preservando main; nova suíte integral obrigatória**.
    - Escopo: preservar perguntas existentes de lib/home-faq.ts; acrescentar How much does it cost? (lib/plan.ts), Is there a contract? Can I cancel anytime? (termos reais), Can I move from Kajabi, Stan or another platform? (contatos/produtos/compradores conforme importadores e /platform/switching-to-marktmorgen), Does it connect to my other tools? (Zapier/webhooks/API reais e /developers), Is there support, and how? (canal real sem SLA inventado), How long does it take to open a store? (somente passos/tempo demonstráveis, sem promessa).
    - Prova: conferir código/main e páginas antes de responder; preços sem duplicação, links, FAQ acessível,390px, lint/tipos/testes integrais. Custo/M0 antes/depois: texto e links no envelope existente; nova chamada/email/IA/banda exige registry/spend-floor, maior custo pago, impostos e teto automático antes. A leitura vinculante continua reprovada, não certificada; vendas fechadas.
 
 152. **[S11-HOME-CTAS] Ações ao longo da home**
    - Pedido: mesma continuação direta S10–S12.
-   - Estado: **em implementação; PR664/head e91c584 passou integral; integração explícita do pai atual exige novo CI completo**.
+   - Estado: **em implementação; PR664/head e91c584 passou integral; integração explícita do pai atual exige novo CI completo**. Posição vigente: OR: andamento prioritário preservado, antes de 273 [BK1] e 275 [FX1]; conferir o histórico de publicações e executar somente o remanescente acionável.
+   - Histórico OR — estado anterior à atualização documental: - Estado: **em implementação; PR664/head e91c584 passou integral; integração explícita do pai atual exige novo CI completo**.
    - Escopo: a cada uma ou duas seções, botão Start your store e segunda opção See the live demo, com destinos existentes e nomes consistentes. Sem free no CTA, Talk to an expert ou Book a demo; sem pop-up/urgência.
    - Prova: sequência real de seções, links, foco/teclado, nomes acessíveis e390px sem overflow. Sem telemetria/chamada/custo novo por inserir botões; registrar M0 antes/depois, não mudar preço/limite/gate nem afirmar60% fiscal comprovado.
 
 153. **[S12-HOME-PATH] Jornada factual do Marktmorgen Path na home**
    - Pedido: mesma continuação direta S10–S12.
-   - Estado: **em implementação; PR665/head7c77a6b passou integral; integração explícita do pai atual exige novo CI completo**.
+   - Estado: **em implementação; PR665/head7c77a6b passou integral; integração explícita do pai atual exige novo CI completo**. Posição vigente: OR: andamento prioritário preservado, antes de 273 [BK1] e 275 [FX1]; conferir o histórico de publicações e executar somente o remanescente acionável.
+   - Histórico OR — estado anterior à atualização documental: - Estado: **em implementação; PR665/head7c77a6b passou integral; integração explícita do pai atual exige novo CI completo**.
    - Escopo: seção com passos reais e nomes do código atual, ligada a /platform/path. Cada passo distingue o que o criador faz e o que o produto faz por ele. Não prometer resultado, scale your business, conclusão por clique ou função ausente.
    - Prova: passos/nomes/estados conferidos no main, narrativa US English, link/teclado/390px/contraste, lint/tipos/testes integrais. Texto estático sem novo fato consultado em servidor; eventual operação nova só com conta/teto prévios. M0 antes/depois registrada; piso obrigatório60% não é certificação do modelo atual, vendas continuam fechadas.
 
@@ -2494,7 +2592,8 @@ Pricing FAQ repair history: run39407143422 caught mobile target-size;39409356932
 - **PR#711 documental incorporado às12:32:14**, merge `c7e5a802fe4ef750a9b8f946cd6213badc4e2630`, head `13bc4f43365f509a29ce5898b33d063c3cc3f9e8`; Product39446304453/verify118709017805/Redis118709017451/security39446304536 aprovados. Registra104, sem incrementar contador funcional.
 
 182. **[HT0] Renomear a seção da Hotmart e separar os itens sem custo do gate de margem**
-- Estado: **Implementado; aguardando verificação integral e incorporação documental**.
+- Estado: **Implementado; aguardando verificação integral e incorporação documental**. Posição vigente: OR: andamento prioritário preservado, antes de 273 [BK1] e 275 [FX1]; conferir o histórico de publicações e executar somente o remanescente acionável.
+   - Histórico OR — estado anterior à atualização documental: - Estado: **Implementado; aguardando verificação integral e incorporação documental**.
 - Preparação iniciada em20/10/2026 às12:32:40 de Fortaleza (15:32:40UTC). Pedido direto do dono lido nesta conversa; hora original da mensagem não fornecida. Os números180[B2-180] e181[B2-181] já estavam ocupados antes desse pedido e foram preservados;182 era o próximo livre.
 - Commit-base conferido: `c7e5a802fe4ef750a9b8f946cd6213badc4e2630`. Commit das alterações HT0: `d4f1bb01bd4a46d5d3394d6775c8936b38b14b34` (criado em2026-10-20 12:34:08 de Fortaleza).
 - Alterações: seção no mesmo lugar entre publicação83 e continuação B2, renomeada H→HT;17subtítulos HT1–HT17 na mesma ordem e com textos preservados; subseção HT0 imediatamente abaixo do título e antes de Pedido do dono recebido. Referências posteriores da Hotmart passam a HT; os antigos [H1]/[H2]/[H3] e o prefixo histórico anterior à seção ficam intactos.
@@ -2805,7 +2904,8 @@ Product checks39462624653/verify118766157526 aprovou regressões mas recusou o b
 
 196. **[HT10] Unir navegação de pixels e atribuição preservando consentimento e custo existente**
 
-- Estado: **Cálculo próprio registrado antes da implementação; implementado; CI integral e publicação pendentes**.
+- Estado: **Cálculo próprio registrado antes da implementação; implementado; CI integral e publicação pendentes**. Posição vigente: OR: andamento prioritário preservado, antes de 273 [BK1] e 275 [FX1]; conferir o histórico de publicações e executar somente o remanescente acionável.
+   - Histórico OR — estado anterior à atualização documental: - Estado: **Cálculo próprio registrado antes da implementação; implementado; CI integral e publicação pendentes**.
 - Registro UTC:2026-10-20 17:16:50 UTC; Fortaleza UTC−3. Base canônica da sequência conferida `98690ce0ca790bc8ab691e2721890362a4f1b57d`. Revisão antes de código em docs/ht10-cost-review.md.
 - Escopo autorizado sem custo novo: configuraçõesMeta/Google/TikTok/Pinterest e atribuição por canal já existem; apenas navegação entre elas, explicação visível de consentimento/GPC e confirmação local estrita do retorno das duas gravações existentes. Nenhuma nova operação, endpoint, provider/IA, pixel/evento, job, retenção ou direito de uso; mesmo custo nos tetos atuais. Não iniciar anúncios nem conectar conta.
 - Custo adicional de fornecedor por cliente no pior mês:US$0/mês eUS$0/ano em Store/Studio/Scale, ambos intervalos. Leitura de dimensionamento existente, com todos custos/impostos/reservas e maior taxa por cobrança, permanece60,31/60,59/60,38/60,06/60,46/60,07% nos6cenários (Store mês/ano, Studio mês/ano, Scale mês/ano), sem preço/limite/receita nova. Não confundir com gateM0: leitura tributária mais onerosa continua12,02–12,21%, reprovada para vendas. Desconhecido reprova; operação nova exige cálculo antes de uso.
@@ -2861,7 +2961,8 @@ HT6/Product checks39462558715/verify118765503722 foi cancelado pelo limite de25m
 
 199. **[HT14] Sugerir preço e estrutura de oferta com regras locais e dados já lidos da própria loja**
 
-- Estado: **Cálculo próprio registrado antes do código; implementado; CI integral e publicação pendentes**.
+- Estado: **Cálculo próprio registrado antes do código; implementado; CI integral e publicação pendentes**. Posição vigente: OR: andamento prioritário preservado, antes de 273 [BK1] e 275 [FX1]; conferir o histórico de publicações e executar somente o remanescente acionável.
+   - Histórico OR — estado anterior à atualização documental: - Estado: **Cálculo próprio registrado antes do código; implementado; CI integral e publicação pendentes**.
 - Registro UTC:2026-10-20 17:34:21 UTC; FortalezaUTC−3. Base remota conferida `2f29aaf4a936dde7b085815246761674fdd9183e`; docs/ht14-cost-review.md define escopo antes de operação.
 - Reutilizar leitura de cards/índices/candidatos/permissões do editor de funis já existente. Planejador determinístico local: preço observado da própria categoria/loja (ou preço atual quando não há comparação), regra/amostra exibidas, estrutura suportada com condições atuais. Aceitar/recusar apenas plano local não salvo/editável; não mudar preço/funil nem salvar/publicar/ativar/enviar automaticamente. Sem previsão de vendas, demanda ou lucro.
 - Nenhuma chamada IA nova, histórico/API/read/write/provedor/retencão/job/cota nova. FunilIA existente e pool/tetos/reserva intactos. Custo incremental explícitoUS$0/mês eUS$0/ano nos6cenários em100%dosdireitos/pior mês; dimensionamento com maior recebimento/taxas/reservas/impostos permanece60,31/60,59%Store,60,38/60,06%Studio,60,46/60,07%Scale (mês/ano). Custo/demanda desconhecidos não viramzero nem projeção; operação fora desse escopo exige cálculo antes de uso.
@@ -3026,7 +3127,8 @@ Custo e margem: apenas texto e status, sem operação ou custo variável novo. P
 
 Pedido: P0, pedido de excelência/acessibilidade de 19/10/2026; acrescentado por pedido do dono em 20/10/2026, às16:51 de Fortaleza.
 
-Estado: em andamento. Entrega129 incorporou correções e matrizes sintéticas após22checks completos no head06b7637; não encerra201. Ações atuais comprovam criar/publicar produto em loja sintética já criada, mas ainda falta a prova matricial da criação do endereço e publicação inicial da primeira loja após cadastro. Essa parte é acionável autonomamente e será a próxima correção de cobertura. Lacunas manuais de aparelhos/AT/zoom real400% permanecem aguardando o dono, registradas há mais de uma hora; reflow320 não equivale a zoom real400%, nem LinuxWebKit a Safari físico. Inventário/custos emdocs/accessibility-browsers-devices.md. Não é certificação AAA; não marcar201 inteiro como dependência do dono enquanto houver trabalho autônomo.
+Estado: em andamento. Entrega129 incorporou correções e matrizes sintéticas após22checks completos no head06b7637; não encerra201. Ações atuais comprovam criar/publicar produto em loja sintética já criada, mas ainda falta a prova matricial da criação do endereço e publicação inicial da primeira loja após cadastro. Essa parte é acionável autonomamente e será a próxima correção de cobertura. Lacunas manuais de aparelhos/AT/zoom real400% permanecem aguardando o dono, registradas há mais de uma hora; reflow320 não equivale a zoom real400%, nem LinuxWebKit a Safari físico. Inventário/custos emdocs/accessibility-browsers-devices.md. Não é certificação AAA; não marcar201 inteiro como dependência do dono enquanto houver trabalho autônomo. Posição vigente: OR: andamento prioritário preservado, antes de 273 [BK1] e 275 [FX1]; conferir o histórico de publicações e executar somente o remanescente acionável.
+   - Histórico OR — estado anterior à atualização documental: Estado: em andamento. Entrega129 incorporou correções e matrizes sintéticas após22checks completos no head06b7637; não encerra201. Ações atuais comprovam criar/publicar produto em loja sintética já criada, mas ainda falta a prova matricial da criação do endereço e publicação inicial da primeira loja após cadastro. Essa parte é acionável autonomamente e será a próxima correção de cobertura. Lacunas manuais de aparelhos/AT/zoom real400% permanecem aguardando o dono, registradas há mais de uma hora; reflow320 não equivale a zoom real400%, nem LinuxWebKit a Safari físico. Inventário/custos emdocs/accessibility-browsers-devices.md. Não é certificação AAA; não marcar201 inteiro como dependência do dono enquanto houver trabalho autônomo.
 
 Escopo e prova: acrescentar Firefox e WebKit (Safari) aos testes Playwright existentes, sem serviço pago; se a instalação não for possível, registrar motivo exato e requisitos. Exercitar home, preços, cadastro, criação de produto, publicação da loja, página da loja, checkout e área do comprador nas larguras320,390,768,1280 e1920px: axe incluindo regras AAA, teclado, zoom400% com reflow, espaçamento WCAG1.4.12, movimento reduzido e alto contraste. Corrigir falhas em PRs pequenos com prova de falha antes e aprovação depois. Inventariar lacunas de aparelhos reais (iPhone, Android, Windows/Edge, tablets), custos de aparelhos ou nuvem como BrowserStack/Sauce Labs com fonte oficial e data. Não contratar, criar conta nem realizar submissão externa. Ao concluir registrar data/hora Fortaleza, commits, testes, publicação e lacunas; evidência sintética não equivale a aparelho real.
 
@@ -3036,7 +3138,8 @@ Custo e margem: calcular minutos de CI e qualquer outro custo. Testes não têm 
 
 Pedido: P0, pedido de excelência/acessibilidade de 19/10/2026; acrescentado por pedido do dono em 20/10/2026, às16:51 de Fortaleza.
 
-Estado: plano e cálculo condicional preparados no PR741, integrados ao head77c64d6/PR742; suíte completa e incorporação ainda pendentes. Preparação documental independente enquanto201 roda; incorporação final e conclusão202 devem preservar a prioridade da cobertura autônoma201, cujas lacunas de publicação inicial ainda estão abertas. Fontes oficiais consultadas21/10/2026, protocolo18participantes por rodada/seis perfis/duas rodadas, custos públicos mínimos separados de cotações completas desconhecidas e fórmula de financiamento60%. Não houve contratação, conta, contato ou teste humano. Contratação/recrutamento dependem exclusivamente do dono; desconhecido não vale zero.
+Estado: plano e cálculo condicional preparados no PR741, integrados ao head77c64d6/PR742; suíte completa e incorporação ainda pendentes. Preparação documental independente enquanto201 roda; incorporação final e conclusão202 devem preservar a prioridade da cobertura autônoma201, cujas lacunas de publicação inicial ainda estão abertas. Fontes oficiais consultadas21/10/2026, protocolo18participantes por rodada/seis perfis/duas rodadas, custos públicos mínimos separados de cotações completas desconhecidas e fórmula de financiamento60%. Não houve contratação, conta, contato ou teste humano. Contratação/recrutamento dependem exclusivamente do dono; desconhecido não vale zero. Posição vigente: OR: andamento prioritário preservado, antes de 273 [BK1] e 275 [FX1]; conferir o histórico de publicações e executar somente o remanescente acionável.
+   - Histórico OR — estado anterior à atualização documental: Estado: plano e cálculo condicional preparados no PR741, integrados ao head77c64d6/PR742; suíte completa e incorporação ainda pendentes. Preparação documental independente enquanto201 roda; incorporação final e conclusão202 devem preservar a prioridade da cobertura autônoma201, cujas lacunas de publicação inicial ainda estão abertas. Fontes oficiais consultadas21/10/2026, protocolo18participantes por rodada/seis perfis/duas rodadas, custos públicos mínimos separados de cotações completas desconhecidas e fórmula de financiamento60%. Não houve contratação, conta, contato ou teste humano. Contratação/recrutamento dependem exclusivamente do dono; desconhecido não vale zero.
 
 Escopo e prova: pesquisar somente fontes oficiais datadas sobre testes com cegos/leitores de tela, baixa visão, surdos, deficiência motora, neurodivergentes e idosos; custos por sessão e rodada de recrutamento/serviços, por exemplo Fable, AbilityNet, UserTesting e Access Works. Criar docs/accessibility-real-people-plan.md com perfis, mínimo de participantes por perfil, tarefas de cadastro/criar produto/publicar loja/comprar/baixar produto, roteiro, medidas, proteção e consentimento dos dados e custo total por rodada. Calcular impacto nos custos fixos e número mínimo de clientes pagantes para preservar60% no consolidado. Nenhuma contratação, conta, contato com pessoas/empresas ou recrutamento. Ao concluir registrar data/hora Fortaleza, commits, testes, publicação e lacunas; plano não representa testes com pessoas realizados.
 
@@ -3399,7 +3502,8 @@ Custo e margem: confirme na documentação oficial que as chamadas do Graph util
 
 Estado inicial: na fila. Ao concluir o item, registre o commit, o resultado da suíte completa e a publicação, e altere o estado para "pronto e desligado, aguardando a LLC e a verificação da Microsoft".
 
-**Estado: na fila.** Ordem: depois do item202 [P0-REAL-PEOPLE] e de todos os itens já em andamento; não bloqueia nenhum outro item. Esta entrada foi acrescentada ao fim do arquivo, preservando a ordem e o histórico. Proveniência integral: pedido direto do dono,20/10/2026,23h03Fortaleza, anexo3b412ee8-c4d7-4231-919b-2c9b2d11e8aa/Texto colado.txt. Fatos listados no pedido são requisitos a conferir nas fontes oficiais durante a execução, não conclusões já verificadas por este registro. Não iniciar cadastro, chamada real, aceite, verificação, custo ou ativação por causa desta inclusão. Resultado futuro exigido: commit, suíte completa, publicação e estado “pronto e desligado, aguardando a LLC e a verificação da Microsoft”.
+**Estado: na fila.** Ordem: depois do item202 [P0-REAL-PEOPLE] e de todos os itens já em andamento; não bloqueia nenhum outro item. Esta entrada foi acrescentada ao fim do arquivo, preservando a ordem e o histórico. Proveniência integral: pedido direto do dono,20/10/2026,23h03Fortaleza, anexo3b412ee8-c4d7-4231-919b-2c9b2d11e8aa/Texto colado.txt. Fatos listados no pedido são requisitos a conferir nas fontes oficiais durante a execução, não conclusões já verificadas por este registro. Não iniciar cadastro, chamada real, aceite, verificação, custo ou ativação por causa desta inclusão. Resultado futuro exigido: commit, suíte completa, publicação e estado “pronto e desligado, aguardando a LLC e a verificação da Microsoft”. Posição vigente: OR: andamento prioritário preservado, antes de 273 [BK1] e 275 [FX1]; conferir o histórico de publicações e executar somente o remanescente acionável.
+   - Histórico OR — estado anterior à atualização documental: **Estado: na fila.** Ordem: depois do item202 [P0-REAL-PEOPLE] e de todos os itens já em andamento; não bloqueia nenhum outro item. Esta entrada foi acrescentada ao fim do arquivo, preservando a ordem e o histórico. Proveniência integral: pedido direto do dono,20/10/2026,23h03Fortaleza, anexo3b412ee8-c4d7-4231-919b-2c9b2d11e8aa/Texto colado.txt. Fatos listados no pedido são requisitos a conferir nas fontes oficiais durante a execução, não conclusões já verificadas por este registro. Não iniciar cadastro, chamada real, aceite, verificação, custo ou ativação por causa desta inclusão. Resultado futuro exigido: commit, suíte completa, publicação e estado “pronto e desligado, aguardando a LLC e a verificação da Microsoft”.
 
 
 ## SH — Superar a Shopify no mercado dos criadores (20/10/2026)
@@ -3423,36 +3527,58 @@ Regras que valem para TODOS os itens desta seção:
 8. Ao concluir cada item, registre o commit, o resultado da suíte completa e a publicação, e deixe o estado como "pronto e desligado, aguardando o dono" quando houver interruptor.
 
 204. [SH1] Venda por agentes de IA (ChatGPT, Google AI Mode, Gemini e outros)
+
+Estado: OR: andamento prioritário preservado, antes de 273 [BK1] e 275 [FX1]; conferir o histórico de publicações e executar somente o remanescente acionável. Registro de posição; os estados e provas históricos abaixo permanecem válidos.
 Estude, nas fontes oficiais, os protocolos de compra por agentes que estejam em vigor (o Universal Commerce Protocol, o protocolo de comércio da OpenAI, o que a Stripe oferece para pagamentos iniciados por agentes e o que o Google exige). Em seguida, construa para cada loja um catálogo legível por máquina, apenas com dados publicados pelo criador (nome, descrição, preço, moeda, disponibilidade, termos e política de reembolso), e, se os protocolos permitirem, a conclusão da compra pelo agente com pagamento direto na conta Stripe do criador, como já acontece no checkout. O criador decide se a loja participa; o padrão é desligado. Nada de dado pessoal no catálogo. Registre em docs/agentic-commerce.md o desenho, as fontes, os custos e os passos que só o dono pode executar.
 
 205. [SH2] Produtos de marca do criador com tamanhos e cores
+
+Estado: OR: andamento prioritário preservado, antes de 273 [BK1] e 275 [FX1]; conferir o histórico de publicações e executar somente o remanescente acionável. Registro de posição; os estados e provas históricos abaixo permanecem válidos.
 Permita opções (por exemplo, tamanho e cor) nos produtos enviados pelo correio, com preço, estoque e código próprios para cada combinação, estoque baixado de forma atômica na compra e nunca vendido abaixo de zero. Acrescente o código de rastreio informado pelo criador, o aviso de envio ao comprador e um fluxo de devolução simples, com prazo e condições definidos pelo criador e coerentes com a política de reembolso. Não altere as regras atuais de frete por região sem necessidade. Verifique o efeito nos custos por plano (armazenamento, comandos e e-mails) e mantenha os limites visíveis.
 
 206. [SH3] Impressão sob demanda (Printful, Printify ou equivalentes)
+
+Estado: OR: após o Bloco A, na ordem já existente entre 206 [SH3] e 272 [HM1]; 232 [CA1] foi antecipado e não se repete; antes do Bloco B. Registro de posição; os estados e provas históricos abaixo permanecem válidos.
 Estude as APIs oficiais e os termos de uso dos principais fornecedores de impressão sob demanda. Construa a ligação com a conta do PRÓPRIO criador (OAuth ou chave do criador, guardada com a mesma proteção dos demais tokens), o envio automático do pedido pago ao fornecedor, a atualização do rastreio e o tratamento de falhas sem perder pedidos. O fornecedor cobra o criador diretamente; o Marktmorgen nunca paga nem adianta valores. Depende do item 205 e da regra 3 (impostos sobre bens físicos). Corrija o texto "No print-on-demand" somente quando o interruptor for ligado.
 
 207. [SH4] Catálogo nos canais de venda
+
+Estado: OR: após o Bloco A, na ordem já existente entre 206 [SH3] e 272 [HM1]; 232 [CA1] foi antecipado e não se repete; antes do Bloco B. Registro de posição; os estados e provas históricos abaixo permanecem válidos.
 Gere, para cada loja que o criador escolher, os feeds de produtos aceitos pelo Google Merchant Center, pelo catálogo da Meta (Instagram e Facebook), pelo Pinterest e, se os termos permitirem, pelo TikTok Shop e pelo YouTube Shopping, com endereço próprio que o criador cola em cada canal. Somente dados publicados; preço e disponibilidade sempre iguais aos da loja. Calcule o custo de leitura desses endereços pelos canais (requisições e comandos) e coloque teto automático.
 
 208. [SH5] Preço na moeda do comprador
+
+Estado: OR: após o Bloco A, na ordem já existente entre 206 [SH3] e 272 [HM1]; 232 [CA1] foi antecipado e não se repete; antes do Bloco B. Registro de posição; os estados e provas históricos abaixo permanecem válidos.
 Estude, nas fontes oficiais da Stripe, a conversão automática de preço no checkout (por exemplo, o Adaptive Pricing) com cobranças diretas em contas Standard conectadas: quem paga a taxa de conversão, em que países funciona e como os reembolsos ficam. Construa somente se a taxa recair sobre o comprador ou sobre o criador, nunca sobre a plataforma, e se o criador puder ligar e desligar. Se a resposta depender da Stripe, acrescente a pergunta à cobrança diária que o dono já faz à Stripe, sem enviar nada por conta própria.
 
 209. [SH6] Cartão-presente e crédito na loja (primeiro o estudo, depois a decisão)
+
+Estado: OR: após o Bloco A, na ordem já existente entre 206 [SH3] e 272 [HM1]; 232 [CA1] foi antecipado e não se repete; antes do Bloco B. Registro de posição; os estados e provas históricos abaixo permanecem válidos.
 Estude a legislação aplicável (Credit CARD Act e leis estaduais americanas de saldo não reclamado, regras da União Europeia, do Reino Unido e do Canadá) e registre em docs/gift-cards-study.md o que seria exigido, os riscos e os custos. Não construa nada neste item: a construção depende da decisão do dono, a partir desse estudo.
 
 210. [SH7] Importação de lojas da Shopify
+
+Estado: OR: após o Bloco A, na ordem já existente entre 206 [SH3] e 272 [HM1]; 232 [CA1] foi antecipado e não se repete; antes do Bloco B. Registro de posição; os estados e provas históricos abaixo permanecem válidos.
 Verifique os importadores que já existem e acrescente a importação a partir dos arquivos de exportação da Shopify (produtos, opções, imagens, coleções e clientes com consentimento comprovado para receber e-mail), com pré-visualização, validação no servidor e respeito aos limites do plano, como já se exige dos outros importadores. Clientes sem consentimento comprovado entram somente como compradores, nunca na lista de e-mails.
 
 211. [SH8] Compra com um toque e conta do comprador
+
+Estado: OR: após o Bloco A, na ordem já existente entre 206 [SH3] e 272 [HM1]; 232 [CA1] foi antecipado e não se repete; antes do Bloco B. Registro de posição; os estados e provas históricos abaixo permanecem válidos.
 Verifique se o Link, o Apple Pay e o Google Pay estão disponíveis no checkout com cobrança direta na conta do criador e se a biblioteca do comprador reúne as compras feitas em todas as lojas Marktmorgen. Corrija o que faltar, sem custo novo para a plataforma.
 
 212. [SH9] Assistente que executa tarefas do criador (comparação com o Sidekick da Shopify)
+
+Estado: OR: após o Bloco A, na ordem já existente entre 206 [SH3] e 272 [HM1]; 232 [CA1] foi antecipado e não se repete; antes do Bloco B. Registro de posição; os estados e provas históricos abaixo permanecem válidos.
 Compare o que o Sidekick da Shopify faz com o que o assistente e as ferramentas de IA do Marktmorgen já fazem. Proponha, em docs/creator-copilot.md, as tarefas que o criador poderia pedir em linguagem natural, sempre com confirmação antes de qualquer alteração. Construa somente o que couber nos orçamentos de IA que já existem (reserva antes da chamada, teto automático e margem de 60%).
 
 213. [SH10] Página honesta "Marktmorgen vs Shopify para criadores"
+
+Estado: OR: após o Bloco A, na ordem já existente entre 206 [SH3] e 272 [HM1]; 232 [CA1] foi antecipado e não se repete; antes do Bloco B. Registro de posição; os estados e provas históricos abaixo permanecem válidos.
 Crie uma página de comparação, em inglês americano, somente com fatos verificáveis e fontes oficiais datadas: o que cada plataforma inclui sem aplicativo pago, preços, taxas por venda e o que cada uma não faz. Publique-a apenas com o que estiver no ar e ligado; recursos desligados não aparecem. Siga as regras de SEO e de design já adotadas no site.
 
 214. [SH11] Proposta de complementos pagos que aumentem o lucro com segurança
+
+Estado: OR: após o Bloco A, na ordem já existente entre 206 [SH3] e 272 [HM1]; 232 [CA1] foi antecipado e não se repete; antes do Bloco B. Registro de posição; os estados e provas históricos abaixo permanecem válidos.
 Com base no código de margem que já existe (lib/receiving-costs.ts e tests/margin-alignment-table.ts), calcule quais dos recursos acima poderiam ser vendidos como complementos pagos, no mesmo padrão do Store assistant, com o preço mínimo que mantém 60% em cada unidade, isoladamente, no pior caso. Registre o cálculo em docs/addon-proposals-2026-10-20.md como PROPOSTA: nenhum preço, limite ou interruptor muda sem a decisão do dono.
 
 Estado inicial de todos os itens: na fila.
@@ -3469,15 +3595,23 @@ Pedido: dono, 20/10/2026, 23h58 de Fortaleza: "tem como pegar mais oportunidade 
 Valem para estes itens todas as regras da seção SH (itens 204 a 214), sem exceção: verificar e reutilizar o que já existe; margem líquida mínima de 60% (ela pode ser maior, mas nunca menor) por cliente isolado, com 100% dos direitos usados no pior mês, e também no consolidado, depois de todos os custos e de todos os impostos, inclusive os brasileiros; custo desconhecido não pode ser considerado zero; leitura que der MAIS imposto; interruptor no código, desligado; proibição de criar contas, pagar taxas, aceitar termos, pedir aprovações, ligar interruptores e alterar preços, limites visíveis, comissão, PLANS_ON_SALE, tax gate, art. 9a ou a revisão comercial; testes somente com fornecedores simulados; inglês americano, acessibilidade e nenhuma afirmação sem fonte oficial datada.
 
 215. [OP1] Aplicativo do Marktmorgen na Shopify App Store
+
+Estado: OR: após o Bloco A, na ordem já existente entre 206 [SH3] e 272 [HM1]; 232 [CA1] foi antecipado e não se repete; antes do Bloco B. Registro de posição; os estados e provas históricos abaixo permanecem válidos.
 Estude, nas fontes oficiais da Shopify (shopify.dev), os requisitos para publicar um aplicativo público: conta de parceiro, possibilidade de registro por pessoa física ou exigência de empresa, taxa única de registro (hoje US$ 19), participação da Shopify na receita (hoje 0% sobre o primeiro US$ 1 milhão de receita bruta acumulada na vida e 15% acima disso, contando a partir de 01/01/2025), obrigatoriedade da Shopify Billing API, revisão do aplicativo, requisitos de privacidade e de dados (incluindo os webhooks obrigatórios de dados pessoais) e quem recolhe os impostos sobre a cobrança. Em seguida, desenhe em docs/shopify-app.md um aplicativo que leve aos lojistas da Shopify os cursos, as assinaturas, a comunidade e as chamadas pagas do Marktmorgen, reutilizando o motor existente. Calcule o preço mínimo de cada plano do aplicativo que mantém 60% no pior caso, já com os 15% da Shopify e com a leitura que der mais imposto, e registre-o como PROPOSTA. Construa somente a parte que não depende de conta nem de aprovação, desligada. Os passos que só o dono pode executar (criar a conta de parceiro, pagar o registro, aceitar os termos e enviar para revisão) devem ficar listados no documento.
 
 216. [OP2] Programa de indicação do próprio Marktmorgen
+
+Estado: OR: após o Bloco A, na ordem já existente entre 206 [SH3] e 272 [HM1]; 232 [CA1] foi antecipado e não se repete; antes do Bloco B. Registro de posição; os estados e provas históricos abaixo permanecem válidos.
 Verifique o que já existe (lib/affiliate-setting.ts menciona um diretório de programas de afiliados "if one ever opens"). Construa um programa em que um criador indica outro e recebe crédito na própria mensalidade somente depois que o indicado pagar, com o crédito limitado de modo que cada cliente, isoladamente, mantenha 60% no pior caso. Nada de dinheiro em espécie, pagamento por cadastro sem compra ou recompensa por autoindicação. Proteja contra fraude (mesma pessoa, mesmo cartão, mesmo dispositivo). Desligado até a decisão do dono.
 
 217. [OP3] Aplicativos oficiais no Zapier e no Make
+
+Estado: OR: após o Bloco A, na ordem já existente entre 206 [SH3] e 272 [HM1]; 232 [CA1] foi antecipado e não se repete; antes do Bloco B. Registro de posição; os estados e provas históricos abaixo permanecem válidos.
 Estude os requisitos oficiais para publicar um aplicativo público no Zapier e no Make (custos, revisão, termos e exigência de empresa). Construa, sobre a API v1 e os webhooks que já existem, as definições dos gatilhos e das ações (por exemplo, nova venda, novo comprador, novo membro, novo agendamento, criar cupom), com testes simulados. Não publique nada: registre em docs/zapier-make.md os passos que só o dono pode executar.
 
 218. [OP4] Calculadora pública "quanto custa a sua Shopify com aplicativos"
+
+Estado: OR: após o Bloco A, na ordem já existente entre 206 [SH3] e 272 [HM1]; 232 [CA1] foi antecipado e não se repete; antes do Bloco B. Registro de posição; os estados e provas históricos abaixo permanecem válidos.
 Crie, em inglês americano, uma calculadora pública que some a mensalidade da Shopify, os aplicativos de curso, comunidade, assinatura, e-mail e agendamento mais usados e as taxas por venda, e compare a soma com o plano do Marktmorgen que entrega o mesmo. Use somente preços de fontes oficiais, com a data da consulta exibida na página e uma rotina que acuse preços com mais de 90 dias sem revisão. Nada de valores inventados ou de afirmação de superioridade sem fonte. Siga as regras de SEO e de design já adotadas no site e mostre apenas recursos que estejam ligados.
 
 219. [OP5] Loja completa montada pela IA a partir do que o criador já tem: muito superior à de todos os concorrentes e extremamente fácil de usar
@@ -3525,7 +3659,8 @@ Escopo:
 12. Interruptor no código, desligado, no mesmo padrão de ZOOM_APPROVED. É proibido criar contas, registrar aplicativo na Meta, aceitar termos, pedir aprovações ou ligar o interruptor: isso depende do dono.
 13. Inglês americano e as mesmas exigências de acessibilidade (WCAG 2.2 AAA como ponto de partida) das demais telas, incluindo uso completo por teclado e por leitor de tela. Testes somente com fornecedores e páginas simulados.
 
-Estado: na fila. Ao concluir, registre o commit, o resultado da suíte completa e a publicação, e altere o estado para "pronto e desligado, aguardando o dono".
+Estado: na fila. Ao concluir, registre o commit, o resultado da suíte completa e a publicação, e altere o estado para "pronto e desligado, aguardando o dono". Posição vigente: OR: após o Bloco A, na ordem já existente entre 206 [SH3] e 272 [HM1]; 232 [CA1] foi antecipado e não se repete; antes do Bloco B.
+   - Histórico OR — estado anterior à atualização documental: Estado: na fila. Ao concluir, registre o commit, o resultado da suíte completa e a publicação, e altere o estado para "pronto e desligado, aguardando o dono".
 
 Estado inicial de todos os itens: na fila.
 
@@ -3551,36 +3686,58 @@ Regras que valem para TODOS os itens desta seção (as mesmas da seção SH):
 8. Ao concluir cada item, registre o commit, o resultado da suíte completa e a publicação, e deixe o estado como "pronto e desligado, aguardando o dono" quando houver interruptor.
 
 220. [HL1] Programa de afiliados do próprio Marktmorgen, com comissão recorrente
+
+Estado: OR: após o Bloco A, na ordem já existente entre 206 [SH3] e 272 [HM1]; 232 [CA1] foi antecipado e não se repete; antes do Bloco B. Registro de posição; os estados e provas históricos abaixo permanecem válidos.
 Construa um programa em que qualquer pessoa (cliente ou não) divulga o Marktmorgen e recebe comissão recorrente sobre as mensalidades pagas pelos clientes que indicar. Calcule, com lib/receiving-costs.ts e tests/margin-alignment-table.ts, a maior comissão que ainda mantém 60% em cada plano e intervalo, isoladamente, no pior caso, e registre-a como PROPOSTA em docs/marktmorgen-affiliates.md; nenhuma porcentagem entra em vigor sem a decisão do dono. A comissão só é devida depois que o cliente pagar e que o prazo de reembolso de 30 dias terminar, e é estornada em caso de reembolso ou de contestação. Proteja contra fraude e autoindicação (mesma pessoa, cartão, dispositivo ou endereço). Estude, nas fontes oficiais, como pagar afiliados no exterior (PayPal, Stripe ou outro), os formulários fiscais exigidos (por exemplo, W-8BEN e W-9) e os custos de cada pagamento. Coordene com o item 216 [OP2] (crédito para clientes que indicam), sem duplicar a lógica, e reutilize os mecanismos de afiliados dos criadores que já existem.
 
 221. [HL2] Marktmorgen Academy, como canal de aquisição
+
+Estado: OR: após o Bloco A, na ordem já existente entre 206 [SH3] e 272 [HM1]; 232 [CA1] foi antecipado e não se repete; antes do Bloco B. Registro de posição; os estados e provas históricos abaixo permanecem válidos.
 Crie uma academia gratuita para criadores, hospedada numa loja do próprio Marktmorgen, usando os recursos de curso e de comunidade da plataforma (para que ela também sirva de demonstração ao vivo). Prepare a estrutura e o roteiro dos primeiros cursos (por exemplo, "how to sell your first digital product", "pricing your course", "building an email list"), escritos com base em fatos verificáveis e no que a plataforma realmente faz, sem promessa de ganho. A inscrição pede consentimento explícito para receber e-mails. Cada aula tem página própria, otimizada para busca. Calcule o custo de vídeo, armazenamento e e-mails da academia e coloque teto automático; esse custo entra nos custos fixos da empresa.
 
 222. [HL3] Certificação "Marktmorgen Certified"
+
+Estado: OR: após o Bloco A, na ordem já existente entre 206 [SH3] e 272 [HM1]; 232 [CA1] foi antecipado e não se repete; antes do Bloco B. Registro de posição; os estados e provas históricos abaixo permanecem válidos.
 Verifique o que lib/path-certificate.ts já faz. Ofereça um certificado gratuito, com página pública verificável e link permanente, a quem concluir a academia e passar numa avaliação, e um selo opcional para o perfil do criador. O certificado atesta somente o conhecimento avaliado, nunca resultados de vendas. Sem custo novo para a plataforma.
 
 223. [HL4] Programa de parceiros e especialistas ("Marktmorgen Experts")
+
+Estado: OR: após o Bloco A, na ordem já existente entre 206 [SH3] e 272 [HM1]; 232 [CA1] foi antecipado e não se repete; antes do Bloco B. Registro de posição; os estados e provas históricos abaixo permanecem válidos.
 Permita que freelancers e agências que montam lojas para criadores administrem várias lojas, sempre com a autorização de cada criador, usando os papéis e permissões de equipe que já existem. Crie um diretório público de especialistas verificados, em que só aparece quem concluir a certificação do item 222, com informações fornecidas pelo próprio especialista e sem avaliações inventadas. Os especialistas podem participar do programa de afiliados do item 220. Não inclua revenda com marca própria (white label), que está fora do plano.
 
 224. [HL5] Mensagem de resultado e narrativa de substituição de ferramentas
+
+Estado: OR: após o Bloco A, na ordem já existente entre 206 [SH3] e 272 [HM1]; 232 [CA1] foi antecipado e não se repete; antes do Bloco B. Registro de posição; os estados e provas históricos abaixo permanecem válidos.
 Revise os títulos e subtítulos da página inicial, da página de preços e das páginas de recursos para que falem do resultado que o criador busca (por exemplo, vender o primeiro produto ou não perder compradores fora do horário), e não só da lista de recursos, sempre sem promessa de resultado garantido e somente com recursos que existem e estão ligados. Mostre, com fatos verificáveis, quais ferramentas separadas o Marktmorgen substitui (loja, cursos, comunidade, agendamento, e-mail, afiliados e funis), com um único login. Mantenha uma chamada para ação dominante por página e destaque, na página de preços, o plano mais indicado, sem alterar preços nem limites. Coordene com os itens HT16 e HT17, sem duplicar o que eles já fizeram, e meça o desempenho antes e depois.
 
 225. [HL6] Calculadora de custo da pilha de ferramentas
+
+Estado: OR: após o Bloco A, na ordem já existente entre 206 [SH3] e 272 [HM1]; 232 [CA1] foi antecipado e não se repete; antes do Bloco B. Registro de posição; os estados e provas históricos abaixo permanecem válidos.
 Amplie a calculadora do item 218 [OP4] (que compara apenas com a Shopify) para uma única ferramenta pública que some o que o criador paga hoje em ferramentas separadas (por exemplo, Kajabi, Teachable, Skool, Circle, Linktree, Stan, Calendly, Kit, Mailchimp, ClickFunnels, HighLevel e Shopify com aplicativos) e compare a soma com o plano do Marktmorgen que entrega o mesmo. Use somente preços de fontes oficiais, com a data da consulta exibida e uma rotina que acuse preços com mais de 90 dias sem revisão. Não crie calculadora de "quanto você vai ganhar": nada de projeção de receita.
 
 226. [HL7] Painéis de valor do comprador ao longo do tempo (LTV) e de coortes para o criador
+
+Estado: OR: após o Bloco A, na ordem já existente entre 206 [SH3] e 272 [HM1]; 232 [CA1] foi antecipado e não se repete; antes do Bloco B. Registro de posição; os estados e provas históricos abaixo permanecem válidos.
 Verifique o que os relatórios e lib/stats já mostram. Acrescente, a partir dos dados que a loja já guarda, o valor médio gerado por comprador ao longo do tempo e a retenção por coorte de mês de compra (especialmente para assinaturas e comunidades), com explicação simples de cada número. Calcule o custo de leitura e de armazenamento e mantenha os limites do plano.
 
 227. [HL8] Automação recomendada a partir de um objetivo
+
+Estado: OR: após o Bloco A, na ordem já existente entre 206 [SH3] e 272 [HM1]; 232 [CA1] foi antecipado e não se repete; antes do Bloco B. Registro de posição; os estados e provas históricos abaixo permanecem válidos.
 Na matriz docs/highlevel-gap-matrix.md, o item H22 (Workflow AI) está como lacuna. Permita que o criador descreva um objetivo em linguagem natural (por exemplo, "lembrar quem não terminou a compra" ou "dar boas-vindas a novos membros") e receba uma proposta de automação montada somente com os blocos que já existem, explicada passo a passo. Nada é ligado sem a confirmação dele. A chamada à IA é reservada antes, com teto automático, dentro dos orçamentos de IA que já existem.
 
 228. [HL9] Agendador de posts nas redes sociais (primeiro o estudo)
+
+Estado: OR: após o Bloco A, na ordem já existente entre 206 [SH3] e 272 [HM1]; 232 [CA1] foi antecipado e não se repete; antes do Bloco B. Registro de posição; os estados e provas históricos abaixo permanecem válidos.
 Na mesma matriz, o item H14 (planejador de redes sociais) está como lacuna. Estude, nas fontes oficiais, as APIs, as revisões de aplicativo, os termos e os custos do Instagram, do Facebook, do TikTok, do YouTube, do Pinterest, do LinkedIn e do X para agendar e publicar posts com a conta do próprio criador, e registre em docs/social-scheduler-study.md o que seria possível, o que exige aprovação e quanto custaria. Construa somente o que couber na margem, sem depender de aprovação, e desligado; o restante depende da decisão do dono.
 
 229. [HL10] Biblioteca de casos reais e pedidos de avaliação
+
+Estado: OR: após o Bloco A, na ordem já existente entre 206 [SH3] e 272 [HM1]; 232 [CA1] foi antecipado e não se repete; antes do Bloco B. Registro de posição; os estados e provas históricos abaixo permanecem válidos.
 Verifique o que já existe sobre casos e vitrines. Prepare uma biblioteca pública de casos que só aceite lojas reais, com autorização escrita do criador e com números conferidos nos dados da própria loja; enquanto não houver casos reais, a página não é publicada. Prepare também, desligado, o convite para que clientes reais avaliem o Marktmorgen no G2, no Capterra ou no Trustpilot, sem recompensa condicionada a avaliação positiva e respeitando as regras de cada site.
 
 230. [HL11] Páginas por nicho de criador, com conteúdo útil e único
+
+Estado: OR: após o Bloco A, na ordem já existente entre 206 [SH3] e 272 [HM1]; 232 [CA1] foi antecipado e não se repete; antes do Bloco B. Registro de posição; os estados e provas históricos abaixo permanecem válidos.
 Verifique as páginas que já existem em app/for. Amplie-as para os nichos mais valiosos (por exemplo, coaches, professores de ioga, fotógrafos, músicos e consultores), cada uma com conteúdo realmente útil e diferente (exemplos de produtos, preços praticados no nicho com fonte, passos de montagem e perguntas frequentes), e não páginas repetidas com o nome do nicho trocado, para cumprir as políticas do Google contra conteúdo produzido em escala sem valor. Siga as regras de SEO e de design já adotadas no site.
 
 Estado inicial de todos os itens: na fila.
@@ -3594,7 +3751,8 @@ Estado inicial de todos os itens: na fila.
 
 ### 231. [EQ1] Venda de cursos para equipes de empresas, 100% autoatendida
 
-**Estado:** na fila. **Ordem:** depois do item230 [HL11] e de todos os trabalhos em andamento; não bloqueia nenhum outro item. Implementação futura, sem iniciar este recurso nesta inclusão.
+**Estado:** na fila. **Ordem:** depois do item230 [HL11] e de todos os trabalhos em andamento; não bloqueia nenhum outro item. Implementação futura, sem iniciar este recurso nesta inclusão. Posição vigente: OR: após o Bloco A, na ordem já existente entre 206 [SH3] e 272 [HM1]; 232 [CA1] foi antecipado e não se repete; antes do Bloco B.
+   - Histórico OR — estado anterior à atualização documental: **Estado:** na fila. **Ordem:** depois do item230 [HL11] e de todos os trabalhos em andamento; não bloqueia nenhum outro item. Implementação futura, sem iniciar este recurso nesta inclusão.
 
 Pedido: dono, 21/10/2026, 01h24 de Fortaleza. Da análise da Coursera (segmento de empresas: US$ 140,0 milhões de receita no 2º trimestre de 2026, segundo o Form 8-K da Coursera na SEC), aproveitar apenas a venda de cursos para equipes de empresas, sem copiar a assinatura de catálogo (Coursera Plus), que exigiria que o Marktmorgen recebesse o dinheiro dos alunos e o repartisse entre os criadores, contra a decisão do dono de 29/09/2026 de nunca movimentar dinheiro de terceiros.
 
@@ -3625,7 +3783,8 @@ Estado: na fila. Ao concluir, registre o commit, o resultado da suíte completa 
 
 ### 232. [CA1] Fechamento de toda possibilidade de calote dos criadores ao Marktmorgen
 
-**Estado:** na fila. **Ordem:** depois do item231 [EQ1] e de todos os trabalhos em andamento; não bloqueia nenhum outro. Escopo futuro, sem iniciar a implementação nesta inclusão.
+**Estado:** na fila. **Ordem:** depois do item231 [EQ1] e de todos os trabalhos em andamento; não bloqueia nenhum outro. Escopo futuro, sem iniciar a implementação nesta inclusão. Posição vigente: OR: Bloco A, posição 4/8, após 275 [FX1] e antes de 206 [SH3]; antecipado da posição histórica após 231 [EQ1], sem repetir no trecho 206–272.
+   - Histórico OR — estado anterior à atualização documental: **Estado:** na fila. **Ordem:** depois do item231 [EQ1] e de todos os trabalhos em andamento; não bloqueia nenhum outro. Escopo futuro, sem iniciar a implementação nesta inclusão.
 
 Pedido: dono, 21/10/2026, 01h26, 01h28 e 01h32 de Fortaleza: "eu vou querer ter modelo em que não tem como levar calote dos criadores" e "veja como faz Stan, Hotmart".
 
@@ -3667,18 +3826,28 @@ O que já existe no Marktmorgen e NÃO deve ser refeito (verifique antes): comun
 Regras: valem para estes itens todas as regras da seção SH (itens 204 a 214), sem exceção: verificar e reutilizar o que já existe; margem líquida mínima de 60% (ela pode ser maior, mas nunca menor) por cliente isolado, com 100% dos direitos usados no pior mês, e também no consolidado, depois de todos os custos e de todos os impostos, inclusive os brasileiros; custo desconhecido não pode ser considerado zero; leitura que der MAIS imposto; interruptor no código, desligado; proibição de criar contas, pagar qualquer valor, aceitar termos, pedir aprovações, ligar interruptores e alterar preços, limites visíveis, comissão, PLANS_ON_SALE, tax gate, art. 9a ou a revisão comercial; testes somente com fornecedores simulados; inglês americano, acessibilidade (WCAG 2.2 AAA como ponto de partida) e nenhuma afirmação sem fonte oficial datada. Todo número exibido ao público (membros, atividade, avaliações) tem de ser real, lido dos dados da própria loja, nunca arredondado para cima, estimado ou inventado.
 
 233. [SK1] Página pública de cada comunidade, como página de vendas indexada
+
+Estado: OR: após o Bloco A, na ordem já existente entre 206 [SH3] e 272 [HM1]; 232 [CA1] foi antecipado e não se repete; antes do Bloco B. Registro de posição; os estados e provas históricos abaixo permanecem válidos.
 Verifique o que um visitante que não é membro vê hoje em /@nome/community. Crie, com a autorização do criador (desligada por padrão), uma página pública "About" para cada comunidade, com a descrição escrita pelo criador, o preço, o que o membro recebe (cursos, eventos, níveis e o que cada nível libera), o número real de membros, a atividade real dos últimos 30 dias, as avaliações reais de membros e o criador, além do botão de entrada no checkout que já existe. Nenhum conteúdo pago aparece (nem títulos de aulas, como já protege lib/community-found.ts), nenhum membro aparece sem ter escolhido aparecer, e números pequenos são mostrados como são. A página segue as regras de SEO, dados estruturados e design já adotadas. Calcule o custo de leitura por visita e coloque cache e teto automático.
 
 234. [SK2] Descoberta de lojas e comunidades
+
+Estado: OR: após o Bloco A, na ordem já existente entre 206 [SH3] e 272 [HM1]; 232 [CA1] foi antecipado e não se repete; antes do Bloco B. Registro de posição; os estados e provas históricos abaixo permanecem válidos.
 Crie uma página pública de descoberta em que o comprador encontra lojas e comunidades Marktmorgen por tema, idioma e preço, somente das lojas cujo criador autorizou a listagem (desligada por padrão), no mesmo padrão de índice mantido por consentimento de lib/directory-index.ts, sem varrer a base a cada visita. A ordem é explicada na própria página e baseada apenas em critérios declarados (por exemplo, avaliações reais e atividade real), sem posição paga e sem manipulação. Defina e aplique regras de conteúdo para a listagem (nada ilegal, nada adulto, nada enganoso), com denúncia pelo visitante e remoção automática da listagem em caso de violação comprovada. Calcule o custo do índice, das leituras e da moderação, e coloque teto automático.
 
 235. [SK3] Perfil único do membro em todas as comunidades Marktmorgen
+
+Estado: OR: após o Bloco A, na ordem já existente entre 206 [SH3] e 272 [HM1]; 232 [CA1] foi antecipado e não se repete; antes do Bloco B. Registro de posição; os estados e provas históricos abaixo permanecem válidos.
 Verifique o que a biblioteca do comprador e o perfil de membro já fazem. Permita que uma pessoa use um único perfil (nome, foto e apresentação) em todas as comunidades Marktmorgen de que participa, e veja num só lugar as comunidades, os eventos e as notificações. Cada criador continua vendo apenas os dados dos próprios membros, o perfil não revela a uma comunidade de quais outras a pessoa participa, e a pessoa pode usar um perfil diferente em cada comunidade se preferir. A política de privacidade deve dizer isso, e o texto entra em vigor junto com o recurso.
 
 236. [SK4] Desafio de crescimento para criadores, inspirado no Skool Games (primeiro o estudo)
+
+Estado: OR: após o Bloco A, na ordem já existente entre 206 [SH3] e 272 [HM1]; 232 [CA1] foi antecipado e não se repete; antes do Bloco B. Registro de posição; os estados e provas históricos abaixo permanecem válidos.
 Estude, nas fontes oficiais, como funciona o Skool Games e as leis aplicáveis a concursos e prêmios nos EUA, no Canadá, no Reino Unido e na União Europeia. Registre em docs/creator-challenge-study.md uma proposta de desafio que premie progresso real e verificado nos dados da loja (por exemplo, a primeira venda ou os primeiros dez membros), com prêmios que não sejam dinheiro (por exemplo, destaque na vitrine e na descoberta, com autorização, e um selo), sem exigência de compra, com regras públicas e sem números inventados. O custo dos prêmios entra nos custos fixos da empresa. Não construa nada: a construção depende da decisão do dono, a partir desse estudo.
 
 237. [SK5] Página honesta "Marktmorgen vs Skool"
+
+Estado: OR: após o Bloco A, na ordem já existente entre 206 [SH3] e 272 [HM1]; 232 [CA1] foi antecipado e não se repete; antes do Bloco B. Registro de posição; os estados e provas históricos abaixo permanecem válidos.
 Crie, em inglês americano, uma página de comparação somente com fatos verificáveis e fontes oficiais datadas: o que cada plataforma inclui, preços, taxas por venda e o que cada uma não faz. Destaque, se confirmado nas fontes oficiais da Skool, que o Marktmorgen une a comunidade com recursos de venda (provas e certificados, oferta extra no checkout, oferta depois do pagamento, combos, funis e loja completa), sempre mostrando apenas recursos que estejam no ar e ligados. Siga o padrão do item 213 [SH10] e coordene com o item 224 [HL5], para que a mensagem "comunidade e vendas num só lugar" seja a mesma em todo o site.
 
 Estado inicial de todos os itens: na fila.
@@ -3699,21 +3868,33 @@ O que já existe ou já está na fila e NÃO deve ser refeito (verifique antes):
 Regras: valem para estes itens todas as regras da seção SH (itens 204 a 214), sem exceção: verificar e reutilizar o que já existe; margem líquida mínima de 60% (ela pode ser maior, mas nunca menor) por cliente isolado, com 100% dos direitos usados no pior mês, e também no consolidado, depois de todos os custos e de todos os impostos, inclusive os brasileiros; custo desconhecido não pode ser considerado zero; leitura que der MAIS imposto; interruptor no código, desligado, quando o item criar recurso novo para os criadores; proibição de criar contas, pagar qualquer valor, aceitar termos, pedir aprovações, ligar interruptores e alterar preços, limites visíveis, comissão, PLANS_ON_SALE, tax gate, art. 9a ou a revisão comercial; testes somente com fornecedores simulados; inglês americano, acessibilidade (WCAG 2.2 AAA como ponto de partida) e nenhuma afirmação sem fonte oficial datada. Nenhuma página pública pode mostrar recurso desligado.
 
 238. [CF1] Programa único de páginas de comparação e de alternativas
+
+Estado: OR: após o Bloco A, na ordem já existente entre 206 [SH3] e 272 [HM1]; 232 [CA1] foi antecipado e não se repete; antes do Bloco B. Registro de posição; os estados e provas históricos abaixo permanecem válidos.
 Reúna num único modelo, reutilizado em todas as páginas, as comparações dos itens 213 [SH10] e 237 [SK5] e as que já existem no blog, e amplie-o para os principais concorrentes da lista dos 30 (por exemplo, Kajabi, ClickFunnels, Stan, Hotmart, Teachable, Thinkific, Gumroad, Circle, Skool, Linktree, Beacons, Podia, Systeme.io, Kartra, HighLevel e Shopify). Para cada concorrente, crie uma página "Marktmorgen vs [concorrente]" e uma página "[concorrente] alternatives", ambas com fatos verificáveis, fontes oficiais com a data da consulta, o que cada plataforma faz e não faz, preços e taxas por venda, e uma rotina que acuse fatos com mais de 90 dias sem revisão. Cada página tem conteúdo realmente útil e diferente, em cumprimento às políticas do Google contra conteúdo produzido em escala sem valor. Nada de afirmação de superioridade sem fonte, de depoimento ou de número inventado.
 
 239. [CF2] Guias oficiais de migração por plataforma
+
+Estado: OR: após o Bloco A, na ordem já existente entre 206 [SH3] e 272 [HM1]; 232 [CA1] foi antecipado e não se repete; antes do Bloco B. Registro de posição; os estados e provas históricos abaixo permanecem válidos.
 Crie, para cada plataforma de origem que os importadores aceitam (por exemplo, Stan, Gumroad, Kajabi, Teachable, Mailchimp, Shopify e ClickFunnels), uma página "Move from [plataforma] to Marktmorgen" que explique, passo a passo e com base no que o código realmente faz, como exportar os dados na plataforma de origem, o que entra no Marktmorgen (produtos, contatos com consentimento, membros e compras anteriores), o que não entra e o que o criador precisa refazer. Verifique nas fontes oficiais de cada plataforma como a exportação funciona hoje e registre a data. Nenhuma migração manual feita pelo dono: tudo autoatendido.
 
 240. [CF3] Início pelo e-mail na página inicial e boletim do Marktmorgen
+
+Estado: OR: após o Bloco A, na ordem já existente entre 206 [SH3] e 272 [HM1]; 232 [CA1] foi antecipado e não se repete; antes do Bloco B. Registro de posição; os estados e provas históricos abaixo permanecem válidos.
 Na primeira tela da página inicial, ofereça um campo de e-mail que inicia o cadastro pelo mesmo link de acesso que já existe, com a proteção contra robôs que já existe (Vercel BotID). Se a pessoa não concluir o cadastro, envie no máximo um lembrete, e somente se ela tiver marcado uma caixa, desmarcada por padrão, pedindo esse lembrete. Ofereça também, separadamente e com outra caixa desmarcada por padrão, um boletim do Marktmorgen para criadores, com conteúdo útil e verificável (ligado à academia do item 221 [HL2]), link de cancelamento em um clique e o endereço postal exigido por lei. Cumpra a lei americana CAN-SPAM, o GDPR, a lei canadense CASL e as regras do Reino Unido. O custo desses e-mails entra nos custos fixos da empresa e tem teto automático. Meça a conversão do cadastro antes e depois.
 
 241. [CF4] Vídeos curtos e reais do produto nas páginas de recursos
+
+Estado: OR: após o Bloco A, na ordem já existente entre 206 [SH3] e 272 [HM1]; 232 [CA1] foi antecipado e não se repete; antes do Bloco B. Registro de posição; os estados e provas históricos abaixo permanecem válidos.
 Grave, por automação de navegador sobre a loja de demonstração (Harbor Kitchen, rotulada como fictícia), vídeos curtos de tela que mostrem cada recurso principal funcionando de verdade, sem atores, sem números inventados e sem recursos desligados. Cada vídeo tem legenda e transcrição em texto, carrega somente quando necessário (sem prejudicar o LCP) e respeita a regra de nenhuma imagem repetida no site. Hospede-os no fornecedor de vídeo que já existe, calcule o custo de armazenamento e de entrega, e coloque teto automático; esse custo entra nos custos fixos da empresa.
 
 242. [CF5] Modelos de funil por nicho de criador
+
+Estado: OR: após o Bloco A, na ordem já existente entre 206 [SH3] e 272 [HM1]; 232 [CA1] foi antecipado e não se repete; antes do Bloco B. Registro de posição; os estados e provas históricos abaixo permanecem válidos.
 Amplie os modelos de funil por objetivo (lib/funnel-starter-catalog.ts) com versões por nicho (por exemplo, coach, professor de ioga, fotógrafo, músico, consultor e educador), com textos de exemplo honestos, sem resultados, números ou depoimentos inventados. Coordene com a biblioteca de modelos do item HT15 e com as páginas por nicho do item 230 [HL11], para que cada nicho tenha o mesmo conjunto coerente de modelos, páginas e exemplos.
 
 243. [CF6] Economia anual explícita e plano recomendado na página de preços
+
+Estado: OR: após o Bloco A, na ordem já existente entre 206 [SH3] e 272 [HM1]; 232 [CA1] foi antecipado e não se repete; antes do Bloco B. Registro de posição; os estados e provas históricos abaixo permanecem válidos.
 Verifique se a página de preços mostra, para cada plano, a economia exata do pagamento anual em relação a doze pagamentos mensais, calculada a partir de lib/plan.ts (o ano equivale a dez mensalidades), e corrija o que faltar. Destaque o plano mais indicado com o rótulo "Recommended", e nunca com "Most Popular" enquanto não houver dados reais de clientes que o comprovem. Não altere preços, limites, nomes nem número de planos. Coordene com o item 224 [HL5].
 
 Estado inicial de todos os itens: na fila.
@@ -3734,15 +3915,23 @@ O que já existe ou já está na fila e NÃO deve ser refeito (verifique antes):
 Regras: valem para estes itens todas as regras da seção SH (itens 204 a 214), sem exceção: verificar e reutilizar o que já existe; margem líquida mínima de 60% (ela pode ser maior, mas nunca menor) por cliente isolado, com 100% dos direitos usados no pior mês, e também no consolidado, depois de todos os custos e de todos os impostos, inclusive os brasileiros; custo desconhecido não pode ser considerado zero; leitura que der MAIS imposto; interruptor no código, desligado, quando o item criar recurso novo; proibição de criar contas, pagar qualquer valor, aceitar termos, pedir aprovações, ligar interruptores e alterar preços, limites visíveis, comissão, PLANS_ON_SALE, tax gate, art. 9a ou a revisão comercial; testes somente com fornecedores simulados; inglês americano, acessibilidade (WCAG 2.2 AAA como ponto de partida) e nenhuma afirmação sem fonte oficial datada. Nenhuma página pública pode mostrar recurso desligado.
 
 244. [SP1] Central de ferramentas gratuitas para criadores, sem cadastro
+
+Estado: OR: após o Bloco A, na ordem já existente entre 206 [SH3] e 272 [HM1]; 232 [CA1] foi antecipado e não se repete; antes do Bloco B. Registro de posição; os estados e provas históricos abaixo permanecem válidos.
 Crie uma seção pública de ferramentas gratuitas, cada uma com página própria otimizada para busca e com uma chamada discreta para abrir a loja no Marktmorgen. Exemplos: quanto sobra de uma venda depois das taxas da Stripe; preço final com IVA ou imposto sobre vendas incluído; quanto o comprador economiza no plano anual; desconto por quantidade para equipes; código QR do link da loja; redimensionador de imagens para a página de produto; e verificador do tamanho de títulos e descrições. Faça os cálculos e o processamento no próprio navegador do visitante, sempre que possível, para não haver custo de servidor; quando houver, calcule-o e coloque teto automático. Todas as taxas e regras usadas vêm de fontes oficiais com a data da consulta, com uma rotina que acuse dados com mais de 90 dias sem revisão. Não crie geradores de documentos jurídicos (termos de uso ou políticas), nem ferramentas que projetem ganhos; se alguma ferramenta usar IA, ela segue a reserva antes da chamada e o teto dos orçamentos de IA que já existem. Nenhum dado digitado pelo visitante é guardado.
 
 245. [SP2] Página "Grow without switching"
+
+Estado: OR: após o Bloco A, na ordem já existente entre 206 [SH3] e 272 [HM1]; 232 [CA1] foi antecipado e não se repete; antes do Bloco B. Registro de posição; os estados e provas históricos abaixo permanecem válidos.
 Crie, em inglês americano, uma página que mostre como o criador começa no plano Store e cresce para o Studio e o Scale sem trocar de ferramenta, usando somente os preços e os limites reais de lib/plan.ts: o que cada plano acrescenta, que a troca de plano é feita pelo próprio criador, que os dados e os compradores continuam com ele (a conta Stripe é dele, e há exportação dos dados) e que não há perda de nada ao subir de plano. Nada de promessa de ganho ou de "marca global". Não altere preços, limites, nomes nem número de planos. Coordene com o item 224 [HL5] e com a página de preços.
 
 246. [SP3] Estudo: teste pago de US$ 1 em comparação com o teste grátis com cartão
+
+Estado: OR: após o Bloco A, na ordem já existente entre 206 [SH3] e 272 [HM1]; 232 [CA1] foi antecipado e não se repete; antes do Bloco B. Registro de posição; os estados e provas históricos abaixo permanecem válidos.
 Estude, nas fontes oficiais, como funciona o "3 days free, then $1/month for 3 months" da Shopify, e compare, para o Marktmorgen, o teste grátis atual de 14 dias com cartão com um período de entrada pago de valor simbólico (por exemplo, US$ 1). Calcule, com lib/receiving-costs.ts e a revisão de exposição (docs/funded-exposure-review.md), o custo máximo de cada opção no pior caso, inclusive o uso integral dos direitos durante o período, as taxas por cobrança, as contestações e o efeito sobre fraudes e calotes. Um período de entrada que não cubra 60% por si só tem de ser tratado como exposição com teto e limite de ocorrências, como o teste grátis. Registre o estudo em docs/paid-intro-study.md como PROPOSTA: nenhum preço, período ou interruptor muda sem a decisão do dono.
 
 247. [SP4] Página de status e página de segurança
+
+Estado: OR: após o Bloco A, na ordem já existente entre 206 [SH3] e 272 [HM1]; 232 [CA1] foi antecipado e não se repete; antes do Bloco B. Registro de posição; os estados e provas históricos abaixo permanecem válidos.
 Crie uma página pública de status que mostre a disponibilidade real do site, do checkout e dos e-mails, medida pelas verificações automáticas que já existem (por exemplo, a verificação diária de e-mail) e por verificações novas de baixo custo, com o histórico real de incidentes, sem arredondar para cima. Crie também uma página de segurança que liste apenas práticas reais e verificáveis no código (por exemplo, pagamentos processados pela Stripe na conta do próprio criador, sem que o Marktmorgen guarde dados de cartão; proteção contra robôs; exportação e exclusão de dados; e formas de entrar na conta), sem selos ou certificações que o Marktmorgen não tenha. Calcule o custo das verificações e coloque teto automático; esse custo entra nos custos fixos da empresa.
 
 Estado inicial de todos os itens: na fila.
@@ -3767,15 +3956,23 @@ O que já existe ou já está na fila e NÃO deve ser refeito (verifique antes):
 Regras: valem para estes itens todas as regras da seção SH (itens 204 a 214), sem exceção: verificar e reutilizar o que já existe; margem líquida mínima de 60% (ela pode ser maior, mas nunca menor) por cliente isolado, com 100% dos direitos usados no pior mês, e também no consolidado, depois de todos os custos e de todos os impostos, inclusive os brasileiros; custo desconhecido não pode ser considerado zero; leitura que der MAIS imposto; interruptor no código, desligado, quando o item criar recurso novo; proibição de criar contas, pagar qualquer valor, aceitar termos, pedir aprovações, ligar interruptores e alterar preços, limites visíveis, comissão, PLANS_ON_SALE, tax gate, art. 9a ou a revisão comercial; testes somente com fornecedores simulados; inglês americano, acessibilidade (WCAG 2.2 AAA como ponto de partida) e nenhuma afirmação sem fonte oficial datada. Nenhuma página pública pode mostrar recurso desligado.
 
 248. [ST1] Lojas dos criadores encontradas no Google
+
+Estado: OR: após o Bloco A, na ordem já existente entre 206 [SH3] e 272 [HM1]; 232 [CA1] foi antecipado e não se repete; antes do Bloco B. Registro de posição; os estados e provas históricos abaixo permanecem válidos.
 Audite o que as lojas já fazem para os buscadores (mapas do site, dados estruturados, títulos e descrições, endereços, velocidade, domínio próprio e o blog da loja) e corrija o que faltar. Acrescente ao studio uma lista de verificação de SEO por loja, por produto e por página, com explicação simples de cada ponto, e campos próprios para título e descrição de busca em cada produto e página. Ofereça ao criador um guia passo a passo para verificar o próprio domínio no Google Search Console. Meça, com dados reais e sem promessas de posição no Google, a nota de desempenho das lojas no celular. Calcule o custo de leitura por visitas de robôs de busca e mantenha os tetos que já existem.
 
 249. [ST2] Trilhas de aprendizado
+
+Estado: OR: após o Bloco A, na ordem já existente entre 206 [SH3] e 272 [HM1]; 232 [CA1] foi antecipado e não se repete; antes do Bloco B. Registro de posição; os estados e provas históricos abaixo permanecem válidos.
 Permita que o criador organize vários cursos numa trilha, em ordem, com pré-requisitos (por exemplo, o curso 2 abre quando o curso 1 é concluído), progresso visível ao aluno e certificado da trilha completa, reutilizando os cursos, as turmas, a liberação gradual, as provas e os certificados que já existem. A trilha pode ser vendida sozinha, dentro de uma assinatura ou de um combo, sempre com cobrança na conta Stripe do criador. Calcule o custo de leitura e de armazenamento e mantenha os limites do plano.
 
 250. [ST3] Proposta: mais valor sem custo no plano Store
+
+Estado: OR: após o Bloco A, na ordem já existente entre 206 [SH3] e 272 [HM1]; 232 [CA1] foi antecipado e não se repete; antes do Bloco B. Registro de posição; os estados e provas históricos abaixo permanecem válidos.
 Liste todos os recursos que hoje ficam só nos planos Studio e Scale e, para cada um, calcule com lib/receiving-costs.ts e o registro de custos por plano se ele tem custo variável para o Marktmorgen. Para os que não têm custo, analise o efeito de oferecê-los também no plano Store: maior conversão e menos cancelamentos, de um lado, e menos motivos para subir de plano, de outro. Siga a regra do dono de 18/10/2026 ("oferecer o ultra máximo de coisas que os clientes percebem como alto valor e que não têm custo para ele"), sem perder lucro. Registre a análise em docs/store-plan-value-proposal.md como PROPOSTA: nenhum recurso, preço ou limite muda sem a decisão do dono.
 
 251. [ST4] Do cadastro à loja pronta para vender, medido
+
+Estado: OR: após o Bloco A, na ordem já existente entre 206 [SH3] e 272 [HM1]; 232 [CA1] foi antecipado e não se repete; antes do Bloco B. Registro de posição; os estados e provas históricos abaixo permanecem válidos.
 Meça, em testes automatizados com fornecedores simulados, o tempo e o número de passos desde o cadastro até a loja publicada com um primeiro produto e o checkout pronto, e registre os resultados. Remova os passos que não forem indispensáveis, sem tirar nenhuma proteção (consentimentos, verificações e avisos legais), e coordene com o Marktmorgen Path e com o item 219 [OP5]. Nenhuma página pública pode citar tempo ou facilidade sem a medição registrada.
 
 Estado inicial de todos os itens: na fila.
@@ -3800,15 +3997,23 @@ O que já existe ou já está na fila e NÃO deve ser refeito (verifique antes):
 Regras: valem para estes itens todas as regras da seção SH (itens 204 a 214), sem exceção: verificar e reutilizar o que já existe; margem líquida mínima de 60% (ela pode ser maior, mas nunca menor) por cliente isolado, com 100% dos direitos usados no pior mês, e também no consolidado, depois de todos os custos e de todos os impostos, inclusive os brasileiros; custo desconhecido não pode ser considerado zero; leitura que der MAIS imposto; interruptor no código, desligado, quando o item criar recurso novo; proibição de criar contas, pagar qualquer valor, aceitar termos, pedir aprovações, ligar interruptores e alterar preços, limites visíveis, comissão, PLANS_ON_SALE, tax gate, art. 9a ou a revisão comercial; testes somente com fornecedores simulados; inglês americano, acessibilidade (WCAG 2.2 AAA como ponto de partida) e nenhuma afirmação sem fonte oficial datada. Nenhuma página pública pode mostrar recurso desligado. O Marktmorgen nunca movimenta dinheiro de terceiros (decisão do dono de 29/09/2026).
 
 252. [WH1] Recompensas por conteúdo, no padrão do Content Rewards da Whop (primeiro o estudo)
+
+Estado: OR: após o Bloco A, na ordem já existente entre 206 [SH3] e 272 [HM1]; 232 [CA1] foi antecipado e não se repete; antes do Bloco B. Registro de posição; os estados e provas históricos abaixo permanecem válidos.
 Estude, nas fontes oficiais, como funcionam o Content Rewards e o Whop Clips: quem paga, quanto se paga por mil visualizações, como as visualizações são verificadas, como se combate a fraude (visualizações compradas ou de robôs) e como as pessoas recebem. Estude também, nas fontes oficiais, o que exigem as regras de publicidade (por exemplo, as orientações da FTC sobre divulgação de conteúdo patrocinado, as regras do Reino Unido e da União Europeia), os termos do TikTok, do Instagram, do YouTube e do X sobre conteúdo pago, e a leitura de visualizações pelas APIs oficiais dessas redes. Desenhe em docs/content-rewards-study.md uma versão para o Marktmorgen em que o criador define a campanha e o orçamento, o pagamento sai da conta do próprio criador, como já acontece nos pagamentos a parceiros pelo PayPal do próprio criador (lib/paypal-payouts.ts), e o Marktmorgen nunca recebe nem guarda o dinheiro. Todo conteúdo pago deve trazer a identificação de publicidade exigida. Avalie também, separadamente, um programa do próprio Marktmorgen para divulgar a plataforma, cujo custo entraria nos custos fixos. Não construa nada: a construção depende da decisão do dono, a partir desse estudo.
 
 253. [WH2] Página completa e transparente de taxas
+
+Estado: OR: após o Bloco A, na ordem já existente entre 206 [SH3] e 272 [HM1]; 232 [CA1] foi antecipado e não se repete; antes do Bloco B. Registro de posição; os estados e provas históricos abaixo permanecem válidos.
 Crie, em inglês americano, uma página pública que mostre, com fontes oficiais e a data da consulta, todas as taxas envolvidas numa venda pelo Marktmorgen: o preço do plano; os 0% do Marktmorgen sobre as vendas; as taxas da Stripe na conta do criador, por país, para cartão doméstico e internacional, conversão de moeda, contestação e saque; as taxas das formas de pagamento como Klarna e Afterpay; e quem paga cada uma. Inclua um exemplo calculado de uma venda, sem projeção de ganho, e uma rotina que acuse dados com mais de 90 dias sem revisão. Coordene com as ferramentas do item 244 [SP1] e com a página de preços.
 
 254. [WH3] Selo honesto de verificação do criador
+
+Estado: OR: após o Bloco A, na ordem já existente entre 206 [SH3] e 272 [HM1]; 232 [CA1] foi antecipado e não se repete; antes do Bloco B. Registro de posição; os estados e provas históricos abaixo permanecem válidos.
 Mostre, na loja e na página pública da comunidade, um selo que diga somente o que é verdade e verificável: por exemplo, que a conta de pagamentos do criador foi verificada pela Stripe (lida da própria conta, sem guardar documentos) e há quanto tempo a loja está aberta no Marktmorgen. O selo some automaticamente quando a condição deixar de valer. Verifique, nas regras oficiais de uso da marca da Stripe, se o nome ou o logotipo podem ser usados e de que forma; se não puderem, use apenas texto descritivo, sem logotipo. Nada de selo de "top seller", número de vendas ou avaliações que não sejam reais.
 
 255. [WH4] Kit do desenvolvedor: especificação OpenAPI, SDK em TypeScript e loja de testes
+
+Estado: OR: após o Bloco A, na ordem já existente entre 206 [SH3] e 272 [HM1]; 232 [CA1] foi antecipado e não se repete; antes do Bloco B. Registro de posição; os estados e provas históricos abaixo permanecem válidos.
 Publique, a partir da API v1 que já existe, uma especificação OpenAPI completa e gerada a partir do código (para que nunca fique desatualizada), um SDK oficial em TypeScript gerado dessa especificação, e uma loja de testes com dados fictícios, claramente rotulada, em que desenvolvedores e as integrações do item 217 [OP3] possam testar sem tocar em dados reais. Calcule o custo das requisições de teste e coloque teto automático. Não publique pacotes em registros externos (como o npm), que exigem conta: deixe tudo pronto e liste em docs/developer-kit.md os passos que só o dono pode executar.
 
 Estado inicial de todos os itens: na fila.
@@ -3833,24 +4038,38 @@ O que já existe ou já está na fila e NÃO deve ser refeito (verifique antes):
 Regras: valem para estes itens todas as regras da seção SH (itens 204 a 214), sem exceção: verificar e reutilizar o que já existe; margem líquida mínima de 60% (ela pode ser maior, mas nunca menor) por cliente isolado, com 100% dos direitos usados no pior mês, e também no consolidado, depois de todos os custos e de todos os impostos, inclusive os brasileiros; custo desconhecido não pode ser considerado zero; leitura que der MAIS imposto; interruptor no código, desligado, quando o item criar recurso novo; proibição de criar contas, pagar qualquer valor, aceitar termos, pedir aprovações, ligar interruptores e alterar preços, limites visíveis, comissão, PLANS_ON_SALE, tax gate, art. 9a ou a revisão comercial; testes somente com fornecedores simulados; inglês americano, acessibilidade (WCAG 2.2 AAA como ponto de partida) e nenhuma afirmação sem fonte oficial datada. Nenhuma página pública pode mostrar recurso desligado. Toda chamada de IA é reservada antes, com teto automático, dentro dos orçamentos de IA que já existem.
 
 256. [KJ1] Demonstração interativa do studio, sem cadastro
+
+Estado: OR: após o Bloco A, na ordem já existente entre 206 [SH3] e 272 [HM1]; 232 [CA1] foi antecipado e não se repete; antes do Bloco B. Registro de posição; os estados e provas históricos abaixo permanecem válidos.
 Crie uma demonstração do studio (o painel do criador) que qualquer visitante abre sem cadastro, sobre a loja de demonstração rotulada como fictícia, para ver na prática como se cria um produto, uma página, uma oferta extra, uma assinatura e um e-mail. Tudo o que o visitante fizer é temporário, isolado dos dados reais, sem enviar e-mail, sem cobrar e sem chamar a IA de verdade (as respostas de IA, se mostradas, são exemplos fixos e rotulados como exemplos). Ao final, um botão leva ao cadastro. Proteja contra robôs com a proteção que já existe, coloque teto automático para o custo das sessões e meça a conversão.
 
 257. [KJ2] Página de checkout com o conteúdo do criador
+
+Estado: OR: após o Bloco A, na ordem já existente entre 206 [SH3] e 272 [HM1]; 232 [CA1] foi antecipado e não se repete; antes do Bloco B. Registro de posição; os estados e provas históricos abaixo permanecem válidos.
 Estude, nas fontes oficiais da Stripe, o Embedded Checkout (ou outra forma oficial) com cobrança direta na conta Standard do criador, para que o pagamento aconteça numa página do próprio Marktmorgen. Ao redor do formulário de pagamento, o criador poderia mostrar o resumo do que o comprador recebe, a garantia, a política de reembolso e somente avaliações reais do produto, sem contagem regressiva, escassez ou depoimento inventado. Confirme que o pagamento continua sendo na conta do criador, que as formas de pagamento continuam sendo as que ele ligou, e o efeito sobre segurança (PCI), impostos e oferta extra. Registre o estudo em docs/checkout-page-study.md e construa somente se for compatível com tudo isso, com interruptor desligado e medição da conversão antes e depois.
 
 258. [KJ3] MCP com ações, sempre com confirmação
+
+Estado: OR: após o Bloco A, na ordem já existente entre 206 [SH3] e 272 [HM1]; 232 [CA1] foi antecipado e não se repete; antes do Bloco B. Registro de posição; os estados e provas históricos abaixo permanecem válidos.
 Amplie o servidor MCP que hoje só lê os números da loja para que o assistente de IA do próprio criador (Claude, ChatGPT ou outro) possa também preparar ações: criar um produto em rascunho, rascunhar uma página, rascunhar um e-mail ou uma sequência, montar um funil a partir de um modelo e sugerir um cupom. Nada é publicado, enviado, cobrado ou apagado pelo MCP: toda ação fica em rascunho até o criador confirmar no studio. Use chaves de acesso com permissões separadas para leitura e para rascunho, que o criador pode revogar a qualquer momento, e aplique os mesmos limites do plano e os mesmos filtros de honestidade da IA que já existem.
 
 259. [KJ4] Plano de estudo personalizado para cada aluno, inspirado no Backstage
+
+Estado: OR: após o Bloco A, na ordem já existente entre 206 [SH3] e 272 [HM1]; 232 [CA1] foi antecipado e não se repete; antes do Bloco B. Registro de posição; os estados e provas históricos abaixo permanecem válidos.
 Permita que o criador ofereça, num curso ou numa trilha, um plano de estudo personalizado: o aluno responde a poucas perguntas (objetivo, nível e tempo disponível) e recebe uma ordem sugerida das aulas e das práticas, usando somente o conteúdo que o criador já publicou e que o aluno comprou. O plano é sugestão, não promessa de resultado, e o criador pode revisar o modelo de perguntas. Coordene com o tutor do aluno (HT13) e com as trilhas (249 [ST2]), sem duplicar. Calcule o custo de IA por aluno, coloque teto automático e verifique se o recurso deve ser incluído num plano ou vendido como complemento, sempre mantendo os 60%.
 
 260. [KJ5] Importador de cursos
+
+Estado: OR: após o Bloco A, na ordem já existente entre 206 [SH3] e 272 [HM1]; 232 [CA1] foi antecipado e não se repete; antes do Bloco B. Registro de posição; os estados e provas históricos abaixo permanecem válidos.
 Verifique, nas fontes oficiais do Kajabi, do Teachable, do Thinkific e do Podia, o que cada um permite exportar dos cursos (estrutura, textos, arquivos e vídeos) e em que formato. Construa um importador que traga, a partir desses arquivos de exportação ou de arquivos enviados pelo próprio criador, a estrutura do curso, os módulos, as aulas, os textos e os arquivos, com pré-visualização, validação no servidor e respeito aos limites do plano (armazenamento e horas de vídeo), como já se exige dos outros importadores. Nunca leia áreas protegidas por login de outra plataforma nem copie conteúdo que o criador não tenha declarado como dele. Coordene com os guias de migração do item 239 [CF2].
 
 261. [KJ6] Proposta: o Store assistant em comparação com os Expert Agents
+
+Estado: OR: após o Bloco A, na ordem já existente entre 206 [SH3] e 272 [HM1]; 232 [CA1] foi antecipado e não se repete; antes do Bloco B. Registro de posição; os estados e provas históricos abaixo permanecem válidos.
 Compare, com fontes oficiais datadas, o Store assistant (US$ 69 por mês, 700 respostas) com os Expert Agents do Kajabi (US$ 79 por agente por mês após 30/09/2026, 1.000 mensagens e 250 créditos de IA) e com o assistente de IA da Hotmart, em preço, número de respostas, funções (vendas, suporte e tutor) e honestidade (rótulo de IA, respostas presas aos fatos e passagem para o criador). Calcule, com o código de margem que já existe, se o número de respostas do Store assistant pode ser aumentado mantendo os 60% e a folga exigida (regra: um limite visível só pode ser aumentado onde a margem permitir). Registre o resultado em docs/assistant-vs-expert-agents.md como PROPOSTA: nenhum preço, limite ou interruptor muda sem a decisão do dono.
 
 262. [KJ7] Estudo: divulgação entre lojas, com consentimento, inspirada no Amplify
+
+Estado: OR: após o Bloco A, na ordem já existente entre 206 [SH3] e 272 [HM1]; 232 [CA1] foi antecipado e não se repete; antes do Bloco B. Registro de posição; os estados e provas históricos abaixo permanecem válidos.
 Estude, nas fontes oficiais, como funciona o Amplify do Kajabi (quem recebe os anúncios, com que consentimento, quem paga e como a receita é dividida) e o que as leis de privacidade e de e-mail exigem (GDPR, CAN-SPAM, CASL e as regras do Reino Unido) para que um criador alcance compradores de outras lojas. Registre em docs/cross-store-promotion-study.md se existe uma forma legal e honesta para o Marktmorgen, por exemplo, somente para compradores que tenham pedido expressamente recomendações de outras lojas, e quanto custaria. Não construa nada: a construção depende da decisão do dono, a partir desse estudo.
 
 Estado inicial de todos os itens: na fila.
@@ -3875,15 +4094,23 @@ O que já existe ou já está na fila e NÃO deve ser refeito (verifique antes):
 Regras: valem para estes itens todas as regras da seção SH (itens 204 a 214), sem exceção: verificar e reutilizar o que já existe; margem líquida mínima de 60% (ela pode ser maior, mas nunca menor) por cliente isolado, com 100% dos direitos usados no pior mês, e também no consolidado, depois de todos os custos e de todos os impostos, inclusive os brasileiros; custo desconhecido não pode ser considerado zero; leitura que der MAIS imposto; interruptor no código, desligado, quando o item criar recurso novo; proibição de criar contas, pagar qualquer valor, aceitar termos, pedir aprovações, ligar interruptores e alterar preços, limites visíveis, comissão, PLANS_ON_SALE, tax gate, art. 9a ou a revisão comercial; testes somente com fornecedores simulados; inglês americano, acessibilidade (WCAG 2.2 AAA como ponto de partida) e nenhuma afirmação sem fonte oficial datada. Nenhuma página pública pode mostrar recurso desligado. Toda chamada de IA é reservada antes, com teto automático, dentro dos orçamentos de IA que já existem, com o rótulo de IA desenhado pela página e nunca pelo modelo. O texto dos membros enviado à IA é tratado como dado, nunca como instrução, com as mesmas proteções contra injeção de comandos do Store assistant.
 
 263. [CI1] Moderação assistida por IA na comunidade
+
+Estado: OR: após o Bloco A, na ordem já existente entre 206 [SH3] e 272 [HM1]; 232 [CA1] foi antecipado e não se repete; antes do Bloco B. Registro de posição; os estados e provas históricos abaixo permanecem válidos.
 Acrescente à moderação que já existe uma verificação por IA das publicações, dos comentários e das mensagens do chat, que apenas aponta ao criador o que parece spam, golpe, assédio ou conteúdo proibido pelas regras da plataforma, com o motivo explicado. A decisão de esconder, remover ou silenciar continua sendo do criador; a única exceção automática é segurar para revisão, sem apagar, uma publicação com link que corresponda claramente a spam conhecido. O membro afetado é informado e pode pedir revisão. A política de privacidade e as regras da comunidade devem dizer isso, e os textos entram em vigor junto com o recurso. Calcule o custo de IA por publicação, coloque teto automático por loja e por mês e, quando o teto for atingido, volte apenas à moderação manual, sem bloquear a comunidade.
 
 264. [CI2] Resumo semanal da comunidade
+
+Estado: OR: após o Bloco A, na ordem já existente entre 206 [SH3] e 272 [HM1]; 232 [CA1] foi antecipado e não se repete; antes do Bloco B. Registro de posição; os estados e provas históricos abaixo permanecem válidos.
 Permita que o criador ofereça aos membros um resumo semanal da comunidade (as discussões principais, os eventos que vêm e o que foi publicado), enviado por e-mail somente aos membros que marcarem uma caixa, desmarcada por padrão, pedindo esse resumo. Cada resumo inclui apenas o que aquele membro tem permissão para ver, usando as mesmas verificações de acesso da busca (lib/community-found.ts), traz o rótulo de IA desenhado pela página e um link de cancelamento em um clique, e conta na franquia de e-mails do plano. O criador pode revisar e aprovar o resumo antes do envio, se preferir. Calcule o custo de IA e de e-mail por membro e coloque teto automático.
 
 265. [CI3] Caixa de entrada com resumo, triagem e rascunho de resposta por IA
+
+Estado: OR: após o Bloco A, na ordem já existente entre 206 [SH3] e 272 [HM1]; 232 [CA1] foi antecipado e não se repete; antes do Bloco B. Registro de posição; os estados e provas históricos abaixo permanecem válidos.
 Na caixa de entrada da loja (lib/inbox.ts), acrescente, para cada conversa, um resumo curto, uma classificação (por exemplo, dúvida antes da compra, problema de acesso, pedido de reembolso ou outro) e um rascunho de resposta escrito somente com os fatos publicados da loja, com os mesmos filtros do Store assistant (heldToFacts). Nada é enviado sem que o criador revise e clique em enviar. Pedidos de reembolso e reclamações nunca recebem resposta automática. Calcule o custo de IA por conversa e coloque teto automático por loja e por mês.
 
 266. [CI4] Calculadora "Which plan fits you"
+
+Estado: OR: após o Bloco A, na ordem já existente entre 206 [SH3] e 272 [HM1]; 232 [CA1] foi antecipado e não se repete; antes do Bloco B. Registro de posição; os estados e provas históricos abaixo permanecem válidos.
 Crie uma calculadora pública, sem cadastro, em que o criador informa o que pretende vender e a escala do negócio (por exemplo, número de produtos, de membros, de e-mails por mês, de horas de vídeo e de visitas) e recebe o plano do Marktmorgen que atende a essas necessidades, calculado somente a partir dos limites reais de lib/plan.ts, com a explicação de cada limite e o preço mensal e anual. Nada de projeção de ganho ou de economia que não seja calculada a partir de fontes oficiais. Faça os cálculos no navegador do visitante, sem custo de servidor. Coordene com as ferramentas do item 244 [SP1], com a calculadora do item 225 [HL6] e com a página de preços.
 
 Estado inicial de todos os itens: na fila.
@@ -3908,12 +4135,18 @@ O que já existe ou já está na fila e NÃO deve ser refeito (verifique antes):
 Regras: valem para estes itens todas as regras da seção SH (itens 204 a 214), sem exceção: verificar e reutilizar o que já existe; margem líquida mínima de 60% (ela pode ser maior, mas nunca menor) por cliente isolado, com 100% dos direitos usados no pior mês, e também no consolidado, depois de todos os custos e de todos os impostos, inclusive os brasileiros; custo desconhecido não pode ser considerado zero; leitura que der MAIS imposto; interruptor no código, desligado, quando o item criar recurso novo; proibição de criar contas, pagar qualquer valor, aceitar termos, pedir aprovações, ligar interruptores e alterar preços, limites visíveis, comissão, PLANS_ON_SALE, tax gate, art. 9a ou a revisão comercial; testes somente com fornecedores simulados; inglês americano, acessibilidade (WCAG 2.2 AAA como ponto de partida) e nenhuma afirmação sem fonte oficial datada. Nenhuma página pública pode mostrar recurso desligado.
 
 267. [KT1] Indicação entre os seguidores do criador, com prêmios do próprio criador
+
+Estado: OR: após o Bloco A, na ordem já existente entre 206 [SH3] e 272 [HM1]; 232 [CA1] foi antecipado e não se repete; antes do Bloco B. Registro de posição; os estados e provas históricos abaixo permanecem válidos.
 Permita que o criador ofereça aos inscritos na lista dele um link pessoal de indicação: quando amigos se inscrevem por esse link e confirmam o endereço, quem indicou avança em marcos definidos pelo criador (por exemplo, 3 indicações liberam um guia gratuito e 10 liberam um desconto num produto). Os prêmios são somente produtos, acessos ou cupons do próprio criador, entregues pelos mecanismos que já existem, sem dinheiro e sem custo novo para o Marktmorgen. Conte apenas inscrições com endereço confirmado (dupla confirmação), recuse autoindicação e endereços descartáveis, e proteja contra robôs com a proteção que já existe. Cada pessoa indicada dá o próprio consentimento para receber e-mails; quem indicou nunca recebe o endereço de quem foi indicado. Os e-mails de confirmação e de marcos contam na franquia de e-mails do plano. A política de privacidade e os termos devem dizer isso, e os textos entram em vigor junto com o recurso.
 
 268. [KT2] Pontuação de interesse dos contatos, somente com dados do próprio criador
+
+Estado: OR: após o Bloco A, na ordem já existente entre 206 [SH3] e 272 [HM1]; 232 [CA1] foi antecipado e não se repete; antes do Bloco B. Registro de posição; os estados e provas históricos abaixo permanecem válidos.
 Mostre ao criador, na lista de contatos, uma pontuação simples de interesse de cada contato, calculada somente com dados que a própria loja já tem e que o contato gerou ao se relacionar com ela (por exemplo, cliques em e-mails, visitas a páginas de produto quando houver consentimento, inscrição em brinde, compras anteriores e participação na comunidade), com a explicação de como cada ponto é ganho. Não use a abertura de e-mails como sinal principal (a proteção de privacidade do Apple Mail a torna pouco confiável), não compre nem busque dados de terceiros e não exiba nada que identifique o contato além do que ele mesmo forneceu. Permita criar segmentos a partir da pontuação. Calcule o custo de leitura e de armazenamento e mantenha os limites do plano. A política de privacidade deve dizer isso, e o texto entra em vigor junto com o recurso.
 
 269. [KT3] Planos descritos pelo estágio do criador
+
+Estado: OR: após o Bloco A, na ordem já existente entre 206 [SH3] e 272 [HM1]; 232 [CA1] foi antecipado e não se repete; antes do Bloco B. Registro de posição; os estados e provas históricos abaixo permanecem válidos.
 Na página de preços e na página do item 245 [SP2], descreva cada plano pelo estágio do criador para quem ele foi pensado (por exemplo, Store para quem está começando, Studio para quem está crescendo e Scale para quem está ampliando o negócio), com os limites reais de lib/plan.ts ao lado, sem prometer resultado. Não altere preços, limites, nomes nem número de planos. Coordene com os itens 224 [HL5], 243 [CF6] e 266 [CI4], para que a mesma descrição apareça em todos os lugares.
 
 Estado inicial de todos os itens: na fila.
@@ -4148,7 +4381,8 @@ PR777 job119565105241: a matriz chegou ao formulário de frete, mas o seletor de
 
 271. [SEO1] Auditar, corrigir e melhorar presença orgânica na busca do Google
 
-Estado: na fila, para depois dos trabalhos atuais e dos itens já aprovados, incluindo270[GR1]; não interrompe PR768 ou outra implementação em curso. A posição desta seção antes deGR preserva a seçãoGR no fim físico do arquivo; não antecipa a ordem de execução.
+Estado: na fila, para depois dos trabalhos atuais e dos itens já aprovados, incluindo270[GR1]; não interrompe PR768 ou outra implementação em curso. A posição desta seção antes deGR preserva a seçãoGR no fim físico do arquivo; não antecipa a ordem de execução. Posição vigente: OR: após o Bloco A, na ordem já existente entre 206 [SH3] e 272 [HM1]; 232 [CA1] foi antecipado e não se repete; antes do Bloco B.
+   - Histórico OR — estado anterior à atualização documental: Estado: na fila, para depois dos trabalhos atuais e dos itens já aprovados, incluindo270[GR1]; não interrompe PR768 ou outra implementação em curso. A posição desta seção antes deGR preserva a seçãoGR no fim físico do arquivo; não antecipa a ordem de execução.
 
 Pedido integral mais recente do dono: "não para o que está fazendo. acrescenta na fila para fazer depois. vc fazer as verificações para corrigir e melhorar para o marktmorgen aparecer na primeira colocação na busca no google"
 
@@ -4181,7 +4415,8 @@ Regras: valem para este item todas as regras da seção SH (itens 204 a 214), se
 270. [GR1] Segmentação RFM dos compradores
 Calcule, para cada comprador da loja, os três indicadores clássicos da segmentação RFM a partir dos dados que a loja já lê da conta Stripe do criador e das compras importadas: quão recente foi a última compra (recência), quantas vezes comprou (frequência) e quanto gastou no total (valor). Mostre ao criador grupos prontos e explicados em linguagem simples (por exemplo, "melhores clientes", "clientes fiéis", "compraram uma vez", "em risco de não voltar" e "não compram há muito tempo"), com o critério de cada grupo visível, e permita usar cada grupo como segmento nos e-mails em massa e nas automações que já existem, somente para quem aceitou receber contato. Nada de dados de terceiros, nada de previsão de gasto futuro apresentada como certeza. Coordene com a pontuação de interesse do item 268 [KT2] e com os painéis do item 226 [HL7], sem duplicar cálculos. Calcule o custo de leitura e de armazenamento, atualize os indicadores em lotes com teto automático e mantenha os limites do plano.
 
-Estado: na fila.
+Estado: na fila. Posição vigente: OR: após o Bloco A, na ordem já existente entre 206 [SH3] e 272 [HM1]; 232 [CA1] foi antecipado e não se repete; antes do Bloco B.
+   - Histórico OR — estado anterior à atualização documental: Estado: na fila.
 
 Registro: item 270 [GR1] na fila; somente inclusão documental, sem implementação ou ativação de RFM. Reutilização dos itens 268 [KT2] e 226 [HL7], consentimento de contato, critérios explicados, lotes com teto e custeio de leitura/armazenamento por plano são obrigatórios. Todos os gates SH permanecem vinculantes. Não é entrega funcional.
 
@@ -4222,7 +4457,8 @@ Regras: valem para este item todas as regras da seção SH (itens 204 a 214), se
 Permita que o comprador de um curso salve aulas no aplicativo instalável que já existe para estudá-las sem internet, começando pelo que é seguro e barato: textos das aulas, PDFs e materiais que o criador marcar como disponíveis sem internet. O acesso salvo continua respeitando a compra (se a compra for reembolsada, a assinatura terminar ou o acesso for retirado, o conteúdo salvo é apagado na próxima vez em que o aplicativo se conectar) e cada arquivo leva a marca do comprador já usada nas entregas, quando houver. Estude separadamente, nas fontes oficiais do fornecedor de vídeo que já existe e dos navegadores (limites de armazenamento do Cache API, Safari no iPhone e Chrome no Android), se é possível salvar vídeos para assistir sem internet com proteção contra cópia e custo controlado, e registre o resultado em docs/offline-lessons-study.md. Corrija a frase da página de comparação (lib/site-pages.ts) somente quando o recurso estiver ligado.
 Custo e margem (REGRA DOS 60%): antes de escrever o código, calcule e registre o custo máximo, no pior caso, de cada cliente que use o recurso ao máximo: entrega dos arquivos salvos (cada download conta nos limites de banda e de entrega do plano), armazenamento, leituras e qualquer outro custo do fornecedor de vídeo ou de arquivos, com as taxas de recebimento de lib/receiving-costs.ts e a leitura que der mais imposto. Demonstre, para cada plano e intervalo (mensal e anual), que o cliente isolado continua com margem líquida de no mínimo 60% depois de todos os custos e impostos, inclusive os brasileiros, e coloque teto automático que bloqueie novos downloads antes de qualquer custo passar desse limite. Vídeo sem internet só é construído se for seguro e se o mesmo cálculo comprovar os 60%. Se o cálculo não fechar, registre o motivo e não implemente.
 
-Estado: na fila.
+Estado: na fila. Posição vigente: OR: após o Bloco A, na ordem já existente entre 206 [SH3] e 272 [HM1]; 232 [CA1] foi antecipado e não se repete; antes do Bloco B.
+   - Histórico OR — estado anterior à atualização documental: Estado: na fila.
 
 Registro: inclusão documental de272 [HM1] para execução posterior. Pedido do dono recebido em22/10/2026, origem `b370da14-f087-418c-b205-a8761ca0daea/Texto colado.txt`; texto integral e proveniência preservados na continuidade. Fatos da auditoria ainda precisam de verificação oficial datada na execução. Nenhum estudo, implementação, ativação, promessa comercial ou novo custo do recurso offline foi iniciado por esta inclusão. Antes de qualquer código, o cálculo máximo mensal/anual por plano, todos os custos/impostos, recebimento, tetos anteriores ao gasto e a margem líquida mínima de60% por cliente isolado e global são condições obrigatórias; desconhecido reprova. Vídeo offline só avança se segurança e cálculo forem comprovados. Não é entrega funcional.
 
@@ -4250,7 +4486,8 @@ Escopo:
 
 É proibido neste item: criar contas, criar buckets, criar chaves de acesso, aceitar termos ou contratar serviço; tudo isso depende do dono. Liste em docs/backup.md, passo a passo, exatamente o que o dono precisa fazer (por exemplo, criar o bucket de backup no Cloudflare R2, criar uma chave de acesso que só possa gravar nesse bucket e cadastrar na Vercel as variáveis de ambiente com os nomes que você definir), e deixe o job pronto e desligado até essas variáveis existirem. Nunca grave segredos, chaves ou valores de variáveis no repositório, nos registros ou nos backups em texto aberto. Testes somente com fornecedores simulados.
 
-Estado: na fila, com prioridade sobre os recursos novos ainda não iniciados. Ao concluir, registre o commit, o resultado da suíte completa e a publicação, e altere o estado para "pronto e desligado, aguardando os passos do dono".
+Estado: na fila, com prioridade sobre os recursos novos ainda não iniciados. Ao concluir, registre o commit, o resultado da suíte completa e a publicação, e altere o estado para "pronto e desligado, aguardando os passos do dono". Posição vigente: OR: prioridade já definida 1/2, após os andamentos e antes do Bloco A; remanescente aguardando o dono conforme evidência histórica de bloqueio por mais de uma hora; não trava os seguintes.
+   - Histórico OR — estado anterior à atualização documental: Estado: na fila, com prioridade sobre os recursos novos ainda não iniciados. Ao concluir, registre o commit, o resultado da suíte completa e a publicação, e altere o estado para "pronto e desligado, aguardando os passos do dono".
 
 
 ### BK273 prerequisite — offline encrypted restore codec
@@ -4364,7 +4601,8 @@ PARTE C — Prova e testes:
 
 É proibido neste item: criar contas, aceitar termos, contratar serviço, pagar qualquer valor, contatar pessoas ou empresas, recrutar participantes e alterar preços, limites visíveis, comissão, PLANS_ON_SALE, tax gate, art. 9a ou a revisão comercial. Testes somente com fornecedores simulados: nenhum e-mail real, nenhuma cobrança real e nenhum registro real de cliente alterado. Nenhuma afirmação sobre lei ou norma sem fonte oficial datada; onde a lei ou a norma tiver mais de uma leitura, siga a que exigir MAIS acessibilidade. Todo texto público em inglês americano. PRs pequenos, um assunto por PR, cada um com prova de falha antes e aprovação depois.
 
-Estado: Parte A em vigor a partir da inclusão (regra gravada em AGENTS.md); Partes B e C na fila. Ao concluir cada parte, registre data e hora de Fortaleza, commits, resultado da suíte completa, publicação e lacunas.
+Estado: Parte A em vigor a partir da inclusão (regra gravada em AGENTS.md); Partes B e C na fila. Ao concluir cada parte, registre data e hora de Fortaleza, commits, resultado da suíte completa, publicação e lacunas. Posição vigente: OR: Parte A continua em vigor para tudo; Partes B e C por último, após todo o Bloco B.
+   - Histórico OR — estado anterior à atualização documental: Estado: Parte A em vigor a partir da inclusão (regra gravada em AGENTS.md); Partes B e C na fila. Ao concluir cada parte, registre data e hora de Fortaleza, commits, resultado da suíte completa, publicação e lacunas.
 
 Registro de inclusão: pedido integral do dono em22/10/2026, origem `022c8b9f-5470-4d4b-9d5d-88f91dd023fa/Texto colado.txt`, preservado na continuidade. Incluído após concluir a tarefa dos contadores (entrega160). Parte A registrada no mesmo PR em AGENTS.md; Partes B e C permanecem na fila, reaproveitando201/202 e o programa, inventário, matrizes e testes existentes. Não houve execução antecipada das Partes B/C, contratação, contato externo, ativação comercial ou certificação. Alegações jurídicas e versões normativas no pedido são requisitos de pesquisa do dono, ainda a verificar em fontes oficiais datadas; não são conclusões verificadas por esta inclusão. Custo desconhecido reprova,não zero; preços e limites visíveis preservados. Inclusão documental não é entrega funcional nem prova de conformidade.
 
@@ -4402,7 +4640,8 @@ REGRA DOS 60% (OBRIGATÓRIA): todo cliente pagante, considerado isoladamente e u
 
 É proibido neste item: alterar preços, limites visíveis, comissão, PLANS_ON_SALE, tax gate, art. 9a ou a revisão comercial, e afrouxar qualquer trava para compensar o custo maior. Nada é contratado, assinado ou pago. Testes somente com fornecedores simulados.
 
-Estado: na fila, com prioridade. Ao concluir, registre data e hora de Fortaleza, commits, a nova base mínima, o resultado da suíte completa e a publicação.
+Estado: na fila, com prioridade. Ao concluir, registre data e hora de Fortaleza, commits, a nova base mínima, o resultado da suíte completa e a publicação. Posição vigente: OR: prioridade já definida 2/2, após os andamentos e antes do Bloco A; remanescente aguardando o dono conforme evidência histórica de bloqueio por mais de uma hora; não trava os seguintes.
+   - Histórico OR — estado anterior à atualização documental: Estado: na fila, com prioridade. Ao concluir, registre data e hora de Fortaleza, commits, a nova base mínima, o resultado da suíte completa e a publicação.
 
 Proveniência: pedido direto do dono nesta conversa; decisão de22/10/2026 às05h10 de Fortaleza, texto literal preservado acima e na continuidade. Incluído após concluir a tarefa em andamento (entrega161), fisicamente depois de todo o histórico e do item274[AX1]. Prioridade sobre recursos novos ainda não iniciados; preserva trabalhos já iniciados. A decisão de atribuição100% é vinculante; a implementação, pesquisa oficial datada, recálculo e suíte completa são trabalho futuro deste item, ainda não concluído. Valores e exigências descritos pelo dono são requisitos de verificação, não novas conclusões jurídicas ou preços oficialmente confirmados por esta inclusão. Nenhuma contratação, assinatura, pagamento, ativação ou mudança de preços/limites/gates. Inclusão documental não incrementa entrega funcional.
 
@@ -4489,3 +4728,70 @@ Security remediation preparation22Oct2026: exactaudit identifiesnext16.3.8critic
 
 
 Security updateprepared22Oct2026 fromsuccessfulreadonlyCIjob119983869856: npm-generated19lockentrydelta reviewed,Next/env/SWC/eslintplugin/config16.4.2,rootmanifestandoptionalTailwindWASIdependencycompletion6entries;existingSharp0.35.5retained. Manifest+lockcommittedtogether,temporarypreparationworkflowremoved. Exactdevelopmentonlyreviewupdatesonlyeslintconfig/pluginpins16.3.8→16.4.2afterreviewinggenerateddev:trueentriesandsamefast-glob→micromatch→braceschain;sameadvisoryGHSA-vfj7-8cjw-p6xm,strictdevclassification/runtimeforbiddenchain,allproductionhigh/criticalrefusal,and18Novexpiryunchanged;no newexception/expiryextension. GHSA-2464-fhr4-w9xwandGHSA-p3m5-59mp-jv5r officialGitHubadvisoriesupdated22Octaffected<=16.4.0patched16.4.1;16.4.2release15Octchecked. All22freshheadchecks,generateddocsconsistency,build/runtime-tracesandbrowserflowsrequired;no securitypassorpublicationclaimeduntilresults. No newservice/providercost;actualCIinvoiceunknownnotzero;flags/prices/limitsunchanged.
+
+
+### Fechamento da tarefa anterior à reorganização OR — entrega funcional 165
+
+PR #802 incorporado em 22/10/2026 às 15:09:38 de Fortaleza, commit `5270327c3d09e02bcef2a6b65224c9561ec8c3a9`. Head `19e605d6d667cb71757031f0330e5bb739e86c0f`: 22/22 verificações completas aprovadas e árvore testada/incorporada idêntica `bde8f7e45198ee068269ca6750d003c12e0f4f83`. Next.js 16.4.2, confirmação de referências de acordos e edição nativa dos detalhes, prontidão do editor e navegação privada sem prefetch. Deployment `dpl_FKY8uw13CoK7TM4cLzSJBJmRZmM4` READY às 15:12:33.140 de Fortaleza, versão exata em marktmorgen.com; /, /platform, /pricing, /mission e /library responderam 200 com o mesmo deployment. Contador 165, próximo 166. Não houve varredura de logs de runtime nesta entrega; não afirmar zero erros. Custos efetivamente faturados de CI/deploy ainda desconhecidos, nunca zero; nenhuma margem certificada ou gate aberto. Tarefa atual concluída antes de iniciar OR.
+
+## OR — Posição dos pendentes antigos de 19/10/2026 (22/10/2026)
+
+Decisão do dono: 22/10/2026, 14h45 de Fortaleza. Registro documental preparado em 22/10/2026 às 15:18:31 de Fortaleza, após concluir a entrega 165. Esta seção prevalece sobre posições antigas incompatíveis; preserva o histórico e não cria itens nem números.
+
+### Pedido integral preservado
+
+NÃO PARE o que você está fazendo agora: conclua normalmente a tarefa atual. Em seguida, COLOQUE NA FILA, PARA FAZER DEPOIS, a reorganização abaixo. Registre-a em docs/codex-queue.md, no fim do arquivo, depois de tudo o que já existe, numa seção nova chamada "OR — Posição dos pendentes antigos de 19/10/2026 (22/10/2026)", e atualize a linha "Estado" de cada item citado com a nova posição, preservando todo o histórico. Esta reorganização não cria itens novos nem usa números novos: ela só define quando entram itens que já estão na fila.
+
+Decisão do dono, 22/10/2026, 14h45 de Fortaleza: os itens antigos de 19/10/2026 que estão "a fazer" sem posição definida passam a ter a ordem abaixo. A prioridade é, primeiro, o que é necessário para abrir as vendas com segurança e para nunca ter prejuízo; depois, o resto.
+
+REGRA DOS 60% (OBRIGATÓRIA): todo cliente pagante, considerado isoladamente e usando 100% de todos os direitos do plano no pior mês, deve manter margem de lucro líquido MÍNIMA de 60%, depois de todos os custos e de todos os impostos, inclusive os brasileiros; a margem pode ser maior, mas nunca menor, e a mesma regra vale para a empresa como um todo. Custo desconhecido não pode ser considerado zero. Use a leitura que der MAIS imposto (docs/tax-uncertainty.md). Vale para cada item abaixo, antes de qualquer código.
+
+ORDEM DE EXECUÇÃO
+
+1. O que já está em andamento continua primeiro, sem interrupção (hoje: 205 [SH2], 204 [SH1], 203 [TEAMS], 7 [C-UE], 89 [C2-CAPACITY], 4/140/141/88 [B2], 151 a 153 [S10 a S12], 201, 202, HT0, HT10 e HT14).
+
+2. Em seguida, os itens com prioridade já definida: 273 [BK1] e 275 [FX1].
+
+3. BLOCO A — logo depois de 275 [FX1] e antes de 206 [SH3], nesta ordem:
+- 7 [C-UE]: concluir, se ainda não estiver concluído.
+- 8 [C-UK]: tratamento fiscal do Reino Unido.
+- 9 [C-US]: regras estaduais de marketplace facilitator dos EUA.
+- 232 [CA1]: fechamento de toda possibilidade de calote dos criadores (antecipado, porque protege contra prejuízo).
+- 91 [D2-EU-WITHDRAWAL]: consentimento europeu para entrega digital imediata.
+- 98 [D2-COMPLIANCE-REVIEW]: checagem factual de conformidade da loja.
+- 114 [E2-AFFILIATE-TAX-FORMS]: formulários W-9/W-8BEN e exportação para 1099.
+- 31 [E14]: preços por país sem nenhum preço abaixo do piso do plano.
+
+4. Depois do Bloco A, a fila segue como está: 206 [SH3] até 272 [HM1].
+
+5. BLOCO B — depois de 272 [HM1] e antes das Partes B e C de 274 [AX1], na ordem original dos números: 10 a 16 [D7 a D13], 92 a 97 [D2], 18 a 30 [E1 a E13], 99 a 113 e 115 [E2], 32 a 38 [F1 a F7], 116 a 126 [F2], 39 a 42 [G1 a G4], 44 a 49 [H1 a H6], 127 [H7-CUSTOM-CSS], 50 a 54 [I1 a I3, J1, J2] e 128 a 132 [J1].
+
+6. Por último, as Partes B e C de 274 [AX1]. A Parte A continua em vigor para tudo.
+
+REGRAS DA REORGANIZAÇÃO
+- Antes de começar cada item do Bloco B, confira no código e na fila se um item mais novo (203 a 275) ou algo já publicado faz a mesma coisa. Exemplos a conferir: 120 [F2-IMPORTS] com 210 [SH7] e 260 [KJ5]; 52 [I3] com 216 [OP2] e 220 [HL1]; 112 [E2-POINTS] com os pontos já existentes da comunidade; 113 [E2-COMMUNITY-MODERATION] e 122 [F2-COMMUNITY-AI] com 263 [CI1]; 25 [E8] com 226 [HL7]; 109 [E2-EVENTS] e 36 [F5] entre si; 40 [G2] com 228 [HL9]; 27 [E10] com 258 [KJ3]. Se estiver totalmente coberto, marque o item antigo como "absorvido pelo item N", com a prova; se estiver só em parte, faça apenas a diferença.
+- 59 [EXCELENCIA] passa a ter o estado "absorvido pelo item 274 [AX1]".
+- 17 [D15] (testes reais com NVDA, VoiceOver e TalkBack) passa a ter o estado "aguardando o dono", junto com o plano do item 202, porque depende de pessoas e aparelhos reais.
+- Os itens que já dependem do dono ou de terceiros (43, 55, 56, 57, 58, 60, 145, 149, 197 e 198) não mudam de estado.
+- Um item que dependa de aprovação externa, conta, pagamento ou da LLC não trava os seguintes: registre o motivo, marque "aguardando o dono" e passe ao próximo.
+
+É proibido nesta reorganização: criar contas, aceitar termos, contratar serviço, pagar qualquer valor e alterar preços, limites visíveis, comissão, PLANS_ON_SALE, tax gate, art. 9a ou a revisão comercial. Testes somente com fornecedores simulados.
+
+Estado: reorganização documental a fazer logo após a tarefa atual, num PR próprio. Ao concluir, registre data e hora de Fortaleza, o commit e a lista final da ordem de execução.
+
+### Ordem final operacional
+
+- Andamentos prioritários: 205, 204, 203, 7, 89, 4/140/141/88, 151–153, 201, 202, HT0 (182), HT10 (196), HT14 (199). Conferir publicações existentes e trabalhar apenas o remanescente; as dependências humanas não travam o trabalho autônomo.
+- Prioridades seguintes: 273 [BK1], 275 [FX1]. Permanecem aguardando o dono nos remanescentes já comprovados no histórico; pular enquanto a dependência persistir.
+- Bloco A: 7 (somente se incompleto), 8, 9, 232, 91, 98, 114, 31.
+- Depois: 206–272 na ordem existente, sem repetir 232, antecipado ao Bloco A.
+- Bloco B: 10 → 11 → 12 → 13 → 14 → 15 → 16 → 92 → 93 → 94 → 95 → 96 → 97 → 18 → 19 → 20 → 21 → 22 → 23 → 24 → 25 → 26 → 27 → 28 → 29 → 30 → 99 → 100 → 101 → 102 → 103 → 104 → 105 → 106 → 107 → 108 → 109 → 110 → 111 → 112 → 113 → 115 → 32 → 33 → 34 → 35 → 36 → 37 → 38 → 116 → 117 → 118 → 119 → 120 → 121 → 122 → 123 → 124 → 125 → 126 → 39 → 40 → 41 → 42 → 44 → 45 → 46 → 47 → 48 → 49 → 127 → 50 → 51 → 52 → 53 → 54 → 128 → 129 → 130 → 131 → 132. A sequência dos grupos do pedido foi preservada, sem ordenar todos os grupos globalmente pelo número.
+- Por último: 274 [AX1], Partes B e C; Parte A vigente em todos os itens.
+
+59 [EXCELENCIA] absorvido pelo 274 por decisão expressa; isso não declara concluídas as Partes B/C. 17 [D15] aguardando o dono junto ao plano 202; nenhum teste real de tecnologia assistiva é alegado. Estados dos itens 43, 55, 56, 57, 58, 60, 145, 149, 197 e 198 preservados literalmente.
+
+Antes de cada item, inclusive antes de código: margem líquida mínima de 60% por cliente isolado usando 100% dos direitos no pior mês e também globalmente, após todos os custos e impostos brasileiros e americanos, pela leitura mais onerosa de docs/tax-uncertainty.md. Desconhecido reprova. Custos novos exigem cálculo mensal/anual por plano, maior preço pago, tetos e reserva. O registro da regra não certifica a margem atual.
+
+Bloco B exige comparar código, fila 203–275 e entregas antes de iniciar; os exemplos do pedido são verificações pendentes, sem absorção presumida. Cobertura total exige prova e estado “absorvido pelo item N”; cobertura parcial autoriza somente a diferença. Aprovação externa, conta, pagamento ou LLC: registrar motivo, marcar aguardando o dono e seguir.
+
+Estado OR: reorganização documental implementada em PR próprio; incorporação depende das verificações completas do novo head. Somente docs/codex-queue.md é alterado. Sem nova operação de fornecedor, conta, termo, contratação, pagamento ou teste real; preços, limites, comissão, PLANS_ON_SALE=false, tax gate, art. 9a e revisão comercial preservados. CI/deploy efetivamente faturados não reconciliados; desconhecido não é zero. Não conta como entrega funcional.
