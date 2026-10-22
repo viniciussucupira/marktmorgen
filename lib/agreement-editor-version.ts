@@ -1,5 +1,5 @@
 import { MAX_BODY, MAX_LINES, MAX_LINE_TEXT, MAX_QUANTITY, MAX_TITLE, MAX_VERSIONS, SHA_PATTERN } from "@/lib/agreement-rules";
-import { readMoney, type Currency } from "@/lib/money";
+import { currencyRule, readMoney, type Currency } from "@/lib/money";
 
 export type AgreementEditorVersion = {
   n: number; title: string; body: string;
@@ -20,6 +20,7 @@ export function agreementEditorVersion(value: unknown, currency: Currency, expec
       typeof value.sha256 !== "string" || !SHA_PATTERN.test(value.sha256) ||
       !Array.isArray(value.lines) || value.lines.length > MAX_LINES) return null;
   const lines: AgreementEditorVersion["lines"] = [];
+  let total = 0;
   for (const line of value.lines) {
     if (!record(line) || !owns(line, ["text", "quantity", "amount"]) ||
         typeof line.text !== "string" || !line.text.trim() || line.text.length > MAX_LINE_TEXT ||
@@ -27,7 +28,9 @@ export function agreementEditorVersion(value: unknown, currency: Currency, expec
         !Number.isSafeInteger(Number(line.quantity)) || Number(line.quantity) > MAX_QUANTITY ||
         typeof line.amount !== "string") return null;
     const amount = readMoney(line.amount, currency);
-    if (amount === null || amount < 0) return null;
+    if (amount === null || amount < 0 || amount > currencyRule(currency).maxPrice) return null;
+    total += amount * Number(line.quantity);
+    if (!Number.isSafeInteger(total) || total > currencyRule(currency).maxPrice * MAX_LINES) return null;
     lines.push({text: line.text, quantity: line.quantity, amount: line.amount});
   }
   return {n: expectedVersion, title: value.title, body: value.body, lines, text: value.text, sha256: value.sha256};
