@@ -1,15 +1,11 @@
 "use client";
 
-import { useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "@/components/toast";
 import { Icon } from "@/components/icons";
 import { MAX_BIO_LENGTH, MAX_NAME_LENGTH } from "@/lib/store-field-rules";
 import { STUDIO_MESSAGES } from "@/lib/studio-messages";
-
-const subscribeReady = () => () => {};
-const clientReady = () => true;
-const serverReady = () => false;
 
 const MESSAGES: Record<string, string> = {
   ...STUDIO_MESSAGES,
@@ -38,7 +34,7 @@ export function DetailsForm({
   ai?: { on: boolean; left: number };
 }) {
   const router = useRouter();
-  const ready = useSyncExternalStore(subscribeReady, clientReady, serverReady);
+  const disclosure = useRef<HTMLDetailsElement>(null);
   const [name, setName] = useState(current);
   const [bio, setBio] = useState(currentBio);
   const [state, setState] = useState<State>({ kind: "closed" });
@@ -78,6 +74,20 @@ export function DetailsForm({
     }
   }
 
+  useEffect(() => {
+    if (!disclosure.current?.open) {
+      setName(current);
+      setBio(currentBio);
+    }
+  }, [current, currentBio]);
+
+  function closeEditor() {
+    if (disclosure.current) disclosure.current.open = false;
+    setName(current);
+    setBio(currentBio);
+    setState({ kind: "closed" });
+  }
+
   async function submit(event: React.FormEvent) {
     event.preventDefault();
     if (state.kind === "saving" || writing) return;
@@ -97,7 +107,7 @@ export function DetailsForm({
         data.name === name.slice(0, MAX_NAME_LENGTH).trim() &&
         data.bio === bio.slice(0, MAX_BIO_LENGTH).trim()
       ) {
-        setState({ kind: "closed" });
+        closeEditor();
         toast("Name and description saved.");
         router.refresh();
         return;
@@ -112,24 +122,11 @@ export function DetailsForm({
     }
   }
 
-  if (state.kind === "closed") {
-    return (
-      <button
-        type="button"
-        disabled={!ready}
-        onClick={() => {
-          setName(current);
-          setBio(currentBio);
-          setState({ kind: "open" });
-        }}
-        className="text-sm font-bold text-ink-soft underline underline-offset-4 transition hover:text-violet-deep"
-      >
-        Edit name and description
-      </button>
-    );
-  }
-
   return (
+    <details ref={disclosure}>
+      <summary className="inline-flex min-h-11 cursor-pointer list-none items-center text-sm font-bold text-ink-soft underline underline-offset-4 hover:text-violet-deep [&::-webkit-details-marker]:hidden">
+        Edit name and description
+      </summary>
     <form onSubmit={submit} className="mt-2" aria-busy={state.kind === "saving"} noValidate>
       <fieldset disabled={state.kind === "saving"} className="min-w-0 space-y-4">
       <div>
@@ -227,7 +224,7 @@ export function DetailsForm({
         </button>
         <button
           type="button"
-          onClick={() => setState({ kind: "closed" })}
+          onClick={closeEditor}
           className="btn btn-ghost"
         >
           Cancel
@@ -235,5 +232,6 @@ export function DetailsForm({
       </div>
       </fieldset>
     </form>
+    </details>
   );
 }

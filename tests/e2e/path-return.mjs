@@ -49,7 +49,8 @@ export async function checkReturnPath({browser,LOCAL,session,sid,otherSid,axeSou
   const edit=async bio=>{
    await page.waitForLoadState("networkidle");
    await page.goto(LOCAL+"/studio?store="+sid+"#details",{waitUntil:"domcontentloaded",timeout:60000});
-   await page.getByRole("button",{name:"Edit name and description",exact:true}).click();
+   await page.locator("#details summary").filter({hasText:"Edit name and description"}).click();
+   is("native details editor opens after one action",await page.locator("#details details").filter({has:page.getByLabel("One line about it",{exact:true})}).evaluate(node=>node.open),true);
    try {
     await page.getByLabel("One line about it",{exact:true}).fill(bio);
    } catch (error) {
