@@ -12,6 +12,10 @@ jobs:
   buyer-actions:
     name: Buyer action AAA (${{ matrix.browser }})
     runs-on: ubuntu-latest
+    # Match the exact playwright-core package; browsers and OS libraries are preinstalled.
+    container:
+      image: mcr.microsoft.com/playwright:v1.56.1-noble
+      options: --init --ipc=host
     timeout-minutes: 30
     strategy:
       fail-fast: false
@@ -29,7 +33,8 @@ jobs:
           node-version: "24"
           cache: npm
       - run: npm ci
-      - run: node node_modules/playwright-core/cli.js install --with-deps ${{ matrix.browser }}
+      - name: Verify the package matches the preinstalled browser image
+        run: node -e "if (require('playwright-core/package.json').version !== '1.56.1') process.exit(1)"
       - run: npm run build
       - name: Synthetic local checkout, receipt, library and buyer orders
         run: node tests/e2e/accessibility-buyer-actions.mjs
