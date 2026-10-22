@@ -77,8 +77,13 @@ export async function markShipped(store: Store, session: string, rawTracking: un
     [claimed] = await redisPipeline([["SET", doneKey(session), JSON.stringify(shipped), "NX", "EX", KEEP_SECONDS]]);
   } catch { return { ok: false, reason: "unknown" }; }
   if (claimed === null) {
-    const kept = (await readShipped([session])).get(session);
-    return kept ? { ok: true, shipped: kept, emailed: false } : { ok: false, reason: "unknown" };
+    try {
+      const kept = (await readShipped([session])).get(session);
+      return kept ? { ok: true, shipped: kept, emailed: false } : { ok: false, reason: "unknown" };
+    } catch {
+      // A claimed but unreadable record never grants another email.
+      return { ok: false, reason: "unknown" };
+    }
   }
   // Only an explicit storage acknowledgment grants the right to send.
   if (claimed !== "OK") return { ok: false, reason: "unknown" };
