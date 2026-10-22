@@ -348,7 +348,7 @@ export function SiteNav() {
           </nav>
 
           <div className="flex items-center gap-1 sm:gap-2">
-            <Link
+            <Link prefetch={false}
               href="/signin?to=login"
               className="hidden h-10 items-center rounded-[10px] px-3.5 text-[0.9375rem] font-medium text-ink-soft transition-colors hover:bg-sand hover:text-ink sm:flex"
             >
@@ -357,7 +357,7 @@ export function SiteNav() {
             {/* Under 360px the header has room for the logo and the menu only;
                 the drawer and the hero both carry the same button. */}
             <span className="hidden min-[360px]:block">
-              <Link href="/signin" className="btn btn-primary btn-sm">
+              <Link prefetch={false} href="/signin" className="btn btn-primary btn-sm">
                 <span className="hidden min-[400px]:inline">Start your store</span>
                 <span className="min-[400px]:hidden">Get started</span>
               </Link>
@@ -522,10 +522,10 @@ export function SiteNav() {
           </ul>
         </nav>
         <div className="grid gap-2 border-t border-line bg-paper p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
-          <Link href="/signin" onClick={closeAll} className="btn btn-primary btn-lg btn-block">
+          <Link prefetch={false} href="/signin" onClick={closeAll} className="btn btn-primary btn-lg btn-block">
             Start your store
           </Link>
-          <Link href="/signin?to=login" onClick={closeAll} className="btn btn-ghost btn-block">
+          <Link prefetch={false} href="/signin?to=login" onClick={closeAll} className="btn btn-ghost btn-block">
             Log in
           </Link>
         </div>
