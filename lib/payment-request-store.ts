@@ -253,9 +253,10 @@ export async function listRequests(store: Store, now = Date.now()): Promise<Paym
 
 /** How many of the store's requests are open now. */
 export async function openCount(sid: string, now = Date.now()): Promise<number> {
-  if (!isRedisConfigured() || !sid) return 0;
-  const [, n] = await redisPipeline([["ZREMRANGEBYSCORE", openKey(sid), "-inf", String(now)], ["ZCARD", openKey(sid)]]);
-  return Number(n) || 0;
+  if (!isRedisConfigured() || !sid) throw new Error("Payment request count unavailable");
+  const result = await redisPipeline([["ZREMRANGEBYSCORE", openKey(sid), "-inf", String(now)], ["ZCARD", openKey(sid)]]);
+  if (!Array.isArray(result) || result.length !== 2 || !result.every((n) => typeof n === "number" && Number.isSafeInteger(n) && n >= 0)) throw new Error("Payment request count could not be verified");
+  return result[1] as number;
 }
 
 /** Withdraws an open request: its link stops taking payment and no reminder goes. */
