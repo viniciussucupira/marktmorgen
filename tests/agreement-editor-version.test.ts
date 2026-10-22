@@ -26,3 +26,11 @@ test("one malformed line rejects the whole read without losing preceding lines",
   assert.ok(agreementEditorVersion({...version(),lines:[]},"usd",2));
   assert.ok(agreementEditorVersion({...version(),lines:[{text:"Free line",quantity:"1",amount:"0.00"}]},"usd",2));
 });
+
+test("currency scale and draft totals are checked before opening a version", () => {
+  assert.equal(agreementEditorVersion({...version(),lines:[{text:"Yen line",quantity:"1",amount:"120.50"}]},"jpy",2),null);
+  assert.ok(agreementEditorVersion({...version(),lines:[{text:"Yen line",quantity:"1",amount:"120"}]},"jpy",2));
+  for(const n of [0,6,NaN,Infinity,1.5]) assert.equal(agreementEditorVersion({...version(),n},"usd",n),null);
+  assert.equal(agreementEditorVersion({...version(),sha256:"not a fingerprint"},"usd",2),null);
+  assert.equal(agreementEditorVersion({...version(),lines:[{text:"Over limit",quantity:"1",amount:"9999999.99"}]},"usd",2),null);
+});
