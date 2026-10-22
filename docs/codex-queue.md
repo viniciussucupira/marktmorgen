@@ -4261,8 +4261,16 @@ Inventory and cost/tax failure documented in docs/backup.md. Offline-only bounde
 PR785 falhas preservadas: verify119647705153 detectou filtro de namespace ausente do registro, corrigido por entrada sem chave/escrita. Depois WebKit119649672108 no heada65d84fed5163fde3d454407827cf3ea28a7537b detectou segundo clique Edit name and description antes de hidratação, sem campo One line about it. DetailsForm agora mantém esse controle indisponível até hidratação via useSyncExternalStore, sem alterar roteiro, timeout ou asserções. Exigir suíte completa no novo head. Nenhum backup ativo ou entrega funcional por codec apenas.
 
 
+### BK273 — synthetic verified object roundtrip prerequisite
+
+Create-only injected storage, unique object identities, bounded authenticated read-back and exact snapshot comparison, prior object retained on failure; synthetic only, no real provider adapter/cron/credentials/retention action. Full CI pending; not BK1 completion or functional delivery. Delivery157 proof: PR785 merged22October02:34:54Fortaleza,4722c925e366f9b8cbe3b0446c522c8f7a54bb98,tree0dc54c9916e5cbe929cb049abc00fdb8f6330ac3 equals tested;22/22 checks passed, READY05:36:14.905UTC,dpl_939vCypcyPaQTPioAJbjrx2MrNpR,domain exactSHA,five routes200sameDPL; error/fatal0 only05:32:02.147–05:37:02.147UTC. Functional scope was DetailsForm hydration fix; backup remains incomplete. Actual CI/deploy cost unknown, not zero.
+
+
 ### Revisão da leitura de cobranças — preservação de referências
 
 listRequests não deve transformar índice/resposta incompleta em ausência nem remover referências de registros ilegíveis ou de outro sid/id. Limpeza limitada a null explícito após resposta MGET completa; erro vira null e página mostra indisponibilidade, sem formulário de envio baseado em lista desconhecida. Testes sintéticos do leitor real para índices inválidos, duplicados, registros parciais, identidades erradas, próprio válido e expiração confirmada. Nenhuma nova operação/chave/TTL/mensagem; chamadas existentes preservadas. openCount/admissão concorrente e parseRequest financeiro não certificados por esta mudança; permanecem revisão separada.
 
 BK273: aguardando o dono após mais de1hora de bloqueio observado04:52:23.603UTC. MOST_TAX_READING7818bps sobre lucro e demais custos impede60% mesmo sem custo operacional. Credenciais/bucket independentes não provisionados e criação pelo agente proibida; não ativar por mera presença de variáveis. Codec PR785 incorporado; roundtrip sintético PR786 pendente. Backup diário incompleto, não pronto e desligado. Evidências em docs/backup.md e continuidade. Avançar itens acionáveis sem reduzir impostos/gates. Faturas reais CI/deploy desconhecidas, não zero.
+
+
+PR786 incorporado em22/10/2026 03:11:21 Fortaleza (06:11:21UTC), commit58f14c23db3f4cddd750b2b0d96e20b9f8752811, árvore f7ea72988840eb984559cc2eb2b3113064d75d6b igual à testada e prevista;22 verificações completas aprovadas no heada0e54af8dd1b75aa7497cd597f230c8b8c029051. Roundtrip sintético interno, sem ativação nem incremento funcional. Integração explícita de main no PR787 exige suíte completa no novo head. Histórico e bloqueio BK273 preservados; custo efetivo de CI/deploy desconhecido, não zero.
