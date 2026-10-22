@@ -26,11 +26,16 @@ const env = {
   NEXT_TELEMETRY_DISABLED: "1",
 };
 if(!process.env.SIGNUP_TLS_KEY||!process.env.SIGNUP_TLS_CERT)throw Error("Disposable local TLS certificate required");
+let proxyTrace=[];
 const proxy=createServer({key:readFileSync(process.env.SIGNUP_TLS_KEY),cert:readFileSync(process.env.SIGNUP_TLS_CERT)},(incoming,outgoing)=>{
+ const trace={method:incoming.method,path:new URL(incoming.url??"/",origin).pathname,received:true,response:false,finished:false};
+ proxyTrace.push(trace);
+ outgoing.once("finish",()=>{trace.finished=true;});
  const forwarded=httpRequest(upstream+incoming.url,{method:incoming.method,headers:{...incoming.headers,host:"localhost:3199","x-forwarded-host":"localhost:3199","x-forwarded-proto":"https"}},response=>{
+  trace.response=true;trace.status=response.statusCode??502;
   outgoing.writeHead(response.statusCode??502,response.headers);response.pipe(outgoing);
  });
- forwarded.on("error",()=>{if(!outgoing.headersSent)outgoing.writeHead(502);outgoing.end();});
+ forwarded.on("error",error=>{trace.error=error.code??error.name;if(!outgoing.headersSent)outgoing.writeHead(502);outgoing.end();});
  incoming.on("aborted",()=>forwarded.destroy());
  incoming.pipe(forwarded);
 });
@@ -48,17 +53,29 @@ try{
   // fake database would exhaust the real ten-store company-funded pool.
   // Keep that production ceiling intact; never seed paying stores or enlarge it.
   if(cases>0){await services.close();services=await startServices(4498);}
+  proxyTrace=[];
   const index=cases+1,viewportWidth=mode==="reflow-320"?320:width;
   const context=await browser.newContext({ignoreHTTPSErrors:true,viewport:{width:viewportWidth,height:900},serviceWorkers:"block",reducedMotion:mode==="reduced-motion"?"reduce":"no-preference",forcedColors:mode==="forced-colors"?"active":"none",extraHTTPHeaders:{"x-forwarded-for":"192.0.2."+index,"Sec-GPC":"1"}});
-  let page;let phase="open",foreign=0,interceptedVisits=0;const mutations=[],errors=[];const handle="matrix-"+engine[0]+"-"+index,storeName="Matrix "+engine+" "+index;const inbox="matrix-"+engine+"-"+index+"@example.test",before=services.emails().length;
+  let page;let phase="open",foreign=0,interceptedVisits=0,localChallenges=0;const mutations=[],errors=[],network=[];const handle="matrix-"+engine[0]+"-"+index,storeName="Matrix "+engine+" "+index;const inbox="matrix-"+engine+"-"+index+"@example.test",before=services.emails().length;
   try{
    await context.addInitScript(()=>Object.defineProperty(navigator,"globalPrivacyControl",{configurable:true,get:()=>true}));
    if(mode==="text-spacing")await context.addInitScript(()=>document.addEventListener("DOMContentLoaded",()=>{const style=document.createElement("style");style.textContent="*{line-height:1.5!important;letter-spacing:.12em!important;word-spacing:.16em!important}p{margin-bottom:2em!important}";document.head.append(style);},{once:true}));
    page=await context.newPage();page.setDefaultTimeout(30000);page.setDefaultNavigationTimeout(60000);
+   page.on("request",request=>{network.push({event:"request",method:request.method(),path:new URL(request.url()).pathname});});
+   page.on("response",response=>{network.push({event:"response",method:response.request().method(),path:new URL(response.url()).pathname,status:response.status()});});
+   page.on("requestfailed",request=>{network.push({event:"failed",method:request.method(),path:new URL(request.url()).pathname,error:request.failure()?.errorText});});
    page.on("pageerror",error=>errors.push(String(error).replace(/token=[^&\s"']+/g,"token=redacted")));
    await context.route("**/*",route=>{
     const request=route.request(),url=new URL(request.url());
     if(url.origin!==origin){foreign++;return route.abort();}
+    // withBotId rewrites this same-origin script to Vercel. Supply the
+    // disposable provider locally before that rewrite can contact a service.
+    // This is no production BotID verdict: the server already uses VERCEL=0.
+    if(url.pathname==="/149e9513-01fa-4fb0-aad4-566afd725d1b/2d206a39-8ed7-437e-a3be-862e0f06eea3/a-4-a/c.js"){
+     if(request.method()!=="GET"){mutations.push({method:request.method(),path:"unexpected-local-challenge"});return route.abort();}
+     localChallenges++;
+     return route.fulfill({status:200,contentType:"application/javascript",body:"window.V_C.push({b:0,d:0});"});
+    }
     if(url.pathname==="/api/store/hit"&&request.method()==="POST"){
      const raw=request.postData(),input=raw?request.postDataJSON():null;
      const missingWebkit=engine==="webkit"&&!raw&&new URL(request.frame().url()).pathname==="/@"+handle;
@@ -136,10 +153,10 @@ try{
    if((await context.cookies()).some(c=>c.name==="nl_session"))throw Error("Public proof retained creator session");
    await page.getByRole("heading",{name:storeName,exact:true}).waitFor();
    await audit("anonymous-first-store-after-reload");
-   if(foreign||errors.length||mutations.length!==3||mutations[0].path!=="/api/auth/request"||mutations[1].path!=="/api/auth/callback"||mutations[2].path!=="/api/store/claim")throw Error("Unexpected operation or page error "+JSON.stringify({foreign,errors,mutations}));
+   if(localChallenges<1||foreign||errors.length||mutations.length!==3||mutations[0].path!=="/api/auth/request"||mutations[1].path!=="/api/auth/callback"||mutations[2].path!=="/api/store/claim")throw Error("Unexpected operation or page error "+JSON.stringify({foreign,errors,mutations}));
    gaps.push({width,mode,reason:"Synthetic disposable local inbox/session/store claim only; no real email/account/store, physical device, assistive user or actual browser400% zoom. Production BotID behavior and manual sticky-scroll review remain open."});
-   console.log("SIGNUP_ACTION_PROOF:"+JSON.stringify({engine,width,mode,actualLocalRequest:true,capturedEmails:mail.length,confirmationGetDidNotSignIn:true,explicitConfirmation:true,authenticatedFirstSetup:true,actualFirstStoreClaim:true,anonymousPublicStoreAfterReload:true,interceptedVisits,foreign,mutations}));
-  }catch(error){failed++;const diagnostic=page?await page.evaluate(()=>({path:location.pathname,headings:[...document.querySelectorAll("h1,h2")].map(n=>n.textContent),body:document.body.innerText.slice(0,4000)})).catch(()=>null):null;console.error("SIGNUP_MATRIX_FAILURE:"+JSON.stringify({engine,width,mode,phase,diagnostic,errors,error:String(error).replace(/token=[^&\s"']+/g,"token=redacted")}));console.error("SIGNUP_SERVER_DIAGNOSTIC:"+output.replace(/token=[^&\s"']+/g,"token=redacted"));}
+   console.log("SIGNUP_ACTION_PROOF:"+JSON.stringify({engine,width,mode,actualLocalRequest:true,capturedEmails:mail.length,confirmationGetDidNotSignIn:true,explicitConfirmation:true,authenticatedFirstSetup:true,actualFirstStoreClaim:true,anonymousPublicStoreAfterReload:true,interceptedVisits,localChallenges,foreign,mutations}));
+  }catch(error){failed++;const diagnostic=page?await page.evaluate(()=>({path:location.pathname,headings:[...document.querySelectorAll("h1,h2")].map(n=>n.textContent),body:document.body.innerText.slice(0,4000)})).catch(()=>null):null;console.error("SIGNUP_MATRIX_FAILURE:"+JSON.stringify({engine,width,mode,phase,diagnostic,errors,network:network.slice(-80),proxyTrace:proxyTrace.slice(-80),capturedLocalEmails:services.emails().length-before,error:String(error).replace(/token=[^&\s"']+/g,"token=redacted")}));console.error("SIGNUP_SERVER_DIAGNOSTIC:"+output.replace(/token=[^&\s"']+/g,"token=redacted"));}
   finally{cases++;await context.close();}
  }
  console.log("SIGNUP_MATRIX_OPEN_GAPS:"+JSON.stringify(gaps));

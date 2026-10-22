@@ -4763,6 +4763,28 @@ Custo operacional incremental máximo mensal/anual por plano0/0 no envelope exis
 
 PR #803 permanece exclusivamente documental; sua base agora incorpora explicitamente main805 e exige suíte integral no novo head, sem reutilizar17/22 do head anterior77c17bba. PR #807 (admissão estrita de acordos) preservado em branch sem conflito; atualizado com o mesmo main805 e CI integral pendente, sem alegação de atomicidade. A seção OR continua no fim e a ordem do dono não muda por este registro.
 
+### Entrega funcional168 — preparação independente da página inicial (22/10/2026)
+
+PR #808 incorporado às17:41:38 de Fortaleza(20:41:38Z), commit `6e959aa0c667572a091fd4603f05239f549eeab9`,head `f31596916e280841037c2548d43d5b48b2d529c4`;22/22 verificações formais, árvores testada/prevista/real idênticas `e78fdf67ac14d9ae2d5a78ed2209038432dcba32`. Demonstrações independentes HeroFlow,StudioScreens,FeatureVisual,CreatorShowcase em fronteiras Suspense separadas; três links restantes no rodapé/hero sem pré-carregamento automático. Conteúdo, preços, limites e controles nativos preservados.
+
+Histórico obrigatório: Mobile job120053081786 no head3d139277 falhou em200ms na primeira interação da home. Correção de prefetch sozinha no head5149310/job120057051782 não bastou:224ms,137.5ms de espera pela thread e6.4ms de processamento. Novas fronteiras independentes corrigem trabalho de preparação concorrente; causa histórica exclusiva não certificada. Nenhum limiar, amostra, espera ou asserção alterado. No head final job120061823429:home144/80/64ms;pricing64/40/48ms;sales-pages64/56/64ms,CLS0nas9amostras,LCPmáximo1128ms. Laboratório sintético não é INP de campo nem certificaçãoAAA.
+
+Firefox/WebKit completos usam imagem oficialPlaywright1.56.1noble/pwuser e guarda de versão; remove instalação repetida de apt/browser,preserva dois motores,teste completo,build,asserções e45min. Testes com fornecedores simulados. Sem novo comando/chave/TTL/franquia/provedor operacional; incremento máximo mensal/anual por plano0/0no envelope existente não é fatura0. CI/deploy/impostos efetivos desconhecidos reprovam; margem60% não certificada. Todos os gates permanecem fechados.
+
+Deployment `dpl_Hh3umpUjKk8qCGDQfEdUDkzWqXPq` READY às17:42:30.556 de Fortaleza(20:42:30.556Z);marktmorgen.com no SHA exato acima. /,/platform,/pricing,/mission,/library retornaram200 com mesmoDPL,verificado20:43Z. Contador167→168uma vez;próximo169. Logs de runtime não varridos,não afirmar zeroerros.
+
+PR #807 permanece independente: falha signupFirefox120043124951 no heada45,25casos/121auditorias,1falha1280baseline,formSending e resposta ausente30s. Diagnóstico identificou dependência externa do desafio no fixture local; scriptGET exato agora simulado localmente,sem alterar BotIDprodução. Firefoxcorrigido25casos/125auditorias/0falhas,25provas de desafio local,1emailcapturado/caso,confirmação explícita e loja anônima reais no fixture. Nenhuma conta/mensagem externa. Head807 atualizado com main808exige todos22checks,sem reutilizar21/22anteriores. ORjáconcluída não é reaberta.
+
+### Entrega funcional169 — admissão de acordos verificada (22/10/2026)
+
+PR #807 incorporado em22/10/2026 às18:11:31 deFortaleza(21:11:31Z),commit `6ca2f78e629c6dd6af32c17180921c8d4b01bfe9`,head `4c253ada534eb5d6f44a5165ab3c1143748c53fe`;22/22verificações completas. Árvores testada/prevista/real idênticas `547e51f9b1ba414a68078393eeb699d777425f6e`. createAgreement exige sete respostas inteiras seguras não negativas e recibos explícitos de índices/expiração, contagens positivas antes da reserva/gravação; desconhecido recusa e preserva referências incertas. Limites conhecidos e compensação existentes preservados. Integração sintética cobre formatos/slotsmalformados, ausentes, extras, esparsos, zeros inválidos, salvamento confirmado e ambos limites. Não certifica atomicidade, serialização ou retenção futura.
+
+Falha signupFirefoxheada45/job120043124951 e diagnóstico ficam preservados no registro168. Desafio do fornecedor no fixture local agora respondido localmente noGETexato,sem alterar BotIDprodução; nenhum email/conta/cliente/pagamento real. Todos22checks no headfinal,não reexecução isolada.
+
+Deployment `dpl_FVVVxGnmaGE4kAVNt184VkTbAzNA` READY às18:12:27.315deFortaleza(21:12:27.315Z);marktmorgen.com no SHAexato acima. /,/platform,/pricing,/mission,/library retornaram200 com mesmoDPL. Contador168→169uma vez;próximo170. Logs de runtime não varridos,não afirmar zeroerros.
+
+Sem novo comando/chave/TTL/provedor/franquia; incremento máximo operacional mensal/anual porplano0/0no envelope existente não é fatura0. CI/deploy/impostos efetivos desconhecidos continuam reprovados,60%não certificado. Preços,limitesvisíveis,comissão,opt-in,conteúdodoscriadores,idiomas/IDs,gatesvenda/tax/art9a/revisãocomercial preservados. PR #809somentedocumentalH3/SF preservado; sua integração do main807 exige suítecompleta nova,21/22anterioresnãoaprovação.
+
 ## OR — Posição dos pendentes antigos de 19/10/2026 (22/10/2026)
 
 Decisão do dono: 22/10/2026, 14h45 de Fortaleza. Registro documental preparado em 22/10/2026 às 15:18:31 de Fortaleza, após concluir a entrega 165. Esta seção prevalece sobre posições antigas incompatíveis; preserva o histórico e não cria itens nem números.

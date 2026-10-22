@@ -1,6 +1,6 @@
 import { createAgreement } from "@/lib/agreement-store";
 import { claimHandle, ensureStatsId, ensureStoreId, setStripeAccount, setSubscription, storeForEmail } from "@/lib/store";
-import { agreementsAllowed, type AgreementDraft } from "@/lib/agreement-rules";
+import { agreementsAllowed, MAX_KEPT_AGREEMENTS, MAX_PER_PERSON, type AgreementDraft } from "@/lib/agreement-rules";
 import { store as redis } from "./redis-stub";
 import { paidPeriod } from "./billing-period-fixture";
 import { done, is, part } from "./check";
@@ -50,6 +50,40 @@ async function main() {
  await attempt([[]]);
  is("verified empty membership reaches ordinary admission",calls.some(c=>c[0]==="ZADD"),true);
  redis.pipeline=original;
+ part("Admission requires exact numeric reservation and expiry receipts");
+ const countAttempt=async (receipt:unknown) => {
+  calls=[];
+  redis.pipeline=async commands=>{
+   calls.push(...commands);
+   if(commands[0]?.[0]==="SMEMBERS")return [[]];
+   if(commands[0]?.[0]==="ZREMRANGEBYSCORE")return receipt as unknown[];
+   if(commands[0]?.[0]==="SET" && String(commands[0]?.[1]).startsWith("nl:agree:v:"))return ["OK","OK"];
+   return original(commands);
+  };
+  try { return await createAgreement(store,draft); }
+  finally { redis.pipeline=original; }
+ };
+ const admitted=[0,1,1,1,1,1,1];
+ const unknownAdmissions:unknown[]=[null,undefined,[],admitted.slice(0,6),[...admitted,1],Array(7)];
+ for(let i=0;i<admitted.length;i++)for(const bad of [null,undefined,"1",true,-1,0.5,Number.MAX_SAFE_INTEGER+1]) {
+  const receipt:unknown[]=[...admitted];receipt[i]=bad;unknownAdmissions.push(receipt);
+ }
+ for(const i of [1,2,3,4,5,6]){const receipt=[...admitted];receipt[i]=0;unknownAdmissions.push(receipt);}
+ for(const receipt of unknownAdmissions) {
+  const result=await countAttempt(receipt);
+  is("unknown admission refuses saving",result.ok?"accepted":result.reason,"unavailable");
+  is("unknown admission never writes agreement records",calls.some(c=>c[0]==="SET" && String(c[1]).startsWith("nl:agree:")),false);
+  is("unknown admission retains uncertain memberships",calls.some(c=>c[0]==="ZREM" || c[0]==="SREM" || c[0]==="DEL"),false);
+ }
+ const ordinary=await countAttempt(admitted);
+ is("verified admission can save the agreement",ordinary.ok,true);
+ const storeFull=await countAttempt([0,1,1,MAX_KEPT_AGREEMENTS+1,1,1,1]);
+ is("known store cap keeps existing refusal",storeFull.ok?"accepted":storeFull.reason,"kept");
+ is("known over-cap membership is compensated",calls.filter(c=>c[0]==="ZREM" || c[0]==="SREM").map(c=>c[0]),["ZREM","SREM"]);
+ const personFull=await countAttempt([0,1,1,1,MAX_PER_PERSON+1,1,1]);
+ is("known person cap keeps existing refusal",personFull.ok?"accepted":personFull.reason,"person");
+ is("known person cap never writes a record",calls.some(c=>c[0]==="SET" && String(c[1]).startsWith("nl:agree:")),false);
+
  part("Both agreement records need explicit write acknowledgments");
  const writeAttempt=async (receipt:unknown) => {
   calls=[];
