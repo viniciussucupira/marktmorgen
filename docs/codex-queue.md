@@ -4259,3 +4259,10 @@ Inventory and cost/tax failure documented in docs/backup.md. Offline-only bounde
 
 
 PR785 falhas preservadas: verify119647705153 detectou filtro de namespace ausente do registro, corrigido por entrada sem chave/escrita. Depois WebKit119649672108 no heada65d84fed5163fde3d454407827cf3ea28a7537b detectou segundo clique Edit name and description antes de hidratação, sem campo One line about it. DetailsForm agora mantém esse controle indisponível até hidratação via useSyncExternalStore, sem alterar roteiro, timeout ou asserções. Exigir suíte completa no novo head. Nenhum backup ativo ou entrega funcional por codec apenas.
+
+
+### Revisão da leitura de cobranças — preservação de referências
+
+listRequests não deve transformar índice/resposta incompleta em ausência nem remover referências de registros ilegíveis ou de outro sid/id. Limpeza limitada a null explícito após resposta MGET completa; erro vira null e página mostra indisponibilidade, sem formulário de envio baseado em lista desconhecida. Testes sintéticos do leitor real para índices inválidos, duplicados, registros parciais, identidades erradas, próprio válido e expiração confirmada. Nenhuma nova operação/chave/TTL/mensagem; chamadas existentes preservadas. openCount/admissão concorrente e parseRequest financeiro não certificados por esta mudança; permanecem revisão separada.
+
+BK273: aguardando o dono após mais de1hora de bloqueio observado04:52:23.603UTC. MOST_TAX_READING7818bps sobre lucro e demais custos impede60% mesmo sem custo operacional. Credenciais/bucket independentes não provisionados e criação pelo agente proibida; não ativar por mera presença de variáveis. Codec PR785 incorporado; roundtrip sintético PR786 pendente. Backup diário incompleto, não pronto e desligado. Evidências em docs/backup.md e continuidade. Avançar itens acionáveis sem reduzir impostos/gates. Faturas reais CI/deploy desconhecidas, não zero.

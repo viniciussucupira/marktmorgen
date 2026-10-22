@@ -220,11 +220,15 @@ export async function listRequests(store: Store, now = Date.now()): Promise<Paym
   if (!isRedisConfigured() || !store.sid) return null;
   try {
     const limit = Math.max(1, requestLimitsFor(store, now / 1000).kept, 20);
-    const [ids] = await redisPipeline([["ZREVRANGE", storeKey(store.sid), 0, limit - 1]]);
-    const list = Array.isArray(ids) ? ids.map(String).filter((id) => ID_PATTERN.test(id)) : [];
+    const index = await redisPipeline([["ZREVRANGE", storeKey(store.sid), 0, limit - 1]]);
+    if (!Array.isArray(index) || index.length !== 1 || !Array.isArray(index[0]) ||
+        index[0].length > limit || new Set(index[0]).size !== index[0].length ||
+        index[0].some(id => typeof id !== "string" || !ID_PATTERN.test(id))) return null;
+    const list = index[0] as string[];
     if (!list.length) return [];
-    const [raws] = await redisPipeline([["MGET", ...list.map(recordKey)]]);
-    const values = Array.isArray(raws) ? raws : [];
+    const records = await redisPipeline([["MGET", ...list.map(recordKey)]]);
+    if (!Array.isArray(records) || records.length !== 1 || !Array.isArray(records[0]) || records[0].length !== list.length) return null;
+    const values = records[0];
     const out: PaymentRequest[] = [];
     const gone: string[] = [];
     list.forEach((id, i) => {
@@ -235,8 +239,9 @@ export async function listRequests(store: Store, now = Date.now()): Promise<Paym
       } catch {
         request = null;
       }
-      if (request && request.sid === store.sid) out.push(request);
-      else gone.push(id);
+      if (request && request.sid === store.sid && request.id === id) out.push(request);
+      else if (raw === null) gone.push(id);
+      else throw new Error("Payment request record unreadable");
     });
     if (gone.length) await redisPipeline([["ZREM", storeKey(store.sid), ...gone], ["ZREM", openKey(store.sid), ...gone]]);
     return out;
