@@ -4269,3 +4269,10 @@ Create-only injected storage, unique object identities, bounded authenticated re
 ### Payment request action receipt review
 
 Client now requires successful HTTP and own explicit ok:true. Create also requires a valid persisted request ID; create/remind require an explicit boolean sent receipt. Malformed or ambiguous replies preserve form values and cannot claim sent/canceled/deleted. Unknown-result copy asks to reload before retrying, without claiming nothing was sent. Synthetic parser tests cover HTTP errors with success bodies, invalid/missing/inherited receipts and true/false send outcomes; full CI required before incorporation. Separate component/helper files avoid PR787 reader edits. No new supplier call, email, key, TTL or visible limit; actual CI/deploy cost remains unknown, not zero. No certification of backend admission, locks or tax/margin.
+
+
+### Agreement page — unknown lists remain unknown
+
+Agreements Studio no longer renders an empty list/send form when either agreement or payment request reading returns null. It shows an accessible unavailable notice and asks to reload. Known-empty lists keep their original form. This addresses page fallback only; agreement-store parser/index cleanup remains a separate finding and is not certified. No provider operation, message, key, TTL or visible limit added. Full CI required; actual CI/deploy expenses unknown, not zero.
+
+Entrega158 confirmada: PR788 incorporado22/10/2026 03:38:22Fortaleza,commit a7cb4270054a51572d91e30a4c5f9eebfd277fed,tree ad8d0bef4b86281a954e701e991b956b673735a0 igual à testada/prevista;22/22 verificações no head2b20e8b2de36b715a95b1d51ea005fe5cd1b2b06. READY06:39:16.130UTC,dpl_G4RbHRxMNjuoskH5muYV11oST2sz,marktmorgen.com versão exata,cinco rotas200mesmoDPL. Error/fatal0 somente06:35:11.558–06:40:11.558UTC. Confirmações estritas de ações de cobrança publicadas; nenhum novo custo operacional, faturasCI/deploy desconhecidas, não zero. Contador158,próxima159; nenhuma margem certificada.
