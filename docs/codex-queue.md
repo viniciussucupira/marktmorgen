@@ -16,6 +16,12 @@ Item205 e revisão de clareza/acessibilidade: a página do estúdio dizia “Not
 
 Sem operação/teto novo de fornecedor; incremento máximo mensal/anual0/0por plano. Custos reais de CI/deploy permanecem desconhecidos. SKU histórico e reserva de estoque atômica não são declarados completos.
 
+## Continuidade técnica — compradores recentes sem falsas conclusões (22/10/2026 UTC)
+
+Entrega153 confirmada: PR781 mergeb8fe97bc7974e65105d5bf1fd8085b65c22dca45 em21/10/2026 às23:22:02Fortaleza(22/10/202602:22:02Z),22/22head4c9dd56398f9ac981f31102f5118e0a7c3740f9e,árvore649e952702905cf1aaf9012ab535b2ac2b1cfb6dprevista/real/testadaiguais. Produçãodpl_3zRWNCiWGgWG94ttXtPoQZDV6T1Q READY2026-10-22T02:23:07.467Z,domínioSHAexato,5rotas200mesmoDPL,error/fatal0somente02:18:54.185Z–02:23:54.185Z. Histórico recente explica limite25 e indisponibilidade/erro/ausência sem alegar zero vendas passadas; seção nomeada e h2. Semoperações/tetosnovos;incrementomáximomensal/anual0/0porplano;custosCI/deployreaisdesconhecidos. Contador153próxima154. Registrar na próxima mudança necessária da fila sem reiniciar CI saudável só por documento.
+
+Revisão página por página, compradores do estúdio: a lista filtra pedidos sem e-mail, deduplica os demais e lê somente a janela recente existente, mas dizia “Nobody has bought yet” quando não sobrava nenhuma linha. Agora explica o escopo recente com e-mail e o histórico completo no Stripe; ausência nesta janela não é declarada ausência de compras passadas. Falha é lista não verificável e configuração indisponível recebe explicação, em vez de desaparecer sem contexto. Reutiliza título/região existentes; preserva IDs, permissões, conteúdo dos criadores e idiomas de compradores. Não adiciona leituras, chamadas, retenção, mensagens ou mudanças de plano/opt-in. Somente clareza de estados já existentes, sem testes que espelhem texto; todos os checks completos remotos são exigidos antes de incorporar/publicar. Incremento máximo mensal/anual de teto0/0por plano; custos reais de CI/deploy desconhecidos, não zero. Não é publicação confirmada.
+
 ## Proveniência e prioridade
 
 - **P0:** pedido de excelência/acessibilidade de19/10/2026, anexo bcc471cb-e0ea-4bd0-9b09-26c1d19e0ed5. Hora original não fornecida no arquivo.
