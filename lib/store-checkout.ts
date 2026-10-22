@@ -1165,7 +1165,13 @@ export async function listSales(store: Store): Promise<SaleList> {
     })
     .filter((sale) => sale.reference !== "");
   // When each shipped order was marked as sent, read at once.
-  const shippedAt = await readShipped(sales.filter((sale) => sale.shipTo).map((sale) => sale.reference)).catch(() => new Map<string, Shipped>());
+  let shippedAt: Map<string, Shipped>;
+  try {
+    shippedAt = await readShipped(sales.filter((sale) => sale.shipTo).map((sale) => sale.reference));
+  } catch (error) {
+    console.error("reading order shipment status failed", error);
+    return { state: "error" };
+  }
   for (const sale of sales) if (sale.shipTo) sale.shipped = shippedAt.get(sale.reference) ?? null;
 
   // Products taken in one click after paying are their own charges, not

@@ -32,18 +32,26 @@ export const doneKey = (session: string) => `nl:ship:done:${session}`;
 export async function readShipped(sessions: string[]): Promise<Map<string, Shipped>> {
   const out = new Map<string, Shipped>();
   const ids = sessions.filter((id) => SESSION.test(id));
-  if (!ids.length || !isRedisConfigured()) return out;
+  if (!ids.length) return out;
+  if (!isRedisConfigured()) throw new Error("Shipment status is unavailable");
   const rows = await redisPipeline(ids.map((id) => ["GET", doneKey(id)]));
-  ids.forEach((id, i) => {
+  if (!Array.isArray(rows) || rows.length !== ids.length) {
+    throw new Error("Shipment status reply is incomplete");
+  }
+  for (let i = 0; i < ids.length; i++) {
     const raw = rows[i];
-    if (typeof raw !== "string") return;
+    // Only an explicit missing key means the order has no shipment mark.
+    if (raw === null) continue;
+    if (typeof raw !== "string") throw new Error("Shipment status is unreadable");
+    let value: Shipped | null;
     try {
-      const value = readShippedRecord(JSON.parse(raw));
-      if (value) out.set(id, value);
+      value = readShippedRecord(JSON.parse(raw));
     } catch {
-      // Unreadable is not marked.
+      throw new Error("Shipment status is unreadable");
     }
-  });
+    if (!value) throw new Error("Shipment status is unreadable");
+    out.set(ids[i], value);
+  }
   return out;
 }
 
