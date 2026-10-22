@@ -4274,3 +4274,11 @@ BK273: aguardando o dono após mais de1hora de bloqueio observado04:52:23.603UTC
 
 
 PR786 incorporado em22/10/2026 03:11:21 Fortaleza (06:11:21UTC), commit58f14c23db3f4cddd750b2b0d96e20b9f8752811, árvore f7ea72988840eb984559cc2eb2b3113064d75d6b igual à testada e prevista;22 verificações completas aprovadas no heada0e54af8dd1b75aa7497cd597f230c8b8c029051. Roundtrip sintético interno, sem ativação nem incremento funcional. Integração explícita de main no PR787 exige suíte completa no novo head. Histórico e bloqueio BK273 preservados; custo efetivo de CI/deploy desconhecido, não zero.
+
+
+### Payment request action receipt review
+
+Client now requires successful HTTP and own explicit ok:true. Create also requires a valid persisted request ID; create/remind require an explicit boolean sent receipt. Malformed or ambiguous replies preserve form values and cannot claim sent/canceled/deleted. Unknown-result copy asks to reload before retrying, without claiming nothing was sent. Synthetic parser tests cover HTTP errors with success bodies, invalid/missing/inherited receipts and true/false send outcomes; full CI required before incorporation. Separate component/helper files avoid PR787 reader edits. No new supplier call, email, key, TTL or visible limit; actual CI/deploy cost remains unknown, not zero. No certification of backend admission, locks or tax/margin.
+
+
+PR788 incorporado22/10/2026 03:38:22Fortaleza(06:38:22UTC),a7cb4270054a51572d91e30a4c5f9eebfd277fed,árvore ad8d0bef4b86281a954e701e991b956b673735a0 igual à testada e prevista;22verificações completas no head2b20e8b2de36b715a95b1d51ea005fe5cd1b2b06. Publicação funcional ainda depende de READY/domínio/versão exata; contador não incrementado aqui. Integração no PR787 exige nova suíte completa, sem reutilizar aprovação anterior. CI/deploy custos efetivos desconhecidos, não zero.
