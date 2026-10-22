@@ -4269,3 +4269,8 @@ Create-only injected storage, unique object identities, bounded authenticated re
 ### Payment request action receipt review
 
 Client now requires successful HTTP and own explicit ok:true. Create also requires a valid persisted request ID; create/remind require an explicit boolean sent receipt. Malformed or ambiguous replies preserve form values and cannot claim sent/canceled/deleted. Unknown-result copy asks to reload before retrying, without claiming nothing was sent. Synthetic parser tests cover HTTP errors with success bodies, invalid/missing/inherited receipts and true/false send outcomes; full CI required before incorporation. Separate component/helper files avoid PR787 reader edits. No new supplier call, email, key, TTL or visible limit; actual CI/deploy cost remains unknown, not zero. No certification of backend admission, locks or tax/margin.
+
+
+### Agreement records — preserve references on unreadable storage
+
+listAgreements now requires exact bounded unique valid index and complete MGET response. Invalid JSON, mismatched store/id and incomplete replies return unavailable with no index cleanup, including mixed absent and unreadable records. Only explicit null in a complete, otherwise verified result permits existing bounded ZREM. Synthetic tests call the real reader with simulated Redis; no external service. No new keys/TTL/provider calls/messages, no signature/financial-parser certification. Full CI required; actual CI/deploy expense unknown, not zero. Agreement-page unavailable notice remains separate PR789.
