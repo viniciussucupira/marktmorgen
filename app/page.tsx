@@ -260,7 +260,7 @@ export default function Home() {
             </div>
 
             <div className="">
-              <HeroFlow />
+              <Suspense fallback={null}><HeroFlow /></Suspense>
             </div>
           </div>
 
@@ -372,7 +372,7 @@ export default function Home() {
         <HomeActions place="situations"/>
 
         {/* ------------------------------------------------ the buyer's path */}
-        <StudioScreens />
+        <Suspense fallback={null}><StudioScreens /></Suspense>
         <BuyerPath />
 
         <section className="section" aria-labelledby="home-modules-heading">
@@ -453,7 +453,7 @@ export default function Home() {
                     scrollbar on a phone.
                   */}
                   <div className={`flex min-w-0 justify-center ${i % 2 === 1 ? "lg:order-1 lg:justify-start" : "lg:justify-end"}`}>
-                    <FeatureVisual visual={r.visual} tone="light" />
+                    <Suspense fallback={null}><FeatureVisual visual={r.visual} tone="light" /></Suspense>
                   </div>
                 </article>
               ))}
@@ -517,7 +517,7 @@ export default function Home() {
         </section>
 
         <HomeActions place="plans"/>
-        <CreatorShowcase/>
+        <Suspense fallback={null}><CreatorShowcase /></Suspense>
         <PlatformProof/>
 
         {/* ------------------------------------------------------------ faq */}

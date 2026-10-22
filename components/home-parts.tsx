@@ -416,7 +416,7 @@ export function HeroFlow() {
       */}
       <p className="mt-7 text-center text-[0.8125rem] leading-relaxed text-white/65">
         Five example stores we built. The photographs are licensed stock, not customers of ours. The{" "}
-        <Link href="/demo" className="font-medium text-white/85 underline underline-offset-4 decoration-white/30 hover:decoration-white">
+        <Link prefetch={false} href="/demo" className="font-medium text-white/85 underline underline-offset-4 decoration-white/30 hover:decoration-white">
           demo store
         </Link>{" "}
         is the one you can buy from, with a test card.
