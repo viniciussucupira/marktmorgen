@@ -54,6 +54,24 @@ async function main(): Promise<void> {
     is("valid paid history remains visible",sale.sales.length,1);
     is("the historical title stays intact",sale.sales[0].title,"Original creator title");
     is("the persisted order identifier stays intact",sale.sales[0].reference,"cs_test_orderproof");
+    reply={data:[{id:"cs_test_shipmentreadproof01",status:"complete",payment_status:"paid",
+      created:Math.floor(Date.now()/1000),amount_total:1200,currency:"usd",
+      metadata:{store:store.handle,title:"Physical order",ship:"yes"},
+      customer_details:{email:"synthetic-buyer@example.test"}}]};
+    const originalPipeline=redis.pipeline;
+    const beforeShipmentFailure=calls.length;
+    redis.pipeline=async(commands)=>{
+      if(commands.some(command=>command[0]==="GET" && String(command[1]).startsWith("nl:ship:done:")))return [];
+      return originalPipeline(commands);
+    };
+    try {
+      is("unknown shipment state cannot appear unmarked",(await listSales(store)).state,"error");
+      is("unknown shipment state stops further provider reads",calls.length-beforeShipmentFailure,1);
+    } finally {redis.pipeline=originalPipeline;}
+    const unmarked=await listSales(store);
+    if(unmarked.state!=="ok")throw new Error("Expected known absent shipment");
+    is("an explicit absent shipment remains visible",unmarked.sales[0].shipped,null);
+
     status=500;
     reply={data:[]};
     is("an HTTP failure is not an empty history",(await listSales(store)).state,"error");
