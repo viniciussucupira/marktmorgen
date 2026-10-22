@@ -4251,3 +4251,8 @@ Escopo:
 É proibido neste item: criar contas, criar buckets, criar chaves de acesso, aceitar termos ou contratar serviço; tudo isso depende do dono. Liste em docs/backup.md, passo a passo, exatamente o que o dono precisa fazer (por exemplo, criar o bucket de backup no Cloudflare R2, criar uma chave de acesso que só possa gravar nesse bucket e cadastrar na Vercel as variáveis de ambiente com os nomes que você definir), e deixe o job pronto e desligado até essas variáveis existirem. Nunca grave segredos, chaves ou valores de variáveis no repositório, nos registros ou nos backups em texto aberto. Testes somente com fornecedores simulados.
 
 Estado: na fila, com prioridade sobre os recursos novos ainda não iniciados. Ao concluir, registre o commit, o resultado da suíte completa e a publicação, e altere o estado para "pronto e desligado, aguardando os passos do dono".
+
+
+### BK273 prerequisite — offline encrypted restore codec
+
+Inventory and cost/tax failure documented in docs/backup.md. Offline-only bounded AES256GCM/gzip codec plus synthetic in-memory restore tests prepared; no cron/provider adapter/bucket/key/environment lookup or active privacy change. Full BK1 remains incomplete, not pronto e desligado: daily export, exact Redis restore, repository bundles, retention/reporting and funded caps remain missing. No production backup exists from this change. No functional delivery count for a codec/document alone. Actual CI costs unknown, not zero.
