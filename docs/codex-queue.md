@@ -4066,6 +4066,14 @@ ShippingEditor aceitava ok truthy semHTTPválido nem evidência do produto/frete
 
 Integração explícita do PR774 merge d654f8d2290ef572c7afebbb8cd4d56c8d8fc58d em21/10/2026 às20:02:37Fortaleza (23:02:37Z),22/22 checks no head156860f95303695ec99fd6fd5ebb3fea4cbedec8; árvore prevista/real/testada36306c3a93984fd32745416fdd416b39e24d50ae iguais. Todas as correções e históricos de falha preservados; PR775 exige nova verificação integral no head combinado. Publicação774 ainda em confirmação, contador147.
 
+Entrega148 confirmada: PR774 merge d654f8d2290ef572c7afebbb8cd4d56c8d8fc58d em21/10/2026 às20:02:37Fortaleza(23:02:37Z),22/22checks no head156860f95303695ec99fd6fd5ebb3fea4cbedec8, árvore36306c3a93984fd32745416fdd416b39e24d50ae prevista/real/testada iguais. Produção dpl_4L61LVkXeTVQG1WtFzfeTdC55FzG READY23:03:48.884Z, domínio marktmorgen.com SHAexato,5rotas200mesmoDPL; error/fatal0 somente22:59:25.730Z–23:04:25.729Z. Desativação exigeIDigual/activefalse; botãoLoadaguarda hidratação. Histórico de falhas preservado. Incrementotetooperacionalmensal/anual0/0porplano,custosreaisCI/deploydesconhecidos. Contador148,próxima149; registrar próxima mudança necessária da fila semreiniciarCI saudável só por documento.
+
+Entrega149 confirmada: PR775 merge d1d3656b350cd7d11552fd396ec357e62602321a em21/10/2026 às20:30:43Fortaleza(23:30:43Z),22/22 no head integrado6e9a40241820b211446550dd57a09946f06acd8d; árvore20a2225fc30995b44f913920932c75edf4f5b151 prevista/real/testada iguais. Produção dpl_AgmDF6Z9xsF35syvErz6QNPHBzjH READY23:31:48.939Z, domínioSHAexato,5rotas200mesmoDPL; error/fatal0somente23:27:55.595Z–23:32:55.595Z. Frete salvo exigeproduto/fatosiguais; incerteza preservaescolhas; bloqueiocampos/cancelamento pendente. Incrementotetomensal/anual0/0porplano,custosreaisCI/deploydesconhecidos. Contador149próxima150; registrar na próxima mudança necessária da fila.
+
+### Frete gratuito só por instrução explícita — continuação205
+
+A rota de frete convertia price ausente/não-string em texto vazio e depois zero: corpo parcial com região podia substituir cobrança existente por frete grátis. Novo leitor exige objeto/campo próprio price string no limite12 e região própria reconhecida; null explícito continua removendo frete, vazio/0 explícitos continuam grátis. SKU omitido mantém compatibilidade de preservação; vazio explícito limpa; Unicode/IDs preservados. Leitura falha antes de setProductShipping, sem comando/chamada extra. Testes sintéticos de corpos incompletos, tipos inválidos, destinos, valores pagos/grátis, remoção eSKU. Mesmo limite8kdaAPI,mesmaschaves/TTL/fornecedores/tetos: incremento máximo operacional mensal/anual0/0porplano; custosCI/deployreaisdesconhecidos,nãozero. Todos os gates/preços/limites/opt-in preservados. CIremotocompleto obrigatório, sem testes locais ou submissão externa.
+
 ## SEO — Visibilidade do Marktmorgen no Google (21/10/2026)
 
 271. [SEO1] Auditar, corrigir e melhorar presença orgânica na busca do Google

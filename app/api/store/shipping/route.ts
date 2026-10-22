@@ -1,8 +1,7 @@
 import type { NextRequest } from "next/server";
 import { guardStoreWrite, text } from "@/lib/store-request";
 import { StoreFullError, setProductShipping } from "@/lib/store";
-import { readMoney } from "@/lib/money";
-import { parseShipping, readShippingSku } from "@/lib/shipping";
+import { readShippingWrite } from "@/lib/shipping-request";
 
 /**
  * Makes a product a physical one the creator ships, or an ordinary one again
@@ -17,17 +16,10 @@ export async function POST(request: NextRequest) {
   const { body, store, ref } = guarded;
   const id = text(body.id, 40);
   if (!id) return Response.json({ ok: false, error: "unknown" }, { status: 400 });
-  let shipping = null;
-  if (body.shipping !== null) {
-    const raw = body.shipping && typeof body.shipping === "object" ? (body.shipping as Record<string, unknown>) : {};
-    const typed = text(raw.price, 12).trim();
-    const cents = typed === "" ? 0 : readMoney(typed, store.currency);
-    if (cents === null) return Response.json({ ok: false, error: "ship_price" }, { status: 400 });
-    const sku = readShippingSku(raw.sku);
-    if (sku === null) return Response.json({ ok: false, error: "ship_sku" }, { status: 400 });
-    shipping = parseShipping({ cents, region: raw.region, countries: raw.countries, note: raw.note, ...(Object.hasOwn(raw, "sku") ? { sku } : {}) });
-    if (!shipping) return Response.json({ ok: false, error: "ship_countries" }, { status: 400 });
-  }
+  if (!Object.hasOwn(body,"shipping")) return Response.json({ok:false,error:"ship_price"},{status:400});
+  const read = readShippingWrite(body.shipping,store.currency);
+  if (!read.ok) return Response.json({ok:false,error:read.reason},{status:400});
+  const shipping = read.shipping;
   try {
     const result = await setProductShipping(ref, id, shipping);
     if (!result.ok) return Response.json({ ok: false, error: result.reason }, { status: result.reason === "unknown" ? 404 : 400 });
