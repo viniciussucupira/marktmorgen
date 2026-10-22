@@ -184,6 +184,9 @@ jobs:
   cross-browser:
     name: Cross-browser (${{ matrix.browser }})
     runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.56.1-noble
+      options: --init --ipc=host --user pwuser
     timeout-minutes: 45
     strategy:
       fail-fast: false
@@ -201,8 +204,8 @@ jobs:
           node-version: "24"
           cache: npm
       - run: npm ci
-      - name: Install the pinned Playwright engine and Linux dependencies
-        run: node node_modules/playwright-core/cli.js install --with-deps ${{ matrix.browser }}
+      - name: Verify the package matches the preinstalled browser image
+        run: node -e "if (require('playwright-core/package.json').version !== '1.56.1') process.exit(1)"
       - run: npm run build
       - name: Existing complete studio and public-page browser regressions with synthetic services
         run: node tests/e2e/store-copy.mjs --no-build
