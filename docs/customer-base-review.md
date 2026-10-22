@@ -15,3 +15,8 @@ The reviewed customer count is a snapshot. There is no live collection/retention
 No prices, commission rates, plan count, quotas, billing collection or launch switches change. A change to the minimum-base rules invalidates an older price-and-rights review.
 
 Validation: 12 new cases cover exact cent boundaries, annual fractions, worst mixtures, missing taxes, impossible bases, invalid inputs and integration with commercialMarginReady. The 97 existing customer-margin checks and 116 commercial-snapshot checks also pass; changed modules/tests pass strict TypeScript with the repository's ES2017 target. No full application build or live billing test was run.
+
+
+## FX275 — full company costs,22 October2026
+
+Owner22/10/2026 05:10Fortaleza: "esqueça Hazelsong". Every full LLC fixed cost and fixed tax is100% Marktmorgen; no Hazelsong allocation reduces F. lib/llc-fixed-costs.ts sums full reviewed monthly/annual ceilings and rejects any missing required line. Current ceilings remain unknown, current commercial review null, so minimum paying base is not established and consolidated margin not approved. Most-tax individual failures cannot be repaired by more customers. Native prices, taxes, FX and reserve gaps: [dated evidence](llc-fixed-costs-2026-10-22.md). No commercial-review/gate code changed. Prior validation paragraphs are historical, not verification of this new head.
