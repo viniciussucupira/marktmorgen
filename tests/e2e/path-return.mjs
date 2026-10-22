@@ -50,7 +50,17 @@ export async function checkReturnPath({browser,LOCAL,session,sid,otherSid,axeSou
    await page.waitForLoadState("networkidle");
    await page.goto(LOCAL+"/studio?store="+sid+"#details",{waitUntil:"domcontentloaded",timeout:60000});
    await page.getByRole("button",{name:"Edit name and description",exact:true}).click();
-   await page.getByLabel("One line about it",{exact:true}).fill(bio);
+   try {
+    await page.getByLabel("One line about it",{exact:true}).fill(bio);
+   } catch (error) {
+    // Synthetic fixture only. Preserve the failure and collect the state needed to diagnose it.
+    console.error("PATH_RETURN_EDIT_STATE",JSON.stringify({
+     url:page.url(),errors,
+     details:await page.locator("#details").evaluate(node=>node.outerHTML).catch(()=>null),
+     rsc:await page.evaluate(()=>window.__mmRscBodies).catch(()=>null),
+    }));
+    throw error;
+   }
    const form=page.locator("form").filter({has:page.getByLabel("One line about it",{exact:true})});
    await page.waitForLoadState("networkidle");
    const refresh=page.waitForResponse(response=>new URL(response.url()).pathname==="/studio"&&response.request().method()==="GET"&&response.request().headers()["rsc"]==="1"&&!response.request().headers()["next-router-prefetch"]);refresh.catch(()=>{});
