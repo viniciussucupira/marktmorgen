@@ -4444,3 +4444,6 @@ CI environment repair22/10/2026: repeated30-minute WebKit dependency-install can
 
 
 CI repair verification84bc2429600d892d3d127db4e38345b8a439490c: BuyerFirefox119919689323 andStudioFirefox119919689029 failedbeforetests; Firefox reports currentroot user mismatches mountedhome ownedbypwuser. Container now explicitly runs as pwuser to match that ownership; no HOMEoverride, no sandboxdisable, no test/threshold removal. Complete freshheadCI required; previousfailure retained, no isolatedrerun. No newpublication or functionalcounterincrement.
+
+
+CI repair scope extension22Oct2026 13:09Fortaleza: exactheadb16d3a3ba5ae5c5322909aab617d1c0055c23708 passed21/22, including all Buyer/Studio engines after pwuser correction. Remaining PublicWebKit job119922569193/run39806742439 still installing OS dependencies since15:40:17UTC; build/product assertions not started at16:09UTC. Extend the same exact1.56.1 official container and package-version guard to Public matrix; preserve all engines, five widths, access modes, scripts, assertions, thresholds and30minute cap. Previoushead is not approved or complete; newhead needs entire fresh suite, never isolated rerun. No functional change/counter increment; invoice unknown,not zero, no savings/margin claim.
