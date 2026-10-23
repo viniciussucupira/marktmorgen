@@ -23,7 +23,7 @@ export function ResendPurchase({ reference, email }: { reference: string; email:
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   return (
-    <span className="inline-flex flex-col">
+    <span className="inline-flex flex-col" data-purchase-resend="">
       <button
         type="button"
         disabled={busy}

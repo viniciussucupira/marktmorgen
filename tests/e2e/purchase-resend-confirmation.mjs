@@ -36,8 +36,9 @@ export async function checkPurchaseResend({browser,LOCAL,fixture,shipment,axeSou
     const name=scenario.name+"/"+width;
     await page.goto(LOCAL+"/studio?store="+fixture.sid+"&resend_case="+encodeURIComponent(scenario.name)+"#sales",{waitUntil:"networkidle",timeout:60000});
     const row=page.locator("#sales li").filter({has:page.getByText("Synthetic shipment",{exact:true})});
-    const button=row.getByRole("button",{name:"Send the purchase email again",exact:true});
-    await button.waitFor();const control=button.locator("..");
+    const control=row.locator("[data-purchase-resend]");
+    const button=control.getByRole("button",{name:"Send the purchase email again",exact:true});
+    await button.waitFor();
     let release;const held=new Promise(resolve=>{release=resolve;});pending={scenario,release:held};
     const seen=page.waitForRequest(request=>request.method()==="POST"&&new URL(request.url()).pathname==="/api/store/resend");seen.catch(()=>{});
     try{
