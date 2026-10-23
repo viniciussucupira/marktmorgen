@@ -5026,3 +5026,86 @@ Estado: na fila.
 Acrescentar ao estúdio, na comunidade, lista semanal de até cinco sugestões de temas geradas somente do conteúdo da própria loja e comunidade: temas dos cursos, perguntas sem resposta e eventos marcados, sem ler dados externos. Criador revisa, edita e publica; nada automático. Rótulo desenhado pela página informa que foram geradas por IA. Cada chamada usa o modelo mais barato vigente (verificado antes de implementar), limita entrada/saída, reserva antes da chamada o custo de orçamento próprio por loja e mês e acerta pelo consumo cobrado. Orçamento esgotado impede geração e é informado no estúdio. Coordenar com21[E4], coach de conteúdo por IA, e264[CI2], resumo semanal da comunidade, sem duplicação.
 
 **Regras comuns:** proibido criar contas, aceitar termos, contratar serviços, pagar valores, solicitar aprovações ou alterar preços, limites visíveis, comissão, PLANS_ON_SALE, tax gate, art.9a ou revisão comercial. Somente fornecedores simulados em testes: nenhum e-mail real, cobrança real ou registro real de cliente alterado. Texto público em inglês americano e acessibilidade da ParteA do274[AX1]. Nenhum depoimento, número, resultado, escassez ou urgência inventado; nenhuma superioridade sobre Skool ou concorrente sem fonte oficial datada. Estado inicial de ambos: **na fila**. Ao concluir cada um, registrar data/hora de Fortaleza, commit, resultado da suíte completa e publicação. Proveniência preservada na continuidade e fila; nenhum recurso SX implementado por esta inclusão.
+
+
+### Entrega funcional176 — confirmação de reenvio e menu móvel
+
+PR823, testado891c607cdbb6b92bde2203df286982483c90225a;22/22 verificações aprovadas. Árvore testada, prevista e incorporada9aa54a89f7c04b4c0543bb9a00e558433218d4a4; incorporação ebe02eb055a5bf3beeecd4671c023a099c2d22d3 em23/10/2026 às02:18:42 Fortaleza. Produção READY dpl_8ifS9u78zXcdYicStnujbaE8dXWR em02:19:40.607 Fortaleza, domínio marktmorgen.com no commit exato; /,/platform,/pricing,/mission,/library retornaram200 com o mesmo deployment. Contador175→176 uma vez; próxima177. Logs de runtime não consultados; não há afirmação de zero erros.
+
+Reenvio exige HTTP bem-sucedido, ok booleano exato e ausência de erro contraditório; nomes inesperados usam apenas mensagens próprias. Resposta ambígua/perdida pede conferir antes de tentar novamente; sucesso confirma aceitação para envio, sem alegar entrega.30 cenários sintéticos a390/1280 interceptam todos os POSTs, incluindo erros herdados, falhas, respostas contraditórias e sucesso, com teclado, bloqueio/busy, alertas e contraste real. Menu móvel fechado mantém contêiner/aria-controls e monta seus links/ícones somente quando aberto; testes preservam foco, Escape, rolagem e navegação. Conteúdo, links, direitos e identificadores mantidos.
+
+Falhas preservadas: head ae7768f1d4c3e37157ef47cc6953d685bb7f325b, job120229351688,23/10 às00:51:02 Fortaleza, interação móvel280ms contra<200ms, LCP2188ms/CLS0; corrigida montagem inicial do menu sem alterar limites. Trace correlaciona trabalho React, não comprova causa exclusiva/INP de campo. Na validação seguinte, job120232212640 em01:18:08 e job120238035432 em01:34:32 expuseram referência do novo teste presa ao nome antigo durante Sending…; marcador estável no contêiner corrigiu a cadeia. Job120243052485 em01:52:59 executou todos os30 cenários, mas28 expectativas contavam a região de anúncios vazia como mensagem: exigência corrigida para conteúdo vazio, preservando nó acessível e todas as verificações. Cada novo head exigiu suíte completa; nenhum job isolado, limite/timeout relaxado ou asserção removida.
+
+Cálculo pré-código do incremento máximo mensal/anual: Store$0/$0, Studio$0/$0, Scale$0/$0, por validar a mesma resposta e reduzir renderização oculta, sem nova operação, franquia, dependência, envio ou armazenamento. Faturas reais de CI/deploy/fornecedores continuam desconhecidas, nunca zero.100% dos custos fixos LLC seguem Marktmorgen; leitura mais onerosa e piso60% individual/global não certificados. PLANS_ON_SALE=false, preços, limites, comissão, opt-ins e gates fiscais/comerciais preservados.
+
+
+## H4 — Lições da quarta auditoria da Hotmart (23/10/2026)
+
+Solicitação do dono (23/10/2026,01h13, Fortaleza): incorporar as melhorias da quarta auditoria estratégica da Hotmart (hotmart.com) que ainda não existam no código nem na fila. Antes de cada item, verificar código e fila e implementar apenas a diferença. Fatos atribuídos à Hotmart exigem confirmação em fonte oficial datada antes de qualquer uso; números da Hotmart jamais podem ser apresentados como resultados do Marktmorgen.
+
+**Ordem:** depois de tudo o que já está na fila, incluindo HG/SX; itens não bloqueiam nenhum outro. Todos começam **na fila**. Registro solicitado após concluir a tarefa corrente, respeitado após a publicação176; recursos H4 não implementados por esta inclusão.
+
+**REGRA DOS 60% (OBRIGATÓRIA):** todo cliente pagante, considerado isoladamente e usando100% de todos os direitos do plano no pior mês, deve manter margem de lucro líquido MÍNIMA de60%, depois de todos os custos e todos os impostos, inclusive brasileiros; a margem pode ser maior, nunca menor, e a mesma regra vale para a empresa como um todo. Antes de qualquer código, calcular o custo máximo mensal e anual de cada item por plano, com teto automático aplicado antes do gasto. Custo desconhecido não é zero. Usar a leitura que resultar em MAIS imposto em docs/tax-uncertainty.md. Desde22/10/2026,100% dos custos fixos da LLC pertencem ao Marktmorgen (275[FX1]).
+
+287. [H4-1] Gatilho de automação por progresso no curso
+
+Estado: na fila.
+
+Hoje as sequências (lib/flows.ts) podem começar quando o aluno inicia ou conclui um curso, mas não quando ele atinge uma parte dele. Acrescentar o gatilho "reached a share of the course", com percentuais definidos pelo criador (por exemplo,25%,50% ou80% das aulas concluídas), para que possa apresentar, por exemplo, uma mentoria a quem chegou a80%. Usar somente progresso medido no servidor: aulas marcadas como concluídas, provas aprovadas e trabalhos aprovados. Coordenar com102[E2-COURSE-COMPLIANCE], que mede no servidor a ordem das aulas e90% do vídeo, sem duplicar. Cada aluno dispara cada percentual uma única vez por curso. Mensagens somente a quem consentiu em receber novidades, dentro da franquia de e-mails do plano, verificada antes do envio.
+
+288. [H4-2] Resumo em texto de cada aula, por IA
+
+Estado: na fila.
+
+Gerar resumo curto somente da transcrição já existente de cada aula em vídeo ou áudio, exibido abaixo da aula sob rótulo desenhado pela página indicando geração por IA. Criador revisa e aprova cada resumo antes de publicar, pode editar ou desligar; nada publicado sem aprovação. Gerar uma única vez por versão da aula e guardar, nunca a cada visualização. Usar o modelo mais barato vigente, verificado antes de implementar, com limites de entrada/saída; reservar antes de cada chamada o custo de orçamento próprio por loja e mês e acertar pelo consumo cobrado. Orçamento esgotado impede resumos novos e o estúdio informa isso. Usar somente conteúdo da própria aula, sem acrescentar fatos, números ou promessas. Atender também às orientações para deficiências cognitivas da ParteA do274[AX1].
+
+289. [H4-3] Resumo semanal de progresso enviado ao aluno
+
+Estado: na fila.
+
+Oferecer ao aluno, por escolha dele e desligado por padrão, e-mail semanal com progresso nos cursos da loja: aulas concluídas na semana, próxima aula e eventos marcados na comunidade. Criador pode desativar a opção para a loja. Envio dentro da franquia de e-mails do plano verificada antes do envio, com descadastro em um clique; semana sem novidade não gera e-mail. Coordenar com11[D8], resumo semanal ao criador, e lembretes existentes a membros parados, sem duplicar mensagens para a mesma pessoa na mesma semana.
+
+**Regras comuns:** proibido criar contas, aceitar termos, contratar serviços, pagar valores, solicitar aprovações ou alterar preços, limites visíveis, comissão, PLANS_ON_SALE, tax gate, art.9a ou revisão comercial. Somente fornecedores simulados: nenhum e-mail real, cobrança real ou registro real de cliente alterado. Texto público em inglês americano e acessibilidade da ParteA do274[AX1]. Nenhum depoimento, número, resultado, escassez ou urgência inventado, nem superioridade sobre Hotmart ou outro concorrente sem fonte oficial datada. Ao concluir cada item, registrar data/hora de Fortaleza, commit, resultado da suíte completa e publicação. Proveniência preservada na continuidade e fila; nenhum fato da auditoria foi tratado como confirmado por este registro.
+
+
+## SQ — Lições da quarta auditoria da Shopify (23/10/2026)
+
+**Ordem:** após todos os itens anteriores, incluindo H4; estes itens não bloqueiam nenhum outro. Inclusão documental após concluir a tarefa corrente; nenhum recurso SQ implementado agora.
+
+Solicitação do dono (23/10/2026, 02h11, horário de Fortaleza): incorporar ao Marktmorgen as melhorias identificadas na quarta auditoria estratégica da Shopify (shopify.com) que ainda não existam no código nem na fila. Antes de cada item, verifique o código e a fila e implemente apenas a diferença. Os fatos que a auditoria atribui à Shopify devem ser confirmados em fonte oficial datada antes de qualquer uso, e os números da Shopify jamais podem ser apresentados como resultados do Marktmorgen.
+
+REGRA DOS 60% (OBRIGATÓRIA): todo cliente pagante, considerado isoladamente e usando 100% de todos os direitos do plano no pior mês, deve manter margem de lucro líquido MÍNIMA de 60%, depois de todos os custos e de todos os impostos, inclusive os brasileiros; a margem pode ser maior, mas nunca menor, e a mesma regra vale para a empresa como um todo. Antes de qualquer código, calcule o custo máximo mensal e anual de cada item por plano, com teto automático aplicado antes do gasto. Custo desconhecido não pode ser considerado zero. Use a leitura que resultar em MAIS imposto (docs/tax-uncertainty.md). Desde 22/10/2026, todos os custos fixos da LLC são atribuídos integralmente ao Marktmorgen (item 275 [FX1]).
+
+290. [SQ1] Notas privadas do aluno em cada aula
+
+Estado: na fila.
+
+Permita que o aluno escreva notas privadas em cada aula, visíveis somente para ele, nunca para o criador nem para outros alunos. As notas ficam guardadas por aluno e por aula, podem ser exportadas pelo aluno em arquivo de texto e são apagadas de imediato quando a pessoa pede a exclusão dos seus dados (lib/person-data.ts). Defina um limite de tamanho por nota e de quantidade por aluno, verificado antes de gravar, e inclua o armazenamento no cálculo do pior caso do plano. Atualize a política de privacidade junto com o recurso.
+
+291. [SQ2] Busca dentro do curso
+
+Estado: na fila.
+
+Acrescente, na área do aluno, uma busca dentro do curso que procure nos títulos e nas descrições das aulas e nas transcrições que já existirem, e leve o aluno ao ponto exato da aula correspondente. Sem IA: a busca usa um índice simples, montado quando a aula é publicada ou alterada, nunca a cada pesquisa. Limite o número de pesquisas por aluno e por minuto e inclua as leituras no cálculo do pior caso do plano.
+
+292. [SQ3] Fatos verificáveis na página do curso
+
+Estado: na fila.
+
+Mostre na página de venda e na página do curso, calculados pelo código e nunca digitados pelo criador: a duração total real do conteúdo (soma das durações dos vídeos e áudios), o número de aulas e a data real da última atualização do conteúdo, por exemplo "Last updated October 2026". Quando um dado não puder ser calculado, ele não aparece. O criador pode ocultar cada informação, mas não pode alterá-la.
+
+293. [SQ4] Publicação agendada de posts e avisos na comunidade
+
+Estado: na fila.
+
+Permita que o criador escreva um post ou um aviso na comunidade e escolha a data e a hora da publicação, no fuso horário salvo da loja. Antes da hora, o criador pode editar ou cancelar. A publicação respeita as regras e os limites atuais de posts, e os avisos por e-mail ou notificação ficam dentro da franquia do plano, verificada no momento da publicação, não no agendamento.
+
+294. [SQ5] Duplicar curso, arquivar curso e escolher a página depois da compra
+
+Estado: na fila.
+
+Verifique o que já existe e implemente apenas a diferença: (a) duplicar um curso, com aulas e configurações, para criar uma nova turma sem copiar alunos, notas, comentários nem progresso; (b) arquivar um curso, retirando-o da venda sem apagar o acesso de quem já comprou nem os dados dos alunos; (c) escolher, por produto, a página para onde o comprador vai depois do pagamento, somente entre páginas da própria loja ou do domínio próprio verificado do criador, para não permitir redirecionamento aberto.
+
+Regras para todos os itens: é proibido criar contas, aceitar termos, contratar serviços, pagar qualquer valor, solicitar aprovações e alterar preços, limites visíveis, comissão, PLANS_ON_SALE, tax gate, art. 9a ou a revisão comercial. Testes somente com fornecedores simulados: nenhum e-mail real, nenhuma cobrança real e nenhum registro real de cliente alterado. Todo texto público em inglês americano, com a acessibilidade exigida pela Parte A do item 274 [AX1]. Nada de depoimentos, números, resultados, escassez ou urgência inventados, nem afirmação de superioridade sobre a Shopify ou sobre qualquer outro concorrente sem fonte oficial datada.
+
+Estado inicial de todos os itens: na fila. Ao concluir cada um, registre a data e a hora de Fortaleza, o commit, o resultado da suíte completa e a publicação.
