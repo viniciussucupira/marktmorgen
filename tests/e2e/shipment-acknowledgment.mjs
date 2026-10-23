@@ -37,14 +37,16 @@ export async function checkShipmentAcknowledgment({browser,LOCAL,fixture,shipmen
     await field.fill("https://example.test/chosen");
     let release;const held=new Promise(resolve=>{release=resolve;});pending={scenario,release:held};
     const seen=page.waitForRequest(request=>request.method()==="POST"&&new URL(request.url()).pathname==="/api/store/shipped",{timeout:15000});seen.catch(()=>{});
+    // Keep the reply held for busy-state assertions without awaiting click completion first.
+    // Firefox may wait for effects of the submit action until that reply is released.
+    const click=form.getByRole("button",{name:"Mark as shipped",exact:true}).click();click.catch(()=>{});
     try{
-     await form.getByRole("button",{name:"Mark as shipped",exact:true}).click();
      const sent=(await seen).postDataJSON();
      is("shipment request preserves chosen values "+scenario.name+"/"+width,[sent.session,sent.tracking],[shipment,"https://example.test/chosen"]);
      is("shipment tracking locks while waiting "+scenario.name+"/"+width,await field.isDisabled(),true);
      is("shipment button locks while waiting "+scenario.name+"/"+width,await form.getByRole("button").isDisabled(),true);
      is("shipment form announces pending state "+scenario.name+"/"+width,await form.getAttribute("aria-busy"),"true");
-    }finally{release();}
+    }finally{release();await click;}
     if(scenario.confirmed){
      const status=page.locator("#sales").getByRole("status");await status.waitFor();
      is("confirmed shipment has truthful persistent status "+scenario.name+"/"+width,(await status.innerText()).includes("Marked as shipped on"),true);
