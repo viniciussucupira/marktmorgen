@@ -275,6 +275,7 @@ export default function Home() {
           what the limit is — and every one of them is a measurement or a
           number stated elsewhere on this site, not a slogan.
         */}
+        <Suspense fallback={null}>
         <section aria-label="What you can check before you sign up" className="surface-sand section-tight">
           {/*
             Four numbers, and nothing behind them.
@@ -330,6 +331,7 @@ export default function Home() {
             ))}
           </ul>
         </section>
+        </Suspense>
 
         <HomeActions place="proof"/>
 
@@ -342,11 +344,14 @@ export default function Home() {
           a paragraph about categories, and a strip that never stops is what
           a market looks like.
         */}
+        <Suspense fallback={null}>
         <section aria-label="Things people sell from a Marktmorgen store" className="surface-paper overflow-hidden py-5">
           <SoldMarquee />
         </section>
+        </Suspense>
 
         {/* ------------------------------------------------------ who it's for */}
+        <Suspense fallback={null}>
         <section className="surface-sand section">
           <div className="container-page">
             <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
@@ -368,6 +373,7 @@ export default function Home() {
 
           </div>
         </section>
+        </Suspense>
 
         <HomeActions place="situations"/>
 
@@ -375,6 +381,7 @@ export default function Home() {
         <Suspense fallback={null}><StudioScreens /></Suspense>
         <Suspense fallback={null}><BuyerPath /></Suspense>
 
+        <Suspense fallback={null}>
         <section className="section" aria-labelledby="home-modules-heading">
           <div className="container-page">
             <h2 id="home-modules-heading" className="t-h2 balance">Everything in one place</h2>
@@ -392,9 +399,11 @@ export default function Home() {
             </div>
           </div>
         </section>
+        </Suspense>
 
         <HomeActions place="modules"/>
 
+        <Suspense fallback={null}>
         <section aria-labelledby="home-path-heading" className="surface-sand section">
           <div className="container-page">
             <h2 id="home-path-heading" className="t-h2 balance">Your next step, checked against real facts</h2>
@@ -408,10 +417,12 @@ export default function Home() {
             <Link href="/platform/path" prefetch={false} className="link mt-8 inline-block">Read how the Path works</Link>
           </div>
         </section>
+        </Suspense>
 
         <HomeActions place="path"/>
 
         {/* ------------------------------------------------------ why Marktmorgen */}
+        <Suspense fallback={null}>
         <section className="section">
           <div className="container-page">
             <div className="max-w-2xl">
@@ -495,8 +506,10 @@ export default function Home() {
             </div>
           </div>
         </section>
+        </Suspense>
 
         {/* -------------------------------------------------------- pricing */}
+        <Suspense fallback={null}>
         <section id="pricing" className="surface-sand section scroll-mt-20">
           <div className="container-page">
             <TrustChecks place="home" />
@@ -515,12 +528,14 @@ export default function Home() {
             </div>
           </div>
         </section>
+        </Suspense>
 
         <HomeActions place="plans"/>
         <Suspense fallback={null}><CreatorShowcase /></Suspense>
-        <PlatformProof/>
+        <Suspense fallback={null}><PlatformProof /></Suspense>
 
         {/* ------------------------------------------------------------ faq */}
+        <Suspense fallback={null}>
         <section id="faq" className="section scroll-mt-20">
           <div className="container-page grid gap-10 lg:grid-cols-[1fr_1.6fr]">
             <div className="">
@@ -538,8 +553,10 @@ export default function Home() {
             </div>
           </div>
         </section>
+        </Suspense>
 
         {/* ------------------------------------------------------ final CTA */}
+        <Suspense fallback={null}>
         <section className="surface-signature on-dark overflow-hidden">
           <div className="container-narrow relative py-20 text-center sm:py-28">
             {/*
@@ -615,6 +632,7 @@ export default function Home() {
             </p>
           </div>
         </section>
+        </Suspense>
       </main>
 
       <Suspense fallback={null}><SiteFooter /></Suspense>

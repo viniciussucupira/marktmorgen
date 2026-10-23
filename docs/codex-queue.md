@@ -5260,6 +5260,44 @@ O teste mantinha a resposta POST presa até terminar await click; o clique pode 
 
 Incorporado em 23/10/2026 às 15:53:30 de Fortaleza; commit 856cd0bb69d172efc0a5bf00fa950ebd91800d75, head testado 2b6d36fa084ceb954a72b8e58480eb5ffccaeb49. Suíte completa: 22/22 verificações aprovadas; árvore testada, prevista e incorporada 0eae1747836f208f39d3ab76a1f6dfcfc3c94eab. Histórico da falha Firefox e correção do sequenciamento do teste preservados acima. Itens 300–303 continuam na fila; nenhuma funcionalidade 9A ativada. Sem incremento do contador funcional (185). Custo incremental mensal/anual por Store, Studio e Scale: 0/0; faturas reais de CI e fornecedores desconhecidas, não consideradas zero; nenhuma certificação de margem de 60%.
 
+
+### Incorporação documental GH — PR #850 (23/10/2026)
+
+Incorporado em 23/10/2026 às 16:18:47 de Fortaleza; commit 0842056c87b9c463a772cbdfc7977fa3f4ce6537, head testado 2177e72d92fccfb0e2e059c7f6137b0f593799ca. Suíte completa 22/22 aprovada; árvore testada, prevista e incorporada fc963f78a891c7437d0cf6194296d8e7cc7b29a0. GH1 (304) permanece na fila, sem implementação nem ativação. Registro documental sem incremento funcional (185). Custo incremental mensal/anual Store, Studio e Scale 0/0; faturas reais desconhecidas não são zero, e isto não certifica margem.
+
+
+### Correção dos controles fiscais — PR #852 (23/10/2026)
+
+Incorporado em 23/10/2026 às 16:43:42 de Fortaleza; commit ae1f858f48d3127eef5a4fda547d13e58c326a37, head testado 02f61ae69cffc89335f45af7298f0328e778dbc4. Suíte completa 22/22; árvore testada, prevista e incorporada 8f66671ee759bbae8493ad75862233adc406f301. TaxEditor só habilita controles após seus handlers estarem prontos, mantendo configurações, opt-ins e travas. Publicação ainda aguardando comprovação de READY, domínio e versão exata; nenhum incremento funcional antecipado. Custo incremental mensal/anual 0/0 por plano, sem novas operações; custos reais desconhecidos não são zero.
+
+
+### Histórico de falha e sequenciamento do teste — PR #851
+
+Head aa45ca46ee14b687e0f738057486111094ad102a: job WebKit 120620572055 falhou em 23/10/2026 17:05:02.742 Fortaleza, tax-scope.mjs:37, timeout de 30s esperando “Refresh discount codes”. Leitura dos textos fiscais em 390/1280 e ausência de gravações passaram; o log não registrou a asserção do POST simulado de listagem. DiscountEditor já possui readiness via useSyncExternalStore; nenhuma falha desse guard ou causa exclusiva foi provada.
+
+O teste lia texto deliberadamente após domcontentloaded e abria details antes da etapa separada de interação. A correção do sequenciamento espera a navegação ficar ociosa antes dessa interação e exige observar o POST real com {action:"list"}, mantendo o clique, confirmação visual, contagem única e bloqueio de qualquer escrita não simulada. Acrescentado diagnóstico limitado em falha. Nenhum timeout, cenário ou limiar relaxado; nenhuma mudança no produto ou chamada real. Causa exclusiva da falha não afirmada. Novo head exige suíte completa 22/22; não reexecutar apenas o job falho nem aprovar o head anterior.
+
+
+### Regra permanente contra repetição — PR #853 incorporado
+
+Incorporado em 23/10/2026 17:15:29 Fortaleza, commit 17e12a5b1f629f5cab76ef498545c80abec6ce07, head f5b7fb69d6752211d8a3b973d71c715d8618acc6, árvore testada/prevista/incorporada 97f85b929521cd78bf95fe9651d163dbfb252126, suíte completa 22/22 aprovada. AGENTS.md e início desta fila contêm a regra e a revisão única. Nenhum item duplicado ou renumerado; registro documental sem incremento do contador 186. A confirmação da entrega 186 no início desta fila atualiza o estado histórico “publicação pendente” registrado para #852. Faturas reais desconhecidas continuam não sendo zero.
+
+
+### Falha móvel e particionamento da hidratação — PR #851
+
+Head e6a90b2bad96a17c8864c8642a3e60226ef3cad8, job 120635155141: primeira amostra da home em 23/10/2026 17:19:52.674 Fortaleza mediu LCP2604ms e interação216ms, ambos reprovados, CLS0. Outras amostras home712/56 e624/40; pricing616/32,616/48,616/32; sales-pages612/32,612/32,628/32. Laboratório frio390px, CPU4x, latência150ms,1.6Mbps, terceiros bloqueados, zero escritasAPI. Proxy sintético, não INP de campo ou p75 certificado.
+
+Trace registra tarefa React589ms antes da interação e117ms sobreposta ao primeiro pointer, no summary nativo das vantagens do plano (scrollY22890); não prova causa exclusiva. Particionadas as seções abaixo do hero e a prova da plataforma em boundaries Suspense próprias, preservando conteúdo SSR, hero, conteúdo dos criadores, preços, limites, direitos e controles nativos. Nenhum novo pedido ou operação paga: custo incremental mensal/anual0/0 por plano; faturas reais desconhecidas não são zero. Novo head exige os mesmos9ensaios e suíte22completa; nenhum limiar, cenário, alvo ou cache relaxado. Não aprovar nem reexecutar isoladamente o head reprovado.
+
+
+### Falha de foco Firefox e links nativos — PR #851
+
+Head4ddeaa26f45177b0192d065a16bfacc958979020: jobFirefox120638387882 reprovou em23/10/2026 17:42:00.838Fortaleza “HT3 feature keyboard //390”, primeiro link de recurso da seção PricingValue na home: esperadofoco true, obtidofalse; demaislinks e alvos passaram. Origemtests/e2e/pricing-value.mjs, não o teste separado home-modules. As sequências fiscais/descontos e nenhum erro de página passaram, mas o head integral não foi aprovado.
+
+No mesmo head, mobilejob120638388006 passou9amostras: home992/168,596/48,596/56; pricing628/40,600/40,604/32; sales-pages612/32,604/32,628/32 (LCPms/interaçãoms), CLS0 em todas. Evidência parcial, não aprovação do head ou certificaçãoINP/p75.
+
+PricingValue é uma seção estática; seuslinks agora são âncoras nativas com os mesmoshrefs, textos, nomes acessíveis e alvos, removendo a navegação de cliente nesseslinks. Nenhum teste de foco, alvo ou limite foi alterado. O sintoma não prova causa exclusiva de hidratação; correção será avaliada pela suíte inteira e9ensaios idênticos no novohead. ChecklistReact aplicado: servidor permanece servidor, semestado/efeito/request extra, keysestáveis e sem mudança de conteúdo. Custo incremental mensal/anual0/0 porplano, semfornecedor/operaçãonova, faturas reais desconhecidas não são zero. Não reexecutarjobisolado nemmesclarheadfalho.
+
 ## H4 — Lições da quarta auditoria da Hotmart (23/10/2026)
 
 Solicitação do dono (23/10/2026,01h13, Fortaleza): incorporar as melhorias da quarta auditoria estratégica da Hotmart (hotmart.com) que ainda não existam no código nem na fila. Antes de cada item, verificar código e fila e implementar apenas a diferença. Fatos atribuídos à Hotmart exigem confirmação em fonte oficial datada antes de qualquer uso; números da Hotmart jamais podem ser apresentados como resultados do Marktmorgen.
@@ -5439,5 +5477,111 @@ Estado: na fila.
 Hoje uma assinatura (lib/product-recurring.ts) pode ter teste grátis e número fixo de pagamentos, mas não uma taxa de adesão. Permita que o criador acrescente, a cada assinatura, uma taxa única opcional cobrada uma só vez, junto com o primeiro pagamento, na conta Stripe do próprio criador, como cobrança direta, exatamente como o restante da assinatura. Antes de construir, confirme na documentação oficial e datada do Stripe como uma cobrança única se comporta no checkout de assinatura com e sem teste grátis; se a taxa for cobrada no início mesmo durante o teste, a página deve dizer isso com essas palavras. A taxa aparece com a mesma clareza do preço recorrente, ao lado dele, na página do produto, no checkout, no recibo e no e-mail de confirmação, por exemplo "$29/month + $50 one-time joining fee", e o total da primeira cobrança é mostrado antes do pagamento, como exigem as leis americanas de renovação automática e as regras de informação ao consumidor da UE e do Reino Unido. Nunca é cobrada de novo: nem na renovação, nem na troca de plano (lib/move-members.ts), nem na volta depois de uma pausa; quem cancela e volta a assinar paga de novo somente se a página tiver dito isso antes. Reembolso da taxa segue a política de reembolso que o criador publicou, mostrada antes do pagamento; se ele não tiver publicado nenhuma, a taxa não pode ser ativada. Desligada por padrão, ligada pelo criador em cada assinatura. A taxa entra no mesmo tratamento fiscal de todas as vendas (itens 7, 8, 9 e 300 a 303) e no cálculo do pior caso, com os custos por venda que já existem; nenhum custo novo de fornecedor.
 
 Regras para o item: é proibido criar contas, aceitar termos, contratar serviços, pagar qualquer valor, solicitar aprovações e alterar preços, limites visíveis, comissão, PLANS_ON_SALE, tax gate, art. 9a ou a revisão comercial. Testes somente com fornecedores simulados: nenhum e-mail real, nenhuma cobrança real e nenhum registro real de cliente alterado. Todo texto público em inglês americano, com a acessibilidade exigida pela Parte A do item 274 [AX1]. Nada de depoimentos, números, resultados, escassez ou urgência inventados, nem afirmação de superioridade sobre a HighLevel ou sobre qualquer outro concorrente sem fonte oficial datada.
+
+Estado inicial: na fila. Ao concluir, registre a data e a hora de Fortaleza, o commit, o resultado da suíte completa e a publicação.
+
+## SY — Lições da auditoria da Systeme.io (23/10/2026)
+
+Inclusão exclusivamente documental após concluir PR #850. Números 305–307 conferidos livres no main e nos heads dos 11 PRs abertos antes da gravação. Numeração aplicada pela ordem de leitura mais recente: 305 [SY1], 306 [SY2] imediatamente após SY1 na mesma seção, e 307 [EC1] na seção EC seguinte. O pedido EC originalmente indicava 306; foi usado o próximo livre para manter a sequência após a inserção de SY2, sem perder seu conteúdo. As referências a 305 [SY1] continuam válidas. Textos originais integrais ficam na continuidade, com proveniência e horário declarados pelo dono.
+
+Ordem de execução: SY1 e SY2 juntos, antes de abrir vendas, sem bloquear outros itens; EC1 no Bloco A logo após este conjunto SY, também antes de abrir vendas. A instrução posterior EC/SY2 de preparo anterior à abertura é preservada junto da ordem original SY1 após itens anteriores, incluindo 9A e GH. Nada implementado ou ativado neste registro; comparação de código e fila antes da futura implementação, somente diferenças. Afirmações do briefing sobre código, fornecedores ou direito são requisitos a conferir em fonte oficial datada, não certificação.
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA, PARA FAZER DEPOIS.
+
+Local exato: no fim de docs/codex-queue.md, numa seção nova chamada "SY — Lições da auditoria da Systeme.io (23/10/2026)", depois da seção GH (item 304). Use o número 305. Antes de gravar, confira no main e nos PRs abertos se esse número continua livre; se não estiver, use o próximo livre e mantenha a ordem.
+
+**Ordem:** após todos os itens anteriores, incluindo 9A e GH; este item não bloqueia nenhum outro. Inclusão documental após concluir a tarefa corrente; nada implementado agora.
+
+Solicitação do dono (23/10/2026, 15h48, horário de Fortaleza): incorporar ao Marktmorgen as melhorias identificadas na auditoria estratégica da Systeme.io (systeme.io) que ainda não existam no código nem na fila. Antes do item, verifique o código e a fila e implemente apenas a diferença. Os fatos que a auditoria atribui à Systeme.io devem ser confirmados em fonte oficial datada antes de qualquer uso, e os números da Systeme.io jamais podem ser apresentados como resultados do Marktmorgen.
+
+REGRA DOS 60% (OBRIGATÓRIA): todo cliente pagante, considerado isoladamente e usando 100% de todos os direitos do plano no pior mês, deve manter margem de lucro líquido MÍNIMA de 60%, depois de todos os custos e de todos os impostos, inclusive os brasileiros; a margem pode ser maior, mas nunca menor, e a mesma regra vale para a empresa como um todo. Antes de qualquer código, calcule o custo máximo mensal e anual do item por plano, com teto automático aplicado antes do gasto. Custo desconhecido não pode ser considerado zero. Use a leitura que resultar em MAIS imposto (docs/tax-uncertainty.md). Desde 22/10/2026, todos os custos fixos da LLC são atribuídos integralmente ao Marktmorgen (item 275 [FX1]).
+
+305. [SY1] Reembolso do plano em autoatendimento, sem trabalho manual do dono
+
+Estado: na fila.
+
+Objetivo: cumprir sozinho, pelo código, a garantia que já está publicada, para que o dono não precise ler e-mails nem fazer reembolsos à mão.
+
+Situação atual: a política (lib/plan.ts, REFUND_DAYS = 30; app/refunds/page.tsx; termos) promete o primeiro pagamento devolvido por inteiro quando pedido em até 30 dias e, no plano anual, a devolução dos meses ainda não iniciados, menos a tarifa do cartão retida pelo Stripe. Hoje o pedido é feito por e-mail.
+
+O que construir:
+1. Na área de cobrança do estúdio, somente para o dono da loja, um botão "Refund my payment", visível apenas enquanto a pessoa tiver direito a ele, com o valor exato que será devolvido, calculado pelo código pela mesma regra publicada, e a data em que o acesso termina.
+2. Uma tela de revisão antes de confirmar (critério 3.3.6 da Parte A do item 274 [AX1]): o valor, o que acontece com a loja e com os dados (as regras atuais de encerramento, lib/plan-closing-rules.ts e lib/closed-store-data.ts) e um botão para voltar sem fazer nada. Nenhuma pergunta de motivo obrigatória: a política diz "No reason is required".
+3. Ao confirmar: o reembolso é feito no Stripe da plataforma pelo valor calculado, a assinatura é encerrada e a loja segue as regras de encerramento que já existem. Um e-mail de confirmação com o valor e a data é enviado dentro dos limites de e-mail do próprio Marktmorgen. A operação é idempotente: um segundo clique, um pedido repetido ou uma falha de rede nunca devolvem duas vezes.
+4. Proteção contra abuso, usando somente a regra já publicada: o reembolso integral vale uma única vez por pessoa (mesmo e-mail, mesma conta, mesma impressão digital do cartão no Stripe ou mesma loja), como a política e o comentário de REFUND_DAYS já dizem. Um caso fora da regra mostra, em linguagem simples, por que não há direito e como falar com o suporte; nunca mostra um botão que falharia.
+5. O complemento da loja (o assistente, lib/assistant-billing.ts) segue a política dele que está em CURRENT_COMMERCIAL_TERMS.storeAssistant; não amplie nem reduza o que ela promete.
+6. Pagamento contestado no cartão: o botão não aparece enquanto a contestação estiver aberta, para não devolver em dobro.
+
+Custos e margem: o reembolso faz parte da exposição já revisada em docs/funded-exposure-review.md (reembolso integral, com limite de ocorrências). Use os números dessa revisão, inclua a tarifa do cartão que o Stripe não devolve e as chamadas ao Stripe, e nunca negue um reembolso que a política publicada promete. Se o teto revisado não cobrir o pior caso, a revisão comercial deve reprovar, como já acontece; não mude a política para caber.
+
+Textos: atualize juntos a política de reembolso, os termos e a ajuda (lib/help-content.ts) para dizer que o pedido é feito no estúdio, mantendo o e-mail como alternativa para quem não conseguir usar o botão.
+
+Testes: somente com o Stripe simulado. Precisam falhar se: o valor calculado divergir da política publicada; um segundo pedido devolver de novo; o botão aparecer fora do prazo, para quem já recebeu reembolso integral ou durante uma contestação; ou o reembolso acontecer sem a tela de revisão.
+
+Regras para o item: é proibido criar contas, aceitar termos, contratar serviços, pagar qualquer valor, fazer reembolso real, solicitar aprovações e alterar preços, limites visíveis, comissão, PLANS_ON_SALE, tax gate, art. 9a, REFUND_DAYS, a política de reembolso em substância ou a revisão comercial. Testes somente com fornecedores simulados: nenhum e-mail real, nenhuma cobrança ou devolução real e nenhum registro real de cliente alterado. Todo texto público em inglês americano, com a acessibilidade exigida pela Parte A do item 274 [AX1]. Nada de depoimentos, números, resultados, escassez ou urgência inventados, nem afirmação de superioridade sobre a Systeme.io ou sobre qualquer outro concorrente sem fonte oficial datada.
+
+Estado inicial: na fila. Ao concluir, registre a data e a hora de Fortaleza, o commit, o resultado da suíte completa e a publicação, e deixe o estado como "pronto e desligado, aguardando o dono" enquanto as vendas estiverem fechadas.
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA, PARA FAZER DEPOIS.
+
+Local exato: em docs/codex-queue.md, logo depois do item 305 [SY1], como item novo com o próximo número livre (confira no main e nos PRs abertos antes de gravar), na mesma seção SY. Execução junto com o item 305, antes de as vendas abrirem; não bloqueia outros itens. Inclusão documental após concluir a tarefa corrente; nada implementado agora.
+
+Solicitação do dono (23/10/2026, 16h04, horário de Fortaleza): garantir que todo reembolso prometido pela política dos planos tenha dinheiro real na conta Stripe da plataforma no momento em que for pedido, sem que o dono precise acompanhar saldo, painel ou alerta.
+
+REGRA DOS 60% (OBRIGATÓRIA): todo cliente pagante, considerado isoladamente e usando 100% de todos os direitos do plano no pior mês, deve manter margem de lucro líquido MÍNIMA de 60%, depois de todos os custos e de todos os impostos, inclusive os brasileiros; a margem pode ser maior, mas nunca menor, e a mesma regra vale para a empresa como um todo. Custo desconhecido não pode ser considerado zero. Use a leitura que resultar em MAIS imposto (docs/tax-uncertainty.md). Desde 22/10/2026, todos os custos fixos da LLC são atribuídos integralmente ao Marktmorgen (item 275 [FX1]).
+
+306. [SY2] Reserva de reembolso em dinheiro real no Stripe
+
+Estado: na fila.
+
+Situação atual: lib/contract-funding-rules.ts reserva contabilmente o principal reembolsável, mas CONTRACT_ADMISSION_COVERAGE.settlementAndReserveReconciliation é false: a reserva não é conferida contra o saldo real. Os repasses automáticos do Stripe enviam todo o saldo ao banco, e um reembolso sem saldo fica pendente até o Stripe debitar o banco ou receber fundos (fontes oficiais: docs.stripe.com/payouts/minimum-balances-for-automatic-payouts e support.stripe.com/questions/pending-refunds-due-to-insufficient-stripe-balance; registre a data de leitura).
+
+O que construir:
+1. Reserva calculada pelo código, a cada venda, reembolso e renovação: a soma dos primeiros pagamentos ainda dentro de REFUND_DAYS e dos meses não iniciados de todos os planos anuais, pelas mesmas regras da política publicada, mais as tarifas e reservas de contestação de lib/receiving-costs.ts. Esta é a política de reserva das faturas anuais exigida pelo FX275; registre-a por escrito na revisão comercial.
+2. Repasses pelo código: com o calendário de repasses do Stripe em modo manual, uma rotina diária cria pela API, para a conta bancária da plataforma, somente o valor do saldo disponível que exceder a reserva. Confirme na documentação oficial e datada do Stripe o modo manual e a API de repasses para a conta da plataforma. Nunca repassa quando não consegue ler o saldo ou calcular a reserva.
+3. Trava automática: se o saldo real do Stripe ficar abaixo da reserva, novas assinaturas e trocas para planos mais caros são recusadas até o saldo voltar a cobri-la; renovações, cancelamentos e reembolsos continuam funcionando. A trava faz parte da revisão comercial e de PLANS_ON_SALE como condição a mais, nunca a menos.
+4. Reembolso pendente: se um reembolso do item 305 ficar pendente no Stripe, o estúdio mostra "Refund pending" com a explicação em linguagem simples, e a rotina diária confere até ele sair; nunca há segundo reembolso.
+5. A mudança para repasse manual é uma configuração da conta da plataforma: o código não a altera sozinho; registre em "Depende do dono" o passo exato no painel do Stripe e mantenha a trava fechada enquanto o modo manual não for confirmado pela API.
+
+Testes somente com o Stripe simulado, que falham se: um repasse deixar o saldo abaixo da reserva; uma venda nova for aceita com saldo abaixo da reserva; a reserva divergir da política publicada; ou um reembolso pendente gerar segundo reembolso.
+
+Regras: é proibido criar contas, aceitar termos, alterar configurações reais do Stripe, fazer repasse ou reembolso real, solicitar aprovações e alterar preços, limites visíveis, comissão, REFUND_DAYS, a política de reembolso, tax gate, art. 9a ou a revisão comercial, salvo para acrescentar esta trava. Todo texto público em inglês americano, com a acessibilidade exigida pela Parte A do item 274 [AX1].
+
+Estado inicial: na fila. Ao concluir, registre a data e a hora de Fortaleza, o commit, o resultado da suíte completa e a publicação, e deixe o estado como "pronto e desligado, aguardando o dono".
+
+## EC — Encerramento de loja justo com os compradores (23/10/2026)
+
+Item atribuído: 307 [EC1], por inserção de 306 [SY2] imediatamente após SY1 conforme pedido posterior. A ordem do Bloco A e todos os requisitos originais permanecem; abaixo, o cabeçalho do item usa o número atribuído, e a indicação original de 306 no texto de localização permanece como proveniência.
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA, PARA FAZER DEPOIS.
+
+Local exato: no fim de docs/codex-queue.md, numa seção nova chamada "EC — Encerramento de loja justo com os compradores (23/10/2026)", depois da seção SY (item 305). Use o número 306. Antes de gravar, confira no main e nos PRs abertos se esse número continua livre; se não estiver, use o próximo livre e mantenha a ordem.
+
+**Ordem:** no Bloco A, logo depois do item 305 [SY1], porque o reembolso em autoatendimento leva ao encerramento da loja e os dois precisam estar corretos antes de as vendas abrirem. Inclusão documental após concluir a tarefa corrente; nada implementado agora.
+
+Solicitação do dono (23/10/2026, 15h58, horário de Fortaleza): corrigir o encerramento de uma loja (lib/plan-closing.ts, lib/closed-store-data.ts, termos) para que quem comprou do criador nunca pague por algo que não vai receber, seja avisado diretamente antes de perder o acesso e saiba, antes de comprar, o que acontece se a loja fechar. Manter o encerramento em 30 dias e a exclusão dos dados, que existem para não haver custo sem pagamento.
+
+REGRA DOS 60% (OBRIGATÓRIA): todo cliente pagante, considerado isoladamente e usando 100% de todos os direitos do plano no pior mês, deve manter margem de lucro líquido MÍNIMA de 60%, depois de todos os custos e de todos os impostos, inclusive os brasileiros; a margem pode ser maior, mas nunca menor, e a mesma regra vale para a empresa como um todo. Antes de qualquer código, calcule o custo máximo de cada parte deste item por loja que encerra, inclua-o no custo de encerramento (tests/plan-cost-registry.ts, closure, e docs/funded-exposure-review.md, retenção após o cancelamento), com teto automático aplicado antes do gasto. Custo desconhecido não pode ser considerado zero. Use a leitura que resultar em MAIS imposto (docs/tax-uncertainty.md). Desde 22/10/2026, todos os custos fixos da LLC são atribuídos integralmente ao Marktmorgen (item 275 [FX1]).
+
+307. [EC1] Encerramento de loja justo com os compradores
+
+Estado: na fila.
+
+Falhas encontradas no código atual:
+(a) durante os CLOSING_DAYS entre o fim do plano e o encerramento, as assinaturas e os planos de pagamento dos membros continuam renovando na conta Stripe do criador; no dia do encerramento, stopRenewals apenas marca cancel_at_period_end, mas o conteúdo é apagado nesse mesmo dia, então um membro pode pagar por um período inteiro, inclusive anual, que não receberá;
+(b) os avisos de encerramento vão somente ao criador; os compradores não são avisados pelo Marktmorgen;
+(c) antes da compra, o comprador não é informado de que o acesso depende de a loja continuar aberta.
+
+O que construir, implementando apenas a diferença:
+1. Antes da compra: uma frase fixa, desenhada pelo código e nunca editável pelo criador, no checkout e no recibo de cursos, downloads, podcasts privados, comunidades e assinaturas, em inglês americano simples, dizendo que o acesso é fornecido pela loja no Marktmorgen e que, se a loja fechar, o comprador será avisado por e-mail com pelo menos 7 dias para baixar o que for baixável. Atualize os termos e a política de privacidade junto.
+2. No dia em que o plano termina (e não no dia do encerramento): nenhuma nova cobrança de membro acontece até o encerramento. Verifique na documentação oficial e datada do Stripe o mecanismo correto para suspender a cobrança mantendo a assinatura (por exemplo, pause_collection com invoices anuladas) em contas conectadas; os membros continuam com acesso até o encerramento sem pagar. Se o criador assinar de novo antes do encerramento, a cobrança é retomada exatamente como estava, sem cobrança retroativa. Falha ao suspender uma assinatura é registrada e tentada de novo pela rotina diária, nunca ignorada.
+3. No encerramento: as assinaturas e os planos de pagamento terminam de fato, imediatamente, e não no fim do período.
+4. Tempo pago e não usado: na tela de revisão do reembolso do item 305 [SY1], em cada aviso de encerramento e no estúdio, mostre ao criador quantos membros pagaram por tempo que vai além da data de encerramento e a soma desse tempo não usado, calculada pelo código. Ofereça um botão que devolve a cada um, a partir da conta Stripe do próprio criador, a parte proporcional não usada, com tela de revisão antes de confirmar e operação idempotente. A devolução é decisão do criador, como os termos já dizem; confirme na documentação oficial do Stripe que a plataforma pode criar esse reembolso na conta conectada a pedido do criador e trate saldo insuficiente com mensagem clara, nunca com dívida da plataforma.
+5. Aviso direto aos compradores: 7 dias antes do encerramento, um único e-mail de serviço (não de marketing, sem oferta) a cada comprador que ainda tenha acesso, com o nome da loja, a data do encerramento, o que pode ser baixado até lá (arquivos, episódios, certificados, os próprios trabalhos entregues) e o contato que o criador publicou. Se o criador assinar de novo depois do aviso, um segundo e-mail curto diz que a loja continua. Enviado por remetente do próprio Marktmorgen, com o endereço postal exigido por lei, dentro de um teto por loja calculado no custo de encerramento.
+6. O estúdio e os avisos ao criador passam a dizer que os compradores serão avisados e quando.
+
+Testes somente com Stripe e e-mail simulados, que falham se: um membro for cobrado entre o fim do plano e o encerramento; uma assinatura continuar ativa depois do encerramento; o valor não usado divergir do cálculo proporcional; um reembolso for feito duas vezes; o comprador não receber o aviso de 7 dias; ou a frase fixa faltar em algum caminho de checkout listado acima.
+
+Regras para o item: é proibido criar contas, aceitar termos, contratar serviços, pagar qualquer valor, fazer reembolso real, solicitar aprovações e alterar preços, limites visíveis, comissão, CLOSING_DAYS, PLANS_ON_SALE, tax gate, art. 9a ou a revisão comercial. Nenhum e-mail real, nenhuma cobrança ou devolução real e nenhum registro real de cliente alterado. Todo texto público em inglês americano, com a acessibilidade exigida pela Parte A do item 274 [AX1]. Nada de escassez, urgência ou números inventados.
 
 Estado inicial: na fila. Ao concluir, registre a data e a hora de Fortaleza, o commit, o resultado da suíte completa e a publicação.

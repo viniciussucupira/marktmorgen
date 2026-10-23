@@ -33,8 +33,20 @@ export async function checkTaxScope({browser,LOCAL,session,sid,is}){
    listed++;
    await route.fulfill({status:200,contentType:"application/json",body:JSON.stringify({ok:true,codes:[]})});
   });
-  await page.getByRole("button",{name:"Load discount codes",exact:true}).click();
-  await page.getByRole("button",{name:"Refresh discount codes",exact:true}).waitFor();
+  // The preceding checks intentionally read server text before hydration.
+  // Settle that navigation before the separate, explicit client action.
+  await page.waitForLoadState("networkidle");
+  const load=page.getByRole("button",{name:"Load discount codes",exact:true});
+  const seen=page.waitForRequest(request=>request.method()==="POST"&&new URL(request.url()).pathname==="/api/store/discount",{timeout:15000});
+  seen.catch(()=>{});
+  try{
+   await load.click();
+   is("explicit discount action reaches only the simulated endpoint",(await seen).postDataJSON(),{action:"list"});
+   await page.getByRole("button",{name:"Refresh discount codes",exact:true}).waitFor();
+  }catch(error){
+   console.error("TAX_SCOPE_DISCOUNT_ACTION:"+JSON.stringify({listed,writePaths,url:page.url(),button:await load.count()?await load.evaluate(node=>({disabled:node.disabled,busy:node.getAttribute("aria-busy"),text:node.textContent})):null}));
+   throw error;
+  }
   is("discount list requires one explicit action",listed,1);
  }finally{await context.close();}
 }
