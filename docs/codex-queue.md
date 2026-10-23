@@ -4815,6 +4815,18 @@ Publicação `dpl_G75KpWSv4FDRfdSrb6E9VonU1AwN` READY às20h52min08,633s de Fort
 
 Custos máximos incrementais mensais/anuais Store,Studio,Scale:0/0 cada, sem operações pagas/chaves/retenção/direitos/dependências novos. Faturas existentes CI/publicação/provedores desconhecidas não são zero;100%LLCMarktmorgen, leitura fiscal mais onerosa e mínimo60% individual/global com direitos integrais no pior mês preservados e não certificados. PLANS_ON_SALE=false, preços, limites, idiomas, IDs, opt-in e gates mantidos; H3276–280 eSF281 continuam nas posições aprovadas.
 
+## Entrega funcional 173 — confirmação de estoque e editor de pixels (22/10/2026)
+
+PR [816](https://github.com/viniciussucupira/marktmorgen/pull/816), head testado `7fd1010805f796d040d6ff87b2140abbe06612bf`; 22/22 verificações completas aprovadas. Árvore testada, prevista e incorporada `9c19f38545cb4e1129f17742245c63abf4203a96`. Incorporação real `8b4485ade28445bfa40e2605bb04864a2e522880` em **22/10/2026 22:03:34 Fortaleza** (23/10 01:03:34Z).
+
+Publicação **173**: `dpl_4s3pEMazkTnKDCziMtBNPPNiPgCB`, READY em **22/10/2026 22:04:49.469 Fortaleza**, domínio `marktmorgen.com` confirmou o SHA exato; /, /platform, /pricing, /mission e /library responderam 200 com o mesmo identificador. Contador 172→173 uma vez; próxima funcional174. Logs de execução não foram consultados; nenhuma afirmação de zero erros.
+
+Alterações: confirmação do HSET de reserva exige array externo com exatamente um recibo numérico0/1; 12 respostas externas malformadas exercitam withStockHold real em testes sintéticos, sem repetir operações. Editor de pixels usa details/summary nativo com papel explícito de botão; formulário permanece desabilitado até hidratação, salvamento protegido e confirmação estrita/consentimento/GPC preservados. Não conclui atomicidade por variante ou proteção contra expiração de lock do205.
+
+Falhas preservadas: head8fb3856e1160d42a8eedc3facdfb7b8aed78f1eb, WebKit job120158033405, 22/10 21:15:17Fortaleza: após Change pixels, Meta Pixel ID não apareceu em30s na largura1280;390 passou, causa exclusiva histórica não comprovada. Correção nativa no head a966905543daf4a1d539e9ec3280c79ad6dd30da expôs diferença de papel do summary em WebKit390: job120167088480,22/10 21:36:24.959Fortaleza, locator do botão não encontrado. Papel explícito corrigido no head final; suíte inteira22/22, sem alterar seletores, tempos ou limites.
+
+Custo incremental máximo mensal/anual: Store0/0, Studio0/0, Scale0/0; sem operação paga, chave, TTL, dependência ou direito adicional. Faturas reais de CI/deploy/provedores desconhecidas, não zero.100%LLC atribuídos ao Marktmorgen; leitura fiscal Brasil/EUA mais onerosa,60% por cliente e global vinculantes e não certificados. PLANS_ON_SALE=false, preços, limites, opt-ins e demais gates preservados. Apenas dados/provedores sintéticos; nenhuma mensagem/pagamento/conta externos. Histórico e ordem OR/H3/SF preservados.
+
 ## OR — Posição dos pendentes antigos de 19/10/2026 (22/10/2026)
 
 Decisão do dono: 22/10/2026, 14h45 de Fortaleza. Registro documental preparado em 22/10/2026 às 15:18:31 de Fortaleza, após concluir a entrega 165. Esta seção prevalece sobre posições antigas incompatíveis; preserva o histórico e não cria itens nem números.
