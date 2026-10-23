@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { Icon } from "@/components/icons";
 import { toast } from "@/components/toast";
@@ -9,6 +9,10 @@ import { DEFAULT_PLACE, MAX_PLACE, embedPlace } from "@/lib/embed-rules";
 import { MAX_CAMPAIGN, MAX_EMBED_SITES, type ScriptMode, listedReturn, readEmbedSites } from "@/lib/embed-sites";
 import { BUILDERS, MAX_LINK_TEXT, cspLines, loaderHash, scriptCode } from "@/lib/embed-sdk";
 import { NewTab } from "@/components/new-tab";
+
+const subscribeToEditorReadiness = () => () => {};
+const editorClientReady = () => true;
+const editorServerReady = () => false;
 
 const MESSAGES: Record<string, string> = {
   ...STUDIO_MESSAGES,
@@ -44,6 +48,7 @@ export function CheckoutScriptEditor({
   /** Whether the store takes sign-ups to its list (lib/store-join.ts joinOpen). */
   signup: boolean;
 }) {
+  const ready = useSyncExternalStore(subscribeToEditorReadiness, editorClientReady, editorServerReady);
   const [sites, setSites] = useState(savedSites);
   const [draft, setDraft] = useState(savedSites.join("\n"));
   const [saving, setSaving] = useState(false);
@@ -65,7 +70,7 @@ export function CheckoutScriptEditor({
   const changed = typed.ok ? typed.sites.join("\n") !== sites.join("\n") : draft.trim() !== sites.join("\n");
 
   async function save() {
-    if (saving) return;
+    if (!ready || saving) return;
     if (!typed.ok) {
       toast(typed.reason === "too_many" ? MESSAGES.too_many : `${MESSAGES.invalid}${typed.line ? ` This one is not: ${typed.line}` : ""}`);
       return;
@@ -137,7 +142,7 @@ export function CheckoutScriptEditor({
           <span className="text-xs tabular-nums text-ink-mute">{`${typed.ok ? typed.sites.length : "?"}/${MAX_EMBED_SITES}`}</span>
         </span>
         <textarea
-          disabled={saving}
+          disabled={!ready || saving}
           className="field mt-1 font-mono text-sm"
           rows={3}
           value={draft}
@@ -152,7 +157,7 @@ export function CheckoutScriptEditor({
         <p className="mt-2 text-sm font-semibold text-ink">{typed.reason === "too_many" ? MESSAGES.too_many : `${MESSAGES.invalid}${typed.line ? ` This one is not: ${typed.line}` : ""}`}</p>
       ) : null}
       <div className="mt-3">
-        <button type="button" className="btn btn-secondary btn-sm" disabled={saving || !changed || !typed.ok} onClick={() => void save()}>
+        <button type="button" className="btn btn-secondary btn-sm" disabled={!ready || saving || !changed || !typed.ok} onClick={() => void save()}>
           {saving ? "Saving…" : "Save sites"}
         </button>
       </div>
