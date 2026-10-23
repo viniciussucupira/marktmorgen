@@ -5221,6 +5221,13 @@ Incorporado em 23/10/2026 às 16:18:47 de Fortaleza; commit 0842056c87b9c463a772
 
 Incorporado em 23/10/2026 às 16:43:42 de Fortaleza; commit ae1f858f48d3127eef5a4fda547d13e58c326a37, head testado 02f61ae69cffc89335f45af7298f0328e778dbc4. Suíte completa 22/22; árvore testada, prevista e incorporada 8f66671ee759bbae8493ad75862233adc406f301. TaxEditor só habilita controles após seus handlers estarem prontos, mantendo configurações, opt-ins e travas. Publicação ainda aguardando comprovação de READY, domínio e versão exata; nenhum incremento funcional antecipado. Custo incremental mensal/anual 0/0 por plano, sem novas operações; custos reais desconhecidos não são zero.
 
+
+### Histórico de falha e sequenciamento do teste — PR #851
+
+Head aa45ca46ee14b687e0f738057486111094ad102a: job WebKit 120620572055 falhou em 23/10/2026 17:05:02.742 Fortaleza, tax-scope.mjs:37, timeout de 30s esperando “Refresh discount codes”. Leitura dos textos fiscais em 390/1280 e ausência de gravações passaram; o log não registrou a asserção do POST simulado de listagem. DiscountEditor já possui readiness via useSyncExternalStore; nenhuma falha desse guard ou causa exclusiva foi provada.
+
+O teste lia texto deliberadamente após domcontentloaded e abria details antes da etapa separada de interação. A correção do sequenciamento espera a navegação ficar ociosa antes dessa interação e exige observar o POST real com {action:"list"}, mantendo o clique, confirmação visual, contagem única e bloqueio de qualquer escrita não simulada. Acrescentado diagnóstico limitado em falha. Nenhum timeout, cenário ou limiar relaxado; nenhuma mudança no produto ou chamada real. Causa exclusiva da falha não afirmada. Novo head exige suíte completa 22/22; não reexecutar apenas o job falho nem aprovar o head anterior.
+
 ## H4 — Lições da quarta auditoria da Hotmart (23/10/2026)
 
 Solicitação do dono (23/10/2026,01h13, Fortaleza): incorporar as melhorias da quarta auditoria estratégica da Hotmart (hotmart.com) que ainda não existam no código nem na fila. Antes de cada item, verificar código e fila e implementar apenas a diferença. Fatos atribuídos à Hotmart exigem confirmação em fonte oficial datada antes de qualquer uso; números da Hotmart jamais podem ser apresentados como resultados do Marktmorgen.
