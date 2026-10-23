@@ -5795,3 +5795,41 @@ Regras para o item: é proibido criar contas, aceitar termos, contratar serviço
 Estado inicial: na fila, prioridade logo após os pedidos já recebidos. Ao concluir cada parte, registre a data e a hora de Fortaleza, o commit, o resultado da suíte completa e a publicação.
 
 Proveniência do registro: pedido direto integral de 23/10/2026 20h03 Fortaleza. Main, 11PRs abertos e414refs codex/* conferidos; único head alterado desde a auditoria anterior relido, demais SHAs imutáveis previamente auditados. Nenhum AX2 existente e310livre. EM309 foi incorporado noPR859 em23/10/2026 20:28:29Fortaleza, commit5fe89913aac67b5b885ed9705d149f0a4b87be6d,22/22 e árvores testada/prevista/real iguais. Registro documental atual sem ativar matriz, leitor de tela, agendamento ou licença. Incremento operacional mensal/anual0/0cadaStore/Studio/Scale; custo real de CI desconhecido, não zero. Antes da ativação AX2 calcular custos fixos oficiais datados,100%LLC, base mínima e parada automática no orçamento atual; desconhecido reprova. Nenhuma certificação60% ou conformidadeAAA. Histórico anterior preservado.
+
+## HS — Lições da sexta auditoria da Hotmart (23/10/2026)
+
+Ordem: após todos os itens anteriores, incluindo EM e AX2; este item não bloqueia nenhum outro. Inclusão documental após concluir a tarefa corrente; nada implementado agora.
+
+Solicitação do dono (23/10/2026, 20h14, horário de Fortaleza): incorporar ao Marktmorgen as melhorias identificadas na sexta auditoria estratégica da Hotmart (hotmart.com) que ainda não existam no código nem na fila. Antes do item, verifique o código e a fila e implemente apenas a diferença. Os fatos que a auditoria atribui à Hotmart devem ser confirmados em fonte oficial datada antes de qualquer uso, e os números da Hotmart jamais podem ser apresentados como resultados do Marktmorgen.
+
+REGRA DOS 60% (OBRIGATÓRIA): todo cliente pagante, considerado isoladamente e usando 100% de todos os direitos do plano no pior mês, deve manter margem de lucro líquido MÍNIMA de 60%, depois de todos os custos e de todos os impostos, inclusive os brasileiros; a margem pode ser maior, mas nunca menor, e a mesma regra vale para a empresa como um todo. Antes de qualquer código, calcule o custo máximo mensal e anual do item por plano, com teto automático aplicado antes do gasto. Custo desconhecido não pode ser considerado zero. Use a leitura que resultar em MAIS imposto (docs/tax-uncertainty.md). Desde 22/10/2026, todos os custos fixos da LLC são atribuídos integralmente ao Marktmorgen (item 275 [FX1]).
+
+311. [HS1] Central de integrações
+
+Estado: na fila.
+
+Objetivo: reunir numa única página pública tudo o que o Marktmorgen conecta, para o criador ver, antes de assinar, que as ferramentas dele funcionam aqui, e para o site aparecer nas buscas por "Marktmorgen" mais o nome de cada ferramenta.
+
+Situação atual: cada integração tem a sua página de recurso (por exemplo, webhooks, email-platforms, calendar-sync, discord-access, currencies-and-ways-to-pay, your-stripe) e existe a página /developers, mas não há uma página que reúna todas.
+
+O que construir:
+1. A página pública /integrations, em inglês americano, montada a partir de um único registro no código com todas as integrações que funcionam hoje: pagamentos (Stripe e, quando existir, PayPal), plataformas de e-mail sincronizadas, calendários, Discord, webhooks, API e MCP, pixels de anúncio e as demais que existirem.
+2. Para cada integração, um cartão com:
+- o nome da ferramenta, escrito em texto;
+- uma frase sobre o que ela faz no Marktmorgen;
+- o que é sincronizado e em que direção;
+- em que planos está disponível;
+- o link para a página do recurso ou para a ajuda.
+Use só os nomes das marcas, em texto. Logotipos de terceiros só entram se as regras oficiais de marca de cada empresa permitirem, com a fonte e a data de leitura registradas.
+3. Somente integrações que existem e funcionam no código. Nada de "coming soon", integração planejada ou ferramenta que só funciona por terceiros sem que o Marktmorgen faça nada. Um teste deve falhar se algum cartão apontar para uma integração que não exista no código ou que esteja desligada.
+4. Página própria por integração (/integrations/<nome>) somente onde houver conteúdo útil e único: os passos de configuração, o que sincroniza, os limites e os planos. Nunca páginas repetidas que só troquem o nome da ferramenta.
+5. Filtro por categoria (pagamentos, e-mail, calendário, comunidade, desenvolvedores, anúncios) que funcione sem JavaScript e por teclado, com o número de resultados anunciado a leitores de tela.
+6. Ligar a página ao menu, ao rodapé, ao sitemap e a /developers, com metadados e dados estruturados corretos.
+
+Custo: página estática gerada a partir do código, sem chamada a fornecedor e sem custo variável por cliente.
+
+Regras para o item: é proibido criar contas, aceitar termos, contratar serviços, pagar qualquer valor, contatar terceiros, solicitar aprovações e alterar preços, limites visíveis, comissão, PLANS_ON_SALE, tax gate, art. 9a ou a revisão comercial. Testes somente com fornecedores simulados. Todo texto público em inglês americano, com a acessibilidade exigida pela Parte A do item 274 [AX1]. Nada de depoimentos, números, resultados, escassez ou urgência inventados, nem afirmação de superioridade sobre a Hotmart ou sobre qualquer outro concorrente sem fonte oficial datada.
+
+Estado inicial: na fila. Ao concluir, registre a data e a hora de Fortaleza, o commit, o resultado da suíte completa e a publicação.
+
+Proveniência: pedido integral recebido diretamente em23/10/2026 20h14Fortaleza. Conferidos main,11PRs abertos e415refs codex/*; único head alterado desde a auditoria anterior relido e demais SHAs imutáveis já auditados. NenhumHS1 existente e311livre. AX2310 incorporado noPR860 em23/10/2026 20:54:28Fortaleza, commitb969e8863c4fd15194e8fe9bf149674809293787,22/22 e igualdade deárvores testada/prevista/real; atualização da proveniênciaAX1ParteC incluída. Registro atual apenas documental, não implementa /integrations e não confirma fatos do concorrente ou disponibilidade real de integrações. Antes da implementação, conferir código/fila/fontesoficiaisdatadas e apenasdiferença; custo estático dobrief precisa verificação. Incremento operacional mensal/anual0/0cadaStore/Studio/Scale; faturas reaisCI desconhecidas, não zero; nenhuma certificação60%/AAA. AX2 mantém prioridade antes do restante da fila. Gates/preços/limites/opt-in preservados.
