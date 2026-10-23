@@ -362,6 +362,10 @@ export function parseProduct(entry: unknown): Product | null {
   if (typeof value.title !== "string" || !value.title) return null;
   if (typeof value.priceCents !== "number") return null;
   if (!Number.isInteger(value.priceCents) || value.priceCents < 0) return null;
+  const stock = parseStock(value.stock);
+  // Only an absent or explicitly unlimited stock field may read as unlimited.
+  // Refuse malformed saved limits without rewriting the creator record.
+  if (value.stock !== undefined && value.stock !== null && stock === null) return null;
   const shipping = parseShipping(value.shipping);
   // An unreadable physical record must not become a digital product or free shipping.
   // Leave the stored creator record intact and refuse to offer this product.
@@ -379,7 +383,7 @@ export function parseProduct(entry: unknown): Product | null {
     recurring: parseRecurring(value.recurring),
     options: parseOptions(value.options),
     call: parseSetup(value.call),
-    stock: parseStock(value.stock),
+    stock,
     // A record from when a product offered one box reads as a list of one.
     bumps: parseBumps(value.bumps, value.bump),
     pairs: parsePairs(value.pairs, value.id),
