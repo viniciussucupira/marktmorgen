@@ -5206,6 +5206,11 @@ Head `64b22e72bfa5b4cea3b11305c22d4b66156e759e` reprovado no job120576836109 às
 
 O teste mantinha a resposta POST presa até terminar await click; o clique pode esperar efeitos do envio no Firefox. Correção de sequenciamento: iniciar click, aguardar o POST real, verificar valores/travas/aria-busy enquanto resposta permanece presa, liberar em finally e só então aguardar a conclusão do mesmo click. Permanecem todos os cenários, timeouts30s/15s, contagens exatas, controles e confirmações/recusas; nenhuma asserção reduzida, nenhum retry isolado. Nova execução22 completa no head corrigido. Somente teste/documentação, sem alteração de produto ou incremento funcional; custo incremental Store/Studio/Scale mensal/anual0/0, custos reais desconhecidos, não zero. GH continua pendente até concluir tarefa corrente9A.
 
+
+### Incorporação documental 9A — PR #849 (23/10/2026)
+
+Incorporado em 23/10/2026 às 15:53:30 de Fortaleza; commit 856cd0bb69d172efc0a5bf00fa950ebd91800d75, head testado 2b6d36fa084ceb954a72b8e58480eb5ffccaeb49. Suíte completa: 22/22 verificações aprovadas; árvore testada, prevista e incorporada 0eae1747836f208f39d3ab76a1f6dfcfc3c94eab. Histórico da falha Firefox e correção do sequenciamento do teste preservados acima. Itens 300–303 continuam na fila; nenhuma funcionalidade 9A ativada. Sem incremento do contador funcional (185). Custo incremental mensal/anual por Store, Studio e Scale: 0/0; faturas reais de CI e fornecedores desconhecidas, não consideradas zero; nenhuma certificação de margem de 60%.
+
 ## H4 — Lições da quarta auditoria da Hotmart (23/10/2026)
 
 Solicitação do dono (23/10/2026,01h13, Fortaleza): incorporar as melhorias da quarta auditoria estratégica da Hotmart (hotmart.com) que ainda não existam no código nem na fila. Antes de cada item, verificar código e fila e implementar apenas a diferença. Fatos atribuídos à Hotmart exigem confirmação em fonte oficial datada antes de qualquer uso; números da Hotmart jamais podem ser apresentados como resultados do Marktmorgen.
@@ -5363,3 +5368,27 @@ Atualize os termos de uso, a política de privacidade e a página de impostos pa
 Regras para todos os itens: é proibido criar contas, aceitar termos, registrar a LLC em qualquer órgão de impostos, contratar serviços, pagar qualquer valor, contatar terceiros, solicitar aprovações e alterar preços, limites visíveis, comissão, o tax gate, a leitura MOST_TAX_READING, OPENING_REQUESTED ou a revisão comercial. PLANS_ON_SALE só pode mudar como consequência legítima das travas, nunca editado à mão. Testes somente com fornecedores simulados: nenhum e-mail real, nenhuma cobrança real e nenhum registro real de cliente alterado. Todo texto público em inglês americano, com a acessibilidade exigida pela Parte A do item 274 [AX1]. Cada fonte legal citada com endereço oficial e data de leitura; isto é pesquisa, não parecer, e nenhuma página afirma conformidade.
 
 Estado inicial de todos os itens: na fila. Ao concluir cada um, registre a data e a hora de Fortaleza, o commit, o resultado da suíte completa e a publicação, e deixe o estado como "pronto e desligado, aguardando o dono" onde houver dependência de registro.
+
+## GH — Lições da terceira auditoria da HighLevel (23/10/2026)
+
+Registro documental solicitado pelo dono; número 304 conferido livre no main e nos heads dos 11 PRs abertos antes da gravação. Ordem: após todos os itens anteriores, incluindo H5 e 9A; não bloqueia outros itens. Nenhuma implementação agora. O texto abaixo preserva integralmente a solicitação e suas condições; as afirmações sobre fornecedores e requisitos legais serão verificadas em fontes oficiais datadas antes do uso ou implementação.
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA, PARA FAZER DEPOIS.
+
+Local exato: no fim de docs/codex-queue.md, numa seção nova chamada "GH — Lições da terceira auditoria da HighLevel (23/10/2026)", depois da seção 9A (itens 300 a 303, PR #849). Use o número 304. Antes de gravar, confira no main e nos PRs abertos se esse número continua livre; se não estiver, use o próximo livre e mantenha a ordem.
+
+**Ordem:** após todos os itens anteriores, incluindo H5 e 9A; este item não bloqueia nenhum outro. Inclusão documental após concluir a tarefa corrente; nada implementado agora.
+
+Solicitação do dono (23/10/2026, 15h14, horário de Fortaleza): incorporar ao Marktmorgen as melhorias identificadas na terceira auditoria estratégica da HighLevel (gohighlevel.com) que ainda não existam no código nem na fila. Antes do item, verifique o código e a fila e implemente apenas a diferença. Os fatos que a auditoria atribui à HighLevel devem ser confirmados em fonte oficial datada antes de qualquer uso, e os números da HighLevel jamais podem ser apresentados como resultados do Marktmorgen.
+
+REGRA DOS 60% (OBRIGATÓRIA): todo cliente pagante, considerado isoladamente e usando 100% de todos os direitos do plano no pior mês, deve manter margem de lucro líquido MÍNIMA de 60%, depois de todos os custos e de todos os impostos, inclusive os brasileiros; a margem pode ser maior, mas nunca menor, e a mesma regra vale para a empresa como um todo. Antes de qualquer código, calcule o custo máximo mensal e anual do item por plano, com teto automático aplicado antes do gasto. Custo desconhecido não pode ser considerado zero. Use a leitura que resultar em MAIS imposto (docs/tax-uncertainty.md). Desde 22/10/2026, todos os custos fixos da LLC são atribuídos integralmente ao Marktmorgen (item 275 [FX1]).
+
+304. [GH1] Taxa de adesão opcional nas assinaturas dos criadores
+
+Estado: na fila.
+
+Hoje uma assinatura (lib/product-recurring.ts) pode ter teste grátis e número fixo de pagamentos, mas não uma taxa de adesão. Permita que o criador acrescente, a cada assinatura, uma taxa única opcional cobrada uma só vez, junto com o primeiro pagamento, na conta Stripe do próprio criador, como cobrança direta, exatamente como o restante da assinatura. Antes de construir, confirme na documentação oficial e datada do Stripe como uma cobrança única se comporta no checkout de assinatura com e sem teste grátis; se a taxa for cobrada no início mesmo durante o teste, a página deve dizer isso com essas palavras. A taxa aparece com a mesma clareza do preço recorrente, ao lado dele, na página do produto, no checkout, no recibo e no e-mail de confirmação, por exemplo "$29/month + $50 one-time joining fee", e o total da primeira cobrança é mostrado antes do pagamento, como exigem as leis americanas de renovação automática e as regras de informação ao consumidor da UE e do Reino Unido. Nunca é cobrada de novo: nem na renovação, nem na troca de plano (lib/move-members.ts), nem na volta depois de uma pausa; quem cancela e volta a assinar paga de novo somente se a página tiver dito isso antes. Reembolso da taxa segue a política de reembolso que o criador publicou, mostrada antes do pagamento; se ele não tiver publicado nenhuma, a taxa não pode ser ativada. Desligada por padrão, ligada pelo criador em cada assinatura. A taxa entra no mesmo tratamento fiscal de todas as vendas (itens 7, 8, 9 e 300 a 303) e no cálculo do pior caso, com os custos por venda que já existem; nenhum custo novo de fornecedor.
+
+Regras para o item: é proibido criar contas, aceitar termos, contratar serviços, pagar qualquer valor, solicitar aprovações e alterar preços, limites visíveis, comissão, PLANS_ON_SALE, tax gate, art. 9a ou a revisão comercial. Testes somente com fornecedores simulados: nenhum e-mail real, nenhuma cobrança real e nenhum registro real de cliente alterado. Todo texto público em inglês americano, com a acessibilidade exigida pela Parte A do item 274 [AX1]. Nada de depoimentos, números, resultados, escassez ou urgência inventados, nem afirmação de superioridade sobre a HighLevel ou sobre qualquer outro concorrente sem fonte oficial datada.
+
+Estado inicial: na fila. Ao concluir, registre a data e a hora de Fortaleza, o commit, o resultado da suíte completa e a publicação.
