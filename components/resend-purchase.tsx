@@ -4,6 +4,8 @@ import { useState } from "react";
 import { toast } from "@/components/toast";
 import { STUDIO_MESSAGES } from "@/lib/studio-messages";
 
+const UNCERTAIN = "Sending could not be confirmed. Check with the buyer before trying again.";
+
 const MESSAGES: Record<string, string> = {
   ...STUDIO_MESSAGES,
   unknown: "That sale could not be found on your Stripe account.",
@@ -21,13 +23,14 @@ export function ResendPurchase({ reference, email }: { reference: string; email:
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   return (
-    <span className="inline-flex flex-col">
+    <span className="inline-flex flex-col" data-purchase-resend="">
       <button
         type="button"
         disabled={busy}
         aria-busy={busy}
         className="inline-flex min-h-11 -my-2.5 items-center text-xs font-bold text-ink-soft underline underline-offset-4 hover:text-violet-deep"
         onClick={async () => {
+          if (busy) return;
           setBusy(true);
           setError(null);
           try {
@@ -36,11 +39,16 @@ export function ResendPurchase({ reference, email }: { reference: string; email:
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ reference }),
             });
-            const data = (await response.json().catch(() => ({}))) as { ok?: boolean; error?: string };
-            if (data.ok) toast(`Purchase email sent again to ${email}.`);
-            else setError(MESSAGES[data.error ?? ""] ?? MESSAGES.server_error);
+            const data: unknown = await response.json().catch(() => null);
+            const record = data !== null && typeof data === "object" && !Array.isArray(data) ? data as Record<string, unknown> : null;
+            if (response.ok && record?.ok === true && !Object.prototype.hasOwnProperty.call(record, "error")) {
+              toast(`Purchase email accepted for sending to ${email}.`);
+            } else {
+              const code = record?.ok === false && typeof record.error === "string" && Object.prototype.hasOwnProperty.call(MESSAGES, record.error) ? record.error : null;
+              setError(code ? MESSAGES[code] : UNCERTAIN);
+            }
           } catch {
-            setError(MESSAGES.server_error);
+            setError(UNCERTAIN);
           } finally {
             setBusy(false);
           }
@@ -49,7 +57,7 @@ export function ResendPurchase({ reference, email }: { reference: string; email:
         {busy ? "Sending…" : "Send the purchase email again"}
       </button>
       {error ? (
-        <span className="mt-1 text-xs text-danger" role="alert">
+        <span className="mt-1 text-xs text-danger-text" role="alert">
           {error}
         </span>
       ) : null}

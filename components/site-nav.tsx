@@ -483,6 +483,8 @@ export function SiteNav() {
         ref={drawerRef}
         className={`fixed inset-x-0 bottom-0 top-16 z-50 flex flex-col bg-white lg:hidden ${drawerOpen ? "" : "hidden"}`}
       >
+        {/* Hidden menu links mount on request, rather than joining every page’s initial hydration. */}
+        {drawerOpen ? <>
         <nav aria-label="Mobile" className="flex-1 overflow-y-auto overscroll-contain px-4 pb-6 pt-2">
           {MENUS.map((menu) => (
             <section key={menu.id} className="border-b border-line py-4">
@@ -529,6 +531,7 @@ export function SiteNav() {
             Log in
           </Link>
         </div>
+        </> : null}
       </div>
     </div>
     </>
