@@ -2,7 +2,7 @@
 
 import { pixelSettingsConfirmed } from "@/lib/marketing-settings-response";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "@/components/toast";
 import { PIXEL_INFO, PIXEL_KINDS, type PixelKind, type Pixels, hasPixels, readPixels } from "@/lib/pixels";
@@ -16,9 +16,14 @@ const MESSAGES: Record<string, string> = {
   server_error: "Something went wrong on our side. Try again in a moment.",
 };
 
+const subscribeReady = () => () => {};
+const clientReady = () => true;
+const serverReady = () => false;
+
 /** The creator's Meta, Google, TikTok and Pinterest ids, on their store's pages. */
 export function PixelEditor({ pixels, canViewAttribution = false }: { pixels: Pixels; canViewAttribution?: boolean }) {
   const router = useRouter();
+  const ready = useSyncExternalStore(subscribeReady, clientReady, serverReady);
   const disclosure = useRef<HTMLDetailsElement>(null);
   const [draft, setDraft] = useState<Record<PixelKind, string>>(() => ({
     meta: pixels.meta ?? "",
@@ -33,6 +38,7 @@ export function PixelEditor({ pixels, canViewAttribution = false }: { pixels: Pi
 
   async function save(event: React.FormEvent) {
     event.preventDefault();
+    if (!ready || busy) return;
     setError(null);
     const local = readPixels(draft);
     if (!local.ok) {
@@ -88,7 +94,7 @@ export function PixelEditor({ pixels, canViewAttribution = false }: { pixels: Pi
           {hasPixels(pixels) ? "Change pixels" : "Add a pixel"}
         </summary>
         <form onSubmit={save} className="mt-5" noValidate aria-busy={busy}>
-          <fieldset disabled={busy} className="min-w-0 space-y-4"><legend className="sr-only">Advertising pixel IDs</legend>
+          <fieldset disabled={!ready || busy} className="min-w-0 space-y-4"><legend className="sr-only">Advertising pixel IDs</legend>
           {PIXEL_KINDS.map((kind) => {
             const info = PIXEL_INFO[kind];
             const invalid = bad === kind;
