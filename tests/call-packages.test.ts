@@ -22,7 +22,7 @@ import { done, is, part } from "./check";
 import { paidPeriod } from "./billing-period-fixture";
 
 const emails: { to: string[]; text: string }[] = [];
-const posts: { path: string; body: URLSearchParams }[] = [];
+const posts: { path: string; body: URLSearchParams; headers: Headers }[] = [];
 let refunded = false;
 globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) => {
   const url = new URL(String(input));
@@ -33,7 +33,7 @@ globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) =>
   const path = url.pathname.replace(/^\/v1/, "");
   const method = init?.method ?? "GET";
   if (method === "POST") {
-    posts.push({ path, body: new URLSearchParams(String(init?.body)) });
+    posts.push({ path, body: new URLSearchParams(String(init?.body)), headers: new Headers(init?.headers) });
     if (path === "/checkout/sessions") return new Response(JSON.stringify({ id: `cs_test_${"p".repeat(24)}`, url: "https://checkout.stripe.com/c/pay/pkg" }));
     if (path === "/coupons") return new Response(JSON.stringify({ id: `co_Session${posts.length}` }));
   }
@@ -88,6 +88,9 @@ async function main(): Promise<void> {
   part("Its checkout");
   await packageCheckout(store, product, product.callPackage!, "https://marktmorgen.com");
   const body = posts[0].body;
+  is("the package charge belongs to this creator's connected account", posts[0].headers.get("Stripe-Account"), store.stripeAccountId);
+  is("the platform test credential acts on the connected account", posts[0].headers.get("Authorization"), "Bearer sk_test_packages_only");
+  is("the package is not a platform charge routed by destination or transfer", [...body.keys()].filter((key) => /transfer_data|on_behalf_of|destination/.test(key)), []);
   is("one payment for all of it, marked as a package", [body.get("mode"), body.get("line_items[0][price_data][unit_amount]"), body.get("metadata[kind]"), body.get("metadata[sessions]"), body.get("metadata[days]")], ["payment", "50000", "package", "5", "90"]);
 
   part("Once paid");
