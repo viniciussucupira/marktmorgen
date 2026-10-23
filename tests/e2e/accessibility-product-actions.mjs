@@ -80,7 +80,23 @@ try{
    await page.getByRole("button",{name:"Add something to sell",exact:true}).click();
    const title="Synthetic matrix "+engine+" "+width+" "+mode;
    const form=page.locator("form").filter({has:page.locator("#product-title-new")});
-   await page.locator("#product-title-new").fill(title);
+   try {
+    await page.locator("#product-title-new").fill(title);
+   } catch (error) {
+    const opener = page.getByRole("button",{name:"Add something to sell",exact:true});
+    console.error("PRODUCT_OPENER_DIAGNOSTIC:"+JSON.stringify({
+     engine,width,mode,url:page.url(),errors:errors.slice(-8),
+     titleFields:await page.locator("#product-title-new").count(),
+     openerCount:await opener.count(),
+     opener:await opener.evaluateAll(nodes=>nodes.slice(0,3).map(node=>({
+      disabled:node.disabled,html:node.outerHTML.slice(0,1200),
+      rect:{x:node.getBoundingClientRect().x,y:node.getBoundingClientRect().y,width:node.getBoundingClientRect().width,height:node.getBoundingClientRect().height}
+     }))),
+     mainText:(await page.locator("main").innerText()).slice(-5000),
+     pendingRsc:await page.evaluate(()=>window.__mmRscBodies.slice(-5).map(({url,done,bytes,error})=>({url,done,bytes,error})))
+    }));
+    throw error;
+   }
    await page.locator("#product-summary-new").fill("Disposable local product; no real payment, email or delivery.");
    await page.locator("#product-price-new").fill("0");
    if(mode==="forced-colors"){
