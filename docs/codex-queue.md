@@ -5109,3 +5109,28 @@ Verifique o que já existe e implemente apenas a diferença: (a) duplicar um cur
 Regras para todos os itens: é proibido criar contas, aceitar termos, contratar serviços, pagar qualquer valor, solicitar aprovações e alterar preços, limites visíveis, comissão, PLANS_ON_SALE, tax gate, art. 9a ou a revisão comercial. Testes somente com fornecedores simulados: nenhum e-mail real, nenhuma cobrança real e nenhum registro real de cliente alterado. Todo texto público em inglês americano, com a acessibilidade exigida pela Parte A do item 274 [AX1]. Nada de depoimentos, números, resultados, escassez ou urgência inventados, nem afirmação de superioridade sobre a Shopify ou sobre qualquer outro concorrente sem fonte oficial datada.
 
 Estado inicial de todos os itens: na fila. Ao concluir cada um, registre a data e a hora de Fortaleza, o commit, o resultado da suíte completa e a publicação.
+
+
+**Complementos SQ solicitados pelo dono:** SQ6 em23/10/2026 às02h22 Fortaleza; SQ7/SQ8 às02h29 Fortaleza. Incluídos depois de concluir PR824, logo após SQ5 nesta mesma seção, sem mudar a ordem anterior. Execução depois de tudo o que já está na fila; não bloqueiam outros itens. Antes de cada recurso, comparar código/fila e implementar somente a diferença; regras comuns e proveniência SQ acima permanecem vinculantes.
+
+295. [SQ6] Modo foco na aula
+
+Estado: na fila.
+
+Acrescentar à página da aula botão "Focus mode" que esconde navegação lateral, lista de aulas e demais elementos ao redor do vídeo ou texto da aula, deixando visíveis somente conteúdo, controles do player e botão claro para sair. Ligar/desligar por teclado e leitor de tela, mantendo foco do teclado no lugar correto ao entrar e sair. Nenhuma animação quando "reduzir movimento" estiver ativa. Lembrar escolha somente no próprio navegador do aluno. Atender às orientações W3C para deficiências cognitivas e de aprendizagem da ParteA do274[AX1]. Sem custo variável por cliente e nenhuma chamada a fornecedor.
+
+296. [SQ7] Avaliação rápida de cada aula
+
+Estado: na fila.
+
+Ao final de cada aula, oferecer avaliação opcional de1 a5, com comentário também opcional. Criador vê por aula média, distribuição das notas e comentários, ao lado do mapa de abandono96[D2-LESSON-DROPOFF], sem duplicar o que ele mostrar. Cada aluno avalia cada aula uma vez e pode mudar a nota. Avaliações privadas: jamais aparecem como prova social nem para outros alunos. Incluir armazenamento no cálculo do pior caso do plano.
+
+297. [SQ8] Respostas das provas gravadas automaticamente
+
+Estado: na fila.
+
+Verificar o que já existe nas provas e trabalhos e implementar apenas a diferença. Gravar automaticamente as respostas de prova em andamento à medida que o aluno responde, para que nada se perca ao sair da página, fechar navegador ou perder conexão; oferecer continuar de onde parou ao voltar. Gravação somente da própria pessoa, apagada quando a prova é enviada ou quando a pessoa pede exclusão dos dados. Atender à prevenção de perda de dados da ParteA do274[AX1].
+
+**Margem e custos dos complementos:** cada cliente pagante individualmente, usando100% de todos os direitos do plano no pior mês, mantém no mínimo60% de lucro líquido após todos os custos/impostos, inclusive brasileiros, e a mesma regra vale globalmente; pode ser maior, nunca menor. Antes de qualquer código, calcular máximo mensal/anual por item/plano, com teto automático antes do gasto. Custo desconhecido nunca é zero. Manter leitura mais onerosa de docs/tax-uncertainty.md e100% dos custos fixos LLC no Marktmorgen275[FX1]. A ausência de chamadas a fornecedor em SQ6 não certifica margem global nem permite zerar custos fixos desconhecidos.
+
+**Regras dos complementos:** proibido alterar preços, limites visíveis, comissão, PLANS_ON_SALE, tax gate, art.9a ou revisão comercial. Texto público em inglês americano, acessibilidade ParteA do274[AX1]. Testes somente com fornecedores simulados; preservar proibições comuns SQ de conta, termos, contratação, pagamento, solicitação de aprovação e alteração real de cliente/envio/cobrança. Estado inicial de todos: na fila. Ao concluir cada um, registrar data/hora de Fortaleza, commit, resultado da suíte completa e publicação. Inclusão documental apenas: nenhum recurso SQ6/SQ7/SQ8 implementado agora.
