@@ -303,6 +303,8 @@ export async function createBillingCheckout(
   assertFunding(funding,tier,cycle,store.statsId??'');
   const body = new URLSearchParams({
     mode: "subscription",
+    // Keep collection explicit even when a trial has nothing due today.
+    payment_method_collection: "always",
     // English, always. Left to itself Stripe picks the language of the
     // browser, and a creator in the United States should never meet a
     // payment page in whatever language the last person to test it spoke.
@@ -324,6 +326,7 @@ export async function createBillingCheckout(
   }
   if (trialOffered(store)) {
     body.set("subscription_data[trial_period_days]", String(TRIAL_DAYS));
+    body.set("subscription_data[trial_settings][end_behavior][missing_payment_method]", "cancel");
   }
   // A year is paid at once, and a yearly first payment is refundable in full
   // for thirty days: the one charge a stolen card would go for. The card's
