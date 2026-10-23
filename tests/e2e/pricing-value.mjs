@@ -8,6 +8,8 @@ export async function checkPricingValue({browser,LOCAL,axeSource,is}){
    await page.route("**/api/**",async route=>{if(route.request().method()!=="GET"){writes++;await route.abort();}else await route.continue();});
    for(const path of ["/","/pricing"]){
     await page.goto(LOCAL+path,{waitUntil:"domcontentloaded",timeout:60000});
+   // These checks inspect the settled document, including streamed home sections.
+   await page.waitForLoadState("networkidle");
     const value=page.locator("[data-pricing-value]"),prices=page.locator("[data-plan-prices]");
     is("HT3 ten benefit categories "+path+"/"+width,await value.locator(":scope > ul h3").allInnerTexts(),names);
     is("HT3 value precedes prices "+path+"/"+width,await value.evaluate((node,target)=>Boolean(node.compareDocumentPosition(document.querySelector(target))&Node.DOCUMENT_POSITION_FOLLOWING),"[data-plan-prices]"),true);

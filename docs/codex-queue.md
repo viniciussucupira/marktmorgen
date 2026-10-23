@@ -5329,6 +5329,13 @@ PR #855 incorporado em 23/10/2026 às 18h55m30s (Fortaleza), commit `6768e1722d1
 
 Estado de publicação do PR #855 no momento deste registro (23/10/2026,18h57 Fortaleza): aguardando confirmação READY/domínio/versão exata; contador permanece188. A confirmação efetiva posterior deve ser acrescentada ao histórico, sem transformar esta espera em entrega. O PR #856 integra agora o main real acima, preserva todas as alterações e exige nova suíte completa no novo head; resultados parciais anteriores não o concluem.
 
+
+### PR #856 — falha Firefox em leitura durante streaming (23/10/2026, 19h21 Fortaleza)
+
+Head ed3f5a6af9c68962e71ac66eea101f397753863b rejeitado: job 120677290109 terminou em 23/10/2026 19:21:47.761 Fortaleza com duas falhas: texto US-English da home (19:06:05.489) e foco do primeiro link HT3 na home a 390 px (19:17:37.883). Nenhum erro de página registrado. A fonte mantém o texto e links nativos; ambos os testes liam logo em domcontentloaded, enquanto as seções da home agora usam Suspense. Isso permite observar conteúdo parcial e substituição durante hidratação; causa exclusiva do foco ainda não demonstrada.
+
+Correção limitada ao preparo da leitura dos dois testes: aguardar networkidle antes das mesmas verificações de texto/foco, sem mudar expectativas, rotas, larguras, casos, limites ou tempos máximos. Suíte completa de 22 verificações obrigatória no novo head; nenhum rerun isolado autoriza conclusão. Sem alteração de runtime, preços, direitos ou gates; incremento mensal/anual por Store/Studio/Scale 0/0, sem novo fornecedor/operação. Faturas reais de CI continuam desconhecidas, não zero; nenhuma certificação de margem ou acessibilidade. PRs 857/858 precisam incorporar esta correção antes da conclusão. EM1 preservado na continuidade para inclusão documental após concluir a tarefa corrente, conforme pedido expresso; nenhuma implementação EM agora.
+
 ## H4 — Lições da quarta auditoria da Hotmart (23/10/2026)
 
 Solicitação do dono (23/10/2026,01h13, Fortaleza): incorporar as melhorias da quarta auditoria estratégica da Hotmart (hotmart.com) que ainda não existam no código nem na fila. Antes de cada item, verificar código e fila e implementar apenas a diferença. Fatos atribuídos à Hotmart exigem confirmação em fonte oficial datada antes de qualquer uso; números da Hotmart jamais podem ser apresentados como resultados do Marktmorgen.
