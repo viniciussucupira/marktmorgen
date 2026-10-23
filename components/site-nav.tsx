@@ -31,7 +31,7 @@ const PRODUCT_GROUPS: { label: string; items: MenuItem[] }[] = [
     label: "Sell",
     items: [
       item("Store page", "Your photo, links and products at one address.", "/platform/store-page", "store"),
-      item("Price options", "Up to three prices on one product.", "/platform/price-options", "tag"),
+      item("Price options", "Several prices on one product.", "/platform/price-options", "tag"),
       item("Sales pages", "Built from blocks, with reviews.", "/platform/sales-pages", "layout"),
       item("Courses", "Video lessons that open over time.", "/platform/courses", "book"),
       item("Memberships", "Paid every day, week, month or year.", "/platform/memberships", "repeat"),
