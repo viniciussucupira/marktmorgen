@@ -15,6 +15,7 @@ import { done, is, part } from "./check";
 import { paidPeriod } from "./billing-period-fixture";
 
 const checkouts: URLSearchParams[] = [];
+const checkoutHeaders: Headers[] = [];
 let session: Record<string, unknown> = {};
 globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) => {
   const url = new URL(String(input));
@@ -23,6 +24,7 @@ globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) =>
   const answer = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status });
   if (path === "/checkout/sessions" && method === "POST") {
     checkouts.push(new URLSearchParams(String(init?.body)));
+    checkoutHeaders.push(new Headers(init?.headers));
     return answer({ id: `cs_test_${"t".repeat(24)}`, url: "https://checkout.stripe.com/c/pay/test" });
   }
   if (path.startsWith("/checkout/sessions/") && method === "GET") return answer(session);
@@ -60,6 +62,9 @@ async function main(): Promise<void> {
   const opened = await createTipCheckout(store, "https://marktmorgen.com", 500);
   const sent = checkouts[0];
   is("goes to Stripe", opened.url, "https://checkout.stripe.com/c/pay/test");
+  is("support is charged directly on this creator's connected account", checkoutHeaders[0].get("Stripe-Account"), store.stripeAccountId);
+  is("support uses the platform test key to act on that connected account", checkoutHeaders[0].get("Authorization"), "Bearer sk_test_tips_only_a_stand_in");
+  is("support never routes a platform charge through a destination or transfer", [...sent.keys()].filter((key) => /transfer_data|on_behalf_of|destination/.test(key)), []);
   is("one payment of the amount chosen, in the store's currency and language", [sent.get("mode"), sent.get("line_items[0][price_data][unit_amount]"), sent.get("line_items[0][price_data][currency]"), sent.get("locale"), sent.get("line_items[0][price_data][product_data][name]")], ["payment", "500", "usd", "de", "Unterstützung für Tip Shop"]);
   is("marked as support, for the list of sales and the sweep", [sent.get("metadata[store]"), sent.get("metadata[kind]"), sent.get("metadata[title]"), sent.get("payment_intent_data[metadata][kind]")], ["tipshop", "tip", TIP_TITLE, "tip"]);
   is("with a box for a message, which may be left empty", [sent.get("custom_fields[0][type]"), sent.get("custom_fields[0][optional]"), sent.get("custom_fields[0][label][custom]")], ["text", "true", "Deine Nachricht"]);
