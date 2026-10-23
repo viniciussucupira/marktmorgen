@@ -4959,3 +4959,39 @@ Regras: é proibido criar contas, aceitar termos, contratar serviços, pagar qua
 Estado inicial: na fila. Ao concluir, registre a data e a hora de Fortaleza, o commit, o resultado da suíte completa e a publicação.
 
 Limites e metodologia Google deverão ser consultados emweb.dev e datados antes de implementação. Medição sintética e proxy de interação de laboratório não podem ser apresentados comoINP de campo ou certificaçãoCoreWebVitals. Nenhuma redução de conteúdo/franquia, mudança de preços/gates, conta/termo/contratação/pagamento/aprovação externa autorizada. Custo desconhecido reprova, incluindoCI,armazenamento/entrega e100%LLCatribuído aoMarktmorgen; registro não certifica margem60%.
+
+
+## Entrega funcional174 — estoque persistido e interação móvel (22/10/2026)
+
+PR818; head `a487a9226b1d0b504abf7c93bc4b250c947f718c`; suíte completa22/22 aprovada. Árvore testada/prevista/incorporada `30991a14d566b00256cdbddea1ea7d3aa17e2c36`; incorporação real `373bce7437e9b4e291ae1bc863de704f5b61181d` em22/10/2026 **23:02:20Fortaleza**. READY `dpl_DcKiMkGjK64BLEcKwUkY8rKVktGd` em **23:03:30.141Fortaleza**; marktmorgen.com confirmou SHA exato; /,/platform,/pricing,/mission,/library200 com o mesmo deployment. Contador173→174 uma vez; próxima175.
+
+parseProduct recusa estoque explícito malformado em vez de convertê-lo em ilimitado, preservando ausência/null e limites numéricos/textuais válidos sem reescrever registros. Regressão sintética cobre tipos/faixas inválidos, formas válidas e dados originais. Homepage SiteNav/SiteFooter em limites de hidratação independentes, conteúdo/controles/SSR preservados. Falha anterior: head ef9dfff78c35791405778e91ebd1409ef83152e0, job120189366511,22/10 **22:33:28Fortaleza**: primeira interação móvel da home200ms, reprovação contra<200; LCP892/CLS0, demais amostras48/32. Trabalho longo coincidiu com interação no summary nativo; causa exclusiva histórica não comprovada. Correção seguida de22/22 no head final; nenhum limite, timeout ou asserção relaxado, nenhum job isolado usado como aprovação. Medição sintética não é INP de campo.
+
+Custo incremental máximo mensal/anual Store0/0,Studio0/0,Scale0/0; sem operação paga/chave/TTL/dependência/direito adicional. Faturas reais CI/deploy/provedores desconhecidas, não zero.100%LLCMarktmorgen, leitura fiscal mais onerosa Brasil/EUA e60% individual/global vinculantes e não certificados; gates/preços/limites/opt-ins preservados.205 atomicidade por variante permanece incompleto. Logs de execução não consultados, sem afirmação de zero erros. Prova documental não incrementa contador.
+
+
+## HG — Lições da segunda auditoria da HighLevel (22/10/2026)
+
+**Solicitação do dono:**22/10/2026,19h34Fortaleza; segunda auditoria estratégica da HighLevel (gohighlevel.com), elaborada com o Gemini. Inclusão feita após concluir normalmente a tarefa atual (PR818, entrega174). **Ordem de execução:** depois de tudo o que já existe na fila; estes itens não bloqueiam nenhum outro. Antes de cada item, conferir código e fila e implementar somente a diferença ainda inexistente. Os fatos atribuídos à HighLevel exigem confirmação em fonte oficial datada antes de qualquer uso; seus números jamais serão apresentados como resultados do Marktmorgen. Esta inclusão não verifica nem publica tais fatos.
+
+**Regra obrigatória dos60%:** cada cliente pagante, isoladamente, usando100% de todos os direitos do plano no pior mês, e a empresa como um todo devem manter lucro líquido mínimo de60%, depois de todos os custos e impostos, inclusive brasileiros; pode ser maior, nunca menor. Antes de qualquer código, calcular o custo máximo mensal e anual de cada item por plano, com teto automático aplicado antes do gasto. Custo desconhecido não é zero. Usar a leitura que resultar em MAIS imposto de docs/tax-uncertainty.md. Desde22/10/2026, todos os custos fixos da LLC são integralmente do Marktmorgen, conforme275[FX1]. Nenhuma margem é certificada por este registro.
+
+282. [HG1] Relatório de taxas e de valor líquido de cada venda
+
+Estado: na fila.
+
+Verificar os números existentes em lib/stats.ts e implementar apenas a diferença. Acrescentar ao estúdio relatório por venda e por mês com valor bruto, taxa do Stripe, taxa do Stripe Tax, reembolsos, contestações, comissão do Marktmorgen (0% enquanto COMMISSION_LIVE=false) e valor líquido recebido pelo criador, lido somente das transações do saldo da própria conta Stripe do criador, sem escrita. Exportação CSV. Valores em cada moeda recebida, sem conversão inventada. Dado ilegível ou indisponível é informado como indisponível, nunca zero. Leituras com cache e teto por plano, verificados antes da consulta.
+
+283. [HG2] E-mail no aniversário da compra e em datas definidas pelo criador
+
+Estado: na fila.
+
+Permitir programação automática no aniversário da compra de um produto (por exemplo, um ano depois da compra de um curso, para nova edição ou conteúdo complementar) e em datas definidas pelo criador para a loja. Enviar somente a contatos que consentiram em novidades (news igual a yes), no máximo uma vez por contato por data, dentro da franquia de e-mails do plano verificada antes do envio, com descadastro em um clique. Não coletar data de nascimento: usar somente a data da compra já registrada, evitando dado pessoal desnecessário e risco de dados de menores. Nenhuma urgência, escassez ou desconto que o criador não tenha publicado.
+
+284. [HG3] Depoimento em vídeo do comprador
+
+Estado: na fila.
+
+Ampliar avaliações existentes (lib/reviews.ts e lib/review-requests.ts) para vídeo curto de até60segundos gravado ou enviado pelo comprador depois da compra. Consentimento expresso e separado para publicação, guardando texto e data; retirada a qualquer momento com remoção imediata da página. Criador aprova cada vídeo antes de publicar e nunca pode editá-lo ou cortá-lo para mudar o sentido. Cada vídeo publicado tem legendas e transcrição completa conforme ParteA do274[AX1]. Armazenamento e entrega pelo fornecedor de vídeo já usado, contados na franquia de vídeo do plano; tamanho e quantidade limitados antes do envio. Exclusão imediata a pedido da pessoa. Atualizar política de privacidade e termos junto com o recurso.
+
+**Regras comuns:** proibido criar contas, aceitar termos, contratar serviços, pagar qualquer valor, solicitar aprovações ou alterar preços, limites visíveis, comissão, PLANS_ON_SALE, tax gate, art.9a ou revisão comercial. Testes somente com fornecedores simulados: nenhum e-mail real, cobrança real ou registro real de cliente alterado. Todo texto público em inglês americano, com acessibilidade da ParteA do274[AX1]. Nada de depoimentos, números, resultados, escassez ou urgência inventados; nenhuma superioridade sobre HighLevel ou outro concorrente sem fonte oficial datada. Estado inicial de todos: **na fila**. Ao concluir cada um, registrar data/hora de Fortaleza, commit, resultado da suíte completa e publicação. Registrar a proveniência na continuidade e na fila; esta inclusão não implementa os recursos.
