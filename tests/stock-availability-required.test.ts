@@ -31,3 +31,24 @@ test("limited stock cannot bypass inventory when its store identifier is unavail
     assert.equal(commands, 0);
   } finally { redis.pipeline = original; }
 });
+
+
+test("unreadable saved stock cannot silently become unlimited", () => {
+  const record = { id: "limited123", title: "Limited", summary: "", priceCents: 100 };
+  for (const stock of [0, -1, 1.5, 100_001, NaN, Infinity, false, true, {}, [], "", " ", "unknown", "0", "-1", "100001"]) {
+    const saved = { ...record, stock };
+    assert.equal(parseProduct(saved), null);
+    assert.equal(saved.stock, stock);
+  }
+  for (const stock of [undefined, null]) {
+    assert.equal(parseProduct({ ...record, stock })?.stock, null);
+  }
+  assert.equal(parseProduct(record)?.stock, null);
+  for (const [stock, expected] of [[1, 1], [100_000, 100_000], ["1", 1], [" 12 ", 12]] as const) {
+    const parsed = parseProduct({ ...record, stock });
+    assert.ok(parsed);
+    assert.equal(parsed.stock, expected);
+    assert.equal(parsed.id, record.id);
+    assert.equal(parsed.title, record.title);
+  }
+});
