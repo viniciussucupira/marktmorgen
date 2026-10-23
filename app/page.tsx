@@ -199,7 +199,7 @@ export default function Home() {
   const questions = homeQuestions(paypalSalesConfigured());
   return (
     <div className="min-h-screen bg-paper text-ink">
-      <SiteNav />
+      <Suspense fallback={null}><SiteNav /></Suspense>
 
       <main id="content" data-static-reading>
         {/* ------------------------------------------------------------ hero */}
@@ -617,7 +617,7 @@ export default function Home() {
         </section>
       </main>
 
-      <SiteFooter />
+      <Suspense fallback={null}><SiteFooter /></Suspense>
       <HomeData questions={questions} />
     </div>
   );
