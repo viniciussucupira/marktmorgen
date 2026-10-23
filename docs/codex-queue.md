@@ -5289,6 +5289,15 @@ Head e6a90b2bad96a17c8864c8642a3e60226ef3cad8, job 120635155141: primeira amostr
 
 Trace registra tarefa React589ms antes da interação e117ms sobreposta ao primeiro pointer, no summary nativo das vantagens do plano (scrollY22890); não prova causa exclusiva. Particionadas as seções abaixo do hero e a prova da plataforma em boundaries Suspense próprias, preservando conteúdo SSR, hero, conteúdo dos criadores, preços, limites, direitos e controles nativos. Nenhum novo pedido ou operação paga: custo incremental mensal/anual0/0 por plano; faturas reais desconhecidas não são zero. Novo head exige os mesmos9ensaios e suíte22completa; nenhum limiar, cenário, alvo ou cache relaxado. Não aprovar nem reexecutar isoladamente o head reprovado.
 
+
+### Falha de foco Firefox e links nativos — PR #851
+
+Head4ddeaa26f45177b0192d065a16bfacc958979020: jobFirefox120638387882 reprovou em23/10/2026 17:42:00.838Fortaleza “HT3 feature keyboard //390”, primeiro link de recurso da seção PricingValue na home: esperadofoco true, obtidofalse; demaislinks e alvos passaram. Origemtests/e2e/pricing-value.mjs, não o teste separado home-modules. As sequências fiscais/descontos e nenhum erro de página passaram, mas o head integral não foi aprovado.
+
+No mesmo head, mobilejob120638388006 passou9amostras: home992/168,596/48,596/56; pricing628/40,600/40,604/32; sales-pages612/32,604/32,628/32 (LCPms/interaçãoms), CLS0 em todas. Evidência parcial, não aprovação do head ou certificaçãoINP/p75.
+
+PricingValue é uma seção estática; seuslinks agora são âncoras nativas com os mesmoshrefs, textos, nomes acessíveis e alvos, removendo a navegação de cliente nesseslinks. Nenhum teste de foco, alvo ou limite foi alterado. O sintoma não prova causa exclusiva de hidratação; correção será avaliada pela suíte inteira e9ensaios idênticos no novohead. ChecklistReact aplicado: servidor permanece servidor, semestado/efeito/request extra, keysestáveis e sem mudança de conteúdo. Custo incremental mensal/anual0/0 porplano, semfornecedor/operaçãonova, faturas reais desconhecidas não são zero. Não reexecutarjobisolado nemmesclarheadfalho.
+
 ## H4 — Lições da quarta auditoria da Hotmart (23/10/2026)
 
 Solicitação do dono (23/10/2026,01h13, Fortaleza): incorporar as melhorias da quarta auditoria estratégica da Hotmart (hotmart.com) que ainda não existam no código nem na fila. Antes de cada item, verificar código e fila e implementar apenas a diferença. Fatos atribuídos à Hotmart exigem confirmação em fonte oficial datada antes de qualquer uso; números da Hotmart jamais podem ser apresentados como resultados do Marktmorgen.
