@@ -5039,6 +5039,12 @@ Falhas preservadas: head ae7768f1d4c3e37157ef47cc6953d685bb7f325b, job1202293516
 Cálculo pré-código do incremento máximo mensal/anual: Store$0/$0, Studio$0/$0, Scale$0/$0, por validar a mesma resposta e reduzir renderização oculta, sem nova operação, franquia, dependência, envio ou armazenamento. Faturas reais de CI/deploy/fornecedores continuam desconhecidas, nunca zero.100% dos custos fixos LLC seguem Marktmorgen; leitura mais onerosa e piso60% individual/global não certificados. PLANS_ON_SALE=false, preços, limites, comissão, opt-ins e gates fiscais/comerciais preservados.
 
 
+## Continuidade técnica — entrega177 e nomes dos planos (23/10/2026 UTC)
+
+Entrega177 confirmada: PR826 merge498d0c3d850d04cd598665c6b899088232114ebb em23/10/2026 às03:47:13Fortaleza(06:47:13Z),22/22headdb916f1bc78c3347043eb65d9abc51903457e55c,árvore4b33a716b84f61ccec945b08919d9007192d42d7testada/prevista/real iguais. Produçãodpl_8vPKKLFXWPJRR4bgYHBJD5n23T97 READY2026-10-23T06:48:03.421Z,domínio marktmorgen.com SHAexato e5rotas200mesmoDPL. Menu troca a alegação obsoleta de três preços por Several prices; máximo50inalterado. Falha móvel anterior preservada na continuidade; suíte integral aprovada no novo head. Sem certificaçãoAAA/INPcampo/margem nem alegação de logs sem erros.
+
+Próxima revisão de clareza: menu ainda chama de Pro as opções de e-mail/domínio, enquanto lib/plan.ts e páginas dessas funções usam Studio. Corrigir apenas os dois rótulos públicos, preservando identificador pro, preços, limites, permissões, opt-in e gates. Suíte22completa obrigatória no novo head antes de incorporar/publicar; ajuste ainda não é entrega178. Sem nova chamada, armazenamento ou fornecedor: incremento máximo mensal/anual0/0porStore/Studio/Scale. FaturasCI/deploy reais desconhecidas,nãozero; leitura fiscal mais onerosa e100%LLC vinculantes,60%individual/global não certificado,PLANS_ON_SALE=false e demais gates mantidos.
+
 ## H4 — Lições da quarta auditoria da Hotmart (23/10/2026)
 
 Solicitação do dono (23/10/2026,01h13, Fortaleza): incorporar as melhorias da quarta auditoria estratégica da Hotmart (hotmart.com) que ainda não existam no código nem na fila. Antes de cada item, verificar código e fila e implementar apenas a diferença. Fatos atribuídos à Hotmart exigem confirmação em fonte oficial datada antes de qualquer uso; números da Hotmart jamais podem ser apresentados como resultados do Marktmorgen.
