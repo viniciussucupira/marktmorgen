@@ -79,6 +79,12 @@ async function main(): Promise<void> {
   is("active", await taxStatus(await load()), { state: "active" });
   settings = { status: 200, body: { status: "pending", status_details: { pending: { missing_fields: ["head_office"] } } } };
   is("pending, with what is missing", await taxStatus(await load()), { state: "pending", missing: ["head_office"] });
+  for (const body of [null, false, 1, "active", [], {}, { status: "disabled" }, { status: true }, { status: null }, { error: { message: "unreadable" } }]) {
+    settings = { status: 200, body };
+    is(`successful HTTP with unreadable tax status ${JSON.stringify(body)} stays unknown`, await taxStatus(await load()), { state: "unknown" });
+  }
+  settings = { status: 200, body: { status: "pending" } };
+  is("explicit pending without details remains pending", await taxStatus(await load()), { state: "pending", missing: [] });
   settings = { status: 500, body: { error: { message: "down" } } };
   is("Stripe unreadable: unknown, never ready", await taxStatus(await load()), { state: "unknown" });
 

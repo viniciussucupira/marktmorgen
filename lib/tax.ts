@@ -62,7 +62,11 @@ export async function taxStatus(store: Store): Promise<TaxStatus> {
   if (!store.stripeAccountId) return { state: "unknown" };
   try {
     const settings = await onAccount("GET", store.stripeAccountId, "/tax/settings");
+    // A successful HTTP response can still be unreadable or introduce a new
+    // status. Only an explicit pending status means setup is incomplete.
+    if (!settings || typeof settings !== "object" || Array.isArray(settings)) return { state: "unknown" };
     if (settings.status === "active") return { state: "active" };
+    if (settings.status !== "pending") return { state: "unknown" };
     const details = settings.status_details as { pending?: { missing_fields?: unknown } } | null;
     const missing = Array.isArray(details?.pending?.missing_fields) ? (details!.pending!.missing_fields as string[]) : [];
     return { state: "pending", missing };
