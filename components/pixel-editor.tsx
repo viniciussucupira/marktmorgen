@@ -2,7 +2,7 @@
 
 import { pixelSettingsConfirmed } from "@/lib/marketing-settings-response";
 
-import { useState, useSyncExternalStore } from "react";
+import { useRef, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "@/components/toast";
 import { PIXEL_INFO, PIXEL_KINDS, type PixelKind, type Pixels, hasPixels, readPixels } from "@/lib/pixels";
@@ -24,7 +24,7 @@ const serverReady = () => false;
 export function PixelEditor({ pixels, canViewAttribution = false }: { pixels: Pixels; canViewAttribution?: boolean }) {
   const router = useRouter();
   const ready = useSyncExternalStore(subscribeReady, clientReady, serverReady);
-  const [open, setOpen] = useState(false);
+  const disclosure = useRef<HTMLDetailsElement>(null);
   const [draft, setDraft] = useState<Record<PixelKind, string>>(() => ({
     meta: pixels.meta ?? "",
     google: pixels.google ?? "",
@@ -38,6 +38,7 @@ export function PixelEditor({ pixels, canViewAttribution = false }: { pixels: Pi
 
   async function save(event: React.FormEvent) {
     event.preventDefault();
+    if (!ready || busy) return;
     setError(null);
     const local = readPixels(draft);
     if (!local.ok) {
@@ -54,7 +55,7 @@ export function PixelEditor({ pixels, canViewAttribution = false }: { pixels: Pi
       });
       const data = (await response.json().catch(() => ({}))) as { ok?: unknown; pixels?: unknown; error?: string; bad?: PixelKind };
       if (pixelSettingsConfirmed(response.ok, data, local.pixels)) {
-        setOpen(false);
+        if (disclosure.current) disclosure.current.open = false;
         toast("Pixels saved.");
         router.refresh();
         return;
@@ -83,20 +84,17 @@ export function PixelEditor({ pixels, canViewAttribution = false }: { pixels: Pi
         {canViewAttribution ? <a href="#numbers" className="link inline-flex min-h-11 items-center">Attribution by channel</a> : null}
       </nav>
       <p className="mt-3 text-sm text-ink-soft" data-pixel-consent>Saving an ID does not override consent. Visitors in the configured consent regions, including Brazil, or with an unknown country are asked first. A browser’s Global Privacy Control signal prevents advertising pixels. Attribution is a separate reading of existing payment records; it is not proof that an ad caused a sale.</p>
-      {!open ? (
-        <>
-          <p className="mt-4 text-sm font-semibold text-ink">
-            {hasPixels(pixels)
-              ? `On: ${on.map((kind) => `${PIXEL_INFO[kind].name} (${pixels[kind]})`).join(", ")}`
-              : "No pixel on your store."}
-          </p>
-          <button type="button" disabled={!ready} onClick={() => setOpen(true)} className="btn btn-secondary mt-4">
-            {hasPixels(pixels) ? "Change pixels" : "Add a pixel"}
-          </button>
-        </>
-      ) : (
+      <p className="mt-4 text-sm font-semibold text-ink">
+        {hasPixels(pixels)
+          ? `On: ${on.map((kind) => `${PIXEL_INFO[kind].name} (${pixels[kind]})`).join(", ")}`
+          : "No pixel on your store."}
+      </p>
+      <details ref={disclosure} className="mt-4">
+        <summary role="button" className="btn btn-secondary w-fit cursor-pointer list-none [&::-webkit-details-marker]:hidden">
+          {hasPixels(pixels) ? "Change pixels" : "Add a pixel"}
+        </summary>
         <form onSubmit={save} className="mt-5" noValidate aria-busy={busy}>
-          <fieldset disabled={busy} className="min-w-0 space-y-4"><legend className="sr-only">Advertising pixel IDs</legend>
+          <fieldset disabled={!ready || busy} className="min-w-0 space-y-4"><legend className="sr-only">Advertising pixel IDs</legend>
           {PIXEL_KINDS.map((kind) => {
             const info = PIXEL_INFO[kind];
             const invalid = bad === kind;
@@ -145,7 +143,7 @@ export function PixelEditor({ pixels, canViewAttribution = false }: { pixels: Pi
               type="button"
               className="btn btn-ghost"
               onClick={() => {
-                setOpen(false);
+                if (disclosure.current) disclosure.current.open = false;
                 setBad(null);
                 setError(null);
               }}
@@ -155,7 +153,7 @@ export function PixelEditor({ pixels, canViewAttribution = false }: { pixels: Pi
           </div>
           </fieldset>
         </form>
-      )}
+      </details>
     </section>
   );
 }
