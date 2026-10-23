@@ -4629,6 +4629,9 @@ REGRA DOS 60% (OBRIGATÓRIA): todo cliente pagante, considerado isoladamente e u
 
 274. [AX1] Acessibilidade no grau máximo em todas as páginas, subpáginas e em tudo o que o Marktmorgen entrega, acima de todas as regulações governamentais
 
+Proveniência — solicitação do dono de 23/10/2026, 20h03 (Fortaleza): a Parte C deste item passou a ser executada pelo item 310 [AX2], seção “AX2 — Prova de acessibilidade em todo o site (23/10/2026)”, fisicamente após EM309 e com prioridade de execução logo após a tarefa corrente e os registros dos pedidos já recebidos, antes do restante da fila. Reusar o que já existe, implementar apenas a diferença e preservar a Parte A como regra permanente. A antiga posição da Parte C fica como histórico; não executar duas vezes. Testes automáticos não certificam conformidade.
+
+
 PARTE A — Regra permanente (gravar já em AGENTS.md, no mesmo PR que inclui este item na fila, porque vale para todo trabalho a partir de agora):
 1. Grau obrigatório: WCAG 2.2 nível AAA em TODOS os critérios aplicáveis, em todas as páginas, subpáginas e estados do site. O nível AA é apenas o mínimo legal, nunca a meta. Onde um critério AAA for tecnicamente impossível num caso concreto, registre o caso, o motivo e a alternativa equivalente oferecida em docs/accessibility-programme.md; a impossibilidade nunca pode ser presumida, precisa ser demonstrada.
 2. Além do WCAG, para superar o exigido, aplique também: as orientações do W3C para deficiências cognitivas e de aprendizagem (Making Content Usable for People with Cognitive and Learning Disabilities); os padrões do WAI-ARIA Authoring Practices Guide para todo componente interativo; a ATAG 2.0, partes A e B, no estúdio, porque o estúdio é uma ferramenta de criação e precisa ajudar o criador a produzir conteúdo acessível; todos os capítulos aplicáveis da EN 301 549 em vigor, inclusive documentação e suporte; os critérios de desempenho funcional da Section 508; o EPUB Accessibility 1.1 para livros digitais; o PDF/UA para PDFs; e os resultados do rascunho do WCAG 3.0 como camada extra, sem tratá-lo como norma em vigor. Referências de qualidade: GOV.UK Design System e Apple Human Interface Guidelines.
@@ -5728,3 +5731,67 @@ Regras para o item: é proibido criar contas, aceitar termos, contratar serviço
 Estado inicial: na fila. Ao concluir, registre a data e a hora de Fortaleza, o commit, o resultado da suíte completa e a publicação.
 
 Proveniência do registro: pedido integral recebido pelo anexo Texto colado.txt; a tarefa corrente PR #856 foi incorporada em 23/10/2026 19:52:35 (Fortaleza), commit c21b47474d28b44e5fe3520f1d37691e4f002641, com 22/22 verificações e igualdade das árvores testada, prevista e incorporada. Sem entrega funcional ou incremento do contador. Conferidos main, 13 PRs abertos e 413 refs codex/* (três heads alterados desde auditoria anterior relidos; demais SHAs imutáveis já auditados): EM1 ausente e 309 livre. As informações de conta, preços e capacidade acima são observações/briefing do dono, ainda não verificações independentes de produção ou fontes oficiais para implementação. Antes de implementar, verificar fontes datadas, custos máximos mensais/anuais por plano, capacidade global, tetos e reserva; desconhecido reprova. Este registro documental não altera configurações nem envia mensagens; incremento operacional por plano mensal/anual 0/0, faturas reais de CI desconhecidas, não zero; margem de 60% não certificada.
+
+## AX2 — Prova de acessibilidade em todo o site (23/10/2026)
+
+Ordem expressa: após concluir a tarefa atual e gravar EM309, antes do restante da fila. Esta posição de execução antecipa a Parte C do AX274; a posição física desta seção é após EM. Registros posteriores, como HS, não adiam esta prioridade.
+
+Solicitação do dono (23/10/2026, 20h03, horário de Fortaleza): hoje a regra permanente de acessibilidade (AX274, Parte A) obriga todo trabalho novo, mas o site inteiro ainda não foi testado em todas as páginas, e os testes com leitores de tela reais e com pessoas ainda não foram feitos. Antecipar a Parte C do item 274 [AX1], fazer tudo o que for possível sem contratar serviços nem recrutar pessoas, e deixar pronto e documentado o que depende do dono.
+
+REGRA DOS 60% (OBRIGATÓRIA): todo cliente pagante, considerado isoladamente e usando 100% de todos os direitos do plano no pior mês, deve manter margem de lucro líquido MÍNIMA de 60%, depois de todos os custos e de todos os impostos, inclusive os brasileiros; a margem pode ser maior, mas nunca menor, e a mesma regra vale para a empresa como um todo. O custo destes testes é fixo (minutos de execução no GitHub e eventuais licenças): calcule-o com preços oficiais datados, inclua-o nos custos fixos e na base mínima de clientes (item 275 [FX1]) e mantenha-o dentro do orçamento atual do GitHub Actions, com parada automática ao atingir o limite. Custo desconhecido não pode ser considerado zero. Use a leitura que resultar em MAIS imposto (docs/tax-uncertainty.md).
+
+310. [AX2] Prova de acessibilidade em 100% das páginas, com leitores de tela reais
+
+Estado: na fila, com prioridade logo após os pedidos já recebidos.
+
+Verifique primeiro o que os cinco fluxos de acessibilidade do CI já cobrem (accessibility-public-matrix, accessibility-studio-matrix, accessibility-signup-actions, accessibility-product-actions e accessibility-buyer-actions) e implemente apenas a diferença.
+
+1. Inventário completo das rotas, gerado pelo código:
+- o CI lista, a partir de app/ inteiro, todas as rotas, páginas e subpáginas, inclusive as dinâmicas, preenchidas com dados sintéticos;
+- cobre o site público, o estúdio, a área do comprador, o checkout, o checkout embutido, os widgets, as lojas, os cursos, a comunidade, os podcasts, a central de ajuda, as páginas legais e as de erro;
+- cobre cada rota nos seus estados (vazio, carregando, erro, sucesso, aberto, fechado, desativado) e nos seus modais e menus;
+- falha se alguma rota existir no código sem teste de acessibilidade correspondente, para que nenhuma página nova fique de fora;
+- mantenha docs/accessibility-inventory.json gerado e conferido por tests/accessibility-inventory.test.ts.
+
+2. Testes automáticos em todas as rotas do inventário, sem serviço pago:
+- axe com todas as regras de nível A, AA e AAA;
+- Playwright em Chromium, Firefox e WebKit, nas larguras 320, 390, 768, 1280 e 1920 px;
+- navegação só por teclado, ordem do foco, foco visível e ausência de armadilha de foco;
+- reflow a 320 px, zoom de 200% e de 400%, e espaçamento de texto ajustado (1.4.12);
+- modo escuro, alto contraste (forced-colors) e redução de movimento (prefers-reduced-motion);
+- contraste de 7:1 para texto e de 3:1 para componentes, e alvos de 44 × 44 px.
+Para não estourar o tempo e o custo do CI, execute a matriz completa em toda mudança das rotas afetadas e, uma vez por dia, em todas as rotas.
+
+3. Verificações que o axe não faz:
+- nível de leitura dos textos do próprio Marktmorgen (3.1.5);
+- legendas, transcrições e audiodescrição nas mídias do próprio Marktmorgen;
+- PDFs gerados (recibos, faturas e certificados) validados contra o PDF/UA com ferramenta gratuita (por exemplo, veraPDF);
+- livros digitais validados contra o EPUB Accessibility 1.1 com ferramenta gratuita (por exemplo, Ace by DAISY);
+- e-mails em HTML acessível e com versão em texto.
+
+4. Leitores de tela reais, automatizados e gratuitos:
+- use a biblioteca de código aberto Guidepup (ou equivalente gratuito verificado em fonte oficial datada) para comandar o NVDA no Windows e o VoiceOver no macOS, nos servidores de execução do próprio GitHub Actions;
+- teste ao menos as tarefas principais: cadastro e acesso, criar uma loja, criar e publicar um produto, comprar como comprador, entrar num curso, cancelar uma assinatura e pedir um reembolso;
+- registre exatamente o que cada leitor de tela anunciou em cada passo e falhe quando um nome, função, estado ou aviso estiver ausente ou errado;
+- antes de ativar, calcule o custo dos minutos de Windows e de macOS pela página oficial de preços do GitHub, com data, e mantenha tudo dentro do orçamento atual, com parada automática;
+- se algum leitor ou sistema não puder ser automatizado de forma gratuita, registre o motivo, sem presumir que passou.
+
+5. O que depende do dono, deixado pronto para ele decidir:
+- JAWS, que exige licença paga: estime o custo com fonte oficial datada e deixe o roteiro de teste pronto;
+- TalkBack em aparelho Android real e VoiceOver em iPhone real;
+- testes com pessoas com deficiência, conforme docs/accessibility-real-people-plan.md (item 202): roteiro das tarefas, termo de consentimento, perguntas, custo estimado por sessão e por rodada com fontes datadas, e critérios de quem recrutar.
+Registre cada um em "Depende do dono", com o custo e o passo exato.
+
+6. Declaração honesta:
+- crie ou atualize a página pública /accessibility, em inglês americano simples;
+- informe as normas adotadas, o que foi testado, como e quando, as lacunas conhecidas, a data da última revisão e como pedir ajuda ou relatar um problema;
+- os números e as listas da página devem vir do resultado real dos testes, nunca digitados à mão;
+- é proibido escrever "fully accessible", "ADA compliant", "WCAG AAA certified", "the most accessible platform" ou qualquer selo sem auditoria completa que o comprove.
+
+7. Correções: cada falha encontrada vira correção no mesmo PR, quando for pequena, ou item próprio na fila, com a rota, o critério WCAG, a evidência e a prioridade. Onde um critério AAA for comprovadamente impossível num caso concreto, registre o caso, o motivo e a alternativa equivalente em docs/accessibility-programme.md.
+
+Regras para o item: é proibido criar contas, aceitar termos, contratar serviços, comprar licenças, pagar qualquer valor, contatar pessoas ou empresas, recrutar participantes, aumentar o orçamento do GitHub e alterar preços, limites visíveis, comissão, PLANS_ON_SALE, tax gate, art. 9a ou a revisão comercial. Testes somente com dados sintéticos: nenhum e-mail real, nenhuma cobrança real e nenhum registro real de cliente alterado. Cada PR traz a seção "Acessibilidade" exigida pela Parte A do item 274 [AX1]. Testes automáticos não equivalem a conformidade: nada pode ser declarado como certificado.
+
+Estado inicial: na fila, prioridade logo após os pedidos já recebidos. Ao concluir cada parte, registre a data e a hora de Fortaleza, o commit, o resultado da suíte completa e a publicação.
+
+Proveniência do registro: pedido direto integral de 23/10/2026 20h03 Fortaleza. Main, 11PRs abertos e414refs codex/* conferidos; único head alterado desde a auditoria anterior relido, demais SHAs imutáveis previamente auditados. Nenhum AX2 existente e310livre. EM309 foi incorporado noPR859 em23/10/2026 20:28:29Fortaleza, commit5fe89913aac67b5b885ed9705d149f0a4b87be6d,22/22 e árvores testada/prevista/real iguais. Registro documental atual sem ativar matriz, leitor de tela, agendamento ou licença. Incremento operacional mensal/anual0/0cadaStore/Studio/Scale; custo real de CI desconhecido, não zero. Antes da ativação AX2 calcular custos fixos oficiais datados,100%LLC, base mínima e parada automática no orçamento atual; desconhecido reprova. Nenhuma certificação60% ou conformidadeAAA. Histórico anterior preservado.
