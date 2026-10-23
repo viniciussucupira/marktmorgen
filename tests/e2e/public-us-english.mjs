@@ -6,6 +6,8 @@ export async function checkPublicAmericanEnglish({browser,LOCAL,is}){
   const cases=[["/","Canceling is two clicks in your studio"],["/mission","but not a checkbox"],["/help","with revenue only if you select it"],["/privacy","members wrote when canceling"],["/platform/calls","select who hosts it"],["/platform/email","buttons in your store\'s color"],["/platform/insights","reason for canceling"],["/platform/bundles","buyer selects that many"],["/platform/sales-pages","with check marks, crosses"]];
   for(const [path,expected] of cases){
    await page.goto(LOCAL+path,{waitUntil:"domcontentloaded",timeout:60000});
+   // These checks inspect the settled document, including streamed home sections.
+   await page.waitForLoadState("networkidle");
    await page.locator("main details").evaluateAll(nodes=>nodes.forEach(node=>{node.open=true;}));
    const text=(await page.locator("main").innerText()).replace(/\s+/g," ");
    is("reviewed US-English wording "+path,text.includes(expected),true);
