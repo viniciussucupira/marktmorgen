@@ -169,21 +169,20 @@ export function parseAssistantPlan(raw: unknown): AssistantPlan | null {
   };
 }
 
-/** After a period's end, how long its next one is assumed to have begun while the snapshot has not caught up (as lib/allowance-window.ts). */
-export const ASSISTANT_RENEW_GRACE_SECONDS = 2 * 86_400;
+/** Compatibility export: an expired snapshot never grants an unconfirmed AI renewal. */
+export const ASSISTANT_RENEW_GRACE_SECONDS = 0;
 const DAY = (seconds: number) => new Date(seconds * 1000).toISOString().slice(0, 10);
 
 /**
  * The add-on's month a moment falls in: one payment, one pool, named by the
  * UTC day it began. Null when nothing is paid for now: no add-on, one that is
- * not active, one with no period known, or past its end (with the grace a
- * renewing one gets). Unknown is closed.
+ * not active, one with no period known, or past its recorded end. A renewing flag does not confirm the next
+ * payment or authorize a new pool. Unknown is closed.
  */
 export function assistantWindow(plan: AssistantPlan | null, nowSeconds = Date.now() / 1000): { id: string; start: number; end: number } | null {
   if (!plan || !plan.active || plan.disputedAt || !plan.period) return null;
-  const { start, end, renews } = plan.period;
+  const { start, end } = plan.period;
   if (nowSeconds >= start - 300 && nowSeconds < end) return { id: DAY(start), start, end };
-  if (renews && nowSeconds >= end && nowSeconds < end + ASSISTANT_RENEW_GRACE_SECONDS) return { id: DAY(end), start: end, end: end + 31 * 86_400 };
   return null;
 }
 
