@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { MAX_OPTIONS } from "@/lib/product-option";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Icon, type IconName } from "@/components/icons";
 import { Logo } from "@/components/logo";
@@ -31,7 +32,7 @@ const PRODUCT_GROUPS: { label: string; items: MenuItem[] }[] = [
     label: "Sell",
     items: [
       item("Store page", "Your photo, links and products at one address.", "/platform/store-page", "store"),
-      item("Price options", "Up to three prices on one product.", "/platform/price-options", "tag"),
+      item("Price options", `Up to ${MAX_OPTIONS} prices on one product.`, "/platform/price-options", "tag"),
       item("Sales pages", "Built from blocks, with reviews.", "/platform/sales-pages", "layout"),
       item("Courses", "Video lessons that open over time.", "/platform/courses", "book"),
       item("Memberships", "Paid every day, week, month or year.", "/platform/memberships", "repeat"),
