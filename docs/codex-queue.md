@@ -5216,6 +5216,11 @@ Incorporado em 23/10/2026 às 15:53:30 de Fortaleza; commit 856cd0bb69d172efc0a5
 
 Incorporado em 23/10/2026 às 16:18:47 de Fortaleza; commit 0842056c87b9c463a772cbdfc7977fa3f4ce6537, head testado 2177e72d92fccfb0e2e059c7f6137b0f593799ca. Suíte completa 22/22 aprovada; árvore testada, prevista e incorporada fc963f78a891c7437d0cf6194296d8e7cc7b29a0. GH1 (304) permanece na fila, sem implementação nem ativação. Registro documental sem incremento funcional (185). Custo incremental mensal/anual Store, Studio e Scale 0/0; faturas reais desconhecidas não são zero, e isto não certifica margem.
 
+
+### Correção dos controles fiscais — PR #852 (23/10/2026)
+
+Incorporado em 23/10/2026 às 16:43:42 de Fortaleza; commit ae1f858f48d3127eef5a4fda547d13e58c326a37, head testado 02f61ae69cffc89335f45af7298f0328e778dbc4. Suíte completa 22/22; árvore testada, prevista e incorporada 8f66671ee759bbae8493ad75862233adc406f301. TaxEditor só habilita controles após seus handlers estarem prontos, mantendo configurações, opt-ins e travas. Publicação ainda aguardando comprovação de READY, domínio e versão exata; nenhum incremento funcional antecipado. Custo incremental mensal/anual 0/0 por plano, sem novas operações; custos reais desconhecidos não são zero.
+
 ## H4 — Lições da quarta auditoria da Hotmart (23/10/2026)
 
 Solicitação do dono (23/10/2026,01h13, Fortaleza): incorporar as melhorias da quarta auditoria estratégica da Hotmart (hotmart.com) que ainda não existam no código nem na fila. Antes de cada item, verificar código e fila e implementar apenas a diferença. Fatos atribuídos à Hotmart exigem confirmação em fonte oficial datada antes de qualquer uso; números da Hotmart jamais podem ser apresentados como resultados do Marktmorgen.

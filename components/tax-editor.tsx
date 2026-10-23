@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "@/components/toast";
 import type { TaxSetting } from "@/lib/tax";
@@ -17,6 +17,10 @@ const MESSAGES: Record<string, string> = {
   server_error: "We could not confirm whether your tax settings were saved. Reload this page to check before trying again.",
 };
 
+const subscribeToReadiness = () => () => {};
+const clientReady = () => true;
+const serverReady = () => false;
+
 const STRIPE_TAX_SETTINGS = "https://dashboard.stripe.com/settings/tax";
 const STRIPE_EMAIL_SETTINGS = "https://dashboard.stripe.com/settings/emails";
 
@@ -31,6 +35,7 @@ export function TaxEditor({
   status: "active" | "pending" | "unknown";
   connected: boolean;
 }) {
+  const ready = useSyncExternalStore(subscribeToReadiness, clientReady, serverReady);
   const router = useRouter();
   const [enabled, setEnabled] = useState(tax.enabled);
   const [included, setIncluded] = useState(tax.included);
@@ -41,7 +46,7 @@ export function TaxEditor({
 
   async function save(event: React.FormEvent) {
     event.preventDefault();
-    if (busy) return;
+    if (!ready || busy) return;
     setBusy(true);
     setError(null);
     try {
@@ -110,14 +115,14 @@ export function TaxEditor({
             <input
               type="checkbox"
               checked={enabled}
-                disabled={busy}
+                disabled={!ready || busy}
               onChange={(e) => setEnabled(e.target.checked)}
               className="mt-0.5 h-4 w-4 accent-violet-brand"
             />
             Add sales tax at checkout
           </label>
 
-          <fieldset className="space-y-2" disabled={!enabled || busy}>
+          <fieldset className="space-y-2" disabled={!ready || !enabled || busy}>
             <legend className="field-label">Your prices</legend>
             <label className="flex items-start gap-3 text-sm text-ink">
               <input type="radio" name="tax-included" checked={!included} onChange={() => setIncluded(false)} className="mt-0.5 h-4 w-4" />
@@ -129,13 +134,13 @@ export function TaxEditor({
             </label>
           </fieldset>
 
-          <fieldset className="space-y-3 border-t border-line pt-4" disabled={busy}>
+          <fieldset className="space-y-3 border-t border-line pt-4" disabled={!ready || busy}>
             <legend className="field-label">Business buyers</legend>
             <label className="flex items-start gap-3 text-sm font-semibold text-ink">
               <input
                 type="checkbox"
                 checked={ids}
-                disabled={busy}
+                disabled={!ready || busy}
                 onChange={(e) => setIds(e.target.checked)}
                 className="mt-0.5 h-4 w-4 accent-violet-brand"
               />
@@ -152,7 +157,7 @@ export function TaxEditor({
               <input
                 type="checkbox"
                 checked={invoices}
-                disabled={busy}
+                disabled={!ready || busy}
                 onChange={(e) => setInvoices(e.target.checked)}
                 className="mt-0.5 h-4 w-4 accent-violet-brand"
               />
@@ -177,7 +182,7 @@ export function TaxEditor({
           ) : null}
 
           {error ? <p className="notice notice-error" role="alert">{error}</p> : null}
-          <button type="submit" aria-busy={busy} disabled={busy} className="btn btn-primary">
+          <button type="submit" aria-busy={busy} disabled={!ready || busy} className="btn btn-primary">
             {busy ? "Saving…" : "Save"}
           </button>
         </form>
