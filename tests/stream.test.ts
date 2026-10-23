@@ -253,6 +253,26 @@ async function main() {
   is("the one that was opened for it, yes: the file is there and no size is ready", claimed?.state, "working");
   is("what it is called and how big come from what was written down, not from the browser", [claimed?.name, claimed?.bytes, claimed?.type], ["Lesson one.mp4", 800_000_000, "video/mp4"]);
 
+  part("An unconfirmed peek claim never asks the video provider");
+  const realPipeline = redis.pipeline;
+  try {
+    for (const receipt of [[], ["OK", "extra"], [undefined], [false], [0], [1], [true], ["ok"], [{}], "OK", null]) {
+      let claims = 0;
+      redis.pipeline = async (commands) => {
+        if (commands.length === 1 && commands[0][0] === "SET" && commands[0][1] === `nl:stream:peek:${door.id}`) {
+          claims += 1;
+          return receipt as unknown as unknown[];
+        }
+        return realPipeline(commands);
+      };
+      const beforePeek = asked.length;
+      const waiting = await playerFor(door.pathname, NOW + 2 * MINUTE);
+      is(`unconfirmed claim ${JSON.stringify(receipt)} keeps preparation without provider request or retry`, [waiting?.state, waiting?.src, asked.length - beforePeek, claims], ["working", null, 0, 1]);
+    }
+  } finally {
+    redis.pipeline = realPipeline;
+  }
+
   part("A student opens the lesson while it is being prepared");
   let player = await playerFor(door.pathname, NOW + 2 * MINUTE);
   is("there is nothing to play yet, and the page says so", [player?.state, player?.src], ["working", null]);

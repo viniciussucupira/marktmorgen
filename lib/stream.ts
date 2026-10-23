@@ -610,8 +610,11 @@ export async function playerFor(pathname: string, now = Date.now()): Promise<Pla
   if (!record) return null;
   const unmeasured = record.state === "ready" && !record.settled && !(record.width > 0 && record.height > 0);
   if (record.state === "working" || unmeasured) {
-    const [first] = await redisPipeline([["SET", peekKey(record.id), "1", "NX", "EX", 30]]);
-    if (first !== null) record = (await lookAt(record.id, now, STREAM_PEEK_TIMEOUT_MS)) ?? record;
+    const receipt = await redisPipeline([["SET", peekKey(record.id), "1", "NX", "EX", 30]]);
+    // Only a confirmed cooldown claim authorizes a provider request.
+    if (Array.isArray(receipt) && receipt.length === 1 && receipt[0] === "OK") {
+      record = (await lookAt(record.id, now, STREAM_PEEK_TIMEOUT_MS)) ?? record;
+    }
   }
   const shape = shapeOf(record.width, record.height, null);
   if (record.state !== "ready") return { state: record.state, src: null, ...shape, record };
