@@ -55,7 +55,7 @@ export async function checkPurchaseResend({browser,LOCAL,fixture,shipment,axeSou
     }else{
      const alert=control.getByRole("alert");await alert.waitFor();
      is("resend refusal or uncertainty "+name,await alert.innerText(),scenario.known?"That sale could not be found on your Stripe account.":uncertain);
-     is("unconfirmed resend no success toast "+name,await page.locator('.nb-toast-region [role="status"]').count(),0);
+     is("unconfirmed resend no success toast "+name,await page.locator('.nb-toast-region [role="status"]').innerText(),"");
      await page.addScriptTag({content:axeSource});
      const contrast=await alert.evaluate(async node=>{
       const report=await window.axe.run([node],{runOnly:{type:"rule",values:["color-contrast-enhanced"]}});
