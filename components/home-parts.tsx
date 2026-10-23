@@ -702,6 +702,8 @@ function PlanCard({
           </li>
         ))}
       </ul>
+      {/* Native toggle targets details itself: keep that event inside a small hydration boundary too. */}
+      <Suspense fallback={null}>
       <details className="group/perks mt-6">
         {/* The native summary has its own small hydration boundary, separate from the card and long list. */}
         <Suspense fallback={null}>
@@ -723,6 +725,7 @@ function PlanCard({
         </ul>
         </Suspense>
       </details>
+      </Suspense>
 
       <p className="mt-5 text-sm text-ink-soft">{uploadAllowanceWords(tier)}</p>
       <p className="mt-3 text-sm text-ink-soft">Up to {PAID_STORAGE_BYTES[tier] / (1024 ** 3)} GB of stored files and videos. New uploads must fit in the remaining space.</p>

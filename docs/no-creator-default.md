@@ -24,6 +24,20 @@ The following actual-function journeys intercept outgoing requests and assert th
 
 The booking proof checks every new checkout emitted by `holdAndCheckout` within those fixtures against its own store. It does not activate Teams, establish coverage for every booking variant or prove every platform payment path is connected-account commerce. Existing payment, tax, price, ownership, refund, permissions and booking assertions remain in place. No real account, payment, email or calendar submission was made.
 
+## Assistant suspension and recorded-period admission
+
+PR #844 incorporated actual `syncAssistant` regression coverage at 13:09:53 Fortaleza on 23 October 2026. Synthetic `past_due`, `unpaid` and `canceled` provider replies persist an inactive add-on and prevent model invocation. A confirmed dispute persists suspension, requests termination and refuses repurchase. This does not prove detection at the first failure in real time: the existing refresh schedule remains, and the dispute lookup covers only three recent invoices.
+
+PR #845 incorporated the runtime correction at 13:33:25 Fortaleza. An expired renewing snapshot no longer invents a new 31-day AI pool during a two-day grace period. The actual `askAssistant` path is closed at the exact recorded end and four later points: no model call, no allowance and no speculative pool. Current recorded admission and an updated actual period remain usable. Final integrated head `b262b7b08c72ab04c99b65834c7d4136dc6eb725` passed all 22 checks; verify job 120520354001 logged the renewal cases at 13:14:56 Fortaleza.
+
+These are partial admission controls. A subscription's active status or updated period is not independent proof of a paid invoice, settled funds or a funded dispute/refund reserve. Purchased buyer content and creator records are preserved.
+
+## Caption refund evidence still required
+
+Source review of `lib/billing.ts` and `lib/auto-captions.ts` found that `refundCharge` accepts an HTTP-success reply without validating the refund receipt, while caption callers ignore its boolean and remove the pending record even if the refund failed. The transcription submission accepts HTTP 200 unless `success` is explicitly false; a missing acknowledgment is not confirmation of acceptance.
+
+No refund completion, loss elimination or automatic recovery is claimed from this review. A repair must preserve evidence of uncertain refunds and avoid duplicate charges/transcriptions; additional retries, retention or polling require priced bounds and funding before operation. No real refund or provider submission was made.
+
 ## Remaining scope
 
 Account configuration and the listed checkout transport journeys now have regression evidence. Exhaustive proof for every sales/recovery path, the complete creator-charge inventory, paid-before-use credit admission, trial funding, first-failure suspension, disputes and guarantee exposure remain incomplete.
