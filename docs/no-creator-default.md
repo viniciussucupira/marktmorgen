@@ -6,13 +6,27 @@ Reviewed 23 October 2026. This is a partial implementation record. It does not e
 
 The actual `createConnectedAccount` function in `lib/stripe-connect.ts` sends `dashboard: "full"`, `defaults.responsibilities.fees_collector: "stripe"` and `losses_collector: "stripe"`, with merchant card-payments capability and API version `2026-08-26.dahlia`. The creator's supplied country is validated against the existing offered list.
 
-`tests/connect-configuration.test.ts` intercepts every fetch, rejects any unexpected URL, exercises the actual function for every offered country, and asserts the complete account-creation payload and headers. Unapproved countries must make no request. All calls are synthetic: no account is created, no terms accepted and no provider contacted. Full CI is required before this pending regression is treated as incorporated evidence.
+`tests/connect-configuration.test.ts` intercepts every fetch, rejects any unexpected URL, exercises the actual function for every offered country, and asserts the complete account-creation payload and headers. Unapproved countries must make no request. All calls are synthetic: no account is created, no terms accepted and no provider contacted. PR #836 incorporated this regression after all 22 checks passed, including full validation after integration with the then-current main branch.
 
 Stripe-owned reference checked on 23 October 2026: [Accounts v2 account types](https://github.com/stripe/ai/blob/main/providers/claude/plugin/skills/connect-recommend/references/account-types.md). Its full-dashboard SaaS example uses these fee/loss responsibilities. This code/reference comparison does not establish that every possible platform charge or liability is borne by Stripe, nor does it verify live account approval or terms.
 
+## Verified checkout transport coverage
+
+The following actual-function journeys intercept outgoing requests and assert the creator's `Stripe-Account`, the platform test credential acting on that connected account, and absence of destination/transfer/on-behalf-of routing fields. Each PR passed all 22 checks on its incorporated head; these are synthetic transport proofs, not live provider acceptance or liability decisions.
+
+| Journey | Test | Incorporated PR | Merge time, Fortaleza, 23 October 2026 |
+| --- | --- | --- | --- |
+| Support payment | `tests/store-tips.test.ts` | #838 | 10:05:18 |
+| Call package | `tests/call-packages.test.ts` | #839 | 10:33:49 |
+| Payment request | `tests/payment-requests.test.ts` | #840 | 10:59:23 |
+| Product, bump, membership and cart, with existing tax variants | `tests/checkout-tax-journey.test.ts` | #841 | 11:24:53 |
+| Booking checkout through existing isolated host-booking fixtures | `tests/team-scheduling.test.ts` | #842 | 11:55:20 |
+
+The booking proof checks every new checkout emitted by `holdAndCheckout` within those fixtures against its own store. It does not activate Teams, establish coverage for every booking variant or prove every platform payment path is connected-account commerce. Existing payment, tax, price, ownership, refund, permissions and booking assertions remain in place. No real account, payment, email or calendar submission was made.
+
 ## Remaining scope
 
-The new regression protects account creation only. Exhaustive direct-charge proof for each sales path, the complete creator-charge inventory, paid-before-use credit admission, trial funding, first-failure suspension, disputes and guarantee exposure remain incomplete.
+Account configuration and the listed checkout transport journeys now have regression evidence. Exhaustive proof for every sales/recovery path, the complete creator-charge inventory, paid-before-use credit admission, trial funding, first-failure suspension, disputes and guarantee exposure remain incomplete.
 
 Existing review found `addToNextInvoice` in `lib/billing.ts` called by `lib/usage-billing.ts`. Historical video invoice allowances and unfinished invoice records must be distinguished from current tier playback admission; their presence alone does not prove every current playback creates a postpaid charge. Raw-file access, player-token lifetime and physical supplier-byte costs require their separate lifecycle review. Preserve creator records and purchased buyer access.
 
