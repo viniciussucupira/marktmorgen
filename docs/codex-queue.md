@@ -5152,11 +5152,25 @@ Head `636273abf5bdb026c9ad2a0fd46553b0413ff3df` rejeitado: job WebKit 1204837641
 
 Correção de runtime: textarea de sites e botão de salvar aguardam prontidão do cliente por useSyncExternalStore; save também exige prontidão. Não altera parse, confirmação canônica, rascunho, preços, permissões ou requests. Todos os cenários, timeouts e asserções existentes preservados; novo head exige 22 verificações completas. Incremento mensal/anual Store/Studio/Scale US$0/US$0; sem serviço, operação paga, chave ou TTL novo. Faturas reais desconhecidas, nunca zero; margem de 60% mais onerosa/100% LLC não certificada. Publicação funcional só após READY/domínio/SHA exatos; contador permanece 182, próximo 183.
 
+## CA232 — Regressão sintética de suspensão do assistente (23/10/2026, 12:36 Fortaleza)
+
+Implementação de teste da rotina real syncAssistant: estados past_due/unpaid/canceled persistem suspensão e impedem invocação do modelo; disputa confirmada persiste bloqueio, solicita encerramento e recusa recompra. Todas as respostas Stripe/modelo são interceptadas; nenhuma conta, cobrança ou mensagem real. CI completo pendente no novo head. Cobertura parcial: três faturas recentes não provam todo o histórico; recibos desconhecidos e financiamento por invoice exigem revisão própria. Não certifica margem nem elimina perdas.
+
+Custo incremental Store/Studio/Scale mensal/anual: 0/0; somente teste, sem nova operação de produção, serviço, teto, preço ou permissão. Faturas reais CI/deploy/provedores desconhecidas, não zero; leitura fiscal mais onerosa e meta 60% continuam vinculantes. PR843 segue independente, aguardando validação; contador funcional permanece 182, próximo183.
+
+PR843 incorporado em 23/10/2026 às 12:40:26 Fortaleza: merge `4b5e8493aa09c010b25669c11c6944d79438d8df`, head testado `f2d2643d0ccdba3aad6088d5be6f1e0843af8e07`, 22/22 aprovados e árvore testada/predita/incorporada `dad40ee13510c43028184235a6e9e8f793a8cf8e`. Correção de prontidão da hidratação e consolidação das provas de direct charge. Domínio ainda na versão anterior; entrega183 não contabilizada até READY/exata versão/rotas. Histórico da falha anterior preservado. PR844 integra este main e exige nova execução completa no head integrado.
+
+## Entrega funcional183 — publicação confirmada (23/10/2026)
+
+PR843 incorporado às 12:40:26 Fortaleza; READY às 12:41:24.269 Fortaleza. Domínio marktmorgen.com na versão exata `4b5e8493aa09c010b25669c11c6944d79438d8df`, deployment `dpl_53Sw5qCC18VqACSRTZmQqwYY1jJL`; /, /platform, /pricing, /mission e /library retornaram200 com este mesmo deployment. Head testado `f2d2643d0ccdba3aad6088d5be6f1e0843af8e07`, 22/22 aprovados, árvores testada/predita/incorporada iguais. Campo de sites e salvamento aguardam prontidão da hidratação; rascunho, confirmação canônica e permissões preservados. Contador182→183 uma vez; próximo184. Custo incremental mensal/anual por Store/Studio/Scale0/0, sem serviço/operação adicional; faturas reais desconhecidas, não zero, margem60% não certificada. Histórico da falha anterior permanece acima. PR844 é regressão de teste sem entrega funcional própria; nova execução completa exigida após este registro.
+
 ## CA232 — Assistente sem renovação presumida (23/10/2026, 12:44 Fortaleza)
 
 Correção concreta: período expirado não cria mais um pool31dias apenas porque renews=true. A admissão do assistente fecha no fim registrado e reabre com período atualizado; nenhum novo request de fornecedor. Regressão percorre instante exato e quatro pontos após vencimento, pela rotina real askAssistant, verificando nenhuma chamada ao modelo e nenhum pool novo. Período vigente preservado. PR844 continua independente (suspensão por estado conhecido/disputa), sujeito à integração e nova validação completa.
 
 Escopo parcial: status active/período atualizado ainda não prova recibo de invoice quitada; disputa histórica, funding/reserva e reembolsos continuam pendentes em CA232. Não altera acesso a conteúdo comprado, preços, limites, opt-in ou gates de venda. Custo incremental Store/Studio/Scale mensal/anual0/0, nenhuma operação/serviço adicional; faturas reais desconhecidas, não zero; leitura mais onerosa100%LLC e meta60% não certificada. CI completo22 exigido no novo head; entrega funcional só após READY/domínio/versão, próximo184. Prova da entrega183 está no PR844.
+
+PR844 incorporado em23/10/2026 às13:09:53 Fortaleza: merge `b1d829e1582ba985350219818345f2b36c62036b`, head `4f19071961380b7c371a53f029f47fc084b34210`, 22/22 aprovados; árvores testada/predita/incorporada `aa81343733b1a0d6452b9bb815971edf247d1c10`. Job verify120506940626 confirmou às12:44:53 Fortaleza suspensão real por past_due/unpaid/canceled, bloqueio de modelo e disputa confirmada/encerramento/recusa recompra. Apenas teste/documentação; contador183 preservado, próximo184. PR845 integra este main e exige22 verificações completas no novo head.
 
 ## H4 — Lições da quarta auditoria da Hotmart (23/10/2026)
 
