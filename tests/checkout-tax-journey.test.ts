@@ -34,7 +34,13 @@ globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) =>
   const answer = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status });
   if (path === "/tax/settings") return answer(settings.body, settings.status);
   if (path === "/checkout/sessions" && method === "POST") {
-    checkouts.push(new URLSearchParams(String(init?.body)));
+    const body = new URLSearchParams(String(init?.body));
+    const headers = new Headers(init?.headers);
+    const context = `${body.get("mode")} / ${body.get("automatic_tax[enabled]") ?? "tax off"} / ${body.get("line_items[0][price_data][tax_behavior]") ?? "no behavior"}`;
+    is(`checkout uses the creator connected account: ${context}`, headers.get("Stripe-Account"), "acct_1TestLoom00001");
+    is(`platform credential acts on that account: ${context}`, headers.get("Authorization"), "Bearer sk_test_tax_journey_only");
+    is(`no platform destination or transfer routing: ${context}`, [...body.keys()].filter((key) => /transfer_data|on_behalf_of|destination/.test(key)), []);
+    checkouts.push(body);
     return answer({ id: `cs_test_${"t".repeat(24)}`, url: "https://checkout.stripe.com/c/pay/test" });
   }
   if (method === "GET") return answer({ object: "list", data: [], has_more: false });
