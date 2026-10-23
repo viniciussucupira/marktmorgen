@@ -5178,6 +5178,12 @@ PR845 incorporado às13:33:25 Fortaleza, merge `3a6d0f97000ec986179363cbd7791bb1
 
 Proveniência consolidada em docs/no-creator-default.md para PR844/845 e lacunas de recibo/reembolso das legendas. RefundCharge aceita HTTP-success sem prova de recibo e chamadores apagam pendência mesmo se falhar; não declarar reembolso concluído nem acrescentar retries/polling/retenção sem custos/tetos/reserva. Revisão sem execução real. Este registro/documentação não é entrega funcional adicional; CI completo pendente no novo head.
 
+## PR846 — falha móvel preservada e reparo de isolamento (23/10/2026)
+
+Head `40531e63b13eef26cd798f88aed9f4e4d8c0d82b` reprovado: Mobile render candidate job120533296662, 13:39:54.077 Fortaleza; home amostra1,390px, CPU4x/rede fria, interação408ms contra teto200ms, LCP820ms/CLS0. Outras amostras home56/40ms; pricing32ms; sales-pages32/32/40ms. Trace registra React document.ontoggle88ms antes de task391ms e segundo clique no summary da lista de benefícios; causa exclusiva não demonstrada. Não incorporar head falho, repetir só job ou aumentar teto.
+
+Fonte: summary e ul já possuem Suspense individuais, mas evento toggle nativo tem details como alvo fora dessas duas fronteiras. Reparo: envolver também o details inteiro em fronteira própria, mantendo as duas internas, todos os itens, textos, preços, IDs e comportamento nativo; evita escalada de hidratação pelo alvo toggle até o restante do card/preços. Hipótese consistente com trace, não causalidade exclusiva provada. Teste móvel e todos os seus cenários/limiares inalterados. Nova execução22 completa exigida. Custo incremental Store/Studio/Scale mensal/anual0/0, sem operação/serviço/retention adicional; custos reais desconhecidos, não zero; meta60% não certificada. Agora PR846 contém reparo funcional, candidato185 apenas após READY/domínio/versão/rotas; documentação isolada não incrementa contador184.
+
 ## H4 — Lições da quarta auditoria da Hotmart (23/10/2026)
 
 Solicitação do dono (23/10/2026,01h13, Fortaleza): incorporar as melhorias da quarta auditoria estratégica da Hotmart (hotmart.com) que ainda não existam no código nem na fila. Antes de cada item, verificar código e fila e implementar apenas a diferença. Fatos atribuídos à Hotmart exigem confirmação em fonte oficial datada antes de qualquer uso; números da Hotmart jamais podem ser apresentados como resultados do Marktmorgen.
