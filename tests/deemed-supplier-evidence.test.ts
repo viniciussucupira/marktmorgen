@@ -37,8 +37,8 @@ function evidenceProblems(record: Pick<DeemedSupplierRecord, "implementedIn" | "
       continue;
     }
     if (!read(path)?.regular) problems.push("implementation file missing: " + path);
-    const module = path.replace(/\.(?:ts|tsx|mjs)$/, "");
-    const references = [path, "@/" + module, "../" + module];
+    const sourceModule = path.replace(/\.(?:ts|tsx|mjs)$/, "");
+    const references = [path, "@/" + sourceModule, "../" + sourceModule];
     if (!testTexts.some(text => references.some(ref => text.includes('"' + ref + '"') || text.includes("'" + ref + "'")))) {
       problems.push("implementation has no referenced test: " + path);
     }
