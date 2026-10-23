@@ -5351,6 +5351,13 @@ Head ed3f5a6af9c68962e71ac66eea101f397753863b rejeitado: job 120677290109 termin
 
 Correção limitada ao preparo da leitura dos dois testes: aguardar networkidle antes das mesmas verificações de texto/foco, sem mudar expectativas, rotas, larguras, casos, limites ou tempos máximos. Suíte completa de 22 verificações obrigatória no novo head; nenhum rerun isolado autoriza conclusão. Sem alteração de runtime, preços, direitos ou gates; incremento mensal/anual por Store/Studio/Scale 0/0, sem novo fornecedor/operação. Faturas reais de CI continuam desconhecidas, não zero; nenhuma certificação de margem ou acessibilidade. PRs 857/858 precisam incorporar esta correção antes da conclusão. EM1 preservado na continuidade para inclusão documental após concluir a tarefa corrente, conforme pedido expresso; nenhuma implementação EM agora.
 
+### Publicações verificadas 190 e 191 (23/10/2026, Fortaleza)
+
+- Entrega190, PR857: head d3b39dd9c7dc31d8d99bd4458c799bc448367108, árvore bb959033d40ba4539871531f2efe22f20e5fbe78, incorporado 19:56:38 no commit6001673d5f2f2aa84b7d1391243ac1408d573065, 22/22 verificações, árvores testada/prevista/real iguais. READY19:57:26.348, dpl_5dPXLbZjnm35t9x4fUbzSjuo1ET4. marktmorgen.com e cinco GETs /, /platform, /pricing, /mission, /library HTTP200 com o mesmoDPL. Política explícita always e cancelamento ao fim do trial sem forma de pagamento, preservada nos fallbacks existentes; não certifica confirmação independente do cartão nem exposição integral de trial financiada.
+- Entrega191, PR858: head81fb986d8becaf4d37c0e8a621a5bb0bbe762486, árvore5fde170b86aa962972abb0bf4f97cbab7fc4693d, incorporado19:59:27 no commitf35581a543851fd3dfae9da4eea6792f60041b94, 22/22 verificações, árvores testada/prevista/real iguais. READY20:00:13.461, dpl_BQhr1Fohqzu75BmQcKynVqwPHWsQ. Mesmo domínio/cincoGETs200/DPL exato. Reembolso de application_fee só contado com recibo correspondente; moeda desconhecida/quantia insegura recusadas antes da mutação; falha torna execução incompleta. Recuperação durável, paginação integral e liquidação bancária ainda não certificadas.
+
+Custos incrementais de runtime por Store/Studio/Scale, mensal/anual:0/0 nas duas mudanças; mesmas ou menos chamadas existentes, mesma idempotência, sem novo retry/armazenamento/serviço/direito. Faturas reais de CI/provedores continuam desconhecidas, não zero. Most-tax,100%LLC e60%individual/global continuam vinculantes, não certificados. PLANS_ON_SALE=false, preços/limites/opt-in/gates preservados. Verificação de produção apenas GETs públicos; nenhum pagamento, reembolso ou conta real alterado. Logs runtime não auditados, sem afirmação de zero erros.
+
 ## H4 — Lições da quarta auditoria da Hotmart (23/10/2026)
 
 Solicitação do dono (23/10/2026,01h13, Fortaleza): incorporar as melhorias da quarta auditoria estratégica da Hotmart (hotmart.com) que ainda não existam no código nem na fila. Antes de cada item, verificar código e fila e implementar apenas a diferença. Fatos atribuídos à Hotmart exigem confirmação em fonte oficial datada antes de qualquer uso; números da Hotmart jamais podem ser apresentados como resultados do Marktmorgen.
@@ -5673,3 +5680,51 @@ Testes: que a sugestão aparece para erros comuns de domínio e de final, não a
 Regras para o item: é proibido criar contas, aceitar termos, contratar serviços, pagar qualquer valor, solicitar aprovações e alterar preços, limites visíveis, comissão, PLANS_ON_SALE, tax gate, art. 9a ou a revisão comercial. Testes somente com fornecedores simulados: nenhum e-mail real, nenhuma cobrança real e nenhum registro real de cliente alterado. Todo texto público em inglês americano, com a acessibilidade exigida pela Parte A do item 274 [AX1]. Nada de depoimentos, números, resultados, escassez ou urgência inventados, nem afirmação de superioridade sobre a ThriveCart ou sobre qualquer outro concorrente sem fonte oficial datada.
 
 Estado inicial: na fila. Ao concluir, registre a data e a hora de Fortaleza, o commit, o resultado da suíte completa e a publicação.
+
+## EM — Envios para a lista pelo fornecedor mais barato (23/10/2026)
+
+Ordem: após todos os itens anteriores; este item não bloqueia nenhum outro. Inclusão documental após concluir a tarefa corrente; nada implementado agora.
+
+Solicitação do dono (23/10/2026, 18h58, horário de Fortaleza): fazer com que os e-mails enviados para a lista dos criadores (boletins, campanhas e sequências) usem somente o fornecedor mais barato, para que o pior caso de custo desses envios seja calculado pelo preço dele, e, com isso, aumentar os limites de envio dos planos onde a margem de 60% se mantiver.
+
+REGRA DOS 60% (OBRIGATÓRIA): todo cliente pagante, considerado isoladamente e usando 100% de todos os direitos do plano no pior mês, deve manter margem de lucro líquido MÍNIMA de 60%, depois de todos os custos e de todos os impostos, inclusive os brasileiros; a margem pode ser maior, mas nunca menor, e a mesma regra vale para a empresa como um todo. Antes de qualquer código, calcule o custo máximo mensal e anual do item por plano, com teto automático aplicado antes do gasto. Custo desconhecido não pode ser considerado zero. Nunca conte a cota gratuita de um fornecedor como custo zero; use o preço pago mais caro. Use a leitura que resultar em MAIS imposto (docs/tax-uncertainty.md). Desde 22/10/2026, todos os custos fixos da LLC são atribuídos integralmente ao Marktmorgen (item 275 [FX1]).
+
+309. [EM1] E-mails para a lista somente pela Amazon SES, com fila de espera, e limites de envio maiores
+
+Estado: na fila.
+
+Situação atual:
+- lib/email.ts envia cada e-mail pela Amazon SES (US$ 0,10 por mil, lib/ses.ts) sempre que a conta permite e, quando a Amazon não aceita, envia o mesmo e-mail na hora pelo Resend, que custa US$ 0,90 por mil acima do plano.
+- Como qualquer e-mail pode cair no Resend, os limites de e-mails para a lista em lib/plan.ts (PRO_MONTHLY_EMAILS = 7.000 e SCALE_MONTHLY_EMAILS = 10.000) foram calculados ao preço do Resend.
+- Observado pelo dono no console da Amazon em 23/10/2026, às 18h53: a conta "Marktmorgen" (553015629483), na região us-east-1, tem o SES liberado para produção, com cota de 50.000 e-mails por 24 horas e 14 por segundo; os domínios marktmorgen.com e mail.marktmorgen.com estão verificados; o status da conta é "Íntegro".
+- Não verificado: se as quatro configurações AWS_SES_* de lib/ses.ts estão definidas na produção. Confirme isso sem expor nenhum valor e sem alterar configurações; se faltarem, registre em "Depende do dono" o passo exato.
+
+O que construir, implementando apenas a diferença:
+1. Separar os e-mails em duas classes, definidas no código e cobertas por teste:
+(a) e-mails de serviço: links de acesso, recibos, entrega de produtos, avisos de cobrança, de reembolso e de encerramento de loja, e qualquer e-mail exigido por lei ou pelos termos;
+(b) e-mails para a lista: campanhas, boletins, sequências e automações de marketing enviados pelo criador aos contatos dele.
+2. Os e-mails de serviço continuam como hoje: Amazon primeiro e Resend em seguida, na hora.
+3. Os e-mails para a lista nunca saem pelo Resend. Se a Amazon não aceitar (conta em análise, pausada, cota do dia usada ou sem resposta), eles esperam numa fila durável e são tentados de novo sozinhos, respeitando a cota e a taxa por segundo lidas da Amazon. Cada e-mail sai no máximo uma vez, usando a marca de lote que já existe (nl:ses:did). Se um envio continuar parado por mais de 72 horas, o criador é avisado no estúdio, em linguagem simples, e pode cancelar o envio; nada é descartado em silêncio.
+4. Capacidade total: a cota da Amazon é da plataforma inteira. Calcule, a partir da cota lida da Amazon, quantos e-mails para a lista por mês a plataforma consegue entregar, e garanta que a soma dos limites de todas as lojas pagantes nunca passe de uma fração segura dessa capacidade. Se uma nova assinatura ou troca de plano fizesse a soma passar dessa fração, ela é recusada sozinha até a cota aumentar; a Amazon aumenta a cota por conta própria conforme a conta envia bem, e o pedido de aumento manual fica em "Depende do dono". Nunca venda um limite que a plataforma não consiga entregar.
+5. Custo do pior caso dos e-mails para a lista, a partir de fontes oficiais datadas (aws.amazon.com/ses/pricing e a página de preços do Amazon SNS), sem contar cota gratuita:
+- US$ 0,10 por mil e-mails;
+- os dados enviados por gigabyte, pelo tamanho máximo de e-mail que o código permite;
+- as notificações de devolução e de reclamação pelo SNS;
+- qualquer recurso pago que o código use, como o VDM ou um IP dedicado.
+O plano Pro do Resend continua nos custos fixos, e os e-mails de serviço continuam contados ao preço do Resend no pior caso de cada plano.
+6. Com o novo custo, refaça o cálculo de cada plano nos dois intervalos (tests/plan-cost-registry.ts, tests/spend-floor.test.ts, tests/margin-alignment-table.ts e scripts/margin-alignment.mjs). Aumente os limites de e-mails para a lista do Studio e do Scale até o maior valor redondo que mantém 60% nos dois intervalos com a folga do spend floor, e avalie se o Store pode passar a ter um limite de e-mails para a lista com a mesma regra. Atualize lib/plan.ts, docs/value-presentation-2026-10-18.md e docs/margin-alignment-2026-10-18.md. As páginas de preços e as comparações leem os números do código.
+7. As proteções de entregabilidade continuam como estão: lib/mail-health.ts (2% de devoluções e 0,08% de reclamações por loja), descadastro em um clique e endereço postal.
+
+Testes somente com Amazon e Resend simulados, que falham se:
+- um e-mail para a lista sair pelo Resend;
+- um e-mail para a lista esperando na fila for enviado duas vezes ou descartado sem aviso;
+- um e-mail de serviço deixar de cair no Resend quando a Amazon falhar;
+- o custo dos e-mails para a lista divergir do preço oficial registrado;
+- algum plano ficar abaixo de 60% em qualquer intervalo;
+- uma venda for aceita quando a soma dos limites passar da capacidade segura.
+
+Regras para o item: é proibido criar contas, aceitar termos, contratar serviços, pagar qualquer valor, alterar configurações reais da Amazon, do Resend ou da Vercel, pedir aumento de cota, enviar e-mails reais, solicitar aprovações e alterar preços, comissão, PLANS_ON_SALE, tax gate, art. 9a ou a revisão comercial. Limites visíveis só podem subir, nunca descer. Todo texto público em inglês americano, com a acessibilidade exigida pela Parte A do item 274 [AX1]. Nenhuma página pode prometer envios "sem limite".
+
+Estado inicial: na fila. Ao concluir, registre a data e a hora de Fortaleza, o commit, o resultado da suíte completa e a publicação.
+
+Proveniência do registro: pedido integral recebido pelo anexo Texto colado.txt; a tarefa corrente PR #856 foi incorporada em 23/10/2026 19:52:35 (Fortaleza), commit c21b47474d28b44e5fe3520f1d37691e4f002641, com 22/22 verificações e igualdade das árvores testada, prevista e incorporada. Sem entrega funcional ou incremento do contador. Conferidos main, 13 PRs abertos e 413 refs codex/* (três heads alterados desde auditoria anterior relidos; demais SHAs imutáveis já auditados): EM1 ausente e 309 livre. As informações de conta, preços e capacidade acima são observações/briefing do dono, ainda não verificações independentes de produção ou fontes oficiais para implementação. Antes de implementar, verificar fontes datadas, custos máximos mensais/anuais por plano, capacidade global, tetos e reserva; desconhecido reprova. Este registro documental não altera configurações nem envia mensagens; incremento operacional por plano mensal/anual 0/0, faturas reais de CI desconhecidas, não zero; margem de 60% não certificada.
