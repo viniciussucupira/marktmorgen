@@ -4970,6 +4970,16 @@ parseProduct recusa estoque explícito malformado em vez de convertê-lo em ilim
 Custo incremental máximo mensal/anual Store0/0,Studio0/0,Scale0/0; sem operação paga/chave/TTL/dependência/direito adicional. Faturas reais CI/deploy/provedores desconhecidas, não zero.100%LLCMarktmorgen, leitura fiscal mais onerosa Brasil/EUA e60% individual/global vinculantes e não certificados; gates/preços/limites/opt-ins preservados.205 atomicidade por variante permanece incompleto. Logs de execução não consultados, sem afirmação de zero erros. Prova documental não incrementa contador.
 
 
+## Entrega funcional175 — erros legíveis e cabeçalho estável (23/10/2026)
+
+PR821, head `c984bced475a9a14c87c8bb9ea6ea794843977cc`,22/22 verificações completas aprovadas; árvore testada/prevista/incorporada `8aecf71cf950e899afdf3cf4ce4a195729fbaaef`. Incorporação real `aeabb1cf35a10817c8c56db747b00ce329135123` em **23/10/2026 00:28:25Fortaleza**. READY `dpl_DWwKkuCDjLPciyoCdW33eFDVt4rr` em **00:29:09.972Fortaleza**; marktmorgen.com confirmou SHAexato; /,/platform,/pricing,/mission,/library200mesmoDPL. Contador174→175uma vez,próxima176.
+
+PixelEditor usa somente mensagens próprias da tabela para respostas inesperadas __proto__/constructor, preserva explicação existente,rascunho/repetição/confirmação estrita/consentimento/GPC. Fluxo real sintético390/1280 cobre ambos, texto exato e contagens de operações interceptadas, mantendo sucesso/refusa/atribuição anteriores. Não é alegação de poluição de protótipo. Cabeçalho da home deixa de usar fallback de streaming vazio; rodapé conserva limite independente, conteúdo/controles preservados.
+
+Falha anterior preservada: headbe5bb5b39821da118abbaa62ace39626a9a50dc1, Mobilejob120215285610,23/10 **00:00:50Fortaleza**. Homeamostra2CLS0.7909138033175356 em801.9ms: mainy0→138.625 quando chega cabeçalho. OutrasCLS0,todas9interações passaram(home128/48/48). Correção seguida de suíte completa22/22 no novo head, sem relaxar testes,limiares,timeout ou rerunisolado. Medição de laboratório não certifica INP/CWVdecampo.
+
+Custo incremental máximo mensal/anual Store0/0,Studio0/0,Scale0/0; semoperação paga/chave/TTL/dependência/direito adicional. Faturas reaisCI/deploy/provedoresdesconhecidas,nãozero.100%LLCMarktmorgen,leitura fiscal maisonerosa Brasil/EUA e60%individual/global vinculantes,não certificados. PLANS_ON_SALE=false,preços,limites,opt-ins e gatespreservados. Logsdeexecuçãonãoconsultados,semalegaçãodezeroerros. Registrodocumentalnãoincrementa contador;HG/SXordem e estadospreservados.
+
 ## HG — Lições da segunda auditoria da HighLevel (22/10/2026)
 
 **Solicitação do dono:**22/10/2026,19h34Fortaleza; segunda auditoria estratégica da HighLevel (gohighlevel.com), elaborada com o Gemini. Inclusão feita após concluir normalmente a tarefa atual (PR818, entrega174). **Ordem de execução:** depois de tudo o que já existe na fila; estes itens não bloqueiam nenhum outro. Antes de cada item, conferir código e fila e implementar somente a diferença ainda inexistente. Os fatos atribuídos à HighLevel exigem confirmação em fonte oficial datada antes de qualquer uso; seus números jamais serão apresentados como resultados do Marktmorgen. Esta inclusão não verifica nem publica tais fatos.
