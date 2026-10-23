@@ -90,7 +90,7 @@ export function PixelEditor({ pixels, canViewAttribution = false }: { pixels: Pi
           : "No pixel on your store."}
       </p>
       <details ref={disclosure} className="mt-4">
-        <summary className="btn btn-secondary w-fit cursor-pointer list-none [&::-webkit-details-marker]:hidden">
+        <summary role="button" className="btn btn-secondary w-fit cursor-pointer list-none [&::-webkit-details-marker]:hidden">
           {hasPixels(pixels) ? "Change pixels" : "Add a pixel"}
         </summary>
         <form onSubmit={save} className="mt-5" noValidate aria-busy={busy}>
