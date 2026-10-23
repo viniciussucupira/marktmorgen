@@ -5298,6 +5298,13 @@ No mesmo head, mobilejob120638388006 passou9amostras: home992/168,596/48,596/56;
 
 PricingValue é uma seção estática; seuslinks agora são âncoras nativas com os mesmoshrefs, textos, nomes acessíveis e alvos, removendo a navegação de cliente nesseslinks. Nenhum teste de foco, alvo ou limite foi alterado. O sintoma não prova causa exclusiva de hidratação; correção será avaliada pela suíte inteira e9ensaios idênticos no novohead. ChecklistReact aplicado: servidor permanece servidor, semestado/efeito/request extra, keysestáveis e sem mudança de conteúdo. Custo incremental mensal/anual0/0 porplano, semfornecedor/operaçãonova, faturas reais desconhecidas não são zero. Não reexecutarjobisolado nemmesclarheadfalho.
 
+
+### PR #851 incorporado e publicação funcional 187 confirmada — 23/10/2026
+
+Incorporado em 23/10/2026 às 18h17m37s (Fortaleza), commit `30dc47816dd204687cf4c6de1fe8d8d9abfcd26b`, head testado `9c9d9da7c423eed27a514dd55ba30422fce713df`, árvore testada e incorporada `3dc0865dbbd5a74cfa8ed430590874d2c60b507d`. Suíte completa: 22/22 verificações aprovadas no novo head após as correções; nenhuma reexecução isolada usada como conclusão. As falhas anteriores e suas evidências ficam preservadas abaixo. Página inicial: seções abaixo do hero isoladas por Suspense; PricingValue usa links HTML nativos com destinos e nomes preservados. O teste fiscal observa o POST simulado explícito de descontos. SY1/SY2/EC1 apenas registrados, sem implementação dessas funcionalidades.
+
+Produção: READY em 23/10/2026 às 18h18m29,911s (Fortaleza), domínio `marktmorgen.com`, versão exata `30dc47816dd204687cf4c6de1fe8d8d9abfcd26b`, deployment `dpl_671tcEAd9rnpK7fB4tJ5YGV2vQrg`; `/`, `/platform`, `/pricing`, `/mission` e `/library` responderam 200 com esse mesmo deployment antes de incrementar 186→187. Nove amostras móveis sintéticas frias: LCP máximo 1148 ms, interação até pintura máxima 136 ms, CLS 0 e zero escritas de API; não equivalem a INP de campo nem certificação p75. Incremento operacional mensal/anual: Store 0/0, Studio 0/0, Scale 0/0; nenhuma nova operação paga. Faturas reais de CI/fornecedores desconhecidas não viram zero; nenhuma certificação da margem de 60%. Gates, preços, limites, conteúdo, identificadores e idiomas preservados.
+
 ## H4 — Lições da quarta auditoria da Hotmart (23/10/2026)
 
 Solicitação do dono (23/10/2026,01h13, Fortaleza): incorporar as melhorias da quarta auditoria estratégica da Hotmart (hotmart.com) que ainda não existam no código nem na fila. Antes de cada item, verificar código e fila e implementar apenas a diferença. Fatos atribuídos à Hotmart exigem confirmação em fonte oficial datada antes de qualquer uso; números da Hotmart jamais podem ser apresentados como resultados do Marktmorgen.
@@ -5583,5 +5590,40 @@ O que construir, implementando apenas a diferença:
 Testes somente com Stripe e e-mail simulados, que falham se: um membro for cobrado entre o fim do plano e o encerramento; uma assinatura continuar ativa depois do encerramento; o valor não usado divergir do cálculo proporcional; um reembolso for feito duas vezes; o comprador não receber o aviso de 7 dias; ou a frase fixa faltar em algum caminho de checkout listado acima.
 
 Regras para o item: é proibido criar contas, aceitar termos, contratar serviços, pagar qualquer valor, fazer reembolso real, solicitar aprovações e alterar preços, limites visíveis, comissão, CLOSING_DAYS, PLANS_ON_SALE, tax gate, art. 9a ou a revisão comercial. Nenhum e-mail real, nenhuma cobrança ou devolução real e nenhum registro real de cliente alterado. Todo texto público em inglês americano, com a acessibilidade exigida pela Parte A do item 274 [AX1]. Nada de escassez, urgência ou números inventados.
+
+Estado inicial: na fila. Ao concluir, registre a data e a hora de Fortaleza, o commit, o resultado da suíte completa e a publicação.
+
+## TC — Lições da auditoria da ThriveCart (23/10/2026)
+
+**Ordem:** após todos os itens anteriores; este item não bloqueia nenhum outro. Inclusão documental após concluir a tarefa corrente; nada implementado agora.
+
+Proveniência: pedido integral do dono recebido nesta conversa em 23/10/2026 às 16h42 (Fortaleza). Registro após a conclusão da entrega 187. Antes desta gravação, main, todos os 11 PRs abertos e os 408 heads codex/* foram atualizados; a auditoria das 76 branches recentes foi reutilizada pelos SHAs imutáveis e comparada com os heads atuais; os únicos heads alterado ou novo desde aquela listagem são 851 e 853, cujas filas foram relidas. Nenhuma seção TC, etiqueta TC1 ou ocupação do número 308 encontrada no escopo conferido; número 308 mantido, após EC307. A situação atual e o custo zero abaixo são o briefing do dono, a verificar no código e no orçamento antes da execução; não são certificação de implementação, custo total ou margem. Conferir novamente main/PRs/branches antes de implementar e executar apenas a diferença. Nenhum fato competitivo foi usado como afirmação pública neste registro.
+
+Solicitação do dono (23/10/2026, 16h42, horário de Fortaleza): incorporar ao Marktmorgen as melhorias identificadas na auditoria estratégica da ThriveCart (thrivecart.com) que ainda não existam no código nem na fila. Antes do item, verifique o código e a fila e implemente apenas a diferença. Os fatos que a auditoria atribui à ThriveCart devem ser confirmados em fonte oficial datada antes de qualquer uso, e os números da ThriveCart jamais podem ser apresentados como resultados do Marktmorgen.
+
+REGRA DOS 60% (OBRIGATÓRIA): todo cliente pagante, considerado isoladamente e usando 100% de todos os direitos do plano no pior mês, deve manter margem de lucro líquido MÍNIMA de 60%, depois de todos os custos e de todos os impostos, inclusive os brasileiros; a margem pode ser maior, mas nunca menor, e a mesma regra vale para a empresa como um todo. Antes de qualquer código, calcule o custo máximo mensal e anual do item por plano, com teto automático aplicado antes do gasto. Custo desconhecido não pode ser considerado zero. Use a leitura que resultar em MAIS imposto (docs/tax-uncertainty.md). Desde 22/10/2026, todos os custos fixos da LLC são atribuídos integralmente ao Marktmorgen (item 275 [FX1]).
+
+308. [TC1] Sugestão de correção para e-mail digitado errado
+
+Estado: na fila.
+
+Objetivo: evitar que um comprador ou um criador perca o produto, o link de acesso ou o contato por ter digitado o e-mail com erro, como "maria@gmial.com" ou "joao@hotmail.con".
+
+Situação atual: nenhum campo de e-mail das páginas do próprio Marktmorgen sugere correção.
+
+Onde aplicar: em todos os campos de e-mail desenhados pelo Marktmorgen. Isso inclui o cadastro e o acesso do criador, os formulários das lojas, os produtos gratuitos, a lista de espera, o boletim, o contato, o pedido de afiliado, a gestão da assinatura pelo membro, a consulta de pedidos pelo comprador e a caixa de lembrete do checkout (lib/assistant-reminder*.ts). O campo de e-mail da página de pagamento do Stripe fica de fora, porque não é desenhado pelo Marktmorgen.
+
+Como funciona:
+1. A verificação acontece no próprio navegador, sem nenhuma chamada a servidor ou fornecedor, comparando o domínio digitado com uma lista embutida dos provedores de e-mail mais usados nos EUA, no Canadá, no Reino Unido e na União Europeia, e com os finais de domínio mais comuns (.com, .net, .org, .co.uk, .ca, .de, .fr e outros), por distância de edição pequena.
+2. Quando houver um provável erro, aparece abaixo do campo, depois que a pessoa sai dele ou tenta enviar, a frase "Did you mean maria@gmail.com?" com um botão que preenche a sugestão. A pessoa pode ignorar e manter o que digitou; nada é corrigido sozinho, nada é bloqueado e o envio continua possível.
+3. Acessibilidade (Parte A do item 274 [AX1]): a sugestão é anunciada em região ao vivo educada (aria-live="polite"), ligada ao campo por aria-describedby, sem tirar o foco do campo; o botão tem nome acessível completo, alvo de pelo menos 44 × 44 px, funciona por teclado, toque e voz, e respeita alto contraste e modo escuro. Nada pisca nem se move.
+4. Idiomas: a frase sai em todos os idiomas de comprador que as lojas já têm (lib/buyer-words), sem acrescentar idiomas novos.
+5. Privacidade: nenhum e-mail digitado é guardado, registrado ou enviado por causa da sugestão. Atualize a política de privacidade somente se algo nela precisar mudar.
+
+Custo: zero por cliente, sem fornecedor; o tamanho da lista embutida entra no orçamento de desempenho das páginas (itens 277 e 281).
+
+Testes: que a sugestão aparece para erros comuns de domínio e de final, não aparece para endereços corretos nem para domínios próprios desconhecidos, nunca altera o campo sem o clique, é anunciada a leitores de tela, funciona só com teclado e não faz nenhuma chamada de rede.
+
+Regras para o item: é proibido criar contas, aceitar termos, contratar serviços, pagar qualquer valor, solicitar aprovações e alterar preços, limites visíveis, comissão, PLANS_ON_SALE, tax gate, art. 9a ou a revisão comercial. Testes somente com fornecedores simulados: nenhum e-mail real, nenhuma cobrança real e nenhum registro real de cliente alterado. Todo texto público em inglês americano, com a acessibilidade exigida pela Parte A do item 274 [AX1]. Nada de depoimentos, números, resultados, escassez ou urgência inventados, nem afirmação de superioridade sobre a ThriveCart ou sobre qualquer outro concorrente sem fonte oficial datada.
 
 Estado inicial: na fila. Ao concluir, registre a data e a hora de Fortaleza, o commit, o resultado da suíte completa e a publicação.
