@@ -28,6 +28,7 @@ const PATH = streamPath("a".repeat(32), "lesson000001", VIDEO);
 let stripe: { path: string; body: URLSearchParams }[] = [];
 const bunny: { method: string; path: string; body: unknown }[] = [];
 let declineCard = false;
+let paidReceipt: unknown = undefined;
 let serviceRefuses = false;
 let delivered: string[] = [];
 
@@ -48,7 +49,7 @@ globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) =>
   if (path === "/invoices") return json({ id: "in_Captions00001", status: "draft" });
   if (path === "/invoiceitems") return json({ id: "ii_Captions0001" });
   if (path.endsWith("/finalize")) return json({ id: "in_Captions00001", status: "open" });
-  if (path.endsWith("/pay")) return declineCard ? json({ error: { code: "card_declined", message: "Your card was declined." } }, 402) : json({ id: "in_Captions00001", status: "paid", payment_intent: "pi_Captions000001" });
+  if (path.endsWith("/pay")) return declineCard ? json({ error: { code: "card_declined", message: "Your card was declined." } }, 402) : json(paidReceipt !== undefined ? paidReceipt : { id: "in_Captions00001", status: "paid", payment_intent: "pi_Captions000001" });
   if (path.endsWith("/void")) return json({ id: "in_Captions00001", status: "void" });
   if (path === "/refunds") return json({ id: "re_1" });
   return json({});
@@ -111,6 +112,30 @@ async function main(): Promise<void> {
   } finally {
     redis.pipeline = realPipeline;
     redis.run(["DEL", pending]);
+  }
+
+  part("An unconfirmed payment never starts supplier work");
+  try {
+    for (const receipt of [
+      null, [], {}, { payment_intent: "pi_Captions000001" },
+      { status: "open", payment_intent: "pi_Captions000001" },
+      { status: "paid" }, { status: "paid", payment_intent: null },
+      { status: "paid", payment_intent: "" }, { status: "paid", payment_intent: false },
+      { status: "paid", payment_intent: 1 }, { status: "paid", payment_intent: {} },
+    ]) {
+      stripe = [];
+      bunny.length = 0;
+      paidReceipt = receipt;
+      const answer = await requestAutoCaptions(store, PATH, "en", ["es"]);
+      is("unknown payment " + JSON.stringify(receipt) + " closes supplier admission",
+        [answer.ok, bunny.length, stripePaths().filter((p) => p.endsWith("/pay")).length,
+          stripePaths().filter((p) => p.endsWith("/void")).length, redis.run(["GET", pending])],
+        [false, 0, 1, 1, null]);
+    }
+  } finally {
+    paidReceipt = undefined;
+    stripe = [];
+    bunny.length = 0;
   }
 
   part("Charged first, then asked for");

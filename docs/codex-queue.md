@@ -5184,6 +5184,12 @@ Head `40531e63b13eef26cd798f88aed9f4e4d8c0d82b` reprovado: Mobile render candida
 
 Fonte: summary e ul já possuem Suspense individuais, mas evento toggle nativo tem details como alvo fora dessas duas fronteiras. Reparo: envolver também o details inteiro em fronteira própria, mantendo as duas internas, todos os itens, textos, preços, IDs e comportamento nativo; evita escalada de hidratação pelo alvo toggle até o restante do card/preços. Hipótese consistente com trace, não causalidade exclusiva provada. Teste móvel e todos os seus cenários/limiares inalterados. Nova execução22 completa exigida. Custo incremental Store/Studio/Scale mensal/anual0/0, sem operação/serviço/retention adicional; custos reais desconhecidos, não zero; meta60% não certificada. Agora PR846 contém reparo funcional, candidato185 apenas após READY/domínio/versão/rotas; documentação isolada não incrementa contador184.
 
+## CA232 — Comprovação de pagamento antes de legendas (23/10/2026)
+
+Regressão sintética adicional do caminho real requestAutoCaptions→chargeNow: onze recibos de pagamento ausentes/incompletos ou status não pago recusam a operação, sem chamada ao fornecedor, um único pay e uma tentativa de void, sem pendência de transcrição criada. Casos de cobrança válida, recusa, exclusividade, entrega parcial e reembolso já existentes preservados. Não prova recebimento líquido, autorização de estorno, reserva de contestação nem todas as cobranças do criador; CA232 permanece parcial. Nenhuma operação real.
+
+Somente teste: custo incremental de produção Store/Studio/Scale mensal/anual0/0, sem novo request/serviço/preço/permissão; custos reais CI/provedor desconhecidos, não zero; margem60% não certificada. CI completo22 exigido, sem entrega funcional adicional; contador185 permanece. Registro H5 em PR847 continua separado e sem implementação de recurso.
+
 ## H4 — Lições da quarta auditoria da Hotmart (23/10/2026)
 
 Solicitação do dono (23/10/2026,01h13, Fortaleza): incorporar as melhorias da quarta auditoria estratégica da Hotmart (hotmart.com) que ainda não existam no código nem na fila. Antes de cada item, verificar código e fila e implementar apenas a diferença. Fatos atribuídos à Hotmart exigem confirmação em fonte oficial datada antes de qualquer uso; números da Hotmart jamais podem ser apresentados como resultados do Marktmorgen.
