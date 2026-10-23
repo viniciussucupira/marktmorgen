@@ -5045,6 +5045,11 @@ Entrega177 confirmada: PR826 merge498d0c3d850d04cd598665c6b899088232114ebb em23/
 
 Próxima revisão de clareza: menu ainda chama de Pro as opções de e-mail/domínio, enquanto lib/plan.ts e páginas dessas funções usam Studio. Corrigir apenas os dois rótulos públicos, preservando identificador pro, preços, limites, permissões, opt-in e gates. Suíte22completa obrigatória no novo head antes de incorporar/publicar; ajuste ainda não é entrega178. Sem nova chamada, armazenamento ou fornecedor: incremento máximo mensal/anual0/0porStore/Studio/Scale. FaturasCI/deploy reais desconhecidas,nãozero; leitura fiscal mais onerosa e100%LLC vinculantes,60%individual/global não certificado,PLANS_ON_SALE=false e demais gates mantidos.
 
+
+## Falha preservada — PR827 (23/10/2026 UTC)
+
+Head1477c8a0bcd1f1d003aea672d63ac2e800edf4dd, WebKit job120283281987 em23/10/2026 às04:07:32.507Fortaleza: formulário Meta Pixel ID não ficou acessível após ativar Change pixels; timeout30s. Texto do menu não prova causa. O summary nativo não expunha a prontidão já usada pelo fieldset. Correção torna essa prontidão explícita com aria-disabled e recusa ativação antes da inicialização; teste aguarda esse estado real, abre por Enter e exige details.open antes das verificações existentes. Não aumenta timeout, remove cenário, repete clique nem enfraquece limites. Nova suíte22completa obrigatória; nenhuma publicação178 confirmada. Mesmas operações e incremento máximo mensal/anual0/0por plano; faturas desconhecidas,nãozero,demais gates preservados.
+
 ## H4 — Lições da quarta auditoria da Hotmart (23/10/2026)
 
 Solicitação do dono (23/10/2026,01h13, Fortaleza): incorporar as melhorias da quarta auditoria estratégica da Hotmart (hotmart.com) que ainda não existam no código nem na fila. Antes de cada item, verificar código e fila e implementar apenas a diferença. Fatos atribuídos à Hotmart exigem confirmação em fonte oficial datada antes de qualquer uso; números da Hotmart jamais podem ser apresentados como resultados do Marktmorgen.
