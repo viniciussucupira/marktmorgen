@@ -5058,6 +5058,10 @@ Entrega178 confirmada: PR827 merge1a907f0e8babaaa9258f16daf64a204f66149daa em23/
 
 RevisãoB2/151: FAQ compartilhada home/preços usa grafia britânica instalment na resposta de contrato. Trocar somente por installment em inglês americano, sem mudar o significado contratual. Item201 reconciliado com prova já existente, preservando estados históricos e lacunas manuais; nenhuma matriz duplicada. Suíte22completa obrigatória neste novo head antes de incorporar/publicar. Sem operação/fornecedor/armazenamento novo: incremento máximo mensal/anual0/0porStore/Studio/Scale. Custos reaisCI/deploy desconhecidos,nãozero; leitura mais onerosa e100%LLC vinculantes,60%individual/global não certificado,preços/limites/opt-in/gates inalterados.
 
+## Falha móvel preservada — PR829 (23/10/2026 UTC)
+
+Head482ceeb806f406f3d1562e2984e75b3dc7ea69dd,job120306932148,23/10/2026 às05:00:31.801Fortaleza: primeira interação fria da home280ms contra teto estrito<200,LCP1264ms/CLS0; outras8interações32–56ms/todasCLS0. Alvo: summary nativo de detalhes dos planos. Traço contém69.2ms em document.ontransitionrun junto da interação; causalidade exclusiva não comprovada. Retirar a transição decorativa200ms do ícone desse controle, preservando rotação instantânea, estado visual aberto/fechado, semântica nativa, teclado, conteúdo e todos os limiares/casos. Não adicionar espera nem rerunisolado; nova suíte22completa obrigatória. Sem publicação179confirmada. Nenhuma nova operação/fornecedor; incremento mensal/anual0/0por plano, custos reais desconhecidos,nãozero,gates inalterados.
+
 ## H4 — Lições da quarta auditoria da Hotmart (23/10/2026)
 
 Solicitação do dono (23/10/2026,01h13, Fortaleza): incorporar as melhorias da quarta auditoria estratégica da Hotmart (hotmart.com) que ainda não existam no código nem na fila. Antes de cada item, verificar código e fila e implementar apenas a diferença. Fatos atribuídos à Hotmart exigem confirmação em fonte oficial datada antes de qualquer uso; números da Hotmart jamais podem ser apresentados como resultados do Marktmorgen.
