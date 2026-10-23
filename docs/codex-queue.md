@@ -5282,6 +5282,13 @@ O teste lia texto deliberadamente após domcontentloaded e abria details antes d
 
 Incorporado em 23/10/2026 17:15:29 Fortaleza, commit 17e12a5b1f629f5cab76ef498545c80abec6ce07, head f5b7fb69d6752211d8a3b973d71c715d8618acc6, árvore testada/prevista/incorporada 97f85b929521cd78bf95fe9651d163dbfb252126, suíte completa 22/22 aprovada. AGENTS.md e início desta fila contêm a regra e a revisão única. Nenhum item duplicado ou renumerado; registro documental sem incremento do contador 186. A confirmação da entrega 186 no início desta fila atualiza o estado histórico “publicação pendente” registrado para #852. Faturas reais desconhecidas continuam não sendo zero.
 
+
+### Falha móvel e particionamento da hidratação — PR #851
+
+Head e6a90b2bad96a17c8864c8642a3e60226ef3cad8, job 120635155141: primeira amostra da home em 23/10/2026 17:19:52.674 Fortaleza mediu LCP2604ms e interação216ms, ambos reprovados, CLS0. Outras amostras home712/56 e624/40; pricing616/32,616/48,616/32; sales-pages612/32,612/32,628/32. Laboratório frio390px, CPU4x, latência150ms,1.6Mbps, terceiros bloqueados, zero escritasAPI. Proxy sintético, não INP de campo ou p75 certificado.
+
+Trace registra tarefa React589ms antes da interação e117ms sobreposta ao primeiro pointer, no summary nativo das vantagens do plano (scrollY22890); não prova causa exclusiva. Particionadas as seções abaixo do hero e a prova da plataforma em boundaries Suspense próprias, preservando conteúdo SSR, hero, conteúdo dos criadores, preços, limites, direitos e controles nativos. Nenhum novo pedido ou operação paga: custo incremental mensal/anual0/0 por plano; faturas reais desconhecidas não são zero. Novo head exige os mesmos9ensaios e suíte22completa; nenhum limiar, cenário, alvo ou cache relaxado. Não aprovar nem reexecutar isoladamente o head reprovado.
+
 ## H4 — Lições da quarta auditoria da Hotmart (23/10/2026)
 
 Solicitação do dono (23/10/2026,01h13, Fortaleza): incorporar as melhorias da quarta auditoria estratégica da Hotmart (hotmart.com) que ainda não existam no código nem na fila. Antes de cada item, verificar código e fila e implementar apenas a diferença. Fatos atribuídos à Hotmart exigem confirmação em fonte oficial datada antes de qualquer uso; números da Hotmart jamais podem ser apresentados como resultados do Marktmorgen.
