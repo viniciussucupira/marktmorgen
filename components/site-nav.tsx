@@ -58,8 +58,8 @@ const PRODUCT_GROUPS: { label: string; items: MenuItem[] }[] = [
       item("Numbers and pixels", "Visits, sources, sales, ad pixels.", "/platform/insights", "chart"),
       item("Affiliates", "A link for each. You pay them.", "/platform/affiliates", "handshake"),
       item("Outreach", "A pitch to a sponsor or a partner.", "/platform/outreach", "target"),
-      item("Email to your list", "Broadcasts and sequences. Pro.", "/platform/email", "mail"),
-      item("Your own domain", "shop.yourname.com. Pro.", "/platform/domain", "globe"),
+      item("Email to your list", "Broadcasts and sequences. Studio.", "/platform/email", "mail"),
+      item("Your own domain", "shop.yourname.com. Studio.", "/platform/domain", "globe"),
     ],
   },
 ];
