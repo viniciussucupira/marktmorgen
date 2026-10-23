@@ -1064,14 +1064,28 @@ export async function chargeNow(input: {
   }
 }
 
-/** Gives back all of a charge made by chargeNow, or `cents` of it. True when Stripe took the refund. */
+/** Refunds chargeNow's USD payment. True only for a matching succeeded receipt.
+ * Pending, unreadable or failed receipts are not proof that money was returned.
+ * A false result must never cause a caller to mint a new idempotency key.
+ */
 export async function refundCharge(paymentIntent: string, cents: number | null, idempotencyKey: string): Promise<boolean> {
   if (!/^pi_[A-Za-z0-9]{8,64}$/.test(paymentIntent)) return false;
+  if (cents !== null && (!Number.isSafeInteger(cents) || cents <= 0)) return false;
   try {
     const body = new URLSearchParams({ payment_intent: paymentIntent, reason: "requested_by_customer" });
     if (cents !== null) body.set("amount", String(cents));
-    await onPlatform("POST", "/refunds", body, { version: CHARGE_VERSION, idempotencyKey });
-    return true;
+    const receipt = await onPlatform("POST", "/refunds", body, { version: CHARGE_VERSION, idempotencyKey });
+    if (!receipt || typeof receipt !== "object" || Array.isArray(receipt)) return false;
+    const intent = typeof receipt.payment_intent === "string"
+      ? receipt.payment_intent
+      : (receipt.payment_intent as { id?: unknown } | null | undefined)?.id;
+    return receipt.object === "refund"
+      && typeof receipt.id === "string" && /^re_[A-Za-z0-9]{8,64}$/.test(receipt.id)
+      && receipt.status === "succeeded"
+      && intent === paymentIntent
+      && receipt.currency === "usd"
+      && typeof receipt.amount === "number" && Number.isSafeInteger(receipt.amount) && receipt.amount > 0
+      && (cents === null || receipt.amount === cents);
   } catch (error) {
     console.error("refunding a charge failed", error);
     return false;
