@@ -48,6 +48,7 @@ const read = (file: string) => readFileSync(join(process.cwd(), file), "utf8");
 type Mail = { to: string; subject: string; text: string };
 const mails: Mail[] = [];
 const checkouts: URLSearchParams[] = [];
+const checkoutHeaders: Headers[] = [];
 const sessions = new Map<string, Record<string, unknown>>();
 let refunds: Record<string, unknown>[] = [];
 let mailDown = false;
@@ -66,6 +67,7 @@ globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) =>
   if (path === "/checkout/sessions" && method === "POST") {
     const body = new URLSearchParams(String(init?.body));
     checkouts.push(body);
+    checkoutHeaders.push(new Headers(init?.headers));
     const id = `cs_test_${String(checkouts.length).padStart(24, "r")}`;
     const meta: Record<string, string> = {};
     for (const [key, value] of body) {
@@ -167,6 +169,9 @@ async function main(): Promise<void> {
   store = (await storeForEmail(owner))!;
   const opened = await openRequestCheckout(store, request.id, "https://marktmorgen.com", now);
   const body = checkouts.at(-1)!;
+  is("payment request is charged on this creator's connected account", checkoutHeaders.at(-1)!.get("Stripe-Account"), store.stripeAccountId);
+  is("the platform test credential acts on this connected account", checkoutHeaders.at(-1)!.get("Authorization"), "Bearer sk_test_payment_requests_only_a_stand_in");
+  is("payment request has no platform destination or transfer routing", [...body.keys()].filter((key) => /transfer_data|on_behalf_of|destination/.test(key)), []);
   is("Stripe's page on the creator's account", opened.ok ? opened.url.startsWith("https://checkout.stripe.com/") : false, true);
   is("one payment of its lines, to the person it was sent to", [body.get("mode"), body.get("customer_email"), body.get("line_items[0][price_data][unit_amount]"), body.get("line_items[0][quantity]"), body.get("line_items[0][price_data][product_data][name]"), body.get("line_items[0][price_data][currency]")], ["payment", "client@example.com", "48000", "1", "Coaching, October (4 sessions)", "usd"]);
   is("marked as this request, for the sales list, the sweep and the receipt", [body.get("metadata[kind]"), body.get("metadata[request]"), body.get("metadata[store]"), body.get("payment_intent_data[metadata][kind]"), body.get("metadata[title]")], ["request", request.id, "danacoach", "request", "Payment request: Coaching, October (4 sessions)"]);
