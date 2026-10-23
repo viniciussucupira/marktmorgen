@@ -5152,6 +5152,12 @@ Head `636273abf5bdb026c9ad2a0fd46553b0413ff3df` rejeitado: job WebKit 1204837641
 
 Correção de runtime: textarea de sites e botão de salvar aguardam prontidão do cliente por useSyncExternalStore; save também exige prontidão. Não altera parse, confirmação canônica, rascunho, preços, permissões ou requests. Todos os cenários, timeouts e asserções existentes preservados; novo head exige 22 verificações completas. Incremento mensal/anual Store/Studio/Scale US$0/US$0; sem serviço, operação paga, chave ou TTL novo. Faturas reais desconhecidas, nunca zero; margem de 60% mais onerosa/100% LLC não certificada. Publicação funcional só após READY/domínio/SHA exatos; contador permanece 182, próximo 183.
 
+## CA232 — Assistente sem renovação presumida (23/10/2026, 12:44 Fortaleza)
+
+Correção concreta: período expirado não cria mais um pool31dias apenas porque renews=true. A admissão do assistente fecha no fim registrado e reabre com período atualizado; nenhum novo request de fornecedor. Regressão percorre instante exato e quatro pontos após vencimento, pela rotina real askAssistant, verificando nenhuma chamada ao modelo e nenhum pool novo. Período vigente preservado. PR844 continua independente (suspensão por estado conhecido/disputa), sujeito à integração e nova validação completa.
+
+Escopo parcial: status active/período atualizado ainda não prova recibo de invoice quitada; disputa histórica, funding/reserva e reembolsos continuam pendentes em CA232. Não altera acesso a conteúdo comprado, preços, limites, opt-in ou gates de venda. Custo incremental Store/Studio/Scale mensal/anual0/0, nenhuma operação/serviço adicional; faturas reais desconhecidas, não zero; leitura mais onerosa100%LLC e meta60% não certificada. CI completo22 exigido no novo head; entrega funcional só após READY/domínio/versão, próximo184. Prova da entrega183 está no PR844.
+
 ## H4 — Lições da quarta auditoria da Hotmart (23/10/2026)
 
 Solicitação do dono (23/10/2026,01h13, Fortaleza): incorporar as melhorias da quarta auditoria estratégica da Hotmart (hotmart.com) que ainda não existam no código nem na fila. Antes de cada item, verificar código e fila e implementar apenas a diferença. Fatos atribuídos à Hotmart exigem confirmação em fonte oficial datada antes de qualquer uso; números da Hotmart jamais podem ser apresentados como resultados do Marktmorgen.

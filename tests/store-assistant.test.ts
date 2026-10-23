@@ -152,7 +152,7 @@ async function main(): Promise<void> {
   const plan = { subscriptionId: "sub_Assist00001", active: true, period, cancelsAtEnd: false, disputedAt: "" };
   is("a month paid for, named by its first day", assistantWindow(plan, now / 1000)?.id, new Date(period.start * 1000).toISOString().slice(0, 10));
   is("none when it is not active, disputed, unknown, or ended without renewing", [assistantWindow({ ...plan, active: false }, now / 1000), assistantWindow({ ...plan, disputedAt: "2026-10-01" }, now / 1000), assistantWindow({ ...plan, period: null }, now / 1000), assistantWindow({ ...plan, period: { ...period, renews: false } }, period.end + 60)], [null, null, null, null]);
-  is("a renewing one is assumed renewed for two days past its end", assistantWindow(plan, period.end + 3_600)?.id, new Date(period.end * 1000).toISOString().slice(0, 10));
+  is("a renewing flag does not grant a new paid period", assistantWindow(plan, period.end + 3_600), null);
 
   part("Off until switched on and paid for");
   const owner = "assist@example.com";
@@ -190,6 +190,19 @@ async function main(): Promise<void> {
   const many = Array.from({ length: 200 }, (_, i) => ({ ...product, id: `p${i}`, title: `Product number ${i} with a long title`, summary: "s".repeat(290) }));
   const cut = assistantFacts(store, many, new Map());
   is("a large catalog is cut to the cap, and the model is told more exist", [new TextEncoder().encode(cut).byteLength <= 16_384, /more are in the store and not listed here/.test(cut)], [true, true]);
+
+  part("An expired snapshot cannot fund a new AI month");
+  const beforeRenewal = asked.length;
+  const nextPool = `nl:assist:pool:${store.statsId}:${new Date(period.end * 1000).toISOString().slice(0, 10)}`;
+  for (const seconds of [period.end, period.end + 1, period.end + 3_600, period.end + 86_400, period.end + 2 * 86_400]) {
+    const at = seconds * 1000;
+    const reply = await askAssistant({ store, text: "Is it a PDF?", facts, now: at });
+    is("expired renewal closes display, allowance and provider at " + seconds, [assistantShown(store, at), await assistantLeft(store, at), reply.ok ? "answered" : reply.reason, asked.length], [false, null, "off", beforeRenewal]);
+    is("no speculative renewal pool is created", await redis.pipeline([["EXISTS", nextPool]]), [0]);
+  }
+  const confirmedNext = { ...plan, period: { start: period.end, end: period.end + 31 * 86_400, renews: true } };
+  is("an updated actual period restores admission", assistantShown({ ...store, assistantPlan: confirmedNext }, (period.end + 1) * 1000), true);
+  is("the existing recorded period remains admitted", assistantShown(store, now), true);
 
   part("An answer");
   answer("It is a printable PDF, and you can ask for a refund within 14 days.", { input_tokens: 4_000, output_tokens: 40 });
