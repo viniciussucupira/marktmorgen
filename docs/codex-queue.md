@@ -5339,6 +5339,12 @@ Testes sintéticos do helper real cobrem todos os planos/ciclos, preço e client
 
 Estado: PR857 implementado, integrado ao head do PR856 para preservar as verificações de evidências e evitar sobreposição de arquivos; incorporar856 primeiro. Ambos continuam exigindo22 checks completos no próprio head e árvore incorporada idêntica à testada. Resultados parciais de heads anteriores não concluem o novo head. O teste/documento do PR856 não é entrega funcional.
 
+### Confirmação de devolução de taxa — continuação parcial232[CA1], 23/10/2026
+
+Implementação na branch `codex/fee-refund-receipt-confirmation`, sobre o head do PR857 e com incorporação de856/857 antes dela. `settleFee` não soma valores devolvidos por mero HTTP200: exige objeto fee_refund com identificador, taxa, moeda e valor exato correspondentes. Moeda desconhecida e valor calculado inseguro recusam mutação. Recibo desconhecido entra no contador de falhas já existente; qualquer falha impede complete=true. Não há nova tentativa, armazenamento ou consulta, nem mudança de comissão, preço, permissão ou direitos. A fonte oficial https://docs.stripe.com/api/fee_refunds/object foi conferida em23/10/2026; o objeto não tem campo status.
+
+Testes sintéticos exercitam o helper e a agregação reais, respostas corretas/expandidas/malformadas, contador de falhas sem valores inventados e chave de idempotência original; a fixture antiga recebe os campos oficiais, com asserções preservadas. Antes do código, incremento operacional mensal/anual Store0/0, Studio0/0 e Scale0/0, mesmas requisições limitadas ou menos; sem novo fornecedor, serviço, retenção ou operação paga. Custos reais desconhecidos não são zero; regra dos60% com leitura mais onerosa e100% dos custos da LLC preservada, sem certificação. Recuperação durável, liquidação bancária e o restante de232 continuam incompletos; vendas e comissão permanecem desligadas. Estado: implementado, aguardando suíte completa22/22 no próprio head e árvore incorporada idêntica à testada; nenhuma entrega funcional contada antecipadamente.
+
 ## H4 — Lições da quarta auditoria da Hotmart (23/10/2026)
 
 Solicitação do dono (23/10/2026,01h13, Fortaleza): incorporar as melhorias da quarta auditoria estratégica da Hotmart (hotmart.com) que ainda não existam no código nem na fila. Antes de cada item, verificar código e fila e implementar apenas a diferença. Fatos atribuídos à Hotmart exigem confirmação em fonte oficial datada antes de qualquer uso; números da Hotmart jamais podem ser apresentados como resultados do Marktmorgen.

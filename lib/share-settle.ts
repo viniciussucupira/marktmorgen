@@ -123,14 +123,27 @@ export async function owedOnFee(fee: Fee, nowSeconds: number, live = COMMISSION_
 /** Gives back what was taken above what is owed on one fee. Returns the cents given back. */
 export async function settleFee(fee: Fee, nowSeconds: number, live = COMMISSION_LIVE): Promise<number> {
   if (fee.amount - fee.refunded <= 0) return 0;
+  if (!fee.currency || !/^[a-z]{3}$/.test(fee.currency)) throw new Error("Application fee refund currency is unknown");
   const owed = await owedOnFee(fee, nowSeconds, live);
   if (owed === null) return 0;
   const back = toGiveBack(fee, owed);
   if (back <= 0) return 0;
-  await onPlatform("POST", `/application_fees/${encodeURIComponent(fee.id)}/refunds`, new URLSearchParams({ amount: String(back) }), {
+  if (!Number.isSafeInteger(back)) throw new Error("Application fee refund amount is not a safe integer");
+  const receipt = await onPlatform("POST", `/application_fees/${encodeURIComponent(fee.id)}/refunds`, new URLSearchParams({ amount: String(back) }), {
     // The same difference is never given back twice, however often this runs.
     idempotencyKey: `share-back:${fee.id}:${fee.refunded}:${back}`,
   });
+  const refundedFee = receipt && typeof receipt === "object" && !Array.isArray(receipt)
+    ? (typeof receipt.fee === "string" ? receipt.fee : (receipt.fee as { id?: unknown } | null | undefined)?.id)
+    : undefined;
+  if (!receipt || typeof receipt !== "object" || Array.isArray(receipt)
+    || receipt.object !== "fee_refund"
+    || typeof receipt.id !== "string" || !/^fr_[A-Za-z0-9]{8,64}$/.test(receipt.id)
+    || refundedFee !== fee.id || receipt.amount !== back || receipt.currency !== fee.currency) {
+    // The caller's existing failure count must reflect an unconfirmed result.
+    // Keep the original idempotency key; do not create another refund here.
+    throw new Error("Application fee refund receipt was not confirmed");
+  }
   return back;
 }
 
@@ -281,5 +294,6 @@ export async function settleShares(deadline: number, nowSeconds = Date.now() / 1
       console.error(`keeping the share of ${store.handle} failed`, error);
     }
   }
+  counts.complete = counts.complete && counts.failed === 0;
   return counts;
 }

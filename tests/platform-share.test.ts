@@ -37,7 +37,7 @@ import { paidPeriod } from "./billing-period-fixture";
 const NOW = 1_800_000_000;
 const ON = true;
 
-type Fee = { id: string; account: string; charge: string; amount: number; amount_refunded: number; created: number };
+type Fee = { id: string; account: string; charge: string; amount: number; amount_refunded: number; currency: string; created: number };
 const fees = new Map<string, Fee>();
 const charges = new Map<string, Record<string, unknown>>();
 const sessions = new Map<string, Record<string, unknown>>();
@@ -66,7 +66,7 @@ globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) =>
       const amount = Number(new URLSearchParams(String(init?.body)).get("amount"));
       fee.amount_refunded += amount;
       gaveBack.push({ fee: fee.id, amount });
-      return json({ object: "fee_refund", amount });
+      return json({ id: `fr_Refund${fee.id.replace(/^fee_/, "")}0001`, object: "fee_refund", amount, fee: fee.id, currency: fee.currency });
     }
   } else {
     const charge = path.match(/^\/charges\/([^/]+)$/);
@@ -156,24 +156,24 @@ async function main(): Promise<void> {
   is("a store that pays a share is in the list the job reads", (await redisPipeline([["SISMEMBER", SHARING_INDEX, ref]]))[0], 1);
   const A = "acct_1TestShare00001";
   // A: $100 listed, a 20% code typed, $4 of tax: the fee was set on the least ($80, 500) — exact.
-  fees.set("fee_A", { id: "fee_A", account: A, charge: "ch_A", amount: 500, amount_refunded: 0, created: NOW - 3600 });
+  fees.set("fee_A", { id: "fee_A", account: A, charge: "ch_A", amount: 500, amount_refunded: 0, currency: "usd", created: NOW - 3600 });
   charges.set("ch_A", { id: "ch_A", amount: 8_400, amount_refunded: 0, disputed: false, payment_intent: { id: "pi_A", metadata: { share_bps: "625" } } });
   sessions.set("pi_A", { amount_total: 8_400, total_details: { amount_tax: 400, amount_shipping: 0 } });
   // B: the box could have taken 50%, nobody typed a code; tax included in the price: the fee was set on $50, paid $100 of which $10 tax.
-  fees.set("fee_B", { id: "fee_B", account: A, charge: "ch_B", amount: 312, amount_refunded: 0, created: NOW - 3600 });
+  fees.set("fee_B", { id: "fee_B", account: A, charge: "ch_B", amount: 312, amount_refunded: 0, currency: "usd", created: NOW - 3600 });
   charges.set("ch_B", { id: "ch_B", amount: 10_000, amount_refunded: 0, disputed: false, payment_intent: { id: "pi_B", metadata: { share_bps: "625" } } });
   sessions.set("pi_B", { amount_total: 10_000, total_details: { amount_tax: 1_000, amount_shipping: 0 } });
   // C: a $40 offer after checkout, refunded in full.
-  fees.set("fee_C", { id: "fee_C", account: A, charge: "ch_C", amount: 250, amount_refunded: 0, created: NOW - 3600 });
+  fees.set("fee_C", { id: "fee_C", account: A, charge: "ch_C", amount: 250, amount_refunded: 0, currency: "usd", created: NOW - 3600 });
   charges.set("ch_C", { id: "ch_C", amount: 4_000, amount_refunded: 4_000, disputed: false, payment_intent: { id: "pi_C", metadata: { share_bps: "625", share_base: "4000" } } });
   // D: a membership's payment made while the store was still in its trial.
-  fees.set("fee_D", { id: "fee_D", account: A, charge: "ch_D", amount: 125, amount_refunded: 0, created: NOW - 3600 });
+  fees.set("fee_D", { id: "fee_D", account: A, charge: "ch_D", amount: 125, amount_refunded: 0, currency: "usd", created: NOW - 3600 });
   charges.set("ch_D", { id: "ch_D", amount: 2_000, amount_refunded: 0, disputed: false, invoice: { created: NOW - 20 * 86_400, total_excluding_tax: 2_000, subscription_details: { metadata: { store: "maker", share_bps: "625" } } } });
   // E: a $60 sale whose dispute was lost.
-  fees.set("fee_E", { id: "fee_E", account: A, charge: "ch_E", amount: 375, amount_refunded: 0, created: NOW - 3600 });
+  fees.set("fee_E", { id: "fee_E", account: A, charge: "ch_E", amount: 375, amount_refunded: 0, currency: "usd", created: NOW - 3600 });
   charges.set("ch_E", { id: "ch_E", amount: 6_000, amount_refunded: 0, disputed: true, dispute: { status: "lost" }, payment_intent: { id: "pi_E", metadata: { share_bps: "625", share_base: "6000" } } });
   // F: an old sale, refunded in half yesterday, found through the refund itself.
-  fees.set("fee_F", { id: "fee_F", account: A, charge: "ch_F", amount: 625, amount_refunded: 0, created: NOW - 40 * 86_400 });
+  fees.set("fee_F", { id: "fee_F", account: A, charge: "ch_F", amount: 625, amount_refunded: 0, currency: "usd", created: NOW - 40 * 86_400 });
   charges.set("ch_F", { id: "ch_F", amount: 10_000, amount_refunded: 5_000, disputed: false, payment_intent: { id: "pi_F", metadata: { share_bps: "625", share_base: "10000" } } });
   events.push({ id: "evt_F", type: "charge.refunded", data: { object: { id: "ch_F", application_fee: "fee_F" } } });
   // The store's plan was Studio when its memberships were sold; it is Store now.
