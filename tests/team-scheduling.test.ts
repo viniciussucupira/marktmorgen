@@ -63,6 +63,7 @@ Date.now = () => realNow() + offset;
 
 let sessions = 0;
 const checkouts: URLSearchParams[] = [];
+const checkoutHeaders: Headers[] = [];
 const google: { method: string; path: string; body: string }[] = [];
 let grantScope = GOOGLE_HOST_SCOPES.join(" ");
 let freeBusy: ((items: string[]) => Response) | null = null;
@@ -112,6 +113,7 @@ globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) =>
   if (method === "POST" && path === "/checkout/sessions") {
     sessions += 1;
     checkouts.push(new URLSearchParams(String(init?.body ?? "")));
+    checkoutHeaders.push(new Headers(init?.headers));
     const id = `cs_test_team${String(sessions).padStart(12, "0")}`;
     return answer({ id, url: `https://checkout.stripe.com/c/pay/${id}` });
   }
@@ -175,7 +177,14 @@ async function storeWithCalls(email: string, handle: string, account: string, ti
 
 async function hold(store: Store, product: CallListing, start: number) {
   const full = (await readProduct(store, product.id)) as Product & { call: CallSetup };
-  return holdAndCheckout({ store, product: full, start, buyerTz: "Europe/Lisbon", origin: "https://marktmorgen.com" });
+  const before = checkouts.length;
+  const result = await holdAndCheckout({ store, product: full, start, buyerTz: "Europe/Lisbon", origin: "https://marktmorgen.com" });
+  for (let index = before; index < checkouts.length; index += 1) {
+    is(`call checkout belongs to its creator ${store.handle}/${index}`, checkoutHeaders[index].get("Stripe-Account"), store.stripeAccountId);
+    is(`platform credential acts on the connected account ${store.handle}/${index}`, checkoutHeaders[index].get("Authorization"), "Bearer sk_test_team_scheduling_only");
+    is(`call checkout has no platform destination or transfer ${store.handle}/${index}`, [...checkouts[index].keys()].filter((key) => /transfer_data|on_behalf_of|destination/.test(key)), []);
+  }
+  return result;
 }
 
 async function offered(store: Store, product: CallListing, start: number): Promise<boolean> {
