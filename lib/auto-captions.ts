@@ -87,8 +87,11 @@ export async function requestAutoCaptions(store: Store, pathname: string, spoken
   if (!store.subscriptionActive || !store.subscriptionId || !store.stripeCustomerId) return { ok: false, reason: "plan" };
 
   const key = pendingKey(record.id);
-  const [claimed] = await redisPipeline([["SET", key, "charging", "NX", "EX", 300]]);
-  if (claimed === null) return { ok: false, reason: "busy" };
+  const receipt = await redisPipeline([["SET", key, "charging", "NX", "EX", 300]]);
+  // An uncertain claim must not authorize a charge or remove another request.
+  if (!Array.isArray(receipt) || receipt.length !== 1) return { ok: false, reason: "unavailable" };
+  if (receipt[0] === null) return { ok: false, reason: "busy" };
+  if (receipt[0] !== "OK") return { ok: false, reason: "unavailable" };
 
   const cents = autoCaptionCents(record.seconds, asked.languages.length);
   const names = asked.languages.map((lang) => captionLabel(lang) ?? lang).join(", ");
