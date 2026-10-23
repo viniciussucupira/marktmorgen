@@ -1168,7 +1168,7 @@ export default async function StudioPage({
                 { href: studioPath(store, "", "growth"), title: "Growth", text: "Choose a goal and connect the tools for your next action.", icon: "chart" as const, prefetch: false },
                 ...(may("products")
                   ? [
-                      { href: studioPath(store, "", "pages"), title: "Sales pages", text: "Build each product's page from blocks, or a landing page for something free.", icon: "layout" as const, prefetch: false },
+                      { href: studioPath(store, "", "pages"), title: "Sales pages", text: "Build each product's page from blocks, or a landing page for something free.", icon: "layout" as const, prefetch: false as const },
                       { href: studioPath(store, "", "funnels"), title: "Funnels", text: `Up to ${MAX_FUNNEL_STEPS} one-click offers after paying.`, icon: "ladder" as const },
                       { href: studioPath(store, "", "bundles"), title: "Bundles", text: "Several of your products for one price.", icon: "gift" as const },
                     ]
@@ -1187,7 +1187,7 @@ export default async function StudioPage({
                   ? [{ href: studioPath(store, "", "inbox"), title: "Inbox", text: "A chat on your store and your contact form, answered in one place, with saved replies.", icon: "mail" as const }]
                   : []),
                 ...(may("reviews")
-                  ? [{ href: studioPath(store, "", "reviews"), title: "Reviews", text: "Verified reviews from buyers, and your replies.", icon: "star" as const, prefetch: false }]
+                  ? [{ href: studioPath(store, "", "reviews"), title: "Reviews", text: "Verified reviews from buyers, and your replies.", icon: "star" as const, prefetch: false as const }]
                   : []),
                 ...(may("settings")
                   ? [{ href: studioPath(store, "", "affiliates"), title: "Affiliates", text: "People who share your store, for a share you set.", icon: "handshake" as const }]
