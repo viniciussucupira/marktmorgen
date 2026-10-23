@@ -61,7 +61,7 @@ export function PixelEditor({ pixels, canViewAttribution = false }: { pixels: Pi
         return;
       }
       if (data.error === "format" && data.bad && PIXEL_KINDS.includes(data.bad)) setBad(data.bad);
-      else setError(MESSAGES[data.error ?? ""] ?? "Your pixel IDs are still here. Saving could not be confirmed. Reload to check the saved IDs before trying again.");
+      else setError((typeof data.error === "string" && Object.prototype.hasOwnProperty.call(MESSAGES, data.error) ? MESSAGES[data.error] : undefined) ?? "Your pixel IDs are still here. Saving could not be confirmed. Reload to check the saved IDs before trying again.");
     } catch {
       setError(MESSAGES.server_error);
     } finally {
