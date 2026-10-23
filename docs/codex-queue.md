@@ -5142,6 +5142,12 @@ Incorporado em 23/10/2026 às 10:59:23 Fortaleza: merge `926cb9cb71eb2c2eaaf773c
 
 Incorporado em 23/10/2026 às 11:24:53 Fortaleza: merge `16c5cc70c41bd1cced9a75a54c5470e8ca4f359a`, head `73a1121ed624ac04d4419cba956625ab9f6586b1`, árvore testada/predita/real `3cf2c731bee574e28fd99c1b61790877ea8b4b61`, 22/22 verificações completas. Cada checkout real interceptado do cenário de produto, adicional, assinatura e carrinho agora prova Stripe-Account do criador, credencial sintética da plataforma nessa conta e ausência de destination/transfer/on_behalf_of. Variantes existentes sem imposto e com imposto exclusivo/inclusivo, preço e moeda preservadas. Sem conta, mensagem ou pagamento real. Apenas teste/documentação; contador funcional 182 e próximo 183. Prova parcial de CA232, sem eliminar exposição de financiamento/disputa/reembolso. Incremento mensal/anual Store/Studio/Scale US$0/US$0, sem operação paga/serviço/franquia adicional; faturas reais desconhecidas, nunca zero. Leitura mais onerosa/100% LLC e 60% individual/global permanecem vinculantes e não certificados.
 
+## CA232 — Regressão sintética de suspensão do assistente (23/10/2026, 12:36 Fortaleza)
+
+Implementação de teste da rotina real syncAssistant: estados past_due/unpaid/canceled persistem suspensão e impedem invocação do modelo; disputa confirmada persiste bloqueio, solicita encerramento e recusa recompra. Todas as respostas Stripe/modelo são interceptadas; nenhuma conta, cobrança ou mensagem real. CI completo pendente no novo head. Cobertura parcial: três faturas recentes não provam todo o histórico; recibos desconhecidos e financiamento por invoice exigem revisão própria. Não certifica margem nem elimina perdas.
+
+Custo incremental Store/Studio/Scale mensal/anual: 0/0; somente teste, sem nova operação de produção, serviço, teto, preço ou permissão. Faturas reais CI/deploy/provedores desconhecidas, não zero; leitura fiscal mais onerosa e meta 60% continuam vinculantes. PR843 segue independente, aguardando validação; contador funcional permanece 182, próximo183.
+
 ## H4 — Lições da quarta auditoria da Hotmart (23/10/2026)
 
 Solicitação do dono (23/10/2026,01h13, Fortaleza): incorporar as melhorias da quarta auditoria estratégica da Hotmart (hotmart.com) que ainda não existam no código nem na fila. Antes de cada item, verificar código e fila e implementar apenas a diferença. Fatos atribuídos à Hotmart exigem confirmação em fonte oficial datada antes de qualquer uso; números da Hotmart jamais podem ser apresentados como resultados do Marktmorgen.
