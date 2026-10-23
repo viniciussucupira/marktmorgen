@@ -43,8 +43,8 @@ export async function checkPurchaseResend({browser,LOCAL,fixture,shipment,axeSou
     try{
      await button.focus();await page.keyboard.press("Enter");
      is("resend exact existing reference "+name,(await seen).postDataJSON(),{reference:shipment});
-     is("resend locks while waiting "+name,await button.isDisabled(),true);
-     is("resend announces pending "+name,await button.getAttribute("aria-busy"),"true");
+     is("resend locks while waiting "+name,await control.getByRole("button").isDisabled(),true);
+     is("resend announces pending "+name,await control.getByRole("button").getAttribute("aria-busy"),"true");
     }finally{release();}
     await control.getByRole("button",{name:"Send the purchase email again",exact:true}).waitFor();
     await page.waitForFunction(()=>[...document.querySelectorAll("#sales button")].some(node=>node.textContent.trim()==="Send the purchase email again"&&!node.disabled));
