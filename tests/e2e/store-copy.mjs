@@ -1,3 +1,4 @@
+import { checkPurchaseResend } from "./purchase-resend-confirmation.mjs";
 import { checkShippingSave } from "./shipping-save-confirmation.mjs";
 import {placeholderPaint} from "./placeholder-paint.mjs";
 import {checkOfferPlanning} from "./offer-planning.mjs";
@@ -888,6 +889,7 @@ await checkNudgeAcknowledgment({browser,LOCAL,fixture:pauseFixtures[0],is});
   await checkEmailCapabilities({browser,LOCAL,is});
   const shipment=services.seedShipment("templatelibraryfixture",libraryFixture.product);
   await checkShipmentAcknowledgment({browser,LOCAL,fixture:libraryFixture,shipment,is});
+  await checkPurchaseResend({browser,LOCAL,fixture:libraryFixture,shipment,axeSource,is});
   await checkShippingSave({browser,LOCAL,fixture:shippingFixture,is});
   await checkDiscountAcknowledgment({browser,LOCAL,fixture:libraryFixture,is});
   is("no page threw", errors, []);
