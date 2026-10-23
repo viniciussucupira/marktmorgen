@@ -15,9 +15,16 @@ export async function checkPixelAttributionCenter({browser,LOCAL,fixture,axeSour
  is("HT10 refusal retains form "+width,await panel.getByRole("button",{name:"Save pixels",exact:true}).isEnabled(),true);
  await panel.scrollIntoViewIfNeeded();await page.addScriptTag({content:axeSource});const audit=await page.evaluate(async()=>await window.axe.run(document.querySelector('section[aria-labelledby="pixels-title"]'),{runOnly:{type:"tag",values:["wcag2a","wcag2aa","wcag21aa","wcag22aa"]}}));is("HT10 center accessibility "+width,audit.violations.map(v=>v.id),[]);
  is("HT10 center fits "+width,await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
+ for(const error of ["__proto__","constructor"]){
+ reply={status:400,body:{error}};
+ await panel.getByRole("button",{name:"Save pixels",exact:true}).click();
+ await panel.getByRole("alert").getByText("Your pixel IDs are still here. Saving could not be confirmed. Reload to check the saved IDs before trying again.",{exact:true}).waitFor();
+ is("HT10 inherited error retains draft "+error+" "+width,await meta.inputValue(),"999999999999999");
+ is("HT10 inherited error retains enabled form "+error+" "+width,await panel.getByRole("button",{name:"Save pixels",exact:true}).isEnabled(),true);
+ }
  reply={status:200,body:{ok:true,pixels:{meta:"999999999999999",google:"G-AB12CD34EF",tiktok:"C4ABCDEFGH1234567890",pinterest:null}}};
  await panel.getByRole("button",{name:"Save pixels",exact:true}).click();await panel.getByRole("button",{name:"Change pixels",exact:true}).waitFor();
- is("HT10 both saves synthetic "+width,intercepted,2);
+ is("HT10 both saves synthetic "+width,intercepted,4);
  const attribution=page.locator("[data-attribution]");await attribution.waitFor();const window=attribution.locator("select");
  await window.selectOption("60");await attribution.getByRole("alert").waitFor();
  is("HT10 rejected window choice retained "+width,await window.inputValue(),"60");
@@ -26,7 +33,7 @@ export async function checkPixelAttributionCenter({browser,LOCAL,fixture,axeSour
  await attribution.getByRole("button",{name:"Retry window change",exact:true}).click();await attribution.getByRole("alert").waitFor({state:"hidden"});await attribution.getByText(/within the 60 days before;/).waitFor();
  is("HT10 matching window confirmed "+width,(await attribution.innerText()).includes("within the 60 days before"),true);
  is("HT10 attribution links same center "+width,await attribution.getByRole("link",{name:"Review pixel IDs and consent",exact:true}).getAttribute("href"),"#pixels-title");
- is("HT10 all center writes intercepted "+width,intercepted,4);
+ is("HT10 all center writes intercepted "+width,intercepted,6);
  }finally{await context.close();}
  const gpc=await browser.newContext({viewport:{width,height:1000},extraHTTPHeaders:{"Sec-GPC":"1"}});try{
  await gpc.addInitScript(()=>{Object.defineProperty(navigator,"globalPrivacyControl",{configurable:true,get:()=>true});localStorage.setItem("nl_px_consent:templatelibraryfixture","yes");});
