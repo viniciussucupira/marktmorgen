@@ -114,3 +114,39 @@ This dated decision supersedes every earlier 50/50 fixed-cost allocation above o
 Every paying customer individually at full rights in the worst month and annual term, and the company as a whole, must keep at least60% net after all costs and US/Brazilian taxes. Use the most-tax reading in docs/tax-uncertainty.md. Unknown cost, tax, exchange-rate ceiling or supplier coverage fails; it never becomes zero. A public starting price or temporary discount is not a verified worst-case ceiling. Annual invoices need a reviewed reserve/accrual policy before monthly normalization. No finite minimum customer base or consolidated margin may be claimed while the complete review is missing or individual units fail.
 
 FX275 does not authorize changing prices, visible limits, commission, PLANS_ON_SALE, the tax gate, Article9a or the commercial review, or relaxing any protection. No account, contract, signature, payment or supplier contact; synthetic tests only. Implementation and official dated cost evidence remain tracked in docs/codex-queue.md item275; this policy records the binding allocation, not completed recalculation or certified profitability.
+
+## Pedidos repetidos (23 de outubro de 2026)
+
+Solicitação do dono (23/10/2026, 16h21, horário de Fortaleza). Regra permanente para todo pedido recebido a partir desta solicitação. Texto repetido não gera seção, número, item, commit ou implementação em dobro, nem altera a ordem. Esta regra entra em vigor imediatamente; o registro documental não adia sua aplicação.
+
+1. Antes de gravar qualquer pedido, confira o main, os PRs abertos e os ramos codex/* recentes, e procure o pedido pelas suas marcas de identificação, nesta ordem:
+(a) a linha "Solicitação do dono (data, hora, horário de Fortaleza)";
+(b) o nome da seção (por exemplo, "SY — Lições da auditoria da Systeme.io (23/10/2026)");
+(c) a etiqueta de cada item entre colchetes (por exemplo, [SY1], [EC1], [SY2]);
+(d) o conteúdo, mesmo com redação um pouco diferente.
+
+2. Se a solicitação já estiver gravada ou em gravação num PR aberto (mesma linha de data e hora, ou mesma seção, ou mesma etiqueta, com o mesmo conteúdo), trata-se de repetição: não crie seção, número nem item novo, não faça commit só por causa dela e não mude a ordem da fila. Apenas acrescente, na proveniência da seção já existente, uma linha curta: "Recebido novamente em DD/MM/AAAA HHhMM (Fortaleza); repetição sem mudança; nada alterado."
+
+3. Se o texto repetido tiver alguma diferença em relação ao que já está gravado:
+(a) com a mesma linha de data e hora: é o mesmo pedido; aplique somente a diferença ao item já existente, mantendo o número, a posição e o estado, e registre na proveniência o que mudou;
+(b) com data e hora diferentes: a instrução de data e hora mais recente prevalece sobre a mais antiga naquilo em que divergirem; o que já estiver gravado e não divergir continua valendo;
+(c) se não for possível saber com segurança qual vale, não aplique nenhuma das duas versões no ponto da divergência: registre a divergência em "Depende do dono", citando os dois trechos, e continue o restante do trabalho.
+
+4. Um pedido sem nome de seção, como um complemento, é reconhecido pela linha de data e hora e pela etiqueta entre colchetes. Se mesmo assim houver dúvida, procure o conteúdo nos itens existentes antes de criar um novo.
+
+5. Antes de implementar qualquer item, confira se ele já foi feito ou está em andamento noutro PR ou ramo; nunca implemente o mesmo item duas vezes.
+
+6. Se, apesar disso, a mesma solicitação acabar gravada com dois números:
+(a) mantenha o número menor como o válido;
+(b) marque o maior como "Duplicado do item N; não executar";
+(c) não renumere nenhum outro item.
+
+7. Revisão única, agora: procure na fila atual (main e PRs abertos) solicitações gravadas mais de uma vez, a partir das marcas do passo 1, e aplique a elas os passos 2, 3 e 6. Registre o resultado da revisão na mesma PR, mesmo que nenhuma repetição seja encontrada.
+
+8. Depois deste PR, volte a gravar os pedidos ainda não gravados, na ordem em que foram recebidos, aplicando esta regra a cada um. Os próximos esperados são: SY ("SY — Lições da auditoria da Systeme.io (23/10/2026)", item [SY1]), EC ("EC — Encerramento de loja justo com os compradores (23/10/2026)", item [EC1]) e o complemento de reserva de reembolso [SY2], solicitado às 16h04.
+
+
+Aplicação ao estado encontrado: SY1, EC1 e SY2 já estavam em gravação no PR #851 quando esta regra foi recebida; devem permanecer no mesmo registro, sem recriação. A lista de próximos esperados do passo 8 descreve o pedido original, não autoriza duplicar esses registros já encontrados. A linha curta de nova recepção deve ser incorporada à proveniência existente no PR em gravação ou no próximo commit autorizado que já tenha outra alteração; não criar commit exclusivamente pela repetição sem mudança.
+
+Esta regra não altera itens, preços, limites visíveis, comissão, PLANS_ON_SALE, tax gate, art. 9a ou revisão comercial. A REGRA DOS 60% permanece por cliente pagante isolado, usando 100% dos direitos no pior mês, e globalmente, após todos os custos e impostos brasileiros/americanos; desconhecido reprova, não é zero, e a leitura mais onerosa continua obrigatória. Todos os custos fixos da LLC pertencem integralmente ao Marktmorgen (FX275). Proibido criar contas, aceitar termos, contratar serviços, pagar valores ou contatar terceiros por causa desta regra.
+
