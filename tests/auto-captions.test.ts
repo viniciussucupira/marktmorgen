@@ -86,6 +86,33 @@ async function main(): Promise<void> {
   // A video the service has finished, ten minutes long.
   await redis.pipeline([["SET", `nl:stream:v:${VIDEO}`, JSON.stringify({ id: VIDEO, path: PATH, name: "Knife skills.mp4", type: "video/mp4", bytes: 1, state: "ready", at: Date.now(), seconds: 600, width: 1920, height: 1080, settled: true })]]);
 
+  part("Only a confirmed single claim can authorize a charge");
+  const realPipeline = redis.pipeline;
+  const pending = `nl:stream:auto:${VIDEO}`;
+  try {
+    for (const receipt of [[], ["OK", "extra"], [undefined], [false], [0], [1], [true], ["ok"], [{}], "OK", null]) {
+      redis.run(["DEL", pending]);
+      stripe = [];
+      bunny.length = 0;
+      let claims = 0;
+      redis.pipeline = async (commands) => {
+        if (commands.length === 1 && commands[0][0] === "SET" && commands[0][1] === pending) {
+          claims += 1;
+          await realPipeline(commands);
+          return receipt as unknown as unknown[];
+        }
+        return realPipeline(commands);
+      };
+      const answer = await requestAutoCaptions(store, PATH, "en", ["es"]);
+      is(`unconfirmed claim ${JSON.stringify(receipt)} refuses without charge, provider request, retry or cleanup`,
+        [answer, stripe.length, bunny.length, claims, redis.run(["GET", pending])],
+        [{ ok: false, reason: "unavailable" }, 0, 0, 1, "charging"]);
+    }
+  } finally {
+    redis.pipeline = realPipeline;
+    redis.run(["DEL", pending]);
+  }
+
   part("Charged first, then asked for");
   declineCard = true;
   const declined = await requestAutoCaptions(store, PATH, "en", ["es"]);
