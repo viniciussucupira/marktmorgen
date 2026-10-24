@@ -447,6 +447,7 @@ export async function readStartedSubscription(
       subscriptionId,tier:state.tier,cycle:state.cycle,createdSeconds:subscription.created as number,
       trialing:state.trialing,periodStartSeconds:began as number,periodEndSeconds:until as number,
     })))return null;
+    if(state.state==='active')state={...state,period:fundedPeriod(state.period)};
   }else{
     // Legacy observations have no funded receipt. Their migration remains an
     // explicit unfinished release prerequisite; never invent or free a reserve.
@@ -638,7 +639,9 @@ export async function readSubscription(
 
   const state=stateOf(subscription);
   if(state.state==='active'&&hasContractFunding(subscription)){
-    if(!fundingStore||subscription.id!==subscriptionId||!(await startedFromObservedSubscription(fundingStore,subscription)))return{state:'unknown'};
+    if(!fundingStore||subscription.id!==subscriptionId)return{state:'unknown'};
+    const observed=await startedFromObservedSubscription(fundingStore,subscription);if(!observed)return{state:'unknown'};
+    return {...state,period:observed.period};
   }
   return state;
 }
@@ -821,7 +824,7 @@ export async function switchPlan(
   await onPlatform("POST", path, new URLSearchParams({ "metadata[tier]": choice.tier,...(funding?{"metadata[funding_grant]":funding.id,"metadata[funding_review]":funding.reviewId,"metadata[funding_action]":"switch","metadata[funding_pending_grant]":"","metadata[funding_pending_review]":""}:{}) })).catch((error) =>
     console.error("noting the plan on the subscription failed", error),
   );
-  return { kind: "switched", state: stateOf(updated) };
+  return { kind: "switched", state: funding&&observedState.state==="active"?{...observedState,period:fundedPeriod(observedState.period)}:observedState };
 }
 
 /**
@@ -925,6 +928,8 @@ export function hasSwitchFunding(subscription:Record<string,unknown>):boolean{
  return meta?.funding_action!==undefined||meta?.funding_pending_grant!==undefined||meta?.funding_pending_review!==undefined;
 }
 /** Any persisted funding marker requires the corresponding owned proof. */
+/** This marker follows the exact acknowledged paid period through existing store writes. */
+function fundedPeriod(period:BillingPeriod|null):BillingPeriod|null{return period?{...period,funded:true}:null;}
 export function hasContractFunding(subscription:Record<string,unknown>):boolean{
  const meta=subscription.metadata as Record<string,unknown>|null|undefined;
  return hasSwitchFunding(subscription)||meta?.funding_grant!==undefined||meta?.funding_review!==undefined;
@@ -946,7 +951,7 @@ export async function startedFromObservedSubscription(store:Store,subscription:R
   const pending=meta?.funding_pending_grant!==undefined||meta?.funding_pending_review!==undefined;
   const grantId=pending?meta?.funding_pending_grant:meta?.funding_grant,reviewId=pending?meta?.funding_pending_review:meta?.funding_review;
   if(typeof grantId!=='string'||typeof reviewId!=='string')return null;
-  return await activateObservedSwitch(store.statsId??'',grantId,reviewId,started.subscriptionId,subscription)?started:null;
+  return await activateObservedSwitch(store.statsId??'',grantId,reviewId,started.subscriptionId,subscription)?{...started,period:fundedPeriod(started.period)}:null;
  }
  if(meta?.funding_grant===undefined&&meta?.funding_review===undefined)return started;
  if(!ownedBy(store,subscription)||meta?.store!==store.handle||typeof meta.funding_grant!=="string"||typeof meta.funding_review!=="string")return null;
@@ -963,7 +968,7 @@ export async function startedFromObservedSubscription(store:Store,subscription:R
   subscriptionId:started.subscriptionId,tier:state.tier,cycle:state.cycle,createdSeconds:subscription.created as number,
   trialing:state.trialing,periodStartSeconds:began as number,periodEndSeconds:until as number,
  })))return null;
- return started;
+ return {...started,period:fundedPeriod(started.period)};
 }
 
 /** How many of a store's subscriptions one search looks at. */

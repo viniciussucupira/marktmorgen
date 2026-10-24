@@ -89,3 +89,26 @@ test("the words a refusal ends with say the day it opens again", () => {
   assert.equal(resetWords(store, at(2026, 10, 20)), "This opens again with your next billing month, on November 19 (UTC).");
   assert.equal(resetWords({ subscriptionActive: false, subscriptionId: null, trialEnds: 0, planEndedAt: "" }, at(2026, 12, 20)), "This opens again on January 1, 2027 (UTC).");
 });
+
+test('a funded paid period never infers the next allowance during legacy renewal grace',()=>{
+ const store=paying(at(2026,10,19),at(2026,11,19));
+ const funded={...store,period:{...store.period,funded:true as const}};
+ assert.ok(allowanceWindow(funded,at(2026,11,18)));
+ for(const now of [at(2026,11,19),at(2026,11,19)+1000,at(2026,11,20)]){
+  assert.equal(allowanceWindow(funded,now),null);
+  assert.ok(allowanceWindow(store,now),'unmarked existing contracts keep their legacy grace');
+ }
+ assert.equal(samePeriod(store.period,funded.period),false);
+ assert.equal(samePeriod(funded.period,{...funded.period}),true);
+ assert.equal(isPeriod({...funded.period,funded:false}),false);
+});
+test('a funded annual period keeps twelve anchored months and no thirteenth window',()=>{
+ const store=paying(at(2026,1,31,12),at(2027,1,31,12),'year');
+ const funded={...store,period:{...store.period,funded:true as const}};
+ for(let month=0;month<12;month++){
+  const now=addMonthsMs(at(2026,1,31,12),month)+1000;
+  assert.deepEqual(allowanceWindow(funded,now),allowanceWindow(store,now));
+ }
+ assert.equal(allowanceWindow(funded,at(2027,1,31,12)),null);
+ assert.ok(allowanceWindow(store,at(2027,1,31,12)));
+});

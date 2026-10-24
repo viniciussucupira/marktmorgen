@@ -116,7 +116,10 @@ async function applyListed(subscription: Record<string, unknown>, counts: SyncCo
   // The one this store wrote down: Stripe's word stands.
   if (store.subscriptionId === id) {
     const state=stateOf(subscription);
-    if(state.state==='active'&&hasContractFunding(subscription)&&!(await startedFromObservedSubscription(store,subscription)))return;
+    if(state.state==='active'&&hasContractFunding(subscription)){
+      const observed=await startedFromObservedSubscription(store,subscription);if(!observed)return;
+      state.period=observed.period;
+    }
     if (await recordState(store, state)) counts.updated += 1;
     return;
   }
