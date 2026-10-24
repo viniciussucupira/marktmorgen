@@ -16,6 +16,7 @@ import { keyFromHeader, resolveKey } from "@/lib/api-keys";
 import { storeForId, type Store } from "@/lib/store";
 import { BodyTooLarge, limited, withinLimit } from "@/lib/request-guard";
 import { takeAllowance } from "@/lib/store-allowance";
+import { reservePaidResourceWindow } from "@/lib/contract-resource-window";
 
 /** Requests one key may make in a minute. Generous for a sync, a wall for a runaway loop. */
 export const API_RATE = 120;
@@ -32,7 +33,7 @@ export function apiOk(body: unknown): Response {
 
 /** The store this request may read, or the response that refuses it. */
 export async function apiStore(request: Request): Promise<Store | Response> {
-  const found = await apiKeyed(request);
+  const found = await apiKeyed(request, "read");
   return found instanceof Response ? found : found.store;
 }
 
@@ -42,7 +43,7 @@ export async function apiStore(request: Request): Promise<Store | Response> {
  * the way to make one that writes.
  */
 export async function apiWriter(request: Request): Promise<{ store: Store; keyId: string } | Response> {
-  const found = await apiKeyed(request);
+  const found = await apiKeyed(request, "write");
   if (found instanceof Response) return found;
   if (!found.write) {
     return apiError(403, "read_only", "This key reads only. Make a key that can also write, in your studio under API keys.");
@@ -50,7 +51,7 @@ export async function apiWriter(request: Request): Promise<{ store: Store; keyId
   return { store: found.store, keyId: found.keyId };
 }
 
-async function apiKeyed(request: Request): Promise<{ store: Store; keyId: string; write: boolean } | Response> {
+async function apiKeyed(request: Request, purpose: "read" | "write"): Promise<{ store: Store; keyId: string; write: boolean } | Response> {
   const presented = keyFromHeader(request.headers.get("authorization"));
   const unauthorized = () =>
     apiError(401, "unauthorized", "Send your API key as: Authorization: Bearer nl_live_…", {
@@ -66,6 +67,11 @@ async function apiKeyed(request: Request): Promise<{ store: Store; keyId: string
   }
   const store = await storeForId(found.sid);
   if (!store) return unauthorized();
+  // Read-only API/MCP work needs its paid resource month. Writing includes
+  // access revocation and needs its own retained-cleanup classification.
+  if (purpose === "read" && store.period?.funded === true && !(await reservePaidResourceWindow(store))) {
+    return apiError(429, "unavailable", "The store could not answer just now. Try again in a moment.");
+  }
   // Each request is one of the store's window (lib/store-allowance-rules.ts), taken before any work.
   const taken = await takeAllowance(store, "api");
   if (!taken.ok) return apiError(429, taken.reason === "used" ? "monthly_limit" : "unavailable", taken.message);
