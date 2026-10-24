@@ -22,6 +22,7 @@
  * comes back to a conversation they started, reaches these keys.
  */
 import { takeAllowance } from "@/lib/store-allowance";
+import { reservePaidResourceWindow } from "@/lib/contract-resource-window";
 import { randomBytes } from "node:crypto";
 import { EMAIL_PATTERN, MAX_EMAIL_LENGTH, normaliseEmail } from "@/lib/auth";
 import { type AiResult, answerModel, askModel, counted } from "@/lib/ai";
@@ -180,6 +181,7 @@ async function open(input: NewInput): Promise<{ ok: true; conversation: Kept; me
   if (!(await withinLimit("inbox-new", statsId, NEW_PER_DAY, 86_400))) return { ok: false, reason: "limited" };
   const now = input.now ?? Date.now();
   // One of the store's inbox messages for its window (lib/store-allowance-rules.ts), before it is written.
+  if (store.period?.funded === true && !(await reservePaidResourceWindow(store))) return { ok: false, reason: "closed" };
   if (!(await takeAllowance(store, "inbox", 1, now)).ok) return { ok: false, reason: "limited" };
   const conversation: Kept = {
     id: newId(),
@@ -297,6 +299,7 @@ export async function visitorSend(
   const conversation = await readKept(found.statsId, found.id);
   if (!conversation || conversation.token !== token) return { ok: false, reason: "gone" };
   if (!(await withinLimit("chat-send", `${found.statsId}:${found.id}`, VISITOR_PER_HOUR, 3_600))) return { ok: false, reason: "limited" };
+  if (store.period?.funded === true && !(await reservePaidResourceWindow(store))) return { ok: false, reason: "closed" };
   if (!(await takeAllowance(store, "inbox", 1, now)).ok) return { ok: false, reason: "limited" };
   const message: Message = { at: now, from: "visitor", text };
   let next: Kept;
