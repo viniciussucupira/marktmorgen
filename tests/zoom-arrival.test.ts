@@ -20,9 +20,9 @@
 import { readFileSync } from "node:fs";
 import { NextRequest } from "next/server";
 import { SESSION_COOKIE, openSession } from "@/lib/auth";
-import { NotConnected, disconnect, finishConsent, meetView } from "@/lib/meet-connect";
-import { ProviderError, ZOOM_ARRIVAL_COOKIE, cameForZoom } from "@/lib/meet-providers";
-import { startConnect, startHostConnect } from "@/lib/meet-routes";
+import { NotConnected, beginConsent, disconnect, finishConsent, meetView } from "@/lib/meet-connect";
+import { GOOGLE_HOST_SCOPES, ProviderError, ZOOM_ARRIVAL_COOKIE, cameForZoom } from "@/lib/meet-providers";
+import { startConnect, startHostConnect, finishConnect } from "@/lib/meet-routes";
 import { TEST_MEETING_MINUTES, TEST_MEETING_TITLE, TEST_MOVE_MINUTES, makeTest, moveTest, readTests, removeTest, TestMeetingUnavailable } from "@/lib/meet-test";
 import { claimHandle, ensureStatsId, setSubscription, storeForEmail } from "@/lib/store";
 import { proxy } from "@/proxy";
@@ -30,6 +30,7 @@ import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
 import { paidPeriod } from "./billing-period-fixture";
 import { allowanceUsed } from "@/lib/store-allowance";
+import { hostId } from "@/lib/host-claims";
 
 const HOST = "marktmorgen.com";
 
@@ -187,6 +188,33 @@ async function main(): Promise<void> {
     else process.env.GOOGLE_CALENDAR_SYNC_SCOPES = previousHostScopes;
   }
   is("no provider request or extra integration allowance", [seen.length, await allowanceUsed(funded, "integration")], [0, beforeConnectUnits]);
+  part("A callback rechecks funding before exchanging new provider credentials");
+  const consentInput = { statsId, sid: funded.sid, sessionCookie: session, email: "owner@example.com" };
+  const callbackFor = async (provider: "zoom" | "google", host = false, decline = false) => {
+    // Synthetic state models consent started before funding ceased to be available.
+    const consentUrl = await beginConsent(provider, { ...consentInput, ...(host ? { host: hostId("owner@example.com"), scopes: GOOGLE_HOST_SCOPES } : {}) });
+    const state = new URL(consentUrl).searchParams.get("state") ?? "";
+    const query = new URLSearchParams({ state });
+    query.set(decline ? "error" : "code", decline ? "access_denied" : "synthetic-code");
+    return finishConnect(page(`/api/integrations/${provider}/callback?${query}`, `${SESSION_COOKIE}=${session}`), provider);
+  };
+  const ownerReturn = await callbackFor("zoom");
+  is("new owner credentials are refused after state validation", [ownerReturn.status, new URL(ownerReturn.headers.get("location")!).searchParams.get("meet")], [303, "limited"]);
+  const ownerDecline = await callbackFor("zoom", false, true);
+  is("canceling remains available without funding", new URL(ownerDecline.headers.get("location")!).searchParams.get("meet"), "declined");
+  const previousReturnScopes = process.env.GOOGLE_CALENDAR_SYNC_SCOPES;
+  try {
+    process.env.GOOGLE_CALENDAR_SYNC_SCOPES = "1";
+    const hostReturn = await callbackFor("google", true);
+    is("new host credentials are also refused", [hostReturn.status, new URL(hostReturn.headers.get("location")!).searchParams.get("cal")], [303, "limited"]);
+    const hostDecline = await callbackFor("google", true, true);
+    is("host canceling remains available", new URL(hostDecline.headers.get("location")!).searchParams.get("cal"), "declined");
+  } finally {
+    if (previousReturnScopes === undefined) delete process.env.GOOGLE_CALENDAR_SYNC_SCOPES;
+    else process.env.GOOGLE_CALENDAR_SYNC_SCOPES = previousReturnScopes;
+  }
+  is("no token exchange, provider lookup or new connection", seen.length, 0);
+
 
 
   part("Forgotten with the connection");
