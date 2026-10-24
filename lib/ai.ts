@@ -346,6 +346,7 @@ export async function counted<T>(store: Store, now: number, run: () => Promise<T
   if (jobs > allowance) return { ok: false, reason: "used" };
   const key = monthKey(store, new Date(now));
   if (!key) return { ok: false, reason: "off" };
+  if (store.period?.funded === true && !(await reservePaidResourceWindow(store))) return { ok: false, reason: "off" };
   const [used] = await redisPipeline([
     ["INCRBY", key, jobs],
     ["EXPIRE", key, 40 * 86_400],
