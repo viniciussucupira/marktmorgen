@@ -5941,6 +5941,9 @@ Retomada AX2: head8a8bb8221399bb16107bcb9b365c294e47791ae6 teve20/24 sucessos e4
 
 Integração AX2 do certificado: PR #868 head ef810709ef970818a5dc7ff9ace22da8e4813a80 passou24/24; seus7arquivos não se sobrepõem aos12arquivos doPR865. O título existente do certificadoHTML usa agora h1 nativo com texto/estilo/idiomas/identificadores preservados;fixtures sintéticas emitido/retirado×390/1280, checks deheading/overflow/axeespecífico eguarda público-standard entramna mesma verificação conjunta. FalhaTS2345 anterior938085c9648585516c60aabb0a5f107cb5da89c3 preservada nadocumentação; reparoef810... passou24/24. Não declarar a combinação pronta nem aumentar contador antes de24/24no novohead, incorporação verificada e READY/domínio/versãoexata de publicação funcional. A troca doelemento não adiciona chamadas/bytesdeassets/fornecedores/operações deplanos; tetos existentes mantidos, sem certificação60%/AAA.
 
+
+Histórico AX2 adicional: noheadcaf4964951ae16e4d97161a0f9824f46ad01a579 WebKit120758938172 alcançou151/151 porTab emhome, mas falhou a observação de checked apósArrowRight (02:57:10–02:57:12UTC). Fontefeature-demos usaestadoReactcontrolado. Reparosincroniza observação de foco/checked/focus-visible após cadaúnicatecla, comteto3000ms e diagnóstico antesdefalhar; nãoatribui estado/foco, não repete tecla, não reduz critério e nãoalteratimeoutglobal. Nova suíte completa obrigatória; cabeça combinada anterior nãoaprovada.
+
 ## CV — Custo por visita das lojas (23/10/2026)
 
 Ordem: logo depois do item 309 [EM1], porque os dois baixam custos reais que limitam o que cada plano oferece. Inclusão documental antecipada por instrução direta posterior do dono, antes de continuar AX2; nada implementado agora. Posição física: no fim da fila; HQ1 permanece reservado como item 312 no PR #865, sem duplicação neste registro.

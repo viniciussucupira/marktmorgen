@@ -47,8 +47,18 @@ export async function checkPublicKeyboardCycle({page,path,is}) {
    testedGroups.add(groupIndex);
    const group=snapshot.groups[groupIndex],start=group.indexOf(current.key),reached=[];
    for(let step=1;step<=group.length;step++){
+    const target=group[(start+step)%group.length];
     await page.keyboard.press("ArrowRight");
-    const actual=await read(),target=group[(start+step)%group.length];
+    const targetHandle=await state.evaluateHandle(({nodes},key)=>nodes[key],target);
+    try{
+     // Controlled native radios may commit React state after keyup. Observe that
+     // real focus and selection settled before issuing the next native key.
+     await page.waitForFunction(node=>document.activeElement===node&&node.checked&&node.matches(":focus-visible"),targetHandle,{timeout:3000});
+    }catch(error){
+     console.log("AX2_RADIO_UNSETTLED:"+JSON.stringify({path,target,actual:await read()}));
+     throw error;
+    }finally{await targetHandle.dispose();}
+    const actual=await read();
     is("native radio arrow reaches next option "+path,actual.key,target);
     is("native radio arrow checks focused visible option "+path,actual.checked&&actual.visible&&actual.width>0&&actual.height>0,true);
     reached.push(actual.key);
