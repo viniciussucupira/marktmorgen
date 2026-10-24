@@ -3,7 +3,7 @@ import { claimHandle, ensureListId, ensureStatsId, setMailSettings, setSubscript
 import { upsertContact } from '@/lib/contacts';
 import { test, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
-import { reserve, reserveDay, usedThisMonth, monthlyAllowance, sendTo } from '@/lib/mail';
+import { reserve, reserveDay, usedThisMonth, monthlyAllowance, sendTo, takeFromMonth } from '@/lib/mail';
 import { PRO_MONTHLY_EMAILS, SCALE_MONTHLY_EMAILS } from '@/lib/plan';
 import type { Store } from '@/lib/store';
 import { store as memory } from './redis-stub';
@@ -52,4 +52,18 @@ test('actual provider retry outcomes retain attempted monthly capacity',async()=
 test('a provider refusal also cannot replenish dispatched attempt capacity',async()=>{
  const made=await fullStore();dispatch.outcome='refused';const result=await sendTo(made,['reader@example.com'],'Synthetic','Test only','refused-attempt');
  assert.equal(result.stopped,'refused');assert.equal(dispatch.calls,1);assert.equal(await usedThisMonth(made.listId, windowId(made)),1);
+});
+
+test('funded paid mail cannot consume sender or monthly capacity without its paid cohort',async()=>{
+ const made=await fullStore(),marked={...made,period:{...made.period!,funded:true as const}};
+ const before=pipelines.length;
+ assert.equal(await reserve(marked,1),'unavailable');
+ assert.equal(await takeFromMonth(marked,1),0);
+ assert.equal(pipelines.length,before);assert.equal(dispatch.calls,0);
+});
+test('funded paid list dispatch stops before the provider when financial approvals are absent',async()=>{
+ const made=await fullStore(),marked={...made,period:{...made.period!,funded:true as const}};
+ const result=await sendTo(marked,['reader@example.com'],'Synthetic','Test only','funded-cohort-required');
+ assert.equal(result.stopped,'retry');assert.equal(dispatch.calls,0);
+ assert.equal(await usedThisMonth(made.listId,windowId(made)),0);
 });

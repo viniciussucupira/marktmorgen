@@ -23,6 +23,7 @@ import { tokensFor } from "@/lib/contacts";
 import { SITE_URL } from "@/lib/site-url";
 import { SUPPORT_EMAIL } from "@/lib/creator-research";
 import { calendarWindow, windowId } from "@/lib/allowance-window";
+import { reservePaidResourceWindow } from '@/lib/contract-resource-window';
 import { admitNonPaying } from "@/lib/free-pool";
 import type { Store } from "@/lib/store";
 import { creatorAddress } from "@/lib/mail-from";
@@ -262,6 +263,7 @@ export async function reserve(store: Store, n: number): Promise<Reserved> {
   if(!(await admitNonPaying(store)))return "month";
   const allowance=monthlyAllowance(store);
   if(!Number.isSafeInteger(allowance) || allowance<0 || n>allowance)return "month";
+  if(store.period?.funded===true && !(await reservePaidResourceWindow(store)))return "unavailable";
   try {
     if(!(await senderTakes(n)))return "sender";
     const key=usedKey(store.listId,window),cap=dailyCap(),day=dayKey();
@@ -294,6 +296,7 @@ export async function takeFromMonth(store: Store, n: number): Promise<number> {
   const window = windowOf(store);
   if (!Number.isSafeInteger(allowance) || allowance <= 0 || !window) return 0;
   if (!(await admitNonPaying(store))) return 0;
+  if (store.period?.funded===true && !(await reservePaidResourceWindow(store))) return 0;
   try {
     const key = usedKey(store.listId, window);
     const results = await redisPipeline([["INCRBY", key, n], ["EXPIRE", key, 70 * 86400]]);
