@@ -1838,6 +1838,19 @@ export async function setSubscription(
       return null;
     }
 
+    // A proved period never becomes an inferred renewal through a writer
+    // that omitted its marker. New identities/plans/periods need fresh proof.
+    if(fields.period!==undefined&&fields.period!==null&&!isPeriod(fields.period))return null;
+    let period=!fields.active?null:fields.period===undefined?store.period??null:fields.period;
+    if(fields.active&&store.period?.funded===true){
+      const changed=subscriptionId!==store.subscriptionId||(fields.tier??store.tier)!==store.tier||(fields.cycle??store.cycle)!==store.cycle;
+      if(changed&&fields.period?.funded!==true)return null;
+      if(period?.funded!==true){
+        if(!period||period.start!==store.period.start||period.end!==store.period.end)return null;
+        period={...period,funded:true};
+      }
+    }
+
     // The day a plan is first seen to be over is written down once, and
     // wiped when a plan runs again. A store that never started one has none.
     const had = store.subscriptionActive || store.subscriptionId !== null || subscriptionId !== null;
@@ -1854,7 +1867,7 @@ export async function setSubscription(
       trialEnds: fields.trialEnds ?? store.trialEnds,
       shared: fields.shared ?? store.shared,
       // A plan that is not running has no period to follow.
-      period: !fields.active ? null : fields.period === undefined ? store.period ?? null : fields.period,
+      period,
       planEndedAt,
     });
     // Kept in line by the day its plan ended, for the daily job that looks

@@ -36,7 +36,9 @@
  *     ends; the snapshot learns it when the studio is opened or the daily
  *     job runs, so for RENEW_GRACE_SECONDS after a period's end the next
  *     window (which starts exactly there) is used, and after that nothing.
- *     A period set to end with no renewal gets no such grace.
+ *     A period set to end with no renewal gets no such grace. A period whose
+ *     cash proof was acknowledged (funded=true) also gets no inferred next
+ *     allowance: another period needs its own acknowledged funding proof.
  *
  * Nothing here touches the network: pages that print when an allowance
  * opens again read the same window the counters do.
@@ -45,7 +47,7 @@ import { type Cycle, TRIAL_DAYS } from "@/lib/plan";
 import { type PlanFields, standingOf } from "@/lib/plan-standing";
 
 /** What Stripe last said about the period a store paid for, in seconds (lib/store.ts). */
-export type BillingPeriod = { start: number; end: number; renews: boolean };
+export type BillingPeriod = { start: number; end: number; renews: boolean; /** Only an acknowledged committed cash proof may set this. No inferred renewal. */ funded?: true };
 
 /** The fields of a store the window is worked out from. */
 export type WindowFields = PlanFields & { cycle?: Cycle; period?: BillingPeriod | null };
@@ -95,15 +97,15 @@ export function addMonthsMs(atMs: number, months: number): number {
 /** Whether a period read from a store's record is one a window can be made from. */
 export function isPeriod(value: unknown): value is BillingPeriod {
   if (!value || typeof value !== "object") return false;
-  const { start, end, renews } = value as Record<string, unknown>;
-  return Number.isSafeInteger(start) && Number.isSafeInteger(end) && (start as number) > 0 && (end as number) > (start as number) && typeof renews === "boolean"
+  const { start, end, renews, funded } = value as Record<string, unknown>;
+  return Number.isSafeInteger(start) && Number.isSafeInteger(end) && (start as number) > 0 && (end as number) > (start as number) && typeof renews === "boolean" && (funded === undefined || funded === true)
     // A billing period is at most a year and a day long.
     && (end as number) - (start as number) <= 367 * 86_400;
 }
 
 /** Whether two billing periods are the same one: a snapshot is written again when they differ. */
 export function samePeriod(a: BillingPeriod | null, b: BillingPeriod | null): boolean {
-  return a === b || (!!a && !!b && a.start === b.start && a.end === b.end && a.renews === b.renews);
+  return a === b || (!!a && !!b && a.start === b.start && a.end === b.end && a.renews === b.renews && a.funded === b.funded);
 }
 
 /** The billing month of a paid period around `now`: the period itself for a monthly plan, its month on the period's day for a yearly one. */
@@ -144,7 +146,7 @@ export function allowanceWindow(store: WindowFields, now = Date.now()): Allowanc
   if (current) return current;
   // Past the period's end: the next one, which begins exactly there, for a
   // short while, when the period renews.
-  if (!period.renews || now < period.end * 1000 || now >= (period.end + RENEW_GRACE_SECONDS) * 1000) return null;
+  if (period.funded === true || !period.renews || now < period.end * 1000 || now >= (period.end + RENEW_GRACE_SECONDS) * 1000) return null;
   const start = period.end * 1000;
   return { id: day(start), start, end: addMonthsMs(start, 1), billing: true };
 }

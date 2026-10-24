@@ -234,3 +234,15 @@ test('a marked checkout read requires its store and exact current funded phase p
   assert.equal(activationObservations.calls[1].periodEndSeconds,created+30*86400);
  }finally{globalThis.fetch=old;activationObservations.accept=false;}
 });
+
+test('only acknowledged observations mark a paid allowance period as funded',async()=>{
+ const g=grant('switch'),raw=switchObservation(g),own={...store,stripeCustomerId:'cus_Test000001',previousHandles:[],releasedHandles:[]} as Store;
+ switchActivationObservations.accept=false;
+ assert.equal(await startedFromObservedSubscription(own,raw),null);
+ switchActivationObservations.accept=true;
+ try{
+  const observed=await startedFromObservedSubscription(own,raw);assert.equal(observed?.period?.funded,true);assert.equal(observed?.period?.renews,true);
+  const legacy={...raw,metadata:{store:'harbor'}};
+  const old=await startedFromObservedSubscription(own,legacy);assert.ok(old);assert.equal(old.period?.funded,undefined);
+ }finally{switchActivationObservations.accept=false;}
+});
