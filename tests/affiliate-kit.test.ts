@@ -122,6 +122,17 @@ async function main(): Promise<void> {
   is("a quarter of the store's month for its affiliates together, then no more", [4 + other, last], [quarter, "month"]);
   is("a quarter is at least a few drafts on the smallest allowance", kitMonthly(20) >= 5, true);
 
+  part("New affiliate drafts use the funded resource boundary before consuming writing jobs");
+  await setSubscription(OWNER, { customerId: "cus_Chef00001", subscriptionId: "sub_Chef00001", active: true, tier: "pro", period: { ...paidPeriod(), funded: true } });
+  const fundedKitStore = (await storeForEmail(OWNER))!;
+  const beforeFundedKitJobs = await aiLeft(fundedKitStore);
+  const beforeFundedKitCalls = asked.length;
+  const beforeKitCounters = [...redis.entries()].filter(([key]) => key.startsWith("nl:affkit:"));
+  const deniedKit = await draftKit(fundedKitStore, affiliate({ id: "dddddddddddd", code: "funded" }), plan.product.id, "Synthetic note only");
+  is("missing resource funding refuses before model calls or kit and writing counters",
+    [deniedKit.ok ? "" : deniedKit.reason, asked.length, await aiLeft(fundedKitStore), [...redis.entries()].filter(([key]) => key.startsWith("nl:affkit:"))],
+    ["unavailable", beforeFundedKitCalls, beforeFundedKitJobs, beforeKitCounters]);
+
   done();
 }
 
