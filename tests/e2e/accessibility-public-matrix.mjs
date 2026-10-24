@@ -17,17 +17,24 @@ try{
  browser=await driver.launch();console.log("PUBLIC_MATRIX_ENGINE:"+JSON.stringify({requested:engine,actual:driver.name(),version:browser.version()}));
  for(const path of ["/","/pricing","/signin"])for(const width of [320,390,768,1280,1920])for(const mode of ["baseline","text-spacing","reduced-motion","forced-colors","reflow-320",...(process.env.AX2_PUBLIC_STANDARD==="true"?["dark"]:[])]){
   const viewportWidth=mode==="reflow-320"?320:width;
-  // Fresh Firefox process isolates dark preference from prior forced-colors cases.
-  const isolatedDarkBrowser=engine==="firefox"&&mode==="dark"?await driver.launch():null;
-  const context=await (isolatedDarkBrowser??browser).newContext({...(mode==="dark"?{colorScheme:"dark"}:{}),viewport:{width:viewportWidth,height:900},serviceWorkers:"block",reducedMotion:mode==="reduced-motion"?"reduce":"no-preference",forcedColors:mode==="forced-colors"?"active":"none"});
+  const context=await browser.newContext({...(mode==="dark"?{colorScheme:"dark"}:{}),viewport:{width:viewportWidth,height:900},serviceWorkers:"block",reducedMotion:mode==="reduced-motion"?"reduce":"no-preference",forcedColors:mode==="forced-colors"?"active":"none"});
   let writes=0,foreign=0;const errors=[];
   try{
    const page=await context.newPage();
+   const restoreDarkAfterNavigation=async()=>{
+    if(mode!=="dark")return;
+    const before=await page.evaluate(()=>matchMedia("(prefers-color-scheme: dark)").matches);
+    await page.emulateMedia({colorScheme:"dark"});
+    const after=await page.evaluate(()=>matchMedia("(prefers-color-scheme: dark)").matches);
+    console.log("AX2_DARK_NAVIGATION:"+JSON.stringify({engine,path:page.url(),before,after}));
+    if(!after)throw Error("Dark color-scheme request not honored after navigation");
+   };
+
    // Explicit page emulation avoids a Firefox page override masking context media.
    if(mode==="dark")await page.emulateMedia({colorScheme:"dark"});
    page.on("pageerror",error=>errors.push(String(error)));
    await context.route("**/*",route=>{const r=route.request(),url=new URL(r.url());if(!["GET","HEAD"].includes(r.method())){writes++;return route.abort();}if(url.origin!==origin){foreign++;return route.abort();}return route.continue();});
-   const response=await page.goto(origin+path,{waitUntil:"networkidle",timeout:60000});if(response.status()!==200)throw Error("HTTP "+response.status());
+   const response=await page.goto(origin+path,{waitUntil:"networkidle",timeout:60000});await restoreDarkAfterNavigation();if(response.status()!==200)throw Error("HTTP "+response.status());
    if(mode==="text-spacing")await page.addStyleTag({content:"*{line-height:1.5!important;letter-spacing:.12em!important;word-spacing:.16em!important}p{margin-bottom:2em!important}"});
    if(mode==="forced-colors"){
     const active=await page.evaluate(()=>matchMedia("(forced-colors: active)").matches);
@@ -110,7 +117,7 @@ try{
    console.log("PUBLIC_MATRIX_CASE:"+JSON.stringify({engine,path,width,mode,viewportWidth,writes,foreign,...report,errors}));
    if(report.violations.length||errors.length||writes)failed++;
   }catch(error){failed++;console.error("PUBLIC_MATRIX_FAILURE:"+JSON.stringify({engine,path,width,mode,error:String(error)}));}
-  finally{cases++;await context.close();await isolatedDarkBrowser?.close();}
+  finally{cases++;await context.close();}
  }
  console.log("PUBLIC_MATRIX_OPEN_GAPS:"+JSON.stringify(gaps));
  console.log("PUBLIC_MATRIX_SUMMARY:"+JSON.stringify({engine,cases,failed,gaps:gaps.length,scope:"Three public entry journeys only. Synthetic emulation; reflow320 is not real browser400% zoom. No real-device, assistive-user or whole-product AAA certification."}));

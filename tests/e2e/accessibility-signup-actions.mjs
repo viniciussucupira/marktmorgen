@@ -55,14 +55,21 @@ try{
   if(cases>0){await services.close();services=await startServices(4498);}
   proxyTrace=[];
   const index=cases+1,viewportWidth=mode==="reflow-320"?320:width;
-  // Fresh Firefox process isolates dark preference from prior forced-colors cases.
-  const isolatedDarkBrowser=engine==="firefox"&&mode==="dark"?await driver.launch():null;
-  const context=await (isolatedDarkBrowser??browser).newContext({...(mode==="dark"?{colorScheme:"dark"}:{}),ignoreHTTPSErrors:true,viewport:{width:viewportWidth,height:900},serviceWorkers:"block",reducedMotion:mode==="reduced-motion"?"reduce":"no-preference",forcedColors:mode==="forced-colors"?"active":"none",extraHTTPHeaders:{"x-forwarded-for":"192.0.2."+index,"Sec-GPC":"1"}});
+  const context=await browser.newContext({...(mode==="dark"?{colorScheme:"dark"}:{}),ignoreHTTPSErrors:true,viewport:{width:viewportWidth,height:900},serviceWorkers:"block",reducedMotion:mode==="reduced-motion"?"reduce":"no-preference",forcedColors:mode==="forced-colors"?"active":"none",extraHTTPHeaders:{"x-forwarded-for":"192.0.2."+index,"Sec-GPC":"1"}});
   let page;let phase="open",foreign=0,interceptedVisits=0,localChallenges=0;const mutations=[],errors=[],network=[];const handle="matrix-"+engine[0]+"-"+index,storeName="Matrix "+engine+" "+index;const inbox="matrix-"+engine+"-"+index+"@example.test",before=services.emails().length;
   try{
    await context.addInitScript(()=>Object.defineProperty(navigator,"globalPrivacyControl",{configurable:true,get:()=>true}));
    if(mode==="text-spacing")await context.addInitScript(()=>document.addEventListener("DOMContentLoaded",()=>{const style=document.createElement("style");style.textContent="*{line-height:1.5!important;letter-spacing:.12em!important;word-spacing:.16em!important}p{margin-bottom:2em!important}";document.head.append(style);},{once:true}));
    page=await context.newPage();
+   const restoreDarkAfterNavigation=async()=>{
+    if(mode!=="dark")return;
+    const before=await page.evaluate(()=>matchMedia("(prefers-color-scheme: dark)").matches);
+    await page.emulateMedia({colorScheme:"dark"});
+    const after=await page.evaluate(()=>matchMedia("(prefers-color-scheme: dark)").matches);
+    console.log("AX2_DARK_NAVIGATION:"+JSON.stringify({engine,path:page.url(),before,after}));
+    if(!after)throw Error("Dark color-scheme request not honored after navigation");
+   };
+
    // Explicit page emulation avoids a Firefox page override masking context media.
    if(mode==="dark")await page.emulateMedia({colorScheme:"dark"});
    page.setDefaultTimeout(30000);page.setDefaultNavigationTimeout(60000);
@@ -95,7 +102,7 @@ try{
     return route.continue();
    });
    async function audit(state){
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("networkidle");await restoreDarkAfterNavigation();
     await page.evaluate(()=>{document.activeElement?.blur?.();window.scrollTo({top:0,left:0,behavior:"instant"});});
     await page.waitForFunction(()=>scrollX===0&&scrollY===0);
     if(mode==="dark"&&!await page.evaluate(()=>matchMedia("(prefers-color-scheme: dark)").matches))throw Error("Dark color-scheme request not honored");
@@ -110,7 +117,7 @@ try{
     if(result.scroll>result.client||result.violations.length)throw Error("Accessibility/overflow failure at "+state);
     if(result.incomplete.length)gaps.push({width,mode,state,manualReview:result.incomplete});
    }
-   const response=await page.goto(origin+"/signin",{waitUntil:"networkidle"});if(response.status()!==200)throw Error("Signup document failed");
+   const response=await page.goto(origin+"/signin",{waitUntil:"networkidle"});await restoreDarkAfterNavigation();if(response.status()!==200)throw Error("Signup document failed");
    if(await page.locator('input[type="password"],input[autocomplete^="cc-"]').count())throw Error("Unexpected password/card field");
    await audit("signup-form");
    if(mode==="baseline"){
@@ -127,13 +134,13 @@ try{
    const match=String(mail[0].text??"").match(/https?:\/\/[^\s<>"]+\/signin\/confirm\?token=[0-9a-f]{64}/);
    if(!match)throw Error("Captured confirmation link missing");
    const confirmation=new URL(match[0]);if(confirmation.origin!==origin)throw Error("Confirmation escaped synthetic origin");
-   phase="confirmation";await page.goto(confirmation.href,{waitUntil:"networkidle"});
+   phase="confirmation";await page.goto(confirmation.href,{waitUntil:"networkidle"});await restoreDarkAfterNavigation();
    if((await context.cookies()).some(c=>c.name==="nl_session"))throw Error("Reading confirmation spent token or opened session");
    await audit("confirmation-before-tap");
    const signed=page.waitForResponse(r=>new URL(r.url()).pathname==="/api/auth/callback"&&r.request().method()==="POST");
    await page.getByRole("button",{name:"Log me in",exact:true}).focus();await page.keyboard.press("Enter");
    const callback=await signed;if(callback.status()!==303)throw Error("Confirmation did not redirect safely");
-   await page.waitForURL(url=>url.pathname==="/studio");await page.waitForLoadState("networkidle");
+   await page.waitForURL(url=>url.pathname==="/studio");await page.waitForLoadState("networkidle");await restoreDarkAfterNavigation();
    if(!(await context.cookies()).some(c=>c.name==="nl_session"&&c.secure&&c.httpOnly&&c.sameSite==="Lax"))throw Error("Local authenticated session missing");
    phase="empty-studio";await audit("authenticated-first-setup");
    phase="claim-first-store";
@@ -150,7 +157,7 @@ try{
    const publicLink=page.locator('header a[href="/@'+handle+'"]');
    if(await publicLink.count()!==1)throw Error("Actual first-store link missing or ambiguous");
    await publicLink.focus();await page.keyboard.press("Enter");
-   await page.waitForURL(url=>url.pathname==="/@"+handle);await page.waitForLoadState("networkidle");
+   await page.waitForURL(url=>url.pathname==="/@"+handle);await page.waitForLoadState("networkidle");await restoreDarkAfterNavigation();
    // An owner-only preview is insufficient: discard the browser session and
    // reload the actual newly claimed address as an anonymous visitor.
    await context.clearCookies();
@@ -163,7 +170,7 @@ try{
    gaps.push({width,mode,reason:"Synthetic disposable local inbox/session/store claim only; no real email/account/store, physical device, assistive user or actual browser400% zoom. Production BotID behavior and manual sticky-scroll review remain open."});
    console.log("SIGNUP_ACTION_PROOF:"+JSON.stringify({engine,width,mode,actualLocalRequest:true,capturedEmails:mail.length,confirmationGetDidNotSignIn:true,explicitConfirmation:true,authenticatedFirstSetup:true,actualFirstStoreClaim:true,anonymousPublicStoreAfterReload:true,interceptedVisits,localChallenges,foreign,mutations}));
   }catch(error){failed++;const diagnostic=page?await page.evaluate(()=>({path:location.pathname,headings:[...document.querySelectorAll("h1,h2")].map(n=>n.textContent),body:document.body.innerText.slice(0,4000)})).catch(()=>null):null;console.error("SIGNUP_MATRIX_FAILURE:"+JSON.stringify({engine,width,mode,phase,diagnostic,errors,network:network.slice(-80),proxyTrace:proxyTrace.slice(-80),capturedLocalEmails:services.emails().length-before,error:String(error).replace(/token=[^&\s"']+/g,"token=redacted")}));console.error("SIGNUP_SERVER_DIAGNOSTIC:"+output.replace(/token=[^&\s"']+/g,"token=redacted"));}
-  finally{cases++;await context.close();await isolatedDarkBrowser?.close();}
+  finally{cases++;await context.close();}
  }
  console.log("SIGNUP_MATRIX_OPEN_GAPS:"+JSON.stringify(gaps));
  console.log("SIGNUP_MATRIX_SUMMARY:"+JSON.stringify({engine,cases,audits,failed,scope:"Real local request/captured fake email/explicit confirmation/new empty studio/actual initial claim/anonymous public store after session removal and reload. Synthetic services only; no production signup/store/payment/message/checkout or buyer proof."}));

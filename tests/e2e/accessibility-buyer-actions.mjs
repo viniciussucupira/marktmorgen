@@ -51,14 +51,21 @@ try{
  browser=await driver.launch();console.log("BUYER_MATRIX_ENGINE:"+JSON.stringify({requested:engine,actual:driver.name(),version:browser.version()}));
  for(const width of [320,390,768,1280,1920])for(const mode of ["baseline","text-spacing","reduced-motion","forced-colors","reflow-320",...(process.env.AX2_PUBLIC_STANDARD==="true"?["dark"]:[])]){
   const index=cases+1,viewportWidth=mode==="reflow-320"?320:width;
-  // Fresh Firefox process isolates dark preference from prior forced-colors cases.
-  const isolatedDarkBrowser=engine==="firefox"&&mode==="dark"?await driver.launch():null;
-  const context=await (isolatedDarkBrowser??browser).newContext({...(mode==="dark"?{colorScheme:"dark"}:{}),viewport:{width:viewportWidth,height:900},serviceWorkers:"block",reducedMotion:mode==="reduced-motion"?"reduce":"no-preference",forcedColors:mode==="forced-colors"?"active":"none",extraHTTPHeaders:{"x-forwarded-for":"192.0.2."+index,"sec-gpc":"1"}});
+  const context=await browser.newContext({...(mode==="dark"?{colorScheme:"dark"}:{}),viewport:{width:viewportWidth,height:900},serviceWorkers:"block",reducedMotion:mode==="reduced-motion"?"reduce":"no-preference",forcedColors:mode==="forced-colors"?"active":"none",extraHTTPHeaders:{"x-forwarded-for":"192.0.2."+index,"sec-gpc":"1"}});
   let phase="open",foreign=0;const mutations=[],errors=[],beforeEmails=services.emails().length,beforeCheckouts=services.checkouts().length;let libraryRequested=false;
   try{
    await context.addInitScript(()=>{Object.defineProperty(navigator,"globalPrivacyControl",{value:true,configurable:true});});
    if(mode==="text-spacing")await context.addInitScript(()=>document.addEventListener("DOMContentLoaded",()=>{const style=document.createElement("style");style.textContent="*{line-height:1.5!important;letter-spacing:.12em!important;word-spacing:.16em!important}p{margin-bottom:2em!important}";document.head.append(style);},{once:true}));
    const page=await context.newPage();
+   const restoreDarkAfterNavigation=async()=>{
+    if(mode!=="dark")return;
+    const before=await page.evaluate(()=>matchMedia("(prefers-color-scheme: dark)").matches);
+    await page.emulateMedia({colorScheme:"dark"});
+    const after=await page.evaluate(()=>matchMedia("(prefers-color-scheme: dark)").matches);
+    console.log("AX2_DARK_NAVIGATION:"+JSON.stringify({engine,path:page.url(),before,after}));
+    if(!after)throw Error("Dark color-scheme request not honored after navigation");
+   };
+
    // Explicit page emulation avoids a Firefox page override masking context media.
    if(mode==="dark")await page.emulateMedia({colorScheme:"dark"});
    page.setDefaultTimeout(30000);page.setDefaultNavigationTimeout(60000);
@@ -74,7 +81,7 @@ try{
     return route.continue();
    });
    async function audit(state){
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("networkidle");await restoreDarkAfterNavigation();
     await page.evaluate(()=>{document.activeElement?.blur?.();window.scrollTo({top:0,left:0,behavior:"instant"});});
     await page.waitForFunction(()=>scrollX===0&&scrollY===0);
     if(mode==="dark"&&!await page.evaluate(()=>matchMedia("(prefers-color-scheme: dark)").matches))throw Error("Dark color-scheme request not honored");
@@ -87,7 +94,7 @@ try{
     if(result.scroll>result.client||result.violations.length)throw Error("Accessibility/overflow failure at "+state);
     if(result.incomplete.length)gaps.push({width,mode,state,manualReview:result.incomplete});
    }
-   const response=await page.goto(origin+"/@localshop/p/"+ids["Weeknight Dinners"],{waitUntil:"networkidle"});
+   const response=await page.goto(origin+"/@localshop/p/"+ids["Weeknight Dinners"],{waitUntil:"networkidle"});await restoreDarkAfterNavigation();
    if(response.status()!==200)throw Error("Synthetic product page failed");
    await audit("product-checkout-form");
    const buyForm=page.locator('#buy form[data-checkout]').first();
@@ -96,12 +103,12 @@ try{
    if(mode==="baseline"){await page.keyboard.press("Tab");if(!await page.evaluate(()=>document.activeElement!==document.body))throw Error("Native keyboard focus missing");}
    phase="checkout";const checkout=page.waitForResponse(r=>new URL(r.url()).pathname==="/api/store/checkout"&&r.request().method()==="POST");
    await buyForm.locator('button[type="submit"]').focus();await page.keyboard.press("Enter");await checkout;
-   await page.waitForURL(url=>url.pathname==="/@localshop/thanks"&&url.searchParams.has("session_id"));await page.waitForLoadState("networkidle");
+   await page.waitForURL(url=>url.pathname==="/@localshop/thanks"&&url.searchParams.has("session_id"));await page.waitForLoadState("networkidle");await restoreDarkAfterNavigation();
    const created=services.checkouts().slice(beforeCheckouts);
    if(created.length!==1||created[0].amount_total!==1900||created[0].metadata.product!==ids["Weeknight Dinners"])throw Error("Simulated checkout amount/product mismatch");
    phase="receipt";await audit("simulated-paid-receipt");
    if(!(await page.locator("main").innerText()).includes("Weeknight Dinners"))throw Error("Receipt did not hand over selected product");
-   phase="library-request";await page.goto(origin+"/library",{waitUntil:"networkidle"});await audit("buyer-library-request");
+   phase="library-request";await page.goto(origin+"/library",{waitUntil:"networkidle"});await restoreDarkAfterNavigation();await audit("buyer-library-request");
    if(!libraryLink){
     const beforeLibrary=services.emails().length;
     await page.locator("#library-email").fill("buyer@example.com");
@@ -114,18 +121,18 @@ try{
     libraryLink=localLink(match[0]);if(new URL(libraryLink).origin!==origin)throw Error("Library link escaped local origin");
     libraryRequested=true;
    }
-   phase="library-shelf";await page.goto(libraryLink,{waitUntil:"networkidle"});await audit("authenticated-buyer-library");
+   phase="library-shelf";await page.goto(libraryLink,{waitUntil:"networkidle"});await restoreDarkAfterNavigation();await audit("authenticated-buyer-library");
    const shelf=page.locator("[data-library-store='localshop']");if(await shelf.count()!==1)throw Error("Purchased store missing from buyer library");
    const purchases=await shelf.getByRole("link",{name:"Open your purchases",exact:true}).getAttribute("href");
    const orderLink=localLink(purchases??"");if(new URL(orderLink,origin).origin!==origin)throw Error("Orders escaped synthetic origin");
-   phase="buyer-orders";await page.goto(new URL(orderLink,origin).href,{waitUntil:"networkidle"});await audit("buyer-orders");
+   phase="buyer-orders";await page.goto(new URL(orderLink,origin).href,{waitUntil:"networkidle"});await restoreDarkAfterNavigation();await audit("buyer-orders");
    if(!(await page.locator("main").innerText()).includes("Weeknight Dinners"))throw Error("Purchased product missing in buyer area");
    const expected=libraryRequested?2:1;
    if(foreign||errors.length||mutations.length!==expected||mutations.filter(m=>m.path==="/api/store/checkout").length!==1)throw Error("Unexpected operation/page error "+JSON.stringify({foreign,errors,mutations}));
    gaps.push({width,mode,reason:"Local simulated paid return only; Stripe-hosted UI, real card/wallet, external delivery, actual400%zoom, physical devices/AT and manual sticky-scroll not proven. Library token from one real local fake-inbox request per engine is reused for remaining viewport cases."});
    console.log("BUYER_ACTION_PROOF:"+JSON.stringify({engine,width,mode,simulatedCheckout:true,amountCents:created[0].amount_total,productMatched:true,extrasOptedIn:false,capturedLocalEmails:services.emails().length-beforeEmails,libraryRequestThisCase:libraryRequested,buyerLibrary:true,buyerOrders:true,foreign,mutations}));
   }catch(error){failed++;console.error("BUYER_MATRIX_FAILURE:"+JSON.stringify({engine,width,mode,phase,error:redact(error)}));}
-  finally{cases++;await context.close();await isolatedDarkBrowser?.close();}
+  finally{cases++;await context.close();}
  }
  console.log("BUYER_MATRIX_OPEN_GAPS:"+JSON.stringify(gaps));
  console.log("BUYER_MATRIX_SUMMARY:"+JSON.stringify({engine,cases,audits,failed,scope:"Real local app checkout against fake Stripe paid return; local captured inbox/library/orders. No real checkout/payment/provider/message/account or external download."}));

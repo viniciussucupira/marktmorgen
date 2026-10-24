@@ -51,9 +51,7 @@ try{
  browser=await driver.launch();console.log("PRODUCT_MATRIX_ENGINE:"+JSON.stringify({requested:engine,actual:driver.name(),version:browser.version()}));
  for(const path of ["/studio?store="+fixture.sid])for(const width of [320,390,768,1280,1920])for(const mode of ["baseline","text-spacing","reduced-motion","forced-colors","reflow-320",...(process.env.AX2_PUBLIC_STANDARD==="true"?["dark"]:[])]){
   const viewportWidth=mode==="reflow-320"?320:width;
-  // Fresh Firefox process isolates dark preference from prior forced-colors cases.
-  const isolatedDarkBrowser=engine==="firefox"&&mode==="dark"?await driver.launch():null;
-  const context=await (isolatedDarkBrowser??browser).newContext({...(mode==="dark"?{colorScheme:"dark"}:{}),viewport:{width:viewportWidth,height:900},serviceWorkers:"block",reducedMotion:mode==="reduced-motion"?"reduce":"no-preference",forcedColors:mode==="forced-colors"?"active":"none"});
+  const context=await browser.newContext({...(mode==="dark"?{colorScheme:"dark"}:{}),viewport:{width:viewportWidth,height:900},serviceWorkers:"block",reducedMotion:mode==="reduced-motion"?"reduce":"no-preference",forcedColors:mode==="forced-colors"?"active":"none"});
   if(mode==="text-spacing")await context.addInitScript(()=>document.addEventListener("DOMContentLoaded",()=>{const style=document.createElement("style");style.textContent="*{line-height:1.5!important;letter-spacing:.12em!important;word-spacing:.16em!important}p{margin-bottom:2em!important}";document.head.append(style);},{once:true}));
   await context.addInitScript(()=>{
    window.__mmRscBodies=[];
@@ -71,6 +69,15 @@ try{
   let writes=0,foreign=0,localProductWrites=0,interceptedVisits=0,expectedVisits=1;const errors=[],blockedWrites=[];
   try{
    const page=await context.newPage();
+   const restoreDarkAfterNavigation=async()=>{
+    if(mode!=="dark")return;
+    const before=await page.evaluate(()=>matchMedia("(prefers-color-scheme: dark)").matches);
+    await page.emulateMedia({colorScheme:"dark"});
+    const after=await page.evaluate(()=>matchMedia("(prefers-color-scheme: dark)").matches);
+    console.log("AX2_DARK_NAVIGATION:"+JSON.stringify({engine,path:page.url(),before,after}));
+    if(!after)throw Error("Dark color-scheme request not honored after navigation");
+   };
+
    // Explicit page emulation avoids a Firefox page override masking context media.
    if(mode==="dark")await page.emulateMedia({colorScheme:"dark"});
    page.setDefaultTimeout(30000);page.setDefaultNavigationTimeout(60000);page.on("pageerror",error=>errors.push(String(error)));
@@ -79,7 +86,7 @@ try{
    const describeFrame=frame=>{try{if(!frameIds.has(frame))frameIds.set(frame,++frameSequence);const u=new URL(frame.url()||"about:blank"),parent=frame.parentFrame();if(parent&&!frameIds.has(parent))frameIds.set(parent,++frameSequence);return {id:frameIds.get(frame),parent:parent?frameIds.get(parent):null,origin:u.origin,path:u.pathname};}catch{return {unavailable:true};}};
    if(engine==="firefox")for(const event of ["frameattached","framedetached","framenavigated"])page.on(event,frame=>{if(frameEvents++<40)console.log("PRODUCT_FRAME_EVENT:"+JSON.stringify({engine,width,mode,event,frame:describeFrame(frame)}));});
    await context.route("**/*",route=>{const r=route.request(),url=new URL(r.url());if(url.origin===origin&&url.pathname==="/api/store/hit"&&r.method()==="POST"){const raw=r.postData(),input=raw?r.postDataJSON():null;const missingWebkit=engine==="webkit"&&!raw&&new URL(r.frame().url()).pathname==="/@activationonboarding";if(missingWebkit)gaps.push({path,width,mode,reason:"WebKit exposes no beacon body to routing. Only same-origin store-hit POST from the exact synthetic storefront is fulfilled204 without executing stats; payload validation remains unverified."});if(!missingWebkit&&(input?.h!=="activationonboarding"||input?.k!=="v")){writes++;blockedWrites.push({method:r.method(),path:url.pathname,handle:input?.h,kind:input?.k,bodyBytes:r.postData()?.length??0});return route.abort();}interceptedVisits++;return route.fulfill({status:204});}if(!["GET","HEAD"].includes(r.method())){if(url.origin===origin&&url.pathname==="/api/store/product"&&r.method()==="POST"&&["add","visibility"].includes(r.postDataJSON()?.action)){localProductWrites++;return route.continue();}writes++;blockedWrites.push({method:r.method(),path:url.pathname});return route.abort();}if(url.origin!==origin){foreign++;return route.abort();}return route.continue();});
-   const response=await page.goto(origin+path,{waitUntil:"networkidle",timeout:60000});if(response.status()!==200)throw Error("HTTP "+response.status());
+   const response=await page.goto(origin+path,{waitUntil:"networkidle",timeout:60000});await restoreDarkAfterNavigation();if(response.status()!==200)throw Error("HTTP "+response.status());
    if(new URL(page.url()).pathname.startsWith("/signin"))throw Error("Synthetic authenticated journey redirected to sign-in");
    if(!await page.locator("main").count())throw Error("Authenticated main missing");
    await page.getByRole("button",{name:"Add something to sell",exact:true}).click();
@@ -151,7 +158,7 @@ try{
    const createdId=creationData.product.id;
    await page.locator(".nb-toast-region [role=status]").getByText("Product added.",{exact:true}).waitFor({state:"attached"});
    const createdRefresh=await creationRefresh;if(!createdRefresh.ok()||(await completedResponse(page,createdRefresh)).error)throw Error("Create RSC refresh failed");
-   await page.waitForLoadState("networkidle");
+   await page.waitForLoadState("networkidle");await restoreDarkAfterNavigation();
    await page.reload({waitUntil:"networkidle"});
    const row=page.locator("#products li").filter({has:page.locator('button[aria-controls="product-panel-'+createdId+'"]')});
    if(await row.count()!==1)throw Error("Created product row is not unique");
@@ -170,27 +177,27 @@ try{
     if(response.request().postDataJSON()?.id!==createdId||!response.ok()||data.ok!==true||!data.product||data.product.id!==createdId||Boolean(data.product.hidden)!==hidden)throw Error("Local visibility refused "+JSON.stringify({status:response.status(),data}));
     const refresh=await refreshed;if(!refresh.ok()||(await completedResponse(page,refresh)).error)throw Error("Visibility RSC refresh failed");
     const flight=(await completedResponse(page,refresh)).text;const savedAt=flight.indexOf('"id":"'+data.product.id+'"');console.log("PRODUCT_VISIBILITY_RESPONSE:"+JSON.stringify({engine,width,mode,hidden,url:refresh.url(),productFragment:savedAt<0?"not found":flight.slice(savedAt,savedAt+1600)}));
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("networkidle");await restoreDarkAfterNavigation();
     console.log("PRODUCT_VISIBILITY_RENDER:"+JSON.stringify({engine,width,mode,hidden,buttons:await row.getByRole("button").allTextContents()}));
    }
    if(await row.getByRole("button",{name:"Unpublish",exact:true}).count()){
     await visibility(row.getByRole("button",{name:"Unpublish",exact:true}),true);expectedWrites++;
     await row.getByRole("button",{name:"Publish it",exact:true}).waitFor();
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("networkidle");await restoreDarkAfterNavigation();
    }
    await visibility(row.getByRole("button",{name:"Publish it",exact:true}),false);expectedWrites++;
    await row.getByRole("button",{name:"Unpublish",exact:true}).waitFor();
-   await page.waitForLoadState("networkidle");
-   await page.goto(origin+"/@activationonboarding",{waitUntil:"networkidle"});
+   await page.waitForLoadState("networkidle");await restoreDarkAfterNavigation();
+   await page.goto(origin+"/@activationonboarding",{waitUntil:"networkidle"});await restoreDarkAfterNavigation();
    if(!await page.getByText(title,{exact:true}).count()){
     const next=page.locator('a[rel="next"]');if(await next.count()!==1)throw Error("Published product absent and no unique next storefront page");
-    await next.click();await page.waitForURL(url=>url.searchParams.get("page")==="2");await page.waitForLoadState("networkidle");
+    await next.click();await page.waitForURL(url=>url.searchParams.get("page")==="2");await page.waitForLoadState("networkidle");await restoreDarkAfterNavigation();
    }
    try{await page.getByText(title,{exact:true}).waitFor({state:"attached"});}catch(error){console.error("PRODUCT_STOREFRONT_DIAGNOSTIC:"+JSON.stringify({engine,width,mode,createdId,url:page.url(),titleCount:await page.getByText(title,{exact:true}).count(),pager:await page.locator(".st-pager").allTextContents()}));throw error;}
    if(writes||foreign||localProductWrites!==expectedWrites||interceptedVisits!==expectedVisits)throw Error("Unexpected operation count "+JSON.stringify({writes,foreign,localProductWrites,expectedWrites,interceptedVisits,expectedVisits,blockedWrites}));
    console.log("PRODUCT_ACTION_PROOF:"+JSON.stringify({engine,width,mode,title,localProductWrites,expectedWrites,interceptedVisits,createdAndReloaded:true,explicitPublication:true,storefrontVisible:true,scope:"Disposable local fixture only; no checkout, email, delivery or real account."}));
   }catch(error){failed++;console.error("PRODUCT_MATRIX_FAILURE:"+JSON.stringify({engine,path,width,mode,error:String(error)}));}
-  finally{cases++;await context.close();await isolatedDarkBrowser?.close();}
+  finally{cases++;await context.close();}
  }
  console.log("PRODUCT_MATRIX_OPEN_GAPS:"+JSON.stringify(gaps));
  console.log("PRODUCT_MATRIX_SUMMARY:"+JSON.stringify({engine,cases,failed,gaps:gaps.length,scope:"Product form and actual disposable local creation/reload/manual visibility/storefront proof only; no checkout or buyer-area action proof. Synthetic emulation; reflow320 is not real browser400% zoom. No real-device, assistive-user or whole-product AAA certification."}));
