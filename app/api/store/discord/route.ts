@@ -8,6 +8,7 @@ import { assignable, cleanRoles } from "@/lib/discord-rules";
 import { forgetServer, readServer, saveServer, setProductRoles } from "@/lib/discord-store";
 import { logTeam } from "@/lib/team";
 import { PERMISSION_WORDS } from "@/lib/team-roles";
+import { reservePaidResourceWindow } from "@/lib/contract-resource-window";
 
 const no = (error: string, status = 400) => Response.json({ ok: false, error }, { status });
 
@@ -47,6 +48,7 @@ export async function POST(request: NextRequest) {
       if (!hasProduct(store, productId)) return no("unknown", 404);
       const wanted = cleanRoles(body.roles);
       if (wanted.length) {
+        if (store.period?.funded === true && !(await reservePaidResourceWindow(store))) return no("unavailable", 503);
         const read = await serverRoles(server.id);
         if (!read) return no("server", 502);
         const allowed = new Set(assignable(read.roles, server.id, read.botTop).map((r) => r.id));
@@ -60,6 +62,7 @@ export async function POST(request: NextRequest) {
     if (body.action === "role") {
       const name = typeof body.name === "string" ? body.name.replace(/\s+/g, " ").trim().slice(0, 100) : "";
       if (!name) return no("name");
+      if (store.period?.funded === true && !(await reservePaidResourceWindow(store))) return no("unavailable", 503);
       const made = await createRole(server.id, name);
       if (!made) return no("server", 502);
       await log(`made the Discord role ${name}`);

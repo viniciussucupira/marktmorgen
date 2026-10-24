@@ -26,6 +26,7 @@ import { paidPeriod } from "./billing-period-fixture";
 import { NextRequest } from "next/server";
 import { SESSION_COOKIE, openSession } from "@/lib/auth";
 import { POST as startDiscordInstall } from "@/app/api/store/discord/connect/route";
+import { POST as manageDiscord } from "@/app/api/store/discord/route";
 import { allowanceUsed } from "@/lib/store-allowance";
 
 const SERVER = "100000000000000001";
@@ -176,6 +177,21 @@ async function main(): Promise<void> {
   const installDestination = new URL(installStart.headers.get("location") ?? "https://none.invalid/");
   is("the owner stays at the studio instead of Discord consent", [installStart.status, installDestination.hostname, installDestination.searchParams.get("discord")], [303, "marktmorgen.com", "limited"]);
   is("no provider request or extra integration allowance", [discord.length, await allowanceUsed(fundedDiscord, "integration")], [beforeInstallRequests, beforeInstallUnits]);
+
+
+  part("Funded new role work refuses while role removal and disconnect remain available");
+  await setSubscription(OWNER, { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true, period: { ...paidPeriod(), funded: true } });
+  const managementSession = await openSession(OWNER);
+  const manage = (body: Record<string, unknown>) => manageDiscord(new NextRequest(`https://marktmorgen.com/api/store/discord?store=${store.sid}`, { method: "POST", headers: { host: "marktmorgen.com", origin: "https://marktmorgen.com", "content-type": "application/json", cookie: `${SESSION_COOKIE}=${managementSession}` }, body: JSON.stringify(body) }));
+  const beforeManagementRequests = discord.length;
+  const newRole = await manage({ action: "role", name: "New members" });
+  const newRoles = await manage({ action: "roles", productId, roles: [R1] });
+  is("new provider role and nonempty assignment fail closed", [newRole.status, (await newRole.json()).error, newRoles.status, (await newRoles.json()).error], [503, "unavailable", 503, "unavailable"]);
+  is("neither new operation asks Discord", discord.length, beforeManagementRequests);
+  const removeRoles = await manage({ action: "roles", productId, roles: [] });
+  is("removing product roles remains available without provider lookup", [removeRoles.status, (await removeRoles.json()).roles, discord.length], [200, [], beforeManagementRequests]);
+  const disconnected = await manage({ action: "disconnect" });
+  is("disconnect still reaches the existing provider cleanup", [disconnected.status, discord.includes(`DELETE /users/@me/guilds/${SERVER}`)], [200, true]);
 
   part("A trip to Discord's page");
   const state = await startTrip({ k: "join", sid: store.sid, email: "ana@example.com", redirect: "r", back: "/" });
