@@ -47,10 +47,14 @@ export async function checkPublicKeyboardCycle({page,path,is}) {
    const groupIndex=snapshot.groups.findIndex(group=>group.includes(current.key));
    if(groupIndex<0||testedGroups.has(groupIndex))return;
    testedGroups.add(groupIndex);
-   const group=snapshot.groups[groupIndex],start=group.indexOf(current.key),reached=[];
-   for(let step=1;step<=group.length;step++){
-    const target=group[(start+step)%group.length];
-    await page.keyboard.press("ArrowRight");
+   const group=snapshot.groups[groupIndex],start=group.indexOf(current.key),reached=[current.key],steps=[];
+   // Walk to both native ends and back to the initial option. WebKit does not
+   // wrap native radio arrows; no browser-specific skip or focus assignment.
+   for(let index=start+1;index<group.length;index++)steps.push({key:"ArrowRight",target:group[index]});
+   for(let index=group.length-2;index>=0;index--)steps.push({key:"ArrowLeft",target:group[index]});
+   for(let index=1;index<=start;index++)steps.push({key:"ArrowRight",target:group[index]});
+   for(const {key,target} of steps){
+    await page.keyboard.press(key);
     const targetHandle=await state.evaluateHandle(({nodes},key)=>nodes[key],target);
     try{
      // Controlled native radios may commit React state after keyup. Observe that
@@ -68,7 +72,7 @@ export async function checkPublicKeyboardCycle({page,path,is}) {
    const restored=await read();
    is("native radio traversal restores original selection "+path,restored.key,current.key);
    is("native radio traversal covers every option "+path,new Set(reached).size,group.length);
-   radioReports.push({group:groupIndex,expected:group.length,reached:new Set(reached).size,restored:restored.key===current.key});
+   radioReports.push({group:groupIndex,expected:group.length,reached:new Set(reached).size,keys:steps.length,keyBound:2*(group.length-1),restored:restored.key===current.key});
   };
   const reports=[];
   for(const direction of ["Tab","Shift+Tab"]) {
