@@ -22,6 +22,8 @@ jobs:
       matrix:
         browser: [chromium, firefox, webkit]
     env:
+      # New AX2 cases stay off for private/unknown repositories; existing cases remain.
+      AX2_PUBLIC_STANDARD: ${{ github.repository == 'viniciussucupira/marktmorgen' && github.event.repository.private == false && github.event.repository.visibility == 'public' }}
       NEXT_TELEMETRY_DISABLED: "1"
       E2E_BROWSER: ${{ matrix.browser }}
     steps:

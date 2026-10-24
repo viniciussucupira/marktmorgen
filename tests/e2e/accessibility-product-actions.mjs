@@ -49,9 +49,9 @@ let browser,failed=0,cases=0;const gaps=[];
 try{
  let up=false;for(let n=0;n<120;n++){if(app.exitCode!==null)throw Error(output);try{up=(await fetch(origin)).ok;}catch{}if(up)break;await new Promise(resolve=>setTimeout(resolve,500));}if(!up)throw Error("Local app unavailable "+output);
  browser=await driver.launch();console.log("PRODUCT_MATRIX_ENGINE:"+JSON.stringify({requested:engine,actual:driver.name(),version:browser.version()}));
- for(const path of ["/studio?store="+fixture.sid])for(const width of [320,390,768,1280,1920])for(const mode of ["baseline","text-spacing","reduced-motion","forced-colors","reflow-320"]){
+ for(const path of ["/studio?store="+fixture.sid])for(const width of [320,390,768,1280,1920])for(const mode of ["baseline","text-spacing","reduced-motion","forced-colors","reflow-320",...(process.env.AX2_PUBLIC_STANDARD==="true"?["dark"]:[])]){
   const viewportWidth=mode==="reflow-320"?320:width;
-  const context=await browser.newContext({viewport:{width:viewportWidth,height:900},serviceWorkers:"block",reducedMotion:mode==="reduced-motion"?"reduce":"no-preference",forcedColors:mode==="forced-colors"?"active":"none"});
+  const context=await browser.newContext({...(mode==="dark"?{colorScheme:"dark"}:{}),viewport:{width:viewportWidth,height:900},serviceWorkers:"block",reducedMotion:mode==="reduced-motion"?"reduce":"no-preference",forcedColors:mode==="forced-colors"?"active":"none"});
   if(mode==="text-spacing")await context.addInitScript(()=>document.addEventListener("DOMContentLoaded",()=>{const style=document.createElement("style");style.textContent="*{line-height:1.5!important;letter-spacing:.12em!important;word-spacing:.16em!important}p{margin-bottom:2em!important}";document.head.append(style);},{once:true}));
   await context.addInitScript(()=>{
    window.__mmRscBodies=[];
@@ -121,6 +121,7 @@ try{
    await page.waitForFunction(()=>{if(scrollX!==0||scrollY!==0){window.scrollTo({top:0,left:0,behavior:"instant"});delete window.__mmAuditOriginSince;return false;}window.__mmAuditOriginSince??=performance.now();return performance.now()-window.__mmAuditOriginSince>=200;});
    await page.evaluate(()=>{delete window.__mmAuditOriginSince;if(scrollX!==0||scrollY!==0)throw Error("Audit viewport origin changed after settlement");});
    gaps.push({path,width,mode,reason:"Whole-document axe is anchored at scroll0. Intermediate scroll positions under sticky navigation still require manual occlusion review; this run does not close that gap."});
+   if(mode==="dark"&&!await page.evaluate(()=>matchMedia("(prefers-color-scheme: dark)").matches))throw Error("Dark color-scheme request not honored");
    await page.addScriptTag({content:axe});
    const report=await page.evaluate(async()=>{
     const tags=["wcag2a","wcag2aa","wcag2aaa","wcag21a","wcag21aa","wcag21aaa","wcag22a","wcag22aa","wcag22aaa"];

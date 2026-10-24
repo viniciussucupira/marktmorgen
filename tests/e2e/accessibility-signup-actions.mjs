@@ -48,14 +48,14 @@ try{
  let up=false;for(let n=0;n<120;n++){if(app.exitCode!==null)throw Error("Local app exited");try{up=(await fetch(upstream)).ok;}catch{}if(up)break;await new Promise(r=>setTimeout(r,500));}
  if(!up)throw Error("Local app did not start");
  browser=await driver.launch();console.log("SIGNUP_MATRIX_ENGINE:"+JSON.stringify({requested:engine,actual:driver.name(),version:browser.version()}));
- for(const width of [320,390,768,1280,1920])for(const mode of ["baseline","text-spacing","reduced-motion","forced-colors","reflow-320"]){
+ for(const width of [320,390,768,1280,1920])for(const mode of ["baseline","text-spacing","reduced-motion","forced-colors","reflow-320",...(process.env.AX2_PUBLIC_STANDARD==="true"?["dark"]:[])]){
   // Each viewport/mode is a separate fresh deployment fixture. Reusing the
   // fake database would exhaust the real ten-store company-funded pool.
   // Keep that production ceiling intact; never seed paying stores or enlarge it.
   if(cases>0){await services.close();services=await startServices(4498);}
   proxyTrace=[];
   const index=cases+1,viewportWidth=mode==="reflow-320"?320:width;
-  const context=await browser.newContext({ignoreHTTPSErrors:true,viewport:{width:viewportWidth,height:900},serviceWorkers:"block",reducedMotion:mode==="reduced-motion"?"reduce":"no-preference",forcedColors:mode==="forced-colors"?"active":"none",extraHTTPHeaders:{"x-forwarded-for":"192.0.2."+index,"Sec-GPC":"1"}});
+  const context=await browser.newContext({...(mode==="dark"?{colorScheme:"dark"}:{}),ignoreHTTPSErrors:true,viewport:{width:viewportWidth,height:900},serviceWorkers:"block",reducedMotion:mode==="reduced-motion"?"reduce":"no-preference",forcedColors:mode==="forced-colors"?"active":"none",extraHTTPHeaders:{"x-forwarded-for":"192.0.2."+index,"Sec-GPC":"1"}});
   let page;let phase="open",foreign=0,interceptedVisits=0,localChallenges=0;const mutations=[],errors=[],network=[];const handle="matrix-"+engine[0]+"-"+index,storeName="Matrix "+engine+" "+index;const inbox="matrix-"+engine+"-"+index+"@example.test",before=services.emails().length;
   try{
    await context.addInitScript(()=>Object.defineProperty(navigator,"globalPrivacyControl",{configurable:true,get:()=>true}));
@@ -93,7 +93,8 @@ try{
     await page.waitForLoadState("networkidle");
     await page.evaluate(()=>{document.activeElement?.blur?.();window.scrollTo({top:0,left:0,behavior:"instant"});});
     await page.waitForFunction(()=>scrollX===0&&scrollY===0);
-    await page.addScriptTag({content:axe});
+    if(mode==="dark"&&!await page.evaluate(()=>matchMedia("(prefers-color-scheme: dark)").matches))throw Error("Dark color-scheme request not honored");
+   await page.addScriptTag({content:axe});
     const result=await page.evaluate(async()=>{
      const root=document.documentElement,result=await window.axe.run(document,{rules:{"color-contrast-enhanced":{enabled:true}}});
      return {scroll:root.scrollWidth,client:root.clientWidth,rules:result.passes.map(r=>r.id),

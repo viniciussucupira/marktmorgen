@@ -15,9 +15,9 @@ let browser,failed=0,cases=0;const gaps=[];
 try{
  let up=false;for(let n=0;n<120;n++){if(app.exitCode!==null)throw Error(output);try{up=(await fetch(origin)).ok;}catch{}if(up)break;await new Promise(resolve=>setTimeout(resolve,500));}if(!up)throw Error("Local app unavailable "+output);
  browser=await driver.launch();console.log("PUBLIC_MATRIX_ENGINE:"+JSON.stringify({requested:engine,actual:driver.name(),version:browser.version()}));
- for(const path of ["/","/pricing","/signin"])for(const width of [320,390,768,1280,1920])for(const mode of ["baseline","text-spacing","reduced-motion","forced-colors","reflow-320"]){
+ for(const path of ["/","/pricing","/signin"])for(const width of [320,390,768,1280,1920])for(const mode of ["baseline","text-spacing","reduced-motion","forced-colors","reflow-320",...(process.env.AX2_PUBLIC_STANDARD==="true"?["dark"]:[])]){
   const viewportWidth=mode==="reflow-320"?320:width;
-  const context=await browser.newContext({viewport:{width:viewportWidth,height:900},serviceWorkers:"block",reducedMotion:mode==="reduced-motion"?"reduce":"no-preference",forcedColors:mode==="forced-colors"?"active":"none"});
+  const context=await browser.newContext({...(mode==="dark"?{colorScheme:"dark"}:{}),viewport:{width:viewportWidth,height:900},serviceWorkers:"block",reducedMotion:mode==="reduced-motion"?"reduce":"no-preference",forcedColors:mode==="forced-colors"?"active":"none"});
   let writes=0,foreign=0;const errors=[];
   try{
    const page=await context.newPage();page.on("pageerror",error=>errors.push(String(error)));
@@ -86,6 +86,7 @@ try{
     window.__publicOriginSince??=performance.now();return performance.now()-window.__publicOriginSince>=200;
    },undefined,{timeout:10000});}catch(error){console.error("PUBLIC_SCROLL_DIAGNOSTIC:"+JSON.stringify({engine,path,width,stage:"audit-origin",...await page.evaluate(()=>({x:scrollX,y:scrollY,originSince:window.__publicOriginSince,active:document.activeElement?.tagName,scrollBehavior:getComputedStyle(document.documentElement).scrollBehavior}))}));throw error;}
    await page.evaluate(()=>{delete window.__publicOriginSince;});
+   if(mode==="dark"&&!await page.evaluate(()=>matchMedia("(prefers-color-scheme: dark)").matches))throw Error("Dark color-scheme request not honored");
    await page.addScriptTag({content:axe});
    const report=await page.evaluate(async()=>{
     const tags=["wcag2a","wcag2aa","wcag2aaa","wcag21a","wcag21aa","wcag21aaa","wcag22a","wcag22aa","wcag22aaa"];

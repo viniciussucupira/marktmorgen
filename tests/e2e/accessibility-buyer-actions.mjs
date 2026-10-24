@@ -49,9 +49,9 @@ try{
  let up=false;for(let n=0;n<120;n++){if(app.exitCode!==null)throw Error("Local app exited");try{up=(await fetch(origin)).ok;}catch{}if(up)break;await new Promise(r=>setTimeout(r,500));}
  if(!up)throw Error("Local app did not start");
  browser=await driver.launch();console.log("BUYER_MATRIX_ENGINE:"+JSON.stringify({requested:engine,actual:driver.name(),version:browser.version()}));
- for(const width of [320,390,768,1280,1920])for(const mode of ["baseline","text-spacing","reduced-motion","forced-colors","reflow-320"]){
+ for(const width of [320,390,768,1280,1920])for(const mode of ["baseline","text-spacing","reduced-motion","forced-colors","reflow-320",...(process.env.AX2_PUBLIC_STANDARD==="true"?["dark"]:[])]){
   const index=cases+1,viewportWidth=mode==="reflow-320"?320:width;
-  const context=await browser.newContext({viewport:{width:viewportWidth,height:900},serviceWorkers:"block",reducedMotion:mode==="reduced-motion"?"reduce":"no-preference",forcedColors:mode==="forced-colors"?"active":"none",extraHTTPHeaders:{"x-forwarded-for":"192.0.2."+index,"sec-gpc":"1"}});
+  const context=await browser.newContext({...(mode==="dark"?{colorScheme:"dark"}:{}),viewport:{width:viewportWidth,height:900},serviceWorkers:"block",reducedMotion:mode==="reduced-motion"?"reduce":"no-preference",forcedColors:mode==="forced-colors"?"active":"none",extraHTTPHeaders:{"x-forwarded-for":"192.0.2."+index,"sec-gpc":"1"}});
   let phase="open",foreign=0;const mutations=[],errors=[],beforeEmails=services.emails().length,beforeCheckouts=services.checkouts().length;let libraryRequested=false;
   try{
    await context.addInitScript(()=>{Object.defineProperty(navigator,"globalPrivacyControl",{value:true,configurable:true});});
@@ -72,7 +72,8 @@ try{
     await page.waitForLoadState("networkidle");
     await page.evaluate(()=>{document.activeElement?.blur?.();window.scrollTo({top:0,left:0,behavior:"instant"});});
     await page.waitForFunction(()=>scrollX===0&&scrollY===0);
-    await page.addScriptTag({content:axe});
+    if(mode==="dark"&&!await page.evaluate(()=>matchMedia("(prefers-color-scheme: dark)").matches))throw Error("Dark color-scheme request not honored");
+   await page.addScriptTag({content:axe});
     const result=await page.evaluate(async()=>{
      const root=document.documentElement,result=await window.axe.run(document,{rules:{"color-contrast-enhanced":{enabled:true}}});
      return {scroll:root.scrollWidth,client:root.clientWidth,overflow:root.scrollWidth>root.clientWidth?[...document.querySelectorAll("main *")].filter(n=>{const r=n.getBoundingClientRect();return r.width>1&&r.height>1&&r.right>root.clientWidth+1;}).slice(0,12).map(n=>({tag:n.tagName,classes:typeof n.className==="string"?n.className:"",width:n.getBoundingClientRect().width,right:n.getBoundingClientRect().right,client:n.clientWidth,scroll:n.scrollWidth})):[],violations:result.violations.map(r=>({id:r.id,targets:r.nodes.map(n=>n.target)})),incomplete:result.incomplete.map(r=>({id:r.id,targets:r.nodes.map(n=>n.target)}))};
