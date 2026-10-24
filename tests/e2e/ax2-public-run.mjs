@@ -1,0 +1,10 @@
+import {readFileSync} from "node:fs";
+const REPOSITORY="viniciussucupira/marktmorgen";
+/** Added AX2 cases stay off for private, foreign or unknown repository visibility. */
+export function publicStandardAx2Run(env=process.env,readEvent=path=>JSON.parse(readFileSync(path,"utf8"))){
+ if(env.GITHUB_REPOSITORY!==REPOSITORY||!env.GITHUB_EVENT_PATH)return false;
+ try{
+  const repo=readEvent(env.GITHUB_EVENT_PATH)?.repository;
+  return repo?.full_name===REPOSITORY&&repo.private===false&&repo.visibility==="public";
+ }catch{return false;}
+}

@@ -1,3 +1,5 @@
+import {publicStandardAx2Run} from "./ax2-public-run.mjs";
+import {checkCertificateHeading} from "./certificate-heading.mjs";
 import { checkMenuMounting } from "./menu-mounting.mjs";
 import { checkPurchaseResend } from "./purchase-resend-confirmation.mjs";
 import { checkShippingSave } from "./shipping-save-confirmation.mjs";
@@ -213,7 +215,7 @@ try {
   const seeded = await run(process.execPath, [seedFile]);
   rmSync(out, { recursive: true, force: true });
   if (seeded.status !== 0) throw new Error(`the store could not be made:\n${seeded.said}`);
-  const { shippingFixture,libraryFixture,signinPrices,activationFixture,packageFixture,tierFixture,exitFixture,homeDemo,pauseFixtures,session, second, abProduct, abStore, contactToken,growthSession,growthSid,growthProduct,returnSession,returnSid,wordingSession,wordingSid,wordingTrialSession,wordingTrialSid } = JSON.parse(seeded.said.trim().split("\n").at(-1));
+  const { certificateHeadingFixture,shippingFixture,libraryFixture,signinPrices,activationFixture,packageFixture,tierFixture,exitFixture,homeDemo,pauseFixtures,session, second, abProduct, abStore, contactToken,growthSession,growthSid,growthProduct,returnSession,returnSid,wordingSession,wordingSid,wordingTrialSession,wordingTrialSid } = JSON.parse(seeded.said.trim().split("\n").at(-1));
 
   if (BUILD) {
     const built = await run(process.execPath, [nextCli, "build"]);
@@ -832,6 +834,7 @@ try {
   await checkPathScripts({browser,LOCAL,session:growthSession,sid:growthSid,axeSource,is});
   await checkPathWording({browser,LOCAL,services,session:wordingSession,sid:wordingSid,trialSession:wordingTrialSession,trialSid:wordingTrialSid,axeSource,is});
   await checkPathCertificates({browser,LOCAL,session:growthSession,sid:growthSid,otherSession:wordingSession,axeSource,is});
+  if(publicStandardAx2Run())await checkCertificateHeading({browser,LOCAL,fixture:certificateHeadingFixture,axeSource,is});
   await checkPublicAmericanEnglish({browser,LOCAL,is});
   await checkSalesComparisons({browser,LOCAL,axeSource,is});
   await checkContactAcknowledgment({browser,LOCAL,fixture:homeDemo,axeSource,is});
