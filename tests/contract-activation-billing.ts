@@ -8,3 +8,6 @@ export const switchActivationObservations:{calls:CheckoutContractActivation[];ac
 export async function activateSwitchContract(input:CheckoutContractActivation):Promise<boolean>{
  switchActivationObservations.calls.push(input);return switchActivationObservations.accept;
 }
+
+// Pure production binding stays exact when transitive sender imports need it.
+export {contractFundingBinding} from '../lib/contract-funding';

@@ -5057,6 +5057,7 @@ Proveniência da revisão comercial: passou a fazer parte do Bloco de abertura, 
 2. 315 [MG2], somente passos1e2 (cobrança só em dólar e cobrança anual sem Stripe Billing), junto com320 [TK2] (mensais e assistente, com as mesmas garantias).
    Em seguida,331 [RC1] — Stripe Tax por transação, por pedido do dono de24/10/2026 02h39(Fortaleza), junto à cobrança própria de320 [TK2] e315 [MG2]/passo2.
    Logo depois,332 [RD1] — débito em conta como opção adicional ao cartão, por pedido do dono de24/10/2026 09h19(Fortaleza); cartão preservado e pior caso continua pelo cartão.
+   Depois de332 [RD1],333 [RE1] — remessa somente do lucro, e334 [RE2] —3D Secure no primeiro pagamento mensal e das legendas, nessa ordem, por pedido do dono de24/10/2026 09h52(Fortaleza).
 3. 309 [EM1] — e-mails para a lista pela Amazon SES.
 4. 313 [CV1] — visitas pelo CDN e imagens pelo Cloudflare R2.
 5. 326 [IN2] — menos comandos e menos tempo de função por página.
@@ -6609,3 +6610,61 @@ Custos incrementais condicionais:1EVAL18primeira/17repetida, requestJSON<=12288b
 Branch codex/ab-paid-mail-cohort preserva main205 e os pedidos RC331/RD332/provas204–205 de #894. Para períodos marcados financiados, reserve(store,n) e takeFromMonth(store,n) exigem prova da coorte antes de consumir capacidade de remetente/mês. Sem aprovação financeira, enviar à lista deve parar antes do fornecedor. Recursos transacionais/globais separados continuam pendentes; resourceAllocations=false. Testes sintéticos adicionados para zero contadores/zero dispatch sem aprovação, mantendo casos anteriores de perda/repetição.
 
 Custos antes de operar: novoEVAL18primeira/17repetida, JSON<=12288bytes, mesmo campo de coorte. Condicional7000/10000observações Studio/Scale (uma por e-mail publicado), primária sem réplica PAYG0.20/100k e18comandos: USD0.252/0.36 por mês, USD3.024/4.32 por12pioresmeses por intervalo. Store0direitos não zera custo de observações recusadas. Limites globais de observações/abuso/repetições, overhead, resposta/transferência, CPU/memória, retenção/topologia e reserva continuam desconhecidos/reprovados; nenhuma redução de teto/reserva ou margem certificada. Ver docs/paid-mail-contract-cohort.md. Suíte completa e publicação exata ainda pendentes.
+
+
+## RE — Remessa só do lucro e verificação do cartão nos planos mensais (24/10/2026)
+
+Solicitação do dono (24/10/2026, 09h52, horário de Fortaleza): reduzir o custo de receber os pagamentos do Marktmorgen.
+
+NÃO PARE o que está fazendo. COLOQUE NA FILA, com os próximos números livres, depois dos pedidos já gravados ou em gravação (inclusive o RC de24/10/2026,02h39, e o RD de24/10/2026,09h19), e inclua estes itens na posição(k) do Bloco de abertura, logo depois do item do RD.
+
+Estado inicial informado pelo dono: no main, o último item é330 [EV2]; o PR#894 grava RC331; o RD ainda não foi gravado. Conferência atual: RC331 e RD332 já estão no main pelo PR#895, preservando a ancestralidade de#894;333–334 são os próximos números livres. Não renumerar nem duplicar itens anteriores.
+
+333. [RE1] Remessa somente do lucro.
+
+Estado: na fila. Proveniência AB(k)/RE: pedido direto do dono de24/10/2026 09h52(Fortaleza); executar logo depois de332 [RD1], antes de334 [RE2]. AB(a) e posições(a)–(j) continuam primeiro.
+
+Hoje lib/receiving-costs.ts cobra REMITTANCE_BPS (1,5%) sobre toda a receita, conforme o briefing, a conferir durante a execução. Registre em AGENTS.md a regra de que todos os fornecedores da LLC são pagos em dólar, diretamente da conta americana da LLC, e que só o lucro é levado ao Brasil. Confirme no código e na documentação que nenhum custo variável do Marktmorgen é pago em reais. Só então passe a calcular a remessa sobre o lucro antes dos impostos de cada unidade, e não sobre a receita, com a taxa da rota comprovada no item314 [MG1], passo2, ou1,5% enquanto ela não for comprovada. Registre a economia por plano e intervalo. Não aplicar o desconto antes das condições e evidências; a regra em AGENTS.md é parte da execução de RE1, não certificação de despesas reais por este registro.
+
+334. [RE2] 3D Secure no primeiro pagamento dos planos mensais.
+
+Estado: na fila. Proveniência AB(k)/RE: mesmo pedido; executar logo depois de333 [RE1], ambos imediatamente após332 [RD1].
+
+Hoje lib/billing.ts pede3D Secure somente nos planos anuais (linha336 no briefing) e lib/assistant-billing.ts no assistente; conferir o código vigente na execução. Pela documentação oficial e datada do Stripe sobre transferência de responsabilidade em fraudes autenticadas, peça3D Secure também no primeiro pagamento dos planos mensais e das legendas, mantendo a renovação fora da sessão sem nova autenticação quando permitido. Meça, com o Stripe simulado, que nenhuma renovação falha por isso. A reserva de contestação de lib/receiving-costs.ts não muda sem dados reais; registre o efeito esperado e o risco de perda de conversão. Testes sintéticos demonstram os cenários implementados, sem prometer ausência universal de falha de emissor ou certificação de conversão.
+
+REGRA DOS60% (OBRIGATÓRIA): todo cliente pagante, considerado isoladamente e usando100% de todos os direitos do plano no pior mês, deve manter margem de lucro líquido MÍNIMA de60%, depois de todos os custos e de todos os impostos, inclusive os brasileiros; a margem pode ser maior, mas nunca menor, e a mesma regra vale para a empresa como um todo. Custo desconhecido não pode ser considerado zero. Use a leitura que resultar em MAIS imposto (docs/tax-uncertainty.md). Desde22/10/2026, todos os custos fixos da LLC são atribuídos integralmente ao Marktmorgen (item275 [FX1]). Uma tarifa só sai do pior caso quando o código ou uma regra gravada garante que ela não pode ocorrer. Aplica-se324 [TK6] a toda economia.
+
+Proibições: não alterar preços, limites visíveis, comissão, meios de pagamento aceitos, PLANS_ON_SALE, tax gate, art.9a ou revisão comercial; não criar contas, aceitar termos, contratar serviços, pagar valores, alterar configurações reais do Stripe ou contatar terceiros; somente testes sintéticos com o Stripe simulado.
+
+Na execução, registrar custos mensais/anuais por plano e maior preço pago, taxa/rota e custos variáveis em moeda comprovados, tetos/reserva, fontes oficiais datadas, testes completos, PR e publicação exata. Nenhuma remessa, cálculo de recebimento, autenticação de cartão, reserva ou configuração real é alterada por este registro documental. Desconhecido continua reprovado; documento não conta como entrega funcional.
+
+
+### Entrega funcional206 — reservas de e-mail financiadas (24/10/2026)
+
+PR#895 head d0fe3a4f132cdf1315fb5c0a17945e166b06adf8, tree172397c68c47cd738d512e36b8a2eccd673b62c7, merge138db629e8c2aca5554b8e1474077334127ea0fe em12:52:18UTC/09:52:18Fortaleza;24/24success no head exato, árvores prevista/testada/real e pais conferidos. verify120872540741 passou os novos casos de capacidade zero/dispatch zero às12:31:44UTC. #894 documental foi incorporado pela ancestralidade em#895, sem entrega extra, preservando RC331/RD332 e provas204–205.
+
+Deployment dpl_7Ti7zHwpovqZpVJbWgZLJgdtRDgC READY12:53:45.905UTC/09:53:45.905Fortaleza, GitSHA exato do merge e marktmorgen.com /,/platform,/pricing,/mission,/library HTTP200 com o mesmo deployment. Só então contador205→206, próxima207, aviso206 emitido uma vez. reserve/takeFromMonth de períodos marcados financiados exigem coorte paga antes de capacidade de remetente/mês; envio à lista para antes do fornecedor sem aprovação. Demais caminhos transacionais/globais e recursos continuam pendentes; políticas nulas, coberturas falsas, vendas fechadas.
+
+Custos condicionais já calculados: novoEVAL18/17comandos,JSON<=12288bytes,coorte compartilhada. Uma observação por e-mail publicado Studio7000/Scale10000, primária sem réplica PAYG0.20/100k:USD0.252/0.36mês e3.024/4.32por12pioresmeses por intervalo. Store0direitos não zera chamadas recusadas. Teto global/repetições/abuso,topologia,CPU/memória,respostas/transferência,retenção e reserva desconhecidos continuam reprovados;sem certificação60%.
+
+
+### AB(a) — coorte paga no remetente para e-mail próprio e de acesso (em implementação)
+
+Branch codex/ab-paid-store-email-cohort, descendente imutável de#896, preserva RE333/334 e prova206. EmailMeter bystore exige coorte paga antes de takeAllowance e de chamar remetente para períodos marcados financiados. Teste sintético cobre email/transactional com zero uso e zero dispatch sem aprovação. Company/order/monthly e assistente separado mantêm seus controles e seguem pendentes de auditoria; não certifica resourceAllocations.
+
+Custos antes de operar:1EVAL18primeira/17repetida,JSON<=12288bytes,sem campo novo. Envelope condicional uma observação/e-mail publicado Store225/Studio700/Scale1800,18comandos,primária sem réplicaPAYG0.20/100k:USD0.0081/0.0252/0.0648mês e0.0972/0.3024/0.7776por12pioresmeses por intervalo. JSONmensal2764800/8601600/22118400bytes;12meses33177600/103219200/265420800. Abuso/repetições/recusas,teto global/reserva,topologia,CPU/memória,respostas/transferência,overhead/retenção desconhecidos continuam reprovados. Sem redução de teto/reserva ou margem60%certificada. Ver docs/paid-store-email-cohort.md. Suíte completa/publicação exata pendentes.
+
+
+### AB(a) — compatibilidade do simulador de ativação corrigida (24/10/2026)
+
+Head21ebe9e35f03fe6338d02110fd81c418514587ec, verify120878963958 falhou em13:02:00.889UTC/10:02:00.889Fortaleza: esbuild não encontrou contractFundingBinding no alias tests/contract-activation-billing.ts, agora alcançado transitivamente por email→contract-resource-window. Correção reexporta somente a função pura de hash da implementação real pelo caminho relativo, preservando simuladores de ativação, recusas e aprovações reais nulas. Nenhuma lógica de produção/guarda/teto é afrouxada. Executar suíte completa no novo head; não concluir com repetição de job isolado. Falha e evidência mantidas no histórico.
+
+
+### AB(a) — falha WebKit na transição entre salvar e remover coleções (24/10/2026)
+
+Head97fc07f0fe9b8d7ac684428fb4b9f271568320c9, job120879788296: em13:21:32.715UTC/10:21:32.715Fortaleza timeout do clique Save collections após edit/confirmed/390. Log mostra botão inicialmente instável e depois desativado; tests/e2e/collections-acknowledgment.mjs:38. O componente chama router.refresh após confirmação e o teste começava a fase seguinte antes de aguardar essa transição. Corrida de refresh é hipótese apoiada no fluxo, não rastreamento causal exclusivo capturado. Correção do teste aguarda rede ociosa após a confirmação e prontidão real (busyfalse/botão habilitado) antes da próxima fase; mantém42requisições interceptadas, todos os cenários de ACK, ambos tamanhos, limites e timeouts existentes. Não usa force, sleep fixo, remoção de caso ou repetição isolada. Nenhum TSX/produção alterado. Exigir suíte completa no novo head e confirmar o cenário WebKit original; falha fica histórica.
+
+
+### AB(a) — segunda falha WebKit: observação do título preservado (24/10/2026)
+
+Head2a8be37543bc9799632df393ca6b3496e2c826b3, job120884117830:13:44:26.974UTC/10:44:26.974Fortaleza, FAIL HT15 saved creator headline intact390, esperado true/obtido false. Não é repetição do timeout anterior: a execução chegou aos testes posteriores e concluiu com essa única asserção falsa. tests/e2e/template-library.mjs clicava o bloco Keep my creator headline e imediatamente avaliava input/textarea, sem aguardar a seleção renderizada. Correção aguarda o mesmo valor exato aparecer no DOM antes de manter a asserção original; não troca texto, não salva/publica, não remove caso, não aumenta timeout, não usa force/sleep nem altera componente. Renderização assíncrona é hipótese do fluxo, não trace causal exclusivo capturado. Exigir suíte completa no novo head e manter as falhas anteriores. Publicação continua bloqueada.

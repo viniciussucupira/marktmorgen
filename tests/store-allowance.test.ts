@@ -155,3 +155,12 @@ test("the daily job writes a store down again when only its billing month moved"
   assert.deepEqual((await storeForEmail("renew@example.com"))!.period, next);
   assert.equal(await recordState((await storeForEmail("renew@example.com"))!, state), false, "and not again when nothing moved");
 });
+
+test("funded store-metered emails require paid proof before counters or provider dispatch",async()=>{
+ const base=paying(50,{statsId:'a'.repeat(32)}),store={...base,period:{...base.period!,funded:true as const}};
+ for(const kind of ['email','transactional'] as const){
+  assert.equal(await sendEmail({meter:{by:'store',store,kind},from:'Shop <shop@example.com>',to:'reader@example.org',subject:'Synthetic only',text:'No dispatch without approval.'}),false);
+  assert.equal(await allowanceUsed(store,kind),0);
+ }
+ assert.equal(sends,0);
+});
