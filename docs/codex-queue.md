@@ -5042,7 +5042,7 @@ Proveniência da revisão comercial: passou a fazer parte do Bloco de abertura, 
 
 (e) Os itens fiscais 7 [C-UE], 8 [C-UK] e 9 [C-US] e os itens 300 a 303 (9A).
 
-(f) 317 [EU1] — hospedagem na União Europeia, com a decisão sobre a Hazelsong encerrada, registrada nesta mesma alteração documental.
+(f) 317 [EU1] — hospedagem na União Europeia, incluindo337[HZ2] e os recursos guardados da Hazelsong pagos pela LLC, conforme decisão posterior do dono de24/10/2026 14h58(Fortaleza). Preservar histórico anterior; nenhuma exclusão ou configuração real sem ordem expressa.
 
 (g) 305 [SY1], 306 [SY2] e 307 [EC1] — reembolso em autoatendimento, reserva em dinheiro real e encerramento justo.
 
@@ -6909,3 +6909,28 @@ addHostIcs recebe Store completa e exige coorte após validação, antes de DNS/
 ### AB(a) — admissão de novo calendário da loja financiada (em implementação)
 
 addFeed exige coorte após URL/config/capacidade/duplicidade, antes de homeZone/feed. Rota503unavailable. Regressão sintética persistida com resolver injetado, recusa sem DNS/mutação e remoção disponível. calendarView confirmado somente estado guardado; refresh retido/token/reembolso inalterados. Custos e lacunas em docs/paid-store-calendar-cohort.md. Preserva920 por ancestralidade; CI completo obrigatório. Políticas nulas/coberturas falsas/vendas fechadas, sem60% certificado.
+
+
+
+## HZ — Hazelsong guardada sem dividir custos (24/10/2026)
+
+Solicitação do dono24/10/2026,14h58 Fortaleza. Registro após335[FR1], preservando itens anteriores e os trabalhos funcionais em andamento. Conferidos mainbb50779c9fb4c06a718674ef001d375e5d8aca95, filas candidatas918–921 e15PRs abertos:336–338 livres, sem HZ repetido. Heads antigos738–754 permanecem idênticos aos já auditados; não duplicar nem renumerar. HZ2 integra AB(f) junto317[EU1]; demais subpartes ligadas275[FX1]/proteção do orçamento, sem interromper AB(a).
+
+336. [HZ1] Hazelsong guardada e custos residuais integrais no Marktmorgen.
+
+Estado: regra de preservação registrada em AGENTS.md juntoFX275/Hazelsong encerrada; medição/reconciliação de custos na fila, vinculada275[FX1]. A Hazelsong não é apagada: repositório, projeto Vercel, armazenamentos, dados e domínios preservados; nada pode ser apagado sem ordem expressa do dono. Todo custo residual, inclusive renovações hazelsong.com/getkudobox.com, armazenamentos hazelsong-private-media/kudobox-media na Vercel, chaves dela no Upstash compartilhado e uso do projeto hazelsong entra100%nos custos fixos do Marktmorgen, por valor medido/fonte/data/escopo, sem desconto ou divisão. Medir mensal/anual, maior preço pago, tetos e reserva; desconhecido reprova. Se voltar daqui a anos, contas/custos/cálculos totalmente separados, sem divisão com Marktmorgen. O texto de23/10 que dizia nenhum custo dela pago pela LLC permanece somente histórico, expressamente substituído neste ponto.
+
+337. [HZ2] Guarda da Hazelsong compatível com hospedagem na UE.
+
+Estado: na fila do Bloco de abertura AB(f), junto317[EU1], sem antecipar sobreAB(a)–(e). Incluir no inventário servidores/funções/agendas, bancos/chaves compartilhados, armazenamentos/arquivos, configurações e qualquer recurso guardado pago pela LLC. EU_HOSTING_CONFIRMED exige nenhum servidor, banco ou armazenamento pago pela LLC fora da UE; domínio guardado não elimina localização de dados. A decisão não confirma região nem liga flag.
+Propor, com inventário/evidências/custos: (A)cópia completa e verificada de arquivos, Redis e configurações para arquivo do dono fora das contas pagas da LLC; ou(B)guarda em armazenamento de região da UE. Preservar segredos com proteção adequada, identificadores e dados; manifestos/contagens/hashes e teste de restauração sintético, incluindo configurações e dependências, antes de declarar cópia verificada. Nunca presumir backup completo por download parcial.
+Depende do dono: escolher A ouB e indicar o arquivo/destino sob seu controle; depois de receber relatório da cópia completa verificada, dar ordem expressa específica para eventual retirada dos recursos atuais. Roteiro futuro deve indicar cada recurso e passo exato, com rótulos reais do painel conferidos na execução. Até cópia verificada E ordem expressa, não excluir nem retirar recurso algum. Nenhuma migração, exportação real de dados ou contratação executada neste registro.
+
+338. [HZ3] Impedir que Hazelsong consuma o orçamento compartilhado sem apagá-la.
+
+Estado: na fila, ligado275[FX1] e proteção operacional, sem interromper implementação atual. Verificar por leitura projeto hazelsong na Vercel: tarefas agendadas ativas, funções/requests/CPU/transferência/armazenamento e consumo medido na equipe, período/moeda/fonte/data; distinguir medido de estimativa e fatura desconhecida. Verificar em fonte oficial datada o efeito do limite de gasto da equipe sobre todos os projetos, sem apresentar a alegação do briefing como prova já conferida.
+Depende do dono: após inventário, apresentar a ação exata no projeto hazelsong para impedir novas execuções/consumo preservando código/dados/domínios, com rótulos reais e efeitos conferidos; aguardar ação/ordem expressa do dono antes de mudar configuração. Não apagar projeto, agenda, função, armazenamento, chave ou domínio; não alterar orçamento ou controles de Marktmorgen. Não considerar custo eliminado até evidência da interrupção e persistência/renovação residual reconciliada.
+
+REGRA DOS60% para336–338: cada pagante isolado usando100%dos direitos no pior mês e globalmente mínimo60%líquido após todos os custos/impostos Brasil/EUA; leitura que resultar em MAIS imposto em docs/tax-uncertainty.md. Desde22/10/2026 todos os custos fixos LLC pertencem integralmente ao Marktmorgen275[FX1]. Desconhecido reprova, nunca zero. Nenhuma certificação de margem por documento/teste isolado.
+
+Proibições: não apagar nada da Hazelsong; não alterar preços, limites visíveis, comissão, meios aceitos, PLANS_ON_SALE, tax gate, art.9a ou revisão comercial; não criar contas, aceitar termos, contratar, pagar, alterar configurações reais de fornecedores ou contatar terceiros. Somente testes sintéticos. A regra de preservação/custos em AGENTS é registro imediato da decisão, não execução das medições/migração. Briefing/proveniência ficam nesta fila e na continuidade. Nenhum custo real medido, fornecedor alterado ou arquivo real exportado por este registro; documentação não é entrega funcional e não incrementa contador.
