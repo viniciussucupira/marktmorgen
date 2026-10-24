@@ -695,7 +695,7 @@ export async function restartPlan(input: {
   if (!started) throw new Error(`the restarted plan is not in good standing: ${String(subscription.status)}`);
   // A successful response still has to describe the customer and monthly plan requested.
   // A mismatched observation is uncertain billing evidence, never a card refusal.
-  if (started.customerId !== input.customerId || started.tier !== input.tier || started.cycle !== "month" || started.trialEnds !== 0) {
+  if (subscription.status !== "active" || started.customerId !== input.customerId || started.tier !== input.tier || started.cycle !== "month" || started.trialEnds !== 0) {
     throw new Error("the restarted plan does not match the requested customer and paid monthly plan");
   }
   return started;

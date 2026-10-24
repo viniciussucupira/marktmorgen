@@ -30,7 +30,7 @@ const NOW = 1_791_700_000;
 const emails: { to: string; subject: string; text: string }[] = [];
 const subs: Record<string, Record<string, unknown>> = {};
 const created: URLSearchParams[] = [];
-let createAnswer: "ok" | "declined" | "down" | "otherCustomer" | "otherTier" | "yearly" | "trial" = "ok";
+let createAnswer: "ok" | "declined" | "down" | "otherCustomer" | "otherTier" | "yearly" | "trial" | "pastDue" = "ok";
 
 function subscription(id: string, over: Record<string, unknown> = {}): Record<string, unknown> {
   return {
@@ -75,6 +75,7 @@ globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) =>
         } }] };
       }
       if (createAnswer === "trial") { fresh.status = "trialing"; fresh.trial_end = NOW + DAY; }
+      if (createAnswer === "pastDue") fresh.status = "past_due";
       subs.sub_Restarted00001 = fresh;
       return new Response(JSON.stringify(fresh), { status: 200 });
     }
@@ -229,7 +230,7 @@ async function main() {
 
   part("A restart response must match the requested paid monthly plan");
   {
-    const mismatches = ["otherCustomer", "otherTier", "yearly", "trial"] as const;
+    const mismatches = ["otherCustomer", "otherTier", "yearly", "trial", "pastDue"] as const;
     for (const [index, answer] of mismatches.entries()) {
       const id = `sub_Mismatch0000${index}`;
       const email = `restart-mismatch-${index}@example.com`;
