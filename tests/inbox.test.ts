@@ -26,6 +26,7 @@ import { claimHandle, ensureStatsId, setContact, setFaq, setInboxSetting, setLan
 import { advance, store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
 import { paidPeriod } from "./billing-period-fixture";
+import { allowanceUsed } from "@/lib/store-allowance";
 
 process.env.RESEND_API_KEY = "re_test_inbox_only_a_stand_in";
 process.env.ANTHROPIC_API_KEY = `sk-ant-api03-${"x".repeat(40)}`;
@@ -85,6 +86,17 @@ async function main(): Promise<void> {
   is("started, with a token only the visitor holds", [started.ok, /^[A-Za-z0-9_-]{32}$/.test(token)], [true, true]);
   const told = sent.filter((m) => m.to === OWNER);
   is("the owner told, with a link to answer in the studio", [told.length, told[0]?.subject, /\/studio\/inbox\?(store=[^&]+&)?c=[a-z0-9]{12}/.test(told[0]?.text ?? "")], [1, "New message from Ana Real on Cocina de Ana", true]);
+  part("Marked funded incoming messages need the paid resource month");
+  const funded = { ...store, period: { ...store.period!, funded: true as const } };
+  const inboxBefore = JSON.stringify(await readInbox(store.statsId));
+  const messagesBefore = JSON.stringify(await visitorThread(token));
+  const allowanceBefore = await allowanceUsed(store, "inbox");
+  const sentBeforeFunding = sent.length;
+  is("a new funded conversation without actual approval stays closed", await startChat({ store: funded, email: "funded@example.com", name: "Synthetic", text: "This must not open a new conversation.", ip: "10.0.0.99" }), { ok: false, reason: "closed" });
+  is("a funded follow-up without actual approval is not written", await visitorSend(token, "This must not add a funded message.", async () => funded), { ok: false, reason: "closed" });
+  is("existing conversations and messages remain readable and unchanged", [JSON.stringify(await readInbox(store.statsId)), JSON.stringify(await visitorThread(token))], [inboxBefore, messagesBefore]);
+  is("refused incoming work consumes no inbox allowance or supplier email", [await allowanceUsed(store, "inbox"), sent.length], [allowanceBefore, sentBeforeFunding]);
+
   await visitorSend(token, "Also: is there a certificate?", (h) => storeForHandle(h));
   is("a second message within the half hour: not told again", sent.filter((m) => m.to === OWNER).length, 1);
 

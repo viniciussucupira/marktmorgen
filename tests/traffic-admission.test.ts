@@ -1,6 +1,6 @@
 import { test, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
-import { trafficForAdmission, isResting } from '@/lib/traffic';
+import { trafficForAdmission, isResting, takePublicRequest } from '@/lib/traffic';
 import { publicVisitLimit, visitLimitFor, VISITS_INCLUDED } from '@/lib/traffic-rules';
 import { videoLimitFor } from '@/lib/plan-standing';
 import { paidVideoSeconds } from '@/lib/video-admission-rules';
@@ -62,4 +62,15 @@ test('invalid folder, month or request clock cannot authorize',async()=>{
  for(const month of ['2026-00','2026-13','2026-1','oops'])assert.equal(await trafficForAdmission(folder,month),null);
  world.folder='invalid';assert.equal(await isResting(store),true);
  world.folder=folder;assert.equal(await isResting(store,NaN),true);
+});
+
+test('marked funded pages and public requests require their resource month before traffic work',async()=>{
+ const funded={...paid,statsId:folder,cycle:'month',subscriptionId:'sub_TrafficCohort001',period:{...paidPeriod(),funded:true as const}} as Parameters<typeof isResting>[0];
+ assert.equal(await isResting(funded),true);
+ assert.equal(world.reads,0);
+ assert.equal(await isResting(funded,undefined,'buyer'),true);
+ assert.equal(world.reads,0);
+ assert.equal(await takePublicRequest(funded,'public'),false);
+ assert.equal(await takePublicRequest(funded,'buyer'),false);
+ assert.equal(world.reads,0);
 });
