@@ -16,10 +16,16 @@
  * we make.
  */
 import { randomBytes } from "node:crypto";
+import type { Store } from "@/lib/store";
+import { reservePaidResourceWindow } from "@/lib/contract-resource-window";
 import type { MeetProvider } from "@/lib/call-setup";
-import { accessFor, testKey } from "@/lib/meet-connect";
+import { accessFor, testKey, NotConnected } from "@/lib/meet-connect";
 import { eventId, googleCreate, googleDelete, googleMove, zoomCreate, zoomDelete, zoomMove } from "@/lib/meet-providers";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
+
+export class TestMeetingUnavailable extends Error {
+  constructor() { super("The test meeting could not be changed just now. Try again in a moment."); }
+}
 
 export type TestMeeting = { id: string; link: string; start: number; end: number; madeAt: number };
 
@@ -55,9 +61,12 @@ export async function readTests(statsId: string | null, providers: MeetProvider[
  * the connection or the provider throws (NotConnected, ProviderError), for
  * the route to say in words.
  */
-export async function makeTest(statsId: string, provider: MeetProvider, now = Date.now()): Promise<TestMeeting> {
+export async function makeTest(store: Store, provider: MeetProvider, now = Date.now()): Promise<TestMeeting> {
+  const statsId = store.statsId;
+  if (!statsId) throw new NotConnected("Connect an account first.");
   const had = (await readTests(statsId, [provider]))[provider];
   if (had) return had;
+  if (store.period?.funded === true && !await reservePaidResourceWindow(store)) throw new TestMeetingUnavailable();
   const access = await accessFor(statsId, provider);
   // An hour from now, on the next five minutes: far enough not to ring anybody's phone as "starting".
   const start = Math.ceil((now + 3_600_000) / 300_000) * 300_000;
@@ -86,9 +95,12 @@ export const TEST_MOVE_MINUTES = 60;
  * same call a booking's meeting is moved with when its buyer picks another
  * time (lib/meet-links.ts). Null when there is no test meeting to move.
  */
-export async function moveTest(statsId: string, provider: MeetProvider): Promise<TestMeeting | null> {
+export async function moveTest(store: Store, provider: MeetProvider): Promise<TestMeeting | null> {
+  const statsId = store.statsId;
+  if (!statsId) return null;
   const had = (await readTests(statsId, [provider]))[provider];
   if (!had) return null;
+  if (store.period?.funded === true && !await reservePaidResourceWindow(store)) throw new TestMeetingUnavailable();
   const access = await accessFor(statsId, provider);
   const shift = TEST_MOVE_MINUTES * 60_000;
   const when = { start: had.start + shift, end: had.end + shift, tz: "UTC" };
