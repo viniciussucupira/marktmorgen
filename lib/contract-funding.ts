@@ -114,7 +114,7 @@ export async function activateCheckoutContract(
  const seconds=Math.floor(now.getTime()/1000);
  if(createdSeconds>seconds||periodEndSeconds<=seconds)return false;
  try{
-  const result=await redisPipeline([['EVAL',ACTIVATE_CONTRACT,1,'nl:contract-reserve:v1',contractFundingBinding(config),reviewId,statsId,key,grantId,subscriptionId,createdSeconds,seconds,config.grantCents[key],config.cashLimitCents,config.carryForwardCents,CONTRACT_FUNDING_RULES.submissionSeconds,config.fundedGrants[key],trialing?'trial':'paid',periodStartSeconds,periodEndSeconds]]]);
+  const result=await redisPipeline([['EVAL',ACTIVATE_CONTRACT,1,'nl:contract-reserve:v1',contractFundingBinding(config),reviewId,statsId,key,grantId,subscriptionId,createdSeconds,seconds,config.grantCents[key],config.cashLimitCents,config.carryForwardCents,CONTRACT_FUNDING_RULES.submissionSeconds,config.fundedGrants[key],trialing?'trial':'paid',periodStartSeconds,periodEndSeconds]]);
   const ack=result[0];
   return result.length===1&&Array.isArray(ack)&&ack.length===2&&ack[0]===1&&Number.isSafeInteger(ack[1])&&ack[1]>=createdSeconds&&ack[1]<=createdSeconds+CONTRACT_FUNDING_RULES.activationDelayDays*86400&&Date.now()<=ack[1]*1000&&Date.now()<periodEndSeconds*1000;
  }catch{return false;}
