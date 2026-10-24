@@ -110,6 +110,18 @@ async function main(): Promise<void> {
   is("Pro has more", aiAllowance({ ...store, tier: "pro" }), AI_MONTHLY.pro);
   is("the free trial has fewer", aiAllowance({ ...store, trialEnds: Math.floor(Date.now() / 1000) + 86_400 }), AI_MONTHLY.trial);
 
+  part("Resource refusal happens before a new writing job is counted");
+  await setSubscription("owner@example.com", { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true, tier: "pro", trialEnds: 0, period: { ...paidPeriod(), funded: true } });
+  const fundedWriter = (await storeForEmail("owner@example.com"))!;
+  const fundedJobKey = `nl:ai:${fundedWriter.statsId}:${windowId(fundedWriter)}`;
+  await redis.pipeline([["SET", fundedJobKey, "0"]]);
+  const beforeFundingCalls = asked.length;
+  const beforeFundingJobs = await aiLeft(fundedWriter);
+  const refusedWriting = await writeEmail(fundedWriter, { goal: "announce", product: "Pantry Guide", link: "https://example.com/p/1", notes: "Synthetic draft only." });
+  is("unfunded resource window leaves available writing jobs untouched and calls no model",
+    [refusedWriting.ok ? "" : refusedWriting.reason, await aiLeft(fundedWriter), asked.length],
+    ["off", beforeFundingJobs, beforeFundingCalls]);
+
   part("Reading an answer");
   is("the JSON inside whatever surrounds it", jsonIn('Sure! {"a": 1} Hope it helps.'), { a: 1 });
   is("nothing when there is none", jsonIn("no json here"), null);

@@ -9,6 +9,7 @@
  *   nl:ai:<statsId>:<YYYY-MM>                      the store's month of writing jobs, which each draft is one of (lib/ai.ts)
  */
 import { windowId } from "@/lib/allowance-window";
+import { reservePaidResourceWindow } from "@/lib/contract-resource-window";
 import { randomUUID } from "node:crypto";
 import { affiliateCampaignLink } from "@/lib/affiliate-promotion";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
@@ -49,13 +50,14 @@ export function productAffiliateLink(store: Store, product: Pick<Listing, "id" |
   return `${storeBase(store)}/p/${productSegment(product)}?via=${code}`;
 }
 
-export type KitResult = { ok: true; posts: AffiliatePosts; left: number } | { ok: false; reason: "off" | "unknown" | "day" | "month" | "failed" };
+export type KitResult = { ok: true; posts: AffiliatePosts; left: number } | { ok: false; reason: "off" | "unknown" | "day" | "month" | "failed" | "unavailable" };
 
 /** Drafts one affiliate's three posts about one product, within the limits. */
 export async function draftKit(store: Store, affiliate: Affiliate, productId: string, rawNote: string, now = new Date()): Promise<KitResult> {
   if (!aiAvailableFor(store) || !isRedisConfigured() || !store.statsId || !affiliatesOn(store) || !store.affiliates.kit || affiliate.status !== "approved") return { ok: false, reason: "off" };
   const product = await readListing(store, productId);
   if (!kitProduct(store, affiliate, product)) return { ok: false, reason: "unknown" };
+  if (store.period?.funded === true && !(await reservePaidResourceWindow(store))) return { ok: false, reason: "unavailable" };
   const note = rawNote.replace(/\s+/g, " ").trim().slice(0, MAX_KIT_NOTE);
   const allowance = aiAllowance(store, now.getTime());
   if (!Number.isSafeInteger(allowance) || allowance < 0) return { ok: false, reason: "off" };

@@ -29,6 +29,6 @@ export async function POST(request: NextRequest) {
   if (!affiliate) return Response.json({ ok: false, error: "signedout" }, { status: 401 });
   if (!(await withinService("aff-kit", `${store.handle}|${affiliate.id}`, 3, 60, store))) return Response.json({ ok: false, error: "slow" }, { status: 429 });
   const result = await draftKit(store, affiliate, read("product", 40), read("note", MAX_KIT_NOTE * 2));
-  if (!result.ok) return Response.json({ ok: false, error: result.reason }, { status: result.reason === "failed" ? 502 : 400 });
+  if (!result.ok) return Response.json({ ok: false, error: result.reason }, { status: result.reason === "unavailable" ? 503 : result.reason === "failed" ? 502 : 400 });
   return Response.json({ ok: true, posts: result.posts, left: result.left }, { headers: { "Cache-Control": "no-store" } });
 }
