@@ -78,3 +78,22 @@ test('a cohort acknowledgement cannot outlive its window, admission deadline or 
   }finally{t.mock.timers.reset();}
  }
 });
+
+test('a backwards clock refuses first and repeated cohort acknowledgements even inside the same valid window',async(t)=>{
+ t.mock.timers.enable({apis:['Date'],now:new Date('2026-10-10T12:00:00Z')});
+ for(const existing of [false,true]){
+  t.mock.timers.setTime(new Date('2026-10-10T12:00:00Z').getTime());
+  const f=await setup();
+  if(existing)assert.equal(await reservePaidResourceWindow(f.store,f.policy,f.context),true);
+  t.mock.timers.tick(1000);
+  const before=new Map(f.h),count=calls.length;
+  resourceSettings({afterAck:()=>t.mock.timers.setTime(Date.now()-1)});
+  assert.equal(await reservePaidResourceWindow(f.store,f.policy,f.context),false);
+  assert.ok(Date.now()>f.store.period.start*1000,'clock remains inside the paid window');
+  for(const [key,value] of before)assert.equal(f.h.get(key),value,'committed financial fields remain exact');
+  const window=allowanceWindow(f.store)!;
+  assert.equal(f.h.get('resource:ctr_resources:0'),window.start+'|'+window.end);
+  assert.equal(f.h.size,before.size+(existing?0:1),'only the first cohort field may be added');
+  assert.equal(calls.length,count+1,'no compensating Redis request');
+ }
+});

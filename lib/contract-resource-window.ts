@@ -99,6 +99,6 @@ export async function reservePaidResourceWindow(
   const result=await redisPipeline(commands);
   const ack=result[0],current=contractFundingConfiguration(policy,context,new Date()),ready=commercialMarginReady(context.review);
   const checkedAt=Date.now();
-  return current!==null&&current.binding===config.binding&&ready&&checkedAt<=config.admissionsUntilMs&&new Date(checkedAt).toISOString().slice(0,7)===context.review?.fundedExposure?.month&&result.length===1&&Array.isArray(ack)&&ack.length===2&&ack[0]===1&&ack[1]===window.end&&checkedAt>=window.start&&checkedAt<window.end;
+  return current!==null&&current.binding===config.binding&&ready&&checkedAt<=config.admissionsUntilMs&&new Date(checkedAt).toISOString().slice(0,7)===context.review?.fundedExposure?.month&&result.length===1&&Array.isArray(ack)&&ack.length===2&&ack[0]===1&&ack[1]===window.end&&checkedAt>=now.getTime()&&checkedAt>=window.start&&checkedAt<window.end;
  }catch{return false;}
 }
