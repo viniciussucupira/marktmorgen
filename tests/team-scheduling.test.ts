@@ -46,7 +46,7 @@ import { claimHosts, claimsKey, confirmClaim, hostId, newClaimId, readClaims, re
 import { activeTeam, writeTeam } from "@/lib/team-booking";
 import { beginConsent, finishConsent, takeConsent } from "@/lib/meet-connect";
 import { GOOGLE_HOST_SCOPES } from "@/lib/meet-providers";
-import { hostCalendarView, hostSync, setHostCalendars, setHostSource } from "@/lib/host-calendar";
+import { addHostIcs, removeHostIcs, hostCalendarView, hostSync, setHostCalendars, setHostSource } from "@/lib/host-calendar";
 import { callRefunded } from "@/lib/meet-links";
 import { readRecord, callScope } from "@/lib/meet-records";
 import { redisPipeline, store as redis } from "./redis-stub";
@@ -401,6 +401,30 @@ async function main(): Promise<void> {
   const off = await hostSync(first.store, MAYA, NY, { refresh: true });
   is("with the switch off, a Google host is blocked rather than read without permission", [off.state, off.blocked], ["off", true]);
   is("and choosing Google is refused", await setHostSource(first.store, OWNER, "google"), "google_off");
+
+
+  part("New private-calendar admission uses the store funding boundary");
+  const previousCalendarKey = process.env.NIMBUS_DATA_KEY;
+  process.env.NIMBUS_DATA_KEY = "synthetic-host-calendar-key-only-000000";
+  let feedLookups = 0;
+  const feedHooks = { feed: { resolve: async () => { feedLookups += 1; throw new Error("Synthetic calendar resolver: no network"); } } };
+  try {
+    const beforeFunding = await addHostIcs(first.store, OWNER, "https://calendar.example.com/private.ics", "UTC", feedHooks);
+    is("unmarked existing behavior reaches only the injected feed resolver", [beforeFunding.ok, feedLookups], [false, 1]);
+    await setSubscription(OWNER, { customerId: "cus_HostFunded01", subscriptionId: "sub_HostFunded01", active: true, period: { ...paidPeriod(), funded: true } });
+    const fundedCalendar = (await storeForEmail(OWNER))!;
+    const cfg = `nl:hostcal:cfg:${hostId(OWNER)}`;
+    const [beforeConfig] = await redisPipeline([["GET", cfg]]);
+    const deniedFeed = await addHostIcs(fundedCalendar, OWNER, "https://calendar.example.com/private.ics", "UTC", feedHooks);
+    const [afterConfig] = await redisPipeline([["GET", cfg]]);
+    is("funded admission refuses before DNS or configuration mutation", [deniedFeed.ok, feedLookups, afterConfig], [false, 1, beforeConfig]);
+    is("the refusal is a temporary calendar notice", deniedFeed.ok ? "" : deniedFeed.message, "Calendar changes are temporarily unavailable. Try again later.");
+    await removeHostIcs(fundedCalendar, OWNER);
+    is("retained removal does not require new provider reading", feedLookups, 1);
+  } finally {
+    if (previousCalendarKey === undefined) delete process.env.NIMBUS_DATA_KEY;
+    else process.env.NIMBUS_DATA_KEY = previousCalendarKey;
+  }
 
   done();
 }
