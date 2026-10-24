@@ -51,5 +51,5 @@ const hostile = pricingPerksMarkup(['<img src=x onerror="alert(1)">', "A & B's <
 is("plan words never create executable disclosure markup", /<img|<script|onerror="/.test(hostile), false);
 is("literal HTML-looking plan words remain visible as text", hostile.includes('&lt;img src=x onerror=&quot;alert(1)&quot;&gt;'), true);
 is("ampersands and apostrophes remain escaped", hostile.includes("A &amp; B&#39;s &lt;plan&gt;"), true);
-is("the native disclosure keeps its summary and semantic list", [hostile.startsWith("<summary "), (hostile.match(/<li /g) ?? []).length, hostile.endsWith("</ul>")], [true, 3]);
+is("the native disclosure keeps its summary and semantic list", [hostile.startsWith("<summary "), (hostile.match(/<li /g) ?? []).length, hostile.endsWith("</ul>")], [true, 3, true]);
 done();
