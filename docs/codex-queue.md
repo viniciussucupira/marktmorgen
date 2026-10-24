@@ -211,12 +211,16 @@ A ordem abaixo é de execução dos itens acionáveis. Itens feitos/aguardando/c
    - Custo e margem: Só documento. Nenhuma tradução em tempo de requisição ou custo por visita; custo de conteúdo/manutenção e fiscalidade ainda precisam ser calculados.
 
 7. **[C-UE] Construir tratamento de IVA europeu do art.9a em docs/eu-vat-article-9a.md: OSS não-UE desde a primeira venda, duas provas de localização coerentes (24b/24f), retenção art.63c por10anos; imposto no comprador ou repasse, nunca na comissão. Dividir em PRs por caminho de checkout e prova.**
+
+Proveniência AB: passou a fazer parte do Bloco de abertura, posição (e), por solicitação do dono de 24/10/2026, 00h11 (Fortaleza). Esta posição prevalece sobre a ordem OR/Bloco A anterior; histórico e estado de execução preservados.
    - Pedido: P2 C1/C2; datas/horas e grau de certeza em Proveniência.
    - Estado: **em andamento; auditoria de13caminhos e registro, primeiro endurecimento de data no PR #629; coleta/duas provas/retenção/OSS ainda não implementados**. Posição vigente: OR: permanece nos andamentos prioritários; se ainda incompleto, concluir também como primeiro do Bloco A, sem execução duplicada.
    - Histórico OR — estado anterior à atualização documental: - Estado: **em andamento; auditoria de13caminhos e registro, primeiro endurecimento de data no PR #629; coleta/duas provas/retenção/OSS ainda não implementados**.
    - Custo e margem: Custo de cálculo, registros10anos, evidências e operação ainda não calculado/integrado: calcular fornecedor pago mais caro, mensal/anual por plano, antes/depois; registrar no plan-cost-registry e spend-floor, reservar tetos antes do trabalho. Falta de conta é reprovação, não zero.
 
 8. **[C-UK] Depois da UE, implementar tratamento do Reino Unido pela leitura com mais imposto, em todos os caminhos aplicáveis.**
+
+Proveniência AB: passou a fazer parte do Bloco de abertura, posição (e), por solicitação do dono de 24/10/2026, 00h11 (Fortaleza). Esta posição prevalece sobre a ordem OR/Bloco A anterior; histórico e estado de execução preservados.
    - Pedido: P2 C1/C2; datas/horas e grau de certeza em Proveniência.
    - Estado: **aguardando o dono no remanescente de registro e financiamento; implementação fiscal incompleta**. Posição vigente: OR: Bloco A, posição 2/8, após 275 [FX1] e antes de 206 [SH3]. A dependência externa não trava o próximo item.
    - Histórico de 23/10/2026, 07:15 Fortaleza — estado anterior preservado: - Estado: **a fazer**. Posição vigente: OR: Bloco A, posição 2/8, após 275 [FX1] e antes de 206 [SH3].
@@ -226,6 +230,8 @@ A ordem abaixo é de execução dos itens acionáveis. Itens feitos/aguardando/c
    - Custo e margem: Ainda não calculado: orçamento por plano/intervalo e teto automático são pré-condições; não registrar tratamento como concluído antes de testes.
 
 9. **[C-US] Depois do Reino Unido, implementar regras estaduais dos EUA de marketplace facilitator e registros necessários, por jurisdição e caminho de checkout.**
+
+Proveniência AB: passou a fazer parte do Bloco de abertura, posição (e), por solicitação do dono de 24/10/2026, 00h11 (Fortaleza). Esta posição prevalece sobre a ordem OR/Bloco A anterior; histórico e estado de execução preservados.
    - Pedido: P2 C1/C2; datas/horas e grau de certeza em Proveniência.
    - Estado: **aguardando o dono no remanescente de registros e financiamento; pesquisa e matriz por jurisdição incompletas**. Posição vigente: OR: Bloco A, posição 3/8, após 275 [FX1] e antes de 206 [SH3]. Dependências externas não travam 232 [CA1].
    - Histórico de 23/10/2026, 08:14 Fortaleza — estado anterior preservado: - Estado: **a fazer**. Posição vigente: OR: Bloco A, posição 3/8, após 275 [FX1] e antes de 206 [SH3].
@@ -237,6 +243,8 @@ A ordem abaixo é de execução dos itens acionáveis. Itens feitos/aguardando/c
 ### C2 — Capacidade dos planos (novos IDs estáveis)
 
 89. **[C2-CAPACITY] Calcular o máximo de cada franquia em cada plano e nos dois intervalos**
+
+Proveniência AB: passou a fazer parte do Bloco de abertura, posição (c), por solicitação do dono de 24/10/2026, 00h11 (Fortaleza). Esta posição prevalece sobre a ordem OR/Bloco A anterior; histórico e estado de execução preservados.
    - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
    - Estado: **em andamento; branch codex/capacity-precheck; pré-verificação matemática, auditoria completa de unitários/configuração ainda pendente**. Posição vigente: OR: andamento prioritário preservado, antes de 273 [BK1] e 275 [FX1]; conferir o histórico de publicações e executar somente o remanescente acionável.
    - Histórico OR — estado anterior à atualização documental: - Estado: **em andamento; branch codex/capacity-precheck; pré-verificação matemática, auditoria completa de unitários/configuração ainda pendente**.
@@ -300,6 +308,8 @@ A ordem abaixo é de execução dos itens acionáveis. Itens feitos/aguardando/c
 ### D2 — Diferenciais exclusivos (após o Path)
 
 91. **[D2-EU-WITHDRAWAL] Consentimento europeu para entrega digital imediata**
+
+Proveniência AB: passou a fazer parte do Bloco de abertura, posição (h), por solicitação do dono de 24/10/2026, 00h11 (Fortaleza). Esta posição prevalece sobre a ordem OR/Bloco A anterior; histórico e estado de execução preservados.
    - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
    - Estado: **a fazer**. Posição vigente: OR: Bloco A, posição 5/8, após 275 [FX1] e antes de 206 [SH3].
    - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
@@ -349,6 +359,8 @@ A ordem abaixo é de execução dos itens acionáveis. Itens feitos/aguardando/c
    - Custo e margem: Antes de construir: conferir capacidade existente no main e preservar Claude. Custo unitário pago mais caro, uso integral simultâneo por plano mensal/anual, taxas de receiving-costs e leitura fiscal mais onerosa (nunca abaixo de27,5%); teto por fornecedor/loja e reserva antes da operação, plan-cost-registry/spend-floor. Desconhecido reprova; sem cortar limite visível, mudar preço ou afrouxar gates.
 
 98. **[D2-COMPLIANCE-REVIEW] Checagem factual de conformidade da loja**
+
+Proveniência AB: passou a fazer parte do Bloco de abertura, posição (i), por solicitação do dono de 24/10/2026, 00h11 (Fortaleza). Esta posição prevalece sobre a ordem OR/Bloco A anterior; histórico e estado de execução preservados.
    - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
    - Estado: **a fazer**. Posição vigente: OR: Bloco A, posição 6/8, após 275 [FX1] e antes de 206 [SH3].
    - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
@@ -547,6 +559,8 @@ A ordem abaixo é de execução dos itens acionáveis. Itens feitos/aguardando/c
    - Custo e margem: Antes de construir: conferir capacidade existente no main e preservar Claude. Custo unitário pago mais caro, uso integral simultâneo por plano mensal/anual, taxas de receiving-costs e leitura fiscal mais onerosa (nunca abaixo de27,5%); teto por fornecedor/loja e reserva antes da operação, plan-cost-registry/spend-floor. Desconhecido reprova; sem cortar limite visível, mudar preço ou afrouxar gates.
 
 114. **[E2-AFFILIATE-TAX-FORMS] W-9/W-8BEN e exportação para1099**
+
+Proveniência AB: passou a fazer parte do Bloco de abertura, posição (j), por solicitação do dono de 24/10/2026, 00h11 (Fortaleza). Esta posição prevalece sobre a ordem OR/Bloco A anterior; histórico e estado de execução preservados.
    - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
    - Estado: **a fazer**. Posição vigente: OR: Bloco A, posição 7/8, após 275 [FX1] e antes de 206 [SH3].
    - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
@@ -3857,6 +3871,8 @@ Já confirmado em 21/10/2026, na documentação oficial da Stripe e no código: 
 
 232. [CA1] Fechamento de toda possibilidade de calote dos criadores ao Marktmorgen
 
+Proveniência AB: passou a fazer parte do Bloco de abertura, posição (d), por solicitação do dono de 24/10/2026, 00h11 (Fortaleza). Esta posição prevalece sobre a ordem OR/Bloco A anterior; histórico e estado de execução preservados.
+
 Escopo:
 1. Proteja a configuração já confirmada: acrescente um teste que falhe se lib/stripe-connect.ts deixar de criar as contas com dashboard "full", fees_collector "stripe" e losses_collector "stripe", ou se qualquer cobrança de venda deixar de ser cobrança direta na conta do criador. Registre a confirmação, com as fontes e a data, em docs/no-creator-default.md.
 2. Liste em docs/no-creator-default.md TODA cobrança que o Marktmorgen faz ao criador (planos mensais e anuais, Store assistant, legendas por IA, pacotes de uso e qualquer outra) e, para cada uma, se ela é paga ANTES ou DEPOIS do uso.
@@ -4699,6 +4715,8 @@ REGRA DOS 60% (OBRIGATÓRIA): todo cliente pagante, considerado isoladamente e u
 
 275. [FX1] Atribuir 100% dos custos fixos da LLC ao Marktmorgen
 
+Proveniência AB: passou a fazer parte do Bloco de abertura, posição (b), por solicitação do dono de 24/10/2026, 00h11 (Fortaleza). Esta posição prevalece sobre a ordem OR/Bloco A anterior; histórico e estado de execução preservados.
+
 1. Atualize AGENTS.md, CLAUDE.md e docs/cross-product-handoff.md: onde hoje se diz que os custos fixos da LLC são divididos 50/50 com a Hazelsong, passe a dizer que são 100% do Marktmorgen, citando esta decisão com data e hora. Preserve o texto literal do dono e o histórico; acrescente a decisão nova em vez de apagar as antigas.
 2. Atualize todo código, teste, script e documento que calcule custos fixos ou a base mínima de clientes pagantes com a divisão 50/50 (procure por "50/50", "Hazelsong", "half", "share" e pelos nomes das constantes usadas), para que cada custo fixo da LLC entre inteiro no Marktmorgen. Isso inclui os impostos e taxas de Delaware e da Califórnia, o agente registrado, o INSS do dono, os domínios, as ferramentas, a caixa de correspondência comercial nos EUA (Stable: 3 meses grátis pelo Atlas e depois US$ 49/mês, ou US$ 24,50/mês se o desconto de startup for confirmado por fonte oficial datada; até essa confirmação, use US$ 49/mês) e os representantes exigidos na União Europeia (GDPR art. 27 e Digital Services Act art. 13) e no Reino Unido (UK GDPR art. 27), com o custo de cada um por fonte oficial datada; sem preço oficial, o custo é desconhecido e reprova.
 3. Recalcule e registre a nova base mínima de clientes pagantes e a margem consolidada nos documentos gerados (regenere os que têm script, como docs/margin-alignment-2026-10-18.md, e confira que os testes de documento desatualizado passam).
@@ -4892,6 +4910,57 @@ Alterações: confirmação do HSET de reserva exige array externo com exatament
 Falhas preservadas: head8fb3856e1160d42a8eedc3facdfb7b8aed78f1eb, WebKit job120158033405, 22/10 21:15:17Fortaleza: após Change pixels, Meta Pixel ID não apareceu em30s na largura1280;390 passou, causa exclusiva histórica não comprovada. Correção nativa no head a966905543daf4a1d539e9ec3280c79ad6dd30da expôs diferença de papel do summary em WebKit390: job120167088480,22/10 21:36:24.959Fortaleza, locator do botão não encontrado. Papel explícito corrigido no head final; suíte inteira22/22, sem alterar seletores, tempos ou limites.
 
 Custo incremental máximo mensal/anual: Store0/0, Studio0/0, Scale0/0; sem operação paga, chave, TTL, dependência ou direito adicional. Faturas reais de CI/deploy/provedores desconhecidas, não zero.100%LLC atribuídos ao Marktmorgen; leitura fiscal Brasil/EUA mais onerosa,60% por cliente e global vinculantes e não certificados. PLANS_ON_SALE=false, preços, limites, opt-ins e demais gates preservados. Apenas dados/provedores sintéticos; nenhuma mensagem/pagamento/conta externos. Histórico e ordem OR/H3/SF preservados.
+
+## AB — Bloco de abertura das vendas (24/10/2026)
+
+Solicitação do dono (24/10/2026, 00h11, horário de Fortaleza): concluir por completo, antes de qualquer outro item, tudo o que é necessário para que as vendas possam ser abertas, e só depois seguir o restante da fila na ordem já existente. O objetivo é fechar itens, não abrir frentes novas.
+
+Estado inicial: em vigor depois dos PRs do AX2 já abertos (#865 a #868). Concluir esses PRs primeiro; a prioridade anterior do restante de AX2 e as ordens OR/Bloco A incompatíveis passam a ser históricas. Esta reorganização não cria números ou implementações duplicados.
+
+### Ordem vinculante do Bloco de abertura
+
+(a) A revisão comercial (lib/commercial-margin.ts): construir e testar tudo o que falta para que commercialPlansMayOpen() possa passar de forma legítima, isto é, o mecanismo da revisão (CURRENT_COMMERCIAL_MARGIN_REVIEW), a política de exposição (CURRENT_EXPOSURE_BUDGET_POLICY), a política de reserva dos contratos (CURRENT_CONTRACT_FUNDING_POLICY) e as três coberturas hoje false em CONTRACT_ADMISSION_COVERAGE (resourceAllocations, renewals e settlementAndReserveReconciliation), a última junto com o item 306 [SY2]. Não preencha nenhuma revisão com números que não estejam comprovados: a revisão real só é preenchida quando todos os dados existirem.
+
+Proveniência da revisão comercial: passou a fazer parte do Bloco de abertura, posição (a), por solicitação do dono de 24/10/2026, 00h11 (Fortaleza). A ligação com SY2 não autoriza executar ou contar o mesmo trabalho duas vezes.
+
+(b) 275 [FX1] — custos fixos da LLC e base mínima de clientes.
+
+(c) 89 [C2-CAPACITY] — capacidade máxima de cada franquia.
+
+(d) 232 [CA1] — fechamento de toda possibilidade de calote.
+
+(e) Os itens fiscais 7 [C-UE], 8 [C-UK] e 9 [C-US] e os itens 300 a 303 (9A).
+
+(f) 317 [EU1] — hospedagem na União Europeia, com a decisão sobre a Hazelsong encerrada, registrada nesta mesma alteração documental.
+
+(g) 305 [SY1], 306 [SY2] e 307 [EC1] — reembolso em autoatendimento, reserva em dinheiro real e encerramento justo.
+
+(h) 91 [D2-EU-WITHDRAWAL] — consentimento europeu para entrega digital imediata.
+
+(i) 98 [D2-COMPLIANCE-REVIEW] — checagem factual de conformidade da loja.
+
+(j) 114 [E2-AFFILIATE-TAX-FORMS] — formulários fiscais dos afiliados.
+
+Os demais itens do antigo Bloco A (por exemplo, 31 [E14]) e o restante do AX2 (item 310) voltam logo depois do Bloco de abertura, na ordem já existente. Os demais pedidos novos continuam depois do Bloco de abertura, salvo ordem expressa em contrário.
+
+### Como trabalhar
+
+- Conclua um item por completo antes de começar o próximo, com código, testes, documentação e publicação.
+- Quando um item depender do dono (LLC, contas, registros, consultas, configurações em painéis), faça tudo o que for possível sem ele, deixe o estado como "pronto, aguardando o dono", registre em "Depende do dono" o passo exato, com os nomes dos campos e botões, e passe imediatamente ao próximo item, sem esperar.
+- Não comece itens fora do Bloco de abertura, exceto correções urgentes de algo que esteja quebrado em produção.
+- Pedidos novos do dono continuam sendo gravados na fila assim que chegarem, num PR só de documentação, mas executados depois do Bloco de abertura, salvo ordem expressa em contrário.
+
+### Resumo obrigatório ao terminar o bloco
+
+Grave nesta fila um resumo para o dono com cada trava (tax gate, art. 9a e revisão comercial), o que já está pronto, o que falta e o que depende dele; e a lista única e ordenada de tudo o que só o dono pode fazer para as vendas abrirem. Este registro não declara o bloco concluído nem substitui esse resumo final.
+
+REGRA DOS 60% (OBRIGATÓRIA): todo cliente pagante, considerado isoladamente e usando 100% de todos os direitos do plano no pior mês, deve manter margem de lucro líquido MÍNIMA de 60%, depois de todos os custos e de todos os impostos, inclusive os brasileiros; a margem pode ser maior, mas nunca menor, e a mesma regra vale para a empresa como um todo. Custo desconhecido não pode ser considerado zero. Use a leitura que resultar em MAIS imposto (docs/tax-uncertainty.md). Desde 22/10/2026, todos os custos fixos da LLC são atribuídos integralmente ao Marktmorgen (item 275 [FX1]).
+
+Esta ordem não afrouxa nada: é proibido ligar OPENING_REQUESTED, PLANS_ON_SALE ou EU_HOSTING_CONFIRMED, preencher DEEMED_SUPPLIER_RECORDS ou a revisão comercial sem tratamento construído, testado e comprovado, criar contas, aceitar termos, contratar serviços, pagar qualquer valor, contatar terceiros e alterar preços, limites visíveis ou comissão. A Parte A do item 274 [AX1] continua valendo em todo trabalho. Testes somente com fornecedores simulados.
+
+Ao concluir cada item do bloco, registre a data e a hora de Fortaleza, o commit, o resultado da suíte completa e a publicação.
+
+Proveniência: instrução direta recebida em 24/10/2026 às 00h11 (Fortaleza). Registro único, junto à seção OR; preserva o histórico. A nova ordem prevalece somente nos pontos incompatíveis com as anteriores. A condição "depois dos PRs #865 a #868" não é cumprida por PR pendente, teste isolado ou documento: confirmar incorporação e publicação funcional quando aplicável. Nada do Bloco de abertura é implementado por este PR documental.
 
 ## OR — Posição dos pendentes antigos de 19/10/2026 (22/10/2026)
 
@@ -5521,11 +5590,15 @@ REGRA DOS 60% (OBRIGATÓRIA): todo cliente pagante, considerado isoladamente e u
 
 300. [9A-1] Recusa automática, antes da cobrança, dos compradores de cada jurisdição ainda sem tratamento
 
+Proveniência AB: passou a fazer parte do Bloco de abertura, posição (e), por solicitação do dono de 24/10/2026, 00h11 (Fortaleza). Esta posição prevalece sobre a ordem OR/Bloco A anterior; histórico e estado de execução preservados.
+
 Estado: na fila.
 
 Construa e teste o tratamento "refuse-consumers", que já existe no tipo DeemedSupplierRecord mas não tem código. Para cada jurisdição (UE, Reino Unido, cada estado americano e cada outro país) que não tiver a cobrança do imposto construída e registrada, a loja recusa a compra ANTES de qualquer cobrança, em todos os caminhos de checkout listados em docs/eu-vat-article-9a.md: produtos digitais, carrinho, ofertas, cursos, podcasts privados, assinaturas e comunidades, gorjetas, solicitações de pagamento e, pela leitura com mais imposto, chamadas; produtos físicos enviados à UE e ao Reino Unido também ficam recusados até a análise do art. 14a da Diretiva e das regras britânicas de mercadorias. A recusa vale para consumidores e empresas, até que a cobrança com autoliquidação para empresas (VIES) esteja construída no item 302. Use todas as provas de localização disponíveis sem custo novo: o país e a região informados pelo comprador, o endereço de cobrança, o país do cartão (verifique na documentação oficial e datada do Stripe como obtê-lo antes de confirmar a cobrança na conta conectada; se não for possível antes da cobrança, essa prova não é usada para liberar, e nunca se cobra para depois reembolsar) e o país do IP fornecido pela hospedagem. Basta UMA prova apontar para uma jurisdição recusada para a compra ser recusada; prova ausente ou ilegível também recusa. Na UE, recuse todos os Estados-Membros da mesma forma, nunca uns sim e outros não, e confira com fonte oficial datada o Regulamento (UE) 2018/302 (geobloqueio) antes de concluir. O aviso aparece na página do produto antes de a pessoa iniciar a compra, em inglês americano simples, sem culpar o comprador e dizendo que a compra ainda não está disponível no país dele; nenhum dado pessoal da recusa é guardado, apenas contagens anônimas por jurisdição. O estúdio mostra ao criador, em linguagem simples, em quais países e estados os compradores dele ainda não podem comprar e por quê.
 
 301. [9A-2] Limite de faturamento por estado americano e por país, com parada automática antes do limite
+
+Proveniência AB: passou a fazer parte do Bloco de abertura, posição (e), por solicitação do dono de 24/10/2026, 00h11 (Fortaleza). Esta posição prevalece sobre a ordem OR/Bloco A anterior; histórico e estado de execução preservados.
 
 Estado: na fila.
 
@@ -5533,11 +5606,15 @@ Hoje a trava trata os EUA e os "outros países" como um bloco único e a leitura
 
 302. [9A-3] Cobrança do IVA da UE e do Reino Unido pronta e desligada, aguardando o registro
 
+Proveniência AB: passou a fazer parte do Bloco de abertura, posição (e), por solicitação do dono de 24/10/2026, 00h11 (Fortaleza). Esta posição prevalece sobre a ordem OR/Bloco A anterior; histórico e estado de execução preservados.
+
 Estado: na fila.
 
 Complete, dentro dos itens 7 [C-UE] e 8 [C-UK] e sem duplicá-los, a cobrança como fornecedor presumido, deixando tudo pronto e DESLIGADO: o imposto somado ao preço do comprador ou retido do repasse ao criador pela taxa de aplicação, nunca da comissão (inclusive no plano sem comissão); a retirada da linha de imposto do Stripe Tax do próprio criador para consumidores da UE e do Reino Unido, para não haver imposto em dobro; a autoliquidação para empresas com número de IVA conferido no VIES (e, no Reino Unido, pela verificação oficial do número britânico); o recibo que identifica o fornecedor como o art. 9a exige; as duas provas de localização não contraditórias (arts. 24b e 24f); o registro de cada venda exigido pelo art. 63c, guardado por 10 anos com o mínimo de dados e com a base legal indicada na política de privacidade; e a geração do arquivo da declaração trimestral do OSS não-UE e da declaração britânica, para o dono enviar. A conversão do dinheiro do imposto e as tarifas de transferência são retidas junto com o imposto, do lado do criador, nunca da comissão. Enquanto o dono não informar o Estado-Membro de identificação do OSS e o número de registro britânico, a UE e o Reino Unido ficam com o tratamento "refuse-consumers" do item 300; a mudança para "collect" só acontece com o número informado pelo dono e com os testes passando. A questão 25 (ISS de Fortaleza sobre essas vendas) continua na leitura com mais imposto, 5%, até haver resposta oficial registrada em docs/tax-consultations.md.
 
 303. [9A-4] Termos, privacidade e testes que impedem registro falso
+
+Proveniência AB: passou a fazer parte do Bloco de abertura, posição (e), por solicitação do dono de 24/10/2026, 00h11 (Fortaleza). Esta posição prevalece sobre a ordem OR/Bloco A anterior; histórico e estado de execução preservados.
 
 Estado: na fila.
 
@@ -5589,6 +5666,8 @@ REGRA DOS 60% (OBRIGATÓRIA): todo cliente pagante, considerado isoladamente e u
 
 305. [SY1] Reembolso do plano em autoatendimento, sem trabalho manual do dono
 
+Proveniência AB: passou a fazer parte do Bloco de abertura, posição (g), por solicitação do dono de 24/10/2026, 00h11 (Fortaleza). Esta posição prevalece sobre a ordem OR/Bloco A anterior; histórico e estado de execução preservados.
+
 Estado: na fila.
 
 Objetivo: cumprir sozinho, pelo código, a garantia que já está publicada, para que o dono não precise ler e-mails nem fazer reembolsos à mão.
@@ -5623,6 +5702,8 @@ REGRA DOS 60% (OBRIGATÓRIA): todo cliente pagante, considerado isoladamente e u
 
 306. [SY2] Reserva de reembolso em dinheiro real no Stripe
 
+Proveniência AB: passou a fazer parte do Bloco de abertura, posição (g), por solicitação do dono de 24/10/2026, 00h11 (Fortaleza). Esta posição prevalece sobre a ordem OR/Bloco A anterior; histórico e estado de execução preservados.
+
 Estado: na fila.
 
 Situação atual: lib/contract-funding-rules.ts reserva contabilmente o principal reembolsável, mas CONTRACT_ADMISSION_COVERAGE.settlementAndReserveReconciliation é false: a reserva não é conferida contra o saldo real. Os repasses automáticos do Stripe enviam todo o saldo ao banco, e um reembolso sem saldo fica pendente até o Stripe debitar o banco ou receber fundos (fontes oficiais: docs.stripe.com/payouts/minimum-balances-for-automatic-payouts e support.stripe.com/questions/pending-refunds-due-to-insufficient-stripe-balance; registre a data de leitura).
@@ -5655,6 +5736,8 @@ Solicitação do dono (23/10/2026, 15h58, horário de Fortaleza): corrigir o enc
 REGRA DOS 60% (OBRIGATÓRIA): todo cliente pagante, considerado isoladamente e usando 100% de todos os direitos do plano no pior mês, deve manter margem de lucro líquido MÍNIMA de 60%, depois de todos os custos e de todos os impostos, inclusive os brasileiros; a margem pode ser maior, mas nunca menor, e a mesma regra vale para a empresa como um todo. Antes de qualquer código, calcule o custo máximo de cada parte deste item por loja que encerra, inclua-o no custo de encerramento (tests/plan-cost-registry.ts, closure, e docs/funded-exposure-review.md, retenção após o cancelamento), com teto automático aplicado antes do gasto. Custo desconhecido não pode ser considerado zero. Use a leitura que resultar em MAIS imposto (docs/tax-uncertainty.md). Desde 22/10/2026, todos os custos fixos da LLC são atribuídos integralmente ao Marktmorgen (item 275 [FX1]).
 
 307. [EC1] Encerramento de loja justo com os compradores
+
+Proveniência AB: passou a fazer parte do Bloco de abertura, posição (g), por solicitação do dono de 24/10/2026, 00h11 (Fortaleza). Esta posição prevalece sobre a ordem OR/Bloco A anterior; histórico e estado de execução preservados.
 
 Estado: na fila.
 
@@ -5966,3 +6049,34 @@ Proveniência do registro documental conjunto: pedidos recebidos em 23/10/2026 �
 Aplicação das instruções posteriores: MG2 e MG3 complementam MG1, sem duplicar seção ou execução. No passo 4 de MG1, a ordem vinculante de uso da folga é a de MG3: horas de vídeo assistidas, e-mails para a lista, pedidos e visitas. Os demais requisitos de MG1 permanecem. Antes de executar qualquer item, conferir novamente código, fila, outros PRs e fontes oficiais datadas e implementar somente a diferença. Números e descrições de situação atual acima são contexto fornecido pelo dono, não medição ou validação de preços realizada neste registro.
 
 Escopo e custo deste PR: somente docs/codex-queue.md; sem alteração operacional dos planos, fornecedores, preços, limites, cobrança ou configurações. Nenhum gasto operacional mensal/anual adicional por plano é introduzido pelo registro; isso não atribui valor zero a custos desconhecidos, não certifica margem de 60% nem acessibilidade completa. Todos os quatro itens continuam na fila. As verificações e o horário real de incorporação deste registro serão preservados na continuidade; as evidências de implementação/publicação exigidas acima só serão preenchidas quando cada item for efetivamente executado.
+
+## EU — Hospedagem na União Europeia (23/10/2026)
+
+Ordem vigente: Bloco de abertura, posição (f), depois dos itens fiscais 7–9 e 300–303; a instrução AB de 24/10/2026 00h11 prevalece sobre a posição anterior no Bloco A. Registro documental; execução futura, sem migração ou mudança de serviços.
+
+Solicitação do dono (23/10/2026, 23h50, horário de Fortaleza):
+(a) decisão do dono: a Hazelsong foi encerrada e não vai mais funcionar. Registre a decisão em AGENTS.md, numa seção nova "Hazelsong encerrada (23 de outubro de 2026)", preservando como histórico tudo o que já foi escrito sobre ela. A Hazelsong deixa de ser produto da Solrenning LLC: não entra em nenhuma trava, cálculo ou condição do Marktmorgen, e nenhum custo dela é pago pela LLC. A condição EU_HOSTING_CONFIRMED (lib/tax-gate.ts), escrita em 18/10/2026 para "os dois produtos", passa a ser: "o Marktmorgen, e todo outro produto que a Solrenning LLC venha a operar, está hospedado inteiramente em regiões da União Europeia, e nenhum servidor, banco de dados ou armazenamento pago pela LLC está fora da UE";
+(b) preparar o Marktmorgen para funcionar inteiramente em regiões da União Europeia, deixando pronto tudo o que o código e a documentação podem fazer, para que o dono faça as trocas nas contas depois de a LLC existir.
+
+REGRA DOS 60% (OBRIGATÓRIA): todo cliente pagante, considerado isoladamente e usando 100% de todos os direitos do plano no pior mês, deve manter margem de lucro líquido MÍNIMA de 60%, depois de todos os custos e de todos os impostos, inclusive os brasileiros; a margem pode ser maior, mas nunca menor, e a mesma regra vale para a empresa como um todo. Calcule o custo de cada fornecedor na região europeia com preços oficiais datados; se for maior que o atual, o novo custo entra no pior caso de cada plano. Custo desconhecido não pode ser considerado zero. Use a leitura que resultar em MAIS imposto (docs/tax-uncertainty.md). Desde 22/10/2026, todos os custos fixos da LLC são atribuídos integralmente ao Marktmorgen (item 275 [FX1]).
+
+317. [EU1] Marktmorgen inteiramente em regiões da União Europeia
+
+Proveniência AB: passou a fazer parte do Bloco de abertura, posição (f), por solicitação do dono de 24/10/2026, 00h11 (Fortaleza).
+
+Estado: na fila.
+
+1. Trava: altere a documentação e a condição de EU_HOSTING_CONFIRMED conforme a decisão (a), sem ligar a trava. Ela continua false até a hospedagem estar ativa e verificada. Retire do código e dos testes do Marktmorgen toda dependência da Hazelsong para essa trava. Acrescente testes que falham se, com a trava true: o Marktmorgen ou outro produto operado pela LLC não estiver hospedado inteiramente na UE; ou algum serviço pago pela LLC estiver fora da UE e ligado.
+2. Modelo de custos: onde lib/receiving-costs.ts e outros arquivos dizem estar "alinhados com a Hazelsong", mantenha os mesmos valores e suposições, que continuam valendo por si; apenas atualize o texto para não depender de um produto encerrado. Nenhuma tarifa, reserva ou imposto pode diminuir por causa desta mudança.
+3. Inventário: liste cada serviço que guarda ou processa dados ou executa código do Marktmorgen e a região atual de cada um: funções e builds da Vercel, Upstash Redis, Cloudflare R2, Bunny Stream, Amazon SES, Amazon SNS, Resend e qualquer outro encontrado no código. Para cada um, registre a região europeia disponível, a fonte oficial datada, o preço nessa região e o que muda.
+4. Código: deixe a região de cada serviço configurável e verificável. Crie uma checagem, em tempo de execução e sem expor segredos, que leia a região real de cada serviço e falhe se algum estiver fora da UE quando EU_HOSTING_CONFIRMED for true.
+5. Migração: escreva em docs/eu-hosting.md o roteiro passo a passo da mudança, na ordem certa, para cada serviço: criar o recurso na região europeia, copiar os dados sem perda, validar, trocar as configurações, verificar e desligar o recurso antigo. Inclua como evitar interrupção, como desfazer cada passo e o que o dono precisa fazer em cada painel, com os nomes exatos dos campos e botões.
+6. Encerramento da Hazelsong: sem alterar nada, liste em docs/eu-hosting.md, a partir do que estiver documentado nos repositórios, os serviços da Hazelsong que podem continuar ligados (por exemplo, o projeto na Vercel, o domínio, o processador de pagamentos, o e-mail e o banco de dados) e escreva o roteiro para o dono desligá-los: exportar o que for preciso guardar, avisar e reembolsar quem tiver pago, se houver alguém, conforme os termos da Hazelsong, cancelar as cobranças dos fornecedores e confirmar que nada da Hazelsong será pago pela LLC.
+7. Impostos: registre em docs/tax-uncertainty.md, com fontes oficiais datadas, por que a hospedagem na UE muda a leitura das questões 1, 4 e 22, e o que continua valendo (imposto brasileiro, Califórnia 13,3% e ISS 5% na leitura atual).
+8. Custos: recalcule o pior caso de todos os planos com os preços europeus e registre a diferença.
+
+Regras para o item: é proibido criar contas, aceitar termos, contratar serviços, pagar qualquer valor, mover dados reais, alterar configurações reais de fornecedores, desligar ou alterar serviços da Hazelsong, ligar EU_HOSTING_CONFIRMED, solicitar aprovações e alterar preços, limites visíveis, comissão, PLANS_ON_SALE, art. 9a ou a revisão comercial. Testes somente com fornecedores simulados. Todo texto público em inglês americano, com a acessibilidade exigida pela Parte A do item 274 [AX1].
+
+Estado inicial: na fila. Ao concluir, registre a data e a hora de Fortaleza, o commit, o resultado da suíte completa e a publicação, e deixe o estado como "pronto, aguardando o dono e a LLC".
+
+Proveniência EU1: pedido integral das23h50 de23/10/2026 (Fortaleza), versão vinculante sobre qualquer versão anterior ainda não registrada. Conferidos main, todos os15PRs abertos e os2heads alterados desde423refs auditados (agora424), sem EU1/AB ou317ocupado. A decisão(a) é registrada no AGENTS.md no mesmo PR; os8passos, fontes oficiais, cálculos e migração permanecem na fila. Nenhum serviço da Hazelsong foi alterado ou desligado, nenhuma região ativa foi presumida e nenhuma trava foi ligada. Desconhecido reprova; a nova decisão não reduz valores, tarifas, reservas ou impostos.
