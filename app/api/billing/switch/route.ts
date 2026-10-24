@@ -1,4 +1,4 @@
-import {reserveContractFunding} from '@/lib/contract-funding';
+import {reserveSwitchContractFunding} from '@/lib/contract-funding';
 import type { NextRequest } from "next/server";
 import { away, creatorFrom } from "@/lib/studio-route";
 import { isBillingConfigured, switchPlan } from "@/lib/billing";
@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
   if (!cycle || !tier) return away(origin, studio("billing=switch-error"));
   if (tier !== "creator" && !PRO_ON_SALE) return away(origin, studio("billing=pro-closed"));
 
-  const grant=await reserveContractFunding(store.statsId??'',tier,cycle,'switch');
+  const grant=await reserveSwitchContractFunding(store.statsId??'',store.subscriptionId,tier,cycle);
   if(!grant)return away(origin,studio('billing=not-open'));
   try {
     const result = await switchPlan(store.subscriptionId, { tier, cycle },grant);

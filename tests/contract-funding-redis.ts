@@ -32,4 +32,35 @@ function activate(args:(string|number)[]):unknown[]{
 }
 
 /** Contract double only. CI executes the production Lua against real Redis. */
-export async function redisPipeline(commands:(string|number)[][]):Promise<unknown[]>{calls.push(commands);if(failure)throw Error('Redis unavailable');if(response!==null)return response;if(String(commands[0]?.[1]).includes("'activated:'")){if(commands.length!==1||commands[0][0]!=='EVAL'||commands[0][2]!==1)throw Error('Expected one activation');return activate(commands[0].slice(3));}const [op,,keys,key,binding,review,store,choice,rawCharge,rawLimit,rawCarry,rawFunded,nonce,receipt,action]=commands[0];if(op!=='EVAL'||keys!==1||commands.length!==1)throw Error('Expected one contract reservation');const h=ledger.get(String(key));if(!h||h.get('policy')!==binding||h.get('review')!==review)return[0];if(!['checkout','switch'].includes(String(action))||!String(receipt).startsWith([review,store,choice,action,''].join('|'))||action==='checkout'&&h.has('active:'+store))return[0];const parse=(n:unknown)=>typeof n==='string'&&/^(0|[1-9][0-9]*)$/.test(n)&&Number(n)<=1e12?Number(n):NaN;const reserved=parse(h.get('reserved')),carried=parse(h.get('carried')),charge=parse(String(rawCharge)),limit=parse(String(rawLimit)),carry=parse(String(rawCarry)),funded=parse(String(rawFunded)),slots=parse(h.get('slots:'+choice));if(![reserved,carried,charge,limit,carry,funded,slots].every(Number.isSafeInteger)||charge<=0||carried!==carry||reserved<carried||reserved>limit||funded<=0||slots>funded||slots<=0||h.has('pending:'+store)||h.has('grant:'+nonce)||charge>limit-reserved)return[0];h.set('slots:'+choice,String(slots-1));h.set('reserved',String(reserved+charge));h.set('pending:'+store,String(nonce));h.set('grant:'+nonce,String(receipt));return lostAck?[]:[1];}
+export async function redisPipeline(commands:(string|number)[][]):Promise<unknown[]>{
+ calls.push(commands);if(failure)throw Error('Redis unavailable');if(response!==null)return response;
+ if(String(commands[0]?.[1]).includes("local consumed=redis.call")){
+  if(commands.length!==1||commands[0][0]!=='EVAL'||commands[0][2]!==1)throw Error('Expected one activation');
+  return activate(commands[0].slice(3));
+ }
+ const [op,,keys,key,binding,review,store,choice,rawCharge,rawLimit,rawCarry,rawFunded,nonce,receipt,action,sourceSubscription,rawNow]=commands[0];
+ if(op!=='EVAL'||keys!==1||commands.length!==1)throw Error('Expected one contract reservation');
+ const h=ledger.get(String(key));
+ if(!h||h.get('policy')!==binding||h.get('review')!==review)return[0];
+ if(!['checkout','switch'].includes(String(action))||!String(receipt).startsWith([review,store,choice,action,''].join('|'))||action==='checkout'&&h.has('active:'+store))return[0];
+ const parse=(n:unknown)=>typeof n==='string'&&/^(0|[1-9][0-9]*)$/.test(n)&&Number(n)<=1e12?Number(n):NaN;
+ let sourceGrant:string|undefined,sourceCharge:number|undefined;
+ if(action==='checkout'){if(sourceSubscription!=='')return[0];}
+ else{
+  const active=h.get('active:'+store),source=(active??'').split('|');
+  if(!active||active.length>256||source.length!==7||source[1]!==sourceSubscription||source[0].length>84||!/^ctr_[A-Za-z0-9_-]+$/.test(source[0])||!['creator_month','creator_year','pro_month','pro_year','scale_month','scale_year'].includes(source[2]))return[0];
+  const [created,start,finish,now]=[source[3],source[5],source[6],String(rawNow)].map(parse);
+  if(!['trial','paid'].includes(source[4])||![created,start,finish,now].every(Number.isSafeInteger)||start<created||start>now||finish<=now||finish<=start||h.get('activated:'+source[0])!==active)return[0];
+  const raw=h.get('grant:'+source[0])??'';if(raw.length>1024)return[0];const old=raw.split('|');
+  if(old[0]!==review||old[1]!==store||old[2]!==source[2]||!(old[3]==='checkout'&&old.length===9||old[3]==='switch'&&old.length===10&&/^ctr_[A-Za-z0-9_-]+$/.test(old[9])))return[0];
+  const [submitted,expires,activation]=old.slice(5,8).map(parse);
+  if(![submitted,expires,activation].every(Number.isSafeInteger)||old[3]==='checkout'&&(submitted<300||created<submitted-300||created>activation))return[0];
+  sourceCharge=parse(old[4]);const through=/^(0|[1-9][0-9]*)$/.test(old[8])?Number(old[8]):NaN;
+  if(!Number.isSafeInteger(sourceCharge)||sourceCharge<=0||!Number.isSafeInteger(through)||finish*1000>through)return[0];
+  sourceGrant=source[0];
+ }
+ const reserved=parse(h.get('reserved')),carried=parse(h.get('carried')),charge=parse(String(rawCharge)),limit=parse(String(rawLimit)),carry=parse(String(rawCarry)),funded=parse(String(rawFunded)),slots=parse(h.get('slots:'+choice));
+ if(![reserved,carried,charge,limit,carry,funded,slots].every(Number.isSafeInteger)||charge<=0||carried!==carry||reserved<carried||reserved>limit||funded<=0||slots>funded||slots<=0||h.has('pending:'+store)||h.has('grant:'+nonce)||charge>limit-reserved||sourceCharge!==undefined&&sourceCharge>reserved-carried)return[0];
+ h.set('slots:'+choice,String(slots-1));h.set('reserved',String(reserved+charge));h.set('pending:'+store,String(nonce));h.set('grant:'+nonce,String(receipt)+(sourceGrant?'|'+sourceGrant:''));
+ return lostAck?[]:[1];
+}

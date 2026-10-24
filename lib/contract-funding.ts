@@ -19,6 +19,34 @@ if string.sub(ARGV[10] or '',1,#receiptPrefix)~=receiptPrefix then return 0 end
 -- An activated contract cannot open a second new-enrollment obligation.
 -- Switches retain their distinct funded lifecycle and never overwrite active.
 if ARGV[11]=='checkout' and redis.call('HEXISTS',KEYS[1],'active:'..ARGV[3])==1 then return 0 end
+local sourceGrant=nil
+local sourceCharge=nil
+if ARGV[11]=='checkout' then
+ if ARGV[12]~='' then return 0 end
+else
+ -- A new switch obligation must name the same currently funded subscription.
+ local active=redis.call('HGET',KEYS[1],'active:'..ARGV[3])
+ if not active or #active>256 then return 0 end
+ local source={}
+ for field in string.gmatch(active,'[^|]+') do table.insert(source,field) end
+ if #source~=7 or table.concat(source,'|')~=active or source[2]~=ARGV[12] or #source[1]>84 or not string.match(source[1],'^ctr_[%w_-]+$') then return 0 end
+ if source[3]~='creator_month' and source[3]~='creator_year' and source[3]~='pro_month' and source[3]~='pro_year' and source[3]~='scale_month' and source[3]~='scale_year' then return 0 end
+ local created,start,finish,now=amount(source[4]),amount(source[6]),amount(source[7]),amount(ARGV[13])
+ if (source[5]~='trial' and source[5]~='paid') or not created or not start or not finish or not now or start<created or start>now or finish<=now or finish<=start then return 0 end
+ if redis.call('HGET',KEYS[1],'activated:'..source[1])~=active then return 0 end
+ local raw=redis.call('HGET',KEYS[1],'grant:'..source[1])
+ if not raw or #raw>1024 then return 0 end
+ local receipt={}
+ for field in string.gmatch(raw,'[^|]+') do table.insert(receipt,field) end
+ if table.concat(receipt,'|')~=raw or receipt[1]~=ARGV[2] or receipt[2]~=ARGV[3] or receipt[3]~=source[3] then return 0 end
+ if not ((receipt[4]=='checkout' and #receipt==9) or (receipt[4]=='switch' and #receipt==10 and string.match(receipt[10],'^ctr_[%w_-]+$'))) then return 0 end
+ sourceCharge=amount(receipt[5])
+ local submitted,expires,activation=amount(receipt[6]),amount(receipt[7]),amount(receipt[8])
+ if not submitted or not expires or not activation or (receipt[4]=='checkout' and (submitted<300 or created<submitted-300 or created>activation)) then return 0 end
+ local through=tonumber(receipt[9])
+ if not sourceCharge or sourceCharge<=0 or not through or not string.match(receipt[9],'^%d+$') or (#receipt[9]>1 and string.sub(receipt[9],1,1)=='0') or through>9007199254740991 or through~=math.floor(through) or finish*1000>through then return 0 end
+ sourceGrant=source[1]
+end
 local reserved=amount(redis.call('HGET',KEYS[1],'reserved'))
 local carried=amount(redis.call('HGET',KEYS[1],'carried'))
 local charge,limit,carry,funded=amount(ARGV[5]),amount(ARGV[6]),amount(ARGV[7]),amount(ARGV[8])
@@ -26,18 +54,19 @@ local slot='slots:'..ARGV[4]
 local slots=amount(redis.call('HGET',KEYS[1],slot))
 if not reserved or not carried or not charge or charge<=0 or not limit or not carry or carried~=carry or reserved<carried or reserved>limit or not funded or funded<=0 or not slots or slots>funded or slots<=0 then return 0 end
 if redis.call('HEXISTS',KEYS[1],'pending:'..ARGV[3])==1 or redis.call('HEXISTS',KEYS[1],'grant:'..ARGV[9])==1 then return 0 end
-if charge>limit-reserved then return 0 end
+if charge>limit-reserved or (sourceCharge and sourceCharge>reserved-carried) then return 0 end
 redis.call('HINCRBY',KEYS[1],slot,-1)
 redis.call('HINCRBY',KEYS[1],'reserved',ARGV[5])
 redis.call('HSET',KEYS[1],'pending:'..ARGV[3],ARGV[9])
-redis.call('HSET',KEYS[1],'grant:'..ARGV[9],ARGV[10])
+redis.call('HSET',KEYS[1],'grant:'..ARGV[9],ARGV[10]..(sourceGrant and '|'..sourceGrant or ''))
 return 1
 `;
-export type ContractGrant={action:'checkout'|'switch';id:string;reviewId:string;statsId:string;key:ContractKey;reservedCents:number;submitUntilSeconds:number;checkoutExpiresAtSeconds:number;activationUntilSeconds:number;liabilitiesThrough:string};
+export type ContractGrant={sourceSubscriptionId:string|null;action:'checkout'|'switch';id:string;reviewId:string;statsId:string;key:ContractKey;reservedCents:number;submitUntilSeconds:number;checkoutExpiresAtSeconds:number;activationUntilSeconds:number;liabilitiesThrough:string};
 /** Single-use, full-cost grant. Failure or lost acknowledgement never frees
  * money, capacity or the store's pending lock. No initialization or expiry. */
-export async function reserveContractFunding(statsId:string,tier:Tier,cycle:Cycle,action:'checkout'|'switch',policy:ContractFundingPolicy|null=CURRENT_CONTRACT_FUNDING_POLICY,context:ContractFundingContext={termsSnapshot:CURRENT_PRICE_AND_RIGHTS_SNAPSHOT,review:CURRENT_COMMERCIAL_MARGIN_REVIEW},nonce='ctr_'+randomUUID()):Promise<ContractGrant|null>{
+export async function reserveContractFunding(statsId:string,tier:Tier,cycle:Cycle,action:'checkout'|'switch',policy:ContractFundingPolicy|null=CURRENT_CONTRACT_FUNDING_POLICY,context:ContractFundingContext={termsSnapshot:CURRENT_PRICE_AND_RIGHTS_SNAPSHOT,review:CURRENT_COMMERCIAL_MARGIN_REVIEW},nonce='ctr_'+randomUUID(),sourceSubscriptionId:string|null=null):Promise<ContractGrant|null>{
  if(typeof statsId!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(statsId)||!['checkout','switch'].includes(action)||typeof nonce!=='string'||!/^ctr_[A-Za-z0-9_-]{1,80}$/.test(nonce)||typeof tier!=='string'||typeof cycle!=='string'||!isRedisConfigured())return null;
+ if(action==='switch'?(typeof sourceSubscriptionId!=='string'||!/^sub_[A-Za-z0-9]{6,64}$/.test(sourceSubscriptionId)):sourceSubscriptionId!==null)return null;
  const key=(tier+'_'+cycle) as ContractKey;
  const encodedContext=canonicalFinancialSnapshot(context);
  if(!encodedContext)return null;
@@ -49,7 +78,18 @@ export async function reserveContractFunding(statsId:string,tier:Tier,cycle:Cycl
  if(!config||config.fundedGrants[key]===0)return null;
  const seconds=Math.floor(reservedAt.getTime()/1000),submitUntilSeconds=seconds+CONTRACT_FUNDING_RULES.submissionSeconds,checkoutExpiresAtSeconds=seconds+CONTRACT_FUNDING_RULES.checkoutLifetimeSeconds,activationUntilSeconds=seconds+CONTRACT_FUNDING_RULES.activationDelayDays*86400;
  const charge=config.grantCents[key],receipt=[config.reviewId,statsId,key,action,charge,submitUntilSeconds,checkoutExpiresAtSeconds,activationUntilSeconds,config.liabilitiesThroughMs].join('|');
- try{const result=await redisPipeline([['EVAL',RESERVE_CONTRACT,1,'nl:contract-reserve:v1',contractFundingBinding(config),config.reviewId,statsId,key,charge,config.cashLimitCents,config.carryForwardCents,config.fundedGrants[key],nonce,receipt,action]]);return result.length===1&&result[0]===1&&Date.now()<=submitUntilSeconds*1000?{action,id:nonce,reviewId:config.reviewId,statsId,key,reservedCents:charge,submitUntilSeconds,checkoutExpiresAtSeconds,activationUntilSeconds,liabilitiesThrough:new Date(config.liabilitiesThroughMs).toISOString()}:null;}catch{return null;}
+ try{const result=await redisPipeline([['EVAL',RESERVE_CONTRACT,1,'nl:contract-reserve:v1',contractFundingBinding(config),config.reviewId,statsId,key,charge,config.cashLimitCents,config.carryForwardCents,config.fundedGrants[key],nonce,receipt,action,sourceSubscriptionId??'',seconds]]);return result.length===1&&result[0]===1&&Date.now()<=submitUntilSeconds*1000?{sourceSubscriptionId,action,id:nonce,reviewId:config.reviewId,statsId,key,reservedCents:charge,submitUntilSeconds,checkoutExpiresAtSeconds,activationUntilSeconds,liabilitiesThrough:new Date(config.liabilitiesThroughMs).toISOString()}:null;}catch{return null;}
+}
+
+/** A switch reserves a separate obligation against the existing funded
+ * subscription. Legacy/unmigrated contracts keep their current rights. */
+export async function reserveSwitchContractFunding(
+ statsId:string,subscriptionId:string,tier:Tier,cycle:Cycle,
+ policy:ContractFundingPolicy|null=CURRENT_CONTRACT_FUNDING_POLICY,
+ context:ContractFundingContext={termsSnapshot:CURRENT_PRICE_AND_RIGHTS_SNAPSHOT,review:CURRENT_COMMERCIAL_MARGIN_REVIEW},
+ nonce='ctr_'+randomUUID(),
+):Promise<ContractGrant|null>{
+ return reserveContractFunding(statsId,tier,cycle,'switch',policy,context,nonce,subscriptionId);
 }
 
 

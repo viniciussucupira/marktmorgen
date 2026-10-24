@@ -1,3 +1,4 @@
+import {reserveContractFunding,activateCheckoutContract} from '@/lib/contract-funding';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import type {NextRequest} from 'next/server';
@@ -16,5 +17,16 @@ const result=(r:Response)=>new URL(r.headers.get('Location')!).searchParams.get(
 test('no actual reserve cannot create a checkout even with a mocked open sales gate',async()=>{start(false);assert.equal(result(await checkout(request('checkout'))),'not-open');assert.equal(observations.checkout.length,0);assert.equal(ledger.size,0);});
 test('new checkout receives its full annual grant before the provider call',async()=>{const f=start();const response=await checkout(request('checkout'));assert.equal(response.headers.get('Location'),'https://checkout.stripe.test/session');assert.equal(observations.checkout.length,1);const grant=observations.checkout[0];assert.equal(grant.key,'creator_year');assert.equal(grant.reservedCents,contractFundingConfiguration(f.policy,f.context)!.grantCents.creator_year);assert.equal(ledger.get('nl:contract-reserve:v1')?.get('pending:route-one'),grant.id);});
 test('a provider failure holds the reservation and refuses another pending obligation',async()=>{start();observations.fail=true;assert.equal(result(await checkout(request('checkout'))),'error');const reserved=ledger.get('nl:contract-reserve:v1')?.get('reserved');assert.equal(result(await checkout(request('checkout'))),'not-open');assert.equal(observations.checkout.length,1);assert.equal(ledger.get('nl:contract-reserve:v1')?.get('reserved'),reserved);});
-test('a plan switch needs a fresh annual grant before payment confirmation is offered',async()=>{start();setRouteStore({subscriptionId:'sub_Test000001',subscriptionActive:true});const response=await change(request('switch'));assert.equal(response.headers.get('Location'),'https://invoice.stripe.test/confirm');assert.equal(observations.switches[0]?.key,'creator_year');assert.equal(ledger.get('nl:contract-reserve:v1')?.get('pending:route-one'),observations.switches[0].id);});
+test('a plan switch needs a fresh annual grant before payment confirmation is offered',async()=>{
+ const f=start(),created=Math.floor(Date.now()/1000);
+ const source=await reserveContractFunding('route-one','creator','month','checkout',f.policy,f.context,'ctr_route_source');assert.ok(source);
+ assert.equal(await activateCheckoutContract({statsId:'route-one',grantId:source.id,reviewId:source.reviewId,subscriptionId:'sub_Test000001',tier:'creator',cycle:'month',createdSeconds:created,trialing:false,periodStartSeconds:created,periodEndSeconds:created+30*86400},f.policy,f.context),true);
+setRouteStore({subscriptionId:'sub_Test000001',subscriptionActive:true});const response=await change(request('switch'));assert.equal(response.headers.get('Location'),'https://invoice.stripe.test/confirm');assert.equal(observations.switches[0]?.key,'creator_year');assert.equal(ledger.get('nl:contract-reserve:v1')?.get('pending:route-one'),observations.switches[0].id);});
 test('an existing active subscription is not intercepted as a new funded obligation',async()=>{start(false);setRouteStore({subscriptionActive:true,subscriptionId:'sub_Test000001'});assert.equal(result(await checkout(request('checkout'))),'already');assert.equal(observations.checkout.length,0);assert.equal(observations.find,0);});
+
+test('an unmigrated subscription retains existing rights but cannot create an unbound switch obligation',async()=>{
+ start();setRouteStore({subscriptionId:'sub_Test000001',subscriptionActive:true});
+ const before=[...ledger.get('nl:contract-reserve:v1')!];
+ assert.equal(result(await change(request('switch'))),'not-open');assert.equal(observations.switches.length,0);
+ assert.deepEqual([...ledger.get('nl:contract-reserve:v1')!],before);
+});
