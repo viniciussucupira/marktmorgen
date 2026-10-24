@@ -4962,6 +4962,16 @@ Ao concluir cada item do bloco, registre a data e a hora de Fortaleza, o commit,
 
 Proveniência: instrução direta recebida em 24/10/2026 às 00h11 (Fortaleza). Registro único, junto à seção OR; preserva o histórico. A nova ordem prevalece somente nos pontos incompatíveis com as anteriores. A condição "depois dos PRs #865 a #868" não é cumprida por PR pendente, teste isolado ou documento: confirmar incorporação e publicação funcional quando aplicável. Nada do Bloco de abertura é implementado por este PR documental.
 
+### Precedência AX2 cumprida — entrega funcional 193
+
+PR #865 incorporado em24/10/2026 01h06min02s (Fortaleza), commit70a5a63daa9613501e8d0fe0cd6a1f795a47744e, com24/24 verificações no head25bd303072b2c6ed416abf83ff94d2ac56071427; árvore a92843d1828e124aa57cae9013c91055bc9fa772 testada/prevista/real iguais e pais conferidos. PRs #866, #867 e #868 aparecem incorporados no GitHub por seus commits ancestrais; os quatro foram concluídos pela combinação integralmente verificada, sem alegar aprovação dos heads intermediários falhos. READY24/10/2026 01h06min56,152s (Fortaleza), deploymentdpl_CLCfHeYBpStFQTq2MRVcyhS5SbVb, SHAexato70a5a63daa9613501e8d0fe0cd6a1f795a47744e; marktmorgen.com em/,/platform,/pricing,/mission,/library retornou200comomesmoDPL. Contador192→193umaúnicavez; próxima194somentecomnovapublicaçãofuncional.
+
+Mudanças funcionais: contorno nativo de foco nos rádios, preservando3px/afastamento3px e superfíciesescuras, e títuloHTMLh1nativo docertificado, semalterarconteúdo/idiomas/IDs. Chromium120768802387,Firefox120768802547,WebKit120768802586:9rotas×2direções,alcance100%dosalvos,3rádios/4setas/restauração;0gravações,0origensinesperadas e12imagenssintéticaslocaispormotor. Certificados emitido/retirado×390/1280 passaram nostrêsmotores. Mobile120768802498:9amostrasfrias390px,CPU4x/150ms/1,6Mbps;LCP572–1048ms,CLS0,interação26,4–80ms,todososcritériosmantidos; medidaslaboratoriais,nãoINPdecampo. Não certificaAAA/PDF-UA/ordemsemânticacompleta/todasastarefasAT/saídaparaochrome/fotosoriginais. Histórico de falhas mantido.
+
+Custo: CSS-fonte+195bytes,semasset/JS/request/operaçãodefornecedor/franquianovos; tetosexistentesmantidos. Runnerpadrãopúblico0incrementalsomentesobexceçãoverificadadodono; faturasreaisdeoutrosserviçosdesconhecidas,nãozero.Semcertificar60%;gates/preços/limites/opt-inpreservados. FonteprimáriaWebKit fixada em67d931686f9e8cd74deeadd0da510cafd8686ba5,31/03/2026 04:11:55UTC,Source/WebCore/html/RadioInputType.cpp; comportamento consistentecomobservaçãonativa,nãoprovaocommitdobináriotestado.
+
+A precedência dos PRs AX2 já abertos está cumprida. O restante do item310 continua depois do Bloco de abertura. O próximo item de execução é (a), revisão comercial; nenhuma etapa do bloco é declarada concluída por este registro.
+
 ## OR — Posição dos pendentes antigos de 19/10/2026 (22/10/2026)
 
 Decisão do dono: 22/10/2026, 14h45 de Fortaleza. Registro documental preparado em 22/10/2026 às 15:18:31 de Fortaleza, após concluir a entrega 165. Esta seção prevalece sobre posições antigas incompatíveis; preserva o histórico e não cria itens nem números.
@@ -5458,6 +5468,28 @@ Escopo inicial honesto: títulos de nível1 nas entradas de cadastro /signin e a
 
 Custo antes de ativar: US$0 mensal/anual por Store/Studio/Scale e US$0 fixo incremental mensal/anual somente enquanto o repositório canônico for público, em runners padrão autorizados, conforme regra oficial datada e confirmação do dono já registradas. Privado/visibilidade desconhecida não aloca job; lista literal windows-latest/macos-latest, máximo25min cada, max-parallel1 e cancelamento por referência. Sem larger runners, alteração de orçamento ou armazenamento pago. Mudança para privado requer novo cálculo antes de habilitar. Faturas de outros serviços, mínimos FX275, tributos mais onerosos e bloqueios comerciais não são certificados/zerados. Resultado completo do novo head e dos dois leitores ainda pendente; não é publicação nem entrega funcional.
 
+### Entrega funcional 192 — publicação confirmada e AX2 parcial (23/10/2026)
+
+PR #863 incorporado em 23/10/2026 22h10min46s Fortaleza, commit b8c5336636c53d5b08df7799a6d1cddc17d00525, head testado348ad4d0420763e2f4ec0d55c84ec1845d5e891c, árvore testada/prevista/incorporada f3ded5ff1921aa4830ebdea6f03093faca670ad4. Suíte completa24/24, incluindo os22 checks anteriores e os dois leitores reais. Produção dpl_DqvLRnmndAwVgG7tVbmH5v4KozM8 READY em23/10/2026 22:12:16.387Fortaleza; SHA exato confirmado e /, /platform, /pricing, /mission e /library responderam200com o mesmo DPL em marktmorgen.com. Contador191→192uma vez, próxima193.
+
+Alteração funcional de segurança: resolução undici6.28.1→6.29.1, compatível com @vercel/blob, corrige os avisos oficiais alta/moderada já registrados; sem exceção de auditoria. O restante é prova parcial AX2: NVDA real/Chromium em Windows e VoiceOver real/WebKit em macOS anunciaram nome, função heading e nível1 das entradas /signin e /signin?to=login. Logs120729647980 e120729647915 preservam as falas exatas; VoiceOver inicialmente disse “Heading not found” no acesso, depois encontrou o h1 dentro do percurso limitado, sem apagar esse evento. Nenhuma conta, e-mail real, cobrança ou reembolso. Não significa execução das sete tarefas,100%de rotas/estados, PDF/UA, teste humano ou conformidade certificada. O PR #864 de modo escuro permanece em correção/verificação separada; suas falhas Firefox não foram aprovadas.
+
+Sem nova operação de produção: incremento máximo mensal/anual por Store/Studio/Scale0/0. Execução adicional dos leitores usa apenas runners padrão públicos, custo fixo incremental0/0condicional à visibilidade pública, conforme autorização do dono e fonte oficial já registrada; guard antes de alocar,25min, matriz sequencial e concorrência por referência, sem artefato/cache/áudio novo. Custos reais de outros serviços não são zero, tributos mais onerosos/100%LLC/FX275 e gates ficam preservados. Nenhum período sem erros de runtime foi alegado.
+
+### AX2 — roteiro manual complementar e “Depende do dono”
+
+docs/accessibility-real-reader-protocol.md complementa o plano202 existente com sete tarefas, evidência exata, JAWS/Android/iPhone e custo/licença/território. Preços publicados JAWS nos EUA verificados no site oficial em23/10: Professional perpétuo com SMA US$2.316,50 e assinatura a partir deUS$926, sem presumir prazo/total aplicável ao Brasil. A página de produto restringe a loja aos EUA; cotação brasileira, tributos/câmbio e total permanecem desconhecidos. Não houve compra, teste grátis, conta, contato ou recrutamento. Nenhum teste manual/humano é declarado concluído; custos completos e base mínima continuam não aprovados. Registro documental sem recurso ativado ou entrega funcional nova.
+
+### Verificação da inclusão HQ1 — 23/10/2026
+
+O head `b6d8d77058195ab0ca485c40cc161213a818f35b` passou em 23 de 24 verificações. O Firefox falhou no teste sintético de confirmação de envio (cenário “missing record”, largura 1280), às 22h29 de Fortaleza: a ação de clique expirou enquanto a resposta interceptada permanecia retida para verificar o estado ocupado. A correção usa `noWaitAfter: true` no clique real, conforme a API oficial do Playwright 1.56.1, para separar a espera de navegação da espera explícita pela requisição e resposta. A causa exclusiva ainda não está demonstrada. Todos os 13 cenários, as duas larguras, os prazos, a contagem de operações e as verificações de confirmação, erro e acessibilidade foram preservados. A suíte completa de 24 verificações deve passar no novo head antes da incorporação; não basta repetir um job. Alteração apenas de teste e registro, sem nova operação, serviço ou custo mensal/anual por plano; demais custos desconhecidos continuam desconhecidos e os gates comerciais permanecem fechados.
+
+### AX2 — Modo escuro incorporado e verificação conjunta
+
+PR #864 incorporado em 23/10/2026 às 22h43min01s de Fortaleza. Head testado `26bb50bb6f13294af8ef809a2ac0dbb0ecbcff55`; árvore testada, prevista e incorporada `618c2c4894587334d09f8134d73f400586c82dc8`; commit de incorporação `43bad54e77e52e673bc9030edb0af21dfd769ad9`, com o main anterior e o head testado como pais. As 24 verificações passaram, incluindo as cinco matrizes no Firefox com o modo escuro efetivamente confirmado após a navegação. As falhas anteriores e a hipótese de troca do contexto pelo cabeçalho de isolamento continuam no histórico; nenhum cabeçalho de segurança foi removido. Alteração apenas de testes: contador funcional permanece 192.
+
+Os trabalhos sem conflito dos PRs #865, #866 e #867 são reunidos sobre esse main para verificar a árvore completa uma única vez antes da incorporação. Preservam-se os commits e os históricos de cada ramo. O gerador de resultados usa somente os registros reais limitados a dois títulos de entrada por leitor; a travessia de teclado cobre somente nove jornadas públicas existentes, no estado já aberto pelo teste de texto. Nenhuma execução parcial ou cancelada é contada como suíte completa. A nova árvore precisa passar em todas as 24 verificações. Sem nova operação de produção, fornecedor, job ou prazo; custos incrementais mensais e anuais por plano permanecem zero para esta alteração de testes, condicionados à regra já verificada de servidores padrão no repositório público. Custos não verificados e os gates comerciais não mudam.
+
 ## H4 — Lições da quarta auditoria da Hotmart (23/10/2026)
 
 Solicitação do dono (23/10/2026,01h13, Fortaleza): incorporar as melhorias da quarta auditoria estratégica da Hotmart (hotmart.com) que ainda não existam no código nem na fila. Antes de cada item, verificar código e fila e implementar apenas a diferença. Fatos atribuídos à Hotmart exigem confirmação em fonte oficial datada antes de qualquer uso; números da Hotmart jamais podem ser apresentados como resultados do Marktmorgen.
@@ -5944,6 +5976,75 @@ Regras para o item: é proibido criar contas, aceitar termos, contratar serviço
 Estado inicial: na fila. Ao concluir, registre a data e a hora de Fortaleza, o commit, o resultado da suíte completa e a publicação.
 
 Proveniência: pedido integral recebido diretamente em23/10/2026 20h14Fortaleza. Conferidos main,11PRs abertos e415refs codex/*; único head alterado desde a auditoria anterior relido e demais SHAs imutáveis já auditados. NenhumHS1 existente e311livre. AX2310 incorporado noPR860 em23/10/2026 20:54:28Fortaleza, commitb969e8863c4fd15194e8fe9bf149674809293787,22/22 e igualdade deárvores testada/prevista/real; atualização da proveniênciaAX1ParteC incluída. Registro atual apenas documental, não implementa /integrations e não confirma fatos do concorrente ou disponibilidade real de integrações. Antes da implementação, conferir código/fila/fontesoficiaisdatadas e apenasdiferença; custo estático dobrief precisa verificação. Incremento operacional mensal/anual0/0cadaStore/Studio/Scale; faturas reaisCI desconhecidas, não zero; nenhuma certificação60%/AAA. AX2 mantém prioridade antes do restante da fila. Gates/preços/limites/opt-in preservados.
+
+## HQ — Lições da sétima auditoria da Hotmart (23/10/2026)
+
+Ordem: após todos os itens anteriores; este item não bloqueia nenhum outro. Inclusão documental após concluir a tarefa corrente; nada implementado agora.
+
+Solicitação do dono (23/10/2026, 21h33, horário de Fortaleza): incorporar ao Marktmorgen as melhorias identificadas na sétima auditoria estratégica da Hotmart (hotmart.com) que ainda não existam no código nem na fila. Antes do item, verifique o código e a fila e implemente apenas a diferença. Os fatos que a auditoria atribui à Hotmart devem ser confirmados em fonte oficial datada antes de qualquer uso, e os números da Hotmart jamais podem ser apresentados como resultados do Marktmorgen.
+
+REGRA DOS 60% (OBRIGATÓRIA): todo cliente pagante, considerado isoladamente e usando 100% de todos os direitos do plano no pior mês, deve manter margem de lucro líquido MÍNIMA de 60%, depois de todos os custos e de todos os impostos, inclusive os brasileiros; a margem pode ser maior, mas nunca menor, e a mesma regra vale para a empresa como um todo. Antes de qualquer código, calcule o custo máximo mensal e anual do item por plano, com teto automático aplicado antes do gasto. Custo desconhecido não pode ser considerado zero. Use a leitura que resultar em MAIS imposto (docs/tax-uncertainty.md). Desde 22/10/2026, todos os custos fixos da LLC são atribuídos integralmente ao Marktmorgen (item 275 [FX1]).
+
+312. [HQ1] Avisos antecipados de fraude do Stripe: reembolso antes da contestação
+
+Estado: na fila.
+
+Objetivo: quando o emissor do cartão avisar que uma cobrança é provavelmente fraudulenta, devolver o dinheiro antes de o titular abrir uma contestação. Isso evita a tarifa da contestação e a perda do valor, e protege o índice de contestações da conta, sem trabalho manual do dono.
+
+Situação atual: o código não escuta o evento radar.early_fraud_warning.created do Stripe, nem na conta da plataforma nem nas contas conectadas dos criadores.
+
+Antes de construir, confirme na documentação oficial e datada do Stripe:
+- como os avisos antecipados de fraude funcionam;
+- se chegam pelos webhooks do Connect para cobranças diretas em contas Standard conectadas;
+- a tarifa de contestação e se ela é devolvida quando o reembolso acontece antes da contestação;
+- se o reembolso ainda pode gerar contestação depois.
+
+O que construir:
+1. Planos do próprio Marktmorgen (conta da plataforma): ao receber um aviso antecipado de fraude de uma cobrança de plano ou de complemento, o código faz sozinho o reembolso integral dessa cobrança, encerra a assinatura e aplica as mesmas regras de encerramento de loja que já existem. A operação é idempotente: um aviso repetido nunca devolve duas vezes. Registre na revisão comercial o efeito na reserva de contestação de lib/receiving-costs.ts, sem reduzir nenhuma suposição de custo sem fonte oficial.
+2. Vendas dos criadores (contas conectadas): o dinheiro é do criador, então a decisão é dele. Ao receber o aviso:
+- o estúdio mostra a venda marcada, em linguagem simples, com o valor, a data e um botão "Refund this order";
+- o criador recebe um e-mail curto de aviso, dentro dos limites de e-mail do próprio Marktmorgen;
+- nas configurações da loja, o criador pode escolher, desligado por padrão, "Refund automatically when the card issuer warns of fraud", e então o reembolso acontece sozinho;
+- em qualquer caso, o acesso ao produto se fecha pelas regras que já existem em lib/refunds.ts quando o reembolso acontecer.
+3. Nunca devolver uma cobrança já contestada, já devolvida ou de outra conta. Ignorar avisos de contas desconectadas. Nenhum dado do comprador além do que o Stripe já guarda.
+4. Termos e política de reembolso: dizer, para os planos do Marktmorgen, que uma cobrança apontada pelo emissor como fraudulenta pode ser devolvida e encerrada automaticamente.
+
+Custo: chamadas ao Stripe e um e-mail por aviso, dentro dos tetos atuais. Inclua no pior caso de cada plano o número máximo de avisos que uma loja pode gerar.
+
+Testes somente com o Stripe simulado, que falham se:
+- um aviso devolver duas vezes;
+- uma cobrança contestada ou já devolvida for devolvida;
+- uma venda de criador for devolvida sem a escolha do criador;
+- o acesso não se fechar depois do reembolso;
+- um aviso de uma conta desconectada for processado.
+
+Regras para o item: é proibido criar contas, aceitar termos, contratar serviços, pagar qualquer valor, fazer reembolso real, alterar configurações reais do Stripe, solicitar aprovações e alterar preços, limites visíveis, comissão, PLANS_ON_SALE, tax gate, art. 9a ou a revisão comercial, salvo para registrar o efeito na reserva. Todo texto público em inglês americano, com a acessibilidade exigida pela Parte A do item 274 [AX1].
+
+Estado inicial: na fila. Ao concluir, registre a data e a hora de Fortaleza, o commit, o resultado da suíte completa e a publicação, e deixe o estado como "pronto e desligado, aguardando o dono" enquanto as vendas estiverem fechadas.
+
+Proveniência: pedido direto de23/10/2026 21h33Fortaleza, recebido novamente pelo anexo Texto colado.txt. Conferidos main b8c5336636c53d5b08df7799a6d1cddc17d00525,12PRs abertos e419refs codex/*; dois heads novos/alterados desde a auditoria de417refs relidos, demais SHAs imutáveis previamente auditados. Nome da seção, data/hora, HQ1, número312 e conteúdo/early_fraud_warning ausentes nas filas examinadas;312livre. Recebido novamente em 23/10/2026 22h09 (Fortaleza); repetição sem mudança; nada alterado. Um único HQ1 é gravado agora, após concluir/incorporar/publicar a tarefa corrente PR863; sem repetição de item, commit exclusivo por repetição ou mudança da ordem.
+
+Os fatos de situação atual, benefício contra contestação e custo acima são briefing do dono, não confirmação de comportamento do Stripe, cobrança ou código. Antes da implementação, verificar apenas a diferença, fontes oficiais datadas, máximos mensais/anuais por plano, número máximo de avisos, tetos/reserva e leitura fiscal mais onerosa; desconhecido reprova. Esta inclusão não implementa webhook, opção, e-mail ou reembolso, não altera revisão comercial nem afirma eliminação de contestações/tarifas. Incremento operacional deste registro mensal/anual por Store/Studio/Scale0/0, sem nova operação ou fornecedor; outros custos reais/CI permanecem desconhecidos, não zero. Nenhuma margem ou acessibilidade certificada. AX2 mantém prioridade de execução sobre o restante da fila.
+
+Registro de continuidade: PR #869 incorporado em 23/10/2026 23h47min35s (Fortaleza), commit ed07709e2fabd114b5e734041c71e8666ed3dca4, com24/24 verificações no head b3bef8560ebc7ff018354492671c219987026c4b e igualdade das árvores testada/prevista/real 33e1a777350fe66bf81c25e745698406b508e46b. CV1 313, MG1 314, MG2 315 e MG3 316 preservados integralmente a seguir; HQ1 permanece312, único, antes deCV. Registro apenas documental, sem entrega funcional.
+
+Retomada AX2: head8a8bb8221399bb16107bcb9b365c294e47791ae6 teve20/24 sucessos e4falhas: tecladoChromium120749549690/Firefox120749549903/WebKit120749549786 e Mobile render120749549868. Os diagnósticos identificaram7links emdetailsfechados e2radiosnão selecionados incorretamente esperados porTab. Correção do oráculo nativo documentada emdocs/accessibility-public-keyboard-review.md: todos os alvos sequenciais emambasdireções e todas as opções de rádio porArrowRight; saída para oscontrolesdonavegador segue lacuna sem alegação de auditoria completa. Mobile registrou272ms naprimeiraamostrafria dehome, falha preservada; nenhumlimiar/amostra/throttle/timeout relaxado. Verificação completa no novohead obrigatória antesdeincorporar; correção nãodeclarada pronta.
+
+
+
+Integração AX2 do certificado: PR #868 head ef810709ef970818a5dc7ff9ace22da8e4813a80 passou24/24; seus7arquivos não se sobrepõem aos12arquivos doPR865. O título existente do certificadoHTML usa agora h1 nativo com texto/estilo/idiomas/identificadores preservados;fixtures sintéticas emitido/retirado×390/1280, checks deheading/overflow/axeespecífico eguarda público-standard entramna mesma verificação conjunta. FalhaTS2345 anterior938085c9648585516c60aabb0a5f107cb5da89c3 preservada nadocumentação; reparoef810... passou24/24. Não declarar a combinação pronta nem aumentar contador antes de24/24no novohead, incorporação verificada e READY/domínio/versãoexata de publicação funcional. A troca doelemento não adiciona chamadas/bytesdeassets/fornecedores/operações deplanos; tetos existentes mantidos, sem certificação60%/AAA.
+
+
+Histórico AX2 adicional: noheadcaf4964951ae16e4d97161a0f9824f46ad01a579 WebKit120758938172 alcançou151/151 porTab emhome, mas falhou a observação de checked apósArrowRight (02:57:10–02:57:12UTC). Fontefeature-demos usaestadoReactcontrolado. Reparosincroniza observação de foco/checked/focus-visible após cadaúnicatecla, comteto3000ms e diagnóstico antesdefalhar; nãoatribui estado/foco, não repete tecla, não reduz critério e nãoalteratimeoutglobal. Nova suíte completa obrigatória; cabeça combinada anterior nãoaprovada.
+
+
+Correção de foco nativoAX2: head6b2198bb0e510f1cb9cb367e9b7587147f0330b8 falhou WebKit120760320680 em24/10/2026 00:05:02Fortaleza; rádioesperado estavafocado echeckedtrue, masfocusVisiblefalse. Espera isolada não resolveu. OcontornoCSSexistente3pxsolid/offset3passaavalertambémpararádionativo:focus, inclusivecoresdassuperfíciesescuras. Testeexigecontornocomputadosólidonãotransparentedepelomenos3pxapóscadaúnicaseta, sem relaxar alcance/seleção/timeoutglobal. Nenhumrequest/operação/assetfornecedornovo; bytesCSSincrementais permanecemsujeitosàmediçãoe tetosexistentes, custosdesconhecidosnãoviraramzero. Nova suítecompletaantesdeincorporar.
+
+
+Histórico nativoAX2: head7b95b4767fffbb1b05b11058272d55d0656de51f WebKit120762494093 em24/10/2026 00:14:23Fortaleza mostrouúltimorádio804focado/checkedtrue/contorno3pxsólidovisível, masArrowRightnão retornouaoprimeiro790. FonteoficialWebKitRadioInputType.cpp percorrenóspróximos/anterioressemwrap; compatívelcomaobservação,nãoprovaocommitexatodobinário. TestecaminhaagorapelosdoisextremosporArrowRight/Lefterestaurainicial, exigindotodasasopções/seleção/contorno/foco;2*(N−1)teclasnativas,sematribuirfoco/estado,semexcluirengine/rota/limiar.SemcertificarwrapnativoouAPGcompleto;novasuíte24noheadcorrigidoobrigatória.
+
+
+AX2head0fefc27b51cb91103cf201d29771a36fd5659c72: Chromium120764382635eFirefox120764382794 passaramalcancecompletodas9rotasem2direções,3rádioscom4setaserestauração, masfalharam12tentativasexternasbloqueadascada. Fontepública contémfotosUnsplashjáexistentes. SimulaçãoagoraatendeimagensGET/HEADdessaorigemHTTPSexata comSVGsintéticolocal; nãocontatafornecedor. Qualqueroutraorigem/tiponãoimagem permanecebloqueadoereprova;gravaçõesreprovam;serviceworkersbloqueados. Contagensdefixtures/tentativasbloqueadasreportadasseparadamente,nãofalsozero.Semalterarfotos/conteúdodoproduto;suítecompletanovoheadobrigatória.
 
 ## CV — Custo por visita das lojas (23/10/2026)
 

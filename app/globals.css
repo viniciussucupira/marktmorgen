@@ -223,7 +223,8 @@ body {
   color: var(--violet-ink);
 }
 
-:where(a, button, [role="button"], input, select, textarea, summary):focus-visible {
+:where(a, button, [role="button"], input, select, textarea, summary):focus-visible,
+:where(input[type="radio"]):focus {
   outline: 3px solid var(--focus);
   outline-offset: 3px;
   border-radius: 6px;
@@ -238,11 +239,11 @@ body {
  * and a white ring on a white card is no ring at all; the halo gives it an
  * edge on either background without changing its shape.
  */
-.on-dark :focus-visible,
-.surface-night :focus-visible,
-.surface-daybreak :focus-visible,
-.surface-navy :focus-visible,
-.surface-signature :focus-visible {
+.on-dark :is(:focus-visible, input[type="radio"]:focus),
+.surface-night :is(:focus-visible, input[type="radio"]:focus),
+.surface-daybreak :is(:focus-visible, input[type="radio"]:focus),
+.surface-navy :is(:focus-visible, input[type="radio"]:focus),
+.surface-signature :is(:focus-visible, input[type="radio"]:focus) {
   outline-color: #fff;
   box-shadow: 0 0 0 6px rgba(11, 17, 25, 0.75);
 }
