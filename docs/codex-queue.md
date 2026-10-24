@@ -6890,3 +6890,8 @@ POSTcreator/AdminconnectexigecoorteStorefinanciadaapósauth/permissãoantesdeens
 ### AB(a) — nova gestão de roles Discord financiada (em implementação)
 
 Gate antes de criar role ou consultar roles para atribuição não vazia; remoção vazia e disconnect preservados. Regressão sintética de rotas reais/Store persistida/sessão:503 sem provider nos novos trabalhos; remoção e disconnect disponíveis. Custos e lacunas vinculantes em docs/paid-discord-role-cohort.md. Preserva917 por ancestralidade; suíte completa no novo head antes de publicar. Callback de instalação/obrigações retidas permanecem pendentes, sem60% certificado, políticas nulas/coberturas falsas/vendas fechadas.
+
+
+### AB(a) — novo onboarding PayPal financiado (em implementação)
+
+onboardingUrl exige coorte antes de novo referral/token. Verificação existente de vendedor, captura, recuperação pendente, reembolso e disconnect preservados. Regressão sintética com Store persistida: retorno nulo sem provider/mutação de vendedor. Custos e lacunas em docs/paid-paypal-onboarding-cohort.md; 100% fixos LLC/leitura mais onerosa/políticas nulas/coberturas falsas/vendas fechadas. Preserva918 por ancestralidade; suíte completa no novo head obrigatória.

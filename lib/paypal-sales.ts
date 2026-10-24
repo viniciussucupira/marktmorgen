@@ -39,6 +39,7 @@
  * affiliate book and the webhooks count it (lib/stats.ts readPaidSales,
  * lib/paypal-delivery.ts).
  */
+import { reservePaidResourceWindow } from "@/lib/contract-resource-window";
 import { admitOrders } from "@/lib/order-admission";
 import { countOrder } from "@/lib/orders";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
@@ -188,6 +189,7 @@ export function referralBody(store: Store, returnUrl: string): Record<string, un
 /** Where to send the creator to connect their PayPal, or null when PayPal would not say. */
 export async function onboardingUrl(store: Store, returnUrl: string): Promise<string | null> {
   if (!store.statsId) return null;
+  if (store.period?.funded === true && !(await reservePaidResourceWindow(store))) return null;
   const made = await call("POST", "/v2/customer/partner-referrals", { body: referralBody(store, returnUrl) });
   const links = Array.isArray(made.links) ? (made.links as { rel?: unknown; href?: unknown }[]) : [];
   const action = links.find((l) => l.rel === "action_url");
