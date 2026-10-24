@@ -51,7 +51,9 @@ try{
  browser=await driver.launch();console.log("PRODUCT_MATRIX_ENGINE:"+JSON.stringify({requested:engine,actual:driver.name(),version:browser.version()}));
  for(const path of ["/studio?store="+fixture.sid])for(const width of [320,390,768,1280,1920])for(const mode of ["baseline","text-spacing","reduced-motion","forced-colors","reflow-320",...(process.env.AX2_PUBLIC_STANDARD==="true"?["dark"]:[])]){
   const viewportWidth=mode==="reflow-320"?320:width;
-  const context=await browser.newContext({...(mode==="dark"?{colorScheme:"dark"}:{}),viewport:{width:viewportWidth,height:900},serviceWorkers:"block",reducedMotion:mode==="reduced-motion"?"reduce":"no-preference",forcedColors:mode==="forced-colors"?"active":"none"});
+  // Fresh Firefox process isolates dark preference from prior forced-colors cases.
+  const isolatedDarkBrowser=engine==="firefox"&&mode==="dark"?await driver.launch():null;
+  const context=await (isolatedDarkBrowser??browser).newContext({...(mode==="dark"?{colorScheme:"dark"}:{}),viewport:{width:viewportWidth,height:900},serviceWorkers:"block",reducedMotion:mode==="reduced-motion"?"reduce":"no-preference",forcedColors:mode==="forced-colors"?"active":"none"});
   if(mode==="text-spacing")await context.addInitScript(()=>document.addEventListener("DOMContentLoaded",()=>{const style=document.createElement("style");style.textContent="*{line-height:1.5!important;letter-spacing:.12em!important;word-spacing:.16em!important}p{margin-bottom:2em!important}";document.head.append(style);},{once:true}));
   await context.addInitScript(()=>{
    window.__mmRscBodies=[];
@@ -188,7 +190,7 @@ try{
    if(writes||foreign||localProductWrites!==expectedWrites||interceptedVisits!==expectedVisits)throw Error("Unexpected operation count "+JSON.stringify({writes,foreign,localProductWrites,expectedWrites,interceptedVisits,expectedVisits,blockedWrites}));
    console.log("PRODUCT_ACTION_PROOF:"+JSON.stringify({engine,width,mode,title,localProductWrites,expectedWrites,interceptedVisits,createdAndReloaded:true,explicitPublication:true,storefrontVisible:true,scope:"Disposable local fixture only; no checkout, email, delivery or real account."}));
   }catch(error){failed++;console.error("PRODUCT_MATRIX_FAILURE:"+JSON.stringify({engine,path,width,mode,error:String(error)}));}
-  finally{cases++;await context.close();}
+  finally{cases++;await context.close();await isolatedDarkBrowser?.close();}
  }
  console.log("PRODUCT_MATRIX_OPEN_GAPS:"+JSON.stringify(gaps));
  console.log("PRODUCT_MATRIX_SUMMARY:"+JSON.stringify({engine,cases,failed,gaps:gaps.length,scope:"Product form and actual disposable local creation/reload/manual visibility/storefront proof only; no checkout or buyer-area action proof. Synthetic emulation; reflow320 is not real browser400% zoom. No real-device, assistive-user or whole-product AAA certification."}));

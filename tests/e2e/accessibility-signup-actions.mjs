@@ -55,7 +55,9 @@ try{
   if(cases>0){await services.close();services=await startServices(4498);}
   proxyTrace=[];
   const index=cases+1,viewportWidth=mode==="reflow-320"?320:width;
-  const context=await browser.newContext({...(mode==="dark"?{colorScheme:"dark"}:{}),ignoreHTTPSErrors:true,viewport:{width:viewportWidth,height:900},serviceWorkers:"block",reducedMotion:mode==="reduced-motion"?"reduce":"no-preference",forcedColors:mode==="forced-colors"?"active":"none",extraHTTPHeaders:{"x-forwarded-for":"192.0.2."+index,"Sec-GPC":"1"}});
+  // Fresh Firefox process isolates dark preference from prior forced-colors cases.
+  const isolatedDarkBrowser=engine==="firefox"&&mode==="dark"?await driver.launch():null;
+  const context=await (isolatedDarkBrowser??browser).newContext({...(mode==="dark"?{colorScheme:"dark"}:{}),ignoreHTTPSErrors:true,viewport:{width:viewportWidth,height:900},serviceWorkers:"block",reducedMotion:mode==="reduced-motion"?"reduce":"no-preference",forcedColors:mode==="forced-colors"?"active":"none",extraHTTPHeaders:{"x-forwarded-for":"192.0.2."+index,"Sec-GPC":"1"}});
   let page;let phase="open",foreign=0,interceptedVisits=0,localChallenges=0;const mutations=[],errors=[],network=[];const handle="matrix-"+engine[0]+"-"+index,storeName="Matrix "+engine+" "+index;const inbox="matrix-"+engine+"-"+index+"@example.test",before=services.emails().length;
   try{
    await context.addInitScript(()=>Object.defineProperty(navigator,"globalPrivacyControl",{configurable:true,get:()=>true}));
@@ -161,7 +163,7 @@ try{
    gaps.push({width,mode,reason:"Synthetic disposable local inbox/session/store claim only; no real email/account/store, physical device, assistive user or actual browser400% zoom. Production BotID behavior and manual sticky-scroll review remain open."});
    console.log("SIGNUP_ACTION_PROOF:"+JSON.stringify({engine,width,mode,actualLocalRequest:true,capturedEmails:mail.length,confirmationGetDidNotSignIn:true,explicitConfirmation:true,authenticatedFirstSetup:true,actualFirstStoreClaim:true,anonymousPublicStoreAfterReload:true,interceptedVisits,localChallenges,foreign,mutations}));
   }catch(error){failed++;const diagnostic=page?await page.evaluate(()=>({path:location.pathname,headings:[...document.querySelectorAll("h1,h2")].map(n=>n.textContent),body:document.body.innerText.slice(0,4000)})).catch(()=>null):null;console.error("SIGNUP_MATRIX_FAILURE:"+JSON.stringify({engine,width,mode,phase,diagnostic,errors,network:network.slice(-80),proxyTrace:proxyTrace.slice(-80),capturedLocalEmails:services.emails().length-before,error:String(error).replace(/token=[^&\s"']+/g,"token=redacted")}));console.error("SIGNUP_SERVER_DIAGNOSTIC:"+output.replace(/token=[^&\s"']+/g,"token=redacted"));}
-  finally{cases++;await context.close();}
+  finally{cases++;await context.close();await isolatedDarkBrowser?.close();}
  }
  console.log("SIGNUP_MATRIX_OPEN_GAPS:"+JSON.stringify(gaps));
  console.log("SIGNUP_MATRIX_SUMMARY:"+JSON.stringify({engine,cases,audits,failed,scope:"Real local request/captured fake email/explicit confirmation/new empty studio/actual initial claim/anonymous public store after session removal and reload. Synthetic services only; no production signup/store/payment/message/checkout or buyer proof."}));

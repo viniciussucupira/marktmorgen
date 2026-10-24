@@ -51,7 +51,9 @@ try{
  browser=await driver.launch();console.log("BUYER_MATRIX_ENGINE:"+JSON.stringify({requested:engine,actual:driver.name(),version:browser.version()}));
  for(const width of [320,390,768,1280,1920])for(const mode of ["baseline","text-spacing","reduced-motion","forced-colors","reflow-320",...(process.env.AX2_PUBLIC_STANDARD==="true"?["dark"]:[])]){
   const index=cases+1,viewportWidth=mode==="reflow-320"?320:width;
-  const context=await browser.newContext({...(mode==="dark"?{colorScheme:"dark"}:{}),viewport:{width:viewportWidth,height:900},serviceWorkers:"block",reducedMotion:mode==="reduced-motion"?"reduce":"no-preference",forcedColors:mode==="forced-colors"?"active":"none",extraHTTPHeaders:{"x-forwarded-for":"192.0.2."+index,"sec-gpc":"1"}});
+  // Fresh Firefox process isolates dark preference from prior forced-colors cases.
+  const isolatedDarkBrowser=engine==="firefox"&&mode==="dark"?await driver.launch():null;
+  const context=await (isolatedDarkBrowser??browser).newContext({...(mode==="dark"?{colorScheme:"dark"}:{}),viewport:{width:viewportWidth,height:900},serviceWorkers:"block",reducedMotion:mode==="reduced-motion"?"reduce":"no-preference",forcedColors:mode==="forced-colors"?"active":"none",extraHTTPHeaders:{"x-forwarded-for":"192.0.2."+index,"sec-gpc":"1"}});
   let phase="open",foreign=0;const mutations=[],errors=[],beforeEmails=services.emails().length,beforeCheckouts=services.checkouts().length;let libraryRequested=false;
   try{
    await context.addInitScript(()=>{Object.defineProperty(navigator,"globalPrivacyControl",{value:true,configurable:true});});
@@ -123,7 +125,7 @@ try{
    gaps.push({width,mode,reason:"Local simulated paid return only; Stripe-hosted UI, real card/wallet, external delivery, actual400%zoom, physical devices/AT and manual sticky-scroll not proven. Library token from one real local fake-inbox request per engine is reused for remaining viewport cases."});
    console.log("BUYER_ACTION_PROOF:"+JSON.stringify({engine,width,mode,simulatedCheckout:true,amountCents:created[0].amount_total,productMatched:true,extrasOptedIn:false,capturedLocalEmails:services.emails().length-beforeEmails,libraryRequestThisCase:libraryRequested,buyerLibrary:true,buyerOrders:true,foreign,mutations}));
   }catch(error){failed++;console.error("BUYER_MATRIX_FAILURE:"+JSON.stringify({engine,width,mode,phase,error:redact(error)}));}
-  finally{cases++;await context.close();}
+  finally{cases++;await context.close();await isolatedDarkBrowser?.close();}
  }
  console.log("BUYER_MATRIX_OPEN_GAPS:"+JSON.stringify(gaps));
  console.log("BUYER_MATRIX_SUMMARY:"+JSON.stringify({engine,cases,audits,failed,scope:"Real local app checkout against fake Stripe paid return; local captured inbox/library/orders. No real checkout/payment/provider/message/account or external download."}));

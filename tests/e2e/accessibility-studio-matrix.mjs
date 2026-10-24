@@ -45,7 +45,9 @@ try{
  browser=await driver.launch();console.log("STUDIO_MATRIX_ENGINE:"+JSON.stringify({requested:engine,actual:driver.name(),version:browser.version()}));
  for(const path of ["/studio?store="+fixture.sid,"/studio/pages?store="+fixture.sid+"&product="+fixture.product])for(const width of [320,390,768,1280,1920])for(const mode of ["baseline","text-spacing","reduced-motion","forced-colors","reflow-320",...(process.env.AX2_PUBLIC_STANDARD==="true"?["dark"]:[])]){
   const viewportWidth=mode==="reflow-320"?320:width;
-  const context=await browser.newContext({...(mode==="dark"?{colorScheme:"dark"}:{}),viewport:{width:viewportWidth,height:900},serviceWorkers:"block",reducedMotion:mode==="reduced-motion"?"reduce":"no-preference",forcedColors:mode==="forced-colors"?"active":"none"});
+  // Fresh Firefox process isolates dark preference from prior forced-colors cases.
+  const isolatedDarkBrowser=engine==="firefox"&&mode==="dark"?await driver.launch():null;
+  const context=await (isolatedDarkBrowser??browser).newContext({...(mode==="dark"?{colorScheme:"dark"}:{}),viewport:{width:viewportWidth,height:900},serviceWorkers:"block",reducedMotion:mode==="reduced-motion"?"reduce":"no-preference",forcedColors:mode==="forced-colors"?"active":"none"});
   await context.addCookies([{name:"nl_session",value:fixture.session,url:origin}]);
   let writes=0,foreign=0;const errors=[];
   try{
@@ -88,7 +90,7 @@ try{
    console.log("STUDIO_MATRIX_CASE:"+JSON.stringify({engine,path,width,mode,viewportWidth,writes,foreign,...report,errors}));
    if(report.violations.length||errors.length||writes)failed++;
   }catch(error){failed++;console.error("STUDIO_MATRIX_FAILURE:"+JSON.stringify({engine,path,width,mode,error:String(error)}));}
-  finally{cases++;await context.close();}
+  finally{cases++;await context.close();await isolatedDarkBrowser?.close();}
  }
  console.log("STUDIO_MATRIX_OPEN_GAPS:"+JSON.stringify(gaps));
  console.log("STUDIO_MATRIX_SUMMARY:"+JSON.stringify({engine,cases,failed,gaps:gaps.length,scope:"Two authenticated read-only studio/editor surfaces only; no creation/save/publication action proof. Synthetic emulation; reflow320 is not real browser400% zoom. No real-device, assistive-user or whole-product AAA certification."}));
