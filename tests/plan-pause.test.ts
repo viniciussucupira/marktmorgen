@@ -286,7 +286,16 @@ async function main() {
     await setSubscription(email, { active: false });
     const ref = storeRef(store);
     const key = `nl:pause:${ref}`;
-    for (const raw of ["{", "null", JSON.stringify({ subscription: "sub_InvalidRecord" })]) {
+    const good = set.kind === "paused" ? set.record : {};
+    for (const raw of [
+      "{", "null", JSON.stringify({ subscription: "sub_InvalidRecord" }),
+      JSON.stringify({ ...good, from: -1 }),
+      JSON.stringify({ ...good, until: until + 0.5 }),
+      JSON.stringify({ ...good, until: Number.MAX_SAFE_INTEGER + 1 }),
+      JSON.stringify({ ...good, paymentMethod: "not_a_card" }),
+      JSON.stringify({ ...good, told: -1 }),
+      JSON.stringify({ ...good, told: "unknown" }),
+    ]) {
       await pauseRedis.pipeline([["SET", key, raw]]);
       const before = created.length;
       emails.length = 0;

@@ -101,11 +101,14 @@ function parseRecord(raw: unknown): PauseRecord | null {
   try {
     const value = JSON.parse(raw) as Record<string, unknown>;
     const tier = parseTier(value.tier);
+    const told = value.told === undefined ? 0 : value.told;
     if (
       typeof value.subscription !== "string" || !SUBSCRIPTION_ID.test(value.subscription) ||
       typeof value.customer !== "string" || !CUSTOMER_ID.test(value.customer) ||
-      typeof value.paymentMethod !== "string" || !tier ||
-      typeof value.from !== "number" || typeof value.until !== "number" || value.until <= value.from
+      typeof value.paymentMethod !== "string" || !/^(pm|card|src)_[A-Za-z0-9]{6,64}$/.test(value.paymentMethod) || !tier ||
+      typeof value.from !== "number" || !Number.isSafeInteger(value.from) || value.from <= 0 ||
+      typeof value.until !== "number" || !Number.isSafeInteger(value.until) || value.until <= value.from ||
+      typeof told !== "number" || !Number.isSafeInteger(told) || told < 0
     ) {
       return null;
     }
@@ -116,7 +119,7 @@ function parseRecord(raw: unknown): PauseRecord | null {
       tier,
       from: value.from,
       until: value.until,
-      told: typeof value.told === "number" ? value.told : 0,
+      told,
     };
   } catch {
     return null;
