@@ -69,6 +69,24 @@ try{
   let writes=0,foreign=0,localProductWrites=0,interceptedVisits=0,expectedVisits=1;const errors=[],blockedWrites=[];
   try{
    const page=await context.newPage();
+   // Capture native delivery without re-clicking, forcing focus or changing actionability.
+   await page.addInitScript(()=>{
+    window.__mmProductPointerEvents=[];
+    for(const type of ["pointerdown","pointerup","mousedown","mouseup","click"]){
+     document.addEventListener(type,event=>{
+      const element=event.target instanceof Element?event.target:null;
+      const button=element?.closest("button"),rect=button?.getBoundingClientRect();
+      window.__mmProductPointerEvents.push({
+       type,trusted:event.isTrusted,target:element?.tagName,id:element?.id??"",
+       button:button?.textContent?.trim().slice(0,100)??null,
+       disabled:button?.disabled??null,x:event.clientX,y:event.clientY,scrollX,scrollY,
+       rect:rect?{x:rect.x,y:rect.y,width:rect.width,height:rect.height}:null
+      });
+      if(window.__mmProductPointerEvents.length>30)window.__mmProductPointerEvents.shift();
+     },true);
+    }
+   });
+
    const restoreDarkAfterNavigation=async()=>{
     if(mode!=="dark")return;
     const before=await page.evaluate(()=>matchMedia("(prefers-color-scheme: dark)").matches);
@@ -99,6 +117,12 @@ try{
     console.error("PRODUCT_OPENER_DIAGNOSTIC:"+JSON.stringify({
      engine,width,mode,url:page.url(),errors:errors.slice(-8),
      titleFields:await page.locator("#product-title-new").count(),
+     nativeDelivery:await page.evaluate(()=>({
+      events:window.__mmProductPointerEvents,
+      active:document.activeElement?.outerHTML.slice(0,600),
+      scroll:{x:scrollX,y:scrollY}
+     })),
+
      openerCount:await opener.count(),
      opener:await opener.evaluateAll(nodes=>nodes.slice(0,3).map(node=>({
       disabled:node.disabled,html:node.outerHTML.slice(0,1200),
