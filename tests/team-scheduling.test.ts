@@ -445,6 +445,21 @@ async function main(): Promise<void> {
   is("funded new feed returns unavailable before DNS or configuration changes", [deniedOwnerFeed.ok ? "" : deniedOwnerFeed.reason, ownerFeedLookups, await calendarView(fundedOwnerCalendar)], ["unavailable", 1, beforeOwnerView]);
   is("retained removal stays available without a new feed read", [await removeFeed(fundedOwnerCalendar, "synthetic-missing-feed"), ownerFeedLookups], [beforeOwnerView, 1]);
 
+
+  part("A funded host view retains stored state without a new provider calendar list");
+  const beforeCalendarScope = process.env.GOOGLE_CALENDAR_SYNC_SCOPES;
+  process.env.GOOGLE_CALENDAR_SYNC_SCOPES = "1";
+  try {
+    const fundedHostViewStore = (await storeForEmail(OWNER))!;
+    const beforeCalendarListCalls = google.length;
+    const storedHostView = await hostCalendarView(fundedHostViewStore, MAYA, NY);
+    is("the calendar list is unavailable without a funded resource window", [storedHostView.calendars, storedHostView.calendarsError, google.length], [null, "Calendar choices are temporarily unavailable. Try again later.", beforeCalendarListCalls]);
+    is("the existing connection and last reading remain visible", [storedHostView.google?.freebusy, storedHostView.sync.lastSuccess > 0], [true, true]);
+  } finally {
+    if (beforeCalendarScope === undefined) delete process.env.GOOGLE_CALENDAR_SYNC_SCOPES;
+    else process.env.GOOGLE_CALENDAR_SYNC_SCOPES = beforeCalendarScope;
+  }
+
   done();
 }
 

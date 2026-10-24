@@ -293,7 +293,7 @@ export type HostCalendarView = {
 };
 
 /** What a host's calendar page shows. Reads Google's calendar list when it may; never reads busy times. */
-export async function hostCalendarView(store: Pick<Store, "statsId">, email: string, tz: string): Promise<HostCalendarView> {
+export async function hostCalendarView(store: Store, email: string, tz: string): Promise<HostCalendarView> {
   const host = hostId(email);
   const statsId = store.statsId ?? "";
   const config = (statsId ? await readConfig(host) : null) ?? emptyConfig(email);
@@ -302,11 +302,15 @@ export async function hostCalendarView(store: Pick<Store, "statsId">, email: str
   let calendars: GoogleCalendar[] | null = null;
   let calendarsError = "";
   if (conn && !conn.broken && parts?.calendars && hostSyncOn()) {
-    try {
-      const access = await accessFor(statsId, "google", undefined, host);
-      calendars = await googleCalendars(access.token);
-    } catch (error) {
-      calendarsError = syncWords(error);
+    if (store.period?.funded === true && !(await reservePaidResourceWindow(store))) {
+      calendarsError = "Calendar choices are temporarily unavailable. Try again later.";
+    } else {
+      try {
+        const access = await accessFor(statsId, "google", undefined, host);
+        calendars = await googleCalendars(access.token);
+      } catch (error) {
+        calendarsError = syncWords(error);
+      }
     }
   }
   let ics: HostCalendarView["ics"] = null;
