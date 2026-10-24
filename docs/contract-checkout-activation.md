@@ -35,3 +35,7 @@ One EVAL request is not one billed command: the official [Upstash command-cost e
 At the [published paid command rate](https://upstash.com/pricing/redis) of0.20USD per100,000 commands, a single primary with no read replicas would give the following conditional command-only arithmetic, identically for Store, Studio and Scale in both billing intervals:14×10×32×2/1,000,000=0.00896USD per worst month, and12 such months=0.10752USD. No free quota is used. This is not a total-cost estimate or proof of actual provider topology. Replication, full-route command headroom, transfer, CPU/wall time, ledger storage lifetime and actual invoices remain unproved and are not assigned zero. No existing cost ceiling is reduced. The actual null policies and false coverage still block release.
 
 These official pages were read on October24,2026; a publication date was not established. Future verification can use the official [Redis INFO commandstats fields](https://redis.io/docs/latest/commands/info/) in disposable CI, without calling a real supplier.
+
+## Complete activation identity
+
+An identical retry must preserve not only the grant/subscription/creation identity but also its initial trial-or-paid phase and exact period boundaries. Changing an anchor or phase cannot reuse this activation to reset allowances. Transitioning a trial to paid rights, a switch, renewal or pause remains a separate funded lifecycle; this initial-checkout operation does not authorize those transitions. Existing paid rights/refunds must be preserved during their later reconciliation.

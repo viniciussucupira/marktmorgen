@@ -35,6 +35,8 @@ test('checkout activation binds one receipt and provider subscription without re
  assert.equal(before.has('pending:one'),false);assert.ok(before.get('activated:ctr_activate'));assert.ok(before.get('grant:ctr_activate'));
  assert.equal(await activateCheckoutContract(input,f.policy,f.context),true);
  assert.equal(await activateCheckoutContract({...input,subscriptionId:'sub_Another001'},f.policy,f.context),false);
+ assert.equal(await activateCheckoutContract({...input,periodStartSeconds:input.periodStartSeconds+3600,periodEndSeconds:input.periodEndSeconds+3600},f.policy,f.context),false);
+ assert.equal(await activateCheckoutContract({...input,trialing:true,periodEndSeconds:input.createdSeconds+7*86400},f.policy,f.context),false);
  assert.equal(before.get('reserved'),reserved);
 });
 test('lost activation acknowledgement is recoverable only for the identical committed binding',async()=>{

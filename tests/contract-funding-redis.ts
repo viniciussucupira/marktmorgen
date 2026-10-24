@@ -10,7 +10,7 @@ export function settings(v:{available?:boolean;failure?:boolean;lostAck?:boolean
 export function seed(c:ContractFundingConfiguration){ledger.set('nl:contract-reserve:v1',new Map([['review',c.reviewId],['policy',createHash('sha256').update(c.binding).digest('hex')],['reserved',String(c.carryForwardCents)],['carried',String(c.carryForwardCents)],...Object.entries(c.fundedGrants).map(([key,n]):[string,string]=>['slots:'+key,String(n)])]));}
 
 function activate(args:(string|number)[]):unknown[]{
- const [key,binding,review,store,choice,nonce,subscription,rawCreated,rawNow,rawMinimum,rawLimit,rawCarry,rawSubmission,rawFunded]=args;
+ const [key,binding,review,store,choice,nonce,subscription,rawCreated,rawNow,rawMinimum,rawLimit,rawCarry,rawSubmission,rawFunded,phase,rawStart,rawEnd]=args;
  const h=ledger.get(String(key));
  if(!h||h.get('policy')!==binding||h.get('review')!==review)return[0];
  const parse=(n:unknown)=>typeof n==='string'&&/^(0|[1-9][0-9]*)$/.test(n)&&Number(n)<=1e12?Number(n):NaN;
@@ -22,7 +22,9 @@ function activate(args:(string|number)[]):unknown[]{
  const reserved=parse(h.get('reserved')),carried=parse(h.get('carried')),slots=parse(h.get('slots:'+choice));
  if(receipt[0]!==review||receipt[1]!==store||receipt[2]!==choice||receipt[3]!=='checkout'||![charge,submitted,expires,activation,through,created,now,minimum,limit,carry,submission,funded,reserved,carried,slots].every(Number.isSafeInteger)||funded<=0||slots>=funded)return[0];
  if(charge!==minimum||carried!==carry||reserved<carried||reserved>limit||charge>reserved-carried||submitted<submission||created<submitted-submission||created>activation||created>now||now>activation||through<now*1000)return[0];
- const proof=[nonce,subscription,choice,rawCreated].join('|'),consumed=h.get('activated:'+nonce),active=h.get('active:'+store);
+ const start=parse(String(rawStart)),finish=parse(String(rawEnd));
+ if(!['trial','paid'].includes(String(phase))||!Number.isSafeInteger(start)||!Number.isSafeInteger(finish)||start<created||finish<=start||finish*1000>through)return[0];
+ const proof=[nonce,subscription,choice,rawCreated,phase,rawStart,rawEnd].join('|'),consumed=h.get('activated:'+nonce),active=h.get('active:'+store);
  if(consumed)return consumed===proof&&active===proof?[[1,activation]]:[0];
  if(h.get('pending:'+store)!==nonce||active)return[0];
  h.set('activated:'+nonce,proof);h.set('active:'+store,proof);h.delete('pending:'+store);

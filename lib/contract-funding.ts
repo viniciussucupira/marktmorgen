@@ -70,7 +70,9 @@ local slots,funded=amount(redis.call('HGET',KEYS[1],'slots:'..ARGV[4])),amount(A
 if receipt[1]~=ARGV[2] or receipt[2]~=ARGV[3] or receipt[3]~=ARGV[4] or receipt[4]~='checkout' then return 0 end
 if not charge or not minimum or charge~=minimum or not submitted or not expires or not activation or not through or through<0 or through>9007199254740991 or through~=math.floor(through) or not string.match(receipt[9],'^%d+$') or (#receipt[9]>1 and string.sub(receipt[9],1,1)=='0') or not created or not now or not submission or not limit or not carry or not reserved or not carried or not slots or not funded or funded<=0 or slots>=funded then return 0 end
 if carried~=carry or reserved<carried or reserved>limit or charge>reserved-carried or submitted<submission or created<submitted-submission or created>activation or created>now or now>activation or through<now*1000 then return 0 end
-local binding=ARGV[5]..'|'..ARGV[6]..'|'..ARGV[4]..'|'..ARGV[7]
+local start,finish=amount(ARGV[15]),amount(ARGV[16])
+if (ARGV[14]~='trial' and ARGV[14]~='paid') or not start or not finish or start<created or finish<=start or finish*1000>through then return 0 end
+local binding=ARGV[5]..'|'..ARGV[6]..'|'..ARGV[4]..'|'..ARGV[7]..'|'..ARGV[14]..'|'..ARGV[15]..'|'..ARGV[16]
 local consumed=redis.call('HGET',KEYS[1],'activated:'..ARGV[5])
 local active=redis.call('HGET',KEYS[1],'active:'..ARGV[3])
 if consumed then
@@ -112,7 +114,7 @@ export async function activateCheckoutContract(
  const seconds=Math.floor(now.getTime()/1000);
  if(createdSeconds>seconds||periodEndSeconds<=seconds)return false;
  try{
-  const result=await redisPipeline([['EVAL',ACTIVATE_CONTRACT,1,'nl:contract-reserve:v1',contractFundingBinding(config),reviewId,statsId,key,grantId,subscriptionId,createdSeconds,seconds,config.grantCents[key],config.cashLimitCents,config.carryForwardCents,CONTRACT_FUNDING_RULES.submissionSeconds,config.fundedGrants[key]]]);
+  const result=await redisPipeline([['EVAL',ACTIVATE_CONTRACT,1,'nl:contract-reserve:v1',contractFundingBinding(config),reviewId,statsId,key,grantId,subscriptionId,createdSeconds,seconds,config.grantCents[key],config.cashLimitCents,config.carryForwardCents,CONTRACT_FUNDING_RULES.submissionSeconds,config.fundedGrants[key],trialing?'trial':'paid',periodStartSeconds,periodEndSeconds]]]);
   const ack=result[0];
   return result.length===1&&Array.isArray(ack)&&ack.length===2&&ack[0]===1&&Number.isSafeInteger(ack[1])&&ack[1]>=createdSeconds&&ack[1]<=createdSeconds+CONTRACT_FUNDING_RULES.activationDelayDays*86400&&Date.now()<=ack[1]*1000&&Date.now()<periodEndSeconds*1000;
  }catch{return false;}

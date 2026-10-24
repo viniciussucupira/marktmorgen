@@ -104,8 +104,8 @@ def main():
             assert take(redis, key) == 1
             receipt = '|'.join(map(str, ['review', 'one', 'creator_month', action, 50, instant+300, instant+3600, instant+86400, 2000000000000]))
             redis.command('HSET', key, 'grant:ctr_one', receipt)
-        def activate(client, key, subscription='sub_Activation001', store='one', nonce='ctr_one', created=instant, now=instant+1):
-            return client.command('EVAL', activation_script, 1, key, 'binding', 'review', store, 'creator_month', nonce, subscription, created, now, 50, 100, 0, 300, 2)
+        def activate(client, key, subscription='sub_Activation001', store='one', nonce='ctr_one', created=instant, now=instant+1, phase='paid', period_start=instant, period_end=instant+30*86400):
+            return client.command('EVAL', activation_script, 1, key, 'binding', 'review', store, 'creator_month', nonce, subscription, created, now, 50, 100, 0, 300, 2, phase, period_start, period_end)
         funded_activation(keys[12])
         money = redis.command('HGET', keys[12], 'reserved')
         slots = redis.command('HGET', keys[12], 'slots:creator_month')
@@ -118,6 +118,8 @@ def main():
         assert activate(redis, keys[12]) == [1, instant+86400]
         assert snapshot(keys[12]) == before
         assert activate(redis, keys[12], subscription='sub_Other001') == 0
+        assert activate(redis, keys[12], period_start=instant+3600, period_end=instant+30*86400+3600) == 0
+        assert activate(redis, keys[12], phase='trial', period_end=instant+7*86400) == 0
         assert snapshot(keys[12]) == before
         print('PASS: checkout activation binds once, retains all cash/slots and recovers identical lost replies')
         funded_activation(keys[13])
