@@ -6269,3 +6269,35 @@ REGRA DOS 60% (OBRIGATÓRIA, para TK1 a TK6): todo cliente pagante, considerado 
 Proibições (para TK1 a TK6): não alterar preços, limites visíveis (exceto aumentos pelo TK6), comissão, meios de pagamento aceitos, PLANS_ON_SALE, tax gate, art.9a ou revisão comercial; não criar contas, aceitar termos, contratar serviços, pagar valores, alterar configurações reais de fornecedores ou contatar terceiros; somente testes sintéticos com fornecedores simulados.
 
 Proveniência: pedido direto do dono de24/10/2026 02h06(Fortaleza), preservado uma única vez, depois de318[IW1]. TK2 complementa MG2 sem duplicar sua implementação; TK6 prevalece sobre qualquer aplicação anterior de economia que aumentaria limites antes de recuperar60% em todos os planos/intervalos e no assistente na leitura do bloqueio, com a folga exigida. A prioridade AB não muda. Nenhuma tarifa, fornecedor, política de retenção, cobrança, prompt, lote, imagem ou limite é alterado por este registro. Custo do registro: nenhum serviço/operação novo de produto; desconhecido não vira zero. Ao executar cada item, registrar data/hora de Fortaleza, commit, suíte completa e publicação; documentos e PRs pendentes não contam como entrega funcional.
+
+## IN — Infraestrutura mais barata (24/10/2026)
+
+Solicitação do dono (24/10/2026, 02h19, horário de Fortaleza): encontrar meios tecnológicos de aperfeiçoar o código e reduzir os custos de infraestrutura do Marktmorgen.
+
+NÃO PARE o que está fazendo. COLOQUE NA FILA, com os próximos números livres, depois dos pedidos já gravados ou em gravação (inclusive o IW de24/10/2026,01h32, e o TK de24/10/2026,02h06).
+
+Estado informado no pedido: no main, o último item é o317 [EU1]; o PR #872 grava o IW como item318; o TK ainda não foi gravado. Conferência para este registro: o PR documental #872 já contém IW318 e TK319–324. Os próximos números livres325–327 foram conferidos no main e nas filas dos13PRs abertos (incluindo #872 e #873), sem seção IN ou etiquetas duplicadas. Acrescentar depois de324[TK6], no mesmo PR só de documentação. AB(a) continua como item ativo; executar IN depois do Bloco de abertura e dos pedidos anteriores, salvo nova ordem expressa.
+
+325. [IN1] Plano fixo do Upstash.
+
+Estado: na fila.
+
+Pela página oficial e datada de preços do Upstash (os planos fixos não cobram por comando; o limite é a taxa de comandos por segundo, o tamanho dos dados e o tráfego), calcule para cada plano, nos dois intervalos, o custo do pior caso com o plano por uso atual e com cada plano fixo: os comandos passam a custo fixo, e os dados guardados e o tráfego são rateados pelo preço do plano fixo. Inclua o teto automático que mantém a plataforma inteira abaixo da taxa de comandos por segundo e do tamanho de dados do plano escolhido, recusando sozinho o que passaria disso. Recomende o plano mais barato no pior caso e registre em "Depende do dono" o passo exato da troca no painel do Upstash. Não altere a conta real.
+
+326. [IN2] Menos comandos e menos tempo de função por página.
+
+Estado: na fila.
+
+Meça, com o Redis simulado, quantos comandos e quanto tempo de função cada caminho público e do estúdio usa (página da loja, checkout, pedido, área do comprador, estúdio). Junte leituras em uma só ida ao banco (pipeline, MGET), não repita a mesma leitura numa mesma requisição e não mantenha a função esperando o Stripe quando o webhook já informa o resultado. Atualize as contagens em tests/traffic-cost.ts e tests/plan-cost-registry.ts somente com os valores medidos, com testes que falham se um caminho voltar a usar mais comandos do que o medido.
+
+327. [IN3] Estudo de servidor próprio na União Europeia.
+
+Estado: na fila.
+
+Sem migrar nada, compare o custo do pior caso de cada plano, nos dois intervalos, entre a hospedagem atual (Vercel e Upstash) e um servidor alugado numa região da UE (por exemplo, Hetzner), com Redis próprio, pelas páginas oficiais e datadas de preço. Inclua cópia de segurança diária, atualizações automáticas de segurança, reinício automático, capacidade máxima com teto automático e o que exigiria atenção do dono. Registre a conclusão e o plano de migração em docs/, ligado ao item317 [EU1], e a decisão em "Depende do dono".
+
+REGRA DOS 60% (OBRIGATÓRIA, para IN1 a IN3): todo cliente pagante, considerado isoladamente e usando100% de todos os direitos do plano no pior mês, deve manter margem de lucro líquido MÍNIMA de60%, depois de todos os custos e de todos os impostos, inclusive os brasileiros; a margem pode ser maior, mas nunca menor, e a mesma regra vale para a empresa como um todo. Custo desconhecido não pode ser considerado zero. Use a leitura que resultar em MAIS imposto (docs/tax-uncertainty.md). Desde22/10/2026, todos os custos fixos da LLC são atribuídos integralmente ao Marktmorgen (item275 [FX1]). Um custo só sai do pior caso quando o código garante que ele não pode ocorrer ou quando o novo valor foi medido no pior caso; custo fixo novo entra nos custos fixos e na base mínima de clientes.
+
+Proibições (para IN1 a IN3): não alterar preços, limites visíveis, comissão, meios de pagamento aceitos, PLANS_ON_SALE, tax gate, art.9a ou revisão comercial; não criar contas, aceitar termos, contratar serviços, pagar valores, alterar configurações reais de fornecedores, migrar dados ou contatar terceiros; somente testes sintéticos com fornecedores simulados.
+
+Proveniência: pedido direto do dono de24/10/2026 02h19(Fortaleza), preservado uma única vez, depois de IW318/TK319–324. IN3 liga o estudo a317[EU1] sem autorizar migração ou antecipar sua execução ao Bloco de abertura. As características/preços de fornecedores citados são requisitos e referências do pedido a confirmar em fontes oficiais datadas na execução, não fatos verificados por este registro. Nenhuma infraestrutura, operação real ou contagem de custo é alterada agora. Custo do registro: nenhum serviço/operação de produto novo; desconhecido não vira zero. Ao executar cada item, registrar data/hora de Fortaleza, commit, suíte completa e publicação; documento e PR pendente não contam como entrega funcional.
