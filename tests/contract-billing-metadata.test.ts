@@ -221,3 +221,16 @@ test('a foreign or malformed switch result cannot finalize metadata or request a
   }
  }finally{globalThis.fetch=old;switchActivationObservations.accept=false;}
 });
+
+test('a marked checkout read requires its store and exact current funded phase proof too',async()=>{
+ const old=globalThis.fetch,created=Math.floor(Date.now()/1000),own={...store,stripeCustomerId:'cus_Test000001',previousHandles:[],releasedHandles:[]} as Store;
+ const raw={id:'sub_Test000001',customer:'cus_Test000001',created,status:'active',metadata:{store:'harbor',funding_grant:'ctr_metadata',funding_review:'test_only'},items:{data:[{current_period_start:created,current_period_end:created+30*86400,price:{lookup_key:'nimbus_creator_month',unit_amount:6900,currency:'usd',recurring:{interval:'month',interval_count:1}}}]}};
+ let reads=0;globalThis.fetch=async()=>{reads++;return Response.json(raw);};activationObservations.calls.length=0;activationObservations.accept=false;
+ try{
+  assert.equal((await readSubscription(raw.id)).state,'unknown');assert.equal(activationObservations.calls.length,0);
+  assert.equal((await readSubscription(raw.id,own)).state,'unknown');
+  activationObservations.accept=true;assert.equal((await readSubscription(raw.id,own)).state,'active');
+  assert.equal(reads,3);assert.equal(activationObservations.calls.length,2);
+  assert.equal(activationObservations.calls[1].periodEndSeconds,created+30*86400);
+ }finally{globalThis.fetch=old;activationObservations.accept=false;}
+});

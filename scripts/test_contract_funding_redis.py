@@ -148,7 +148,7 @@ def main():
         assert redis.command('HGET', keys[12], 'grant:ctr_one') is not None
         before = snapshot(keys[12])
         result, _ = measured_activation(keys[12], 'identical retry')
-        assert result == [1, instant+86400]
+        assert result == [2, instant+30*86400]
         assert snapshot(keys[12]) == before
         result, _ = measured_activation(keys[12], 'foreign subscription', subscription='sub_Other001')
         assert result == 0
@@ -183,7 +183,8 @@ def main():
                 client.close()
         with concurrent.futures.ThreadPoolExecutor(max_workers=16) as pool:
             results = list(pool.map(parallel_activation, range(64)))
-        assert all(result == [1, instant+86400] for result in results)
+        assert sum(result == [1, instant+86400] for result in results) == 1
+        assert all(result in ([1, instant+86400], [2, instant+30*86400]) for result in results)
         assert redis.command('HGET', keys[13], 'reserved') == '50'
         assert redis.command('HGET', keys[13], 'slots:creator_month') == '1'
         print('PASS: 64 duplicate activation observations share exactly one immutable subscription binding')
@@ -306,7 +307,7 @@ def main():
         assert redis.command('HGET', keys[28], 'slots:creator_month') == '0'
         before = snapshot(keys[28])
         before_calls = command_calls()
-        assert switch_activate(redis, keys[28]) == [1, instant+86400]
+        assert switch_activate(redis, keys[28]) == [2, instant+30*86400]
         after_calls = command_calls()
         retry_changes = {name: after_calls.get(name, 0)-before_calls.get(name, 0)
                          for name in set(before_calls) | set(after_calls) if name != 'info'}
@@ -322,7 +323,8 @@ def main():
                 client.close()
         with concurrent.futures.ThreadPoolExecutor(max_workers=16) as pool:
             results = list(pool.map(parallel_switch_activation, range(64)))
-        assert all(value == [1, instant+86400] for value in results)
+        assert sum(value == [1, instant+86400] for value in results) == 1
+        assert all(value in ([1, instant+86400], [2, instant+30*86400]) for value in results)
         assert redis.command('HGET', keys[29], 'reserved') == '100'
         assert redis.command('HGET', keys[29], 'slots:creator_month') == '0'
         assert redis.command('HGET', keys[29], 'activated:ctr_one') is not None
@@ -352,6 +354,34 @@ def main():
         assert take(redis, keys[36], nonce='ctr_switch', action='switch', source_subscription='sub_Activation001') == 1
         assert switch_activate(redis, keys[36], created=old_created) == [1, instant+86400]
         print('PASS: a switch keeps the original subscription creation identity while its new grant has a fresh deadline')
+
+        # Late observations may read only a previously committed exact term.
+        # Reuse existing generated keys; no extra service or cleanup namespace.
+        before = snapshot(keys[13])
+        before_calls = command_calls()
+        assert activate(redis, keys[13], now=instant+2*86400) == [2, instant+30*86400]
+        after_calls = command_calls()
+        changes = {name: after_calls.get(name, 0)-before_calls.get(name, 0)
+                   for name in set(before_calls) | set(after_calls) if name != 'info'}
+        assert all(value >= 0 for value in changes.values()) and sum(changes.values()) == 11, changes
+        print('MEASURED committed checkout term observation commands:', 11, sorted((name, count) for name, count in changes.items() if count))
+        assert snapshot(keys[13]) == before
+        assert activate(redis, keys[13], now=instant+30*86400) == 0
+        assert activate(redis, keys[13], now=instant+2*86400, period_end=instant+30*86400+1) == 0
+        assert snapshot(keys[13]) == before
+        before = snapshot(keys[29])
+        before_calls = command_calls()
+        assert switch_activate(redis, keys[29], now=instant+2*86400) == [2, instant+30*86400]
+        after_calls = command_calls()
+        changes = {name: after_calls.get(name, 0)-before_calls.get(name, 0)
+                   for name in set(before_calls) | set(after_calls) if name != 'info'}
+        assert all(value >= 0 for value in changes.values()) and sum(changes.values()) == 13, changes
+        print('MEASURED committed switch term observation commands:', 13, sorted((name, count) for name, count in changes.items() if count))
+        assert snapshot(keys[29]) == before
+        assert switch_activate(redis, keys[29], now=instant+30*86400) == 0
+        assert switch_activate(redis, keys[29], now=instant+2*86400, start=instant+1) == 0
+        assert snapshot(keys[29]) == before
+        print('PASS: committed checkout and switch proofs survive activation deadlines without any write, renewal or expired unconsumed activation')
 
     finally:
         for key in keys:

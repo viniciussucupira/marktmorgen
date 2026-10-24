@@ -115,16 +115,17 @@ local reserved,carried=amount(redis.call('HGET',KEYS[1],'reserved')),amount(redi
 local slots,funded=amount(redis.call('HGET',KEYS[1],'slots:'..ARGV[4])),amount(ARGV[13])
 if receipt[1]~=ARGV[2] or receipt[2]~=ARGV[3] or receipt[3]~=ARGV[4] or receipt[4]~='checkout' then return 0 end
 if not charge or not minimum or charge~=minimum or not submitted or not expires or not activation or not through or through<0 or through>9007199254740991 or through~=math.floor(through) or not string.match(receipt[9],'^%d+$') or (#receipt[9]>1 and string.sub(receipt[9],1,1)=='0') or not created or not now or not submission or not limit or not carry or not reserved or not carried or not slots or not funded or funded<=0 or slots>=funded then return 0 end
-if carried~=carry or reserved<carried or reserved>limit or charge>reserved-carried or submitted<submission or created<submitted-submission or created>activation or created>now or now>activation or through<now*1000 then return 0 end
+if carried~=carry or reserved<carried or reserved>limit or charge>reserved-carried or submitted<submission or created<submitted-submission or created>activation or created>now or through<now*1000 then return 0 end
 local start,finish=amount(ARGV[15]),amount(ARGV[16])
-if (ARGV[14]~='trial' and ARGV[14]~='paid') or not start or not finish or start<created or finish<=start or finish*1000>through then return 0 end
+if (ARGV[14]~='trial' and ARGV[14]~='paid') or not start or not finish or start<created or start>now or finish<=now or finish<=start or finish*1000>through then return 0 end
 local binding=ARGV[5]..'|'..ARGV[6]..'|'..ARGV[4]..'|'..ARGV[7]..'|'..ARGV[14]..'|'..ARGV[15]..'|'..ARGV[16]
 local consumed=redis.call('HGET',KEYS[1],'activated:'..ARGV[5])
 local active=redis.call('HGET',KEYS[1],'active:'..ARGV[3])
 if consumed then
  if consumed~=binding or active~=binding then return 0 end
- return {1,activation}
+ return {2,finish}
 end
+if now>activation then return 0 end
 if redis.call('HGET',KEYS[1],'pending:'..ARGV[3])~=ARGV[5] then return 0 end
 -- An already active subscription is reconciled by the switch/renewal lifecycle.
 if active then return 0 end
@@ -162,7 +163,7 @@ export async function activateCheckoutContract(
  try{
   const result=await redisPipeline([['EVAL',ACTIVATE_CONTRACT,1,'nl:contract-reserve:v1',contractFundingBinding(config),reviewId,statsId,key,grantId,subscriptionId,createdSeconds,seconds,config.grantCents[key],config.cashLimitCents,config.carryForwardCents,CONTRACT_FUNDING_RULES.submissionSeconds,config.fundedGrants[key],trialing?'trial':'paid',periodStartSeconds,periodEndSeconds]]);
   const ack=result[0];
-  return result.length===1&&Array.isArray(ack)&&ack.length===2&&ack[0]===1&&Number.isSafeInteger(ack[1])&&ack[1]>=createdSeconds&&ack[1]<=createdSeconds+CONTRACT_FUNDING_RULES.activationDelayDays*86400&&Date.now()<=ack[1]*1000&&Date.now()<periodEndSeconds*1000;
+  return contractObservationAcknowledged(result,ack,createdSeconds,periodStartSeconds,periodEndSeconds);
  }catch{return false;}
 }
 
@@ -190,7 +191,7 @@ local through=tonumber(receipt[9])
 local created,now,minimum,limit,carry,submission,funded,start,finish,span=amount(ARGV[7]),amount(ARGV[8]),amount(ARGV[9]),amount(ARGV[10]),amount(ARGV[11]),amount(ARGV[12]),amount(ARGV[13]),amount(ARGV[15]),amount(ARGV[16]),amount(ARGV[17])
 if not charge or charge<=0 or not submitted or not expires or not deadline or not through or through>9007199254740991 or through~=math.floor(through) or not string.match(receipt[9],'^%d+$') or (#receipt[9]>1 and string.sub(receipt[9],1,1)=='0') then return 0 end
 if not created or not now or not minimum or not limit or not carry or not submission or not funded or not start or not finish or not span or span<=0 then return 0 end
-if charge~=minimum or submitted<submission or expires<submitted or deadline<expires or now<submitted-submission or now>deadline or created>now or start<created or start>now or finish<=now or finish<=start or finish-start>span or finish>submitted-submission+span or finish*1000>through or (ARGV[14]~='trial' and ARGV[14]~='paid') then return 0 end
+if charge~=minimum or submitted<submission or expires<submitted or deadline<expires or now<submitted-submission or created>now or start<created or start>now or finish<=now or finish<=start or finish-start>span or finish>submitted-submission+span or finish*1000>through or (ARGV[14]~='trial' and ARGV[14]~='paid') then return 0 end
 local reserved,carried,slots=amount(redis.call('HGET',KEYS[1],'reserved')),amount(redis.call('HGET',KEYS[1],'carried')),amount(redis.call('HGET',KEYS[1],'slots:'..ARGV[4]))
 if not reserved or not carried or not slots or carried~=carry or reserved<carried or reserved>limit or funded<=0 or slots>=funded then return 0 end
 local switchSource=redis.call('HGET',KEYS[1],'activated:'..receipt[10])
@@ -211,8 +212,9 @@ local consumed=redis.call('HGET',KEYS[1],'activated:'..ARGV[5])
 local active=redis.call('HGET',KEYS[1],'active:'..ARGV[3])
 if consumed then
  if consumed~=binding or active~=binding then return 0 end
- return {1,deadline}
+ return {2,finish}
 end
+if now>deadline then return 0 end
 if active~=switchSource or redis.call('HGET',KEYS[1],'pending:'..ARGV[3])~=ARGV[5] then return 0 end
 redis.call('HSET',KEYS[1],'activated:'..ARGV[5],binding,'active:'..ARGV[3],binding)
 redis.call('HDEL',KEYS[1],'pending:'..ARGV[3])
@@ -236,7 +238,17 @@ export async function activateSwitchContract(
  const seconds=Math.floor(now.getTime()/1000);if(createdSeconds>seconds||periodStartSeconds>seconds||periodEndSeconds<=seconds)return false;
  try{
   const result=await redisPipeline([['EVAL',ACTIVATE_SWITCH_CONTRACT,1,'nl:contract-reserve:v1',contractFundingBinding(config),reviewId,statsId,key,grantId,subscriptionId,createdSeconds,seconds,config.grantCents[key],config.cashLimitCents,config.carryForwardCents,CONTRACT_FUNDING_RULES.submissionSeconds,config.fundedGrants[key],trialing?'trial':'paid',periodStartSeconds,periodEndSeconds,span]]);
-  const ack=result[0],checkedAt=Date.now();
-  return result.length===1&&Array.isArray(ack)&&ack.length===2&&ack[0]===1&&Number.isSafeInteger(ack[1])&&ack[1]>=seconds&&ack[1]<=seconds+CONTRACT_FUNDING_RULES.activationDelayDays*86400&&checkedAt<=ack[1]*1000&&checkedAt<periodEndSeconds*1000;
+  const ack=result[0];
+  return contractObservationAcknowledged(result,ack,seconds,periodStartSeconds,periodEndSeconds);
  }catch{return false;}
+}
+
+/** A committed proof may be observed for its exact current period. This never
+ * turns an expired, unconsumed grant into an activation or a renewal. Admission
+ * policy and commercial review must still be current; archives are separate. */
+function contractObservationAcknowledged(result:unknown[],ack:unknown,earliestDeadline:number,start:number,finish:number):boolean{
+ const checkedAt=Date.now();
+ if(result.length!==1||!Array.isArray(ack)||ack.length!==2||!Number.isSafeInteger(ack[1])||checkedAt<start*1000||checkedAt>=finish*1000)return false;
+ if(ack[0]===2)return ack[1]===finish;
+ return ack[0]===1&&ack[1]>=earliestDeadline&&ack[1]<=earliestDeadline+CONTRACT_FUNDING_RULES.activationDelayDays*86400&&checkedAt<=ack[1]*1000;
 }
