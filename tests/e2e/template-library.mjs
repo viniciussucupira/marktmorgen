@@ -26,6 +26,9 @@ export async function checkTemplateLibrary({browser,LOCAL,fixture,axeSource,is})
  await page.goto(LOCAL+"/studio/pages?store="+fixture.sid+"&product="+fixture.preservedProduct+"&template=course");
  await page.getByText("Your saved page was preserved. Library templates only start an empty page; use the editor to change existing content.",{exact:true}).waitFor();
  await page.getByRole("button",{name:/Keep my creator headline/}).click();
+ // The editor selection renders asynchronously; assert the preserved value after
+ // that state is observable, without changing the exact content requirement.
+ await page.waitForFunction(()=>[...document.querySelectorAll("input,textarea")].some(node=>node.value==="Keep my creator headline"));
  is("HT15 saved creator headline intact "+width,await page.locator("input,textarea").evaluateAll(nodes=>nodes.some(node=>node.value==="Keep my creator headline")),true);
  const mailCount=page.waitForResponse(response=>new URL(response.url()).pathname==="/api/store/mail"&&response.request().method()==="POST"&&response.request().postDataJSON()?.action==="count");
  await page.goto(LOCAL+"/studio/email?store="+fixture.sid+"&emailTemplate=news");
