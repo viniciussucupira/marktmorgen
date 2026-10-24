@@ -5,6 +5,7 @@
  * how it went, and none answers at all (404) while the deployment has no
  * Meta app.
  */
+import { reservePaidResourceWindow } from "@/lib/contract-resource-window";
 import { withinService } from "@/lib/metered-limits";
 import { type NextRequest, after } from "next/server";
 import { SESSION_COOKIE, emailForSession } from "@/lib/auth";
@@ -27,6 +28,7 @@ export async function startMeta(request: NextRequest): Promise<Response> {
   const creator = await creatorFrom(request, "settings");
   if (creator instanceof Response) return creator;
   const { store, ref, email, origin } = creator;
+  if (store.period?.funded === true && !await reservePaidResourceWindow(store)) return back(origin, store, "limited");
   const named = store.statsId ? store : await ensureStatsId(ref);
   if (!named?.statsId || !store.sid) return back(origin, store, "error");
   if (!(await withinService("metaads-start", named.statsId, 10, 600, named))) return back(origin, store, "limited");
@@ -63,6 +65,7 @@ export async function finishMetaConnect(request: NextRequest): Promise<Response>
   // They pressed Cancel on Meta's page.
   if (params.get("error") || !code) return back(origin, store, "declined");
   if (code.length > 2048 || !/^[A-Za-z0-9._~/+=#-]+$/.test(code)) return back(origin, store, "error");
+  if (store.period?.funded === true && !await reservePaidResourceWindow(store)) return back(origin, store, "limited");
   try {
     const result = await finishMeta({
       statsId: taken.statsId,

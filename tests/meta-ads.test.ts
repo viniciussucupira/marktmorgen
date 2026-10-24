@@ -36,10 +36,15 @@ import {
   takeMeta,
 } from "@/lib/meta-ads";
 import { addSpend, readSpends } from "@/lib/ad-spend";
-import { claimHandle, ensureStatsId, storeForEmail, storeForId } from "@/lib/store";
+import { claimHandle, ensureStatsId, setSubscription, storeForEmail, storeForId } from "@/lib/store";
 import { sourceAlias } from "@/lib/source-rules";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
+import { NextRequest } from "next/server";
+import { SESSION_COOKIE, openSession } from "@/lib/auth";
+import { startMeta, finishMetaConnect } from "@/lib/meta-routes";
+import { allowanceUsed } from "@/lib/store-allowance";
+import { paidPeriod } from "./billing-period-fixture";
 
 const SECRET = "meta-app-secret-for-tests-0123456789";
 process.env.META_APP_ID = "123456789012345";
@@ -199,6 +204,32 @@ async function main(): Promise<void> {
   const first = await readMetaDue(Date.now() + 10_000, storeForId);
   const second = await readMetaDue(Date.now() + 10_000, storeForId);
   is("each store read once a day", [first.read, second.read], [1, 0]);
+
+  part("Funded new Meta connection phases refuse before provider work");
+  await claimHandle("funded-meta@example.com", "funded-meta-shop", "Funded Meta Shop", "");
+  await ensureStatsId("funded-meta@example.com");
+  await setSubscription("funded-meta@example.com", { customerId: "cus_MetaFunded001", subscriptionId: "sub_MetaFunded001", active: true, period: { ...paidPeriod(), funded: true } });
+  const funded = (await storeForEmail("funded-meta@example.com"))!;
+  const session = await openSession("funded-meta@example.com");
+  const origin = "https://marktmorgen.com";
+  const cookie = `${SESSION_COOKIE}=${session}`;
+  const beforeMetaRequests = asked.length;
+  const beforeMetaUnits = await allowanceUsed(funded, "integration");
+  const started = await startMeta(new NextRequest(`${origin}/api/integrations/meta/start?store=${funded.sid}`, { method: "POST", headers: { host: "marktmorgen.com", origin, cookie } }));
+  const destination = new URL(started.headers.get("location") ?? "https://none.invalid/");
+  is("a new start stays at the studio", [started.status, destination.hostname, destination.searchParams.get("metaads")], [303, "marktmorgen.com", "limited"]);
+  const returnMeta = async (decline = false) => {
+    // Synthetic state models a consent started before its funding proof became unavailable.
+    const consent = await beginMeta({ statsId: funded.statsId!, sid: funded.sid, sessionCookie: session, email: "funded-meta@example.com", redirect: `${origin}/api/integrations/meta/callback` });
+    const query = new URLSearchParams({ state: new URL(consent).searchParams.get("state") ?? "" });
+    query.set(decline ? "error" : "code", decline ? "access_denied" : "synthetic-code");
+    return finishMetaConnect(new NextRequest(`${origin}/api/integrations/meta/callback?${query}`, { headers: { host: "marktmorgen.com", cookie } }));
+  };
+  const returned = await returnMeta();
+  is("valid new callback state cannot exchange credentials without funding", [returned.status, new URL(returned.headers.get("location")!).searchParams.get("metaads")], [303, "limited"]);
+  const financialDecline = await returnMeta(true);
+  is("canceling remains available", new URL(financialDecline.headers.get("location")!).searchParams.get("metaads"), "declined");
+  is("no provider request or extra integration allowance", [asked.length, await allowanceUsed(funded, "integration")], [beforeMetaRequests, beforeMetaUnits]);
 
   part("Meta's notice, and disconnecting");
   const payload = Buffer.from(JSON.stringify({ algorithm: "HMAC-SHA256", user_id: USER, issued_at: 1 })).toString("base64url");
