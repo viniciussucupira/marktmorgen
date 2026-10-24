@@ -1,3 +1,4 @@
+import { reservePaidResourceWindow } from "@/lib/contract-resource-window";
 import { withinService } from "@/lib/metered-limits";
 import type { NextRequest } from "next/server";
 import { authorizeUrl, isDiscordConfigured, redirectUri } from "@/lib/discord";
@@ -16,8 +17,9 @@ export async function POST(request: NextRequest) {
   const creator = await creatorFrom(request, "settings");
   if (creator instanceof Response) return creator;
   const { store, ref, email, origin } = creator;
-  const sid = store.sid || (await ensureStoreId(ref))?.sid || "";
   const back = (query: string) => away(origin, studioPath(store, query, "discord"));
+  if (store.period?.funded === true && !await reservePaidResourceWindow(store)) return back("discord=limited");
+  const sid = store.sid || (await ensureStoreId(ref))?.sid || "";
   if (!sid) return back("discord=error");
   if (!(await withinService("discord-connect", sid, 10, 600, store))) return back("discord=limited");
   const redirect = redirectUri(origin);
