@@ -5944,6 +5944,9 @@ Integração AX2 do certificado: PR #868 head ef810709ef970818a5dc7ff9ace22da8e4
 
 Histórico AX2 adicional: noheadcaf4964951ae16e4d97161a0f9824f46ad01a579 WebKit120758938172 alcançou151/151 porTab emhome, mas falhou a observação de checked apósArrowRight (02:57:10–02:57:12UTC). Fontefeature-demos usaestadoReactcontrolado. Reparosincroniza observação de foco/checked/focus-visible após cadaúnicatecla, comteto3000ms e diagnóstico antesdefalhar; nãoatribui estado/foco, não repete tecla, não reduz critério e nãoalteratimeoutglobal. Nova suíte completa obrigatória; cabeça combinada anterior nãoaprovada.
 
+
+Correção de foco nativoAX2: head6b2198bb0e510f1cb9cb367e9b7587147f0330b8 falhou WebKit120760320680 em24/10/2026 00:05:02Fortaleza; rádioesperado estavafocado echeckedtrue, masfocusVisiblefalse. Espera isolada não resolveu. OcontornoCSSexistente3pxsolid/offset3passaavalertambémpararádionativo:focus, inclusivecoresdassuperfíciesescuras. Testeexigecontornocomputadosólidonãotransparentedepelomenos3pxapóscadaúnicaseta, sem relaxar alcance/seleção/timeoutglobal. Nenhumrequest/operação/assetfornecedornovo; bytesCSSincrementais permanecemsujeitosàmediçãoe tetosexistentes, custosdesconhecidosnãoviraramzero. Nova suítecompletaantesdeincorporar.
+
 ## CV — Custo por visita das lojas (23/10/2026)
 
 Ordem: logo depois do item 309 [EM1], porque os dois baixam custos reais que limitam o que cada plano oferece. Inclusão documental antecipada por instrução direta posterior do dono, antes de continuar AX2; nada implementado agora. Posição física: no fim da fila; HQ1 permanece reservado como item 312 no PR #865, sem duplicação neste registro.
