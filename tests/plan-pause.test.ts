@@ -297,6 +297,7 @@ async function main() {
       ]);
       is("unreadable evidence is not treated as a missing pause", [counts.failed, counts.dropped, counts.restarted], [1, 0, 0]);
       is("the exact stored evidence remains", retained, raw);
+      is("unreadable pause evidence makes closing wait", await onBreak(ref, until + DAY), true);
       is("the pending entry remains available for reconciliation", Array.isArray(due) && due.includes(ref), true);
       is("no provider charge or notice follows unreadable evidence", [created.length - before, emails.length], [0, 0]);
     }
@@ -309,6 +310,14 @@ async function main() {
     is("an explicit missing record is still dropped", [missing.dropped, missing.failed, missing.restarted], [1, 0, 0]);
     is("its stale due entry is removed", Array.isArray(due) && due.includes(ref), false);
     is("absence never initiates a charge or notice", [created.length - before, emails.length], [0, 0]);
+    is("explicit absence does not indefinitely hold closing", await onBreak(ref, until + DAY), false);
+    const pipeline = pauseRedis.pipeline;
+    pauseRedis.pipeline = async () => { throw new Error("synthetic pause read unavailable"); };
+    try {
+      is("unavailable pause evidence also makes closing wait", await onBreak(ref, until + DAY), true);
+    } finally {
+      pauseRedis.pipeline = pipeline;
+    }
   }
 
   part("A store that started again by hand");

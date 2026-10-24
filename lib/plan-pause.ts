@@ -147,8 +147,14 @@ export function breakRunning(record: Pick<PauseRecord, "until">, nowSeconds = Da
 
 /** Whether a store's closing must wait: a break that has not run out. Read by lib/plan-closing.ts. */
 export async function onBreak(ref: string, nowSeconds = Date.now() / 1000): Promise<boolean> {
-  const record = await pauseAt(ref).catch(() => null);
-  return record !== null && record.until > nowSeconds;
+  try {
+    const stored = await storedPauseAt(ref);
+    // Unknown pause evidence is not permission to remove a creator's content.
+    if (!stored.record) return !stored.missing;
+    return stored.record.until > nowSeconds;
+  } catch {
+    return true;
+  }
 }
 
 export type PauseRefusal = "standing" | "trial" | "yearly" | "canceling" | "pending" | "early" | "recent";
