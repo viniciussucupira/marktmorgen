@@ -1,4 +1,4 @@
-import type {ContractGrant} from '@/lib/contract-funding';
+import {activateCheckoutContract,type ContractGrant} from '@/lib/contract-funding';
 /**
  * The one way Marktmorgen makes money.
  *
@@ -425,7 +425,32 @@ export async function readStartedSubscription(
   if (!CUSTOMER_PATTERN.test(customerId)) return null;
   if (!SUBSCRIPTION_PATTERN.test(subscriptionId)) return null;
 
-  const state = await readSubscription(subscriptionId);
+  // Funded checkouts must reconcile the immutable cash receipt before this
+  // return path can adopt their rights. The existing subscription GET is reused.
+  let state:SubscriptionState;
+  if(metadata.funding_grant!==undefined||metadata.funding_review!==undefined){
+    const subscription=await subscriptionRecord(subscriptionId);
+    if(!subscription||subscription.id!==subscriptionId||subscription.customer!==customerId)return null;
+    const meta=subscription.metadata as Record<string,unknown>|null;
+    if(meta?.store!==store.handle||meta?.funding_grant!==metadata.funding_grant||meta?.funding_review!==metadata.funding_review)return null;
+    state=stateOf(subscription);
+    if(state.state!=="active"||state.changePending)return null;
+    const items=subscription.items as {data?:{price?:Record<string,unknown>}[]}|undefined;
+    const price=items?.data?.[0]?.price;
+    const recurring=price?.recurring as {interval?:unknown;interval_count?:unknown}|undefined;
+    if(items?.data?.length!==1||price?.currency!=="usd"||recurring?.interval!==state.cycle||recurring?.interval_count!==1||state.amountCents!==PUBLISHED_PLAN_PRICES[state.tier][state.cycle])return null;
+    const began=state.trialing?subscription.trial_start:periodStart(subscription);
+    const until=state.trialing?subscription.trial_end:periodEnd(subscription,false);
+    if(!(await activateCheckoutContract({
+      statsId:store.statsId??"",grantId:metadata.funding_grant,reviewId:metadata.funding_review,
+      subscriptionId,tier:state.tier,cycle:state.cycle,createdSeconds:subscription.created as number,
+      trialing:state.trialing,periodStartSeconds:began as number,periodEndSeconds:until as number,
+    })))return null;
+  }else{
+    // Legacy observations have no funded receipt. Their migration remains an
+    // explicit unfinished release prerequisite; never invent or free a reserve.
+    state=await readSubscription(subscriptionId);
+  }
   return {
     customerId,
     subscriptionId,

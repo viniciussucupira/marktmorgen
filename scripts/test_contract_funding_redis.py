@@ -15,8 +15,12 @@ def main():
     if not match or '$' + '{' in match.group(1):
         raise RuntimeError('Expected static application contract reservation Lua')
     script = match.group(1)
+    activated = re.search(r'export const ACTIVATE_CONTRACT = `([^`]+)`;', source)
+    if not activated or '$' + '{' in activated.group(1):
+        raise RuntimeError('Expected static checkout activation Lua')
+    activation_script = activated.group(1)
     prefix = 'marktmorgen:integration:contract:' + uuid.uuid4().hex + ':'
-    keys = [prefix + str(i) for i in range(12)]
+    keys = [prefix + str(i) for i in range(20)]
     redis = Redis()
     def seed(key, carried=0):
         redis.command('HSET', key, 'review', 'review', 'policy', 'binding', 'reserved', carried, 'carried', carried, 'slots:creator_month', 2, 'slots:creator_year', 2)
@@ -88,6 +92,62 @@ def main():
             assert take(redis, keys[11], charge=charge) == 0
             assert redis.command('HGETALL', keys[11]) == before
         print('PASS: zero, fractional, noncanonical and unsafe charges cannot create a grant')
+        # Activation runs the actual application Lua, not the TypeScript double.
+        instant = 1800000000
+        def funded_activation(key, action='checkout'):
+            seed(key)
+            assert take(redis, key) == 1
+            receipt = '|'.join(map(str, ['review', 'one', 'creator_month', action, 50, instant+300, instant+3600, instant+86400, 2000000000000]))
+            redis.command('HSET', key, 'grant:ctr_one', receipt)
+        def activate(client, key, subscription='sub_Activation001', store='one', nonce='ctr_one', created=instant, now=instant+1):
+            return client.command('EVAL', activation_script, 1, key, 'binding', 'review', store, 'creator_month', nonce, subscription, created, now, 50, 100, 0, 300, 2)
+        funded_activation(keys[12])
+        money = redis.command('HGET', keys[12], 'reserved')
+        slots = redis.command('HGET', keys[12], 'slots:creator_month')
+        assert activate(redis, keys[12]) == [1, instant+86400]
+        assert redis.command('HGET', keys[12], 'reserved') == money
+        assert redis.command('HGET', keys[12], 'slots:creator_month') == slots
+        assert redis.command('HGET', keys[12], 'pending:one') is None
+        assert redis.command('HGET', keys[12], 'grant:ctr_one') is not None
+        before = redis.command('HGETALL', keys[12])
+        assert activate(redis, keys[12]) == [1, instant+86400]
+        assert redis.command('HGETALL', keys[12]) == before
+        assert activate(redis, keys[12], subscription='sub_Other001') == 0
+        assert redis.command('HGETALL', keys[12]) == before
+        print('PASS: checkout activation binds once, retains all cash/slots and recovers identical lost replies')
+        funded_activation(keys[13])
+        def parallel_activation(_):
+            client = Redis()
+            try:
+                return activate(client, keys[13])
+            finally:
+                client.close()
+        with concurrent.futures.ThreadPoolExecutor(max_workers=16) as pool:
+            results = list(pool.map(parallel_activation, range(64)))
+        assert all(result == [1, instant+86400] for result in results)
+        assert redis.command('HGET', keys[13], 'reserved') == '50'
+        assert redis.command('HGET', keys[13], 'slots:creator_month') == '1'
+        print('PASS: 64 duplicate activation observations share exactly one immutable subscription binding')
+        funded_activation(keys[14])
+        before = redis.command('HGETALL', keys[14])
+        for args in [dict(store='other'), dict(nonce='ctr_missing'), dict(created=instant-1), dict(now=instant+86401)]:
+            assert activate(redis, keys[14], **args) == 0
+            assert redis.command('HGETALL', keys[14]) == before
+        funded_activation(keys[15], action='switch')
+        assert activate(redis, keys[15]) == 0
+        print('PASS: foreign, absent, expired, predating and switch receipts cannot activate checkout rights')
+        for key, field, value in [(keys[16], 'reserved', 0), (keys[17], 'slots:creator_month', 2), (keys[18], 'active:one', 'other')]:
+            funded_activation(key)
+            redis.command('HSET', key, field, value)
+            before = redis.command('HGETALL', key)
+            assert activate(redis, key) == 0
+            assert redis.command('HGETALL', key) == before
+        funded_activation(keys[19])
+        redis.command('EXPIRE', keys[19], 60)
+        before = redis.command('HGETALL', keys[19])
+        assert activate(redis, keys[19]) == 0
+        assert redis.command('HGETALL', keys[19]) == before
+        print('PASS: corrupt, already-active and expiring activation ledgers fail before writes')
     finally:
         for key in keys:
             if not key.startswith(prefix):
