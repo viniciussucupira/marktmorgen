@@ -7154,3 +7154,8 @@ ED348 foi registrado no main pela ancestralidade 932/934. Sua implementação co
 As entregas 232–234 não aprovam margem: políticas comerciais nulas, coberturas falsas, PLANS_ON_SALE=false e vendas fechadas. Preços, limites visíveis, comissão, meios aceitos, tax gate, art.9a, revisão comercial, conteúdo de criadores, idiomas e identificadores permanecem preservados. Aplicam-se a leitura fiscal mais onerosa de docs/tax-uncertainty.md e 100% dos custos fixos LLC no Marktmorgen, inclusive resíduos Hazelsong preservados. Meta de 60% líquida por pagante isolado no pior mês com 100% dos direitos e globalmente; desconhecido é reprovação, não zero.
 
 Este acréscimo registra fatos já confirmados; é documental, não constitui publicação funcional nova nem altera o contador.
+
+
+### AB(a) — validade do reconhecimento de reserva de contrato (24/10/2026)
+
+Em implementação: após Redis confirmar a reserva, revalidar configuração/revisão comercial, binding, admissão, mês de exposição, relógio emissor e prazo de submissão antes de devolver autorização. Reconhecimento tardio ou política alterada recusa sem liberar dinheiro, slot ou trava pendente já comprometidos. Testes sintéticos dos quatro limites preservam o ledger inteiro e a única chamada Redis. Detalhes: docs/contract-reservation-acknowledgement.md. Não adiciona comando/chave/campo/provedor; CPU adicional desconhecida, não zero, exige inclusão na revisão de custos mensal/anual por plano. Maior imposto e 100% dos fixos LLC, inclusive Hazelsong preservado; políticas nulas, coberturas falsas e vendas fechadas. Suíte completa no novo head antes de incorporar; nenhuma entrega funcional contabilizada enquanto pendente.
