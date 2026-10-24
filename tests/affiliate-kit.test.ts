@@ -1,3 +1,4 @@
+import { windowId } from "@/lib/allowance-window";
 /**
  * Posts drafted for an affiliate (lib/affiliate-kit.ts, added 11 October
  * 2026). What is checked:
@@ -127,10 +128,11 @@ async function main(): Promise<void> {
   const fundedKitStore = (await storeForEmail(OWNER))!;
   const beforeFundedKitJobs = await aiLeft(fundedKitStore);
   const beforeFundedKitCalls = asked.length;
-  const beforeKitCounters = [...redis.entries()].filter(([key]) => key.startsWith("nl:affkit:"));
+  const kitCounterKeys = [`nl:affkit:${fundedKitStore.statsId}:dddddddddddd:${new Date().toISOString().slice(0, 10)}`, `nl:affkit:${fundedKitStore.statsId}:${windowId(fundedKitStore)}`];
+  const beforeKitCounters = await redis.pipeline(kitCounterKeys.map((key) => ["GET", key]));
   const deniedKit = await draftKit(fundedKitStore, affiliate({ id: "dddddddddddd", code: "funded" }), plan.product.id, "Synthetic note only");
   is("missing resource funding refuses before model calls or kit and writing counters",
-    [deniedKit.ok ? "" : deniedKit.reason, asked.length, await aiLeft(fundedKitStore), [...redis.entries()].filter(([key]) => key.startsWith("nl:affkit:"))],
+    [deniedKit.ok ? "" : deniedKit.reason, asked.length, await aiLeft(fundedKitStore), await redis.pipeline(kitCounterKeys.map((key) => ["GET", key]))],
     ["unavailable", beforeFundedKitCalls, beforeFundedKitJobs, beforeKitCounters]);
 
   done();
