@@ -6593,3 +6593,12 @@ REGRA DOS60% (OBRIGATÓRIA): todo cliente pagante, considerado isoladamente e us
 Proibições: não alterar preços, limites visíveis, comissão, PLANS_ON_SALE, tax gate, art.9a ou revisão comercial; não retirar o cartão de crédito; não criar contas, aceitar termos, contratar serviços, pagar valores, alterar configurações reais do Stripe ou contatar terceiros; somente testes sintéticos com o Stripe simulado.
 
 A autorização de RD acrescenta a opção de débito ao executar este item e substitui apenas a restrição genérica incompatível sobre adicionar esse meio; preserva o cartão e todas as demais proibições. Registrar custos mensais/anuais por plano e maior preço pago, verificação, falhas, contestações e respectivos prazos, tetos/reserva, fontes/data e testes completos antes de operar. Nenhuma configuração, meio de pagamento real ou custo de recebimento é alterado por este registro; documento não é entrega funcional.
+
+
+### Entrega funcional205 — prova de coorte antes do pedido de IA (24/10/2026)
+
+PR#893, head06f2ca9171680eef23aa88c7e51b938ee464897f, tree5609919055d1117e08b017f966b88e02176b81d8, mergeb86d61e28bd196fcba4e5ce79399aaee3ddfe7bb em12:21:53UTC/09:21:53Fortaleza.24/24success no head exato, árvores prevista/testada/real e pais ordenados conferidos. verify120864938086 passou o novo caso de ausência de aprovação antes de gasto/fetch às11:54:38UTC e inventário às11:56:26UTC; nenhuma repetição isolada usada como conclusão.
+
+Vercel dpl_DU4eAYnqNnotC216ZrNGKCbCKVoq READY em12:23:23.572UTC/09:23:23.572Fortaleza, GitSHA exato do merge, marktmorgen.com /,/platform,/pricing,/mission,/library HTTP200 com o mesmo data-dpl-id. Só depois contador204→205, próxima206, aviso205 emitido uma vez. askModel em período marcado financiado exige coorte paga antes de reservar gasto/chamar modelo; postToModel/assistente e outros recursos permanecem pendentes. Políticas reais nulas, vendas fechadas e três coberturas ainda falsas.
+
+Custos incrementais condicionais:1EVAL18primeira/17repetida, requestJSON<=12288bytes, sem novo campo além da coorte compartilhada. Envelope publicado Studio330/Scale560observações por mês,18comandos cada, primária sem réplica PAYG0.20/100k:Studio USD0.01188/mês e0.14256/12pioresmeses;Scale0.02016/mês e0.24192/12pioresmeses por intervalo. Store0direitos não significa custo zero de tentativas recusadas. Tetos globais/repetições/abuso, topologia, resposta/transferência, CPU/memória, retenção e reserva desconhecidos continuam reprovados; nenhuma certificação60% ou redução de reserva.
