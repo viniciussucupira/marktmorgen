@@ -33,6 +33,7 @@
  *   nl:cal:err:<feed>          the last failure, for the studio
  *   nl:cal:out:<statsId>       the subscription file, five minutes
  */
+import { reservePaidResourceWindow } from "@/lib/contract-resource-window";
 import { createHash, randomBytes } from "node:crypto";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { type Busy, isTimeZone, roomFor, seatsAt } from "@/lib/call-setup";
@@ -293,7 +294,7 @@ export function subscribeUrl(token: string): string {
 
 export type AddFeedResult =
   | { ok: true; view: CalendarView; busyTimes: number }
-  | { ok: false; reason: "full" | "duplicate" | "long" | "invalid"; message: string };
+  | { ok: false; reason: "full" | "duplicate" | "long" | "invalid" | "unavailable"; message: string };
 
 /**
  * Adds a calendar, after reading it once: an address that cannot be read is
@@ -313,6 +314,7 @@ export async function addFeed(store: Store, raw: string, now = Date.now(), hooks
     return { ok: false, reason: "invalid", message: problemWords(error) };
   }
   if (config.feeds.some((f) => f.url === url)) return { ok: false, reason: "duplicate", message: "That calendar is already added." };
+  if (store.period?.funded === true && !(await reservePaidResourceWindow(store))) return { ok: false, reason: "unavailable", message: "Calendar changes are temporarily unavailable. Try again later." };
   let reading: Reading;
   try {
     reading = await readFeed(url, await homeZone(store), now, hooks);
