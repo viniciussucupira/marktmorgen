@@ -23,8 +23,13 @@ def main():
     if not switch_match or '$' + '{' in switch_match.group(1):
         raise RuntimeError('Expected static switch activation Lua')
     switch_script = switch_match.group(1)
+    resource_source = (Path(__file__).resolve().parents[1] / 'lib/contract-resource-window.ts').read_text(encoding='utf-8')
+    resource_match = re.search(r'export const RESERVE_PAID_RESOURCE_WINDOW = `([^`]+)`;', resource_source)
+    if not resource_match or '$' + '{' in resource_match.group(1):
+        raise RuntimeError('Expected static paid resource cohort Lua')
+    resource_script = resource_match.group(1)
     prefix = 'marktmorgen:integration:contract:' + uuid.uuid4().hex + ':'
-    keys = [prefix + str(i) for i in range(37)]
+    keys = [prefix + str(i) for i in range(39)]
     redis = Redis()
     def snapshot(key):
         fields = redis.command('HGETALL', key)
@@ -382,6 +387,72 @@ def main():
         assert switch_activate(redis, keys[29], now=instant+2*86400, start=instant+1) == 0
         assert snapshot(keys[29]) == before
         print('PASS: committed checkout and switch proofs survive activation deadlines without any write, renewal or expired unconsumed activation')
+
+        def resource_slots(key, annual=False):
+            redis.command('HSET', key, 'slots:creator_month', 0 if annual else 1,
+                          'slots:creator_year', 1 if annual else 0,
+                          'slots:pro_month', 0, 'slots:pro_year', 0, 'slots:scale_month', 0, 'slots:scale_year', 0)
+        def resource_claim(client, key, annual=False, index=0, subscription='sub_Activation001', shift=0, now_ms=None):
+            start, finish = instant, instant+(360 if annual else 30)*86400
+            from_ms = (instant+index*30*86400)*1000+shift
+            until_ms = (instant+(index+1)*30*86400)*1000
+            now_ms = now_ms if now_ms is not None else from_ms+1000
+            quotes = [0 if annual else 2, 50, 2 if annual else 0, 50, 0, 1, 0, 1, 0, 1, 0, 1]
+            return client.command('EVAL', resource_script, 1, key, 'binding', 'review', 'one',
+                                  subscription, 'creator_year' if annual else 'creator_month',
+                                  start, finish, from_ms, until_ms, now_ms, index, 12 if annual else 1,
+                                  50, 100, 0, 2, *quotes)
+        funded_activation(keys[37])
+        assert activate(redis, keys[37]) == [1, instant+86400]
+        resource_slots(keys[37])
+        original = snapshot(keys[37])
+        for expected_count, label in [(18, 'first cohort'), (17, 'repeated cohort')]:
+            before_calls = command_calls()
+            assert resource_claim(redis, keys[37]) == [1, (instant+30*86400)*1000]
+            after_calls = command_calls()
+            delta = {name: after_calls.get(name, 0)-before_calls.get(name, 0)
+                     for name in set(before_calls) | set(after_calls) if name != 'info'}
+            assert all(value >= 0 for value in delta.values()) and sum(delta.values()) == expected_count, delta
+            print('MEASURED paid resource commands:', label, expected_count, sorted((name, value) for name, value in delta.items() if value))
+        for name, value in original:
+            assert redis.command('HGET', keys[37], name) == value
+        committed = snapshot(keys[37])
+        for args in [dict(subscription='sub_Foreign001'), dict(shift=1), dict(index=1), dict(now_ms=(instant+30*86400)*1000)]:
+            assert resource_claim(redis, keys[37], **args) == 0
+            assert snapshot(keys[37]) == committed
+        redis.command('HSET', keys[37], 'slots:pro_year', 1)
+        corrupt = snapshot(keys[37])
+        assert resource_claim(redis, keys[37]) == 0
+        assert snapshot(keys[37]) == corrupt
+        seed(keys[38])
+        redis.command('HSET', keys[38], 'slots:creator_month', 0)
+        assert take(redis, keys[38], choice='creator_year') == 1
+        assert redis.command('EVAL', activation_script, 1, keys[38], 'binding', 'review', 'one',
+                             'creator_year', 'ctr_one', 'sub_Activation001', instant, instant+1,
+                             50, 100, 0, 300, 2, 'paid', instant, instant+360*86400) == [1, instant+86400]
+        resource_slots(keys[38], annual=True)
+        def concurrent_resource(_):
+            client = Redis()
+            try:
+                return resource_claim(client, keys[38], annual=True)
+            finally:
+                client.close()
+        with concurrent.futures.ThreadPoolExecutor(max_workers=16) as pool:
+            results = list(pool.map(concurrent_resource, range(64)))
+        assert all(value == [1, (instant+30*86400)*1000] for value in results)
+        assert len([name for name, value in snapshot(keys[38]) if name.startswith('resource:')]) == 1
+        for index in range(12):
+            assert resource_claim(redis, keys[38], annual=True, index=index) == [1, (instant+(index+1)*30*86400)*1000]
+        before = snapshot(keys[38])
+        assert len([name for name, value in before if name.startswith('resource:')]) == 12
+        assert resource_claim(redis, keys[38], annual=True, index=12) == 0
+        assert redis.command('HGET', keys[38], 'reserved') == '50'
+        assert redis.command('HGET', keys[38], 'slots:creator_year') == '1'
+        assert snapshot(keys[38]) == before
+        redis.command('EXPIRE', keys[38], 60)
+        assert resource_claim(redis, keys[38], annual=True) == 0
+        assert snapshot(keys[38]) == before
+        print('PASS: paid resource cohorts retain cash, reconcile six slot counters, share64 replies and bound annual fields to12')
 
     finally:
         for key in keys:
