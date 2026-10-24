@@ -199,6 +199,14 @@ async function ensureProduct(tier: Tier): Promise<string> {
   return id;
 }
 
+/** A lookup name or bare ID is not proof of the amount and billing interval. */
+function matchingPlanPrice(value: Record<string, unknown> | undefined, amount: number, cycle: Cycle): string | null {
+  const recurring = value?.recurring as { interval?: unknown; interval_count?: unknown } | undefined;
+  return typeof value?.id === "string" && value.id.length > 0 &&
+    value.unit_amount === amount && value.currency === "usd" &&
+    recurring?.interval === cycle && recurring?.interval_count === 1 ? value.id : null;
+}
+
 const priceIds = new Map<string, string>();
 
 /**
@@ -220,16 +228,10 @@ export async function ensurePrice(tier: Tier, cycle: Cycle): Promise<string> {
     `/prices?${new URLSearchParams({ "lookup_keys[]": key, active: "true", limit: "1" })}`,
   );
   const found = (listed.data as Record<string, unknown>[] | undefined)?.[0];
-  const recurring = found?.recurring as { interval?: unknown } | null | undefined;
-  if (
-    found &&
-    typeof found.id === "string" &&
-    found.unit_amount === amount &&
-    found.currency === "usd" &&
-    recurring?.interval === cycle
-  ) {
-    priceIds.set(`${key}:${amount}`, found.id);
-    return found.id;
+  const existingId = matchingPlanPrice(found, amount, cycle);
+  if (existingId) {
+    priceIds.set(`${key}:${amount}`, existingId);
+    return existingId;
   }
 
   const product = await ensureProduct(tier);
@@ -240,6 +242,7 @@ export async function ensurePrice(tier: Tier, cycle: Cycle): Promise<string> {
       currency: "usd",
       unit_amount: String(amount),
       "recurring[interval]": cycle,
+      "recurring[interval_count]": "1",
       product,
       lookup_key: key,
       // Takes the name from an old price whose amount no longer matches.
@@ -247,9 +250,10 @@ export async function ensurePrice(tier: Tier, cycle: Cycle): Promise<string> {
       nickname: `${PLAN_NAMES[tier]}, ${cycle === "year" ? "yearly" : "monthly"}`,
     }),
   );
-  if (typeof made.id !== "string") throw new Error("Stripe did not return a price");
-  priceIds.set(`${key}:${amount}`, made.id);
-  return made.id;
+  const madeId = matchingPlanPrice(made, amount, cycle);
+  if (!madeId) throw new Error("Stripe did not confirm the requested price and single billing interval");
+  priceIds.set(`${key}:${amount}`, madeId);
+  return madeId;
 }
 
 /** The same price, written out on the checkout itself. */

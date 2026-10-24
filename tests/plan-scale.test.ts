@@ -10,7 +10,7 @@
  */
 import { AI_MONTHLY } from "@/lib/ai-rules";
 import { aiAllowance } from "@/lib/ai";
-import { lookupKey, planOf, switchPlan } from "@/lib/billing";
+import { ensurePrice, lookupKey, planOf, switchPlan } from "@/lib/billing";
 import { canUseDomain } from "@/lib/domains";
 import { monthlyAllowance } from "@/lib/mail";
 import { PLAN_NAMES, PLAN_PRICES, PRO_MONTHLY_EMAILS, SCALE_MONTHLY_EMAILS, TIERS, TRIAL_MONTHLY_EMAILS, canUse, hasPro, monthlyEmails, parseTier, priceWords, yearSaving } from "@/lib/plan";
@@ -21,6 +21,8 @@ type Sent = { method: string; path: string; body: URLSearchParams };
 const sent: Sent[] = [];
 /** The subscription as Stripe holds it, changed by the stand-in when a new price is posted. */
 let held: Record<string, unknown> = {};
+let catalogIntervalCount = 1;
+let madePriceMode: "ok" | "partial" | "wrong" = "ok";
 
 const priceOf = (key: string) => `price_${key.replace(/[^a-z]/g, "")}`;
 
@@ -37,7 +39,17 @@ globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) =>
     const [, tier, cycle] = /^nimbus_(\w+)_(month|year)$/.exec(key) ?? [];
     const plan = parseTier(tier);
     if (!plan) return answer({ data: [] });
-    return answer({ data: [{ id: priceOf(key), unit_amount: PLAN_PRICES[plan][cycle as "month" | "year"], currency: "usd", lookup_key: key, recurring: { interval: cycle } }] });
+    return answer({ data: [{ id: priceOf(key), unit_amount: PLAN_PRICES[plan][cycle as "month" | "year"], currency: "usd", lookup_key: key, recurring: { interval: cycle, interval_count: catalogIntervalCount } }] });
+  }
+  if (path.startsWith("/products/") && method === "GET") return answer({ active: true });
+  if (path === "/prices" && method === "POST") {
+    const id = priceOf(body.get("lookup_key") ?? "") + "_new";
+    if (madePriceMode === "partial") return answer({ id });
+    return answer({
+      id, unit_amount: Number(body.get("unit_amount")) + (madePriceMode === "wrong" ? 1 : 0),
+      currency: body.get("currency"),
+      recurring: { interval: body.get("recurring[interval]"), interval_count: Number(body.get("recurring[interval_count]")) },
+    });
   }
   if (path.startsWith("/subscriptions/") && method === "GET") return answer(held);
   if (path.startsWith("/subscriptions/") && method === "POST") {
@@ -83,6 +95,36 @@ async function main(): Promise<void> {
   is("and a year", [priced(30000, "year"), priced(94800, "year"), priced(238800, "year")], ["creator", "pro", "scale"]);
   is("a yearly Pro is not taken for Scale because its number is large", priced(94800, "year"), "pro");
   is("the note on the subscription is believed too", [priced(0, "month", { tier: "scale" }), priced(0, "month", { tier: "pro" })], ["scale", "pro"]);
+
+  part("Catalog evidence is validated before a price can be used");
+  catalogIntervalCount = 2;
+  sent.length = 0;
+  const replacement = await ensurePrice("creator", "year");
+  const made = sent.find((row) => row.path === "/prices" && row.method === "POST");
+  is("a doubled interval is replaced rather than reused", replacement, priceOf(lookupKey("creator", "year")) + "_new");
+  is("the replacement explicitly requests one unchanged annual interval", [made?.body.get("unit_amount"), made?.body.get("recurring[interval]"), made?.body.get("recurring[interval_count]")], [String(PLAN_PRICES.creator.year), "year", "1"]);
+  const cachedCount = sent.length;
+  await ensurePrice("creator", "year");
+  is("the validated replacement is cached without another request", sent.length, cachedCount);
+
+  for (const mode of ["partial", "wrong"] as const) {
+    madePriceMode = mode;
+    sent.length = 0;
+    let refused = false;
+    try { await ensurePrice("pro", "year"); } catch { refused = true; }
+    is(`${mode}: a bare or contradictory new price is refused`, refused, true);
+    is(`${mode}: unconfirmed output was not cached from the prior attempt`, sent.some((row) => row.path === "/prices" && row.method === "POST"), true);
+  }
+  madePriceMode = "ok";
+  is("a later fully confirmed price can recover", await ensurePrice("pro", "year"), priceOf(lookupKey("pro", "year")) + "_new");
+
+  catalogIntervalCount = 1;
+  sent.length = 0;
+  is("a valid existing one-interval price is reused", await ensurePrice("scale", "year"), priceOf(lookupKey("scale", "year")));
+  is("no replacement is created for valid catalog evidence", sent.some((row) => row.method === "POST"), false);
+  const validCount = sent.length;
+  await ensurePrice("scale", "year");
+  is("the validated existing price is also cached", sent.length, validCount);
 
   part("Moving up from Pro");
   held = { id: "sub_Owner00000001", status: "active", items: { data: [{ id: "si_Item00000001", price: { lookup_key: lookupKey("pro", "month"), unit_amount: PLAN_PRICES.pro.month, recurring: { interval: "month" } } }] }, metadata: { tier: "pro" } };

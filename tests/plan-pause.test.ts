@@ -60,6 +60,14 @@ globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) =>
   const url = new URL(String(input));
   const method = init?.method ?? "GET";
   if (url.hostname === "api.stripe.com") {
+    if (url.pathname === "/v1/prices" && method === "POST") {
+      const body = new URLSearchParams(String(init?.body ?? ""));
+      return new Response(JSON.stringify({
+        id: "price_creator_month", unit_amount: Number(body.get("unit_amount")),
+        currency: body.get("currency"),
+        recurring: { interval: body.get("recurring[interval]"), interval_count: Number(body.get("recurring[interval_count]")) },
+      }), { status: 200 });
+    }
     if (url.pathname === "/v1/prices" || url.pathname.startsWith("/v1/prices/search") || url.pathname.startsWith("/v1/products")) {
       return new Response(JSON.stringify({ data: [{ id: "price_creator_month", lookup_key: "nimbus_labs_creator_month", active: true, unit_amount: 2900, recurring: { interval: "month" } }], has_more: false, id: "price_creator_month" }), { status: 200 });
     }
