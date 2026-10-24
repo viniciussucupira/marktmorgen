@@ -10,7 +10,7 @@ The Lua operation validates the immutable receipt and its policy/review/store/pl
 
 ## Remaining work
 
-This does not activate switch or renewal grants, reconcile bank/Stripe available cash, migrate legacy rights, allocate all supplier resources for future months, or recover an expired policy after an ambiguous payment. Such cases must be reconciled without forfeiting paid rights or refunds. The legacy observation path is preserved and remains an explicit release prerequisite. All three unfinished CONTRACT_ADMISSION_COVERAGE entries remain false. Actual review and funding policies remain null and sales stay closed.
+This does not activate switch or renewal grants, reconcile bank/Stripe available cash, migrate legacy rights, allocate all supplier resources for future months, or recover an expired policy after an ambiguous payment. Such cases must be reconciled without forfeiting paid rights or refunds. The legacy observation path is preserved and remains an explicit release prerequisite. The activation protocol is included in schema2 of CONTRACT_FUNDING_RULES, so the commercial terms snapshot and exact ledger policy binding change with it; an old review or ledger cannot silently authorize the new protocol. The persisted ledger key and identifiers are preserved, and any future migration must retain existing obligations. All three unfinished CONTRACT_ADMISSION_COVERAGE entries remain false. Actual review and funding policies remain null and sales stay closed.
 
 ## Cost and release prerequisites before implementation
 
