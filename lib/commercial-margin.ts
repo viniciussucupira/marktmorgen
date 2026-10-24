@@ -1,4 +1,4 @@
-import {CONTRACT_FUNDING_RULES,CONTRACT_ADMISSION_COVERAGE,CURRENT_CONTRACT_FUNDING_POLICY,contractFundingConfiguration} from '@/lib/contract-funding-rules';
+import {CONTRACT_FUNDING_RULES,CONTRACT_ADMISSION_COVERAGE,CURRENT_CONTRACT_FUNDING_POLICY,contractFundingConfiguration,canonicalFinancialSnapshot} from '@/lib/contract-funding-rules';
 import { CURRENT_EXPOSURE_BUDGET_POLICY, exposureBudgetConfiguration, EXPOSURE_ADMISSION_RULES } from '@/lib/exposure-budget-policy';
 import { assessFundedExposure, FUNDED_EXPOSURE_RULES, type FundedExposureReview } from '@/lib/funded-exposure-rules';
 import { AI_ENTITLEMENT_RULES, aiEntitlementsFunded } from '@/lib/ai-entitlement-rules';
@@ -110,13 +110,27 @@ export type CommercialMarginReview={
 };
 /** No verified all-tax/all-cost review exists yet. Unknown is not zero or permission to sell. */
 export const CURRENT_COMMERCIAL_MARGIN_REVIEW:CommercialMarginReview|null=null;
+/** Reviews are data, never executable accessors, inherited assertions or JSON hooks.
+ * The same bounded canonical representation already binds contract funding.
+ * Keep real reviews absent until their evidence is established independently.
+ */
+function commercialReviewData(review:CommercialMarginReview|null):CommercialMarginReview|null{
+ if(!review||typeof review!=="object"||Array.isArray(review))return null;
+ const encoded=canonicalFinancialSnapshot(review);
+ return encoded===null?null:JSON.parse(encoded) as CommercialMarginReview;
+}
 export function commercialMarginReady(review:CommercialMarginReview|null=CURRENT_COMMERCIAL_MARGIN_REVIEW):boolean{
+ const data=commercialReviewData(review);
+ return data!==null&&commercialMarginDataReady(data);
+}
+/** Called only with the detached own-data snapshot produced above. */
+function commercialMarginDataReady(review:CommercialMarginReview):boolean{
  const uploadPolicy=currentUploadBudgetPolicy();
  if(!isUploadBudgetConfigured(uploadPolicy))return false;
  const aiPolicy=currentAiSpendPolicy();
  if(!isAiSpendPolicyValid(aiPolicy)||!aiEntitlementsFunded(aiPolicy))return false;
  if(!review||review.priceAndRightsSnapshot!==CURRENT_PRICE_AND_RIGHTS_SNAPSHOT)return false;
- if(!review.taxEvidence?.trim()||!review.costAndLimitEvidence?.trim())return false;
+ if(typeof review.taxEvidence!=="string"||!review.taxEvidence.trim()||typeof review.costAndLimitEvidence!=="string"||!review.costAndLimitEvidence.trim())return false;
  if(review.allocatedFixedCostsVerified!==true||review.prepaidUsageEnforced!==true||!review.scenarios)return false;
  const exposure=assessFundedExposure(review.fundedExposure);
  if(!exposure.approved||!review.companyBase||review.companyBase.monthlyFixedCostsCeilingCents==null)return false;
@@ -151,9 +165,12 @@ export function commercialMarginReady(review:CommercialMarginReview|null=CURRENT
  });
 }
 export function commercialPlansMayOpen(requested:boolean,review:CommercialMarginReview|null=CURRENT_COMMERCIAL_MARGIN_REVIEW):boolean{
+ if(requested!==true)return false;
+ review=commercialReviewData(review);
+ if(review===null)return false;
  const commissionReady=!COMMISSION_PLANS_PUBLISHED||(COMMISSION_LIVE&&SHARE_PROVED_IN_TEST_MODE);
  const exposureReady=review!==null&&exposureBudgetConfiguration(CURRENT_EXPOSURE_BUDGET_POLICY,{termsSnapshot:CURRENT_PRICE_AND_RIGHTS_SNAPSHOT,review:review.fundedExposure})!==null;
  const contractReady=review!==null&&contractFundingConfiguration(CURRENT_CONTRACT_FUNDING_POLICY,{termsSnapshot:CURRENT_PRICE_AND_RIGHTS_SNAPSHOT,review})!==null;
  const lifecycleReady=Object.values(CONTRACT_ADMISSION_COVERAGE).every(Boolean);
- return requested===true&&commissionReady&&exposureReady&&contractReady&&lifecycleReady&&commercialMarginReady(review);
+ return requested===true&&commissionReady&&exposureReady&&contractReady&&lifecycleReady&&commercialMarginDataReady(review);
 }
