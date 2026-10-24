@@ -169,7 +169,8 @@ export async function activateCheckoutContract(
  try{
   const result=await redisPipeline([['EVAL',ACTIVATE_CONTRACT,1,'nl:contract-reserve:v1',contractFundingBinding(config),reviewId,statsId,key,grantId,subscriptionId,createdSeconds,seconds,config.grantCents[key],config.cashLimitCents,config.carryForwardCents,CONTRACT_FUNDING_RULES.submissionSeconds,config.fundedGrants[key],trialing?'trial':'paid',periodStartSeconds,periodEndSeconds]]);
   const ack=result[0];
-  return contractObservationAcknowledged(result,ack,createdSeconds,periodStartSeconds,periodEndSeconds);
+  const current=contractFundingConfiguration(policy,context,new Date());
+  return current!==null&&current.binding===config.binding&&commercialMarginReady(context.review)&&Date.now()>=now.getTime()&&contractObservationAcknowledged(result,ack,createdSeconds,periodStartSeconds,periodEndSeconds);
  }catch{return false;}
 }
 
@@ -245,7 +246,8 @@ export async function activateSwitchContract(
  try{
   const result=await redisPipeline([['EVAL',ACTIVATE_SWITCH_CONTRACT,1,'nl:contract-reserve:v1',contractFundingBinding(config),reviewId,statsId,key,grantId,subscriptionId,createdSeconds,seconds,config.grantCents[key],config.cashLimitCents,config.carryForwardCents,CONTRACT_FUNDING_RULES.submissionSeconds,config.fundedGrants[key],trialing?'trial':'paid',periodStartSeconds,periodEndSeconds,span]]);
   const ack=result[0];
-  return contractObservationAcknowledged(result,ack,seconds,periodStartSeconds,periodEndSeconds);
+  const current=contractFundingConfiguration(policy,context,new Date());
+  return current!==null&&current.binding===config.binding&&commercialMarginReady(context.review)&&Date.now()>=now.getTime()&&contractObservationAcknowledged(result,ack,seconds,periodStartSeconds,periodEndSeconds);
  }catch{return false;}
 }
 
