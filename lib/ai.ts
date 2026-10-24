@@ -1,4 +1,5 @@
 import { allowanceWindow, windowId } from "@/lib/allowance-window";
+import { reservePaidResourceWindow } from '@/lib/contract-resource-window';
 import { reserveFundedExposure } from '@/lib/exposure-budget';
 import { consumeAiCallBudget, hasAiCallBudget, withAiCallBudget } from '@/lib/ai-call-budget';
 import { AI_ENTITLEMENT_RULES } from '@/lib/ai-entitlement-rules';
@@ -211,6 +212,7 @@ export async function askModel(
   // The store's window (lib/allowance-window.ts): a paying store's ceiling is its billing month's.
   const window = allowanceWindow(store);
   if (!window) return null;
+  if (store.period?.funded===true && !(await reservePaidResourceWindow(store))) return null;
   if (!(await reserveAiSpend(store.statsId, scope, named, undefined, hold, window))) return null;
   const response = await timed(timeoutMs, (signal) =>
     fetch(API, {
