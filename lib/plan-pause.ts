@@ -101,11 +101,14 @@ function parseRecord(raw: unknown): PauseRecord | null {
   try {
     const value = JSON.parse(raw) as Record<string, unknown>;
     const tier = parseTier(value.tier);
+    const told = value.told === undefined ? 0 : value.told;
     if (
       typeof value.subscription !== "string" || !SUBSCRIPTION_ID.test(value.subscription) ||
       typeof value.customer !== "string" || !CUSTOMER_ID.test(value.customer) ||
-      typeof value.paymentMethod !== "string" || !tier ||
-      typeof value.from !== "number" || typeof value.until !== "number" || value.until <= value.from
+      typeof value.paymentMethod !== "string" || !/^(pm|card|src)_[A-Za-z0-9]{6,64}$/.test(value.paymentMethod) || !tier ||
+      typeof value.from !== "number" || !Number.isSafeInteger(value.from) || value.from <= 0 ||
+      typeof value.until !== "number" || !Number.isSafeInteger(value.until) || value.until <= value.from ||
+      typeof told !== "number" || !Number.isSafeInteger(told) || told < 0
     ) {
       return null;
     }
@@ -116,7 +119,7 @@ function parseRecord(raw: unknown): PauseRecord | null {
       tier,
       from: value.from,
       until: value.until,
-      told: typeof value.told === "number" ? value.told : 0,
+      told,
     };
   } catch {
     return null;
@@ -128,10 +131,16 @@ export async function pauseOf(store: Pick<Store, "email" | "sid" | "extra">): Pr
   return pauseAt(storeRef(store));
 }
 
-async function pauseAt(ref: string): Promise<PauseRecord | null> {
-  if (!isRedisConfigured()) return null;
+async function storedPauseAt(ref: string): Promise<{ record: PauseRecord | null; missing: boolean }> {
+  if (!isRedisConfigured()) return { record: null, missing: true };
   const [raw] = await redisPipeline([["GET", recordKey(ref)]]);
-  return parseRecord(raw);
+  // Only an explicit Redis miss proves absence. Invalid or incomplete replies
+  // must not authorize deletion of billing evidence.
+  return { record: parseRecord(raw), missing: raw === null };
+}
+
+async function pauseAt(ref: string): Promise<PauseRecord | null> {
+  return (await storedPauseAt(ref)).record;
 }
 
 /** Whether a break has not run out yet. */
@@ -141,8 +150,14 @@ export function breakRunning(record: Pick<PauseRecord, "until">, nowSeconds = Da
 
 /** Whether a store's closing must wait: a break that has not run out. Read by lib/plan-closing.ts. */
 export async function onBreak(ref: string, nowSeconds = Date.now() / 1000): Promise<boolean> {
-  const record = await pauseAt(ref).catch(() => null);
-  return record !== null && record.until > nowSeconds;
+  try {
+    const stored = await storedPauseAt(ref);
+    // Unknown pause evidence is not permission to remove a creator's content.
+    if (!stored.record) return !stored.missing;
+    return stored.record.until > nowSeconds;
+  } catch {
+    return true;
+  }
 }
 
 export type PauseRefusal = "standing" | "trial" | "yearly" | "canceling" | "pending" | "early" | "recent";
@@ -251,6 +266,11 @@ export async function undoPause(store: Store, nowSeconds = Math.floor(Date.now()
   if (!record) return "none";
   if (nowSeconds < record.from && record.subscription === store.subscriptionId) {
     const state = await setCancelAtPeriodEnd(record.subscription, false);
+    // Being active is not acknowledgement that the scheduled stop was removed.
+    // Keep the pause and its annual eligibility until that change is observed.
+    if (state.state === "active" && state.cancelsAtEnd) {
+      throw new Error("the subscription is still set to stop at the end of its paid period");
+    }
     await forget(ref, true);
     return state.state === "active" ? "kept" : "stopped";
   }
@@ -339,9 +359,11 @@ export function pauseEmail(kind: "set" | "soon" | "restarted" | "failed" | "unco
     text: [
       "Hello,",
       "",
-      `Your break ended on ${day(record.until)}, and we could not start your plan again: the card it was paid with did not go through, or your bank asked for a confirmation we cannot give for you. Nothing was charged.`,
+      `Your break ended on ${day(record.until)}, and we could not start your plan again: the latest attempt was refused by the card or bank, or needs a confirmation we cannot give for you. This does not confirm the outcome of any earlier attempt.`,
       "",
-      `Start it again in your studio, with this card or another one: ${studio}`,
+      `Check your billing in the studio before starting the plan again: ${studio}`,
+      "",
+      "If you see a charge or are unsure about an earlier attempt, contact us before trying again. Include the date and amount of any charge, but do not send card details.",
       "",
       "Your store and your products stay up. If your store keeps more than a store with no plan may, we will write with the figures and the date before anything is removed.",
       ...close,
@@ -372,7 +394,12 @@ export async function runBreaks(nowSeconds = Math.floor(Date.now() / 1000)): Pro
   const [raw] = await redisPipeline([["ZRANGEBYSCORE", DUE, "-inf", String(nowSeconds + RESTART_NOTICE_DAYS * DAY), "LIMIT", "0", "200"]]);
   const refs = Array.isArray(raw) ? (raw as string[]) : [];
   for (const ref of refs) {
-    const record = await pauseAt(ref);
+    const stored = await storedPauseAt(ref);
+    const record = stored.record;
+    if (!record && !stored.missing) {
+      counts.failed += 1;
+      continue;
+    }
     const store = await storeForEmail(ref);
     if (!record || !store) {
       await forget(ref, false);

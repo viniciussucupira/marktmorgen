@@ -21,6 +21,7 @@ import { onBreak, pauseEmail, pauseOf, pausePlan, pauseRefusal, runBreaks, undoP
 import { addPeriods } from "@/lib/plans";
 import { done, is, part } from "./check";
 import { paidPeriod } from "./billing-period-fixture";
+import { store as pauseRedis } from "./redis-stub";
 
 process.env.STRIPE_SECRET_KEY = "sk_test_plan_pause_only";
 process.env.RESEND_API_KEY = "re_test_plan_pause_only";
@@ -30,7 +31,8 @@ const NOW = 1_791_700_000;
 const emails: { to: string; subject: string; text: string }[] = [];
 const subs: Record<string, Record<string, unknown>> = {};
 const created: URLSearchParams[] = [];
-let createAnswer: "ok" | "declined" | "down" = "ok";
+let keepScheduledStop = false;
+let createAnswer: "ok" | "declined" | "down" | "otherCustomer" | "otherTier" | "yearly" | "trial" | "pastDue" = "ok";
 
 function subscription(id: string, over: Record<string, unknown> = {}): Record<string, unknown> {
   return {
@@ -66,6 +68,16 @@ globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) =>
       if (createAnswer === "declined") return new Response(JSON.stringify({ error: { code: "card_declined", message: "Your card was declined." } }), { status: 402 });
       if (createAnswer === "down") return new Response(JSON.stringify({ error: { type: "api_error", message: "down" } }), { status: 500 });
       const fresh = subscription("sub_Restarted00001", { start_date: NOW, trial_end: null, customer: { id: body.get("customer"), email: "x@example.com" } });
+      if (createAnswer === "otherCustomer") fresh.customer = { id: "cus_OtherRestart01", email: "other@example.com" };
+      if (createAnswer === "otherTier" || createAnswer === "yearly") {
+        fresh.items = { data: [{ current_period_end: NOW + 10 * DAY, price: {
+          lookup_key: createAnswer === "otherTier" ? "nimbus_labs_pro_month" : "nimbus_labs_creator_year",
+          unit_amount: createAnswer === "otherTier" ? 44900 : 69000,
+          recurring: { interval: createAnswer === "yearly" ? "year" : "month" },
+        } }] };
+      }
+      if (createAnswer === "trial") { fresh.status = "trialing"; fresh.trial_end = NOW + DAY; }
+      if (createAnswer === "pastDue") fresh.status = "past_due";
       subs.sub_Restarted00001 = fresh;
       return new Response(JSON.stringify(fresh), { status: 200 });
     }
@@ -73,7 +85,7 @@ globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) =>
     if (m && subs[m[1]]) {
       if (method === "POST") {
         const body = new URLSearchParams(String(init?.body ?? ""));
-        if (body.has("cancel_at_period_end")) subs[m[1]].cancel_at_period_end = body.get("cancel_at_period_end") === "true";
+        if (body.has("cancel_at_period_end") && !(keepScheduledStop && body.get("cancel_at_period_end") === "false")) subs[m[1]].cancel_at_period_end = body.get("cancel_at_period_end") === "true";
       }
       return new Response(JSON.stringify(subs[m[1]]), { status: 200 });
     }
@@ -137,6 +149,26 @@ async function main() {
     await undoPause(store, NOW + DAY);
   }
 
+  part("Taking a break back requires acknowledgement of the removed stop");
+  {
+    const id = "sub_UndoAck00001";
+    subs[id] = subscription(id);
+    const store = await storeWith("undo-ack@example.com", "undoackstore", id);
+    const set = await pausePlan(store, 1, NOW);
+    is("the break is available to take back", set.kind, "paused");
+    const before = await pauseOf(store);
+    keepScheduledStop = true;
+    let refused = false;
+    try { await undoPause(store, NOW + DAY); } catch { refused = true; }
+    keepScheduledStop = false;
+    is("an unchanged scheduled stop is not reported as kept", refused, true);
+    is("the original pause is retained exactly", await pauseOf(store), before);
+    is("the provider still plans to stop it", subs[id].cancel_at_period_end, true);
+    is("a later acknowledged undo still works", await undoPause(store, NOW + DAY), "kept");
+    is("the pause is removed only after acknowledgement", await pauseOf(store), null);
+    is("the provider no longer plans to stop it", subs[id].cancel_at_period_end, false);
+  }
+
   part("The emails say the dates and the price");
   {
     const record = { subscription: "sub_x", customer: "cus_x", paymentMethod: "pm_x", tier: "creator" as const, from: NOW, until: NOW + 61 * DAY, told: 0 };
@@ -145,7 +177,9 @@ async function main() {
     const soon = pauseEmail("soon", record);
     is("a week before: the charge and how to stop it", soon.text.includes("your card is charged $69") && soon.text.includes("one click"), true);
     const failed = pauseEmail("failed", record);
-    is("failed: nothing was charged", failed.text.includes("Nothing was charged."), true);
+    is("failed: a card refusal does not rule out an earlier charge", failed.text.includes("Nothing was charged."), false);
+    is("failed: distinguishes the latest refusal from earlier attempts", failed.text.includes("latest attempt was refused") && failed.text.includes("does not confirm the outcome of any earlier attempt"), true);
+    is("failed: asks for billing review before another charge", failed.text.includes("Check your billing in the studio before starting the plan again") && failed.text.includes("do not send card details"), true);
   }
 
   part("The end of a break");
@@ -190,6 +224,9 @@ async function main() {
     const counts = await runBreaks(until + DAY);
     is("a refused card ends the break", [counts.failed, await pauseOf(store)], [1, null]);
     is("and the creator is told", emails.map((e) => e.subject), ["Your Marktmorgen plan could not start again"]);
+    const notice = emails[0]?.text ?? "";
+    is("a refusal after an unknown attempt never promises no charge", notice.includes("Nothing was charged."), false);
+    is("earlier uncertainty remains explicit after the later refusal", notice.includes("does not confirm the outcome of any earlier attempt") && notice.includes("contact us before trying again"), true);
     is("the store does not sell", (await storeForEmail("decline@example.com"))?.subscriptionActive, false);
     createAnswer = "ok";
   }
@@ -211,6 +248,85 @@ async function main() {
     is("it states uncertainty and asks for checking before another restart", text.includes("whether a charge went through") && text.includes("Before starting the plan again, contact us") && text.includes("do not send card details"), true);
     is("it does not claim the plan is taking payments", text.includes("your checkout is taking payments"), false);
     createAnswer = "ok";
+  }
+
+  part("A restart response must match the requested paid monthly plan");
+  {
+    const mismatches = ["otherCustomer", "otherTier", "yearly", "trial", "pastDue"] as const;
+    for (const [index, answer] of mismatches.entries()) {
+      const id = `sub_Mismatch0000${index}`;
+      const email = `restart-mismatch-${index}@example.com`;
+      subs[id] = subscription(id);
+      const store = await storeWith(email, `restartmismatch${index}`, id);
+      const set = await pausePlan(store, 1, NOW);
+      const until = set.kind === "paused" ? set.record.until : 0;
+      await setSubscription(email, { active: false });
+      createAnswer = answer;
+      emails.length = 0;
+      const before = created.length;
+      const counts = await runBreaks(until + 60);
+      const after = await storeForEmail(email);
+      is(`${answer}: observed response does not activate the store`, [counts.restarted, counts.failed, after?.subscriptionActive], [0, 1, false]);
+      is(`${answer}: no success or no-charge message`, emails.length, 0);
+      is(`${answer}: pause remains for existing uncertain-outcome handling`, (await pauseOf(store)) !== null, true);
+      is(`${answer}: no additional provider attempt in this pass`, created.length - before, 1);
+      await undoPause(store, until + 60);
+    }
+    createAnswer = "ok";
+  }
+
+  part("Unreadable pause evidence is retained without attempting a charge");
+  {
+    const email = "unreadable-pause@example.com";
+    const id = "sub_Unreadable001";
+    subs[id] = subscription(id);
+    const store = await storeWith(email, "unreadablepause", id);
+    const set = await pausePlan(store, 1, NOW);
+    const until = set.kind === "paused" ? set.record.until : 0;
+    await setSubscription(email, { active: false });
+    const ref = storeRef(store);
+    const key = `nl:pause:${ref}`;
+    const good = set.kind === "paused" ? set.record : {};
+    for (const raw of [
+      "{", "null", JSON.stringify({ subscription: "sub_InvalidRecord" }),
+      JSON.stringify({ ...good, from: -1 }),
+      JSON.stringify({ ...good, until: until + 0.5 }),
+      JSON.stringify({ ...good, until: Number.MAX_SAFE_INTEGER + 1 }),
+      JSON.stringify({ ...good, paymentMethod: "not_a_card" }),
+      JSON.stringify({ ...good, told: -1 }),
+      JSON.stringify({ ...good, told: "unknown" }),
+    ]) {
+      await pauseRedis.pipeline([["SET", key, raw]]);
+      const before = created.length;
+      emails.length = 0;
+      const counts = await runBreaks(until + DAY);
+      const [retained, due] = await pauseRedis.pipeline([
+        ["GET", key],
+        ["ZRANGEBYSCORE", "nl:pause:due", "-inf", String(until + DAY)],
+      ]);
+      is("unreadable evidence is not treated as a missing pause", [counts.failed, counts.dropped, counts.restarted], [1, 0, 0]);
+      is("the exact stored evidence remains", retained, raw);
+      is("unreadable pause evidence makes closing wait", await onBreak(ref, until + DAY), true);
+      is("the pending entry remains available for reconciliation", Array.isArray(due) && due.includes(ref), true);
+      is("no provider charge or notice follows unreadable evidence", [created.length - before, emails.length], [0, 0]);
+    }
+    // An explicit Redis miss remains ordinary stale-index cleanup.
+    await pauseRedis.pipeline([["DEL", key]]);
+    const before = created.length;
+    emails.length = 0;
+    const missing = await runBreaks(until + DAY);
+    const [due] = await pauseRedis.pipeline([["ZRANGEBYSCORE", "nl:pause:due", "-inf", String(until + DAY)]]);
+    is("an explicit missing record is still dropped", [missing.dropped, missing.failed, missing.restarted], [1, 0, 0]);
+    is("its stale due entry is removed", Array.isArray(due) && due.includes(ref), false);
+    is("absence never initiates a charge or notice", [created.length - before, emails.length], [0, 0]);
+    is("explicit absence does not indefinitely hold closing", await onBreak(ref, until + DAY), false);
+    const pipeline = pauseRedis.pipeline;
+    pauseRedis.pipeline = async () => { throw new Error("synthetic pause read unavailable"); };
+    try {
+      is("unavailable pause evidence also makes closing wait", await onBreak(ref, until + DAY), true);
+    } finally {
+      pauseRedis.pipeline = pipeline;
+    }
   }
 
   part("A store that started again by hand");
