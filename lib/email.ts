@@ -23,6 +23,7 @@ import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { SUPPORT_EMAIL } from "@/lib/creator-research";
 import { atSiteAddress, creatorDomain, domainOf } from "@/lib/mail-from";
 import { countSesSent, isSesConfigured, notYetTaken, sesBatch, sesBulkRoom, sesConfig, sesDown, sesReady, sesSend } from "@/lib/ses";
+import { reservePaidResourceWindow } from "@/lib/contract-resource-window";
 import { type AllowanceStore, takeAllowance } from "@/lib/store-allowance";
 
 /**
@@ -54,6 +55,7 @@ export type EmailMeter =
 /** Takes a store's figure for `n` emails before they go; true for the meters already counted elsewhere. */
 async function metered(meter: EmailMeter, n: number): Promise<boolean> {
   if (meter.by !== "store") return true;
+  if (meter.store.period?.funded===true && (!meter.store.tier || !(await reservePaidResourceWindow({...meter.store,tier:meter.store.tier,statsId:meter.store.statsId??null})))) return false;
   const taken = await takeAllowance(meter.store, meter.kind, n, Date.now(), meter.asked === true);
   if (!taken.ok) console.error(`an email was not sent: the store's ${meter.kind} figure (${taken.reason})`);
   return taken.ok;
