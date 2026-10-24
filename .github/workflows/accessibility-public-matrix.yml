@@ -22,6 +22,8 @@ jobs:
       matrix:
         browser: [chromium, firefox, webkit]
     env:
+      # New AX2 cases stay off for private/unknown repositories; existing cases remain.
+      AX2_PUBLIC_STANDARD: ${{ github.repository == 'viniciussucupira/marktmorgen' && github.event.repository.private == false && github.event.repository.visibility == 'public' }}
       NEXT_TELEMETRY_DISABLED: "1"
       E2E_BROWSER: ${{ matrix.browser }}
     steps:
@@ -35,6 +37,9 @@ jobs:
       - run: npm ci
       - name: Verify the package matches the preinstalled browser image
         run: node -e "if (require('playwright-core/package.json').version !== '1.56.1') process.exit(1)"
+      - name: Diagnose actual engine media state before app navigation
+        if: env.AX2_PUBLIC_STANDARD == 'true'
+        run: node tests/e2e/accessibility-media-diagnostic.mjs
       - run: npm run build
       - name: Public entry journeys at five widths with AAA and access modes
         run: node tests/e2e/accessibility-public-matrix.mjs

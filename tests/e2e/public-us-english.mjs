@@ -1,3 +1,4 @@
+import {checkPublicKeyboardCycle} from "./accessibility-public-keyboard.mjs";
 /** Native page text, excluding comments and persisted identifiers. No writes or provider calls. */
 export async function checkPublicAmericanEnglish({browser,LOCAL,is}){
  const context=await browser.newContext();
@@ -12,6 +13,7 @@ export async function checkPublicAmericanEnglish({browser,LOCAL,is}){
    const text=(await page.locator("main").innerText()).replace(/\s+/g," ");
    is("reviewed US-English wording "+path,text.includes(expected),true);
    is("reviewed visible text has no selected British forms "+path,/\b(?:cancelling|colour|licence|afterwards|untick(?:ed|ing|s)?|tick(?:ed|ing|s)?)\b/i.test(text),false);
+   if(process.env.AX2_KEYBOARD_PUBLIC_STANDARD==="true")await checkPublicKeyboardCycle({page,path,is});
   }
  }finally{await context.close();}
 }
