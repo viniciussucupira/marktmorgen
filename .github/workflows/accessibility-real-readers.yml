@@ -1,0 +1,54 @@
+name: AX2 real screen reader entry pilot
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+concurrency:
+  group: ax2-real-reader-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  entry-pilot:
+    # Fail closed before runner allocation; never use larger or self-hosted runners.
+    if: github.repository == 'viniciussucupira/marktmorgen' && github.event.repository.private == false && github.event.repository.visibility == 'public'
+    name: Real reader entry (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        os: [windows-latest, macos-latest]
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: "24"
+          package-manager-cache: false
+      - run: npm ci
+      - run: npm run build
+      - name: Install isolated locked tooling without lifecycle scripts or optional recording
+        working-directory: tooling/screen-reader
+        run: npm ci --ignore-scripts --omit=optional --no-fund
+      - name: Audit isolated tooling
+        working-directory: tooling/screen-reader
+        run: npm audit --omit=optional --audit-level=moderate
+      - name: Install matching headed browser
+        run: node node_modules/playwright-core/cli.js install ${{ runner.os == 'Windows' && 'chromium' || 'webkit' }}
+      - name: Configure real screen reader on disposable standard runner
+        working-directory: tooling/screen-reader
+        run: node node_modules/@guidepup/setup/bin/guidepup setup --ci
+      - name: Install version-matched real reader assets
+        working-directory: tooling/screen-reader
+        run: node node_modules/@guidepup/setup/bin/guidepup install
+      - name: Assert actual entry heading announcements and log exact speech
+        working-directory: tooling/screen-reader
+        run: node entry-pilot.mjs
