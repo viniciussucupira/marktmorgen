@@ -6715,3 +6715,5 @@ A página real passa Store a lessonVideo, que exige coorte para período financi
 Falha preservada #900 headc9f563c4a651e6063498ba2e420725dac41d33ea: verify120899181063 em24/10/2026 14:35:56.504UTC/11:35:56.504Fortaleza recusou tests/video-admission.test.ts linha21 Invalid character: sequência literal barra-n introduzida antes do novo teste. Outros jobs falharam ao compilar/lintar o mesmo código; nenhuma entrega. Correção somente converte a sequência literal em quebra real de linha,sem alterar guard/asserções/casos. Suíte COMPLETA obrigatória no novo head;nenhum job isolado reexecutado para conclusão.
 
 Revisão preventiva do fixture: Cycle canônico é month/year (lib/plan.ts); novo caso de mídia ajustado de monthly para month, para não testar uma identidade inválida. Todas as verificações voltam a rodar no novo head,sem relaxar guard ou asserção.
+
+Fixture de mídia alinhado também aos campos canônicos Store:trialEnds=0 e planEndedAt='' em vez de null,para testar recusa por revisão real ausente em identidade válida. Suíte completa no novo head novamente,sem mudança de produção.
