@@ -106,18 +106,47 @@ def main():
             redis.command('HSET', key, 'grant:ctr_one', receipt)
         def activate(client, key, subscription='sub_Activation001', store='one', nonce='ctr_one', created=instant, now=instant+1, phase='paid', period_start=instant, period_end=instant+30*86400):
             return client.command('EVAL', activation_script, 1, key, 'binding', 'review', store, 'creator_month', nonce, subscription, created, now, 50, 100, 0, 300, 2, phase, period_start, period_end)
+        def command_calls():
+            raw = redis.command('INFO', 'commandstats')
+            if not isinstance(raw, str):
+                raise AssertionError('Expected INFO commandstats text')
+            counts = {}
+            for line in raw.splitlines():
+                match = re.fullmatch(r'cmdstat_([^:]+):calls=(\d+),.*', line)
+                if match:
+                    counts[match.group(1)] = int(match.group(2))
+            if 'eval' not in counts or 'hget' not in counts:
+                raise AssertionError('Command counters must include Lua and its internal calls')
+            return counts
+        def measured_activation(key, label, **args):
+            before = command_calls()
+            result = activate(redis, key, **args)
+            after = command_calls()
+            changes = {name: after.get(name, 0) - before.get(name, 0)
+                       for name in set(before) | set(after) if name != 'info'}
+            assert all(value >= 0 for value in changes.values()), changes
+            changes = {name: value for name, value in changes.items() if value}
+            assert changes.get('eval') == 1, changes
+            total = sum(changes.values())
+            assert 1 <= total <= 14, (label, total, changes)
+            print('MEASURED activation commands:', label, total, sorted(changes.items()))
+            return result, total
         funded_activation(keys[12])
         money = redis.command('HGET', keys[12], 'reserved')
         slots = redis.command('HGET', keys[12], 'slots:creator_month')
-        assert activate(redis, keys[12]) == [1, instant+86400]
+        result, total = measured_activation(keys[12], 'first activation')
+        assert result == [1, instant+86400]
+        assert total == 14, 'Every internal command must be measured, including writes'
         assert redis.command('HGET', keys[12], 'reserved') == money
         assert redis.command('HGET', keys[12], 'slots:creator_month') == slots
         assert redis.command('HGET', keys[12], 'pending:one') is None
         assert redis.command('HGET', keys[12], 'grant:ctr_one') is not None
         before = snapshot(keys[12])
-        assert activate(redis, keys[12]) == [1, instant+86400]
+        result, _ = measured_activation(keys[12], 'identical retry')
+        assert result == [1, instant+86400]
         assert snapshot(keys[12]) == before
-        assert activate(redis, keys[12], subscription='sub_Other001') == 0
+        result, _ = measured_activation(keys[12], 'foreign subscription', subscription='sub_Other001')
+        assert result == 0
         assert activate(redis, keys[12], period_start=instant+3600, period_end=instant+30*86400+3600) == 0
         assert activate(redis, keys[12], phase='trial', period_end=instant+7*86400) == 0
         assert snapshot(keys[12]) == before

@@ -36,3 +36,32 @@ test('foreign ownership, currency, interval or funding references never reach ac
   }
  }finally{globalThis.fetch=old;}
 });
+
+test('missing session funding fields cannot downgrade a funded subscription to legacy',async()=>{
+ const old=globalThis.fetch,created=Math.floor(Date.now()/1000);
+ const references={funding_grant:'ctr_metadata',funding_review:'test_only'};
+ const baseSession={mode:'subscription',customer:'cus_Test000001',subscription:'sub_Test000001',metadata:{store:'harbor',...references}};
+ const subscription={id:'sub_Test000001',customer:'cus_Test000001',created,status:'active',metadata:{store:'harbor',...references},items:{data:[{current_period_start:created,current_period_end:created+30*86400,price:{lookup_key:'nimbus_creator_month',unit_amount:6900,currency:'usd',recurring:{interval:'month',interval_count:1}}}]}};
+ activationObservations.accept=true;
+ try{
+  for(const metadata of [{store:'harbor'},{store:'harbor',funding_grant:references.funding_grant},{store:'harbor',funding_review:references.funding_review}]){
+   activationObservations.calls.length=0;let reads=0,writes=0;
+   globalThis.fetch=async(input,init)=>{reads++;if(init?.method==='POST')writes++;return Response.json(new URL(String(input)).pathname.includes('/checkout/sessions/')?{...baseSession,metadata}:subscription);};
+   assert.equal(await readStartedSubscription(store,'cs_test_Activation001'),null);
+   assert.equal(reads,2);assert.equal(writes,0);assert.equal(activationObservations.calls.length,0);
+  }
+ }finally{globalThis.fetch=old;activationObservations.accept=false;}
+});
+test('only two unmarked provider records keep the legacy return path; missing or unavailable subscriptions grant no rights',async()=>{
+ const old=globalThis.fetch,created=Math.floor(Date.now()/1000);
+ const session={mode:'subscription',customer:'cus_Test000001',subscription:'sub_Test000001',metadata:{store:'harbor'}};
+ const subscription={id:'sub_Test000001',customer:'cus_Test000001',created,status:'active',metadata:{store:'harbor'},items:{data:[{current_period_start:created,current_period_end:created+30*86400,price:{lookup_key:'nimbus_creator_month',unit_amount:6900,currency:'usd',recurring:{interval:'month',interval_count:1}}}]}};
+ try{
+  for(const status of [200,404,503]){
+   let reads=0,writes=0;activationObservations.calls.length=0;
+   globalThis.fetch=async(input,init)=>{reads++;if(init?.method==='POST')writes++;if(new URL(String(input)).pathname.includes('/checkout/sessions/'))return Response.json(session);return status===200?Response.json(subscription):Response.json({error:{message:'synthetic provider failure'}},{status});};
+   const result=await readStartedSubscription(store,'cs_test_Activation001');
+   assert.equal(result?.active,status===200);assert.equal(reads,2);assert.equal(writes,0);assert.equal(activationObservations.calls.length,0);
+  }
+ }finally{globalThis.fetch=old;}
+});
