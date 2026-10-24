@@ -22,13 +22,14 @@ import { NextRequest } from "next/server";
 import { SESSION_COOKIE, openSession } from "@/lib/auth";
 import { NotConnected, disconnect, finishConsent, meetView } from "@/lib/meet-connect";
 import { ProviderError, ZOOM_ARRIVAL_COOKIE, cameForZoom } from "@/lib/meet-providers";
-import { startConnect } from "@/lib/meet-routes";
+import { startConnect, startHostConnect } from "@/lib/meet-routes";
 import { TEST_MEETING_MINUTES, TEST_MEETING_TITLE, TEST_MOVE_MINUTES, makeTest, moveTest, readTests, removeTest, TestMeetingUnavailable } from "@/lib/meet-test";
 import { claimHandle, ensureStatsId, setSubscription, storeForEmail } from "@/lib/store";
 import { proxy } from "@/proxy";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
 import { paidPeriod } from "./billing-period-fixture";
+import { allowanceUsed } from "@/lib/store-allowance";
 
 const HOST = "marktmorgen.com";
 
@@ -170,6 +171,23 @@ async function main(): Promise<void> {
   const refusedCreate = await makeTest(funded, "zoom").catch((error) => error);
   is("a new test meeting requires financial approval", refusedCreate instanceof TestMeetingUnavailable, true);
   is("no provider request or test record", [seen.length, await readTests(statsId, ["zoom"])], [0, {}]);
+  part("Funded optional connection starts refuse before OAuth state and integration allowance");
+  const beforeConnectUnits = await allowanceUsed(funded, "integration");
+  const ownerStart = await startConnect(post(`/api/integrations/zoom/start?${pin}`, `${SESSION_COOKIE}=${session}; ${ZOOM_ARRIVAL_COOKIE}=1`), "zoom");
+  const ownerDestination = new URL(ownerStart.headers.get("location") ?? "https://none.invalid/");
+  is("owner remains at the studio instead of a new consent", [ownerStart.status, ownerDestination.hostname, ownerDestination.searchParams.get("meet")], [303, HOST, "limited"]);
+  const previousHostScopes = process.env.GOOGLE_CALENDAR_SYNC_SCOPES;
+  try {
+    process.env.GOOGLE_CALENDAR_SYNC_SCOPES = "1";
+    const hostStart = await startHostConnect(post(`/api/integrations/google/host/start?${pin}`, `${SESSION_COOKIE}=${session}`));
+    const hostDestination = new URL(hostStart.headers.get("location") ?? "https://none.invalid/");
+    is("a member's optional host consent is also refused", [hostStart.status, hostDestination.hostname, hostDestination.searchParams.get("cal")], [303, HOST, "limited"]);
+  } finally {
+    if (previousHostScopes === undefined) delete process.env.GOOGLE_CALENDAR_SYNC_SCOPES;
+    else process.env.GOOGLE_CALENDAR_SYNC_SCOPES = previousHostScopes;
+  }
+  is("no provider request or extra integration allowance", [seen.length, await allowanceUsed(funded, "integration")], [0, beforeConnectUnits]);
+
 
   part("Forgotten with the connection");
   await disconnect(statsId, "zoom");
