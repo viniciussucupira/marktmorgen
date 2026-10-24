@@ -39,3 +39,9 @@ These official pages were read on October24,2026; a publication date was not est
 ## Complete activation identity
 
 An identical retry must preserve not only the grant/subscription/creation identity but also its initial trial-or-paid phase and exact period boundaries. Changing an anchor or phase cannot reuse this activation to reset allowances. Transitioning a trial to paid rights, a switch, renewal or pause remains a separate funded lifecycle; this initial-checkout operation does not authorize those transitions. Existing paid rights/refunds must be preserved during their later reconciliation.
+
+## Session and subscription metadata must agree
+
+A return cannot classify a subscription as legacy using Checkout Session metadata alone. If either funding field exists on the subscription but is absent from the session, the return refuses adoption. Partial references and mismatched references also refuse before activation. Only two provider records with no funding markers keep the historical legacy path; migration of that path is still unfinished and no coverage flag is enabled.
+
+This check reuses the existing subscription GET: two provider reads for the return, no new provider writes, Redis calls, persistent fields, entitlements or supplier requests. The existing cost ceilings remain binding; this is not evidence that unknown bills are zero. Synthetic tests include stripped/partial session metadata, an ordinary unmarked legacy observation, a missing subscription and provider unavailability. A failed provider read grants no rights. Full remote CI on the new head is required.

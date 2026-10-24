@@ -449,7 +449,18 @@ export async function readStartedSubscription(
   }else{
     // Legacy observations have no funded receipt. Their migration remains an
     // explicit unfinished release prerequisite; never invent or free a reserve.
-    state=await readSubscription(subscriptionId);
+    // Session metadata alone cannot classify a subscription as legacy: both
+    // provider records must lack a funding reference. Reuse the same single
+    // subscription GET, preserving unknown/missing outcomes without adoption.
+    let subscription:Record<string,unknown>|null;
+    try{subscription=await subscriptionRecord(subscriptionId);}
+    catch(error){
+      console.error("reading the subscription failed",error);
+      return {customerId,subscriptionId,active:false,tier:"creator",cycle:"month",trialEnds:0,shared:false,period:null};
+    }
+    const meta=subscription?.metadata as Record<string,unknown>|null|undefined;
+    if(meta?.funding_grant!==undefined||meta?.funding_review!==undefined)return null;
+    state=subscription?stateOf(subscription):{state:"inactive",reason:"missing"};
   }
   return {
     customerId,
