@@ -4941,6 +4941,20 @@ Proveniência da revisão comercial: passou a fazer parte do Bloco de abertura, 
 
 (j) 114 [E2-AFFILIATE-TAX-FORMS] — formulários fiscais dos afiliados.
 
+(k) Itens de redução de custos, acrescentados por328 [PC1], solicitação do dono de24/10/2026 02h29(Fortaleza), depois de114 [E2-AFFILIATE-TAX-FORMS], nesta ordem vinculante do maior ganho para o menor:
+1. 319 [TK1] — Somente Stripe.
+2. 315 [MG2], somente passos1e2 (cobrança só em dólar e cobrança anual sem Stripe Billing), junto com320 [TK2] (mensais e assistente, com as mesmas garantias).
+3. 309 [EM1] — e-mails para a lista pela Amazon SES.
+4. 313 [CV1] — visitas pelo CDN e imagens pelo Cloudflare R2.
+5. 326 [IN2] — menos comandos e menos tempo de função por página.
+6. 325 [IN1] — plano fixo do Upstash.
+7. 316 [MG3] — vídeo, pedidos, assistente e cartões de preço.
+8. 321 [TK3] — cache de prompt;323 [TK5] — imagens e arquivos;322 [TK4] — API em lote, nesta ordem.
+9. 314 [MG1] — limites invisíveis e remessa. Passo3, débito em conta como única forma de pagamento, descartado pelo dono; não executar.
+10. 318 [IW1] e327 [IN3] — estudos e modelo, por último, nesta ordem.
+
+A regra de324 [TK6] vale para toda a posição(k): primeiro todos os planos nos dois intervalos e o assistente devem alcançar pelo menos60% na leitura usada pelo bloqueio de vendas, com a folga do spend floor; somente a economia restante pode aumentar limites impressos, na ordem de316 [MG3]. Nenhum item existente é renumerado. As posições(a)–(j) e o trabalho atual em AB(a) permanecem antes de(k). Proveniências/ordens anteriores incompatíveis ficam preservadas como histórico e são substituídas somente nesses pontos.
+
 Os demais itens do antigo Bloco A (por exemplo, 31 [E14]) e o restante do AX2 (item 310) voltam logo depois do Bloco de abertura, na ordem já existente. Os demais pedidos novos continuam depois do Bloco de abertura, salvo ordem expressa em contrário.
 
 ### Como trabalhar
@@ -5852,6 +5866,8 @@ REGRA DOS 60% (OBRIGATÓRIA): todo cliente pagante, considerado isoladamente e u
 
 309. [EM1] E-mails para a lista somente pela Amazon SES, com fila de espera, e limites de envio maiores
 
+Proveniência AB(k)/PC1: passou a integrar o Bloco de abertura, posição(k), por solicitação do dono de24/10/2026 02h29(Fortaleza); seguir a ordem vinculante de328[PC1] e a regra de324[TK6]. Histórico/estado preservados; nenhuma implementação duplicada.
+
 Estado: na fila.
 
 Situação atual:
@@ -6071,6 +6087,8 @@ REGRA DOS 60% (OBRIGATÓRIA): todo cliente pagante, considerado isoladamente e u
 
 313. [CV1] Visitas às lojas mais baratas: imagens pelo Cloudflare R2 e páginas guardadas no CDN
 
+Proveniência AB(k)/PC1: passou a integrar o Bloco de abertura, posição(k), por solicitação do dono de24/10/2026 02h29(Fortaleza); seguir a ordem vinculante de328[PC1] e a regra de324[TK6]. Histórico/estado preservados; nenhuma implementação duplicada.
+
 Estado: na fila.
 
 Situação atual (tests/traffic-cost.ts e lib/traffic-rules.ts): uma visita é custeada como três páginas e até 24 imagens por página, cada imagem como uma requisição ao CDN da Vercel (US$ 2,00 por milhão no Flat Rate CDN), mais chamadas e tempo de função a cada página. As visitas são o maior custo do plano Scale, e os limites de visitas (3.400, 10.000 e 40.000 por mês) existem por causa desse custo.
@@ -6099,6 +6117,8 @@ REGRA DOS 60% (OBRIGATÓRIA): todo cliente pagante, considerado isoladamente e u
 
 314. [MG1] Folga de margem: limites invisíveis, remessa e débito em conta
 
+Proveniência AB(k)/PC1: passou a integrar o Bloco de abertura, posição(k), por solicitação do dono de24/10/2026 02h29(Fortaleza); seguir a ordem vinculante de328[PC1] e a regra de324[TK6]. Histórico/estado preservados; nenhuma implementação duplicada. Passo3 (débito em conta como única forma de pagamento) descartado expressamente; não executar, mantendo o texto anterior apenas como histórico.
+
 Estado: na fila.
 
 Contexto, pelos números de docs/margin-alignment-2026-10-18.md: receber o pagamento custa cerca de três vezes todo o uso no pior caso (Store US$ 9,02 contra US$ 2,57; Studio US$ 55,21 contra US$ 19,80; Scale US$ 122,04 contra US$ 43,73).
@@ -6125,6 +6145,8 @@ REGRA DOS 60% (OBRIGATÓRIA): todo cliente pagante, considerado isoladamente e u
 
 315. [MG2] Custo de receber o pagamento dos planos
 
+Proveniência AB(k)/PC1: passou a integrar o Bloco de abertura, posição(k), por solicitação do dono de24/10/2026 02h29(Fortaleza); seguir a ordem vinculante de328[PC1] e a regra de324[TK6]. Histórico/estado preservados; nenhuma implementação duplicada. Esta inclusão abrange somente os passos1e2, junto com320[TK2].
+
 Estado: na fila.
 
 Contexto (lib/receiving-costs.ts): o custo de receber o Store mensal é US$ 9,02, assim: tarifa do Stripe de 6,6% + US$ 0,30 sobre o preço com 27% de imposto por fora (2,9% do cartão, 1,5% de cartão estrangeiro, 1% de conversão, 0,7% do Stripe Billing e 0,5% do Stripe Tax), remessa de 1,5%, reserva de reembolso de 1% e reserva de contestação de 1% sobre o valor cobrado mais US$ 30.
@@ -6145,6 +6167,8 @@ Solicitação do dono (23/10/2026, 23h00, horário de Fortaleza): baixar o custo
 REGRA DOS 60% (OBRIGATÓRIA): todo cliente pagante, considerado isoladamente e usando 100% de todos os direitos do plano no pior mês, deve manter margem de lucro líquido MÍNIMA de 60%, depois de todos os custos e de todos os impostos, inclusive os brasileiros; a margem pode ser maior, mas nunca menor, e a mesma regra vale para a empresa como um todo. Calcule cada plano nos dois intervalos antes e depois. Custo desconhecido não pode ser considerado zero. Nunca conte cota gratuita de fornecedor como custo zero; use o preço pago mais caro. Use a leitura que resultar em MAIS imposto (docs/tax-uncertainty.md). Desde 22/10/2026, todos os custos fixos da LLC são atribuídos integralmente ao Marktmorgen (item 275 [FX1]).
 
 316. [MG3] Vídeo, pedidos, assistente e cartões de preço
+
+Proveniência AB(k)/PC1: passou a integrar o Bloco de abertura, posição(k), por solicitação do dono de24/10/2026 02h29(Fortaleza); seguir a ordem vinculante de328[PC1] e a regra de324[TK6]. Histórico/estado preservados; nenhuma implementação duplicada.
 
 Estado: na fila.
 
@@ -6207,6 +6231,8 @@ Estado informado no pedido: no main, o último item é o316 [MG3]; o PR #870 gra
 
 318. [IW1] Considerar no modelo de margem a pior resposta possível da Prefeitura de Fortaleza.
 
+Proveniência AB(k)/PC1: passou a integrar o Bloco de abertura, posição(k), por solicitação do dono de24/10/2026 02h29(Fortaleza); seguir a ordem vinculante de328[PC1] e a regra de324[TK6]. Histórico/estado preservados; nenhuma implementação duplicada.
+
 Estado: na fila.
 
 1. Em lib/receiving-costs.ts, crie a leitura WORST_FORTALEZA_READING, igual a EU_HOSTING_READING, mas com o ISS de 5% mantido também sobre a receita reembolsada e sobre a contestada (sem dedução), e use-a no lugar de EU_HOSTING_READING sempre que esta for a leitura do gate após a hospedagem na UE.
@@ -6230,11 +6256,15 @@ Estado informado no pedido: no main, o último item é o317 [EU1]; o IW ainda n�
 
 319. [TK1] Somente Stripe.
 
+Proveniência AB(k)/PC1: passou a integrar o Bloco de abertura, posição(k), por solicitação do dono de24/10/2026 02h29(Fortaleza); seguir a ordem vinculante de328[PC1] e a regra de324[TK6]. Histórico/estado preservados; nenhuma implementação duplicada.
+
 Estado: na fila.
 
 O Marktmorgen recebe somente pelo Stripe. Garanta no código e em teste que nenhum plano, complemento ou legenda pode ser cobrado pelo Paddle; só então retire o Paddle de providerFeeCents (lib/receiving-costs.ts) e de toda a documentação do Marktmorgen. Sem isso, a tarifa do Paddle (5% + US$0,50) limita o ganho do item315 [MG2].
 
 320. [TK2] Cobrança própria também nos planos mensais e no assistente.
+
+Proveniência AB(k)/PC1: passou a integrar o Bloco de abertura, posição(k), por solicitação do dono de24/10/2026 02h29(Fortaleza); seguir a ordem vinculante de328[PC1] e a regra de324[TK6]. Histórico/estado preservados; nenhuma implementação duplicada.
 
 Estado: na fila.
 
@@ -6242,11 +6272,15 @@ Estenda o passo2 do item315 [MG2] aos planos mensais e ao assistente da loja: re
 
 321. [TK3] Cache de prompt na IA.
 
+Proveniência AB(k)/PC1: passou a integrar o Bloco de abertura, posição(k), por solicitação do dono de24/10/2026 02h29(Fortaleza); seguir a ordem vinculante de328[PC1] e a regra de324[TK6]. Histórico/estado preservados; nenhuma implementação duplicada.
+
 Estado: na fila.
 
 Em toda chamada ao modelo (assistente da loja, próximo produto, lembrete de checkout, rascunhos e resumos), organize o prompt com a parte fixa primeiro (regras e fatos publicados da loja) e use o cache de prompt da API, conforme a documentação e os preços oficiais e datados da Anthropic, sempre que a parte fixa passar do mínimo de cache do modelo. Meça o custo real por mensagem com e sem cache, atualize assistantMessageWorstMicroUsd() e as linhas de IA em tests/plan-cost-registry.ts somente com o valor medido no pior caso, e mantenha intactas todas as regras do assistente em AGENTS.md (reserva antes da chamada, heldToFacts, rótulo, transferência, privacidade e injeção de instruções).
 
 322. [TK4] API em lote.
+
+Proveniência AB(k)/PC1: passou a integrar o Bloco de abertura, posição(k), por solicitação do dono de24/10/2026 02h29(Fortaleza); seguir a ordem vinculante de328[PC1] e a regra de324[TK6]. Histórico/estado preservados; nenhuma implementação duplicada.
 
 Estado: na fila.
 
@@ -6254,11 +6288,15 @@ Identifique as tarefas de IA que não precisam de resposta imediata (por exemplo
 
 323. [TK5] Imagens e arquivos.
 
+Proveniência AB(k)/PC1: passou a integrar o Bloco de abertura, posição(k), por solicitação do dono de24/10/2026 02h29(Fortaleza); seguir a ordem vinculante de328[PC1] e a regra de324[TK6]. Histórico/estado preservados; nenhuma implementação duplicada.
+
 Estado: na fila.
 
 Converta as imagens enviadas para AVIF ou WebP com qualidade visual equivalente, guardando o original somente quando o criador precisar dele, e apague automaticamente os envios órfãos (que nenhum produto, página ou curso usa) depois de um prazo com aviso ao criador. Meça a redução de armazenamento e de tráfego e atualize as linhas storage, uploads e visits somente com o valor medido.
 
 324. [TK6] Ordem de uso da economia.
+
+Proveniência AB(k)/PC1: passou a integrar o Bloco de abertura, posição(k), por solicitação do dono de24/10/2026 02h29(Fortaleza); seguir a ordem vinculante de328[PC1] e a regra de324[TK6]. Histórico/estado preservados; nenhuma implementação duplicada. Sua regra aplica-se a toda a posição(k), antes de qualquer aumento de limite.
 
 Estado: na fila.
 
@@ -6280,17 +6318,23 @@ Estado informado no pedido: no main, o último item é o317 [EU1]; o PR #872 gra
 
 325. [IN1] Plano fixo do Upstash.
 
+Proveniência AB(k)/PC1: passou a integrar o Bloco de abertura, posição(k), por solicitação do dono de24/10/2026 02h29(Fortaleza); seguir a ordem vinculante de328[PC1] e a regra de324[TK6]. Histórico/estado preservados; nenhuma implementação duplicada.
+
 Estado: na fila.
 
 Pela página oficial e datada de preços do Upstash (os planos fixos não cobram por comando; o limite é a taxa de comandos por segundo, o tamanho dos dados e o tráfego), calcule para cada plano, nos dois intervalos, o custo do pior caso com o plano por uso atual e com cada plano fixo: os comandos passam a custo fixo, e os dados guardados e o tráfego são rateados pelo preço do plano fixo. Inclua o teto automático que mantém a plataforma inteira abaixo da taxa de comandos por segundo e do tamanho de dados do plano escolhido, recusando sozinho o que passaria disso. Recomende o plano mais barato no pior caso e registre em "Depende do dono" o passo exato da troca no painel do Upstash. Não altere a conta real.
 
 326. [IN2] Menos comandos e menos tempo de função por página.
 
+Proveniência AB(k)/PC1: passou a integrar o Bloco de abertura, posição(k), por solicitação do dono de24/10/2026 02h29(Fortaleza); seguir a ordem vinculante de328[PC1] e a regra de324[TK6]. Histórico/estado preservados; nenhuma implementação duplicada.
+
 Estado: na fila.
 
 Meça, com o Redis simulado, quantos comandos e quanto tempo de função cada caminho público e do estúdio usa (página da loja, checkout, pedido, área do comprador, estúdio). Junte leituras em uma só ida ao banco (pipeline, MGET), não repita a mesma leitura numa mesma requisição e não mantenha a função esperando o Stripe quando o webhook já informa o resultado. Atualize as contagens em tests/traffic-cost.ts e tests/plan-cost-registry.ts somente com os valores medidos, com testes que falham se um caminho voltar a usar mais comandos do que o medido.
 
 327. [IN3] Estudo de servidor próprio na União Europeia.
+
+Proveniência AB(k)/PC1: passou a integrar o Bloco de abertura, posição(k), por solicitação do dono de24/10/2026 02h29(Fortaleza); seguir a ordem vinculante de328[PC1] e a regra de324[TK6]. Histórico/estado preservados; nenhuma implementação duplicada.
 
 Estado: na fila.
 
@@ -6301,3 +6345,34 @@ REGRA DOS 60% (OBRIGATÓRIA, para IN1 a IN3): todo cliente pagante, considerado 
 Proibições (para IN1 a IN3): não alterar preços, limites visíveis, comissão, meios de pagamento aceitos, PLANS_ON_SALE, tax gate, art.9a ou revisão comercial; não criar contas, aceitar termos, contratar serviços, pagar valores, alterar configurações reais de fornecedores, migrar dados ou contatar terceiros; somente testes sintéticos com fornecedores simulados.
 
 Proveniência: pedido direto do dono de24/10/2026 02h19(Fortaleza), preservado uma única vez, depois de IW318/TK319–324. IN3 liga o estudo a317[EU1] sem autorizar migração ou antecipar sua execução ao Bloco de abertura. As características/preços de fornecedores citados são requisitos e referências do pedido a confirmar em fontes oficiais datadas na execução, não fatos verificados por este registro. Nenhuma infraestrutura, operação real ou contagem de custo é alterada agora. Custo do registro: nenhum serviço/operação de produto novo; desconhecido não vira zero. Ao executar cada item, registrar data/hora de Fortaleza, commit, suíte completa e publicação; documento e PR pendente não contam como entrega funcional.
+
+## PC — Redução de custos dentro do Bloco de abertura (24/10/2026)
+
+Solicitação do dono (24/10/2026, 02h29, horário de Fortaleza): oferecer o mesmo volume de recursos que os concorrentes, ou mais, mantendo a margem de lucro líquido mínima de60% depois de todos os impostos, inclusive os brasileiros. Como nenhum plano chega a60% na leitura do bloqueio de vendas sem a redução de custos, os itens de custo passam a fazer parte do Bloco de abertura.
+
+NÃO PARE o que está fazendo. COLOQUE NA FILA, com os próximos números livres, depois dos pedidos já gravados ou em gravação (inclusive o PR #872).
+
+Estado informado no pedido: no main, o último item é o317 [EU1]; o PR #872 grava os itens318 [IW1],319a324 [TK1–TK6] e325a327 [IN1–IN3]; o PR #873 está em andamento no Bloco de abertura. Conferência para este registro:328 livre no main e nas filas dos13PRs abertos, sem PC/[PC1] repetido; IW/TK/IN e todos os números anteriores preservados. Registro documental no mesmo PR #872.
+
+328. [PC1] Redução de custos dentro do Bloco de abertura.
+
+Estado: instrução de ordenação em vigor por pedido direto do dono; implementações de custo na fila do Bloco de abertura, posição(k). Este registro documental não conclui esses itens.
+
+Acrescente ao Bloco de abertura das vendas, como posição(k), depois de114 [E2-AFFILIATE-TAX-FORMS], os itens de redução de custos, nesta ordem, do maior ganho para o menor:
+1. 319 [TK1] Somente Stripe;
+2. 315 [MG2] passos1e2 (cobrança só em dólar e cobrança anual sem o Stripe Billing), junto com320 [TK2] (o mesmo nos planos mensais e no assistente);
+3. 309 [EM1] e-mails para a lista pela Amazon SES;
+4. 313 [CV1] visitas pelo CDN e imagens pelo Cloudflare R2;
+5. 326 [IN2] menos comandos e menos tempo de função por página;
+6. 325 [IN1] plano fixo do Upstash;
+7. 316 [MG3] vídeo, pedidos, assistente e cartões de preço;
+8. 321 [TK3] cache de prompt,323 [TK5] imagens e arquivos e322 [TK4] API em lote;
+9. 314 [MG1] limites invisíveis e remessa (o passo3, débito em conta como única forma de pagamento, está descartado pelo dono);
+10. 318 [IW1] e327 [IN3], estudos e modelo, por último.
+A regra de324 [TK6] vale para toda a posição(k): a economia leva primeiro todos os planos e o assistente a60% na leitura do bloqueio de vendas, e só o que sobrar aumenta limites impressos, na ordem do item316 [MG3]. Não renumere nenhum item.
+
+REGRA DOS 60% (OBRIGATÓRIA): todo cliente pagante, considerado isoladamente e usando100% de todos os direitos do plano no pior mês, deve manter margem de lucro líquido MÍNIMA de60%, depois de todos os custos e de todos os impostos, inclusive os brasileiros; a margem pode ser maior, mas nunca menor, e a mesma regra vale para a empresa como um todo. Custo desconhecido não pode ser considerado zero. Use a leitura que resultar em MAIS imposto (docs/tax-uncertainty.md). Desde22/10/2026, todos os custos fixos da LLC são atribuídos integralmente ao Marktmorgen (item275 [FX1]).
+
+Proibições: não alterar preços, limites visíveis (exceto aumentos pela regra do item324 [TK6]), comissão, meios de pagamento aceitos, PLANS_ON_SALE, tax gate, art.9a ou revisão comercial; não criar contas, aceitar termos, contratar serviços, pagar valores, alterar configurações reais de fornecedores ou contatar terceiros; somente testes sintéticos com fornecedores simulados.
+
+Proveniência: pedido direto do dono de24/10/2026 02h29(Fortaleza). PC1 registra a nova prioridade e o descarte expresso de MG1/passo3; os itens existentes recebem uma linha de proveniência AB(k)/PC1, sem duplicar implementação ou número. As instruções anteriores que os colocavam depois de AB ficam históricas nos pontos incompatíveis. A regra de TK6 não autoriza aumento antes da margem exigida nem mudança dos meios de pagamento. Nenhuma estimativa de economia ou equivalência com concorrentes é certificada por este documento; fontes, medições e margem ainda devem ser comprovadas na execução. AB(a)/PR873 continua ativo; não iniciar(k) antes de(a)–(j). Nenhuma operação, configuração ou trava foi alterada por este registro. Custo documental sem serviço/operação de produto novo; desconhecido não vira zero.
