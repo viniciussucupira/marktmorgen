@@ -51,6 +51,9 @@ import {
 import { MAX_CAPTION_BYTES, MAX_CAPTION_TRACKS, CAPTION_LANGUAGES } from "@/lib/captions";
 import { advance, store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
+import { claimHandle, ensureStatsId, setSubscription, storeForEmail, storeFolder } from "@/lib/store";
+import { addStoreCaption } from "@/lib/store-caption";
+import { paidPeriod } from "./billing-period-fixture";
 
 const LIBRARY = "4242";
 const API_KEY = "a-stand-in-library-key-for-tests-only";
@@ -527,6 +530,29 @@ async function main() {
   }
   is("missing tracking acknowledgement never publishes an upload signature", unconfirmedDoor, { ok: false, reason: "unavailable" });
   is("the empty provider video is removed", videos.size, storedBeforeUnconfirmedDoor);
+
+  part("A new manual caption is bound to its funded owner before provider work");
+  await claimHandle("funded-caption@example.com", "funded-caption-shop", "Funded Caption Shop", "");
+  await ensureStatsId("funded-caption@example.com");
+  const captionPeriod = paidPeriod();
+  await setSubscription("funded-caption@example.com", { customerId: "cus_CaptionFund001", subscriptionId: "sub_CaptionFund001", active: true, period: captionPeriod });
+  const captionOwner = (await storeForEmail("funded-caption@example.com"))!;
+  const captionFolder = await storeFolder("funded-caption@example.com");
+  const captionDoor = await openUpload({ ...input, folder: captionFolder }, NOW);
+  if (!captionDoor.ok) throw new Error("no synthetic caption door");
+  videos.get(captionDoor.door.id)!.status = 1;
+  await claimUpload(captionDoor.door.pathname, captionFolder, LESSON, NOW);
+  is("the owner wrapper still adds captions on an unmarked period", (await addStoreCaption(captionOwner, captionDoor.door.pathname, "en", SRT)).ok, true);
+  await setSubscription("funded-caption@example.com", { active: true, period: { ...captionPeriod, funded: true } });
+  const fundedCaptionOwner = (await storeForEmail("funded-caption@example.com"))!;
+  const captionRequests = asked.length;
+  const originalCaption = captions.get(`${captionDoor.door.id}/en`)?.file;
+  is("a new manual caption needs financial approval", await addStoreCaption(fundedCaptionOwner, captionDoor.door.pathname, "en", "WEBVTT\n\n00:01.000 --> 00:02.000\nChanged.\n"), { ok: false, reason: "unavailable" });
+  is("a foreign video's folder is refused", await addStoreCaption(fundedCaptionOwner, door.pathname, "en", SRT), { ok: false, reason: "unknown" });
+  is("no provider request or caption replacement", [asked.length, captions.get(`${captionDoor.door.id}/en`)?.file], [captionRequests, originalCaption]);
+  is("the existing caption can still be removed", (await dropCaption(captionDoor.door.pathname, "en")).ok, true);
+  is("the existing language is gone after provider cleanup", captions.has(`${captionDoor.door.id}/en`), false);
+  await dropStream(captionDoor.door.pathname);
 
   part("The announcements' address does not exist without the key they are signed with");
   delete process.env.BUNNY_STREAM_READ_KEY;
