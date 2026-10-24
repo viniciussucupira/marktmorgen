@@ -6219,3 +6219,53 @@ REGRA DOS 60% (OBRIGATÓRIA): todo cliente pagante, considerado isoladamente e u
 Proibições: não alterar preços, limites visíveis, comissão, PLANS_ON_SALE, tax gate, art. 9a ou revisão comercial; não criar contas, aceitar termos, contratar serviços, pagar valores ou contatar terceiros; somente testes sintéticos.
 
 Proveniência: pedido direto do dono, recebido com data24/10/2026 01h32(Fortaleza). Registro documental único, após317[EU1], preservando integralmente os quatro passos e as proibições. Os percentuais aproximados acima são referências do pedido para futura conferência, não resultados calculados ou certificados por este registro. Nenhuma leitura fiscal, geração de tabela, cálculo, gate ou operação real é alterada agora. Custo do registro: nenhum serviço/operação de produto novo; faturas desconhecidas continuam desconhecidas. Ao executar, registrar data/hora de Fortaleza, commit, suíte completa e publicação, sem contar documento ou PR pendente como entrega funcional.
+
+## TK — Redução de custos por tecnologia (24/10/2026)
+
+Solicitação do dono (24/10/2026, 02h06, horário de Fortaleza): concentrar o trabalho em meios tecnológicos de aperfeiçoar o código e reduzir os custos do Marktmorgen, mantendo o pagamento por cartão de crédito.
+
+NÃO PARE o que está fazendo. COLOQUE NA FILA, com os próximos números livres, depois dos pedidos já gravados ou em gravação (inclusive o IW de 24/10/2026, 01h32).
+
+Estado informado no pedido: no main, o último item é o317 [EU1]; o IW ainda não foi gravado; o PR #871 está em andamento. Conferência para este registro: #871 já incorporado e publicado como194; IW318 está no PR documental #872. Os próximos números livres319–324 foram conferidos no main e nas filas dos12PRs abertos, sem seção TK ou etiquetas repetidas. Registro no mesmo PR documental #872, depois de IW318. AB(a) permanece ativo; executar TK depois do Bloco de abertura e dos pedidos anteriores, salvo nova ordem expressa.
+
+319. [TK1] Somente Stripe.
+
+Estado: na fila.
+
+O Marktmorgen recebe somente pelo Stripe. Garanta no código e em teste que nenhum plano, complemento ou legenda pode ser cobrado pelo Paddle; só então retire o Paddle de providerFeeCents (lib/receiving-costs.ts) e de toda a documentação do Marktmorgen. Sem isso, a tarifa do Paddle (5% + US$0,50) limita o ganho do item315 [MG2].
+
+320. [TK2] Cobrança própria também nos planos mensais e no assistente.
+
+Estado: na fila.
+
+Estenda o passo2 do item315 [MG2] aos planos mensais e ao assistente da loja: renovação com o cartão salvo, fora da sessão, sem o Stripe Billing, com as mesmas garantias exigidas lá (aviso antes da renovação, cancelamento em um clique, reembolso, recuperação de cobrança falhada e autenticação do cartão quando exigida). Adote somente com testes e registre o ganho e o risco por plano.
+
+321. [TK3] Cache de prompt na IA.
+
+Estado: na fila.
+
+Em toda chamada ao modelo (assistente da loja, próximo produto, lembrete de checkout, rascunhos e resumos), organize o prompt com a parte fixa primeiro (regras e fatos publicados da loja) e use o cache de prompt da API, conforme a documentação e os preços oficiais e datados da Anthropic, sempre que a parte fixa passar do mínimo de cache do modelo. Meça o custo real por mensagem com e sem cache, atualize assistantMessageWorstMicroUsd() e as linhas de IA em tests/plan-cost-registry.ts somente com o valor medido no pior caso, e mantenha intactas todas as regras do assistente em AGENTS.md (reserva antes da chamada, heldToFacts, rótulo, transferência, privacidade e injeção de instruções).
+
+322. [TK4] API em lote.
+
+Estado: na fila.
+
+Identifique as tarefas de IA que não precisam de resposta imediata (por exemplo, resumos e rascunhos de divulgação) e passe-as para a API em lote, com o desconto da página oficial de preços, mantendo a reserva antes do envio, o teto automático e a devolução quando nada for cobrado. Registre o ganho por plano.
+
+323. [TK5] Imagens e arquivos.
+
+Estado: na fila.
+
+Converta as imagens enviadas para AVIF ou WebP com qualidade visual equivalente, guardando o original somente quando o criador precisar dele, e apague automaticamente os envios órfãos (que nenhum produto, página ou curso usa) depois de um prazo com aviso ao criador. Meça a redução de armazenamento e de tráfego e atualize as linhas storage, uploads e visits somente com o valor medido.
+
+324. [TK6] Ordem de uso da economia.
+
+Estado: na fila.
+
+A economia obtida nos itens314 [MG1],315 [MG2],316 [MG3],309 [EM1],313 [CV1] e TK1 a TK5 deve primeiro levar todos os planos, nos dois intervalos, e o assistente da loja a pelo menos60% na leitura usada pelo bloqueio de vendas (lib/tax-gate.ts), com a folga do spend floor; somente o que sobrar pode aumentar limites impressos, na ordem do item316 [MG3]. Teste que falha se um limite for aumentado enquanto algum plano estiver abaixo de60% nessa leitura.
+
+REGRA DOS 60% (OBRIGATÓRIA, para TK1 a TK6): todo cliente pagante, considerado isoladamente e usando100% de todos os direitos do plano no pior mês, deve manter margem de lucro líquido MÍNIMA de60%, depois de todos os custos e de todos os impostos, inclusive os brasileiros; a margem pode ser maior, mas nunca menor, e a mesma regra vale para a empresa como um todo. Custo desconhecido não pode ser considerado zero. Use a leitura que resultar em MAIS imposto (docs/tax-uncertainty.md). Desde22/10/2026, todos os custos fixos da LLC são atribuídos integralmente ao Marktmorgen (item275 [FX1]). Uma tarifa ou um custo só sai do pior caso quando o código garante que ele não pode ocorrer ou quando o novo valor foi medido no pior caso.
+
+Proibições (para TK1 a TK6): não alterar preços, limites visíveis (exceto aumentos pelo TK6), comissão, meios de pagamento aceitos, PLANS_ON_SALE, tax gate, art.9a ou revisão comercial; não criar contas, aceitar termos, contratar serviços, pagar valores, alterar configurações reais de fornecedores ou contatar terceiros; somente testes sintéticos com fornecedores simulados.
+
+Proveniência: pedido direto do dono de24/10/2026 02h06(Fortaleza), preservado uma única vez, depois de318[IW1]. TK2 complementa MG2 sem duplicar sua implementação; TK6 prevalece sobre qualquer aplicação anterior de economia que aumentaria limites antes de recuperar60% em todos os planos/intervalos e no assistente na leitura do bloqueio, com a folga exigida. A prioridade AB não muda. Nenhuma tarifa, fornecedor, política de retenção, cobrança, prompt, lote, imagem ou limite é alterado por este registro. Custo do registro: nenhum serviço/operação novo de produto; desconhecido não vira zero. Ao executar cada item, registrar data/hora de Fortaleza, commit, suíte completa e publicação; documentos e PRs pendentes não contam como entrega funcional.
