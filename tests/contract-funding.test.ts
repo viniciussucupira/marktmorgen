@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {canonicalFinancialSnapshot,contractCoverageDays,contractFundingConfiguration,CONTRACT_ADMISSION_COVERAGE,CONTRACT_KEYS} from '@/lib/contract-funding-rules';
+import {canonicalFinancialSnapshot,contractCoverageDays,contractFundingConfiguration,CONTRACT_ADMISSION_COVERAGE,CONTRACT_KEYS,CONTRACT_FUNDING_RULES} from '@/lib/contract-funding-rules';
 import {assessCustomerWorstCase} from '@/lib/net-margin-rules';
 import {activateCheckoutContract,activateSwitchContract,type CheckoutContractActivation,reserveContractFunding,reserveSwitchContractFunding} from '@/lib/contract-funding';
 import {contractFixture} from './contract-funding-fixture';
@@ -8,6 +8,23 @@ import {reset,seed,ledger,calls,settings} from './contract-funding-redis';
 const key='nl:contract-reserve:v1';
 function start(){reset();const f=contractFixture(),config=contractFundingConfiguration(f.policy,f.context,f.now)!;assert.ok(config);seed(config);return {...f,config};}
 test('annual coverage funds twelve paid months plus the reviewed tail and repeated pause bounds',()=>{assert.equal(contractCoverageDays('month',60),167);assert.equal(contractCoverageDays('year',60),570);assert.equal(contractCoverageDays('year',null as unknown as number),null);assert.equal(contractCoverageDays('month',59),null);});
+test('last admitted monthly and annual obligations keep full coverage after the maximum activation delay',()=>{
+ for(const cycle of ['month','year'] as const){
+  const f=contractFixture(),selected=cycle==='month'?'creator_month':'creator_year';
+  f.policy.fundedGrants=Object.fromEntries(CONTRACT_KEYS.map(key=>[key,key===selected?2:0])) as typeof f.policy.fundedGrants;
+  const days=contractCoverageDays(cycle,f.policy.reviewedLiabilityTailDays!);assert.ok(days);
+  const admission=Date.parse(f.policy.admissionsUntil);
+  f.policy.liabilitiesThrough=new Date(admission+days*86400000).toISOString();
+  assert.equal(contractFundingConfiguration(f.policy,f.context,f.now),null,'the old boundary omits the permitted activation delay');
+  const through=admission+(days+CONTRACT_FUNDING_RULES.activationDelayDays)*86400000;
+  f.policy.liabilitiesThrough=new Date(through-1).toISOString();
+  assert.equal(contractFundingConfiguration(f.policy,f.context,f.now),null,'one millisecond short cannot approve');
+  f.policy.liabilitiesThrough=new Date(through).toISOString();
+  const approved=contractFundingConfiguration(f.policy,f.context,f.now);assert.ok(approved);
+  assert.equal(approved.liabilitiesThroughMs,through);
+  assert.equal(approved.coverageDays[cycle],days,'activation delay is additional to the complete reviewed tail');
+ }
+});
 test('cash reserve includes the full published refund principal without reducing or changing profit arithmetic',()=>{const f=start();const before=assessCustomerWorstCase(f.review.scenarios.creator_year_full!);assert.equal(f.config.grantCents.creator_month,9316);assert.equal(f.config.grantCents.creator_year,93153);assert.equal(before.netCents,44850);assert.deepEqual(assessCustomerWorstCase(f.review.scenarios.creator_year_full!),before);assert.equal(canonicalFinancialSnapshot(f.review),f.policy.financialSnapshot);});
 test('one cent under aggregate grants or a quote covering only the paid year cannot approve',()=>{let f=contractFixture();f.policy.reservedFundsCents--;assert.equal(contractFundingConfiguration(f.policy,f.context,f.now),null);f=contractFixture();f.policy.liabilitiesThrough=new Date(Date.parse(f.policy.admissionsUntil)+365*86400000).toISOString();assert.equal(contractFundingConfiguration(f.policy,f.context,f.now),null);f=contractFixture();f.policy.allTermCostsAndLiabilitiesBounded=false;assert.equal(contractFundingConfiguration(f.policy,f.context,f.now),null);});
 test('new trial obligations and missing fixed costs cannot disappear from the quote',()=>{let f=contractFixture();f.policy.fundedGrants.creator_month++;f.policy.reservedFundsCents+=100000;assert.equal(contractFundingConfiguration(f.policy,f.context,f.now),null);f=contractFixture();f.review.companyBase!.monthlyFixedCostsCeilingCents=null;f.policy.financialSnapshot=canonicalFinancialSnapshot(f.review)!;assert.equal(contractFundingConfiguration(f.policy,f.context,f.now),null);});
