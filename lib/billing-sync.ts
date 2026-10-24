@@ -25,6 +25,7 @@ import { applyListedAssistant } from "@/lib/assistant-billing";
 import {
   type SubscriptionState,
   isAddOn,
+  hasSwitchFunding,
   isBillingConfigured,
   listSubscriptions,
   ownedBy,
@@ -89,7 +90,7 @@ export async function recordState(store: Store, state: SubscriptionState): Promi
 export async function refreshPeriod(store: Store): Promise<Store> {
   if (!store.subscriptionId || !isBillingConfigured() || allowanceWindow(store)) return store;
   try {
-    const state = await readSubscription(store.subscriptionId);
+    const state = await readSubscription(store.subscriptionId,store);
     if (!(await recordState(store, state))) return store;
     return (await storeForHandle(store.handle)) ?? store;
   } catch (error) {
@@ -114,7 +115,9 @@ async function applyListed(subscription: Record<string, unknown>, counts: SyncCo
 
   // The one this store wrote down: Stripe's word stands.
   if (store.subscriptionId === id) {
-    if (await recordState(store, stateOf(subscription))) counts.updated += 1;
+    const state=stateOf(subscription);
+    if(state.state==='active'&&hasSwitchFunding(subscription)&&!(await startedFromObservedSubscription(store,subscription)))return;
+    if (await recordState(store, state)) counts.updated += 1;
     return;
   }
 
@@ -185,7 +188,7 @@ async function syncStores(deadline: number, seen: Set<string>, counts: SyncCount
       if (!store.subscriptionActive || !store.subscriptionId || seen.has(store.subscriptionId)) continue;
       counts.checked += 1;
       try {
-        if (await recordState(store, await readSubscription(store.subscriptionId))) counts.updated += 1;
+        if (await recordState(store, await readSubscription(store.subscriptionId,store))) counts.updated += 1;
       } catch (error) {
         counts.failed += 1;
         console.error("checking a store's subscription failed", error);

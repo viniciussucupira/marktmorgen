@@ -19,8 +19,12 @@ def main():
     if not activated or '$' + '{' in activated.group(1):
         raise RuntimeError('Expected static checkout activation Lua')
     activation_script = activated.group(1)
+    switch_match = re.search(r'export const ACTIVATE_SWITCH_CONTRACT = `([^`]+)`;', source)
+    if not switch_match or '$' + '{' in switch_match.group(1):
+        raise RuntimeError('Expected static switch activation Lua')
+    switch_script = switch_match.group(1)
     prefix = 'marktmorgen:integration:contract:' + uuid.uuid4().hex + ':'
-    keys = [prefix + str(i) for i in range(28)]
+    keys = [prefix + str(i) for i in range(37)]
     redis = Redis()
     def snapshot(key):
         fields = redis.command('HGETALL', key)
@@ -271,6 +275,83 @@ def main():
         assert take(redis, keys[27], nonce='ctr_lost_reply_retry', action='switch', source_subscription='sub_Activation001') == 0
         assert snapshot(keys[27]) == before
         print('PASS: 64 source-bound switches fund one additional obligation and preserve the old active grant')
+
+
+        def switch_ready(key, trial=False):
+            funded_activation(key)
+            if trial:
+                assert activate(redis, key, phase='trial', period_end=instant+7*86400) == [1, instant+86400]
+            else:
+                assert activate(redis, key) == [1, instant+86400]
+            assert take(redis, key, nonce='ctr_switch', action='switch', source_subscription='sub_Activation001') == 1
+        def switch_activate(client, key, subscription='sub_Activation001', created=instant, now=instant+2, phase='paid', start=instant, finish=instant+30*86400, span=31*86400):
+            return client.command('EVAL', switch_script, 1, key, 'binding', 'review', 'one', 'creator_month', 'ctr_switch', subscription, created, now, 50, 100, 0, 300, 2, phase, start, finish, span)
+        switch_ready(keys[28])
+        source_proof = redis.command('HGET', keys[28], 'active:one')
+        source_receipt = redis.command('HGET', keys[28], 'grant:ctr_one')
+        before_calls = command_calls()
+        assert switch_activate(redis, keys[28]) == [1, instant+86400]
+        after_calls = command_calls()
+        switch_activation_changes = {name: after_calls.get(name, 0)-before_calls.get(name, 0)
+                                     for name in set(before_calls) | set(after_calls) if name != 'info'}
+        assert all(value >= 0 for value in switch_activation_changes.values())
+        switch_activation_changes = {name: count for name, count in switch_activation_changes.items() if count}
+        assert switch_activation_changes.get('eval') == 1 and sum(switch_activation_changes.values()) == 16, switch_activation_changes
+        print('MEASURED switch activation commands:', 16, sorted(switch_activation_changes.items()))
+        assert redis.command('HGET', keys[28], 'active:one') != source_proof
+        assert redis.command('HGET', keys[28], 'activated:ctr_one') == source_proof
+        assert redis.command('HGET', keys[28], 'grant:ctr_one') == source_receipt
+        assert redis.command('HGET', keys[28], 'pending:one') is None
+        assert redis.command('HGET', keys[28], 'reserved') == '100'
+        assert redis.command('HGET', keys[28], 'slots:creator_month') == '0'
+        before = snapshot(keys[28])
+        before_calls = command_calls()
+        assert switch_activate(redis, keys[28]) == [1, instant+86400]
+        after_calls = command_calls()
+        retry_changes = {name: after_calls.get(name, 0)-before_calls.get(name, 0)
+                         for name in set(before_calls) | set(after_calls) if name != 'info'}
+        assert all(value >= 0 for value in retry_changes.values()) and sum(retry_changes.values()) == 13, retry_changes
+        print('MEASURED switch activation retry commands:', 13, sorted((name, count) for name, count in retry_changes.items() if count))
+        assert snapshot(keys[28]) == before
+        switch_ready(keys[29])
+        def parallel_switch_activation(_):
+            client = Redis()
+            try:
+                return switch_activate(client, keys[29])
+            finally:
+                client.close()
+        with concurrent.futures.ThreadPoolExecutor(max_workers=16) as pool:
+            results = list(pool.map(parallel_switch_activation, range(64)))
+        assert all(value == [1, instant+86400] for value in results)
+        assert redis.command('HGET', keys[29], 'reserved') == '100'
+        assert redis.command('HGET', keys[29], 'slots:creator_month') == '0'
+        assert redis.command('HGET', keys[29], 'activated:ctr_one') is not None
+        print('PASS: 64 switch activation observations share one new binding and retain both principals')
+        switch_ready(keys[30])
+        before = snapshot(keys[30])
+        for args in [dict(subscription='sub_Other0001'), dict(created=instant+1), dict(phase='trial', finish=instant+7*86400), dict(finish=instant+32*86400), dict(now=instant+86401)]:
+            assert switch_activate(redis, keys[30], **args) == 0
+            assert snapshot(keys[30]) == before
+        switch_ready(keys[31], trial=True)
+        before = snapshot(keys[31])
+        assert switch_activate(redis, keys[31], phase='trial', finish=instant+8*86400, span=14*86400) == 0
+        assert snapshot(keys[31]) == before
+        assert switch_activate(redis, keys[31], phase='trial', finish=instant+7*86400, span=14*86400) == [1, instant+86400]
+        for key, field, value in [(keys[32], 'active:one', 'different'), (keys[33], 'activated:ctr_one', 'different'), (keys[34], 'grant:ctr_one', 'missing'), (keys[35], 'reserved', 50)]:
+            switch_ready(key)
+            redis.command('HSET', key, field, value)
+            before = snapshot(key)
+            assert switch_activate(redis, key) == 0
+            assert snapshot(key) == before
+        print('PASS: foreign periods, new or extended trials, corrupt sources and insufficient cash cannot activate a switch')
+        funded_activation(keys[36])
+        old_created = instant-30*86400
+        old_receipt = '|'.join(map(str, ['review', 'one', 'creator_month', 'checkout', 50, old_created+300, old_created+3600, old_created+86400, 2000000000000]))
+        redis.command('HSET', keys[36], 'grant:ctr_one', old_receipt)
+        assert activate(redis, keys[36], created=old_created, now=old_created+1, period_start=old_created, period_end=old_created+31*86400) == [1, old_created+86400]
+        assert take(redis, keys[36], nonce='ctr_switch', action='switch', source_subscription='sub_Activation001') == 1
+        assert switch_activate(redis, keys[36], created=old_created) == [1, instant+86400]
+        print('PASS: a switch keeps the original subscription creation identity while its new grant has a fresh deadline')
 
     finally:
         for key in keys:

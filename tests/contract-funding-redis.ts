@@ -31,9 +31,41 @@ function activate(args:(string|number)[]):unknown[]{
  return lostAck?[]:[[1,activation]];
 }
 
+
+function activateSwitch(args:(string|number)[]):unknown[]{
+ const [key,binding,review,store,choice,nonce,sub,rawCreated,rawNow,rawMinimum,rawLimit,rawCarry,rawSubmission,rawFunded,phase,rawStart,rawFinish,rawSpan]=args;
+ const h=ledger.get(String(key));if(!h||h.get('policy')!==binding||h.get('review')!==review)return[0];
+ const parse=(v:unknown)=>typeof v==='string'&&/^(0|[1-9][0-9]*)$/.test(v)&&Number(v)<=1e12?Number(v):NaN;
+ const epoch=(v:unknown)=>typeof v==='string'&&/^(0|[1-9][0-9]*)$/.test(v)&&Number.isSafeInteger(Number(v))?Number(v):NaN;
+ const receipt=(h.get('grant:'+nonce)??'').split('|');
+ if(receipt.length!==10||receipt[0]!==review||receipt[1]!==store||receipt[2]!==choice||receipt[3]!=='switch'||receipt[9].length>84||!/^ctr_[A-Za-z0-9_-]+$/.test(receipt[9])||receipt[9]===nonce)return[0];
+ const [charge,submitted,expires,deadline]=receipt.slice(4,8).map(parse),through=epoch(receipt[8]);
+ const [created,now,minimum,limit,carry,submission,funded,start,finish,span]=[rawCreated,rawNow,rawMinimum,rawLimit,rawCarry,rawSubmission,rawFunded,rawStart,rawFinish,rawSpan].map(v=>parse(String(v)));
+ if(![charge,submitted,expires,deadline,through,created,now,minimum,limit,carry,submission,funded,start,finish,span].every(Number.isSafeInteger)||charge<=0||span<=0||charge!==minimum||submitted<submission||expires<submitted||deadline<expires||now<submitted-submission||now>deadline||created>now||start<created||start>now||finish<=now||finish<=start||finish-start>span||finish>submitted-submission+span||finish*1000>through||!['trial','paid'].includes(String(phase)))return[0];
+ const reserved=parse(h.get('reserved')),carried=parse(h.get('carried')),slots=parse(h.get('slots:'+choice));
+ if(![reserved,carried,slots].every(Number.isSafeInteger)||carried!==carry||reserved<carried||reserved>limit||funded<=0||slots>=funded)return[0];
+ const sourceRaw=h.get('activated:'+receipt[9]),source=(sourceRaw??'').split('|');
+ if(!sourceRaw||sourceRaw.length>256||source.length!==7||source[0]!==receipt[9]||source[1]!==sub||source[3]!==String(rawCreated))return[0];
+ const sourceStart=parse(source[5]),sourceFinish=parse(source[6]);
+ if(![sourceStart,sourceFinish].every(Number.isSafeInteger)||sourceStart<created||sourceStart>submitted-submission||sourceFinish<=submitted-submission||!['trial','paid'].includes(source[4])||phase==='trial'&&(source[4]!=='trial'||finish>sourceFinish))return[0];
+ const original=(h.get('grant:'+receipt[9])??'').split('|');
+ if(original[0]!==review||original[1]!==store||original[2]!==source[2]||!(original.length===9&&original[3]==='checkout'||original.length===10&&original[3]==='switch'))return[0];
+ const oldCharge=parse(original[4]),oldThrough=epoch(original[8]);
+ if(!original.slice(5,8).map(parse).every(Number.isSafeInteger)||!Number.isSafeInteger(oldThrough)||sourceFinish*1000>oldThrough||!Number.isSafeInteger(oldCharge)||oldCharge<=0||charge+oldCharge>reserved-carried)return[0];
+ const proof=[nonce,sub,choice,rawCreated,phase,rawStart,rawFinish].join('|'),consumed=h.get('activated:'+nonce),active=h.get('active:'+store);
+ if(proof.length>256)return[0];
+ if(consumed)return consumed===proof&&active===proof?[[1,deadline]]:[0];
+ if(active!==sourceRaw||h.get('pending:'+store)!==nonce)return[0];
+ h.set('activated:'+nonce,proof);h.set('active:'+store,proof);h.delete('pending:'+store);return lostAck?[]:[[1,deadline]];
+}
+
 /** Contract double only. CI executes the production Lua against real Redis. */
 export async function redisPipeline(commands:(string|number)[][]):Promise<unknown[]>{
  calls.push(commands);if(failure)throw Error('Redis unavailable');if(response!==null)return response;
+ if(String(commands[0]?.[1]).includes("local switchSource=redis.call")){
+  if(commands.length!==1||commands[0][0]!=='EVAL'||commands[0][2]!==1)throw Error('Expected one switch activation');
+  return activateSwitch(commands[0].slice(3));
+ }
  if(String(commands[0]?.[1]).includes("local consumed=redis.call")){
   if(commands.length!==1||commands[0][0]!=='EVAL'||commands[0][2]!==1)throw Error('Expected one activation');
   return activate(commands[0].slice(3));

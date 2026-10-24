@@ -1,7 +1,7 @@
-import {activationObservations} from './contract-activation-billing';
+import {activationObservations,switchActivationObservations} from './contract-activation-billing';
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createBillingCheckout,switchPlan,readStartedSubscription,startedFromObservedSubscription,findStoreSubscriptions} from '@/lib/billing';
+import {createBillingCheckout,switchPlan,readSubscription,readStartedSubscription,startedFromObservedSubscription,findStoreSubscriptions} from '@/lib/billing';
 import type {ContractGrant} from '@/lib/contract-funding';
 import type {Store} from '@/lib/store';
 process.env.STRIPE_SECRET_KEY='sk_test_not_a_real_deployment_key';
@@ -9,7 +9,7 @@ const store={statsId:'metadata-one',handle:'harbor',email:'owner@example.test',s
 function grant(action:ContractGrant['action']='checkout'):ContractGrant{const now=Math.floor(Date.now()/1000);return{sourceSubscriptionId:action==='switch'?'sub_Test000001':null,action,id:'ctr_metadata',reviewId:'test_only',statsId:'metadata-one',key:'creator_year',reservedCents:93153,submitUntilSeconds:now+300,checkoutExpiresAtSeconds:now+3600,activationUntilSeconds:now+86400,liabilitiesThrough:'2099-01-01T00:00:00.000Z'};}
 test('funded checkout carries its reserve reference, fixed price and bounded expiration to Stripe',async()=>{const old=globalThis.fetch;const g=grant();let body:URLSearchParams|null=null;globalThis.fetch=async(input,init)=>{const url=new URL(String(input));if(url.pathname==='/v1/checkout/sessions'){body=new URLSearchParams(String(init?.body));return Response.json({url:'https://checkout.stripe.test/session'});}return Response.json({error:{message:'TEST ONLY no catalog'}},{status:404});};try{assert.equal(await createBillingCheckout(store,'https://marktmorgen.test',{tier:'creator',cycle:'year'},null,g),'https://checkout.stripe.test/session');const sent=body as URLSearchParams|null;assert.ok(sent);assert.equal(sent.get('metadata[funding_grant]'),g.id);assert.equal(sent.get('subscription_data[metadata][funding_review]'),g.reviewId);assert.equal(sent.get('line_items[0][price_data][unit_amount]'),'69000');assert.equal(sent.get('expires_at'),String(g.checkoutExpiresAtSeconds));}finally{globalThis.fetch=old;}});
 test('wrong plan, wrong store, insufficient principal or an expired grant reaches no provider',async()=>{const old=globalThis.fetch;let calls=0;globalThis.fetch=async()=>{calls++;throw Error('must not call');};try{for(const change of [{key:'scale_year'},{statsId:'other'},{reservedCents:68999},{submitUntilSeconds:1}])await assert.rejects(createBillingCheckout(store,'https://marktmorgen.test',{tier:'creator',cycle:'year'},null,{...grant(),...change} as ContractGrant));assert.equal(calls,0);}finally{globalThis.fetch=old;}});
-test('pending plan changes retain a separate funding reference without replacing the active grant',async()=>{const old=globalThis.fetch;const g=grant('switch');const writes:URLSearchParams[]=[];const subscription={id:'sub_Test000001',status:'active',metadata:{funding_grant:'ctr_prior'},items:{data:[{id:'si_test',price:{lookup_key:'nimbus_creator_month',unit_amount:6900,recurring:{interval:'month'}}}]}};globalThis.fetch=async(input,init)=>{const url=new URL(String(input));if(url.pathname==='/v1/prices')return Response.json({data:[{id:'price_year',unit_amount:69000,currency:'usd',recurring:{interval:'year'}}]});if(init?.method==='POST'){const body=new URLSearchParams(String(init.body));writes.push(body);if(body.has('items[0][price]'))return Response.json({...subscription,pending_update:{expires_at:Math.floor(Date.now()/1000)+23*3600},latest_invoice:{hosted_invoice_url:'https://invoice.stripe.com/i/test'}});}return Response.json(subscription);};try{const result=await switchPlan(subscription.id,{tier:'creator',cycle:'year'},g);assert.equal(result.kind,'confirm');assert.equal(writes[0].get('metadata[funding_pending_grant]'),g.id);assert.equal(writes[0].has('metadata[funding_grant]'),false);assert.equal(writes[1].get('payment_behavior'),'pending_if_incomplete');}finally{globalThis.fetch=old;}});
+test('pending plan changes retain a separate funding reference without replacing the active grant',async()=>{const old=globalThis.fetch;const g=grant('switch');const writes:URLSearchParams[]=[];const subscription={id:'sub_Test000001',status:'active',metadata:{funding_grant:'ctr_prior'},items:{data:[{id:'si_test',price:{lookup_key:'nimbus_creator_month',unit_amount:6900,recurring:{interval:'month'}}}]}};globalThis.fetch=async(input,init)=>{const url=new URL(String(input));if(url.pathname==='/v1/prices')return Response.json({data:[{id:'price_year',unit_amount:69000,currency:'usd',recurring:{interval:'year'}}]});if(init?.method==='POST'){const body=new URLSearchParams(String(init.body));writes.push(body);if(body.has('items[0][price]'))return Response.json({...subscription,metadata:{...subscription.metadata,funding_pending_grant:g.id,funding_pending_review:g.reviewId},pending_update:{expires_at:Math.floor(Date.now()/1000)+23*3600},latest_invoice:{hosted_invoice_url:'https://invoice.stripe.com/i/test'}});}return Response.json(subscription);};try{const result=await switchPlan(subscription.id,{tier:'creator',cycle:'year'},g);assert.equal(result.kind,'confirm');assert.equal(writes[0].get('metadata[funding_pending_grant]'),g.id);assert.equal(writes[0].has('metadata[funding_grant]'),false);assert.equal(writes[1].get('payment_behavior'),'pending_if_incomplete');}finally{globalThis.fetch=old;}});
 
 test('funded return reuses the provider read and adopts no rights until its receipt is acknowledged',async()=>{
  const old=globalThis.fetch,created=Math.floor(Date.now()/1000);
@@ -147,4 +147,77 @@ test('a switch grant for another or missing source subscription makes no provide
   }
   assert.equal(calls,0);
  }finally{globalThis.fetch=old;}
+});
+
+function switchObservation(g:ContractGrant){
+ const created=Math.floor(Date.now()/1000)-86400,now=Math.floor(Date.now()/1000);
+ return{id:'sub_Test000001',created,customer:'cus_Test000001',status:'active',metadata:{store:'harbor',funding_grant:'ctr_source',funding_review:g.reviewId,funding_pending_grant:g.id,funding_pending_review:g.reviewId},items:{data:[{id:'si_test',current_period_start:now,current_period_end:now+365*86400,price:{lookup_key:'nimbus_creator_year',unit_amount:69000,currency:'usd',recurring:{interval:'year',interval_count:1}}}]}};
+}
+test('a paid switch cannot report new rights until its durable funding activation is acknowledged',async()=>{
+ const old=globalThis.fetch,g=grant('switch'),updated=switchObservation(g),writes:URLSearchParams[]=[];
+ globalThis.fetch=async(input,init)=>{
+  const url=new URL(String(input));
+  if(url.pathname==='/v1/prices')return Response.json({data:[{id:'price_year',unit_amount:69000,currency:'usd',recurring:{interval:'year'}}]});
+  if(init?.method==='POST'){const body=new URLSearchParams(String(init.body));writes.push(body);return Response.json(updated);}
+  return Response.json({...updated,metadata:{store:'harbor',funding_grant:'ctr_source'},items:{data:[{id:'si_test',price:{lookup_key:'nimbus_creator_month',unit_amount:6900,currency:'usd',recurring:{interval:'month',interval_count:1}}}]}});
+ };
+ switchActivationObservations.calls.length=0;switchActivationObservations.accept=false;
+ try{
+  await assert.rejects(switchPlan('sub_Test000001',{tier:'creator',cycle:'year'},g),/activation was not acknowledged/);
+  assert.equal(writes.length,2);assert.equal(switchActivationObservations.calls.length,1);
+  assert.equal(writes.some(v=>v.has('metadata[funding_action]')),false);
+  switchActivationObservations.accept=true;writes.length=0;
+  const result=await switchPlan('sub_Test000001',{tier:'creator',cycle:'year'},g);
+  assert.equal(result.kind,'switched');assert.equal(writes.length,3);assert.equal(writes[2].get('metadata[funding_action]'),'switch');
+  assert.equal(switchActivationObservations.calls[0].createdSeconds,updated.created);
+ }finally{globalThis.fetch=old;switchActivationObservations.accept=false;}
+});
+test('switch recovery uses pending or finalized references without treating either as a fresh Checkout',async()=>{
+ const g=grant('switch'),raw=switchObservation(g),own={...store,stripeCustomerId:'cus_Test000001',previousHandles:[],releasedHandles:[]} as Store;
+ activationObservations.calls.length=0;switchActivationObservations.calls.length=0;switchActivationObservations.accept=false;
+ assert.equal(await startedFromObservedSubscription(own,raw),null);
+ switchActivationObservations.accept=true;
+ try{
+  assert.equal((await startedFromObservedSubscription(own,raw))?.cycle,'year');
+  const final={...raw,metadata:{store:'harbor',funding_action:'switch',funding_grant:g.id,funding_review:g.reviewId}};
+  assert.equal((await startedFromObservedSubscription(own,final))?.cycle,'year');
+  assert.equal(await startedFromObservedSubscription(own,{...raw,pending_update:{expires_at:9999999999}}),null);
+  assert.equal(await startedFromObservedSubscription(own,{...raw,metadata:{...raw.metadata,funding_pending_review:undefined}}),null);
+  assert.equal(activationObservations.calls.length,0);
+ }finally{switchActivationObservations.accept=false;}
+});
+
+test('a switch read stays unknown without its store and acknowledged phase proof',async()=>{
+ const old=globalThis.fetch,g=grant('switch'),raw=switchObservation(g),own={...store,stripeCustomerId:'cus_Test000001',subscriptionId:raw.id,previousHandles:[],releasedHandles:[]} as Store;let reads=0;
+ globalThis.fetch=async()=>{reads++;return Response.json(raw);};switchActivationObservations.calls.length=0;switchActivationObservations.accept=false;
+ try{
+  assert.equal((await readSubscription(raw.id)).state,'unknown');assert.equal(switchActivationObservations.calls.length,0);
+  assert.equal((await readSubscription(raw.id,own)).state,'unknown');
+  switchActivationObservations.accept=true;assert.equal((await readSubscription(raw.id,own)).state,'active');
+  assert.equal(reads,3);assert.equal(switchActivationObservations.calls.length,2);
+ }finally{globalThis.fetch=old;switchActivationObservations.accept=false;}
+});
+
+test('a foreign or malformed switch result cannot finalize metadata or request activation',async()=>{
+ const old=globalThis.fetch,g=grant('switch'),base=switchObservation(g);
+ const cases=[
+  {...base,id:'sub_Other0001'},
+  {...base,metadata:{...base.metadata,funding_pending_review:'other'}},
+  {...base,items:{data:[{...base.items.data[0],price:{...base.items.data[0].price,currency:'eur'}}]}},
+  {...base,items:{data:[{...base.items.data[0],price:{...base.items.data[0].price,recurring:{interval:'year',interval_count:2}}}]}},
+ ];
+ switchActivationObservations.accept=true;
+ try{
+  for(const updated of cases){
+   const writes:URLSearchParams[]=[];switchActivationObservations.calls.length=0;
+   globalThis.fetch=async(input,init)=>{
+    const url=new URL(String(input));
+    if(url.pathname==='/v1/prices')return Response.json({data:[{id:'price_year',unit_amount:69000,currency:'usd',recurring:{interval:'year'}}]});
+    if(init?.method==='POST'){writes.push(new URLSearchParams(String(init.body)));return Response.json(updated);}
+    return Response.json({...base,items:{data:[{id:'si_test',price:{lookup_key:'nimbus_creator_month',unit_amount:6900,currency:'usd',recurring:{interval:'month',interval_count:1}}}]}});
+   };
+   await assert.rejects(switchPlan('sub_Test000001',{tier:'creator',cycle:'year'},g));
+   assert.equal(writes.length,2);assert.equal(switchActivationObservations.calls.length,0);assert.equal(writes.some(v=>v.has('metadata[funding_action]')),false);
+  }
+ }finally{globalThis.fetch=old;switchActivationObservations.accept=false;}
 });
