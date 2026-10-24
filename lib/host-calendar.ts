@@ -33,6 +33,7 @@
  * Changing any of it takes a signed-in session of that very person on a
  * store they are on (app/api/store/host-calendar), never a store's owner.
  */
+import { reservePaidResourceWindow } from "@/lib/contract-resource-window";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import type { Busy } from "@/lib/call-setup";
 import { readFeed, providerOf } from "@/lib/calendar-sync";
@@ -378,7 +379,7 @@ export async function setHostCalendars(store: Pick<Store, "statsId">, email: str
 export type AddIcsResult = { ok: true } | { ok: false; message: string };
 
 /** Adds a host's private iCal address, after reading it once, sealed at rest, and makes it their source. */
-export async function addHostIcs(store: Pick<Store, "statsId">, email: string, raw: string, tz: string, hooks: SyncHooks = {}, now = Date.now()): Promise<AddIcsResult> {
+export async function addHostIcs(store: Store, email: string, raw: string, tz: string, hooks: SyncHooks = {}, now = Date.now()): Promise<AddIcsResult> {
   if (!store.statsId) return { ok: false, message: "Open the studio once more and try again." };
   if (!canSeal()) return { ok: false, message: "Calendar addresses cannot be stored safely on this deployment yet, so nothing was added." };
   const text = raw.trim();
@@ -389,6 +390,7 @@ export async function addHostIcs(store: Pick<Store, "statsId">, email: string, r
   } catch (error) {
     return { ok: false, message: fetchProblemWords(error) };
   }
+  if (store.period?.funded === true && !(await reservePaidResourceWindow(store))) return { ok: false, message: "Calendar changes are temporarily unavailable. Try again later." };
   let busy: [number, number][];
   try {
     busy = (await readFeed(url, tz, now, hooks.feed ?? {})).busy;

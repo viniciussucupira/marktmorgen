@@ -6895,3 +6895,8 @@ Gate antes de criar role ou consultar roles para atribuição não vazia; remoç
 ### AB(a) — novo onboarding PayPal financiado (em implementação)
 
 onboardingUrl exige coorte antes de novo referral/token. Verificação existente de vendedor, captura, recuperação pendente, reembolso e disconnect preservados. Regressão sintética com Store persistida: retorno nulo sem provider/mutação de vendedor. Custos e lacunas em docs/paid-paypal-onboarding-cohort.md; 100% fixos LLC/leitura mais onerosa/políticas nulas/coberturas falsas/vendas fechadas. Preserva918 por ancestralidade; suíte completa no novo head obrigatória.
+
+
+### AB(a) — admissão de novo iCal do host financiada (em implementação)
+
+addHostIcs recebe Store completa e exige coorte após validação, antes de DNS/feed/configuração. Único chamador de produção já passa Store completa. Teste sintético: caminho legado alcança só resolver injetado; financiado recusa sem DNS/mutação; remoção preservada. Agendamento, booking/move/refund e hostSync retido continuam inalterados; atribuição multi-store/renovação/cleanup global pendentes. Custos e lacunas em docs/paid-host-ics-cohort.md; nenhuma certificação60%, políticas nulas/coberturas falsas/vendas fechadas. Preserva919 por ancestralidade; CI completo no novo head obrigatório.
