@@ -4962,6 +4962,21 @@ Ao concluir cada item do bloco, registre a data e a hora de Fortaleza, o commit,
 
 Proveniência: instrução direta recebida em 24/10/2026 às 00h11 (Fortaleza). Registro único, junto à seção OR; preserva o histórico. A nova ordem prevalece somente nos pontos incompatíveis com as anteriores. A condição "depois dos PRs #865 a #868" não é cumprida por PR pendente, teste isolado ou documento: confirmar incorporação e publicação funcional quando aplicável. Nada do Bloco de abertura é implementado por este PR documental.
 
+### AB(a) em execução — registros financeiros sem código executável
+
+Primeira proteção do mecanismo da revisão: candidatos são tratados como registros próprios e destacados antes de avaliar campos; getters, herança, hooks de JSON, ciclos, símbolos, tipos inválidos de evidência e registros acima dos limites existentes são recusados. Testes sintéticos preservam os casos válidos e a recusa de imposto desconhecido/termos antigos. Esta alteração não encerra AB(a), não preenche as três políticas reais e não muda nenhuma cobertura false. Alocações de recursos, renovações e conciliação da reserva (junto com306SY2) continuam no mesmo item ativo. Verificação completa e publicação ainda pendentes; nenhuma entrega funcional contada neste registro.
+
+Custo: nenhuma operação nova de fornecedor, requisição, armazenamento, franquia ou ativo pago; caminho real sem revisão continua fechado. Para cada plano mensal/anual, tetos financeiros e impostos existentes permanecem vinculantes; faturas desconhecidas não viram zero e não há certificação de60%. Detalhes em docs/commercial-review-validation.md.
+
+
+### Entrega funcional 194 — primeira proteção de AB(a)
+
+PR #871 incorporado em24/10/2026 02h10min18s(Fortaleza), commit43ae0e7dbf753637a34b51ec89d0b036a9500fab. Suíte completa24/24 no head3cf681484d4d2ab07f45d9bbd9a8936d727fe756; árvore testada/prevista/real baed64ec3e0559587a7b6c955915021006227390 e pais conferidos. READY24/10/2026 02h11min56,158s(Fortaleza), deploymentdpl_BNZbumajyGzmWoFwZmaZaJNMDJ6Y, SHAexato43ae0e7dbf753637a34b51ec89d0b036a9500fab. marktmorgen.com em/,/platform,/pricing,/mission,/library retornou200comomesmoDPL. Contador193→194umaúnicavez; próxima195somentecomnovapublicaçãofuncional.
+
+Revisões candidatas agora são destacadas em dados próprios antes da leitura de campos. Testes sintéticos preservam dados válidos e recusam getters superiores/internos sem executá-los, herança, hooks de JSON, ciclos, símbolos, excesso de tamanho e tipos inválidos de evidência; impostos desconhecidos e termos antigos continuam reprovados. Verify120781579683,Firefox120781579693,WebKit120781579718 e a matriz completa passaram. Sem alegação de certificaçãoAAA ou de margem líquida real60%.
+
+AB(a) NÃO concluído: alocações de recursos, renovações e conciliação de caixa com306SY2 continuam no mesmo item ativo. CURRENT_COMMERCIAL_MARGIN_REVIEW, CURRENT_EXPOSURE_BUDGET_POLICY e CURRENT_CONTRACT_FUNDING_POLICY permanecem null; nenhuma cobertura false virou true, nenhuma venda ou trava foi ligada. Custo: nenhuma operação nova de fornecedor, requisição, armazenamento, franquia ou ativo pago; limites atuais preservados e desconhecido não vira zero. Publicação desta proteção não autoriza avançar a AB(b).
+
 ### Precedência AX2 cumprida — entrega funcional 193
 
 PR #865 incorporado em24/10/2026 01h06min02s (Fortaleza), commit70a5a63daa9613501e8d0fe0cd6a1f795a47744e, com24/24 verificações no head25bd303072b2c6ed416abf83ff94d2ac56071427; árvore a92843d1828e124aa57cae9013c91055bc9fa772 testada/prevista/real iguais e pais conferidos. PRs #866, #867 e #868 aparecem incorporados no GitHub por seus commits ancestrais; os quatro foram concluídos pela combinação integralmente verificada, sem alegar aprovação dos heads intermediários falhos. READY24/10/2026 01h06min56,152s (Fortaleza), deploymentdpl_CLCfHeYBpStFQTq2MRVcyhS5SbVb, SHAexato70a5a63daa9613501e8d0fe0cd6a1f795a47744e; marktmorgen.com em/,/platform,/pricing,/mission,/library retornou200comomesmoDPL. Contador192→193umaúnicavez; próxima194somentecomnovapublicaçãofuncional.
