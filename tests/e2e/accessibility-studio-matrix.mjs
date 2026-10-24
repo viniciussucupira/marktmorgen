@@ -49,7 +49,10 @@ try{
   await context.addCookies([{name:"nl_session",value:fixture.session,url:origin}]);
   let writes=0,foreign=0;const errors=[];
   try{
-   const page=await context.newPage();page.on("pageerror",error=>errors.push(String(error)));
+   const page=await context.newPage();
+   // Explicit page emulation avoids a Firefox page override masking context media.
+   if(mode==="dark")await page.emulateMedia({colorScheme:"dark"});
+   page.on("pageerror",error=>errors.push(String(error)));
    await context.route("**/*",route=>{const r=route.request(),url=new URL(r.url());if(!["GET","HEAD"].includes(r.method())){writes++;return route.abort();}if(url.origin!==origin){foreign++;return route.abort();}return route.continue();});
    const response=await page.goto(origin+path,{waitUntil:"networkidle",timeout:60000});if(response.status()!==200)throw Error("HTTP "+response.status());
    if(new URL(page.url()).pathname.startsWith("/signin"))throw Error("Synthetic authenticated journey redirected to sign-in");

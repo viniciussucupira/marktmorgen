@@ -60,7 +60,10 @@ try{
   try{
    await context.addInitScript(()=>Object.defineProperty(navigator,"globalPrivacyControl",{configurable:true,get:()=>true}));
    if(mode==="text-spacing")await context.addInitScript(()=>document.addEventListener("DOMContentLoaded",()=>{const style=document.createElement("style");style.textContent="*{line-height:1.5!important;letter-spacing:.12em!important;word-spacing:.16em!important}p{margin-bottom:2em!important}";document.head.append(style);},{once:true}));
-   page=await context.newPage();page.setDefaultTimeout(30000);page.setDefaultNavigationTimeout(60000);
+   page=await context.newPage();
+   // Explicit page emulation avoids a Firefox page override masking context media.
+   if(mode==="dark")await page.emulateMedia({colorScheme:"dark"});
+   page.setDefaultTimeout(30000);page.setDefaultNavigationTimeout(60000);
    page.on("request",request=>{network.push({event:"request",method:request.method(),path:new URL(request.url()).pathname});});
    page.on("response",response=>{network.push({event:"response",method:response.request().method(),path:new URL(response.url()).pathname,status:response.status()});});
    page.on("requestfailed",request=>{network.push({event:"failed",method:request.method(),path:new URL(request.url()).pathname,error:request.failure()?.errorText});});

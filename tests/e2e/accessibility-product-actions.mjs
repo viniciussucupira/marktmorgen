@@ -68,7 +68,10 @@ try{
   await context.addCookies([{name:"nl_session",value:fixture.session,url:origin}]);
   let writes=0,foreign=0,localProductWrites=0,interceptedVisits=0,expectedVisits=1;const errors=[],blockedWrites=[];
   try{
-   const page=await context.newPage();page.setDefaultTimeout(30000);page.setDefaultNavigationTimeout(60000);page.on("pageerror",error=>errors.push(String(error)));
+   const page=await context.newPage();
+   // Explicit page emulation avoids a Firefox page override masking context media.
+   if(mode==="dark")await page.emulateMedia({colorScheme:"dark"});
+   page.setDefaultTimeout(30000);page.setDefaultNavigationTimeout(60000);page.on("pageerror",error=>errors.push(String(error)));
    // Observe frame lifecycles without changing browser execution or swallowing failures.
    const frameIds=new WeakMap();let frameSequence=0,frameEvents=0;
    const describeFrame=frame=>{try{if(!frameIds.has(frame))frameIds.set(frame,++frameSequence);const u=new URL(frame.url()||"about:blank"),parent=frame.parentFrame();if(parent&&!frameIds.has(parent))frameIds.set(parent,++frameSequence);return {id:frameIds.get(frame),parent:parent?frameIds.get(parent):null,origin:u.origin,path:u.pathname};}catch{return {unavailable:true};}};
