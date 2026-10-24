@@ -61,6 +61,7 @@ import { isSettled } from "@/lib/instant-pay";
 import { SafeFetchError, checkUrl, problemWords, safeFetch } from "@/lib/safe-fetch";
 import { type Store, storeForHandle, saleHandles } from "@/lib/store";
 import { takeAllowance } from "@/lib/store-allowance";
+import { reservePaidResourceWindow } from "@/lib/contract-resource-window";
 import { readListing } from "@/lib/catalog";
 import { SITE_URL } from "@/lib/site-url";
 import { type BundleSlot, bumpsFromMeta, bundleFromMeta } from "@/lib/bundle-rules";
@@ -565,7 +566,7 @@ export async function removeEndpoint(store: Store, id: string): Promise<Webhooks
  * Sends one test message to one endpoint, now, and says how it went. Tried
  * once, never retried, and listed with the rest.
  */
-export async function sendTest(store: Store, id: string, now = Date.now()): Promise<{ ok: true; delivery: Delivery; view: WebhooksView } | { ok: false; reason: "missing" | "limited" } | { ok: false; reason: "used"; message: string }> {
+export async function sendTest(store: Store, id: string, now = Date.now()): Promise<{ ok: true; delivery: Delivery; view: WebhooksView } | { ok: false; reason: "missing" | "limited" | "unavailable" } | { ok: false; reason: "used"; message: string }> {
   if (!store.statsId) return { ok: false, reason: "missing" };
   const statsId = store.statsId;
   const config = await readConfig(statsId);
@@ -576,6 +577,8 @@ export async function sendTest(store: Store, id: string, now = Date.now()): Prom
     ["INCR", testsKey(statsId)],
   ]);
   if (Number(count) > TESTS_PER_MINUTE) return { ok: false, reason: "limited" };
+  // This is new, manually requested work, not an already queued delivery.
+  if (store.period?.funded === true && !await reservePaidResourceWindow(store)) return { ok: false, reason: "unavailable" };
   // A test is one of the store's webhook deliveries too: refused, it is not made at all.
   const taken = await takeAllowance(store, "webhook", 1, now);
   if (!taken.ok) return { ok: false, reason: "used", message: taken.message };
