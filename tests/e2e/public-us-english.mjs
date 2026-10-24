@@ -2,6 +2,14 @@ import {checkPublicKeyboardCycle} from "./accessibility-public-keyboard.mjs";
 /** Native page text, excluding comments and persisted identifiers. No writes or provider calls. */
 export async function checkPublicAmericanEnglish({browser,LOCAL,is}){
  const context=await browser.newContext();
+ const keyboardEnabled=process.env.AX2_KEYBOARD_PUBLIC_STANDARD==="true";
+ const operations={writes:0,foreign:0};
+ if(keyboardEnabled)await context.route("**/*",async route=>{
+  const request=route.request(),url=new URL(request.url());
+  if(!["GET","HEAD"].includes(request.method())){operations.writes++;return route.abort();}
+  if(url.origin!==new URL(LOCAL).origin){operations.foreign++;return route.abort();}
+  return route.continue();
+ });
  try{
   const page=await context.newPage();
   const cases=[["/","Canceling is two clicks in your studio"],["/mission","but not a checkbox"],["/help","with revenue only if you select it"],["/privacy","members wrote when canceling"],["/platform/calls","select who hosts it"],["/platform/email","buttons in your store\'s color"],["/platform/insights","reason for canceling"],["/platform/bundles","buyer selects that many"],["/platform/sales-pages","with check marks, crosses"]];
@@ -13,8 +21,9 @@ export async function checkPublicAmericanEnglish({browser,LOCAL,is}){
    const text=(await page.locator("main").innerText()).replace(/\s+/g," ");
    is("reviewed US-English wording "+path,text.includes(expected),true);
    is("reviewed visible text has no selected British forms "+path,/\b(?:cancelling|colour|licence|afterwards|untick(?:ed|ing|s)?|tick(?:ed|ing|s)?)\b/i.test(text),false);
-   if(process.env.AX2_KEYBOARD_PUBLIC_STANDARD==="true")await checkPublicKeyboardCycle({page,path,is});
+   if(keyboardEnabled)await checkPublicKeyboardCycle({page,path,is});
   }
+  if(keyboardEnabled){is("public keyboard journeys perform no writes",operations.writes,0);is("public keyboard journeys use no foreign origin",operations.foreign,0);}
  }finally{await context.close();}
 }
 

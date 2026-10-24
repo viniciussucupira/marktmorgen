@@ -5932,3 +5932,113 @@ Estado inicial: na fila. Ao concluir, registre a data e a hora de Fortaleza, o c
 Proveniência: pedido direto de23/10/2026 21h33Fortaleza, recebido novamente pelo anexo Texto colado.txt. Conferidos main b8c5336636c53d5b08df7799a6d1cddc17d00525,12PRs abertos e419refs codex/*; dois heads novos/alterados desde a auditoria de417refs relidos, demais SHAs imutáveis previamente auditados. Nome da seção, data/hora, HQ1, número312 e conteúdo/early_fraud_warning ausentes nas filas examinadas;312livre. Recebido novamente em 23/10/2026 22h09 (Fortaleza); repetição sem mudança; nada alterado. Um único HQ1 é gravado agora, após concluir/incorporar/publicar a tarefa corrente PR863; sem repetição de item, commit exclusivo por repetição ou mudança da ordem.
 
 Os fatos de situação atual, benefício contra contestação e custo acima são briefing do dono, não confirmação de comportamento do Stripe, cobrança ou código. Antes da implementação, verificar apenas a diferença, fontes oficiais datadas, máximos mensais/anuais por plano, número máximo de avisos, tetos/reserva e leitura fiscal mais onerosa; desconhecido reprova. Esta inclusão não implementa webhook, opção, e-mail ou reembolso, não altera revisão comercial nem afirma eliminação de contestações/tarifas. Incremento operacional deste registro mensal/anual por Store/Studio/Scale0/0, sem nova operação ou fornecedor; outros custos reais/CI permanecem desconhecidos, não zero. Nenhuma margem ou acessibilidade certificada. AX2 mantém prioridade de execução sobre o restante da fila.
+
+Registro de continuidade: PR #869 incorporado em 23/10/2026 23h47min35s (Fortaleza), commit ed07709e2fabd114b5e734041c71e8666ed3dca4, com24/24 verificações no head b3bef8560ebc7ff018354492671c219987026c4b e igualdade das árvores testada/prevista/real 33e1a777350fe66bf81c25e745698406b508e46b. CV1 313, MG1 314, MG2 315 e MG3 316 preservados integralmente a seguir; HQ1 permanece312, único, antes deCV. Registro apenas documental, sem entrega funcional.
+
+Retomada AX2: head8a8bb8221399bb16107bcb9b365c294e47791ae6 teve20/24 sucessos e4falhas: tecladoChromium120749549690/Firefox120749549903/WebKit120749549786 e Mobile render120749549868. Os diagnósticos identificaram7links emdetailsfechados e2radiosnão selecionados incorretamente esperados porTab. Correção do oráculo nativo documentada emdocs/accessibility-public-keyboard-review.md: todos os alvos sequenciais emambasdireções e todas as opções de rádio porArrowRight; saída para oscontrolesdonavegador segue lacuna sem alegação de auditoria completa. Mobile registrou272ms naprimeiraamostrafria dehome, falha preservada; nenhumlimiar/amostra/throttle/timeout relaxado. Verificação completa no novohead obrigatória antesdeincorporar; correção nãodeclarada pronta.
+
+
+## CV — Custo por visita das lojas (23/10/2026)
+
+Ordem: logo depois do item 309 [EM1], porque os dois baixam custos reais que limitam o que cada plano oferece. Inclusão documental antecipada por instrução direta posterior do dono, antes de continuar AX2; nada implementado agora. Posição física: no fim da fila; HQ1 permanece reservado como item 312 no PR #865, sem duplicação neste registro.
+
+Solicitação do dono (23/10/2026, 22h11, horário de Fortaleza): reduzir o custo real de cada visita às lojas dos criadores, sem afrouxar nenhuma regra nem suposição de custo, para que os limites de visitas dos planos possam subir mantendo a margem mínima de 60%.
+
+REGRA DOS 60% (OBRIGATÓRIA): todo cliente pagante, considerado isoladamente e usando 100% de todos os direitos do plano no pior mês, deve manter margem de lucro líquido MÍNIMA de 60%, depois de todos os custos e de todos os impostos, inclusive os brasileiros; a margem pode ser maior, mas nunca menor, e a mesma regra vale para a empresa como um todo. Calcule o custo máximo mensal e anual por plano antes e depois, com teto automático aplicado antes do gasto. Custo desconhecido não pode ser considerado zero. Nunca conte cota gratuita de fornecedor como custo zero; use o preço pago mais caro. Use a leitura que resultar em MAIS imposto (docs/tax-uncertainty.md). Desde 22/10/2026, todos os custos fixos da LLC são atribuídos integralmente ao Marktmorgen (item 275 [FX1]).
+
+313. [CV1] Visitas às lojas mais baratas: imagens pelo Cloudflare R2 e páginas guardadas no CDN
+
+Estado: na fila.
+
+Situação atual (tests/traffic-cost.ts e lib/traffic-rules.ts): uma visita é custeada como três páginas e até 24 imagens por página, cada imagem como uma requisição ao CDN da Vercel (US$ 2,00 por milhão no Flat Rate CDN), mais chamadas e tempo de função a cada página. As visitas são o maior custo do plano Scale, e os limites de visitas (3.400, 10.000 e 40.000 por mês) existem por causa desse custo.
+
+O que fazer, implementando apenas a diferença:
+1. Imagens: servir as imagens dos produtos e das lojas diretamente do Cloudflare R2, que já guarda os arquivos (lib/vault-upload.ts e relacionados), por um domínio próprio ligado ao CDN da Cloudflare, se as fontes oficiais datadas confirmarem que a saída de dados do R2 não é cobrada e indicarem o preço por leitura. Mantenha o formato otimizado e os tamanhos certos de cada imagem, sem perder qualidade nem acessibilidade (texto alternativo intacto).
+2. Páginas: guardar no CDN as páginas públicas das lojas que não mudam por visitante, renovadas quando o criador publica uma mudança, para que a maioria das visitas não execute função nem consulte o banco. O que é pessoal (carrinho, área do comprador, contagem de visitas) continua correto e funcionando.
+3. Contagem de visitas: continuar contando cada visita com precisão e no máximo uma vez, mesmo com as páginas guardadas no CDN, e manter o limite automático de cada plano.
+4. Medir antes e depois no site publicado, com dados sintéticos: requisições, chamadas de função, tempo de CPU e bytes por visita; atualizar tests/traffic-cost.ts somente com o que foi medido, e manter o pior caso (24 imagens por página e três páginas por visita).
+5. Recalcular todos os planos nos dois intervalos e aumentar os limites de visitas até o maior valor redondo que mantém 60% com a folga do spend floor; atualizar lib/traffic-rules.ts, docs/value-presentation-2026-10-18.md e docs/margin-alignment-2026-10-18.md. Limites visíveis só podem subir.
+6. Desempenho e acessibilidade: o carregamento no celular não pode piorar (itens 277 e 281); a Parte A do item 274 [AX1] vale em tudo.
+
+Testes que falham se: uma página pessoal for servida do CDN para outra pessoa; uma visita for contada duas vezes ou deixar de ser contada; o custo por visita no teste divergir do medido; algum plano ficar abaixo de 60% em qualquer intervalo.
+
+Regras para o item: é proibido criar contas, aceitar termos, contratar serviços, pagar qualquer valor, alterar configurações reais da Vercel, da Cloudflare ou de outros fornecedores sem registrar o passo exato em "Depende do dono", solicitar aprovações e alterar preços, comissão, PLANS_ON_SALE, tax gate, art. 9a ou a revisão comercial. Testes somente com dados sintéticos. Todo texto público em inglês americano, com a acessibilidade exigida pela Parte A do item 274 [AX1].
+
+Estado inicial: na fila. Ao concluir, registre a data e a hora de Fortaleza, o commit, o resultado da suíte completa e a publicação.
+
+## MG — Folga de margem para volumes maiores (23/10/2026)
+
+Ordem de execução: depois de 309 [EM1] e 313 [CV1]. MG1, MG2 e MG3 são executados juntos; a prioridade vigente de AX2 é preservada. Registro documental antecipado pela instrução direta posterior do dono; nenhuma implementação agora.
+
+Solicitação do dono (23/10/2026, 22h31, horário de Fortaleza): encontrar, sem afrouxar nenhuma regra, tarifa ou suposição de imposto, toda a folga de custo que permita oferecer volumes iguais ou maiores que os dos concorrentes, mantendo a margem líquida mínima de 60% por cliente e para a empresa.
+
+REGRA DOS 60% (OBRIGATÓRIA): todo cliente pagante, considerado isoladamente e usando 100% de todos os direitos do plano no pior mês, deve manter margem de lucro líquido MÍNIMA de 60%, depois de todos os custos e de todos os impostos, inclusive os brasileiros; a margem pode ser maior, mas nunca menor, e a mesma regra vale para a empresa como um todo. Calcule cada plano nos dois intervalos antes e depois de cada mudança. Custo desconhecido não pode ser considerado zero. Nunca conte cota gratuita de fornecedor como custo zero; use o preço pago mais caro. Use a leitura que resultar em MAIS imposto (docs/tax-uncertainty.md). Desde 22/10/2026, todos os custos fixos da LLC são atribuídos integralmente ao Marktmorgen (item 275 [FX1]).
+
+314. [MG1] Folga de margem: limites invisíveis, remessa e débito em conta
+
+Estado: na fila.
+
+Contexto, pelos números de docs/margin-alignment-2026-10-18.md: receber o pagamento custa cerca de três vezes todo o uso no pior caso (Store US$ 9,02 contra US$ 2,57; Studio US$ 55,21 contra US$ 19,80; Scale US$ 122,04 contra US$ 43,73).
+
+1. Limites invisíveis: liste, em tests/plan-cost-registry.ts, cada custo de cada plano que não corresponde a um limite impresso (estúdio, API, webhooks, importações, automações, funis, IA, agendamentos, sala de dados e o que a loja deixa ao encerrar), com o teto aplicado, o custo no teto e o uso máximo que um criador real poderia ter. Onde o teto estiver muito acima de qualquer uso legítimo, proponha um teto menor, ainda generoso, aplicado automaticamente antes do gasto e com mensagem clara ao criador quando atingido. Limites impressos nunca podem diminuir. Mostre quanta folga cada redução libera por plano e intervalo.
+
+2. Remessa: verifique em fontes oficiais datadas o custo real de levar a receita da conta americana ao Brasil por cada rota disponível ao dono (incluindo câmbio, spread e tarifas fixas). Se uma rota comprovadamente custar menos que REMITTANCE_BPS (1,5%) no pior caso, registre a rota, a fonte e a data, e ajuste o valor em lib/receiving-costs.ts somente com essa prova. Sem prova oficial, nada muda.
+
+3. Débito em conta: calcule, sem mudar nada no código de cobrança, quanto custaria receber o Studio e o Scale somente por débito em conta (ACH nos EUA, SEPA na UE, Bacs no Reino Unido, PAD no Canadá), pelas tarifas oficiais datadas do Stripe, e quanta folga isso liberaria por plano e intervalo. Inclua o risco: débitos podem ser contestados por prazo maior e alguns criadores não terão conta compatível. Registre em "Depende do dono" a decisão de aceitar ou não somente débito nesses planos.
+
+4. Com a folga comprovada dos passos 1 e 2 (e do passo 3 somente se o dono aprovar), refaça o cálculo de todos os planos nos dois intervalos e aumente os limites impressos que os concorrentes mais comparam (e-mails para a lista, visitas, pedidos, armazenamento, horas de vídeo) até o maior valor redondo que mantém 60% com a folga do spend floor. Atualize lib/plan.ts, os arquivos de regras de cada limite, docs/value-presentation-2026-10-18.md e docs/margin-alignment-2026-10-18.md, e a comparação com os concorrentes com as fontes datadas.
+
+5. Entregue um resumo para o dono: o limite atual e o novo de cada plano, ao lado do concorrente comparável, e o que ainda falta para igualar.
+
+Testes que falham se: um limite impresso diminuir; um teto invisível for ultrapassado sem bloqueio automático; algum plano ficar abaixo de 60% em qualquer intervalo; uma tarifa ou remessa mudar sem fonte oficial datada registrada.
+
+Regras para o item: é proibido criar contas, aceitar termos, contratar serviços, pagar qualquer valor, alterar configurações reais de fornecedores, mudar meios de pagamento aceitos, solicitar aprovações e alterar preços, comissão, PLANS_ON_SALE, tax gate, art. 9a ou a revisão comercial. Testes somente com dados sintéticos. Todo texto público em inglês americano, com a acessibilidade exigida pela Parte A do item 274 [AX1].
+
+Estado inicial: na fila. Ao concluir, registre a data e a hora de Fortaleza, o commit, o resultado da suíte completa e a publicação.
+
+Solicitação do dono (23/10/2026, 22h41, horário de Fortaleza): reduzir o custo de receber o pagamento dos planos do Marktmorgen em tudo o que puder ser garantido pelo código ou comprovado por preço oficial, sem afrouxar nenhuma regra nem suposição.
+
+REGRA DOS 60% (OBRIGATÓRIA): todo cliente pagante, considerado isoladamente e usando 100% de todos os direitos do plano no pior mês, deve manter margem de lucro líquido MÍNIMA de 60%, depois de todos os custos e de todos os impostos, inclusive os brasileiros; a margem pode ser maior, mas nunca menor, e a mesma regra vale para a empresa como um todo. Uma linha de custo só sai do pior caso quando o código tornar impossível a cobrança dela, com teste; nunca por média ou por suposição sobre os clientes. Custo desconhecido não pode ser considerado zero. Use a leitura que resultar em MAIS imposto (docs/tax-uncertainty.md). Desde 22/10/2026, todos os custos fixos da LLC são atribuídos integralmente ao Marktmorgen (item 275 [FX1]).
+
+315. [MG2] Custo de receber o pagamento dos planos
+
+Estado: na fila.
+
+Contexto (lib/receiving-costs.ts): o custo de receber o Store mensal é US$ 9,02, assim: tarifa do Stripe de 6,6% + US$ 0,30 sobre o preço com 27% de imposto por fora (2,9% do cartão, 1,5% de cartão estrangeiro, 1% de conversão, 0,7% do Stripe Billing e 0,5% do Stripe Tax), remessa de 1,5%, reserva de reembolso de 1% e reserva de contestação de 1% sobre o valor cobrado mais US$ 30.
+
+1. Conversão de moeda: confirme na documentação oficial e datada do Stripe que uma cobrança feita em dólar numa conta que recebe em dólar não paga a tarifa de conversão, qualquer que seja o país do cartão. Se confirmado, garanta no código e em teste que os planos e os complementos do Marktmorgen só podem ser cobrados em dólar (sem preço local nem conversão automática no checkout da plataforma) e, só então, retire do pior caso a parcela de conversão para essas cobranças.
+2. Stripe Billing nos planos anuais: avalie, com a documentação oficial e datada do Stripe, cobrar os planos anuais como pagamento único com o cartão salvo para renovação, cobrado uma vez por ano fora da sessão, sem o Stripe Billing, mantendo tudo o que a cobrança atual garante: aviso antes da renovação (lib/billing-reminders.ts), cancelamento em um clique, reembolso dos meses não iniciados, recuperação de cobrança falhada e autenticação do cartão quando exigida. Só adote se a renovação ficar tão segura quanto a atual, com testes; registre o ganho por plano e o risco.
+3. Plano anual em destaque: na página de preços, mostrar o plano anual primeiro, com o preço mensal equivalente e os dois meses grátis que já existem, sem pressão, sem contador e sem esconder o mensal. Calcule e registre quanto o custo de receber por mês cai no anual.
+4. Recalcule todos os planos nos dois intervalos com o que for comprovado e use a folga como no item 314 [MG1], passo 4.
+
+Testes que falham se: um plano puder ser cobrado em moeda diferente do dólar depois do passo 1; uma renovação anual pelo passo 2 deixar de avisar, cancelar ou devolver como hoje; algum plano ficar abaixo de 60%.
+
+Regras: é proibido criar contas, aceitar termos, contratar serviços, pagar qualquer valor, alterar configurações reais do Stripe, solicitar aprovações e alterar preços, comissão, PLANS_ON_SALE, tax gate, art. 9a ou a revisão comercial. Testes somente com o Stripe simulado. Todo texto público em inglês americano, com a acessibilidade exigida pela Parte A do item 274 [AX1].
+
+Estado inicial: na fila. Ao concluir, registre a data e a hora de Fortaleza, o commit, o resultado da suíte completa e a publicação.
+
+Solicitação do dono (23/10/2026, 23h00, horário de Fortaleza): baixar o custo real do vídeo, dos pedidos e das respostas do assistente da loja, aplicar a folga primeiro às horas de vídeo e mostrar nos cartões de preço, com o mesmo destaque, os volumes em que o Marktmorgen já supera os concorrentes.
+
+REGRA DOS 60% (OBRIGATÓRIA): todo cliente pagante, considerado isoladamente e usando 100% de todos os direitos do plano no pior mês, deve manter margem de lucro líquido MÍNIMA de 60%, depois de todos os custos e de todos os impostos, inclusive os brasileiros; a margem pode ser maior, mas nunca menor, e a mesma regra vale para a empresa como um todo. Calcule cada plano nos dois intervalos antes e depois. Custo desconhecido não pode ser considerado zero. Nunca conte cota gratuita de fornecedor como custo zero; use o preço pago mais caro. Use a leitura que resultar em MAIS imposto (docs/tax-uncertainty.md). Desde 22/10/2026, todos os custos fixos da LLC são atribuídos integralmente ao Marktmorgen (item 275 [FX1]).
+
+316. [MG3] Vídeo, pedidos, assistente e cartões de preço
+
+Estado: na fila.
+
+1. Vídeo (lib/stream.ts, lib/stream-rules.ts, lib/watch-rules.ts, lib/video-admission-rules.ts): verifique, com as páginas oficiais e datadas de preço da Bunny, em que rede os vídeos são entregues e em quantas regiões são guardados. Se a rede de volume e um número menor de regiões puderem ser garantidos pelo código e pela configuração, sem piorar a reprodução para alunos dos EUA, do Canadá, do Reino Unido e da UE, adote-os, meça e atualize o pior caso por hora assistida. As alterações de configuração na conta da Bunny ficam em "Depende do dono", com o passo exato.
+2. Pedidos (lib/order-rules.ts): meça de novo o custo máximo de um pedido (e-mails, avisos, consultas ao banco, recibos e entrega), já com os e-mails pela Amazon SES do item 309 [EM1] quando ele estiver pronto, e atualize o pior caso.
+3. Assistente da loja (lib/store-assistant*.ts): envie ao modelo somente os trechos dos fatos publicados da loja que respondem à pergunta, mantendo todas as regras da seção do assistente em AGENTS.md (heldToFacts, rótulo, transferência, privacidade, injeção de instruções). Reduza ASSISTANT_INPUT_BYTES ao novo máximo comprovado, recalcule assistantMessageWorstMicroUsd() e aumente ASSISTANT_MESSAGES_MONTHLY até o maior valor redondo que mantém 60% com ADD_ON_ROOM_CENTS, sem mudar ASSISTANT_PRICE_CENTS.
+4. Ordem de uso da folga: no passo 4 do item [MG1], aumente primeiro as horas de vídeo assistidas, depois os e-mails para a lista, depois os pedidos e depois as visitas, sempre até o maior valor redondo que mantém 60% nos dois intervalos com a folga do spend floor.
+5. Cartões de preço (lib/pricing-page-data.ts e componentes): mostre, no mesmo nível de destaque dos limites, os volumes em que o Marktmorgen já é forte, lidos do código: produtos no catálogo (MAX_PRODUCTS), contatos na lista (MAX_LEADS), membros na comunidade (MAX_MEMBERS) e 0% de comissão sobre as vendas, com o dinheiro direto na conta Stripe do criador. Nenhum limite pode ser escondido, e nada pode ser chamado de "unlimited". Na comparação com os concorrentes, use somente números de fontes oficiais datadas.
+
+Testes que falham se: um limite impresso diminuir; um número do cartão divergir do código; o assistente mostrar resposta que não passe por heldToFacts; algum plano ou o assistente ficar abaixo de 60%.
+
+Regras: é proibido criar contas, aceitar termos, contratar serviços, pagar qualquer valor, alterar configurações reais de fornecedores, solicitar aprovações e alterar preços, comissão, PLANS_ON_SALE, tax gate, art. 9a ou a revisão comercial. Testes somente com fornecedores simulados. Todo texto público em inglês americano, com a acessibilidade exigida pela Parte A do item 274 [AX1].
+
+Estado inicial: na fila. Ao concluir, registre a data e a hora de Fortaleza, o commit, o resultado da suíte completa e a publicação.
+
+Proveniência do registro documental conjunto: pedidos recebidos em 23/10/2026 às 22h11 (CV1), 22h31 (MG1), 22h41 (MG2) e 23h00 (MG3), horário de Fortaleza, preservados nessa ordem. Conferidos o main 43bad54e77e52e673bc9030edb0af21dfd769ad9, todos os 15 PRs abertos e os dois heads codex/* alterados desde a auditoria anterior de 422 refs (agora 423); demais heads imutáveis já auditados. Nenhuma dessas quatro solicitações, seção, etiqueta ou conteúdo equivalente estava registrada; 313–316 livres. HQ1 consta uma única vez no PR #865 como 312 e não é copiado aqui. A posição final de CV fica depois de HQ quando o PR #865 incorporar a fila atual; não renumerar HQ. A instrução mais recente antecipa apenas este registro e determina retomar AX2 exatamente do ponto interrompido após a incorporação.
+
+Aplicação das instruções posteriores: MG2 e MG3 complementam MG1, sem duplicar seção ou execução. No passo 4 de MG1, a ordem vinculante de uso da folga é a de MG3: horas de vídeo assistidas, e-mails para a lista, pedidos e visitas. Os demais requisitos de MG1 permanecem. Antes de executar qualquer item, conferir novamente código, fila, outros PRs e fontes oficiais datadas e implementar somente a diferença. Números e descrições de situação atual acima são contexto fornecido pelo dono, não medição ou validação de preços realizada neste registro.
+
+Escopo e custo deste PR: somente docs/codex-queue.md; sem alteração operacional dos planos, fornecedores, preços, limites, cobrança ou configurações. Nenhum gasto operacional mensal/anual adicional por plano é introduzido pelo registro; isso não atribui valor zero a custos desconhecidos, não certifica margem de 60% nem acessibilidade completa. Todos os quatro itens continuam na fila. As verificações e o horário real de incorporação deste registro serão preservados na continuidade; as evidências de implementação/publicação exigidas acima só serão preenchidas quando cada item for efetivamente executado.
