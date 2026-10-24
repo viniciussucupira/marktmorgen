@@ -27,3 +27,11 @@ No user interface, creator content, language or persisted identifier is changed.
 ## Verification history
 
 Head69fddf8585a422e6fc40b3227ad6078b05c8ac57 failed the disposable Redis job120790193362 at2026-10-24T05:27:32.915Z while comparing raw HGETALL arrays after a refused activation. The source returns0 before all writes on that path; the assertion relied on Redis hash iteration order, which is not a stable record order. The revised test compares all sorted field/value pairs, retaining every field and value and the unchanged-state requirement. The actual source Lua still runs; no refusal assertion or production guard is removed. Full verification on the new head is required, not a single-job retry.
+
+## Command-cost audit, accessed October24,2026
+
+One EVAL request is not one billed command: the official [Upstash command-cost examples](https://upstash.com/docs/redis/sdks/ratelimit-ts/costs) include EVAL and its internal commands and describe replicated-write costs. Static enumeration of this activation script gives at most13 internal calls plus EVAL,14 executions; this is not an INFO-commandstats measurement. The existing ESSENTIAL_PER_DAY=10 and32 touched UTC days bound one store to320 essential attempts in a worst month, shared with the other essential actions.
+
+At the [published paid command rate](https://upstash.com/pricing/redis) of0.20USD per100,000 commands, a single primary with no read replicas would give the following conditional command-only arithmetic, identically for Store, Studio and Scale in both billing intervals:14×10×32×2/1,000,000=0.00896USD per worst month, and12 such months=0.10752USD. No free quota is used. This is not a total-cost estimate or proof of actual provider topology. Replication, full-route command headroom, transfer, CPU/wall time, ledger storage lifetime and actual invoices remain unproved and are not assigned zero. No existing cost ceiling is reduced. The actual null policies and false coverage still block release.
+
+These official pages were read on October24,2026; a publication date was not established. Future verification can use the official [Redis INFO commandstats fields](https://redis.io/docs/latest/commands/info/) in disposable CI, without calling a real supplier.
