@@ -39,6 +39,7 @@ import { rememberFolderOwner } from "@/lib/delivery";
 import { type AllowanceWindow, WINDOW_ID, allowanceWindow, calendarWindow, keepSecondsFor } from "@/lib/allowance-window";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { admitNonPaying } from "@/lib/free-pool";
+import { reservePaidResourceWindow } from "@/lib/contract-resource-window";
 import { deriveKey } from "@/lib/secret-box";
 import { type Store, storeFolder, storeRef } from "@/lib/store";
 import { PARTS_PER_VISIT, SHARE_BATCH, clientDayShare, publicVisitLimit, requestLimitFor, shareAddress, visitLimitFor, visitorAddress } from "@/lib/traffic-rules";
@@ -233,6 +234,7 @@ export async function isResting(store: Store, now = Date.now(), who: "public" | 
   try {
     const window = allowanceWindow(store, now);
     if (!window) return true;
+    if (store.period?.funded === true && !(await reservePaidResourceWindow(store))) return true;
     const month = visitLimitFor(store, now / 1000);
     const limit = who === "buyer" ? month : publicVisitLimit(month);
     if (!Number.isSafeInteger(limit) || limit < 0) return true;
@@ -284,6 +286,7 @@ export async function takePublicRequest(store: Store, who: "public" | "buyer" = 
   try {
     const window = allowanceWindow(store, now);
     if (!window) return false;
+    if (store.period?.funded === true && !(await reservePaidResourceWindow(store))) return false;
     return await countRequest(await storeFolder(storeRef(store)), store, window, who, now, units, await askingConnection());
   } catch {
     return false;
