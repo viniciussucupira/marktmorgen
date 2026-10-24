@@ -11,9 +11,11 @@
  *     with it.
  */
 import { MAX_KEYS, keyFromHeader, listKeys, makeKey, resolveKey, revokeKey } from "@/lib/api-keys";
-import { apiStore } from "@/lib/api-guard";
+import { apiStore, apiWriter } from "@/lib/api-guard";
 import { leads } from "@/lib/api-read";
-import type { Store } from "@/lib/store";
+import { claimHandle, ensureStatsId, setSubscription, storeForEmail, type Store } from "@/lib/store";
+import { allowanceUsed } from "@/lib/store-allowance";
+import { paidPeriod } from "./billing-period-fixture";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
 
@@ -78,6 +80,24 @@ async function main(): Promise<void> {
   const refusal = await apiStore(new Request("https://marktmorgen.com/api/v1/store"));
   is("and it says how to send one", refusal instanceof Response && (await refusal.json()).error, "unauthorized");
   is("with no CORS header, so a web page cannot use a key", refusal instanceof Response && refusal.headers.get("access-control-allow-origin"), null);
+
+  part("Marked funded read-only API work needs the paid resource month");
+  const fundedOwner = "funded-api@example.com";
+  await claimHandle(fundedOwner, "fundedapi", "Synthetic API", "");
+  await ensureStatsId(fundedOwner);
+  await setSubscription(fundedOwner, { customerId: "cus_FundedApi001", subscriptionId: "sub_FundedApi001", active: true, tier: "creator", period: { ...paidPeriod(), funded: true } });
+  const fundedStore = (await storeForEmail(fundedOwner))!;
+  const fundedKey = await makeKey(fundedStore.sid, "Synthetic writer", Date.now(), true);
+  if (!fundedKey.ok) throw new Error("no synthetic key");
+  const fundedRequest = () => new Request("https://marktmorgen.com/api/v1/store", { headers: { authorization: `Bearer ${fundedKey.key}` } });
+  const noFunds = await apiStore(fundedRequest());
+  is("missing actual funding approval refuses read-only API work", noFunds instanceof Response && [noFunds.status, (await noFunds.json()).error], [429, "unavailable"]);
+  is("the refused read takes no API allowance", await allowanceUsed(fundedStore, "api"), 0);
+  const cleanupAuth = await apiWriter(fundedRequest());
+  is("the writer authorization used by access removal retains its existing path", !(cleanupAuth instanceof Response) && cleanupAuth.store.sid, fundedStore.sid);
+  await revokeKey(fundedStore.sid, fundedKey.made.id);
+  const afterRevoke = await apiStore(fundedRequest());
+  is("key revocation still refuses before financial admission", afterRevoke instanceof Response && afterRevoke.status, 401);
 
   part("Only the written fields go out");
   redis.clear();
