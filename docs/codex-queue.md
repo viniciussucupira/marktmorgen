@@ -5060,6 +5060,7 @@ Proveniência da revisão comercial: passou a fazer parte do Bloco de abertura, 
    Depois de332 [RD1],333 [RE1] — remessa somente do lucro, e334 [RE2] —3D Secure no primeiro pagamento mensal e das legendas, nessa ordem, por pedido do dono de24/10/2026 09h52(Fortaleza).
 3. 309 [EM1] — e-mails para a lista pela Amazon SES.
 4. 313 [CV1] — visitas pelo CDN e imagens pelo Cloudflare R2.
+   Logo depois,339 [WS1] — imagens em arquivos;340 [WS2] — folha de estilo uma só vez;341 [WS3] — peso por página;342 [WS4] — custo das visitas, nesta ordem, por pedido do dono de24/10/2026 16h16(Fortaleza). Executar antes de326[IN2], sem antecipar(k) sobre(a)–(j).
 5. 326 [IN2] — menos comandos e menos tempo de função por página.
 6. 329 [EV1] — memória das funções, por pedido posterior do dono de24/10/2026 02h35(Fortaleza).
 7. 330 [EV2] — tarefas agendadas por evento, pelo mesmo pedido.
@@ -6977,3 +6978,33 @@ Registro HZ336–338 incorporado peloPR922 em24/10/2026 15:30:50Fortaleza,merge0
 ### AB(a) — atualização manual do calendário do host financiada (em implementação)
 
 checkHostCalendar Store completa/coorte antes de nova atualização forçada;rota503unavailable. hostSync retido/booking/remove/disconnect preservados. Regressão sintética persistida:financiado semGoogle,legadoatualiza provider simulado. Custos/lacunas em docs/paid-host-calendar-check-cohort.md;preserva925/complemento317/HZporancestralidade,CIcompletoobrigatório. Políticasnulas/coberturasfalsas/vendasfechadas,sem60%certificação.
+
+
+
+## WS — Desperdício de peso nas páginas (24/10/2026)
+
+Solicitação do dono24/10/2026,16h16(Fortaleza): procurar e eliminar desperdícios no site do Marktmorgen. Registro após HZ336–338 e complemento317EU1 de15h51, que não consumiu novo número. Conferidos main db9fd2064fcca928768246b08287e284b8bcc8a3 e filas em gravação, inclusive926headd680a37939ca26b95c3b7c82b4c425e7f2342431;12PRs abertos, antigos738–754 com heads idênticos aos já auditados:339–342 livres, sem WS repetido. Preservar números/histórico/estado dos pedidos anteriores.
+
+Proveniência AB(k)/WS: incluir339–342 imediatamente depois313[CV1] e antes326[IN2], na ordem WS1,WS2,WS3,WS4. AB(a) continua ativo; não executar(k) antes de(a)–(j). Aplicam-se324[TK6],275[FX1] e ParteA274[AX1] a cada mudança de página.
+
+Estado inicial informado pelo dono: medição em produção de24/10/2026,16h20, no navegador: inicial1.321KB brutos/429KB compactados para24KB de texto visível; quatro cópias do JPEG107KB em base64 (428KB), vindas de components/studio-screens.tsx; folha178KB em três cópias por página (uma style/duas nos dados) atribuída a experimental.inlineCss em next.config.ts;404com415KB;demo623KB brutos/113KB compactados contra48KB compactados de PAGE_BYTES em tests/traffic-cost.ts, medidos07/10/2026;ajuda1.453KB. São medições/proveniência fornecidas pelo dono, preservadas como briefing, não auditoria reproduzida por este registro. Na execução registrar versão exata/domínio/data, unidades, bruto/compactado/algoritmo, cabeçalhos/cache/rede/device e conteúdo sintético para comparação reprodutível.
+
+339. [WS1] Imagens em arquivos.
+
+Estado: na fila AB(k), logo depois313[CV1], antes340[WS2]. Retirar de components/studio-screens.tsx e de qualquer outro componente imagens gravadas em base64; servir como arquivos AVIF ou WebP no tamanho exato de exibição, com lazy loading fora da primeira tela e cache longo, preservando texto alternativo, acessibilidade274AX1 e qualidade visual. Auditar HTML/dados da página/componentes, sem alterar imagens/conteúdo dos criadores ou identificadores persistidos. Teste deve falhar se qualquer página contiver imagem base64 acima2KB; definir unidade/decodificação explicitamente, cobrir também dados serializados e evitar contorno por duplicação/fragmentação. Verificação visual sintética e política de cache/invalidacão antes de publicar.
+
+340. [WS2] Folha de estilo uma só vez.
+
+Estado: na fila AB(k), depois339[WS1], antes341[WS3]. Medir as duas opções de experimental.inlineCss em condições comparáveis de produção, celular simulado/rede lenta: ligado com as cópias observadas e desligado com arquivo único em cache/pré-carregamento. Usar artefatos/versionamento verificáveis, primeira visita e repetidas, cache frio/quente, número de execuções e dispersão; adotar a menor soma do tempo até primeiro conteúdo nas visitas repetidas e primeira visita, conforme pedido, com critério e unidade explícitos. Se inline permanecer, eliminar cópias duplicadas dos dados da página. Reduzir CSS que nenhuma página usa, considerando todas as páginas/estados responsivos/dinâmicos/idiomas existentes, sem remover estilos de foco/erro/acessibilidade ou recursos contratados. Registrar medições/fontes/data e regressões visuais/sintéticas274AX1. Não mudar configuração real de fornecedor para comparar.
+
+341. [WS3] Peso por página.
+
+Estado: na fila AB(k), depois340[WS2], antes342[WS4]. Medir bruto e compactado de cada tipo: inicial, preços, ajuda, loja, produto, checkout, área do comprador, estúdio e404; medir separadamente JavaScript de cada uma, inclusive compartilhado/hidratado e arquivos/dados/recursos transferidos, evitando dupla contagem ou omissão de cache. Remover de pacotes da inicial e lojas código não usado nelas, preservando fluxos, privacidade, conteúdo dos criadores, idiomas, IDs, direitos e acessibilidade. Usar dados sintéticos no pior caso de conteúdo permitido. Definir limites de peso a partir das medições reproduzidas e teste que falhe se qualquer tipo exceder o limite; não afrouxar limite/assertion para esconder regressão. Registrar antes/depois por versão e compressão sem confundir HTML com custo total da visita.
+
+342. [WS4] Custo das visitas.
+
+Estado: na fila AB(k), depois341[WS3], antes326[IN2]. Atualizar PAGE_BYTES e demais contagens em tests/traffic-cost.ts e tests/plan-cost-registry.ts pelo peso medido no pior caso, antes e depois de WS1–WS3, substituindo referência antiga de48KB somente com evidência. Recalcular margem de todos os planos, mensal/anual, cada cliente isolado usando100%de todos os direitos no pior mês e globalmente; incluir transferências, funções, comandos, cache miss/hit, mídia/JS/CSS/HTML, maior preço pago por fornecedor, tetos e reserva,100%fixosLLC e impostosBrasil/EUA na leitura mais onerosa. Não descontar economia antes da prova nem usar média, quota gratuita ou medição parcial como pior caso. Exibir pendência quando custo/dado desconhecido; não preencher revisão comercial ou certificar60%por simples teste de tráfego. Toda economia segue324[TK6] sem antecipar alteração de preço/limite.
+
+REGRA DOS60% para339–342: margem líquida mínima60%por pagante isolado em100%dos direitos no pior mês e empresa globalmente após todos os custos e impostosBrasil/EUA; pode superar,nunca ficar abaixo. Desconhecido reprova,nãozero; docs/tax-uncertainty.md usa leitura que resulte em MAIS imposto. Desde22/10/2026 todos os custos fixosLLC são integralmente Marktmorgen275[FX1], inclusive resíduosHazelsong conforme336[HZ1]. Toda mudança de página segue ParteA274[AX1].
+
+Proibições: não alterar preços, limites visíveis, comissão, meios aceitos, PLANS_ON_SALE, tax gate, art.9a ou revisão comercial; não alterar conteúdo dos criadores; não criar contas, aceitar termos, contratar, pagar, alterar configurações reais de fornecedores ou contatar terceiros; somente testes sintéticos. Medições de produção são leituras autorizadas, sem submissão/conta/pagamento real. Briefing/proveniência na fila e continuidade; nenhum arquivo de produto/CSS/imagem/custo alterado por este registro. Documentação não é entrega funcional; não incrementa contador. Na execução registrar data/horaFortaleza, commit, suítecompleta, medições oficiais/observadas e publicaçãoREADY/domínio/SHA antes de contar entrega.
