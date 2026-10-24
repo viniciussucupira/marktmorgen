@@ -30,6 +30,7 @@ const NOW = 1_791_700_000;
 const emails: { to: string; subject: string; text: string }[] = [];
 const subs: Record<string, Record<string, unknown>> = {};
 const created: URLSearchParams[] = [];
+let keepScheduledStop = false;
 let createAnswer: "ok" | "declined" | "down" | "otherCustomer" | "otherTier" | "yearly" | "trial" | "pastDue" = "ok";
 
 function subscription(id: string, over: Record<string, unknown> = {}): Record<string, unknown> {
@@ -83,7 +84,7 @@ globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) =>
     if (m && subs[m[1]]) {
       if (method === "POST") {
         const body = new URLSearchParams(String(init?.body ?? ""));
-        if (body.has("cancel_at_period_end")) subs[m[1]].cancel_at_period_end = body.get("cancel_at_period_end") === "true";
+        if (body.has("cancel_at_period_end") && !(keepScheduledStop && body.get("cancel_at_period_end") === "false")) subs[m[1]].cancel_at_period_end = body.get("cancel_at_period_end") === "true";
       }
       return new Response(JSON.stringify(subs[m[1]]), { status: 200 });
     }
@@ -145,6 +146,26 @@ async function main() {
     is("the year is given back for a break that never began", third.kind, "paused");
     // Taken back again, so this store's break does not end beside the next part's.
     await undoPause(store, NOW + DAY);
+  }
+
+  part("Taking a break back requires acknowledgement of the removed stop");
+  {
+    const id = "sub_UndoAck00001";
+    subs[id] = subscription(id);
+    const store = await storeWith("undo-ack@example.com", "undoackstore", id);
+    const set = await pausePlan(store, 1, NOW);
+    is("the break is available to take back", set.kind, "paused");
+    const before = await pauseOf(store);
+    keepScheduledStop = true;
+    let refused = false;
+    try { await undoPause(store, NOW + DAY); } catch { refused = true; }
+    keepScheduledStop = false;
+    is("an unchanged scheduled stop is not reported as kept", refused, true);
+    is("the original pause is retained exactly", await pauseOf(store), before);
+    is("the provider still plans to stop it", subs[id].cancel_at_period_end, true);
+    is("a later acknowledged undo still works", await undoPause(store, NOW + DAY), "kept");
+    is("the pause is removed only after acknowledgement", await pauseOf(store), null);
+    is("the provider no longer plans to stop it", subs[id].cancel_at_period_end, false);
   }
 
   part("The emails say the dates and the price");

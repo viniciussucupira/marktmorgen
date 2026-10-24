@@ -251,6 +251,11 @@ export async function undoPause(store: Store, nowSeconds = Math.floor(Date.now()
   if (!record) return "none";
   if (nowSeconds < record.from && record.subscription === store.subscriptionId) {
     const state = await setCancelAtPeriodEnd(record.subscription, false);
+    // Being active is not acknowledgement that the scheduled stop was removed.
+    // Keep the pause and its annual eligibility until that change is observed.
+    if (state.state === "active" && state.cancelsAtEnd) {
+      throw new Error("the subscription is still set to stop at the end of its paid period");
+    }
     await forget(ref, true);
     return state.state === "active" ? "kept" : "stopped";
   }
