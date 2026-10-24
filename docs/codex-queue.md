@@ -4947,11 +4947,13 @@ Proveniência da revisão comercial: passou a fazer parte do Bloco de abertura, 
 3. 309 [EM1] — e-mails para a lista pela Amazon SES.
 4. 313 [CV1] — visitas pelo CDN e imagens pelo Cloudflare R2.
 5. 326 [IN2] — menos comandos e menos tempo de função por página.
-6. 325 [IN1] — plano fixo do Upstash.
-7. 316 [MG3] — vídeo, pedidos, assistente e cartões de preço.
-8. 321 [TK3] — cache de prompt;323 [TK5] — imagens e arquivos;322 [TK4] — API em lote, nesta ordem.
-9. 314 [MG1] — limites invisíveis e remessa. Passo3, débito em conta como única forma de pagamento, descartado pelo dono; não executar.
-10. 318 [IW1] e327 [IN3] — estudos e modelo, por último, nesta ordem.
+6. 329 [EV1] — memória das funções, por pedido posterior do dono de24/10/2026 02h35(Fortaleza).
+7. 330 [EV2] — tarefas agendadas por evento, pelo mesmo pedido.
+8. 325 [IN1] — plano fixo do Upstash.
+9. 316 [MG3] — vídeo, pedidos, assistente e cartões de preço.
+10. 321 [TK3] — cache de prompt;323 [TK5] — imagens e arquivos;322 [TK4] — API em lote, nesta ordem.
+11. 314 [MG1] — limites invisíveis e remessa. Passo3, débito em conta como única forma de pagamento, descartado pelo dono; não executar.
+12. 318 [IW1] e327 [IN3] — estudos e modelo, por último, nesta ordem.
 
 A regra de324 [TK6] vale para toda a posição(k): primeiro todos os planos nos dois intervalos e o assistente devem alcançar pelo menos60% na leitura usada pelo bloqueio de vendas, com a folga do spend floor; somente a economia restante pode aumentar limites impressos, na ordem de316 [MG3]. Nenhum item existente é renumerado. As posições(a)–(j) e o trabalho atual em AB(a) permanecem antes de(k). Proveniências/ordens anteriores incompatíveis ficam preservadas como histórico e são substituídas somente nesses pontos.
 
@@ -6356,6 +6358,8 @@ Estado informado no pedido: no main, o último item é o317 [EU1]; o PR #872 gra
 
 328. [PC1] Redução de custos dentro do Bloco de abertura.
 
+Proveniência posterior EV: pedido de24/10/2026 02h35(Fortaleza) insere329[EV1] e330[EV2] em AB(k), logo depois de326[IN2] e antes de325[IN1]. A lista original abaixo é mantida como histórico; a ordem vigente está na seção AB. TK6 e os números existentes ficam preservados.
+
 Estado: instrução de ordenação em vigor por pedido direto do dono; implementações de custo na fila do Bloco de abertura, posição(k). Este registro documental não conclui esses itens.
 
 Acrescente ao Bloco de abertura das vendas, como posição(k), depois de114 [E2-AFFILIATE-TAX-FORMS], os itens de redução de custos, nesta ordem, do maior ganho para o menor:
@@ -6376,3 +6380,33 @@ REGRA DOS 60% (OBRIGATÓRIA): todo cliente pagante, considerado isoladamente e u
 Proibições: não alterar preços, limites visíveis (exceto aumentos pela regra do item324 [TK6]), comissão, meios de pagamento aceitos, PLANS_ON_SALE, tax gate, art.9a ou revisão comercial; não criar contas, aceitar termos, contratar serviços, pagar valores, alterar configurações reais de fornecedores ou contatar terceiros; somente testes sintéticos com fornecedores simulados.
 
 Proveniência: pedido direto do dono de24/10/2026 02h29(Fortaleza). PC1 registra a nova prioridade e o descarte expresso de MG1/passo3; os itens existentes recebem uma linha de proveniência AB(k)/PC1, sem duplicar implementação ou número. As instruções anteriores que os colocavam depois de AB ficam históricas nos pontos incompatíveis. A regra de TK6 não autoriza aumento antes da margem exigida nem mudança dos meios de pagamento. Nenhuma estimativa de economia ou equivalência com concorrentes é certificada por este documento; fontes, medições e margem ainda devem ser comprovadas na execução. AB(a)/PR873 continua ativo; não iniciar(k) antes de(a)–(j). Nenhuma operação, configuração ou trava foi alterada por este registro. Custo documental sem serviço/operação de produto novo; desconhecido não vira zero.
+
+## EV — Memória dos servidores e tarefas por evento (24/10/2026)
+
+Solicitação do dono (24/10/2026, 02h35, horário de Fortaleza): mais meios tecnológicos de aperfeiçoar o código e reduzir custos do Marktmorgen.
+
+NÃO PARE o que está fazendo. COLOQUE NA FILA, com os próximos números livres, depois dos pedidos já gravados ou em gravação (inclusive o PC de24/10/2026,02h29), e inclua estes itens na posição(k) do Bloco de abertura, logo depois de326 [IN2].
+
+Estado informado no pedido: no main, o último item é o317 [EU1]; o PR #872 grava os itens318a327; o PC ainda não foi gravado. Conferência para este registro: #872 já contém328[PC1]. Próximos números329–330 livres no main e nas filas dos13PRs abertos, sem EV/[EV1]/[EV2] repetidos. Registro no mesmo PR só de documentação, depois de328; ordem de execução em AB(k):326[IN2],329[EV1],330[EV2],325[IN1]. AB(a) continua ativo.
+
+329. [EV1] Memória das funções.
+
+Proveniência AB(k)/EV: integra o Bloco de abertura por pedido do dono de24/10/2026 02h35(Fortaleza), imediatamente depois de326[IN2] e antes de330[EV2]. Aplica-se324[TK6] a toda economia; nenhum item existente é renumerado.
+
+Estado: na fila.
+
+O vercel.json não define memória e o modelo de custos assume2GB por requisição (VERCEL_FUNCTION_GB em lib/spend-cost-table.ts). Pela documentação oficial e datada da Vercel, liste os tamanhos de memória disponíveis para este projeto, meça o uso máximo de memória de cada função (página da loja, checkout, webhooks, estúdio, tarefas agendadas) com dados sintéticos no pior caso, configure o menor tamanho que atenda cada uma com folga e atualize VERCEL_FUNCTION_GB e as contagens somente com o valor configurado. Testes que falham se uma função ultrapassar a memória configurada nos casos sintéticos de pior caso.
+
+330. [EV2] Tarefas agendadas por evento.
+
+Proveniência AB(k)/EV: integra o Bloco de abertura por pedido do dono de24/10/2026 02h35(Fortaleza), imediatamente depois de329[EV1] e antes de325[IN1]. Aplica-se324[TK6] a toda economia; nenhum item existente é renumerado.
+
+Estado: na fila.
+
+As tarefas /api/cron/mail, /api/cron/imports e /api/cron/stream rodam a cada5minutos mesmo sem trabalho. Faça com que cada execução termine na primeira leitura quando não houver nada pendente, e que o trabalho seja acionado pelo próprio evento (envio agendado, importação iniciada, vídeo enviado), mantendo a tarefa agendada só como rede de segurança, com frequência menor. Meça as chamadas e os comandos por mês antes e depois, com zero lojas e com o número máximo de lojas da capacidade do item89 [C2-CAPACITY], e registre o custo fixo resultante nos custos fixos (item275 [FX1]).
+
+REGRA DOS 60% (OBRIGATÓRIA, para EV1 e EV2): todo cliente pagante, considerado isoladamente e usando100% de todos os direitos do plano no pior mês, deve manter margem de lucro líquido MÍNIMA de60%, depois de todos os custos e de todos os impostos, inclusive os brasileiros; a margem pode ser maior, mas nunca menor, e a mesma regra vale para a empresa como um todo. Custo desconhecido não pode ser considerado zero. Use a leitura que resultar em MAIS imposto (docs/tax-uncertainty.md). Desde22/10/2026, todos os custos fixos da LLC são atribuídos integralmente ao Marktmorgen (item275 [FX1]). Um custo só sai do pior caso quando o código garante que ele não pode ocorrer ou quando o novo valor foi medido no pior caso.
+
+Proibições (para EV1 e EV2): não alterar preços, limites visíveis, comissão, meios de pagamento aceitos, PLANS_ON_SALE, tax gate, art.9a ou revisão comercial; não criar contas, aceitar termos, contratar serviços, pagar valores, alterar configurações reais de fornecedores ou contatar terceiros; somente testes sintéticos com fornecedores simulados.
+
+Proveniência: pedido direto do dono de24/10/2026 02h35(Fortaleza), preservado uma única vez depois de328[PC1]. A inserção dos dois itens em AB(k) altera somente esse ponto da ordem PC anterior; o texto original de PC fica histórico, com TK6 preservado. A situação técnica/preços/memória/frequência descrita no pedido deve ser conferida no código e em fontes oficiais datadas durante a execução; não foi medida ou certificada por este registro. Nenhuma memória, agenda, evento, fornecedor, operação real ou contagem de custo é alterada agora. Custo documental sem serviço/operação novo de produto; desconhecido não vira zero. Ao executar cada item, registrar data/hora de Fortaleza, commit, suíte completa e publicação; documento e PR pendente não contam como entrega funcional.
