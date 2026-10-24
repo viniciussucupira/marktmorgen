@@ -23,3 +23,7 @@ For a future live policy, total return attempts must be bounded by the existing 
 TypeScript tests cover receipt binding, idempotent repeats, lost acknowledgements, cross-store/subscription/plan rejection, stale periods, switches, corrupt ledgers, malformed acknowledgements and executable inputs. Billing tests verify owned provider data reaches activation, failed activation returns no new rights, and the subscription GET is reused without a provider write. The existing dedicated loopback Redis CI job executes both production Lua scripts, including64 concurrent duplicates and pre-write failure checks. Full exact-head CI is required; no local test result is claimed.
 
 No user interface, creator content, language or persisted identifier is changed. This internal document does not certify accessibility or legal compliance.
+
+## Verification history
+
+Head69fddf8585a422e6fc40b3227ad6078b05c8ac57 failed the disposable Redis job120790193362 at2026-10-24T05:27:32.915Z while comparing raw HGETALL arrays after a refused activation. The source returns0 before all writes on that path; the assertion relied on Redis hash iteration order, which is not a stable record order. The revised test compares all sorted field/value pairs, retaining every field and value and the unchanged-state requirement. The actual source Lua still runs; no refusal assertion or production guard is removed. Full verification on the new head is required, not a single-job retry.
