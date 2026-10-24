@@ -6181,3 +6181,26 @@ Regras para o item: é proibido criar contas, aceitar termos, contratar serviço
 Estado inicial: na fila. Ao concluir, registre a data e a hora de Fortaleza, o commit, o resultado da suíte completa e a publicação, e deixe o estado como "pronto, aguardando o dono e a LLC".
 
 Proveniência EU1: pedido integral das23h50 de23/10/2026 (Fortaleza), versão vinculante sobre qualquer versão anterior ainda não registrada. Conferidos main, todos os15PRs abertos e os2heads alterados desde423refs auditados (agora424), sem EU1/AB ou317ocupado. A decisão(a) é registrada no AGENTS.md no mesmo PR; os8passos, fontes oficiais, cálculos e migração permanecem na fila. Nenhum serviço da Hazelsong foi alterado ou desligado, nenhuma região ativa foi presumida e nenhuma trava foi ligada. Desconhecido reprova; a nova decisão não reduz valores, tarifas, reservas ou impostos.
+
+## IW — Pior resposta da Prefeitura de Fortaleza no modelo de margem (24/10/2026)
+
+Solicitação do dono (24/10/2026, 01h32, horário de Fortaleza).
+
+NÃO PARE o que está fazendo. COLOQUE NA FILA, com o próximo número livre, depois dos pedidos já gravados ou em gravação (inclusive o PR #870).
+
+Estado informado no pedido: no main, o último item é o316 [MG3]; o PR #870 grava AB, EU1 e o encerramento da Hazelsong. Conferência para este registro: #870 já incorporado, EU1 ocupa317. Próximo número livre:318, conferido no main e nas filas dos12PRs abertos, inclusive #871; nenhuma seção IW/[IW1] preexistente. A ordem AB permanece vinculante; executar IW1 depois do Bloco de abertura e dos pedidos anteriores, sem interromper AB(a).
+
+318. [IW1] Considerar no modelo de margem a pior resposta possível da Prefeitura de Fortaleza.
+
+Estado: na fila.
+
+1. Em lib/receiving-costs.ts, crie a leitura WORST_FORTALEZA_READING, igual a EU_HOSTING_READING, mas com o ISS de 5% mantido também sobre a receita reembolsada e sobre a contestada (sem dedução), e use-a no lugar de EU_HOSTING_READING sempre que esta for a leitura do gate após a hospedagem na UE.
+2. Em docs/margin-alignment-2026-10-18.md (gerado por scripts/margin-alignment.mjs), acrescente a coluna dessa leitura e o teto de margem com preço ilimitado (cartão: cerca de 57,6%; vendas só a empresas: cerca de 58,2%), calculados pelo código, nunca digitados.
+3. Em docs/tax-uncertainty.md, questão 10, registre: sob a pior resposta (sem exportação, ISS de 5% sobre a receita), nenhum preço mantém 60% com pagamento por cartão; uma resposta desfavorável impede a abertura da LLC até ser revertida.
+4. Testes: tests/margin-alignment.test.ts deve falhar se essa leitura aprovar algum plano enquanto o teto calculado estiver abaixo de 60%.
+
+REGRA DOS 60% (OBRIGATÓRIA): todo cliente pagante, considerado isoladamente e usando 100% de todos os direitos do plano no pior mês, deve manter margem de lucro líquido MÍNIMA de 60%, depois de todos os custos e de todos os impostos, inclusive os brasileiros; a margem pode ser maior, mas nunca menor, e a mesma regra vale para a empresa como um todo. Custo desconhecido não pode ser considerado zero. Use a leitura que resultar em MAIS imposto (docs/tax-uncertainty.md). Desde 22/10/2026, todos os custos fixos da LLC são atribuídos integralmente ao Marktmorgen (item 275 [FX1]).
+
+Proibições: não alterar preços, limites visíveis, comissão, PLANS_ON_SALE, tax gate, art. 9a ou revisão comercial; não criar contas, aceitar termos, contratar serviços, pagar valores ou contatar terceiros; somente testes sintéticos.
+
+Proveniência: pedido direto do dono, recebido com data24/10/2026 01h32(Fortaleza). Registro documental único, após317[EU1], preservando integralmente os quatro passos e as proibições. Os percentuais aproximados acima são referências do pedido para futura conferência, não resultados calculados ou certificados por este registro. Nenhuma leitura fiscal, geração de tabela, cálculo, gate ou operação real é alterada agora. Custo do registro: nenhum serviço/operação de produto novo; faturas desconhecidas continuam desconhecidas. Ao executar, registrar data/hora de Fortaleza, commit, suíte completa e publicação, sem contar documento ou PR pendente como entrega funcional.
