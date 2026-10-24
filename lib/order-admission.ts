@@ -34,6 +34,7 @@
  * scripts/test_order_admission_redis.py runs both scripts on a real Redis.
  */
 import { allowanceWindow } from "@/lib/allowance-window";
+import { reservePaidResourceWindow } from "@/lib/contract-resource-window";
 import { admitNonPaying } from "@/lib/free-pool";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { type Store, storeFolder, storeRef } from "@/lib/store";
@@ -146,6 +147,9 @@ export async function admitOrders(store: Store, n = 1, now = Date.now(), items =
   // Counted in the store's billing month (lib/allowance-window.ts); none known, none admitted.
   const window = allowanceWindow(store, now);
   if (!window) return { ok: false, reason: "unavailable" };
+  // A paid contract must cover this resource month before capacity is held or a buyer can pay.
+  // Settlement below remains available for checkouts already paid.
+  if (store.period?.funded === true && !(await reservePaidResourceWindow(store))) return { ok: false, reason: "unavailable" };
   try {
     const folder = await storeFolder(storeRef(store));
     const room = dataKey(store);
