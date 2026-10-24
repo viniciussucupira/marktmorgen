@@ -19,8 +19,11 @@ import { countStudio } from "@/lib/studio-route";
 import { ESSENTIAL_PER_DAY, STUDIO_PAGE_UNITS } from "@/lib/studio-allowance-rules";
 import { isResting, takePublicRequest } from "@/lib/traffic";
 import { REQUESTS_PER_VISIT, EXTRA_REQUESTS, VISITS_INCLUDED, publicVisitLimit, requestLimitFor } from "@/lib/traffic-rules";
-import { claimHandle, setSubscription, storeFolder, storeForEmail, type Store } from "@/lib/store";
+import { claimHandle, ensureStatsId, setSubscription, storeFolder, storeForEmail, type Store } from "@/lib/store";
 import { allowanceWindow } from "@/lib/allowance-window";
+import { connect, refreshTargets, saveSettings, testConnection, disconnect, syncView } from "@/lib/email-sync";
+import { seal } from "@/lib/secret-box";
+import { setPlatformHooksForTests } from "@/lib/email-platforms";
 
 const paying = (n: number, extra: Partial<Store> = {}) => ({
   sid: `${String(n).padStart(2, "0")}`.padEnd(32, "a"), handle: `paying${n}`, statsId: null, tier: "creator" as const,
@@ -163,4 +166,41 @@ test("funded store-metered emails require paid proof before counters or provider
   assert.equal(await allowanceUsed(store,kind),0);
  }
  assert.equal(sends,0);
+});
+
+test("funded owner platform calls refuse without approval while consent reduction and disconnect remain available",async()=>{
+ const oldKey=process.env.NIMBUS_DATA_KEY;
+ process.env.NIMBUS_DATA_KEY="synthetic-email-sync-data-key-only-000000";
+ let resolved=0;
+ setPlatformHooksForTests({resolve:async()=>{resolved+=1;throw new Error("No real platform lookup in this synthetic test");}});
+ try{
+  await claimHandle("funded-sync@example.com","funded-sync-shop","Funded Sync Shop","");
+  await ensureStatsId("funded-sync@example.com");
+  await setSubscription("funded-sync@example.com",{customerId:"cus_SyncFunded001",subscriptionId:"sub_SyncFunded001",active:true,period:{...paidPeriod(),funded:true}});
+  const store=(await storeForEmail("funded-sync@example.com"))!;
+  const key="synthetic_platform_key_000000";
+  const config={handle:store.handle,provider:"kit",key:seal(key,`email-sync|${store.statsId}|kit`),last4:"0000",target:{id:"target-old",name:"Synthetic audience"},free:true,buyers:"all",products:[],tags:{},since:Date.now(),connectedAt:Date.now()};
+  const configKey=`nl:esync:cfg:${store.statsId}`;
+  await redis.pipeline([["SET",configKey,JSON.stringify(config)]]);
+  const refused={ok:false,message:"The platform could not be contacted just now. Try again in a moment."};
+  assert.deepEqual(await connect(store,"kit",key),refused);
+  assert.deepEqual(await refreshTargets(store),refused);
+  const tested=await testConnection(store);
+  assert.equal(tested.ok,false);assert.equal(tested.message,refused.message);
+  assert.equal(tested.view.connected?.target?.id,"target-old");
+  assert.deepEqual(await saveSettings(store,{target:"target-new",free:true,buyers:"all",products:[],tags:{}}),refused);
+  const [kept]=await redis.pipeline([["GET",configKey]]);
+  assert.equal(kept,JSON.stringify(config));
+  assert.equal(await allowanceUsed(store,"integration"),0);
+  assert.equal(resolved,0,"no provider lookup or network request");
+  const reduced=await saveSettings(store,{target:"target-old",free:false,buyers:"none",products:[],tags:{}});
+  assert.equal(reduced.ok,true);
+  assert.equal((await syncView(store)).connected?.free,false);
+  assert.equal((await syncView(store)).connected?.buyers,"none");
+  assert.equal((await disconnect(store)).connected,null);
+  assert.equal(resolved,0);
+ }finally{
+  setPlatformHooksForTests(undefined);
+  if(oldKey===undefined)delete process.env.NIMBUS_DATA_KEY;else process.env.NIMBUS_DATA_KEY=oldKey;
+ }
 });
