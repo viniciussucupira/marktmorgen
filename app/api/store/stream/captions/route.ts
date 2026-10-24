@@ -5,7 +5,8 @@ import { readKind } from "@/lib/catalog";
 import { ITEM_ID_PATTERN, findLesson, readCourses } from "@/lib/course";
 import { storeFolder, storeForEmail } from "@/lib/store";
 import { guardStoreWrite, text } from "@/lib/store-request";
-import { addCaption, dropCaption, isStreamConfigured } from "@/lib/stream";
+import { dropCaption, isStreamConfigured } from "@/lib/stream";
+import { addStoreCaption } from "@/lib/store-caption";
 import { readStreamPath } from "@/lib/stream-rules";
 import { autoQuote, requestAutoCaptions } from "@/lib/auto-captions";
 
@@ -70,7 +71,7 @@ export async function POST(request: NextRequest) {
       if (!asked.ok) return Response.json({ ok: false, error: asked.reason === "off" ? "off" : `auto_${asked.reason}` }, { status: asked.reason === "off" ? 404 : 400 });
       return Response.json({ ok: true, writing: asked.writing, cents: asked.cents }, { headers: { "Cache-Control": "no-store" } });
     }
-    const answer = action === "add" ? await addCaption(pathname, lang, body.text) : await dropCaption(pathname, lang);
+    const answer = action === "add" ? await addStoreCaption(store, pathname, lang, body.text) : await dropCaption(pathname, lang);
     if (!answer.ok) {
       const error = answer.reason === "unavailable" ? "video_unavailable" : `caption_${answer.reason}`;
       return Response.json({ ok: false, error: answer.reason === "off" ? "off" : error }, { status: STATUS[answer.reason] ?? 400 });
