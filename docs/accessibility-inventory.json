@@ -8,507 +8,1152 @@
   "pageTemplates": [
     {
       "source": "app/[handle]/[slug]/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/[handle]/[slug]",
+      "parameters": [
+        {
+          "name": "handle",
+          "kind": "segment"
+        },
+        {
+          "name": "slug",
+          "kind": "segment"
+        }
+      ]
     },
     {
       "source": "app/[handle]/affiliates/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/[handle]/affiliates",
+      "parameters": [
+        {
+          "name": "handle",
+          "kind": "segment"
+        }
+      ]
     },
     {
       "source": "app/[handle]/blog/[post]/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/[handle]/blog/[post]",
+      "parameters": [
+        {
+          "name": "handle",
+          "kind": "segment"
+        },
+        {
+          "name": "post",
+          "kind": "segment"
+        }
+      ]
     },
     {
       "source": "app/[handle]/blog/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/[handle]/blog",
+      "parameters": [
+        {
+          "name": "handle",
+          "kind": "segment"
+        }
+      ]
     },
     {
       "source": "app/[handle]/book/[product]/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/[handle]/book/[product]",
+      "parameters": [
+        {
+          "name": "handle",
+          "kind": "segment"
+        },
+        {
+          "name": "product",
+          "kind": "segment"
+        }
+      ]
     },
     {
       "source": "app/[handle]/certificate/[id]/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/[handle]/certificate/[id]",
+      "parameters": [
+        {
+          "name": "handle",
+          "kind": "segment"
+        },
+        {
+          "name": "id",
+          "kind": "segment"
+        }
+      ]
     },
     {
       "source": "app/[handle]/community/chat/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/[handle]/community/chat",
+      "parameters": [
+        {
+          "name": "handle",
+          "kind": "segment"
+        }
+      ]
     },
     {
       "source": "app/[handle]/community/events/[event]/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/[handle]/community/events/[event]",
+      "parameters": [
+        {
+          "name": "handle",
+          "kind": "segment"
+        },
+        {
+          "name": "event",
+          "kind": "segment"
+        }
+      ]
     },
     {
       "source": "app/[handle]/community/events/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/[handle]/community/events",
+      "parameters": [
+        {
+          "name": "handle",
+          "kind": "segment"
+        }
+      ]
     },
     {
       "source": "app/[handle]/community/leaderboard/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/[handle]/community/leaderboard",
+      "parameters": [
+        {
+          "name": "handle",
+          "kind": "segment"
+        }
+      ]
     },
     {
       "source": "app/[handle]/community/members/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/[handle]/community/members",
+      "parameters": [
+        {
+          "name": "handle",
+          "kind": "segment"
+        }
+      ]
     },
     {
       "source": "app/[handle]/community/messages/[pair]/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/[handle]/community/messages/[pair]",
+      "parameters": [
+        {
+          "name": "handle",
+          "kind": "segment"
+        },
+        {
+          "name": "pair",
+          "kind": "segment"
+        }
+      ]
     },
     {
       "source": "app/[handle]/community/messages/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/[handle]/community/messages",
+      "parameters": [
+        {
+          "name": "handle",
+          "kind": "segment"
+        }
+      ]
     },
     {
       "source": "app/[handle]/community/notifications/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/[handle]/community/notifications",
+      "parameters": [
+        {
+          "name": "handle",
+          "kind": "segment"
+        }
+      ]
     },
     {
       "source": "app/[handle]/community/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/[handle]/community",
+      "parameters": [
+        {
+          "name": "handle",
+          "kind": "segment"
+        }
+      ]
     },
     {
       "source": "app/[handle]/community/post/[post]/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/[handle]/community/post/[post]",
+      "parameters": [
+        {
+          "name": "handle",
+          "kind": "segment"
+        },
+        {
+          "name": "post",
+          "kind": "segment"
+        }
+      ]
     },
     {
       "source": "app/[handle]/community/search/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/[handle]/community/search",
+      "parameters": [
+        {
+          "name": "handle",
+          "kind": "segment"
+        }
+      ]
     },
     {
       "source": "app/[handle]/community/you/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/[handle]/community/you",
+      "parameters": [
+        {
+          "name": "handle",
+          "kind": "segment"
+        }
+      ]
     },
     {
       "source": "app/[handle]/contact/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/[handle]/contact",
+      "parameters": [
+        {
+          "name": "handle",
+          "kind": "segment"
+        }
+      ]
     },
     {
       "source": "app/[handle]/course/[product]/[lesson]/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/[handle]/course/[product]/[lesson]",
+      "parameters": [
+        {
+          "name": "handle",
+          "kind": "segment"
+        },
+        {
+          "name": "product",
+          "kind": "segment"
+        },
+        {
+          "name": "lesson",
+          "kind": "segment"
+        }
+      ]
     },
     {
       "source": "app/[handle]/course/[product]/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/[handle]/course/[product]",
+      "parameters": [
+        {
+          "name": "handle",
+          "kind": "segment"
+        },
+        {
+          "name": "product",
+          "kind": "segment"
+        }
+      ]
     },
     {
       "source": "app/[handle]/discord/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/[handle]/discord",
+      "parameters": [
+        {
+          "name": "handle",
+          "kind": "segment"
+        }
+      ]
     },
     {
       "source": "app/[handle]/form/[form]/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/[handle]/form/[form]",
+      "parameters": [
+        {
+          "name": "handle",
+          "kind": "segment"
+        },
+        {
+          "name": "form",
+          "kind": "segment"
+        }
+      ]
     },
     {
       "source": "app/[handle]/free/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/[handle]/free",
+      "parameters": [
+        {
+          "name": "handle",
+          "kind": "segment"
+        }
+      ]
     },
     {
       "source": "app/[handle]/group/[group]/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/[handle]/group/[group]",
+      "parameters": [
+        {
+          "name": "handle",
+          "kind": "segment"
+        },
+        {
+          "name": "group",
+          "kind": "segment"
+        }
+      ]
     },
     {
       "source": "app/[handle]/join/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/[handle]/join",
+      "parameters": [
+        {
+          "name": "handle",
+          "kind": "segment"
+        }
+      ]
     },
     {
       "source": "app/[handle]/left/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/[handle]/left",
+      "parameters": [
+        {
+          "name": "handle",
+          "kind": "segment"
+        }
+      ]
     },
     {
       "source": "app/[handle]/letters/[letter]/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/[handle]/letters/[letter]",
+      "parameters": [
+        {
+          "name": "handle",
+          "kind": "segment"
+        },
+        {
+          "name": "letter",
+          "kind": "segment"
+        }
+      ]
     },
     {
       "source": "app/[handle]/letters/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/[handle]/letters",
+      "parameters": [
+        {
+          "name": "handle",
+          "kind": "segment"
+        }
+      ]
     },
     {
       "source": "app/[handle]/manage/card/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/[handle]/manage/card",
+      "parameters": [
+        {
+          "name": "handle",
+          "kind": "segment"
+        }
+      ]
     },
     {
       "source": "app/[handle]/manage/leave/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/[handle]/manage/leave",
+      "parameters": [
+        {
+          "name": "handle",
+          "kind": "segment"
+        }
+      ]
     },
     {
       "source": "app/[handle]/manage/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/[handle]/manage",
+      "parameters": [
+        {
+          "name": "handle",
+          "kind": "segment"
+        }
+      ]
     },
     {
       "source": "app/[handle]/manage/switch/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/[handle]/manage/switch",
+      "parameters": [
+        {
+          "name": "handle",
+          "kind": "segment"
+        }
+      ]
     },
     {
       "source": "app/[handle]/media-kit/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/[handle]/media-kit",
+      "parameters": [
+        {
+          "name": "handle",
+          "kind": "segment"
+        }
+      ]
     },
     {
       "source": "app/[handle]/move/[product]/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/[handle]/move/[product]",
+      "parameters": [
+        {
+          "name": "handle",
+          "kind": "segment"
+        },
+        {
+          "name": "product",
+          "kind": "segment"
+        }
+      ]
     },
     {
       "source": "app/[handle]/orders/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/[handle]/orders",
+      "parameters": [
+        {
+          "name": "handle",
+          "kind": "segment"
+        }
+      ]
     },
     {
       "source": "app/[handle]/p/[product]/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/[handle]/p/[product]",
+      "parameters": [
+        {
+          "name": "handle",
+          "kind": "segment"
+        },
+        {
+          "name": "product",
+          "kind": "segment"
+        }
+      ]
     },
     {
       "source": "app/[handle]/p/[product]/reviews/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/[handle]/p/[product]/reviews",
+      "parameters": [
+        {
+          "name": "handle",
+          "kind": "segment"
+        },
+        {
+          "name": "product",
+          "kind": "segment"
+        }
+      ]
     },
     {
       "source": "app/[handle]/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/[handle]",
+      "parameters": [
+        {
+          "name": "handle",
+          "kind": "segment"
+        }
+      ]
     },
     {
       "source": "app/[handle]/pay/[request]/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/[handle]/pay/[request]",
+      "parameters": [
+        {
+          "name": "handle",
+          "kind": "segment"
+        },
+        {
+          "name": "request",
+          "kind": "segment"
+        }
+      ]
     },
     {
       "source": "app/[handle]/podcast/[product]/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/[handle]/podcast/[product]",
+      "parameters": [
+        {
+          "name": "handle",
+          "kind": "segment"
+        },
+        {
+          "name": "product",
+          "kind": "segment"
+        }
+      ]
     },
     {
       "source": "app/[handle]/renew/[product]/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/[handle]/renew/[product]",
+      "parameters": [
+        {
+          "name": "handle",
+          "kind": "segment"
+        },
+        {
+          "name": "product",
+          "kind": "segment"
+        }
+      ]
     },
     {
       "source": "app/[handle]/resting/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/[handle]/resting",
+      "parameters": [
+        {
+          "name": "handle",
+          "kind": "segment"
+        }
+      ]
     },
     {
       "source": "app/[handle]/review/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/[handle]/review",
+      "parameters": [
+        {
+          "name": "handle",
+          "kind": "segment"
+        }
+      ]
     },
     {
       "source": "app/[handle]/shop/[collection]/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/[handle]/shop/[collection]",
+      "parameters": [
+        {
+          "name": "handle",
+          "kind": "segment"
+        },
+        {
+          "name": "collection",
+          "kind": "segment"
+        }
+      ]
     },
     {
       "source": "app/[handle]/sign/[agreement]/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/[handle]/sign/[agreement]",
+      "parameters": [
+        {
+          "name": "handle",
+          "kind": "segment"
+        },
+        {
+          "name": "agreement",
+          "kind": "segment"
+        }
+      ]
     },
     {
       "source": "app/[handle]/thanks/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/[handle]/thanks",
+      "parameters": [
+        {
+          "name": "handle",
+          "kind": "segment"
+        }
+      ]
     },
     {
       "source": "app/[handle]/tip/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/[handle]/tip",
+      "parameters": [
+        {
+          "name": "handle",
+          "kind": "segment"
+        }
+      ]
     },
     {
       "source": "app/[handle]/waitlist/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/[handle]/waitlist",
+      "parameters": [
+        {
+          "name": "handle",
+          "kind": "segment"
+        }
+      ]
     },
     {
       "source": "app/affiliate-programs/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/affiliate-programs",
+      "parameters": []
     },
     {
       "source": "app/affiliate/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/affiliate",
+      "parameters": []
     },
     {
       "source": "app/blog/[slug]/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/blog/[slug]",
+      "parameters": [
+        {
+          "name": "slug",
+          "kind": "segment"
+        }
+      ]
     },
     {
       "source": "app/blog/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/blog",
+      "parameters": []
     },
     {
       "source": "app/copyright/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/copyright",
+      "parameters": []
     },
     {
       "source": "app/creators/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/creators",
+      "parameters": []
     },
     {
       "source": "app/demo/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/demo",
+      "parameters": []
     },
     {
       "source": "app/developers/checkout-script/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/developers/checkout-script",
+      "parameters": []
     },
     {
       "source": "app/developers/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/developers",
+      "parameters": []
     },
     {
       "source": "app/embed/[handle]/[product]/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/embed/[handle]/[product]",
+      "parameters": [
+        {
+          "name": "handle",
+          "kind": "segment"
+        },
+        {
+          "name": "product",
+          "kind": "segment"
+        }
+      ]
     },
     {
       "source": "app/embed/[handle]/join/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/embed/[handle]/join",
+      "parameters": [
+        {
+          "name": "handle",
+          "kind": "segment"
+        }
+      ]
     },
     {
       "source": "app/for/[slug]/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/for/[slug]",
+      "parameters": [
+        {
+          "name": "slug",
+          "kind": "segment"
+        }
+      ]
     },
     {
       "source": "app/grow-sales/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/grow-sales",
+      "parameters": []
     },
     {
       "source": "app/help/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/help",
+      "parameters": []
     },
     {
       "source": "app/help/zoom/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/help/zoom",
+      "parameters": []
     },
     {
       "source": "app/invite/[code]/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/invite/[code]",
+      "parameters": [
+        {
+          "name": "code",
+          "kind": "segment"
+        }
+      ]
     },
     {
       "source": "app/l/ended/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/l/ended",
+      "parameters": []
     },
     {
       "source": "app/library/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/library",
+      "parameters": []
     },
     {
       "source": "app/mission/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/mission",
+      "parameters": []
     },
     {
       "source": "app/numbers/[id]/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/numbers/[id]",
+      "parameters": [
+        {
+          "name": "id",
+          "kind": "segment"
+        }
+      ]
     },
     {
       "source": "app/outreach/stop/[token]/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/outreach/stop/[token]",
+      "parameters": [
+        {
+          "name": "token",
+          "kind": "segment"
+        }
+      ]
     },
     {
       "source": "app/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/",
+      "parameters": []
     },
     {
       "source": "app/platform/[slug]/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/platform/[slug]",
+      "parameters": [
+        {
+          "name": "slug",
+          "kind": "segment"
+        }
+      ]
     },
     {
       "source": "app/platform/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/platform",
+      "parameters": []
     },
     {
       "source": "app/platform/path/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/platform/path",
+      "parameters": []
     },
     {
       "source": "app/pricing/page.tsx",
-      "status": "AAA review not completed; scoped keyboard, viewport and automated AA checks in tests/e2e/pricing.mjs"
+      "status": "AAA review not completed; scoped keyboard, viewport and automated AA checks in tests/e2e/pricing.mjs",
+      "routeTemplate": "/pricing",
+      "parameters": []
     },
     {
       "source": "app/privacy/delete/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/privacy/delete",
+      "parameters": []
     },
     {
       "source": "app/privacy/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/privacy",
+      "parameters": []
     },
     {
       "source": "app/products/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/products",
+      "parameters": []
     },
     {
       "source": "app/proof/[slug]/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/proof/[slug]",
+      "parameters": [
+        {
+          "name": "slug",
+          "kind": "segment"
+        }
+      ]
     },
     {
       "source": "app/refunds/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/refunds",
+      "parameters": []
     },
     {
       "source": "app/report/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/report",
+      "parameters": []
     },
     {
       "source": "app/signin/code/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/signin/code",
+      "parameters": []
     },
     {
       "source": "app/signin/confirm-move/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/signin/confirm-move",
+      "parameters": []
     },
     {
       "source": "app/signin/confirm/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/signin/confirm",
+      "parameters": []
     },
     {
       "source": "app/signin/join/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/signin/join",
+      "parameters": []
     },
     {
       "source": "app/signin/lost/confirm/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/signin/lost/confirm",
+      "parameters": []
     },
     {
       "source": "app/signin/lost/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/signin/lost",
+      "parameters": []
     },
     {
       "source": "app/signin/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/signin",
+      "parameters": []
     },
     {
       "source": "app/signin/rescue/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/signin/rescue",
+      "parameters": []
     },
     {
       "source": "app/studio/affiliates/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/studio/affiliates",
+      "parameters": []
     },
     {
       "source": "app/studio/agreements/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/studio/agreements",
+      "parameters": []
     },
     {
       "source": "app/studio/blog/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/studio/blog",
+      "parameters": []
     },
     {
       "source": "app/studio/bundles/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/studio/bundles",
+      "parameters": []
     },
     {
       "source": "app/studio/calendar/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/studio/calendar",
+      "parameters": []
     },
     {
       "source": "app/studio/community/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/studio/community",
+      "parameters": []
     },
     {
       "source": "app/studio/copy/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/studio/copy",
+      "parameters": []
     },
     {
       "source": "app/studio/course/[product]/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/studio/course/[product]",
+      "parameters": [
+        {
+          "name": "product",
+          "kind": "segment"
+        }
+      ]
     },
     {
       "source": "app/studio/deals/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/studio/deals",
+      "parameters": []
     },
     {
       "source": "app/studio/discord/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/studio/discord",
+      "parameters": []
     },
     {
       "source": "app/studio/email/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/studio/email",
+      "parameters": []
     },
     {
       "source": "app/studio/forms/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/studio/forms",
+      "parameters": []
     },
     {
       "source": "app/studio/funnels/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/studio/funnels",
+      "parameters": []
     },
     {
       "source": "app/studio/growth/page.tsx",
-      "status": "Scoped synthetic Chromium4 goals/4 widths and role tests;whole-page AAA/manual assistive/user research pending"
+      "status": "Scoped synthetic Chromium4 goals/4 widths and role tests;whole-page AAA/manual assistive/user research pending",
+      "routeTemplate": "/studio/growth",
+      "parameters": []
     },
     {
       "source": "app/studio/import/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/studio/import",
+      "parameters": []
     },
     {
       "source": "app/studio/inbox/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/studio/inbox",
+      "parameters": []
     },
     {
       "source": "app/studio/integrations/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/studio/integrations",
+      "parameters": []
     },
     {
       "source": "app/studio/invite/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/studio/invite",
+      "parameters": []
     },
     {
       "source": "app/studio/meetings/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/studio/meetings",
+      "parameters": []
     },
     {
       "source": "app/studio/memberships/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/studio/memberships",
+      "parameters": []
     },
     {
       "source": "app/studio/new/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/studio/new",
+      "parameters": []
     },
     {
       "source": "app/studio/outreach/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/studio/outreach",
+      "parameters": []
     },
     {
       "source": "app/studio/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/studio",
+      "parameters": []
     },
     {
       "source": "app/studio/pages/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/studio/pages",
+      "parameters": []
     },
     {
       "source": "app/studio/path/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/studio/path",
+      "parameters": []
     },
     {
       "source": "app/studio/path/privacy/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/studio/path/privacy",
+      "parameters": []
     },
     {
       "source": "app/studio/paused/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/studio/paused",
+      "parameters": []
     },
     {
       "source": "app/studio/people/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/studio/people",
+      "parameters": []
     },
     {
       "source": "app/studio/phone/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/studio/phone",
+      "parameters": []
     },
     {
       "source": "app/studio/podcast/[product]/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/studio/podcast/[product]",
+      "parameters": [
+        {
+          "name": "product",
+          "kind": "segment"
+        }
+      ]
     },
     {
       "source": "app/studio/requests/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/studio/requests",
+      "parameters": []
     },
     {
       "source": "app/studio/reviews/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/studio/reviews",
+      "parameters": []
     },
     {
       "source": "app/studio/site/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/studio/site",
+      "parameters": []
     },
     {
       "source": "app/studio/team/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/studio/team",
+      "parameters": []
     },
     {
       "source": "app/takedown/[token]/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/takedown/[token]",
+      "parameters": [
+        {
+          "name": "token",
+          "kind": "segment"
+        }
+      ]
     },
     {
       "source": "app/terms/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/terms",
+      "parameters": []
     },
     {
       "source": "app/unsubscribe/page.tsx",
-      "status": "AAA review not completed"
+      "status": "AAA review not completed",
+      "routeTemplate": "/unsubscribe",
+      "parameters": []
     }
   ],
   "boundaryTemplates": [
@@ -1200,5 +1845,10 @@
       "source": "app/studio/layout.tsx",
       "status": "not yet reviewed for this programme"
     }
-  ]
+  ],
+  "routeInventory": {
+    "generator": "scripts/accessibility-route-inventory.mjs",
+    "scope": "Source templates and parameter shapes only. Existing review status is preserved; a route is not an exercised fixture or a passing accessibility test.",
+    "pageTemplates": 126
+  }
 }
