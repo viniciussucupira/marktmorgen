@@ -27,6 +27,7 @@
  */
 import type { Store } from "@/lib/store";
 import { takeAllowance } from "@/lib/store-allowance";
+import { reservePaidResourceWindow } from "@/lib/contract-resource-window";
 import { takePublicRequest } from "@/lib/traffic";
 
 /** Public requests a community picture counts as: its bytes pass through us (tests/plan-cost-registry.ts holds the price). */
@@ -34,6 +35,7 @@ export const PICTURE_REQUEST_UNITS = 4;
 
 /** One action, taken from the store's month: the buyer's figure, or the creator's studio requests. */
 export async function takeBuyerAction(store: Store, by: "buyer" | "owner" = "buyer"): Promise<boolean> {
+  if (store.period?.funded === true && !(await reservePaidResourceWindow(store))) return false;
   const taken = by === "owner" ? await takeAllowance(store, "studio") : await takeAllowance(store, "buyer");
   return taken.ok;
 }

@@ -22,7 +22,7 @@ import { dropCommunityImage, noteCommunityUpload, picturesKept, sweepCommunityUp
 import { COMMUNITY_PICTURES, TRIAL_COMMUNITY_PICTURES, picturesLimitFor } from "@/lib/community-picture-rules";
 import { MAX_STORE_TASK_BYTES, TASK_ROOM_BYTES, TRIAL_TASK_ROOM_BYTES, taskRoomFor } from "@/lib/assignment-rules";
 import { hasRoom, takeRoom } from "@/lib/assignment";
-import { claimHandle, setSubscription, storeFolder, storeForEmail, type Store } from "@/lib/store";
+import { claimHandle, ensureStatsId, setSubscription, storeFolder, storeForEmail, type Store } from "@/lib/store";
 
 const read = (file: string) => readFileSync(join(process.cwd(), file), "utf8");
 const plan = { subscriptionActive: true, subscriptionId: "sub_Buyer0000001", trialEnds: 0, planEndedAt: "" };
@@ -53,6 +53,17 @@ test("a buyer's action is one of the store's buyer actions, refused past the mon
   assert.equal(await allowanceUsed(store, "studio"), 1);
   // A larger plan has more in the same month.
   assert.equal(await takeBuyerAction({ ...store, tier: "pro" }), true);
+});
+
+test("marked funded buyer and owner actions require their resource month before allowance use", async () => {
+  const made = await payingStore("fundedactions");
+  await ensureStatsId(made.email);
+  const store = (await storeForEmail(made.email))!;
+  const funded = { ...store, period: { ...store.period!, funded: true as const } };
+  assert.equal(await takeBuyerAction(funded), false);
+  assert.equal(await takeBuyerAction(funded, "owner"), false);
+  assert.equal(await allowanceUsed(store, "buyer"), 0);
+  assert.equal(await allowanceUsed(store, "studio"), 0);
 });
 
 test("a store that pays nothing has few, a store whose plan ended answers its buyers a little", () => {
