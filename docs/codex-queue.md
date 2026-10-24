@@ -7169,3 +7169,8 @@ Em implementação após a proteção de reserva: revalidar configuração, bind
 ### AB(a) — relógio emissor do reconhecimento de recursos (24/10/2026)
 
 Em implementação: recusar reconhecimento de coorte quando o relógio regressa antes do instante emissor, mesmo ainda dentro da janela paga. Testar primeira alocação e repetição com regressão de 1ms; conservar coorte comprometida, recibos, dinheiro e slots, sem chamada compensatória. docs/resource-cohort-acknowledgement-clock.md registra limites: apenas comparação CPU não medida, nenhum comando/chave/campo/provedor novo; não aprova margem nem teto global de tentativas. Maior imposto, fixos LLC integrais/Hazelsong preservado e todos os gates fechados. CI completo obrigatório no novo head; nenhuma publicação contabilizada.
+
+
+### AB(a) — relógio antes da submissão de cobrança financiada (24/10/2026)
+
+Em implementação: assertFunding recusa checkout/troca se relógio anterior ao segundo emissor derivado do prazo existente, antes de leitura/escrita de provedor. Teste sintético regressa 1s e exige zero chamadas nos dois caminhos, mantendo positivos existentes. docs/funded-billing-submission-clock.md registra limites; nenhum campo/chave/chamada extra, comparação CPU não medida, maior imposto/fixos LLC integrais/tetos/reserva preservados. Não implementa retomada/renovação nem aprova margem ou rotação de política; todos os gates fechados. CI completo obrigatório; sem entrega contada enquanto pendente.
