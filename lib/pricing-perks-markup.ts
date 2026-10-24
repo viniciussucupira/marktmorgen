@@ -4,8 +4,10 @@
  * Keeping its descendants outside React's hydration tree lets the browser
  * open the list without hydrating all of its rows first.
  */
+const TEXT_ENTITIES: Readonly<Record<string, string>> = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
+
 function escapeText(value: string): string {
-  return value.replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]!);
+  return value.replace(/[&<>"']/g, (char) => TEXT_ENTITIES[char]!);
 }
 
 export function pricingPerksMarkup(perks: readonly string[]): string {
