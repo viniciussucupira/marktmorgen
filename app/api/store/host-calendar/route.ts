@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
       case "source": {
         const source = body.source === "google" || body.source === "ics" ? body.source : "none";
         const problem = await setHostSource(store, email, source);
-        if (problem) return Response.json({ ok: false, error: problem }, { status: 400 });
+        if (problem) return Response.json({ ok: false, error: problem }, { status: problem === "unavailable" ? 503 : 400 });
         return Response.json({ ok: true, view: await view() });
       }
       case "calendars": {
