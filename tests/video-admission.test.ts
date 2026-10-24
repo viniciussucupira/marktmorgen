@@ -18,3 +18,10 @@ test('invalid finite allowance cannot bypass admission',async()=>{for(const limi
 test('confirmed balance below allowance preserves playback',async()=>{set(['99']);reset();assert.equal((await lessonVideo(file,100))?.kind,'stream');assert.equal(players,1);});
 
 test('null or omitted stream allowance cannot mint a player token',async()=>{for(const limit of [null,undefined]){set(['0']);reset();assert.equal(await lessonVideo(file,limit),null);assert.equal(players,0);assert.equal(commands.length,0);}});
+\ntest('marked funded lesson media cannot issue a player without actual financial approval',async()=>{
+ const store={statsId:folder,tier:'creator',cycle:'monthly',subscriptionId:'sub_VideoCohort001',subscriptionActive:true,trialEnds:null,planEndedAt:null,period:{start:Math.floor(Date.UTC(2026,9,1)/1000),end:Math.floor(Date.UTC(2026,10,1)/1000),renews:true,funded:true}} as import('../lib/store').Store;
+ set(['0']);reset();
+ assert.equal(await lessonVideo(file,100,month,store),null);
+ assert.equal(players,0);
+ assert.equal(commands.length,0);
+});
