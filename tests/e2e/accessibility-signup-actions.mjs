@@ -48,19 +48,31 @@ try{
  let up=false;for(let n=0;n<120;n++){if(app.exitCode!==null)throw Error("Local app exited");try{up=(await fetch(upstream)).ok;}catch{}if(up)break;await new Promise(r=>setTimeout(r,500));}
  if(!up)throw Error("Local app did not start");
  browser=await driver.launch();console.log("SIGNUP_MATRIX_ENGINE:"+JSON.stringify({requested:engine,actual:driver.name(),version:browser.version()}));
- for(const width of [320,390,768,1280,1920])for(const mode of ["baseline","text-spacing","reduced-motion","forced-colors","reflow-320"]){
+ for(const width of [320,390,768,1280,1920])for(const mode of ["baseline","text-spacing","reduced-motion","forced-colors","reflow-320",...(process.env.AX2_PUBLIC_STANDARD==="true"?["dark"]:[])]){
   // Each viewport/mode is a separate fresh deployment fixture. Reusing the
   // fake database would exhaust the real ten-store company-funded pool.
   // Keep that production ceiling intact; never seed paying stores or enlarge it.
   if(cases>0){await services.close();services=await startServices(4498);}
   proxyTrace=[];
   const index=cases+1,viewportWidth=mode==="reflow-320"?320:width;
-  const context=await browser.newContext({ignoreHTTPSErrors:true,viewport:{width:viewportWidth,height:900},serviceWorkers:"block",reducedMotion:mode==="reduced-motion"?"reduce":"no-preference",forcedColors:mode==="forced-colors"?"active":"none",extraHTTPHeaders:{"x-forwarded-for":"192.0.2."+index,"Sec-GPC":"1"}});
+  const context=await browser.newContext({...(mode==="dark"?{colorScheme:"dark"}:{}),ignoreHTTPSErrors:true,viewport:{width:viewportWidth,height:900},serviceWorkers:"block",reducedMotion:mode==="reduced-motion"?"reduce":"no-preference",forcedColors:mode==="forced-colors"?"active":"none",extraHTTPHeaders:{"x-forwarded-for":"192.0.2."+index,"Sec-GPC":"1"}});
   let page;let phase="open",foreign=0,interceptedVisits=0,localChallenges=0;const mutations=[],errors=[],network=[];const handle="matrix-"+engine[0]+"-"+index,storeName="Matrix "+engine+" "+index;const inbox="matrix-"+engine+"-"+index+"@example.test",before=services.emails().length;
   try{
    await context.addInitScript(()=>Object.defineProperty(navigator,"globalPrivacyControl",{configurable:true,get:()=>true}));
    if(mode==="text-spacing")await context.addInitScript(()=>document.addEventListener("DOMContentLoaded",()=>{const style=document.createElement("style");style.textContent="*{line-height:1.5!important;letter-spacing:.12em!important;word-spacing:.16em!important}p{margin-bottom:2em!important}";document.head.append(style);},{once:true}));
-   page=await context.newPage();page.setDefaultTimeout(30000);page.setDefaultNavigationTimeout(60000);
+   page=await context.newPage();
+   const restoreDarkAfterNavigation=async()=>{
+    if(mode!=="dark")return;
+    const before=await page.evaluate(()=>matchMedia("(prefers-color-scheme: dark)").matches);
+    await page.emulateMedia({colorScheme:"dark"});
+    const after=await page.evaluate(()=>matchMedia("(prefers-color-scheme: dark)").matches);
+    console.log("AX2_DARK_NAVIGATION:"+JSON.stringify({engine,path:page.url(),before,after}));
+    if(!after)throw Error("Dark color-scheme request not honored after navigation");
+   };
+
+   // Explicit page emulation avoids a Firefox page override masking context media.
+   if(mode==="dark")await page.emulateMedia({colorScheme:"dark"});
+   page.setDefaultTimeout(30000);page.setDefaultNavigationTimeout(60000);
    page.on("request",request=>{network.push({event:"request",method:request.method(),path:new URL(request.url()).pathname});});
    page.on("response",response=>{network.push({event:"response",method:response.request().method(),path:new URL(response.url()).pathname,status:response.status()});});
    page.on("requestfailed",request=>{network.push({event:"failed",method:request.method(),path:new URL(request.url()).pathname,error:request.failure()?.errorText});});
@@ -90,10 +102,11 @@ try{
     return route.continue();
    });
    async function audit(state){
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("networkidle");await restoreDarkAfterNavigation();
     await page.evaluate(()=>{document.activeElement?.blur?.();window.scrollTo({top:0,left:0,behavior:"instant"});});
     await page.waitForFunction(()=>scrollX===0&&scrollY===0);
-    await page.addScriptTag({content:axe});
+    if(mode==="dark"&&!await page.evaluate(()=>matchMedia("(prefers-color-scheme: dark)").matches))throw Error("Dark color-scheme request not honored");
+   await page.addScriptTag({content:axe});
     const result=await page.evaluate(async()=>{
      const root=document.documentElement,result=await window.axe.run(document,{rules:{"color-contrast-enhanced":{enabled:true}}});
      return {scroll:root.scrollWidth,client:root.clientWidth,rules:result.passes.map(r=>r.id),
@@ -104,7 +117,7 @@ try{
     if(result.scroll>result.client||result.violations.length)throw Error("Accessibility/overflow failure at "+state);
     if(result.incomplete.length)gaps.push({width,mode,state,manualReview:result.incomplete});
    }
-   const response=await page.goto(origin+"/signin",{waitUntil:"networkidle"});if(response.status()!==200)throw Error("Signup document failed");
+   const response=await page.goto(origin+"/signin",{waitUntil:"networkidle"});await restoreDarkAfterNavigation();if(response.status()!==200)throw Error("Signup document failed");
    if(await page.locator('input[type="password"],input[autocomplete^="cc-"]').count())throw Error("Unexpected password/card field");
    await audit("signup-form");
    if(mode==="baseline"){
@@ -121,13 +134,13 @@ try{
    const match=String(mail[0].text??"").match(/https?:\/\/[^\s<>"]+\/signin\/confirm\?token=[0-9a-f]{64}/);
    if(!match)throw Error("Captured confirmation link missing");
    const confirmation=new URL(match[0]);if(confirmation.origin!==origin)throw Error("Confirmation escaped synthetic origin");
-   phase="confirmation";await page.goto(confirmation.href,{waitUntil:"networkidle"});
+   phase="confirmation";await page.goto(confirmation.href,{waitUntil:"networkidle"});await restoreDarkAfterNavigation();
    if((await context.cookies()).some(c=>c.name==="nl_session"))throw Error("Reading confirmation spent token or opened session");
    await audit("confirmation-before-tap");
    const signed=page.waitForResponse(r=>new URL(r.url()).pathname==="/api/auth/callback"&&r.request().method()==="POST");
    await page.getByRole("button",{name:"Log me in",exact:true}).focus();await page.keyboard.press("Enter");
    const callback=await signed;if(callback.status()!==303)throw Error("Confirmation did not redirect safely");
-   await page.waitForURL(url=>url.pathname==="/studio");await page.waitForLoadState("networkidle");
+   await page.waitForURL(url=>url.pathname==="/studio");await page.waitForLoadState("networkidle");await restoreDarkAfterNavigation();
    if(!(await context.cookies()).some(c=>c.name==="nl_session"&&c.secure&&c.httpOnly&&c.sameSite==="Lax"))throw Error("Local authenticated session missing");
    phase="empty-studio";await audit("authenticated-first-setup");
    phase="claim-first-store";
@@ -144,7 +157,7 @@ try{
    const publicLink=page.locator('header a[href="/@'+handle+'"]');
    if(await publicLink.count()!==1)throw Error("Actual first-store link missing or ambiguous");
    await publicLink.focus();await page.keyboard.press("Enter");
-   await page.waitForURL(url=>url.pathname==="/@"+handle);await page.waitForLoadState("networkidle");
+   await page.waitForURL(url=>url.pathname==="/@"+handle);await page.waitForLoadState("networkidle");await restoreDarkAfterNavigation();
    // An owner-only preview is insufficient: discard the browser session and
    // reload the actual newly claimed address as an anonymous visitor.
    await context.clearCookies();
