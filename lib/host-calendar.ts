@@ -336,7 +336,7 @@ export async function hostCalendarView(store: Store, email: string, tz: string):
 }
 
 /** What a busy-time source change can be refused for. */
-export type HostChangeProblem = "google_off" | "google_none" | "ics_none" | "calendars" | "write" | "invalid";
+export type HostChangeProblem = "google_off" | "google_none" | "ics_none" | "calendars" | "write" | "invalid" | "unavailable";
 
 /** Picks where a host's busy times come from. A new source is read at the next look. */
 export async function setHostSource(store: Pick<Store, "statsId">, email: string, source: HostSource): Promise<HostChangeProblem | null> {
@@ -357,11 +357,12 @@ export async function setHostSource(store: Pick<Store, "statsId">, email: string
  * ticked reads the primary one) and which one bookings are written to, each
  * checked against the list Google gives now.
  */
-export async function setHostCalendars(store: Pick<Store, "statsId">, email: string, read: string[], write: string): Promise<HostChangeProblem | null> {
+export async function setHostCalendars(store: Store, email: string, read: string[], write: string): Promise<HostChangeProblem | null> {
   if (!store.statsId || !hostSyncOn()) return "google_off";
   const host = hostId(email);
   const conn = await hostConnectionView(store.statsId, host).catch(() => null);
   if (!conn || conn.broken) return "google_none";
+  if (store.period?.funded === true && !(await reservePaidResourceWindow(store))) return "unavailable";
   let listed: GoogleCalendar[];
   try {
     const access = await accessFor(store.statsId, "google", undefined, host);

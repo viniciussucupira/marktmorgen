@@ -455,6 +455,11 @@ async function main(): Promise<void> {
     const storedHostView = await hostCalendarView(fundedHostViewStore, MAYA, NY);
     is("the calendar list is unavailable without a funded resource window", [storedHostView.calendars, storedHostView.calendarsError, google.length], [null, "Calendar choices are temporarily unavailable. Try again later.", beforeCalendarListCalls]);
     is("the existing connection and last reading remain visible", [storedHostView.google?.freebusy, storedHostView.sync.lastSuccess > 0], [true, true]);
+    const beforeSelectionCalls = google.length;
+    const refusedSelection = await setHostCalendars(fundedHostViewStore, MAYA, ["maya@example.com"], "");
+    const afterSelectionView = await hostCalendarView(fundedHostViewStore, MAYA, NY);
+    is("new selection refuses before provider lookup and preserves existing choices", [refusedSelection, google.length, afterSelectionView.read, afterSelectionView.write], ["unavailable", beforeSelectionCalls, storedHostView.read, storedHostView.write]);
+
   } finally {
     if (beforeCalendarScope === undefined) delete process.env.GOOGLE_CALENDAR_SYNC_SCOPES;
     else process.env.GOOGLE_CALENDAR_SYNC_SCOPES = beforeCalendarScope;

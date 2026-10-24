@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
       case "calendars": {
         const read = Array.isArray(body.read) ? body.read.filter((id): id is string => typeof id === "string").slice(0, 20) : [];
         const problem = await setHostCalendars(store, email, read, text(body.write, 300));
-        if (problem) return Response.json({ ok: false, error: problem }, { status: 400 });
+        if (problem) return Response.json({ ok: false, error: problem }, { status: problem === "unavailable" ? 503 : 400 });
         return Response.json({ ok: true, view: await view() });
       }
       case "ics-add": {
