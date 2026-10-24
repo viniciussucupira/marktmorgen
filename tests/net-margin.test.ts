@@ -67,4 +67,59 @@ const originalUploadMonth=testUploadFunding.month;
 testUploadFunding.month="2000-01";
 is("an expired resource budget cannot approve a paid release",commercialMarginReady(review()),false);
 testUploadFunding.month=originalUploadMonth;
+{
+// Financial reviews are detached own-data records, never executable assertions.
+is('plain complete synthetic financial data remains assessable',commercialMarginReady(review()),true);
+const nullPrototype=Object.assign(Object.create(null),review()) as CommercialMarginReview;
+is('own financial data with null prototype remains assessable',commercialMarginReady(nullPrototype),true);
+is('frozen reviewed data remains assessable',commercialMarginReady(Object.freeze(review())),true);
+is('no request cannot activate a synthetic review',commercialPlansMayOpen(false,review()),false);
+is('absent real review remains closed',commercialPlansMayOpen(true),false);
+for(const field of ['priceAndRightsSnapshot','taxEvidence','costAndLimitEvidence','companyBase','fundedExposure','scenarios','allocatedFixedCostsVerified','prepaidUsageEnforced'] as const){
+ const input=review();const value=input[field];let calls=0;
+ Object.defineProperty(input,field,{enumerable:true,get(){calls++;return value;}});
+ is('calculator rejects executable review assertion '+field,commercialMarginReady(input),false);
+ is('calculator never invokes review accessor '+field,calls,0);
+ is('release rejects executable review assertion '+field,commercialPlansMayOpen(true,input),false);
+ is('release never invokes review accessor '+field,calls,0);
+}
+for(const entry of ['companyBase','fundedExposure','scenarios'] as const){
+ const input=review();const target=input[entry] as unknown as Record<string,unknown>;
+ const key=Object.keys(target)[0],value=target[key];let calls=0;
+ Object.defineProperty(target,key,{enumerable:true,get(){calls++;return value;}});
+ is('nested financial accessor rejected '+entry,commercialMarginReady(input),false);
+ is('nested financial accessor not invoked '+entry,calls,0);
+ is('release refuses nested financial accessor '+entry,commercialPlansMayOpen(true,input),false);
+ is('release never invokes nested financial accessor '+entry,calls,0);
+}
+for(const field of ['taxEvidence','costAndLimitEvidence'] as const){
+ for(const invalid of [null,undefined,0,false,{},[],['source'],{trim:'not a function'}]){
+  const input=review();Object.assign(input,{[field]:invalid});
+  is('malformed evidence type refuses calculation '+field,commercialMarginReady(input),false);
+  is('malformed evidence type refuses release '+field,commercialPlansMayOpen(true,input),false);
+ }
+}
+const inherited=Object.create(review()) as CommercialMarginReview;
+is('inherited reviewed assertions cannot pass calculator',commercialMarginReady(inherited),false);
+is('inherited reviewed assertions cannot pass release',commercialPlansMayOpen(true,inherited),false);
+const hook=review();let hookCalls=0;
+Object.assign(hook,{toJSON(){hookCalls++;return review();}});
+is('JSON hook cannot turn a review into verified data',commercialMarginReady(hook),false);
+is('JSON hook never executed by calculator',hookCalls,0);
+is('release rejects JSON hook',commercialPlansMayOpen(true,hook),false);
+is('JSON hook never executed by release',hookCalls,0);
+const cyclic=review();Object.assign(cyclic,{cycle:cyclic});
+is('cyclic review fails closed',commercialMarginReady(cyclic),false);
+is('cyclic release review fails closed',commercialPlansMayOpen(true,cyclic),false);
+const symbolic=review();Object.defineProperty(symbolic,Symbol('evidence'),{value:true});
+is('symbol financial assertions fail closed',commercialMarginReady(symbolic),false);
+const oversized=review();oversized.taxEvidence='x'.repeat(1024*1024+1);
+is('review beyond existing contract snapshot ceiling fails closed',commercialMarginReady(oversized),false);
+is('oversized release review fails closed',commercialPlansMayOpen(true,oversized),false);
+const stale=review();stale.priceAndRightsSnapshot='old terms';
+is('detachment never makes stale terms current',commercialMarginReady(stale),false);
+const unknown=review();unknown.scenarios.creator_month_full!.taxesCeilingCents=null;
+is('detachment never treats unknown taxes as zero',commercialMarginReady(unknown),false);
+is('real missing review still cannot open plans',commercialMarginReady(),false);
+}
 done();

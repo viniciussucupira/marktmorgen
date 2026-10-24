@@ -4962,6 +4962,12 @@ Ao concluir cada item do bloco, registre a data e a hora de Fortaleza, o commit,
 
 Proveniência: instrução direta recebida em 24/10/2026 às 00h11 (Fortaleza). Registro único, junto à seção OR; preserva o histórico. A nova ordem prevalece somente nos pontos incompatíveis com as anteriores. A condição "depois dos PRs #865 a #868" não é cumprida por PR pendente, teste isolado ou documento: confirmar incorporação e publicação funcional quando aplicável. Nada do Bloco de abertura é implementado por este PR documental.
 
+### AB(a) em execução — registros financeiros sem código executável
+
+Primeira proteção do mecanismo da revisão: candidatos são tratados como registros próprios e destacados antes de avaliar campos; getters, herança, hooks de JSON, ciclos, símbolos, tipos inválidos de evidência e registros acima dos limites existentes são recusados. Testes sintéticos preservam os casos válidos e a recusa de imposto desconhecido/termos antigos. Esta alteração não encerra AB(a), não preenche as três políticas reais e não muda nenhuma cobertura false. Alocações de recursos, renovações e conciliação da reserva (junto com306SY2) continuam no mesmo item ativo. Verificação completa e publicação ainda pendentes; nenhuma entrega funcional contada neste registro.
+
+Custo: nenhuma operação nova de fornecedor, requisição, armazenamento, franquia ou ativo pago; caminho real sem revisão continua fechado. Para cada plano mensal/anual, tetos financeiros e impostos existentes permanecem vinculantes; faturas desconhecidas não viram zero e não há certificação de60%. Detalhes em docs/commercial-review-validation.md.
+
 ### Precedência AX2 cumprida — entrega funcional 193
 
 PR #865 incorporado em24/10/2026 01h06min02s (Fortaleza), commit70a5a63daa9613501e8d0fe0cd6a1f795a47744e, com24/24 verificações no head25bd303072b2c6ed416abf83ff94d2ac56071427; árvore a92843d1828e124aa57cae9013c91055bc9fa772 testada/prevista/real iguais e pais conferidos. PRs #866, #867 e #868 aparecem incorporados no GitHub por seus commits ancestrais; os quatro foram concluídos pela combinação integralmente verificada, sem alegar aprovação dos heads intermediários falhos. READY24/10/2026 01h06min56,152s (Fortaleza), deploymentdpl_CLCfHeYBpStFQTq2MRVcyhS5SbVb, SHAexato70a5a63daa9613501e8d0fe0cd6a1f795a47744e; marktmorgen.com em/,/platform,/pricing,/mission,/library retornou200comomesmoDPL. Contador192→193umaúnicavez; próxima194somentecomnovapublicaçãofuncional.
