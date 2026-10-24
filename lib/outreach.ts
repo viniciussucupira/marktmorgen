@@ -213,7 +213,7 @@ export async function listPitches(store: Store): Promise<Pitch[]> {
 export type StartResult =
   /** `replaced`: drafts to the same business that this one took the place of. */
   | { ok: true; pitch: Pitch; left: number; replaced: string[] }
-  | { ok: false; reason: PitchProblem | SiteProblem | "unpublished" | "off" | "used" | "failed" | "notes" | "full" | "room" | "busy" };
+  | { ok: false; reason: PitchProblem | SiteProblem | "unpublished" | "off" | "used" | "failed" | "notes" | "full" | "room" | "busy" | "unavailable" };
 
 /**
  * Writes one pitch, after everything that could forbid it has been asked.
@@ -243,6 +243,8 @@ export async function startPitch(
   }
   const email = input.email.trim().toLowerCase();
   if (!isOwnAddress(email, page.hostname)) return { ok: false, reason: "unpublished" };
+  // New draft work must be funded before even verifying its external page.
+  if (store.period?.funded === true && !await reservePaidResourceWindow(store)) return { ok: false, reason: "unavailable" };
   const reader = options.reader ?? readPage;
   if (!robotsAllows(await siteRules(page.origin, reader), `${page.pathname || "/"}${page.search}`)) return { ok: false, reason: "unreadable" };
   const read = await reader(page.toString());
