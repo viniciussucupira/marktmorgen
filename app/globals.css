@@ -4734,3 +4734,11 @@ fieldset:disabled .cm-poll-row {
 html:has(:focus-visible) {
   scroll-behavior: auto;
 }
+
+/* Product editing uses immediate document scrolling. An animated document
+ * scroll can move the focused opener between pointer press and release in
+ * WebKit, leaving the release outside the button and losing the first click.
+ * Keep the ordinary click and keyboard activation paths unchanged. */
+html:has([data-product-editor]) {
+  scroll-behavior: auto;
+}

@@ -1811,7 +1811,7 @@ export function ProductEditor({
   return (
     <StoreCurrency value={currency}>
     <AiOn value={ai}>
-    <div className="card mt-8 p-6 sm:p-8">
+    <div data-product-editor className="card mt-8 p-6 sm:p-8">
       <div className="flex flex-wrap items-baseline justify-between gap-3">
         <p className="text-lg font-semibold tracking-[-0.02em] text-ink">
           What you are selling
