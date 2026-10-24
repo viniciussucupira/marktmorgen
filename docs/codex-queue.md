@@ -6526,3 +6526,8 @@ Proveniência: pedido direto do dono de24/10/2026 02h35(Fortaleza), preservado u
 ### AB(a) — auditoria pré-incorporação da coorte de upload (24/10/2026)
 
 O primeiro head 7d489ace4ea6efa8c7b17766e5faa35af4966374 passou o Redis real (job 120862065693): em 11:37:36 UTC, medidos 18 comandos na primeira coorte e 17 na repetição; 64 respostas compartilham a mesma coorte e o anual fica limitado a 12 campos, sem liberar caixa. Esses resultados não substituem os testes do novo head. Refinamento: amostrar o relógio depois da revalidação financeira local e verificar novamente prazo de admissão, mês da revisão e fim da janela. Casos sintéticos atrasam o ACK até ultrapassar cada limite e exigem recusa mantendo a obrigação registrada. Nova execução completa obrigatória antes de incorporar. Custos e tetos anteriores preservados; nenhuma aprovação real, abertura comercial ou cobertura integral adicionada.
+
+
+### AB(a) — falha do inventário de armazenamento e correção obrigatória (24/10/2026)
+
+Head6be8c3aa0881ea53713e1e99ace40aee26c2c1a1, verify120863893416 concluído com falha em11:48:40UTC (08:48:40Fortaleza): store-data-registry.test.ts exigiu registrar nl:contract-reserve:v1@lib/contract-resource-window.ts. Casos de coorte e ACK atrasado passaram às11:46:35UTC; Redis real passou às11:45:18UTC com18/17comandos. Isso não autoriza incorporar o head falho. Correção registra o uso do mesmo hash permanente e limites1/12campos,140bytesbrutos/campo+valor; não cria ledger, reduz reserva ou transforma overhead/retenção desconhecidos em zero. Suíte completa será executada no novo head de #892 e no descendente #893; nenhum job isolado será usado como conclusão. Falha preservada no histórico.
