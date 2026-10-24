@@ -21,11 +21,12 @@ function activate(args:(string|number)[]):unknown[]{
  const [created,now,minimum,limit,carry,submission,funded]=[rawCreated,rawNow,rawMinimum,rawLimit,rawCarry,rawSubmission,rawFunded].map(n=>parse(String(n)));
  const reserved=parse(h.get('reserved')),carried=parse(h.get('carried')),slots=parse(h.get('slots:'+choice));
  if(receipt[0]!==review||receipt[1]!==store||receipt[2]!==choice||receipt[3]!=='checkout'||![charge,submitted,expires,activation,through,created,now,minimum,limit,carry,submission,funded,reserved,carried,slots].every(Number.isSafeInteger)||funded<=0||slots>=funded)return[0];
- if(charge!==minimum||carried!==carry||reserved<carried||reserved>limit||charge>reserved-carried||submitted<submission||created<submitted-submission||created>activation||created>now||now>activation||through<now*1000)return[0];
+ if(charge!==minimum||carried!==carry||reserved<carried||reserved>limit||charge>reserved-carried||submitted<submission||created<submitted-submission||created>activation||created>now||through<now*1000)return[0];
  const start=parse(String(rawStart)),finish=parse(String(rawEnd));
- if(!['trial','paid'].includes(String(phase))||!Number.isSafeInteger(start)||!Number.isSafeInteger(finish)||start<created||finish<=start||finish*1000>through)return[0];
+ if(!['trial','paid'].includes(String(phase))||!Number.isSafeInteger(start)||!Number.isSafeInteger(finish)||start<created||start>now||finish<=now||finish<=start||finish*1000>through)return[0];
  const proof=[nonce,subscription,choice,rawCreated,phase,rawStart,rawEnd].join('|'),consumed=h.get('activated:'+nonce),active=h.get('active:'+store);
- if(consumed)return consumed===proof&&active===proof?[[1,activation]]:[0];
+ if(consumed)return consumed===proof&&active===proof?[[2,finish]]:[0];
+ if(now>activation)return[0];
  if(h.get('pending:'+store)!==nonce||active)return[0];
  h.set('activated:'+nonce,proof);h.set('active:'+store,proof);h.delete('pending:'+store);
  return lostAck?[]:[[1,activation]];
@@ -41,7 +42,7 @@ function activateSwitch(args:(string|number)[]):unknown[]{
  if(receipt.length!==10||receipt[0]!==review||receipt[1]!==store||receipt[2]!==choice||receipt[3]!=='switch'||receipt[9].length>84||!/^ctr_[A-Za-z0-9_-]+$/.test(receipt[9])||receipt[9]===nonce)return[0];
  const [charge,submitted,expires,deadline]=receipt.slice(4,8).map(parse),through=epoch(receipt[8]);
  const [created,now,minimum,limit,carry,submission,funded,start,finish,span]=[rawCreated,rawNow,rawMinimum,rawLimit,rawCarry,rawSubmission,rawFunded,rawStart,rawFinish,rawSpan].map(v=>parse(String(v)));
- if(![charge,submitted,expires,deadline,through,created,now,minimum,limit,carry,submission,funded,start,finish,span].every(Number.isSafeInteger)||charge<=0||span<=0||charge!==minimum||submitted<submission||expires<submitted||deadline<expires||now<submitted-submission||now>deadline||created>now||start<created||start>now||finish<=now||finish<=start||finish-start>span||finish>submitted-submission+span||finish*1000>through||!['trial','paid'].includes(String(phase)))return[0];
+ if(![charge,submitted,expires,deadline,through,created,now,minimum,limit,carry,submission,funded,start,finish,span].every(Number.isSafeInteger)||charge<=0||span<=0||charge!==minimum||submitted<submission||expires<submitted||deadline<expires||now<submitted-submission||created>now||start<created||start>now||finish<=now||finish<=start||finish-start>span||finish>submitted-submission+span||finish*1000>through||!['trial','paid'].includes(String(phase)))return[0];
  const reserved=parse(h.get('reserved')),carried=parse(h.get('carried')),slots=parse(h.get('slots:'+choice));
  if(![reserved,carried,slots].every(Number.isSafeInteger)||carried!==carry||reserved<carried||reserved>limit||funded<=0||slots>=funded)return[0];
  const sourceRaw=h.get('activated:'+receipt[9]),source=(sourceRaw??'').split('|');
@@ -54,7 +55,8 @@ function activateSwitch(args:(string|number)[]):unknown[]{
  if(!original.slice(5,8).map(parse).every(Number.isSafeInteger)||!Number.isSafeInteger(oldThrough)||sourceFinish*1000>oldThrough||!Number.isSafeInteger(oldCharge)||oldCharge<=0||charge+oldCharge>reserved-carried)return[0];
  const proof=[nonce,sub,choice,rawCreated,phase,rawStart,rawFinish].join('|'),consumed=h.get('activated:'+nonce),active=h.get('active:'+store);
  if(proof.length>256)return[0];
- if(consumed)return consumed===proof&&active===proof?[[1,deadline]]:[0];
+ if(consumed)return consumed===proof&&active===proof?[[2,finish]]:[0];
+ if(now>deadline)return[0];
  if(active!==sourceRaw||h.get('pending:'+store)!==nonce)return[0];
  h.set('activated:'+nonce,proof);h.set('active:'+store,proof);h.delete('pending:'+store);return lostAck?[]:[[1,deadline]];
 }

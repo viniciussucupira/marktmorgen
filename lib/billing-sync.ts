@@ -25,7 +25,7 @@ import { applyListedAssistant } from "@/lib/assistant-billing";
 import {
   type SubscriptionState,
   isAddOn,
-  hasSwitchFunding,
+  hasContractFunding,
   isBillingConfigured,
   listSubscriptions,
   ownedBy,
@@ -116,7 +116,7 @@ async function applyListed(subscription: Record<string, unknown>, counts: SyncCo
   // The one this store wrote down: Stripe's word stands.
   if (store.subscriptionId === id) {
     const state=stateOf(subscription);
-    if(state.state==='active'&&hasSwitchFunding(subscription)&&!(await startedFromObservedSubscription(store,subscription)))return;
+    if(state.state==='active'&&hasContractFunding(subscription)&&!(await startedFromObservedSubscription(store,subscription)))return;
     if (await recordState(store, state)) counts.updated += 1;
     return;
   }

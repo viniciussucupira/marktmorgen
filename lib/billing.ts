@@ -637,7 +637,7 @@ export async function readSubscription(
   }
 
   const state=stateOf(subscription);
-  if(state.state==='active'&&hasSwitchFunding(subscription)){
+  if(state.state==='active'&&hasContractFunding(subscription)){
     if(!fundingStore||subscription.id!==subscriptionId||!(await startedFromObservedSubscription(fundingStore,subscription)))return{state:'unknown'};
   }
   return state;
@@ -923,6 +923,11 @@ export function startedFrom(subscription: Record<string, unknown>): StartedSubsc
 export function hasSwitchFunding(subscription:Record<string,unknown>):boolean{
  const meta=subscription.metadata as Record<string,unknown>|null|undefined;
  return meta?.funding_action!==undefined||meta?.funding_pending_grant!==undefined||meta?.funding_pending_review!==undefined;
+}
+/** Any persisted funding marker requires the corresponding owned proof. */
+export function hasContractFunding(subscription:Record<string,unknown>):boolean{
+ const meta=subscription.metadata as Record<string,unknown>|null|undefined;
+ return hasSwitchFunding(subscription)||meta?.funding_grant!==undefined||meta?.funding_review!==undefined;
 }
 async function activateObservedSwitch(statsId:string,grantId:string,reviewId:string,subscriptionId:string,subscription:Record<string,unknown>):Promise<boolean>{
  const state=stateOf(subscription);

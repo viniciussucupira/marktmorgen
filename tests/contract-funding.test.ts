@@ -206,3 +206,44 @@ test('switch activation rejects executable data and malformed acknowledgements',
   settings({response});assert.equal(await activateSwitchContract(f.input,f.policy,f.context),false);
  }
 });
+
+test('committed checkout observations survive the initial deadline only for the exact current period',async(t)=>{
+ t.mock.timers.enable({apis:['Date'],now:new Date('2026-10-10T12:00:00.000Z')});
+ reset();const f=contractFixture();f.policy.admissionsUntil=new Date(Date.now()+10*86400000).toISOString();
+ const config=contractFundingConfiguration(f.policy,f.context)!;seed(config);
+ assert.ok(await reserveContractFunding('one','creator','month','checkout',f.policy,f.context,'ctr_activate'));
+ const input=activation();assert.equal(await activateCheckoutContract(input,f.policy,f.context),true);
+ const h=ledger.get(key)!,before=[...h];t.mock.timers.tick(2*86400000);
+ assert.equal(await activateCheckoutContract(input,f.policy,f.context),true);assert.deepEqual([...h],before);
+ for(const changes of [{subscriptionId:'sub_Other0001'},{trialing:true},{periodStartSeconds:input.periodStartSeconds+1},{periodEndSeconds:input.periodEndSeconds+1}]){
+  assert.equal(await activateCheckoutContract({...input,...changes},f.policy,f.context),false);assert.deepEqual([...h],before);
+ }
+ h.delete('activated:'+input.grantId);const uncommitted=[...h];
+ assert.equal(await activateCheckoutContract(input,f.policy,f.context),false);assert.deepEqual([...h],uncommitted);
+});
+test('committed switch observations retain both principals after its initial deadline and cannot roll into renewal',async(t)=>{
+ t.mock.timers.enable({apis:['Date'],now:new Date('2026-10-10T12:00:00.000Z')});
+ reset();const f=contractFixture();f.policy.admissionsUntil=new Date(Date.now()+10*86400000).toISOString();
+ const config=contractFundingConfiguration(f.policy,f.context)!;seed(config);
+ assert.ok(await reserveContractFunding('one','creator','month','checkout',f.policy,f.context,'ctr_source'));
+ const source=activation('one','ctr_source');assert.equal(await activateCheckoutContract(source,f.policy,f.context),true);
+ assert.ok(await reserveSwitchContractFunding('one',source.subscriptionId,'creator','month',f.policy,f.context,'ctr_switch'));
+ const input={...source,grantId:'ctr_switch'};assert.equal(await activateSwitchContract(input,f.policy,f.context),true);
+ const h=ledger.get(key)!,before=[...h];t.mock.timers.tick(2*86400000);
+ assert.equal(await activateSwitchContract(input,f.policy,f.context),true);assert.deepEqual([...h],before);
+ assert.equal(await activateCheckoutContract(source,f.policy,f.context),false);
+ assert.equal(await activateSwitchContract({...input,periodStartSeconds:input.periodEndSeconds,periodEndSeconds:input.periodEndSeconds+30*86400},f.policy,f.context),false);
+ settings({response:[[2,input.periodEndSeconds+1]]});assert.equal(await activateSwitchContract(input,f.policy,f.context),false);
+ settings({response:[[1,input.periodEndSeconds]]});assert.equal(await activateSwitchContract(input,f.policy,f.context),false);settings({response:null});
+ h.delete('activated:'+input.grantId);const uncommitted=[...h];
+ assert.equal(await activateSwitchContract(input,f.policy,f.context),false);assert.deepEqual([...h],uncommitted);
+});
+test('a committed acknowledgement cannot authorize an ended period or bypass a stale admission policy',async(t)=>{
+ t.mock.timers.enable({apis:['Date'],now:new Date('2026-10-10T12:00:00.000Z')});
+ const f=start();assert.ok(await reserveContractFunding('one','creator','month','checkout',f.policy,f.context,'ctr_activate'));
+ const input=activation();assert.equal(await activateCheckoutContract(input,f.policy,f.context),true);
+ const h=ledger.get(key)!,before=[...h];t.mock.timers.tick(2*86400000);
+ assert.equal(await activateCheckoutContract(input,f.policy,f.context),false);assert.deepEqual([...h],before);
+ settings({response:[[2,input.periodEndSeconds]]});t.mock.timers.tick(30*86400000);
+ assert.equal(await activateCheckoutContract(input,f.policy,f.context),false);assert.deepEqual([...h],before);
+});
