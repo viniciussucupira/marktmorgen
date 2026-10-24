@@ -264,3 +264,25 @@ test('a committed acknowledgement cannot authorize an ended period or bypass a s
  settings({response:[[2,input.periodEndSeconds]]});t.mock.timers.tick(30*86400000);
  assert.equal(await activateCheckoutContract(input,f.policy,f.context),false);assert.deepEqual([...h],before);
 });
+
+test('a committed reservation acknowledgement cannot outlive admission, its exposure month, or its issuing clock',async(t)=>{
+ t.mock.timers.enable({apis:['Date'],now:new Date('2026-10-10T12:00:00.000Z')});
+ for(const mode of ['admission','month','rollback','policy'] as const){
+  t.mock.timers.setTime(new Date(mode==='month'?'2026-10-31T23:59:59.000Z':'2026-10-10T12:00:00.000Z').getTime());
+  reset();const f=contractFixture();
+  if(mode==='admission')f.policy.admissionsUntil=new Date(Date.now()+1000).toISOString();
+  const config=contractFundingConfiguration(f.policy,f.context)!;assert.ok(config);seed(config);
+  const pending=reserveContractFunding('one','creator','month','checkout',f.policy,f.context,'ctr_late_ack');
+  const h=ledger.get(key)!;assert.equal(h.get('pending:one'),'ctr_late_ack');
+  const committed=[...h];
+  if(mode==='admission')t.mock.timers.tick(1001);
+  if(mode==='month')t.mock.timers.tick(1001);
+  if(mode==='rollback')t.mock.timers.setTime(Date.now()-1);
+  if(mode==='policy')f.policy.reserveEvidence+=' changed while awaiting acknowledgement';
+  assert.equal(await pending,null,mode);
+  assert.deepEqual([...h],committed,mode+' never releases committed cash, slot or lock');
+  assert.equal(h.get('reserved'),String(config.grantCents.creator_month));
+  assert.equal(h.get('slots:creator_month'),'1');
+  assert.equal(calls.length,1,mode+' performs no compensating Redis request');
+ }
+});
