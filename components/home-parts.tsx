@@ -31,6 +31,7 @@ import {
   TIERS,
 } from "@/lib/plan";
 import { feeWords } from "@/lib/fee-words";
+import { pricingPerksMarkup } from "@/lib/pricing-perks-markup";
 
 /*
  * Reveals every element with .reveal as it scrolls into view, once.
@@ -702,29 +703,10 @@ function PlanCard({
           </li>
         ))}
       </ul>
-      {/* Native toggle targets details itself: keep that event inside a small hydration boundary too. */}
+      {/* Native disclosure contents are escaped static HTML, with no React event
+          handlers or child hydration work between a press and opening the list. */}
       <Suspense fallback={null}>
-      <details className="group/perks mt-6">
-        {/* The native summary has its own small hydration boundary, separate from the card and long list. */}
-        <Suspense fallback={null}>
-        <summary className="inline-flex min-h-11 cursor-pointer list-none items-center gap-1.5 rounded-[8px] text-sm font-semibold text-violet-deep [&::-webkit-details-marker]:hidden">
-          <span aria-hidden="true" className="inline-flex shrink-0 group-open/perks:rotate-45"><Icon name="plus" size={15} /></span>
-          <span className="group-open/perks:hidden">{`All ${perks.length} of them, itemized`}</span>
-          <span className="hidden group-open/perks:inline">Close the list</span>
-        </summary>
-        </Suspense>
-        {/* Keep the native summary responsive while the long, initially closed list hydrates independently. */}
-        <Suspense fallback={null}>
-        <ul className="mt-4 space-y-3">
-          {perks.map((perk) => (
-            <li key={perk} className="flex gap-3 text-[0.9375rem] text-ink-soft">
-              <Icon name="check" size={17} strokeWidth={2.2} className="mt-1 shrink-0 text-mint-brand" />
-              <span>{perk}</span>
-            </li>
-          ))}
-        </ul>
-        </Suspense>
-      </details>
+        <details className="group/perks mt-6" dangerouslySetInnerHTML={{ __html: pricingPerksMarkup(perks) }} />
       </Suspense>
 
       <p className="mt-5 text-sm text-ink-soft">{uploadAllowanceWords(tier)}</p>

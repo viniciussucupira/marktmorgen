@@ -1,3 +1,4 @@
+import { pricingPerksMarkup } from "@/lib/pricing-perks-markup";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { Pricing } from "@/components/home-parts";
@@ -46,4 +47,9 @@ for(const price of ["$69","$449","$999"]) is(price+" is the card's monthly price
 for(const tier of TIERS) is(tier+" setup link preserves the selected plan",html.includes("plan="+tier+"&amp;billing=month"),true);
 is("all three plans say sales are not open",(html.match(/Not yet\. Marktmorgen is still being built/g)??[]).length,3);
 is("no blanket zero-fee claim",html.includes("We take none of it"),false);
+const hostile = pricingPerksMarkup(['<img src=x onerror="alert(1)">', "A & B's <plan>", "</span><script>bad()</script>"]);
+is("plan words never create executable disclosure markup", /<img|<script|onerror="/.test(hostile), false);
+is("literal HTML-looking plan words remain visible as text", hostile.includes('&lt;img src=x onerror=&quot;alert(1)&quot;&gt;'), true);
+is("ampersands and apostrophes remain escaped", hostile.includes("A &amp; B&#39;s &lt;plan&gt;"), true);
+is("the native disclosure keeps its summary and semantic list", [hostile.startsWith("<summary "), (hostile.match(/<li /g) ?? []).length, hostile.endsWith("</ul>")], [true, 3, true]);
 done();
