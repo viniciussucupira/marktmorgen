@@ -298,6 +298,13 @@ async function main(): Promise<void> {
   is("from their purchases and their course", [(await importedFor(store, "buyer@example.com")).length, dropped], [0, [`buyer@example.com|${product.id}`]]);
   is("the paid record stays, for the thanks page and PayPal's id", (await readPaid(second.order))?.capture, paid.paid.capture);
 
+  part("A funded new seller onboarding requires its resource cohort");
+  await setSubscription("owner@example.com", { customerId: "cus_PayPalFund01", subscriptionId: "sub_PayPalFund01", active: true, period: { ...paidPeriod(), funded: true } });
+  const fundedSeller = (await storeForEmail("owner@example.com"))!;
+  const beforeReferral = seen.length;
+  is("no new referral without a funded resource window", await onboardingUrl(fundedSeller, "https://marktmorgen.com/api/store/paypal/onboarded"), null);
+  is("the provider is not asked and the existing seller stays", [seen.length, (await storeForEmail("owner@example.com"))?.paypalSeller], [beforeReferral, fundedSeller.paypalSeller]);
+
   part("Disconnected");
   await setPayPalSeller("owner@example.com", null);
   store = (await storeForEmail("owner@example.com"))!;
