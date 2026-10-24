@@ -13,6 +13,12 @@ local function amount(value)
 end
 if redis.call('TYPE',KEYS[1]).ok~='hash' or redis.call('TTL',KEYS[1])~=-1 then return 0 end
 if redis.call('HGET',KEYS[1],'policy')~=ARGV[1] or redis.call('HGET',KEYS[1],'review')~=ARGV[2] then return 0 end
+if ARGV[11]~='checkout' and ARGV[11]~='switch' then return 0 end
+local receiptPrefix=ARGV[2]..'|'..ARGV[3]..'|'..ARGV[4]..'|'..ARGV[11]..'|'
+if string.sub(ARGV[10] or '',1,#receiptPrefix)~=receiptPrefix then return 0 end
+-- An activated contract cannot open a second new-enrollment obligation.
+-- Switches retain their distinct funded lifecycle and never overwrite active.
+if ARGV[11]=='checkout' and redis.call('HEXISTS',KEYS[1],'active:'..ARGV[3])==1 then return 0 end
 local reserved=amount(redis.call('HGET',KEYS[1],'reserved'))
 local carried=amount(redis.call('HGET',KEYS[1],'carried'))
 local charge,limit,carry,funded=amount(ARGV[5]),amount(ARGV[6]),amount(ARGV[7]),amount(ARGV[8])
@@ -43,7 +49,7 @@ export async function reserveContractFunding(statsId:string,tier:Tier,cycle:Cycl
  if(!config||config.fundedGrants[key]===0)return null;
  const seconds=Math.floor(reservedAt.getTime()/1000),submitUntilSeconds=seconds+CONTRACT_FUNDING_RULES.submissionSeconds,checkoutExpiresAtSeconds=seconds+CONTRACT_FUNDING_RULES.checkoutLifetimeSeconds,activationUntilSeconds=seconds+CONTRACT_FUNDING_RULES.activationDelayDays*86400;
  const charge=config.grantCents[key],receipt=[config.reviewId,statsId,key,action,charge,submitUntilSeconds,checkoutExpiresAtSeconds,activationUntilSeconds,config.liabilitiesThroughMs].join('|');
- try{const result=await redisPipeline([['EVAL',RESERVE_CONTRACT,1,'nl:contract-reserve:v1',contractFundingBinding(config),config.reviewId,statsId,key,charge,config.cashLimitCents,config.carryForwardCents,config.fundedGrants[key],nonce,receipt]]);return result.length===1&&result[0]===1&&Date.now()<=submitUntilSeconds*1000?{id:nonce,reviewId:config.reviewId,statsId,key,reservedCents:charge,submitUntilSeconds,checkoutExpiresAtSeconds,activationUntilSeconds,liabilitiesThrough:new Date(config.liabilitiesThroughMs).toISOString()}:null;}catch{return null;}
+ try{const result=await redisPipeline([['EVAL',RESERVE_CONTRACT,1,'nl:contract-reserve:v1',contractFundingBinding(config),config.reviewId,statsId,key,charge,config.cashLimitCents,config.carryForwardCents,config.fundedGrants[key],nonce,receipt,action]]);return result.length===1&&result[0]===1&&Date.now()<=submitUntilSeconds*1000?{id:nonce,reviewId:config.reviewId,statsId,key,reservedCents:charge,submitUntilSeconds,checkoutExpiresAtSeconds,activationUntilSeconds,liabilitiesThrough:new Date(config.liabilitiesThroughMs).toISOString()}:null;}catch{return null;}
 }
 
 
