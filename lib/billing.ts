@@ -40,10 +40,10 @@ import { type BillingPeriod, isPeriod } from "@/lib/allowance-window";
 
 /** Internal billing calls must keep their route-issued cash grant bound to the
  * published offer. This does not create or release a funding reservation. */
-function assertFunding(funding:ContractGrant|undefined,tier:Tier,cycle:Cycle,action:ContractGrant['action'],statsId?:string):void {
+function assertFunding(funding:ContractGrant|undefined,tier:Tier,cycle:Cycle,action:ContractGrant['action'],statsId?:string,subscriptionId?:string):void {
  if(!funding)return;
  const now=Math.floor(Date.now()/1000);
- if(funding.action!==action||funding.key!==tier+'_'+cycle||!/^ctr_[A-Za-z0-9_-]{1,80}$/.test(funding.id)||!Number.isSafeInteger(funding.reservedCents)||funding.reservedCents<PUBLISHED_PLAN_PRICES[tier][cycle]||PLAN_PRICES[tier][cycle]!==PUBLISHED_PLAN_PRICES[tier][cycle]||!Number.isSafeInteger(funding.submitUntilSeconds)||now>funding.submitUntilSeconds||!Number.isSafeInteger(funding.checkoutExpiresAtSeconds)||funding.checkoutExpiresAtSeconds<now+1800||statsId!==undefined&&funding.statsId!==statsId)throw new Error('Funding grant does not cover this published plan or activation window');
+ if(funding.action!==action||(action==='switch'?funding.sourceSubscriptionId!==subscriptionId:funding.sourceSubscriptionId!==null)||funding.key!==tier+'_'+cycle||!/^ctr_[A-Za-z0-9_-]{1,80}$/.test(funding.id)||!Number.isSafeInteger(funding.reservedCents)||funding.reservedCents<PUBLISHED_PLAN_PRICES[tier][cycle]||PLAN_PRICES[tier][cycle]!==PUBLISHED_PLAN_PRICES[tier][cycle]||!Number.isSafeInteger(funding.submitUntilSeconds)||now>funding.submitUntilSeconds||!Number.isSafeInteger(funding.checkoutExpiresAtSeconds)||funding.checkoutExpiresAtSeconds<now+1800||statsId!==undefined&&funding.statsId!==statsId)throw new Error('Funding grant does not cover this published plan or activation window');
 }
 
 /**
@@ -743,7 +743,7 @@ export async function switchPlan(
   choice: { tier: Tier; cycle: Cycle },
   funding?:ContractGrant,
 ): Promise<SwitchResult> {
-  assertFunding(funding,choice.tier,choice.cycle,'switch');
+  assertFunding(funding,choice.tier,choice.cycle,'switch',undefined,subscriptionId);
   if (!SUBSCRIPTION_PATTERN.test(subscriptionId)) return { kind: "refused", reason: "standing" };
   const path = `/subscriptions/${encodeURIComponent(subscriptionId)}`;
   const subscription = await onPlatform("GET", path);
@@ -780,11 +780,11 @@ export async function switchPlan(
   if (status === "trialing" && typeof subscription.trial_end === "number") {
     body.set("trial_end", String(subscription.trial_end));
   }
-  assertFunding(funding,choice.tier,choice.cycle,'switch');
+  assertFunding(funding,choice.tier,choice.cycle,'switch',undefined,subscriptionId);
   if(funding)await onPlatform('POST',path,new URLSearchParams({'metadata[funding_pending_grant]':funding.id,'metadata[funding_pending_review]':funding.reviewId}));
   let updated: Record<string, unknown>;
   try {
-    assertFunding(funding,choice.tier,choice.cycle,'switch');
+    assertFunding(funding,choice.tier,choice.cycle,'switch',undefined,subscriptionId);
     updated = await onPlatform("POST", path, body);
   } catch (error) {
     // A price archived at Stripe since we last read it. The creator asked to
@@ -794,7 +794,7 @@ export async function switchPlan(
     if (!(error instanceof BillingError) || error.status !== 400) throw error;
     priceIds.clear();
     body.set("items[0][price]", await ensurePrice(choice.tier, choice.cycle));
-    assertFunding(funding,choice.tier,choice.cycle,'switch');
+    assertFunding(funding,choice.tier,choice.cycle,'switch',undefined,subscriptionId);
     updated = await onPlatform("POST", path, body);
   }
 

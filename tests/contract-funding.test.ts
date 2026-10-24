@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {canonicalFinancialSnapshot,contractCoverageDays,contractFundingConfiguration,CONTRACT_ADMISSION_COVERAGE,CONTRACT_KEYS} from '@/lib/contract-funding-rules';
 import {assessCustomerWorstCase} from '@/lib/net-margin-rules';
-import {activateCheckoutContract,type CheckoutContractActivation,reserveContractFunding} from '@/lib/contract-funding';
+import {activateCheckoutContract,type CheckoutContractActivation,reserveContractFunding,reserveSwitchContractFunding} from '@/lib/contract-funding';
 import {contractFixture} from './contract-funding-fixture';
 import {reset,seed,ledger,calls,settings} from './contract-funding-redis';
 const key='nl:contract-reserve:v1';
@@ -55,7 +55,9 @@ test('activation rejects wrong store, plan, review, missing receipt and reused r
  }
 });
 test('activation never treats a switch receipt, corrupt ledger or ambiguous response as rights',async()=>{
- const f=start();assert.ok(await reserveContractFunding('one','creator','month','switch',f.policy,f.context,'ctr_activate'));
+ const f=start();assert.ok(await reserveContractFunding('one','creator','month','checkout',f.policy,f.context,'ctr_source'));
+ assert.equal(await activateCheckoutContract(activation('one','ctr_source'),f.policy,f.context),true);
+ assert.ok(await reserveSwitchContractFunding('one','sub_Activation001','creator','month',f.policy,f.context,'ctr_activate'));
  assert.equal(await activateCheckoutContract(activation(),f.policy,f.context),false);
  for(const [field,value] of [['reserved','0'],['carried','1'],['slots:creator_month','2'],['policy','wrong']]){
   const g=start();assert.ok(await reserveContractFunding('one','creator','month','checkout',g.policy,g.context,'ctr_activate'));
@@ -81,7 +83,7 @@ test('an active funded store cannot reserve another checkout even after its pend
  assert.equal(h.has('pending:one'),false);
  const attempts=await Promise.all(Array.from({length:64},(_,i)=>reserveContractFunding('one','creator','month','checkout',f.policy,f.context,'ctr_second_'+i)));
  assert.equal(attempts.some(Boolean),false);assert.deepEqual([...h],before);
- assert.ok(await reserveContractFunding('one','creator','month','switch',f.policy,f.context,'ctr_switch_after_active'));
+ assert.ok(await reserveSwitchContractFunding('one','sub_Activation001','creator','month',f.policy,f.context,'ctr_switch_after_active'));
  assert.equal(h.get('active:one'),active);assert.equal(h.get('pending:one'),'ctr_switch_after_active');
  assert.ok(h.get('grant:ctr_activate'));assert.ok(h.get('grant:ctr_switch_after_active'));
  assert.equal(h.get('reserved'),String(f.config.grantCents.creator_month*2));
@@ -89,8 +91,63 @@ test('an active funded store cannot reserve another checkout even after its pend
 
 test('the returned grant purpose matches its permanent cash receipt',async()=>{
  for(const action of ['checkout','switch'] as const){
-  const f=start(),g=await reserveContractFunding('purpose','creator','month',action,f.policy,f.context,'ctr_purpose');
+  const f=start();
+  if(action==='switch'){
+   assert.ok(await reserveContractFunding('purpose','creator','month','checkout',f.policy,f.context,'ctr_source'));
+   assert.equal(await activateCheckoutContract(activation('purpose','ctr_source'),f.policy,f.context),true);
+  }
+  const g=action==='checkout'?await reserveContractFunding('purpose','creator','month',action,f.policy,f.context,'ctr_purpose'):await reserveSwitchContractFunding('purpose','sub_Activation001','creator','month',f.policy,f.context,'ctr_purpose');
   assert.ok(g);assert.equal(g.action,action);
   assert.equal(ledger.get(key)!.get('grant:'+g.id)!.split('|')[3],g.action);
  }
+});
+
+async function activeSource(){
+ const f=start();assert.ok(await reserveContractFunding('one','creator','month','checkout',f.policy,f.context,'ctr_source'));
+ assert.equal(await activateCheckoutContract(activation('one','ctr_source'),f.policy,f.context),true);return f;
+}
+test('switch admission requires a source subscription before any Redis operation',async()=>{
+ const f=start();for(const id of [null,'','sub_bad','other',123]){
+  assert.equal(await reserveContractFunding('one','creator','year','switch',f.policy,f.context,'ctr_unbound',id as string|null),null);
+ }
+ assert.equal(calls.length,0);
+ assert.equal(await reserveContractFunding('one','creator','year','checkout',f.policy,f.context,'ctr_crossed','sub_Activation001'),null);
+ assert.equal(calls.length,0);
+});
+test('64 source-bound switches preserve the original active contract and fund exactly one additional obligation',async()=>{
+ const f=await activeSource(),h=ledger.get(key)!,active=h.get('active:one'),oldReceipt=h.get('grant:ctr_source');
+ const results=await Promise.all(Array.from({length:64},(_,i)=>reserveSwitchContractFunding('one','sub_Activation001','creator','month',f.policy,f.context,'ctr_switch_'+i)));
+ const accepted=results.filter((g):g is NonNullable<typeof g>=>Boolean(g));assert.equal(accepted.length,1);
+ const g=accepted[0];assert.equal(g.action,'switch');assert.equal(g.sourceSubscriptionId,'sub_Activation001');
+ assert.equal(h.get('active:one'),active);assert.equal(h.get('grant:ctr_source'),oldReceipt);
+ assert.equal(h.get('reserved'),String(f.config.grantCents.creator_month*2));assert.equal(h.get('slots:creator_month'),'0');
+ const receipt=h.get('grant:'+g.id)!.split('|');assert.equal(receipt.length,10);assert.equal(receipt[9],'ctr_source');
+});
+test('foreign, missing, corrupt or expired source records refuse a switch without touching any field',async()=>{
+ const absent=start(),empty=[...ledger.get(key)!];
+ assert.equal(await reserveSwitchContractFunding('one','sub_Activation001','creator','month',absent.policy,absent.context,'ctr_no_source'),null);
+ assert.deepEqual([...ledger.get(key)!],empty);
+ const changes=[
+  ['active:one','ctr_source|sub_Other0001|creator_month|1|paid|1|9999999999'],
+  ['activated:ctr_source','wrong'],
+  ['grant:ctr_source','missing'],
+  ['active:one','ctr_source|sub_Activation001|unknown|1|paid|1|9999999999'],
+  ['active:one','ctr_source|sub_Activation001|creator_month|1|paid|1|2'],
+ ];
+ for(const [field,value] of changes){
+  const f=await activeSource(),h=ledger.get(key)!;h.set(field,value);const before=[...h];
+  assert.equal(await reserveSwitchContractFunding('one','sub_Activation001','creator','month',f.policy,f.context,'ctr_refused'),null);
+  assert.deepEqual([...h],before);
+ }
+ const f=await activeSource(),h=ledger.get(key)!,before=[...h];
+ assert.equal(await reserveSwitchContractFunding('one','sub_Other0001','creator','month',f.policy,f.context,'ctr_foreign'),null);assert.deepEqual([...h],before);
+});
+test('a lost source-bound switch reply retains both receipts, every cent and the pending lock',async()=>{
+ const f=await activeSource(),h=ledger.get(key)!,active=h.get('active:one');settings({lostAck:true});
+ assert.equal(await reserveSwitchContractFunding('one','sub_Activation001','creator','month',f.policy,f.context,'ctr_lost_switch'),null);
+ assert.equal(h.get('active:one'),active);assert.equal(h.get('pending:one'),'ctr_lost_switch');assert.ok(h.get('grant:ctr_source'));
+ assert.equal(h.get('grant:ctr_lost_switch')!.split('|')[9],'ctr_source');
+ assert.equal(h.get('reserved'),String(f.config.grantCents.creator_month*2));
+ const before=[...h];settings({lostAck:false});
+ assert.equal(await reserveSwitchContractFunding('one','sub_Activation001','creator','month',f.policy,f.context,'ctr_retry_switch'),null);assert.deepEqual([...h],before);
 });
