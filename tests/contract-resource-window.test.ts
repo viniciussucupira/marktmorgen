@@ -8,12 +8,12 @@ import {reserveStoreUpload,reserveUploadControl} from '@/lib/upload-budget';
 import {contractFixture} from './contract-funding-fixture';
 import {reset,seed,ledger,calls,resourceSettings} from './contract-resource-redis';
 const ledgerKey='nl:contract-reserve:v1',statsId='a'.repeat(32);
-async function setup(cycle:'month'|'year'='month'){
- reset();resourceSettings({lost:false,failure:false,response:null});const f=contractFixture();
- f.policy.admissionsUntil=new Date(Date.now()+10*86400000).toISOString();
+async function setup(cycle:'month'|'year'='month',options:{admissionMs?:number;durationSeconds?:number}={}){
+ reset();resourceSettings({lost:false,failure:false,response:null,afterAck:null});const f=contractFixture();
+ f.policy.admissionsUntil=new Date(Date.now()+(options.admissionMs??10*86400000)).toISOString();
  const config=contractFundingConfiguration(f.policy,f.context)!;assert.ok(config);seed(config);
  assert.ok(await reserveContractFunding(statsId,'creator',cycle,'checkout',f.policy,f.context,'ctr_resources'));
- const created=Math.floor(Date.now()/1000),end=created+(cycle==='year'?365:30)*86400;
+ const created=Math.floor(Date.now()/1000),end=created+(options.durationSeconds??(cycle==='year'?365:30)*86400);
  assert.equal(await activateCheckoutContract({statsId,grantId:'ctr_resources',reviewId:f.policy.reviewId,subscriptionId:'sub_ResourceWindow001',tier:'creator',cycle,createdSeconds:created,trialing:false,periodStartSeconds:created,periodEndSeconds:end},f.policy,f.context),true);
  const store={statsId,tier:'creator' as const,cycle,subscriptionId:'sub_ResourceWindow001',subscriptionActive:true,trialEnds:0,planEndedAt:'',period:{start:created,end,renews:true,funded:true as const}};
  return{...f,config,store,h:ledger.get(ledgerKey)!};
@@ -65,4 +65,16 @@ test('resource request payload remains below its enforced financial byte ceiling
  assert.equal(await reservePaidResourceWindow(extra,f.policy,f.context),true);assert.equal(reads,0);
  const command=calls.at(-1)!;assert.equal(command[0][1],RESERVE_PAID_RESOURCE_WINDOW);
  assert.ok(new TextEncoder().encode(JSON.stringify(command)).length<=12288);
+});
+
+test('a cohort acknowledgement cannot outlive its window, admission deadline or review month',async(t)=>{
+ for(const scenario of ['window','admission','review'] as const){
+  t.mock.timers.enable({apis:['Date'],now:new Date(scenario==='review'?'2026-10-31T23:59:59Z':'2026-10-10T12:00:00Z')});
+  try{
+   const f=await setup('month',scenario==='window'?{durationSeconds:30}:scenario==='admission'?{admissionMs:1000}:{});
+   resourceSettings({afterAck:()=>t.mock.timers.tick(scenario==='window'?30000:scenario==='admission'?1001:2000)});
+   assert.equal(await reservePaidResourceWindow(f.store,f.policy,f.context),false,scenario);
+   assert.ok(f.h.has('resource:ctr_resources:0'),scenario+' retains its committed cohort');
+  }finally{t.mock.timers.reset();}
+ }
 });

@@ -97,7 +97,8 @@ export async function reservePaidResourceWindow(
   const commands:(string|number)[][]=[['EVAL',RESERVE_PAID_RESOURCE_WINDOW,1,'nl:contract-reserve:v1',contractFundingBinding(config),config.reviewId,store.statsId,store.subscriptionId,key,store.period.start,store.period.end,window.start,window.end,now.getTime(),index,count,config.grantCents[key],config.cashLimitCents,config.carryForwardCents,config.fundedGrants[key],...CONTRACT_KEYS.flatMap(choice=>[config.fundedGrants[choice],config.grantCents[choice]])]];
   if(new TextEncoder().encode(JSON.stringify(commands)).length>CONTRACT_FUNDING_RULES.resourceCohortRequestBytes)return false;
   const result=await redisPipeline(commands);
-  const ack=result[0],checkedAt=Date.now(),current=contractFundingConfiguration(policy,context,new Date(checkedAt));
-  return current!==null&&current.binding===config.binding&&commercialMarginReady(context.review)&&result.length===1&&Array.isArray(ack)&&ack.length===2&&ack[0]===1&&ack[1]===window.end&&checkedAt>=window.start&&checkedAt<window.end;
+  const ack=result[0],current=contractFundingConfiguration(policy,context,new Date()),ready=commercialMarginReady(context.review);
+  const checkedAt=Date.now();
+  return current!==null&&current.binding===config.binding&&ready&&checkedAt<=config.admissionsUntilMs&&new Date(checkedAt).toISOString().slice(0,7)===context.review?.fundedExposure?.month&&result.length===1&&Array.isArray(ack)&&ack.length===2&&ack[0]===1&&ack[1]===window.end&&checkedAt>=window.start&&checkedAt<window.end;
  }catch{return false;}
 }

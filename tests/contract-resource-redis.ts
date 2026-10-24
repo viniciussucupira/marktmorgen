@@ -1,7 +1,7 @@
 export * from './contract-funding-redis';
 import {ledger,calls,redisPipeline as basePipeline} from './contract-funding-redis';
-let lost=false,failure=false,response:unknown[]|null=null;
-export function resourceSettings(value:{lost?:boolean;failure?:boolean;response?:unknown[]|null}){if(value.lost!==undefined)lost=value.lost;if(value.failure!==undefined)failure=value.failure;if(value.response!==undefined)response=value.response;}
+let lost=false,failure=false,response:unknown[]|null=null,afterAck:(()=>void)|null=null;
+export function resourceSettings(value:{lost?:boolean;failure?:boolean;response?:unknown[]|null;afterAck?:(()=>void)|null}){if(value.afterAck!==undefined)afterAck=value.afterAck;if(value.lost!==undefined)lost=value.lost;if(value.failure!==undefined)failure=value.failure;if(value.response!==undefined)response=value.response;}
 export async function redisPipeline(commands:(string|number)[][]):Promise<unknown[]>{
  if(!String(commands[0]?.[1]).includes("local resourceActive=redis.call"))return basePipeline(commands);
  calls.push(commands);if(failure)throw Error('Resource ledger unavailable');if(response!==null)return response;
@@ -33,5 +33,5 @@ export async function redisPipeline(commands:(string|number)[][]):Promise<unknow
  const field='resource:'+proof[0]+':'+rawIndex,cohort=rawFrom+'|'+rawUntil,existing=h.get(field);
  if(existing!==undefined&&existing!==cohort)return[0];
  if(existing===undefined)h.set(field,cohort);
- return lost?[]:[[1,until]];
+ afterAck?.();return lost?[]:[[1,until]];
 }
