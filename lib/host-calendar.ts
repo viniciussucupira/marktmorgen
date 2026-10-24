@@ -345,7 +345,7 @@ export async function hostCalendarView(store: Store, email: string, tz: string):
 export type HostChangeProblem = "google_off" | "google_none" | "ics_none" | "calendars" | "write" | "invalid" | "unavailable";
 
 /** Picks where a host's busy times come from. A new source is read at the next look. */
-export async function setHostSource(store: Pick<Store, "statsId">, email: string, source: HostSource): Promise<HostChangeProblem | null> {
+export async function setHostSource(store: Store, email: string, source: HostSource): Promise<HostChangeProblem | null> {
   if (!store.statsId) return "invalid";
   const host = hostId(email);
   const config = (await readConfig(host)) ?? emptyConfig(email);
@@ -354,6 +354,7 @@ export async function setHostSource(store: Pick<Store, "statsId">, email: string
     if (!(await hostConnectionView(store.statsId, host).catch(() => null))) return "google_none";
   }
   if (source === "ics" && !config.ics) return "ics_none";
+  if (source !== "none" && store.period?.funded === true && !(await reservePaidResourceWindow(store))) return "unavailable";
   await writeConfig(host, { ...config, email: email.toLowerCase(), source });
   return null;
 }

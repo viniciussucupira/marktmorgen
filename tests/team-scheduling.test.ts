@@ -463,6 +463,12 @@ async function main(): Promise<void> {
     is("a new manual refresh refuses without provider calls", [await checkHostCalendar(fundedHostViewStore, MAYA, NY), google.length], [null, beforeManualRefresh]);
     const legacyManualRefresh = await checkHostCalendar(first.store, MAYA, NY);
     is("the unmarked fixture still performs its synthetic manual refresh", [legacyManualRefresh?.state, google.length > beforeManualRefresh], ["ok", true]);
+    const beforeSourceCalls = google.length;
+    const refusedSource = await setHostSource(fundedHostViewStore, MAYA, "google");
+    is("funded nonempty source refuses without changing the saved source", [refusedSource, (await hostCalendarView(fundedHostViewStore, MAYA, NY)).source, google.length], ["unavailable", "google", beforeSourceCalls]);
+    is("turning the busy-time source off remains available", await setHostSource(fundedHostViewStore, MAYA, "none"), null);
+    is("the stored source is off without a provider request", [(await hostCalendarView(fundedHostViewStore, MAYA, NY)).source, google.length], ["none", beforeSourceCalls]);
+
 
 
   } finally {
