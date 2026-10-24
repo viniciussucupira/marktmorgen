@@ -1,7 +1,7 @@
 import {activationObservations} from './contract-activation-billing';
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createBillingCheckout,switchPlan,readStartedSubscription} from '@/lib/billing';
+import {createBillingCheckout,switchPlan,readStartedSubscription,startedFromObservedSubscription,findStoreSubscriptions} from '@/lib/billing';
 import type {ContractGrant} from '@/lib/contract-funding';
 import type {Store} from '@/lib/store';
 process.env.STRIPE_SECRET_KEY='sk_test_not_a_real_deployment_key';
@@ -64,4 +64,28 @@ test('only two unmarked provider records keep the legacy return path; missing or
    assert.equal(result?.active,status===200);assert.equal(reads,2);assert.equal(writes,0);assert.equal(activationObservations.calls.length,0);
   }
  }finally{globalThis.fetch=old;}
+});
+
+test('missed-return observations and subscription search cannot adopt a funded plan before receipt acknowledgement',async()=>{
+ const old=globalThis.fetch,created=Math.floor(Date.now()/1000);
+ const owner={...store,stripeCustomerId:'cus_Test000001',previousHandles:[],releasedHandles:[]} as Store;
+ const subscription={id:'sub_Test000001',customer:{id:'cus_Test000001',email:owner.email},created,status:'active',metadata:{store:'harbor',funding_grant:'ctr_metadata',funding_review:'test_only'},items:{data:[{current_period_start:created,current_period_end:created+30*86400,price:{lookup_key:'nimbus_creator_month',unit_amount:6900,currency:'usd',recurring:{interval:'month',interval_count:1}}}]}};
+ let reads=0,writes=0;globalThis.fetch=async(_input,init)=>{reads++;if(init?.method!=='GET')writes++;return Response.json({data:[subscription]});};
+ try{
+  activationObservations.calls.length=0;activationObservations.accept=false;
+  assert.equal(await startedFromObservedSubscription(owner,subscription),null);assert.equal(reads,0);
+  assert.equal((await findStoreSubscriptions(owner)).live,null);assert.equal(reads,1);
+  activationObservations.accept=true;
+  assert.equal((await startedFromObservedSubscription(owner,subscription))?.subscriptionId,subscription.id);assert.equal(reads,1);
+  assert.equal((await findStoreSubscriptions(owner)).live?.subscriptionId,subscription.id);assert.equal(reads,2);assert.equal(writes,0);
+  assert.equal(activationObservations.calls.length,4);
+  for(const change of [{metadata:{...subscription.metadata,funding_review:undefined}},{customer:{id:'cus_Other001',email:'other@example.test'}},{pending_update:{expires_at:created+100}},{items:{data:[{...subscription.items.data[0],price:{...subscription.items.data[0].price,currency:'eur'}}]}}]){
+   activationObservations.calls.length=0;
+   assert.equal(await startedFromObservedSubscription(owner,{...subscription,...change}),null);
+   assert.equal(activationObservations.calls.length,0);
+  }
+  activationObservations.calls.length=0;
+  assert.ok(await startedFromObservedSubscription(owner,{...subscription,metadata:{store:'harbor'}}));
+  assert.equal(activationObservations.calls.length,0);assert.equal(writes,0);
+ }finally{globalThis.fetch=old;activationObservations.accept=false;}
 });

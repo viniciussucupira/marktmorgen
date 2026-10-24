@@ -902,6 +902,33 @@ export function startedFrom(subscription: Record<string, unknown>): StartedSubsc
   };
 }
 
+/**
+ * Recovering a missed Checkout return may adopt only its funded initial
+ * subscription, never renew or replace a term. Provider observations are
+ * already available from the existing search/list response.
+ */
+export async function startedFromObservedSubscription(store:Store,subscription:Record<string,unknown>):Promise<StartedSubscription|null>{
+ const started=startedFrom(subscription);
+ if(!started)return null;
+ const meta=subscription.metadata as Record<string,unknown>|null|undefined;
+ if(meta?.funding_grant===undefined&&meta?.funding_review===undefined)return started;
+ if(!ownedBy(store,subscription)||meta?.store!==store.handle||typeof meta.funding_grant!=="string"||typeof meta.funding_review!=="string")return null;
+ const state=stateOf(subscription);
+ if(state.state!=="active"||state.changePending)return null;
+ const items=subscription.items as {data?:{price?:Record<string,unknown>}[]}|undefined;
+ const price=items?.data?.[0]?.price;
+ const recurring=price?.recurring as {interval?:unknown;interval_count?:unknown}|undefined;
+ if(items?.data?.length!==1||price?.currency!=="usd"||recurring?.interval!==state.cycle||recurring?.interval_count!==1||state.amountCents!==PUBLISHED_PLAN_PRICES[state.tier][state.cycle])return null;
+ const began=state.trialing?subscription.trial_start:periodStart(subscription);
+ const until=state.trialing?subscription.trial_end:periodEnd(subscription,false);
+ if(!(await activateCheckoutContract({
+  statsId:store.statsId??"",grantId:meta.funding_grant,reviewId:meta.funding_review,
+  subscriptionId:started.subscriptionId,tier:state.tier,cycle:state.cycle,createdSeconds:subscription.created as number,
+  trialing:state.trialing,periodStartSeconds:began as number,periodEndSeconds:until as number,
+ })))return null;
+ return started;
+}
+
 /** How many of a store's subscriptions one search looks at. */
 const SEARCH_LIMIT = 100;
 
@@ -943,7 +970,7 @@ export async function findStoreSubscriptions(
 
   let live: StartedSubscription | null = null;
   for (const subscription of rows) {
-    live = startedFrom(subscription);
+    live = await startedFromObservedSubscription(store,subscription);
     if (live) break;
   }
   const last = rows.map((subscription) => customerOf(subscription).id).find((id) => CUSTOMER_PATTERN.test(id));

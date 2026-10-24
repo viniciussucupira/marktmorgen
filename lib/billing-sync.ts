@@ -30,6 +30,7 @@ import {
   ownedBy,
   readSubscription,
   startedFrom,
+  startedFromObservedSubscription,
   stateOf,
 } from "@/lib/billing";
 import { ENDED_INDEX } from "@/lib/plan-standing";
@@ -127,7 +128,8 @@ async function applyListed(subscription: Record<string, unknown>, counts: SyncCo
     console.error(`store ${store.handle} has a second subscription in good standing: ${id}`);
     return;
   }
-  if (await setSubscription(storeRef(store), started)) counts.adopted += 1;
+  const verified=await startedFromObservedSubscription(store,subscription);
+  if(verified && await setSubscription(storeRef(store),verified)) counts.adopted += 1;
 }
 
 /** Step 1: every subscription on our account, newest first. */
