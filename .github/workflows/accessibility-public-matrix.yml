@@ -37,6 +37,9 @@ jobs:
       - run: npm ci
       - name: Verify the package matches the preinstalled browser image
         run: node -e "if (require('playwright-core/package.json').version !== '1.56.1') process.exit(1)"
+      - name: Diagnose actual engine media state before app navigation
+        if: env.AX2_PUBLIC_STANDARD == 'true'
+        run: node tests/e2e/accessibility-media-diagnostic.mjs
       - run: npm run build
       - name: Public entry journeys at five widths with AAA and access modes
         run: node tests/e2e/accessibility-public-matrix.mjs
