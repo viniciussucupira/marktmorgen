@@ -128,10 +128,16 @@ export async function pauseOf(store: Pick<Store, "email" | "sid" | "extra">): Pr
   return pauseAt(storeRef(store));
 }
 
-async function pauseAt(ref: string): Promise<PauseRecord | null> {
-  if (!isRedisConfigured()) return null;
+async function storedPauseAt(ref: string): Promise<{ record: PauseRecord | null; missing: boolean }> {
+  if (!isRedisConfigured()) return { record: null, missing: true };
   const [raw] = await redisPipeline([["GET", recordKey(ref)]]);
-  return parseRecord(raw);
+  // Only an explicit Redis miss proves absence. Invalid or incomplete replies
+  // must not authorize deletion of billing evidence.
+  return { record: parseRecord(raw), missing: raw === null };
+}
+
+async function pauseAt(ref: string): Promise<PauseRecord | null> {
+  return (await storedPauseAt(ref)).record;
 }
 
 /** Whether a break has not run out yet. */
@@ -379,7 +385,12 @@ export async function runBreaks(nowSeconds = Math.floor(Date.now() / 1000)): Pro
   const [raw] = await redisPipeline([["ZRANGEBYSCORE", DUE, "-inf", String(nowSeconds + RESTART_NOTICE_DAYS * DAY), "LIMIT", "0", "200"]]);
   const refs = Array.isArray(raw) ? (raw as string[]) : [];
   for (const ref of refs) {
-    const record = await pauseAt(ref);
+    const stored = await storedPauseAt(ref);
+    const record = stored.record;
+    if (!record && !stored.missing) {
+      counts.failed += 1;
+      continue;
+    }
     const store = await storeForEmail(ref);
     if (!record || !store) {
       await forget(ref, false);

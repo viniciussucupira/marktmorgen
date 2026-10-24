@@ -21,6 +21,7 @@ import { onBreak, pauseEmail, pauseOf, pausePlan, pauseRefusal, runBreaks, undoP
 import { addPeriods } from "@/lib/plans";
 import { done, is, part } from "./check";
 import { paidPeriod } from "./billing-period-fixture";
+import { store as pauseRedis } from "./redis-stub";
 
 process.env.STRIPE_SECRET_KEY = "sk_test_plan_pause_only";
 process.env.RESEND_API_KEY = "re_test_plan_pause_only";
@@ -272,6 +273,34 @@ async function main() {
       await undoPause(store, until + 60);
     }
     createAnswer = "ok";
+  }
+
+  part("Unreadable pause evidence is retained without attempting a charge");
+  {
+    const email = "unreadable-pause@example.com";
+    const id = "sub_Unreadable001";
+    subs[id] = subscription(id);
+    const store = await storeWith(email, "unreadablepause", id);
+    const set = await pausePlan(store, 1, NOW);
+    const until = set.kind === "paused" ? set.record.until : 0;
+    await setSubscription(email, { active: false });
+    const ref = storeRef(store);
+    const key = `nl:pause:${ref}`;
+    for (const raw of ["{", "null", JSON.stringify({ subscription: "sub_InvalidRecord" })]) {
+      await pauseRedis.pipeline([["SET", key, raw]]);
+      const before = created.length;
+      emails.length = 0;
+      const counts = await runBreaks(until + DAY);
+      const [retained, due] = await pauseRedis.pipeline([
+        ["GET", key],
+        ["ZRANGEBYSCORE", "nl:pause:due", "-inf", String(until + DAY)],
+      ]);
+      is("unreadable evidence is not treated as a missing pause", [counts.failed, counts.dropped, counts.restarted], [1, 0, 0]);
+      is("the exact stored evidence remains", retained, raw);
+      is("the pending entry remains available for reconciliation", Array.isArray(due) && due.includes(ref), true);
+      is("no provider charge or notice follows unreadable evidence", [created.length - before, emails.length], [0, 0]);
+    }
+    await pauseRedis.pipeline([["DEL", key], ["ZREM", "nl:pause:due", ref]]);
   }
 
   part("A store that started again by hand");

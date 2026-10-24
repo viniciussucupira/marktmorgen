@@ -7324,3 +7324,10 @@ Não equivale à reconciliação durável da cobrança nem corrige reconheciment
 Estado: implementação em verificação completa, sem publicação. Uma assinatura ativa ainda pode estar programada para encerrar. Ao desfazer uma pausa antes de seu começo, resposta ativa com encerramento ainda marcado não pode apagar a pausa nem devolver a elegibilidade anual como se a alteração estivesse concluída. A resposta divergente passa a falhar mantendo o registro; nova tentativa reconhecida conclui o fluxo existente. Limpeza de assinatura inativa e interrupção de pausa já iniciada preservadas.
 
 Teste sintético conserva o encerramento na primeira resposta, verifica a pausa exata retida e depois confirma recuperação por retirada reconhecida. Sem comando Redis/provedor, envio, chave ou campo persistido adicional. Custos de bytes/CPU e retenção não medidos não são zero; sem promessa de economia ou margem certificada. Não implementa reconciliação durável de cobrança ou retomada financiada. PLANS_ON_SALE=false, preços, limites e controles fiscais/comerciais preservados.
+
+
+### AB(a) — não apagar evidência ilegível de pausa como se estivesse ausente (24/10/2026)
+
+Estado: implementação em verificação completa; sem publicação. O passe de retomada distingue agora ausência explícita (null do Redis) de conteúdo ilegível/incompleto. Evidência ilegível e seu índice de pendência ficam preservados; o item conta como falha e não autoriza cobrança nem aviso. Casos sintéticos de JSON quebrado, null serializado e registro incompleto verificam preservação exata, pendência retida e nenhuma tentativa ou mensagem. Limpeza de ausência explícita e fluxos válidos preservados.
+
+Escopo do passe de retomada, não reparação do registro nem reconciliação durável; outros leitores de pausa mantêm seus contratos e o tratamento de fechamento/retenção mais amplo exige auditoria própria. Mesmo GET existente, sem comando, chave, campo ou envio novo. Retenção e repetições futuras custam: valores de CPU/bytes e retenção não medidos não são zero nem economia certificada. Políticas e cobertura financeira permanecem fechadas; PLANS_ON_SALE=false, preços, limites e gates fiscais preservados.
