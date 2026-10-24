@@ -106,6 +106,7 @@ async function finishHostConnect(
   const code = params.get("code") ?? "";
   if (params.get("error") || !code) return back("cal=declined");
   if (code.length > 2048 || !/^[A-Za-z0-9._~/+=-]+$/.test(code)) return back("cal=error");
+  if (store.period?.funded === true && !await reservePaidResourceWindow(store)) return back("cal=limited");
   try {
     const result = await finishConsent("google", {
       statsId: taken.statsId,
@@ -161,6 +162,7 @@ export async function finishConnect(request: NextRequest, provider: MeetProvider
   // "access_denied": they pressed Cancel on the provider's page.
   if (params.get("error") || !code) return back(`meet=declined&p=${provider}`);
   if (code.length > 2048 || !/^[A-Za-z0-9._~/+=-]+$/.test(code)) return back(`meet=error&p=${provider}`);
+  if (store.period?.funded === true && !await reservePaidResourceWindow(store)) return back(`meet=limited&p=${provider}`);
 
   try {
     const result = await finishConsent(provider, {
