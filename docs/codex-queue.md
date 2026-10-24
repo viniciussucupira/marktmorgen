@@ -6668,3 +6668,45 @@ Head97fc07f0fe9b8d7ac684428fb4b9f271568320c9, job120879788296: em13:21:32.715UTC
 ### AB(a) — segunda falha WebKit: observação do título preservado (24/10/2026)
 
 Head2a8be37543bc9799632df393ca6b3496e2c826b3, job120884117830:13:44:26.974UTC/10:44:26.974Fortaleza, FAIL HT15 saved creator headline intact390, esperado true/obtido false. Não é repetição do timeout anterior: a execução chegou aos testes posteriores e concluiu com essa única asserção falsa. tests/e2e/template-library.mjs clicava o bloco Keep my creator headline e imediatamente avaliava input/textarea, sem aguardar a seleção renderizada. Correção aguarda o mesmo valor exato aparecer no DOM antes de manter a asserção original; não troca texto, não salva/publica, não remove caso, não aumenta timeout, não usa force/sleep nem altera componente. Renderização assíncrona é hipótese do fluxo, não trace causal exclusivo capturado. Exigir suíte completa no novo head e manter as falhas anteriores. Publicação continua bloqueada.
+
+
+## FR — Relatórios fiscais automáticos da LLC (24/10/2026)
+
+Solicitação do dono (24/10/2026, 10h31, horário de Fortaleza): formas tecnológicas de reduzir os custos da empresa.
+
+NÃO PARE o que está fazendo. COLOQUE NA FILA, com os próximos números livres, depois dos pedidos já gravados ou em gravação (inclusive o RE de24/10/2026,09h52). Executar depois do Bloco de abertura, salvo se um item do bloco já exigir parte disto.
+
+Estado inicial informado pelo dono: no main, o último item é332 [RD1]; o RE ainda não foi gravado. Conferência atual: RE333–334 já estão no main pela ancestralidade de#896 incorporada em#897;335 é o próximo número livre, sem FR1 nas filas consultadas. Numeração e história anteriores preservadas.
+
+335. [FR1] Relatórios fiscais anuais gerados pelo código.
+
+Estado: na fila. Proveniência: pedido direto do dono de24/10/2026 10h31(Fortaleza). Executar depois do Bloco de abertura, respeitando a ordem posterior já existente; se um item do bloco exigir uma parte, implementá-la nesse item e referenciar FR335, sem duplicar mecanismo nem antecipar o restante. AB(a) permanece ativo. O dono informa que não usa contador desde18/10/2026; isso não substitui comprovação das regras/dados nem autoriza zerar custos desconhecidos.
+
+A partir dos registros que o Marktmorgen já guarda (faturas e taxas na conta Stripe da LLC, despesas pagas pela LLC e aportes e retiradas do dono), gere sozinho, a cada ano, em arquivo para o dono conferir e enviar:
+(a) os dados do Formulário5472 com o1120pro forma (transações entre a LLC e o dono), com o prazo;
+(b) o lembrete e o valor do imposto anual de Delaware;
+(c) os dados exigidos pela Califórnia, se a leitura vigente em docs/tax-uncertainty.md exigir;
+(d) o lucro da LLC em31de dezembro convertido pela cotação de fechamento de venda do Banco Central, para a declaração anual brasileira (Lei14.754/2023);
+(e) o resumo do INSS do ano.
+
+Cada valor indica a fonte oficial e datada da regra e o registro de onde saiu. Avisos automáticos ao dono30e7dias antes de cada prazo, por e-mail, sem depender de painel. Custo desconhecido não é zero; nenhum envio automático a autoridade. Os formulários, incidências, prazos e câmbio mencionados são requisitos do briefing a validar em fontes oficiais datadas durante a execução, sem certificar obrigações por este registro. Dado/registro ausente deve aparecer como pendência, nunca valor fiscal inventado ou zero. Manter rastreabilidade até registros originais e revisão pelo dono.
+
+REGRA DOS60% (OBRIGATÓRIA): todo cliente pagante, considerado isoladamente e usando100% de todos os direitos do plano no pior mês, deve manter margem de lucro líquido MÍNIMA de60%, depois de todos os custos e de todos os impostos, inclusive os brasileiros; a margem pode ser maior, mas nunca menor, e a mesma regra vale para a empresa como um todo. Custo desconhecido não pode ser considerado zero. Use a leitura que resultar em MAIS imposto (docs/tax-uncertainty.md). Desde22/10/2026, todos os custos fixos da LLC são atribuídos integralmente ao Marktmorgen (item275 [FX1]).
+
+Proibições: não alterar preços, limites visíveis, comissão, meios de pagamento aceitos, PLANS_ON_SALE, tax gate, art.9a ou revisão comercial; não criar contas, aceitar termos, contratar serviços, pagar valores, enviar declarações, alterar configurações reais ou contatar terceiros; somente testes sintéticos.
+
+Na execução calcular antes todos os custos mensais/anuais por plano, maior preço pago, geração/armazenamento/consulta/câmbio/agendamento e e-mails de aviso, com tetos/reserva; nenhuma contratação/envio real durante esta implementação autorizada apenas para testes sintéticos. Construir avisos por e-mail ao dono como requisito do produto, testados com remetente simulado. Arquivos somente para o dono conferir/enviar; nenhuma submissão a autoridade. Registrar testes completos, fontes/data, PR, incorporação e versão publicada; documento não é entrega funcional.
+
+
+### Entrega funcional207 — coorte paga no remetente por loja (24/10/2026)
+
+PR#897 head final02576118e6065aebb9fd9b9b32a3d0ef1ea5e8d9, tree446f9c486f5b8ed79d884432b3594c7aca1eacdb, merge85d91f1944d99a84d0b802b3294074f0029c1d5a em14:16:40UTC/11:16:40Fortaleza;24/24success após correções e suítes completas em novos heads, árvores prevista/testada/real e pais ordenados conferidos. Falhas anteriores preservadas acima. WebKit120890025425 confirmou coleções390/1280 às14:04:38/14:04:50UTC e título preservado390/1280 às14:06:36/14:06:39UTC. Nenhum job isolado usado como conclusão. #896 documental incorporado por ancestralidade, RE333/334 e prova206 no main sem entrega extra.
+
+Deployment dpl_3JAdhrSkqmmzmeDZyxwztGFUQEoB READY14:18:33.396UTC/11:18:33.396Fortaleza, GitSHA exato do merge e marktmorgen.com /,/platform,/pricing,/mission,/library HTTP200 com mesmo data-dpl-id. Só então contador206→207, próxima208, aviso207 emitido uma vez. EmailMeter bystore email/transactional de períodos marcados financiados exige coorte antes de takeAllowance e remetente; ausência de aprovação recusa antes do custo. Empresa/order/monthly/assistente separado e outros recursos continuam pendentes; políticas reais nulas, três coberturas falsas, vendas fechadas.
+
+Custos condicionais prévios:1EVAL18/17comandos,JSON<=12288bytes,sem campo adicional. Uma observação/e-mail publicado Store225/Studio700/Scale1800,18comandos,primária sem réplicaPAYG0.20/100k:USD0.0081/0.0252/0.0648mês e0.0972/0.3024/0.7776por12pioresmeses por intervalo. Abuso/repetições/recusas,teto global/reserva,topologia,CPU/memória,respostas/transferência,overhead/retenção desconhecidos continuam reprovados;sem certificação60% ou redução de reservas.
+
+
+### AB(a) — coorte financeira na admissão de pedidos (24/10/2026, em implementação)
+
+Guard em lib/order-admission.ts antes da reserva de capacidade e abertura do checkout: período explicitamente financiado exige reservePaidResourceWindow. Sem aprovação financeira real recusa; settleAdmitted para pedidos já pagos continua acessível e não devolve caixa contratual. Testes sintéticos mantêm quotas e cenários anteriores e verificam recusa sem gravação e liquidação com marcador. Documento docs/paid-order-cohort.md registra custos ANTES de operação: EVAL18/17,JSON<=12288bytes,campo compartilhado; cenário condicional uma observação/unidade,primária sem réplica,PAYG USD0.20/100k: Store200/Studio450/Scale1500 => USD0.0072/0.0162/0.054mês e0.0864/0.1944/0.648por12pioresmeses,ambosintervalos. Tentativas recusadas/abandonadas/abusivas e repetições NÃO são limitadas pelas ordens concluídas; teto global/reserva,topologia,CPU/memória,respostas/transferência/overhead/retenção desconhecidos reprovam. Sem certificação60%;100%fixosLLC/leitura tributária mais onerosa preservados. Políticas reais nulas,três coberturas falsas,vendas fechadas. FR335 e prova207 preservados por ancestralidade de #898; não contam entrega funcional. Aguardar suíte completa no head exato e READY/domínio/SHA antes de eventual208.
