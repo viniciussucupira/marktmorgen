@@ -153,7 +153,7 @@ export default async function CertificatePage({ params, searchParams }: Params) 
               <span className="cert-store">{store.name}</span>
             </div>
 
-            <p className="cert-kicker">{w.kicker}<span className="font-accent">{w.kickerAccent}</span></p>
+            <h1 className="cert-kicker">{w.kicker}<span className="font-accent">{w.kickerAccent}</span></h1>
             <p className="cert-lead">{w.certifies}</p>
             <p className="cert-name">{certificate.name}</p>
             <p className="cert-lead">{w.hasCompleted}</p>

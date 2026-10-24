@@ -39,7 +39,7 @@ export async function checkShipmentAcknowledgment({browser,LOCAL,fixture,shipmen
     const seen=page.waitForRequest(request=>request.method()==="POST"&&new URL(request.url()).pathname==="/api/store/shipped",{timeout:15000});seen.catch(()=>{});
     // Keep the reply held for busy-state assertions without awaiting click completion first.
     // Firefox may wait for effects of the submit action until that reply is released.
-    const click=form.getByRole("button",{name:"Mark as shipped",exact:true}).click();click.catch(()=>{});
+    const click=form.getByRole("button",{name:"Mark as shipped",exact:true}).click({noWaitAfter:true});click.catch(()=>{});
     try{
      const sent=(await seen).postDataJSON();
      is("shipment request preserves chosen values "+scenario.name+"/"+width,[sent.session,sent.tracking],[shipment,"https://example.test/chosen"]);

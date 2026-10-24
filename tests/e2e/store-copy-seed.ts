@@ -1,3 +1,4 @@
+import {publicStandardAx2Run} from "./ax2-public-run.mjs";
 import {setProductShipping,setPixels} from "@/lib/store";
 import {TIERS,publishedPriceWords} from "@/lib/plan";
 import type { CallSetup } from "@/lib/call-setup";
@@ -70,6 +71,10 @@ async function main(): Promise<void> {
   }
   if(!(await setStripeAccount(growthOwner,DEMO_CONNECTED_ACCOUNT,true)).ok)throw Error("No growth synthetic account");
   const growthStore=(await storeForEmail(growthOwner))!;
+  const certificateHeadingFixture=publicStandardAx2Run()?{handle:growthStore.handle,name:"Łukasz Żółć",title:"Synthetic course title",certs:[{id:"ax2certen0000000",withdrawn:false},{id:"ax2goneen0000000",withdrawn:true}]}:null;
+  if(certificateHeadingFixture)for(const cert of certificateHeadingFixture.certs){
+    await redisPipeline([["SET","nl:cert:"+cert.id,JSON.stringify({id:cert.id,store:growthStore.statsId,productId:growthProducts[0],courseId:"ax2-heading-course",name:certificateHeadingFixture.name,title:certificateHeadingFixture.title,creator:growthStore.name,email:"synthetic-certificate@example.test",issuedAt:1791580800,withdrawnAt:cert.withdrawn?1791667200:0})]]);
+  }
   if(!(await startPath(growthStore,{goalCents:0,goalCurrency:"usd",skills:"Teaching",subject:"Guides",minutes:15,audience:"none",timeZone:"America/New_York"})).ok)throw Error("No growth Path");
   const growthSession=await openSession(growthOwner);
   const returnOwner="path-return-owner@example.test";
@@ -193,6 +198,6 @@ async function main(): Promise<void> {
   if(!(await setProductShipping(shippingOwner,shippingProduct.product.id,{cents:500,region:"us",countries:["US"],note:"Ships later",sku:"Synthetic-SKU"})).ok)throw Error("No saved shipping");
   const shippingStore=await storeForEmail(shippingOwner);if(!shippingStore)throw Error("No shipping store");
   const shippingFixture={session:await openSession(shippingOwner),sid:shippingStore.sid,product:shippingProduct.product.id};
-  console.log(JSON.stringify({ shippingFixture,libraryFixture,signinPrices:TIERS.map(tier=>({tier,words:publishedPriceWords(tier,"month")})),activationFixture,packageFixture,tierFixture,exitFixture,homeDemo,pauseFixtures,wordingSession,wordingSid:wordingStore.sid,wordingTrialSession,wordingTrialSid:wordingTrialStore.sid,returnSession,returnSid:returnStore.sid,growthSession,growthSid:growthStore.sid,growthProduct:growthProducts[0],session: await openSession(OWNER), second: second.store.sid, abProduct, abStore:abStore.sid,contactToken }));
+  console.log(JSON.stringify({ certificateHeadingFixture,shippingFixture,libraryFixture,signinPrices:TIERS.map(tier=>({tier,words:publishedPriceWords(tier,"month")})),activationFixture,packageFixture,tierFixture,exitFixture,homeDemo,pauseFixtures,wordingSession,wordingSid:wordingStore.sid,wordingTrialSession,wordingTrialSid:wordingTrialStore.sid,returnSession,returnSid:returnStore.sid,growthSession,growthSid:growthStore.sid,growthProduct:growthProducts[0],session: await openSession(OWNER), second: second.store.sid, abProduct, abStore:abStore.sid,contactToken }));
 }
 main().catch((e) => { console.error(e); process.exit(1); });
