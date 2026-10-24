@@ -30,7 +30,7 @@ const NOW = 1_791_700_000;
 const emails: { to: string; subject: string; text: string }[] = [];
 const subs: Record<string, Record<string, unknown>> = {};
 const created: URLSearchParams[] = [];
-let createAnswer: "ok" | "declined" | "down" = "ok";
+let createAnswer: "ok" | "declined" | "down" | "otherCustomer" | "otherTier" | "yearly" | "trial" = "ok";
 
 function subscription(id: string, over: Record<string, unknown> = {}): Record<string, unknown> {
   return {
@@ -66,6 +66,15 @@ globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) =>
       if (createAnswer === "declined") return new Response(JSON.stringify({ error: { code: "card_declined", message: "Your card was declined." } }), { status: 402 });
       if (createAnswer === "down") return new Response(JSON.stringify({ error: { type: "api_error", message: "down" } }), { status: 500 });
       const fresh = subscription("sub_Restarted00001", { start_date: NOW, trial_end: null, customer: { id: body.get("customer"), email: "x@example.com" } });
+      if (createAnswer === "otherCustomer") fresh.customer = { id: "cus_OtherRestart01", email: "other@example.com" };
+      if (createAnswer === "otherTier" || createAnswer === "yearly") {
+        fresh.items = { data: [{ current_period_end: NOW + 10 * DAY, price: {
+          lookup_key: createAnswer === "otherTier" ? "nimbus_labs_pro_month" : "nimbus_labs_creator_year",
+          unit_amount: createAnswer === "otherTier" ? 44900 : 69000,
+          recurring: { interval: createAnswer === "yearly" ? "year" : "month" },
+        } }] };
+      }
+      if (createAnswer === "trial") { fresh.status = "trialing"; fresh.trial_end = NOW + DAY; }
       subs.sub_Restarted00001 = fresh;
       return new Response(JSON.stringify(fresh), { status: 200 });
     }
@@ -215,6 +224,31 @@ async function main() {
     is("it does not claim that no charge occurred", text.includes("Nothing was charged."), false);
     is("it states uncertainty and asks for checking before another restart", text.includes("whether a charge went through") && text.includes("Before starting the plan again, contact us") && text.includes("do not send card details"), true);
     is("it does not claim the plan is taking payments", text.includes("your checkout is taking payments"), false);
+    createAnswer = "ok";
+  }
+
+  part("A restart response must match the requested paid monthly plan");
+  {
+    const mismatches = ["otherCustomer", "otherTier", "yearly", "trial"] as const;
+    for (const [index, answer] of mismatches.entries()) {
+      const id = `sub_Mismatch0000${index}`;
+      const email = `restart-mismatch-${index}@example.com`;
+      subs[id] = subscription(id);
+      const store = await storeWith(email, `restartmismatch${index}`, id);
+      const set = await pausePlan(store, 1, NOW);
+      const until = set.kind === "paused" ? set.record.until : 0;
+      await setSubscription(email, { active: false });
+      createAnswer = answer;
+      emails.length = 0;
+      const before = created.length;
+      const counts = await runBreaks(until + 60);
+      const after = await storeForEmail(email);
+      is(`${answer}: observed response does not activate the store`, [counts.restarted, counts.failed, after?.subscriptionActive], [0, 1, false]);
+      is(`${answer}: no success or no-charge message`, emails.length, 0);
+      is(`${answer}: pause remains for existing uncertain-outcome handling`, (await pauseOf(store)) !== null, true);
+      is(`${answer}: no additional provider attempt in this pass`, created.length - before, 1);
+      await undoPause(store, until + 60);
+    }
     createAnswer = "ok";
   }
 
