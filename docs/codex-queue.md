@@ -5375,6 +5375,12 @@ Custo antes do código: incremento por cliente Store/Studio/Scale US$0 mensal e 
 
 Histórico: PR #861 incorporado em 23/10/2026 21h22min26s Fortaleza, commit 48a897c591194f9e2f4364cecdcb4cbc61b4bc6a, 22/22 verificações; registro HS1 documental. PR #862 incorporado em 23/10/2026 21h34min05s Fortaleza, commit 1e41e9ac12bea0be9aab50f59e2f2818507e6a2d, 22/22 verificações e árvore testada/incorporada 3676aa1fb311712ee6dea7afbd7f1afabac7f646; 126 modelos inventariados não significam 126 rotas aprovadas. Sem entrega funcional nova; contador permanece 191.
 
+### AX2 — falha de auditoria e correção sem exceção (23/10/2026)
+
+No head 619eafe2290026e1bdaf6a8c004221fa4d427b8b, audit120728626655 falhou em 23/10/2026 21h42min21s Fortaleza: undici6.28.1, dependência de produção de @vercel/blob, foi apontado por GHSA-xjj6-f33q-929c (alta) e GHSA-4qv8-2p9j-2685 (moderada). Avisos oficiais GitHub/Node.js lidos em23/10 indicam6.29.1 corrigida; metadados e integridade confirmados no registro oficial npm. Atualização somente da resolução compatível com ^6.23.0 no lock, sem baixar o Blob nem criar exceção de auditoria. Novo head exige suíte completa; não reexecutar apenas audit para concluir.
+
+O job isolado lock-review120728626674 passou, gerou54 entradas de pacote e encontrou0vulnerabilidades na auditoria com opcionais omitidos em2026-10-24T00:42:24.2479703Z. As duas integridades diretas coincidem com os registros oficiais Guidepup verificados. O lock passa a ser preservado para instalação reprodutível; isto ainda não é teste real de leitor. Custo incremental de runtime da correção de segurança0/0mensal/anual por plano, sem nova operação; custos fixos e condições de runner público da entrada anterior permanecem. Nenhuma publicação ou contador novo.
+
 ## H4 — Lições da quarta auditoria da Hotmart (23/10/2026)
 
 Solicitação do dono (23/10/2026,01h13, Fortaleza): incorporar as melhorias da quarta auditoria estratégica da Hotmart (hotmart.com) que ainda não existam no código nem na fila. Antes de cada item, verificar código e fila e implementar apenas a diferença. Fatos atribuídos à Hotmart exigem confirmação em fonte oficial datada antes de qualquer uso; números da Hotmart jamais podem ser apresentados como resultados do Marktmorgen.
