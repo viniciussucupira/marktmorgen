@@ -86,3 +86,11 @@ test('an active funded store cannot reserve another checkout even after its pend
  assert.ok(h.get('grant:ctr_activate'));assert.ok(h.get('grant:ctr_switch_after_active'));
  assert.equal(h.get('reserved'),String(f.config.grantCents.creator_month*2));
 });
+
+test('the returned grant purpose matches its permanent cash receipt',async()=>{
+ for(const action of ['checkout','switch'] as const){
+  const f=start(),g=await reserveContractFunding('purpose','creator','month',action,f.policy,f.context,'ctr_purpose');
+  assert.ok(g);assert.equal(g.action,action);
+  assert.equal(ledger.get(key)!.get('grant:'+g.id)!.split('|')[3],g.action);
+ }
+});
