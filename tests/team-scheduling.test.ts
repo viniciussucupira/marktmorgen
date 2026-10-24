@@ -381,7 +381,21 @@ async function main(): Promise<void> {
   offset += 20 * 60_000;
   const within = await hostSync(first.store, MAYA, NY, { refresh: true });
   is("a failure soon after a good reading keeps it, and says so", [within.state, within.blocked, within.message.length > 0], ["ok", false, true]);
-  offset += 30 * 60_000;
+  const failedReadCalls = google.filter((g) => g.path.endsWith("/freeBusy")).length;
+  const repeatedFailure = await hostSync(first.store, MAYA, NY, { refresh: true });
+  const otherStoreFailure = await hostSync(second.store, MAYA, NY, { refresh: true });
+  is("repeated views across stores keep the known reading without repeating the failed provider call",
+    [repeatedFailure.state, otherStoreFailure.state, google.filter((g) => g.path.endsWith("/freeBusy")).length],
+    ["ok", "ok", failedReadCalls]);
+  offset += 15 * 60_000 - 1;
+  await hostSync(first.store, MAYA, NY, { refresh: true });
+  is("the automatic failure retry stays closed until the complete fifteen-minute interval",
+    google.filter((g) => g.path.endsWith("/freeBusy")).length, failedReadCalls);
+  offset += 1;
+  await hostSync(first.store, MAYA, NY, { refresh: true });
+  is("at the retry boundary a synthetic provider read is allowed again",
+    google.filter((g) => g.path.endsWith("/freeBusy")).length, failedReadCalls + 1);
+  offset += 15 * 60_000;
   const stale = await hostSync(first.store, MAYA, NY, { refresh: true });
   is("past 45 minutes without a good reading she is blocked", [stale.state, stale.blocked], ["stale", true]);
   const T = weekdayAt(7, 600);
