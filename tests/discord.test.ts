@@ -23,6 +23,10 @@ import { accountOf, dueMembers, readMember, saveServer, setProductRoles, startTr
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
 import { paidPeriod } from "./billing-period-fixture";
+import { NextRequest } from "next/server";
+import { SESSION_COOKIE, openSession } from "@/lib/auth";
+import { POST as startDiscordInstall } from "@/app/api/store/discord/connect/route";
+import { allowanceUsed } from "@/lib/store-allowance";
 
 const SERVER = "100000000000000001";
 const R1 = "200000000000000001";
@@ -159,6 +163,19 @@ async function main(): Promise<void> {
   stripe = "canceled";
   await redisFlushCache();
   is("ended, and removed", [await checkMember(store.sid, ANA_TWO), members.has(ANA_TWO)], ["ended", false]);
+
+  part("A funded optional bot-install start refuses before provider consent");
+  await claimHandle("funded-discord@example.com", "funded-discord-shop", "Funded Discord Shop", "");
+  await ensureStatsId("funded-discord@example.com");
+  await setSubscription("funded-discord@example.com", { customerId: "cus_DiscordFund01", subscriptionId: "sub_DiscordFund01", active: true, period: { ...paidPeriod(), funded: true } });
+  const fundedDiscord = (await storeForEmail("funded-discord@example.com"))!;
+  const installSession = await openSession("funded-discord@example.com");
+  const beforeInstallUnits = await allowanceUsed(fundedDiscord, "integration");
+  const beforeInstallRequests = discord.length;
+  const installStart = await startDiscordInstall(new NextRequest(`https://marktmorgen.com/api/store/discord/connect?store=${fundedDiscord.sid}`, { method: "POST", headers: { host: "marktmorgen.com", origin: "https://marktmorgen.com", cookie: `${SESSION_COOKIE}=${installSession}` } }));
+  const installDestination = new URL(installStart.headers.get("location") ?? "https://none.invalid/");
+  is("the owner stays at the studio instead of Discord consent", [installStart.status, installDestination.hostname, installDestination.searchParams.get("discord")], [303, "marktmorgen.com", "limited"]);
+  is("no provider request or extra integration allowance", [discord.length, await allowanceUsed(fundedDiscord, "integration")], [beforeInstallRequests, beforeInstallUnits]);
 
   part("A trip to Discord's page");
   const state = await startTrip({ k: "join", sid: store.sid, email: "ana@example.com", redirect: "r", back: "/" });
