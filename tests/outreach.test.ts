@@ -27,6 +27,7 @@ import {
   listPitches,
   readSender,
   readSite,
+  readStoreSite,
   readStopLink,
   saveSender,
   setPitchStatus,
@@ -358,6 +359,26 @@ async function main(): Promise<void> {
   const failed = await startPitch(daily, { ...input, page: "https://brand98.com/contact", email: "hello@brand98.com" }, { reader: site({ "https://brand98.com/contact": "<p>hello@brand98.com</p>" }), now: NOW + 2 * 86_400 });
   is("says so", failed.ok ? "written" : failed.reason, "failed");
   is("the started attempt remains counted", await aiLeft(daily, NOW * 1000), AI_MONTHLY.pro - PITCHES_PER_DAY - 2);
+
+  part("A funded manual business lookup refuses before any external reader");
+  await claimHandle("funded-outreach@example.com", "funded-outreach-shop", "Funded Outreach Shop", "");
+  await ensureStatsId("funded-outreach@example.com");
+  const lookupPeriod = paidPeriod();
+  await setSubscription("funded-outreach@example.com", { customerId: "cus_OutreachFund01", subscriptionId: "sub_OutreachFund01", active: true, tier: "pro", period: lookupPeriod });
+  const lookupOwner = (await storeForEmail("funded-outreach@example.com"))!;
+  let lookupPages = 0;
+  const lookupReader: PageReader = async (url) => {
+    lookupPages += 1;
+    return { url, html: url.endsWith("/robots.txt") ? "" : "<p>Contact hello@synthetic-brand.example.com</p>" };
+  };
+  const legacyLookup = await readStoreSite(lookupOwner, "https://synthetic-brand.example.com", lookupReader);
+  is("an unmarked lookup still uses the existing reader", [legacyLookup.ok, lookupPages > 0], [true, true]);
+  await setSubscription("funded-outreach@example.com", { active: true, period: { ...lookupPeriod, funded: true } });
+  const fundedLookupOwner = (await storeForEmail("funded-outreach@example.com"))!;
+  const pagesBeforeRefusal = lookupPages;
+  is("missing funding refuses a manual lookup", await readStoreSite(fundedLookupOwner, "https://synthetic-brand.example.com", lookupReader), { ok: false, reason: "unavailable" });
+  is("not even its front page or robots file is read", lookupPages, pagesBeforeRefusal);
+  is("no pitch was created", await listPitches(fundedLookupOwner), []);
 
   part("Nothing here sends an email");
   const source = ["lib/outreach.ts", "lib/outreach-rules.ts", "app/api/store/outreach/route.ts", "app/api/outreach/stop/route.ts", "components/outreach-studio.tsx"].map((f) => readFileSync(f, "utf8")).join("\n");

@@ -59,6 +59,7 @@ import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { SafeFetchError, checkUrl, safeFetch } from "@/lib/safe-fetch";
 import { SITE_URL } from "@/lib/site-url";
 import type { Store } from "@/lib/store";
+import { reservePaidResourceWindow } from "@/lib/contract-resource-window";
 
 /** Who is reading, said to every site read. */
 export const READER = `${READER_NAME}/1.0 (+${SITE_URL}/help#outreach)`;
@@ -123,6 +124,12 @@ async function siteRules(origin: string, reader: PageReader): Promise<string[]> 
  * Reads what a creator typed as the address of a business's website, and
  * returns what that business says of itself and where it asks to be written.
  */
+/** A new owner-requested lookup, admitted before reading any external page. */
+export async function readStoreSite(store: Store, raw: string, reader: PageReader = readPage): Promise<Awaited<ReturnType<typeof readSite>> | { ok: false; reason: "unavailable" }> {
+  if (store.period?.funded === true && !await reservePaidResourceWindow(store)) return { ok: false, reason: "unavailable" };
+  return readSite(raw, reader);
+}
+
 export async function readSite(raw: string, reader: PageReader = readPage): Promise<{ ok: true; site: SiteRead } | { ok: false; reason: SiteProblem }> {
   let start: URL;
   try {
