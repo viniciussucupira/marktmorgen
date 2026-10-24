@@ -38,6 +38,7 @@ import { accessWords } from "@/lib/buyer-words/access";
 import { redisPipeline } from "@/lib/redis";
 import { withinLimit } from "@/lib/request-guard";
 import { takeAllowance } from "@/lib/store-allowance";
+import { reservePaidResourceWindow } from "@/lib/contract-resource-window";
 import { API_WRITE_UNITS } from "@/lib/store-allowance-rules";
 import { DataRoomError } from "@/lib/store-data";
 
@@ -59,7 +60,8 @@ export type WriteError =
   | "cannot_email"
   | "daily_limit"
   | "monthly_limit"
-  | "store_full";
+  | "store_full"
+  | "unavailable";
 
 type Done<T> = { ok: true; value: T } | { ok: false; error: WriteError };
 
@@ -83,6 +85,7 @@ export async function addLead(store: Store, body: Record<string, unknown>): Prom
   if (body.agreed !== true) return fail("consent");
   const tags = readLabels(body.tags);
   if (!tags) return fail("labels");
+  if (store.period?.funded === true && !(await reservePaidResourceWindow(store))) return fail("unavailable");
   const name = typeof body.name === "string" ? body.name.replace(/\s+/g, " ").trim().slice(0, MAX_CONTACT_NAME) : "";
   const listId = store.listId ?? (await ensureListId(storeRef(store)))?.listId;
   if (!listId) return fail("list_full");
@@ -109,6 +112,8 @@ export async function changeLeadLabels(store: Store, body: Record<string, unknow
   const add = readLabels(body.add);
   const remove = readLabels(body.remove);
   if (!add || !remove || (!add.length && !remove.length)) return fail("labels");
+  // Removing existing labels creates no enrollment; keep this cleanup path available.
+  if (add.length > 0 && store.period?.funded === true && !(await reservePaidResourceWindow(store))) return fail("unavailable");
   if (!store.listId) return fail("not_on_list");
   const [raw] = await redisPipeline([["HGET", leadsKey(store.listId), email]]);
   const before = parseContact(raw);
@@ -178,10 +183,12 @@ export async function giveAccess(
   const notify = body.notify === true;
   if (notify && (!isSenderConfigured() || !isPaidUp(store))) return fail("cannot_email");
 
+  if (store.period?.funded === true && !store.statsId) return fail("unavailable");
   const statsId = store.statsId ?? (await ensureStatsId(storeRef(store)))?.statsId;
   if (!statsId || !store.sid) return fail("nothing_to_give");
   const already = (await importedFor({ ...store, statsId, pastBuyers: true }, email)).some((p) => p.productId === product.id);
   if (already) return { ok: true, value: { email, product: product.id, status: "already", emailed: false } };
+  if (store.period?.funded === true && !(await reservePaidResourceWindow(store))) return fail("unavailable");
   if (!(await withinLimit("api-give", store.sid, GIVES_PER_DAY, 86_400))) return fail("daily_limit");
   if (!(await takeAllowance(store, "api", API_WRITE_UNITS - 1)).ok) return fail("monthly_limit");
   const [isNew] = await grantImported(statsId, `api:${keyId}`, [{ email, productId: product.id, items }], undefined, store.sid, store);
@@ -232,6 +239,7 @@ export async function takeAccess(store: Store, body: Record<string, unknown>): P
 
 /** What each refusal says, and its status, as the API answers it. */
 export const WRITE_ERRORS: Record<WriteError, [number, string]> = {
+  unavailable: [503, "The store could not make this change just now. Try again in a moment."],
   email: [400, "Send email: an address."],
   consent: [400, "Send agreed: true, your word that this person agreed to hear from you. Nobody is added without it."],
   unsubscribed: [409, "This person unsubscribed from your list, so they are not added back."],

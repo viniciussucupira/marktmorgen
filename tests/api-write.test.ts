@@ -20,6 +20,7 @@ import { DELETE as deleteAccess, POST as postAccess } from "@/app/api/v1/access/
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
 import { paidPeriod } from "./billing-period-fixture";
+import { allowanceUsed } from "@/lib/store-allowance";
 
 type Sent = { to: string | string[]; subject: string; text: string };
 const emails: Sent[] = [];
@@ -90,6 +91,21 @@ async function main(): Promise<void> {
   const told = await call(postAccess, writer.key, { email: "dee@example.com", product: guide.product.id, notify: true });
   is("the one email, when asked for", [told.json.data?.emailed, emails.length, [emails[0]?.to].flat()[0]], [true, 1, "dee@example.com"]);
   is("saying it was given and nothing was charged", emails[0]?.text.includes("Harbor Kitchen has given you The Guide. Nothing was charged."), true);
+
+  part("New funded mutations need the resource month; removal remains available");
+  await setSubscription(OWNER, { active: true, period: { ...fresh.period!, funded: true } });
+  const funded = (await storeForEmail(OWNER))!;
+  const beforeFunds = await allowanceUsed(funded, "api");
+  const emailsBeforeFunds = emails.length;
+  const refusedLead = await call(postLead, writer.key, { email: "funded-new@example.com", agreed: true });
+  const refusedLabel = await call(postLabels, writer.key, { email: "ada@example.com", add: ["funded-new"] });
+  const refusedGrant = await call(postAccess, writer.key, { email: "funded-new@example.com", product: guide.product.id, notify: true });
+  is("new lead, enrollment label and product grant refuse missing actual approval", [refusedLead, refusedLabel, refusedGrant].map(r => [r.status, r.json.error]), [[503, "unavailable"], [503, "unavailable"], [503, "unavailable"]]);
+  is("only the three authenticated requests count, with no additional mutation units", await allowanceUsed(funded, "api"), beforeFunds + 3);
+  const [noNewLead] = await redis.pipeline([["HGET", leadsKey(funded.listId!), "funded-new@example.com"]]);
+  is("nothing newly added or emailed", [noNewLead, (await importedFor(funded, "funded-new@example.com")).length, emails.length], [null, 0, emailsBeforeFunds]);
+  is("an already-given product remains acknowledged without new grant work", (await call(postAccess, writer.key, { email: "cy@example.com", product: guide.product.id })).json.data?.status, "already");
+  is("removing an existing label stays available", (await call(postLabels, writer.key, { email: "ada@example.com", remove: ["vip"] })).json.data?.labels, []);
 
   part("Taking a product back");
   is("what the API gave", (await call(deleteAccess, writer.key, { email: "cy@example.com", product: guide.product.id }, "DELETE")).json.data?.status, "taken_back");
