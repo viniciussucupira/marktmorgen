@@ -255,6 +255,9 @@ export async function hostSync(
   if (!options.force && age < SYNC_SECONDS * 1000) return result(source, "ok", good, lastWords);
   const fallback = () => (age < STALE_SECONDS * 1000 ? result(source, "ok", good, lastWords) : result(source, good ? "stale" : "failed", good, lastWords || "Your calendar has not been read recently enough."));
   if (!options.refresh && !options.force) return fallback();
+  // Failed automatic reads share the same host-wide retry interval as good reads.
+  // A kept failure must not turn each booking-page view into another provider call.
+  if (!options.force && failure && Number.isFinite(failure.at) && failure.at <= now && now - failure.at < SYNC_SECONDS * 1000) return fallback();
   const [mine] = await redisPipeline([["SET", lockKey(host), "1", "NX", "EX", 20]]).catch(() => [null]);
   if (mine === null) return fallback();
   try {
