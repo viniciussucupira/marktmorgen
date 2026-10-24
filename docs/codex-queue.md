@@ -7120,3 +7120,19 @@ Em implementação: counted valida configuração/jobs/janela e recusa recurso e
 Correção adicional de testes24/10/2026:verify930/931 detectou expectativa com dois elementos para três verificações semânticas do disclosure;resultado correto é[true,3,true],sem removerassertion.Real reader windows933 detectou teste chamando entries inexistente noMemoryRedis;usar GETdos dois contadores reais de kit via pipeline existente e aiLeftparaescrita,sem alterarstub/produção/critério. Corrigir e executar todos24checks no novohead de cada candidato;nenhum resultado parcial/isolado declara conclusão.
 
 Correção de teste de borda24/10/2026:verify931/job120977938797 mostrou avanço real do relógio entre chamadas fazendo cenário de1msantes cruzar limite15min. Usar now explícito suportado por hostSync para primeira falha,repetição e instantes exatos limite−1ms/limite;preservaroffsetfinal original30min para cenáriostale45min.Nenhuma janela/assertion/produção relaxada;validar24checks completos em cada novohead.
+
+### Provas incorporadas e publicação232 — registro posterior verificado
+
+PR927(WS339–342)incorporado em24/10/2026,16:52:44Fortaleza(19:52:44Z),merge4bf5d6daa054ccfe2284967dc9c87f60f8ff12b6,árvore35f81592d623d5763fb1e6580febf5d1c3b3bd7e,pais e80074b087eb173f24f4390da0f71b1012d6c69c/45e823e8c48241401528ed722afd7dfb715eca3d,24/24sucessos.Registroducumental,sem incremento funcional;execuçãoAB(k)após313CV1 permanece na fila.
+
+PR929(RN343–345)incorporado em24/10/2026,17:06:01Fortaleza(20:06:01Z),mergee703928310de6571a5688b631ec739ea5ab7dfa3,árvoreefec4c1764c04d2aa05d73cf27c75bfe751d5cd4,paiscfff5020091709f0480253acfaebb3977173338c/0e6a5fc2461a9fc9b0c680fb1120a42d21d7e93a,24/24sucessos.Documental,sem incremento funcional;execução apósBloco deabertura,sem aprovarpreçoouativação.
+
+Entrega232,PR930:head28dda0c464c9dd87034d6c7eafbb108b48e1eb68,merge1f4b3d992c1ab4c6908bf366f2434d37b27ed849,árvore7a76c56cf5631ce2159228d57c42720849ebd1c6,paise703928310de6571a5688b631ec739ea5ab7dfa3/28dda0c464c9dd87034d6c7eafbb108b48e1eb68,incorporação real2026-10-24T17:51:17-03:00(2026-10-24T20:51:17Z).24/24sucessos noheadcorrigido,incluindo suítecompleta após falhas de teste;nenhumjobisoladocontou. Publicaçãodpl_4m39GuMHKob5YY6FsgYQD86gteyk,READY2026-10-24T20:52:09.498Z,metaSHAexato1f4b3d992c1ab4c6908bf366f2434d37b27ed849,aliasmarktmorgen.com e rotas/,/platform,/pricing,/mission,/library todas200comdata-dpl-idda mesma publicação. Contador232 confirmado,sucessor233;notificado uma vez na continuidade.
+
+Mudança funcional232:lista nativa de itensdosplanos usa HTMLestático com texto sempreescapado,sem hidrataçãoReactporlinha;semântica summary/lista,íconesdecorativos,teclado/foco,textos,preços,ciclos,direitos e links preservados.Testes de markuphostil/fechamentosemântico e todasregressões passaram.FL346–347registrado,execuçãoapósabertura,sem link/página/programa de parceria ativado.RegistroFLnão contaentregaseparada.
+
+Medição noheadexato28dda0c464c9dd87034d6c7eafbb108b48e1eb68,CI móvel sintético frioChromium390px,CPU4x,latência150ms,1.6Mbps,terceirosbloqueados:inicial LCP2180/636/628ms,interação120/56/64ms;preços LCP684/664/672ms,interação32/32/48ms;platform/sales-pages LCP672/668/656ms,interação80/40/56ms;CLS0 nas9amostras.Proxylaboratorial,nãoINPdecampooucertificaçãop75.Não converter diferenças entreexecutores em economiagarantida.
+
+Custos232:nenhum fornecedor/conta/serviço/chave/campoadicionado;CPU/bytes/economiasatuais não certificados por esta medição.Comercialnulo,coberturasfalsas,vendasfechadas,PLANS_ON_SALE=false,preços/limites/comissão/taxgate/art9a preservados.Maiorimposto e100%LLCfixos275FX1incluindoHazelsong continuamvinculantes;desconhecidoreprova,nãozero,sem60%certificado.
+
+Este registro preserva implementações931/933/934eED348do932,não asdeclaraincorporadasoupublicadas antes de24checks/provaREADYdomínioSHA.Se forincorporado após essasalterações,éapenasdocumental e não incrementacontadorfuncional.
