@@ -29,6 +29,13 @@ async function main() {
   // Since 17 October 2026 a trial's paid orders stop at its figure too, shared with free copies.
   is("a trial's paid orders and free copies stop at the trial's figure", [paidOrdersLimitFor({ ...store, trialEnds: now / 1000 + 86_400 }, now / 1000), freeCopiesLimitFor({ ...store, trialEnds: now / 1000 + 86_400 }, now / 1000)], [TRIAL_ORDERS, TRIAL_ORDERS]);
 
+  part("A marked paid contract needs its funded resource month before checkout");
+  const funded = { ...store, period: { ...store.period!, funded: true as const } };
+  const beforeFunded = JSON.stringify(redis.keys().filter((key) => key.startsWith("nl:orders:")));
+  is("without actual financial approval no new funded order can open", await admitOrders(funded, 1, now), { ok: false, reason: "unavailable" });
+  is("refused funded admission holds neither order capacity nor data room", JSON.stringify(redis.keys().filter((key) => key.startsWith("nl:orders:"))), beforeFunded);
+  is("invalid order units cannot open a funded admission", await admitOrders(funded, 0, now), { ok: false, reason: "unavailable" });
+
   part("Checkouts are admitted up to the figure, counting those still open");
   const limit = ORDERS_INCLUDED.creator;
   for (let i = 0; i < limit - 3; i += 1) await countOrder(store, `checkout:test_${i}`, 0, now);
@@ -39,7 +46,7 @@ async function main() {
   is("one more is refused: the figure is reached", await admitOrders(store, 1, now), { ok: false, reason: "paused" });
   // The first checkout is paid and its order counted: it gives its hour back.
   await countOrder(store, "checkout:paid_a", 0, now);
-  await settleAdmitted(store, a.ok ? String(a.hour) : null, 1);
+  await settleAdmitted(funded, a.ok ? String(a.hour) : null, 1);
   is("a paid checkout is not counted twice, and the figure is still reached", (await admitOrders(store, 1, now)).ok, false);
   const later = now + OPEN_HOURS * 3_600_000;
   is("a checkout nobody paid falls out of the window after a day, and frees its place", (await admitOrders(store, 1, later)).ok, true);

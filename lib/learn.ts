@@ -46,6 +46,7 @@ import { playerFor } from "@/lib/stream";
 import { isStreamPath } from "@/lib/stream-rules";
 import { opened, watchedForAdmission } from "@/lib/watch";
 import { calendarWindow } from "@/lib/allowance-window";
+import { reservePaidResourceWindow } from "@/lib/contract-resource-window";
 import type { ProductFile } from "@/lib/product-file";
 import type { Listing, Store } from "@/lib/store";
 import { readKind, readListing } from "@/lib/catalog";
@@ -623,7 +624,9 @@ export type LessonVideo =
  * including for paid plans. Missing, invalid or unreadable limits never mint
  * a player token. This meter does not bound provider bytes, replay or buffering.
  */
-export async function lessonVideo(file: ProductFile, limit: number | null = null, window: string | null = calendarWindow().id): Promise<LessonVideo | null> {
+export async function lessonVideo(file: ProductFile, limit: number | null = null, window: string | null = calendarWindow().id, store?: Store): Promise<LessonVideo | null> {
+  // The creator contract funds each new media admission before signing a URL or querying a player.
+  if (store?.period?.funded === true && !(await reservePaidResourceWindow(store))) return null;
   if (!isStreamPath(file.pathname)) {
     const src = await signedMedia(file, VIDEO_URL_SECONDS);
     return src ? { kind: "file", src } : null;
