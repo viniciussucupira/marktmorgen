@@ -7303,3 +7303,10 @@ Não há novo envio/comandoRedis/operação de provedor/campo/chave pelo aviso; 
 BH353registrado no main viaPR944,head673c9848861fe61c023768e3582074a59eef3284,24/24checks concluídos com sucesso; incorporação real24/10/2026 19:50:49−03 (22:50:49Z), commita5924a07e4191c4c6629600a00a1e6e93f4851c5, árvore4186b2849f6dd2ff21f9055e6d577b803ceeb983, pais[39ff4dd10cb5a4f73a91525d7261d7687497c38a,673c9848861fe61c023768e3582074a59eef3284]. Somente documentação, sem entrega funcional. DN134/349–352 incorporados pela ancestralidade942/943, construção continua bloqueada atéPLANS_ON_SALEtrue; BHapósBlocodeabertura/DN, sem implementação.118/267uma só implementação comambosescopos, números e histórico preservados.
 
 Este registro documenta fatos confirmados e limitações; não incrementa contador, não altera produto, preços, limites, comissão, meios aceitos, opt-in, conteúdo, idiomas, IDs, taxgate,art.9a ou revisão comercial.
+
+
+### AB(a) — recusa posterior não prova ausência de cobrança anterior (24/10/2026)
+
+Estado: implementação em verificação completa; sem publicação funcional nem incremento do contador. A sequência sintética já existente de erro do provedor seguido por recusa do cartão expõe uma segunda promessa indevida: a recusa mais recente não comprova que uma tentativa anterior não cobrou. O aviso de recusa passa a distinguir a última tentativa das anteriores, orientar consulta ao faturamento e contato antes de nova tentativa em caso de cobrança ou dúvida, sem pedir dados do cartão. Preservados pausa, desfazer, retomada normal, prazos de repetição e aviso de resultado desconhecido.
+
+Escopo limitado ao texto e às verificações sintéticas dessa sequência; não resolve a intenção durável anterior à cobrança, a reconciliação de recibos ou o reconhecimento da ativação da loja. Sem novo envio, operação Redis/provedor, chave ou campo persistido. Bytes/processamento não medidos não são zero; nenhuma margem certificada. PLANS_ON_SALE=false, políticas comerciais nulas, coberturas financeiras fechadas, preços e limites preservados. A leitura tributária mais onerosa e todos os custos fixos da LLC continuam vinculantes.

@@ -339,9 +339,11 @@ export function pauseEmail(kind: "set" | "soon" | "restarted" | "failed" | "unco
     text: [
       "Hello,",
       "",
-      `Your break ended on ${day(record.until)}, and we could not start your plan again: the card it was paid with did not go through, or your bank asked for a confirmation we cannot give for you. Nothing was charged.`,
+      `Your break ended on ${day(record.until)}, and we could not start your plan again: the latest attempt was refused by the card or bank, or needs a confirmation we cannot give for you. This does not confirm the outcome of any earlier attempt.`,
       "",
-      `Start it again in your studio, with this card or another one: ${studio}`,
+      `Check your billing in the studio before starting the plan again: ${studio}`,
+      "",
+      "If you see a charge or are unsure about an earlier attempt, contact us before trying again. Include the date and amount of any charge, but do not send card details.",
       "",
       "Your store and your products stay up. If your store keeps more than a store with no plan may, we will write with the figures and the date before anything is removed.",
       ...close,

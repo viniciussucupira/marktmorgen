@@ -145,7 +145,9 @@ async function main() {
     const soon = pauseEmail("soon", record);
     is("a week before: the charge and how to stop it", soon.text.includes("your card is charged $69") && soon.text.includes("one click"), true);
     const failed = pauseEmail("failed", record);
-    is("failed: nothing was charged", failed.text.includes("Nothing was charged."), true);
+    is("failed: a card refusal does not rule out an earlier charge", failed.text.includes("Nothing was charged."), false);
+    is("failed: distinguishes the latest refusal from earlier attempts", failed.text.includes("latest attempt was refused") && failed.text.includes("does not confirm the outcome of any earlier attempt"), true);
+    is("failed: asks for billing review before another charge", failed.text.includes("Check your billing in the studio before starting the plan again") && failed.text.includes("do not send card details"), true);
   }
 
   part("The end of a break");
@@ -190,6 +192,9 @@ async function main() {
     const counts = await runBreaks(until + DAY);
     is("a refused card ends the break", [counts.failed, await pauseOf(store)], [1, null]);
     is("and the creator is told", emails.map((e) => e.subject), ["Your Marktmorgen plan could not start again"]);
+    const notice = emails[0]?.text ?? "";
+    is("a refusal after an unknown attempt never promises no charge", notice.includes("Nothing was charged."), false);
+    is("earlier uncertainty remains explicit after the later refusal", notice.includes("does not confirm the outcome of any earlier attempt") && notice.includes("contact us before trying again"), true);
     is("the store does not sell", (await storeForEmail("decline@example.com"))?.subscriptionActive, false);
     createAnswer = "ok";
   }
