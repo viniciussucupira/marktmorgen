@@ -286,3 +286,32 @@ test('a committed reservation acknowledgement cannot outlive admission, its expo
   assert.equal(calls.length,1,mode+' performs no compensating Redis request');
  }
 });
+
+test('checkout and switch acknowledgements revalidate admission, exposure, policy and the issuing clock after committing',async(t)=>{
+ t.mock.timers.enable({apis:['Date'],now:new Date('2026-10-10T12:00:00.000Z')});
+ for(const action of ['checkout','switch'] as const){
+  for(const mode of ['admission','month','rollback','policy'] as const){
+   t.mock.timers.setTime(new Date(mode==='month'?'2026-10-31T23:59:59.000Z':'2026-10-10T12:00:00.000Z').getTime());
+   reset();const f=contractFixture();
+   if(mode==='admission')f.policy.admissionsUntil=new Date(Date.now()+1000).toISOString();
+   const config=contractFundingConfiguration(f.policy,f.context)!;assert.ok(config);seed(config);
+   assert.ok(await reserveContractFunding('one','creator','month','checkout',f.policy,f.context,'ctr_source'));
+   let input=activation('one','ctr_source');
+   if(action==='switch'){
+    assert.equal(await activateCheckoutContract(input,f.policy,f.context),true);
+    assert.ok(await reserveSwitchContractFunding('one','sub_Activation001','creator','month',f.policy,f.context,'ctr_switch'));
+    input={...input,grantId:'ctr_switch'};
+   }
+   const beforeCalls=calls.length;
+   const pending=action==='checkout'?activateCheckoutContract(input,f.policy,f.context):activateSwitchContract(input,f.policy,f.context);
+   const h=ledger.get(key)!;assert.ok(h.get('activated:'+input.grantId));assert.equal(h.has('pending:one'),false);
+   const committed=[...h];
+   if(mode==='admission'||mode==='month')t.mock.timers.tick(1001);
+   if(mode==='rollback')t.mock.timers.setTime(Date.now()-1);
+   if(mode==='policy')f.policy.reserveEvidence+=' changed while awaiting activation acknowledgement';
+   assert.equal(await pending,false,action+' '+mode);
+   assert.deepEqual([...h],committed,action+' '+mode+' preserves all committed proofs and funds');
+   assert.equal(calls.length,beforeCalls+1,'no compensating Redis operation');
+  }
+ }
+});
