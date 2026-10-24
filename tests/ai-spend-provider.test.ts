@@ -25,3 +25,13 @@ test('unfunded setup and ended accounts never spend a paid allocation',async()=>
 });
 
 test('the provider cannot exceed the shared job call envelope even with spare money',async()=>{start();let calls=0;const old=globalThis.fetch;globalThis.fetch=async()=>{calls++;return Response.json({content:[{type:'text',text:'A draft'}]});};try{const results=await withAiCallBudget('one',2,async()=>Promise.all(Array.from({length:20},()=>askModel(store,'system','prompt',100,'claude-sonnet-5-5'))));assert.equal(results?.filter(Boolean).length,2);assert.equal(calls,2);assert.equal(ledger.get(key)?.get('company'),'200');assert.equal(ledger.get(key)?.get('store:one:'+calendarPeriodId()),'200');}finally{globalThis.fetch=old;}});
+
+test('marked paid AI work needs its contract cohort before spending or contacting the model',async()=>{
+ start();let calls=0;const old=globalThis.fetch;globalThis.fetch=async()=>{calls++;throw Error('must not call');};
+ try{
+  const marked={...store,statsId:'a'.repeat(32),subscriptionId:'sub_AiCohortProof001',period:{...store.period!,funded:true as const}};
+  assert.equal(await askModel(marked,'system','prompt',100,'claude-sonnet-5-5'),null);
+  assert.equal(calls,0);assert.equal(ledger.get(key)?.get('company'),'0');
+  assert.equal(ledger.get(key)?.get('store:one:'+calendarPeriodId()),undefined);
+ }finally{globalThis.fetch=old;}
+});
