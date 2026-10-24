@@ -39,7 +39,7 @@ export async function checkPublicKeyboardCycle({page,path,is}) {
    if(!node||node===document.body||node===document.documentElement)return {outside:false,key:null};
    const box=node.getBoundingClientRect();
    const style=getComputedStyle(node),radio=node instanceof HTMLInputElement&&node.type==="radio";
-   const outlined=style.outlineStyle==="solid"&&parseFloat(style.outlineWidth)>=3&&style.outlineColor!=="transparent"&&!/rgba\\([^)]*,\\s*0\\)$/.test(style.outlineColor);
+   const outlined=style.outlineStyle==="solid"&&parseFloat(style.outlineWidth)>=3&&style.outlineColor!=="transparent"&&!style.outlineColor.replaceAll(" ","").endsWith(",0)");
    return {outside:false,key:nodes.indexOf(node),visible:radio?outlined:node.matches(":focus-visible"),focusVisible:node.matches(":focus-visible"),outlined,outlineWidth:style.outlineWidth,outlineStyle:style.outlineStyle,outlineColor:style.outlineColor,width:box.width,height:box.height,checked:node instanceof HTMLInputElement?node.checked:null};
   });
   const radioReports=[],testedGroups=new Set();
