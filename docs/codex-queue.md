@@ -7164,3 +7164,8 @@ Em implementação: após Redis confirmar a reserva, revalidar configuração/re
 ### AB(a) — reconhecimento de ativação de checkout e troca (24/10/2026)
 
 Em implementação após a proteção de reserva: revalidar configuração, binding e revisão comercial depois do reconhecimento Redis, além de recusar relógio anterior ao emissor. Validações existentes de período e prazo continuam obrigatórias; não cria renovação nem libera reserva. Oito cenários sintéticos de checkout/troca com admissão vencida, mês alterado, política alterada e relógio regressivo conferem ledger comprometido integral e chamada única. docs/activation-acknowledgement-validity.md registra limites e custos: nenhum novo comando/chave/campo/provedor; CPU adicional desconhecida deve integrar custos mensal/anual, maior imposto, fixos LLC integrais, tetos e reserva. Gates continuam fechados. CI completo pendente no novo head; sem incremento de entrega.
+
+
+### AB(a) — relógio emissor do reconhecimento de recursos (24/10/2026)
+
+Em implementação: recusar reconhecimento de coorte quando o relógio regressa antes do instante emissor, mesmo ainda dentro da janela paga. Testar primeira alocação e repetição com regressão de 1ms; conservar coorte comprometida, recibos, dinheiro e slots, sem chamada compensatória. docs/resource-cohort-acknowledgement-clock.md registra limites: apenas comparação CPU não medida, nenhum comando/chave/campo/provedor novo; não aprova margem nem teto global de tentativas. Maior imposto, fixos LLC integrais/Hazelsong preservado e todos os gates fechados. CI completo obrigatório no novo head; nenhuma publicação contabilizada.
