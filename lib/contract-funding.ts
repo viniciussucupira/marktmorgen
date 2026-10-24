@@ -165,3 +165,78 @@ export async function activateCheckoutContract(
   return result.length===1&&Array.isArray(ack)&&ack.length===2&&ack[0]===1&&Number.isSafeInteger(ack[1])&&ack[1]>=createdSeconds&&ack[1]<=createdSeconds+CONTRACT_FUNDING_RULES.activationDelayDays*86400&&Date.now()<=ack[1]*1000&&Date.now()<periodEndSeconds*1000;
  }catch{return false;}
 }
+
+/** A switch replaces only the active pointer; all cash and prior proofs stay. */
+export const ACTIVATE_SWITCH_CONTRACT = `
+local function amount(value)
+ if not value or not string.match(value,'^%d+$') or (#value>1 and string.sub(value,1,1)=='0') then return nil end
+ local n=tonumber(value)
+ if not n or n<0 or n>1000000000000 or n~=math.floor(n) then return nil end
+ return n
+end
+local function parts(raw,max)
+ if not raw or #raw>max then return nil end
+ local result={}
+ for field in string.gmatch(raw,'[^|]+') do table.insert(result,field) end
+ if table.concat(result,'|')~=raw then return nil end
+ return result
+end
+if redis.call('TYPE',KEYS[1]).ok~='hash' or redis.call('TTL',KEYS[1])~=-1 then return 0 end
+if redis.call('HGET',KEYS[1],'policy')~=ARGV[1] or redis.call('HGET',KEYS[1],'review')~=ARGV[2] then return 0 end
+local receipt=parts(redis.call('HGET',KEYS[1],'grant:'..ARGV[5]),1024)
+if not receipt or #receipt~=10 or receipt[1]~=ARGV[2] or receipt[2]~=ARGV[3] or receipt[3]~=ARGV[4] or receipt[4]~='switch' or #receipt[10]>84 or not string.match(receipt[10],'^ctr_[%w_-]+$') or receipt[10]==ARGV[5] then return 0 end
+local charge,submitted,expires,deadline=amount(receipt[5]),amount(receipt[6]),amount(receipt[7]),amount(receipt[8])
+local through=tonumber(receipt[9])
+local created,now,minimum,limit,carry,submission,funded,start,finish,span=amount(ARGV[7]),amount(ARGV[8]),amount(ARGV[9]),amount(ARGV[10]),amount(ARGV[11]),amount(ARGV[12]),amount(ARGV[13]),amount(ARGV[15]),amount(ARGV[16]),amount(ARGV[17])
+if not charge or charge<=0 or not submitted or not expires or not deadline or not through or through>9007199254740991 or through~=math.floor(through) or not string.match(receipt[9],'^%d+$') or (#receipt[9]>1 and string.sub(receipt[9],1,1)=='0') then return 0 end
+if not created or not now or not minimum or not limit or not carry or not submission or not funded or not start or not finish or not span or span<=0 then return 0 end
+if charge~=minimum or submitted<submission or expires<submitted or deadline<expires or now<submitted-submission or now>deadline or created>now or start<created or start>now or finish<=now or finish<=start or finish-start>span or finish>submitted-submission+span or finish*1000>through or (ARGV[14]~='trial' and ARGV[14]~='paid') then return 0 end
+local reserved,carried,slots=amount(redis.call('HGET',KEYS[1],'reserved')),amount(redis.call('HGET',KEYS[1],'carried')),amount(redis.call('HGET',KEYS[1],'slots:'..ARGV[4]))
+if not reserved or not carried or not slots or carried~=carry or reserved<carried or reserved>limit or funded<=0 or slots>=funded then return 0 end
+local switchSource=redis.call('HGET',KEYS[1],'activated:'..receipt[10])
+local source=parts(switchSource,256)
+if not source or #source~=7 or source[1]~=receipt[10] or source[2]~=ARGV[6] or source[4]~=ARGV[7] then return 0 end
+local sourceStart,sourceFinish=amount(source[6]),amount(source[7])
+if not sourceStart or not sourceFinish or sourceStart<created or sourceStart>submitted-submission or sourceFinish<=submitted-submission or (source[5]~='trial' and source[5]~='paid') then return 0 end
+if ARGV[14]=='trial' and (source[5]~='trial' or finish>sourceFinish) then return 0 end
+local original=parts(redis.call('HGET',KEYS[1],'grant:'..receipt[10]),1024)
+if not original or original[1]~=ARGV[2] or original[2]~=ARGV[3] or original[3]~=source[3] or not ((#original==9 and original[4]=='checkout') or (#original==10 and original[4]=='switch')) then return 0 end
+local originalCharge=amount(original[5])
+local originalThrough=tonumber(original[9])
+if not amount(original[6]) or not amount(original[7]) or not amount(original[8]) or not originalThrough or not string.match(original[9],'^%d+$') or (#original[9]>1 and string.sub(original[9],1,1)=='0') or originalThrough>9007199254740991 or originalThrough~=math.floor(originalThrough) or sourceFinish*1000>originalThrough then return 0 end
+if not originalCharge or originalCharge<=0 or charge+originalCharge>reserved-carried then return 0 end
+local binding=ARGV[5]..'|'..ARGV[6]..'|'..ARGV[4]..'|'..ARGV[7]..'|'..ARGV[14]..'|'..ARGV[15]..'|'..ARGV[16]
+if #binding>256 then return 0 end
+local consumed=redis.call('HGET',KEYS[1],'activated:'..ARGV[5])
+local active=redis.call('HGET',KEYS[1],'active:'..ARGV[3])
+if consumed then
+ if consumed~=binding or active~=binding then return 0 end
+ return {1,deadline}
+end
+if active~=switchSource or redis.call('HGET',KEYS[1],'pending:'..ARGV[3])~=ARGV[5] then return 0 end
+redis.call('HSET',KEYS[1],'activated:'..ARGV[5],binding,'active:'..ARGV[3],binding)
+redis.call('HDEL',KEYS[1],'pending:'..ARGV[3])
+return {1,deadline}
+`;
+export async function activateSwitchContract(
+ input:CheckoutContractActivation,
+ policy:ContractFundingPolicy|null=CURRENT_CONTRACT_FUNDING_POLICY,
+ context:ContractFundingContext={termsSnapshot:CURRENT_PRICE_AND_RIGHTS_SNAPSHOT,review:CURRENT_COMMERCIAL_MARGIN_REVIEW},
+):Promise<boolean>{
+ const encoded=canonicalFinancialSnapshot({input,context});if(!encoded)return false;
+ ({input,context}=JSON.parse(encoded) as {input:CheckoutContractActivation;context:ContractFundingContext});
+ if(!input||!context||typeof input!=='object'||typeof context!=='object')return false;
+ const {statsId,grantId,reviewId,subscriptionId,tier,cycle,createdSeconds,trialing,periodStartSeconds,periodEndSeconds}=input;
+ const key=(tier+'_'+cycle) as ContractKey;
+ if(typeof statsId!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(statsId)||typeof grantId!=='string'||!/^ctr_[A-Za-z0-9_-]{1,80}$/.test(grantId)||typeof reviewId!=='string'||typeof subscriptionId!=='string'||!/^sub_[A-Za-z0-9]{6,64}$/.test(subscriptionId)||!CONTRACT_KEYS.includes(key)||typeof trialing!=='boolean'||!isRedisConfigured())return false;
+ if(![createdSeconds,periodStartSeconds,periodEndSeconds].every(n=>Number.isSafeInteger(n)&&n>0)||periodStartSeconds<createdSeconds||periodEndSeconds<=periodStartSeconds)return false;
+ const span=(trialing?CONTRACT_FUNDING_RULES.trialDays:CONTRACT_FUNDING_RULES.paidMonths[cycle]*CONTRACT_FUNDING_RULES.longestMonthDays)*86400;
+ if(periodEndSeconds-periodStartSeconds>span||!commercialMarginReady(context.review))return false;
+ const now=new Date(),config=contractFundingConfiguration(policy,context,now);if(!config||config.reviewId!==reviewId)return false;
+ const seconds=Math.floor(now.getTime()/1000);if(createdSeconds>seconds||periodStartSeconds>seconds||periodEndSeconds<=seconds)return false;
+ try{
+  const result=await redisPipeline([['EVAL',ACTIVATE_SWITCH_CONTRACT,1,'nl:contract-reserve:v1',contractFundingBinding(config),reviewId,statsId,key,grantId,subscriptionId,createdSeconds,seconds,config.grantCents[key],config.cashLimitCents,config.carryForwardCents,CONTRACT_FUNDING_RULES.submissionSeconds,config.fundedGrants[key],trialing?'trial':'paid',periodStartSeconds,periodEndSeconds,span]]);
+  const ack=result[0],checkedAt=Date.now();
+  return result.length===1&&Array.isArray(ack)&&ack.length===2&&ack[0]===1&&Number.isSafeInteger(ack[1])&&ack[1]>=seconds&&ack[1]<=seconds+CONTRACT_FUNDING_RULES.activationDelayDays*86400&&checkedAt<=ack[1]*1000&&checkedAt<periodEndSeconds*1000;
+ }catch{return false;}
+}

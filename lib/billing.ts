@@ -1,4 +1,4 @@
-import {activateCheckoutContract,type ContractGrant} from '@/lib/contract-funding';
+import {activateCheckoutContract,activateSwitchContract,type ContractGrant} from '@/lib/contract-funding';
 /**
  * The one way Marktmorgen makes money.
  *
@@ -616,6 +616,7 @@ export function periodOf(subscription: Record<string, unknown>, trialing: boolea
 /** Asks Stripe what a subscription is doing right now. */
 export async function readSubscription(
   subscriptionId: string,
+  fundingStore?:Store,
 ): Promise<SubscriptionState> {
   if (!SUBSCRIPTION_PATTERN.test(subscriptionId)) {
     return { state: "inactive", reason: "shape" };
@@ -635,7 +636,11 @@ export async function readSubscription(
     return { state: "unknown" };
   }
 
-  return stateOf(subscription);
+  const state=stateOf(subscription);
+  if(state.state==='active'&&hasSwitchFunding(subscription)){
+    if(!fundingStore||subscription.id!==subscriptionId||!(await startedFromObservedSubscription(fundingStore,subscription)))return{state:'unknown'};
+  }
+  return state;
 }
 
 /**
@@ -798,6 +803,8 @@ export async function switchPlan(
     updated = await onPlatform("POST", path, body);
   }
 
+  const updatedMeta=updated.metadata as Record<string,unknown>|null|undefined;
+  if(funding&&(updated.id!==subscriptionId||updatedMeta?.funding_pending_grant!==funding.id||updatedMeta?.funding_pending_review!==funding.reviewId))throw new Error('Switch funding observation does not match the submitted contract');
   if (updated.pending_update) {
     const invoice = updated.latest_invoice as { hosted_invoice_url?: unknown } | null;
     const url = typeof invoice?.hosted_invoice_url === "string" ? invoice.hosted_invoice_url : "";
@@ -806,9 +813,12 @@ export async function switchPlan(
     }
     return { kind: "refused", reason: "pending" };
   }
+  const observedState=stateOf(updated);
+  if(funding&&(observedState.state!=='active'||observedState.tier!==choice.tier||observedState.cycle!==choice.cycle))throw new Error('Switch observation does not match the requested plan');
+  if(funding&&!(await activateObservedSwitch(funding.statsId,funding.id,funding.reviewId,subscriptionId,updated)))throw new Error('Switch funding activation was not acknowledged');
   // The price says which plan this is; the note is for whoever reads the
   // subscription in the Stripe dashboard. Missing it changes nothing charged.
-  await onPlatform("POST", path, new URLSearchParams({ "metadata[tier]": choice.tier,...(funding?{"metadata[funding_grant]":funding.id,"metadata[funding_review]":funding.reviewId,"metadata[funding_pending_grant]":"","metadata[funding_pending_review]":""}:{}) })).catch((error) =>
+  await onPlatform("POST", path, new URLSearchParams({ "metadata[tier]": choice.tier,...(funding?{"metadata[funding_grant]":funding.id,"metadata[funding_review]":funding.reviewId,"metadata[funding_action]":"switch","metadata[funding_pending_grant]":"","metadata[funding_pending_review]":""}:{}) })).catch((error) =>
     console.error("noting the plan on the subscription failed", error),
   );
   return { kind: "switched", state: stateOf(updated) };
@@ -905,14 +915,34 @@ export function startedFrom(subscription: Record<string, unknown>): StartedSubsc
 }
 
 /**
- * Recovering a missed Checkout return may adopt only its funded initial
- * subscription, never renew or replace a term. Provider observations are
+ * Recovery may adopt only its funded Checkout or separately reserved switch
+ * phase, never an unfunded renewal. Provider observations are
  * already available from the existing search/list response.
  */
+/** Presence is conservative: partial switch metadata cannot become an unmarked legacy contract. */
+export function hasSwitchFunding(subscription:Record<string,unknown>):boolean{
+ const meta=subscription.metadata as Record<string,unknown>|null|undefined;
+ return meta?.funding_action!==undefined||meta?.funding_pending_grant!==undefined||meta?.funding_pending_review!==undefined;
+}
+async function activateObservedSwitch(statsId:string,grantId:string,reviewId:string,subscriptionId:string,subscription:Record<string,unknown>):Promise<boolean>{
+ const state=stateOf(subscription);
+ if(subscription.id!==subscriptionId||state.state!=='active'||state.changePending)return false;
+ const items=subscription.items as {data?:{price?:Record<string,unknown>}[]}|undefined;
+ const price=items?.data?.[0]?.price,recurring=price?.recurring as {interval?:unknown;interval_count?:unknown}|undefined;
+ if(items?.data?.length!==1||price?.currency!=='usd'||recurring?.interval!==state.cycle||recurring?.interval_count!==1||state.amountCents!==PUBLISHED_PLAN_PRICES[state.tier][state.cycle])return false;
+ return activateSwitchContract({statsId,grantId,reviewId,subscriptionId,tier:state.tier,cycle:state.cycle,createdSeconds:subscription.created as number,trialing:state.trialing,periodStartSeconds:(state.trialing?subscription.trial_start:periodStart(subscription)) as number,periodEndSeconds:(state.trialing?subscription.trial_end:periodEnd(subscription,false)) as number});
+}
 export async function startedFromObservedSubscription(store:Store,subscription:Record<string,unknown>):Promise<StartedSubscription|null>{
  const started=startedFrom(subscription);
  if(!started)return null;
  const meta=subscription.metadata as Record<string,unknown>|null|undefined;
+ if(hasSwitchFunding(subscription)){
+  if(!ownedBy(store,subscription)||meta?.store!==store.handle||meta?.funding_action!==undefined&&meta.funding_action!=='switch')return null;
+  const pending=meta?.funding_pending_grant!==undefined||meta?.funding_pending_review!==undefined;
+  const grantId=pending?meta?.funding_pending_grant:meta?.funding_grant,reviewId=pending?meta?.funding_pending_review:meta?.funding_review;
+  if(typeof grantId!=='string'||typeof reviewId!=='string')return null;
+  return await activateObservedSwitch(store.statsId??'',grantId,reviewId,started.subscriptionId,subscription)?started:null;
+ }
  if(meta?.funding_grant===undefined&&meta?.funding_review===undefined)return started;
  if(!ownedBy(store,subscription)||meta?.store!==store.handle||typeof meta.funding_grant!=="string"||typeof meta.funding_review!=="string")return null;
  const state=stateOf(subscription);

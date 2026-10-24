@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {canonicalFinancialSnapshot,contractCoverageDays,contractFundingConfiguration,CONTRACT_ADMISSION_COVERAGE,CONTRACT_KEYS} from '@/lib/contract-funding-rules';
 import {assessCustomerWorstCase} from '@/lib/net-margin-rules';
-import {activateCheckoutContract,type CheckoutContractActivation,reserveContractFunding,reserveSwitchContractFunding} from '@/lib/contract-funding';
+import {activateCheckoutContract,activateSwitchContract,type CheckoutContractActivation,reserveContractFunding,reserveSwitchContractFunding} from '@/lib/contract-funding';
 import {contractFixture} from './contract-funding-fixture';
 import {reset,seed,ledger,calls,settings} from './contract-funding-redis';
 const key='nl:contract-reserve:v1';
@@ -150,4 +150,59 @@ test('a lost source-bound switch reply retains both receipts, every cent and the
  assert.equal(h.get('reserved'),String(f.config.grantCents.creator_month*2));
  const before=[...h];settings({lostAck:false});
  assert.equal(await reserveSwitchContractFunding('one','sub_Activation001','creator','month',f.policy,f.context,'ctr_retry_switch'),null);assert.deepEqual([...h],before);
+});
+
+async function switchSetup(trial=false){
+ const f=start();assert.ok(await reserveContractFunding('one','creator','month','checkout',f.policy,f.context,'ctr_source'));
+ const source=activation('one','ctr_source');if(trial){source.trialing=true;source.periodEndSeconds=source.createdSeconds+7*86400;}
+ assert.equal(await activateCheckoutContract(source,f.policy,f.context),true);
+ assert.ok(await reserveSwitchContractFunding('one','sub_Activation001','creator','month',f.policy,f.context,'ctr_switch'));
+ const input={...source,grantId:'ctr_switch'};
+ return{...f,input};
+}
+test('switch activation changes only the active pointer and keeps every prior receipt and reserved cent',async()=>{
+ const f=await switchSetup(),h=ledger.get(key)!,old=h.get('active:one'),oldReceipt=h.get('grant:ctr_source'),reserved=h.get('reserved'),slots=h.get('slots:creator_month');
+ assert.equal(await activateSwitchContract(f.input,f.policy,f.context),true);
+ assert.notEqual(h.get('active:one'),old);assert.equal(h.get('activated:ctr_source'),old);
+ assert.equal(h.get('grant:ctr_source'),oldReceipt);assert.ok(h.get('grant:ctr_switch'));assert.ok(h.get('activated:ctr_switch'));
+ assert.equal(h.has('pending:one'),false);assert.equal(h.get('reserved'),reserved);assert.equal(h.get('slots:creator_month'),slots);
+ const before=[...h];assert.equal(await activateSwitchContract(f.input,f.policy,f.context),true);assert.deepEqual([...h],before);
+});
+test('64 identical switch observations recover one atomic activation without changing money or slots',async()=>{
+ const f=await switchSetup(),h=ledger.get(key)!,money=h.get('reserved'),slots=h.get('slots:creator_month');
+ const results=await Promise.all(Array.from({length:64},()=>activateSwitchContract(f.input,f.policy,f.context)));
+ assert.equal(results.every(Boolean),true);assert.equal(h.get('reserved'),money);assert.equal(h.get('slots:creator_month'),slots);
+ assert.ok(h.get('activated:ctr_source'));assert.ok(h.get('activated:ctr_switch'));
+});
+test('a lost switch activation reply recovers only the identical committed phase and period',async()=>{
+ const f=await switchSetup(),h=ledger.get(key)!;settings({lostAck:true});
+ assert.equal(await activateSwitchContract(f.input,f.policy,f.context),false);assert.ok(h.get('activated:ctr_switch'));
+ const before=[...h];settings({lostAck:false});
+ assert.equal(await activateSwitchContract(f.input,f.policy,f.context),true);
+ assert.equal(await activateSwitchContract({...f.input,subscriptionId:'sub_Other0001'},f.policy,f.context),false);
+ assert.equal(await activateSwitchContract({...f.input,periodEndSeconds:f.input.periodEndSeconds+1},f.policy,f.context),false);
+ assert.deepEqual([...h],before);
+});
+test('switch activation refuses a foreign identity, new trial, oversized term or corrupt source before writes',async()=>{
+ const f=await switchSetup(),h=ledger.get(key)!,before=[...h];
+ for(const changes of [{statsId:'other'},{subscriptionId:'sub_Other0001'},{createdSeconds:f.input.createdSeconds+1},{grantId:'ctr_source'},{trialing:true,periodEndSeconds:f.input.createdSeconds+7*86400},{periodEndSeconds:f.input.createdSeconds+32*86400},{reviewId:'other'}]){
+  assert.equal(await activateSwitchContract({...f.input,...changes} as CheckoutContractActivation,f.policy,f.context),false);assert.deepEqual([...h],before);
+ }
+ for(const [field,value] of [['active:one','other'],['activated:ctr_source','other'],['grant:ctr_source','missing'],['reserved',String(f.config.grantCents.creator_month)] ]){
+  const g=await switchSetup(),m=ledger.get(key)!;m.set(field,value);const previous=[...m];
+  assert.equal(await activateSwitchContract(g.input,g.policy,g.context),false);assert.deepEqual([...m],previous);
+ }
+});
+test('a trial switch cannot extend its source trial',async()=>{
+ const f=await switchSetup(true),h=ledger.get(key)!,before=[...h];
+ assert.equal(await activateSwitchContract({...f.input,periodEndSeconds:f.input.periodEndSeconds+86400},f.policy,f.context),false);assert.deepEqual([...h],before);
+ assert.equal(await activateSwitchContract(f.input,f.policy,f.context),true);
+});
+test('switch activation rejects executable data and malformed acknowledgements',async()=>{
+ reset();assert.equal(await activateSwitchContract(activation()),false);assert.equal(calls.length,0);
+ const f=await switchSetup(),input={...f.input};let reads=0;Object.defineProperty(input,'statsId',{get(){reads++;return'one';}});
+ const count=calls.length;assert.equal(await activateSwitchContract(input,f.policy,f.context),false);assert.equal(reads,0);assert.equal(calls.length,count);
+ for(const response of [[],[1],[[true,9999999999]],[[1,0]],[[1,'9999999999']],[[1,9999999999,1]]]){
+  settings({response});assert.equal(await activateSwitchContract(f.input,f.policy,f.context),false);
+ }
 });
