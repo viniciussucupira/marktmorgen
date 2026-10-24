@@ -29,3 +29,7 @@ This activation is initial and deadline-bound. It is not perpetual paid-term aut
 ## Accessibility
 
 No visible content, control, navigation or public response change. Existing complete public/creator/buyer browser and accessibility checks run on the head. Automatic checks do not certify AAA, legal conformity or real assistive-technology results.
+
+## Rejected head and fixture correction
+
+Head3afaed2e75b540d150295f1999d3dd6af5e71f7e failed the route fixture's source-Checkout activation assertion (job120840956993,24 October06:47:49.012 Fortaleza). Its simulated provider creation time was sampled before awaiting the cash reservation, contrary to the actual flow; a second boundary can make it predate the receipt. The fixture now samples creation after reservation and explicitly asserts that ordering. Exact failed clock values were not logged, so that boundary remains the supported source-level explanation, not a captured clock trace. No production predicate, deadline, assertion, timeout or case is relaxed. Actual Lua first16/retry13 measurements passed on the rejected head but do not release it. Full verification of the new head is mandatory, with failure history retained; no isolated-job retry.
