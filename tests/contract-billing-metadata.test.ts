@@ -246,3 +246,15 @@ test('only acknowledged observations mark a paid allowance period as funded',asy
   const old=await startedFromObservedSubscription(own,legacy);assert.ok(old);assert.equal(old.period?.funded,undefined);
  }finally{switchActivationObservations.accept=false;}
 });
+
+test('checkout and plan-switch grants cannot reach a provider before their issuing second',async(t)=>{
+ t.mock.timers.enable({apis:['Date'],now:new Date('2026-10-10T12:00:00Z')});
+ const checkout=grant(),change=grant('switch'),old=globalThis.fetch;let calls=0;
+ globalThis.fetch=async()=>{calls++;throw Error('a future-issued grant must not reach the provider');};
+ try{
+  t.mock.timers.setTime(Date.now()-1000);
+  await assert.rejects(createBillingCheckout(store,'https://marktmorgen.test',{tier:'creator',cycle:'year'},null,checkout),/Funding grant/);
+  await assert.rejects(switchPlan('sub_Test000001',{tier:'creator',cycle:'year'},change),/Funding grant/);
+  assert.equal(calls,0);
+ }finally{globalThis.fetch=old;}
+});

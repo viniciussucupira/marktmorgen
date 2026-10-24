@@ -1,3 +1,4 @@
+import {CONTRACT_FUNDING_RULES} from '@/lib/contract-funding-rules';
 import {activateCheckoutContract,activateSwitchContract,type ContractGrant} from '@/lib/contract-funding';
 /**
  * The one way Marktmorgen makes money.
@@ -43,7 +44,7 @@ import { type BillingPeriod, isPeriod } from "@/lib/allowance-window";
 function assertFunding(funding:ContractGrant|undefined,tier:Tier,cycle:Cycle,action:ContractGrant['action'],statsId?:string,subscriptionId?:string):void {
  if(!funding)return;
  const now=Math.floor(Date.now()/1000);
- if(funding.action!==action||(action==='switch'?funding.sourceSubscriptionId!==subscriptionId:funding.sourceSubscriptionId!==null)||funding.key!==tier+'_'+cycle||!/^ctr_[A-Za-z0-9_-]{1,80}$/.test(funding.id)||!Number.isSafeInteger(funding.reservedCents)||funding.reservedCents<PUBLISHED_PLAN_PRICES[tier][cycle]||PLAN_PRICES[tier][cycle]!==PUBLISHED_PLAN_PRICES[tier][cycle]||!Number.isSafeInteger(funding.submitUntilSeconds)||now>funding.submitUntilSeconds||!Number.isSafeInteger(funding.checkoutExpiresAtSeconds)||funding.checkoutExpiresAtSeconds<now+1800||statsId!==undefined&&funding.statsId!==statsId)throw new Error('Funding grant does not cover this published plan or activation window');
+ if(funding.action!==action||(action==='switch'?funding.sourceSubscriptionId!==subscriptionId:funding.sourceSubscriptionId!==null)||funding.key!==tier+'_'+cycle||!/^ctr_[A-Za-z0-9_-]{1,80}$/.test(funding.id)||!Number.isSafeInteger(funding.reservedCents)||funding.reservedCents<PUBLISHED_PLAN_PRICES[tier][cycle]||PLAN_PRICES[tier][cycle]!==PUBLISHED_PLAN_PRICES[tier][cycle]||!Number.isSafeInteger(funding.submitUntilSeconds)||(now<funding.submitUntilSeconds-CONTRACT_FUNDING_RULES.submissionSeconds||now>funding.submitUntilSeconds)||!Number.isSafeInteger(funding.checkoutExpiresAtSeconds)||funding.checkoutExpiresAtSeconds<now+1800||statsId!==undefined&&funding.statsId!==statsId)throw new Error('Funding grant does not cover this published plan or activation window');
 }
 
 /**
