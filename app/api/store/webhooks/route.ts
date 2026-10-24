@@ -44,6 +44,7 @@ export async function POST(request: NextRequest) {
     if (action === "test") {
       const result = await sendTest(store, id);
       if (!result.ok) {
+        if (result.reason === "unavailable") return Response.json({ ok: false, error: "unavailable", message: "The test could not be sent just now. Try again in a moment." }, { status: 503 });
         if (result.reason === "used") return Response.json({ ok: false, error: "used", message: result.message }, { status: 429 });
         return Response.json({ ok: false, error: result.reason }, { status: result.reason === "limited" ? 429 : 404 });
       }

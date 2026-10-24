@@ -31,7 +31,7 @@ import net from "node:net";
 import { MAX_ATTEMPTS, MAX_ENDPOINTS, RETRY_MINUTES, addEndpoint, deliverDue, emitEvent, eventIdFor, removeEndpoint, sendTest, setEndpointEvents, setSendHooksForTests, webhooksView } from "@/lib/webhooks";
 import { claimHandle, ensureStatsId, setSubscription, storeForEmail } from "@/lib/store";
 import { STORE_ALLOWANCES } from "@/lib/store-allowance-rules";
-import { takeAllowance } from "@/lib/store-allowance";
+import { allowanceUsed, takeAllowance } from "@/lib/store-allowance";
 import { paidPeriod } from "./billing-period-fixture";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
@@ -195,6 +195,22 @@ async function main(): Promise<void> {
   is("past the figure a delivery is not tried, and says why", [hook, received.length, view.log[0].state, view.log[0].attempts, view.log[0].lastError.startsWith("Not sent. Your webhook deliveries for this month are used")], [1, sentSoFar, "failed", 0, true]);
   is("it is not tried again either", [(await deliverDue(Date.now() + 10_000, Date.now() + 86_400_000)).tried, received.length], [0, sentSoFar]);
   is("Store's figure is the one published", STORE_ALLOWANCES.creator.webhook > 0, true);
+
+  part("A funded manual test needs its resource cohort before dispatch");
+  await claimHandle("funded-hook@example.com", "funded-hook-shop", "Funded Hook Shop", "");
+  await ensureStatsId("funded-hook@example.com");
+  await setSubscription("funded-hook@example.com", { customerId: "cus_HookFunded001", subscriptionId: "sub_HookFunded001", active: true, period: { ...paidPeriod(), funded: true } });
+  const funded = (await storeForEmail("funded-hook@example.com"))!;
+  const added = await addEndpoint(funded, "https://hooks.example.com/funded", ["sale.completed"]);
+  if (!added.ok) throw new Error("funded endpoint not added");
+  const endpointId = added.view.endpoints[0].id;
+  const beforeFunded = received.length;
+  const beforeUnits = await allowanceUsed(funded, "webhook");
+  const beforeLog = (await webhooksView(funded)).log;
+  is("missing financial approval refuses an actual manual test", await sendTest(funded, endpointId), { ok: false, reason: "unavailable" });
+  is("no request, delivery log or webhook allowance is consumed", [received.length, await allowanceUsed(funded, "webhook"), (await webhooksView(funded)).log], [beforeFunded, beforeUnits, beforeLog]);
+  await removeEndpoint(funded, endpointId);
+  is("removing the endpoint remains available", (await webhooksView(funded)).endpoints.length, 0);
 
   server.close();
   done();
