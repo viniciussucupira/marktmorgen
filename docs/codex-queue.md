@@ -7079,6 +7079,14 @@ Entrega231: PR928/head56a46978d7fc552e563e122631a45daa4c5c4288,mergecfff50200917
 
 Em implementação: falha de leitura automática de calendário de host respeita intervalo existente15min antes da próxima tentativa;fallbackbom mantém limite45min e stale continua bloqueado. Mesmohost em váriaslojas compartilha falha, sem nova chave/comando/campo;force manual continua na coorte financiada. Testes sintéticos de repetição/cross-store/borda exata comprovider503;booking/move/refund/optout preservados. Custos condicionais/lacunas em docs/host-calendar-failure-retry.md;atribuição de retidos/globalabuso/concurrency/forçados/CPU/transferências/impostos desconhecidos continuam reprovados.100%LLCfixos/maiorimposto,sem60%certificado. PreservaRN343–345 eFL346–347. CIcompleto obrigatório no novohead.
 
+### Correção de CI móvel no PR930 — 24/10/2026
+
+Headff2c9a21e1786ff45fe29f98f728416bd9fb65db falhou Mobile render(candidate),job120972829074:primeira amostrafria da inicial interaction-to-paint224ms>200ms;LCP2452ms/CLS0 passaram,amostras posteriores80/104ms. Alvo era summary nativo de itens do plano,durante trabalho de hidratação. Não relaxar assertion/rede/CPU/número de amostras e não reexecutar job isolado para aprovar.
+
+Correção em components/home-parts.tsx: filhos estáticos do disclosure nativo passam a HTML com texto obrigatoriamente escapado por lib/pricing-perks-markup.ts,sem handlers/fibrasReact por linha. Preserva summary/lista,ícones decorativos,classes/foco/teclado,textos/itens/direitos/IDs,preços/ciclos/links e toggle nativo. Testes de markup hostil ficam no teste de preços existente;suíte móvel/acessibilidade completa e demais24checks devem passar no novohead antes de incorporar. Nenhum custo de fornecedor,operação externa/chave ou serviço novo. CPU/bytes reais só podem ser afirmados após medição;não assumir economia/custo0 ou60%certificado.100%fixosLLC e maiorimposto continuam. PR931/932descendentes ainda precisam incorporar a correção antes da aprovação final;preservar filasRN/FL/ED e trabalho de calendário.
+
+Integração da correção930 no PR931: preservar seu código de retry e prova231;validar24checks completos neste novohead,sem usar resultados dohead anterior. A correção não muda recursos/valores/gates e não altera operações retidas.
+
 ## ED — Programa pago de formação de criadores (24/10/2026)
 
 Solicitação do dono (24/10/2026,16h59,horário de Fortaleza): procurar mais fontes de lucro para o Marktmorgen, mantendo margem líquida mínima60% depois de todos os impostos, inclusive brasileiros. Registrar após pedidos já gravados/em gravação, inclusive FL24/10/2026,16h54; executar depois do Bloco de abertura e dos pedidos anteriores, sem interromper AB(a).
