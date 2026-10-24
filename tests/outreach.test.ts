@@ -379,6 +379,14 @@ async function main(): Promise<void> {
   is("missing funding refuses a manual lookup", await readStoreSite(fundedLookupOwner, "https://synthetic-brand.example.com", lookupReader), { ok: false, reason: "unavailable" });
   is("not even its front page or robots file is read", lookupPages, pagesBeforeRefusal);
   is("no pitch was created", await listPitches(fundedLookupOwner), []);
+  part("A funded new pitch refuses before page verification or AI work");
+  const aiBeforeDraft = await aiLeft(fundedLookupOwner);
+  const modelBeforeDraft = asked.length;
+  const draftBeforePages = lookupPages;
+  const refusedDraft = await startPitch(fundedLookupOwner, { ...input, page: "https://synthetic-brand.example.com/contact", email: "hello@synthetic-brand.example.com" }, { reader: lookupReader });
+  is("new draft work needs financial approval before its page", refusedDraft, { ok: false, reason: "unavailable" });
+  is("no reader, model call, writing allowance or pitch is consumed", [lookupPages, asked.length, await aiLeft(fundedLookupOwner), await listPitches(fundedLookupOwner)], [draftBeforePages, modelBeforeDraft, aiBeforeDraft, []]);
+
 
   part("Nothing here sends an email");
   const source = ["lib/outreach.ts", "lib/outreach-rules.ts", "app/api/store/outreach/route.ts", "app/api/outreach/stop/route.ts", "components/outreach-studio.tsx"].map((f) => readFileSync(f, "utf8")).join("\n");

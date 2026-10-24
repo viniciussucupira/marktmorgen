@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
         about: text(body.about, 500),
         notes: text(body.notes, MAX_AI_NOTES + 100),
       });
-      if (!done.ok) return fail(done.reason, done.reason === "failed" ? 502 : 400);
+      if (!done.ok) return fail(done.reason, done.reason === "unavailable" ? 503 : done.reason === "failed" ? 502 : 400);
       return Response.json({ ok: true, pitch: done.pitch, left: done.left, replaced: done.replaced });
     }
     if (action === "edit") {
