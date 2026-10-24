@@ -53,7 +53,10 @@ export function testAliases(file,root,here){
   aliases['@/lib/billing']=join(here,'contract-route-billing.ts');
   aliases['@/lib/store']=join(here,'contract-route-store.ts');
  }
- if(file==='contract-billing-metadata.test.ts')aliases['@/lib/plan']=join(here,'contract-billing-plan.ts');
+ if(file==='contract-billing-metadata.test.ts'){
+  aliases['@/lib/plan']=join(here,'contract-billing-plan.ts');
+  aliases['@/lib/contract-funding']=join(here,'contract-activation-billing.ts');
+ }
  if(file==='buyer-actions.test.ts')aliases['@/lib/blob']=join(here,'buyer-actions-blob.ts');
  return aliases;
 }
