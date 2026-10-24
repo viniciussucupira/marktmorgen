@@ -7,7 +7,7 @@ import {
   addHostIcs,
   disconnectHostGoogle,
   hostCalendarView,
-  hostSync,
+  checkHostCalendar,
   removeHostIcs,
   setHostCalendars,
   setHostSource,
@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
         await disconnectHostGoogle(store, email);
         return Response.json({ ok: true, view: await view() });
       case "check":
-        await hostSync(store, email, tz, { force: true });
+        if (!(await checkHostCalendar(store, email, tz))) return Response.json({ ok: false, error: "unavailable" }, { status: 503 });
         return Response.json({ ok: true, view: await view() });
       default:
         return Response.json({ ok: false, error: "invalid" }, { status: 400 });

@@ -275,6 +275,12 @@ export async function hostSync(
   }
 }
 
+/** An explicit new studio refresh, separate from already owed booking refreshes. */
+export async function checkHostCalendar(store: Store, email: string, tz: string): Promise<HostSync | null> {
+  if (store.period?.funded === true && !(await reservePaidResourceWindow(store))) return null;
+  return hostSync(store, email, tz, { force: true });
+}
+
 // ---- The host's own page -----------------------------------------------------
 
 export type HostCalendarView = {

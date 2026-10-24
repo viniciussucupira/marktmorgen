@@ -46,7 +46,7 @@ import { claimHosts, claimsKey, confirmClaim, hostId, newClaimId, readClaims, re
 import { activeTeam, writeTeam } from "@/lib/team-booking";
 import { beginConsent, finishConsent, takeConsent } from "@/lib/meet-connect";
 import { GOOGLE_HOST_SCOPES } from "@/lib/meet-providers";
-import { addHostIcs, removeHostIcs, hostCalendarView, hostSync, setHostCalendars, setHostSource } from "@/lib/host-calendar";
+import { checkHostCalendar, addHostIcs, removeHostIcs, hostCalendarView, hostSync, setHostCalendars, setHostSource } from "@/lib/host-calendar";
 import { addFeed, calendarView, removeFeed } from "@/lib/calendar-sync";
 import { callRefunded } from "@/lib/meet-links";
 import { readRecord, callScope } from "@/lib/meet-records";
@@ -459,6 +459,11 @@ async function main(): Promise<void> {
     const refusedSelection = await setHostCalendars(fundedHostViewStore, MAYA, ["maya@example.com"], "");
     const afterSelectionView = await hostCalendarView(fundedHostViewStore, MAYA, NY);
     is("new selection refuses before provider lookup and preserves existing choices", [refusedSelection, google.length, afterSelectionView.read, afterSelectionView.write], ["unavailable", beforeSelectionCalls, storedHostView.read, storedHostView.write]);
+    const beforeManualRefresh = google.length;
+    is("a new manual refresh refuses without provider calls", [await checkHostCalendar(fundedHostViewStore, MAYA, NY), google.length], [null, beforeManualRefresh]);
+    const legacyManualRefresh = await checkHostCalendar(first.store, MAYA, NY);
+    is("the unmarked fixture still performs its synthetic manual refresh", [legacyManualRefresh?.state, google.length > beforeManualRefresh], ["ok", true]);
+
 
   } finally {
     if (beforeCalendarScope === undefined) delete process.env.GOOGLE_CALENDAR_SYNC_SCOPES;
