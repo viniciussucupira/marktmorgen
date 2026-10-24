@@ -73,3 +73,16 @@ test('unconfigured or executable activation input makes no Redis request',async(
  Object.defineProperty(input,'statsId',{get(){reads++;return 'one';}});
  assert.equal(await activateCheckoutContract(input,f.policy,f.context),false);assert.equal(reads,0);assert.equal(calls.length,0);
 });
+
+test('an active funded store cannot reserve another checkout even after its pending lock is cleared',async()=>{
+ const f=start();assert.ok(await reserveContractFunding('one','creator','month','checkout',f.policy,f.context,'ctr_activate'));
+ assert.equal(await activateCheckoutContract(activation(),f.policy,f.context),true);
+ const h=ledger.get(key)!,before=[...h],active=h.get('active:one');
+ assert.equal(h.has('pending:one'),false);
+ const attempts=await Promise.all(Array.from({length:64},(_,i)=>reserveContractFunding('one','creator','month','checkout',f.policy,f.context,'ctr_second_'+i)));
+ assert.equal(attempts.some(Boolean),false);assert.deepEqual([...h],before);
+ assert.ok(await reserveContractFunding('one','creator','month','switch',f.policy,f.context,'ctr_switch_after_active'));
+ assert.equal(h.get('active:one'),active);assert.equal(h.get('pending:one'),'ctr_switch_after_active');
+ assert.ok(h.get('grant:ctr_activate'));assert.ok(h.get('grant:ctr_switch_after_active'));
+ assert.equal(h.get('reserved'),String(f.config.grantCents.creator_month*2));
+});

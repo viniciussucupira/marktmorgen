@@ -20,7 +20,7 @@ def main():
         raise RuntimeError('Expected static checkout activation Lua')
     activation_script = activated.group(1)
     prefix = 'marktmorgen:integration:contract:' + uuid.uuid4().hex + ':'
-    keys = [prefix + str(i) for i in range(20)]
+    keys = [prefix + str(i) for i in range(21)]
     redis = Redis()
     def snapshot(key):
         fields = redis.command('HGETALL', key)
@@ -29,8 +29,9 @@ def main():
         return sorted(zip(fields[::2], fields[1::2]))
     def seed(key, carried=0):
         redis.command('HSET', key, 'review', 'review', 'policy', 'binding', 'reserved', carried, 'carried', carried, 'slots:creator_month', 2, 'slots:creator_year', 2)
-    def take(client, key, store='one', nonce='ctr_one', choice='creator_month', charge=50, limit=100, carry=0, binding='binding'):
-        return client.command('EVAL', script, 1, key, binding, 'review', store, choice, charge, limit, carry, 2, nonce, 'receipt:' + store + ':' + choice)
+    def take(client, key, store='one', nonce='ctr_one', choice='creator_month', charge=50, limit=100, carry=0, binding='binding', action='checkout'):
+        receipt = '|'.join(map(str, ['review', store, choice, action, charge, 1800000300, 1800003600, 1800086400, 2000000000000]))
+        return client.command('EVAL', script, 1, key, binding, 'review', store, choice, charge, limit, carry, 2, nonce, receipt, action)
     def parallel(key, store, nonce):
         client = Redis()
         try:
@@ -151,6 +152,15 @@ def main():
         assert activate(redis, keys[12], phase='trial', period_end=instant+7*86400) == 0
         assert snapshot(keys[12]) == before
         print('PASS: checkout activation binds once, retains all cash/slots and recovers identical lost replies')
+        before = snapshot(keys[12])
+        assert take(redis, keys[12], nonce='ctr_second_checkout') == 0
+        assert snapshot(keys[12]) == before
+        active = redis.command('HGET', keys[12], 'active:one')
+        assert take(redis, keys[12], nonce='ctr_switch_after_active', action='switch') == 1
+        assert redis.command('HGET', keys[12], 'active:one') == active
+        assert redis.command('HGET', keys[12], 'reserved') == '100'
+        assert redis.command('HGET', keys[12], 'slots:creator_month') == '0'
+        print('PASS: an active contract blocks another checkout, while a separate switch retains both obligations')
         funded_activation(keys[13])
         def parallel_activation(_):
             client = Redis()
@@ -184,6 +194,21 @@ def main():
         assert activate(redis, keys[19]) == 0
         assert snapshot(keys[19]) == before
         print('PASS: corrupt, already-active and expiring activation ledgers fail before writes')
+        seed(keys[20])
+        before = snapshot(keys[20])
+        forged_receipt = 'review|one|creator_month|checkout|50|1800000300|1800003600|1800086400|2000000000000'
+        assert redis.command('EVAL', script, 1, keys[20], 'binding', 'review', 'one', 'creator_month', 50, 100, 0, 2, 'ctr_wrong_action', forged_receipt, 'switch') == 0
+        assert snapshot(keys[20]) == before
+        before_calls = command_calls()
+        assert take(redis, keys[20]) == 1
+        after_calls = command_calls()
+        changes = {name: after_calls.get(name, 0) - before_calls.get(name, 0)
+                   for name in set(before_calls) | set(after_calls) if name != 'info'}
+        assert all(value >= 0 for value in changes.values()), changes
+        changes = {name: value for name, value in changes.items() if value}
+        assert changes.get('eval') == 1 and sum(changes.values()) == 15, changes
+        print('MEASURED checkout reservation commands:', 15, sorted(changes.items()))
+
     finally:
         for key in keys:
             if not key.startswith(prefix):
