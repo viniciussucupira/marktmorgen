@@ -273,7 +273,7 @@ function dollars(cents: number): string {
 }
 
 /** What the creator is told, plain text. */
-export function pauseEmail(kind: "set" | "soon" | "restarted" | "failed", record: PauseRecord): { subject: string; text: string } {
+export function pauseEmail(kind: "set" | "soon" | "restarted" | "failed" | "unconfirmed", record: PauseRecord): { subject: string; text: string } {
   const name = PLAN_NAMES[record.tier];
   const price = dollars(PLAN_PRICES[record.tier].month);
   const studio = `${SITE_URL}/studio#billing`;
@@ -319,6 +319,21 @@ export function pauseEmail(kind: "set" | "soon" | "restarted" | "failed", record
       ].join("\n"),
     };
   }
+  if (kind === "unconfirmed") {
+    return {
+      subject: `Your ${name} plan restart needs a check`,
+      text: [
+        "Hello,",
+        "",
+        "We could not confirm the outcome of your plan restart. This does not tell us whether a charge went through.",
+        "",
+        `Check your billing in the studio: ${studio}`,
+        "",
+        "Before starting the plan again, contact us so we can check the subscription and any charge. If you see a charge, include its date and amount, but do not send card details.",
+        ...close,
+      ].join("\n"),
+    };
+  }
   return {
     subject: `Your ${name} plan could not start again`,
     text: [
@@ -334,7 +349,7 @@ export function pauseEmail(kind: "set" | "soon" | "restarted" | "failed", record
   };
 }
 
-async function tell(store: Store, kind: "set" | "soon" | "restarted" | "failed", record: PauseRecord): Promise<boolean> {
+async function tell(store: Store, kind: "set" | "soon" | "restarted" | "failed" | "unconfirmed", record: PauseRecord): Promise<boolean> {
   if (!isSenderConfigured() || !store.email) return false;
   const { subject, text } = pauseEmail(kind, record);
   return sendEmail({ meter: { by: "company" }, from: NIMBUS_FROM, to: store.email, subject, text, replyTo: SUPPORT_EMAIL });
@@ -399,7 +414,7 @@ export async function runBreaks(nowSeconds = Math.floor(Date.now() / 1000)): Pro
         continue;
       }
       await forget(ref, false);
-      await tell(store, "failed", record).catch(() => false);
+      await tell(store, declined(error) ? "failed" : "unconfirmed", record).catch(() => false);
       counts.failed += 1;
     }
   }

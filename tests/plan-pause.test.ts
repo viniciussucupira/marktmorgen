@@ -194,6 +194,25 @@ async function main() {
     createAnswer = "ok";
   }
 
+  part("An unknown provider outcome never promises that nothing was charged");
+  {
+    subs.sub_Unknown00001 = subscription("sub_Unknown00001");
+    const store = await storeWith("unknown@example.com", "unknownrestart", "sub_Unknown00001");
+    const set = await pausePlan(store, 1, NOW);
+    const until = set.kind === "paused" ? set.record.until : 0;
+    await setSubscription("unknown@example.com", { active: false });
+    createAnswer = "down";
+    emails.length = 0;
+    const counts = await runBreaks(until + 4 * DAY);
+    is("the existing retry horizon still ends", counts.failed, 1);
+    is("unknown outcome has its own truthful notice", emails.map((e) => e.subject), ["Your Marktmorgen plan restart needs a check"]);
+    const text = emails[0]?.text ?? "";
+    is("it does not claim that no charge occurred", text.includes("Nothing was charged."), false);
+    is("it states uncertainty and asks for checking before another restart", text.includes("whether a charge went through") && text.includes("Before starting the plan again, contact us") && text.includes("do not send card details"), true);
+    is("it does not claim the plan is taking payments", text.includes("your checkout is taking payments"), false);
+    createAnswer = "ok";
+  }
+
   part("A store that started again by hand");
   {
     subs.sub_ByHand000001 = subscription("sub_ByHand000001");
