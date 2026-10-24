@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
     const action = text(guarded.body.action, 20);
     if (action === "add") {
       const result = await addFeed(store, text(guarded.body.url, MAX_FEED_URL + 1));
-      if (!result.ok) return Response.json({ ok: false, error: result.reason, message: result.message }, { status: 400 });
+      if (!result.ok) return Response.json({ ok: false, error: result.reason, message: result.message }, { status: result.reason === "unavailable" ? 503 : 400 });
       return Response.json({ ok: true, view: result.view, busyTimes: result.busyTimes });
     }
     if (action === "remove") {

@@ -47,6 +47,7 @@ import { activeTeam, writeTeam } from "@/lib/team-booking";
 import { beginConsent, finishConsent, takeConsent } from "@/lib/meet-connect";
 import { GOOGLE_HOST_SCOPES } from "@/lib/meet-providers";
 import { addHostIcs, removeHostIcs, hostCalendarView, hostSync, setHostCalendars, setHostSource } from "@/lib/host-calendar";
+import { addFeed, calendarView, removeFeed } from "@/lib/calendar-sync";
 import { callRefunded } from "@/lib/meet-links";
 import { readRecord, callScope } from "@/lib/meet-records";
 import { redisPipeline, store as redis } from "./redis-stub";
@@ -425,6 +426,24 @@ async function main(): Promise<void> {
     if (previousCalendarKey === undefined) delete process.env.NIMBUS_DATA_KEY;
     else process.env.NIMBUS_DATA_KEY = previousCalendarKey;
   }
+
+
+  part("New store calendar feed admission requires funding");
+  const calendarOwner = "calendar-cohort@example.com";
+  await claimHandle(calendarOwner, "calendar-cohort-shop", "Calendar Cohort Shop", "");
+  await ensureStatsId(calendarOwner);
+  await setSubscription(calendarOwner, { customerId: "cus_CalendarFund01", subscriptionId: "sub_CalendarFund01", active: true, period: paidPeriod() });
+  const calendarStore = (await storeForEmail(calendarOwner))!;
+  let ownerFeedLookups = 0;
+  const ownerFeedHooks = { resolve: async () => { ownerFeedLookups += 1; throw new Error("Synthetic owner calendar resolver: no network"); } };
+  const beforeOwnerFunding = await addFeed(calendarStore, "https://calendar.example.com/owner.ics", Date.now(), ownerFeedHooks);
+  is("unmarked feed admission reaches only the injected resolver", [beforeOwnerFunding.ok, ownerFeedLookups], [false, 1]);
+  await setSubscription(calendarOwner, { customerId: "cus_CalendarFund01", subscriptionId: "sub_CalendarFund01", active: true, period: { ...paidPeriod(), funded: true } });
+  const fundedOwnerCalendar = (await storeForEmail(calendarOwner))!;
+  const beforeOwnerView = await calendarView(fundedOwnerCalendar);
+  const deniedOwnerFeed = await addFeed(fundedOwnerCalendar, "https://calendar.example.com/owner.ics", Date.now(), ownerFeedHooks);
+  is("funded new feed returns unavailable before DNS or configuration changes", [deniedOwnerFeed.ok ? "" : deniedOwnerFeed.reason, ownerFeedLookups, await calendarView(fundedOwnerCalendar)], ["unavailable", 1, beforeOwnerView]);
+  is("retained removal stays available without a new feed read", [await removeFeed(fundedOwnerCalendar, "synthetic-missing-feed"), ownerFeedLookups], [beforeOwnerView, 1]);
 
   done();
 }
