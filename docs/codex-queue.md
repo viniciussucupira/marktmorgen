@@ -5035,6 +5035,7 @@ Proveniência da revisão comercial: passou a fazer parte do Bloco de abertura, 
 (k) Itens de redução de custos, acrescentados por328 [PC1], solicitação do dono de24/10/2026 02h29(Fortaleza), depois de114 [E2-AFFILIATE-TAX-FORMS], nesta ordem vinculante do maior ganho para o menor:
 1. 319 [TK1] — Somente Stripe.
 2. 315 [MG2], somente passos1e2 (cobrança só em dólar e cobrança anual sem Stripe Billing), junto com320 [TK2] (mensais e assistente, com as mesmas garantias).
+   Em seguida,331 [RC1] — Stripe Tax por transação, por pedido do dono de24/10/2026 02h39(Fortaleza), junto à cobrança própria de320 [TK2] e315 [MG2]/passo2.
 3. 309 [EM1] — e-mails para a lista pela Amazon SES.
 4. 313 [CV1] — visitas pelo CDN e imagens pelo Cloudflare R2.
 5. 326 [IN2] — menos comandos e menos tempo de função por página.
@@ -6501,3 +6502,26 @@ REGRA DOS 60% (OBRIGATÓRIA, para EV1 e EV2): todo cliente pagante, considerado 
 Proibições (para EV1 e EV2): não alterar preços, limites visíveis, comissão, meios de pagamento aceitos, PLANS_ON_SALE, tax gate, art.9a ou revisão comercial; não criar contas, aceitar termos, contratar serviços, pagar valores, alterar configurações reais de fornecedores ou contatar terceiros; somente testes sintéticos com fornecedores simulados.
 
 Proveniência: pedido direto do dono de24/10/2026 02h35(Fortaleza), preservado uma única vez depois de328[PC1]. A inserção dos dois itens em AB(k) altera somente esse ponto da ordem PC anterior; o texto original de PC fica histórico, com TK6 preservado. A situação técnica/preços/memória/frequência descrita no pedido deve ser conferida no código e em fontes oficiais datadas durante a execução; não foi medida ou certificada por este registro. Nenhuma memória, agenda, evento, fornecedor, operação real ou contagem de custo é alterada agora. Custo documental sem serviço/operação novo de produto; desconhecido não vira zero. Ao executar cada item, registrar data/hora de Fortaleza, commit, suíte completa e publicação; documento e PR pendente não contam como entrega funcional.
+
+
+## RC — Stripe Tax cobrado por transação (24/10/2026)
+
+Solicitação do dono (24/10/2026, 02h39, horário de Fortaleza): reduzir o custo de receber os pagamentos do Marktmorgen.
+
+NÃO PARE o que está fazendo. COLOQUE NA FILA, com os próximos números livres, depois dos pedidos já gravados ou em gravação (inclusive o EV de 24/10/2026, 02h35), e inclua este item na posição (k) do Bloco de abertura, logo depois de 320 [TK2].
+
+Estado inicial informado pelo dono: no main, o último item é o 317 [EU1]; o PR #872 grava os itens 318 a 328; o EV ainda não foi gravado. Conferência atual: #872 já incorporou até330 [EV2];331 é o próximo número livre, sem RC1 nas filas canônicas e candidatas consultadas.
+
+331. [RC1] Stripe Tax por transação.
+
+Estado: na fila. Proveniência AB(k)/RC: pedido direto do dono de24/10/2026 02h39(Fortaleza); executar logo depois de320 [TK2], em conjunto com a cobrança própria de320 e o passo2 de315 [MG2]. Não interrompe AB(a) nem antecipa(k) sobre(a)–(j). Numeração anterior e histórico preservados.
+
+Pela página oficial e datada do Stripe (https://support.stripe.com/questions/understanding-stripe-tax-pricing), o pedido informa que o Stripe Tax custa0,5% do volume quando usado pelo Billing, Invoicing, Checkout ou Payment Links, e US$0,50 por chamada da Transaction API e US$0,05 por chamada da Calculation API (cada Transaction inclui até10 Calculations) quando usado pela API; em ambos os casos, só há cobrança nas jurisdições onde houver registro ativo. Essas condições são alegações do briefing a conferir em documentação oficial datada na execução, não tarifas certificadas por este registro.
+
+Junto com a cobrança própria de320 [TK2] e do passo2 de315 [MG2], passe o cálculo e o registro do imposto dos planos, do assistente e das legendas para a API do Stripe Tax, limitando o número de cálculos por cobrança no código. Confirme na documentação oficial que esse uso é cobrado pela tabela da API, garanta no código e em teste que nenhuma cobrança do Marktmorgen usa a cobrança de0,5% e, só então, troque no modelo de recebimento (lib/receiving-costs.ts) a parcela de0,5% pelo custo fixo máximo por cobrança (US$0,50 mais os cálculos acima dos incluídos), escolhendo, por cobrança, o maior entre os dois enquanto houver qualquer caminho de0,5%. Registre a economia por plano e intervalo.
+
+REGRA DOS60% (OBRIGATÓRIA): todo cliente pagante, considerado isoladamente e usando100% de todos os direitos do plano no pior mês, deve manter margem de lucro líquido MÍNIMA de60%, depois de todos os custos e de todos os impostos, inclusive os brasileiros; a margem pode ser maior, mas nunca menor, e a mesma regra vale para a empresa como um todo. Custo desconhecido não pode ser considerado zero. Use a leitura que resultar em MAIS imposto (docs/tax-uncertainty.md). Desde22/10/2026, todos os custos fixos da LLC são atribuídos integralmente ao Marktmorgen (item275 [FX1]). Uma tarifa só sai do pior caso quando o código garante que ela não pode ocorrer. Aplica-se324 [TK6] a toda economia, sem antecipar aumentos de limites.
+
+Proibições: não alterar preços, limites visíveis, comissão, meios de pagamento aceitos, PLANS_ON_SALE, tax gate, art.9a ou revisão comercial; não criar contas, aceitar termos, contratar serviços, pagar valores, alterar configurações reais do Stripe ou contatar terceiros; somente testes sintéticos com o Stripe simulado.
+
+Registrar fontes oficiais/data, limites de chamadas por cobrança, custos mensais/anuais por plano e maior preço pago, tetos/reserva, testes completos, PR, incorporação e publicação efetiva ao executar. Nenhuma tarifa, modelo de recebimento, integração ou operação real é alterada agora. Registro documental não é entrega funcional; custo desconhecido continua reprovado.
