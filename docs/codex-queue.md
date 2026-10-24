@@ -5055,6 +5055,8 @@ Proveniência da revisão comercial: passou a fazer parte do Bloco de abertura, 
 (k) Itens de redução de custos, acrescentados por328 [PC1], solicitação do dono de24/10/2026 02h29(Fortaleza), depois de114 [E2-AFFILIATE-TAX-FORMS], nesta ordem vinculante do maior ganho para o menor:
 1. 319 [TK1] — Somente Stripe.
 2. 315 [MG2], somente passos1e2 (cobrança só em dólar e cobrança anual sem Stripe Billing), junto com320 [TK2] (mensais e assistente, com as mesmas garantias).
+   Em seguida,331 [RC1] — Stripe Tax por transação, por pedido do dono de24/10/2026 02h39(Fortaleza), junto à cobrança própria de320 [TK2] e315 [MG2]/passo2.
+   Logo depois,332 [RD1] — débito em conta como opção adicional ao cartão, por pedido do dono de24/10/2026 09h19(Fortaleza); cartão preservado e pior caso continua pelo cartão.
 3. 309 [EM1] — e-mails para a lista pela Amazon SES.
 4. 313 [CV1] — visitas pelo CDN e imagens pelo Cloudflare R2.
 5. 326 [IN2] — menos comandos e menos tempo de função por página.
@@ -6536,3 +6538,58 @@ Branch separada codex/ab-paid-ai-cohort, descendente do head completo de #892, s
 ### AB(a) — falha do inventário de armazenamento e correção obrigatória (24/10/2026)
 
 Head6be8c3aa0881ea53713e1e99ace40aee26c2c1a1, verify120863893416 concluído com falha em11:48:40UTC (08:48:40Fortaleza): store-data-registry.test.ts exigiu registrar nl:contract-reserve:v1@lib/contract-resource-window.ts. Casos de coorte e ACK atrasado passaram às11:46:35UTC; Redis real passou às11:45:18UTC com18/17comandos. Isso não autoriza incorporar o head falho. Correção registra o uso do mesmo hash permanente e limites1/12campos,140bytesbrutos/campo+valor; não cria ledger, reduz reserva ou transforma overhead/retenção desconhecidos em zero. Suíte completa será executada no novo head de #892 e no descendente #893; nenhum job isolado será usado como conclusão. Falha preservada no histórico.
+
+
+## RC — Stripe Tax cobrado por transação (24/10/2026)
+
+Solicitação do dono (24/10/2026, 02h39, horário de Fortaleza): reduzir o custo de receber os pagamentos do Marktmorgen.
+
+NÃO PARE o que está fazendo. COLOQUE NA FILA, com os próximos números livres, depois dos pedidos já gravados ou em gravação (inclusive o EV de 24/10/2026, 02h35), e inclua este item na posição (k) do Bloco de abertura, logo depois de 320 [TK2].
+
+Estado inicial informado pelo dono: no main, o último item é o 317 [EU1]; o PR #872 grava os itens 318 a 328; o EV ainda não foi gravado. Conferência atual: #872 já incorporou até330 [EV2];331 é o próximo número livre, sem RC1 nas filas canônicas e candidatas consultadas.
+
+331. [RC1] Stripe Tax por transação.
+
+Estado: na fila. Proveniência AB(k)/RC: pedido direto do dono de24/10/2026 02h39(Fortaleza); executar logo depois de320 [TK2], em conjunto com a cobrança própria de320 e o passo2 de315 [MG2]. Não interrompe AB(a) nem antecipa(k) sobre(a)–(j). Numeração anterior e histórico preservados.
+
+Pela página oficial e datada do Stripe (https://support.stripe.com/questions/understanding-stripe-tax-pricing), o pedido informa que o Stripe Tax custa0,5% do volume quando usado pelo Billing, Invoicing, Checkout ou Payment Links, e US$0,50 por chamada da Transaction API e US$0,05 por chamada da Calculation API (cada Transaction inclui até10 Calculations) quando usado pela API; em ambos os casos, só há cobrança nas jurisdições onde houver registro ativo. Essas condições são alegações do briefing a conferir em documentação oficial datada na execução, não tarifas certificadas por este registro.
+
+Junto com a cobrança própria de320 [TK2] e do passo2 de315 [MG2], passe o cálculo e o registro do imposto dos planos, do assistente e das legendas para a API do Stripe Tax, limitando o número de cálculos por cobrança no código. Confirme na documentação oficial que esse uso é cobrado pela tabela da API, garanta no código e em teste que nenhuma cobrança do Marktmorgen usa a cobrança de0,5% e, só então, troque no modelo de recebimento (lib/receiving-costs.ts) a parcela de0,5% pelo custo fixo máximo por cobrança (US$0,50 mais os cálculos acima dos incluídos), escolhendo, por cobrança, o maior entre os dois enquanto houver qualquer caminho de0,5%. Registre a economia por plano e intervalo.
+
+REGRA DOS60% (OBRIGATÓRIA): todo cliente pagante, considerado isoladamente e usando100% de todos os direitos do plano no pior mês, deve manter margem de lucro líquido MÍNIMA de60%, depois de todos os custos e de todos os impostos, inclusive os brasileiros; a margem pode ser maior, mas nunca menor, e a mesma regra vale para a empresa como um todo. Custo desconhecido não pode ser considerado zero. Use a leitura que resultar em MAIS imposto (docs/tax-uncertainty.md). Desde22/10/2026, todos os custos fixos da LLC são atribuídos integralmente ao Marktmorgen (item275 [FX1]). Uma tarifa só sai do pior caso quando o código garante que ela não pode ocorrer. Aplica-se324 [TK6] a toda economia, sem antecipar aumentos de limites.
+
+Proibições: não alterar preços, limites visíveis, comissão, meios de pagamento aceitos, PLANS_ON_SALE, tax gate, art.9a ou revisão comercial; não criar contas, aceitar termos, contratar serviços, pagar valores, alterar configurações reais do Stripe ou contatar terceiros; somente testes sintéticos com o Stripe simulado.
+
+Registrar fontes oficiais/data, limites de chamadas por cobrança, custos mensais/anuais por plano e maior preço pago, tetos/reserva, testes completos, PR, incorporação e publicação efetiva ao executar. Nenhuma tarifa, modelo de recebimento, integração ou operação real é alterada agora. Registro documental não é entrega funcional; custo desconhecido continua reprovado.
+
+
+### Entrega funcional204 — coorte de upload paga, confirmada em produção (24/10/2026)
+
+PR#892, head corrigido6efe785758da85b6cc1a84a47245ef4fc425d99a, tree832bfb2607d24887b644dc819fdef9a13642ca75, merge6884f54d69702b8389987696dadfba0479699713 em12:12:43UTC/09:12:43Fortaleza. Suíte completa24/24 no head corrigido; árvores prevista/testada/real e pais ordenados conferidos. A falha anterior de inventário permanece acima, não foi ignorada nem substituída por job isolado. verify120864829190 passou o inventário e os casos de64observações/ACK atrasado; Redis real confirmou18/17comandos e limite12campos anuais.
+
+Vercel dpl_DErfvCdWNdBQg3j8y3Kv7zsP2mWG READY em12:14:17.828UTC/09:14:17.828Fortaleza, metadado Git igual ao merge exato; marktmorgen.com /,/platform,/pricing,/mission,/library HTTP200 com o mesmo data-dpl-id. Só então o contador passou203→204, próxima205, aviso204 emitido uma vez. #891 documental incorporado por ancestralidade, sem entrega extra.
+
+Uploads/controle de períodos financiados exigem prova imutável paga, reconciliação dos seis contadores com principal retido, ACK estrito e prazos/mês/janela válidos;1coorte mensal ou12anuais. Não há liberação de caixa/slots nem novo Stripe GET. RequestJSON<=12288bytes. Custos condicionais320observações/primária sem réplica/PAYG0.20por100k: USD0.01152/mês e0.13824/12pioresmeses por plano/intervalo. Armazenamento bruto<=140bytes/coorte; overhead, retenção, cópias, respostas/transferência, CPU/memória, teto global e reserva desconhecidos continuam reprovados. Sem certificação60%, políticas reais nulas, PLANS_ON_SALE=false e coberturas de recursos/renovação/liquidação ainda falsas. AB(a) continua, #893 cuida do caminho askModel; assistente separado, demais recursos e ciclos de vida permanecem pendentes.
+
+
+## RD — Débito em conta como opção adicional ao cartão (24/10/2026)
+
+Solicitação do dono (24/10/2026, 09h19, horário de Fortaleza): reduzir o custo de receber os pagamentos do Marktmorgen.
+
+NÃO PARE o que está fazendo. COLOQUE NA FILA, com os próximos números livres, depois dos pedidos já gravados ou em gravação (inclusive o RC de 24/10/2026, 02h39), e inclua este item na posição (k) do Bloco de abertura, logo depois do item do RC.
+
+Estado inicial informado pelo dono: no main, o último item é o330 [EV2]; o RC ainda não foi gravado. Conferência atual: RC331 já está registrado no PR#894 e na continuidade;332 é o próximo número livre, sem RD1 nas filas consultadas.
+
+332. [RD1] Débito em conta como opção adicional.
+
+Estado: na fila. Proveniência AB(k)/RD: pedido direto do dono de24/10/2026 09h19(Fortaleza); executar logo depois de331 [RC1], após320 [TK2]. Não interrompe AB(a), não antecipa(k) sobre(a)–(j), não renumera itens existentes.
+
+O cartão de crédito continua sendo aceito em todos os planos; esta opção não substitui o cartão e não contradiz o descarte do débito em conta como forma única de pagamento (passo3 do item314 [MG1]). Pela página oficial e datada do Stripe (https://stripe.com/payments/us-bank-debits: ACH Direct Debit a0,8% com teto de US$5 por cobrança e US$1,50 por verificação de conta pelo Financial Connections), ofereça no checkout dos planos, do assistente e das legendas, ao lado do cartão, o pagamento por conta bancária americana (ACH Direct Debit) e, se a documentação oficial confirmar que uma conta Stripe americana pode aceitá-los, SEPA Direct Debit (UE) e Bacs Direct Debit (Reino Unido), com renovação automática pela cobrança própria de320 [TK2]. Tarifas, disponibilidade e condições aqui são alegações do briefing a conferir em fontes oficiais datadas na execução, não certificação deste registro.
+
+Mantenha todas as garantias atuais: aviso antes da renovação, cancelamento em um clique, reembolso, recuperação de cobrança falhada e acesso liberado só depois da confirmação do pagamento. Inclua no custo de cada cobrança por débito a tarifa de débito que falha, a de contestação e o prazo de contestação, pelas páginas oficiais. O pior caso de cada plano continua calculado pelo cartão, porque o cliente pode escolhê-lo; registre, à parte, o custo real por plano quando o cliente escolhe o débito.
+
+REGRA DOS60% (OBRIGATÓRIA): todo cliente pagante, considerado isoladamente e usando100% de todos os direitos do plano no pior mês, deve manter margem de lucro líquido MÍNIMA de60%, depois de todos os custos e de todos os impostos, inclusive os brasileiros; a margem pode ser maior, mas nunca menor, e a mesma regra vale para a empresa como um todo. Custo desconhecido não pode ser considerado zero. Use a leitura que resultar em MAIS imposto (docs/tax-uncertainty.md). Desde22/10/2026, todos os custos fixos da LLC são atribuídos integralmente ao Marktmorgen (item275 [FX1]). Aplica-se324 [TK6] a toda economia; nenhuma tarifa sai do pior caso sem garantia no código.
+
+Proibições: não alterar preços, limites visíveis, comissão, PLANS_ON_SALE, tax gate, art.9a ou revisão comercial; não retirar o cartão de crédito; não criar contas, aceitar termos, contratar serviços, pagar valores, alterar configurações reais do Stripe ou contatar terceiros; somente testes sintéticos com o Stripe simulado.
+
+A autorização de RD acrescenta a opção de débito ao executar este item e substitui apenas a restrição genérica incompatível sobre adicionar esse meio; preserva o cartão e todas as demais proibições. Registrar custos mensais/anuais por plano e maior preço pago, verificação, falhas, contestações e respectivos prazos, tetos/reserva, fontes/data e testes completos antes de operar. Nenhuma configuração, meio de pagamento real ou custo de recebimento é alterado por este registro; documento não é entrega funcional.
