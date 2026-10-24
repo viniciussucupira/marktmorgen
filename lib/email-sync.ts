@@ -65,6 +65,7 @@ import {
 import { type EmailSyncRef, type Store, setEmailSyncRef, storeRef } from "@/lib/store";
 import { productIds } from "@/lib/catalog";
 import { SITE_URL } from "@/lib/site-url";
+import { reservePaidResourceWindow } from "@/lib/contract-resource-window";
 
 /** Jobs a store's studio keeps. */
 export const LOG_SIZE = 50;
@@ -555,6 +556,7 @@ export async function connect(store: Store, rawProvider: unknown, rawKey: unknow
   const key = typeof rawKey === "string" ? rawKey.trim() : "";
   const problem = keyProblem(provider, key);
   if (problem) return { ok: false, message: problem };
+  if (store.period?.funded === true && !await reservePaidResourceWindow(store)) return { ok: false, message: "The platform could not be contacted just now. Try again in a moment." };
   if (!canSeal()) return { ok: false, message: "Keys cannot be stored safely on this deployment, so nothing was saved." };
   let targets: Target[];
   try {
@@ -591,6 +593,7 @@ export async function connect(store: Store, rawProvider: unknown, rawKey: unknow
 export async function refreshTargets(store: Store): Promise<{ ok: true; targets: Target[] } | { ok: false; message: string }> {
   const config = store.statsId ? await readConfig(store.statsId) : null;
   if (!store.statsId || !config) return { ok: false, message: "Connect a platform first." };
+  if (store.period?.funded === true && !await reservePaidResourceWindow(store)) return { ok: false, message: "The platform could not be contacted just now. Try again in a moment." };
   const opened = openKey(store.statsId, config);
   if (!opened.ok) return { ok: false, message: opened.message };
   try {
@@ -614,6 +617,7 @@ export async function saveSettings(store: Store, input: Settings): Promise<{ ok:
   const wantedTarget = typeof input.target === "string" ? input.target : "";
   let target: Target | null = config.target;
   if (wantedTarget && wantedTarget !== config.target?.id) {
+    if (store.period?.funded === true && !await reservePaidResourceWindow(store)) return { ok: false, message: "The platform could not be contacted just now. Try again in a moment." };
     let targets: Target[];
     try {
       targets = await listTargets(config.provider, opened.key);
@@ -647,6 +651,7 @@ export async function saveSettings(store: Store, input: Settings): Promise<{ ok:
 export async function testConnection(store: Store): Promise<{ ok: boolean; message: string; view: SyncView }> {
   const config = store.statsId ? await readConfig(store.statsId) : null;
   if (!store.statsId || !config) return { ok: false, message: "Connect a platform first.", view: await syncView(store) };
+  if (store.period?.funded === true && !await reservePaidResourceWindow(store)) return { ok: false, message: "The platform could not be contacted just now. Try again in a moment.", view: await syncView(store) };
   const name = PROVIDER_NAMES[config.provider];
   const opened = openKey(store.statsId, config);
   if (!opened.ok) return { ok: false, message: opened.message, view: await syncView(store) };
