@@ -4,7 +4,7 @@ import { noticeCreator } from "@/lib/account-notice";
 import { isMeetProvider } from "@/lib/call-setup";
 import { ACCOUNT_NAMES, NotConnected, disconnect, logProblem, meetView } from "@/lib/meet-connect";
 import { ProviderError, isConfigured } from "@/lib/meet-providers";
-import { makeTest, moveTest, removeTest } from "@/lib/meet-test";
+import { makeTest, moveTest, removeTest, TestMeetingUnavailable } from "@/lib/meet-test";
 import { guardStoreWrite } from "@/lib/store-request";
 
 /** Changes a store may make here in a minute: each one reaches Google or Zoom. */
@@ -44,14 +44,15 @@ export async function POST(request: NextRequest) {
   }
   if (action === "test" || action === "movetest" || action === "untest") {
     try {
-      if (action === "test") return Response.json({ ok: true, test: await makeTest(store.statsId, provider) });
+      if (action === "test") return Response.json({ ok: true, test: await makeTest(store, provider) });
       if (action === "movetest") {
-        const moved = await moveTest(store.statsId, provider);
+        const moved = await moveTest(store, provider);
         return moved ? Response.json({ ok: true, test: moved }) : Response.json({ ok: false, error: "no_test" }, { status: 400 });
       }
       await removeTest(store.statsId, provider);
       return Response.json({ ok: true, test: null });
     } catch (error) {
+      if (error instanceof TestMeetingUnavailable) return Response.json({ ok: false, error: "unavailable", message: error.message }, { status: 503 });
       if (error instanceof NotConnected) return Response.json({ ok: false, error: "not_connected" }, { status: 400 });
       const why = error instanceof ProviderError ? error.message : "it could not be reached";
       console.error("a test meeting failed", error);

@@ -23,11 +23,12 @@ import { SESSION_COOKIE, openSession } from "@/lib/auth";
 import { NotConnected, disconnect, finishConsent, meetView } from "@/lib/meet-connect";
 import { ProviderError, ZOOM_ARRIVAL_COOKIE, cameForZoom } from "@/lib/meet-providers";
 import { startConnect } from "@/lib/meet-routes";
-import { TEST_MEETING_MINUTES, TEST_MEETING_TITLE, TEST_MOVE_MINUTES, makeTest, moveTest, readTests, removeTest } from "@/lib/meet-test";
-import { claimHandle, ensureStatsId, storeForEmail } from "@/lib/store";
+import { TEST_MEETING_MINUTES, TEST_MEETING_TITLE, TEST_MOVE_MINUTES, makeTest, moveTest, readTests, removeTest, TestMeetingUnavailable } from "@/lib/meet-test";
+import { claimHandle, ensureStatsId, setSubscription, storeForEmail } from "@/lib/store";
 import { proxy } from "@/proxy";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
+import { paidPeriod } from "./billing-period-fixture";
 
 const HOST = "marktmorgen.com";
 
@@ -106,7 +107,7 @@ async function main(): Promise<void> {
   is("the proxy reads rules that import nothing", /^import /m.test(readFileSync("lib/zoom-arrival.ts", "utf8")), false);
 
   part("Nothing to test before an account is connected");
-  const early = await makeTest(statsId, "zoom").catch((error) => error);
+  const early = await makeTest(shop, "zoom").catch((error) => error);
   is("says it is not connected", early instanceof NotConnected, true);
   is("and removing one that is not there does nothing", await removeTest(statsId, "zoom"), false);
 
@@ -116,7 +117,7 @@ async function main(): Promise<void> {
   is("and it stays in sight, offered or not", (await meetView(statsId, shop)).providers, ["google", "zoom"]);
   seen.length = 0;
   const NOW = Date.UTC(2026, 9, 5, 17, 2, 30);
-  const test = await makeTest(statsId, "zoom", NOW);
+  const test = await makeTest(shop, "zoom", NOW);
   const made = seen.filter((s) => s.method === "POST" && s.url === "https://api.zoom.us/v2/users/me/meetings");
   is("one meeting is asked of Zoom, on the user's own account", made.length, 1);
   const sent = JSON.parse(made[0].body) as { topic: string; type: number; start_time: string; duration: number; timezone: string };
@@ -124,12 +125,12 @@ async function main(): Promise<void> {
   is("an hour from now, on the next five minutes", [new Date(test.start).toISOString(), sent.duration, sent.timezone], ["2026-10-05T18:05:00.000Z", TEST_MEETING_MINUTES, "UTC"]);
   is("its join link comes back", [test.id, test.link], [String(meetingNumber), `https://us05web.zoom.us/j/${meetingNumber}?pwd=abc`]);
   is("and is kept for the page", (await readTests(statsId, ["google", "zoom"])).zoom?.id, test.id);
-  const again = await makeTest(statsId, "zoom", NOW + 60_000);
+  const again = await makeTest(shop, "zoom", NOW + 60_000);
   is("asked twice: the same one, and Zoom is not asked again", [again.id, seen.filter((s) => s.method === "POST" && s.url.endsWith("/users/me/meetings")).length], [test.id, 1]);
 
   part("Moving it, as a buyer's move does");
   seen.length = 0;
-  const moved = await moveTest(statsId, "zoom");
+  const moved = await moveTest(shop, "zoom");
   const patched = seen.filter((s) => s.method === "PATCH");
   is("one change is asked of Zoom, on that meeting", patched.map((s) => s.url), [`https://api.zoom.us/v2/meetings/${test.id}`]);
   const shifted = JSON.parse(patched[0].body) as { start_time: string; duration: number; timezone: string };
@@ -145,20 +146,35 @@ async function main(): Promise<void> {
   is("deleted", await removeTest(statsId, "zoom"), true);
   is("on Zoom, by its own number", seen.filter((s) => s.method === "DELETE").map((s) => s.url), [`https://api.zoom.us/v2/meetings/${test.id}`]);
   is("and forgotten here", await readTests(statsId, ["zoom"]), {});
-  is("with none left, there is nothing to move", await moveTest(statsId, "zoom"), null);
+  is("with none left, there is nothing to move", await moveTest(shop, "zoom"), null);
 
   part("A provider that fails");
   failMeetings = 1;
-  const failed = await makeTest(statsId, "zoom", NOW).catch((error) => error);
+  const failed = await makeTest(shop, "zoom", NOW).catch((error) => error);
   is("says what happened", failed instanceof ProviderError && failed.kind, "server");
   is("and nothing is kept as if it had worked", await readTests(statsId, ["zoom"]), {});
-  const after = await makeTest(statsId, "zoom", NOW);
+  const after = await makeTest(shop, "zoom", NOW);
   is("the next try makes it", /^\d{11}$/.test(after.id), true);
+
+  part("Funded new test work refuses while the existing meeting and cleanup remain accessible");
+  await setSubscription("owner@example.com", { customerId: "cus_MeetFunded001", subscriptionId: "sub_MeetFunded001", active: true, tier: "creator", cycle: "month", trialEnds: 0, period: { ...paidPeriod(), funded: true } });
+  const funded = (await storeForEmail("owner@example.com"))!;
+  seen.length = 0;
+  is("an existing meeting is returned without new work", (await makeTest(funded, "zoom")).id, after.id);
+  const refusedMove = await moveTest(funded, "zoom").catch((error) => error);
+  is("a new provider move needs financial approval", refusedMove instanceof TestMeetingUnavailable, true);
+  is("no credential refresh or provider request, and the meeting is unchanged", [seen.length, (await readTests(statsId, ["zoom"])).zoom], [0, after]);
+  is("retained removal is still available", await removeTest(statsId, "zoom"), true);
+  is("removal uses the existing provider cleanup", seen.filter((entry) => entry.method === "DELETE").length, 1);
+  seen.length = 0;
+  const refusedCreate = await makeTest(funded, "zoom").catch((error) => error);
+  is("a new test meeting requires financial approval", refusedCreate instanceof TestMeetingUnavailable, true);
+  is("no provider request or test record", [seen.length, await readTests(statsId, ["zoom"])], [0, {}]);
 
   part("Forgotten with the connection");
   await disconnect(statsId, "zoom");
   is("disconnecting forgets the test meeting", await readTests(statsId, ["zoom"]), {});
-  const gone = await makeTest(statsId, "zoom").catch((error) => error);
+  const gone = await makeTest(shop, "zoom").catch((error) => error);
   is("and a new one cannot be made", gone instanceof NotConnected, true);
 
   part("Where it is offered");
