@@ -9,6 +9,7 @@
  * and neither answers at all (404) while the deployment has not switched the
  * provider on.
  */
+import { reservePaidResourceWindow } from "@/lib/contract-resource-window";
 import { withinService } from "@/lib/metered-limits";
 import { type NextRequest, after } from "next/server";
 import { SESSION_COOKIE, emailForSession } from "@/lib/auth";
@@ -48,6 +49,7 @@ export async function startConnect(request: NextRequest, provider: MeetProvider)
   if (!offeredProviders(store, review).includes(provider)) return notFound();
   const kept = review && !offeredProviders(store).includes(provider) ? `&${ZOOM_REVIEW_QUERY}` : "";
   const back = (query: string) => away(origin, studioPath(store, `${query}${kept}`, "meetings"));
+  if (store.period?.funded === true && !await reservePaidResourceWindow(store)) return back(`meet=limited&p=${provider}`);
   const named = store.statsId ? store : await ensureStatsId(ref);
   if (!named?.statsId || !store.sid) return back(`meet=error&p=${provider}`);
   if (!(await withinService("meet-start", named.statsId, STARTS_PER_TEN_MINUTES, 600, named))) return back(`meet=limited&p=${provider}`);
@@ -74,6 +76,7 @@ export async function startHostConnect(request: NextRequest): Promise<Response> 
   if (creator instanceof Response) return creator;
   const { store, ref, email, origin } = creator;
   const back = (query: string) => away(origin, studioPath(store, query, "calendar"));
+  if (store.period?.funded === true && !await reservePaidResourceWindow(store)) return back("cal=limited");
   const named = store.statsId ? store : await ensureStatsId(ref);
   if (!named?.statsId || !store.sid) return back("cal=error");
   if (!(await withinService("meet-start", `${named.statsId}|${email}`, STARTS_PER_TEN_MINUTES, 600, named))) return back("cal=limited");
