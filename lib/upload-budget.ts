@@ -1,3 +1,4 @@
+import {reservePaidResourceWindow} from '@/lib/contract-resource-window';
 import { isRedisConfigured, redisPipeline } from '@/lib/redis';
 import { standingOf } from '@/lib/plan-standing';
 import { type AllowanceWindow, type WindowFields, allowanceWindow } from '@/lib/allowance-window';
@@ -161,7 +162,8 @@ async function reserve(statsId: string, scope: UploadBudgetScope, action: 'open'
 export async function reserveStoreUpload(store: UploadStore, bytes: number, backend: UploadBackend, policy: UploadBudgetPolicy|null=currentUploadBudgetPolicy()): Promise<boolean> {
   // Direct Blob/Bunny grants do not establish the same revocable, size-bound
   // session contract. Keep them closed until that provider path is proven.
-  if(backend!=='r2')return false;
+  if(backend!=='r2'||!Number.isSafeInteger(bytes)||bytes<=0)return false;
+  if(store?.period?.funded===true&&!(await reservePaidResourceWindow(store)))return false;
   return !!store?.statsId && reserve(store.statsId,uploadScopeFor(store),'open',bytes,policy,allowanceWindow(store));
 }
 /** Signing requests share the store's monthly control ceiling.
@@ -169,5 +171,6 @@ export async function reserveStoreUpload(store: UploadStore, bytes: number, back
  * per-open liability must include that work and month-boundary carryover.
  */
 export async function reserveUploadControl(store: UploadStore, policy: UploadBudgetPolicy|null=currentUploadBudgetPolicy()): Promise<boolean> {
+  if(store?.period?.funded===true&&!(await reservePaidResourceWindow(store)))return false;
   return !!store?.statsId && reserve(store.statsId,uploadScopeFor(store),'control',0,policy,allowanceWindow(store));
 }

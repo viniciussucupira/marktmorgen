@@ -40,11 +40,12 @@ export function testAliases(file,root,here){
   aliases['@/lib/ai-spend-policy']=join(here,'commercial-ai-approved-policy.ts');
   aliases['@/lib/upload-budget-policy']=join(here,'upload-budget-approved-policy.ts');
  }
- if(['contract-funding.test.ts','contract-routes.test.ts'].includes(file)){
+ if(['contract-funding.test.ts','contract-routes.test.ts','contract-resource-window.test.ts'].includes(file)){
   aliases['@/lib/redis']=join(here,'contract-funding-redis.ts');
   aliases['@/lib/ai-spend-policy']=join(here,'commercial-ai-approved-policy.ts');
   aliases['@/lib/upload-budget-policy']=join(here,'upload-budget-approved-policy.ts');
  }
+ if(file==='contract-resource-window.test.ts')aliases['@/lib/redis']=join(here,'contract-resource-redis.ts');
  if(file==='contract-routes.test.ts'){
   aliases['@/lib/contract-funding-rules']=join(here,'contract-funding-approved-policy.ts');
   aliases['@/lib/commercial-margin']=join(here,'contract-commercial-context.ts');
