@@ -6658,3 +6658,8 @@ Custos antes de operar:1EVAL18primeira/17repetida,JSON<=12288bytes,sem campo nov
 ### AB(a) — compatibilidade do simulador de ativação corrigida (24/10/2026)
 
 Head21ebe9e35f03fe6338d02110fd81c418514587ec, verify120878963958 falhou em13:02:00.889UTC/10:02:00.889Fortaleza: esbuild não encontrou contractFundingBinding no alias tests/contract-activation-billing.ts, agora alcançado transitivamente por email→contract-resource-window. Correção reexporta somente a função pura de hash da implementação real pelo caminho relativo, preservando simuladores de ativação, recusas e aprovações reais nulas. Nenhuma lógica de produção/guarda/teto é afrouxada. Executar suíte completa no novo head; não concluir com repetição de job isolado. Falha e evidência mantidas no histórico.
+
+
+### AB(a) — falha WebKit na transição entre salvar e remover coleções (24/10/2026)
+
+Head97fc07f0fe9b8d7ac684428fb4b9f271568320c9, job120879788296: em13:21:32.715UTC/10:21:32.715Fortaleza timeout do clique Save collections após edit/confirmed/390. Log mostra botão inicialmente instável e depois desativado; tests/e2e/collections-acknowledgment.mjs:38. O componente chama router.refresh após confirmação e o teste começava a fase seguinte antes de aguardar essa transição. Corrida de refresh é hipótese apoiada no fluxo, não rastreamento causal exclusivo capturado. Correção do teste aguarda rede ociosa após a confirmação e prontidão real (busyfalse/botão habilitado) antes da próxima fase; mantém42requisições interceptadas, todos os cenários de ACK, ambos tamanhos, limites e timeouts existentes. Não usa force, sleep fixo, remoção de caso ou repetição isolada. Nenhum TSX/produção alterado. Exigir suíte completa no novo head e confirmar o cenário WebKit original; falha fica histórica.

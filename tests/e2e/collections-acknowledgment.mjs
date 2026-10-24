@@ -30,6 +30,7 @@ export async function checkCollectionsAcknowledgment({browser,LOCAL,fixture,is})
    for(const phase of ["create","edit","remove"]){
     if(phase==="edit")await section.getByLabel("Collection 1: name",{exact:false}).fill("Guides  suivants");
     if(phase==="remove")await section.getByRole("button",{name:"Remove collection 1",exact:true}).click();
+    await page.waitForFunction(()=>{const root=document.querySelector("[data-collections-editor]");return root?.getAttribute("aria-busy")==="false"&&[...root.querySelectorAll("button")].some(button=>button.textContent.trim()==="Save collections"&&!button.disabled);});
     for(const scenario of cases){
      let release;const held=new Promise(resolve=>{release=resolve;});pending={scenario,phase,release:held};
      const name=phase+"/"+scenario.name+"/"+width;
@@ -43,6 +44,9 @@ export async function checkCollectionsAcknowledgment({browser,LOCAL,fixture,is})
      }finally{release();}
      await page.waitForFunction(()=>document.querySelector("[data-collections-editor]")?.getAttribute("aria-busy")==="false");
      if(scenario.confirmed){
+      // A confirmed save calls router.refresh(); finish that transition before
+      // starting the next edit/removal against this same editor.
+      await page.waitForLoadState("networkidle");
       is("collections confirmed without error "+name,await section.getByRole("alert").count(),0);
       is("collections saved baseline "+name,await section.getByRole("button",{name:"Save collections",exact:true}).isDisabled(),true);
       if(phase!=="remove")is("saved collection address keeps id "+name,(await section.getByRole("link").getAttribute("href")).endsWith("-abcd1234"),true);
