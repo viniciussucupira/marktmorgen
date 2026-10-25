@@ -437,6 +437,34 @@ async function main() {
     }
   }
 
+  part("Unknown annual pause eligibility is refused before scheduling or persistence");
+  {
+    const email="unknown-eligibility@example.com",id="sub_UnknownEligibility01";
+    subs[id]=subscription(id);
+    const store=await storeWith(email,"unknowneligibility",id);
+    const ref=storeRef(store),lastKey=`nl:pause:last:${ref}`;
+    const originalPipeline=pauseRedis.pipeline;
+    const replies:unknown[][]=[[],[undefined],[null],["0"],["1"],[true],[-1],[2],[0,"extra"],[1,"extra"]];
+    for(const reply of replies){
+      let otherCommands=0;
+      pauseRedis.pipeline=async(commands)=>{
+        if(commands.length===1&&commands[0][0]==="EXISTS"&&commands[0][1]===lastKey)return reply;
+        otherCommands+=commands.length;
+        return originalPipeline(commands);
+      };
+      try{
+        const before=created.length;emails.length=0;
+        const result=await pausePlan(store,1,NOW);
+        is("uncertain eligibility has no inferred unused year", result, {kind:"refused",reason:"standing"});
+        is("uncertain eligibility performs no subsequent Redis mutation",otherCommands,0);
+        is("uncertain eligibility does not schedule the provider stop",subs[id].cancel_at_period_end,false);
+        is("uncertain eligibility has no charge or notice",[created.length-before,emails.length],[0,0]);
+        const [record,last]=await originalPipeline([["GET",`nl:pause:${ref}`],["GET",lastKey]]);
+        is("uncertain eligibility leaves both pause and annual marker absent",[record,last],[null,null]);
+      }finally{pauseRedis.pipeline=originalPipeline;}
+    }
+  }
+
   part("A store that started again by hand");
   {
     subs.sub_ByHand000001 = subscription("sub_ByHand000001");
