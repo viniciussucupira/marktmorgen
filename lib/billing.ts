@@ -898,10 +898,17 @@ export async function listSubscriptions(
   if (status === "past_due") query.append("expand[]", "data.latest_invoice");
   if (startingAfter) query.set("starting_after", startingAfter);
   const page = await onPlatform("GET", `/subscriptions?${query}`);
-  return {
-    data: Array.isArray(page.data) ? (page.data as Record<string, unknown>[]) : [],
-    hasMore: page.has_more === true,
-  };
+  // An unreadable page is not an empty account or the end of pagination.
+  // Validate the whole bounded observation before any caller processes rows.
+  if (!page || typeof page !== "object" || Array.isArray(page) ||
+      !Array.isArray(page.data) || page.data.length > 100 ||
+      typeof page.has_more !== "boolean" || (page.has_more && page.data.length === 0) ||
+      page.data.some(row => !row || typeof row !== "object" || Array.isArray(row) ||
+        typeof row.id !== "string" || !SUBSCRIPTION_PATTERN.test(row.id)) ||
+      new Set(page.data.map(row => row.id)).size !== page.data.length) {
+    throw new Error("The subscription list page is not a complete bounded observation");
+  }
+  return { data: page.data as Record<string, unknown>[], hasMore: page.has_more };
 }
 
 export { periodEnd };
