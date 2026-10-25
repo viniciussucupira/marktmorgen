@@ -8630,3 +8630,14 @@ Referência primária conferida em 25/10/2026: https://docs.stripe.com/api/subsc
 Custos: nenhum GET/POST extra, retry automático, Redis, chave, campo, cópia, TTL ou armazenamento adicional. Incremento de operações por plano mensal/anual 0/0, sem tratar custo real total desconhecido como zero; validação constante de resposta já solicitada. Preços, limites, PLANS_ON_SALE=false, permissões e revisões reais nulas preservados. Custos completos BR/EUA/100% LLC e direitos continuam sujeitos à leitura mais onerosa e 60% líquido antes de operar.
 
 Limitação: isto protege a confirmação no helper e não completa o protocolo durável de pausa/reinício; o tratamento preexistente de falha incerta do stop em pausePlan ainda precisa preservar intenções/fase/ownership antes de apagar evidência, e o novo termo precisa de reserva distinta. Não completa AB(a) nem libera EI1/363.
+
+
+### Entrega funcional 253 — confirmação identificada de cancelamento
+
+[PR #1019](https://github.com/viniciussucupira/marktmorgen/pull/1019) incorporado em **25/10/2026 09:32:33 Fortaleza (12:32:33Z)**. Head testado `1bca8beca704f5740e4d3a5e7af5c85ba559712d`, árvore `0bb8c5c7c6295185d2fb3375651b886d37f673ed`, merge `70e74034887bede704ce6fe80e110dbb81c75335`, pais ordenados `2733ed98e8cc0592684056ed57e4265b3f93253a` e head testado; árvore de incorporação idêntica à testada. Base documental #1018 incorporada primeiro, sem perda da prova 252.
+
+**24/24 verificações completas aprovadas no head**. Log verify job **121163579509**: novo helper real de cancelamento com 19 verificações do runner mais assert.rejects para formas/identidades/status ambíguos, falta de confirmação nas duas direções e cancel_at restante; casos válidos e cinco estados inativos explícitos preservados. Resultado geral Everything passing, testes de pausa existentes intactos; nenhum provedor real/subprocesso local.
+
+Produção **READY 2026-10-25T12:33:23.117Z**, deployment `dpl_HHAQgFU3573Xpcmt15UGejy69hRz`, metadata SHA exato do merge e alias **marktmorgen.com**. `/`, `/platform`, `/pricing`, `/mission`, `/library`: **200** e marcador literal do deployment exato. Contador somente após essas provas: **252 → 253**, próximo **254**. Este registro documental não é entrega funcional.
+
+Custos/limites da seção anterior mantidos: nenhuma operação/chave/campo/cópia/TTL adicional, incremento de operações mensal/anual 0/0 por plano sem custo real desconhecido virar zero; nenhuma certificação de margem. Confirmação do helper não completa pausa/reinício durável, reserva do novo termo, renovações/liquidação ou AB(a). PLANS_ON_SALE=false, revisões reais nulas, três flags incompletas, preços/direitos/permissões preservados; EI1/363 após AB(a) inteiro.
