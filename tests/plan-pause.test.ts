@@ -21,6 +21,7 @@ import { onBreak, pauseEmail, pauseOf, pausePlan, pauseRefusal, runBreaks, undoP
 import { addPeriods } from "@/lib/plans";
 import { done, is, part } from "./check";
 import { paidPeriod } from "./billing-period-fixture";
+import { PLAN_PRICES } from "@/lib/plan";
 import { store as pauseRedis } from "./redis-stub";
 
 process.env.STRIPE_SECRET_KEY = "sk_test_plan_pause_only";
@@ -32,7 +33,7 @@ const emails: { to: string; subject: string; text: string }[] = [];
 const subs: Record<string, Record<string, unknown>> = {};
 const created: URLSearchParams[] = [];
 let keepScheduledStop = false;
-let createAnswer: "ok" | "declined" | "down" | "otherCustomer" | "otherTier" | "yearly" | "trial" | "pastDue" = "ok";
+let createAnswer: "ok" | "declined" | "down" | "otherCustomer" | "otherTier" | "yearly" | "trial" | "pastDue" | "otherPrice" | "amount" | "currency" | "intervalCount" | "extraItem" | "intervalMismatch" = "ok";
 
 function subscription(id: string, over: Record<string, unknown> = {}): Record<string, unknown> {
   return {
@@ -67,7 +68,23 @@ globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) =>
       created.push(body);
       if (createAnswer === "declined") return new Response(JSON.stringify({ error: { code: "card_declined", message: "Your card was declined." } }), { status: 402 });
       if (createAnswer === "down") return new Response(JSON.stringify({ error: { type: "api_error", message: "down" } }), { status: 500 });
-      const fresh = subscription("sub_Restarted00001", { start_date: NOW, trial_end: null, customer: { id: body.get("customer"), email: "x@example.com" } });
+      const freshPrice = {
+        id: body.get("items[0][price]"), lookup_key: "nimbus_labs_creator_month",
+        currency: "usd", unit_amount: PLAN_PRICES.creator.month,
+        recurring: { interval: "month", interval_count: 1 },
+      };
+      if (createAnswer === "otherPrice") freshPrice.id = "price_NotRequested01";
+      if (createAnswer === "amount") freshPrice.unit_amount += 1;
+      if (createAnswer === "currency") freshPrice.currency = "eur";
+      if (createAnswer === "intervalCount") freshPrice.recurring.interval_count = 2;
+      if (createAnswer === "intervalMismatch") freshPrice.recurring.interval = "year";
+      const items = [{ current_period_end: NOW + 10 * DAY, price: freshPrice }];
+      if (createAnswer === "extraItem") items.push({ ...items[0] });
+      const fresh = subscription("sub_Restarted00001", {
+        start_date: NOW, trial_end: null,
+        customer: { id: body.get("customer"), email: "x@example.com" },
+        items: { data: items },
+      });
       if (createAnswer === "otherCustomer") fresh.customer = { id: "cus_OtherRestart01", email: "other@example.com" };
       if (createAnswer === "otherTier" || createAnswer === "yearly") {
         fresh.items = { data: [{ current_period_end: NOW + 10 * DAY, price: {
@@ -252,7 +269,7 @@ async function main() {
 
   part("A restart response must match the requested paid monthly plan");
   {
-    const mismatches = ["otherCustomer", "otherTier", "yearly", "trial", "pastDue"] as const;
+    const mismatches = ["otherCustomer", "otherTier", "yearly", "trial", "pastDue", "otherPrice", "amount", "currency", "intervalCount", "extraItem", "intervalMismatch"] as const;
     for (const [index, answer] of mismatches.entries()) {
       const id = `sub_Mismatch0000${index}`;
       const email = `restart-mismatch-${index}@example.com`;

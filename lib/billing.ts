@@ -680,9 +680,10 @@ export async function restartPlan(input: {
 }): Promise<StartedSubscription> {
   if (!CUSTOMER_PATTERN.test(input.customerId)) throw new Error("not a customer of ours");
   if (!/^(pm|card|src)_[A-Za-z0-9]{6,64}$/.test(input.paymentMethod)) throw new Error("no card to charge");
+  const priceId = await ensurePrice(input.tier, "month");
   const body = new URLSearchParams({
     customer: input.customerId,
-    "items[0][price]": await ensurePrice(input.tier, "month"),
+    "items[0][price]": priceId,
     default_payment_method: input.paymentMethod,
     off_session: "true",
     payment_behavior: "error_if_incomplete",
@@ -697,6 +698,13 @@ export async function restartPlan(input: {
   // A mismatched observation is uncertain billing evidence, never a card refusal.
   if (subscription.status !== "active" || started.customerId !== input.customerId || started.tier !== input.tier || started.cycle !== "month" || started.trialEnds !== 0) {
     throw new Error("the restarted plan does not match the requested customer and paid monthly plan");
+  }
+  const items = subscription.items as { data?: { price?: Record<string, unknown> }[] } | undefined;
+  const price = items?.data?.[0]?.price;
+  const recurring = price?.recurring as { interval?: unknown; interval_count?: unknown } | undefined;
+  if (items?.data?.length !== 1 || price?.id !== priceId || price?.currency !== "usd" ||
+      price?.unit_amount !== PLAN_PRICES[input.tier].month || recurring?.interval !== "month" || recurring?.interval_count !== 1) {
+    throw new Error("the restarted plan price does not match the requested monthly charge");
   }
   return started;
 }
