@@ -41,11 +41,23 @@ try{
    // Two rendering frames, not a claim that this represents a real-user percentile.
    await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
    const before=await page.evaluate(()=>({lcp:window.__renderLab.lcp,cls:window.__renderLab.cls,shifts:window.__renderLab.shifts}));
+   // Browser counters identify whether a slow native disclosure spent its time
+   // in script, layout or style. Read outside the measured pointer-to-paint
+   // interval; preserve every cold sample and the existing strict thresholds.
+   await cdp.send("Performance.enable");
+   const metricNames=["TaskDuration","ScriptDuration","LayoutDuration","RecalcStyleDuration","LayoutCount","RecalcStyleCount","JSHeapUsedSize"];
+   const metrics=async()=>Object.fromEntries((await cdp.send("Performance.getMetrics")).metrics.filter(metric=>metricNames.includes(metric.name)).map(metric=>[metric.name,metric.value]));
+   const browserWork=[];
    const control=page.locator("main summary,main button[aria-expanded]").first();
-   if(await control.count())for(let interaction=0;interaction<3;interaction++){await control.click();await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));}
+   if(await control.count())for(let interaction=0;interaction<3;interaction++){
+    const start=await metrics();
+    await control.click();await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+    const end=await metrics();
+    browserWork.push({interaction:interaction+1,delta:Object.fromEntries(metricNames.map(name=>[name,(end[name]??0)-(start[name]??0)])),heapBytes:end.JSHeapUsedSize??null});
+   }
    const interaction=await page.evaluate(()=>{const state=window.__renderLab;return {paint:state.paint,event:state.events,longTasks:state.longTasks,animationFrames:state.animationFrames,inputTargets:state.inputTargets};});
    const interactionMs=interaction.paint.length?Math.max(...interaction.paint,...interaction.event.map(item=>item.duration)):null;
-   const result={label,version,path,sample,viewport:390,cpuSlowdown:4,latencyMs:150,downloadMbps:1.6,cache:"cold",thirdPartyRequests:"blocked",apiWrites:writes,lcpMs:before.lcp,cls:before.cls,interactionToPaintMs:interactionMs,eventTiming:interaction.event,longTasks:interaction.longTasks,longAnimationFrames:interaction.animationFrames,inputTargets:interaction.inputTargets,fieldINP:null,layoutShiftSources:before.shifts};
+   const result={label,version,path,sample,viewport:390,cpuSlowdown:4,latencyMs:150,downloadMbps:1.6,cache:"cold",thirdPartyRequests:"blocked",apiWrites:writes,lcpMs:before.lcp,cls:before.cls,interactionToPaintMs:interactionMs,eventTiming:interaction.event,longTasks:interaction.longTasks,longAnimationFrames:interaction.animationFrames,inputTargets:interaction.inputTargets,fieldINP:null,browserWork,layoutShiftSources:before.shifts};
    result.targets={lcp:typeof before.lcp==="number"&&before.lcp<2500,cls:before.cls<0.1,interaction:interactionMs!==null&&interactionMs<200};
    console.log("MOBILE_RENDER_MEASUREMENT:"+JSON.stringify(result));results.push(result);
    if(writes||!Number.isFinite(before.lcp)||!Number.isFinite(before.cls)||interactionMs===null)failed=true;
