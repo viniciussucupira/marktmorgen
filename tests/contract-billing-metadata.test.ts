@@ -14,7 +14,7 @@ test('pending plan changes retain a separate funding reference without replacing
 test('funded return reuses the provider read and adopts no rights until its receipt is acknowledged',async()=>{
  const old=globalThis.fetch,created=Math.floor(Date.now()/1000);
  const session={mode:'subscription',customer:'cus_Test000001',subscription:'sub_Test000001',metadata:{store:'harbor',funding_grant:'ctr_metadata',funding_review:'test_only'}};
- const subscription={id:'sub_Test000001',customer:'cus_Test000001',created,status:'active',metadata:{...session.metadata},items:{data:[{current_period_start:created,current_period_end:created+30*86400,price:{lookup_key:'nimbus_creator_month',unit_amount:6900,currency:'usd',recurring:{interval:'month',interval_count:1}}}]}};
+ const subscription={id:'sub_Test000001',customer:'cus_Test000001',created,status:'active',metadata:{...session.metadata},items:{data:[{quantity:1,current_period_start:created,current_period_end:created+30*86400,price:{lookup_key:'nimbus_creator_month',unit_amount:6900,currency:'usd',recurring:{interval:'month',interval_count:1}}}]}};
  let reads=0,writes=0;globalThis.fetch=async(input,init)=>{reads++;if(init?.method==='POST')writes++;return Response.json(new URL(String(input)).pathname.includes('/checkout/sessions/')?session:subscription);};
  activationObservations.calls.length=0;activationObservations.accept=false;
  try{
@@ -28,7 +28,7 @@ test('funded return reuses the provider read and adopts no rights until its rece
 test('foreign ownership, currency, interval or funding references never reach activation',async()=>{
  const old=globalThis.fetch,created=Math.floor(Date.now()/1000);
  const session={mode:'subscription',customer:'cus_Test000001',subscription:'sub_Test000001',metadata:{store:'harbor',funding_grant:'ctr_metadata',funding_review:'test_only'}};
- const base={id:'sub_Test000001',customer:'cus_Test000001',created,status:'active',metadata:{...session.metadata},items:{data:[{current_period_start:created,current_period_end:created+30*86400,price:{lookup_key:'nimbus_creator_month',unit_amount:6900,currency:'usd',recurring:{interval:'month',interval_count:1}}}]}};
+ const base={id:'sub_Test000001',customer:'cus_Test000001',created,status:'active',metadata:{...session.metadata},items:{data:[{quantity:1,current_period_start:created,current_period_end:created+30*86400,price:{lookup_key:'nimbus_creator_month',unit_amount:6900,currency:'usd',recurring:{interval:'month',interval_count:1}}}]}};
  try{
   for(const change of [{customer:'cus_Other001'},{metadata:{...session.metadata,store:'other'}},{metadata:{...session.metadata,funding_grant:'ctr_other'}},{pending_update:{expires_at:created+100}},{items:{data:[{...base.items.data[0],price:{...base.items.data[0].price,currency:'eur'}}]}},{items:{data:[{...base.items.data[0],price:{...base.items.data[0].price,recurring:{interval:'month',interval_count:2}}}]}},{items:{data:[{...base.items.data[0],price:{...base.items.data[0].price,unit_amount:1}}]}}]){
    activationObservations.calls.length=0;globalThis.fetch=async(input)=>Response.json(new URL(String(input)).pathname.includes('/checkout/sessions/')?session:{...base,...change});
@@ -41,7 +41,7 @@ test('missing session funding fields cannot downgrade a funded subscription to l
  const old=globalThis.fetch,created=Math.floor(Date.now()/1000);
  const references={funding_grant:'ctr_metadata',funding_review:'test_only'};
  const baseSession={mode:'subscription',customer:'cus_Test000001',subscription:'sub_Test000001',metadata:{store:'harbor',...references}};
- const subscription={id:'sub_Test000001',customer:'cus_Test000001',created,status:'active',metadata:{store:'harbor',...references},items:{data:[{current_period_start:created,current_period_end:created+30*86400,price:{lookup_key:'nimbus_creator_month',unit_amount:6900,currency:'usd',recurring:{interval:'month',interval_count:1}}}]}};
+ const subscription={id:'sub_Test000001',customer:'cus_Test000001',created,status:'active',metadata:{store:'harbor',...references},items:{data:[{quantity:1,current_period_start:created,current_period_end:created+30*86400,price:{lookup_key:'nimbus_creator_month',unit_amount:6900,currency:'usd',recurring:{interval:'month',interval_count:1}}}]}};
  activationObservations.accept=true;
  try{
   for(const metadata of [{store:'harbor'},{store:'harbor',funding_grant:references.funding_grant},{store:'harbor',funding_review:references.funding_review}]){
@@ -55,7 +55,7 @@ test('missing session funding fields cannot downgrade a funded subscription to l
 test('only two unmarked provider records keep the legacy return path; missing or unavailable subscriptions grant no rights',async()=>{
  const old=globalThis.fetch,created=Math.floor(Date.now()/1000);
  const session={mode:'subscription',customer:'cus_Test000001',subscription:'sub_Test000001',metadata:{store:'harbor'}};
- const subscription={id:'sub_Test000001',customer:'cus_Test000001',created,status:'active',metadata:{store:'harbor'},items:{data:[{current_period_start:created,current_period_end:created+30*86400,price:{lookup_key:'nimbus_creator_month',unit_amount:6900,currency:'usd',recurring:{interval:'month',interval_count:1}}}]}};
+ const subscription={id:'sub_Test000001',customer:'cus_Test000001',created,status:'active',metadata:{store:'harbor'},items:{data:[{quantity:1,current_period_start:created,current_period_end:created+30*86400,price:{lookup_key:'nimbus_creator_month',unit_amount:6900,currency:'usd',recurring:{interval:'month',interval_count:1}}}]}};
  try{
   for(const status of [200,404,503]){
    let reads=0,writes=0;activationObservations.calls.length=0;
@@ -69,7 +69,7 @@ test('only two unmarked provider records keep the legacy return path; missing or
 test('missed-return observations and subscription search cannot adopt a funded plan before receipt acknowledgement',async()=>{
  const old=globalThis.fetch,created=Math.floor(Date.now()/1000);
  const owner={...store,stripeCustomerId:'cus_Test000001',previousHandles:[],releasedHandles:[]} as Store;
- const subscription={id:'sub_Test000001',customer:{id:'cus_Test000001',email:owner.email},created,status:'active',metadata:{store:'harbor',funding_grant:'ctr_metadata',funding_review:'test_only'},items:{data:[{current_period_start:created,current_period_end:created+30*86400,price:{lookup_key:'nimbus_creator_month',unit_amount:6900,currency:'usd',recurring:{interval:'month',interval_count:1}}}]}};
+ const subscription={id:'sub_Test000001',customer:{id:'cus_Test000001',email:owner.email},created,status:'active',metadata:{store:'harbor',funding_grant:'ctr_metadata',funding_review:'test_only'},items:{data:[{quantity:1,current_period_start:created,current_period_end:created+30*86400,price:{lookup_key:'nimbus_creator_month',unit_amount:6900,currency:'usd',recurring:{interval:'month',interval_count:1}}}]}};
  let reads=0,writes=0;globalThis.fetch=async(_input,init)=>{reads++;if(init?.method!=='GET')writes++;return Response.json({data:[subscription]});};
  try{
   activationObservations.calls.length=0;activationObservations.accept=false;
@@ -151,7 +151,7 @@ test('a switch grant for another or missing source subscription makes no provide
 
 function switchObservation(g:ContractGrant){
  const created=Math.floor(Date.now()/1000)-86400,now=Math.floor(Date.now()/1000);
- return{id:'sub_Test000001',created,customer:'cus_Test000001',status:'active',metadata:{store:'harbor',funding_grant:'ctr_source',funding_review:g.reviewId,funding_pending_grant:g.id,funding_pending_review:g.reviewId},items:{data:[{id:'si_test',current_period_start:now,current_period_end:now+365*86400,price:{lookup_key:'nimbus_creator_year',unit_amount:69000,currency:'usd',recurring:{interval:'year',interval_count:1}}}]}};
+ return{id:'sub_Test000001',created,customer:'cus_Test000001',status:'active',metadata:{store:'harbor',funding_grant:'ctr_source',funding_review:g.reviewId,funding_pending_grant:g.id,funding_pending_review:g.reviewId},items:{data:[{id:'si_test',quantity:1,current_period_start:now,current_period_end:now+365*86400,price:{lookup_key:'nimbus_creator_year',unit_amount:69000,currency:'usd',recurring:{interval:'year',interval_count:1}}}]}};
 }
 test('a paid switch cannot report new rights until its durable funding activation is acknowledged',async()=>{
  const old=globalThis.fetch,g=grant('switch'),updated=switchObservation(g),writes:URLSearchParams[]=[];
@@ -224,7 +224,7 @@ test('a foreign or malformed switch result cannot finalize metadata or request a
 
 test('a marked checkout read requires its store and exact current funded phase proof too',async()=>{
  const old=globalThis.fetch,created=Math.floor(Date.now()/1000),own={...store,stripeCustomerId:'cus_Test000001',previousHandles:[],releasedHandles:[]} as Store;
- const raw={id:'sub_Test000001',customer:'cus_Test000001',created,status:'active',metadata:{store:'harbor',funding_grant:'ctr_metadata',funding_review:'test_only'},items:{data:[{current_period_start:created,current_period_end:created+30*86400,price:{lookup_key:'nimbus_creator_month',unit_amount:6900,currency:'usd',recurring:{interval:'month',interval_count:1}}}]}};
+ const raw={id:'sub_Test000001',customer:'cus_Test000001',created,status:'active',metadata:{store:'harbor',funding_grant:'ctr_metadata',funding_review:'test_only'},items:{data:[{quantity:1,current_period_start:created,current_period_end:created+30*86400,price:{lookup_key:'nimbus_creator_month',unit_amount:6900,currency:'usd',recurring:{interval:'month',interval_count:1}}}]}};
  let reads=0;globalThis.fetch=async()=>{reads++;return Response.json(raw);};activationObservations.calls.length=0;activationObservations.accept=false;
  try{
   assert.equal((await readSubscription(raw.id)).state,'unknown');assert.equal(activationObservations.calls.length,0);
@@ -257,4 +257,27 @@ test('checkout and plan-switch grants cannot reach a provider before their issui
   await assert.rejects(switchPlan('sub_Test000001',{tier:'creator',cycle:'year'},change),/Funding grant/);
   assert.equal(calls,0);
  }finally{globalThis.fetch=old;}
+});
+
+
+test('funded return, missed return and switch reject unknown or multiple units before activation',async()=>{
+ const old=globalThis.fetch,created=Math.floor(Date.now()/1000);
+ const session={mode:'subscription',customer:'cus_Test000001',subscription:'sub_Test000001',metadata:{store:'harbor',funding_grant:'ctr_metadata',funding_review:'test_only'}};
+ const own={...store,stripeCustomerId:'cus_Test000001',previousHandles:[],releasedHandles:[]} as Store;
+ const raw={id:'sub_Test000001',customer:'cus_Test000001',created,status:'active',metadata:{...session.metadata},items:{data:[{quantity:1,current_period_start:created,current_period_end:created+30*86400,price:{lookup_key:'nimbus_creator_month',unit_amount:6900,currency:'usd',recurring:{interval:'month',interval_count:1}}}]}};
+ activationObservations.accept=true;switchActivationObservations.accept=true;
+ try{
+  for(const quantity of [undefined,0,2,'1']){
+   const invalid={...raw,items:{data:[{...raw.items.data[0],quantity}]}};
+   activationObservations.calls.length=0;switchActivationObservations.calls.length=0;
+   let reads=0;
+   globalThis.fetch=async(input,init)=>{assert.notEqual(init?.method,'POST');reads++;return Response.json(new URL(String(input)).pathname.includes('/checkout/sessions/')?session:invalid);};
+   assert.equal(await readStartedSubscription(own,'cs_test_Activation001'),null);
+   assert.equal(reads,2);assert.equal(activationObservations.calls.length,0);
+   assert.equal(await startedFromObservedSubscription(own,invalid),null);assert.equal(reads,2);
+   const switched=switchObservation(grant('switch'));
+   assert.equal(await startedFromObservedSubscription(own,{...switched,items:{data:[{...switched.items.data[0],quantity}]}}),null);
+   assert.equal(activationObservations.calls.length,0);assert.equal(switchActivationObservations.calls.length,0);
+  }
+ }finally{globalThis.fetch=old;activationObservations.accept=false;switchActivationObservations.accept=false;}
 });

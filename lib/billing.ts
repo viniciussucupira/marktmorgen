@@ -441,10 +441,10 @@ export async function readStartedSubscription(
     if(meta?.store!==store.handle||meta?.funding_grant!==metadata.funding_grant||meta?.funding_review!==metadata.funding_review)return null;
     state=stateOf(subscription);
     if(state.state!=="active"||state.changePending)return null;
-    const items=subscription.items as {data?:{price?:Record<string,unknown>}[]}|undefined;
+    const items=subscription.items as {data?:{quantity?:unknown;price?:Record<string,unknown>}[]}|undefined;
     const price=items?.data?.[0]?.price;
     const recurring=price?.recurring as {interval?:unknown;interval_count?:unknown}|undefined;
-    if(items?.data?.length!==1||price?.currency!=="usd"||recurring?.interval!==state.cycle||recurring?.interval_count!==1||state.amountCents!==PUBLISHED_PLAN_PRICES[state.tier][state.cycle])return null;
+    if(items?.data?.length!==1||items.data[0].quantity!==1||price?.currency!=="usd"||recurring?.interval!==state.cycle||recurring?.interval_count!==1||state.amountCents!==PUBLISHED_PLAN_PRICES[state.tier][state.cycle])return null;
     const began=state.trialing?subscription.trial_start:periodStart(subscription);
     const until=state.trialing?subscription.trial_end:periodEnd(subscription,false);
     if(!(await activateCheckoutContract({
@@ -956,9 +956,9 @@ export function hasContractFunding(subscription:Record<string,unknown>):boolean{
 async function activateObservedSwitch(statsId:string,grantId:string,reviewId:string,subscriptionId:string,subscription:Record<string,unknown>):Promise<boolean>{
  const state=stateOf(subscription);
  if(subscription.id!==subscriptionId||state.state!=='active'||state.changePending)return false;
- const items=subscription.items as {data?:{price?:Record<string,unknown>}[]}|undefined;
+ const items=subscription.items as {data?:{quantity?:unknown;price?:Record<string,unknown>}[]}|undefined;
  const price=items?.data?.[0]?.price,recurring=price?.recurring as {interval?:unknown;interval_count?:unknown}|undefined;
- if(items?.data?.length!==1||price?.currency!=='usd'||recurring?.interval!==state.cycle||recurring?.interval_count!==1||state.amountCents!==PUBLISHED_PLAN_PRICES[state.tier][state.cycle])return false;
+ if(items?.data?.length!==1||items.data[0].quantity!==1||price?.currency!=='usd'||recurring?.interval!==state.cycle||recurring?.interval_count!==1||state.amountCents!==PUBLISHED_PLAN_PRICES[state.tier][state.cycle])return false;
  return activateSwitchContract({statsId,grantId,reviewId,subscriptionId,tier:state.tier,cycle:state.cycle,createdSeconds:subscription.created as number,trialing:state.trialing,periodStartSeconds:(state.trialing?subscription.trial_start:periodStart(subscription)) as number,periodEndSeconds:(state.trialing?subscription.trial_end:periodEnd(subscription,false)) as number});
 }
 export async function startedFromObservedSubscription(store:Store,subscription:Record<string,unknown>):Promise<StartedSubscription|null>{
@@ -976,10 +976,10 @@ export async function startedFromObservedSubscription(store:Store,subscription:R
  if(!ownedBy(store,subscription)||meta?.store!==store.handle||typeof meta.funding_grant!=="string"||typeof meta.funding_review!=="string")return null;
  const state=stateOf(subscription);
  if(state.state!=="active"||state.changePending)return null;
- const items=subscription.items as {data?:{price?:Record<string,unknown>}[]}|undefined;
+ const items=subscription.items as {data?:{quantity?:unknown;price?:Record<string,unknown>}[]}|undefined;
  const price=items?.data?.[0]?.price;
  const recurring=price?.recurring as {interval?:unknown;interval_count?:unknown}|undefined;
- if(items?.data?.length!==1||price?.currency!=="usd"||recurring?.interval!==state.cycle||recurring?.interval_count!==1||state.amountCents!==PUBLISHED_PLAN_PRICES[state.tier][state.cycle])return null;
+ if(items?.data?.length!==1||items.data[0].quantity!==1||price?.currency!=="usd"||recurring?.interval!==state.cycle||recurring?.interval_count!==1||state.amountCents!==PUBLISHED_PLAN_PRICES[state.tier][state.cycle])return null;
  const began=state.trialing?subscription.trial_start:periodStart(subscription);
  const until=state.trialing?subscription.trial_end:periodEnd(subscription,false);
  if(!(await activateCheckoutContract({
