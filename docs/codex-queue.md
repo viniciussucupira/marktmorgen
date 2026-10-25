@@ -9000,3 +9000,34 @@ No push main, oito classificadores/provas executaram nove regressões documentai
 Medição pela API de jobs GitHub em 25/10/2026: provas Linux de 9, 9, 9, 12, 12, 12, 11 e 9 segundos, 83 segundos agregados (1,3833 minuto). Reserva conservadora pelo arredondamento separado: oito minutos Linux. Antes: repetição integral no main, com referência aproximada de 153 minutos agregados informada pelo dono; sem comparação pareada independente ou extrapolação de mês/ano/fatura. Resultado de uma execução, sem desconto no modelo de produto e sem certificação de margem.
 
 Publicação técnica `dpl_229MmqqH3tTVAVzJoggKRVrL4yjP` READY em 25/10/2026, SHA do merge e domínio marktmorgen.com confirmados; /, /platform, /pricing, /mission e /library responderam 200 com data-dpl-id exato. Mudança da esteira, não entrega funcional: contador 254 preservado. PV8(c), execução completa diária e mapa testado de dependências permanecem pendentes. Nenhum preço, limite visível, imposto, reserva ou trava foi alterado.
+
+
+## AC — Custos completos do débito em conta e imposto da Califórnia sobre SaaS (25/10/2026)
+
+Solicitação do dono (25/10/2026, 19h10, horário de Fortaleza).
+Estado inicial: na fila.
+
+Execução conjunta com 431 [PV1](m) e 432 [PV2](b), sem duplicar os mecanismos, unidades ou cálculos que eles já pedem. AC1 detalha os custos do débito e AC2 complementa os perfis da Califórnia de PV1(k). Preservar a etapa AB(a) em andamento e a precedência já aprovada; este registro não antecipa implementação nem abre vendas. Reutilizar 331 [RC1], lib/receiving-costs.ts, docs/tax-uncertainty.md e os modelos canônicos.
+
+Pedidos repetidos (23/10/2026) aplicados antes de gravar: continuidade lida primeiro; main031bc3c0e6fd5b0000b4fab3c88fc39dbb4ba4fc, conteúdo dos 11 PRs abertos, inventário de 590 refs codex/* e conteúdo das filas nos sete ramos recentes PV/CI/BV/TM consultados, total de 18 heads distintos. Seção/data/hora, etiquetas AC1/AC2 e conteúdo específico ausentes. Maior item canônico435[PV5]; acrescentar somente436[AC1] e437[AC2], sem renumerar anteriores. A relação com PV1(m)/PV2(b) é um detalhamento, não segunda implementação. Revalidar heads e fontes na execução.
+
+436. [AC1] Débito em conta com todos os custos e verificação sem tarifa.
+Estado: na fila.
+(a) Conferir na página oficial e datada de preços do Stripe todas as tarifas do débito ACH: percentual e teto, verificação instantânea da conta, verificação por microdepósitos, débito que falha, contestação e liquidação rápida. Registrar cada uma em lib/receiving-costs.ts com a fonte e a data; nenhuma tarifa digitada fora dali.
+(b) Incluir no pior mês de cada cliente pago por débito: a verificação da conta (uma vez por cliente, no primeiro período), um débito que falha antes do que dá certo, a contestação pela reserva existente e o Stripe Tax pela API do item331[RC1].
+(c) Verificar a conta bancária por microdepósitos quando a fonte oficial confirmar que não há tarifa; usar a verificação instantânea somente se o custo dela couber na margem do cliente. Nenhum período começa antes do débito confirmado, como PV1(m) já exige.
+(d) Calcular, por plano e período (mês, bloco de3meses, ano), se o débito mantém60% com esses custos; oferecer somente os períodos que mantêm. Pelas contas do dono, o Store mensal não mantém num mês com verificação e uma falha; confirmar no código e, se não mantiver, oferecer ao Store o débito somente em blocos de3meses ou no ano. O cálculo informado é hipótese a confirmar, não resultado certificado; se nenhuma duração passar, não oferecer o meio. Preservar preços e direitos existentes, sem desconto/acréscimo por duração.
+
+437. [AC2] Imposto da Califórnia sobre SaaS a partir de1ºde janeiro de2027.
+Estado: na fila.
+(a) Conferir em fonte oficial datada (texto da lei SB122, Stats.2026,ch.23, assinada em29/06/2026, e as regras da CDTFA: Regulations1600,1600.1,1600.2,1600.3 e1502.2) a tributação de SaaS e produtos digitais na Califórnia a partir de01/01/2027, a alíquota máxima com os impostos locais e o limite de vendas a partir do qual uma empresa de fora precisa se registrar e cobrar.
+(b) A partir de01/01/2027, no perfil de cliente da Califórnia, somar ao preço a maior alíquota estadual e local aplicável, junto com os13,3% sobre o lucro já considerados, e calcular a taxa do pagamento sobre o valor realmente cobrado. Atualizar docs/tax-uncertainty.md, os perfis de PV1(k), as tabelas de docs/margin-alignment-2026-10-18.md e os testes; dúvida fica na leitura com mais imposto.
+(c) Verificar também o efeito sobre as vendas dos criadores como fornecedor presumido (questões20 e23a27 de docs/tax-uncertainty.md), sem construir nada novo além do registro e do cálculo.
+
+A referência legislativa, a data, o alcance, as regras e as alíquotas acima são os pontos de investigação fornecidos pelo dono; este registro NÃO confirma existência, vigência ou aplicabilidade. Na execução, conferir o texto oficial e documentar eventual divergência, sem presumir isenção nem reduzir a leitura onerosa. Não confundir imposto sobre consumo com13,3% sobre o lucro ou o limiar de registro de vendedor remoto; custos e impostos efetivamente aplicáveis entram separadamente, sem duplicar a mesma incidência. Nenhuma alteração tributária automática ou oferta de pagamento é autorizada só por esta inclusão.
+
+REGRA DOS60% (AC1 eAC2): todo cliente pagante, isoladamente e usando100% dos direitos do plano no pior mês, e a empresa como um todo, mantêm margem real de lucro líquido mínima de60% sobre tudo o que é cobrado, depois de todos os custos e de todos os impostos, inclusive os brasileiros e o ISS de5%; pode ser maior, nunca menor. Leitura que dá mais imposto(docs/tax-uncertainty.md). Desconhecido reprova, nunca é zero. Todos os custos fixos da LLC pertencem ao Marktmorgen(FX275). Calcular os custos mensais/anuais e do primeiro período por plano/duração, com maiores preços pagos, tetos e reservas antes de operar, sem afirmar margem certificada.
+
+Proibido: mudar preços, dar desconto ou acréscimo por período, meio de pagamento ou país, cobrar tarifa extra do cliente, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, o tax gate, o art.9a ou a revisão comercial, afrouxar qualquer suposição de imposto, taxa ou reserva, oferecer forma de pagamento a quem não mantém60% nela, apagar conteúdo de criadores, apagar qualquer coisa da Hazelsong, criar contas, aceitar termos, contratar, pagar, registrar-se em órgão fiscal ou contatar terceiros. Somente testes sintéticos com o Stripe simulado.
+
+VR: só chamar de pronto o que estiver incorporado, publicado, conferido em marktmorgen.com e usado de ponta a ponta; relatar o estado exato e o que não foi verificado. Este registro apenas põe AC1/AC2 na fila; nenhuma tarifa, legislação, cálculo, integração, cobrança, margem ou disponibilidade foi verificada/implementada por ele. Não é entrega funcional e não incrementa o contador.
