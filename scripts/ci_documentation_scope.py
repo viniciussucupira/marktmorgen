@@ -1,5 +1,6 @@
 """PV8(a): conservatively classify documentation-only PRs; all uncertainty runs full CI."""
 import os
+from ci_full_tree_proof import can_reuse_main
 import re
 import subprocess
 from pathlib import PurePosixPath
@@ -52,6 +53,9 @@ def git_diff(base, head):
 if __name__ == "__main__":
     full = requires_full(os.environ.get("CI_EVENT", ""), os.environ.get("CI_BASE", ""),
                          os.environ.get("CI_HEAD", ""), git_diff)
+    if full and can_reuse_main():
+        full = False
+        print("Reused complete PR coverage for identical Git tree")
     value = "true" if full else "false"
     print("Full coverage required: " + value)
     with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
