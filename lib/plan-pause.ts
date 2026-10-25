@@ -79,6 +79,7 @@ const lastKey = (ref: string) => `nl:pause:last:${ref}`;
 const DUE = "nl:pause:due";
 const SUBSCRIPTION_ID = /^sub_[A-Za-z0-9]{6,64}$/;
 const CUSTOMER_ID = /^cus_[A-Za-z0-9]{6,64}$/;
+const PAYMENT_METHOD_ID = /^(pm|card|src)_[A-Za-z0-9]{6,64}$/;
 
 /** A break, as it is kept. Times in seconds. */
 export type PauseRecord = {
@@ -105,7 +106,7 @@ function parseRecord(raw: unknown): PauseRecord | null {
     if (
       typeof value.subscription !== "string" || !SUBSCRIPTION_ID.test(value.subscription) ||
       typeof value.customer !== "string" || !CUSTOMER_ID.test(value.customer) ||
-      typeof value.paymentMethod !== "string" || !/^(pm|card|src)_[A-Za-z0-9]{6,64}$/.test(value.paymentMethod) || !tier ||
+      typeof value.paymentMethod !== "string" || !PAYMENT_METHOD_ID.test(value.paymentMethod) || !tier ||
       typeof value.from !== "number" || !Number.isSafeInteger(value.from) || value.from <= 0 ||
       typeof value.until !== "number" || !Number.isSafeInteger(value.until) || value.until <= value.from ||
       typeof told !== "number" || !Number.isSafeInteger(told) || told < 0
@@ -228,7 +229,7 @@ export async function pausePlan(store: Store, months: PauseMonths, nowSeconds = 
   const paymentMethod = cardOf(subscription);
   // Without a card on the subscription there is nothing to start it again on,
   // and a break that cannot end by itself is a cancellation with a nicer name.
-  if (!CUSTOMER_ID.test(customer) || !paymentMethod) return { kind: "refused", reason: "card" };
+  if (!PAYMENT_METHOD_ID.test(paymentMethod)) return { kind: "refused", reason: "card" };
 
   const from = periodEnd(subscription, false);
   if (!from || from <= nowSeconds) return { kind: "refused", reason: "standing" };

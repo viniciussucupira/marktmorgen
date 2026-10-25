@@ -496,6 +496,51 @@ async function main() {
     await undoPause(store,NOW);
   }
 
+  part("An unusable payment method cannot create an unreadable pause");
+  {
+    const email="invalid-pause-card@example.com",id="sub_InvalidPauseCard01";
+    const store=await storeWith(email,"invalidpausecard",id);
+    const ref=storeRef(store);
+    const changes:Record<string,unknown>[]=[
+      {default_payment_method:"not_a_card"},
+      {default_payment_method:"pm_short"},
+      {default_payment_method:"pm_"+"a".repeat(65)},
+      {default_payment_method:{id:"not_a_card"}},
+      {default_payment_method:null,default_source:"not_a_card"},
+      {default_payment_method:null,default_source:42},
+      {default_payment_method:42},
+    ];
+    for(const change of changes){
+      subs[id]=subscription(id,change);
+      const originalPipeline=pauseRedis.pipeline;
+      let mutationCommands=0;
+      pauseRedis.pipeline=async(commands)=>{
+        mutationCommands+=commands.filter(command=>command[0]!=="EXISTS").length;
+        return originalPipeline(commands);
+      };
+      try{
+        const before=created.length;emails.length=0;
+        is("a payment method that cannot be read back is refused",await pausePlan(store,1,NOW),{kind:"refused",reason:"card"});
+        is("an unusable card creates no scheduling or annual writes",mutationCommands,0);
+        is("an unusable card does not stop the original subscription",subs[id].cancel_at_period_end,false);
+        is("an unusable card causes no charge or notice",[created.length-before,emails.length],[0,0]);
+        const [record,last]=await originalPipeline([["GET",`nl:pause:${ref}`],["GET",`nl:pause:last:${ref}`]]);
+        is("no unreadable pause or annual marker is persisted",[record,last],[null,null]);
+      }finally{pauseRedis.pipeline=originalPipeline;}
+    }
+    for(const change of [
+      {default_payment_method:{id:"pm_ExpandedCard01"}},
+      {default_payment_method:null,default_source:"card_LegacyCard01"},
+      {default_payment_method:null,default_source:"src_LegacySource01"},
+    ]){
+      subs[id]=subscription(id,change);
+      const result=await pausePlan(store,1,NOW);
+      is("supported expanded and legacy card identifiers remain usable",result.kind,"paused");
+      is("the successfully written pause can be read back",await pauseOf(store),result.kind==="paused"?result.record:null);
+      await undoPause(store,NOW);
+    }
+  }
+
   part("A store that started again by hand");
   {
     subs.sub_ByHand000001 = subscription("sub_ByHand000001");
