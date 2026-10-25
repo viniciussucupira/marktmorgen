@@ -133,7 +133,9 @@ export async function pauseOf(store: Pick<Store, "email" | "sid" | "extra">): Pr
 
 async function storedPauseAt(ref: string): Promise<{ record: PauseRecord | null; missing: boolean }> {
   if (!isRedisConfigured()) return { record: null, missing: true };
-  const [raw] = await redisPipeline([["GET", recordKey(ref)]]);
+  const reply = await redisPipeline([["GET", recordKey(ref)]]);
+  if (!Array.isArray(reply) || reply.length !== 1) return { record: null, missing: false };
+  const raw = reply[0];
   // Only an explicit Redis miss proves absence. Invalid or incomplete replies
   // must not authorize deletion of billing evidence.
   return { record: parseRecord(raw), missing: raw === null };
@@ -392,8 +394,15 @@ export async function confirmPause(store: Store, record: PauseRecord): Promise<v
 export async function runBreaks(nowSeconds = Math.floor(Date.now() / 1000)): Promise<{ told: number; restarted: number; failed: number; dropped: number }> {
   const counts = { told: 0, restarted: 0, failed: 0, dropped: 0 };
   if (!isRedisConfigured() || !isBillingConfigured()) return counts;
-  const [raw] = await redisPipeline([["ZRANGEBYSCORE", DUE, "-inf", String(nowSeconds + RESTART_NOTICE_DAYS * DAY), "LIMIT", "0", "200"]]);
-  const refs = Array.isArray(raw) ? (raw as string[]) : [];
+  const reply = await redisPipeline([["ZRANGEBYSCORE", DUE, "-inf", String(nowSeconds + RESTART_NOTICE_DAYS * DAY), "LIMIT", "0", "200"]]);
+  const raw = Array.isArray(reply) && reply.length === 1 ? reply[0] : null;
+  // The provider query is bounded to 200 distinct members. An ambiguous or
+  // over-limit observation cannot authorize per-store reads, charges or cleanup.
+  if (!Array.isArray(raw) || raw.length > 200 || raw.some(ref => typeof ref !== "string" || ref.length === 0) || new Set(raw).size !== raw.length) {
+    counts.failed += 1;
+    return counts;
+  }
+  const refs = raw as string[];
   for (const ref of refs) {
     const stored = await storedPauseAt(ref);
     const record = stored.record;
