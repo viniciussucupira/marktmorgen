@@ -784,14 +784,8 @@ export async function switchPlan(
   if (funding && (subscription.id !== subscriptionId || sourceItems?.data?.length !== 1 || sourceItems.data[0].quantity !== 1)) {
     throw new Error("The funded switch source must identify exactly one plan unit");
   }
-  const now = planOf(subscription);
-  if (funding) {
-    const sourcePrice = (subscription.items as { data: { price?: Record<string, unknown> }[] }).data[0].price;
-    const sourceRecurring = sourcePrice?.recurring as { interval?: unknown; interval_count?: unknown } | undefined;
-    if (sourcePrice?.currency !== "usd" || sourcePrice?.unit_amount !== PUBLISHED_PLAN_PRICES[now.tier][now.cycle] ||
-        sourceRecurring?.interval !== now.cycle || sourceRecurring?.interval_count !== 1) {
-      throw new Error("The funded switch source price is not the single reviewed plan interval");
-    }
+  function assertSourcePhase(): void {
+    if (!funding) return;
     const began = status === "trialing" ? subscription.trial_start : periodStart(subscription);
     const ends = status === "trialing" ? subscription.trial_end : periodEnd(subscription, false);
     const observedAt = Math.floor(Date.now() / 1000);
@@ -800,6 +794,17 @@ export async function switchPlan(
         began <= 0 || ends <= began || began > reservedAt || reservedAt > observedAt || ends <= observedAt) {
       throw new Error("The funded switch source phase does not cover its reservation and observation");
     }
+  }
+  assertSourcePhase();
+  const now = planOf(subscription);
+  if (funding) {
+    const sourcePrice = (subscription.items as { data: { price?: Record<string, unknown> }[] }).data[0].price;
+    const sourceRecurring = sourcePrice?.recurring as { interval?: unknown; interval_count?: unknown } | undefined;
+    if (sourcePrice?.currency !== "usd" || sourcePrice?.unit_amount !== PUBLISHED_PLAN_PRICES[now.tier][now.cycle] ||
+        sourceRecurring?.interval !== now.cycle || sourceRecurring?.interval_count !== 1) {
+      throw new Error("The funded switch source price is not the single reviewed plan interval");
+    }
+
   }
   if (
     now.tier === choice.tier &&
@@ -828,11 +833,13 @@ export async function switchPlan(
   if (status === "trialing" && typeof subscription.trial_end === "number") {
     body.set("trial_end", String(subscription.trial_end));
   }
+  assertSourcePhase();
   assertFunding(funding,choice.tier,choice.cycle,'switch',undefined,subscriptionId);
   if(funding)await onPlatform('POST',path,new URLSearchParams({'metadata[funding_pending_grant]':funding.id,'metadata[funding_pending_review]':funding.reviewId}));
   let updated: Record<string, unknown>;
   try {
-    assertFunding(funding,choice.tier,choice.cycle,'switch',undefined,subscriptionId);
+    assertSourcePhase();
+  assertFunding(funding,choice.tier,choice.cycle,'switch',undefined,subscriptionId);
     updated = await onPlatform("POST", path, body);
   } catch (error) {
     // A price archived at Stripe since we last read it. The creator asked to
@@ -840,9 +847,12 @@ export async function switchPlan(
     // stale note of a price id. Forget it, make the price again, and retry —
     // the same recovery the first checkout has had all along.
     if (!(error instanceof BillingError) || error.status !== 400) throw error;
+    assertSourcePhase();
+    assertFunding(funding,choice.tier,choice.cycle,'switch',undefined,subscriptionId);
     priceIds.clear();
     body.set("items[0][price]", await ensurePrice(choice.tier, choice.cycle));
-    assertFunding(funding,choice.tier,choice.cycle,'switch',undefined,subscriptionId);
+    assertSourcePhase();
+  assertFunding(funding,choice.tier,choice.cycle,'switch',undefined,subscriptionId);
     updated = await onPlatform("POST", path, body);
   }
 

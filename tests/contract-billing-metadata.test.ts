@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import {createBillingCheckout,switchPlan,readSubscription,readStartedSubscription,startedFromObservedSubscription,findStoreSubscriptions} from '@/lib/billing';
 import type {ContractGrant} from '@/lib/contract-funding';
 import type {Store} from '@/lib/store';
+import {PUBLISHED_PLAN_PRICES} from '@/lib/plan';
 process.env.STRIPE_SECRET_KEY='sk_test_not_a_real_deployment_key';
 const store={statsId:'metadata-one',handle:'harbor',email:'owner@example.test',stripeCustomerId:null,subscriptionId:null,extra:false} as Store;
 function grant(action:ContractGrant['action']='checkout'):ContractGrant{const now=Math.floor(Date.now()/1000);return{sourceSubscriptionId:action==='switch'?'sub_Test000001':null,action,id:'ctr_metadata',reviewId:'test_only',statsId:'metadata-one',key:'creator_year',reservedCents:93153,submitUntilSeconds:now+300,checkoutExpiresAtSeconds:now+3600,activationUntilSeconds:now+86400,liabilitiesThrough:'2099-01-01T00:00:00.000Z'};}
@@ -332,6 +333,42 @@ test('a funded switch source phase must contain both reservation and observation
    globalThis.fetch=async(input,init)=>{if((init?.method??'GET')!=='GET'){writes++;throw Error('must not write');}reads++;assert.equal(new URL(String(input)).pathname,'/v1/subscriptions/sub_Test000001');return Response.json({id:'sub_Test000001',status:'active',items:{data:[{id:'si_test',quantity:1,price,...phase}]}});};
    await assert.rejects(switchPlan('sub_Test000001',{tier:'creator',cycle:'year'},g),/source phase/);
    assert.equal(reads,1);assert.equal(writes,0);
+  }
+ }finally{globalThis.fetch=old;Date.now=oldNow;}
+});
+
+
+test('source phase is checked again after price, metadata and stale-price waits',async()=>{
+ const old=globalThis.fetch,oldNow=Date.now,initial=Math.floor(Date.now()/1000);
+ try{
+  for(const stage of ['price','metadata','fallback']){
+   let clock=initial*1000;Date.now=()=>clock;
+   const g=grant('switch'),end=initial+30;
+   const choice=stage==='price'?{tier:'scale' as const,cycle:'month' as const}:stage==='metadata'?{tier:'pro' as const,cycle:'month' as const}:{tier:'scale' as const,cycle:'year' as const};
+   let sourceReads=0,priceReads=0,metadataWrites=0,changeWrites=0;
+   const raw={id:'sub_Test000001',status:'active',items:{data:[{id:'si_test',quantity:1,current_period_start:initial-86400,current_period_end:end,price:{lookup_key:'nimbus_creator_month',unit_amount:6900,currency:'usd',recurring:{interval:'month',interval_count:1}}}]}};
+   globalThis.fetch=async(input,init)=>{
+    const url=new URL(String(input));
+    if((init?.method??'GET')==='GET'&&url.pathname==='/v1/subscriptions/sub_Test000001'){sourceReads++;return Response.json(raw);}
+    if((init?.method??'GET')==='GET'&&url.pathname==='/v1/prices'){
+     priceReads++;if(stage==='price')clock=end*1000;
+     return Response.json({data:[{id:'price_source_wait_'+stage,unit_amount:PUBLISHED_PLAN_PRICES[choice.tier][choice.cycle],currency:'usd',recurring:{interval:choice.cycle,interval_count:1}}]});
+    }
+    if(init?.method==='POST'){
+     const body=new URLSearchParams(String(init.body));
+     if(body.has('items[0][price]')){
+      changeWrites++;assert.equal(stage,'fallback');clock=end*1000;
+      return Response.json({error:{message:'No such price',code:'resource_missing'}},{status:400});
+     }
+     metadataWrites++;assert.ok(body.has('metadata[funding_pending_grant]'));
+     if(stage==='metadata')clock=end*1000;
+     return Response.json(raw);
+    }
+    throw Error('unexpected operation');
+   };
+   await assert.rejects(switchPlan(raw.id,choice,{...g,key:choice.tier+'_'+choice.cycle,reservedCents:2_000_000} as ContractGrant),/source phase/);
+   assert.equal(sourceReads,1);assert.equal(priceReads,1);
+   assert.equal(metadataWrites,stage==='price'?0:1);assert.equal(changeWrites,stage==='fallback'?1:0);
   }
  }finally{globalThis.fetch=old;Date.now=oldNow;}
 });
