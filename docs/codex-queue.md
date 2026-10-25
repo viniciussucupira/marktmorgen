@@ -9056,3 +9056,41 @@ REGRA DOS60%: todo cliente pagante, isoladamente e usando100% dos direitos do pl
 Proibido: mudar preços, dar desconto ou acréscimo por período, meio de pagamento ou país, cobrar qualquer tarifa além da tarifa de débito devolvido deste item, cobrá-la acima do custo real ou sem aviso prévio, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, o tax gate, o art.9a ou a revisão comercial, afrouxar qualquer suposição de imposto,taxa ou reserva, apagar conteúdo de criadores, apagar qualquer coisa da Hazelsong, criar contas, aceitar termos, contratar,pagar ou contatar terceiros. Somente testes sintéticos com o Stripe simulado.
 
 VR: só chamar de pronto o que estiver incorporado,publicado,conferido em marktmorgen.com e usado de ponta a ponta; relatar estado exato e o que não foi verificado. Este registro apenas põe o complemento na fila: regras legais,tarifas,atribuição de causa,cobrança,reserva e margem não foram validadas ou implementadas por ele. Não é entrega funcional e não incrementa o contador.
+
+
+## FC — Cortes nos custos fixos e transferência sem tarifa (25/10/2026)
+
+Solicitação do dono (25/10/2026, 20h18, horário de Fortaleza).
+Estado inicial: na fila.
+
+Execução junto da seção PV e de275[FX1], sem duplicar PV5(d) (remessa) ou PV5(f) (INSS/FTB/representantes/agente). FC1 estende PV1(i)/PV2(b) para recebimento bancário próprio; FC2 e FC3 detalham o mesmo inventário de custos fixos e base mínima FX275, sem segundo modelo. Preservar AB(a) e o PR1036 em andamento; este registro não antecipa execução nem abre pagamento.
+
+Pedidos repetidos aplicados: continuidade lida primeiro; main368ef6fa8b6414f09bf3969eb8b5387f6e7da6e4, conteúdo de12PRs abertos, inventário de593refs codex/* e filas em ramos recentes PV/CI/AC e no ramo fx275-full-fixed-costs,18heads distintos, conferidos por seção/data/hora20h18,etiquetas FC1/FC2/FC3 e conteúdo específico. Ausentes. Maior item437[AC2], com AC3 como complemento sem número global; acrescentar somente438[FC1],439[FC2],440[FC3], sem renumerar anteriores. O detalhamento não recria estudos PV5(d)/(f). Revalidar heads e o código antes de implementar.
+
+438. [FC1] Transferência direto para a conta bancária da LLC, com conciliação automática.
+Estado: na fila.
+(a) Estudar, com fontes oficiais datadas e sem criar conta, os bancos disponíveis a uma LLC americana de dono brasileiro (por exemplo, Mercury e Relay) quanto ao custo de RECEBER ACH e wire em dólar, domésticos e internacionais, à existência de API e de avisos automáticos de recebimento, e aos limites e exigências de cadastro.
+(b) Construir, DESLIGADO até a conta existir e o dono decidir, a forma de pagamento "transferência direto para a conta da LLC": cada cliente recebe dados bancários e uma referência única; o código lê os recebimentos pela API do banco, confere valor e referência, e começa o período somente quando o valor inteiro chega, como PV1(i). Valor a menos fica como crédito até completar; valor sem referência ou duvidoso não libera nada e vai para conferência sem dado pessoal exposto. Nenhum trabalho manual do dono no caminho normal.
+(c) Calcular em lib/receiving-costs.ts a margem desta forma por plano e período, com o custo real do banco, e oferecê-la somente onde mantém60%. Manter a transferência pelo Stripe de PV1(i) enquanto esta não estiver ligada.
+
+Reutilizar os registros e cálculos PV, reservas, controles de confirmação e lib/receiving-costs.ts; não criar conta ou acessar recebimentos reais por este item. "Sem tarifa" no título é objetivo a verificar: gratuidade, API, disponibilidade ao dono, limites, identificação, devoluções e conciliação não são fatos comprovados pelo registro. Desconhecido não autoriza custo zero ou liberação. Somente recebimentos próprios do Marktmorgen para seu plano, sem receber ou movimentar valores de terceiros. Construção permanece desligada até conta existente, decisão expressa e todos os gates aplicáveis; simular banco e recebimentos nos testes.
+
+439. [FC2] Caixa postal nos EUA mais barata.
+Estado: na fila.
+Comparar, em fontes oficiais datadas e sem contato nem contratação, os serviços de endereço comercial e caixa postal nos EUA (por exemplo, Stable, iPostal1, Anytime Mailbox e Earth Class Mail): preço mensal e anual, digitalização de cartas, reenvio, exigências legais (formulário USPS1583) e se o endereço é aceito pelo Stripe, pelos bancos de[FC1] e para os registros da LLC. Registrar em docs/llc-fixed-costs-2026-10-22.md o menor custo completo que atende a todas as exigências e o efeito na base mínima de clientes. Decisão de troca fica em "Depende do dono".
+
+A pesquisa não presume que endereço postal, endereço físico/comercial, endereço fiscal e agente registrado sejam equivalentes ou intercambiáveis; comprovar cada requisito de uso e todos os custos obrigatórios. Não preencher/enviar formulário, contratar ou migrar serviço. Valores mensais e anuais desconhecidos mantêm reprovação e o custo vigente conservador.
+
+440. [FC3] Estado de abertura da LLC.
+Estado: na fila.
+A LLC ainda não foi aberta (informação do dono nesta solicitação). Comparar, em fontes oficiais datadas dos estados, Delaware com Wyoming e New Mexico: taxa de abertura, imposto ou relatório anual, custo e exigência de agente registrado, sigilo do dono, aceitação pelo Stripe e pelos bancos de[FC1], exigências para dono estrangeiro e qualquer efeito nos impostos dos EUA e do Brasil (docs/tax-uncertainty.md). Registrar o custo fixo anual de cada um, o efeito na base mínima de clientes e o que muda nos serviços de abertura (o Stripe Atlas abre somente em Delaware, ponto indicado pelo dono a reconferir em fonte oficial). Decisão do estado fica em "Depende do dono"; nenhuma abertura, conta ou contato.
+
+Esta pesquisa complementa275[FX1]/PV5(f), sem trocar o estado assumido nos modelos ou reduzir tributos por antecipação. Comparar o custo total obrigatório, não apenas taxa estadual; sigilo público não equivale a dispensa de identificação perante banco, processador ou autoridade. Reutilizar docs/tax-uncertainty.md, manter leitura onerosa onde houver dúvida e registrar a decisão futura sem inventá-la.
+
+REGRA DOS60%: todo cliente pagante, isoladamente e usando100% dos direitos do plano no pior mês, e a empresa como um todo, mantêm margem real de lucro líquido mínima de60% sobre tudo o que é cobrado, depois de todos os custos e de todos os impostos, inclusive os brasileiros e o ISS de5%; pode ser maior,nunca menor. Leitura que dá mais imposto(docs/tax-uncertainty.md). Desconhecido reprova,nunca é zero. Todos os custos fixos da LLC pertencem ao Marktmorgen(FX275). Calcular custos mensais/anuais por plano e período, maiores preços pagos, limites,tetos e reservas antes de operar; comparar efeito na base mínima sem certificação de lucro.
+
+Proibido: mudar preços, dar desconto ou acréscimo por período, meio de pagamento ou país, cobrar tarifa além da de[AC3]/[AC4], cortar limites visíveis, alterar comissão, PLANS_ON_SALE, o tax gate, o art.9a ou a revisão comercial, afrouxar qualquer suposição de imposto,taxa ou reserva, guardar ou movimentar dinheiro de terceiros, apagar conteúdo de criadores, apagar qualquer coisa da Hazelsong, abrir empresa, criar contas, aceitar termos, contratar,pagar ou contatar terceiros. Somente testes sintéticos.
+
+Referência AC4 preservada como recebida: etiqueta/pedido AC4 não localizado no main, nos PRs abertos ou nas filas recentes consultadas. Não criar AC4 por inferência nem tratar a referência como autorização para outra tarifa. Aplicar somente a exceção AC3 já registrada e suas condições legais, de custo real e aviso prévio; demais proibições continuam vinculantes.
+
+VR: só chamar de pronto o que estiver incorporado,publicado,conferido em marktmorgen.com e usado de ponta a ponta; relatar o estado exato e o que não foi verificado. Este registro põe FC1–FC3 na fila; bancos,API,preços,endereços,aceitação,leis,impostos,cálculos,conciliação e margem ainda não foram verificados ou implementados por ele. Não é entrega funcional e não incrementa o contador.
