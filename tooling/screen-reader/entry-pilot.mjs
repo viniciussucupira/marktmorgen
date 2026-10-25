@@ -10,7 +10,7 @@ if(!kind)throw Error("Real reader pilot requires Windows or macOS");
 const engine=kind==="nvda"?"chromium":"webkit",reader=kind==="nvda"?nvda:voiceOver;
 const port=3196,origin="http://127.0.0.1:"+port;
 const app=spawn(process.execPath,[join(root,"node_modules/next/dist/bin/next"),"start","-H","127.0.0.1","-p",String(port)],{cwd:root,env:{...process.env,NEXT_TELEMETRY_DISABLED:"1"},stdio:["ignore","pipe","pipe"]});
-let output="",browser,context,writes=0,foreign=0;
+let output="",browser,context,writes=0,foreign=0,primaryFailure=false,stage="local app startup";
 for(const stream of [app.stdout,app.stderr])stream.on("data",chunk=>{output=(output+chunk).slice(-6000);});
 async function report(step,expected){
  const spoken=await reader.lastSpokenPhrase();
@@ -35,13 +35,17 @@ try{
   return route.continue();
  });
  const page=await context.newPage();
+ stage="real reader startup";
  await reader.start({capture:"initial"});
  for(const fixture of [{path:"/signin",heading:"Start your store"},{path:"/signin?to=login",heading:"Log in to your store"}]){
+  stage="entry navigation "+fixture.path;
   const response=await page.goto(origin+fixture.path,{waitUntil:"networkidle",timeout:60000});
   assert.equal(response.status(),200);
   // Verify the expected application state independently before checking speech.
   await page.getByRole("heading",{level:1,name:fixture.heading,exact:true}).waitFor();
+  stage="reader content navigation "+fixture.path;
   await navigateToContent(reader,page,kind);
+  stage="reader heading assertions "+fixture.path;
   let matched=false;
   for(let step=0;step<8;step++){
    await reader.nextHeading();
@@ -58,7 +62,23 @@ try{
  assert.equal(writes,0,"Entry pilot must not submit anything");
  assert.equal(foreign,0,"No browser request may leave local synthetic origin");
  console.log("AX2_REAL_READER_RESULT:"+JSON.stringify({reader:kind,engine,entryStates:2,writes,foreign,scope:"Entry headings only; account creation, purchase, course, cancellation and refund tasks remain untested"}));
+}catch(error){
+ primaryFailure=true;
+ console.error("AX2_REAL_READER_PRIMARY_ERROR:"+JSON.stringify({reader:kind,stage,error:String(error),stack:error instanceof Error?error.stack:null}));
+ throw error;
 }finally{
  try{const phrases=await reader.spokenPhraseLog();if(Array.isArray(phrases)&&phrases.length<=1000)console.log("AX2_REAL_READER_FINAL_TRANSCRIPT:"+JSON.stringify({reader:kind,phrases}));}catch(error){console.error("Transcript unavailable",String(error));}
- try{await reader.stop();}finally{try{await context?.close();await browser?.close();}finally{app.kill();}}
+ const cleanupErrors=[];
+ for(const [step,close] of [
+  ["reader stop",()=>reader.stop()],
+  ["browser context close",()=>context?.close()],
+  ["browser close",()=>browser?.close()],
+  ["local app stop",()=>app.kill()],
+ ]){
+  try{await close();}catch(error){
+   cleanupErrors.push(error);
+   console.error("AX2_REAL_READER_CLEANUP_ERROR:"+JSON.stringify({reader:kind,step,error:String(error)}));
+  }
+ }
+ if(!primaryFailure&&cleanupErrors.length)throw cleanupErrors[0];
 }
