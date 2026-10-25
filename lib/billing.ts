@@ -780,6 +780,10 @@ export async function switchPlan(
     return { kind: "refused", reason: "canceling" };
   }
   if (subscription.pending_update) return { kind: "refused", reason: "pending" };
+  const sourceItems = subscription.items as { data?: { quantity?: unknown }[] } | undefined;
+  if (funding && (subscription.id !== subscriptionId || sourceItems?.data?.length !== 1 || sourceItems.data[0].quantity !== 1)) {
+    throw new Error("The funded switch source must identify exactly one plan unit");
+  }
   const now = planOf(subscription);
   if (
     now.tier === choice.tier &&
@@ -804,6 +808,7 @@ export async function switchPlan(
     payment_behavior: "pending_if_incomplete",
     "expand[]": "latest_invoice",
   });
+  if (funding) body.set("items[0][quantity]", "1");
   if (status === "trialing" && typeof subscription.trial_end === "number") {
     body.set("trial_end", String(subscription.trial_end));
   }
