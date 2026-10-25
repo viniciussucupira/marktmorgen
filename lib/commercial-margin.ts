@@ -240,7 +240,7 @@ export function commercialProfitMix(input:CommercialProfitMixInput|null):Commerc
   Object.keys(data.sources).length!==COMMERCIAL_PROFIT_SOURCES.length||
   !COMMERCIAL_PROFIT_SOURCES.every(source=>Object.hasOwn(data.sources,source)))return result;
  result.basis=data.basis;result.interval=data.interval;result.period=data.period;
- let total=0n,fixed=0n,complete=true;
+ let total=BigInt(0),fixed=BigInt(0),complete=true;
  for(const row of result.rows){
   const amounts=data.sources[row.source];
   if(!amounts||Array.isArray(amounts)||typeof amounts!=="object"||
@@ -257,8 +257,8 @@ export function commercialProfitMix(input:CommercialProfitMixInput|null):Commerc
  if(fixed!==BigInt(data.companyFixedCostsCents)){result.reason="fixed_cost_allocation_mismatch";return result;}
  result.totalNetProfitCents=safeProfitNumber(total);
  if(result.totalNetProfitCents===null)return result;
- if(total<=0n){result.reason="nonpositive_total";return result;}
- const shares=result.rows.map(row=>safeProfitNumber(BigInt(row.netProfitCents!)*10000n/total));
+ if(total<=BigInt(0)){result.reason="nonpositive_total";return result;}
+ const shares=result.rows.map(row=>safeProfitNumber(BigInt(row.netProfitCents!)*BigInt(10000)/total));
  if(shares.some(share=>share===null)){result.totalNetProfitCents=null;return result;}
  result.rows.forEach((row,index)=>{row.shareOfNetProfitBps=shares[index];});
  result.reason="known";
