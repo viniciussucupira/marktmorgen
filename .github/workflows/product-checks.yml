@@ -2,6 +2,8 @@ name: Product checks
 on:
   pull_request:
   push:
+    needs: documentation-scope
+    if: always() && needs.documentation-scope.outputs.full != 'false'
     branches: [main]
 permissions:
   contents: read
@@ -9,7 +11,28 @@ concurrency:
   group: product-checks-${{ github.ref }}
   cancel-in-progress: true
 jobs:
+  documentation-scope:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      full: ${{ steps.scope.outputs.full }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Test conservative documentation classification
+        run: python3 scripts/test_ci_documentation_scope.py
+      - name: Compare actual PR trees; uncertainty keeps full coverage
+        id: scope
+        env:
+          CI_EVENT: ${{ github.event_name }}
+          CI_BASE: ${{ github.event.pull_request.base.sha }}
+          CI_HEAD: ${{ github.event.pull_request.head.sha }}
+        run: python3 scripts/ci_documentation_scope.py
   verify:
+    needs: documentation-scope
+    if: always() && needs.documentation-scope.outputs.full != 'false'
     runs-on: ubuntu-latest
     timeout-minutes: 35
     env:
@@ -40,6 +63,8 @@ jobs:
         run: node tests/e2e/store-copy.mjs --no-build
 
   form-opportunity-redis:
+    needs: documentation-scope
+    if: always() && needs.documentation-scope.outputs.full != 'false'
     runs-on: ubuntu-latest
     timeout-minutes: 12
     services:
@@ -148,6 +173,8 @@ jobs:
         run: python3 scripts/test_experiment_sale_redis.py
 
   mobile-render:
+    needs: documentation-scope
+    if: always() && needs.documentation-scope.outputs.full != 'false'
     name: Mobile render (${{ matrix.label }})
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -183,6 +210,8 @@ jobs:
         run: node tests/e2e/mobile-render.mjs measured-app
 
   cross-browser:
+    needs: documentation-scope
+    if: always() && needs.documentation-scope.outputs.full != 'false'
     name: Cross-browser (${{ matrix.browser }})
     runs-on: ubuntu-latest
     container:
