@@ -23,7 +23,16 @@ export async function checkTemplateLibrary({browser,LOCAL,fixture,axeSource,is})
  await pageLink.click();await page.getByText("Template opened as an unsaved draft. Review every block before saving; nothing has been published.",{exact:true}).waitFor();
  is("HT15 page draft starts from actual product "+width,(await page.locator("main").innerText()).includes("Synthetic template product"),true);
  page.on("dialog",dialog=>void dialog.accept());
+ // The preserved-page message is server-rendered. The depth read starts in
+ // PageEditor's useEffect, proving its controls have hydrated before clicking.
+ // Wait for that existing GET rather than sleeping, retrying the click or
+ // weakening the exact preserved-content assertion.
+ const preservedEditorHydrated=page.waitForRequest(request=>{
+  const url=new URL(request.url());
+  return request.method()==="GET"&&url.pathname==="/api/store/depth"&&url.searchParams.get("id")===fixture.preservedProduct;
+ });
  await page.goto(LOCAL+"/studio/pages?store="+fixture.sid+"&product="+fixture.preservedProduct+"&template=course");
+ await preservedEditorHydrated;
  await page.getByText("Your saved page was preserved. Library templates only start an empty page; use the editor to change existing content.",{exact:true}).waitFor();
  await page.getByRole("button",{name:/Keep my creator headline/}).click();
  // The editor selection renders asynchronously; assert the preserved value after
