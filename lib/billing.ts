@@ -642,6 +642,13 @@ export async function readSubscription(
     return { state: "unknown" };
   }
 
+  // A successful HTTP response is not evidence about this subscription unless
+  // its identity and status are explicit. Retain access on unknown observations.
+  if (!subscription || typeof subscription !== "object" || Array.isArray(subscription) ||
+      subscription.id !== subscriptionId || typeof subscription.status !== "string" ||
+      !["active", "trialing", "past_due", "unpaid", "canceled", "incomplete", "incomplete_expired", "paused"].includes(subscription.status)) {
+    return { state: "unknown" };
+  }
   const state=stateOf(subscription);
   if(state.state==='active'&&hasContractFunding(subscription)){
     if(!fundingStore||subscription.id!==subscriptionId)return{state:'unknown'};
