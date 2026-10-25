@@ -785,6 +785,14 @@ export async function switchPlan(
     throw new Error("The funded switch source must identify exactly one plan unit");
   }
   const now = planOf(subscription);
+  if (funding) {
+    const sourcePrice = (subscription.items as { data: { price?: Record<string, unknown> }[] }).data[0].price;
+    const sourceRecurring = sourcePrice?.recurring as { interval?: unknown; interval_count?: unknown } | undefined;
+    if (sourcePrice?.currency !== "usd" || sourcePrice?.unit_amount !== PUBLISHED_PLAN_PRICES[now.tier][now.cycle] ||
+        sourceRecurring?.interval !== now.cycle || sourceRecurring?.interval_count !== 1) {
+      throw new Error("The funded switch source price is not the single reviewed plan interval");
+    }
+  }
   if (
     now.tier === choice.tier &&
     now.cycle === choice.cycle &&
