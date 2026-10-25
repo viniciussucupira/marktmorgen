@@ -812,6 +812,22 @@ async function fromStripe(store: Store, event: StripeEvent, lookups: { left: num
   }
 }
 
+/** A partial or malformed observation must not advance past unseen events. */
+function stripeEventPage(value: unknown): StripeEvent[] {
+  const invalid = () => new Error("Stripe events are not a complete bounded page");
+  if (!value || typeof value !== "object" || Array.isArray(value)) throw invalid();
+  const page = value as Record<string, unknown>;
+  if (!Array.isArray(page.data) || page.data.length > 100 || typeof page.has_more !== "boolean" ||
+      (page.has_more && !page.data.length)) throw invalid();
+  const ids = new Set<string>();
+  for (const row of page.data) {
+    if (!row || typeof row !== "object" || Array.isArray(row) ||
+        typeof row.id !== "string" || !/^evt_[A-Za-z0-9]+$/.test(row.id) || ids.has(row.id)) throw invalid();
+    ids.add(row.id);
+  }
+  return page.data as StripeEvent[];
+}
+
 /** One store: its Stripe events since the last one read, oldest first. */
 async function watchStore(store: Store, statsId: string, config: Config): Promise<number> {
   const account = store.stripeAccountId as string;
@@ -829,9 +845,9 @@ async function watchStore(store: Store, statsId: string, config: Config): Promis
   };
 
   if (!anchor) {
-    // The first run, or an anchor Stripe no longer has: every page since
-    // then is read, going back in time, and all of it sent oldest first, so
-    // nothing between the start and the newest page is passed over.
+    // The first run, or an anchor Stripe no longer has: collect bounded pages
+    // going back in time, then send them oldest first. History beyond the
+    // first-run page cap still needs a separate durable continuation.
     const pages: StripeEvent[][] = [];
     let older = "";
     for (let page = 0; page < FIRST_RUN_PAGES; page += 1) {
@@ -840,7 +856,7 @@ async function watchStore(store: Store, statsId: string, config: Config): Promis
         account,
         `/events?limit=100&${types}&created[gte]=${Math.max(config.since - 60, 0)}${older ? `&starting_after=${encodeURIComponent(older)}` : ""}`,
       );
-      const rows = Array.isArray(list.data) ? (list.data as StripeEvent[]) : [];
+      const rows = stripeEventPage(list);
       if (!rows.length) break;
       pages.push(rows);
       const last = str(rows[rows.length - 1].id);
@@ -873,7 +889,7 @@ async function watchStore(store: Store, statsId: string, config: Config): Promis
       }
       throw error;
     }
-    const rows = Array.isArray(list.data) ? (list.data as StripeEvent[]) : [];
+    const rows = stripeEventPage(list);
     if (!rows.length) break;
     await send(rows);
     const newest = str(rows[0].id);
