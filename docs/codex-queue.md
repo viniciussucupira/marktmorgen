@@ -8661,3 +8661,12 @@ Custos: nenhuma requisição/Redis/chave/campo/cópia/TTL adicional; incremento 
 Produção **READY 2026-10-25T13:09:08.161Z**, deployment `dpl_HQNCqDMZCWqzcXDKWAJUKyQDrHSQ`, metadata SHA exato do merge e alias **marktmorgen.com**. Cinco rotas `/`, `/platform`, `/pricing`, `/mission`, `/library` retornaram **200** com marcador literal desse deployment. Após as provas, contador **253 → 254**, próximo **255**; registro documental não soma entrega.
 
 Custos/limites preservados: nenhuma operação/chave/campo/cópia/TTL adicional; incremento de operações mensal/anual 0/0 por plano não é custo real zero nem margem certificada. Protocolo durável de pausa/reinício/renovação/liquidação e AB(a) continuam incompletos, revisões reais nulas, três coberturas false e PLANS_ON_SALE=false; preços/direitos/permissões intactos. EI1/363 após AB(a) inteiro.
+
+
+## AB(a) — Status explícito em toda página de assinaturas (25/10/2026, 10h53 Fortaleza)
+
+Implementação na branch codex/subscription-list-status-observation; CI completo obrigatório antes da incorporação. O guard da entrega 248 já verificava paginação/limite/identidades, mas ainda admitia linhas sem status ou com status desconhecido. Em lib/billing-sync.ts, applyListed usa stateOf e recordState para a assinatura atual; estado desconhecido na linha podia ser interpretado como inativo e gravado, perdendo acesso/período. Validar o status conhecido de todas as linhas antes de devolver qualquer página evita que a reconciliação aplique esse dado ambíguo.
+
+Teste existente de listSubscriptions ampliado com status ausente, nulo após uma linha válida e desconhecido. Preserva todos os casos anteriores, vazios explícitos, cursores, teto 100, chamada GET única e ausência de fallback/mutação. Somente fetch sintético substituído; nenhum teste local por subprocesso, provedor real, conta, pagamento ou mensagem externa.
+
+Custos: zero operações Redis/provedor/chaves/campos/cópias/TTL adicionais, mesma página e tetos; incremento de operações mensal/anual 0/0 por plano não equivale a custo real total zero. Validação de no máximo 100 status na resposta já solicitada. Custos reais desconhecidos, impostos BR/EUA, 100% LLC/direitos, reservas e meta 60% permanecem vinculantes; sem certificação. Não completa protocolo durável de reinício/renovação/liquidação ou AB(a), não altera PLANS_ON_SALE=false, preços, limites, permissões e revisões reais nulas. EI1/363 após AB(a) inteiro.

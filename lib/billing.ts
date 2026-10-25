@@ -923,7 +923,8 @@ export async function listSubscriptions(
       !Array.isArray(page.data) || page.data.length > 100 ||
       typeof page.has_more !== "boolean" || (page.has_more && page.data.length === 0) ||
       page.data.some(row => !row || typeof row !== "object" || Array.isArray(row) ||
-        typeof row.id !== "string" || !SUBSCRIPTION_PATTERN.test(row.id)) ||
+        typeof row.id !== "string" || !SUBSCRIPTION_PATTERN.test(row.id) ||
+        typeof row.status !== "string" || !["active", "trialing", "past_due", "unpaid", "canceled", "incomplete", "incomplete_expired", "paused"].includes(row.status)) ||
       new Set(page.data.map(row => row.id)).size !== page.data.length) {
     throw new Error("The subscription list page is not a complete bounded observation");
   }
