@@ -28,7 +28,20 @@ export async function checkPairsAcknowledgment({browser,LOCAL,fixture,is}){
    const section=page.locator('[data-pairs-editor="'+fixture.product+'"]');await section.waitFor();
    is("creator-pick three labeled selectors "+width,await section.locator("select").count(),3);
    const first=section.locator("select").nth(0),target=await first.locator('option:not([value=""])').first().getAttribute("value");
+   await section.evaluate(root=>{
+    window.__pairsSelectionEvents=[];
+    for(const type of ["input","change"])root.addEventListener(type,event=>{
+     if(window.__pairsSelectionEvents.length>=8)return;
+     const select=event.target;
+     window.__pairsSelectionEvents.push({type,trusted:event.isTrusted,value:select?.value,selectedIndex:select?.selectedIndex,buttonDisabled:root.querySelector("button")?.disabled});
+    },true);
+   });
    await first.selectOption(target);
+   console.log("PAIRS_INITIAL_SELECTION",JSON.stringify(await section.evaluate((root,target)=>({
+    target,events:window.__pairsSelectionEvents,
+    selects:Array.from(root.querySelectorAll("select"),s=>({value:s.value,selectedIndex:s.selectedIndex,disabled:s.disabled})),
+    buttonDisabled:root.querySelector("button")?.disabled,busy:root.getAttribute("aria-busy"),
+   }),target)));
    for(const remove of [false,true]){
     if(remove)await first.selectOption("");
     for(const scenario of cases){
