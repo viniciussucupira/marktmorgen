@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import { syncSubscriptions } from "@/lib/billing-sync";
 import { claimHandle, ensureStatsId, setSubscription, storeForEmail } from "@/lib/store";
-import { allowanceWindow } from "@/lib/allowance-window";
+import { allowanceWindow, calendarWindow } from "@/lib/allowance-window";
+import { standingOf } from "@/lib/plan-standing";
 import { paidPeriod } from "./billing-period-fixture";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
@@ -75,7 +76,9 @@ async function main() {
     const after = (await storeForEmail(owner))!;
     is("the actual synchronizer persists identified cancellation", [result.updated, after.subscriptionActive, after.period], [1, false, null]);
     is("the existing ended-plan retention path is recorded", Number.isFinite(Date.parse(after.planEndedAt)), true);
-    is("no new paid allowance window is fabricated", allowanceWindow(after), null);
+    const checkedAt = Date.now();
+    is("the ended store retains the existing unpaid calendar window", allowanceWindow(after, checkedAt), calendarWindow(checkedAt));
+    is("the calendar window does not make the store paid", standingOf(after, checkedAt / 1000) === "paid", false);
     is("the recorded subscription identity stays intact", after.subscriptionId, id);
   }
   done();
