@@ -7630,3 +7630,12 @@ Falha novaCross-browser(WebKit),head2012a8a42760ab495f1ad7c7b77e8c6153cbe406,run
 PairsEditor lia event.target.value DENTRO do atualizador funcional de estado,quando oDOM/evento já pode ter mudado. Handler agora captura event.currentTarget.value imediatamente e usa string imutável no atualizador. Não muda escolha,limites,payload,critério de dirty,aprovação/ack do servidor,erro/retry ou persistência. Causa completa da ocorrência não certificada só pelo log; diagnóstico sintético registra input/change nativos limitados e valor/disabled após a MESMA primeira seleção,sem selecionar de novo,forçarclique,aumentar timeout ou afrouxarassertivas. Conjunto completo no novohead obrigatório para validação e novas evidências.
 
 Sem novo pedidoRedis/provedor/envio/campo persistido;CPU/bytes desconhecidos nãozero,nenhum novo serviço/custo externo. PLANS_ON_SALE=false,preços,limites,permissões,gates fiscais/art.9a/revisão,100%fixosLLC e leitura mais onerosa preservados. Provas241,filaAP361–362 e complementoES1 preservados. Sem publicação/contador.
+
+
+### AB(a) — manter texto e produto escolhidos no layout (24/10/2026)
+
+Auditoria relacionada à falha de seleção958 encontrou o mesmo padrão noStoreLayoutEditor: título eStarts at liam event.target.value dentro do atualizador funcional,dependendo deDOMmutável. Ambos agora capturam string imediata de currentTarget e atualizam somente a linha correspondente,sem mudar conteúdo do criador,ordenação,limites,payload,normalização ou contrato de confirmação. Leituras imediatas já existentes em outros campos não foram reescritas.
+
+Teste de layout existente passa a escolher outro produto de início uma vez e confere título exato/produto noPOSTinterceptado,além de retenção do seletor após cada resposta incerta. Mantém todos os casos anteriores,remoção/ack,busy/controles,390/1280e48escritas sintéticas por largura. Sem força,repetição para esconder falha,aumento de timeout ou relaxamento. Exigir conjunto completo no novohead. Não atribuir causa completa doWebKit958somente a padrão de código.
+
+Sem novo pedidoRedis/provedor/envio/campo persistido;CPU/bytes desconhecidos nãozero,nenhum serviço pago novo. PLANS_ON_SALE=false,preços,limites,gates fiscais/art.9a/revisão,coberturas fechadas,100%LLC/maior imposto preservados. Provas241,pedidosAPecomplemento309step6 preservados. Sem publicação/contador.
