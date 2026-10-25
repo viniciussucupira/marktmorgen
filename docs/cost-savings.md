@@ -46,3 +46,23 @@ PV6járegistradoantes,no mesmoPR1030. PV7 seguePV6 na mesma seção,sem número 
 Constataçõesdo dono sobre linhasStudiojáabrangidas:e-mail6,30;IA3,35;visitas2,64;pedidos0,95;armazenamento0,92;agendas0,63;automações0,48;uploads0,36dólares/mês. Não somadas/reclassificadas nemusadaspara baixar custo neste registro. Fontes/medições pendentes;não há economia comprovada. Nenhum original alterado/apagado,nenhumcacheativado,nenhum dadoentrelojas,nenhum fornecedor/serviço realalterado.
 
 Cadaeconomia exige fonteoficialdatada OU medição registrada conformePV7,teste de qualidade/velocidade,limitespreservados,cálculo60%porcliente/globalapóstodosimpostos/fixosLLC. Nenhum resultado de perfil atendido inventado. Histórico:PV7adicionadonomesmoPR1030apósPV6;exigirverificaçãocompletanonovohead,VR/AX274integrais.
+
+## Complemento PV8 — dono25/10/2026 16h47Fortaleza
+
+PV1–PV7 járegistrados no mesmoPR1030;PV8nãogera númeroglobal/seçãoPVnova. Estado:nafila;autorizadaexecuçãoantecipada(a)–(c)apósregistro,seminterromperAB(a). Nenhumaeconomiaimplementadaporescrito.
+
+| Medida | Evidência inicial / antes | Depois e prova pendente |
+|---|---|---|
+| PV8(a)documentalCIleve | Donorelata24jobs/153min,20–25mindeespera,PRdocsrodatudo;product-checks.ymllido | Amedir;classificaçãodearquivosestrita/testada,fallbackcompletaseincerto,nenhumcódigo/config/teste/dependênciaomitido |
+| PV8(b)maincomárvoreidênticacompletamenteaprovada | DonorelataexecuçãoduplicadaPR/main | Amedir;provaexataárvore/head/todoschecks;semprovaexecutarcompleta |
+| PV8(c)matrizporimpacto | Donorelata8workflowss emmesmaesteira | Amedir;mapadedependênciastestado,completadiáriaeantesdetodaprodução,gateexatoVercel/GitHub |
+| PV8(d)custoprivado/executorfixo | Donorelata1856execuções/27h;tarifasoficiaispendentes | Calcularminutos/máquina/planoseFX275;opçãoDependedodono,nãoprivatizar |
+| PV8(e)previewdocumentalignorado | Tempoatualbuildnãoextraído | RecursooficialVercel,tempoantes/depois;execuçãonaposiçãoPV |
+| PV8(f)repetiçãotestegrátis | Exposiçãoatualafere funded-exposure-review.md | Limiteslegaissemcartão/semfalsobloqueio;custosrecalculados |
+| PV8(g)gratuitasparadasemfrioUE | Prazo/avisos/restauronãodefinidos | Estudo/tetoseprovasvoltaimediata,semapagar,prazosexistentespreservados |
+
+Minutos/valoresfornecidospelodono sãohipótesesdocumentadasatéextraçãoderegistros. Semconta/fatura oufonte nãoinventar custoGitHubprivado,economiapositiva ougratuidadeilimitada. FontesoficiaisdatadasGitHubbilling/Actions/paths/reusableworkflowseVercelignoredbuilda conferirduranteimplementação.
+
+Coberturacompletaeheadexatoantesdequalquerproduçãosãovinculantes. PRsdocumentaispodemtergateleveapenasquandoalteraremexclusivamentedocs/.md,s emcódigo/testes/config/dependências. Nada de publicar código semtestecompleto,nemusarárvoreparecida/comparação textualcomoidentidade. Qualquerincerteza→completa. Nãoexecutarworkflowdadoexternocomsegredos.
+
+Histórico:PV8adicionadonomesmoPR1030depoisdePV6/PV7;estudos(a)-(c)podemcomeçarapósregistro;primeiraleituradeworkflowrealiniciada,nenhumworkflowalteradoainda. DemaisitensPV8nafilaapósAB(a)/EI1conformePV. Nenhumcusto/modelo/reserva/visibilidade/dadocriadoralterado. Pessoasreais202eVRnãoaprovadosporotimizaçãoCI.

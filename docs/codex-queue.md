@@ -5077,7 +5077,10 @@ Head `3afaed2e75b540d150295f1999d3dd6af5e71f7e` reprovado, sem incorporação/pu
 
 ### Ordem vinculante do Bloco de abertura
 
-**Atualização vinculante — PV, dono25/10/2026 16h34Fortaleza:** após concluir AB(a) inteiro, executar somente o estudo363[EI1] e então431–435[PV1–PV5] e os complementos[PV6–PV7]na mesma seção,antes de AB(b)e dos demais itens deste Bloco. Preservar a ordem interna e o histórico abaixo; a seção PV integral ao final da fila contém escopo,dependências e proibições. PV4(b)depende de dados próprios pós-abertura; PV5(b)/(e)são estudo até decisão. Nenhuma venda abre por este registro.
+**Exceção PV8, dono25/10/2026 16h47Fortaleza:** após registrarPV8,permitida execução(a)–(c)de desperdíciosCI semesperarPV e seminterromperAB(a);coberturacompletaantesdeproduçãocontinuaobrigatória. RestantePV8segueposiçãoPV. Não privatizar repositório.
+
+
+**Atualização vinculante — PV, dono25/10/2026 16h34Fortaleza:** após concluir AB(a) inteiro, executar somente o estudo363[EI1] e então431–435[PV1–PV5] e os complementos[PV6–PV8]na mesma seção,antes de AB(b)e dos demais itens deste Bloco. Preservar a ordem interna e o histórico abaixo; a seção PV integral ao final da fila contém escopo,dependências e proibições. PV4(b)depende de dados próprios pós-abertura; PV5(b)/(e)são estudo até decisão. Nenhuma venda abre por este registro.
 
 
 
@@ -8921,9 +8924,29 @@ Proibido:mudarpreços/limites,qualidade/velocidadesemteste,alterar/apagarorigina
 
 Proveniência PV7:complementoaoMESMOPV;PV1–PV6jágravadosnoPR1030/head ae94d0f2c156edac7ae994e13bca77476d475fd0;main/fila e12PRsabertos conferidos,PV7ausente. Aplicar somente diferença,nãorecriarPV3/PV6 nemseção/númeroglobal;semalterarprioridadeAB(a)integral→EI1estudo→PV1–PV7→AB(b). Antesdaimplementação,reconferircódigo,heads,fontesemedidas;nestePRnenhumruntime/custo/reserva/limite/gatealterado. CIcompletoexigidononovohead;documentonãoéentrega.
 
+
+[PV8] Desperdícios na esteira de testes e nos custos sem receita — complemento ao PV.
+Solicitação do dono (25/10/2026,16h47,horário de Fortaleza). Estado inicial: na fila. Mesma seçãoPV16h34,depois dePV6(16h37)ePV7(16h43),sem nova seção ou número global;registro emdocs/cost-savings.md(PV5a). Exceção expressa: PV8(a)–(c)podem ser executados assim que este complemento estiver gravado,sem esperar a posição dePV,desde que não interrompam AB(a). Demais partes permanecem na posiçãoPVapósAB(a)integral/363EI1estudo.
+
+Constatação do dono,medida noGitHub25/10/2026,a revalidar:24jobs em8arquivos.github/workflows,cerca153minsomados(incluindoWindows/macOS),duplicados emPR/pushmain,sem paths/paths-ignore;1856execuções em27h;PRdocumentalBV/TM/PVespera20–25min;repopúblicosemcobrança,privado(navésperadaabertura,decisãododono)passaa preçooficialaverificar. Nenhumcusto/minuto confirmado por este registro;nenhuma mudança de visibilidade autorizada.
+
+(a) PRsomente docs/:e arquivos.md,semcódigo/teste/configuração/dependência,nãoexecutartestes pesadosdenavegador/acessibilidade;rodarapenasverificaçãolevequeprove que nenhum arquivo fora dessa lista mudou. Qualquerarquivo fora da lista exigeesteiracompleta. Classificação deve tratar renomes/deleções,base/head/árvore/merge exatos,semconfiar sóemnomedePRouentrada manipulável;mudançaemworkflow,scriptouconfig nunca documentalmesmo sobdocs/.
+(b) Mainsemrepetição:secommitincorporado tiverEXATAMENTEamesmaárvorejátestadaporcompletonoPR,rodarsóverificaçãorápida;árvorediferenteouprovaincompleta/desconhecidaexigeesteiracompleta. Nunca usar checksdeoutrohead/parciais/canceladoscomoaprovaçãocompleta;conferir workflowsetestequeproduziramprova.
+(c) Matrizesporpartealterada:estúdio/comprador/cadastro/produto/públicas/leitoresreais conforme dependênciasescritasetestadas. CompletaumavezpordiaeOBRIGATORIAMENTEantesdecadapublicaçãoprodução;VRnão perde cobertura. Mudançatransversal/incertaexigecompleta;publicação automática precisa respeitarhead/árvoretestados,nenhum código vai aproduçãoantesdaaprovaçãocompleta. Escrever/testarmapeamento real,seminventar que cacheoupathsprovamcobertura.
+(d) Antesdeprivatizar:calcularminutosmensaisapós(a)-(c),preçooficialdatadoGitHubpor máquina,comparar executoresprópriosfixos eplanosGitHub;registrarfixo275FX1 eopçãoemDependedodono. Semconta/plano/servidor ouprivatização.
+(e) PréviasVercel:nãogerarpreviewdePRdocumentalpelorecursooficialignoredbuild;registrartempoantes/depois. Não desabilitarverificaçãocompletapré-produção.
+(f) Abusodoteste:limitar repetição pelamesmapessoa comconfirmaçãodee-mail,sinaisde repetiçãolegais e limitespororigem,semcartão e sembloquearlegítimo;recalcular docs/funded-exposure-review.md. Preservarfinalidade/privacidade/retentativa/correção,semfingerprintingouinferênciailegal.
+(g) Lojasgratuitasparadas:períodosemusoadefinir,aviso prévioe-mail+estúdio,moverarquivosparafrioUE,semapagar ecomvoltaimediataao retorno;recalcularmesmotetodeexposição,incluindorestauro/avisos/custos,semencurtardireitos.
+
+Todosregistros:docs/cost-savings.md,minutos/custosantes/depoisporplano mensal/anual,pioruso100%direitos,fonteoficialdatada,head/árvore/cobertura/custofixoFX275 e limitações. Benefício/caminhodelucro:reduzir esperasemduplicartestesjácomprovados e custo semreceita,semperder segurança/cobertura/qualidade oulegítimos;impactofinanceironãomedido,nãocertificado.
+REGRA60%:cadapaganteisolado100%direitosnopior mês eglobal≥60%líquidosobre tudocobradoapósTODOS custos/impostosBrasil/EUA,maiorleituradocs/tax-uncertainty.md,desconhecidoreprova/nuncazero,100%fixosLLCMarktmorgenFX275.
+Proibido:reduzircoberturapré-publicação,publicarcódigosemtestecompleto,apagardados,bloquearlegítimo,pedircartãonoteste,mudarpreços/limites/travasPLANS_ON_SALE/taxgate/art9a/revisãocomercial,afrouxarimposto/taxa/reserva,tornarrepoprivado,custódia/movimentarterceiros,contas/termos/contratar/pagar/contatar. Somentetestessintéticos,VR/AX274integrais.
+
+Proveniência:continuidade/main/fila e12PRsabertos conferidos;PV1–PV7járegistrados noPR1030/heada7b3b1d3869553aa9951472b9c82f3fd97b8e32f,PV8ausente. Aplicarsódiferença noMESMOPR,semmudarnúmeros431–435,seçãonovaouduplicação. Código produtivo não muda neste registro;revisãoinicialdeproduct-checks.ymliniciada para(a)-(c),implementaçãoaindapendente. Nunca alegareconomiaporregistrarpedido. Nenhumcustopago/conta/serviçoexternoativado.
+
 Proveniência do registro PV — Pedidos repetidos aplicados: continuidade lida primeiro,main0a2baa6f16512117fb47648de09253e83243c458,fila canônica,11PRs abertos e585refs codex/* consultados. Seção/data/etiquetas PV ausentes; máximo430[TM1],sem renumerar anteriores. Registrar somente431[PV1]–435[PV5],reaproveitando todos os mecanismos/itens listados no pedido integral acima. Nenhuma implementação duplicada; revalidar código e heads antes de executar. Pedido integral preservado na continuidade.
 
-Prioridade vigente PV: AB(a) INTEGRAL → estudo363[EI1] →431[PV1]→432[PV2]→433[PV3]→434[PV4]→435[PV5]→[PV6]→[PV7]→AB(b)e restante do Bloco de abertura. Os números431–435 preservam o histórico numérico; sua posição de execução é a exceção expressa do dono25/10/2026 16h34Fortaleza. Não interromper AB(a),não declarar guard isolado seu cumprimento e não antecipar BV/TM ou VR1. PV4(b) depende de dados próprios depois da abertura e não pode ser simulado como medido nem usado para baixar reserva antes disso; PV5(b)/(e) permanecem estudo até decisão expressa,sem migração/troca de processador.
+Prioridade vigente PV: AB(a) INTEGRAL → estudo363[EI1] →431[PV1]→432[PV2]→433[PV3]→434[PV4]→435[PV5]→[PV6]→[PV7]→[PV8]→AB(b)e restante do Bloco de abertura. Os números431–435 preservam o histórico numérico; sua posição de execução é a exceção expressa do dono25/10/2026 16h34Fortaleza. Não interromper AB(a),não declarar guard isolado seu cumprimento e não antecipar BV/TM ou VR1. PV4(b) depende de dados próprios depois da abertura e não pode ser simulado como medido nem usado para baixar reserva antes disso; PV5(b)/(e) permanecem estudo até decisão expressa,sem migração/troca de processador.
 
 Honestidade/segurança do registro: números1–9 são constatações fornecidas pelo dono A REFAZER no código/fontes oficiais datadas; nenhuma taxa,preço,modelo de IA,capacidade,isenção,garantia de pagamento,disponibilidade geográfica ou margem foi validada por este PR. Preservar integralmente os cenários,inclusive6e9sem conciliá-los artificialmente. A meta de oferecer todo meio a todo cliente é objetivo, nunca promessa atual; desconhecido fecha aquela forma/perfil. Modelo completo do cartão e reservas vigentes não são reduzidos pela transcrição.
 
