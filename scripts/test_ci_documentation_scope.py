@@ -1,5 +1,6 @@
 """Synthetic policy regressions; run by GitHub Actions, never provider traffic."""
 import unittest
+from pathlib import Path
 from ci_documentation_scope import documentation_diff, documentation_path, requires_full
 
 A = "a" * 40
@@ -55,6 +56,29 @@ class DocumentationScopeTests(unittest.TestCase):
         self.assertTrue(documentation_path("docs/space and newline\nname.md"))
         self.assertFalse(documentation_path("../README.md"))
         self.assertFalse(documentation_path("/README.md"))
+
+
+    def test_workflow_conditions_stay_inside_jobs_and_are_unique(self):
+        names = set()
+        workflows = list(Path(".github/workflows").glob("*.yml"))
+        self.assertEqual(len(workflows), 8)
+        for path in workflows:
+            text = path.read_text(encoding="utf-8")
+            prefix, jobs = text.split("jobs:\n", 1)
+            self.assertNotIn("needs:", prefix, str(path))
+            self.assertNotIn("    if:", prefix, str(path))
+            self.assertIn("  documentation-scope:\n", jobs)
+            scope_name = next(line.strip() for line in jobs.splitlines() if line.startswith("    name: Documentation scope"))
+            self.assertNotIn(scope_name, names)
+            names.add(scope_name)
+            # Each existing heavy job has exactly one gate and condition.
+            chunks = __import__("re").split(r"(?m)^  [a-z][a-z0-9-]*:\n", jobs)[2:]
+            self.assertTrue(chunks, str(path))
+            for chunk in chunks:
+                self.assertEqual(chunk.count("    needs: documentation-scope\n"), 1)
+                conditions = [line for line in chunk.splitlines() if line.startswith("    if:")]
+                self.assertEqual(len(conditions), 1, str(path))
+                self.assertIn("always() && needs.documentation-scope.outputs.full != 'false'", conditions[0])
 
 if __name__ == "__main__":
     unittest.main()

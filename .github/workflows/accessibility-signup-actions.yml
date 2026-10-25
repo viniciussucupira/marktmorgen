@@ -2,8 +2,6 @@ name: Signup action accessibility matrix
 on:
   pull_request:
   push:
-    needs: documentation-scope
-    if: always() && needs.documentation-scope.outputs.full != 'false'
     branches: [main]
 permissions:
   contents: read
