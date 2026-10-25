@@ -198,6 +198,16 @@ async function main(): Promise<void> {
   if(!(await setProductShipping(shippingOwner,shippingProduct.product.id,{cents:500,region:"us",countries:["US"],note:"Ships later",sku:"Synthetic-SKU"})).ok)throw Error("No saved shipping");
   const shippingStore=await storeForEmail(shippingOwner);if(!shippingStore)throw Error("No shipping store");
   const shippingFixture={session:await openSession(shippingOwner),sid:shippingStore.sid,product:shippingProduct.product.id};
-  console.log(JSON.stringify({ certificateHeadingFixture,shippingFixture,libraryFixture,signinPrices:TIERS.map(tier=>({tier,words:publishedPriceWords(tier,"month")})),activationFixture,packageFixture,tierFixture,exitFixture,homeDemo,pauseFixtures,wordingSession,wordingSid:wordingStore.sid,wordingTrialSession,wordingTrialSid:wordingTrialStore.sid,returnSession,returnSid:returnStore.sid,growthSession,growthSid:growthStore.sid,growthProduct:growthProducts[0],session: await openSession(OWNER), second: second.store.sid, abProduct, abStore:abStore.sid,contactToken }));
+  // A separate synthetic owner for the real studio billing observation flow.
+  const billingOwner = "studio-observation@example.test";
+  const billingClaim = await claimHandle(billingOwner, "billing-observation", "Synthetic billing observation", "");
+  if (!billingClaim.ok) throw new Error("billing observation fixture refused");
+  await ensureStatsId(billingOwner);
+  const billingStore = await setSubscription(billingOwner, { customerId: "cus_StudioObservation01", subscriptionId: "sub_StudioObservation01", active: true, tier: "creator", cycle: "month", period: paidPeriod() });
+  if (!billingStore?.subscriptionActive || !billingStore.period) throw new Error("billing observation paid fixture missing");
+  const billingDigest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode("nimbus-store:" + billingOwner));
+  const billingKey = "nl:store:owner:" + Array.from(new Uint8Array(billingDigest), n => n.toString(16).padStart(2, "0")).join("").slice(0, 40);
+  const billingObservation = { session: await openSession(billingOwner), sid: billingStore.sid, key: billingKey };
+  console.log(JSON.stringify({ billingObservation,certificateHeadingFixture,shippingFixture,libraryFixture,signinPrices:TIERS.map(tier=>({tier,words:publishedPriceWords(tier,"month")})),activationFixture,packageFixture,tierFixture,exitFixture,homeDemo,pauseFixtures,wordingSession,wordingSid:wordingStore.sid,wordingTrialSession,wordingTrialSid:wordingTrialStore.sid,returnSession,returnSid:returnStore.sid,growthSession,growthSid:growthStore.sid,growthProduct:growthProducts[0],session: await openSession(OWNER), second: second.store.sid, abProduct, abStore:abStore.sid,contactToken }));
 }
 main().catch((e) => { console.error(e); process.exit(1); });
