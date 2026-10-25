@@ -8604,3 +8604,14 @@ Verificação prevista: novo tests/webhook-stripe-pages.test.ts pelo watchStripe
 Custos e limites: nenhum novo GET/EVAL/comando Redis, chave, campo, cópia ou TTL; página continua limit=100, tetos de páginas, lookups e cursores existentes. Incremento de operações provisionadas por plano (mensal/anual): 0/0, sem significar custo total zero; validação local limitada a 100 linhas por página existente. Custos reais completos, retenção, impostos BR/EUA, maior preço pago, 100% dos direitos e fixos de toda a LLC continuam exigidos antes de aprovar reservas/operação; desconhecido reprova. Não há certificação de margem de 60%.
 
 Limitações preservadas e explícitas: o teto da primeira coleta ainda exige continuidade durável para a história mais antiga; esta validação não a implementa. Não resolve persistência atômica da fila/deduplicação/âncora, observações Redis globais, reserva para entregas futuras, renovações ou liquidação. PLANS_ON_SALE=false, revisões reais nulas e três coberturas incompletas continuam vinculantes. EI1/363 somente após AB(a) inteiro; fila até 426 e trabalhos Claude intactos.
+
+
+### Entrega funcional 252 — confirmação da observação de eventos Stripe
+
+Incorporado em **25/10/2026 09:00:39 Fortaleza (12:00:39Z)** pelo [PR #1017](https://github.com/viniciussucupira/marktmorgen/pull/1017). Head testado `31d981c8043936ab538c5fc57719b7a7670e45af`; árvore `442e625435da9d95da626c16e372fbb739bdcbcd`; merge `12977c8c02405d82f6d257377dca2838d7e63225`, pais ordenados `689bcd8be8c862f42a4b1852cbf1a62b27f5e026` e head testado. A árvore de incorporação é a testada.
+
+**24/24 verificações completas aprovadas nesse head**. Log verify do job `121148564660`: novo teste real watchStripe com **217 verificações aprovadas**, incluindo 14 formas inválidas nos dois modos (28 cenários), resposta malformada na segunda página inicial sem avançar âncora, vazios explícitos, páginas válidas e paginação positiva. Resultado geral Everything passing; sem chamadas reais Stripe/endpoint/pagamentos e sem subprocessos locais.
+
+Produção **READY** em **2026-10-25T12:01:25.972Z**, deployment `dpl_F2LwuRSoEknoEhoT45zayUaYYRHx`, metadata SHA exato do merge, alias **marktmorgen.com**. Cinco rotas `/`, `/platform`, `/pricing`, `/mission`, `/library` responderam **200** com marcador literal desse deployment. Somente após essas provas: contador **251 → 252**, próximo **253**. O registro documental desta prova não soma entrega.
+
+Custos e limites são os da seção precedente: nenhuma operação/chave/campo/cópia/TTL adicional; incremento mensal/anual de operações 0/0 por plano, sem atribuir zero aos custos reais desconhecidos ou certificar margem. O limite da coleta inicial ainda precisa de continuidade durável; reserva integral da fila/renovações/liquidação e AB(a) seguem incompletos. PLANS_ON_SALE=false, revisões reais nulas, preços, direitos e permissões preservados. EI1/363 após AB(a) inteiro.
