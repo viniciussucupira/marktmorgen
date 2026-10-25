@@ -8615,3 +8615,18 @@ Incorporado em **25/10/2026 09:00:39 Fortaleza (12:00:39Z)** pelo [PR #1017](htt
 Produção **READY** em **2026-10-25T12:01:25.972Z**, deployment `dpl_F2LwuRSoEknoEhoT45zayUaYYRHx`, metadata SHA exato do merge, alias **marktmorgen.com**. Cinco rotas `/`, `/platform`, `/pricing`, `/mission`, `/library` responderam **200** com marcador literal desse deployment. Somente após essas provas: contador **251 → 252**, próximo **253**. O registro documental desta prova não soma entrega.
 
 Custos e limites são os da seção precedente: nenhuma operação/chave/campo/cópia/TTL adicional; incremento mensal/anual de operações 0/0 por plano, sem atribuir zero aos custos reais desconhecidos ou certificar margem. O limite da coleta inicial ainda precisa de continuidade durável; reserva integral da fila/renovações/liquidação e AB(a) seguem incompletos. PLANS_ON_SALE=false, revisões reais nulas, preços, direitos e permissões preservados. EI1/363 após AB(a) inteiro.
+
+
+## AB(a) — Identidade e confirmação do cancelamento no provedor (25/10/2026, 09h06 Fortaleza)
+
+Em implementação na branch codex/cancellation-provider-observation, baseada no head documental 74250f220a3b4788b331a860efe246d8c912d2df para preservar a prova 252; alterações funcionais somente em lib/billing.ts e teste novo. Incorporação aguarda CI completo e a base pendente, sem edições concorrentes da mesma branch.
+
+Achado: setCancelAtPeriodEnd convertia resposta ausente/desconhecida em inatividade, aceitava identidade diferente e devolvia estado ativo sem verificar a configuração solicitada. Agora resposta deve identificar exatamente a assinatura solicitada e um status conhecido; estado ativo exige booleano explícito e confirmação efetiva do cancelamento/reversão solicitado, incluindo cancel_at. Falha ambígua lança erro genérico, não BillingError/recusa de cartão; não inventa encerramento ou sucesso. Estados inativos explícitos da assinatura correta preservam o comportamento existente.
+
+Teste sintético pelo helper real: formas malformadas/ID diferente/status desconhecido, flag ausente ou incorreta, falta de confirmação nos dois sentidos, cancel_at ainda ativo, cancelamento e reversão válidos e estados inativos conhecidos. Fetch inteiramente substituído e restrito ao POST sintético esperado; sem chamadas Stripe, cobrança ou mensagem real. Exigir todos os testes no novo head, sem subprocessos locais.
+
+Referência primária conferida em 25/10/2026: https://docs.stripe.com/api/subscriptions/object (identificador e campos cancel_at/cancel_at_period_end). A inferência de segurança local é que resposta não identificada/ambígua não comprova a alteração solicitada; não é certificação fiscal ou jurídica.
+
+Custos: nenhum GET/POST extra, retry automático, Redis, chave, campo, cópia, TTL ou armazenamento adicional. Incremento de operações por plano mensal/anual 0/0, sem tratar custo real total desconhecido como zero; validação constante de resposta já solicitada. Preços, limites, PLANS_ON_SALE=false, permissões e revisões reais nulas preservados. Custos completos BR/EUA/100% LLC e direitos continuam sujeitos à leitura mais onerosa e 60% líquido antes de operar.
+
+Limitação: isto protege a confirmação no helper e não completa o protocolo durável de pausa/reinício; o tratamento preexistente de falha incerta do stop em pausePlan ainda precisa preservar intenções/fase/ownership antes de apagar evidência, e o novo termo precisa de reserva distinta. Não completa AB(a) nem libera EI1/363.
