@@ -33,7 +33,7 @@ const emails: { to: string; subject: string; text: string }[] = [];
 const subs: Record<string, Record<string, unknown>> = {};
 const created: URLSearchParams[] = [];
 let keepScheduledStop = false;
-let createAnswer: "ok" | "declined" | "down" | "otherCustomer" | "otherTier" | "yearly" | "trial" | "pastDue" | "otherPrice" | "amount" | "currency" | "intervalCount" | "extraItem" | "intervalMismatch" = "ok";
+let createAnswer: "ok" | "declined" | "down" | "otherCustomer" | "otherTier" | "yearly" | "trial" | "pastDue" | "otherPrice" | "amount" | "currency" | "intervalCount" | "extraItem" | "intervalMismatch" | "quantity" | "missingQuantity" = "ok";
 
 function subscription(id: string, over: Record<string, unknown> = {}): Record<string, unknown> {
   return {
@@ -86,7 +86,9 @@ globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) =>
       if (createAnswer === "currency") freshPrice.currency = "eur";
       if (createAnswer === "intervalCount") freshPrice.recurring.interval_count = 2;
       if (createAnswer === "intervalMismatch") freshPrice.recurring.interval = "year";
-      const items = [{ current_period_end: NOW + 10 * DAY, price: freshPrice }];
+      const items: { current_period_end: number; price: typeof freshPrice; quantity?: number }[] = [{ current_period_end: NOW + 10 * DAY, price: freshPrice, quantity: 1 }];
+      if (createAnswer === "quantity") items[0].quantity = 2;
+      if (createAnswer === "missingQuantity") delete items[0].quantity;
       if (createAnswer === "extraItem") items.push({ ...items[0] });
       const fresh = subscription("sub_Restarted00001", {
         start_date: NOW, trial_end: null,
@@ -277,7 +279,7 @@ async function main() {
 
   part("A restart response must match the requested paid monthly plan");
   {
-    const mismatches = ["otherCustomer", "otherTier", "yearly", "trial", "pastDue", "otherPrice", "amount", "currency", "intervalCount", "extraItem", "intervalMismatch"] as const;
+    const mismatches = ["otherCustomer", "otherTier", "yearly", "trial", "pastDue", "otherPrice", "amount", "currency", "intervalCount", "extraItem", "intervalMismatch", "quantity", "missingQuantity"] as const;
     for (const [index, answer] of mismatches.entries()) {
       const id = `sub_Mismatch0000${index}`;
       const email = `restart-mismatch-${index}@example.com`;
