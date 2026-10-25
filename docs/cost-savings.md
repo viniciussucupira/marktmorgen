@@ -30,3 +30,19 @@ Consultado25/10/2026:https://upstash.com/pricing/redis. Preço por comandoUS$0,2
 25/10/2026: criado inventário documental PV1–PV6 noPR1030,sem implementação nem economia medida. Quando houver mudança funcional publicada,recalcular automaticamente perfis atendidos e cliente mais oneroso por plano/período/meio; registrar somente resultados produzidos pelo código e seus limites. Até lá,contagem de novos perfis atendidos é desconhecida,não zero nem positiva inventada.
 
 Preços/limites/garantia/prazos/travas preservados. Sem contatos,contratos,pagamentos,migrações,contas ou termos. Somente testes sintéticos. AX274/VR integrais; pesquisas reais202 são lacuna. Criar este registro não exige nem autoriza execução antecipada dePV.
+
+## Complemento PV7 — dono25/10/2026 16h43Fortaleza
+
+PV6járegistradoantes,no mesmoPR1030. PV7 seguePV6 na mesma seção,sem número global. Estado:encontrado no pedido,na fila;não implementado/publicado.
+
+| Medida | Código/vínculo | Antes/depois porplano mensal/anual | Prova pendente |
+|---|---|---|---|
+| PV7(a)esperas externas emfila/funções por tempo detrabalho | wait emtests/plan-cost-registry.ts;webhooks/integrações existentes | Antes2GB8–10sinformadopelodono a refazer;depoisdesconhecido | Medição real,custos fila/retry,prazos,idempotência/efeitos,AB(a) |
+| PV7(b)cachecurtoloja/sessão/papel | UNIT_COST.studio eautorização existentes | StudioUS$0,39/20comandos+leiturainformado,a refazer;depoisdesconhecido | Invalidaçãoimediata,revogação,multi-instância/isolaçãoloja,comandos reais |
+| PV7(c)cacheinstruçõesperguntas | ANSWER_REFERENCE24KB/ANSWER_MICRO_USD | Antes/depoisnão recalculados | FonteAnthropicdatada,custo leitura/escrita/miss,invalidação e qualidade |
+| PV7(d)vídeocompatível/antecipação | hourCost/FETCHED_AHEAD | StudioUS$0,46/1,25informados,a refazer;depoisdesconhecido | Qualidademáxima/horaspreservadas,aparelhos,medição,codificação/armazenamento |
+| PV7(e)imagensmodernas | Upload/imagens/AX274 existentes | Antes/depoisdesconhecidos | Originalaprovado/preservado,alt text,conversão/transferência/cópia,celularsimples |
+
+Constataçõesdo dono sobre linhasStudiojáabrangidas:e-mail6,30;IA3,35;visitas2,64;pedidos0,95;armazenamento0,92;agendas0,63;automações0,48;uploads0,36dólares/mês. Não somadas/reclassificadas nemusadaspara baixar custo neste registro. Fontes/medições pendentes;não há economia comprovada. Nenhum original alterado/apagado,nenhumcacheativado,nenhum dadoentrelojas,nenhum fornecedor/serviço realalterado.
+
+Cadaeconomia exige fonteoficialdatada OU medição registrada conformePV7,teste de qualidade/velocidade,limitespreservados,cálculo60%porcliente/globalapóstodosimpostos/fixosLLC. Nenhum resultado de perfil atendido inventado. Histórico:PV7adicionadonomesmoPR1030apósPV6;exigirverificaçãocompletanonovohead,VR/AX274integrais.
