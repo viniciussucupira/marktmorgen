@@ -1821,6 +1821,45 @@ export function ProductEditor({
         </p>
       </div>
 
+      {/* Keep creation ahead of product rows so expanding rows cannot displace its pointer target. */}
+      {adding ? (
+        <div className="mt-5">
+          <ProductForm
+            draft={draft}
+            setDraft={setDraft}
+            busy={busy}
+            error={error}
+            submitLabel="Add it"
+            onSubmit={() =>
+              run(
+                { action: "add", ...payloadOf(draft) },
+                () => {
+                  setAdding(false);
+                  setDraft(EMPTY);
+                  // A new product goes to the end of the list: on a long one,
+                  // the page it lands on is opened so it can be seen.
+                  if (paging) router.push(pageHref(Math.ceil((total + 1) / paging.size), "", sid));
+                },
+                "Product added.",
+              )
+            }
+            onCancel={() => {
+              setAdding(false);
+              setError(null);
+            }}
+          />
+        </div>
+      ) : (
+        <button
+          type="button"
+          disabled={full || !editorReady}
+          onClick={startAdding}
+          className="btn btn-primary mt-5"
+        >
+          Add something to sell
+        </button>
+      )}
+
       {total === 0 ? (
         <p className="mt-2 text-ink-soft">
           Your page is live and it is empty. Add the first thing and it shows up
@@ -2201,44 +2240,6 @@ export function ProductEditor({
         })}
       </ul>
       {paging ? <Pager paging={paging} /> : null}
-
-      {adding ? (
-        <div className="mt-5">
-          <ProductForm
-            draft={draft}
-            setDraft={setDraft}
-            busy={busy}
-            error={error}
-            submitLabel="Add it"
-            onSubmit={() =>
-              run(
-                { action: "add", ...payloadOf(draft) },
-                () => {
-                  setAdding(false);
-                  setDraft(EMPTY);
-                  // A new product goes to the end of the list: on a long one,
-                  // the page it lands on is opened so it can be seen.
-                  if (paging) router.push(pageHref(Math.ceil((total + 1) / paging.size), "", sid));
-                },
-                "Product added.",
-              )
-            }
-            onCancel={() => {
-              setAdding(false);
-              setError(null);
-            }}
-          />
-        </div>
-      ) : (
-        <button
-          type="button"
-          disabled={full || !editorReady}
-          onClick={startAdding}
-          className="btn btn-primary mt-5"
-        >
-          Add something to sell
-        </button>
-      )}
 
       {full && !adding ? (
         <p className="mt-3 text-sm text-ink-soft">
