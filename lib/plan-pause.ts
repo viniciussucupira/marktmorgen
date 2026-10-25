@@ -442,6 +442,13 @@ export async function runBreaks(nowSeconds = Math.floor(Date.now() / 1000)): Pro
       }
       continue;
     }
+    // A due record alone does not prove that its original plan stopped.
+    // If that same subscription still appears active, keep the evidence and
+    // wait for reconciliation rather than starting a second paid plan.
+    if (store.subscriptionActive) {
+      counts.failed += 1;
+      continue;
+    }
     try {
       const started = await restartPlan({
         store,

@@ -541,6 +541,34 @@ async function main() {
     }
   }
 
+  part("An original plan still active at the restart date is not charged again");
+  {
+    const email="original-still-active@example.com",id="sub_OriginalActive01";
+    subs[id]=subscription(id);
+    const store=await storeWith(email,"originalstillactive",id);
+    const set=await pausePlan(store,1,NOW);
+    const until=set.kind==="paused"?set.record.until:0;
+    const ref=storeRef(store);
+    const before=created.length;emails.length=0;
+    const [originalRecord,originalYear]=await pauseRedis.pipeline([
+      ["GET",`nl:pause:${ref}`],["GET",`nl:pause:last:${ref}`],
+    ]);
+    const counts=await runBreaks(until+60);
+    is("an active original plan is an unresolved restart, not a success or stale entry",counts,{told:0,restarted:0,failed:1,dropped:0});
+    is("no replacement charge or success/decline notice is made",[created.length-before,emails.length],[0,0]);
+    const [retainedRecord,retainedYear,due]=await pauseRedis.pipeline([
+      ["GET",`nl:pause:${ref}`],["GET",`nl:pause:last:${ref}`],
+      ["ZRANGEBYSCORE","nl:pause:due","-inf",String(until+60)],
+    ]);
+    is("the exact pause and annual evidence remain",[retainedRecord,retainedYear],[originalRecord,originalYear]);
+    is("the due record remains available for reconciliation",Array.isArray(due)&&due.includes(ref),true);
+    is("the original store remains active",(await storeForEmail(email))?.subscriptionActive,true);
+    await setSubscription(email,{active:false});
+    const reconciled=await runBreaks(until+60);
+    is("an ordinary restart still works after the original is recorded inactive",[reconciled.restarted,reconciled.failed],[1,0]);
+    is("only that later pass creates the replacement",created.length-before,1);
+  }
+
   part("A store that started again by hand");
   {
     subs.sub_ByHand000001 = subscription("sub_ByHand000001");
