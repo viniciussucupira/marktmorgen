@@ -133,7 +133,9 @@ export async function pauseOf(store: Pick<Store, "email" | "sid" | "extra">): Pr
 
 async function storedPauseAt(ref: string): Promise<{ record: PauseRecord | null; missing: boolean }> {
   if (!isRedisConfigured()) return { record: null, missing: true };
-  const [raw] = await redisPipeline([["GET", recordKey(ref)]]);
+  const reply = await redisPipeline([["GET", recordKey(ref)]]);
+  if (!Array.isArray(reply) || reply.length !== 1) return { record: null, missing: false };
+  const raw = reply[0];
   // Only an explicit Redis miss proves absence. Invalid or incomplete replies
   // must not authorize deletion of billing evidence.
   return { record: parseRecord(raw), missing: raw === null };

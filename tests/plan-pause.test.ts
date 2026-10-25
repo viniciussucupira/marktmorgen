@@ -362,6 +362,27 @@ async function main() {
       is("the pending entry remains available for reconciliation", Array.isArray(due) && due.includes(ref), true);
       is("no provider charge or notice follows unreadable evidence", [created.length - before, emails.length], [0, 0]);
     }
+    const originalPipeline = pauseRedis.pipeline;
+    for (const reply of [[], [null, "unrelated"], [JSON.stringify(good), "unrelated"]]) {
+      pauseRedis.pipeline = async (commands) => {
+        if (commands.length === 1 && commands[0][0] === "GET" && commands[0][1] === key) return reply;
+        return originalPipeline(commands);
+      };
+      try {
+        const before = created.length;
+        emails.length = 0;
+        const counts = await runBreaks(until + DAY);
+        const [retained, due] = await originalPipeline([
+          ["GET", key], ["ZRANGEBYSCORE", "nl:pause:due", "-inf", String(until + DAY)],
+        ]);
+        is("ambiguous read cardinality cannot authorize cleanup or restart", [counts.failed, counts.dropped, counts.restarted], [1, 0, 0]);
+        is("ambiguous read keeps closing on hold", await onBreak(ref, until + DAY), true);
+        is("ambiguous read retains stored evidence and due index", [typeof retained, Array.isArray(due) && due.includes(ref)], ["string", true]);
+        is("ambiguous read produces no charge or notice", [created.length - before, emails.length], [0, 0]);
+      } finally {
+        pauseRedis.pipeline = originalPipeline;
+      }
+    }
     // An explicit Redis miss remains ordinary stale-index cleanup.
     await pauseRedis.pipeline([["DEL", key]]);
     const before = created.length;
