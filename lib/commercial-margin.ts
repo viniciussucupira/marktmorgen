@@ -174,3 +174,95 @@ export function commercialPlansMayOpen(requested:boolean,review:CommercialMargin
  const lifecycleReady=Object.values(CONTRACT_ADMISSION_COVERAGE).every(Boolean);
  return requested===true&&commissionReady&&exposureReady&&contractReady&&lifecycleReady&&commercialMarginDataReady(review);
 }
+
+
+/** Descriptive accounting only. These figures never approve a customer or open sales. */
+export const COMMERCIAL_PROFIT_SOURCES = [
+ "plan_subscriptions", "add_ons", "email_packages", "captions",
+ "network_and_sponsorship", "paid_recommendations", "list_validation",
+ "referral_commissions", "training",
+] as const;
+export type CommercialProfitSource = typeof COMMERCIAL_PROFIT_SOURCES[number];
+export type ProfitSourceAmounts = {
+ /** Marktmorgen revenue only, never a creator's gross proceeds or an unpaid authorization. */
+ revenueCents: number|null;
+ variableCostsCents: number|null;
+ allocatedFixedCostsCents: number|null;
+ taxesCents: number|null;
+ refundsCents: number|null;
+ reservesCents: number|null;
+ /** Dated provenance covers all costs, the most onerous taxes and the allocation method. */
+ evidence: string;
+};
+export type CommercialProfitMixInput = {
+ basis: "worst_case"|"reconciled_actual";
+ interval: "month"|"year";
+ period: string;
+ currency: "USD";
+ /** The entire LLC fixed cost for this SAME period, including Hazelsong. */
+ companyFixedCostsCents: number|null;
+ sources: Record<CommercialProfitSource, ProfitSourceAmounts|null>;
+};
+export type CommercialProfitMix = {
+ basis: CommercialProfitMixInput["basis"]|null;
+ interval: CommercialProfitMixInput["interval"]|null;
+ period: string|null;
+ rows: {source:CommercialProfitSource;netProfitCents:number|null;shareOfNetProfitBps:number|null}[];
+ totalNetProfitCents:number|null;
+ reason:"known"|"unknown"|"fixed_cost_allocation_mismatch"|"nonpositive_total";
+};
+const profitAmountKeys = [
+ "revenueCents","variableCostsCents","allocatedFixedCostsCents","taxesCents","refundsCents","reservesCents",
+] as const;
+function profitCents(value:unknown):value is number {
+ return typeof value==="number"&&Number.isSafeInteger(value)&&value>=0;
+}
+function safeProfitNumber(value:bigint):number|null {
+ return value>BigInt(Number.MAX_SAFE_INTEGER)||value<BigInt(Number.MIN_SAFE_INTEGER)?null:Number(value);
+}
+/** A missing source is unknown, even when sales are closed. Explicit evidenced zero is supported.
+ * Negative source profits remain negative; their share may be negative or exceed 100%.
+ * Shares are truncated to one basis point and need not sum to exactly 10,000.
+ */
+export function commercialProfitMix(input:CommercialProfitMixInput|null):CommercialProfitMix {
+ const result:CommercialProfitMix={
+  basis:null,interval:null,period:null,
+  rows:COMMERCIAL_PROFIT_SOURCES.map(source=>({source,netProfitCents:null,shareOfNetProfitBps:null})),
+  totalNetProfitCents:null,reason:"unknown",
+ };
+ const encoded=canonicalFinancialSnapshot(input);
+ if(encoded===null)return result;
+ const data=JSON.parse(encoded) as CommercialProfitMixInput|null;
+ if(!data||Array.isArray(data)||(data.basis!=="worst_case"&&data.basis!=="reconciled_actual")||
+  (data.interval!=="month"&&data.interval!=="year")||data.currency!=="USD"||
+  typeof data.period!=="string"||!data.period.trim()||
+  !data.sources||Array.isArray(data.sources)||typeof data.sources!=="object"||
+  Object.keys(data.sources).length!==COMMERCIAL_PROFIT_SOURCES.length||
+  !COMMERCIAL_PROFIT_SOURCES.every(source=>Object.hasOwn(data.sources,source)))return result;
+ result.basis=data.basis;result.interval=data.interval;result.period=data.period;
+ let total=0n,fixed=0n,complete=true;
+ for(const row of result.rows){
+  const amounts=data.sources[row.source];
+  if(!amounts||Array.isArray(amounts)||typeof amounts!=="object"||
+   typeof amounts.evidence!=="string"||!amounts.evidence.trim()||
+   !profitAmountKeys.every(key=>profitCents(amounts[key]))){complete=false;continue;}
+  const net=BigInt(amounts.revenueCents!)-BigInt(amounts.variableCostsCents!)-
+   BigInt(amounts.allocatedFixedCostsCents!)-BigInt(amounts.taxesCents!)-
+   BigInt(amounts.refundsCents!)-BigInt(amounts.reservesCents!);
+  row.netProfitCents=safeProfitNumber(net);
+  if(row.netProfitCents===null)complete=false;
+  total+=net;fixed+=BigInt(amounts.allocatedFixedCostsCents!);
+ }
+ if(!complete||!profitCents(data.companyFixedCostsCents))return result;
+ if(fixed!==BigInt(data.companyFixedCostsCents)){result.reason="fixed_cost_allocation_mismatch";return result;}
+ result.totalNetProfitCents=safeProfitNumber(total);
+ if(result.totalNetProfitCents===null)return result;
+ if(total<=0n){result.reason="nonpositive_total";return result;}
+ const shares=result.rows.map(row=>safeProfitNumber(BigInt(row.netProfitCents!)*10000n/total));
+ if(shares.some(share=>share===null)){result.totalNetProfitCents=null;return result;}
+ result.rows.forEach((row,index)=>{row.shareOfNetProfitBps=shares[index];});
+ result.reason="known";
+ return result;
+}
+/** No reconciled accounting dataset or independently reviewed forecast exists yet. */
+export const CURRENT_COMMERCIAL_PROFIT_MIX_INPUT:CommercialProfitMixInput|null=null;
