@@ -8717,3 +8717,14 @@ Problema: o criador/comprador não deve ser levado a confiar em algo indisponív
 Acessibilidade deste PR: nenhuma tela/ação do cliente alterada, passos 0→0 e decisões 0→0 no escopo documental; isso não mede a usabilidade atual do site nem substitui AX274/202. Estado do registro: em andamento até teste/incorporação/publicação; estado de427: na fila. Nenhum recurso passou a ficar disponível ao cliente por um documento e o contador funcional não muda.
 
 Aplicação ao trabalho em curso: #1023 pode ser descrito como publicado somente após conferir READY/domínio/SHA, com a lacuna de teste completo do fluxo de reconciliação e janela dos registros expressas; teste isolado do helper e páginas públicas não bastam para chamá-lo pronto, disponível ao cliente ou entregue sob VR. Não somar nova entrega só por código publicado. Não reescrever provas históricas como se contivessem verificações que não ocorreram.
+
+
+## AB(a) — Prova do fluxo backend de reconciliação (25/10/2026, 11h53 Fortaleza)
+
+Estado: em andamento, branch codex/billing-sync-observation-flow. Benefício registrado antes da implementação na continuidade: impedir que observação ambígua apague o registro de plano/período pagos do criador; reduzir suporte/retrabalho e proteger retenção. Impacto econômico não medido, nenhuma margem certificada. Não é execução antecipada de427VR1.
+
+Novo teste percorre o código real syncSubscriptions → listSubscriptions/readSubscription → Redis/Store → allowanceWindow. Respostas sintéticas estritas: status ausente/nulo/desconhecido e página mista não alteram Store/período/âncora; fallback de assinatura diferente/status desconhecido preserva direitos; cancelamento conhecido continua gravando estado e retenção existentes. GETs limitados aos caminhos esperados, sem provider real, conta, pagamento ou mensagem. Executar CI completo no head; nenhum subprocesso local.
+
+Limite de evidência VR: fluxo backend real com dados sintéticos, não prova navegação de cliente no estúdio/comprador/checkout nem uso por pessoa real. Código de testes não é funcionalidade disponível ou entrega. PLANS_ON_SALE=false e demais travas intactas;1023 continua publicado sem contagem adicional até evidência suficiente. Teste com pessoas reais é lacuna202.
+
+Custos: nenhum runtime/fornecedor/chave/campo/TTL adicional; casos finitos no CI existente, custo real de CI não quantificado nem zero presumido. Custos reais e impostos BR/EUA/100% LLC continuam na leitura mais onerosa; qualquer operação futura nova exige cálculo/reserva/teto. Acessibilidade: sem telas alteradas, passos0→0/decisões0→0 no escopo documental/teste, sem alegar usabilidade ou AX274 aprovados.
