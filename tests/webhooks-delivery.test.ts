@@ -24,6 +24,7 @@
  *     delivery is marked failed with the reason; a store with no plan sends
  *     none.
  */
+import assert from "node:assert/strict";
 import { createHmac } from "node:crypto";
 import http from "node:http";
 import https from "node:https";
@@ -93,6 +94,28 @@ async function main(): Promise<void> {
   // A public address, as a real name would resolve to; the socket goes to the local server.
   setSendHooksForTests({ fetch: { resolve: async () => [{ address: "93.184.216.34", family: 4 }], agent: new LocalAgent(port) as never } });
 
+
+  part("Unknown due observations cannot authorize queue work");
+  const queuePipeline = redis.pipeline;
+  const malformedQueues: unknown[] = [null, [], [null], ["unknown"], [{}], [[1]], [[""]], [["duplicate", "duplicate"]], [Array.from({ length: 101 }, (_, i) => "member" + i)], [[], []]];
+  for (const bad of malformedQueues) {
+    let queryCalls = 0;
+    let downstream = 0;
+    redis.pipeline = async commands => {
+      if (commands.length === 1 && commands[0][0] === "ZRANGEBYSCORE") {
+        queryCalls += 1;
+        return bad as never;
+      }
+      downstream += 1;
+      return queuePipeline(commands);
+    };
+    try {
+      await assert.rejects(deliverDue(Date.now() + 10000), /complete bounded observation/);
+      is("malformed due reply stops before reads, leases or cleanup", [queryCalls, downstream, received.length], [1, 0, 0]);
+    } finally { redis.pipeline = queuePipeline; }
+  }
+  is("an explicit empty queue is a valid completed pass", await deliverDue(Date.now() + 10000), { tried: 0, delivered: 0 });
+
   await claimHandle("one@example.com", "first-shop", "First Shop", "");
   await claimHandle("two@example.com", "second-shop", "Second Shop", "");
   await ensureStatsId("one@example.com");
@@ -143,6 +166,30 @@ async function main(): Promise<void> {
   const failing = view.log[0];
   is("the first try failed and is waiting", [failing.state, failing.attempts, failing.lastStatus], ["retrying", 1, 500]);
   is(`the next try is ${RETRY_MINUTES[0]} minutes later`, Math.round((failing.next - failing.lastAt) / 60_000), RETRY_MINUTES[0]);
+
+  part("Only the exact numeric lease acknowledgment authorizes a delivery");
+  const leasePipeline = redis.pipeline;
+  const beforeLeaseRequests = received.length;
+  const beforeLeaseView = await webhooksView(one);
+  for (const bad of [[], [null], ["1"], [true], [[1]], [2], [-1], [1, 1]]) {
+    let leaseCalls = 0;
+    redis.pipeline = async commands => {
+      if (commands.length === 1 && commands[0][0] === "EVAL" && String(commands[0][1]).includes('redis.call("ZSCORE", KEYS[1], ARGV[1])')) {
+        leaseCalls += 1;
+        return bad as never;
+      }
+      return leasePipeline(commands);
+    };
+    try {
+      await assert.rejects(deliverDue(Date.now() + 10000, Date.now() + RETRY_MINUTES[0] * 60000 + 1000), /lease was not acknowledged/);
+      is("an ambiguous lease never calls the endpoint or rewrites its delivery", [leaseCalls, received.length, (await webhooksView(one)).log], [1, beforeLeaseRequests, beforeLeaseView.log]);
+    } finally { redis.pipeline = leasePipeline; }
+  }
+  redis.pipeline = async commands => commands.length === 1 && commands[0][0] === "EVAL" && String(commands[0][1]).includes('redis.call("ZSCORE", KEYS[1], ARGV[1])') ? [0] : leasePipeline(commands);
+  try {
+    is("numeric zero means no lease, without an attempted delivery", await deliverDue(Date.now() + 10000, Date.now() + RETRY_MINUTES[0] * 60000 + 1000), { tried: 0, delivered: 0 });
+  } finally { redis.pipeline = leasePipeline; }
+
   is("not before then", (await deliverDue(Date.now() + 10_000)).tried, 0);
   const before = received.length;
   await new Promise((resolve) => setTimeout(resolve, 1_100));
