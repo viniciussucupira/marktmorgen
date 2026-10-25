@@ -542,12 +542,16 @@ export async function addEndpoint(store: Store, rawUrl: string, events: unknown,
 }
 
 /** Changes which events an endpoint hears. */
-export async function setEndpointEvents(store: Store, id: string, events: unknown): Promise<WebhooksView | "events" | "missing"> {
+export async function setEndpointEvents(store: Store, id: string, events: unknown): Promise<WebhooksView | "events" | "missing" | "unavailable"> {
   if (!store.statsId) return "missing";
   const chosen = Array.isArray(events) ? [...new Set(events.filter(isEvent))] : [];
   if (!chosen.length) return "events";
   const config = await readConfig(store.statsId);
-  if (!config || !config.endpoints.some((e) => e.id === id)) return "missing";
+  const endpoint = config?.endpoints.find((e) => e.id === id);
+  if (!config || !endpoint) return "missing";
+  // A subset removes future work; adding a new event creates a new obligation.
+  // Keep retained event removal available without a fresh admission.
+  if (chosen.some(event => !endpoint.events.includes(event)) && store.period?.funded === true && !(await reservePaidResourceWindow(store))) return "unavailable";
   const next: Config = { ...config, handle: store.handle, endpoints: config.endpoints.map((e) => (e.id === id ? { ...e, events: chosen } : e)) };
   await redisPipeline([["SET", cfgKey(store.statsId), JSON.stringify(next)]]);
   return webhooksView(store);

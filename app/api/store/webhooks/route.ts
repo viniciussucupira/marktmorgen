@@ -31,6 +31,7 @@ export async function POST(request: NextRequest) {
     }
     if (action === "events") {
       const result = await setEndpointEvents(store, id, guarded.body.events);
+      if (result === "unavailable") return Response.json({ ok: false, error: "unavailable", message: "The endpoint events could not be changed just now. Try again in a moment." }, { status: 503 });
       if (result === "events") return Response.json({ ok: false, error: "events" }, { status: 400 });
       if (result === "missing") return Response.json({ ok: false, error: "missing" }, { status: 404 });
       return Response.json({ ok: true, view: result });
