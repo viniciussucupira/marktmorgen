@@ -745,7 +745,19 @@ export async function setCancelAtPeriodEnd(
     `/subscriptions/${encodeURIComponent(subscriptionId)}`,
     new URLSearchParams({ cancel_at_period_end: cancel ? "true" : "false" }),
   );
-  return stateOf(subscription);
+  // Only an identified, explicit provider observation can confirm this change.
+  // Unknown replies must throw so callers retain paid access and pause evidence.
+  if (!subscription || typeof subscription !== "object" || Array.isArray(subscription) ||
+      subscription.id !== subscriptionId || typeof subscription.status !== "string" ||
+      !["active", "trialing", "past_due", "unpaid", "canceled", "incomplete", "incomplete_expired", "paused"].includes(subscription.status)) {
+    throw new Error("The cancellation response does not identify the requested subscription state");
+  }
+  const state = stateOf(subscription);
+  if (state.state === "active" &&
+      (typeof subscription.cancel_at_period_end !== "boolean" || state.cancelsAtEnd !== cancel)) {
+    throw new Error("The subscription did not acknowledge the requested cancellation setting");
+  }
+  return state;
 }
 
 export type SwitchResult =
