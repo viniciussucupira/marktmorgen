@@ -12,6 +12,7 @@ concurrency:
   cancel-in-progress: true
 jobs:
   documentation-scope:
+    name: Documentation scope (accessibility-buyer-actions)
     runs-on: ubuntu-latest
     timeout-minutes: 5
     outputs:
