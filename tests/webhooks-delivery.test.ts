@@ -200,7 +200,7 @@ async function main(): Promise<void> {
   await claimHandle("funded-hook@example.com", "funded-hook-shop", "Funded Hook Shop", "");
   await ensureStatsId("funded-hook@example.com");
   const retainedOwner = (await storeForEmail("funded-hook@example.com"))!;
-  const added = await addEndpoint(retainedOwner, "https://hooks.example.com/funded", ["sale.completed"]);
+  const added = await addEndpoint(retainedOwner, "https://hooks.example.com/funded", ["sale.completed", "refund.issued"]);
   if (!added.ok) throw new Error("retained endpoint not added");
   const endpointId = added.view.endpoints[0].id;
   await setSubscription("funded-hook@example.com", { customerId: "cus_HookFunded001", subscriptionId: "sub_HookFunded001", active: true, period: { ...paidPeriod(), funded: true } });
@@ -211,6 +211,15 @@ async function main(): Promise<void> {
   is("no endpoint or secret is persisted on refusal", (await webhooksView(funded)).endpoints, endpointsBefore);
   const duplicate = await addEndpoint(funded, "https://hooks.example.com/funded", ["sale.completed"]);
   is("an existing endpoint stays an explicit duplicate", !duplicate.ok && duplicate.reason, "duplicate");
+  is("adding another event needs new cohort approval", await setEndpointEvents(funded, endpointId, ["sale.completed", "refund.issued", "membership.started"]), "unavailable");
+  is("failed event expansion retains the exact endpoint configuration", (await webhooksView(funded)).endpoints, endpointsBefore);
+  const reduced = await setEndpointEvents(funded, endpointId, ["sale.completed"]);
+  if (typeof reduced === "string") throw new Error("retained event removal refused");
+  is("removing an existing event remains available", reduced.endpoints[0].events, ["sale.completed"]);
+  const repeated = await setEndpointEvents(funded, endpointId, ["sale.completed"]);
+  is("keeping the same events creates no new funding obligation", typeof repeated !== "string", true);
+  is("putting a removed event back requires new approval", await setEndpointEvents(funded, endpointId, ["sale.completed", "refund.issued"]), "unavailable");
+  is("the removed event stays removed after refusal", (await webhooksView(funded)).endpoints[0].events, ["sale.completed"]);
   const beforeFunded = received.length;
   const beforeUnits = await allowanceUsed(funded, "webhook");
   const beforeLog = (await webhooksView(funded)).log;
