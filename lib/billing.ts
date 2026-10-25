@@ -792,6 +792,14 @@ export async function switchPlan(
         sourceRecurring?.interval !== now.cycle || sourceRecurring?.interval_count !== 1) {
       throw new Error("The funded switch source price is not the single reviewed plan interval");
     }
+    const began = status === "trialing" ? subscription.trial_start : periodStart(subscription);
+    const ends = status === "trialing" ? subscription.trial_end : periodEnd(subscription, false);
+    const observedAt = Math.floor(Date.now() / 1000);
+    const reservedAt = funding.submitUntilSeconds - CONTRACT_FUNDING_RULES.submissionSeconds;
+    if (!Number.isSafeInteger(began) || !Number.isSafeInteger(ends) || typeof began !== "number" || typeof ends !== "number" ||
+        began <= 0 || ends <= began || began > reservedAt || reservedAt > observedAt || ends <= observedAt) {
+      throw new Error("The funded switch source phase does not cover its reservation and observation");
+    }
   }
   if (
     now.tier === choice.tier &&
