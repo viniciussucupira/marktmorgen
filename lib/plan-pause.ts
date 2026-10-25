@@ -210,8 +210,13 @@ export async function pausePlan(store: Store, months: PauseMonths, nowSeconds = 
   const subscription = await subscriptionRecord(id);
   if (!subscription) return { kind: "refused", reason: "standing" };
   const ref = storeRef(store);
-  const [last] = await redisPipeline([["EXISTS", lastKey(ref)]]);
-  const refusal = pauseRefusal(subscription, nowSeconds, Number(last) === 1);
+  const lastReply = await redisPipeline([["EXISTS", lastKey(ref)]]);
+  // Unknown annual eligibility must fail before a due record or provider stop
+  // is created. Only the single numeric EXISTS result proves this state.
+  if (!Array.isArray(lastReply) || lastReply.length !== 1 || (lastReply[0] !== 0 && lastReply[0] !== 1)) {
+    return { kind: "refused", reason: "standing" };
+  }
+  const refusal = pauseRefusal(subscription, nowSeconds, lastReply[0] === 1);
   if (refusal) return { kind: "refused", reason: refusal };
   const customer = typeof subscription.customer === "string" ? subscription.customer : store.stripeCustomerId ?? "";
   const paymentMethod = cardOf(subscription);
