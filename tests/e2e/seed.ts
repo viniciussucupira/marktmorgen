@@ -7,6 +7,7 @@
 import { setPayPalSeller } from "@/lib/store";
 import { addProduct, addStoreLink, claimHandle, createStore, ensureStatsId, setProductPage, setAnnouncement, setProductExtras, setProductImage, setLinkImage, setProductLink, setReviewed, setSections, storeForEmail, setStripeAccount, setSubscription, setMailSettings, storeRef } from "@/lib/store";
 import { openSession } from "@/lib/auth";
+import { paidPeriod } from "../billing-period-fixture";
 import { saveReview, setReviewPhoto } from "@/lib/reviews";
 import { refreshStoreQuotes } from "@/lib/store-quotes";
 import { writePage } from "@/lib/sales-page-store";
@@ -111,7 +112,17 @@ async function main(): Promise<void> {
   // On Pro, so its studio writes to a list (app/studio/email).
   await setSubscription(storeRef(fresh.store), { active: true, tier: "pro", cycle: "month", subscriptionId: null, customerId: null, trialEnds: 0 });
   await setMailSettings(storeRef(fresh.store), { fromName: "Fresh Kitchen", address: "1 Main St, Austin, TX 78701" });
-  console.log(JSON.stringify({ ids, reviews, fresh: fresh.store.sid, session: await openSession(OWNER), statsId, longSession: await openSession(LONG) }));
+  // A separate synthetic owner for the real studio billing observation flow.
+  const billingOwner = "studio-observation@example.test";
+  const billingClaim = await claimHandle(billingOwner, "billing-observation", "Synthetic billing observation", "");
+  if (!billingClaim.ok) throw new Error("billing observation fixture refused");
+  await ensureStatsId(billingOwner);
+  const billingStore = await setSubscription(billingOwner, { customerId: "cus_StudioObservation01", subscriptionId: "sub_StudioObservation01", active: true, tier: "creator", cycle: "month", period: paidPeriod() });
+  if (!billingStore?.subscriptionActive || !billingStore.period) throw new Error("billing observation paid fixture missing");
+  const billingDigest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode("nimbus-store:" + billingOwner));
+  const billingKey = "nl:store:owner:" + Array.from(new Uint8Array(billingDigest), n => n.toString(16).padStart(2, "0")).join("").slice(0, 40);
+  const billingObservation = { session: await openSession(billingOwner), sid: billingStore.sid, key: billingKey };
+  console.log(JSON.stringify({ ids, reviews, fresh: fresh.store.sid, session: await openSession(OWNER), statsId, longSession: await openSession(LONG), billingObservation }));
 }
 
 main().catch((error) => {

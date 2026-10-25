@@ -52,6 +52,7 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { build } from "esbuild";
 import { startServices } from "./services.mjs";
+import { checkBillingStudioObservation } from "./billing-studio-observation.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = resolve(here, "../..");
@@ -199,7 +200,7 @@ try {
     child.on("close", (status) => done({ status, ...said }));
   });
   if (seeded.status !== 0) throw new Error(`the store could not be made:\n${seeded.err}`);
-  const { ids, reviews: seededReviews, fresh, session, statsId, longSession } = JSON.parse(seeded.out.trim().split("\n").at(-1));
+  const { ids, reviews: seededReviews, fresh, session, statsId, longSession, billingObservation } = JSON.parse(seeded.out.trim().split("\n").at(-1));
 
   // Built once, before it is served (see PRODUCTION above).
   if (PRODUCTION) {
@@ -3819,6 +3820,8 @@ try {
   }
 
   await keepSmall();
+  part("The real studio preserves paid rights when its billing answer is uncertain");
+  await checkBillingStudioObservation({ browser, LOCAL, services, fixture: billingObservation, is });
   part("Nothing went wrong on the way");
   is("no page threw an error", errors, []);
   is("and no page's own policy refused anything on it", [...new Set(policyRefusals)], []);
