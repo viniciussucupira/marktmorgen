@@ -8670,3 +8670,50 @@ Implementação na branch codex/subscription-list-status-observation; CI complet
 Teste existente de listSubscriptions ampliado com status ausente, nulo após uma linha válida e desconhecido. Preserva todos os casos anteriores, vazios explícitos, cursores, teto 100, chamada GET única e ausência de fallback/mutação. Somente fetch sintético substituído; nenhum teste local por subprocesso, provedor real, conta, pagamento ou mensagem externa.
 
 Custos: zero operações Redis/provedor/chaves/campos/cópias/TTL adicionais, mesma página e tetos; incremento de operações mensal/anual 0/0 por plano não equivale a custo real total zero. Validação de no máximo 100 status na resposta já solicitada. Custos reais desconhecidos, impostos BR/EUA, 100% LLC/direitos, reservas e meta 60% permanecem vinculantes; sem certificação. Não completa protocolo durável de reinício/renovação/liquidação ou AB(a), não altera PLANS_ON_SALE=false, preços, limites, permissões e revisões reais nulas. EI1/363 após AB(a) inteiro.
+
+
+## VR — Tudo de verdade: pronto significa funcionando para o cliente (25/10/2026)
+
+Solicitação do dono (25/10/2026, 11h13, horário de Fortaleza), palavras do dono: "tudo o que o chatgpt faz para mim tem que ser de verdade, verdadeiro, concretamente verdadeiro, funcionando infinitamente perfeitamente, sem erros, sem desperdício, não pode ser de faz de conta, tem que ser concretamente na realidade de verdade, não pode ser fingimento, tem que ser coisas que realmente beneficiem o cliente e me tragam lucro, e sempre tem que superar infinitamente no máximo de perfeição a excelência, acessibilidade e ser infinitamente fácil de usar, de entender e de aprender, ultra fácil de entender intuitivamente de imediato".
+
+Pedido aplicado sem parar o trabalho corrente. Parte A gravada em AGENTS.md no mesmo PR desta seção; sua vigência começa na instrução do dono, não na aprovação do PR. O item VR1 permanece na fila e não foi executado por este registro.
+
+Proveniência e não duplicação: conferidos main efce8d42b61d935a2da780c9c5b05008e06f3572, PRs abertos e ramos codex/* nos commits recentes. Não encontrados data/hora, título, [VR1] ou pedido equivalente já em gravação. Reutilizar integralmente AX274 (sem criar segunda auditoria AAA), docs/cross-product-handoff.md (proposta/commit testado/incorporação/publicação) e 189[HT7] (demo identificada). Máximo anterior de pedidos 426[BX2]; somente 427[VR1] é novo. Histórico, números anteriores e ordem do Bloco de abertura preservados.
+
+### PARTE A — Regra permanente (vigente desde já)
+
+1. Pronto só quando funciona de verdade. Um item só pode ser chamado de pronto quando: está incorporado ao main; está publicado, com a versão exata conferida em marktmorgen.com; foi usado de ponta a ponta como um cliente real usaria, com o código real (os dados podem ser sintéticos, nunca inventados no resultado); e não gerou erro nos registros da publicação. Todo relatório usa um destes estados, sem misturar: na fila; em andamento; testado num PR; incorporado; publicado; disponível ao cliente; desligado pelas travas (construído e testado, mas fechado pelo tax gate, art. 9a, revisão comercial ou PLANS_ON_SALE). O que existe só em documento, plano, teste isolado, simulação ou código desligado nunca é chamado de pronto nem de entregue.
+
+2. Nada de faz de conta diante do cliente. Nenhuma página, e-mail, botão, menu, número, contador, integração, depoimento, captura de tela ou recurso anunciado pode mostrar algo que não funciona hoje para quem está vendo. Se ainda não funciona, não aparece. Botão que não faz nada, link quebrado, texto de exemplo, recurso prometido e desligado ou número estimado apresentado como real são defeitos a corrigir antes de qualquer item novo da mesma página. A demo continua identificada como demo.
+
+3. Benefício real e lucro real. Todo item novo registra, antes de começar: qual problema concreto do criador ou do comprador ele resolve; como se confere que resolveu (teste do fluxo completo e, quando houver clientes, contagem agregada de uso, sem dados pessoais e sem rastreamento de abertura); e como traz lucro ao Marktmorgen (receita direta, retenção ou redução de custo), dentro da REGRA DOS 60%. Item sem benefício ou sem caminho de lucro demonstrável vai para "Depende do dono" em vez de ser construído.
+
+4. Fácil de entender de imediato. Toda tela nova ou alterada deve permitir ao criador fazer a tarefa principal sem manual: uma ação principal clara por tela; padrões prontos que funcionam sem configurar nada; texto em inglês americano simples (AX274, 3.1.5); exemplos reais dentro da própria tela; nenhum termo técnico sem explicação no lugar; desfazer onde houver risco de perda; zero trabalho manual que o sistema possa fazer sozinho. Cada PR registra, na seção "Acessibilidade", quantos passos e decisões a tarefa principal exige antes e depois. Testes com pessoas reais seguem o plano de custos já existente (item 202); enquanto não forem feitos, ficam registrados como lacuna, nunca como aprovados.
+
+5. Sem erros: como se busca isso de verdade. Nenhum sistema garante zero erro, então o compromisso é verificável: todo comportamento novo tem teste automático que exercita o código real; todo erro encontrado é corrigido na causa e ganha um teste que impede sua volta; depois de cada publicação, os registros de erro são conferidos por uma janela de tempo; se uma publicação quebrar algo que o cliente usa, volta-se à versão anterior antes de investigar. O relatório nunca diz "sem erros"; diz o que foi testado, como, com que resultado e o que não foi testado.
+
+6. Sem desperdício. Nunca construir o que já existe (confira o código e a fila antes); reaproveitar mecanismos existentes; nenhum gasto com fornecedor sem teto automático; nada de refazer o mesmo trabalho em PRs diferentes; nenhum texto, página ou recurso que ninguém vai usar.
+
+7. Superar os concorrentes de verdade. Toda comparação usa fonte oficial datada, conferida no dia. Superioridade só se afirma internamente com prova e, em público, nunca sem a auditoria e a fonte já exigidas em AX274 (item 7).
+
+8. Relatórios honestos e curtos. Cada relatório diz, em linguagem simples: o que passou a funcionar para o cliente, em qual estado do item 1, o que ainda não funciona e o que não foi verificado. Nunca usar "concluído", "perfeito" ou "100%" sem a prova correspondente.
+
+### PARTE B — Item futuro
+
+427. [VR1] Varredura única de faz de conta no site publicado.
+
+Estado: na fila. Depois do Bloco de abertura e dos itens já gravados (até 426); a regra permanente da Parte A vale imediatamente, independentemente dessa posição.
+
+Percorra todas as páginas públicas, o estúdio, a área do comprador, o checkout, os e-mails e a central de ajuda, em todos os idiomas, e liste cada ponto que mostra ao cliente algo que não funciona hoje para ele: links quebrados, botões sem efeito, recursos anunciados que estão desligados, textos de exemplo, números sem fonte, promessas que dependem das travas e capturas que não são do produto real. Para cada ponto: corrija, ou esconda até funcionar, ou reescreva para dizer a verdade (por exemplo, que as assinaturas ainda não estão à venda). Registre a lista completa, o que foi feito em cada ponto e a prova. Testes automáticos de links e de cada botão em 390 px e 1280 px, com teclado; nenhuma conta, pagamento ou mensagem real.
+
+REGRA DOS 60%: todo cliente pagante, isoladamente e usando 100% dos direitos do plano no pior mês, e a empresa como um todo, mantêm margem de lucro líquido mínima de 60% depois de todos os custos e de todos os impostos, inclusive os brasileiros; pode ser maior, nunca menor. Leitura que dá mais imposto (docs/tax-uncertainty.md). Desconhecido reprova, nunca é zero. Todos os custos fixos da LLC pertencem ao Marktmorgen (FX275).
+
+Proibido: mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, o tax gate, o art. 9a ou a revisão comercial, afrouxar qualquer trava para que algo pareça pronto, apagar conteúdo de criadores, apagar qualquer coisa da Hazelsong, criar contas, aceitar termos, contratar, pagar ou contatar terceiros. Somente testes sintéticos.
+
+### Benefício, verificação, lucro e custos registrados antes da alteração
+
+Problema: o criador/comprador não deve ser levado a confiar em algo indisponível ou não verificado; o dono precisa distinguir código/documentação de benefício efetivamente disponível. Verificação: este PR preserva literalmente as oito regras em AGENTS.md e na fila, sem afirmar que isso implementa a varredura; VR1 exigirá inventário completo e provas de fluxo real nas duas larguras com teclado, idiomas existentes e os registros da versão publicada. Pessoas reais continuam lacuna do202. Caminho de lucro: reduzir retrabalho/suporte e preservar retenção/confiança evitando falsas promessas; nenhum aumento de receita, redução monetária ou margem é tratado como resultado medido antes de dados reais agregados e aprovados. Nenhum custo operacional, fornecedor, rastreamento, teste com pessoa real ou nova permissão é introduzido por este registro; qualquer implementação futura precisa de limites/reserva/modelo mensal e anual por plano antes de operar. Valores totais desconhecidos continuam reprovados.
+
+Acessibilidade deste PR: nenhuma tela/ação do cliente alterada, passos 0→0 e decisões 0→0 no escopo documental; isso não mede a usabilidade atual do site nem substitui AX274/202. Estado do registro: em andamento até teste/incorporação/publicação; estado de427: na fila. Nenhum recurso passou a ficar disponível ao cliente por um documento e o contador funcional não muda.
+
+Aplicação ao trabalho em curso: #1023 pode ser descrito como publicado somente após conferir READY/domínio/SHA, com a lacuna de teste completo do fluxo de reconciliação e janela dos registros expressas; teste isolado do helper e páginas públicas não bastam para chamá-lo pronto, disponível ao cliente ou entregue sob VR. Não somar nova entrega só por código publicado. Não reescrever provas históricas como se contivessem verificações que não ocorreram.
