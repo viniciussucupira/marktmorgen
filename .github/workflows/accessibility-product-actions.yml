@@ -1,6 +1,9 @@
 name: Product action accessibility matrix
 run-name: PV8 source ${{ github.sha }}
 on:
+  schedule:
+    - cron: '37 5 * * *'
+  workflow_dispatch:
   pull_request:
   push:
     branches: [main]
@@ -8,7 +11,7 @@ permissions:
   contents: read
   actions: read
 concurrency:
-  group: product-action-accessibility-${{ github.ref }}
+  group: product-action-accessibility-${{ github.ref }}-${{ github.event_name }}
   cancel-in-progress: true
 jobs:
   documentation-scope:

@@ -80,5 +80,13 @@ class DocumentationScopeTests(unittest.TestCase):
                 self.assertEqual(len(conditions), 1, str(path))
                 self.assertIn("always() && needs.documentation-scope.outputs.full != 'false'", conditions[0])
 
+    def test_daily_and_manual_events_are_explicit_and_isolated(self):
+        for path in Path(".github/workflows").glob("*.yml"):
+            text = path.read_text(encoding="utf-8")
+            prefix = text.split("jobs:\n", 1)[0]
+            self.assertIn("  schedule:\n    - cron: '37 5 * * *'\n  workflow_dispatch:\n", prefix, str(path))
+            self.assertIn("-${{ github.event_name }}", prefix, str(path))
+            self.assertNotIn("paths-ignore", prefix, str(path))
+
 if __name__ == "__main__":
     unittest.main()
