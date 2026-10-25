@@ -9,7 +9,29 @@ concurrency:
   group: product-action-accessibility-${{ github.ref }}
   cancel-in-progress: true
 jobs:
+  documentation-scope:
+    name: Documentation scope (accessibility-product-actions)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      full: ${{ steps.scope.outputs.full }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Test conservative documentation classification
+        run: python3 scripts/test_ci_documentation_scope.py
+      - name: Compare actual PR trees; uncertainty keeps full coverage
+        id: scope
+        env:
+          CI_EVENT: ${{ github.event_name }}
+          CI_BASE: ${{ github.event.pull_request.base.sha }}
+          CI_HEAD: ${{ github.event.pull_request.head.sha }}
+        run: python3 scripts/ci_documentation_scope.py
   product-actions:
+    needs: documentation-scope
+    if: always() && needs.documentation-scope.outputs.full != 'false'
     name: Product action AAA (${{ matrix.browser }})
     runs-on: ubuntu-latest
     # Match the exact playwright-core package; browsers and OS libraries are preinstalled.
