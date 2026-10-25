@@ -402,6 +402,41 @@ async function main() {
     }
   }
 
+  part("An uncertain due-list reply cannot start unbounded or duplicate work");
+  {
+    const originalPipeline = pauseRedis.pipeline;
+    const replies: unknown[][] = [
+      [], [null], [["unknown@example.com"], "unrelated"], [[null]],
+      [["unknown@example.com", "unknown@example.com"]], [[""]],
+      [Array.from({length:201},(_,index)=>`over-limit-${index}@example.com`)],
+    ];
+    for (const reply of replies) {
+      let otherCommands=0;
+      pauseRedis.pipeline = async (commands) => {
+        if (commands.length === 1 && commands[0][0] === "ZRANGEBYSCORE" && commands[0][1] === "nl:pause:due") return reply;
+        otherCommands += commands.length;
+        return originalPipeline(commands);
+      };
+      try {
+        const before=created.length;emails.length=0;
+        const counts=await runBreaks(NOW+400*DAY);
+        is("unknown due batch is reported as failed, not empty success", counts, {told:0,restarted:0,failed:1,dropped:0});
+        is("unknown due batch authorizes no per-store operation, charge or notice", [otherCommands,created.length-before,emails.length], [0,0,0]);
+      } finally {
+        pauseRedis.pipeline=originalPipeline;
+      }
+    }
+    pauseRedis.pipeline=async(commands)=>{
+      if(commands.length===1&&commands[0][0]==="ZRANGEBYSCORE"&&commands[0][1]==="nl:pause:due")return [[]];
+      return originalPipeline(commands);
+    };
+    try {
+      is("one explicit empty due list remains a successful no-op", await runBreaks(NOW), {told:0,restarted:0,failed:0,dropped:0});
+    } finally {
+      pauseRedis.pipeline=originalPipeline;
+    }
+  }
+
   part("A store that started again by hand");
   {
     subs.sub_ByHand000001 = subscription("sub_ByHand000001");
