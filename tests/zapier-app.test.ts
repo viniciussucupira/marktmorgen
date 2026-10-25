@@ -17,7 +17,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { addProduct, claimHandle, ensureListId, ensureStatsId, setProductLink, setSubscription, storeForEmail } from "@/lib/store";
 import { makeKey } from "@/lib/api-keys";
-import { MAX_ENDPOINTS, emitEvent } from "@/lib/webhooks";
+import { MAX_ENDPOINTS, emitEvent, webhooksView } from "@/lib/webhooks";
 import { DELETE as deleteHook, POST as postHook } from "@/app/api/v1/hooks/route";
 import { GET as getEvents } from "@/app/api/v1/events/route";
 import { GET as getStore } from "@/app/api/v1/store/route";
@@ -207,6 +207,27 @@ async function main(): Promise<void> {
   part("The app names the platform version it installs");
   const pkg = JSON.parse(read("zapier/package.json")) as { dependencies: Record<string, string> };
   is("index.js and package.json agree on the platform version", app.platformVersion, pkg.dependencies["zapier-platform-core"]);
+
+  part("A funded store cannot create new webhook obligations without its cohort");
+  await setSubscription(OWNER, { customerId: "cus_Z0000001", subscriptionId: "sub_Z0000001", active: true, period: { ...store.period!, funded: true } });
+  const fundedStore = (await storeForEmail(OWNER))!;
+  const endpointsBefore = (await webhooksView(fundedStore)).endpoints;
+  is("the rejection is not the five-endpoint ceiling", endpointsBefore.length < MAX_ENDPOINTS, true);
+  const noticesBefore = emails.length;
+  const unavailable = await postHook(new Request("https://marktmorgen.com/api/v1/hooks", {
+    method: "POST", headers: { Authorization: `Bearer ${writer.key}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ url: "https://hooks.zapier.com/hooks/catch/funded/new", events: ["sale.completed"] }),
+  }));
+  is("the actual API reports temporary financial unavailability", [unavailable.status, (await unavailable.json()).error], [503, "unavailable"]);
+  is("the refusal leaves all endpoints and creator notices unchanged", [(await webhooksView(fundedStore)).endpoints, emails.length], [endpointsBefore, noticesBefore]);
+  const retained = endpointsBefore[0];
+  if (!retained) throw new Error("missing retained endpoint");
+  const removed = await deleteHook(new Request("https://marktmorgen.com/api/v1/hooks", {
+    method: "DELETE", headers: { Authorization: `Bearer ${writer.key}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ id: retained.id }),
+  }));
+  is("the actual authenticated DELETE remains available without new cohort approval", removed.status, 200);
+  is("only that retained endpoint is removed", (await webhooksView(fundedStore)).endpoints.map(e => e.id), endpointsBefore.filter(e => e.id !== retained.id).map(e => e.id));
 
   done();
 }
