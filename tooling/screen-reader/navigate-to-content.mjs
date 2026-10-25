@@ -7,6 +7,20 @@ export async function navigateToContent(reader,page,kind){
  await page.bringToFront();
  if(kind==="nvda"){
   await reader.perform(NVDAKeyCodeCommands.exitFocusMode,{capture:false});
+  // The active Playwright tab does not prove NVDA's foreground application.
+  const pageTitle=(await page.title()).replace(/\s+/g," ").trim().toLowerCase();
+  if(!pageTitle)throw Error("NVDA browser focus requires a nonempty page title");
+  let browserFocused=false;
+  for(let attempt=0;attempt<=10;attempt++){
+   await reader.perform(NVDAKeyCodeCommands.reportTitle);
+   const windowTitle=(await reader.lastSpokenPhrase()).replace(/\s+/g," ").trim().toLowerCase();
+   console.log("AX2_NVDA_WINDOW_FOCUS:"+JSON.stringify({attempt,pageTitle,windowTitle}));
+   if(windowTitle.startsWith(pageTitle)){browserFocused=true;break;}
+   if(attempt===10)break;
+   await reader.perform({keyCode:[WindowsKeyCodes.Escape],modifiers:[WindowsModifiers.Alt]},{capture:false});
+   await new Promise(resolve=>setTimeout(resolve,500));
+  }
+  if(!browserFocused)throw Error("NVDA foreground window did not match the synthetic page title");
   await page.locator("body").focus();
   await page.locator("body").click({position:{x:1,y:1}});
   await page.locator("body").blur();

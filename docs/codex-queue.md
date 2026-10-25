@@ -7778,3 +7778,10 @@ Cross-browserFirefoxhead82fe7a6f62333939915ea7b29b3c7829c25354ff,job121036774432
 TesteexistentegetByLabelStarts at exact:true,intençãoeseleçãodeoutroproduto,contagem48escritasporlargura,todoscasosack/erro/390/1280inalterados. Semlocatoralternativo,forceclique,reseleção,aumentodetimeoutourelaxamento. Exigirconjuntocompletodeverificaçõesnoheadcorrigido;falha969deopenercontinuaem investigação,passagemisoladade971não aprovacausa/solução.
 
 NenhumrequestRedis/provedor/envio/campopersistido adicional,useIdsomentedoDOM. CustosCPU/bytesnãomedidosnãozero,semnovoserviçopago;preços,limites,PLANS_ON_SALE=false,gates,coberturas,100%LLCFX275/maiorimpostopreservados. PedidosatéEZ367,complementos35522h11/22h14eprioridade363apósAB(a)preservados.Sempublicação/contador.
+
+
+### AB(a) — foco nativo NVDA antes de navegar pelos títulos (24/10/2026)
+
+Real reader entryWindowshead2985b6fcacfc40d3d4d27053ec8db217686f8347,job121040861572,falha2026-10-25T01:27:38Z: título obrigatório não anunciado;transcrito“Start,window”eoitoteclas“h”,apesardeheadingHTMLpresente. navigateToContentconferiaapenasbringToFront/DOMfocus,nãoaplicaçãonativaativa. Agora lêreportTitle e exige prefixo do título REAL da página sintética;nãobasta“Chrome”genérico. Outraaplicação→AltEscapecomlimite10tentativas/500ms,registrandotítulos;se não focar,erroexplícito. Sem alterarDOM/heading/falartextoartificial/limpartranscrito,semrelaxaroitopassos/assertivas. VoiceOverinalterado. PreparaçãoCIWindowsdescartável,nãocomputadordodono,nãocertificaçãoAAAgeral.
+
+Fonteprimáriaconsultada24/10/2026:https://github.com/guidepup/guidepup-playwright/blob/main/src/navigateNVDAtoWebContent.ts (focusBrowser/reportTitle/AltEscape10tentativas),https://www.guidepup.dev/docs/screen-reader-testing/testing-nvda . AvisoMIT/GUIDEPUP-LICENSEexistentespreservados.ExigirsuíteCOMPLETAnovohead,nãorerunisolado/pularchecagemoumarcarinfra“sucesso”.Falha969openercontinuaaberta,label974pendente. PedidosatéEZ367/prioridadeEI363/complementos355,gates/PLANS_ON_SALE=false,preços,limites,100%LLCFX275/maiorimpostopreservados.Semcustooperacionalnovo,conta/envio/pagamentoreal,publicação/contador.
