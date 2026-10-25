@@ -8650,3 +8650,14 @@ Em implementação na branch codex/subscription-read-observation, baseada no hea
 Correção: antes de stateOf, exigir objeto da assinatura exata solicitada e status conhecido; qualquer observação ambígua retorna unknown, preservando acesso/evidência. 404 explícito continua missing; falha do provedor continua unknown; estados conhecidos e ramo de validação de contrato marcado permanecem. Teste sintético pelo readSubscription real com fetch restrito substituído: nove formas/identidades/status inválidos, positivos ativos/inativos, 404 e 500, sem retry/fallback ou operação real.
 
 Custos: nenhuma requisição/Redis/chave/campo/cópia/TTL adicional; incremento de operações mensal/anual 0/0 por plano, sem custo real desconhecido ser zero. Validação constante no GET já existente. Mantidos preços, limites, PLANS_ON_SALE=false, permissões, impostos BR/EUA e 100% fixos LLC/direitos no pior mês. Não certifica margem nem completa reserva de renovação/reinício/liquidação, persistência durável de pausa ou AB(a). Revisões reais nulas/três coberturas incompletas preservadas; EI1/363 após AB(a) inteiro. Sem subprocessos locais, pagamentos ou mensagens reais.
+
+
+### Entrega funcional 254 — leitura identificada da assinatura
+
+[PR #1021](https://github.com/viniciussucupira/marktmorgen/pull/1021) incorporado em **25/10/2026 10:08:27 Fortaleza (13:08:27Z)**. Head testado `bfb3bb73447b8c11b6dcc2249de8d9053f7cd4c4`, árvore `d3f282fc3c57edfa689b5680a6ff3c3bfc973814`, merge `ab25ebdafb08d0a975365b5b91c6e086b8076736`, pais ordenados `e7a4eb0b82fea2d729f81d2f9fd9cf2bdaaed1a7` e head testado; árvore de incorporação idêntica à testada. Prova documental #1020 incorporada antes, sem conflito nem perda histórica.
+
+**24/24 verificações completas aprovadas nesse head**. Verify job **121170481619**, novo teste real readSubscription: **26 verificações aprovadas**, nove observações ambíguas conservadas como unknown sem fallback/retry, estados ativos/inativos identificados e respostas 404/500 corretas. Resultado geral Everything passing. Fetch sintético restrito, nenhuma conta/provedor/pagamento/mensagem real ou subprocesso local.
+
+Produção **READY 2026-10-25T13:09:08.161Z**, deployment `dpl_HQNCqDMZCWqzcXDKWAJUKyQDrHSQ`, metadata SHA exato do merge e alias **marktmorgen.com**. Cinco rotas `/`, `/platform`, `/pricing`, `/mission`, `/library` retornaram **200** com marcador literal desse deployment. Após as provas, contador **253 → 254**, próximo **255**; registro documental não soma entrega.
+
+Custos/limites preservados: nenhuma operação/chave/campo/cópia/TTL adicional; incremento de operações mensal/anual 0/0 por plano não é custo real zero nem margem certificada. Protocolo durável de pausa/reinício/renovação/liquidação e AB(a) continuam incompletos, revisões reais nulas, três coberturas false e PLANS_ON_SALE=false; preços/direitos/permissões intactos. EI1/363 após AB(a) inteiro.
