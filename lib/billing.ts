@@ -711,6 +711,12 @@ export async function restartPlan(input: {
       price?.unit_amount !== PLAN_PRICES[input.tier].month || recurring?.interval !== "month" || recurring?.interval_count !== 1) {
     throw new Error("the restarted plan price does not match the requested monthly charge");
   }
+  const observedAt = Math.floor(Date.now() / 1000);
+  const start = periodStart(subscription), end = periodEnd(subscription, false);
+  if (!Number.isSafeInteger(start) || !Number.isSafeInteger(end) || start <= 0 || end <= start ||
+      start > observedAt || end <= observedAt || end - start > 31 * 86400 || !started.period) {
+    throw new Error("the restarted plan does not have a current paid monthly period");
+  }
   return started;
 }
 

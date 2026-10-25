@@ -34,7 +34,7 @@ const subs: Record<string, Record<string, unknown>> = {};
 const created: URLSearchParams[] = [];
 let keepScheduledStop = false;
 let refuseScheduledStop = false;
-let createAnswer: "ok" | "declined" | "down" | "otherCustomer" | "otherTier" | "yearly" | "trial" | "pastDue" | "otherPrice" | "amount" | "currency" | "intervalCount" | "extraItem" | "intervalMismatch" | "quantity" | "missingQuantity" = "ok";
+let createAnswer: "ok" | "declined" | "down" | "otherCustomer" | "otherTier" | "yearly" | "trial" | "pastDue" | "otherPrice" | "amount" | "currency" | "intervalCount" | "extraItem" | "intervalMismatch" | "quantity" | "missingQuantity" | "missingPeriod" | "expiredPeriod" | "futurePeriod" | "fractionPeriod" | "longPeriod" = "ok";
 
 function subscription(id: string, over: Record<string, unknown> = {}): Record<string, unknown> {
   return {
@@ -87,7 +87,13 @@ globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) =>
       if (createAnswer === "currency") freshPrice.currency = "eur";
       if (createAnswer === "intervalCount") freshPrice.recurring.interval_count = 2;
       if (createAnswer === "intervalMismatch") freshPrice.recurring.interval = "year";
-      const items: { current_period_end: number; price: typeof freshPrice; quantity?: number }[] = [{ current_period_end: NOW + 10 * DAY, price: freshPrice, quantity: 1 }];
+      const observedNow = Math.floor(Date.now() / 1000);
+      const items: { current_period_start?: number; current_period_end: number; price: typeof freshPrice; quantity?: number }[] = [{ current_period_start: observedNow - 60, current_period_end: observedNow + 30 * DAY, price: freshPrice, quantity: 1 }];
+      if (createAnswer === "missingPeriod") delete items[0].current_period_start;
+      if (createAnswer === "expiredPeriod") { items[0].current_period_start = observedNow - 2 * DAY; items[0].current_period_end = observedNow; }
+      if (createAnswer === "futurePeriod") { items[0].current_period_start = observedNow + DAY; items[0].current_period_end = observedNow + 2 * DAY; }
+      if (createAnswer === "fractionPeriod") items[0].current_period_start = observedNow - 0.5;
+      if (createAnswer === "longPeriod") items[0].current_period_end = observedNow + 32 * DAY;
       if (createAnswer === "quantity") items[0].quantity = 2;
       if (createAnswer === "missingQuantity") delete items[0].quantity;
       if (createAnswer === "extraItem") items.push({ ...items[0] });
@@ -298,7 +304,7 @@ async function main() {
 
   part("A restart response must match the requested paid monthly plan");
   {
-    const mismatches = ["otherCustomer", "otherTier", "yearly", "trial", "pastDue", "otherPrice", "amount", "currency", "intervalCount", "extraItem", "intervalMismatch", "quantity", "missingQuantity"] as const;
+    const mismatches = ["otherCustomer", "otherTier", "yearly", "trial", "pastDue", "otherPrice", "amount", "currency", "intervalCount", "extraItem", "intervalMismatch", "quantity", "missingQuantity", "missingPeriod", "expiredPeriod", "futurePeriod", "fractionPeriod", "longPeriod"] as const;
     for (const [index, answer] of mismatches.entries()) {
       const id = `sub_Mismatch0000${index}`;
       const email = `restart-mismatch-${index}@example.com`;

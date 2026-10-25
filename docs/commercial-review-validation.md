@@ -21,3 +21,16 @@ Synthetic tests keep complete plain/frozen/null-prototype financial fixtures ass
 ## Acessibilidade
 
 No interface, public copy, media or creator content changes. The internal document uses headings and explicit scope. Functional and accessibility matrices remain required in the complete CI suite. Real assistive-technology review of this internal document and complete WCAG conformance are not claimed.
+
+
+## DD — Net profit by source (owner decision, 24 October 2026, 23:53 Fortaleza)
+
+The descriptive `commercialProfitMix` table in `lib/commercial-margin.ts` reports nine sources: plan subscriptions, add-ons, email packages, captions, network fees/sponsorship, paid recommendations, list validation, referral commissions and training. Each row requires explicit Marktmorgen revenue, variable costs, allocated LLC fixed costs, most onerous taxes, refunds and reserves in USD cents, plus dated evidence. Creator proceeds and unpaid card authorizations are not Marktmorgen revenue. Keep the forecast and reconciled actual accounts separate, with the same period and monthly or annual basis. Annual prepaid receipts require the approved recognition/liability policy, not immediate spendable profit. Evidence must explain recognition and prevent overlap between costs, refunds and reserves.
+
+All LLC fixed costs (including Hazelsong) must be allocated exactly once across the nine sources for the same period. A mismatch makes the total and shares unknown. A missing source, amount, evidence or unsafe integer also leaves the total and every percentage unknown. An inactive source requires evidence of zero revenue and its allocated costs; closed sales alone do not establish zero costs. No reviewed forecast or reconciled actual dataset exists: CURRENT_COMMERCIAL_PROFIT_MIX_INPUT remains null.
+
+For known records, net profit subtracts all six relevant monetary fields from revenue. Percentages use total NET profit as denominator, only when positive and complete. Negative source profits stay negative and may produce negative shares; other shares may exceed 100%. Shares truncate to one basis point, so rounding need not total 100%. Zero/negative total has no applicable percentage. Overflow fails closed.
+
+This is a pure bounded accounting calculation, using the existing detached financial-data canonicalizer (depth/one-MiB limits), with nine rows and no provider calls, storage, reconciliation queries or paid resource allocation. It does not certify evidence, costs or the 60% rule. Operational collection/reporting costs remain unknown until measured and reserved before enabling them; no new supplier operation is added here. Synthetic tests cover category deductions, missing evidence/amounts, fixed cost mismatch, losses, zero denominator, overflow, executable data and unchanged closed-sale gates. Run the complete remote CI on the new head.
+
+The report is deliberately outside commercialMarginReady/commercialPlansMayOpen. It never finances an individual customer using uncertain commissions, sponsorship or network receipts and cannot replace per-customer full-entitlement worst-month assessments, the global review, the most onerous Brazil/US taxes, all LLC costs, tax gate, article 9a, resource/renewal/settlement coverage or the owner's opening process. All current policies and commercial review remain absent; PLANS_ON_SALE remains false.
