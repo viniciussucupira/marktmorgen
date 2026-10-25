@@ -21,6 +21,9 @@ async function main(){
     {data:[],has_more:true},{data:[null],has_more:false},
     {data:[{}],has_more:false},{data:[{id:"not_a_subscription"}],has_more:false},
     {data:[row,row],has_more:false},
+    {data:[{id:"sub_MissingStatus01"}],has_more:false},
+    {data:[row,{id:"sub_NullStatus01",status:null}],has_more:false},
+    {data:[{id:"sub_UnknownStatus01",status:"future_unknown"}],has_more:false},
     {data:Array.from({length:101},(_,i)=>({id:`sub_OverLimit${String(i).padStart(6,"0")}`})),has_more:false},
   ];
   for(const value of invalid){
