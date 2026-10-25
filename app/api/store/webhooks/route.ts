@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
     const id = text(guarded.body.id, 40);
     if (action === "add") {
       const result = await addEndpoint(store, text(guarded.body.url, MAX_ENDPOINT_URL + 1), guarded.body.events);
-      if (!result.ok) return Response.json({ ok: false, error: result.reason, message: result.message }, { status: 400 });
+      if (!result.ok) return Response.json({ ok: false, error: result.reason, message: result.message }, { status: result.reason === "unavailable" ? 503 : 400 });
       // Buyers' details can leave through a webhook, so every new one is
       // reported to the creator's inbox (lib/account-notice.ts).
       const added = result.view.endpoints[result.view.endpoints.length - 1];

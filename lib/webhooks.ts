@@ -500,7 +500,7 @@ export function isWebhookEvent(value: unknown): value is WebhookEvent {
 
 export type AddEndpointResult =
   | { ok: true; secret: string; view: WebhooksView }
-  | { ok: false; reason: "full" | "invalid" | "events" | "duplicate"; message: string };
+  | { ok: false; reason: "full" | "invalid" | "events" | "duplicate" | "unavailable"; message: string };
 
 /**
  * Adds an endpoint. Its secret is made here and returned this once; the
@@ -523,6 +523,11 @@ export async function addEndpoint(store: Store, rawUrl: string, events: unknown,
   const config = (await readConfig(store.statsId)) ?? { handle: store.handle, endpoints: [], since: Math.floor(now / 1000) };
   if (config.endpoints.length >= MAX_ENDPOINTS) return { ok: false, reason: "full", message: `A store can have ${MAX_ENDPOINTS} endpoints. Remove one first.` };
   if (config.endpoints.some((e) => e.url === url)) return { ok: false, reason: "duplicate", message: "That endpoint is already added." };
+  // Adding an endpoint creates new future delivery work. Removing an existing
+  // endpoint remains on its retained cleanup path below.
+  if (store.period?.funded === true && !(await reservePaidResourceWindow(store))) {
+    return { ok: false, reason: "unavailable", message: "The endpoint could not be added just now. Try again in a moment." };
+  }
   const secret = `whsec_${randomBytes(24).toString("base64url")}`;
   const endpoint: Endpoint = { id: `we_${randomBytes(8).toString("hex")}`, url, secret, events: chosen, addedAt: new Date(now).toISOString() };
   // The Stripe pass starts from now for a store's first endpoint: nothing
