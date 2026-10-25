@@ -33,6 +33,7 @@ const emails: { to: string; subject: string; text: string }[] = [];
 const subs: Record<string, Record<string, unknown>> = {};
 const created: URLSearchParams[] = [];
 let keepScheduledStop = false;
+let refuseScheduledStop = false;
 let createAnswer: "ok" | "declined" | "down" | "otherCustomer" | "otherTier" | "yearly" | "trial" | "pastDue" | "otherPrice" | "amount" | "currency" | "intervalCount" | "extraItem" | "intervalMismatch" | "quantity" | "missingQuantity" = "ok";
 
 function subscription(id: string, over: Record<string, unknown> = {}): Record<string, unknown> {
@@ -112,7 +113,7 @@ globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) =>
     if (m && subs[m[1]]) {
       if (method === "POST") {
         const body = new URLSearchParams(String(init?.body ?? ""));
-        if (body.has("cancel_at_period_end") && !(keepScheduledStop && body.get("cancel_at_period_end") === "false")) subs[m[1]].cancel_at_period_end = body.get("cancel_at_period_end") === "true";
+        if (body.has("cancel_at_period_end") && !(keepScheduledStop && body.get("cancel_at_period_end") === "false") && !(refuseScheduledStop && body.get("cancel_at_period_end") === "true")) subs[m[1]].cancel_at_period_end = body.get("cancel_at_period_end") === "true";
       }
       return new Response(JSON.stringify(subs[m[1]]), { status: 200 });
     }
@@ -173,6 +174,24 @@ async function main() {
     const third = await pausePlan(store, 1, NOW + DAY);
     is("the year is given back for a break that never began", third.kind, "paused");
     // Taken back again, so this store's break does not end beside the next part's.
+    await undoPause(store, NOW + DAY);
+  }
+
+  part("Taking a break requires acknowledgement of the scheduled stop");
+  {
+    const id = "sub_PauseAck00001";
+    subs[id] = subscription(id);
+    const store = await storeWith("pause-ack@example.com", "pauseackstore", id);
+    refuseScheduledStop = true;
+    let refused = false;
+    try { await pausePlan(store, 1, NOW); } catch { refused = true; }
+    refuseScheduledStop = false;
+    is("an active response without the stop is not a confirmed break", refused, true);
+    is("the provider has not scheduled a stop", subs[id].cancel_at_period_end, false);
+    is("the unconfirmed break is removed by the existing cleanup", await pauseOf(store), null);
+    const again = await pausePlan(store, 1, NOW);
+    is("a later acknowledged stop can still start the break", again.kind, "paused");
+    is("the later stop is acknowledged by the provider", subs[id].cancel_at_period_end, true);
     await undoPause(store, NOW + DAY);
   }
 
