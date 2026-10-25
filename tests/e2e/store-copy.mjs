@@ -51,6 +51,7 @@ import { checkHomeModules } from "./home-modules.mjs";
 import { captureHomeStudio } from "./home-studio-capture.mjs";
 import { checkSalesComparisons } from "./sales-comparisons.mjs";
 import { checkPauseAcknowledgment } from "./pause-acknowledgment.mjs";
+import { checkBillingStudioObservation } from "./billing-studio-observation.mjs";
 import { checkClaimAcknowledgment } from "./claim-acknowledgment.mjs";
 import { checkShipmentAcknowledgment } from "./shipment-acknowledgment.mjs";
 import { checkDiscountAcknowledgment } from "./discount-acknowledgment.mjs";
@@ -215,7 +216,7 @@ try {
   const seeded = await run(process.execPath, [seedFile]);
   rmSync(out, { recursive: true, force: true });
   if (seeded.status !== 0) throw new Error(`the store could not be made:\n${seeded.said}`);
-  const { certificateHeadingFixture,shippingFixture,libraryFixture,signinPrices,activationFixture,packageFixture,tierFixture,exitFixture,homeDemo,pauseFixtures,session, second, abProduct, abStore, contactToken,growthSession,growthSid,growthProduct,returnSession,returnSid,wordingSession,wordingSid,wordingTrialSession,wordingTrialSid } = JSON.parse(seeded.said.trim().split("\n").at(-1));
+  const { billingObservation,certificateHeadingFixture,shippingFixture,libraryFixture,signinPrices,activationFixture,packageFixture,tierFixture,exitFixture,homeDemo,pauseFixtures,session, second, abProduct, abStore, contactToken,growthSession,growthSid,growthProduct,returnSession,returnSid,wordingSession,wordingSid,wordingTrialSession,wordingTrialSid } = JSON.parse(seeded.said.trim().split("\n").at(-1));
 
   if (BUILD) {
     const built = await run(process.execPath, [nextCli, "build"]);
@@ -897,6 +898,7 @@ await checkNudgeAcknowledgment({browser,LOCAL,fixture:pauseFixtures[0],is});
   await checkPurchaseResend({browser,LOCAL,fixture:libraryFixture,shipment,axeSource,is});
   await checkShippingSave({browser,LOCAL,fixture:shippingFixture,is});
   await checkDiscountAcknowledgment({browser,LOCAL,fixture:libraryFixture,is});
+  await checkBillingStudioObservation({browser,LOCAL,services,fixture:billingObservation,is});
   is("no page threw", errors, []);
 } catch (error) {
   failed += 1;

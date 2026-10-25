@@ -43,6 +43,8 @@ export async function startServices(port) {
   let paypalCounter = 0;
   const blobs = new Map();
   const subscriptionUpdates = [];
+  let studioObservationReply = null;
+  const studioObservationReads = [];
   const portalConfigs = [];
   // Discord: one server, its roles, and who the bot put in it (lib/discord.ts).
   const discordCalls = [];
@@ -405,6 +407,10 @@ export async function startServices(port) {
       if (req.method === "GET" && path === "/v1/customers" && url.searchParams.get("email") === "pause.member@example.com") {
         return json(res, 200, { object: "list", has_more: false, data: [{ id: "cus_PauseMember01", object: "customer" }] });
       }
+      if (req.method === "GET" && path === "/v1/subscriptions/sub_StudioObservation01" && !req.headers["stripe-account"]) {
+        studioObservationReads.push(path);
+        return json(res, 200, studioObservationReply);
+      }
       if (req.method === "GET" && path === "/v1/customers/cus_PauseMember01") return json(res, 200, { id: "cus_PauseMember01", object: "customer", email: "pause.member@example.com" });
       if (req.method === "GET" && path === "/v1/subscriptions" && url.searchParams.get("customer") === "cus_PauseMember01") {
         return json(res, 200, { object: "list", has_more: false, data: [pauseSub] });
@@ -516,6 +522,8 @@ export async function startServices(port) {
     adEvents: () => [...adEvents],
     writing: () => [...writing],
     subscriptionUpdates: () => [...subscriptionUpdates],
+    setStudioObservation: (reply) => { studioObservationReply = reply; studioObservationReads.length = 0; },
+    studioObservationReads: () => [...studioObservationReads],
     /** The pause member's membership on another product, and back as it was. */
     setPauseProduct: (product) => {
       pauseSub = { ...firstPauseSub(), metadata: { store: "localshop", product } };
