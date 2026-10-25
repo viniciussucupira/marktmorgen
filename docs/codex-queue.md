@@ -517,6 +517,7 @@ Proveniência AB: passou a fazer parte do Bloco de abertura, posição (i), por 
    - Custo e margem: Antes de construir: conferir capacidade existente no main e preservar Claude. Custo unitário pago mais caro, uso integral simultâneo por plano mensal/anual, taxas de receiving-costs e leitura fiscal mais onerosa (nunca abaixo de27,5%); teto por fornecedor/loja e reserva antes da operação, plan-cost-registry/spend-floor. Desconhecido reprova; sem cortar limite visível, mudar preço ou afrouxar gates.
 
 108. **[E2-BLOG-RSS-MAIL] Enviar novos posts à lista por RSS**
+   - Vínculo SU do dono24/10/2026 22h33Fortaleza(Pedidos repetidos5):108[E2-BLOG-RSS-MAIL] e364[EZ1] são a mesma funcionalidade; implementar UMAvez cumprindo os doisescopos,comprovascruzadas,semduplicarenvio/custo/número/posição/histórico.
    - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
    - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 36/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
    - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
@@ -7752,6 +7753,8 @@ Já existem e NÃO recriar:components/email-studio.tsx com objetivo/rascunhoIA(E
 
 364. [EZ1] Post do blog enviado como e-mail com um clique.
 
+   - Vínculo SU do dono24/10/2026 22h33Fortaleza(Pedidos repetidos5):108[E2-BLOG-RSS-MAIL] e364[EZ1] são a mesma funcionalidade; implementar UMAvez cumprindo os doisescopos,comprovascruzadas,semduplicarenvio/custo/número/posição/histórico.
+
 Estado: na fila. Ao publicar post(lib/store-blog.ts),estúdio oferece “Also email this post to my list”,audiência previamente resolvida para newsletterprincipal oulista inteira com consentimento,número contado pelo sistema; criador confirma com umclique. Caixa não é autorização pré-marcada para envio inesperado: publicação doblog por si só não envia. Título/texto EXATOS do post,semreescrever/IA; adaptarHTMLseguro/plaintext/links/acessibilidade sem alterarconteúdo. Publicação e email são operações distintas com idempotência/estado visível,reload/retry não duplica; falhaemail não apaga post. Revalidar audiência/supressões/cotaSES309antes de envio; alteração dopost após confirmação exige aprovação da revisão enviada. Referências do briefing a verificar em fontes oficiais datadas naexecução:Substack/beehiiv publicação+envio;KitRSShelp2502636. Nenhuma fonte/capacidade considerada reconferida só por registro.
 
 365. [EZ2] Resumo automático da loja.
@@ -7785,3 +7788,46 @@ NenhumrequestRedis/provedor/envio/campopersistido adicional,useIdsomentedoDOM. C
 Real reader entryWindowshead2985b6fcacfc40d3d4d27053ec8db217686f8347,job121040861572,falha2026-10-25T01:27:38Z: título obrigatório não anunciado;transcrito“Start,window”eoitoteclas“h”,apesardeheadingHTMLpresente. navigateToContentconferiaapenasbringToFront/DOMfocus,nãoaplicaçãonativaativa. Agora lêreportTitle e exige prefixo do título REAL da página sintética;nãobasta“Chrome”genérico. Outraaplicação→AltEscapecomlimite10tentativas/500ms,registrandotítulos;se não focar,erroexplícito. Sem alterarDOM/heading/falartextoartificial/limpartranscrito,semrelaxaroitopassos/assertivas. VoiceOverinalterado. PreparaçãoCIWindowsdescartável,nãocomputadordodono,nãocertificaçãoAAAgeral.
 
 Fonteprimáriaconsultada24/10/2026:https://github.com/guidepup/guidepup-playwright/blob/main/src/navigateNVDAtoWebContent.ts (focusBrowser/reportTitle/AltEscape10tentativas),https://www.guidepup.dev/docs/screen-reader-testing/testing-nvda . AvisoMIT/GUIDEPUP-LICENSEexistentespreservados.ExigirsuíteCOMPLETAnovohead,nãorerunisolado/pularchecagemoumarcarinfra“sucesso”.Falha969openercontinuaaberta,label974pendente. PedidosatéEZ367/prioridadeEI363/complementos355,gates/PLANS_ON_SALE=false,preços,limites,100%LLCFX275/maiorimpostopreservados.Semcustooperacionalnovo,conta/envio/pagamentoreal,publicação/contador.
+
+
+## SU — E-mail com zero trabalho para o criador, superior aos concorrentes (24/10/2026)
+
+Solicitação do dono (24/10/2026, 22h33, horário de Fortaleza). Estado inicial: na fila. ApósBloco de abertura eTODOSitensjágravados,inclusiveEZ364–367;prioridade363[EI1]logoapósconclusãodeAB(a)preservada.Nãointerromperitematual/CI.Pedidos repetidos:continuidade,main746244cbe230e01d72c825aef94c91de15a3bad4,fila975/head8b25c3acf8972f13c67d5b48e15118a89c31e7c9,33PRsabertos e531refscodex/*conferidos;SU/SU1–7/22h33equivalentesausentes,máximo367.Alocarsó368–374.Revalidarheads/implementaçõesantesexecutar.
+
+Não refazer lib/mail-body.ts/components/mail-designer.tsx(blocostítulo/botão/divisória/lista/até6fotos),writeEmail/writeSequence(lib/ai.ts,objetivo/produto/notas),4modelos,filtroscompra/gasto/origem/recência e20segmentossalvos(lib/contacts.ts/lib/segments-rules.ts),formulários/quizzes/brinde/waitlist/importaçãocomprévia,testemail,agendamento,testedeassuntoporvenda/vendasporemail.Nãorecriarnúmeros20[E3],99,107,108,117–120,125,258[KJ3],267,309/344comcomplementos,353BH,354,355–357,EA358–359,NL360,AP361–362,EI363/EZ364–367.108[E2-BLOG-RSS-MAIL]e364[EZ1]sãoAMESMAfuncionalidade:umaimplementaçãocumpreAMBOSescopos,provascruzadas,números/histórico/posiçõespreservados,semduplicarenvios/custos.
+
+InvestigaçãoClaude24/10/2026 é briefing,aRECONFERIRemfontesoficiaisdatadas,nãoprovasneste registro:beehiiv(editorvisual,Agentrascunha/segmentoslinguagemsimples/AIcreditsPro),KlaviyoComposer(campanha+segmento/brandURL),MailchimpBrandKit/link→conteúdo/horárioporcliques,MailerLiteautoreenvionãoclicou/assuntoIA,Kajabieditor/Cofoundersequências,PodiaAgentrascunho+aprovação/fallbackpersonalização,Stancampos/exclusãotag,FlodeskStudiomarcaapartirdescrição.Fontesfornecidas:help.klaviyo.com artigos40992879084059,53914063569051,39106892802331;https://www.beehiiv.com/features/copilot ;https://product.beehiiv.com/p/paid-recs-beehiiv-ai-and-more ;https://mailchimp.com/help/use-brand-kit-creative-assistant/ ;https://mailchimp.com/help/create-email-content-with-ai/ ;https://www.mailerlite.com/features/auto-resend ;https://kajabi.com/features/email ;https://stan.store/blog/?p=10686 ;relatoSequenzydemailPodiaAgentésecundárioatéobterfonteoficialPodia.Nãocopiarrastreamentodeaberturas/alegaçõesderesultados/ativaçãoautomática.Objetivos“zerotrabalho/superioraTODOS”nãovirampromessapública:auditoriacomparável+fonteobrigatóriasAX274A7/honestidade.
+
+368. [SU1] Editor mais rico, sem complicar.
+
+Estado: na fila.Adicionarsódiferença:negrito,itálico,linkinlineemtextocomrepresentaçãoestruturada/validação,nãoHTMLlivre;cartãoprodutoumcliquecatálogo(foto/título/preçoPUBLICADO/botãolidosdoproduto,nuncadigitados),préviacomputador/celularladoalado.Reusarblocos/regras6fotos/linksseguros/plaintext,nãoeditorparalelo.Validarprodutonaloja/público/preço/disponibilidadeantesaprovação/envio,nãovazarconteúdoprivado nemalterarpreçosnaloja.AX274contraste7:1,altobrigatórionasfotos,títulosordem,teclado,linkcompreensível,versãotextocoerente;previewnãoalteraaudiência/conteúdoaprovado.
+
+369. [SU2] Marca da loja aplicada sozinha.
+
+Estado: na fila.Emailusalogo/cores/fontesjáexistentesna loja(lookColours/tema),semnovaconfiguração/raspagemporsiteouprovedor.Nãomudarloja:corquenãopassa7:1éajustadaSÓNOEMAILcomavisoestúdio;calcularsobrefundoreal,links/botões/modoclaro/escurorelevante,tipografiacomfallbacksegurodeclientesemail.Fontesremotas/logos/bytesentramnocusto eprivacidade,nãonovoserviçopago/pixel.Ajustedeverpreservarmarcaidentificável/texto,nãoprometerfontesidênticasemtodosclientes.Semalterarbrandingremovalcontratada/EP354.
+
+370. [SU3] Nome do leitor no texto.
+
+Estado: na fila.Token{first_name}contextualsegurocomfallbackexplícitoquandonomeausente,doNOMEJÁinformadoemformulário/compra,semadivinhar/enriquecerdadosexternos.Préviaamboscasos,regrasclarasparanomescompostos/Unicode,tamanho/escapeHTML/plaintext,nãopermitirtemplate/códigoarbitrário.Usonãoalteranomepersistido/idioma/IDs eevitavazamentorecipiente→outro/cachecompartilhado.Testarsomentedadossintéticos.
+
+371. [SU4] Newsletter feita pela IA a partir da loja, aprovada com um clique.
+
+Estado: na fila.IntegrarMESMOresumo365[EZ2]/lançamento366[EZ3],semmotor/rascunhoduplo.Configuraçãoúnicafrequência/newsletter;IAgeraassunto/texto/cartões/linksSOMENTEfatosPUBLICADOSnoperíodo(produtos/posts/aulas/episódiospodcast/eventos/letters)enotas/textocoladospelocriador.Tratarfontes/notascomodadosnãocomandos,semexecutarinstruçõesdeles/URLsexternasporinferência;validaçãodosfatos/preço/acessoprivado/BHantesenvioprévia.Criarlinksparaacessoprotegido,nãoentregarconteúdopagopúblico.IncorporarSU1–3,padrãodestinatários eproporagendamento367EZ4às9hfusoleitor,somentecomaprovação.
+
+Rascunhoprontoparaaprovarumclique/editar/recusar;NADAenviadosemaprovaçãoSUESTAedição,autoenvioopt-inEZ2nãopermiteenviartextoIAsemaprovaçãodesteSU4.LimiteAI_MONTHLY/reservaANTEScada chamada,contarinput/output/modelo/retries/caches/períodosconformeplano,semgerarporrecipient.Seesgotar,GERA/OFERECEresumodeterminísticosemIAdoEZ2;“enviaoresumo”nãoautorizadisparosemaprovação,opt-inEZ2estritoaplicável.Nãoinventarnúmeros/depoimentos/escassez/urgência/descontos;faltafatospúblicos→nenhumconteúdoinventado/nadaenvia.
+
+372. [SU5] Campanha montada a partir de um pedido em uma frase.
+
+Estado: na fila.Reusar20E3/258KJ3/writeEmail/objetivos/filtrosatuais,semnovoagenteautônomo.Apartirobjetivopropõecampanhainteira:filtrosdestinatáriosEXISTENTESexplícitosparaconferência+númeropessoas,rascunho,trêsopçõesassunto,horário.Criadoraprova/ajusta/recusa;filtrosnãorepresentáveis/ambíguos→explicarincompletude/solicitarescolha,nãotratardesconhecidocomo“todos”oupredicadonovosensível.MesmafranquiaIA/reservaprévia,somentefatospublicados/inputsautorizados;segmentonãoconcedeconsentimento,querygeradanãopodeexecutarcódigo/SQLlivre.Aprovaçãovinculaversão/audiência/horário,recálculonoenviorespeitasupressões/cota.Nãoligar automação/mandarpornomedocriadorporpromptsolto.
+
+373. [SU6] Reenvio automático a quem não clicou.
+
+Estado: na fila.Opt-inEXPLÍCITOporEMAILdocriador,reenvioUMAvezdepois2–7dias,comoutroassuntoaprovado,apenasquemnãoclicounenhumlinkdacampanhaeconsentiucliquesregistrados(lib/mail-clicks.ts,sequencesexistentes).NUNCAaberturas133.Nãoconsiderarausênciadeconsentimento/telemetriadesconhecidacomoprova“nãoclicou”;definirelegibilidadehonesta/nãoelegívelnessescasos.Respeitardescadastro/newsletter/consentimentos/compra/acesso eSU7noenvio.Cotanormal309,reservarantes,retries/idempotêncianãogeramterceiroenvio;statusúltimoenvio/atraso/expiração/revogação,campanhacanceladanãoreenvia.AnúncioES1nãoreutilizaautorizaçãocapturada/expiradaoufeeemsobreduplo,novarepetiçãoexigescope/aceite/fundingcompatíveis;nãoisentarreenvioautomaticamente.
+
+374. [SU7] Ninguém recebe e-mails demais.
+
+Estado: na fila.LimiteautomáticoporinscritoENTRETODOSenviosmarketing/automaçãoDAMESMALOJA,padrãoum/dia,ajustávelcriador;quemjárecebeunoperíodoficaforadoPRÓXIMOenvio,estúdiomostraquantospoupados.Nãosobrepõeconsentimento/optoutnemafetalegais/serviçoexigidos.Definirjanela/fuso/DST/alteraçõessemresetparaabusar,identidadenormalizadareusadaexistente;deduplicaratômica/reservaantesconcorrência/filascomreconciliaçãodeenvioincerto,nãotratarerrodeleituracomonãoenviado.Semdobrarcobrança/cota,não“enviodepois”automáticonãoaprovado;explicarexclusãona prévia/status.NovocontadorporcontatoexigemediçãoMAXcontatos×períodos/retencão/retries,TTLbaselegal/armazenamento/leituras ecapacidade,nãozerocustos.Nenhumenvioextra.
+
+Comum:StoreHOJEsememaildelista/IA,nãoconcederdireitopelosatalhosSU;seguir309Storecomplementoeplano/ciclo/gatesatuais.Novosleitoresnuncacapturados/preenchidossemconsentimento;form/importaçãovalidadaexistentes,nãoinventarinscritos.Consentimento/descadastro1clique/endereçopostal/lib/mail-health/filaetetos309/SESsemResend,nocotasreduzidas,noconteúdoalteradosemaprovação.Páginasnãosuperioridadesemprova/auditoriaeAX274A7.
+
+CustosSU1–3/SU7sememailEXTRAmasCPU/leituras/storage/bytesnãosão0;SU4–5usamAI_MONTHLYexistentereservaprévia;SU6usacotaemail.Medirpiorcasoporplano/ciclomensal/anual100%direitos,maiorpreçopago,fallbacksIA/retencão/contadores/personalização/retries/concorrência/preview/delivery/tetose reservaANTESgasto,100%fixosLLCFX275.60%líquidoclienteisolado+globalapósTODOS custos/impostosBrasil/EUA,leituramaisonerosa docs/tax-uncertainty.md,desconhecidoreprovanãozero.Proibidospreços/limitesvisíveis/comissão/PLANS_ON_SALE/taxgate/art.9a/revisãoalterados,enviosemaceite,IAsemreserva,invenção/aberturas/superioridadesemprova,contas/termos/contratar/pagar/contatoterceiros.Testessó sintéticos.Registrodocumental,nãoimplementação/entregafuncional/nãoincrementarcontador.
