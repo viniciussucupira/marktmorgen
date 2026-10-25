@@ -208,7 +208,14 @@ export async function pausePlan(store: Store, months: PauseMonths, nowSeconds = 
   const id = store.subscriptionId;
   if (!id || !isBillingConfigured() || !isRedisConfigured()) return { kind: "refused", reason: "standing" };
   const subscription = await subscriptionRecord(id);
-  if (!subscription) return { kind: "refused", reason: "standing" };
+  if (!subscription || subscription.id !== id) return { kind: "refused", reason: "standing" };
+  const observedCustomer = subscription.customer;
+  const customer = typeof observedCustomer === "string" ? observedCustomer :
+    observedCustomer && typeof observedCustomer === "object" && typeof (observedCustomer as { id?: unknown }).id === "string" ? (observedCustomer as { id: string }).id : "";
+  // Never replace missing provider ownership with the store's cached customer.
+  if (!CUSTOMER_ID.test(customer) || (store.stripeCustomerId !== null && customer !== store.stripeCustomerId)) {
+    return { kind: "refused", reason: "standing" };
+  }
   const ref = storeRef(store);
   const lastReply = await redisPipeline([["EXISTS", lastKey(ref)]]);
   // Unknown annual eligibility must fail before a due record or provider stop
@@ -218,7 +225,6 @@ export async function pausePlan(store: Store, months: PauseMonths, nowSeconds = 
   }
   const refusal = pauseRefusal(subscription, nowSeconds, lastReply[0] === 1);
   if (refusal) return { kind: "refused", reason: refusal };
-  const customer = typeof subscription.customer === "string" ? subscription.customer : store.stripeCustomerId ?? "";
   const paymentMethod = cardOf(subscription);
   // Without a card on the subscription there is nothing to start it again on,
   // and a break that cannot end by itself is a cancellation with a nicer name.

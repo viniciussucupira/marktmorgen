@@ -465,6 +465,37 @@ async function main() {
     }
   }
 
+  part("Pause source identity and customer must match the store before any write");
+  {
+    const email="source-identity@example.com",id="sub_SourceIdentity01";
+    const store=await storeWith(email,"sourceidentity",id);
+    const ref=storeRef(store);
+    const changes:Record<string,unknown>[]=[
+      {id:"sub_OtherSource01"},{id:null},{customer:"cus_OtherOwner01"},
+      {customer:{id:"cus_OtherOwner01"}},{customer:null},{customer:"not_a_customer"},{customer:{}},
+    ];
+    for(const change of changes){
+      subs[id]=subscription(id,change);
+      const originalPipeline=pauseRedis.pipeline;
+      let commandsAfterObservation=0;
+      pauseRedis.pipeline=async(commands)=>{commandsAfterObservation+=commands.length;return originalPipeline(commands);};
+      try{
+        const before=created.length;emails.length=0;
+        is("mismatched or missing source ownership is refused",await pausePlan(store,1,NOW),{kind:"refused",reason:"standing"});
+        is("source ownership fails before Redis scheduling writes or eligibility reads",commandsAfterObservation,0);
+        is("the original subscription is not scheduled to stop",subs[id].cancel_at_period_end,false);
+        is("source mismatch has no new charge or notice",[created.length-before,emails.length],[0,0]);
+        const [record,last]=await originalPipeline([["GET",`nl:pause:${ref}`],["GET",`nl:pause:last:${ref}`]]);
+        is("source mismatch creates no pause or annual record",[record,last],[null,null]);
+      }finally{pauseRedis.pipeline=originalPipeline;}
+    }
+    subs[id]=subscription(id,{customer:{id:"cus_TestPause0001",email:"ignored@example.com"}});
+    const valid=await pausePlan(store,1,NOW);
+    is("a matching expanded provider customer remains supported",valid.kind,"paused");
+    is("the observed customer is retained exactly",valid.kind==="paused"?valid.record.customer:null,"cus_TestPause0001");
+    await undoPause(store,NOW);
+  }
+
   part("A store that started again by hand");
   {
     subs.sub_ByHand000001 = subscription("sub_ByHand000001");
