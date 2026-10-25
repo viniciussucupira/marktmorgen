@@ -14,7 +14,7 @@ globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) =>
   if (url.origin !== "https://api.stripe.com") throw new Error("Unexpected synthetic checkout host");
   if (url.pathname === "/v1/prices" && (init?.method ?? "GET") === "GET") {
     return catalog
-      ? Response.json({ data: [{ id: "price_TrialPolicy0001", unit_amount: PLAN_PRICES[choice.tier][choice.cycle], currency: "usd", recurring: { interval: choice.cycle } }] })
+      ? Response.json({ data: [{ id: "price_TrialPolicy0001", unit_amount: PLAN_PRICES[choice.tier][choice.cycle], currency: "usd", recurring: { interval: choice.cycle, interval_count: 1 } }] })
       : Response.json({ error: { message: "Synthetic catalog unavailable" } }, { status: 404 });
   }
   if (url.pathname !== "/v1/checkout/sessions" || init?.method !== "POST") throw new Error("Unexpected synthetic checkout operation");

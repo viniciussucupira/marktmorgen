@@ -33,7 +33,8 @@ const emails: { to: string; subject: string; text: string }[] = [];
 const subs: Record<string, Record<string, unknown>> = {};
 const created: URLSearchParams[] = [];
 let keepScheduledStop = false;
-let createAnswer: "ok" | "declined" | "down" | "otherCustomer" | "otherTier" | "yearly" | "trial" | "pastDue" | "otherPrice" | "amount" | "currency" | "intervalCount" | "extraItem" | "intervalMismatch" = "ok";
+let refuseScheduledStop = false;
+let createAnswer: "ok" | "declined" | "down" | "otherCustomer" | "otherTier" | "yearly" | "trial" | "pastDue" | "otherPrice" | "amount" | "currency" | "intervalCount" | "extraItem" | "intervalMismatch" | "quantity" | "missingQuantity" = "ok";
 
 function subscription(id: string, over: Record<string, unknown> = {}): Record<string, unknown> {
   return {
@@ -60,6 +61,14 @@ globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) =>
   const url = new URL(String(input));
   const method = init?.method ?? "GET";
   if (url.hostname === "api.stripe.com") {
+    if (url.pathname === "/v1/prices" && method === "POST") {
+      const body = new URLSearchParams(String(init?.body ?? ""));
+      return new Response(JSON.stringify({
+        id: "price_creator_month", unit_amount: Number(body.get("unit_amount")),
+        currency: body.get("currency"),
+        recurring: { interval: body.get("recurring[interval]"), interval_count: Number(body.get("recurring[interval_count]")) },
+      }), { status: 200 });
+    }
     if (url.pathname === "/v1/prices" || url.pathname.startsWith("/v1/prices/search") || url.pathname.startsWith("/v1/products")) {
       return new Response(JSON.stringify({ data: [{ id: "price_creator_month", lookup_key: "nimbus_labs_creator_month", active: true, unit_amount: 2900, recurring: { interval: "month" } }], has_more: false, id: "price_creator_month" }), { status: 200 });
     }
@@ -78,7 +87,9 @@ globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) =>
       if (createAnswer === "currency") freshPrice.currency = "eur";
       if (createAnswer === "intervalCount") freshPrice.recurring.interval_count = 2;
       if (createAnswer === "intervalMismatch") freshPrice.recurring.interval = "year";
-      const items = [{ current_period_end: NOW + 10 * DAY, price: freshPrice }];
+      const items: { current_period_end: number; price: typeof freshPrice; quantity?: number }[] = [{ current_period_end: NOW + 10 * DAY, price: freshPrice, quantity: 1 }];
+      if (createAnswer === "quantity") items[0].quantity = 2;
+      if (createAnswer === "missingQuantity") delete items[0].quantity;
       if (createAnswer === "extraItem") items.push({ ...items[0] });
       const fresh = subscription("sub_Restarted00001", {
         start_date: NOW, trial_end: null,
@@ -102,7 +113,7 @@ globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) =>
     if (m && subs[m[1]]) {
       if (method === "POST") {
         const body = new URLSearchParams(String(init?.body ?? ""));
-        if (body.has("cancel_at_period_end") && !(keepScheduledStop && body.get("cancel_at_period_end") === "false")) subs[m[1]].cancel_at_period_end = body.get("cancel_at_period_end") === "true";
+        if (body.has("cancel_at_period_end") && !(keepScheduledStop && body.get("cancel_at_period_end") === "false") && !(refuseScheduledStop && body.get("cancel_at_period_end") === "true")) subs[m[1]].cancel_at_period_end = body.get("cancel_at_period_end") === "true";
       }
       return new Response(JSON.stringify(subs[m[1]]), { status: 200 });
     }
@@ -163,6 +174,24 @@ async function main() {
     const third = await pausePlan(store, 1, NOW + DAY);
     is("the year is given back for a break that never began", third.kind, "paused");
     // Taken back again, so this store's break does not end beside the next part's.
+    await undoPause(store, NOW + DAY);
+  }
+
+  part("Taking a break requires acknowledgement of the scheduled stop");
+  {
+    const id = "sub_PauseAck00001";
+    subs[id] = subscription(id);
+    const store = await storeWith("pause-ack@example.com", "pauseackstore", id);
+    refuseScheduledStop = true;
+    let refused = false;
+    try { await pausePlan(store, 1, NOW); } catch { refused = true; }
+    refuseScheduledStop = false;
+    is("an active response without the stop is not a confirmed break", refused, true);
+    is("the provider has not scheduled a stop", subs[id].cancel_at_period_end, false);
+    is("the unconfirmed break is removed by the existing cleanup", await pauseOf(store), null);
+    const again = await pausePlan(store, 1, NOW);
+    is("a later acknowledged stop can still start the break", again.kind, "paused");
+    is("the later stop is acknowledged by the provider", subs[id].cancel_at_period_end, true);
     await undoPause(store, NOW + DAY);
   }
 
@@ -269,7 +298,7 @@ async function main() {
 
   part("A restart response must match the requested paid monthly plan");
   {
-    const mismatches = ["otherCustomer", "otherTier", "yearly", "trial", "pastDue", "otherPrice", "amount", "currency", "intervalCount", "extraItem", "intervalMismatch"] as const;
+    const mismatches = ["otherCustomer", "otherTier", "yearly", "trial", "pastDue", "otherPrice", "amount", "currency", "intervalCount", "extraItem", "intervalMismatch", "quantity", "missingQuantity"] as const;
     for (const [index, answer] of mismatches.entries()) {
       const id = `sub_Mismatch0000${index}`;
       const email = `restart-mismatch-${index}@example.com`;

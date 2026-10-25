@@ -80,9 +80,22 @@ try{
        type,trusted:event.isTrusted,target:element?.tagName,id:element?.id??"",
        button:button?.textContent?.trim().slice(0,100)??null,
        disabled:button?.disabled??null,x:event.clientX,y:event.clientY,scrollX,scrollY,
+       time:performance.now(),fonts:document.fonts.status,
+       opener:(()=>{const node=[...document.querySelectorAll("[data-product-editor] button")].find(node=>node.textContent.trim()==="Add something to sell");if(!node)return null;const r=node.getBoundingClientRect(),style=getComputedStyle(node);return {x:r.x,y:r.y,width:r.width,height:r.height,transform:style.transform,font:style.font,lineHeight:style.lineHeight};})(),
+       editor:(()=>{const node=document.querySelector("[data-product-editor]");if(!node)return null;const r=node.getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height,children:node.children.length,expanded:node.querySelectorAll('button[aria-expanded="true"]').length};})(),
        rect:rect?{x:rect.x,y:rect.y,width:rect.width,height:rect.height}:null
       });
       if(window.__mmProductPointerEvents.length>30)window.__mmProductPointerEvents.shift();
+      if(type==="pointerdown"&&button?.textContent.trim()==="Add something to sell"){
+       window.__mmProductMutations=[];
+       window.__mmProductMutationObserver?.disconnect();
+       window.__mmProductMutationObserver=new MutationObserver(records=>{
+        for(const record of records){if(window.__mmProductMutations.length>=20)break;const node=record.target instanceof Element?record.target:record.target.parentElement;window.__mmProductMutations.push({time:performance.now(),type:record.type,attribute:record.attributeName,tag:node?.tagName,id:node?.id,className:node?.className?.toString().slice(0,200),added:record.addedNodes.length,removed:record.removedNodes.length});}
+       });
+       const root=document.querySelector("[data-product-editor]");
+       if(root)window.__mmProductMutationObserver.observe(root,{subtree:true,attributes:true,childList:true,characterData:true});
+       setTimeout(()=>window.__mmProductMutationObserver?.disconnect(),1000);
+      }
      },true);
     }
    });
@@ -119,6 +132,7 @@ try{
      titleFields:await page.locator("#product-title-new").count(),
      nativeDelivery:await page.evaluate(()=>({
       events:window.__mmProductPointerEvents,
+      mutations:window.__mmProductMutations,
       active:document.activeElement?.outerHTML.slice(0,600),
       scroll:{x:scrollX,y:scrollY}
      })),

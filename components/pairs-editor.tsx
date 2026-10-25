@@ -85,7 +85,10 @@ export function PairsEditor({
               disabled={busy}
               className="field mt-1"
               value={value}
-              onChange={(event) => setSlots((all) => all.map((v, i) => (i === index ? event.target.value : v)))}
+              onChange={(event) => {
+                const selected = event.currentTarget.value;
+                setSlots((all) => all.map((v, i) => (i === index ? selected : v)));
+              }}
             >
               <option value="">None</option>
               {value && !titles.has(value) ? <option value={value}>A product that is no longer published</option> : null}

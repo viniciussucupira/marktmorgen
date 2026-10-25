@@ -31,7 +31,15 @@ export async function checkLayoutAcknowledgment({browser,LOCAL,fixture,is}){
    await page.locator("main details").evaluateAll(nodes=>nodes.forEach(n=>{n.open=true;}));
    const section=page.locator("[data-layout-editor]");await section.waitFor();
    for(const kind of ["sections","news"]){
-    if(kind==="sections"){await section.getByRole("button",{name:/Add a section/}).click();await section.getByLabel("Heading 1",{exact:true}).fill("Guides  pour vous");}
+    let chosenStart=null;
+    if(kind==="sections"){
+     await section.getByRole("button",{name:/Add a section/}).click();
+     await section.getByLabel("Heading 1",{exact:true}).fill("Guides  pour vous");
+     const starts=section.getByLabel("Starts at",{exact:true});
+     chosenStart=await starts.evaluate(select=>Array.from(select.options).find(option=>option.value!==select.value)?.value??null);
+     is("layout has another starting product "+width,typeof chosenStart==="string",true);
+     await starts.selectOption(chosenStart);
+    }
     else await section.getByLabel("What it says",{exact:false}).fill("Bonjour  à tous");
     for(const remove of [false,true]){
      if(remove){if(kind==="sections")await section.getByRole("button",{name:"Remove heading 1",exact:true}).click();else await section.getByLabel("What it says",{exact:false}).fill("");}
@@ -43,6 +51,10 @@ export async function checkLayoutAcknowledgment({browser,LOCAL,fixture,is}){
       try{
        await section.getByRole("button",{name:kind==="sections"?"Save sections":"Save",exact:true}).click();const input=(await seen).postDataJSON();
        is("layout removal intent "+name,kind==="sections"?input.sections.length===0:input.text==="",remove);
+       if(kind==="sections"&&!remove){
+        is("layout sends the exact typed heading "+name,input.sections[0]?.title,"Guides  pour vous");
+        is("layout sends the selected starting product "+name,input.sections[0]?.at,chosenStart);
+       }
        is("layout busy "+name,await section.getAttribute("aria-busy"),"true");
        for(const field of await section.locator("input,select,button").all())is("layout controls lock "+name,await field.isDisabled(),true);
       }finally{release();}
@@ -56,6 +68,7 @@ export async function checkLayoutAcknowledgment({browser,LOCAL,fixture,is}){
        const alert=section.getByRole("alert");await alert.waitFor();
        is("layout uncertainty honest "+name,(await alert.innerText()).includes("Reload this page to check before trying again"),true);
        if(!remove)is("creator layout draft retained "+name,await section.getByLabel(kind==="sections"?"Heading 1":"What it says",{exact:kind==="sections"}).inputValue(),kind==="sections"?"Guides  pour vous":"Bonjour  à tous");
+       if(kind==="sections"&&!remove)is("layout keeps the selected start after uncertainty "+name,await section.getByLabel("Starts at",{exact:true}).inputValue(),chosenStart);
       }
       is("layout controls fit "+name,await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
      }

@@ -239,6 +239,7 @@ export async function pausePlan(store: Store, months: PauseMonths, nowSeconds = 
   try {
     const state = await setCancelAtPeriodEnd(id, true);
     if (state.state !== "active") throw new Error(`the subscription is ${state.state}`);
+    if (!state.cancelsAtEnd) throw new Error("the subscription did not acknowledge its scheduled stop");
   } catch (error) {
     await forget(ref, true);
     throw error;

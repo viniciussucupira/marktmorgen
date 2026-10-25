@@ -199,6 +199,14 @@ async function ensureProduct(tier: Tier): Promise<string> {
   return id;
 }
 
+/** A lookup name or bare ID is not proof of the amount and billing interval. */
+function matchingPlanPrice(value: Record<string, unknown> | undefined, amount: number, cycle: Cycle): string | null {
+  const recurring = value?.recurring as { interval?: unknown; interval_count?: unknown } | undefined;
+  return typeof value?.id === "string" && value.id.length > 0 &&
+    value.unit_amount === amount && value.currency === "usd" &&
+    recurring?.interval === cycle && recurring?.interval_count === 1 ? value.id : null;
+}
+
 const priceIds = new Map<string, string>();
 
 /**
@@ -220,16 +228,10 @@ export async function ensurePrice(tier: Tier, cycle: Cycle): Promise<string> {
     `/prices?${new URLSearchParams({ "lookup_keys[]": key, active: "true", limit: "1" })}`,
   );
   const found = (listed.data as Record<string, unknown>[] | undefined)?.[0];
-  const recurring = found?.recurring as { interval?: unknown } | null | undefined;
-  if (
-    found &&
-    typeof found.id === "string" &&
-    found.unit_amount === amount &&
-    found.currency === "usd" &&
-    recurring?.interval === cycle
-  ) {
-    priceIds.set(`${key}:${amount}`, found.id);
-    return found.id;
+  const existingId = matchingPlanPrice(found, amount, cycle);
+  if (existingId) {
+    priceIds.set(`${key}:${amount}`, existingId);
+    return existingId;
   }
 
   const product = await ensureProduct(tier);
@@ -240,6 +242,7 @@ export async function ensurePrice(tier: Tier, cycle: Cycle): Promise<string> {
       currency: "usd",
       unit_amount: String(amount),
       "recurring[interval]": cycle,
+      "recurring[interval_count]": "1",
       product,
       lookup_key: key,
       // Takes the name from an old price whose amount no longer matches.
@@ -247,9 +250,10 @@ export async function ensurePrice(tier: Tier, cycle: Cycle): Promise<string> {
       nickname: `${PLAN_NAMES[tier]}, ${cycle === "year" ? "yearly" : "monthly"}`,
     }),
   );
-  if (typeof made.id !== "string") throw new Error("Stripe did not return a price");
-  priceIds.set(`${key}:${amount}`, made.id);
-  return made.id;
+  const madeId = matchingPlanPrice(made, amount, cycle);
+  if (!madeId) throw new Error("Stripe did not confirm the requested price and single billing interval");
+  priceIds.set(`${key}:${amount}`, madeId);
+  return madeId;
 }
 
 /** The same price, written out on the checkout itself. */
@@ -437,10 +441,10 @@ export async function readStartedSubscription(
     if(meta?.store!==store.handle||meta?.funding_grant!==metadata.funding_grant||meta?.funding_review!==metadata.funding_review)return null;
     state=stateOf(subscription);
     if(state.state!=="active"||state.changePending)return null;
-    const items=subscription.items as {data?:{price?:Record<string,unknown>}[]}|undefined;
+    const items=subscription.items as {data?:{quantity?:unknown;price?:Record<string,unknown>}[]}|undefined;
     const price=items?.data?.[0]?.price;
     const recurring=price?.recurring as {interval?:unknown;interval_count?:unknown}|undefined;
-    if(items?.data?.length!==1||price?.currency!=="usd"||recurring?.interval!==state.cycle||recurring?.interval_count!==1||state.amountCents!==PUBLISHED_PLAN_PRICES[state.tier][state.cycle])return null;
+    if(items?.data?.length!==1||items.data[0].quantity!==1||price?.currency!=="usd"||recurring?.interval!==state.cycle||recurring?.interval_count!==1||state.amountCents!==PUBLISHED_PLAN_PRICES[state.tier][state.cycle])return null;
     const began=state.trialing?subscription.trial_start:periodStart(subscription);
     const until=state.trialing?subscription.trial_end:periodEnd(subscription,false);
     if(!(await activateCheckoutContract({
@@ -684,6 +688,7 @@ export async function restartPlan(input: {
   const body = new URLSearchParams({
     customer: input.customerId,
     "items[0][price]": priceId,
+    "items[0][quantity]": "1",
     default_payment_method: input.paymentMethod,
     off_session: "true",
     payment_behavior: "error_if_incomplete",
@@ -699,10 +704,10 @@ export async function restartPlan(input: {
   if (subscription.status !== "active" || started.customerId !== input.customerId || started.tier !== input.tier || started.cycle !== "month" || started.trialEnds !== 0) {
     throw new Error("the restarted plan does not match the requested customer and paid monthly plan");
   }
-  const items = subscription.items as { data?: { price?: Record<string, unknown> }[] } | undefined;
+  const items = subscription.items as { data?: { quantity?: unknown; price?: Record<string, unknown> }[] } | undefined;
   const price = items?.data?.[0]?.price;
   const recurring = price?.recurring as { interval?: unknown; interval_count?: unknown } | undefined;
-  if (items?.data?.length !== 1 || price?.id !== priceId || price?.currency !== "usd" ||
+  if (items?.data?.length !== 1 || items.data[0].quantity !== 1 || price?.id !== priceId || price?.currency !== "usd" ||
       price?.unit_amount !== PLAN_PRICES[input.tier].month || recurring?.interval !== "month" || recurring?.interval_count !== 1) {
     throw new Error("the restarted plan price does not match the requested monthly charge");
   }
@@ -775,7 +780,32 @@ export async function switchPlan(
     return { kind: "refused", reason: "canceling" };
   }
   if (subscription.pending_update) return { kind: "refused", reason: "pending" };
+  const sourceItems = subscription.items as { data?: { quantity?: unknown }[] } | undefined;
+  if (funding && (subscription.id !== subscriptionId || sourceItems?.data?.length !== 1 || sourceItems.data[0].quantity !== 1)) {
+    throw new Error("The funded switch source must identify exactly one plan unit");
+  }
+  function assertSourcePhase(): void {
+    if (!funding) return;
+    const began = status === "trialing" ? subscription.trial_start : periodStart(subscription);
+    const ends = status === "trialing" ? subscription.trial_end : periodEnd(subscription, false);
+    const observedAt = Math.floor(Date.now() / 1000);
+    const reservedAt = funding.submitUntilSeconds - CONTRACT_FUNDING_RULES.submissionSeconds;
+    if (!Number.isSafeInteger(began) || !Number.isSafeInteger(ends) || typeof began !== "number" || typeof ends !== "number" ||
+        began <= 0 || ends <= began || began > reservedAt || reservedAt > observedAt || ends <= observedAt) {
+      throw new Error("The funded switch source phase does not cover its reservation and observation");
+    }
+  }
+  assertSourcePhase();
   const now = planOf(subscription);
+  if (funding) {
+    const sourcePrice = (subscription.items as { data: { price?: Record<string, unknown> }[] }).data[0].price;
+    const sourceRecurring = sourcePrice?.recurring as { interval?: unknown; interval_count?: unknown } | undefined;
+    if (sourcePrice?.currency !== "usd" || sourcePrice?.unit_amount !== PUBLISHED_PLAN_PRICES[now.tier][now.cycle] ||
+        sourceRecurring?.interval !== now.cycle || sourceRecurring?.interval_count !== 1) {
+      throw new Error("The funded switch source price is not the single reviewed plan interval");
+    }
+
+  }
   if (
     now.tier === choice.tier &&
     now.cycle === choice.cycle &&
@@ -799,14 +829,17 @@ export async function switchPlan(
     payment_behavior: "pending_if_incomplete",
     "expand[]": "latest_invoice",
   });
+  if (funding) body.set("items[0][quantity]", "1");
   if (status === "trialing" && typeof subscription.trial_end === "number") {
     body.set("trial_end", String(subscription.trial_end));
   }
+  assertSourcePhase();
   assertFunding(funding,choice.tier,choice.cycle,'switch',undefined,subscriptionId);
   if(funding)await onPlatform('POST',path,new URLSearchParams({'metadata[funding_pending_grant]':funding.id,'metadata[funding_pending_review]':funding.reviewId}));
   let updated: Record<string, unknown>;
   try {
-    assertFunding(funding,choice.tier,choice.cycle,'switch',undefined,subscriptionId);
+    assertSourcePhase();
+  assertFunding(funding,choice.tier,choice.cycle,'switch',undefined,subscriptionId);
     updated = await onPlatform("POST", path, body);
   } catch (error) {
     // A price archived at Stripe since we last read it. The creator asked to
@@ -814,9 +847,12 @@ export async function switchPlan(
     // stale note of a price id. Forget it, make the price again, and retry —
     // the same recovery the first checkout has had all along.
     if (!(error instanceof BillingError) || error.status !== 400) throw error;
+    assertSourcePhase();
+    assertFunding(funding,choice.tier,choice.cycle,'switch',undefined,subscriptionId);
     priceIds.clear();
     body.set("items[0][price]", await ensurePrice(choice.tier, choice.cycle));
-    assertFunding(funding,choice.tier,choice.cycle,'switch',undefined,subscriptionId);
+    assertSourcePhase();
+  assertFunding(funding,choice.tier,choice.cycle,'switch',undefined,subscriptionId);
     updated = await onPlatform("POST", path, body);
   }
 
@@ -951,9 +987,9 @@ export function hasContractFunding(subscription:Record<string,unknown>):boolean{
 async function activateObservedSwitch(statsId:string,grantId:string,reviewId:string,subscriptionId:string,subscription:Record<string,unknown>):Promise<boolean>{
  const state=stateOf(subscription);
  if(subscription.id!==subscriptionId||state.state!=='active'||state.changePending)return false;
- const items=subscription.items as {data?:{price?:Record<string,unknown>}[]}|undefined;
+ const items=subscription.items as {data?:{quantity?:unknown;price?:Record<string,unknown>}[]}|undefined;
  const price=items?.data?.[0]?.price,recurring=price?.recurring as {interval?:unknown;interval_count?:unknown}|undefined;
- if(items?.data?.length!==1||price?.currency!=='usd'||recurring?.interval!==state.cycle||recurring?.interval_count!==1||state.amountCents!==PUBLISHED_PLAN_PRICES[state.tier][state.cycle])return false;
+ if(items?.data?.length!==1||items.data[0].quantity!==1||price?.currency!=='usd'||recurring?.interval!==state.cycle||recurring?.interval_count!==1||state.amountCents!==PUBLISHED_PLAN_PRICES[state.tier][state.cycle])return false;
  return activateSwitchContract({statsId,grantId,reviewId,subscriptionId,tier:state.tier,cycle:state.cycle,createdSeconds:subscription.created as number,trialing:state.trialing,periodStartSeconds:(state.trialing?subscription.trial_start:periodStart(subscription)) as number,periodEndSeconds:(state.trialing?subscription.trial_end:periodEnd(subscription,false)) as number});
 }
 export async function startedFromObservedSubscription(store:Store,subscription:Record<string,unknown>):Promise<StartedSubscription|null>{
@@ -971,10 +1007,10 @@ export async function startedFromObservedSubscription(store:Store,subscription:R
  if(!ownedBy(store,subscription)||meta?.store!==store.handle||typeof meta.funding_grant!=="string"||typeof meta.funding_review!=="string")return null;
  const state=stateOf(subscription);
  if(state.state!=="active"||state.changePending)return null;
- const items=subscription.items as {data?:{price?:Record<string,unknown>}[]}|undefined;
+ const items=subscription.items as {data?:{quantity?:unknown;price?:Record<string,unknown>}[]}|undefined;
  const price=items?.data?.[0]?.price;
  const recurring=price?.recurring as {interval?:unknown;interval_count?:unknown}|undefined;
- if(items?.data?.length!==1||price?.currency!=="usd"||recurring?.interval!==state.cycle||recurring?.interval_count!==1||state.amountCents!==PUBLISHED_PLAN_PRICES[state.tier][state.cycle])return null;
+ if(items?.data?.length!==1||items.data[0].quantity!==1||price?.currency!=="usd"||recurring?.interval!==state.cycle||recurring?.interval_count!==1||state.amountCents!==PUBLISHED_PLAN_PRICES[state.tier][state.cycle])return null;
  const began=state.trialing?subscription.trial_start:periodStart(subscription);
  const until=state.trialing?subscription.trial_end:periodEnd(subscription,false);
  if(!(await activateCheckoutContract({

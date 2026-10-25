@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Icon } from "@/components/icons";
 import { toast } from "@/components/toast";
@@ -36,6 +36,7 @@ export function StoreLayoutEditor({
   products: { id: string; title: string }[];
 }) {
   const router = useRouter();
+  const fieldId = useId();
   const [savedRows, setSavedRows] = useState(sections);
   const [savedNews, setSavedNews] = useState(announcement);
   const [rows, setRows] = useState<StoreSection[]>(sections);
@@ -97,12 +98,18 @@ export function StoreLayoutEditor({
                       maxLength={MAX_SECTION_TITLE}
                       value={row.title}
                       placeholder="For example: Courses"
-                      onChange={(event) => setRows((all) => all.map((r, i) => (i === index ? { ...r, title: event.target.value } : r)))}
+                      onChange={(event) => {
+                        const title = event.currentTarget.value;
+                        setRows((all) => all.map((r, i) => (i === index ? { ...r, title } : r)));
+                      }}
                     />
                   </label>
                   <label className="min-w-[12rem] flex-1">
-                    <span className="field-label">Starts at</span>
-                    <select disabled={busy !== null} className="field mt-1" value={row.at} onChange={(event) => setRows((all) => all.map((r, i) => (i === index ? { ...r, at: event.target.value } : r)))}>
+                    <span id={`${fieldId}-start-label-${index}`} className="field-label">Starts at</span>
+                    <select aria-labelledby={`${fieldId}-start-label-${index}`} disabled={busy !== null} className="field mt-1" value={row.at} onChange={(event) => {
+                      const at = event.currentTarget.value;
+                      setRows((all) => all.map((r, i) => (i === index ? { ...r, at } : r)));
+                    }}>
                       {row.at && !order.has(row.at) ? <option value={row.at}>A product that is no longer published</option> : null}
                       {products
                         .filter((product) => product.id === row.at || !taken.has(product.id))
