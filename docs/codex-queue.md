@@ -8641,3 +8641,12 @@ Limitação: isto protege a confirmação no helper e não completa o protocolo 
 Produção **READY 2026-10-25T12:33:23.117Z**, deployment `dpl_HHAQgFU3573Xpcmt15UGejy69hRz`, metadata SHA exato do merge e alias **marktmorgen.com**. `/`, `/platform`, `/pricing`, `/mission`, `/library`: **200** e marcador literal do deployment exato. Contador somente após essas provas: **252 → 253**, próximo **254**. Este registro documental não é entrega funcional.
 
 Custos/limites da seção anterior mantidos: nenhuma operação/chave/campo/cópia/TTL adicional, incremento de operações mensal/anual 0/0 por plano sem custo real desconhecido virar zero; nenhuma certificação de margem. Confirmação do helper não completa pausa/reinício durável, reserva do novo termo, renovações/liquidação ou AB(a). PLANS_ON_SALE=false, revisões reais nulas, três flags incompletas, preços/direitos/permissões preservados; EI1/363 após AB(a) inteiro.
+
+
+## AB(a) — Identidade da observação de assinatura (25/10/2026, 09h36 Fortaleza)
+
+Em implementação na branch codex/subscription-read-observation, baseada no head documental #1020; incorporar #1020 primeiro e exigir CI completo no novo head. Achado: readSubscription aplicava stateOf a resposta HTTP bem-sucedida sem identidade/status explícitos, exceto no ramo de contrato marcado. Dados malformados podiam virar inatividade e liberar alegação de encerramento em callers de cancelamento; resposta de outra assinatura podia conceder estado ativo.
+
+Correção: antes de stateOf, exigir objeto da assinatura exata solicitada e status conhecido; qualquer observação ambígua retorna unknown, preservando acesso/evidência. 404 explícito continua missing; falha do provedor continua unknown; estados conhecidos e ramo de validação de contrato marcado permanecem. Teste sintético pelo readSubscription real com fetch restrito substituído: nove formas/identidades/status inválidos, positivos ativos/inativos, 404 e 500, sem retry/fallback ou operação real.
+
+Custos: nenhuma requisição/Redis/chave/campo/cópia/TTL adicional; incremento de operações mensal/anual 0/0 por plano, sem custo real desconhecido ser zero. Validação constante no GET já existente. Mantidos preços, limites, PLANS_ON_SALE=false, permissões, impostos BR/EUA e 100% fixos LLC/direitos no pior mês. Não certifica margem nem completa reserva de renovação/reinício/liquidação, persistência durável de pausa ou AB(a). Revisões reais nulas/três coberturas incompletas preservadas; EI1/363 após AB(a) inteiro. Sem subprocessos locais, pagamentos ou mensagens reais.
