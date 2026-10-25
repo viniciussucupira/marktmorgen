@@ -305,8 +305,11 @@ const LEASE_MS = 10 * 60 * 1000;
 
 /** Takes a delivery that is due, for the length of a lease. Only the caller that took it tries it. */
 async function claim(statsId: string, id: string, now = Date.now()): Promise<boolean> {
-  const [taken] = await redisPipeline([["EVAL", LEASE_SCRIPT, 1, QUEUE_KEY, `${statsId}|${id}`, now, now + LEASE_MS]]);
-  return Number(taken) === 1;
+  const reply = await redisPipeline([["EVAL", LEASE_SCRIPT, 1, QUEUE_KEY, `${statsId}|${id}`, now, now + LEASE_MS]]);
+  if (!Array.isArray(reply) || reply.length !== 1 || (reply[0] !== 0 && reply[0] !== 1)) {
+    throw new Error("The webhook delivery lease was not acknowledged");
+  }
+  return reply[0] === 1;
 }
 
 /** Runs now, after the answer is sent when there is a request to wait for. */
@@ -385,8 +388,12 @@ export async function emitEvent(store: Store, type: WebhookEvent, seed: string, 
 export async function deliverDue(deadline: number, now = Date.now()): Promise<{ tried: number; delivered: number }> {
   const counts = { tried: 0, delivered: 0 };
   if (!isRedisConfigured()) return counts;
-  const [due] = await redisPipeline([["ZRANGEBYSCORE", QUEUE_KEY, "-inf", now, "LIMIT", 0, MAX_RETRIES_PER_RUN]]);
-  const members = Array.isArray(due) ? (due as unknown[]).map(String) : [];
+  const reply = await redisPipeline([["ZRANGEBYSCORE", QUEUE_KEY, "-inf", now, "LIMIT", 0, MAX_RETRIES_PER_RUN]]);
+  const due = Array.isArray(reply) && reply.length === 1 ? reply[0] : null;
+  if (!Array.isArray(due) || due.length > MAX_RETRIES_PER_RUN || due.some(member => typeof member !== "string" || member.length === 0) || new Set(due).size !== due.length) {
+    throw new Error("The webhook due queue is not a complete bounded observation");
+  }
+  const members = due as string[];
   for (let i = 0; i < members.length && Date.now() < deadline; i += 10) {
     await Promise.all(
       members.slice(i, i + 10).map(async (member) => {
