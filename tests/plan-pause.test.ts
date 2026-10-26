@@ -32,6 +32,7 @@ const NOW = 1_791_700_000;
 const emails: { to: string; subject: string; text: string }[] = [];
 const subs: Record<string, Record<string, unknown>> = {};
 const created: URLSearchParams[] = [];
+let providerCalls = 0;
 let keepScheduledStop = false;
 let refuseScheduledStop = false;
 let loseScheduledStopAck = false;
@@ -63,6 +64,7 @@ globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) =>
   const url = new URL(String(input));
   const method = init?.method ?? "GET";
   if (url.hostname === "api.stripe.com") {
+    providerCalls++;
     if (url.pathname === "/v1/prices" && method === "POST") {
       const body = new URLSearchParams(String(init?.body ?? ""));
       return new Response(JSON.stringify({
@@ -703,6 +705,50 @@ async function main() {
     }finally{
       pauseRedis.pipeline=original;
       for(const store of owners)await undoPause(store,NOW);
+    }
+  }
+
+
+  part("A funded pause keeps its source marker before the store becomes inactive");
+  for(const sourceGrant of ["ctr_pause_source", null]){
+    const suffix=sourceGrant?"known":"unknown",email="funded-pause-"+suffix+"@example.com",id="sub_FundedPause"+suffix;
+    subs[id]=subscription(id,{metadata:sourceGrant?{funding_grant:sourceGrant}:{funding_review:"unknown-source"}});
+    const store=await storeWith(email,"fundedpause"+suffix,id),ref=storeRef(store);
+    const set=await pausePlan(store,1,NOW);
+    if(set.kind!=="paused")throw new Error("Synthetic funded pause was refused");
+    is("provider funding remains an explicit versioned source marker",set.record.funding,{version:1,grantId:sourceGrant});
+    is("the marker is read back from the durable pause",(await pauseOf(store))?.funding,set.record.funding);
+    await setSubscription(ref,{active:false});
+    const current=await storeForEmail(ref);
+    is("the ordinary inactive store has no funded period",current?.period,null);
+    const original=pauseRedis.pipeline;
+    const evidence=await original([["GET",`nl:pause:${ref}`],["GET",`nl:pause:last:${ref}`]]);
+    let ledgerCommands=0;
+    pauseRedis.pipeline=async commands=>{
+      ledgerCommands+=commands.filter(command=>command.some(value=>value==="nl:contract-reserve:v1")).length;
+      return original(commands);
+    };
+    try{
+      for(const offset of [60,4*DAY]){
+        const calls=providerCalls,before=created.length;emails.length=0;
+        is("the closed integrated funded branch stays unresolved beyond the legacy retry window",await runBreaks(set.record.until+offset),{told:0,restarted:0,failed:1,dropped:0});
+        is("coverage refuses before ensurePrice, provider GET/POST, grant or intent IO",[providerCalls-calls,created.length-before,ledgerCommands,emails.length],[0,0,0,0]);
+        is("exact pause and annual evidence remain",await original([["GET",`nl:pause:${ref}`],["GET",`nl:pause:last:${ref}`]]),evidence);
+        const [due]=await original([["ZRANGEBYSCORE","nl:pause:due","-inf","+inf"]]);
+        is("funded due ownership is retained",Array.isArray(due)&&due.includes(ref),true);
+        is("unresolved funded restart cannot authorize content closing",await onBreak(ref,set.record.until+offset),true);
+      }
+      const raw=JSON.parse(evidence[0] as string);
+      for(const funding of [null,{version:2,grantId:sourceGrant},{version:1,grantId:"foreign"}]){
+        await original([["SET",`nl:pause:${ref}`,JSON.stringify({...raw,funding})]]);
+        const calls=providerCalls;
+        is("malformed funded evidence is unreadable, never a legacy restart",await runBreaks(set.record.until+60),{told:0,restarted:0,failed:1,dropped:0});
+        is("malformed evidence performs no provider operation",providerCalls-calls,0);
+      }
+      await original([["SET",`nl:pause:${ref}`,evidence[0] as string]]);
+    }finally{
+      pauseRedis.pipeline=original;
+      await undoPause(store,set.record.until+4*DAY);
     }
   }
 

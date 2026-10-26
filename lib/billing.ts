@@ -1,5 +1,6 @@
+import {randomUUID} from 'node:crypto';
 import {CONTRACT_FUNDING_RULES} from '@/lib/contract-funding-rules';
-import {activateCheckoutContract,activateSwitchContract,type ContractGrant} from '@/lib/contract-funding';
+import {claimRestartIntent,reserveRestartContractFunding,activateCheckoutContract,activateSwitchContract,type ContractGrant} from '@/lib/contract-funding';
 /**
  * The one way Marktmorgen makes money.
  *
@@ -688,9 +689,23 @@ export async function restartPlan(input: {
   paymentMethod: string;
   tier: Tier;
   idempotencyKey: string;
+  funding?: { statsId: string; sourceSubscriptionId: string; sourceGrantId: string | null; ref: string; paused: string };
 }): Promise<StartedSubscription> {
   if (!CUSTOMER_PATTERN.test(input.customerId)) throw new Error("not a customer of ours");
   if (!/^(pm|card|src)_[A-Za-z0-9]{6,64}$/.test(input.paymentMethod)) throw new Error("no card to charge");
+  if (input.funding) {
+    const source = input.funding;
+    // This branch is selected from the durable pause, not a now-inactive store.
+    // Current coverage refuses before Redis or any ensurePrice/provider call.
+    if (!source.sourceGrantId) throw new Error("The funded restart source is unknown");
+    const grant = await reserveRestartContractFunding(source.statsId, source.sourceSubscriptionId, input.tier);
+    if (!grant || !(await claimRestartIntent({ grant, ref: source.ref, handle: input.store.handle, paused: source.paused, sourceGrantId: source.sourceGrantId, claim: "claim_" + randomUUID() }))) {
+      throw new Error("The funded restart intent was not acknowledged");
+    }
+    // Intent ownership is not provider stop/payment/activation proof. Until
+    // those integrated phases exist, no funded provider operation is permitted.
+    throw new Error("The funded restart requires reconciliation and activation coverage");
+  }
   const priceId = await ensurePrice(input.tier, "month");
   const body = new URLSearchParams({
     customer: input.customerId,

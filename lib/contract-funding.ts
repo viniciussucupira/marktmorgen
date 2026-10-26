@@ -288,3 +288,90 @@ function contractObservationAcknowledged(result:unknown[],ack:unknown,earliestDe
  if(ack[0]===2)return ack[1]===finish;
  return ack[0]===1&&ack[1]>=earliestDeadline&&ack[1]<=earliestDeadline+CONTRACT_FUNDING_RULES.activationDelayDays*86400&&checkedAt<=ack[1]*1000;
 }
+
+/** Integrated preparation only; real funded restart remains uncovered. A claim
+ * preserves its source, full cash and exact pause forever under the same ledger.
+ * A lost acknowledgement or a duplicate never yields permission again.
+ */
+export const CLAIM_RESTART_INTENT = `
+local function amount(value)
+ if not value or not string.match(value,'^%d+$') or (#value>1 and string.sub(value,1,1)=='0') then return nil end
+ local n=tonumber(value)
+ if not n or n<0 or n>1000000000000 or n~=math.floor(n) then return nil end
+ return n
+end
+local function parts(raw,maximum)
+ if not raw or #raw>maximum then return nil end
+ local out={}
+ for field in string.gmatch(raw,'[^|]+') do out[#out+1]=field end
+ if table.concat(out,'|')~=raw then return nil end
+ return out
+end
+if #KEYS~=4 or #ARGV~=16 then return 0 end
+if KEYS[2]~='nl:pause:'..ARGV[12] or KEYS[3]~='nl:pause:due' or KEYS[4]~='nl:pause:last:'..ARGV[12] then return 0 end
+if #ARGV[12]>320 or #ARGV[13]>1536 or #ARGV[16]>4096 or #ARGV[14]>86 or not string.match(ARGV[14],'^claim_[%w_-]+$') then return 0 end
+if redis.call('TYPE',KEYS[1]).ok~='hash' or redis.call('TTL',KEYS[1])~=-1 then return 0 end
+if redis.call('HGET',KEYS[1],'policy')~=ARGV[1] or redis.call('HGET',KEYS[1],'review')~=ARGV[2] then return 0 end
+if ARGV[4]~='creator_month' and ARGV[4]~='pro_month' and ARGV[4]~='scale_month' then return 0 end
+local receipt=parts(redis.call('HGET',KEYS[1],'grant:'..ARGV[5]),1024)
+if not receipt or #receipt~=10 or receipt[1]~=ARGV[2] or receipt[2]~=ARGV[3] or receipt[3]~=ARGV[4] or receipt[4]~='restart' or receipt[10]==ARGV[5] then return 0 end
+local charge,submitted,expires,activation=amount(receipt[5]),amount(receipt[6]),amount(receipt[7]),amount(receipt[8])
+local now,minimum,limit,carry,submission=amount(ARGV[7]),amount(ARGV[8]),amount(ARGV[9]),amount(ARGV[10]),amount(ARGV[11])
+local through=tonumber(receipt[9])
+if not charge or charge<=0 or charge~=minimum or not submitted or not expires or not activation or not now or not limit or not carry or not submission or submission<=0 or submitted<submission or now<submitted-submission or now>submitted or expires<submitted or activation<expires then return 0 end
+if not through or not string.match(receipt[9],'^%d+$') or (#receipt[9]>1 and string.sub(receipt[9],1,1)=='0') or through>9007199254740991 or through~=math.floor(through) or activation*1000>through then return 0 end
+if redis.call('HGET',KEYS[1],'pending:'..ARGV[3])~=ARGV[5] then return 0 end
+local active=redis.call('HGET',KEYS[1],'active:'..ARGV[3])
+local source=parts(active,256)
+if not source or #source~=7 or source[1]~=receipt[10] or source[2]~=ARGV[6] or source[3]~=ARGV[4] or source[5]~='paid' then return 0 end
+local created,start,finish=amount(source[4]),amount(source[6]),amount(source[7])
+if not created or created<=0 or not start or start<created or not finish or finish<=start or finish>now then return 0 end
+if redis.call('HGET',KEYS[1],'activated:'..source[1])~=active then return 0 end
+local original=parts(redis.call('HGET',KEYS[1],'grant:'..source[1]),1024)
+if not original or original[1]~=ARGV[2] or original[2]~=ARGV[3] or original[3]~=ARGV[4] or not ((#original==9 and original[4]=='checkout') or (#original==10 and (original[4]=='switch' or original[4]=='restart'))) then return 0 end
+local oldCharge,oldSubmitted,oldExpires,oldActivation=amount(original[5]),amount(original[6]),amount(original[7]),amount(original[8])
+local oldThrough=tonumber(original[9])
+if not oldCharge or oldCharge<=0 or not oldSubmitted or not oldExpires or not oldActivation or not oldThrough or not string.match(original[9],'^%d+$') or (#original[9]>1 and string.sub(original[9],1,1)=='0') or oldThrough>9007199254740991 or oldThrough~=math.floor(oldThrough) or finish*1000>oldThrough then return 0 end
+local reserved,carried=amount(redis.call('HGET',KEYS[1],'reserved')),amount(redis.call('HGET',KEYS[1],'carried'))
+if not reserved or not carried or carried~=carry or reserved<carried or reserved>limit or oldCharge+charge>reserved-carried then return 0 end
+-- Exact pause observation, including its funded marker, is part of ownership.
+if redis.call('GET',KEYS[2])~=ARGV[13] then return 0 end
+local ok,pause=pcall(cjson.decode,ARGV[13])
+if not ok or type(pause)~='table' or type(pause.funding)~='table' or pause.funding.version~=1 or pause.funding.grantId~=source[1] or pause.subscription~=ARGV[6] or type(pause.customer)~='string' or not string.match(pause.customer,'^cus_[%w]+$') or type(pause.paymentMethod)~='string' or type(pause.tier)~='string' or pause.tier..'_month'~=ARGV[4] or type(pause.from)~='number' or pause.from~=finish or type(pause.until)~='number' or pause.until<=pause.from or pause.until>now or pause.until~=math.floor(pause.until) then return 0 end
+if tonumber(redis.call('ZSCORE',KEYS[3],ARGV[12]))~=pause.until then return 0 end
+local annual=amount(redis.call('GET',KEYS[4]))
+if not annual or annual<=0 or annual>pause.from then return 0 end
+local valid,intent=pcall(cjson.decode,ARGV[16])
+if not valid or type(intent)~='table' or intent.version~=1 or intent.grant~=ARGV[5] or intent.review~=ARGV[2] or intent.statsId~=ARGV[3] or intent.sourceSubscription~=ARGV[6] or intent.sourceGrant~=source[1] or intent.ref~=ARGV[12] or intent.handle~=ARGV[15] or intent.paused~=ARGV[13] or intent.claim~=ARGV[14] or intent.created~=now or intent.deadline~=submitted then return 0 end
+-- Permanent single ownership: no TTL, release, overwrite, or repeated permission.
+if redis.call('HEXISTS',KEYS[1],'restart-intent:'..ARGV[5])==1 then return 0 end
+redis.call('HSET',KEYS[1],'restart-intent:'..ARGV[5],ARGV[16])
+return 1
+`;
+export type RestartIntentInput={
+ grant:ContractGrant;ref:string;handle:string;paused:string;claim:string;sourceGrantId:string;
+};
+export async function claimRestartIntent(
+ input:RestartIntentInput,
+ policy:ContractFundingPolicy|null=CURRENT_CONTRACT_FUNDING_POLICY,
+ context:ContractFundingContext={termsSnapshot:CURRENT_PRICE_AND_RIGHTS_SNAPSHOT,review:CURRENT_COMMERCIAL_MARGIN_REVIEW},
+):Promise<boolean>{
+ // New IO is forbidden until the entire lifecycle/cost review is covered.
+ if(!Boolean(CONTRACT_ADMISSION_COVERAGE.pauseRestart))return false;
+ const encoded=canonicalFinancialSnapshot({input,context});if(!encoded)return false;
+ ({input,context}=JSON.parse(encoded) as {input:RestartIntentInput;context:ContractFundingContext});
+ if(!input||!context||typeof input!=='object'||typeof context!=='object')return false;
+ const {grant,ref,handle,paused,claim,sourceGrantId}=input;
+ if(!grant||typeof grant.statsId!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(grant.statsId)||grant.action!=='restart'||!/^sub_[A-Za-z0-9]{6,64}$/.test(grant.sourceSubscriptionId??'')||!/^ctr_[A-Za-z0-9_-]{1,80}$/.test(grant.id)||!/^ctr_[A-Za-z0-9_-]{1,80}$/.test(sourceGrantId)||typeof ref!=='string'||ref.length===0||ref.length>320||typeof paused!=='string'||Buffer.byteLength(paused)>CONTRACT_FUNDING_RULES.restartIntent.maxPauseBytes||typeof handle!=='string'||!/^[a-z0-9][a-z0-9-]{2,62}$/.test(handle)||typeof claim!=='string'||!/^claim_[A-Za-z0-9_-]{1,80}$/.test(claim)||!isRedisConfigured())return false;
+ if(!['creator_month','pro_month','scale_month'].includes(grant.key)||!commercialMarginReady(context.review))return false;
+ const before=new Date(),config=contractFundingConfiguration(policy,context,before);
+ if(!config||config.reviewId!==grant.reviewId||config.grantCents[grant.key]!==grant.reservedCents)return false;
+ const now=Math.floor(before.getTime()/1000);
+ const intent=JSON.stringify({version:1,grant:grant.id,review:grant.reviewId,statsId:grant.statsId,sourceSubscription:grant.sourceSubscriptionId,sourceGrant:sourceGrantId,ref,handle,paused,claim,created:now,deadline:grant.submitUntilSeconds});
+ if(Buffer.byteLength(intent)>CONTRACT_FUNDING_RULES.restartIntent.maxIntentBytes)return false;
+ try{
+  const result=await redisPipeline([['EVAL',CLAIM_RESTART_INTENT,4,'nl:contract-reserve:v1','nl:pause:'+ref,'nl:pause:due','nl:pause:last:'+ref,contractFundingBinding(config),config.reviewId,grant.statsId,grant.key,grant.id,grant.sourceSubscriptionId!,now,grant.reservedCents,config.cashLimitCents,config.carryForwardCents,CONTRACT_FUNDING_RULES.submissionSeconds,ref,paused,claim,handle,intent]]);
+  const current=contractFundingConfiguration(policy,context,new Date()),checked=Date.now();
+  return current!==null&&current.binding===config.binding&&commercialMarginReady(context.review)&&checked>=before.getTime()&&checked<=grant.submitUntilSeconds*1000&&result.length===1&&result[0]===1;
+ }catch{return false;}
+}

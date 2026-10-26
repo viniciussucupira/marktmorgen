@@ -9742,3 +9742,31 @@ Contador254 preservado: ensaio interno/documentação não é entrega funcional2
 AB(a)retoma intenção durável/propriedade atômica/submissão única integrada,
 coveragepauseRestart=false até protocolo/custos/reconciliação/ativação completos.
 AP449–455/AN456/361–362 e histórico preservados.
+
+
+### AB(a) — intenção durável integrada, primeira fase fechada (26/10/2026)
+
+Implementação em verificação: marcador financiado versionado é persistido na pausa
+antes da parada do provedor, pois o snapshot inativo apaga period.funded.
+runBreaks encaminha marcador/raw exato para o ramo financiado de billing.restartPlan
+antes de ensurePrice/GET/POST. CoveragepauseRestart=false/políticasNULL recusam
+antes de reserva/claim Redis; marcador desconhecido ou inválido não vira legado.
+Falha financiada retém pausa/due/ano além de3dias e não autoriza apagar conteúdo.
+
+Claim atômico no mesmo ledger valida grant integral novo/pending, origem mensal
+paga expirada+activated, caixa antigo/novo, policy/review, raw da pausa, marcador,
+due/ano e janela; grava só o primeiro proprietário permanente. SemTTL/liberação/
+segunda permissão apósACK perdido. Payload≤4096bytes,pausa≤1536,ceil17comandos.
+Mesmo um claim reconhecido ainda termina em recusa antes do provedor: próxima
+fase deve integrar reconciliação da origem, preço ePOSTúnico,IDdurável,
+recuperaçãoGETlimitada,ativação,ACKstore ecleanup/undo porgeração/rollover.
+Não conclui AB(a),não habilita cobranças nem presume migração legada.
+
+Testes remotos completos obrigatórios: fluxo realrunBreaks→billing após snapshot
+inativo perdeperiod,0IOprovedor/ledger/notices sobgatefechado e retenção após4dias;
+Lua real64claims,ACKignorado,casosnegativos eINFO/caixa/source retidos.
+Sem testes locais, conta, pagamento ou mensagem real. Custos reais porseiscontratos/
+todaLLC/impostos desconhecidos reprovados;nenhuma operação nova paga autorizada.
+Detalhes, tetos e tabela porcontrato emdocs/contract-restart-reservation.md.
+Preços69/690/449/4490/999/9990,limites,PLANS_ON_SALE,gates/AP449–455/AN456/361–362
+econtador254 preservados. Provas medidasSV4 e merge1071 já na fila/main via1072.

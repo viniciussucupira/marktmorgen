@@ -1,6 +1,7 @@
 """Execute contract cash admission against disposable loopback CI Redis only."""
 import concurrent.futures
 import os
+import json
 from pathlib import Path
 import re
 import uuid
@@ -23,13 +24,18 @@ def main():
     if not switch_match or '$' + '{' in switch_match.group(1):
         raise RuntimeError('Expected static switch activation Lua')
     switch_script = switch_match.group(1)
+    intent_match = re.search(r'export const CLAIM_RESTART_INTENT = `([^`]+)`;', source)
+    if not intent_match or '$' + '{' in intent_match.group(1):
+        raise RuntimeError('Expected static integrated restart intent Lua')
+    intent_script = intent_match.group(1)
     resource_source = (Path(__file__).resolve().parents[1] / 'lib/contract-resource-window.ts').read_text(encoding='utf-8')
     resource_match = re.search(r'export const RESERVE_PAID_RESOURCE_WINDOW = `([^`]+)`;', resource_source)
     if not resource_match or '$' + '{' in resource_match.group(1):
         raise RuntimeError('Expected static paid resource cohort Lua')
     resource_script = resource_match.group(1)
     prefix = 'marktmorgen:integration:contract:' + uuid.uuid4().hex + ':'
-    keys = [prefix + str(i) for i in range(42)]
+    keys = [prefix + str(i) for i in range(45)]
+    intent_refs = ['synthetic-restart-intent-' + uuid.uuid4().hex + '-' + str(i) for i in range(3)]
     redis = Redis()
     def snapshot(key):
         fields = redis.command('HGETALL', key)
@@ -557,7 +563,139 @@ def main():
         print('MEASURED restart reservation commands: first=' + str(first_counts) +
               ', duplicate=' + str(duplicate_counts) + ', canonical ceiling=' + str(command_ceiling))
 
+        # Actual application intent ownership, separate from reservation. No
+        # provider permission, activation or production coverage is inferred.
+        def intent_ready(key, ref):
+            seed_restart(key)
+            assert take_restart(redis, key) == 1
+            pause = json.dumps(dict(subscription='sub_RestartSource01',
+                                    customer='cus_IntentCustomer01', paymentMethod='pm_IntentCard001',
+                                    tier='creator', **{'from': 1800000000}, until=1800000001,
+                                    told=0, funding=dict(version=1, grantId='ctr_restart_source')),
+                               separators=(',', ':'))
+            redis.command('SET', 'nl:pause:' + ref, pause)
+            redis.command('SET', 'nl:pause:last:' + ref, 1799999000)
+            redis.command('ZADD', 'nl:pause:due', 1800000001, ref)
+            return pause
+        def intent_claim(client, key, ref, pause, claim='claim_first', **over):
+            options = dict(binding='binding', review='review', now=1800000001,
+                           source='sub_RestartSource01', raw=pause, amount=50, limit=140,
+                           source_grant='ctr_restart_source', payload=None)
+            options.update(over)
+            intent = json.dumps(dict(version=1, grant='ctr_restart_new', review=options['review'],
+                                     statsId='restart-store', sourceSubscription=options['source'],
+                                     sourceGrant=options['source_grant'], ref=ref, handle='synthetic-store',
+                                     paused=options['raw'], claim=claim, created=options['now'],
+                                     deadline=1800000300), separators=(',', ':'))
+            return client.command('EVAL', intent_script, 4, key, 'nl:pause:' + ref,
+                                  'nl:pause:due', 'nl:pause:last:' + ref,
+                                  options['binding'], options['review'], 'restart-store',
+                                  'creator_month', 'ctr_restart_new', options['source'],
+                                  options['now'], options['amount'], options['limit'], 0, 300,
+                                  ref, options['raw'], claim, 'synthetic-store',
+                                  options['payload'] if options['payload'] is not None else intent)
+        pause = intent_ready(keys[42], intent_refs[0])
+        before = snapshot(keys[42])
+        def concurrent_intent(index):
+            client = Redis()
+            try:
+                return intent_claim(client, keys[42], intent_refs[0], pause, 'claim_' + str(index))
+            finally:
+                client.close()
+        with concurrent.futures.ThreadPoolExecutor(max_workers=16) as pool:
+            results = list(pool.map(concurrent_intent, range(64)))
+        assert sum(results) == 1 and all(result in (0, 1) for result in results)
+        for field, value in before:
+            assert redis.command('HGET', keys[42], field) == value
+        claimed = json.loads(redis.command('HGET', keys[42], 'restart-intent:ctr_restart_new'))
+        assert claimed['paused'] == pause and claimed['sourceGrant'] == 'ctr_restart_source'
+        assert redis.command('TTL', keys[42]) == -1
+        print('PASS:64 actual restart intent contenders produce one durable owner and retain source/full cash')
+
+        # Unknown acknowledgement is deliberately ignored; all subsequent
+        # attempts, including a new nonce and time beyond the window, refuse.
+        pause = intent_ready(keys[44], intent_refs[2])
+        match = re.search(r'restartIntent:\{[^}]*commandCeiling:(\d+)', rule_source)
+        assert match
+        intent_ceiling = int(match.group(1))
+        before_calls = command_counts()
+        assert intent_claim(redis, keys[44], intent_refs[2], pause) == 1
+        first = difference(before_calls, command_counts())
+        assert sum(first.values()) <= intent_ceiling
+        committed = snapshot(keys[44])
+        before_calls = command_counts()
+        assert intent_claim(redis, keys[44], intent_refs[2], pause) == 0
+        duplicate = difference(before_calls, command_counts())
+        assert sum(duplicate.values()) <= intent_ceiling
+        assert intent_claim(redis, keys[44], intent_refs[2], pause, claim='claim_after_lost_ack') == 0
+        assert intent_claim(redis, keys[44], intent_refs[2], pause, now=1800000301) == 0
+        assert snapshot(keys[44]) == committed
+        print('MEASURED restart intent commands:first=' + str(first) + ',duplicate=' + str(duplicate) + ',canonical ceiling=' + str(intent_ceiling))
+        print('PASS:lost intent ACK never releases money, expires ownership or yields a second permission')
+
+        for scenario in ['policy', 'review', 'pending', 'source', 'activated', 'old-grant',
+                         'cash', 'carried', 'ttl', 'pause-missing', 'pause-marker',
+                         'due-missing', 'due-score', 'annual-missing', 'raw-mismatch',
+                         'expired', 'rollback', 'foreign-source', 'foreign-grant', 'oversize']:
+            ref = intent_refs[1]
+            pause = intent_ready(keys[43], ref)
+            args = {}
+            if scenario in ('policy', 'review'):
+                redis.command('HSET', keys[43], scenario, 'unknown')
+            elif scenario == 'pending':
+                redis.command('HSET', keys[43], 'pending:restart-store', 'ctr_foreign')
+            elif scenario == 'source':
+                redis.command('HSET', keys[43], 'active:restart-store', 'unknown')
+            elif scenario == 'activated':
+                redis.command('HDEL', keys[43], 'activated:ctr_restart_source')
+            elif scenario == 'old-grant':
+                redis.command('HDEL', keys[43], 'grant:ctr_restart_source')
+            elif scenario == 'cash':
+                redis.command('HSET', keys[43], 'reserved', 89)
+            elif scenario == 'carried':
+                redis.command('HSET', keys[43], 'carried', 1)
+            elif scenario == 'ttl':
+                redis.command('EXPIRE', keys[43], 60)
+            elif scenario == 'pause-missing':
+                redis.command('DEL', 'nl:pause:' + ref)
+            elif scenario == 'pause-marker':
+                pause = pause.replace('"version":1', '"version":2')
+                redis.command('SET', 'nl:pause:' + ref, pause)
+            elif scenario == 'due-missing':
+                redis.command('ZREM', 'nl:pause:due', ref)
+            elif scenario == 'due-score':
+                redis.command('ZADD', 'nl:pause:due', 1800000002, ref)
+            elif scenario == 'annual-missing':
+                redis.command('DEL', 'nl:pause:last:' + ref)
+            elif scenario == 'raw-mismatch':
+                args['raw'] = pause + ' '
+            elif scenario == 'expired':
+                args['now'] = 1800000301
+            elif scenario == 'rollback':
+                args['now'] = 1799999999
+            elif scenario == 'foreign-source':
+                args['source'] = 'sub_ForeignIntent01'
+            elif scenario == 'foreign-grant':
+                args['source_grant'] = 'ctr_foreign'
+            elif scenario == 'oversize':
+                args['payload'] = 'x' * 4097
+            before = snapshot(keys[43])
+            pause_before = redis.command('GET', 'nl:pause:' + ref)
+            last_before = redis.command('GET', 'nl:pause:last:' + ref)
+            due_before = redis.command('ZSCORE', 'nl:pause:due', ref)
+            assert intent_claim(redis, keys[43], ref, pause, **args) == 0, scenario
+            assert snapshot(keys[43]) == before, scenario
+            assert redis.command('GET', 'nl:pause:' + ref) == pause_before
+            assert redis.command('GET', 'nl:pause:last:' + ref) == last_before
+            assert redis.command('ZSCORE', 'nl:pause:due', ref) == due_before
+        print('PASS:20 unknown or mismatched restart intent observations retain exact pause/source/annual/cash evidence')
+
     finally:
+        for ref in intent_refs:
+            if not ref.startswith('synthetic-restart-intent-'):
+                raise RuntimeError('Refuse unrelated synthetic pause cleanup')
+            redis.command('DEL', 'nl:pause:' + ref, 'nl:pause:last:' + ref)
+            redis.command('ZREM', 'nl:pause:due', ref)
         for key in keys:
             if not key.startswith(prefix):
                 raise RuntimeError('Refuse cleanup outside this generated CI namespace')
