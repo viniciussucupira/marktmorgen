@@ -6398,6 +6398,8 @@ REGRA DOS 60% (OBRIGATÓRIA): todo cliente pagante, considerado isoladamente e u
 
 317. [EU1] Marktmorgen inteiramente em regiões da União Europeia
 
+Complemento SV do dono (25/10/2026, 21h20 Fortaleza): executar 441[SV1] e 442[SV2] como parte deste mesmo317/Bloco de abertura, ligados a PV5(b),363[EI1] e275[FX1], sem outro inventário, infraestrutura ou cálculo duplicado. SV1(a) é a primeira etapa de317; SV1(b) autoriza preparação/testes desligados somente sob a condição oficial deSV1(a). Migração/contratação/desligamento reais continuam dependendo do dono. Não interrompe AB(a) nem o PR1036; mantém a precedência vigente. Briefing completo na seçãoSV ao fim desta fila.
+
 Proveniência AB: passou a fazer parte do Bloco de abertura, posição (f), por solicitação do dono de 24/10/2026, 00h11 (Fortaleza).
 
 Estado: na fila.
@@ -9109,6 +9111,37 @@ Referência AC4 preservada como recebida: etiqueta/pedido AC4 não localizado no
 VR: só chamar de pronto o que estiver incorporado,publicado,conferido em marktmorgen.com e usado de ponta a ponta; relatar o estado exato e o que não foi verificado. Este registro põe FC1–FC3 na fila; bancos,API,preços,endereços,aceitação,leis,impostos,cálculos,conciliação e margem ainda não foram verificados ou implementados por ele. Não é entrega funcional e não incrementa o contador.
 
 
+## SV — Servidores próprios de preço fixo na UE para abrir as vendas (25/10/2026)
+
+Solicitação do dono (25/10/2026, 21h20, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA, com os próximos números livres, dentro do Bloco de abertura, junto de 317 [EU1] e ligado a PV5(b) e 363 [EI1], sem duplicá-los.
+
+Pedidos repetidos: antes de gravar, aplique a regra "Pedidos repetidos" (23/10/2026): procure esta solicitação no main, nos PRs abertos e nos ramos codex/* recentes, pela linha de data e hora, pelo nome da seção, pelas etiquetas [SV1] e [SV2] e pelo conteúdo. Se já estiver gravada, não duplique.
+
+Estado inicial: na fila.
+
+Contexto do dono: pela condição de EU_HOSTING_CONFIRMED (nenhum servidor, banco de dados ou armazenamento pago pela LLC fora da UE), a rede de entrega global da Vercel e a entrega pública do Cloudflare R2 parecem não poder ficar inteiramente na UE. Pela documentação pesquisada pelo dono, a Vercel permite fixar a região das funções, mas não limitar a sua rede de entrega à UE no plano Pro; limitar a Cloudflare à UE exige o pacote Enterprise. Confirmar em fonte oficial datada em 317 [EU1].
+
+441. [SV1] Hospedagem inteiramente na UE, construída e desligada.
+(a) Como primeira etapa de 317 [EU1], confirmar em fonte oficial datada se a Vercel, a Upstash, o Cloudflare R2 e a Bunny podem servir e guardar tudo somente em regiões da UE no plano disponível ao dono, e o preço disso. Registrar o resultado em "Depende do dono" assim que houver.
+(b) Se algum deles não puder, deixar pronta, testada e DESLIGADA a execução do site, das funções, do banco de dados, das filas, dos trabalhos agendados e da entrega de arquivos em servidores próprios de preço fixo em região da UE (por exemplo, Hetzner em Falkenstein ou Helsinki), com cópias de segurança, servidor de reserva, monitoramento automático, caminho de volta e nenhum dado fora da UE. Manter somente serviços que possam ficar inteiramente na UE (por exemplo, Amazon SES em região europeia e Bunny com as regiões de fora da UE desligadas, a confirmar).
+(c) Estrutura mínima para abrir, crescendo só quando a capacidade medida exigir: 1 servidor dedicado AX42-1 (€ 97,30 por mês e € 49 de instalação, página oficial de reajuste da Hetzner de 15/06/2026), 1 servidor na nuvem CX33 (€ 8,49 por mês) para reserva e monitoramento, armazenamento de arquivos na UE, cópias de segurança e endereços IP. Conferir todos os preços em fonte oficial datada e somar o custo fixo completo em 275 [FX1], com câmbio de pior caso.
+(d) Medir com teste de carga sintético quantos clientes de cada plano, usando 100% dos direitos ao mesmo tempo, cabem na estrutura, com teto automático por loja; quando o número de clientes pagantes chegar perto do limite medido, o código registra em "Depende do dono" que é preciso mais um servidor, com antecedência e com o custo.
+(e) Recalcular o custo de uso por cliente nessa estrutura e a margem de cada plano, período e forma de pagamento, inclusive o cartão por perfil de cliente de PV1(k).
+
+442. [SV2] Troca somente com decisão do dono.
+Nenhuma migração real, contratação ou desligamento é feito por este item. Quando SV1 estiver pronto e testado, registrar em "Depende do dono" o roteiro completo da troca, o custo mensal e de instalação, o efeito nas margens e na base mínima de clientes, e o passo a passo do que o dono precisa fazer em cada painel, com os nomes exatos dos campos e botões.
+
+REGRA DOS 60%: todo cliente pagante, isoladamente e usando 100% dos direitos do plano no pior mês, e a empresa como um todo, mantêm margem real de lucro líquido mínima de 60% sobre tudo o que é cobrado, depois de todos os custos e de todos os impostos, inclusive os brasileiros e o ISS de 5%; pode ser maior, nunca menor. Leitura que dá mais imposto (docs/tax-uncertainty.md). Desconhecido reprova, nunca é zero. Todos os custos fixos da LLC pertencem ao Marktmorgen (FX275).
+
+Proibido: mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, o tax gate, o art. 9a ou a revisão comercial, afrouxar qualquer suposição de imposto, taxa ou reserva, ligar EU_HOSTING_CONFIRMED, migrar serviços reais, apagar conteúdo de criadores, apagar qualquer coisa da Hazelsong, criar contas, aceitar termos, contratar, pagar ou contatar terceiros. Somente testes sintéticos.
+
+Aplicar a regra VR: só chamar de pronto o que estiver incorporado, publicado, conferido em marktmorgen.com e usado de ponta a ponta; relatar o estado exato e o que não foi verificado.
+
+Proveniência e escopo deste registro: pedidos repetidos conferidos no main50644b8dcc4323bb443a218280af16d6264dc5a3, nas filas dos12PRs abertos,594refs codex/* e23heads distintos recentes/relevantes (incluindoEU1/EI1/FX275/PV/AC/FC). Título/data25/10/2026 21h20,etiquetasSV1/SV2 e conteúdo equivalente ausentes; maior número440. Alocar somente441–442, dentro do Bloco de abertura e do mesmo trabalho317, sem segunda implementação ou mudança da ordemAB(a)integral→363EI1estudo→PV→AB(b)/demais posições existentes. O estudo363continua somente estudo; a preparação condicional desligada agora pedida é o escopoSV1/EU1, não autorização para abrir conta, migrar ou ligar trava. As afirmações sobreVercel/Cloudflare e os modelos/preços/datasHetzner acima são contexto fornecido pelo dono, NÃO verificação oficial nem compromisso de gasto por este registro. Capacidade não medida, topologia/região/preço desconhecidos reprovam; não estimar como medidos nem reduzir custos por suposta região/franquia. Registrar resultado/decisão e roteiro em Depende do dono quando existirem as evidências exigidas, sem marcar pesquisa ainda executável como bloqueada antecipadamente. Benefício pretendido: residência efetiva naUE e custos previsíveis com capacidade/tetos financiados; margem e base mínima não certificadas. Somente fila/documentação, nenhum runtime, serviço, variável, custo assumido, teste de carga real, região ou dado alterado. Nenhuma publicação funcional ou incremento do contador254.
+
+
 ### PV8(c): diagnóstico da falha móvel — 25/10/2026, 20h43 Fortaleza
 
 Em andamento, sem incorporação/publicação: head ac0c8da7c27cd7ea57031e90e1668b207172fcd6, PR1036, Mobile render (candidate), job121324652469, falhou às20h32:07 Fortaleza. Primeira amostra fria de /:392ms de interação; demais oito passaram. Frame lento389,7ms sem script atribuído: causa ainda não determinada. Preservados limiar200ms, três amostras frias por página, CPU/rede e interações reais; sem exclusão de amostra nem espera adicional. Teste passa a registrar diferenças dos contadores nativos de tarefa/script/layout/estilo e heap por interação, fora do intervalo pointer-to-paint. Instrumentação não resolve nem aprova a falha; exige diagnóstico, correção e suíte integral no novo head, nunca só reexecução do job. Sem fornecedor, dependência, armazenamento persistente ou operação paga nova; poucos contadores no log existente, CI permanece custo fixo integral FX275 e fatura desconhecida não certifica margem. PLANS_ON_SALE=false, preços, limites e travas preservados. Nenhuma entrega funcional ou incremento de contador.
@@ -9130,3 +9163,6 @@ Achado: os jobs pesados usavam always() no nível do job. Isso também permanece
 Execução cancelada não aprova publicação nem reutilização: a prova PV8(b) continua exigindo o conjunto exato de jobs concluídos com sucesso na mesma árvore. Nova suíte INTEGRAL no novo head, sem reaproveitar checks de heads antigos. O teste estrutural existente agora impede always() no gate pesado e exige !cancelled() com expressão fechada; não há corte de testes do head que será publicado.
 
 Custo: evitar trabalho de head substituído é redução esperada de desperdício, ainda sem medição faturada, mensal/anual ou economia certificada. Mantido o limite configurado707min agregados por execução completa e todos os cenários conservadores anteriores,100% fixos Marktmorgen/FX275; nenhum novo workflow, fornecedor, operação produtiva ou franquia. Incremento de requisições produtivas por plano mês/ano0/0; fatura/topologia/impostos desconhecidos não viram zero. Estado: em andamento no PR1036, sem incorporação/publicação ou entrega funcional. Sem mudança adicional de interface; passos/decisões e lacuna de pessoas reais202 preservados. PLANS_ON_SALE=false e demais gates intactos.
+
+
+Registro de incorporação SV441–442: PR1039 incorporado em25/10/2026 às21h27min30s deFortaleza, commit c9755a03033d7459ccee47e9cf05c353602627d6, head87332b182b0fd7d31413fbbecbf5bb4f0e74b2f4, árvore871283c941c53d8276ccb12d1bc97387f846e5eb. Única alteração docs/codex-queue.md,8 classificadores passaram9+6testes cada e full=false;11 definições pesadas foram legitimamente puladas para documentação, NÃO prova de suíte integral. StatusVercelPRsuccess, árvore/pais previstos e incorporados conferidos. Itens441–442 continuam na fila, pesquisa/construção/migração não executadas; nenhuma entrega funcional/contador. Publicação técnica/domínio desse registro ainda pendentes nesta anotação. PR1036 continua no mesmo trabalho, com SV preservado e suíte integral exigida no head combinado; nenhum resultado de head antigo o aprova. Custo somente CI/documental, sem custo real desconhecido virar zero nem corte de hipóteses/controles.
