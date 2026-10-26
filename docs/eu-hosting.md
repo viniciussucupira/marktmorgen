@@ -98,3 +98,14 @@ Ainda falta janela comparável porproduto/região para os seisfornecedores,conta
 ### Estado exato
 
 SV5(a) em pesquisa;SV5(b)–(d),SV1(b)–(e),SV3calendário eSV4infraestrutura/ensaio completo continuam pendentes. Não há carga sintética medida,teto porloja,reserva/custo total porplano,margem60%ou base mínima certificada. Decisão final de fornecedor continua emDepende do dono quando comparação estiver completa; nenhuma ação do dono é necessária agora. Nenhuma conta,contrato,pagamento,DNS,migração ou gate foi alterado.
+
+
+## SV4 — contrato sintético HTTP para Redis real
+
+Em construção, desligado deprodução. `scripts/test_self_hosted_redis_http.py` executa uma fixtureHTTP somente em127.0.0.1 com portaefêmera eRedis descartável16379 já existente noCI. Token gerado em memória; nenhum endereço/segredo do ambiente deprodução é lido. Não é proxy operacional nem novo banco deprodução.
+
+O ensaio verifica rejeição anterior àmutação para autenticação/rota/comandos/corpo inválidos; respostas ordenadasUTF-8/null/erroporcomando;TTL persistente/expirável;64concorrentes pelaLua real de reserva integral do contrato; e resposta perdida apósINCR aplicado semreconexão/replay/liberação de dinheiro. Pipeline continua sendo nãoatômico; não foi convertido emMULTI. Somente chaves sintéticas deUUID são removidas ao final.
+
+Limites1MiB/128comandos são dafixture e não mudam direitos/limites dos planos. Sem fornecedor,dependência externa,credencialconta,DNS ou recurso real. Acrescentado ao jobRedis existente,sem nova matriz,sem ampliar timeout,sem reduzir testes anteriores. Execução remota integral do novohead ainda pendente. Custo operacional novo porplano0/mês e0/ano por serfixture nãoimportada peloapp; custo total deCI,allocaçãoN,reserva e impacto da infraestrutura real permanecem não certificados,sem redução de teto.
+
+Não verifica clienteTypeScript de ponta a ponta,criação decontêineres,site,replicação,backup/restauração,domínio deteste,rollback completo,tempo total ou capacidade100%dos direitos. SV4 completo continua pendente. Adaptadores externos pesquisados não foram adotados por publicidade decompatibilidade.
