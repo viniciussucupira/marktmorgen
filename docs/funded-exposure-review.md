@@ -73,3 +73,42 @@ não preços/tetos do produto ou custos oficiais. Nenhum envio, inscrição real
 conta, cobrança, obrigação fiscal ou gate comercial é ativado. Custo incremental
 deCI permanece desconhecido, sem reduzir tetos/reservaFX275. LE448 integral não
 está implementado, publicado ou usado ponta a ponta por este incremento.
+
+### LE448 — núcleo compartilhado de tokens e isolamento de finalidade
+
+A geração de tokens48hex, o identificadorRedis `nl:wl:t:sha256(token)` e o decoder
+de grants de loja são extraídos para `lib/waitlist-tokens.ts`; a lista existente
+importa esse núcleo e reexporta WAIT_TOKEN. Tokens/URLs/keys de lojas, seus
+vencimentos, consentimento e dados permanecem compatíveis com grants legados
+produzidos pelo código. A extração não cria lista, conta, e-mail, armazenamento,
+cadastro ou boletim duplicado e não emite token de plataforma em produção.
+
+Grants de plataforma possuem discriminador/versionamento próprio, finalidade
+confirm/leave, identidade opaca de entrada e geração (para futura comparação CAS
+no registro), emissão e vencimento absolutos. O decoder de loja recusa grants
+com escopo de plataforma; o decoder de plataforma não aceita grants de loja,
+finalidade trocada, geração/identidade inválida, dados excessivos, relógio
+inválido, emissão futura, vencimento ou vida maior que confirm7dias/leave365dias
+já usados pelo mecanismo. Só devolve dados de roteamento, sem e-mail/país/plano
+ou afirmações de consentimento/autorização. A identidade hash não é anonimização
+dos dados privados: futuras leituras continuam exclusivas ao fluxo autorizado.
+
+Validar um grant não consome token, confirma inscrição nem autoriza despesa.
+Comparação atômica da geração no registro e confirmação/saída/reentrada/outbox,
+registro do consentimento exato/datatado, orçamento, políticas de retenção,
+remetentes sintéticos, UI e resumo/CSV privado ainda estão pendentes no protocolo
+integral LE448. Não se afirma que geração antiga já seja recusada contra uma
+base que este incremento não cria. Testes novos cobrem compatibilidade, separação
+entre listas/finalidades, tempo e dados indevidos; testes existentes de waitlist
+também devem passar no CI completo do novo head. Nenhuma execução local ou
+operação real; sem novo fornecedor/custo variável de operação, incremento real
+deCI desconhecido e sem redução de tetosFX275. Sem entrega funcional adicional.
+
+Correção do primeiro head422ca4793956b1b05ef7dcefe2ba132cbb00538a:
+verify121401603679 falhou em26/10/2026 01:45:43Fortaleza no inventário de chaves,
+porque o literalnl:wl:t: mudou para o núcleo compartilhado e sua família ainda
+apontava ao arquivo antigo. Os seis testes novos e32checks legados de waitlist
+passaram; isso não basta para aprovação geral. A entrada do registro é movida
+para o novo arquivo, mantendo exatamente room/lib/waitlist.ts, partes, bytes,
+retenção, unidade e custos: sem entrada duplicada, exceção ao scanner, mudança de
+teto ou redução de custo. Nova verificação completa obrigatória no novo head.
