@@ -569,6 +569,44 @@ async function main() {
     is("only that later pass creates the replacement",created.length-before,1);
   }
 
+
+  part("An unreadable store cannot erase a known pause");
+  {
+    const email="unreadable-pause-owner@example.com",id="sub_UnreadableOwner01";
+    subs[id]=subscription(id);
+    const store=await storeWith(email,"unreadablepauseowner",id);
+    const set=await pausePlan(store,1,NOW);
+    const until=set.kind==="paused"?set.record.until:0;
+    const ref=storeRef(store),key=`nl:pause:${ref}`,year=`nl:pause:last:${ref}`;
+    const pipeline=pauseRedis.pipeline;
+    const beforeEvidence=await pipeline([["GET",key],["GET",year]]);
+    for(const answer of ["missing","corrupt","empty","unavailable"] as const){
+      let mutations=0;
+      pauseRedis.pipeline=async(commands)=>{
+        if(commands.length===1&&commands[0][0]==="GET"&&String(commands[0][1]).startsWith("nl:store:owner:")){
+          if(answer==="unavailable")throw new Error("synthetic owner lookup unavailable");
+          if(answer==="missing")return [null];
+          if(answer==="corrupt")return ["{not-json"];
+          return [];
+        }
+        mutations+=commands.filter(command=>!["GET","ZRANGEBYSCORE"].includes(String(command[0]))).length;
+        return pipeline(commands);
+      };
+      try{
+        const before=created.length;emails.length=0;
+        is("an unknown owner is retained for reconciliation",await runBreaks(until+60),{told:0,restarted:0,failed:1,dropped:0});
+        is("unknown ownership performs no mutation, charge or notice",[mutations,created.length-before,emails.length],[0,0,0]);
+        const [record,last,due]=await pipeline([["GET",key],["GET",year],["ZRANGEBYSCORE","nl:pause:due","-inf",String(until+60)]]);
+        is("exact pause and annual evidence survive an unknown owner",[record,last],beforeEvidence);
+        is("the due member survives an unknown owner",Array.isArray(due)&&due.includes(ref),true);
+      }finally{pauseRedis.pipeline=pipeline;}
+    }
+    // A successful later read does not by itself start a replacement while
+    // the original subscription is still active.
+    is("restored ownership retains the existing active-plan guard",await runBreaks(until+60),{told:0,restarted:0,failed:1,dropped:0});
+    await undoPause(store,NOW);
+  }
+
   part("A store that started again by hand");
   {
     subs.sub_ByHand000001 = subscription("sub_ByHand000001");
