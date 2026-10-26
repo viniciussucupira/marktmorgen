@@ -662,6 +662,50 @@ async function main() {
     await undoPause(store,NOW);
   }
 
+  part("One unavailable pause record cannot abort the bounded batch");
+  {
+    const entries=[
+      {email:"unavailable-pause-read@example.com",handle:"unavailablepauseread",id:"sub_UnavailablePause01"},
+      {email:"following-pause-read@example.com",handle:"followingpauseread",id:"sub_FollowingPause01"},
+    ];
+    const owners: Awaited<ReturnType<typeof storeWith>>[]=[];
+    let until=0;
+    for(const entry of entries){
+      subs[entry.id]=subscription(entry.id);
+      const store=await storeWith(entry.email,entry.handle,entry.id);
+      owners.push(store);
+      const set=await pausePlan(store,1,NOW);
+      if(set.kind!=="paused")throw new Error("Synthetic pause fixture could not be created");
+      until=set.record.until;
+    }
+    const refs=owners.map(storeRef),original=pauseRedis.pipeline;
+    const beforeEvidence=await original(refs.flatMap(ref=>[["GET",`nl:pause:${ref}`],["GET",`nl:pause:last:${ref}`]]));
+    let followingOwnerReads=0;
+    pauseRedis.pipeline=async commands=>{
+      if(commands.length===1&&commands[0][0]==="ZRANGEBYSCORE"&&commands[0][1]==="nl:pause:due")return [refs];
+      if(commands.length===1&&commands[0][0]==="GET"&&commands[0][1]===`nl:pause:${refs[0]}`)throw new Error("Synthetic unavailable pause record");
+      if(commands.length===1&&commands[0][0]==="GET"&&String(commands[0][1]).startsWith("nl:store:owner:")){
+        const reply=await original(commands);
+        const owner=typeof reply[0]==="string"?JSON.parse(reply[0]):null;
+        if(owner?.email===owners[1].email&&owner?.sid===owners[1].sid)followingOwnerReads++;
+        return reply;
+      }
+      return original(commands);
+    };
+    try{
+      const before=created.length;emails.length=0;
+      is("unavailable pause is failed individually and the following active plan is also retained",await runBreaks(until+60),{told:0,restarted:0,failed:2,dropped:0});
+      is("the next owner in the same bounded batch was actually read",followingOwnerReads,1);
+      is("unknown pause does not trigger replacement charges or notices",[created.length-before,emails.length],[0,0]);
+      is("neither store loses its exact pause or annual evidence",await original(refs.flatMap(ref=>[["GET",`nl:pause:${ref}`],["GET",`nl:pause:last:${ref}`]])),beforeEvidence);
+      const [due]=await original([["ZRANGEBYSCORE","nl:pause:due","-inf","+inf"]]);
+      is("both due members remain for reconciliation",Array.isArray(due)&&refs.every(ref=>due.includes(ref)),true);
+    }finally{
+      pauseRedis.pipeline=original;
+      for(const store of owners)await undoPause(store,NOW);
+    }
+  }
+
   part("A store that started again by hand");
   {
     subs.sub_ByHand000001 = subscription("sub_ByHand000001");
