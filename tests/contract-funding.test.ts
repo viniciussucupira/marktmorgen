@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {canonicalFinancialSnapshot,contractCoverageDays,contractFundingConfiguration,CONTRACT_ADMISSION_COVERAGE,CONTRACT_KEYS,CONTRACT_FUNDING_RULES} from '@/lib/contract-funding-rules';
 import {assessCustomerWorstCase} from '@/lib/net-margin-rules';
-import {activateCheckoutContract,activateSwitchContract,type CheckoutContractActivation,reserveContractFunding,reserveSwitchContractFunding} from '@/lib/contract-funding';
+import {activateCheckoutContract,activateSwitchContract,type CheckoutContractActivation,reserveContractFunding,reserveSwitchContractFunding,reserveRestartContractFunding} from '@/lib/contract-funding';
 import {contractFixture} from './contract-funding-fixture';
 import {reset,seed,ledger,calls,settings} from './contract-funding-redis';
 const key='nl:contract-reserve:v1';
@@ -314,4 +314,15 @@ test('checkout and switch acknowledgements revalidate admission, exposure, polic
    assert.equal(calls.length,beforeCalls+1,'no compensating Redis operation');
   }
  }
+});
+
+test('unfinished pause-restart coverage refuses before Redis even with a synthetic reviewed policy',async()=>{
+ const f=start();assert.equal(CONTRACT_ADMISSION_COVERAGE.pauseRestart,false);
+ const before=[...ledger.get(key)!];
+ for(const tier of ['creator','pro','scale'] as const){
+  assert.equal(await reserveRestartContractFunding('one','sub_RestartSource01',tier,f.policy,f.context,'ctr_restart_'+tier),null);
+ }
+ assert.equal(await reserveContractFunding('one','creator','year','restart',f.policy,f.context,'ctr_annual','sub_RestartSource01'),null);
+ assert.equal(calls.length,0);
+ assert.deepEqual([...ledger.get(key)!],before);
 });

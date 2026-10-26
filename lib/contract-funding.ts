@@ -1,7 +1,7 @@
 import {createHash,randomUUID} from 'node:crypto';
 import {isRedisConfigured,redisPipeline} from '@/lib/redis';
 import {commercialMarginReady,CURRENT_COMMERCIAL_MARGIN_REVIEW,CURRENT_PRICE_AND_RIGHTS_SNAPSHOT} from '@/lib/commercial-margin';
-import {CONTRACT_FUNDING_RULES,CONTRACT_KEYS,CURRENT_CONTRACT_FUNDING_POLICY,canonicalFinancialSnapshot,contractFundingConfiguration,type ContractKey,type ContractFundingPolicy,type ContractFundingContext,type ContractFundingConfiguration} from '@/lib/contract-funding-rules';
+import {CONTRACT_FUNDING_RULES,CONTRACT_ADMISSION_COVERAGE,CONTRACT_KEYS,CURRENT_CONTRACT_FUNDING_POLICY,canonicalFinancialSnapshot,contractFundingConfiguration,type ContractKey,type ContractFundingPolicy,type ContractFundingContext,type ContractFundingConfiguration} from '@/lib/contract-funding-rules';
 import type {Tier,Cycle} from '@/lib/plan';
 export const contractFundingBinding=(c:ContractFundingConfiguration)=>createHash('sha256').update(c.binding).digest('hex');
 export const RESERVE_CONTRACT = `
@@ -13,7 +13,7 @@ local function amount(value)
 end
 if redis.call('TYPE',KEYS[1]).ok~='hash' or redis.call('TTL',KEYS[1])~=-1 then return 0 end
 if redis.call('HGET',KEYS[1],'policy')~=ARGV[1] or redis.call('HGET',KEYS[1],'review')~=ARGV[2] then return 0 end
-if ARGV[11]~='checkout' and ARGV[11]~='switch' then return 0 end
+if ARGV[11]~='checkout' and ARGV[11]~='switch' and ARGV[11]~='restart' then return 0 end
 local receiptPrefix=ARGV[2]..'|'..ARGV[3]..'|'..ARGV[4]..'|'..ARGV[11]..'|'
 if string.sub(ARGV[10] or '',1,#receiptPrefix)~=receiptPrefix then return 0 end
 -- An activated contract cannot open a second new-enrollment obligation.
@@ -24,7 +24,8 @@ local sourceCharge=nil
 if ARGV[11]=='checkout' then
  if ARGV[12]~='' then return 0 end
 else
- -- A new switch obligation must name the same currently funded subscription.
+ -- Switch/restart obligations name the same immutable funded subscription.
+ -- A restart reserve does not prove that the provider actually stopped it.
  local active=redis.call('HGET',KEYS[1],'active:'..ARGV[3])
  if not active or #active>256 then return 0 end
  local source={}
@@ -32,14 +33,26 @@ else
  if #source~=7 or table.concat(source,'|')~=active or source[2]~=ARGV[12] or #source[1]>84 or not string.match(source[1],'^ctr_[%w_-]+$') then return 0 end
  if source[3]~='creator_month' and source[3]~='creator_year' and source[3]~='pro_month' and source[3]~='pro_year' and source[3]~='scale_month' and source[3]~='scale_year' then return 0 end
  local created,start,finish,now=amount(source[4]),amount(source[6]),amount(source[7]),amount(ARGV[13])
- if (source[5]~='trial' and source[5]~='paid') or not created or not start or not finish or not now or start<created or start>now or finish<=now or finish<=start then return 0 end
+ if (source[5]~='trial' and source[5]~='paid') or not created or not start or not finish or not now or start<created or start>now or finish<=start then return 0 end
+ if ARGV[11]=='switch' and finish<=now then return 0 end
+ if ARGV[11]=='restart' then
+  if source[5]~='paid' or created<=0 or start<=0 or now<=0 or finish>now or source[3]~=ARGV[4] or (ARGV[4]~='creator_month' and ARGV[4]~='pro_month' and ARGV[4]~='scale_month') then return 0 end
+  local proposed={}
+  local proposedRaw=ARGV[10]
+  if not proposedRaw or #proposedRaw+#source[1]+1>1024 then return 0 end
+  for field in string.gmatch(proposedRaw,'[^|]+') do table.insert(proposed,field) end
+  if #proposed~=9 or table.concat(proposed,'|')~=proposedRaw or proposed[1]~=ARGV[2] or proposed[2]~=ARGV[3] or proposed[3]~=ARGV[4] or proposed[4]~='restart' or amount(proposed[5])~=amount(ARGV[5]) then return 0 end
+  local submitted,expires,activation,submission=amount(proposed[6]),amount(proposed[7]),amount(proposed[8]),amount(ARGV[14])
+  local through=tonumber(proposed[9])
+  if not submitted or not expires or not activation or not submission or submission<=0 or submitted<submission or now<submitted-submission or now>submitted or expires<submitted or activation<expires or not through or not string.match(proposed[9],'^%d+$') or (#proposed[9]>1 and string.sub(proposed[9],1,1)=='0') or through>9007199254740991 or through~=math.floor(through) or activation*1000>through then return 0 end
+ end
  if redis.call('HGET',KEYS[1],'activated:'..source[1])~=active then return 0 end
  local raw=redis.call('HGET',KEYS[1],'grant:'..source[1])
  if not raw or #raw>1024 then return 0 end
  local receipt={}
  for field in string.gmatch(raw,'[^|]+') do table.insert(receipt,field) end
  if table.concat(receipt,'|')~=raw or receipt[1]~=ARGV[2] or receipt[2]~=ARGV[3] or receipt[3]~=source[3] then return 0 end
- if not ((receipt[4]=='checkout' and #receipt==9) or (receipt[4]=='switch' and #receipt==10 and string.match(receipt[10],'^ctr_[%w_-]+$'))) then return 0 end
+ if not ((receipt[4]=='checkout' and #receipt==9) or ((receipt[4]=='switch' or receipt[4]=='restart') and #receipt==10 and string.match(receipt[10],'^ctr_[%w_-]+$'))) then return 0 end
  sourceCharge=amount(receipt[5])
  local submitted,expires,activation=amount(receipt[6]),amount(receipt[7]),amount(receipt[8])
  if not submitted or not expires or not activation or (receipt[4]=='checkout' and (submitted<300 or created<submitted-300 or created>activation)) then return 0 end
@@ -61,12 +74,13 @@ redis.call('HSET',KEYS[1],'pending:'..ARGV[3],ARGV[9])
 redis.call('HSET',KEYS[1],'grant:'..ARGV[9],ARGV[10]..(sourceGrant and '|'..sourceGrant or ''))
 return 1
 `;
-export type ContractGrant={sourceSubscriptionId:string|null;action:'checkout'|'switch';id:string;reviewId:string;statsId:string;key:ContractKey;reservedCents:number;submitUntilSeconds:number;checkoutExpiresAtSeconds:number;activationUntilSeconds:number;liabilitiesThrough:string};
+export type ContractGrant={sourceSubscriptionId:string|null;action:'checkout'|'switch'|'restart';id:string;reviewId:string;statsId:string;key:ContractKey;reservedCents:number;submitUntilSeconds:number;checkoutExpiresAtSeconds:number;activationUntilSeconds:number;liabilitiesThrough:string};
 /** Single-use, full-cost grant. Failure or lost acknowledgement never frees
  * money, capacity or the store's pending lock. No initialization or expiry. */
-export async function reserveContractFunding(statsId:string,tier:Tier,cycle:Cycle,action:'checkout'|'switch',policy:ContractFundingPolicy|null=CURRENT_CONTRACT_FUNDING_POLICY,context:ContractFundingContext={termsSnapshot:CURRENT_PRICE_AND_RIGHTS_SNAPSHOT,review:CURRENT_COMMERCIAL_MARGIN_REVIEW},nonce='ctr_'+randomUUID(),sourceSubscriptionId:string|null=null):Promise<ContractGrant|null>{
- if(typeof statsId!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(statsId)||!['checkout','switch'].includes(action)||typeof nonce!=='string'||!/^ctr_[A-Za-z0-9_-]{1,80}$/.test(nonce)||typeof tier!=='string'||typeof cycle!=='string'||!isRedisConfigured())return null;
- if(action==='switch'?(typeof sourceSubscriptionId!=='string'||!/^sub_[A-Za-z0-9]{6,64}$/.test(sourceSubscriptionId)):sourceSubscriptionId!==null)return null;
+export async function reserveContractFunding(statsId:string,tier:Tier,cycle:Cycle,action:'checkout'|'switch'|'restart',policy:ContractFundingPolicy|null=CURRENT_CONTRACT_FUNDING_POLICY,context:ContractFundingContext={termsSnapshot:CURRENT_PRICE_AND_RIGHTS_SNAPSHOT,review:CURRENT_COMMERCIAL_MARGIN_REVIEW},nonce='ctr_'+randomUUID(),sourceSubscriptionId:string|null=null):Promise<ContractGrant|null>{
+ if(typeof statsId!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(statsId)||!['checkout','switch','restart'].includes(action)||typeof nonce!=='string'||!/^ctr_[A-Za-z0-9_-]{1,80}$/.test(nonce)||typeof tier!=='string'||typeof cycle!=='string'||!isRedisConfigured())return null;
+ if(action==='restart'&&(!Boolean(CONTRACT_ADMISSION_COVERAGE.pauseRestart)||cycle!=='month'))return null;
+ if((action==='switch'||action==='restart')?(typeof sourceSubscriptionId!=='string'||!/^sub_[A-Za-z0-9]{6,64}$/.test(sourceSubscriptionId)):sourceSubscriptionId!==null)return null;
  const key=(tier+'_'+cycle) as ContractKey;
  const encodedContext=canonicalFinancialSnapshot(context);
  if(!encodedContext)return null;
@@ -79,7 +93,7 @@ export async function reserveContractFunding(statsId:string,tier:Tier,cycle:Cycl
  const seconds=Math.floor(reservedAt.getTime()/1000),submitUntilSeconds=seconds+CONTRACT_FUNDING_RULES.submissionSeconds,checkoutExpiresAtSeconds=seconds+CONTRACT_FUNDING_RULES.checkoutLifetimeSeconds,activationUntilSeconds=seconds+CONTRACT_FUNDING_RULES.activationDelayDays*86400;
  const charge=config.grantCents[key],receipt=[config.reviewId,statsId,key,action,charge,submitUntilSeconds,checkoutExpiresAtSeconds,activationUntilSeconds,config.liabilitiesThroughMs].join('|');
  try{
-  const result=await redisPipeline([['EVAL',RESERVE_CONTRACT,1,'nl:contract-reserve:v1',contractFundingBinding(config),config.reviewId,statsId,key,charge,config.cashLimitCents,config.carryForwardCents,config.fundedGrants[key],nonce,receipt,action,sourceSubscriptionId??'',seconds]]);
+  const result=await redisPipeline([['EVAL',RESERVE_CONTRACT,1,'nl:contract-reserve:v1',contractFundingBinding(config),config.reviewId,statsId,key,charge,config.cashLimitCents,config.carryForwardCents,config.fundedGrants[key],nonce,receipt,action,sourceSubscriptionId??'',seconds,...(action==='restart'?[CONTRACT_FUNDING_RULES.submissionSeconds]:[])]]);
   const current=contractFundingConfiguration(policy,context,new Date()),ready=commercialMarginReady(context.review);
   const checkedAt=Date.now();
   const acknowledged=current!==null&&current.binding===config.binding&&ready&&checkedAt>=reservedAt.getTime()&&checkedAt<=config.admissionsUntilMs&&new Date(checkedAt).toISOString().slice(0,7)===context.review?.fundedExposure?.month&&result.length===1&&result[0]===1&&checkedAt<=submitUntilSeconds*1000;
@@ -96,6 +110,20 @@ export async function reserveSwitchContractFunding(
  nonce='ctr_'+randomUUID(),
 ):Promise<ContractGrant|null>{
  return reserveContractFunding(statsId,tier,cycle,'switch',policy,context,nonce,subscriptionId);
+}
+
+
+/** Reservation primitive only. The uncovered real lifecycle refuses before
+ * Redis even with a supplied review. This cannot authorize ensurePrice,
+ * a charge, a retry, or activation.
+ */
+export async function reserveRestartContractFunding(
+ statsId:string,subscriptionId:string,tier:Tier,
+ policy:ContractFundingPolicy|null=CURRENT_CONTRACT_FUNDING_POLICY,
+ context:ContractFundingContext={termsSnapshot:CURRENT_PRICE_AND_RIGHTS_SNAPSHOT,review:CURRENT_COMMERCIAL_MARGIN_REVIEW},
+ nonce='ctr_'+randomUUID(),
+):Promise<ContractGrant|null>{
+ return reserveContractFunding(statsId,tier,'month','restart',policy,context,nonce,subscriptionId);
 }
 
 
