@@ -29,7 +29,7 @@ def main():
         raise RuntimeError('Expected static paid resource cohort Lua')
     resource_script = resource_match.group(1)
     prefix = 'marktmorgen:integration:contract:' + uuid.uuid4().hex + ':'
-    keys = [prefix + str(i) for i in range(39)]
+    keys = [prefix + str(i) for i in range(42)]
     redis = Redis()
     def snapshot(key):
         fields = redis.command('HGETALL', key)
@@ -38,9 +38,9 @@ def main():
         return sorted(zip(fields[::2], fields[1::2]))
     def seed(key, carried=0):
         redis.command('HSET', key, 'review', 'review', 'policy', 'binding', 'reserved', carried, 'carried', carried, 'slots:creator_month', 2, 'slots:creator_year', 2)
-    def take(client, key, store='one', nonce='ctr_one', choice='creator_month', charge=50, limit=100, carry=0, binding='binding', action='checkout', source_subscription='', now=1800000001):
+    def take(client, key, store='one', nonce='ctr_one', choice='creator_month', charge=50, limit=100, carry=0, binding='binding', action='checkout', source_subscription='', now=1800000001, submission=300):
         receipt = '|'.join(map(str, ['review', store, choice, action, charge, 1800000300, 1800003600, 1800086400, 2000000000000]))
-        return client.command('EVAL', script, 1, key, binding, 'review', store, choice, charge, limit, carry, 2, nonce, receipt, action, source_subscription, now)
+        return client.command('EVAL', script, 1, key, binding, 'review', store, choice, charge, limit, carry, 2, nonce, receipt, action, source_subscription, now, *([submission] if action == 'restart' else []))
     def parallel(key, store, nonce):
         client = Redis()
         try:
@@ -453,6 +453,109 @@ def main():
         assert resource_claim(redis, keys[38], annual=True) == 0
         assert snapshot(keys[38]) == before
         print('PASS: paid resource cohorts retain cash, reconcile six slot counters, share64 replies and bound annual fields to12')
+
+
+        # Reservation-only restart primitive. The production TypeScript gate is
+        # false; these receipts/cash are synthetic, not reviewed supplier funds.
+        def seed_restart(key):
+            redis.command('DEL', key)
+            seed(key)
+            binding = 'ctr_restart_source|sub_RestartSource01|creator_month|1799999000|paid|1799999000|1800000000'
+            receipt = 'review|restart-store|creator_month|checkout|40|1799999300|1800000000|1800000200|2000000000000'
+            redis.command('HSET', key, 'reserved', 40, 'active:restart-store', binding,
+                          'activated:ctr_restart_source', binding, 'grant:ctr_restart_source', receipt)
+            return binding, receipt
+        def take_restart(client, key, nonce='ctr_restart_new', **over):
+            args = dict(store='restart-store', nonce=nonce, action='restart',
+                        source_subscription='sub_RestartSource01', limit=140)
+            args.update(over)
+            return take(client, key, **args)
+        old_binding, old_receipt = seed_restart(keys[39])
+        def concurrent_restart(index):
+            client = Redis()
+            try:
+                return take_restart(client, keys[39], 'ctr_restart_' + str(index))
+            finally:
+                client.close()
+        with concurrent.futures.ThreadPoolExecutor(max_workers=16) as pool:
+            results = list(pool.map(concurrent_restart, range(64)))
+        assert sum(results) == 1
+        assert redis.command('HGET', keys[39], 'reserved') == '90'
+        assert redis.command('HGET', keys[39], 'slots:creator_month') == '1'
+        assert redis.command('HGET', keys[39], 'active:restart-store') == old_binding
+        assert redis.command('HGET', keys[39], 'activated:ctr_restart_source') == old_binding
+        assert redis.command('HGET', keys[39], 'grant:ctr_restart_source') == old_receipt
+        winner = redis.command('HGET', keys[39], 'pending:restart-store')
+        assert winner.startswith('ctr_restart_')
+        assert redis.command('HGET', keys[39], 'grant:' + winner).endswith('|ctr_restart_source')
+        assert redis.command('TTL', keys[39]) == -1
+        print('PASS: 64 restart reserves share one new full obligation and retain every old cash/source receipt')
+
+        invalid = [
+            ('active:restart-store', old_binding.replace('|paid|', '|trial|'), {}),
+            ('active:restart-store', old_binding.replace('|1800000000', '|1800000100'), {}),
+            ('active:restart-store', old_binding.replace('creator_month', 'creator_year'), {}),
+            ('active:restart-store', old_binding + '|extra', {}),
+            ('activated:ctr_restart_source', 'mismatched', {}),
+            ('grant:ctr_restart_source', old_receipt.replace('|restart-store|', '|other-store|'), {}),
+            ('grant:ctr_restart_source', old_receipt.replace('|40|', '|41|'), {'limit': 40}),
+            ('grant:ctr_restart_source', old_receipt + '|extra', {}),
+            ('reserved', 39, {}),
+            ('policy', 'unknown', {}),
+            (None, None, {'source_subscription': 'sub_OtherSource01'}),
+            (None, None, {'choice': 'creator_year'}),
+            (None, None, {'choice': 'pro_month'}),
+            (None, None, {'now': 1800000301}),
+            (None, None, {'submission': 0}),
+            (None, None, {'submission': '01'}),
+        ]
+        for field, value, options in invalid:
+            seed_restart(keys[40])
+            if field is not None:
+                redis.command('HSET', keys[40], field, value)
+            before = snapshot(keys[40])
+            assert take_restart(redis, keys[40], **options) == 0
+            assert snapshot(keys[40]) == before
+        seed_restart(keys[40])
+        redis.command('HDEL', keys[40], 'activated:ctr_restart_source')
+        before = snapshot(keys[40])
+        assert take_restart(redis, keys[40]) == 0
+        assert snapshot(keys[40]) == before
+        print('PASS: unknown, live, trial, foreign, annual or unbacked restart sources refuse without writes')
+
+        # Count the actual application Lua's commands, including EVAL and
+        # internal calls. Exclude only INFO used to observe the test.
+        rule_source = (Path(__file__).resolve().parents[1] / 'lib/contract-funding-rules.ts').read_text(encoding='utf-8')
+        ceiling_match = re.search(r'restartReservation:\{[^}]*commandCeiling:(\d+)', rule_source)
+        assert ceiling_match
+        command_ceiling = int(ceiling_match.group(1))
+        def command_counts():
+            answer = redis.command('INFO', 'commandstats')
+            return {name: int(count) for name, count in re.findall(r'cmdstat_([^:]+):calls=(\d+)', answer)}
+        def difference(before, after):
+            return {name: count-before.get(name, 0) for name, count in after.items()
+                    if name != 'info' and count-before.get(name, 0) > 0}
+        old_binding, old_receipt = seed_restart(keys[41])
+        before_counts = command_counts()
+        assert take_restart(redis, keys[41]) == 1
+        first_counts = difference(before_counts, command_counts())
+        assert sum(first_counts.values()) <= command_ceiling
+        # Ignore that committed acknowledgement; neither same nor new nonce
+        # may reserve again, expire ownership, release old cash or overwrite it.
+        before = snapshot(keys[41])
+        before_counts = command_counts()
+        assert take_restart(redis, keys[41]) == 0
+        duplicate_counts = difference(before_counts, command_counts())
+        assert sum(duplicate_counts.values()) <= command_ceiling
+        assert take_restart(redis, keys[41], 'ctr_retry_restart') == 0
+        assert take(redis, keys[41], store='restart-store', nonce='ctr_restart_checkout') == 0
+        assert snapshot(keys[41]) == before
+        assert redis.command('HGET', keys[41], 'reserved') == '90'
+        assert redis.command('HGET', keys[41], 'active:restart-store') == old_binding
+        assert redis.command('HGET', keys[41], 'grant:ctr_restart_source') == old_receipt
+        print('PASS: restart lost-ack reservation retains cash and pending ownership without replay')
+        print('MEASURED restart reservation commands: first=' + str(first_counts) +
+              ', duplicate=' + str(duplicate_counts) + ', canonical ceiling=' + str(command_ceiling))
 
     finally:
         for key in keys:
