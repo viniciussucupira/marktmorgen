@@ -423,3 +423,53 @@ SV4 parcial, nenhuma migração real. AB(a) segue preço exato/submissão única
 durável/ID/recuperação somente leitura/ativação/ACKstore/CAScleanup-undo/rollover/
 custeio completo. PLANS_ON_SALE=false,preços/limites/permissões/AP449–455/AN456/
 361–362 e contador254preservados; nenhum desses incrementos é entrega funcional255.
+
+
+
+### AB(a) — preço exato e barreira durável de submissão, ainda fechados (26/10/2026)
+
+Depois do primeiro claim reconhecido e da origem parada observada, billing lê
+uma única página de preços existentes por lookup_key (limit2). Exige página
+completa com exatamente1preço ativo, unitário/licenciado, USD e valor mensal
+publicado, sem tiering/transformação/custom amount. Nada cria produto/preço,
+usa cache mutável ou fallback inline neste ramo. Relógio e prazo do proprietário
+são conferidos após a leitura. A ausência/ambiguidade conserva toda a evidência.
+
+O corpo futuro da assinatura é montado com preço/cliente/cartão/quantidade e
+metadados do grant/review/claim/origem; seu SHA256 identifica bytes exatos.
+EVAL ARM_RESTART_SUBMISSION confere proprietário/policy/review/active/pending/
+receipts/caixa/rawpause/due/ano/janela, e acrescenta phase=uncertain no MESMO
+campo de intenção, antes de qualquer POST. Só o primeiro ACK exato pode
+reconhecer a barreira. ACK perdido, nonce novo e repetição jamais rearmam.
+Campos originais de origem/caixa/receipts permanecem imutáveis; a única mutação
+nova é esse acréscimo de estado, sem TTL, liberação ou segundo campo.
+
+Envelope COMPLETO continua≤4096bytes; se o acréscimo não couber, recusa antes de
+HSET. Até17comandos POR etapa EVAL (claim e arm separadamente), não17para o fluxo
+inteiro. INFO real deve medir a etapa nova, com64concorrentes primeiroACK,
+64duplicados apósACKignorado,14negativos e preservação dos campos originais.
+Cobertura realpauseRestart=false/políticasNULL recusam antes de todo esse IO;
+teste sintético com política revista também exige0Redis no wrapper fechado.
+Mesmo com ACKarm reconhecido, billing ainda termina ANTES do POST: IDdurável,
+recuperação somente leitura, ativação, ACKstore/CAScleanup/undo e rollover faltam.
+Não há autorização de cobrança ou conclusão AB(a).
+
+| Contrato | Novas operações habilitadas mensais/anuais | Custo integral prospectivo |
+| --- | --- | --- |
+| creator_month | 0/0 | desconhecido,reprovado |
+| creator_year | 0/0 | desconhecido,reprovado;restartyearnãohabilitado |
+| pro_month | 0/0 | desconhecido,reprovado |
+| pro_year | 0/0 | desconhecido,reprovado;restartyearnãohabilitado |
+| scale_month | 0/0 | desconhecido,reprovado |
+| scale_year | 0/0 | desconhecido,reprovado;restartyearnãohabilitado |
+
+Prospectivo máximo desta fase: mais1GETpreço e1EVALarm≤17comandos porclaim
+além de reserva/claim/GETorigem; esses custos NÃO são0 nem aprovação de operação.
+Cardinalidade continua1campo/grant/envelope4096, mas overhead/cópias/retenção/
+reconciliação/LLC/BR-US+ISS5% precisam cotação, teto e reserva sob leitura onerosa.
+Preçosmáximos pagos69/690/449/4490/999/9990 mantidos, nenhuma compensação por média.
+Sem novo job/matriz/dependência/serviço/artefato/cache. CI público padrão segue
+escopo incremental faturado0condicional já comprovado, não preço de runtime.
+Fontes primárias consultadas26/10: https://docs.stripe.com/api/prices/list
+e https://docs.stripe.com/api/subscriptions/object. IDs/idiomas/conteúdo/AP/AN/
+gates/PLANS_ON_SALE=false/contador254 preservados. Novohead exige suítecompleta.

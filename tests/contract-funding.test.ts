@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {canonicalFinancialSnapshot,contractCoverageDays,contractFundingConfiguration,CONTRACT_ADMISSION_COVERAGE,CONTRACT_KEYS,CONTRACT_FUNDING_RULES} from '@/lib/contract-funding-rules';
 import {assessCustomerWorstCase} from '@/lib/net-margin-rules';
-import {ownedRestartIntentFromAcknowledgement,claimRestartIntent,activateCheckoutContract,activateSwitchContract,type CheckoutContractActivation,reserveContractFunding,reserveSwitchContractFunding,reserveRestartContractFunding} from '@/lib/contract-funding';
+import {armRestartSubmission,ownedRestartIntentFromAcknowledgement,claimRestartIntent,activateCheckoutContract,activateSwitchContract,type CheckoutContractActivation,reserveContractFunding,reserveSwitchContractFunding,reserveRestartContractFunding} from '@/lib/contract-funding';
 import {contractFixture} from './contract-funding-fixture';
 import {reset,seed,ledger,calls,settings} from './contract-funding-redis';
 const key='nl:contract-reserve:v1';
@@ -375,3 +375,5 @@ test('first-owner acknowledgement carries the exact immutable atomic source and 
  assert.equal(ownedRestartIntentFromAcknowledgement(hostile,now,budget,[1,JSON.stringify(frame)]),null);assert.equal(getters,0);
  input.grant.id='ctr_caller_mutated';assert.equal(owned.grant.id,'ctr_restart_new');
 });
+
+test('closed submission barrier performs no Redis or provider IO even with a synthetic reviewed policy',async()=>{const f=contractFixture();reset();assert.equal(await armRestartSubmission({intent:null as never,priceId:'price_SyntheticRestart01',bodyHash:'a'.repeat(64)},f.policy,f.context),null);assert.equal(calls.length,0);});

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import {observeStoppedRestartSource,observeRestartedPlan} from "@/lib/billing";
+import {observeFundedRestartPrice,observeStoppedRestartSource,observeRestartedPlan} from "@/lib/billing";
 import type {OwnedRestartIntent} from "@/lib/contract-funding";
 import {PLAN_PRICES} from "@/lib/plan";
 
@@ -132,4 +132,30 @@ test("stop observation refuses expired ownership, clock rollback, source substit
  assert.throws(()=>observeStoppedRestartSource({...intent,source:{...intent.source,binding:intent.source.binding.replace("paid","trial")}},original,NOW));
  let reads=0;const hostile={...original};Object.defineProperty(hostile,"ended_at",{enumerable:true,get(){reads++;return NOW-2*DAY;}});
  assert.throws(()=>observeStoppedRestartSource(intent,hostile,NOW));assert.equal(reads,0);
+});
+
+function pricePage(){return {object:"list",has_more:false,data:[{
+ id:"price_ExactRestart01",object:"price",active:true,type:"recurring",billing_scheme:"per_unit",
+ lookup_key:"nimbus_creator_month",unit_amount:PLAN_PRICES.creator.month,currency:"usd",
+ recurring:{interval:"month",interval_count:1,usage_type:"licensed"},
+ transform_quantity:null,tiers_mode:null,custom_unit_amount:null,
+}]};}
+test("funded price observation binds one existing complete published monthly unit without IO",()=>{
+ const {intent}=stoppedFixture(),page=pricePage(),before=JSON.stringify(page);
+ assert.equal(observeFundedRestartPrice(intent,page,NOW),"price_ExactRestart01");assert.equal(JSON.stringify(page),before);
+});
+test("unknown, empty, ambiguous, incomplete or substituted price pages cannot arm submission",()=>{
+ const {intent}=stoppedFixture();
+ for(const page of [{},{...pricePage(),has_more:true},{...pricePage(),data:[]},{...pricePage(),data:[...pricePage().data,...pricePage().data]}])
+  assert.throws(()=>observeFundedRestartPrice(intent,page,NOW));
+ for(const change of [{active:false},{currency:"eur"},{lookup_key:"nimbus_pro_month"},{unit_amount:PLAN_PRICES.creator.month+1},
+  {billing_scheme:"tiered"},{type:"one_time"},{transform_quantity:{}},{custom_unit_amount:{}},{tiers_mode:"volume"},
+  {recurring:{interval:"year",interval_count:1,usage_type:"licensed"}},{recurring:{interval:"month",interval_count:2,usage_type:"licensed"}},
+  {recurring:{interval:"month",interval_count:1,usage_type:"metered"}}]){
+  const page=pricePage();Object.assign(page.data[0],change);
+  assert.throws(()=>observeFundedRestartPrice(intent,page,NOW));
+ }
+ for(const now of [NOW-11,NOW+121,NaN,Infinity,0])assert.throws(()=>observeFundedRestartPrice(intent,pricePage(),now));
+ let reads=0;const page=pricePage();Object.defineProperty(page,"data",{enumerable:true,get(){reads++;return [];}});
+ assert.throws(()=>observeFundedRestartPrice(intent,page,NOW));assert.equal(reads,0);
 });

@@ -28,6 +28,10 @@ def main():
     if not intent_match or '$' + '{' in intent_match.group(1):
         raise RuntimeError('Expected static integrated restart intent Lua')
     intent_script = intent_match.group(1)
+    arm_match = re.search(r'export const ARM_RESTART_SUBMISSION = `([^`]+)`;', source)
+    if not arm_match or '$' + '{' in arm_match.group(1):
+        raise RuntimeError('Expected static submission barrier Lua')
+    arm_script = arm_match.group(1)
     resource_source = (Path(__file__).resolve().parents[1] / 'lib/contract-resource-window.ts').read_text(encoding='utf-8')
     resource_match = re.search(r'export const RESERVE_PAID_RESOURCE_WINDOW = `([^`]+)`;', resource_source)
     if not resource_match or '$' + '{' in resource_match.group(1):
@@ -751,6 +755,101 @@ def main():
             for field, value in before:
                 assert redis.command('HGET', keys[43], field) == value
         print('PASS:owned intent retains exact checkout, switch and prior-restart source receipts without replacing any principal')
+
+        def arm(client, key, ref, pause, **over):
+            args = dict(binding='binding', review='review', stats='restart-store', grant='ctr_restart_new',
+                        claim='claim_first', now=1800000002, claimed=1800000001, deadline=1800000300,
+                        raw=pause, source=json.loads(client.command('HGET', key, 'restart-intent:ctr_restart_new'))['sourceBinding'],
+                        price='price_SyntheticRestart01', digest='a' * 64)
+            args.update(over)
+            return client.command(
+                'EVAL', arm_script, 4, key, 'nl:pause:' + ref, 'nl:pause:due', 'nl:pause:last:' + ref,
+                args['binding'], args['review'], args['stats'], args['grant'], args['claim'], args['now'],
+                args['claimed'], args['deadline'], ref, args['raw'], args['source'], args['price'], args['digest'])
+        ref = intent_refs[0]
+        pause = intent_ready(keys[42], ref)
+        assert intent_claim(redis, keys[42], ref, pause)[0] == 1
+        before = snapshot(keys[42])
+        original_intent = json.loads(redis.command('HGET', keys[42], 'restart-intent:ctr_restart_new'))
+        # Capture the source before measuring actual Redis commands.
+        binding = original_intent['sourceBinding']
+        def arm_direct(client):
+            return client.command('EVAL', arm_script, 4, keys[42], 'nl:pause:' + ref,
+                                  'nl:pause:due', 'nl:pause:last:' + ref,
+                                  'binding','review','restart-store','ctr_restart_new','claim_first',
+                                  1800000002,1800000001,1800000300,ref,pause,binding,
+                                  'price_SyntheticRestart01','a' * 64)
+        counts = command_counts()
+        armed_ack = arm_direct(redis)
+        first_arm_counts = difference(counts, command_counts())
+        assert sum(first_arm_counts.values()) <= intent_ceiling
+        assert armed_ack[0] == 1
+        # Deliberately ignore first ACK: all contenders must refuse permanently.
+        def duplicate_arm(_index):
+            client = Redis()
+            try:
+                return arm_direct(client)
+            finally:
+                client.close()
+        with concurrent.futures.ThreadPoolExecutor(max_workers=16) as pool:
+            assert list(pool.map(duplicate_arm, range(64))) == [0] * 64
+        stored = json.loads(redis.command('HGET', keys[42], 'restart-intent:ctr_restart_new'))
+        assert stored.pop('submission') == dict(version=1,phase='uncertain',priceId='price_SyntheticRestart01',
+                                               bodyHash='a' * 64,armedAt=1800000002,
+                                               idempotencyKey='restart:ctr_restart_new:claim_first')
+        assert stored == original_intent
+        assert armed_ack[1] == redis.command('HGET', keys[42], 'restart-intent:ctr_restart_new')
+        for field, value in before:
+            if field != 'restart-intent:ctr_restart_new':
+                assert redis.command('HGET', keys[42], field) == value
+        assert redis.command('TTL', keys[42]) == -1
+        print('PASS:actual permanent submission barrier retains all source/cash fields and refuses64duplicates after ignoredACK')
+        print('RESTART_SUBMISSION_BARRIER_COMMANDS:' + json.dumps(first_arm_counts, sort_keys=True))
+
+        race_ref = intent_refs[2]
+        race_pause = intent_ready(keys[44], race_ref)
+        assert intent_claim(redis, keys[44], race_ref, race_pause)[0] == 1
+        race_original = json.loads(redis.command('HGET', keys[44], 'restart-intent:ctr_restart_new'))
+        def first_arm_race(_index):
+            client = Redis()
+            try:
+                return arm(client, keys[44], race_ref, race_pause)
+            finally:
+                client.close()
+        with concurrent.futures.ThreadPoolExecutor(max_workers=16) as pool:
+            raced = list(pool.map(first_arm_race, range(64)))
+        assert sum(isinstance(value,list) and value[0] == 1 for value in raced) == 1
+        race_stored = json.loads(redis.command('HGET', keys[44], 'restart-intent:ctr_restart_new'))
+        assert race_stored.pop('submission')['phase'] == 'uncertain'
+        assert race_stored == race_original
+        assert arm(redis, keys[44], race_ref, race_pause, claim='claim_new') == 0
+        print('PASS:64 actual first submission contenders produce exactly one durable barrier ACK;new claim cannot rearm')
+
+        for scenario in ('claim','binding','review','deadline','rollback','price','digest','pause','due','annual','source','pending','cash','overflow'):
+            ref = intent_refs[1]
+            pause = intent_ready(keys[43], ref)
+            assert intent_claim(redis, keys[43], ref, pause)[0] == 1
+            over = {}
+            if scenario == 'claim': over['claim'] = 'claim_foreign'
+            elif scenario == 'binding': over['binding'] = 'changed'
+            elif scenario == 'review': over['review'] = 'changed'
+            elif scenario == 'deadline': over['now'] = 1800000301
+            elif scenario == 'rollback': over['now'] = 1800000000
+            elif scenario == 'price': over['price'] = 'not-a-price'
+            elif scenario == 'digest': over['digest'] = 'z' * 64
+            elif scenario == 'pause': redis.command('SET', 'nl:pause:' + ref, pause + ' ')
+            elif scenario == 'due': redis.command('ZADD', 'nl:pause:due', 1800000003, ref)
+            elif scenario == 'annual': redis.command('DEL', 'nl:pause:last:' + ref)
+            elif scenario == 'source': redis.command('HSET', keys[43], 'active:restart-store', 'changed')
+            elif scenario == 'pending': redis.command('HSET', keys[43], 'pending:restart-store', 'ctr_other')
+            elif scenario == 'cash': redis.command('HSET', keys[43], 'reserved', 89)
+            elif scenario == 'overflow':
+                raw = redis.command('HGET', keys[43], 'restart-intent:ctr_restart_new')
+                redis.command('HSET', keys[43], 'restart-intent:ctr_restart_new', raw + ' ' * 4097)
+            snapshot_before = snapshot(keys[43])
+            assert arm(redis, keys[43], ref, pause, **over) == 0, scenario
+            assert snapshot(keys[43]) == snapshot_before, scenario
+        print('PASS:14 foreign, stale, changed, incomplete and oversize barrier cases preserve exact ledger evidence')
 
     finally:
         for ref in intent_refs:
