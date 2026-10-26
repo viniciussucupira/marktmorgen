@@ -137,7 +137,22 @@ def main():
         rejected([["INCR", keys[2]], ["FLUSHALL"]], 400)
         rejected([["INCR", keys[2]], ["SET", keys[0], True]], 400)
         rejected([["INCR", keys[2]]] * (MAX_COMMANDS + 1), 400)
-        rejected([["SET", keys[0], "x" * MAX_BODY]], 413)
+        # Test rejection from framing BEFORE sending an oversized body.
+        # Uploading the whole body races the server's deliberate early close,
+        # making urllib raise BrokenPipe before it reads the valid 413 reply.
+        oversized = http.client.HTTPConnection(
+            "127.0.0.1", server.server_address[1], timeout=15)
+        try:
+            oversized.putrequest("POST", "/pipeline")
+            oversized.putheader("Authorization", "Bearer " + TOKEN)
+            oversized.putheader("Content-Type", "application/json")
+            oversized.putheader("Content-Length", str(MAX_BODY + 1))
+            oversized.endheaders()
+            response = oversized.getresponse()
+            assert response.status == 413, response.status
+            assert json.load(response) == {"error": "Fixture request too large"}
+        finally:
+            oversized.close()
         assert direct.command("GET", keys[2]) is None
         print("PASS: authentication, route and admission failures do not mutate Redis")
 

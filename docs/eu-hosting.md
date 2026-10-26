@@ -135,3 +135,12 @@ Nenhum serviço real, conta, segredo, DNS, direito comercial ou gate é alterado
 Custo operacional novo por plano: zero neste teste isolado; custo incremental
 real de CI ainda desconhecido, não tratado como zero nem usado para reduzir
 tetos/reserva de275[FX1]. Sem incremento do contador funcional.
+
+Correção de verificação do primeiro head647536c1883cd1d0c968c6280ebe03191390a69a:
+o job Redis121372336063 falhou em26/10/2026 02:46:40UTC (25/10 23:46:40Fortaleza),
+antes de executar o cliente Node, porque urllib ainda enviava o corpo excedente
+quando o fixture corretamente recusava Content-Length com413 e fechava a conexão.
+O ensaio agora envia somente o cabeçalho que excede o teto e exige413 e o erro
+JSON exato antes de enviar corpo. Não captura/ignora BrokenPipe, não aumenta
+limites e mantém a conferência de nenhuma mutação. A falha anterior é preservada;
+somente CI completo no novo head pode aprovar este incremento.
