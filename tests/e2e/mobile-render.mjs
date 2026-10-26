@@ -62,6 +62,38 @@ try{
    console.log("MOBILE_RENDER_MEASUREMENT:"+JSON.stringify(result));results.push(result);
    if(writes||!Number.isFinite(before.lcp)||!Number.isFinite(before.cls)||interactionMs===null)failed=true;
    if(label==="candidate"&&Object.values(result.targets).some(value=>!value))failed=true;
+   // After preserving every cold performance measurement, exercise the real
+   // cycle slots and native disclosure. No warm-up or threshold changes.
+   if(path==="/"&&sample===1){
+    const cards=page.locator("[data-pricing-card]");
+    if(await cards.count()!==3)throw Error("Expected three canonical plan cards");
+    const summaries=cards.locator('details[class~="group/perks"] > summary');
+    const disclosures=cards.locator('details[class~="group/perks"]');
+    const nativeState=await disclosures.evaluateAll(nodes=>nodes.map(node=>node.open));
+    const cycle=page.getByRole("group",{name:"How often you pay"});
+    const year=cycle.getByRole("button",{name:/^Yearly/}),month=cycle.getByRole("button",{name:"Monthly",exact:true});
+    await year.focus();await page.keyboard.press("Enter");
+    if(await year.getAttribute("aria-pressed")!=="true"||await month.getAttribute("aria-pressed")!=="false")throw Error("Yearly keyboard selection not reflected");
+    const annual=["$690","$4,490","$9,990"],monthly=["$69","$449","$999"],tiers=["creator","pro","scale"];
+    for(let i=0;i<3;i++){
+     const card=cards.nth(i);
+     if((await card.locator("p.mt-7 > span").first().innerText()).trim()!==annual[i])throw Error("Annual card price mismatch");
+     if(!await card.locator("dl").innerText().then(text=>text.includes(annual[i]+" for the year")))throw Error("Annual first-charge terms mismatch");
+     if(await card.getByRole("link",{name:/^Start on/}).getAttribute("href")!=="/signin?plan="+tiers[i]+"&billing=year")throw Error("Annual signup choice lost");
+    }
+    await month.click();
+    for(let i=0;i<3;i++){
+     const card=cards.nth(i);
+     if((await card.locator("p.mt-7 > span").first().innerText()).trim()!==monthly[i])throw Error("Monthly card price mismatch");
+     if(!await card.locator("dl").innerText().then(text=>text.includes(monthly[i]+" for the month")))throw Error("Monthly first-charge terms mismatch");
+     if(await card.getByRole("link",{name:/^Start on/}).getAttribute("href")!=="/signin?plan="+tiers[i]+"&billing=month")throw Error("Monthly signup choice lost");
+    }
+    if(JSON.stringify(await disclosures.evaluateAll(nodes=>nodes.map(node=>node.open)))!==JSON.stringify(nativeState))throw Error("Billing selection replaced native disclosure state");
+    const before=await disclosures.first().evaluate(node=>node.open);
+    await summaries.first().focus();await page.keyboard.press("Enter");
+    if(await disclosures.first().evaluate(node=>node.open)===before)throw Error("Native keyboard disclosure did not toggle");
+    console.log("PRICING_CYCLE_REGRESSION: three monthly/yearly prices, first-charge terms, signup URLs, pressed state, native state retention and keyboard disclosure passed");
+   }
   }finally{await context.close();}
  }
  console.log("MOBILE_RENDER_SUMMARY:"+JSON.stringify({label,version,samples:results.length,scope:"Synthetic cold local Chromium lab. Interaction-to-paint is a lab proxy, not field INP; no p75 Core Web Vitals certification.",results}));
