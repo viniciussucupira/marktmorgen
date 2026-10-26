@@ -182,7 +182,8 @@ export type { CourseRef, Listing, Product };
  * maria.souza or maria_souza should be able to keep it here instead of
  * inventing a different one for this store alone.
  */
-export const HANDLE_PATTERN = /^[a-z0-9](?:[a-z0-9._-]{1,22}[a-z0-9])$/;
+import { HANDLE_PATTERN } from "@/lib/store-handle-pattern";
+export { HANDLE_PATTERN } from "@/lib/store-handle-pattern";
 
 
 

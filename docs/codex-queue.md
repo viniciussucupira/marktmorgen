@@ -9861,3 +9861,11 @@ novohead exige novamente suítecompleta,primeiroheadnãoéaprovação.
 Fixtures de origem switch/restart mantêm explicitamente principal histórico10+
 origem40+novo50=100,comreceipt/activated do anterior;história não vira custo0.
 Tetos/produçãoinalterados;novoheadcompleto,nãoaprovação do anterior.
+
+PR#1075 headbeac6add8360ff9ef0c18885f12cd6aa891ed0dd:Redis121817845042
+passou20:07:35.9897612UTC(64snapshots/22negativos/3origens/INFO17+16) e40fundingtests
+passaram;verify121817845221falhou nofixture4:handle25caracteres ultrapassava
+limiteexistente24,loja retornounull. Fixturecurtoagora exigecriaçãoexplícita.
+Padrão existente dehandle3–24comdot/underscore extraídobyte-for-byte para módulo
+puro ereexportado porstore.ts;preparação eparser usammesmaregra,semidentificador
+persistido/limitealterado. Novohead exige suítecompleta;nenhumrerunisolado.

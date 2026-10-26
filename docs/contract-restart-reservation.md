@@ -251,3 +251,22 @@ The ten-field switch/prior-restart fixtures explicitly retain an upstream
 therefore keeps100cents (upstream10+source40+new50), rather than assuming missing
 history costs zero. They test immutable observations, not supplier cost approval
 or complete historical reconciliation; full financial/provenance gates stay closed.
+
+
+### Verification failure and canonical handle preservation
+
+Headbeac6add8360ff9ef0c18885f12cd6aa891ed0dd passed actual Redis121817845042
+at20:07:35.9897612UTC:64 owned snapshots,22 negative cases, checkout/switch/
+prior-restart receipts and17first/16duplicate commands. Its40 funding tests
+also passed. Full verify121817845221 failed later because the fourth synthetic
+store handle had25characters, exceeding the existing24-character rule; store
+creation returned null before that scenario could run. The fixture now uses a
+short valid handle and checks creation explicitly. Assertions and product limits
+are preserved; full new-head CI remains required.
+
+The funded-only preparation filter also now shares the existing canonical store
+handle pattern, extracted byte-for-byte to a pure module and re-exported from
+store.ts for the same public API. Valid existing dots/underscores and the same
+3–24-character boundaries remain recognized; no persisted identifier is changed.
+The actual decoder tests these valid forms and invalid boundaries. This does not
+enable coverage, provider calls or a new customer-facing entitlement.

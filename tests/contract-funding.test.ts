@@ -356,6 +356,12 @@ test('first-owner acknowledgement carries the exact immutable atomic source and 
   const observed=decode([1,JSON.stringify({...frame,sourceReceipt:prior,reservedCents:100})]);assert.ok(observed);
   assert.equal(observed.source.receipt,prior);
  }
+ for(const handle of ['a.b','a_b','a-b','abc','a'.repeat(24)]){
+  assert.ok(ownedRestartIntentFromAcknowledgement({...input,handle},now,budget,[1,JSON.stringify({...frame,handle})]));
+ }
+ for(const handle of ['ab','a'.repeat(25),'.abc','abc_','abc.']){
+  assert.equal(ownedRestartIntentFromAcknowledgement({...input,handle},now,budget,[1,JSON.stringify({...frame,handle})]),null);
+ }
  const owned=decode([1,JSON.stringify(frame)]);assert.ok(owned);
  assert.deepEqual(owned.source,{binding:sourceBinding,receipt:sourceReceipt,restartReceipt,reservedCents:90,carriedCents:0});
  assert.equal(owned.claim,input.claim);assert.equal(owned.paused,paused);

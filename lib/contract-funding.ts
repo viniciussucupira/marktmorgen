@@ -1,3 +1,4 @@
+import {HANDLE_PATTERN} from '@/lib/store-handle-pattern';
 import {createHash,randomUUID} from 'node:crypto';
 import {isRedisConfigured,redisPipeline} from '@/lib/redis';
 import {commercialMarginReady,CURRENT_COMMERCIAL_MARGIN_REVIEW,CURRENT_PRICE_AND_RIGHTS_SNAPSHOT} from '@/lib/commercial-margin';
@@ -382,7 +383,7 @@ export function ownedRestartIntentFromAcknowledgement(
   const encoded=canonicalFinancialSnapshot({input,budget,ack,now});if(!encoded)return null;
   ({input,budget,ack,now}=JSON.parse(encoded) as {input:RestartIntentInput;budget:{cashLimitCents:number;carryForwardCents:number};ack:unknown;now:number});
   const candidate=input?.grant;
-  if(!candidate||candidate.action!=='restart'||!['creator_month','pro_month','scale_month'].includes(candidate.key)||!/^ctr_[A-Za-z0-9_-]{1,80}$/.test(candidate.id)||!/^sub_[A-Za-z0-9]{6,64}$/.test(candidate.sourceSubscriptionId??'')||!Number.isSafeInteger(now)||now<=0||now>candidate.submitUntilSeconds||now<candidate.submitUntilSeconds-CONTRACT_FUNDING_RULES.submissionSeconds||![budget.cashLimitCents,budget.carryForwardCents].every(n=>Number.isSafeInteger(n)&&n>=0&&n<=CONTRACT_FUNDING_RULES.maxInteger)||budget.cashLimitCents<budget.carryForwardCents)return null;
+  if(!candidate||typeof input.handle!=='string'||!HANDLE_PATTERN.test(input.handle)||candidate.action!=='restart'||!['creator_month','pro_month','scale_month'].includes(candidate.key)||!/^ctr_[A-Za-z0-9_-]{1,80}$/.test(candidate.id)||!/^sub_[A-Za-z0-9]{6,64}$/.test(candidate.sourceSubscriptionId??'')||!Number.isSafeInteger(now)||now<=0||now>candidate.submitUntilSeconds||now<candidate.submitUntilSeconds-CONTRACT_FUNDING_RULES.submissionSeconds||![budget.cashLimitCents,budget.carryForwardCents].every(n=>Number.isSafeInteger(n)&&n>=0&&n<=CONTRACT_FUNDING_RULES.maxInteger)||budget.cashLimitCents<budget.carryForwardCents)return null;
   if(!Array.isArray(ack)||ack.length!==2||ack[0]!==1||typeof ack[1]!=='string'||Buffer.byteLength(ack[1])>CONTRACT_FUNDING_RULES.restartIntent.maxIntentBytes)return null;
   const owned=JSON.parse(ack[1]) as Record<string,unknown>;
   if(!owned||typeof owned!=='object'||Array.isArray(owned))return null;
@@ -419,7 +420,7 @@ export async function claimRestartIntent(
  ({input,context}=JSON.parse(encoded) as {input:RestartIntentInput;context:ContractFundingContext});
  if(!input||!context||typeof input!=='object'||typeof context!=='object')return null;
  const {grant,ref,handle,paused,claim,sourceGrantId}=input;
- if(!grant||typeof grant.statsId!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(grant.statsId)||grant.action!=='restart'||!/^sub_[A-Za-z0-9]{6,64}$/.test(grant.sourceSubscriptionId??'')||!/^ctr_[A-Za-z0-9_-]{1,80}$/.test(grant.id)||!/^ctr_[A-Za-z0-9_-]{1,80}$/.test(sourceGrantId)||typeof ref!=='string'||ref.length===0||ref.length>320||typeof paused!=='string'||Buffer.byteLength(paused)>CONTRACT_FUNDING_RULES.restartIntent.maxPauseBytes||typeof handle!=='string'||!/^[a-z0-9][a-z0-9-]{2,62}$/.test(handle)||typeof claim!=='string'||!/^claim_[A-Za-z0-9_-]{1,80}$/.test(claim)||!isRedisConfigured())return null;
+ if(!grant||typeof grant.statsId!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(grant.statsId)||grant.action!=='restart'||!/^sub_[A-Za-z0-9]{6,64}$/.test(grant.sourceSubscriptionId??'')||!/^ctr_[A-Za-z0-9_-]{1,80}$/.test(grant.id)||!/^ctr_[A-Za-z0-9_-]{1,80}$/.test(sourceGrantId)||typeof ref!=='string'||ref.length===0||ref.length>320||typeof paused!=='string'||Buffer.byteLength(paused)>CONTRACT_FUNDING_RULES.restartIntent.maxPauseBytes||typeof handle!=='string'||!HANDLE_PATTERN.test(handle)||typeof claim!=='string'||!/^claim_[A-Za-z0-9_-]{1,80}$/.test(claim)||!isRedisConfigured())return null;
  if(!['creator_month','pro_month','scale_month'].includes(grant.key)||!commercialMarginReady(context.review))return null;
  const before=new Date(),config=contractFundingConfiguration(policy,context,before);
  if(!config||config.reviewId!==grant.reviewId||config.grantCents[grant.key]!==grant.reservedCents)return null;

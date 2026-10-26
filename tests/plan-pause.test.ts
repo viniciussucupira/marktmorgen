@@ -718,7 +718,9 @@ async function main() {
   ]){
     const {suffix,grant:sourceGrant}=fixture,email="funded-pause-"+suffix+"@example.com",id="sub_FundedPause"+suffix;
     subs[id]=subscription(id,{metadata:fixture.metadata});
-    const initial=await storeWith(email,"fundedpause"+suffix,id),ref=storeRef(initial);
+    const initial=await storeWith(email,"fp"+suffix,id);
+    if(!initial)throw new Error("Synthetic funded source store was not created");
+    const ref=storeRef(initial);
     const store=await setSubscription(ref,{active:true,period:{...paidPeriod(),funded:true}});
     if(!store)throw new Error("Synthetic funded period was not saved");
     is("the source store initially has an explicit funded period",store.period?.funded,true);
