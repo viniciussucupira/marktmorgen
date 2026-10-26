@@ -11,7 +11,8 @@
  * <store> is the store's statsId, which stays through a change of handle.
  */
 import { withinStore } from "@/lib/metered-limits";
-import { createHash, randomBytes } from "node:crypto";
+import { createHash } from "node:crypto";
+import { WAIT_TOKEN, newWaitlistToken as newToken, waitlistTokenKey as tokenKey, parseStoreWaitlistGrant, type StoreWaitlistGrant as TokenGrant } from "@/lib/waitlist-tokens";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { takeData } from "@/lib/store-data";
 import { dataBytes } from "@/lib/store-data-rules";
@@ -48,16 +49,9 @@ const jobKey = (sid: string, pid: string) => `nl:wl:${sid}:${pid}:job`;
 const sendKey = (sid: string, pid: string) => `nl:wl:${sid}:${pid}:send`;
 const JOBS = "nl:wl:jobs";
 const sha = (value: string) => createHash("sha256").update(value).digest("hex");
-const tokenKey = (token: string) => `nl:wl:t:${sha(token)}`;
 const now = () => Math.floor(Date.now() / 1000);
 
-export const WAIT_TOKEN = /^[0-9a-f]{48}$/;
-
-type TokenGrant = { s: string; h: string; p: string; e: string; k: "confirm" | "leave" };
-
-function newToken(): string {
-  return randomBytes(24).toString("hex");
-}
+export { WAIT_TOKEN };
 
 function sender(store: Store): string {
   const match = NIMBUS_FROM.match(/<([^>]+)>/);
@@ -165,13 +159,7 @@ export async function joinWaitlist(input: {
 export async function readWaitToken(token: string): Promise<TokenGrant | null> {
   if (!WAIT_TOKEN.test(token) || !isRedisConfigured()) return null;
   const [raw] = await redisPipeline([["GET", tokenKey(token)]]);
-  if (typeof raw !== "string") return null;
-  try {
-    const v = JSON.parse(raw) as TokenGrant;
-    return v.k === "confirm" || v.k === "leave" ? v : null;
-  } catch {
-    return null;
-  }
+  return parseStoreWaitlistGrant(raw);
 }
 
 /** Presses the button in the email: the address now counts, and joins the creator's list if it asked to. */
