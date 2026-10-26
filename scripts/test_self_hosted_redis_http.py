@@ -13,6 +13,7 @@ import os
 from pathlib import Path
 import re
 import secrets
+import subprocess
 import threading
 import urllib.error
 import urllib.request
@@ -101,6 +102,8 @@ def main():
     script = found.group(1)
     prefix = "marktmorgen:integration:sv4-http:" + uuid.uuid4().hex + ":"
     keys = [prefix + name for name in ("values", "wrongtype", "counter", "cash")]
+    keys.extend(prefix + "node-" + name for name in
+                ("value", "hash", "counter", "ack", "cutoff"))
     direct = Redis()
     server = ThreadingHTTPServer(("127.0.0.1", 0), Fixture)
     server.daemon_threads = True
@@ -185,6 +188,15 @@ def main():
         assert int(direct.command("GET", keys[2])) == before + 1
         assert direct.command("HGET", keys[3], "reserved") == "100"
         print("PASS: lost acknowledgement does not reconnect, replay or release funding")
+        # Only the CI job launches Node; no provider credentials are inherited.
+        subprocess.run(
+            ["node", str(Path(__file__).with_name("test_self_hosted_redis_client.mjs"))],
+            env={"PATH": os.environ.get("PATH", ""),
+                 "MARKTMORGEN_REDIS_INTEGRATION": "1",
+                 "MARKTMORGEN_SYNTHETIC_REDIS_URL": url,
+                 "MARKTMORGEN_SYNTHETIC_REDIS_TOKEN": TOKEN,
+                 "MARKTMORGEN_SYNTHETIC_REDIS_PREFIX": prefix},
+            check=True, timeout=90)
         print("SV4 prerequisite only: no container cutover, backup, capacity or production approval")
     finally:
         server.shutdown()
