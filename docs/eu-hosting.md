@@ -144,3 +144,38 @@ O ensaio agora envia somente o cabeçalho que excede o teto e exige413 e o erro
 JSON exato antes de enviar corpo. Não captura/ignora BrokenPipe, não aumenta
 limites e mantém a conferência de nenhuma mutação. A falha anterior é preservada;
 somente CI completo no novo head pode aprovar este incremento.
+
+### SV4: restauração binária com codec existente e Redis descartável (em verificação)
+
+O próximo ensaio usa o próprio `lib/backup-codec.ts`, mantendo seu envelope
+AES256GCM/gzip e seus limites, com DUMP real de strings binárias, hash de reserva
+sintético, lista, conjunto, conjunto ordenado e chave com vencimento. Captura
+DUMP/PEXPIRETIME/relógio em uma única operação Lua para seis chaves UUID explícitas;
+não enumera nem exporta dados reais. Bancos14/15 do Redis descartável de CI separam
+origem e destino com as mesmas identidades, sem FLUSH, sem REPLACE e com limpeza
+apenas das chaves deste ensaio. A adaptação RESP binária é transporte de teste,
+sem reconexão/reenvio nem uso no cliente de produção.
+
+Fontes primárias consultadas26/10/2026,00:16Fortaleza:
+[Redis DUMP](https://github.com/redis/redis-doc/blob/master/commands/dump.md),
+[RESTORE](https://github.com/redis/redis-doc/blob/master/commands/restore.md) e
+[PEXPIRETIME](https://github.com/redis/redis-doc/blob/master/commands/pexpiretime.md).
+DUMP não guarda TTL; RESTORE ABSTTL conserva o vencimento absoluto e recusa destino
+ocupado sem REPLACE. O checksum RDB e a autenticação do envelope são controles
+distintos, ambos exercitados. Data é de consulta, não publicação editorial.
+
+O subprocesso Node24 recebe somente PATH, autorização explícita do ensaio e
+snapshot sintético em stdin; a chave aleatória de criptografia vive apenas na
+memória e não é retornada. Verifica roundtrip, nonces distintos, chave errada,
+adulteração, truncamento, relógio anterior e registros expirados. Redis recebe
+bytes opacos autenticados; asserções comparam cada tipo/conteúdo e vencimento,
+a recusa de sobrescrita e checksum inválido, e a reserva/fonte intactas.
+
+Etapa no mesmo job/setupNode/Redis já existente, sem dependências, jobs, matrizes
+ou timeout novo. Aprovação depende de CI completo no novo head. Não certifica
+backup operacional, armazenamento/offsite/contas independentes, consistência de
+toda a base, todas as capacidades/direitos, segredos, agendamento, failover ou
+troca integral em contêineres; nenhuma migração é autorizada por esse ensaio.
+Custo real incremental de CI ainda desconhecido e permanece pendente em275[FX1],
+sem redução de tetos ou reserva. Nenhuma operação paga ou novo custo de fornecedor
+por plano é iniciado. Documento/ensaio não incrementam contador funcional.

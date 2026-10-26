@@ -144,6 +144,10 @@ jobs:
         env:
           MARKTMORGEN_REDIS_INTEGRATION: "1"
         run: python3 scripts/test_self_hosted_redis_http.py
+      - name: Synthetic encrypted codec to actual binary Redis restore
+        env:
+          MARKTMORGEN_REDIS_INTEGRATION: "1"
+        run: python3 scripts/test_self_hosted_backup_redis.py
       - name: Actual Redis security checks (docs/security-audit-2026-10-18.md)
         env:
           MARKTMORGEN_REDIS_INTEGRATION: "1"
