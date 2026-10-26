@@ -9869,3 +9869,36 @@ limiteexistente24,loja retornounull. Fixturecurtoagora exigecriaçãoexplícita.
 Padrão existente dehandle3–24comdot/underscore extraídobyte-for-byte para módulo
 puro ereexportado porstore.ts;preparação eparser usammesmaregra,semidentificador
 persistido/limitealterado. Novohead exige suítecompleta;nenhumrerunisolado.
+
+
+
+### AB(a) — publicação verificada da fonte imutável, PR1075
+
+Head6fe29dfbfcaf94b0e6a003638ac317ff4036b40f aprovado31/31checks+Vercel;
+8classificadores10+7/full=true. Merge81faa03bd85ff1b102a92ca229e1368b45d6add3
+em26/10/2026 17:48:38Fortaleza(20:48:38UTC), árvore
+3c044ea65d09e396800defee553d5fc7d7144903 e pais[a9a9b8a,6fe29df] conferidos.
+Falha anterior do fixture preservada acima; aprovação exige novohead completo.
+
+Verify121825131999:477checks plan-pause20:24:49.0430192UTC;
+Everything20:26:18.0279836UTC, agreements20:28:22.9320811UTC,
+store-copy20:42:27.6667601UTC. Redis real121825131973 passou20:21:34.8331209UTC:
+64concorrentes/ACKperdido/22negativos/3origens e caixa histórico100 preservado;
+INFO17primeiro/16duplicado, sem nova leitura nem aumento do teto17.
+Mobile121825131903:home96/48/40ms,pricing32/32/32ms,sales32/32/32ms;
+LCP584–928ms,CLS0;limites originais/ciclo/Enter/details preservados.
+
+Produção dpl_DoGMb62Yj3csyPbbtev161QNbgLs READY17:50:15.003Fortaleza
+(20:50:15.003UTC), SHA81faa03bd85ff1b102a92ca229e1368b45d6add3 e
+marktmorgen.com conferidos. /,/platform,/pricing,/mission,/library HTTP200
+comIDexato. Consulta error/fatal20:50:15.003→20:53:09.671UTC sem registros;
+somente essa janela, não garantia de ausência de erros.
+Docs1074 incluídos nesta versão verificada, sem presumir publicação própria.
+
+Preparação continua fechada: não prova parada do provedor nem autoriza POST.
+CoveragepauseRestart=false/políticasNULL; AB(a) incompleto, contador254.
+Próximo incremento: parada observada da origem e preço/submissão única/IDdurável/
+recuperação somente leitura/ativação/ACKstore/CAScleanup-undo e rollover integrados.
+Nenhuma conta, mensagem, pagamento real, novo serviço ou operação paga.
+Tetos e seis contratos preservados; custos reais/retenção/LLC/BR-US+ISS5%
+desconhecidos continuam reprovados, não zero; nenhuma margem certificada.
