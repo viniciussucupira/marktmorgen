@@ -194,8 +194,9 @@ explícita da etapa pública. Não existe modo de produção ou comando de migra
 do cliente. Nenhum teste local foi executado.
 
 O ensaio cria duas instâncias Redis7.4 e duas redes internas com UUID e rótulo de
-propriedade, usando somente a imagem já presente no job e --pull=never. Portas de
-controle são aleatórias e publicadas exclusivamente em127.0.0.1; o consumidor
+propriedade, usando somente a imagem já presente no job e --pull=never. Nenhuma porta de
+host é publicada: o controle usa o IP privado do contêiner, conferido no subnet
+da rede interna com rótulo próprio; o consumidor
 descartável usa apenas a rede privada, nome marktmorgen.test e ACL de leitura.
 Contêineres não rodam como root, não têm capabilities e possuem limites de
 memória/CPU, raiz somente leitura e dados/configuração em tmpfs. Senhas aleatórias
@@ -269,3 +270,11 @@ fornecedor, carga por plano ou armazenamento operacional de backups. Não escolh
 fornecedor, não cria recursos externos, não muda domínio real, EU hosting flag,
 PLANS_ON_SALE, preços/limites/comissão ou gates fiscais/comerciais. Todas essas
 lacunas, SV5 e a publicação dependente do dono permanecem registradas.
+
+Correção do primeiro headc67e7200a868e2e3c56274f631164ee9d0482eb0:
+o job121752784855 falhou26/10/2026 às18:03:22.631UTC antes da cópia porque
+Docker não publicou6379 na bridge interna, e a leitura desse mapeamento falhou.
+Agora não solicita porta publicada: valida ausência de PortBindings e usa somente
+o IPv4 privado confirmado no subnet da rede interna com rótulo do UUID. Não
+abre bridge com egress nem afrouxa a checagem de propriedade. A falha permanece
+registrada; somente o CI completo do novo head poderá aprovar o ensaio.

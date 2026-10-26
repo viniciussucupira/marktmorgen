@@ -9708,3 +9708,8 @@ parcial de SV4, não migração completa da aplicação ou publicação ao clien
 Próximo trabalho AB(a): intenção durável com propriedade atômica/submissão única
 integrada antes de qualquer IO do provedor; coveragepauseRestart=false até cumprir
 protocolo, custeio, reconciliação e ativação. AP449–455/AN456/361–362 preservados.
+
+SV4/PR#1071: primeiro headc67e720 jobRedis121752784855 falhou18:03:22.631UTC
+no boot (mapeamento6379 inexistente em bridge interna), antes de copiar dados.
+Correção usa IP privado da rede interna de propriedade validada e não publica
+portas; não habilita egress. Novo head exige toda a suíte, sem rerun isolado.

@@ -4,6 +4,7 @@ No provider API, real host configuration, production URL, artifact or cache.
 """
 import base64
 import json
+import ipaddress
 import os
 from pathlib import Path
 import secrets
@@ -21,10 +22,11 @@ DOMAIN = "marktmorgen.test"
 
 
 class Peer(BinaryRedis):
-    def __init__(self, port, password):
-        if type(port) is not int or not 1024 < port < 65536:
-            raise RuntimeError("Invalid synthetic loopback port")
-        self.sock = socket.create_connection(("127.0.0.1", port), timeout=10)
+    def __init__(self, address, password):
+        ip = ipaddress.IPv4Address(address)
+        if not ip.is_private or ip.is_loopback or ip.is_unspecified:
+            raise RuntimeError("Invalid owned synthetic bridge address")
+        self.sock = socket.create_connection((str(ip), 6379), timeout=10)
         self.stream = self.sock.makefile("rb")
         try:
             assert self.command("AUTH", password) == "OK"
@@ -126,7 +128,7 @@ def main():
                 docker(
                     "run", "-d", "--pull=never", "--name", name,
                     "--label", LABEL + "=" + run_id, "--network", networks[0],
-                    "--publish", "127.0.0.1::6379", "--read-only",
+                    "--read-only",
                     "--tmpfs", "/run:rw,noexec,nosuid,size=1m,mode=1777",
                     "--tmpfs", "/data:rw,noexec,nosuid,size=32m,mode=1777",
                     "--user", "redis", "--cap-drop=ALL", "--security-opt=no-new-privileges",
@@ -142,14 +144,18 @@ def main():
                        "umask 077; cat > /run/redis.conf.tmp && mv /run/redis.conf.tmp /run/redis.conf",
                        data=config)
                 item = inspect("container", name)
-                ports = item["NetworkSettings"]["Ports"]["6379/tcp"]
-                if len(ports) != 1 or ports[0]["HostIp"] != "127.0.0.1":
-                    raise RuntimeError("Synthetic Redis must only publish on loopback")
-                port = int(ports[0]["HostPort"])
+                if item["HostConfig"].get("PortBindings"):
+                    raise RuntimeError("Synthetic Redis must not publish any host port")
+                owned_network = item["NetworkSettings"]["Networks"][networks[0]]
+                address = owned_network["IPAddress"]
+                network = inspect("network", networks[0])
+                subnet = ipaddress.IPv4Network(network["IPAM"]["Config"][0]["Subnet"])
+                if ipaddress.IPv4Address(address) not in subnet:
+                    raise RuntimeError("Synthetic address does not belong to its owned internal bridge")
                 peer = None
                 for _ in range(50):
                     try:
-                        peer = Peer(port, operator)
+                        peer = Peer(address, operator)
                         break
                     except (OSError, RuntimeError):
                         time.sleep(0.1)
