@@ -46,3 +46,27 @@ required. No new dependency/job/provider or operating service starts. Incrementa
 actual CI cost is unknown and cannot reduce FX275 ceilings/reserves. No
 functional delivery count; AB(a), commercial/tax gates and existing creator
 content, buyer languages and persisted store identifiers remain unchanged.
+
+
+## Private report projection (partial prerequisite)
+
+`lib/platform-waitlist-report.ts` reuses `csvLine` from the existing CSV
+library and the confirmed-contact projection above. A complete supplied snapshot
+produces a deterministic private CSV (email, first confirmation UTC date,
+intended plan, country), total confirmed, confirmed since an explicit inclusive
+cutoff, and exact self-reported plan/country group counts. Null metadata remains
+unknown, distinct from a literal country label. Pending, withdrawn and expired
+entries are excluded. Corruption, duplicate identities, future observations,
+incomplete snapshots and exceeded explicit record/UTF-8 byte bounds refuse the
+whole report, rather than silently producing partial counts or a partial CSV.
+
+Eight synthetic tests cover those invariants, formula/quote escaping through the
+existing encoder, exact week/byte boundaries, Unicode byte accounting, stable
+scan order and empty snapshots. The module performs no reads, sends or access
+checks. The caller's completeness flag is a contract, not authenticated evidence
+or a consistency guarantee. Its safety ceilings (10,000 supplied records /4MiB
+CSV) are not approved operating budgets or promised capacity. Real use still
+requires a reviewed coherent snapshot, owner authentication, pre-funded read/
+retention/generation/email obligations and automatic caps before any operation.
+There is no public route, owner dashboard, scheduled email, CSV download or
+opening notice enabled by this prerequisite; no new provider/dependency/job.
