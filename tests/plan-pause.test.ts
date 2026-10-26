@@ -713,7 +713,10 @@ async function main() {
   for(const sourceGrant of ["ctr_pause_source", null]){
     const suffix=sourceGrant?"known":"unknown",email="funded-pause-"+suffix+"@example.com",id="sub_FundedPause"+suffix;
     subs[id]=subscription(id,{metadata:sourceGrant?{funding_grant:sourceGrant}:{funding_review:"unknown-source"}});
-    const store=await storeWith(email,"fundedpause"+suffix,id),ref=storeRef(store);
+    const initial=await storeWith(email,"fundedpause"+suffix,id),ref=storeRef(initial);
+    const store=await setSubscription(ref,{active:true,period:{...paidPeriod(),funded:true}});
+    if(!store)throw new Error("Synthetic funded period was not saved");
+    is("the source store initially has an explicit funded period",store.period?.funded,true);
     const set=await pausePlan(store,1,NOW);
     if(set.kind!=="paused")throw new Error("Synthetic funded pause was refused");
     is("provider funding remains an explicit versioned source marker",set.record.funding,{version:1,grantId:sourceGrant});

@@ -127,3 +127,13 @@ must use the existing canonical protocol cost/margin calculators and be reserved
 before operations. Unknown remains failing, never zero; no60% margin is certified.
 Price, visible limits, commission, PLANS_ON_SALE and commercial/fiscal gates stay
 unchanged. This internal preparation does not increment functional counter254.
+
+### First-head failure retained
+
+Head1cd06c801da9b15a1450401ec39487bba411cc4c failed Redis job121777266263
+at26 October2026,18:49:23.8715457UTC while compiling the new intent Lua:
+until is a Lua keyword and cannot be accessed with dot syntax. The fix uses
+pause["until"]; no condition, command ceiling, ownership rule or test is relaxed.
+The integration fixture also now explicitly saves a funded period before making
+the store inactive, proving that the durable pause marker survives its removal.
+Only a complete new-head CI may approve; no individual-job rerun.

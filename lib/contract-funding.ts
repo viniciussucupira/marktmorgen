@@ -337,8 +337,8 @@ if not reserved or not carried or carried~=carry or reserved<carried or reserved
 -- Exact pause observation, including its funded marker, is part of ownership.
 if redis.call('GET',KEYS[2])~=ARGV[13] then return 0 end
 local ok,pause=pcall(cjson.decode,ARGV[13])
-if not ok or type(pause)~='table' or type(pause.funding)~='table' or pause.funding.version~=1 or pause.funding.grantId~=source[1] or pause.subscription~=ARGV[6] or type(pause.customer)~='string' or not string.match(pause.customer,'^cus_[%w]+$') or type(pause.paymentMethod)~='string' or type(pause.tier)~='string' or pause.tier..'_month'~=ARGV[4] or type(pause.from)~='number' or pause.from~=finish or type(pause.until)~='number' or pause.until<=pause.from or pause.until>now or pause.until~=math.floor(pause.until) then return 0 end
-if tonumber(redis.call('ZSCORE',KEYS[3],ARGV[12]))~=pause.until then return 0 end
+if not ok or type(pause)~='table' or type(pause.funding)~='table' or pause.funding.version~=1 or pause.funding.grantId~=source[1] or pause.subscription~=ARGV[6] or type(pause.customer)~='string' or not string.match(pause.customer,'^cus_[%w]+$') or type(pause.paymentMethod)~='string' or type(pause.tier)~='string' or pause.tier..'_month'~=ARGV[4] or type(pause.from)~='number' or pause.from~=finish or type(pause["until"])~='number' or pause["until"]<=pause.from or pause["until"]>now or pause["until"]~=math.floor(pause["until"]) then return 0 end
+if tonumber(redis.call('ZSCORE',KEYS[3],ARGV[12]))~=pause["until"] then return 0 end
 local annual=amount(redis.call('GET',KEYS[4]))
 if not annual or annual<=0 or annual>pause.from then return 0 end
 local valid,intent=pcall(cjson.decode,ARGV[16])

@@ -9770,3 +9770,10 @@ todaLLC/impostos desconhecidos reprovados;nenhuma operação nova paga autorizad
 Detalhes, tetos e tabela porcontrato emdocs/contract-restart-reservation.md.
 Preços69/690/449/4490/999/9990,limites,PLANS_ON_SALE,gates/AP449–455/AN456/361–362
 econtador254 preservados. Provas medidasSV4 e merge1071 já na fila/main via1072.
+
+AB(a)/PR#1073 primeirohead1cd06c801da9b15a1450401ec39487bba411cc4c:
+jobRedis121777266263 falhou18:49:23.8715457UTC na compilação do Lua,
+antes de qualquerclaim: until é palavrareservada. Corrigido acesso para
+pause["until"], semafrouxarcondição/teto/teste. Fixture integrado agora grava
+period.funded=true explicitamente antes de inativar e provar que o marcador
+sobrevive à remoção. Nova suíteCOMPLETA obrigatória,semrerunisolado.
