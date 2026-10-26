@@ -1,4 +1,4 @@
-import { pricingPerksMarkup } from "@/lib/pricing-perks-markup";
+import { pricingPerksMarkup, pricingTermsMarkup } from "@/lib/pricing-perks-markup";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { Pricing } from "@/components/home-parts";
@@ -52,4 +52,12 @@ is("plan words never create executable disclosure markup", /<img|<script|onerror
 is("literal HTML-looking plan words remain visible as text", hostile.includes('&lt;img src=x onerror=&quot;alert(1)&quot;&gt;'), true);
 is("ampersands and apostrophes remain escaped", hostile.includes("A &amp; B&#39;s &lt;plan&gt;"), true);
 is("the native disclosure keeps its summary and semantic list", [hostile.startsWith("<summary "), (hostile.match(/<li /g) ?? []).length, hostile.endsWith("</ul>")], [true, 3, true]);
+const terms = pricingTermsMarkup([['<img src=x onerror="bad()">', "A & B's <terms>"], ["First charge", '$69 for the month.']]);
+is("term labels and values cannot insert executable HTML", /<img|<script|onerror="/.test(terms), false);
+is("term labels retain literal HTML as escaped text", terms.includes('&lt;img src=x onerror=&quot;bad()&quot;&gt;'), true);
+is("term values retain punctuation and escaped markup", terms.includes("A &amp; B&#39;s &lt;terms&gt;"), true);
+is("static terms retain one definition pair per row", [(terms.match(/<dt /g) ?? []).length, (terms.match(/<dd /g) ?? []).length], [2, 2]);
+for (const label of ["Free trial", "First charge", "Money back", "Canceling", "Fees"]) {
+ is("every plan preserves its " + label + " term", (html.match(new RegExp(">" + label + "</dt>", "g")) ?? []).length, 3);
+}
 done();
