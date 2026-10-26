@@ -5201,6 +5201,47 @@ Aplicar a regra VR: só chamar de pronto o que estiver incorporado, publicado, c
 
 Proveniência e ordemTS: solicitação direta25/10/2026,23h12Fortaleza. RegraPedidos repetidos aplicada antes da gravação: main38b65177db0393371249e23aa7eb81f65492ea9e,12PRs abertos(títulos/corpos/filas),inventário599refs codex/* e58heads distintos recentes/relevantes ligados aos100commits/pais recentes,PRs e mecanismos de teste. Nenhuma correspondência por data/hora,seção,TS1/TS2ou conteúdo equivalente. Mecanismo existente de demonstração identificado:lib/house-store.ts,lib/demo-account.ts e sellsInTestMode emlib/stripe-connect.ts; ampliar/reutilizar sem segunda loja-sistema ou duplicar checkout/entrega. A demo atual escreve a nenhum comprador; extensão a endereços verificados é pedido futuro, não funcionalidade já existente. Posição: depois de TODO o Bloco de abertura, incluindo sua ordem vinculante e complementos de abertura, antes de avançar aos pendentes antigos. Não interrompeAB(a),CI/PR1043 ou demais trabalhos autorizados; não antecipaTS às tarefas deabertura. Numeração global443/444,estado inicialnafila. Nenhuma conta real,checkoutStripe real/teste externo ou e-mail foi aberto/enviado por este registro. Exposição gratuita precisa reserva/admissão automática antesdopróximo pedido/e-mail/arquivo/IA,tetomês/dia comcusto máximo eimpostosmais onerosos,semquota grátis comozero. Não ativa plano nem gates ou confunde ensaioTS2 comdireitos pagos. Implementação,teste completo,incorporação/publicação/VR ainda pendentes; registro documental não é entrega funcional.
 
+## GE — Painel de gestão da empresa para o dono (25/10/2026)
+
+Solicitação do dono (25/10/2026, 23h44, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA, com os próximos números livres, depois do Bloco de abertura, reutilizando 335 [FR1], [FR2], 275 [FX1], SV3(c) e os dados que o Marktmorgen já guarda, sem duplicar cálculos.
+
+Pedidos repetidos: antes de gravar, aplique a regra "Pedidos repetidos" (23/10/2026): procure esta solicitação no main, nos PRs abertos e nos ramos codex/* recentes, pela linha de data e hora, pelo nome da seção, pelas etiquetas [GE1] a [GE3] e pelo conteúdo. Se já estiver gravada, não duplique.
+
+Estado inicial: na fila.
+
+Decisão do dono: além dos e-mails, ele quer ler num painel tudo o que importa para gerenciar a empresa. O painel é para consulta; nenhum alerta ou prazo depende de ele abrir o painel (os e-mails de FR1 e FR2 continuam). Todo o painel, como todo o site, em inglês americano.
+
+445. [GE1] Acesso e segurança.
+(a) Página privada (por exemplo, marktmorgen.com/owner), acessível somente ao dono, com chave de acesso (passkey) ou login com verificação em duas etapas; nenhum outro usuário, criador ou membro de equipe a vê; tentativas negadas registradas.
+(b) Somente leitura: o painel mostra e explica, nunca move dinheiro, envia declaração, muda preço, limite, trava ou configuração.
+(c) Dados pessoais de clientes reduzidos ao necessário (por exemplo, nome da loja e situação, sem dados do comprador), conforme a política de privacidade.
+(d) Em inglês americano simples (grafia, datas e números no padrão dos EUA), acessível conforme AX274 e fácil de entender de imediato (VR).
+
+446. [GE2] O que o painel mostra, sempre com a data da última atualização e "unknown" quando não houver dado (nunca zero inventado).
+(a) Clientes: quantos em cada plano (Store, Studio, Scale), em cada período (mês, 3 meses, ano) e em cada forma de pagamento; em teste grátis; em dia; com o próximo mês ainda não pago e quanto falta; pausados; com débito devolvido; com contestação aberta; com reembolso pedido; cancelados no mês; e a lista dos que precisam de atenção, com o motivo.
+(b) Receita: receita do mês e do ano, receita mensal recorrente, receita por plano e por forma de pagamento, meses já pagos adiantados (valor guardado e a reconhecer), créditos de clientes e reembolsos.
+(c) A receber e a pagar: valores a receber do Stripe com as datas de repasse; contas a pagar de cada fornecedor e de cada custo fixo, com valor e vencimento; impostos a pagar com valor e prazo (ISS do mês, IVA OSS e VAT do Reino Unido do trimestre, sales tax, Delaware, Califórnia, INSS, imposto de renda anual estimado até a data).
+(d) Custos: custos fixos de 275 [FX1] por item; custos variáveis por fornecedor no mês, comparados aos tetos automáticos e aos limites de capacidade medidos (SV1(d)); custos sem receita (teste grátis, plano gratuito, lojas em modo de teste), com os seus tetos.
+(e) Resultado: lucro do mês e do ano depois de todos os custos e impostos; margem da empresa comparada aos 60%; quantos clientes faltam para não ter prejuízo e para chegar aos 60% (SV3(c)); margem do pior cliente de cada plano e forma de pagamento, que nunca pode estar abaixo de 60%.
+(f) Caixa: saldo na conta Stripe da LLC e, se houver integração somente de leitura com o banco de FC1, o saldo bancário; valores enviados ao Brasil, com cotação e IOF.
+(g) Prazos: próximos 90 dias de prazos fiscais e de fornecedores, os mesmos dos e-mails de FR1 e FR2.
+(h) Situação da operação: estado das travas (PLANS_ON_SALE, tax gate, art. 9a, revisão comercial, EU_HOSTING_CONFIRMED), servidores e uso da capacidade, e o que está em "Depende do dono".
+
+447. [GE3] Custo e verificação.
+Cada leitura do painel tem custo calculado antes e teto automático (por exemplo, números calculados uma vez por hora e guardados, em vez de recalculados a cada abertura); o custo entra em 275 [FX1]; desconhecido reprova. Testes sintéticos cobrem acesso negado a quem não é o dono, cada número comparado ao registro de origem e o "unknown" quando falta dado.
+
+REGRA DOS 60%: todo cliente pagante, isoladamente e usando 100% dos direitos do plano no pior mês, e a empresa como um todo, mantêm margem real de lucro líquido mínima de 60% sobre tudo o que é cobrado, depois de todos os custos e de todos os impostos, inclusive os brasileiros e o ISS de 5%; pode ser maior, nunca menor. Leitura que dá mais imposto (docs/tax-uncertainty.md). Desconhecido reprova, nunca é zero. Todos os custos fixos da LLC pertencem ao Marktmorgen (FX275).
+
+Proibido: mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, o tax gate, o art. 9a ou a revisão comercial, afrouxar qualquer suposição de imposto, taxa ou reserva, mostrar o painel a qualquer pessoa além do dono, mover dinheiro ou enviar declarações pelo painel, expor dados de compradores além do necessário, apagar conteúdo de criadores, apagar qualquer coisa da Hazelsong, criar contas, aceitar termos, contratar, pagar ou contatar terceiros. Somente testes sintéticos.
+
+Aplicar a regra VR: só chamar de pronto o que estiver incorporado, publicado, conferido em marktmorgen.com e usado de ponta a ponta; relatar o estado exato e o que não foi verificado.
+
+Registro de ordem e reutilização:445–447 permanecem na fila depois de TODO o Bloco de abertura e após443[TS1]/444[TS2], sem interromper AB(a), PV8 ou a construção desligada já autorizada de SV4. Reusar335[FR1], seu complemento[FR2],275[FX1],SV3(c), os registros e cálculos canônicos, sem modelo fiscal/financeiro paralelo. O painel não substitui os e-mails: nenhum alerta ou prazo depende de acesso. Texto do produto em inglês americano; preservar conteúdo de criadores, idiomas de compradores e identificadores persistidos conforme docs/site-languages.md, sem ativar traduções. Passkey/2FA e autorização exclusiva ao dono devem ser comprovadas nos testes sintéticos, não presumidas de uma rota privada. Consulta não autoriza conta, chave real, integração bancária, movimentação ou mudança de gate. Dados e datas desconhecidos aparecem como unknown; nenhum custo ou lucro inventado. Todos os custos da consulta/cache/agendamento e retenção devem ter cálculo mensal/anual por plano, maior preço pago, teto e reserva antes de operar. Estado exato: registro documental; painel ainda não implementado ou usado ponta a ponta, sem entrega funcional adicional.
+
+Pedidos repetidos: conferidos main f2d087104aa6796b74f7858cc4f2f57de5d1a548,13 PRs abertos (títulos/corpos e filas),602 refs codex/* e65 heads distintos recentes/relacionados escolhidos por100 commits/pais, PRs e nomes.62 filas lidas sem ocorrência de GE1–GE3/data23h44/título/conteúdo. Três ramos antigos de dashboard retornaram404 para docs/codex-queue.md; commits datados14–15/10/2026, anteriores ao pedido, sem alegar leitura de fila inexistente. FR2 pendente#1045 foi preservado por ancestralidade. Nenhum mecanismo ou item anterior duplicado.
+
 ## OR — Posição dos pendentes antigos de 19/10/2026 (22/10/2026)
 
 Decisão do dono: 22/10/2026, 14h45 de Fortaleza. Registro documental preparado em 22/10/2026 às 15:18:31 de Fortaleza, após concluir a entrega 165. Esta seção prevalece sobre posições antigas incompatíveis; preserva o histórico e não cria itens nem números.
