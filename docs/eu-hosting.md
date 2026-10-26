@@ -179,3 +179,93 @@ troca integral em contêineres; nenhuma migração é autorizada por esse ensaio
 Custo real incremental de CI ainda desconhecido e permanece pendente em275[FX1],
 sem redução de tetos ou reserva. Nenhuma operação paga ou novo custo de fornecedor
 por plano é iniciado. Documento/ensaio não incrementam contador funcional.
+
+
+### SV4: dois servidores Redis, cópia autenticada e retorno por DNS privado (26/10/2026)
+
+Estado: implementação do ensaio; aprovação e durações medidas dependem do CI completo
+do novo head. Pré-requisito parcial, sem declaração de SV4 concluído. A revisão de
+AB(a) continua em sua branch independente conforme autorização do dono.
+
+No job público padrão já existente, a etapa executa
+`python3 scripts/test_self_hosted_redis_migration.py`. O programa recusa qualquer
+contexto que não seja GitHub Actions/Linux/repositório canônico e autorização
+explícita da etapa pública. Não existe modo de produção ou comando de migração
+do cliente. Nenhum teste local foi executado.
+
+O ensaio cria duas instâncias Redis7.4 e duas redes internas com UUID e rótulo de
+propriedade, usando somente a imagem já presente no job e --pull=never. Portas de
+controle são aleatórias e publicadas exclusivamente em127.0.0.1; o consumidor
+descartável usa apenas a rede privada, nome marktmorgen.test e ACL de leitura.
+Contêineres não rodam como root, não têm capabilities e possuem limites de
+memória/CPU, raiz somente leitura e dados/configuração em tmpfs. Senhas aleatórias
+são transmitidas por stdin, não por argumentos, logs, artefatos ou metadados Docker.
+O cliente Docker aponta explicitamente para o socket local com HOME temporário
+vazio; contextos e credenciais externos não são herdados.
+
+Etapas verificáveis:
+
+1. Iniciar origem/destino e comprovar que o nome privado aponta à origem.
+2. Gravar seis chaves sintéticas UUID: bytes/Unicode, reserva e obrigação de caixa,
+   lista, conjunto, conjunto ordenado e vencimento absoluto. A chave de identidade
+   de cada servidor é metadado do ensaio e fica fora das seis chaves copiadas.
+3. Capturar DUMP/PEXPIRETIME/TIME atomicamente e autenticar o snapshot no codec real
+   AES-GCM/gzip já usado pela aplicação, com os testes existentes de adulteração.
+4. Copiar só cinco chaves e exigir reprovação antes de qualquer troca de DNS;
+   apagar somente as seis chaves conhecidas do destino e restaurar o conjunto todo.
+5. Comparar os dumps, tipos, conteúdo binário/Unicode, reserva100, ausência de TTL
+   da reserva e prazo absoluto idêntico; não usar FLUSH, REPLACE ou enumeração real.
+6. Desconectar a origem da rede do consumidor e conectar o destino ao mesmo alias.
+   Consumidores novos devem ler identidade do destino e reserva100; INCR deve ser
+   negado pela ACL tanto antes quanto depois da troca.
+7. Parar o destino, exigir falha de leitura, devolver o alias à origem e confirmar
+   identidade, reserva e todos os dumps originais intactos.
+8. Remover apenas contêineres/redes UUID após verificar seus rótulos de propriedade,
+   inclusive no caminho de falha. Inventário indisponível não prova ausência.
+
+O programa emite `SV4_REDIS_MIGRATION_TIMINGS:` com segundos realmente medidos
+por fase e total, somente depois das asserções e limpeza bem-sucedidas. Nesta
+revisão os valores ainda estão pendentes: não são estimativas nem tempos de
+migração de produção. Alarme de120s para o ensaio, até50s de operações de limpeza
+(dez comandos de até5s), asserção de total≤180s e etapa de4min dentro do job
+existente de12min; nenhum timeout do job ou matriz foi aumentado.
+
+Fontes oficiais, consultadas26/10/2026 (data de consulta):
+[GitHub Actions billing](https://docs.github.com/en/billing/concepts/product-billing/github-actions),
+[standard runner selection](https://docs.github.com/en/actions/how-tos/write-workflows/choose-where-workflows-run/choose-the-runner-for-a-job)
+e [Docker user-defined bridges](https://docs.docker.com/engine/network/drivers/bridge/).
+GitHub documenta gratuidade de runners padrão para repositórios públicos, incluindo
+ubuntu-latest; logs e resumos de jobs não contam armazenamento de artefatos. Runners
+maiores continuam pagos. A API confirmou este repositório público nesta data.
+Docker documenta resolução por nomes/aliases e conexão/desconexão de bridges em
+execução. Isso fundamenta apenas o DNS privado deste ensaio.
+
+Custo incremental desta etapa, condicionado ao runner público padrão já verificado,
+sem novo cache, artefato, imagem, pull, conta ou fornecedor:
+
+| Contrato preservado | Incremento mensal | Incremento anual |
+| --- | --- | --- |
+| Store69/mês | US$0 | US$0 |
+| Store690/ano | US$0 | US$0 |
+| Studio449/mês | US$0 | US$0 |
+| Studio4490/ano | US$0 | US$0 |
+| Scale999/mês | US$0 | US$0 |
+| Scale9990/ano | US$0 | US$0 |
+
+Custo fixo incremental deste ensaio para Marktmorgen: US$0/mês e US$0/ano;
+reserva incremental0 apenas nesse escopo comprovado, com os tetos de tempo acima.
+Nenhum preço cobrado foi alterado; maior preço pago continua o contrato original
+correspondente. A etapa é omitida fora da condição pública conhecida e o script
+recusa ausência de autorização; isso não conta como teste aprovado. Mudar para
+runner pago/privado, armazenamento ou serviço novo exige novo cálculo e reserva
+antes de operar. Os demais custos de CI/cache, hospedagem real, toda a LLC(FX275),
+impostos, capacidade e direitos de cada plano continuam sujeitos às provas
+anteriores; desconhecido reprova e nunca vira zero. A tabela não certifica margem
+de60% nem retroage para aprovar custos históricos.
+
+Não exercita a aplicação inteira, gravações concorrentes, drenagem/replay de
+escritas, caches de clientes persistentes, topologia entre hosts, TLS/DNS de
+fornecedor, carga por plano ou armazenamento operacional de backups. Não escolhe
+fornecedor, não cria recursos externos, não muda domínio real, EU hosting flag,
+PLANS_ON_SALE, preços/limites/comissão ou gates fiscais/comerciais. Todas essas
+lacunas, SV5 e a publicação dependente do dono permanecem registradas.

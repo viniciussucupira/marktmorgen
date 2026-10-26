@@ -148,6 +148,13 @@ jobs:
         env:
           MARKTMORGEN_REDIS_INTEGRATION: "1"
         run: python3 scripts/test_self_hosted_backup_redis.py
+      - name: Synthetic two-server Redis migration and private DNS rollback
+        if: ${{ github.repository == 'viniciussucupira/marktmorgen' && github.event.repository.private == false && github.event.repository.visibility == 'public' }}
+        timeout-minutes: 4
+        env:
+          MARKTMORGEN_REDIS_INTEGRATION: "1"
+          SV4_STANDARD_PUBLIC_CI: "true"
+        run: python3 scripts/test_self_hosted_redis_migration.py
       - name: Actual Redis security checks (docs/security-audit-2026-10-18.md)
         env:
           MARKTMORGEN_REDIS_INTEGRATION: "1"
