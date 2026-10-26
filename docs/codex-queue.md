@@ -9784,3 +9784,12 @@ INFO17primeiro/16duplicado≤17. Porém verify121779390404 falhou18:55:01.039224
 por dois exports ausentes no fixture de metadados de billing. Fixture agora
 reexporta os guardas reais fechados de produção, sem fake de sucesso e sem
 afrouxarasserções. Novohead exige suíteCOMPLETA; evidência parcial não é aprovação.
+
+AB(a)/PR#1073 headdabd44105e80b65c9e47ab146e58465dd3748ac9:
+437checks plan-pause passaram19:03:27.4016200UTC (ramo financiado real+legado).
+Verify121782942584 porém falhou19:04:07.3437034UTC no inventário de dados:
+3famílias existentespausa/due/ano faltavam sob novo leitorcontract-funding.ts.
+Registro agora associa o mesmo armazenamento/limites existentes ao leitor sem
+mutação e documenta intent≤4096bytes/grant no mesmoledger;retenção/custos reais
+desconhecidos reprovados. Semnova chave ou corte delimites;produçãoinalterada.
+Novamente toda a suíte no novohead,semrerunisolado;prova parcialnãoéaprovação.

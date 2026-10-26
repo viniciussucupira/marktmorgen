@@ -146,3 +146,13 @@ the existing metadata-test activation fixture did not export the two new imports
 The fixture now re-exports the actual production closed restart functions, without
 adding a successful fake, changing guards or relaxing assertions. This is not a
 full-head approval; the entire suite must pass on the next corrected head.
+
+Third headdabd44105e80b65c9e47ab146e58465dd3748ac9 passed all437
+plan-pause checks at19:03:27.4016200UTC, including the real funded branch and
+unchanged legacy cases. Full verify121782942584 still failed the storage registry
+test at19:04:07.3437034UTC: three existing pause key families were not registered
+under their new read-only caller contract-funding.ts. The registry now names the
+same existing per-store pause/annual keys and shared due set, and describes the
+bounded permanent intent field in the same company hash with unknown/rejected
+retention costs. No new key, data-room limit or price is introduced; production
+code and passing assertions stay unchanged. Next-head full CI remains mandatory.
