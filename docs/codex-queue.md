@@ -5242,6 +5242,39 @@ Registro de ordem e reutilização:445–447 permanecem na fila depois de TODO o
 
 Pedidos repetidos: conferidos main f2d087104aa6796b74f7858cc4f2f57de5d1a548,13 PRs abertos (títulos/corpos e filas),602 refs codex/* e65 heads distintos recentes/relacionados escolhidos por100 commits/pais, PRs e nomes.62 filas lidas sem ocorrência de GE1–GE3/data23h44/título/conteúdo. Três ramos antigos de dashboard retornaram404 para docs/codex-queue.md; commits datados14–15/10/2026, anteriores ao pedido, sem alegar leitura de fila inexistente. FR2 pendente#1045 foi preservado por ancestralidade. Nenhum mecanismo ou item anterior duplicado.
 
+## LE — Lista de espera do próprio Marktmorgen antes da abertura (26/10/2026)
+
+Solicitação do dono (26/10/2026, 00h19, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA, com os próximos números livres, para execução em paralelo ao Bloco de abertura, sem interromper AB(a), porque a lista precisa existir antes da abertura das vendas.
+
+Pedidos repetidos: antes de gravar, aplique a regra "Pedidos repetidos" (23/10/2026): procure esta solicitação no main, nos PRs abertos e nos ramos codex/* recentes, pela linha de data e hora, pelo nome da seção, pela etiqueta [LE1] e pelo conteúdo, inclusive 240 [CF3] (início pelo e-mail na página inicial). Se já estiver gravada ou coberta, não duplique: aplique só a diferença.
+
+Estado inicial: na fila.
+
+Objetivo do dono: juntar criadores interessados antes de abrir as vendas, para só abrir a LLC e ligar os custos fixos quando houver assinaturas suficientes para não ter prejuízo.
+
+448. [LE1] Lista de espera do Marktmorgen.
+(a) Reutilizar o mecanismo de lista de espera das lojas (app/api/store/waitlist, confirmação, saída), sem duplicá-lo, para uma lista do próprio Marktmorgen.
+(b) Na página inicial, junto ao botão "Start your store", e numa página própria (por exemplo, marktmorgen.com/waitlist): campo de e-mail e botão em inglês americano simples, por exemplo "Notify me when selling opens", com uma frase honesta do que a pessoa vai receber (um e-mail quando as vendas abrirem e, se ela quiser, notícias do Marktmorgen), sem escassez falsa, contagem pública, desconto inventado ou promessa de data.
+(c) Duas perguntas opcionais, que ajudam a planejar a abertura: qual plano a pessoa pretende usar (Store, Studio, Scale ou "not sure yet") e em que país ela mora. Nada obrigatório além do e-mail.
+(d) Confirmação por e-mail (dupla confirmação), saída com um clique, registro do consentimento com o texto exato e a data, conforme a política de privacidade, que deve ser atualizada junto.
+(e) Onde o dono lê a lista, desde o primeiro dia: um e-mail semanal ao dono, em inglês americano, com o total de inscritos confirmados por plano e por país, os novos da semana e a lista completa em anexo, num arquivo CSV (e-mail, data da confirmação, plano escolhido e país). Quando o painel de gestão (GE) existir, a mesma lista, com os totais e um botão para baixar o CSV, aparece nele. Nenhum número público.
+(f) Quando as vendas abrirem, um único e-mail a quem confirmou, com o aviso e o link; nenhum outro envio sem consentimento.
+(g) Custo de cada inscrição, confirmação e e-mail calculado antes, com teto automático, contado nos custos sem receita; desconhecido reprova.
+
+REGRA DOS 60%: todo cliente pagante, isoladamente e usando 100% dos direitos do plano no pior mês, e a empresa como um todo, mantêm margem real de lucro líquido mínima de 60% sobre tudo o que é cobrado, depois de todos os custos e de todos os impostos, inclusive os brasileiros e o ISS de 5%; pode ser maior, nunca menor. Leitura que dá mais imposto (docs/tax-uncertainty.md). Desconhecido reprova, nunca é zero. Todos os custos fixos da LLC pertencem ao Marktmorgen (FX275).
+
+Proibido: mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, o tax gate, o art. 9a ou a revisão comercial, prometer data de abertura, desconto ou vantagem que não exista, mostrar contagem pública ou escassez falsa, enviar e-mail sem confirmação, enviar a lista a qualquer pessoa além do dono, apagar conteúdo de criadores, apagar qualquer coisa da Hazelsong, criar contas, aceitar termos, contratar, pagar ou contatar terceiros. Somente testes sintéticos.
+
+Aplicar a regra VR: só chamar de pronto o que estiver incorporado, publicado, conferido em marktmorgen.com e usado de ponta a ponta; relatar o estado exato e o que não foi verificado.
+
+Diferença e ordem autorizada:448[LE1] fica na fila para execução paralela ao Bloco de abertura, conforme instrução direta de26/10 00h19, sem interromper AB(a) e sem antecipar TS/GE ou outros pedidos pós-abertura.240[CF3] já cobre campo inicial de cadastro pelo link de acesso existente, lembrete opcional e boletim separado com consentimento; preservar esse texto e aproveitar interface/consentimento comum, sem construir segundo cadastro/boletim. A diferença LE é a lista do próprio Marktmorgen antes das vendas, perguntas opcionais, confirmação/saída, consentimento textual datado, CSV/resumo semanal privado desde o primeiro dia e aviso único na abertura efetivamente autorizada. Reusar lib/waitlist.ts, suas regras/tokens e rotas de confirmação/saída com segregação e controles adequados, não copiar o armazenamento das lojas nem presumir que a rota de switches do studio atende inscrição pública. Nenhum acesso de criador/equipe à lista da plataforma. O resumo semanal não depende de GE existir; integração posterior usa a mesma fonte e CSV. Consentimento de novidades é separado e opcional; o pedido de confirmação não autoriza marketing para endereço não confirmado. Atualizar privacidade junto da implementação e testar apenas remetentes/dados sintéticos, sem cadastrar conta ou enviar a pessoa real.
+
+Inscrição confirmada indica interesse, não assinatura paga, receita recebida ou caixa reservado; não usar tamanho da lista para atestar margem, abrir LLC, ligar custo ou liberar vendas. Reusar275[FX1]/SV3(c)/modelo canônico para demonstrar ponto de equilíbrio e60%, com dados ausentes reprovando. Antes de operar, custear inscrição, confirmação, saída, consentimento, armazenamento, resumo/CSV, retenção, aviso de abertura e recusas/repetições, mensal/anual por plano/maior preço pago, com teto/reserva de exposição sem receita. Nenhum teto novo reduz direitos visíveis nem afrouxa impostos/gates.
+
+Pedidos repetidos: conferidos maince14c9d3bf223ffc09f8d02782a1715678df49a1,13PRs abertos (títulos/corpos e filas),604refs codex/* e57heads distintos recentes/relacionados selecionados por100commits/pais, nomes ePRs;57filas sem ocorrência da solicitação por etiqueta/data/título/conteúdo.240[CF3] lido e sobreposição aplicada somente por diferença. Estado exato: registro documental; LE448 não implementado, não usado ponta a ponta e sem entrega funcional adicional.
+
 ## OR — Posição dos pendentes antigos de 19/10/2026 (22/10/2026)
 
 Decisão do dono: 22/10/2026, 14h45 de Fortaleza. Registro documental preparado em 22/10/2026 às 15:18:31 de Fortaleza, após concluir a entrega 165. Esta seção prevalece sobre posições antigas incompatíveis; preserva o histórico e não cria itens nem números.
