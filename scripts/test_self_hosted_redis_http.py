@@ -13,6 +13,7 @@ import os
 from pathlib import Path
 import re
 import secrets
+import subprocess
 import threading
 import urllib.error
 import urllib.request
@@ -101,6 +102,8 @@ def main():
     script = found.group(1)
     prefix = "marktmorgen:integration:sv4-http:" + uuid.uuid4().hex + ":"
     keys = [prefix + name for name in ("values", "wrongtype", "counter", "cash")]
+    keys.extend(prefix + "node-" + name for name in
+                ("value", "hash", "counter", "ack", "cutoff"))
     direct = Redis()
     server = ThreadingHTTPServer(("127.0.0.1", 0), Fixture)
     server.daemon_threads = True
@@ -134,7 +137,22 @@ def main():
         rejected([["INCR", keys[2]], ["FLUSHALL"]], 400)
         rejected([["INCR", keys[2]], ["SET", keys[0], True]], 400)
         rejected([["INCR", keys[2]]] * (MAX_COMMANDS + 1), 400)
-        rejected([["SET", keys[0], "x" * MAX_BODY]], 413)
+        # Test rejection from framing BEFORE sending an oversized body.
+        # Uploading the whole body races the server's deliberate early close,
+        # making urllib raise BrokenPipe before it reads the valid 413 reply.
+        oversized = http.client.HTTPConnection(
+            "127.0.0.1", server.server_address[1], timeout=15)
+        try:
+            oversized.putrequest("POST", "/pipeline")
+            oversized.putheader("Authorization", "Bearer " + TOKEN)
+            oversized.putheader("Content-Type", "application/json")
+            oversized.putheader("Content-Length", str(MAX_BODY + 1))
+            oversized.endheaders()
+            response = oversized.getresponse()
+            assert response.status == 413, response.status
+            assert json.load(response) == {"error": "Fixture request too large"}
+        finally:
+            oversized.close()
         assert direct.command("GET", keys[2]) is None
         print("PASS: authentication, route and admission failures do not mutate Redis")
 
@@ -185,6 +203,15 @@ def main():
         assert int(direct.command("GET", keys[2])) == before + 1
         assert direct.command("HGET", keys[3], "reserved") == "100"
         print("PASS: lost acknowledgement does not reconnect, replay or release funding")
+        # Only the CI job launches Node; no provider credentials are inherited.
+        subprocess.run(
+            ["node", str(Path(__file__).with_name("test_self_hosted_redis_client.mjs"))],
+            env={"PATH": os.environ.get("PATH", ""),
+                 "MARKTMORGEN_REDIS_INTEGRATION": "1",
+                 "MARKTMORGEN_SYNTHETIC_REDIS_URL": url,
+                 "MARKTMORGEN_SYNTHETIC_REDIS_TOKEN": TOKEN,
+                 "MARKTMORGEN_SYNTHETIC_REDIS_PREFIX": prefix},
+            check=True, timeout=90)
         print("SV4 prerequisite only: no container cutover, backup, capacity or production approval")
     finally:
         server.shutdown()
