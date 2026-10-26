@@ -242,22 +242,24 @@ export async function pausePlan(store: Store, months: PauseMonths, nowSeconds = 
     until: addPeriods(from, "month", months),
     told: 0,
   };
-  // Written down before Stripe is told, so a store whose plan is set to stop
-  // is never left without the record that starts it again. If Stripe then
-  // refuses, the record is taken back.
-  await redisPipeline([
+  // All three durable scheduling writes must be acknowledged before any
+  // provider mutation. A missing/partial reply may hide committed writes:
+  // retain them and refuse rather than assuming an unused year or no pause.
+  const written = await redisPipeline([
     ["SET", recordKey(ref), JSON.stringify(record)],
     ["ZADD", DUE, record.until, ref],
     ["SET", lastKey(ref), String(nowSeconds), "EX", PAUSE_EVERY_DAYS * DAY],
   ]);
-  try {
-    const state = await setCancelAtPeriodEnd(id, true);
-    if (state.state !== "active") throw new Error(`the subscription is ${state.state}`);
-    if (!state.cancelsAtEnd) throw new Error("the subscription did not acknowledge its scheduled stop");
-  } catch (error) {
-    await forget(ref, true);
-    throw error;
+  if (!Array.isArray(written) || written.length !== 3 || written[0] !== "OK"
+    || (written[1] !== 0 && written[1] !== 1) || written[2] !== "OK") {
+    return { kind: "refused", reason: "standing" };
   }
+  // A provider error or lost acknowledgement cannot prove that its scheduled
+  // stop was not applied. Keep the exact pause, due member and annual evidence
+  // until an explicit undo/reconciliation; never roll unknown evidence back.
+  const state = await setCancelAtPeriodEnd(id, true);
+  if (state.state !== "active") throw new Error(`the subscription is ${state.state}`);
+  if (!state.cancelsAtEnd) throw new Error("the subscription did not acknowledge its scheduled stop");
   return { kind: "paused", record };
 }
 
