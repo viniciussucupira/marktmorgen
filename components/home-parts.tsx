@@ -31,7 +31,7 @@ import {
   TIERS,
 } from "@/lib/plan";
 import { feeWords } from "@/lib/fee-words";
-import { pricingPerksMarkup } from "@/lib/pricing-perks-markup";
+import { pricingPerksMarkup, pricingTermsMarkup } from "@/lib/pricing-perks-markup";
 
 /*
  * Reveals every element with .reveal as it scrolls into view, once.
@@ -601,14 +601,10 @@ function PlanTerms({ tier, yearly }: { tier: Tier; yearly: boolean }) {
     ["Fees", `${shareShown(tier) / 100}% of each sale. Stripe charges its own processing fee separately.`],
   ];
   return (
-    <dl className="mt-6 divide-y divide-line border-t border-line text-[0.8125rem] leading-relaxed">
-      {rows.map(([label, value]) => (
-        <div key={label} className="grid gap-x-4 py-2.5 sm:grid-cols-[6.5rem_1fr]">
-          <dt className="font-semibold text-ink">{label}</dt>
-          <dd className="text-ink-mute">{value}</dd>
-        </div>
-      ))}
-    </dl>
+    // These rows have no events. Keep the full semantic list in the HTML
+    // without hydrating each static term during the first native disclosure.
+    <dl className="mt-6 divide-y divide-line border-t border-line text-[0.8125rem] leading-relaxed"
+      dangerouslySetInnerHTML={{ __html: pricingTermsMarkup(rows) }} />
   );
 }
 

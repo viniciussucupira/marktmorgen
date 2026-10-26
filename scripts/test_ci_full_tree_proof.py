@@ -1,6 +1,8 @@
 import copy
 import unittest
-from ci_full_tree_proof import WORKFLOWS, REPO, prove_full_tree
+import os
+from unittest.mock import patch
+from ci_full_tree_proof import WORKFLOWS, REPO, prove_full_tree, can_reuse_main
 A, T, M = "a"*40, "b"*40, "c"*40
 
 def fixture():
@@ -55,6 +57,11 @@ class FullTreeProofTests(unittest.TestCase):
         latest=copy.deepcopy(listing["workflow_runs"][0]);latest.update(id=999,status="in_progress",conclusion=None)
         listing["workflow_runs"].append(latest);listing["total_count"]+=1
         self.assertFalse(prove_full_tree(A,T,data.__getitem__))
+
+    def test_daily_and_manual_cannot_reuse_old_proof(self):
+        for event in ("schedule", "workflow_dispatch", "pull_request", ""):
+            with patch.dict(os.environ, {"CI_EVENT":event, "CI_REF":"refs/heads/main", "CI_REPOSITORY":REPO}):
+                self.assertFalse(can_reuse_main())
 
 if __name__=="__main__":
     unittest.main()
