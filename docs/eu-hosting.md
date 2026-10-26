@@ -54,3 +54,47 @@ Estes são resultados para a decisão futura, não pedido de ação agora nem bl
 5. Seguem pendentes os demais serviços de317, a comparaçãoSV5 dos fornecedores de servidor, o calendárioSV3, o IaC/comando/ensaioSV4 e seus tempos/custos, cargaSV1(d), margens por cliente/plano/período/pagamento, roteiro exato dos painéis e corte/rollback. Não há fornecedor escolhido ou ativação no mesmo dia demonstrada.
 
 O calendário de caixa não exclui INSS, Califórnia ou outro custo possível dos tetos de margem. A escolha só pode ser submetida com custo completo mensal/anual, maior preço aplicável, capacidade, tetos e reserva, mantendo100% dos fixos da LLC no Marktmorgen. PLANS_ON_SALE=false, EU_HOSTING_CONFIRMED=false, taxgate, art.9a, revisão comercial, preços, direitos, idiomas e identificadores permanecem intactos. Não é conclusão deEU1/SV nem entrega funcional.
+
+
+## SV5 — comparação inicial dos seis fornecedores
+
+Consulta em25/10/2026,22h37Fortaleza. Resultado parcial verificável, sem seleção nem aprovação financeira. Preços abaixo são componentes publicados, não custos completos nem capacidade medida. A comparação final depende de armazenamento de arquivos, backup independente, IPs, tráfego excedente/replicação, impostos, câmbio mais oneroso, reserva e carga de100%dos direitos. Desconhecido reprova. Nenhum custo do modelo foi reduzido.
+
+| Fornecedor | Computação observada | Disponibilidade contratual observada | Pendência que impede escolha |
+| --- | --- | --- | --- |
+| Hetzner | CX33:4vCPU,8GB,80GBNVMe;€8,49/mês ou€0,0136/h,semIPv4/VAT;2instâncias:€16,98/mês,€203,76/12meses sócompute |99,9%mensal porinstância,crédito conforme termos | Catálogo mostra indisponível; disponibilidade real,backup independente,custo completo,cadastro e desempenho não confirmados |
+| Netcup | VPS1000G12:4vCore,8GB,256GBNVMe;€0,017/h ou mensal starting€10,37incl19%VAT; mensal regular12meses difere da cobrança horária antecipada | VPS99,6%anual;Root99,9%anual | Não igualar preço starting ao teto horário; API de gestão/domínios não comprova compra automática deVPS;backup,cadastro,custo completo pendentes |
+| DigitalOcean | BasicRegular4vCPU/8GiB/160GiBSSD/5000GiBtransfer:US$48/mês ou0,07143/h;2combackupdiário30%:US$124,80/mês,US$1497,60/12meses sócompute+backup | CPU Droplet99,99%mensal porinstância,comexclusões ecréditosfuturos | Custos restantes,região debackup,cadastro e desempenho pendentes;v5 não consta disponível emAMS3/FRA1 |
+| Scaleway | STANDARD2-A2C-8G:2vCPU/8GB/400Mbps,€0,0586/h;€42,77/mês é aproximação730h;31dias744h=€43,5984 sócompute,semstorage/IPv4/impostos | PáginaSLA atual:STANDARD2/3 99,5%mensal;BASIC2/3 99%;DEV1/PLAY2/PRO2 eoutros semSLO | MarketingPRO299,99% diverge da tabelaSLA; resolver termos vigentes porSKU antes de afirmar qualidade; custo completo e carga pendentes |
+| OVHcloud | Páginas anunciam gamaVPS2027 com preços starting e termos variáveis; preço completo atual não confirmado | PublicidadeVPS99,9%,termos completos a conferir | Backup diárioaté7dias,3réplicas no MESMOdatacenter excluindo discos extras; não substitui backup independente;SKU/contrato/API/horário/custo total pendentes |
+| Contabo | Catálogos oficiais deCloudVPS eCore/Performance exibem gerações distintas; não consolidar preço entre elas | Texto de termos indexado efetivo fev2025:95%anual de conectividade física comexclusões; versão vigente a confirmar | Abertura direta dos termos retornou403; não contornado.1mês mínimo em documentaçãoCloudVPS não confirma ensaiohorário;região/custo debackup e qualidade pendentes |
+
+Fontes de preços e modalidades:
+- [Hetzner reajuste15jun2026](https://docs.hetzner.com/general/infrastructure-and-availability/price-adjustment/) (atualizado8jul2026) e [catálogoCX33](https://www.hetzner.com/cloud/cost-optimized/). A indisponibilidade exibida impede prometer compra imediata.
+- [NetcupVPS](https://www.netcup.com/en/server/vps) e [API](https://helpcenter.netcup.com/en/wiki/general/our-api). A oferta especialOpenClaw€11,94mensais e0setup não foi adotada como teto regular. Datas editoriais dessas páginas não estabelecidas; consulta acima.
+- [DigitalOcean preços](https://www.digitalocean.com/pricing/droplets), [disponibilidade verificada25ago2026](https://docs.digitalocean.com/products/droplets/details/availability/) e [backup](https://docs.digitalocean.com/products/backups/details/pricing/). CPUcompartilhada não equivale aCPUdedicada:CPUoptimized4vCPU/8GiB custaUS$84/mês;GeneralPurpose2vCPU/8GiB custaUS$63/mês,comdiscos distintos.
+- [Scaleway preços](https://www.scaleway.com/en/pricing/virtual-instances/) e [reajustes1jun2026](https://www.scaleway.com/en/blog/a-transparent-update-on-scaleway-pricing/). Não converter aproximação mensal em teto.
+- [OVHcloudVPS](https://www.ovhcloud.com/en-ie/vps/). Nome2027 não prova por si que oferta é futura; condições de contratação atuais permanecem desconhecidas.
+- [ContaboCloudVPS,atualizadojun2026](https://docs.contabo.com/docs/products/cloud-vps/), [famíliasVPS](https://docs.contabo.com/docs/servers-hosting/vps/) e [AutoBackup](https://docs.contabo.com/docs/servers-hosting/vps-auto-backup/). Backup pagooff-server retém até10cópias/10dias; não prova datacenter independente ou localizaçãoUE específica. Resultadoscontabo.se não usados,pois afiliação oficial não estabelecida.
+
+Fontes contratuais: [HetznerSLA16mar2026](https://docs.hetzner.com/general/company-and-policy/slas-cloud/), [NetcupAmsterdam](https://www.netcup.com/en/ueber-netcup/server-standorte/amsterdam), [DigitalOceanCPU-SLA3jun2025](https://www.digitalocean.com/sla/cpu-droplets), [ScalewaySLA](https://www.scaleway.com/en/virtual-instances/sla/) e [Contabo termos](https://contabo.com/en/legal/terms-and-conditions/). Janela anual não é diretamente equivalente à mensal;SLA não certifica disponibilidade real nem a aplicação.
+
+### Backup, caixa e automação: diferenças que afetamSV3/SV4
+
+[Hetznerbackup,atualizado3set2026](https://docs.hetzner.com/cloud/servers/backups-snapshots/overview/) não inclui volumes anexados; são7slotsdiários. A [FAQ de cobrança](https://docs.hetzner.com/cloud/billing/faq/) define backup20%do servidor eIPs cobrados separadamente inclusive desassociados. [IPv4](https://docs.hetzner.com/general/infrastructure-and-availability/ipv4-pricing/),atualizado13abr2023,publica€0,50/mês porPrimaryIPv4 e€3porFloatingIPv4,semVAT. Nenhuma restauração destrutiva foi feita.
+
+[PagamentoHetzner,atualizado28jul2026](https://docs.hetzner.com/general/billing-and-account-management/billing-at-hetzner/payment-overview/) depende do país:cartão/SEPAEUR automáticos;transferência/PayPal manuais. Cobrança retroativa não adia o início do custo do recurso. Cadastro pode exigir verificação/adiantamento; nenhuma conta foi criada. Elegibilidade específica pessoa física brasileira/LLC americana permanece não comprovada.
+
+[DigitalOceanpagamentos](https://docs.digitalocean.com/platform/billing/manage-payment-methods/) pode exigir autorizaçãoPayPalUS$5; não executada. [VPC](https://docs.digitalocean.com/products/networking/vpc/details/pricing/) entre datacenters custaUS$0,01/GiB;franquiaDroplet não cobreNAT. Não zerar replicação/backup/tráfego da reserva.
+
+Referências públicas deAPI localizadas: [HetznerCloud](https://docs.hetzner.cloud/reference/cloud), [DigitalOceanDroplets](https://docs.digitalocean.com/products/droplets/reference/api/droplets/) e [Scalewaycriação](https://www.scaleway.com/en/docs/instances/how-to/create-an-instance/). Parâmetros,limites,idempotência e provisão completa sem passos adicionais continuam por verificar; nenhuma chamada autenticada ou criação real foi feita. Nenhum script deSV4 é declarado pronto.
+
+### Histórico público: evidência parcial, sem ranking
+
+[Hetzner14out2026](https://status.hetzner.com/incident/23397b40-e121-48d7-9c4e-0a6b4dcc4307) registra ataque e indisponibilidade parcial deAPIs/Console12:58–14:25UTC.87min é duração do evento decontrole, não queda universal de todas as instâncias. Importa ao provisionamento e recuperação. [FalhaNBG1 em1out](https://status.hetzner.com/incident/64a888c8-1e30-4a0f-8938-ce79b89dee83) requer escopo/duração completos. [DigitalOceanstatus](https://status.digitalocean.com/) operacional agora não prova histórico sem incidentes; incidenteAppPlatform de implantação não equivale a indisponibilidadeDroplet.
+
+Ainda falta janela comparável porproduto/região para os seisfornecedores,contagem completa,causas,duração e impacto efetivo. Ausência de resultados de busca nunca é disponibilidade100%. Não se escolheu fornecedor porpreço,SLApublicitário oucontagembruta.
+
+### Estado exato
+
+SV5(a) em pesquisa;SV5(b)–(d),SV1(b)–(e),SV3calendário eSV4infraestrutura/ensaio completo continuam pendentes. Não há carga sintética medida,teto porloja,reserva/custo total porplano,margem60%ou base mínima certificada. Decisão final de fornecedor continua emDepende do dono quando comparação estiver completa; nenhuma ação do dono é necessária agora. Nenhuma conta,contrato,pagamento,DNS,migração ou gate foi alterado.
