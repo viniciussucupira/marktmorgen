@@ -684,7 +684,12 @@ async function main() {
     pauseRedis.pipeline=async commands=>{
       if(commands.length===1&&commands[0][0]==="ZRANGEBYSCORE"&&commands[0][1]==="nl:pause:due")return [refs];
       if(commands.length===1&&commands[0][0]==="GET"&&commands[0][1]===`nl:pause:${refs[0]}`)throw new Error("Synthetic unavailable pause record");
-      if(commands.length===1&&commands[0][0]==="GET"&&commands[0][1]===`nl:store:owner:${refs[1]}`)followingOwnerReads++;
+      if(commands.length===1&&commands[0][0]==="GET"&&String(commands[0][1]).startsWith("nl:store:owner:")){
+        const reply=await original(commands);
+        const owner=typeof reply[0]==="string"?JSON.parse(reply[0]):null;
+        if(owner?.email===owners[1].email&&owner?.sid===owners[1].sid)followingOwnerReads++;
+        return reply;
+      }
       return original(commands);
     };
     try{
