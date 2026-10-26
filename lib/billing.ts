@@ -1,6 +1,6 @@
 import {randomUUID} from 'node:crypto';
-import {CONTRACT_FUNDING_RULES} from '@/lib/contract-funding-rules';
-import {claimRestartIntent,reserveRestartContractFunding,activateCheckoutContract,activateSwitchContract,type ContractGrant} from '@/lib/contract-funding';
+import {canonicalFinancialSnapshot,CONTRACT_FUNDING_RULES} from '@/lib/contract-funding-rules';
+import {claimRestartIntent,reserveRestartContractFunding,activateCheckoutContract,activateSwitchContract,type ContractGrant,type OwnedRestartIntent} from '@/lib/contract-funding';
 /**
  * The one way Marktmorgen makes money.
  *
@@ -707,8 +707,12 @@ export async function restartPlan(input: {
     if (paused.customer !== input.customerId || paused.paymentMethod !== input.paymentMethod || paused.tier !== input.tier || intent.handle !== input.store.handle || intent.source.binding.split("|")[1] !== source.sourceSubscriptionId) {
       throw new Error("The funded restart source does not match its owned intent");
     }
-    // Intent ownership is not provider stop/payment/activation proof. Until
-    // those integrated phases exist, no funded provider operation is permitted.
+    // Only the first acknowledged owner may read its exact original subscription.
+    // No search/list, cancellation mutation or retry can infer that it stopped.
+    const original = await onPlatform("GET", `/subscriptions/${encodeURIComponent(source.sourceSubscriptionId)}`);
+    observeStoppedRestartSource(intent, original);
+    // A stopped original is not submission/payment/activation permission.
+    // Coverage stays closed until the entire funded lifecycle and costs pass.
     throw new Error("The funded restart requires reconciliation and activation coverage");
   }
   const priceId = await ensurePrice(input.tier, "month");
@@ -725,6 +729,61 @@ export async function restartPlan(input: {
   });
   const subscription = await onPlatform("POST", "/subscriptions", body, { idempotencyKey: input.idempotencyKey });
   return observeRestartedPlan({ customerId: input.customerId, tier: input.tier, priceId }, subscription);
+}
+
+
+/**
+ * Validate the exact original fetched by the owned funded restart branch.
+ * A canceled-at request, paused collection, 404, empty search or inactive local
+ * store is not proof that this paid source ended. No IO or submission permission.
+ */
+export function observeStoppedRestartSource(
+  intent: OwnedRestartIntent, subscription: Record<string, unknown>,
+  observedAt = Math.floor(Date.now() / 1000),
+): Readonly<{ subscriptionId: string; endedAtSeconds: number; observedAtSeconds: number }> {
+  const encoded = canonicalFinancialSnapshot({ intent, subscription, observedAt });
+  if (!encoded) throw new Error("The funded restart source observation is unknown");
+  ({ intent, subscription, observedAt } = JSON.parse(encoded));
+  const [grantId, subscriptionId, key, createdRaw, phase, startRaw, endRaw] = intent.source.binding.split("|");
+  const created = Number(createdRaw), start = Number(startRaw), end = Number(endRaw);
+  const pause = JSON.parse(intent.paused) as { customer?: unknown; subscription?: unknown; from?: unknown; until?: unknown; funding?: { version?: unknown; grantId?: unknown } };
+  if (intent.source.binding.split("|").length !== 7 || !/^ctr_[A-Za-z0-9_-]{1,80}$/.test(grantId) ||
+      !SUBSCRIPTION_PATTERN.test(subscriptionId) || subscriptionId !== intent.grant.sourceSubscriptionId ||
+      key !== intent.grant.key || phase !== "paid" ||
+      ![created,start,end,observedAt,intent.claimedAtSeconds,intent.grant.submitUntilSeconds].every(n => Number.isSafeInteger(n) && n > 0) ||
+      start < created || end <= start || end > intent.claimedAtSeconds ||
+      observedAt < intent.claimedAtSeconds || observedAt > intent.grant.submitUntilSeconds ||
+      pause.subscription !== subscriptionId || pause.from !== end ||
+      typeof pause.until !== "number" || pause.until <= end || pause.until > observedAt ||
+      pause.funding?.version !== 1 || pause.funding.grantId !== grantId ||
+      typeof pause.customer !== "string" || !CUSTOMER_PATTERN.test(pause.customer)) {
+    throw new Error("The funded restart source does not match its owned paid period");
+  }
+  const items = subscription.items as { data?: { quantity?: unknown; price?: Record<string, unknown> }[]; has_more?: unknown } | undefined;
+  const price = items?.data?.[0]?.price;
+  const recurring = price?.recurring as { interval?: unknown; interval_count?: unknown } | undefined;
+  const meta = subscription.metadata as Record<string, unknown> | undefined;
+  const pending = meta && (Object.hasOwn(meta,"funding_pending_grant") || Object.hasOwn(meta,"funding_pending_review"));
+  const metadataGrant = pending ? meta?.funding_pending_grant : meta?.funding_grant;
+  const metadataReview = pending ? meta?.funding_pending_review : meta?.funding_review;
+  const tier = key.split("_")[0] as Tier;
+  if (!["creator_month","pro_month","scale_month"].includes(key) ||
+      subscription.id !== subscriptionId || subscription.status !== "canceled" ||
+      customerOf(subscription).id !== pause.customer || subscription.created !== created ||
+      subscription.ended_at !== end || periodStart(subscription) !== start || periodEnd(subscription,false) !== end ||
+      !Number.isSafeInteger(subscription.canceled_at) || (subscription.canceled_at as number) < created || (subscription.canceled_at as number) > end ||
+      subscription.cancel_at_period_end !== true || subscription.pending_update != null ||
+      metadataGrant !== grantId || metadataReview !== intent.grant.reviewId ||
+      items?.data?.length !== 1 || items.has_more !== false || items.data[0].quantity !== 1 ||
+      typeof price?.id !== "string" || !/^price_[A-Za-z0-9]{6,100}$/.test(price.id) ||
+      price.currency !== "usd" || price.unit_amount !== PUBLISHED_PLAN_PRICES[tier].month ||
+      recurring?.interval !== "month" || recurring.interval_count !== 1 ||
+      planOf(subscription).tier !== tier || planOf(subscription).cycle !== "month") {
+    throw new Error("The original funded subscription has not been observed stopped exactly");
+  }
+  // Return detached scalars only. Original source/cash remain in the permanent
+  // intent; this observation cannot activate a term or release that evidence.
+  return Object.freeze({ subscriptionId, endedAtSeconds:end, observedAtSeconds:observedAt });
 }
 
 /**

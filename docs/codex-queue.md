@@ -9902,3 +9902,40 @@ recuperação somente leitura/ativação/ACKstore/CAScleanup-undo e rollover int
 Nenhuma conta, mensagem, pagamento real, novo serviço ou operação paga.
 Tetos e seis contratos preservados; custos reais/retenção/LLC/BR-US+ISS5%
 desconhecidos continuam reprovados, não zero; nenhuma margem certificada.
+
+
+
+### Owned source stop observation — integrated, still disabled (26 October2026)
+
+After the acknowledged immutable claim, the funded billing branch now reads only
+GET /subscriptions/{exact owned source ID}, once, before any price creation or POST.
+The production observer requires status canceled, ended_at equal to the owned
+paid period end, original created/customer/subscription and exact paid period,
+one complete monthly published-price unit, and the same funding grant/review.
+Pending metadata takes precedence; a partial marker never falls back to an older
+grant. A cancellation request timestamp is not the actual ending timestamp.
+No empty search, 404, local inactive snapshot, paused collection or other inactive
+status can prove the paid source stopped. Errors retain permanent intent/cash.
+
+The response is copied through the canonical financial snapshot before reading
+fields (accessors rejected without execution), with a current ownership deadline
+and monotonic observation. Proof returns detached frozen scalars; it is not a
+submission token, paid result, new activation, cleanup or release authorization.
+The actual branch still terminates before ensurePrice or provider mutation.
+Current coveragefalse/null policies mean even this new GET cannot execute live.
+
+Synthetic existing restart-observation tests cover exact stop, malformed/active/
+unknown sources, period/customer/price/grant substitutions, pending precedence,
+deadline/clock rollback and getters. Existing real runBreaks→billing closed-flow
+tests retain zero provider/ledger/notices. New-head full CI is mandatory.
+Source consulted26October2026: https://docs.stripe.com/api/subscriptions/object
+(canceled_at may be the cancellation request, ended_at identifies actual ending).
+
+Per-six-contract monthly/yearly incremental enabled provider GETs:0/0, because
+coverage stays false. Prospective protocol adds at most one exact GET per owned
+claim; its provider/latency/retention/LLC/BR-US tax cost remains unknown/rejected
+under every contract and the global heavier fiscal reading, never priced as zero.
+No new job/matrix/service/storage/paid operation, price, limit or rights change.
+AB(a) still requires exact new price, single durable submission/result ID,
+read-only uncertain recovery, funded activation/ACKstore/CASgeneration cleanup/
+undo and rollover, plus full costing. Counter254 and PLANS_ON_SALE=false remain.
