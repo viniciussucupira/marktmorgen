@@ -9852,3 +9852,8 @@ Docs/filapr1074incorporados16:44:49Fortaleza(19:44:49UTC),merge
 a9a9b8a5c969cf60526183c33f6c1b8a2effb8fb,árvore840bb728ac282c242b981e6fc97a3dcb78118f23,
 19checksdocs(8success10+7/fullfalse+11skipslegítimos)+Vercel;semnovaentregafuncional.
 Preços/limites/PLANS_ON_SALE/gates/AP449–455/AN456/361–362 econtador254preservados.
+
+PR#1075 ensaios ampliados antes da aprovação: origens checkout/switch/restart
+exercitam também receipts de10campos no EVAL real e no parser de produção,
+preservando cada campo/caixa anterior. Semmudança de produção ou tetos;
+novohead exige novamente suítecompleta,primeiroheadnãoéaprovação.

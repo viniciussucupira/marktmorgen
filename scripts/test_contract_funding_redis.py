@@ -565,8 +565,12 @@ def main():
 
         # Actual application intent ownership, separate from reservation. No
         # provider permission, activation or production coverage is inferred.
-        def intent_ready(key, ref):
-            seed_restart(key)
+        def intent_ready(key, ref, source_action='checkout'):
+            assert source_action in ('checkout', 'switch', 'restart')
+            _, receipt = seed_restart(key)
+            if source_action != 'checkout':
+                receipt = receipt.replace('|checkout|', '|' + source_action + '|') + '|ctr_upstream_source'
+                redis.command('HSET', key, 'grant:ctr_restart_source', receipt)
             assert take_restart(redis, key) == 1
             pause = json.dumps(dict(subscription='sub_RestartSource01',
                                     customer='cus_IntentCustomer01', paymentMethod='pm_IntentCard001',
@@ -716,6 +720,24 @@ def main():
             assert redis.command('GET', 'nl:pause:last:' + ref) == last_before
             assert redis.command('ZSCORE', 'nl:pause:due', ref) == due_before
         print('PASS:22 unknown, mismatched or over-limit restart intent observations retain exact pause/source/annual/cash evidence')
+
+        for source_action in ('switch', 'restart'):
+            ref = intent_refs[1]
+            pause = intent_ready(keys[43], ref, source_action)
+            before = snapshot(keys[43])
+            ack = intent_claim(redis, keys[43], ref, pause)
+            assert isinstance(ack, list) and len(ack) == 2 and ack[0] == 1
+            owned = json.loads(ack[1])
+            prior = dict(before)
+            assert owned['sourceReceipt'] == prior['grant:ctr_restart_source']
+            assert owned['sourceReceipt'].split('|')[3] == source_action
+            assert len(owned['sourceReceipt'].split('|')) == 10
+            assert owned['sourceBinding'] == prior['active:restart-store']
+            assert owned['reservedCents'] == 90 and owned['carriedCents'] == 0
+            assert ack[1] == redis.command('HGET', keys[43], 'restart-intent:ctr_restart_new')
+            for field, value in before:
+                assert redis.command('HGET', keys[43], field) == value
+        print('PASS:owned intent retains exact checkout, switch and prior-restart source receipts without replacing any principal')
 
     finally:
         for ref in intent_refs:

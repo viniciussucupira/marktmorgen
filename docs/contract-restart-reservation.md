@@ -234,7 +234,8 @@ without a provider call, notice or lost pause/due/year/content evidence.
 Remote tests must verify64 contenders returning one exact stored snapshot;
 unchanged source/cash/receipt fields; ignored ACK, duplicate/new nonce/deadline
 refusal;22 negative cases including caller-supplied fields and enriched overflow;
-INFO command accounting; exact decoder mismatches/immutable copies; and all
+INFO command accounting; exact checkout/switch/prior-restart source receipts,
+decoder mismatches/immutable copies; and all
 existing application/browser regressions. Values below remain pending until
 the entire new head passes. No local process or synthetic service was run.
 
