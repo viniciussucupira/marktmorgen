@@ -78,7 +78,7 @@ const VERIFIED = new Set([
   "photo-1780585328302-747a6eee7694", "photo-1535473895227-bdecb20fb157",
 ]);
 
-const FILES = ["app/page.tsx", "components/home-parts.tsx", "components/home-static.tsx", "components/buyer-path.tsx"];
+const FILES = ["app/page.tsx", "components/home-parts.tsx", "components/home-interactive.tsx", "components/home-static.tsx", "components/buyer-path.tsx"];
 
 /*
  * The runner compiles each test into a temporary directory, so a path
