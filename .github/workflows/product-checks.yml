@@ -1,6 +1,9 @@
 name: Product checks
 run-name: PV8 source ${{ github.sha }}
 on:
+  schedule:
+    - cron: '37 5 * * *'
+  workflow_dispatch:
   pull_request:
   push:
     branches: [main]
@@ -8,7 +11,7 @@ permissions:
   contents: read
   actions: read
 concurrency:
-  group: product-checks-${{ github.ref }}
+  group: product-checks-${{ github.ref }}-${{ github.event_name }}
   cancel-in-progress: true
 jobs:
   documentation-scope:
@@ -38,7 +41,7 @@ jobs:
         run: python3 scripts/ci_documentation_scope.py
   verify:
     needs: documentation-scope
-    if: always() && needs.documentation-scope.outputs.full != 'false'
+    if: ${{ !cancelled() && needs.documentation-scope.outputs.full != 'false' }}
     runs-on: ubuntu-latest
     timeout-minutes: 35
     env:
@@ -70,7 +73,7 @@ jobs:
 
   form-opportunity-redis:
     needs: documentation-scope
-    if: always() && needs.documentation-scope.outputs.full != 'false'
+    if: ${{ !cancelled() && needs.documentation-scope.outputs.full != 'false' }}
     runs-on: ubuntu-latest
     timeout-minutes: 12
     services:
@@ -180,7 +183,7 @@ jobs:
 
   mobile-render:
     needs: documentation-scope
-    if: always() && needs.documentation-scope.outputs.full != 'false'
+    if: ${{ !cancelled() && needs.documentation-scope.outputs.full != 'false' }}
     name: Mobile render (${{ matrix.label }})
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -217,7 +220,7 @@ jobs:
 
   cross-browser:
     needs: documentation-scope
-    if: always() && needs.documentation-scope.outputs.full != 'false'
+    if: ${{ !cancelled() && needs.documentation-scope.outputs.full != 'false' }}
     name: Cross-browser (${{ matrix.browser }})
     runs-on: ubuntu-latest
     container:
