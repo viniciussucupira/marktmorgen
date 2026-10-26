@@ -370,3 +370,56 @@ tributos e AB(a) seguem reprovados/desabilitados. Fontes primárias consultadas
 e terminateVoiceOverProcess.ts no mesmo diretório (comportamento de término);
 a causa desta execução vem do log do pacote fixado0.36.4, não versão main presumida.
 Contador254, preços/limites/PLANS_ON_SALE preservados.
+
+
+
+### AB(a)/SV4 — incorporações e publicações verificadas, PR1077 e1078
+
+PR1077 head6b7bc93d3707674cd7a6b33777aca1b0a636c9d7 aprovado31/31checks+Vercel,
+8scope10+7/fulltrue. Merge74ce5faffe35a4c87bcfc7beabc06f271deb655d em26/10/2026
+18:43:53Fortaleza(21:43:53UTC),árvore7701bcbc080c76d4a7b262f0dc2a2b47d43bf548
+e pais[8302551,6b7bc93] conferidos. Falha inicial do VoiceOver preservada acima;
+nenhum rerun isolado. Verify121853926486:477checks21:21:50.3933934UTC;
+4novos casos origem21:22:18.747UTC;Everything21:23:24.6151385UTC,
+agreements21:25:32.4700548UTC,store-copy21:40:51.6624796UTC.
+Redis12185392619664/22casos21:17:59.562UTC. Voz real VoiceOver121853553323
+21:25:12.8967880UTC e NVDA12185355339721:20:31.0365272UTC:2estados,0writes/foreign.
+Preflight VoiceOver observou0processos antigos nesta execução; testes sintéticos
+exercitam TERM/KILL e recusas, não alegar que o caso preso real foi reproduzido.
+Mobilehome112/96/88ms,pricing48/56/32,sales56/40/48,LCP644–948ms,CLS0;
+limites originais preservados.
+Produção dpl_9eESTo7WPf5SFKcuQUqqNxncPHEL READY18:45:21.666Fortaleza
+(21:45:21.666UTC),SHA74ce5fa e marktmorgen.com exatos;
+5rotas /,/platform,/pricing,/mission,/library200comIDexato.
+Error/fatal21:45:21.666→21:46:51.523UTC semregistros, somente essa janela.
+Origem parada integrada ainda termina antes de preço/POST: cobertura e políticas
+fechadas, AB(a) inteiro não concluído. Não autoriza cobrança ou limpeza.
+
+PR1078 head40e80aa5c2de033d49c651f9d4a5a15e4d88b5a8 aprovado31/31checks+Vercel,
+8scope10+7/fulltrue. Merge375052e8885109a95984f72f21ef1b856b3dcebb em26/10/2026
+18:53:59Fortaleza(21:53:59UTC),árvoredd034e9cea51903fcf8241f3d32cfe0c9e2ba305
+e pais[74ce5fa,40e80aa]conferidos. TestmergeGitHub6b3bedcached tinha pais830/40;
+prova RESTcompare74...40 confirmou mergebase6b7 e maintree7701=basetree6b7,
+somente2arquivos SV4 diferentes; resultado determinístico dd034, depois árvore/
+pais reais conferidos. Não apresentar testmergecached como pais atualizados.
+Verify121854772935:477checks21:23:12.6701974UTC,Everything21:24:32.4025789UTC,
+agreements21:26:23.2154670UTC,store-copy21:39:13.1441772UTC.
+Mobilehome112/64/56ms,pricing40/64/40,sales40/40/40,LCP640–1072,CLS0;
+dois leitores reais aprovados. Redis12185477297921:21:32.9411788UTC:
+ensaio24.891503s; destino ocupado recusa0.183491s,checksum0.176295s,
+caixa alterado0.203393s, falha/retorno20.723790s,limpeza0.282140s.
+Seis dados binários/caixa100/prazos preservados; sem sobrescrever destino ocupado,
+sem hostexterno/pull/dadosreais. Tempos específicos deste head, não reutilizados.
+Produção dpl_CFp57nnfPQLRbunEzTcUmESp38Zr READY18:54:51.319Fortaleza
+(21:54:51.319UTC),SHA375052e e marktmorgen.com exatos;
+5rotas200comIDexato. Error/fatal21:54:51.319→21:55:19.432UTC sem registros;
+janela curta, não garantia de ausência de erros.
+
+Custos: mesmos jobs/matrizes/tetos; nenhum serviço/artefato/cache/pull novo.
+Incremento faturado do ensaio público padrão0mensal/0anual por seis contratos
+e fixo0 no escopo condicional já comprovado; demais infraestrutura/retenção/
+capacidade/LLC/BR-US+ISS5% continuam desconhecidos/reprovados,nãozero.
+SV4 parcial, nenhuma migração real. AB(a) segue preço exato/submissão única
+durável/ID/recuperação somente leitura/ativação/ACKstore/CAScleanup-undo/rollover/
+custeio completo. PLANS_ON_SALE=false,preços/limites/permissões/AP449–455/AN456/
+361–362 e contador254preservados; nenhum desses incrementos é entrega funcional255.
