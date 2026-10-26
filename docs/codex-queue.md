@@ -9793,3 +9793,35 @@ Registro agora associa o mesmo armazenamento/limites existentes ao leitor sem
 mutação e documenta intent≤4096bytes/grant no mesmoledger;retenção/custos reais
 desconhecidos reprovados. Semnova chave ou corte delimites;produçãoinalterada.
 Novamente toda a suíte no novohead,semrerunisolado;prova parcialnãoéaprovação.
+
+
+### AB(a) — provas finais da preparação fechada integrada, PR1073
+
+Final head5c8a9d0e30e3c19217aa76b6b359d3728687d99a passed31/31checks and Vercel,
+with8scope classifiers10+7/full=true. Earlier failing heads above remain history;
+no isolated job rerun was used for approval. Merge75cbf2fafaf95ee4676cecacd2ccd8e25b46e9fe
+on26 October2026 at16:40:41Fortaleza(19:40:41UTC), exact tree
+38e5cb7e5993773e478d528d7953ef27f97b66aa and parents verified.
+
+Verify121788408665:437 plan-pause checks19:13:49.1873555UTC;
+Everything19:15:21.7919164UTC, agreements19:17:28.9590215UTC,
+store-copy19:31:58.8491765UTC. Actual Redis121788408560:
+64intent contenders, ignored ACK and20negative cases passed19:10:34.3554494UTC;
+INFO17first/16duplicate commands, including EVAL, within canonical17.
+Mobile121788408485:home112/64/88ms, pricing40/32/32ms, sales32/32/48ms;
+LCP624–1048ms,CLS0, original thresholds/cycle/keyboard/native details preserved.
+
+Productiondpl_ADyb6UZUNuruSgLPvQ1GuSFR7Ze1 READY16:42:16.681Fortaleza
+(19:42:16.681UTC), exact merge SHA and marktmorgen.com verified.
+Five routes /,/platform,/pricing,/mission,/library returned200 with this deployment ID.
+Error/fatal lookup19:42:16.681→19:42:50.217UTC returned no records; bounded
+observation only, not a guarantee of no errors. Documentation PR1072 had no own
+ff9d deployment observed; its docs are included in this verified descendant.
+
+This proves closed preparation and preservation, not the positive funded provider
+flow. Even an acknowledged intent still refuses before provider IO. Coveragefalse,
+null policies, unresolved full operating costs/retention and fiscal margins remain
+binding. Next implementation needs the immutable owned source observation,
+provider stop/price/single submission, durable resulting ID, read-only recovery,
+funded activation and acknowledged store/CAS cleanup with generations/rollover.
+No new account, paid operation or real message. AB(a) is incomplete; counter254.
