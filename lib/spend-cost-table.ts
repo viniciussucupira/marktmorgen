@@ -158,3 +158,57 @@ const priced = (ref: { model: string; shape: AiRequestShape }) => {
 export const WRITING_JOB_MICRO_USD = priced(WRITING_JOB_REFERENCE);
 export const ANSWER_MICRO_USD = priced(ANSWER_REFERENCE);
 export const PDF_READ_MICRO_USD = priced(PDF_READ_REFERENCE);
+
+
+/** Explicit aggregate bounds for one protocol obligation. These are supplied
+ * measurements/ceilings, never defaults or evidence that a budget is funded.
+ * transferBytes includes all reads, writes and replicas; storageCopies counts
+ * every region/replica holding retainedBytes for retentionMonths.
+ */
+export type ProtocolInfrastructureBounds = {
+  functionCalls: number;
+  memoryGbMilliseconds: number;
+  cpuMilliseconds: number;
+  redisCommands: number;
+  transferBytes: number;
+  retainedBytes: number;
+  retentionMonths: number;
+  storageCopies: number;
+};
+
+/** Price finite, explicit protocol bounds using the same canonical rates as
+ * other reservations. Unknown/inherited/computed values fail without running
+ * their getters. Permanent or unresolved retention has no implicit free tail.
+ * This prices infrastructure only: payment, mail, support, fixed expenses,
+ * customer rights and all applicable taxes still need the canonical review.
+ * It neither reserves money nor authorizes an operation.
+ */
+export function protocolInfrastructureMicroUsd(
+  input: ProtocolInfrastructureBounds | null,
+): { baseMicroUsd: number; providerAllowanceMicroUsd: number; totalMicroUsd: number } | null {
+  if (!input || typeof input !== 'object' || Array.isArray(input)) return null;
+  const keys = ['functionCalls', 'memoryGbMilliseconds', 'cpuMilliseconds',
+    'redisCommands', 'transferBytes', 'retainedBytes', 'retentionMonths', 'storageCopies'] as const;
+  const values: bigint[] = [];
+  try {
+    for (const key of keys) {
+      const field = Object.getOwnPropertyDescriptor(input, key);
+      if (!field || !Object.hasOwn(field, 'value') ||
+          !Number.isSafeInteger(field.value) || field.value < 0) return null;
+      values.push(BigInt(field.value));
+    }
+  } catch { return null; }
+  const [calls, memory, cpu, commands, transfer, retained, months, copies] = values;
+  if (copies < BigInt(1) || (retained > BigInt(0) && months === BigInt(0))) return null;
+  const base =
+    ceilDiv(calls * BigInt(VERCEL_CALL_MICRO_USD_PER_MILLION), BigInt(1_000_000)) +
+    ceilDiv(memory * BigInt(VERCEL_MEMORY_MICRO_USD_PER_GB_HOUR), BigInt(3_600_000)) +
+    ceilDiv(cpu * BigInt(VERCEL_CPU_MICRO_USD_PER_HOUR), BigInt(3_600_000)) +
+    ceilDiv(commands * BigInt(UPSTASH_MICRO_USD_PER_MILLION_COMMANDS), BigInt(1_000_000)) +
+    ceilDiv(transfer * BigInt(UPSTASH_MICRO_USD_PER_GB_TRANSFER), BigInt(1_000_000_000)) +
+    ceilDiv(retained * months * copies * BigInt(UPSTASH_MICRO_USD_PER_GB_MONTH), BigInt(1_000_000_000));
+  const allowance = ceilDiv(base * BigInt(PROVIDER_CHARGES_BPS), BigInt(10_000));
+  const total = base + allowance;
+  if (total > BigInt(Number.MAX_SAFE_INTEGER)) return null;
+  return { baseMicroUsd: Number(base), providerAllowanceMicroUsd: Number(allowance), totalMicroUsd: Number(total) };
+}
