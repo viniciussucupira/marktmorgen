@@ -211,6 +211,44 @@ def main():
                         args.append("ABSTTL")
                     assert target.command(*args) == "OK"
 
+            def retained_source():
+                assert client("GET", identity) == (0, b"source")
+                _, retained = source.command("EVAL", CAPTURE, len(keys), *keys)
+                assert retained == raw_rows
+                assert source.command("HGET", keys[1], "reserved") == b"100"
+
+            def refuse_existing_destination():
+                # RESTORE must never replace a pre-existing destination value.
+                target.command("SET", keys[0], "destination-owned-value")
+                try:
+                    restore(rows)
+                except RuntimeError as error:
+                    assert "BUSYKEY" in str(error)
+                else:
+                    raise AssertionError("Existing destination data must refuse restore")
+                assert target.command("GET", keys[0]) == b"destination-owned-value"
+                assert target.command("EXISTS", *keys[1:]) == 0
+                retained_source()
+                target.command("DEL", keys[0])
+
+            phase("existing_destination_refuses_without_overwrite", refuse_existing_destination)
+
+            def refuse_corrupt_binary():
+                damaged = bytearray(base64.b64decode(rows[0]["dump"], validate=True))
+                # Damage the Redis DUMP checksum, after authenticated decode.
+                # This exercises RESTORE's own rejection, not a mocked parser.
+                damaged[-1] ^= 1
+                try:
+                    target.command("RESTORE", keys[0], 0, bytes(damaged))
+                except RuntimeError as error:
+                    assert "checksum" in str(error).lower()
+                else:
+                    raise AssertionError("Corrupt Redis binary must refuse restore")
+                assert target.command("EXISTS", *keys) == 0
+                retained_source()
+
+            phase("corrupt_redis_dump_refuses_before_cutover", refuse_corrupt_binary)
+
             def refuse_partial():
                 restore(rows[:-1])
                 try:
@@ -234,6 +272,22 @@ def main():
                 assert target.command("PTTL", keys[1]) == -1
                 assert target.command("PEXPIRETIME", keys[5]) == snapshot["rows"][5]["expiresAt"]
 
+            def refuse_mismatched_cash():
+                target.command("HSET", keys[1], "reserved", 99)
+                try:
+                    validate()
+                except AssertionError:
+                    pass
+                else:
+                    raise AssertionError("A complete copy with changed cash must refuse cutover")
+                assert target.command("HGET", keys[1], "reserved") == b"99"
+                retained_source()
+                # Repair only the owned synthetic target key from the exact
+                # authenticated snapshot. Never overwrite it with REPLACE.
+                target.command("DEL", keys[1])
+                restore([rows[1]])
+
+            phase("changed_destination_cash_refuses_before_cutover", refuse_mismatched_cash)
             phase("validate_types_binary_cash_and_absolute_expiry", validate)
 
             def cutover():
@@ -283,7 +337,7 @@ def main():
             "notProven": ["application migration", "live-write draining/replay",
                           "provider DNS/TLS", "cross-host topology", "capacity", "production costs"]
         }, sort_keys=True))
-        print("PASS: actual binary copy, private DNS cutover, target failure and source rollback")
+        print("PASS: actual binary copy; existing/corrupt/changed-cash refusals; private DNS cutover, target failure and source rollback")
         print("SV4 prerequisite only; EU hosting flag, providers and commercial gates unchanged")
 
 

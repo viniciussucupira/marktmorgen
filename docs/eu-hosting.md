@@ -318,3 +318,30 @@ fbfe47b217d5856defcc8dcf58cdb9321e7d166c e pais conferidos.
 A falha inicial permanece acima; não houve rerun isolado para declarar conclusão.
 Este resultado conclui o ensaio restrito, não SV4 completo, hospedagem UE ou
 entrega funcional255. Gates e contador254 mantidos.
+
+
+
+### SV4 — falhas de destino antes da troca (26/10/2026, em verificação)
+
+O mesmo ensaio real com dois Redis agora também injeta três falhas antes da
+troca: chave já existente (RESTORE deve recusar BUSYKEY sem sobrescrever),
+checksum DUMP adulterado depois do decode autenticado (Redis deve recusar sem
+criar chave), e caixa alterado100→99 no destino completo (validação deve recusar).
+Cada recusa confirma alias ainda na origem, snapshot binário integral da origem
+inalterado e reserva100. A reparação ocorre só no destino sintético do UUID,
+sem REPLACE/FLUSH nem acesso externo. Depois executa novamente validação completa,
+troca, falha e retorno existentes. Não simula sucesso nem usa parser falso.
+
+Mesmas seis chaves, dois servidores/cliente transitório, imagem já disponível,
+job existente e tetos120s/50s/180s/4min/12min; sem novo job/matriz/pull/artefato/cache.
+Incremento faturado do runner padrão público continua0mensal/0anual por contrato
+nos seis contratos e fixo0, condicionado às mesmas verificações de repositório
+público/runner padrão documentadas acima em26/10. Reserva adicional desse estágio0;
+não declara CI inteiro, infraestrutura, LLC ou tributos gratuitos.
+Custos operacionais e capacidade/retensão/BR-US+ISS5% desconhecidos reprovados.
+
+Tempos das novas fases e suíte remota completa no novohead ainda pendentes;
+não reutilizar27.035956s como medida deste incremento. Fonte antiga e falha inicial
+preservadas. Continua pré-requisito parcial SV4, sem migração real/topologia/TLS/
+capacidade certificada. AB(a) segue prioritário na branch própria em CI;
+coveragefalse/políticasNULL/PLANS_ON_SALE=false econtador254 preservados.
