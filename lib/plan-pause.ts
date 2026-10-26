@@ -422,10 +422,24 @@ export async function runBreaks(nowSeconds = Math.floor(Date.now() / 1000)): Pro
       counts.failed += 1;
       continue;
     }
-    const store = await storeForEmail(ref);
-    if (!record || !store) {
+    if (!record) {
+      // The explicit pause miss above proves this is only a stale due member.
       await forget(ref, false);
       counts.dropped += 1;
+      continue;
+    }
+    // A nullable store lookup does not distinguish absence from unreadable
+    // data. Neither that nor a transport failure authorizes erasing a known
+    // pause, its due entry, or its once-a-year evidence.
+    let store: Store | null;
+    try {
+      store = await storeForEmail(ref);
+    } catch {
+      counts.failed += 1;
+      continue;
+    }
+    if (!store || storeRef(store) !== ref) {
+      counts.failed += 1;
       continue;
     }
     // Started again by hand, from the studio, on a subscription of its own:
