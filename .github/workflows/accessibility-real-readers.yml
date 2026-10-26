@@ -42,7 +42,7 @@ jobs:
   entry-pilot:
     needs: documentation-scope
     # Fail closed before runner allocation; never use larger or self-hosted runners.
-    if: always() && needs.documentation-scope.outputs.full != 'false' && github.repository == 'viniciussucupira/marktmorgen' && github.event.repository.private == false && github.event.repository.visibility == 'public'
+    if: ${{ !cancelled() && needs.documentation-scope.outputs.full != 'false' && github.repository == 'viniciussucupira/marktmorgen' && github.event.repository.private == false && github.event.repository.visibility == 'public' }}
     name: Real reader entry (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     timeout-minutes: 25

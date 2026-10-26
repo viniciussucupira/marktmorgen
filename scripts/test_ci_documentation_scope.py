@@ -78,7 +78,9 @@ class DocumentationScopeTests(unittest.TestCase):
                 self.assertEqual(chunk.count("    needs: documentation-scope\n"), 1)
                 conditions = [line for line in chunk.splitlines() if line.startswith("    if:")]
                 self.assertEqual(len(conditions), 1, str(path))
-                self.assertIn("always() && needs.documentation-scope.outputs.full != 'false'", conditions[0])
+                self.assertIn("${{ !cancelled() && needs.documentation-scope.outputs.full != 'false'", conditions[0])
+                self.assertTrue(conditions[0].endswith(" }}"), str(path))
+                self.assertNotIn("always()", conditions[0], str(path))
 
     def test_daily_and_manual_events_are_explicit_and_isolated(self):
         for path in Path(".github/workflows").glob("*.yml"):

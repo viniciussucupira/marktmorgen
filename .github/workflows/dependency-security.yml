@@ -41,7 +41,7 @@ jobs:
         run: python3 scripts/ci_documentation_scope.py
   audit:
     needs: documentation-scope
-    if: always() && needs.documentation-scope.outputs.full != 'false'
+    if: ${{ !cancelled() && needs.documentation-scope.outputs.full != 'false' }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
