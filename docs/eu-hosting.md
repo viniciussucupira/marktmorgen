@@ -278,3 +278,43 @@ Agora não solicita porta publicada: valida ausência de PortBindings e usa some
 o IPv4 privado confirmado no subnet da rede interna com rótulo do UUID. Não
 abre bridge com egress nem afrouxa a checagem de propriedade. A falha permanece
 registrada; somente o CI completo do novo head poderá aprovar o ensaio.
+
+
+### Resultado medido do ensaio em contêineres — PR#1071
+
+Head0c49d1c816e60b835ba2f7cef238992450a29a1e, jobRedis121754372959,
+execução26/10/2026 às15:06:45.1379127Fortaleza(18:06:45.1379127UTC).
+O log emitiu PASS somente após cópia real, troca do alias, falha do destino,
+retorno à origem e limpeza dos recursos com rótulos conferidos.
+
+| Fase | Segundos medidos |
+| --- | --- |
+| boot_two_servers_and_private_dns | 5.199005 |
+| capture_real_binary_snapshot | 0.000516 |
+| cleanup_owned_resources | 0.235496 |
+| destination_failure_and_private_dns_rollback | 20.623908 |
+| encrypt_authenticate_and_decode_actual_codec | 0.057417 |
+| partial_copy_refuses_before_cutover | 0.160635 |
+| restore_complete_second_server | 0.000227 |
+| seed_synthetic_source | 0.27854 |
+| switch_private_test_domain_and_read_destination | 0.47964 |
+| total | 27.035956 |
+| total_before_cleanup | 26.800437 |
+| validate_types_binary_cash_and_absolute_expiry | 0.000271 |
+
+Total27.035956s, dentro dos tetos originais. Trata-se desta execução sintética
+no runner, não prazo prometido de migração real. Nenhum dado de cliente, host
+externo, pull ou artefato; seis chaves copiadas, consumidor novo somente leitura.
+Persistem todas as lacunas de aplicação inteira, escritas ao vivo, clientes
+persistentes, topologia entre hosts, TLS/DNS de fornecedor, capacidade e custos.
+
+Novo head aprovado por31/31checks e Vercel;8 classificadores10+7/full=true.
+Verify121754373059: Everything18:09:40.9103029UTC, agreements18:11:09.9597840UTC,
+store-copy18:23:54.9239972UTC. Mobile: home64/64/64ms, pricing40/40/32ms,
+sales48/40/32ms; LCP628–728ms, CLS0, ciclo/teclado/details preservados.
+Incorporado15:33:16Fortaleza(18:33:16UTC), merge
+c19fae799a24643f9d10ab49d6fca2b29f856f7d, árvore
+fbfe47b217d5856defcc8dcf58cdb9321e7d166c e pais conferidos.
+A falha inicial permanece acima; não houve rerun isolado para declarar conclusão.
+Este resultado conclui o ensaio restrito, não SV4 completo, hospedagem UE ou
+entrega funcional255. Gates e contador254 mantidos.

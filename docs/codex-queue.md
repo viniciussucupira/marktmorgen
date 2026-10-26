@@ -9713,3 +9713,32 @@ SV4/PR#1071: primeiro headc67e720 jobRedis121752784855 falhou18:03:22.631UTC
 no boot (mapeamento6379 inexistente em bridge interna), antes de copiar dados.
 Correção usa IP privado da rede interna de propriedade validada e não publica
 portas; não habilita egress. Novo head exige toda a suíte, sem rerun isolado.
+
+
+### SV4 — prova medida e incorporação do ensaio restrito, PR#1071
+
+Novo head0c49d1c816e60b835ba2f7cef238992450a29a1e aprovado31/31checks+Vercel;
+8classificadores10+7/full=true, sem rerun isolado. Merge
+c19fae799a24643f9d10ab49d6fca2b29f856f7d em26/10/2026
+15:33:16Fortaleza(18:33:16UTC); árvorefbfe47b217d5856defcc8dcf58cdb9321e7d166c
+e pais[01bd4f237167e3cbf30e9037763ee12da6cf918d,0c49d1c816e60b835ba2f7cef238992450a29a1e] conferidos.
+Verify121754373059 Everything18:09:40.9103029UTC/agreements18:11:09.9597840UTC/
+store-copy18:23:54.9239972UTC. Mobilehome64/64/64ms,pricing40/40/32ms,
+sales48/40/32ms; LCP628–728ms,CLS0 e limites originais/ciclo/Enter/details aprovados.
+JobRedis121754372959 em18:06:45.1379127UTC mediu27.035956s totais:
+boot5.199005s,captura0.000516s,codec0.057417s,cópia parcial recusada0.160635s,
+restore0.000227s,validação0.000271s,troca0.47964s,falha/retorno20.623908s,
+limpeza0.235496s;semeadura0.27854s. Tabela completa emdocs/eu-hosting.md.
+Destino parou e retorno à origem preservou dumps/reserva/prazos; sem hostexterno,
+pull,artefato,dadosdecliente ou fornecedor. Incremento CI0condicional ao runner
+público padrão comprovado;demais custos/LLC/impostos desconhecidos reprovados.
+Pré-requisito parcial,SV4 inteiro não concluído. Nenhuma migração real autorizada.
+
+Produção dpl_A9dwmRhJgEqZHtq7DMre6zhNjH1V READY15:34:05.899Fortaleza
+(18:34:05.899UTC),SHA exato c19fae e domínio marktmorgen.com conferidos;
+cinco rotas /,/platform,/pricing,/mission,/library HTTP200 comIDexato.
+Error/fatal18:34:05.899→18:34:53.828UTC semregistros;somente essa janela.
+Contador254 preservado: ensaio interno/documentação não é entrega funcional255.
+AB(a)retoma intenção durável/propriedade atômica/submissão única integrada,
+coveragepauseRestart=false até protocolo/custos/reconciliação/ativação completos.
+AP449–455/AN456/361–362 e histórico preservados.
