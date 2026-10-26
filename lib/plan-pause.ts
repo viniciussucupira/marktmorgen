@@ -418,7 +418,15 @@ export async function runBreaks(nowSeconds = Math.floor(Date.now() / 1000)): Pro
   }
   const refs = raw as string[];
   for (const ref of refs) {
-    const stored = await storedPauseAt(ref);
+    let stored: Awaited<ReturnType<typeof storedPauseAt>>;
+    try {
+      stored = await storedPauseAt(ref);
+    } catch {
+      // A single unavailable record must not erase its evidence or abort
+      // the other distinct members of this already bounded due batch.
+      counts.failed += 1;
+      continue;
+    }
     const record = stored.record;
     if (!record && !stored.missing) {
       counts.failed += 1;
