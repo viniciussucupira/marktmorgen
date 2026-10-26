@@ -16,7 +16,7 @@ def main():
         raise RuntimeError('Expected static application exposure reservation script')
     script = match.group(1)
     prefix = 'marktmorgen:integration:exposure:' + uuid.uuid4().hex + ':'
-    keys = [prefix + str(i) for i in range(12)]
+    keys = [prefix + str(i) for i in range(14)]
     redis = Redis()
     def seed(key, slots=2):
         redis.command('HSET', key, 'review', 'review', 'policy', 'binding', 'reserved', 0, 'slots:trial', slots, 'slots:setup', slots)
@@ -84,6 +84,30 @@ def main():
         assert take(redis, keys[11], charge=0, limit=0, funded=1) == 1
         assert take(redis, keys[11], 'other', charge=0, limit=0, funded=1) == 0
         print('PASS: an explicitly zero-cost case still consumes a finite occurrence slot')
+        seed(keys[12])
+        redis.command('HSET', keys[12], 'slots:platform_waitlist', 2)
+        assert take(redis, keys[12], 'same', charge=100, limit=140) == 1
+        def platform_take(index):
+            client = Redis()
+            try:
+                return take(client, keys[12], str(index),
+                            scope='platform_waitlist', charge=20, limit=140)
+            finally:
+                client.close()
+        with concurrent.futures.ThreadPoolExecutor(max_workers=16) as pool:
+            results = list(pool.map(platform_take, range(64)))
+        assert sum(results) == 2
+        assert redis.command('HGET', keys[12], 'reserved') == '140'
+        assert redis.command('HGET', keys[12], 'slots:platform_waitlist') == '0'
+        assert redis.command('HGET', keys[12], 'case:trial:same') == '100'
+        assert redis.command('PTTL', keys[12]) == -1
+        print('PASS: 64 platform waitlist contenders share company cash without consuming trial receipts')
+        seed(keys[13])
+        before = redis.command('HGETALL', keys[13])
+        assert take(redis, keys[13], scope='platform_waitlist', charge=20) == 0
+        assert redis.command('HGETALL', keys[13]) == before
+        assert redis.command('HEXISTS', keys[13], 'slots:platform_waitlist') == 0
+        print('PASS: an existing ledger without reviewed platform waitlist slots refuses without initialization')
     finally:
         for key in keys:
             if not key.startswith(prefix):
