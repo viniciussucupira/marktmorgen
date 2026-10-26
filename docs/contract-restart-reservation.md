@@ -340,3 +340,33 @@ No new job/matrix/service/storage/paid operation, price, limit or rights change.
 AB(a) still requires exact new price, single durable submission/result ID,
 read-only uncertain recovery, funded activation/ACKstore/CASgeneration cleanup/
 undo and rollover, plus full costing. Counter254 and PLANS_ON_SALE=false remain.
+
+
+
+### PR1077 — falha do leitor real e correção de inicialização (26/10/2026)
+
+Head87fb54437473e3ec276b93dab36f5952c7c47fb2 não aprovado: leitor macOS
+job121844217093 falhou21:07:01.1147550UTC antes da navegação, após setup/assets
+bem-sucedidos. VoiceOver não iniciou porque a biblioteca excedeu espera pelo
+processo antigo encerrar.477checks plan-pause, quatro testes novos da origem,
+Redis e mobile passaram, mas prova parcial não autoriza incorporação.
+
+Correção no tooling isolado: somente runner macOS descartável público marcado,
+repositório canônico, usuário atual e executável Apple exato podem receber
+limpeza inicial. Inventário completo≤8processos validado antes de sinal; TERM,
+e somente para os mesmos PIDs ainda verificados KILL, com teto8s de preflight,
+comandos≤2s e confirmação explícita de ausência antes de iniciar o leitor real.
+Host não marcado/usuário ou caminho estranho/inventário desconhecido/PID novo
+recusam. Nenhum reset no computador do dono, privilégio elevado ou kill amplo.
+Testes de recusa/ownership usam comandos falsos; as duas páginas continuam
+obrigatoriamente verificadas por fala real, sem skip/retry de assertions.
+
+Nova suíte COMPLETA em novohead, não rerun isolado. Job/matriz/timeout25min e
+tetos de fala intactos. Mesmos runners padrão públicos/nenhum serviço/artefato/
+cache/dependência novo; incremento faturado mensal/anual0 por seis contratos
+e fixo0 somente no escopo CI público já comprovado. Custos operacionais/LLC/
+tributos e AB(a) seguem reprovados/desabilitados. Fontes primárias consultadas
+26/10: https://raw.githubusercontent.com/guidepup/guidepup/main/src/macOS/VoiceOver/VoiceOver.ts
+e terminateVoiceOverProcess.ts no mesmo diretório (comportamento de término);
+a causa desta execução vem do log do pacote fixado0.36.4, não versão main presumida.
+Contador254, preços/limites/PLANS_ON_SALE preservados.
