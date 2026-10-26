@@ -5172,6 +5172,35 @@ Custo: CSS-fonte+195bytes,semasset/JS/request/operaçãodefornecedor/franquianov
 
 A precedência dos PRs AX2 já abertos está cumprida. O restante do item310 continua depois do Bloco de abertura. O próximo item de execução é (a), revisão comercial; nenhuma etapa do bloco é declarada concluída por este registro.
 
+## TS — Modo de teste para o criador vender sem dinheiro real (25/10/2026)
+
+Solicitação do dono (25/10/2026, 23h12, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA, com os próximos números livres, depois do Bloco de abertura.
+
+Pedidos repetidos: antes de gravar, aplique a regra "Pedidos repetidos" (23/10/2026): procure esta solicitação no main, nos PRs abertos e nos ramos codex/* recentes, pela linha de data e hora, pelo nome da seção, pelas etiquetas [TS1] e [TS2] e pelo conteúdo. Se já estiver gravada, não duplique. Reutilizar o mecanismo da loja de demonstração (lib/house-store.ts, lib/demo-account.ts, sellsInTestMode em lib/stripe-connect.ts), sem duplicá-lo.
+
+Estado inicial: na fila.
+
+Objetivo do dono: usar o Marktmorgen como criador, vendo exatamente o que um criador real veria, sem pagar; e oferecer o mesmo a todo criador antes de assinar.
+
+443. [TS1] Modo de teste da loja.
+(a) Todo criador, inclusive sem plano pago, pode ligar e desligar na própria loja o "Test mode", por escolha explícita. Ligado, a loja vende somente no modo de teste do Stripe (cartão de teste 4242 4242 4242 4242), com o mesmo checkout, a mesma entrega, os mesmos e-mails, os mesmos pedidos, reembolsos e relatórios de uma loja real; nenhum dinheiro real se move e nenhum cartão real é aceito.
+(b) Honestidade: em modo de teste, a loja mostra, antes de qualquer formulário de pagamento, que é uma loja em teste, sem cobrança; nenhuma venda de teste conta em números públicos, estatísticas da plataforma, avaliações ou contagem de compradores.
+(c) Segurança contra abuso: em modo de teste, e-mails de compra e de entrega vão somente para endereços que o próprio criador verificou (como a loja de demonstração, que não escreve a compradores desconhecidos); nenhum e-mail a terceiros, nenhuma avaliação e nenhuma venda real. Ao desligar o modo de teste, os pedidos de teste ficam separados e marcados como teste, nunca misturados aos reais.
+(d) Custo: cada loja em modo de teste é exposição financiada (docs/funded-exposure-review.md), com teto automático de pedidos, e-mails, arquivos e chamadas de IA por dia e por mês, calculado antes, e contado nos custos sem receita; desconhecido reprova.
+
+444. [TS2] Tela de assinatura do plano em teste.
+O criador em modo de teste pode passar pela tela de assinatura de qualquer plano (Store, Studio, Scale), em todas as formas de pagamento disponíveis, usando o modo de teste do Stripe, vendo exatamente o que verá ao assinar de verdade, sem cobrança e sem ativar nenhum direito pago. Não altera PLANS_ON_SALE nem nenhuma trava: com as travas fechadas, a assinatura real continua impossível.
+
+REGRA DOS 60%: todo cliente pagante, isoladamente e usando 100% dos direitos do plano no pior mês, e a empresa como um todo, mantêm margem real de lucro líquido mínima de 60% sobre tudo o que é cobrado, depois de todos os custos e de todos os impostos, inclusive os brasileiros e o ISS de 5%; pode ser maior, nunca menor. Leitura que dá mais imposto (docs/tax-uncertainty.md). Desconhecido reprova, nunca é zero. Todos os custos fixos da LLC pertencem ao Marktmorgen (FX275).
+
+Proibido: mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, o tax gate, o art. 9a ou a revisão comercial, permitir venda real ou cobrança real por este item, contar vendas de teste como reais, enviar e-mail a endereço não verificado pelo criador em modo de teste, apagar conteúdo de criadores, apagar qualquer coisa da Hazelsong, criar contas reais, aceitar termos, contratar, pagar ou contatar terceiros. Somente testes sintéticos.
+
+Aplicar a regra VR: só chamar de pronto o que estiver incorporado, publicado, conferido em marktmorgen.com e usado de ponta a ponta; relatar o estado exato e o que não foi verificado.
+
+Proveniência e ordemTS: solicitação direta25/10/2026,23h12Fortaleza. RegraPedidos repetidos aplicada antes da gravação: main38b65177db0393371249e23aa7eb81f65492ea9e,12PRs abertos(títulos/corpos/filas),inventário599refs codex/* e58heads distintos recentes/relevantes ligados aos100commits/pais recentes,PRs e mecanismos de teste. Nenhuma correspondência por data/hora,seção,TS1/TS2ou conteúdo equivalente. Mecanismo existente de demonstração identificado:lib/house-store.ts,lib/demo-account.ts e sellsInTestMode emlib/stripe-connect.ts; ampliar/reutilizar sem segunda loja-sistema ou duplicar checkout/entrega. A demo atual escreve a nenhum comprador; extensão a endereços verificados é pedido futuro, não funcionalidade já existente. Posição: depois de TODO o Bloco de abertura, incluindo sua ordem vinculante e complementos de abertura, antes de avançar aos pendentes antigos. Não interrompeAB(a),CI/PR1043 ou demais trabalhos autorizados; não antecipaTS às tarefas deabertura. Numeração global443/444,estado inicialnafila. Nenhuma conta real,checkoutStripe real/teste externo ou e-mail foi aberto/enviado por este registro. Exposição gratuita precisa reserva/admissão automática antesdopróximo pedido/e-mail/arquivo/IA,tetomês/dia comcusto máximo eimpostosmais onerosos,semquota grátis comozero. Não ativa plano nem gates ou confunde ensaioTS2 comdireitos pagos. Implementação,teste completo,incorporação/publicação/VR ainda pendentes; registro documental não é entrega funcional.
+
 ## OR — Posição dos pendentes antigos de 19/10/2026 (22/10/2026)
 
 Decisão do dono: 22/10/2026, 14h45 de Fortaleza. Registro documental preparado em 22/10/2026 às 15:18:31 de Fortaleza, após concluir a entrega 165. Esta seção prevalece sobre posições antigas incompatíveis; preserva o histórico e não cria itens nem números.
