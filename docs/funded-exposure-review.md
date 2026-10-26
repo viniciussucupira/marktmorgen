@@ -38,3 +38,38 @@ Both exposures of the database after a plan ends are closed:
 The database is priced as one region. A read region added in Upstash keeps a copy of everything and is billed for it: it multiplies the `database-storage` and `retained-data` lines by the number of copies, and must be priced before it is turned on. `tests/upstash-single-region.test.ts` fails if the code or the deployment ever configures one; switching one on in Upstash's console is the owner's act, and must wait for that price.
 
 Moving orders older than 90 days to R2 was asked for and is not built: docs/order-data.md ("Asked for, and not built here") says why, with the measured sizes, for the owner's decision. Deleting a closed store's records at its closing day is built (above); keeping its sales in R2 for 7 years was built and taken out the same day, because they are the creator's records, not Marktmorgen's.
+
+## LE448 — exposição própria da lista de pré-abertura (em implementação)
+
+Pedido do dono26/10/2026 00h19Fortaleza. A lista da plataforma não é uma loja
+fictícia, uma assinatura paga ou conversão futura. O escopo canônico
+`platform_waitlist` passa a integrar a mesma revisão de exposição, o mesmo teto
+de caixa e o mesmo ledger `nl:exposure:v1:YYYY-MM`; não cria um ledger paralelo,
+não reinicializa saldo/slots nem usa uma loja inventada sob `setup`.
+Revisão antiga sem esse caso é desconhecida e reprovada; interesse não pode entrar
+como receita no caso. Tetos nulos, custos/impostos desconhecidos e ausência de
+enforcement continuam reprovando. Nenhuma política atual deixa de ser nula.
+
+O escopo tem slots/recibos próprios, preservando os recibos e obrigações dos demais
+escopos. A reserva é permanente para a identidade/escopo/mês aprovada; repetir uma
+operação não cria dinheiro ou slots. Faltando campo no ledger, a operação recusa
+sem inicializá-lo. Configurar slots não autoriza enviar e-mail: ainda são
+necessários o protocolo completo de consentimento, limites diários/mensais por
+operação e o binding da unidade financiada à identidade/coorte real.
+
+Antes de admissão, a revisão deve abranger inscrição, validação de e-mail,
+confirmação, saída, consentimento exato/datatado, dados opcionais, retenção,
+consultas/recusas/repetições, resumo semanal privado/CSV, armazenamento/transferência,
+e-mail de abertura e novidades separadamente consentidas. Quantidade máxima de
+casos, custo completo por caso e reserva são desconhecidos; não se publica aqui
+um orçamento zero, uma base mínima ou margem aprovada. O teto por operação é
+adicional à reserva de exposição, não substituído por ela.
+
+Verificações adicionadas exigem contabilidade conjunta e recibos separados,
+64concorrentes limitados a dois casos sintéticos e ledger antigo sem campo
+recusado sem escrita, tanto no código real quanto no Lua real em Redis descartável.
+Valores20/100/140/240centavos usados nesses testes são exclusivamente sintéticos,
+não preços/tetos do produto ou custos oficiais. Nenhum envio, inscrição real,
+conta, cobrança, obrigação fiscal ou gate comercial é ativado. Custo incremental
+deCI permanece desconhecido, sem reduzir tetos/reservaFX275. LE448 integral não
+está implementado, publicado ou usado ponta a ponta por este incremento.

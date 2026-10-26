@@ -1,5 +1,5 @@
 import { assessCustomerWorstCase, CUSTOMER_COST_CATEGORIES, type CustomerWorstCase } from '@/lib/net-margin-rules';
-export const EXPOSURE_SCOPES = ['trial','setup','full_refund','non_payment','post_cancellation','paused','legacy_credits'] as const;
+export const EXPOSURE_SCOPES = ['trial','setup','full_refund','non_payment','post_cancellation','paused','legacy_credits','platform_waitlist'] as const;
 export const FUNDED_EXPOSURE_RULES = {schema:1,period:'worst-recognized-month',offsets:'none-no-future-conversions',fixedTaxShield:'none',scopes:EXPOSURE_SCOPES} as const;
 export type ExposureScope = typeof EXPOSURE_SCOPES[number];
 export type FundedExposureReview = {month:string; evidence:string; admissionLimitsEnforced:boolean; monthlyBudgetCents:number|null; cases:Record<ExposureScope,{maximumMonthlyCases:number|null;worstCase:CustomerWorstCase|null}>};
@@ -21,6 +21,9 @@ export function assessFundedExposure(review:FundedExposureReview|null,now=new Da
   const item=own(cases,scope),count=own(item,'maximumMonthlyCases'),raw=own(item,'worstCase'),costs=own(raw,'costCeilings');
   if(!integer(count))return fail(count==null?'unknown':'invalid');
   const unit={collectedRevenueCents:own(raw,'collectedRevenueCents'),refundableRevenueCents:own(raw,'refundableRevenueCents'),taxesCeilingCents:own(raw,'taxesCeilingCents'),costCeilings:Object.fromEntries(CUSTOMER_COST_CATEGORIES.map(key=>[key,own(costs,key)])),allCostsBounded:own(raw,'allCostsBounded')===true,allTaxesReviewed:own(raw,'allTaxesReviewed')===true,revenueCollected:own(raw,'revenueCollected')===true} as CustomerWorstCase;
+  // A pre-opening waitlist has no collected subscription revenue. Interest or
+  // later conversions cannot offset this scope's costs or another obligation.
+  if(scope==='platform_waitlist'&&unit.collectedRevenueCents!==0)return fail(unit.collectedRevenueCents==null?'unknown':'invalid');
   const assessed=assessCustomerWorstCase(unit);
   if(!['approved','below_floor','no_revenue'].includes(assessed.reason))return fail(assessed.reason==='invalid'?'invalid':'unknown');
   // Do not allow revenue from another customer or an expected conversion to

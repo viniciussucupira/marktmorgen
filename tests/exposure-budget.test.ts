@@ -43,3 +43,46 @@ test('a month rollover before acknowledgement refuses new work but retains the r
  t.mock.timers.setTime(Date.UTC(2026,10,1));
  assert.equal(await pending,false);assert.equal(ledger.get(f.key)?.get('reserved'),'100');
 });
+
+function platformStart(){
+ reset();
+ const f=exposureFixture(), item=f.context.review!.cases.platform_waitlist;
+ item.maximumMonthlyCases=2;
+ item.worstCase!.costCeilings.email=20;
+ f.context.review!.monthlyBudgetCents=240;
+ f.policy.reservedFundsCents=240;
+ const c=exposureBudgetConfiguration(f.policy,f.context)!;
+ assert.ok(c);
+ const key='nl:exposure:v1:'+c.month;
+ seed(key,c);
+ return {...f,key,c};
+}
+test('platform waitlist competes for the same cash but has independent durable slots and receipts',async()=>{
+ const f=platformStart();
+ assert.equal(await reserveFundedExposure('same','trial',f.policy,f.context),true);
+ assert.equal(await reserveFundedExposure('same','platform_waitlist',f.policy,f.context),true);
+ const h=ledger.get(f.key)!;
+ assert.equal(h.get('reserved'),'120');
+ assert.equal(h.get('slots:trial'),'1');
+ assert.equal(h.get('slots:platform_waitlist'),'1');
+ assert.equal(h.get('case:trial:same'),'100');
+ assert.equal(h.get('case:platform_waitlist:same'),'20');
+ for(let i=0;i<10;i++)assert.equal(await reserveFundedExposure('same','platform_waitlist',f.policy,f.context),true);
+ assert.equal(h.get('reserved'),'120');
+});
+test('64 synthetic waitlist contenders cannot spend more than two pre-funded case slots',async()=>{
+ const f=platformStart();
+ const results=await Promise.all(Array.from({length:64},(_,i)=>reserveFundedExposure('platform'+i,'platform_waitlist',f.policy,f.context)));
+ assert.equal(results.filter(Boolean).length,2);
+ assert.equal(ledger.get(f.key)!.get('reserved'),'40');
+ assert.equal(ledger.get(f.key)!.get('slots:platform_waitlist'),'0');
+});
+test('missing waitlist scope, changed review or absent current approval refuses before any Redis call',async()=>{
+ for(const edit of [
+  (f:ReturnType<typeof exposureFixture>)=>{Reflect.deleteProperty(f.policy.review.cases,'platform_waitlist');},
+  (f:ReturnType<typeof exposureFixture>)=>{f.policy.review=structuredClone(f.context.review!);f.policy.review.cases.platform_waitlist.maximumMonthlyCases=1;},
+ ]){const f=platformStart();edit(f);assert.equal(await reserveFundedExposure('platform','platform_waitlist',f.policy,f.context),false);assert.equal(calls.length,0);}
+ reset();
+ assert.equal(await reserveFundedExposure('platform','platform_waitlist'),false);
+ assert.equal(calls.length,0);
+});
