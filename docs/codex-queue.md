@@ -6811,6 +6811,38 @@ Proibições: não alterar preços, limites visíveis, comissão, meios de pagam
 Na execução calcular antes todos os custos mensais/anuais por plano, maior preço pago, geração/armazenamento/consulta/câmbio/agendamento e e-mails de aviso, com tetos/reserva; nenhuma contratação/envio real durante esta implementação autorizada apenas para testes sintéticos. Construir avisos por e-mail ao dono como requisito do produto, testados com remetente simulado. Arquivos somente para o dono conferir/enviar; nenhuma submissão a autoridade. Registrar testes completos, fontes/data, PR, incorporação e versão publicada; documento não é entrega funcional.
 
 
+### Complemento FR2 — relatórios mensais e trimestrais por e-mail
+
+FR2 — Relatórios fiscais mensais e trimestrais por e-mail (25/10/2026)
+
+Solicitação do dono (25/10/2026, 23h38, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA, como complemento da seção FR, junto de 335 [FR1], sem duplicar o mecanismo dele.
+
+Pedidos repetidos: antes de gravar, aplique a regra "Pedidos repetidos" (23/10/2026): procure esta solicitação no main, nos PRs abertos e nos ramos codex/* recentes, pela linha de data e hora, pelo nome da seção, pela etiqueta [FR2] e pelo conteúdo. Se já estiver gravada, não duplique.
+
+Estado inicial: na fila.
+
+Decisão do dono: ele lê tudo no e-mail, sem painel. Os relatórios de [FR1] passam a incluir também os impostos que não são anuais.
+
+[FR2] Relatórios mensais e trimestrais.
+(a) Todo mês: o ISS de 5% sobre a receita do mês, convertida em reais pela cotação oficial exigida, com a receita de cada venda, a data do vencimento e o valor a pagar.
+(b) Todo trimestre: o IVA da União Europeia (OSS não União) e o VAT do Reino Unido cobrados dos compradores, por país e alíquota, com o prazo de declaração e de pagamento; e, onde houver obrigação, o sales tax de cada estado americano, na frequência daquele estado.
+(c) A cada remessa ao Brasil: o valor, a cotação e o IOF descontado, somados no resumo anual de [FR1].
+(d) Mesma forma de [FR1]: e-mail ao dono 30 e 7 dias antes de cada prazo (para os mensais, 7 dias e 1 dia antes), com o arquivo pronto para conferir, a fonte oficial datada de cada regra e o registro de onde saiu cada valor. Nenhum envio automático a autoridade.
+(e) Custo de cada e-mail e arquivo contado nos custos fixos (275 [FX1]); desconhecido reprova.
+
+REGRA DOS 60%: todo cliente pagante, isoladamente e usando 100% dos direitos do plano no pior mês, e a empresa como um todo, mantêm margem real de lucro líquido mínima de 60% sobre tudo o que é cobrado, depois de todos os custos e de todos os impostos, inclusive os brasileiros e o ISS de 5%; pode ser maior, nunca menor. Leitura que dá mais imposto (docs/tax-uncertainty.md). Desconhecido reprova, nunca é zero. Todos os custos fixos da LLC pertencem ao Marktmorgen (FX275).
+
+Proibido: mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, o tax gate, o art. 9a ou a revisão comercial, afrouxar qualquer suposição de imposto, taxa ou reserva, enviar declarações ou pagamentos a qualquer autoridade, apagar conteúdo de criadores, apagar qualquer coisa da Hazelsong, criar contas, aceitar termos, contratar, pagar ou contatar terceiros. Somente testes sintéticos.
+
+Aplicar a regra VR: só chamar de pronto o que estiver incorporado, publicado, conferido em marktmorgen.com e usado de ponta a ponta; relatar o estado exato e o que não foi verificado.
+
+Registro e execução: complemento sem novo número global, junto de335[FR1], sem duplicar o mecanismo anual, seus registros de origem, agendamento, arquivos e avisos. Permanece na fila na mesma posição de FR1, depois do Bloco de abertura, sem interromper AB(a) e a construção desligada já autorizada de SV4. Incidências, periodicidades, prazos e câmbio do briefing serão validados em fontes oficiais datadas na execução; este registro não certifica obrigação fiscal nem transforma informação ausente em zero. Cada apuração deve conservar origem de cada venda/remessa, valores, cotações, regras e pendências. Nenhum e-mail real ou submissão a autoridade nesta implementação: somente remetente/arquivos sintéticos. Calcular antes geração, armazenamento, consultas, câmbio, agendamento e envio mensais/anuais por plano e maior preço pago, com tetos e reserva em275[FX1]; desconhecido reprova, sem reduzir hipóteses do modelo de margem.
+
+Pedidos repetidos: antes desta gravação, conferidos main f2d087104aa6796b74f7858cc4f2f57de5d1a548, títulos/corpos e filas dos11 PRs abertos e55 heads distintos codex/* recentes ou relacionados a FR/fiscal (seleção por100 commits recentes/pais e inventário de600 refs). Sem ocorrência desta solicitação por etiqueta, título, data/hora ou conteúdo; FR335 existente foi preservado. Estado exato: registro documental; não implementado, não conferido em fluxo fiscal ponta a ponta e sem entrega funcional adicional.
+
+
 ### Entrega funcional207 — coorte paga no remetente por loja (24/10/2026)
 
 PR#897 head final02576118e6065aebb9fd9b9b32a3d0ef1ea5e8d9, tree446f9c486f5b8ed79d884432b3594c7aca1eacdb, merge85d91f1944d99a84d0b802b3294074f0029c1d5a em14:16:40UTC/11:16:40Fortaleza;24/24success após correções e suítes completas em novos heads, árvores prevista/testada/real e pais ordenados conferidos. Falhas anteriores preservadas acima. WebKit120890025425 confirmou coleções390/1280 às14:04:38/14:04:50UTC e título preservado390/1280 às14:06:36/14:06:39UTC. Nenhum job isolado usado como conclusão. #896 documental incorporado por ancestralidade, RE333/334 e prova206 no main sem entrega extra.
