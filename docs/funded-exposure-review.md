@@ -103,3 +103,12 @@ entre listas/finalidades, tempo e dados indevidos; testes existentes de waitlist
 também devem passar no CI completo do novo head. Nenhuma execução local ou
 operação real; sem novo fornecedor/custo variável de operação, incremento real
 deCI desconhecido e sem redução de tetosFX275. Sem entrega funcional adicional.
+
+Correção do primeiro head422ca4793956b1b05ef7dcefe2ba132cbb00538a:
+verify121401603679 falhou em26/10/2026 01:45:43Fortaleza no inventário de chaves,
+porque o literalnl:wl:t: mudou para o núcleo compartilhado e sua família ainda
+apontava ao arquivo antigo. Os seis testes novos e32checks legados de waitlist
+passaram; isso não basta para aprovação geral. A entrada do registro é movida
+para o novo arquivo, mantendo exatamente room/lib/waitlist.ts, partes, bytes,
+retenção, unidade e custos: sem entrada duplicada, exceção ao scanner, mudança de
+teto ou redução de custo. Nova verificação completa obrigatória no novo head.
