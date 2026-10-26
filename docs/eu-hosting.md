@@ -109,3 +109,38 @@ O ensaio verifica rejeição anterior àmutação para autenticação/rota/coman
 Limites1MiB/128comandos são dafixture e não mudam direitos/limites dos planos. Sem fornecedor,dependência externa,credencialconta,DNS ou recurso real. Acrescentado ao jobRedis existente,sem nova matriz,sem ampliar timeout,sem reduzir testes anteriores. Execução remota integral do novohead ainda pendente. Custo operacional novo porplano0/mês e0/ano por serfixture nãoimportada peloapp; custo total deCI,allocaçãoN,reserva e impacto da infraestrutura real permanecem não certificados,sem redução de teto.
 
 Não verifica clienteTypeScript de ponta a ponta,criação decontêineres,site,replicação,backup/restauração,domínio deteste,rollback completo,tempo total ou capacidade100%dos direitos. SV4 completo continua pendente. Adaptadores externos pesquisados não foram adotados por publicidade decompatibilidade.
+
+### SV4: cliente HTTP real no ensaio sintético de Redis (em verificação)
+
+O ensaio do PR1043 agora também executa o próprio `lib/redis.ts` e o próprio
+`lib/fetch-timeout.ts` em Node24, sem copiar o cliente, trocar Redis por memória
+ou acrescentar dependência. O único alias de importação é resolvido pelo mecanismo
+nativo [module.registerHooks do Node24](https://github.com/nodejs/node/blob/v24.0.0/doc/api/module.md).
+A etapa usa o setup-node24/npm ci já existente no mesmo job, deslocando o ensaio
+para depois dele; não adiciona job, matriz, instalação ou teto de execução.
+
+O subprocesso recebe somente PATH e identificadores sintéticos do fixture efêmero
+em127.0.0.1, nunca credenciais de provedor. O transporte nativo continua real;
+o envoltório de teste restringe origem/rota e injeta perda de ACK uma vez. Os
+cenários verificam configuração ausente/401 sem mutação, Unicode/null/ordem, TTL
+persistente e com vencimento, erro parcial sem reenviar, mutação com ACK perdido
+sem replay automático, cutoff vencido antes do envio e aliases KV existentes.
+O coordenador remove somente chaves com UUID deste ensaio, inclusive após falha.
+
+Este incremento exige toda a verificação do novo head; escrever o teste não é
+evidência de aprovação. Continua sendo pré-requisito parcial de SV4: não fornece
+proxy de produção, backup/restore binário, replicação, failover, contêineres da
+troca integral, capacidade por plano, escolha de fornecedor ou migração pronta.
+Nenhum serviço real, conta, segredo, DNS, direito comercial ou gate é alterado.
+Custo operacional novo por plano: zero neste teste isolado; custo incremental
+real de CI ainda desconhecido, não tratado como zero nem usado para reduzir
+tetos/reserva de275[FX1]. Sem incremento do contador funcional.
+
+Correção de verificação do primeiro head647536c1883cd1d0c968c6280ebe03191390a69a:
+o job Redis121372336063 falhou em26/10/2026 02:46:40UTC (25/10 23:46:40Fortaleza),
+antes de executar o cliente Node, porque urllib ainda enviava o corpo excedente
+quando o fixture corretamente recusava Content-Length com413 e fechava a conexão.
+O ensaio agora envia somente o cabeçalho que excede o teto e exige413 e o erro
+JSON exato antes de enviar corpo. Não captura/ignora BrokenPipe, não aumenta
+limites e mantém a conferência de nenhuma mutação. A falha anterior é preservada;
+somente CI completo no novo head pode aprovar este incremento.

@@ -122,10 +122,6 @@ jobs:
         env:
           MARKTMORGEN_REDIS_INTEGRATION: "1"
         run: python3 scripts/test_exposure_budget_redis.py
-      - name: Synthetic self-hosted HTTP to actual Redis contract
-        env:
-          MARKTMORGEN_REDIS_INTEGRATION: "1"
-        run: python3 scripts/test_self_hosted_redis_http.py
       - name: Actual Redis full contract cash reservation checks
         env:
           MARKTMORGEN_REDIS_INTEGRATION: "1"
@@ -144,6 +140,10 @@ jobs:
           node-version: "24"
           cache: npm
       - run: npm ci
+      - name: Synthetic self-hosted HTTP to actual Redis contract
+        env:
+          MARKTMORGEN_REDIS_INTEGRATION: "1"
+        run: python3 scripts/test_self_hosted_redis_http.py
       - name: Actual Redis security checks (docs/security-audit-2026-10-18.md)
         env:
           MARKTMORGEN_REDIS_INTEGRATION: "1"
