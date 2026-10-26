@@ -9676,3 +9676,40 @@ Correção da regressão de lote após falha no head894ddaf7,jobverify1217251892
 
 
 Publicação1066confirmada:dpl_8KYeDn3EwoAFuKktRRRiWQo4ypag READY26/10/2026 14:23:42.693Fortaleza,SHA2d5a7209d71d1c2621a4eb4a1250d453886f8fd2 ealiasmarktmorgen.com exatos;5HTTP200 comdata-dpl-id exato em /,/platform,/pricing,/mission,/library. Cobertura false/políticasNULL mantidas;apenas pré-requisito fechado,sem teste financeiro real ou recurso disponível ao cliente declarado. Contador254preservado. Verificação de logs desta publicação registrada na continuidade com janela real;nenhuma promessa semerros.
+
+
+### Registro de continuidade — isolamento do lote e próximo ensaio SV4 (26/10/2026)
+
+PR#1070 incorporado em26/10/2026 às14:53:44Fortaleza(17:53:44UTC),
+merge01bd4f237167e3cbf30e9037763ee12da6cf918d, headcb686722bed9af4f67b19e1f99804c1136e627a5,
+árvore96512847d77a1e86a30f85894667189c5d01d4bd; pais e árvore real conferidos.
+Falha inicial de uma espia de teste preservada no registro anterior; novo head
+aprovou31/31checks e Vercel, com8 classificadores10+7/full=true, sem rerun isolado.
+Verify121732959787:397checks passaram; Everything17:31:29.232UTC,
+agreements17:33:29.662UTC, store-copy17:48:22.410UTC. Mobile121732959817:
+home72/48/48ms, pricing32/32/32ms, sales32/32/32ms; LCP576–716ms, CLS0,
+limites originais preservados e ciclo/Enter/details aprovados.
+Produção dpl_6NhDAwxGLmDkqDHieFpfKjiTpf7U READY14:54:34.902Fortaleza
+(17:54:34.902UTC), SHA exato do merge e marktmorgen.com conferidos;
+cinco rotas /,/platform,/pricing,/mission,/library responderam200 com esse ID.
+Consulta error/fatal17:54:34.902→18:00:31.867UTC sem registros; janela limitada,
+não garantia de ausência de erro. Nenhum comando/chave/serviço unitário novo.
+AB(a) continua em andamento e contador254 permanece, sem entrega funcional255.
+
+SV4: ensaio concreto de dois servidores Redis em contêineres, cópia binária com
+codec real, reprovação de cópia parcial, troca de alias privado, falha do destino
+e retorno à origem. Mesma imagem já disponível, job existente, sem novo
+fornecedor/conta/pagamento/artefato/cache/pull. Novo código deve passar CI completo;
+tempos por fase ainda pendentes, não inventados. Detalhes e fontes oficiais
+datadas em docs/eu-hosting.md. Custo incremental condicional deste estágio público
+padrão US$0 mensal/anual nos seis contratos e fixo0, tetos120s+50s/total180s/etapa4min;
+demais custos/LLC/impostos/margens desconhecidos seguem reprovados. É pré-requisito
+parcial de SV4, não migração completa da aplicação ou publicação ao cliente.
+Próximo trabalho AB(a): intenção durável com propriedade atômica/submissão única
+integrada antes de qualquer IO do provedor; coveragepauseRestart=false até cumprir
+protocolo, custeio, reconciliação e ativação. AP449–455/AN456/361–362 preservados.
+
+SV4/PR#1071: primeiro headc67e720 jobRedis121752784855 falhou18:03:22.631UTC
+no boot (mapeamento6379 inexistente em bridge interna), antes de copiar dados.
+Correção usa IP privado da rede interna de propriedade validada e não publica
+portas; não habilita egress. Novo head exige toda a suíte, sem rerun isolado.
