@@ -1031,8 +1031,15 @@ export async function storeForEmail(
   email: string | null,
 ): Promise<Store | null> {
   if (!email || !isRedisConfigured()) return null;
-  const [raw] = await redisPipeline([["GET", await ownerKey(email)]]);
-  return parseStore(raw);
+  const reply = await redisPipeline([["GET", await ownerKey(email)]]);
+  if (!Array.isArray(reply) || reply.length !== 1) return null;
+  const store = parseStore(reply[0]);
+  // A readable record must belong to this exact owner key. Preserve legacy
+  // first-store records and case-insensitive email lookup; extra stores must
+  // still be addressed by their own persistent id.
+  if (!store || typeof store.email !== "string" ||
+      storeRef(store).toLowerCase() !== email.toLowerCase()) return null;
+  return store;
 }
 
 /** The store behind a public address, or null if that handle is free. */
