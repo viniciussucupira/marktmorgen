@@ -9825,3 +9825,47 @@ binding. Next implementation needs the immutable owned source observation,
 provider stop/price/single submission, durable resulting ID, read-only recovery,
 funded activation and acknowledged store/CAS cleanup with generations/rollover.
 No new account, paid operation or real message. AB(a) is incomplete; counter254.
+
+
+### AB(a) — fonte e caixa imutáveis da intenção reconhecida (26/10/2026)
+
+Novo incremento integrado em verificação: o primeiro ACK passa a carregar o
+snapshot exato da origem/receipts/caixa observados no mesmo EVAL, em vez de só
+booleano e futura releitura de ponteiro mutável. Snapshot persistido+retornado
+inclui somente provas lidas/validadas do ledger; chama não fornece as5provas.
+Pedido tem12campos exatos e payload completo≤4096bytes antes de HSET. Mesmo
+ledger/campo porgrant,ceil17comandos/semleituraextra/TTL/liberação/overwrite.
+
+Wrapper exigeprimeiroACK exato,contexto/deadline,identidades,origem mensal paga,
+receipts ecaixa antigo+novo; cópia congelada/desvinculada do chamador. Billing
+consome essa prova e confere cliente/cartão/plano/handle/origem, mas permanece
+emrecusa antes do provedor: coveragefalse/políticasNULL;protocolo inteiro pendente.
+Pausa de switch financiado escolhe pendinggrant; marcadorparcial fica desconhecido
+e não volta ao grant antigo. Teste real cobre4formas e conserva0IO/avisos/evidência.
+
+Suíte remota completa obrigatória:Lua real64concorrentes+ACKperdido/22negativos/
+overflow enriquecido/INFO eparser exato imutável,legado efluxo integrado.
+Nenhum teste local, conta, pagamento, mensagem ou custo de serviço novo.
+Custos/tetos no mesmo modelo canônico, tabela6contratos continua fechada;
+custos reais/LLC/impostos/retenção desconhecidos reprovados,nãozero.
+Docs/filapr1074incorporados16:44:49Fortaleza(19:44:49UTC),merge
+a9a9b8a5c969cf60526183c33f6c1b8a2effb8fb,árvore840bb728ac282c242b981e6fc97a3dcb78118f23,
+19checksdocs(8success10+7/fullfalse+11skipslegítimos)+Vercel;semnovaentregafuncional.
+Preços/limites/PLANS_ON_SALE/gates/AP449–455/AN456/361–362 econtador254preservados.
+
+PR#1075 ensaios ampliados antes da aprovação: origens checkout/switch/restart
+exercitam também receipts de10campos no EVAL real e no parser de produção,
+preservando cada campo/caixa anterior. Semmudança de produção ou tetos;
+novohead exige novamente suítecompleta,primeiroheadnãoéaprovação.
+
+Fixtures de origem switch/restart mantêm explicitamente principal histórico10+
+origem40+novo50=100,comreceipt/activated do anterior;história não vira custo0.
+Tetos/produçãoinalterados;novoheadcompleto,nãoaprovação do anterior.
+
+PR#1075 headbeac6add8360ff9ef0c18885f12cd6aa891ed0dd:Redis121817845042
+passou20:07:35.9897612UTC(64snapshots/22negativos/3origens/INFO17+16) e40fundingtests
+passaram;verify121817845221falhou nofixture4:handle25caracteres ultrapassava
+limiteexistente24,loja retornounull. Fixturecurtoagora exigecriaçãoexplícita.
+Padrão existente dehandle3–24comdot/underscore extraídobyte-for-byte para módulo
+puro ereexportado porstore.ts;preparação eparser usammesmaregra,semidentificador
+persistido/limitealterado. Novohead exige suítecompleta;nenhumrerunisolado.

@@ -699,8 +699,13 @@ export async function restartPlan(input: {
     // Current coverage refuses before Redis or any ensurePrice/provider call.
     if (!source.sourceGrantId) throw new Error("The funded restart source is unknown");
     const grant = await reserveRestartContractFunding(source.statsId, source.sourceSubscriptionId, input.tier);
-    if (!grant || !(await claimRestartIntent({ grant, ref: source.ref, handle: input.store.handle, paused: source.paused, sourceGrantId: source.sourceGrantId, claim: "claim_" + randomUUID() }))) {
-      throw new Error("The funded restart intent was not acknowledged");
+    const intent = grant ? await claimRestartIntent({ grant, ref: source.ref, handle: input.store.handle, paused: source.paused, sourceGrantId: source.sourceGrantId, claim: "claim_" + randomUUID() }) : null;
+    if (!intent) throw new Error("The funded restart intent was not acknowledged");
+    // Ownership carries the source observed atomically with its cash. Never
+    // replace it with a newer active pointer or a mismatched provider request.
+    const paused = JSON.parse(intent.paused) as {customer?:unknown;paymentMethod?:unknown;tier?:unknown};
+    if (paused.customer !== input.customerId || paused.paymentMethod !== input.paymentMethod || paused.tier !== input.tier || intent.handle !== input.store.handle || intent.source.binding.split("|")[1] !== source.sourceSubscriptionId) {
+      throw new Error("The funded restart source does not match its owned intent");
     }
     // Intent ownership is not provider stop/payment/activation proof. Until
     // those integrated phases exist, no funded provider operation is permitted.

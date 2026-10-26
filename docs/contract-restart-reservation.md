@@ -188,3 +188,85 @@ binding. Next implementation needs the immutable owned source observation,
 provider stop/price/single submission, durable resulting ID, read-only recovery,
 funded activation and acknowledged store/CAS cleanup with generations/rollover.
 No new account, paid operation or real message. AB(a) is incomplete; counter254.
+
+
+## Atomic owned source snapshot — next integrated increment
+
+State: in verification; funded provider IO remains closed. A boolean first-claim
+reply was insufficient for the next phase: re-reading a mutable active pointer
+after ownership would not establish which paid source and cash were observed
+during that claim. The same atomic operation now persists and returns its exact
+active binding, source receipt, new restart receipt, reserved principal and
+carried principal as part of the one owned intent.
+
+These values are copied from the Redis reads already validated by the claim,
+not supplied by its caller. A request must contain exactly the12 original fields.
+The fully enriched stored/returned payload must fit the existing4096-byte bound
+before any HSET; a bounded request whose enriched snapshot is too large refuses
+without mutation. There is still one field per grant in the same permanent hash,
+no TTL/release/overwrite, and the same17-command ceiling. No extra Redis read,
+second ledger, snapshot service, job, matrix or dependency is introduced.
+
+Only a first-owner reply [1,exactStoredPayload] can be decoded. The production
+wrapper rechecks the financial context/deadline and verifies exact fields,
+claim/store/source identities, source paid monthly period, both receipts and
+old-plus-new cash against the same budget. Unknown, duplicate, malformed,
+over-limit or mismatched acknowledgements yield null; none authorizes another
+attempt or compensating release. Decoding is a pure wire check, not provider
+submission permission. Its own data input refuses accessors without executing
+them. Returned grant/source data are frozen and detached from caller mutation.
+
+billing.restartPlan consumes that owned snapshot and checks the paused customer,
+card, plan, handle and immutable source before its existing terminal refusal.
+It does not replace the captured source with a later active pointer. Coverage
+remains false and policies null, so live funding/claim/provider IO stays closed.
+Provider stop/price/single POST/ID/recovery/activation/store acknowledgement,
+generation-aware cleanup/undo and rollover remain unfinished; this does not
+complete AB(a) or prove a positive funded charge flow.
+
+Pause creation now selects the pending funded switch grant when either pending
+metadata marker is present, matching the existing subscription activation logic.
+A partial pending marker stays unknown instead of falling back to the older
+grant. The real runBreaks→billing synthetic regression covers ordinary, unknown,
+switched and partially marked sources, after the funded store period is cleared,
+without a provider call, notice or lost pause/due/year/content evidence.
+
+Remote tests must verify64 contenders returning one exact stored snapshot;
+unchanged source/cash/receipt fields; ignored ACK, duplicate/new nonce/deadline
+refusal;22 negative cases including caller-supplied fields and enriched overflow;
+INFO command accounting; exact checkout/switch/prior-restart source receipts,
+decoder mismatches/immutable copies; and all
+existing application/browser regressions. Values below remain pending until
+the entire new head passes. No local process or synthetic service was run.
+
+Cost authorization remains the six-contract table above: no live claim operation
+while disabled; commands and all enriched bytes stay within existing ceilings.
+A ceiling is not a supplier quote. Full protocol retention, Redis overhead,
+reads/recovery/provider/LLC/BR-US taxes including5%ISS and the heavier reading
+remain unknown/rejected under the same canonical cost model. No price, visible
+limit, commission, commercial/fiscal gate or functional counter254 changes.
+
+The ten-field switch/prior-restart fixtures explicitly retain an upstream
+10-cent synthetic principal and its receipt/activation proof. Their snapshot
+therefore keeps100cents (upstream10+source40+new50), rather than assuming missing
+history costs zero. They test immutable observations, not supplier cost approval
+or complete historical reconciliation; full financial/provenance gates stay closed.
+
+
+### Verification failure and canonical handle preservation
+
+Headbeac6add8360ff9ef0c18885f12cd6aa891ed0dd passed actual Redis121817845042
+at20:07:35.9897612UTC:64 owned snapshots,22 negative cases, checkout/switch/
+prior-restart receipts and17first/16duplicate commands. Its40 funding tests
+also passed. Full verify121817845221 failed later because the fourth synthetic
+store handle had25characters, exceeding the existing24-character rule; store
+creation returned null before that scenario could run. The fixture now uses a
+short valid handle and checks creation explicitly. Assertions and product limits
+are preserved; full new-head CI remains required.
+
+The funded-only preparation filter also now shares the existing canonical store
+handle pattern, extracted byte-for-byte to a pure module and re-exported from
+store.ts for the same public API. Valid existing dots/underscores and the same
+3–24-character boundaries remain recognized; no persisted identifier is changed.
+The actual decoder tests these valid forms and invalid boundaries. This does not
+enable coverage, provider calls or a new customer-facing entitlement.

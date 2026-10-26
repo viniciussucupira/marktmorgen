@@ -1,3 +1,4 @@
+import {HANDLE_PATTERN} from '@/lib/store-handle-pattern';
 import {createHash,randomUUID} from 'node:crypto';
 import {isRedisConfigured,redisPipeline} from '@/lib/redis';
 import {commercialMarginReady,CURRENT_COMMERCIAL_MARGIN_REVIEW,CURRENT_PRICE_AND_RIGHTS_SNAPSHOT} from '@/lib/commercial-margin';
@@ -313,7 +314,8 @@ if #ARGV[12]>320 or #ARGV[13]>1536 or #ARGV[16]>4096 or #ARGV[14]>86 or not stri
 if redis.call('TYPE',KEYS[1]).ok~='hash' or redis.call('TTL',KEYS[1])~=-1 then return 0 end
 if redis.call('HGET',KEYS[1],'policy')~=ARGV[1] or redis.call('HGET',KEYS[1],'review')~=ARGV[2] then return 0 end
 if ARGV[4]~='creator_month' and ARGV[4]~='pro_month' and ARGV[4]~='scale_month' then return 0 end
-local receipt=parts(redis.call('HGET',KEYS[1],'grant:'..ARGV[5]),1024)
+local restartRaw=redis.call('HGET',KEYS[1],'grant:'..ARGV[5])
+local receipt=parts(restartRaw,1024)
 if not receipt or #receipt~=10 or receipt[1]~=ARGV[2] or receipt[2]~=ARGV[3] or receipt[3]~=ARGV[4] or receipt[4]~='restart' or receipt[10]==ARGV[5] then return 0 end
 local charge,submitted,expires,activation=amount(receipt[5]),amount(receipt[6]),amount(receipt[7]),amount(receipt[8])
 local now,minimum,limit,carry,submission=amount(ARGV[7]),amount(ARGV[8]),amount(ARGV[9]),amount(ARGV[10]),amount(ARGV[11])
@@ -327,7 +329,8 @@ if not source or #source~=7 or source[1]~=receipt[10] or source[2]~=ARGV[6] or s
 local created,start,finish=amount(source[4]),amount(source[6]),amount(source[7])
 if not created or created<=0 or not start or start<created or not finish or finish<=start or finish>now then return 0 end
 if redis.call('HGET',KEYS[1],'activated:'..source[1])~=active then return 0 end
-local original=parts(redis.call('HGET',KEYS[1],'grant:'..source[1]),1024)
+local sourceRaw=redis.call('HGET',KEYS[1],'grant:'..source[1])
+local original=parts(sourceRaw,1024)
 if not original or original[1]~=ARGV[2] or original[2]~=ARGV[3] or original[3]~=ARGV[4] or not ((#original==9 and original[4]=='checkout') or (#original==10 and (original[4]=='switch' or original[4]=='restart'))) then return 0 end
 local oldCharge,oldSubmitted,oldExpires,oldActivation=amount(original[5]),amount(original[6]),amount(original[7]),amount(original[8])
 local oldThrough=tonumber(original[9])
@@ -343,35 +346,93 @@ local annual=amount(redis.call('GET',KEYS[4]))
 if not annual or annual<=0 or annual>pause.from then return 0 end
 local valid,intent=pcall(cjson.decode,ARGV[16])
 if not valid or type(intent)~='table' or intent.version~=1 or intent.grant~=ARGV[5] or intent.review~=ARGV[2] or intent.statsId~=ARGV[3] or intent.sourceSubscription~=ARGV[6] or intent.sourceGrant~=source[1] or intent.ref~=ARGV[12] or intent.handle~=ARGV[15] or intent.paused~=ARGV[13] or intent.claim~=ARGV[14] or intent.created~=now or intent.deadline~=submitted then return 0 end
+-- The request cannot supply or overwrite the atomically observed source/cash.
+local fields=0
+for _ in pairs(intent) do fields=fields+1 end
+if fields~=12 then return 0 end
 -- Permanent single ownership: no TTL, release, overwrite, or repeated permission.
 if redis.call('HEXISTS',KEYS[1],'restart-intent:'..ARGV[5])==1 then return 0 end
-redis.call('HSET',KEYS[1],'restart-intent:'..ARGV[5],ARGV[16])
-return 1
+intent.sourceBinding=active
+intent.sourceReceipt=sourceRaw
+intent.restartReceipt=restartRaw
+intent.reservedCents=reserved
+intent.carriedCents=carried
+local owned=cjson.encode(intent)
+if #owned>4096 then return 0 end
+redis.call('HSET',KEYS[1],'restart-intent:'..ARGV[5],owned)
+return {1,owned}
 `;
 export type RestartIntentInput={
  grant:ContractGrant;ref:string;handle:string;paused:string;claim:string;sourceGrantId:string;
 };
+
+export type OwnedRestartIntent=Readonly<{
+ claim:string;grant:Readonly<ContractGrant>;ref:string;handle:string;paused:string;claimedAtSeconds:number;
+ source:Readonly<{binding:string;receipt:string;restartReceipt:string;reservedCents:number;carriedCents:number}>;
+}>;
+/** Pure wire validation, not submission permission. Only claimRestartIntent's
+ * first owned ACK and current financial checks can produce a live preparation.
+ * Immutable strings retain the source observed in that same atomic operation;
+ * reading a new mutable active pointer later would not prove this ownership.
+ */
+export function ownedRestartIntentFromAcknowledgement(
+ input:RestartIntentInput,now:number,
+ budget:{cashLimitCents:number;carryForwardCents:number},ack:unknown,
+):OwnedRestartIntent|null{
+ try{
+  const encoded=canonicalFinancialSnapshot({input,budget,ack,now});if(!encoded)return null;
+  ({input,budget,ack,now}=JSON.parse(encoded) as {input:RestartIntentInput;budget:{cashLimitCents:number;carryForwardCents:number};ack:unknown;now:number});
+  const candidate=input?.grant;
+  if(!candidate||typeof input.handle!=='string'||!HANDLE_PATTERN.test(input.handle)||candidate.action!=='restart'||!['creator_month','pro_month','scale_month'].includes(candidate.key)||!/^ctr_[A-Za-z0-9_-]{1,80}$/.test(candidate.id)||!/^sub_[A-Za-z0-9]{6,64}$/.test(candidate.sourceSubscriptionId??'')||!Number.isSafeInteger(now)||now<=0||now>candidate.submitUntilSeconds||now<candidate.submitUntilSeconds-CONTRACT_FUNDING_RULES.submissionSeconds||![budget.cashLimitCents,budget.carryForwardCents].every(n=>Number.isSafeInteger(n)&&n>=0&&n<=CONTRACT_FUNDING_RULES.maxInteger)||budget.cashLimitCents<budget.carryForwardCents)return null;
+  if(!Array.isArray(ack)||ack.length!==2||ack[0]!==1||typeof ack[1]!=='string'||Buffer.byteLength(ack[1])>CONTRACT_FUNDING_RULES.restartIntent.maxIntentBytes)return null;
+  const owned=JSON.parse(ack[1]) as Record<string,unknown>;
+  if(!owned||typeof owned!=='object'||Array.isArray(owned))return null;
+  const {grant,ref,handle,paused,claim,sourceGrantId}=input;
+  const expected={version:1,grant:grant.id,review:grant.reviewId,statsId:grant.statsId,sourceSubscription:grant.sourceSubscriptionId,sourceGrant:sourceGrantId,ref,handle,paused,claim,created:now,deadline:grant.submitUntilSeconds};
+  const fields=[...Object.keys(expected),'sourceBinding','sourceReceipt','restartReceipt','reservedCents','carriedCents'].sort();
+  if(JSON.stringify(Object.keys(owned).sort())!==JSON.stringify(fields)||Object.entries(expected).some(([key,value])=>owned[key]!==value))return null;
+  if(typeof owned.sourceBinding!=='string'||typeof owned.sourceReceipt!=='string'||typeof owned.restartReceipt!=='string'||owned.sourceBinding.length>256||owned.sourceReceipt.length>1024||owned.restartReceipt.length>1024)return null;
+  const binding=owned.sourceBinding.split('|'),receipt=owned.sourceReceipt.split('|'),restart=owned.restartReceipt.split('|');
+  const amount=(raw:string,max:number=CONTRACT_FUNDING_RULES.maxInteger):number|null=>{
+   if(!/^(0|[1-9][0-9]*)$/.test(raw))return null;
+   const n=Number(raw);return Number.isSafeInteger(n)&&n>=0&&n<=max?n:null;
+  };
+  const created=amount(binding[3]??''),start=amount(binding[5]??''),finish=amount(binding[6]??'');
+  const pause=JSON.parse(paused) as {subscription?:unknown;from?:unknown;until?:unknown;funding?:{version?:unknown;grantId?:unknown}};
+  if(binding.length!==7||binding[0]!==sourceGrantId||binding[1]!==grant.sourceSubscriptionId||binding[2]!==grant.key||binding[4]!=='paid'||created===null||created<=0||start===null||start<created||finish===null||finish<=start||finish>now||pause.subscription!==grant.sourceSubscriptionId||pause.from!==finish||typeof pause.until!=='number'||!Number.isSafeInteger(pause.until)||pause.until<=finish||pause.until>now||pause.funding?.version!==1||pause.funding.grantId!==sourceGrantId)return null;
+  const sourceCharge=amount(receipt[4]??''),through=amount(receipt[8]??'',Number.MAX_SAFE_INTEGER);
+  if(receipt[0]!==grant.reviewId||receipt[1]!==grant.statsId||receipt[2]!==grant.key||!((receipt.length===9&&receipt[3]==='checkout')||(receipt.length===10&&['switch','restart'].includes(receipt[3])&&/^ctr_[A-Za-z0-9_-]{1,80}$/.test(receipt[9])))||sourceCharge===null||sourceCharge<=0||[5,6,7].some(i=>amount(receipt[i]??'')===null)||through===null||finish*1000>through)return null;
+  const expectedRestart=[grant.reviewId,grant.statsId,grant.key,'restart',grant.reservedCents,grant.submitUntilSeconds,grant.checkoutExpiresAtSeconds,grant.activationUntilSeconds,Date.parse(grant.liabilitiesThrough),sourceGrantId].join('|');
+  if(restart.length!==10||owned.restartReceipt!==expectedRestart)return null;
+  const reserved=owned.reservedCents,carried=owned.carriedCents;
+  if(typeof reserved!=='number'||typeof carried!=='number'||!Number.isSafeInteger(reserved)||!Number.isSafeInteger(carried)||carried!==budget.carryForwardCents||carried<0||reserved<carried||reserved>budget.cashLimitCents||sourceCharge+grant.reservedCents>reserved-carried)return null;
+  return Object.freeze({claim,grant:Object.freeze({...grant}),ref,handle,paused,claimedAtSeconds:now,source:Object.freeze({binding:owned.sourceBinding,receipt:owned.sourceReceipt,restartReceipt:owned.restartReceipt,reservedCents:reserved,carriedCents:carried})});
+ }catch{return null;}
+}
 export async function claimRestartIntent(
  input:RestartIntentInput,
  policy:ContractFundingPolicy|null=CURRENT_CONTRACT_FUNDING_POLICY,
  context:ContractFundingContext={termsSnapshot:CURRENT_PRICE_AND_RIGHTS_SNAPSHOT,review:CURRENT_COMMERCIAL_MARGIN_REVIEW},
-):Promise<boolean>{
+):Promise<OwnedRestartIntent|null>{
  // New IO is forbidden until the entire lifecycle/cost review is covered.
- if(!Boolean(CONTRACT_ADMISSION_COVERAGE.pauseRestart))return false;
- const encoded=canonicalFinancialSnapshot({input,context});if(!encoded)return false;
+ if(!Boolean(CONTRACT_ADMISSION_COVERAGE.pauseRestart))return null;
+ const encoded=canonicalFinancialSnapshot({input,context});if(!encoded)return null;
  ({input,context}=JSON.parse(encoded) as {input:RestartIntentInput;context:ContractFundingContext});
- if(!input||!context||typeof input!=='object'||typeof context!=='object')return false;
+ if(!input||!context||typeof input!=='object'||typeof context!=='object')return null;
  const {grant,ref,handle,paused,claim,sourceGrantId}=input;
- if(!grant||typeof grant.statsId!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(grant.statsId)||grant.action!=='restart'||!/^sub_[A-Za-z0-9]{6,64}$/.test(grant.sourceSubscriptionId??'')||!/^ctr_[A-Za-z0-9_-]{1,80}$/.test(grant.id)||!/^ctr_[A-Za-z0-9_-]{1,80}$/.test(sourceGrantId)||typeof ref!=='string'||ref.length===0||ref.length>320||typeof paused!=='string'||Buffer.byteLength(paused)>CONTRACT_FUNDING_RULES.restartIntent.maxPauseBytes||typeof handle!=='string'||!/^[a-z0-9][a-z0-9-]{2,62}$/.test(handle)||typeof claim!=='string'||!/^claim_[A-Za-z0-9_-]{1,80}$/.test(claim)||!isRedisConfigured())return false;
- if(!['creator_month','pro_month','scale_month'].includes(grant.key)||!commercialMarginReady(context.review))return false;
+ if(!grant||typeof grant.statsId!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(grant.statsId)||grant.action!=='restart'||!/^sub_[A-Za-z0-9]{6,64}$/.test(grant.sourceSubscriptionId??'')||!/^ctr_[A-Za-z0-9_-]{1,80}$/.test(grant.id)||!/^ctr_[A-Za-z0-9_-]{1,80}$/.test(sourceGrantId)||typeof ref!=='string'||ref.length===0||ref.length>320||typeof paused!=='string'||Buffer.byteLength(paused)>CONTRACT_FUNDING_RULES.restartIntent.maxPauseBytes||typeof handle!=='string'||!HANDLE_PATTERN.test(handle)||typeof claim!=='string'||!/^claim_[A-Za-z0-9_-]{1,80}$/.test(claim)||!isRedisConfigured())return null;
+ if(!['creator_month','pro_month','scale_month'].includes(grant.key)||!commercialMarginReady(context.review))return null;
  const before=new Date(),config=contractFundingConfiguration(policy,context,before);
- if(!config||config.reviewId!==grant.reviewId||config.grantCents[grant.key]!==grant.reservedCents)return false;
+ if(!config||config.reviewId!==grant.reviewId||config.grantCents[grant.key]!==grant.reservedCents)return null;
  const now=Math.floor(before.getTime()/1000);
  const intent=JSON.stringify({version:1,grant:grant.id,review:grant.reviewId,statsId:grant.statsId,sourceSubscription:grant.sourceSubscriptionId,sourceGrant:sourceGrantId,ref,handle,paused,claim,created:now,deadline:grant.submitUntilSeconds});
- if(Buffer.byteLength(intent)>CONTRACT_FUNDING_RULES.restartIntent.maxIntentBytes)return false;
+ if(Buffer.byteLength(intent)>CONTRACT_FUNDING_RULES.restartIntent.maxIntentBytes)return null;
  try{
   const result=await redisPipeline([['EVAL',CLAIM_RESTART_INTENT,4,'nl:contract-reserve:v1','nl:pause:'+ref,'nl:pause:due','nl:pause:last:'+ref,contractFundingBinding(config),config.reviewId,grant.statsId,grant.key,grant.id,grant.sourceSubscriptionId!,now,grant.reservedCents,config.cashLimitCents,config.carryForwardCents,CONTRACT_FUNDING_RULES.submissionSeconds,ref,paused,claim,handle,intent]]);
   const current=contractFundingConfiguration(policy,context,new Date()),checked=Date.now();
-  return current!==null&&current.binding===config.binding&&commercialMarginReady(context.review)&&checked>=before.getTime()&&checked<=grant.submitUntilSeconds*1000&&result.length===1&&result[0]===1;
- }catch{return false;}
+  if(current===null||current.binding!==config.binding||!commercialMarginReady(context.review)||checked<before.getTime()||checked>grant.submitUntilSeconds*1000||result.length!==1)return null;
+  const owned=ownedRestartIntentFromAcknowledgement(input,now,{cashLimitCents:config.cashLimitCents,carryForwardCents:config.carryForwardCents},result[0]);
+  const finished=Date.now();
+  return owned&&finished>=checked&&finished<=grant.submitUntilSeconds*1000&&new Date(finished).toISOString().slice(0,7)===context.review?.fundedExposure?.month?owned:null;
+ }catch{return null;}
 }

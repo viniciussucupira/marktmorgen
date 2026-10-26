@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {canonicalFinancialSnapshot,contractCoverageDays,contractFundingConfiguration,CONTRACT_ADMISSION_COVERAGE,CONTRACT_KEYS,CONTRACT_FUNDING_RULES} from '@/lib/contract-funding-rules';
 import {assessCustomerWorstCase} from '@/lib/net-margin-rules';
-import {claimRestartIntent,activateCheckoutContract,activateSwitchContract,type CheckoutContractActivation,reserveContractFunding,reserveSwitchContractFunding,reserveRestartContractFunding} from '@/lib/contract-funding';
+import {ownedRestartIntentFromAcknowledgement,claimRestartIntent,activateCheckoutContract,activateSwitchContract,type CheckoutContractActivation,reserveContractFunding,reserveSwitchContractFunding,reserveRestartContractFunding} from '@/lib/contract-funding';
 import {contractFixture} from './contract-funding-fixture';
 import {reset,seed,ledger,calls,settings} from './contract-funding-redis';
 const key='nl:contract-reserve:v1';
@@ -335,7 +335,43 @@ test('unfinished integrated restart intent refuses before Redis and never opens 
  assert.equal(CONTRACT_FUNDING_RULES.restartIntent.maxPauseBytes,1536);
  assert.equal(CONTRACT_FUNDING_RULES.restartIntent.maxIntentBytes,4096);
  const grant={sourceSubscriptionId:'sub_RestartSource01',action:'restart' as const,id:'ctr_new',reviewId:'review',statsId:'one',key:'creator_month' as const,reservedCents:50,submitUntilSeconds:Math.floor(Date.now()/1000)+300,checkoutExpiresAtSeconds:Math.floor(Date.now()/1000)+3600,activationUntilSeconds:Math.floor(Date.now()/1000)+86400,liabilitiesThrough:'2030-01-01T00:00:00.000Z'};
- assert.equal(await claimRestartIntent({grant,ref:'one@example.com',handle:'one-store',paused:'{}',claim:'claim_one',sourceGrantId:'ctr_source'},f.policy,f.context),false);
+ assert.equal(await claimRestartIntent({grant,ref:'one@example.com',handle:'one-store',paused:'{}',claim:'claim_one',sourceGrantId:'ctr_source'},f.policy,f.context),null);
  assert.equal(calls.length,0);
  assert.deepEqual([...ledger.get(key)!],before);
+});
+
+test('first-owner acknowledgement carries the exact immutable atomic source and cash snapshot',()=>{
+ const now=1800000001;
+ const grant={sourceSubscriptionId:'sub_RestartSource01',action:'restart' as const,id:'ctr_restart_new',reviewId:'review',statsId:'restart-store',key:'creator_month' as const,reservedCents:50,submitUntilSeconds:1800000300,checkoutExpiresAtSeconds:1800003600,activationUntilSeconds:1800086400,liabilitiesThrough:new Date(2000000000000).toISOString()};
+ const paused=JSON.stringify({subscription:grant.sourceSubscriptionId,customer:'cus_IntentCustomer01',paymentMethod:'pm_IntentCard001',tier:'creator',from:1800000000,until:now,told:0,funding:{version:1,grantId:'ctr_restart_source'}});
+ const input={grant,ref:'synthetic-source',handle:'synthetic-store',paused,claim:'claim_first',sourceGrantId:'ctr_restart_source'};
+ const budget={cashLimitCents:140,carryForwardCents:0};
+ const sourceBinding='ctr_restart_source|sub_RestartSource01|creator_month|1799999000|paid|1799999000|1800000000';
+ const sourceReceipt='review|restart-store|creator_month|checkout|40|1799999300|1800000000|1800000200|2000000000000';
+ const restartReceipt='review|restart-store|creator_month|restart|50|1800000300|1800003600|1800086400|2000000000000|ctr_restart_source';
+ const frame={version:1,grant:grant.id,review:grant.reviewId,statsId:grant.statsId,sourceSubscription:grant.sourceSubscriptionId,sourceGrant:input.sourceGrantId,ref:input.ref,handle:input.handle,paused,claim:input.claim,created:now,deadline:grant.submitUntilSeconds,sourceBinding,sourceReceipt,restartReceipt,reservedCents:90,carriedCents:0};
+ const decode=(value:unknown)=>ownedRestartIntentFromAcknowledgement(input,now,budget,value);
+ for(const action of ['switch','restart']){
+  const prior=sourceReceipt.replace('|checkout|','|'+action+'|')+'|ctr_upstream_source';
+  const observed=decode([1,JSON.stringify({...frame,sourceReceipt:prior,reservedCents:100})]);assert.ok(observed);
+  assert.equal(observed.source.receipt,prior);
+ }
+ for(const handle of ['a.b','a_b','a-b','abc','a'.repeat(24)]){
+  assert.ok(ownedRestartIntentFromAcknowledgement({...input,handle},now,budget,[1,JSON.stringify({...frame,handle})]));
+ }
+ for(const handle of ['ab','a'.repeat(25),'.abc','abc_','abc.']){
+  assert.equal(ownedRestartIntentFromAcknowledgement({...input,handle},now,budget,[1,JSON.stringify({...frame,handle})]),null);
+ }
+ const owned=decode([1,JSON.stringify(frame)]);assert.ok(owned);
+ assert.deepEqual(owned.source,{binding:sourceBinding,receipt:sourceReceipt,restartReceipt,reservedCents:90,carriedCents:0});
+ assert.equal(owned.claim,input.claim);assert.equal(owned.paused,paused);
+ assert.ok(Object.isFrozen(owned)&&Object.isFrozen(owned.source)&&Object.isFrozen(owned.grant));
+ for(const ack of [null,[],[1],[1,null],[1,'{'],[1,JSON.stringify(frame),1],[2,JSON.stringify(frame)],[1,JSON.stringify({...frame,claim:'claim_other'})],[1,JSON.stringify({...frame,sourceSubscription:'sub_ForeignIntent01'})],[1,JSON.stringify({...frame,sourceBinding:sourceBinding.replace('|paid|','|trial|')})],[1,JSON.stringify({...frame,sourceReceipt:sourceReceipt.replace('|40|','|41|'),reservedCents:90})],[1,JSON.stringify({...frame,restartReceipt:restartReceipt.replace('|50|','|49|')})],[1,JSON.stringify({...frame,reservedCents:89})],[1,JSON.stringify({...frame,carriedCents:1})],[1,JSON.stringify({...frame,extra:'not an owned field'})],[1,'x'.repeat(4097)]]){
+  assert.equal(decode(ack),null);
+ }
+ assert.equal(ownedRestartIntentFromAcknowledgement(input,now,{cashLimitCents:89,carryForwardCents:0},[1,JSON.stringify(frame)]),null);
+ assert.equal(ownedRestartIntentFromAcknowledgement(input,1800000301,budget,[1,JSON.stringify({...frame,created:1800000301})]),null);
+ let getters=0;const hostile={...input};Object.defineProperty(hostile,'claim',{enumerable:true,get(){getters++;return input.claim;}});
+ assert.equal(ownedRestartIntentFromAcknowledgement(hostile,now,budget,[1,JSON.stringify(frame)]),null);assert.equal(getters,0);
+ input.grant.id='ctr_caller_mutated';assert.equal(owned.grant.id,'ctr_restart_new');
 });

@@ -247,7 +247,7 @@ export async function pausePlan(store: Store, months: PauseMonths, nowSeconds = 
     from,
     until: addPeriods(from, "month", months),
     told: 0,
-    ...((store.period?.funded === true || hasContractFunding(subscription)) ? { funding: { version: 1 as const, grantId: (() => { const metadata = subscription.metadata as Record<string, unknown> | null | undefined; const grant = metadata?.funding_grant; return typeof grant === "string" && /^ctr_[A-Za-z0-9_-]{1,80}$/.test(grant) ? grant : null; })() } } : {}),
+    ...((store.period?.funded === true || hasContractFunding(subscription)) ? { funding: { version: 1 as const, grantId: (() => { const metadata = subscription.metadata as Record<string, unknown> | null | undefined; const pending = metadata?.funding_pending_grant !== undefined || metadata?.funding_pending_review !== undefined; const grant = pending ? metadata?.funding_pending_grant : metadata?.funding_grant; return typeof grant === "string" && /^ctr_[A-Za-z0-9_-]{1,80}$/.test(grant) ? grant : null; })() } } : {}),
   };
   // All three durable scheduling writes must be acknowledged before any
   // provider mutation. A missing/partial reply may hide committed writes:

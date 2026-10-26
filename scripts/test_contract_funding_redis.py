@@ -565,8 +565,22 @@ def main():
 
         # Actual application intent ownership, separate from reservation. No
         # provider permission, activation or production coverage is inferred.
-        def intent_ready(key, ref):
-            seed_restart(key)
+        def intent_ready(key, ref, source_action='checkout'):
+            assert source_action in ('checkout', 'switch', 'restart')
+            _, receipt = seed_restart(key)
+            if source_action != 'checkout':
+                receipt = receipt.replace('|checkout|', '|' + source_action + '|') + '|ctr_upstream_source'
+                # Historical upstream principal is retained explicitly, not
+                # silently treated as zero by a synthetic ten-field fixture.
+                if source_action == 'switch':
+                    upstream = 'ctr_upstream_source|sub_RestartSource01|creator_month|1799999000|paid|1799999000|1800000000'
+                    upstream_receipt = 'review|restart-store|creator_month|checkout|10|1799999300|1800000000|1800000200|2000000000000'
+                else:
+                    upstream = 'ctr_upstream_source|sub_PreviousSource01|creator_month|1799998000|paid|1799998000|1799999000'
+                    upstream_receipt = 'review|restart-store|creator_month|checkout|10|1799998300|1799999000|1799999300|2000000000000'
+                redis.command('HSET', key, 'grant:ctr_restart_source', receipt, 'reserved', 50,
+                              'grant:ctr_upstream_source', upstream_receipt,
+                              'activated:ctr_upstream_source', upstream)
             assert take_restart(redis, key) == 1
             pause = json.dumps(dict(subscription='sub_RestartSource01',
                                     customer='cus_IntentCustomer01', paymentMethod='pm_IntentCard001',
@@ -580,13 +594,17 @@ def main():
         def intent_claim(client, key, ref, pause, claim='claim_first', **over):
             options = dict(binding='binding', review='review', now=1800000001,
                            source='sub_RestartSource01', raw=pause, amount=50, limit=140,
-                           source_grant='ctr_restart_source', payload=None)
+                           source_grant='ctr_restart_source', payload=None, extra=False, prove_input_bound=False)
             options.update(over)
             intent = json.dumps(dict(version=1, grant='ctr_restart_new', review=options['review'],
                                      statsId='restart-store', sourceSubscription=options['source'],
                                      sourceGrant=options['source_grant'], ref=ref, handle='synthetic-store',
                                      paused=options['raw'], claim=claim, created=options['now'],
                                      deadline=1800000300), separators=(',', ':'))
+            if options['extra']:
+                intent = json.dumps({**json.loads(intent), 'unexpected': 'not an owned field'}, separators=(',', ':'))
+            if options['prove_input_bound']:
+                assert len(intent.encode()) <= 4096
             return client.command('EVAL', intent_script, 4, key, 'nl:pause:' + ref,
                                   'nl:pause:due', 'nl:pause:last:' + ref,
                                   options['binding'], options['review'], 'restart-store',
@@ -604,13 +622,21 @@ def main():
                 client.close()
         with concurrent.futures.ThreadPoolExecutor(max_workers=16) as pool:
             results = list(pool.map(concurrent_intent, range(64)))
-        assert sum(results) == 1 and all(result in (0, 1) for result in results)
+        assert sum(isinstance(result, list) and len(result) == 2 and result[0] == 1 for result in results) == 1
+        assert all(result == 0 or isinstance(result, list) and len(result) == 2 and result[0] == 1 and isinstance(result[1], str) for result in results)
         for field, value in before:
             assert redis.command('HGET', keys[42], field) == value
         claimed = json.loads(redis.command('HGET', keys[42], 'restart-intent:ctr_restart_new'))
         assert claimed['paused'] == pause and claimed['sourceGrant'] == 'ctr_restart_source'
+        original = dict(before)
+        assert claimed['sourceBinding'] == original['active:restart-store']
+        assert claimed['sourceReceipt'] == original['grant:ctr_restart_source']
+        assert claimed['restartReceipt'] == original['grant:ctr_restart_new']
+        assert claimed['reservedCents'] == 90 and claimed['carriedCents'] == 0
+        winner = next(result for result in results if isinstance(result, list))
+        assert winner[1] == redis.command('HGET', keys[42], 'restart-intent:ctr_restart_new')
         assert redis.command('TTL', keys[42]) == -1
-        print('PASS:64 actual restart intent contenders produce one durable owner and retain source/full cash')
+        print('PASS:64 actual restart intent contenders produce one immutable owned source/cash snapshot')
 
         # Unknown acknowledgement is deliberately ignored; all subsequent
         # attempts, including a new nonce and time beyond the window, refuse.
@@ -619,9 +645,11 @@ def main():
         assert match
         intent_ceiling = int(match.group(1))
         before_calls = command_counts()
-        assert intent_claim(redis, keys[44], intent_refs[2], pause) == 1
+        first_ack = intent_claim(redis, keys[44], intent_refs[2], pause)
         first = difference(before_calls, command_counts())
         assert sum(first.values()) <= intent_ceiling
+        assert isinstance(first_ack, list) and len(first_ack) == 2 and first_ack[0] == 1
+        assert first_ack[1] == redis.command('HGET', keys[44], 'restart-intent:ctr_restart_new')
         committed = snapshot(keys[44])
         before_calls = command_counts()
         assert intent_claim(redis, keys[44], intent_refs[2], pause) == 0
@@ -636,7 +664,8 @@ def main():
         for scenario in ['policy', 'review', 'pending', 'source', 'activated', 'old-grant',
                          'cash', 'carried', 'ttl', 'pause-missing', 'pause-marker',
                          'due-missing', 'due-score', 'annual-missing', 'raw-mismatch',
-                         'expired', 'rollback', 'foreign-source', 'foreign-grant', 'oversize']:
+                         'expired', 'rollback', 'foreign-source', 'foreign-grant', 'oversize',
+                         'extra-request-field', 'enriched-overflow']:
             ref = intent_refs[1]
             pause = intent_ready(keys[43], ref)
             args = {}
@@ -679,6 +708,18 @@ def main():
                 args['source_grant'] = 'ctr_foreign'
             elif scenario == 'oversize':
                 args['payload'] = 'x' * 4097
+            elif scenario == 'extra-request-field':
+                args['extra'] = True
+            elif scenario == 'enriched-overflow':
+                review = 'R' * 850
+                old = redis.command('HGET', keys[43], 'grant:ctr_restart_source').replace('review|', review + '|', 1)
+                new = redis.command('HGET', keys[43], 'grant:ctr_restart_new').replace('review|', review + '|', 1)
+                assert len(old.encode()) <= 1024 and len(new.encode()) <= 1024
+                redis.command('HSET', keys[43], 'review', review, 'grant:ctr_restart_source', old, 'grant:ctr_restart_new', new)
+                pause = json.dumps({**json.loads(pause), 'padding': 'x' * 900}, separators=(',', ':'))
+                assert len(pause.encode()) <= 1536
+                redis.command('SET', 'nl:pause:' + ref, pause)
+                args.update(review=review, prove_input_bound=True)
             before = snapshot(keys[43])
             pause_before = redis.command('GET', 'nl:pause:' + ref)
             last_before = redis.command('GET', 'nl:pause:last:' + ref)
@@ -688,7 +729,28 @@ def main():
             assert redis.command('GET', 'nl:pause:' + ref) == pause_before
             assert redis.command('GET', 'nl:pause:last:' + ref) == last_before
             assert redis.command('ZSCORE', 'nl:pause:due', ref) == due_before
-        print('PASS:20 unknown or mismatched restart intent observations retain exact pause/source/annual/cash evidence')
+        print('PASS:22 unknown, mismatched or over-limit restart intent observations retain exact pause/source/annual/cash evidence')
+
+        for source_action in ('switch', 'restart'):
+            ref = intent_refs[1]
+            pause = intent_ready(keys[43], ref, source_action)
+            before = snapshot(keys[43])
+            ack = intent_claim(redis, keys[43], ref, pause)
+            assert isinstance(ack, list) and len(ack) == 2 and ack[0] == 1
+            owned = json.loads(ack[1])
+            prior = dict(before)
+            assert owned['sourceReceipt'] == prior['grant:ctr_restart_source']
+            assert owned['sourceReceipt'].split('|')[3] == source_action
+            assert len(owned['sourceReceipt'].split('|')) == 10
+            assert owned['sourceBinding'] == prior['active:restart-store']
+            assert owned['reservedCents'] == 100 and owned['carriedCents'] == 0
+            assert prior['grant:ctr_upstream_source'].split('|')[4] == '10'
+            assert redis.command('HGET', keys[43], 'grant:ctr_upstream_source') == prior['grant:ctr_upstream_source']
+            assert redis.command('HGET', keys[43], 'activated:ctr_upstream_source') == prior['activated:ctr_upstream_source']
+            assert ack[1] == redis.command('HGET', keys[43], 'restart-intent:ctr_restart_new')
+            for field, value in before:
+                assert redis.command('HGET', keys[43], field) == value
+        print('PASS:owned intent retains exact checkout, switch and prior-restart source receipts without replacing any principal')
 
     finally:
         for ref in intent_refs:
