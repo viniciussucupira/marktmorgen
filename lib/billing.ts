@@ -704,6 +704,25 @@ export async function restartPlan(input: {
     "metadata[restarted]": "break",
   });
   const subscription = await onPlatform("POST", "/subscriptions", body, { idempotencyKey: input.idempotencyKey });
+  return observeRestartedPlan({ customerId: input.customerId, tier: input.tier, priceId }, subscription);
+}
+
+/**
+ * Validate an already obtained provider response using the same checks as the
+ * restart POST. No IO, grant activation, store write, retry or new charge.
+ * Recovery must separately prove the exact durable intent/subscription/source;
+ * a matching customer/price/period alone does not authorize adoption.
+ */
+export function observeRestartedPlan(
+  input: { customerId: string; tier: Tier; priceId: string },
+  subscription: Record<string, unknown>,
+  observedAt = Math.floor(Date.now() / 1000),
+): StartedSubscription {
+  if (!subscription || typeof subscription !== "object" || Array.isArray(subscription) ||
+      !Number.isSafeInteger(observedAt) || observedAt <= 0) {
+    throw new Error("the restarted plan observation or clock is unknown");
+  }
+  const priceId = input.priceId;
   const started = startedFrom(subscription);
   if (!started) throw new Error(`the restarted plan is not in good standing: ${String(subscription.status)}`);
   // A successful response still has to describe the customer and monthly plan requested.
@@ -718,7 +737,6 @@ export async function restartPlan(input: {
       price?.unit_amount !== PLAN_PRICES[input.tier].month || recurring?.interval !== "month" || recurring?.interval_count !== 1) {
     throw new Error("the restarted plan price does not match the requested monthly charge");
   }
-  const observedAt = Math.floor(Date.now() / 1000);
   const start = periodStart(subscription), end = periodEnd(subscription, false);
   if (!Number.isSafeInteger(start) || !Number.isSafeInteger(end) || start <= 0 || end <= start ||
       start > observedAt || end <= observedAt || end - start > 31 * 86400 || !started.period) {
