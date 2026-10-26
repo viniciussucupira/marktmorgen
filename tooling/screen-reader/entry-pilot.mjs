@@ -3,6 +3,7 @@ import {spawn} from "node:child_process";
 import {createRequire} from "node:module";
 import {resolve,join} from "node:path";
 import {nvda,voiceOver} from "@guidepup/guidepup";
+import {resetVoiceOverRunner} from "./reset-voiceover.mjs";
 import {navigateToContent} from "./navigate-to-content.mjs";
 const root=resolve("../.."),require=createRequire(join(root,"package.json"));
 const kind=process.platform==="win32"?"nvda":process.platform==="darwin"?"voiceover":null;
@@ -35,6 +36,11 @@ try{
   return route.continue();
  });
  const page=await context.newPage();
+ if(kind==="voiceover"&&process.env.GITHUB_ACTIONS==="true"){
+  stage="disposable runner reader preflight";
+  const result=await resetVoiceOverRunner();
+  console.log("AX2_REAL_READER_PREFLIGHT:"+JSON.stringify({reader:kind,...result}));
+ }
  stage="real reader startup";
  await reader.start({capture:"initial"});
  for(const fixture of [{path:"/signin",heading:"Start your store"},{path:"/signin?to=login",heading:"Log in to your store"}]){
