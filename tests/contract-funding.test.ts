@@ -353,7 +353,7 @@ test('first-owner acknowledgement carries the exact immutable atomic source and 
  const decode=(value:unknown)=>ownedRestartIntentFromAcknowledgement(input,now,budget,value);
  for(const action of ['switch','restart']){
   const prior=sourceReceipt.replace('|checkout|','|'+action+'|')+'|ctr_upstream_source';
-  const observed=decode([1,JSON.stringify({...frame,sourceReceipt:prior})]);assert.ok(observed);
+  const observed=decode([1,JSON.stringify({...frame,sourceReceipt:prior,reservedCents:100})]);assert.ok(observed);
   assert.equal(observed.source.receipt,prior);
  }
  const owned=decode([1,JSON.stringify(frame)]);assert.ok(owned);

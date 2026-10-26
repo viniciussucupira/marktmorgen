@@ -245,3 +245,9 @@ A ceiling is not a supplier quote. Full protocol retention, Redis overhead,
 reads/recovery/provider/LLC/BR-US taxes including5%ISS and the heavier reading
 remain unknown/rejected under the same canonical cost model. No price, visible
 limit, commission, commercial/fiscal gate or functional counter254 changes.
+
+The ten-field switch/prior-restart fixtures explicitly retain an upstream
+10-cent synthetic principal and its receipt/activation proof. Their snapshot
+therefore keeps100cents (upstream10+source40+new50), rather than assuming missing
+history costs zero. They test immutable observations, not supplier cost approval
+or complete historical reconciliation; full financial/provenance gates stay closed.

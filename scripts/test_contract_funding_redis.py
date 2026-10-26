@@ -570,7 +570,17 @@ def main():
             _, receipt = seed_restart(key)
             if source_action != 'checkout':
                 receipt = receipt.replace('|checkout|', '|' + source_action + '|') + '|ctr_upstream_source'
-                redis.command('HSET', key, 'grant:ctr_restart_source', receipt)
+                # Historical upstream principal is retained explicitly, not
+                # silently treated as zero by a synthetic ten-field fixture.
+                if source_action == 'switch':
+                    upstream = 'ctr_upstream_source|sub_RestartSource01|creator_month|1799999000|paid|1799999000|1800000000'
+                    upstream_receipt = 'review|restart-store|creator_month|checkout|10|1799999300|1800000000|1800000200|2000000000000'
+                else:
+                    upstream = 'ctr_upstream_source|sub_PreviousSource01|creator_month|1799998000|paid|1799998000|1799999000'
+                    upstream_receipt = 'review|restart-store|creator_month|checkout|10|1799998300|1799999000|1799999300|2000000000000'
+                redis.command('HSET', key, 'grant:ctr_restart_source', receipt, 'reserved', 50,
+                              'grant:ctr_upstream_source', upstream_receipt,
+                              'activated:ctr_upstream_source', upstream)
             assert take_restart(redis, key) == 1
             pause = json.dumps(dict(subscription='sub_RestartSource01',
                                     customer='cus_IntentCustomer01', paymentMethod='pm_IntentCard001',
@@ -733,7 +743,10 @@ def main():
             assert owned['sourceReceipt'].split('|')[3] == source_action
             assert len(owned['sourceReceipt'].split('|')) == 10
             assert owned['sourceBinding'] == prior['active:restart-store']
-            assert owned['reservedCents'] == 90 and owned['carriedCents'] == 0
+            assert owned['reservedCents'] == 100 and owned['carriedCents'] == 0
+            assert prior['grant:ctr_upstream_source'].split('|')[4] == '10'
+            assert redis.command('HGET', keys[43], 'grant:ctr_upstream_source') == prior['grant:ctr_upstream_source']
+            assert redis.command('HGET', keys[43], 'activated:ctr_upstream_source') == prior['activated:ctr_upstream_source']
             assert ack[1] == redis.command('HGET', keys[43], 'restart-intent:ctr_restart_new')
             for field, value in before:
                 assert redis.command('HGET', keys[43], field) == value

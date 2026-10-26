@@ -9857,3 +9857,7 @@ PR#1075 ensaios ampliados antes da aprovação: origens checkout/switch/restart
 exercitam também receipts de10campos no EVAL real e no parser de produção,
 preservando cada campo/caixa anterior. Semmudança de produção ou tetos;
 novohead exige novamente suítecompleta,primeiroheadnãoéaprovação.
+
+Fixtures de origem switch/restart mantêm explicitamente principal histórico10+
+origem40+novo50=100,comreceipt/activated do anterior;história não vira custo0.
+Tetos/produçãoinalterados;novoheadcompleto,nãoaprovação do anterior.
