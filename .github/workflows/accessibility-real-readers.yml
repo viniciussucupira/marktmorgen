@@ -53,6 +53,7 @@ jobs:
         os: [windows-latest, macos-latest]
     env:
       NEXT_TELEMETRY_DISABLED: "1"
+      AX2_PUBLIC_DISPOSABLE_RUNNER: "true"
     defaults:
       run:
         shell: bash
@@ -80,6 +81,9 @@ jobs:
       - name: Install version-matched real reader assets
         working-directory: tooling/screen-reader
         run: node node_modules/@guidepup/setup/bin/guidepup install
+      - name: Check bounded reader preflight ownership and refusal cases
+        working-directory: tooling/screen-reader
+        run: node --test reset-voiceover.test.mjs
       - name: Assert actual entry heading announcements and log exact speech
         working-directory: tooling/screen-reader
         run: node entry-pilot.mjs
