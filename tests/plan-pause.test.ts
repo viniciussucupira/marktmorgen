@@ -34,6 +34,8 @@ const subs: Record<string, Record<string, unknown>> = {};
 const created: URLSearchParams[] = [];
 let keepScheduledStop = false;
 let refuseScheduledStop = false;
+let loseScheduledStopAck = false;
+let scheduledStopWrites = 0;
 let createAnswer: "ok" | "declined" | "down" | "otherCustomer" | "otherTier" | "yearly" | "trial" | "pastDue" | "otherPrice" | "amount" | "currency" | "intervalCount" | "extraItem" | "intervalMismatch" | "quantity" | "missingQuantity" | "missingPeriod" | "expiredPeriod" | "futurePeriod" | "fractionPeriod" | "longPeriod" = "ok";
 
 function subscription(id: string, over: Record<string, unknown> = {}): Record<string, unknown> {
@@ -119,8 +121,10 @@ globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) =>
     if (m && subs[m[1]]) {
       if (method === "POST") {
         const body = new URLSearchParams(String(init?.body ?? ""));
+        if (body.get("cancel_at_period_end") === "true") scheduledStopWrites++;
         if (body.has("cancel_at_period_end") && !(keepScheduledStop && body.get("cancel_at_period_end") === "false") && !(refuseScheduledStop && body.get("cancel_at_period_end") === "true")) subs[m[1]].cancel_at_period_end = body.get("cancel_at_period_end") === "true";
       }
+      if (loseScheduledStopAck && method === "POST") throw new Error("synthetic lost scheduled-stop acknowledgement");
       return new Response(JSON.stringify(subs[m[1]]), { status: 200 });
     }
     return new Response(JSON.stringify({ error: { message: `no route ${method} ${url.pathname}` } }), { status: 404 });
@@ -194,11 +198,62 @@ async function main() {
     refuseScheduledStop = false;
     is("an active response without the stop is not a confirmed break", refused, true);
     is("the provider has not scheduled a stop", subs[id].cancel_at_period_end, false);
-    is("the unconfirmed break is removed by the existing cleanup", await pauseOf(store), null);
+    is("the unconfirmed break retains its exact source", (await pauseOf(store))?.subscription, id);
+    const [heldYear, heldDue] = await pauseRedis.pipeline([["GET", `nl:pause:last:${storeRef(store)}`], ["ZRANGEBYSCORE", "nl:pause:due", "-inf", "+inf"]]);
+    is("an unconfirmed stop retains annual and due evidence", [heldYear, Array.isArray(heldDue) && heldDue.includes(storeRef(store))], [String(NOW), true]);
+    is("an unconfirmed stop does not infer a fresh unused year", await pausePlan(store, 1, NOW), {kind:"refused",reason:"recent"});
+    await undoPause(store, NOW + DAY);
     const again = await pausePlan(store, 1, NOW);
-    is("a later acknowledged stop can still start the break", again.kind, "paused");
+    is("after explicit acknowledged undo a new break remains possible", again.kind, "paused");
     is("the later stop is acknowledged by the provider", subs[id].cancel_at_period_end, true);
     await undoPause(store, NOW + DAY);
+  }
+
+  part("Unknown persistence acknowledgements never authorize a provider stop");
+  {
+    const email="pause-write-ack@example.com",id="sub_PauseWriteAck01";
+    subs[id]=subscription(id);
+    const store=await storeWith(email,"pausewriteack",id),ref=storeRef(store);
+    const original=pauseRedis.pipeline;
+    const replies:unknown[][]=[[],[null],["OK",1],["OK","1","OK"],["OK",2,"OK"],[true,1,"OK"],["OK",1,null],["OK",1,"OK","extra"]];
+    for(const reply of replies){
+      pauseRedis.pipeline=async commands=>{
+        if(commands.length===3&&commands[0][0]==="SET"&&commands[0][1]===`nl:pause:${ref}`){
+          await original(commands); // The commit happened; only its reply is uncertain.
+          return reply;
+        }
+        return original(commands);
+      };
+      try{
+        const before=scheduledStopWrites;
+        is("uncertain write acknowledgement refuses scheduling",await pausePlan(store,1,NOW),{kind:"refused",reason:"standing"});
+        is("no provider mutation follows an uncertain write acknowledgement",scheduledStopWrites-before,0);
+        const [record,year,due]=await original([["GET",`nl:pause:${ref}`],["GET",`nl:pause:last:${ref}`],["ZRANGEBYSCORE","nl:pause:due","-inf","+inf"]]);
+        is("committed pause and annual evidence are never rolled back", [typeof record,year,Array.isArray(due)&&due.includes(ref)], ["string",String(NOW),true]);
+      }finally{
+        pauseRedis.pipeline=original;
+        await original([["DEL",`nl:pause:${ref}`],["DEL",`nl:pause:last:${ref}`],["ZREM","nl:pause:due",ref]]);
+      }
+    }
+  }
+
+  part("A provider-applied stop with a lost acknowledgement retains the pause");
+  {
+    const email="pause-provider-ack@example.com",id="sub_PauseProviderAck01";
+    subs[id]=subscription(id);
+    const store=await storeWith(email,"pauseproviderack",id),ref=storeRef(store);
+    loseScheduledStopAck=true;
+    let uncertain=false;
+    try{await pausePlan(store,1,NOW);}catch{uncertain=true;}finally{loseScheduledStopAck=false;}
+    is("the caller is not told that an unknown stop succeeded",uncertain,true);
+    is("the provider mutation actually happened in the synthetic service",subs[id].cancel_at_period_end,true);
+    const [record,year,due]=await pauseRedis.pipeline([["GET",`nl:pause:${ref}`],["GET",`nl:pause:last:${ref}`],["ZRANGEBYSCORE","nl:pause:due","-inf","+inf"]]);
+    is("applied unknown stop retains pause, annual evidence and due member",[typeof record,year,Array.isArray(due)&&due.includes(ref)],["string",String(NOW),true]);
+    is("the retained record still protects creator content",await onBreak(ref,NOW+20*DAY),true);
+    const before=scheduledStopWrites;
+    is("repeating the request cannot schedule another stop", (await pausePlan(store,1,NOW)).kind,"refused");
+    is("repeat makes no second provider mutation",scheduledStopWrites-before,0);
+    is("explicit acknowledged undo still works",await undoPause(store,NOW+DAY),"kept");
   }
 
   part("Taking a break back requires acknowledgement of the removed stop");
