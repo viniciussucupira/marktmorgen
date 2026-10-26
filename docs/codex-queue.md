@@ -9518,3 +9518,75 @@ Incremento de custeio em branch separada enquantoCI1060 roda, sem editar aquela 
 ### AB(a) — observação reutilizável do resultado de reinício sem novo POST (26/10/2026)
 
 Extração concreta da validação já usada pelo POST restartPlan para observeRestartedPlan, chamada pelo mesmo fluxo produtivo e reutilizável futuramente por recuperação com resposta já obtida. Mantém verificações de cliente/plano mensal pago/preço exato/moeda/unidade/período vigente até31dias, erros de observação incerta e retorno existente; adiciona recusa explícita de resposta/relógio inválidos. Quatro testes sintéticos da função real verificam leitura sem rede/mutação, divergências de identidade/preço/unidades/standing, períodos inválidos e desconhecidos; testes legados completos obrigatórios. Não faz GET/POST, reserva, persistência, nova tentativa ou ativação; identidade/preço/período não provam intenção durável, fonte parada, financiamento ou autorização para adotar assinatura. Protocolo AB integral permanece pendente. Benefício: recuperação poderá reutilizar os mesmos critérios sem criar cobrança para validar resultado, reduzindo risco de duplicação e suporte; margem/lucro não certificados. Sem novo fornecedor/comando/campo/retentativa de provedor/Redis; CPU e custo total reais não medidos,nãozero,sem reduzirFX275. Preços/direitos/PLANS_ON_SALE=false e políticasNULL/coberturasfalse intactos. Nenhuma tela/etapa ou contador funcional alterado; exigir CI completo no novohead.
+
+
+## AP — App do criador para iPhone, primeira versão (26/10/2026)
+
+Proveniência e ordem: solicitação do dono26/10/2026 12h31Fortaleza,anexo Texto colado.txt preservado integralmente na continuidade. Estado inicial **na fila**, números449–455 após448 e todos os itens já gravados; não interrompe AB(a), verificações/publicações ou demais prioridades vigentes. RegraPedidos repetidos aplicada ao maincb74b7d0c0ee85d7a59e5d169173bf14dfcdf3ba,11PRs abertos(títulos/corpos/filas),619refs codex/* e49heads distintos recentes/relevantes com suas filas, ligados aos100commits/pais recentes. Nenhuma correspondência por data/hora,seção,AP3–AP7 ou conteúdo específico de iPhone/Expo/EAS; AP1/AP2 antigos361/362 tratam de Autopilot/validação de lista e ficam intactos,sem duplicação ou renomeação. As referências deste novo pedido usam **449[AP1]–455[AP7], seção iPhone de26/10 12h31** para evitar ambiguidade.
+
+Precedência limitada: esta ordem mais recente reabre especificamente o escopo do app do criador para iPhone abaixo, sobrepondo o cancelamento/fora de escopo histórico de app nativo apenas nessa parte (incluindo a referência44[H1]). Não reabre demais itens cancelados ou excluídos junto, nem amplia a primeira versão para Android; Android permanece posterior com o mesmo código. Reutilizar rotas/autenticação/passkey/dados/limites/regras/cálculos do site, sem backend, base ou modelo financeiro paralelo. Os números/avaliações/posicionamento da Stan e os valores/condições Apple/Expo abaixo são contexto do pedido, não verificação oficial por este registro. Conferência oficial datada fica em452[AP4]/454[AP6], antes de afirmar conformidade ou iniciar custo. Não presumir que excluir vendas de plano por si só garante aprovaçãoApple.
+
+Texto integral do pedido com numeração global acrescentada:
+
+AP — App do criador para iPhone, primeira versão (26/10/2026)
+
+Solicitação do dono (26/10/2026, 12h31, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA, com os próximos números livres, depois dos itens já gravados, reutilizando as rotas, a autenticação, os dados e as regras que o site já tem, sem criar segundo backend, segunda base de dados ou segundo modelo de custo.
+
+Pedidos repetidos: antes de gravar, aplique a regra "Pedidos repetidos" (23/10/2026): procure esta solicitação no main, nos PRs abertos e nos ramos codex/* recentes, pela linha de data e hora, pelo nome da seção, pelas etiquetas [AP1] a [AP7] e pelo conteúdo. A fila tem "app nativo" marcado como cancelado e fora do escopo em pedido anterior; esta solicitação do dono, mais recente, reabre especificamente o app do criador para iPhone descrito aqui, sem reabrir os demais itens cancelados junto com ele. Se já estiver gravada ou coberta, não duplique: aplique só a diferença.
+
+Estado inicial: na fila.
+
+Objetivo do dono: um app para iPhone, no modelo do app da Stan ("Stan: Link in Bio for Creators", só para iPhone, 4,9 de 5 com cerca de 13 mil avaliações), com o que o criador usa no dia a dia pelo celular. O resto continua no site, aberto por um botão dentro do app. Android depois, com o mesmo código.
+
+449. [AP1] Base técnica
+(a) React Native com Expo, um só código para iPhone agora e Android depois.
+(b) Compilação para iPhone pelo serviço de nuvem da Expo (EAS Build), sem Mac; envio à App Store pelo EAS Submit quando o dono autorizar ([AP7]).
+(c) O app usa as rotas e a autenticação que o site já tem (reaproveitar o login existente, inclusive passkey), sem teste cognitivo, conforme AX274.
+(d) Nenhum dado novo guardado no celular além do necessário para a sessão; sessão revogável pelo site.
+
+450. [AP2] O que entra na primeira versão
+(a) Vendas e receita: vendas de hoje e do mês, pedidos e compradores.
+(b) Aviso de cada venda no celular, na hora ([AP3]).
+(c) Produtos: criar e editar produtos e a página da loja, com fotos da câmera e da galeria, respeitando os limites e as travas de cada plano.
+(d) Caixa de entrada: ler e responder as mensagens dos compradores (lib/inbox.ts).
+(e) Agenda: chamadas e mentorias marcadas.
+(f) Compartilhar o link da loja com um toque (folha de compartilhamento do iPhone).
+(g) Botão que abre a conta Stripe do próprio criador para ver saldo e sacar; o Marktmorgen nunca guarda nem movimenta o dinheiro do criador.
+
+451. [AP3] Avisos no celular
+(a) Aviso de venda e de mensagem nova, só depois que o criador permitir; ele pode desligar cada tipo a qualquer momento.
+(b) Pelo serviço de avisos da Expo e da Apple, com o custo calculado e com teto automático antes do gasto.
+(c) O aviso não mostra dados pessoais do comprador além do necessário (por exemplo: "New sale: Course name, $49").
+
+452. [AP4] O que fica no site
+(a) Montagem de cursos e comunidades, funis, sequências de e-mail, contatos, configurações, impostos, integrações e API abrem no site por um botão do app.
+(b) O plano e o pagamento da assinatura nunca são vendidos dentro do app, para não cair na compra obrigatória pela Apple. Conferir nas App Store Review Guidelines atuais, em fonte oficial datada, as regras 3.1.1, 3.1.3 e 4.2 (o app não pode ser só o site embrulhado) e a regra 5.1.1(v) (exclusão de conta dentro do app, se o app permitir criar conta), e registrar a leitura em docs/.
+
+453. [AP5] Acessibilidade e idioma
+(a) Todo o app em inglês americano.
+(b) AX274 inteiro aplicado ao app: VoiceOver, tamanho de texto ajustável (Dynamic Type), contraste de 7:1, alvos de pelo menos 44 × 44, respeito a "reduzir movimento", operação sem gestos difíceis e sem limite de tempo.
+(c) Seção "Acessibilidade" em todo PR do app.
+
+454. [AP6] Custos
+(a) Programa de desenvolvedor da Apple: US$ 99 por ano, custo fixo do Marktmorgen (FX275), NÃO pago agora.
+(b) Compilação na nuvem e avisos: usar o plano grátis enquanto couber; qualquer custo calculado antes, com teto automático; custo por cliente entra no pior caso de cada plano; custo desconhecido reprova.
+(c) Conferir os preços e limites atuais da Expo e da Apple em fonte oficial datada.
+
+455. [AP7] Publicação (Depende do dono)
+(a) Construir e testar já (Expo Go e compilações de teste), sem pagar nada.
+(b) A inscrição no programa de desenvolvedor da Apple só depois de existir a LLC, como empresa (número D-U-N-S, gratuito), para a App Store mostrar o nome da empresa e não o nome do dono. A inscrição é feita pelo dono; registrar o passo exato em "Depende do dono".
+(c) Nada é enviado à App Store sem ordem expressa do dono.
+
+REGRA DOS 60%: todo cliente pagante, isoladamente e usando 100% dos direitos do plano no pior mês, e a empresa como um todo, mantêm margem de lucro líquido mínima de 60% depois de todos os custos e de todos os impostos, inclusive os brasileiros e o ISS de 5%; pode ser maior, nunca menor. Leitura que dá mais imposto (docs/tax-uncertainty.md). Desconhecido reprova, nunca é zero. Todos os custos fixos da LLC pertencem ao Marktmorgen (FX275).
+
+Proibido: mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, o tax gate, o art. 9a ou a revisão comercial, afrouxar qualquer trava, vender o plano dentro do app, criar contas (inclusive na Apple ou na Expo), aceitar termos, contratar, pagar ou contatar terceiros. Somente testes sintéticos.
+
+Aplicar a regra VR.
+
+Estado de execução e limites AP:449–454 na fila;455 na fila,com inscrição/publicação **aguardando o dono** quando chegar essa etapa. AP7(a) autoriza construção/testes sem pagamento dentro da posição solicitada; não altera o comando inicial de colocar após os itens já gravados/não parar o trabalho atual. Contas,termos,chaves,inscrição e submissões externas continuam proibidos; falta de conta/credencial ou incompatibilidade ExpoGo/passkey/avisos/build deve ser registrada como lacuna real,sem fingir teste ou usar conta alheia. AppStore somente por ordem expressa e inscrição empresarial pelo dono depois da LLC/D-U-N-S; roteiro exato de painel deve ser conferido em fonte oficial atual na implementação e ficar em Depende do dono,sem execução por este registro. Sessão mínima no aparelho e revogação pelo site devem ser comprovadas; avisos exigem opt-in separado por tipo/revogável e minimização,sem compra de plano no app ou movimentação de dinheiro do criador.
+
+Custos AP incluem desenvolvimento/CI/EAS/Apple/avisos/armazenamento/operações/abuso/recusas/retenção/câmbio/impostos e manutenção no pior caso mensal/anual de cada plano e global; grátis não significa capacidade ou custo total zero. Teto automático e reserva antes de operação; US$99/ano é valor fornecido no pedido, a verificar oficialmente, sem pagamento ou dedução indevida deFX275. Todos os fixosLLC pertencem ao Marktmorgen, leitura tributária mais onerosa/ISS5%/60%porcliente100%direitos/global permanecem. Preços,limitesvisíveis,comissão,PLANS_ON_SALE=false,taxgate,art9a,revisão comercial,conteúdo/idiomas de compradores/identificadores e trabalhosClaude preservados. AX274inteiro,inglêsamericano,VR e seçãoAcessibilidade em cadaPRdoapp; quando houver tela nova registrar passos/decisões antes/depois e provasVoiceOver/DynamicType/7:1/44×44/reduzirmovimento. Nenhum app construído/testado/publicado por este registro, nenhum custo/fornecedor/conta/submissão real iniciado e nenhuma entrega funcional255.
+
+Provas do trabalho preservado: #1063 mergecb74b7d0c0ee85d7a59e5d169173bf14dfcdf3ba em26/10/2026 12:23:36Fortaleza,headde46a8d5b6fa11bd8767d69b2bc16f4aa9d89c1d,31/31success+Vercelsuccess,oito classificadores10+7/fulltrue;verify121641856395 quatro testes14:50:52UTC/Everythingpassing14:51:57.675UTC. Árvore prevista/testada/real77a2218f44d2977922de2dc751cfc7f5741517f1,pais[50226ae,de46a8d]conferidos;dpl_7ZrF6Vy6tD3t62jr1bMkxJJh8Eyf READY12:24:43.249Fortaleza,SHA/domíniomarktmorgen.com/cinco rotas200IDexato confirmados. #1062 documental merge50226ae71b7d19191922730871f5b54af5ae87d3 às11:33:53Fortaleza,19runs(oito classificadores10+7/fullfalse success,onze definições pesadas skipped)+Vercelsuccess,árvore0f058990f7435d935ea04c8c26d085cc0ef48804/pais[e2fae71,cd1e24b];dpl_BMWYn2M7rbqJEL6n8MVYeFacftDa READY11:34:45.150Fortaleza,SHA/domínio/cinco rotas200IDexato. Rotas /,/platform,/pricing,/mission,/library. HTTP/CI não substituem uso interativo; Chrome continua aguardando conexão do dono, AB(a)integral em andamento, contador254preservado.
