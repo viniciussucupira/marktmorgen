@@ -44,6 +44,7 @@
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import {
   BillingError,
+  hasContractFunding,
   isBillingConfigured,
   periodEnd,
   planOf,
@@ -95,6 +96,8 @@ export type PauseRecord = {
   until: number;
   /** When the creator was told the plan is about to start again; 0 until then. */
   told: number;
+  /** Durable marker before the inactive store loses its funded period. Null is unknown, never legacy. */
+  funding?: { version: 1; grantId: string | null };
 };
 
 function parseRecord(raw: unknown): PauseRecord | null {
@@ -103,6 +106,8 @@ function parseRecord(raw: unknown): PauseRecord | null {
     const value = JSON.parse(raw) as Record<string, unknown>;
     const tier = parseTier(value.tier);
     const told = value.told === undefined ? 0 : value.told;
+    const funding = value.funding as { version?: unknown; grantId?: unknown } | null | undefined;
+    if (value.funding !== undefined && (!funding || typeof funding !== 'object' || Array.isArray(funding) || funding.version !== 1 || (funding.grantId !== null && (typeof funding.grantId !== 'string' || !/^ctr_[A-Za-z0-9_-]{1,80}$/.test(funding.grantId))))) return null;
     if (
       typeof value.subscription !== "string" || !SUBSCRIPTION_ID.test(value.subscription) ||
       typeof value.customer !== "string" || !CUSTOMER_ID.test(value.customer) ||
@@ -121,6 +126,7 @@ function parseRecord(raw: unknown): PauseRecord | null {
       from: value.from,
       until: value.until,
       told,
+      ...(funding ? { funding: { version: 1 as const, grantId: funding.grantId as string | null } } : {}),
     };
   } catch {
     return null;
@@ -132,14 +138,14 @@ export async function pauseOf(store: Pick<Store, "email" | "sid" | "extra">): Pr
   return pauseAt(storeRef(store));
 }
 
-async function storedPauseAt(ref: string): Promise<{ record: PauseRecord | null; missing: boolean }> {
-  if (!isRedisConfigured()) return { record: null, missing: true };
+async function storedPauseAt(ref: string): Promise<{ record: PauseRecord | null; missing: boolean; raw: string | null }> {
+  if (!isRedisConfigured()) return { record: null, missing: true, raw: null };
   const reply = await redisPipeline([["GET", recordKey(ref)]]);
-  if (!Array.isArray(reply) || reply.length !== 1) return { record: null, missing: false };
+  if (!Array.isArray(reply) || reply.length !== 1) return { record: null, missing: false, raw: null };
   const raw = reply[0];
   // Only an explicit Redis miss proves absence. Invalid or incomplete replies
   // must not authorize deletion of billing evidence.
-  return { record: parseRecord(raw), missing: raw === null };
+  return { record: parseRecord(raw), missing: raw === null, raw: typeof raw === "string" ? raw : null };
 }
 
 async function pauseAt(ref: string): Promise<PauseRecord | null> {
@@ -157,7 +163,7 @@ export async function onBreak(ref: string, nowSeconds = Date.now() / 1000): Prom
     const stored = await storedPauseAt(ref);
     // Unknown pause evidence is not permission to remove a creator's content.
     if (!stored.record) return !stored.missing;
-    return stored.record.until > nowSeconds;
+    return Boolean(stored.record.funding) || stored.record.until > nowSeconds;
   } catch {
     return true;
   }
@@ -241,6 +247,7 @@ export async function pausePlan(store: Store, months: PauseMonths, nowSeconds = 
     from,
     until: addPeriods(from, "month", months),
     told: 0,
+    ...((store.period?.funded === true || hasContractFunding(subscription)) ? { funding: { version: 1 as const, grantId: (() => { const metadata = subscription.metadata as Record<string, unknown> | null | undefined; const grant = metadata?.funding_grant; return typeof grant === "string" && /^ctr_[A-Za-z0-9_-]{1,80}$/.test(grant) ? grant : null; })() } } : {}),
   };
   // All three durable scheduling writes must be acknowledged before any
   // provider mutation. A missing/partial reply may hide committed writes:
@@ -454,7 +461,7 @@ export async function runBreaks(nowSeconds = Math.floor(Date.now() / 1000)): Pro
     }
     // Started again by hand, from the studio, on a subscription of its own:
     // there is nothing left to start.
-    if (store.subscriptionActive && store.subscriptionId !== record.subscription) {
+    if (!record.funding && store.subscriptionActive && store.subscriptionId !== record.subscription) {
       await forget(ref, false);
       counts.dropped += 1;
       continue;
@@ -480,6 +487,7 @@ export async function runBreaks(nowSeconds = Math.floor(Date.now() / 1000)): Pro
         paymentMethod: record.paymentMethod,
         tier: record.tier,
         idempotencyKey: `restart:${record.subscription}:${record.until}`,
+        ...(record.funding ? { funding: { statsId: store.statsId ?? "", sourceSubscriptionId: record.subscription, sourceGrantId: record.funding.grantId, ref, paused: stored.raw ?? "" } } : {}),
       });
       await setSubscription(ref, started);
       await forget(ref, false);
@@ -487,6 +495,9 @@ export async function runBreaks(nowSeconds = Math.floor(Date.now() / 1000)): Pro
       counts.restarted += 1;
     } catch (error) {
       console.error("starting a plan again after a break failed", store.handle, error);
+      // The funded protocol retains every uncertain source/intent. It must not
+      // enter the legacy retry window, forget its evidence, or announce success.
+      if (record.funding) { counts.failed += 1; continue; }
       // Stripe or the network failing is not the card failing: tried again on
       // the next run, for a few days, before the creator is told it did not work.
       if (!declined(error) && nowSeconds - record.until < RETRY_DAYS * DAY) {

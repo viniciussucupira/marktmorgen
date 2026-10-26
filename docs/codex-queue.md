@@ -9742,3 +9742,54 @@ Contador254 preservado: ensaio interno/documentação não é entrega funcional2
 AB(a)retoma intenção durável/propriedade atômica/submissão única integrada,
 coveragepauseRestart=false até protocolo/custos/reconciliação/ativação completos.
 AP449–455/AN456/361–362 e histórico preservados.
+
+
+### AB(a) — intenção durável integrada, primeira fase fechada (26/10/2026)
+
+Implementação em verificação: marcador financiado versionado é persistido na pausa
+antes da parada do provedor, pois o snapshot inativo apaga period.funded.
+runBreaks encaminha marcador/raw exato para o ramo financiado de billing.restartPlan
+antes de ensurePrice/GET/POST. CoveragepauseRestart=false/políticasNULL recusam
+antes de reserva/claim Redis; marcador desconhecido ou inválido não vira legado.
+Falha financiada retém pausa/due/ano além de3dias e não autoriza apagar conteúdo.
+
+Claim atômico no mesmo ledger valida grant integral novo/pending, origem mensal
+paga expirada+activated, caixa antigo/novo, policy/review, raw da pausa, marcador,
+due/ano e janela; grava só o primeiro proprietário permanente. SemTTL/liberação/
+segunda permissão apósACK perdido. Payload≤4096bytes,pausa≤1536,ceil17comandos.
+Mesmo um claim reconhecido ainda termina em recusa antes do provedor: próxima
+fase deve integrar reconciliação da origem, preço ePOSTúnico,IDdurável,
+recuperaçãoGETlimitada,ativação,ACKstore ecleanup/undo porgeração/rollover.
+Não conclui AB(a),não habilita cobranças nem presume migração legada.
+
+Testes remotos completos obrigatórios: fluxo realrunBreaks→billing após snapshot
+inativo perdeperiod,0IOprovedor/ledger/notices sobgatefechado e retenção após4dias;
+Lua real64claims,ACKignorado,casosnegativos eINFO/caixa/source retidos.
+Sem testes locais, conta, pagamento ou mensagem real. Custos reais porseiscontratos/
+todaLLC/impostos desconhecidos reprovados;nenhuma operação nova paga autorizada.
+Detalhes, tetos e tabela porcontrato emdocs/contract-restart-reservation.md.
+Preços69/690/449/4490/999/9990,limites,PLANS_ON_SALE,gates/AP449–455/AN456/361–362
+econtador254 preservados. Provas medidasSV4 e merge1071 já na fila/main via1072.
+
+AB(a)/PR#1073 primeirohead1cd06c801da9b15a1450401ec39487bba411cc4c:
+jobRedis121777266263 falhou18:49:23.8715457UTC na compilação do Lua,
+antes de qualquerclaim: until é palavrareservada. Corrigido acesso para
+pause["until"], semafrouxarcondição/teto/teste. Fixture integrado agora grava
+period.funded=true explicitamente antes de inativar e provar que o marcador
+sobrevive à remoção. Nova suíteCOMPLETA obrigatória,semrerunisolado.
+
+AB(a)/PR#1073 headc4aa0fa3f2ced9f435b0db81af3cc08b477061b1:Lua real
+job121779390465 passou64claims/ACKperdido/20negativos em18:53:25.6418498UTC;
+INFO17primeiro/16duplicado≤17. Porém verify121779390404 falhou18:55:01.0392244UTC
+por dois exports ausentes no fixture de metadados de billing. Fixture agora
+reexporta os guardas reais fechados de produção, sem fake de sucesso e sem
+afrouxarasserções. Novohead exige suíteCOMPLETA; evidência parcial não é aprovação.
+
+AB(a)/PR#1073 headdabd44105e80b65c9e47ab146e58465dd3748ac9:
+437checks plan-pause passaram19:03:27.4016200UTC (ramo financiado real+legado).
+Verify121782942584 porém falhou19:04:07.3437034UTC no inventário de dados:
+3famílias existentespausa/due/ano faltavam sob novo leitorcontract-funding.ts.
+Registro agora associa o mesmo armazenamento/limites existentes ao leitor sem
+mutação e documenta intent≤4096bytes/grant no mesmoledger;retenção/custos reais
+desconhecidos reprovados. Semnova chave ou corte delimites;produçãoinalterada.
+Novamente toda a suíte no novohead,semrerunisolado;prova parcialnãoéaprovação.

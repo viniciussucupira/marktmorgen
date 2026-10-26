@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {canonicalFinancialSnapshot,contractCoverageDays,contractFundingConfiguration,CONTRACT_ADMISSION_COVERAGE,CONTRACT_KEYS,CONTRACT_FUNDING_RULES} from '@/lib/contract-funding-rules';
 import {assessCustomerWorstCase} from '@/lib/net-margin-rules';
-import {activateCheckoutContract,activateSwitchContract,type CheckoutContractActivation,reserveContractFunding,reserveSwitchContractFunding,reserveRestartContractFunding} from '@/lib/contract-funding';
+import {claimRestartIntent,activateCheckoutContract,activateSwitchContract,type CheckoutContractActivation,reserveContractFunding,reserveSwitchContractFunding,reserveRestartContractFunding} from '@/lib/contract-funding';
 import {contractFixture} from './contract-funding-fixture';
 import {reset,seed,ledger,calls,settings} from './contract-funding-redis';
 const key='nl:contract-reserve:v1';
@@ -323,6 +323,19 @@ test('unfinished pause-restart coverage refuses before Redis even with a synthet
   assert.equal(await reserveRestartContractFunding('one','sub_RestartSource01',tier,f.policy,f.context,'ctr_restart_'+tier),null);
  }
  assert.equal(await reserveContractFunding('one','creator','year','restart',f.policy,f.context,'ctr_annual','sub_RestartSource01'),null);
+ assert.equal(calls.length,0);
+ assert.deepEqual([...ledger.get(key)!],before);
+});
+
+test('unfinished integrated restart intent refuses before Redis and never opens coverage',async()=>{
+ const f=start(),before=[...ledger.get(key)!];
+ assert.equal(CONTRACT_ADMISSION_COVERAGE.pauseRestart,false);
+ assert.equal(CONTRACT_FUNDING_RULES.restartIntent.status,'intent-only-disabled');
+ assert.equal(CONTRACT_FUNDING_RULES.restartIntent.commandCeiling,17);
+ assert.equal(CONTRACT_FUNDING_RULES.restartIntent.maxPauseBytes,1536);
+ assert.equal(CONTRACT_FUNDING_RULES.restartIntent.maxIntentBytes,4096);
+ const grant={sourceSubscriptionId:'sub_RestartSource01',action:'restart' as const,id:'ctr_new',reviewId:'review',statsId:'one',key:'creator_month' as const,reservedCents:50,submitUntilSeconds:Math.floor(Date.now()/1000)+300,checkoutExpiresAtSeconds:Math.floor(Date.now()/1000)+3600,activationUntilSeconds:Math.floor(Date.now()/1000)+86400,liabilitiesThrough:'2030-01-01T00:00:00.000Z'};
+ assert.equal(await claimRestartIntent({grant,ref:'one@example.com',handle:'one-store',paused:'{}',claim:'claim_one',sourceGrantId:'ctr_source'},f.policy,f.context),false);
  assert.equal(calls.length,0);
  assert.deepEqual([...ledger.get(key)!],before);
 });
