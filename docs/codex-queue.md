@@ -9777,3 +9777,10 @@ antes de qualquerclaim: until é palavrareservada. Corrigido acesso para
 pause["until"], semafrouxarcondição/teto/teste. Fixture integrado agora grava
 period.funded=true explicitamente antes de inativar e provar que o marcador
 sobrevive à remoção. Nova suíteCOMPLETA obrigatória,semrerunisolado.
+
+AB(a)/PR#1073 headc4aa0fa3f2ced9f435b0db81af3cc08b477061b1:Lua real
+job121779390465 passou64claims/ACKperdido/20negativos em18:53:25.6418498UTC;
+INFO17primeiro/16duplicado≤17. Porém verify121779390404 falhou18:55:01.0392244UTC
+por dois exports ausentes no fixture de metadados de billing. Fixture agora
+reexporta os guardas reais fechados de produção, sem fake de sucesso e sem
+afrouxarasserções. Novohead exige suíteCOMPLETA; evidência parcial não é aprovação.

@@ -137,3 +137,12 @@ pause["until"]; no condition, command ceiling, ownership rule or test is relaxed
 The integration fixture also now explicitly saves a funded period before making
 the store inactive, proving that the durable pause marker survives its removal.
 Only a complete new-head CI may approve; no individual-job rerun.
+
+Second headc4aa0fa3f2ced9f435b0db81af3cc08b477061b1 passed actual Redis
+job121779390465:64 contenders, lost ACK and20 negative cases; INFO measured
+17commands for the first claim and16for a duplicate at18:53:25.6418498UTC.
+Its full verify job121779390404 nevertheless failed18:55:01.0392244UTC:
+the existing metadata-test activation fixture did not export the two new imports.
+The fixture now re-exports the actual production closed restart functions, without
+adding a successful fake, changing guards or relaxing assertions. This is not a
+full-head approval; the entire suite must pass on the next corrected head.
