@@ -1,5 +1,16 @@
 # Fila de trabalho do Codex — Marktmorgen
 
+## Execução TX/SV — 27/10/2026, 14h35 Fortaleza
+
+PR1104 incorporado às14:34:40Fortaleza (17:34:40UTC), merge c06ff2379f2d73786e46592eda6455fa618ac6f6, pais07ad336fda3050f9332ea9a4d12eb99d188a0f84/a2345d85f2fafb54ff48223188f5c62744b1d747, árvore883257a482ee25704e460e29c9d733bb097e2460 conferidos. Instruções AGENTS/CLAUDE registram os17pontos TX com estados de fonte; histórico preservado. A falha anterior no teste de workflows ao atravessar meia-noiteUTC foi corrigida com relógio de cenário que mantém o tempo real decorrido e dois testes de leitura de dias distintos. Verificação integral no novohead:31/31checks eVercelsuccess;8jobs de escopo com10+7testes eFull coverage required:true. O verify122342553613 confirmou teto diário e ambas leituras de dia. Não foi reexecução isolada. TX1global permanece incompleto; fontes e remissões pendentes estão na matriz.
+
+PR1106, head8840b81efa61940cb47895c9710eebd5c4318f56, foi redirecionado para main após1104. Remove somente dependências de consultas e hospedagemUE de taxGateValid; CONSULTATION_ANSWERSvazio eEU_HOSTING_CONFIRMEDfalse. Na conferência14h35:30/31checks passaram,WebKit pendente;verify122343815930 eVercelsuccess. Não incorporado neste registro. Leitura most-correct,baseIOF,destinos/estados,dimensionamento e geradores ainda pendentes; coeficientes não mudam nesta etapa e demais travas permanecem.
+
+PR1107 registra PDFs oficiais UpstashDPA(abril2025) eCPC47/ResCVM116(20/05/2022): lacunas de leitura resolvidas, sem confirmar contrato/conta/registroDPF nem enquadramento contábil/tributário daLLC. PR1108, head1044a8768c9f99022bfe9f4b87e20816bc3e4af7, empilhado em1106, ajusta motivos tributários por jurisdição e comentário de abertura, sem mudar algoritmo/registro/flag; CIintegral pendente. Não declarar TX2/TX3 completos por esses passos.
+
+Custos: nenhum serviço,conta,aceite,contratação,pagamento,consulta,submissão ouIOprodutivo novo; pesquisa/CI pertencem100%FX275 e custos desconhecidos continuam reprovados,nãozero. Preços,limites,comissão,reservas,custeio,exposição,opt-ins,conteúdo,Hazelsong,idiomas/IDs preservados. SVsomente depois daabertura. VR: incorporação1104 verificada; publicações funcionais/READY/domínio/versão não verificados por este registro. Contador254,sem entrega255.
+
+
 ## Prioridade vigente — SV depois da abertura (27/10/2026, 13h19 Fortaleza)
 
 Atualização dos itens existentes, sem novo número:317[EU1],441[SV1],442[SV2],SV3,SV4eSV5 passam TODOS para DEPOIS DA ABERTURA DAS VENDAS. Nenhum ensaio, código, PR, prova, histórico ou recurso é apagado, desfeito ou descartado. Não abrir novos PRs de implementação desses itens até a abertura. A ordem antiga que os coloca antes da abertura fica somente como histórico. O tempo de execução vai às travas do Bloco de abertura, com471[TX1] como próxima unidade já priorizada. Esta atualização documental é incluída no PR1101 de fila já aberto, sem criar PR de servidores.
@@ -11018,3 +11029,24 @@ Em andamento. AGENTS.md e prefixos tax-uncertainty/tax-consultations fazem preva
 ###471[TX1] — Matriz17pontos e remissãoart9a,27/10/2026
 
 Em andamento. docs/tx-legal-source-review-2026-10-27.md registra17pontoscom fontesefetivamenteconferidas/condições/lacunas,semadoçãoglobalnemimpostozero universal. docs/eu-vat-article-9a.mdrecebeprefixoTXsemconsulta/maisimpostoautomático;corpohistóricointacto,DEEMED_SUPPLIER_RECORDSexigeconstrução/testes. EUfonteintegraanti-botnãoésucesso;IOFentrada-vs-lucro/IN1037IVnão confirmadoregistrados,semconsultas. Semcódigo/preços/limites/gates/reservas/custeio/conteúdo/Hazelsongalterados;semnovoIOoperacional. Custospesquisa/CI100%FX275,desconhecidonãozero;Markdown0açõesnovas,semcertificação/entregafuncional,counter254. Novohead exigetodoschecksdocumentais;resultadoanterior8scope/11skipsnãoprovanovohead. TX1global/remissõesrestantes/TX2–TX7pendentes.
+
+
+###471[TX1] — Registro dos17pontos nas instruções e provas de incorporação,27/10/2026
+
+AGENTSrecebe17pontos literais do pedido com estados individuais de conferência e divergências;CLAUDEremete explicitamenteTX/SV,mantendo imports ecorposMR/SR históricos. Nãoéadoçãocegade17teses,TX1aindaincompleto/geradosecódigopendentesTX2/TX5. Nenhumcálculogateflagpreçolimitealterado;nenhumIOprodutivo,consulta,registro,conta,contrato,pagamentooucontato. Markdown0açõesnovas,semcertificação/entregafuncional;custospesquisaCI100%FX275,desconhecido≠zero,contador254.
+
+PR1102incorporadof8f449a65290002b32dc8bf0d14de9e7a7df7ab7às13:50:35Fortaleza,headc30818089a1aa058730b2ee39678fd65c0d54645,árvorec48e22ef41be1ce3495161a482f5e762de3b184f,pais759ba/c308,31/31+Vercel,8escopos10+7/fulltrue. PR1103incorporado38205f7ad797f470abc2eb602740c60398fa2221às13:51:18Fortaleza,head7fc7b3e39705fef028ae9025cf5cc42fa5185ab4,árvore51d46f06904dba7481e15099c5711efaa02e166b,paisreaisf8f449/7fc7b3e,19conclusivos8scope10+7fullfalse/11skipslegítimos+Vercel. Predcached3a03tinhabasec308treec48eigualamainf8;árvorefinalidêntica. Registrosdocumentais,nãopublicaçãofuncional;READY/domínio/fluxointerativodessesSHAsnãoforamverificados,nãocontar255.
+
+
+###PR1104 — falha temporal do ensaio de limite diário e correção,27/10/2026
+
+Head51de22d8484cebe2369b7f68ef156e4f61878aaf não aprovado:verify122335048782 às17:00:00.4131761UTC falhou “counted before the ceiling” (expectedtrue,gotfalse);62checks/1falha emworkflow-branching.test.ts,verifyfinalfailure17:00:11.490018UTC. Cenário usaDate.nowreal+79h:às16:59UTCissofica23:59e passagem17:00mudaodiaUTCentreinícioe leitura de contador,sem mudança de limite produtivo. Demais falhasfetch/Stripe/logsdeerroda suítetêmasserçõessintéticasnegativasesperadas,nãoforamusadasparaconcluircausa.
+
+Correção:testeiniciacenáriosintéticoemUTC12h,maspreservaelapsedwalltimeparaexpirações/timeouts/locks e deslocamentoshora jáexistentes. Todas62asserçõesanteriores permanecem;acrescenta2regressões explícitas de separação de diaUTC e nãozerar limite anterior. Nenhumcódigoprodutivo/preço/limite/gate/reserva/asserçãorelaxado. Dados/Redis/email sóstand-ins,semserviço/conta/pagamento/terceiro. Nova suíte INTEGRAL no novohead,semreexecutarjobisoladoou usar30checksantigoscomoaprovação. CustosCI/reparos100%FX275,nãográtis;contador254,sem entregafuncional. TX1política/17pontosdocumentais continuaemPRaté31/31+Vercel.
+
+
+### Evidência de fornecedores atuais incorporada —27/10/2026 14h05:21 Fortaleza
+
+PR1105incorporado07ad336fda3050f9332ea9a4d12eb99d188a0f84,headd61b3662bc766058e9ebb73cff9d32f355937849,árvoredc954c6fe044c181f439ae181309a3fb7f807fa4,pais38205/d61b,19conclusivos8scope10+7/fullfalse/11skipslegítimos+Vercel. docs/current-provider-transfer-evidence-2026-10-27.mdregistraofertapública/escopo/condições/lacunas:DPFregistry/contratosreais/inventáriocompleto ainda nãoverificados. Não éimplementaçãoSV,nenhumamigraçãoouaceite,conta/contato/pagamento,nenhumaentregafuncional/255. Custopesquisa/CI100%FX275,nãozero. READY/domínio/fluxointerativonãoverificadosdestecódigo documental.
+
+PR1104avançamain07ad336preservandodocfornecedores,AGENTS/CLAUDE17pontos ecorreçãotemporal com2regressõesUTC. SuíteINTEGRAL novamente noheadcomárvorecombinada;resultadosparciais2526nãoaprovamnovohead. Nenhumcódigoprodutivo/limitefoialteradopela correçãodoteste.
