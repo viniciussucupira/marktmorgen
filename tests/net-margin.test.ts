@@ -1,21 +1,24 @@
 import { zeroExposureFixture } from './margin-test-fixtures';
 import {CURRENT_UPLOAD_BUDGET_POLICY as testUploadFunding} from "./upload-budget-approved-policy";
 import {fundedCustomerScenario,fundedCustomerWithAi,zeroFixedCompanyFixture} from './margin-test-fixtures';
-import { assessCustomerWorstCase, CUSTOMER_COST_CATEGORIES, MINIMUM_NET_MARGIN_BPS, type CustomerWorstCase } from "@/lib/net-margin-rules";
+import { assessCustomerWorstCase, CUSTOMER_COST_CATEGORIES, MINIMUM_NET_MARGIN_BPS, MINIMUM_NET_PROFIT_CENTS, type CustomerWorstCase } from "@/lib/net-margin-rules";
 import { commercialMarginReady, commercialPlansMayOpen, CURRENT_PRICE_AND_RIGHTS_SNAPSHOT, REQUIRED_MARGIN_SCENARIOS, BASE_PLAN_REVENUE_CEILINGS, type CommercialMarginReview } from "@/lib/commercial-margin";
 import { PLANS_ON_SALE } from "@/lib/opening";
 import { done, is } from "./check";
 const zeroCosts=()=>Object.fromEntries(CUSTOMER_COST_CATEGORIES.map(key=>[key,0])) as Record<typeof CUSTOMER_COST_CATEGORIES[number],number>;
 const scenario=(changes:Partial<CustomerWorstCase>={}):CustomerWorstCase=>({...fundedCustomerScenario(),...changes});
-is("owner floor is sixty percent",MINIMUM_NET_MARGIN_BPS,6000);
-is("exact sixty percent passes",assessCustomerWorstCase(scenario()),{approved:true,reason:"approved",netCents:6000,marginBps:6000});
-is("one cent below floor fails",assessCustomerWorstCase(scenario({costCeilings:{...zeroCosts(),infrastructure:1725}})).approved,false);
-is("higher than floor passes",assessCustomerWorstCase(scenario({taxesCeilingCents:2475,costCeilings:{...zeroCosts(),infrastructure:1000}})).approved,true);
+is("owner percentage floor is retired",MINIMUM_NET_MARGIN_BPS,0);
+is("a positive whole net cent is required",MINIMUM_NET_PROFIT_CENTS,1);
+is("historical sixty-percent net is still positive and passes",assessCustomerWorstCase(scenario()),{approved:true,reason:"approved",netCents:6000,marginBps:6000});
+is("a positive profit below the retired floor passes",assessCustomerWorstCase(scenario({costCeilings:{...zeroCosts(),infrastructure:1725}})).approved,true);
+is("exact zero net is refused",assessCustomerWorstCase(scenario({costCeilings:{...zeroCosts(),infrastructure:7724}})).approved,false);
+is("one cent of loss is refused",assessCustomerWorstCase(scenario({costCeilings:{...zeroCosts(),infrastructure:7725}})).approved,false);
+is("larger positive profit passes",assessCustomerWorstCase(scenario({taxesCeilingCents:2475,costCeilings:{...zeroCosts(),infrastructure:1000}})).approved,true);
 is("missing complete input never passes",assessCustomerWorstCase(null).approved,false);
 for(const key of CUSTOMER_COST_CATEGORIES){
  const costs={...zeroCosts(),[key]:null};
  is("missing "+key+" not silently zero",assessCustomerWorstCase(scenario({costCeilings:costs})).reason,"unknown");
- const expensive={...zeroCosts(),[key]:4001};
+ const expensive={...zeroCosts(),[key]:10000};
  is(key+" counted in customer worst case",assessCustomerWorstCase(scenario({costCeilings:expensive})).approved,false);
 }
 for(const n of [NaN,Infinity,-1,0.5,Number.MAX_SAFE_INTEGER+1]){
@@ -30,13 +33,13 @@ const refunded=assessCustomerWorstCase(scenario({refundableRevenueCents:10000}))
 is("full refund after consumption fails",refunded.approved,false);
 is("full refund exposes customer loss",refunded.netCents,-4000);
 is("refund beyond collection invalid",assessCustomerWorstCase(scenario({refundableRevenueCents:10001})).reason,"invalid");
-is("fixed costs included even with one customer",assessCustomerWorstCase(scenario({costCeilings:{...zeroCosts(),fixedBusinessCosts:4001}})).approved,false);
+is("fixed costs included even with one customer",assessCustomerWorstCase(scenario({costCeilings:{...zeroCosts(),fixedBusinessCosts:10000}})).approved,false);
 is("cost sum overflow fails safely",assessCustomerWorstCase(scenario({costCeilings:Object.fromEntries(CUSTOMER_COST_CATEGORIES.map(key=>[key,Number.MAX_SAFE_INTEGER]))})).approved,false);
 for(const gross of [1,3,10,101,1000,10001,1000000]){
- for(const cost of [Math.floor(gross*0.4),Math.floor(gross*0.4)+1]){
+ for(const cost of [gross,Math.max(0,gross-1),Math.max(0,gross-2)]){
   const tax=Math.ceil(Math.max(0,gross-cost)*0.275);
   const result=assessCustomerWorstCase(scenario({collectedRevenueCents:gross,taxesCeilingCents:tax,costCeilings:{...zeroCosts(),other:cost}}));
-  is("exact boundary not display rounding",result.approved,(gross-cost-tax)*100>=gross*60);
+  is("exact boundary not display rounding",result.approved,gross-cost-tax>0);
  }
 }
 const review=():CommercialMarginReview=>({companyBase:{monthlyFixedCostsCeilingCents:0,monthlyFixedTaxesCeilingCents:0,allFixedCostsBounded:true,allFixedTaxesReviewed:true,fixedCostsEvidence:"TEST ONLY: zero fixed costs",fixedTaxEvidence:"TEST ONLY: zero fixed taxes",reviewedPayingCustomers:1},priceAndRightsSnapshot:CURRENT_PRICE_AND_RIGHTS_SNAPSHOT,taxEvidence:"TEST ONLY: hypothetical ceilings",costAndLimitEvidence:"TEST ONLY: hypothetical enforced limits",allocatedFixedCostsVerified:true, fundedExposure:zeroExposureFixture(),prepaidUsageEnforced:true,scenarios:Object.fromEntries(REQUIRED_MARGIN_SCENARIOS.map(key=>{const gross=BASE_PLAN_REVENUE_CEILINGS[key]??10000;return [key,fundedCustomerWithAi(gross,Math.floor(gross*.65))];}))});
