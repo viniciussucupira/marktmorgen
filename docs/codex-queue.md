@@ -10255,3 +10255,67 @@ continuam pendentes até suítecompleta no novohead.
 
 ### PR1082 — correção da amostra de corpo imutável (27out2026 UTC)
 No head cb61f5af90348bbe6a308b1fd57abf8a34b3db01, verify121965339757 falhou em27out02:07:39.8746098UTC: a pausa sintética stoppedFixture não continha tier/paymentMethod exigidos pelo corpo real. Completar a amostra com os campos persistidos e acrescentar recusa explícita para cada customer/paymentMethod/tier ausente; nenhuma validação de produção relaxada. Redis121965339651 passou, mas isso não aprova o head com verifyfalho. Novo head exige suíte completa; não reexecutar job isolado. Gates/custos desconhecidos/contador254 preservados; nenhuma publicação funcional.
+
+
+### PR1082 — recuperação limitada incorporada e READY (26out2026, Fortaleza)
+PR https://github.com/viniciussucupira/marktmorgen/pull/1082.
+Head final d017dd3ef454a581df75901c9036e88c9d30acde;
+tree d58dbf2d22a6f281ef0141123a4e9724d804c313.
+Incorporado em27out02:47:32UTC =26out23:47:32Fortaleza,
+merge a455cbd88fc0f309300cd73ae53efa56eddadd3e.
+Predição42cb2dcac68bb033d799dd9c0d5cd7ee94e4721a e merge real:
+mesma tree testada, pais exatos main407b750f013e15d6e46a5a5324dfd172527eb06b
+e headd017dd3, conferidos antes/depois da incorporação.
+31/31 verificações +Vercelsuccess no head corrigido; nenhuma reexecução isolada.
+Os dois heads anteriores falharam em amostras de teste, preservados acima; não aprovados.
+
+O índice permanente de origem impede outro dono mesmo se pending sumir.
+A recuperação consome até3 leituras de provedor por dono durante toda sua vida,
+inclusive quando se perde ACK; busca só produz identidade positiva, nunca ausência
+ou permissão de POST. ID encontrado por busca exige GETexato em outra leitura
+orçada antes de adoção; ainda sem ativar/publicarstore/limparpausa/enviaraviso.
+Corpo futuro vem da pausa imutável; ausência customer/cartão/tier recusa.
+AB(a) segue incompleto: ativação financiada, ACKstore/CASgerações/cleanupundo,
+rollover, limite/custo de polling retido e custo integral dos6contratos pendentes.
+
+Evidências remotas:
+- 8 classificadores (121969412964/121969040281/121969040229/121969040109/
+  121969040093/121969039973/121969039951/121969039904):10+7testes cada,
+  Full coverage required:true.
+- verify121969456482:477checks27out02:18:57.7464574UTC;
+  corpo imutável02:19:14.3442400;233/233browserbundles;
+  Everything passing02:20:09.1523356;agreements02:21:41.6444562;
+  storecopy02:33:02.8052799UTC.
+- Redisreal121969456427,27out02:16:36.1799693UTC:
+  64contendentes/ACKperdido/índicecom pendingausente/10negativos;
+  origem/caixa/recibos preservados. INFO:reserve17,claim17,ARM16,
+  retençãoID5,recuperação15; teto17 POR ETAPA, não fluxo inteiro.
+- Mobile121969456448:home136/80/72ms,pricing48/48/32ms,
+  salespages40/40/48ms;LCP636–1444ms,CLS0;limites inalterados.
+- VoiceOver121969108254 e NVDA121969108273 passaram.
+
+Produção dpl_4DmDs71D47PXvrhasjdzQHLLkHHS READY
+27out02:49:03.505UTC =26out23:49:03.505Fortaleza, SHAexatoa455cbd,
+domíniomarktmorgen.com. /,/platform,/pricing,/mission,/library:
+5HTTP200 com IDdessa publicação. Logs error/fatal
+02:49:03.505→02:49:43.494UTC sem correspondência nessa janela curta;
+não é garantia de ausência futura. Sem E2Einterativo de produção:
+Chrome continua aguardando reconexão do dono; sem tentativa alternativa.
+
+| Contrato | Novas operações habilitadas mês/ano | Custo integral futuro |
+| --- | --- | --- |
+| creator_month | 0/0 | desconhecido,reprovado |
+| creator_year | 0/0 | desconhecido,reprovado |
+| pro_month | 0/0 | desconhecido,reprovado |
+| pro_year | 0/0 | desconhecido,reprovado |
+| scale_month | 0/0 | desconhecido,reprovado |
+| scale_year | 0/0 | desconhecido,reprovado |
+
+Zerohabilitado decorre de pauseRestart=false e políticasNULL, não de custo futurozero.
+Índice182bytesbrutos/origem permanente, envelope4096inclui256headroom;
+overheadRedis/cópias/retenção/capacidade/polling/LLC/FX275/BR-US+ISS5%
+continuam desconhecidos,reprovados. Mesmos jobs/matrizes/tetos/serviços;
+CI público padrão condicional0 só no escopo conhecido, sem afirmar custo totalzero.
+Preçosmáximos69/690/449/4490/999/9990, direitos, limites, opt-in, idiomas,
+conteúdo, IDs, PLANS_ON_SALE=false e contador254 preservados.
+Esta publicação de fase interna fechada não é entrega funcional255.
