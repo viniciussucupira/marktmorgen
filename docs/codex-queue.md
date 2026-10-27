@@ -10460,3 +10460,34 @@ CI público padrão condicional0 no mesmo escopo; futuros custos integrais,
 retenção/LLC/FX275/BR-US+ISS5%, teto e reserva continuam gates desconhecidosreprovados.
 PLANS_ON_SALE=false,preços69/690/449/4490/999/9990,limites,opt-in,conteúdo,
 idiomas eIDs preservados;contador254. AB(a) permanece incompleto.
+
+
+### PR1084 — aviso financiado retido, incorporado e READY (27out2026 Fortaleza)
+PR1084 headb3ad5dc02d17353b05d33fa31f0d6f251db000e1,
+tree538c67720dab569f0adffe95fa468994c4da89ce;merge98526d69daecf4a8cfc7866cfd0b977b5d699c87,
+27out03:32:37UTC=27out00:32:37Fortaleza. Treeprevista/incorporada=testada,
+pais66200db569ad541bb5223c4f1b35b4111ee4ddf7+b3ad5dc,
+conferidos antes/depois;EL457–463 doPR1085 integralmente preservados.
+31/31+Vercelsuccess no novohead integrado,8classificadores10+7/fulltrue
+(121986944874/121986685111/121986685019/121986684945/
+121986684936/121986684696/121986684689/121986684561).
+verify121987009422:525checks de pausa03:15:15.8794670UTC,
+Everything03:16:34.4598057,agreements03:18:12.9452027,
+storecopy03:30:39.8936149. Quatro origens×3momentos anteriores ao vencimento:
+0lookupdono/write/provider/ledger/email;bytespausa/ano/due retidos.
+Mobile121987009396:home80/32/32ms,pricing33.5/32/33.2ms,
+sales32/32/32ms;LCP548–856ms/CLS0. RealVoiceOver/NVDA aprovados na31/31.
+Produção dpl_9XWym5qv3D2Nj5RpCRN8gc45Pkb7 READY27out03:33:37.403UTC
+=27out00:33:37.403Fortaleza,SHA98526d69 exato,aliasmarktmorgen.com.
+Cinco rotas /,/platform,/pricing,/mission,/library retornaram200
+comIDexato. Error/fatal03:33:37.403→03:34:00.347UTC sem correspondência;
+janela curta,não garantiafutura. SemE2EinterativoChrome,donoaindapendentereconexão.
+Nenhum novo serviço/IO/custo habilitado;mesmosjobs/matrizes/tetos,
+somente interrupção deemail/SET desse ramo.0novaoperação mês/ano nos6contratos,
+não custototalzero. Custointegral/notices/retensão/polling/LLC/FX275/
+ISS5%BR-US/leituramaisonerosa ainda desconhecidosreprovados;100%pioruso
+porcliente/global60%continua. Preços/limites/opt-in/IDs/idiomas/conteúdo
+ePLANS_ON_SALE=false preservados. Esta correção interna não encerraAB(a),
+não habilita reinício financiado e não incrementa contador254.
+Próximo:ativaçãofinanciada→ACKstore/CASgerações/cleanupundo→rollover,
+limitesdepolling e cálculointegral6contratos;sem anteciparEL.
