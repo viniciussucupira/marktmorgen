@@ -1,5 +1,11 @@
 # Fila de trabalho do Codex — Marktmorgen
 
+## TX1/TX3 — fontes europeias e classificação (27/10/2026, 16h38 Fortaleza)
+
+A matriz de fontes recebe complemento institucionalDG TAXUD(arts44/196 e44/45/58/59c) e manualRevenueIrlanda criadojunho2025,seções3/4.2–4.4/6. Distingue inversãoB2B e evidência de status,limiarEUR10mil sob condiçõesEU e eventos virtuais/gravados/mentorias. Exclusão de serviço eletrônico não certificaIVAzero nem exclui toda responsabilidade da plataforma. Não generalizar exemplo de evento ao vivo paraqualquercall,produto ou país. InteiroteoresEUR-Lex dos atos1042/2013 e2022/542 continuam bloqueados,sem fingir leitura integral;comitê/propostas não são lei vinculante.
+
+Nenhumcódigo/registro/preço/limite/flag/ID/idioma/conteúdo/opt-in/custooperacional alterado. TX1/TX3globais incompletos;continuar fontes/classificação/enquadramento e implementação,sem consultas/contas/aceites/contratações/pagamentos/contatos/submissões. Pesquisa/CI100%FX275,desconhecido≠zero;contador254,sem entrega funcional. PR1115 incorporado16:30:38Fortaleza,merge428b128187886856897a92aa6f11ad6a93d39386,paisec6c33/5eef067,árvore2fcbf3510fda420aad1232ac8ec047fccfc91f10,8escopos10+7/fullfalse+11skips+Vercel;provasTX4preservadas. Histórico abaixo intacto.
+
 ## TX4 — correção incorporada e verificação combinada concluída (27/10/2026, 16h28 Fortaleza)
 
 PR1113 incorporado27/10/2026 16:00:36Fortaleza/19:00:36UTC,mergeec6c33c5a09726496886fc969c46a698bedacfbf,pais619eb6d04e3525353ff5abd6990088b3b8a653f7/2eb8db58702429c7e4602be559351c2ed628cf91,árvoree2e8d8b205680ecd2da4adf255d4cbbfe4dee95c igual à união prevista de main com os dois arquivos.31/31checks nohead+Vercelsuccess;8escopos10+7/fulltrue;verify122388609898 com7/7testes de custos e233/233bundles/Everythingpassing. Corrige leituras mutáveis/herdadas do agregador sem invocar getters;reprova lacunas/acessores e overflow. Preserva totais/categorias/reservas/relatório e custos reais desconhecidos.
