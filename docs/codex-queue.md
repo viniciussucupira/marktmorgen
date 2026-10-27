@@ -1,5 +1,12 @@
 # Fila de trabalho do Codex — Marktmorgen
 
+## TX4 — incorporação verificada (27/10/2026, 15h15min43s Fortaleza)
+
+PR1110 incorporado18:15:43UTC/15:15:43Fortaleza:mergec17a767e5acdf662932afe0800b677bf473317e9,pais1d3c17bf0a2d0bf69bba62b46bfacad128a5bbcc/778084af0d3114fc940f441c27e789349e742d9d,árvore494d243857d1b4994a5ab84106ab1ea75d373e8d conferidos.31/31checks+Vercel;8escopos10+7testes/fullcoverage:true,verify122364965752 com4/4testes de custos,233/233bundles/Everythingpassing e igualdade do relatório gerado. A união preservou1108/1109/documentosanteriores. Catálogo passa a exigir revisão explícita das8categorias de conformidade/SR,todas inicialmente desconhecidas e sem reserva revisada;nenhuma obrigação universal/contratação/INSSzero é presumida. TX4global e base completa ainda incompletos. CI automático do main combinado deve ser acompanhado;falha exige correção e suíte completa no novohead,sem rerunisolado.
+
+VR/custos: nenhum serviço/IOprodutivo/conta/aceite/contato/envio novo,CI100%FX275 e desconhecido nãozero. Preços,limites,comissão,flagsfalse,revisões,reservas,custeio,exposição,conteúdo,Hazelsong,idiomas/IDs preservados. READY/domínio/versão funcional não confirmados;contador254,sem255. O estado pendente de1110 no registro15h12 é preservado como histórico.
+
+
 ## TX — execução verificada e custos pendentes (27/10/2026, 15h12 Fortaleza)
 
 PR1108 incorporado14:57:46Fortaleza/17:57:46UTC,merge f620d907013aff2be9cac06bb992b520a504d477,pais3a18e1c1397152c342c80abd33b56eb03e2b859b/1044a8768c9f99022bfe9f4b87e20816bc3e4af7,árvore9d2c47ec3ff98a8fd6d80e52003a44003a31b456.31/31checks+Vercel;8escopos10+7/fulltrue;verify122355587455,233/233bundles/Everythingpassing. Corrige motivos de jurisdição e comentário de abertura,sem alterar algoritmo/flags/registros;união atual conferida preservou os documentos1107/1111.
