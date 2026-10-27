@@ -9,7 +9,7 @@ import { AUTOMATIC_UPLOAD_BUDGET_CEILINGS, UPLOAD_BUDGET_RULES, currentUploadBud
 import { assessMinimumCustomerBase, CUSTOMER_BASE_RULES, type CustomerBaseReview } from "@/lib/customer-base-rules";
 import { PLAN_PRICES, COMMISSION_BPS, COMMISSION_LIVE, COMMISSION_PLANS_PUBLISHED, PUBLISHED_PLAN_PRICES, TRIAL_DAYS, REFUND_DAYS, PRO_MONTHLY_EMAILS, SCALE_MONTHLY_EMAILS, TRIAL_MONTHLY_EMAILS } from "@/lib/plan";
 import { SHARE_PROVED_IN_TEST_MODE } from "@/lib/platform-share";
-import { assessCustomerWorstCase, CUSTOMER_COST_CATEGORIES, MINIMUM_NET_MARGIN_BPS, PLANNING_PROFIT_TAX_FLOOR_BPS, type CustomerWorstCase } from "@/lib/net-margin-rules";
+import { assessCustomerWorstCase, CUSTOMER_COST_CATEGORIES, MINIMUM_NET_MARGIN_BPS, MINIMUM_NET_PROFIT_CENTS, PLANNING_PROFIT_TAX_FLOOR_BPS, type CustomerWorstCase } from "@/lib/net-margin-rules";
 import { AI_SPEND_RULES, AUTOMATIC_AI_SPEND_CEILINGS, currentAiSpendPolicy, aiStoreCostCents, isAiSpendPolicyValid } from "@/lib/ai-spend-policy";
 import { AI_REQUEST_LIMITS, SUPPORTED_AI_MODELS } from "@/lib/ai-request-rules";
 import { AI_MONTHLY, AI_PER_MINUTE, MAX_AI_NOTES, READ_PDF_PAGES, READ_PDF_JOBS } from "@/lib/ai-rules";
@@ -54,7 +54,8 @@ export const BASE_PLAN_REVENUE_CEILINGS: Partial<Record<MarginScenario, number>>
  */
 export const CURRENT_COMMERCIAL_TERMS = {
  // Since 18 October 2026 (schema 22): the price list of the owner's decision of 11:21, one list with no share of a sale, and the limits raised with it.
- schemaVersion: 22,
+ schemaVersion: 23,
+ marginPolicy: { decision: '2026-10-27T07:42:00-03:00', unit: 'strictly-positive-net-cents', minimumNetProfitCents: MINIMUM_NET_PROFIT_CENTS, company: 'nonnegative-at-computed-minimum-base', companyTargetBps: 6000, targetBasis: 'monthly-reconciled-actual-not-a-sales-gate', spendFloorRoom: 'unchanged' },
  usageAdmission: { schema: 1, paidVisits: "finite-plan-threshold", paidVideo: "finite-explicit-threshold", unknownTraffic: "pause", supplierByteCeilingProven: false },
  uploadAdmission: { rules: UPLOAD_BUDGET_RULES, policy: AUTOMATIC_UPLOAD_BUDGET_CEILINGS },
  planningProfitTaxFloorBps: PLANNING_PROFIT_TAX_FLOOR_BPS,

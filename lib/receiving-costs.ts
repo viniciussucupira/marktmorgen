@@ -34,8 +34,9 @@
  * the add-on read the same numbers.
  */
 
-/** The owner's floor: 60% of revenue kept after every cost and every tax. */
-export const FLOOR_BPS = 6_000;
+/** MR27Oct2026: no percentage floor; every unit must retain a positive net cent. */
+export const FLOOR_BPS = 0;
+export const POSITIVE_NET_CENTS = 1;
 /** The profit tax every reading is held to at least (lib/net-margin-rules.ts PLANNING_PROFIT_TAX_FLOOR_BPS). */
 export const STRESS_PROFIT_TAX_BPS = 2_750;
 
@@ -68,7 +69,8 @@ export type Reading = {
   revenueTaxBps: number;
 };
 
-/** The sizing reading: limits are sized to keep 60% here (the most favorable reading the owner may later confirm). */
+/** Historical18Oct sizing reading; MR27Oct replaces its60% floor with positive net.
+ * This favorable reading never replaces the unchanged most-tax release reading. */
 export const SIZING_READING: Reading = {
   id: "sizing",
   label: "Sizing reading: 27.5% on profit, the buyer's tax on top at 27%",
@@ -172,12 +174,12 @@ export type UnitResult = Receiving & {
   netCents: number;
   /** Net over revenue, in basis points, rounded down. */
   netBps: number;
-  /** The net the floor needs: 60% of revenue, rounded up. */
+  /** The positive whole net cent MR requires; the existing spend-floor room is separate. */
   floorCents: number;
   meetsFloor: boolean;
-  /** How much more net the unit needs to keep 60%, in cents (0 when it does). */
+  /** Net cents missing to positive profit (zero only when the unit is positive). */
   gapCents: number;
-  /** The most usage may cost for the unit to keep 60% (negative when even no use misses). */
+  /** Most usage may cost while keeping positive net (negative when no use still loses). */
   usageRoomCents: number;
 };
 
@@ -190,13 +192,13 @@ export function taxOf(revenueCents: number, pretaxCents: number, reading: Readin
 /** Whether a unit with this non-tax cost keeps the floor under a reading. */
 function keeps(revenueCents: number, costCents: number, reading: Reading): boolean {
   const pretax = revenueCents - costCents;
-  return pretax - taxOf(revenueCents, pretax, reading) >= pct(revenueCents, FLOOR_BPS);
+  return pretax - taxOf(revenueCents, pretax, reading) >= POSITIVE_NET_CENTS;
 }
 
-/** The largest non-tax cost that still keeps 60% under a reading, in cents (negative when none does). */
+/** Largest non-tax cost preserving a positive net cent under the supplied reading. */
 export function costBudgetCents(revenueCents: number, reading: Reading): number {
   const profitBps = Math.max(reading.profitTaxBps, STRESS_PROFIT_TAX_BPS);
-  const target = pct(revenueCents, FLOOR_BPS) + pct(revenueCents, reading.revenueTaxBps);
+  const target = POSITIVE_NET_CENTS + pct(revenueCents, reading.revenueTaxBps);
   let budget = revenueCents - Math.ceil((target * 10_000) / (10_000 - profitBps));
   while (budget > -revenueCents && !keeps(revenueCents, budget, reading)) budget -= 1;
   while (keeps(revenueCents, budget + 1, reading)) budget += 1;
@@ -210,7 +212,7 @@ export function unitUnder(priceCents: number, usageCents: number, reading: Readi
   const pretaxCents = r.revenueCents - costCents;
   const taxCents = taxOf(r.revenueCents, pretaxCents, reading);
   const netCents = pretaxCents - taxCents;
-  const floorCents = pct(r.revenueCents, FLOOR_BPS);
+  const floorCents = POSITIVE_NET_CENTS;
   const budget = costBudgetCents(r.revenueCents, reading);
   return {
     ...r,
