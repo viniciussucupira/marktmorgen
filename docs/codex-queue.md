@@ -10319,3 +10319,43 @@ CI público padrão condicional0 só no escopo conhecido, sem afirmar custo tota
 Preçosmáximos69/690/449/4490/999/9990, direitos, limites, opt-in, idiomas,
 conteúdo, IDs, PLANS_ON_SALE=false e contador254 preservados.
 Esta publicação de fase interna fechada não é entrega funcional255.
+
+
+### Próxima correção concreta AB(a): aviso de pausa financiada sem reescrever prova
+A revisão do caminho de aviso encontrou o ramo legado anterior ao vencimento:
+envia email e depois substitui o JSON da pausa com told, sem CAS de geração.
+Uma chamada de email em espera pode terminar quando outro trabalhador já
+reivindicou os bytes originais; substituir a pausa então quebra a prova imutável
+da recuperação. Além disso o aviso financiado ainda não tem cobertura/custo integral.
+
+Correção: uma pausa marcada funding dentro da janela de aviso fica retida antes
+de consultar o dono, enviar email ou executar o SETlegado. Conta failed/held,
+mantém bytes exatos, due e prova anual; avisos legados semfunding preservados.
+Não ativa notices por ter cobertura pauseRestart: noticeACK/CAS/custos precisam
+protocolo próprio antes de habilitação. Não altera criação/undo do dono nem o
+ramo financiado devido, que continua fechado por coveragefalse/políticasNULL.
+Não remove ou reprograma registros e não declara polling vitalício resolvido.
+
+Testes sintéticos remotos completos no novo head:4origens financiadas
+(conhecida/desconhecida/switch/pendingparcial),3momentos anteriores ao vencimento
+com releituras repetidas;0lookupdono/0write/0provider/0ledger/0email,
+bytespausa/ano/due idênticos. Os testes existentes verificam o aviso legado,
+o vencimento, a preservação de evidências e isolamento de lote. Sem testes locais,
+conta, pagamento, mensagem real ou serviço novo.
+
+| Contrato | Nova operação paga habilitada mês/ano | Custo prospectivo de notice/CAS |
+| --- | --- | --- |
+| creator_month | 0/0 | desconhecido,reprovado |
+| creator_year | 0/0 | desconhecido,reprovado |
+| pro_month | 0/0 | desconhecido,reprovado |
+| pro_year | 0/0 | desconhecido,reprovado |
+| scale_month | 0/0 | desconhecido,reprovado |
+| scale_year | 0/0 | desconhecido,reprovado |
+
+A alteração somente interrompe email/SET legado desse ramo; mesmo lote≤200 e
+leitura da pausa já existentes, sem campo/índice/job/matriz/dependência/serviço/cache/
+artefato extra. Não afirma custo totalzero nem limite vitalício de polling.
+CI público padrão condicional0 no mesmo escopo; futuros custos integrais,
+retenção/LLC/FX275/BR-US+ISS5%, teto e reserva continuam gates desconhecidosreprovados.
+PLANS_ON_SALE=false,preços69/690/449/4490/999/9990,limites,opt-in,conteúdo,
+idiomas eIDs preservados;contador254. AB(a) permanece incompleto.
