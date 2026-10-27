@@ -161,7 +161,7 @@ export async function strictFencedCompareAndSet(
     const bytes = (value: string) => new TextEncoder().encode(value).byteLength;
     if (typeof lock !== "string" || typeof token !== "string" || typeof key !== "string" ||
       !lock || !token || !key || lock === key || bytes(lock) > 512 || bytes(key) > 512 || bytes(token) > 128 ||
-      !Number.isSafeInteger(ttl) || ttl <= 0 ||
+      typeof ttl !== "number" || !Number.isSafeInteger(ttl) || ttl <= 0 ||
       typeof expected !== "string" || typeof next !== "string" ||
       !Number.isSafeInteger(maximumBytes) || maximumBytes < 1 || maximumBytes > STRICT_FENCED_CAS_MAX_BYTES ||
       bytes(expected) > maximumBytes || bytes(next) > maximumBytes) return "refused";
