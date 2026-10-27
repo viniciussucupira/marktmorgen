@@ -11032,3 +11032,10 @@ PR1102incorporadof8f449a65290002b32dc8bf0d14de9e7a7df7ab7às13:50:35Fortaleza,he
 Head51de22d8484cebe2369b7f68ef156e4f61878aaf não aprovado:verify122335048782 às17:00:00.4131761UTC falhou “counted before the ceiling” (expectedtrue,gotfalse);62checks/1falha emworkflow-branching.test.ts,verifyfinalfailure17:00:11.490018UTC. Cenário usaDate.nowreal+79h:às16:59UTCissofica23:59e passagem17:00mudaodiaUTCentreinícioe leitura de contador,sem mudança de limite produtivo. Demais falhasfetch/Stripe/logsdeerroda suítetêmasserçõessintéticasnegativasesperadas,nãoforamusadasparaconcluircausa.
 
 Correção:testeiniciacenáriosintéticoemUTC12h,maspreservaelapsedwalltimeparaexpirações/timeouts/locks e deslocamentoshora jáexistentes. Todas62asserçõesanteriores permanecem;acrescenta2regressões explícitas de separação de diaUTC e nãozerar limite anterior. Nenhumcódigoprodutivo/preço/limite/gate/reserva/asserçãorelaxado. Dados/Redis/email sóstand-ins,semserviço/conta/pagamento/terceiro. Nova suíte INTEGRAL no novohead,semreexecutarjobisoladoou usar30checksantigoscomoaprovação. CustosCI/reparos100%FX275,nãográtis;contador254,sem entregafuncional. TX1política/17pontosdocumentais continuaemPRaté31/31+Vercel.
+
+
+### Evidência de fornecedores atuais incorporada —27/10/2026 14h05:21 Fortaleza
+
+PR1105incorporado07ad336fda3050f9332ea9a4d12eb99d188a0f84,headd61b3662bc766058e9ebb73cff9d32f355937849,árvoredc954c6fe044c181f439ae181309a3fb7f807fa4,pais38205/d61b,19conclusivos8scope10+7/fullfalse/11skipslegítimos+Vercel. docs/current-provider-transfer-evidence-2026-10-27.mdregistraofertapública/escopo/condições/lacunas:DPFregistry/contratosreais/inventáriocompleto ainda nãoverificados. Não éimplementaçãoSV,nenhumamigraçãoouaceite,conta/contato/pagamento,nenhumaentregafuncional/255. Custopesquisa/CI100%FX275,nãozero. READY/domínio/fluxointerativonãoverificadosdestecódigo documental.
+
+PR1104avançamain07ad336preservandodocfornecedores,AGENTS/CLAUDE17pontos ecorreçãotemporal com2regressõesUTC. SuíteINTEGRAL novamente noheadcomárvorecombinada;resultadosparciais2526nãoaprovamnovohead. Nenhumcódigoprodutivo/limitefoialteradopela correçãodoteste.
