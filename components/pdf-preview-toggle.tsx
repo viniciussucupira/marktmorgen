@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useHydrated } from "@/components/use-hydrated";
 import { useRouter } from "next/navigation";
 import { toast } from "@/components/toast";
 import type { Product } from "@/lib/store";
@@ -18,8 +19,7 @@ export function PdfPreviewToggle({ product }: { product: Product }) {
   // This control writes through React. Keep the server-rendered choice inert
   // until its handler is mounted, so an early change cannot be replayed with
   // the controlled field restored to its previous persisted value.
-  const [ready, setReady] = useState(false);
-  useEffect(() => { setReady(true); }, []);
+  const ready = useHydrated();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const file = product.file;
