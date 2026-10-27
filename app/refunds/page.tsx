@@ -55,7 +55,7 @@ export default function RefundsPage() {
           charged, whether or not you qualified for a trial. An eligible first
           store can receive a {TRIAL_DAYS}-day trial when you choose a plan
           separately in your studio; returning and additional stores may not
-          qualify. If a trial applies, cancelling before it ends prevents the
+          qualify. If a trial applies, canceling before it ends prevents the
           first plan charge.
         </p>
         <p>
