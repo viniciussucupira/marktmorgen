@@ -1,5 +1,13 @@
 # Fila de trabalho do Codex — Marktmorgen
 
+## Evidência de incorporação e fonteRFB — 27/10/2026, 15h53 Fortaleza
+
+PR1112 incorporado27/10/2026 15:49:00Fortaleza/18:49:00UTC,merge220b72337e8544d3621390c0f09b53770d05e080,paisc17a767e5acdf662932afe0800b677bf473317e9/a151440d4b534846bcda98d318db453d4a9aaa57,árvoree433cdb274fd9cf1f01c0a99d81f2c80b7ca9b64 igual à união prevista dos três documentos.19checksdocumentais:8escopos com10+7testes/fullfalse e11skipslegítimos;Vercelsuccess. Antes disso,o CIintegral combinado do mainc17 concluiu31/31sucessos,incluindoWebKit;verify122381004610 já havia confirmado testes de custos/limites e233/233bundles. Preserva código/histórico anterior. Inventário de fornecedores e auditoria estáticaTX6/TX7 não certificam contratos/enquadramento nem ativam operação;apenasDPAexistenteBunny/vínculo continua aguardando o dono conforme registro15h12.
+
+PR1113,head2eb8db58702429c7e4602be559351c2ed628cf91,continua sem incorporação nesta anotação:28/31sucessos,verify/Firefox/WebKit pendentes. No verify122388609898,às18:43:20UTC,os7testes de custos passaram,0falhas;é prova parcial do job,não aprovação da suíte.8escopos próprios confirmaram10+7/fulltrue. Árvore prevista sobre main220b723 com os2arquivos é04167e14d3c4320abf8c730a3ca8409915ed2cde;reconferir main/head/checks antes de incorporar.
+
+A matrizTX1 recebe ementa lida no índice oficialRFB paraCosit56/publicação15/04/2026/art2VII. Link ao inteiroteor redireciona paraAdmin vazio;ementa não é decisão integral ouINconsolidada. Enquadramento real continua desconhecido,sem alterar números nem resolver TX2global. Custos:semIOprodutivo/serviço/contrato novo;CI/pesquisa100%FX275,desconhecido nãozero. Preços/limites/comissão/flagsfalse/reservas/custeio/conteúdo/idiomas/IDs preservados. Nenhum pagamento,conta,aceite,contato,consulta ou submissão. Sem nova verificação interativa/entrega funcional;contador254. Histórico integral abaixo.
+
 ## TX4 — consistência das provas e verificação combinada (27/10/2026, 15h42 Fortaleza)
 
 PR1113,head2eb8db58702429c7e4602be559351c2ed628cf91,branchcodex/tx4-detached-cost-evidence,emCIintegral: o agregador antigo podia ler um campo diferente entre validar e somar,além de aceitar propriedades herdadas. A correção proposta usa descritores próprios lidos uma vez e reprova getters,índices acessores/lacunas,registros herdados e overflow;mantém custos/categorias/reservas/alocação/relatório. Vercelsuccess,mas suíte integral ainda pendente e nenhuma incorporação declarada. Testes novos verificam que getters não executam,além de valores mutáveis,herança e totais inseguros. SemIOprodutivo novo,nenhum custo real desconhecido aprovado.
