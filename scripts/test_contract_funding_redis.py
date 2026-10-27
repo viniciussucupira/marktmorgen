@@ -912,11 +912,11 @@ def main():
         print('PASS:durable result ID retained after deadline/policy-month change;64sameIDduplicates are evidence ACK2 only;foreign IDs/owners refuse')
         print('RESTART_RESULT_COMMANDS:' + json.dumps(record_counts, sort_keys=True))
 
-        def recovery(client, key, ref, pause, **over):
+        def recovery(client, key, record_ref, pause, **over):
             options = dict(stats='restart-store',source='sub_RestartSource01',source_grant='ctr_restart_source',
-                           ref=ref,handle='synthetic-store',raw=pause,now=1800000003,binding='binding',review='review')
+                           ref=record_ref,handle='synthetic-store',raw=pause,now=1800000003,binding='binding',review='review')
             options.update(over)
-            return client.command('EVAL',recovery_script,4,key,'nl:pause:'+ref,'nl:pause:due','nl:pause:last:'+ref,
+            return client.command('EVAL',recovery_script,4,key,'nl:pause:'+record_ref,'nl:pause:due','nl:pause:last:'+record_ref,
                                   *[options[name] for name in ('stats','source','source_grant','ref','handle','raw','now','binding','review')])
         ref = intent_refs[0]
         pause = intent_ready(keys[42],ref)

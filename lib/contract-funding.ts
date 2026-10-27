@@ -358,6 +358,7 @@ local fields=0
 for _ in pairs(intent) do fields=fields+1 end
 if fields~=12 then return 0 end
 -- Permanent single ownership: no TTL, release, overwrite, or repeated permission.
+if #source[1]>84 or not string.match(source[1],'^ctr_[%w_-]+$') or #ARGV[5]>84 or not string.match(ARGV[5],'^ctr_[%w_-]+$') then return 0 end
 if redis.call('HGET',KEYS[1],'restart-owner:'..source[1]) then return 0 end
 if redis.call('HEXISTS',KEYS[1],'restart-intent:'..ARGV[5])==1 then return 0 end
 intent.sourceBinding=active
@@ -593,7 +594,7 @@ local function number(v)
  return n
 end
 local function integer(v) return type(v)=='number' and v>=0 and v<=1000000000000 and v==math.floor(v) end
-if #KEYS~=4 or #ARGV~=9 or #ARGV[6]>1536 then return 0 end
+if #KEYS~=4 or #ARGV~=9 or #ARGV[1]<1 or #ARGV[1]>128 or #ARGV[3]>84 or not string.match(ARGV[3],'^ctr_[%w_-]+$') or #ARGV[4]<1 or #ARGV[4]>320 or #ARGV[5]<3 or #ARGV[5]>24 or #ARGV[6]>1536 then return 0 end
 if KEYS[2]~='nl:pause:'..ARGV[4] or KEYS[3]~='nl:pause:due' or KEYS[4]~='nl:pause:last:'..ARGV[4] then return 0 end
 local now=number(ARGV[7])
 if not now or now<=0 or redis.call('TYPE',KEYS[1]).ok~='hash' or redis.call('TTL',KEYS[1])~=-1 then return 0 end

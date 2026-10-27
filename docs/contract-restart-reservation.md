@@ -633,3 +633,22 @@ Fonte primária27/10: https://docs.stripe.com/api/subscriptions/search
 AB(a) incompleto: ativação financiada/ACKstore/CASgeraçõescleanup-undo/rollover/
 polling limitado e custeio integral seguem; gates/permissões/conteúdo/idiomas/
 identificadores/AP/AN/contador254 preservados. Nenhum pagamento ou aviso real.
+
+
+
+PR1082 primeiroheadbba99145958cb6a7d08519c6c423e63729b659c7:
+Redis121962846446 falhou27/10 01:56:07.4391124UTC no fixture negativo ref,
+por argumento ref recebido simultaneamente por posição e keyword em Python,
+antes dessa asserção Lua. Não foi aprovação parcial. Helper físico renomeado
+record_ref; override ref agora altera somenteARGV e testa a recusa pretendida,
+sem relaxar asserções. Também reforçados limites debytes do índice dentro do
+Lua antes da aprovação. Novohead exige suíteCOMPLETA, não rerun deumjob.
+
+Correção explícita de soma dos mapasINFO históricos: ARM mediu16comandos
+(EVAL1/GET2/HGET9/HSET1/TTL1/TYPE1/ZSCORE1, ouHGET8+HMGET1 na versão indexada),
+e não17como dizia a prosa anterior. O teto conservador17por etapa continua
+vinculante; reserva/claim medidos17,retenção5,recuperação15 neste primeirohead.
+Fonte:mapas reais121876839746/121943538664/121962846446.
+Histórico anterior permanece acima, agora corrigido; não representa cotação,
+custo runtime0 nem margem certificada. Testes posteriores ao fixture interrompido
+continuam pendentes até suítecompleta no novohead.
