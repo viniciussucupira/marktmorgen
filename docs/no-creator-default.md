@@ -1,5 +1,7 @@
 # Creator payment default review — CA232
 
+> **Atualização SR,27/10/2026 08h00 Fortaleza:** [Elegibilidade da plataforma Stripe](stripe-platform-eligibility.md) fixa a resposta menos favorável. Conta BR só conecta BR; planejamentoUS exigeSSN/ITIN,representante residente,endereço comercial real semcaixapostal. Payload/testes abaixo são histórico de transporte, não aceiteStripe nem prova de elegibilidade internacional. [MR](../AGENTS.md#mr--regra-de-margem-vigente-27-de-outubro-de-2026) substitui o piso60%histórico, preservando impostos/reservas/gates;MR2ainda precisa alterar os cálculos.
+
 Reviewed 23 October 2026. This is a partial implementation record. It does not establish that every default, dispute, operating cost or tax risk is eliminated. Sales remain closed and the most-tax review remains binding.
 
 ## Account creation configuration
