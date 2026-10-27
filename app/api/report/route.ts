@@ -13,7 +13,9 @@ export async function POST(request: NextRequest) {
   if (fromAnotherSite(request)) return Response.json({ ok: false, error: "forbidden" }, { status: 403 });
   let body: Record<string, unknown>;
   try {
-    body = (await (await limited(request, 16_000)).json()) as Record<string, unknown>;
+    const parsed: unknown = await (await limited(request, 16_000)).json();
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("Invalid report body");
+    body = parsed as Record<string, unknown>;
   } catch {
     return Response.json({ ok: false, error: "invalid" }, { status: 400 });
   }
