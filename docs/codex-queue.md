@@ -1,5 +1,34 @@
 # Fila de trabalho do Codex — Marktmorgen
 
+## TX4 — consistência das provas e verificação combinada (27/10/2026, 15h42 Fortaleza)
+
+PR1113,head2eb8db58702429c7e4602be559351c2ed628cf91,branchcodex/tx4-detached-cost-evidence,emCIintegral: o agregador antigo podia ler um campo diferente entre validar e somar,além de aceitar propriedades herdadas. A correção proposta usa descritores próprios lidos uma vez e reprova getters,índices acessores/lacunas,registros herdados e overflow;mantém custos/categorias/reservas/alocação/relatório. Vercelsuccess,mas suíte integral ainda pendente e nenhuma incorporação declarada. Testes novos verificam que getters não executam,além de valores mutáveis,herança e totais inseguros. SemIOprodutivo novo,nenhum custo real desconhecido aprovado.
+
+Maincombinadoc17a767e5acdf662932afe0800b677bf473317e9:30/31passaram às15h42,somenteWebKit pendente. Verify122381004610 passou com os testes de limites e custos juntos,233/233bundles/Everythingpassing,sem erros. Não cancelar essa verificação por novo pushdocumental antes de concluir. MetadadosVercel conferidos:deploymentdpl_FJ5rQeZUE2X1yGW6t3SmBEYpJXkk,READY/production,SHAexatoc17a767e5acdf662932afe0800b677bf473317e9,aliasesmarktmorgen.com/www.marktmorgen.com. Isso não confirma verificação interativa nem nova funcionalidade ativada. Contador254,sem255. O bloqueio de conexãoChrome anterior permanece respeitado,sem repetir ou trocar de navegador.
+
+Custos/VR: somente correção/provas/testes sintéticos;semconta,aceite,contratação,pagamento,contato,consulta,formulário ou submissão. CI100%FX275,desconhecido nãozero;preços/limites/comissão/flagsfalse/custeio/reservas/exposição/conteúdo/Hazelsong/idiomas/IDs preservados. Histórico abaixo mantém os estados de cada horário.
+
+
+## TX4 — incorporação verificada (27/10/2026, 15h15min43s Fortaleza)
+
+PR1110 incorporado18:15:43UTC/15:15:43Fortaleza:mergec17a767e5acdf662932afe0800b677bf473317e9,pais1d3c17bf0a2d0bf69bba62b46bfacad128a5bbcc/778084af0d3114fc940f441c27e789349e742d9d,árvore494d243857d1b4994a5ab84106ab1ea75d373e8d conferidos.31/31checks+Vercel;8escopos10+7testes/fullcoverage:true,verify122364965752 com4/4testes de custos,233/233bundles/Everythingpassing e igualdade do relatório gerado. A união preservou1108/1109/documentosanteriores. Catálogo passa a exigir revisão explícita das8categorias de conformidade/SR,todas inicialmente desconhecidas e sem reserva revisada;nenhuma obrigação universal/contratação/INSSzero é presumida. TX4global e base completa ainda incompletos. CI automático do main combinado deve ser acompanhado;falha exige correção e suíte completa no novohead,sem rerunisolado.
+
+VR/custos: nenhum serviço/IOprodutivo/conta/aceite/contato/envio novo,CI100%FX275 e desconhecido nãozero. Preços,limites,comissão,flagsfalse,revisões,reservas,custeio,exposição,conteúdo,Hazelsong,idiomas/IDs preservados. READY/domínio/versão funcional não confirmados;contador254,sem255. O estado pendente de1110 no registro15h12 é preservado como histórico.
+
+
+## TX — execução verificada e custos pendentes (27/10/2026, 15h12 Fortaleza)
+
+PR1108 incorporado14:57:46Fortaleza/17:57:46UTC,merge f620d907013aff2be9cac06bb992b520a504d477,pais3a18e1c1397152c342c80abd33b56eb03e2b859b/1044a8768c9f99022bfe9f4b87e20816bc3e4af7,árvore9d2c47ec3ff98a8fd6d80e52003a44003a31b456.31/31checks+Vercel;8escopos10+7/fulltrue;verify122355587455,233/233bundles/Everythingpassing. Corrige motivos de jurisdição e comentário de abertura,sem alterar algoritmo/flags/registros;união atual conferida preservou os documentos1107/1111.
+
+PR1109 incorporado15:09:10Fortaleza/18:09:10UTC,merge1d3c17bf0a2d0bf69bba62b46bfacad128a5bbcc,paisf620d907013aff2be9cac06bb992b520a504d477/3c5f50bc0a50681b38c891cb73537bb64ba00671,árvore4274f262c0b4008e7da041676aa96f97a1571ec9.31/31+Vercel,8escopos10+7/fulltrue,verify122361967778 com6/6testes dos limites e233/233bundles. Soma exata de receitas aplicáveis,reservas e proposta distingueCAexceder/Noruegaatingir e reprova dados incompletos/inválidos/overflow. Não é contador persistente,classificação,nexo,registro ou checkout integrado;TX3global continua incompleto. Nenhuma permissão de venda criada.
+
+PR1110 head778084af0d3114fc940f441c27e789349e742d9d ainda pendente às15h12:30/31passaram,WebKit em curso. Verify122364965752 completo:4/4testes de custos,relatório gerado consistente,233/233bundles. Ainda não incorporado neste registro. Não zerar custos desconhecidos nem declararINSSuniversal/zero sem fatos e fonte aplicável.
+
+Transferências: complemento do inventário registra metadadosProduction sem valores secretos e lista oficial públicaUpstash de suboperadores,com limites de aplicabilidade/data. RegistroDPFgovernamental não pôde confirmar entidade/escopo. ApenasDPAexistente/vínculo contratual Bunny,com lacuna desde14:05:21(mais1h),fica aguardando o dono;nenhumaceite/contato/conta/contratação autorizado ou feito. Os outros trabalhos continuam. Detalhes e fontes emdocs/current-provider-transfer-evidence-2026-10-27.md. IOFsomentecontinuaaguardandocorreçãodabase,conforme registro anterior.
+
+Custos/VR: semnovoIOprodutivo/serviço/contrato;CI/pesquisa100%FX275 e desconhecido nãozero. Preços,limites,comissão,revisões,reservas,custeio,exposição,opt-ins,conteúdo,Hazelsong,idiomas/IDs eflagsfalse intactos. Sem confirmação funcionalREADY/domínio/versão;contador254. Histórico integral preservado abaixo.
+
+
 ## TX — atualização de execução e dependência delimitada (27/10/2026, 14h52 Fortaleza)
 
 **472[TX2], somente componenteIOF: aguardando o dono.** O pedido integral preservado abaixo usa duas bases diferentes: ponto4, “sobre o valor que entrar no Brasil”; TX2, “sobre o lucro”. A matrizTX1 registra a divergência e o art14doDecreto6306/2007 como base da operação cambial; a classificação/isenções e aplicação dos incisos ainda requerem conferência. Os valores não são automaticamente idênticos quando há retenção de lucro,aportes ou remessas em períodos diferentes. A divergência já estava documentada na incorporação1102 às13:50:35Fortaleza; continua sem correção às14h52,mais de1hora. Conforme a regra expressa do pedido, preservar somente esse componente atual até correção do dono. Não escolher outra base por conta própria,não abrir/preparar consulta e não tratar desconhecido comozero. Esse estado não paralisa os demais componentesTX nem pede autorização para continuar o trabalho já autorizado.

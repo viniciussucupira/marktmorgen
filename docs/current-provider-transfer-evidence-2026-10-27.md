@@ -34,3 +34,21 @@ Concluir inventário dos fornecedores efetivamente configurados sem expor segred
 Custos mensais/anuais de eventuais exigências permanecem sujeitos aFX275 e aos seis contratos;desconhecido reprova,nunca zero. Não presumir revisão contratual/auditoria/assistência grátis. Nenhum serviço operacional adicional foi habilitado por este registro.
 
 VR: oferta pública pesquisada e inventário inicial registrados;contratos reais,registroDPF e revisão completa de todos os fornecedores ainda não verificados. Nenhuma migração,aceite ou garantia de conformidade. Acessibilidade:Markdown com tabela/links,zero ações novas;sem teste humano/certificação. Preços,limites,comissão,flagsfalse,exposição,custeio,reservas,opt-ins/conteúdo/Hazelsong/idiomas/IDs preservados. Contador254;documento não é entrega funcional.
+
+
+## Complemento de evidência — 27/10/2026, 15h11 Fortaleza
+
+Leitura somente de metadados do projetoVercel, sem descriptografar valores: há entradas destinadas aProduction paraCloudflareR2,BunnyStream,AWSSES,Anthropic,Resend,KV/Redis eBlob;Google,Zoom eDiscord também possuem referências de integração. A presença de uma variável não comprova valor não vazio,válido,conta/tenant,região,uso efetivo ou configuração do deployment exato. Não foram lidos,salvos ou publicados valores secretos,nem alterada configuração. A observação inicial de resultado nulo foi um problema de interpretação do envelope da resposta;os metadados foram recuperados posteriormente. Não interpretar aquela tentativa como ausência de fornecedores.
+
+A [documentação oficialUpstash](https://upstash.com/docs/common/help/compliance) liga à [lista pública de suboperadores](https://upstash.com/static/trust/subprocessors.pdf),3páginas recuperadas em27/10/2026,sem data de revisão visível. Ela reúne finalidades de nuvem,site,administração,Context7 eIA. Isso não demonstra que cada linha trate os dadosRedis doMarktmorgen;vincular ao serviço/região/contrato real continua necessário. Data da conferência não substitui data de vigência da lista.
+
+O link da policyUpstash para o [registroDPFgovernamental](https://www.dataprivacyframework.gov/) retornou apenas a exigência deJavaScript,sem listagem de entidade/período/escopo. A declaração do fornecedor e o fallbackSCC contratual não são confirmação independente da certificação ativa. Não afirmar que não há certificação por causa dessa limitação de acesso.
+
+Bunny: a rota pública /dpa retornou404 e a páginaGDPRjá conferida ofereceDPA no painel. A lacuna do texto/versão/mecanismo contratual persiste desde o registro1105 de14:05:21Fortaleza,mais de1hora. **Somente a obtenção/conferência doDPA existente e do vínculo contratual da conta fica aguardando o dono**;não acessar fluxo de aceite,criar conta,contratar,contatar terceiros ou presumirSCC por relatos de outros clientes. Os metadados deProduction tornam a verificação relevante,sem provar queStream esteja efetivamente ativo. O restante da revisão e implementação continua. Nenhum novoPR de servidoresSV é aberto por essa conferência.
+
+
+## Enquadramento brasileiro por fluxo — conferência27/10/2026
+
+A [ResoluçãoCD/ANPD19de23/08/2024,retificada18/08/2025](https://www.gov.br/anpd/pt-br/acesso-a-informacao/institucional/atos-normativos/regulamentacoes_anpd/resolucao-cd-anpd-no-19-de-23-de-agosto-de-2024),arts4–9 e15–18,distingue transferência,coleta internacional,aplicação daLGPD,hipótese legal e mecanismo válido. Não presumir que mencionarDPF ouEUSCCcomprove o mecanismo aplicável a qualquer fluxo brasileiro ou equivalência automática com cláusulasANPD. O contrato/fluxo real e a legislação incidente precisam ser conferidos;nenhum instrumento é assinado ou preparado por este levantamento.
+
+A [ResoluçãoANPD32de26/01/2026,publicada27/01/2026](https://dspace.mj.gov.br/bitstream/1/16638/2/RES_ANPD_2026_32.pdf),art1,reconhece adequação daUE,Islândia,Liechtenstein,Noruega e instituições europeias abrangidas. Não é adequação universal de outros destinos nem certificação doMarktmorgen;há exceções específicas noart2. A decisão não torna servidoresUE uma condição de abertura e não autoriza retomarSV. Aplicar o mecanismo cabível aos fornecedores e fluxos efetivos,com evidência de papéis,suboperadores e transferências posteriores;as lacunas da conta real permanecem.
