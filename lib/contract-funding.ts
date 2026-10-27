@@ -436,3 +436,71 @@ export async function claimRestartIntent(
   return owned&&finished>=checked&&finished<=grant.submitUntilSeconds*1000&&new Date(finished).toISOString().slice(0,7)===context.review?.fundedExposure?.month?owned:null;
  }catch{return null;}
 }
+
+export const ARM_RESTART_SUBMISSION = `
+local function amount(v)
+ if not v or not string.match(v,'^%d+$') or (#v>1 and string.sub(v,1,1)=='0') then return nil end
+ local n=tonumber(v)
+ if not n or n<0 or n>1000000000000 or n~=math.floor(n) then return nil end
+ return n
+end
+local now,claimed,deadline=amount(ARGV[6]),amount(ARGV[7]),amount(ARGV[8])
+if not now or not claimed or not deadline or now<claimed or now>deadline or deadline-claimed>300 then return 0 end
+if redis.call('TYPE',KEYS[1]).ok~='hash' or redis.call('TTL',KEYS[1])~=-1 then return 0 end
+if redis.call('HGET',KEYS[1],'policy')~=ARGV[1] or redis.call('HGET',KEYS[1],'review')~=ARGV[2] then return 0 end
+local raw=redis.call('HGET',KEYS[1],'restart-intent:'..ARGV[4])
+if not raw or #raw>4096 then return 0 end
+local ok,intent=pcall(cjson.decode,raw)
+if not ok or type(intent)~='table' or intent.submission~=nil then return 0 end
+local fields=0
+for _ in pairs(intent) do fields=fields+1 end
+if fields~=17 then return 0 end
+if intent.version~=1 or intent.review~=ARGV[2] or intent.statsId~=ARGV[3] or intent.grant~=ARGV[4] or intent.claim~=ARGV[5] or intent.created~=claimed or intent.deadline~=deadline or intent.ref~=ARGV[9] or intent.paused~=ARGV[10] or intent.sourceBinding~=ARGV[11] then return 0 end
+if redis.call('HGET',KEYS[1],'active:'..ARGV[3])~=intent.sourceBinding or redis.call('HGET',KEYS[1],'pending:'..ARGV[3])~=ARGV[4] then return 0 end
+if redis.call('HGET',KEYS[1],'grant:'..intent.sourceGrant)~=intent.sourceReceipt or redis.call('HGET',KEYS[1],'grant:'..ARGV[4])~=intent.restartReceipt then return 0 end
+local reserved,carried=amount(redis.call('HGET',KEYS[1],'reserved')),amount(redis.call('HGET',KEYS[1],'carried'))
+if not reserved or not carried or reserved~=intent.reservedCents or carried~=intent.carriedCents then return 0 end
+local annual=amount(redis.call('GET',KEYS[4]))
+if redis.call('GET',KEYS[2])~=ARGV[10] or not annual or annual<=0 or annual>now then return 0 end
+local parsed,pause=pcall(cjson.decode,ARGV[10])
+if not parsed or type(pause)~='table' or type(pause["until"])~='number' or pause["until"]>now then return 0 end
+if tonumber(redis.call('ZSCORE',KEYS[3],ARGV[9]))~=pause["until"] then return 0 end
+if not string.match(ARGV[12],'^price_[A-Za-z0-9]+$') or #ARGV[12]>106 or #ARGV[13]~=64 or not string.match(ARGV[13],'^[a-f0-9]+$') then return 0 end
+intent.submission={version=1,phase='uncertain',priceId=ARGV[12],bodyHash=ARGV[13],armedAt=now,idempotencyKey='restart:'..ARGV[4]..':'..ARGV[5]}
+local encoded=cjson.encode(intent)
+if #encoded>4096 then return 0 end
+redis.call('HSET',KEYS[1],'restart-intent:'..ARGV[4],encoded)
+return {1,encoded}
+`;
+export type ArmedRestartSubmission=Readonly<{intent:OwnedRestartIntent;priceId:string;bodyHash:string;armedAtSeconds:number;idempotencyKey:string}>;
+/** First durable submission barrier ACK only; no provider IO or activation.
+ * Lost ACK keeps phase=uncertain forever, never a fresh submission permission.
+ */
+export async function armRestartSubmission(
+ input:{intent:OwnedRestartIntent;priceId:string;bodyHash:string},
+ policy:ContractFundingPolicy|null=CURRENT_CONTRACT_FUNDING_POLICY,
+ context:ContractFundingContext={termsSnapshot:CURRENT_PRICE_AND_RIGHTS_SNAPSHOT,review:CURRENT_COMMERCIAL_MARGIN_REVIEW},
+):Promise<ArmedRestartSubmission|null>{
+ if(!Boolean(CONTRACT_ADMISSION_COVERAGE.pauseRestart))return null;
+ const encoded=canonicalFinancialSnapshot({input,context});if(!encoded)return null;
+ ({input,context}=JSON.parse(encoded));
+ const {intent,priceId,bodyHash}=input;
+ if(!intent||!/^price_[A-Za-z0-9]{6,100}$/.test(priceId)||!/^[a-f0-9]{64}$/.test(bodyHash)||!isRedisConfigured())return null;
+ const before=new Date(),config=contractFundingConfiguration(policy,context,before);
+ if(!config||!commercialMarginReady(context.review)||config.reviewId!==intent.grant.reviewId||config.grantCents[intent.grant.key]!==intent.grant.reservedCents)return null;
+ const now=Math.floor(before.getTime()/1000),grant=intent.grant;
+ if(now<intent.claimedAtSeconds||now>grant.submitUntilSeconds)return null;
+ try{
+  const result=await redisPipeline([['EVAL',ARM_RESTART_SUBMISSION,4,'nl:contract-reserve:v1','nl:pause:'+intent.ref,'nl:pause:due','nl:pause:last:'+intent.ref,contractFundingBinding(config),config.reviewId,grant.statsId,grant.id,intent.claim,now,intent.claimedAtSeconds,grant.submitUntilSeconds,intent.ref,intent.paused,intent.source.binding,priceId,bodyHash]]);
+  const after=Date.now(),current=contractFundingConfiguration(policy,context,new Date(after));
+  if(current===null||current.binding!==config.binding||!commercialMarginReady(context.review)||after<before.getTime()||after>grant.submitUntilSeconds*1000||new Date(after).toISOString().slice(0,7)!==context.review?.fundedExposure?.month||result.length!==1)return null;
+  const ack=result[0];
+  if(!Array.isArray(ack)||ack.length!==2||ack[0]!==1||typeof ack[1]!=='string'||Buffer.byteLength(ack[1])>CONTRACT_FUNDING_RULES.restartIntent.maxIntentBytes)return null;
+  const stored=JSON.parse(ack[1]),{submission,...original}=stored;
+  const owned=ownedRestartIntentFromAcknowledgement({grant,ref:intent.ref,handle:intent.handle,paused:intent.paused,claim:intent.claim,sourceGrantId:intent.source.binding.split('|')[0]},intent.claimedAtSeconds,{cashLimitCents:config.cashLimitCents,carryForwardCents:config.carryForwardCents},[1,JSON.stringify(original)]);
+  const expected={version:1,phase:'uncertain',priceId,bodyHash,armedAt:now,idempotencyKey:'restart:'+grant.id+':'+intent.claim};
+  if(!owned||canonicalFinancialSnapshot(owned)!==canonicalFinancialSnapshot(intent)||canonicalFinancialSnapshot(submission)!==canonicalFinancialSnapshot(expected))return null;
+  const finished=Date.now();if(finished<after||finished>grant.submitUntilSeconds*1000||new Date(finished).toISOString().slice(0,7)!==context.review?.fundedExposure?.month)return null;
+  return Object.freeze({intent:owned,priceId,bodyHash,armedAtSeconds:now,idempotencyKey:expected.idempotencyKey});
+ }catch{return null;}
+}

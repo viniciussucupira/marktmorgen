@@ -1,6 +1,6 @@
-import {randomUUID} from 'node:crypto';
+import {createHash,randomUUID} from 'node:crypto';
 import {canonicalFinancialSnapshot,CONTRACT_FUNDING_RULES} from '@/lib/contract-funding-rules';
-import {claimRestartIntent,reserveRestartContractFunding,activateCheckoutContract,activateSwitchContract,type ContractGrant,type OwnedRestartIntent} from '@/lib/contract-funding';
+import {armRestartSubmission,claimRestartIntent,reserveRestartContractFunding,activateCheckoutContract,activateSwitchContract,type ContractGrant,type OwnedRestartIntent} from '@/lib/contract-funding';
 /**
  * The one way Marktmorgen makes money.
  *
@@ -711,7 +711,23 @@ export async function restartPlan(input: {
     // No search/list, cancellation mutation or retry can infer that it stopped.
     const original = await onPlatform("GET", `/subscriptions/${encodeURIComponent(source.sourceSubscriptionId)}`);
     observeStoppedRestartSource(intent, original);
-    // A stopped original is not submission/payment/activation permission.
+    // A bounded read of an existing published price cannot create products or
+    // prices. Empty/ambiguous/partial pages are unknown, never inline fallback.
+    const prices = await onPlatform("GET", "/prices?" + new URLSearchParams({
+      "lookup_keys[]": lookupKey(input.tier,"month"),active:"true",limit:"2",
+    }));
+    const priceId = observeFundedRestartPrice(intent, prices);
+    const body = new URLSearchParams({
+      customer:input.customerId,"items[0][price]":priceId,"items[0][quantity]":"1",
+      default_payment_method:input.paymentMethod,off_session:"true",payment_behavior:"error_if_incomplete",
+      "metadata[store]":intent.handle,"metadata[tier]":input.tier,"metadata[restarted]":"break",
+      "metadata[funding_grant]":intent.grant.id,"metadata[funding_review]":intent.grant.reviewId,
+      "metadata[funding_action]":"restart","metadata[restart_claim]":intent.claim,
+      "metadata[restart_source]":source.sourceSubscriptionId,
+    });
+    const armed = await armRestartSubmission({intent,priceId,bodyHash:createHash("sha256").update(body.toString()).digest("hex")});
+    if (!armed) throw new Error("The funded restart submission barrier was not acknowledged");
+    // A stopped original and an armed barrier are not payment/activation permission.
     // Coverage stays closed until the entire funded lifecycle and costs pass.
     throw new Error("The funded restart requires reconciliation and activation coverage");
   }
@@ -731,6 +747,30 @@ export async function restartPlan(input: {
   return observeRestartedPlan({ customerId: input.customerId, tier: input.tier, priceId }, subscription);
 }
 
+
+
+/** Exact existing public monthly price only. No IO, cache, creation or charge.
+ * The owned deadline still applies after the source GET and price-list GET.
+ */
+export function observeFundedRestartPrice(intent:OwnedRestartIntent,page:Record<string,unknown>,observedAt=Math.floor(Date.now()/1000)):string{
+ const encoded=canonicalFinancialSnapshot({intent,page,observedAt});
+ if(!encoded)throw Error("The funded restart price observation is unknown");
+ ({intent,page,observedAt}=JSON.parse(encoded));
+ if(!Number.isSafeInteger(observedAt)||observedAt<intent.claimedAtSeconds||observedAt>intent.grant.submitUntilSeconds||
+    !["creator_month","pro_month","scale_month"].includes(intent.grant.key)||
+    page.object!=="list"||page.has_more!==false||!Array.isArray(page.data)||page.data.length!==1)
+  throw Error("The funded restart price page is not one complete owned observation");
+ const tier=intent.grant.key.split("_")[0] as Tier;
+ const price=page.data[0] as Record<string,unknown>;
+ const recurring=price?.recurring as Record<string,unknown>|undefined;
+ if(!price||price.object!=="price"||price.active!==true||price.type!=="recurring"||price.billing_scheme!=="per_unit"||
+    price.lookup_key!==lookupKey(tier,"month")||typeof price.id!=="string"||!/^price_[A-Za-z0-9]{6,100}$/.test(price.id)||
+    price.unit_amount!==PUBLISHED_PLAN_PRICES[tier].month||price.unit_amount!==PLAN_PRICES[tier].month||
+    price.currency!=="usd"||recurring?.interval!=="month"||recurring.interval_count!==1||recurring.usage_type!=="licensed"||
+    price.transform_quantity!=null||price.tiers_mode!=null||price.custom_unit_amount!=null)
+  throw Error("The funded restart price is not the single exact published monthly unit");
+ return price.id;
+}
 
 /**
  * Validate the exact original fetched by the owned funded restart branch.
