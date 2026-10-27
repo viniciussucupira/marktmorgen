@@ -34,17 +34,40 @@ export const FIXED_COST_SOURCE_OBSERVATIONS = {
  */
 export const CURRENT_LLC_FIXED_COST_CEILINGS: readonly FixedCostCeiling[] = LLC_FIXED_COST_IDS.map(id => ({id,fullMonthlyUsdCents:null,fullAnnualUsdCents:null,evidence:"",reserveReviewed:false}));
 const cents = (n: unknown): n is number => typeof n === "number" && Number.isSafeInteger(n) && n >= 0;
+/** Read fixed-cost evidence once from own data properties. Getters, inherited
+ * defaults and sparse/accessor array entries are not a reviewed cost record. */
 export function allocateEntireLlcFixedCosts(lines: readonly FixedCostCeiling[]) {
- if (!Array.isArray(lines) || lines.length !== LLC_FIXED_COST_IDS.length || new Set(lines.map(x=>x?.id)).size !== LLC_FIXED_COST_IDS.length) return null;
- let monthly = 0, annual = 0;
- for (const id of LLC_FIXED_COST_IDS) {
-  const line = lines.find(x=>x?.id === id);
-  if (!line || !cents(line.fullMonthlyUsdCents) || !cents(line.fullAnnualUsdCents) || line.reserveReviewed !== true || typeof line.evidence !== "string" || !line.evidence.trim()) return null;
-  monthly += line.fullMonthlyUsdCents;
-  annual += line.fullAnnualUsdCents;
-  if (!Number.isSafeInteger(monthly) || !Number.isSafeInteger(annual)) return null;
- }
- return {monthlyUsdCents:monthly,annualUsdCents:annual,marktmorgenBps:LLC_FIXED_COST_ALLOCATION.marktmorgenBps,hazelsongBps:LLC_FIXED_COST_ALLOCATION.hazelsongBps};
+ try {
+  if (!Array.isArray(lines) || Object.getPrototypeOf(lines) !== Array.prototype) return null;
+  const length = Object.getOwnPropertyDescriptor(lines, "length")?.value;
+  if (length !== LLC_FIXED_COST_IDS.length || Reflect.ownKeys(lines).length !== length + 1) return null;
+  const keys = ["id", "fullMonthlyUsdCents", "fullAnnualUsdCents", "evidence", "reserveReviewed"] as const;
+  const seen = new Set<FixedCostId>();
+  let monthly = 0, annual = 0;
+  for (let index = 0; index < length; index += 1) {
+   const entry = Object.getOwnPropertyDescriptor(lines, String(index));
+   if (!entry || !Object.hasOwn(entry, "value")) return null;
+   const record: unknown = entry.value;
+   if (!record || typeof record !== "object" || ![Object.prototype, null].includes(Object.getPrototypeOf(record))
+    || Reflect.ownKeys(record).length !== keys.length) return null;
+   const fields = Object.getOwnPropertyDescriptors(record);
+   const data: Record<string, unknown> = {};
+   for (const key of keys) {
+    const field = fields[key];
+    if (!field || !Object.hasOwn(field, "value")) return null;
+    data[key] = field.value;
+   }
+   const id = data.id, month = data.fullMonthlyUsdCents, year = data.fullAnnualUsdCents;
+   if (typeof id !== "string" || !(LLC_FIXED_COST_IDS as readonly string[]).includes(id)
+    || seen.has(id as FixedCostId) || !cents(month) || !cents(year)
+    || data.reserveReviewed !== true || typeof data.evidence !== "string" || !data.evidence.trim()) return null;
+   seen.add(id as FixedCostId);
+   monthly += month;
+   annual += year;
+   if (!Number.isSafeInteger(monthly) || !Number.isSafeInteger(annual)) return null;
+  }
+  return {monthlyUsdCents:monthly,annualUsdCents:annual,marktmorgenBps:LLC_FIXED_COST_ALLOCATION.marktmorgenBps,hazelsongBps:LLC_FIXED_COST_ALLOCATION.hazelsongBps};
+ } catch { return null; }
 }
 
 /** Generated-report section: unknown complete ceilings block a finite minimum.
