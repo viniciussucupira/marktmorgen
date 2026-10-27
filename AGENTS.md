@@ -1,3 +1,17 @@
+## TX — Política tributária vigente (dono,27/10/2026 12h34 Fortaleza)
+
+Esta decisão substitui a regra19 e toda instrução anterior conflitante, inclusive MR/SR, Hazelsong, AX274,FX275,VR e Pedidos repetidos. Texto antigo permanece histórico. Usar a interpretação juridicamente mais correta, fundamentada em lei, regulamentação e decisões oficiais, conferidas e citadas com artigo/data; não escolher automaticamente a hipótese que dá mais imposto nem somar regimes/países inaplicáveis. ISS5% não é fato certificado.
+
+Nenhuma consulta tributária será feita em qualquer país nem preparada para envio. Rascunhos abaixo e documentos antigos são exclusivamente históricos, não tarefas do dono. CONSULTATION_ANSWERS permanece vazio e nenhuma leitura/gate/cálculo novo pode depender de resposta. A retirada técnica das dependências existentes pertence a472[TX2], ainda não implementada por este texto; não afirmar gate alterado.
+
+Preservar desconhecido reprova, custo desconhecido nunca zero, ausência de cota grátis como custo zero, recebimento mais caro de lib/receiving-costs.ts e SR menos favorável do Stripe. MR permanece unidade sem prejuízo com direitos100%/folga existente e empresa coberta desde base mínima,60%meta mensal real. PLANS_ON_SALE/OPENING_REQUESTED permanecemfalse;preços,limites,comissão,revisão comercial,exposição,custeio,reservas,conteúdo e Hazelsong preservados. Nenhuma conta,registro fiscal,termo,contrato,pagamento ou contato externo autorizado.
+
+As17teses do pedido TX estão registradas integralmente em docs/codex-queue.md e na continuidade como solicitações, ainda sob conferência471[TX1]. Não copiar uma tese como conclusão verificada sem conferir a citação e o enquadramento. Citação não confirmada: registrar divergência em Depende do dono e manter somente nesse ponto a leitura atual até correção, sem voltar a consultas. Nenhum restante da pesquisa fica bloqueado por isso.
+
+SV posterior,27/10/2026 13h19Fortaleza:317[EU1],441[SV1],442[SV2],SV3–SV5 somente depois da abertura;preservar trabalho/ensaios/provas e não abrir novosPRs de implementação desses itens antes dela. EU_HOSTING_CONFIRMEDfalse e sem condição de abertura por decisão do dono; a remoção de dependência no código continuaTX2. DPF/SCC dos fornecedores atuais exige fontes oficiais datadas e escopo efetivo, sem aceitar termos; oferta não é prova de contrato/conta coberta.
+
+Estado: política e proibição de consultas vigentes; revisão integral dos17pontos,remissões em todos os arquivos e alterações de código pendentes. Sem certificação jurídica/lucro ou abertura das vendas.
+
 <!-- BEGIN:nextjs-agent-rules -->
 
 # This is NOT the Next.js you know

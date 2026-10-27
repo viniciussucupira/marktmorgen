@@ -1,3 +1,17 @@
+## TX1 — Conferência oficial parcial e divergências (27/10/2026)
+
+Fonte de autoridade desta política: pedido do dono27/10/2026 12h34Fortaleza, integral em docs/codex-queue.md,471–477. As seções antigas abaixo, inclusive o título “MORE tax”, regra19 e consultas, são histórico; não comandam a execução atual. A [política TX vigente](../AGENTS.md#tx--política-tributária-vigente-dono27102026-12h34-fortaleza) prevalece. Este registro não adota automaticamente os17pontos nem declara concluídoTX1.
+
+Conferido27/10/2026 no texto oficial da [Lei14.754/2023 de12/12/2023, Câmara](https://www2.camara.leg.br/legin/fed/lei/2023/lei-14754-12-dezembro-2023-795058-normaatualizada-pl.html): art.2§1 estabelece15%anual;art.5caput/§5/§10 disciplinam controladas enquadradas,apuração31/12 e balanço;§11 impede nova tributação da distribuição de lucros já tributados. Isso sustenta o mecanismo legal, não autentica enquadramento real da LLC, balanço ou incidência de outros tributos. A referência IN1.037 art.2IV do pedido ainda não foi confirmada: texto integral do ato RFB não foi recuperado nesta rodada; busca oficial apontaVII e exige conferir ato vigente antes de corrigir/adotar. Não declarar incisoIV verificado.
+
+Conferido27/10/2026 no [Decreto6.306/2007 de14/12/2007, texto atualizado da Câmara](https://www2.camara.leg.br/legin/fed/decret/2007/decreto-6306-14-dezembro-2007-566561-normaatualizada-pe.html): art.14 define base pelo valor em reais da operação cambial;art.15-BXXV prevê0,38%para demais entradas não isentas/não abrangidas pelos incisos anteriores, com remissões às alterações2025 eADC96. A fonte não diz que IOF incide automaticamente sobre lucro contábil. Classificação da operação,isenções e efeitos das remissões precisam de revisão antes de aplicar.
+
+**Depende do dono — divergência delimitada TX4/IOF:** ponto4do pedido diz0,38%sobre valor que entrar no Brasil;textoTX2 diz0,38%sobre lucro. Art.14vincula a operação cambial. Registrar a inconsistência e conservar somente o componente IOF atual até correção deste ponto; não substituir por15,38%sobre lucro como se fosse identidade legal conferida, não presumir remessa zero nem exigir consulta. Restante da pesquisa prossegue.
+
+Conferido27/10/2026 na [LC116/2003 de31/07/2003, Planalto](https://www.planalto.gov.br/ccivil_03/leis/lcp/lcp116.htm): art.2I eparágrafoúnico tratam exportação/resultado;art.3 estabelece regra geral e exceções. A localização do cliente,sozinha,não prova resultado no exterior nem inexistência de estabelecimento. Art.4 e análise factual ainda serão conferidos antes de concluir o pontoISS; não adotarISSzero por essa leitura parcial,nem tratar5%como conclusão jurídica certa.
+
+Sem alteração de cálculos/código nesta etapa. Restantes pontosIRPJ/CSLL/PIS/Cofins/IBS/CBS/INSS/IVA/obrigações,USA/estados e Europa/outrospaíses permanecem em conferência; não sãozero comprovado. Sem consulta,contato,submissão ou serviço novo. VR: política executável para o trabalho atualizada;interpretações/parâmetros não implementados;TX1incompleto. Custos pesquisa/CI/fixos desconhecidos nãozero,100%FX275.
+
 # Tax uncertainty: always the hypothesis with MORE tax (owner's rule 19, 17 Oct 2026; research of 18 Oct 2026)
 
 The owner's words (Portuguese, verbatim, 17 Oct 2026):
