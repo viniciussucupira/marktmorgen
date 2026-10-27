@@ -32,3 +32,37 @@ test("TX4 and SR obligations cannot disappear inside the old fixed-cost inventor
   assert.equal(current.reserveReviewed,false);
  }
 });
+
+test("cost evidence accessors never execute or substitute a lower second value",()=>{
+ for(const key of ["id","fullMonthlyUsdCents","fullAnnualUsdCents","evidence","reserveReviewed"] as const){
+  let reads=0;
+  const lines=fixture();
+  Object.defineProperty(lines[0],key,{enumerable:true,get(){reads++;throw new Error("unreviewed getter");}});
+  assert.equal(allocateEntireLlcFixedCosts(lines),null);
+  assert.equal(reads,0);
+ }
+ let reads=0;
+ const changing=fixture();
+ Object.defineProperty(changing[0],"fullMonthlyUsdCents",{enumerable:true,get(){return ++reads===1?101:-100000;}});
+ assert.equal(allocateEntireLlcFixedCosts(changing),null);
+ assert.equal(reads,0);
+});
+test("inherited cost records, sparse arrays and accessor entries are not complete evidence",()=>{
+ const inherited=fixture();
+ inherited[0]=Object.create(inherited[0]);
+ assert.equal(allocateEntireLlcFixedCosts(inherited),null);
+ const sparse=fixture();Reflect.deleteProperty(sparse,"0");
+ assert.equal(allocateEntireLlcFixedCosts(sparse),null);
+ let reads=0;const indexed=fixture();
+ Object.defineProperty(indexed,"0",{enumerable:true,get(){reads++;return fixture()[0];}});
+ assert.equal(allocateEntireLlcFixedCosts(indexed),null);
+ assert.equal(reads,0);
+});
+test("detached cost evidence retains valid totals and refuses unsafe aggregate amounts",()=>{
+ const lines=fixture(),expected=allocateEntireLlcFixedCosts(lines);
+ assert.deepEqual(allocateEntireLlcFixedCosts(lines.map(line=>Object.assign(Object.create(null),line))),expected);
+ const overflow=fixture();overflow[0].fullMonthlyUsdCents=Number.MAX_SAFE_INTEGER;
+ assert.equal(allocateEntireLlcFixedCosts(overflow),null);
+ const annual=fixture();annual[0].fullAnnualUsdCents=Number.MAX_SAFE_INTEGER;
+ assert.equal(allocateEntireLlcFixedCosts(annual),null);
+});
