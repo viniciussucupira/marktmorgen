@@ -4,6 +4,7 @@ import { SiteNav } from "@/components/site-nav";
 import { SiteFooter } from "@/components/site-footer";
 import { storeForHandle } from "@/lib/store";
 import { readErasureLink } from "@/lib/erasure-request";
+import { readErasureReceipt } from "@/lib/erasure-receipt";
 import { ERASE_TOKEN } from "@/lib/erasure-rules";
 
 export const metadata: Metadata = {
@@ -57,7 +58,9 @@ export default async function DeletePage({ searchParams }: Params) {
   const handle = typeof query.store === "string" ? query.store.slice(0, 60).toLowerCase() : "";
   const store = handle ? await storeForHandle(handle).catch(() => null) : null;
   const link = token ? await readErasureLink(token).catch(() => null) : null;
-  const n = Number(typeof query.n === "string" ? query.n : "0") || 0;
+  const receipt = readErasureReceipt(query.receipt, token);
+  const confirmed = receipt?.state === statusKey ? receipt : null;
+  const n = confirmed?.count ?? 0;
 
   return (
     <div className="flex min-h-screen flex-col bg-paper text-ink">
@@ -73,10 +76,10 @@ export default async function DeletePage({ searchParams }: Params) {
           </div>
         </section>
         <section className="container-page py-12 sm:py-16" data-erase>
-          {statusKey === "done" ? (
+          {statusKey === "done" && confirmed ? (
             <div className="max-w-2xl">
               <p className="notice notice-success" role="status">
-                {n === 1 ? "Done. You were deleted from 1 store, and its owner was told." : `Done. You were deleted from ${n} stores, and each owner was told.`} Those stores will not email you again.
+                {n === 1 ? "Done. You were deleted from 1 store." : `Done. You were deleted from ${n} stores.`} Those stores will not email you again.
               </p>
               <p className="mt-6 text-sm text-ink-soft">
                 Their creators keep your payments on their own Stripe accounts, as their sales records. <Link href="/privacy#delete" className="underline underline-offset-4">What is kept, and why</Link>.
@@ -84,7 +87,7 @@ export default async function DeletePage({ searchParams }: Params) {
             </div>
           ) : link ? (
             <div className="max-w-2xl">
-              {statusKey === "more" ? (
+              {statusKey === "more" && confirmed ? (
                 <p className="notice notice-info mb-6" role="status">
                   {`Deleted from ${n} ${n === 1 ? "store" : "stores"} so far. The rest could not be finished just now. Press the button again in a while; this link works for an hour, and you can ask for a new one at any time.`}
                 </p>
@@ -124,6 +127,11 @@ export default async function DeletePage({ searchParams }: Params) {
             </div>
           ) : (
             <div className="max-w-xl">
+              {(statusKey === "done" || statusKey === "more") && !confirmed ? (
+                <p className="notice notice-info mb-6" role="status">
+                  This page cannot confirm the deletion result. Ask for a new link below to check which stores still hold your data.
+                </p>
+              ) : null}
               {token && !status ? (
                 <p className="notice notice-error mb-6" role="alert">
                   That link has run out or was already used. Ask for a new one below.

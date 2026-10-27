@@ -2,6 +2,7 @@ import type { NextRequest } from "next/server";
 import { originFrom } from "@/lib/request-origin";
 import { clientAddress, fromAnotherSite, limited } from "@/lib/request-guard";
 import { confirmErasure, requestErasureLink } from "@/lib/erasure-request";
+import { makeErasureReceipt } from "@/lib/erasure-receipt";
 import { handleProblem } from "@/lib/store";
 
 /**
@@ -42,8 +43,10 @@ export async function POST(request: NextRequest) {
       const token = String(form.get("token") ?? "").slice(0, 80);
       const done = await confirmErasure(token);
       if (done.state === "gone") return away("status=expired");
-      if (done.state === "more") return away(`status=more&n=${done.deleted.length}&token=${encodeURIComponent(token)}`);
-      return away(`status=done&n=${done.deleted.length}`);
+      const receipt = makeErasureReceipt(done.state, done.deleted.length, token);
+      const result = receipt ? `&receipt=${encodeURIComponent(receipt)}` : "";
+      if (done.state === "more") return away(`status=more&token=${encodeURIComponent(token)}${result}`);
+      return away(`status=done${result}`);
     }
     return new Response("Bad request", { status: 400 });
   } catch (error) {
