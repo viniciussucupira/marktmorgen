@@ -1,5 +1,90 @@
 # Fila de trabalho do Codex — Marktmorgen
 
+## Prioridade vigente — TX (27/10/2026, 12h34 Fortaleza)
+
+A decisão TX substitui, nos pontos conflitantes, a regra 19, o pressuposto de ISS5% certo, a exigência de consultas tributárias e a leitura que dá mais imposto, inclusive nas seções MR/SR e nas instruções antigas desta fila. Preservar o texto anterior como histórico. Não fazer nem preparar para envio consulta tributária em qualquer país; CONSULTATION_ANSWERS permanece vazio. Recebimento mais caro e regra SR menos favorável do Stripe continuam; desconhecido reprova e não vira zero. As fontes oficiais e o enquadramento de cada um dos17pontos serão conferidos em471[TX1] antes de registrar uma interpretação como verificada/adotada ou alterar cálculos. Divergência de citação vai a Depende do dono e conserva, somente naquele ponto, a leitura atual até correção. O texto integral abaixo é solicitação/proveniência, não parecer nem conferência jurídica concluída.
+
+Ordem: preservar e concluir a unidade já iniciada (PR1100);471[TX1] tem prioridade sobre qualquer item ainda não iniciado.472[TX2] no Bloco de abertura antes de466[MR3];473[TX3] no mesmo bloco;474[TX4] ligado a275[FX1];475[TX5] junto de466[MR3] e309[EM1];476[TX6] e477[TX7] na fila. Não recriar MR3 já incorporado: complementar seus resultados após nova leitura implementada/verificada. SV permanece redução de risco, sem nova execução externa autorizada; a retirada concreta de dependência EU_HOSTING/consultas está emTX2 e não é afirmada implementada neste registro.
+
+Pedidos repetidos: conferidos main84e5815510db1007bcb76a3b690335562ca54732,12PRs abertos (metadados/corpos e filas),656refs codex/* e100commits recentes;58heads distintos recentes/PRs/tributários examinados.56filas lidas sem correspondência de data/hora,seção,TX1–TX7 ou conteúdo equivalente;2heads tributários antigos retornaram404para codex-queue.md (ausência de arquivo, não leitura presumida). Revisão não encontrou duplicação deste pedido; registros anteriores permanecem. Numeração única471–477 após470. Proveniência: anexo7c2515fa-cbc7-4731-a219-6b0ead4a48ae/Texto colado.txt, texto integral preservado abaixo, somente títulos de itens numerados.
+
+VR: sete itens registrados na fila, nenhum implementado/conferido juridicamente por este registro. Não mudam código, impostos calculados, preços, limites, comissão, flags, revisões, custeio, exposição, reservas, conteúdo ou Hazelsong. Nenhuma conta, consulta, envio, contato, pagamento ou aceitação de termos. Acessibilidade: Markdown somente,0→0ações/decisões de interface; sem teste humano/certificação. Sem novo serviço/IO operacional; pesquisa/CI/custos totais desconhecidos não sãozero,100%FX275; futuras operações exigem limites e reserva mensais/anuais nos seis contratos. Contador254, nenhuma entrega funcional nova.
+
+## TX — Leitura tributária juridicamente mais correta, sem consultas, no Brasil e no exterior (27/10/2026)
+
+Solicitação do dono (27/10/2026, 12h34, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: antes de gravar, aplique a regra permanente "Pedidos repetidos". Confira o main, os PRs abertos e os ramos codex/* recentes, e procure esta solicitação pela linha de data e hora, pelo nome da seção, pelas etiquetas [TX1] a [TX7] e pelo conteúdo. Se já estiver gravada, não crie nada novo.
+
+Decisões do dono, em vigor a partir desta solicitação:
+(a) A regra 19 ("onde houver dúvida, usar a leitura que der MAIS imposto") é substituída. Daqui em diante, cada dúvida tributária, no Brasil, nos EUA, na Europa e em qualquer outro país, INCLUSIVE O ISS, usa a interpretação JURIDICAMENTE MAIS CORRETA, fundamentada no texto da lei, da regulamentação e das decisões oficiais, conferido na fonte e citado com artigo e data.
+(b) O dono NÃO fará nenhuma consulta tributária, em nenhum país (Receita Federal, município, IRS, estados americanos, autoridades europeias ou outras). Nenhuma leitura, gate ou cálculo pode depender de resposta a consulta. Os rascunhos de consulta existentes ficam só como histórico; CONSULTATION_ANSWERS permanece vazio.
+(c) Deixam de valer: a leitura que dá mais imposto, o ISS de 5% tratado como certo e a soma de impostos de países ou regimes que não se aplicam ao caso.
+(d) Continuam valendo: "custo desconhecido reprova, nunca é zero", nenhuma cota grátis de fornecedor contada como zero, as taxas de recebimento mais caras de lib/receiving-costs.ts e a regra do Stripe (seção SR, resposta menos favorável do Stripe).
+
+Leitura juridicamente mais correta adotada (confira cada citação na fonte oficial antes de gravar; se uma citação não se confirmar, registre a divergência em "Depende do dono" e use, só nesse ponto, a leitura atual até a correção):
+
+BRASIL
+1. IRPF: 15% sobre o lucro anual da LLC, apurado em 31/12, ainda que não distribuído (Lei 14.754/2023, art. 5º), porque a LLC estadual de sócio não residente, não sujeita ao imposto federal americano, consta como regime fiscal privilegiado (IN RFB 1.037/2010, art. 2º, IV). O lucro já tributado não é tributado de novo quando for distribuído.
+2. IRPJ, CSLL, PIS, Cofins, IBS e CBS: não incidem; a LLC estrangeira não é pessoa jurídica brasileira e os clientes estão no exterior; a requalificação depende de simulação ou de operação brasileira de fato, que não existem no desenho.
+3. ISS: não incide, por dois fundamentos independentes: (a) o contribuinte é o prestador, no local do estabelecimento prestador (LC 116/2003, arts. 3º e 4º), e a LLC não tem estabelecimento no Brasil; (b) não incide sobre exportação de serviços (LC 116/2003, art. 2º, I), e os clientes estão no exterior, onde o resultado se verifica.
+4. IOF: 0,38% sobre o valor que entrar no Brasil (Decreto 6.306/2007, art. 15-B, XXV).
+5. INSS: não incide enquanto o dono não receber pró-labore ou outra remuneração pelo trabalho (Lei 8.212/1991, arts. 21 e 28, III).
+6. IVA e sales tax estrangeiros recolhidos pela LLC: não integram a receita nem o lucro tributável no Brasil, por serem valores recebidos por conta de terceiros.
+7. Obrigações sem imposto: declarar a participação na LLC e o lucro no IRPF anual; entregar a declaração de Capitais Brasileiros no Exterior (CBE) ao Banco Central quando os limites forem atingidos.
+
+ESTADOS UNIDOS
+8. Imposto federal: 0%; a renda é de fonte estrangeira (serviços executados pelo sócio fora dos EUA) e a LLC não tem escritório, empregado nem agente nos EUA (26 U.S.C. §§864, 871, 881). Obrigatórios: Form 5472 e Form 1120 pro forma todos os anos.
+9. Imposto estadual sobre a renda ou franquia: 0% em cada estado enquanto as vendas ali ficarem abaixo do limite legal de "doing business" daquele estado (por exemplo, Cal. Rev. & Tax. Code §23101); o código soma as vendas por estado e liga a cobrança automaticamente antes de cada limite. Delaware: taxa anual fixa da LLC, como custo fixo.
+10. Sales tax sobre os planos do Marktmorgen: somente nos estados que tributam software por assinatura e em que as vendas do Marktmorgen passarem do limite de nexo econômico do estado; cobrado do cliente por fora do preço.
+11. Sales tax sobre as vendas das lojas: o Marktmorgen é "marketplace facilitator" só nos estados cuja lei o enquadre e acima do limite de cada estado; cobrado do comprador por fora do preço ou descontado do repasse ao criador.
+
+EUROPA
+12. União Europeia, IVA sobre os planos do Marktmorgen: para criador com número de IVA válido, sem IVA, por inversão do sujeito passivo (Diretiva 2006/112/CE, art. 196); para criador sem número válido, IVA do país dele desde a primeira venda, pelo balcão único não UE (OSS), cobrado por fora do preço.
+13. União Europeia, IVA sobre as vendas das lojas (Regulamento de Execução 282/2011, art. 9º-A, cuja validade foi confirmada pelo TJUE no processo C-695/20, Fenix International, 2023): o Marktmorgen é o fornecedor presumido apenas dos serviços prestados por via eletrônica (produtos digitais entregues de forma automática: e-books, cursos gravados, downloads, assinaturas de conteúdo) vendidos a consumidores da UE, porque o checkout dele autoriza a cobrança. Não se aplica a mentorias e chamadas ao vivo (com intervenção humana) nem a produtos físicos. O IVA é cobrado do comprador por fora do preço ou descontado do repasse ao criador, nunca da receita do Marktmorgen.
+14. Reino Unido: a mesma lógica pelas regras britânicas equivalentes, com registro desde a primeira venda a consumidor, por não haver limite para fornecedor não estabelecido.
+15. Suíça e Noruega: IVA sobre serviços eletrônicos a consumidores só acima dos limites legais (Suíça: faturamento mundial de CHF 100 mil; Noruega, regime VOEC: NOK 50 mil em vendas a consumidores noruegueses), cobrado por fora do preço.
+16. Imposto de renda em qualquer país europeu: 0%, por não haver estabelecimento permanente. Impostos sobre serviços digitais (França, Itália, Espanha, Reino Unido e outros): não se aplicam, por estarem muito abaixo dos limites de faturamento desses impostos.
+
+OUTROS PAÍSES
+17. Canadá: GST/HST só acima de CA$ 30 mil em 12 meses de vendas a consumidores canadenses, por fora do preço, com as regras de operador de plataforma no mesmo limite. Em qualquer outro país com clientes, a mesma regra: imposto sobre consumo só onde a lei local o exigir, acima do limite local, cobrado por fora do preço; imposto sobre a renda 0% sem estabelecimento permanente. O código conta as vendas por país e liga cada registro e cobrança automaticamente antes do limite.
+
+471. [TX1] Gravar as decisões e a leitura.
+Estado inicial: na fila, com prioridade sobre qualquer item ainda não iniciado.
+Grave as decisões (a) a (d) e os 17 pontos em AGENTS.md (seção nova datada), em docs/tax-uncertainty.md (cada pergunta com a leitura adotada, a citação e o risco residual), em docs/tax-consultations.md (registrando que nenhuma consulta será feita), em docs/eu-vat-article-9a.md e em todas as seções que citam a regra 19, a "leitura que dá mais imposto", consultas tributárias ou o ISS de 5% como certo, inclusive a seção MR, preservando o texto antigo como histórico.
+
+472. [TX2] Trocar a leitura no código.
+Estado inicial: na fila, dentro do Bloco de abertura, antes de 466 [MR3].
+Em lib/receiving-costs.ts, crie a leitura "most-correct" com: 15% (IRPF) + 0,38% (IOF) sobre o lucro; 0% de imposto sobre a receita; o imposto do comprador somado por fora a até 27%, onde devido; e os impostos estaduais americanos ligados automaticamente pelos limites do ponto 9. Use-a como leitura do gate (lib/tax-gate.ts) e do dimensionamento. Ela não depende de EU_HOSTING_CONFIRMED nem de qualquer consulta. Retire do gate qualquer dependência de CONSULTATION_ANSWERS. Atualize os testes que exigem a leitura antiga, sem afrouxar nenhuma outra trava.
+
+473. [TX3] Impostos sobre consumo por país e por estado.
+Estado inicial: na fila, dentro do Bloco de abertura.
+Ajuste lib/deemed-supplier.ts e docs/eu-vat-article-9a.md aos pontos 10 a 17: inversão para criadores com número de IVA, OSS para os demais, art. 9º-A só para serviços prestados por via eletrônica a consumidores, e registro e cobrança por estado e por país ligados automaticamente antes de cada limite legal, com a contagem de vendas por lugar no código. DEEMED_SUPPLIER_RECORDS continua exigindo, para cada jurisdição, o tratamento construído e testado.
+
+474. [TX4] Custos fixos.
+Estado inicial: na fila.
+Em 275 [FX1], retire o INSS enquanto o dono não receber pró-labore, e inclua os custos de cumprir: Form 5472 e Form 1120 pro forma, a declaração da LLC no IRPF, a CBE quando aplicável, a taxa anual de Delaware e os registros e declarações de impostos sobre consumo (OSS e equivalentes), com fontes oficiais datadas. Desconhecido reprova.
+
+475. [TX5] Mostrar o efeito.
+Estado inicial: na fila, junto de 466 [MR3].
+Mostre, por plano, intervalo e complemento, o lucro líquido no pior caso com a nova leitura e a base mínima da empresa, e recalcule os limites de e-mails para a lista de 309 [EM1] com ela. Não proponha nem aplique preço novo.
+
+476. [TX6] Riscos residuais.
+Estado inicial: na fila.
+Registre em docs/tax-uncertainty.md os riscos que a leitura adotada não elimina (requalificação como operação brasileira ou atividade da pessoa física, INSS sobre remuneração presumida, ISS se a atividade for tratada como prestada no Brasil, fonte americana por servidores nos EUA, enquadramento como facilitador em estados ou países específicos), com a hipótese que os aumentaria e a providência no próprio desenho que os reduz. Os servidores na UE (itens SV) continuam na fila como redução de risco, não como trava de abertura.
+
+477. [TX7] Providências que sustentam a leitura adotada.
+Estado inicial: na fila.
+Confira no site, nos termos, nos recibos, no checkout e na cobrança se: os contratos identificam a LLC como fornecedora, com endereço e jurisdição próprios; nenhum endereço, telefone ou dado brasileiro apresenta a atividade como brasileira; a receita é recebida só em contas da LLC; o dono aparece como administrador da LLC, não como prestador pessoal; e o número de IVA de cada criador é validado antes de aplicar a inversão. Corrija no código o que puder ser corrigido sem mudar preço, limite ou trava, e liste em "Depende do dono" o que só o dono pode fazer.
+
+REGRA DE MARGEM (decisão do dono de 27/10/2026, seção MR, com os impostos desta seção): nenhum cliente pagante, considerado isoladamente e usando 100% de todos os direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo, depois de todos os custos e de todos os impostos, no Brasil e no exterior, pela leitura juridicamente mais correta; a empresa como um todo nunca pode dar prejuízo no pior caso, com os custos fixos (100% do Marktmorgen, FX275) cobertos a partir da base mínima de clientes; a meta de 60% de margem líquida da empresa é medida todo mês com os números reais. Custo desconhecido reprova, nunca é zero.
+
+Proibido: mudar preços, cortar limites visíveis, alterar comissão, ligar PLANS_ON_SALE ou OPENING_REQUESTED, afrouxar a revisão comercial, a política de exposição, o custeio dos contratos ou qualquer trava além da troca da leitura tributária descrita aqui, fazer ou preparar para envio qualquer consulta tributária, registrar a empresa em qualquer autoridade fiscal, criar contas, abrir a empresa, contratar, pagar, aceitar termos, contatar qualquer autoridade fiscal ou terceiro, apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR: cada item informa, ao terminar, em qual estado está, o que passou a funcionar, o que não funciona e o que não foi verificado.
+
 ## Prioridade vigente — MR e SR (27/10/2026)
 
 As decisões diretas do dono abaixo entram em vigor nas respectivas datas/horas. A REGRA DE MARGEM MR substitui somente os antigos pisos de 60% como trava por cliente/empresa no pior caso; os 60% passam a meta mensal real da empresa. Toda referência antiga conflitante nesta fila, inclusive em AX274, FX275, VR, Pedidos repetidos, Hazelsong e assistente, permanece como histórico e deve ser lida com essa substituição. Não interpretar a preservação literal como manutenção do piso revogado. Lucro líquido por unidade estritamente positivo com a folga existente do spend floor, base mínima global calculada, ISS5%, leitura tributária mais onerosa, recebimento mais caro, reservas, desconhecido reprova e custeio integral continuam obrigatórios. Código ainda não adaptado não é prova de cumprimento; gates permanecem fechados.
