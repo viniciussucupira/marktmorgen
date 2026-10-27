@@ -10491,3 +10491,54 @@ ePLANS_ON_SALE=false preservados. Esta correção interna não encerraAB(a),
 não habilita reinício financiado e não incrementa contador254.
 Próximo:ativaçãofinanciada→ACKstore/CASgerações/cleanupundo→rollover,
 limitesdepolling e cálculointegral6contratos;sem anteciparEL.
+
+
+### AB(a) — ativação do ledger de reinício, etapa fechada construída
+Novo lib/contract-restart-activation.ts implementa Lua real e wrapper fechado,
+sem chamar o provedor. Exige a intenção imutável17campos, ID járetido em
+submission.phase=observed, preço/hash/chave/horário exatos, origem/recibos/índice/
+pending/caixa/policy/review atuais, pausa/due/ano e período mensal pago coerente.
+Ativação primeira só atédeadline; observação duplicada retorna somente o
+mesmo binding dentro do período pago, inclusive apósdeadline, sem novo direito.
+Um HSET troca active e grava activated no ledger existente; retém pending,
+origem,índice,recibos,caixa,pausa,due/ano para a futura publicação comACK/CAS.
+Não libera principal,incrementa slot,remove registro ou cria outroledger.
+
+Esta etapa NÃO está ligada ao retorno de restartPlan nem publica Store:
+billing continua terminando antes da ativação; o wrapper também recusa antes
+dequalquerIO enquanto pauseRestart=false, mesmo com policyinjetada.
+A recuperação atual exige active ainda naorigem; integrar reconhecimento do
+binding ativado/ACKperdido e ACKstore/CASgerações/cleanupundo é requisito ANTES
+de ligar a etapa ou completarAB(a). Não interpretar este helper como protocolo
+completo, ativação real aprovada ou recurso disponível ao cliente.
+Nenhum segredo/conta/payment/email/serviço externo acionado.
+
+Verificação remota completa exigida: Lua real no mesmo RedisCI/namespaces
+sintéticos existentes,64primeiroscontendentes/1binding,ACKperdido+64observações
+tardias idênticas,22recusas de proprietário/ID/tempo/período/caixa/índice/
+recibos/policy/pause/due/ano/TTL semmutações,INFOteto17por etapa (medição nova
+pendente); teste wrapperfechado0IO/0getters. Reusa as45chaves deledger/3refs
+já existentes e o mesmojob/serviço/matriz/tetos,semdependência/cache/artefato.
+Registra os4usos do mesmoledger/pausa/due/ano em store-data-registry,
+sem nova chave física; bindingactivated≤256bytesbrutos nafamília existente.
+Retenção/cardinalidade/overhead/cópias/polling vitalício permanecem desconhecidos.
+
+| Contrato | Operações de ativação novas habilitadas mês/ano | Custo integral futuro |
+| --- | --- | --- |
+| creator_month | 0/0 | desconhecido,reprovado |
+| creator_year | 0/0 | desconhecido,reprovado;esta etapa é mensal |
+| pro_month | 0/0 | desconhecido,reprovado |
+| pro_year | 0/0 | desconhecido,reprovado;esta etapa é mensal |
+| scale_month | 0/0 | desconhecido,reprovado |
+| scale_year | 0/0 | desconhecido,reprovado;esta etapa é mensal |
+
+Zerohabilitado pelo gatefechado/nãointerligado,não custofuturozero.
+Custopior100%pordireito/cliente/global60%,LLC100%MarktmorgenFX275,
+BR-US+ISS5%leituramaisonerosa,tetos e reserva exigidos antes da operação.
+MesmoCIpúblicopadrão,0incremental faturado somente noescopocondicionalconhecido;
+não declara CI/LLC/runtimegratuitos. Preçosmáximos69/690/449/4490/999/9990,
+limites,consentimentos,conteúdo,idiomas,IDs,PLANS_ON_SALE=false/policiesNULL
+econtador254 preservados. VR: implementação de etapa fechada em PR para teste;
+não incorporada/publicada/disponível ao cliente neste registro.
+Após esta etapa: integração comrecuperação→ACKstore/CASgerações/cleanupundo→
+rollover/limitesdepolling/cálculointegral6contratos. AB(a)incompleto;ELnafila.
