@@ -8,8 +8,33 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 <!-- END:nextjs-agent-rules -->
 
+## MR — Regra de margem vigente (27 de outubro de 2026)
+
+Solicitação do dono (27/10/2026, 07h42, horário de Fortaleza). Registro464[MR1]; decisão vigente desde a solicitação, acima de instruções históricas incompatíveis. O texto do dono é preservado abaixo.
+
+REGRA DE MARGEM (substitui a regra dos 60% por cliente e a regra dos 60% da empresa no pior caso):
+1. Nenhum cliente pagante, considerado isoladamente e usando 100% de todos os direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo, depois de todos os custos e de todos os impostos, inclusive os brasileiros, com ISS de 5% sobre a receita, as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação. Isso é garantido pelo código, com tetos automáticos antes de cada gasto, sem o dono acompanhar painel nem agir à mão.
+2. A empresa como um todo nunca pode dar prejuízo no pior caso: os custos fixos (100% do Marktmorgen, FX275) e as exposições financiadas (teste grátis, reembolso, inadimplência, retenção depois do cancelamento) são cobertos a partir de uma base mínima de clientes pagantes, calculada e mostrada; abaixo dela, os custos fixos ficam no menor valor possível.
+3. Meta de 60%: a margem líquida da empresa, depois de todos os custos e impostos, é medida todo mês com os números reais e mostrada num relatório automático ao dono. Os 60% são a meta de lucro, não uma trava de venda.
+4. Continuam valendo integralmente: a leitura que der MAIS imposto (docs/tax-uncertainty.md), o ISS de 5% como certo, "custo desconhecido reprova, nunca é zero", nenhuma cota grátis de fornecedor contada como zero, e o critério de lucro máximo nas decisões de preço e limites.
+
+Aplicação técnica vinculante: por unidade, lucro líquido **maior que zero**, mantendo a folga já existente do spend floor, todos os direitos e complementos a100% no pior mês de cada intervalo mensal/anual. Comissão não pode subsidiar o resultado. Cada gasto exige teto automático/reserva anteriores; não depender de painel ou intervenção manual. Exposições financiadas continuam dentro de seu custeio/revisão e limites próprios. A empresa precisa da base mínima calculada para cobrir100% dos custos fixos FX275 e exposições; abaixo dela os custos fixos ficam no menor valor possível. Sem fonte/custo/teto de câmbio/cobertura/revisão, reprova: não inventar uma base finita.
+
+A meta líquida de60% pertence ao relatório mensal **real da empresa**, sem dados pessoais; não é trava de venda por cliente nem global no pior caso. MR2 implementa o critério e o relatório; MR3 apresenta os resultados com os preços atuais. Este registro não calcula lucro, não preenche revisões e não demonstra que esses itens já funcionam.
+
+Precedência completa: em AX274, FX275, VR, Pedidos repetidos, Hazelsong guardada, assistente da loja, documentos vinculados e comentários/testes/cálculos ainda antigos, qualquer instrução de60% como piso obrigatório remete a esta seção. Citações literais e decisões antigas ficam intactas como histórico. Custos da acessibilidade continuam variáveis por plano ou fixos na base mínima; a preservação da Hazelsong continua integral e seus custos residuais pagos pela LLC pertencem100%ao Marktmorgen. O assistente continuaUS$69,700respostas e com reserva própria; seus números de margem antigos não certificam a nova regra.
+
+Continuam integralmente: leitura que der MAIS imposto em docs/tax-uncertainty.md, ISS5% como certo, taxas mais caras de lib/receiving-costs.ts, reservas de reembolso/contestação, exposição e custeio contratual, tax gate, art9a, revisão comercial e demais gates. Não usar cota grátis de fornecedor como custo zero. Nenhuma mudança de preço, limite visível, comissão, PLANS_ON_SALE ou OPENING_REQUESTED. Não criar conta, aceitar termos, contratar, pagar ou contatar terceiros; não apagar conteúdo nem qualquer coisa da Hazelsong. Somente testes sintéticos. Lucro máximo orienta decisões futuras; este pedido não autoriza preço novo.
+
+VR: política documental vigente; código/calculadores/relatório ainda sujeitos a MR2, resultados ainda sujeitos a MR3. Não declarar lucro certificado, abertura ou disponibilidade ao cliente por esta inclusão.
+
+
+
 
 ## Owner requirement: customer-level net margin
+
+> **Atualização MR, 27/10/2026 07h42 Fortaleza:** somente o piso histórico de 60% desta seção foi substituído pela [REGRA DE MARGEM vigente](AGENTS.md#mr--regra-de-margem-vigente-27-de-outubro-de-2026). Os textos e números anteriores ficam como histórico, não como trava atual. Nenhum outro requisito, custo, imposto, teto, reserva ou gate é dispensado.
+
 
 Every paying customer, taken one at a time and using every entitlement of its plan at the maximum in the worst month (commission on sales counted as zero), must meet a minimum 60% net margin after all applicable taxes and all variable costs. Do not use average customer consumption or cross-subsidies to pass an unprofitable customer. Include annual discounts and overages. Never count a supplier's free quota as zero cost; use the paid unit price at its most expensive tier. If a plan misses 60%, fix it by REDUCING that plan's limits, never by changing its price, and enforce the limits automatically with per-supplier spending ceilings: the owner will not watch dashboards or act on alerts. (For Marktmorgen, the owner's decision of 18 October 2026, 11:21, below, replaces "never by changing its price": prices may change, visible limits may not be cut.)
 
@@ -21,6 +46,9 @@ The owner's own rule (16 Oct 2026) puts two things outside the per-customer unit
 Unknown taxes, unbounded costs and missing reviews do not count as zero: they keep release closed. Use 27.5% (the Brazilian individual top rate) as the minimum profit-tax stress rate, and a higher combined rate wherever the reading with more tax gives one (docs/tax-uncertainty.md); since 18 Oct 2026 the owner uses no accountant, so a lower reading needs an official text or a recorded consultation answer. Paid commercial release stays closed while the review in lib/commercial-margin.ts is absent or fails. Existing operating-margin tests are not proof of all-tax net margin. Do not claim that this requirement is satisfied merely because a guard or a calculator was added.
 
 ## Owner's margin rule, restated 17 Oct 2026 (binding for Hazelsong and Marktmorgen)
+
+> **Atualização MR, 27/10/2026 07h42 Fortaleza:** somente o piso histórico de 60% desta seção foi substituído pela [REGRA DE MARGEM vigente](AGENTS.md#mr--regra-de-margem-vigente-27-de-outubro-de-2026). Os textos e números anteriores ficam como histórico, não como trava atual. Nenhum outro requisito, custo, imposto, teto, reserva ou gate é dispensado.
+
 
 The owner's words (Portuguese, verbatim):
 
@@ -40,6 +68,9 @@ Unknown taxes, unknown supplier costs and unenforced limits count as failing, ne
 
 ## Tax uncertainty: the reading with more tax (owner, 17 Oct 2026, rule 19)
 
+> **Atualização MR, 27/10/2026 07h42 Fortaleza:** somente o piso histórico de 60% desta seção foi substituído pela [REGRA DE MARGEM vigente](AGENTS.md#mr--regra-de-margem-vigente-27-de-outubro-de-2026). Os textos e números anteriores ficam como histórico, não como trava atual. Nenhum outro requisito, custo, imposto, teto, reserva ou gate é dispensado.
+
+
 Where the law is unclear or has more than one reading, every margin model, review and gate uses the reading that gives MORE tax, so profit is never overstated; the questions, their status (CLOSED-TEXT, CLOSED-DESIGN, CLOSABLE-CONSULTA, OPEN), citations and readings are in [docs/tax-uncertainty.md](docs/tax-uncertainty.md). **Since 18 Oct 2026 the owner uses no accountant:** a doubt is closed only by an official text or by an answer to a consultation (Receita under IN RFB 2.058/2021, or the Prefeitura de Fortaleza for ISS), recorded with its date and source ([docs/tax-consultations.md](docs/tax-consultations.md), `CONSULTATION_ANSWERS` in `lib/tax-gate.ts`); otherwise it stays at the most-tax reading. The gate reading is `gateReading()` (`lib/tax-gate.ts`): `MOST_TAX_READING` while `EU_HOSTING_CONFIRMED` is false (it is set only once both products' servers are in EU regions), under which the 60% floor is not reachable at any limit, so paid sales stay closed; `tests/tax-gate.test.ts` fails if the old confirmation flag comes back or anything is on sale while a published plan misses 60% under the gate reading. Never lower the tax assumption or loosen a gate to make a test pass, and never raise a price to pass the most-tax gate; limits and prices are sized for 60% at the most favorable reading the owner may later confirm (the sizing reading).
 
 ## Marktmorgen as the supplier for tax: EU art. 9a and the rest (18 Oct 2026)
@@ -48,9 +79,15 @@ Council Implementing Regulation (EU) No 282/2011 art. 9a presumes that a platfor
 
 ## One receiving model for every unit (18 Oct 2026)
 
+> **Atualização MR, 27/10/2026 07h42 Fortaleza:** somente o piso histórico de 60% desta seção foi substituído pela [REGRA DE MARGEM vigente](AGENTS.md#mr--regra-de-margem-vigente-27-de-outubro-de-2026). Os textos e números anteriores ficam como histórico, não como trava atual. Nenhum outro requisito, custo, imposto, teto, reserva ou gate é dispensado.
+
+
 `lib/receiving-costs.ts` is the only model of what receiving a payment costs, for every plan, interval and add-on, aligned with Hazelsong's `WORST_CASE`: the dearer per-charge fee of Stripe with every surcharge (6.6% + 30¢) and Paddle (5% + 50¢) ON THE AMOUNT CHARGED (the price plus the buyer's tax on top at 27%; a line on a renewal invoice pays only the percentages), remittance 1.5% of revenue, a 1% refund reserve, a dispute reserve of ($30 + amount charged) × 1%, and a profit tax never below 27.5%. `tests/plan-cost-model.ts` (`netOf`), `tests/spend-floor.test.ts` and the add-on read it; no other fee figure may be typed. Under it no unit keeps 60% at full use today, and none can by cutting a limit the customer never sees (the "Printed lines only" column). The owner's decision of 18 Oct 2026 (morning): no cut to any limit a customer sees (visits, orders, video hours, storage, AI drafts, emails, anything printed) and no change to the number of plans; its price rule was replaced at 11:21 (next section). `docs/margin-alignment-2026-10-18.md` is generated by `node scripts/margin-alignment.mjs` and `tests/margin-alignment.test.ts` fails when it is stale, when a unit on sale misses 60%, when anything is on sale while a unit misses, or when the most-tax reading passes any unit. Never lower a tax or fee assumption or loosen a gate to make it pass.
 
 ## Prices and limits per plan: the owner's decision of 18 October 2026, 11:21 (Marktmorgen only)
+
+> **Atualização MR, 27/10/2026 07h42 Fortaleza:** somente o piso histórico de 60% desta seção foi substituído pela [REGRA DE MARGEM vigente](AGENTS.md#mr--regra-de-margem-vigente-27-de-outubro-de-2026). Os textos e números anteriores ficam como histórico, não como trava atual. Nenhum outro requisito, custo, imposto, teto, reserva ou gate é dispensado.
+
 
 The owner's words (Portuguese, verbatim): 11:21 "preço: o que maximiza o meu lucro. limites: combinação que potencializa o que maximiza meu lucro + o que cliente percebe alto valor + não remover limites visíveis"; 11:22 "preço e limites = preço e limites de cada plano"; 11:25 "você deve verificar como os melhores concorrentes fazem para ver como o cliente veria alto valor em mim." Hazelsong's prices do not change.
 
@@ -62,6 +99,9 @@ The owner's words (Portuguese, verbatim): 11:21 "preço: o que maximiza o meu lu
 - **Nothing opens.** The tax gate (most-tax reading), the EU art. 9a gate and the commercial review stay exactly as strict; `tests/tax-gate.test.ts` still fails if anything is on sale while a unit misses 60% under the gate reading.
 
 ## Store assistant add-on (17 Oct 2026): rules that must survive
+
+> **Atualização MR, 27/10/2026 07h42 Fortaleza:** somente o piso histórico de 60% desta seção foi substituído pela [REGRA DE MARGEM vigente](AGENTS.md#mr--regra-de-margem-vigente-27-de-outubro-de-2026). Os textos e números anteriores ficam como histórico, não como trava atual. Nenhum outro requisito, custo, imposto, teto, reserva ou gate é dispensado.
+
 
 docs/store-assistant.md has the design and the arithmetic. Whoever changes `lib/store-assistant*.ts`, `lib/assistant-billing.ts`, `components/store-assistant*.tsx` or `app/api/store/assistant*` keeps all of these:
 
@@ -79,6 +119,9 @@ docs/store-assistant.md has the design and the arithmetic. Whoever changes `lib/
 
 
 ## AX274 — Permanent owner accessibility requirement (22 October 2026)
+
+> **Atualização MR, 27/10/2026 07h42 Fortaleza:** somente o piso histórico de 60% desta seção foi substituído pela [REGRA DE MARGEM vigente](AGENTS.md#mr--regra-de-margem-vigente-27-de-outubro-de-2026). Os textos e números anteriores ficam como histórico, não como trava atual. Nenhum outro requisito, custo, imposto, teto, reserva ou gate é dispensado.
+
 
 Owner instruction,22/10/2026 04:28 and04:30 Fortaleza; exact Part A below is binding from this inclusion, for every subsequent change. Queue item274 [AX1] expands item59; reuse items201/202, docs/accessibility-programme.md, docs/accessibility-inventory.json, existing accessibility matrices and tests. This policy records required work, not achieved conformity or a legal opinion. Verify current legal/technical references against dated official sources before asserting them; ambiguous requirements use the more accessible reading. Every PR must include an **Acessibilidade** section with criteria checked, method, results and exclusions; unperformed checks remain gaps. Preserve creator content without unapproved edits, persisted identifiers, existing buyer languages and language rollout gates.
 
@@ -107,6 +150,9 @@ Implementation boundaries: Parts B and C remain queued in docs/codex-queue.md. N
 
 ## FX275 — All LLC fixed costs belong to Marktmorgen (22 October 2026)
 
+> **Atualização MR, 27/10/2026 07h42 Fortaleza:** somente o piso histórico de 60% desta seção foi substituído pela [REGRA DE MARGEM vigente](AGENTS.md#mr--regra-de-margem-vigente-27-de-outubro-de-2026). Os textos e números anteriores ficam como histórico, não como trava atual. Nenhum outro requisito, custo, imposto, teto, reserva ou gate é dispensado.
+
+
 Complemento vinculante HZ (dono,24/10/2026,14h58 Fortaleza; itens336–338): a Hazelsong é guardada, não apagada. Todo custo residual dela pago pela LLC pertence100%ao Marktmorgen no item275[FX1], com valor medido/fonte; não existe divisão atual ou futura. Ver a atualização HZ junto de "Hazelsong encerrada" abaixo. Este registro não mede faturas nem considera desconhecido como zero.
 
 Owner decision,22/10/2026 at05:10 Fortaleza, verbatim: "esqueça Hazelsong". "A partir de agora, a Hazelsong não divide nenhum custo da empresa: todos os custos fixos da Solrenning LLC são atribuídos 100% ao Marktmorgen."
@@ -118,6 +164,9 @@ Every paying customer individually at full rights in the worst month and annual 
 FX275 does not authorize changing prices, visible limits, commission, PLANS_ON_SALE, the tax gate, Article9a or the commercial review, or relaxing any protection. No account, contract, signature, payment or supplier contact; synthetic tests only. Implementation and official dated cost evidence remain tracked in docs/codex-queue.md item275; this policy records the binding allocation, not completed recalculation or certified profitability.
 
 ## Pedidos repetidos (23 de outubro de 2026)
+
+> **Atualização MR, 27/10/2026 07h42 Fortaleza:** somente o piso histórico de 60% desta seção foi substituído pela [REGRA DE MARGEM vigente](AGENTS.md#mr--regra-de-margem-vigente-27-de-outubro-de-2026). Os textos e números anteriores ficam como histórico, não como trava atual. Nenhum outro requisito, custo, imposto, teto, reserva ou gate é dispensado.
+
 
 Solicitação do dono (23/10/2026, 16h21, horário de Fortaleza). Regra permanente para todo pedido recebido a partir desta solicitação. Texto repetido não gera seção, número, item, commit ou implementação em dobro, nem altera a ordem. Esta regra entra em vigor imediatamente; o registro documental não adia sua aplicação.
 
@@ -154,6 +203,9 @@ Esta regra não altera itens, preços, limites visíveis, comissão, PLANS_ON_SA
 
 ## Hazelsong encerrada (23 de outubro de 2026)
 
+> **Atualização MR, 27/10/2026 07h42 Fortaleza:** somente o piso histórico de 60% desta seção foi substituído pela [REGRA DE MARGEM vigente](AGENTS.md#mr--regra-de-margem-vigente-27-de-outubro-de-2026). Os textos e números anteriores ficam como histórico, não como trava atual. Nenhum outro requisito, custo, imposto, teto, reserva ou gate é dispensado.
+
+
 **Atualização vinculante — Hazelsong guardada sem dividir custos (dono,24/10/2026,14h58 Fortaleza;336[HZ1],337[HZ2],338[HZ3]).** A Hazelsong fica guardada por tempo indeterminado, não apagada: repositório, projeto Vercel, armazenamentos, dados e domínios. Nada dela pode ser apagado sem ordem expressa do dono. Esta decisão substitui a afirmação anterior de que nenhum custo dela é pago pela LLC: renovação de hazelsong.com/getkudobox.com, hazelsong-private-media/kudobox-media na Vercel, chaves no Upstash compartilhado, uso do projeto hazelsong e qualquer outro custo residual entram integralmente nos custos fixos do Marktmorgen275[FX1], por valor medido e fonte. Desconhecido reprova, não é zero. Se voltar daqui a anos, a Hazelsong terá contas, custos e cálculos totalmente separados, sem divisão com o Marktmorgen.
 
 Recursos guardados pagos pela LLC também integram o inventário317[EU1]/337[HZ2]: EU_HOSTING_CONFIRMED continua false enquanto qualquer servidor, banco ou armazenamento pago pela LLC estiver fora da UE. Alternativas de guarda: cópia completa e verificada de arquivos/Redis/configurações para arquivo do dono fora das contas pagas da LLC, ou armazenamento em região da UE. Escolha/destino e ordem expressa de eventual retirada ficam em "Depende do dono"; nenhuma exclusão, migração ou mudança real de fornecedor é autorizada por este registro.338[HZ3] deve medir consumo/agendas/funções do projeto hazelsong e registrar o passo exato para impedir consumo do orçamento compartilhado sem apagar recursos; não desligar nada automaticamente. Preservar histórico anterior abaixo,60% individual/global após todos os custos/impostos Brasil/EUA e leitura mais onerosa.
@@ -167,6 +219,9 @@ Valores e suposições do modelo de custos anteriormente descritos como alinhado
 
 
 ## VR — Regra permanente de verdade operacional (25/10/2026, 11h13 Fortaleza)
+
+> **Atualização MR, 27/10/2026 07h42 Fortaleza:** somente o piso histórico de 60% desta seção foi substituído pela [REGRA DE MARGEM vigente](AGENTS.md#mr--regra-de-margem-vigente-27-de-outubro-de-2026). Os textos e números anteriores ficam como histórico, não como trava atual. Nenhum outro requisito, custo, imposto, teto, reserva ou gate é dispensado.
+
 
 Solicitação do dono (25/10/2026, 11h13, horário de Fortaleza), palavras do dono: "tudo o que o chatgpt faz para mim tem que ser de verdade, verdadeiro, concretamente verdadeiro, funcionando infinitamente perfeitamente, sem erros, sem desperdício, não pode ser de faz de conta, tem que ser concretamente na realidade de verdade, não pode ser fingimento, tem que ser coisas que realmente beneficiem o cliente e me tragam lucro, e sempre tem que superar infinitamente no máximo de perfeição a excelência, acessibilidade e ser infinitamente fácil de usar, de entender e de aprender, ultra fácil de entender intuitivamente de imediato".
 

@@ -1,5 +1,8 @@
 # Minimum net margin policy
 
+> **MR vigente — dono27/10/2026 07h42 Fortaleza,464[MR1]:** [REGRA DE MARGEM](../AGENTS.md#mr--regra-de-margem-vigente-27-de-outubro-de-2026) substitui todos os pisos históricos de60% neste documento e suas referências. Exigir lucro líquido por unidade maior que zero no pior caso com a folga existente do spend floor,100% direitos mensal/anual e complementos; empresa sem prejuízo a partir de base mínima calculada com100%FX275 e exposições.60% é meta real mensal da empresa. Preservados ISS5%, leitura mais onerosa, recebimento mais caro, reservas/tetos/gates; desconhecido reprova, não é zero. Texto/citações/números antigos abaixo são histórico, não recalculados nem certificados. Código/relatório/regeneração pertencem a MR2; resultados atuais a MR3. Sem mudança de preços/limites/comissão/vendas.
+
+
 The owner's floor is 60% for every individual paying customer using all included resources. It is not a blended gross or operating margin.
 
 **Current rule (16 Oct 2026, the owner's own wording, see AGENTS.md):** fixed costs are computed separately as the minimum number of paying customers needed to cover them, and the trial, refund, non-payment and post-cancellation cases are funded exposures with calculated maxima and occurrence caps (docs/funded-exposure-review.md). Where the paragraphs below still mention one isolated customer carrying all fixed costs or each free/refund case earning 60% on its own, that is the earlier, stricter wording, replaced by this rule; it never relaxes the per-customer 60% test or the company-wide 60% at the minimum base.

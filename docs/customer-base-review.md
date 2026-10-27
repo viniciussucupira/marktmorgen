@@ -1,5 +1,8 @@
 # Minimum customer base in commercial review
 
+> **MR vigente — dono27/10/2026 07h42 Fortaleza,464[MR1]:** [REGRA DE MARGEM](../AGENTS.md#mr--regra-de-margem-vigente-27-de-outubro-de-2026) substitui todos os pisos históricos de60% neste documento e suas referências. Exigir lucro líquido por unidade maior que zero no pior caso com a folga existente do spend floor,100% direitos mensal/anual e complementos; empresa sem prejuízo a partir de base mínima calculada com100%FX275 e exposições.60% é meta real mensal da empresa. Preservados ISS5%, leitura mais onerosa, recebimento mais caro, reservas/tetos/gates; desconhecido reprova, não é zero. Texto/citações/números antigos abaixo são histórico, não recalculados nem certificados. Código/relatório/regeneração pertencem a MR2; resultados atuais a MR3. Sem mudança de preços/limites/comissão/vendas.
+
+
 A profitable individual plan does not automatically fund company overhead. The release review now requires explicit worst-month fixed-cost and fixed-tax ceilings, evidence, and a reviewed number of paying customers. Missing values are not zero. The actual commercial review remains null and paid plans stay closed.
 
 For each of the six locked plan/cycle cases, let P be subscription revenue for the paid period, N the worst-case net amount after all unit costs and taxes, and m the number of months (1 or 12). Monthly surplus above the owner's 60% floor is H = (N - 0.60 P) / m. No creator sales commission is required for this calculation. The conservative minimum for any plan mix is max over all six cases of ceil(F / H), where F includes the reviewed worst-month fixed costs and fixed taxes without assuming any tax deduction. BigInt arithmetic keeps the annual division exact until the final whole-customer ceiling.

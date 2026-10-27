@@ -1,5 +1,8 @@
 # Store assistant (paid add-on), 17 Oct 2026
 
+> **MR vigente — dono27/10/2026 07h42 Fortaleza,464[MR1]:** [REGRA DE MARGEM](../AGENTS.md#mr--regra-de-margem-vigente-27-de-outubro-de-2026) substitui todos os pisos históricos de60% neste documento e suas referências. Exigir lucro líquido por unidade maior que zero no pior caso com a folga existente do spend floor,100% direitos mensal/anual e complementos; empresa sem prejuízo a partir de base mínima calculada com100%FX275 e exposições.60% é meta real mensal da empresa. Preservados ISS5%, leitura mais onerosa, recebimento mais caro, reservas/tetos/gates; desconhecido reprova, não é zero. Texto/citações/números antigos abaixo são histórico, não recalculados nem certificados. Código/relatório/regeneração pertencem a MR2; resultados atuais a MR3. Sem mudança de preços/limites/comissão/vendas.
+
+
 One add-on, **Store assistant, $69 a month per store** ($49 until the owner's price decision of 18 October 2026, 11:21), on any plan once the plan is paid (not during the trial). It has three functions that share one monthly pool of AI replies, built in this order:
 
 1. **24/7 store Q&A chat** on every page of the store, grounded only in the creator's own published products, pages and FAQ. **Built here** (`lib/store-assistant-rules.ts`, `lib/store-assistant.ts`, `components/store-assistant.tsx`, `app/api/store/assistant`).

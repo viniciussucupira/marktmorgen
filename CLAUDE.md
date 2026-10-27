@@ -1,12 +1,37 @@
 @AGENTS.md
 @docs/cross-product-handoff.md
 
+## MR — Regra de margem vigente (27 de outubro de 2026)
+
+Solicitação do dono (27/10/2026, 07h42, horário de Fortaleza). Registro464[MR1]; decisão vigente desde a solicitação, acima de instruções históricas incompatíveis. O texto do dono é preservado abaixo.
+
+REGRA DE MARGEM (substitui a regra dos 60% por cliente e a regra dos 60% da empresa no pior caso):
+1. Nenhum cliente pagante, considerado isoladamente e usando 100% de todos os direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo, depois de todos os custos e de todos os impostos, inclusive os brasileiros, com ISS de 5% sobre a receita, as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação. Isso é garantido pelo código, com tetos automáticos antes de cada gasto, sem o dono acompanhar painel nem agir à mão.
+2. A empresa como um todo nunca pode dar prejuízo no pior caso: os custos fixos (100% do Marktmorgen, FX275) e as exposições financiadas (teste grátis, reembolso, inadimplência, retenção depois do cancelamento) são cobertos a partir de uma base mínima de clientes pagantes, calculada e mostrada; abaixo dela, os custos fixos ficam no menor valor possível.
+3. Meta de 60%: a margem líquida da empresa, depois de todos os custos e impostos, é medida todo mês com os números reais e mostrada num relatório automático ao dono. Os 60% são a meta de lucro, não uma trava de venda.
+4. Continuam valendo integralmente: a leitura que der MAIS imposto (docs/tax-uncertainty.md), o ISS de 5% como certo, "custo desconhecido reprova, nunca é zero", nenhuma cota grátis de fornecedor contada como zero, e o critério de lucro máximo nas decisões de preço e limites.
+
+Aplicação técnica vinculante: por unidade, lucro líquido **maior que zero**, mantendo a folga já existente do spend floor, todos os direitos e complementos a100% no pior mês de cada intervalo mensal/anual. Comissão não pode subsidiar o resultado. Cada gasto exige teto automático/reserva anteriores; não depender de painel ou intervenção manual. Exposições financiadas continuam dentro de seu custeio/revisão e limites próprios. A empresa precisa da base mínima calculada para cobrir100% dos custos fixos FX275 e exposições; abaixo dela os custos fixos ficam no menor valor possível. Sem fonte/custo/teto de câmbio/cobertura/revisão, reprova: não inventar uma base finita.
+
+A meta líquida de60% pertence ao relatório mensal **real da empresa**, sem dados pessoais; não é trava de venda por cliente nem global no pior caso. MR2 implementa o critério e o relatório; MR3 apresenta os resultados com os preços atuais. Este registro não calcula lucro, não preenche revisões e não demonstra que esses itens já funcionam.
+
+Precedência completa: em AX274, FX275, VR, Pedidos repetidos, Hazelsong guardada, assistente da loja, documentos vinculados e comentários/testes/cálculos ainda antigos, qualquer instrução de60% como piso obrigatório remete a esta seção. Citações literais e decisões antigas ficam intactas como histórico. Custos da acessibilidade continuam variáveis por plano ou fixos na base mínima; a preservação da Hazelsong continua integral e seus custos residuais pagos pela LLC pertencem100%ao Marktmorgen. O assistente continuaUS$69,700respostas e com reserva própria; seus números de margem antigos não certificam a nova regra.
+
+Continuam integralmente: leitura que der MAIS imposto em docs/tax-uncertainty.md, ISS5% como certo, taxas mais caras de lib/receiving-costs.ts, reservas de reembolso/contestação, exposição e custeio contratual, tax gate, art9a, revisão comercial e demais gates. Não usar cota grátis de fornecedor como custo zero. Nenhuma mudança de preço, limite visível, comissão, PLANS_ON_SALE ou OPENING_REQUESTED. Não criar conta, aceitar termos, contratar, pagar ou contatar terceiros; não apagar conteúdo nem qualquer coisa da Hazelsong. Somente testes sintéticos. Lucro máximo orienta decisões futuras; este pedido não autoriza preço novo.
+
+VR: política documental vigente; código/calculadores/relatório ainda sujeitos a MR2, resultados ainda sujeitos a MR3. Não declarar lucro certificado, abertura ou disponibilidade ao cliente por esta inclusão.
+
+
+
 Marktmorgen's prices and per-plan limits since the owner's decision of 18 October 2026, 11:21 ("preço: o que maximiza o meu lucro. limites: combinação que potencializa o que maximiza meu lucro + o que cliente percebe alto valor + não remover limites visíveis"): AGENTS.md, "Prices and limits per plan", and docs/value-presentation-2026-10-18.md.
 
 A PROPOSAL, not in force (18 October 2026): entry prices with a smaller included amount and prepaid usage packs, each keeping 60% on its own, computed with the repository's own margin code: docs/pricing-usage-proposal-2026-10-18.md (`node scripts/pricing-usage-proposal.mjs`, held by tests/pricing-usage-proposal.test.ts). Nothing in it changes a price, a limit or a gate.
 
 
 ## FX275 — All LLC fixed costs belong to Marktmorgen (22 October 2026)
+
+> **Atualização MR, 27/10/2026 07h42 Fortaleza:** somente o piso histórico de 60% desta seção foi substituído pela [REGRA DE MARGEM vigente](AGENTS.md#mr--regra-de-margem-vigente-27-de-outubro-de-2026). Os textos e números anteriores ficam como histórico, não como trava atual. Nenhum outro requisito, custo, imposto, teto, reserva ou gate é dispensado.
+
 
 Owner decision,22/10/2026 at05:10 Fortaleza, verbatim: "esqueça Hazelsong". "A partir de agora, a Hazelsong não divide nenhum custo da empresa: todos os custos fixos da Solrenning LLC são atribuídos 100% ao Marktmorgen."
 
