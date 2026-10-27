@@ -14,7 +14,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { PLANS_ON_SALE } from "@/lib/opening";
 import { PLAN_PRICES, TIERS } from "@/lib/plan";
-import { MOST_TAX_READING } from "@/lib/receiving-costs";
+import { MOST_TAX_READING } from "./historical-margin-model";
 import {
   DOC_FILE, ELASTICITIES, INPUT_FILE, dataset, exhaustive, hedonic, keeps, linearityGap, milpInput, milpOutput, minimaxRegret, ones,
   renderPricingOptimization, unitAt, verified,

@@ -13,7 +13,7 @@ import { join } from "node:path";
 import { PLANS_ON_SALE } from "@/lib/opening";
 import { LEGACY_PLAN_PRICES, PLAN_PRICES, TIERS } from "@/lib/plan";
 import { ADD_ON_ROOM_CENTS } from "@/lib/store-assistant-rules";
-import { MOST_TAX_READING } from "@/lib/receiving-costs";
+import { MOST_TAX_READING } from "./historical-margin-model";
 import { ORDER, figures } from "./limits-proposal-table";
 import {
   COMPETITORS, KEPT_IN_FULL, MIN_INCLUDED_SHARE, PACKS, PRICES_BEFORE_553, RAISED_BY_553, figuresBefore553, grid, packUnit, planAt,

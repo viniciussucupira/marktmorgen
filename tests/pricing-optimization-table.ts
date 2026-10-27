@@ -1,3 +1,4 @@
+import { HISTORICAL_MARGIN_NOTICE } from "./historical-margin-model";
 /**
  * Prices and limits that maximize the owner's profit under stated demand
  * scenarios (18 October 2026): an ANALYSIS for the owner, not a change. No
@@ -37,8 +38,8 @@ import { MAX_TEAM } from "@/lib/team";
 import { PAID_STORAGE_BYTES } from "@/lib/storage-rules";
 import { PAID_VIDEO_HOURS } from "@/lib/video-admission-rules";
 import { TOP_HEIGHT, viewingBytes } from "@/lib/stream-rules";
-import { assessMinimumCustomerBase } from "@/lib/customer-base-rules";
-import { MOST_TAX_READING, SIZING_READING, unitUnder, type UnitResult } from "@/lib/receiving-costs";
+import { assessMinimumCustomerBase } from "./historical-margin-model";
+import { MOST_TAX_READING, SIZING_READING, unitUnder, type UnitResult } from "./historical-margin-model";
 import { ORDER, figures, tidy, usageCents, type Printed } from "./limits-proposal-table";
 import { FETCHED_AHEAD, GB, PER_EMAIL } from "./plan-cost-registry";
 import { CREDIT_AMOUNTS, creditOption } from "./pack-cost-decomposition-table";
@@ -677,5 +678,5 @@ export function renderPricingOptimization(): string {
   push("- **Fixed costs.** Not reviewed for Marktmorgen; the base is per $100 a month.");
   push("- **The gate.** Under the most-tax reading no plan keeps 60% at any price here (the recommendation table), so nothing opens.");
   push("");
-  return out.join("\n");
+  return HISTORICAL_MARGIN_NOTICE + out.join("\n");
 }
