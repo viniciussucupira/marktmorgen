@@ -18,11 +18,12 @@ const read = (file: string) => readFileSync(join(process.cwd(), file), "utf8");
 
 async function main() {
   const OWNER = "orders-paused@example.com";
+  // Keep the paid snapshot and every admission on the same deterministic clock.
+  const now = Date.UTC(2026, 9, 17, 12);
   await claimHandle(OWNER, "pausedshop", "Paused Shop", "");
   await ensureStatsId(OWNER);
-  await setSubscription(OWNER, { customerId: "cus_Paused0001", subscriptionId: "sub_Paused0001", active: true, tier: "creator", period: paidPeriod() });
+  await setSubscription(OWNER, { customerId: "cus_Paused0001", subscriptionId: "sub_Paused0001", active: true, tier: "creator", period: paidPeriod(now) });
   const store = (await storeForEmail(OWNER))!;
-  const now = Date.UTC(2026, 9, 17, 12);
 
   part("Where a paid store's orders stop");
   is("a paid store's figure is its plan's, for paid orders and free copies alike", [paidOrdersLimitFor(store, now / 1000), freeCopiesLimitFor(store, now / 1000)], [ORDERS_INCLUDED.creator, ORDERS_INCLUDED.creator]);
@@ -58,7 +59,7 @@ async function main() {
   is("nothing is held for it", await admitOrders(ended, 1, now), { ok: true, hour: null });
 
   part("Unknown is not zero");
-  await setSubscription(OWNER, { customerId: "cus_Paused0001", subscriptionId: "sub_Paused0001", active: true, tier: "creator", period: paidPeriod() });
+  await setSubscription(OWNER, { customerId: "cus_Paused0001", subscriptionId: "sub_Paused0001", active: true, tier: "creator", period: paidPeriod(now) });
   const paid = (await storeForEmail(OWNER))!;
   const keys = [...redis.keys()].filter((key) => key.startsWith("nl:orders:n:"));
   for (const key of keys) redis.run(["SET", key, "not-a-number"]);

@@ -1,5 +1,8 @@
 # Full LLC fixed costs — 22 October2026
 
+> **MR vigente — dono27/10/2026 07h42 Fortaleza,464[MR1]:** [REGRA DE MARGEM](../AGENTS.md#mr--regra-de-margem-vigente-27-de-outubro-de-2026) substitui todos os pisos históricos de60% neste documento e suas referências. Exigir lucro líquido por unidade maior que zero no pior caso com a folga existente do spend floor,100% direitos mensal/anual e complementos; empresa sem prejuízo a partir de base mínima calculada com100%FX275 e exposições.60% é meta real mensal da empresa. Preservados ISS5%, leitura mais onerosa, recebimento mais caro, reservas/tetos/gates; desconhecido reprova, não é zero. Texto/citações/números antigos abaixo são histórico, não recalculados nem certificados. Código/relatório/regeneração pertencem a MR2; resultados atuais a MR3. Sem mudança de preços/limites/comissão/vendas.
+
+
 Owner22/10/2026 05:10Fortaleza: "esqueça Hazelsong". All Solrenning LLC fixed costs and taxes belong100% to Marktmorgen. Earlier50/50 figures remain history; they are superseded. No other product subsidizes this calculation.
 
 ## Dated official observations
