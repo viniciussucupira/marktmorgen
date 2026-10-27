@@ -45,10 +45,19 @@ Allocation:100% Marktmorgen;0% Hazelsong. Owner22/10/2026 05:10 Fortaleza: "esqu
 | eu-gdpr-representative | unknown | unknown |
 | eu-dsa-representative | unknown | unknown |
 | uk-gdpr-representative | unknown | unknown |
+| us-form-5472 | unknown | unknown |
+| us-pro-forma-1120 | unknown | unknown |
+| br-irpf | unknown | unknown |
+| br-cbe | unknown | unknown |
+| vat-oss-and-local-compliance | unknown | unknown |
+| itin-and-acceptance-agent | unknown | unknown |
+| us-resident-representative | unknown | unknown |
+| us-business-address | unknown | unknown |
 
 Complete fixed-cost total: unknown; rejected, never zero. Minimum paying customer base: not established. Consolidated net margin: not approved.
 MR27Oct requires positive net per unit with existing room; no customer count repairs a zero-profit or losing unit. The full company base remains unestablished while costs are unknown and the commercial review is absent.60%is the actual monthly company target, not a sales gate. No price, visible limit, commission or other launch/tax gate changes.
 Native-currency public prices, taxes, eligibility, exchange-rate ceilings and reserve gaps: docs/llc-fixed-costs-2026-10-22.md. A quote or temporary discount is not an approved operating ceiling.
+TX4/SR compliance and identity-related costs are explicit review categories, not proof that every filing or paid service applies. Conditional non-applicability needs evidence; unknown remains rejected. Owner INSS remains unresolved pending the remuneration facts and applicable legal reading, not automatically zero or an unconditional fixed liability.
 
 SR3 must additionally establish the official costs and acceptance of ITIN/acceptance-agent work if applicable, a US-resident legal representative and a real US business address. Existing registered-agent/mailbox/GDPR quotations do not prove these requirements. Complete company costs and the actual minimum paying base remain unknown.
 
