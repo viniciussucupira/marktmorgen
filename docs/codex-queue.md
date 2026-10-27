@@ -1,5 +1,12 @@
 # Fila de trabalho do Codex — Marktmorgen
 
+## Incorporação parcial TX2 — 27/10/2026, 14h38min11s Fortaleza
+
+PR1106 incorporado17:38:11UTC/14:38:11Fortaleza, merge bacdb636095c7090a212903958568bf2cae1efa6, pais reais c06ff2379f2d73786e46592eda6455fa618ac6f6/8840b81efa61940cb47895c9710eebd5c4318f56 e árvore373fedf1c0092d93df5b4963e84296a5613a492a conferidos.31/31checks eVercelsuccess no head8840b81;8escopos com10+7testes/Fullcoverage:true e verify122343815930 completos. taxGateValid deixa de depender de consultas/hospedagem;EU_HOSTING_CONFIRMEDfalse eCONSULTATION_ANSWERSvazio preservados. Parser histórico permanece, sem decidir admissão. Registros e demais travas continuam fechados. Leitura numérica most-correct NÃO implementada por este passo;TX2global incompleto. PR1108 redirecionado para main, ainda em verificação integral. Registro anterior14h35 continua como histórico do estado daquela hora.
+
+Custos/VR: nenhum IOprodutivo/serviço/contrato novo,CI100%FX275 e desconhecido nãozero;preços/limites/comissão/reservas/custeio/exposição/opt-in/conteúdo/Hazelsong/idiomas/IDs intactos. Nenhuma confirmação de publicação funcional READY/domínio/versão;contador254,sem255.
+
+
 ## Execução TX/SV — 27/10/2026, 14h35 Fortaleza
 
 PR1104 incorporado às14:34:40Fortaleza (17:34:40UTC), merge c06ff2379f2d73786e46592eda6455fa618ac6f6, pais07ad336fda3050f9332ea9a4d12eb99d188a0f84/a2345d85f2fafb54ff48223188f5c62744b1d747, árvore883257a482ee25704e460e29c9d733bb097e2460 conferidos. Instruções AGENTS/CLAUDE registram os17pontos TX com estados de fonte; histórico preservado. A falha anterior no teste de workflows ao atravessar meia-noiteUTC foi corrigida com relógio de cenário que mantém o tempo real decorrido e dois testes de leitura de dias distintos. Verificação integral no novohead:31/31checks eVercelsuccess;8jobs de escopo com10+7testes eFull coverage required:true. O verify122342553613 confirmou teto diário e ambas leituras de dia. Não foi reexecução isolada. TX1global permanece incompleto; fontes e remissões pendentes estão na matriz.
