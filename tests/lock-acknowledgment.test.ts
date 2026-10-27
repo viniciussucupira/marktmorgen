@@ -108,3 +108,47 @@ test("strict fenced CAS refuses unsafe or over-budget inputs before any IO", asy
     assert.equal(calls, 0); assert.equal(getters, 0);
   } finally { store.pipeline = original; }
 });
+
+test("strict release cannot turn an ambiguous EVAL into a GET/DEL race", async () => {
+  const { releaseLockStrict } = await import("@/lib/redis-lock");
+  const original: typeof store.pipeline = store.pipeline.bind(store);
+  const held = { key: "synthetic:lock", token: "owned-token", ttlSeconds: 15 };
+  let getters = 0;
+  const accessor: unknown[] = [];
+  Object.defineProperty(accessor, 0, { get() { getters++; return 1; } });
+  try {
+    for (const reply of [null, undefined, false, "OK", {}, [], Array(1), [1, 0], ["1"], [true], accessor]) {
+      const commands: unknown[][] = [];
+      store.pipeline = async batch => { commands.push(...batch); return reply as unknown[]; };
+      assert.equal(await releaseLockStrict(held), "unknown");
+      assert.deepEqual(commands.map(command => command[0]), ["EVAL"]);
+    }
+    for (const [reply, expected] of [[[1], "released"], [[0], "not-owned"]] as const) {
+      store.pipeline = async () => [...reply];
+      assert.equal(await releaseLockStrict(held), expected);
+    }
+    const commands: unknown[][] = [];
+    store.pipeline = async batch => { commands.push(...batch); throw new Error("DEL may already have committed"); };
+    assert.equal(await releaseLockStrict(held), "unknown");
+    assert.deepEqual(commands.map(command => command[0]), ["EVAL"]);
+  } finally { store.pipeline = original; }
+  assert.equal(getters, 0);
+});
+
+test("strict release rejects unknown ownership without reading executable fields", async () => {
+  const { releaseLockStrict } = await import("@/lib/redis-lock");
+  const original: typeof store.pipeline = store.pipeline.bind(store);
+  const held = { key: "synthetic:lock", token: "owned-token", ttlSeconds: 15 };
+  let calls = 0, getters = 0;
+  const accessor = { ...held };
+  Object.defineProperty(accessor, "token", { get() { getters++; return "owned-token"; } });
+  try {
+    store.pipeline = async () => { calls++; return [1]; };
+    for (const value of [{ ...held, key: "" }, { ...held, token: "" }, { ...held, ttlSeconds: 0 },
+      { ...held, ttlSeconds: Infinity }, { ...held, key: "é".repeat(257) }, { ...held, token: "é".repeat(65) },
+      { ...held, extra: true }, Object.create(held), accessor]) {
+      assert.equal(await releaseLockStrict(value), "refused");
+    }
+    assert.equal(calls, 0); assert.equal(getters, 0);
+  } finally { store.pipeline = original; }
+});

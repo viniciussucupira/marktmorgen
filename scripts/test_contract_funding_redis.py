@@ -1260,6 +1260,54 @@ def main():
         print('PASS:actual strict CAS INFO commands=' + json.dumps(strict_counts,sort_keys=True))
 
 
+        strict_release_match = re.search(r'export const STRICT_RELEASE_LOCK = `([^`]+)`;', lock_source)
+        if not strict_release_match or '$' + '{' in strict_release_match.group(1):
+            raise RuntimeError('Expected static application strict release Lua')
+        strict_release_script = strict_release_match.group(1)
+        def release_strict(client, token='owned-token'):
+            return client.command('EVAL', strict_release_script, 1, lock_key, token)
+        def release_contender(token):
+            client = Redis()
+            try:
+                return release_strict(client, token)
+            finally:
+                client.close()
+        seed_strict()
+        with concurrent.futures.ThreadPoolExecutor(max_workers=16) as pool:
+            released = list(pool.map(release_contender, ['owned-token'] * 64))
+        assert released.count(1) == 1 and released.count(0) == 63, released
+        assert redis.command('GET', lock_key) is None
+        seed_strict()
+        assert release_strict(redis) == 1  # Client loses this acknowledgement.
+        redis.command('SET', lock_key, 'new-owner-token', 'PX', 60000)
+        with concurrent.futures.ThreadPoolExecutor(max_workers=16) as pool:
+            old_owner_retries = list(pool.map(release_contender, ['owned-token'] * 64))
+        assert old_owner_retries == [0] * 64, old_owner_retries
+        assert redis.command('GET', lock_key) == 'new-owner-token'
+        assert redis.command('GET', value_key) == 'before'
+        print('PASS:strict release64contenders delete once;64old-owner retries after lost ACK preserve new owner and Store')
+
+        for scenario in ('wrong-token','oversize-token','permanent','expired','hash'):
+            seed_strict()
+            token='owned-token'
+            if scenario=='wrong-token': token='foreign-token'
+            elif scenario=='oversize-token': token='x' * 129
+            elif scenario=='permanent': redis.command('PERSIST', lock_key)
+            elif scenario=='expired': redis.command('PEXPIREAT', lock_key, 1)
+            elif scenario=='hash':
+                redis.command('DEL', lock_key); redis.command('HSET', lock_key, 'kept', 'record')
+            before_lock, before_store = strict_record(lock_key), strict_record(value_key)
+            assert release_strict(redis, token) == 0, scenario
+            assert strict_record(lock_key) == before_lock, scenario
+            assert strict_record(value_key) == before_store, scenario
+        seed_strict()
+        release_before = command_counts()
+        assert release_strict(redis) == 1
+        release_counts = difference(release_before, command_counts())
+        assert sum(release_counts.values()) <= 5, release_counts
+        print('PASS:strict release5negative cases and actual INFO commands=' + json.dumps(release_counts,sort_keys=True))
+
+
     finally:
         for ref in intent_refs:
             if not ref.startswith('synthetic-restart-intent-'):

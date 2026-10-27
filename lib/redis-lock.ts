@@ -174,3 +174,32 @@ export async function strictFencedCompareAndSet(
     return acknowledgement.value === 0 ? "refused" : "unknown";
   } catch { return "unknown"; }
 }
+
+/** No production caller yet: a financial writer must not fall back to GET/DEL. */
+export const STRICT_RELEASE_LOCK = `
+if #KEYS~=1 or #ARGV~=1 or #KEYS[1]<1 or #KEYS[1]>512 or #ARGV[1]<1 or #ARGV[1]>128 then return 0 end
+if redis.call('TYPE',KEYS[1]).ok~='string' or redis.call('PTTL',KEYS[1])<=0 then return 0 end
+if redis.call('GET',KEYS[1])~=ARGV[1] then return 0 end
+return redis.call('DEL',KEYS[1])
+`;
+export type StrictLockReleaseResult = "released" | "not-owned" | "refused" | "unknown";
+/** A lost ACK is unknown even when DEL might have committed. Never retry as
+ * separate GET/DEL: a new holder could take the lock between those commands. */
+export async function releaseLockStrict(held: Held): Promise<StrictLockReleaseResult> {
+  try {
+    if (!held || typeof held !== "object" || ![Object.prototype, null].includes(Object.getPrototypeOf(held))) return "refused";
+    const descriptors = Object.getOwnPropertyDescriptors(held);
+    if (Reflect.ownKeys(held).length !== 3 || !["key", "token", "ttlSeconds"].every(name =>
+      Object.hasOwn(descriptors, name) && Object.hasOwn(descriptors[name]!, "value"))) return "refused";
+    const key = descriptors.key!.value, token = descriptors.token!.value, ttl = descriptors.ttlSeconds!.value;
+    const bytes = (value: string) => new TextEncoder().encode(value).byteLength;
+    if (typeof key !== "string" || typeof token !== "string" || !key || !token ||
+      bytes(key) > 512 || bytes(token) > 128 ||
+      typeof ttl !== "number" || !Number.isSafeInteger(ttl) || ttl <= 0) return "refused";
+    const reply = await redisPipeline([["EVAL", STRICT_RELEASE_LOCK, 1, key, token]]);
+    if (!Array.isArray(reply) || reply.length !== 1) return "unknown";
+    const ack = Object.getOwnPropertyDescriptor(reply, "0");
+    if (!ack || !Object.hasOwn(ack, "value")) return "unknown";
+    return ack.value === 1 ? "released" : ack.value === 0 ? "not-owned" : "unknown";
+  } catch { return "unknown"; }
+}
