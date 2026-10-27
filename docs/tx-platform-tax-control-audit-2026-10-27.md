@@ -29,6 +29,6 @@ As [notasDG TAXUDde03/04/2014](https://vat-one-stop-shop.ec.europa.eu/document/d
 2. Conferir enquadramento e fontes atuais por destino,com identificação do comprador e provas suficientes quando exigidas.
 3. Construir contadores completos,reservas atômicas e tratamento antes do limite;resposta incerta de persistência não confirma admissão.
 4. Vincular registro,cobrança,documentos fiscais,renovações,reembolsos e identidade real ao tratamento implementado. Testes sintéticos não autenticam registros reais.
-5. Revisar custos completos e dados do dono pendentes. Não executar contas,aceites,contratações,contatos ou submissões. Somente o componenteIOF e os documentos explicitamente dependentes do dono permanecem aguardando seu esclarecimento;os outros trabalhos continuam.
+5. Revisar custos completos e dados do dono pendentes. Não executar contas,aceites,contratações,contatos ou submissões. Os componentes e documentos explicitamente dependentes do dono permanecem delimitados nos respectivos registros,sem paralisar os outros trabalhos.
 
 TX6/TX7globais não concluídos. Nenhuma promessa de isenção,lucro ou conformidade. Preços,limites visíveis,comissão,opt-ins,conteúdo dos criadores,Hazelsong,idiomas de compradores e identificadores persistidos preservados. NenhumaUIouoperação produtiva nova;pesquisa/CI100%FX275 e desconhecido nãozero. Contador254;este registro não confirma READY,domínio,versão ou publicação funcional.
