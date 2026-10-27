@@ -20,3 +20,15 @@ test("source observations preserve full taxes, INSS and higher monthly mailbox r
  assert.equal(sources.californiaFee.maximumAnnualMinor,1179000);assert.equal(sources.inss.monthlyMinor,169511);assert.equal(sources.inss.annualMinor,2034132);
  assert.equal(sources.mailbox.monthlyMinor,5900);assert.equal(sources.mailbox.twelveMonthlyPaymentsMinor,70800);
 });
+
+test("TX4 and SR obligations cannot disappear inside the old fixed-cost inventory",()=>{
+ const required = ["us-form-5472","us-pro-forma-1120","br-irpf","br-cbe","vat-oss-and-local-compliance","itin-and-acceptance-agent","us-resident-representative","us-business-address"];
+ for(const id of required){
+  assert.ok((LLC_FIXED_COST_IDS as readonly string[]).includes(id));
+  assert.equal(allocateEntireLlcFixedCosts(fixture().filter(line=>line.id!==id)),null);
+  const current=CURRENT_LLC_FIXED_COST_CEILINGS.find(line=>line.id===id)!;
+  assert.equal(current.fullMonthlyUsdCents,null);
+  assert.equal(current.fullAnnualUsdCents,null);
+  assert.equal(current.reserveReviewed,false);
+ }
+});

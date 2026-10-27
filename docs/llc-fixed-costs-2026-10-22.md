@@ -1,5 +1,14 @@
 # Full LLC fixed costs — 22 October2026
 
+## TX4/SR — inventário explícito de custos de conformidade (27/10/2026)
+
+O catálogo de revisão emlib/llc-fixed-costs.ts passa a incluir5472,proforma1120,IRPF,CBE,conformidadeIVA/OSS/local,ITIN/acceptance-agent,representante residenteUS e endereço empresarialUS. As linhas começam com tetos mensal/anual desconhecidos e reserva não revisada. Não são preços nem afirmação de obrigação incondicional: cada aplicabilidade, trabalho interno, custo de ferramenta/serviço, moeda, teto e reserva precisam de prova. Mailbox/registered-agent não substituem automaticamente endereço/representante aceitos peloStripe.
+
+As [instruções oficiais5472](https://www.irs.gov/instructions/i5472) condicionam as obrigações aos fatos/transações e tipo de entidade; a [matrizTX1](tx-legal-source-review-2026-10-27.md) mantém as condições e lacunasBR/IVA/CBE. Nenhum formulário ou envio é preparado. Nenhuma contratação,conta,aceite,pagamento ou contato é feito. Não presumir honorários obrigatórios nem trabalho gratuito. Custo desconhecido continua reprovado,nunca zero.
+
+A observação histórica deINSS não comprova remuneração atual ou obrigação fixa universal. A remoção/zero depende dos fatos e leitura aplicável;permanece desconhecida neste passo,sem inventar remuneração. TX4global ainda não concluído. Alocação100%Marktmorgen,0%Hazelsong,preços/limites/comissão e demais travas preservados. Nenhum IOprodutivo novo;CI no orçamentoFX275,desconhecido nãozero. O relatório gerado é atualizado junto do catálogo;sem entrega funcional/contador.
+
+
 > **TX vigente — dono, 27/10/2026, 12h34 Fortaleza.** As referências anteriores deste documento à regra 19, à leitura que dá mais imposto, ao ISS de 5% como certo ou a consultas tributárias ficam preservadas como histórico e são substituídas, nos pontos conflitantes, pela política TX de [AGENTS.md](../AGENTS.md). Nenhuma consulta será feita ou preparada para envio. As taxas de recebimento mais caras, SR, desconhecido reprova, reservas, exposição e custeio continuam obrigatórios. A [matriz TX1](tx-legal-source-review-2026-10-27.md) distingue fontes conferidas e lacunas; não certifica incidência zero. O código e os números antigos ainda não adaptados não provam a nova leitura; revisão e regeneração pertencem a TX2/TX5. Flags continuam false.
 >
 > **SV vigente — dono, 27/10/2026, 13h19 Fortaleza.** EU1 e SV1–SV5 ficam depois da abertura, com trabalho e provas preservados, sem novos PRs desses itens até lá. EU_HOSTING_CONFIRMED permanece false e não é condição de abertura por decisão do dono; a retirada técnica da dependência está em TX2. A conferência de DPF/SCC dos fornecedores atuais segue no Bloco de abertura, sem aceitar termos ou contratar.

@@ -9,7 +9,14 @@
  * No network, contract or operational activation occurs here.
  */
 export const LLC_FIXED_COST_ALLOCATION = { marktmorgenBps: 10000, hazelsongBps: 0, decision: "2026-10-22T05:10:00-03:00" } as const;
-export const LLC_FIXED_COST_IDS = ["delaware", "california-tax", "california-fee", "registered-agent", "owner-inss", "domains", "tools", "us-mailbox", "eu-gdpr-representative", "eu-dsa-representative", "uk-gdpr-representative"] as const;
+/** TX4/SR: cost-review categories, not a claim that every filing/service applies.
+ * Each conditional absence needs evidence; unknown cost is never zero.
+ * No form, account, submission, paid service or operational IO is prepared here. */
+export const LLC_COMPLIANCE_COST_IDS = [
+ "us-form-5472", "us-pro-forma-1120", "br-irpf", "br-cbe", "vat-oss-and-local-compliance",
+ "itin-and-acceptance-agent", "us-resident-representative", "us-business-address",
+] as const;
+export const LLC_FIXED_COST_IDS = ["delaware", "california-tax", "california-fee", "registered-agent", "owner-inss", "domains", "tools", "us-mailbox", "eu-gdpr-representative", "eu-dsa-representative", "uk-gdpr-representative", ...LLC_COMPLIANCE_COST_IDS] as const;
 export type FixedCostId = typeof LLC_FIXED_COST_IDS[number];
 export type FixedCostCeiling = { id: FixedCostId; fullMonthlyUsdCents: number | null; fullAnnualUsdCents: number | null; evidence: string; reserveReviewed: boolean };
 /** Public observations checked22 October2026; discounts/free periods never reduce worst-case cost. */
@@ -57,6 +64,7 @@ export function renderLlcFixedCostStatus(): string {
   costs===null?"Complete fixed-cost total: unknown; rejected, never zero. Minimum paying customer base: not established. Consolidated net margin: not approved.":"Complete fixed-cost ceilings require the separate customer-level and company-base reviews.",
   "MR27Oct requires positive net per unit with existing room; no customer count repairs a zero-profit or losing unit. The full company base remains unestablished while costs are unknown and the commercial review is absent.60%is the actual monthly company target, not a sales gate. No price, visible limit, commission or other launch/tax gate changes.",
   "Native-currency public prices, taxes, eligibility, exchange-rate ceilings and reserve gaps: docs/llc-fixed-costs-2026-10-22.md. A quote or temporary discount is not an approved operating ceiling.",
+  "TX4/SR compliance and identity-related costs are explicit review categories, not proof that every filing or paid service applies. Conditional non-applicability needs evidence; unknown remains rejected. Owner INSS remains unresolved pending the remuneration facts and applicable legal reading, not automatically zero or an unconditional fixed liability.",
   "",
  ].join("\n");
 }
