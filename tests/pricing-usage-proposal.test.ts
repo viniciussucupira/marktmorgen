@@ -1,3 +1,4 @@
+import { HISTORICAL_MARGIN_NOTICE } from "./historical-margin-model";
 /**
  * The pricing and usage proposal of 18 October 2026
  * (docs/pricing-usage-proposal-2026-10-18.md): a PROPOSAL, no price, limit or
@@ -25,7 +26,8 @@ const read = (file: string) => readFileSync(join(process.cwd(), file), "utf8");
 
 test("the document is what the numbers render today (run node scripts/pricing-usage-proposal.mjs)", () => {
   assert.equal(read(DOC), renderPricingUsageProposal(), `${DOC} is stale: run node scripts/pricing-usage-proposal.mjs`);
-  assert.match(read(DOC), /^# Entry prices with usage packs: a proposal, 18 October 2026/);
+  assert.ok(read(DOC).startsWith(HISTORICAL_MARGIN_NOTICE));
+  assert.match(read(DOC).slice(HISTORICAL_MARGIN_NOTICE.length), /^# Entry prices with usage packs: a proposal, 18 October 2026/);
   assert.match(read(DOC), /\*\*A proposal for the owner, not a change\.\*\*/);
 });
 

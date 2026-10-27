@@ -10,7 +10,7 @@ const fixed=(amount=10000,count=10):CustomerBaseReview=>({monthlyFixedCostsCeili
 const unit=(gross=10000,net=7000,months:1|12=1):CustomerBaseUnit=>({months,scenario:scenario(gross,net)});
 test('two customers with $70 net cover the full $100 fixed without a global loss',()=>{assert.deepEqual(assessMinimumCustomerBase([unit()],fixed(10000,2)),{status:'calculated',minimumCustomers:2,reviewedBaseSufficient:true});assert.equal(assessMinimumCustomerBase([unit()],fixed(10000,1)).reviewedBaseSufficient,false);});
 test('one cent of additional fixed cost requires the next whole customer',()=>{assert.equal(assessMinimumCustomerBase([unit()],fixed(14001,2)).minimumCustomers,3);});
-test('annual revenue is divided exactly without rounding monthly cents',()=>{const annual=unit(22000,15401,12);assert.equal(assessMinimumCustomerBase([annual],fixed(18342,101)).minimumCustomers,101);const at100=100*(15401-22000*0.6)/12;assert.ok(at100<18342);});
+test('annual revenue is divided exactly without rounding monthly cents',()=>{const annual=unit(22000,15401,12);assert.equal(assessMinimumCustomerBase([annual],fixed(18342,15)).minimumCustomers,15);const at14=14*15401/12;assert.ok(at14<18342);});
 test('any mix uses the weakest per-customer surplus',()=>{assert.equal(assessMinimumCustomerBase([unit(),unit(10000,6500)],fixed(13001)).minimumCustomers,3);});
 test('more customers cannot repair a zero-profit paying unit',()=>{assert.equal(assessMinimumCustomerBase([unit(10000,0)],fixed(1,1000000)).status,'below_unit_floor');});
 test('positive profit below sixty percent can fund an explicitly calculated base',()=>{assert.equal(assessMinimumCustomerBase([unit(10000,5999)],fixed(1,1)).minimumCustomers,1);});
