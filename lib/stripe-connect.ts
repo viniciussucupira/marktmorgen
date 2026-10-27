@@ -1,4 +1,15 @@
 /**
+ * OWNER SR,27 October2026 08:00 Fortaleza (docs/stripe-platform-eligibility.md):
+ * country eligibility is NOT established by this payload or COUNTRIES.
+ * For contradictory Stripe replies the less favorable answer applies until a
+ * later complete, non-contradictory reply: BR platform connects BR creators only;
+ * US platform planning requires SSN/ITIN, a US-resident legal representative and
+ * a real US business address, not a PO box. These are owner-reported answers,
+ * not verified platform-account approval. Earlier design rationale below is
+ * retained as history; it cannot override SR or establish cross-border access.
+ * SR2 separately requires dated company-account/direct-charge eligibility proof
+ * before opening. No account, country list, fee, loss or release flag changes here.
+ *
  * Connecting a creator's own Stripe account.
  *
  * The creator ends up owning a full Stripe account: their name on it, their

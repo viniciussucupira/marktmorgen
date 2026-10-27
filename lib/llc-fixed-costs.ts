@@ -1,3 +1,9 @@
+/** Owner SR,27 October2026 08:00 Fortaleza: existing mailbox/registered-agent
+ * observations below do not establish a Stripe-accepted real business address
+ * or US-resident legal representative. ITIN/acceptance-agent and other required
+ * costs remain unknown pending SR3, never zero. See docs/stripe-platform-eligibility.md.
+ * Historical observations are preserved; no cost review or release is approved here.
+ */
 /** FX275, owner22 October2026 05:10Fortaleza. Entire LLC costs, never shared.
  * Native-currency amounts are source observations, not approved USD ceilings.
  * No network, contract or operational activation occurs here.

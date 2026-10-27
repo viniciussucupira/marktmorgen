@@ -147,3 +147,8 @@ When an answer arrives: record it in [tax-consultations.md](tax-consultations.md
 ## FX275 allocation supersession — 22 October2026
 
 Owner22/10/2026 05:10Fortaleza: "esqueça Hazelsong". All LLC fixed taxes/costs are100% Marktmorgen, superseding every earlier50/50/half amount in this historical research. INSS fullBRL1695.11/month,20341.32/year; Delaware fullUSD400/year; California fullUSD800/year plus entire applicable income-tierLLCfee (up toUSD11790 under the official schedule). Earlier USD conversion at4.50BRL/USD is historical, not a verified future currency ceiling. Registered agent, domains, tools, mailbox andEU/UK representatives are entire company costs too. Current dated sources, native prices, unknown ceilings and rejected minimum-base result: [full fixed costs](llc-fixed-costs-2026-10-22.md). No tax reading, consultation status, gate or commercial review changes. Unknown never becomes zero; no finite base or60% certification.
+
+
+## SR467 — Elegibilidade Stripe não equivale a tratamento tributário (27/10/2026)
+
+A [regra SR](stripe-platform-eligibility.md),dono27/10/2026 08h00Fortaleza,subordina respostasStripe contraditórias àmenosfavorável. BRsóconectaBR;planejamentoUS exigeSSN/ITIN,representante residente eendereço comercialreal semcaixapostal. Esse relato nãofecha nenhuma dúvida tributária nem prova residênciafiscal,dispensa legal,custo,aceite real ouhospedagemUE. Textos anteriores/citações ficam históricos;leitura MAIS onerosa eISS5%segueminteiros.469[SR3]custos/FX275 e468[SR2]contaempresaUS comprovada continuam pendentes;sem consulta/contato/conta/pagamento. MRsubstitui somente opiso60%,nãoimpostos,reservas ouevidência.

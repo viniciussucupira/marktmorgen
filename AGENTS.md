@@ -248,3 +248,25 @@ A Parte A abaixo vigora imediatamente por instrução direta do dono e prevalece
 REGRA DOS 60%: todo cliente pagante, isoladamente e usando 100% dos direitos do plano no pior mês, e a empresa como um todo, mantêm margem de lucro líquido mínima de 60% depois de todos os custos e de todos os impostos, inclusive os brasileiros; pode ser maior, nunca menor. Leitura que dá mais imposto (docs/tax-uncertainty.md). Desconhecido reprova, nunca é zero. Todos os custos fixos da LLC pertencem ao Marktmorgen (FX275).
 
 Proibido: mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, o tax gate, o art. 9a ou a revisão comercial, afrouxar qualquer trava para que algo pareça pronto, apagar conteúdo de criadores, apagar qualquer coisa da Hazelsong, criar contas, aceitar termos, contratar, pagar ou contatar terceiros. Somente testes sintéticos.
+
+
+## SR — Stripe: resposta menos favorável e requisitos da empresa (27 de outubro de 2026)
+
+Solicitação do dono (27/10/2026, 08h00, horário de Fortaleza).467[SR1]. Regra vigente desde a solicitação: **quando respostas do Stripe se contradisserem, vale a resposta menos favorável ao dono, até que resposta posterior, completa e sem contradição, a substitua**.
+
+| Ponto | Respostas relatadas pelo dono | Aplicação vinculante |
+| --- | --- | --- |
+| Plataforma BR conecta criadores fora do Brasil? | Suporte09/10/2026: só contas BR; vendas19/10/2026: pode exterior | **Não; conta BR só conecta criadores BR.** |
+| Conta US deLLC de sócio único residente noBrasil exigeSSN/ITIN? | Suporte11/10/2026: passaporte/CPF bastam,ITINgeralmente não; vendas19/10/2026: exigeSSN/ITIN | **ExigeSSN ouITIN.** |
+| Representante legal nosEUA | Vendas19/10/2026: sim; residência ainda sem resposta | **Sim e considerar residência nosEUA obrigatória**, por leitura menos favorável enquanto desconhecida. |
+| Endereço nosEUA | Vendas19/10/2026: real,semcaixapostal | **Endereço comercial real nosEUA,semcaixapostal.** |
+
+O dono informou ter enviado novo e-mail em27/10/2026 pedindo resposta única definitiva aos quatro pontos. Nenhuma resposta nova foi fornecida; não presumir aceite pelo silêncio. Guardar resposta posterior completa, data e prova e conferir contradições antes de substituir qualquer linha.
+
+[docs/stripe-platform-eligibility.md](docs/stripe-platform-eligibility.md) guarda a aplicação, datas, proveniência e limites. As respostas acima são relato do dono por e-mail/formulário, preservado nafila467–470; e-mails/formulários originais e conta real não foram acessados ou verificados independentemente. PayloadAccountsV2/dashboardfull/COUNTRIES/testes deAPI não provam elegibilidade internacional da plataforma. Preservar comentários/design antigos como histórico, subordinados aSR. Registered agent,representanteGDPR/DSA e caixa postal não são prova de representante/endereço aceitos peloStripe.
+
+468[SR2] acrescenta condição de abertura: conta de plataforma emnome daempresaamericana apta, comdata/prova, a conectar criadoresEUA/Canadá/ReinoUnido/Europa emcobrançasdiretas. Ainda não construída por este registro; PLANS_ON_SALEcontinua false e demaisgates intactos.469[SR3] pesquisa custos/requisitos oficiais datados,100%FX275mensal/anual/base mínima.470[SR4] sóroteiro emDepende dodono, semexecutarLLC/EIN/ITIN/representante/endereço/conta. Desconhecido reprova, não ézero.
+
+Aplica-seMR27/10/2026 07h42: lucro líquido por unidadepositivo comfolga existente,empresa semprejuízo apartirbase mínima e60%meta mensalreal. ISS5%,leituratributária maisonerosa,recebimento maiscaro,reservas/exposição/custeio/gatespreservados. Não mudarpreços,limitesvisíveis,comissão,taxgate/art9a/revisãocomercial ouflag;não criarcontas,abrirempresa,pedirEIN/ITIN,contratar,pagar,aceitartermos,contatarStripe/terceiros ouapagardados/Hazelsong. Somentetestessintéticos.
+
+VR: política documental e evidência relatada; não conta aprovada, recurso disponível ao cliente, pesquisa oficial concluída ougate aberto. Nenhumresultadofinanceirocertificado.
