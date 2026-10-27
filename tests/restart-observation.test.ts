@@ -75,7 +75,7 @@ function stoppedFixture(): { intent: OwnedRestartIntent; original: Record<string
   claim:"claim_StoppedSource01",ref:"synthetic",handle:"synthetic",claimedAtSeconds:NOW-10,
   grant:{id:"ctr_NewStopped01",reviewId:review,statsId:"synthetic",key:"creator_month",action:"restart",sourceSubscriptionId:id,
    reservedCents:50,submitUntilSeconds:NOW+120,checkoutExpiresAtSeconds:NOW+3600,activationUntilSeconds:NOW+7200,liabilitiesThrough:new Date((NOW+40*DAY)*1000).toISOString()},
-  paused:JSON.stringify({customer:input.customerId,subscription:id,from:end,until:NOW-60,funding:{version:1,grantId:source}}),
+  paused:JSON.stringify({customer:input.customerId,paymentMethod:"pm_StoppedSource01",tier:input.tier,subscription:id,from:end,until:NOW-60,funding:{version:1,grantId:source}}),
   source:{binding:[source,id,"creator_month",created,"paid",start,end].join("|"),receipt:"retained",restartReceipt:"retained",reservedCents:100,carriedCents:0},
  };
  const original={...observed(),id,status:"canceled",created,ended_at:end,canceled_at:end-DAY,cancel_at_period_end:true,pending_update:null,
@@ -211,6 +211,7 @@ test("future request bytes come only from the frozen owned pause and preserve ex
  assert.equal(body.get("metadata[restart_claim]"),armed.intent.claim);
  assert.equal(body.get("metadata[restart_source]"),armed.intent.grant.sourceSubscriptionId);
  assert.equal(JSON.stringify(armed.intent),before);
+ for(const field of ["customer","paymentMethod","tier"]){const missing={...pause};delete missing[field];assert.throws(()=>fundedRestartRequestBody({...armed.intent,paused:JSON.stringify(missing)},armed.priceId));}
  const bad={...armed.intent,paused:JSON.stringify({...pause,customer:"not-customer"})};
  assert.throws(()=>fundedRestartRequestBody(bad,armed.priceId));
  let reads=0;const hostile={...armed.intent};Object.defineProperty(hostile,"paused",{enumerable:true,get(){reads++;return "";}});

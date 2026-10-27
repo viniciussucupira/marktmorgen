@@ -10251,3 +10251,7 @@ Fonte:mapas reais121876839746/121943538664/121962846446.
 Histórico anterior permanece acima, agora corrigido; não representa cotação,
 custo runtime0 nem margem certificada. Testes posteriores ao fixture interrompido
 continuam pendentes até suítecompleta no novohead.
+
+
+### PR1082 — correção da amostra de corpo imutável (27out2026 UTC)
+No head cb61f5af90348bbe6a308b1fd57abf8a34b3db01, verify121965339757 falhou em27out02:07:39.8746098UTC: a pausa sintética stoppedFixture não continha tier/paymentMethod exigidos pelo corpo real. Completar a amostra com os campos persistidos e acrescentar recusa explícita para cada customer/paymentMethod/tier ausente; nenhuma validação de produção relaxada. Redis121965339651 passou, mas isso não aprova o head com verifyfalho. Novo head exige suíte completa; não reexecutar job isolado. Gates/custos desconhecidos/contador254 preservados; nenhuma publicação funcional.
