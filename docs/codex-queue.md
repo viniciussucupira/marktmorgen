@@ -10542,3 +10542,50 @@ econtador254 preservados. VR: implementação de etapa fechada em PR para teste;
 não incorporada/publicada/disponível ao cliente neste registro.
 Após esta etapa: integração comrecuperação→ACKstore/CASgerações/cleanupundo→
 rollover/limitesdepolling/cálculointegral6contratos. AB(a)incompleto;ELnafila.
+
+
+### PR1087 — ativação fechada do ledger incorporada e READY (27out2026 Fortaleza)
+Head2cf29b6f59f8056149c3cdec064471f7a03a7c75,treeffdf3ba25183f99fe69d880eacec206bdf0d45ab.
+Merge6a89dd4ff6aa6733e45994f2b142c7a10141b074 em27out08:31:53UTC
+=27out05:31:53Fortaleza (horário real, não o horário anterior do heartbeat).
+Treeprevista/incorporada=testada,paisf951536ba778e9304dea724370a9fb45ed8ff946
++2cf29b6f conferidos antes/depois.31/31+Vercelsuccess nohead,
+8classificadores10+7/fulltrue(121996400028/121996399860/121996399777/
+121996399632/121996399358/121996399315/121996399288/121996399214).
+verify121996461094:wrapper0IO/getters03:45:21.3885839UTC,
+525pausechecks03:46:28.2269637,Everything03:47:47.1097854,
+agreements03:49:25.4307832,storecopy04:01:56.9584894UTC.
+Redisreal121996461013,03:43:36.2513174UTC:64primeiros→1binding,
+ACKperdido+64observações tardias idênticas,22recusas sem mutação.
+INFOativação8comandos (EVAL1,GET2,HMGET1,HSET1,TTL1,TYPE1,ZSCORE1),
+abaixo do teto17 POR ETAPA,não custo/total dofluxo.
+Mobile121996461057:home112/64/88ms,pricing48/32/40ms,sales40/40/40ms,
+LCP652–1020ms/CLS0;leitores reais passaram na31/31.
+
+dpl_4yfpAYqQKvpuLwL93G5nuXUUWbam READY27out08:32:42.737UTC
+=27out05:32:42.737Fortaleza,SHA6a89dd4f exato,aliasmarktmorgen.com.
+Cinco rotas /,/platform,/pricing,/mission,/library:HTTP200 comIDexato.
+Logs error/fatal08:32:42.737→08:33:11.463UTC sem correspondência;
+janela curta,não ausência futura. Sem E2EinterativoChrome,
+aguarda reconexão do dono sem alternativa/bypass.
+
+EstadoVR: código de etapa fechada incorporado/publicado,**desligado pelas travas**,
+não disponível ao cliente. Ainda NÃO ligado a restartPlan/publicaçãoStore;
+recuperação de binding jáativado/ACKperdido→ACKstore/CASgerações/cleanupundo→
+rollover/heldpolling/custosintegrais6contratos permanecem obrigatórios.
+Não encerrarAB(a) nem habilitarcoverage/policies por estes testes.
+0novasoperaçõesativaçãohabilitadas mês/ano nos6contratos porquefechado/nãoligado;
+não custofuturozero. Binding256bytesbrutos nafamíliaexistente,semsegundoledger/
+liberaçãodecaixa/slot/limpeza. Cardinalidade/overhead/cópias/retenção/polling/
+LLC100%FX275/BR-US+ISS5%leituramaisonerosa desconhecidosreprovados.
+Mesmosjobs/matrizes/tetos/serviços;CIpúblicopadrãocondicional0sóescopoconhecido.
+Preçosmáximos69/690/449/4490/999/9990,limites,opt-ins,IDs,conteúdo,idiomas,
+EL457–463nafila,PLANS_ON_SALE=false/policiesNULL econtador254 preservados.
+Esta publicação interna não é entrega funcional255.
+
+PV8: consulta real27out08:32UTC aos30runs event=schedule não encontrou
+runagendado de27out;últimos8são26out11:26–11:30UTC,aprovados.
+Cronatualproduct-checks ainda37 5 * * * (UTC). Não declarar cron dehoje
+executado nem falha comprovada do código sem run/log. A incorporação6a89dd4f
+dispara a suíte completa push/main separada; acompanhar sem trocarcron/
+matriz/teto ou inventar aprovação diária. Nenhumdispatchmanual realizado.
