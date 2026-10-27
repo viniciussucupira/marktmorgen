@@ -1184,6 +1184,82 @@ def main():
         print('PASS:full31day provider period fits explicit prefunded receipt horizon without truncating paid rights')
 
 
+        # The actual strict Store CAS primitive never retries an EVAL as GET/SET.
+        lock_source = (Path(__file__).resolve().parents[1] / 'lib/redis-lock.ts').read_text(encoding='utf-8')
+        strict_match = re.search(r'export const STRICT_FENCED_CAS = `([^`]+)`;', lock_source)
+        if not strict_match or '$' + '{' in strict_match.group(1):
+            raise RuntimeError('Expected static application strict fenced CAS Lua')
+        strict_script = strict_match.group(1)
+        lock_key, value_key = keys[0], keys[1]
+        def seed_strict(before='before'):
+            redis.command('DEL', lock_key, value_key)
+            redis.command('SET', lock_key, 'owned-token', 'PX', 60000)
+            redis.command('SET', value_key, before)
+        def strict_cas(client, before='before', after='after', limit=1000000, token='owned-token'):
+            return client.command('EVAL', strict_script, 2, lock_key, value_key, token, before, after, limit)
+        def strict_record(key):
+            kind = redis.command('TYPE', key)
+            if kind == 'string': return kind, redis.command('GET', key)
+            if kind == 'hash': return kind, snapshot(key)
+            return kind, None
+        def strict_contender(after):
+            client = Redis()
+            try:
+                return strict_cas(client, after=after)
+            finally:
+                client.close()
+        seed_strict()
+        with concurrent.futures.ThreadPoolExecutor(max_workers=16) as pool:
+            answers = list(pool.map(strict_contender, ['after-' + str(i) for i in range(64)]))
+        assert answers.count(1) == 1 and answers.count(0) == 63, answers
+        assert redis.command('GET', value_key).startswith('after-')
+        seed_strict()
+        assert strict_cas(redis) == 1  # Ignore this ACK, as if the client lost it.
+        with concurrent.futures.ThreadPoolExecutor(max_workers=16) as pool:
+            recovered = list(pool.map(strict_contender, ['after'] * 64))
+        assert recovered == [2] * 64, recovered
+        assert redis.command('GET', value_key) == 'after'
+        print('PASS:strict CAS64different contenders permit one write; ignored ACK64identical recoveries never write again')
+
+        for refusal in ('foreign-token','expired-lock','permanent-lock','expiring-record','wrong-lock-type','wrong-record-type','stale-record','oversize-before','oversize-after','fractional-limit','too-large-limit'):
+            seed_strict()
+            before, after, limit, token = 'before', 'after', 1000000, 'owned-token'
+            if refusal=='foreign-token': token='foreign-token'
+            elif refusal=='expired-lock': redis.command('PEXPIREAT', lock_key, 1)
+            elif refusal=='permanent-lock': redis.command('PERSIST', lock_key)
+            elif refusal=='expiring-record': redis.command('PEXPIRE', value_key, 60000)
+            elif refusal=='wrong-lock-type':
+                redis.command('DEL', lock_key); redis.command('HSET', lock_key, 'field', 'kept')
+            elif refusal=='wrong-record-type':
+                redis.command('DEL', value_key); redis.command('HSET', value_key, 'field', 'kept')
+            elif refusal=='stale-record': redis.command('SET', value_key, 'newer')
+            elif refusal=='oversize-before': before='x' * 9; limit=8
+            elif refusal=='oversize-after': after='x' * 9; limit=8
+            elif refusal=='fractional-limit': limit='8.5'
+            elif refusal=='too-large-limit': limit=1000001
+            kept_lock, kept_value = strict_record(lock_key), strict_record(value_key)
+            assert strict_cas(redis, before, after, limit, token) == 0, refusal
+            assert strict_record(lock_key) == kept_lock, refusal
+            assert strict_record(value_key) == kept_value, refusal
+        seed_strict('éé')
+        assert strict_cas(redis, 'éé', 'after', 3) == 0
+        assert redis.command('GET', value_key) == 'éé'
+        seed_strict()
+        assert strict_cas(redis) == 1
+        redis.command('SET', value_key, 'newer-write-after-ack-loss')
+        assert strict_cas(redis) == 0
+        assert redis.command('GET', value_key) == 'newer-write-after-ack-loss'
+        print('PASS:strict CAS11invalid/expired/type/budget cases,UTF8bytes and newer-write recovery preserve exact values')
+
+        seed_strict()
+        strict_before = command_counts()
+        assert strict_cas(redis) == 1
+        strict_after = command_counts()
+        strict_counts = {name: strict_after.get(name,0)-strict_before.get(name,0) for name in strict_after if name!='info' and strict_after.get(name,0)>strict_before.get(name,0)}
+        assert sum(strict_counts.values()) <= 8, strict_counts
+        print('PASS:actual strict CAS INFO commands=' + json.dumps(strict_counts,sort_keys=True))
+
+
     finally:
         for ref in intent_refs:
             if not ref.startswith('synthetic-restart-intent-'):
