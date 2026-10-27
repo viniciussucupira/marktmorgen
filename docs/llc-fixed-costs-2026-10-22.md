@@ -1,5 +1,8 @@
 # Full LLC fixed costs — 22 October2026
 
+> **MR vigente — dono27/10/2026 07h42 Fortaleza,464[MR1]:** [REGRA DE MARGEM](../AGENTS.md#mr--regra-de-margem-vigente-27-de-outubro-de-2026) substitui todos os pisos históricos de60% neste documento e suas referências. Exigir lucro líquido por unidade maior que zero no pior caso com a folga existente do spend floor,100% direitos mensal/anual e complementos; empresa sem prejuízo a partir de base mínima calculada com100%FX275 e exposições.60% é meta real mensal da empresa. Preservados ISS5%, leitura mais onerosa, recebimento mais caro, reservas/tetos/gates; desconhecido reprova, não é zero. Texto/citações/números antigos abaixo são histórico, não recalculados nem certificados. Código/relatório/regeneração pertencem a MR2; resultados atuais a MR3. Sem mudança de preços/limites/comissão/vendas.
+
+
 Owner22/10/2026 05:10Fortaleza: "esqueça Hazelsong". All Solrenning LLC fixed costs and taxes belong100% to Marktmorgen. Earlier50/50 figures remain history; they are superseded. No other product subsidizes this calculation.
 
 ## Dated official observations
@@ -31,3 +34,10 @@ The previous local minimum base was not computed: CURRENT_COMMERCIAL_MARGIN_REVI
 lib/llc-fixed-costs.ts keeps each required cost explicit, sums entire reviewed amounts without an allocation divisor, rejects missing/duplicate/unreviewed/unsafe values, and distinguishes native observations from reviewed ceilings. Synthetic tests increase every line and require100% of the increase to reach Marktmorgen. The margin document includes the shared generated status section; its existing stale-document test must pass on the complete new head.
 
 No prices, visible rights, commissions, PLANS_ON_SALE, tax gate, Article9a or commercial-review code changed. No funded operation is enabled. This is not profitability, legal or accessibility certification. Remaining cost/FX/reserve evidence must be resolved before operation; unknown is rejection, never zero.
+
+
+## SR467 — Requisitos Stripe não cobertos por estas cotações (27/10/2026)
+
+A [regra SR](stripe-platform-eligibility.md),dono27/10/2026 08h00Fortaleza, exige a leitura menos favorável das respostas contraditórias:SSN/ITIN,representante legal residente eendereço comercial realnosEUA semcaixapostal paraoplanejamento da plataformaUS. A cotação histórica demailbox/Stable eoregistered agent não comprovam essesrequisitos,aceiteStripe nemcustos máximos. RepresentantesGDPR/DSA não sãosubstitutos semprova.
+
+Valores anteriores preservados como histórico decada serviço, semtratá-los como preço do novo requisito.469[SR3]deve obter fonte oficialdatada,aceite/cobertura e custosmensais/anuais deITIN/agente deaceitação seaplicável,representanteresidente,endereçoreal eextras,100%MarktmorgenFX275;desconhecido reprova,nãozero. Não adicionada cotação inventada nem alterado oregistro de custos/revisão.468[SR2]ainda precisa da condição explícita decontaempresaUS;470[SR4]sóroteiro. Sem contratação/contato/pagamento ouafrouxamento dequalquergate.

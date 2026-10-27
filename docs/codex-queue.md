@@ -10733,3 +10733,30 @@ MesmoCIpúblicopadrão,0incremental condicional noescopoconhecido;nãototalgratu
 PLANS_ON_SALE=false,preços/limites/opt-ins/IDs/idiomas/conteúdo,ELnafila econtador254
 preservados. Próximo:ACKStore/CASgerações/cleanupundo→rollover/heldpolling/custos;
 AB(a)incompleto e nenhuma entrega255 neste registro.
+
+
+## MR464 — Registro da regra vigente e referências históricas (27/10/2026)
+
+464[MR1] em andamento neste head: regra integral do dono datada em AGENTS.md, CLAUDE.md e docs/cross-product-handoff.md, com remissão explícita em cada seção antiga que tratava60%como trava, incluindo AX274,FX275,VR,Pedidos repetidos,Hazelsong e assistente. Mantidos textos/citações anteriores; notas de precedência adicionadas, sem reescrever citações. Oito documentos de política/custeio diretamente usados pelo gate e assistente remetem à mesma regra. A precedência se estende aos documentos/comentários/testes antigos; a alteração numérica no código/testes e a regeneração do relatório calculado pertencem465[MR2], ainda não executado. Não confundir histórico de cálculo com resultado atual.
+
+Benefício/retorno: impedir que assistentes apliquem o piso revogado ou alterem impostos/reservas para contorná-lo, preservando custos/revisões desconhecidos como reprovação e evitando retrabalho. Método: cotejo dos textos integrais/decisões e quotes, links locais/âncora, diff só aditivo eCI documental; não teste de lucro nem relatório mensal. Acessibilidade: Markdown com títulos/links descritivos, sem tela/fluxo novo, passos e decisões do cliente0→0; sem alegação deWCAGcertificado ou avaliação humana. Custos operacionais novos: nenhum neste registro documental; não contarCI/custosfixosglobais como grátis. Preços69/690,449/4490,999/9990 eassistente69/700respostas,limites/comissão/PLANS_ON_SALE=false/OPENING_REQUESTED/gates/ISS5%/art9a/reservas/custeio e conteúdo preservados. Contador254.
+
+1089: integração interna incorporada95f23e46794aa35d1a93d3e58ddfc8346233ed1f em27/10/2026 07:39:47Fortaleza;31verificações eVercelsuccess,8scopes10+7/fulltrue. Redis122127370755: ACK de ativação perdido e64leitores concorrentes conservam3permissõesGETvitalícias;8bindingsinválidos recusados;período31dias cabe na reserva explícita;17comandos medidos nesta etapa, não no fluxo inteiro. Produção dpl_46nE5YuHeXEew6THjiJ7SjBZWh81 READY27/10/2026 07:41:43.647Fortaleza,SHAdomainmarktmorgen.com conferidos,5rotasHTTP200comdeploymentIDexato. Logs error/fatal10:41:43.647→10:42:53.247UTCsemocorrênciasnessajanela,semgarantiafutura. coveragepauseRestartfalse/policiesNULL, terminal antesStore/cleanup;AB(a)incompleto e sementrega255. Etapa1089 concluída como unidade interna;próxima prioridade documentalMR1/SR1 antes de iniciar nova unidade Store. Nada habilita venda/relatório/contaStripe.
+
+VR: registro de regra documental, não recurso disponível ao cliente. Lucro líquido por plano/base mínima, relatório mensal real e nova travaStripe continuam não implementados/não verificados. SR467–470mantidos nafila, sem contato externo. Margem vigente é MR27/10/2026 07h42; menções60%anteriores nesta continuidade são histórico.
+
+
+### PR1091 — Falha de relógio da fixture e correção (27/10/2026)
+
+Head23331a5c6e0ab46a4eed90e362b623b75c6863af,verify122200917949 falhou em27/10/2026 12:58:23.343–12:58:23.344UTC noarquivo tests/order-admission.test.ts:3das21asserçõesfalharam;admissão esperadatrue voltouunavailable e depoisogrupo passou semcontagem. A fixture usava paidPeriod() comrelógioatual e consultava17/10/2026 12:00UTCfixo. Em27/10após12:05UTC, start=(agora−10dias) passou além dessa datafixa e além dos300sdetolerância; allowanceWindow corretamente recusou. Não foi regressão de margem nem permissão para relaxar produção.
+
+Correção: declarar o nowfixo antes da criação do Store e usar paidPeriod(now) nasduascriações daassinatura. Todas21asserções e casosdeausência deaprovaçãofunded/dadosdesconhecidos/limites continuam; nenhuma alteração de lógica deprodução, prazo/tolerância, imposto, custo ougate. CIcompleto31+Vercel exigido no novohead; não reexecutar sóverify, não tratar os20sucessos doheadantigo como aprovação donovo. MR1continuaem andamento atéverificação/incorporação;sem entrega255.
+
+
+## SR467 — Regra de elegibilidade da plataforma (27/10/2026)
+
+467[SR1]em andamento: seçãoAGENTSdatada comasquatrorespostas relatadas,novo docs/stripe-platform-eligibility.md,remissões em docs/no-creator-default.md,docs/llc-fixed-costs-2026-10-22.md e docs/tax-uncertainty.md;comentários emlib/stripe-connect.ts e lib/llc-fixed-costs.ts distinguem payload/cotação deaceiteStripe. Histórico/citações/configuração/listaCOUNTRIES/preços/limites/responsabilidades preservados. Nenhuma mudançafuncional ouacessoàconta. Datas/evidência são relato dodono;originaise-mail/formulárionãoverificados,nenhum contato externo. Não presumir que registeredagent/mailbox/GDPR/DSA atendam representantes/endereçoStripe.
+
+Benefício/retorno: bloquear premissas otimistas de elegibilidade ecusto eprevenir gasto/aberturasemprova.468[SR2]condição deabertura,469[SR3]pesquisa oficial/custosmensais-anuais100%FX275/basemínima e470[SR4]roteiro emDepende dodono continuamna fila,nãoimplementados nemverificados por este registro. Nenhumcontrato/conta/termo/pagamento/terceiro;custosdesconhecidos reprovam. MRvigente:unidade lucrativacomfolga,empresasemprejuízobasemínima,60%meta mensalreal;ISS5%/leituramaisonerosa/reservas/gatesintegros.
+
+Verificação: branchSR1avança semeditarbranchMR1,nosarquivos daeligibilidade/observações;integra oheadMR1corrigido5bc6d5paraadicionarseçãoAGENTSsemperderMR. PRdependente deveaguardarMR1incorporado e ser redirecionado aomain;verificar árvore/pais/headnovamente.NãointegrarSR1comonovaentregafuncional nemcontar255. CIcompleto noheadSR1;nenhumjobisolado. Acessibilidade:Markdowncomtítulos/tabela/links,0→0passos/decisõesdocliente;nenhumaavaliaçãohumana/conformidadecertificada. Custosincrementaisprodução0/0nos6contratosporserdocumentação/comentáriossemchamada/chave/retençãonova,nãocustototalCI/LLCzero.
