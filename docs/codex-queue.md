@@ -1,5 +1,17 @@
 # Fila de trabalho do Codex — Marktmorgen
 
+## TX4 — correção incorporada e verificação combinada concluída (27/10/2026, 16h28 Fortaleza)
+
+PR1113 incorporado27/10/2026 16:00:36Fortaleza/19:00:36UTC,mergeec6c33c5a09726496886fc969c46a698bedacfbf,pais619eb6d04e3525353ff5abd6990088b3b8a653f7/2eb8db58702429c7e4602be559351c2ed628cf91,árvoree2e8d8b205680ecd2da4adf255d4cbbfe4dee95c igual à união prevista de main com os dois arquivos.31/31checks nohead+Vercelsuccess;8escopos10+7/fulltrue;verify122388609898 com7/7testes de custos e233/233bundles/Everythingpassing. Corrige leituras mutáveis/herdadas do agregador sem invocar getters;reprova lacunas/acessores e overflow. Preserva totais/categorias/reservas/relatório e custos reais desconhecidos.
+
+Verificação INTEGRAL automática do main combinado ec6c33 também concluiu31/31sucessos,observados16h24:8escopos122405176056,122405010630,122404958182,122404942912,122404915886,122404896748,122404726689,122404722245 todos10+7/fulltrue/sem erro. Verify122405027589 confirmou7/7custos,233/233bundles eEverythingpassing,sem erro de workflow. Nenhum rerunisolado substituiu a suíte. Publicação técnica conferida:deploymentdpl_DSgWQQjQvwcde5g2D6GpwwJUjozc,READY/production,SHAexatoec6c33c5a09726496886fc969c46a698bedacfbf,aliasesmarktmorgen.com/www.marktmorgen.com. Metadados não são prova interativa do fluxo;contador254,sem255. Bloqueio de conexãoChrome anterior respeitado,sem repetir/trocar navegador.
+
+PR1114documental incorporado15:56:05Fortaleza/18:56:05UTC,merge619eb6d04e3525353ff5abd6990088b3b8a653f7,pais220b72337e8544d3621390c0f09b53770d05e080/fcc3d816202551a69abbd2d60fb2184f2bfe52a2,árvore6b0d96e1cdbd3ab570a96945d806a339a8e8efd1.8escopos10+7/fullfalse+11skipslegítimos eVercelsuccess. EmentaRFB é fonte oficial parcial,sem inteiroteor/enquadramento real;nenhuma consulta preparada/enviada.
+
+TX2numérico ainda incompleto: alterar apenas GATE_READING_ID não basta;assessCustomerWorstCase e receiving-costs impõem2750 independentemente. A referênciaIN1037IV versusVII continua divergente conforme políticaTX,apenas esse componente preservado até correção;IOFcontinua dependência delimitada registrada. Valores antigos não viram certificação ou retorno à regra19. Continuar componentesautônomosTX3–TX7/MR/SR,sem inventar fatos,custoszero ou basefinita. CatálogoTX4 não comprova custos/reservas reais e não concluiTX4global.
+
+Custos/VR:nenhum serviço/IOprodutivo/contrato/conta/aceite/pagamento/contato/consulta/submissão novo;CI100%FX275,desconhecido≠zero. Preços/limites/comissão/PLANS_ON_SALEfalse/OPENING_REQUESTEDfalse/revisões/reservas/custeio/exposição/opt-ins/conteúdo/Hazelsong/idiomas/IDs preservados. Histórico anterior intacto.
+
 ## Evidência de incorporação e fonteRFB — 27/10/2026, 15h53 Fortaleza
 
 PR1112 incorporado27/10/2026 15:49:00Fortaleza/18:49:00UTC,merge220b72337e8544d3621390c0f09b53770d05e080,paisc17a767e5acdf662932afe0800b677bf473317e9/a151440d4b534846bcda98d318db453d4a9aaa57,árvoree433cdb274fd9cf1f01c0a99d81f2c80b7ca9b64 igual à união prevista dos três documentos.19checksdocumentais:8escopos com10+7testes/fullfalse e11skipslegítimos;Vercelsuccess. Antes disso,o CIintegral combinado do mainc17 concluiu31/31sucessos,incluindoWebKit;verify122381004610 já havia confirmado testes de custos/limites e233/233bundles. Preserva código/histórico anterior. Inventário de fornecedores e auditoria estáticaTX6/TX7 não certificam contratos/enquadramento nem ativam operação;apenasDPAexistenteBunny/vínculo continua aguardando o dono conforme registro15h12.
