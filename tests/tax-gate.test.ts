@@ -15,8 +15,8 @@
  *     not live, and the after-design reading is refused until it is;
  *   - a recorded consultation answer carries its question, authority, date,
  *     source and reading;
- *   - nothing is on sale while a published plan misses 60% under the gate
- *     reading with nothing used;
+ *   - all six current prices retain positive modeled net at full registered use
+ *     and unchanged room, without waiving a missing review or another gate;
  *   - art. 9a is one more reason nothing is on sale: no plan can start and no
  *     store's checkout can open while the EU, UK, US and other records are
  *     missing, and the reasons name art. 9a;
@@ -37,6 +37,8 @@ import { PUBLISHED_PLAN_PRICES, TIERS } from "@/lib/plan";
 import { ASSISTANT_ON_SALE, PLANS_ON_SALE } from "@/lib/opening";
 import { canSell } from "@/lib/store-checkout";
 import type { Store } from "@/lib/store";
+import { planUnits, roomKept } from "./margin-alignment-table";
+import { CURRENT_COMMERCIAL_MARGIN_REVIEW, commercialPlansMayOpen } from "@/lib/commercial-margin";
 import { done, is, part } from "./check";
 
 const root = process.cwd();
@@ -89,12 +91,18 @@ is("an answer without its source, with an unknown authority, a bad date or no su
 ]).length, 4);
 is("so the gate's setting is valid today", taxGateValid(), true);
 
-part("Nothing is on sale while a published plan misses 60% under the gate reading");
-const gated = TIERS.flatMap((tier) => (["month", "year"] as const).map((cycle) => ({ id: `${tier}-${cycle}`, unit: unitUnder(PUBLISHED_PLAN_PRICES[tier][cycle], 0, gateReading()) })));
-const missing = gated.filter(({ unit }) => !unit.meetsFloor).map(({ id }) => id);
-console.log(`  under the gate reading, nothing used: ${gated.map(({ id, unit }) => `${id} ${(unit.netBps / 100).toFixed(2)}%`).join(", ")}`);
-is("today every published plan misses, even with nothing used", missing.length, gated.length);
-if (missing.length) is("so no plan and no add-on is on sale", [PLANS_ON_SALE, ASSISTANT_ON_SALE], [false, false]);
+part("MR: full-use modeled positive net never waives the unchanged gates");
+const gated = planUnits(false).map(unit => ({
+  id: unit.id, result: unitUnder(unit.priceCents, unit.usageCents + roomKept(unit), gateReading(), true),
+}));
+is("all six current price-cycle cases are tested at full registered use and unchanged room", gated.length, 6);
+for (const row of gated) {
+  is("a nonpositive registered net fails " + row.id, row.result.netCents > 0 && row.result.meetsFloor, true);
+}
+is("positive model results never supply the absent actual review", CURRENT_COMMERCIAL_MARGIN_REVIEW, null);
+is("a launch request cannot replace the missing review", commercialPlansMayOpen(true), false);
+is("the recorded release flags remain closed", [PLANS_ON_SALE, ASSISTANT_ON_SALE], [false, false]);
+is("the explicit opening request is not changed", read("lib/opening.ts").includes("const OPENING_REQUESTED: boolean = false;"), true);
 
 part("Art. 9a: one more reason nothing is on sale");
 const problems = deemedSupplierProblems();
