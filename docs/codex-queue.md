@@ -1,5 +1,31 @@
 # Fila de trabalho do Codex — Marktmorgen
 
+## Prioridade vigente — SV depois da abertura (27/10/2026, 13h19 Fortaleza)
+
+Atualização dos itens existentes, sem novo número:317[EU1],441[SV1],442[SV2],SV3,SV4eSV5 passam TODOS para DEPOIS DA ABERTURA DAS VENDAS. Nenhum ensaio, código, PR, prova, histórico ou recurso é apagado, desfeito ou descartado. Não abrir novos PRs de implementação desses itens até a abertura. A ordem antiga que os coloca antes da abertura fica somente como histórico. O tempo de execução vai às travas do Bloco de abertura, com471[TX1] como próxima unidade já priorizada. Esta atualização documental é incluída no PR1101 de fila já aberto, sem criar PR de servidores.
+
+EU_HOSTING_CONFIRMED continua false e, por decisão vigente do dono, não é condição de abertura nem premissa necessária para a nova leitura tributária. O código atual ainda não foi alterado por este registro:472[TX2] remove a dependência de hospedagem/consultas com testes completos e fontes oficiais conferidas, sem tocar nas outras travas. Não alegar que a alteração de gate já funciona nem que as17teses TX foram verificadas.
+
+Proteção de dados com fornecedores atuais: conferência de mecanismos DPF ou cláusulas contratuais padrão fica NA FILA DO BLOCO DE ABERTURA, sem aguardar a migração UE e sem novo item SV duplicado. Inventariar cada fornecedor/suboperador efetivamente usado, conferir oferta e escopo em fonte oficial datada e registrar entidade, serviço, mecanismo, cobertura e lacunas. Oferta pública não prova que acordo esteja celebrado, conta coberta ou configuração correta; não aceitar termos, contratar, criar conta ou contatar ninguém. Ausência de prova não é conformidade nem custo zero. Resultado dessa conferência ainda não foi produzido; não declarar fornecedores cobertos neste registro.
+
+Pedidos repetidos: main59b4cf14f2e61d326482caea20a63f5d866b09d9,12PRs abertos,657refs codex/*,100commits recentes e54filas de heads distintos recentes/PRs/SV conferidos. Sem correspondência deste pedido por13h19,seção ou conteúdo equivalente; TX já contém redução de risco/sem gate, mas não o adiamento completo nem proibição de novos PRs SV. Complemento posterior é aplicado aos registros existentes, sem criar SV6 ou renumerar. Texto integral abaixo preservado. Antigas ordens e evidências continuam intactas como histórico.
+
+VR: reordenação e critérios registrados; nenhuma migração ou conferência de transferência internacional concluída por este registro, nenhum gate alterado. Sem serviço/IO operacional novo, sem UI nova (0→0ações/decisões); pesquisa/CI/fixos desconhecidos não sãozero e pertencem100%FX275. Flagsfalse,preços,limites,comissão,revisões,reservas,exposição,custeio,conteúdo,Hazelsong e idiomas/IDs preservados. Contador254; não é entrega funcional.
+
+## SV — Servidores na UE depois da abertura (27/10/2026)
+
+Solicitação do dono (27/10/2026, 13h19, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: aplique a regra permanente "Pedidos repetidos" antes de gravar.
+
+Decisão do dono: com a leitura tributária juridicamente mais correta (seção TX), os servidores na União Europeia não são necessários para nenhum imposto nem para a abertura. Mova todos os itens de servidores na UE (317 [EU1], 441 [SV1], 442 [SV2] e os itens SV3, SV4 e SV5) para depois da abertura das vendas, preservando todo o trabalho já feito, os ensaios e as provas, sem apagar nada. Até lá, não abra novos PRs desses itens; use o tempo nas travas que impedem a venda, na ordem do Bloco de abertura. EU_HOSTING_CONFIRMED continua false e não é condição de abertura. Mantenha a proteção de dados com os fornecedores atuais por meio dos mecanismos legais de transferência (Data Privacy Framework ou cláusulas contratuais padrão), conferindo, em fonte oficial datada, que cada fornecedor os oferece, e registre o resultado.
+
+Proibido: apagar trabalho dos itens SV, mudar preços, cortar limites visíveis, alterar comissão, afrouxar qualquer trava, criar contas, contratar, pagar, aceitar termos ou contatar terceiros. Somente testes sintéticos.
+
+Aplicar a regra VR.
+
 ## Prioridade vigente — TX (27/10/2026, 12h34 Fortaleza)
 
 A decisão TX substitui, nos pontos conflitantes, a regra 19, o pressuposto de ISS5% certo, a exigência de consultas tributárias e a leitura que dá mais imposto, inclusive nas seções MR/SR e nas instruções antigas desta fila. Preservar o texto anterior como histórico. Não fazer nem preparar para envio consulta tributária em qualquer país; CONSULTATION_ANSWERS permanece vazio. Recebimento mais caro e regra SR menos favorável do Stripe continuam; desconhecido reprova e não vira zero. As fontes oficiais e o enquadramento de cada um dos17pontos serão conferidos em471[TX1] antes de registrar uma interpretação como verificada/adotada ou alterar cálculos. Divergência de citação vai a Depende do dono e conserva, somente naquele ponto, a leitura atual até correção. O texto integral abaixo é solicitação/proveniência, não parecer nem conferência jurídica concluída.
