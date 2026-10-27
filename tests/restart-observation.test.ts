@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import {observeFundedRestartPrice,observeStoppedRestartSource,observeRestartedPlan} from "@/lib/billing";
-import type {OwnedRestartIntent} from "@/lib/contract-funding";
+import {observeFundedRestartResult,observeFundedRestartPrice,observeStoppedRestartSource,observeRestartedPlan} from "@/lib/billing";
+import type {ArmedRestartSubmission,OwnedRestartIntent} from "@/lib/contract-funding";
 import {PLAN_PRICES} from "@/lib/plan";
 
 const NOW=1_800_000_000,DAY=86_400;
@@ -158,4 +158,25 @@ test("unknown, empty, ambiguous, incomplete or substituted price pages cannot ar
  for(const now of [NOW-11,NOW+121,NaN,Infinity,0])assert.throws(()=>observeFundedRestartPrice(intent,pricePage(),now));
  let reads=0;const page=pricePage();Object.defineProperty(page,"data",{enumerable:true,get(){reads++;return [];}});
  assert.throws(()=>observeFundedRestartPrice(intent,page,NOW));assert.equal(reads,0);
+});
+
+function fundedResultFixture(){
+ const {intent}=stoppedFixture();
+ const armed:ArmedRestartSubmission={intent,priceId:input.priceId,bodyHash:"a".repeat(64),armedAtSeconds:NOW-5,
+  idempotencyKey:"restart:"+intent.grant.id+":"+intent.claim,policyBinding:"b".repeat(64)};
+ const subscription={...observed(),metadata:{funding_grant:intent.grant.id,funding_review:intent.grant.reviewId,
+  restart_claim:intent.claim,restart_source:intent.grant.sourceSubscriptionId,funding_action:"restart",store:intent.handle,tier:input.tier}};
+ return {armed,subscription};
+}
+test("durably identified funded result must still match every submitted owner/source metadata field",()=>{
+ const {armed,subscription}=fundedResultFixture();
+ assert.equal(observeFundedRestartResult(armed,input,subscription,NOW).subscriptionId,subscription.id);
+ for(const field of ["funding_grant","funding_review","restart_claim","restart_source","funding_action","store","tier"]){
+  const wrong=structuredClone(subscription);Object.assign(wrong.metadata,{[field]:"foreign"});
+  assert.throws(()=>observeFundedRestartResult(armed,input,wrong,NOW),field);
+ }
+ assert.throws(()=>observeFundedRestartResult(armed,input,{...subscription,id:armed.intent.grant.sourceSubscriptionId},NOW));
+ assert.throws(()=>observeFundedRestartResult(armed,input,{...subscription,customer:"cus_ForeignResult01"},NOW));
+ let reads=0;const hostile={...subscription};Object.defineProperty(hostile,"metadata",{enumerable:true,get(){reads++;return {};}});
+ assert.throws(()=>observeFundedRestartResult(armed,input,hostile,NOW));assert.equal(reads,0);
 });

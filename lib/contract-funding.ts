@@ -468,11 +468,11 @@ if tonumber(redis.call('ZSCORE',KEYS[3],ARGV[9]))~=pause["until"] then return 0 
 if not string.match(ARGV[12],'^price_[A-Za-z0-9]+$') or #ARGV[12]>106 or #ARGV[13]~=64 or not string.match(ARGV[13],'^[a-f0-9]+$') then return 0 end
 intent.submission={version=1,phase='uncertain',priceId=ARGV[12],bodyHash=ARGV[13],armedAt=now,idempotencyKey='restart:'..ARGV[4]..':'..ARGV[5]}
 local encoded=cjson.encode(intent)
-if #encoded>4096 then return 0 end
+if #encoded+160>4096 then return 0 end
 redis.call('HSET',KEYS[1],'restart-intent:'..ARGV[4],encoded)
 return {1,encoded}
 `;
-export type ArmedRestartSubmission=Readonly<{intent:OwnedRestartIntent;priceId:string;bodyHash:string;armedAtSeconds:number;idempotencyKey:string}>;
+export type ArmedRestartSubmission=Readonly<{intent:OwnedRestartIntent;priceId:string;bodyHash:string;armedAtSeconds:number;idempotencyKey:string;policyBinding:string}>;
 /** First durable submission barrier ACK only; no provider IO or activation.
  * Lost ACK keeps phase=uncertain forever, never a fresh submission permission.
  */
@@ -501,6 +501,76 @@ export async function armRestartSubmission(
   const expected={version:1,phase:'uncertain',priceId,bodyHash,armedAt:now,idempotencyKey:'restart:'+grant.id+':'+intent.claim};
   if(!owned||canonicalFinancialSnapshot(owned)!==canonicalFinancialSnapshot(intent)||canonicalFinancialSnapshot(submission)!==canonicalFinancialSnapshot(expected))return null;
   const finished=Date.now();if(finished<after||finished>grant.submitUntilSeconds*1000||new Date(finished).toISOString().slice(0,7)!==context.review?.fundedExposure?.month)return null;
-  return Object.freeze({intent:owned,priceId,bodyHash,armedAtSeconds:now,idempotencyKey:expected.idempotencyKey});
+  return Object.freeze({intent:owned,priceId,bodyHash,armedAtSeconds:now,idempotencyKey:expected.idempotencyKey,policyBinding:contractFundingBinding(config)});
  }catch{return null;}
+}
+
+export const RECORD_RESTART_RESULT = `
+local function amount(v)
+ if not v or not string.match(v,'^%d+$') or (#v>1 and string.sub(v,1,1)=='0') then return nil end
+ local n=tonumber(v)
+ if not n or n<0 or n>1000000000000 or n~=math.floor(n) then return nil end
+ return n
+end
+local now,armed=amount(ARGV[8]),amount(ARGV[9])
+if not now or not armed or now<armed or not string.match(ARGV[7],'^sub_[A-Za-z0-9]+$') or #ARGV[7]<10 or #ARGV[7]>68 then return 0 end
+if redis.call('TYPE',KEYS[1]).ok~='hash' or redis.call('TTL',KEYS[1])~=-1 then return 0 end
+local raw=redis.call('HGET',KEYS[1],'restart-intent:'..ARGV[1])
+if not raw or #raw>4096 then return 0 end
+local ok,intent=pcall(cjson.decode,raw)
+if not ok or type(intent)~='table' or type(intent.submission)~='table' then return 0 end
+local s=intent.submission
+if intent.grant~=ARGV[1] or intent.review~=ARGV[2] or intent.statsId~=ARGV[3] or intent.claim~=ARGV[4] or s.version~=1 or s.priceId~=ARGV[5] or s.bodyHash~=ARGV[6] or s.armedAt~=armed or s.idempotencyKey~='restart:'..ARGV[1]..':'..ARGV[4] then return 0 end
+-- Retain evidence even after the submission deadline or policy month changed.
+-- This never activates rights, moves cash, clears a pending lock or permits POST.
+if s.phase=='observed' then
+ if s.subscriptionId==ARGV[7] and type(s.observedAt)=='number' and s.observedAt==math.floor(s.observedAt) and s.observedAt>=armed and s.observedAt<=now then return 2 end
+ return 0
+end
+if s.phase~='uncertain' or s.subscriptionId~=nil or s.observedAt~=nil then return 0 end
+s.phase='observed'
+s.subscriptionId=ARGV[7]
+s.observedAt=now
+local encoded=cjson.encode(intent)
+if #encoded>4096 then return 0 end
+redis.call('HSET',KEYS[1],'restart-intent:'..ARGV[1],encoded)
+return 1
+`;
+/** Evidence retention only. No current-month admission or activation decision.
+ * The first owner already spent its one POST attempt; recording an observed ID
+ * after the deadline cannot restore that permission or authorize adoption.
+ */
+export async function recordRestartResult(input:{armed:ArmedRestartSubmission;subscriptionId:string}):Promise<boolean>{
+ if(!Boolean(CONTRACT_ADMISSION_COVERAGE.pauseRestart))return false;
+ const encoded=canonicalFinancialSnapshot(input);if(!encoded)return false;
+ input=JSON.parse(encoded);
+ const {armed,subscriptionId}=input,now=Math.floor(Date.now()/1000);
+ if(!armed||!/^sub_[A-Za-z0-9]{6,64}$/.test(subscriptionId)||!/^price_[A-Za-z0-9]{6,100}$/.test(armed.priceId)||
+    !/^[a-f0-9]{64}$/.test(armed.bodyHash)||!Number.isSafeInteger(armed.armedAtSeconds)||armed.armedAtSeconds<=0||
+    armed.idempotencyKey!=='restart:'+armed.intent.grant.id+':'+armed.intent.claim||now<armed.armedAtSeconds||!isRedisConfigured())return false;
+ try{
+  const {intent}=armed;
+  const reply=await redisPipeline([['EVAL',RECORD_RESTART_RESULT,1,'nl:contract-reserve:v1',intent.grant.id,intent.grant.reviewId,intent.grant.statsId,intent.claim,armed.priceId,armed.bodyHash,subscriptionId,now,armed.armedAtSeconds]]);
+  return Array.isArray(reply)&&reply.length===1&&(reply[0]===1||reply[0]===2);
+ }catch{return false;}
+}
+
+/** Final synchronous admission check immediately before the sole POST.
+ * Pure validation; an armed ACK is still required separately by its caller.
+ */
+export function restartSubmissionOpenNow(
+ armed:ArmedRestartSubmission,nowMs=Date.now(),
+ policy:ContractFundingPolicy|null=CURRENT_CONTRACT_FUNDING_POLICY,
+ context:ContractFundingContext={termsSnapshot:CURRENT_PRICE_AND_RIGHTS_SNAPSHOT,review:CURRENT_COMMERCIAL_MARGIN_REVIEW},
+):boolean{
+ if(!Boolean(CONTRACT_ADMISSION_COVERAGE.pauseRestart))return false;
+ const encoded=canonicalFinancialSnapshot({armed,nowMs,policy,context});if(!encoded)return false;
+ ({armed,nowMs,policy,context}=JSON.parse(encoded));
+ if(!Number.isSafeInteger(nowMs)||nowMs<=0||!armed?.intent)return false;
+ const config=contractFundingConfiguration(policy,context,new Date(nowMs)),grant=armed.intent.grant;
+ return config!==null&&commercialMarginReady(context.review)&&contractFundingBinding(config)===armed.policyBinding&&
+  config.reviewId===grant.reviewId&&config.grantCents[grant.key]===grant.reservedCents&&grant.action==='restart'&&
+  ['creator_month','pro_month','scale_month'].includes(grant.key)&&Number.isSafeInteger(armed.armedAtSeconds)&&
+  nowMs>=armed.armedAtSeconds*1000&&nowMs<=(grant.submitUntilSeconds*1000)&&
+  new Date(nowMs).toISOString().slice(0,7)===context.review?.fundedExposure?.month;
 }
