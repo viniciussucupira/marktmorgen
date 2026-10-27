@@ -3,6 +3,7 @@
 import { useState, useSyncExternalStore } from "react";
 import { type PublicKeyCredentialRequestOptionsJSON, browserSupportsWebAuthn, startAuthentication } from "@simplewebauthn/browser";
 import { Icon } from "@/components/icons";
+import { passkeyAnswer, type PasskeyAnswer } from "@/lib/passkey-signin-response";
 
 const MESSAGES: Record<string, string> = {
   not_recognised:
@@ -13,15 +14,14 @@ const MESSAGES: Record<string, string> = {
   server_error: "Something went wrong on our side. Try again in a moment, or use the emailed link.",
 };
 
-type Answer = { ok?: boolean; error?: string; options?: unknown; next?: string };
-
-async function call(payload: Record<string, unknown>): Promise<Answer> {
+async function call(payload: { action: "options" | "verify"; response?: unknown }): Promise<PasskeyAnswer> {
   const response = await fetch("/api/auth/passkey/signin", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
-  return (await response.json().catch(() => ({ ok: false, error: "server_error" }))) as Answer;
+  const raw: unknown = await response.json().catch(() => null);
+  return passkeyAnswer(response.ok, raw, payload.action);
 }
 
 const noSubscription = () => () => {};
@@ -46,22 +46,22 @@ export function PasskeySignIn() {
     try {
       const first = await call({ action: "options" });
       if (!first.ok || !first.options) {
-        setError(MESSAGES[first.error ?? ""] ?? MESSAGES.server_error);
+        setError(!first.ok ? MESSAGES[first.error] ?? MESSAGES.server_error : MESSAGES.server_error);
         return;
       }
       let response;
       try {
-        response = await startAuthentication({ optionsJSON: first.options as PublicKeyCredentialRequestOptionsJSON });
+        response = await startAuthentication({ optionsJSON: first.options as unknown as PublicKeyCredentialRequestOptionsJSON });
       } catch {
         setError(MESSAGES.cancelled);
         return;
       }
       const done = await call({ action: "verify", response });
-      if (done.ok) {
+      if (done.ok && done.next) {
         window.location.assign(done.next ?? "/studio");
         return;
       }
-      setError(MESSAGES[done.error ?? ""] ?? MESSAGES.server_error);
+      setError(!done.ok ? MESSAGES[done.error] ?? MESSAGES.server_error : MESSAGES.server_error);
     } catch {
       setError(MESSAGES.server_error);
     } finally {
