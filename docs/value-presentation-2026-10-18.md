@@ -1,3 +1,5 @@
+> **MR update — owner27/10/2026 07h42Fortaleza.** The18October pricing explanation below is preserved as history. Its60%floor and theoretical alternative threshold prices are superseded, not current instructions or new price proposals. Current prices and every visible allowance remain unchanged. See [the current MR model rows](#mr--current-price-registered-model-27-october2026) and [the complete model report](margin-alignment-2026-10-18.md). Unknown costs still fail;60%is the actual monthly company target.
+
 # Prices, limits and how value is presented, 18 October 2026
 
 The owner's decision, in chat, verbatim:
@@ -74,3 +76,21 @@ The cards follow what the leaders do, from the code only: the price first, then 
 ## Owner steps at Stripe
 
 None is needed to create prices by hand. The checkout makes each plan's Stripe price itself, under the lookup key `nimbus_<tier>_<cycle>`, the first time it is needed, and uses a price at Stripe only when its amount, currency and interval match `lib/plan.ts`; otherwise it makes a new one and moves the lookup key to it (`ensurePrice` in `lib/billing.ts`, `transfer_lookup_key`). The Store assistant's price is made the same way (`lib/assistant-billing.ts`), and AI captions are charged by amount. No environment variable holds a price ID. When sales open, after the first checkout of each plan: in the Stripe dashboard, Product catalog, archive the old $29, $99, $249, $300, $948 and $2,388 prices (and the $49 Store assistant price), so no old link can be used.
+
+
+## MR — Current-price registered model (27 October2026)
+
+Generated from the actual CI renderer for MR; amounts are registered-model calculations under the binding most-tax reading, not actual invoices or certified margins. No new price or limit is proposed. All costs/coverage outside the model, the full LLC base, SR3requirements and real accounting remain unapproved where unknown. The commercial/art9a/Stripe-eligibility and other gates remain closed.
+
+| Unit | Current price | Revenue | Receiving and reserves | Full usage | Taxes | Net profit | Net margin | Cost room | With room | On sale |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Store monthly ($69) | $69.00 | $54.33 | $9.14 | $2.57 | $36.05 | $6.57 | 12.09% | $0.25 | positive | no |
+| Store yearly ($690) | $690.00 | $543.30 | $85.65 | $28.83 | $362.43 | $66.39 | 12.21% | $1.00 | positive | no |
+| Studio monthly ($449) | $449.00 | $353.54 | $55.97 | $19.80 | $234.85 | $42.92 | 12.14% | $0.25 | positive | no |
+| Studio yearly ($4,490) | $4,490.00 | $3,535.43 | $553.98 | $223.61 | $2,332.86 | $424.98 | 12.02% | $1.00 | positive | no |
+| Scale monthly ($999) | $999.00 | $786.61 | $123.76 | $43.73 | $523.37 | $95.75 | 12.17% | $0.25 | positive | no |
+| Scale yearly ($9,990) | $9,990.00 | $7,866.14 | $1,231.82 | $496.89 | $5,191.56 | $945.87 | 12.02% | $1.00 | positive | no |
+| Store assistant add-on ($69/mo, 700 replies) | $69.00 | $54.33 | $9.14 | $2.48 | $36.12 | $6.59 | 12.12% | $0.25 | positive | no |
+| AI captions, 1 language (6 min, $36.00) | $36.00 | $28.34 | $5.06 | $1.20 | $18.69 | $3.39 | 11.96% | $0.00 | positive | no |
+| AI captions, 2 languages (3 min, $36.00) | $36.00 | $28.34 | $5.06 | $0.90 | $18.92 | $3.46 | 12.20% | $0.00 | positive | no |
+| AI captions, 3 languages (2 min, $36.00) | $36.00 | $28.34 | $5.06 | $0.80 | $19.00 | $3.48 | 12.27% | $0.00 | positive | no |

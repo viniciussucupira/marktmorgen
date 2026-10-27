@@ -5,7 +5,7 @@ import {VISITS_INCLUDED} from "@/lib/traffic-rules";
 import {ORDERS_INCLUDED} from "@/lib/order-rules";
 import {paidStorageBytes} from "@/lib/storage-rules";
 import {PAID_VIDEO_HOURS} from "@/lib/video-admission-rules";
-import {FLOOR_BPS,STRESS_PROFIT_TAX_BPS,unitUnder,type Reading} from "@/lib/receiving-costs";
+import {STRESS_PROFIT_TAX_BPS,unitUnder,type Reading} from "@/lib/receiving-costs";
 import {gateReading} from "@/lib/tax-gate";
 import {planUnits,evaluate} from "./margin-alignment-table";
 import {PER_EMAIL,STORAGE_PER_GB} from "./plan-cost-registry";
@@ -42,7 +42,7 @@ export function capacityInputLines():string[]{
  const reading=gateReading();
  return [
   "Binding configured reading: `"+reading.id+"`.",
-  "Counterfactual ceiling before all non-tax costs: "+percent(capacityTaxCeilingBps(reading))+"; required: "+percent(FLOOR_BPS)+".",
+  "Counterfactual ceiling before all non-tax costs: "+percent(capacityTaxCeilingBps(reading))+"; required: positive net with the existing spend-floor room.60%is the actual monthly company target.",
   "Existing registered list-email delivery assumption: $"+PER_EMAIL.toFixed(6)+" per email; storage assumption: $"+STORAGE_PER_GB.toFixed(6)+" per model GiB-month.",
  ];
 }

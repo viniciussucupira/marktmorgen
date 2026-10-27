@@ -1,7 +1,9 @@
 /** Platform fees only, never creator GMV. All amounts are USD cents for one customer's worst case.
  * This checks supplied ceilings, not the accuracy of tax advice, vendor quotes or usage enforcement.
  */
-export const MINIMUM_NET_MARGIN_BPS=6_000;
+/** MR27Oct2026: percentage floors are retired; a whole positive net cent is required. */
+export const MINIMUM_NET_MARGIN_BPS=0;
+export const MINIMUM_NET_PROFIT_CENTS=1;
 /** Owner-required planning minimum, not a ruling on the legal tax treatment. */
 export const PLANNING_PROFIT_TAX_FLOOR_BPS=2_750;
 export const CUSTOMER_COST_CATEGORIES=[
@@ -30,7 +32,7 @@ const ownReviewData=(record:object,key:string)=>{
   return field&&Object.prototype.hasOwnProperty.call(field,"value")?field.value:undefined;
  }catch{return undefined;}
 };
-/** Exact integer comparison: a display rounded to 60% never approves an amount below the floor. */
+/** Exact whole-cent comparison: zero profit or a rounded display never passes MR. */
 export function assessCustomerWorstCase(value:CustomerWorstCase|null):MarginAssessment{
  if(!value||typeof value!=="object"||Array.isArray(value))return stopped("unknown");
  const suppliedCosts=ownReviewData(value,"costCeilings");
@@ -59,6 +61,6 @@ export function assessCustomerWorstCase(value:CustomerWorstCase|null):MarginAsse
  const net=pretax-BigInt(value.taxesCeilingCents!);
  if(net>BigInt(Number.MAX_SAFE_INTEGER)||net< -BigInt(Number.MAX_SAFE_INTEGER))return stopped("invalid");
  const ratio=Number(net*BigInt(10_000)/gross);
- const approved=net*BigInt(10_000)>=gross*BigInt(MINIMUM_NET_MARGIN_BPS);
+ const approved=net>=BigInt(MINIMUM_NET_PROFIT_CENTS);
  return {approved,reason:approved?"approved":"below_floor",netCents:Number(net),marginBps:Number.isSafeInteger(ratio)?ratio:null};
 }

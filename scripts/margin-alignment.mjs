@@ -38,8 +38,8 @@ try {
     process.exit(1);
   }
   const target = join(root, "docs/margin-alignment-2026-10-18.md");
-  writeFileSync(target, run.stdout);
-  console.log(`Wrote ${target}`);
+  if (process.argv.includes("--stdout")) process.stdout.write(run.stdout);
+  else { writeFileSync(target, run.stdout); console.log(`Wrote ${target}`); }
 } finally {
   rmSync(out, { recursive: true, force: true });
 }

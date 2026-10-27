@@ -1,3 +1,4 @@
+import { HISTORICAL_MARGIN_NOTICE } from "./historical-margin-model";
 /**
  * A PROPOSAL, not a change (18 October 2026), superseded the same day at
  * 11:21 by the owner's decision to set prices instead (lib/plan.ts): at the
@@ -28,7 +29,7 @@ import {
   ADD_ON_ROOM_CENTS, ASSISTANT_FACTS_BYTES, ASSISTANT_INPUT_BYTES, ASSISTANT_MESSAGES_MONTHLY, ASSISTANT_MODEL, ASSISTANT_PRICE_CENTS, ASSISTANT_PRODUCTS, ASSISTANT_REQUEST_SHAPE, assistantMessageExtraMicroUsd,
 } from "@/lib/store-assistant-rules";
 import { CENTS_PER_MINUTE, MAX_AUTO_LANGUAGES, MAX_AUTO_MINUTES, MIN_CENTS } from "@/lib/auto-captions-rules";
-import { SIZING_READING, unitUnder } from "@/lib/receiving-costs";
+import { SIZING_READING, unitUnder } from "./historical-margin-model";
 import { COST_LINES, GB, STORAGE_PER_GB, perPaymentCost } from "./plan-cost-registry";
 
 /** The printed lines, in the order cuts are proposed: least likely to be reached, and least generous at competitors, first. */
@@ -327,5 +328,5 @@ export function renderLimitsProposal(plansOnSale: boolean, captionsOnSale: boole
   out.push("- Every proposed figure would be a cut to a limit the customer sees, which the owner ruled out on 18 October 2026. The same day (11:21) he chose a price change instead: at the price list every plan, the Store assistant and AI captions keep 60% with no cut, and no figure above is proposed (docs/value-presentation-2026-10-18.md). Nothing here opens a sale.");
   out.push("- Cuts were deep because receiving a payment and using a plan in full take more than the 17.24% of revenue the floor leaves after a 27.5% tax; that is why the prices are about twenty times the cost of a plan's full use.");
   out.push("");
-  return out.join("\n");
+  return HISTORICAL_MARGIN_NOTICE + out.join("\n");
 }

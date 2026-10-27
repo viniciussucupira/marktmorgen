@@ -13,7 +13,7 @@ const run = (value: CustomerEnvelopeBinding | null, now = 150, customer = 'store
   boundCustomerEnvelope(value, customer, terms, now, 10000, 1);
 
 test('current customer and terms receive the existing conservative allowance', () => {
-  const result = run(binding()); assert.equal(result.approved, true); assert.equal(result.affordableUnits, 1000);
+  const result = run(binding()); assert.equal(result.approved, true); assert.equal(result.affordableUnits, 6999);
 });
 test('another customer cannot reuse a funded review', () => {
   assert.equal(run(binding(), 150, 'store-b').reason, 'customer_mismatch');
@@ -46,7 +46,7 @@ test('absent binding or unknown tax review cannot create an allowance', () => {
 test('binding does not bypass provider unit validation or available capacity', () => {
   const value = binding();
   assert.equal(boundCustomerEnvelope(value, 'store-a', 'current-terms', 150, 0, 1).approved, false);
-  assert.equal(boundCustomerEnvelope(value, 'store-a', 'current-terms', 150, 10000, 1001).approved, false);
+  assert.equal(boundCustomerEnvelope(value, 'store-a', 'current-terms', 150, 10000, 7000).approved, false);
 });
 test('computed or inherited binding fields are refused without executing getters', () => {
   let reads = 0;
