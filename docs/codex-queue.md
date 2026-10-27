@@ -9649,6 +9649,107 @@ Verificação parcial da correção1068,head454cd8e814dfe2fb144449f6b344d54802db
 Correção do head1068 após verificação completa:jobverify121698288408 encontrou inventário de acessibilidade desatualizado(duas falhas emaccessibility-inventory.test.ts;nenhum componente deve ficar fora do mapeamento). Acrescentados home-interactive.tsx epricing-cycle.tsx à listaordenada existente,exatamente como determina generateInventory,sendo preservados todos os estados/lacunas/revisões. Não remover/afrouxar o teste. Nova execução COMPLETA obrigatória no novohead de1068 e descendentes1069; métricas móveis já aprovadas no head anterior não certificam o novo. Nenhuma incorporação/publicação/entrega funcional alegada.
 
 
+
+## EL — Contatos ilimitados, sequências no Store e paridade com o Pro da Stan (26/10/2026)
+
+
+Proveniência e ordem: solicitação do dono26/10/2026 23h54Fortaleza,
+recebida por anexo nesta conversa. Regra permanente Pedidos repetidos aplicada:
+main20b177e334e56ae356f6bb8b87bec1a9678c92ea,12PRs abertos
+(títulos/corpos e filas),inventário640refs codex/* e71heads distintos
+recentes/relacionados selecionados pelos100commits/pais recentes,PRs e nomes.
+70filas legíveis sem correspondência por data/hora,seção,EL1–EL7 ou conteúdo
+equivalente. Uma fila404 no ramo antigo assistant-previous-coverage,
+head653fa30 de14/10/2026,anterior ao pedido; não alegar leitura inexistente.
+Máximo456 confirmado no main e nas filas examinadas: alocar somente
+457[EL1]–463[EL7], na fila, após AN456 e todos os pedidos anteriores,
+depois de TODO o Bloco de abertura. Não interromper AB(a),PR1084/CI
+ou outras prioridades anteriores; este registro não antecipa implementação.
+
+Reutilização vinculante:309[EM1]e seu complemento passo6 continuam donos
+da cotaStore/aumentoStudioScale;344[RN2]+EP e357[ES3] continuam donos
+dos pacotes/envios extras;356[ES2],238[CF1],239[CF2],39[G1],Klarna/Afterpay
+na contaStripe do criador e AP449–455/AN456 não são recriados.
+Os aliasesIP449–455 do briefing remetem aos mesmos AP449–455,
+sem renomear a seção restaurada nem AP361/362.
+EL2 depende da cotaStore309;EL4 depende deEL5 e só oferece357/344 quando
+disponíveis ao cliente;EL7 usa o modelo238 e liga lacunas já enfileiradas
+em vez de registrá-las de novo. Seguir VR e AX274, sem prometer paridade.
+
+Código canônico lido somente para reutilização, sem alterar:
+lib/contact-rules.ts/MAX_LEADS100000/MAX_IMPORT5000;
+lib/imports.ts/IMPORT_LIMITS.contacts50000 (mecanismo distinto, não confundir
+seus limites);lib/segments-rules.ts/MAX_SEGMENTS20;
+lib/mail-from.ts;lib/flows.ts e lib/flow-limits.ts/
+ACTIVE_FLOWS_BY_TIER creator0/pro10/scale20.
+Não tomar esta leitura como aprovação de custo vitalício, margem ou limite novo.
+Não removido teto, criadoEngaged, ligado sequência, enviada lista ou
+verificado Resend/contratadoSES por este registro. EL6 eEL7 são conferências
+futuras na ordem da fila; suas fontes/status/preços ainda não verificados.
+
+Texto do pedido preservado abaixo, com atribuição apenas dos números livres.
+
+Solicitação do dono (26/10/2026, 23h54, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: antes de gravar, aplique a regra permanente "Pedidos repetidos". Confira o main, os PRs abertos e os ramos codex/* recentes, e procure esta solicitação pela linha de data e hora, pelo nome da seção, pelas etiquetas [EL1] a [EL7] e pelo conteúdo. Se já estiver gravada, não crie nada novo. Grave depois do Bloco de abertura, na ordem de chegada, sem alterar a ordem dos itens existentes.
+
+Já existem ou estão na fila e NÃO devem ser refeitos: 309 [EM1], inclusive o complemento do passo 6 sobre a cota de e-mails do Store e o aumento dos limites do Studio e do Scale; 344 [RN2] com o complemento EP (pacotes de e-mails); 357 [ES3] (mais envios quando acabam); 356 [ES2] (domínio do próprio criador); 238 [CF1] (páginas de comparação); 239 [CF2] (guias de migração); 39 [G1] (AutoDM); Klarna e Afterpay pela conta Stripe do criador; IP449–455 e AN456 (apps); lib/segments-rules.ts; lib/mail-from.ts; lib/contact-rules.ts; lib/imports.ts.
+
+Princípio desta seção: a palavra "unlimited" só pode aparecer onde não existe limite nenhum no código. Nunca escrever "unlimited emails" e nunca pôr um número embaixo de uma promessa de ilimitado.
+
+457. [EL1] Contatos ilimitados de verdade, ou o número real.
+Estado inicial: na fila.
+Calcule o custo do pior caso de guardar contatos, por plano, no mensal e no anual: o máximo que uma loja consegue juntar pela loja (limitado pelas visitas do plano) e pela importação, durante toda a vida da conta, incluindo armazenamento, leituras, cópias de segurança e retenção depois do cancelamento. Se couber em todos os planos mantendo 60% na leitura de dimensionamento, retire o teto MAX_LEADS e escreva "Unlimited contacts" nas páginas e no estúdio, com teste que falhe se um teto voltar sem a página mudar. Se não couber, mostre o número real de cada plano, sem a palavra "unlimited". Nunca reduza o teto atual de 100.000.
+
+458. [EL2] Três sequências automáticas de e-mail no Store.
+Estado inicial: na fila.
+Hoje o Store tem 0 sequências ativas (ACTIVE_FLOWS_BY_TIER). Depois da cota de e-mails do Store definida em 309 [EM1], dê ao Store 3 sequências automáticas, com o custo de cada uma no pior caso dentro da cota. É aumento de limite visível, permitido somente onde a margem do próprio plano permite nos dois intervalos; se não couber, registre a inviabilidade em "Depende do dono", com o número exato que faltou.
+
+459. [EL3] Frase simples junto do número de e-mails.
+Estado inicial: na fila.
+Na página de preços e no estúdio, mostre junto do número mensal de e-mails de cada plano uma frase de equivalência calculada pelo próprio código, nunca digitada à mão, por exemplo "Enough to email 5,000 people 15 times a month", com teste que falhe se a frase divergir do limite.
+
+460. [EL4] Conta antes de enviar.
+Estado inicial: na fila.
+No estúdio, antes de cada envio para a lista, mostre em linguagem simples quantos contatos receberão, quantos e-mails o plano ainda permite neste mês e quantas vezes isso dá para enviar a todos. Se passar do saldo, ofereça enviar só para os contatos ativos (EL5) ou, quando 357 [ES3] e 344 [RN2] estiverem no ar, a forma de enviar mais que eles definem. Nada é enviado sem o criador confirmar. Seguir AX274.
+
+461. [EL5] Segmento de contatos ativos.
+Estado inicial: na fila.
+Acrescente aos segmentos de lib/segments-rules.ts o filtro "Engaged": contatos que clicaram em algum e-mail ou compraram nos últimos 30, 60, 90 ou 180 dias, escolhidos pelo criador. Use somente cliques e compras, nunca rastreamento de abertura. Respeite MAX_SEGMENTS e os custos de leitura existentes, com teste.
+
+462. [EL6] Duas conferências, sem mudar nada.
+Estado inicial: na fila.
+1. Confirme, só por leitura e sem expor nenhum segredo ou valor, se o domínio mail.marktmorgen.com está com status "verified" no Resend; registre o resultado com data. Não altere nenhuma configuração.
+2. Estude, nas fontes oficiais datadas da Amazon, o recurso SES "Tenants" (reputação separada por cliente): preço, ativação, mudança no código e custo no pior caso de cada plano. Somente estudo; nada é ativado nem contratado. Preço desconhecido reprova, nunca é zero.
+
+463. [EL7] Lista de paridade com o Creator Pro da Stan.
+Estado inicial: na fila.
+Reutilizando o modelo de 238 [CF1], monte com fontes oficiais da Stan datadas no dia (stan.store/blog/stan-store-pricing e help.stan.store/article/31-creator-vs-creator-pro) a lista de cada recurso do Creator Pro e diga, para cada um, se o Marktmorgen já o tem no código, em qual plano e em qual estado da regra VR. Para o que faltar e não estiver na fila, registre o item faltante em "Depende do dono". Nenhuma página pode afirmar paridade ou superioridade sobre a Stan antes de todos os itens estarem disponíveis ao cliente, com a fonte e a data dos dados da Stan na própria página.
+
+REGRA DOS 60% (OBRIGATÓRIA): todo cliente pagante, considerado isoladamente e usando 100% de todos os direitos do plano no pior mês, no mensal e no anual, deve manter margem de lucro líquido MÍNIMA de 60%, depois de todos os custos e de todos os impostos, inclusive os brasileiros, com ISS de 5% sobre a receita; a margem pode ser maior, nunca menor, e a mesma regra vale para a empresa como um todo. Todo custo novo desta seção entra no cálculo, com teto automático antes do gasto. Use a leitura que der MAIS imposto (docs/tax-uncertainty.md). Custo desconhecido reprova, nunca é zero. Todos os custos fixos da LLC pertencem ao Marktmorgen (FX275).
+
+Proibido: mudar preços, cortar qualquer limite visível, alterar comissão, PLANS_ON_SALE, o tax gate, o art. 9a ou a revisão comercial, afrouxar qualquer trava, enviar e-mails para a lista pelo Resend, usar rastreamento de abertura, escrever "unlimited" onde existe limite, apagar conteúdo de criadores, apagar qualquer coisa da Hazelsong, criar contas, aceitar termos, contratar, pagar ou contatar terceiros. Somente testes sintéticos.
+
+Aplicar a regra VR: cada item informa, ao terminar, em qual estado está (na fila, em andamento, testado num PR, incorporado, publicado, disponível ao cliente ou desligado pelas travas), o que passou a funcionar para o cliente, o que não funciona e o que não foi verificado.
+
+Estado VR deste registro (457–463): todos **na fila**. Alterado somente
+o documento da fila; nenhum recursoEL construído/testado/publicado/disponível
+ao cliente, nenhum statusResend/SES/Stan atual certificado. Não levantar
+travas por este pedido. Cada conclusão futura deve declarar estadoVR,
+o que funciona para o cliente,o que não funciona e o que não foi verificado.
+PR deve incluir Acessibilidade; conteúdo de criadores,idiomas de compradores e
+IDs persistidos preservados conforme docs/site-languages.md, sem ativar traduções.
+
+Custos deste registro documental: nenhuma nova operação/fornecedor/recurso
+habilitado,0incremental mês/ano para os6contratos creator_month/creator_year/
+pro_month/pro_year/scale_month/scale_year. Isso não define comozero custo real
+de CI,contatos,envio,SES,retenção,LLC,BR/US ou imposto. EstudosEL futuros precisam
+pioruso integral,preçomáximopago69/690/449/4490/999/9990,ISS5%,leitura maisonerosa,
+tetosautomáticos e reserva antes do gasto. Sem certificação60% nem entrega255;
+PLANS_ON_SALE=false econtador254 preservados.
+
 ### AB(a) — reserva própria de reinício, construída e fechada (26/10/2026)
 
 Primitiva separa restart de checkout/switch no mesmo ledger/configuração canônicos: fonte paga mensal encerrada,mesma assinatura/plano,vínculoactivated/recibo imutáveis e caixa antigo respaldado; novo grant integral mantém todo caixa e fonte antigos,com trava pending/nonce semTTLouliberação. API nova permanece desligada por pauseRestart=false e políticasNULL,recusando antes deRedis mesmo com revisão sintética; nenhum handler/cron a invoca,não permite ensurePrice/POST ou ativação. Regrasfinanceiras versionadas exigem revisão nova,semreset deledger ou direitos legados. Ensaios sintéticos no jobRedis existente comLua real:64concorrentes,fonte trial/vigente/anual/estrangeira/corrompida/semcaixa,ACKperdido e mediçãoINFO de comandos. Teto canônico17incluiEVAL/comandosinternos;reciborestartmáximo1024bytescomsufixo,fonte256bytes,semnovachave/TTL. Custos completos por plano/mês/ano,retençãopermanente/topologia/CPU/tráfego/frequência/recusas e demais impostos seguem desconhecidos/reprovados,nãozero,sem reduzirFX275. Reservar caixa não prova que assinatura original parou,nem completa intenção durável/submissão única/reconciliação/ativação; AB(a)integral continua em andamento. Benefício: evitar reutilizar reserva/vínculo expirado e manter obrigações anteriores antes de futura cobrança autorizada; margem não certificada. Sem custo/fornecedor/operação real,nem tela/etapa/preço/direito/gate alterados; contador254 preservado. ExigirCIcompleto no novohead. Verdocs/contract-restart-reservation.md.
