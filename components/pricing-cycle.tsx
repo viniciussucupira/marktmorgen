@@ -1,7 +1,6 @@
 "use client";
 
 import { createContext, useContext, useState, type ReactNode } from "react";
-import Link from "next/link";
 import type { Tier } from "@/lib/plan";
 
 // Static plan content is rendered by the server and passed as children.
@@ -30,8 +29,10 @@ export function CycleText({ month, year }: { month: string; year: string }) {
 
 export function CycleLink({ tier, cta, featured }: { tier: Tier; cta: string; featured: boolean }) {
  const yearly = useContext(Yearly);
- return <Link href={`/signin?plan=${tier}&billing=${yearly ? "year" : "month"}`} prefetch={false}
-  className={`btn ${featured ? "btn-primary" : "btn-secondary"} btn-lg btn-block`}>{cta}</Link>;
+ // Starting a signup leaves this price comparison; native navigation needs no
+ // client router instance in each plan card. Keep the selected URL unchanged.
+ return <a href={`/signin?plan=${tier}&billing=${yearly ? "year" : "month"}`}
+  className={`btn ${featured ? "btn-primary" : "btn-secondary"} btn-lg btn-block`}>{cta}</a>;
 }
 
 export function CycleTerms({ month, year }: { month: string; year: string }) {
