@@ -1,5 +1,90 @@
 # Fila de trabalho do Codex — Marktmorgen
 
+## Prioridade vigente — MR e SR (27/10/2026)
+
+As decisões diretas do dono abaixo entram em vigor nas respectivas datas/horas. A REGRA DE MARGEM MR substitui somente os antigos pisos de 60% como trava por cliente/empresa no pior caso; os 60% passam a meta mensal real da empresa. Toda referência antiga conflitante nesta fila, inclusive em AX274, FX275, VR, Pedidos repetidos, Hazelsong e assistente, permanece como histórico e deve ser lida com essa substituição. Não interpretar a preservação literal como manutenção do piso revogado. Lucro líquido por unidade estritamente positivo com a folga existente do spend floor, base mínima global calculada, ISS5%, leitura tributária mais onerosa, recebimento mais caro, reservas, desconhecido reprova e custeio integral continuam obrigatórios. Código ainda não adaptado não é prova de cumprimento; gates permanecem fechados.
+
+SR determina a interpretação menos favorável das respostas contraditórias do Stripe até resposta posterior completa e sem contradição. A conta BR só conecta criadores BR; conta US exige SSN ou ITIN, representante residente e endereço comercial real nos EUA sem caixa postal, conforme evidência relatada pelo dono. Não certifica aceitação pelo Stripe nem autoriza contato/conta/contratação.
+
+Ordem: concluir a unidade já iniciada do reinício financiado, preservando seu trabalho e verificações. 464[MR1] e 467[SR1] têm prioridade sobre qualquer item ainda não iniciado, em ordem de recebimento (07h42 antes de08h00); não iniciar nova unidade antiga para adiar essas prioridades. 465[MR2] fica dentro do Bloco de abertura antes da revisão comercial, 466[MR3] imediatamente depois de MR2; 468[SR2] integra as condições de abertura antes de qualquer liberação. 469[SR3] alimenta os custos fixos/base mínima e 470[SR4] o roteiro em Depende do dono. Mantidos números/estados/ordem relativos de todos os pedidos anteriores, salvo essa prioridade expressa. A proibição de execução externa de SR4 é vinculante.
+
+Proveniência / Pedidos repetidos: main95f23e46794aa35d1a93d3e58ddfc8346233ed1f; 11PRs abertos (títulos/corpos), inventário645refs codex/*, 100commits/pais recentes e53heads distintos recentes/PRs, cujas53filas foram lidas. Nenhuma correspondência MR/SR por data/hora, nome, etiquetas ou conteúdo equivalente; nenhum erro de leitura. Máximo463, atribuição única464–470. Texto integral abaixo preservado, alterando somente a numeração dos títulos dos itens. SR veio do anexo f7d707c3-e3bf-4b2b-9a12-9e73f93db20f/Texto colado.txt; respostas do Stripe são relato do dono, não acesso a e-mails/formulários nem verificação independente.
+
+VR do registro: sete itens na fila; prioridade e critérios registrados. Nenhum dos sete está implementado por este registro. Relatório mensal, novos cálculos, nova trava Stripe, pesquisa oficial e roteiro ainda não funcionam/não foram verificados. Sem custos operacionais novos: alteração documental; pesquisa/execução futura exige fonte datada, cálculo mensal/anual e tetos/reserva antes de gasto. Nenhuma alegação de custo desconhecido zero. Acessibilidade: somente Markdown, sem interface/ação nova; implementação futura segue AX274 e VR. Preços/limites/comissão/PLANS_ON_SALE/OPENING_REQUESTED/tax gate/art9a/exposição/conteúdo/idiomas/IDs preservados; contador254.
+
+## MR — Nova regra de margem: nenhum prejuízo no pior caso e lucro máximo (27/10/2026)
+
+Solicitação do dono (27/10/2026, 07h42, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: antes de gravar, aplique a regra permanente "Pedidos repetidos". Confira o main, os PRs abertos e os ramos codex/* recentes, e procure esta solicitação pela linha de data e hora, pelo nome da seção, pelas etiquetas [MR1] a [MR3] e pelo conteúdo. Se já estiver gravada, não crie nada novo.
+
+Decisão do dono, em vigor a partir desta solicitação: a regra dos 60% por cliente no pior caso é substituída pela REGRA DE MARGEM abaixo, porque, com pagamento por cartão, nenhum preço permite 60% por cliente no pior caso, e a regra antiga impediria para sempre a abertura das vendas. O dono exige não ter prejuízo e o máximo de lucro.
+
+REGRA DE MARGEM (substitui a regra dos 60% por cliente e a regra dos 60% da empresa no pior caso):
+1. Nenhum cliente pagante, considerado isoladamente e usando 100% de todos os direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo, depois de todos os custos e de todos os impostos, inclusive os brasileiros, com ISS de 5% sobre a receita, as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação. Isso é garantido pelo código, com tetos automáticos antes de cada gasto, sem o dono acompanhar painel nem agir à mão.
+2. A empresa como um todo nunca pode dar prejuízo no pior caso: os custos fixos (100% do Marktmorgen, FX275) e as exposições financiadas (teste grátis, reembolso, inadimplência, retenção depois do cancelamento) são cobertos a partir de uma base mínima de clientes pagantes, calculada e mostrada; abaixo dela, os custos fixos ficam no menor valor possível.
+3. Meta de 60%: a margem líquida da empresa, depois de todos os custos e impostos, é medida todo mês com os números reais e mostrada num relatório automático ao dono. Os 60% são a meta de lucro, não uma trava de venda.
+4. Continuam valendo integralmente: a leitura que der MAIS imposto (docs/tax-uncertainty.md), o ISS de 5% como certo, "custo desconhecido reprova, nunca é zero", nenhuma cota grátis de fornecedor contada como zero, e o critério de lucro máximo nas decisões de preço e limites.
+
+464. [MR1] Gravar a nova regra.
+Estado inicial: na fila, com prioridade sobre qualquer item ainda não iniciado.
+Grave a REGRA DE MARGEM em AGENTS.md, CLAUDE.md e docs/cross-product-handoff.md, numa seção nova datada. Atualize todas as menções à regra dos 60% como trava (inclusive nas seções AX274, FX275, VR, Pedidos repetidos, Hazelsong e no complemento do assistente da loja) para remeter à nova regra. Preserve as decisões antigas e as citações literais do dono como histórico, sem apagá-las.
+
+465. [MR2] Trocar o critério no código e nos testes.
+Estado inicial: na fila, dentro do Bloco de abertura, antes da revisão comercial.
+Em lib/commercial-margin.ts, tests/margin-alignment.test.ts, tests/margin-alignment-table.ts, tests/spend-floor.test.ts, tests/tax-gate.test.ts, tests/store-assistant.test.ts, lib/store-assistant-rules.ts (assistantMeetsFloor), scripts/margin-alignment.mjs e no que mais usar o piso de 60%, troque o piso por unidade de 60% por "lucro líquido maior que zero no pior caso, com a folga já existente do spend floor". Os testes devem falhar se qualquer plano, intervalo ou complemento der prejuízo no pior caso, ou se a base mínima da empresa não for calculada. Regere docs/margin-alignment-2026-10-18.md. Construa o relatório mensal automático da margem real da empresa (item 3 da regra), sem dados pessoais.
+
+466. [MR3] Mostrar ao dono o resultado com os preços atuais.
+Estado inicial: na fila, logo depois de MR2.
+Com os preços em vigor (US$ 69 / 449 / 999 e o assistente de US$ 69), mostre por plano e intervalo o lucro líquido do pior caso e a base mínima da empresa, sob a leitura que der mais imposto. Liste quais travas da abertura continuam fechadas e por quê. Não proponha nem aplique preço novo.
+
+Proibido: mudar preços, cortar qualquer limite visível, alterar comissão, ligar PLANS_ON_SALE ou OPENING_REQUESTED, afrouxar o tax gate, o art. 9a, a política de exposição, o custeio dos contratos ou qualquer outra trava além da troca do critério de 60% descrita aqui, preencher revisões sem prova, apagar conteúdo de criadores, apagar qualquer coisa da Hazelsong, criar contas, aceitar termos, contratar, pagar ou contatar terceiros. Somente testes sintéticos.
+
+Aplicar a regra VR: cada item informa, ao terminar, em qual estado está, o que passou a funcionar, o que não funciona e o que não foi verificado.
+
+## SR — Stripe: vale a resposta menos favorável e os requisitos da empresa (27/10/2026)
+
+Solicitação do dono (27/10/2026, 08h00, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: antes de gravar, aplique a regra permanente "Pedidos repetidos". Confira o main, os PRs abertos e os ramos codex/* recentes, e procure esta solicitação pela linha de data e hora, pelo nome da seção, pelas etiquetas [SR1] a [SR4] e pelo conteúdo. Se já estiver gravada, não crie nada novo.
+
+Regra permanente do dono, em vigor a partir desta solicitação: quando respostas do Stripe se contradisserem, a resposta menos favorável ao dono é a que vale, até que uma resposta posterior, completa e sem contradição, a substitua.
+
+Aplicação às respostas já recebidas (pelo dono, por e-mail e formulário do Stripe):
+1. A conta Stripe brasileira da plataforma pode conectar criadores fora do Brasil? Suporte (09/10/2026): só contas no Brasil. Vendas (19/10/2026): pode conectar contas no exterior. Vale: NÃO pode; a conta brasileira só conecta criadores no Brasil.
+2. Uma conta Stripe americana de uma LLC de sócio único residente no Brasil exige SSN ou ITIN? Suporte (11/10/2026): passaporte e CPF bastam, ITIN em geral não é necessário. Vendas (19/10/2026): exige SSN ou ITIN. Vale: EXIGE SSN ou ITIN.
+3. Exige representante legal nos EUA? Vendas (19/10/2026): sim. Vale: SIM. Ainda sem resposta sobre se ele precisa residir nos EUA; pela mesma regra, considere que PRECISA residir nos EUA.
+4. Endereço nos EUA: vendas (19/10/2026): endereço real, sem caixa postal. Vale: endereço comercial real nos EUA, sem caixa postal.
+
+Em 27/10/2026 o dono enviou ao Stripe um novo e-mail pedindo uma resposta única e definitiva sobre esses quatro pontos. Quando a resposta chegar, ela só substitui a leitura acima se for completa e não contradisser outra.
+
+467. [SR1] Gravar a regra e a aplicação.
+Estado inicial: na fila, com prioridade sobre qualquer item ainda não iniciado.
+Grave a regra e a tabela acima em AGENTS.md, numa seção nova datada, e num documento próprio (docs/stripe-platform-eligibility.md), com as datas das respostas. Atualize todo documento ou comentário do código que presuma que a conta brasileira conecta criadores no exterior ou que uma conta americana dispensa ITIN e representante, preservando o texto antigo como histórico.
+
+468. [SR2] Nova condição de abertura, sem afrouxar nada.
+Estado inicial: na fila, dentro do Bloco de abertura.
+Acrescente às condições de PLANS_ON_SALE (lib/opening.ts) uma condição que só passa quando existir, registrada com data e prova, uma conta Stripe de plataforma em nome da empresa americana, apta a conectar criadores nos EUA, no Canadá, no Reino Unido e na Europa com cobranças diretas. Enquanto não existir, PLANS_ON_SALE continua false. Com teste que falhe se a condição for removida ou se puder passar sem a prova. Isso só acrescenta uma trava; nenhuma outra muda.
+
+469. [SR3] Custos fixos novos, por pesquisa em fontes oficiais.
+Estado inicial: na fila.
+Pesquise, em fontes oficiais datadas, sem contatar ninguém, o custo de cada requisito acima: obtenção do ITIN (formulário W-7 do IRS e eventuais serviços de agente de aceitação), serviço de representante legal residente nos EUA aceito pelo Stripe, endereço comercial real nos EUA sem caixa postal, e qualquer outro custo que essas exigências criem. Some tudo aos custos fixos da LLC, 100% do Marktmorgen (FX275), mensal e anual, e recalcule a base mínima de clientes. Custo sem fonte oficial conta como desconhecido e reprova, nunca como zero.
+
+470. [SR4] Roteiro do dono, sem executar nada.
+Estado inicial: na fila.
+Escreva em "Depende do dono", em português do Brasil e em ordem, o roteiro exato para cumprir esses requisitos: abrir a LLC, obter o EIN, obter o ITIN, contratar o representante legal e o endereço, e abrir a conta Stripe da plataforma; com o tempo estimado de cada passo segundo as fontes oficiais, o custo de SR3 e os documentos necessários. Nada é executado por este pedido.
+
+REGRA DE MARGEM (decisão do dono de 27/10/2026, seção MR): nenhum cliente pagante, considerado isoladamente e usando 100% de todos os direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo, depois de todos os custos e de todos os impostos, inclusive os brasileiros, com ISS de 5% sobre a receita; a empresa como um todo nunca pode dar prejuízo no pior caso, com os custos fixos (100% do Marktmorgen, FX275) cobertos a partir da base mínima de clientes; a meta de 60% de margem líquida da empresa é medida todo mês com os números reais. Use a leitura que der MAIS imposto (docs/tax-uncertainty.md). Custo desconhecido reprova, nunca é zero.
+
+Proibido: criar contas, abrir a empresa, pedir EIN ou ITIN, contratar representante ou endereço, contatar o Stripe ou qualquer terceiro, aceitar termos, pagar qualquer valor, mudar preços, cortar limites visíveis, alterar comissão, afrouxar PLANS_ON_SALE, o tax gate, o art. 9a, a revisão comercial ou qualquer outra trava, apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR: cada item informa, ao terminar, em qual estado está, o que passou a funcionar, o que não funciona e o que não foi verificado.
+
+
 ## Pedidos repetidos (23 de outubro de 2026)
 
 Solicitação do dono (23/10/2026, 16h21, horário de Fortaleza). Regra permanente para todo pedido recebido a partir desta solicitação. Texto repetido não gera seção, número, item, commit ou implementação em dobro, nem altera a ordem. Esta regra entra em vigor imediatamente; o registro documental não adia sua aplicação.
