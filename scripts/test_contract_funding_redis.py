@@ -40,6 +40,11 @@ def main():
     if not recovery_match or '$' + '{' in recovery_match.group(1):
         raise RuntimeError('Expected static bounded restart recovery Lua')
     recovery_script = recovery_match.group(1)
+    restart_activation_source = (Path(__file__).resolve().parents[1] / 'lib/contract-restart-activation.ts').read_text(encoding='utf-8')
+    restart_activation_match = re.search(r'export const ACTIVATE_RESTART_CONTRACT = `([^`]+)`;', restart_activation_source)
+    if not restart_activation_match or '$' + '{' in restart_activation_match.group(1):
+        raise RuntimeError('Expected static funded restart activation Lua')
+    restart_activation_script = restart_activation_match.group(1)
     resource_source = (Path(__file__).resolve().parents[1] / 'lib/contract-resource-window.ts').read_text(encoding='utf-8')
     resource_match = re.search(r'export const RESERVE_PAID_RESOURCE_WINDOW = `([^`]+)`;', resource_source)
     if not resource_match or '$' + '{' in resource_match.group(1):
@@ -1011,6 +1016,109 @@ def main():
             if field != 'restart-intent:ctr_restart_new':
                 assert redis.command('HGET',keys[42],field) == value
         print('PASS:known durable result ID remains readable after policy/month/deadline without creating submission permission')
+
+
+        # New closed activation stage: actual application Lua, not a mocked
+        # financial approval. Reuse existing owned synthetic keys and pause.
+        def activation_ready():
+            owner_ref = intent_refs[0]
+            owner_pause = intent_ready(keys[42],owner_ref)
+            assert intent_claim(redis,keys[42],owner_ref,owner_pause)[0] == 1
+            assert arm(redis,keys[42],owner_ref,owner_pause)[0] == 1
+            assert record_result(redis,now=1800000003) == 1
+            owner = json.loads(redis.command('HGET',keys[42],'restart-intent:ctr_restart_new'))
+            submission = owner.pop('submission')
+            sent = {field:submission[field] for field in ('priceId','bodyHash','idempotencyKey','armedAt')}
+            observed = dict(id='sub_ObservedRestart01',created=1800000003,start=1800000003,finish=1801000000)
+            return owner_ref,owner_pause,owner,sent,observed
+        def activate_restart(client,fixture,**over):
+            owner_ref,owner_pause,owner,sent,observed = fixture
+            args = dict(binding='binding',review='review',expected=owner,sent=sent,observed=observed,
+                        now=1800000004,minimum=50,limit=140,carry=0,funded=2,span=31*86400)
+            args.update(over)
+            return client.command('EVAL',restart_activation_script,4,keys[42],
+                                  'nl:pause:'+owner_ref,'nl:pause:due','nl:pause:last:'+owner_ref,
+                                  args['binding'],args['review'],json.dumps(args['expected'],separators=(',',':')),
+                                  json.dumps(args['sent'],separators=(',',':')),json.dumps(args['observed'],separators=(',',':')),
+                                  args['now'],args['minimum'],args['limit'],args['carry'],args['funded'],args['span'])
+        fixture = activation_ready()
+        before = snapshot(keys[42])
+        before_counts = command_counts()
+        ignored = activate_restart(redis,fixture) # Deliberately lose first ACK.
+        activation_counts = difference(before_counts,command_counts())
+        assert ignored == [1,1800086400]
+        assert sum(activation_counts.values()) <= 17
+        new_binding = 'ctr_restart_new|sub_ObservedRestart01|creator_month|1800000003|paid|1800000003|1801000000'
+        assert redis.command('HGET',keys[42],'activated:ctr_restart_new') == new_binding
+        assert redis.command('HGET',keys[42],'active:restart-store') == new_binding
+        for field,value in before:
+            if field != 'active:restart-store':
+                assert redis.command('HGET',keys[42],field) == value
+        assert redis.command('HGET',keys[42],'pending:restart-store') == 'ctr_restart_new'
+        assert redis.command('GET','nl:pause:'+fixture[0]) == fixture[1]
+        def activation_retry(_index):
+            client = Redis()
+            try:
+                return activate_restart(client,fixture,now=1800086401)
+            finally:
+                client.close()
+        with concurrent.futures.ThreadPoolExecutor(max_workers=16) as pool:
+            assert list(pool.map(activation_retry,range(64))) == [[2,1801000000]]*64
+        print('PASS:restart activation lostACK plus64late observations retain exact binding,pending,pause,source and all cash')
+        print('RESTART_ACTIVATION_COMMANDS:'+json.dumps(activation_counts,sort_keys=True))
+        fixture = activation_ready()
+        def first_activation_race(_index):
+            client = Redis()
+            try:
+                return activate_restart(client,fixture)
+            finally:
+                client.close()
+        with concurrent.futures.ThreadPoolExecutor(max_workers=16) as pool:
+            results = list(pool.map(first_activation_race,range(64)))
+        assert results.count([1,1800086400]) == 1
+        assert results.count([2,1801000000]) == 63
+        assert redis.command('HGET',keys[42],'reserved') == '90'
+        assert redis.command('HGET',keys[42],'slots:creator_month') == '1'
+        print('PASS:64first restart activation contenders produce exactly1committed binding without releasing or reusing principal')
+
+        for scenario in ('raw','ref','claim','price','digest','id','source-id','created','period','span',
+                         'deadline','pending','index','source','receipt','cash','slots','policy','due','annual','ttl','phase'):
+            fixture = activation_ready()
+            owner_ref,owner_pause,owner,sent,observed = fixture
+            over = {}
+            if scenario in ('raw','ref','claim'):
+                changed = dict(owner)
+                changed[dict(raw='paused',ref='ref',claim='claim')[scenario]] = owner['paused']+' ' if scenario=='raw' else 'foreign'
+                over['expected'] = changed
+            elif scenario in ('price','digest'):
+                over['sent'] = {**sent,dict(price='priceId',digest='bodyHash')[scenario]:'price_ForeignActivation01' if scenario=='price' else 'b'*64}
+            elif scenario in ('id','source-id','created','period','span'):
+                changes = {'id':dict(id='sub_ForeignActivation01'),'source-id':dict(id=owner['sourceSubscription']),
+                           'created':dict(created=1800000001),'period':dict(start=1800000002),'span':dict(finish=1804000000)}
+                over['observed'] = {**observed,**changes[scenario]}
+            elif scenario=='deadline': over['now'] = 1800086401
+            elif scenario=='pending': redis.command('HDEL',keys[42],'pending:restart-store')
+            elif scenario=='index': redis.command('HSET',keys[42],'restart-owner:ctr_restart_source','ctr_foreign')
+            elif scenario=='source': redis.command('HSET',keys[42],'activated:ctr_restart_source','foreign')
+            elif scenario=='receipt': redis.command('HSET',keys[42],'grant:ctr_restart_source','foreign')
+            elif scenario=='cash': redis.command('HSET',keys[42],'reserved',89)
+            elif scenario=='slots': redis.command('HSET',keys[42],'slots:creator_month',0)
+            elif scenario=='policy': redis.command('HSET',keys[42],'policy','foreign')
+            elif scenario=='due': redis.command('ZADD','nl:pause:due',1800000002,owner_ref)
+            elif scenario=='annual': redis.command('DEL','nl:pause:last:'+owner_ref)
+            elif scenario=='ttl': redis.command('EXPIRE',keys[42],300)
+            elif scenario=='phase':
+                retained = json.loads(redis.command('HGET',keys[42],'restart-intent:ctr_restart_new'))
+                retained['submission']['phase'] = 'uncertain'
+                redis.command('HSET',keys[42],'restart-intent:ctr_restart_new',json.dumps(retained,separators=(',',':')))
+            before = snapshot(keys[42])
+            evidence = [redis.command('GET','nl:pause:'+owner_ref),redis.command('GET','nl:pause:last:'+owner_ref),
+                        redis.command('ZSCORE','nl:pause:due',owner_ref)]
+            assert activate_restart(redis,fixture,**over) == 0,scenario
+            assert snapshot(keys[42]) == before,scenario
+            assert [redis.command('GET','nl:pause:'+owner_ref),redis.command('GET','nl:pause:last:'+owner_ref),
+                    redis.command('ZSCORE','nl:pause:due',owner_ref)] == evidence,scenario
+        print('PASS:22foreign/unknown/late restart activation cases preserve every field and pause/year/due')
 
 
     finally:
