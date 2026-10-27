@@ -16,7 +16,7 @@ async function main() {
   const previous = process.env.NIMBUS_DATA_KEY;
   process.env.NIMBUS_DATA_KEY = "synthetic-erasure-render-key-32-characters";
   globalThis.fetch = (async()=>{throw new Error("Unexpected external request");}) as typeof fetch;
-  const show = async(query:Record<string,string>) => inspect(await DeletePage({searchParams:Promise.resolve(query)}));
+  const show = async(query:Record<string,string|undefined>) => inspect(await DeletePage({searchParams:Promise.resolve(query)}));
   try {
     for (const query of [{status:"done",n:"999"}, {status:"done",n:"-1",receipt:"forged"}, {status:"more",n:"3"}]) {
       const result=await show(query);
