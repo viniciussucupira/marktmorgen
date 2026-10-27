@@ -28,6 +28,8 @@ import { readListing } from "@/lib/catalog";
 import { parsePage } from "@/lib/sales-page";
 import { readInbox } from "@/lib/inbox";
 import { ANTHROPIC_RATES, aiRequestHoldMicroUsd } from "@/lib/spend-cost-table";
+import { gateReading } from "@/lib/tax-gate";
+import { unitUnder } from "@/lib/receiving-costs";
 import { assessCustomerWorstCase } from "@/lib/net-margin-rules";
 import { ASSISTANT_ON_SALE, PLANS_ON_SALE } from "@/lib/opening";
 import { CURRENT_COMMERCIAL_TERMS } from "@/lib/commercial-margin";
@@ -139,11 +141,19 @@ async function main(): Promise<void> {
   // Since 18 October 2026 every plan and add-on is received in one model (lib/receiving-costs.ts). At $49 and 700
   // replies it kept 59.06%; the owner set the price instead of cutting anything (11:21): $69 and the same 700 replies keep
   // 60% with the room (docs/margin-alignment-2026-10-18.md). The floor is never assumed, it is read here.
-  is("the add-on alone, every reply used at its worst, keeps 60% after the 27.5% tax with room kept, or is not on sale", [assessed.approved && month.roomCents >= ADD_ON_ROOM_CENTS, assistantMeetsFloor(), ASSISTANT_ON_SALE && !assistantMeetsFloor()], [assistantMeetsFloor(), assessed.approved && month.roomCents >= ADD_ON_ROOM_CENTS, false]);
-  // Since the price set on 18 October 2026 ($69 a month, 700 replies) it keeps 60% with its room, and stays closed with the plans.
-  is("today it keeps the floor, and is closed while the plans are", [assistantMeetsFloor(), ASSISTANT_ON_SALE], [true, PLANS_ON_SALE]);
-  is("one more hundred replies would not", assistantMeetsFloor(ASSISTANT_MESSAGES_MONTHLY + 100), false);
-  is("under the most-tax reading it is far below 60%", assistantMostTaxNetShare() < 0.6, true);
+  const gatedMonth = unitUnder(ASSISTANT_PRICE_CENTS, month.aiCents, gateReading(), true);
+  const keepsRoom = gatedMonth.usageRoomCents - month.aiCents >= ADD_ON_ROOM_CENTS;
+  is("the add-on uses positive net and unchanged room under the most-tax gate reading",
+    assistantMeetsFloor(), assessed.approved && month.roomCents >= ADD_ON_ROOM_CENTS && gatedMonth.meetsFloor && keepsRoom);
+  is("the published price and reply allowance never change with the criterion", [ASSISTANT_PRICE_CENTS, ASSISTANT_MESSAGES_MONTHLY], [6900, 700]);
+  is("positive modeled economics alone do not open the add-on", [assistantMeetsFloor(), ASSISTANT_ON_SALE], [true, false]);
+  const overRoom = Math.ceil((gatedMonth.usageRoomCents - ADD_ON_ROOM_CENTS + 1) * 10000 / worst);
+  is("spending one cent past its unchanged room is refused", assistantMeetsFloor(overRoom), false);
+  for (const invalid of [-1, 0.5, NaN, Infinity, Number.MAX_SAFE_INTEGER + 1]) {
+    is("invalid reply counts never pass the financial helper", assistantMeetsFloor(invalid), false);
+  }
+  is("the most-tax result is the actual modeled share, not clamped or replaced by the target",
+    assistantMostTaxNetShare(), unitUnder(ASSISTANT_PRICE_CENTS, month.aiCents, gateReading(), true).netBps / 10000);
   is("so it is not on sale while the plans are not", [PLANS_ON_SALE, ASSISTANT_ON_SALE], [false, false]);
   is("and its terms are bound into the commercial review's snapshot", [CURRENT_COMMERCIAL_TERMS.storeAssistant.priceCents, CURRENT_COMMERCIAL_TERMS.storeAssistant.messagesMonthly], [ASSISTANT_PRICE_CENTS, ASSISTANT_MESSAGES_MONTHLY]);
 
