@@ -1,3 +1,15 @@
+## TX — Precedência vigente para esta análise (27/10/2026)
+
+Pedido do dono27/10/2026 12h34Fortaleza,471[TX1]/473[TX3]. A regra19/maisimposto automático e consultas mencionadas no corpo antigo abaixo são HISTÓRICO,revogados nos pontos conflitantes pela políticaTX deAGENTS.md. Nenhuma consulta tributária será feita ou preparada para envio;CONSULTATION_ANSWERS permanece vazio. O recorte pretendido deTX13 separa serviço eletrônico automatizado,intervenção humana e bem físico,mas não é declarado integralmente conferido/implementado por este prefixo.
+
+A [matriz de fontesTX1](tx-legal-source-review-2026-10-27.md) registra o que foi conferido e as lacunas. As rotas oficiaisEUR-Lex paraReg282eFenixC695/20 retornaram anti-robotJS durante esta conferência;resultados de busca não são inteiro teor autenticado. A documentação antiga continua preservada,sem alegação de nova prova. Só no ponto não confirmado,manter leitura técnica atual até correção e registrar divergência emDependedodono,sem consulta e sem bloquear a pesquisa restante.
+
+Continua obrigatório construir e testar o tratamento de cada jurisdição emDEEMED_SUPPLIER_RECORDS;nenhum registro real foi preenchido ou gate relaxado. IVAporfora/dedução de repasse não é prova de ausência de custo/obrigação da plataforma:base,tributo devido,principal/agente,taxa de recebimento sobretotal,reembolso e reserva exigem fonte e custeio. Sem certificarconformidade/margem ou registrar empresa/conta/OSS/aceitartermos.
+
+SV27/10/2026 13h19Fortaleza:servidoresUEdepoisdaabertura,EU_HOSTING_CONFIRMEDfalsee semcondiçãodeabertura por decisão do dono;retirada de dependência no código pertence a472[TX2],ainda pendente. Preservar ensaios SV e conferir mecanismosDPF/SCCdosfornecedoresatuais no Blocodeabertura,sem contato ou contratação.
+
+EstadoVR:precedência documental atualizada;TX1/17teses/TX3 e conferência oficial integral desteescopo ainda incompletos. Sem alteração de código/cálculo/flag/preço/limite;sem novoIO operacional. Custos pesquisa/CI100%FX275,desconhecido nãozero. Conteúdo antigo integral abaixo.
+
 # EU VAT, Implementing Regulation 282/2011 art. 9a: Marktmorgen as the supplier of what a store sells (18 Oct 2026)
 
 Research of 18 Oct 2026, under the owner's rule 19 (the reading with more tax where the law leaves a doubt). Not advice, not a finding of compliance, and nothing on any public page may say Marktmorgen or a creator complies. Question 20 of [tax-uncertainty.md](tax-uncertainty.md) points here; questions 26 (United Kingdom) and 27 (physical goods) are detailed at the end.
