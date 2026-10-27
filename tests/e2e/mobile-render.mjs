@@ -65,6 +65,10 @@ try{
    // After preserving every cold performance measurement, exercise the real
    // cycle slots and native disclosure. No warm-up or threshold changes.
    if(path==="/"&&sample===1){
+    // This check is after every cold measurement above; it neither warms
+    // the disclosure nor changes timing, thresholds, samples or input events.
+    if(!await control.evaluate(node=>node===document.activeElement))throw Error("Native pointer focus was not retained");
+    if(await page.evaluate(()=>getComputedStyle(document.documentElement).scrollBehavior)!=="auto")throw Error("Native disclosure pointer focus still animates document scrolling");
     const cards=page.locator("[data-pricing-card]");
     if(await cards.count()!==3)throw Error("Expected three canonical plan cards");
     const summaries=cards.locator('details[class~="group/perks"] > summary');

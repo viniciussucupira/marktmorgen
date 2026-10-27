@@ -4735,6 +4735,13 @@ html:has(:focus-visible) {
   scroll-behavior: auto;
 }
 
+/* A pointer can focus a native disclosure without :focus-visible. Keep that
+ * focus scroll immediate too, instead of animating the long public home while
+ * its details are opening. Link navigation elsewhere retains its behavior. */
+html:has([data-static-reading] summary:focus) {
+  scroll-behavior: auto;
+}
+
 /* Product editing uses immediate document scrolling. An animated document
  * scroll can move the focused opener between pointer press and release in
  * WebKit, leaving the release outside the button and losing the first click.
