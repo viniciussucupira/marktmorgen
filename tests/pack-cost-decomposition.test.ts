@@ -14,7 +14,7 @@ import { join } from "node:path";
 import { PLANS_ON_SALE } from "@/lib/opening";
 import { PLAN_PRICES } from "@/lib/plan";
 import { ADD_ON_ROOM_CENTS } from "@/lib/store-assistant-rules";
-import { MOST_TAX_READING, SIZING_READING, STRESS_PROFIT_TAX_BPS, STRIPE_TOTAL_BPS, unitUnder } from "@/lib/receiving-costs";
+import { MOST_TAX_READING, SIZING_READING, STRESS_PROFIT_TAX_BPS, STRIPE_TOTAL_BPS, unitUnder } from "./historical-margin-model";
 import { PER_EMAIL, STORAGE_PER_GB } from "./plan-cost-registry";
 import { PACKS, packPriceCents } from "./pricing-usage-proposal-table";
 import {

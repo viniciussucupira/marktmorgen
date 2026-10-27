@@ -1,3 +1,4 @@
+import { HISTORICAL_MARGIN_NOTICE } from "./historical-margin-model";
 /**
  * A PROPOSAL, not a change (18 October 2026): a HighLevel-style price list
  * for Marktmorgen. Each plan at an entry price near the competitor plan a
@@ -36,9 +37,9 @@ import { MAX_FORMS } from "@/lib/forms";
 import { MAX_TEAM } from "@/lib/team";
 import {
   FLOOR_BPS, MOST_TAX_READING, PROVIDER_FEES, SIZING_READING, STRIPE_TOTAL_BPS, unitUnder, type UnitResult,
-} from "@/lib/receiving-costs";
+} from "./historical-margin-model";
 import { ORDER as PRINTED, figures, tidy, usageCents, type Printed } from "./limits-proposal-table";
-import { floorPriceCents } from "./margin-alignment-table";
+import { floorPriceCents } from "./historical-margin-model";
 import { COMMAND, GB, NOT_A_COST, ORDER_COST, PER_EMAIL, REQUEST_COMMANDS, STORAGE_PER_GB, UNIT_COST, hourCost } from "./plan-cost-registry";
 import { visitCost } from "./traffic-cost";
 
@@ -421,5 +422,5 @@ export function renderPricingUsageProposal(): string {
   push(`2. If so, the price points (the rule above picks the lowest with at least ${MIN_INCLUDED_SHARE * 100}% of #553's figures included; the tables show every other point and what it includes).`);
   push("3. The pack sizes, and whether packs are offered at all for visits and orders (they are what a link-in-bio store sells through; when a window's figure is reached today, public pages rest and new orders stop).");
   push("");
-  return out.join("\n");
+  return HISTORICAL_MARGIN_NOTICE + out.join("\n");
 }

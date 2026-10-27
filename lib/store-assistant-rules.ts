@@ -33,8 +33,8 @@
  *     handed to the creator: the question, and the buyer's address only if
  *     they type it to be answered, go into the store's inbox.
  *
- * What keeps it from costing more than it earns (the owner's 60% after the
- * 27.5% stress tax, held in tests/store-assistant.test.ts and
+ * Historical17Oct sizing used60% after the27.5% stress tax; MR27Oct instead
+ * requires positive net and unchanged room under the release reading, held in tests/store-assistant.test.ts and
  * tests/plan-cost-registry.ts, ADD_ON_LINES): each message is one request to
  * the cheapest current model, Haiku 5.5, with its input capped at
  * ASSISTANT_INPUT_BYTES and its answer at ASSISTANT_OUTPUT_TOKENS, so its
@@ -48,6 +48,7 @@
  * question for the creator, which costs no AI at all.
  */
 import { AI_CALL_INFRA_MICRO_USD, ANTHROPIC_RATES, PROVIDER_CHARGES_BPS, UPSTASH_MICRO_USD_PER_GB_MONTH, UPSTASH_MICRO_USD_PER_GB_TRANSFER, UPSTASH_MICRO_USD_PER_MILLION_COMMANDS, aiRequestHoldMicroUsd } from "@/lib/spend-cost-table";
+import { gateReading } from "@/lib/tax-gate";
 import { maximumPretaxCostCents } from "@/lib/cost-envelope";
 import { assessCustomerWorstCase, PLANNING_PROFIT_TAX_FLOOR_BPS, type CustomerWorstCase } from "@/lib/net-margin-rules";
 import { MAX_STORED_PAGE_BYTES } from "@/lib/sales-page";
@@ -69,8 +70,8 @@ export const ASSISTANT_MODEL = "claude-haiku-5-5" as const;
 /**
  * Messages a store's buyers may be answered in one month of the add-on (one
  * payment, its own billing period), each at its worst cost. Sized so the
- * add-on alone, every message used at its worst, keeps the owner's 60% after
- * the 27.5% stress tax with every fee and reserve below counted
+ * add-on alone is checked at every message's worst cost. Historical17Oct sizing
+ * used60%; MR27Oct requires positive net with room, without changing these rights
  * (assistantMonthWorst). A message that costs less than its worst gives the
  * difference back to the pool, so a month answers at least this many.
  */
@@ -396,8 +397,13 @@ export function assistantMonthWorst(messages = ASSISTANT_MESSAGES_MONTHLY): AddO
 
 /** Whether the add-on alone keeps the owner's floor, with its room to spare: what the release gate and the tests read. */
 export function assistantMeetsFloor(messages = ASSISTANT_MESSAGES_MONTHLY): boolean {
+  if (!Number.isSafeInteger(messages) || messages < 0) return false;
   const month = assistantMonthWorst(messages);
-  return month.roomCents >= ADD_ON_ROOM_CENTS && assessCustomerWorstCase(month.review).approved;
+  // MR27Oct: positive net with the existing 25-cent cost room under the
+  // unchanged release tax reading, not a favorable sizing percentage.
+  const gated = unitUnder(ASSISTANT_PRICE_CENTS, month.aiCents, gateReading(), true);
+  return month.roomCents >= ADD_ON_ROOM_CENTS && assessCustomerWorstCase(month.review).approved
+    && gated.meetsFloor && gated.usageRoomCents - month.aiCents >= ADD_ON_ROOM_CENTS;
 }
 
 /**
@@ -405,13 +411,13 @@ export function assistantMeetsFloor(messages = ASSISTANT_MESSAGES_MONTHLY): bool
  * lib/receiving-costs.ts MOST_TAX_READING): VAT of 27% inside the price, the
  * dearest fee, US federal 37%, California 13.3%, Brazil 27.5% and IOF 0.38%
  * on profit with no credit, ISS at 5% of revenue, and IOF on the money
- * brought home. Its net share of revenue, which is below 60% at any limit:
- * so it stays closed with the plans.
+ * brought home. Its actual modeled net share is returned, including a loss.
+ * MR27Oct treats60% as the company monthly actual target, never this unit's gate.
  */
 export function assistantMostTaxNetShare(): number {
   const month = assistantMonthWorst();
   const unit = unitUnder(ASSISTANT_PRICE_CENTS, month.aiCents, MOST_TAX_READING, true);
-  return Math.max(0, unit.netBps / 10_000);
+  return unit.netBps / 10_000;
 }
 
 // ----------------------------------------------------------------- public words, from these numbers

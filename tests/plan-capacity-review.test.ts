@@ -2,7 +2,7 @@ import {test} from "node:test";
 import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
 import {PLAN_PRICES,TIERS,monthlyEmails} from "@/lib/plan";
-import {MOST_TAX_READING,SIZING_READING,FLOOR_BPS,unitUnder} from "@/lib/receiving-costs";
+import {MOST_TAX_READING,SIZING_READING,unitUnder} from "@/lib/receiving-costs";
 import {gateReading} from "@/lib/tax-gate";
 import {PAID_STORAGE_BYTES} from "@/lib/storage-rules";
 import {STORE_ALLOWANCES} from "@/lib/store-allowance-rules";
@@ -18,12 +18,13 @@ test("capacity precheck: no feasible maximum is never a zero allowance",()=>{
   assert.equal(row.maximum,null);
   assert.equal(row.zeroUsage.netBps,unitUnder(PLAN_PRICES[row.tier][row.cycle],0,reading).netBps);
   assert.ok(row.full.netBps<=row.zeroUsage.netBps);
-  if(capacityTaxCeilingBps(reading)<FLOOR_BPS){
+  if(!row.zeroUsage.meetsFloor){
    assert.equal(row.status,"infeasible");assert.equal(row.zeroUsage.meetsFloor,false);
    assert.ok(row.zeroUsage.usageRoomCents<0);
   }
  }
- assert.ok(capacityTaxCeilingBps(MOST_TAX_READING)<FLOOR_BPS);
+ assert.equal(capacityTaxCeilingBps(MOST_TAX_READING),1682); // unchanged78.18%profit and5%revenue tax
+ assert.ok(rows.every(row=>row.status==="unreviewed"||row.status==="infeasible"));
 });
 test("capacity precheck: even a favorable counterfactual never approves unreviewed costs",()=>{
  assert.equal(capacityStatus(999000,SIZING_READING),"unreviewed");
@@ -45,7 +46,9 @@ test("capacity precheck: annual windows cover twelve full months and preserve co
 });
 test("capacity precheck: the recorded six payment cases and36 entitlements cannot become stale",()=>{
  const text=doc();
- for(const line of [...capacityModelLines(),...capacityQuantityLines(),...capacityInputLines()])assert.ok(text.includes(line),"stale or missing: "+line);
+ const lines=[...capacityModelLines(),...capacityQuantityLines(),...capacityInputLines()];
+ if(lines.some(line=>!text.includes(line)))console.log("MR_CAPACITY_LINES_BEGIN\n"+lines.join("\n")+"\nMR_CAPACITY_LINES_END");
+ for(const line of lines)assert.ok(text.includes(line),"stale or missing: "+line);
  assert.match(text,/not a zero supplier cost/);
  assert.match(text,/No feasible maximum is different from a maximum of zero/);
  assert.match(text,/Queue89 remains in progress/);

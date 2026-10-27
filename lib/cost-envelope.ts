@@ -1,4 +1,4 @@
-import { MINIMUM_NET_MARGIN_BPS, PLANNING_PROFIT_TAX_FLOOR_BPS } from './net-margin-rules';
+import { MINIMUM_NET_PROFIT_CENTS, PLANNING_PROFIT_TAX_FLOOR_BPS } from './net-margin-rules';
 
 /** Exact arithmetic only. A ceiling does not verify vendor costs or tax treatment. */
 export function maximumPretaxCostCents(revenueCents: number, combinedProfitTaxBps: number): number | null {
@@ -6,7 +6,7 @@ export function maximumPretaxCostCents(revenueCents: number, combinedProfitTaxBp
       !Number.isSafeInteger(combinedProfitTaxBps) || combinedProfitTaxBps < 0 || combinedProfitTaxBps >= 10_000) return null;
   const tax = Math.max(combinedProfitTaxBps, PLANNING_PROFIT_TAX_FLOOR_BPS);
   const p = BigInt(revenueCents), unit = BigInt(10_000);
-  const minimumNet = (p * BigInt(MINIMUM_NET_MARGIN_BPS) + unit - BigInt(1)) / unit;
+  const minimumNet = BigInt(MINIMUM_NET_PROFIT_CENTS);
   const retained = BigInt(10_000 - tax);
   const requiredPretaxProfit = (minimumNet * unit + retained - BigInt(1)) / retained;
   const available = p - requiredPretaxProfit;

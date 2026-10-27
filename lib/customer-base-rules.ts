@@ -1,8 +1,10 @@
-import { assessCustomerWorstCase, MINIMUM_NET_MARGIN_BPS, type CustomerWorstCase } from '@/lib/net-margin-rules';
+import { assessCustomerWorstCase, MINIMUM_NET_MARGIN_BPS, MINIMUM_NET_PROFIT_CENTS, type CustomerWorstCase } from '@/lib/net-margin-rules';
 
 export const CUSTOMER_BASE_RULES = {
-  schema: 1,
+  schema: 2,
   marginBps: MINIMUM_NET_MARGIN_BPS,
+  minimumUnitNetCents: MINIMUM_NET_PROFIT_CENTS,
+  companyFloor: 'nonnegative-after-whole-fixed-costs-and-funded-exposures',
   basis: 'worst-month-fixed-ceilings-and-every-plan-mix',
   annualNormalization: 'exact-rational-twelve-months',
   fixedTaxShield: 'none-assumed',

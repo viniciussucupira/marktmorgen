@@ -1,3 +1,4 @@
+import { HISTORICAL_MARGIN_NOTICE } from "./historical-margin-model";
 /**
  * The limits proposal of 18 October 2026 (docs/limits-proposal-2026-10-18.md):
  * a PROPOSAL, no limit in code changes. The document must be what
@@ -19,7 +20,8 @@ const read = (file: string) => readFileSync(join(process.cwd(), file), "utf8");
 
 test("the document is what the numbers render today (run node scripts/limits-proposal.mjs)", () => {
   assert.equal(read(DOC), renderLimitsProposal(PLANS_ON_SALE, PLANS_ON_SALE), `${DOC} is stale: run node scripts/limits-proposal.mjs`);
-  assert.match(read(DOC), /^# Limits proposal, 18 October 2026 — a PROPOSAL, nothing here is in force/);
+  assert.ok(read(DOC).startsWith(HISTORICAL_MARGIN_NOTICE));
+  assert.match(read(DOC).slice(HISTORICAL_MARGIN_NOTICE.length), /^# Limits proposal, 18 October 2026 — a PROPOSAL, nothing here is in force/);
 });
 
 test("every proposed figure is a cut, never a raise, and at the price list of 18 October 2026 no cut is proposed", () => {

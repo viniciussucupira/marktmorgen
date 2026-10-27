@@ -1,3 +1,4 @@
+import { HISTORICAL_MARGIN_NOTICE } from "./historical-margin-model";
 /**
  * Where a usage pack's price comes from (18 October 2026): an ANALYSIS for
  * the owner, not a change. No price, limit, gate or tax assumption in code
@@ -32,7 +33,7 @@ import { ADD_ON_ROOM_CENTS } from "@/lib/store-assistant-rules";
 import {
   DISPUTE_COUNTER_FEE_CENTS, DISPUTE_FEE_CENTS, DISPUTE_RESERVE_BPS, FLOOR_BPS, PROVIDER_FEES, REFUND_RESERVE_BPS, REMITTANCE_BPS,
   SIZING_READING, STRESS_PROFIT_TAX_BPS, STRIPE_TOTAL_BPS, costBudgetCents, receivingOf, unitUnder, type Reading, type UnitResult,
-} from "@/lib/receiving-costs";
+} from "./historical-margin-model";
 import { CLOSING_DAYS, WARN_WEEK_DAYS } from "@/lib/plan-closing-rules";
 import { PACKS, atScale, linePriceCents, packPriceCents, packUnit, type Pack } from "./pricing-usage-proposal-table";
 import { PER_EMAIL, STORAGE_PER_GB } from "./plan-cost-registry";
@@ -414,5 +415,5 @@ export function renderPackCostDecomposition(): string {
   push("- **Demand.** Whether creators buy credits, at which amounts, and how much of what they buy they use: unknown until a sale is open. Every net above is at full use, the owner's rule.");
   push("- **The order of building.** Credits need the packs' machinery first (a Stripe charge, a balance, the meters drawing on it, the pages and terms); SES-only routing needs the pack's figure and the waiting path. Nothing here builds either.");
   push("");
-  return out.join("\n");
+  return HISTORICAL_MARGIN_NOTICE + out.join("\n");
 }

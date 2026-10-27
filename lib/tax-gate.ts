@@ -36,7 +36,7 @@ export type GateReadingId = "most-tax" | "most-tax-after-design";
  * The reading sales are gated on: "most-tax" (every tax stacked,
  * MOST_TAX_READING) while EU hosting is not live; "most-tax-after-design"
  * (EU_HOSTING_READING) only once EU_HOSTING_CONFIRMED is true. Either way
- * nothing is on sale while a published plan misses 60% under it
+ * MR27Oct requires positive unit net with unchanged spend-floor room under it
  * (tests/tax-gate.test.ts).
  */
 export const GATE_READING_ID: GateReadingId = "most-tax";

@@ -1,3 +1,4 @@
+import { HISTORICAL_MARGIN_NOTICE } from "./historical-margin-model";
 /**
  * Whether to resell per-use services at a profit (18 October 2026): an
  * ANALYSIS for the owner, not a change. No price, limit or gate in code
@@ -21,7 +22,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { CENTS_PER_MINUTE, MIN_CENTS } from "@/lib/auto-captions-rules";
 import { ADD_ON_ROOM_CENTS } from "@/lib/store-assistant-rules";
-import { MOST_TAX_READING, SIZING_READING, unitUnder, type UnitResult } from "@/lib/receiving-costs";
+import { MOST_TAX_READING, SIZING_READING, unitUnder, type UnitResult } from "./historical-margin-model";
 import { PER_EMAIL, hourCost } from "./plan-cost-registry";
 import { PACKS } from "./pricing-usage-proposal-table";
 import { centsUp, creditOption } from "./pack-cost-decomposition-table";
@@ -266,5 +267,5 @@ export function renderPerUseResale(): string {
   push("- **Stripe's own pricing page** was not re-read (docs/pack-cost-decomposition-2026-10-18.md); the receiving model keeps the dearer of Stripe and Paddle.");
   push("- **The legal analysis** is a list of burdens to review, not advice and not a finding that any service is lawful as built.");
   push("");
-  return out.join("\n");
+  return HISTORICAL_MARGIN_NOTICE + out.join("\n");
 }

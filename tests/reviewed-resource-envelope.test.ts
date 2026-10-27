@@ -5,10 +5,10 @@ import { remainingResourceCostCents } from '../lib/cost-envelope';
 import { assessCustomerWorstCase, CUSTOMER_COST_CATEGORIES, type CustomerWorstCase } from '../lib/net-margin-rules';
 const costs = Object.fromEntries(CUSTOMER_COST_CATEGORIES.map(key=>[key,0]));
 function review(): CustomerWorstCase { return { collectedRevenueCents:10000, refundableRevenueCents:0, taxesCeilingCents:3000, costCeilings:{...costs}, allCostsBounded:true, allTaxesReviewed:true, revenueCollected:true }; }
-test('reserves full reviewed taxes and admits only exact affordable units',()=>{ const r=reviewedResourceEnvelope(review(),3000000,3); assert.equal(r.approved,true); assert.equal(r.affordableUnits,3); assert.equal(r.remainingMicroUsd,10000000); assert.equal(reviewedResourceEnvelope(review(),3000000,4).approved,false); });
-test('zero headroom never authorizes even the smallest charge',()=>{const r=review();r.costCeilings.other=1000;r.taxesCeilingCents=3000;const result=reviewedResourceEnvelope(r,1,1);assert.equal(result.approved,false);assert.equal(result.remainingMicroUsd,0);});
-test('fractional cent charges fit only inside an already rounded cent allowance',()=>{ const r=review();r.costCeilings.other=999;assert.equal(reviewedResourceEnvelope(r,1,10000).approved,true);assert.equal(reviewedResourceEnvelope(r,1,10001).approved,false); });
-test('refund liabilities reduce available capacity',()=>{ const r=review();r.refundableRevenueCents=500;assert.equal(reviewedResourceEnvelope(r,1,1).remainingMicroUsd,5000000);r.refundableRevenueCents=10000;assert.equal(reviewedResourceEnvelope(r,1,1).approved,false); });
+test('reserves full reviewed taxes and admits only exact affordable units',()=>{ const r=reviewedResourceEnvelope(review(),23330000,3); assert.equal(r.approved,true); assert.equal(r.affordableUnits,3); assert.equal(r.remainingMicroUsd,69990000); assert.equal(reviewedResourceEnvelope(review(),23330000,4).approved,false); });
+test('zero headroom never authorizes even the smallest charge',()=>{const r=review();r.costCeilings.other=6999;r.taxesCeilingCents=3000;const result=reviewedResourceEnvelope(r,1,1);assert.equal(result.approved,false);assert.equal(result.remainingMicroUsd,0);});
+test('fractional cent charges fit only inside an already rounded cent allowance',()=>{ const r=review();r.costCeilings.other=6998;assert.equal(reviewedResourceEnvelope(r,1,10000).approved,true);assert.equal(reviewedResourceEnvelope(r,1,10001).approved,false); });
+test('refund liabilities reduce available capacity',()=>{ const r=review();r.refundableRevenueCents=500;assert.equal(reviewedResourceEnvelope(r,1,1).remainingMicroUsd,64990000);r.refundableRevenueCents=10000;assert.equal(reviewedResourceEnvelope(r,1,1).approved,false); });
 test('unknown taxes or costs do not authorize provider work',()=>{assert.equal(reviewedResourceEnvelope(null,1,1).approved,false);const r=review();r.allTaxesReviewed=false;assert.equal(reviewedResourceEnvelope(r,1,1).approved,false);r.allTaxesReviewed=true;r.costCeilings.email=null;assert.equal(reviewedResourceEnvelope(r,1,1).approved,false);});
 test('malformed unit prices and quantities refuse work',()=>{for(const value of [0,-1,0.5,NaN,Infinity,Number.MAX_SAFE_INTEGER+1]) {assert.equal(reviewedResourceEnvelope(review(),value,1).approved,false);assert.equal(reviewedResourceEnvelope(review(),1,value).approved,false);}});
 test('unsafe ledger conversion refuses rather than rounding',()=>{const r=review();r.collectedRevenueCents=Number.MAX_SAFE_INTEGER;r.taxesCeilingCents=Math.ceil(Number.MAX_SAFE_INTEGER*.3);assert.equal(reviewedResourceEnvelope(r,1,1).reason,'unsafe_ledger_amount');});
@@ -25,7 +25,7 @@ test('computed or inherited review fields are refused without executing getters'
  assert.equal(reviewedResourceEnvelope(inheritedCost,1,1).approved,false);
  assert.equal(reads,0);
 });
-test('headroom agrees with lib/cost-envelope.ts and spending all of it keeps the 60% gate approved',()=>{
+test('headroom agrees with lib/cost-envelope.ts and spending all of it preserves positive net with every reviewed tax cent retained',()=>{
  let seed=20261017;const next=(n:number)=>{seed=(seed*1103515245+12345)%2147483648;return seed%n;};
  let checked=0;
  for(let i=0;i<4000;i+=1){

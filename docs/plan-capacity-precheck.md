@@ -1,3 +1,5 @@
+> **MR update — owner27/10/2026 07h42Fortaleza.** The19October precheck below is retained as history under the former60%target. Its infeasibility conclusion is superseded by [the current MR precheck](#mr--current-precheck-27-october2026), not by supplier approval or a new allowance. Prices/rights/tax assumptions and unknown-cost refusal remain unchanged.
+
 # Plan capacity precheck — C2 / queue89
 
 19October2026. Read-only analysis of the configured gate, not a supplier quote, legal conclusion, launch approval or limit change. The full unit uses every existing COST_LINES item simultaneously and the per-payment closing exposure from planUnits; commission is zero. Fixed-company costs, funded free/refund/retention exposure and minimum customer base remain separate mandatory reviews.
@@ -58,3 +60,34 @@ Before a feasible tax reading could permit an increase, finish the maximum paid-
 Use plan-cost-registry/spend-floor and receiving-costs; do not change their assumptions to make a test pass. Unknown unit costs or unenforced bounds remain failures. If a proposal needs price/package changes, record it underI1/I2 for the owner; this document changes none. PLANS_ON_SALE, fiscal/art.9a/commercial reviews and existing prices/visible limits remain intact. Queue89 remains in progress for the paid-unit/configuration audit; this is its verified feasibility precheck, not the full admission review.
 
 Reproducible checks: tests/plan-capacity-review.test.ts compares both tables and numeric inputs with the actual canonical exports, checks twelve annual windows without multiplying concurrent storage, rejects unknown prices/tax values, and never turns a counterfactual passing bound into approved capacity. Tests and this analysis make no live payment, message, account or provider operation.
+
+
+## MR — Current precheck (27 October2026)
+
+Binding configured reading: `most-tax`.
+
+Counterfactual ceiling before all non-tax costs: 16.82%; required: positive net with the existing spend-floor room.60%is the actual monthly company target.
+
+Existing registered list-email delivery assumption: $0.000900 per email; storage assumption: $0.023000 per model GiB-month.
+
+The unchanged registered model now tests positive net with the existing spend-floor room. Positive arithmetic is not an approved supplier maximum or complete review. No feasible maximum is different from a maximum of zero; a counterfactual is not a zero supplier cost. Every actual supplier/capacity assumption still needs its most expensive paid unit, configuration, retention, combined-use bounds and advance funding. No increase, price change or release is authorized.
+
+| Plan | Interval | Price | Full existing use | Zero usage, receiving still charged | Capacity precheck |
+| --- | --- | --- | --- | --- | --- |
+| Store | month | $69.00 | 12.09% | 13.14% | unreviewed; no approved maximum |
+| Store | year | $690.00 | 12.21% | 13.37% | unreviewed; no approved maximum |
+| Studio | month | $449.00 | 12.14% | 13.36% | unreviewed; no approved maximum |
+| Studio | year | $4490.00 | 12.02% | 13.40% | unreviewed; no approved maximum |
+| Scale | month | $999.00 | 12.17% | 13.38% | unreviewed; no approved maximum |
+| Scale | year | $9990.00 | 12.02% | 13.40% | unreviewed; no approved maximum |
+
+| Plan | Interval | Windows | List emails | Shared buyer actions | Visits | Orders | Concurrent GiB | GiB-months | Video hours |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Store | month | 1 | 0 | 200 | 3400 | 200 | 5 | 5 | 4 |
+| Store | year | 12 | 0 | 2400 | 40800 | 2400 | 5 | 60 | 48 |
+| Studio | month | 1 | 7000 | 1000 | 10000 | 450 | 40 | 40 | 32 |
+| Studio | year | 12 | 84000 | 12000 | 120000 | 5400 | 40 | 480 | 384 |
+| Scale | month | 1 | 10000 | 3000 | 40000 | 1500 | 80 | 80 | 64 |
+| Scale | year | 12 | 120000 | 36000 | 480000 | 18000 | 80 | 960 | 768 |
+
+All quantities above are the exact unchanged exports, computed in CI. Queue89 remains in progress for the complete paid-unit/configuration audit. Unknown rates, full LLC costs, exposure and SR3requirements still fail; no actual company base or certified profit is asserted.

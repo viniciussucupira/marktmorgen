@@ -55,7 +55,7 @@ export function renderLlcFixedCostStatus(): string {
   ...CURRENT_LLC_FIXED_COST_CEILINGS.map(line=>`| ${line.id} | ${line.fullMonthlyUsdCents===null?"unknown":line.fullMonthlyUsdCents+" cents"} | ${line.fullAnnualUsdCents===null?"unknown":line.fullAnnualUsdCents+" cents"} |`),
   "",
   costs===null?"Complete fixed-cost total: unknown; rejected, never zero. Minimum paying customer base: not established. Consolidated net margin: not approved.":"Complete fixed-cost ceilings require the separate customer-level and company-base reviews.",
-  "The most-tax reading already fails every paid unit; no finite customer base repairs an individual unit below60%. The commercial review remains absent. No price, visible limit, commission or launch/tax gate changes.",
+  "MR27Oct requires positive net per unit with existing room; no customer count repairs a zero-profit or losing unit. The full company base remains unestablished while costs are unknown and the commercial review is absent.60%is the actual monthly company target, not a sales gate. No price, visible limit, commission or other launch/tax gate changes.",
   "Native-currency public prices, taxes, eligibility, exchange-rate ceilings and reserve gaps: docs/llc-fixed-costs-2026-10-22.md. A quote or temporary discount is not an approved operating ceiling.",
   "",
  ].join("\n");

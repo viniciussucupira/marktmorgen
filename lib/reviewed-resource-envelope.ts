@@ -1,5 +1,5 @@
 import { remainingResourceCostCents } from './cost-envelope';
-import { assessCustomerWorstCase, CUSTOMER_COST_CATEGORIES, MINIMUM_NET_MARGIN_BPS, PLANNING_PROFIT_TAX_FLOOR_BPS, type CustomerWorstCase } from './net-margin-rules';
+import { assessCustomerWorstCase, CUSTOMER_COST_CATEGORIES, MINIMUM_NET_PROFIT_CENTS, PLANNING_PROFIT_TAX_FLOOR_BPS, type CustomerWorstCase } from './net-margin-rules';
 
 export type ReviewedResourceEnvelope = { approved: boolean; reason: string; remainingMicroUsd: number | null; affordableUnits: number | null };
 const denied = (reason: string): ReviewedResourceEnvelope => ({ approved: false, reason, remainingMicroUsd: null, affordableUnits: null });
@@ -41,10 +41,10 @@ export function reviewedResourceEnvelope(review: CustomerWorstCase | null, unitC
   const value = snapshot(review);
   const assessment = assessCustomerWorstCase(value);
   if (!assessment.approved || !value) return denied(assessment.reason);
-  const one = BigInt(1), scale = BigInt(10000);
+  const scale = BigInt(10000);
   const gross = BigInt(value.collectedRevenueCents!);
   const refunds = BigInt(value.refundableRevenueCents!);
-  const minimumNet = (gross * BigInt(MINIMUM_NET_MARGIN_BPS) + scale - one) / scale;
+  const minimumNet = BigInt(MINIMUM_NET_PROFIT_CENTS);
   const costList = CUSTOMER_COST_CATEGORIES.map(key => value.costCeilings[key]!);
   const costs = costList.reduce((sum, cost) => sum + BigInt(cost), BigInt(0));
   let remaining = gross - minimumNet - refunds - BigInt(value.taxesCeilingCents!) - costs;

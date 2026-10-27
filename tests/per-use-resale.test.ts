@@ -11,7 +11,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { PLANS_ON_SALE } from "@/lib/opening";
-import { MOST_TAX_READING, unitUnder } from "@/lib/receiving-costs";
+import { MOST_TAX_READING, unitUnder } from "./historical-margin-model";
 import { AMOUNTS, DOC_FILE, candidates, data, rateOf, renderPerUseResale } from "./per-use-resale-table";
 
 const read = (file: string) => readFileSync(join(process.cwd(), file), "utf8");
