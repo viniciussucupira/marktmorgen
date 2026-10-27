@@ -152,7 +152,7 @@ try{
     const recoveryButton=page.getByRole("button",{name:"Email my recovery address",exact:true});
     for(const invalid of ["","not-an-email"]){
      await recoveryEmail.fill(invalid);
-     await recoveryButton.click();
+     await recoveryButton.focus();await page.keyboard.press("Enter");
      // The old click handler schedules its lock for the next event-loop turn.
      await page.waitForTimeout(100);
      if(await recoveryButton.getAttribute("aria-busy")!=="false"||recoveryPosts!==0)throw Error("Invalid recovery input locked or submitted the form");
