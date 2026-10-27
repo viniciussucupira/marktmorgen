@@ -24,6 +24,10 @@ export function PendingSubmit({ label, pending, className }: { label: string; pe
           event.preventDefault();
           return;
         }
+        // Native validation can cancel a click before it submits. Keep the
+        // button available so the person can correct a required field and retry.
+        const button = event.currentTarget;
+        if (button.form && !button.formNoValidate && !button.form.noValidate && !button.form.checkValidity()) return;
         // Set after the browser has taken the submit, so the form still sends.
         setTimeout(() => setBusy(true), 0);
       }}

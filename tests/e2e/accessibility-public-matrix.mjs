@@ -138,6 +138,33 @@ try{
     console.log("PUBLIC_NAV_RESIZE_REGRESSION:"+JSON.stringify({engine,from:390,to:1280,back:390,scrollUnlocked:true,visibleFocusRestored:true,reopenedAndEscaped:true}));
    }
 
+   // Keep the measured public case above intact. Exercise only a disposable,
+   // intercepted recovery request: no account lookup, email or server mutation.
+   if(path==="/signin"&&width===390&&mode==="baseline"){
+    let recoveryPosts=0;
+    await page.route("**/api/auth/lost",route=>{
+     if(route.request().method()!=="POST")return route.abort();
+     recoveryPosts++;
+     return route.fulfill({status:200,contentType:"text/html",body:"<!doctype html><title>Synthetic recovery response</title><p>Intercepted locally</p>"});
+    });
+    await page.goto(origin+"/signin/lost",{waitUntil:"networkidle"});
+    const recoveryEmail=page.getByLabel("The address you log in with",{exact:true});
+    const recoveryButton=page.getByRole("button",{name:"Email my recovery address",exact:true});
+    for(const invalid of ["","not-an-email"]){
+     await recoveryEmail.fill(invalid);
+     await recoveryButton.focus();await page.keyboard.press("Enter");
+     // The old click handler schedules its lock for the next event-loop turn.
+     await page.waitForTimeout(100);
+     if(await recoveryButton.getAttribute("aria-busy")!=="false"||recoveryPosts!==0)throw Error("Invalid recovery input locked or submitted the form");
+    }
+    await recoveryEmail.fill("recovery-fixture@example.test");
+    const posted=page.waitForResponse(r=>new URL(r.url()).pathname==="/api/auth/lost"&&r.request().method()==="POST");
+    await recoveryButton.focus();await page.keyboard.press("Enter");
+    await posted;
+    if(recoveryPosts!==1)throw Error("Corrected recovery input did not submit exactly once");
+    console.log("PENDING_SUBMIT_VALIDATION_REGRESSION:"+JSON.stringify({engine,emptyRetry:true,malformedRetry:true,validKeyboardPost:1,intercepted:true}));
+   }
+
   }catch(error){failed++;console.error("PUBLIC_MATRIX_FAILURE:"+JSON.stringify({engine,path,width,mode,error:String(error)}));}
   finally{cases++;await context.close();}
  }
