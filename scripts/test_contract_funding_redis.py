@@ -32,6 +32,10 @@ def main():
     if not arm_match or '$' + '{' in arm_match.group(1):
         raise RuntimeError('Expected static submission barrier Lua')
     arm_script = arm_match.group(1)
+    result_match = re.search(r'export const RECORD_RESTART_RESULT = `([^`]+)`;', source)
+    if not result_match or '$' + '{' in result_match.group(1):
+        raise RuntimeError('Expected static durable restart result Lua')
+    result_script = result_match.group(1)
     resource_source = (Path(__file__).resolve().parents[1] / 'lib/contract-resource-window.ts').read_text(encoding='utf-8')
     resource_match = re.search(r'export const RESERVE_PAID_RESOURCE_WINDOW = `([^`]+)`;', resource_source)
     if not resource_match or '$' + '{' in resource_match.group(1):
@@ -850,6 +854,58 @@ def main():
             assert arm(redis, keys[43], ref, pause, **over) == 0, scenario
             assert snapshot(keys[43]) == snapshot_before, scenario
         print('PASS:14 foreign, stale, changed, incomplete and oversize barrier cases preserve exact ledger evidence')
+
+        # A result ID is evidence, not a new submission or rights activation.
+        # Policy/month/deadline changes must not discard an already observed ID.
+        ref = intent_refs[0]
+        pause = intent_ready(keys[42], ref)
+        assert intent_claim(redis, keys[42], ref, pause)[0] == 1
+        assert arm(redis, keys[42], ref, pause)[0] == 1
+        redis.command('HSET', keys[42], 'policy', 'next-month-policy', 'review', 'next-month-review')
+        before_result = snapshot(keys[42])
+        original = json.loads(redis.command('HGET', keys[42], 'restart-intent:ctr_restart_new'))
+        def record_result(client, subscription='sub_ObservedRestart01', **over):
+            options = dict(grant='ctr_restart_new', review='review', stats='restart-store',
+                           claim='claim_first', price='price_SyntheticRestart01', digest='a' * 64,
+                           now=1803000000, armed=1800000002)
+            options.update(over)
+            return client.command('EVAL', result_script, 1, keys[42],
+                                  options['grant'],options['review'],options['stats'],options['claim'],
+                                  options['price'],options['digest'],subscription,options['now'],options['armed'])
+        count_before = command_counts()
+        assert record_result(redis) == 1
+        record_counts = difference(count_before, command_counts())
+        assert sum(record_counts.values()) <= 17
+        known = json.loads(redis.command('HGET', keys[42], 'restart-intent:ctr_restart_new'))
+        assert known['submission']['phase'] == 'observed'
+        assert known['submission']['subscriptionId'] == 'sub_ObservedRestart01'
+        assert known['submission']['observedAt'] == 1803000000
+        expected_submission = {**original['submission'], 'phase':'observed',
+                               'subscriptionId':'sub_ObservedRestart01','observedAt':1803000000}
+        assert known.pop('submission') == expected_submission
+        assert known == {name:value for name,value in original.items() if name != 'submission'}
+        stored_before_duplicates = snapshot(keys[42])
+        def result_duplicate(_index):
+            client = Redis()
+            try:
+                return record_result(client)
+            finally:
+                client.close()
+        with concurrent.futures.ThreadPoolExecutor(max_workers=16) as pool:
+            assert list(pool.map(result_duplicate, range(64))) == [2] * 64
+        assert snapshot(keys[42]) == stored_before_duplicates
+        assert record_result(redis, 'sub_ForeignResult01') == 0
+        for field,value in [('grant','ctr_foreign'),('review','foreign'),('stats','foreign'),
+                            ('claim','claim_foreign'),('price','price_Foreign01'),('digest','b'*64),
+                            ('now',1800000001),('armed',1800000001)]:
+            assert record_result(redis, **{field:value}) == 0, field
+            assert snapshot(keys[42]) == stored_before_duplicates
+        for field,value in before_result:
+            if field != 'restart-intent:ctr_restart_new':
+                assert redis.command('HGET', keys[42], field) == value
+        assert redis.command('TTL', keys[42]) == -1
+        print('PASS:durable result ID retained after deadline/policy-month change;64sameIDduplicates are evidence ACK2 only;foreign IDs/owners refuse')
+        print('RESTART_RESULT_COMMANDS:' + json.dumps(record_counts, sort_keys=True))
 
     finally:
         for ref in intent_refs:

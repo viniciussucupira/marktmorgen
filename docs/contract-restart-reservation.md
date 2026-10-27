@@ -473,3 +473,73 @@ escopo incremental faturado0condicional já comprovado, não preço de runtime.
 Fontes primárias consultadas26/10: https://docs.stripe.com/api/prices/list
 e https://docs.stripe.com/api/subscriptions/object. IDs/idiomas/conteúdo/AP/AN/
 gates/PLANS_ON_SALE=false/contador254 preservados. Novohead exige suítecompleta.
+
+
+
+### PR1080 — incorporação e publicação verificadas
+
+Head2c36625a0a0f4f6629de7f94dfa4ac108156bbad aprovado31/31checks+Vercel,
+8classificadores10+7/fulltrue. Merge791dd9d29abedf7a6e67932cacee1bdd90d80c57
+em26/10/2026 21:45:40Fortaleza(27/10 00:45:40UTC),árvore
+9028149661a6e42aa78835a94b8d883d54e2a526 e pais[ca11449,2c36625]conferidos.
+Verify121876839762:Everything26/10 22:09:19.8192459UTC,
+agreements22:10:50.0762243UTC,store-copy22:22:29.9851862UTC.
+Redis12187683974626/10 22:05:50.342UTC:64primeiros concorrentes,
+64duplicados apósACKignorado,14negativos;ARMINFO17comandos
+(EVAL1,GET2,HGET9,HSET1,TTL1,TYPE1,ZSCORE1), dentro do teto por etapa.
+Mobilehome96/72/80ms,pricing40/40/40,sales32/40/32,LCP644–944ms,CLS0.
+Produção dpl_AgFB2vdJC6yFpFVVB5fGrL6VsogZ READY26/10 21:47:17.311Fortaleza
+(27/10 00:47:17.311UTC),SHA791dd9d e marktmorgen.com exatos;
+5rotas /,/platform,/pricing,/mission,/library200comIDexato.
+Error/fatal27/10 00:47:17.311→00:48:34.736UTC semregistros, somente essa janela.
+Coveragefalse/políticasNULL econtador254 mantidos;preparação fechada,não AB(a)inteiro.
+
+
+
+### AB(a) — POST único e ID observado durável antes da adoção, ainda desabilitados
+
+Incremento integrado: só o primeiro ACK da barreira pode chegar a um POST
+/subscriptions, com os mesmos bytes SHA256/preço/key. Checagem síncrona final
+revalida binding financeiro exato, review/mês, valor e relógio antes do POST.
+Sem retry/catch/fallback/preço novo/key nova; qualquer falha deixa uncertain
+permanente. Cobertura atualfalse recusa antes de todo esse IO.
+
+ARM agora reserva160bytes DENTRO dos4096para o ID ASCII≤68bytes+timestamp
+posteriores; não aumenta envelope/cardinalidade/chaves. RECORD_RESTART_RESULT
+confere mesmo grant/review/stats/claim/preço/hash/key/armedAt e grava somente
+primeiro ID reconhecido, phaseobserved. Mesmo ID repetido ACK2 é confirmação
+de evidência, nunca novo direito de POST; outro ID/owner não substitui nada.
+Retenção é permitida depois do deadline/mudança do mês da policy, pois não cria
+admissão/ativação/caixa nem apaga source/receipts/pending. Wrapper permanece
+fechado sob cobertura atualfalse, sem IO para entrada fabricada.
+
+ID é persistido ANTES de tentar adotar a resposta. Cliente/preço/grant/review/
+claim/origem/store/tier/action devem coincidir; reutilização do ID original
+ou retorno ambíguo recusam. Até uma resposta identificada porém divergente fica
+retida para reconciliação, sem ser promovida a assinatura válida.
+Ainda NÃO publica direitos/store, não limpa pausa/due/ano e não envia aviso.
+Recuperação somente leitura (inclusive uncertain semID), ativação financiada,
+ACKstore/CASgerações/undo e rollover completo seguem pendentes: AB(a) incompleto.
+
+Suíte remota completa obrigatória: Lua real grava ID apósdeadline/policytrocar,
+64duplicados sameID sóACK2, IDs/owners diferentes recusam semmutar caixa/origem,
+INFO por etapa; preço/origem/metadados/clock/getters em observadores reais;
+ramo fechado conserva0IOprovedor/ledger/notices. Sem testes locais ou cobrança real.
+
+| Contrato | Novas operações habilitadas mensais/anuais | Custo integral prospectivo |
+| --- | --- | --- |
+| creator_month | 0/0 | desconhecido,reprovado |
+| creator_year | 0/0 | desconhecido,reprovado;reinício mensal apenas |
+| pro_month | 0/0 | desconhecido,reprovado |
+| pro_year | 0/0 | desconhecido,reprovado;reinício mensal apenas |
+| scale_month | 0/0 | desconhecido,reprovado |
+| scale_year | 0/0 | desconhecido,reprovado;reinício mensal apenas |
+
+Prospectivo desta fase:1POST máximo porbarreira e1EVALretenção (teto17por etapa;
+medição específica nova pendente), mais recuperação/leitura/retensão a cotar.
+Não tratar custo futuro como0: Redis/provider/overhead/cópias/LLC/BR-US+ISS5%/
+leitura onerosa precisam cálculo, teto e reserva para todos os contratos e global.
+Preçosmáximos pagos69/690/449/4490/999/9990mantidos, sem média/subsídio.
+Mesmos jobs/matrizes/tetos, sem serviço/dependência/cache/artefato novo;
+CI público padrão condicional0 somente no escopo documentado.
+Gates/PLANS_ON_SALE=false/IDs/idiomas/conteúdo/permissões/contador254 preservados.

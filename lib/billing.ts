@@ -1,6 +1,6 @@
 import {createHash,randomUUID} from 'node:crypto';
 import {canonicalFinancialSnapshot,CONTRACT_FUNDING_RULES} from '@/lib/contract-funding-rules';
-import {armRestartSubmission,claimRestartIntent,reserveRestartContractFunding,activateCheckoutContract,activateSwitchContract,type ContractGrant,type OwnedRestartIntent} from '@/lib/contract-funding';
+import {restartSubmissionOpenNow,recordRestartResult,armRestartSubmission,claimRestartIntent,reserveRestartContractFunding,activateCheckoutContract,activateSwitchContract,type ContractGrant,type OwnedRestartIntent,type ArmedRestartSubmission} from '@/lib/contract-funding';
 /**
  * The one way Marktmorgen makes money.
  *
@@ -727,8 +727,23 @@ export async function restartPlan(input: {
     });
     const armed = await armRestartSubmission({intent,priceId,bodyHash:createHash("sha256").update(body.toString()).digest("hex")});
     if (!armed) throw new Error("The funded restart submission barrier was not acknowledged");
-    // A stopped original and an armed barrier are not payment/activation permission.
-    // Coverage stays closed until the entire funded lifecycle and costs pass.
+    // The barrier identifies exact request bytes and one permanent attempt.
+    // No catch/retry, alternate price, fresh key or fallback can submit twice.
+    if (armed.bodyHash !== createHash("sha256").update(body.toString()).digest("hex") || armed.priceId !== priceId ||
+        !restartSubmissionOpenNow(armed)) {
+      throw new Error("The funded restart request changed or its submission window ended");
+    }
+    const subscription = await onPlatform("POST", "/subscriptions", body, {idempotencyKey:armed.idempotencyKey});
+    // Persist an identified outcome BEFORE validating it for adoption. Even a
+    // mismatched customer/price is evidence for read-only reconciliation.
+    const resultId = subscription?.id;
+    if (typeof resultId !== "string" || !SUBSCRIPTION_PATTERN.test(resultId) ||
+        !(await recordRestartResult({armed,subscriptionId:resultId}))) {
+      throw new Error("The funded restart result ID was not durably acknowledged");
+    }
+    observeFundedRestartResult(armed,{customerId:input.customerId,tier:input.tier},subscription);
+    // Current coverage refuses before any of this IO. Even an identified paid
+    // result cannot be published to the store before activation/ACK/CAS coverage.
     throw new Error("The funded restart requires reconciliation and activation coverage");
   }
   const priceId = await ensurePrice(input.tier, "month");
@@ -748,6 +763,29 @@ export async function restartPlan(input: {
 }
 
 
+
+
+/** Observe an already obtained, durably identified result. Descriptive only:
+ * callers still need funded activation and acknowledged store/CAS publication.
+ */
+export function observeFundedRestartResult(
+ armed:ArmedRestartSubmission,input:{customerId:string;tier:Tier},subscription:Record<string,unknown>,
+ observedAt=Math.floor(Date.now()/1000),
+):StartedSubscription{
+ const encoded=canonicalFinancialSnapshot({armed,input,subscription,observedAt});
+ if(!encoded)throw Error("The funded restart result observation is unknown");
+ ({armed,input,subscription,observedAt}=JSON.parse(encoded));
+ const {intent}=armed,source=intent.grant.sourceSubscriptionId;
+ if(subscription.id===source||intent.grant.action!=="restart"||intent.grant.key!==input.tier+"_month")
+  throw Error("The funded restart result reused or changed its original source");
+ const started=observeRestartedPlan({customerId:input.customerId,tier:input.tier,priceId:armed.priceId},subscription,observedAt);
+ const metadata=subscription.metadata as Record<string,unknown>|undefined;
+ if(metadata?.funding_grant!==intent.grant.id||metadata.funding_review!==intent.grant.reviewId||
+    metadata.restart_claim!==intent.claim||metadata.restart_source!==source||metadata.funding_action!=="restart"||
+    metadata.store!==intent.handle||metadata.tier!==input.tier)
+  throw Error("The funded restart result does not match its submitted owner and source");
+ return started;
+}
 
 /** Exact existing public monthly price only. No IO, cache, creation or charge.
  * The owned deadline still applies after the source GET and price-list GET.
