@@ -27,9 +27,10 @@ import { commercialPlansMayOpen } from "@/lib/commercial-margin";
 import { deemedSupplierReady } from "@/lib/deemed-supplier";
 import { assistantMeetsFloor } from "@/lib/store-assistant-rules";
 import { taxGateValid } from "@/lib/tax-gate";
+import { stripePlatformEligibilityReady } from "@/lib/stripe-platform-eligibility";
 
 const OPENING_REQUESTED: boolean = false;
-export const PLANS_ON_SALE: boolean = commercialPlansMayOpen(OPENING_REQUESTED) && taxGateValid() && deemedSupplierReady();
+export const PLANS_ON_SALE: boolean = commercialPlansMayOpen(OPENING_REQUESTED) && taxGateValid() && deemedSupplierReady() && stripePlatformEligibilityReady();
 
 /**
  * Whether the Store assistant add-on can be bought (lib/assistant-billing.ts):

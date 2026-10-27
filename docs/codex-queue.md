@@ -10831,8 +10831,53 @@ Prova publicação1094:15ceac3351087bbd9a0937193e4202ad7e7df5a4, dpl_FLMWuF5A7DT
 VR: númeroscondicionaisdocumentados,nãolucrocertificado/recursoentregue; testes/relatórioreal/revisões/contaaceitaaindafaltam. Sempreço/limite/comissão/flag/imposto/reserva/exposição/custeio/conteúdoalterado,semserviço/IO/chave/retençãonovos,semconta/termo/pagamento/contato. Custodesconhecido≠zero. SemUI,0→0passos/decisões;semcertificação. Contador254.
 
 
+## SR468 — Condição adicional de conta de plataforma comprovada (27/10/2026)
+
+468[SR2]em andamento em branch separada,dependente doPR1094/MR2,sem editar a branchMR2 duranteCI. Novo validador puro lib/stripe-platform-eligibility.ts exige revisão datada de contaUS ativa emnome daempresaUS e prova explícita de cobrançasdiretasUS/CA/GB/EUROPE,com referências/checksum/data/fonte e mesmo vínculo deconta/empresa. Não inferir aptidão deCOUNTRIES,configuração deAPI ou promessa. CURRENT_STRIPE_PLATFORM_ELIGIBILITY_REVIEWnull;conta/elegibilidadereais não comprovadas. A condição éacrescida porAND emPLANS_ON_SALE;OPENING_REQUESTEDfalse e todasascondições anteriores permanecem.
+
+Testes reais do código com provas exclusivamente sintéticas devem recusar falta deprova/datasimpossíveis/futuras/BR/pessoa física/empresaestrangeira/containativa/região/vínculoincorreto/getters/hookseherança;fixturepositiva não altera constantereal. Teste de ligação falha seremovida a condição nova ou anterior. Nenhuma consulta/criação deconta ou contatoStripe. Referências de evidência não podemcontersegredos,linksprivados,SSN/ITIN/IDpessoal ouhash deIDpessoal. Checagem deestrutura não autentica aorigemexterna;somente preencherrevisãocomprovareal verificada.
+
+Benefício/retorno: impediraberturacom plataforma inelegível,sem permitir cobranças ou gastos baseados em resposta favorável contraditória. Custos:nenhumIO/key/retenção/serviço/provideradicional,registrorealnull eflags anterioresfechados;deltaoperaçãoprovider6contratos0/0,nãocustos totaisCI/LLC/CPU/byteszero. Futuropayload/operaçãofica sujeito a custo/teto/reserva;desconhecidoreprova. Acessibilidade:semUI,0→0passos/decisões,Markdowncomtítulos/links;semavaliaçãohumana/certificação. MR2relatório/realdata eMR3/SR3custos/SR4roteiropendentes,preços/limites/comissão/ISS5%/art9a/gates/conteúdo/idiomas/IDspreservados;contador254. Não alegar contaUS existente,aceiteEuropeu,empresaaberta ouelegibilidade certificada por umtestesintético. docs/stripe-platform-opening-gate.md registra limites e estado.
+
+
+### SR2/PV8 — primeira interação dos planos,27/10/2026
+
+Falha preservada do head eee77780e3eba07566c416b87311a3f5ecd5b1a6/job122239993154 às14:15:46.2219649UTC: primeira interação fria /208ms, demais80/72ms; limite estrito<200ms permanece, nenhuma amostra descartada. Alvo summary nativo de recursos dos planos,scrollY22890; primeiro frame142.3ms/90.6ms bloqueio, sem script atribuído. Contadores incluem preparação/rolagem:224.8ms script,5.4ms layout,23.3ms estilo; não demonstram causa exclusiva.
+
+Correção candidata concreta: os três destinos de cadastro dos planos usam âncora HTML normal, mantendo o hrefselecionado/CTA/classes e intervalo. Retira instâncias de navegação cliente NextLink de cada cartão; cadastro navega como documento. Estado de comparação mensal/anual e disclosure nativo permanece no contexto existente. Isso não prova que NextLink causou208ms, nem ganho de bytes/tempo ou resolução da falha. Guia instalado next/dist/docs/01-app/03-api-reference/02-components/link.md lido antes da alteração.
+
+Nova suíte INTEGRAL no novohead obrigatória, incluindo navegação, preços/termos/URLs/teclado e todas as9amostras frias; nenhum ajuste de limiar, espera, aquecimento ou workflow. Não incorporar por reexecução isolada ou aprovação anterior30/31. Risco: destino faz navegação de documento; verificar fluxo. Sem fornecedor/serviço/chave/retencão/limite/preço/flag novo. Navegação continua leitura do destino existente, mas bytes/CPU/fatura total não medidos nem presumidoszero; CI/falhas100%FX275. Acessibilidade:1ação→1ação de cadastro,1decisão→1decisão de intervalo; sem testehumano/certificação. Dados sintéticos apenas, sem submissão/conta/pagamento/contato.
+
+SR2código/prova permanece realnull, nove testes próprios passaram no headanterior, nova verificação necessária. Incorpora main ae725d5 com todos os relatórios/históricos MR1/MR2/MR3/SR3; sem editarbranches de terceiros. PR1097documental ae725d5fab5fe947aa12498bcb930958e51384a2 incorporado27/10/2026 11:41:51Fortaleza,8escopos10+7/fullfalse+11skips+Vercel; árvore19d28975ab48d549cca94b18d2d26e11947d42a8. Relatório automático real MR2 e custos completos continuam faltando. Contador254.
+
+
+### AB(a) — primitiva estrita de confirmação de gravação,27/10/2026
+
+Em andamento, preparação de código; não é ACKStore integral nem reinício disponível. O helper legado redis-lock usa fallback GET/SET após erroEVAL; ele não serve como prova financeira. A nova strictFencedCompareAndSet usa somente umEVAL, compara bytesraw e locktoken ainda sobTTL, exige owner permanente/tipos válidos e recibo exato. ACK desconhecido retorna unknown sem novoGET/SET; valor idêntico retorna already-current apenas como estado literal, nunca prova de pagamento/ledger/geração.
+
+Nenhum chamador produtivo novo: setSubscription/runBreaks/commit e comportamento legado permanecem intactos. Seguem necessários guards de catálogo/MAX_STORE_BYTES,ledger ativo,geração pausa,journal/índices,recuperação/custeio,cleanupundo e integraçãoantes de liberar fase. Cobertura pauseRestartfalse/políticasnull; nenhum teto comercial ativado ou custo desconhecidozerado.
+
+Limite técnico:1.000.000bytesUTF8 por imagemraw, até2.000.000bytes deexpected+next maisLua/chaves/metadados por chamada, até8comandosRedis comEVAL no caminho de gravação. Não é custo completo do fluxo: frequência/tentativas/CPU/retenção/protocolo ainda exigem limites e reserva antes de operação nos seis contratos mensais/anuais; ISS5%,mais imposto eMRpositivo+folga/base preservados. Sem novo serviço/chave/TTL/índice/política produtivos; reutiliza registro e lock existentes. Delta operacional habilitado0, não custoCI/LLC/prospectivozero.
+
+Testes sintéticos chamam helperreal e Luaextraída literalmente do arquivo produtivo: recibosmalformados/getter/UTF8/limites e nenhumfallback;64concorrentes comdestinosdiferentes,64recuperações apósACKignorado,11tipos/TTL/posse/stale/bytes inválidos e escrita maisnova preservada; INFOcom teto8. Mesmo jobRedis/matrix/deps/45keys/3refs existentes,namespaceCIgeneratedloopback16379;nenhum Redisreal, pagamento, mensagem ouconta. Suíte integral no novohead antesdeincorporar. SemUI,0→0passos/decisões,semtestehumano/certificação;contador254.
+
+
+### AB(a) strictCAS — correção de tipagem antes de aprovação
+
+Head9ecb34d9a2c94c60854905dc5fe31215c3297135 não aprovado: buildMobile122268045803 às15:02:03.7004426UTC recusouTS18048,ttl possivelmenteundefined emredis-lock.ts:164. Mesma causa interrompeu builds de váriasmatrizes; não são aprovações. Corrigir typeof ttl number antes de comparar; não relaxar validação, desligarTypeScript ou mudarteste. Nova suíte INTEGRAL no novohead, nenhumjobisolado. Redis122268046212 noheadantigo passou Lua real64contendores/64ACKperdido/11negativos/UTF8/newerwrite;INFO8(eval1/get2/pttl2/set1/type2)às15:00:45.975143UTC. Prova parcial preservada, não substitui novoverify/31checks. Sem nova operação/chave/TTL/fornecedor produtivo;coveragefalse/políticasnull/flagsfalse econtador254.
+
+
 ###470[SR4] — roteiro somente do dono,27/10/2026
 
 Depende do dono; nenhuma etapa executada. docs/stripe-us-owner-roadmap.md segueLLC→EIN→ITIN→representante/endereço→Stripe,com fontes oficiais datadas, prazosindicativos e custos/lacunas. IRSformaentidadeantesEIN;W7exigefinalidadetributária,notaStripe;responsávelEINnãoé nominee. Taxa anualDelaware400confirmadaporHB400/lei85:273,semreduzirporpáginaantiga300;lib/llc-fixed-costs.ts já400,semcorreçãoduplicada. Formação/CAA/representante/endereço/câmbio/tetos/cobertura desconhecidos reprovam,100%FX275nosseiscontratos,sem basefinita certificada.
 
 Não cadastrar empresa/conta,preencher/enviarSS4/W7,pedirEIN/ITIN,aceitartermo,contratar,pagar,contactarterceiros oucoletaridentificadorespessoais. Estado roteirodocumental com lacunas;nenhumaceiteStripeouoperaçãofinanceirademonstrado. Fontes eprovasantecedem qualquerfuturadecisão do dono; sem urgênciaouaçãoimediatapedida. Preços/direitos/comissão/taxgate/art9a/reservas/exposições/custeio/Hazelsongpreservados. SemUI/serviço/IO/chave/retençãonovo;0→0passosprodutivos;semtestehumano/certificação. Pesquisa/CI100%FX275,nãográtis;contador254. CI documentalantesdeincorporar. Não é novopedido/número nem repetição deSR3.
+
+
+### Evidência de incorporaçãoSR2/AB(a) e lacunaSR3 —27/10/2026
+
+SR2PR1095 incorporado3e99c9bda535b5e0260db4f32aae3a6b6fc8490a às12:07:14Fortaleza,árvoreca3106534e7a3a21c96d38ad715755d7c567ee72,paisae725d5/b3dc112,31/31+Vercel. dpl_FS94KYktvqo56recsrz4qGc1hfSu READY12:08:29.625Fortaleza,aliasmarktmorgen.com,cincoHTTP200/IDexato;error/fatal15:08:29.625–15:09:30.013UTCnenhum encontrado,janelacurta. CondiçãonovaANDligada,revisãorealnull/flagsfalse. Amostrashome96/72/56ms,pricing40/40/32,salespages48/32/40,CLS0,LCP632–892ms,novefrias;antiga208msnãoapagada nemcausaexclusiva/INPrealcertificados. Fluxointerativoprodutivopendente,não255.
+
+AB(a)PR1099 incorporadof02132affab532e2ea45b15816d8a8d0272dbe4e às12:31:19Fortaleza,árvoreace2c8ebf2147754fc2f8f35ee642ed68da3879e,pais3e99/ad953,31/31+Vercel noheadcorrigidoapósTS18048. Predcachedff09tinhabaseb3dctreeca310idênticaamain3e99;árvorefinaltestada/paisreaisconferidos. Redisnovohead122270538179 às15:05:01.912770UTC64contendores/64ACKignorado/11negativos/UTF8/newerwritePASS;INFO8(eval1/get2/pttl2/set1/type2). Semchamadorprodutivo,ledger/journal/índices/cleanup/custeio/ACKStoreintegralaindapendentes;coveragefalse/políticasnull,publicaçãodestaetapaaindaa confirmar. Nenhumreiníciofinanceiroativado,counter254.
+
+469[SR3] — aguardando o dono quanto à evidência externa de aceite e teto integral. Pesquisa iniciada14:18UTC27/10,maisde1haté15:31; fontes IRS/Stripe documentadas emstripe-us-requirements-cost-evidence.md não comprovam enquadramentoW7pessoal,serviçorepresentanteresidenteUS/endereçoaceito oucustosmáximos. Sem nova respostaStripefornecida,sem conta/contrato/cotação/enviodeformulário/contatoautorizados. Preço inicial/listaagentes não éprovaou teto; nãoinventarzero/basefinita nem contratarparaobterprova. Continuartrabalhoautônomorestanteda fila; não pedir autorizaçãojáconcedida,nemaçãoimediata desnecessária. SR4roteiroapenas,emDependedodono; atualizar referênciadagateSR2paraincorporado,semexecutarLLC/EIN/ITIN/Stripe.
