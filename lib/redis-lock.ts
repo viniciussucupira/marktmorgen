@@ -122,3 +122,55 @@ export async function withLock<T>(key: string, ttlSeconds: number, waitMs: numbe
     await releaseLock(held);
   }
 }
+
+/**
+ * Strict raw-record CAS for a future funded Store writer. This is only an
+ * atomic persistence primitive, never a payment/funding/ledger authorization.
+ * No production caller uses it yet. Unlike legacy helpers, an ambiguous EVAL
+ * never falls back to separate GET/SET commands.
+ */
+export const STRICT_FENCED_CAS_MAX_BYTES = 1_000_000;
+export const STRICT_FENCED_CAS = `
+if #KEYS~=2 or #ARGV~=4 or KEYS[1]==KEYS[2] then return 0 end
+local limit=tonumber(ARGV[4])
+if not limit or limit~=math.floor(limit) or limit<1 or limit>1000000 then return 0 end
+if #KEYS[1]<1 or #KEYS[1]>512 or #KEYS[2]<1 or #KEYS[2]>512 or #ARGV[1]<1 or #ARGV[1]>128 or #ARGV[2]>limit or #ARGV[3]>limit then return 0 end
+local lockType=redis.call('TYPE',KEYS[1]).ok
+local valueType=redis.call('TYPE',KEYS[2]).ok
+if lockType~='string' or valueType~='string' then return 0 end
+if redis.call('PTTL',KEYS[1])<=0 or redis.call('PTTL',KEYS[2])~=-1 then return 0 end
+if redis.call('GET',KEYS[1])~=ARGV[1] then return 0 end
+local current=redis.call('GET',KEYS[2])
+if current==ARGV[3] then return 2 end
+if current~=ARGV[2] then return 0 end
+redis.call('SET',KEYS[2],ARGV[3])
+return 1
+`;
+
+export type StrictFencedCasResult = "written" | "already-current" | "refused" | "unknown";
+export async function strictFencedCompareAndSet(
+  held: Held, key: string, expected: string, next: string, maximumBytes: number,
+): Promise<StrictFencedCasResult> {
+  try {
+    // Detached own data only; never invoke a lock token getter or inherited hook.
+    if (!held || typeof held !== "object" || ![Object.prototype, null].includes(Object.getPrototypeOf(held))) return "refused";
+    const descriptors = Object.getOwnPropertyDescriptors(held);
+    if (Reflect.ownKeys(held).length !== 3 || !["key", "token", "ttlSeconds"].every(name =>
+      Object.hasOwn(descriptors, name) && Object.hasOwn(descriptors[name]!, "value"))) return "refused";
+    const lock = descriptors.key!.value, token = descriptors.token!.value, ttl = descriptors.ttlSeconds!.value;
+    const bytes = (value: string) => new TextEncoder().encode(value).byteLength;
+    if (typeof lock !== "string" || typeof token !== "string" || typeof key !== "string" ||
+      !lock || !token || !key || lock === key || bytes(lock) > 512 || bytes(key) > 512 || bytes(token) > 128 ||
+      typeof ttl !== "number" || !Number.isSafeInteger(ttl) || ttl <= 0 ||
+      typeof expected !== "string" || typeof next !== "string" ||
+      !Number.isSafeInteger(maximumBytes) || maximumBytes < 1 || maximumBytes > STRICT_FENCED_CAS_MAX_BYTES ||
+      bytes(expected) > maximumBytes || bytes(next) > maximumBytes) return "refused";
+    const reply = await redisPipeline([["EVAL", STRICT_FENCED_CAS, 2, lock, key, token, expected, next, maximumBytes]]);
+    if (!Array.isArray(reply) || reply.length !== 1 || !Object.hasOwn(reply, 0)) return "unknown";
+    const acknowledgement = Object.getOwnPropertyDescriptor(reply, "0");
+    if (!acknowledgement || !Object.hasOwn(acknowledgement, "value")) return "unknown";
+    if (acknowledgement.value === 1) return "written";
+    if (acknowledgement.value === 2) return "already-current";
+    return acknowledgement.value === 0 ? "refused" : "unknown";
+  } catch { return "unknown"; }
+}

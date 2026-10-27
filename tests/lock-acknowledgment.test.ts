@@ -60,3 +60,51 @@ test("malformed lock receipt never grants ownership or retries an uncertain acqu
   } finally { store.pipeline = original; }
   assert.equal(opened, 0);
 });
+
+test("strict fenced CAS never downgrades an ambiguous EVAL to separate reads or writes", async () => {
+  const { strictFencedCompareAndSet } = await import("@/lib/redis-lock");
+  const original: typeof store.pipeline = store.pipeline.bind(store);
+  const held = { key: "synthetic:lock", token: "owned-token", ttlSeconds: 15 };
+  let getters = 0;
+  const accessorReply: unknown[] = [];
+  Object.defineProperty(accessorReply, 0, { get() { getters++; return 1; } });
+  try {
+    for (const reply of [null, undefined, false, 1, "OK", {}, [], Array(1), [1, 0], ["1"], [true], accessorReply]) {
+      const commands: unknown[][] = [];
+      store.pipeline = async batch => { commands.push(...batch); return reply as unknown[]; };
+      assert.equal(await strictFencedCompareAndSet(held, "synthetic:record", "before", "after", 8), "unknown");
+      assert.deepEqual(commands.map(command => command[0]), ["EVAL"]);
+    }
+    for (const [reply, result] of [[[1], "written"], [[2], "already-current"], [[0], "refused"]] as const) {
+      store.pipeline = async () => [...reply];
+      assert.equal(await strictFencedCompareAndSet(held, "synthetic:record", "before", "after", 8), result);
+    }
+    const commands: unknown[][] = [];
+    store.pipeline = async batch => { commands.push(...batch); throw new Error("lost acknowledgement"); };
+    assert.equal(await strictFencedCompareAndSet(held, "synthetic:record", "before", "after", 8), "unknown");
+    assert.deepEqual(commands.map(command => command[0]), ["EVAL"]);
+  } finally { store.pipeline = original; }
+  assert.equal(getters, 0);
+});
+
+test("strict fenced CAS refuses unsafe or over-budget inputs before any IO", async () => {
+  const { strictFencedCompareAndSet, STRICT_FENCED_CAS_MAX_BYTES } = await import("@/lib/redis-lock");
+  const original: typeof store.pipeline = store.pipeline.bind(store);
+  const held = { key: "synthetic:lock", token: "owned-token", ttlSeconds: 15 };
+  let calls = 0, getters = 0;
+  try {
+    store.pipeline = async () => { calls++; return [1]; };
+    for (const limit of [0, -1, 1.5, NaN, Infinity, STRICT_FENCED_CAS_MAX_BYTES + 1]) {
+      assert.equal(await strictFencedCompareAndSet(held, "synthetic:record", "a", "b", limit), "refused");
+    }
+    assert.equal(await strictFencedCompareAndSet(held, held.key, "a", "b", 8), "refused");
+    assert.equal(await strictFencedCompareAndSet(held, "synthetic:record", "éé", "a", 3), "refused");
+    assert.equal(await strictFencedCompareAndSet(held, "synthetic:record", "a", "éé", 3), "refused");
+    assert.equal(await strictFencedCompareAndSet({ ...held, ttlSeconds: 0 }, "synthetic:record", "a", "b", 8), "refused");
+    const dangerous = { ...held };
+    Object.defineProperty(dangerous, "token", { get() { getters++; return "owned-token"; } });
+    assert.equal(await strictFencedCompareAndSet(dangerous, "synthetic:record", "a", "b", 8), "refused");
+    assert.equal(await strictFencedCompareAndSet(Object.create(held), "synthetic:record", "a", "b", 8), "refused");
+    assert.equal(calls, 0); assert.equal(getters, 0);
+  } finally { store.pipeline = original; }
+});
