@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import {observeFundedRestartResult,observeFundedRestartPrice,observeStoppedRestartSource,observeRestartedPlan} from "@/lib/billing";
+import {fundedRestartRequestBody,identifyFundedRestartResult,selectRestartRecoveryCandidate,observeFundedRestartResult,observeFundedRestartPrice,observeStoppedRestartSource,observeRestartedPlan} from "@/lib/billing";
 import type {ArmedRestartSubmission,OwnedRestartIntent} from "@/lib/contract-funding";
 import {PLAN_PRICES} from "@/lib/plan";
 
@@ -164,7 +164,7 @@ function fundedResultFixture(){
  const {intent}=stoppedFixture();
  const armed:ArmedRestartSubmission={intent,priceId:input.priceId,bodyHash:"a".repeat(64),armedAtSeconds:NOW-5,
   idempotencyKey:"restart:"+intent.grant.id+":"+intent.claim,policyBinding:"b".repeat(64)};
- const subscription={...observed(),metadata:{funding_grant:intent.grant.id,funding_review:intent.grant.reviewId,
+ const subscription={...observed(),created:NOW-4,items:{...observed().items,has_more:false,data:observed().items.data.map(item=>({...item,current_period_start:NOW-4}))},metadata:{funding_grant:intent.grant.id,funding_review:intent.grant.reviewId,
   restart_claim:intent.claim,restart_source:intent.grant.sourceSubscriptionId,funding_action:"restart",store:intent.handle,tier:input.tier}};
  return {armed,subscription};
 }
@@ -179,4 +179,40 @@ test("durably identified funded result must still match every submitted owner/so
  assert.throws(()=>observeFundedRestartResult(armed,input,{...subscription,customer:"cus_ForeignResult01"},NOW));
  let reads=0;const hostile={...subscription};Object.defineProperty(hostile,"metadata",{enumerable:true,get(){reads++;return {};}});
  assert.throws(()=>observeFundedRestartResult(armed,input,hostile,NOW));assert.equal(reads,0);
+});
+
+test("bounded search is a positive identity observation across statuses, never proof of absence",()=>{
+ const {armed,subscription}=fundedResultFixture();
+ for(const status of ["active","trialing","past_due","unpaid","canceled","incomplete","incomplete_expired","paused"]){
+  const candidate={...subscription,status};
+  assert.equal(identifyFundedRestartResult(armed,input,candidate),candidate.id);
+  assert.equal(selectRestartRecoveryCandidate(armed,input,{object:"search_result",has_more:false,data:[candidate]}).id,candidate.id);
+  if(status!=="active")assert.throws(()=>observeFundedRestartResult(armed,input,candidate,NOW));
+ }
+ for(const page of [{},{object:"search_result",has_more:false,data:[]},
+  {object:"search_result",has_more:true,data:[subscription]},
+  {object:"search_result",has_more:false,data:[subscription,subscription]}])
+  assert.throws(()=>selectRestartRecoveryCandidate(armed,input,page));
+ for(const change of [{id:armed.intent.grant.sourceSubscriptionId},{created:NOW-6},
+  {created:armed.intent.grant.activationUntilSeconds+1},{status:"unknown"},{customer:"cus_ForeignRecover01"},
+  {items:{...subscription.items,has_more:true}},{metadata:{...subscription.metadata,restart_claim:"claim_foreign"}}]){
+  assert.throws(()=>identifyFundedRestartResult(armed,input,{...subscription,...change}));
+ }
+});
+
+test("a recovered active paid period cannot begin before subscription creation",()=>{const {armed,subscription}=fundedResultFixture();subscription.items.data[0].current_period_start=NOW-60;assert.throws(()=>observeFundedRestartResult(armed,input,subscription,NOW));});
+
+test("future request bytes come only from the frozen owned pause and preserve exact owner metadata",()=>{
+ const {armed}=fundedResultFixture(),before=JSON.stringify(armed.intent);
+ const body=fundedRestartRequestBody(armed.intent,armed.priceId),pause=JSON.parse(armed.intent.paused);
+ assert.equal(body.get("customer"),pause.customer);assert.equal(body.get("default_payment_method"),pause.paymentMethod);
+ assert.deepEqual(body.getAll("items[0][quantity]"),["1"]);assert.equal(body.get("items[0][price]"),armed.priceId);
+ assert.equal(body.get("metadata[funding_grant]"),armed.intent.grant.id);
+ assert.equal(body.get("metadata[restart_claim]"),armed.intent.claim);
+ assert.equal(body.get("metadata[restart_source]"),armed.intent.grant.sourceSubscriptionId);
+ assert.equal(JSON.stringify(armed.intent),before);
+ const bad={...armed.intent,paused:JSON.stringify({...pause,customer:"not-customer"})};
+ assert.throws(()=>fundedRestartRequestBody(bad,armed.priceId));
+ let reads=0;const hostile={...armed.intent};Object.defineProperty(hostile,"paused",{enumerable:true,get(){reads++;return "";}});
+ assert.throws(()=>fundedRestartRequestBody(hostile,armed.priceId));assert.equal(reads,0);
 });

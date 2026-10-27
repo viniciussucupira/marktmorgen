@@ -36,6 +36,10 @@ def main():
     if not result_match or '$' + '{' in result_match.group(1):
         raise RuntimeError('Expected static durable restart result Lua')
     result_script = result_match.group(1)
+    recovery_match = re.search(r'export const TAKE_RESTART_RECOVERY = `([^`]+)`;', source)
+    if not recovery_match or '$' + '{' in recovery_match.group(1):
+        raise RuntimeError('Expected static bounded restart recovery Lua')
+    recovery_script = recovery_match.group(1)
     resource_source = (Path(__file__).resolve().parents[1] / 'lib/contract-resource-window.ts').read_text(encoding='utf-8')
     resource_match = re.search(r'export const RESERVE_PAID_RESOURCE_WINDOW = `([^`]+)`;', resource_source)
     if not resource_match or '$' + '{' in resource_match.group(1):
@@ -829,7 +833,7 @@ def main():
         assert arm(redis, keys[44], race_ref, race_pause, claim='claim_new') == 0
         print('PASS:64 actual first submission contenders produce exactly one durable barrier ACK;new claim cannot rearm')
 
-        for scenario in ('claim','binding','review','deadline','rollback','price','digest','pause','due','annual','source','pending','cash','overflow'):
+        for scenario in ('claim','binding','review','deadline','rollback','price','digest','pause','due','annual','source','pending','cash','overflow','owner-index'):
             ref = intent_refs[1]
             pause = intent_ready(keys[43], ref)
             assert intent_claim(redis, keys[43], ref, pause)[0] == 1
@@ -847,13 +851,14 @@ def main():
             elif scenario == 'source': redis.command('HSET', keys[43], 'active:restart-store', 'changed')
             elif scenario == 'pending': redis.command('HSET', keys[43], 'pending:restart-store', 'ctr_other')
             elif scenario == 'cash': redis.command('HSET', keys[43], 'reserved', 89)
+            elif scenario == 'owner-index': redis.command('HSET',keys[43],'restart-owner:ctr_restart_source','ctr_foreign')
             elif scenario == 'overflow':
                 raw = redis.command('HGET', keys[43], 'restart-intent:ctr_restart_new')
                 redis.command('HSET', keys[43], 'restart-intent:ctr_restart_new', raw + ' ' * 4097)
             snapshot_before = snapshot(keys[43])
             assert arm(redis, keys[43], ref, pause, **over) == 0, scenario
             assert snapshot(keys[43]) == snapshot_before, scenario
-        print('PASS:14 foreign, stale, changed, incomplete and oversize barrier cases preserve exact ledger evidence')
+        print('PASS:15 foreign, stale, changed, incomplete, index and oversize barrier cases preserve exact ledger evidence')
 
         # A result ID is evidence, not a new submission or rights activation.
         # Policy/month/deadline changes must not discard an already observed ID.
@@ -906,6 +911,107 @@ def main():
         assert redis.command('TTL', keys[42]) == -1
         print('PASS:durable result ID retained after deadline/policy-month change;64sameIDduplicates are evidence ACK2 only;foreign IDs/owners refuse')
         print('RESTART_RESULT_COMMANDS:' + json.dumps(record_counts, sort_keys=True))
+
+        def recovery(client, key, ref, pause, **over):
+            options = dict(stats='restart-store',source='sub_RestartSource01',source_grant='ctr_restart_source',
+                           ref=ref,handle='synthetic-store',raw=pause,now=1800000003,binding='binding',review='review')
+            options.update(over)
+            return client.command('EVAL',recovery_script,4,key,'nl:pause:'+ref,'nl:pause:due','nl:pause:last:'+ref,
+                                  *[options[name] for name in ('stats','source','source_grant','ref','handle','raw','now','binding','review')])
+        ref = intent_refs[0]
+        pause = intent_ready(keys[42],ref)
+        # Fresh synthetic source with no reservation or intent, not a release
+        # operation: seed only this generated fixture ledger from its origin.
+        seed_restart(keys[42])
+        before = snapshot(keys[42])
+        assert recovery(redis,keys[42],ref,pause) == ['absent']
+        assert snapshot(keys[42]) == before
+        assert recovery(redis,keys[42],ref,pause,binding='old-policy') == 0
+        assert take_restart(redis,keys[42]) == 1
+        assert recovery(redis,keys[42],ref,pause) == 0  # pre-index pending is unknown
+        assert intent_claim(redis,keys[42],ref,pause)[0] == 1
+        assert redis.command('HGET',keys[42],'restart-owner:ctr_restart_source') == 'ctr_restart_new'
+        assert recovery(redis,keys[42],ref,pause) == ['held']  # claim ACK lost before arm
+        index_before = snapshot(keys[42])
+        redis.command('HDEL',keys[42],'pending:restart-store')
+        without_pending = snapshot(keys[42])
+        assert take_restart(redis,keys[42],nonce='ctr_new_owner') == 0
+        assert snapshot(keys[42]) == without_pending
+        assert recovery(redis,keys[42],ref,pause) == 0
+        redis.command('HSET',keys[42],'pending:restart-store','ctr_restart_new')
+        assert snapshot(keys[42]) == index_before
+        assert arm(redis,keys[42],ref,pause)[0] == 1
+        before_recovery = snapshot(keys[42])
+        initial = json.loads(redis.command('HGET',keys[42],'restart-intent:ctr_restart_new'))
+        counts = command_counts()
+        first_recovery = recovery(redis,keys[42],ref,pause)  # Deliberately ignore this provider-read allowance.
+        recovery_counts = difference(counts,command_counts())
+        assert first_recovery[0] == 'read'
+        assert sum(recovery_counts.values()) <= 17
+        def recovery_race(_index):
+            client = Redis()
+            try:
+                return recovery(client,keys[42],ref,pause)
+            finally:
+                client.close()
+        with concurrent.futures.ThreadPoolExecutor(max_workers=16) as pool:
+            attempts = list(pool.map(recovery_race,range(64)))
+        assert sum(value[0] == 'read' for value in attempts) == 2
+        assert sum(value == ['held'] for value in attempts) == 62
+        after = json.loads(redis.command('HGET',keys[42],'restart-intent:ctr_restart_new'))
+        assert after['submission']['recoveryReads'] == 3
+        assert after['submission']['lastRecoveryAt'] == 1800000003
+        assert after['submission']['phase'] == 'uncertain'
+        after['submission'].pop('recoveryReads')
+        after['submission'].pop('lastRecoveryAt')
+        assert after == initial
+        for field,value in before_recovery:
+            if field != 'restart-intent:ctr_restart_new':
+                assert redis.command('HGET',keys[42],field) == value
+        assert recovery(redis,keys[42],ref,pause,now=1803000000) == ['held']
+        assert arm(redis,keys[42],ref,pause) == 0
+        print('PASS:permanent source index blocks a new owner even without pending;ignored recoveryACK+64contenders consume at most3lifetime provider reads')
+        print('RESTART_RECOVERY_COMMANDS:'+json.dumps(recovery_counts,sort_keys=True))
+
+        for scenario in ('raw','ref','handle','source','grant','due','annual','cash','index','rollback'):
+            ref = intent_refs[1]
+            pause = intent_ready(keys[43],ref)
+            assert intent_claim(redis,keys[43],ref,pause)[0] == 1
+            assert arm(redis,keys[43],ref,pause)[0] == 1
+            over = {}
+            if scenario == 'raw': over['raw'] = pause+' '
+            elif scenario == 'ref': over['ref'] = 'foreign'
+            elif scenario == 'handle': over['handle'] = 'foreign-store'
+            elif scenario == 'source': over['source'] = 'sub_ForeignRecover01'
+            elif scenario == 'grant': over['source_grant'] = 'ctr_foreign'
+            elif scenario == 'due': redis.command('ZADD','nl:pause:due',1800000004,ref)
+            elif scenario == 'annual': redis.command('DEL','nl:pause:last:'+ref)
+            elif scenario == 'cash': redis.command('HSET',keys[43],'reserved',89)
+            elif scenario == 'index': redis.command('HSET',keys[43],'restart-owner:ctr_restart_source','ctr_missing')
+            elif scenario == 'rollback': over['now'] = 1800000001
+            before = snapshot(keys[43])
+            assert recovery(redis,keys[43],ref,pause,**over) == 0,scenario
+            assert snapshot(keys[43]) == before,scenario
+        print('PASS:10unknown/foreign/missing/cash/clock recovery cases retain every ledger field')
+
+        ref = intent_refs[0]
+        pause = intent_ready(keys[42],ref)
+        assert intent_claim(redis,keys[42],ref,pause)[0] == 1
+        assert arm(redis,keys[42],ref,pause)[0] == 1
+        assert record_result(redis) == 1
+        redis.command('HSET',keys[42],'policy','changed-after-submission','review','changed-after-submission')
+        known_before = snapshot(keys[42])
+        acknowledged = recovery(redis,keys[42],ref,pause,now=1803000001,binding='',review='')
+        assert acknowledged[0] == 'read'
+        known = json.loads(acknowledged[1])
+        assert known['submission']['phase'] == 'observed'
+        assert known['submission']['subscriptionId'] == 'sub_ObservedRestart01'
+        assert known['submission']['recoveryReads'] == 1
+        for field,value in known_before:
+            if field != 'restart-intent:ctr_restart_new':
+                assert redis.command('HGET',keys[42],field) == value
+        print('PASS:known durable result ID remains readable after policy/month/deadline without creating submission permission')
+
 
     finally:
         for ref in intent_refs:

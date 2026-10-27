@@ -13,7 +13,12 @@ local function amount(value)
  return n
 end
 if redis.call('TYPE',KEYS[1]).ok~='hash' or redis.call('TTL',KEYS[1])~=-1 then return 0 end
-if redis.call('HGET',KEYS[1],'policy')~=ARGV[1] or redis.call('HGET',KEYS[1],'review')~=ARGV[2] then return 0 end
+if ARGV[11]=='restart' then
+ local policyReview=redis.call('HMGET',KEYS[1],'policy','review')
+ if policyReview[1]~=ARGV[1] or policyReview[2]~=ARGV[2] then return 0 end
+else
+ if redis.call('HGET',KEYS[1],'policy')~=ARGV[1] or redis.call('HGET',KEYS[1],'review')~=ARGV[2] then return 0 end
+end
 if ARGV[11]~='checkout' and ARGV[11]~='switch' and ARGV[11]~='restart' then return 0 end
 local receiptPrefix=ARGV[2]..'|'..ARGV[3]..'|'..ARGV[4]..'|'..ARGV[11]..'|'
 if string.sub(ARGV[10] or '',1,#receiptPrefix)~=receiptPrefix then return 0 end
@@ -37,6 +42,7 @@ else
  if (source[5]~='trial' and source[5]~='paid') or not created or not start or not finish or not now or start<created or start>now or finish<=start then return 0 end
  if ARGV[11]=='switch' and finish<=now then return 0 end
  if ARGV[11]=='restart' then
+  if redis.call('HGET',KEYS[1],'restart-owner:'..source[1]) then return 0 end
   if source[5]~='paid' or created<=0 or start<=0 or now<=0 or finish>now or source[3]~=ARGV[4] or (ARGV[4]~='creator_month' and ARGV[4]~='pro_month' and ARGV[4]~='scale_month') then return 0 end
   local proposed={}
   local proposedRaw=ARGV[10]
@@ -312,7 +318,8 @@ if #KEYS~=4 or #ARGV~=16 then return 0 end
 if KEYS[2]~='nl:pause:'..ARGV[12] or KEYS[3]~='nl:pause:due' or KEYS[4]~='nl:pause:last:'..ARGV[12] then return 0 end
 if #ARGV[12]>320 or #ARGV[13]>1536 or #ARGV[16]>4096 or #ARGV[14]>86 or not string.match(ARGV[14],'^claim_[%w_-]+$') then return 0 end
 if redis.call('TYPE',KEYS[1]).ok~='hash' or redis.call('TTL',KEYS[1])~=-1 then return 0 end
-if redis.call('HGET',KEYS[1],'policy')~=ARGV[1] or redis.call('HGET',KEYS[1],'review')~=ARGV[2] then return 0 end
+local policyReview=redis.call('HMGET',KEYS[1],'policy','review')
+if policyReview[1]~=ARGV[1] or policyReview[2]~=ARGV[2] then return 0 end
 if ARGV[4]~='creator_month' and ARGV[4]~='pro_month' and ARGV[4]~='scale_month' then return 0 end
 local restartRaw=redis.call('HGET',KEYS[1],'grant:'..ARGV[5])
 local receipt=parts(restartRaw,1024)
@@ -351,6 +358,7 @@ local fields=0
 for _ in pairs(intent) do fields=fields+1 end
 if fields~=12 then return 0 end
 -- Permanent single ownership: no TTL, release, overwrite, or repeated permission.
+if redis.call('HGET',KEYS[1],'restart-owner:'..source[1]) then return 0 end
 if redis.call('HEXISTS',KEYS[1],'restart-intent:'..ARGV[5])==1 then return 0 end
 intent.sourceBinding=active
 intent.sourceReceipt=sourceRaw
@@ -359,7 +367,7 @@ intent.reservedCents=reserved
 intent.carriedCents=carried
 local owned=cjson.encode(intent)
 if #owned>4096 then return 0 end
-redis.call('HSET',KEYS[1],'restart-intent:'..ARGV[5],owned)
+redis.call('HSET',KEYS[1],'restart-intent:'..ARGV[5],owned,'restart-owner:'..source[1],ARGV[5])
 return {1,owned}
 `;
 export type RestartIntentInput={
@@ -447,7 +455,8 @@ end
 local now,claimed,deadline=amount(ARGV[6]),amount(ARGV[7]),amount(ARGV[8])
 if not now or not claimed or not deadline or now<claimed or now>deadline or deadline-claimed>300 then return 0 end
 if redis.call('TYPE',KEYS[1]).ok~='hash' or redis.call('TTL',KEYS[1])~=-1 then return 0 end
-if redis.call('HGET',KEYS[1],'policy')~=ARGV[1] or redis.call('HGET',KEYS[1],'review')~=ARGV[2] then return 0 end
+local policyReview=redis.call('HMGET',KEYS[1],'policy','review')
+if policyReview[1]~=ARGV[1] or policyReview[2]~=ARGV[2] then return 0 end
 local raw=redis.call('HGET',KEYS[1],'restart-intent:'..ARGV[4])
 if not raw or #raw>4096 then return 0 end
 local ok,intent=pcall(cjson.decode,raw)
@@ -458,6 +467,7 @@ if fields~=17 then return 0 end
 if intent.version~=1 or intent.review~=ARGV[2] or intent.statsId~=ARGV[3] or intent.grant~=ARGV[4] or intent.claim~=ARGV[5] or intent.created~=claimed or intent.deadline~=deadline or intent.ref~=ARGV[9] or intent.paused~=ARGV[10] or intent.sourceBinding~=ARGV[11] then return 0 end
 if redis.call('HGET',KEYS[1],'active:'..ARGV[3])~=intent.sourceBinding or redis.call('HGET',KEYS[1],'pending:'..ARGV[3])~=ARGV[4] then return 0 end
 if redis.call('HGET',KEYS[1],'grant:'..intent.sourceGrant)~=intent.sourceReceipt or redis.call('HGET',KEYS[1],'grant:'..ARGV[4])~=intent.restartReceipt then return 0 end
+if redis.call('HGET',KEYS[1],'restart-owner:'..intent.sourceGrant)~=ARGV[4] then return 0 end
 local reserved,carried=amount(redis.call('HGET',KEYS[1],'reserved')),amount(redis.call('HGET',KEYS[1],'carried'))
 if not reserved or not carried or reserved~=intent.reservedCents or carried~=intent.carriedCents then return 0 end
 local annual=amount(redis.call('GET',KEYS[4]))
@@ -468,7 +478,7 @@ if tonumber(redis.call('ZSCORE',KEYS[3],ARGV[9]))~=pause["until"] then return 0 
 if not string.match(ARGV[12],'^price_[A-Za-z0-9]+$') or #ARGV[12]>106 or #ARGV[13]~=64 or not string.match(ARGV[13],'^[a-f0-9]+$') then return 0 end
 intent.submission={version=1,phase='uncertain',priceId=ARGV[12],bodyHash=ARGV[13],armedAt=now,idempotencyKey='restart:'..ARGV[4]..':'..ARGV[5]}
 local encoded=cjson.encode(intent)
-if #encoded+160>4096 then return 0 end
+if #encoded+256>4096 then return 0 end
 redis.call('HSET',KEYS[1],'restart-intent:'..ARGV[4],encoded)
 return {1,encoded}
 `;
@@ -573,4 +583,96 @@ export function restartSubmissionOpenNow(
   ['creator_month','pro_month','scale_month'].includes(grant.key)&&Number.isSafeInteger(armed.armedAtSeconds)&&
   nowMs>=armed.armedAtSeconds*1000&&nowMs<=(grant.submitUntilSeconds*1000)&&
   new Date(nowMs).toISOString().slice(0,7)===context.review?.fundedExposure?.month;
+}
+
+export const TAKE_RESTART_RECOVERY = `
+local function number(v)
+ if not v or not string.match(v,'^%d+$') or (#v>1 and string.sub(v,1,1)=='0') then return nil end
+ local n=tonumber(v)
+ if not n or n<0 or n>1000000000000 or n~=math.floor(n) then return nil end
+ return n
+end
+local function integer(v) return type(v)=='number' and v>=0 and v<=1000000000000 and v==math.floor(v) end
+if #KEYS~=4 or #ARGV~=9 or #ARGV[6]>1536 then return 0 end
+if KEYS[2]~='nl:pause:'..ARGV[4] or KEYS[3]~='nl:pause:due' or KEYS[4]~='nl:pause:last:'..ARGV[4] then return 0 end
+local now=number(ARGV[7])
+if not now or now<=0 or redis.call('TYPE',KEYS[1]).ok~='hash' or redis.call('TTL',KEYS[1])~=-1 then return 0 end
+if redis.call('GET',KEYS[2])~=ARGV[6] then return 0 end
+local ok,pause=pcall(cjson.decode,ARGV[6])
+local annual=number(redis.call('GET',KEYS[4]))
+if not ok or type(pause)~='table' or not integer(pause["until"]) or pause["until"]>now or not annual or annual<=0 or annual>now then return 0 end
+if tonumber(redis.call('ZSCORE',KEYS[3],ARGV[4]))~=pause["until"] then return 0 end
+local active=redis.call('HGET',KEYS[1],'active:'..ARGV[1])
+if not active or #active>256 then return 0 end
+local source={}
+for field in string.gmatch(active,'[^|]+') do source[#source+1]=field end
+if #source~=7 or table.concat(source,'|')~=active or source[1]~=ARGV[3] or source[2]~=ARGV[2] or source[5]~='paid' or number(source[7])~=pause.from or pause.subscription~=ARGV[2] or type(pause.funding)~='table' or pause.funding.version~=1 or pause.funding.grantId~=ARGV[3] then return 0 end
+if source[3]~='creator_month' and source[3]~='pro_month' and source[3]~='scale_month' then return 0 end
+local owner=redis.call('HGET',KEYS[1],'restart-owner:'..ARGV[3])
+local pending=redis.call('HGET',KEYS[1],'pending:'..ARGV[1])
+if not owner then
+ -- A pre-index pending lock is unknown, never permission to submit again.
+ if pending or ARGV[8]=='' or ARGV[9]=='' then return 0 end
+ local current=redis.call('HMGET',KEYS[1],'policy','review')
+ if current[1]~=ARGV[8] or current[2]~=ARGV[9] then return 0 end
+ return {'absent'}
+end
+if #owner>84 or not string.match(owner,'^ctr_[%w_-]+$') or pending~=owner then return 0 end
+local raw=redis.call('HGET',KEYS[1],'restart-intent:'..owner)
+if not raw or #raw>4096 then return 0 end
+local valid,intent=pcall(cjson.decode,raw)
+if not valid or type(intent)~='table' or intent.version~=1 or intent.grant~=owner or intent.statsId~=ARGV[1] or intent.sourceSubscription~=ARGV[2] or intent.sourceGrant~=ARGV[3] or intent.ref~=ARGV[4] or intent.handle~=ARGV[5] or intent.paused~=ARGV[6] or intent.sourceBinding~=active then return 0 end
+if redis.call('HGET',KEYS[1],'grant:'..owner)~=intent.restartReceipt or redis.call('HGET',KEYS[1],'grant:'..ARGV[3])~=intent.sourceReceipt then return 0 end
+local reserved,carried=number(redis.call('HGET',KEYS[1],'reserved')),number(redis.call('HGET',KEYS[1],'carried'))
+if not reserved or not carried or reserved<carried or not integer(intent.reservedCents) or not integer(intent.carriedCents) or reserved<intent.reservedCents or carried<intent.carriedCents then return 0 end
+local s=intent.submission
+if s==nil then return {'held'} end
+if type(s)~='table' or s.version~=1 or (s.phase~='uncertain' and s.phase~='observed') or not integer(s.armedAt) or now<s.armedAt or type(s.priceId)~='string' or type(s.bodyHash)~='string' or #s.bodyHash~=64 or s.idempotencyKey~='restart:'..owner..':'..intent.claim then return 0 end
+if s.phase=='observed' and (type(s.subscriptionId)~='string' or not string.match(s.subscriptionId,'^sub_[A-Za-z0-9]+$') or #s.subscriptionId>68) then return 0 end
+if s.phase=='uncertain' and s.subscriptionId~=nil then return 0 end
+local reads=s.recoveryReads or 0
+if not integer(reads) or reads>3 or (s.lastRecoveryAt~=nil and (not integer(s.lastRecoveryAt) or now<s.lastRecoveryAt)) then return 0 end
+if reads>=3 then return {'held'} end
+s.recoveryReads=reads+1
+s.lastRecoveryAt=now
+local encoded=cjson.encode(intent)
+if #encoded>4096 then return 0 end
+redis.call('HSET',KEYS[1],'restart-intent:'..owner,encoded)
+return {'read',encoded}
+`;
+export type RestartRecoveryInput={statsId:string;sourceSubscriptionId:string;sourceGrantId:string;ref:string;handle:string;paused:string};
+export type RestartRecovery={kind:'absent'}|{kind:'held'}|{kind:'read';armed:ArmedRestartSubmission;subscriptionId:string|null};
+/** At most three lifetime provider reads per source owner. Lost ACK consumes
+ * its read allowance. No POST, new owner, reserve, release or activation.
+ */
+export async function takeRestartRecovery(
+ input:RestartRecoveryInput,
+ policy:ContractFundingPolicy|null=CURRENT_CONTRACT_FUNDING_POLICY,
+ context:ContractFundingContext={termsSnapshot:CURRENT_PRICE_AND_RIGHTS_SNAPSHOT,review:CURRENT_COMMERCIAL_MARGIN_REVIEW},
+):Promise<RestartRecovery|null>{
+ if(!Boolean(CONTRACT_ADMISSION_COVERAGE.pauseRestart))return null;
+ const encoded=canonicalFinancialSnapshot({input,policy,context});if(!encoded)return null;
+ ({input,policy,context}=JSON.parse(encoded));
+ if(!input||!/^[A-Za-z0-9_-]{1,128}$/.test(input.statsId)||!/^sub_[A-Za-z0-9]{6,64}$/.test(input.sourceSubscriptionId)||!/^ctr_[A-Za-z0-9_-]{1,80}$/.test(input.sourceGrantId)||typeof input.ref!=='string'||input.ref.length===0||input.ref.length>320||!HANDLE_PATTERN.test(input.handle)||typeof input.paused!=='string'||Buffer.byteLength(input.paused)>1536||!isRedisConfigured())return null;
+ try{
+  const before=new Date(),now=Math.floor(before.getTime()/1000),config=contractFundingConfiguration(policy,context,before);
+  const reply=await redisPipeline([['EVAL',TAKE_RESTART_RECOVERY,4,'nl:contract-reserve:v1','nl:pause:'+input.ref,'nl:pause:due','nl:pause:last:'+input.ref,input.statsId,input.sourceSubscriptionId,input.sourceGrantId,input.ref,input.handle,input.paused,now,config?contractFundingBinding(config):'',config?.reviewId??'']]);
+  if(!Array.isArray(reply)||reply.length!==1||!Array.isArray(reply[0]))return null;
+  const ack=reply[0];
+  if(ack.length===1&&(ack[0]==='absent'||ack[0]==='held'))return {kind:ack[0]};
+  if(ack.length!==2||ack[0]!=='read'||typeof ack[1]!=='string'||Buffer.byteLength(ack[1])>4096)return null;
+  const {submission,...original}=JSON.parse(ack[1]);
+  if(typeof original.claim!=='string'||!/^claim_[A-Za-z0-9_-]{1,80}$/.test(original.claim))return null;
+  const receipt=original.restartReceipt.split('|'),through=Number(receipt[8]);
+  if(receipt.length!==10||!['creator_month','pro_month','scale_month'].includes(receipt[2])||!Number.isSafeInteger(through)||through<=0)return null;
+  const grant:ContractGrant={id:original.grant,reviewId:original.review,statsId:input.statsId,key:receipt[2] as ContractGrant['key'],action:'restart',sourceSubscriptionId:input.sourceSubscriptionId,reservedCents:Number(receipt[4]),submitUntilSeconds:Number(receipt[5]),checkoutExpiresAtSeconds:Number(receipt[6]),activationUntilSeconds:Number(receipt[7]),liabilitiesThrough:new Date(through).toISOString()};
+  const intent=ownedRestartIntentFromAcknowledgement({grant,ref:input.ref,handle:input.handle,paused:input.paused,claim:original.claim,sourceGrantId:input.sourceGrantId},original.created,{cashLimitCents:original.reservedCents,carryForwardCents:original.carriedCents},[1,JSON.stringify(original)]);
+  if(!intent||!submission||submission.version!==1||!['uncertain','observed'].includes(submission.phase)||!/^price_[A-Za-z0-9]{6,100}$/.test(submission.priceId)||!/^[a-f0-9]{64}$/.test(submission.bodyHash)||!Number.isSafeInteger(submission.armedAt)||submission.armedAt<intent.claimedAtSeconds||submission.armedAt>intent.grant.submitUntilSeconds||submission.idempotencyKey!=='restart:'+grant.id+':'+intent.claim||!Number.isSafeInteger(submission.recoveryReads)||submission.recoveryReads<1||submission.recoveryReads>3||submission.lastRecoveryAt!==now)return null;
+  const id=submission.phase==='observed'?submission.subscriptionId:null;
+  if(id!==null&&(typeof id!=='string'||!/^sub_[A-Za-z0-9]{6,64}$/.test(id)))return null;
+  const armed=Object.freeze({intent,priceId:submission.priceId,bodyHash:submission.bodyHash,armedAtSeconds:submission.armedAt,idempotencyKey:submission.idempotencyKey,
+   // Recovery cannot carry a live submission permission from a current policy.
+   policyBinding:''});
+  return {kind:'read',armed,subscriptionId:id};
+ }catch{return null;}
 }
