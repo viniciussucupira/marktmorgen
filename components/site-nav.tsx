@@ -239,6 +239,23 @@ export function SiteNav() {
     };
   }, [drawerOpen]);
 
+  // The desktop layout hides the drawer. Close its state too, so resizing
+  // cannot leave body scrolling locked or focus in a hidden mobile link.
+  useEffect(() => {
+    if (!drawerOpen) return;
+    const desktop = window.matchMedia("(min-width: 1024px)");
+    const closeAtDesktop = () => {
+      if (!desktop.matches) return;
+      const needsFocus = drawerRef.current?.contains(document.activeElement)
+        || document.activeElement === toggleRef.current;
+      setDrawerOpen(false);
+      if (needsFocus) headerRef.current?.querySelector<HTMLAnchorElement>('a[href="/"]')?.focus();
+    };
+    desktop.addEventListener("change", closeAtDesktop);
+    closeAtDesktop();
+    return () => desktop.removeEventListener("change", closeAtDesktop);
+  }, [drawerOpen]);
+
   const hoverOpen = (id: string) => {
     if (closeTimer.current) clearTimeout(closeTimer.current);
     if (window.matchMedia("(hover: hover)").matches) {

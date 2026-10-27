@@ -116,6 +116,28 @@ try{
    if(report.incomplete.length)gaps.push({path,width,mode,manualReview:report.incomplete});
    console.log("PUBLIC_MATRIX_CASE:"+JSON.stringify({engine,path,width,mode,viewportWidth,writes,foreign,...report,errors}));
    if(report.violations.length||errors.length||writes)failed++;
+   // After preserving the baseline audit, exercise a real mobile-to-desktop
+   // change. A CSS-hidden drawer must not retain its scroll lock or focus.
+   if(path==="/"&&width===390&&mode==="baseline"){
+    const toggle=page.locator('button[aria-controls="mobile-drawer"]');
+    await toggle.focus();await page.keyboard.press("Enter");
+    await page.waitForFunction(()=>document.body.style.overflow==="hidden"&&document.querySelector("#mobile-drawer")?.contains(document.activeElement));
+    await page.setViewportSize({width:1280,height:900});
+    await page.waitForFunction(()=>{
+     const drawer=document.querySelector("#mobile-drawer"),button=document.querySelector('button[aria-controls="mobile-drawer"]');
+     return document.body.style.overflow!=="hidden"&&button?.getAttribute("aria-expanded")==="false"
+      &&getComputedStyle(drawer).display==="none"
+      &&document.activeElement?.getAttribute("aria-label")==="Marktmorgen, home";
+    });
+    await page.setViewportSize({width:390,height:900});
+    if(await toggle.getAttribute("aria-expanded")!=="false")throw Error("Mobile drawer reopened on return");
+    await toggle.focus();await page.keyboard.press("Enter");
+    await page.waitForFunction(()=>document.querySelector("#mobile-drawer")?.contains(document.activeElement));
+    await page.keyboard.press("Escape");
+    await page.waitForFunction(()=>document.body.style.overflow!=="hidden"&&document.activeElement===document.querySelector('button[aria-controls="mobile-drawer"]'));
+    console.log("PUBLIC_NAV_RESIZE_REGRESSION:"+JSON.stringify({engine,from:390,to:1280,back:390,scrollUnlocked:true,visibleFocusRestored:true,reopenedAndEscaped:true}));
+   }
+
   }catch(error){failed++;console.error("PUBLIC_MATRIX_FAILURE:"+JSON.stringify({engine,path,width,mode,error:String(error)}));}
   finally{cases++;await context.close();}
  }
