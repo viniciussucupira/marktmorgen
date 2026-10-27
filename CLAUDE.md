@@ -1,6 +1,15 @@
 @AGENTS.md
 @docs/cross-product-handoff.md
 
+## TX/SV — Precedência vigente (27 de outubro de 2026)
+
+Pedido TX do dono,27/10/2026 12h34Fortaleza: a políticaTX e os estados dos17pontos emAGENTS.md prevalecem sobre referências antigas deMR/SR à regra19,maisimposto automático,consultas eISS5%certo. Nenhuma consulta tributária será feita ou preparada para envio;CONSULTATION_ANSWERS permanece vazio. Conferir lei/regulamentação/decisões oficiais com artigo/data,registrar divergência por ponto e não presumir custo desconhecidozero. O recebimento mais caro,SRmenosfavorável,reservas,custeio,exposição e demais travas continuam. A matriz emdocs/tx-legal-source-review-2026-10-27.md distingue fonte lida,condições e lacunas;nenhuma das17teses vira prova real apenas por estar transcrita.
+
+Pedido SV posterior,27/10/2026 13h19Fortaleza:EU1eSV1–SV5 só depois da abertura,sem novosPRs de implementação desses itens atélá,preservando trabalho/provas. EU_HOSTING_CONFIRMEDfalsee semcondiçãodeabertura por decisão do dono;TX2 ainda deve retirar a dependência técnica. DPF/SCCdosfornecedoresatuais permanece conferência noBlocodeabertura,semcontratação/termos/contatos.
+
+O textoMR/SR anterior abaixo fica preservado como histórico nos pontos conflitantes. Não alterar preço,limite,comissão,flagsfalse,revisões,reservas,conteúdo ouHazelsong por esta remissão.
+
+
 ## MR — Regra de margem vigente (27 de outubro de 2026)
 
 Solicitação do dono (27/10/2026, 07h42, horário de Fortaleza). Registro464[MR1]; decisão vigente desde a solicitação, acima de instruções históricas incompatíveis. O texto do dono é preservado abaixo.

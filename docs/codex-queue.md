@@ -11018,3 +11018,10 @@ Em andamento. AGENTS.md e prefixos tax-uncertainty/tax-consultations fazem preva
 ###471[TX1] — Matriz17pontos e remissãoart9a,27/10/2026
 
 Em andamento. docs/tx-legal-source-review-2026-10-27.md registra17pontoscom fontesefetivamenteconferidas/condições/lacunas,semadoçãoglobalnemimpostozero universal. docs/eu-vat-article-9a.mdrecebeprefixoTXsemconsulta/maisimpostoautomático;corpohistóricointacto,DEEMED_SUPPLIER_RECORDSexigeconstrução/testes. EUfonteintegraanti-botnãoésucesso;IOFentrada-vs-lucro/IN1037IVnão confirmadoregistrados,semconsultas. Semcódigo/preços/limites/gates/reservas/custeio/conteúdo/Hazelsongalterados;semnovoIOoperacional. Custospesquisa/CI100%FX275,desconhecidonãozero;Markdown0açõesnovas,semcertificação/entregafuncional,counter254. Novohead exigetodoschecksdocumentais;resultadoanterior8scope/11skipsnãoprovanovohead. TX1global/remissõesrestantes/TX2–TX7pendentes.
+
+
+###471[TX1] — Registro dos17pontos nas instruções e provas de incorporação,27/10/2026
+
+AGENTSrecebe17pontos literais do pedido com estados individuais de conferência e divergências;CLAUDEremete explicitamenteTX/SV,mantendo imports ecorposMR/SR históricos. Nãoéadoçãocegade17teses,TX1aindaincompleto/geradosecódigopendentesTX2/TX5. Nenhumcálculogateflagpreçolimitealterado;nenhumIOprodutivo,consulta,registro,conta,contrato,pagamentooucontato. Markdown0açõesnovas,semcertificação/entregafuncional;custospesquisaCI100%FX275,desconhecido≠zero,contador254.
+
+PR1102incorporadof8f449a65290002b32dc8bf0d14de9e7a7df7ab7às13:50:35Fortaleza,headc30818089a1aa058730b2ee39678fd65c0d54645,árvorec48e22ef41be1ce3495161a482f5e762de3b184f,pais759ba/c308,31/31+Vercel,8escopos10+7/fulltrue. PR1103incorporado38205f7ad797f470abc2eb602740c60398fa2221às13:51:18Fortaleza,head7fc7b3e39705fef028ae9025cf5cc42fa5185ab4,árvore51d46f06904dba7481e15099c5711efaa02e166b,paisreaisf8f449/7fc7b3e,19conclusivos8scope10+7fullfalse/11skipslegítimos+Vercel. Predcached3a03tinhabasec308treec48eigualamainf8;árvorefinalidêntica. Registrosdocumentais,nãopublicaçãofuncional;READY/domínio/fluxointerativodessesSHAsnãoforamverificados,nãocontar255.

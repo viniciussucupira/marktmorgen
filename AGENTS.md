@@ -14,6 +14,45 @@ Estado: política e proibição de consultas vigentes; revisão integral dos17po
 
 <!-- BEGIN:nextjs-agent-rules -->
 
+## TX — Os 17 pontos do pedido e seu estado de conferência (27/10/2026)
+
+Proveniência: solicitação do dono de 27/10/2026, 12h34 Fortaleza, registrada uma única vez como471–477. O texto literal abaixo preserva os17pontos solicitados, não representa confirmação independente. Aplicar junto da políticaTX vigente no início deste arquivo e da [matriz oficial de fontes e limites](docs/tx-legal-source-review-2026-10-27.md). Cada conclusão deve respeitar o estado de sua fonte e os fatos reais; não copiar frases deste histórico como certificação, parâmetro liberado ou prova de impostozero.
+
+**Estados por ponto:** 1:mecanismo15%/31dez confirmado, enquadramento e incisoINpendentes; 2:exclusão global não confirmada, IBS/CBS dependem local/consumo; 3:LC116arts2–5 conferidos, fatos de estabelecimento/resultado pendentes; 4:base cambial confirmada, divergência entrada versus lucro emDependedodono; 5:remuneração/base conferidas, enquadramento real pendente; 6:contabilidade principal/agente e texto completo pendentes; 7:DAA confirmada, texto normativoCBE ainda pendente; 8:5472/proforma condicionados e distinção pessoal/cloud conferidos,0%global não comprovado; 9:FTB confirma testes alternativos, não só vendas; 10–11:classificação/nexo/contador por estado ainda pendentes; 12:OSS confirmado como mecanismo opcional de declaração,arts44/58/196 eVAT real pendentes; 13:EMTA explicaart9a,inteiroteorFenix inacessível e fatos/implementação pendentes; 14:regraHMRCsem limiar sob condições confirmada; 15:SuíçaCHF100mil mundial mínimo eNoruegaNOK50mil oumais/12meses confirmados em orientações oficiais,aplicação/custos ainda pendentes; 16:zeroemqualquerpaís/renda/DST não comprovado; 17:CRA limiarCAD30mil excedido/12meses e agregação parcialmente confirmados,universalização não autorizada.
+
+**Depende do dono, somente no ponto divergente:** TXponto4 descreve IOF sobre valor que entra; TX2 descreve sobre lucro. Art14doDecreto6306 vincula operação cambial. Não equiparar as bases nem substituir por15,38%sobre lucro como se a igualdade estivesse conferida. A referênciaIN1037art2IV também não foi confirmada; busca primária apontaVII, mas leitura integral retornou0linhas. Preservar o componente atual somente nesses pontos até correção; continuar os demais sem consulta. Uma falha técnica de leitura é lacuna de evidência, não prova de falsidade ou incidência.
+
+Nenhum retorno à regra19, consultas ouISS5%certo é autorizado. Continuam desconhecido reprova, taxas de recebimento mais caras, regraSR e os demais controles. Números/renderers ainda antigos são estado de implementação pendente deTX2/TX5, não regra fiscal vigente. Não afirmarTX1integralmente concluído enquanto remissões/fontes específicas restarem.
+
+### Texto do dono — registro literal sujeito aos estados acima
+
+BRASIL
+1. IRPF: 15% sobre o lucro anual da LLC, apurado em 31/12, ainda que não distribuído (Lei 14.754/2023, art. 5º), porque a LLC estadual de sócio não residente, não sujeita ao imposto federal americano, consta como regime fiscal privilegiado (IN RFB 1.037/2010, art. 2º, IV). O lucro já tributado não é tributado de novo quando for distribuído.
+2. IRPJ, CSLL, PIS, Cofins, IBS e CBS: não incidem; a LLC estrangeira não é pessoa jurídica brasileira e os clientes estão no exterior; a requalificação depende de simulação ou de operação brasileira de fato, que não existem no desenho.
+3. ISS: não incide, por dois fundamentos independentes: (a) o contribuinte é o prestador, no local do estabelecimento prestador (LC 116/2003, arts. 3º e 4º), e a LLC não tem estabelecimento no Brasil; (b) não incide sobre exportação de serviços (LC 116/2003, art. 2º, I), e os clientes estão no exterior, onde o resultado se verifica.
+4. IOF: 0,38% sobre o valor que entrar no Brasil (Decreto 6.306/2007, art. 15-B, XXV).
+5. INSS: não incide enquanto o dono não receber pró-labore ou outra remuneração pelo trabalho (Lei 8.212/1991, arts. 21 e 28, III).
+6. IVA e sales tax estrangeiros recolhidos pela LLC: não integram a receita nem o lucro tributável no Brasil, por serem valores recebidos por conta de terceiros.
+7. Obrigações sem imposto: declarar a participação na LLC e o lucro no IRPF anual; entregar a declaração de Capitais Brasileiros no Exterior (CBE) ao Banco Central quando os limites forem atingidos.
+
+ESTADOS UNIDOS
+8. Imposto federal: 0%; a renda é de fonte estrangeira (serviços executados pelo sócio fora dos EUA) e a LLC não tem escritório, empregado nem agente nos EUA (26 U.S.C. §§864, 871, 881). Obrigatórios: Form 5472 e Form 1120 pro forma todos os anos.
+9. Imposto estadual sobre a renda ou franquia: 0% em cada estado enquanto as vendas ali ficarem abaixo do limite legal de "doing business" daquele estado (por exemplo, Cal. Rev. & Tax. Code §23101); o código soma as vendas por estado e liga a cobrança automaticamente antes de cada limite. Delaware: taxa anual fixa da LLC, como custo fixo.
+10. Sales tax sobre os planos do Marktmorgen: somente nos estados que tributam software por assinatura e em que as vendas do Marktmorgen passarem do limite de nexo econômico do estado; cobrado do cliente por fora do preço.
+11. Sales tax sobre as vendas das lojas: o Marktmorgen é "marketplace facilitator" só nos estados cuja lei o enquadre e acima do limite de cada estado; cobrado do comprador por fora do preço ou descontado do repasse ao criador.
+
+EUROPA
+12. União Europeia, IVA sobre os planos do Marktmorgen: para criador com número de IVA válido, sem IVA, por inversão do sujeito passivo (Diretiva 2006/112/CE, art. 196); para criador sem número válido, IVA do país dele desde a primeira venda, pelo balcão único não UE (OSS), cobrado por fora do preço.
+13. União Europeia, IVA sobre as vendas das lojas (Regulamento de Execução 282/2011, art. 9º-A, cuja validade foi confirmada pelo TJUE no processo C-695/20, Fenix International, 2023): o Marktmorgen é o fornecedor presumido apenas dos serviços prestados por via eletrônica (produtos digitais entregues de forma automática: e-books, cursos gravados, downloads, assinaturas de conteúdo) vendidos a consumidores da UE, porque o checkout dele autoriza a cobrança. Não se aplica a mentorias e chamadas ao vivo (com intervenção humana) nem a produtos físicos. O IVA é cobrado do comprador por fora do preço ou descontado do repasse ao criador, nunca da receita do Marktmorgen.
+14. Reino Unido: a mesma lógica pelas regras britânicas equivalentes, com registro desde a primeira venda a consumidor, por não haver limite para fornecedor não estabelecido.
+15. Suíça e Noruega: IVA sobre serviços eletrônicos a consumidores só acima dos limites legais (Suíça: faturamento mundial de CHF 100 mil; Noruega, regime VOEC: NOK 50 mil em vendas a consumidores noruegueses), cobrado por fora do preço.
+16. Imposto de renda em qualquer país europeu: 0%, por não haver estabelecimento permanente. Impostos sobre serviços digitais (França, Itália, Espanha, Reino Unido e outros): não se aplicam, por estarem muito abaixo dos limites de faturamento desses impostos.
+
+OUTROS PAÍSES
+17. Canadá: GST/HST só acima de CA$ 30 mil em 12 meses de vendas a consumidores canadenses, por fora do preço, com as regras de operador de plataforma no mesmo limite. Em qualquer outro país com clientes, a mesma regra: imposto sobre consumo só onde a lei local o exigir, acima do limite local, cobrado por fora do preço; imposto sobre a renda 0% sem estabelecimento permanente. O código conta as vendas por país e liga cada registro e cobrança automaticamente antes do limite.
+
+
+
 # This is NOT the Next.js you know
 
 This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
