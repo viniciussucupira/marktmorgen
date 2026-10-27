@@ -1,5 +1,14 @@
 # Fila de trabalho do Codex — Marktmorgen
 
+## TX4 — consistência das provas e verificação combinada (27/10/2026, 15h42 Fortaleza)
+
+PR1113,head2eb8db58702429c7e4602be559351c2ed628cf91,branchcodex/tx4-detached-cost-evidence,emCIintegral: o agregador antigo podia ler um campo diferente entre validar e somar,além de aceitar propriedades herdadas. A correção proposta usa descritores próprios lidos uma vez e reprova getters,índices acessores/lacunas,registros herdados e overflow;mantém custos/categorias/reservas/alocação/relatório. Vercelsuccess,mas suíte integral ainda pendente e nenhuma incorporação declarada. Testes novos verificam que getters não executam,além de valores mutáveis,herança e totais inseguros. SemIOprodutivo novo,nenhum custo real desconhecido aprovado.
+
+Maincombinadoc17a767e5acdf662932afe0800b677bf473317e9:30/31passaram às15h42,somenteWebKit pendente. Verify122381004610 passou com os testes de limites e custos juntos,233/233bundles/Everythingpassing,sem erros. Não cancelar essa verificação por novo pushdocumental antes de concluir. MetadadosVercel conferidos:deploymentdpl_FJ5rQeZUE2X1yGW6t3SmBEYpJXkk,READY/production,SHAexatoc17a767e5acdf662932afe0800b677bf473317e9,aliasesmarktmorgen.com/www.marktmorgen.com. Isso não confirma verificação interativa nem nova funcionalidade ativada. Contador254,sem255. O bloqueio de conexãoChrome anterior permanece respeitado,sem repetir ou trocar de navegador.
+
+Custos/VR: somente correção/provas/testes sintéticos;semconta,aceite,contratação,pagamento,contato,consulta,formulário ou submissão. CI100%FX275,desconhecido nãozero;preços/limites/comissão/flagsfalse/custeio/reservas/exposição/conteúdo/Hazelsong/idiomas/IDs preservados. Histórico abaixo mantém os estados de cada horário.
+
+
 ## TX4 — incorporação verificada (27/10/2026, 15h15min43s Fortaleza)
 
 PR1110 incorporado18:15:43UTC/15:15:43Fortaleza:mergec17a767e5acdf662932afe0800b677bf473317e9,pais1d3c17bf0a2d0bf69bba62b46bfacad128a5bbcc/778084af0d3114fc940f441c27e789349e742d9d,árvore494d243857d1b4994a5ab84106ab1ea75d373e8d conferidos.31/31checks+Vercel;8escopos10+7testes/fullcoverage:true,verify122364965752 com4/4testes de custos,233/233bundles/Everythingpassing e igualdade do relatório gerado. A união preservou1108/1109/documentosanteriores. Catálogo passa a exigir revisão explícita das8categorias de conformidade/SR,todas inicialmente desconhecidas e sem reserva revisada;nenhuma obrigação universal/contratação/INSSzero é presumida. TX4global e base completa ainda incompletos. CI automático do main combinado deve ser acompanhado;falha exige correção e suíte completa no novohead,sem rerunisolado.
