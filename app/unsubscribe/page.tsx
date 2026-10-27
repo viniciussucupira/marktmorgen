@@ -68,17 +68,16 @@ const localeOf = (store: Store | null) => LANGUAGES[parseLanguage(store?.languag
 export default async function UnsubscribePage({ searchParams }: { searchParams: Promise<Query> }) {
   const query = await searchParams;
   const reminder = param(query, "r");
-  if (reminder) return <StopReminders token={reminder} done={query.done === "1"} />;
+  if (reminder) return <StopReminders token={reminder} />;
   const review = param(query, "v");
-  if (review) return <StopReviewRequests token={review} done={query.done === "1"} />;
+  if (review) return <StopReviewRequests token={review} />;
   const update = param(query, "u");
-  if (update) return <StopUpdates token={update} done={query.done === "1"} />;
+  if (update) return <StopUpdates token={update} />;
   const community = param(query, "c");
-  if (community) return <StopAnnouncements token={community} done={query.done === "1"} />;
+  if (community) return <StopAnnouncements token={community} />;
   const links = param(query, "l");
-  if (links) return <StopLinkCounting token={links} store={await storeOf(query)} done={query.done === "1"} />;
+  if (links) return <StopLinkCounting token={links} store={await storeOf(query)} />;
   const token = param(query, "t");
-  const done = query.done === "1";
   const found = token ? await readUnsubToken(token) : null;
   const listStore = found ? await storeOf(query) : null;
   const name = listStore ? listStore.mail?.fromName || listStore.name : "";
@@ -92,7 +91,7 @@ export default async function UnsubscribePage({ searchParams }: { searchParams: 
             <h1 className="t-h3">{a.unknownLink}</h1>
             <p className="mt-3 text-ink-soft">{a.unknownListBody}</p>
           </>
-        ) : done || found.contact.unsub ? (
+        ) : found.contact.unsub ? (
           <>
             <h1 className="t-h3">{a.listDoneTitle}</h1>
             <p className="mt-3 text-ink-soft">{a.listDone(found.email, name)}</p>
@@ -126,7 +125,7 @@ export default async function UnsubscribePage({ searchParams }: { searchParams: 
  * store's sequences, which they allowed apart from joining (lib/mail-clicks.ts).
  * They stay on the list; what was counted is deleted.
  */
-async function StopLinkCounting({ token, store, done }: { token: string; store: Store | null; done: boolean }) {
+async function StopLinkCounting({ token, store }: { token: string; store: Store | null }) {
   const found = await countingFor(token);
   const name = store ? store.mail?.fromName || store.name : "";
   const a = wordsFor(store);
@@ -138,7 +137,7 @@ async function StopLinkCounting({ token, store, done }: { token: string; store: 
             <h1 className="t-h3">{a.unknownLink}</h1>
             <p className="mt-3 text-ink-soft">{a.unknownListBody}</p>
           </>
-        ) : done || !found.on ? (
+        ) : !found.on ? (
           <>
             <h1 className="t-h3">{a.clicksDoneTitle}</h1>
             <p className="mt-3 text-ink-soft">{a.clicksDone(found.email, name)}</p>
@@ -159,7 +158,7 @@ async function StopLinkCounting({ token, store, done }: { token: string; store: 
 }
 
 /** The same one button, for a community's emails: announcements and live event reminders. */
-async function StopAnnouncements({ token, done }: { token: string; done: boolean }) {
+async function StopAnnouncements({ token }: { token: string }) {
   const found = COMMUNITY_UNSUB.test(token) ? await readCommunityUnsub(token) : null;
   const store = found ? await storeForPage(found.handle) : null;
   const config = found && store?.community?.id === found.community ? await readConfig(found.community) : null;
@@ -174,7 +173,7 @@ async function StopAnnouncements({ token, done }: { token: string; done: boolean
             <h1 className="t-h3">{a.unknownLink}</h1>
             <p className="mt-3 text-ink-soft">{a.unknownOtherBody}</p>
           </>
-        ) : done || !found.member.mail ? (
+        ) : !found.member.mail ? (
           <>
             <h1 className="t-h3">{a.communityDoneTitle}</h1>
             <p className="mt-3 text-ink-soft">{a.communityDone(found.member.e, who, where)}</p>
@@ -196,7 +195,7 @@ async function StopAnnouncements({ token, done }: { token: string; done: boolean
 }
 
 /** The same one button, for a store's abandoned-checkout reminders. */
-async function StopReminders({ token, done }: { token: string; done: boolean }) {
+async function StopReminders({ token }: { token: string }) {
   const found = STOP_TOKEN.test(token) ? await readStopToken(token) : null;
   const store = found?.handle ? await storeForPage(found.handle) : null;
   const who = found?.storeName || "";
@@ -209,7 +208,7 @@ async function StopReminders({ token, done }: { token: string; done: boolean }) 
             <h1 className="t-h3">{a.unknownLink}</h1>
             <p className="mt-3 text-ink-soft">{a.unknownOtherBody}</p>
           </>
-        ) : done || found.stopped ? (
+        ) : found.stopped ? (
           <>
             <h1 className="t-h3">{a.remindersDoneTitle}</h1>
             <p className="mt-3 text-ink-soft">{a.remindersDone(found.email, who)}</p>
@@ -231,7 +230,7 @@ async function StopReminders({ token, done }: { token: string; done: boolean }) 
 }
 
 /** The same one button, for a store's emails asking for a review. */
-async function StopReviewRequests({ token, done }: { token: string; done: boolean }) {
+async function StopReviewRequests({ token }: { token: string }) {
   const found = REVIEW_STOP.test(token) ? await readReviewStop(token) : null;
   const store = found?.handle ? await storeForPage(found.handle) : null;
   const who = found?.storeName || "";
@@ -244,7 +243,7 @@ async function StopReviewRequests({ token, done }: { token: string; done: boolea
             <h1 className="t-h3">{a.unknownLink}</h1>
             <p className="mt-3 text-ink-soft">{a.unknownOtherBody}</p>
           </>
-        ) : done || found.stopped ? (
+        ) : found.stopped ? (
           <>
             <h1 className="t-h3">{a.reviewsDoneTitle}</h1>
             <p className="mt-3 text-ink-soft">{a.reviewsDone(found.email, who)}</p>
@@ -266,7 +265,7 @@ async function StopReviewRequests({ token, done }: { token: string; done: boolea
 }
 
 /** The same one button, for a store's emails telling its buyers of an update. */
-async function StopUpdates({ token, done }: { token: string; done: boolean }) {
+async function StopUpdates({ token }: { token: string }) {
   const found = UPDATE_STOP.test(token) ? await readUpdateStop(token) : null;
   const store = found?.handle ? await storeForPage(found.handle) : null;
   const who = found?.storeName || "";
@@ -280,7 +279,7 @@ async function StopUpdates({ token, done }: { token: string; done: boolean }) {
             <h1 className="t-h3">{a.unknownLink}</h1>
             <p className="mt-3 text-ink-soft">{a.unknownOtherBody}</p>
           </>
-        ) : done || found.stopped ? (
+        ) : found.stopped ? (
           <>
             <h1 className="t-h3">{u.doneTitle}</h1>
             <p className="mt-3 text-ink-soft">{u.done(found.email, who)}</p>
