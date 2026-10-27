@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {canonicalFinancialSnapshot,contractCoverageDays,contractFundingConfiguration,CONTRACT_ADMISSION_COVERAGE,CONTRACT_KEYS,CONTRACT_FUNDING_RULES} from '@/lib/contract-funding-rules';
 import {assessCustomerWorstCase} from '@/lib/net-margin-rules';
-import {restartSubmissionOpenNow,recordRestartResult,armRestartSubmission,ownedRestartIntentFromAcknowledgement,claimRestartIntent,activateCheckoutContract,activateSwitchContract,type CheckoutContractActivation,reserveContractFunding,reserveSwitchContractFunding,reserveRestartContractFunding} from '@/lib/contract-funding';
+import {takeRestartRecovery,restartSubmissionOpenNow,recordRestartResult,armRestartSubmission,ownedRestartIntentFromAcknowledgement,claimRestartIntent,activateCheckoutContract,activateSwitchContract,type CheckoutContractActivation,reserveContractFunding,reserveSwitchContractFunding,reserveRestartContractFunding} from '@/lib/contract-funding';
 import {contractFixture} from './contract-funding-fixture';
 import {reset,seed,ledger,calls,settings} from './contract-funding-redis';
 const key='nl:contract-reserve:v1';
@@ -381,3 +381,5 @@ test('closed submission barrier performs no Redis or provider IO even with a syn
 test('closed result retention wrapper cannot perform Redis IO for a fabricated result',async()=>{reset();assert.equal(await recordRestartResult({armed:null as never,subscriptionId:'sub_SyntheticResult01'}),false);assert.equal(calls.length,0);});
 
 test('closed final submission check cannot authorize POST for fabricated ownership',()=>{assert.equal(restartSubmissionOpenNow(null as never),false);});
+
+test('closed recovery wrapper performs no Redis reads or writes for fabricated ownership',async()=>{reset();assert.equal(await takeRestartRecovery(null as never),null);assert.equal(calls.length,0);});

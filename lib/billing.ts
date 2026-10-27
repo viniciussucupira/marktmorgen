@@ -1,6 +1,6 @@
 import {createHash,randomUUID} from 'node:crypto';
 import {canonicalFinancialSnapshot,CONTRACT_FUNDING_RULES} from '@/lib/contract-funding-rules';
-import {restartSubmissionOpenNow,recordRestartResult,armRestartSubmission,claimRestartIntent,reserveRestartContractFunding,activateCheckoutContract,activateSwitchContract,type ContractGrant,type OwnedRestartIntent,type ArmedRestartSubmission} from '@/lib/contract-funding';
+import {takeRestartRecovery,restartSubmissionOpenNow,recordRestartResult,armRestartSubmission,claimRestartIntent,reserveRestartContractFunding,activateCheckoutContract,activateSwitchContract,type ContractGrant,type OwnedRestartIntent,type ArmedRestartSubmission} from '@/lib/contract-funding';
 /**
  * The one way Marktmorgen makes money.
  *
@@ -698,6 +698,32 @@ export async function restartPlan(input: {
     // This branch is selected from the durable pause, not a now-inactive store.
     // Current coverage refuses before Redis or any ensurePrice/provider call.
     if (!source.sourceGrantId) throw new Error("The funded restart source is unknown");
+    const recovery = await takeRestartRecovery({statsId:source.statsId,sourceSubscriptionId:source.sourceSubscriptionId,sourceGrantId:source.sourceGrantId,ref:source.ref,handle:input.store.handle,paused:source.paused});
+    if (!recovery) throw new Error("The funded restart recovery observation is unknown");
+    if (recovery.kind === "held") throw new Error("The funded restart remains held without another provider operation");
+    if (recovery.kind === "read") {
+      const {armed}=recovery,paused=JSON.parse(armed.intent.paused) as {customer?:unknown;paymentMethod?:unknown;tier?:unknown};
+      if(paused.customer!==input.customerId||paused.paymentMethod!==input.paymentMethod||paused.tier!==input.tier||armed.intent.handle!==input.store.handle)
+        throw new Error("The funded recovery source does not match its durable owner");
+      const ownedCustomer=paused.customer as string,ownedTier=paused.tier as Tier;
+      let subscription:Record<string,unknown>;
+      if(recovery.subscriptionId){
+        subscription=await onPlatform("GET","/subscriptions/"+encodeURIComponent(recovery.subscriptionId));
+        if(identifyFundedRestartResult(armed,{customerId:ownedCustomer,tier:ownedTier},subscription)!==recovery.subscriptionId)
+          throw new Error("The known restart ID returned a different subscription");
+      }else{
+        // Search is only a bounded positive observation. Empty/lagging pages
+        // never prove absence, restore a claim or permit another POST.
+        const query="metadata['funding_grant']:'"+armed.intent.grant.id+"' AND metadata['restart_claim']:'"+armed.intent.claim+"' AND metadata['restart_source']:'"+armed.intent.grant.sourceSubscriptionId+"'";
+        const page=await onPlatform("GET","/subscriptions/search?"+new URLSearchParams({query,limit:"2"}));
+        subscription=selectRestartRecoveryCandidate(armed,{customerId:ownedCustomer,tier:ownedTier},page);
+      }
+      const id=identifyFundedRestartResult(armed,{customerId:ownedCustomer,tier:ownedTier},subscription);
+      if(!(await recordRestartResult({armed,subscriptionId:id})))throw new Error("The recovered restart ID was not durably acknowledged");
+      if(!recovery.subscriptionId)throw new Error("The identified restart ID is retained; a separately budgeted exact-ID GET is required before state adoption");
+      observeFundedRestartResult(armed,{customerId:ownedCustomer,tier:ownedTier},subscription);
+      throw new Error("The recovered funded restart still requires activation and acknowledged publication");
+    }
     const grant = await reserveRestartContractFunding(source.statsId, source.sourceSubscriptionId, input.tier);
     const intent = grant ? await claimRestartIntent({ grant, ref: source.ref, handle: input.store.handle, paused: source.paused, sourceGrantId: source.sourceGrantId, claim: "claim_" + randomUUID() }) : null;
     if (!intent) throw new Error("The funded restart intent was not acknowledged");
@@ -707,24 +733,18 @@ export async function restartPlan(input: {
     if (paused.customer !== input.customerId || paused.paymentMethod !== input.paymentMethod || paused.tier !== input.tier || intent.handle !== input.store.handle || intent.source.binding.split("|")[1] !== source.sourceSubscriptionId) {
       throw new Error("The funded restart source does not match its owned intent");
     }
+    const ownedCustomer=paused.customer as string,ownedTier=paused.tier as Tier;
     // Only the first acknowledged owner may read its exact original subscription.
     // No search/list, cancellation mutation or retry can infer that it stopped.
-    const original = await onPlatform("GET", `/subscriptions/${encodeURIComponent(source.sourceSubscriptionId)}`);
+    const original = await onPlatform("GET", `/subscriptions/${encodeURIComponent(intent.grant.sourceSubscriptionId!)}`);
     observeStoppedRestartSource(intent, original);
     // A bounded read of an existing published price cannot create products or
     // prices. Empty/ambiguous/partial pages are unknown, never inline fallback.
     const prices = await onPlatform("GET", "/prices?" + new URLSearchParams({
-      "lookup_keys[]": lookupKey(input.tier,"month"),active:"true",limit:"2",
+      "lookup_keys[]": lookupKey(ownedTier,"month"),active:"true",limit:"2",
     }));
     const priceId = observeFundedRestartPrice(intent, prices);
-    const body = new URLSearchParams({
-      customer:input.customerId,"items[0][price]":priceId,"items[0][quantity]":"1",
-      default_payment_method:input.paymentMethod,off_session:"true",payment_behavior:"error_if_incomplete",
-      "metadata[store]":intent.handle,"metadata[tier]":input.tier,"metadata[restarted]":"break",
-      "metadata[funding_grant]":intent.grant.id,"metadata[funding_review]":intent.grant.reviewId,
-      "metadata[funding_action]":"restart","metadata[restart_claim]":intent.claim,
-      "metadata[restart_source]":source.sourceSubscriptionId,
-    });
+    const body = fundedRestartRequestBody(intent,priceId);
     const armed = await armRestartSubmission({intent,priceId,bodyHash:createHash("sha256").update(body.toString()).digest("hex")});
     if (!armed) throw new Error("The funded restart submission barrier was not acknowledged");
     // The barrier identifies exact request bytes and one permanent attempt.
@@ -741,7 +761,7 @@ export async function restartPlan(input: {
         !(await recordRestartResult({armed,subscriptionId:resultId}))) {
       throw new Error("The funded restart result ID was not durably acknowledged");
     }
-    observeFundedRestartResult(armed,{customerId:input.customerId,tier:input.tier},subscription);
+    observeFundedRestartResult(armed,{customerId:ownedCustomer,tier:ownedTier},subscription);
     // Current coverage refuses before any of this IO. Even an identified paid
     // result cannot be published to the store before activation/ACK/CAS coverage.
     throw new Error("The funded restart requires reconciliation and activation coverage");
@@ -765,6 +785,68 @@ export async function restartPlan(input: {
 
 
 
+
+
+/** Exact future request bytes from the immutable owned pause only. A mutable
+ * caller object never supplies customer/card/tier/source after an await.
+ */
+export function fundedRestartRequestBody(intent:OwnedRestartIntent,priceId:string):URLSearchParams{
+ const encoded=canonicalFinancialSnapshot({intent,priceId});
+ if(!encoded)throw Error("The owned restart request is unknown");
+ ({intent,priceId}=JSON.parse(encoded));
+ const pause=JSON.parse(intent.paused) as {customer?:unknown;paymentMethod?:unknown;tier?:unknown;subscription?:unknown;funding?:{version?:unknown;grantId?:unknown}};
+ const source=intent.grant.sourceSubscriptionId,tier=pause.tier;
+ if(typeof pause.customer!=="string"||!CUSTOMER_PATTERN.test(pause.customer)||
+    typeof pause.paymentMethod!=="string"||!/^(pm|card|src)_[A-Za-z0-9]{6,64}$/.test(pause.paymentMethod)||
+    (tier!=="creator"&&tier!=="pro"&&tier!=="scale")||intent.grant.key!==tier+"_month"||intent.grant.action!=="restart"||
+    typeof source!=="string"||!SUBSCRIPTION_PATTERN.test(source)||pause.subscription!==source||
+    pause.funding?.version!==1||pause.funding.grantId!==intent.source.binding.split("|")[0]||
+    !HANDLE_PATTERN.test(intent.handle)||!/^price_[A-Za-z0-9]{6,100}$/.test(priceId)||
+    !/^ctr_[A-Za-z0-9_-]{1,80}$/.test(intent.grant.id)||!/^claim_[A-Za-z0-9_-]{1,80}$/.test(intent.claim))
+  throw Error("The restart request does not match its immutable owned source");
+ return new URLSearchParams({
+  customer:pause.customer,"items[0][price]":priceId,"items[0][quantity]":"1",
+  default_payment_method:pause.paymentMethod,off_session:"true",payment_behavior:"error_if_incomplete",
+  "metadata[store]":intent.handle,"metadata[tier]":tier,"metadata[restarted]":"break",
+  "metadata[funding_grant]":intent.grant.id,"metadata[funding_review]":intent.grant.reviewId,
+  "metadata[funding_action]":"restart","metadata[restart_claim]":intent.claim,"metadata[restart_source]":source,
+ });
+}
+
+/** Positive identity only, across all explicit statuses. A canceled result
+ * remains evidence; it cannot pass the separate active paid-plan observer.
+ */
+export function identifyFundedRestartResult(armed:ArmedRestartSubmission,input:{customerId:string;tier:Tier},subscription:Record<string,unknown>):string{
+ const encoded=canonicalFinancialSnapshot({armed,input,subscription});
+ if(!encoded)throw Error("The restart recovery identity is unknown");
+ ({armed,input,subscription}=JSON.parse(encoded));
+ const {intent}=armed,meta=subscription.metadata as Record<string,unknown>|undefined;
+ const items=subscription.items as {data?:{quantity?:unknown;price?:Record<string,unknown>}[];has_more?:unknown}|undefined;
+ const price=items?.data?.[0]?.price,recurring=price?.recurring as Record<string,unknown>|undefined;
+ if(typeof subscription.id!=="string"||!SUBSCRIPTION_PATTERN.test(subscription.id)||subscription.id===intent.grant.sourceSubscriptionId||
+    typeof subscription.status!=="string"||!["active","trialing","past_due","unpaid","canceled","incomplete","incomplete_expired","paused"].includes(subscription.status)||
+    !Number.isSafeInteger(subscription.created)||(subscription.created as number)<armed.armedAtSeconds||
+    (subscription.created as number)>intent.grant.activationUntilSeconds||customerOf(subscription).id!==input.customerId||
+    intent.grant.action!=="restart"||intent.grant.key!==input.tier+"_month"||
+    items?.data?.length!==1||items.has_more!==false||items.data[0].quantity!==1||
+    price?.id!==armed.priceId||price.currency!=="usd"||price.unit_amount!==PUBLISHED_PLAN_PRICES[input.tier].month||
+    recurring?.interval!=="month"||recurring.interval_count!==1||planOf(subscription).tier!==input.tier||planOf(subscription).cycle!=="month"||
+    meta?.funding_grant!==intent.grant.id||meta.funding_review!==intent.grant.reviewId||meta.restart_claim!==intent.claim||
+    meta.restart_source!==intent.grant.sourceSubscriptionId||meta.funding_action!=="restart"||meta.store!==intent.handle||meta.tier!==input.tier)
+  throw Error("The restart recovery observation does not identify its exact submitted owner");
+ return subscription.id;
+}
+export function selectRestartRecoveryCandidate(armed:ArmedRestartSubmission,input:{customerId:string;tier:Tier},page:Record<string,unknown>):Record<string,unknown>{
+ const encoded=canonicalFinancialSnapshot({armed,input,page});
+ if(!encoded)throw Error("The restart search observation is unknown");
+ ({armed,input,page}=JSON.parse(encoded));
+ if(page.object!=="search_result"||page.has_more!==false||!Array.isArray(page.data)||page.data.length!==1)
+  throw Error("The restart search page cannot prove a unique result or absence");
+ const candidate=page.data[0] as Record<string,unknown>;
+ identifyFundedRestartResult(armed,input,candidate);
+ return candidate;
+}
+
 /** Observe an already obtained, durably identified result. Descriptive only:
  * callers still need funded activation and acknowledged store/CAS publication.
  */
@@ -775,9 +857,11 @@ export function observeFundedRestartResult(
  const encoded=canonicalFinancialSnapshot({armed,input,subscription,observedAt});
  if(!encoded)throw Error("The funded restart result observation is unknown");
  ({armed,input,subscription,observedAt}=JSON.parse(encoded));
+ identifyFundedRestartResult(armed,input,subscription);
  const {intent}=armed,source=intent.grant.sourceSubscriptionId;
  if(subscription.id===source||intent.grant.action!=="restart"||intent.grant.key!==input.tier+"_month")
   throw Error("The funded restart result reused or changed its original source");
+ if(periodStart(subscription)<(subscription.created as number))throw Error("The recovered paid period begins before its identified subscription");
  const started=observeRestartedPlan({customerId:input.customerId,tier:input.tier,priceId:armed.priceId},subscription,observedAt);
  const metadata=subscription.metadata as Record<string,unknown>|undefined;
  if(metadata?.funding_grant!==intent.grant.id||metadata.funding_review!==intent.grant.reviewId||

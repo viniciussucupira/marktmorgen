@@ -10142,3 +10142,116 @@ Preçosmáximos pagos69/690/449/4490/999/9990mantidos, sem média/subsídio.
 Mesmos jobs/matrizes/tetos, sem serviço/dependência/cache/artefato novo;
 CI público padrão condicional0 somente no escopo documentado.
 Gates/PLANS_ON_SALE=false/IDs/idiomas/conteúdo/permissões/contador254 preservados.
+
+
+
+### PR1081 — incorporação e publicação verificadas
+
+Head25e68df2e436a530776671a880441cb0e393713c aprovado31/31checks+Vercel;
+8classificadores10+7/fulltrue. Merge407b750f013e15d6e46a5a5324dfd172527eb06b
+em26/10/2026 22:23:39Fortaleza(27/10 01:23:39UTC),árvore
+f9e7d5472be0c4c6a989256e18bdec3cd886f2cf e pais[791dd9d,25e68df]conferidos.
+Verify121943538800:477checks00:59:18.4825907UTC,
+Everything01:00:32.7504623UTC,agreements01:02:20.4952971UTC,
+store-copy01:14:00.3162973UTC27/10. Redis12194353866400:56:37.4287070UTC:
+IDretido apósdeadline/policy-mês,64duplicados sameID sóACK2 e recusasforeign;
+RECORDINFO5(EVAL1/HGET1/HSET1/TTL1/TYPE1),ARM17. Mobilehome72/32/32ms,
+pricing32/32/32,sales32/32/32,LCP588–692ms,CLS0;doisleitoresreaisaprovados.
+Produção dpl_8BGNkANqZe9SwWJ4DvxLncrEZoDp READY26/10 22:25:40.874Fortaleza
+(27/10 01:25:40.874UTC),SHA407b750 e marktmorgen.com exatos;
+5rotas /,/platform,/pricing,/mission,/library200comIDexato.
+Error/fatal27/10 01:25:40.874→01:26:05.397UTC semregistros;
+janela curta, não garantia de ausência de erros.
+Coveragefalse/políticasNULL/PLANS_ON_SALE=false econtador254 mantidos.
+
+
+
+### AB(a) — recuperação com provedor somente leitura e dono permanente da origem
+
+Antes de qualquer reserva nova, billing consulta estado atômico da origem.
+Novo índice permanente restart-owner:sourceGrant→restartGrant, no mesmo ledger,
+é escrito no MESMO HSET do primeiro claim. Reserva/claim/arm recusam outra
+propriedade mesmo se o pending desaparecer. Policy/review usamHMGET nos estágios
+restart para acomodar leitura do índice sem ampliar teto17comandos por etapa;
+checkout/switch mantêm suas leituras anteriores. Falha parcial/índice divergente/
+pending antigo semíndice é desconhecido, nunca autorização de POST.
+Ausência exige índice e pending ausentes e binding/review atuais exatos; não
+constitui aprovação de migração legada ou permissão financeira por si só.
+
+TAKE_RESTART_RECOVERY reserva atomicamente no máximo3leituras do provedor POR
+dono ao longo da vida; ACK perdido consome a leitura.64concorrentes não ampliam
+o limite. Índice/receipts/caixa/rawpause/due/ano/identidades devem coincidir.
+Intenção só reclamada, orçamento esgotado ou observação desconhecida ficam retidos.
+Estado read nunca carrega binding de submissão: não pode passar a última
+checagem de POST. Um novo nonce não recupera caixa, readbudget ou ownership.
+
+ID conhecido usaGETexato. SemID, uma busca com metadata grant/claim/origem,
+limit2 e sem filtro de status pode apenas identificar um único resultado
+positivo. Vazio, has_more, duplicado, erro ou atraso de indexação NUNCA provam
+ausência e não habilitam POST. Canceled/past_due/outros status explícitos podem
+identificar ID/evidência, mas só observador separado de período mensal ativo pago
+pode descrever boa situação. Busca positiva persisteID e termina: exige nova
+leitura porID, separadamente orçada, antes de qualquer adoção de estado.
+AtéGETativo válido ainda termina antes de ativação/store/cleanup nesta fase.
+
+Pedidos futuros são agora construídos apenas da cópia imutável da pausa
+reconhecida (cliente/cartão/tier/origem/metadata). Objeto mutável do chamador não
+fornece esses campos depois de await. Observadores recusam período pago iniciado
+antes da criação da assinatura e getters não são executados.
+
+Envelope4096inclui resultado e readbudget; headroom interno passa160→256bytes,
+sem ampliar envelope. Índice acrescenta no máximo182bytes crus campo+valor por
+grant original, além de overhead Redis/cópias/retenção ainda desconhecidos.
+Não há TTL/reclaim/liberação. Data registry e regra canônica registram a nova
+cardinalidade; não fingem que o índice é armazenamento gratuito.
+
+| Contrato | Novas operações habilitadas mensais/anuais | Custos prospectivos |
+| --- | --- | --- |
+| creator_month | 0/0 | desconhecidos,reprovados |
+| creator_year | 0/0 | desconhecidos,reprovados;restartmensalapenas |
+| pro_month | 0/0 | desconhecidos,reprovados |
+| pro_year | 0/0 | desconhecidos,reprovados;restartmensalapenas |
+| scale_month | 0/0 | desconhecidos,reprovados |
+| scale_year | 0/0 | desconhecidos,reprovados;restartmensalapenas |
+
+Prospectivo:1EVALrecovery porpassagem(teto17) e no máximo1GETouSEARCH por
+allowance,3allowances totais/origem. RegistroID usaEVALseparado, sem novoPOST.
+Isso NÃO cota nem limita por si só o polling Redis diário de estados retidos,
+conteúdo preservado, migração de dados, capacidade e retenção permanentes:
+esses custos e o lifecycle de suspensão da fila continuam pendentes/reprovados,
+incluindo6contratos/LLC/BR-US+ISS5%/leitura onerosa. Desconhecido não é0.
+Preçosmáximos pagos69/690/449/4490/999/9990inalterados; teto e reserva reais antes
+de operação. CoveragepauseRestart=false/políticasNULL impedem todo novo IO real.
+Mesmojobs/matrizes/dependências/serviços/cache/artefatos;CI público padrão
+condicional0somente no escopo documentado (repo público reconferido27/10UTC).
+TesteLua real exige índice/pending perdido/3reads/64concorrentes/negativos/
+IDconhecido pós-mês/INFO; wrappers fechados0Redis, busca/metadata/clock/getters/
+corpo imutável em observadores reais. Nova suítecompleta obrigatória.
+Fonte primária27/10: https://docs.stripe.com/api/subscriptions/search
+(índice pode atrasar, portanto ausência não é inferida).
+AB(a) incompleto: ativação financiada/ACKstore/CASgeraçõescleanup-undo/rollover/
+polling limitado e custeio integral seguem; gates/permissões/conteúdo/idiomas/
+identificadores/AP/AN/contador254 preservados. Nenhum pagamento ou aviso real.
+
+
+
+PR1082 primeiroheadbba99145958cb6a7d08519c6c423e63729b659c7:
+Redis121962846446 falhou27/10 01:56:07.4391124UTC no fixture negativo ref,
+por argumento ref recebido simultaneamente por posição e keyword em Python,
+antes dessa asserção Lua. Não foi aprovação parcial. Helper físico renomeado
+record_ref; override ref agora altera somenteARGV e testa a recusa pretendida,
+sem relaxar asserções. Também reforçados limites debytes do índice dentro do
+Lua antes da aprovação. Novohead exige suíteCOMPLETA, não rerun deumjob.
+
+Correção explícita de soma dos mapasINFO históricos: ARM mediu16comandos
+(EVAL1/GET2/HGET9/HSET1/TTL1/TYPE1/ZSCORE1, ouHGET8+HMGET1 na versão indexada),
+e não17como dizia a prosa anterior. O teto conservador17por etapa continua
+vinculante; reserva/claim medidos17,retenção5,recuperação15 neste primeirohead.
+Fonte:mapas reais121876839746/121943538664/121962846446.
+Histórico anterior permanece acima, agora corrigido; não representa cotação,
+custo runtime0 nem margem certificada. Testes posteriores ao fixture interrompido
+continuam pendentes até suítecompleta no novohead.
+
+
+### PR1082 — correção da amostra de corpo imutável (27out2026 UTC)
+No head cb61f5af90348bbe6a308b1fd57abf8a34b3db01, verify121965339757 falhou em27out02:07:39.8746098UTC: a pausa sintética stoppedFixture não continha tier/paymentMethod exigidos pelo corpo real. Completar a amostra com os campos persistidos e acrescentar recusa explícita para cada customer/paymentMethod/tier ausente; nenhuma validação de produção relaxada. Redis121965339651 passou, mas isso não aprova o head com verifyfalho. Novo head exige suíte completa; não reexecutar job isolado. Gates/custos desconhecidos/contador254 preservados; nenhuma publicação funcional.
