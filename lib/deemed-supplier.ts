@@ -10,9 +10,11 @@
  * presumes that a platform taking part in a supply of electronically supplied
  * services acts in its own name, and the presumption cannot be rebutted by
  * one that authorises the charge, authorises the delivery or sets the general
- * terms and conditions, which Marktmorgen does. Under the reading with more
- * tax (rule 19) the same holds in the UK, for US states' marketplace
- * facilitator laws, and for other countries' platform rules.
+ * terms and conditions. The owner's TX decision (27 October 2026) retires
+ * rule 19: do not infer identical liability for the UK, every US state or
+ * every other country. Each product, jurisdiction and actual platform role
+ * needs its own applicable source and implemented treatment. See the dated
+ * source matrix in docs/tx-legal-source-review-2026-10-27.md.
  *
  * None of the treatment is built. Until each jurisdiction has a record below
  * (VAT or sales tax collected on top or from the creator's payout, never from
@@ -40,12 +42,12 @@ export const DEEMED_SUPPLIER_RULES: Record<DeemedSupplierJurisdiction, { rule: s
   },
   US: {
     rule:
-      "US states' marketplace facilitator laws on the creators' sales: not researched state by state, so the most-tax reading makes Marktmorgen a facilitator everywhere (docs/tax-uncertainty.md question 23)",
+      "US states' marketplace facilitator laws on the creators' sales: product classification, platform role, nexus and applicable thresholds must be reviewed state by state; unverified treatment remains unbuilt, not liability presumed everywhere (docs/tx-legal-source-review-2026-10-27.md; question 23)",
     questions: [23],
   },
   other: {
     rule:
-      "Other countries' platform rules for digital services sold by sellers abroad (Canada, Australia, New Zealand, Norway, Switzerland, Singapore, Japan and others): not researched (docs/tax-uncertainty.md question 24)",
+      "Other countries' platform rules: Canada, Norway and Switzerland have partially reviewed official sources with different scopes and thresholds; no complete country-by-country treatment, counters or registrations are built and recorded. Do not generalize one country's rule to all digital, human or physical supplies (docs/tx-legal-source-review-2026-10-27.md; question 24)",
     questions: [24],
   },
 };
