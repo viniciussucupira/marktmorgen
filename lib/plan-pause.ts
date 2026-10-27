@@ -445,6 +445,15 @@ export async function runBreaks(nowSeconds = Math.floor(Date.now() / 1000)): Pro
       counts.dropped += 1;
       continue;
     }
+    // A funded pause is immutable evidence for its future restart owner.
+    // The legacy notice sends before an unguarded SET of `told`: another
+    // worker could already have claimed these exact bytes while email waits.
+    // Until notice funding and generation-aware ACK/CAS are covered, retain
+    // the untouched pause without owner reads, email or a replacement SET.
+    if (record.funding && record.until > nowSeconds) {
+      counts.failed += 1;
+      continue;
+    }
     // A nullable store lookup does not distinguish absence from unreadable
     // data. Neither that nor a transport failure authorizes erasing a known
     // pause, its due entry, or its once-a-year evidence.

@@ -733,12 +733,22 @@ async function main() {
     is("the ordinary inactive store has no funded period",current?.period,null);
     const original=pauseRedis.pipeline;
     const evidence=await original([["GET",`nl:pause:${ref}`],["GET",`nl:pause:last:${ref}`]]);
-    let ledgerCommands=0;
+    let ledgerCommands=0,ownerReads=0,mutations=0;
     pauseRedis.pipeline=async commands=>{
       ledgerCommands+=commands.filter(command=>command.some(value=>value==="nl:contract-reserve:v1")).length;
+      ownerReads+=commands.filter(command=>command[0]==="GET"&&String(command[1]).startsWith("nl:store:owner:")).length;
+      mutations+=commands.filter(command=>!["GET","ZRANGEBYSCORE"].includes(String(command[0]))).length;
       return original(commands);
     };
     try{
+      for(const offset of [-2*DAY,-DAY,-60]){
+        const calls=providerCalls,before=created.length,ownersBefore=ownerReads,writesBefore=mutations;emails.length=0;
+        is("a funded notice window stays held before legacy email and told replacement",await runBreaks(set.record.until+offset),{told:0,restarted:0,failed:1,dropped:0});
+        is("held notice performs no owner lookup, write, provider call, ledger work or email",[ownerReads-ownersBefore,mutations-writesBefore,providerCalls-calls,created.length-before,ledgerCommands,emails.length],[0,0,0,0,0,0]);
+        is("repeated funded notice reads preserve the exact raw pause and annual evidence",await original([["GET",`nl:pause:${ref}`],["GET",`nl:pause:last:${ref}`]]),evidence);
+        const [due]=await original([["ZRANGEBYSCORE","nl:pause:due","-inf","+inf"]]);
+        is("held notice retains the due member for later reconciliation",Array.isArray(due)&&due.includes(ref),true);
+      }
       for(const offset of [60,4*DAY]){
         const calls=providerCalls,before=created.length;emails.length=0;
         is("the closed integrated funded branch stays unresolved beyond the legacy retry window",await runBreaks(set.record.until+offset),{told:0,restarted:0,failed:1,dropped:0});
