@@ -77,8 +77,41 @@ function calendarDay(value: unknown): boolean {
 }
 const said = (value: unknown) => typeof value === "string" && value.trim().length > 0;
 
+/** A review is data, never inherited defaults or executable property reads.
+ * Detach every field once before filtering or validating the same snapshot. */
+function ownTreatmentRecords(value: unknown): DeemedSupplierRecord[] | null {
+  try {
+    if (!Array.isArray(value) || Object.getPrototypeOf(value) !== Array.prototype) return null;
+    const length = Object.getOwnPropertyDescriptor(value, "length")?.value;
+    if (!Number.isSafeInteger(length) || length < 0 || Reflect.ownKeys(value).length !== length + 1) return null;
+    const keys = ["jurisdiction", "treatment", "implementedIn", "recordedOn", "registration", "evidence"] as const;
+    const records: DeemedSupplierRecord[] = [];
+    for (let index = 0; index < length; index += 1) {
+      const entry = Object.getOwnPropertyDescriptor(value, String(index));
+      if (!entry || !Object.hasOwn(entry, "value")) return null;
+      const record: unknown = entry.value;
+      if (!record || typeof record !== "object" || ![Object.prototype, null].includes(Object.getPrototypeOf(record))
+        || Reflect.ownKeys(record).length !== keys.length) return null;
+      const fields = Object.getOwnPropertyDescriptors(record);
+      const data: Record<string, unknown> = {};
+      for (const key of keys) {
+        const field = fields[key];
+        if (!field || !Object.hasOwn(field, "value")) return null;
+        data[key] = field.value;
+      }
+      if (!(DEEMED_SUPPLIER_JURISDICTIONS as readonly unknown[]).includes(data.jurisdiction)) return null;
+      records.push(data as unknown as DeemedSupplierRecord);
+    }
+    return records;
+  } catch {
+    return null;
+  }
+}
+
 /** Every reason sales must stay closed under the deemed-supplier rules: empty only when each jurisdiction has a complete record. */
-export function deemedSupplierProblems(records: readonly DeemedSupplierRecord[] = DEEMED_SUPPLIER_RECORDS): string[] {
+export function deemedSupplierProblems(value: unknown = DEEMED_SUPPLIER_RECORDS): string[] {
+  const records = ownTreatmentRecords(value);
+  if (!records) return ["tax-treatment records: complete own data required"];
   const out: string[] = [];
   for (const jurisdiction of DEEMED_SUPPLIER_JURISDICTIONS) {
     const found = records.filter((record) => record?.jurisdiction === jurisdiction);
@@ -97,6 +130,6 @@ export function deemedSupplierProblems(records: readonly DeemedSupplierRecord[] 
 }
 
 /** Whether every jurisdiction's treatment is built and recorded. Not permission to sell by itself. */
-export function deemedSupplierReady(records: readonly DeemedSupplierRecord[] = DEEMED_SUPPLIER_RECORDS): boolean {
+export function deemedSupplierReady(records: unknown = DEEMED_SUPPLIER_RECORDS): boolean {
   return deemedSupplierProblems(records).length === 0;
 }
