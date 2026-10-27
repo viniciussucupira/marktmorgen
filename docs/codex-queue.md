@@ -1,5 +1,17 @@
 # Fila de trabalho do Codex — Marktmorgen
 
+## Revisão pública — navegação responsiva incorporada (27/10/2026, 18h03:25 Fortaleza)
+
+PR1119 incorporado em 27/10/2026 às 18:03:25 Fortaleza / 21:03:25 UTC: merge b865c793f1a5955ccdff920f99d23c2c6757dc4d, pais 2da4aedbef84acb11b9a0435b72620d504e6e331 / 420500882e0ad33a168bf3f97a1757eb7918929c, árvore 4cf4f56af5ad4768ec95dcbc259d78879c89efa1 idêntica à testada. Ao ampliar a tela com o menu móvel aberto, a navegação agora fecha o painel, libera a rolagem e devolve o foco ao início visível. Antes o CSS ocultava o painel, mas mantinha a página bloqueada e o foco invisível. Listener removido ao fechar; nenhum preço, limite, idioma, identificador, permissão ou gate alterado.
+
+Prova sintética integral no head: 31/31 + Vercel success; oito escopos 10+7/fulltrue. Verify 122455010250: 233/233 bundles, Everything passing, sem erro de workflow. Regressão 390→1280→390 passou em Chromium/Firefox/WebKit (jobs 122454999537 / 122454999506 / 122454999431): rolagem liberada, foco visível, painel continua fechado ao retornar, reabre e fecha por Escape. Cada matriz manteve 90 casos, zero falhas e lacunas manuais 73/68/70; não é certificação AAA ou teste humano. A regressão roda após as medições existentes, sem alterar casos, limites ou workflows.
+
+Main: oito escopos bem-sucedidos (122468770201, 122468768514, 122468768020, 122468767152, 122468767092, 122468766740, 122468766552, 122468766464) e onze skips legítimos. Todos os oito logs confirmam explicitamente Reused complete PR coverage for identical Git tree, sem erro. Reutilização existente da prova integral da mesma árvore; não se declara nova execução integral no main.
+
+Publicação técnica confirmada READY/production: dpl_35trCq7upt6aU9fwdEJtKSphoKfQ, marktmorgen-feqcxd8f5-viniciussucupira.vercel.app, SHA exato b865c793f1a5955ccdff920f99d23c2c6757dc4d, aliases marktmorgen.com / www.marktmorgen.com. Consulta de logs error/fatal deste deployment desde 21:03:25 UTC retornou tabela sem grupos em 27/10/2026; ausência de registros nessa janela não comprova tráfego, fluxo ou ausência universal de falhas. Prova interativa de produção continua pendente pelo bloqueio anterior da conexão Chrome, sem repetir ou trocar de navegador. Contador 254, sem entrega funcional 255.
+
+Revisões estáticas de início, preços e ajuda não confirmaram outra alteração necessária; não equivalem a teste visual, humano, desempenho ou navegação real. TX/MR/SR continuam com suas pendências e precedência aprovada. Benefício: eliminar recuperação manual de rolagem/foco na mudança de tamanho; 0→0 ações obrigatórias. Sem novo IO produtivo, serviço ou custo operacional ativado. CI/revisão custeados 100% pela empresa em FX275; custo desconhecido não é zero. PLANS_ON_SALE=false e todos os controles preservados. Histórico abaixo permanece intacto.
+
 ## TX3 — registros fiscais consistentes,incorporados (27/10/2026, 17h19 Fortaleza)
 
 PR1117 incorporado17:15:23Fortaleza/20:15:23UTC,merged57deffd06d5835979de3cf5ef411f4129009048,paisc2a55b8fa600b72164568eccb4bc7e052472372c/7f85a74c7022a16093b08fbbf88b4070be4a3c4a,árvoredee1662590d3acad4125185e225c72e4bf8871b0 idêntica à testada. O validador fiscal agora captura somente descritores próprios uma vez antes de filtrar/validar;getter que mudava collect para refuse-consumers não pode evitar o registro. Recusa herança/acessores/lacunas/jurisdição desconhecida,sem executar getters. Quatro regressões específicas passaram;sem inventar registros reais,DEEMED_SUPPLIER_RECORDSvazio e demaisgates/flagsfalse.
