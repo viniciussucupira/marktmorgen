@@ -32,7 +32,7 @@ import { IMPORTS_PER_SHARE_MONTH, PREVIEWS_PER_SHARE_MONTH, SHARE_LIMITS } from 
 import { TEAM_LIMITS } from "@/lib/team-scheduling-rules";
 import { NEXT_OFFER_CHOICES, NEXT_OFFER_KEEP_SECONDS, NEXT_OFFER_OUTPUT_TOKENS, NEXT_OFFER_PRODUCTS, NEXT_OFFER_REQUEST_UNITS } from "@/lib/next-offer-rules";
 import { ASSIST_REMINDERS_PER_STORE_DAY, ASSIST_REMIND_KEEP_SECONDS, ASSIST_REMIND_OUTPUT_TOKENS, ASSIST_REMIND_PRODUCTS, ASSIST_REMIND_REQUEST_UNITS, ASSIST_REMIND_VERSION } from "@/lib/assistant-reminder-rules";
-import { ADD_ON_FEES, ASSISTANT_INPUT_BYTES, ASSISTANT_KEEP_SECONDS, ASSISTANT_MESSAGES_MONTHLY, ASSISTANT_MODEL, ASSISTANT_OUTPUT_TOKENS, ASSISTANT_PRICE_CENTS, DISPUTE_RESERVE_BPS, REFUND_RESERVE_BPS, REMITTANCE_BPS } from "@/lib/store-assistant-rules";
+import { ADD_ON_ROOM_CENTS, ADD_ON_FEES, ASSISTANT_INPUT_BYTES, ASSISTANT_KEEP_SECONDS, ASSISTANT_MESSAGES_MONTHLY, ASSISTANT_MODEL, ASSISTANT_OUTPUT_TOKENS, ASSISTANT_PRICE_CENTS, DISPUTE_RESERVE_BPS, REFUND_RESERVE_BPS, REMITTANCE_BPS } from "@/lib/store-assistant-rules";
 export const REQUIRED_MARGIN_SCENARIOS=[
  "creator_month_full","creator_year_full","pro_month_full","pro_year_full","scale_month_full","scale_year_full",
  "video_overage","visits_overage","orders_overage",
@@ -49,13 +49,27 @@ export const BASE_PLAN_REVENUE_CEILINGS: Partial<Record<MarginScenario, number>>
  scale_month_full: PUBLISHED_PLAN_PRICES.scale.month,
  scale_year_full: PUBLISHED_PLAN_PRICES.scale.year,
 };
+/** Existing spend-floor cost buffers, not published entitlement limits. */
+export const COMMERCIAL_SPEND_FLOOR_ROOM_CENTS = { month: 25, year: 100 } as const;
+/** Hold the existing cost room without crediting a speculative tax deduction.
+ * The caller passes only the detached own-data review snapshot.
+ */
+function scenarioWithPlanRoom(key: MarginScenario, scenario: CustomerWorstCase | null): CustomerWorstCase | null {
+ if(BASE_PLAN_REVENUE_CEILINGS[key]===undefined)return scenario;
+ if(!scenario||!assessCustomerWorstCase(scenario).approved)return null;
+ const room=key.includes("_year_")?COMMERCIAL_SPEND_FLOOR_ROOM_CENTS.year:COMMERCIAL_SPEND_FLOOR_ROOM_CENTS.month;
+ const other=scenario.costCeilings.other!+room;
+ if(!Number.isSafeInteger(other))return null;
+ return {...scenario,costCeilings:{...scenario.costCeilings,other}};
+}
+
 /** Bind a review to actual priced rights, including free and post-cancellation use.
  * Vendor pricing, tax evidence and enforcement still require an independent review.
  */
 export const CURRENT_COMMERCIAL_TERMS = {
  // Since 18 October 2026 (schema 22): the price list of the owner's decision of 11:21, one list with no share of a sale, and the limits raised with it.
  schemaVersion: 23,
- marginPolicy: { decision: '2026-10-27T07:42:00-03:00', unit: 'strictly-positive-net-cents', minimumNetProfitCents: MINIMUM_NET_PROFIT_CENTS, company: 'nonnegative-at-computed-minimum-base', companyTargetBps: 6000, targetBasis: 'monthly-reconciled-actual-not-a-sales-gate', spendFloorRoom: 'unchanged' },
+ marginPolicy: { decision: '2026-10-27T07:42:00-03:00', unit: 'strictly-positive-net-cents', minimumNetProfitCents: MINIMUM_NET_PROFIT_CENTS, company: 'nonnegative-at-computed-minimum-base', companyTargetBps: 6000, targetBasis: 'monthly-reconciled-actual-not-a-sales-gate', spendFloorRoom: COMMERCIAL_SPEND_FLOOR_ROOM_CENTS, assistantCostRoomCents: ADD_ON_ROOM_CENTS },
  usageAdmission: { schema: 1, paidVisits: "finite-plan-threshold", paidVideo: "finite-explicit-threshold", unknownTraffic: "pause", supplierByteCeilingProven: false },
  uploadAdmission: { rules: UPLOAD_BUDGET_RULES, policy: AUTOMATIC_UPLOAD_BUDGET_CEILINGS },
  planningProfitTaxFloorBps: PLANNING_PROFIT_TAX_FLOOR_BPS,
@@ -138,7 +152,7 @@ function commercialMarginDataReady(review:CommercialMarginReview):boolean{
  const combinedCosts=review.companyBase.monthlyFixedCostsCeilingCents+exposure.monthlyBudgetCents!;
  if(!Number.isSafeInteger(combinedCosts))return false;
  const company = assessMinimumCustomerBase(
-  Object.keys(BASE_PLAN_REVENUE_CEILINGS).map(key=>({months:key.includes("_year_")?12:1,scenario:review.scenarios[key as MarginScenario]??null})), {...review.companyBase,monthlyFixedCostsCeilingCents:combinedCosts},
+  Object.keys(BASE_PLAN_REVENUE_CEILINGS).map(key=>({months:key.includes("_year_")?12:1,scenario:scenarioWithPlanRoom(key as MarginScenario,review.scenarios[key as MarginScenario]??null)})), {...review.companyBase,monthlyFixedCostsCeilingCents:combinedCosts},
  );
  if(!company.reviewedBaseSufficient)return false;
  // Non-paying AI allocations must be represented in the funded company
@@ -162,7 +176,7 @@ function commercialMarginDataReady(review:CommercialMarginReview):boolean{
    const reviewedAi=scenario?.costCeilings?.ai;
    if(aiCents===null || typeof reviewedAi!=="number" || !Number.isSafeInteger(reviewedAi) || reviewedAi<aiCents)return false;
   }
-  return assessCustomerWorstCase(scenario).approved;
+  return assessCustomerWorstCase(scenarioWithPlanRoom(key,scenario)).approved;
  });
 }
 export function commercialPlansMayOpen(requested:boolean,review:CommercialMarginReview|null=CURRENT_COMMERCIAL_MARGIN_REVIEW):boolean{

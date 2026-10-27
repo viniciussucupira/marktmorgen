@@ -125,4 +125,14 @@ const unknown=review();unknown.scenarios.creator_month_full!.taxesCeilingCents=n
 is('detachment never treats unknown taxes as zero',commercialMarginReady(unknown),false);
 is('real missing review still cannot open plans',commercialMarginReady(),false);
 }
+
+for(const key of Object.keys(BASE_PLAN_REVENUE_CEILINGS) as (keyof typeof BASE_PLAN_REVENUE_CEILINGS)[]){
+ const gross=BASE_PLAN_REVENUE_CEILINGS[key]!;
+ const room=key.includes("_year_")?100:25;
+ const noSpare=review();noSpare.scenarios[key]=fundedCustomerWithAi(gross,room);
+ is("positive unit alone does not waive the existing cost room "+key,assessCustomerWorstCase(noSpare.scenarios[key]!).approved,true);
+ is("all existing room cannot consume the last positive cent "+key,commercialMarginReady(noSpare),false);
+ const spare=review();spare.scenarios[key]=fundedCustomerWithAi(gross,room+1);
+ is("full reviewed taxes and existing cost room retain a positive cent "+key,commercialMarginReady(spare),true);
+}
 done();
