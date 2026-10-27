@@ -1,3 +1,11 @@
+## TX — Nenhuma consulta tributária será feita (27/10/2026)
+
+Decisão vigente do dono27/10/2026 12h34Fortaleza: nenhuma consulta tributária será feita no Brasil,EUA,Europa ou outro país, nem preparada para envio. Todo rascunho/pergunta/procedimento abaixo permanece exclusivamente como histórico e não é tarefa futura do dono. Não enviar,redigir para envio,contatar autoridades/terceiros ou condicionar leitura/gate/cálculo a resposta.
+
+CONSULTATION_ANSWERS permanece vazio. A retirada da dependência existente em código está em472[TX2]; este documento não afirma essa alteração concluída. Incertezas são resolvidas por texto legal/regulamentar e decisões oficiais conferidas com artigo/data, segundo a políticaTX deAGENTS.md. Citação não confirmada vai a Depende do dono,conservando apenas naquele ponto a leitura atual até correção,sem consulta. Preservar desconhecido reprova e demais controles.
+
+VR: proibição/estado histórico registrados;nenhuma consulta realizada/preparada,nenhum novo gasto/contato;revisãoTX1 e códigoTX2aindapendentes.
+
 # Tax consultations (18 Oct 2026)
 
 Since 18 Oct 2026 the owner uses no accountant. A tax doubt in [tax-uncertainty.md](tax-uncertainty.md) is closed by an official text or by an answer to one of these consultations, recorded here with its date and source; until then the reading with more tax stays (rule 19). Every answer updates this file, [tax-uncertainty.md](tax-uncertainty.md) and `CONSULTATION_ANSWERS` in `lib/tax-gate.ts` (and Hazelsong's `CONSULTATION_ANSWERS` in `lib/owner-margin.ts`, because the consultations are the LLC's and the owner's, not one product's), and only then the reading it closes is changed and the margins recomputed.
