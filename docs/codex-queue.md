@@ -11018,3 +11018,24 @@ Em andamento. AGENTS.md e prefixos tax-uncertainty/tax-consultations fazem preva
 ###471[TX1] — Matriz17pontos e remissãoart9a,27/10/2026
 
 Em andamento. docs/tx-legal-source-review-2026-10-27.md registra17pontoscom fontesefetivamenteconferidas/condições/lacunas,semadoçãoglobalnemimpostozero universal. docs/eu-vat-article-9a.mdrecebeprefixoTXsemconsulta/maisimpostoautomático;corpohistóricointacto,DEEMED_SUPPLIER_RECORDSexigeconstrução/testes. EUfonteintegraanti-botnãoésucesso;IOFentrada-vs-lucro/IN1037IVnão confirmadoregistrados,semconsultas. Semcódigo/preços/limites/gates/reservas/custeio/conteúdo/Hazelsongalterados;semnovoIOoperacional. Custospesquisa/CI100%FX275,desconhecidonãozero;Markdown0açõesnovas,semcertificação/entregafuncional,counter254. Novohead exigetodoschecksdocumentais;resultadoanterior8scope/11skipsnãoprovanovohead. TX1global/remissõesrestantes/TX2–TX7pendentes.
+
+
+###471[TX1] — Registro dos17pontos nas instruções e provas de incorporação,27/10/2026
+
+AGENTSrecebe17pontos literais do pedido com estados individuais de conferência e divergências;CLAUDEremete explicitamenteTX/SV,mantendo imports ecorposMR/SR históricos. Nãoéadoçãocegade17teses,TX1aindaincompleto/geradosecódigopendentesTX2/TX5. Nenhumcálculogateflagpreçolimitealterado;nenhumIOprodutivo,consulta,registro,conta,contrato,pagamentooucontato. Markdown0açõesnovas,semcertificação/entregafuncional;custospesquisaCI100%FX275,desconhecido≠zero,contador254.
+
+PR1102incorporadof8f449a65290002b32dc8bf0d14de9e7a7df7ab7às13:50:35Fortaleza,headc30818089a1aa058730b2ee39678fd65c0d54645,árvorec48e22ef41be1ce3495161a482f5e762de3b184f,pais759ba/c308,31/31+Vercel,8escopos10+7/fulltrue. PR1103incorporado38205f7ad797f470abc2eb602740c60398fa2221às13:51:18Fortaleza,head7fc7b3e39705fef028ae9025cf5cc42fa5185ab4,árvore51d46f06904dba7481e15099c5711efaa02e166b,paisreaisf8f449/7fc7b3e,19conclusivos8scope10+7fullfalse/11skipslegítimos+Vercel. Predcached3a03tinhabasec308treec48eigualamainf8;árvorefinalidêntica. Registrosdocumentais,nãopublicaçãofuncional;READY/domínio/fluxointerativodessesSHAsnãoforamverificados,nãocontar255.
+
+
+###PR1104 — falha temporal do ensaio de limite diário e correção,27/10/2026
+
+Head51de22d8484cebe2369b7f68ef156e4f61878aaf não aprovado:verify122335048782 às17:00:00.4131761UTC falhou “counted before the ceiling” (expectedtrue,gotfalse);62checks/1falha emworkflow-branching.test.ts,verifyfinalfailure17:00:11.490018UTC. Cenário usaDate.nowreal+79h:às16:59UTCissofica23:59e passagem17:00mudaodiaUTCentreinícioe leitura de contador,sem mudança de limite produtivo. Demais falhasfetch/Stripe/logsdeerroda suítetêmasserçõessintéticasnegativasesperadas,nãoforamusadasparaconcluircausa.
+
+Correção:testeiniciacenáriosintéticoemUTC12h,maspreservaelapsedwalltimeparaexpirações/timeouts/locks e deslocamentoshora jáexistentes. Todas62asserçõesanteriores permanecem;acrescenta2regressões explícitas de separação de diaUTC e nãozerar limite anterior. Nenhumcódigoprodutivo/preço/limite/gate/reserva/asserçãorelaxado. Dados/Redis/email sóstand-ins,semserviço/conta/pagamento/terceiro. Nova suíte INTEGRAL no novohead,semreexecutarjobisoladoou usar30checksantigoscomoaprovação. CustosCI/reparos100%FX275,nãográtis;contador254,sem entregafuncional. TX1política/17pontosdocumentais continuaemPRaté31/31+Vercel.
+
+
+### Evidência de fornecedores atuais incorporada —27/10/2026 14h05:21 Fortaleza
+
+PR1105incorporado07ad336fda3050f9332ea9a4d12eb99d188a0f84,headd61b3662bc766058e9ebb73cff9d32f355937849,árvoredc954c6fe044c181f439ae181309a3fb7f807fa4,pais38205/d61b,19conclusivos8scope10+7/fullfalse/11skipslegítimos+Vercel. docs/current-provider-transfer-evidence-2026-10-27.mdregistraofertapública/escopo/condições/lacunas:DPFregistry/contratosreais/inventáriocompleto ainda nãoverificados. Não éimplementaçãoSV,nenhumamigraçãoouaceite,conta/contato/pagamento,nenhumaentregafuncional/255. Custopesquisa/CI100%FX275,nãozero. READY/domínio/fluxointerativonãoverificadosdestecódigo documental.
+
+PR1104avançamain07ad336preservandodocfornecedores,AGENTS/CLAUDE17pontos ecorreçãotemporal com2regressõesUTC. SuíteINTEGRAL novamente noheadcomárvorecombinada;resultadosparciais2526nãoaprovamnovohead. Nenhumcódigoprodutivo/limitefoialteradopela correçãodoteste.

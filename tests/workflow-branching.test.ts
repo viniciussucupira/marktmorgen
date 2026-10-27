@@ -32,8 +32,14 @@ import { ROOM } from "./data-room";
 
 const HOUR = 3_600_000;
 const realNow = Date.now;
+// Start the synthetic scenario at UTC noon. Keep elapsed wall time for lock
+// deadlines, but never let the host's hour move the +79h scenario across a
+// UTC day between admission and its daily-counter assertion.
+const clockStartedAt = realNow();
+const scenarioStartedAt = new Date(clockStartedAt);
+scenarioStartedAt.setUTCHours(12, 0, 0, 0);
 let shift = 0;
-Date.now = () => realNow() + shift;
+Date.now = () => scenarioStartedAt.getTime() + (realNow() - clockStartedAt) + shift;
 
 const sent: { to: string; subject: string }[] = [];
 let resendDown = false;
@@ -221,6 +227,15 @@ async function main(): Promise<void> {
   is("counted before the ceiling", (today?.started ?? 0) > 0, true);
   is("past the ceiling nobody more starts today, and the refusal is counted", [(await readRun(lostId, personOf("eve@example.com"))) === null, (await runsToday(list))?.refused], [true, 1]);
   is("and their start is given back for another day", (await redisPipeline([["EXISTS", `nl:mail:enr:${lostId}:${personOf("eve@example.com")}`]]))[0], 0);
+
+  // UTC day separation is checked explicitly, rather than by waiting for
+  // the real clock to cross midnight while another assertion is running.
+  const quotaDay = new Date(Date.now()).toISOString().slice(0, 10);
+  const quotaMidnight = Date.parse(quotaDay + "T00:00:00Z") / 1000;
+  is("the next UTC day has its own empty run counter",
+    await runsToday(list, quotaMidnight + 86_400), { started: 0, refused: 0 });
+  is("reading the next day does not reset the previous day's ceiling",
+    await runsToday(list, quotaMidnight + 12 * 3_600), { started: 300, refused: 1 });
 
   part("Active workflows");
   const outcomes: string[] = [];
