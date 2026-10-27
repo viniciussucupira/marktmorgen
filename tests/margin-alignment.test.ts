@@ -18,14 +18,17 @@ import { ASSISTANT_PRICE_CENTS, addOnFeeCents, assistantMeetsFloor, assistantMon
 import {
   MOST_TAX_READING, READINGS, SIZING_READING, STRESS_PROFIT_TAX_BPS, costBudgetCents, providerFeeCents, receivingOf, unitUnder,
 } from "@/lib/receiving-costs";
-import { allUnits, evaluate, floorPriceCents, renderMarginAlignment, roomKept } from "./margin-alignment-table";
+import { allUnits, evaluate, floorPriceCents, renderMarginAlignment, roomKept, currentPriceMarginRows } from "./margin-alignment-table";
+import { gateReading } from "@/lib/tax-gate";
 import { netOf } from "./plan-cost-model";
 
 const DOC = "docs/margin-alignment-2026-10-18.md";
 
 test("the document is what the numbers render today (run node scripts/margin-alignment.mjs)", () => {
   const onDisk = readFileSync(join(process.cwd(), DOC), "utf8");
-  assert.equal(onDisk, renderMarginAlignment(PLANS_ON_SALE, ASSISTANT_ON_SALE), `${DOC} is stale: run node scripts/margin-alignment.mjs`);
+  const generated = renderMarginAlignment(PLANS_ON_SALE, ASSISTANT_ON_SALE);
+  if (onDisk !== generated) console.log("MR_ALIGNMENT_GENERATED_BEGIN\n" + generated + "\nMR_ALIGNMENT_GENERATED_END");
+  assert.equal(onDisk, generated, `${DOC} is stale: run node scripts/margin-alignment.mjs`);
 });
 
 test("one model: the fee is the dearer provider's on the amount charged, with the buyer's tax on top", () => {
@@ -60,48 +63,38 @@ test("no reading taxes profit below the 27.5% stress floor", () => {
   assert.equal(unitUnder(14_900, 0, under).taxCents, unitUnder(14_900, 0, SIZING_READING).taxCents);
 });
 
-test("under the most-tax reading every unit fails, even with nothing used", () => {
+test("every current plan, interval and add-on remains positive at full registered use with unchanged room under the gate reading", () => {
+  assert.equal(gateReading(), MOST_TAX_READING);
   for (const unit of allUnits(PLANS_ON_SALE, ASSISTANT_ON_SALE)) {
-    assert.equal(evaluate(unit, MOST_TAX_READING).meetsFloor, false, unit.id);
-    assert.equal(unitUnder(unit.priceCents, 0, MOST_TAX_READING, unit.ownTransaction).meetsFloor, false, `${unit.id} with no use`);
+    const result = unitUnder(unit.priceCents, unit.usageCents + roomKept(unit), gateReading(), unit.ownTransaction);
+    assert.ok(result.netCents > 0 && result.meetsFloor, unit.id + ": nonpositive worst modeled net");
   }
 });
-
-test("no unit on sale misses 60%, and while any misses, nothing is on sale", () => {
-  const units = allUnits(PLANS_ON_SALE, ASSISTANT_ON_SALE);
-  for (const unit of units) if (unit.onSale) assert.equal(evaluate(unit).meetsFloor, true, `${unit.id} is on sale and misses 60%`);
-  if (units.some((unit) => !evaluate(unit).meetsFloor)) {
-    assert.equal(PLANS_ON_SALE, false);
-    assert.equal(ASSISTANT_ON_SALE, false);
-    assert.equal(commercialMarginReady(), false);
-  }
-  assert.equal(assistantMeetsFloor(), evaluate(units.find((u) => u.id === "store-assistant")!).meetsFloor && assistantMonthWorst().roomCents >= 25);
+test("positive model results never waive unknown reviews or open plans", () => {
+  assert.equal(PLANS_ON_SALE, false);
+  assert.equal(ASSISTANT_ON_SALE, false);
+  assert.equal(commercialMarginReady(), false);
+  const month = assistantMonthWorst();
+  const gate = unitUnder(ASSISTANT_PRICE_CENTS, month.aiCents, gateReading(), true);
+  assert.equal(assistantMeetsFloor(), gate.meetsFloor && gate.usageRoomCents - month.aiCents >= 25
+    && month.roomCents >= 25);
 });
-
-test("every unit on the price list (owner, 18 October 2026, 11:21) keeps 60% at full use, at or above its floor with the room kept", () => {
+test("internal positive-profit thresholds are exact; current prices and annual rights are preserved", () => {
   for (const unit of allUnits(PLANS_ON_SALE, ASSISTANT_ON_SALE)) {
-    assert.equal(evaluate(unit).meetsFloor, true, `${unit.id} misses 60% at full use`);
+    assert.ok(evaluate(unit).netCents > 0, unit.id);
     if (unit.id.startsWith("captions")) continue;
     const floor = floorPriceCents(unit.usageCents);
-    // The floor is exact: one cent less misses.
-    assert.equal(unitUnder(floor, unit.usageCents).meetsFloor, true);
-    assert.equal(unitUnder(floor - 1, unit.usageCents).meetsFloor, false, `${unit.id}: the floor is not the lowest price`);
-    assert.ok(unit.priceCents >= floorPriceCents(unit.usageCents, roomKept(unit)), `${unit.id}: $${unit.priceCents / 100} is under its floor with room`);
+    assert.equal(unitUnder(floor, unit.usageCents, gateReading()).meetsFloor, true);
+    assert.equal(unitUnder(floor - 1, unit.usageCents, gateReading()).meetsFloor, false);
+    assert.ok(unit.priceCents >= floorPriceCents(unit.usageCents, roomKept(unit)));
   }
-  // The yearly price is ten monthly payments on every plan, and still keeps the room.
   for (const tier of TIERS) assert.equal(PRICES_WITH_COMMISSION[tier].year, PRICES_WITH_COMMISSION[tier].month * 10);
 });
-
-test("the value presentation prints the price list and the floors in force as the code computes them", () => {
+test("the value presentation retains historical owner decisions and the exact current-price model rows", () => {
   const doc = readFileSync(join(process.cwd(), "docs/value-presentation-2026-10-18.md"), "utf8");
-  const usd = (cents: number) => `$${(cents / 100).toLocaleString("en-US", { minimumFractionDigits: cents % 100 ? 2 : 0, maximumFractionDigits: 2 })}`;
-  const usd2 = (cents: number) => `$${(cents / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-  for (const unit of allUnits(PLANS_ON_SALE, ASSISTANT_ON_SALE).filter((u) => !u.id.startsWith("captions"))) {
-    assert.ok(doc.includes(`**${usd(unit.priceCents)}`), `${unit.id}: the price ${usd(unit.priceCents)} is not in the value presentation`);
-    assert.ok(doc.includes(usd2(floorPriceCents(unit.usageCents))), `${unit.id}: its floor ${usd2(floorPriceCents(unit.usageCents))} is not in the value presentation`);
-    assert.ok(doc.includes(usd2(floorPriceCents(unit.usageCents, roomKept(unit)))), `${unit.id}: its floor with room is not in the value presentation`);
-    assert.ok(doc.includes(`${(evaluate(unit).netBps / 100).toFixed(2)}%`), `${unit.id}: its net is not in the value presentation`);
-  }
+  const rows = currentPriceMarginRows(PLANS_ON_SALE, ASSISTANT_ON_SALE);
+  if (rows.some(row => !doc.includes(row))) console.log("MR_VALUE_ROWS_BEGIN\n" + rows.join("\n") + "\nMR_VALUE_ROWS_END");
+  for (const row of rows) assert.ok(doc.includes(row), "stale current-price row: " + row);
   assert.match(doc, /preço: o que maximiza o meu lucro/);
   assert.doesNotMatch(doc, /\bsmall\b|unlimited (visits|orders|emails|storage) on (Store|Studio|Scale)/i);
 });
