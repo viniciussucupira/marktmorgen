@@ -14,8 +14,8 @@
  * The server and browser read the same answer. Requesting opening is not
  * enough: the per-customer, after-tax margin review must also be complete,
  * the tax gate's setting must be one sales may be judged on (lib/tax-gate.ts:
- * the reading with more tax, closed only by an official text or a recorded
- * consultation answer), and, since 18 October 2026, every jurisdiction where
+ * the current source-based TX/SV policy, without consultation or EU-hosting
+ * dependencies), and, since 18 October 2026, every jurisdiction where
  * a tax law makes Marktmorgen the supplier of what a store sells (EU VAT,
  * Implementing Regulation 282/2011 art. 9a; the UK; US states; other
  * countries) must have its treatment built and recorded
