@@ -72,7 +72,7 @@ part("The gate reading");
 is("while EU hosting is not live the gate is the reading with every tax stacked", [EU_HOSTING_CONFIRMED, GATE_READING_ID, gateReading() === MOST_TAX_READING], [false, "most-tax", true]);
 is("and the flag stays false in this change", read("lib/tax-gate.ts").includes("export const EU_HOSTING_CONFIRMED = false;"), true);
 is("the gate setting in force is accepted", gateProblems(GATE_READING_ID, EU_HOSTING_CONFIRMED), []);
-is("the after-design reading is refused while EU hosting is not live", gateProblems("most-tax-after-design", false).length > 0, true);
+is("TX/SV: the historical scenario is not conditioned on EU hosting", gateProblems("most-tax-after-design", false), []);
 is("and accepted once it is", gateProblems("most-tax-after-design", true), []);
 is("an unknown reading is refused", gateProblems("lenient" as never, true).length > 0, true);
 is("the after-design reading is the receiving model's EU hosting one", [EU_HOSTING_READING.profitTaxBps, EU_HOSTING_READING.revenueTaxBps, EU_HOSTING_READING.salesTaxInsideBps], [2_868, 500, 0]);
@@ -90,6 +90,30 @@ is("an answer without its source, with an unknown authority, a bad date or no su
   { ...good, question: TAX_QUESTIONS + 1 },
 ]).length, 4);
 is("so the gate's setting is valid today", taxGateValid(), true);
+
+part("TX: historical consultation records cannot decide the gate");
+const historicalAnswers = CONSULTATION_ANSWERS as ConsultationAnswer[];
+const beforeHistoricalRecord = taxGateValid();
+try {
+  historicalAnswers.push({ ...good, date: "not-a-date", source: "" });
+  is("a malformed historical record is still recognized as malformed",
+    consultationProblems().length > 0, true);
+  is("but a historical record cannot change the current gate setting",
+    taxGateValid(), beforeHistoricalRecord);
+  is("and cannot supply missing commercial or jurisdiction approval",
+    [CURRENT_COMMERCIAL_MARGIN_REVIEW, commercialPlansMayOpen(true), deemedSupplierReady(), PLANS_ON_SALE],
+    [null, false, false, false]);
+} finally {
+  historicalAnswers.pop();
+}
+is("the real consultation record remains empty", CONSULTATION_ANSWERS.length, 0);
+for (const historicalFlag of [false, true]) {
+  is("the same permitted reading does not depend on a hosting flag",
+    gateProblems(GATE_READING_ID, historicalFlag), []);
+  is("an unknown reading is refused for either hosting value",
+    gateProblems("unknown" as never, historicalFlag).length > 0, true);
+}
+
 
 part("MR: full-use modeled positive net never waives the unchanged gates");
 const gated = planUnits(false).map(unit => ({

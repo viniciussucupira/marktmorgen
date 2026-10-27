@@ -1,4 +1,15 @@
 /**
+ * TX/SV, owner27October2026: no tax consultation is made or prepared, and
+ * EU hosting is not an opening condition. Older rationale/comments below
+ * are historical, not current instructions.
+ *
+ * This stage removes those dependencies only. GATE_READING_ID and all
+ * numerical readings remain unchanged pending the complete TX2 transition.
+ * Consultation parsers are retained for historical records and cannot decide
+ * taxGateValid(). No actual answer is recorded and no other release gate,
+ * commercial review, funding, exposure, fee or reserve is waived.
+ */
+/**
  * Which tax reading decides whether Marktmorgen may sell, and how a tax doubt
  * is closed (owner, 18 October 2026; docs/tax-uncertainty.md and
  * docs/tax-consultations.md).
@@ -42,12 +53,9 @@ export type GateReadingId = "most-tax" | "most-tax-after-design";
 export const GATE_READING_ID: GateReadingId = "most-tax";
 
 /** Why a gate setting is not allowed: empty when it is. */
-export function gateProblems(id: GateReadingId, euHostingConfirmed: boolean): string[] {
+export function gateProblems(id: GateReadingId, _historicalEuHostingConfirmed?: boolean): string[] {
   const out: string[] = [];
   if (id !== "most-tax" && id !== "most-tax-after-design") out.push(`unknown gate reading ${String(id)}`);
-  if (id === "most-tax-after-design" && euHostingConfirmed !== true) {
-    out.push("the after-design reading needs EU hosting live for both products: EU_HOSTING_CONFIRMED is false");
-  }
   return out;
 }
 
@@ -102,5 +110,5 @@ export function consultationProblems(answers: readonly ConsultationAnswer[] = CO
 
 /** Whether the gate's own setting is one sales may be judged on. Not permission to sell. */
 export function taxGateValid(): boolean {
-  return gateProblems(GATE_READING_ID, EU_HOSTING_CONFIRMED).length === 0 && consultationProblems().length === 0;
+  return gateProblems(GATE_READING_ID).length === 0;
 }
