@@ -10589,3 +10589,62 @@ Cronatualproduct-checks ainda37 5 * * * (UTC). Não declarar cron dehoje
 executado nem falha comprovada do código sem run/log. A incorporação6a89dd4f
 dispara a suíte completa push/main separada; acompanhar sem trocarcron/
 matriz/teto ou inventar aprovação diária. Nenhumdispatchmanual realizado.
+
+
+### AB(a) — integração fechada da ativação e recuperação de binding já ativado
+O caminho financiado de lib/billing.ts agora entrega a observação paga mensal
+já validada a activateRestartContract, tanto após o únicoPOST quanto após GET
+exato doID recuperado. O handoff puro clona a observação antes de aguardarIO,
+captura ID/created/início/fim reais e recusa status/preço/metadados/período/
+clock/getters desconhecidos. Não retorna direitos aoStore: termina exigindo
+ACKStore e cleanup de geração. Busca positiva ainda só retémID e para;
+exige GETexato em outra leitura orçada, sem inferir ausência nem repetirPOST.
+
+TAKE_RESTART_RECOVERY lê o activated da origem imutável separadamente do active
+atual. Após ACKdeativação perdido, só reconhece active==activated do mesmoowner,
+mesmoID járetido/plano/período pago coerente e recibos/índice/pending/pausa/due/
+ano/caixa intactos; desconhecido/inconsistente recusa antes de consumirleitura.
+Também recusa activatednovo com active revertido àorigem. Conserva as MESMAS
+3leituras deprovedor vitalícias porowner,incluindo ACKperdido. Tokenrecuperado
+continua policyBindingvazio e nunca confere permissão dePOST.
+São2leiturasHASH extras no mesmoledger; teto17comandos por etapa preservado,
+nova medição INFO obrigatória,não antecipar valor ou custo total aprovado.
+Nenhumcampo/chave/TTL/provedor/segundareseva/liberaçãoprincipal/slot novo.
+
+Correção do limite de observação da etapa: os31dias pagos são medidos a partir
+do início do período observado do provedor, não dos segundos anteriores ao
+reivindicar intenção. Mantidos span≤31dias,created dentro da janela deativação,
+start≥created/≤now,end>now e end coberto pelo horizonte explícito do recibo.
+Não encurtar direitos pagos de um mês de31dias por latência entreclaim/criação;
+não amplia limite visível nem permite obrigação fora do horizonte pré-financiado.
+Os testes exigem esse mês inteiro,caixa/slots idênticos e recusa acima do span.
+A importação interna do validador real usa caminho relativo,para não substituir
+prova financeira por fixture de billing; wrapper real continua fechado.
+
+Suíte remota COMPLETA no novohead: preserva todos os testes Lua anteriores,
+mais ACKativação perdido+64leiturasconcorrentes→3allowances totais,8recusas de
+bindingativo/activated/origem/tempo/plano semmutações,31dias inteiros cobertos,
+handoffimutável/semgetters e recusa inativos/ambíguos. Mesmos45ledgerkeys/3refs,
+job/serviço/matriz/tetos/dependências;sem teste local,pagamento/email/conta real.
+Inventário descreve leituras novas nos mesmoscampos/famílias,semnovaarmazenagem.
+Esta é integração desligada testável em componentes; não afirmar E2Epositivo
+decliente,publicaçãoStore,cleanup ou protocoloAB(a) completo.
+
+| Contrato | Nova operação habilitada mês/ano | Custo integral futuro |
+| --- | --- | --- |
+| creator_month | 0/0 | desconhecido,reprovado |
+| creator_year | 0/0 | desconhecido,reprovado;reinício mensal |
+| pro_month | 0/0 | desconhecido,reprovado |
+| pro_year | 0/0 | desconhecido,reprovado;reinício mensal |
+| scale_month | 0/0 | desconhecido,reprovado |
+| scale_year | 0/0 | desconhecido,reprovado;reinício mensal |
+
+CoveragepauseRestart=false/policiesNULL ainda recusam ANTES deIO emprodução;
+0habilitado não é custofuturozero. Acrescentar operações/retenção/cardinalidade/
+overhead/cópias/polling/LLC100%FX275/ISS5%BR-USleituramaisonerosa ao cálculo
+integral6contratos100%pioruso,preçomáximopago69/690/449/4490/999/9990,
+clienteisolado/global≥60%,tetoautomático/reserva antes deabrirqualquergate.
+MesmoCIpúblicopadrão,0incremental condicional noescopoconhecido;nãototalgratuito.
+PLANS_ON_SALE=false,preços/limites/opt-ins/IDs/idiomas/conteúdo,ELnafila econtador254
+preservados. Próximo:ACKStore/CASgerações/cleanupundo→rollover/heldpolling/custos;
+AB(a)incompleto e nenhuma entrega255 neste registro.

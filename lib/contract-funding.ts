@@ -604,16 +604,17 @@ local annual=number(redis.call('GET',KEYS[4]))
 if not ok or type(pause)~='table' or not integer(pause["until"]) or pause["until"]>now or not annual or annual<=0 or annual>now then return 0 end
 if tonumber(redis.call('ZSCORE',KEYS[3],ARGV[4]))~=pause["until"] then return 0 end
 local active=redis.call('HGET',KEYS[1],'active:'..ARGV[1])
-if not active or #active>256 then return 0 end
+local sourceBinding=redis.call('HGET',KEYS[1],'activated:'..ARGV[3])
+if not active or #active>256 or not sourceBinding or #sourceBinding>256 then return 0 end
 local source={}
-for field in string.gmatch(active,'[^|]+') do source[#source+1]=field end
-if #source~=7 or table.concat(source,'|')~=active or source[1]~=ARGV[3] or source[2]~=ARGV[2] or source[5]~='paid' or number(source[7])~=pause.from or pause.subscription~=ARGV[2] or type(pause.funding)~='table' or pause.funding.version~=1 or pause.funding.grantId~=ARGV[3] then return 0 end
+for field in string.gmatch(sourceBinding,'[^|]+') do source[#source+1]=field end
+if #source~=7 or table.concat(source,'|')~=sourceBinding or source[1]~=ARGV[3] or source[2]~=ARGV[2] or source[5]~='paid' or number(source[7])~=pause.from or pause.subscription~=ARGV[2] or type(pause.funding)~='table' or pause.funding.version~=1 or pause.funding.grantId~=ARGV[3] then return 0 end
 if source[3]~='creator_month' and source[3]~='pro_month' and source[3]~='scale_month' then return 0 end
 local owner=redis.call('HGET',KEYS[1],'restart-owner:'..ARGV[3])
 local pending=redis.call('HGET',KEYS[1],'pending:'..ARGV[1])
 if not owner then
  -- A pre-index pending lock is unknown, never permission to submit again.
- if pending or ARGV[8]=='' or ARGV[9]=='' then return 0 end
+ if pending or active~=sourceBinding or ARGV[8]=='' or ARGV[9]=='' then return 0 end
  local current=redis.call('HMGET',KEYS[1],'policy','review')
  if current[1]~=ARGV[8] or current[2]~=ARGV[9] then return 0 end
  return {'absent'}
@@ -622,15 +623,34 @@ if #owner>84 or not string.match(owner,'^ctr_[%w_-]+$') or pending~=owner then r
 local raw=redis.call('HGET',KEYS[1],'restart-intent:'..owner)
 if not raw or #raw>4096 then return 0 end
 local valid,intent=pcall(cjson.decode,raw)
-if not valid or type(intent)~='table' or intent.version~=1 or intent.grant~=owner or intent.statsId~=ARGV[1] or intent.sourceSubscription~=ARGV[2] or intent.sourceGrant~=ARGV[3] or intent.ref~=ARGV[4] or intent.handle~=ARGV[5] or intent.paused~=ARGV[6] or intent.sourceBinding~=active then return 0 end
+if not valid or type(intent)~='table' or intent.version~=1 or intent.grant~=owner or intent.statsId~=ARGV[1] or intent.sourceSubscription~=ARGV[2] or intent.sourceGrant~=ARGV[3] or intent.ref~=ARGV[4] or intent.handle~=ARGV[5] or intent.paused~=ARGV[6] or intent.sourceBinding~=sourceBinding then return 0 end
 if redis.call('HGET',KEYS[1],'grant:'..owner)~=intent.restartReceipt or redis.call('HGET',KEYS[1],'grant:'..ARGV[3])~=intent.sourceReceipt then return 0 end
 local reserved,carried=number(redis.call('HGET',KEYS[1],'reserved')),number(redis.call('HGET',KEYS[1],'carried'))
 if not reserved or not carried or reserved<carried or not integer(intent.reservedCents) or not integer(intent.carriedCents) or reserved<intent.reservedCents or carried<intent.carriedCents then return 0 end
+local activated=redis.call('HGET',KEYS[1],'activated:'..owner)
+if active==sourceBinding and activated then return 0 end
 local s=intent.submission
-if s==nil then return {'held'} end
+if s==nil then
+ if active~=sourceBinding then return 0 end
+ return {'held'}
+end
 if type(s)~='table' or s.version~=1 or (s.phase~='uncertain' and s.phase~='observed') or not integer(s.armedAt) or now<s.armedAt or type(s.priceId)~='string' or type(s.bodyHash)~='string' or #s.bodyHash~=64 or s.idempotencyKey~='restart:'..owner..':'..intent.claim then return 0 end
 if s.phase=='observed' and (type(s.subscriptionId)~='string' or not string.match(s.subscriptionId,'^sub_[A-Za-z0-9]+$') or #s.subscriptionId>68) then return 0 end
 if s.phase=='uncertain' and s.subscriptionId~=nil then return 0 end
+-- An already committed activation may be reconciled after a lost ACK.
+-- It never permits another POST or another owner, and shares the same
+-- three lifetime read allowances. The original activated source is retained.
+if active~=sourceBinding then
+ if s.phase~='observed' or activated~=active then return 0 end
+ local bound={}
+ for field in string.gmatch(active,'[^|]+') do bound[#bound+1]=field end
+ local receipt={}
+ for field in string.gmatch(intent.restartReceipt,'[^|]+') do receipt[#receipt+1]=field end
+ local created,start,finish=number(bound[4]),number(bound[6]),number(bound[7])
+ local deadline,through=number(receipt[8]),tonumber(receipt[9])
+ if #bound~=7 or table.concat(bound,'|')~=active or bound[1]~=owner or bound[2]~=s.subscriptionId or bound[3]~=source[3] or bound[5]~='paid' or not created or not start or not finish or created<s.armedAt or created>now or start<created or start>now or finish<=start or finish-start>31*86400 then return 0 end
+ if #receipt~=10 or table.concat(receipt,'|')~=intent.restartReceipt or receipt[1]~=intent.review or receipt[2]~=intent.statsId or receipt[3]~=source[3] or receipt[4]~='restart' or receipt[10]~=ARGV[3] or not deadline or created>deadline or not through or through<=0 or not string.match(receipt[9],'^%d+$') or (#receipt[9]>1 and string.sub(receipt[9],1,1)=='0') or through~=math.floor(through) or through>9007199254740991 or finish*1000>through then return 0 end
+end
 local reads=s.recoveryReads or 0
 if not integer(reads) or reads>3 or (s.lastRecoveryAt~=nil and (not integer(s.lastRecoveryAt) or now<s.lastRecoveryAt)) then return 0 end
 if reads>=3 then return {'held'} end

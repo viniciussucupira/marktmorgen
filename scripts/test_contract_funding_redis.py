@@ -1121,6 +1121,69 @@ def main():
         print('PASS:22foreign/unknown/late restart activation cases preserve every field and pause/year/due')
 
 
+        # The same lifetime recovery allowance must work after activation
+        # changed active, even when the activation acknowledgement was lost.
+        fixture = activation_ready()
+        assert activate_restart(redis,fixture) == [1,1800086400]
+        state = snapshot(keys[42])
+        before_counts = command_counts()
+        ignored = recovery(redis,keys[42],fixture[0],fixture[1],now=1800086402)
+        activated_recovery_counts = difference(before_counts,command_counts())
+        assert ignored[0] == 'read'
+        assert sum(activated_recovery_counts.values()) <= 17
+        assert json.loads(ignored[1])['submission']['subscriptionId'] == 'sub_ObservedRestart01'
+        def after_activation_recovery(_index):
+            client = Redis()
+            try:
+                return recovery(client,keys[42],fixture[0],fixture[1],now=1800086402)
+            finally:
+                client.close()
+        with concurrent.futures.ThreadPoolExecutor(max_workers=16) as pool:
+            attempts = list(pool.map(after_activation_recovery,range(64)))
+        assert sum(value[0]=='read' for value in attempts) == 2
+        assert sum(value==['held'] for value in attempts) == 62
+        retained = json.loads(redis.command('HGET',keys[42],'restart-intent:ctr_restart_new'))
+        assert retained['submission']['recoveryReads'] == 3
+        for field,value in state:
+            if field!='restart-intent:ctr_restart_new':
+                assert redis.command('HGET',keys[42],field) == value
+        assert arm(redis,keys[42],fixture[0],fixture[1],now=1800086402) == 0
+        print('PASS:activated owner lostACK plus64recovery contenders share3lifetime reads without POSTpermission,newowner,cashchange or cleanup')
+        print('ACTIVATED_RESTART_RECOVERY_COMMANDS:'+json.dumps(activated_recovery_counts,sort_keys=True))
+
+        for scenario in ('missing-activated','active-foreign','active-unbacked','source-proof','future-created','wrong-period','wrong-key','reverted-active'):
+            fixture = activation_ready()
+            assert activate_restart(redis,fixture) == [1,1800086400]
+            current = redis.command('HGET',keys[42],'active:restart-store')
+            if scenario=='missing-activated': redis.command('HDEL',keys[42],'activated:ctr_restart_new')
+            elif scenario=='active-foreign': redis.command('HSET',keys[42],'active:restart-store',current.replace('sub_ObservedRestart01','sub_ForeignActive01'))
+            elif scenario=='active-unbacked': redis.command('HSET',keys[42],'active:restart-store',current+'|extra')
+            elif scenario=='source-proof': redis.command('HDEL',keys[42],'activated:ctr_restart_source')
+            elif scenario=='reverted-active': redis.command('HSET',keys[42],'active:restart-store',owner['sourceBinding'])
+            else:
+                fields = current.split('|')
+                if scenario=='future-created': fields[3]='1801000001'
+                elif scenario=='wrong-period': fields[5]='1800000002'
+                elif scenario=='wrong-key': fields[2]='pro_month'
+                changed = '|'.join(fields)
+                redis.command('HSET',keys[42],'active:restart-store',changed,'activated:ctr_restart_new',changed)
+            before = snapshot(keys[42])
+            assert recovery(redis,keys[42],fixture[0],fixture[1],now=1800086402) == 0,scenario
+            assert snapshot(keys[42]) == before,scenario
+        print('PASS:8unknown activated-binding recovery cases cannot spend a read allowance or change the ledger')
+
+        # A legitimate full31day paid month starts when the provider creates
+        # the replacement, not a few seconds before at intent claim time.
+        fixture = activation_ready()
+        ref,pause,owner,sent,observed = fixture
+        observed = {**observed,'finish':observed['start']+31*86400}
+        monthly = (ref,pause,owner,sent,observed)
+        assert activate_restart(redis,monthly) == [1,1800086400]
+        assert redis.command('HGET',keys[42],'reserved') == '90'
+        assert redis.command('HGET',keys[42],'slots:creator_month') == '1'
+        print('PASS:full31day provider period fits explicit prefunded receipt horizon without truncating paid rights')
+
+
     finally:
         for ref in intent_refs:
             if not ref.startswith('synthetic-restart-intent-'):

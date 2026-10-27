@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import {fundedRestartRequestBody,identifyFundedRestartResult,selectRestartRecoveryCandidate,observeFundedRestartResult,observeFundedRestartPrice,observeStoppedRestartSource,observeRestartedPlan} from "@/lib/billing";
+import {observeFundedRestartActivation,fundedRestartRequestBody,identifyFundedRestartResult,selectRestartRecoveryCandidate,observeFundedRestartResult,observeFundedRestartPrice,observeStoppedRestartSource,observeRestartedPlan} from "@/lib/billing";
 import type {ArmedRestartSubmission,OwnedRestartIntent} from "@/lib/contract-funding";
 import {PLAN_PRICES} from "@/lib/plan";
 
@@ -216,4 +216,28 @@ test("future request bytes come only from the frozen owned pause and preserve ex
  assert.throws(()=>fundedRestartRequestBody(bad,armed.priceId));
  let reads=0;const hostile={...armed.intent};Object.defineProperty(hostile,"paused",{enumerable:true,get(){reads++;return "";}});
  assert.throws(()=>fundedRestartRequestBody(hostile,armed.priceId));assert.equal(reads,0);
+});
+
+test("activation handoff clones the exact paid provider period without IO or adopting mutable input",()=>{
+ const {armed,subscription}=fundedResultFixture(),before=JSON.stringify({armed,subscription});
+ const proof=observeFundedRestartActivation(armed,input,subscription,NOW);
+ assert.equal(proof.subscriptionId,subscription.id);
+ assert.equal(proof.createdSeconds,subscription.created);
+ assert.equal(proof.periodStartSeconds,subscription.items.data[0].current_period_start);
+ assert.equal(proof.periodEndSeconds,subscription.items.data[0].current_period_end);
+ assert.equal(Object.isFrozen(proof),true);
+ assert.equal(JSON.stringify({armed,subscription}),before);
+ subscription.items.data[0].current_period_end=NOW+DAY;
+ Object.assign(armed.intent.grant,{id:"ctr_MutatedAfterObservation"});
+ assert.equal(proof.armed.intent.grant.id,"ctr_NewStopped01");
+ assert.notEqual(proof.periodEndSeconds,subscription.items.data[0].current_period_end);
+});
+test("activation handoff refuses ambiguous or inactive observations and never invokes getters",()=>{
+ const {armed,subscription}=fundedResultFixture();
+ for(const change of [{status:"canceled"},{customer:"cus_ForeignActivation01"},
+  {metadata:{...subscription.metadata,funding_grant:"ctr_foreign"}},
+  {created:NOW+1},{items:{...subscription.items,has_more:true}}])
+  assert.throws(()=>observeFundedRestartActivation(armed,input,{...subscription,...change},NOW));
+ let reads=0;const hostile={...subscription};Object.defineProperty(hostile,"created",{enumerable:true,get(){reads++;return NOW;}});
+ assert.throws(()=>observeFundedRestartActivation(armed,input,hostile,NOW));assert.equal(reads,0);
 });
