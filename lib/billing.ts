@@ -1,3 +1,4 @@
+import {activateRestartContract,type RestartContractActivation} from "@/lib/contract-restart-activation";
 import {createHash,randomUUID} from 'node:crypto';
 import {canonicalFinancialSnapshot,CONTRACT_FUNDING_RULES} from '@/lib/contract-funding-rules';
 import {takeRestartRecovery,restartSubmissionOpenNow,recordRestartResult,armRestartSubmission,claimRestartIntent,reserveRestartContractFunding,activateCheckoutContract,activateSwitchContract,type ContractGrant,type OwnedRestartIntent,type ArmedRestartSubmission} from '@/lib/contract-funding';
@@ -721,8 +722,9 @@ export async function restartPlan(input: {
       const id=identifyFundedRestartResult(armed,{customerId:ownedCustomer,tier:ownedTier},subscription);
       if(!(await recordRestartResult({armed,subscriptionId:id})))throw new Error("The recovered restart ID was not durably acknowledged");
       if(!recovery.subscriptionId)throw new Error("The identified restart ID is retained; a separately budgeted exact-ID GET is required before state adoption");
-      observeFundedRestartResult(armed,{customerId:ownedCustomer,tier:ownedTier},subscription);
-      throw new Error("The recovered funded restart still requires activation and acknowledged publication");
+      const activation=observeFundedRestartActivation(armed,{customerId:ownedCustomer,tier:ownedTier},subscription);
+      if(!(await activateRestartContract(activation)))throw new Error("The recovered funded restart activation was not acknowledged");
+      throw new Error("The recovered activated restart still requires acknowledged Store publication and generation-aware cleanup");
     }
     const grant = await reserveRestartContractFunding(source.statsId, source.sourceSubscriptionId, input.tier);
     const intent = grant ? await claimRestartIntent({ grant, ref: source.ref, handle: input.store.handle, paused: source.paused, sourceGrantId: source.sourceGrantId, claim: "claim_" + randomUUID() }) : null;
@@ -761,10 +763,11 @@ export async function restartPlan(input: {
         !(await recordRestartResult({armed,subscriptionId:resultId}))) {
       throw new Error("The funded restart result ID was not durably acknowledged");
     }
-    observeFundedRestartResult(armed,{customerId:ownedCustomer,tier:ownedTier},subscription);
-    // Current coverage refuses before any of this IO. Even an identified paid
-    // result cannot be published to the store before activation/ACK/CAS coverage.
-    throw new Error("The funded restart requires reconciliation and activation coverage");
+    const activation=observeFundedRestartActivation(armed,{customerId:ownedCustomer,tier:ownedTier},subscription);
+    if(!(await activateRestartContract(activation)))throw new Error("The funded restart activation was not acknowledged");
+    // Publication still needs its own store ACK and generation-aware cleanup.
+    // No rights, pause removal or notification can follow this stage yet.
+    throw new Error("The activated funded restart requires acknowledged Store publication and generation-aware cleanup");
   }
   const priceId = await ensurePrice(input.tier, "month");
   const body = new URLSearchParams({
@@ -869,6 +872,23 @@ export function observeFundedRestartResult(
     metadata.store!==intent.handle||metadata.tier!==input.tier)
   throw Error("The funded restart result does not match its submitted owner and source");
  return started;
+}
+
+/** Freezes the exact already-observed paid period before activation awaits.
+ * This is a pure handoff, never a provider call or publication permission.
+ */
+export function observeFundedRestartActivation(
+ armed:ArmedRestartSubmission,input:{customerId:string;tier:Tier},subscription:Record<string,unknown>,
+ observedAt=Math.floor(Date.now()/1000),
+):RestartContractActivation{
+ const encoded=canonicalFinancialSnapshot({armed,input,subscription,observedAt});
+ if(!encoded)throw Error("The funded activation observation is unknown");
+ ({armed,input,subscription,observedAt}=JSON.parse(encoded));
+ const paid=observeFundedRestartResult(armed,input,subscription,observedAt);
+ if(!paid.period)throw Error("The funded activation has no observed paid period");
+ return Object.freeze({armed,subscriptionId:paid.subscriptionId,
+  createdSeconds:subscription.created as number,
+  periodStartSeconds:periodStart(subscription),periodEndSeconds:periodEnd(subscription,false)});
 }
 
 /** Exact existing public monthly price only. No IO, cache, creation or charge.

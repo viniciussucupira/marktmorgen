@@ -1,7 +1,7 @@
 import {isRedisConfigured,redisPipeline} from "@/lib/redis";
 import {commercialMarginReady,CURRENT_COMMERCIAL_MARGIN_REVIEW,CURRENT_PRICE_AND_RIGHTS_SNAPSHOT} from "@/lib/commercial-margin";
 import {CONTRACT_ADMISSION_COVERAGE,CONTRACT_FUNDING_RULES,CURRENT_CONTRACT_FUNDING_POLICY,canonicalFinancialSnapshot,contractFundingConfiguration,type ContractFundingPolicy,type ContractFundingContext} from "@/lib/contract-funding-rules";
-import {contractFundingBinding,ownedRestartIntentFromAcknowledgement,type ArmedRestartSubmission} from "@/lib/contract-funding";
+import {contractFundingBinding,ownedRestartIntentFromAcknowledgement,type ArmedRestartSubmission} from "./contract-funding";
 
 /** Ledger activation only. Keeps the source, cash, pending owner and exact pause.
  * Store publication and generation-aware cleanup are separate acknowledgements.
@@ -54,7 +54,7 @@ local oldCreated,oldStart,oldFinish=amount(source[4]),amount(source[6]),amount(s
 local charge,submitted,expires,deadline=amount(receipt[5]),amount(receipt[6]),amount(receipt[7]),amount(receipt[8])
 local through=tonumber(receipt[9])
 if not oldCreated or not oldStart or not oldFinish or oldCreated<=0 or oldStart<oldCreated or oldFinish<=oldStart or oldFinish>e.created or charge~=minimum or submitted~=e.deadline or not expires or not deadline or expires<submitted or deadline<expires or o.created>deadline then return 0 end
-if not through or through~=math.floor(through) or through>9007199254740991 or not string.match(receipt[9],'^%d+$') or (#receipt[9]>1 and string.sub(receipt[9],1,1)=='0') or o.finish*1000>through or o.finish>e.created+span then return 0 end
+if not through or through~=math.floor(through) or through>9007199254740991 or not string.match(receipt[9],'^%d+$') or (#receipt[9]>1 and string.sub(receipt[9],1,1)=='0') or o.finish*1000>through then return 0 end
 if not oldReceipt or oldReceipt[1]~=e.review or oldReceipt[2]~=e.statsId or oldReceipt[3]~=source[3] or not ((#oldReceipt==9 and oldReceipt[4]=='checkout') or (#oldReceipt==10 and (oldReceipt[4]=='switch' or oldReceipt[4]=='restart'))) then return 0 end
 local oldCharge=amount(oldReceipt[5])
 if not oldCharge or oldCharge<=0 or oldCharge+charge>e.reservedCents-e.carriedCents then return 0 end
