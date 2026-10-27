@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { LegalPage, LegalSection } from "@/components/legal-page";
 import { REFUND_DAYS, TRIAL_DAYS } from "@/lib/plan";
+import { PLANS_ON_SALE } from "@/lib/opening";
 
 export const metadata: Metadata = {
   title: "Refund Policy — Marktmorgen",
@@ -50,10 +51,12 @@ export default function RefundsPage() {
           for any of your stores.
         </p>
         <p>
-          It is separate from, and comes after, the free trial. The first{" "}
-          {TRIAL_DAYS} days of your first store cost nothing and are never
-          charged if you cancel inside them; this guarantee covers what
-          happens once you have actually been charged.
+          This guarantee covers what happens once you have actually been
+          charged, whether or not you qualified for a trial. An eligible first
+          store can receive a {TRIAL_DAYS}-day trial when you choose a plan
+          separately in your studio; returning and additional stores may not
+          qualify. If a trial applies, cancelling before it ends prevents the
+          first plan charge.
         </p>
         <p>
           A refund closes the paid features of the store it was for — your
@@ -62,6 +65,12 @@ export default function RefundsPage() {
           its customers and its payout history are untouched: that money was
           never ours to return.
         </p>
+        {!PLANS_ON_SALE ? (
+          <p>
+            Paid plans are not on sale yet. Preparing a store today does not
+            start a paid plan or an active trial.
+          </p>
+        ) : null}
       </LegalSection>
       <LegalSection id="yearly" title="3. Yearly plans: the months you have not started">
         <p>
