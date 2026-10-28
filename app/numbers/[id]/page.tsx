@@ -101,7 +101,7 @@ export default async function NumbersLinkPage({ params, searchParams }: Params) 
       </header>
       {!verified ? (
         <div className="card mt-8 p-6 sm:p-8">
-          <p className="text-ink">The numbers are being read for the first time. They are here within a day.</p>
+          <p className="text-ink">No recorded numbers are available for this link yet. Please try again later.</p>
         </div>
       ) : (
         <div data-numbers-link>
