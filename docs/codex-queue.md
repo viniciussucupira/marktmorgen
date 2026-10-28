@@ -12067,3 +12067,8 @@ A matriz real sintética continua com30casos e as mesmas auditorias, agora tamb�
 ### Correção de verificação DE1 — 2026-10-28T18:16:18.054Z
 
 PR #1166, head reprovado efb9e7807b1de542182203af812ff7b7e594b299: os jobs verify/Firefox/WebKit encontraram dois alertas ao usar getByRole('alert') na página inteira: o aviso da revisão e o anúncio de rota do Next. O teste agora busca o alerta dentro de main, preservando visibilidade, foco, limpeza do comprador anterior e privacidade; sem first(), remoção de assertivas, espera extra ou alteração do produto. Nova suíte completa exigida no novo head; nenhum resultado antigo aprova a correção. Sem nova operação externa ou custo contratado; CI não medido não é zero. AV vigente preservada: concluir PRs já abertos antes de 495[SR6].
+
+
+### Correção candidata da prontidão do editor de ordem — 2026-10-28T18:36:01.147Z
+
+PR #1166, heade278ea512f95826b1c40fcc106598929e8c451dd: WebKit123011393163 expirou em order-acknowledgment.mjs:33 aguardando a ordem do rascunho após o primeiro clique; identificadores iniciais corretos. Causa única não comprovada. Revisão do código identifica botões SSR habilitados antes da conexão de ações. Agora controles e handlers recusam ativação até useEffect confirmar prontidão; teste exige essa prontidão e botão habilitado antes do mesmo clique e preserva todas as 24 mutações sintéticas e assertivas de confirmação/retenção. Nenhum retry, sample discard, prazo ampliado ou teste removido. Correção candidata sujeita à suíte completa no novo head; não afirmar falha reproduzida/resolvida até os resultados. Sem custo novo contratado; CI não medido não é zero; AV preservada.
