@@ -1,5 +1,5 @@
 /** LQ1, owner28 October2026 20:20 Fortaleza: ITIN/acceptance-agent and
- * US-resident representative requirements were cancelled after SR5/SD1.
+ * US-resident representative requirements were canceled after SR5/SD1.
  * Only those two categories are removed; the real US business address and
  * every remaining applicable cost still require reviewed ceilings and reserves.
  * The prior SR observation below is historical, not the current requirement.

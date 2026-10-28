@@ -67,7 +67,7 @@ test("detached cost evidence retains valid totals and refuses unsafe aggregate a
  assert.equal(allocateEntireLlcFixedCosts(annual),null);
 });
 
-test("LQ1 removes only cancelled identity categories and retains unresolved real US address",()=>{
+test("LQ1 removes only canceled identity categories and retains unresolved real US address",()=>{
  const ids=LLC_FIXED_COST_IDS as readonly string[];
  assert.ok(!ids.includes("itin-and-acceptance-agent"));
  assert.ok(!ids.includes("us-resident-representative"));
