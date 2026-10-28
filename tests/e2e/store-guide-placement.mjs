@@ -5,21 +5,9 @@ export async function checkGuidePlacement({browser,LOCAL,fixture,axeSource,is}){
  for(const viewport of [{width:390,height:844},{width:1280,height:720}]){
   const context=await browser.newContext({viewport,serviceWorkers:"block"});
   try{
-   const page=await context.newPage();let calls=0,hits=0;const otherWrites=[];const first=fixture.products[0];
+   const page=await context.newPage();let calls=0;const otherWrites=[];const first=fixture.products[0];
    await page.route("**/api/**",async route=>{
     const request=route.request(),url=new URL(request.url());
-    // The existing store visit beacon is expected even when guide replies
-    // are mocked. Validate and fulfill it locally; no server write is needed.
-    if(url.origin===local.origin&&url.pathname==="/api/store/hit"&&request.method()==="POST"){
-     hits++;const body=request.postDataJSON();
-     is("ME1 existing synthetic visit payload "+viewport.width,{handle:body.h,kind:body.k},{handle:fixture.handle,kind:"v"});
-     return route.fulfill({status:204,body:""});
-    }
-    if(url.origin===local.origin&&url.pathname==="/api/store/read"&&request.method()==="POST"){
-     const body=request.postDataJSON();
-     is("ME1 existing synthetic read payload "+viewport.width,body.k==="s"&&typeof body.t==="string"&&Number.isInteger(body.n)&&body.n>=0,true);
-     return route.fulfill({status:204,body:""});
-    }
     if(url.origin===local.origin&&url.pathname==="/api/store/guide"&&request.method()==="POST"){
      calls++;const body=request.postDataJSON();
      is("ME1 guide keeps store handle "+viewport.width,body.handle,fixture.handle);
@@ -27,6 +15,18 @@ export async function checkGuidePlacement({browser,LOCAL,fixture,axeSource,is}){
     }
     if(!["GET","HEAD"].includes(request.method())){otherWrites.push(request.method()+" "+url.pathname);return route.abort();}
     return route.continue();
+   });
+   // Capture the real Blob before transport. WebKit's network driver may
+   // report sendBeacon POST bodies as null; validate source bytes instead.
+   await page.addInitScript(()=>{
+    window.__guideBeacons=[];
+    Object.defineProperty(navigator,"sendBeacon",{configurable:true,value:(url,data)=>{
+     const entry={url:String(url),settled:false,body:null,error:""};window.__guideBeacons.push(entry);
+     Promise.resolve(typeof data==="string"?data:data?.text?.()).then(text=>{
+      entry.body=JSON.parse(text);entry.settled=true;
+     }).catch(error=>{entry.error=String(error);entry.settled=true;});
+     return true; // Synthetic transport only: no request or server write.
+    }});
    });
    await page.goto(LOCAL+"/@"+fixture.handle,{waitUntil:"networkidle",timeout:60000});
    const guide=page.getByRole("region",{name:"Not sure which one is for you?",exact:true});
@@ -45,7 +45,12 @@ export async function checkGuidePlacement({browser,LOCAL,fixture,axeSource,is}){
    await guide.getByText(/nothing Guide placement fixture sells fits that yet/).waitFor();
    is("ME1 guide no-match removes old recommendation "+viewport.width,await guide.locator(".st-guide-pick").count(),0);
    is("ME1 guide two synthetic replies "+viewport.width,calls,2);
-   is("ME1 guide one existing visit beacon "+viewport.width,hits,1);
+   await page.waitForFunction(()=>window.__guideBeacons.length>0&&window.__guideBeacons.every(entry=>entry.settled));
+   const beacons=await page.evaluate(()=>window.__guideBeacons);
+   const visits=beacons.filter(entry=>entry.url==="/api/store/hit");
+   is("ME1 guide one existing visit beacon "+viewport.width,visits.map(entry=>({handle:entry.body?.h,kind:entry.body?.k,error:entry.error})),[{handle:fixture.handle,kind:"v",error:""}]);
+   const unexpected=beacons.filter(entry=>entry.url!=="/api/store/hit"&&(entry.url!=="/api/store/read"||entry.error||entry.body?.k!=="s"||typeof entry.body?.t!=="string"||!Number.isInteger(entry.body?.n)||entry.body.n<0));
+   is("ME1 guide no unexpected beacon "+viewport.width,unexpected,[]);
    is("ME1 guide no unhandled writes "+viewport.width,otherWrites,[]);
    await page.addScriptTag({content:axeSource});
    const issues=await guide.evaluate(async node=>(await window.axe.run(node,{runOnly:{type:"tag",values:["wcag2a","wcag2aa","wcag21aa","wcag22aa"]}})).violations.map(v=>v.id));
