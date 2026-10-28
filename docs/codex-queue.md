@@ -12062,3 +12062,8 @@ A matriz real sintética continua com30casos e as mesmas auditorias, agora tamb�
 
 
 - Atualização da preparação cumulativa de #1162/#1164: #1162 head334daf1beae946ab73cbffa75aca77521b1006da concluiu31/31, verify122967837997/allpassed17:22:18UTC,Firefox122967838041/allpassed17:26:05UTC,WebKit122967838089/allpassed17:28:56UTC; oito escopos10+7/fulltrue, leitores122968327044/122968327174 duas entradas/zeroescritas/terceiros, mobile122967838055 nove amostras estritas (homeLCP852/632/656ms,interação128/64/64ms,CLS0). Isso é prova somente desse head, não de versão futura. Propagação de #1170 transporte real capturado e navegação com título/SID, mais main023909ae/fila canônica, exige novamente31checks no conjunto resultante. #1164 também recebe as mesmas correções globais; antigo head8088b9e ainda não é incorporação. Sem aprovar código de #1170 antes de CI integral.
+
+
+### Correção de verificação DE1 — 2026-10-28T18:16:18.054Z
+
+PR #1166, head reprovado efb9e7807b1de542182203af812ff7b7e594b299: os jobs verify/Firefox/WebKit encontraram dois alertas ao usar getByRole('alert') na página inteira: o aviso da revisão e o anúncio de rota do Next. O teste agora busca o alerta dentro de main, preservando visibilidade, foco, limpeza do comprador anterior e privacidade; sem first(), remoção de assertivas, espera extra ou alteração do produto. Nova suíte completa exigida no novo head; nenhum resultado antigo aprova a correção. Sem nova operação externa ou custo contratado; CI não medido não é zero. AV vigente preservada: concluir PRs já abertos antes de 495[SR6].
