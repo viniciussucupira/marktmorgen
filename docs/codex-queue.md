@@ -11577,3 +11577,43 @@ Regra de margem: segue a REGRA DE MARGEM vigente (MR, 27/10/2026, 07h42): nenhum
 Proibido: mudar preços, cortar limites visíveis, retirar recursos, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a, a revisão comercial ou stripePlatformEligibilityReady; criar contas, abrir empresa, pedir EIN ou ITIN, aceitar termos, contratar, pagar ou contatar o Stripe ou terceiros; tratar a resposta como aprovação de conta; apagar conteúdo ou qualquer coisa da Hazelsong. Somente testes sintéticos.
 
 Aplicar a regra VR.
+
+
+## ME — Medição real contra a Stan: produtos na primeira tela, resposta rápida e página inicial curta (28/10/2026)
+
+Proveniência: anexo do dono 0e26f1a4-6186-46bf-8c33-fd4010c0c8b2/Texto colado.txt, solicitação de28/10/2026 00h44 Fortaleza. Registro único496[ME1],497[ME2],498[ME3], todos na fila, após495[SR6]. O texto literal abaixo preserva integralmente o pedido, alterando somente a numeração dos três títulos. Medições atribuídas ao Claude no Chrome do dono, com poucas repetições e cache parcial: sinal fornecido pelo dono, não auditoria independente do Codex nem prova pública de superioridade.
+
+Pedidos repetidos: conferidos main3f7edb1a4d9f303870e61f2580744f45d7675c04,15PRs abertos, inventário696ramos codex/*,100commits recentes e115heads distintos dos PRs/commits/ramos recentes (115filas lidas, nenhuma indisponível), por data/hora,seção,ME1–ME3 e conteúdo; nenhum registro anterior deste pedido encontrado. Revisão da fila atual e PRs não encontrou duplicação deste pedido. ME2 é complemento diferencial ao281[SF1], sem renumerar,mover ou alterar o estado de281; os demais itens citados permanecem íntegros e serão reconferidos antes da implementação. Não implementado por este registro; nenhuma alteração de código, custo de fornecedor, configuração, conteúdo de criador, preço, trava ou alegação pública. Benefício e caminho de lucro solicitados: descoberta dos produtos e clareza da página inicial, menor espera/transferência e possível redução de custo; resultado real ainda não medido, sem promessa de conversão ou lucro. VR,AX274,MR eTX vigentes aplicam-se.
+
+### Texto integral do dono (somente títulos numerados)
+
+ME — Medição real contra a Stan: produtos na primeira tela, resposta rápida e página inicial curta (28/10/2026)
+
+Solicitação do dono (28/10/2026, 00h44, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: antes de gravar, aplique a regra permanente "Pedidos repetidos". Confira o main, os PRs abertos e os ramos codex/* recentes, e procure esta solicitação pela linha de data e hora, pelo nome da seção, pelas etiquetas [ME1] a [ME3] e pelo conteúdo. Se já estiver gravada, não crie nada novo. Grave depois de 495 [SR6], na ordem de chegada, com os próximos números livres, sem alterar a ordem dos itens existentes.
+
+Contexto: medição feita pelo Claude em 28/10/2026, no Chrome do dono, no Brasil, com poucas repetições e parte dos arquivos já em cache (sinal, não laudo):
+- Página inicial: stan.store tinha 19,6 MB, carregamento completo em 7,2 s, 18 de 40 imagens sem alt, 14 h1, sem lang e sem link para pular ao conteúdo; marktmorgen.com tinha 1,8 MB, 1,4 a 1,7 s, todas as imagens com alt, um h1, lang en-US e link para pular ao conteúdo. Porém marktmorgen.com tinha 4.218 palavras e 130 links, e stan.store, 232 palavras e 27 links.
+- Loja: stan.store/GrowingFaceless mostrava todos os produtos, com preço e botão, na primeira tela (janela de 695 px de altura) e respondia em 152 a 178 ms até o primeiro byte. marktmorgen.com/@harborkitchen respondia em 345 a 1.557 ms até o primeiro byte, com cerca de 624 KB só de HTML, e o primeiro produto começava em 843 px, abaixo do perfil e do quadro "Not sure which one is for you?" (lib/store-guide.ts).
+Já existem e NÃO devem ser refeitos: 281 [SF1] orçamento de desempenho das lojas no celular, 313 [CV1] páginas no CDN, 326 [IN2], 339 [WS1] a 342 [WS4], 183 [HT1], 145 [S4-HOME-SALES], 151 [S10-HOME-PRICING-FAQ], 152 [S11-HOME-CTAS], 153 [S12-HOME-PATH], 240 [CF3], 484 [IT1] e 481 [SB4]. Antes de cada item, confira de novo o código e a fila e faça só a diferença.
+
+496 [ME1] Produtos na primeira tela da loja.
+Estado inicial: na fila.
+Na página da loja, o primeiro produto, com nome, preço e botão, deve aparecer inteiro na primeira tela, sem rolar, em 390 × 844 px (celular) e em 1280 × 720 px (computador), em todos os temas e predefinições existentes, inclusive no modo escuro. Para isso: perfil compacto (foto, nome, uma linha de apresentação e redes), e o quadro "Not sure which one is for you?" de lib/store-guide.ts depois da lista de produtos ou recolhido num link curto, sem perder a função. Nada do conteúdo do criador é retirado ou alterado sem aprovação dele; só a ordem padrão muda, e o criador pode reordenar. Teste automático que falhe se o primeiro produto sair da primeira tela nessas duas medidas. Seguir AX274 (ordem de leitura igual à ordem visual).
+
+497 [ME2] Complemento ao 281 [SF1], aplicando só a diferença, sem mudar número, posição ou estado do item 281.
+Estado inicial: na fila.
+Acrescente às metas do SF1, para as páginas públicas das lojas (loja, produto e página de venda): tempo até o primeiro byte no percentil 75 de no máximo 200 ms, servida do CDN conforme 313 [CV1], e documento HTML de no máximo 100 KB comprimido conforme 341 [WS3]. Meça também, nas mesmas condições sintéticas e datadas, uma loja pública da Stan e registre a comparação em docs/ease-vs-stan.md (481 [SB4]). Só afirmar em público "faster than Stan" com essa medição repetida, datada e publicada junto, conforme AX274 (item 7) e a regra VR (item 7).
+
+498 [ME3] Página inicial curta e direta.
+Estado inicial: na fila.
+Hoje a página inicial tem 4.218 palavras e 130 links; a da Stan, 232 palavras e 27 links. Deixe a página inicial com no máximo 600 palavras e 30 links: um título, uma frase do que é o Marktmorgen, uma ação principal ("Start your store"), a loja de demonstração real, até 5 vantagens verificáveis no código, o link para os preços e o aviso honesto de que as vendas ainda não abriram. Todo o conteúdo que sair da página inicial vai para as páginas de recursos, de preços, de comparação e de ajuda já existentes, com links claros: nada é apagado. Os itens de página inicial já na fila (183 [HT1], 145 [S4-HOME-SALES], 151 [S10-HOME-PRICING-FAQ], 152 [S11-HOME-CTAS], 153 [S12-HOME-PATH], 240 [CF3]) passam a respeitar esse limite, colocando o que não couber nas páginas internas. Teste automático que conte palavras e links da página inicial e falhe acima do limite. Seguir AX274 (3.1.5, linguagem simples) e a regra VR.
+
+Regra de margem: cada item segue a REGRA DE MARGEM vigente (MR, 27/10/2026, 07h42): nenhum cliente pagante dá prejuízo, usando 100% de todos os direitos do plano e de cada complemento no pior mês, no mensal e no anual, com teto automático e reserva antes de cada gasto; a empresa sem prejuízo a partir da base mínima; 60% é meta mensal real, não trava. Política tributária TX. Custo desconhecido reprova, nunca é zero; nenhuma cota grátis de fornecedor conta como zero; taxas de recebimento mais caras de lib/receiving-costs.ts; todos os custos fixos são 100% do Marktmorgen (FX275).
+
+Proibido: mudar preços, cortar limites visíveis, retirar recursos ou direitos de qualquer plano, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; apagar páginas ou conteúdo (só mover); alterar o conteúdo do criador sem aprovação; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; mudar configuração real de fornecedor para medir; apagar qualquer coisa da Hazelsong; afirmar em público superioridade sobre a Stan sem a prova exigida em AX274 (item 7) e na regra VR (item 7). Somente testes sintéticos.
+
+Aplicar a regra VR.
