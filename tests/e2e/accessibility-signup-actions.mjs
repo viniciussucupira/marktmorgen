@@ -77,7 +77,8 @@ try{
    page.on("response",response=>{network.push({event:"response",method:response.request().method(),path:new URL(response.url()).pathname,status:response.status()});});
    page.on("requestfailed",request=>{network.push({event:"failed",method:request.method(),path:new URL(request.url()).pathname,error:request.failure()?.errorText});});
    page.on("pageerror",error=>errors.push(String(error).replace(/token=[^&\s"']+/g,"token=redacted")));
-   await context.route("**/*",route=>{
+   let capturedClaim=null;
+   await context.route("**/*",async route=>{
     const request=route.request(),url=new URL(request.url());
     if(url.origin!==origin){foreign++;return route.abort();}
     // withBotId rewrites this same-origin script to Vercel. Supply the
@@ -98,6 +99,13 @@ try{
     if(!["GET","HEAD"].includes(request.method())){
      mutations.push({method:request.method(),path:url.pathname});
      if(request.method()!=="POST"||!["/api/auth/request","/api/auth/callback","/api/store/claim"].includes(url.pathname))return route.abort();
+     if(url.pathname==="/api/store/claim"){
+      // Capture the actual local server response before a native navigation
+      // destroys Chromium's renderer-owned response-body handle.
+      const response=await route.fetch({maxRedirects:0});
+      capturedClaim={ok:response.ok(),body:await response.json(),requestBody:request.postDataJSON()};
+      return route.fulfill({response});
+     }
     }
     return route.continue();
    });
@@ -149,8 +157,10 @@ try{
    await page.getByLabel("One line about it",{exact:false}).fill("Disposable local accessibility fixture.");
    const claim=page.waitForResponse(r=>new URL(r.url()).pathname==="/api/store/claim"&&r.request().method()==="POST");
    await page.getByRole("button",{name:"Create my store",exact:true}).focus();await page.keyboard.press("Enter");
-   const claimed=await claim,claimBody=claimed.request().postDataJSON(),created=await claimed.json();
-   if(!claimed.ok()||created.ok!==true||created.handle!==handle||typeof created.store!=="string"||!/^[0-9a-f]{32}$/.test(created.store)||claimBody.handle!==handle||claimBody.name!==storeName||claimBody.another!==false)throw Error("Initial local store claim refused or mismatched");
+   const claimed=await claim;
+   if(!capturedClaim)throw Error("Actual local claim response was not captured");
+   const claimBody=capturedClaim.requestBody,created=capturedClaim.body;
+   if(!claimed.ok()||!capturedClaim.ok||created.ok!==true||created.handle!==handle||typeof created.store!=="string"||!/^[0-9a-f]{32}$/.test(created.store)||claimBody.handle!==handle||claimBody.name!==storeName||claimBody.another!==false)throw Error("Initial local store claim refused or mismatched");
    await page.getByRole("heading",{name:"Your store",exact:true}).waitFor();
    if(await page.getByLabel("Your address",{exact:true}).count())throw Error("Initial setup did not refresh into created store");
    phase="created-studio";
