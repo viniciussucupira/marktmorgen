@@ -21,7 +21,7 @@ export type StripePurchaseBinding = {
   checkoutCreatedAt: number; chargeCreatedAt: number; amount: number; disputedAmount: number; currency: string;
 };
 /**
- * This initial adapter supports paid Checkout payments with an expanded charge.
+ * This initial adapter supports fully captured Checkout payments with an expanded charge.
  * Missing/mismatched records, subscription invoices and other payment rails return
  * null; callers must show unavailable evidence rather than guess a relationship.
  */
@@ -49,8 +49,8 @@ export function bindStripeDisputePurchase(input: {
       id(dispute.charge, "ch") !== chargeId ||
       id(dispute.payment_intent, "pi") !== paymentIntent ||
       id(charge.payment_intent, "pi") !== paymentIntent) return null;
-  if (!integer(session.amount_total) || !integer(charge.amount) || !integer(dispute.amount) ||
-      session.amount_total <= 0 || charge.amount !== session.amount_total ||
+  if (!integer(session.amount_total) || !integer(charge.amount) || !integer(charge.amount_captured) || !integer(dispute.amount) ||
+      session.amount_total <= 0 || charge.amount !== session.amount_total || charge.amount_captured !== charge.amount ||
       dispute.amount <= 0 || dispute.amount > charge.amount ||
       !integer(session.created) || !integer(charge.created) || charge.created < session.created ||
       typeof session.currency !== "string" || !/^[a-z]{3}$/.test(session.currency) ||

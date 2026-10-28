@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { bindStripeDisputePurchase } from "@/lib/dispute-purchase-binding";
 function fixture() {
-  const charge = { object: "charge", id: "ch_fixture", paid: true, captured: true, created: 200, payment_intent: "pi_fixture", amount: 1000, currency: "usd" };
+  const charge = { object: "charge", id: "ch_fixture", paid: true, captured: true, created: 200, payment_intent: "pi_fixture", amount: 1000, amount_captured: 1000, currency: "usd" };
   const session = {
     object: "checkout.session", id: "cs_fixture", mode: "payment", status: "complete", payment_status: "paid",
     metadata: { store: "old-handle", product: "a".repeat(32), title: "Original synthetic title" },
@@ -73,6 +73,9 @@ test("authorization without capture or a succeeded intent is not settled purchas
   const authorization = fixture();
   authorization.session.payment_intent.latest_charge.captured = false;
   assert.equal(bindStripeDisputePurchase(authorization), null);
+  const partial = fixture();
+  partial.session.payment_intent.latest_charge.amount_captured = 800;
+  assert.equal(bindStripeDisputePurchase(partial), null);
   const incomplete = fixture();
   incomplete.session.payment_intent.status = "requires_capture";
   assert.equal(bindStripeDisputePurchase(incomplete), null);
