@@ -59,6 +59,7 @@ export function testAliases(file,root,here){
   aliases['@/lib/contract-funding']=join(here,'contract-activation-billing.ts');
  }
  if(file==='buyer-actions.test.ts')aliases['@/lib/blob']=join(here,'buyer-actions-blob.ts');
+ if(file==='dispute-purchase-review.test.ts')for(const name of ['store','stripe-account','contract-resource-window','store-allowance'])aliases['@/lib/'+name]=join(here,'dispute-review-world.ts');
  return aliases;
 }
 export function testEnvironment(env){return{...env,NIMBUS_DATA_KEY:env.NIMBUS_DATA_KEY??'tests-only-not-a-real-deployment-secret'};}
