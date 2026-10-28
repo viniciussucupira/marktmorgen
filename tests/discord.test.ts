@@ -19,12 +19,13 @@ import { emailKey, storeKey } from "@/lib/learn";
 import { CHECK_HOURS, MAX_PRODUCT_ROLES, assignable, cleanRoles, rolesDiff, rolesFor } from "@/lib/discord-rules";
 import { authorizeUrl } from "@/lib/discord";
 import { checkMember, joinServer } from "@/lib/discord-access";
-import { accountOf, dueMembers, readMember, saveServer, setProductRoles, startTrip, takeTrip } from "@/lib/discord-store";
+import { accountOf, dueMembers, readMember, readServer, saveServer, setProductRoles, startTrip, takeTrip } from "@/lib/discord-store";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
 import { paidPeriod } from "./billing-period-fixture";
 import { NextRequest } from "next/server";
 import { SESSION_COOKIE, openSession } from "@/lib/auth";
+import { GET as returnDiscord } from "@/app/api/discord/callback/route";
 import { POST as startDiscordInstall } from "@/app/api/store/discord/connect/route";
 import { POST as manageDiscord } from "@/app/api/store/discord/route";
 import { allowanceUsed } from "@/lib/store-allowance";
@@ -178,6 +179,27 @@ async function main(): Promise<void> {
   is("the owner stays at the studio instead of Discord consent", [installStart.status, installDestination.hostname, installDestination.searchParams.get("discord")], [303, "marktmorgen.com", "limited"]);
   is("no provider request or extra integration allowance", [discord.length, await allowanceUsed(fundedDiscord, "integration")], [beforeInstallRequests, beforeInstallUnits]);
 
+
+  part("A previously issued funded install trip is rechecked on return");
+  const retainedServer={id:SERVER,name:"Retained synthetic server",at:1,kick:false};
+  await saveServer(storeKey(fundedDiscord),retainedServer);
+  const redirect="https://marktmorgen.com/api/discord/callback";
+  const callbackFor=(state:string,query:string,session=installSession)=>returnDiscord(new NextRequest(redirect+"?state="+state+"&"+query,{headers:{host:"marktmorgen.com",cookie:`${SESSION_COOKIE}=${session}`}}));
+  const installTrip=await startTrip({k:"install",sid:fundedDiscord.sid,by:"funded-discord@example.com",redirect});
+  const beforeReturnRequests=discord.length;
+  const returned=await callbackFor(installTrip,"code=synthetic_install_code");
+  const returnDestination=new URL(returned.headers.get("location")??"https://none.invalid/");
+  is("unapproved marked return stays at the studio before token exchange",[returned.status,returnDestination.hostname,returnDestination.searchParams.get("discord")],[303,"marktmorgen.com","limited"]);
+  is("no provider call, server replacement or extra integration allowance",[discord.length,await readServer(storeKey(fundedDiscord)),await allowanceUsed(fundedDiscord,"integration")],[beforeReturnRequests,retainedServer,beforeInstallUnits]);
+  const replay=await callbackFor(installTrip,"code=synthetic_install_code");
+  is("the same trip remains single-use",new URL(replay.headers.get("location")!).searchParams.get("discord"),"expired");
+  const declinedTrip=await startTrip({k:"install",sid:fundedDiscord.sid,by:"funded-discord@example.com",redirect});
+  const declinedReturn=await callbackFor(declinedTrip,"error=access_denied");
+  is("declining consent remains available without funding",new URL(declinedReturn.headers.get("location")!).searchParams.get("discord"),"declined");
+  const invalidTrip=await startTrip({k:"install",sid:fundedDiscord.sid,by:"funded-discord@example.com",redirect});
+  const invalidReturn=await callbackFor(invalidTrip,"code=%3Cinvalid%3E");
+  is("invalid codes keep their existing refusal before financial admission",new URL(invalidReturn.headers.get("location")!).searchParams.get("discord"),"error");
+  is("all refused and declined returns retain the original server and make no provider request",[await readServer(storeKey(fundedDiscord)),discord.length],[retainedServer,beforeReturnRequests]);
 
   part("Funded new role work refuses while role removal and disconnect remain available");
   await setSubscription(OWNER, { customerId: "cus_Owner00001", subscriptionId: "sub_Owner00001", active: true, period: { ...paidPeriod(), funded: true } });

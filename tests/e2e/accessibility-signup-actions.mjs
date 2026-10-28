@@ -186,6 +186,9 @@ try{
    const unsolicited=network.slice(anonymousNetworkStart).filter(entry=>entry.event==="request"&&entry.method==="GET"&&["/","/demo"].includes(entry.path));
    console.log("SIGNUP_STORE_BADGE_REQUESTS:"+JSON.stringify({engine,width,mode,unsolicited}));
    if(unsolicited.length)throw Error("Anonymous store must not fetch the platform home or demo before the badge is chosen");
+   const unchosenDemo=network.filter(entry=>entry.event==="request"&&entry.method==="GET"&&entry.path==="/demo");
+   console.log("SIGNUP_UNCHOSEN_DEMO_REQUESTS:"+JSON.stringify({engine,width,mode,requests:unchosenDemo}));
+   if(unchosenDemo.length)throw Error("Signup and initial setup must not fetch the demo before it is chosen");
    if(localChallenges<1||foreign||errors.length||mutations.length!==3||mutations[0].path!=="/api/auth/request"||mutations[1].path!=="/api/auth/callback"||mutations[2].path!=="/api/store/claim")throw Error("Unexpected operation or page error "+JSON.stringify({foreign,errors,mutations}));
    gaps.push({width,mode,reason:"Synthetic disposable local inbox/session/store claim only; no real email/account/store, physical device, assistive user or actual browser400% zoom. Production BotID behavior and manual sticky-scroll review remain open."});
    console.log("SIGNUP_ACTION_PROOF:"+JSON.stringify({engine,width,mode,actualLocalRequest:true,capturedEmails:mail.length,confirmationGetDidNotSignIn:true,explicitConfirmation:true,authenticatedFirstSetup:true,actualFirstStoreClaim:true,anonymousPublicStoreAfterReload:true,interceptedVisits,localChallenges,foreign,mutations}));
