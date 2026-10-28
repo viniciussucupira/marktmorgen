@@ -15,6 +15,8 @@ const port=3195,origin="http://localhost:"+port;
 const here=join(root,"tests/e2e"),FAKE="http://127.0.0.1:4495";
 const env = {
   ...process.env,
+  DEMO_STUDIO_ADMIN: "operator@example.test",
+  STRIPE_DEMO_ACCOUNT_ID: "acct_fixtureDemo",
   UPSTASH_REDIS_REST_URL: FAKE,
   UPSTASH_REDIS_REST_TOKEN: "local",
   RESEND_API_KEY: "re_local_only_a_stand_in",

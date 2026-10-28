@@ -12,6 +12,8 @@ const driver=require("playwright-core")[engine],axe=readFileSync(require.resolve
 const port=3198,upstream="http://localhost:"+port,origin="https://localhost:3199",here=join(root,"tests/e2e"),FAKE="http://127.0.0.1:4498";
 const env = {
   ...process.env,
+  DEMO_STUDIO_ADMIN: "operator@example.test",
+  STRIPE_DEMO_ACCOUNT_ID: "acct_fixtureDemo",
   VERCEL:"0",
   UPSTASH_REDIS_REST_URL: FAKE,
   UPSTASH_REDIS_REST_TOKEN: "local",
