@@ -5,15 +5,27 @@ export async function checkGuidePlacement({browser,LOCAL,fixture,axeSource,is}){
  for(const viewport of [{width:390,height:844},{width:1280,height:720}]){
   const context=await browser.newContext({viewport,serviceWorkers:"block"});
   try{
-   const page=await context.newPage();let calls=0,otherWrites=0;const first=fixture.products[0];
+   const page=await context.newPage();let calls=0,hits=0;const otherWrites=[];const first=fixture.products[0];
    await page.route("**/api/**",async route=>{
     const request=route.request(),url=new URL(request.url());
+    // The existing store visit beacon is expected even when guide replies
+    // are mocked. Validate and fulfill it locally; no server write is needed.
+    if(url.origin===local.origin&&url.pathname==="/api/store/hit"&&request.method()==="POST"){
+     hits++;const body=request.postDataJSON();
+     is("ME1 existing synthetic visit payload "+viewport.width,{handle:body.h,kind:body.k},{handle:fixture.handle,kind:"v"});
+     return route.fulfill({status:204,body:""});
+    }
+    if(url.origin===local.origin&&url.pathname==="/api/store/read"&&request.method()==="POST"){
+     const body=request.postDataJSON();
+     is("ME1 existing synthetic read payload "+viewport.width,body.k==="s"&&typeof body.t==="string"&&Number.isInteger(body.n)&&body.n>=0,true);
+     return route.fulfill({status:204,body:""});
+    }
     if(url.origin===local.origin&&url.pathname==="/api/store/guide"&&request.method()==="POST"){
      calls++;const body=request.postDataJSON();
      is("ME1 guide keeps store handle "+viewport.width,body.handle,fixture.handle);
      return route.fulfill({status:200,contentType:"application/json",body:JSON.stringify({ok:true,picks:body.goal==="a trip to the moon"?[]:[{title:first.title,href:"/@"+fixture.handle+"/p/"+first.id,price:"$10",why:"A synthetic catalog match."}]})});
     }
-    if(!["GET","HEAD"].includes(request.method())){otherWrites++;return route.abort();}
+    if(!["GET","HEAD"].includes(request.method())){otherWrites.push(request.method()+" "+url.pathname);return route.abort();}
     return route.continue();
    });
    await page.goto(LOCAL+"/@"+fixture.handle,{waitUntil:"networkidle",timeout:60000});
@@ -33,7 +45,8 @@ export async function checkGuidePlacement({browser,LOCAL,fixture,axeSource,is}){
    await guide.getByText(/nothing Guide placement fixture sells fits that yet/).waitFor();
    is("ME1 guide no-match removes old recommendation "+viewport.width,await guide.locator(".st-guide-pick").count(),0);
    is("ME1 guide two synthetic replies "+viewport.width,calls,2);
-   is("ME1 guide no unhandled writes "+viewport.width,otherWrites,0);
+   is("ME1 guide one existing visit beacon "+viewport.width,hits,1);
+   is("ME1 guide no unhandled writes "+viewport.width,otherWrites,[]);
    await page.addScriptTag({content:axeSource});
    const issues=await guide.evaluate(async node=>(await window.axe.run(node,{runOnly:{type:"tag",values:["wcag2a","wcag2aa","wcag21aa","wcag22aa"]}})).violations.map(v=>v.id));
    is("ME1 moved guide accessibility "+viewport.width,issues,[]);
