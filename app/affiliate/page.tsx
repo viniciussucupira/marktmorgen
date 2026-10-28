@@ -113,6 +113,11 @@ export default async function AffiliateHubPage({ searchParams }: Params) {
                         </div>
                       ) : null}
                       {on ? <p className="mt-4 text-sm text-ink-soft">{payoutPromise(store.affiliates, store.name)}</p> : null}
+                      {on && !open ? (
+                        <p role="status" className="mt-4 text-sm text-ink-soft">
+                          Your numbers could not be opened just now. Try again in a moment, or visit the store for help.
+                        </p>
+                      ) : null}
                       <div className="mt-5 flex flex-wrap gap-3">
                         {open ? (
                           <a href={open} className="btn btn-primary btn-sm">
