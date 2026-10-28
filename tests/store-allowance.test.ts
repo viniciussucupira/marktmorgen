@@ -205,17 +205,21 @@ test("funded owner platform calls refuse without approval while consent reductio
  }
 });
 
-test("every marked paid allowance refuses before counters when its contract cohort is not approved",async()=>{
+test("marked paid webhook attempts need their cohort without blocking general maintenance allowances",async()=>{
  for(const tier of ["creator","pro","scale"] as const)for(const cycle of ["month","year"] as const){
   redis.clear();
   const base=paying(70,{tier,cycle,statsId:"b".repeat(32)});
   const marked={...base,period:{...paidPeriod(),funded:true as const}};
-  const before=redis.keys();
   for(const kind of ALLOWANCE_KINDS){
+   const before=redis.keys();
    const result=await takeAllowance(marked,kind);
-   assert.equal(result.ok,false,tier+"/"+cycle+"/"+kind);
-   assert.ok(!result.ok&&result.reason==="unknown");
-   assert.deepEqual(redis.keys(),before,"no allowance, pool or contract mutation on unapproved admission");
+   if(kind==="webhook"){
+    assert.equal(result.ok,false,tier+"/"+cycle+"/"+kind);
+    assert.ok(!result.ok&&result.reason==="unknown");
+    assert.deepEqual(redis.keys(),before,"unapproved outbound attempt creates no counter, pool or contract key");
+   }else{
+    assert.equal(result.ok,true,"general "+kind+" authorization must remain available; new obligations use their own operation guard");
+   }
   }
   const legacy={...marked,period:paidPeriod()};
   assert.equal((await takeAllowance(legacy,"integration")).ok,true,"unmarked existing contracts keep their allowance");

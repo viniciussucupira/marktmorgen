@@ -49,10 +49,10 @@ export async function takeAllowance(store: AllowanceStore, kind: AllowanceKind, 
   if (!Number.isSafeInteger(limit) || limit < n) return refuse("used", usedWords(kind, limit, resetWords(store, now)));
   const id = idOf(store);
   if (!id || !isRedisConfigured()) return refuse("unknown", "This can't be counted right now. Try again in a minute.");
-  // A published allowance is not proof that this marked paid term has cash.
-  // Share the existing immutable paid cohort before counters or provider work.
-  // Legacy/unmarked and non-paying admission retain their existing paths.
-  if (store.period?.funded === true && (!store.tier || !(await reservePaidResourceWindow({ ...store, tier: store.tier, statsId: store.statsId ?? null })))) {
+  // Each outbound webhook attempt creates provider work and needs its paid cohort.
+  // General API/studio authorization also admits removal and disconnection:
+  // their operation-specific guards must retain that distinction.
+  if (kind === "webhook" && store.period?.funded === true && (!store.tier || !(await reservePaidResourceWindow({ ...store, tier: store.tier, statsId: store.statsId ?? null })))) {
     return refuse("unknown", "This can't be counted right now. Try again in a minute.");
   }
   if (!(await admitNonPaying(store, now))) return refuse("pool", POOL_FULL_WORDS);
