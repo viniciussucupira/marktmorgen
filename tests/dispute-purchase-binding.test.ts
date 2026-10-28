@@ -2,11 +2,11 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { bindStripeDisputePurchase } from "@/lib/dispute-purchase-binding";
 function fixture() {
-  const charge = { object: "charge", id: "ch_fixture", paid: true, created: 200, payment_intent: "pi_fixture", amount: 1000, currency: "usd" };
+  const charge = { object: "charge", id: "ch_fixture", paid: true, captured: true, created: 200, payment_intent: "pi_fixture", amount: 1000, currency: "usd" };
   const session = {
     object: "checkout.session", id: "cs_fixture", mode: "payment", status: "complete", payment_status: "paid",
     metadata: { store: "old-handle", product: "a".repeat(32), title: "Original synthetic title" },
-    payment_intent: { object: "payment_intent", id: "pi_fixture", latest_charge: charge },
+    payment_intent: { object: "payment_intent", status: "succeeded", id: "pi_fixture", latest_charge: charge },
     customer_details: { email: "buyer@example.test" }, amount_total: 1000, currency: "usd", created: 100,
   };
   const dispute = { object: "dispute", id: "du_fixture", charge: "ch_fixture", payment_intent: "pi_fixture", amount: 500, currency: "usd" };
@@ -67,4 +67,13 @@ test("expanded dispute references are supported without changing purchase identi
   const bound = bindStripeDisputePurchase({ ...input, dispute: { ...input.dispute, charge: { id: "ch_fixture" }, payment_intent: { id: "pi_fixture" } } });
   assert.equal(bound?.charge, "ch_fixture");
   assert.equal(bound?.paymentIntent, "pi_fixture");
+});
+
+test("authorization without capture or a succeeded intent is not settled purchase proof", () => {
+  const authorization = fixture();
+  authorization.session.payment_intent.latest_charge.captured = false;
+  assert.equal(bindStripeDisputePurchase(authorization), null);
+  const incomplete = fixture();
+  incomplete.session.payment_intent.status = "requires_capture";
+  assert.equal(bindStripeDisputePurchase(incomplete), null);
 });

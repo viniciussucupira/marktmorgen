@@ -45,7 +45,7 @@ export function bindStripeDisputePurchase(input: {
   const paymentIntent = id(intent, "pi");
   const chargeId = id(charge, "ch");
   if (!intent || !charge || intent.object !== "payment_intent" || charge.object !== "charge" ||
-      !paymentIntent || !chargeId || charge.paid !== true ||
+      !paymentIntent || !chargeId || intent.status !== "succeeded" || charge.paid !== true || charge.captured !== true ||
       id(dispute.charge, "ch") !== chargeId ||
       id(dispute.payment_intent, "pi") !== paymentIntent ||
       id(charge.payment_intent, "pi") !== paymentIntent) return null;
