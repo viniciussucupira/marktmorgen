@@ -20,11 +20,18 @@ export async function setupOwnedReader(options={}){
   first.status!==null&&first.status!==0&&
   output.includes('Failed to enable "Do not disturb" mode')&&
   output.includes("osascript is not allowed to send keystrokes");
- if(!permissionPropagation)throw Error("Reader preparation failed; no permitted recovery");
- // Guidepup has already written TCC permissions. Repeat that idempotent setup
- // once after propagation time; never change SIP, skip TCC, or retry the pilot.
+ // A download can fail before preferences are installed. Only the pinned
+ // macOS preferences asset plus an explicit network-fetch failure qualifies;
+ // signature, mount, permission, timeout and unknown errors remain failures.
+ const cacheDownload=platform==="darwin"&&!first.signal&&!first.error&&
+  first.status!==null&&first.status!==0&&
+  output.includes("Failed to download Guidepup cache asset: guidepup-voiceover-preferences-macos-26.dmg")&&
+  output.includes("Cause: TypeError: fetch failed");
+ if(!permissionPropagation&&!cacheDownload)throw Error("Reader preparation failed; no permitted recovery");
+ // Repeat only idempotent preparation once. Never skip download validation,
+ // change SIP/TCC protections, retry the reader pilot or convert failure to approval.
  await wait(2000);
- if(!succeeded(attempt()))throw Error("Reader permission preparation remained unavailable");
+ if(!succeeded(attempt()))throw Error("Reader preparation remained unavailable");
  return {attempts:2};
 }
 if(process.argv[1]===fileURLToPath(import.meta.url)){

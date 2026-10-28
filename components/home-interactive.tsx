@@ -37,9 +37,12 @@ export function RevealOnScroll() {
       { rootMargin: "0px 0px -6% 0px", threshold: 0.1 },
     );
     const fold = window.innerHeight;
-    nodes.forEach((n) => {
-      if (n.classList.contains("is-in")) return;
-      if (n.getBoundingClientRect().top < fold) n.classList.add("is-in");
+    // Snapshot geometry first. Revealing one node can change layout/style;
+    // interleaving writes with the next measurement forces repeated layout.
+    const pending = nodes.filter((n) => !n.classList.contains("is-in"));
+    const inView = pending.map((n) => n.getBoundingClientRect().top < fold);
+    pending.forEach((n, index) => {
+      if (inView[index]) n.classList.add("is-in");
       else io.observe(n);
     });
     return () => io.disconnect();

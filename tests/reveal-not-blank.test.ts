@@ -19,6 +19,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { runInNewContext } from "node:vm";
+import { REVEAL_WATCH } from "@/lib/reveal-scripts";
 
 const layout = readFileSync(join(process.cwd(), "app/layout.tsx"), "utf8");
 const css = readFileSync(join(process.cwd(), "app/globals.css"), "utf8");
@@ -76,4 +78,38 @@ test("a throw anywhere in it un-hides the page", () => {
     /catch\(e\)\{try\{document\.documentElement\.removeAttribute\("data-reveal"\)/,
     "if the reveal script fails it must take the attribute off, so the page is simply all there",
   );
+});
+
+test("initial reveal reads all geometry before class writes and still observes below-fold content", () => {
+  const events: string[] = [];
+  let notify: (entries: { target: unknown; isIntersecting: boolean }[]) => void = () => {};
+  const node = (name: string, top: number) => ({
+    name,
+    getBoundingClientRect: () => { events.push("read:" + name); return { top }; },
+    classList: { add: (value: string) => events.push("show:" + name + ":" + value) },
+  });
+  const first = node("first", 0), second = node("second", 50), later = node("later", 900);
+  class Observer {
+    constructor(callback: typeof notify) { notify = callback; }
+    observe(n: typeof first) { events.push("observe:" + n.name); }
+    unobserve(n: typeof first) { events.push("unobserve:" + n.name); }
+  }
+  runInNewContext(REVEAL_WATCH, {
+    window: { innerHeight: 800 }, IntersectionObserver: Observer,
+    document: { documentElement: { getAttribute: () => "on", removeAttribute: () => events.push("fallback") },
+      querySelectorAll: () => [first, second, later] },
+  });
+  assert.deepEqual(events, ["read:first", "read:second", "read:later", "show:first:is-in", "show:second:is-in", "observe:later"]);
+  notify([{ target: later, isIntersecting: true }]);
+  assert.deepEqual(events.slice(-2), ["show:later:is-in", "unobserve:later"]);
+});
+
+test("geometry failure removes the hiding attribute rather than leaving an unreadable page", () => {
+  const removed: string[] = [];
+  runInNewContext(REVEAL_WATCH, {
+    window: { innerHeight: 800 }, IntersectionObserver: class { observe() {} unobserve() {} },
+    document: { documentElement: { getAttribute: () => "on", removeAttribute: (name: string) => removed.push(name) },
+      querySelectorAll: () => [{ getBoundingClientRect: () => { throw Error("Unavailable geometry"); } }] },
+  });
+  assert.deepEqual(removed, ["data-reveal"]);
 });
