@@ -9,6 +9,7 @@ import {
   CONSENT_RESEARCH_TEXT,
   CONSENT_UPDATES_TEXT,
   LIMITS,
+  isSavedCreatorAnswer,
   PLATFORMS,
   PROBLEM_MIN_LENGTH,
   SUPPORT_EMAIL,
@@ -68,7 +69,8 @@ export function CreatorResearchForm() {
         }),
       });
 
-      if (response.ok) {
+      const result: unknown = await response.json().catch(() => null);
+      if (isSavedCreatorAnswer(response.ok, result)) {
         form.reset();
         setEmailNote(
           consentFollowUp
@@ -81,27 +83,25 @@ export function CreatorResearchForm() {
         return;
       }
 
-      const result = (await response.json().catch(() => ({}))) as {
-        error?: string;
-        field?: string;
-      };
+      const errorField = result && typeof result === "object" && !Array.isArray(result) &&
+        Object.hasOwn(result, "field") ? (result as Record<string, unknown>).field : undefined;
 
       setStatus("error");
       if (response.status === 429) {
         setMessage(
           "Too many submissions from this connection. Please try again in an hour.",
         );
-      } else if (result.field && FIELD_MESSAGES[result.field]) {
-        setMessage(FIELD_MESSAGES[result.field]);
+      } else if (typeof errorField === "string" && Object.hasOwn(FIELD_MESSAGES, errorField)) {
+        setMessage(FIELD_MESSAGES[errorField]);
       } else {
         setMessage(
-          `Something went wrong and your answers were not saved. Please try again, or email ${SUPPORT_EMAIL}.`,
+          `We could not confirm that your answers were saved. Please try again, or email ${SUPPORT_EMAIL}.`,
         );
       }
     } catch {
       setStatus("error");
       setMessage(
-        `Something went wrong and your answers were not saved. Please try again, or email ${SUPPORT_EMAIL}.`,
+        `We could not confirm that your answers were saved. Please try again, or email ${SUPPORT_EMAIL}.`,
       );
     }
   }

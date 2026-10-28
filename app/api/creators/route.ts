@@ -141,11 +141,14 @@ export async function POST(request: NextRequest) {
     ]);
     if (Number(count) > RATE_LIMIT) return fail(429, "rate_limited");
 
-    await redisPipeline([["LPUSH", RESPONSES_KEY, JSON.stringify(answer)]]);
+    const [saved] = await redisPipeline([["LPUSH", RESPONSES_KEY, JSON.stringify(answer)]]);
+    if (typeof saved !== "number" || !Number.isSafeInteger(saved) || saved < 1) {
+      throw new Error("Research storage did not confirm the saved answer");
+    }
   } catch (error) {
     console.error("creator research submission failed", error);
     return fail(500, "server_error");
   }
 
-  return Response.json({ ok: true }, { status: 201 });
+  return Response.json({ ok: true, saved: true }, { status: 201 });
 }

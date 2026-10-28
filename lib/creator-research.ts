@@ -53,3 +53,12 @@ export type CreatorAnswer = {
   consentFollowUp?: boolean;
   consentUpdates: boolean;
 };
+
+/** A transport success is not proof that research answers were stored. */
+export function isSavedCreatorAnswer(httpOK: boolean, raw: unknown): boolean {
+  if (!httpOK || !raw || typeof raw !== "object" || Array.isArray(raw)) return false;
+  const data = raw as Record<string, unknown>;
+  return Object.hasOwn(data, "ok") && data.ok === true &&
+    Object.hasOwn(data, "saved") && data.saved === true &&
+    !Object.hasOwn(data, "error") && !Object.hasOwn(data, "field");
+}
