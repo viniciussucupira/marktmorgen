@@ -150,3 +150,5 @@ Funcionamento: o job `all-checks` (`All checks (<workflow>)`) é o último de ca
 Quem renomear, acrescentar ou retirar um workflow precisa manter `all-checks` e avisar o dono: a regra do GitHub exige os oito nomes `All checks (<workflow>)`; um nome ausente deixa o PR esperando (trava, não aprova). Limite conhecido: cada PR traz a própria definição dos workflows, então a proteção contra um PR que afrouxe a verificação final continua sendo a regra de nunca afrouxar testes.
 
 Estado VR: testado localmente; PR, provas de sabotagem e de PR documental e a regra do GitHub ainda pendentes. Custo: oito jobs Linux curtos por execução, minutos reais a medir (gratuitos em repositório público). Não é entrega funcional ao cliente; contador preservado. Nenhum preço, limite visível, imposto, reserva, comissão ou trava de venda alterado.
+
+Prova temporária (28/10/2026): mudança só de documentação para conferir que as verificações finais passam quando os testes pesados são pulados. Este PR não entra no main.
