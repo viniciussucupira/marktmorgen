@@ -12257,3 +12257,11 @@ Domínio principal marktmorgen.com e www.marktmorgen.com conferidos nos aliases 
 ### 495 [SR6] — comparação e decisão, 28/10/2026
 
 Estudo em docs/stripe-route-comparison-2026-10-28.md: recomendação única priorizar CPF existente condicionada à decisão/gatesAV, sem contrataçãoLLC. Compara preços preservados, meses1/6/12/24/48, impostos, recebimento, EIN e consumo; resultados financeiros indeterminados/reprovados enquanto tetos completos/fatos/câmbio não fechados. Não declarar495integralmente concluído nem base mínima finita. Conferida divergência IN1037art2VII na ementa oficialCosit56/2026, inteiroteor/enquadramento ainda pendentes. Nenhum código fiscal/termo/conta/trava alterado. Custos desconhecidos não zero; nenhum fornecedor contratado. CI do novohead pendente; registro de pesquisa, não nova publicação funcional/contador.
+
+### Falha imediata e correção candidata — cadastro WebKit,28/10/2026
+
+Main0b3f19b331dcbede9761d87c9754f5c77facef59,job123106028080,21h22m29sUTC/18h22m29sFortaleza:1/30casos falhou (390px/text-spacing,anonymous-first-store),150auditorias. Página nova presente,sem prova de falha de conteúdo; erro FetchAPI para /demo?_rsc bloqueado por accesscontrolchecks. Não declarar31/31ou margem/AAA. Fonte mostra badge Made with Marktmorgen da loja com Link padrão,disparando pré-carregamento da home; trace contém GETs/ não escolhidos. Relação com o erro/demo é hipótese, não causa única certificada.
+
+Candidata: badge preserva href/texto/classe/visibilidade e navegação,com prefetch=false para não carregar home ao simplesmente visitar loja. Guia instalado Next AppRouter confirma false desliga viewport/hover. Harness mantém30casos/todasregras/erros/mutações e150auditorias; acrescenta prova do badge e recusa qualquerGET/home/demo após reload anônimo antes de escolha. Sem waits/repetições/filtrodeerro/afrouxamento. CIintegral obrigatório no novohead;semrerunisolado.
+
+Custos porStore/Studio/Scale mensal/anual: nenhum novo comando/requisição/armazenamento/serviço; remove requisição especulativa,sem estimativa fictícia de economia. Totais pagos continuam desconhecidos/reprovados,nenhum teto/reserva reduzido. Conteúdo,idiomas,identificadores,preços,direitos ePLANS_ON_SALE/OPENING_REQUESTEDfalse preservados. Contador254; publicação funcional/interativa não certificada.
