@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useHydrated } from "@/components/use-hydrated";
 import { useRouter } from "next/navigation";
 import { toast } from "@/components/toast";
 import type { Product } from "@/lib/store";
@@ -15,6 +16,10 @@ const CHOICES = [0, 1, 2, 3, 5, 10];
  */
 export function PdfPreviewToggle({ product }: { product: Product }) {
   const router = useRouter();
+  // This control writes through React. Keep the server-rendered choice inert
+  // until its handler is mounted, so an early change cannot be replayed with
+  // the controlled field restored to its previous persisted value.
+  const ready = useHydrated();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const file = product.file;
@@ -53,7 +58,7 @@ export function PdfPreviewToggle({ product }: { product: Product }) {
       <label htmlFor={id} className="field-label">
         Let anyone read the first pages before buying
       </label>
-      <select id={id} className="field mt-1 w-auto" value={product.preview} disabled={busy || (tooBig && product.preview === 0)} onChange={(event) => void change(Number(event.target.value))}>
+      <select id={id} className="field mt-1 w-auto" value={product.preview} disabled={!ready || busy || (tooBig && product.preview === 0)} onChange={(event) => void change(Number(event.target.value))}>
         {CHOICES.map((pages) => (
           <option key={pages} value={pages}>
             {pages === 0 ? "Off" : `The first ${pages === 1 ? "page" : `${pages} pages`}`}
