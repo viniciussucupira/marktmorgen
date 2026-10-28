@@ -58,3 +58,22 @@ jobs:
           npm audit --json > audit-all.json || true
           npm audit --omit=dev --json > audit-production.json || true
           python3 scripts/check_dependency_audit.py audit-all.json audit-production.json
+
+  all-checks:
+    # The one check GitHub requires before main (scripts/ci_all_checks.py): it always runs and
+    # passes only when every job above passed, or was skipped for a documentation-only change.
+    name: All checks (dependency-security)
+    needs: [audit, documentation-scope]
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - name: Read every job's result; a skip counts only for a documentation-only change
+        env:
+          NEEDS: ${{ toJSON(needs) }}
+        run: |
+          python3 scripts/test_ci_all_checks.py
+          python3 scripts/ci_all_checks.py

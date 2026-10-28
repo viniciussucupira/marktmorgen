@@ -78,3 +78,22 @@ jobs:
           SIGNUP_TLS_KEY: ${{ runner.temp }}/signup-key.pem
           SIGNUP_TLS_CERT: ${{ runner.temp }}/signup-cert.pem
         run: node tests/e2e/accessibility-signup-actions.mjs
+
+  all-checks:
+    # The one check GitHub requires before main (scripts/ci_all_checks.py): it always runs and
+    # passes only when every job above passed, or was skipped for a documentation-only change.
+    name: All checks (accessibility-signup-actions)
+    needs: [documentation-scope, signup-actions]
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - name: Read every job's result; a skip counts only for a documentation-only change
+        env:
+          NEEDS: ${{ toJSON(needs) }}
+        run: |
+          python3 scripts/test_ci_all_checks.py
+          python3 scripts/ci_all_checks.py
