@@ -1,3 +1,4 @@
+import { HomeReasonsDetail } from "@/components/home-reasons-detail";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Icon } from "@/components/icons";
@@ -58,6 +59,8 @@ export default function PlatformIndex() {
             </div>
           </div>
         </section>
+
+        <HomeReasonsDetail />
 
         <div className="container-page space-y-16 py-14 sm:py-18">
         <section className="section" aria-labelledby="home-modules-heading">
