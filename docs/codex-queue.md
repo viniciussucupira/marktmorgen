@@ -12021,3 +12021,49 @@ REGRA DE MARGEM (MR, 27/10/2026, 07h42): nenhum cliente pagante, isoladamente, u
 Proibido: ligar OPENING_REQUESTED ou PLANS_ON_SALE; preencher revisões ou registros sem tratamento construído, testado e comprovado; afrouxar qualquer trava ou teste; mudar preços, limites visíveis ou comissão; criar contas, abrir empresa, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
 
 Aplicar a regra VR.
+
+
+### Investigação e correção da alternância de layout — 28/10/2026
+
+A falha móvel208ms no head6b9bfca810a56b71464558e37385091775ae047f, job122947729764, continua vinculante para essa candidata. O primeiro clique frio fez a página rolar até o disclosure de preços (scrollY14339); frame195.6ms/bloqueio114.6ms sem script atribuído não certifica causa única. Inspeção concreta encontrou alternância de leitura getBoundingClientRect com escrita de classe is-in em cada elemento reveal, tanto no script inicial quanto no componente de navegação. Cada escrita pode invalidar o layout antes da leitura seguinte. A correção faz primeiro todas as leituras, depois todas as escritas/observações, preservando o conteúdo, início antes da hidratação, posição da dobra, reduced-motion, fallback e limpeza do observer. Não promete resolver sozinha a amostra208ms: exige nova medição integral e mantém os nove casos frios e limites existentes.
+
+Hash CSP do script atualizado em conjunto; testes existentes continuam obrigatórios. Dois testes sintéticos adicionais executam o script real com DOM controlado para comprovar ordem de todas as leituras antes das escritas, observação posterior do conteúdo abaixo da dobra e retirada do atributo de ocultação em falha de geometria. Não alteram cron, quantidade de workflows, thresholds ou medições. Nenhum serviço/custo operacional, preço, limite ou idioma novo. Conteúdo dos criadores e cinco exemplos da home intactos; contador254.
+
+- Evidência de #1165: incorporado às13:53:34Fortaleza/16:53:34UTC, merge1f47396c577cdc144fd33a489a45944230355d88. Main19completos,8aprovados/11dispensados com8provas explícitas de árvore idêntica e10+7testes cada. Produção READY dpl_3yWPHbwzPTQDXVW15J2Btht69AU5, SHA exato conferido, marktmorgen.com e outros6aliases. A prova interativa no navegador autorizado segue pendente; sem entrega255.
+
+
+### Correção concreta do primeiro studio após cadastro — 28/10/2026
+
+#1168 head14c0a6faa196f2e7725ac4f1ec9592f7d7ae14d3 reprovou Signup action AAA Chromium, job122967465814: caso768px/dark, created-first-store-studio, regra document-title sobre html; largura768/768, sem overflow e sem erros de página/terceiros. O source de /studio já exporta título estático, porém HandleForm fazia router.refresh na mesma rota após criar a primeira loja, o que pode expor corpo atualizado durante a transição de metadados; esta relação é hipótese de implementação a verificar no novo conjunto. O diagnóstico mostra navegação de /studio abortada na atualização; não é prova de problema de contraste nem motivo para excluir a regra.
+
+Correção: após a resposta de criação já validada (handle exato e SID32hex), faz navegação de documento para /studio?store=SID. Mantém a loja persistente selecionada, o mesmo servidor/autenticação e o título junto do documento; não altera criação, preços, idioma ou conteúdo. O formulário também usa esse destino fixo na criação de outra loja. Remove dependência de router no formulário.
+
+A matriz real sintética continua com30casos e as mesmas auditorias, agora também exige imediatamente o título exato e o SID devolvido na URL após o título h1 aparecer. Não acrescenta espera, repetição, exclusão ou mudança de regra axe. Novo conjunto requer CI integral no head exato; #1168 antigo não é aprovado e não foi incorporado. Nenhum custo operacional/serviço novo, pagamento/contato/conta real ou entrega funcional; contador254.
+
+- Revisão antes de aprovação do #1170: primeira loja preserva a query e fragmento correntes (inclusive plano e periodicidade já escolhidos) ao fixar store=SID e navegar para o documento de /studio. Outra loja mantém o comportamento anterior de partir de /studio limpo, agora com navegação de documento. Nenhuma escolha existente é descartada para corrigir o título. Novo head requer CI integral.
+
+
+- Nova verificação do #1170 head493133546a74a77a8ecf4eb5870a5d3fde744bc3: Signup Chromium122977147083 executou30casos,22falharam na leitura Playwright response.json com Network.getResponseBody/No resource with given identifier, faseclaim-first-store; nenhuma violação axe/overflow registrada nos casos que chegaram à auditoria. A navegação de documento destrói o identificador de corpo associado ao renderer antes da leitura tardia do harness. Correção de observação: no roteamento sintético local existente, encaminhar uma única chamada real com route.fetch, capturar seu JSON/status/payload antes de entregá-la ao navegador e cumprir a resposta original inalterada. Mesmas validações de SID/handle/body/status, título imediato,30casos e auditorias; sem resposta inventada, espera, repetição ou exclusão. Incorpora main6aab655 e sua preparação do leitor já publicada. Novo head exige CI integral; os22casos reprovados não são aprovação e nenhum job isolado é reexecutado.
+
+
+- #1170 head664da80922b6d6b0673bf5c665488a537f3b9dc9 teve nova falha Firefox122983541465 às17:36:59UTC: primeiro clique de descoberta da home em1280px não chegou a /platform#home-modules-heading em30s;390px passou e o navegador ficou na home, sem prova de causa única. Correção de produto: os dois links estáticos para detalhes relocados usam navegação nativa com href/texto/id/classes preservados, sem depender da hidratação do roteador. O scroll do documento fica imediato enquanto um link de uma página static-reading está focado, assim como já era para disclosure; evita deslocar o alvo entre pressionar e soltar. Mesmos testes de descoberta/CRM e foco, clique comum, timeout e limites móveis; sem retry, espera extra ou navegação direta substituindo o clique do teste. Nova verificação integral no conjunto; o Firefox reprovado não é aprovação.
+
+
+- Atualização de base de #1170: main023909ae incorporou a fila documental #1171 enquanto a correção de navegação estava em preparação. Conflito restrito à fila impedia a composição do PR e o início dos checks; resolvido preservando integralmente a fila canônica e os registros da candidata, com dois pais explícitos. Nenhuma alteração de fonte/asserção descartada; novo head exige CI integral. Main023909ae ainda28/31aprovados/3emexecução na consulta das17:43UTC, sem aprovação presumida.
+
+
+- #1170 head9be2deab54fbb1b85a3a9e2f302e580020fabe5e reprovou verify122995619551: regra Next de navegação interna rejeitou os dois anchors nativos (sem dispensar a regra, voltam a Link prefetch=false); a correção de foco/scroll permanece. Mobile122995619526 também reprovou: primeiro LCP frio da home2940ms acima de2500ms, H1 identificado, interação160ms eCLS0.02962; oito outras amostras passaram. Sem ignorar/aquecer/repetir amostra ou aumentar limite.
+
+- Inspeção concreta encontrou219038caracteres de JPEG base64 nos dois screenshots sintéticos de StudioScreens, incorporados ao HTML da home mesmo com loading=lazy. Para reduzir de fato o payload inicial, o componente completo, imagens originais e explicações foram movidos para a página existente /platform; a home mantém o mesmo título/id e descoberta visível. Não reprocessa pixels, muda textos/alt/destinos/data de proveniência nem cria arquivo/host/otimizador/request de imagem; dados JPEG permanecem inline e byte a byte idênticos no detalhe. Apenas o título do detalhe recebe tabindex/foco e margem de âncora. Preços e limites continuam visíveis na home, cinco pares de ações e demais conteúdos preservados. ME3 completo600palavras/30links ainda não concluído.
+
+- Novo teste real de navegação390/1280 segue o link por teclado e verifica ausência do payload completo na home, duas imagens originais válidas1280x820, comprimentos codificados originais, alt/textos/destinos/proveniência, ajuste à tela, axe básico e zero escritas. Conectado ao harness ativo; nove amostras móveis frias/CPU4x/rede1.6Mbps150ms e limiares permanecem integrais. Captura de tamanho HTML é escopo de payload, não p75/CWV de campo ou superioridade. Nenhum serviço/armazenamento/TTL/cobrança nova; redistribui conteúdo existente entre páginas existentes sem novo request de imagem, sob envelopes de tráfego/custos vigentes e gates desconhecidos reprovando. Novo head exige31checks completos antes de incorporar.
+
+
+### Correção da verificação HT16 após mover capturas — 2026-10-28T18:23:30.512Z
+
+PR #1170, head29313d63031afbf92c3fe8b98a2c8cd571c79afc reprovado no verify123005451596: HT16 ainda buscava data-studio-screens na home; falhou a exigência de duas capturas e a leitura da proveniência expirou. O percurso agora confere legibilidade/ausência de entrada opaca ainda na home e segue o link real por teclado para /platform#studio-screens-title, onde preserva integralmente duas capturas distintas, JPEG inline, pixels1280×820 decodificados e proveniência sintética datada. Nenhuma assertiva removida, nenhum limite alterado e nenhuma imagem modificada. Suíte completa obrigatória no novo head. Sem publicação/contador; sem novo serviço contratado; CI não medido não equivale a zero. AV vigente preservada.
+
+
+### Sincronização com a ordem AV incorporada
+
+Preservado integralmente o main e3c62e8f0576444bcca8979732059d1fb60a9528, inclusive AV1/AV2, e todas as anotações deste PR #1170. Conflito apenas no apêndice da fila resolvido por composição sem descartar histórico. Esta sincronização não declara correção aprovada: suíte completa exigida no novo head; sem nova entrega ou custo contratado.
