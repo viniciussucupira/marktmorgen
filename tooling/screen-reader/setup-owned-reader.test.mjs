@@ -28,3 +28,24 @@ test("timeouts, unknown errors and Windows never use the recovery",async()=>{
  }
  let calls=0;await assert.rejects(setupOwnedReader({env,platform:"win32",run:()=>{calls++;return denied;}}));assert.equal(calls,1);
 });
+
+const cacheDownload={status:1,signal:null,stderr:"[!] Error: Failed to download Guidepup cache asset: guidepup-voiceover-preferences-macos-26.dmg\nCause: TypeError: fetch failed"};
+test("pinned macOS preferences fetch failure repeats only setup once",async()=>{
+ let calls=0,delay=0;
+ const result=await setupOwnedReader({env,platform:"darwin",run:()=>++calls===1?cacheDownload:ok,wait:async ms=>{delay=ms;}});
+ assert.deepEqual(result,{attempts:2});assert.equal(calls,2);assert.equal(delay,2000);
+});
+test("persistent cache failure still fails without third attempt",async()=>{
+ let calls=0;await assert.rejects(setupOwnedReader({env,platform:"darwin",run:()=>{calls++;return cacheDownload;},wait:async()=>{}}));assert.equal(calls,2);
+});
+test("download recovery excludes different assets, non-network failures, timeout and Windows",async()=>{
+ for(const [platform,result] of [
+  ["darwin",{...cacheDownload,stderr:cacheDownload.stderr.replace("macos-26","macos-99")}],
+  ["darwin",{...cacheDownload,stderr:cacheDownload.stderr.replace("Cause: TypeError: fetch failed","checksum mismatch")}],
+  ["darwin",{...cacheDownload,signal:"SIGTERM"}],
+  ["darwin",{...cacheDownload,error:new Error("spawn failed")}],
+  ["win32",cacheDownload],
+ ]){
+  let calls=0;await assert.rejects(setupOwnedReader({env,platform,run:()=>{calls++;return result;},wait:async()=>{}}));assert.equal(calls,1);
+ }
+});
