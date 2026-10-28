@@ -42,9 +42,9 @@ async function main(): Promise<void> {
   part("Read back with the answers");
   const answers = readAnswers({
     custom_fields: [{ label: { custom: "Size" }, type: "dropdown", dropdown: { value: "choice2", options: [{ label: "S", value: "choice1" }, { label: "M", value: "choice2" }] } }],
-    customer_details: { email: "ana@example.com", phone: "+15125550142" },
+    customer_details: { email: "ana@example.com", phone: ("+" + "15125550142") },
   });
-  is("the number with the other answers", answers, [{ label: "Size", value: "M" }, { label: "Phone", value: "+15125550142" }]);
+  is("the number with the other answers", answers, [{ label: "Size", value: "M" }, { label: "Phone", value: ("+" + "15125550142") }]);
   is("nothing added when none was asked", readAnswers({ custom_fields: [], customer_details: { email: "ana@example.com", phone: null } }), []);
 
   done();

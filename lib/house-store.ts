@@ -45,14 +45,19 @@ export const TEST_CARD = "4242 4242 4242 4242";
  * Nobody signs in as the demo's owner, and its Zoom and Google Calendar
  * connections are made in the studio, the way every creator's are. So one
  * address is on its team as an Admin (lib/demo-seed.ts, lib/team.ts). It is
- * written here rather than left to a setting, so the demo is the same
- * wherever this code runs; DEMO_STUDIO_ADMIN replaces it where one is set.
+ * supplied only by the server's DEMO_STUDIO_ADMIN environment variable.
+ * No personal address or default identity is kept in the repository.
  *
  * An Admin can reach the store's settings and products. They cannot change
  * what the demo is: it is built from lib/demo-seed.ts on every deployment
  * that changes it, and anything edited by hand is put back.
  */
-export const DEMO_STUDIO_ADMIN = "viniciussucupira084@gmail.com";
+/** Server configuration only; an absent or invalid address grants nobody access. */
+export function configuredDemoStudioAdmin(value = process.env.DEMO_STUDIO_ADMIN): string {
+  const address = (value ?? "").trim().toLowerCase();
+  return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(address) ? address : "";
+}
+export const DEMO_STUDIO_ADMIN = configuredDemoStudioAdmin();
 
 /**
  * What the demo store's booking pages say in place of the email they would

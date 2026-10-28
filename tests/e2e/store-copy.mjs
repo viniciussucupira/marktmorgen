@@ -143,6 +143,8 @@ const BUILD = !process.argv.includes("--no-build");
 
 const env = {
   ...process.env,
+  DEMO_STUDIO_ADMIN: "operator@example.test",
+  STRIPE_DEMO_ACCOUNT_ID: "acct_fixtureDemo",
   UPSTASH_REDIS_REST_URL: FAKE,
   UPSTASH_REDIS_REST_TOKEN: "local",
   RESEND_API_KEY: "re_local_only_a_stand_in",

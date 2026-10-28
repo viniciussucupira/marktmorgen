@@ -27,7 +27,7 @@ async function main(): Promise<void> {
   const claimed = await claimHandle(OWNER, "localshop", "Harbor Kitchen Local", "Simple family meals. A store on this computer only, for checking pages.");
   if (!claimed.ok) throw new Error(`the address was refused: ${claimed.reason}`);
   await ensureStatsId(OWNER);
-  await setStripeAccount(OWNER, "acct_1LocalHarbor0001", true);
+  await setStripeAccount(OWNER, "acct_fixture005", true);
   await setSubscription(OWNER, { active: true, tier: "creator", cycle: "month", subscriptionId: null, customerId: null, trialEnds: 0 });
   const ids: Record<string, string> = {};
   for (const [title, summary, price] of PRODUCTS) {

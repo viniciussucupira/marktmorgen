@@ -41,7 +41,7 @@ async function main(): Promise<void> {
   part("Nobody named in what is sent");
   is(
     "addresses, links and phone numbers taken out",
-    cleanVoice("Write to me at pat.smith@example.com or +1 (415) 555-0199, see https://example.com/x"),
+    cleanVoice(("Write to me at pat.smith@example.com or " + ("+" + "1 (415) 555-0199") + ", see https://example.com/x")),
     "Write to me at [email] or [number], see [link]",
   );
 

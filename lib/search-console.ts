@@ -29,7 +29,7 @@ import { randomBytes } from "node:crypto";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { seal, unseal } from "@/lib/secret-box";
 import { REDIRECT_URIS, googleAccount, refreshTokens } from "@/lib/meet-providers";
-import { DEMO_STUDIO_ADMIN } from "@/lib/house-store";
+import { configuredDemoStudioAdmin } from "@/lib/house-store";
 import { SITE_URL } from "@/lib/site-url";
 import type { Store } from "@/lib/store";
 
@@ -37,7 +37,7 @@ export const SEARCH_CONSOLE_SCOPE = "https://www.googleapis.com/auth/webmasters.
 /** The property every store lives under: the URL-prefix property verified by public/google*.html. */
 export const SEARCH_CONSOLE_SITE = "https://marktmorgen.com/";
 /** Who may connect it: the person who runs the site, signed in to the studio. */
-const OPERATORS = new Set([DEMO_STUDIO_ADMIN]);
+
 const CONN = "nl:gsc:conn";
 const stateKey = (state: string) => `nl:gsc:state:${state}`;
 const cacheKey = (statsId: string) => `nl:gsc:q:${statsId}`;
@@ -46,7 +46,10 @@ const STATE = /^gsc\.[A-Za-z0-9_-]{20,64}$/;
 export const SEARCH_ROWS = 25;
 const DAY_MS = 86_400_000;
 
-export const isOperator = (email: string | null | undefined) => Boolean(email) && OPERATORS.has((email as string).trim().toLowerCase());
+export const isOperator = (email: string | null | undefined) => {
+  const operator = configuredDemoStudioAdmin();
+  return Boolean(operator && email && email.trim().toLowerCase() === operator);
+};
 const env = (name: string) => process.env[name]?.trim() ?? "";
 export const searchConsoleConfigured = () => Boolean(env("GOOGLE_OAUTH_CLIENT_ID") && env("GOOGLE_OAUTH_CLIENT_SECRET"));
 export const isSearchConsoleState = (state: string) => STATE.test(state);

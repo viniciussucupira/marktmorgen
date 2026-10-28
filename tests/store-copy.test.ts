@@ -66,7 +66,7 @@ async function main(): Promise<void> {
   process.env.UPSTASH_REDIS_REST_URL ??= "http://stub";
   await claimHandle(OWNER, "firstshop", "First Shop", "Recipes for busy weeks.");
   await ensureStatsId(OWNER);
-  await setStripeAccount(OWNER, "acct_1TestCopyFirst01", true);
+  await setStripeAccount(OWNER, "acct_fixture012", true);
   await setSubscription(OWNER, paid);
   const second = await createStore(OWNER, "secondshop", "Second Shop", "");
   if (!second.ok) throw new Error("no second store");
@@ -208,7 +208,7 @@ async function main(): Promise<void> {
   part("Nothing personal and nothing of the first store's comes across");
   const keys = redis.keys().filter((k) => k.includes(second2.statsId!) || k.includes(second2.sid) || (second2.listId ? k.includes(second2.listId) : false));
   const written = JSON.stringify([second2, made, guidePage, pageBlocks, forms, funnels]);
-  is("no buyer, review, Stripe account or first store id", [BUYER, "Private words", "acct_1TestCopyFirst01", first.sid, first.statsId!, guide.product.id, "files/aaaa"].filter((needle) => written.includes(needle)), []);
+  is("no buyer, review, Stripe account or first store id", [BUYER, "Private words", "acct_fixture012", first.sid, first.statsId!, guide.product.id, "files/aaaa"].filter((needle) => written.includes(needle)), []);
   // A key the stand-in keeps after a read of an empty list holds nothing: only keys with something in them count.
   const held: string[] = [];
   for (const k of keys.filter((k) => /review|contact|:form:r:|order/.test(k))) {
