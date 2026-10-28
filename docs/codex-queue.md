@@ -11296,3 +11296,61 @@ Head antigoe62a06c2c085b2e862cc50c94b7ee63720c80c6a falhou verify122476661334 na
 Produção dpl_B6D9kcN3rXL4j9KyGTQYc1PXGMUq, marktmorgen-aihhf0svx-viniciussucupira.vercel.app, READY/SHA3d03exato, marktmorgen.com/www e nimbuslabsai.com/www confirmados. Consulta agrupadaerror/fatal desde00:51:22UTC vazia; não comprova tráfego/interação. Nova execução INTEGRAL do main3d03 em andamento,13/31sucessos18pendentes à00:55UTC, sem falha confirmada; não cancelar para próxima incorporação. PR1124/1126/1131 continuam aprovados, pendentes de incorporação/leitura fresca.
 
 Contador254 preservado; Chrome continua bloqueado para prova interativa. Sem entrega255, margem certificada ou abertura. Custos CI/tempo/reparos100%FX275 desconhecidos,nãozero; nenhum novo IOprodutivo/serviço, mensagem/pagamento/conta/aceite. PLANS_ON_SALE/OPENING_REQUESTED/preços/limites/comissão, opt-in, controles fiscais/custos, conteúdo/idiomas/IDs/Hazelsong preservados.
+
+
+## IT — Registro e proveniência, solicitação de 27/10/2026 20h55 Fortaleza
+
+Estado: na fila, itens484[IT1]–489[IT6], depois de483[SB6], na ordem recebida. Texto integral do anexo0a74c84a-96bf-4d8c-98ae-6f0e174017c4/Texto colado.txt preservado abaixo, alterando apenas a numeração dos seis títulos. Não interrompe trabalho ativo nem altera itens anteriores;486IT3 não duplica páginas,488IT5 complementa219OP5 sem mudar seu número, posição ou estado. Reutilizar Path,481SB4,375TB1 e demais dependências indicadas antes de implementar só a diferença.
+
+Pedidos repetidos: main6845825a503fa756c313d314e0f41f24060acb21 e fila integral,13PRs abertos (títulos/corpos),689refs codex/*,100commits recentes e50heads distintos recentes/abertos/temáticos conferidos.48filas lidas sem correspondência por20h55, título ou IT1–IT6;2heads sem fila legível não são declarados lidos. Próximos números livres484–489; nenhum número, ordem ou estado anterior alterado. Alegações sobre concorrentes, contagens do estúdio e fontes no pedido são proveniência do dono, ainda não conferência independente. Sem alegação pública de superioridade.
+
+IT2 requer distinguir ação reversível de reembolso/envio/exclusão definitiva/retirada de segurança, sem simular reversibilidade; IT3 lista local semIA; IT5 custo/reserva/robôs/teto anônimo antes de cada chamada e fallback256; IT6 somente agregado real com pelo menos50lojas pagas, sem estimativas/arredondamento favorável. Registro não implementa recursos nem certifica facilidade. VR/AX274/MR/TX preservados; custosCI/tempo100%empresaFX275 desconhecidos,nãozero. Nenhum serviço/IOprodutivo/preço/limite/direito/comissão/gate/opt-in/conteúdo/idioma/ID alterado, nenhuma conta/aceite/pagamento/mensagem/submissão. Contador254.
+
+IT — Intuitivo de imediato: mais simples que a Stan sem perder nenhum recurso (27/10/2026)
+
+Solicitação do dono (27/10/2026, 20h55, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: antes de gravar, aplique a regra permanente "Pedidos repetidos". Confira o main, os PRs abertos e os ramos codex/* recentes, e procure esta solicitação pela linha de data e hora, pelo nome da seção, pelas etiquetas [IT1] a [IT6] e pelo conteúdo. Se já estiver gravada, não crie nada novo. Grave depois de 483 [SB6], na ordem de chegada, com os próximos números livres, sem alterar a ordem dos itens existentes.
+
+Contexto: pesquisa de 27/10/2026. A Stan monta tudo num editor de página única, com prévia ao vivo à direita e uma lista "Store Launch Checklist" no início (help.stan.store, artigos 109, 14 e 406). No main, a página inicial do estúdio (app/studio/page.tsx) importa 191 componentes, e o estúdio tem 34 seções em app/studio. Mais recursos à vista tornam a ferramenta mais difícil para quem começa. Reaproveite e NÃO refaça: o Marktmorgen Path (lib/path*.ts, components/path-onboarding.tsx), 481 [SB4] teste de facilidade contra a Stan, 219 [OP5] loja montada pela IA, 256 [KJ1] demonstração sem cadastro, 251 [ST4] cadastro até a loja pronta, 15 [D12] painel do dono com tempo até a primeira venda, 375 [TB1] editor com desfazer e salvamento automático, 212 [SH9] assistente que executa tarefas, AX274 e a regra VR (item 4). Antes de cada item, confira de novo o código e a fila e faça só a diferença.
+
+484. [IT1] Estúdio simples no início.
+Estado inicial: na fila.
+Na primeira tela do estúdio, mostre só: uma lista de no máximo 5 passos até a primeira venda, que se marcam sozinhos quando o passo é feito, com progresso visível e opção de recolher (padrão do guia de configuração da Shopify, shopify.dev/docs/apps/design/user-experience/onboarding); a ação principal do momento; e os números de vendas. Todo o resto vai para "More tools", em grupos com nomes simples, e aparece na primeira tela quando o criador passa a usar. No celular, uma barra de navegação sempre visível na parte de baixo, com 4 ou 5 destinos e alvos de pelo menos 44 × 44 px (a pesquisa da Nielsen Norman Group de 26/06/2016 mostrou que esconder a navegação reduz em mais de 20% o quanto as pessoas encontram as coisas). Nenhum recurso, direito ou limite é retirado: só a ordem e a forma de mostrar mudam. Reaproveite o Path e conte, na seção "Acessibilidade" do PR, os passos e decisões antes e depois.
+
+485. [IT2] Desfazer no lugar de "Are you sure?".
+Estado inicial: na fila.
+Há chamadas confirm() do navegador em 9 arquivos (components/community-composer.tsx, community-events-studio.tsx, community-studio.tsx, email-studio.tsx, leave-guard.ts, passkey-manager.tsx, path-onboarding.tsx, recovery-address-manager.tsx, team-manager.tsx). Troque cada confirmação de rotina por "desfazer" logo depois da ação, com aviso acessível em região ao vivo. Mantenha a confirmação somente no que não tem volta (reembolso, envio de e-mail, exclusão definitiva, retirada de acesso de segurança), numa caixa da própria página, com o resultado escrito nos botões (por exemplo, "Delete post" e "Keep post"). Fonte: Nielsen Norman Group, "Confirmation Dialogs", 18/02/2018, revisto em 07/08/2026. Com teste para cada caso.
+
+486. [IT3] Busca "What do you want to do?".
+Estado inicial: na fila.
+Em todas as telas do estúdio, um campo de busca de AÇÕES (não só de páginas): o criador escreve "refund", "coupon", "send email", "change price" e vai direto à tela certa. Aceite erro de digitação, plural e sinônimos (por exemplo, "discount" encontra "coupon"), em ordem de uso recente. No computador, também pelo atalho Ctrl+K ou Cmd+K; no celular, como campo visível. Sem modelo de IA e sem custo por uso: lista de ações e sinônimos mantida no código, com teste que falhe se uma tela nova do estúdio não tiver ação na busca. Seguir AX274.
+
+487. [IT4] Padrões comprovados em cada formulário e tela.
+Estado inicial: na fila.
+Confira e corrija, tela por tela, no estúdio, no checkout e na área do comprador:
+1. Validação de cada campo quando a pessoa sai dele, nunca enquanto digita; mensagem ao lado do campo, com texto e ícone, que some assim que o erro é corrigido (Baymard, 09/01/2024).
+2. Teclado certo no celular (inputmode e autocomplete para e-mail, telefone, número e valor).
+3. Campo já preenchido com o valor mais comum, nunca com a opção mais cara.
+4. Rótulo sempre visível, nunca só o texto de exemplo dentro do campo.
+5. Nenhuma tela vazia sem uma frase do que fazer, um botão para a ação e um modelo pronto (Nielsen Norman Group, 19/09/2021).
+6. Rascunho salvo sozinho, com o estado "Saving…" e "Saved" visível, e nenhuma perda de dados por tempo esgotado.
+7. Prévia ao vivo, no formato de celular, ao lado de cada editor de produto, página, checkout e e-mail, onde ainda não houver.
+8. Antes de publicar ou enviar, um resumo com "Change" em cada item (padrão "Check answers" do GOV.UK Design System).
+Registre em docs/ease-patterns-audit.md cada tela, o que foi encontrado e o que foi corrigido. Reaproveite 481 [SB4] e 375 [TB1], sem duplicar.
+
+488. [IT5] Complemento ao 219 [OP5], aplicando só a diferença, sem mudar número, posição ou estado do item 219.
+Estado inicial: na fila.
+Permita ver a loja montada ANTES de criar a conta: na página inicial, o visitante cola o link da página dele (Stan, Linktree, Beacons, site próprio) ou escreve o que vende e vê, em poucos segundos, a prévia da loja dele em rascunho; para guardar, cria a conta, e a prévia vira o rascunho do estúdio, sem redigitar nada. Nada é publicado. Custo: cada prévia usa as mesmas regras de leitura de site e de IA do 219, com teto automático de prévias anônimas por mês dentro das vagas de lojas que não pagam (lib/free-pool-rules.ts), proteção contra robôs que já existe e reserva antes de cada chamada; acabado o teto, a página mostra a demonstração de 256 [KJ1]. Evidência a conferir com fonte datada: Duolingo, cerca de 20% mais usuários ativos por dia ao levar o cadastro para depois da primeira lição (First Round Review, 17/07/2017); Shopify AI Store Builder e Squarespace Blueprint.
+
+489. [IT6] Taxa real de primeira venda, publicada com dados reais.
+Estado inicial: na fila.
+Nenhum concorrente publica quantos criadores fazem a primeira venda nem em quanto tempo. Quando houver pelo menos 50 lojas pagas, mostre na página inicial e na de preços, calculado pelo próprio código a partir de 15 [D12], somente agregado e sem identificar ninguém: a porcentagem de lojas que fizeram a primeira venda e o tempo mediano até ela, com a data da última atualização. Antes disso, o número não aparece. Nunca arredondar para cima, nunca escolher período favorável, nunca exibir estimativa.
+
+Regra de margem: cada item segue a REGRA DE MARGEM vigente (MR, 27/10/2026, 07h42): nenhum cliente pagante dá prejuízo, usando 100% de todos os direitos do plano e de cada complemento no pior mês, no mensal e no anual, com teto automático e reserva antes de cada gasto; a empresa sem prejuízo a partir da base mínima; 60% é meta mensal real, não trava. Política tributária TX. Custo desconhecido reprova, nunca é zero; nenhuma cota grátis de fornecedor conta como zero; taxas de recebimento mais caras de lib/receiving-costs.ts; todos os custos fixos são 100% do Marktmorgen (FX275).
+
+Proibido: mudar preços, cortar limites visíveis, retirar recursos ou direitos de qualquer plano, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; enviar e-mail real; apagar conteúdo de criadores ou qualquer coisa da Hazelsong; afirmar em público que o Marktmorgen é mais fácil que a Stan sem a prova exigida em 481 [SB4], AX274 (item 7) e na regra VR (item 7). Somente testes sintéticos.
+
+Aplicar a regra VR.
