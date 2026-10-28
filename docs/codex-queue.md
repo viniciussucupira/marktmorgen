@@ -12310,6 +12310,45 @@ Head3aee67de/job123114390011,21h38m31sUTC:6arquivos de testes falharam porque a 
 ### 470SR4 apósSD1 — roteiro documental,28/10/2026
 Documento emdocs/us-llc-owner-roadmap-2026-10-28.md:sequência constituição/agente/endereço físico/EINsemSSN/banco exatoLLC/StripeUS/prova datada; somente ações do dono, nenhuma executada. Fontes oficiais relidas,Atlas500+agente100renovação,Delaware400vigente;componentes conhecidos900primeirociclo/500anualposterior não são total/teto. Desconhecidosendereço/telefone/banco/compliance/FX/etc reprovam,100%FX275. Sempromoçõesabatidas/duplataxaincluída. Rótulos públicosAtlas e camposSS4/esquemaprova diferenciados; botõesprivadosStripe não inventados.470ainda parcial pelosrótulosprivados/orçamento/provafísica; pesquisaautônomacontinua. Proibição de conta/assinatura/EIN/contrato/pagamento/contatointacta. SD1/AVordem,COUNTRIES,MR/TX,flagsfalse preservados. PR1178reparo b660 suíteintegralpendente. SD1PR1179incorporado19h29m54sFortaleza/22h29m54sUTC,merge24968f206044d36e20db38afff0a8c723e8b4253,8escopos10+7/fullfalse eVercelaprovados;documento,nãoentregafuncional/contador254.
 
+
+### 470SR4 — remissão do roteiro histórico corrigida,28/10/2026
+Conferido docs/stripe-us-owner-roadmap.md: ainda continha ordemLLC→EIN→ITIN e exigência históricaITIN/representanteresidente. Adicionada decisão vigenteSR5/SD1 e remissão ao roteiro28/10; textoantigopreservadocomo histórico,sem prevalecer. NenhumaetapaobrigatóriaITIN/SSNouresidênciaUSafirmada;endereço físicorealUS/bancoUSnomexatoLLC/provadatada mantidos. Fontes públicasStripeativação/checklistconferidas;cadastropúblicoexigeJavaScript,nãoprovarótulosprivados. Nãofoitro cadanemretentadaconexãobloqueadadonavegador,criadanova contaoupreenchidoformulário.470permaneceparcial;semnovaentregafuncional/contador254.
+
+
+## FW — Regras de limite de pedidos publicadas na Vercel (28/10/2026) [FW1]
+Solicitação direta28/10/2026 19h44Fortaleza. **Na fila; executar com275FX1/passo6AV1 ou próximoPRde custos já previstoAV1. NenhumPRexclusivoFW1.** Este registro de recebimento integraPR1181existente e não declara execução de custos/medições.
+
+MM-SA-11/Owner's steps1: **feito pelo dono**, conforme relato de publicação às19h37 e19h44, conferida peloClaude na tela. ProjetoMarktmorgen/Firewall/Projectrules: “MM-SA-11 store API”,RequestPath Startswith/api/store/,RateLimit/FixedWindow60s/300/IPAddress/429TooManyRequests; “MM-SA-11 image API”,mesmosparâmetros,/api/image/,600. AttackChallengeMode somente duranteataque. Codexnãoalterou nemafirma nova inspeçãoindependente da tela.
+
+Execução futura no mesmoPRde custos: atualizar docs/security-audit-2026-10-18.md com o passo do dono concluído; incluir cobrançaWAFpublic-requests e demais cálculos/store/image para seiscontratosmensal/anual+complementos100%direitos/maiorpreçopago/tetos/reservas;contarduasavaliaçõessepossível/regenerardocumentos/suíteintegral. Medirpicos60segundosporIP de loja/checkout/galeria/curso,compradorescompartilhandoIPeGitHubActions/testes/monitores/provadiáriaprodução;nenhum pico foi medido neste registro. Se exceder300/600, propor númeroexatoemDependedodono/motivo,semalterarVercel.
+
+Fonteoficialpreliminarconferida28/10: https://vercel.com/docs/vercel-firewall/vercel-waf/usage-and-pricing (0,50USD/milhãoallowed) e https://vercel.com/docs/pricing/regional-pricing (faixa0,50–0,80USD/milhão;regiãodeorigemimporta). Preservar o valor0,50 exibido ao dono como observação, sem tratá-lo como teto mundial; investigarcoberturaantesdeaprovarcustos. https://vercel.com/changelog/web-application-firewall-mitigated-traffic-is-free-on-vercel ,18/05/2026,confirmaisençãoCDN/FDTde tráfegoWAFnegado/desafiado/rate-limited. Franquiagratuitanãoreduzpiorcasosemcobertura;desconhecidoreprova.
+
+Pedidosrepetidos: main9011b3b69af1cf17132240c44a5ec304af129921,3PRsabertos,40filasdeheadsrecentesdistintos,736nomesrefscodex/* conferidos;semFW1/data19h44/seçãoequivalente. Nenhumitemrenumerado. VR:0→0açõesUI,códigoinformado/custos/mediçõesainda pendentes;flagsfalse,MR/TX/100%FX275,preços/limites/comissão/conteúdo/Hazelsongpreservados;semnovaoperaçãoexterna/entregafuncional/contador254.
+
+### Texto integral do dono — FW1
+FW — Regras de limite de pedidos publicadas na Vercel (28/10/2026)
+Etiquetas: [FW1]
+
+Solicitação do dono (28/10/2026, 19h44, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: antes de gravar, aplique a regra permanente "Pedidos repetidos". Confira o main, os PRs abertos e os ramos codex/* recentes, e procure esta solicitação pela linha de data e hora, pelo nome da seção, pela etiqueta [FW1] e pelo conteúdo. Se já estiver gravada, não crie nada novo.
+
+Estado inicial: na fila, executado junto com o passo 6 de [AV1] (275 [FX1]) ou com o próximo PR de custos já previsto em [AV1], sem abrir PR somente por este pedido.
+
+[FW1] Registrar as regras publicadas e o custo delas.
+1. Registre como feito pelo dono o passo 1 de "Owner's steps" em docs/security-audit-2026-10-18.md (MM-SA-11). O dono publicou na Vercel, projeto marktmorgen, Firewall, Project rules, em 28/10/2026 (19h37 e 19h44, Fortaleza), conferido pelo Claude na tela: (a) "MM-SA-11 store API": Request Path, Starts with /api/store/, Rate Limit, Fixed Window, 60 segundos, 300 pedidos, chave IP Address, ação Too Many Requests (429); (b) "MM-SA-11 image API": igual, com /api/image/ e 600 pedidos. Attack Challenge Mode continua para usar só durante um ataque. Não altere as regras: mudança na Vercel é passo do dono.
+2. Custo: a Vercel informou na própria tela, em 28/10/2026, US$ 0,50 por 1 milhão de pedidos permitidos por regra de limite; pedidos bloqueados são grátis. Confira em fonte oficial datada da Vercel. Inclua esse custo na linha public-requests de tests/plan-cost-registry.ts (e onde mais o código calcular pedidos a /api/store/ e /api/image/), no pior caso de cada plano e complemento, mensal e anual, com 100% dos direitos. Se um pedido puder passar pelas duas regras, conte as duas. Regenere os documentos gerados e rode a suíte completa. Desconhecido reprova, nunca é zero.
+3. Confira, sem alterar as regras, se algum uso legítimo pode passar do limite: uma página de loja, um checkout, uma galeria de imagens ou um curso abertos por um comprador; vários compradores atrás do mesmo IP (rede de empresa, operadora de celular); e todo teste, monitoramento ou prova diária que acesse marktmorgen.com a partir do GitHub Actions. Registre o pico medido de pedidos por minuto e por IP em cada caso. Se algum puder passar de 300 (store) ou de 600 (image) em 60 segundos, registre em "Depende do dono" o novo número exato de cada regra, com o motivo, para o dono ajustar na Vercel.
+
+REGRA DE MARGEM (MR, 27/10/2026, 07h42): nenhum cliente pagante, isoladamente, usando 100% de todos os direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo depois de todos os custos e impostos; a empresa nunca dá prejuízo no pior caso a partir da base mínima calculada; 60% é a meta líquida mensal real da empresa. Taxas de recebimento mais caras de lib/receiving-costs.ts, reservas, exposição e custeio preservados; desconhecido reprova, nunca é zero; 100% dos custos fixos da LLC pertencem ao Marktmorgen (FX275); política tributária TX vigente.
+
+Proibido: ligar OPENING_REQUESTED ou PLANS_ON_SALE; afrouxar travas ou testes; mudar preços, limites visíveis ou comissão; alterar regras ou configurações da Vercel; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+
 ### AV(a) — retorno Discord,28/10/2026
 Após1177,conferido callback de instalação:estadoOAuthválido não revalidava coorte antes de trocar credenciais/substituirservidor. Implementação parcial repeteprova da coorte marcada após sessão/permissão/código e antes deprovider/escritas,semalterarcancelamento,comprador,remoçãooudisconnect. Testedrota real comestado/sessãosintéticosprova303limited/zeroprovider/servidorretido/franquiaintacta/replayexpirado/cancelamentopreservado. Custospré-operaçãoemdocs/paid-discord-install-return-cohort.md;parcelasteóricasmensais/anuaisporplano,nãototaisaprovados;desconhecidosreprovam,políticasnull. CIintegralpendente. Nenhumserviço,conta,permissão,preço,direito,conteúdo,idioma,identificadorouflagcomercialalterado;contador254.
 
@@ -12321,5 +12360,16 @@ Heade07174817fcc313c0cf115b626f1854f5d29e8e5 rejeitado:job123134965506 SignupWeb
 1178/b660:SignupChromium/Firefox/WebKit jobs123141672444/123141672456/123141672490 passaramcada30casos150audits0falhas e30casoszeroGET/demo não escolhido. Isto não aprova o head inteiro:verify/Firefox/WebKitgerais ainda pendentes. União documental com main9011/roteiro1180 preservaSD1 e todos os registros, semcancelarCIanterior;novohead exigeverificaçãocompleta. Nenhuma conclusão funcional/counter254.
 
 
+### Incorporação1178 — 2026-10-28T23:10:12Z, Fortaleza2026-10-28T20:10:12.000-03:00
+Merge4c7ccc345f7ed078c02835f976e9250e1fd9303f,head285efc3821943e01b237a279703010fdeaed5138,árvore765310c67caa2872d10dcb319c1377c42d98fbd9exata.31/31+Vercelaprovados:verify123145752425Everythingpassing,Firefox123145752593,WebKit123145752477success;8escopos10+7/fulltrue. Signup123145223462/123145222848/123145222763cada30casos150audits0falhas e30zeroGET/demo nãoescolhido. Mobile123145752483noveamostrasfrias/todoslimitesestritospassam,maxLCP2100ms/CLS0/interação144ms/zeroescritas. Leitores123145221574/123145221452apenas2entrystatescada,0writes0foreign;semcertificarfluxocompleto/AAA.
+Mudanças:instalaçãoDiscordmarcadarevalidaadmissãoantesdeprovider/substituirservidor,semalterarcancelamento/buyer/limpeza;Studio/demo semprefetchautomático e regressãopercursointeiro. Falhae071job123134965506preservada;nãofoir erunisolado/nemasserçãorelaxada. CIcombinaçãomain/READY/domínio/versãoaindaa confirmar,semprova interativaproduçãoautorizada;contador254,não255. Custoscomponentesestimadosnãoaprovação,totaldesconhecidoFX275/guardasnull/flagsfalse. FW1/SR5/SD1/470/Claude/Hazelsonghistóricospreservados. PR1182PayPalsegueindependenteemCI.
+
+
 ### AV(a) — retorno da instalaçãoPayPal,28/10/2026
 Implementação parcial independente enquanto1178CIroda,base285efc:revalidaresourcecohortmarcada antesdecheckSeller/provider/substituirvendedor/aviso;iníciojáguardado. Rotaautenticadapermissionspayments,trackingIdpróprio,merchantIdURLnãoconfiável. Testerotarealcomsessãosintéticarecusa303limited/zeroPayPalincluindotoken/vendedorinalterado;desconexãoexistenteintacta. Semalterarbuyerreturn/captura/entrega/reembolso/limpeza. Custoscomponentespré-operaçãoemdocs/paid-paypal-install-return-cohort.md;volumesilustrativosnãofranquias/tetos,desconhecidosreprovam,políticasnull. FW1executacom275/próximoPRcustosAV1,nãoaplicadoisoladamente. Suítecompletaexigida;nenhumserviçopago/conta/permissão/preço/limite/flag/COUNTRIESalterado. SD1/470/Claude/históricopreservados,contador254.
+
+
+### Incorporação1182 — 2026-10-28T23:15:42Z
+Fortaleza2026-10-28T20:15:42.000-03:00;mergeaea62fb2f5d8ab246fb8019af6f022af8c729fae,headfeecc28ffcfc73a33a5ab4ee4e78a8026f81976f,árvore89571322f3783c594956679e68d4910fa263d99eexata.31/31+Vercel;verify123149360121Everythingpassing e testePayPalretorno303limited/zeroAPIincluindotoken/vendedorinalterado,Firefox123149360289,WebKit123149360174success;8escopos10+7/fulltrue. Mobile123149360107noveamostrasfriastodoslimitesestritospassam,maxLCP704ms/interação56ms;Signup123149291725/123149291683/123149291667cada30casos150audits0falhas;leitores123149321581/123149321535só2entrystates/0writes0foreign. Suítecompleta,nãor erunisolado. Principalrevalidaadmissãomarcadapréprovider/nova instalação,nãoalteracompras/obrigações/desconexão;componentescusto não são tetoaprovado/políticasnull. MainCI/READY/domínioaindapendentes,contador254.
+
+Publicação1178confirmadaantesde1182:dpl_57PnYfoh43Dkg4pp1RYau5PJWJ8DREADY/production,versão4c7ccc345f7ed078c02835f976e9250e1fd9303f,setealiasesincluindomarktmorgen.com/www;GET/home/signin200IDexato. Main19checks,oito10+7/fullfalsecomreusoexplícitodeárvoreidêntica/jobs123157254071/123157253664/123157252758/123157252619/123157252439/123157252389/123157251987/123157251986. Prova interativaproduçãopendenteporconexãobloqueada,semretry/troca,nãoincrementar254. Nenhum serviço/conta/pagamento/contrato/contatoativado;MR/TX/100%FX275,FW1agendado,SD1/470/Claude/Hazelsongpreservados.
