@@ -12238,3 +12238,17 @@ PR #1166, heade278ea512f95826b1c40fcc106598929e8c451dd: WebKit123011393163 expir
 ### Correção da implementação de prontidão — 2026-10-28T18:40:17.206Z
 
 Verify123023257201 reprovou head8cacf9d5f32bc5fbcdb270e818d43f76766fc8f8 na regra de setState síncrono em efeito. Substituído o efeito por useSyncExternalStore com assinatura estável sem eventos, snapshot servidor false e cliente true. Controles continuam recusados no servidor/antes da hidratação; nenhuma regra de lint desativada. Mesmos testes de prontidão, movimento e24 respostas sintéticas preservados; suíte completa obrigatória no novo head. Sem publicação ou custo contratado; CI não medido não é zero.
+
+
+## AV2 — lote diário de provas, 28/10/2026
+
+Registro consolidado das incorporações conferidas nesta conversa após AV2. Histórico anterior preservado; nenhuma entrega funcional adicional certificada: contador254 permanece, pois a conferência interativa autorizada segue indisponível. Nenhuma tentativa ou troca de navegador foi feita.
+
+| PR | Incorporação real (Fortaleza) | Commit publicado | Verificação |
+| --- | --- | --- | --- |
+|1172, AV1/AV2|15h17m53s|e3c62e8f0576444bcca8979732059d1fb60a9528|Head documental19:8success/11skipped,8classificadores10+7/fullfalse;main31/31completo. READYdpl_7j8dYuGDTmfrtamVdUEYYVfaUeRR,7aliases. Sem entrega funcional.|
+|1170, home/navegação|15h53m44s|c0fd713568bbeccf3f366246679493a61862abcc|Head24b1265:31/31+Vercel;8classificadores10+7/fulltrue;verify/Firefox/WebKit allpassed;9amostrasfrias móveis aprovadas;leitores2estados/0writes/0foreign. Main19com8provas explícitas de reutilização para árvore idêntica7161ad64. READYdpl_8SkhPcoDcL2hMGGpfDvzDmvzfLAF,7aliases;HTTP200home/platform/signin com IDexato.|
+|1158,505[SG2]|16h53m46s|1bb07eb360977897db5eee9b0af448d42d22fad6|Head8b2db28:31/31+Vercel,8classificadores10+7/fulltrue;2646arquivos/0ocorrências na varredura pública;verify/Firefox/WebKit allpassed;9amostrasfriasaprovadas;2estadosporleitor/0writes/0foreign. Main19com8reutilizações explícitas/árvore idêntica1ae89cbf. READYdpl_EmsQ6B3npyFT8YT489vhrfLxpQeD,7aliases;HTTP200home/platform/signincomIDexato.505incorporado/publicado; bloqueio privado encerrado por metadadosProduction/sensitive dos dois nomes,sem ler valores.|
+|1169, incluindo1162/1164/1166|17h27m15s;ancestres reconhecidos17h27m17s|df787bf4a373a920d9e32797493bd52b3e13da20|Headf5f9d999:31/31+Vercel;8classificadores10+7/fulltrue;verify/Firefox/WebKit allpassed;Redisreal/invariantesde retençãoaprovados;9amostrasfriasmóveisaprovadas;2estadosporleitor/0writes/0foreign. Main19com8provas explícitas de reutilização/árvore idêntica37e4d00d. READYdpl_4Zb1MeuctGvLYKGQCgJoBDvXzUJZ,7aliases;HTTP200home/signin e acesso anônimo/studio/disputesapresentouentrada,IDexato. ParteDE1publicada,não envio de evidência ao banco nem DE1inteiroconcluído.|
+
+Domínio principal marktmorgen.com e www.marktmorgen.com conferidos nos aliases das publicações; também preservados nimbuslabsai.com/www, nimbus-labs-six e aliases de projeto/main. HTTP não substitui a lacuna interativa; leitores testados só nas duas entradas, sem extrapolar para compras/cancelamento/reembolso ou pessoas reais. Custos: nenhum novo serviço contratado; custos de CI/deploy/pesquisa não medidos não são zero. DE1mantém teto/quota existente,até3unidadesdeintegração por consulta completa e leituraRedissem escrita/renovaçãoTTL; nenhuma margem certificada. Vendas/OPENING_REQUESTED permanecemfalse. Falhas e correções anteriores continuam em seus registros imediatos.
