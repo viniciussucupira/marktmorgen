@@ -37,7 +37,7 @@ async function main(): Promise<void> {
   const OTHER = "other@example.com";
   await claimHandle(OWNER, "firstshop", "First Shop", "");
   await ensureStatsId(OWNER);
-  await setStripeAccount(OWNER, "acct_1TestFirstShop01", true);
+  await setStripeAccount(OWNER, "acct_fixture006", true);
   const second = await createStore(OWNER, "secondshop", "Second Shop", "");
   if (!second.ok) throw new Error("no second store");
   await ensureStatsId(storeRef(second.store));
@@ -109,7 +109,7 @@ async function main(): Promise<void> {
   const written = JSON.stringify([theirPage, secondStore.sitePages, theirs]);
   is(
     "nothing names the first store, its products or its Stripe account",
-    [first.statsId!, first.sid, firstGuide.product.id, firstCourse.product.id, "acct_1TestFirstShop01"].filter((needle) => written.includes(needle)),
+    [first.statsId!, first.sid, firstGuide.product.id, firstCourse.product.id, "acct_fixture006"].filter((needle) => written.includes(needle)),
     [],
   );
   is("the first store is unchanged", (await readPageFunnels(first.statsId)).length, 1);

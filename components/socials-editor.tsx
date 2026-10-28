@@ -23,7 +23,7 @@ type Row = { key: number; network: SocialNetwork; typed: string };
 const PLACEHOLDER: Partial<Record<SocialNetwork, string>> = {
   email: "you@example.com",
   website: "https://example.com",
-  whatsapp: "+1 555 010 0000",
+  whatsapp: "Country code and number",
   spotify: "https://open.spotify.com/…",
   discord: "https://discord.gg/…",
   substack: "yourname",

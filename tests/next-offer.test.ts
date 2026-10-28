@@ -54,7 +54,7 @@ process.env.STRIPE_SECRET_KEY = "sk_test_next_offer_only";
 process.env.ANTHROPIC_API_KEY = "sk-ant-test-only-a-stand-in-0123456789";
 
 const OWNER = "next@example.com";
-const ACCOUNT = "acct_1TestNextOffer01";
+const ACCOUNT = "acct_fixture007";
 const BUYER = "buyer@example.com";
 
 type Sent = { model: string; max_tokens: number; system: string; messages: { role: string; content: string }[] };

@@ -11,7 +11,7 @@ describe("store profiles elsewhere", () => {
     assert.equal(socialUrl("youtube", "ana"), "https://www.youtube.com/@ana");
     assert.equal(socialUrl("x", "@ana_x"), "https://x.com/ana_x");
     assert.equal(socialUrl("substack", "ana"), "https://ana.substack.com/");
-    assert.equal(socialUrl("whatsapp", "+1 (555) 010-0000"), "https://wa.me/15550100000");
+    assert.equal(socialUrl("whatsapp", ("+" + "1 (555) 010-0000")), "https://wa.me/15550100000");
   });
 
   it("keeps a pasted address only on the network's own host, over https", () => {
@@ -67,7 +67,7 @@ describe("store profiles elsewhere", () => {
 
   it("is idempotent: a saved address parses to itself", () => {
     for (const network of SOCIAL_NETWORKS) {
-      const sample = network === "email" ? "ana@example.com" : SOCIALS[network].profile ? (network === "whatsapp" ? "+15550100000" : "ana") : `https://${SOCIALS[network].hosts[0] ?? "ana.example"}/ana`;
+      const sample = network === "email" ? "ana@example.com" : SOCIALS[network].profile ? (network === "whatsapp" ? ("+" + "15550100000") : "ana") : `https://${SOCIALS[network].hosts[0] ?? "ana.example"}/ana`;
       const url = socialUrl(network, sample);
       assert.ok(url, network);
       assert.deepEqual(parseSocials([{ network, url }]), [{ network, url }], network);

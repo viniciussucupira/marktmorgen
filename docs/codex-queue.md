@@ -12069,7 +12069,20 @@ PR #1170, head29313d63031afbf92c3fe8b98a2c8cd571c79afc reprovado no verify123005
 Preservado integralmente o main e3c62e8f0576444bcca8979732059d1fb60a9528, inclusive AV1/AV2, e todas as anotações deste PR #1170. Conflito apenas no apêndice da fila resolvido por composição sem descartar histórico. Esta sincronização não declara correção aprovada: suíte completa exigida no novo head; sem nova entrega ou custo contratado.
 
 
-### Histórico do PR #1169 preservado ao incorporar correção global aprovada #1170
+## 505 [SG2] — configuração privada confirmada pelo dono; conclusão retomada
+
+2026-10-28T19:26:09.183Z: instrução direta do dono informa criação de DEMO_STUDIO_ADMIN e STRIPE_DEMO_ACCOUNT_ID em Production do projeto marktmorgen, como Secret, com os mesmos valores antes no código. Conferência estritamente por metadados via decrypt=false: ambos os nomes presentes, target=[production], type=sensitive. Valores não lidos, comparados nem expostos; equivalência dos valores é declaração do dono. Bloqueio anterior de configuração encerrado; histórico de espera preservado.
+
+PR #1158, head anterior1f96b89b060341034d6ae6f17fce82de31b97c95 com31/31 aprovado, reconciliado com mainc0fd713568bbeccf3f366246679493a61862abcc. Alterações SG2 preservadas, assim como a correção global #1170 e AV1/AV2. Dois conflitos em fixtures de signup/harness compostos aplicando exatamente os respectivos hunks de SG2 sobre o main atual; apêndice da fila registra esta retomada sem restaurar histórico desatualizado ou identificadores privados. Nenhuma criação/alteração de variável, conta, preço, limite, comissão ou gate comercial. PLANS_ON_SALE/OPENING_REQUESTED continuam false; conteúdo de criadores e Hazelsong preservados. Suíte completa obrigatória no novo head, depois incorporação e conferência da publicação exata. Ainda não declarar505 concluído antes dessas verificações.
+
+Custos: configuração privada feita pelo dono; nenhum serviço novo contratado ou operação real de pagamento/mensagem executada. Tetos/reservas e desconhecido reprova preservados; custo de CI não medido não é zero. Provas de sucesso serão consolidadas no registro diário AV2; falhas registradas/corrigidas imediatamente.
+
+
+### Integração do SG2 publicado no PR #1169
+
+Preservado integralmente o main1bb07eb360977897db5eee9b0af448d42d22fad6 e a proteção SG2. A referência sintética de merge anteriormente retornada pela API ainda apontava o main antigoc0fd713; não foi usada para incorporar. Agora a branch contém o main real como pai. Workflow, harness e configuração de testes compostos com os hunks SG2, preservando a leitura real de Redis e os aliases DE1. Histórico da branch preservado abaixo; nenhum pedido novo/renumerado. Suíte completa obrigatória neste novo head, sem declarar validação pela suíte anterior. Sem novo serviço ou operação paga; CI não medido não é zero.
+
+# Histórico do PR #1169 preservado ao incorporar correção global aprovada #1170
 
 AV1/AV2 do main preservadas integralmente. As notas seguintes são histórico existente, não novos itens. Incluídos os arquivos da correção global aprovada31/31 no head24b1265 e publicada no mainc0fd713. Harness composto preservando a jornada DE1 e adicionando a jornada de descoberta das capturas; nenhuma prova retida, quota, TTL ou permissão modificada. Nova suíte completa exigida no novo head; resultados anteriores não aprovam esta composição. Sem novo custo contratado; CI não medido não é zero.
 

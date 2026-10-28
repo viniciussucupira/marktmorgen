@@ -64,4 +64,4 @@ export function testAliases(file,root,here){
  if(file==='dispute-preorder-review.test.ts')for(const name of ['redis','contract-resource-window','store-allowance'])aliases['@/lib/'+name]=join(here,'dispute-preorder-world.ts');
  return aliases;
 }
-export function testEnvironment(env){return{...env,NIMBUS_DATA_KEY:env.NIMBUS_DATA_KEY??'tests-only-not-a-real-deployment-secret'};}
+export function testEnvironment(env){return{...env,DEMO_STUDIO_ADMIN:'operator@example.test',STRIPE_DEMO_ACCOUNT_ID:'acct_fixtureDemo',NIMBUS_DATA_KEY:env.NIMBUS_DATA_KEY??'tests-only-not-a-real-deployment-secret'};}

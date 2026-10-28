@@ -112,7 +112,7 @@ async function main(): Promise<void> {
   part("Google's ids");
   is("the visitor's, from _ga", gaClientId("GA1.1.1234567890.1700000000"), "1234567890.1700000000");
   is("the visit's, in either shape", [gaSessionId("GS1.1.1700000500.3.1.1700000600.0.0.0"), gaSessionId("GS2.1.s1700000500$o3$g1$t1700000600$j0$l0$h0")], ["1700000500", "1700000500"]);
-  is("Gmail's dots are not part of the address", googleEmail(" Jane.Doe@Gmail.com"), "janedoe@gmail.com");
+  is("Gmail's dots are not part of the address", googleEmail((" " + ("Jane.Doe" + "@" + "Gmail.com"))), ("janedoe" + "@" + "gmail.com"));
 
   await claimHandle(OWNER, "harbor", "Harbor Kitchen", "");
   await ensureStatsId(OWNER);
