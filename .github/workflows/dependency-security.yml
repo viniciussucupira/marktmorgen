@@ -58,6 +58,8 @@ jobs:
           npm audit --json > audit-all.json || true
           npm audit --omit=dev --json > audit-production.json || true
           python3 scripts/check_dependency_audit.py audit-all.json audit-production.json
+      - name: SABOTAGE (proof only, never merged) - this job must fail
+        run: exit 1
 
   all-checks:
     # The one check GitHub requires before main (scripts/ci_all_checks.py): it always runs and
