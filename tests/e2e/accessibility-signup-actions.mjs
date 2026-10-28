@@ -153,7 +153,10 @@ try{
    if(!claimed.ok()||created.ok!==true||created.handle!==handle||typeof created.store!=="string"||!/^[0-9a-f]{32}$/.test(created.store)||claimBody.handle!==handle||claimBody.name!==storeName||claimBody.another!==false)throw Error("Initial local store claim refused or mismatched");
    await page.getByRole("heading",{name:"Your store",exact:true}).waitFor();
    if(await page.getByLabel("Your address",{exact:true}).count())throw Error("Initial setup did not refresh into created store");
-   phase="created-studio";await audit("created-first-store-studio");
+   phase="created-studio";
+   if(new URL(page.url()).searchParams.get("store")!==created.store)throw Error("Created studio must pin the returned persistent store ID");
+   if((await page.title())!=="Your account — Marktmorgen")throw Error("Created studio must immediately have its document title");
+   await audit("created-first-store-studio");
    const publicLink=page.locator('header a[href="/@'+handle+'"]');
    if(await publicLink.count()!==1)throw Error("Actual first-store link missing or ambiguous");
    await publicLink.focus();await page.keyboard.press("Enter");

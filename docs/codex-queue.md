@@ -12024,3 +12024,17 @@ Sete casos sintéticos de serviço adicionados; fluxo privado390/1280 passa a co
 
 
 - Verificação do #1169: verify122974369776 no headed56f9267e803a8a00357afe9664d1642decd1e6 reprovou três apóstrofos JSX que a preparação a partir de uma cópia de fonte antiga reintroduziu, embora já corrigidos no #1166. Fonte atual do componente foi relida no head remoto c073daced8c0af9608d11b31e6bd85dd2b686a33; restauradas as entidades, com texto renderizado intacto, sem excluir lint/regra. A partir desta correção, não usar cópia de fonte anterior para derivados sem compará-la com o blob remoto do head exato. Novo head exige CI integral, sem reexecutar somente verify.
+
+
+### Correção concreta do primeiro studio após cadastro — 28/10/2026
+
+#1168 head14c0a6faa196f2e7725ac4f1ec9592f7d7ae14d3 reprovou Signup action AAA Chromium, job122967465814: caso768px/dark, created-first-store-studio, regra document-title sobre html; largura768/768, sem overflow e sem erros de página/terceiros. O source de /studio já exporta título estático, porém HandleForm fazia router.refresh na mesma rota após criar a primeira loja, o que pode expor corpo atualizado durante a transição de metadados; esta relação é hipótese de implementação a verificar no novo conjunto. O diagnóstico mostra navegação de /studio abortada na atualização; não é prova de problema de contraste nem motivo para excluir a regra.
+
+Correção: após a resposta de criação já validada (handle exato e SID32hex), faz navegação de documento para /studio?store=SID. Mantém a loja persistente selecionada, o mesmo servidor/autenticação e o título junto do documento; não altera criação, preços, idioma ou conteúdo. O formulário também usa esse destino fixo na criação de outra loja. Remove dependência de router no formulário.
+
+A matriz real sintética continua com30casos e as mesmas auditorias, agora também exige imediatamente o título exato e o SID devolvido na URL após o título h1 aparecer. Não acrescenta espera, repetição, exclusão ou mudança de regra axe. Novo conjunto requer CI integral no head exato; #1168 antigo não é aprovado e não foi incorporado. Nenhum custo operacional/serviço novo, pagamento/contato/conta real ou entrega funcional; contador254.
+
+- Revisão antes de aprovação do #1170: primeira loja preserva a query e fragmento correntes (inclusive plano e periodicidade já escolhidos) ao fixar store=SID e navegar para o documento de /studio. Outra loja mantém o comportamento anterior de partir de /studio limpo, agora com navegação de documento. Nenhuma escolha existente é descartada para corrigir o título. Novo head requer CI integral.
+
+
+- Correção de alvo de toque do #1166: verify122971046509 no headc073daced8c0af9608d11b31e6bd85dd2b686a33 reprovou tap-targets.test.ts porque o botão de consulta tinha altura mínima44px sem centralização explícita. Acrescentados inline-flex/items-center/justify-center ao botão, preservando alvo, texto, submissão somente de consulta e regras do teste. Correção carregada também no #1169. O conjunto passa a incluir a correção de título #1170 ainda sujeita ao CI integral; nenhum head anterior reprovado é aprovado e nenhum job isolado é reexecutado.
