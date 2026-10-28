@@ -1702,6 +1702,26 @@ try {
     const person = await context.newPage();
     await open(person, `${LOCAL}/@localshop`);
     const guide = person.getByRole("region", { name: "Not sure which one is for you?" });
+    // ME1: catalog first in both the DOM/read order and the painted layout.
+    // Exercise the actual hydrated guide; the existing questions below still
+    // prove that its catalog picks and no-match response work after the move.
+    await guide.waitFor({ state: "visible" });
+    for (const viewport of [{ width: 390, height: 844 }, { width: 1280, height: 720 }]) {
+      await person.setViewportSize(viewport);
+      await person.evaluate(() => document.fonts.ready);
+      const placement = await guide.evaluate((node) => {
+        const products = [...document.querySelectorAll('[data-part="products"] li[data-item^="p:"]')];
+        const last = products.at(-1);
+        return {
+          catalogPresent: products.length > 0,
+          readingOrder: Boolean(last && (last.compareDocumentPosition(node) & Node.DOCUMENT_POSITION_FOLLOWING)),
+          visualOrder: Boolean(last && node.getBoundingClientRect().top >= last.getBoundingClientRect().bottom),
+        };
+      });
+      is("ME1 guide follows the catalog in reading and visual order " + viewport.width, placement, {
+        catalogPresent: true, readingOrder: true, visualOrder: true,
+      });
+    }
     await guide.getByLabel("What are you looking for?").fill("dinners for a busy family");
     await guide.getByRole("button", { name: "Help me choose" }).click();
     await guide.getByText("These fit best").waitFor({ timeout: 30_000 });

@@ -424,12 +424,6 @@ export default async function StorePage({ params, searchParams }: Params) {
                       ) : null}
                     </form>
                   ) : null}
-                  {/* "Not sure which one is for you?": the visitor says what they want, and sees what fits (lib/store-guide.ts). */}
-                  {!searching && page === 1 && total >= 3 && guideOn(store, total) && canSell(store) ? (
-                    <div className="mb-8">
-                      <StoreGuideBox handle={store.handle} storeName={store.name} lang={store.language} />
-                    </div>
-                  ) : null}
                   {/* The creator's collections, each a page of its own (lib/store-collections.ts). */}
                   {!searching && page === 1 ? <CollectionsNav store={store} /> : null}
                   {groups.map((group, g) => (
@@ -465,6 +459,13 @@ export default async function StorePage({ params, searchParams }: Params) {
                       </ul>
                     </section>
                   ))}
+
+                  {/* "Not sure which one is for you?": the visitor says what they want, and sees what fits (lib/store-guide.ts). */}
+                  {!searching && page === 1 && total >= 3 && guideOn(store, total) && canSell(store) ? (
+                    <div className="mt-8">
+                      <StoreGuideBox handle={store.handle} storeName={store.name} lang={store.language} />
+                    </div>
+                  ) : null}
 
                   {/*
                     A long store, a page at a time: plain links, so every page has
