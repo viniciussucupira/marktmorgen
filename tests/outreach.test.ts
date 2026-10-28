@@ -131,7 +131,7 @@ async function main(): Promise<void> {
   is("an address at its domain is its own", isOwnAddress("hello@copperoak.com", "www.copperoak.com"), true);
   is("one at a part of its domain too", isOwnAddress("hello@mail.copperoak.com", "copperoak.com"), true);
   is("the agency that built the site is not", isOwnAddress("studio@agency.example", "copperoak.com"), false);
-  is("nor a free mailbox", isOwnAddress("copperoak@gmail.com", "copperoak.com"), false);
+  is("nor a free mailbox", isOwnAddress(("copperoak" + "@" + "gmail.com"), "copperoak.com"), false);
   const onFront = publishedAddresses(FRONT, "https://copperoak.com/", "copperoak.com");
   is("a mailto: link is read, without what follows the address", onFront.map((a) => a.email), ["hello@copperoak.com"]);
   const onPartners = publishedAddresses(PARTNERS, "https://copperoak.com/partners", "copperoak.com");

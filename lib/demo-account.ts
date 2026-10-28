@@ -18,7 +18,7 @@
  */
 
 /** The fictional creator's connected account, in Stripe's test mode. */
-export const DEMO_CONNECTED_ACCOUNT = "acct_1UGdQH6rwR1Kc2eJ";
+export const DEMO_CONNECTED_ACCOUNT = (process.env.STRIPE_DEMO_ACCOUNT_ID ?? "").trim();
 
 /** The key for that account, or null: a live key is refused, never used. */
 export function demoKey(): string | null {

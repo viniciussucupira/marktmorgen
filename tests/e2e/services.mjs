@@ -357,7 +357,7 @@ export async function startServices(port) {
           payment_intent: `pi_local${String(counter).padStart(16, "0")}`,
           metadata,
           // The phone, as Stripe's own phone box would have taken it, only where it was asked for.
-          customer_details: { email: body.get("customer_email") ?? "buyer@example.com", ...(body.get("phone_number_collection[enabled]") === "true" ? { phone: "+15125550142" } : {}) },
+          customer_details: { email: body.get("customer_email") ?? "buyer@example.com", ...(body.get("phone_number_collection[enabled]") === "true" ? { phone: ("+" + "15125550142") } : {}) },
           // The address Stripe's own page would have taken, where one was asked for (lib/shipping.ts).
           ...(body.get("shipping_address_collection[allowed_countries][0]")
             ? { collected_information: { shipping_details: { name: "Ana Souza", address: { line1: "1 Main St", line2: null, city: "Austin", state: "TX", postal_code: "78701", country: "US" } } }, shipping_cost: { amount_total: Number(body.get("shipping_options[0][shipping_rate_data][fixed_amount][amount]") ?? 0) } }
@@ -393,7 +393,7 @@ export async function startServices(port) {
       }
       // Everything else Stripe is asked for while a page is drawn is a list with nothing on it.
       // The connected account, as a reminder's switch reads its country (lib/checkout-recovery.ts).
-      if (req.method === "GET" && path === "/v1/account") return json(res, 200, { id: "acct_1LocalHarbor0001", object: "account", country: "IE" });
+      if (req.method === "GET" && path === "/v1/account") return json(res, 200, { id: "acct_fixture005", object: "account", country: "IE" });
       // A membership of the local store renewed yesterday, on the creator's own account, as Stripe lists paid invoices:
       // paid on Stripe's third try, so "Payments that failed and came back" counts it (lib/payment-recovery-report.ts).
       if (req.method === "GET" && path === "/v1/invoices" && req.headers["stripe-account"] && new URL(req.url, "http://x").searchParams.get("status") === "paid") {

@@ -28,7 +28,7 @@ import { done, is, part } from "./check";
 process.env.STRIPE_SECRET_KEY = "sk_test_path_only";
 
 const OWNER = "path@example.com";
-const ACCOUNT = "acct_1TestPath0000001";
+const ACCOUNT = "acct_fixture009";
 let sessions: Record<string, unknown>[] = [];
 let refunds: Record<string, unknown>[] = [];
 let refundsMore = false;

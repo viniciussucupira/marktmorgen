@@ -27,7 +27,7 @@ async function main(): Promise<void> {
     const { listSales } = await import("@/lib/store-checkout");
     const email = "order-list-proof@example.test";
     await claimHandle(email, "orderlistproof", "Order history proof", "");
-    await setStripeAccount(email, "acct_OrderListProof0001", true);
+    await setStripeAccount(email, "acct_fixture008", true);
     await setSubscription(email, {customerId:"cus_OrderListProof1",subscriptionId:"sub_OrderListProof1",active:true,period:paidPeriod()});
     const store = (await storeForEmail(email))!;
     part("An unreadable order list must not appear empty");

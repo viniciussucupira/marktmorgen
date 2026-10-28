@@ -17,7 +17,7 @@ globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) =>
   assert.equal(url, "https://api.stripe.com/v2/core/accounts");
   assert.equal(init?.method, "POST");
   calls.push({ url, method: init?.method ?? "", headers: new Headers(init?.headers), body: JSON.parse(String(init?.body)) });
-  return Response.json({ id: "acct_ConfigurationSyntheticOnly" });
+  return Response.json({ id: "acct_fixture004" });
 }) as typeof fetch;
 
 async function main(): Promise<void> {
@@ -26,7 +26,7 @@ async function main(): Promise<void> {
     const before = calls.length;
     const id = await createConnectedAccount({ email: "creator@example.com", country: country.code, displayName: "Synthetic creator" });
     is(country.code + ": exactly one intercepted request", calls.length - before, 1);
-    is(country.code + ": return the account Stripe confirmed", id, "acct_ConfigurationSyntheticOnly");
+    is(country.code + ": return the account Stripe confirmed", id, "acct_fixture004");
     const call = calls.at(-1)!;
     is(country.code + ": full dashboard and Stripe fee/loss collection", call.body, {
       contact_email: "creator@example.com",

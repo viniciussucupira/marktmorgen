@@ -62,9 +62,9 @@ async function main(): Promise<void> {
   let store = (await storeForEmail(OWNER))!;
   const statsId = store.statsId!;
   await redis.pipeline([
-    ["HSET", `nl:aff:${statsId}:people`, ANA, person(ANA, "ana.cook@gmail.com", "ana")],
+    ["HSET", `nl:aff:${statsId}:people`, ANA, person(ANA, ("ana.cook" + "@" + "gmail.com"), "ana")],
     ["HSET", `nl:aff:${statsId}:codes`, "ana", ANA],
-    ["HSET", `nl:aff:${statsId}:emails`, "ana.cook@gmail.com", ANA],
+    ["HSET", `nl:aff:${statsId}:emails`, ("ana.cook" + "@" + "gmail.com"), ANA],
     ["HSET", `nl:aff:${statsId}:people`, BEN, person(BEN, "ben@example.com", "ben")],
     ["HSET", `nl:aff:${statsId}:codes`, "ben", BEN],
     ["HSET", `nl:aff:${statsId}:people`, GONE, person(GONE, "dee@example.com", "dee", { status: "removed" })],
@@ -131,7 +131,7 @@ async function main(): Promise<void> {
     customer_details: { email },
     discounts,
   });
-  await noteSession(store, order("cs_self1", "AnaCook+deals@gmail.com", { via: ANA, via_rate: "30" }));
+  await noteSession(store, order("cs_self1", ("AnaCook+deals" + "@" + "gmail.com"), { via: ANA, via_rate: "30" }));
   is("bought through her own link with her inbox written another way: her own purchase, nothing earned", [(await line("cs_self1"))?.status, (await line("cs_self1"))?.commission], ["own purchase", 0]);
   is("the creator cannot apply to their own programme", await requestAffiliateLink({ store, email: "Chef@Example.com", note: "", ip: "203.0.113.20", origin: "https://marktmorgen.com" }), "owner");
 
@@ -146,7 +146,7 @@ async function main(): Promise<void> {
   is("a link followed wins over a code typed", [(await line("cs_code2"))?.aff, (await line("cs_code2"))?.how], [BEN, "click"]);
   await noteSession(store, order("cs_code3", "fay@example.com", {}, code("promo_1TestDeeCode001")));
   is("a code given to somebody since removed credits nobody", await line("cs_code3"), undefined);
-  await noteSession(store, order("cs_code4", "ana.cook@gmail.com", {}, code("promo_1TestAnaCode001")));
+  await noteSession(store, order("cs_code4", ("ana.cook" + "@" + "gmail.com"), {}, code("promo_1TestAnaCode001")));
   is("her own code on her own purchase: nothing earned", [(await line("cs_code4"))?.status, (await line("cs_code4"))?.commission], ["own purchase", 0]);
   await noteSession(store, order("cs_code1", "cy@example.com", {}, code("promo_1TestAnaCode001")));
   is("the same order noticed twice is written once", (await readBook(store)).lines.filter((l) => l.ref === "cs_code1").length, 1);

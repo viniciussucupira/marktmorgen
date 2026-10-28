@@ -6442,7 +6442,7 @@ REGRA DOS 60% (OBRIGATÓRIA): todo cliente pagante, considerado isoladamente e u
 
 Estado: na fila.
 
-Objetivo: evitar que um comprador ou um criador perca o produto, o link de acesso ou o contato por ter digitado o e-mail com erro, como "maria@gmial.com" ou "joao@hotmail.con".
+Objetivo: evitar que um comprador ou um criador perca o produto, o link de acesso ou o contato por ter digitado o e-mail com erro, como "buyer@exampel.test" ou "buyer@example.test".
 
 Situação atual: nenhum campo de e-mail das páginas do próprio Marktmorgen sugere correção.
 
@@ -6450,7 +6450,7 @@ Onde aplicar: em todos os campos de e-mail desenhados pelo Marktmorgen. Isso inc
 
 Como funciona:
 1. A verificação acontece no próprio navegador, sem nenhuma chamada a servidor ou fornecedor, comparando o domínio digitado com uma lista embutida dos provedores de e-mail mais usados nos EUA, no Canadá, no Reino Unido e na União Europeia, e com os finais de domínio mais comuns (.com, .net, .org, .co.uk, .ca, .de, .fr e outros), por distância de edição pequena.
-2. Quando houver um provável erro, aparece abaixo do campo, depois que a pessoa sai dele ou tenta enviar, a frase "Did you mean maria@gmail.com?" com um botão que preenche a sugestão. A pessoa pode ignorar e manter o que digitou; nada é corrigido sozinho, nada é bloqueado e o envio continua possível.
+2. Quando houver um provável erro, aparece abaixo do campo, depois que a pessoa sai dele ou tenta enviar, a frase "Did you mean buyer@example.test?" com um botão que preenche a sugestão. A pessoa pode ignorar e manter o que digitou; nada é corrigido sozinho, nada é bloqueado e o envio continua possível.
 3. Acessibilidade (Parte A do item 274 [AX1]): a sugestão é anunciada em região ao vivo educada (aria-live="polite"), ligada ao campo por aria-describedby, sem tirar o foco do campo; o botão tem nome acessível completo, alvo de pelo menos 44 × 44 px, funciona por teclado, toque e voz, e respeita alto contraste e modo escuro. Nada pisca nem se move.
 4. Idiomas: a frase sai em todos os idiomas de comprador que as lojas já têm (lib/buyer-words), sem acrescentar idiomas novos.
 5. Privacidade: nenhum e-mail digitado é guardado, registrado ou enviado por causa da sugestão. Atualize a política de privacidade somente se algo nela precisar mudar.
@@ -11919,3 +11919,6 @@ Substituídas as referências pessoais do dono nos quatro documentos indicados p
 Verificação CI de todos os arquivos rastreados acrescentada, com saída limitada a caminho e categoria, nunca o valor encontrado. Detector cobre e-mails pessoais reconhecidos, contas de fornecedor reconhecidas, telefone internacional, CPF formatado válido e indícios de endereço residencial; padrões são defesa adicional, não certificação de ausência universal de dados pessoais. Achados/possíveis falsos positivos devem ser corrigidos e a suíte completa executada no novo head; não remover a trava para aprovar. Limpeza global/detector verde e comportamento produtivo ainda não concluídos por este registro.
 
 O histórico Git continua contendo os dados anteriores. Reescrever ou apagar esse histórico não está autorizado. Somente estado atual do código/documentos em revisão; sem mudança de preços, limites, direitos, gates, conta, visibilidade, termos ou recursoHazelsong. CI100%FX275, custo desconhecido nunca zero; sem nova operação ou serviço produtivo. Contador254preservado.
+
+
+505SG2,conferência de28/10/2026 10h49Fortaleza: somente metadados de nomes/escopos do ambiente foram lidos,sem decrypt/valores. DEMO_STUDIO_ADMIN e STRIPE_DEMO_ACCOUNT_ID não constam das41entradas retornadas. A migração dessas identidades não pode ser publicada alegando comportamento produtivo preservado enquanto a configuração necessária não for feita pelo dono; alterações de conta continuam proibidas ao agente. Continuar correções de documentação/detector/testes; nenhuma restauração de dado pessoal padrão para contornar a pendência. O identificador persistido da demonstração deve ser mantido na configuração apropriada, nunca substituído por um identificador fictício em produção. Dados de testes seguem exclusivamente sintéticos e nomes/códigos de configuração podem ser documentados sem seus valores.

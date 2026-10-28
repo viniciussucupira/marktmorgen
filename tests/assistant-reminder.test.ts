@@ -62,7 +62,7 @@ process.env.RESEND_API_KEY = "re_test_assist_reminder_only";
 process.env.ANTHROPIC_API_KEY = "sk-ant-test-only-a-stand-in-0123456789";
 
 const OWNER = "remind@example.com";
-const ACCOUNT = "acct_1TestAssistRem01";
+const ACCOUNT = "acct_fixture002";
 const ADDRESS = "12 Oven Lane, Portland, OR 97201";
 type Mail = { to: string; subject: string; text: string; headers?: Record<string, string> };
 type Sent = { model: string; max_tokens: number; system: string; messages: { role: string; content: string }[] };
