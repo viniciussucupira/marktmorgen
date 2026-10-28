@@ -11865,3 +11865,49 @@ Head combinado1154:31/31success+Vercel; verify122805003444,Firefox122805003334,W
 Produção1154 dpl_7XegA8M1MspPAFojqxKszecWbD8A,marktmorgen-2svbqx9zw-viniciussucupira.vercel.app,READY no SHAexato7951dad4dc5f1d3d339580f0031031c2b23ee1a7;7aliases incluindo marktmorgen.com/www.marktmorgen.com conferidos às09h40Fortaleza. Logs agrupadoserror/fatal desde12:38:01UTC vazios na janela consultada. Conexão Chrome original continua bloqueada, sem retry/troca e sem prova interativa produtiva; contador254 preservado, sem entrega255.
 
 Custos/controles: nenhum novo IO produtivo, modelo, provedor, retenção, cota, preço, limite visível, direito, comissão, permissão, opt-in, idioma, identificador ou conteúdo de criador alterado. CI/publicações100%FX275; custo desconhecido nunca zero, sem margem certificada. Gates de abertura/venda mantidos. Hazelsong e todos os recursos/dados preservados, custos residuais100%Marktmorgen. Histórico, pedidos e estados anteriores preservados; demais parcelas496/498seguem acionáveis. Anexação dos dois PRs tentou usar o app e foi recusada pelo limite100identidades da conversa; URLs mantidas e anexos antigos preservados.
+
+
+## SG — Segurança: nova auditoria, dados pessoais fora do repositório público e verificações automáticas (28/10/2026)
+
+Proveniência e ordem: pedido direto anexado nesta conversa, declarado pelo dono em28/10/2026 09h46Fortaleza; recebido e conferido em28/10/2026 09h57Fortaleza. Registro único505[SG2],506[SG1],507[SG3],508[SG4], depois504[AG2], preservando a ordem dos demais. Exceção urgente expressa:505SG2 será a próxima implementação após o item atualmente em andamento(PR1156, realocação dos detalhes dos14recursos); não esperar a ordem normal da fila. SG1/SG3/SG4 permanecem na ordem registrada. Não iniciar auditoria/alterações de conta/produção por este registro.
+
+Pedidos repetidos: maine4e3ef6db8d6f98b2d42d8bb0dc782fe7f1d129e,12PRs abertos,712refs codex/* inventariados,100commits recentes;45heads selecionados por PR aberto,headpresente nos100commits ou nomenclatura de segurança/auditoria/privacidade.44filas disponíveis lidas por data/hora,seção,SG1–SG4 e conteúdo,sem correspondência. Um ramo de segurança é histórico de19/10/2026(head58a2b01),anterior ao pedido; sua fila não está disponível e não foi contada como lida. Nenhum pedido SG duplicado encontrado nas fontes atuais conferidas. Próximos números505–508livres no main. Este registro não repete as proteções existentes nem afirma auditoria executada.
+
+VR: benefício esperado é reduzir exposição de dados pessoais e reincidência de falhas, sem promessa de segurança perfeita. Testes sintéticos e evidência por fluxo real de código; publicação/documento isolado não prova recurso disponível.505SG2deve preservar o comportamento administrativo por configuração sem valor no código,falhar explicitamente se configuração necessária estiver ausente,sem inventar identidade substituta ou liberar acesso; confirmar desenho/testes antes de modificar. Um detector deve distinguir dados sintéticos documentados de dados pessoais reais sem produzir valores em logs; nenhuma exceção nova além da autorizada pode mascarar exposição. História Git continua contendo dados e sua reescrita/remoção não está autorizada. Limitações ou dependências reais ficam registradas sem declarar limpeza histórica.
+
+
+Solicitação do dono (28/10/2026, 09h46, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: antes de gravar, aplique a regra permanente "Pedidos repetidos". Confira o main, os PRs abertos e os ramos codex/* recentes, e procure esta solicitação pela linha de data e hora, pelo nome da seção, pelas etiquetas [SG1] a [SG4] e pelo conteúdo. Se já estiver gravada, não crie nada novo. Grave depois de 504 [AG2], na ordem de chegada, com os próximos números livres, sem alterar a ordem dos itens existentes. SG2 é urgente: execute-o logo depois do item que estiver em andamento, sem esperar a ordem da fila.
+
+Contexto: o repositório é público. Já existem e NÃO devem ser refeitos: lib/csp.ts, next.config.ts (HSTS, nosniff, Referrer-Policy, Permissions-Policy, X-Frame-Options), lib/request-guard.ts, lib/request-origin.ts, lib/bot-check.ts, lib/local-limit.ts, lib/safe-fetch.ts, lib/secret-box.ts, lib/passkeys.ts, lib/two-step.ts, lib/totp.ts, lib/api-guard.ts, .github/workflows/dependency-security.yml, docs/security-audit-2026-10-18.md (MM-SA-01 a MM-SA-12), 247 [SP4] e 273 [BK1].
+
+505 [SG2] Dados pessoais fora do repositório público (urgente).
+Estado inicial: na fila.
+1. Troque, em AGENTS.md, CLAUDE.md, docs/codex-queue.md e docs/stripe-platform-eligibility.md, todo endereço de e-mail pessoal do dono por "Gmail do dono" e o ID da conta Stripe por "conta de plataforma brasileira do dono", sem mudar o sentido de nenhum registro.
+2. Em lib/house-store.ts, troque o e-mail escrito em DEMO_STUDIO_ADMIN por uma variável de ambiente (sem valor no código), mantendo o comportamento atual, com teste.
+3. Crie uma verificação na integração contínua que falhe se um arquivo do repositório tiver e-mail pessoal (gmail.com, hotmail.com, outlook.com e similares), telefone, CPF, endereço residencial ou ID de conta de fornecedor, com exceção só do nome legal nas páginas de termos e privacidade, como já decidido pelo dono.
+4. Registre que o histórico do Git continua com esses dados e que apagar o histórico não é autorizado.
+Não exponha nenhum valor em PR, log ou comentário.
+
+506 [SG1] Nova auditoria de segurança.
+Estado inicial: na fila.
+Repita a auditoria de 18/10/2026 sobre todo o código atual, com o mesmo formato e numeração nova (MM-SA-13 em diante), em docs/security-audit-2026-10-28.md. Cubra no mínimo: login, sessão, passkeys e verificação em duas etapas; isolamento entre lojas e entre contas; permissões da equipe; avisos do Stripe e do Resend; API v1, MCP e webhooks; envio de arquivos; conteúdo do criador (XSS em textos, páginas, blocos e e-mails); CSRF; redirecionamentos; busca de endereços externos (SSRF); limites de pedidos; segredos e chaves; e os itens que dependem de custo com teto. Corrija na causa cada falha encontrada, com teste que falhe se ela voltar. O que depender do dono vai para "Depende do dono". Nunca teste contra produção nem contas reais; somente dados sintéticos.
+
+507 [SG3] Imagens com conta própria de espaço (decisão do dono sobre MM-SA-08).
+Estado inicial: na fila.
+O dono decide: as imagens (produtos, links, páginas, e-mails, avaliações) ganham um limite próprio por plano, além do armazenamento atual, dimensionado para que nenhum plano perca espaço; e imagens que não estão ligadas a nada são varridas depois de um prazo seguro, com aviso ao criador e sem apagar nada que esteja em uso. Calcule antes o custo no pior caso, com teto automático. Atualize docs/security-audit-2026-10-18.md.
+
+508 [SG4] Verificações automáticas e canal de contato de segurança.
+Estado inicial: na fila.
+1. Acrescente a análise de código CodeQL aos workflows do GitHub (gratuita para repositório público), rodando em todo PR e uma vez por dia, e .github/dependabot.yml para atualizações de segurança das dependências, sem incorporar nada sozinho.
+2. Publique /.well-known/security.txt (RFC 9116) com o endereço de suporte já público, data de validade e link para a página de segurança de 247 [SP4], coordenando com ele.
+3. Escreva docs/incident-response.md em linguagem simples: o que as proteções automáticas já fazem, e o passo a passo para trocar uma chave vazada, pausar envios de e-mail e avisar os criadores, sem depender de painel.
+
+Regra de margem: cada item segue a REGRA DE MARGEM vigente (MR, 27/10/2026, 07h42): nenhum cliente pagante dá prejuízo, usando 100% de todos os direitos do plano e de cada complemento no pior mês, no mensal e no anual, com teto automático e reserva antes de cada gasto; a empresa sem prejuízo a partir da base mínima; 60% é meta mensal real, não trava. Política tributária TX. Custo desconhecido reprova, nunca é zero; custos fixos 100% do Marktmorgen (FX275).
+
+Proibido: mudar preços, cortar limites visíveis, retirar recursos, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; mudar a visibilidade do repositório; reescrever ou apagar o histórico do Git; alterar configurações de conta (GitHub, Vercel, Stripe ou outras); expor qualquer segredo, valor de variável ou dado pessoal; testar contra produção ou contas reais; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
