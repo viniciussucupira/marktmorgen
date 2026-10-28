@@ -10,9 +10,12 @@ test("home modules point to existing factual pages for all fourteen requested ca
 test("home keeps the real headline and demo, removes stale Zoom gap and delivery deadline",()=>{
  const page=readFileSync("app/page.tsx","utf8");
  for(const words of ["Your store.","Stripe.","Your money.","See the live demo"])assert.ok(page.includes(words),words);
- assert.ok(page.includes('href="/pricing#calculator-heading"'));
+ const platform=readFileSync("app/platform/page.tsx","utf8");
+ assert.ok(page.includes('href="/platform#home-modules-heading"'));
+ assert.ok(platform.includes('href="/pricing#calculator-heading"'));
  assert.doesNotMatch(page,/Zoom links made for each booking|confirmation reaches them by email within minutes/);
- assert.ok(page.includes("HOME_MODULES.map"));
+ assert.ok(platform.includes("HOME_MODULES.map"));
+ assert.ok(!page.includes("HOME_MODULES.map"));
 });
 test("studio capture uses local synthetic demo facts and never opens an external session",()=>{
  const capture=readFileSync("tests/e2e/home-studio-capture.mjs","utf8");

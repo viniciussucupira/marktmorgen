@@ -8,6 +8,7 @@ import { SiteNav } from "@/components/site-nav";
 import { PAGES, type TopicPage } from "@/lib/site-pages";
 import { PUBLISHED_PLAN_PRICES as PLAN_PRICES, TRIAL_DAYS } from "@/lib/plan";
 import { CREATOR_JOURNEY } from "@/lib/creator-journey";
+import { HOME_MODULES } from "@/lib/home-modules";
 import { PLANS_ON_SALE, startWords } from "@/lib/opening";
 
 export const metadata: Metadata = {
@@ -59,6 +60,24 @@ export default function PlatformIndex() {
         </section>
 
         <div className="container-page space-y-16 py-14 sm:py-18">
+        <section className="section" aria-labelledby="home-modules-heading">
+          <div className="container-page">
+            <h2 id="home-modules-heading" className="t-h2 balance scroll-mt-32" tabIndex={-1}>Everything in one place</h2>
+            <p className="mt-5 max-w-3xl text-ink-soft">Choose the tools your work needs, with the limits and conditions shown before you commit. {PLANS_ON_SALE ? "The live demo shows the buyer experience." : "Paid selling remains closed; the live demo shows the buyer experience."}</p>
+            <ul className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {HOME_MODULES.map(capability=><li key={capability.name} className="rounded-2xl border border-line bg-white p-6">
+                <h3 className="text-xl font-semibold"><Link href={capability.href} prefetch={false} className="underline decoration-line underline-offset-4">{capability.name}</Link></h3>
+                <p className="mt-3 text-ink-soft">{capability.body}</p>
+              </li>)}
+            </ul>
+            <div className="mt-8 rounded-2xl bg-lilac p-6">
+              <h3 className="text-xl font-semibold">Compare your current tools and their costs</h3>
+              <p className="mt-3 text-ink-soft">Use published subscription prices, your sales volume and your applicable fee quotes. Unknown costs stay unconfirmed; the calculator makes no promise of earnings or identical features.</p>
+              <Link href="/pricing#calculator-heading" prefetch={false} className="link mt-4 inline-block">Open the browser-only cost calculator</Link>
+            </div>
+          </div>
+        </section>
+
           <section aria-labelledby="creator-journey-title" data-creator-journey>
             <div className="flex flex-wrap items-end justify-between gap-4">
               <div><h2 id="creator-journey-title" className="t-h2 balance">Your creator journey</h2><p className="mt-4 max-w-2xl text-ink-soft">Start with the stage you need. Add the rest when it serves your work; every tool keeps its existing limits and permissions.</p></div>
