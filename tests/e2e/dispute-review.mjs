@@ -40,8 +40,13 @@ export async function checkDisputeReview({browser,LOCAL,fixture,axeSource,is}){
    await Promise.all([page.waitForURL(LOCAL+"/studio/disputes?store="+fixture.sid),discovery.click()]);
    is("DE1 authenticated private heading "+width,await page.getByRole("heading",{level:1,name:"Review one disputed purchase",exact:true}).count(),1);
    const input=page.getByLabel("Stripe dispute reference",{exact:true});
-   await input.fill("du_fixture");await page.keyboard.press("Tab");
+   await input.fill("du_fixture");
+   const inputBox=await input.boundingBox();is("DE1 input target at least44px "+width,Boolean(inputBox&&inputBox.height>=44&&inputBox.width>=44),true);
+   await page.keyboard.press("Tab");
    is("DE1 review keyboard target "+width,await page.getByRole("button",{name:"Review purchase record",exact:true}).evaluate(node=>node===document.activeElement),true);
+   await page.keyboard.press("Shift+Tab");
+   is("DE1 input has visible keyboard focus "+width,await input.evaluate(node=>{const s=getComputedStyle(node);return node===document.activeElement&&s.outlineStyle!=="none"&&parseFloat(s.outlineWidth)>=2;}),true);
+   await page.keyboard.press("Tab");
    let timer;try{await page.keyboard.press("Enter");await Promise.race([requestArrived,new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error("Synthetic lookup not requested")),10000);})]);}finally{clearTimeout(timer);}
    is("DE1 pending review prevents duplicate activation "+width,await page.getByRole("button",{name:"Reviewing purchase…",exact:true}).isDisabled(),true);
    release();
