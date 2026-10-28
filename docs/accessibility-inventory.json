@@ -1278,6 +1278,7 @@
     "components/help-search.tsx",
     "components/home-interactive.tsx",
     "components/home-parts.tsx",
+    "components/home-reasons-detail.tsx",
     "components/home-static.tsx",
     "components/host-calendar.tsx",
     "components/icons.tsx",
