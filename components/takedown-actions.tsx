@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { takedownAnswer } from "@/lib/takedown-response";
 
 type Action = { type: "link"; id: string } | { type: "product"; id: string } | { type: "kit" } | { type: "store"; on: boolean };
 
@@ -20,15 +21,16 @@ export function TakedownButton({ token, action, label, danger = false }: { token
           setState("busy");
           try {
             const response = await fetch("/api/takedown", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token, action }) });
-            const data = (await response.json().catch(() => ({}))) as { ok?: boolean; done?: string; error?: string };
-            if (data.ok) {
+            const raw: unknown = await response.json().catch(() => null);
+            const answer = takedownAnswer(response.ok, raw);
+            if (answer.ok) {
               setState("done");
-              setSaid(`Done: ${data.done} The creator was emailed.`);
+              setSaid(`Done: ${answer.done}`);
               router.refresh();
               return;
             }
             setState("idle");
-            setSaid(data.error === "nothing" ? "Nothing to do: it is already down." : "It did not work. Try again.");
+            setSaid(answer.nothing ? "Nothing to do: it is already down." : "It did not work. Try again.");
           } catch {
             setState("idle");
             setSaid("It did not work. Try again.");

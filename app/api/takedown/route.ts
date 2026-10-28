@@ -12,7 +12,11 @@ export async function POST(request: NextRequest) {
   if (fromAnotherSite(request)) return Response.json({ ok: false, error: "forbidden" }, { status: 403 });
   let body: Record<string, unknown>;
   try {
-    body = (await (await limited(request, 4_000)).json()) as Record<string, unknown>;
+    const raw: unknown = await (await limited(request, 4_000)).json();
+    if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
+      return Response.json({ ok: false, error: "invalid" }, { status: 400 });
+    }
+    body = raw as Record<string, unknown>;
   } catch {
     return Response.json({ ok: false, error: "invalid" }, { status: 400 });
   }
