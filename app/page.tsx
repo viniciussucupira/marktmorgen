@@ -339,7 +339,7 @@ export default function Home() {
           <div className="container-page">
             <h2 id="home-modules-heading" className="t-h2 balance">Everything in one place</h2>
             <p className="mt-5 max-w-3xl text-ink-soft">Explore the tools, their limits and the cost calculator on the feature page.</p>
-            <Link href="/platform#home-modules-heading" prefetch={false} className="link mt-4 inline-flex min-h-11 items-center">Explore all 14 tools and their conditions</Link>
+            <a href="/platform#home-modules-heading" className="link mt-4 inline-flex min-h-11 items-center">Explore all 14 tools and their conditions</a>
           </div>
         </section>
 
@@ -366,7 +366,7 @@ export default function Home() {
                 <Link href={reason.href} prefetch={false} className="link mt-4 inline-flex min-h-11 items-center">{reason.link}</Link>
               </li>)}
             </ul>
-            <Link href="/platform#home-reasons-heading" prefetch={false} className="link mt-6 inline-flex min-h-11 items-center">Read the details, examples and current limitations</Link>
+            <a href="/platform#home-reasons-heading" className="link mt-6 inline-flex min-h-11 items-center">Read the details, examples and current limitations</a>
           </div>
         </section>
 

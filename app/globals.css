@@ -4735,10 +4735,12 @@ html:has(:focus-visible) {
   scroll-behavior: auto;
 }
 
-/* A pointer can focus a native disclosure without :focus-visible. Keep that
- * focus scroll immediate too, instead of animating the long public home while
- * its details are opening. Link navigation elsewhere retains its behavior. */
-html:has([data-static-reading] summary:focus) {
+/* A pointer can focus a native disclosure or discovery link without
+ * :focus-visible. Keep the focused control still between press and release;
+ * an unfinished smooth document scroll can otherwise lose the first click.
+ * Creator/store themes and links outside static-reading pages are unchanged. */
+html:has([data-static-reading] summary:focus),
+html:has([data-static-reading] a:focus) {
   scroll-behavior: auto;
 }
 
