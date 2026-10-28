@@ -3,6 +3,7 @@ import { noticeCreator } from "@/lib/account-notice";
 import { away, creatorFrom } from "@/lib/studio-route";
 import { checkSeller, paypalSalesConfigured } from "@/lib/paypal-sales";
 import { setPayPalSeller } from "@/lib/store";
+import { reservePaidResourceWindow } from "@/lib/contract-resource-window";
 
 /**
  * Where PayPal sends the creator back after onboarding. PayPal arrives by
@@ -17,6 +18,7 @@ export async function GET(request: NextRequest) {
   const { ref, store, origin, studio } = creator;
   if (!paypalSalesConfigured()) return away(origin, studio("paypal=unavailable#paypal"));
   if (!store.statsId) return away(origin, studio("paypal=error#paypal"));
+  if (store.period?.funded === true && !(await reservePaidResourceWindow(store))) return away(origin, studio("paypal=limited#paypal"));
   const checked = await checkSeller(store.statsId);
   if (!checked.ok) return away(origin, studio(`paypal=${checked.reason}#paypal`));
   const saved = await setPayPalSeller(ref, checked.merchant);

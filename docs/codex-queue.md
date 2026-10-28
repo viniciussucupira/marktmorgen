@@ -12319,3 +12319,7 @@ Heade07174817fcc313c0cf115b626f1854f5d29e8e5 rejeitado:job123134965506 SignupWeb
 
 
 1178/b660:SignupChromium/Firefox/WebKit jobs123141672444/123141672456/123141672490 passaramcada30casos150audits0falhas e30casoszeroGET/demo não escolhido. Isto não aprova o head inteiro:verify/Firefox/WebKitgerais ainda pendentes. União documental com main9011/roteiro1180 preservaSD1 e todos os registros, semcancelarCIanterior;novohead exigeverificaçãocompleta. Nenhuma conclusão funcional/counter254.
+
+
+### AV(a) — retorno da instalaçãoPayPal,28/10/2026
+Implementação parcial independente enquanto1178CIroda,base285efc:revalidaresourcecohortmarcada antesdecheckSeller/provider/substituirvendedor/aviso;iníciojáguardado. Rotaautenticadapermissionspayments,trackingIdpróprio,merchantIdURLnãoconfiável. Testerotarealcomsessãosintéticarecusa303limited/zeroPayPalincluindotoken/vendedorinalterado;desconexãoexistenteintacta. Semalterarbuyerreturn/captura/entrega/reembolso/limpeza. Custoscomponentespré-operaçãoemdocs/paid-paypal-install-return-cohort.md;volumesilustrativosnãofranquias/tetos,desconhecidosreprovam,políticasnull. FW1executacom275/próximoPRcustosAV1,nãoaplicadoisoladamente. Suítecompletaexigida;nenhumserviçopago/conta/permissão/preço/limite/flag/COUNTRIESalterado. SD1/470/Claude/históricopreservados,contador254.
