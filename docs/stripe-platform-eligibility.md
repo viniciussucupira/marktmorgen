@@ -1,3 +1,101 @@
+# SR5 — Aplicação vigente da resposta completa relatada (28 October 2026)
+
+Solicitação do dono (28/10/2026, 00h23, horário de Fortaleza),494[SR5], versão final. **Proveniência conferida pelo Claude em28/10/2026 noGmailviniciussucupira090@gmail.com:** e-maildesupport@stripe.com de27/10/2026,16h47Fortaleza,assinadoGabriel/equipeespecializada,no fio"Re: Connect platform eligibility for international accounts",texto idêntico ao colado pelo dono. Mensagens anteriores da mesma equipe21/10/202619h41 e22/10/202614h15não a contradizem. Esta é a conferência doClaude informada na versão final do dono; não afirmar queCodex a repetiu. Conta não aprovada por este registro.
+
+O dono determinou que esta resposta posterior, completa e sem contradição substitui a aplicação menos favorável dos quatro pontos de467[SR1]. A regra geral para futuras respostas contraditórias continua; as tabelas/respostas anteriores ficam **histórico**, sem prevalecer nos pontos substituídos aqui. As datas e correções de respostas antigas são as relatadas pelo dono.
+
+| Ponto | Aplicação vigente — relato completo recebido em28/10/2026 00h23Fortaleza |
+| --- | --- |
+| Plataforma brasileira acct_1UG8u59LFSmgUKIK | **Sim:** conecta criadores nosEUA,Canadá,ReinoUnido eEEE,excetoIslândia, com **cobranças diretas sem taxa de aplicação**. Fora doBrasil não há application fees,destination charges nem separate charges and transfers; cobrar somente assinatura não precisa desses mecanismos. A resposta relatada de vendas19/10corrige suporte09/10 neste ponto. |
+| LLC de sócio único deDelaware eITIN | **ITIN não obrigatório**, segundo a resposta relatada: criação com empresa/EIN; ativação comEIN,documento nãoamericano(passaporte preferido) eCPF; primeiro saque com conta bancária nosEUA,semITIN. Conta analisada individualmente,podem ser pedidos outros documentos; se cadastro pedirSSN/ITIN,o dono deve guardar a mensagem exata. Suporte11/10correto; vendas19/10não corresponde às orientações de verificação relatadas. |
+| Representante legal | **Pode ser o próprio dono morando noBrasil**, sem residência nosEUA,SSN ouITIN; passaporte brasileiro,CPF e dados doEIN,com possíveis pedidos adicionais de documentos. |
+| Endereço nosEUA e banco | **Endereço comercial real nosEUA,nunca caixa postal.** A empresaAtlas pode ter endereço principal do dono emFortaleza,mas endereço residencialBRnão basta para contaStripeUS. Registered agent não deve ser endereço de operação; não recomendado. Escritório virtual sem aceitação antecipada garantida; se falhar verificação automática,revisão manual. ParceirosAtlas oferecem endereçoUScomdesconto,sem cotação/aceite presumido. BancoUSno **nome exato daLLC**. Segundo mensagem22/10/202614h15,Mercuryfora vantagensAtlasdesdesetembro2026;StripeTreasuryindicado apenas a quemforelegível,não contratação/garantia. |
+
+**Stripe Tax pendente:** pergunta de20/10/2026,cobrada21/10,sobre quem arca com taxaStripeTax em cobrançasdiretas de contasStandard doscriadores(plataformaouconectada) continua **sem resposta**. Até resposta aplicável,manter a leitura menos favorável já usada emlib/receiving-costs.ts;nenhum coeficiente/código alterado.
+
+**Não é aprovação de conta.** Pontos2e3 são resultados esperados, não aprovações; documentos adicionais/revisão individual continuam possíveis. Não confundir representante legal com endereço comercial/registeredagent ou representantesGDPR/DSA.
+
+**468[SR2] continua integralmente até decisão do dono em495[SR6].** Não alterar PLANS_ON_SALE,OPENING_REQUESTED,stripePlatformEligibilityReady,taxgate,art9a,revisão comercial ou demais travas. Nenhuma conta/empresa/EIN/ITIN/aceite/contrato/pagamento/contatoStripeouterceiro. Não abrir vendas por causa da tabela. Nenhum código de imposto, preço, limite, comissão, permissão, conteúdo, idioma ou identificador alterado.
+
+495[SR6] permanece somente estudo dos caminhosBRCPF eLLC, com fontes oficiais datadas/TX,mesmas premissas/preços,meses1/6/12/24/48,base mínima/prazo/inclusiveEINsemSSN,bancoUSnonomeLLC/riscos e impostos sobreconsumo nosdoiscaminhos. Recomendação única futura emDependedodono; não decidir rota nem alterar termos/conta/leitura tributária no código. As pesquisas/roteirosSR3/SR4 devem considerar esta resposta nova sem apagar seu histórico; não imporITIN ou representante residente como necessidade confirmada nem fingir preço zero de custo desconhecido. MR/TX/100%custosFX275/reservas continuam.
+
+VR: aplicação documental concreta dos quatro pontos, sem recurso novo ao cliente, conta aprovada, pesquisa econômica concluída, abertura ou lucro certificado.0→0passos/decisões de interface; sem teste humano/AAA. Sem novoIOprodutivo/serviço/retenção; CI/tempo100%empresaFX275 desconhecidos,nãozero. Contador254,sem entrega255.
+
+Proveniência da revisão: versãofinal da mesma solicitação aplicada porPedidosrepetidos3a,mesmos494/495/posição/estado; substitui somente proveniência,detalhesendereço/banco,pendênciaStripeTax eprazoEINsemSSN. Textosanteriorespreservadoscomohistórico,sem prevalecer sobre versãofinal.
+
+## Versão final integral recebida do dono — mesma solicitação, sem novos itens
+
+SR — Resposta completa do Stripe substitui a leitura menos favorável (28/10/2026) — versão final
+
+Solicitação do dono (28/10/2026, 00h23, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: antes de gravar, aplique a regra permanente "Pedidos repetidos". Confira o main, os PRs abertos e os ramos codex/* recentes, e procure esta solicitação pela linha de data e hora, pelo nome da seção, pelas etiquetas [SR5] e [SR6] e pelo conteúdo. Esta é a versão final deste pedido. A versão anterior, com a mesma linha de data e hora, já está em gravação no PR #1139 como 494 [SR5] e 495 [SR6]: aplique somente a diferença (passo 3a), mantendo números, posição e estado, e registre na proveniência o que mudou. Não crie itens novos.
+
+Contexto: a regra SR (467 [SR1]) diz que, quando respostas do Stripe se contradisserem, vale a menos favorável ao dono "até que resposta posterior, completa e sem contradição, a substitua". Essa resposta chegou. Proveniência conferida pelo Claude em 28/10/2026 no Gmail viniciussucupira090@gmail.com: e-mail de support@stripe.com de 27/10/2026, 16h47 (Fortaleza), assinado por Gabriel, da equipe especializada do Stripe, no fio "Re: Connect platform eligibility for international accounts", texto idêntico ao colado pelo dono. As mensagens anteriores da mesma equipe (21/10/2026, 19h41, e 22/10/2026, 14h15) não a contradizem. Substitua, no texto gravado, "relato colado pelo dono; e-mail original não verificado de forma independente" por esta proveniência. Resumo fiel da resposta de 27/10:
+1. A conta de plataforma brasileira acct_1UG8u59LFSmgUKIK pode conectar criadores nos EUA, no Canadá, no Reino Unido e no EEE (exceto Islândia) e usar cobranças diretas sem taxa de aplicação. Taxas de aplicação, destination charges e separate charges and transfers não estão disponíveis em contas conectadas fora do Brasil; a cobrança só da assinatura não precisa deles. Correta a resposta de vendas de 19/10/2026; errada a de suporte de 09/10/2026.
+2. LLC de sócio único de Delaware: ITIN não é obrigatório. Criação da conta: dados da empresa e EIN. Ativação: EIN e documento de identidade não americano (passaporte preferido) e CPF como identificação fiscal local. Primeiro saque: sem ITIN, com conta bancária nos EUA. O Stripe analisa cada conta e pode pedir mais; se o cadastro pedir SSN ou ITIN, enviar a ele a mensagem exata. Correta a resposta de 11/10/2026; a de vendas de 19/10/2026 não corresponde às orientações de verificação.
+3. Representante legal: não precisa morar nos EUA nem ter SSN ou ITIN; o dono pode ser o representante morando no Brasil. Documentos: passaporte brasileiro, CPF e dados do EIN; o Stripe pode pedir documentos durante o cadastro.
+4. Endereço nos EUA: caixa postal nunca é aceita; endereço de registered agent não é recomendado; escritório virtual não pode ser garantido de antemão; se não passar na verificação automática, revisão manual. Detalhes da mensagem de 22/10/2026, 14h15: a empresa da Atlas pode ter o endereço do dono em Fortaleza como endereço principal; a conta Stripe dos EUA exige endereço comercial nos EUA (o endereço residencial no Brasil não basta); o endereço do registered agent não deve ser usado como endereço de operação; parceiros da Atlas oferecem endereço comercial nos EUA com desconto; conta bancária nos EUA no nome exato da LLC; desde setembro de 2026 o Mercury não está mais entre as vantagens da Atlas, que indica o Stripe Treasury a quem for elegível.
+Ressalva do próprio Stripe: os pontos 2 e 3 são resultados esperados, não aprovações.
+Pendente: a pergunta de 20/10/2026, cobrada em 21/10/2026, sobre quem paga a taxa do Stripe Tax nas cobranças diretas das contas Standard dos criadores (a plataforma ou a conta conectada) continua sem resposta do Stripe; até haver resposta, vale a leitura menos favorável já usada em lib/receiving-costs.ts.
+
+[SR5] Gravar a resposta e substituir a aplicação.
+Estado inicial: na fila.
+Guarde a resposta e a proveniência acima em docs/stripe-platform-eligibility.md, e atualize a tabela da seção SR em AGENTS.md e CLAUDE.md: ponto 1, sim; ponto 2, ITIN não obrigatório; ponto 3, representante pode ser o dono morando no Brasil; ponto 4, endereço comercial real nos EUA, nunca caixa postal, com as observações sobre registered agent, escritório virtual e conta bancária. Preserve as respostas antigas como histórico. Registre a pergunta do Stripe Tax como pendente. Registre que nada disso é aprovação de conta. Não altere PLANS_ON_SALE, stripePlatformEligibilityReady nem nenhuma trava por este item: a condição 468 [SR2] continua até a decisão do dono no SR6.
+
+[SR6] Estudo: abrir pela conta brasileira ou pela LLC.
+Estado inicial: na fila.
+Compare, com fontes oficiais datadas e a interpretação juridicamente mais correta (política TX), os dois caminhos:
+(a) abrir as vendas pela conta Stripe brasileira existente, ativada em pessoa física (CPF): imposto de renda da pessoa física sobre o resultado (carnê-leão, livro-caixa e alíquotas vigentes), INSS de contribuinte individual, ISS na exportação de serviços (LC 116/2003, art. 2º, I e parágrafo único), IOF e câmbio na remessa, moedas que a conta brasileira aceita e em que moeda liquida, taxas do Stripe Brasil para cartões estrangeiros, e o que muda nos termos (operador hoje: "Vinicius Colares Sucupira, an individual trading as Solrenning");
+(b) manter a LLC de Delaware (sem ITIN e com o dono como representante, conforme a resposta acima): custos fixos 275 [FX1], endereço comercial real nos EUA, conta bancária nos EUA no nome da LLC e prazo até abrir, inclusive o prazo do EIN sem SSN.
+Para cada caminho, mostre o lucro líquido mensal com os preços atuais nos meses 1, 6, 12, 24 e 48 sob as mesmas premissas, a base mínima de clientes, o prazo até a primeira venda possível e os riscos. Impostos sobre consumo (IVA/OSS, sales tax) valem nos dois caminhos e devem aparecer. Termine com uma recomendação única em "Depende do dono". Somente estudo: não mude trava, termos, conta, nem leitura tributária no código.
+
+Regra de margem: segue a REGRA DE MARGEM vigente (MR, 27/10/2026, 07h42): nenhum cliente pagante dá prejuízo no pior caso, com 100% dos direitos, no mensal e no anual, com teto automático e reserva antes de cada gasto; empresa sem prejuízo a partir da base mínima; 60% é meta mensal real, não trava. Custo desconhecido reprova, nunca é zero; taxas de recebimento mais caras de lib/receiving-costs.ts; custos fixos 100% do Marktmorgen.
+
+Proibido: mudar preços, cortar limites visíveis, retirar recursos, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a, a revisão comercial ou stripePlatformEligibilityReady; criar contas, abrir empresa, pedir EIN ou ITIN, aceitar termos, contratar, pagar ou contatar o Stripe ou terceiros; tratar a resposta como aprovação de conta; apagar conteúdo ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+
+## Histórico da versão anterior recebida — proveniência sucedida pela conferência Claude acima
+
+SR — Resposta completa do Stripe substitui a leitura menos favorável (28/10/2026)
+
+Solicitação do dono (28/10/2026, 00h23, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: antes de gravar, aplique a regra permanente "Pedidos repetidos". Confira o main, os PRs abertos e os ramos codex/* recentes, e procure esta solicitação pela linha de data e hora, pelo nome da seção, pelas etiquetas [SR5] e [SR6] e pelo conteúdo. Se já estiver gravada, não crie nada novo. Grave depois dos itens já existentes, na ordem de chegada, com os próximos números livres, sem alterar a ordem dos itens existentes.
+
+Contexto: a regra SR (467 [SR1]) diz que, quando respostas do Stripe se contradisserem, vale a menos favorável ao dono "até que resposta posterior, completa e sem contradição, a substitua". O dono recebeu e colou em 28/10/2026, 00h23, a resposta de Gabriel, da equipe especializada do Stripe, conferida, segundo ele, com as orientações internas do Stripe e a disponibilidade por país da conta acct_1UG8u59LFSmgUKIK. Ela responde os quatro pontos, diz quais respostas anteriores estavam erradas e não se contradiz. Resumo fiel:
+1. A conta de plataforma brasileira acct_1UG8u59LFSmgUKIK pode conectar criadores nos EUA, no Canadá, no Reino Unido e no EEE (exceto Islândia) e usar cobranças diretas sem taxa de aplicação. Taxas de aplicação, destination charges e separate charges and transfers não estão disponíveis em contas conectadas fora do Brasil; a cobrança só da assinatura não precisa deles. Correta a resposta de vendas de 19/10/2026; errada a de 09/10/2026.
+2. LLC de sócio único de Delaware: ITIN não é obrigatório. Criação da conta: dados da empresa e EIN. Ativação: EIN e documento de identidade não americano (passaporte preferido) e CPF como identificação fiscal local. Primeiro saque: sem ITIN, com conta bancária nos EUA. O Stripe analisa cada conta e pode pedir mais; se o cadastro pedir SSN ou ITIN, enviar a ele a mensagem exata. Correta a resposta de 11/10/2026; a de vendas de 19/10/2026 não corresponde às orientações de verificação.
+3. Representante legal: não precisa morar nos EUA nem ter SSN ou ITIN; o dono pode ser o representante morando no Brasil. Documentos: passaporte brasileiro, CPF e dados do EIN; o Stripe pode pedir documentos durante o cadastro.
+4. Endereço nos EUA: caixa postal nunca é aceita; endereço de registered agent não é recomendado; escritório virtual não pode ser garantido de antemão; se não passar na verificação automática, revisão manual.
+Ressalva do próprio Stripe: os pontos 2 e 3 são resultados esperados, não aprovações.
+
+[SR5] Gravar a resposta e substituir a aplicação.
+Estado inicial: na fila.
+Guarde a resposta, com data e proveniência (relato colado pelo dono; e-mail original não verificado de forma independente), em docs/stripe-platform-eligibility.md, e atualize a tabela da seção SR em AGENTS.md e CLAUDE.md: ponto 1, sim; ponto 2, ITIN não obrigatório; ponto 3, representante pode ser o dono morando no Brasil; ponto 4, inalterado (endereço comercial real, nunca caixa postal), com as observações sobre registered agent e escritório virtual. Preserve as respostas antigas como histórico. Registre que nada disso é aprovação de conta. Não altere PLANS_ON_SALE, stripePlatformEligibilityReady nem nenhuma trava por este item: a condição 468 [SR2] continua até a decisão do dono no SR6.
+
+[SR6] Estudo: abrir pela conta brasileira ou pela LLC.
+Estado inicial: na fila.
+Compare, com fontes oficiais datadas e a interpretação juridicamente mais correta (política TX), os dois caminhos:
+(a) abrir as vendas pela conta Stripe brasileira existente, ativada em pessoa física (CPF): imposto de renda da pessoa física sobre o resultado (carnê-leão, livro-caixa e alíquotas vigentes), INSS de contribuinte individual, ISS na exportação de serviços (LC 116/2003, art. 2º, I e parágrafo único), IOF e câmbio na remessa, moedas que a conta brasileira aceita e em que moeda liquida, taxas do Stripe Brasil para cartões estrangeiros, e o que muda nos termos (operador hoje: "Vinicius Colares Sucupira, an individual trading as Solrenning");
+(b) manter a LLC de Delaware (sem ITIN e com o dono como representante, conforme a resposta acima): custos fixos 275 [FX1], conta bancária nos EUA, endereço comercial real e prazo até abrir.
+Para cada caminho, mostre o lucro líquido mensal com os preços atuais nos meses 1, 6, 12, 24 e 48 sob as mesmas premissas, a base mínima de clientes, o prazo até a primeira venda possível e os riscos. Impostos sobre consumo (IVA/OSS, sales tax) valem nos dois caminhos e devem aparecer. Termine com uma recomendação única em "Depende do dono". Somente estudo: não mude trava, termos, conta, nem leitura tributária no código.
+
+Regra de margem: segue a REGRA DE MARGEM vigente (MR, 27/10/2026, 07h42): nenhum cliente pagante dá prejuízo no pior caso, com 100% dos direitos, no mensal e no anual, com teto automático e reserva antes de cada gasto; empresa sem prejuízo a partir da base mínima; 60% é meta mensal real, não trava. Custo desconhecido reprova, nunca é zero; taxas de recebimento mais caras de lib/receiving-costs.ts; custos fixos 100% do Marktmorgen.
+
+Proibido: mudar preços, cortar limites visíveis, retirar recursos, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a, a revisão comercial ou stripePlatformEligibilityReady; criar contas, abrir empresa, pedir EIN ou ITIN, aceitar termos, contratar, pagar ou contatar o Stripe ou terceiros; tratar a resposta como aprovação de conta; apagar conteúdo ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+
+---
+
+## Histórico integral anterior — aplicação substituída nos quatro pontos porSR5 acima
+
 # Stripe platform eligibility — SR (27 October 2026)
 
 > **TX vigente — dono, 27/10/2026, 12h34 Fortaleza.** As referências anteriores deste documento à regra 19, à leitura que dá mais imposto, ao ISS de 5% como certo ou a consultas tributárias ficam preservadas como histórico e são substituídas, nos pontos conflitantes, pela política TX de [AGENTS.md](../AGENTS.md). Nenhuma consulta será feita ou preparada para envio. As taxas de recebimento mais caras, SR, desconhecido reprova, reservas, exposição e custeio continuam obrigatórios. A [matriz TX1](tx-legal-source-review-2026-10-27.md) distingue fontes conferidas e lacunas; não certifica incidência zero. O código e os números antigos ainda não adaptados não provam a nova leitura; revisão e regeneração pertencem a TX2/TX5. Flags continuam false.
