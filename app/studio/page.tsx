@@ -3125,6 +3125,7 @@ export default async function StudioPage({
 
         <div className="mt-8 flex flex-wrap items-center gap-3">
           <Link
+            prefetch={false}
             href="/demo"
             className="btn btn-primary"
           >
