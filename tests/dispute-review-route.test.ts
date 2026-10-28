@@ -24,7 +24,7 @@ test("guard refusal is private and prevents every provider lookup", async () => 
     const response = await POST(request);
     assert.equal(response.status, status);
     assert.equal(response.headers.get("cache-control"), "private, no-store");
-    assert.equal(state.reads.length, 0);
+    assert.equal(state.reads.length, 0); assert.equal(state.historyReads, 0);
   }
 });
 test("invalid identifiers and any submission action cannot reach the read service", async () => {
@@ -43,6 +43,7 @@ test("verified response is private and service failures disclose no provider err
   const response = await POST(request);
   assert.equal(response.status, 200); assert.equal(response.headers.get("cache-control"), "private, no-store");
   assert.equal((await response.json()).submitted, false);
+  assert.equal(state.historyReads, 1);
   reset(); state.error = true;
   const failed = await POST(request);
   assert.equal(failed.status, 503);

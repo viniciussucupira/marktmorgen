@@ -4,13 +4,21 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useStudioStore } from "@/components/studio-store-pin";
 import { formatMoney } from "@/lib/money";
 import type { DisputePurchaseReview } from "@/lib/dispute-purchase-review";
+import type { RetainedPreorderReview } from "@/lib/dispute-preorder-review";
 
-type Success = Extract<DisputePurchaseReview, { ok: true }>;
+type Success = Extract<DisputePurchaseReview, { ok: true }> & { preorder?: RetainedPreorderReview };
 type State = { kind: "idle" | "loading" } | { kind: "error"; message: string } | { kind: "ready"; result: Success };
 function object(value: unknown): Record<string, unknown> | null {
   return value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : null;
 }
 function whole(value: unknown): boolean { return typeof value === "number" && Number.isSafeInteger(value) && value >= 0; }
+function preorderOf(value: unknown): RetainedPreorderReview | null {
+  const p = object(value);
+  if (p?.status === "missing" || p?.status === "unavailable") return { status: p.status };
+  if (p?.status !== "available" || !["checkoutCreatedAt", "lookupStartedAt", "retainedUntil"].every(key => whole(p[key])) ||
+      !["grantedAt", "revokedAt"].every(key => p[key] === null || whole(p[key]))) return null;
+  return { status: "available", checkoutCreatedAt: p.checkoutCreatedAt as number, grantedAt: p.grantedAt as number | null, revokedAt: p.revokedAt as number | null, lookupStartedAt: p.lookupStartedAt as number, retainedUntil: p.retainedUntil as number };
+}
 function resultOf(value: unknown): Success | null {
   const r = object(value), b = object(r?.binding);
   if (!r || !b || r.ok !== true || r.submitted !== false) return null;
@@ -21,6 +29,7 @@ function resultOf(value: unknown): Success | null {
   if (r.submissionCount !== null && !whole(r.submissionCount)) return null;
   if (r.pastDue !== null && typeof r.pastDue !== "boolean") return null;
   if (r.reason !== null && (typeof r.reason !== "string" || !/^[a-z_]{1,64}$/.test(r.reason))) return null;
+  if (r.preorder !== undefined && !preorderOf(r.preorder)) return null;
   return r as unknown as Success;
 }
 function dateWords(value: number | null): string {
@@ -75,20 +84,20 @@ export function DisputePurchaseReviewPanel({ connected }: { connected: boolean }
   const loading = state.kind === "loading";
   const result = state.kind === "ready" ? state.result : null;
   return <div className="mt-8 max-w-3xl space-y-6">
-    <p id="dispute-lookup-help" className="text-sm text-ink-soft">A lookup uses up to two calls from your existing connected-service allowance. Nothing is submitted to the bank from this page.</p>
-    {!connected ? <p className="notice">The store&apos;s owner needs to connect Stripe before a purchase record can be reviewed.</p> : null}
+    <p id="dispute-lookup-help" className="text-sm text-ink-soft">A lookup uses up to three units from your existing connected-service allowance. Nothing is submitted to the bank from this page.</p>
+    {!connected ? <p className="notice">The store's owner needs to connect Stripe before a purchase record can be reviewed.</p> : null}
     <form method="post" action={sid ? "/api/store/disputes?store=" + encodeURIComponent(sid) : "/api/store/disputes"} onSubmit={review} aria-busy={loading} aria-describedby="dispute-lookup-help">
       <noscript><p className="notice">JavaScript is needed to review this purchase here. Nothing is sent automatically.</p></noscript>
       <fieldset disabled={loading || !connected || !sid} className="space-y-4">
         <legend className="sr-only">Find one disputed purchase</legend>
         <div><label htmlFor="dispute-reference" className="block font-semibold">Stripe dispute reference</label>
           <input id="dispute-reference" name="dispute" required pattern="du_[A-Za-z0-9]{1,128}" maxLength={132} autoComplete="off" spellCheck={false} placeholder="du_…" className="input mt-2 w-full" aria-describedby="dispute-reference-hint" />
-          <p id="dispute-reference-hint" className="mt-2 text-sm text-ink-soft">Copy the reference beginning with du_ from this store&apos;s Stripe account.</p>
+          <p id="dispute-reference-hint" className="mt-2 text-sm text-ink-soft">Copy the reference beginning with du_ from this store's Stripe account.</p>
         </div>
         <button type="submit" className="btn btn-primary min-h-11">{loading ? "Reviewing purchase…" : "Review purchase record"}</button>
       </fieldset>
     </form>
-    {loading ? <p role="status">Reviewing this store&apos;s purchase record…</p> : null}
+    {loading ? <p role="status">Reviewing this store's purchase record…</p> : null}
     {state.kind === "error" ? <div ref={feedback} tabIndex={-1} role="alert" className="notice scroll-mt-24">{state.message}</div> : null}
     {result ? <div ref={feedback} tabIndex={-1} role="region" aria-labelledby="dispute-result-heading" className="card scroll-mt-24 space-y-5 p-6">
       <h2 id="dispute-result-heading" className="text-xl font-semibold">Purchase record</h2>
@@ -107,7 +116,22 @@ export function DisputePurchaseReviewPanel({ connected }: { connected: boolean }
           ["Previous submissions reported by Stripe", result.submissionCount === null ? "Unknown" : String(result.submissionCount)],
         ].map(([label, value]) => <div key={label} className="min-w-0"><dt className="text-sm font-semibold text-ink-soft">{label}</dt><dd className="mt-1 break-words [overflow-wrap:anywhere]">{value}</dd></div>)}
       </dl>
-      <p className="notice">Historical terms, refund-policy acceptance, delivery records and buyer messages have not been loaded. No evidence has been submitted.</p>
+      <section aria-labelledby="preorder-record-heading" className="space-y-3 border-t border-line pt-5">
+        <h3 id="preorder-record-heading" className="font-semibold">Retained pre-order record</h3>
+        {result.preorder?.status === "available" ? <>
+          <p className="text-sm text-ink-soft">This existing record belongs to this checkout, buyer and payment. A recorded access grant does not prove an email arrived, a file was downloaded or a lesson was attended.</p>
+          <dl className="grid gap-4 sm:grid-cols-2">
+            {[
+              ["Access grant recorded", dateWords(result.preorder.grantedAt)],
+              ["Revocation recorded", dateWords(result.preorder.revokedAt)],
+              ["Lookup started", dateWords(result.preorder.lookupStartedAt)],
+              ["Source expiry at lookup", dateWords(result.preorder.retainedUntil)],
+            ].map(([label, value]) => <div key={label}><dt className="text-sm font-semibold text-ink-soft">{label}</dt><dd className="mt-1 break-words">{value}</dd></div>)}
+          </dl>
+          <p className="text-sm text-ink-soft">The source expiry was read without extending it. These records are not kept by this page.</p>
+        </> : <p className="text-sm text-ink-soft">{result.preorder?.status === "missing" ? "No retained pre-order row was found for this checkout. This does not mean no purchase or access grant occurred." : "The retained pre-order record could not be checked. An unavailable record does not mean there was no purchase or access grant."}</p>}
+      </section>
+      <p className="notice">Historical terms, refund-policy acceptance, original emails, downloads, attendance and buyer messages have not been loaded. No evidence has been submitted.</p>
     </div> : null}
   </div>;
 }

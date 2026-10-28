@@ -15,7 +15,7 @@ export async function checkDisputeReview({browser,LOCAL,fixture,axeSource,is}){
   const gate=new Promise(resolve=>{release=resolve;});
   let arrived;const requestArrived=new Promise(resolve=>{arrived=resolve;});
   const title="<img src=x onerror='window.__de1Unexpected=true'>";
-  const payload=()=>({ok:true,submitted:false,history:"Historical records not loaded.",reason:"fraudulent",responseDeadline:null,pastDue:null,submissionCount:0,
+  const payload=()=>({ok:true,submitted:false,preorder:{status:"available",checkoutCreatedAt:100,grantedAt:250,revokedAt:null,lookupStartedAt:300,retainedUntil:600},history:"Historical records not loaded.",reason:"fraudulent",responseDeadline:null,pastDue:null,submissionCount:0,
    binding:{account:"acct_fixture",dispute:mode==="yen"?"du_yen":"du_fixture",purchase:"cs_fixture",charge:"ch_fixture",paymentIntent:"pi_fixture",buyerEmail:"buyer@example.test",product:"a".repeat(32),title,checkoutCreatedAt:100,chargeCreatedAt:200,amount:1000,disputedAmount:500,currency:mode==="yen"?"jpy":"usd"}});
   try{
    const page=await context.newPage();
@@ -55,6 +55,7 @@ export async function checkDisputeReview({browser,LOCAL,fixture,axeSource,is}){
    is("DE1 captured USD amount "+width,(await field("Captured amount").innerText()).trim(),"$10");
    is("DE1 unknown deadline remains unknown "+width,(await field("Response deadline reported by Stripe").innerText()).trim(),"Unknown");
    is("DE1 zero submissions stays a known zero "+width,(await field("Previous submissions reported by Stripe").innerText()).trim(),"0");
+   is("DE1 retained pre-order grant stays scoped "+width,(await field("Access grant recorded").innerText()).trim(),"1970-01-01 00:04:10 UTC");
    is("DE1 no bank submission button "+width,await page.getByRole("button",{name:/submit evidence|send evidence/i}).count(),0);
    await page.addScriptTag({content:axeSource});
    is("DE1 private result accessibility "+width,await page.locator("main").evaluate(async node=>(await window.axe.run(node,{runOnly:{type:"tag",values:["wcag2a","wcag2aa","wcag21aa"]}})).violations.map(v=>v.id)),[]);
