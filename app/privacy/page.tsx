@@ -1,3 +1,4 @@
+import { MAX_COOKIE_DAYS } from "@/lib/affiliate-setting";
 import {CERTIFICATE_PRIVACY} from "@/lib/path-certificate";
 import {PATH_WORDING_PRIVACY} from "@/lib/path-wording-rules";
 import {RETURN_PRIVACY_LINE} from "@/lib/path-return-rules";
@@ -958,8 +959,8 @@ export default function PrivacyPage() {
           When someone follows an affiliate&apos;s link to a store, a cookie
           named <code>nl_via_</code> followed by the store&apos;s address holds
           the affiliate&apos;s code and the time of the click, and the earliest click
-          that visitor still carries, for up to 400 days &mdash; the longest any
-          browser keeps a cookie; a purchase counts for the affiliate only
+          that visitor still carries, for up to {MAX_COOKIE_DAYS} days, subject to the browser&apos;s
+          own limits; it may expire sooner. A purchase counts for the affiliate only
           within the window the creator set, measured from whichever of those
           two clicks that creator credits. Visitors in the European Economic Area, the United
           Kingdom, Switzerland or Brazil, or whose country we cannot tell, are
@@ -1809,7 +1810,8 @@ export default function PrivacyPage() {
           browser into a course or a community, named <code>nl_learn_</code>{" "}
           followed by a code for the store, for 90 days; the code and time of
           an affiliate link a visitor followed, named <code>nl_via_</code>{" "}
-          followed by the store&apos;s address, for up to 90 days; and an
+          followed by the store&apos;s address, for up to {MAX_COOKIE_DAYS} days,
+          subject to the browser&apos;s own limits; it may expire sooner. The store also keeps an
           affiliate&apos;s own sign-in, named <code>nl_aff_</code> followed by
           the store&apos;s address, for 30 days. The ad pixels a creator may
           add are described in section 1 and are asked for first where the law
