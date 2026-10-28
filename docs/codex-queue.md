@@ -11492,3 +11492,48 @@ Produção dpl_6yjfRC1GiExH4nZGc6eg4ZD2Cpvw, marktmorgen-rckqokqtb-viniciussucup
 PR1137corrigido2b8db0727018d1c1d4f2f382d20d3a30b59513aa ePR1138ce50256546f219c1e93a2702feb4b5cf75a8392a concluíram31/31+Vercel apósnovoheadinteiro;1137nãoaprovahead4e075falho. Verify122596506863/122597498703:233bundles/Everythingpassing/sem erro;escopos completos/proveniêncianacontinuidade. Ambosnãoincorporados;1136jáaprovadoaguardasequência. PedidoDE492–493estáintegralnestePR,nãoincorporadonemimplementado;98originalintacto.
 
 NenhumIOprodutivo/serviço/preço/limite/direito/comissão/gate/opt-in/conteúdo/idioma/ID/Hazelsong alterado,semconta/aceite/pagamento/mensagem/consulta/submissão. CI/tempo/reparos100%empresaFX275desconhecidos,nãozero;seiscontratos/tetos/reservasantesoperação;semabertura/margemcertificada. Histórico e pedidosintegralmentepreservados.
+
+
+## SR — Registro e proveniência, solicitação de 28/10/2026 00h23 Fortaleza
+
+Estado: na fila,494[SR5] e495[SR6], depois de493DE2, na ordem recebida. Texto integral do anexo2b120aa9-bae7-4ac1-8ef0-519cec32e97d/Texto colado.txt preservado abaixo, alterando somente a numeração dos dois títulos. Prefixo, ordem e estados anteriores intactos; não interromper trabalho ativo.
+
+Pedidos repetidos aplicado: main2b60072b4d71c456ba146e5f50ff5ec2d6d5387c/fila integral;15PRs abertos/títulos/corpos;695refs codex/*;100commits recentes e66heads distintos recentes/abertos/temáticosStripe/eligibility/tax/LLC/commercial,64filas lidas sem correspondência por00h23/título/SR5–SR6;2heads e17518a02029c76c1cc253c5453f3463e10b143e/e7bf17c84ea2ad99b632b1c8932e8b0914571e9f sem arquivo legível não são declarados lidos. Máximo anterior493; próximos494–495 livres. SR467–470 permanecem no lugar, histórico não apagado.
+
+Proveniência: resposta atribuída a Gabriel/equipe especializada doStripe, segundo relato colado pelo dono e conferência interna descrita por ele. E-mail original não verificado de forma independente. O resumo integral recebido é preservado; não inventar teor de e-mail original nem alegar autenticação. A instrução direta mais recente pede substituir a aplicação dos quatro pontos pela resposta completa quando executar494SR5: ponto1sim para contaBR/directchargessemapplicationfee nas regiões/ressalvas dadas; ponto2ITINnãoobrigatório; ponto3donoBrasilpodeserrepresentante; ponto4endereço real/nunca caixa postal/com ressalvasregisteredagent/escritóriovirtual. Pontos2/3 são resultados esperados,nãoaprovação. Este registro não altera tabela/docs alvo ainda nem trava;468SR2continuaatédecisão495SR6. Preservar respostas antigas como histórico.
+
+495SR6é somente estudo comparável BRCPF versusLLC: fontes oficiais datadas/TX,mesmas premissas/preços,meses1/6/12/24/48,base mínima/prazo/riscos,impostosconsumo nosdoiscaminhos,100%fixosFX275 e custosdesconhecidosreprovam. Recomendação única futura emDependedodono; nenhuma escolha/termo/conta/leituratributárianocódigo alterada por estudo. Não converter relatoStripe em certeza de conta aprovada ou estimativa econômica sem dados. Antesdeimplementarrelercódigo/fila/heads e fazer sódiferença.
+
+VR/MR/TX preservados; nenhum preço/limite/direito/comissão/gate/stripePlatformEligibilityReady/PLANS_ON_SALE/OPENING_REQUESTED/opt-in/conteúdo/idioma/ID/Hazelsong alterado,nenhuma conta/empresa/EIN/ITIN/aceite/contrato/pagamento/contatoStripeouterceiro. SemIOprodutivo/serviço novo;tempo/CI100%empresaFX275desconhecidos,nãozero;seiscontratos/tetos/reservasantesoperação. Contador254,sem255/abertura/margemcertificada. Ambosapenasnafila,nãoimplementadosouestudadosporesteinclusão. Histórico integralpreservado.
+
+SR — Resposta completa do Stripe substitui a leitura menos favorável (28/10/2026)
+
+Solicitação do dono (28/10/2026, 00h23, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: antes de gravar, aplique a regra permanente "Pedidos repetidos". Confira o main, os PRs abertos e os ramos codex/* recentes, e procure esta solicitação pela linha de data e hora, pelo nome da seção, pelas etiquetas [SR5] e [SR6] e pelo conteúdo. Se já estiver gravada, não crie nada novo. Grave depois dos itens já existentes, na ordem de chegada, com os próximos números livres, sem alterar a ordem dos itens existentes.
+
+Contexto: a regra SR (467 [SR1]) diz que, quando respostas do Stripe se contradisserem, vale a menos favorável ao dono "até que resposta posterior, completa e sem contradição, a substitua". O dono recebeu e colou em 28/10/2026, 00h23, a resposta de Gabriel, da equipe especializada do Stripe, conferida, segundo ele, com as orientações internas do Stripe e a disponibilidade por país da conta acct_1UG8u59LFSmgUKIK. Ela responde os quatro pontos, diz quais respostas anteriores estavam erradas e não se contradiz. Resumo fiel:
+1. A conta de plataforma brasileira acct_1UG8u59LFSmgUKIK pode conectar criadores nos EUA, no Canadá, no Reino Unido e no EEE (exceto Islândia) e usar cobranças diretas sem taxa de aplicação. Taxas de aplicação, destination charges e separate charges and transfers não estão disponíveis em contas conectadas fora do Brasil; a cobrança só da assinatura não precisa deles. Correta a resposta de vendas de 19/10/2026; errada a de 09/10/2026.
+2. LLC de sócio único de Delaware: ITIN não é obrigatório. Criação da conta: dados da empresa e EIN. Ativação: EIN e documento de identidade não americano (passaporte preferido) e CPF como identificação fiscal local. Primeiro saque: sem ITIN, com conta bancária nos EUA. O Stripe analisa cada conta e pode pedir mais; se o cadastro pedir SSN ou ITIN, enviar a ele a mensagem exata. Correta a resposta de 11/10/2026; a de vendas de 19/10/2026 não corresponde às orientações de verificação.
+3. Representante legal: não precisa morar nos EUA nem ter SSN ou ITIN; o dono pode ser o representante morando no Brasil. Documentos: passaporte brasileiro, CPF e dados do EIN; o Stripe pode pedir documentos durante o cadastro.
+4. Endereço nos EUA: caixa postal nunca é aceita; endereço de registered agent não é recomendado; escritório virtual não pode ser garantido de antemão; se não passar na verificação automática, revisão manual.
+Ressalva do próprio Stripe: os pontos 2 e 3 são resultados esperados, não aprovações.
+
+494. [SR5] Gravar a resposta e substituir a aplicação.
+Estado inicial: na fila.
+Guarde a resposta, com data e proveniência (relato colado pelo dono; e-mail original não verificado de forma independente), em docs/stripe-platform-eligibility.md, e atualize a tabela da seção SR em AGENTS.md e CLAUDE.md: ponto 1, sim; ponto 2, ITIN não obrigatório; ponto 3, representante pode ser o dono morando no Brasil; ponto 4, inalterado (endereço comercial real, nunca caixa postal), com as observações sobre registered agent e escritório virtual. Preserve as respostas antigas como histórico. Registre que nada disso é aprovação de conta. Não altere PLANS_ON_SALE, stripePlatformEligibilityReady nem nenhuma trava por este item: a condição 468 [SR2] continua até a decisão do dono no SR6.
+
+495. [SR6] Estudo: abrir pela conta brasileira ou pela LLC.
+Estado inicial: na fila.
+Compare, com fontes oficiais datadas e a interpretação juridicamente mais correta (política TX), os dois caminhos:
+(a) abrir as vendas pela conta Stripe brasileira existente, ativada em pessoa física (CPF): imposto de renda da pessoa física sobre o resultado (carnê-leão, livro-caixa e alíquotas vigentes), INSS de contribuinte individual, ISS na exportação de serviços (LC 116/2003, art. 2º, I e parágrafo único), IOF e câmbio na remessa, moedas que a conta brasileira aceita e em que moeda liquida, taxas do Stripe Brasil para cartões estrangeiros, e o que muda nos termos (operador hoje: "Vinicius Colares Sucupira, an individual trading as Solrenning");
+(b) manter a LLC de Delaware (sem ITIN e com o dono como representante, conforme a resposta acima): custos fixos 275 [FX1], conta bancária nos EUA, endereço comercial real e prazo até abrir.
+Para cada caminho, mostre o lucro líquido mensal com os preços atuais nos meses 1, 6, 12, 24 e 48 sob as mesmas premissas, a base mínima de clientes, o prazo até a primeira venda possível e os riscos. Impostos sobre consumo (IVA/OSS, sales tax) valem nos dois caminhos e devem aparecer. Termine com uma recomendação única em "Depende do dono". Somente estudo: não mude trava, termos, conta, nem leitura tributária no código.
+
+Regra de margem: segue a REGRA DE MARGEM vigente (MR, 27/10/2026, 07h42): nenhum cliente pagante dá prejuízo no pior caso, com 100% dos direitos, no mensal e no anual, com teto automático e reserva antes de cada gasto; empresa sem prejuízo a partir da base mínima; 60% é meta mensal real, não trava. Custo desconhecido reprova, nunca é zero; taxas de recebimento mais caras de lib/receiving-costs.ts; custos fixos 100% do Marktmorgen.
+
+Proibido: mudar preços, cortar limites visíveis, retirar recursos, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a, a revisão comercial ou stripePlatformEligibilityReady; criar contas, abrir empresa, pedir EIN ou ITIN, aceitar termos, contratar, pagar ou contatar o Stripe ou terceiros; tratar a resposta como aprovação de conta; apagar conteúdo ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
