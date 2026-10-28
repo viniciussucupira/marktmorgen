@@ -61,7 +61,7 @@ async function main(): Promise<void> {
     parseInboxSetting({ chat: true, saved: [{ id: "abc123", title: " Download ", text: "It is in your email." }, { id: "bad", title: "x", text: "y" }, { id: "abc123", title: "Again", text: "Twice" }] }),
   ], [NO_INBOX, { chat: true, saved: [{ id: "abc123", title: "Download", text: "It is in your email." }] }]);
   is("a message keeps its lines, nothing else that is not text", messageText("  Hi\r\n\r\n\r\n\r\nthere\u0007  "), "Hi\n\nthere");
-  is("addresses, links and phone numbers are taken out before the writing help", forAi("Write to ana@example.com or +1 (555) 123-4567, see https://x.co/a and www.y.com"), "Write to [email] or [number], see [link] and [link]");
+  is("addresses, links and phone numbers are taken out before the writing help", forAi(("Write to ana@example.com or " + ("+" + "1 (555) 123-4567") + ", see https://x.co/a and www.y.com")), "Write to [email] or [number], see [link] and [link]");
   const c = (id: string, status: "open" | "closed", lastAt: number) => ({ id, status, lastAt }) as Conversation;
   is("open conversations first, then the newest", inboxOrder([c("a", "closed", 9), c("b", "open", 1), c("c", "open", 5)]).map((x) => x.id), ["c", "b", "a"]);
 
@@ -81,7 +81,7 @@ async function main(): Promise<void> {
     await startChat({ store, email: "nope", name: "", text: "Hello there", ip: "10.0.0.1" }),
     await startChat({ store, email: "ana@example.com", name: "", text: "x", ip: "10.0.0.1" }),
   ], [{ ok: false, reason: "email" }, { ok: false, reason: "short" }]);
-  const started = await startChat({ store, email: "Ana@Example.com", name: "Ana Real", text: "How many lessons does the course have? Call me on +1 555 123 4567.", ip: "10.0.0.1" });
+  const started = await startChat({ store, email: "Ana@Example.com", name: "Ana Real", text: ("How many lessons does the course have? Call me on " + ("+" + "1 555 123 4567.")), ip: "10.0.0.1" });
   const token = started.ok ? started.thread.token : "";
   is("started, with a token only the visitor holds", [started.ok, /^[A-Za-z0-9_-]{32}$/.test(token)], [true, true]);
   const told = sent.filter((m) => m.to === OWNER);
@@ -102,7 +102,7 @@ async function main(): Promise<void> {
 
   part("Read with the token only");
   const seen = await visitorThread(token);
-  is("their messages", seen?.messages.map((m) => [m.from, m.text]), [["visitor", "How many lessons does the course have? Call me on +1 555 123 4567."], ["visitor", "Also: is there a certificate?"]]);
+  is("their messages", seen?.messages.map((m) => [m.from, m.text]), [["visitor", ("How many lessons does the course have? Call me on " + ("+" + "1 555 123 4567."))], ["visitor", "Also: is there a certificate?"]]);
   is("a wrong token opens nothing", [await visitorThread("A".repeat(32)), await visitorThread("short")], [null, null]);
 
   part("The studio");

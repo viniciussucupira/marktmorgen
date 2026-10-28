@@ -20,7 +20,7 @@
  *     one whose answer was lost, is handed over when PayPal completes it;
  *   - a full refund takes it back, unless another payment of theirs stands.
  */
-import { claimHandle, ensureStatsId, addProduct, setProductLink, setSubscription, setPayPalSeller, storeForEmail, type Listing, type Store } from "@/lib/store";
+import { claimHandle, ensureStoreId, ensureStatsId, addProduct, setProductLink, setSubscription, setPayPalSeller, storeForEmail, type Listing, type Store } from "@/lib/store";
 import { readListing } from "@/lib/catalog";
 import { CURRENCIES } from "@/lib/money";
 import {
@@ -46,6 +46,9 @@ import { chargedLine, purchasesFor } from "@/lib/buyer-orders";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
 import { paidPeriod } from "./billing-period-fixture";
+import { NextRequest } from "next/server";
+import { openSession, SESSION_COOKIE } from "@/lib/auth";
+import { GET as returnPayPalSeller } from "@/app/api/store/paypal/onboarded/route";
 
 const PARTNER_CLIENT = "AZpartnerClientId0123456789";
 const PARTNER_SECRET = "EPpartnerSecret0123456789";
@@ -63,6 +66,7 @@ let captureWith: (order: string) => { status: number; body: Record<string, unkno
 const orders = new Map<string, Record<string, unknown>>();
 const captures = new Map<string, string>();
 let made = 0;
+let paypalRequests = 0;
 
 const orderId = (n: number) => `5O190127TN36471${String(n).padStart(2, "0")}`;
 
@@ -91,6 +95,7 @@ globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) =>
     return json({ id: "e" });
   }
   if (url.hostname !== "api-m.paypal.com") return json({ error: "unexpected" }, 404);
+  paypalRequests++;
   const headers = new Headers(init?.headers);
   const method = init?.method ?? "GET";
   if (url.pathname === "/v1/oauth2/token") {
@@ -300,10 +305,19 @@ async function main(): Promise<void> {
 
   part("A funded new seller onboarding requires its resource cohort");
   await setSubscription("owner@example.com", { customerId: "cus_PayPalFund01", subscriptionId: "sub_PayPalFund01", active: true, period: { ...paidPeriod(), funded: true } });
+  await ensureStoreId("owner@example.com");
   const fundedSeller = (await storeForEmail("owner@example.com"))!;
   const beforeReferral = seen.length;
   is("no new referral without a funded resource window", await onboardingUrl(fundedSeller, "https://marktmorgen.com/api/store/paypal/onboarded"), null);
   is("the provider is not asked and the existing seller stays", [seen.length, (await storeForEmail("owner@example.com"))?.paypalSeller], [beforeReferral, fundedSeller.paypalSeller]);
+
+  part("A funded seller return rechecks admission before provider verification");
+  const sellerSession = await openSession("owner@example.com");
+  const beforeSellerReturn = paypalRequests;
+  const sellerReturn = await returnPayPalSeller(new NextRequest(`https://marktmorgen.com/api/store/paypal/onboarded?store=${fundedSeller.sid}&merchantId=UNTRUSTED123`, { headers: { host: "marktmorgen.com", cookie: `${SESSION_COOKIE}=${sellerSession}` } }));
+  const sellerDestination = new URL(sellerReturn.headers.get("location") ?? "https://none.invalid/");
+  is("a marked owner stays at the studio without completing seller installation", [sellerReturn.status, sellerDestination.hostname, sellerDestination.searchParams.get("paypal")], [303, "marktmorgen.com", "limited"]);
+  is("no PayPal request including auth and no seller replacement", [paypalRequests, (await storeForEmail("owner@example.com"))?.paypalSeller], [beforeSellerReturn, fundedSeller.paypalSeller]);
 
   part("Disconnected");
   await setPayPalSeller("owner@example.com", null);

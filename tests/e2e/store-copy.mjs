@@ -52,6 +52,7 @@ import { checkContactAcknowledgment } from "./contact-acknowledgment.mjs";
 import { checkHomeModules } from "./home-modules.mjs";
 import { checkHomeStudioDetails } from "./home-studio-details.mjs";
 import { checkHomeReasons } from "./home-reasons.mjs";
+import { checkDisputeReview } from "./dispute-review.mjs";
 import { captureHomeStudio } from "./home-studio-capture.mjs";
 import { checkSalesComparisons } from "./sales-comparisons.mjs";
 import { checkPauseAcknowledgment } from "./pause-acknowledgment.mjs";
@@ -143,6 +144,8 @@ const BUILD = !process.argv.includes("--no-build");
 
 const env = {
   ...process.env,
+  DEMO_STUDIO_ADMIN: "operator@example.test",
+  STRIPE_DEMO_ACCOUNT_ID: "acct_fixtureDemo",
   UPSTASH_REDIS_REST_URL: FAKE,
   UPSTASH_REDIS_REST_TOKEN: "local",
   RESEND_API_KEY: "re_local_only_a_stand_in",
@@ -891,6 +894,7 @@ await checkNudgeAcknowledgment({browser,LOCAL,fixture:pauseFixtures[0],is});
   await checkHomeModules({browser,LOCAL,axeSource,is});
   await checkHomeStudioDetails({browser,LOCAL,axeSource,is});
   await checkHomeReasons({browser,LOCAL,axeSource,is});
+  await checkDisputeReview({browser,LOCAL,fixture:homeDemo,axeSource,is});
   await checkStudioAmericanEnglish({browser,LOCAL,session:growthSession,sid:growthSid,is});
   await checkComposerAmericanEnglish({browser,LOCAL,session:growthSession,sid:growthSid,product:growthProduct,is});
   await checkTaxScope({browser,LOCAL,session:growthSession,sid:growthSid,is});

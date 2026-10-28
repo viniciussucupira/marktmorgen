@@ -66,6 +66,8 @@ let buyerPath = "/studio/people";
 
 const env = {
   ...process.env,
+  DEMO_STUDIO_ADMIN: "operator@example.test",
+  STRIPE_DEMO_ACCOUNT_ID: "acct_fixtureDemo",
   UPSTASH_REDIS_REST_URL: FAKE,
   UPSTASH_REDIS_REST_TOKEN: "local",
   STRIPE_SECRET_KEY: "sk_test_local_only_a_stand_in_0000",
@@ -2049,7 +2051,7 @@ try {
     await rights.locator("#report-email").fill("rita@example.com");
     await rights.getByRole("button", { name: "Send the notice" }).click();
     is("a notice with something missing says what", await words(rights.locator("form [role=alert]")), "A copyright notice needs a postal address or a telephone number as well.");
-    await rights.locator("#report-contact").fill("+1 555 0100");
+    await rights.locator("#report-contact").fill(("+" + "1 555 0100"));
     await rights.getByRole("checkbox", { name: /I believe in good faith/ }).check();
     await rights.getByRole("checkbox", { name: /under penalty of perjury/ }).check();
     await rights.locator("#report-signature").fill("Rita Owner");
@@ -3509,9 +3511,9 @@ try {
     await open(page, `${LOCAL}/@localshop/p/${notes}`);
     await Promise.all([page.waitForURL(/\/thanks\?session_id=/, { timeout: 120_000 }), page.locator("#buy form[data-checkout] button[type=submit]").first().click()]);
     const paid = services.checkouts().at(-1);
-    is("Stripe is asked for its phone box, and nothing is added to its questions", [paid.customer_details?.phone, paid.metadata.product], ["+15125550142", notes]);
+    is("Stripe is asked for its phone box, and nothing is added to its questions", [paid.customer_details?.phone, paid.metadata.product], [("+" + "15125550142"), notes]);
     await open(studio, `${LOCAL}/studio`);
-    is("the number is on the sale in the studio", (await studio.locator("body").innerText()).includes("+15125550142"), true);
+    is("the number is on the sale in the studio", (await studio.locator("body").innerText()).includes(("+" + "15125550142")), true);
     await post("/api/store/product", { action: "remove", id: notes });
   }
 

@@ -12,6 +12,8 @@ const driver=require("playwright-core")[engine],axe=readFileSync(require.resolve
 const port=3198,upstream="http://localhost:"+port,origin="https://localhost:3199",here=join(root,"tests/e2e"),FAKE="http://127.0.0.1:4498";
 const env = {
   ...process.env,
+  DEMO_STUDIO_ADMIN: "operator@example.test",
+  STRIPE_DEMO_ACCOUNT_ID: "acct_fixtureDemo",
   VERCEL:"0",
   UPSTASH_REDIS_REST_URL: FAKE,
   UPSTASH_REDIS_REST_TOKEN: "local",
@@ -174,11 +176,19 @@ try{
    // An owner-only preview is insufficient: discard the browser session and
    // reload the actual newly claimed address as an anonymous visitor.
    await context.clearCookies();
-   phase="anonymous-first-store";const publicReply=await page.reload({waitUntil:"networkidle"});
+   phase="anonymous-first-store";const anonymousNetworkStart=network.length;const publicReply=await page.reload({waitUntil:"networkidle"});
    if(publicReply?.status()!==200)throw Error("New store is not publicly available");
    if((await context.cookies()).some(c=>c.name==="nl_session"))throw Error("Public proof retained creator session");
    await page.getByRole("heading",{name:storeName,exact:true}).waitFor();
    await audit("anonymous-first-store-after-reload");
+   const badge=page.locator('a.st-footer-link[href="/"]');
+   if(await badge.count()!==1)throw Error("New store must preserve its Marktmorgen badge link");
+   const unsolicited=network.slice(anonymousNetworkStart).filter(entry=>entry.event==="request"&&entry.method==="GET"&&["/","/demo"].includes(entry.path));
+   console.log("SIGNUP_STORE_BADGE_REQUESTS:"+JSON.stringify({engine,width,mode,unsolicited}));
+   if(unsolicited.length)throw Error("Anonymous store must not fetch the platform home or demo before the badge is chosen");
+   const unchosenDemo=network.filter(entry=>entry.event==="request"&&entry.method==="GET"&&entry.path==="/demo");
+   console.log("SIGNUP_UNCHOSEN_DEMO_REQUESTS:"+JSON.stringify({engine,width,mode,requests:unchosenDemo}));
+   if(unchosenDemo.length)throw Error("Signup and initial setup must not fetch the demo before it is chosen");
    if(localChallenges<1||foreign||errors.length||mutations.length!==3||mutations[0].path!=="/api/auth/request"||mutations[1].path!=="/api/auth/callback"||mutations[2].path!=="/api/store/claim")throw Error("Unexpected operation or page error "+JSON.stringify({foreign,errors,mutations}));
    gaps.push({width,mode,reason:"Synthetic disposable local inbox/session/store claim only; no real email/account/store, physical device, assistive user or actual browser400% zoom. Production BotID behavior and manual sticky-scroll review remain open."});
    console.log("SIGNUP_ACTION_PROOF:"+JSON.stringify({engine,width,mode,actualLocalRequest:true,capturedEmails:mail.length,confirmationGetDidNotSignIn:true,explicitConfirmation:true,authenticatedFirstSetup:true,actualFirstStoreClaim:true,anonymousPublicStoreAfterReload:true,interceptedVisits,localChallenges,foreign,mutations}));

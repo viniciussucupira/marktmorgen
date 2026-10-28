@@ -25,6 +25,10 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
+      - name: Test public repository data detector
+        run: python3 scripts/test_public_data.py
+      - name: Reject personal data without printing matched values
+        run: python3 scripts/check_public_data.py
       - name: Test conservative documentation classification
         run: |
           python3 scripts/test_ci_documentation_scope.py
@@ -94,6 +98,10 @@ jobs:
         env:
           MARKTMORGEN_REDIS_INTEGRATION: "1"
         run: python3 scripts/test_form_opportunity_redis.py
+      - name: Actual Redis bounded retained dispute record checks
+        env:
+          MARKTMORGEN_REDIS_INTEGRATION: "1"
+        run: python3 scripts/test_dispute_preorder_redis.py
       - name: Actual Redis CRM pipelines compare-and-set checks
         env:
           MARKTMORGEN_REDIS_INTEGRATION: "1"

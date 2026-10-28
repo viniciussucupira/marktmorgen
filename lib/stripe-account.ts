@@ -98,7 +98,12 @@ export async function onAccount(
    * the same key with the first result instead of doing it again.
    */
   idempotencyKey?: string,
+  /** A read-only workflow may choose a shorter ceiling; existing callers keep the default. */
+  timeoutMs = STRIPE_TIMEOUT_MS,
 ): Promise<Record<string, unknown>> {
+  if (!Number.isSafeInteger(timeoutMs) || timeoutMs < 50 || timeoutMs > STRIPE_TIMEOUT_MS) {
+    throw new Error("Invalid Stripe request ceiling");
+  }
   const key = keyFor(account);
   if (!key) throw new Error("Selling is not configured");
 
@@ -106,7 +111,7 @@ export async function onAccount(
   // failure is: never a StripeError, so a charge that timed out is "no
   // answer" to its caller — kept pending and settled from what Stripe says
   // later, with the same idempotency key — never "declined".
-  const { response, data } = await timed(STRIPE_TIMEOUT_MS, async (signal) => {
+  const { response, data } = await timed(timeoutMs, async (signal) => {
     const response = await fetch(`${STRIPE_API}${path}`, {
       method,
       headers: {

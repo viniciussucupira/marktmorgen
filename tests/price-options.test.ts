@@ -71,7 +71,7 @@ async function main(): Promise<void> {
 
   await claimHandle(OWNER, "optionsshop", "Options Shop", "");
   await ensureStatsId(OWNER);
-  await setStripeAccount(OWNER, "acct_1TestOptions0001", true);
+  await setStripeAccount(OWNER, "acct_fixture011", true);
   await setSubscription(OWNER, { customerId: "cus_Options0001", subscriptionId: "sub_Options0001", active: true, period: paidPeriod() });
 
   part("Many prices on one product");

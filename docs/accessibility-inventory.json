@@ -984,6 +984,12 @@
       "parameters": []
     },
     {
+      "source": "app/studio/disputes/page.tsx",
+      "status": "AAA review not completed",
+      "routeTemplate": "/studio/disputes",
+      "parameters": []
+    },
+    {
       "source": "app/studio/email/page.tsx",
       "status": "AAA review not completed",
       "routeTemplate": "/studio/email",
@@ -1246,6 +1252,7 @@
     "components/discord-studio.tsx",
     "components/discount-editor.tsx",
     "components/discount-impact.tsx",
+    "components/dispute-purchase-review.tsx",
     "components/domain-editor.tsx",
     "components/dunning-editor.tsx",
     "components/email-studio.tsx",
@@ -1616,6 +1623,7 @@
     "app/api/store/discord/join/route.ts",
     "app/api/store/discord/route.ts",
     "app/api/store/discount/route.ts",
+    "app/api/store/disputes/route.ts",
     "app/api/store/domain/route.ts",
     "app/api/store/download/route.ts",
     "app/api/store/dunning/route.ts",
@@ -1852,6 +1860,6 @@
   "routeInventory": {
     "generator": "scripts/accessibility-route-inventory.mjs",
     "scope": "Source templates and parameter shapes only. Existing review status is preserved; a route is not an exercised fixture or a passing accessibility test.",
-    "pageTemplates": 126
+    "pageTemplates": 127
   }
 }
