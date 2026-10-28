@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { STUDIO_MESSAGES } from "@/lib/studio-messages";
 
 type State =
@@ -28,7 +27,6 @@ const MESSAGES: Record<string, string> = {
  * with `another`, one more (app/api/store/claim). The studio opens on it.
  */
 export function HandleForm({ another = false }: { another?: boolean }) {
-  const router = useRouter();
   const [handle, setHandle] = useState("");
   const [name, setName] = useState("");
   const [bio, setBio] = useState("");
@@ -55,8 +53,9 @@ export function HandleForm({ another = false }: { another?: boolean }) {
         data.handle === preview &&
         typeof data.store === "string" && /^[0-9a-f]{32}$/.test(data.store)
       ) {
-        if (another) router.push(`/studio?store=${encodeURIComponent(data.store)}`);
-        else router.refresh();
+        // A fresh document keeps the studio title and selected store together.
+        // A same-route refresh can expose the new body while head metadata changes.
+        window.location.assign(`/studio?store=${encodeURIComponent(data.store)}`);
         return;
       }
       setState({

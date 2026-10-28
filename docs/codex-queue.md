@@ -11955,3 +11955,12 @@ A falha móvel208ms no head6b9bfca810a56b71464558e37385091775ae047f, job12294772
 Hash CSP do script atualizado em conjunto; testes existentes continuam obrigatórios. Dois testes sintéticos adicionais executam o script real com DOM controlado para comprovar ordem de todas as leituras antes das escritas, observação posterior do conteúdo abaixo da dobra e retirada do atributo de ocultação em falha de geometria. Não alteram cron, quantidade de workflows, thresholds ou medições. Nenhum serviço/custo operacional, preço, limite ou idioma novo. Conteúdo dos criadores e cinco exemplos da home intactos; contador254.
 
 - Evidência de #1165: incorporado às13:53:34Fortaleza/16:53:34UTC, merge1f47396c577cdc144fd33a489a45944230355d88. Main19completos,8aprovados/11dispensados com8provas explícitas de árvore idêntica e10+7testes cada. Produção READY dpl_3yWPHbwzPTQDXVW15J2Btht69AU5, SHA exato conferido, marktmorgen.com e outros6aliases. A prova interativa no navegador autorizado segue pendente; sem entrega255.
+
+
+### Correção concreta do primeiro studio após cadastro — 28/10/2026
+
+#1168 head14c0a6faa196f2e7725ac4f1ec9592f7d7ae14d3 reprovou Signup action AAA Chromium, job122967465814: caso768px/dark, created-first-store-studio, regra document-title sobre html; largura768/768, sem overflow e sem erros de página/terceiros. O source de /studio já exporta título estático, porém HandleForm fazia router.refresh na mesma rota após criar a primeira loja, o que pode expor corpo atualizado durante a transição de metadados; esta relação é hipótese de implementação a verificar no novo conjunto. O diagnóstico mostra navegação de /studio abortada na atualização; não é prova de problema de contraste nem motivo para excluir a regra.
+
+Correção: após a resposta de criação já validada (handle exato e SID32hex), faz navegação de documento para /studio?store=SID. Mantém a loja persistente selecionada, o mesmo servidor/autenticação e o título junto do documento; não altera criação, preços, idioma ou conteúdo. O formulário também usa esse destino fixo na criação de outra loja. Remove dependência de router no formulário.
+
+A matriz real sintética continua com30casos e as mesmas auditorias, agora também exige imediatamente o título exato e o SID devolvido na URL após o título h1 aparecer. Não acrescenta espera, repetição, exclusão ou mudança de regra axe. Novo conjunto requer CI integral no head exato; #1168 antigo não é aprovado e não foi incorporado. Nenhum custo operacional/serviço novo, pagamento/contato/conta real ou entrega funcional; contador254.
