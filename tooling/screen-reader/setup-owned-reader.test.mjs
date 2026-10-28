@@ -11,7 +11,7 @@ test("refuses every unowned or non-disposable host before running",async()=>{
 });
 test("successful setup runs once with exact pinned CLI and ceiling",async()=>{
  let calls=0;const result=await setupOwnedReader({env,platform:"darwin",run:(file,args,options)=>{
-  calls++;assert.equal(file,process.execPath);assert.ok(args[0].replaceAll("\\\\","/").endsWith("/node_modules/@guidepup/setup/bin/guidepup"));
+  calls++;assert.equal(file,process.execPath);assert.ok(args[0].split(String.fromCharCode(92)).join("/").endsWith("/node_modules/@guidepup/setup/bin/guidepup"));
   assert.deepEqual(args.slice(1),["setup","--ci"]);assert.equal(options.timeout,210000);return ok;
  }});assert.deepEqual(result,{attempts:1});assert.equal(calls,1);
 });
