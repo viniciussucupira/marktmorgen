@@ -1,5 +1,7 @@
 # Full LLC fixed costs — 22 October2026
 
+> **LQ1 vigente — dono28/10/2026 20h20 Fortaleza; SR5/SD1.** Canceladas somente as categorias ITIN/agente de aceitação e representante residente nos EUA. Removidas do catálogo, sem atribuir custo zero. Endereço comercial real nos EUA, sem caixa postal, banco no nome exato da LLC e todos os demais custos aplicáveis permanecem; total, tetos e reservas continuam desconhecidos e reprovados. Os inventários e requisitos anteriores abaixo ficam preservados como histórico. Quantificação vigente somente da rota LLC em275[FX1]; não executar a rota brasileira. Nenhum serviço contratado ou obrigação jurídica universal certificada.
+
 ## TX4/SR — inventário explícito de custos de conformidade (27/10/2026)
 
 O catálogo de revisão emlib/llc-fixed-costs.ts passa a incluir5472,proforma1120,IRPF,CBE,conformidadeIVA/OSS/local,ITIN/acceptance-agent,representante residenteUS e endereço empresarialUS. As linhas começam com tetos mensal/anual desconhecidos e reserva não revisada. Não são preços nem afirmação de obrigação incondicional: cada aplicabilidade, trabalho interno, custo de ferramenta/serviço, moeda, teto e reserva precisam de prova. Mailbox/registered-agent não substituem automaticamente endereço/representante aceitos peloStripe.

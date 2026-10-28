@@ -50,8 +50,6 @@ Allocation:100% Marktmorgen;0% Hazelsong. Owner22/10/2026 05:10 Fortaleza: "esqu
 | br-irpf | unknown | unknown |
 | br-cbe | unknown | unknown |
 | vat-oss-and-local-compliance | unknown | unknown |
-| itin-and-acceptance-agent | unknown | unknown |
-| us-resident-representative | unknown | unknown |
 | us-business-address | unknown | unknown |
 
 Complete fixed-cost total: unknown; rejected, never zero. Minimum paying customer base: not established. Consolidated net margin: not approved.
