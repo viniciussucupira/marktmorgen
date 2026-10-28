@@ -12373,3 +12373,45 @@ Implementação parcial independente enquanto1178CIroda,base285efc:revalidaresou
 Fortaleza2026-10-28T20:15:42.000-03:00;mergeaea62fb2f5d8ab246fb8019af6f022af8c729fae,headfeecc28ffcfc73a33a5ab4ee4e78a8026f81976f,árvore89571322f3783c594956679e68d4910fa263d99eexata.31/31+Vercel;verify123149360121Everythingpassing e testePayPalretorno303limited/zeroAPIincluindotoken/vendedorinalterado,Firefox123149360289,WebKit123149360174success;8escopos10+7/fulltrue. Mobile123149360107noveamostrasfriastodoslimitesestritospassam,maxLCP704ms/interação56ms;Signup123149291725/123149291683/123149291667cada30casos150audits0falhas;leitores123149321581/123149321535só2entrystates/0writes0foreign. Suítecompleta,nãor erunisolado. Principalrevalidaadmissãomarcadapréprovider/nova instalação,nãoalteracompras/obrigações/desconexão;componentescusto não são tetoaprovado/políticasnull. MainCI/READY/domínioaindapendentes,contador254.
 
 Publicação1178confirmadaantesde1182:dpl_57PnYfoh43Dkg4pp1RYau5PJWJ8DREADY/production,versão4c7ccc345f7ed078c02835f976e9250e1fd9303f,setealiasesincluindomarktmorgen.com/www;GET/home/signin200IDexato. Main19checks,oito10+7/fullfalsecomreusoexplícitodeárvoreidêntica/jobs123157254071/123157253664/123157252758/123157252619/123157252439/123157252389/123157251987/123157251986. Prova interativaproduçãopendenteporconexãobloqueada,semretry/troca,nãoincrementar254. Nenhum serviço/conta/pagamento/contrato/contatoativado;MR/TX/100%FX275,FW1agendado,SD1/470/Claude/Hazelsongpreservados.
+
+
+## LQ — Limpeza da fila: itens sem motivo, concluídos e repetidos (28/10/2026) [LQ1] [LQ2] [LQ3]
+Solicitação direta20h20Fortaleza. **Na fila, únicoPR para executar logo após o trabalho em andamento, sem interromperAV1/SD1.** Mais recente que os itens citados; prevalece porPedidosrepetidos3b,semrenumerar. Registro inicial não conclui as conferências.
+Deduplicação:main9c224622c0f93fc864026f48114267e6b6d79998,PRaberto1173,40filasdeheadsrecentesdistintos e737nomesrefscodex/*;semLQ1–3/data20h20/seçãoequivalente. TrabalhoClaude preservado.
+
+LQ1: cancelamentos decididos pelo dono, com marca exata **“Cancelado por decisão do dono em 28/10/2026 (LQ1); não executar”** em318,440,partesITIN/agenteaceitação/representanteresidente de469,317/441/442/327/363/337,53/128–132. Endereço comercial realUS/demais custos469,DPF/SCCatual e472TX2continuam. Retirada das duaslinhasdelib/llc-fixed-costs.ts/testes/regeneração é código expressamente autorizado porLQ1(c): executar dentro deste mesmoPR, comsuíteintegral, semclassificá-lo comodocumentalapósalterarcódigo. Nenhuma linha foi retirada por este registro.
+LQ2: todos permanecem abertos até conferência real de código e site; não marcar151/152/153/182/196/199/197/198/59/149 concluídos por relato apenas.
+LQ3: leitura integral de cada item e diferenças antes de absorver; menor número válido, diferenças incorporadas, texto/provas/histórico retidos; grupos distintos permanecem com motivo emlinha. Resultado emtabelaúnica item/decisão/motivo, a completar no mesmoPR. Não concluir LQ por mera criação desta solicitação.
+
+VR/MR/TX: nenhuma exclusão/renumeração/falsa conclusão ou prova humana. Flagsfalse,preços/limites/comissão,reservas/exposição/custeio,conteúdo/Hazelsong/idiomas/IDs preservados. Sem operaçãoexterna;CI/pesquisa/custosfixos100%FX275,desconhecidonãozero. Contador254. Não solicitar autorização já dada nem criar váriosPRs paraLQ.
+
+### Texto integral do dono — LQ
+LQ — Limpeza da fila: itens sem motivo, concluídos e repetidos (28/10/2026)
+Etiquetas: [LQ1] [LQ2] [LQ3]
+
+Solicitação do dono (28/10/2026, 20h20, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: antes de gravar, aplique a regra permanente "Pedidos repetidos". Confira o main, os PRs abertos e os ramos codex/* recentes, e procure esta solicitação pela linha de data e hora, pelo nome da seção, pelas etiquetas [LQ1] a [LQ3] e pelo conteúdo. Se já estiver gravada, não crie nada novo. Esta decisão é mais recente que os itens citados e prevalece sobre eles (passo 3b), sem renumerar nada.
+
+Estado inicial: na fila, num único PR de documentação, feito logo depois do PR em andamento, sem interromper [AV1] nem [SD1].
+
+[LQ1] Cancelar itens que perderam o motivo por decisão posterior do dono. Marque cada um como "Cancelado por decisão do dono em 28/10/2026 (LQ1); não executar", preservando texto, histórico e provas:
+(a) 318 [IW1]: a política TX não usa consultas tributárias.
+(b) 440 [FC3]: o estado da LLC foi decidido no SD1 (Delaware).
+(c) 469 [SR3], somente as partes de ITIN, agente de aceitação e representante legal residente nos EUA: a resposta da Stripe em 494 [SR5] dispensa os dois. A parte do endereço comercial real nos EUA e os demais custos continuam. Retire de lib/llc-fixed-costs.ts as linhas de ITIN/agente de aceitação e de representante residente nos EUA, com teste, regenerando os documentos gerados.
+(d) 317 [EU1], 441 [SV1], 442 [SV2], 327 [IN3], 363 [EI1] e 337 [HZ2]: a hospedagem na UE deixou de ser condição de abertura (SV, 27/10/2026, 13h19) e o motivo principal era a trava fiscal antiga. A conferência de DPF/SCC dos fornecedores atuais continua no Bloco de abertura. A retirada técnica de EU_HOSTING_CONFIRMED continua em 472 [TX2], sem afrouxar nenhuma outra trava.
+(e) 53 [J1] e 128 a 132 [J1-SKOOL, J1-KIT, J1-CIRCLE, J1-TEACHABLE, J1-SUBSTACK]: matrizes internas de concorrentes, já cobertas pelas páginas de comparação publicadas.
+
+[LQ2] Fechar como concluídos, depois de conferir no código e no site publicado: 151, 152, 153, 182, 196 e 199 (implementados e absorvidos), 197 e 198 (avaliação concluída e reprovada), 59 (absorvido por 274 [AX1]) e 149 (referência ao 93). Se algum não estiver de fato concluído, mantenha-o aberto e registre por quê.
+
+[LQ3] Juntar pedidos repetidos. Para cada grupo abaixo, leia o texto completo de cada item. Somente se tratarem do mesmo pedido, mantenha o número menor como válido, acrescente a ele as diferenças dos outros e marque os demais como "Absorvido pelo item N (LQ3); não executar", sem renumerar nada (regra "Pedidos repetidos", passos 3 e 6). Se não forem o mesmo pedido, mantenha-os e registre a diferença em uma linha.
+Grupos: 23 e 387; 27 e 258; 28, 100 e 428; 32 e 375; 34, 259 e 385; 40 e 228; 21 e 403; 108 e 364; 118 e 267; 216 e 220; 57 e 217; 380, 443 e 444; 332 e 436; 22, 31, 208 e 393; 113, 122 e 263; 117 e 264; 46, 234 e 349; 44 e 449 a 456; 120, 260 e 394; 107 e 377; 20, 227 e 372; 218 e 225; 221 e 249; 50, 213, 237 e 238; 282, 392 e 426.
+Registre o resultado numa tabela única: item, decisão (cancelado, concluído, absorvido ou mantido) e motivo.
+
+REGRA DE MARGEM (MR, 27/10/2026, 07h42): nenhum cliente pagante, isoladamente, usando 100% de todos os direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo depois de todos os custos e impostos; a empresa nunca dá prejuízo no pior caso a partir da base mínima calculada; 60% é a meta líquida mensal real da empresa. Taxas de recebimento mais caras de lib/receiving-costs.ts, reservas, exposição e custeio preservados; desconhecido reprova, nunca é zero; 100% dos custos fixos da LLC pertencem ao Marktmorgen (FX275); política tributária TX vigente.
+
+Proibido: ligar OPENING_REQUESTED ou PLANS_ON_SALE; afrouxar travas ou testes; mudar preços, limites visíveis ou comissão; apagar texto, histórico ou provas de qualquer item; renumerar itens; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
