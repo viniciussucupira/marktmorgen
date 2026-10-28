@@ -11656,3 +11656,32 @@ Regra de margem: cada item segue a REGRA DE MARGEM vigente (MR, 27/10/2026, 07h4
 Proibido: mudar preços, cortar limites visíveis, retirar recursos ou direitos de qualquer plano, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar as regras de lei por país ou de "no solicitations" do Outreach; enviar qualquer e-mail pelo Marktmorgen; comprar ou raspar listas de contatos; escrever a pessoas físicas; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo ou qualquer coisa da Hazelsong. Somente testes sintéticos.
 
 Aplicar a regra VR.
+
+
+## CX — Respostas aos e-mails do criador também na caixa de entrada do estúdio (28/10/2026)
+
+Proveniência: solicitação direta do dono nesta conversa,28/10/2026 01h00 Fortaleza. Registro único502[RX1], na fila após501[OX3], mantendo a etiqueta RX1 solicitada, apesar do título CX. Pedido integral abaixo, alterado somente o título numerado. Pedidos repetidos: conferidos main3f7edb1a4d9f303870e61f2580744f45d7675c04,15PRs abertos,696refs codex/*,100commits recentes e115heads distintos/115filas lidas, nenhuma indisponível; nenhuma solicitação anterior encontrada por data/hora,seção,RX1 e conteúdo. Preservar lib/inbox*.ts,lib/inbound-mail.ts,265CI3 e assistente; reconferir código e fila antes de implementar e aplicar só a diferença, sem alterar os itens existentes.
+
+VR: benefício solicitado é reunir respostas reais no estúdio sem perder o recebimento pessoal; caminho de lucro esperado é retenção/menor esforço de atendimento dentro do orçamento, ainda sem resultado medido. O contexto técnico é descrição fornecida pelo dono, a reconferir no código antes da implementação. Estado apenas na fila, sem custo calculado/aprovado, configuração real, ativação, envio ou funcionalidade entregue. Opção desligada por padrão; recebimento/leitura/armazenamento/encaminhamento exigem custeio mensal/anual no pior mês, direitos integrais, teto e reserva antes do gasto. O teto não autoriza interromper o encaminhamento pessoal; mecanismo e custo dessa continuidade terão de ser demonstrados antes da ativação. Desconhecido reprova, nunca zero. Nenhuma resposta automática sem clique; reembolso/reclamação sem resposta automática; filtros/descadastro e privacidade/termos conjuntos permanecem requisitos. MR,TX,AX274,VR e travas atuais preservados.
+
+### Texto integral do dono (somente título numerado)
+
+CX — Respostas aos e-mails do criador também na caixa de entrada do estúdio (28/10/2026)
+
+Solicitação do dono (28/10/2026, 01h00, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: antes de gravar, aplique a regra permanente "Pedidos repetidos". Confira o main, os PRs abertos e os ramos codex/* recentes, e procure esta solicitação pela linha de data e hora, pelo nome da seção, pela etiqueta [RX1] e pelo conteúdo. Se já estiver gravada, não crie nada novo. Grave depois de [OX3], na ordem de chegada, com o próximo número livre, sem alterar a ordem dos itens existentes.
+
+Contexto: hoje os e-mails do criador saem de <handle>@mail.marktmorgen.com (lib/mail-from.ts) com Reply-To igual ao e-mail do próprio criador (lib/mail.ts, replyTo: store.email). As respostas dos compradores vão só para o e-mail pessoal do criador e nunca chegam ao estúdio, então a caixa de entrada (lib/inbox.ts, app/studio/inbox) e a IA de 265 [CI3] não as veem. O recebimento de e-mails do próprio site já existe em lib/inbound-mail.ts (Resend, app/api/mail/inbound). Já existem e NÃO devem ser refeitos: lib/inbox*.ts, lib/inbound-mail.ts, 265 [CI3] e o assistente da loja. Antes de começar, confira de novo o código e a fila e faça só a diferença.
+
+502 [RX1] Respostas aos e-mails do criador também no estúdio.
+Estado inicial: na fila.
+Dê ao criador uma opção, desligada por padrão: "Also show replies to my emails in my studio inbox". Ligada, o Reply-To dos e-mails dele passa a ser um endereço de resposta próprio da loja no domínio de envio dos criadores; cada resposta recebida entra na caixa de entrada do estúdio, ligada à conversa e ao contato, e é encaminhada na mesma hora ao e-mail pessoal do criador, como hoje, para nada se perder. Responder pelo estúdio envia ao comprador pelo endereço da loja. A IA de 265 [CI3] passa a resumir, classificar e rascunhar também essas respostas, sempre com o clique do criador para enviar; reembolso e reclamação nunca têm resposta automática. Filtre robôs, respostas automáticas de férias e mensagens de rejeição; respeite descadastros. Calcule antes o custo no pior caso (recebimento, leitura, armazenamento dentro do espaço de dados do plano, encaminhamento), com teto automático por loja e por mês; acabado o teto, as respostas continuam indo ao e-mail pessoal do criador. Atualize a política de privacidade e os termos juntos. Seguir AX274.
+
+Regra de margem: segue a REGRA DE MARGEM vigente (MR, 27/10/2026, 07h42): nenhum cliente pagante dá prejuízo, usando 100% de todos os direitos do plano e de cada complemento no pior mês, no mensal e no anual, com teto automático e reserva antes de cada gasto; a empresa sem prejuízo a partir da base mínima; 60% é meta mensal real, não trava. Política tributária TX. Custo desconhecido reprova, nunca é zero; nenhuma cota grátis de fornecedor conta como zero; taxas de recebimento mais caras de lib/receiving-costs.ts; todos os custos fixos são 100% do Marktmorgen (FX275).
+
+Proibido: mudar preços, cortar limites visíveis, retirar recursos ou direitos de qualquer plano, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; ligar a opção por padrão; enviar qualquer resposta sem o clique do criador; deixar de encaminhar a resposta ao e-mail pessoal do criador; mudar configuração real de fornecedor, criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
