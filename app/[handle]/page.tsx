@@ -717,7 +717,7 @@ export default async function StorePage({ params, searchParams }: Params) {
               </Link>
             </p>
             {store.look.badge || !canUse(store, "branding") ? (
-              <Link href="/" className="st-footer-link text-sm font-semibold">
+              <Link href="/" prefetch={false} className="st-footer-link text-sm font-semibold">
                 {w.madeWith}
               </Link>
             ) : null}
