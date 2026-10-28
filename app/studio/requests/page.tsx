@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
@@ -65,6 +66,7 @@ export default async function StudioRequestsPage({ searchParams }: Params) {
             A custom amount for work you agreed on, as an invoice with lines, a due date if you want one, and its receipt. Each is paid like any
             sale here: on your own Stripe account, listed with your sales, and refunded from Stripe the same way.
           </p>
+          {can(view.role, "export") ? <p className="mt-6"><Link prefetch={false} href={studioPath(store, "", "disputes")} className="link inline-flex min-h-11 items-center">Review a disputed purchase</Link></p> : null}
           {listed === null || openNow === null ? <div role="status" className="notice mt-8">Payment requests and their open count could not be verified. Reload to check them; an unavailable list does not mean there are no requests.</div> : <PaymentRequestsStudio
             rows={requests.map((r) => ({ ...r, link: requestLink(store, r) }))}
             now={now}

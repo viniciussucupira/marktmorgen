@@ -52,7 +52,7 @@ async function main(): Promise<void> {
   part("In the store's cart");
   await claimHandle(OWNER, "ovenhouse", "Oven House", "");
   await ensureStatsId(OWNER);
-  await setStripeAccount(OWNER, "acct_1TestOvenHouse01", true);
+  await setStripeAccount(OWNER, "acct_fixture003", true);
   await setSubscription(OWNER, { customerId: "cus_Oven00001", subscriptionId: "sub_Oven00001", active: true, period: paidPeriod() });
   const p: Record<string, string> = {};
   for (const [title, price] of [["Bread", "19"], ["Starter", "9"], ["Pizza", "29"], ["Cakes", "15"]]) {

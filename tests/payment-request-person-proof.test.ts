@@ -9,7 +9,7 @@ async function main() {
  const owner="synthetic-person-proof@example.com";
  await claimHandle(owner,"personproof","Synthetic store","");
  await ensureStatsId(owner);await ensureStoreId(owner);
- await setStripeAccount(owner,"acct_1PersonProofxxxxxxxx",true);
+ await setStripeAccount(owner,"acct_fixture010",true);
  const paid=await setSubscription(owner,{customerId:"cus_personproof",subscriptionId:"sub_personproof",active:true,tier:"creator",period:paidPeriod()});
  if (!paid?.subscriptionActive) throw new Error("Synthetic subscription fixture was not accepted");
  const store=(await storeForEmail(owner))!;

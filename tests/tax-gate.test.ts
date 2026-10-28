@@ -140,7 +140,7 @@ is("and its reasons name art. 9a for the EU, and the UK, US states and other cou
 ], [true, true, true, true]);
 if (!deemedSupplierReady()) is("while it is shut no plan can start, whatever the margin review says", PLANS_ON_SALE, false);
 is("the release gate reads it", /PLANS_ON_SALE: boolean = [^;]*deemedSupplierReady\(\)/.test(read("lib/opening.ts")), true);
-const shop = { stripeAccountId: "acct_1TestOnlyConnected", stripeChargesEnabled: true, subscriptionActive: false, suspended: false } as unknown as Store;
+const shop = { stripeAccountId: "acct_fixture013", stripeChargesEnabled: true, subscriptionActive: false, suspended: false } as unknown as Store;
 const savedKey = process.env.STRIPE_SECRET_KEY;
 process.env.STRIPE_SECRET_KEY = "sk_test_notARealKeyOnlyForTheseChecks";
 is("a store with Stripe connected and no plan cannot sell, so no EU consumer can buy from one", canSell(shop), false);

@@ -11,7 +11,7 @@ import assert from "node:assert/strict";
 import { store as redis } from "./redis-stub";
 import { paidPeriod } from "./billing-period-fixture";
 import { allowanceUsed, takeAllowance } from "@/lib/store-allowance";
-import { STORE_ALLOWANCES, NON_PAYING_ALLOWANCES, allowanceListWords } from "@/lib/store-allowance-rules";
+import { ALLOWANCE_KINDS, STORE_ALLOWANCES, NON_PAYING_ALLOWANCES, allowanceListWords } from "@/lib/store-allowance-rules";
 import { admitNonPaying, poolThisMonth } from "@/lib/free-pool";
 import { FREE_POOL_BASE_STORES, PAID_STORES_PER_FREE_STORE, PAYING_INDEX, freePoolSize } from "@/lib/free-pool-rules";
 import { sendEmail } from "@/lib/email";
@@ -202,5 +202,26 @@ test("funded owner platform calls refuse without approval while consent reductio
  }finally{
   setPlatformHooksForTests(undefined);
   if(oldKey===undefined)delete process.env.NIMBUS_DATA_KEY;else process.env.NIMBUS_DATA_KEY=oldKey;
+ }
+});
+
+test("marked paid webhook attempts need their cohort without blocking general maintenance allowances",async()=>{
+ for(const tier of ["creator","pro","scale"] as const)for(const cycle of ["month","year"] as const){
+  redis.clear();
+  const base=paying(70,{tier,cycle,statsId:"b".repeat(32)});
+  const marked={...base,period:{...paidPeriod(),funded:true as const}};
+  for(const kind of ALLOWANCE_KINDS){
+   const before=redis.keys();
+   const result=await takeAllowance(marked,kind);
+   if(kind==="webhook"){
+    assert.equal(result.ok,false,tier+"/"+cycle+"/"+kind);
+    assert.ok(!result.ok&&result.reason==="unknown");
+    assert.deepEqual(redis.keys(),before,"unapproved outbound attempt creates no counter, pool or contract key");
+   }else{
+    assert.equal(result.ok,true,"general "+kind+" authorization must remain available; new obligations use their own operation guard");
+   }
+  }
+  const legacy={...marked,period:paidPeriod()};
+  assert.equal((await takeAllowance(legacy,"integration")).ok,true,"unmarked existing contracts keep their allowance");
  }
 });
