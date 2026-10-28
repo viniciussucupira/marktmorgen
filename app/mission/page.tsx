@@ -152,7 +152,7 @@ const ORDERS_LINE =
  * Stripe from this deployment rather than to whether we have written the code.
  */
 const usd = (cents: number) => `$${(cents / 100).toLocaleString("en-US", { maximumFractionDigits: 2 })}`;
-const BILLING_LINE = `The subscription that pays us: ${usd(PRICE_CENTS)} a month or ${usd(YEAR_PRICE_CENTS)} a year on Store, or ${usd(PLAN_PRICES.pro.month)} and ${usd(PLAN_PRICES.pro.year)} on Studio, or ${usd(PLAN_PRICES.scale.month)} and ${usd(PLAN_PRICES.scale.year)} on Scale for a bigger list, free for the first ${TRIAL_DAYS} days, with an email a week before the first charge, canceled in two clicks from your studio`;
+const BILLING_LINE = `The subscription that pays us: ${usd(PRICE_CENTS)} a month or ${usd(YEAR_PRICE_CENTS)} a year on Store, or ${usd(PLAN_PRICES.pro.month)} and ${usd(PLAN_PRICES.pro.year)} on Studio, or ${usd(PLAN_PRICES.scale.month)} and ${usd(PLAN_PRICES.scale.year)} on Scale for a bigger list, with a ${TRIAL_DAYS}-day trial only for an eligible first store, an email a week before the first charge, canceled in two clicks from your studio`;
 
 /**
  * The same line while plans are not on sale (lib/opening.ts): the code is
