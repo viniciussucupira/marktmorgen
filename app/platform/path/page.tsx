@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { TopicPageView } from "@/components/topic-page";
+import { PATH_HOME_STEPS } from "@/lib/path-home";
 export const metadata: Metadata={title:"Marktmorgen Path — From first light to first sale",description:"A practical next mission, verified by your store's records."};
 export default function PathFeaturePage(){
  return <TopicPageView page={{
@@ -7,6 +8,7 @@ export default function PathFeaturePage(){
   intro:"Every step is real. Every sale is yours. Turn setting up your store, sharing your work and listening to customers into practical missions. Your store records the progress.",
   badge:{label:"In your studio",tone:"live"},accent:"from-violet-brand to-pink-brand",plan:"creator",
   blocks:[
+   {kind:"how",title:"Your next step, checked against real facts",items:PATH_HOME_STEPS.map(step=>({title:step.title,body:`What you do: ${step.creator} What Marktmorgen checks: ${step.platform}`}))},
    {kind:"how",title:"A next step you can act on",items:[
     {title:"Begin with your own answers",body:"Choose your subject, skills, available time and audience. A monthly goal is optional, personal and never a forecast."},
     {title:"Follow the store facts",body:"Publish your store, offer a product, check delivery in Stripe test mode, share post links, welcome a lead and work toward a real sale. Missions are recorded from store data."},

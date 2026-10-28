@@ -6,12 +6,25 @@ export async function checkHomePath({browser,LOCAL,axeSource,is}){
    await page.route("**/api/**",async route=>{if(route.request().method()!=="GET"){writes++;await route.abort();}else await route.continue();});
    await page.goto(LOCAL+"/",{waitUntil:"domcontentloaded",timeout:60000});
    const s=page.getByRole("region",{name:"Your next step, checked against real facts",exact:true});await s.scrollIntoViewIfNeeded();
-   is("home shows actual seven missions "+width,await s.locator("li").count(),7);
-   is("each mission identifies creator role "+width,await s.getByText("What you do",{exact:true}).count(),7);
-   is("each mission identifies platform check "+width,await s.getByText("What Marktmorgen checks",{exact:true}).count(),7);
+   is("ME3 home keeps Path brief "+width,await s.locator("li").count(),0);
    const link=s.getByRole("link",{name:"Read how the Path works",exact:true});is("Path discovery "+width,await link.getAttribute("href"),"/platform/path");await link.focus();is("Path discovery keyboard "+width,await link.evaluate(n=>n===document.activeElement),true);
    is("Path fits "+width,await s.evaluate(n=>n.scrollWidth<=n.clientWidth+1),true);
    await page.addScriptTag({content:axeSource});const issues=await s.evaluate(async n=>(await window.axe.run(n,{runOnly:{type:"tag",values:["wcag2a","wcag2aa","wcag21aa","wcag22aa"]}})).violations.map(v=>v.id));is("home Path accessibility "+width,issues,[]);
+   await link.click();await page.waitForURL(url=>url.pathname==="/platform/path");
+   const details=page.getByRole("region",{name:"Your next step, checked against real facts",exact:true});
+   await details.scrollIntoViewIfNeeded();
+   is("ME3 existing Path page keeps actual seven missions "+width,await details.locator("li").count(),7);
+   const missionBodies=await details.locator("li p").allTextContents();
+   is("ME3 all seven creator roles retained "+width,missionBodies.filter(text=>text.includes("What you do:")).length,7);
+   is("ME3 all seven platform checks retained "+width,missionBodies.filter(text=>text.includes("What Marktmorgen checks:")).length,7);
+   const facts=await details.innerText();
+   for(const caveat of ["does not verify file access or delivery","never asked to make a real self-purchase","not marketing consent","No sale or deadline is guaranteed"]){
+    is("ME3 Path safety retained "+caveat+" "+width,facts.includes(caveat),true);
+   }
+   is("ME3 detailed Path fits "+width,await details.evaluate(n=>n.scrollWidth<=n.clientWidth+1),true);
+   await page.addScriptTag({content:axeSource});
+   const movedIssues=await details.evaluate(async n=>(await window.axe.run(n,{runOnly:{type:"tag",values:["wcag2a","wcag2aa","wcag21aa","wcag22aa"]}})).violations.map(v=>v.id));
+   is("ME3 moved Path accessibility "+width,movedIssues,[]);
    is("home Path makes no API writes "+width,writes,0);
   }finally{await context.close();}
  }
