@@ -83,6 +83,11 @@ export default async function LibraryPage({ searchParams }: Params) {
                         )}
                         <p className="min-w-0 truncate text-lg font-semibold">{store.name}</p>
                       </div>
+                      {!open ? (
+                        <p role="status" className="mt-4 text-sm text-ink-soft">
+                          Your purchases could not be opened just now. Try again in a moment, or visit the store for help.
+                        </p>
+                      ) : null}
                       <div className="mt-5 flex min-w-0 flex-wrap gap-3">
                         {open ? (
                           <a href={open} className="btn btn-primary btn-sm btn-wrap min-w-0">
