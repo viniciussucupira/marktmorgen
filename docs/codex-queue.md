@@ -11685,3 +11685,43 @@ Regra de margem: segue a REGRA DE MARGEM vigente (MR, 27/10/2026, 07h42): nenhum
 Proibido: mudar preços, cortar limites visíveis, retirar recursos ou direitos de qualquer plano, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; ligar a opção por padrão; enviar qualquer resposta sem o clique do criador; deixar de encaminhar a resposta ao e-mail pessoal do criador; mudar configuração real de fornecedor, criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo ou qualquer coisa da Hazelsong. Somente testes sintéticos.
 
 Aplicar a regra VR.
+
+
+## AG — Agente de vendas do criador e qualidade de todos os agentes (28/10/2026)
+
+Proveniência: anexo do dono2a054355-6a8e-4f96-8db1-78f3d8103faf/Texto colado.txt, solicitação28/10/2026 01h06 Fortaleza. Registro único503[AG1],504[AG2], na fila após502[RX1]. Texto integral abaixo, somente títulos numerados. Pedidos repetidos: conferidos main3f7edb1a4d9f303870e61f2580744f45d7675c04,15PRs abertos,696refs codex/*,100commits recentes,115heads distintos/115filas lidas, nenhuma indisponível; nenhum pedido anterior encontrado pela data/hora,seção,AG1–AG2 e conteúdo. Preservar todas as referências e mecanismos existentes citados pelo dono; reconferir código/fila/PRs antes de cada implementação e fazer somente a diferença.
+
+Referência oficial conferida28/10/2026: [SaaStr, Dear SaaStr: Should I Run 20+ AI Agents the Way SaaStr Does?](https://www.saastr.com/dear-saastr-should-i-run-20-ai-agents-the-way-saastr-does/), relato de Jason Lemkin: recomenda começar com1–2agentes, relata30dias de ajuste diário, avaliação60–90dias e falha de ingestão sem alerta por4meses. É experiência atribuída ao autor, não prova de eficácia, preço ou lucro do Marktmorgen. Data exata de publicação e postagem específica de Greg Isenberg de27/10/2026 não confirmadas; buscas não localizaram fonte primária específica dessa postagem, portanto a citação continua atribuída ao pedido, sem certificação independente.
+
+VR: benefício solicitado é preparar ações úteis com evidência da própria loja e impedir resultados de agentes com dados antigos/falhas; retenção ou receita do complemento são caminhos esperados, não lucro comprovado.503 começa pelo estudo docs/sales-agent-pricing.md e recomendação em Depende do dono. Não criar nem vender complemento sem aprovação do dono conforme proibição expressa; construção eventual permanece desligada e sem venda até as aprovações aplicáveis. Nenhum preço máximo de lucro pode ser certificado sem custos, procura e hipóteses comparáveis verificadas.504 exige inventário diferencial e testes/limites próprios, não duplicação dos mecanismos atuais. Nenhuma ação/envio/publicação/alteração sem clique do criador; não cruzar lojas nem rastrear abertura. MR/TX/AX274/VR, tetos/reserva e custo desconhecido reprovado preservados. Registro apenas na fila; nenhuma ativação, implementação, custo aprovado ou promessa de melhor agente.
+
+### Texto integral do dono (somente títulos numerados)
+
+AG — Agente de vendas do criador e qualidade de todos os agentes (28/10/2026)
+
+Solicitação do dono (28/10/2026, 01h06, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: antes de gravar, aplique a regra permanente "Pedidos repetidos". Confira o main, os PRs abertos e os ramos codex/* recentes, e procure esta solicitação pela linha de data e hora, pelo nome da seção, pelas etiquetas [AG1] e [AG2] e pelo conteúdo. Se já estiver gravada, não crie nada novo. Grave depois de [RX1], na ordem de chegada, com os próximos números livres, sem alterar a ordem dos itens existentes.
+
+Contexto: o dono quer que o Marktmorgen tenha os melhores agentes de IA e que eles deem lucro. Referências a conferir com fontes datadas: Greg Isenberg (X, 27/10/2026): o software passa a valer pelo "agent that does the work"; SaaStr (saastr.com, "Dear SaaStr: Should I Run 20+ AI Agents the Way SaaStr Does?"): comece com um ou dois agentes, ajuste diário nos primeiros 30 dias, avaliação em 60 a 90 dias, e o defeito de um agente que parou de receber dados novos por quatro meses sem nenhum alerta. Já existem e NÃO devem ser refeitos: lib/store-assistant*.ts, lib/next-offer*.ts, lib/assistant-reminder*.ts, lib/help-ask.ts, lib/store-guide.ts, lib/growth-plan.ts, lib/store-coach.ts, lib/sales-levers.ts, lib/promotion-plan.ts, lib/outreach*.ts, lib/ai-spend-policy.ts, 212 [SH9], 361 [AP1], 372 [SU5], 21 [E4], 265 [CI3], 227 [HL8], 490 [PP1], 478 [SB1] e os itens OX. Antes de cada item, confira de novo o código e a fila e faça só a diferença.
+
+503 [AG1] Agente de vendas do criador.
+Estado inicial: na fila.
+Um complemento mensal, construído DESLIGADO e fora de venda até o dono aprovar o preço. Uma vez por semana, no fuso do criador, o agente lê somente os dados da própria loja (visitas, vendas, checkouts abandonados, compradores que não voltaram, contatos, produtos, propostas do Outreach) e prepara, numa única tela "This week", de 3 a 7 ações prontas para aprovar com um clique, cada uma com o motivo em uma frase tirada dos números da loja: e-mail para a lista ou para um segmento (reaproveitando 372 [SU5]); lembrete de checkout abandonado com consentimento; convite de volta a compradores; posts da semana (reaproveitando 21 [E4]); produto ou oferta a destacar (lib/sales-levers.ts, lib/promotion-plan.ts); lembrete de proposta sem resposta (OX). Nada é enviado, publicado ou alterado sem o clique do criador; nada de desconto, urgência, escassez ou número que o criador não publicou. Na semana seguinte, mostre o resultado de cada ação aprovada (somente agregados da própria loja, sem rastrear abertura de e-mail) e ajuste as propostas. Custo: cada semana tem um teto de custo de IA calculado no pior caso e reservado antes de cada chamada; acabado o teto, as ações restantes saem sem IA, só com regras fixas. Antes de construir, faça o estudo de preço em docs/sales-agent-pricing.md, com fontes oficiais datadas (Stanley da Stan, Kajabi Cofounder, Shopify Sidekick, assistente da loja do Marktmorgen), e calcule o preço de maior lucro que deixa o complemento sem prejuízo no pior caso; registre a recomendação em "Depende do dono". Seguir AX274 e a regra VR.
+
+504 [AG2] Qualidade e saúde de todos os agentes.
+Estado inicial: na fila.
+Para cada agente de IA do Marktmorgen (os do código e os que forem construídos):
+1. Uma suíte de testes sintéticos própria, com casos reais de uso, de recusa e de tentativa de manipulação, que roda em toda alteração e falha se a qualidade cair.
+2. Checagem automática de dados velhos: se o agente estiver usando dados mais antigos do que o limite definido para ele, ele para sozinho e o criador vê o aviso em linguagem simples, sem precisar de painel.
+3. Medição, só agregada e sem dados pessoais, de quantos rascunhos o criador aceita sem mudar, quantos edita e quantos recusa, por agente.
+4. Pausa automática quando um agente falhar repetidamente ou passar do seu teto de custo, com a função voltando à versão sem IA.
+Registre em docs/agents-quality.md o inventário de agentes, o que cada um faz, o teto de custo, o limite de dados velhos e os resultados dos testes. Nenhum agente pode ser anunciado como "the best" em público sem prova conforme AX274 (item 7) e a regra VR (item 7).
+
+Regra de margem: cada item segue a REGRA DE MARGEM vigente (MR, 27/10/2026, 07h42): nenhum cliente pagante dá prejuízo, usando 100% de todos os direitos do plano e de cada complemento no pior mês, no mensal e no anual, com teto automático e reserva antes de cada gasto; a empresa sem prejuízo a partir da base mínima; 60% é meta mensal real, não trava. Política tributária TX. Custo desconhecido reprova, nunca é zero; nenhuma cota grátis de fornecedor conta como zero; taxas de recebimento mais caras de lib/receiving-costs.ts; todos os custos fixos são 100% do Marktmorgen (FX275).
+
+Proibido: mudar preços, criar ou pôr à venda complemento sem aprovação do dono, cortar limites visíveis, retirar recursos ou direitos de qualquer plano, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; enviar, publicar ou alterar qualquer coisa sem o clique do criador; usar dados de uma loja para outra; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
