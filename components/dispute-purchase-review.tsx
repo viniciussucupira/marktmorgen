@@ -85,7 +85,7 @@ export function DisputePurchaseReviewPanel({ connected }: { connected: boolean }
           <input id="dispute-reference" name="dispute" required pattern="du_[A-Za-z0-9]{1,128}" maxLength={132} autoComplete="off" spellCheck={false} placeholder="du_…" className="input mt-2 w-full" aria-describedby="dispute-reference-hint" />
           <p id="dispute-reference-hint" className="mt-2 text-sm text-ink-soft">Copy the reference beginning with du_ from this store&apos;s Stripe account.</p>
         </div>
-        <button type="submit" className="btn btn-primary min-h-11">{loading ? "Reviewing purchase…" : "Review purchase record"}</button>
+        <button type="submit" className="btn btn-primary min-h-11 inline-flex items-center justify-center">{loading ? "Reviewing purchase…" : "Review purchase record"}</button>
       </fieldset>
     </form>
     {loading ? <p role="status">Reviewing this store&apos;s purchase record…</p> : null}
