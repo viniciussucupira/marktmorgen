@@ -11617,3 +11617,42 @@ Regra de margem: cada item segue a REGRA DE MARGEM vigente (MR, 27/10/2026, 07h4
 Proibido: mudar preços, cortar limites visíveis, retirar recursos ou direitos de qualquer plano, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; apagar páginas ou conteúdo (só mover); alterar o conteúdo do criador sem aprovação; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; mudar configuração real de fornecedor para medir; apagar qualquer coisa da Hazelsong; afirmar em público superioridade sobre a Stan sem a prova exigida em AX274 (item 7) e na regra VR (item 7). Somente testes sintéticos.
 
 Aplicar a regra VR.
+
+
+## OX — Propostas a marcas e empresas com alvo certo, lembrete e aprendizado (28/10/2026)
+
+Proveniência: pedido direto do dono nesta conversa,28/10/2026 00h55 Fortaleza. Registro único499[OX1],500[OX2],501[OX3], todos na fila após498[ME3]. Texto integral abaixo; somente títulos recebem números. Pedidos repetidos: main3f7edb1a4d9f303870e61f2580744f45d7675c04,15PRs abertos,696refs codex/*,100commits recentes,115heads distintos e115filas lidas sem indisponibilidade; nenhum pedido OX anterior encontrado pela data/hora,seção,etiquetas e conteúdo. Preservar482SB5,425BX1,355ES1,268KT2,AB(a),Outreach existente e a ordem/estado de todos os itens; antes de implementar, conferir código/fila/PRs novamente e fazer só a diferença.
+
+Fonte oficial conferida em28/10/2026: [OXYGEN](https://oxygen-agent.com/), página pública, trechos de exemplos de perfil ideal/pontuação com motivos, sequências interrompidas por resposta e aprendizado por campanha (linhas117–131,165–222,249–274). São descrições e exemplos do fornecedor, não ensaio independente ou prova de resultado. A autoria Tim Scheuer e a retenção com motivo não foram confirmadas nesses trechos; permanecem contexto atribuído ao pedido. Nenhuma adoção das bases de contatos ou do envio automático mostrados pelo concorrente. O pedido do dono exige exclusivamente site público da empresa, envio pelo próprio criador e controles por país/no solicitations intactos.
+
+VR: benefício solicitado é reduzir propostas sem afinidade, esquecimento e decisões sem dados; caminho de lucro esperado é retenção dentro dos tetos existentes, ainda sem resultado medido. Não há implementação ou teste funcional neste registro, custo novo aprovado, envio, conta, contrato ou alteração de trava. MR/TX/AX274/VR permanecem vinculantes. Abaixo de cinco propostas, ausência de dados não vira recomendação inventada.
+
+### Texto integral do dono (somente títulos numerados)
+
+OX — Propostas a marcas e empresas com alvo certo, lembrete e aprendizado (28/10/2026)
+
+Solicitação do dono (28/10/2026, 00h55, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: antes de gravar, aplique a regra permanente "Pedidos repetidos". Confira o main, os PRs abertos e os ramos codex/* recentes, e procure esta solicitação pela linha de data e hora, pelo nome da seção, pelas etiquetas [OX1] a [OX3] e pelo conteúdo. Se já estiver gravada, não crie nada novo. Grave depois de [ME3], na ordem de chegada, com os próximos números livres, sem alterar a ordem dos itens existentes.
+
+Contexto: inspiração no OXYGEN (oxygen-agent.com, de Tim Scheuer), plataforma de prospecção B2B por agentes de IA que pontua contas pelo perfil ideal, segura com motivo o que não está pronto, envia sequências e transforma resultados em próximos passos; confira com fontes oficiais datadas. O Marktmorgen já tem a área Outreach do estúdio (app/studio/outreach, lib/outreach.ts, lib/outreach-rules.ts): objetivos sponsor, partner e business; endereço lido só do site publicado pela empresa; países onde o primeiro e-mail B2B é permitido; respeito a avisos de "no solicitations"; rascunho aberto no e-mail do próprio criador, que envia ele mesmo; link para parar; situações draft, sent, replied, deal e stopped. Já existem ou estão na fila e NÃO devem ser refeitos: lib/outreach*.ts, 482 [SB5] proposta para marcas a partir do kit de mídia, 425 [BX1], 355 [ES1], 268 [KT2] e a pré-admissão AB(a) do pitch. Antes de cada item, confira de novo o código e a fila e faça só a diferença.
+
+499 [OX1] Alvo certo antes de escrever.
+Estado inicial: na fila.
+Antes de escrever a proposta, o criador define em no máximo 4 escolhas por botões quem é um bom alvo (por exemplo: assunto ou público parecido com o dele, faixa de preço, tamanho do negócio, país onde o primeiro e-mail é permitido pelas regras já existentes). Para cada empresa, mostre uma nota simples (forte, média, fraca) com os motivos tirados SOMENTE do que o próprio site da empresa diz, lido pelas regras já existentes. As fracas ficam em espera, com o motivo, e só seguem se o criador decidir. Nada de números inventados, nada de dado comprado. Custo dentro do orçamento de IA e das leituras do plano, com reserva antes; sem IA quando regras fixas bastarem.
+
+500 [OX2] Um lembrete educado, no máximo.
+Estado inicial: na fila.
+Se uma proposta continuar na situação "sent", sem "replied", "deal" ou "stopped", depois do número de dias que o criador escolher (padrão 7), mostre no estúdio um único rascunho de lembrete curto e educado, aberto no e-mail do próprio criador, que envia ele mesmo. No máximo um lembrete por proposta. Um pedido de parar, um aviso de "no solicitations" ou a situação "stopped" encerram tudo na hora. Nada é enviado pelo Marktmorgen. Siga as mesmas regras de lei por país já existentes.
+
+501 [OX3] Aprender com os próprios resultados.
+Estado inicial: na fila.
+Na área Outreach, um resumo com os dados do próprio criador: por objetivo (sponsor, partner, business) e por tipo de alvo, quantas propostas foram enviadas, respondidas e fechadas, e a próxima ação sugerida em linguagem simples (por exemplo, "Sponsors in your topic reply more often; write to two more this week"). Só agregados do próprio criador; nunca de outros criadores; nunca rastreamento de abertura de e-mail. Mostrar "not enough data yet" abaixo de 5 propostas.
+
+Regra de margem: cada item segue a REGRA DE MARGEM vigente (MR, 27/10/2026, 07h42): nenhum cliente pagante dá prejuízo, usando 100% de todos os direitos do plano e de cada complemento no pior mês, no mensal e no anual, com teto automático e reserva antes de cada gasto; a empresa sem prejuízo a partir da base mínima; 60% é meta mensal real, não trava. Política tributária TX. Custo desconhecido reprova, nunca é zero; nenhuma cota grátis de fornecedor conta como zero; taxas de recebimento mais caras de lib/receiving-costs.ts; todos os custos fixos são 100% do Marktmorgen (FX275).
+
+Proibido: mudar preços, cortar limites visíveis, retirar recursos ou direitos de qualquer plano, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar as regras de lei por país ou de "no solicitations" do Outreach; enviar qualquer e-mail pelo Marktmorgen; comprar ou raspar listas de contatos; escrever a pessoas físicas; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
