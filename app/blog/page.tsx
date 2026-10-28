@@ -24,6 +24,8 @@ export const metadata: Metadata = {
 
 export default function BlogIndexPage() {
   const featured = featuredPost();
+  const posts = postsSorted();
+  const latest = posts[0];
 
   return (
     <div className="flex min-h-screen flex-col bg-paper text-ink">
@@ -42,9 +44,9 @@ export default function BlogIndexPage() {
               what each platform really costs you on a sale.
             </p>
             <p className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-ink-mute">
-              <span>{`${postsSorted().length} articles`}</span>
+              <span>{`${posts.length} articles`}</span>
               <span aria-hidden="true">·</span>
-              <span>{`Written by us, latest ${formatPostDate(featured.date)}`}</span>
+              <span>{latest ? `Written by us, latest ${formatPostDate(latest.date)}` : "Written by us"}</span>
               <span aria-hidden="true">·</span>
               <span>Facts about other companies carry their source</span>
             </p>
@@ -106,7 +108,7 @@ export default function BlogIndexPage() {
             Pick a subject or search for a word. Every article is written by us and says where its facts about other companies come from.
           </p>
           <div className="mt-8">
-            <BlogBrowser posts={postsSorted()} categories={[...BLOG_CATEGORIES]} />
+            <BlogBrowser posts={posts} categories={[...BLOG_CATEGORIES]} />
           </div>
         </section>
 
