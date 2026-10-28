@@ -17,7 +17,14 @@ export async function checkCrmFeature({browser,LOCAL,axeSource,is}){
    for(const link of await page.locator('main a[href="/proof/highlevel"],main a[href="/pricing"]').all()){await link.focus();is("CRM related link focus "+width,await link.evaluate(node=>node===document.activeElement),true);}
    is("CRM reading makes no API write "+width,writes,0);
    await page.goto(LOCAL+"/",{waitUntil:"domcontentloaded",timeout:60000});
-   is("home links the actual CRM page "+width,await page.locator('[aria-labelledby="home-modules-heading"] a[href="/platform/crm"]').count(),1);
+   const discovery=page.locator('[aria-labelledby="home-modules-heading"] a[href="/platform#home-modules-heading"]');
+   is("ME3 home keeps feature discovery for CRM "+width,await discovery.count(),1);
+   await Promise.all([page.waitForURL(LOCAL+"/platform#home-modules-heading"),discovery.click()]);
+   const crm=page.locator('[aria-labelledby="home-modules-heading"] a[href="/platform/crm"]');
+   is("ME3 relocated tools link actual CRM page "+width,await crm.count(),1);
+   await Promise.all([page.waitForURL(LOCAL+"/platform/crm"),crm.click()]);
+   is("ME3 home discovery reaches actual CRM heading "+width,(await page.locator("main h1").innerText()).replace(/\s+/g," ").trim(),"People, deals and pipelines");
+   is("ME3 CRM discovery makes no API write "+width,writes,0);
   }finally{await context.close();}
  }
 }
