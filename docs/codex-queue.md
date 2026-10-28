@@ -12162,3 +12162,8 @@ PR #1166, head reprovado efb9e7807b1de542182203af812ff7b7e594b299: os jobs verif
 ### Correção candidata da prontidão do editor de ordem — 2026-10-28T18:36:01.147Z
 
 PR #1166, heade278ea512f95826b1c40fcc106598929e8c451dd: WebKit123011393163 expirou em order-acknowledgment.mjs:33 aguardando a ordem do rascunho após o primeiro clique; identificadores iniciais corretos. Causa única não comprovada. Revisão do código identifica botões SSR habilitados antes da conexão de ações. Agora controles e handlers recusam ativação até useEffect confirmar prontidão; teste exige essa prontidão e botão habilitado antes do mesmo clique e preserva todas as 24 mutações sintéticas e assertivas de confirmação/retenção. Nenhum retry, sample discard, prazo ampliado ou teste removido. Correção candidata sujeita à suíte completa no novo head; não afirmar falha reproduzida/resolvida até os resultados. Sem custo novo contratado; CI não medido não é zero; AV preservada.
+
+
+### Correção da implementação de prontidão — 2026-10-28T18:40:17.206Z
+
+Verify123023257201 reprovou head8cacf9d5f32bc5fbcdb270e818d43f76766fc8f8 na regra de setState síncrono em efeito. Substituído o efeito por useSyncExternalStore com assinatura estável sem eventos, snapshot servidor false e cliente true. Controles continuam recusados no servidor/antes da hidratação; nenhuma regra de lint desativada. Mesmos testes de prontidão, movimento e24 respostas sintéticas preservados; suíte completa obrigatória no novo head. Sem publicação ou custo contratado; CI não medido não é zero.

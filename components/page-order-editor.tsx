@@ -1,9 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "@/components/toast";
 import { PAGE_PARTS, type PagePart, USUAL_ORDER, isUsualOrder } from "@/lib/store-order";
+
+const subscribeReady = () => () => {};
+const clientReady = () => true;
+const serverReady = () => false;
 
 const LABELS = new Map<string, { label: string; note: string }>(PAGE_PARTS.map((part) => [part.id, part]));
 
@@ -15,8 +19,7 @@ const LABELS = new Map<string, { label: string; note: string }>(PAGE_PARTS.map((
  */
 export function PageOrderEditor({ order, on }: { order: PagePart[]; on: Record<PagePart, boolean> }) {
   const router = useRouter();
-  const [ready, setReady] = useState(false);
-  useEffect(() => { setReady(true); }, []);
+  const ready = useSyncExternalStore(subscribeReady, clientReady, serverReady);
   const [list, setList] = useState<PagePart[]>(order);
   const [saved, setSaved] = useState<PagePart[]>(order);
   const [saving, setSaving] = useState(false);
