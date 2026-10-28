@@ -13,13 +13,13 @@ const DESCRIPTION =
 
 export async function generateMetadata(): Promise<Metadata> {
   await connection();
-  const rows = await readDirectory().catch(() => []);
+  const rows = await readDirectory().catch(() => null);
   return {
     title: TITLE,
     description: DESCRIPTION,
     alternates: { canonical: "/affiliate-programs" },
     // Asked to be found only once there is a catalogue to find (lib/directory-index.ts, INDEX_DIRECTORY_AT).
-    robots: rows.length >= INDEX_DIRECTORY_AT ? { index: true, follow: true } : { index: false, follow: true },
+    robots: rows !== null && rows.length >= INDEX_DIRECTORY_AT ? { index: true, follow: true } : { index: false, follow: true },
   };
 }
 
@@ -40,7 +40,7 @@ const HONEST = [
 
 export default async function AffiliateProgramsPage() {
   await connection();
-  const rows = await readDirectory().catch(() => []);
+  const rows = await readDirectory().catch(() => null);
   return (
     <div className="flex min-h-screen flex-col bg-paper text-ink">
       <SiteNav />
@@ -64,7 +64,9 @@ export default async function AffiliateProgramsPage() {
               .
             </p>
             <p className="mt-6 text-sm text-white/70" data-count>
-              {rows.length === 0
+              {rows === null
+                ? "The program list could not be checked just now."
+                : rows.length === 0
                 ? "No program is listed yet."
                 : `${rows.length} ${rows.length === 1 ? "program" : "programs"} listed.`}
             </p>
@@ -72,7 +74,15 @@ export default async function AffiliateProgramsPage() {
         </section>
 
         <section className="container-page py-10 sm:py-14">
-          {rows.length ? (
+          {rows === null ? (
+            <div role="status" className="card mx-auto max-w-2xl p-6 text-center sm:p-8">
+              <h2 className="text-lg font-semibold text-ink">The program list is unavailable just now</h2>
+              <p className="mt-2 text-ink-soft">We could not check the list. This does not mean there are no programs. Try again in a moment.</p>
+              <form action="/affiliate-programs" method="get" className="mt-5">
+                <button type="submit" className="btn btn-primary">Try again</button>
+              </form>
+            </div>
+          ) : rows.length ? (
             <AffiliateDirectory rows={rows} />
           ) : (
             <div className="card mx-auto max-w-2xl p-6 text-center sm:p-8">
