@@ -1,9 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "@/components/toast";
 import { PAGE_PARTS, type PagePart, USUAL_ORDER, isUsualOrder } from "@/lib/store-order";
+
+const subscribeReady = () => () => {};
+const clientReady = () => true;
+const serverReady = () => false;
 
 const LABELS = new Map<string, { label: string; note: string }>(PAGE_PARTS.map((part) => [part.id, part]));
 
@@ -15,6 +19,7 @@ const LABELS = new Map<string, { label: string; note: string }>(PAGE_PARTS.map((
  */
 export function PageOrderEditor({ order, on }: { order: PagePart[]; on: Record<PagePart, boolean> }) {
   const router = useRouter();
+  const ready = useSyncExternalStore(subscribeReady, clientReady, serverReady);
   const [list, setList] = useState<PagePart[]>(order);
   const [saved, setSaved] = useState<PagePart[]>(order);
   const [saving, setSaving] = useState(false);
@@ -22,7 +27,7 @@ export function PageOrderEditor({ order, on }: { order: PagePart[]; on: Record<P
   const changed = list.some((part, i) => part !== saved[i]);
 
   function move(at: number, by: -1 | 1) {
-    if (saving) return;
+    if (!ready || saving) return;
     const to = at + by;
     if (to < 0 || to >= list.length) return;
     const next = [...list];
@@ -31,7 +36,7 @@ export function PageOrderEditor({ order, on }: { order: PagePart[]; on: Record<P
   }
 
   async function save(next: PagePart[]) {
-    if (saving) return;
+    if (!ready || saving) return;
     setSaving(true);
     setError("");
     try {
@@ -58,7 +63,7 @@ export function PageOrderEditor({ order, on }: { order: PagePart[]; on: Record<P
   }
 
   return (
-    <section aria-busy={saving} id="order" aria-labelledby="order-title" className="card mt-8 scroll-mt-32 p-6 sm:p-8">
+    <section data-order-ready={ready ? "true" : "false"} aria-busy={saving} id="order" aria-labelledby="order-title" className="card mt-8 scroll-mt-32 p-6 sm:p-8">
       <h2 id="order-title" className="text-lg font-semibold tracking-[-0.02em] text-ink">
         The order of your page
       </h2>
@@ -86,7 +91,7 @@ export function PageOrderEditor({ order, on }: { order: PagePart[]; on: Record<P
                 <button
                   type="button"
                   onClick={() => move(i, -1)}
-                  disabled={i === 0 || saving}
+                  disabled={!ready || i === 0 || saving}
                   aria-label={`Move ${about?.label} up`}
                   className="btn btn-secondary btn-sm px-2.5 disabled:opacity-40"
                 >
@@ -95,7 +100,7 @@ export function PageOrderEditor({ order, on }: { order: PagePart[]; on: Record<P
                 <button
                   type="button"
                   onClick={() => move(i, 1)}
-                  disabled={i === list.length - 1 || saving}
+                  disabled={!ready || i === list.length - 1 || saving}
                   aria-label={`Move ${about?.label} down`}
                   className="btn btn-secondary btn-sm px-2.5 disabled:opacity-40"
                 >
@@ -117,7 +122,7 @@ export function PageOrderEditor({ order, on }: { order: PagePart[]; on: Record<P
         <button
           type="button"
           onClick={() => void save(list)}
-          disabled={!changed || saving}
+          disabled={!ready || !changed || saving}
           aria-busy={saving}
           className="btn btn-primary"
         >
@@ -127,7 +132,7 @@ export function PageOrderEditor({ order, on }: { order: PagePart[]; on: Record<P
           <button
             type="button"
             onClick={() => void save([...USUAL_ORDER])}
-            disabled={saving}
+            disabled={!ready || saving}
             className="btn btn-secondary"
           >
             Back to the usual order

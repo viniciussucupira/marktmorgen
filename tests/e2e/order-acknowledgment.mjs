@@ -28,6 +28,8 @@ export async function checkOrderAcknowledgment({browser,LOCAL,fixture,is}){
    await page.locator("main details").evaluateAll(nodes=>nodes.forEach(n=>{n.open=true;}));
    const section=page.locator("#order");await section.waitFor();
    const order=()=>section.locator("[data-order-part]").evaluateAll(nodes=>nodes.map(n=>n.getAttribute("data-order-part")));
+   await page.waitForFunction(()=>document.querySelector("#order")?.getAttribute("data-order-ready")==="true");
+   is("order controls ready before activation "+width,await section.getByRole("button",{name:"Move What you sell down",exact:true}).isEnabled(),true);
    is("order starts with existing identifiers "+width,await order(),usual);
    await section.getByRole("button",{name:"Move What you sell down",exact:true}).click();
    await page.waitForFunction(expected=>JSON.stringify([...document.querySelectorAll("#order [data-order-part]")].map(node=>node.getAttribute("data-order-part")))===JSON.stringify(expected),moved);
