@@ -61,4 +61,4 @@ export function testAliases(file,root,here){
  if(file==='buyer-actions.test.ts')aliases['@/lib/blob']=join(here,'buyer-actions-blob.ts');
  return aliases;
 }
-export function testEnvironment(env){return{...env,NIMBUS_DATA_KEY:env.NIMBUS_DATA_KEY??'tests-only-not-a-real-deployment-secret'};}
+export function testEnvironment(env){return{...env,DEMO_STUDIO_ADMIN:'operator@example.test',NIMBUS_DATA_KEY:env.NIMBUS_DATA_KEY??'tests-only-not-a-real-deployment-secret'};}
