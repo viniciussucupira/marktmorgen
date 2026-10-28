@@ -1,5 +1,4 @@
 import { TrustChecks } from "@/components/trust-checks";
-import { StudioScreens } from "@/components/studio-screens";
 import { CreatorShowcase, PlatformProof } from "@/components/creator-showcase";
 import { PricingValue } from "@/components/pricing-value";
 import type { Metadata } from "next";
@@ -332,14 +331,18 @@ export default function Home() {
         <HomeActions place="situations"/>
 
         {/* ------------------------------------------------ the buyer's path */}
-        <Suspense fallback={null}><StudioScreens /></Suspense>
+        <section aria-labelledby="studio-screens-title" data-home-studio-summary className="container-page py-12">
+          <h2 id="studio-screens-title" className="t-h2">See the work before you start</h2>
+          <p className="mt-4 max-w-3xl text-ink-soft">Two actual screens from isolated fictional fixtures show the guided setup and product-page editor. View the examples and their explanations on the feature page.</p>
+          <Link href="/platform#studio-screens-title" prefetch={false} className="link mt-4 inline-flex min-h-11 items-center">See the studio and product editor examples</Link>
+        </section>
         <Suspense fallback={null}><BuyerPath /></Suspense>
 
         <section className="section" aria-labelledby="home-modules-heading">
           <div className="container-page">
             <h2 id="home-modules-heading" className="t-h2 balance">Everything in one place</h2>
             <p className="mt-5 max-w-3xl text-ink-soft">Explore the tools, their limits and the cost calculator on the feature page.</p>
-            <a href="/platform#home-modules-heading" className="link mt-4 inline-flex min-h-11 items-center">Explore all 14 tools and their conditions</a>
+            <Link href="/platform#home-modules-heading" prefetch={false} className="link mt-4 inline-flex min-h-11 items-center">Explore all 14 tools and their conditions</Link>
           </div>
         </section>
 
@@ -366,7 +369,7 @@ export default function Home() {
                 <Link href={reason.href} prefetch={false} className="link mt-4 inline-flex min-h-11 items-center">{reason.link}</Link>
               </li>)}
             </ul>
-            <a href="/platform#home-reasons-heading" className="link mt-6 inline-flex min-h-11 items-center">Read the details, examples and current limitations</a>
+            <Link href="/platform#home-reasons-heading" prefetch={false} className="link mt-6 inline-flex min-h-11 items-center">Read the details, examples and current limitations</Link>
           </div>
         </section>
 

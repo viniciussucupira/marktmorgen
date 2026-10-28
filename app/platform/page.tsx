@@ -1,3 +1,4 @@
+import { StudioScreens } from "@/components/studio-screens";
 import { HomeReasonsDetail } from "@/components/home-reasons-detail";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -61,6 +62,7 @@ export default function PlatformIndex() {
         </section>
 
         <HomeReasonsDetail />
+        <StudioScreens />
 
         <div className="container-page space-y-16 py-14 sm:py-18">
         <section className="section" aria-labelledby="home-modules-heading">

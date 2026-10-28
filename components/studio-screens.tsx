@@ -6,7 +6,7 @@ const SHOTS=[
 ] as const;
 export function StudioScreens(){
  return <section aria-labelledby="studio-screens-title" className="container-page py-16 sm:py-24" data-studio-screens>
- <p className="eyebrow">Inside Marktmorgen</p><h2 id="studio-screens-title" className="t-h2 mt-3 balance">See the work before you start</h2>
+ <p className="eyebrow">Inside Marktmorgen</p><h2 id="studio-screens-title" tabIndex={-1} className="t-h2 mt-3 balance scroll-mt-24">See the work before you start</h2>
  <p className="mt-5 max-w-3xl text-ink-soft">Actual screens from the application, captured on October 20, 2026 with isolated fictional test content. No customer identity, testimonial or result is shown.</p>
  <div className="mt-10 grid gap-8 lg:grid-cols-2">{SHOTS.map(shot=><article key={shot.id} className="min-w-0 rounded-3xl border border-line bg-white p-5 sm:p-6">
  <h3 className="text-xl font-semibold">{shot.title}</h3><p className="mt-3 text-ink-soft">{shot.body}</p>
