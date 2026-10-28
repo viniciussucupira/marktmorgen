@@ -303,6 +303,29 @@ REGRA DOS 60%: todo cliente pagante, isoladamente e usando 100% dos direitos do 
 Proibido: mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, o tax gate, o art. 9a ou a revisão comercial, afrouxar qualquer trava para que algo pareça pronto, apagar conteúdo de criadores, apagar qualquer coisa da Hazelsong, criar contas, aceitar termos, contratar, pagar ou contatar terceiros. Somente testes sintéticos.
 
 
+## SR5 — Resposta completa relatada substitui aplicação anterior (28 de outubro de 2026)
+
+Solicitação do dono (28/10/2026, 00h23, horário de Fortaleza),494[SR5]. Proveniência: relato colado pelo dono no anexo2b120aa9-bae7-4ac1-8ef0-519cec32e97d/Texto colado.txt, atribuído aGabriel/equipe especializada doStripe e, segundo ele, conferido com orientações internas/disponibilidade por país. **E-mail original não verificado de forma independente; conta não acessada.** O material recebido é o resumo completo do dono, não o e-mail original nem certificação independente.
+
+O dono determinou que esta resposta posterior, completa e sem contradição substitui a aplicação menos favorável dos quatro pontos de467[SR1]. A regra geral para futuras respostas contraditórias continua; as tabelas/respostas anteriores ficam **histórico**, sem prevalecer nos pontos substituídos aqui. As datas e correções de respostas antigas são as relatadas pelo dono.
+
+| Ponto | Aplicação vigente — relato completo recebido em28/10/2026 00h23Fortaleza |
+| --- | --- |
+| Plataforma brasileira acct_1UG8u59LFSmgUKIK | **Sim:** conecta criadores nosEUA,Canadá,ReinoUnido eEEE,excetoIslândia, com **cobranças diretas sem taxa de aplicação**. Fora doBrasil não há application fees,destination charges nem separate charges and transfers; cobrar somente assinatura não precisa desses mecanismos. A resposta relatada de vendas19/10corrige suporte09/10 neste ponto. |
+| LLC de sócio único deDelaware eITIN | **ITIN não obrigatório**, segundo a resposta relatada: criação com empresa/EIN; ativação comEIN,documento nãoamericano(passaporte preferido) eCPF; primeiro saque com conta bancária nosEUA,semITIN. Conta analisada individualmente,podem ser pedidos outros documentos; se cadastro pedirSSN/ITIN,o dono deve guardar a mensagem exata. Suporte11/10correto; vendas19/10não corresponde às orientações de verificação relatadas. |
+| Representante legal | **Pode ser o próprio dono morando noBrasil**, sem residência nosEUA,SSN ouITIN; passaporte brasileiro,CPF e dados doEIN,com possíveis pedidos adicionais de documentos. |
+| Endereço nosEUA | **Endereço comercial real, nunca caixa postal.** Registered agent não recomendado; escritório virtual não tem aceitação garantida de antemão; falha automática pode exigir revisão manual. Não presume endereço aceito. |
+
+**Não é aprovação de conta.** Pontos2e3 são resultados esperados, não aprovações; documentos adicionais/revisão individual continuam possíveis. Não confundir representante legal com endereço comercial/registeredagent ou representantesGDPR/DSA.
+
+**468[SR2] continua integralmente até decisão do dono em495[SR6].** Não alterar PLANS_ON_SALE,OPENING_REQUESTED,stripePlatformEligibilityReady,taxgate,art9a,revisão comercial ou demais travas. Nenhuma conta/empresa/EIN/ITIN/aceite/contrato/pagamento/contatoStripeouterceiro. Não abrir vendas por causa da tabela. Nenhum código de imposto, preço, limite, comissão, permissão, conteúdo, idioma ou identificador alterado.
+
+495[SR6] permanece somente estudo dos caminhosBRCPF eLLC, com fontes oficiais datadas/TX,mesmas premissas/preços,meses1/6/12/24/48,base mínima/prazo/riscos e impostos sobreconsumo nosdoiscaminhos. Recomendação única futura emDependedodono; não decidir rota nem alterar termos/conta/leitura tributária no código. As pesquisas/roteirosSR3/SR4 devem considerar esta resposta nova sem apagar seu histórico; não imporITIN ou representante residente como necessidade confirmada nem fingir preço zero de custo desconhecido. MR/TX/100%custosFX275/reservas continuam.
+
+VR: aplicação documental concreta dos quatro pontos, sem recurso novo ao cliente, conta aprovada, pesquisa econômica concluída, abertura ou lucro certificado.0→0passos/decisões de interface; sem teste humano/AAA. Sem novoIOprodutivo/serviço/retenção; CI/tempo100%empresaFX275 desconhecidos,nãozero. Contador254,sem entrega255.
+
+### Histórico SR1–SR4 abaixo — quatro aplicações anteriores substituídas porSR5
+
 ## SR — Stripe: resposta menos favorável e requisitos da empresa (27 de outubro de 2026)
 
 Solicitação do dono (27/10/2026, 08h00, horário de Fortaleza).467[SR1]. Regra vigente desde a solicitação: **quando respostas do Stripe se contradisserem, vale a resposta menos favorável ao dono, até que resposta posterior, completa e sem contradição, a substitua**.
