@@ -78,7 +78,7 @@ export default async function AffiliateProgramsPage() {
             <div role="status" className="card mx-auto max-w-2xl p-6 text-center sm:p-8">
               <h2 className="text-lg font-semibold text-ink">The program list is unavailable just now</h2>
               <p className="mt-2 text-ink-soft">We could not check the list. This does not mean there are no programs. Try again in a moment.</p>
-              <Link href="/affiliate-programs" prefetch={false} className="btn btn-primary mt-5">Try again</Link>
+              <a href="/affiliate-programs" className="btn btn-primary mt-5">Try again</a>
             </div>
           ) : rows.length ? (
             <AffiliateDirectory rows={rows} />
