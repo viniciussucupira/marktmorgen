@@ -13,7 +13,6 @@ import { Icon, type IconName } from "@/components/icons";
 import { FeatureVisual, type VisualKey } from "@/components/feature-visuals";
 import { HeroFlow, Pricing } from "@/components/home-parts";
 import { Faq, SoldMarquee } from "@/components/home-static";
-import { HOME_MODULES } from "@/lib/home-modules";
 import { HomeData } from "@/components/structured-data";
 import { homeQuestions } from "@/lib/home-faq";
 import { paypalSalesConfigured } from "@/lib/paypal-sales";
@@ -380,25 +379,13 @@ export default function Home() {
         <Suspense fallback={null}><StudioScreens /></Suspense>
         <Suspense fallback={null}><BuyerPath /></Suspense>
 
-        <Suspense fallback={null}>
         <section className="section" aria-labelledby="home-modules-heading">
           <div className="container-page">
             <h2 id="home-modules-heading" className="t-h2 balance">Everything in one place</h2>
-            <p className="mt-5 max-w-3xl text-ink-soft">Choose the tools your work needs, with the limits and conditions shown before you commit. {PLANS_ON_SALE ? "The live demo shows the buyer experience." : "Paid selling remains closed; the live demo shows the buyer experience."}</p>
-            <ul className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {HOME_MODULES.map(capability=><li key={capability.name} className="rounded-2xl border border-line bg-white p-6">
-                <h3 className="text-xl font-semibold"><Link href={capability.href} prefetch={false} className="underline decoration-line underline-offset-4">{capability.name}</Link></h3>
-                <p className="mt-3 text-ink-soft">{capability.body}</p>
-              </li>)}
-            </ul>
-            <div className="mt-8 rounded-2xl bg-lilac p-6">
-              <h3 className="text-xl font-semibold">Compare your current tools and their costs</h3>
-              <p className="mt-3 text-ink-soft">Use published subscription prices, your sales volume and your applicable fee quotes. Unknown costs stay unconfirmed; the calculator makes no promise of earnings or identical features.</p>
-              <Link href="/pricing#calculator-heading" prefetch={false} className="link mt-4 inline-block">Open the browser-only cost calculator</Link>
-            </div>
+            <p className="mt-5 max-w-3xl text-ink-soft">Explore the tools, their limits and the cost calculator on the feature page.</p>
+            <Link href="/platform#home-modules-heading" prefetch={false} className="link mt-4 inline-flex min-h-11 items-center">Explore all 14 tools and their conditions</Link>
           </div>
         </section>
-        </Suspense>
 
         <HomeActions place="modules"/>
 

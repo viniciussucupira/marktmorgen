@@ -6,15 +6,21 @@ export async function checkHomeModules({browser,LOCAL,axeSource,is}){
    const page=await context.newPage();let writes=0;
    await page.route("**/api/**",async route=>{if(route.request().method()!=="GET"){writes++;await route.abort();}else await route.continue();});
    await page.goto(LOCAL+"/",{waitUntil:"domcontentloaded",timeout:60000});
+   const discovery=page.getByRole("region",{name:"Everything in one place",exact:true});
+   is("ME3 home module summary has no detailed cards "+width,await discovery.locator("li").count(),0);
+   const more=discovery.getByRole("link",{name:"Explore all 14 tools and their conditions",exact:true});
+   await more.focus();is("ME3 module discovery focus "+width,await more.evaluate(n=>n===document.activeElement),true);
+   is("ME3 module discovery destination "+width,await more.getAttribute("href"),"/platform#home-modules-heading");
+   await Promise.all([page.waitForURL(LOCAL+"/platform#home-modules-heading"),more.click()]);
    const section=page.getByRole("region",{name:"Everything in one place",exact:true});
    await section.scrollIntoViewIfNeeded();
-   is("home shows all14 factual modules "+width,await section.locator("li").count(),14);
+   is("ME3 existing feature page keeps all14 factual modules "+width,await section.locator("li").count(),14);
    const links=section.locator("li a");
    for(const link of await links.all()){await link.focus();is("module link focus "+width,await link.evaluate(node=>node===document.activeElement),true);}
-   is("home module section fits "+width,await section.evaluate(node=>node.scrollWidth<=node.clientWidth+1),true);
+   is("ME3 moved module section fits "+width,await section.evaluate(node=>node.scrollWidth<=node.clientWidth+1),true);
    await page.addScriptTag({content:axeSource});
    const audit=await section.evaluate(async node=>(await window.axe.run(node,{runOnly:{type:"tag",values:["wcag2a","wcag2aa","wcag21aa"]}})).violations.map(v=>v.id));
-   is("home module accessibility "+width,audit,[]);
+   is("ME3 moved module accessibility "+width,audit,[]);
    is("module calculator link "+width,await section.locator('a[href="/pricing#calculator-heading"]').count(),1);
    is("home module reading makes no API write "+width,writes,0);
   }finally{await context.close();}
