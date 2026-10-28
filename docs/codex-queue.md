@@ -12206,3 +12206,22 @@ A matriz real sintética continua com30casos e as mesmas auditorias, agora tamb�
 ### Correção de verificação DE1 — 2026-10-28T18:16:23.944Z
 
 PR #1169, head reprovado 1777750726e80d4cb0a917e76f39ee0a6bdbb697: os jobs verify/Firefox encontraram dois alertas ao usar getByRole('alert') na página inteira: o aviso da revisão e o anúncio de rota do Next. O teste agora busca o alerta dentro de main, preservando visibilidade, foco, limpeza do comprador anterior e privacidade; sem first(), remoção de assertivas, espera extra ou alteração do produto. Nova suíte completa exigida no novo head; nenhum resultado antigo aprova a correção. O teste móvel deste head também reprovou a primeira amostra fria da home: LCP=2500ms, limite estrito<2500; interação184ms e CLS0. As nove amostras ficam preservadas. Correção de payload do PR #1170 ainda sob verificação e não propagada como aprovada; falha móvel continua pendente. Sem nova operação externa ou custo contratado; CI não medido não é zero. AV vigente preservada: concluir PRs já abertos antes de 495[SR6].
+
+
+### Composição da prontidão aprovada do editor de ordem — 2026-10-28T19:10:49.663Z
+
+Incluída a correção de #1166 d51b508 aprovada31/31, com o mesmo movimento e24 respostas sintéticas confirmados em Chromium/Firefox/WebKit. Mantidos os registros retidos e testes de #1169 e a correção global #1170. Dois arquivos de ordem e histórico de falhas atualizados, sem mudar preços/limites/quotas/retensão/permissões; nenhuma repetição de pedido. Nova suíte completa obrigatória para a composição; sem publicação/contador e sem custo novo contratado; CI não medido não é zero.
+
+### Correção de verificação DE1 — 2026-10-28T18:16:18.054Z
+
+PR #1166, head reprovado efb9e7807b1de542182203af812ff7b7e594b299: os jobs verify/Firefox/WebKit encontraram dois alertas ao usar getByRole('alert') na página inteira: o aviso da revisão e o anúncio de rota do Next. O teste agora busca o alerta dentro de main, preservando visibilidade, foco, limpeza do comprador anterior e privacidade; sem first(), remoção de assertivas, espera extra ou alteração do produto. Nova suíte completa exigida no novo head; nenhum resultado antigo aprova a correção. Sem nova operação externa ou custo contratado; CI não medido não é zero. AV vigente preservada: concluir PRs já abertos antes de 495[SR6].
+
+
+### Correção candidata da prontidão do editor de ordem — 2026-10-28T18:36:01.147Z
+
+PR #1166, heade278ea512f95826b1c40fcc106598929e8c451dd: WebKit123011393163 expirou em order-acknowledgment.mjs:33 aguardando a ordem do rascunho após o primeiro clique; identificadores iniciais corretos. Causa única não comprovada. Revisão do código identifica botões SSR habilitados antes da conexão de ações. Agora controles e handlers recusam ativação até useEffect confirmar prontidão; teste exige essa prontidão e botão habilitado antes do mesmo clique e preserva todas as 24 mutações sintéticas e assertivas de confirmação/retenção. Nenhum retry, sample discard, prazo ampliado ou teste removido. Correção candidata sujeita à suíte completa no novo head; não afirmar falha reproduzida/resolvida até os resultados. Sem custo novo contratado; CI não medido não é zero; AV preservada.
+
+
+### Correção da implementação de prontidão — 2026-10-28T18:40:17.206Z
+
+Verify123023257201 reprovou head8cacf9d5f32bc5fbcdb270e818d43f76766fc8f8 na regra de setState síncrono em efeito. Substituído o efeito por useSyncExternalStore com assinatura estável sem eventos, snapshot servidor false e cliente true. Controles continuam recusados no servidor/antes da hidratação; nenhuma regra de lint desativada. Mesmos testes de prontidão, movimento e24 respostas sintéticas preservados; suíte completa obrigatória no novo head. Sem publicação ou custo contratado; CI não medido não é zero.
