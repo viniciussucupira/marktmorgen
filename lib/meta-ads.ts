@@ -42,6 +42,8 @@
  */
 import { createHash, createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
+import { storeForId } from "@/lib/store";
+import { reservePaidResourceWindow } from "@/lib/contract-resource-window";
 import { canSeal, seal, unseal } from "@/lib/secret-box";
 import { timed } from "@/lib/fetch-timeout";
 import type { AdSpend } from "@/lib/ad-spend-rules";
@@ -477,6 +479,11 @@ export async function readMetaSpend(statsId: string, storeCurrency: string, now 
   if (!c || c.broken || !c.account) return c?.broken ? "broken" : "none";
   const account = c.accounts.find((a) => a.id === c.account);
   if (!account) return "none";
+  // Resolve the connection's own current store, including calls made by the
+  // daily job or account picker, before a read lock or any provider request.
+  const store = await storeForId(c.sid);
+  if (!store || store.statsId !== statsId) return "none";
+  if (store.period?.funded === true && !(await reservePaidResourceWindow(store))) return "busy";
   const [got] = await redisPipeline([["SET", readingKey(statsId), "1", "NX", "EX", 90]]);
   if (got === null) return "busy";
   const window = readWindow(now);
