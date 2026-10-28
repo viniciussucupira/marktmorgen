@@ -26,7 +26,7 @@ export default async function StudioDisputesPage({ searchParams }: Params) {
       <main id="content" className="container-page pb-20 pt-10 sm:pt-14">
         <p className="eyebrow">Disputed purchases</p>
         <h1 className="t-h2 mt-3">Review one disputed purchase</h1>
-        <p className="mt-3 max-w-2xl text-ink-soft">Check a payment on this store's Stripe account before preparing your response. This page only reads the purchase record; it does not send evidence or promise a result.</p>
+        <p className="mt-3 max-w-2xl text-ink-soft">Check a payment on this store&apos;s Stripe account before preparing your response. This page only reads the purchase record; it does not send evidence or promise a result.</p>
         <DisputePurchaseReviewPanel connected={Boolean(store.stripeAccountId)} />
       </main>
     </StudioStorePin>

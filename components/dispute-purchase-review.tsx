@@ -76,19 +76,19 @@ export function DisputePurchaseReviewPanel({ connected }: { connected: boolean }
   const result = state.kind === "ready" ? state.result : null;
   return <div className="mt-8 max-w-3xl space-y-6">
     <p id="dispute-lookup-help" className="text-sm text-ink-soft">A lookup uses up to two calls from your existing connected-service allowance. Nothing is submitted to the bank from this page.</p>
-    {!connected ? <p className="notice">The store's owner needs to connect Stripe before a purchase record can be reviewed.</p> : null}
+    {!connected ? <p className="notice">The store&apos;s owner needs to connect Stripe before a purchase record can be reviewed.</p> : null}
     <form method="post" action={sid ? "/api/store/disputes?store=" + encodeURIComponent(sid) : "/api/store/disputes"} onSubmit={review} aria-busy={loading} aria-describedby="dispute-lookup-help">
       <noscript><p className="notice">JavaScript is needed to review this purchase here. Nothing is sent automatically.</p></noscript>
       <fieldset disabled={loading || !connected || !sid} className="space-y-4">
         <legend className="sr-only">Find one disputed purchase</legend>
         <div><label htmlFor="dispute-reference" className="block font-semibold">Stripe dispute reference</label>
           <input id="dispute-reference" name="dispute" required pattern="du_[A-Za-z0-9]{1,128}" maxLength={132} autoComplete="off" spellCheck={false} placeholder="du_…" className="input mt-2 w-full" aria-describedby="dispute-reference-hint" />
-          <p id="dispute-reference-hint" className="mt-2 text-sm text-ink-soft">Copy the reference beginning with du_ from this store's Stripe account.</p>
+          <p id="dispute-reference-hint" className="mt-2 text-sm text-ink-soft">Copy the reference beginning with du_ from this store&apos;s Stripe account.</p>
         </div>
         <button type="submit" className="btn btn-primary min-h-11">{loading ? "Reviewing purchase…" : "Review purchase record"}</button>
       </fieldset>
     </form>
-    {loading ? <p role="status">Reviewing this store's purchase record…</p> : null}
+    {loading ? <p role="status">Reviewing this store&apos;s purchase record…</p> : null}
     {state.kind === "error" ? <div ref={feedback} tabIndex={-1} role="alert" className="notice scroll-mt-24">{state.message}</div> : null}
     {result ? <div ref={feedback} tabIndex={-1} role="region" aria-labelledby="dispute-result-heading" className="card scroll-mt-24 space-y-5 p-6">
       <h2 id="dispute-result-heading" className="text-xl font-semibold">Purchase record</h2>
