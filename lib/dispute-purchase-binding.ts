@@ -18,7 +18,7 @@ function integer(value: unknown): value is number {
 export type StripePurchaseBinding = {
   account: string; dispute: string; purchase: string; charge: string; paymentIntent: string;
   buyerEmail: string; product: string; title: string | null;
-  paidAt: number; amount: number; disputedAmount: number; currency: string;
+  checkoutCreatedAt: number; chargeCreatedAt: number; amount: number; disputedAmount: number; currency: string;
 };
 /**
  * This initial adapter supports paid Checkout payments with an expanded charge.
@@ -52,7 +52,7 @@ export function bindStripeDisputePurchase(input: {
   if (!integer(session.amount_total) || !integer(charge.amount) || !integer(dispute.amount) ||
       session.amount_total <= 0 || charge.amount !== session.amount_total ||
       dispute.amount <= 0 || dispute.amount > charge.amount ||
-      !integer(session.created) ||
+      !integer(session.created) || !integer(charge.created) || charge.created < session.created ||
       typeof session.currency !== "string" || !/^[a-z]{3}$/.test(session.currency) ||
       charge.currency !== session.currency || dispute.currency !== session.currency) return null;
   const details = row(session.customer_details);
@@ -64,6 +64,6 @@ export function bindStripeDisputePurchase(input: {
     charge: chargeId, paymentIntent, buyerEmail: email,
     product: metadata.product,
     title: typeof metadata.title === "string" && metadata.title.length <= 480 ? metadata.title : null,
-    paidAt: session.created, amount: charge.amount, disputedAmount: dispute.amount, currency: session.currency,
+    checkoutCreatedAt: session.created, chargeCreatedAt: charge.created, amount: charge.amount, disputedAmount: dispute.amount, currency: session.currency,
   };
 }

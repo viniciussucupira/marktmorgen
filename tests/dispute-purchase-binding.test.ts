@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { bindStripeDisputePurchase } from "@/lib/dispute-purchase-binding";
 function fixture() {
-  const charge = { object: "charge", id: "ch_fixture", paid: true, payment_intent: "pi_fixture", amount: 1000, currency: "usd" };
+  const charge = { object: "charge", id: "ch_fixture", paid: true, created: 200, payment_intent: "pi_fixture", amount: 1000, currency: "usd" };
   const session = {
     object: "checkout.session", id: "cs_fixture", mode: "payment", status: "complete", payment_status: "paid",
     metadata: { store: "old-handle", product: "a".repeat(32), title: "Original synthetic title" },
@@ -20,6 +20,9 @@ test("binds partial dispute to original account, payment, buyer and recorded tit
   assert.equal(bound.buyerEmail, "buyer@example.test");
   assert.equal(bound.title, "Original synthetic title");
   assert.equal(bound.purchase, "cs_fixture");
+  assert.equal(bound.checkoutCreatedAt, 100);
+  assert.equal(bound.chargeCreatedAt, 200);
+  assert.equal("paidAt" in bound, false);
   assert.equal("submitted" in bound, false);
 });
 test("renames work only through server-resolved sale handles", () => {
@@ -40,7 +43,7 @@ test("different charge or intent cannot borrow another purchase's receipt", () =
 test("unpaid, nonpayment and malformed records never become paid proof", () => {
   for (const patch of [
     { mode: "subscription" }, { payment_status: "unpaid" }, { status: "open" },
-    { object: "other" }, { created: NaN }, { amount_total: 999 }, { currency: "eur" },
+    { object: "other" }, { created: NaN }, { created: 201 }, { amount_total: 999 }, { currency: "eur" },
   ]) {
     const input = fixture();
     Object.assign(input.session, patch);
