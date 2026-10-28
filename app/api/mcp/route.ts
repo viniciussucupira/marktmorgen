@@ -155,8 +155,8 @@ export async function POST(request: Request) {
       get_buyers: (data) => buyersTool(data, days),
       get_worth_knowing: (data) => insightsTool(data, days),
     };
-    const tool = typeof params.name === "string" ? windowed[params.name] : undefined;
-    if (tool) {
+    const tool = typeof params.name === "string" && Object.hasOwn(windowed, params.name) ? windowed[params.name] : undefined;
+    if (typeof tool === "function") {
       const data = await readFullNumbers(store);
       return result(id, data ? said(await tool(data)) : said({ error: "Your numbers could not be read just now. Try again in a moment." }, true));
     }
