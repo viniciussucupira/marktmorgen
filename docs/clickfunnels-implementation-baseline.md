@@ -1,6 +1,6 @@
 # ClickFunnels research and Marktmorgen implementation baseline
 
-Reviewed: **2026-10-17 UTC**. Production/code snapshot: **3cb51cc07ad5cb33606c112fb715731cc089e416**, confirmed READY for marktmorgen.com in project prj_DiVxPAugJjlCmZs9x6406vgvpAa3. This is an internal product/engineering baseline, not a public superiority claim or a completed authenticated usability study.
+Reviewed: **2026-10-17 UTC**. Production/code snapshot: **3cb51cc07ad5cb33606c112fb715731cc089e416**, confirmed READY for marktmorgen.com in project the Marktmorgen production project. This is an internal product/engineering baseline, not a public superiority claim or a completed authenticated usability study.
 
 ## 1. Delivery order and evidence
 
