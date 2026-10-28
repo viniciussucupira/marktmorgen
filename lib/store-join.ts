@@ -81,7 +81,9 @@ export async function askToJoin(input: { store: Store; email: string; clicks?: b
 
   const token = randomBytes(24).toString("hex");
   const grant: Grant = { s: store.statsId, h: store.handle, e: email, at: new Date().toISOString(), ...(input.clicks ? { k: true } : {}), ...(input.formId && /^[a-z0-9]{10}$/.test(input.formId) ? { f: input.formId, ...(input.formOutcome && /^[a-z0-9]{6}$/.test(input.formOutcome) ? { r: input.formOutcome } : {}) } : {}), ...(input.site && /^https:\/\/[^/\s]{1,300}$/.test(input.site) ? { w: input.site } : {}), ...(input.lead && /^[0-9a-f]{12}$/.test(input.lead) ? { a: input.lead } : {}) };
-  await redisPipeline([["SET", tokenKey(token), JSON.stringify(grant), "EX", JOIN_SECONDS], ...noteForErasure(store.statsId, grant.e, tokenKey(token))]);
+  const [saved] = await redisPipeline([["SET", tokenKey(token), JSON.stringify(grant), "EX", JOIN_SECONDS], ...noteForErasure(store.statsId, grant.e, tokenKey(token))]);
+  // Never spend an email on a confirmation link whose grant was not saved.
+  if (saved !== "OK") return "error";
 
   const w = joinWords(store.language);
   const sent = await sendEmail({ meter: { by: "store", store: store, kind: "transactional", asked: true },

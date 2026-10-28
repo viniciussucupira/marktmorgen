@@ -81,6 +81,29 @@ async function main(): Promise<void> {
   for (let i = 0; i < 6; i++) results.push(await askToJoin({ store, email: "fay@example.com", ip: `2.2.2.${i}`, origin }));
   is("five an hour for one inbox, from anywhere", results, ["sent", "sent", "sent", "sent", "sent", "limited"]);
 
+  part("A confirmation is sent only after its token is saved");
+  const run = redis.run.bind(redis);
+  try {
+    for (const [index, acknowledgment] of [undefined, null, false, 0, "", "ok"].entries()) {
+      let refusedKey = "";
+      redis.run = (command) => {
+        if (command[0] === "SET" && String(command[1]).startsWith("nl:join:t:")) {
+          refusedKey = String(command[1]);
+          return acknowledgment;
+        }
+        return run(command);
+      };
+      const before = single.length;
+      is("an unconfirmed token write reports an error", await askToJoin({ store, email: `unsaved${index}@example.com`, ip: `3.3.3.${index}`, origin }), "error");
+      is("no unusable confirmation email is sent", single.length, before);
+      is("the missing grant was actually exercised", [Boolean(refusedKey), run(["GET", refusedKey])], [true, null]);
+    }
+  } finally {
+    redis.run = run;
+  }
+  is("a later confirmed write still sends its confirmation", await askToJoin({ store, email: "saved-again@example.com", ip: "3.3.4.1", origin }), "sent");
+  is("that confirmation has a readable grant", (await readJoinToken(tokenIn(single.at(-1)!.text)))?.e, "saved-again@example.com");
+
   part("Settings kept safe");
   is("anything else is off with no words", parseJoin({ on: "yes", heading: 5 }), { on: false, heading: "", line: "" });
   is("long words are cut to size", [parseJoin({ heading: "x".repeat(99) }).heading.length, parseJoin({ line: "y".repeat(999) }).line.length], [60, 200]);
