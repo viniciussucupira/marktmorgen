@@ -1,5 +1,5 @@
 import {publicStandardAx2Run} from "./ax2-public-run.mjs";
-import {setProductShipping,setPixels} from "@/lib/store";
+import {setAnswers,setProductShipping,setPixels} from "@/lib/store";
 import {TIERS,publishedPriceWords} from "@/lib/plan";
 import type { CallSetup } from "@/lib/call-setup";
 import { setProductCall } from "@/lib/store";
@@ -114,6 +114,20 @@ async function main(): Promise<void> {
     if(!saved?.period || saved.pause!==initial || !saved.catalog.items.some(item=>(item.kind & KIND.recurring)!==0))throw Error("Incomplete local pause fixture");
     pauseFixtures.push({session:await openSession(owner),sid:saved.sid,initial});
   }
+  // Isolated guide fixture: only disposable local Redis and test configuration.
+  const guideOwner="guide-placement@example.test",guideHandle="guideplacementfixture";
+  if(!(await claimHandle(guideOwner,guideHandle,"Guide placement fixture","Synthetic local catalog.")).ok)throw Error("No guide fixture");
+  await setSubscription(guideOwner,{active:true,tier:"pro",cycle:"month",subscriptionId:null,customerId:null,trialEnds:0,period:paidPeriod()});
+  await ensureStatsId(guideOwner);
+  await setStripeAccount(guideOwner,DEMO_CONNECTED_ACCOUNT,true);
+  if(!(await setAnswers(guideOwner,{on:true,facts:"Synthetic catalog only."})))throw Error("No guide setting");
+  const guideProducts=[];
+  for(const title of ["Synthetic dinners","Synthetic baking","Synthetic planner"]){
+    const added=await addProduct(guideOwner,title,"Synthetic local guide product.","10",null);
+    if(!added.ok)throw Error("No guide product");
+    guideProducts.push({id:added.product.id,title});
+  }
+  const guideFixture={handle:guideHandle,products:guideProducts};
   // Isolated local Harbor Kitchen fixture: canonical demo content, no external account or upload.
   const homeOwner="home-demo@example.test";
   const homeClaim=await claimHandle(homeOwner,"harborkitchenpreview",DEMO_STORE.name,DEMO_STORE.bio);
@@ -208,6 +222,6 @@ async function main(): Promise<void> {
   const billingDigest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode("nimbus-store:" + billingOwner));
   const billingKey = "nl:store:owner:" + Array.from(new Uint8Array(billingDigest), n => n.toString(16).padStart(2, "0")).join("").slice(0, 40);
   const billingObservation = { session: await openSession(billingOwner), sid: billingStore.sid, key: billingKey };
-  console.log(JSON.stringify({ billingObservation,certificateHeadingFixture,shippingFixture,libraryFixture,signinPrices:TIERS.map(tier=>({tier,words:publishedPriceWords(tier,"month")})),activationFixture,packageFixture,tierFixture,exitFixture,homeDemo,pauseFixtures,wordingSession,wordingSid:wordingStore.sid,wordingTrialSession,wordingTrialSid:wordingTrialStore.sid,returnSession,returnSid:returnStore.sid,growthSession,growthSid:growthStore.sid,growthProduct:growthProducts[0],session: await openSession(OWNER), second: second.store.sid, abProduct, abStore:abStore.sid,contactToken }));
+  console.log(JSON.stringify({ guideFixture,billingObservation,certificateHeadingFixture,shippingFixture,libraryFixture,signinPrices:TIERS.map(tier=>({tier,words:publishedPriceWords(tier,"month")})),activationFixture,packageFixture,tierFixture,exitFixture,homeDemo,pauseFixtures,wordingSession,wordingSid:wordingStore.sid,wordingTrialSession,wordingTrialSid:wordingTrialStore.sid,returnSession,returnSid:returnStore.sid,growthSession,growthSid:growthStore.sid,growthProduct:growthProducts[0],session: await openSession(OWNER), second: second.store.sid, abProduct, abStore:abStore.sid,contactToken }));
 }
 main().catch((e) => { console.error(e); process.exit(1); });
