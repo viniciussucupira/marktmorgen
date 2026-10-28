@@ -11922,3 +11922,11 @@ O histórico Git continua contendo os dados anteriores. Reescrever ou apagar ess
 
 
 505SG2,conferência de28/10/2026 10h49Fortaleza: somente metadados de nomes/escopos do ambiente foram lidos,sem decrypt/valores. DEMO_STUDIO_ADMIN e STRIPE_DEMO_ACCOUNT_ID não constam das41entradas retornadas. A migração dessas identidades não pode ser publicada alegando comportamento produtivo preservado enquanto a configuração necessária não for feita pelo dono; alterações de conta continuam proibidas ao agente. Continuar correções de documentação/detector/testes; nenhuma restauração de dado pessoal padrão para contornar a pendência. O identificador persistido da demonstração deve ser mantido na configuração apropriada, nunca substituído por um identificador fictício em produção. Dados de testes seguem exclusivamente sintéticos e nomes/códigos de configuração podem ser documentados sem seus valores.
+
+### DE1 — implementação inicial do pacote de provas, 28/10/2026
+
+- Item 492 em implementação: construtor limitado a registros retidos da mesma conta, loja, compra e comprador. Um lote misturado é recusado integralmente; registros vencidos não reaparecem; tamanho excedido reprova sem truncar provas; ausência de aceite histórico fica explícita e não é preenchida com a política atual.
+- Testes sintéticos cobrem isolamento, vencimento exato, dados inválidos/futuros, duplicatas, limites e ausência de fabricação. Execução remota completa pendente.
+- Esta etapa não ativa recurso: ainda faltam adaptadores aos registros originais, captura e vínculo da contestação Stripe, revisão na interface, autenticação/permissões, orçamento/reserva e submissão somente após clique. Não marca DE1 concluído nem conta entrega funcional.
+- Fontes oficiais consultadas em 28/10/2026: https://docs.stripe.com/api/disputes/update e https://docs.stripe.com/disputes/responding . A API submete por padrão; nenhuma chamada deve partir da montagem/revisão do pacote. O prazo deve vir da contestação real; o banco decide o resultado, sem probabilidade inventada. Casos de compliance podem gerar custo adicional de rede e não podem operar sem reserva calculada.
+- Sem nova chamada de fornecedor, persistência, mensagem, pagamento ou submissão nesta etapa; nenhum custo operacional novo ativado. Preços, limites e gates preservados.
