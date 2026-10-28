@@ -55,7 +55,10 @@ export function HandleForm({ another = false }: { another?: boolean }) {
       ) {
         // A fresh document keeps the studio title and selected store together.
         // A same-route refresh can expose the new body while head metadata changes.
-        window.location.assign(`/studio?store=${encodeURIComponent(data.store)}`);
+        const destination = new URL(another ? "/studio" : window.location.href, window.location.origin);
+        destination.pathname = "/studio";
+        destination.searchParams.set("store", data.store);
+        window.location.assign(destination.href);
         return;
       }
       setState({
