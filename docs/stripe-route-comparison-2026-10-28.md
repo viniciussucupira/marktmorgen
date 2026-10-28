@@ -54,6 +54,11 @@ SR5 substitui as exigências históricas de ITIN obrigatório e representante re
 
 **EUA:** [IRS instruções5472](https://www.irs.gov/instructions/i5472), conferidas28/10: entidadeUS desconsiderada de proprietário estrangeiro pode ter5472 com1120proforma conforme operações reportáveis; penalidadeUS$25mil é risco de descumprimento, não despesa ordinária inevitável. Nenhuma declaração preparada/enviada. Fonte de renda, estabelecimento, atividade, nexo estadual e obrigações brasileiras precisam enquadramento real; não certificar impostoUS0% em todos os estados apenas por vendas abaixo de um limiar.
 
+
+### Lei14.754: mecanismo conferido no texto atualizado
+
+Em28/10foi lido o [texto oficial atualizado da Câmara](https://www2.camara.leg.br/legin/fed/lei/2023/lei-14754-12-dezembro-2023-795058-normaatualizada-pl.pdf), arts2§1 e5§§1,5,10–15. O regime prevê15% no ajuste anual; controle e regime privilegiado são hipóteses legais relevantes. Para controlada abrangida, apuração individual anual, padrões contábeis brasileiros no regime privilegiado e conversão pela cotaçãoBCBvenda do último dia útil de dezembro. Lucro já tributado não é novamente tributado quando distribuído (§11); crédito de imposto exterior depende das condições do§15. Isso confirma o mecanismo, sem confirmar fatos de umaLLC ainda não constituída nem a opção distinta doart8. Não aplicar27,5% adicional ao mesmo lucro apenas porque esse número existe no código histórico. A conferência integralCosit56/IN1037 e o enquadramento concreto continuam pendentes; nenhuma taxa do código foi alterada.
+
 ## Consumo: obrigatório nos dois caminhos
 Trocar CPF porLLC não elimina IVA/OSS, regras de fornecedor presumido ou sales tax. Separar assinatura própria e venda do criador; B2B e consumidor; eletrônico automatizado, serviço humano e físico; país/estado e evidências do cliente. Não transportar uma taxa universal27% como conclusão jurídica.
 
