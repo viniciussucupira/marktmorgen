@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { MAX_REPORT_CONTACT, MAX_REPORT_NAME, MAX_REPORT_TEXT, MAX_REPORT_URL, REPORT_PROBLEMS, type ReportKind, type ReportProblem } from "@/lib/takedown-rules";
+import { reportAnswer } from "@/lib/report-response";
+import { MAX_REPORT_CONTACT, MAX_REPORT_NAME, MAX_REPORT_TEXT, MAX_REPORT_URL, type ReportKind } from "@/lib/takedown-rules";
 
 /**
  * The notice form (app/report, lib/takedown.ts): each thing a copyright
@@ -29,19 +30,14 @@ export function ReportForm({ url: given }: { url: string }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ kind, ...fields, goodFaith, accurate }),
       });
-      const data = (await response.json().catch(() => ({}))) as { ok?: boolean; error?: string; problem?: ReportProblem };
-      if (data.ok) {
+      const raw: unknown = await response.json().catch(() => null);
+      const answer = reportAnswer(response.ok, raw);
+      if (answer.ok) {
         setState("sent");
         return;
       }
       setState("idle");
-      setError(
-        data.problem
-          ? REPORT_PROBLEMS[data.problem]
-          : data.error === "limited"
-            ? "Too many notices from this connection in the last hour. Try again later, or email support@marktmorgen.com."
-            : "It could not be sent just now. Try again in a moment, or email support@marktmorgen.com.",
-      );
+      setError(answer.message);
     } catch {
       setState("idle");
       setError("It could not be sent just now. Try again in a moment, or email support@marktmorgen.com.");
