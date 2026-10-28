@@ -66,7 +66,7 @@ export async function checkDisputeReview({browser,LOCAL,fixture,axeSource,is}){
    is("DE1 private result accessibility "+width,await page.locator("main").evaluate(async node=>(await window.axe.run(node,{runOnly:{type:"tag",values:["wcag2a","wcag2aa","wcag21aa"]}})).violations.map(v=>v.id)),[]);
    is("DE1 private result fits "+width,await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth+1),true);
    mode="failure";await input.fill("du_fixture");await input.press("Enter");
-   const alert=page.getByRole("alert");await alert.waitFor({state:"visible"});
+   const alert=page.locator("main").getByRole("alert");await alert.waitFor({state:"visible"});
    await page.waitForFunction(()=>document.activeElement?.getAttribute("role")==="alert");
    is("DE1 error receives focus "+width,await alert.evaluate(node=>node===document.activeElement),true);
    is("DE1 stale buyer record removed on failure "+width,await page.getByText("buyer@example.test",{exact:true}).count(),0);
