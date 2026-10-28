@@ -12,6 +12,7 @@
  * that cannot be made, and nothing is taken and the use is refused.
  */
 import { createHash } from "node:crypto";
+import { reservePaidResourceWindow } from "@/lib/contract-resource-window";
 import { type WindowFields, allowanceWindow, keepSecondsFor, resetWords } from "@/lib/allowance-window";
 import { admitNonPaying } from "@/lib/free-pool";
 import { POOL_FULL_WORDS } from "@/lib/free-pool-rules";
@@ -48,6 +49,12 @@ export async function takeAllowance(store: AllowanceStore, kind: AllowanceKind, 
   if (!Number.isSafeInteger(limit) || limit < n) return refuse("used", usedWords(kind, limit, resetWords(store, now)));
   const id = idOf(store);
   if (!id || !isRedisConfigured()) return refuse("unknown", "This can't be counted right now. Try again in a minute.");
+  // Each outbound webhook attempt creates provider work and needs its paid cohort.
+  // General API/studio authorization also admits removal and disconnection:
+  // their operation-specific guards must retain that distinction.
+  if (kind === "webhook" && store.period?.funded === true && (!store.tier || !(await reservePaidResourceWindow({ ...store, tier: store.tier, statsId: store.statsId ?? null })))) {
+    return refuse("unknown", "This can't be counted right now. Try again in a minute.");
+  }
   if (!(await admitNonPaying(store, now))) return refuse("pool", POOL_FULL_WORDS);
   try {
     const k = key(kind, id, window.id);
