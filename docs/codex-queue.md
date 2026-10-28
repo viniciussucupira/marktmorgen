@@ -11270,3 +11270,155 @@ Regra de margem: cada item segue a REGRA DE MARGEM vigente (MR, 27/10/2026, 07h4
 Proibido: mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; criar contas, aceitar termos, pedir aprovação à Meta ou a qualquer fornecedor, contratar, pagar ou contatar terceiros; enviar e-mail real; apagar conteúdo de criadores ou qualquer coisa da Hazelsong; afirmar em público superioridade sobre a Stan sem a prova exigida em AX274 (item 7) e na regra VR (item 7). Somente testes sintéticos.
 
 Aplicar a regra VR.
+
+
+### Prévia de PDF incorporada — 27/10/2026 21h24:14 Fortaleza
+
+PR1132 incorporado em21:24:14Fortaleza (28/10/2026 00:24:14UTC): merge920c690b67802dab2c83620095b6ca8777859a20, head67400c5e5453fc36e3d44464d38ed47bdfb79b18, árvore49fe0e45b3ade1cee187ef71ea4c36532b3b1604, pais82aa0000ad8982d9d51876fa56dd5a4722d69dfa/67400c5e5453fc36e3d44464d38ed47bdfb79b18. Árvore real igual à união independente da filaSB478–483 e do único blob aprovado components/pdf-preview-toggle.tsx 00b2a68fac8c1145e28d46771e9b1c20d21213aa. Preservado todo o pedidoSB e sua ordem.
+
+Correção final reutiliza components/use-hydrated.ts (snapshotfalse no servidor/hidratação,true no cliente), mantendo select inerte até o handler estar montado. Head inicial842d4ebea998ac70eabdf055c1f2b4fda0aa37d4 falhou verify122538201235: react-hooks/set-state-in-effect na linha22, setReady síncrono dentro do efeito;34warnings antigos não eram a causa. Corrigido pelo hook existente, sem desativar regra, adicionar atraso ou relaxar teste. Suíte INTEGRAL no novohead67400:31/31+Vercel; verify122539691015 Everythingpassing/233bundles/sem erro. Oito scopes122539660023,122539649808,122539647804,122539645777,122539637617,122539625018,122539598001,122539329289 com10+7/fulltrue/sem erro. WebKit122539690931 passou todas24asserções de POSTexato da prévia (12cenários x390/1280), inclusive o primeiro HTTPfailure/390; Firefox122539690978 passou. A divergência0anterior e a falha de lint continuam históricas, não foram apagadas nem substituídas por rerunisolado.
+
+Antes desta incorporação, main82aa0000ad8982d9d51876fa56dd5a4722d69dfa concluiu31/31, sem cancelamento. Main920c tem árvore combinada diferente doheadPR: nova execução INTEGRAL em andamento,10/31sucessos21pendentes na leitura00:26UTC; não declarar essa execução concluída nem cancelar para a próxima incorporação.
+
+Produção dpl_CBvVGT8dUACLPQK7obaoNBrDNJVH, marktmorgen-6s15j89so-viniciussucupira.vercel.app, READY/production/SHA920c exato. Aliases marktmorgen.com/www.marktmorgen.com e nimbuslabsai.com/www.nimbuslabsai.com conferidos. Consulta agrupadaerror/fatal desde00:24:14UTC retornou tabela vazia; não comprova tráfego ou fluxo interativo. Chrome continua indisponível para a prova interativa, portanto contador254, sem entrega255.
+
+PR1123/1124/1126/1131 continuam aprovados nos respectivos heads, ainda não incorporados; retomar com leitura fresca/união exata após terminar a execução integral ativa. Sem nova cobrança/serviço/IOprodutivo; tempo/CI/reparos100%FX275, desconhecido nãozero. PLANS_ON_SALE/OPENING_REQUESTED/preços/limites/comissão/opt-ins/controles fiscais/custos/conteúdo/idiomas/IDs/Hazelsong preservados. Nenhuma margem, abertura, perfeição ou disponibilidade funcional adicional certificada.
+
+
+### Clareza de trial e reembolso incorporada — 27/10/2026 21h51:22 Fortaleza
+
+Main920c concluiu31/31 antes de avançar, sem cancelamento. Oito scopes122554060972,122554060362,122554059979,122554059949,122554059928,122554059855,122554059692,122554059627 com10+7/fulltrue/sem erro; verify122554134525 Everythingpassing/233bundles/sem erro.
+
+PR1123 incorporado21:51:22Fortaleza (28/10/2026 00:51:22UTC), merge3d03a89ff77ddb3f32c6a0c6f02d768d459c3222, headd525af4e85a162319441f28192bcb4e4dd9ec8d4, árvore129816b27455dd2625da7d8b0640e59dd6888703, pais920c690b67802dab2c83620095b6ca8777859a20/d525af4e85a162319441f28192bcb4e4dd9ec8d4. União independente exata do main e único blob aprovado app/refunds/page.tsx dfa6775c451ec99f203427913a4465eb2cfb31ea, preservandoSB e reparo da prévia. A garantia da primeira cobrança continua aplicável com ou sem trial; trial é somente para loja elegível, por escolha separada no estúdio, e preparar loja com vendas fechadas não inicia trial/plano. Direitos/durações/preços não mudaram.
+
+Head antigoe62a06c2c085b2e862cc50c94b7ee63720c80c6a falhou verify122476661334 na regra de inglês americano por “cancelling”; corrigido “canceling” e executada suíte INTEGRAL no novoheadd525,31/31+Vercel, reconferidos antes de incorporar. Verify122480306334233/233bundles/Everythingpassing, platform-us-english42/42. Oito scopes122480253877,122480150021,122480147241,122480093880,122480064951,122480014801,122479896776,122479748520 com10+7/fulltrue/sem erro. Não usou rerunisolado nem relaxou regra.
+
+Produção dpl_B6D9kcN3rXL4j9KyGTQYc1PXGMUq, marktmorgen-aihhf0svx-viniciussucupira.vercel.app, READY/SHA3d03exato, marktmorgen.com/www e nimbuslabsai.com/www confirmados. Consulta agrupadaerror/fatal desde00:51:22UTC vazia; não comprova tráfego/interação. Nova execução INTEGRAL do main3d03 em andamento,13/31sucessos18pendentes à00:55UTC, sem falha confirmada; não cancelar para próxima incorporação. PR1124/1126/1131 continuam aprovados, pendentes de incorporação/leitura fresca.
+
+Contador254 preservado; Chrome continua bloqueado para prova interativa. Sem entrega255, margem certificada ou abertura. Custos CI/tempo/reparos100%FX275 desconhecidos,nãozero; nenhum novo IOprodutivo/serviço, mensagem/pagamento/conta/aceite. PLANS_ON_SALE/OPENING_REQUESTED/preços/limites/comissão, opt-in, controles fiscais/custos, conteúdo/idiomas/IDs/Hazelsong preservados.
+
+
+## IT — Registro e proveniência, solicitação de 27/10/2026 20h55 Fortaleza
+
+Estado: na fila, itens484[IT1]–489[IT6], depois de483[SB6], na ordem recebida. Texto integral do anexo0a74c84a-96bf-4d8c-98ae-6f0e174017c4/Texto colado.txt preservado abaixo, alterando apenas a numeração dos seis títulos. Não interrompe trabalho ativo nem altera itens anteriores;486IT3 não duplica páginas,488IT5 complementa219OP5 sem mudar seu número, posição ou estado. Reutilizar Path,481SB4,375TB1 e demais dependências indicadas antes de implementar só a diferença.
+
+Pedidos repetidos: main6845825a503fa756c313d314e0f41f24060acb21 e fila integral,13PRs abertos (títulos/corpos),689refs codex/*,100commits recentes e50heads distintos recentes/abertos/temáticos conferidos.48filas lidas sem correspondência por20h55, título ou IT1–IT6;2heads sem fila legível não são declarados lidos. Próximos números livres484–489; nenhum número, ordem ou estado anterior alterado. Alegações sobre concorrentes, contagens do estúdio e fontes no pedido são proveniência do dono, ainda não conferência independente. Sem alegação pública de superioridade.
+
+IT2 requer distinguir ação reversível de reembolso/envio/exclusão definitiva/retirada de segurança, sem simular reversibilidade; IT3 lista local semIA; IT5 custo/reserva/robôs/teto anônimo antes de cada chamada e fallback256; IT6 somente agregado real com pelo menos50lojas pagas, sem estimativas/arredondamento favorável. Registro não implementa recursos nem certifica facilidade. VR/AX274/MR/TX preservados; custosCI/tempo100%empresaFX275 desconhecidos,nãozero. Nenhum serviço/IOprodutivo/preço/limite/direito/comissão/gate/opt-in/conteúdo/idioma/ID alterado, nenhuma conta/aceite/pagamento/mensagem/submissão. Contador254.
+
+IT — Intuitivo de imediato: mais simples que a Stan sem perder nenhum recurso (27/10/2026)
+
+Solicitação do dono (27/10/2026, 20h55, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: antes de gravar, aplique a regra permanente "Pedidos repetidos". Confira o main, os PRs abertos e os ramos codex/* recentes, e procure esta solicitação pela linha de data e hora, pelo nome da seção, pelas etiquetas [IT1] a [IT6] e pelo conteúdo. Se já estiver gravada, não crie nada novo. Grave depois de 483 [SB6], na ordem de chegada, com os próximos números livres, sem alterar a ordem dos itens existentes.
+
+Contexto: pesquisa de 27/10/2026. A Stan monta tudo num editor de página única, com prévia ao vivo à direita e uma lista "Store Launch Checklist" no início (help.stan.store, artigos 109, 14 e 406). No main, a página inicial do estúdio (app/studio/page.tsx) importa 191 componentes, e o estúdio tem 34 seções em app/studio. Mais recursos à vista tornam a ferramenta mais difícil para quem começa. Reaproveite e NÃO refaça: o Marktmorgen Path (lib/path*.ts, components/path-onboarding.tsx), 481 [SB4] teste de facilidade contra a Stan, 219 [OP5] loja montada pela IA, 256 [KJ1] demonstração sem cadastro, 251 [ST4] cadastro até a loja pronta, 15 [D12] painel do dono com tempo até a primeira venda, 375 [TB1] editor com desfazer e salvamento automático, 212 [SH9] assistente que executa tarefas, AX274 e a regra VR (item 4). Antes de cada item, confira de novo o código e a fila e faça só a diferença.
+
+484. [IT1] Estúdio simples no início.
+Estado inicial: na fila.
+Na primeira tela do estúdio, mostre só: uma lista de no máximo 5 passos até a primeira venda, que se marcam sozinhos quando o passo é feito, com progresso visível e opção de recolher (padrão do guia de configuração da Shopify, shopify.dev/docs/apps/design/user-experience/onboarding); a ação principal do momento; e os números de vendas. Todo o resto vai para "More tools", em grupos com nomes simples, e aparece na primeira tela quando o criador passa a usar. No celular, uma barra de navegação sempre visível na parte de baixo, com 4 ou 5 destinos e alvos de pelo menos 44 × 44 px (a pesquisa da Nielsen Norman Group de 26/06/2016 mostrou que esconder a navegação reduz em mais de 20% o quanto as pessoas encontram as coisas). Nenhum recurso, direito ou limite é retirado: só a ordem e a forma de mostrar mudam. Reaproveite o Path e conte, na seção "Acessibilidade" do PR, os passos e decisões antes e depois.
+
+485. [IT2] Desfazer no lugar de "Are you sure?".
+Estado inicial: na fila.
+Há chamadas confirm() do navegador em 9 arquivos (components/community-composer.tsx, community-events-studio.tsx, community-studio.tsx, email-studio.tsx, leave-guard.ts, passkey-manager.tsx, path-onboarding.tsx, recovery-address-manager.tsx, team-manager.tsx). Troque cada confirmação de rotina por "desfazer" logo depois da ação, com aviso acessível em região ao vivo. Mantenha a confirmação somente no que não tem volta (reembolso, envio de e-mail, exclusão definitiva, retirada de acesso de segurança), numa caixa da própria página, com o resultado escrito nos botões (por exemplo, "Delete post" e "Keep post"). Fonte: Nielsen Norman Group, "Confirmation Dialogs", 18/02/2018, revisto em 07/08/2026. Com teste para cada caso.
+
+486. [IT3] Busca "What do you want to do?".
+Estado inicial: na fila.
+Em todas as telas do estúdio, um campo de busca de AÇÕES (não só de páginas): o criador escreve "refund", "coupon", "send email", "change price" e vai direto à tela certa. Aceite erro de digitação, plural e sinônimos (por exemplo, "discount" encontra "coupon"), em ordem de uso recente. No computador, também pelo atalho Ctrl+K ou Cmd+K; no celular, como campo visível. Sem modelo de IA e sem custo por uso: lista de ações e sinônimos mantida no código, com teste que falhe se uma tela nova do estúdio não tiver ação na busca. Seguir AX274.
+
+487. [IT4] Padrões comprovados em cada formulário e tela.
+Estado inicial: na fila.
+Confira e corrija, tela por tela, no estúdio, no checkout e na área do comprador:
+1. Validação de cada campo quando a pessoa sai dele, nunca enquanto digita; mensagem ao lado do campo, com texto e ícone, que some assim que o erro é corrigido (Baymard, 09/01/2024).
+2. Teclado certo no celular (inputmode e autocomplete para e-mail, telefone, número e valor).
+3. Campo já preenchido com o valor mais comum, nunca com a opção mais cara.
+4. Rótulo sempre visível, nunca só o texto de exemplo dentro do campo.
+5. Nenhuma tela vazia sem uma frase do que fazer, um botão para a ação e um modelo pronto (Nielsen Norman Group, 19/09/2021).
+6. Rascunho salvo sozinho, com o estado "Saving…" e "Saved" visível, e nenhuma perda de dados por tempo esgotado.
+7. Prévia ao vivo, no formato de celular, ao lado de cada editor de produto, página, checkout e e-mail, onde ainda não houver.
+8. Antes de publicar ou enviar, um resumo com "Change" em cada item (padrão "Check answers" do GOV.UK Design System).
+Registre em docs/ease-patterns-audit.md cada tela, o que foi encontrado e o que foi corrigido. Reaproveite 481 [SB4] e 375 [TB1], sem duplicar.
+
+488. [IT5] Complemento ao 219 [OP5], aplicando só a diferença, sem mudar número, posição ou estado do item 219.
+Estado inicial: na fila.
+Permita ver a loja montada ANTES de criar a conta: na página inicial, o visitante cola o link da página dele (Stan, Linktree, Beacons, site próprio) ou escreve o que vende e vê, em poucos segundos, a prévia da loja dele em rascunho; para guardar, cria a conta, e a prévia vira o rascunho do estúdio, sem redigitar nada. Nada é publicado. Custo: cada prévia usa as mesmas regras de leitura de site e de IA do 219, com teto automático de prévias anônimas por mês dentro das vagas de lojas que não pagam (lib/free-pool-rules.ts), proteção contra robôs que já existe e reserva antes de cada chamada; acabado o teto, a página mostra a demonstração de 256 [KJ1]. Evidência a conferir com fonte datada: Duolingo, cerca de 20% mais usuários ativos por dia ao levar o cadastro para depois da primeira lição (First Round Review, 17/07/2017); Shopify AI Store Builder e Squarespace Blueprint.
+
+489. [IT6] Taxa real de primeira venda, publicada com dados reais.
+Estado inicial: na fila.
+Nenhum concorrente publica quantos criadores fazem a primeira venda nem em quanto tempo. Quando houver pelo menos 50 lojas pagas, mostre na página inicial e na de preços, calculado pelo próprio código a partir de 15 [D12], somente agregado e sem identificar ninguém: a porcentagem de lojas que fizeram a primeira venda e o tempo mediano até ela, com a data da última atualização. Antes disso, o número não aparece. Nunca arredondar para cima, nunca escolher período favorável, nunca exibir estimativa.
+
+Regra de margem: cada item segue a REGRA DE MARGEM vigente (MR, 27/10/2026, 07h42): nenhum cliente pagante dá prejuízo, usando 100% de todos os direitos do plano e de cada complemento no pior mês, no mensal e no anual, com teto automático e reserva antes de cada gasto; a empresa sem prejuízo a partir da base mínima; 60% é meta mensal real, não trava. Política tributária TX. Custo desconhecido reprova, nunca é zero; nenhuma cota grátis de fornecedor conta como zero; taxas de recebimento mais caras de lib/receiving-costs.ts; todos os custos fixos são 100% do Marktmorgen (FX275).
+
+Proibido: mudar preços, cortar limites visíveis, retirar recursos ou direitos de qualquer plano, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; enviar e-mail real; apagar conteúdo de criadores ou qualquer coisa da Hazelsong; afirmar em público que o Marktmorgen é mais fácil que a Stan sem a prova exigida em 481 [SB4], AX274 (item 7) e na regra VR (item 7). Somente testes sintéticos.
+
+Aplicar a regra VR.
+
+
+## Incorporações e verificação integral — 27/10/2026, 22h46 Fortaleza
+
+Complemento histórico: main3d03a89ff77ddb3f32c6a0c6f02d768d459c3222 concluiu31/31 antes da incorporação1124, sem cancelamento. Verify122563654447 confirmou233/233bundles/Everythingpassing/sem erro; oito escopos122563603633,122563602946,122563602811,122563602462,122563602250,122563602183,122563600745,122563600671 confirmaram10+7/fulltrue/sem erro.
+
+PR1124 incorporado27/10/2026 22:15:17Fortaleza/28Oct01:15:17UTC: merge30ed01767780c70bf36fda57d7cb46d751a0ae01, pais3d03a89ff77ddb3f32c6a0c6f02d768d459c3222/97808242051222c7f31263af7b4f8f79d1e48a96, árvore717f63599ab9050454193fd99fe66f4a3a76d821 igual à união independente dos três blobs aprovados; preserva correções anteriores e filaSB. Formulário público mantém campos até HTTPok/okestritamentetrue/sem erro contraditório, recusa códigos herdados/desconhecidos com fallback legível. Head31/31+Vercel, verify122479007251 com40/40regressões/233bundles/Everythingpassing/sem erro. Produção dpl_2u1iDZVkozFCJe8Gu4Ettw86d5NX, marktmorgen-1323nxs2g-viniciussucupira.vercel.app READY/SHA30edexato/aliasesmarktmorgen.com,www.marktmorgen.com,nimbuslabsai.com,www.nimbuslabsai.com. Agrupamentoerror/fataldesde01:15:17UTCvazio,sem provar tráfego/interação.
+
+Main30ed concluiu31/31 antes da incorporação1126, sem cancelamento. Verify122571876008 confirmou233/233bundles/Everythingpassing/sem erro; oito escopos122571828477,122571825813,122571824062,122571823881,122571823743,122571823719,122571823522,122571823233 confirmaram10+7/fulltrue/sem erro.
+
+PR1126 incorporado27/10/2026 22:38:20Fortaleza/28Oct01:38:20UTC: merge6845825a503fa756c313d314e0f41f24060acb21, pais30ed01767780c70bf36fda57d7cb46d751a0ae01/5e0d8c4f5ef835f1005621f89bbd3d2d172ca5ea, árvoreda3ae6d415bd66d5801a637fcbaa997b0a9c6403 igual à união independente dos dois blobs aprovados; preserva1124/1123/1132/SB. Seis ramos de saída de email só confirmam pelo estado persistido; done1forjado não autoriza sucesso. Head31/31+Vercel, verify122486512326 confirmou renderização da página real em todos os idiomas existentes, forja/opt-insindependentes/supressão real sintética,233bundles/Everythingpassing/sem erro. Oito escopos122486419764,122486418937,122486418779,122486418435,122486418319,122486418317,122486418010,122486417946 com10+7/fulltrue/sem erro. Produção dpl_23KAAXKQGNS2V3pTEKrRgwbWdr6L, marktmorgen-lte7jrw3c-viniciussucupira.vercel.app READY/SHA684582exato/mesmos quatro domínios confirmados; error/fataldesde01:38:20UTCvazio,com mesmas ressalvas.
+
+Main684582segue28/31sucessos,verify/Firefox/WebKit pendentes em01:47UTC,sem falha confirmada; preservar execução integral antes da próxima incorporação. PR1131 aprovado permanece pendente. PedidoIT484–489 está registrado integralmente nestePR, não incorporado nem implementado. Contador254/sem255: Chrome continua indisponível para prova interativa,sem retry/troca. NenhumIOprodutivo/serviço/preço/limite/direito/gate/conteúdo/idioma/ID/opt-in alterado, sem conta/aceite/pagamento/mensagem/submissão. CustosCI/tempo/reparos100%empresaFX275 desconhecidos,nãozero; seiscontratos/tetos/reservas seguem obrigatórios. Sem abertura ou margem certificada.
+
+
+## Confirmação de exclusão incorporada e próximo reparo — 27/10/2026 23h04 Fortaleza
+
+Main6845825a503fa756c313d314e0f41f24060acb21 concluiu31/31 antes da incorporação1131, sem cancelamento. Verify122579327565:233/233bundles/Everythingpassing/sem erro; oito escopos122579300080,122579272543,122579272479,122579272374,122579272366,122579272278,122579272255,122579272248:10+7/fulltrue/sem erro.
+
+PR1131 incorporado27/10/2026 22:59:20Fortaleza/28Oct01:59:20UTC: merge86f7d49c1496516abfbc1e95bbea1ae185c91f87, pais6845825a503fa756c313d314e0f41f24060acb21/45ce8b60576aabbbb79eb6fd9573ed9bf0fe1485, árvoref60bcc5450bee21860c7780ee27cfe10cf860eb2 igual à união independente dos cinco blobs aprovados, preservando correções/fila anteriores. statusdone/nforjados deixam de declarar exclusão; reciboHMAC de resultado com estado/contagem/prazo, isolado e vinculado ao grant no parcial, só é assinado após operação real. GETnãoexclui, sem novo privilégio/Redis/cookie/segredo/fornecedor. Removida confirmação não comprovada de aviso ao dono. Head31/31+Vercel; verify122529804559 com página real e testes criptográficos sintéticos/233bundles/Everythingpassing/sem erro; oito escopos122530159475,122530158994,122530151225,122530149590,122530135246,122529739899,122529672043,122529651378:10+7/fulltrue/sem erro. Não houve dado real excluído nem mensagem preparada/enviada.
+
+Produção dpl_CSrSXYm7LKhcp7tg3Gvkhju4CSDU, marktmorgen-94d018ech-viniciussucupira.vercel.app READY/production/SHA86f7exato; aliasesmarktmorgen.com,www.marktmorgen.com,nimbuslabsai.com,www.nimbuslabsai.com confirmados. Agrupamentoerror/fataldesde01:59:20UTCvazio; não comprova tráfego/interação/ausência universal. Nova suíte integral do main segue em andamento,12sucessos19pendentes na leitura02:03UTC; não cancelar para incorporar documento ou próximo reparo.
+
+Revisão integral estática de app/privacy/page.tsx(131570caracteres) encontrou contradição: seção1 até400dias de cookiedeafiliado/seção5 até90, enquanto proxy.ts e app/api/store/via/route.ts usamVIA_COOKIE_SECONDS=MAX_COOKIE_DAYS400*86400. PR1134 codex/privacy-affiliate-cookie-duration, head1a2ad27c2b80b2efaecf3f69581e6902101f0b2c, usa constante existente nos dois trechos e informa que navegador pode expirar antes, sem mudar cookie/consentimento/atribuição/IDs. Um arquivo,5adições3remoções; somente clareza,0→0passos/decisões,sem teste humano/certificação jurídica. CIintegral pendente; não é incorporação/entrega. Tentativa de anexarPR1134 ao chat recusada pelo limite100anexos;URLhttps://github.com/viniciussucupira/marktmorgen/pull/1134 preservada aqui e na continuidade.
+
+PedidoIT484–489 continua integral nestePR1133, sem implementar por registro. Contador254,Chromeinterativobloqueado,sem retry/troca; nenhum255/abertura/margemcertificada. NenhumIOprodutivo/serviço/preço/limite/direito/comissão/gate/opt-in/conteúdo/idioma/ID/Hazelsong alterado. CI/tempo/reparos100%empresaFX275 desconhecidos,nãozero; seiscontratosmensal/anual/maiorpreçopago/tetos/reservas obrigatórios antes de nova operação. Sem conta/aceite/pagamento/mensagem/consulta/submissão real. Histórico anterior intacto.
+
+
+## PP — Registro e proveniência, solicitação de 27/10/2026 22h49 Fortaleza
+
+Estado: na fila,490[PP1] e491[PP2], depois de489IT6, na ordem recebida. Pedido integral recebido diretamente nesta conversa preservado abaixo, alterando apenas a numeração dos dois títulos. Regra Pedidos repetidos aplicada: main86f7d49c1496516abfbc1e95bbea1ae185c91f87,13PRs abertos/títulos/corpos,690refs codex/*,100commits recentes e43heads distintos recentes/abertos/temáticos com43filas lidas; sem correspondência por22h49/título/PP1–PP2/conteúdo. Máximo anterior489; prefixo anterior intacto, nenhuma renumeração ou mudança de estado/ordem.
+
+Reaproveitar exatamente os mecanismos/dependências listados pelo dono, construindo só a diferença após novo rastreio. PP1: StoresemIA, máximo5perguntasmaisconhecimento, rascunho baseado somente no informado, PDF/UAdeve ser verificado antes de alegar acessibilidade; preço sugerido4–35é do produto do criador, não alteração dos planos. Sem produto falando como se fosse o criador, publicação só por clique explícito. PP2:semIA no diagnóstico, uma ação desde início e IT3, desconhecido visível como not checked; IA de ajuda só depois. Registro não implementa recursos, não certifica comparação nem fonte/estatística relatada; pesquisas oficiais datadas pendentes. Não interromper trabalho ativo.
+
+VR/MR/TX/AX274 preservados; nenhum preço/limite/direito/comissão/gate/opt-in/conteúdo/idioma/ID/Hazelsong alterado. Sem IOprodutivo/serviço/conta/aceite/pagamento/mensagem/consulta/submissão. Tempo/CI100%empresaFX275 desconhecidos,nãozero; seiscontratosmensal/anual/maiorpreçopago/tetos/reservas antes da operação. Contador254,sem entrega255/abertura/margemcertificada. Histórico anterior intacto.
+
+PP — Primeiro produto pronto e problemas resolvidos sozinhos (27/10/2026)
+
+Solicitação do dono (27/10/2026, 22h49, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: antes de gravar, aplique a regra permanente "Pedidos repetidos". Confira o main, os PRs abertos e os ramos codex/* recentes, e procure esta solicitação pela linha de data e hora, pelo nome da seção, pelas etiquetas [PP1] e [PP2] e pelo conteúdo. Se já estiver gravada, não crie nada novo. Grave depois de [IT6], na ordem de chegada, com os próximos números livres, sem alterar a ordem dos itens existentes.
+
+Contexto: pesquisa de 27/10/2026. Criar o primeiro produto e saber o que vender estão entre as maiores barreiras do criador iniciante (pesquisa da Podia com mais de 900 criadores, 2022; relatório da Linktree, 2022). A própria Stan ensina a fazer o primeiro e-book em cerca de uma hora com o rascunho do Stanley, depois edição no Word ou no Google Docs, diagramação no Canva e envio do arquivo (stan.store/blog/?p=2402). O suporte é o elogio mais citado da Stan no Trustpilot (trustpilot.com/review/stan.store). Já existem e NÃO devem ser refeitos: lib/cover-maker.ts (capa), lib/product-about.ts (descrição), lib/certificate-pdf.ts (PDF), lib/page-coach.ts e lib/store-coach.ts (nota da página e da loja), lib/help-ask.ts (assistente de ajuda), lib/checkout-trouble.ts (checkout recusado pelo Stripe), lib/mail-health.ts (saúde do e-mail), lib/funnel-diagnosis.ts, 219 [OP5], 479 [SB2] verificação de entrega, 212 [SH9] assistente que executa tarefas, 105 [E2-COURSE-AI-DRAFT] e o Marktmorgen Path. Antes de cada item, confira de novo o código e a fila e faça só a diferença.
+
+490. [PP1] Primeiro produto pronto dentro do Marktmorgen.
+Estado inicial: na fila.
+O criador escolhe um formato (guia, checklist, caderno de exercícios ou modelo) e responde no máximo 5 perguntas por botões, mais um campo livre com o que ele sabe sobre o assunto. A IA escreve o rascunho SOMENTE a partir do que o criador informou: sem números, estudos, depoimentos ou promessas de resultado que ele não escreveu. O rascunho abre num editor simples, com salvamento automático e desfazer. Ao aprovar, o código monta sozinho o PDF marcado e acessível (PDF/UA, AX274), a capa (lib/cover-maker.ts), a descrição, a página de venda com preço sugerido entre US$ 4 e US$ 35 (o próprio criador decide) e o checkout, tudo em rascunho, publicado somente com o clique do criador. Custo dentro do orçamento de IA do plano, com reserva antes de cada chamada e teto automático; no Store, que não tem rascunhos de IA, mostre o formato vazio para o criador escrever, com o mesmo PDF automático e sem custo de IA. Compare com fontes oficiais datadas: Stan (Stanley + Word + Canva), Beacons e Kajabi.
+
+491. [PP2] Central "Something's not working".
+Estado inicial: na fila.
+Uma tela no estúdio, a um clique da página inicial e na busca de ações (IT3), que confere sozinha, sem modelo de IA: conexão e situação da conta Stripe do criador; domínio próprio e seus registros; envio de e-mail e sua saúde (lib/mail-health.ts); entrega de cada produto (479 [SB2]); checkout que o Stripe recusou (lib/checkout-trouble.ts); limites do plano já usados; e pedidos, reembolsos e contestações pendentes. Para cada problema: a causa em inglês americano simples, o que acontece se não for corrigido e a correção com um clique, ou o caminho exato quando só o criador pode corrigir (por exemplo, no painel do Stripe). Só então, se a dúvida continuar, o assistente de ajuda (lib/help-ask.ts). Nunca afirmar que está tudo certo sem ter conferido; o que não puder ser conferido aparece como "not checked". Seguir AX274.
+
+Regra de margem: cada item segue a REGRA DE MARGEM vigente (MR, 27/10/2026, 07h42): nenhum cliente pagante dá prejuízo, usando 100% de todos os direitos do plano e de cada complemento no pior mês, no mensal e no anual, com teto automático e reserva antes de cada gasto; a empresa sem prejuízo a partir da base mínima; 60% é meta mensal real, não trava. Política tributária TX. Custo desconhecido reprova, nunca é zero; nenhuma cota grátis de fornecedor conta como zero; taxas de recebimento mais caras de lib/receiving-costs.ts; todos os custos fixos são 100% do Marktmorgen (FX275).
+
+Proibido: mudar preços, cortar limites visíveis, retirar recursos ou direitos de qualquer plano, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; enviar e-mail real; apagar conteúdo de criadores ou qualquer coisa da Hazelsong; criar produto que fale como se fosse o criador; afirmar em público superioridade sobre a Stan sem a prova exigida em AX274 (item 7) e na regra VR (item 7). Somente testes sintéticos.
+
+Aplicar a regra VR.
+
+
+## Próximas correções públicas concretas — 27/10/2026 23h19 Fortaleza
+
+PR1135 https://github.com/viniciussucupira/marktmorgen/pull/1135, codex/takedown-confirmed-result, heada46f345a762a0c119ee8772403cf1b7425277581, árvore7b8e8a3639932d15968a9ee07d3e9c4700c9cc9d, base86f7d49c1496516abfbc1e95bbea1ae185c91f87:4arquivos concretos. POSTtakedownJSONnull antes de body.token passa a400; origem/token/loja/autorização preservados. Botão só confirmaHTTPok/okbooleanotrue/donestringnão-vazia/semerrorcontraditório; não afirma emailentregue porque operação existente captura falha de sendEmailsem devolver prova. Teste usa handler real NextRequest sintético/HostOrigin/malformednullarrayprimitivo/semgrant/origemestrangeira/fetchproibido, e recibos forjados/incompletos/herdados/HTTPfalho. CIintegral18sucessos13pendentessemfalha02:19UTC; não aprovado/incorporado. Nenhuma ação real sobre conteúdo/aviso.
+
+PR1136 https://github.com/viniciussucupira/marktmorgen/pull/1136, codex/library-unavailable-purchases, headc3547f0611b6522f80c2a7078b758c5d3f113fb2:5linhas emapp/library/page.tsx. RastreadoscanRecoverfalse eordersLinkFornull/erro: antes botãoOpenyourpurchases desaparecia sem explicação; agora estado legível orienta tentar depois ou usarVisitthestorejáexistente. Não inventa causa/sucesso/perda da compra, não cria token/IO ou acesso novo; caminho de sucesso preservado. CIintegral iniciado, não aprovado/incorporado.
+
+VR:0→0passos/decisõesobrigatórios; confirmações verdadeiras e recuperação visível,sem teste humano/certificaçãoAAA/jurídica. CustosCI/tempo100%empresaFX275 desconhecidos,nãozero; nenhumIOprodutivo/serviço/preço/limite/direito/comissão/gate/opt-in/conteúdo/idioma/ID/Hazelsong alterado, nenhuma conta/aceite/pagamento/mensagem/consulta/submissão. Tentativas de anexarPRs ao chat recusadas por100anexos,URLs preservadas. Main86f7em29/31sucessos,verify/WebKitpendentes02:19UTC,semfalha; preservar execução completa antes de próxima incorporação. PR1134segue28/31semfalha. PedidosIT484–489 ePP490–491 intactos; contador254,sem255/abertura/margemcertificada.
