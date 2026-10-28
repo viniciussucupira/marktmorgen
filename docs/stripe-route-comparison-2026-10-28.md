@@ -1,4 +1,6 @@
 # 495 [SR6] — Brasil (CPF) ou LLC: decisão antes de contratar
+
+> **Decisão posterior [SD1],28/10/2026 18h41Fortaleza:** o dono escolheu aLLC deDelaware e contaStripe americana em nome dela, contrariando a recomendação brasileira abaixo. Em495, “Depende do dono” está resolvido. A quantificação restante será exclusivamenteLLC em275FX1; não quantificar a rota brasileira. O conteúdo abaixo fica preservado como estudo/histórico, sem autorizar abertura ou contratação. Novo primeiro passoAV1:470SR4, roteiro documental das ações exclusivas do dono. Ver docs/codex-queue.md,SD1.
 Data de corte: 28/10/2026. Estudo solicitado pelo dono; política TX vigente e prioridade AV1. Base técnica: main 962faa93378f8f06e9bbbb9e72eb4c15f8adf262. Sem alteração de conta, termos, cálculo fiscal, elegibilidade ou trava.
 
 ## Resultado e recomendação única

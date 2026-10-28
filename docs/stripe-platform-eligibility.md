@@ -143,3 +143,30 @@ Aplica-se a [REGRA DE MARGEM MR](../AGENTS.md#mr--regra-de-margem-vigente-27-de-
 VR: registro documental de467[SR1] em andamento;468–470na fila. Passa a existir tabela datada e limite explícito para interpretar configuração/testes; nada novo disponível ao cliente. Não funcionam por este registro a nova condição de abertura, pesquisa de custos, base mínima, roteiro ou relatório de margem. Não verificados e-mails originais, resposta futura, conta/aceite real, fontes/prazos/preços oficiais e funcionamento comercial. Sem alegação de lucro certificado.
 
 Custos incrementais de produção desta documentação/comentário: nenhuma chamada, serviço, dado persistido ou retenção adicional;Store mensal/anual0/0,Studio0/0,Scale0/0. Isso não é custo total zero deCI, hospedagem,LLC ou requisitosSR3. Todos os desconhecidos permanecem reprovados. Acessibilidade: Markdown com títulos/tabela/links e texto explícito, nenhuma tela;0→0passos/decisões do cliente;sem auditoria humana ou certificação.
+
+
+## SD — Decisão: abertura pela LLC americana e conta Stripe americana (28/10/2026) [SD1]
+
+Solicitação direta do dono: 28/10/2026, 18h41, Fortaleza. Estado inicial: na fila, execução imediata. Esta decisão é posterior a 495 [SR6]/PR1175 e [AV1] e prevalece onde divergir, sem renumerar itens nem apagar histórico.
+
+### Decisão vigente e ordem
+- **495 [SR6], Depende do dono: decisão TOMADA.** O dono leu a recomendação brasileira do PR1175 e escolheu abertura pela LLC de Delaware, com conta Stripe de plataforma americana em nome dela. A conta brasileira não será usada na abertura. O estudo e a recomendação anterior ficam preservados como histórico. A quantificação restante de495 fica exclusivamente na rota LLC, em275 [FX1], passo6 deAV1; não quantificar a rota brasileira.
+- **Novo passo1 de [AV1]: 470 [SR4].** Produzir somente documento: roteiro exato das ações exclusivas do dono, com fontes oficiais datadas, custos e nomes dos campos/botões, para abertura Delaware, agente registrado, EIN sem SSN, endereço comercial real nos EUA sem caixa postal, banco no nome exato da LLC, conta Stripe americana e prova exigida por stripePlatformEligibilityReady. Colocar as ações em “Depende do dono”; nenhum ato externo executado. Custos fixos em275FX1, 100%Marktmorgen.
+- Passo2 deAV1: conferência da exigência americana abaixo, sem mudança de trava. Restante deAV1 eAV2 preservado na mesma ordem. PR1178 já em verificação continua; trabalho de Claude/PR1173 preservado.
+
+### Resposta Stripe e pergunta pendente
+Proveniência: relato direto do dono, resposta Stripe de28/10/2026 às13h55 Fortaleza no fio “Re: Connect platform eligibility for international accounts”, conferida pelo Claude no Gmail do dono. Codex não afirma nova leitura independente do Gmail. Nenhum identificador de conta é copiado.
+(a) Conta brasileira cobra assinatura em dólar somente com Visa e Mastercard emitidos fora do Brasil.
+(b) Repasse somente em reais, com conversão.
+(c) Taxa publicada:3,99% +R$0,39, mais2% para cartão internacional.
+(d) Stripe Tax em cobranças diretas de contas Standard conectadas é cobrado da conta conectada/do criador, não da plataforma; isso não pode ser mudado. Nas faturas próprias da plataforma, a taxa pertence à plataforma.
+(e) Não é necessário registro comoISO/PayFac e aStripe não aprova negócios antecipadamente.
+**494 [SR5]: pendência sobre quem paga Stripe Tax ENCERRADA por esta resposta**, preservado o registro anterior. Não equivale a aprovação de conta, país ou abertura.
+
+**Pendente à Stripe:** em28/10/2026 às18h37 Fortaleza, no mesmo fio, o dono perguntou se plataforma americana pode conectar contas Standard do Brasil, Índia e de cada um dos43países deCOUNTRIES emlib/stripe-connect.ts, com cobrança direta, sem taxa de aplicação e painel completo. Aguardar resposta em pedido próprio. Não acrescentar/retirar países nem prometer países em texto novo.
+
+### Conferência concreta no main6400f9492ba3e31537b71ca72c430de9f74b48e3
+lib/stripe-platform-eligibility.ts exige platformCountry=US,companyCountry=US,accountInCompanyName=true,accountActive=true e prova datada vinculada à mesma conta/empresa; exige também provas de elegibilidade para cobranças diretas. A revisão real permanece null. tests/stripe-platform-eligibility.test.ts rejeita plataformaBR, empresaBR, conta pessoal/inativa, prova ausente/futura/inválida e divergência de conta/empresa. lib/opening.ts mantém a condição adicional e ambas as flagsfalse. **Sem alteração de código ou testes**: o requisito deSD1 já está presente; isto é inspeção dos testes existentes, não alegação de nova execução.
+
+lib/receiving-costs.ts mantém taxBps=50 (0,5%) no recebimento das assinaturas próprias doMarktmorgen. tests/plan-cost-model.ts aplica receivingOf aos preços dos planos/complementos e lib/store-assistant-rules.ts à assinatura própria do assistente. lib/store-checkout.ts cria checkout de vendas dos criadores via onAccount; lib/tax.ts consulta/configura a própria conta conectada. components/tax-editor.tsx e lib/help-content.ts dizem expressamente que Stripe cobra Stripe Tax na conta do criador. Não identificado cálculo que transforme essa taxa das vendas dos criadores em custo doMarktmorgen na conferência dessas rotas/consumidores. **Sem alteração de cálculo, documento gerado ou regeneração desnecessária**; os0,5% das próprias assinaturas ficam preservados.
+
