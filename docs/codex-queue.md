@@ -1,5 +1,37 @@
 # Fila de trabalho do Codex — Marktmorgen
 
+## SD — Decisão: abertura pela LLC americana e conta Stripe americana (28/10/2026) [SD1]
+
+Solicitação direta do dono: 28/10/2026, 18h41, Fortaleza. Estado inicial: na fila, execução imediata. Esta decisão é posterior a 495 [SR6]/PR1175 e [AV1] e prevalece onde divergir, sem renumerar itens nem apagar histórico.
+
+### Decisão vigente e ordem
+- **495 [SR6], Depende do dono: decisão TOMADA.** O dono leu a recomendação brasileira do PR1175 e escolheu abertura pela LLC de Delaware, com conta Stripe de plataforma americana em nome dela. A conta brasileira não será usada na abertura. O estudo e a recomendação anterior ficam preservados como histórico. A quantificação restante de495 fica exclusivamente na rota LLC, em275 [FX1], passo6 deAV1; não quantificar a rota brasileira.
+- **Novo passo1 de [AV1]: 470 [SR4].** Produzir somente documento: roteiro exato das ações exclusivas do dono, com fontes oficiais datadas, custos e nomes dos campos/botões, para abertura Delaware, agente registrado, EIN sem SSN, endereço comercial real nos EUA sem caixa postal, banco no nome exato da LLC, conta Stripe americana e prova exigida por stripePlatformEligibilityReady. Colocar as ações em “Depende do dono”; nenhum ato externo executado. Custos fixos em275FX1, 100%Marktmorgen.
+- Passo2 deAV1: conferência da exigência americana abaixo, sem mudança de trava. Restante deAV1 eAV2 preservado na mesma ordem. PR1178 já em verificação continua; trabalho de Claude/PR1173 preservado.
+
+### Resposta Stripe e pergunta pendente
+Proveniência: relato direto do dono, resposta Stripe de28/10/2026 às13h55 Fortaleza no fio “Re: Connect platform eligibility for international accounts”, conferida pelo Claude no Gmail do dono. Codex não afirma nova leitura independente do Gmail. Nenhum identificador de conta é copiado.
+(a) Conta brasileira cobra assinatura em dólar somente com Visa e Mastercard emitidos fora do Brasil.
+(b) Repasse somente em reais, com conversão.
+(c) Taxa publicada:3,99% +R$0,39, mais2% para cartão internacional.
+(d) Stripe Tax em cobranças diretas de contas Standard conectadas é cobrado da conta conectada/do criador, não da plataforma; isso não pode ser mudado. Nas faturas próprias da plataforma, a taxa pertence à plataforma.
+(e) Não é necessário registro comoISO/PayFac e aStripe não aprova negócios antecipadamente.
+**494 [SR5]: pendência sobre quem paga Stripe Tax ENCERRADA por esta resposta**, preservado o registro anterior. Não equivale a aprovação de conta, país ou abertura.
+
+**Pendente à Stripe:** em28/10/2026 às18h37 Fortaleza, no mesmo fio, o dono perguntou se plataforma americana pode conectar contas Standard do Brasil, Índia e de cada um dos43países deCOUNTRIES emlib/stripe-connect.ts, com cobrança direta, sem taxa de aplicação e painel completo. Aguardar resposta em pedido próprio. Não acrescentar/retirar países nem prometer países em texto novo.
+
+### Conferência concreta no main6400f9492ba3e31537b71ca72c430de9f74b48e3
+lib/stripe-platform-eligibility.ts exige platformCountry=US,companyCountry=US,accountInCompanyName=true,accountActive=true e prova datada vinculada à mesma conta/empresa; exige também provas de elegibilidade para cobranças diretas. A revisão real permanece null. tests/stripe-platform-eligibility.test.ts rejeita plataformaBR, empresaBR, conta pessoal/inativa, prova ausente/futura/inválida e divergência de conta/empresa. lib/opening.ts mantém a condição adicional e ambas as flagsfalse. **Sem alteração de código ou testes**: o requisito deSD1 já está presente; isto é inspeção dos testes existentes, não alegação de nova execução.
+
+lib/receiving-costs.ts mantém taxBps=50 (0,5%) no recebimento das assinaturas próprias doMarktmorgen. tests/plan-cost-model.ts aplica receivingOf aos preços dos planos/complementos e lib/store-assistant-rules.ts à assinatura própria do assistente. lib/store-checkout.ts cria checkout de vendas dos criadores via onAccount; lib/tax.ts consulta/configura a própria conta conectada. components/tax-editor.tsx e lib/help-content.ts dizem expressamente que Stripe cobra Stripe Tax na conta do criador. Não identificado cálculo que transforme essa taxa das vendas dos criadores em custo doMarktmorgen na conferência dessas rotas/consumidores. **Sem alteração de cálculo, documento gerado ou regeneração desnecessária**; os0,5% das próprias assinaturas ficam preservados.
+
+### Pedidos repetidos, VR e limites
+Conferidos main, filas dos40heads distintos dos40PRs mais recentemente atualizados (incluindo ambos osPRs abertos1178/1173), títulos/branches e nomes dosrefs codex/* disponíveis. Sem correspondência da seção, etiquetaSD1 ou data18h41; nenhum item renumerado. Registro único desta decisão; complementos posteriores devem atualizar este registro.
+VR: decisão e proveniência registradas, conferência de código/testes explícita; roteiro470 ainda a executar, não alegado concluído. Nenhuma publicação funcional, contador254. Nenhuma promessa de país, margem, data de venda ou aprovação antecipada.
+MR27/10/07h42 eTX vigentes: cada cliente a100% dos direitos do plano e complemento no pior mês/mensal/anual não pode dar prejuízo após todos os custos/impostos; empresa sem prejuízo a partir da base mínima calculada;60% é meta líquida mensal real. Recebimento mais caro, reservas, exposição e custeio preservados; desconhecido reprova, nunca zero. Custos fixosLLC100%Marktmorgen/FX275. Pesquisa/CI/deploy não medidos não são custo zero nem nova autorização de contratação.
+Proibido ligarOPENING_REQUESTED/PLANS_ON_SALE, afrouxar travas/testes, alterar preços/limites/comissão/COUNTRIES, criar contas/empresa, pedirEIN, aceitar termos, contratar, pagar, contatar terceiros ou apagar conteúdo de criadores/Hazelsong. Somente testes sintéticos. Nenhuma dessas ações foi executada.
+
+
 ## Correções públicas incorporadas — 27/10/2026, 19h03:56 Fortaleza
 
 PR1121 incorporado18:35:26Fortaleza/21:35:26UTC: merge aca72a8c4c24babeea737f1d9a977aa9390ecc7e, pais51f02508111662c272f37478c87676b13dffc106/dfb3a0be4366cd0e2ad2b12b044f981aaec1b46c, árvore59b968780e8809f180c4d33bf9298869bd43ec57, união exata preservando fila1125. Respostas de passkey exigem sucessoHTTP/okbooleano/ausência de erro contraditório e destino /studio conhecido; nenhum bypass do servidor alegado. HeadPR31/31+Vercel; verify122474117885:48/48regressões,233/233bundles,Everythingpassing,sem erro. A árvore combinada do main também concluiu31/31: oito escopos10+7/fulltrue,verify122485451577 com48/48regressões/233bundles/Everythingpassing,sem erro. Não foi cancelada para incorporar o item seguinte.
