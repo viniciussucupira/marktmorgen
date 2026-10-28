@@ -11975,3 +11975,49 @@ Custos: preparação usa somente CI existente, no máximo uma tentativa adiciona
 - Custo do adaptador retido: uma unidade integration adicional reservada antes da tentativa, máximo3unidades por consulta completa; cotas50/200/500 não aumentam. Modelo interno$0.0000952/unidade,$0.0002856/completa; tetos mensais/anuais12janelas Store$0.00476/$0.05712,Studio$0.01904/$0.22848,Scale$0.0476/$0.5712 se toda a cota dedicada. Preços69/690,449/4490,999/9990 preservados. Componente modelado não é custo total/fatura/margem certificada; maior leitura aplicável, todos os custos/impostos e reserva real continuam obrigatórios, desconhecido reprova. Cutoff14s na rota15s,Redis5s ecliente20s, sem novo armazenamento/TTL/serviço.
 - #1162head334daf1beae946ab73cbffa75aca77521b1006da e#1164head8088b9e4715f3791f4c9935106afc59256bbbb8e ainda aguardam suas verificações completas e propagação da correção global #1170 antes de incorporação. A prova de um head não substitui a de outro. Não reexecutar job isolado para declarar conclusão.
 - #1158SG2 configuração continua aguardando o dono conforme evidência anterior; não alterar conta ou expor valores. PLANS_ON_SALE=false, permissões/opt-in, limites, conteúdo, idiomas e identificadores preservados. Sem entrega255: navegador autorizado continua indisponível, sem tentativa/switch autorizado por este lembrete.
+
+
+## AV — Ordem vigente para abrir as vendas e registro diário de provas (28/10/2026)
+
+Estado: **na fila, com execução imediata da nova ordem depois de concluir os PRs já abertos**. Instrução direta do dono de 28/10/2026, 14h58 Fortaleza, recebida pelo anexo Texto colado.txt nesta conversa. Aplicação de Pedidos repetidos, passo 3b: a ordem AV prevalece sobre prioridades anteriores incompatíveis; histórico, números e trabalhos existentes preservados. A conferência encontrou ausência desta solicitação no main 023909ae17b5ac0ec56c13f352b6477eaa474635, nos 18 PRs abertos e em 33 ramos codex/* adicionais identificados nos 40 PRs atualizados mais recentemente; os 727 nomes de referências codex/* também foram examinados para marcas AV/abertura. Busca por data/hora, título, etiquetas e conteúdo. Nenhuma duplicação identificada nesse conjunto conferido.
+
+PRs abertos no recebimento: #1170, #1169, #1168, #1166, #1164, #1162, #1158, #754, #752, #749, #748, #747, #745, #743, #742, #741, #740, #738. O #1158 continua urgente e aguardando o dono pela configuração privada ausente já registrada; urgência não autoriza incorporar uma quebra nem alterar contas. Os demais trabalhos já abertos continuam. Nenhum novo PR de implementação fora da lista AV será iniciado. Depois deles, 495[SR6] é a primeira prioridade; a decisão do dono nesse estudo não bloqueia o restante autorizado. AV2 altera somente a cadência da anotação de provas, para um único PR documental diário; verificação após cada incorporação permanece obrigatória e falhas exigem registro e correção imediatos. Este registro não abre vendas, não comprova impostos/margem e não implementa recursos ou recusas geográficas ainda pendentes. Sem novo serviço ou custo operacional contratado; custo de CI não medido não é declarado zero.
+
+### Solicitação literal do dono — AV1 e AV2
+
+AV — Abrir as vendas primeiro, com cuidado com os custos (28/10/2026)
+Etiquetas: [AV1] [AV2]
+
+Solicitação do dono (28/10/2026, 14h58, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: antes de gravar, aplique a regra permanente "Pedidos repetidos". Confira o main, os PRs abertos e os ramos codex/* recentes, e procure esta solicitação pela linha de data e hora, pelo nome da seção, pelas etiquetas [AV1] e [AV2] e pelo conteúdo. Se já estiver gravada, não crie nada novo. Esta é a instrução de ordem mais recente do dono e prevalece (passo 3b) sobre qualquer prioridade anterior incompatível, inclusive as da seção AB, de PV, EI, MR, SR, TX, DE, ME e das seções posteriores; o histórico fica preservado. Nenhum item é renumerado.
+
+Estado inicial: na fila, com execução imediata da nova ordem depois de concluir os PRs já abertos.
+
+[AV1] Nova ordem de execução: somente o necessário para vender.
+Primeiro, conclua e incorpore os PRs já abertos (inclusive #1158, do 505 [SG2], que é urgente), sem abrir PRs novos de itens fora desta lista. Depois, execute SOMENTE estes itens, nesta ordem, cada um por completo:
+1. 495 [SR6] — estudo conta brasileira versus LLC, com recomendação única, prazo até a primeira venda e todos os custos fixos e por venda de cada caminho (inclusive impostos pela política TX). Registre em "Depende do dono" a decisão e os passos exatos. Enquanto o dono não decidir, nenhum custo fixo novo (LLC, endereço, representante, contas) é assumido, e o restante desta lista continua sem esperar.
+2. Depois da decisão do dono em 495 [SR6], adapte stripePlatformEligibilityReady (lib/stripe-platform-eligibility.ts) ao caminho escolhido, com a prova datada exigida para esse caminho, sem afrouxar a exigência de prova.
+3. AB(a), revisão comercial, reduzida ao necessário: para cada cobertura ainda false em CONTRACT_ADMISSION_COVERAGE e para cada recurso cuja proteção não esteja comprovada, verifique se ele pode começar DESLIGADO na abertura sem quebrar a assinatura nem um direito do cliente; se puder, deixe desligado (interruptor no código, nenhuma página oferecendo), registre e siga; construa somente o que não puder começar desligado (por exemplo, renovação das assinaturas). Nunca preencha a revisão com números não comprovados.
+4. 472 [TX2] e 473 [TX3] — leitura tributária no código e impostos sobre consumo por país e estado, somente na parte necessária aos registros do passo 5.
+5. DEEMED_SUPPLIER_RECORDS pelo menor caminho legal, por jurisdição (EU, UK, US e other): "collect" somente onde a cobrança estiver construída e testada; nos demais casos, "refuse-consumers", recusando no checkout, com teste, a venda de produtos entregues eletronicamente a consumidores daquela jurisdição. Nos EUA, aplique o ponto 11 da política TX com contador por estado que liga a cobrança antes de cada limite. Decisão do dono: a abertura pode ser feita em fases; a cobrança do IVA europeu e do Reino Unido (7 [C-UE], 8 [C-UK], 300 a 303) vem logo depois da abertura, e a recusa é retirada só quando ela estiver pronta.
+6. 275 [FX1] — custos fixos do caminho escolhido em 495 [SR6] e base mínima de clientes; custo desconhecido reprova, nunca é zero.
+7. 89 [C2-CAPACITY] e 232 [CA1].
+8. 305 [SY1], 306 [SY2], 307 [EC1], 91 [D2-EU-WITHDRAWAL] e 98 [D2-COMPLIANCE-REVIEW].
+9. 114 [E2-AFFILIATE-TAX-FORMS]; se não puder ficar pronto sem atrasar a abertura, os pagamentos a afiliados começam desligados e 114 vem logo depois.
+10. O critério de 465 [MR2] necessário à revisão comercial e 466 [MR3]; o relatório mensal de 465 [MR2] vem logo depois da abertura.
+11. Itens de custo da posição (k) do Bloco de abertura, na ordem já gravada, somente os que reduzem o custo dos primeiros meses ou a base mínima; os demais vêm logo depois da abertura.
+12. Resumo final obrigatório do Bloco de abertura, com a lista única e ordenada do que só o dono pode fazer, inclusive OPENING_REQUESTED.
+Cuidado com os custos: todo gasto continua com teto automático antes de acontecer; nada que gere custo é ligado sem esse teto; a abertura só é pedida ao dono com a base mínima do passo 6 calculada.
+Passam para depois da abertura, na ordem já existente: 363 [EI1], 431 a 435 [PV1–PV5] e PV6, PV7 e PV8 (d) a (g) (PV8 (a) a (c) já autorizados continuam), 317 [EU1] e SV, e todos os itens que não estão na lista acima, inclusive DE, ME, PP, OX, RX, AG, SG1, SG3 e SG4, salvo correção urgente de algo quebrado em produção ou falha de segurança grave.
+
+[AV2] Registro de provas uma vez por dia.
+Para ganhar tempo sem perder nada: a conferência da publicação continua obrigatória depois de cada incorporação (SHA publicado, domínio e páginas respondendo), como hoje. Somente a anotação dessas provas na fila e na continuidade passa a ser feita uma vez por dia, num único PR de documentação, com a lista de cada incorporação do dia, commit, suíte completa e publicação. Se uma conferência falhar, a anotação e a correção são imediatas, sem esperar o lote.
+
+REGRA DE MARGEM (MR, 27/10/2026, 07h42): nenhum cliente pagante, isoladamente, usando 100% de todos os direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo depois de todos os custos e impostos; a empresa nunca dá prejuízo no pior caso a partir da base mínima calculada; 60% é a meta líquida mensal real da empresa. Taxas de recebimento mais caras de lib/receiving-costs.ts, reservas, exposição e custeio preservados; desconhecido reprova, nunca é zero; 100% dos custos fixos da LLC pertencem ao Marktmorgen (FX275); política tributária TX vigente.
+
+Proibido: ligar OPENING_REQUESTED ou PLANS_ON_SALE; preencher revisões ou registros sem tratamento construído, testado e comprovado; afrouxar qualquer trava ou teste; mudar preços, limites visíveis ou comissão; criar contas, abrir empresa, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
