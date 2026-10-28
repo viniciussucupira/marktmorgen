@@ -11270,3 +11270,16 @@ Regra de margem: cada item segue a REGRA DE MARGEM vigente (MR, 27/10/2026, 07h4
 Proibido: mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; criar contas, aceitar termos, pedir aprovação à Meta ou a qualquer fornecedor, contratar, pagar ou contatar terceiros; enviar e-mail real; apagar conteúdo de criadores ou qualquer coisa da Hazelsong; afirmar em público superioridade sobre a Stan sem a prova exigida em AX274 (item 7) e na regra VR (item 7). Somente testes sintéticos.
 
 Aplicar a regra VR.
+
+
+### Prévia de PDF incorporada — 27/10/2026 21h24:14 Fortaleza
+
+PR1132 incorporado em21:24:14Fortaleza (28/10/2026 00:24:14UTC): merge920c690b67802dab2c83620095b6ca8777859a20, head67400c5e5453fc36e3d44464d38ed47bdfb79b18, árvore49fe0e45b3ade1cee187ef71ea4c36532b3b1604, pais82aa0000ad8982d9d51876fa56dd5a4722d69dfa/67400c5e5453fc36e3d44464d38ed47bdfb79b18. Árvore real igual à união independente da filaSB478–483 e do único blob aprovado components/pdf-preview-toggle.tsx 00b2a68fac8c1145e28d46771e9b1c20d21213aa. Preservado todo o pedidoSB e sua ordem.
+
+Correção final reutiliza components/use-hydrated.ts (snapshotfalse no servidor/hidratação,true no cliente), mantendo select inerte até o handler estar montado. Head inicial842d4ebea998ac70eabdf055c1f2b4fda0aa37d4 falhou verify122538201235: react-hooks/set-state-in-effect na linha22, setReady síncrono dentro do efeito;34warnings antigos não eram a causa. Corrigido pelo hook existente, sem desativar regra, adicionar atraso ou relaxar teste. Suíte INTEGRAL no novohead67400:31/31+Vercel; verify122539691015 Everythingpassing/233bundles/sem erro. Oito scopes122539660023,122539649808,122539647804,122539645777,122539637617,122539625018,122539598001,122539329289 com10+7/fulltrue/sem erro. WebKit122539690931 passou todas24asserções de POSTexato da prévia (12cenários x390/1280), inclusive o primeiro HTTPfailure/390; Firefox122539690978 passou. A divergência0anterior e a falha de lint continuam históricas, não foram apagadas nem substituídas por rerunisolado.
+
+Antes desta incorporação, main82aa0000ad8982d9d51876fa56dd5a4722d69dfa concluiu31/31, sem cancelamento. Main920c tem árvore combinada diferente doheadPR: nova execução INTEGRAL em andamento,10/31sucessos21pendentes na leitura00:26UTC; não declarar essa execução concluída nem cancelar para a próxima incorporação.
+
+Produção dpl_CBvVGT8dUACLPQK7obaoNBrDNJVH, marktmorgen-6s15j89so-viniciussucupira.vercel.app, READY/production/SHA920c exato. Aliases marktmorgen.com/www.marktmorgen.com e nimbuslabsai.com/www.nimbuslabsai.com conferidos. Consulta agrupadaerror/fatal desde00:24:14UTC retornou tabela vazia; não comprova tráfego ou fluxo interativo. Chrome continua indisponível para a prova interativa, portanto contador254, sem entrega255.
+
+PR1123/1124/1126/1131 continuam aprovados nos respectivos heads, ainda não incorporados; retomar com leitura fresca/união exata após terminar a execução integral ativa. Sem nova cobrança/serviço/IOprodutivo; tempo/CI/reparos100%FX275, desconhecido nãozero. PLANS_ON_SALE/OPENING_REQUESTED/preços/limites/comissão/opt-ins/controles fiscais/custos/conteúdo/idiomas/IDs/Hazelsong preservados. Nenhuma margem, abertura, perfeição ou disponibilidade funcional adicional certificada.
