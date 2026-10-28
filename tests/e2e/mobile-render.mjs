@@ -21,8 +21,8 @@ try{
    await cdp.send("Network.emulateNetworkConditions",{offline:false,latency:150,downloadThroughput:1600000/8,uploadThroughput:750000/8});
    let writes=0;await page.route("**/*",route=>{const request=route.request(),url=new URL(request.url());if(!["GET","HEAD"].includes(request.method())){writes++;return route.abort();}if(url.pathname.startsWith("/api/")||url.origin!==LOCAL)return route.abort();return route.continue();});
    await page.addInitScript(()=>{
-    window.__renderLab={lcp:null,cls:0,lastShift:0,windowStart:0,windowScore:0,paint:[],events:[],shifts:[],longTasks:[],animationFrames:[],inputTargets:[]};
-    new PerformanceObserver(list=>{for(const entry of list.getEntries())window.__renderLab.lcp=entry.startTime;}).observe({type:"largest-contentful-paint",buffered:true});
+    window.__renderLab={lcp:null,lcpAttribution:null,cls:0,lastShift:0,windowStart:0,windowScore:0,paint:[],events:[],shifts:[],longTasks:[],animationFrames:[],inputTargets:[]};
+    new PerformanceObserver(list=>{for(const entry of list.getEntries()){window.__renderLab.lcp=entry.startTime;window.__renderLab.lcpAttribution={tag:entry.element?.tagName,id:entry.element?.id,text:entry.element?.textContent?.trim().slice(0,120),url:entry.url,size:entry.size,loadTime:entry.loadTime,renderTime:entry.renderTime};}}).observe({type:"largest-contentful-paint",buffered:true});
     new PerformanceObserver(list=>{const state=window.__renderLab;for(const entry of list.getEntries()){if(entry.hadRecentInput)continue;state.shifts.push({value:entry.value,at:entry.startTime,sources:(entry.sources??[]).map(source=>({node:source.node?.outerHTML?.slice(0,220),previous:source.previousRect,current:source.currentRect}))});if(!state.windowStart||entry.startTime-state.lastShift>1000||entry.startTime-state.windowStart>5000){state.windowStart=entry.startTime;state.windowScore=0;}state.lastShift=entry.startTime;state.windowScore+=entry.value;state.cls=Math.max(state.cls,state.windowScore);}}).observe({type:"layout-shift",buffered:true});
     if(PerformanceObserver.supportedEntryTypes.includes("event"))new PerformanceObserver(list=>{for(const entry of list.getEntries())if(entry.interactionId)window.__renderLab.events.push({id:entry.interactionId,duration:entry.duration,name:entry.name,startTime:entry.startTime,processingStart:entry.processingStart,processingEnd:entry.processingEnd});}).observe({type:"event",buffered:true,durationThreshold:16});
     if(PerformanceObserver.supportedEntryTypes.includes("longtask"))new PerformanceObserver(list=>{for(const entry of list.getEntries())window.__renderLab.longTasks.push({startTime:entry.startTime,duration:entry.duration});}).observe({type:"longtask",buffered:true});
@@ -40,7 +40,7 @@ try{
    await page.evaluate(async()=>{await Promise.all(document.getAnimations().filter(animation=>Number.isFinite(animation.effect?.getComputedTiming().iterations)).map(animation=>animation.finished.catch(()=>{})));});
    // Two rendering frames, not a claim that this represents a real-user percentile.
    await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
-   const before=await page.evaluate(()=>({lcp:window.__renderLab.lcp,cls:window.__renderLab.cls,shifts:window.__renderLab.shifts}));
+   const before=await page.evaluate(()=>({lcp:window.__renderLab.lcp,lcpAttribution:window.__renderLab.lcpAttribution,cls:window.__renderLab.cls,shifts:window.__renderLab.shifts}));
    // Browser counters identify whether a slow native disclosure spent its time
    // in script, layout or style. Read outside the measured pointer-to-paint
    // interval; preserve every cold sample and the existing strict thresholds.
@@ -57,7 +57,7 @@ try{
    }
    const interaction=await page.evaluate(()=>{const state=window.__renderLab;return {paint:state.paint,event:state.events,longTasks:state.longTasks,animationFrames:state.animationFrames,inputTargets:state.inputTargets};});
    const interactionMs=interaction.paint.length?Math.max(...interaction.paint,...interaction.event.map(item=>item.duration)):null;
-   const result={label,version,path,sample,viewport:390,cpuSlowdown:4,latencyMs:150,downloadMbps:1.6,cache:"cold",thirdPartyRequests:"blocked",apiWrites:writes,lcpMs:before.lcp,cls:before.cls,interactionToPaintMs:interactionMs,eventTiming:interaction.event,longTasks:interaction.longTasks,longAnimationFrames:interaction.animationFrames,inputTargets:interaction.inputTargets,fieldINP:null,browserWork,layoutShiftSources:before.shifts};
+   const result={label,version,path,sample,viewport:390,cpuSlowdown:4,latencyMs:150,downloadMbps:1.6,cache:"cold",thirdPartyRequests:"blocked",apiWrites:writes,lcpMs:before.lcp,lcpAttribution:before.lcpAttribution,cls:before.cls,interactionToPaintMs:interactionMs,eventTiming:interaction.event,longTasks:interaction.longTasks,longAnimationFrames:interaction.animationFrames,inputTargets:interaction.inputTargets,fieldINP:null,browserWork,layoutShiftSources:before.shifts};
    result.targets={lcp:typeof before.lcp==="number"&&before.lcp<2500,cls:before.cls<0.1,interaction:interactionMs!==null&&interactionMs<200};
    console.log("MOBILE_RENDER_MEASUREMENT:"+JSON.stringify(result));results.push(result);
    if(writes||!Number.isFinite(before.lcp)||!Number.isFinite(before.cls)||interactionMs===null)failed=true;

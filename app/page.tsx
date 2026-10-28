@@ -1,5 +1,4 @@
 import { TrustChecks } from "@/components/trust-checks";
-import { StudioScreens } from "@/components/studio-screens";
 import { CreatorShowcase, PlatformProof } from "@/components/creator-showcase";
 import { PricingValue } from "@/components/pricing-value";
 import type { Metadata } from "next";
@@ -10,7 +9,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { BuyerPath } from "@/components/buyer-path";
 import { SiteNav } from "@/components/site-nav";
 import { Icon, type IconName } from "@/components/icons";
-import { FeatureVisual, type VisualKey } from "@/components/feature-visuals";
+import { HOME_REASONS } from "@/lib/home-reasons";
 import { HeroFlow, Pricing } from "@/components/home-parts";
 import { Faq, SoldMarquee } from "@/components/home-static";
 import { HomeData } from "@/components/structured-data";
@@ -56,46 +55,6 @@ const PRICE = PRICE_CENTS / 100;
  * about where money goes is worth more with the path drawn next to it, and
  * two of these three drawings are the real thing and can be clicked.
  */
-const REASONS: {
-  icon: IconName;
-  title: string;
-  body: string;
-  example: string;
-  visual: VisualKey;
-  href: string;
-  link: string;
-}[] = [
-  {
-    icon: "bank",
-    title: "The money lands in your Stripe",
-    body: "Every sale is a direct charge on your own Stripe account. Payouts follow your schedule, and refunds and disputes live in your own dashboard.",
-    example:
-      "If you ever leave us, nothing moves: the account, the customers and the payout history were yours the whole time.",
-    visual: "stripe",
-    href: "/platform/your-stripe",
-    link: "How the money moves",
-  },
-  {
-    icon: "tag",
-    title: "Several prices for one product",
-    body: "One week for $27, five weeks for $39. Up to 50 options on any product, compared side by side, and each option delivers its own file.",
-    example:
-      "A week at one price, five weeks at another, the season at a third. The buyer picks; each one hands over its own file.",
-    visual: "options",
-    href: "/platform/price-options",
-    link: "See price options",
-  },
-  {
-    icon: "bolt",
-    title: "Reliable access after payment",
-    body: "A file downloads, a course opens, a booked call lands on both calendars — but only after we ask Stripe's own record whether the payment settled, and we ask again on every download. A link somebody guesses or forwards opens nothing. The confirmation email links back to the purchase when the buyer leaves checkout.",
-    example:
-      "A buyer on a new phone types the email address they paid with, and every purchase from that store comes back to them — a month or a year later, for as long as the store is open and the product is still there.",
-    visual: "delivery",
-    href: "/platform/instant-delivery",
-    link: "How delivery works",
-  },
-];
 
 const DOMAINS = isDomainsConfigured();
 
@@ -104,11 +63,7 @@ const DOMAINS = isDomainsConfigured();
  * live. Not a promise of when: each is a line where Stan is ahead today, and
  * the feature-by-feature page has the rest.
  */
-const NOT_YET = [
-  "Automatic replies on Instagram",
-  "An iPhone app from the App Store",
-  "Paying affiliates without a PayPal account of your own",
-];
+
 
 /*
  * Eight kinds of creator, each shown at work rather than posed.
@@ -376,7 +331,11 @@ export default function Home() {
         <HomeActions place="situations"/>
 
         {/* ------------------------------------------------ the buyer's path */}
-        <Suspense fallback={null}><StudioScreens /></Suspense>
+        <section aria-labelledby="studio-screens-title" data-home-studio-summary className="container-page py-12">
+          <h2 id="studio-screens-title" className="t-h2">See the work before you start</h2>
+          <p className="mt-4 max-w-3xl text-ink-soft">Two actual screens from isolated fictional fixtures show the guided setup and product-page editor. View the examples and their explanations on the feature page.</p>
+          <Link href="/platform#studio-screens-title" prefetch={false} className="link mt-4 inline-flex min-h-11 items-center">See the studio and product editor examples</Link>
+        </section>
         <Suspense fallback={null}><BuyerPath /></Suspense>
 
         <section className="section" aria-labelledby="home-modules-heading">
@@ -401,92 +360,18 @@ export default function Home() {
 
         <HomeActions place="path"/>
 
-        {/* ------------------------------------------------------ why Marktmorgen */}
-        <Suspense fallback={null}>
-        <section className="section">
+        <section className="section" aria-labelledby="home-reasons-summary-heading">
           <div className="container-page">
-            <div className="max-w-2xl">
-              <h2 className="t-h2 balance">Built for the people who use it</h2>
-            </div>
-
-            <div className="mt-14 space-y-16 sm:mt-16 sm:space-y-20">
-              {REASONS.map((r, i) => (
-                <article key={r.title} className="grid items-center gap-10 lg:grid-cols-2 lg:gap-16">
-                  <div className={i % 2 === 1 ? "lg:order-2" : ""}>
-                    <span className="icon-tile">
-                      <Icon name={r.icon} size={22} />
-                    </span>
-                    <h3 className="t-h3 mt-6">{r.title}</h3>
-                    <p className="measure mt-3 text-ink-soft">{r.body}</p>
-                    <p className="measure mt-5 flex gap-2.5 rounded-[var(--r-md)] bg-white p-4 text-[0.9375rem] text-ink-soft ring-1 ring-line">
-                      <Icon name="check" size={16} strokeWidth={2.4} className="mt-0.5 shrink-0 text-mint-deep" />
-                      <span>{r.example}</span>
-                    </p>
-                    <Link prefetch={false} href={r.href} className="link-arrow mt-6 text-[0.9375rem]">
-                      {r.link}
-                      <Icon name="arrow-right" size={16} className="arrow" />
-                    </Link>
-                  </div>
-                  {/*
-                    The drawing, on its own.
-
-                    A photograph used to sit above this, tilted, with the
-                    drawing overlapping its lower edge. The drawing is the
-                    evidence — it is the screen this actually happens on —
-                    and a stock photograph of a desk laid over evidence
-                    does not strengthen it, it decorates it. Proof is shown,
-                    not illustrated.
-
-                    min-w-0 is not decoration. A grid item will not shrink
-                    below the widest thing inside it unless you say so, and
-                    these drawings are full of rows that would rather stay
-                    wide, so without it the whole page grows a sideways
-                    scrollbar on a phone.
-                  */}
-                  <div className={`flex min-w-0 justify-center ${i % 2 === 1 ? "lg:order-1 lg:justify-start" : "lg:justify-end"}`}>
-                    <Suspense fallback={null}><FeatureVisual visual={r.visual} tone="light" /></Suspense>
-                  </div>
-                </article>
-              ))}
-            </div>
-
-            {/*
-              What we do not have, kept and made small.
-
-              The feature inventory that used to sit here is on /platform,
-              where it belongs and where the nav already points; repeating
-              it added 5,500px to this page and said nothing the visitor
-              could not reach in one click. This block is the part that
-              could not move, because it is the argument: a page that lists
-              only what works is worth nothing unless it also names what
-              does not. One row, five names, no padding around them.
-            */}
-            <div className="mt-14 flex flex-col gap-4 rounded-[var(--r-lg)] bg-white/70 p-6 shadow-[inset_0_0_0_1px_rgba(42,23,144,0.09)] sm:p-7 lg:flex-row lg:items-center lg:gap-8">
-              <div className="lg:w-[17rem] lg:shrink-0">
-                <span className="tag tag-next" style={{ color: "var(--ink)" }}>Not here yet</span>
-                <p className="mt-3 text-[0.9375rem] text-ink-soft">
-                  Currently unavailable. Each one is explained on the feature page.
-                </p>
-              </div>
-              <ul className="flex flex-wrap gap-2.5">
-                {NOT_YET.map((n) => (
-                  <li
-                    key={n}
-                    className="flex items-center gap-2 rounded-full bg-white px-3.5 py-2 text-[0.875rem] text-ink shadow-[inset_0_0_0_1px_rgba(42,23,144,0.09)]"
-                  >
-                    <Icon name="minus" size={14} className="shrink-0 text-ink-mute" />
-                    {n}
-                  </li>
-                ))}
-              </ul>
-              <Link prefetch={false} href="/proof/everything" className="link-arrow shrink-0 text-[0.9375rem]">
-                Feature by feature
-                <Icon name="arrow-right" size={16} className="arrow" />
-              </Link>
-            </div>
+            <h2 id="home-reasons-summary-heading" className="t-h2 balance">Built for the people who use it</h2>
+            <ul className="mt-8 grid gap-5 lg:grid-cols-3">
+              {HOME_REASONS.map(reason=><li key={reason.href} className="rounded-2xl border border-line bg-white p-6">
+                <h3 className="t-h3">{reason.title}</h3>
+                <Link href={reason.href} prefetch={false} className="link mt-4 inline-flex min-h-11 items-center">{reason.link}</Link>
+              </li>)}
+            </ul>
+            <Link href="/platform#home-reasons-heading" prefetch={false} className="link mt-6 inline-flex min-h-11 items-center">Read the details, examples and current limitations</Link>
           </div>
         </section>
-        </Suspense>
 
         {/* -------------------------------------------------------- pricing */}
         <Suspense fallback={null}>
