@@ -16894,6 +16894,52 @@ AX274:rótulos visíveis/explicações locais/erros emtexto/teclado/7:1/44×44px
 
 Custos decriação/leitura existentes comtetoautomático/reserva,não adicionar chamada porvenda para justificar mensagem ou calcular desconto;reuso não significa custo0. MR27/10/07h42/TX/FX275 vinculantes:100%direitos/complementos pior mês mensal/anual sem prejuízo isolado,empresa basemínima100%fixos,recebimentomaiscaro/impostos/reservas,meta60%mensalreal,desconhecido reprova e franquia grátis nãozero. Preços/limites/comissão/flagsfalse/taxgate/art9a/revisão/stripePlatformEligibilityReady/conteúdo/idiomas/IDs/Hazelsong preservados. Somente registro,não implementação/teste funcional/publicação/número deentrega;contador254.
 
+
+### Complemento vinculante — 29/10/2026, 19h57 Fortaleza — compradores anteriores
+
+Aplicar somente a diferença a554[DS1]: número554, posição após553/subordinaçãoAV1 e estado na fila preservados; nenhum555 criado. Proveniência: pedido direto integral abaixo;main81c708f83b222bff65f69c2dbe9ed9c8cbbb9891 ePRaberto1230/fila conferidos,785refs codex/*inventariadas,sem complemento equivalente. Relato ClickFunnels é do Claude,não nova conferência independente.
+
+Regra opcionalOnlyforpeoplewhoboughtfromme,ou comprador de produto escolhido: conferir NO SERVIDOR,antes de aplicar código,o email de quem paga e compra PAGA da própria loja,via fonte existente lib/next-offer.ts/contaStripe do criador/comprasimportadas,sem outro motor e sem cruzar lojas/contas. Elegibilidade não é cálculo de desconto:Stripe continua única fonte de preço descontado. Falha de leitura/identidade/atribuição incompleta recusa com explicação honesta,nunca aprova como se ausência/zero fosse dado conhecido. Email nãoelegível:mensagemtextualjuntoaocampo/anunciada7:1,sem revelar nomes/listas/histórico de compradores nem pedir dadoextra. Linkcompartilhado?code= não substitui prova de elegibilidade.
+
+Envioavulso atual para compradores pode inserir link com esse código e validadereal,com mesmos opt-in/supressões/cotas,sem email adicional ou novoenvio em teste. Convive com produtos/mínimo/duração somente combinações queStripeaceitar e documentação datada/API fixada do pedido original. Regrafirst_time_transaction e compradorprévio não devem ser oferecidas numa combinação contraditória sem validação real da semânticaStripe;desconhecido não autoriza prometer aceitação ou emular desconto.
+
+Exceção expressa posterior ao custo original19h53 e resumo “não adicionar chamada porvenda”: este complemento19h57 autoriza UMA leitura limitada de compras do email PORCHECKOUTCOMESTECÓDIGO,comcache/tetoautomático/reserva dentrodoplano,antesdeaplicar. Não autoriza leiturassemcódigo/ilimitadas,gratuidadedeAPIouliberaroperação semMR/TX/FX275;os demais limites/criação/leitura/cálculopeloStripe permanecem. Implementação deve provar orçamento mensal/anual e piorcaso,deduplicação/cache isolado por loja/email,desconhecidoreprova,nãozero.
+
+Testessintéticos:compra paga mesma loja/email e produtoescolhido;outraloja/emailemérito recusado;falha de leitura recusa;erroacessívelsemPII;linkreal/validade/combinações;nenhumpreçocalculadolocalmente. VR:opcional,padrõesatuaispreservados,sem nova decisão/dado obrigatório do comprador;sem tiraralternativas/gates/preços/limites/comissão/conteúdo/Hazelsong. Não implementado/publicado,nãoentregafuncional,contador254.
+
+#### Pedido integral do complemento19h57 — 554 [DS1]
+
+DS — Complemento ao 554 [DS1]: código só para quem já comprou (29/10/2026)
+Etiqueta: [DS1]
+
+Solicitação do dono (29/10/2026, 19h57, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: é complemento ao item 554 [DS1] já gravado. Aplique só a diferença ao item existente, mantendo número, posição e estado (regra "Pedidos repetidos", passo 3, letra b), e registre na proveniência o que mudou.
+
+Estado inicial: o do próprio 554.
+
+Contexto: o Claude conferiu em 29/10/2026 a seção "Reward your best customers" de clickfunnels.com/apps/discounts: "Send special discount codes to your most valuable customers. Create personalized offers based on purchase history". No Marktmorgen, o envio avulso já vai só para compradores (lib/contacts.ts, WHO: "all", "buyers", "leads") ou para quem tem ou não tem certo produto, e o link com ?code= aplica o código; mas um código repassado vale para qualquer pessoa, porque não há código restrito a quem já comprou.
+
+O que acrescentar ao 554 [DS1]:
+- nova regra opcional "Only for people who bought from me", ou só para quem comprou um produto escolhido: o checkout só aceita o código quando o e-mail de quem paga já tem uma compra paga nesta loja (lida da conta Stripe do criador e das compras importadas, como já é feito em lib/next-offer.ts), conferido no servidor antes de aplicar o código;
+- quando o e-mail não se encaixa, o checkout diz em texto que o código é para quem já comprou, sem revelar quem comprou e sem pedir dados a mais;
+- no envio avulso para compradores, o estúdio oferece pôr no e-mail o link com esse código, com a data de término real;
+- a regra convive com as outras do 554 (produtos, valor mínimo, duração) dentro das combinações que o Stripe aceitar, e o Marktmorgen continua sem calcular o preço com desconto.
+
+Acessibilidade (AX274): a mensagem de código recusado em texto junto ao campo, anunciada ao leitor de tela; contraste de 7:1.
+
+Testes automáticos: o código só vale para e-mail com compra paga na loja; vale para o produto escolhido quando houver; mensagem de recusa sem dados de outros; leitura que falhar recusa o código com explicação, nunca o aceita por engano; somente Stripe simulado e dados sintéticos.
+
+Custo: uma leitura das compras do e-mail por checkout com o código, com cache e teto automático, dentro do plano; desconhecido reprova, nunca é zero.
+
+Regra de margem: segue a REGRA DE MARGEM vigente (MR, 27/10/2026, 07h42), a política tributária TX e FX275; custo desconhecido reprova, nunca é zero.
+
+Proibido: criar item novo ou mudar número, posição ou estado do 554; revelar quem comprou; aceitar o código quando a leitura falhar; calcular o desconto fora do Stripe; pressa falsa ou "de/por" inventado; mudar preços, limites visíveis, comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a, a revisão comercial ou stripePlatformEligibilityReady; afrouxar qualquer trava; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+
 ### Pedido integral e proveniência — 554 [DS1]
 
 DS — Regras dos códigos de desconto: produtos, primeira compra, valor mínimo e duração (29/10/2026) [DS1]
