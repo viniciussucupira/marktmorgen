@@ -160,6 +160,14 @@ async function stripeRequest(
  * country on this list — its rules change and they depend on where our own
  * account is registered — and that refusal is reported as itself rather than
  * as a generic failure.
+ *
+ * Stripe support, 28 October 2026 (thread "Connect platform eligibility for
+ * international accounts", docs/stripe-platform-eligibility.md), for a US
+ * platform taking direct charges on Standard accounts with no application
+ * fee: available in each country below; not available in Malaysia, so
+ * Malaysia is no longer offered; Brazil is a public beta and India is by
+ * invitation only, so neither is offered. tests/connect-configuration.test.ts
+ * holds the list to that answer.
  */
 export const COUNTRIES: { code: string; name: string; top?: true }[] = [
   { code: "us", name: "United States", top: true },
@@ -189,7 +197,6 @@ export const COUNTRIES: { code: string; name: string; top?: true }[] = [
   { code: "li", name: "Liechtenstein" },
   { code: "lt", name: "Lithuania" },
   { code: "lu", name: "Luxembourg" },
-  { code: "my", name: "Malaysia" },
   { code: "mt", name: "Malta" },
   { code: "mx", name: "Mexico" },
   { code: "nl", name: "Netherlands" },

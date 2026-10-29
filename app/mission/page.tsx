@@ -139,7 +139,7 @@ const BUILT = [
  * than claiming a button that would do nothing.
  */
 const STRIPE_LINE =
-  "Connecting your own Stripe account from the studio, in any of 43 countries, so charges are made on it and not on ours";
+  "Connecting your own Stripe account from the studio, in any of 42 countries, so charges are made on it and not on ours";
 
 const CHECKOUT_LINE =
   "Selling: the buyer pays on your account and the file is handed over the moment Stripe confirms it";

@@ -170,3 +170,18 @@ lib/stripe-platform-eligibility.ts exige platformCountry=US,companyCountry=US,ac
 
 lib/receiving-costs.ts mantém taxBps=50 (0,5%) no recebimento das assinaturas próprias doMarktmorgen. tests/plan-cost-model.ts aplica receivingOf aos preços dos planos/complementos e lib/store-assistant-rules.ts à assinatura própria do assistente. lib/store-checkout.ts cria checkout de vendas dos criadores via onAccount; lib/tax.ts consulta/configura a própria conta conectada. components/tax-editor.tsx e lib/help-content.ts dizem expressamente que Stripe cobra Stripe Tax na conta do criador. Não identificado cálculo que transforme essa taxa das vendas dos criadores em custo doMarktmorgen na conferência dessas rotas/consumidores. **Sem alteração de cálculo, documento gerado ou regeneração desnecessária**; os0,5% das próprias assinaturas ficam preservados.
 
+
+## SC1 — Resposta da Stripe sobre os países dos criadores (28/10/2026, 19h37 Fortaleza)
+
+Proveniência: resposta da Stripe (Gabriel) no fio "Re: Connect platform eligibility for international accounts", recebida em 28/10/2026 às 19h37 (Fortaleza), conferida pelo Claude no Gmail do dono, com o texto igual ao relatado pelo dono às 23h50. Responde à pergunta pendente de 18h37. Nenhum identificador de conta é copiado. É a visão padrão da Stripe para uma plataforma americana; não é aprovação de conta, país ou abertura.
+
+Configuração perguntada: plataforma americana; cada criador conecta a própria conta Standard (painel completo); toda venda é cobrança direta na conta do criador; nenhuma taxa de aplicação; a assinatura do Marktmorgen é cobrada na conta da plataforma. A Stripe disse que cobrar a assinatura não muda quais países podem conectar.
+
+1. Disponível (42 países): Estados Unidos, Reino Unido, Canadá, Austrália, Irlanda, Nova Zelândia, Áustria, Bélgica, Bulgária, Croácia, Chipre, República Tcheca, Dinamarca, Estônia, Finlândia, França, Alemanha, Gibraltar, Grécia, Hong Kong, Hungria, Itália, Japão, Letônia, Liechtenstein, Lituânia, Luxemburgo, Malta, México, Países Baixos, Noruega, Polônia, Portugal, Romênia, Singapura, Eslováquia, Eslovênia, Espanha, Suécia, Suíça, Tailândia e Emirados Árabes Unidos.
+2. Não disponível: Malásia (cobrança direta indisponível para plataforma americana). Retirada de COUNTRIES em lib/stripe-connect.ts; tests/connect-configuration.test.ts impede a volta.
+3. Brasil: cobrança direta de contas brasileiras conectadas a plataforma americana está em beta público, não disponível de forma geral. Depois que a conta americana existir, o dono responde no mesmo fio para a Stripe conferir a liberação. Contas brasileiras têm restrições de pagamento internacional e conversão de moeda (exceto Visa e Mastercard emitidos fora do Brasil), que podem limitar recursos do Connect. Não oferecido.
+4. Índia: cobrança direta disponível e taxa de aplicação indisponível para plataforma de fora da Índia; contas Stripe na Índia só por convite (https://stripe.com/in/contact/sales). Não oferecido.
+5. Emirados Árabes Unidos: o criador pode ter de informar dados de registro fiscal no cadastro da Stripe.
+6. Em todos os países: o criador só conecta se puder abrir conta Stripe no próprio país; a Stripe pode pedir documentos ou analisar a conta conforme o país e o tipo de negócio; a lista deve ser conferida contra a conta real da plataforma quando ela existir.
+
+Passos do dono para depois da conta americana existir (a incluir no roteiro 470 [SR4], em "Depende do dono"): responder no mesmo fio pedindo a liberação do beta de cobrança direta para contas brasileiras; pedir a conferência da lista de países contra a conta real da plataforma. Nenhum contato é feito por agente.
