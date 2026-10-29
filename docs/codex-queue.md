@@ -16613,6 +16613,51 @@ Topo agregado por período: conversas abertas/respondidas e conversas seguidas d
 
 AX274: região com título,números/datas reais rotulados,7:1/44×44px/teclado/sem depender de cor. Testes futuros só Stripe e dados sintéticos para isolamento loja+email,papéis,Unavailable,janela30dias/receita e ausência de outra loja. LeiturasStripe/cache/gravações/processamento entram nos tetos por loja/mês/reserva antes;não chamar custo desconhecido de0nem usar franquia gratuita como0. MR27/10/07h42/TX/FX275:100%direitos+complementos pior mês mensal/anual sem prejuízo isolado,empresa sem prejuízo na base mínima/100%fixos,recebimento mais caro/reservas/impostos;60%meta mensal real. VR: somente registro,nenhum recurso implementado/testadofuncional/publicado,contador254. Flags/preços/limites/comissão/travas/optins/conteúdo/Hazelsong/idiomas/IDs preservados.
 
+### Complemento ao550IX1 — notas internas, tempo e webhook (29/10/2026,18h00Fortaleza)
+
+Proveniência: complemento direto do dono ao550já incorporadoPR1226,aplicado sópela diferença/Pedidosrepetidos3.b. Número550,posição e estado “na fila” acima ficam intactos; sem novo item. Main892de72b ePRs1223/1224 conferidos,sem estecomplemento. Reusar inbox/assignTo/fechamento/webhooks/RBAC atuais.
+
+Internal note: texto simples,distinto por texto E fundo,somente dono/equipeautorizada; nunca mensagem do comprador/email/export comprador/webhook de conversa. Mesmo prazo/exclusão da conversa,bytes na cota da loja,isolamento/RBAC no servidor. Não confundir nota interna com resposta salva ou comentárioCRM.
+
+Topo por período: mediana até primeira resposta real,fechadas,abertas>24horassemresposta; números por membro da equipe só dono da loja,com horários existentes e definição verificável de primeiraresposta sem incluir nota interna como atendimento. Sem novo tracking,pesquisa/envio/número de satisfação; leitura desconhecida não vira0.
+
+conversation.started no motor dewebhooks existente: loja/hora/origemchat-form-assistente/primeirotexto,apenas evento ligado pelo criador,endpoints que ele já cadastrou,assinatura/limites/repetições/segurança atuais,sem segundo emissor. **Diferença expressa em relação ao pedido17h53:** a proibição anterior de dados a terceiros permanece para todo restante; este complemento autoriza somente o payload do evento nos webhooks cadastrados e ativados pelo criador,com informação na privacidade. Não enviar notas internas,compras/receita/rótulos/CRM ou novosdadosnãoespecificados,nem novosendereços. Nenhum webhook real é enviado neste registro/testes.
+
+AX274: Internal note em texto,númerosreaisrotulados,7:1/44×44px/teclado. Testes sintéticos para nota não chegar ao comprador/email,papéis,exclusão,mediana a partir de mensagens,eventosomenteoptin/endpoints cadastrados/assinado. Storage de notas/leituras/webhook/retries dentro dos tetos/reservas antesgasto,sem aumentarfranquia. MR27/10/07h42/TX/FX275/VR vinculantes,desconhecido reprova/nãozero. Nenhum preço/limite/comissão/flag/trava/dadoexistente/Hazelsong alterado,contador254. Somente registro,não implementação/publicação.
+
+#### Briefing integral — complemento550IX1 de18h00
+
+IX — Complemento ao 550 [IX1]: notas internas, tempo de resposta e aviso de conversa nova pelos webhooks (29/10/2026)
+Etiqueta: [IX1]
+
+Solicitação do dono (29/10/2026, 18h00, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: é complemento ao item 550 [IX1] já gravado. Aplique só a diferença ao item existente, mantendo número, posição e estado (regra "Pedidos repetidos", passo 3, letra b), e registre na proveniência o que mudou.
+
+Estado inicial: o do próprio 550.
+
+Contexto: o Claude conferiu em 29/10/2026 as perguntas frequentes de clickfunnels.com/apps/message-hub: notas internas, atribuição de conversas e chat da equipe; respostas prontas, regras de distribuição e webhooks; e relatórios de tempo de resposta, conversas resolvidas, satisfação e produtividade. No Marktmorgen, a caixa de entrada (lib/inbox.ts, lib/inbox-rules.ts, components/inbox-studio.tsx) já tem respostas salvas, conversa entregue a uma pessoa da equipe (assignTo) respeitando os papéis, e fechamento; não tem notas internas, não mede o tempo de resposta, e os webhooks da loja (lib/webhooks.ts) não avisam conversas novas.
+
+O que acrescentar ao 550 [IX1]:
+- notas internas em cada conversa: texto simples, visto só pelo criador e pela equipe que pode ver a caixa de entrada, nunca enviado ao comprador, marcado "Internal note" e com fundo diferente das mensagens; guardadas e apagadas junto com a conversa, pelo mesmo prazo, e contadas no armazenamento da loja;
+- no topo da caixa de entrada, por período: tempo mediano até a primeira resposta, conversas fechadas e conversas abertas há mais de 24 horas sem resposta; por pessoa da equipe, só para o dono da loja; só a partir de horários já gravados nas mensagens, sem rastreamento novo;
+- novo evento nos webhooks que já existem, "conversation.started", com a loja, a hora, a origem (chat, formulário, assistente) e o primeiro texto, enviado só aos endereços que o criador já cadastrou, assinado como os outros eventos; a política de privacidade diz que as mensagens podem ser enviadas aos webhooks do criador quando ele ligar esse evento;
+- sem pesquisa de satisfação enviada ao comprador e sem número de satisfação.
+
+Acessibilidade (AX274): a nota interna é identificada por texto, não só pela cor; os números em texto real com rótulo; contraste de 7:1; alvos de pelo menos 44 × 44 px; operável só pelo teclado.
+
+Testes automáticos: a nota interna nunca chega ao comprador nem ao e-mail dele; respeita os papéis; é apagada com a conversa; o tempo mediano a partir de mensagens simuladas; o evento do webhook só vai aos endereços cadastrados, assinado, e só quando ligado; somente dados sintéticos.
+
+Custo: gravações das notas no armazenamento da loja, com teto; leituras já contadas; envios de webhook dentro dos limites e repetições que já existem; desconhecido reprova, nunca é zero.
+
+Regra de margem: segue a REGRA DE MARGEM vigente (MR, 27/10/2026, 07h42), a política tributária TX e FX275; custo desconhecido reprova, nunca é zero.
+
+Proibido: criar item novo ou mudar número, posição ou estado do 550; mostrar ou enviar a nota interna ao comprador; mandar pesquisa ou e-mail ao comprador; enviar dados a endereços não cadastrados pelo criador; ignorar os papéis da equipe; mudar preços, limites visíveis, comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a, a revisão comercial ou stripePlatformEligibilityReady; afrouxar qualquer trava; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+
 ### Briefing integral do dono — 550IX1
 
 IX — Na caixa de entrada, quem é a pessoa e se a conversa virou venda (29/10/2026) [IX1]
