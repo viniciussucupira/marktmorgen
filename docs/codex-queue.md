@@ -16036,3 +16036,29 @@ Testes automáticos: o texto de prévia aparece como primeiro texto e primeira l
 Custo: um campo de texto sem chamada nova; a sugestão de IA usa só o orçamento de IA já reservado do plano, com reserva antes; nenhum e-mail a mais é enviado; desconhecido reprova, nunca é zero.
 
 Margem (regra MR vigente, 27/10/2026, 07h42): nenhum cliente
+
+
+## 539 [AR1] — Regras por resposta de formulário: sequência, rótulo e etapa do CRM
+
+Estado: na fila. Ordem de chegada após538AB1(numeração),subordinada àAV1; AB1mantém sua posição excepcional no Bloco de abertura,demaisitens não movidos. Proveniência: pedido direto do dono29/10/2026,16h27Fortaleza. Deduplicação: main567efbd1,PRs1216/1217abertos,20heads codex/*recentes e inventário770refs; sem pedido equivalente por etiqueta/data/título/ação conforme resposta/formOutcome. Reusar forms/flows/enroll/CRM/lista existentes; regras por pergunta/opção são diferença em relação ao gatilho por envio/resultado dequiz, não segunda execução desses motores.
+
+Integridade do recebimento: mensagem termina literalmente em “e apagar a pessoa apaga”, no item(e). Continuação não recebida nem inventada. Preservar obrigações atuais de privacidade/eliminação/consentimento; não interpretar frase incompleta como autorização para reter dados. Antes de implementação, permanecem vinculantes VR,AX274,MR27/10/2026 07h42,TX,FX275:100%direitos/complementos no pior mês mensal/anual,taxas mais caras de lib/receiving-costs.ts,tributos/reservas antes do gasto,empresa sem prejuízo na base mínima com100%custosfixos;60%meta mensalreal. Leituras/escritas/CRM/email/armazenamento exigem custo,teto e reserva prévios; desconhecido reprova,nunca zero. Nenhum preço/limite/comissão/PLANS_ON_SALE/OPENING_REQUESTED/tax gate/art.9a/revisãocomercial/stripePlatformEligibilityReady alterado; sem afrouxar trava,conta,aceite,contratação,pagamento oucontatoexterno;preservarcriadores/Hazelsong/idiomas/IDs.Somente testes sintéticos. Texto recebido:
+
+AR — Regras por resposta de formulário: sequência, rótulo e etapa do CRM (29/10/2026) [AR1]
+
+Solicitação do dono (29/10/2026, 16h27, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: antes de gravar, aplique a regra "Pedidos repetidos" (23/10/2026). Procure esta solicitação no main, nos PRs abertos e nos ramos codex/* recentes, pela linha de data e hora, pelo nome da seção, pela etiqueta [AR1] e pelo conteúdo. Se já existir item que peça agir conforme a resposta a uma pergunta de formulário (iniciar sequência, dar rótulo ou mover etapa do CRM), aplique só a diferença dentro dele, mantendo número, posição e estado; caso contrário, crie um único item com o próximo número livre, na posição que a ordem AV1 indicar.
+
+Estado inicial: na fila.
+
+Contexto: o Claude conferiu em 29/10/2026 a seção "Sell more, automatically" de clickfunnels.com/apps/survey-workflows: "Add rule" com "When answer to [What is your business goal?] is equal to [Make six figures]" e a ação "Enroll". No Marktmorgen, uma sequência pode começar quando alguém envia um formulário da loja que pede e-mail (lib/flows.ts, trigger "form") e, num quiz, só para quem recebeu um resultado (formOutcome). Não existe regra pela resposta a uma pergunta específica, nem dar rótulo ou mover etapa do CRM (lib/crm.ts, lib/crm-rules.ts) pela resposta. Os formulários (lib/forms.ts) já guardam as respostas, com os tipos short, long, email, choice, choices e scale.
+
+[AR1] Uma regra fixa, escrita pelo criador, para cada resposta que importa.
+(a) No formulário, o criador acrescenta regras "When the answer to [pergunta] [is / includes / is at least / is at most] [opção ou número], then [ação]", só para perguntas de uma escolha (is), de várias escolhas (includes) e de escala de 1 a 10 (is at least / is at most); nunca para respostas escritas livremente.
+(b) Ações possíveis, reaproveitando o que já existe: iniciar uma das sequências da loja (o mesmo motor de lib/flows.ts, pelo evento "form" de enroll, com a condição da regra); dar ou tirar um rótulo da pessoa; colocar o negócio dela numa etapa do quadro do CRM (o mesmo de hoje, criando um negócio quando ela não tiver um aberto); avisar o criador por e-mail que alguém respondeu assim, dentro da cota de e-mails do plano.
+(c) Até 10 regras por formulário; uma resposta pode acionar mais de uma regra, cada ação no máximo uma vez por envio; nenhuma regra dispara outra regra de formulário, para não haver laço.
+(d) Consentimento: a sequência só envia e-mail a quem confirmou que quer receber do criador, pelas regras atuais de sequência e de lista; quem não deu e-mail ou não confirmou recebe só o rótulo e a etapa do CRM, que ficam visíveis apenas ao criador. Nenhuma regra põe alguém na lista sem a confirmação.
+(e) A página de política de privacidade diz que as respostas a formulários podem dar rótulos e iniciar sequências escolhidas pelo criador, e apagar a pessoa apaga
