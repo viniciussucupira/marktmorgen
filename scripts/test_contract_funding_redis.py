@@ -1397,6 +1397,20 @@ def main():
         print('PASS:pause notice8negative cases, exact generation/due, lostACK, replacement and KEEPTTL;commands=' + json.dumps(notice_counts, sort_keys=True))
 
 
+        bounded_key = prefix + ':bounded-restart-source'
+        keys.append(bounded_key)
+        redis.command('SET', bounded_key, 'x' * 1000002)
+        before_bounded = command_counts()
+        bounded_result = redis.command('GETRANGE', bounded_key, 0, 1000000)
+        bounded_counts = difference(before_bounded, command_counts())
+        assert len(bounded_result.encode('utf-8')) == 1000001
+        assert sum(bounded_counts.values()) == 1, bounded_counts
+        redis.command('SET', bounded_key, 'é' * 450000)
+        assert len(redis.command('GETRANGE', bounded_key, 0, 1000000).encode('utf-8')) == 900000
+        assert redis.command('GETRANGE', prefix + ':missing-bounded-source', 0, 1000000) == ''
+        print('PASS:bounded restart source GETRANGE returns at most1000001raw bytes in1command;UTF8 and missing observations stay explicit;commands=' + json.dumps(bounded_counts, sort_keys=True))
+
+
     finally:
         for ref in intent_refs:
             if not ref.startswith('synthetic-restart-intent-'):

@@ -1043,6 +1043,20 @@ export async function storeForEmail(
   return store;
 }
 
+/** One bounded read for the funded restart's final source check.
+ * It cannot migrate, save, infer absence from an oversized/partial answer,
+ * or turn a current-source observation into permission for another POST. */
+export async function storeForRestartSource(ref: string): Promise<Store | null> {
+  if (!ref || !isRedisConfigured()) return null;
+  const reply = await redisPipeline([["GETRANGE", await ownerKey(ref), 0, MAX_STORE_BYTES]]);
+  if (!Array.isArray(reply) || reply.length !== 1) return null;
+  const entry = Object.getOwnPropertyDescriptor(reply, "0");
+  if (!entry || !Object.hasOwn(entry, "value") || typeof entry.value !== "string" ||
+      new TextEncoder().encode(entry.value).byteLength > MAX_STORE_BYTES) return null;
+  const store = parseStore(entry.value);
+  return store && storeRef(store).toLowerCase() === ref.toLowerCase() ? store : null;
+}
+
 /** The store behind a public address, or null if that handle is free. */
 export async function storeForHandle(handle: string): Promise<Store | null> {
   if (!isRedisConfigured()) return null;

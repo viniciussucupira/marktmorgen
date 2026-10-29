@@ -102,6 +102,16 @@ export class MemoryRedis {
     this.live(key);
 
     switch (name) {
+      case "GETRANGE": {
+        if (args.length !== 2 || !args.every(value => /^-?\d+$/.test(value) && Number.isSafeInteger(Number(value)))) throw new Error("invalid GETRANGE range");
+        const held = this.data.get(key);
+        if (held === undefined) return "";
+        if (typeof held !== "string") throw new Error("WRONGTYPE");
+        const bytes = new TextEncoder().encode(held);
+        const edge = (raw: string) => Number(raw) < 0 ? bytes.length + Number(raw) : Number(raw);
+        const from = Math.max(0, edge(args[0])), to = Math.min(bytes.length - 1, edge(args[1]));
+        return to < from ? "" : new TextDecoder().decode(bytes.slice(from, to + 1));
+      }
       case "EVAL": {
         if (key.startsWith("-- marktmorgen:pause-worker-notice:v1\n") && args[0] === "2" && args.length === 7) {
           const [, target, due, ref, expected, next, rawNow] = args;

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import {observeFundedRestartActivation,fundedRestartRequestBody,identifyFundedRestartResult,selectRestartRecoveryCandidate,observeFundedRestartResult,observeFundedRestartPrice,observeStoppedRestartSource,observeRestartedPlan} from "@/lib/billing";
+import {fundedRestartSourceMatches,observeFundedRestartActivation,fundedRestartRequestBody,identifyFundedRestartResult,selectRestartRecoveryCandidate,observeFundedRestartResult,observeFundedRestartPrice,observeStoppedRestartSource,observeRestartedPlan} from "@/lib/billing";
 import type {ArmedRestartSubmission,OwnedRestartIntent} from "@/lib/contract-funding";
 import {PLAN_PRICES} from "@/lib/plan";
 
@@ -240,4 +240,26 @@ test("activation handoff refuses ambiguous or inactive observations and never in
   assert.throws(()=>observeFundedRestartActivation(armed,input,{...subscription,...change},NOW));
  let reads=0;const hostile={...subscription};Object.defineProperty(hostile,"created",{enumerable:true,get(){reads++;return NOW;}});
  assert.throws(()=>observeFundedRestartActivation(armed,input,hostile,NOW));assert.equal(reads,0);
+});
+
+test("funded restart pre-POST source rejects every changed owner primitive without IO or getters",()=>{
+ const {intent}=stoppedFixture();
+ const current={handle:intent.handle,statsId:intent.grant.statsId,subscriptionId:intent.grant.sourceSubscriptionId,
+  stripeCustomerId:input.customerId,subscriptionActive:false,tier:"creator",cycle:"month",email:intent.ref,sid:"",extra:false};
+ assert.equal(fundedRestartSourceMatches(intent,current),true);
+ const before=JSON.stringify({intent,current});
+ for(const [field,value] of Object.entries({handle:"other",statsId:"other",subscriptionId:"sub_OtherSource01",
+   stripeCustomerId:"cus_OtherSource01",subscriptionActive:true,tier:"pro",cycle:"year",email:"other",extra:true})){
+  assert.equal(fundedRestartSourceMatches(intent,{...current,[field]:value}),false,field);
+ }
+ for(const value of [null,undefined,[],{},Object.create(current)])assert.equal(fundedRestartSourceMatches(intent,value),false);
+ for(const field of Object.keys(current)){
+  let reads=0;const candidate={...current};
+  Object.defineProperty(candidate,field,{enumerable:true,get(){reads++;throw Error("unexpected source getter");}});
+  assert.equal(fundedRestartSourceMatches(intent,candidate),false,field);assert.equal(reads,0,field);
+ }
+ const extraIntent={...intent,ref:"#0123456789abcdef0123456789abcdef"};
+ assert.equal(fundedRestartSourceMatches(extraIntent,{...current,extra:true,sid:"0123456789abcdef0123456789abcdef"}),true);
+ assert.equal(fundedRestartSourceMatches(extraIntent,{...current,extra:true,sid:"fedcba9876543210fedcba9876543210"}),false);
+ assert.equal(JSON.stringify({intent,current}),before);
 });
