@@ -154,7 +154,7 @@ export default function Home() {
     <div className="min-h-screen bg-paper text-ink">
       <SiteNav />
 
-      <main id="content" data-static-reading>
+      <main id="content" data-static-reading data-home-page>
         {/* ------------------------------------------------------------ hero */}
         <section aria-labelledby="home-hero-heading" className="surface-daybreak on-dark overflow-hidden" data-home-hero>
           <div className="container-page grid items-center gap-12 pb-28 pt-12 sm:gap-14 sm:pt-16 lg:grid-cols-[1.04fr_1fr] lg:gap-12 lg:pb-32 lg:pt-20">

@@ -15377,3 +15377,42 @@ Proveniência/diferença: pedido direto do dono acima; descrição da captura at
 ### FN2 preservado no head combinado
 
 PR1211 incorporado em29/10/2026,11:22:11Fortaleza/14:22:11UTC,merge332a38db16d7a2907a5c6fed08e5169403853c01,headef36df797b7c92e54e2f44de638cf188a08b93ec,árvore0fb59845e268c29b85937a6ceae4e9b93c5ca03b,paise51030ab+ef36df7.27checksdocumentais16success11skips+Vercel.526FN2nafilaapós525,briefingintegral/reaproveitamento/ordem/estado preservados.375/32complementoTBpermanece nestePRcomcódigo. Suíteinteira novamente na árvorecombinada;provas antigas não certificamnovohead. Counter254inalterado.
+
+
+## HE — registro integral; item527 (29/10/2026,12h04Fortaleza)
+
+Proveniência: pedido direto do dono nesta conversa; comparaçãoClickFunnels atribuída ao relatoClaude,semverificação independente deste registro. Deduplicação main332a38d,PR1208aberto,20PRsrecentes/19heads codexdistintos e764refs,semHE1/título/data/conteúdo equivalente. Próximo livre527após526; nenhum estado/ordem anterior alterado. ComplementosTB/FN continuam sendo complementossemitemduplicado;527éeste novoHEexplicitamente solicitado. Antes da implementação,conferir cada tipo deproduto funcional no código; não antecipar animação no registro. MR/TX/FX275/AX274/VR/SF1/ME2/ME3eCF3não refazervinculantes. Registro noPR1208jáemcurso; implementação deHEcontinua na fila.
+
+HE — Palavra que muda no título da página inicial (29/10/2026)
+Etiqueta: [HE1]
+
+Solicitação do dono (29/10/2026, 12h04, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: antes de gravar, aplique a regra permanente "Pedidos repetidos". Confira o main, os PRs abertos e os ramos codex/* recentes e procure esta solicitação pela linha de data e hora, pelo nome da seção, pela etiqueta [HE1] e pelo conteúdo. Se já estiver gravada, não crie nada novo. Grave na ordem de chegada, depois do último item já gravado, com o próximo número livre, sem alterar a ordem dos itens existentes.
+
+527. [HE1] Palavra que muda no título da página inicial.
+Estado inicial: na fila.
+Problema que resolve: o título da página inicial (app/page.tsx, id home-hero-heading: "Sell your work. Build your business.") é parado. O título da ClickFunnels, conferido pelo Claude no Chrome em 29/10/2026, digita e apaga o fim da frase "You're one funnel away from…", alternando "changing the world", "your first $10k month", "launching your course", "the Two Comma Club" e "replacing your 9-5"; isso dá movimento ao topo, mas promete renda, nunca para, não tem pausa, muda o texto dentro do próprio h1 (o leitor de tela lê pedaços) e ignora prefers-reduced-motion.
+O que fazer: na primeira linha do título, a palavra depois de "Sell your" alterna, com animação suave, entre tipos de produto que o Marktmorgen vende hoje: "work", "courses", "templates", "coaching", "memberships" e "paid calls" (confira cada um no código antes; só entra o que funciona hoje). O restante do título continua igual. Nenhuma palavra fala de dinheiro, renda, prazo ou resultado.
+Acessibilidade (AX274), obrigatória:
+- o título lido pelo leitor de tela é sempre a frase completa e fixa ("Sell your work. Build your business."); a palavra animada fica aria-hidden;
+- a animação faz uma volta pela lista e para em "work", ou tem botão visível de pausar, cumprindo a regra de conteúdo em movimento por mais de 5 segundos (2.2.2);
+- com prefers-reduced-motion, a palavra fica parada em "work";
+- nada pisca; contraste de 7:1; a largura do título não muda de uma palavra para outra, para a página não pular.
+Desempenho: sem biblioteca nova; a animação não atrasa a primeira tela e a página inicial continua dentro de 281 [SF1], 497 [ME2] e dos limites de 498 [ME3].
+O que não fazer: não copiar "Start for free today" nem começar pela palavra "free"; o campo de e-mail na primeira tela é o item 240 [CF3], já na fila, e não deve ser refeito aqui.
+Testes automáticos: o h1 lido pelo leitor de tela é a frase fixa; a animação para ou pausa; o movimento reduzido deixa a palavra parada; a largura não muda; nenhuma palavra da lista fala de dinheiro ou resultado.
+Lucro: o topo da página mostra em segundos tudo o que se pode vender, sem prometer resultado.
+
+Regra de margem: segue a REGRA DE MARGEM vigente (MR, 27/10/2026, 07h42), a política tributária TX e FX275; custo desconhecido reprova, nunca é zero.
+
+Proibido: prometer renda, dinheiro, prazo ou resultado; animação sem parada nem pausa; mudar preços, limites visíveis, comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a, a revisão comercial ou stripePlatformEligibilityReady; afrouxar qualquer trava; mostrar recurso que não funciona hoje; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+
+
+### PR1208 — falha móvel corrigida com alteração real de renderização
+
+Head9c9366falhoujob123531991576primeirahomecoldLCP2568ms>2500ms,H1home-hero-heading;9samplesCLS0/interaçãomax128ms. Não descartar amostra,aquecer,reexecutarsójobouafrouxarlimite. Renderização real da home usa content-visibility:auto nativo só nas seções diretas fora do hero,com tamanho intrínseco lembrado;conteúdo/DOM/acessibilidade/scroll/foco/print preservados,semnovobiblioteca/JS/ocultarrecursos. Suíteinteira nova obrigatória,prova ainda pendente; HE527éregistro apenas,sem animação antecipada. Detalhes docs/pause-due-selection-bound.md. Direitos/preços/flags/tetos/comissões/optin/controlesfiscais/custos mantidos.

@@ -4751,3 +4751,17 @@ html:has([data-static-reading] a:focus) {
 html:has([data-product-editor]) {
   scroll-behavior: auto;
 }
+
+
+/* Keep the complete home in the DOM and accessibility tree. Let the browser
+ * defer layout/paint of off-screen sections until scrolling or focus needs them,
+ * so the first cold hero paint does not lay out every lower-page pricing list.
+ * The visible hero and navigation are outside this containment; print is intact. */
+@media screen {
+  @supports (content-visibility: auto) {
+    main[data-home-page] > section:not([data-home-hero]) {
+      content-visibility: auto;
+      contain-intrinsic-block-size: auto 800px;
+    }
+  }
+}
