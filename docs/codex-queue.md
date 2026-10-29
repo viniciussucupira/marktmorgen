@@ -15247,6 +15247,34 @@ Proibido: refazer a lógica de 377 [TB3] ou as condições de lib/flows.ts; cria
 Aplicar a regra VR.
 
 
+FN — Complemento ao 526 [FN2]: arrastar etapas para o mapa do funil (29/10/2026)
+Etiqueta: [FN2]
+
+Solicitação do dono (29/10/2026, 11h40, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: é complemento ao item 526 [FN2] já gravado. Aplique só a diferença ao item existente, mantendo número, posição e estado (regra "Pedidos repetidos", passo 3, letra b), e registre na proveniência o que mudou.
+
+Estado inicial: o do próprio 526.
+
+Contexto: na captura da aba "Your Funnel" de clickfunnels.com enviada pelo dono, o cursor arrasta o cartão "Page – Create a new page" do painel lateral até o mapa do funil; um retângulo pontilhado mostra onde a etapa vai entrar, e a linha do funil termina num marcador "End of Funnel".
+
+O que acrescentar ao 526 [FN2]:
+- os cartões "Page", "Conditional path" e "Split test" do painel podem ser arrastados até o mapa; enquanto o cartão é arrastado, um espaço pontilhado aparece entre as etapas, ou no fim, mostrando exatamente onde a nova etapa vai entrar;
+- a linha do funil termina num marcador "End of funnel", e cada ramo do caminho condicional e do teste dividido tem o seu;
+- a mesma ação continua possível sem arrastar, por clique ou teclado, como o 526 já exige (AX274, 2.5.7).
+
+Testes automáticos: arrastar cada cartão para o começo, o meio e o fim; o espaço pontilhado no lugar certo; o marcador de fim em cada ramo; a alternativa por teclado.
+
+Regra de margem: segue a REGRA DE MARGEM vigente (MR, 27/10/2026, 07h42), a política tributária TX e FX275; custo desconhecido reprova, nunca é zero.
+
+Proibido: criar item novo ou mudar número, posição ou estado do 526; mudar preços, limites visíveis, comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a, a revisão comercial ou stripePlatformEligibilityReady; afrouxar qualquer trava; mostrar recurso que não funciona hoje; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+
+Proveniência/diferença: pedido direto do dono acima; descrição da captura atribuída ao briefing, sem alegar inspeção independente de imagem não anexada nesta mensagem. Acrescentados somente arrasto dos3cartões/espaço pontilhado de inserção eEnd of funnel porramo,testescomeço/meio/fim e alternativaAX2742.5.7.526número/posição/estadoeescopoanteriorpreservados;nenhumitem527. Deduplicação no main332a38d,PR1208aberto,20PRsrecentes/19heads codexdistintos e764refs,semcomplemento11h40equivalente. Registro na alteração de códigoPR1208jáemcurso;reconferir código antes da execução e aplicarsóadiferença.MR/TX/FX275/AX274/VRpreservados.
+
 ### FN2 preservado no head combinado
 
 PR1211 incorporado em29/10/2026,11:22:11Fortaleza/14:22:11UTC,merge332a38db16d7a2907a5c6fed08e5169403853c01,headef36df797b7c92e54e2f44de638cf188a08b93ec,árvore0fb59845e268c29b85937a6ceae4e9b93c5ca03b,paise51030ab+ef36df7.27checksdocumentais16success11skips+Vercel.526FN2nafilaapós525,briefingintegral/reaproveitamento/ordem/estado preservados.375/32complementoTBpermanece nestePRcomcódigo. Suíteinteira novamente na árvorecombinada;provas antigas não certificamnovohead. Counter254inalterado.
