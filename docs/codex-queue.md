@@ -16504,3 +16504,54 @@ Margem (regra MR vigente, 27/10/2026, 07h42): nenhum cliente pagante, isoladamen
 Proibido: pixel de rastreamento, contagem de aberturas ou de quem clicou; guardar quem recebeu, abriu ou clicou no relatório; mudar o critério do teste A/B; afrouxar a pausa automática da saúde de envio; mostrar zero no lugar de número desconhecido; mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; enviar e-mail real em testes; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
 
 Aplicar a regra VR.
+
+
+## 548 [TR1] — Novos gatilhos e ação de dar acesso nas sequências
+
+Estado: na fila. Ordem de chegada após547ER1,sobAV1,sem interromper a unidade iniciada. Proveniência: anexo integral do dono29/10/2026 às17h28Fortaleza, preservado abaixo. Pedidos repetidos: mainb87cfae9,nenhumPRaberto,20heads codex/*recentemente atualizados e774refs conferidos por data/seção/TR1/conteúdo; nenhum gatilho de chamada/assinatura/reembolso ou Give access equivalente encontrado.111E2-COMMUNITY-AUTOMATION cobre eventos da comunidade, não substitui estes; ligar111,541FC4 e391CX2/números por etapa,sem duplicá-los. Recuperação lib/payment-recovery.ts/lib/dunning-rules.ts continua única para pagamento recusado,sem novo gatilho/e-mailduplicado.
+
+Reusar lib/flows.ts: booked a call somente chamada paga confirmada; attended/missed somente presença/falta marcada pela sala própria ou criador,sem marca não dispara. Canceled/paused membership,changed plan e was refunded somente eventos confirmados da conta Stripe do criador; nenhum dado Stripe alterado por este pedido. Give access pelo mecanismo atual de entrega: produto grátis/curso541FC4 ou produto pago escolhido como presente,sem cobrança/cartão/assinatura,idempotente pessoa+acesso. Consentimento atual/descadastro respeitados antes de email; sem aceite só ações rótulo/campo/nota/CRM/aviso previstas,no máximo uma sequência de volta por cancelamento,ofertas publicadas a preço publicado,sem desconto/urgência/pressão inventados. RótulosUSsimples,estúdio/mapa atuais e privacidade/exclusão de execuções/acessos de presente. Não interpretar a ação como permissão para oferecer plano recorrente gratuito ilimitado.
+
+AX274: rótulos visíveis,teclado/ordem/erro em texto/7:1. Testes futuros somente Stripe,chamadas e envios simulados,marcas explícitas,idempotência sem cobrança,consentimento/ausência de duplicação da recuperação/ofertas honestas. Reservar ANTES acessos/vídeo/storage e envios,mesmos tetos do plano e541FC4,sem assumir custo0porque eventos/gravações existem. MR27/10/07h42/TX/FX275:100%direitos+complementos pior mês mensal/anual sem prejuízo isolado,empresa sem prejuízo na base mínima/100%fixos,recebimento mais caro/reservas/impostos;60%meta mensal real. Desconhecido reprova,franquia grátis nãoézero. VR: somente registro,nenhuma implementação/publicação funcional/novo contador; flags/preços/limites/comissão/travas/opt-ins/conteúdo/Hazelsong/idiomas/IDs intactos.
+
+### Briefing integral do dono — 548TR1
+
+TR — Novos gatilhos e ação de dar acesso nas sequências (29/10/2026) [TR1]
+
+Solicitação do dono (29/10/2026, 17h28, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: antes de gravar, aplique a regra "Pedidos repetidos" (23/10/2026). Procure esta solicitação no main, nos PRs abertos e nos ramos codex/* recentes, pela linha de data e hora, pelo nome da seção, pela etiqueta [TR1] e pelo conteúdo. Se já existir item que peça gatilhos de chamada, de assinatura ou de reembolso, ou a ação de dar acesso a um produto, aplique só a diferença dentro dele, mantendo número, posição e estado; caso contrário, crie um único item com o próximo número livre, na posição que a ordem AV1 indicar. Ligue este item a 111 [E2-COMMUNITY-AUTOMATION] (gatilhos da comunidade, sem duplicá-los), a 541 [FC4] (curso grátis) e à recuperação de pagamento que já existe (lib/payment-recovery.ts, lib/dunning-rules.ts), sem duplicar os e-mails dela.
+
+Estado inicial: na fila.
+
+Contexto: o Claude conferiu em 29/10/2026 a seção "Connect your entire business" de clickfunnels.com/apps/automations: automações ligadas a cursos, agendamentos, mensagens, comunidade, loja e descontos. No Marktmorgen, FLOW_TRIGGERS (lib/flow-rules.ts) tem joined, product, bought, tagged, finished, form, started, abandoned e stage; as ações são rótulo, outra sequência, campo, etapa do CRM, nota, aviso ao criador e webhook. Não há gatilho de chamada marcada, comparecida ou perdida, de assinatura cancelada, pausada ou trocada, nem de reembolso; não há ação de dar acesso a um produto.
+
+[TR1] Os momentos que mais pesam no dinheiro do criador.
+(a) Novos gatilhos, no motor que já existe (lib/flows.ts): "booked a call" (chamada paga confirmada, lib/calls.ts); "attended a call" e "missed a call" (só quando a sala de vídeo própria ou o criador marcar presença ou falta; sem marca, nenhum dos dois dispara); "canceled a membership", "paused a membership" e "changed plan" (lidos dos eventos da assinatura na conta Stripe do criador); "was refunded" (reembolso confirmado pelo Stripe).
+(b) Nova ação "Give access": dá à pessoa um produto grátis da loja ou um curso grátis de 541 [FC4], ou um produto pago que o criador escolha dar de presente; o acesso é entregue pelo mesmo mecanismo de entrega de hoje, sem cobrança, sem cartão e sem criar assinatura; cada pessoa recebe o mesmo acesso uma vez só; o custo de vídeo e armazenamento desse acesso segue os tetos do plano e de 541 [FC4].
+(c) Consentimento: todo e-mail dessas sequências só vai a quem aceitou receber do criador e não saiu da lista, pelas regras atuais; sem isso, só rótulo, campo, nota, CRM e aviso ao criador. O gatilho de pagamento recusado não é criado: a recuperação de pagamento que já existe continua sendo a única que escreve ao cliente nesse caso, sem e-mail em dobro.
+(d) Sequência de volta depois do cancelamento: pode oferecer só o que o criador já publica (mesmo plano, plano menor ou pausa), ao preço publicado; nenhum desconto inventado, contagem regressiva ou pressão; no máximo uma sequência de volta por cancelamento.
+(e) Cada gatilho e a ação aparecem no estúdio com frase em inglês americano simples e no mapa de 391 [CX2], com os números por etapa.
+(f) Política de privacidade atualizada: quais eventos de chamada, assinatura e reembolso podem iniciar sequências; apagar a pessoa apaga as execuções e os acessos dados de presente.
+
+Acessibilidade (AX274): os novos gatilhos e a ação no mesmo construtor de sequências, com rótulos visíveis, ordem pelo teclado, erros em texto e contraste de 7:1.
+
+Testes automáticos: cada gatilho a partir de eventos simulados do Stripe e de chamadas; presença e falta só com marca; acesso dado uma vez e sem cobrança; e-mail só com consentimento; nenhum e-mail em dobro com a recuperação de pagamento; sequência de volta sem desconto inventado; somente Stripe e envios simulados.
+
+Custo: eventos já recebidos e gravações já contadas no plano, com teto automático; o acesso dado usa os tetos de vídeo e armazenamento do plano e de 541 [FC4], com reserva antes; e-mails na cota do plano; desconhecido reprova, nunca é zero.
+
+Margem (regra MR vigente, 27/10/2026, 07h42): nenhum cliente pagante, isoladamente e usando 100% dos direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo, depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto. A empresa como um todo não pode dar prejuízo a partir da base mínima calculada, com 100% dos custos fixos atribuídos ao Marktmorgen (FX275). A meta de 60% de margem líquida é medida todo mês no relatório real. Política tributária TX vigente. Custo desconhecido reprova, nunca é zero; cota grátis de fornecedor não conta como custo zero.
+
+Proibido: e-mail sem consentimento; e-mail em dobro com a recuperação de pagamento; desconto inventado, contagem regressiva ou pressão na sequência de volta; cobrar ou criar assinatura pela ação de dar acesso; segundo motor de sequências; mudar dados na conta Stripe do criador; mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; enviar e-mail real em testes; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+
+### Provas acumuladas de incorporação — 29/10/2026
+
+PR1221 incorporado29/10/2026 às17:28:33Fortaleza/20:28:33UTC,mergeb87cfae9deeee7e983ffb03511900220c1f56224,pais46c61bc6dd5b4353f0da8df942c0cc092a51d55b/6b0ff75c211bfd6750a02e659398c396920707f3,árvore2f16a3e6da39466c6e52f70a954c6b5cfb54a16digual à árvore conferida.27verificaçõesdocumentais(16sucessos/11skipslegítimos)+Vercelsuccess. Somente fila542–547 e complementos242CF5/513PF1/391CX2; pedidos continuam na fila,não recursos implementados.
+
+PR1217 incorporado29/10/2026 às17:18:52Fortaleza/20:18:52UTC,merge46c61bc6dd5b4353f0da8df942c0cc092a51d55b,árvorebaeca0a0dc68c0c068bbf8e759b71552ffae5293igualàuniãotestada.39/39checks+Vercel,verify123693596539234/234bundles/Everythingpassing19:56:18.9619921UTC;mobile1236935964829coldLCPmáx884ms/CLS0/proxyinteração64ms/0writes,nãoINPdecampo. Inclui correção pública538AB1 e worker1216ACKlimitado,sem mudar regra estatística ou habilitar cobertura financeira. PR1216 marcado incorporado via ancestralidade1217,não entrega separada.
+
+Produção1217:READYdpl_Fw4G8QQL7PTi6xeFJLPvGbgKAvLG,SHAexato46c61bc6dd5b4353f0da8df942c0cc092a51d55b,7aliasesincluindo marktmorgen.com/wwwmarktmorgen. HTMLrealem/,/pricing,/platform/path,/help,/proof/comparisons e/platform/insights conferidocommesmodata-dpl-id;help/insightscontêm regra dinheiro por visitante e14dias. Não é prova interativa de cliente. Chromecontinua bloqueado,sem retentativa/troca;contador254mantido. CustosCI/produção não medidos não sãozero; nenhuma margem certificada. Obrigações de aviso/funding/renewals/settlement/global/lifetime continuam pendentes e coberturasfalse;histórico preservado.
