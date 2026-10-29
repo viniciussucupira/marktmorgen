@@ -754,6 +754,48 @@ async function main() {
     await undoPause(store, paused.record.until + 60);
   }
 
+
+  part("Worker cleanup cannot erase a replacement pause generation");
+  for (const stage of ["missing", "by-hand", "after-provider"] as const) {
+    createAnswer = "ok";
+    const email = "pause-generation-" + stage + "@example.com", id = "sub_Generation" + stage.replaceAll("-", "");
+    subs[id] = subscription(id);
+    const store = await storeWith(email, "pg" + stage.replaceAll("-", ""), id);
+    const paused = await pausePlan(store, 1, NOW);
+    if (paused.kind !== "paused") throw new Error("Synthetic generation fixture failed");
+    const ref = storeRef(store), key = `nl:pause:${ref}`, year = `nl:pause:last:${ref}`;
+    const pipeline = pauseRedis.pipeline;
+    const [old, annual] = await pipeline([["GET", key], ["GET", year]]);
+    const replacement = JSON.stringify({ ...paused.record, until: paused.record.until + DAY });
+    if (stage === "by-hand") await setSubscription(ref, { active: true, subscriptionId: "sub_GenerationManual", period: paidPeriod() });
+    if (stage === "after-provider") await setSubscription(ref, { active: false });
+    let changed = false;
+    pauseRedis.pipeline = async commands => {
+      if (!changed && stage === "missing" && commands.length === 1 && commands[0][0] === "GET" && commands[0][1] === key) {
+        changed = true;
+        await pipeline([["SET", key, replacement], ["ZADD", "nl:pause:due", paused.record.until + DAY, ref]]);
+        return [null];
+      }
+      if (!changed && stage !== "missing" && commands.some(command => command[0] === "EVAL" && String(command[1]).startsWith("-- marktmorgen:pause-worker-forget:v1"))) {
+        changed = true;
+        await pipeline([["SET", key, replacement], ["ZADD", "nl:pause:due", paused.record.until + DAY, ref]]);
+      }
+      return pipeline(commands);
+    };
+    emails.length = 0;
+    try {
+      const counts = await runBreaks(paused.record.until + 60);
+      is("the replacement race was actually reached", changed, true);
+      is("unacknowledged cleanup never announces restart or drop", [counts.restarted, counts.dropped, counts.failed, emails.length], [0, 0, 1, 0]);
+      is("replacement raw and annual eligibility survive", await pipeline([["GET", key], ["GET", year]]), [replacement, annual]);
+      is("replacement due score survives", await pipeline([["ZSCORE", "nl:pause:due", ref]]), [String(paused.record.until + DAY)]);
+      is("the fixture changed its observed generation", old !== replacement, true);
+    } finally {
+      pauseRedis.pipeline = pipeline;
+      await undoPause(store, paused.record.until + 2 * DAY);
+    }
+  }
+
   part("An unreadable store cannot erase a known pause");
   {
     const email="unreadable-pause-owner@example.com",id="sub_UnreadableOwner01";

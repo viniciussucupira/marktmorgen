@@ -33,9 +33,11 @@ const proxy=createServer({key:readFileSync(process.env.SIGNUP_TLS_KEY),cert:read
  const trace={method:incoming.method,path:new URL(incoming.url??"/",origin).pathname,received:true,response:false,finished:false};
  proxyTrace.push(trace);
  outgoing.once("finish",()=>{trace.finished=true;});
- const forwarded=httpRequest(upstream+incoming.url,{method:incoming.method,headers:{...incoming.headers,host:"localhost:3199","x-forwarded-host":"localhost:3199","x-forwarded-proto":"https"}},response=>{
+ const forwarded=httpRequest(upstream+incoming.url,{method:incoming.method,agent:false,headers:{...incoming.headers,connection:"close",host:"localhost:3199","x-forwarded-host":"localhost:3199","x-forwarded-proto":"https"}},response=>{
   trace.response=true;trace.status=response.statusCode??502;
-  outgoing.writeHead(response.statusCode??502,response.headers);response.pipe(outgoing);
+  // Each synthetic case replaces its backing services. Do not retain a
+  // fixture socket across that boundary or replay a mutating request.
+  outgoing.writeHead(response.statusCode??502,{...response.headers,connection:"close"});response.pipe(outgoing);
  });
  forwarded.on("error",error=>{trace.error=error.code??error.name;if(!outgoing.headersSent)outgoing.writeHead(502);outgoing.end();});
  incoming.on("aborted",()=>forwarded.destroy());
