@@ -16,7 +16,7 @@
  *     not answering is tried again the next day instead;
  *   - a store that started again by hand is left alone.
  */
-import { claimHandle, setSubscription, storeForEmail, storeRef } from "@/lib/store";
+import { MAX_STORE_BYTES, claimHandle, setSubscription, storeForEmail, storeForRestartSource, storeRef } from "@/lib/store";
 import { onBreak, pauseEmail, pauseOf, pausePlan, pauseRefusal, runBreaks, undoPause } from "@/lib/plan-pause";
 import { addPeriods } from "@/lib/plans";
 import { done, is, part } from "./check";
@@ -846,6 +846,45 @@ async function main() {
       pauseRedis.pipeline = pipeline;
       await undoPause(store, paused.record.until + 2 * DAY);
     }
+  }
+
+
+  part("Funded restart source observation reads one bounded owner record without mutation");
+  {
+    const id="sub_BoundedPreflight01";
+    subs[id]=subscription(id);
+    const store=await storeWith("bounded-preflight@example.com","boundedpreflight",id),ref=storeRef(store);
+    const pipeline=pauseRedis.pipeline;const calls:(string|number)[][]=[];let raw:unknown;
+    pauseRedis.pipeline=async commands=>{
+      calls.push(...commands);
+      const result=await pipeline(commands);
+      if(commands[0]?.[0]==="GETRANGE")raw=result[0];
+      return result;
+    };
+    try{
+      const current=await storeForRestartSource(ref);
+      is("bounded current owner is readable",current?.subscriptionId,id);
+      is("preflight is exactly one bounded command",[calls.length,calls[0]?.[0],calls[0]?.[2],calls[0]?.[3]],[1,"GETRANGE",0,MAX_STORE_BYTES]);
+      if(typeof raw!=="string")throw Error("Synthetic bounded raw observation missing");
+      for(const reply of [[],[null],["x".repeat(MAX_STORE_BYTES+1)],["é".repeat(Math.floor(MAX_STORE_BYTES/2)+1)],
+          [JSON.stringify({...JSON.parse(raw),email:"foreign-preflight@example.com"})]]){
+        pauseRedis.pipeline=async commands=>{calls.push(...commands);return reply;};
+        is("unknown oversized or foreign preflight refuses",await storeForRestartSource(ref),null);
+      }
+      const sourceRaw=JSON.parse(raw) as Record<string,unknown>;
+      for(const field of ["handle","statsId","subscriptionId","stripeCustomerId","tier","cycle","email","sid","subscriptionActive","extra"]){
+        for(const value of [undefined,null,field==="subscriptionActive"?"false":field==="extra"?"false":{}]){
+          const malformed={...sourceRaw,[field]:value};
+          pauseRedis.pipeline=async()=>[JSON.stringify(malformed)];
+          is("missing or malformed raw source never receives legacy defaults",await storeForRestartSource(ref),null);
+        }
+      }
+      let reads=0;const accessor:unknown[]=[];
+      Object.defineProperty(accessor,"0",{enumerable:true,get(){reads++;throw Error("unexpected reply getter");}});
+      pauseRedis.pipeline=async()=>accessor;
+      is("accessor acknowledgement cannot supply a current source",await storeForRestartSource(ref),null);
+      is("preflight reply getter is never invoked",reads,0);
+    }finally{pauseRedis.pipeline=pipeline;}
   }
 
   part("An unreadable store cannot erase a known pause");

@@ -1043,6 +1043,30 @@ export async function storeForEmail(
   return store;
 }
 
+/** One bounded read for the funded restart's final source check.
+ * It cannot migrate, save, infer absence from an oversized/partial answer,
+ * or turn a current-source observation into permission for another POST. */
+export async function storeForRestartSource(ref: string): Promise<Store | null> {
+  if (!ref || !isRedisConfigured()) return null;
+  const reply = await redisPipeline([["GETRANGE", await ownerKey(ref), 0, MAX_STORE_BYTES]]);
+  if (!Array.isArray(reply) || reply.length !== 1) return null;
+  const entry = Object.getOwnPropertyDescriptor(reply, "0");
+  if (!entry || !Object.hasOwn(entry, "value") || typeof entry.value !== "string" ||
+      new TextEncoder().encode(entry.value).byteLength > MAX_STORE_BYTES) return null;
+  // Financial source observations must not inherit parseStore's legacy defaults.
+  let raw: Record<string, unknown>;
+  try { raw = JSON.parse(entry.value); } catch { return null; }
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
+  const strings = ["handle", "statsId", "subscriptionId", "stripeCustomerId", "tier", "cycle", "email", "sid"] as const;
+  if (strings.some(key => !Object.hasOwn(raw, key) || typeof raw[key] !== "string") ||
+      !Object.hasOwn(raw, "subscriptionActive") || typeof raw.subscriptionActive !== "boolean" ||
+      !Object.hasOwn(raw, "extra") || typeof raw.extra !== "boolean") return null;
+  const store = parseStore(entry.value);
+  if (!store || strings.some(key => store[key] !== raw[key]) ||
+      store.subscriptionActive !== raw.subscriptionActive || store.extra !== raw.extra) return null;
+  return storeRef(store).toLowerCase() === ref.toLowerCase() ? store : null;
+}
+
 /** The store behind a public address, or null if that handle is free. */
 export async function storeForHandle(handle: string): Promise<Store | null> {
   if (!isRedisConfigured()) return null;

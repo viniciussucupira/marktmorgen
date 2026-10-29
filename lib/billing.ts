@@ -34,6 +34,7 @@ import { inTheCurrencyShown } from "@/lib/instant-pay";
 import { normaliseEmail } from "@/lib/auth";
 import {
   CUSTOMER_PATTERN,
+  storeForRestartSource,
   HANDLE_PATTERN,
   SUBSCRIPTION_PATTERN,
   type Store,
@@ -684,6 +685,36 @@ export async function subscriptionRecord(subscriptionId: string): Promise<Record
  * with a subscription that is open and unpaid. The plan is the one they had,
  * monthly, at today's price, with no trial.
  */
+/** An additional source restriction, not financial authorization.
+ * Read only own primitives: an accessor or unknown owner is not a source.
+ * The durable grant/barrier remains independently mandatory. */
+export function fundedRestartSourceMatches(intent: OwnedRestartIntent, current: unknown): boolean {
+  try {
+    const encoded = canonicalFinancialSnapshot(intent);
+    if (!encoded || !current || typeof current !== "object" ||
+        ![Object.prototype, null].includes(Object.getPrototypeOf(current))) return false;
+    const owned = JSON.parse(encoded) as OwnedRestartIntent;
+    const paused = JSON.parse(owned.paused) as { customer?: unknown; tier?: unknown };
+    if (typeof paused.customer !== "string" || typeof paused.tier !== "string") return false;
+    const names = ["handle", "statsId", "subscriptionId", "stripeCustomerId", "subscriptionActive", "tier", "cycle", "email", "sid", "extra"] as const;
+    const descriptors = Object.getOwnPropertyDescriptors(current);
+    const value: Record<string, unknown> = {};
+    for (const name of names) {
+      const descriptor = descriptors[name];
+      if (!descriptor || !Object.hasOwn(descriptor, "value")) return false;
+      value[name] = descriptor.value;
+    }
+    if (typeof value.email !== "string" || typeof value.sid !== "string" || typeof value.extra !== "boolean") return false;
+    const ref = value.extra ? "#" + value.sid : value.email;
+    return owned.grant.action === "restart" && typeof owned.grant.sourceSubscriptionId === "string" &&
+      owned.grant.key === paused.tier + "_month" && ref === owned.ref &&
+      value.handle === owned.handle && value.statsId === owned.grant.statsId &&
+      value.subscriptionId === owned.grant.sourceSubscriptionId &&
+      value.stripeCustomerId === paused.customer && value.subscriptionActive === false &&
+      value.tier === paused.tier && value.cycle === "month";
+  } catch { return false; }
+}
+
 export async function restartPlan(input: {
   store: Pick<Store, "handle">;
   customerId: string;
@@ -754,6 +785,13 @@ export async function restartPlan(input: {
     if (armed.bodyHash !== createHash("sha256").update(body.toString()).digest("hex") || armed.priceId !== priceId ||
         !restartSubmissionOpenNow(armed)) {
       throw new Error("The funded restart request changed or its submission window ended");
+    }
+    // Source reads and price lookup may have waited while the owner changed
+    // plans. Re-read a bounded current owner immediately before the one POST.
+    // Refusal retains the armed owner/cash; it never re-arms or releases them.
+    const currentSource = await storeForRestartSource(intent.ref);
+    if (!fundedRestartSourceMatches(intent, currentSource) || !restartSubmissionOpenNow(armed)) {
+      throw new Error("The current Store no longer matches the funded restart source");
     }
     const subscription = await onPlatform("POST", "/subscriptions", body, {idempotencyKey:armed.idempotencyKey});
     // Persist an identified outcome BEFORE validating it for adoption. Even a
