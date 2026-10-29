@@ -1313,22 +1313,7 @@ def main():
 
         pause_source = (Path(__file__).resolve().parents[1] / 'lib/plan-pause.ts').read_text(encoding='utf-8')
         forget_match = re.search(r'export const PAUSE_WORKER_FORGET = `([^`]+)`;', pause_source)
-        assert forget_match and '
-        for ref in intent_refs:
-            if not ref.startswith('synthetic-restart-intent-'):
-                raise RuntimeError('Refuse unrelated synthetic pause cleanup')
-            redis.command('DEL', 'nl:pause:' + ref, 'nl:pause:last:' + ref)
-            redis.command('ZREM', 'nl:pause:due', ref)
-        for key in keys:
-            if not key.startswith(prefix):
-                raise RuntimeError('Refuse cleanup outside this generated CI namespace')
-            redis.command('DEL', key)
-        redis.close()
-
-
-if __name__ == '__main__':
-    main()
- + '{' not in forget_match.group(1)
+        assert forget_match and chr(36) + '{' not in forget_match.group(1)
         forget_script = forget_match.group(1)
         pause_key, due_key = prefix + ':worker-pause', prefix + ':worker-due'
         keys.extend([pause_key, due_key])
