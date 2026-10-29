@@ -16555,3 +16555,254 @@ PR1221 incorporado29/10/2026 às17:28:33Fortaleza/20:28:33UTC,mergeb87cfae9deeee
 PR1217 incorporado29/10/2026 às17:18:52Fortaleza/20:18:52UTC,merge46c61bc6dd5b4353f0da8df942c0cc092a51d55b,árvorebaeca0a0dc68c0c068bbf8e759b71552ffae5293igualàuniãotestada.39/39checks+Vercel,verify123693596539234/234bundles/Everythingpassing19:56:18.9619921UTC;mobile1236935964829coldLCPmáx884ms/CLS0/proxyinteração64ms/0writes,nãoINPdecampo. Inclui correção pública538AB1 e worker1216ACKlimitado,sem mudar regra estatística ou habilitar cobertura financeira. PR1216 marcado incorporado via ancestralidade1217,não entrega separada.
 
 Produção1217:READYdpl_Fw4G8QQL7PTi6xeFJLPvGbgKAvLG,SHAexato46c61bc6dd5b4353f0da8df942c0cc092a51d55b,7aliasesincluindo marktmorgen.com/wwwmarktmorgen. HTMLrealem/,/pricing,/platform/path,/help,/proof/comparisons e/platform/insights conferidocommesmodata-dpl-id;help/insightscontêm regra dinheiro por visitante e14dias. Não é prova interativa de cliente. Chromecontinua bloqueado,sem retentativa/troca;contador254mantido. CustosCI/produção não medidos não sãozero; nenhuma margem certificada. Obrigações de aviso/funding/renewals/settlement/global/lifetime continuam pendentes e coberturasfalse;histórico preservado.
+
+
+## 549 [SI1] — Trazer páginas de qualquer construtor de sites
+
+Estado: na fila. Ordem de chegada após548TR1, subordinada àAV1, sem interromper a unidade em andamento. Proveniência: solicitação integral do dono29/10/2026 às17h47Fortaleza, anexo399d473e-9c27-41b6-bdff-e618f3cffd56/Texto colado.txt preservado abaixo. Pedidos repetidos: main9dacb88d,PRs1223/1224 abertos,20heads recentes distintos e777refs codex/* conferidos por data/hora,seção,SI1 e conteúdo; nenhum importador genérico de páginas de construtores equivalente.120F2-IMPORTS cobre inscritos/posts/cursos de exports,239CF2guias,394CX5automações/imagensClickFunnels e544SQ9sequências: ligar239/394/544semduplicar leitor,executor ou guias.
+
+Generalizar UM leitor lib/clickfunnels-page.ts e suas regras para arquivoHTMLsalvo da própria página,estúdio “Bring in a page from another site”,sem segundo leitor. Títulos/parágrafos/listas/botões/vídeosYouTubeVimeoLoom/perguntas-respostas/textosdeformulário→blocoslib/sales-page.ts; rascunho escondido até liberação pelo criador,sem sobrescrever. Reconhecer marcasKajabi/Wix/Squarespace/WordPress/equivalentes para partes conhecidas; fallbackgeral sem reconhecimento. Arquivo é dado,nunca executado. Confirmar titularidade/direitos do texto,sem entrar em contas/copiar terceiros/buscarURL.
+
+Excluir scripts/estilos/pixels/rastreadores/pagamento/consentimento/contadores/menus/embeds/HTMLlivre,com relatório de reparo completo e motivo. Imagens APENAS listadas no relatório,criador sobe novamente na cota: a ligação394CX5NÃO autoriza download de imagens nesteSI1,cuja proibição de rede é expressa. Sem chamadaIA/rede para páginas ou imagens. Até10páginasporvez e mesmo tamanho máximo de arquivo do importador atual,conferido antes de implementar,sem afrouxar limites/travas.239CF2explica salvar arquivo com fontes oficiais datadas quando cada plataforma for implementada; contexto concorrente é relatoClaude,não alegar pesquisa independente neste registro.
+
+AX274: passar avisos reais de contraste/alt/hierarquia/linkpropósito antes de publicar; relatório em texto/teclado/7:1. Testes futuros somente arquivos sintéticos por construtor/fallback,blocos corretos/relatório/nãoexecutar/nãorede/nãosobrescrever/escondidoatéliberação. Custo de leitura/processamento/gravações/storage dentro dos tetos/reservas do plano antes da operação; ausência de rede/IA não torna custo desconhecido zero. MR27/10/07h42/TX/FX275:100%direitos+complementos pior mês mensal/anual sem prejuízo isolado,empresa sem prejuízo na base mínima com100%fixos,recebimento mais caro/reservas/impostos,60%meta mensal real; desconhecido reprova,franquia grátis não ézero. VR: somente registro,nenhuma implementação/teste funcional/publicação ou incremento do contador. Flags/preços/direitos/comissão/travas/opt-ins/conteúdo/Hazelsong/idiomas/IDs preservados.
+
+### Briefing integral do dono — 549SI1
+
+SI — Trazer páginas de qualquer construtor de sites, não só da ClickFunnels (29/10/2026) [SI1]
+
+Solicitação do dono (29/10/2026, 17h47, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: antes de gravar, aplique a regra "Pedidos repetidos" (23/10/2026). Procure esta solicitação no main, nos PRs abertos e nos ramos codex/* recentes, pela linha de data e hora, pelo nome da seção, pela etiqueta [SI1] e pelo conteúdo. Se já existir item que peça importar páginas de outros construtores de sites, aplique só a diferença dentro dele, mantendo número, posição e estado; caso contrário, crie um único item com o próximo número livre, na posição que a ordem AV1 indicar. Ligue este item a 239 [CF2] (guias de migração), a 394 [CX5] (importador ClickFunnels para automações e imagens) e a 544 [SQ9] (sequências de outros serviços), sem duplicá-los.
+
+Estado inicial: na fila.
+
+Contexto: o Claude conferiu em 29/10/2026 as perguntas frequentes de clickfunnels.com/apps/site: a resposta a "Can I migrate my existing website to ClickFunnels?" diz "we don't offer automatic migration". O Marktmorgen já importa páginas salvas da ClickFunnels (lib/clickfunnels-page.ts, lib/clickfunnels-funnel.ts, lib/clickfunnels-csv.ts, docs/clickfunnels-import.md): títulos, parágrafos, listas, botões, vídeos do YouTube, Vimeo e Loom e formulários viram blocos de uma página da loja, escondida até o criador liberar, com relatório do que não veio; nunca entra na conta da ClickFunnels, nunca busca páginas nem carrega imagens, e nenhum código dos arquivos roda. Para páginas de Kajabi, Stan, Wix, Squarespace, WordPress, Linktree, Beacons, Carrd e outros, não há importação.
+
+[SI1] O mesmo importador, para o arquivo de página de qualquer construtor.
+(a) No estúdio, "Bring in a page from another site": o criador sobe o arquivo da própria página, salvo pelo navegador (HTML), de qualquer construtor; reaproveite o mesmo leitor e as mesmas regras de lib/clickfunnels-page.ts, generalizados, sem segundo leitor.
+(b) O que vem: títulos, parágrafos, listas, botões com link, vídeos do YouTube, Vimeo e Loom, perguntas e respostas, e textos de formulários, convertidos nos blocos da loja (lib/sales-page.ts); a página fica escondida dos visitantes até o criador liberar; nenhuma página existente é sobrescrita.
+(c) O que nunca vem: scripts, estilos, rastreadores, pixels, campos de pagamento, caixas de consentimento, contadores, menus, código incorporado e qualquer HTML livre; tudo listado no relatório de reparo, com o motivo, como já é feito para a ClickFunnels.
+(d) Imagens: não são buscadas na internet; o relatório lista cada uma, e o criador as sobe de novo, dentro da cota de armazenamento do plano.
+(e) Só arquivos do próprio criador: o estúdio pede que ele confirme que a página é dele e que tem os direitos sobre o texto; nunca buscar uma página por endereço, nunca entrar em conta de terceiros, nunca copiar a página de outra pessoa.
+(f) Reconhecimento por construtor, quando o arquivo tiver as marcas dele (por exemplo, Kajabi, Wix, Squarespace, WordPress), para converter melhor as partes conhecidas; sem reconhecimento, a leitura geral continua funcionando.
+(g) Limites: até 10 páginas por vez e tamanho máximo do arquivo, os mesmos do importador da ClickFunnels; o guia de migração de 239 [CF2] explica como salvar a página em cada construtor.
+
+Acessibilidade (AX274): os blocos importados passam pelos avisos de acessibilidade do estúdio antes de publicar (contraste, texto alternativo, ordem dos títulos, link sem propósito claro); o relatório é texto, operável só pelo teclado; contraste de 7:1.
+
+Testes automáticos: páginas sintéticas de cada construtor viram os blocos certos; scripts, estilos, pixels e HTML livre nunca entram; nada é buscado na internet; nenhuma página existente sobrescrita; a página fica escondida até ser liberada; relatório completo; somente arquivos sintéticos.
+
+Custo: leitura do arquivo e gravações já contadas no plano, com teto automático; nenhuma chamada de rede para buscar páginas ou imagens; nenhuma chamada de IA; desconhecido reprova, nunca é zero.
+
+Margem (regra MR vigente, 27/10/2026, 07h42): nenhum cliente pagante, isoladamente e usando 100% dos direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo, depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto. A empresa como um todo não pode dar prejuízo a partir da base mínima calculada, com 100% dos custos fixos atribuídos ao Marktmorgen (FX275). A meta de 60% de margem líquida é medida todo mês no relatório real. Política tributária TX vigente. Custo desconhecido reprova, nunca é zero; cota grátis de fornecedor não conta como custo zero.
+
+Proibido: buscar páginas ou imagens na internet; entrar em contas de terceiros; importar página de outra pessoa; deixar entrar script, estilo, pixel, rastreador ou HTML livre; executar qualquer código dos arquivos; sobrescrever páginas; segundo leitor de páginas; mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+
+
+## 550 [IX1] — Contexto da pessoa e vendas depois de uma conversa
+
+Estado: na fila. Ordem de chegada após549SI1,subordinadaàAV1; unidade iniciada segue sem interrupção. Proveniência: pedido direto integral do dono29/10/2026 às17h53Fortaleza, preservado abaixo. Pedidos repetidos: main4e986178,PRs1223/1224abertos,20headsrecentes distintos e778refs codex/* conferidos por data/hora,seção,IX1 e conteúdo; nenhum painel de compras ou contagem de vendas após conversa equivalente encontrado.265CI3resume/classifica/rascunha,não é este painel;395CX6chat,502RX1respostas e lib/crm.ts/next-offer.tsreutilizados,sem refazer caixa de entrada/CRM/atribuição.
+
+Para o e-mail de quem escreveu e SOMENTE a própria loja: compras+datas na conta Stripe do criador/importadas,estado assinatura ativa/pausada/cancelada,lista/rótulos,negócioCRMaberto+link. Falha de leitura=Unavailable,nunca “no purchases”. Autorização no servidor e mesmos papéis da equipe; sem permissão de vendas,não ler/expor compras/receita porUI/API/cache/export. Cache privado por loja/pessoa/escopo de permissão,sem vazamento entre criadores.
+
+Topo agregado por período: conversas abertas/respondidas e conversas seguidas de compra paga da mesma pessoa em até30dias,com receita real,“Sales after a conversation”. Texto explícito: coincidência de tempo,não causalidade. Definir contagem/deduplicação temporal verificável sem duplicar a mesma compra por retry ou inflar receita; moedas e leituras indisponíveis não inventadas. Sem pixel/rastreamento fora da loja/dado a terceiros/novaIA. Privacidade informa histórico próprio ao responder; preservar consentimento/RBAC/retenção atuais.
+
+AX274: região com título,números/datas reais rotulados,7:1/44×44px/teclado/sem depender de cor. Testes futuros só Stripe e dados sintéticos para isolamento loja+email,papéis,Unavailable,janela30dias/receita e ausência de outra loja. LeiturasStripe/cache/gravações/processamento entram nos tetos por loja/mês/reserva antes;não chamar custo desconhecido de0nem usar franquia gratuita como0. MR27/10/07h42/TX/FX275:100%direitos+complementos pior mês mensal/anual sem prejuízo isolado,empresa sem prejuízo na base mínima/100%fixos,recebimento mais caro/reservas/impostos;60%meta mensal real. VR: somente registro,nenhum recurso implementado/testadofuncional/publicado,contador254. Flags/preços/limites/comissão/travas/optins/conteúdo/Hazelsong/idiomas/IDs preservados.
+
+### Complemento ao550IX1 — notas internas, tempo e webhook (29/10/2026,18h00Fortaleza)
+
+Proveniência: complemento direto do dono ao550já incorporadoPR1226,aplicado sópela diferença/Pedidosrepetidos3.b. Número550,posição e estado “na fila” acima ficam intactos; sem novo item. Main892de72b ePRs1223/1224 conferidos,sem estecomplemento. Reusar inbox/assignTo/fechamento/webhooks/RBAC atuais.
+
+Internal note: texto simples,distinto por texto E fundo,somente dono/equipeautorizada; nunca mensagem do comprador/email/export comprador/webhook de conversa. Mesmo prazo/exclusão da conversa,bytes na cota da loja,isolamento/RBAC no servidor. Não confundir nota interna com resposta salva ou comentárioCRM.
+
+Topo por período: mediana até primeira resposta real,fechadas,abertas>24horassemresposta; números por membro da equipe só dono da loja,com horários existentes e definição verificável de primeiraresposta sem incluir nota interna como atendimento. Sem novo tracking,pesquisa/envio/número de satisfação; leitura desconhecida não vira0.
+
+conversation.started no motor dewebhooks existente: loja/hora/origemchat-form-assistente/primeirotexto,apenas evento ligado pelo criador,endpoints que ele já cadastrou,assinatura/limites/repetições/segurança atuais,sem segundo emissor. **Diferença expressa em relação ao pedido17h53:** a proibição anterior de dados a terceiros permanece para todo restante; este complemento autoriza somente o payload do evento nos webhooks cadastrados e ativados pelo criador,com informação na privacidade. Não enviar notas internas,compras/receita/rótulos/CRM ou novosdadosnãoespecificados,nem novosendereços. Nenhum webhook real é enviado neste registro/testes.
+
+AX274: Internal note em texto,númerosreaisrotulados,7:1/44×44px/teclado. Testes sintéticos para nota não chegar ao comprador/email,papéis,exclusão,mediana a partir de mensagens,eventosomenteoptin/endpoints cadastrados/assinado. Storage de notas/leituras/webhook/retries dentro dos tetos/reservas antesgasto,sem aumentarfranquia. MR27/10/07h42/TX/FX275/VR vinculantes,desconhecido reprova/nãozero. Nenhum preço/limite/comissão/flag/trava/dadoexistente/Hazelsong alterado,contador254. Somente registro,não implementação/publicação.
+
+#### Briefing integral — complemento550IX1 de18h00
+
+IX — Complemento ao 550 [IX1]: notas internas, tempo de resposta e aviso de conversa nova pelos webhooks (29/10/2026)
+Etiqueta: [IX1]
+
+Solicitação do dono (29/10/2026, 18h00, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: é complemento ao item 550 [IX1] já gravado. Aplique só a diferença ao item existente, mantendo número, posição e estado (regra "Pedidos repetidos", passo 3, letra b), e registre na proveniência o que mudou.
+
+Estado inicial: o do próprio 550.
+
+Contexto: o Claude conferiu em 29/10/2026 as perguntas frequentes de clickfunnels.com/apps/message-hub: notas internas, atribuição de conversas e chat da equipe; respostas prontas, regras de distribuição e webhooks; e relatórios de tempo de resposta, conversas resolvidas, satisfação e produtividade. No Marktmorgen, a caixa de entrada (lib/inbox.ts, lib/inbox-rules.ts, components/inbox-studio.tsx) já tem respostas salvas, conversa entregue a uma pessoa da equipe (assignTo) respeitando os papéis, e fechamento; não tem notas internas, não mede o tempo de resposta, e os webhooks da loja (lib/webhooks.ts) não avisam conversas novas.
+
+O que acrescentar ao 550 [IX1]:
+- notas internas em cada conversa: texto simples, visto só pelo criador e pela equipe que pode ver a caixa de entrada, nunca enviado ao comprador, marcado "Internal note" e com fundo diferente das mensagens; guardadas e apagadas junto com a conversa, pelo mesmo prazo, e contadas no armazenamento da loja;
+- no topo da caixa de entrada, por período: tempo mediano até a primeira resposta, conversas fechadas e conversas abertas há mais de 24 horas sem resposta; por pessoa da equipe, só para o dono da loja; só a partir de horários já gravados nas mensagens, sem rastreamento novo;
+- novo evento nos webhooks que já existem, "conversation.started", com a loja, a hora, a origem (chat, formulário, assistente) e o primeiro texto, enviado só aos endereços que o criador já cadastrou, assinado como os outros eventos; a política de privacidade diz que as mensagens podem ser enviadas aos webhooks do criador quando ele ligar esse evento;
+- sem pesquisa de satisfação enviada ao comprador e sem número de satisfação.
+
+Acessibilidade (AX274): a nota interna é identificada por texto, não só pela cor; os números em texto real com rótulo; contraste de 7:1; alvos de pelo menos 44 × 44 px; operável só pelo teclado.
+
+Testes automáticos: a nota interna nunca chega ao comprador nem ao e-mail dele; respeita os papéis; é apagada com a conversa; o tempo mediano a partir de mensagens simuladas; o evento do webhook só vai aos endereços cadastrados, assinado, e só quando ligado; somente dados sintéticos.
+
+Custo: gravações das notas no armazenamento da loja, com teto; leituras já contadas; envios de webhook dentro dos limites e repetições que já existem; desconhecido reprova, nunca é zero.
+
+Regra de margem: segue a REGRA DE MARGEM vigente (MR, 27/10/2026, 07h42), a política tributária TX e FX275; custo desconhecido reprova, nunca é zero.
+
+Proibido: criar item novo ou mudar número, posição ou estado do 550; mostrar ou enviar a nota interna ao comprador; mandar pesquisa ou e-mail ao comprador; enviar dados a endereços não cadastrados pelo criador; ignorar os papéis da equipe; mudar preços, limites visíveis, comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a, a revisão comercial ou stripePlatformEligibilityReady; afrouxar qualquer trava; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+
+### Briefing integral do dono — 550IX1
+
+IX — Na caixa de entrada, quem é a pessoa e se a conversa virou venda (29/10/2026) [IX1]
+
+Solicitação do dono (29/10/2026, 17h53, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: antes de gravar, aplique a regra "Pedidos repetidos" (23/10/2026). Procure esta solicitação no main, nos PRs abertos e nos ramos codex/* recentes, pela linha de data e hora, pelo nome da seção, pela etiqueta [IX1] e pelo conteúdo. Se já existir item que peça mostrar na caixa de entrada as compras da pessoa ou as vendas depois de uma conversa, aplique só a diferença dentro dele, mantendo número, posição e estado; caso contrário, crie um único item com o próximo número livre, na posição que a ordem AV1 indicar. Ligue este item a 395 [CX6] (chat ao vivo), a 502 [RX1] (respostas aos e-mails no estúdio) e ao CRM existente (lib/crm.ts), sem duplicá-los.
+
+Estado inicial: na fila.
+
+Contexto: o Claude conferiu em 29/10/2026 a seção "Every message is money in motion" de clickfunnels.com/apps/message-hub: uma regra "Message Created / Message Content contains 'I want that!' / Send email to sales team" e a promessa "See exactly which messages drive results". No Marktmorgen, a caixa de entrada (lib/inbox.ts, lib/inbox-rules.ts, components/inbox-studio.tsx) já tem chat nas páginas da loja, respostas salvas, conversa entregue a uma pessoa da equipe, aviso por e-mail a quem está com ela, resposta sugerida pela IA e fechamento; mas a conversa não mostra quem é a pessoa na loja (compras, assinatura, negócio no CRM) nem há contagem de conversas que terminaram em venda.
+
+[IX1] O contexto da pessoa ao lado da conversa, e as vendas que vieram depois.
+(a) Ao abrir uma conversa, um painel ao lado mostra, para o e-mail de quem escreveu e só nesta loja: o que a pessoa comprou e quando (lido da conta Stripe do criador e das compras importadas, como já é feito em lib/next-offer.ts); se tem assinatura ativa, pausada ou cancelada; se está na lista e com quais rótulos; e o negócio aberto no quadro do CRM, com link para a página dela no CRM.
+(b) Leitura que falhar aparece como "Unavailable", nunca como "no purchases"; nada de outra loja nem de outro criador aparece.
+(c) Contagem agregada no topo da caixa de entrada, por período: conversas abertas, respondidas, e quantas tiveram uma compra paga da mesma pessoa em até 30 dias depois, com a receita dessas compras, chamada "Sales after a conversation", com a explicação de que é uma coincidência de tempo, não prova de que a conversa causou a venda.
+(d) O painel respeita os papéis da equipe que já existem: quem não pode ver vendas não vê compras nem receita.
+(e) Nenhum rastreamento fora da loja, nenhum pixel, nenhum dado enviado a terceiros; a política de privacidade diz que o criador vê, ao responder, o histórico da pessoa na própria loja.
+
+Acessibilidade (AX274): o painel é uma região com título; números e datas em texto real; nada só por cor; contraste de 7:1; alvos de pelo menos 44 × 44 px; operável só pelo teclado.
+
+Testes automáticos: o painel mostra só dados da mesma loja e do mesmo e-mail; "Unavailable" quando a leitura falha; papéis respeitados; contagem de vendas em até 30 dias a partir de compras simuladas; nenhum dado de outra loja; somente Stripe simulado e dados sintéticos.
+
+Custo: leituras da conta Stripe do criador com cache, já dentro do plano, com teto automático por loja e por mês e reserva antes; nenhuma chamada de IA nova; desconhecido reprova, nunca é zero.
+
+Margem (regra MR vigente, 27/10/2026, 07h42): nenhum cliente pagante, isoladamente e usando 100% dos direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo, depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto. A empresa como um todo não pode dar prejuízo a partir da base mínima calculada, com 100% dos custos fixos atribuídos ao Marktmorgen (FX275). A meta de 60% de margem líquida é medida todo mês no relatório real. Política tributária TX vigente. Custo desconhecido reprova, nunca é zero; cota grátis de fornecedor não conta como custo zero.
+
+Proibido: mostrar dados de outra loja ou de outro criador; mostrar "no purchases" quando a leitura falhou; dizer que a conversa causou a venda; rastrear fora da loja ou enviar dados a terceiros; ignorar os papéis da equipe; mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+
+
+## 551 [FB1] — Chamada gratuita de apresentação com e-mail confirmado
+
+Estado: na fila. Ordem de chegada após550IX1,subordinadaàAV1,sem interromper a unidade iniciada. Proveniência: anexo integral do dono29/10/2026 às18h01Fortaleza,5c08467c-7473-43db-ae7f-aeccc9db50c4/Texto colado.txt,preservado abaixo. Pedidos repetidos: mainaf59b6cc,PRs1223/1224abertos,20headsrecentes distintos e780refs codex/*conferidos por data/seção/FB1/conteúdo; nenhuma chamada gratuita confirmada sem pagamento equivalente. Ligar520LB1,funilapplication existente e548TR1,sem segundo motor de agenda/formulário/entrega/aviso.
+
+Free intro call individual,duração curta escolhida pelo criador (15/20/30min são EXEMPLOS,não novos limites já aprovados),mesmas agendas/horas/sala/fuso/equipe/lembretes/remarcação atuais. SemStripe/cartão/cobrança: escolhehorário/nome/email/até3perguntas viaforms; holdprovisório≤15min,SEM reserva definitiva antesde confirmar link de email; expirelibera automaticamente. BotID/rate limitsatuais,no máximo1chamada gratuita futura/email/loja,aprovação manual opcional/bloqueio de endereço sem contornar confirmação. Concorrência/idempotência/expiração não podem permitir reserva dupla nem renovarholdilimitadamente; custo/tetogarantido antesIO.
+
+Cancelar/remarcar porlink/regrasatuais,falta explicitamente marcada pode acionar548TR1,sem taxa por falta. Ligação548não autoriza disparo por holdnão confirmado: novo tipo gratuito só em eventos reaisconfirmados/presençaoufaltamarcada,sem segundo fluxo. Confirmação/lembretes são serviço na cota; newsletter somente checkboxdesmarcada+regrasatuaisdeconfirmação,não presumir consentimento por agendar. Depoiscriadorpodecomcliqueenviarlink próprio produto/chamadapaga publicadono preço real,sem desconto/prazo falso,não marketingautomático sem permissão. Termos/privacidade/retenção/exclusão pessoa→reserva atualizados.
+
+AX274: seletoratual/fusoemtexto/teclado/errosreais/7:1/44×44px. Testes futuros somente agendas/Stripe/enviossimulados: holdnãoreservasemconfirmação,expiração,únicafutura,email+aprovação/bloqueio,0Stripe,lembretes/remarcação atuais/optin. Fixar e testar máximo mensal de chamadas gratuitas ANTES de operar; não inventar quantidade ou usar exemplo como direito. E-mails/sala/agendas/armazenamento/consultas/retries entram nos mesmos tetos de plano/reservas anteriores,sem supor que reuso é custozero nem consumir garantia de pagantes sem cobertura. MR27/10/07h42/TX/FX275:100%direitos+complementos pior mês mensal/anual sem prejuízo isolado,empresa sem prejuízo na base mínima/100%fixos,recebimento mais caro/reservas/impostos;60%meta mensalreal. Desconhecido reprova,franquia grátis nãozero. VR:somente registro,nenhum recurso implementado/testadofuncional/publicado,nem contador. Flags/preços/limites/comissão/travas/consentimento/conteúdo/Hazelsong/idiomas/IDs preservados.
+
+### Briefing integral do dono — 551FB1
+
+FB — Chamada gratuita de apresentação, marcada sem pagamento (29/10/2026) [FB1]
+
+Solicitação do dono (29/10/2026, 18h01, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: antes de gravar, aplique a regra "Pedidos repetidos" (23/10/2026). Procure esta solicitação no main, nos PRs abertos e nos ramos codex/* recentes, pela linha de data e hora, pelo nome da seção, pela etiqueta [FB1] e pelo conteúdo. Se já existir item que peça chamada gratuita marcada sem pagamento, aplique só a diferença dentro dele, mantendo número, posição e estado; caso contrário, crie um único item com o próximo número livre, na posição que a ordem AV1 indicar. Ligue este item a 520 [LB1] (atendimento presencial agendado), ao funil "application" de lib/funnel-types.ts e a 548 [TR1] (gatilhos de chamada marcada, comparecida e perdida), sem duplicá-los.
+
+Estado inicial: na fila.
+
+Contexto: o Claude conferiu em 29/10/2026 o topo de clickfunnels.com/apps/appointments: "Turn leads into booked meetings… Perfect for coaches, consultants, and sales teams". No Marktmorgen, o agendamento (lib/calls.ts, lib/call-setup.ts, lib/team-booking.ts) é completo para chamadas pagas: individual, grupo de até MAX_SEATS = 50, sessão ao vivo de até 500, fuso do comprador, horários ocupados de até 3 agendas, Google Meet, Zoom ou sala própria, lembretes de um dia e de uma hora, remarcação pelo comprador até MAX_MOVES = 2, equipe em round robin ou coletiva, e pacotes de sessões. Toda chamada passa por um checkout pago do Stripe, salvo a sessão de um pacote já pago; não existe chamada gratuita de apresentação para quem ainda não comprou.
+
+[FB1] Uma chamada gratuita que só fica reservada para quem confirmou o e-mail.
+(a) O criador pode marcar um tipo de chamada como gratuito ("Free intro call"), só individual, com duração curta escolhida por ele (por exemplo, 15, 20 ou 30 minutos); usa as mesmas horas semanais, agendas, salas, lembretes, fuso e equipe das chamadas pagas, sem segundo motor de agendamento.
+(b) Sem passar pelo Stripe: a pessoa escolhe o horário, informa nome e e-mail e, se o criador quiser, responde até 3 perguntas (o formulário de lib/forms.ts); o horário fica segurado por até 15 minutos e só vira reserva quando ela clicar no link de confirmação enviado ao e-mail; sem confirmação, o horário volta a ficar livre sozinho.
+(c) Proteção contra abuso: a mesma proteção contra robôs que já existe (Vercel BotID) e os mesmos limites de pedidos; no máximo uma chamada gratuita futura por e-mail em cada loja; o criador pode pedir aprovação manual antes de confirmar e pode bloquear um endereço.
+(d) Falta: a pessoa pode cancelar ou remarcar pelo link do e-mail, pelas regras atuais; a falta marcada pelo criador pode acionar os gatilhos de 548 [TR1]; nenhuma cobrança por falta.
+(e) Consentimento: o e-mail de confirmação e os lembretes são e-mails de serviço da reserva; a pessoa só entra na lista de notícias do criador se marcar a caixa desmarcada que já existe.
+(f) Depois da chamada, o criador pode, com um clique, mandar à pessoa o link de um produto ou de uma chamada paga dele, ao preço publicado, sem desconto inventado nem prazo falso.
+(g) Política de privacidade e termos atualizados: o que é guardado da reserva gratuita e por quanto tempo; apagar a pessoa apaga a reserva.
+
+Acessibilidade (AX274): o mesmo seletor de horários das chamadas pagas, operável só pelo teclado, com o fuso dito em texto; erros em texto; contraste de 7:1; alvos de pelo menos 44 × 44 px.
+
+Testes automáticos: o horário só vira reserva com o e-mail confirmado; volta a ficar livre sem confirmação; uma chamada gratuita futura por e-mail; aprovação manual e bloqueio; nada passa pelo Stripe; lembretes e remarcação pelas regras atuais; nenhuma entrada na lista sem a caixa marcada; somente envios simulados.
+
+Custo: os e-mails de confirmação e lembrete contam na cota de e-mails da loja, com teto automático e reserva antes; a sala de vídeo e as agendas usam o que já existe, sem custo novo por chamada; o número máximo de chamadas gratuitas por mês é limitado e testado; desconhecido reprova, nunca é zero.
+
+Margem (regra MR vigente, 27/10/2026, 07h42): nenhum cliente pagante, isoladamente e usando 100% dos direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo, depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto. A empresa como um todo não pode dar prejuízo a partir da base mínima calculada, com 100% dos custos fixos atribuídos ao Marktmorgen (FX275). A meta de 60% de margem líquida é medida todo mês no relatório real. Política tributária TX vigente. Custo desconhecido reprova, nunca é zero; cota grátis de fornecedor não conta como custo zero.
+
+Proibido: reservar horário sem e-mail confirmado; cobrar por falta; pôr alguém na lista sem a caixa marcada; segundo motor de agendamento; desconto inventado ou prazo falso depois da chamada; enviar e-mail real em testes; mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+
+
+## 552 [BB1] — Bloco de agendamento nas páginas e funis
+
+Estado: na fila. Ordem de chegada após551FB1,subordinadaàAV1; sem interromper unidade iniciada. Proveniência: pedido direto integral do dono29/10/2026 às18h05Fortaleza,preservado abaixo. Pedidos repetidos: mainaf59b6cc,PRs1223/1224/1228abertos,20headsrecentes distintos e781refs codex/*conferidos por data/seção/BB1/conteúdo; nenhum bloco de agendamento equivalente.551FB1criafreeintro,scheduleratualpágina própria/375TB1editor/526FN2mapa não são refeitos; ligar551/375/526 e mesmafontedecontagemsemsegundoexecutor.
+
+Booking emlib/sales-page.tsparaqualquerpáginaprópria/etapafunil,selecionachamadadapróprialojapaga/pacote/grátis551; renderiza MESMO seletor/cálculo/calendários/fuso/duração/local lidosdachamada. Pago:holdatual→Stripecontacriador→sóconfirmaapóspagamento; pacote usa autorização/saldoatuais,não pagaoureserva sessão nova indevida; grátis551somenteemailconfirmado. Sóapósagendamentorealpróximaetapafunilouagradecimentoatual,sem pôrdadospessoaisnarotaouautorizarredirecionamentoexterno.
+
+Leiturashoráriosapenasvisívelouescolhadedia,reusarcache/tetos/singleflightatuais; testarbrowsereflow/tempo/custosantesdeafirmarque não impacta restante. Semdisponibilidade:textohonesto+waitlistseligada,nãofalsaescassez.526mostracontagemrealdequemmarcou,semnovotrackingouduplicarcontador;falhadesconhecida não vira0. AX274:botõesdias/horárioscomnomerealcompletoefusocorreto(exemploéformato,nãodatapersistida),seleçãoanunciada/teclado/7:1/44×44px. TestesfuturossóStripe/envios/agenda sintéticosparaparidadeseletor/hold/pagamento551/leituravisível/ausênciadehorário/fluxofinal.
+
+Custosdeleitura/calendários/cache/render/processamentojánoplanoexigemtetose reservaantesoperações; reusarnãosignificacusto0ouconsulta ilimitada porbloco. MR27/10/07h42/TX/FX275/VRvinculantes,100%direitos+complementos pior mês mensal/anual sem prejuízo isolado,empresa na basemínima100%fixos,recebimentomaiscaro/reservas/impostos,60%meta mensalreal;desconhecidoreprova/franquia grátis nãozero. Somenteregistro,nãorecursoimplementado/testadofuncional/publicadooucontador. SemHTML/CSS/scriptlivre,semsegundomotor,travas/preços/limites/comissão/flags/consentimento/conteúdo/Hazelsong/idiomas/IDs preservados.
+
+### Briefing integral do dono — 552BB1
+
+BB — Bloco de agendamento dentro das páginas e dos funis (29/10/2026) [BB1]
+
+Solicitação do dono (29/10/2026, 18h05, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: antes de gravar, aplique a regra "Pedidos repetidos" (23/10/2026). Procure esta solicitação no main, nos PRs abertos e nos ramos codex/* recentes, pela linha de data e hora, pelo nome da seção, pela etiqueta [BB1] e pelo conteúdo. Se já existir item que peça um bloco de agendamento nas páginas de venda ou nos funis, aplique só a diferença dentro dele, mantendo número, posição e estado; caso contrário, crie um único item com o próximo número livre, na posição que a ordem AV1 indicar. Ligue este item a 551 [FB1] (chamada gratuita), a 375 [TB1] (editor visual) e a 526 [FN2] (mapa do funil), sem duplicá-los.
+
+Estado inicial: na fila.
+
+Contexto: o Claude conferiu em 29/10/2026 a seção "Make your funnel your best booking agent" de clickfunnels.com/apps/appointments: um formulário de agendamento (calendário, fuso, duração, local e lista de horários) colocado dentro de qualquer página do funil, "No more sending leads to other scheduling tools". No Marktmorgen, a tela de agendamento existe na página própria de cada chamada (/@<loja>/book/<produto>, lib/calls.ts, lib/call-setup.ts), mas os 21 tipos de bloco de lib/sales-page.ts não têm bloco de agendamento: para marcar, o visitante sai da página do funil.
+
+[BB1] Um bloco "Booking" com o mesmo agendamento que já existe.
+(a) Novo tipo de bloco "Booking" em lib/sales-page.ts, para qualquer página da loja e qualquer etapa do funil: o criador escolhe uma das chamadas da loja (paga, de pacote ou gratuita de 551 [FB1]); o bloco mostra o mesmo seletor de dia e horário, o fuso do visitante, a duração e o local, lidos da chamada, sem segundo motor de agendamento.
+(b) Chamada paga: ao escolher o horário, o horário é segurado e o visitante segue para o checkout do Stripe na conta do criador, pelas mesmas regras de hoje; chamada gratuita: segue o fluxo de e-mail confirmado de 551 [FB1].
+(c) Depois de marcar, o visitante segue para a próxima etapa do funil, se houver, ou para a página de agradecimento de hoje.
+(d) Os horários são lidos só quando o bloco aparece na tela ou quando o visitante escolhe um dia, com o mesmo cache e os mesmos limites da página de agendamento; uma página com o bloco não fica mais lenta para carregar o resto.
+(e) Sem horário livre, o bloco diz isso em texto e oferece a lista de espera, se ligada; nada de "vagas acabando" nem número de vagas inventado.
+(f) No mapa do funil de 526 [FN2], a etapa com o bloco mostra quantos marcaram.
+
+Acessibilidade (AX274): o seletor operável só pelo teclado, com os dias e horários como botões com nome completo ("Monday, January 13, 9:00 AM, Los Angeles time"), o fuso dito em texto, o horário escolhido anunciado ao leitor de tela, contraste de 7:1 e alvos de pelo menos 44 × 44 px.
+
+Testes automáticos: o bloco usa o mesmo cálculo de horários da página de agendamento; chamada paga vai ao checkout com o horário segurado; chamada gratuita segue o 551; leitura só quando visível; sem horário livre, texto honesto; somente Stripe e envios simulados.
+
+Custo: as leituras de horários e agendas já contadas no plano, com cache e teto automático; nenhum custo novo por bloco; desconhecido reprova, nunca é zero.
+
+Margem (regra MR vigente, 27/10/2026, 07h42): nenhum cliente pagante, isoladamente e usando 100% dos direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo, depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto. A empresa como um todo não pode dar prejuízo a partir da base mínima calculada, com 100% dos custos fixos atribuídos ao Marktmorgen (FX275). A meta de 60% de margem líquida é medida todo mês no relatório real. Política tributária TX vigente. Custo desconhecido reprova, nunca é zero; cota grátis de fornecedor não conta como custo zero.
+
+Proibido: segundo motor de agendamento; marcar chamada paga sem pagamento ou gratuita sem e-mail confirmado; escassez ou número de vagas inventado; HTML, CSS ou script livres; mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+
+
+### AB(a) — limite do ACK da leitura de pausa antes do trabalho financeiro (29/10/2026)
+
+Em implementação, sem nova cobertura liberada. Benefício: impedir que resposta malformada force travessia/serialização antes do limite4096bytes, preservar pausa/índice/vigência anual e conteúdo em estado desconhecido, evitar trabalho financeiro adicional. Mesma storedPauseAt/PAUSE_OBSERVATION usada por pauseOf,onBreak e runBreaks; sem segundo leitor/motor. Decodificador aceita apenas[[0]]ou[[1,raw]],comprimentosantesmembros,own-data/semgetters/symbols/sparse,limiteUTF16antesUTF8. Testes sintéticos instrumentam arrays exteriores/interiores acima do limite com autoprova positiva,ASCII/UTF8/getters,verificam0owner/provider/email/cleanup e evidênciafundedinalterada. Testes existentesválidos/ausênciaexplícita mantidos. Suíte completa no novohead ainda obrigatória; não é resultado aprovado neste registro.
+
+Custo:nenhum novo comandoRedis/key/campo/job/retenção/envio/provedor,mesmoslimites; transporte/decoderexterno/global/lifetime/aviso comreserva de caixa/renovações/settlement/custeiointegral continuam pendentes e desconhecidoreprova. Não zerarcustoCI/operação.MR/TX/FX275/VR,preços/direitos/flags/coberturasfalse/optins/conteúdo/Hazelsong/idiomas/IDs preservados.0→0ações/decisõesUI; sem certificaçãoAAA/interativa,contador254. Provas detalhadas no documento técnico desta unidade,sem promessa de aviso resolvido.
+
+RegistroTR1:PR1222incorporado29/10/2026às17:32:34Fortaleza/20:32:34UTC,merge9dacb88d4c417185c06e78bcdbe78769d6bb1aa1,árvore7aa82a33d209dad4407ccdcf4e53b227487e812e,head9b42be9c79a1eb244abe682e35c5e83206b57905,27checksdocumentais16sucessos11skips+Vercelsuccess.548continua na fila; não é entrega funcional.Histórico intacto.
+
+
+### AB(a) — ACK próprio na reserva de exposição; reconciliação em preparo (29/10/2026)
+
+PR1224corrige reserveFundedExposure real: respostaRedis tem de ser array de1elemento próprio de dados,número1; getter/herança/sparse/symbols/objeto/sobrec cardinalidade não admitem gasto. A correção não invoca acessores,não libera dinheiro incerto,não cria segundo motor. Teste sintético do entrypoint reserva primeiro e mantém cash/receipt/slot intactos quando resposta posterior é malformada; autoprova positiva da instrumentação e resposta válida retida. MesmaLua/chave/campos/TTL/tentativas/quantia/IO,nenhum novo envio/provedor. Não é reserva de aviso vinculada ao contrato de origem: é exposição loja/escopo/mês preexistente. Custos completos/global/lifetime/avisosfonte/renovações/settlement seguem pendentes,desconhecidoreprova. Coberturasfalse/policiesnull/MR/TX/FX275/VR/travas/direitos/preços/conteúdo intactos,contador254.0→0passos/decisõesUI,sem provaAAAhumana ou interativa.
+
+Preparada união das fontes/testes/docs independentes1223e1224 com fila main892de72b,retendo549SI1/550IX1 e todo histórico. Preparar árvore não é testar/incorporar/publicar; as duas execuções individuais não são canceladas e a nova união exige suíte completa em head próprio. Registro549SI1:PR1225merge4e986178d598d7d75c0e994f4f639d8d7f99b777,29/10/2026 às17:53:29Fortaleza/20:53:29UTC,árvore9e8810808403743b4733ed3d9deb93a2cb80ab6b,27checks16success11skips+Vercel. Registro550IX1:PR1226merge892de72bb218df1db103f2e5c72d4ad56def0a5a,29/10/2026 às17:57:18Fortaleza/20:57:18UTC,árvore02d1e15a3d2e745cd6f0e1d72041f2152b28c2d7,27checks16success11skips+Vercel. Ambos somente fila,sem recurso implementado.Histórico preservado.
+
+
+### União atualizada e provas individuais — 29/10/2026
+
+As duas suítes individuais terminaram39/39+Vercel sem cancelamento:1223head865679db219aeaa2d65191745c31fb58d470dd9a,verify123716816178234/234bundles/Everythingpassing20:39:34.3818637UTC,instrumentação real e retenção de pausa aprovadas20:38:24;mobile1237168162019coldLCPmáx1076ms/CLS0/proxyinteração104ms/0writes.1224head6ad1b28ee18a559859dc69d84257a81cd3f12f04,verify123718217432234/234Everythingpassing20:44:59.0540117UTC,regressão de ACKpróprio20:42:43;mobile1237182171909coldLCP828ms/CLS0/proxy72ms/0writes. Não éINPdecampo nem provainterativa/AAAintegral/margem certificada.
+
+A união agora inclui main9760076e4c6c4a7c2e31d50366572acceeaa1094,retendo549SI1/550IX1+complemento18h00/551FB1/552BB1 e todos os históricos. PR1227complemento550mergeaf59b6cc7ae42dcbf92117bc43a55c84e0af2179,29/10às18:03:41Fortaleza/21:03:41UTC,árvore12c987d1725ce4b592cdd2a418c32ad50ca0121d. PR1228registros551/552merge9760076e4c6c4a7c2e31d50366572acceeaa1094,29/10às18:09:31Fortaleza/21:09:31UTC,árvore8f998cfcc9974cd1095092aafab74765e2a4ffef;ambos27checksdocumentais16success11skips+Vercel. Estados dosrecursos continuam na fila,sem entrega funcional.
+
+Novo head combinado exige NOVA suíte COMPLETA; provas individuais não a substituem. Nenhuma regra/cobertura/flag/preço/direito/teto/reserva/consentimento/dado/idioma/identificador alterado; custos completos/global/lifetime/noticefunding/renovações/settlement permanecem desconhecidos/reprovados. Sem novoIOprodutivo/provedor/email/retenção,reuso nãozero,CI100%FX275nãozerado. Contador254 aguardaprovainterativa;semretentativaChrome/troca. Histórico integral preservado.
