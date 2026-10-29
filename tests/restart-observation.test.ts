@@ -9,7 +9,7 @@ const input={customerId:"cus_SyntheticRestart01",tier:"creator" as const,priceId
 function observed(){
  return {
   id:"sub_SyntheticRestart01",status:"active",customer:input.customerId,
-  start_date:NOW-60,trial_end:null,cancel_at_period_end:false,
+  start_date:NOW-60,trial_end:null,cancel_at_period_end:false,cancel_at:null,
   items:{data:[{quantity:1,current_period_start:NOW-60,current_period_end:NOW+30*DAY,
    price:{id:input.priceId,lookup_key:"nimbus_labs_creator_month",currency:"usd",unit_amount:PLAN_PRICES.creator.month,recurring:{interval:"month",interval_count:1}},
   }]},
@@ -223,6 +223,8 @@ test("activation handoff clones the exact paid provider period without IO or ado
  const proof=observeFundedRestartActivation(armed,input,subscription,NOW);
  assert.equal(proof.subscriptionId,subscription.id);
  assert.equal(proof.createdSeconds,subscription.created);
+ assert.equal(proof.renews,true);
+ assert.equal(proof.shared,observeRestartedPlan(input,subscription,NOW).shared);
  assert.equal(proof.periodStartSeconds,subscription.items.data[0].current_period_start);
  assert.equal(proof.periodEndSeconds,subscription.items.data[0].current_period_end);
  assert.equal(Object.isFrozen(proof),true);
@@ -236,7 +238,8 @@ test("activation handoff refuses ambiguous or inactive observations and never in
  const {armed,subscription}=fundedResultFixture();
  for(const change of [{status:"canceled"},{customer:"cus_ForeignActivation01"},
   {metadata:{...subscription.metadata,funding_grant:"ctr_foreign"}},
-  {created:NOW+1},{items:{...subscription.items,has_more:true}}])
+  {created:NOW+1},{items:{...subscription.items,has_more:true}},
+  {cancel_at_period_end:undefined},{cancel_at_period_end:"false"},{cancel_at:undefined},{cancel_at:"unknown"},{cancel_at:-1}])
   assert.throws(()=>observeFundedRestartActivation(armed,input,{...subscription,...change},NOW));
  let reads=0;const hostile={...subscription};Object.defineProperty(hostile,"created",{enumerable:true,get(){reads++;return NOW;}});
  assert.throws(()=>observeFundedRestartActivation(armed,input,hostile,NOW));assert.equal(reads,0);
@@ -263,3 +266,11 @@ test("funded restart pre-POST source rejects every changed owner primitive witho
  assert.equal(fundedRestartSourceMatches(extraIntent,{...current,extra:true,sid:"fedcba9876543210fedcba9876543210"}),false);
  assert.equal(JSON.stringify({intent,current}),before);
 });
+
+ test("funded activation checkpoint preserves explicit stopped renewal state",()=>{
+ const {armed,subscription}=fundedResultFixture();
+ const stopped=observeFundedRestartActivation(armed,input,{...subscription,cancel_at_period_end:true},NOW);
+ assert.equal(stopped.renews,false);
+ const dated=observeFundedRestartActivation(armed,input,{...subscription,cancel_at:NOW+DAY},NOW);
+ assert.equal(dated.renews,false);
+ });

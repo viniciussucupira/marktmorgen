@@ -1031,7 +1031,7 @@ def main():
             owner = json.loads(redis.command('HGET',keys[42],'restart-intent:ctr_restart_new'))
             submission = owner.pop('submission')
             sent = {field:submission[field] for field in ('priceId','bodyHash','idempotencyKey','armedAt')}
-            observed = dict(id='sub_ObservedRestart01',created=1800000003,start=1800000003,finish=1801000000)
+            observed = dict(id='sub_ObservedRestart01',created=1800000003,start=1800000003,finish=1801000000,renews=True,shared=False)
             return owner_ref,owner_pause,owner,sent,observed
         def activate_restart(client,fixture,**over):
             owner_ref,owner_pause,owner,sent,observed = fixture
@@ -1053,9 +1053,16 @@ def main():
         new_binding = 'ctr_restart_new|sub_ObservedRestart01|creator_month|1800000003|paid|1800000003|1801000000'
         assert redis.command('HGET',keys[42],'activated:ctr_restart_new') == new_binding
         assert redis.command('HGET',keys[42],'active:restart-store') == new_binding
+        publication_raw = redis.command('HGET',keys[42],'restart-publication:ctr_restart_new')
+        assert len(publication_raw.encode('utf-8')) <= 384
+        assert json.loads(publication_raw) == dict(version=1,binding=new_binding,renews=True,shared=False)
         for field,value in before:
-            if field != 'active:restart-store':
+            if field not in ('active:restart-store','restart-intent:ctr_restart_new'):
                 assert redis.command('HGET',keys[42],field) == value
+            elif field=='restart-intent:ctr_restart_new':
+                retained=json.loads(redis.command('HGET',keys[42],field))
+                assert retained['submission'].pop('publication') == dict(renews=True,shared=False)
+                assert retained == json.loads(value)
         assert redis.command('HGET',keys[42],'pending:restart-store') == 'ctr_restart_new'
         assert redis.command('GET','nl:pause:'+fixture[0]) == fixture[1]
         def activation_retry(_index):
@@ -1124,6 +1131,62 @@ def main():
         print('PASS:23foreign/unknown/late/annual-generation restart activation cases preserve every field and pause/year/due')
 
 
+        for scenario in ('unbacked-checkpoint','unbacked-intent-flags'):
+            fixture = activation_ready()
+            if scenario=='unbacked-checkpoint':
+                redis.command('HSET',keys[42],'restart-publication:ctr_restart_new',json.dumps(dict(version=1,binding=new_binding,renews=True,shared=False),separators=(',',':')))
+            else:
+                retained=json.loads(redis.command('HGET',keys[42],'restart-intent:ctr_restart_new'))
+                retained['submission']['publication']=dict(renews=True,shared=False)
+                redis.command('HSET',keys[42],'restart-intent:ctr_restart_new',json.dumps(retained,separators=(',',':')))
+            state=snapshot(keys[42])
+            assert activate_restart(redis,fixture)==0,scenario
+            assert snapshot(keys[42])==state,scenario
+        print('PASS:unbacked publication checkpoint or intent flags cannot authorize first activation or backfill')
+        
+        # The exact Store handoff is committed with activation, never inferred later.
+        for renews in (False,True):
+            for shared in (False,True):
+                fixture = activation_ready()
+                observed = {**fixture[4],'renews':renews,'shared':shared}
+                fixture = (*fixture[:4],observed)
+                assert activate_restart(redis,fixture) == [1,1800086400]
+                expected_checkpoint = dict(version=1,binding=new_binding,renews=renews,shared=shared)
+                checkpoint_raw = redis.command('HGET',keys[42],'restart-publication:ctr_restart_new')
+                assert len(checkpoint_raw.encode('utf-8')) <= 384
+                assert json.loads(checkpoint_raw) == expected_checkpoint
+                state = snapshot(keys[42])
+                assert activate_restart(redis,fixture,now=1800086401) == [2,1801000000]
+                assert snapshot(keys[42]) == state
+                for field in ('renews','shared'):
+                    assert activate_restart(redis,fixture,observed={**observed,field:not observed[field]}) == 0
+                    assert snapshot(keys[42]) == state
+        for field in ('renews','shared'):
+            for value in (None,'false',0):
+                fixture = activation_ready()
+                before = snapshot(keys[42])
+                assert activate_restart(redis,fixture,observed={**fixture[4],field:value}) == 0
+                assert snapshot(keys[42]) == before
+        for scenario in ('missing','foreign-binding','extra-field','wrong-version','unknown-renews','unknown-shared','opposite-renews','opposite-shared'):
+            fixture = activation_ready()
+            assert activate_restart(redis,fixture) == [1,1800086400]
+            checkpoint = json.loads(redis.command('HGET',keys[42],'restart-publication:ctr_restart_new'))
+            if scenario=='missing':
+                redis.command('HDEL',keys[42],'restart-publication:ctr_restart_new')
+            else:
+                changes={'foreign-binding':{'binding':'foreign'},'extra-field':{'extra':True},'wrong-version':{'version':2},
+                         'unknown-renews':{'renews':'true'},'unknown-shared':{'shared':None},
+                         'opposite-renews':{'renews':False},'opposite-shared':{'shared':True}}
+                checkpoint.update(changes[scenario])
+                redis.command('HSET',keys[42],'restart-publication:ctr_restart_new',json.dumps(checkpoint,separators=(',',':')))
+            state = snapshot(keys[42])
+            assert activate_restart(redis,fixture,now=1800086401) == 0,scenario
+            assert snapshot(keys[42]) == state,scenario
+            result = recovery(redis,keys[42],fixture[0],fixture[1],now=1800086402)
+            assert result==0,scenario
+            assert snapshot(keys[42]) == state,scenario
+        print('PASS:publication checkpoint stores4explicit renewal/share combinations,exact lostACK replay,6unknown flag refusals and8missing/foreign/changed checkpoint cases without backfill')
+        
         # Committed paid evidence is a local observation, not another provider read.
         for consumed in (0,1,3):
             fixture = activation_ready()
@@ -1142,6 +1205,7 @@ def main():
             assert sum(activated_recovery_counts.values()) <= 17
             assert activated_recovery_counts.get('hset',0) == 0
             assert json.loads(ignored[1]) == raw_owner
+            assert json.loads(ignored[3]) == dict(version=1,binding=new_binding,renews=True,shared=False)
             def after_activation_recovery(_index):
                 client = Redis()
                 try:

@@ -734,11 +734,11 @@ export async function restartPlan(input: {
     if (!recovery) throw new Error("The funded restart recovery observation is unknown");
     if (recovery.kind === "held") throw new Error("The funded restart remains held without another provider operation");
     if (recovery.kind === "activated") {
-      const {armed,subscriptionId,createdSeconds,periodStartSeconds,periodEndSeconds}=recovery;
+      const {armed,subscriptionId,createdSeconds,periodStartSeconds,periodEndSeconds,renews,shared}=recovery;
       const paused=JSON.parse(armed.intent.paused) as {customer?:unknown;paymentMethod?:unknown;tier?:unknown};
       if(paused.customer!==input.customerId||paused.paymentMethod!==input.paymentMethod||paused.tier!==input.tier||armed.intent.handle!==input.store.handle)
         throw new Error("The committed restart source does not match its durable owner");
-      if(!(await activateRestartContract({armed,subscriptionId,createdSeconds,periodStartSeconds,periodEndSeconds})))
+      if(!(await activateRestartContract({armed,subscriptionId,createdSeconds,periodStartSeconds,periodEndSeconds,renews,shared})))
         throw new Error("The retained paid restart activation was not acknowledged");
       throw new Error("The retained activated restart still requires acknowledged Store publication and generation-aware cleanup");
     }
@@ -933,9 +933,10 @@ export function observeFundedRestartActivation(
  ({armed,input,subscription,observedAt}=JSON.parse(encoded));
  const paid=observeFundedRestartResult(armed,input,subscription,observedAt);
  if(!paid.period)throw Error("The funded activation has no observed paid period");
+ if(typeof subscription.cancel_at_period_end!=="boolean"||(subscription.cancel_at!==null&&(!Number.isSafeInteger(subscription.cancel_at)||Number(subscription.cancel_at)<=0)))throw Error("The funded activation renewal state is unknown");
  return Object.freeze({armed,subscriptionId:paid.subscriptionId,
   createdSeconds:subscription.created as number,
-  periodStartSeconds:periodStart(subscription),periodEndSeconds:periodEnd(subscription,false)});
+  periodStartSeconds:periodStart(subscription),periodEndSeconds:periodEnd(subscription,false),renews:paid.period.renews,shared:paid.shared});
 }
 
 /** Exact existing public monthly price only. No IO, cache, creation or charge.
