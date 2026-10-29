@@ -8768,6 +8768,41 @@ Aplicar a regra VR.
 
 Proveniência/diferença do sexto complemento: pedido direto do dono acima; descrição da captura atribuída ao briefing, sem alegar inspeção independente de imagem não anexada nesta mensagem. Acrescentados só presença autorizada/expiração,avisoconcorrênciaeversãonovaantesdesalvar,Previewprivadosempublicar,Outline/Infoagregandoequipe/lista/prévia existentes.375número/posição/estadoe cinco complementosanteriorespreservados;nenhumitem527. Referência11h37do briefing preservada,sem reescrever proveniência original11h36do quarto. Deduplicação main332a38d,PR1208aberto,20PRsrecentes/19heads codexdistintos e764refs,semsextocomplemento11h59equivalente. Registro na alteração de códigoPR1208jáemcurso;reconferir código antes eaplicar sódiferença. Custorealtime/presença/leitura/storage/expiração/retencão comtetoantesgasto,desconhecidoreprova;nenhumprovêdor/limite novo autorizado.MR/TX/FX275/AX274/VRpreservados.
 
+**Sétimo complemento ao375TB1 —29/10/2026,16h09Fortaleza.** Proveniência: pedido direto do dono; aplicar só a diferença conformePedidos repetidospasso3(b), preservando número,posição,estado e todos os seis complementos anteriores. Conferidos main8b434e11 e PRs abertos(nenhum),sem este complemento/data/texto. Arrastar arquivo do computador não substitui reordenação de blocos: reusa um único componente e o mesmo pipeline/reserva/validação já existentes; não cria segundo envio nem aumenta direitos. Briefing/relatoClaude atribuídos ao dono,sem alegar auditoria independente. Texto integral:
+
+TB — Sétimo complemento ao 375 [TB1]: soltar uma foto do computador direto no lugar dela (29/10/2026)
+Etiqueta: [TB1]
+
+Solicitação do dono (29/10/2026, 16h09, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: é complemento ao item 375 [TB1] já gravado, que já recebeu seis complementos em 29/10/2026. Aplique só a diferença ao item existente, mantendo número, posição e estado (regra "Pedidos repetidos", passo 3, letra b), e registre na proveniência o que mudou.
+
+Estado inicial: o do próprio 375.
+
+Contexto: o Claude conferiu em 29/10/2026 a seção "Drag. Drop. Done." de clickfunnels.com/apps/landing-pages: no espaço vazio de uma imagem, o editor deles diz "Select image or drop image here to upload", e o criador arrasta uma foto do próprio computador direto para o lugar dela na página. No Marktmorgen, o arrastar do editor (components/page-editor.tsx) serve só para reordenar blocos; as fotos entram apenas por campos de arquivo (type="file"), em components/product-image-editor.tsx, components/look-editor.tsx, components/link-picture.tsx, components/course-editor.tsx, components/mail-picture-button.tsx e outros.
+
+O que acrescentar ao 375 [TB1]:
+- todo lugar do editor visual que recebe uma foto aceita também uma foto arrastada do computador e solta sobre ele, com uma moldura visível e o texto "Drop the picture here" enquanto ela está por cima;
+- a foto solta passa exatamente pelo mesmo caminho de envio que o campo de arquivo já usa: os mesmos tipos aceitos (IMAGE_ACCEPT), o mesmo tamanho máximo (MAX_SOURCE_BYTES), a mesma redução de tamanho, a mesma checagem de conteúdo do arquivo no servidor e a mesma conta de armazenamento do plano, com reserva antes do envio; nada de segundo caminho de envio;
+- mais de um arquivo solto de uma vez: só o primeiro entra, com o aviso em texto; arquivo que não é foto ou maior que o limite é recusado com a mensagem já existente, sem apagar a foto anterior;
+- depois de soltar, o editor pede o texto alternativo da foto, como já faz o campo de arquivo, e a foto só é publicada com o clique do criador;
+- o botão de escolher arquivo continua sempre visível ao lado, como alternativa a arrastar (AX274, 2.5.7), operável só pelo teclado;
+- o mesmo jeito de soltar a foto vale nos outros editores de foto do estúdio que já usam campo de arquivo, reaproveitando um único componente.
+
+Acessibilidade (AX274): a área de soltar tem rótulo, e o aviso de foto recebida ou recusada é anunciado ao leitor de tela; a moldura não depende só de cor; contraste de 7:1 e alvos de pelo menos 44 × 44 px; sem animação sob prefers-reduced-motion.
+
+Testes automáticos: foto solta segue o mesmo caminho e as mesmas checagens do campo de arquivo; tipo errado e tamanho acima do limite recusados sem perder a foto anterior; só o primeiro de vários arquivos entra; a reserva de armazenamento acontece antes do envio; o botão de escolher arquivo continua presente e funcionando pelo teclado; somente arquivos sintéticos.
+
+Custo: o envio usa o armazenamento e a banda já contados no plano, com reserva e teto automáticos antes do envio; nenhum custo novo; desconhecido reprova, nunca é zero.
+
+Regra de margem: segue a REGRA DE MARGEM vigente (MR, 27/10/2026, 07h42), a política tributária TX e FX275; custo desconhecido reprova, nunca é zero.
+
+Proibido: criar item novo ou mudar número, posição ou estado do 375; um segundo caminho de envio de arquivos; aceitar tipos ou tamanhos além dos já permitidos; publicar sem o clique do criador; tirar o botão de escolher arquivo; aumentar limites de armazenamento; mudar preços, limites visíveis, comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a, a revisão comercial ou stripePlatformEligibilityReady; afrouxar qualquer trava; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+
 Complemento aos375[TB1]/376[TB2] — Solicitação do dono (24/10/2026, 23h26, horário de Fortaleza), regraPedidos repetidospasso3. TBjáregistrado978antesdestecomplemento;nãorenumerar/criarseção/item/mudarposiçãoestado;aplicarjuntoàpróximaalteraçãojáprevista,SEMcommitexclusivo.Conferidoscontinuidade,mainc49bc039a0555d673ac2df2af1f282ca6d2e6358,fila978/head30f802f853ed9e476a286f160d7ccd3834306e7a,12PRsabertos e534refscodex/*;23h26equivalenteausente. MetaqualidadesuperioràClickFunnels requerAUDITORIAcomparável+fonte,nãoalegaçãopúblicaautomática.
 
 TB1diferenças:
