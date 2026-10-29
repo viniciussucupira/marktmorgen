@@ -4410,6 +4410,39 @@ Grave, por automação de navegador sobre a loja de demonstração (Harbor Kitch
 Estado: OR: após o Bloco A, na ordem já existente entre 206 [SH3] e 272 [HM1]; 232 [CA1] foi antecipado e não se repete; antes do Bloco B. Registro de posição; os estados e provas históricos abaixo permanecem válidos.
 Amplie os modelos de funil por objetivo (lib/funnel-starter-catalog.ts) com versões por nicho (por exemplo, coach, professor de ioga, fotógrafo, músico, consultor e educador), com textos de exemplo honestos, sem resultados, números ou depoimentos inventados. Coordene com a biblioteca de modelos do item HT15 e com as páginas por nicho do item 230 [HL11], para que cada nicho tenha o mesmo conjunto coerente de modelos, páginas e exemplos.
 
+**Complemento de242CF5 —29/10/2026,17h02Fortaleza.** Proveniência: pedido direto do dono; aplicar só diferença conformePedidos repetidospasso3(b),número/posição/estado do242 preservados. Conferidos main946fb1a e filas dosPRs1221/1217/1216,sem complemento específico. Ligar513–519PF1–PF7,535MV1 e193HT15 sem segundo catálogo ou implementação duplicada. Modelos dependem de capacidades realmente ligadas na loja; recurso apenas na fila não pode aparecer funcionando antes de existir. Mensagem recebida termina em “art.9a,”; restante não recebido nem reconstruído. Todasproibiçõespermanentes/MR/TX/FX275/VR/AX274 e stripePlatformEligibilityReady continuamvinculantes,sem novoitem,conta,aceite,contratação,pagamento,contatoterceiros ouexclusãoHazelsong;testessintéticos. Custos entrega/gravação/imagens desconhecidosreprovam,nãozero. Texto recebido:
+
+CF — Complemento ao 242 [CF5]: modelos para quem vende produto físico (29/10/2026)
+Etiqueta: [CF5]
+
+Solicitação do dono (29/10/2026, 17h02, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: é complemento ao item 242 [CF5] já gravado. Aplique só a diferença ao item existente, mantendo número, posição e estado (regra "Pedidos repetidos", passo 3, letra b), e registre na proveniência o que mudou. Ligue também a 513–519 [PF1–PF7] (produtos físicos), a 535 [MV1] (imagem real de cada modelo) e a 193 [HT15] (biblioteca de modelos), sem duplicá-los.
+
+Estado inicial: o do próprio 242.
+
+Contexto: o Claude conferiu em 29/10/2026 a seção "Create your dream store in minutes" de clickfunnels.com/apps/store: três modelos de loja de produto físico (brinquedos para cachorro, colete de postura com o título "Better Posture, Less Pain" e cozinha natural). O 242 [CF5] pede modelos por nicho só de criadores de conhecimento (coach, professor de ioga, fotógrafo, músico, consultor e educador); não há modelo para quem vende produto físico, que o Marktmorgen já vende (lib/shipping.ts, lib/stock.ts) e que os itens 513–519 completam.
+
+O que acrescentar ao 242 [CF5]:
+- modelos de loja e de página de produto para quem vende produto físico, por exemplo: artesanato e peças feitas à mão; roupas e camisetas com a marca do criador; comida e doces feitos em casa; livros impressos; arte e fotografia impressas; produtos para animais; e o kit físico que acompanha um curso;
+- cada modelo usa só o que já existe ou está na fila para produto físico: opções como tamanho e cor, estoque, frete por país e frete grátis acima de um valor (515 [PF3]), feito sob encomenda (518 [PF6]), retirada no local (519 [PF7]), e mostra só o que estiver ligado na loja;
+- blocos próprios do produto físico na página: o que vem na caixa, medidas e materiais, prazo de envio e de entrega lido das configurações de frete, política de troca e devolução do criador, sem prazo inventado;
+- textos de exemplo neutros e marcados como exemplo; nenhuma promessa de saúde, beleza, emagrecimento, cura, alívio de dor ou resultado ("Less Pain", "Better Posture", "detox", "burn fat"), nenhum selo, avaliação, estrelas, "best seller" ou depoimento; um teste automático falha se algum aparecer;
+- os modelos de comida avisam no lugar o que o criador precisa conferir nas regras do próprio país (rótulo, ingredientes, alergênicos), sem dar conselho jurídico nem prometer conformidade;
+- cada modelo aparece com a imagem real de 535 [MV1], da loja de demonstração rotulada como fictícia, sem repetir imagem.
+
+Acessibilidade (AX274): as mesmas regras dos outros modelos: títulos em ordem, texto alternativo das fotos, contraste de 7:1, alvos de pelo menos 44 × 44 px.
+
+Testes automáticos: cada modelo cria rascunho sem publicar nem sobrescrever; só mostra o que a loja tem ligado; prazos lidos das configurações de frete; nenhum termo proibido de saúde, resultado ou prova social; somente dados sintéticos.
+
+Custo: só gravações de rascunho já contadas no plano e as imagens de 535 [MV1], já contadas nos custos fixos; desconhecido reprova, nunca é zero.
+
+Regra de margem: segue a REGRA DE MARGEM vigente (MR, 27/10/2026, 07h42), a política tributária TX e FX275; custo desconhecido reprova, nunca é zero.
+
+Proibido: criar item novo ou mudar número, posição ou estado do 242; promessas de saúde, beleza, emagrecimento, cura ou resultado; selos, estrelas, avaliações, "best seller" ou depoimentos inventados; prazo de entrega inventado; conselho jurídico sobre rótulos; publicar sem o clique do criador; mudar preços, limites visíveis, comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a,
+
 243. [CF6] Economia anual explícita e plano recomendado na página de preços
 
 Estado: OR: após o Bloco A, na ordem já existente entre 206 [SH3] e 272 [HM1]; 232 [CA1] foi antecipado e não se repete; antes do Bloco B. Registro de posição; os estados e provas históricos abaixo permanecem válidos.
