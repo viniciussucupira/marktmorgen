@@ -1396,6 +1396,37 @@ def main():
 
 
         pause_source = (Path(__file__).resolve().parents[1] / 'lib/plan-pause.ts').read_text(encoding='utf-8')
+        observation_match = re.search(r'export const PAUSE_OBSERVATION = `([^`]+)`;', pause_source)
+        assert observation_match and chr(36) + '{' not in observation_match.group(1)
+        observation_script = observation_match.group(1)
+        observation_key = prefix + ':bounded-pause'
+        keys.append(observation_key)
+        def observe_pause():
+            return redis.command('EVAL', observation_script, 1, observation_key)
+        assert observe_pause() == [0]
+        for value in ('', 'x' * 4097, 'é' * 2049):
+            redis.command('SET', observation_key, value, 'EX', 600)
+            before_observe = command_counts()
+            assert observe_pause() == [-1]
+            observed_counts = difference(before_observe, command_counts())
+            assert sum(observed_counts.values()) <= 3, observed_counts
+            assert redis.command('GET', observation_key) == value
+            assert 0 < redis.command('TTL', observation_key) <= 600
+        for value in ('x' * 4096, 'é' * 2048, '{"unknownCreatorField":[],"funding":{"version":1}}'):
+            redis.command('SET', observation_key, value)
+            before_observe = command_counts()
+            assert observe_pause() == [1, value]
+            observed_counts = difference(before_observe, command_counts())
+            assert sum(observed_counts.values()) <= 3, observed_counts
+            assert redis.command('GET', observation_key) == value
+        redis.command('DEL', observation_key)
+        redis.command('HSET', observation_key, 'foreign', 'value')
+        assert observe_pause() == [-1]
+        assert redis.command('HGET', observation_key, 'foreign') == 'value'
+        redis.command('DEL', observation_key)
+        assert observe_pause() == [0]
+        print('PASS:bounded pause observation distinguishes absent,empty,wrongtype,oversize;4096byte ASCII/UTF8 exact;no writes or TTL change;actual commands=' + json.dumps(observed_counts, sort_keys=True))
+
         forget_match = re.search(r'export const PAUSE_WORKER_FORGET = `([^`]+)`;', pause_source)
         assert forget_match and chr(36) + '{' not in forget_match.group(1)
         forget_script = forget_match.group(1)
