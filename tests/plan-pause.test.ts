@@ -854,7 +854,7 @@ async function main() {
     const id="sub_BoundedPreflight01";
     subs[id]=subscription(id);
     const store=await storeWith("bounded-preflight@example.com","boundedpreflight",id),ref=storeRef(store);
-    const pipeline=pauseRedis.pipeline;let calls:(string|number)[][]=[],raw:unknown;
+    const pipeline=pauseRedis.pipeline;const calls:(string|number)[][]=[];let raw:unknown;
     pauseRedis.pipeline=async commands=>{
       calls.push(...commands);
       const result=await pipeline(commands);
