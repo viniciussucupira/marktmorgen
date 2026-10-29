@@ -664,6 +664,9 @@ Proveniência AB: passou a fazer parte do Bloco de abertura, posição (c), por 
    - Custo e margem: Leitura/agregação/retenção ainda não calculadas; definir orçamento, tamanho mínimo de grupo e privacidade antes do código.
 
 16. **[D13] Grupos opcionais de até6criadores por nicho/fuso aproximado, pseudônimos, check-in assíncrono só com missões, sem dinheiro; moderação, saída, exclusão e avisos com silêncio individual.**
+
+- Decisão vigente em 28/10/2026, complemento LQ7 do dono às20h38: **Cancelado por decisão do dono em 28/10/2026 (LQ7); não executar**. Cancelado por decisão do dono em 28/10/2026 (LQ7); não executar. Texto integral e estado anterior lidos; cancelamento vale para o trabalho futuro deste item, sem apagar código, conteúdo, histórico ou provas existentes. Não cancelar recursos de outros itens por semelhança. Texto, estado e provas anteriores abaixo permanecem históricos nos pontos incompatíveis; nenhuma implementação ou operação externa autorizada por este registro.
+
    - Pedido: P1 item13; P2 D13; datas/horas e grau de certeza em Proveniência.
    - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 7/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
    - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
@@ -738,6 +741,9 @@ Proveniência AB: passou a fazer parte do Bloco de abertura, posição (i), por 
    - Custo e margem: Antes de construir: conferir capacidade existente no main e preservar Claude. Custo unitário pago mais caro, uso integral simultâneo por plano mensal/anual, taxas de receiving-costs e leitura fiscal mais onerosa (nunca abaixo de27,5%); teto por fornecedor/loja e reserva antes da operação, plan-cost-registry/spend-floor. Desconhecido reprova; sem cortar limite visível, mudar preço ou afrouxar gates.
 
 18. **[E1] Tutor por IA nas aulas, só conteúdo do curso, reaproveitando pool/heldToFacts e encaminhamento ao criador; add-on ou franquia, nunca trial.**
+
+- Decisão vigente em 28/10/2026, complemento LQ6 do dono às20h38: **Mantido com atualização LQ6**. Número menor válido do tutor de curso. Incorporar avaliação198 e manter REPROVADO até nova avaliação completa de custo, recuperação privada, acesso, teto e reserva; conteúdo exclusivo do curso e fallback ao criador. Não financiar com franquia já usada100% nem ativar trial. Texto, estado e provas anteriores abaixo permanecem históricos nos pontos incompatíveis; nenhuma implementação ou operação externa autorizada por este registro.
+
    - Pedido: P2 E1; datas/horas e grau de certeza em Proveniência.
    - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 14/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
    - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
@@ -806,6 +812,9 @@ Texto, estados, posições e provas anteriores preservados como histórico, sem 
    - Custo e margem: Conferir campos existentes; calcular bytes/validação nas franquias atuais, sem custo de fornecedor novo.
 
 24. **[E7] Expiração de acesso a curso em data escolhida pelo criador e pontos por concluir aulas.**
+
+- Decisão vigente em 28/10/2026, complemento LQ6 do dono às20h38: **Mantido com atualização LQ6**. Incorporar112: pontos por posts/comentários/aulas, níveis/limites do criador, fatos do servidor, antirrepetição/reversão e lib/community-points.ts. Preservar a expiração de acesso em data escolhida já pedida no24; não perder esse escopo distinto. Texto, estado e provas anteriores abaixo permanecem históricos nos pontos incompatíveis; nenhuma implementação ou operação externa autorizada por este registro.
+
    - Pedido: P2 E7; datas/horas e grau de certeza em Proveniência.
    - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 20/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
    - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
@@ -975,6 +984,9 @@ Texto, estados, posições e provas anteriores preservados como histórico, sem 
    - Custo e margem: Antes de construir: conferir capacidade existente no main e preservar Claude. Custo unitário pago mais caro, uso integral simultâneo por plano mensal/anual, taxas de receiving-costs e leitura fiscal mais onerosa (nunca abaixo de27,5%); teto por fornecedor/loja e reserva antes da operação, plan-cost-registry/spend-floor. Desconhecido reprova; sem cortar limite visível, mudar preço ou afrouxar gates.
 
 109. **[E2-EVENTS] Eventos recorrentes, waitlist, ingressos, cupons e presença pública**
+
+- Decisão vigente em 28/10/2026, complemento LQ6 do dono às20h38: **Absorvido pelo item 36 (LQ6); não executar**. Absorvido pelo item36 (LQ6); não executar. Aplicado o critério explícito do número menor; todas as diferenças de eventos recorrentes/waitlist/cupom/presença vão ao36, sem renumerar ou antecipar AV1. Texto, estado e provas anteriores abaixo permanecem históricos nos pontos incompatíveis; nenhuma implementação ou operação externa autorizada por este registro.
+
    - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
    - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 37/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
    - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
@@ -996,6 +1008,9 @@ Texto, estados, posições e provas anteriores preservados como histórico, sem 
    - Custo e margem: Antes de construir: conferir capacidade existente no main e preservar Claude. Custo unitário pago mais caro, uso integral simultâneo por plano mensal/anual, taxas de receiving-costs e leitura fiscal mais onerosa (nunca abaixo de27,5%); teto por fornecedor/loja e reserva antes da operação, plan-cost-registry/spend-floor. Desconhecido reprova; sem cortar limite visível, mudar preço ou afrouxar gates.
 
 112. **[E2-POINTS] Pontos por posts, comentários e aulas concluídas**
+
+- Decisão vigente em 28/10/2026, complemento LQ6 do dono às20h38: **Absorvido pelo item 24 (LQ6); não executar**. Absorvido pelo item24 (LQ6); não executar. Diferenças de pontuação incorporadas ao24 sem remover expiração de acesso nem refazer motor existente. Texto, estado e provas anteriores abaixo permanecem históricos nos pontos incompatíveis; nenhuma implementação ou operação externa autorizada por este registro.
+
    - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
    - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 40/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
    - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
@@ -1077,12 +1092,18 @@ Texto, estados, posições e provas anteriores preservados como histórico, sem 
    - Custo e margem: Verificar capacidade oficial e custo mais caro por minuto/idioma; teto e reserva prévios; não prometer idioma sem prova.
 
 36. **[F5] Ingressos presenciais e check-in por QR code.**
+
+- Decisão vigente em 28/10/2026, complemento LQ6 do dono às20h38: **Mantido com atualização LQ6**. Número menor do fluxo de eventos/ingressos. Incorporar109: recorrência, fila de espera, ingressos/cupons/presença, consentimento para contato, fuso, cancelamento/reembolso, capacidade e publicação. Preservar QR/check-in presencial/offline e custeio de36; nenhuma implementação duplicada. Texto, estado e provas anteriores abaixo permanecem históricos nos pontos incompatíveis; nenhuma implementação ou operação externa autorizada por este registro.
+
    - Pedido: P2 F5; datas/horas e grau de certeza em Proveniência.
    - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 47/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
    - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Custo e margem: Orçar emissão/validação/offline/retenção/checkout fiscal e admissão antes de custo novo.
 
 37. **[F6] Exportar vendas para Xero e QuickBooks.**
+
+- Decisão vigente em 28/10/2026, complemento LQ7 do dono às20h38: **Cancelado por decisão do dono em 28/10/2026 (LQ7); não executar**. Cancelado por decisão do dono em 28/10/2026 (LQ7); não executar. Texto integral e estado anterior lidos; cancelamento vale para o trabalho futuro deste item, sem apagar código, conteúdo, histórico ou provas existentes. Não cancelar recursos de outros itens por semelhança. Texto, estado e provas anteriores abaixo permanecem históricos nos pontos incompatíveis; nenhuma implementação ou operação externa autorizada por este registro.
+
    - Pedido: P2 F6; datas/horas e grau de certeza em Proveniência.
    - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 48/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
    - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
@@ -1243,6 +1264,9 @@ Texto, estados, posições e provas anteriores preservados como histórico, sem 
    - Custo e margem: Calcular postagem/renovação/token/filas/franquia e teto antes de fornecedor; nenhuma solicitação de aprovação.
 
 41. **[G3] Documentar Google Business Profile e preparar resposta a avaliações, desligada até aprovação.**
+
+- Decisão vigente em 28/10/2026, complemento LQ7 do dono às20h38: **Cancelado por decisão do dono em 28/10/2026 (LQ7); não executar**. Cancelado por decisão do dono em 28/10/2026 (LQ7); não executar. Texto integral e estado anterior lidos; cancelamento vale para o trabalho futuro deste item, sem apagar código, conteúdo, histórico ou provas existentes. Não cancelar recursos de outros itens por semelhança. Texto, estado e provas anteriores abaixo permanecem históricos nos pontos incompatíveis; nenhuma implementação ou operação externa autorizada por este registro.
+
    - Pedido: P2 G3; datas/horas e grau de certeza em Proveniência.
    - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 63/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
    - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
@@ -1292,6 +1316,9 @@ Texto, estados, posições e provas anteriores preservados como histórico, sem 
    - Custo e margem: SOMENTE DOCUMENTO agora. Custos/franquias e margens antes/depois por plano mensal/anual ainda não calculados; qualquer custo desconhecido reprova implementação. Sem conta, contrato ou fornecedor novo.
 
 47. **[H4] Compra de domínio dentro do produto.**
+
+- Decisão vigente em 28/10/2026, complemento LQ7 do dono às20h38: **Cancelado por decisão do dono em 28/10/2026 (LQ7); não executar**. Cancelado por decisão do dono em 28/10/2026 (LQ7); não executar. Texto integral e estado anterior lidos; cancelamento vale para o trabalho futuro deste item, sem apagar código, conteúdo, histórico ou provas existentes. Não cancelar recursos de outros itens por semelhança. Texto, estado e provas anteriores abaixo permanecem históricos nos pontos incompatíveis; nenhuma implementação ou operação externa autorizada por este registro.
+
    - Pedido: P2 H4; datas/horas e grau de certeza em Proveniência.
    - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 68/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
    - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
@@ -1304,12 +1331,18 @@ Texto, estados, posições e provas anteriores preservados como histórico, sem 
    - Custo e margem: SOMENTE DOCUMENTO agora. Custos/franquias e margens antes/depois por plano mensal/anual ainda não calculados; qualquer custo desconhecido reprova implementação. Sem conta, contrato ou fornecedor novo.
 
 49. **[H6] Compra com dois cartões: efeitos em reembolsos e disputas.**
+
+- Decisão vigente em 28/10/2026, complemento LQ7 do dono às20h38: **Cancelado por decisão do dono em 28/10/2026 (LQ7); não executar**. Cancelado por decisão do dono em 28/10/2026 (LQ7); não executar. Texto integral e estado anterior lidos; cancelamento vale para o trabalho futuro deste item, sem apagar código, conteúdo, histórico ou provas existentes. Não cancelar recursos de outros itens por semelhança. Texto, estado e provas anteriores abaixo permanecem históricos nos pontos incompatíveis; nenhuma implementação ou operação externa autorizada por este registro.
+
    - Pedido: P2 H6; datas/horas e grau de certeza em Proveniência.
    - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 70/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
    - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Custo e margem: SOMENTE DOCUMENTO agora. Custos/franquias e margens antes/depois por plano mensal/anual ainda não calculados; qualquer custo desconhecido reprova implementação. Sem conta, contrato ou fornecedor novo.
 
 127. **[H7-CUSTOM-CSS] Estudo de CSS personalizado, por último em H**
+
+- Decisão vigente em 28/10/2026, complemento LQ7 do dono às20h38: **Cancelado por decisão do dono em 28/10/2026 (LQ7); não executar**. Cancelado por decisão do dono em 28/10/2026 (LQ7); não executar. Texto integral e estado anterior lidos; cancelamento vale para o trabalho futuro deste item, sem apagar código, conteúdo, histórico ou provas existentes. Não cancelar recursos de outros itens por semelhança. Texto, estado e provas anteriores abaixo permanecem históricos nos pontos incompatíveis; nenhuma implementação ou operação externa autorizada por este registro.
+
    - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
    - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 71/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
    - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
@@ -1330,6 +1363,9 @@ Texto, estados, posições e provas anteriores preservados como histórico, sem 
    - Ampliação P4 de I1 (proposta, dados fornecidos em19/10/2026, não cotação própria): Skool HobbyUS$9/mês+10%+30¢ e ProUS$99+2,9%+30¢; Kit grátis até10.000inscritos, CreatorUS$33, ProUS$66, vendas3,5%+30¢; CircleUS$89/199/419 por mês no anual+2%/1%/0,5%; TeachableUS$39/89/189+7,5% no Starter; Substack10% das assinaturas+0,5% recorrente. Incluir domínio próprio no Store como proposta (Circle informado em todos os planos), sem ativar nem alterar preço/pacote. Conferir termos/unidade/cadência antes de comparação pública.
 
 51. **[I2] Propor quantos e-mails Store pode incluir nos intervalos mensal/anual mantendo piso na leitura fiscal vinculante, sem reduzir limite visível.**
+
+- Decisão vigente em 28/10/2026, complemento LQ6 do dono às20h38: **Mantido com atualização LQ6**. Texto integral51 pede proposta de franquia Store;309 exige arquitetura SES/fila/capacidade e dimensionamento de todos os planos. Não são o mesmo pedido integral. A avaliação Store é compartilhada e deve ser feita uma única vez em309;51 fica referência dessa diferença, sem segundo cálculo ou alteração de limites. Texto, estado e provas anteriores abaixo permanecem históricos nos pontos incompatíveis; nenhuma implementação ou operação externa autorizada por este registro.
+
    - Pedido: P2 I2; datas/horas e grau de certeza em Proveniência.
    - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 73/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
    - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
@@ -1338,6 +1374,9 @@ Texto, estados, posições e provas anteriores preservados como histórico, sem 
    - Ampliação P4 de I2: incorporar a matriz completa da nova entrada89/C2; todo aumento exige60% nos dois intervalos sob a leitura vinculante. Quando depender de preço/pacote, somente proposta ao dono.
 
 52. **[I3] Comparar indicação entre criadores já pronta/pausada (50% em crédito) com20% em dinheiro e propor após conta de margem.**
+
+- Decisão vigente em 28/10/2026, complemento LQ6 do dono às20h38: **Mantido com atualização LQ6**. Estudo comparativo crédito versus dinheiro é distinto das implementações216(crédito só a clientes) e220(comissão em dinheiro a clientes ou não), mantidas separadas emLQ3. Incorporar comparação e custo aos dois escopos coordenados sem ativar50%/20% ou construir programa duplicado;52 não é autorização de percentual. Texto, estado e provas anteriores abaixo permanecem históricos nos pontos incompatíveis; nenhuma implementação ou operação externa autorizada por este registro.
+
    - Pedido: P2 I3; datas/horas e grau de certeza em Proveniência.
    - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 74/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
    - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
@@ -1445,6 +1484,9 @@ Texto, estados, posições e provas anteriores preservados como histórico, sem 
    - Custo e margem: Sem submissão, conta ou mensagem externa agora.
 
 58. **[K3-LANG/PATH14] Tradução do site/Path: adiar item14 anterior; futuro alemão/francês/holandês/espanhol/italiano conforme documento B4, e português do Brasil quando autorizado.**
+
+- Decisão vigente em 28/10/2026, complemento LQ7 do dono às20h38: **Mantido com atualização LQ7**. Cancelado por decisão do dono em 28/10/2026 (LQ7); não executar — somente a futura tradução para português do Brasil. Restante do58 continua aguardando decisão/autorização e gates próprios. Preservar idiomas dos compradores, conteúdo e identificadores existentes; nenhuma tradução ativada. Texto, estado e provas anteriores abaixo permanecem históricos nos pontos incompatíveis; nenhuma implementação ou operação externa autorizada por este registro.
+
    - Pedido: P1 item14 adiado por P2 B1/B4/K3; datas/horas e grau de certeza em Proveniência.
    - Estado: **aguardando o dono (vendas abertas e autorização explícita para tradução)**.
    - Custo e margem: Nenhuma tradução em runtime; conteúdo/custo/manutenção devem ser analisados antes de implementar.
@@ -3656,6 +3698,9 @@ Estados e provas anteriores abaixo preservados como histórico.
 
 198. **[HT13] Calcular o custo e verificar fontes privadas antes de oferecer tutor de aluno**
 
+- Decisão vigente em 28/10/2026, complemento LQ6 do dono às20h38: **Absorvido pelo item 18 (LQ6); não executar**. Absorvido pelo item18 (LQ6); não executar. Avaliação já concluída e reprovada permanece como prova/histórico no18; não repetir avaliação nem construir tutor sem novo custeio aprovado. Substitui somente acompanhamento duplicado, não a reprovação. Texto, estado e provas anteriores abaixo permanecem históricos nos pontos incompatíveis; nenhuma implementação ou operação externa autorizada por este registro.
+
+
 Conferência vigente LQ2: **concluído**. Somente avaliação concluída e reprovada por recuperação privada/custo/teto desconhecidos: docs/ht13-student-tutor-cost-review.md conferido integralmente. Tutor novo não foi entregue/ativado; Q&A e add-on existentes não são autorização implícita. Não certificar números antigos sob MR/TX.
 
 Estados e provas anteriores abaixo preservados como histórico.
@@ -4340,6 +4385,9 @@ Crie uma página de comparação, em inglês americano, somente com fatos verifi
 
 214. [SH11] Proposta de complementos pagos que aumentem o lucro com segurança
 
+- Decisão vigente em 28/10/2026, complemento LQ8 do dono às20h38: **Mantido com atualização LQ8**. Aplicar MR vigente em vez de60% por cliente/plano: unidade positiva com folga existente,100%dos direitos/complementos no pior mês mensal/anual; empresa sem prejuízo desde base mínima calculada com100%FX275/exposições;60%meta mensal real da empresa. Recebimento mais caro,reservas/tetos,custeio e TX preservados; desconhecido reprova. Somente atualização de regra antes da execução,sem preço/limite/gate novo. Texto, estado e provas anteriores abaixo permanecem históricos nos pontos incompatíveis; nenhuma implementação ou operação externa autorizada por este registro.
+
+
 Estado: OR: após o Bloco A, na ordem já existente entre 206 [SH3] e 272 [HM1]; 232 [CA1] foi antecipado e não se repete; antes do Bloco B. Registro de posição; os estados e provas históricos abaixo permanecem válidos.
 Com base no código de margem que já existe (lib/receiving-costs.ts e tests/margin-alignment-table.ts), calcule quais dos recursos acima poderiam ser vendidos como complementos pagos, no mesmo padrão do Store assistant, com o preço mínimo que mantém 60% em cada unidade, isoladamente, no pior caso. Registre o cálculo em docs/addon-proposals-2026-10-20.md como PROPOSTA: nenhum preço, limite ou interruptor muda sem a decisão do dono.
 
@@ -4358,10 +4406,16 @@ Valem para estes itens todas as regras da seção SH (itens 204 a 214), sem exce
 
 215. [OP1] Aplicativo do Marktmorgen na Shopify App Store
 
+- Decisão vigente em 28/10/2026, complemento LQ7 do dono às20h38: **Cancelado por decisão do dono em 28/10/2026 (LQ7); não executar**. Cancelado por decisão do dono em 28/10/2026 (LQ7); não executar. Texto integral e estado anterior lidos; cancelamento vale para o trabalho futuro deste item, sem apagar código, conteúdo, histórico ou provas existentes. Não cancelar recursos de outros itens por semelhança. Texto, estado e provas anteriores abaixo permanecem históricos nos pontos incompatíveis; nenhuma implementação ou operação externa autorizada por este registro.
+
+
 Estado: OR: após o Bloco A, na ordem já existente entre 206 [SH3] e 272 [HM1]; 232 [CA1] foi antecipado e não se repete; antes do Bloco B. Registro de posição; os estados e provas históricos abaixo permanecem válidos.
 Estude, nas fontes oficiais da Shopify (shopify.dev), os requisitos para publicar um aplicativo público: conta de parceiro, possibilidade de registro por pessoa física ou exigência de empresa, taxa única de registro (hoje US$ 19), participação da Shopify na receita (hoje 0% sobre o primeiro US$ 1 milhão de receita bruta acumulada na vida e 15% acima disso, contando a partir de 01/01/2025), obrigatoriedade da Shopify Billing API, revisão do aplicativo, requisitos de privacidade e de dados (incluindo os webhooks obrigatórios de dados pessoais) e quem recolhe os impostos sobre a cobrança. Em seguida, desenhe em docs/shopify-app.md um aplicativo que leve aos lojistas da Shopify os cursos, as assinaturas, a comunidade e as chamadas pagas do Marktmorgen, reutilizando o motor existente. Calcule o preço mínimo de cada plano do aplicativo que mantém 60% no pior caso, já com os 15% da Shopify e com a leitura que der mais imposto, e registre-o como PROPOSTA. Construa somente a parte que não depende de conta nem de aprovação, desligada. Os passos que só o dono pode executar (criar a conta de parceiro, pagar o registro, aceitar os termos e enviar para revisão) devem ficar listados no documento.
 
 216. [OP2] Programa de indicação do próprio Marktmorgen
+
+- Decisão vigente em 28/10/2026, complemento LQ6 do dono às20h38: **Mantido com atualização LQ6**. Crédito na mensalidade somente para clientes; manter distinção LQ3 frente a comissão em dinheiro220. Reusar estudo52, cálculo/antifraude comuns, sem repetir implementação ou ativar porcentagem. Texto, estado e provas anteriores abaixo permanecem históricos nos pontos incompatíveis; nenhuma implementação ou operação externa autorizada por este registro.
+
 
 Conferência LQ3: **mantido**. Crédito na mensalidade só para clientes que indicam; distinto da comissão recorrente em dinheiro a qualquer afiliado220.
 
@@ -4398,6 +4452,9 @@ Estado: OR: após o Bloco A, na ordem já existente entre 206 [SH3] e 272 [HM1];
 Crie, em inglês americano, uma calculadora pública que some a mensalidade da Shopify, os aplicativos de curso, comunidade, assinatura, e-mail e agendamento mais usados e as taxas por venda, e compare a soma com o plano do Marktmorgen que entrega o mesmo. Use somente preços de fontes oficiais, com a data da consulta exibida na página e uma rotina que acuse preços com mais de 90 dias sem revisão. Nada de valores inventados ou de afirmação de superioridade sem fonte. Siga as regras de SEO e de design já adotadas no site e mostre apenas recursos que estejam ligados.
 
 219. [OP5] Loja completa montada pela IA a partir do que o criador já tem: muito superior à de todos os concorrentes e extremamente fácil de usar
+
+- Decisão vigente em 28/10/2026, complemento LQ6 do dono às20h38: **Mantido com atualização LQ6**. Um fluxo OP5 de montagem em rascunho com aprovação explícita. Incorporar386: imagem própria/autorizada como dado, extração de cores/fontes/estilo, prévia/aprovação, contraste7:1 medido/ajustado, sem importar HTML/CSS/scripts/marca/fonte alheia. IA só com reserva; preservar conteúdo antes de aceitar e todos demais requisitos219. Texto, estado e provas anteriores abaixo permanecem históricos nos pontos incompatíveis; nenhuma implementação ou operação externa autorizada por este registro.
+
 
 Pedido: dono, 21/10/2026, 00h12, 00h16 e 00h19 de Fortaleza: "quero coisa super excelente, melhor que todos os concorrentes e que aumente o meu lucro" e "compare com HighLevel, Hotmart, ClickFunnels, Kajabi, Shopify e outros; faça muito mais superior, infinitamente superior e fácil de usar, super fácil".
 
@@ -4469,6 +4526,9 @@ Regras que valem para TODOS os itens desta seção (as mesmas da seção SH):
 8. Ao concluir cada item, registre o commit, o resultado da suíte completa e a publicação, e deixe o estado como "pronto e desligado, aguardando o dono" quando houver interruptor.
 
 220. [HL1] Programa de afiliados do próprio Marktmorgen, com comissão recorrente
+
+- Decisão vigente em 28/10/2026, complemento LQ6 do dono às20h38: **Mantido com atualização LQ6**. Comissão recorrente em dinheiro, elegibilidade e pagamentos/fiscalidade são distintos de crédito216. Reusar comparação52 e infraestrutura comum; nenhuma porcentagem, transferência ou aprovação externa autorizada. Texto, estado e provas anteriores abaixo permanecem históricos nos pontos incompatíveis; nenhuma implementação ou operação externa autorizada por este registro.
+
 
 Conferência LQ3: **mantido**. Afiliado clienteounão/comissãorecorrente,pósreembolso/formulários fiscais/pagamentoexterior;216écréditoparaclientes. Reusar antifraude semunir.
 
@@ -4656,6 +4716,9 @@ Estado: OR: após o Bloco A, na ordem já existente entre 206 [SH3] e 272 [HM1];
 Verifique o que a biblioteca do comprador e o perfil de membro já fazem. Permita que uma pessoa use um único perfil (nome, foto e apresentação) em todas as comunidades Marktmorgen de que participa, e veja num só lugar as comunidades, os eventos e as notificações. Cada criador continua vendo apenas os dados dos próprios membros, o perfil não revela a uma comunidade de quais outras a pessoa participa, e a pessoa pode usar um perfil diferente em cada comunidade se preferir. A política de privacidade deve dizer isso, e o texto entra em vigor junto com o recurso.
 
 236. [SK4] Desafio de crescimento para criadores, inspirado no Skool Games (primeiro o estudo)
+
+- Decisão vigente em 28/10/2026, complemento LQ7 do dono às20h38: **Cancelado por decisão do dono em 28/10/2026 (LQ7); não executar**. Cancelado por decisão do dono em 28/10/2026 (LQ7); não executar. Texto integral e estado anterior lidos; cancelamento vale para o trabalho futuro deste item, sem apagar código, conteúdo, histórico ou provas existentes. Não cancelar recursos de outros itens por semelhança. Texto, estado e provas anteriores abaixo permanecem históricos nos pontos incompatíveis; nenhuma implementação ou operação externa autorizada por este registro.
+
 
 Estado: OR: após o Bloco A, na ordem já existente entre 206 [SH3] e 272 [HM1]; 232 [CA1] foi antecipado e não se repete; antes do Bloco B. Registro de posição; os estados e provas históricos abaixo permanecem válidos.
 Estude, nas fontes oficiais, como funciona o Skool Games e as leis aplicáveis a concursos e prêmios nos EUA, no Canadá, no Reino Unido e na União Europeia. Registre em docs/creator-challenge-study.md uma proposta de desafio que premie progresso real e verificado nos dados da loja (por exemplo, a primeira venda ou os primeiros dez membros), com prêmios que não sejam dinheiro (por exemplo, destaque na vitrine e na descoberta, com autorização, e um selo), sem exigência de compra, com regras públicas e sem números inventados. O custo dos prêmios entra nos custos fixos da empresa. Não construa nada: a construção depende da decisão do dono, a partir desse estudo.
@@ -4908,6 +4971,9 @@ Estado: OR: após o Bloco A, na ordem já existente entre 206 [SH3] e 272 [HM1];
 Verifique, nas fontes oficiais do Kajabi, do Teachable, do Thinkific e do Podia, o que cada um permite exportar dos cursos (estrutura, textos, arquivos e vídeos) e em que formato. Construa um importador que traga, a partir desses arquivos de exportação ou de arquivos enviados pelo próprio criador, a estrutura do curso, os módulos, as aulas, os textos e os arquivos, com pré-visualização, validação no servidor e respeito aos limites do plano (armazenamento e horas de vídeo), como já se exige dos outros importadores. Nunca leia áreas protegidas por login de outra plataforma nem copie conteúdo que o criador não tenha declarado como dele. Coordene com os guias de migração do item 239 [CF2].
 
 261. [KJ6] Proposta: o Store assistant em comparação com os Expert Agents
+
+- Decisão vigente em 28/10/2026, complemento LQ8 do dono às20h38: **Mantido com atualização LQ8**. Aplicar MR vigente em vez de60% por cliente/plano: unidade positiva com folga existente,100%dos direitos/complementos no pior mês mensal/anual; empresa sem prejuízo desde base mínima calculada com100%FX275/exposições;60%meta mensal real da empresa. Recebimento mais caro,reservas/tetos,custeio e TX preservados; desconhecido reprova. Somente atualização de regra antes da execução,sem preço/limite/gate novo. Texto, estado e provas anteriores abaixo permanecem históricos nos pontos incompatíveis; nenhuma implementação ou operação externa autorizada por este registro.
+
 
 Estado: OR: após o Bloco A, na ordem já existente entre 206 [SH3] e 272 [HM1]; 232 [CA1] foi antecipado e não se repete; antes do Bloco B. Registro de posição; os estados e provas históricos abaixo permanecem válidos.
 Compare, com fontes oficiais datadas, o Store assistant (US$ 69 por mês, 700 respostas) com os Expert Agents do Kajabi (US$ 79 por agente por mês após 30/09/2026, 1.000 mensagens e 250 créditos de IA) e com o assistente de IA da Hotmart, em preço, número de respostas, funções (vendas, suporte e tutor) e honestidade (rótulo de IA, respostas presas aos fatos e passagem para o criador). Calcule, com o código de margem que já existe, se o número de respostas do Store assistant pode ser aumentado mantendo os 60% e a folga exigida (regra: um limite visível só pode ser aumentado onde a margem permitir). Registre o resultado em docs/assistant-vs-expert-agents.md como PROPOSTA: nenhum preço, limite ou interruptor muda sem a decisão do dono.
@@ -6124,6 +6190,9 @@ A auditoria aponta como lacuna da Hotmart a atribuição de ponta a ponta entre 
 Verifique o que já existe na lista de pessoas e de alunos do estúdio e complete: filtros por curso, progresso, último acesso e assinatura; seleção de várias pessoas; ações em lote para liberar acesso, retirar acesso, adicionar etiqueta e exportar. O reembolso continua individual, com confirmação, nunca em lote. Toda ação em lote informa antes quantas pessoas serão afetadas, pede confirmação e pode ser desfeita quando a natureza da ação permitir. As ações em lote não podem gerar e-mails, chamadas a fornecedores ou gravações acima da franquia do plano; o teto é verificado antes da execução.
 
 280. [H3-5] Vídeos curtos de ajuda gravados automaticamente
+
+- Decisão vigente em 28/10/2026, complemento LQ7 do dono às20h38: **Cancelado por decisão do dono em 28/10/2026 (LQ7); não executar**. Cancelado por decisão do dono em 28/10/2026 (LQ7); não executar. Texto integral e estado anterior lidos; cancelamento vale para o trabalho futuro deste item, sem apagar código, conteúdo, histórico ou provas existentes. Não cancelar recursos de outros itens por semelhança. Texto, estado e provas anteriores abaixo permanecem históricos nos pontos incompatíveis; nenhuma implementação ou operação externa autorizada por este registro.
+
    - Estado: **na fila**. Posição: depois de todos os itens existentes, inclusive OR e 274 [AX1] Partes B/C; executar H3-1 a H3-5 nesta ordem. Não bloqueia outros itens.
 
 Amplie o item 241 [CF4] para a central de ajuda: para cada tarefa principal do estúdio (criar a loja, criar um produto, publicar, conectar o Stripe, criar um curso e enviar um e-mail), grave automaticamente, com o Playwright, em uma loja sintética e sem dados reais, um vídeo curto de até 60 segundos. Cada vídeo tem legendas, transcrição completa e audiodescrição quando necessária, conforme a Parte A do item 274 [AX1]. O CI grava os vídeos de novo sempre que a tela correspondente mudar, para que nenhum vídeo mostre uma tela desatualizada. Calcule o custo de armazenamento e de entrega dos vídeos como custo fixo, com teto.
@@ -6893,6 +6962,9 @@ REGRA DOS 60% (OBRIGATÓRIA): todo cliente pagante, considerado isoladamente e u
 
 309. [EM1] E-mails para a lista somente pela Amazon SES, com fila de espera, e limites de envio maiores
 
+- Decisão vigente em 28/10/2026, complemento LQ6 do dono às20h38: **Mantido com atualização LQ6**. Mantido: SES exclusivo para lista/fila durável/capacidade global/serviço com fallback/custos completos extrapolam proposta Store51. Incorporar a avaliação Store51 uma vez no passo6, preservar demais requisitos e posição AV1. MR/TX vigentes substituem pisos fiscais/margem antigos; nenhuma cota aprovada por esta revisão. Texto, estado e provas anteriores abaixo permanecem históricos nos pontos incompatíveis; nenhuma implementação ou operação externa autorizada por este registro.
+
+
 Proveniência AB(k)/PC1: passou a integrar o Bloco de abertura, posição(k), por solicitação do dono de24/10/2026 02h29(Fortaleza); seguir a ordem vinculante de328[PC1] e a regra de324[TK6]. Histórico/estado preservados; nenhuma implementação duplicada.
 
 Estado: na fila.
@@ -7322,6 +7394,9 @@ Estado informado no pedido: no main, o último item é o317 [EU1]; o IW ainda n�
 
 319. [TK1] Somente Stripe.
 
+- Decisão vigente em 28/10/2026, complemento LQ8 do dono às20h38: **Mantido com atualização LQ8**. Motivo histórico de manter Paddle no modelo era o alinhamento à Hazelsong encerrada, confirmado no comentário de receiving-costs. ItemStripe-only permanece: provar em código/teste que plano/complemento/legenda não cobra Paddle antes de retirar tarifa/documentação. Não reduzir agora providerFeeCents, reservas ou leitura de custo sem essa prova. Texto, estado e provas anteriores abaixo permanecem históricos nos pontos incompatíveis; nenhuma implementação ou operação externa autorizada por este registro.
+
+
 Proveniência AB(k)/PC1: passou a integrar o Bloco de abertura, posição(k), por solicitação do dono de24/10/2026 02h29(Fortaleza); seguir a ordem vinculante de328[PC1] e a regra de324[TK6]. Histórico/estado preservados; nenhuma implementação duplicada.
 
 Estado: na fila.
@@ -7361,6 +7436,9 @@ Estado: na fila.
 Converta as imagens enviadas para AVIF ou WebP com qualidade visual equivalente, guardando o original somente quando o criador precisar dele, e apague automaticamente os envios órfãos (que nenhum produto, página ou curso usa) depois de um prazo com aviso ao criador. Meça a redução de armazenamento e de tráfego e atualize as linhas storage, uploads e visits somente com o valor medido.
 
 324. [TK6] Ordem de uso da economia.
+
+- Decisão vigente em 28/10/2026, complemento LQ8 do dono às20h38: **Mantido com atualização LQ8**. Aplicar MR vigente em vez de60% por cliente/plano: unidade positiva com folga existente,100%dos direitos/complementos no pior mês mensal/anual; empresa sem prejuízo desde base mínima calculada com100%FX275/exposições;60%meta mensal real da empresa. Recebimento mais caro,reservas/tetos,custeio e TX preservados; desconhecido reprova. Somente atualização de regra antes da execução,sem preço/limite/gate novo. Texto, estado e provas anteriores abaixo permanecem históricos nos pontos incompatíveis; nenhuma implementação ou operação externa autorizada por este registro.
+
 
 Proveniência AB(k)/PC1: passou a integrar o Bloco de abertura, posição(k), por solicitação do dono de24/10/2026 02h29(Fortaleza); seguir a ordem vinculante de328[PC1] e a regra de324[TK6]. Histórico/estado preservados; nenhuma implementação duplicada. Sua regra aplica-se a toda a posição(k), antes de qualquer aumento de limite.
 
@@ -8125,6 +8203,9 @@ Efeitoentrepedidos:proibição22h56émaisrecenteeabrangeÁUDIO,enquant358[EA1]pe
 
 347. [FL2] Estudo de loja de aplicativos de terceiros, sem construir.
 
+- Decisão vigente em 28/10/2026, complemento LQ7 do dono às20h38: **Cancelado por decisão do dono em 28/10/2026 (LQ7); não executar**. Cancelado por decisão do dono em 28/10/2026 (LQ7); não executar. Texto integral e estado anterior lidos; cancelamento vale para o trabalho futuro deste item, sem apagar código, conteúdo, histórico ou provas existentes. Não cancelar recursos de outros itens por semelhança. Texto, estado e provas anteriores abaixo permanecem históricos nos pontos incompatíveis; nenhuma implementação ou operação externa autorizada por este registro.
+
+
 Estado: na fila, depois346[FL1], após Bloco de abertura. Estudar uma loja de aplicativos de terceiros dentro do Marktmorgen, nos moldes citados pelo dono da Shopify:0% sobre primeiro US$1milhão de receita de cada desenvolvedor e15% acima, referência fornecida https://shopify.dev/apps/store/revenue-share . Esses valores são briefing do dono, não condições verificadas por este registro; conferir fonte oficial datada e todas as regras de elegibilidade/base de cálculo/exceções antes de usar no estudo.
 
 Registrar conclusão em docs/, incluindo segurança (escopos mínimos, isolamento, revisão, revogação, incidentes e cadeia de dependências), privacidade (dados/consentimento/retencão/regiões/subprocessadores), acessibilidade ParteA274[AX1], suporte, disputas/reembolsos, tratamento fiscalBrasil/EUA e art.9a sem alterar o gate ou certificar enquadramento. Calcular número mínimo de lojas ativas/pagantes para viabilidade com premissas e sensibilidade explícitas, custos fixos/variáveis, tributos mais onerosos, pior caso por cliente e global; não inventar demanda/conversão/receita, não tratar desconhecido como zero nem estimativa como aprovação. Sem construir marketplace, SDK, cobrança, cadastro, integração real ou publicação.
@@ -8319,6 +8400,9 @@ Estado: na fila depois350[DN2]; não construir enquanto PLANS_ON_SALE=false. Cri
 Espaços patrocinados separados, ordem normal da rede inalterada; diretório de afiliados continua sem posição paga. Proibido cobrar destaque numa venda própria do Marktmorgen: modelo de recebimento nesse formato foi informado como reprovado, deve ser confirmado no código sem buscar outra taxa para aprovar. Definir atribuição/primeira compra quando aplicável, limites, devoluções/estornos/disputas e medição sem rastrear abertura. Depende do dono: decisão gravada de taxa maior, condições e publicação, depois de cálculo integral. DESLIGADO até decisão e demais gates; não alterar comissão existente ou vender posição no diretório.
 
 352. [DN4] Estudo de anúncios de marcas na rede, sem construção.
+
+- Decisão vigente em 28/10/2026, complemento LQ7 do dono às20h38: **Cancelado por decisão do dono em 28/10/2026 (LQ7); não executar**. Cancelado por decisão do dono em 28/10/2026 (LQ7); não executar. Texto integral e estado anterior lidos; cancelamento vale para o trabalho futuro deste item, sem apagar código, conteúdo, histórico ou provas existentes. Não cancelar recursos de outros itens por semelhança. Texto, estado e provas anteriores abaixo permanecem históricos nos pontos incompatíveis; nenhuma implementação ou operação externa autorizada por este registro.
+
 
 
 Complemento EP — solicitação do dono (24/10/2026, 19h34, horário de Fortaleza), sem mudar número, posição ou estado de352[DN4]. O estudo em docs/discover-ads-study.md cobre também anúncios dentro dos e-mails para a lista dos criadores, inspirado na redebeehiiv. Marca paga o criador por cobrança direta na contaStripe dele, com application fee Marktmorgen pelo mecanismo lib/platform-share.ts e taxaStripe na conta do criador; nenhum dinheiro sob custódia, saldo ou repasse da plataforma. Cada anúncio exige aprovação do criador, rotulagem clara de anúncio e regras de honestidade; nada de perfilamento de dados sensíveis nem de menores. E-mail com anúncio conta na cota do criador; nenhum envio extra peloMarktmorgen. Somar custos desse formato e validar modelo/atribuição/impostos/privacidade em fontes oficiais datadas na execução, sem certificar conformidade por rótulo isolado. Mantém estudo sem construção, sem veiculação, contratação, cobrança real ou contato com marcas/terceiros e todos os gates/requisitosDN originais.
@@ -9010,6 +9094,9 @@ Estado: na fila.Privadoporcliente:mensagens,tarefas,materiais,sessõesagendadas,
 
 386. [TB12] Tema a partir de imagem ou captura enviada pelo criador.
 
+- Decisão vigente em 28/10/2026, complemento LQ6 do dono às20h38: **Absorvido pelo item 219 (LQ6); não executar**. Absorvido pelo item219 (LQ6); não executar. O texto já o identifica como complemento do mesmo fluxo; diferenças de imagem/tema incorporadas sem segundo executor. Texto, estado e provas anteriores abaixo permanecem históricos nos pontos incompatíveis; nenhuma implementação ou operação externa autorizada por este registro.
+
+
 Estado: na fila.COMPLEMENTOintegrado219OP5,UMfluxo,semrefazermotor:extraircores/fontes/estilodaimagemautorizadapropõetema,prévia/aprovação;contraste7:1VERIFICADOeajustado,semalegar“garantido”emtodoconteúdo/clienteseaindanãopassaAX.Preservarbranding/conteúdosemaceite,nãoimportarHTML/CSS/scriptouclonarmarcaterceira/fontenãolicenciada.Fonteimagetratadacomodado,vistoriaformatos/tamanho/segurança,IAseusadareservaanteschamada.ReferenceKajabiNovaWestwind.NúmeroTBéacompanhamentodadiferença,nãosegundoexecutor219.
 
 387. [TB13] Pergunta checkbox no checkout e loja inteira embutível.
@@ -9089,6 +9176,9 @@ Estado: na fila.F56reusarlib/clickfunnels-page.ts/importatual:converterautomaç�
 
 395. [CX6] Chat ao vivo com o comprador.
 
+- Decisão vigente em 28/10/2026, complemento LQ7 do dono às20h38: **Cancelado por decisão do dono em 28/10/2026 (LQ7); não executar**. Cancelado por decisão do dono em 28/10/2026 (LQ7); não executar. Texto integral e estado anterior lidos; cancelamento vale para o trabalho futuro deste item, sem apagar código, conteúdo, histórico ou provas existentes. Não cancelar recursos de outros itens por semelhança. Texto, estado e provas anteriores abaixo permanecem históricos nos pontos incompatíveis; nenhuma implementação ou operação externa autorizada por este registro.
+
+
 Estado: na fila.RealtimeLOJAcomprador↔criador/EQUIPE,reusar lib/inbox.ts/passagemStoreassistantparahumano;forahorárioviraFORMEXISTENTE,semnovoagentepagoouobrigaçãododonomonitoraralertas.AvisosNOTIFICAÇÕESJÁEXISTENTES,semnovosendsautorizadosporregistro.Privacidadeconversaapagável/prazodeclarado/RBAC/clientprivate/DSAR,rateguardporloja/recipient,nãoexporoutroscompradores/IAautomaticamente.TETOAUTOMÁTICOporlojaSOMArealtimeconexões/minutos/mensagens/storage/retencão/bytes/retries/picos,reservafundingantescusto/fallbackplainsemcustonãocoberto;escolherprovidorsódepoisgates,nãocriarconta/contratar.MessageHubreferênciaareconfirmar.
 
 396. [CX7] Proposta, sem construir: mais lojas e pessoas na equipe como complemento pago.
@@ -9125,6 +9215,9 @@ MembrovirarafiliadoumcliqueSÓsecriadorpermitir eprópriomembroescolher,semades�
 
 398. [SL2] Mapa dos membros.
 
+- Decisão vigente em 28/10/2026, complemento LQ7 do dono às20h38: **Cancelado por decisão do dono em 28/10/2026 (LQ7); não executar**. Cancelado por decisão do dono em 28/10/2026 (LQ7); não executar. Texto integral e estado anterior lidos; cancelamento vale para o trabalho futuro deste item, sem apagar código, conteúdo, histórico ou provas existentes. Não cancelar recursos de outros itens por semelhança. Texto, estado e provas anteriores abaixo permanecem históricos nos pontos incompatíveis; nenhuma implementação ou operação externa autorizada por este registro.
+
+
 Estado: na fila.AbaOPCIONALdocriador;CADA membro opt-inDESLIGADOpadrão,cidadeAPROXIMADAescolhida/confirmada,semendereçoexato/IPsemconsentimento/geoautomáticaoculta;saída/retiradaprontaaqualquermomento,políticaatualizada/retencão,minimização econtroledevisibilidademesmogrupoautorizado.Nãomostrarlocalizaçãodemenores/dadossensíveisporsuposição,avaliarprivacidade/safetyantesativar.AlternativalistaACESSÍVELpaís/cidade,teclado/leituradetelaAX274,semdependerdecor/pinarrastar.Conversãocidade→coordenada/tiles/geocoding/dadoslicençafonte/caching/chavescustoreal econsentimentoterceirosmedidosantesoperar;semprovedorgratuitoassumido/requisitoqueobriguconta/contrato.Apagamento/optoutnãoexponhaentradacache/exportprivado/mapa,suprimirdetalhesriscosdeidentificarresidência.
 
 399. [SL3] Ver como membro.
@@ -9157,6 +9250,9 @@ Estado: na fila. Entrega: docs/meta-ads-study.md. Estudar criação/acompanhamen
 Anúncios SEMPRE pagos PELO CRIADOR na PRÓPRIA conta de anúncios; Marktmorgen não paga, adianta, recebe saldo ou guarda dinheiro. Examinar custos próprios (API, processamento, relatórios, armazenamento, suporte, revisão/manutenção, segurança), privacidade/consentimento/retencão/eliminação e isolamento: NUNCA usar compradores de uma loja para anúncios de outra. Avaliar fonte de receita honesta com cálculo independente, sem subsidiar margem mínima com receita incerta, sem decidir taxa nem prometer desempenho. Registrar viabilidade, lacunas e critérios para decisão futura. Estudo apenas: não criar integração operacional, contas, pedir aprovações, aceitar termos ou contatar Meta/terceiros.
 
 402. [WX3] Estudo de pagamentos em criptomoeda estável pela Stripe do criador, sem construir.
+
+- Decisão vigente em 28/10/2026, complemento LQ7 do dono às20h38: **Cancelado por decisão do dono em 28/10/2026 (LQ7); não executar**. Cancelado por decisão do dono em 28/10/2026 (LQ7); não executar. Texto integral e estado anterior lidos; cancelamento vale para o trabalho futuro deste item, sem apagar código, conteúdo, histórico ou provas existentes. Não cancelar recursos de outros itens por semelhança. Texto, estado e provas anteriores abaixo permanecem históricos nos pontos incompatíveis; nenhuma implementação ou operação externa autorizada por este registro.
+
 
 Estado: na fila. Entrega: docs/stablecoin-payments-study.md. Estudar stablecoin (por exemplo USDC) SOMENTE como meio escolhido pelo criador NA PRÓPRIA STRIPE, se e onde oferecido. Reutilizar lib/payment-methods.ts/lib/instant-pay.ts e filas WH existentes, sem segundo checkout/processador, sem ativar automaticamente. Fontes oficiais datadas para países do criador/comprador, moedas e redes, elegibilidade, liquidação, taxas, limites, reembolsos, contestações/fraude e ausência eventual de chargeback; não presumir que não haver contestação significa ausência de obrigações/refundos.
 
@@ -9213,6 +9309,9 @@ Solicitação do dono (25/10/2026,00h11,horário de Fortaleza). Complementa DD24
 Pedidos repetidos: continuidade lida primeiro, main/fila canônicos imutáveis c49bc039a0555d673ac2df2af1f282ca6d2e6358 conferidos; fila integradaPR986/head9bfec7c63a0f9501c18cbfb61cb43e1f43747bdd,20PRsabertos/542refscodex/* consultados; RFausente,máximo403. Revalidar código/heads antes de execução. Reusar240CF3, kit/media/newsletter/blog, cobrança própria, rótulos/consentimentos/relatórios reais e quadroDD, sem recriar ES1(355) de patrocínio ENTREcriadores ou DN3/4 nem programa afiliadoFL1.
 
 404. [RF1] Patrocínios no boletim e no blog do próprio Marktmorgen.
+
+- Decisão vigente em 28/10/2026, complemento LQ7 do dono às20h38: **Cancelado por decisão do dono em 28/10/2026 (LQ7); não executar**. Cancelado por decisão do dono em 28/10/2026 (LQ7); não executar. Texto integral e estado anterior lidos; cancelamento vale para o trabalho futuro deste item, sem apagar código, conteúdo, histórico ou provas existentes. Não cancelar recursos de outros itens por semelhança. Texto, estado e provas anteriores abaixo permanecem históricos nos pontos incompatíveis; nenhuma implementação ou operação externa autorizada por este registro.
+
 
 Estado: na fila; construir DESLIGADO. Dependência: depois de240[CF3], mantendo posição posterior aos itens já registrados. Inventário de espaços patrocinados do boletim e BLOG DO PRÓPRIO MARKTMORGEN, vendido a ferramentas ÚTEISaoscriadores, escolhido por utilidade, nunca produto contrário às regras de honestidade/valores do dono. Não usar audiência privada dos criadores nem ocupar boletins deles sem autorização, não confundir este vendedorMM com ES1StripeDIRECTpublisher.
 
@@ -9415,6 +9514,9 @@ Consentimento, aviso de processamento externo se aplicável, minimização e ret
 Validar tamanho/tipo/duração reais e limites server-side antes de upload/processamento; input/tokens/minutos/retries concorrentes limitados, reserva de IA/transcrição e armazenamento/entrega/egress por plano, teto automático antes de gasto. Não converter desconhecido em zero, “áudio grátis” não é custo zero; definir direitos/custos novos sem mudar preços nem cortar franquias visíveis, não gerar sem franquia financiada. Testes sintéticos, sem voz de pessoa real enviada a fornecedor ou conta externa.
 
 420. [CC4] Estudo de idiomas do estúdio, sem construir.
+
+- Decisão vigente em 28/10/2026, complemento LQ7 do dono às20h38: **Cancelado por decisão do dono em 28/10/2026 (LQ7); não executar**. Cancelado por decisão do dono em 28/10/2026 (LQ7); não executar. Texto integral e estado anterior lidos; cancelamento vale para o trabalho futuro deste item, sem apagar código, conteúdo, histórico ou provas existentes. Não cancelar recursos de outros itens por semelhança. Texto, estado e provas anteriores abaixo permanecem históricos nos pontos incompatíveis; nenhuma implementação ou operação externa autorizada por este registro.
+
 
 Estado: na fila. Entrega: docs/studio-languages-study.md. Espanhol, francês, italiano e alemão: avaliar inventário de textos/formatos, esforço de tradução e manutenção, reuso da estrutura lib/buyer-words sem mudar idiomas já persistidos dos compradores, revisão humana/terminologia, fallback explícito e detecção de traduções faltantes/obsoletas. Não ativar idiomas por este lembrete; construção depende de decisão gravada do dono e docs/site-languages.md com seus gates.
 
@@ -9856,6 +9958,9 @@ Estado inicial: na fila.
 (m) Débito em conta: oferecer o plano inteiro por débito em conta pelo Stripe, mensal, em blocos de 3 meses ou anual, adiantado, onde a margem real do cliente ficar em pelo menos 60%, calculada com lib/receiving-costs.ts com a taxa, a falha e a disputa de cada meio registradas com fonte oficial datada: débito ACH em dólar nos EUA e, se mantiverem 60% já com a conversão de moeda, os débitos SEPA, BACS e equivalentes. O período começa somente quando o débito é confirmado pelo Stripe; débito que falhar não inicia o período e o custo da falha entra no modelo. Mandato do cliente coletado e guardado como cada meio exige.
 
 432. [PV2] Modelo de custos, remessa e travas:
+
+- Decisão vigente em 28/10/2026, complemento LQ8 do dono às20h38: **Mantido com atualização LQ8**. PV2(c): hospedagem integral na UE deixa de ser exigência de abertura, conforme LQ1/SV. Preservar art.9a, revisão comercial, custos fixos275 e demais controles; remoção técnica da dependência EU_HOSTING_CONFIRMED permanece472TX2, sem ligar flags. Pisos antigos60% subordinados à MR vigente. Texto, estado e provas anteriores abaixo permanecem históricos nos pontos incompatíveis; nenhuma implementação ou operação externa autorizada por este registro.
+
 (a) Remessa: lib/receiving-costs.ts passa a calcular a remessa somente sobre o que a LLC envia ao Brasil (o lucro líquido depois dos impostos mais os impostos brasileiros: IRPF ou o piso de estresse na parte brasileira, IOF e ISS); os demais custos são pagos em dólar da conta da LLC e não sofrem remessa. Manter 1,5% até uma fonte oficial datada de um provedor de câmbio disponível justificar outro valor, nunca menor sem prova.
 (b) Acrescente ao modelo de margem (tests/margin-alignment-table.ts e docs/margin-alignment-2026-10-18.md) as unidades "plano pago pelas vendas", "plano pago por transferência em dólar", "plano pago por débito em conta" (por meio), "mês pago pelas vendas com a parte final no cartão, no limite" e "plano inteiro no cartão por perfil de cliente e por período" (país do cartão, Califórnia ou não, faixa de imposto, número fiscal validado ou não; mês, 3 meses, ano), calculadas com lib/receiving-costs.ts, sem digitar taxa fora das fontes registradas, em todas as leituras, sempre com a margem medida sobre tudo o que é cobrado. Cada meio entra como forma própria, sem alterar a taxa completa das demais unidades.
 (c) PLANS_ON_SALE só pode considerar aberta uma forma de pagamento cujas unidades passem para o cliente a quem é oferecida; tests/tax-gate.test.ts continua falhando se qualquer coisa à venda ficar abaixo de 60%. Nada abre por este item: continuam exigidos a hospedagem na UE (317 [EU1]), o art. 9a, a revisão comercial e o cálculo completo dos custos fixos (275 [FX1]).
@@ -9875,6 +9980,9 @@ Estado inicial: na fila.
 (b) Reservas medidas: depois da abertura, medir as taxas reais de disputas e de reembolsos (inclusive pela garantia de 30 dias) das cobranças de plano, por meio de pagamento. Somente com dados próprios em quantidade suficiente, definida e registrada antes (número mínimo de cobranças e de meses), usar no modelo o limite superior com margem de segurança da taxa medida, nunca a média, nunca abaixo do medido; sem dados suficientes, mantêm-se 1% para cada uma.
 
 435. [PV5] Registro permanente e estudos:
+
+- Decisão vigente em 28/10/2026, complemento LQ8 do dono às20h38: **Mantido com atualização LQ8**. PV5(b): retirar UE como condição obrigatória, preservar estudo econômico de preço fixo/capacidade/backup/retorno sem executar migração. PV5(f)(1): preparação/envio de consulta à Receita cancelados por TX; pesquisa jurídica de INSS e fatos de remuneração continua, desconhecido não zero. Demais estudos/PV6–PV8 e provas preservados; DPF/SCC atuais seguem no Bloco de abertura. Texto, estado e provas anteriores abaixo permanecem históricos nos pontos incompatíveis; nenhuma implementação ou operação externa autorizada por este registro.
+
 (a) Criar docs/cost-savings.md e mantê-lo sempre atualizado com cada medida e desperdício de PV1 a PV5: onde está no código, custo por plano antes e depois (pior mês e anual), fonte oficial datada, estado (encontrado, em estudo, implementado, publicado) e efeito em cada forma de pagamento e nos perfis de cliente atendidos. Depois de cada mudança publicada, recalcular sozinho os perfis e registrar quantos passaram a ser atendidos por forma de pagamento e se o cliente de maior custo já passou, plano a plano e período a período.
 (b) Servidores de preço fixo: estudar, junto com 317 [EU1] e 363 [EI1], levar páginas públicas, banco de dados, filas e trabalhos para servidores próprios de preço fixo em região da UE, transformando custos por pedido em custo fixo da empresa contado na base mínima de clientes (FX275), com a capacidade por cliente no uso total calculada e garantida por teto automático; registrar custos, riscos, disponibilidade, cópias de segurança e o caminho de volta. Somente estudo e cálculo até decisão do dono.
 (c) Imposto calculado sem Stripe Tax: estudar o cálculo próprio com tabelas oficiais, comparado ao Stripe Tax em testes sintéticos para todos os países e estados atendidos; somente se for igual em todos os casos e houver fonte oficial de atualização das tabelas, registrar a redução; dúvida mantém o Stripe Tax.
@@ -12983,30 +13091,44 @@ As decisões LQ1/LQ3 abaixo foram aplicadas documentalmente neste PR; LQ2 contin
 
 | Item | Decisão | Motivo |
 | --- | --- | --- |
+| 16 | cancelado | Cancelado por decisão do dono em 28/10/2026 (LQ7); não executar. Texto integral e estado anterior lidos; cancelamento vale para o trabalho futuro deste item, sem apagar código, conteúdo, histórico ou provas existentes. Não cancelar recursos de outros itens por semelhança. |
+| 18 | mantido | Número menor válido do tutor de curso. Incorporar avaliação198 e manter REPROVADO até nova avaliação completa de custo, recuperação privada, acesso, teto e reserva; conteúdo exclusivo do curso e fallback ao criador. Não financiar com franquia já usada100% nem ativar trial. |
 | 20 | mantido | Menor propostaIAde automação porobjetivo; incorporar227blocos existentes,explicação/revisãohumana/teto/reservaprévia. |
 | 21 | mantido | Menor complemento coach/redator social em texto; incorporar403:voz/fatos/rascunho,assinatura/metadataprópria49condicional,custeio/tetos,fonteadd_onsDDsemduplicar. |
 | 22 | mantido | Idioma do checkout e preços manuais em moedas do criador; distinto de preço de plano31,FXautomático208 e preço fixo porpaís393. |
 | 23 | mantido | E6 inclui telefone e checkbox;387 inclui embed da loja inteira além do checkbox. Escopos distintos; reusar checkbox sem duplicar implementação. |
+| 24 | mantido | Incorporar112: pontos por posts/comentários/aulas, níveis/limites do criador, fatos do servidor, antirrepetição/reversão e lib/community-points.ts. Preservar a expiração de acesso em data escolhida já pedida no24; não perder esse escopo distinto. |
 | 27 | mantido | Válido menor do mesmo pedido MCP de rascunhos; incorporar confirmaçãoStudio, sequência/funil/cupom e permissões separadas/revogação/limites de258. |
 | 28 | mantido | Válido menor de publicações premium: acrescentar blog/letters,arquivo,prévia opt-in e proteção/revogação/caches/RSS/sitemap de100/428. |
 | 31 | mantido | Regionalização dos planosMarktmorgen com estudo/aprovação de preço;393éprodutodocriador,208éFX e22idioma/moedas. |
 | 32 | mantido | Menor pedido de construtor de páginas; incorporar editor visual/acessibilidade/rascunhos/undo/versões/IAde375. ComplementoTB2continua376. |
 | 34 | mantido | Menor portal privado de mentoria; incorporar mensagens/tarefas/materiais/permissões/retenção de385, sem confundir plano de estudo259. |
+| 36 | mantido | Número menor do fluxo de eventos/ingressos. Incorporar109: recorrência, fila de espera, ingressos/cupons/presença, consentimento para contato, fuso, cancelamento/reembolso, capacidade e publicação. Preservar QR/check-in presencial/offline e custeio de36; nenhuma implementação duplicada. |
+| 37 | cancelado | Cancelado por decisão do dono em 28/10/2026 (LQ7); não executar. Texto integral e estado anterior lidos; cancelamento vale para o trabalho futuro deste item, sem apagar código, conteúdo, histórico ou provas existentes. Não cancelar recursos de outros itens por semelhança. |
 | 40 | mantido | Menor estudo/preparo de agendamento social desligado; incorporar sete APIs/termos/custos/aprovações de228. |
+| 41 | cancelado | Cancelado por decisão do dono em 28/10/2026 (LQ7); não executar. Texto integral e estado anterior lidos; cancelamento vale para o trabalho futuro deste item, sem apagar código, conteúdo, histórico ou provas existentes. Não cancelar recursos de outros itens por semelhança. |
 | 44 | mantido | Estudo app/PWA inclui consumo de aulas offline;449–456 definem app de gestão do criador e etapas específicas. Não absorver escopos/públicos distintos. |
 | 46 | mantido | Marketplace de produtos com muitaslojas, somenteestudodocumental; distinto de diretório de lojas234 efeed/appbiblioteca349. |
+| 47 | cancelado | Cancelado por decisão do dono em 28/10/2026 (LQ7); não executar. Texto integral e estado anterior lidos; cancelamento vale para o trabalho futuro deste item, sem apagar código, conteúdo, histórico ou provas existentes. Não cancelar recursos de outros itens por semelhança. |
+| 49 | cancelado | Cancelado por decisão do dono em 28/10/2026 (LQ7); não executar. Texto integral e estado anterior lidos; cancelamento vale para o trabalho futuro deste item, sem apagar código, conteúdo, histórico ou provas existentes. Não cancelar recursos de outros itens por semelhança. |
 | 50 | mantido | Matriz interna de proposta de pacotes, sem alterar preços; 213 e 237 são páginas públicas específicas, e 238 é modelo/programa de comparações e alternativas. |
+| 51 | mantido | Texto integral51 pede proposta de franquia Store;309 exige arquitetura SES/fila/capacidade e dimensionamento de todos os planos. Não são o mesmo pedido integral. A avaliação Store é compartilhada e deve ser feita uma única vez em309;51 fica referência dessa diferença, sem segundo cálculo ou alteração de limites. |
+| 52 | mantido | Estudo comparativo crédito versus dinheiro é distinto das implementações216(crédito só a clientes) e220(comissão em dinheiro a clientes ou não), mantidas separadas emLQ3. Incorporar comparação e custo aos dois escopos coordenados sem ativar50%/20% ou construir programa duplicado;52 não é autorização de percentual. |
 | 53 | cancelado | Matrizes internas cobertas pelas páginas de comparação publicadas, conforme decisão expressa do dono; preservar documentos e provas existentes. |
 | 57 | mantido | Submissão externaZapier somente apósabertura/autorização; distinta do estudo/construção localZapier+Make217. |
+| 58 | mantido | Cancelado por decisão do dono em 28/10/2026 (LQ7); não executar — somente a futura tradução para português do Brasil. Restante do58 continua aguardando decisão/autorização e gates próprios. Preservar idiomas dos compradores, conteúdo e identificadores existentes; nenhuma tradução ativada. |
 | 59 | concluído | Fechado somente o acompanhamento duplicado: texto59 já absorvido por274[AX1], conferido no canônico. AX274 permanece transversal e com seus próprios remanescentes; não declarar auditoria/AAA concluída. |
 | 100 | absorvido | Mesmo conteúdo de membros; arquivo/blog/letters incorporados no28. |
 | 107 | mantido | A/B deconteúdodebroadcastemail/denominadores/consentimento é distinto de páginas/automaçõesaté4versões377;compartilhar medição. |
 | 108 | mantido | Menor publicação→email/RSS; SUjádeclaraunicidade. Incorporar confirmação porpost,audiência/supressão/cotaSES,idempotência e revisãoexata de364. |
+| 109 | absorvido | Absorvido pelo item36 (LQ6); não executar. Aplicado o critério explícito do número menor; todas as diferenças de eventos recorrentes/waitlist/cupom/presença vão ao36, sem renumerar ou antecipar AV1. |
+| 112 | absorvido | Absorvido pelo item24 (LQ6); não executar. Diferenças de pontuação incorporadas ao24 sem remover expiração de acesso nem refazer motor existente. |
 | 113 | mantido | Filtro de palavras/regras e spam é distinto do agente/triagemIA122/263;reusar infraestrutura de moderação semduplicar. |
 | 117 | mantido | Menor notificações/resumo comunitário; incorporar264periodicidadesemanal,permissõespormembro/opt-inIA/rótulo/revisãoopcional/unsubscribe/custos. |
 | 118 | mantido | Menor indicação de leitores/alunos; BHjádeclaraunicidade. Incorporar marcos/link/duplaconfirmação/antiabuso/prêmiospróprios/franquia/privacidade de267. |
 | 120 | mantido | Menor importador inclui posts/listas e cursosTeachable; incorporar260fontesKajabi/Thinkific/Podia/exports/arquivos/módulos/vídeos/preview/limites/declaraçãotitular. |
 | 122 | mantido | Menor agenteIAcomunitário pago proposto; incorporar263triagemexplicável,humanofinal,revisão/linkspamconhecido/fallbackmanual/privacidade/tetos. |
+| 127 | cancelado | Cancelado por decisão do dono em 28/10/2026 (LQ7); não executar. Texto integral e estado anterior lidos; cancelamento vale para o trabalho futuro deste item, sem apagar código, conteúdo, histórico ou provas existentes. Não cancelar recursos de outros itens por semelhança. |
 | 128 | cancelado | Matrizes internas cobertas pelas páginas de comparação publicadas, conforme decisão expressa do dono; preservar documentos e provas existentes. |
 | 129 | cancelado | Matrizes internas cobertas pelas páginas de comparação publicadas, conforme decisão expressa do dono; preservar documentos e provas existentes. |
 | 130 | cancelado | Matrizes internas cobertas pelas páginas de comparação publicadas, conforme decisão expressa do dono; preservar documentos e provas existentes. |
@@ -13019,35 +13141,46 @@ As decisões LQ1/LQ3 abaixo foram aplicadas documentalmente neste PR; LQ2 contin
 | 182 | concluído | Conferidos seção HT, HT0 e item182 na fila canônica, com classificação/histórico preservados. Correção documental absorvida; publicação atual exata verificada, sem transformar isso em prova de função ou margem. |
 | 196 | mantido | PixelEditor atual conserva navegação, consentimento e confirmação estrita; prova publicada histórica179 preservada. Fluxo autenticado atual não foi conferido interativamente em produção: conexão Chrome permanece impedida pelo dono. Não fechar por código/CI apenas; sem repetir solicitação ou usar outro navegador. |
 | 197 | concluído | Somente avaliação concluída e reprovada por operação/teto/reserva desconhecidos: docs/ht11-community-cost-review.md conferido integralmente. Comunidade do Marktmorgen não foi entregue/aberta. MR/TX posteriores prevalecem sobre números históricos; desconhecido continua reprovação. |
-| 198 | concluído | Somente avaliação concluída e reprovada por recuperação privada/custo/teto desconhecidos: docs/ht13-student-tutor-cost-review.md conferido integralmente. Tutor novo não foi entregue/ativado; Q&A e add-on existentes não são autorização implícita. Não certificar números antigos sob MR/TX. |
+| 198 | absorvido | Absorvido pelo item18 (LQ6); não executar. Avaliação já concluída e reprovada permanece como prova/histórico no18; não repetir avaliação nem construir tutor sem novo custeio aprovado. Substitui somente acompanhamento duplicado, não a reprovação. Histórico da decisão LQ1–LQ3 preservado: Somente avaliação concluída e reprovada por recuperação privada/custo/teto desconhecidos: docs/ht13-student-tutor-cost-review.md conferido integralmente. Tutor novo não foi entregue/ativado; Q&A e add-on existentes não são autorização implícita. Não certificar números antigos sob MR/TX. |
 | 199 | mantido | OfferPlanning, regra local e teste de aceitar/editar/recusar sem writes conferidos no main; prova histórica179 preservada. Jornada autenticada atual em produção não foi verificada interativamente porque a conexão Chrome continua impedida. Manter aberto, sem criar teste ou operação real fora da autorização. |
 | 208 | mantido | Estudo de conversão automáticaStripe/AdaptivePricing,opcional semcustoplataforma;22/393sãopreçosmanuais e31planosMM. |
 | 213 | mantido | Página pública específica Shopify, reutilizada no modelo 238; não é a matriz interna 50 nem a página Skool 237. |
-| 216 | mantido | Crédito na mensalidade só para clientes que indicam; distinto da comissão recorrente em dinheiro a qualquer afiliado220. |
+| 214 | mantido | Aplicar MR vigente em vez de60% por cliente/plano: unidade positiva com folga existente,100%dos direitos/complementos no pior mês mensal/anual; empresa sem prejuízo desde base mínima calculada com100%FX275/exposições;60%meta mensal real da empresa. Recebimento mais caro,reservas/tetos,custeio e TX preservados; desconhecido reprova. Somente atualização de regra antes da execução,sem preço/limite/gate novo. |
+| 215 | cancelado | Cancelado por decisão do dono em 28/10/2026 (LQ7); não executar. Texto integral e estado anterior lidos; cancelamento vale para o trabalho futuro deste item, sem apagar código, conteúdo, histórico ou provas existentes. Não cancelar recursos de outros itens por semelhança. |
+| 216 | mantido | Crédito na mensalidade somente para clientes; manter distinção LQ3 frente a comissão em dinheiro220. Reusar estudo52, cálculo/antifraude comuns, sem repetir implementação ou ativar porcentagem. Histórico da decisão LQ1–LQ3 preservado: Crédito na mensalidade só para clientes que indicam; distinto da comissão recorrente em dinheiro a qualquer afiliado220. |
 | 217 | mantido | Estudo/definições/testessimuladosdeappsZapier+Make,sempublicar;57éetapafuturaexternadeZapier. |
 | 218 | mantido | Menor calculadora factual de custos; incorporar225pilhainteiradeferramentas,preçosoficiais/90dias/paridadeativada/semprojetarganhos. |
-| 220 | mantido | Afiliado clienteounão/comissãorecorrente,pósreembolso/formulários fiscais/pagamentoexterior;216écréditoparaclientes. Reusar antifraude semunir. |
+| 219 | mantido | Um fluxo OP5 de montagem em rascunho com aprovação explícita. Incorporar386: imagem própria/autorizada como dado, extração de cores/fontes/estilo, prévia/aprovação, contraste7:1 medido/ajustado, sem importar HTML/CSS/scripts/marca/fonte alheia. IA só com reserva; preservar conteúdo antes de aceitar e todos demais requisitos219. |
+| 220 | mantido | Comissão recorrente em dinheiro, elegibilidade e pagamentos/fiscalidade são distintos de crédito216. Reusar comparação52 e infraestrutura comum; nenhuma porcentagem, transferência ou aprovação externa autorizada. Histórico da decisão LQ1–LQ3 preservado: Afiliado clienteounão/comissãorecorrente,pósreembolso/formulários fiscais/pagamentoexterior;216écréditoparaclientes. Reusar antifraude semunir. |
 | 221 | mantido | Academia gratuita do próprio Marktmorgen para aquisição, com custos fixos e consentimento; 249 organiza cursos dos criadores em trilhas vendáveis. Públicos e produtos distintos. |
 | 225 | absorvido | Extensão explicitamente de218paraumaúnicacalculadora; incorporar fornecedores/diferenças semduplicartool. |
 | 227 | absorvido | Mesmo objetivo→rascunhodefluxoIA; diferenças incorporadasno20semativação automática. |
 | 228 | absorvido | Mesmo agendador social precedido de estudo; diferenças de plataformas/aprovação/documento incorporadasno40. |
 | 234 | mantido | Diretório público de lojas/comunidades por tema/idioma/preço;46catálogoprodutos e349feedseguir/criadores/biblioteca/app sãoescoposdistintos. |
+| 236 | cancelado | Cancelado por decisão do dono em 28/10/2026 (LQ7); não executar. Texto integral e estado anterior lidos; cancelamento vale para o trabalho futuro deste item, sem apagar código, conteúdo, histórico ou provas existentes. Não cancelar recursos de outros itens por semelhança. |
 | 237 | mantido | Página pública específica Skool, com fontes e coordenação de mensagem; reutiliza 238, sem duplicar o programa geral. |
 | 238 | mantido | Modelo comum, páginas de alternativas e revisão de fontes em 90 dias; coordena 213/237 e demais páginas, sem apagar entregas específicas nem a proposta interna 50. |
 | 249 | mantido | Trilhas vendáveis dos criadores com pré-requisitos, progresso e certificado; 221 é academia gratuita da plataforma para aquisição. |
 | 258 | absorvido | Mesmo MCP de rascunhos; diferenças incorporadas no27. Nunca publicar/enviar/cobrar/apagar peloMCP. |
 | 259 | mantido | Plano de estudo personalizado de aulas/práticas compradas é distinto de portal de mentoria34/385; coordena tutor/trilhas249. |
 | 260 | absorvido | Mesmo importador de cursos já abrangido pelo120; ampliar plataformas/formatos comfonteoficial,semrasparlogin ouconteúdoalheio. |
+| 261 | mantido | Aplicar MR vigente em vez de60% por cliente/plano: unidade positiva com folga existente,100%dos direitos/complementos no pior mês mensal/anual; empresa sem prejuízo desde base mínima calculada com100%FX275/exposições;60%meta mensal real da empresa. Recebimento mais caro,reservas/tetos,custeio e TX preservados; desconhecido reprova. Somente atualização de regra antes da execução,sem preço/limite/gate novo. |
 | 263 | absorvido | Mesma moderação assistida porIA do agente122; diferenças de escopo posts/comentários/chat, recurso/fallback incorporadas,sempromovergratuidadenempreço. |
 | 264 | absorvido | Mesmo resumo periódico por email, extensão semanalIA com opt-in/permissões/custosincorporada; respostas/menções de117preservadas. |
 | 267 | absorvido | Mesmo programa por decisãoBH anterior; diferenças incorporadasno118semcustódia/dinheiro/duploenvio. |
+| 280 | cancelado | Cancelado por decisão do dono em 28/10/2026 (LQ7); não executar. Texto integral e estado anterior lidos; cancelamento vale para o trabalho futuro deste item, sem apagar código, conteúdo, histórico ou provas existentes. Não cancelar recursos de outros itens por semelhança. |
 | 282 | mantido | Relatório por venda/mês de taxas e saldo Stripe do criador; 392 acrescenta atribuição por funil/afiliado e 426 agrega fontes externas declaradas. Reusar conciliação sem fundir escopos. |
+| 309 | mantido | Mantido: SES exclusivo para lista/fila durável/capacidade global/serviço com fallback/custos completos extrapolam proposta Store51. Incorporar a avaliação Store51 uma vez no passo6, preservar demais requisitos e posição AV1. MR/TX vigentes substituem pisos fiscais/margem antigos; nenhuma cota aprovada por esta revisão. |
 | 317 | cancelado | Residência integral na UE deixou de ser condição de abertura. DPF/SCC dos fornecedores atuais segue no Bloco de abertura; retirada técnica de EU_HOSTING_CONFIRMED permanece em 472 [TX2]. |
 | 318 | cancelado | TX vigente proíbe consultas tributárias; a resposta da Prefeitura deixou de ser dependência. |
+| 319 | mantido | Motivo histórico de manter Paddle no modelo era o alinhamento à Hazelsong encerrada, confirmado no comentário de receiving-costs. ItemStripe-only permanece: provar em código/teste que plano/complemento/legenda não cobra Paddle antes de retirar tarifa/documentação. Não reduzir agora providerFeeCents, reservas ou leitura de custo sem essa prova. |
+| 324 | mantido | Aplicar MR vigente em vez de60% por cliente/plano: unidade positiva com folga existente,100%dos direitos/complementos no pior mês mensal/anual; empresa sem prejuízo desde base mínima calculada com100%FX275/exposições;60%meta mensal real da empresa. Recebimento mais caro,reservas/tetos,custeio e TX preservados; desconhecido reprova. Somente atualização de regra antes da execução,sem preço/limite/gate novo. |
 | 327 | cancelado | Estudo de servidor UE motivado pela trava fiscal antiga cancelado; custos atuais continuam em 275. |
 | 332 | mantido | Menor débito opcional ao lado do cartão; incorporar436todos custosACH/microdepósitos/confirmação e cálculo por duração,sem preçosouperíodosativados. |
 | 337 | cancelado | Guarda condicionada à UE cancelada. Preservação integral da Hazelsong e custos residuais 100% Marktmorgen continuam; nenhuma retirada ou migração. |
+| 347 | cancelado | Cancelado por decisão do dono em 28/10/2026 (LQ7); não executar. Texto integral e estado anterior lidos; cancelamento vale para o trabalho futuro deste item, sem apagar código, conteúdo, histórico ou provas existentes. Não cancelar recursos de outros itens por semelhança. |
 | 349 | mantido | Discover inclui seguir/publicações/recomendações na biblioteca eapp,semredesocialaberta; não é só marketplace46 nem diretório234. |
+| 352 | cancelado | Cancelado por decisão do dono em 28/10/2026 (LQ7); não executar. Texto integral e estado anterior lidos; cancelamento vale para o trabalho futuro deste item, sem apagar código, conteúdo, histórico ou provas existentes. Não cancelar recursos de outros itens por semelhança. |
 | 363 | cancelado | Estudo de envio próprio UE cancelado; não retomar a prioridade histórica depois de AB(a). SES e custos atuais permanecem. |
 | 364 | absorvido | Mesmo pedido por decisãoSU anterior; incluir gatilho comclique junto doRSS,opt-insemduploenvio e falhaemailnãoapagapost. |
 | 372 | mantido | Campanha de envio com audiência/rascunho3assuntos/horário e aprovaçãoexata é distinta de fluxo deautomação20/227;reusarmotor/franquia,semnovoagente. |
@@ -13055,13 +13188,21 @@ As decisões LQ1/LQ3 abaixo foram aplicadas documentalmente neste PR; LQ2 contin
 | 377 | mantido | Extensão de páginas/fluxos a4variantes e vencedornetdereembolso; não é exclusivamente broadcast107. |
 | 380 | mantido | Menor teste decheckoutdalojado criador; incorporar443toggle,todoscriadores,endereçosverificados,separaçãopedidos/exposiçãofinanciada. |
 | 385 | absorvido | Mesmo portal de mentoria; diferenças privadas/RBAC/DSAR/custos incorporadasno34. |
+| 386 | absorvido | Absorvido pelo item219 (LQ6); não executar. O texto já o identifica como complemento do mesmo fluxo; diferenças de imagem/tema incorporadas sem segundo executor. |
 | 387 | mantido | TB13 inclui embed da loja inteira;23 exige também telefone. Não absorver escopo distinto; remeter checkbox ao23. |
 | 392 | mantido | Conciliação e atribuição por funil/afiliado; diferente do detalhamento de taxas 282 e das fontes externas manuais 426. |
 | 393 | mantido | Preço fixo de produto do criador por país, distinto de moedas/idioma22,planosMM31 eFXautomático208;reusarsó mecanismo comum. |
 | 394 | mantido | ConversãoClickFunnels deautomações/imagens é distinta de cursos/posts/listas120/260; reutilizar infraestrutura/segurança semunirpedido. |
+| 395 | cancelado | Cancelado por decisão do dono em 28/10/2026 (LQ7); não executar. Texto integral e estado anterior lidos; cancelamento vale para o trabalho futuro deste item, sem apagar código, conteúdo, histórico ou provas existentes. Não cancelar recursos de outros itens por semelhança. |
+| 398 | cancelado | Cancelado por decisão do dono em 28/10/2026 (LQ7); não executar. Texto integral e estado anterior lidos; cancelamento vale para o trabalho futuro deste item, sem apagar código, conteúdo, histórico ou provas existentes. Não cancelar recursos de outros itens por semelhança. |
+| 402 | cancelado | Cancelado por decisão do dono em 28/10/2026 (LQ7); não executar. Texto integral e estado anterior lidos; cancelamento vale para o trabalho futuro deste item, sem apagar código, conteúdo, histórico ou provas existentes. Não cancelar recursos de outros itens por semelhança. |
 | 403 | absorvido | Mesmo complemento pago de conteúdo social; diferenças do lifecycle/limites/fatos/preço condicionado/custeio incorporadasno21,sem publicar redes. |
+| 404 | cancelado | Cancelado por decisão do dono em 28/10/2026 (LQ7); não executar. Texto integral e estado anterior lidos; cancelamento vale para o trabalho futuro deste item, sem apagar código, conteúdo, histórico ou provas existentes. Não cancelar recursos de outros itens por semelhança. |
+| 420 | cancelado | Cancelado por decisão do dono em 28/10/2026 (LQ7); não executar. Texto integral e estado anterior lidos; cancelamento vale para o trabalho futuro deste item, sem apagar código, conteúdo, histórico ou provas existentes. Não cancelar recursos de outros itens por semelhança. |
 | 426 | mantido | Painel mensal por fonte, incluindo patrocínio e receita externa declarada; distinto do saldo por venda 282 e atribuição 392. Evitar dupla contagem e não chamar líquido incompleto de lucro. |
 | 428 | absorvido | Mesmas publicações restritas; prévia/servidor/biblioteca/revogação/semvazamentoincorporadosno28. |
+| 432 | mantido | PV2(c): hospedagem integral na UE deixa de ser exigência de abertura, conforme LQ1/SV. Preservar art.9a, revisão comercial, custos fixos275 e demais controles; remoção técnica da dependência EU_HOSTING_CONFIRMED permanece472TX2, sem ligar flags. Pisos antigos60% subordinados à MR vigente. |
+| 435 | mantido | PV5(b): retirar UE como condição obrigatória, preservar estudo econômico de preço fixo/capacidade/backup/retorno sem executar migração. PV5(f)(1): preparação/envio de consulta à Receita cancelados por TX; pesquisa jurídica de INSS e fatos de remuneração continua, desconhecido não zero. Demais estudos/PV6–PV8 e provas preservados; DPF/SCC atuais seguem no Bloco de abertura. |
 | 436 | absorvido | Mesmo débito opcional, detalha ACH/verificação/falha/contestação/durações; incorporar no332preservandoSEPA/Bacscondicionais/cartão/pisoMRvigente. |
 | 440 | cancelado | SD1 decidiu Delaware; não executar comparação de estado para decidir a abertura. |
 | 441 | cancelado | Infraestrutura própria na UE perdeu o motivo indicado pelo dono. DPF/SCC atual e 472 [TX2] permanecem. |
@@ -13146,3 +13287,8 @@ Proibido: ligar OPENING_REQUESTED ou PLANS_ON_SALE; afrouxar travas ou testes; m
 Aplicar a regra VR.
 
 Registro documental do complemento, ainda sem execução comprovada. Regressões do head9bab66cc passaram até o passo de comportamento/compilação, mas a suíte anterior estava em andamento; nenhum resultado anterior substitui o novo head deste complemento. Sem publicação funcional/contador;254 preservado.
+
+
+### LQ6–LQ8: aplicação das decisões já conferidas — 28/10/2026
+
+Aplicadas36 decisões na mesma tabela LQ3 e nos próprios itens: cancelamentos LQ7 com escopo parcial do58, quatro absorções198→18/109→36/112→24/386→219 e suas diferenças nos menores, manutenção motivada dos pedidos distintos51/309 e52/216/220, e atualizações normativas LQ8. Textos, provas e numeração preservados. Nenhuma tarifa Paddle retirada, consulta fiscal preparada, condição técnica removida ou tradução ativada. LQ4/LQ5 continuam em conferência; este registro não autoriza incorporar o PR antes do complemento completo e da suíte integral do novo head. Código de custo LQ1/testes permanece sujeito à verificação completa; custo adicional deste registro documental: nenhuma operação de produto nova, sem certificar margem. MR/TX atuais prevalecem sobre afirmações históricas incompatíveis. AV1/SD1 continuam; nenhuma publicação funcional contada.
