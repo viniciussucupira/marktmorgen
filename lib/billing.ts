@@ -733,6 +733,15 @@ export async function restartPlan(input: {
     const recovery = await takeRestartRecovery({statsId:source.statsId,sourceSubscriptionId:source.sourceSubscriptionId,sourceGrantId:source.sourceGrantId,ref:source.ref,handle:input.store.handle,paused:source.paused});
     if (!recovery) throw new Error("The funded restart recovery observation is unknown");
     if (recovery.kind === "held") throw new Error("The funded restart remains held without another provider operation");
+    if (recovery.kind === "activated") {
+      const {armed,subscriptionId,createdSeconds,periodStartSeconds,periodEndSeconds}=recovery;
+      const paused=JSON.parse(armed.intent.paused) as {customer?:unknown;paymentMethod?:unknown;tier?:unknown};
+      if(paused.customer!==input.customerId||paused.paymentMethod!==input.paymentMethod||paused.tier!==input.tier||armed.intent.handle!==input.store.handle)
+        throw new Error("The committed restart source does not match its durable owner");
+      if(!(await activateRestartContract({armed,subscriptionId,createdSeconds,periodStartSeconds,periodEndSeconds})))
+        throw new Error("The retained paid restart activation was not acknowledged");
+      throw new Error("The retained activated restart still requires acknowledged Store publication and generation-aware cleanup");
+    }
     if (recovery.kind === "read") {
       const {armed}=recovery,paused=JSON.parse(armed.intent.paused) as {customer?:unknown;paymentMethod?:unknown;tier?:unknown};
       if(paused.customer!==input.customerId||paused.paymentMethod!==input.paymentMethod||paused.tier!==input.tier||armed.intent.handle!==input.store.handle)
