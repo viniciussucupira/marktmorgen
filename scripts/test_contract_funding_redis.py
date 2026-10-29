@@ -1124,41 +1124,52 @@ def main():
         print('PASS:23foreign/unknown/late/annual-generation restart activation cases preserve every field and pause/year/due')
 
 
-        # The same lifetime recovery allowance must work after activation
-        # changed active, even when the activation acknowledgement was lost.
-        fixture = activation_ready()
-        assert activate_restart(redis,fixture) == [1,1800086400]
-        state = snapshot(keys[42])
-        before_counts = command_counts()
-        ignored = recovery(redis,keys[42],fixture[0],fixture[1],now=1800086402)
-        activated_recovery_counts = difference(before_counts,command_counts())
-        assert ignored[0] == 'read'
-        assert sum(activated_recovery_counts.values()) <= 17
-        assert json.loads(ignored[1])['submission']['subscriptionId'] == 'sub_ObservedRestart01'
-        def after_activation_recovery(_index):
-            client = Redis()
-            try:
-                return recovery(client,keys[42],fixture[0],fixture[1],now=1800086402)
-            finally:
-                client.close()
-        with concurrent.futures.ThreadPoolExecutor(max_workers=16) as pool:
-            attempts = list(pool.map(after_activation_recovery,range(64)))
-        assert sum(value[0]=='read' for value in attempts) == 2
-        assert sum(value==['held'] for value in attempts) == 62
-        retained = json.loads(redis.command('HGET',keys[42],'restart-intent:ctr_restart_new'))
-        assert retained['submission']['recoveryReads'] == 3
-        for field,value in state:
-            if field!='restart-intent:ctr_restart_new':
-                assert redis.command('HGET',keys[42],field) == value
-        assert arm(redis,keys[42],fixture[0],fixture[1],now=1800086402) == 0
-        print('PASS:activated owner lostACK plus64recovery contenders share3lifetime reads without POSTpermission,newowner,cashchange or cleanup')
+        # Committed paid evidence is a local observation, not another provider read.
+        for consumed in (0,1,3):
+            fixture = activation_ready()
+            assert activate_restart(redis,fixture) == [1,1800086400]
+            raw_owner = json.loads(redis.command('HGET',keys[42],'restart-intent:ctr_restart_new'))
+            if consumed:
+                raw_owner['submission']['recoveryReads'] = consumed
+                raw_owner['submission']['lastRecoveryAt'] = 1800000004
+                redis.command('HSET',keys[42],'restart-intent:ctr_restart_new',json.dumps(raw_owner,separators=(',',':')))
+            state = snapshot(keys[42])
+            evidence = [redis.command('GET','nl:pause:'+fixture[0]),redis.command('GET','nl:pause:last:'+fixture[0]),redis.command('ZSCORE','nl:pause:due',fixture[0])]
+            before_counts = command_counts()
+            ignored = recovery(redis,keys[42],fixture[0],fixture[1],now=1800086402) # Lose ACK.
+            activated_recovery_counts = difference(before_counts,command_counts())
+            assert ignored[0] == 'activated' and ignored[2] == new_binding
+            assert sum(activated_recovery_counts.values()) <= 17
+            assert activated_recovery_counts.get('hset',0) == 0
+            assert json.loads(ignored[1]) == raw_owner
+            def after_activation_recovery(_index):
+                client = Redis()
+                try:
+                    return recovery(client,keys[42],fixture[0],fixture[1],now=1800086402)
+                finally:
+                    client.close()
+            with concurrent.futures.ThreadPoolExecutor(max_workers=16) as pool:
+                attempts = list(pool.map(after_activation_recovery,range(64)))
+            assert all(value == ignored for value in attempts)
+            assert snapshot(keys[42]) == state
+            assert [redis.command('GET','nl:pause:'+fixture[0]),redis.command('GET','nl:pause:last:'+fixture[0]),redis.command('ZSCORE','nl:pause:due',fixture[0])] == evidence
+            assert arm(redis,keys[42],fixture[0],fixture[1],now=1800086402) == 0
+        print('PASS:activated owner lostACK plus64contenders at0/1/3consumed reads retain every field and return exact paid evidence without HSET,provider-read entitlement,POST,rearm or cleanup')
         print('ACTIVATED_RESTART_RECOVERY_COMMANDS:'+json.dumps(activated_recovery_counts,sort_keys=True))
 
-        for scenario in ('missing-activated','active-foreign','active-unbacked','source-proof','future-created','wrong-period','wrong-key','reverted-active'):
+        for scenario in ('missing-activated','active-foreign','active-unbacked','source-proof','future-created','wrong-period','wrong-key','reverted-active','expired-paid-period','corrupt-read-count','boolean-read-count'):
             fixture = activation_ready()
             assert activate_restart(redis,fixture) == [1,1800086400]
             current = redis.command('HGET',keys[42],'active:restart-store')
-            if scenario=='missing-activated': redis.command('HDEL',keys[42],'activated:ctr_restart_new')
+            if scenario=='expired-paid-period':
+                fields=current.split('|');fields[6]='1800086402'
+                changed='|'.join(fields)
+                redis.command('HSET',keys[42],'active:restart-store',changed,'activated:ctr_restart_new',changed)
+            elif scenario in ('corrupt-read-count','boolean-read-count'):
+                malformed=json.loads(redis.command('HGET',keys[42],'restart-intent:ctr_restart_new'))
+                malformed['submission']['recoveryReads']=False if scenario=='boolean-read-count' else 4
+                redis.command('HSET',keys[42],'restart-intent:ctr_restart_new',json.dumps(malformed,separators=(',',':')))
+            elif scenario=='missing-activated': redis.command('HDEL',keys[42],'activated:ctr_restart_new')
             elif scenario=='active-foreign': redis.command('HSET',keys[42],'active:restart-store',current.replace('sub_ObservedRestart01','sub_ForeignActive01'))
             elif scenario=='active-unbacked': redis.command('HSET',keys[42],'active:restart-store',current+'|extra')
             elif scenario=='source-proof': redis.command('HDEL',keys[42],'activated:ctr_restart_source')
@@ -1173,7 +1184,7 @@ def main():
             before = snapshot(keys[42])
             assert recovery(redis,keys[42],fixture[0],fixture[1],now=1800086402) == 0,scenario
             assert snapshot(keys[42]) == before,scenario
-        print('PASS:8unknown activated-binding recovery cases cannot spend a read allowance or change the ledger')
+        print('PASS:11unknown/expired activated-binding recovery cases cannot spend a read allowance or change the ledger')
 
         # A legitimate full31day paid month starts when the provider creates
         # the replacement, not a few seconds before at intent claim time.

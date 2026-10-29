@@ -640,9 +640,12 @@ end
 if type(s)~='table' or s.version~=1 or (s.phase~='uncertain' and s.phase~='observed') or not integer(s.armedAt) or now<s.armedAt or type(s.priceId)~='string' or type(s.bodyHash)~='string' or #s.bodyHash~=64 or s.idempotencyKey~='restart:'..owner..':'..intent.claim then return 0 end
 if s.phase=='observed' and (type(s.subscriptionId)~='string' or not string.match(s.subscriptionId,'^sub_[A-Za-z0-9]+$') or #s.subscriptionId>68) then return 0 end
 if s.phase=='uncertain' and s.subscriptionId~=nil then return 0 end
+local reads=s.recoveryReads
+if reads==nil then reads=0 end
+if not integer(reads) or reads>3 or (s.lastRecoveryAt~=nil and (not integer(s.lastRecoveryAt) or now<s.lastRecoveryAt)) then return 0 end
 -- An already committed activation may be reconciled after a lost ACK.
--- It never permits another POST or another owner, and shares the same
--- three lifetime read allowances. The original activated source is retained.
+-- It never permits another POST or another owner. The original activated
+-- source and all three provider-read allowances remain unchanged.
 if active~=sourceBinding then
  if s.phase~='observed' or activated~=active then return 0 end
  local bound={}
@@ -651,11 +654,10 @@ if active~=sourceBinding then
  for field in string.gmatch(intent.restartReceipt,'[^|]+') do receipt[#receipt+1]=field end
  local created,start,finish=number(bound[4]),number(bound[6]),number(bound[7])
  local deadline,through=number(receipt[8]),tonumber(receipt[9])
- if #bound~=7 or table.concat(bound,'|')~=active or bound[1]~=owner or bound[2]~=s.subscriptionId or bound[3]~=source[3] or bound[5]~='paid' or not created or not start or not finish or created<s.armedAt or created>now or start<created or start>now or finish<=start or finish-start>31*86400 then return 0 end
+ if #bound~=7 or table.concat(bound,'|')~=active or bound[1]~=owner or bound[2]~=s.subscriptionId or bound[3]~=source[3] or bound[5]~='paid' or not created or not start or not finish or created<s.armedAt or created>now or start<created or start>now or finish<=now or finish<=start or finish-start>31*86400 then return 0 end
  if #receipt~=10 or table.concat(receipt,'|')~=intent.restartReceipt or receipt[1]~=intent.review or receipt[2]~=intent.statsId or receipt[3]~=source[3] or receipt[4]~='restart' or receipt[10]~=ARGV[3] or not deadline or created>deadline or not through or through<=0 or not string.match(receipt[9],'^%d+$') or (#receipt[9]>1 and string.sub(receipt[9],1,1)=='0') or through~=math.floor(through) or through>9007199254740991 or finish*1000>through then return 0 end
+ return {'activated',raw,active}
 end
-local reads=s.recoveryReads or 0
-if not integer(reads) or reads>3 or (s.lastRecoveryAt~=nil and (not integer(s.lastRecoveryAt) or now<s.lastRecoveryAt)) then return 0 end
 if reads>=3 then return {'held'} end
 s.recoveryReads=reads+1
 s.lastRecoveryAt=now
@@ -665,9 +667,10 @@ redis.call('HSET',KEYS[1],'restart-intent:'..owner,encoded)
 return {'read',encoded}
 `;
 export type RestartRecoveryInput={statsId:string;sourceSubscriptionId:string;sourceGrantId:string;ref:string;handle:string;paused:string};
-export type RestartRecovery={kind:'absent'}|{kind:'held'}|{kind:'read';armed:ArmedRestartSubmission;subscriptionId:string|null};
+export type RestartRecovery={kind:'absent'}|{kind:'held'}|{kind:'read';armed:ArmedRestartSubmission;subscriptionId:string|null}|{kind:'activated';armed:ArmedRestartSubmission;subscriptionId:string;createdSeconds:number;periodStartSeconds:number;periodEndSeconds:number};
 /** At most three lifetime provider reads per source owner. Lost ACK consumes
- * its read allowance. No POST, new owner, reserve, release or activation.
+ * a provider-read allowance; committed paid evidence returns without consuming one.
+ * No POST, new owner, reserve, release or activation.
  */
 export async function takeRestartRecovery(
  input:RestartRecoveryInput,
@@ -684,19 +687,25 @@ export async function takeRestartRecovery(
   if(!Array.isArray(reply)||reply.length!==1||!Array.isArray(reply[0]))return null;
   const ack=reply[0];
   if(ack.length===1&&(ack[0]==='absent'||ack[0]==='held'))return {kind:ack[0]};
-  if(ack.length!==2||ack[0]!=='read'||typeof ack[1]!=='string'||Buffer.byteLength(ack[1])>4096)return null;
+  const activated=ack[0]==='activated';
+  if((activated?ack.length!==3||typeof ack[2]!=='string'||Buffer.byteLength(ack[2])>256:ack.length!==2||ack[0]!=='read')||typeof ack[1]!=='string'||Buffer.byteLength(ack[1])>4096)return null;
   const {submission,...original}=JSON.parse(ack[1]);
   if(typeof original.claim!=='string'||!/^claim_[A-Za-z0-9_-]{1,80}$/.test(original.claim))return null;
   const receipt=original.restartReceipt.split('|'),through=Number(receipt[8]);
   if(receipt.length!==10||!['creator_month','pro_month','scale_month'].includes(receipt[2])||!Number.isSafeInteger(through)||through<=0)return null;
   const grant:ContractGrant={id:original.grant,reviewId:original.review,statsId:input.statsId,key:receipt[2] as ContractGrant['key'],action:'restart',sourceSubscriptionId:input.sourceSubscriptionId,reservedCents:Number(receipt[4]),submitUntilSeconds:Number(receipt[5]),checkoutExpiresAtSeconds:Number(receipt[6]),activationUntilSeconds:Number(receipt[7]),liabilitiesThrough:new Date(through).toISOString()};
   const intent=ownedRestartIntentFromAcknowledgement({grant,ref:input.ref,handle:input.handle,paused:input.paused,claim:original.claim,sourceGrantId:input.sourceGrantId},original.created,{cashLimitCents:original.reservedCents,carryForwardCents:original.carriedCents},[1,JSON.stringify(original)]);
-  if(!intent||!submission||submission.version!==1||!['uncertain','observed'].includes(submission.phase)||!/^price_[A-Za-z0-9]{6,100}$/.test(submission.priceId)||!/^[a-f0-9]{64}$/.test(submission.bodyHash)||!Number.isSafeInteger(submission.armedAt)||submission.armedAt<intent.claimedAtSeconds||submission.armedAt>intent.grant.submitUntilSeconds||submission.idempotencyKey!=='restart:'+grant.id+':'+intent.claim||!Number.isSafeInteger(submission.recoveryReads)||submission.recoveryReads<1||submission.recoveryReads>3||submission.lastRecoveryAt!==now)return null;
+  if(!intent||!submission||submission.version!==1||!['uncertain','observed'].includes(submission.phase)||!/^price_[A-Za-z0-9]{6,100}$/.test(submission.priceId)||!/^[a-f0-9]{64}$/.test(submission.bodyHash)||!Number.isSafeInteger(submission.armedAt)||submission.armedAt<intent.claimedAtSeconds||submission.armedAt>intent.grant.submitUntilSeconds||submission.idempotencyKey!=='restart:'+grant.id+':'+intent.claim||(activated?(!Number.isSafeInteger(submission.recoveryReads??0)||(submission.recoveryReads??0)<0||(submission.recoveryReads??0)>3||(submission.lastRecoveryAt!==undefined&&(!Number.isSafeInteger(submission.lastRecoveryAt)||submission.lastRecoveryAt>now))):(!Number.isSafeInteger(submission.recoveryReads)||submission.recoveryReads<1||submission.recoveryReads>3||submission.lastRecoveryAt!==now)))return null;
   const id=submission.phase==='observed'?submission.subscriptionId:null;
   if(id!==null&&(typeof id!=='string'||!/^sub_[A-Za-z0-9]{6,64}$/.test(id)))return null;
   const armed=Object.freeze({intent,priceId:submission.priceId,bodyHash:submission.bodyHash,armedAtSeconds:submission.armedAt,idempotencyKey:submission.idempotencyKey,
    // Recovery cannot carry a live submission permission from a current policy.
    policyBinding:''});
+  if(activated){
+   const bound=(ack[2] as string).split('|'),created=Number(bound[3]),start=Number(bound[5]),finish=Number(bound[6]);
+   if(!id||submission.phase!=='observed'||bound.length!==7||bound.join('|')!==ack[2]||bound[0]!==grant.id||bound[1]!==id||bound[2]!==grant.key||bound[4]!=='paid'||![created,start,finish].every(n=>Number.isSafeInteger(n)&&n>0)||created<submission.armedAt||created>grant.activationUntilSeconds||start<created||start>now||finish<=now||finish-start>31*86400||finish*1000>through||Math.floor(Date.now()/1000)>=finish)return null;
+   return {kind:'activated',armed,subscriptionId:id,createdSeconds:created,periodStartSeconds:start,periodEndSeconds:finish};
+  }
   return {kind:'read',armed,subscriptionId:id};
  }catch{return null;}
 }
