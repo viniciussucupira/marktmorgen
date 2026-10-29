@@ -42,8 +42,8 @@
    "options": [
     {
      "monthCents": 900,
-     "roomMonth": -47,
-     "roomYear": 290,
+     "roomMonth": -49,
+     "roomYear": 288,
      "netAtOnes": 340,
      "usageMonthAtOnes": 257,
      "demand": {
@@ -55,8 +55,8 @@
     },
     {
      "monthCents": 1900,
-     "roomMonth": 4,
-     "roomYear": 801,
+     "roomMonth": 2,
+     "roomYear": 799,
      "netAtOnes": 977,
      "usageMonthAtOnes": 257,
      "demand": {
@@ -68,8 +68,8 @@
     },
     {
      "monthCents": 2900,
-     "roomMonth": 57,
-     "roomYear": 1309,
+     "roomMonth": 55,
+     "roomYear": 1307,
      "netAtOnes": 1615,
      "usageMonthAtOnes": 257,
      "demand": {
@@ -81,8 +81,8 @@
     },
     {
      "monthCents": 3900,
-     "roomMonth": 107,
-     "roomYear": 1819,
+     "roomMonth": 105,
+     "roomYear": 1817,
      "netAtOnes": 2251,
      "usageMonthAtOnes": 257,
      "demand": {
@@ -94,8 +94,8 @@
     },
     {
      "monthCents": 4900,
-     "roomMonth": 156,
-     "roomYear": 2327,
+     "roomMonth": 154,
+     "roomYear": 2325,
      "netAtOnes": 2887,
      "usageMonthAtOnes": 257,
      "demand": {
@@ -107,8 +107,8 @@
     },
     {
      "monthCents": 5900,
-     "roomMonth": 209,
-     "roomYear": 2837,
+     "roomMonth": 207,
+     "roomYear": 2835,
      "netAtOnes": 3525,
      "usageMonthAtOnes": 257,
      "demand": {
@@ -120,8 +120,8 @@
     },
     {
      "monthCents": 6900,
-     "roomMonth": 259,
-     "roomYear": 3344,
+     "roomMonth": 257,
+     "roomYear": 3342,
      "netAtOnes": 4162,
      "usageMonthAtOnes": 257,
      "demand": {
@@ -133,8 +133,8 @@
     },
     {
      "monthCents": 7900,
-     "roomMonth": 310,
-     "roomYear": 3854,
+     "roomMonth": 308,
+     "roomYear": 3852,
      "netAtOnes": 4798,
      "usageMonthAtOnes": 257,
      "demand": {
@@ -146,8 +146,8 @@
     },
     {
      "monthCents": 8900,
-     "roomMonth": 360,
-     "roomYear": 4362,
+     "roomMonth": 358,
+     "roomYear": 4360,
      "netAtOnes": 5435,
      "usageMonthAtOnes": 257,
      "demand": {
@@ -159,8 +159,8 @@
     },
     {
      "monthCents": 9900,
-     "roomMonth": 412,
-     "roomYear": 4871,
+     "roomMonth": 410,
+     "roomYear": 4869,
      "netAtOnes": 6073,
      "usageMonthAtOnes": 257,
      "demand": {
@@ -172,8 +172,8 @@
     },
     {
      "monthCents": 10900,
-     "roomMonth": 463,
-     "roomYear": 5380,
+     "roomMonth": 461,
+     "roomYear": 5378,
      "netAtOnes": 6709,
      "usageMonthAtOnes": 257,
      "demand": {
@@ -185,8 +185,8 @@
     },
     {
      "monthCents": 11900,
-     "roomMonth": 513,
-     "roomYear": 5891,
+     "roomMonth": 511,
+     "roomYear": 5889,
      "netAtOnes": 7346,
      "usageMonthAtOnes": 257,
      "demand": {
@@ -198,8 +198,8 @@
     },
     {
      "monthCents": 12900,
-     "roomMonth": 566,
-     "roomYear": 6398,
+     "roomMonth": 564,
+     "roomYear": 6396,
      "netAtOnes": 7984,
      "usageMonthAtOnes": 257,
      "demand": {
@@ -248,8 +248,8 @@
    "options": [
     {
      "monthCents": 900,
-     "roomMonth": -47,
-     "roomYear": 290,
+     "roomMonth": -49,
+     "roomYear": 288,
      "netAtOnes": -1254,
      "usageMonthAtOnes": 1980,
      "demand": {
@@ -261,8 +261,8 @@
     },
     {
      "monthCents": 1900,
-     "roomMonth": 4,
-     "roomYear": 801,
+     "roomMonth": 2,
+     "roomYear": 799,
      "netAtOnes": -375,
      "usageMonthAtOnes": 1980,
      "demand": {
@@ -274,8 +274,8 @@
     },
     {
      "monthCents": 2900,
-     "roomMonth": 57,
-     "roomYear": 1309,
+     "roomMonth": 55,
+     "roomYear": 1307,
      "netAtOnes": 366,
      "usageMonthAtOnes": 1980,
      "demand": {
@@ -287,8 +287,8 @@
     },
     {
      "monthCents": 3900,
-     "roomMonth": 107,
-     "roomYear": 1819,
+     "roomMonth": 105,
+     "roomYear": 1817,
      "netAtOnes": 1002,
      "usageMonthAtOnes": 1980,
      "demand": {
@@ -300,8 +300,8 @@
     },
     {
      "monthCents": 4900,
-     "roomMonth": 156,
-     "roomYear": 2327,
+     "roomMonth": 154,
+     "roomYear": 2325,
      "netAtOnes": 1638,
      "usageMonthAtOnes": 1980,
      "demand": {
@@ -313,8 +313,8 @@
     },
     {
      "monthCents": 5900,
-     "roomMonth": 209,
-     "roomYear": 2837,
+     "roomMonth": 207,
+     "roomYear": 2835,
      "netAtOnes": 2276,
      "usageMonthAtOnes": 1980,
      "demand": {
@@ -326,8 +326,8 @@
     },
     {
      "monthCents": 6900,
-     "roomMonth": 259,
-     "roomYear": 3344,
+     "roomMonth": 257,
+     "roomYear": 3342,
      "netAtOnes": 2913,
      "usageMonthAtOnes": 1980,
      "demand": {
@@ -339,8 +339,8 @@
     },
     {
      "monthCents": 7900,
-     "roomMonth": 310,
-     "roomYear": 3854,
+     "roomMonth": 308,
+     "roomYear": 3852,
      "netAtOnes": 3549,
      "usageMonthAtOnes": 1980,
      "demand": {
@@ -352,8 +352,8 @@
     },
     {
      "monthCents": 8900,
-     "roomMonth": 360,
-     "roomYear": 4362,
+     "roomMonth": 358,
+     "roomYear": 4360,
      "netAtOnes": 4186,
      "usageMonthAtOnes": 1980,
      "demand": {
@@ -365,8 +365,8 @@
     },
     {
      "monthCents": 9900,
-     "roomMonth": 412,
-     "roomYear": 4871,
+     "roomMonth": 410,
+     "roomYear": 4869,
      "netAtOnes": 4824,
      "usageMonthAtOnes": 1980,
      "demand": {
@@ -378,8 +378,8 @@
     },
     {
      "monthCents": 10900,
-     "roomMonth": 463,
-     "roomYear": 5380,
+     "roomMonth": 461,
+     "roomYear": 5378,
      "netAtOnes": 5460,
      "usageMonthAtOnes": 1980,
      "demand": {
@@ -391,8 +391,8 @@
     },
     {
      "monthCents": 11900,
-     "roomMonth": 513,
-     "roomYear": 5891,
+     "roomMonth": 511,
+     "roomYear": 5889,
      "netAtOnes": 6097,
      "usageMonthAtOnes": 1980,
      "demand": {
@@ -404,8 +404,8 @@
     },
     {
      "monthCents": 12900,
-     "roomMonth": 566,
-     "roomYear": 6398,
+     "roomMonth": 564,
+     "roomYear": 6396,
      "netAtOnes": 6735,
      "usageMonthAtOnes": 1980,
      "demand": {
@@ -417,8 +417,8 @@
     },
     {
      "monthCents": 13900,
-     "roomMonth": 616,
-     "roomYear": 6908,
+     "roomMonth": 614,
+     "roomYear": 6906,
      "netAtOnes": 7371,
      "usageMonthAtOnes": 1980,
      "demand": {
@@ -430,8 +430,8 @@
     },
     {
      "monthCents": 14900,
-     "roomMonth": 666,
-     "roomYear": 7416,
+     "roomMonth": 664,
+     "roomYear": 7414,
      "netAtOnes": 8008,
      "usageMonthAtOnes": 1980,
      "demand": {
@@ -443,8 +443,8 @@
     },
     {
      "monthCents": 15900,
-     "roomMonth": 719,
-     "roomYear": 7926,
+     "roomMonth": 717,
+     "roomYear": 7924,
      "netAtOnes": 8646,
      "usageMonthAtOnes": 1980,
      "demand": {
@@ -456,8 +456,8 @@
     },
     {
      "monthCents": 16900,
-     "roomMonth": 768,
-     "roomYear": 8433,
+     "roomMonth": 766,
+     "roomYear": 8431,
      "netAtOnes": 9282,
      "usageMonthAtOnes": 1980,
      "demand": {
@@ -469,8 +469,8 @@
     },
     {
      "monthCents": 17900,
-     "roomMonth": 819,
-     "roomYear": 8944,
+     "roomMonth": 817,
+     "roomYear": 8942,
      "netAtOnes": 9918,
      "usageMonthAtOnes": 1980,
      "demand": {
@@ -482,8 +482,8 @@
     },
     {
      "monthCents": 18900,
-     "roomMonth": 867,
-     "roomYear": 9452,
+     "roomMonth": 865,
+     "roomYear": 9450,
      "netAtOnes": 10553,
      "usageMonthAtOnes": 1980,
      "demand": {
@@ -495,8 +495,8 @@
     },
     {
      "monthCents": 19900,
-     "roomMonth": 922,
-     "roomYear": 9961,
+     "roomMonth": 920,
+     "roomYear": 9959,
      "netAtOnes": 11193,
      "usageMonthAtOnes": 1980,
      "demand": {
@@ -508,8 +508,8 @@
     },
     {
      "monthCents": 20900,
-     "roomMonth": 972,
-     "roomYear": 10469,
+     "roomMonth": 970,
+     "roomYear": 10467,
      "netAtOnes": 11829,
      "usageMonthAtOnes": 1980,
      "demand": {
@@ -521,8 +521,8 @@
     },
     {
      "monthCents": 21900,
-     "roomMonth": 1021,
-     "roomYear": 10980,
+     "roomMonth": 1019,
+     "roomYear": 10978,
      "netAtOnes": 12465,
      "usageMonthAtOnes": 1980,
      "demand": {
@@ -534,8 +534,8 @@
     },
     {
      "monthCents": 22900,
-     "roomMonth": 1074,
-     "roomYear": 11487,
+     "roomMonth": 1072,
+     "roomYear": 11485,
      "netAtOnes": 13103,
      "usageMonthAtOnes": 1980,
      "demand": {
@@ -547,8 +547,8 @@
     },
     {
      "monthCents": 23900,
-     "roomMonth": 1124,
-     "roomYear": 11997,
+     "roomMonth": 1122,
+     "roomYear": 11995,
      "netAtOnes": 13740,
      "usageMonthAtOnes": 1980,
      "demand": {
@@ -560,8 +560,8 @@
     },
     {
      "monthCents": 24900,
-     "roomMonth": 1174,
-     "roomYear": 12506,
+     "roomMonth": 1172,
+     "roomYear": 12504,
      "netAtOnes": 14376,
      "usageMonthAtOnes": 1980,
      "demand": {
@@ -573,8 +573,8 @@
     },
     {
      "monthCents": 25900,
-     "roomMonth": 1227,
-     "roomYear": 13016,
+     "roomMonth": 1225,
+     "roomYear": 13014,
      "netAtOnes": 15014,
      "usageMonthAtOnes": 1980,
      "demand": {
@@ -586,8 +586,8 @@
     },
     {
      "monthCents": 26900,
-     "roomMonth": 1277,
-     "roomYear": 13523,
+     "roomMonth": 1275,
+     "roomYear": 13521,
      "netAtOnes": 15651,
      "usageMonthAtOnes": 1980,
      "demand": {
@@ -599,8 +599,8 @@
     },
     {
      "monthCents": 27900,
-     "roomMonth": 1327,
-     "roomYear": 14033,
+     "roomMonth": 1325,
+     "roomYear": 14031,
      "netAtOnes": 16287,
      "usageMonthAtOnes": 1980,
      "demand": {
@@ -612,8 +612,8 @@
     },
     {
      "monthCents": 28900,
-     "roomMonth": 1378,
-     "roomYear": 14541,
+     "roomMonth": 1376,
+     "roomYear": 14539,
      "netAtOnes": 16924,
      "usageMonthAtOnes": 1980,
      "demand": {
@@ -625,8 +625,8 @@
     },
     {
      "monthCents": 29900,
-     "roomMonth": 1431,
-     "roomYear": 15050,
+     "roomMonth": 1429,
+     "roomYear": 15048,
      "netAtOnes": 17562,
      "usageMonthAtOnes": 1980,
      "demand": {
@@ -638,8 +638,8 @@
     },
     {
      "monthCents": 30900,
-     "roomMonth": 1480,
-     "roomYear": 15558,
+     "roomMonth": 1478,
+     "roomYear": 15556,
      "netAtOnes": 18198,
      "usageMonthAtOnes": 1980,
      "demand": {
@@ -651,8 +651,8 @@
     },
     {
      "monthCents": 31900,
-     "roomMonth": 1532,
-     "roomYear": 16070,
+     "roomMonth": 1530,
+     "roomYear": 16068,
      "netAtOnes": 18835,
      "usageMonthAtOnes": 1980,
      "demand": {
@@ -664,8 +664,8 @@
     },
     {
      "monthCents": 32900,
-     "roomMonth": 1584,
-     "roomYear": 16577,
+     "roomMonth": 1582,
+     "roomYear": 16575,
      "netAtOnes": 19473,
      "usageMonthAtOnes": 1980,
      "demand": {
@@ -677,8 +677,8 @@
     },
     {
      "monthCents": 33900,
-     "roomMonth": 1633,
-     "roomYear": 17087,
+     "roomMonth": 1631,
+     "roomYear": 17085,
      "netAtOnes": 20109,
      "usageMonthAtOnes": 1980,
      "demand": {
@@ -690,8 +690,8 @@
     },
     {
      "monthCents": 34900,
-     "roomMonth": 1684,
-     "roomYear": 17595,
+     "roomMonth": 1682,
+     "roomYear": 17593,
      "netAtOnes": 20745,
      "usageMonthAtOnes": 1980,
      "demand": {
@@ -703,8 +703,8 @@
     },
     {
      "monthCents": 35900,
-     "roomMonth": 1736,
-     "roomYear": 18105,
+     "roomMonth": 1734,
+     "roomYear": 18103,
      "netAtOnes": 21383,
      "usageMonthAtOnes": 1980,
      "demand": {
@@ -716,8 +716,8 @@
     },
     {
      "monthCents": 36900,
-     "roomMonth": 1786,
-     "roomYear": 18612,
+     "roomMonth": 1784,
+     "roomYear": 18610,
      "netAtOnes": 22019,
      "usageMonthAtOnes": 1980,
      "demand": {
@@ -729,8 +729,8 @@
     },
     {
      "monthCents": 37900,
-     "roomMonth": 1838,
-     "roomYear": 19122,
+     "roomMonth": 1836,
+     "roomYear": 19120,
      "netAtOnes": 22657,
      "usageMonthAtOnes": 1980,
      "demand": {
@@ -742,8 +742,8 @@
     },
     {
      "monthCents": 38900,
-     "roomMonth": 1886,
-     "roomYear": 19630,
+     "roomMonth": 1884,
+     "roomYear": 19628,
      "netAtOnes": 23292,
      "usageMonthAtOnes": 1980,
      "demand": {
@@ -755,8 +755,8 @@
     },
     {
      "monthCents": 39900,
-     "roomMonth": 1939,
-     "roomYear": 20140,
+     "roomMonth": 1937,
+     "roomYear": 20138,
      "netAtOnes": 23930,
      "usageMonthAtOnes": 1980,
      "demand": {
@@ -768,8 +768,8 @@
     },
     {
      "monthCents": 40900,
-     "roomMonth": 1989,
-     "roomYear": 20648,
+     "roomMonth": 1987,
+     "roomYear": 20646,
      "netAtOnes": 24567,
      "usageMonthAtOnes": 1980,
      "demand": {
@@ -781,8 +781,8 @@
     },
     {
      "monthCents": 41900,
-     "roomMonth": 2039,
-     "roomYear": 21159,
+     "roomMonth": 2037,
+     "roomYear": 21157,
      "netAtOnes": 25203,
      "usageMonthAtOnes": 1980,
      "demand": {
@@ -794,8 +794,8 @@
     },
     {
      "monthCents": 42900,
-     "roomMonth": 2091,
-     "roomYear": 21666,
+     "roomMonth": 2089,
+     "roomYear": 21664,
      "netAtOnes": 25841,
      "usageMonthAtOnes": 1980,
      "demand": {
@@ -807,8 +807,8 @@
     },
     {
      "monthCents": 43900,
-     "roomMonth": 2142,
-     "roomYear": 22176,
+     "roomMonth": 2140,
+     "roomYear": 22174,
      "netAtOnes": 26478,
      "usageMonthAtOnes": 1980,
      "demand": {
@@ -820,8 +820,8 @@
     },
     {
      "monthCents": 44900,
-     "roomMonth": 2192,
-     "roomYear": 22684,
+     "roomMonth": 2190,
+     "roomYear": 22682,
      "netAtOnes": 27114,
      "usageMonthAtOnes": 1980,
      "demand": {
@@ -833,8 +833,8 @@
     },
     {
      "monthCents": 45900,
-     "roomMonth": 2244,
-     "roomYear": 23194,
+     "roomMonth": 2242,
+     "roomYear": 23192,
      "netAtOnes": 27752,
      "usageMonthAtOnes": 1980,
      "demand": {
@@ -846,8 +846,8 @@
     },
     {
      "monthCents": 46900,
-     "roomMonth": 2296,
-     "roomYear": 23702,
+     "roomMonth": 2294,
+     "roomYear": 23700,
      "netAtOnes": 28389,
      "usageMonthAtOnes": 1980,
      "demand": {
@@ -859,8 +859,8 @@
     },
     {
      "monthCents": 47900,
-     "roomMonth": 2345,
-     "roomYear": 24212,
+     "roomMonth": 2343,
+     "roomYear": 24210,
      "netAtOnes": 29025,
      "usageMonthAtOnes": 1980,
      "demand": {
@@ -872,8 +872,8 @@
     },
     {
      "monthCents": 48900,
-     "roomMonth": 2397,
-     "roomYear": 24720,
+     "roomMonth": 2395,
+     "roomYear": 24718,
      "netAtOnes": 29662,
      "usageMonthAtOnes": 1980,
      "demand": {
@@ -885,8 +885,8 @@
     },
     {
      "monthCents": 49900,
-     "roomMonth": 2449,
-     "roomYear": 25229,
+     "roomMonth": 2447,
+     "roomYear": 25227,
      "netAtOnes": 30300,
      "usageMonthAtOnes": 1980,
      "demand": {
@@ -898,8 +898,8 @@
     },
     {
      "monthCents": 50900,
-     "roomMonth": 2498,
-     "roomYear": 25737,
+     "roomMonth": 2496,
+     "roomYear": 25735,
      "netAtOnes": 30936,
      "usageMonthAtOnes": 1980,
      "demand": {
@@ -911,8 +911,8 @@
     },
     {
      "monthCents": 51900,
-     "roomMonth": 2549,
-     "roomYear": 26248,
+     "roomMonth": 2547,
+     "roomYear": 26246,
      "netAtOnes": 31573,
      "usageMonthAtOnes": 1980,
      "demand": {
@@ -924,8 +924,8 @@
     },
     {
      "monthCents": 52900,
-     "roomMonth": 2601,
-     "roomYear": 26755,
+     "roomMonth": 2599,
+     "roomYear": 26753,
      "netAtOnes": 32211,
      "usageMonthAtOnes": 1980,
      "demand": {
@@ -937,8 +937,8 @@
     },
     {
      "monthCents": 53900,
-     "roomMonth": 2651,
-     "roomYear": 27266,
+     "roomMonth": 2649,
+     "roomYear": 27264,
      "netAtOnes": 32846,
      "usageMonthAtOnes": 1980,
      "demand": {
@@ -950,8 +950,8 @@
     },
     {
      "monthCents": 54900,
-     "roomMonth": 2702,
-     "roomYear": 27774,
+     "roomMonth": 2700,
+     "roomYear": 27772,
      "netAtOnes": 33484,
      "usageMonthAtOnes": 1980,
      "demand": {
@@ -963,8 +963,8 @@
     },
     {
      "monthCents": 55900,
-     "roomMonth": 2755,
-     "roomYear": 28284,
+     "roomMonth": 2753,
+     "roomYear": 28282,
      "netAtOnes": 34122,
      "usageMonthAtOnes": 1980,
      "demand": {
@@ -976,8 +976,8 @@
     },
     {
      "monthCents": 56900,
-     "roomMonth": 2805,
-     "roomYear": 28791,
+     "roomMonth": 2803,
+     "roomYear": 28789,
      "netAtOnes": 34758,
      "usageMonthAtOnes": 1980,
      "demand": {
@@ -989,8 +989,8 @@
     },
     {
      "monthCents": 57900,
-     "roomMonth": 2855,
-     "roomYear": 29301,
+     "roomMonth": 2853,
+     "roomYear": 29299,
      "netAtOnes": 35395,
      "usageMonthAtOnes": 1980,
      "demand": {
@@ -1002,8 +1002,8 @@
     },
     {
      "monthCents": 58900,
-     "roomMonth": 2904,
-     "roomYear": 29809,
+     "roomMonth": 2902,
+     "roomYear": 29807,
      "netAtOnes": 36030,
      "usageMonthAtOnes": 1980,
      "demand": {
@@ -1015,8 +1015,8 @@
     },
     {
      "monthCents": 59900,
-     "roomMonth": 2956,
-     "roomYear": 30318,
+     "roomMonth": 2954,
+     "roomYear": 30316,
      "netAtOnes": 36668,
      "usageMonthAtOnes": 1980,
      "demand": {
@@ -1028,8 +1028,8 @@
     },
     {
      "monthCents": 60900,
-     "roomMonth": 3008,
-     "roomYear": 30827,
+     "roomMonth": 3006,
+     "roomYear": 30825,
      "netAtOnes": 37305,
      "usageMonthAtOnes": 1980,
      "demand": {
@@ -1041,8 +1041,8 @@
     },
     {
      "monthCents": 61900,
-     "roomMonth": 3057,
-     "roomYear": 31338,
+     "roomMonth": 3055,
+     "roomYear": 31336,
      "netAtOnes": 37941,
      "usageMonthAtOnes": 1980,
      "demand": {
@@ -1054,8 +1054,8 @@
     },
     {
      "monthCents": 62900,
-     "roomMonth": 3109,
-     "roomYear": 31845,
+     "roomMonth": 3107,
+     "roomYear": 31843,
      "netAtOnes": 38579,
      "usageMonthAtOnes": 1980,
      "demand": {
@@ -1067,8 +1067,8 @@
     },
     {
      "monthCents": 63900,
-     "roomMonth": 3160,
-     "roomYear": 32355,
+     "roomMonth": 3158,
+     "roomYear": 32353,
      "netAtOnes": 39215,
      "usageMonthAtOnes": 1980,
      "demand": {
@@ -1080,8 +1080,8 @@
     },
     {
      "monthCents": 64900,
-     "roomMonth": 3210,
-     "roomYear": 32863,
+     "roomMonth": 3208,
+     "roomYear": 32861,
      "netAtOnes": 39852,
      "usageMonthAtOnes": 1980,
      "demand": {
@@ -1093,8 +1093,8 @@
     },
     {
      "monthCents": 65900,
-     "roomMonth": 3263,
-     "roomYear": 33373,
+     "roomMonth": 3261,
+     "roomYear": 33371,
      "netAtOnes": 40490,
      "usageMonthAtOnes": 1980,
      "demand": {
@@ -1106,8 +1106,8 @@
     },
     {
      "monthCents": 66900,
-     "roomMonth": 3314,
-     "roomYear": 33880,
+     "roomMonth": 3312,
+     "roomYear": 33878,
      "netAtOnes": 41127,
      "usageMonthAtOnes": 1980,
      "demand": {
@@ -1119,8 +1119,8 @@
     },
     {
      "monthCents": 67900,
-     "roomMonth": 3363,
-     "roomYear": 34390,
+     "roomMonth": 3361,
+     "roomYear": 34388,
      "netAtOnes": 41763,
      "usageMonthAtOnes": 1980,
      "demand": {
@@ -1132,8 +1132,8 @@
     },
     {
      "monthCents": 68900,
-     "roomMonth": 3414,
-     "roomYear": 34899,
+     "roomMonth": 3412,
+     "roomYear": 34897,
      "netAtOnes": 42400,
      "usageMonthAtOnes": 1980,
      "demand": {
@@ -1145,8 +1145,8 @@
     },
     {
      "monthCents": 69900,
-     "roomMonth": 3466,
-     "roomYear": 35408,
+     "roomMonth": 3464,
+     "roomYear": 35406,
      "netAtOnes": 43038,
      "usageMonthAtOnes": 1980,
      "demand": {
@@ -1158,8 +1158,8 @@
     },
     {
      "monthCents": 70900,
-     "roomMonth": 3516,
-     "roomYear": 35916,
+     "roomMonth": 3514,
+     "roomYear": 35914,
      "netAtOnes": 43674,
      "usageMonthAtOnes": 1980,
      "demand": {
@@ -1171,8 +1171,8 @@
     },
     {
      "monthCents": 71900,
-     "roomMonth": 3566,
-     "roomYear": 36427,
+     "roomMonth": 3564,
+     "roomYear": 36425,
      "netAtOnes": 44310,
      "usageMonthAtOnes": 1980,
      "demand": {
@@ -1184,8 +1184,8 @@
     },
     {
      "monthCents": 72900,
-     "roomMonth": 3619,
-     "roomYear": 36934,
+     "roomMonth": 3617,
+     "roomYear": 36932,
      "netAtOnes": 44949,
      "usageMonthAtOnes": 1980,
      "demand": {
@@ -1197,8 +1197,8 @@
     },
     {
      "monthCents": 73900,
-     "roomMonth": 3670,
-     "roomYear": 37444,
+     "roomMonth": 3668,
+     "roomYear": 37442,
      "netAtOnes": 45585,
      "usageMonthAtOnes": 1980,
      "demand": {
@@ -1210,8 +1210,8 @@
     },
     {
      "monthCents": 74900,
-     "roomMonth": 3720,
-     "roomYear": 37952,
+     "roomMonth": 3718,
+     "roomYear": 37950,
      "netAtOnes": 46222,
      "usageMonthAtOnes": 1980,
      "demand": {
@@ -1223,8 +1223,8 @@
     },
     {
      "monthCents": 75900,
-     "roomMonth": 3773,
-     "roomYear": 38463,
+     "roomMonth": 3771,
+     "roomYear": 38461,
      "netAtOnes": 46860,
      "usageMonthAtOnes": 1980,
      "demand": {
@@ -1236,8 +1236,8 @@
     },
     {
      "monthCents": 76900,
-     "roomMonth": 3822,
-     "roomYear": 38970,
+     "roomMonth": 3820,
+     "roomYear": 38968,
      "netAtOnes": 47496,
      "usageMonthAtOnes": 1980,
      "demand": {
@@ -1249,8 +1249,8 @@
     },
     {
      "monthCents": 77900,
-     "roomMonth": 3873,
-     "roomYear": 39480,
+     "roomMonth": 3871,
+     "roomYear": 39478,
      "netAtOnes": 48132,
      "usageMonthAtOnes": 1980,
      "demand": {
@@ -1262,8 +1262,8 @@
     },
     {
      "monthCents": 78900,
-     "roomMonth": 3922,
-     "roomYear": 39988,
+     "roomMonth": 3920,
+     "roomYear": 39986,
      "netAtOnes": 48768,
      "usageMonthAtOnes": 1980,
      "demand": {
@@ -1275,8 +1275,8 @@
     },
     {
      "monthCents": 79900,
-     "roomMonth": 3974,
-     "roomYear": 40497,
+     "roomMonth": 3972,
+     "roomYear": 40495,
      "netAtOnes": 49406,
      "usageMonthAtOnes": 1980,
      "demand": {
@@ -1288,8 +1288,8 @@
     },
     {
      "monthCents": 80900,
-     "roomMonth": 4025,
-     "roomYear": 41005,
+     "roomMonth": 4023,
+     "roomYear": 41003,
      "netAtOnes": 50043,
      "usageMonthAtOnes": 1980,
      "demand": {
@@ -1301,8 +1301,8 @@
     },
     {
      "monthCents": 81900,
-     "roomMonth": 4074,
-     "roomYear": 41516,
+     "roomMonth": 4072,
+     "roomYear": 41514,
      "netAtOnes": 50678,
      "usageMonthAtOnes": 1980,
      "demand": {
@@ -1314,8 +1314,8 @@
     },
     {
      "monthCents": 82900,
-     "roomMonth": 4128,
-     "roomYear": 42024,
+     "roomMonth": 4126,
+     "roomYear": 42022,
      "netAtOnes": 51317,
      "usageMonthAtOnes": 1980,
      "demand": {
@@ -1327,8 +1327,8 @@
     },
     {
      "monthCents": 83900,
-     "roomMonth": 4178,
-     "roomYear": 42534,
+     "roomMonth": 4176,
+     "roomYear": 42532,
      "netAtOnes": 51954,
      "usageMonthAtOnes": 1980,
      "demand": {
@@ -1340,8 +1340,8 @@
     },
     {
      "monthCents": 84900,
-     "roomMonth": 4228,
-     "roomYear": 43042,
+     "roomMonth": 4226,
+     "roomYear": 43040,
      "netAtOnes": 52590,
      "usageMonthAtOnes": 1980,
      "demand": {
@@ -1353,8 +1353,8 @@
     },
     {
      "monthCents": 85900,
-     "roomMonth": 4281,
-     "roomYear": 43552,
+     "roomMonth": 4279,
+     "roomYear": 43550,
      "netAtOnes": 53228,
      "usageMonthAtOnes": 1980,
      "demand": {
@@ -1366,8 +1366,8 @@
     },
     {
      "monthCents": 86900,
-     "roomMonth": 4331,
-     "roomYear": 44059,
+     "roomMonth": 4329,
+     "roomYear": 44057,
      "netAtOnes": 53865,
      "usageMonthAtOnes": 1980,
      "demand": {
@@ -1379,8 +1379,8 @@
     },
     {
      "monthCents": 87900,
-     "roomMonth": 4381,
-     "roomYear": 44569,
+     "roomMonth": 4379,
+     "roomYear": 44567,
      "netAtOnes": 54501,
      "usageMonthAtOnes": 1980,
      "demand": {
@@ -1392,8 +1392,8 @@
     },
     {
      "monthCents": 88900,
-     "roomMonth": 4431,
-     "roomYear": 45077,
+     "roomMonth": 4429,
+     "roomYear": 45075,
      "netAtOnes": 55137,
      "usageMonthAtOnes": 1980,
      "demand": {
@@ -1442,8 +1442,8 @@
    "options": [
     {
      "monthCents": 900,
-     "roomMonth": -47,
-     "roomYear": 290,
+     "roomMonth": -49,
+     "roomYear": 288,
      "netAtOnes": -3647,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -1455,8 +1455,8 @@
     },
     {
      "monthCents": 1900,
-     "roomMonth": 4,
-     "roomYear": 801,
+     "roomMonth": 2,
+     "roomYear": 799,
      "netAtOnes": -2768,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -1468,8 +1468,8 @@
     },
     {
      "monthCents": 2900,
-     "roomMonth": 57,
-     "roomYear": 1309,
+     "roomMonth": 55,
+     "roomYear": 1307,
      "netAtOnes": -1888,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -1481,8 +1481,8 @@
     },
     {
      "monthCents": 3900,
-     "roomMonth": 107,
-     "roomYear": 1819,
+     "roomMonth": 105,
+     "roomYear": 1817,
      "netAtOnes": -1010,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -1494,8 +1494,8 @@
     },
     {
      "monthCents": 4900,
-     "roomMonth": 156,
-     "roomYear": 2327,
+     "roomMonth": 154,
+     "roomYear": 2325,
      "netAtOnes": -133,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -1507,8 +1507,8 @@
     },
     {
      "monthCents": 5900,
-     "roomMonth": 209,
-     "roomYear": 2837,
+     "roomMonth": 207,
+     "roomYear": 2835,
      "netAtOnes": 541,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -1520,8 +1520,8 @@
     },
     {
      "monthCents": 6900,
-     "roomMonth": 259,
-     "roomYear": 3344,
+     "roomMonth": 257,
+     "roomYear": 3342,
      "netAtOnes": 1178,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -1533,8 +1533,8 @@
     },
     {
      "monthCents": 7900,
-     "roomMonth": 310,
-     "roomYear": 3854,
+     "roomMonth": 308,
+     "roomYear": 3852,
      "netAtOnes": 1814,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -1546,8 +1546,8 @@
     },
     {
      "monthCents": 8900,
-     "roomMonth": 360,
-     "roomYear": 4362,
+     "roomMonth": 358,
+     "roomYear": 4360,
      "netAtOnes": 2451,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -1559,8 +1559,8 @@
     },
     {
      "monthCents": 9900,
-     "roomMonth": 412,
-     "roomYear": 4871,
+     "roomMonth": 410,
+     "roomYear": 4869,
      "netAtOnes": 3089,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -1572,8 +1572,8 @@
     },
     {
      "monthCents": 10900,
-     "roomMonth": 463,
-     "roomYear": 5380,
+     "roomMonth": 461,
+     "roomYear": 5378,
      "netAtOnes": 3725,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -1585,8 +1585,8 @@
     },
     {
      "monthCents": 11900,
-     "roomMonth": 513,
-     "roomYear": 5891,
+     "roomMonth": 511,
+     "roomYear": 5889,
      "netAtOnes": 4362,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -1598,8 +1598,8 @@
     },
     {
      "monthCents": 12900,
-     "roomMonth": 566,
-     "roomYear": 6398,
+     "roomMonth": 564,
+     "roomYear": 6396,
      "netAtOnes": 5000,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -1611,8 +1611,8 @@
     },
     {
      "monthCents": 13900,
-     "roomMonth": 616,
-     "roomYear": 6908,
+     "roomMonth": 614,
+     "roomYear": 6906,
      "netAtOnes": 5636,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -1624,8 +1624,8 @@
     },
     {
      "monthCents": 14900,
-     "roomMonth": 666,
-     "roomYear": 7416,
+     "roomMonth": 664,
+     "roomYear": 7414,
      "netAtOnes": 6273,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -1637,8 +1637,8 @@
     },
     {
      "monthCents": 15900,
-     "roomMonth": 719,
-     "roomYear": 7926,
+     "roomMonth": 717,
+     "roomYear": 7924,
      "netAtOnes": 6911,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -1650,8 +1650,8 @@
     },
     {
      "monthCents": 16900,
-     "roomMonth": 768,
-     "roomYear": 8433,
+     "roomMonth": 766,
+     "roomYear": 8431,
      "netAtOnes": 7547,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -1663,8 +1663,8 @@
     },
     {
      "monthCents": 17900,
-     "roomMonth": 819,
-     "roomYear": 8944,
+     "roomMonth": 817,
+     "roomYear": 8942,
      "netAtOnes": 8183,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -1676,8 +1676,8 @@
     },
     {
      "monthCents": 18900,
-     "roomMonth": 867,
-     "roomYear": 9452,
+     "roomMonth": 865,
+     "roomYear": 9450,
      "netAtOnes": 8818,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -1689,8 +1689,8 @@
     },
     {
      "monthCents": 19900,
-     "roomMonth": 922,
-     "roomYear": 9961,
+     "roomMonth": 920,
+     "roomYear": 9959,
      "netAtOnes": 9458,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -1702,8 +1702,8 @@
     },
     {
      "monthCents": 20900,
-     "roomMonth": 972,
-     "roomYear": 10469,
+     "roomMonth": 970,
+     "roomYear": 10467,
      "netAtOnes": 10094,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -1715,8 +1715,8 @@
     },
     {
      "monthCents": 21900,
-     "roomMonth": 1021,
-     "roomYear": 10980,
+     "roomMonth": 1019,
+     "roomYear": 10978,
      "netAtOnes": 10730,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -1728,8 +1728,8 @@
     },
     {
      "monthCents": 22900,
-     "roomMonth": 1074,
-     "roomYear": 11487,
+     "roomMonth": 1072,
+     "roomYear": 11485,
      "netAtOnes": 11368,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -1741,8 +1741,8 @@
     },
     {
      "monthCents": 23900,
-     "roomMonth": 1124,
-     "roomYear": 11997,
+     "roomMonth": 1122,
+     "roomYear": 11995,
      "netAtOnes": 12005,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -1754,8 +1754,8 @@
     },
     {
      "monthCents": 24900,
-     "roomMonth": 1174,
-     "roomYear": 12506,
+     "roomMonth": 1172,
+     "roomYear": 12504,
      "netAtOnes": 12641,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -1767,8 +1767,8 @@
     },
     {
      "monthCents": 25900,
-     "roomMonth": 1227,
-     "roomYear": 13016,
+     "roomMonth": 1225,
+     "roomYear": 13014,
      "netAtOnes": 13279,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -1780,8 +1780,8 @@
     },
     {
      "monthCents": 26900,
-     "roomMonth": 1277,
-     "roomYear": 13523,
+     "roomMonth": 1275,
+     "roomYear": 13521,
      "netAtOnes": 13916,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -1793,8 +1793,8 @@
     },
     {
      "monthCents": 27900,
-     "roomMonth": 1327,
-     "roomYear": 14033,
+     "roomMonth": 1325,
+     "roomYear": 14031,
      "netAtOnes": 14552,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -1806,8 +1806,8 @@
     },
     {
      "monthCents": 28900,
-     "roomMonth": 1378,
-     "roomYear": 14541,
+     "roomMonth": 1376,
+     "roomYear": 14539,
      "netAtOnes": 15189,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -1819,8 +1819,8 @@
     },
     {
      "monthCents": 29900,
-     "roomMonth": 1431,
-     "roomYear": 15050,
+     "roomMonth": 1429,
+     "roomYear": 15048,
      "netAtOnes": 15827,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -1832,8 +1832,8 @@
     },
     {
      "monthCents": 30900,
-     "roomMonth": 1480,
-     "roomYear": 15558,
+     "roomMonth": 1478,
+     "roomYear": 15556,
      "netAtOnes": 16463,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -1845,8 +1845,8 @@
     },
     {
      "monthCents": 31900,
-     "roomMonth": 1532,
-     "roomYear": 16070,
+     "roomMonth": 1530,
+     "roomYear": 16068,
      "netAtOnes": 17100,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -1858,8 +1858,8 @@
     },
     {
      "monthCents": 32900,
-     "roomMonth": 1584,
-     "roomYear": 16577,
+     "roomMonth": 1582,
+     "roomYear": 16575,
      "netAtOnes": 17738,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -1871,8 +1871,8 @@
     },
     {
      "monthCents": 33900,
-     "roomMonth": 1633,
-     "roomYear": 17087,
+     "roomMonth": 1631,
+     "roomYear": 17085,
      "netAtOnes": 18374,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -1884,8 +1884,8 @@
     },
     {
      "monthCents": 34900,
-     "roomMonth": 1684,
-     "roomYear": 17595,
+     "roomMonth": 1682,
+     "roomYear": 17593,
      "netAtOnes": 19010,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -1897,8 +1897,8 @@
     },
     {
      "monthCents": 35900,
-     "roomMonth": 1736,
-     "roomYear": 18105,
+     "roomMonth": 1734,
+     "roomYear": 18103,
      "netAtOnes": 19648,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -1910,8 +1910,8 @@
     },
     {
      "monthCents": 36900,
-     "roomMonth": 1786,
-     "roomYear": 18612,
+     "roomMonth": 1784,
+     "roomYear": 18610,
      "netAtOnes": 20284,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -1923,8 +1923,8 @@
     },
     {
      "monthCents": 37900,
-     "roomMonth": 1838,
-     "roomYear": 19122,
+     "roomMonth": 1836,
+     "roomYear": 19120,
      "netAtOnes": 20922,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -1936,8 +1936,8 @@
     },
     {
      "monthCents": 38900,
-     "roomMonth": 1886,
-     "roomYear": 19630,
+     "roomMonth": 1884,
+     "roomYear": 19628,
      "netAtOnes": 21557,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -1949,8 +1949,8 @@
     },
     {
      "monthCents": 39900,
-     "roomMonth": 1939,
-     "roomYear": 20140,
+     "roomMonth": 1937,
+     "roomYear": 20138,
      "netAtOnes": 22195,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -1962,8 +1962,8 @@
     },
     {
      "monthCents": 40900,
-     "roomMonth": 1989,
-     "roomYear": 20648,
+     "roomMonth": 1987,
+     "roomYear": 20646,
      "netAtOnes": 22832,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -1975,8 +1975,8 @@
     },
     {
      "monthCents": 41900,
-     "roomMonth": 2039,
-     "roomYear": 21159,
+     "roomMonth": 2037,
+     "roomYear": 21157,
      "netAtOnes": 23468,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -1988,8 +1988,8 @@
     },
     {
      "monthCents": 42900,
-     "roomMonth": 2091,
-     "roomYear": 21666,
+     "roomMonth": 2089,
+     "roomYear": 21664,
      "netAtOnes": 24106,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -2001,8 +2001,8 @@
     },
     {
      "monthCents": 43900,
-     "roomMonth": 2142,
-     "roomYear": 22176,
+     "roomMonth": 2140,
+     "roomYear": 22174,
      "netAtOnes": 24743,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -2014,8 +2014,8 @@
     },
     {
      "monthCents": 44900,
-     "roomMonth": 2192,
-     "roomYear": 22684,
+     "roomMonth": 2190,
+     "roomYear": 22682,
      "netAtOnes": 25379,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -2027,8 +2027,8 @@
     },
     {
      "monthCents": 45900,
-     "roomMonth": 2244,
-     "roomYear": 23194,
+     "roomMonth": 2242,
+     "roomYear": 23192,
      "netAtOnes": 26017,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -2040,8 +2040,8 @@
     },
     {
      "monthCents": 46900,
-     "roomMonth": 2296,
-     "roomYear": 23702,
+     "roomMonth": 2294,
+     "roomYear": 23700,
      "netAtOnes": 26654,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -2053,8 +2053,8 @@
     },
     {
      "monthCents": 47900,
-     "roomMonth": 2345,
-     "roomYear": 24212,
+     "roomMonth": 2343,
+     "roomYear": 24210,
      "netAtOnes": 27290,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -2066,8 +2066,8 @@
     },
     {
      "monthCents": 48900,
-     "roomMonth": 2397,
-     "roomYear": 24720,
+     "roomMonth": 2395,
+     "roomYear": 24718,
      "netAtOnes": 27927,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -2079,8 +2079,8 @@
     },
     {
      "monthCents": 49900,
-     "roomMonth": 2449,
-     "roomYear": 25229,
+     "roomMonth": 2447,
+     "roomYear": 25227,
      "netAtOnes": 28565,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -2092,8 +2092,8 @@
     },
     {
      "monthCents": 50900,
-     "roomMonth": 2498,
-     "roomYear": 25737,
+     "roomMonth": 2496,
+     "roomYear": 25735,
      "netAtOnes": 29201,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -2105,8 +2105,8 @@
     },
     {
      "monthCents": 51900,
-     "roomMonth": 2549,
-     "roomYear": 26248,
+     "roomMonth": 2547,
+     "roomYear": 26246,
      "netAtOnes": 29838,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -2118,8 +2118,8 @@
     },
     {
      "monthCents": 52900,
-     "roomMonth": 2601,
-     "roomYear": 26755,
+     "roomMonth": 2599,
+     "roomYear": 26753,
      "netAtOnes": 30476,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -2131,8 +2131,8 @@
     },
     {
      "monthCents": 53900,
-     "roomMonth": 2651,
-     "roomYear": 27266,
+     "roomMonth": 2649,
+     "roomYear": 27264,
      "netAtOnes": 31111,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -2144,8 +2144,8 @@
     },
     {
      "monthCents": 54900,
-     "roomMonth": 2702,
-     "roomYear": 27774,
+     "roomMonth": 2700,
+     "roomYear": 27772,
      "netAtOnes": 31749,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -2157,8 +2157,8 @@
     },
     {
      "monthCents": 55900,
-     "roomMonth": 2755,
-     "roomYear": 28284,
+     "roomMonth": 2753,
+     "roomYear": 28282,
      "netAtOnes": 32387,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -2170,8 +2170,8 @@
     },
     {
      "monthCents": 56900,
-     "roomMonth": 2805,
-     "roomYear": 28791,
+     "roomMonth": 2803,
+     "roomYear": 28789,
      "netAtOnes": 33023,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -2183,8 +2183,8 @@
     },
     {
      "monthCents": 57900,
-     "roomMonth": 2855,
-     "roomYear": 29301,
+     "roomMonth": 2853,
+     "roomYear": 29299,
      "netAtOnes": 33660,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -2196,8 +2196,8 @@
     },
     {
      "monthCents": 58900,
-     "roomMonth": 2904,
-     "roomYear": 29809,
+     "roomMonth": 2902,
+     "roomYear": 29807,
      "netAtOnes": 34295,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -2209,8 +2209,8 @@
     },
     {
      "monthCents": 59900,
-     "roomMonth": 2956,
-     "roomYear": 30318,
+     "roomMonth": 2954,
+     "roomYear": 30316,
      "netAtOnes": 34933,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -2222,8 +2222,8 @@
     },
     {
      "monthCents": 60900,
-     "roomMonth": 3008,
-     "roomYear": 30827,
+     "roomMonth": 3006,
+     "roomYear": 30825,
      "netAtOnes": 35570,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -2235,8 +2235,8 @@
     },
     {
      "monthCents": 61900,
-     "roomMonth": 3057,
-     "roomYear": 31338,
+     "roomMonth": 3055,
+     "roomYear": 31336,
      "netAtOnes": 36206,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -2248,8 +2248,8 @@
     },
     {
      "monthCents": 62900,
-     "roomMonth": 3109,
-     "roomYear": 31845,
+     "roomMonth": 3107,
+     "roomYear": 31843,
      "netAtOnes": 36844,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -2261,8 +2261,8 @@
     },
     {
      "monthCents": 63900,
-     "roomMonth": 3160,
-     "roomYear": 32355,
+     "roomMonth": 3158,
+     "roomYear": 32353,
      "netAtOnes": 37481,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -2274,8 +2274,8 @@
     },
     {
      "monthCents": 64900,
-     "roomMonth": 3210,
-     "roomYear": 32863,
+     "roomMonth": 3208,
+     "roomYear": 32861,
      "netAtOnes": 38117,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -2287,8 +2287,8 @@
     },
     {
      "monthCents": 65900,
-     "roomMonth": 3263,
-     "roomYear": 33373,
+     "roomMonth": 3261,
+     "roomYear": 33371,
      "netAtOnes": 38755,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -2300,8 +2300,8 @@
     },
     {
      "monthCents": 66900,
-     "roomMonth": 3314,
-     "roomYear": 33880,
+     "roomMonth": 3312,
+     "roomYear": 33878,
      "netAtOnes": 39392,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -2313,8 +2313,8 @@
     },
     {
      "monthCents": 67900,
-     "roomMonth": 3363,
-     "roomYear": 34390,
+     "roomMonth": 3361,
+     "roomYear": 34388,
      "netAtOnes": 40028,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -2326,8 +2326,8 @@
     },
     {
      "monthCents": 68900,
-     "roomMonth": 3414,
-     "roomYear": 34899,
+     "roomMonth": 3412,
+     "roomYear": 34897,
      "netAtOnes": 40665,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -2339,8 +2339,8 @@
     },
     {
      "monthCents": 69900,
-     "roomMonth": 3466,
-     "roomYear": 35408,
+     "roomMonth": 3464,
+     "roomYear": 35406,
      "netAtOnes": 41303,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -2352,8 +2352,8 @@
     },
     {
      "monthCents": 70900,
-     "roomMonth": 3516,
-     "roomYear": 35916,
+     "roomMonth": 3514,
+     "roomYear": 35914,
      "netAtOnes": 41939,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -2365,8 +2365,8 @@
     },
     {
      "monthCents": 71900,
-     "roomMonth": 3566,
-     "roomYear": 36427,
+     "roomMonth": 3564,
+     "roomYear": 36425,
      "netAtOnes": 42575,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -2378,8 +2378,8 @@
     },
     {
      "monthCents": 72900,
-     "roomMonth": 3619,
-     "roomYear": 36934,
+     "roomMonth": 3617,
+     "roomYear": 36932,
      "netAtOnes": 43214,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -2391,8 +2391,8 @@
     },
     {
      "monthCents": 73900,
-     "roomMonth": 3670,
-     "roomYear": 37444,
+     "roomMonth": 3668,
+     "roomYear": 37442,
      "netAtOnes": 43850,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -2404,8 +2404,8 @@
     },
     {
      "monthCents": 74900,
-     "roomMonth": 3720,
-     "roomYear": 37952,
+     "roomMonth": 3718,
+     "roomYear": 37950,
      "netAtOnes": 44487,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -2417,8 +2417,8 @@
     },
     {
      "monthCents": 75900,
-     "roomMonth": 3773,
-     "roomYear": 38463,
+     "roomMonth": 3771,
+     "roomYear": 38461,
      "netAtOnes": 45125,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -2430,8 +2430,8 @@
     },
     {
      "monthCents": 76900,
-     "roomMonth": 3822,
-     "roomYear": 38970,
+     "roomMonth": 3820,
+     "roomYear": 38968,
      "netAtOnes": 45761,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -2443,8 +2443,8 @@
     },
     {
      "monthCents": 77900,
-     "roomMonth": 3873,
-     "roomYear": 39480,
+     "roomMonth": 3871,
+     "roomYear": 39478,
      "netAtOnes": 46397,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -2456,8 +2456,8 @@
     },
     {
      "monthCents": 78900,
-     "roomMonth": 3922,
-     "roomYear": 39988,
+     "roomMonth": 3920,
+     "roomYear": 39986,
      "netAtOnes": 47033,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -2469,8 +2469,8 @@
     },
     {
      "monthCents": 79900,
-     "roomMonth": 3974,
-     "roomYear": 40497,
+     "roomMonth": 3972,
+     "roomYear": 40495,
      "netAtOnes": 47671,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -2482,8 +2482,8 @@
     },
     {
      "monthCents": 80900,
-     "roomMonth": 4025,
-     "roomYear": 41005,
+     "roomMonth": 4023,
+     "roomYear": 41003,
      "netAtOnes": 48308,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -2495,8 +2495,8 @@
     },
     {
      "monthCents": 81900,
-     "roomMonth": 4074,
-     "roomYear": 41516,
+     "roomMonth": 4072,
+     "roomYear": 41514,
      "netAtOnes": 48944,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -2508,8 +2508,8 @@
     },
     {
      "monthCents": 82900,
-     "roomMonth": 4128,
-     "roomYear": 42024,
+     "roomMonth": 4126,
+     "roomYear": 42022,
      "netAtOnes": 49582,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -2521,8 +2521,8 @@
     },
     {
      "monthCents": 83900,
-     "roomMonth": 4178,
-     "roomYear": 42534,
+     "roomMonth": 4176,
+     "roomYear": 42532,
      "netAtOnes": 50219,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -2534,8 +2534,8 @@
     },
     {
      "monthCents": 84900,
-     "roomMonth": 4228,
-     "roomYear": 43042,
+     "roomMonth": 4226,
+     "roomYear": 43040,
      "netAtOnes": 50855,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -2547,8 +2547,8 @@
     },
     {
      "monthCents": 85900,
-     "roomMonth": 4281,
-     "roomYear": 43552,
+     "roomMonth": 4279,
+     "roomYear": 43550,
      "netAtOnes": 51493,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -2560,8 +2560,8 @@
     },
     {
      "monthCents": 86900,
-     "roomMonth": 4331,
-     "roomYear": 44059,
+     "roomMonth": 4329,
+     "roomYear": 44057,
      "netAtOnes": 52130,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -2573,8 +2573,8 @@
     },
     {
      "monthCents": 87900,
-     "roomMonth": 4381,
-     "roomYear": 44569,
+     "roomMonth": 4379,
+     "roomYear": 44567,
      "netAtOnes": 52766,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -2586,8 +2586,8 @@
     },
     {
      "monthCents": 88900,
-     "roomMonth": 4431,
-     "roomYear": 45077,
+     "roomMonth": 4429,
+     "roomYear": 45075,
      "netAtOnes": 53402,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -2599,8 +2599,8 @@
     },
     {
      "monthCents": 89900,
-     "roomMonth": 4484,
-     "roomYear": 45587,
+     "roomMonth": 4482,
+     "roomYear": 45585,
      "netAtOnes": 54040,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -2612,8 +2612,8 @@
     },
     {
      "monthCents": 90900,
-     "roomMonth": 4534,
-     "roomYear": 46095,
+     "roomMonth": 4532,
+     "roomYear": 46093,
      "netAtOnes": 54677,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -2625,8 +2625,8 @@
     },
     {
      "monthCents": 91900,
-     "roomMonth": 4585,
-     "roomYear": 46606,
+     "roomMonth": 4583,
+     "roomYear": 46604,
      "netAtOnes": 55314,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -2638,8 +2638,8 @@
     },
     {
      "monthCents": 92900,
-     "roomMonth": 4638,
-     "roomYear": 47113,
+     "roomMonth": 4636,
+     "roomYear": 47111,
      "netAtOnes": 55952,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -2651,8 +2651,8 @@
     },
     {
      "monthCents": 93900,
-     "roomMonth": 4687,
-     "roomYear": 47623,
+     "roomMonth": 4685,
+     "roomYear": 47621,
      "netAtOnes": 56588,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -2664,8 +2664,8 @@
     },
     {
      "monthCents": 94900,
-     "roomMonth": 4738,
-     "roomYear": 48131,
+     "roomMonth": 4736,
+     "roomYear": 48129,
      "netAtOnes": 57224,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -2677,8 +2677,8 @@
     },
     {
      "monthCents": 95900,
-     "roomMonth": 4791,
-     "roomYear": 48641,
+     "roomMonth": 4789,
+     "roomYear": 48639,
      "netAtOnes": 57863,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -2690,8 +2690,8 @@
     },
     {
      "monthCents": 96900,
-     "roomMonth": 4840,
-     "roomYear": 49148,
+     "roomMonth": 4838,
+     "roomYear": 49146,
      "netAtOnes": 58499,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -2703,8 +2703,8 @@
     },
     {
      "monthCents": 97900,
-     "roomMonth": 4891,
-     "roomYear": 49659,
+     "roomMonth": 4889,
+     "roomYear": 49657,
      "netAtOnes": 59136,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -2716,8 +2716,8 @@
     },
     {
      "monthCents": 98900,
-     "roomMonth": 4939,
-     "roomYear": 50167,
+     "roomMonth": 4937,
+     "roomYear": 50165,
      "netAtOnes": 59771,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -2729,8 +2729,8 @@
     },
     {
      "monthCents": 99900,
-     "roomMonth": 4992,
-     "roomYear": 50676,
+     "roomMonth": 4990,
+     "roomYear": 50674,
      "netAtOnes": 60409,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -2742,8 +2742,8 @@
     },
     {
      "monthCents": 100900,
-     "roomMonth": 5042,
-     "roomYear": 51184,
+     "roomMonth": 5040,
+     "roomYear": 51182,
      "netAtOnes": 61045,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -2755,8 +2755,8 @@
     },
     {
      "monthCents": 101900,
-     "roomMonth": 5093,
-     "roomYear": 51695,
+     "roomMonth": 5091,
+     "roomYear": 51693,
      "netAtOnes": 61683,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -2768,8 +2768,8 @@
     },
     {
      "monthCents": 102900,
-     "roomMonth": 5146,
-     "roomYear": 52202,
+     "roomMonth": 5144,
+     "roomYear": 52200,
      "netAtOnes": 62321,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -2781,8 +2781,8 @@
     },
     {
      "monthCents": 103900,
-     "roomMonth": 5196,
-     "roomYear": 52712,
+     "roomMonth": 5194,
+     "roomYear": 52710,
      "netAtOnes": 62957,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -2794,8 +2794,8 @@
     },
     {
      "monthCents": 104900,
-     "roomMonth": 5246,
-     "roomYear": 53221,
+     "roomMonth": 5244,
+     "roomYear": 53219,
      "netAtOnes": 63593,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -2807,8 +2807,8 @@
     },
     {
      "monthCents": 105900,
-     "roomMonth": 5298,
-     "roomYear": 53731,
+     "roomMonth": 5296,
+     "roomYear": 53729,
      "netAtOnes": 64231,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -2820,8 +2820,8 @@
     },
     {
      "monthCents": 106900,
-     "roomMonth": 5349,
-     "roomYear": 54238,
+     "roomMonth": 5347,
+     "roomYear": 54236,
      "netAtOnes": 64867,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -2833,8 +2833,8 @@
     },
     {
      "monthCents": 107900,
-     "roomMonth": 5399,
-     "roomYear": 54748,
+     "roomMonth": 5397,
+     "roomYear": 54746,
      "netAtOnes": 65504,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -2846,8 +2846,8 @@
     },
     {
      "monthCents": 108900,
-     "roomMonth": 5449,
-     "roomYear": 55256,
+     "roomMonth": 5447,
+     "roomYear": 55254,
      "netAtOnes": 66141,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -2859,8 +2859,8 @@
     },
     {
      "monthCents": 109900,
-     "roomMonth": 5502,
-     "roomYear": 55765,
+     "roomMonth": 5500,
+     "roomYear": 55763,
      "netAtOnes": 66779,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -2872,8 +2872,8 @@
     },
     {
      "monthCents": 110900,
-     "roomMonth": 5552,
-     "roomYear": 56273,
+     "roomMonth": 5550,
+     "roomYear": 56271,
      "netAtOnes": 67415,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -2885,8 +2885,8 @@
     },
     {
      "monthCents": 111900,
-     "roomMonth": 5603,
-     "roomYear": 56785,
+     "roomMonth": 5601,
+     "roomYear": 56783,
      "netAtOnes": 68052,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -2898,8 +2898,8 @@
     },
     {
      "monthCents": 112900,
-     "roomMonth": 5655,
-     "roomYear": 57292,
+     "roomMonth": 5653,
+     "roomYear": 57290,
      "netAtOnes": 68690,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -2911,8 +2911,8 @@
     },
     {
      "monthCents": 113900,
-     "roomMonth": 5705,
-     "roomYear": 57802,
+     "roomMonth": 5703,
+     "roomYear": 57800,
      "netAtOnes": 69326,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -2924,8 +2924,8 @@
     },
     {
      "monthCents": 114900,
-     "roomMonth": 5756,
-     "roomYear": 58310,
+     "roomMonth": 5754,
+     "roomYear": 58308,
      "netAtOnes": 69963,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -2937,8 +2937,8 @@
     },
     {
      "monthCents": 115900,
-     "roomMonth": 5808,
-     "roomYear": 58820,
+     "roomMonth": 5806,
+     "roomYear": 58818,
      "netAtOnes": 70601,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -2950,8 +2950,8 @@
     },
     {
      "monthCents": 116900,
-     "roomMonth": 5858,
-     "roomYear": 59327,
+     "roomMonth": 5856,
+     "roomYear": 59325,
      "netAtOnes": 71237,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -2963,8 +2963,8 @@
     },
     {
      "monthCents": 117900,
-     "roomMonth": 5908,
-     "roomYear": 59837,
+     "roomMonth": 5906,
+     "roomYear": 59835,
      "netAtOnes": 71873,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -2976,8 +2976,8 @@
     },
     {
      "monthCents": 118900,
-     "roomMonth": 5957,
-     "roomYear": 60346,
+     "roomMonth": 5955,
+     "roomYear": 60344,
      "netAtOnes": 72508,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -2989,8 +2989,8 @@
     },
     {
      "monthCents": 119900,
-     "roomMonth": 6011,
-     "roomYear": 60855,
+     "roomMonth": 6009,
+     "roomYear": 60853,
      "netAtOnes": 73148,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -3002,8 +3002,8 @@
     },
     {
      "monthCents": 120900,
-     "roomMonth": 6061,
-     "roomYear": 61363,
+     "roomMonth": 6059,
+     "roomYear": 61361,
      "netAtOnes": 73784,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -3015,8 +3015,8 @@
     },
     {
      "monthCents": 121900,
-     "roomMonth": 6111,
-     "roomYear": 61874,
+     "roomMonth": 6109,
+     "roomYear": 61872,
      "netAtOnes": 74420,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -3028,8 +3028,8 @@
     },
     {
      "monthCents": 122900,
-     "roomMonth": 6163,
-     "roomYear": 62381,
+     "roomMonth": 6161,
+     "roomYear": 62379,
      "netAtOnes": 75058,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -3041,8 +3041,8 @@
     },
     {
      "monthCents": 123900,
-     "roomMonth": 6214,
-     "roomYear": 62891,
+     "roomMonth": 6212,
+     "roomYear": 62889,
      "netAtOnes": 75695,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -3054,8 +3054,8 @@
     },
     {
      "monthCents": 124900,
-     "roomMonth": 6263,
-     "roomYear": 63399,
+     "roomMonth": 6261,
+     "roomYear": 63397,
      "netAtOnes": 76330,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -3067,8 +3067,8 @@
     },
     {
      "monthCents": 125900,
-     "roomMonth": 6316,
-     "roomYear": 63909,
+     "roomMonth": 6314,
+     "roomYear": 63907,
      "netAtOnes": 76969,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -3080,8 +3080,8 @@
     },
     {
      "monthCents": 126900,
-     "roomMonth": 6367,
-     "roomYear": 64417,
+     "roomMonth": 6365,
+     "roomYear": 64415,
      "netAtOnes": 77606,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -3093,8 +3093,8 @@
     },
     {
      "monthCents": 127900,
-     "roomMonth": 6416,
-     "roomYear": 64927,
+     "roomMonth": 6414,
+     "roomYear": 64925,
      "netAtOnes": 78242,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -3106,8 +3106,8 @@
     },
     {
      "monthCents": 128900,
-     "roomMonth": 6468,
-     "roomYear": 65435,
+     "roomMonth": 6466,
+     "roomYear": 65433,
      "netAtOnes": 78879,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -3119,8 +3119,8 @@
     },
     {
      "monthCents": 129900,
-     "roomMonth": 6520,
-     "roomYear": 65944,
+     "roomMonth": 6518,
+     "roomYear": 65942,
      "netAtOnes": 79517,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -3132,8 +3132,8 @@
     },
     {
      "monthCents": 130900,
-     "roomMonth": 6569,
-     "roomYear": 66452,
+     "roomMonth": 6567,
+     "roomYear": 66450,
      "netAtOnes": 80153,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -3145,8 +3145,8 @@
     },
     {
      "monthCents": 131900,
-     "roomMonth": 6621,
-     "roomYear": 66963,
+     "roomMonth": 6619,
+     "roomYear": 66961,
      "netAtOnes": 80790,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -3158,8 +3158,8 @@
     },
     {
      "monthCents": 132900,
-     "roomMonth": 6673,
-     "roomYear": 67470,
+     "roomMonth": 6671,
+     "roomYear": 67468,
      "netAtOnes": 81428,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -3171,8 +3171,8 @@
     },
     {
      "monthCents": 133900,
-     "roomMonth": 6723,
-     "roomYear": 67981,
+     "roomMonth": 6721,
+     "roomYear": 67979,
      "netAtOnes": 82064,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -3184,8 +3184,8 @@
     },
     {
      "monthCents": 134900,
-     "roomMonth": 6773,
-     "roomYear": 68489,
+     "roomMonth": 6771,
+     "roomYear": 68487,
      "netAtOnes": 82700,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -3197,8 +3197,8 @@
     },
     {
      "monthCents": 135900,
-     "roomMonth": 6826,
-     "roomYear": 68999,
+     "roomMonth": 6824,
+     "roomYear": 68997,
      "netAtOnes": 83338,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -3210,8 +3210,8 @@
     },
     {
      "monthCents": 136900,
-     "roomMonth": 6875,
-     "roomYear": 69506,
+     "roomMonth": 6873,
+     "roomYear": 69504,
      "netAtOnes": 83974,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -3223,8 +3223,8 @@
     },
     {
      "monthCents": 137900,
-     "roomMonth": 6927,
-     "roomYear": 70016,
+     "roomMonth": 6925,
+     "roomYear": 70014,
      "netAtOnes": 84612,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -3236,8 +3236,8 @@
     },
     {
      "monthCents": 138900,
-     "roomMonth": 6976,
-     "roomYear": 70524,
+     "roomMonth": 6974,
+     "roomYear": 70522,
      "netAtOnes": 85247,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -3249,8 +3249,8 @@
     },
     {
      "monthCents": 139900,
-     "roomMonth": 7028,
-     "roomYear": 71033,
+     "roomMonth": 7026,
+     "roomYear": 71031,
      "netAtOnes": 85885,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -3262,8 +3262,8 @@
     },
     {
      "monthCents": 140900,
-     "roomMonth": 7079,
-     "roomYear": 71542,
+     "roomMonth": 7077,
+     "roomYear": 71540,
      "netAtOnes": 86522,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -3275,8 +3275,8 @@
     },
     {
      "monthCents": 141900,
-     "roomMonth": 7128,
-     "roomYear": 72053,
+     "roomMonth": 7126,
+     "roomYear": 72051,
      "netAtOnes": 87158,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -3288,8 +3288,8 @@
     },
     {
      "monthCents": 142900,
-     "roomMonth": 7180,
-     "roomYear": 72560,
+     "roomMonth": 7178,
+     "roomYear": 72558,
      "netAtOnes": 87796,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -3301,8 +3301,8 @@
     },
     {
      "monthCents": 143900,
-     "roomMonth": 7232,
-     "roomYear": 73070,
+     "roomMonth": 7230,
+     "roomYear": 73068,
      "netAtOnes": 88433,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -3314,8 +3314,8 @@
     },
     {
      "monthCents": 144900,
-     "roomMonth": 7281,
-     "roomYear": 73578,
+     "roomMonth": 7279,
+     "roomYear": 73576,
      "netAtOnes": 89069,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -3327,8 +3327,8 @@
     },
     {
      "monthCents": 145900,
-     "roomMonth": 7334,
-     "roomYear": 74088,
+     "roomMonth": 7332,
+     "roomYear": 74086,
      "netAtOnes": 89707,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -3340,8 +3340,8 @@
     },
     {
      "monthCents": 146900,
-     "roomMonth": 7385,
-     "roomYear": 74595,
+     "roomMonth": 7383,
+     "roomYear": 74593,
      "netAtOnes": 90344,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -3353,8 +3353,8 @@
     },
     {
      "monthCents": 147900,
-     "roomMonth": 7435,
-     "roomYear": 75106,
+     "roomMonth": 7433,
+     "roomYear": 75104,
      "netAtOnes": 90980,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -3366,8 +3366,8 @@
     },
     {
      "monthCents": 148900,
-     "roomMonth": 7486,
-     "roomYear": 75614,
+     "roomMonth": 7484,
+     "roomYear": 75612,
      "netAtOnes": 91617,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -3379,8 +3379,8 @@
     },
     {
      "monthCents": 149900,
-     "roomMonth": 7538,
-     "roomYear": 76123,
+     "roomMonth": 7536,
+     "roomYear": 76121,
      "netAtOnes": 92255,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -3392,8 +3392,8 @@
     },
     {
      "monthCents": 150900,
-     "roomMonth": 7588,
-     "roomYear": 76631,
+     "roomMonth": 7586,
+     "roomYear": 76629,
      "netAtOnes": 92891,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -3405,8 +3405,8 @@
     },
     {
      "monthCents": 151900,
-     "roomMonth": 7638,
-     "roomYear": 77142,
+     "roomMonth": 7636,
+     "roomYear": 77140,
      "netAtOnes": 93527,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -3418,8 +3418,8 @@
     },
     {
      "monthCents": 152900,
-     "roomMonth": 7691,
-     "roomYear": 77649,
+     "roomMonth": 7689,
+     "roomYear": 77647,
      "netAtOnes": 94165,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -3431,8 +3431,8 @@
     },
     {
      "monthCents": 153900,
-     "roomMonth": 7740,
-     "roomYear": 78159,
+     "roomMonth": 7738,
+     "roomYear": 78157,
      "netAtOnes": 94801,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -3444,8 +3444,8 @@
     },
     {
      "monthCents": 154900,
-     "roomMonth": 7791,
-     "roomYear": 78667,
+     "roomMonth": 7789,
+     "roomYear": 78665,
      "netAtOnes": 95439,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -3457,8 +3457,8 @@
     },
     {
      "monthCents": 155900,
-     "roomMonth": 7845,
-     "roomYear": 79178,
+     "roomMonth": 7843,
+     "roomYear": 79176,
      "netAtOnes": 96077,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -3470,8 +3470,8 @@
     },
     {
      "monthCents": 156900,
-     "roomMonth": 7894,
-     "roomYear": 79685,
+     "roomMonth": 7892,
+     "roomYear": 79683,
      "netAtOnes": 96713,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -3483,8 +3483,8 @@
     },
     {
      "monthCents": 157900,
-     "roomMonth": 7945,
-     "roomYear": 80195,
+     "roomMonth": 7943,
+     "roomYear": 80193,
      "netAtOnes": 97350,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -3496,8 +3496,8 @@
     },
     {
      "monthCents": 158900,
-     "roomMonth": 7993,
-     "roomYear": 80703,
+     "roomMonth": 7991,
+     "roomYear": 80701,
      "netAtOnes": 97985,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -3509,8 +3509,8 @@
     },
     {
      "monthCents": 159900,
-     "roomMonth": 8045,
-     "roomYear": 81212,
+     "roomMonth": 8043,
+     "roomYear": 81210,
      "netAtOnes": 98623,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -3522,8 +3522,8 @@
     },
     {
      "monthCents": 160900,
-     "roomMonth": 8097,
-     "roomYear": 81720,
+     "roomMonth": 8095,
+     "roomYear": 81718,
      "netAtOnes": 99260,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -3535,8 +3535,8 @@
     },
     {
      "monthCents": 161900,
-     "roomMonth": 8146,
-     "roomYear": 82231,
+     "roomMonth": 8144,
+     "roomYear": 82229,
      "netAtOnes": 99896,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -3548,8 +3548,8 @@
     },
     {
      "monthCents": 162900,
-     "roomMonth": 8199,
-     "roomYear": 82739,
+     "roomMonth": 8197,
+     "roomYear": 82737,
      "netAtOnes": 100534,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -3561,8 +3561,8 @@
     },
     {
      "monthCents": 163900,
-     "roomMonth": 8249,
-     "roomYear": 83249,
+     "roomMonth": 8247,
+     "roomYear": 83247,
      "netAtOnes": 101170,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -3574,8 +3574,8 @@
     },
     {
      "monthCents": 164900,
-     "roomMonth": 8300,
-     "roomYear": 83757,
+     "roomMonth": 8298,
+     "roomYear": 83755,
      "netAtOnes": 101807,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -3587,8 +3587,8 @@
     },
     {
      "monthCents": 165900,
-     "roomMonth": 8352,
-     "roomYear": 84267,
+     "roomMonth": 8350,
+     "roomYear": 84265,
      "netAtOnes": 102445,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -3600,8 +3600,8 @@
     },
     {
      "monthCents": 166900,
-     "roomMonth": 8403,
-     "roomYear": 84774,
+     "roomMonth": 8401,
+     "roomYear": 84772,
      "netAtOnes": 103082,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -3613,8 +3613,8 @@
     },
     {
      "monthCents": 167900,
-     "roomMonth": 8453,
-     "roomYear": 85284,
+     "roomMonth": 8451,
+     "roomYear": 85282,
      "netAtOnes": 103718,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -3626,8 +3626,8 @@
     },
     {
      "monthCents": 168900,
-     "roomMonth": 8503,
-     "roomYear": 85792,
+     "roomMonth": 8501,
+     "roomYear": 85790,
      "netAtOnes": 104355,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -3639,8 +3639,8 @@
     },
     {
      "monthCents": 169900,
-     "roomMonth": 8556,
-     "roomYear": 86302,
+     "roomMonth": 8554,
+     "roomYear": 86300,
      "netAtOnes": 104993,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -3652,8 +3652,8 @@
     },
     {
      "monthCents": 170900,
-     "roomMonth": 8605,
-     "roomYear": 86810,
+     "roomMonth": 8603,
+     "roomYear": 86808,
      "netAtOnes": 105628,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -3665,8 +3665,8 @@
     },
     {
      "monthCents": 171900,
-     "roomMonth": 8655,
-     "roomYear": 87321,
+     "roomMonth": 8653,
+     "roomYear": 87319,
      "netAtOnes": 106265,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -3678,8 +3678,8 @@
     },
     {
      "monthCents": 172900,
-     "roomMonth": 8709,
-     "roomYear": 87828,
+     "roomMonth": 8707,
+     "roomYear": 87826,
      "netAtOnes": 106904,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -3691,8 +3691,8 @@
     },
     {
      "monthCents": 173900,
-     "roomMonth": 8759,
-     "roomYear": 88338,
+     "roomMonth": 8757,
+     "roomYear": 88336,
      "netAtOnes": 107540,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -3704,8 +3704,8 @@
     },
     {
      "monthCents": 174900,
-     "roomMonth": 8810,
-     "roomYear": 88846,
+     "roomMonth": 8808,
+     "roomYear": 88844,
      "netAtOnes": 108177,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -3717,8 +3717,8 @@
     },
     {
      "monthCents": 175900,
-     "roomMonth": 8862,
-     "roomYear": 89356,
+     "roomMonth": 8860,
+     "roomYear": 89354,
      "netAtOnes": 108815,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -3730,8 +3730,8 @@
     },
     {
      "monthCents": 176900,
-     "roomMonth": 8912,
-     "roomYear": 89864,
+     "roomMonth": 8910,
+     "roomYear": 89862,
      "netAtOnes": 109451,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -3743,8 +3743,8 @@
     },
     {
      "monthCents": 177900,
-     "roomMonth": 8962,
-     "roomYear": 90374,
+     "roomMonth": 8960,
+     "roomYear": 90372,
      "netAtOnes": 110087,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -3756,8 +3756,8 @@
     },
     {
      "monthCents": 178900,
-     "roomMonth": 9011,
-     "roomYear": 90882,
+     "roomMonth": 9009,
+     "roomYear": 90880,
      "netAtOnes": 110723,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -3769,8 +3769,8 @@
     },
     {
      "monthCents": 179900,
-     "roomMonth": 9064,
-     "roomYear": 91391,
+     "roomMonth": 9062,
+     "roomYear": 91389,
      "netAtOnes": 111361,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -3782,8 +3782,8 @@
     },
     {
      "monthCents": 180900,
-     "roomMonth": 9114,
-     "roomYear": 91899,
+     "roomMonth": 9112,
+     "roomYear": 91897,
      "netAtOnes": 111998,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -3795,8 +3795,8 @@
     },
     {
      "monthCents": 181900,
-     "roomMonth": 9164,
-     "roomYear": 92410,
+     "roomMonth": 9162,
+     "roomYear": 92408,
      "netAtOnes": 112633,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -3808,8 +3808,8 @@
     },
     {
      "monthCents": 182900,
-     "roomMonth": 9217,
-     "roomYear": 92917,
+     "roomMonth": 9215,
+     "roomYear": 92915,
      "netAtOnes": 113272,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -3821,8 +3821,8 @@
     },
     {
      "monthCents": 183900,
-     "roomMonth": 9267,
-     "roomYear": 93427,
+     "roomMonth": 9265,
+     "roomYear": 93425,
      "netAtOnes": 113909,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -3834,8 +3834,8 @@
     },
     {
      "monthCents": 184900,
-     "roomMonth": 9318,
-     "roomYear": 93936,
+     "roomMonth": 9316,
+     "roomYear": 93934,
      "netAtOnes": 114545,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -3847,8 +3847,8 @@
     },
     {
      "monthCents": 185900,
-     "roomMonth": 9370,
-     "roomYear": 94446,
+     "roomMonth": 9368,
+     "roomYear": 94444,
      "netAtOnes": 115183,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -3860,8 +3860,8 @@
     },
     {
      "monthCents": 186900,
-     "roomMonth": 9421,
-     "roomYear": 94953,
+     "roomMonth": 9419,
+     "roomYear": 94951,
      "netAtOnes": 115820,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -3873,8 +3873,8 @@
     },
     {
      "monthCents": 187900,
-     "roomMonth": 9470,
-     "roomYear": 95463,
+     "roomMonth": 9468,
+     "roomYear": 95461,
      "netAtOnes": 116456,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -3886,8 +3886,8 @@
     },
     {
      "monthCents": 188900,
-     "roomMonth": 9520,
-     "roomYear": 95971,
+     "roomMonth": 9518,
+     "roomYear": 95969,
      "netAtOnes": 117092,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -3899,8 +3899,8 @@
     },
     {
      "monthCents": 189900,
-     "roomMonth": 9573,
-     "roomYear": 96480,
+     "roomMonth": 9571,
+     "roomYear": 96478,
      "netAtOnes": 117730,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -3912,8 +3912,8 @@
     },
     {
      "monthCents": 190900,
-     "roomMonth": 9623,
-     "roomYear": 96988,
+     "roomMonth": 9621,
+     "roomYear": 96986,
      "netAtOnes": 118367,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -3925,8 +3925,8 @@
     },
     {
      "monthCents": 191900,
-     "roomMonth": 9675,
-     "roomYear": 97500,
+     "roomMonth": 9673,
+     "roomYear": 97498,
      "netAtOnes": 119004,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -3938,8 +3938,8 @@
     },
     {
      "monthCents": 192900,
-     "roomMonth": 9727,
-     "roomYear": 98007,
+     "roomMonth": 9725,
+     "roomYear": 98005,
      "netAtOnes": 119642,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -3951,8 +3951,8 @@
     },
     {
      "monthCents": 193900,
-     "roomMonth": 9777,
-     "roomYear": 98517,
+     "roomMonth": 9775,
+     "roomYear": 98515,
      "netAtOnes": 120278,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -3964,8 +3964,8 @@
     },
     {
      "monthCents": 194900,
-     "roomMonth": 9827,
-     "roomYear": 99025,
+     "roomMonth": 9825,
+     "roomYear": 99023,
      "netAtOnes": 120914,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -3977,8 +3977,8 @@
     },
     {
      "monthCents": 195900,
-     "roomMonth": 9880,
-     "roomYear": 99535,
+     "roomMonth": 9878,
+     "roomYear": 99533,
      "netAtOnes": 121553,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -3990,8 +3990,8 @@
     },
     {
      "monthCents": 196900,
-     "roomMonth": 9930,
-     "roomYear": 100042,
+     "roomMonth": 9928,
+     "roomYear": 100040,
      "netAtOnes": 122189,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -4003,8 +4003,8 @@
     },
     {
      "monthCents": 197900,
-     "roomMonth": 9980,
-     "roomYear": 100552,
+     "roomMonth": 9978,
+     "roomYear": 100550,
      "netAtOnes": 122825,
      "usageMonthAtOnes": 4373,
      "demand": {
@@ -4016,8 +4016,8 @@
     },
     {
      "monthCents": 198900,
-     "roomMonth": 10029,
-     "roomYear": 101061,
+     "roomMonth": 10027,
+     "roomYear": 101059,
      "netAtOnes": 123460,
      "usageMonthAtOnes": 4373,
      "demand": {

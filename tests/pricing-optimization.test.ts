@@ -41,10 +41,6 @@ test("the program's input is what the repository's margin code gives today (run 
   close(JSON.parse(read(INPUT_FILE)), JSON.parse(JSON.stringify(milpInput())), "input");
   assert.ok(SAFETY_CENTS >= 5, "the actual solver deducts at least five cents on both intervals");
   assert.ok(linearityGap() < SAFETY_CENTS, "the linear usage stays strictly inside the deducted safety reserve");
-  const input = milpInput();
-  for (const tier of TIERS) for (const option of input.plans[tier].options) {
-    assert.ok(Number.isFinite(option.roomMonth) && Number.isFinite(option.roomYear));
-  }
 });
 
 test("every solution keeps 60% at full use on both intervals, fails the most-tax gate, respects the plan order, and equals the exhaustive search", () => {

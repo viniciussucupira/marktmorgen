@@ -14737,3 +14737,5 @@ Coleta corrigida 1241d029, job123389579078: passo de geração concluído com nu
 
 
 Head6c4f2c36, verify123393215296: os documentos já conferem, mas o teste detectou gap linear de4¢ acima da reserva3¢ do solver. Correção no cálculo: deduzir5¢ de ambos os orçamentos do solver, não apenas aceitar erro maior; teste vinculado à constante usada no cálculo exige reserva≥5¢ e gap estritamente menor. Validação exata de cada solução a60% e busca exaustiva preservadas. Nova geração real temporária após falha, seguida de remoção do passo e suíte completa; preços/limites/flags vigentes intocados.
+
+Coleta d0998f08/job123397355011 concluída: solver real deduz5¢ em cada intervalo e encontrou8soluções ótimas; input/doc antigos foram corretamente rejeitados antes da geração. Cinco saídas exatas versionadas; coleta temporária retirada novamente, workflow original restaurado. O novo head exige conferência input/modelo, gap<reserva, cada solução pelo cálculo exato e busca exaustiva, além da suíte integral. Nenhuma promessa de margem operacional ou mudança de preço vigente.
