@@ -31,12 +31,41 @@ if from<start*1000 or untilMs>finish*1000 or untilMs<=from or untilMs-from>31*86
 if count==1 and (index~=0 or from~=start*1000 or untilMs~=finish*1000) then return 0 end
 if redis.call('HGET',KEYS[1],'activated:'..proof[1])~=resourceActive then return 0 end
 local receipt=parts(redis.call('HGET',KEYS[1],'grant:'..proof[1]),1024)
-if not receipt or receipt[1]~=ARGV[2] or receipt[2]~=ARGV[3] or receipt[3]~=ARGV[5] or not ((#receipt==9 and receipt[4]=='checkout') or (#receipt==10 and receipt[4]=='switch')) then return 0 end
+if not receipt or receipt[1]~=ARGV[2] or receipt[2]~=ARGV[3] or receipt[3]~=ARGV[5] or not ((#receipt==9 and receipt[4]=='checkout') or (#receipt==10 and (receipt[4]=='switch' or receipt[4]=='restart'))) then return 0 end
 local charge,through=amount(receipt[5],1000000000000),amount(receipt[9],9007199254740991)
 local minimum,limit,carry,funded=amount(ARGV[13],1000000000000),amount(ARGV[14],1000000000000),amount(ARGV[15],1000000000000),amount(ARGV[16],1000000000000)
 if not amount(receipt[6],1000000000000) or not amount(receipt[7],1000000000000) or not amount(receipt[8],1000000000000) or tonumber(receipt[7])<tonumber(receipt[6]) or tonumber(receipt[8])<tonumber(receipt[7]) then return 0 end
 if receipt[4]=='checkout' and (created<tonumber(receipt[6])-300 or created>tonumber(receipt[8])) then return 0 end
 if not charge or charge<=0 or charge~=minimum or not through or finish*1000>through or not limit or not carry or not funded or funded<=0 then return 0 end
+-- Restart resources require the completed joint publication, never just activation.
+if receipt[4]=='restart' then
+ if count~=1 or receipt[10]==proof[1] or #receipt[10]>84 or not string.match(receipt[10],'^ctr_[%w_-]+$') then return 0 end
+ if redis.call('HGET',KEYS[1],'restart-owner:'..receipt[10])~=proof[1] then return 0 end
+ local publishedRaw=redis.call('HGET',KEYS[1],'restart-published:'..proof[1])
+ local checkpointRaw=redis.call('HGET',KEYS[1],'restart-publication:'..proof[1])
+ local intentRaw=redis.call('HGET',KEYS[1],'restart-intent:'..proof[1])
+ if not publishedRaw or #publishedRaw>1536 or not checkpointRaw or #checkpointRaw>384 or not intentRaw or #intentRaw>4096 then return 0 end
+ local ok,published=pcall(cjson.decode,publishedRaw)
+ local cpOk,checkpoint=pcall(cjson.decode,checkpointRaw)
+ local intentOk,intent=pcall(cjson.decode,intentRaw)
+ if not ok or not cpOk or not intentOk or type(published)~='table' or type(checkpoint)~='table' or type(intent)~='table' then return 0 end
+ local fields=0 for _ in pairs(published) do fields=fields+1 end
+ if fields~=20 or published.version~=1 or published.policy~=ARGV[1] or published.review~=ARGV[2] or published.grant~=proof[1] or published.sourceGrant~=receipt[10] or published.statsId~=ARGV[3] or published.subscriptionId~=ARGV[4] or published.binding~=resourceActive or published.start~=start or published.finish~=finish or type(published.tier)~='string' or published.tier..'_month'~=ARGV[5] or type(published.renews)~='boolean' or type(published.shared)~='boolean' then return 0 end
+ if checkpoint.version~=1 or checkpoint.binding~=resourceActive or checkpoint.renews~=published.renews or checkpoint.shared~=published.shared then return 0 end
+ if intent.version~=1 or intent.grant~=proof[1] or intent.review~=ARGV[2] or intent.statsId~=ARGV[3] or intent.sourceGrant~=receipt[10] or intent.sourceSubscription~=published.sourceSubscriptionId or intent.ref~=published.ref or intent.handle~=published.handle or intent.claim~=published.claim or type(intent.submission)~='table' or intent.submission.subscriptionId~=ARGV[4] or type(intent.submission.publication)~='table' or intent.submission.publication.renews~=published.renews or intent.submission.publication.shared~=published.shared then return 0 end
+ local oldActive=redis.call('HGET',KEYS[1],'activated:'..receipt[10])
+ local oldProof=parts(oldActive,256)
+ local oldRaw=redis.call('HGET',KEYS[1],'grant:'..receipt[10])
+ local old=parts(oldRaw,1024)
+ if not oldProof or #oldProof~=7 or oldProof[1]~=receipt[10] or oldProof[2]~=published.sourceSubscriptionId or oldProof[3]~=ARGV[5] or oldProof[5]~='paid' or oldActive~=intent.sourceBinding or oldRaw~=intent.sourceReceipt then return 0 end
+ if not old or old[1]~=ARGV[2] or old[2]~=ARGV[3] or old[3]~=ARGV[5] or not ((#old==9 and old[4]=='checkout') or (#old==10 and (old[4]=='switch' or old[4]=='restart'))) then return 0 end
+ local oldStart,oldFinish=amount(oldProof[6],1000000000000),amount(oldProof[7],1000000000000)
+ local oldThrough=amount(old[9],9007199254740991)
+ local oldCharge,oldSubmitted,oldExpires,oldActivation=amount(old[5],1000000000000),amount(old[6],1000000000000),amount(old[7],1000000000000),amount(old[8],1000000000000)
+ if not oldCharge or oldCharge<=0 or not oldSubmitted or not oldExpires or not oldActivation or oldExpires<oldSubmitted or oldActivation<oldExpires then return 0 end
+ if not oldStart or not oldFinish or oldFinish<=oldStart or oldFinish>start or not oldThrough or oldFinish*1000>oldThrough then return 0 end
+ if intent.restartReceipt~=redis.call('HGET',KEYS[1],'grant:'..proof[1]) then return 0 end
+end
 local reserved,carried=amount(redis.call('HGET',KEYS[1],'reserved'),1000000000000),amount(redis.call('HGET',KEYS[1],'carried'),1000000000000)
 if not reserved or not carried or carried~=carry or reserved<carried or reserved>limit or charge>reserved-carried then return 0 end
 local expected=carry
