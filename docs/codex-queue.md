@@ -14724,3 +14724,8 @@ Verificação PR1201 — head8d1c778c95440adb874669cccd2710aafa4640ed/job1233744
 
 
 Verificação PR1201 — head10dfbe43/job123375885969: 4testes puros de publicação passaram eRedisreal passou(lostACK/concorrência/22recusas/11readback),mas verificação global falhou porque9famílias existentes passaram a ter novo caller lib/contract-restart-publication.ts ausente no registro de armazenamento. Registro agora declara cada alias/função/teto,novo recibo1536porgrant/retentionunknown echeckpoint384 já existente; não ignora caller nem relaxa teste/gate. Owner/lock/pause/annual mantêm tetos conservadores eLedger/índicesglobais continuam sujeitos à revisão;custos desconhecidos não viramzero. Nova suíte inteira obrigatória no novohead; nenhuma conclusão porjobisolado ou prova antiga.
+
+
+### PR 1201 — falha dos documentos financeiros no head d207647 (29/10/2026)
+
+O job verify 123380565348 rejeitou quatro arquivos de testes: o novo inventário de nove callers aumenta os custos conservadores e torna desatualizados os documentos gerados de margem, otimização e proposta de uso, além das linhas atuais na apresentação de valor. Browser bundles 234/234 e Redis passaram; isso não aprova o head. Coleta temporária em CI executa os geradores reais somente depois da falha, sem transformar o teste anterior em sucesso. Os resultados serão revisados e versionados; a coleta será retirada e toda a suíte executada no novo head. Preços, limites, flags e reprovação de custos desconhecidos permanecem.
