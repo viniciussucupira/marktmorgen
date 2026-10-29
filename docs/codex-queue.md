@@ -15312,6 +15312,12 @@ Aplicar a regra VR.
 
 Proveniência/diferença do complemento: pedido direto do dono acima; descrição da captura e números contraditórios atribuídos ao briefing, não dados de compradores/receita doMarktmorgen nem inspeção independente de imagem não anexada nesta mensagem. Acrescentados só cliques/porcentagem na últimaetapa pelo mesmo método,gráficodiário/tabelaequivalente e testes de coerência quantidade/moeda/somapartes.525número/posição/estadona filaeescopoanteriorpreservados;nenhumitem527. Counts unavailable distinto de zero,moeda/reembolsos/fuso/período/semPII/semrastreamentonovo e tetosantesleiturascontinuam. Deduplicação main332a38d,PR1208aberto,20PRsrecentes/19heads codexdistintos e764refs,semcomplemento12h01equivalente. Registro na alteração de códigoPR1208jáemcurso;reconferir código antes eaplicar sódiferença.MR/TX/FX275/AX274/VRpreservados.
 
+### Segundo complemento de525FN1 — 29/10/2026,14h06Fortaleza
+
+Proveniência: pedido direto do dono; aplica só diferença ao525,sem novo número,sem mudar posição/estado. O briefing integral conjunto FN1/AF1 está preservado no registro532ao fim desta fila; esta diferença pertence ao525. Comparação e nomes de módulos são relato do dono,reconferir código antes de executar. Acrescenta lista ordenável de funis e totais do mesmo período; mesmas fontes reais,indisponibilidade explícita,reembolsos,coerência,semPII. AX274/7:1,custo cada nova leitura/teto prévio,MR/TX/FX275/VRvinculantes;sem anúncio/implementação neste registro.
+
+Complemento ao 525 [FN1]: na página que lista os funis da loja, cada funil numa linha com compradores, número de vendas e receita do período escolhido, ordenável por cada coluna; no alto, os totais da loja no mesmo período (receita, pedidos e produtos à venda). Os mesmos números e as mesmas regras do 525: lidos das vendas reais na conta Stripe ou PayPal do próprio criador, "Counts unavailable" quando faltar dado, nunca zero inventado, reembolsos descontados, nenhum dado pessoal de comprador, e um total nunca diferente da soma das linhas.
+
 ## FN2 — registro integral; item526 (29/10/2026,11h10Fortaleza)
 
 Proveniência: pedido direto do dono nesta conversa; descrição da captura e do estado do produto atribuída ao briefing, sem alegar inspeção independente de imagem não anexada nesta mensagem. Deduplicação: main51030ab,PR1208aberto,20PRsrecentes/19heads codexdistintos e763refs,sem etiqueta/título/data/conteúdo equivalente. Próximo livre526após525FN1,sem alterar ordem/estado/escopo existentes. Reaproveitar377TB3/headline-test/flows/funnel-metrics;receitas só quando525funcionar;reconferir código antes e aplicar apenasdiferença. MR/TX/FX275/AX274/VR,custosdetetos antesoperação e desconhecido reprova vinculantes. Registro somente,sem implementar/ativar/anunciar recurso; AVcontinua,TB375/32permanece noPR1208comcódigo.
@@ -15527,6 +15533,33 @@ Proibido: criar item novo ou mudar número, posição ou estado do 531; imagem r
 
 Aplicar a regra VR.
 
+### Segundo complemento de531VP1 — 29/10/2026,14h08Fortaleza
+
+Proveniência: pedido direto do dono nesta conversa; ajusta somente o complemento14h02,sem apagar seu histórico. Agora seções alternam tela real e foto de pessoas,com no máximo1foto em cada2seções e ao menos1tela porpágina. 531mantém número,posição eestado na fila;241permanece logoapós531;nenhuma mudançaFIM1adicional. Intenção estética alegria,saúde,paz/tranquilidade não autoriza alegação de resultado. Fonte licenciada existente,notabanco/nãoclientes,unicidadeglobal,altcoerente,nenhuma associação com números/cartões/frases de resultado;custos/AX274/MR/TX/FX275/VRmantidos. Contexto é material do dono,sem comprovação independente neste registro.
+
+VP — Segundo complemento ao 531 [VP1]: fotos de pessoas alternando com telas do produto (29/10/2026)
+Etiqueta: [VP1]
+
+Solicitação do dono (29/10/2026, 14h08, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: é complemento ao item 531 [VP1], que já recebeu o complemento de 29/10/2026, 14h02 (imagem real em cada seção). Aplique só a diferença ao item existente, mantendo número, posição e estado (regra "Pedidos repetidos", passo 3, letra b), e registre na proveniência o que mudou.
+
+Estado inicial: o do próprio 531.
+
+Contexto: na seção "Scale what works" de clickfunnels.com/features/sales-funnels, enviada pelo dono, a imagem é só uma foto de três pessoas sorrindo, sem tela do produto; ao longo da página, a ClickFunnels alterna seções com tela do produto e seções com foto de pessoas. O complemento de 14h02 pediu, em cada seção, cartão ou captura do produto. O dono quer sites que transmitam alegria, saúde, paz e tranquilidade.
+
+O que muda no 531 [VP1]: nas seções das páginas de recursos, as imagens alternam entre tela real do produto (cartão em HTML e CSS ou captura da loja de demonstração, como já pedido) e foto de pessoas, com no máximo uma foto de pessoas a cada duas seções e pelo menos uma tela do produto em toda página. As fotos de pessoas seguem as mesmas regras do topo: mesma fonte licenciada da página inicial, a nota de que são fotos de banco e não clientes, nenhuma repetida no site, coerentes com o tema da seção, texto alternativo descrevendo a cena, e nenhum número, cartão ou frase ao lado sugerindo que a pessoa é cliente ou obteve algum resultado.
+
+Testes automáticos: alternância por página (no máximo uma foto de pessoas a cada duas seções, pelo menos uma tela do produto), nenhuma foto repetida e nenhuma foto de pessoas junto a número de resultado.
+
+Regra de margem: segue a REGRA DE MARGEM vigente (MR, 27/10/2026, 07h42), a política tributária TX e FX275; custo desconhecido reprova, nunca é zero.
+
+Proibido: criar item novo ou mudar número, posição ou estado do 531; foto repetida; foto de pessoas junto a número ou frase de resultado; sugerir que a pessoa da foto é cliente; mudar preços, limites visíveis, comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a, a revisão comercial ou stripePlatformEligibilityReady; afrouxar qualquer trava; mostrar recurso que não funciona hoje; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+
 [VP2] Vídeos reais do produto nas páginas de recursos de volta para perto da frente da fila.
 Estado inicial: mudança de posição.
 O item 241 [CF4] (vídeos curtos e reais de cada recurso, gravados na loja de demonstração, com legenda, transcrição e teto de custo), que o FIM1 de 28/10/2026 levou para o fim da fila, passa para logo depois de [VP1], com escopo, estado e provas intactos. Só a posição muda; nenhum outro item do FIM1 muda de lugar. Registre a mudança na tabela de posições do FIM1 com esta data e hora. Os vídeos do 241 e o vídeo das abas de 509 [CK1] usam o mesmo mecanismo de gravação e não se repetem entre si.
@@ -15541,3 +15574,35 @@ Aplicar a regra VR.
 ### PR1208 — conter somente a faixa de tipos de produto, não textos editoriais
 
 Head615a130:WebKit123583492129reprovou1verificação reviewed US-English wording /,porque a frase Canceling is two clicks in your studio está emhome-reasons,nãoFAQ. Firefox passou,mas não resolve diferença entre engines. A regra genérica de contenção de seções é substituída por seletor exclusivo da faixa Things people sell from a Marktmorgen store. Todos os textos editoriais,razões,disclosures,FAQ,pricing e explicações de recursos passam a layout/renderização imediatos,sem exceções seletivas por frases de testes. Nenhum texto/asserção/teste/limite/amostra relaxado; a faixa continua DOM/leitor/scroll/foco eprint intactos. Nova suíte inteira obrigatória, incluindo9amostrasfriasLCP/CLS/interação e regressões completas dos browsers. VP531/posição241,FT528–530,HE527 ecomplementos TB/FN preservados.
+
+
+## FN/AF — registro integral; complemento525 e item532 (29/10/2026,14h06Fortaleza)
+
+Proveniência: pedido direto do dono. Deduplicação main332a38d,PR1208aberto,20PRsrecentes/19ramoscodex e764refs,semAF1/data/título/conteúdo equivalente. Próximo número livre532após531VP1; estado na fila. ApenasAF1éitemnovo;FN1continua complemento525no próprio item,semrenumerar/mover/alterarestado. Demais posições,incluindo241logoapós531e206após519,mantidas. Reutilizar readBook/affiliate-studioexistentes;nenhum dado inventado,nenhumPII;moedas/refundos/totais/arquivo de pagamento preservados;custos desconhecidosreprovam,novasleiturascomtetoantesgasto. MR/TX/FX275/AX274/VRvinculantes. Registro somente,sem recurso novo ativado;suíte inteira do novoheadcombinadoobrigatória.
+
+FN — Complemento ao 525 [FN1] e resumo dos afiliados (29/10/2026)
+Etiquetas: [FN1] [AF1]
+
+Solicitação do dono (29/10/2026, 14h06, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: [FN1] é complemento ao item 525 [FN1] já gravado; aplique só a diferença ao item existente, mantendo número, posição e estado (regra "Pedidos repetidos", passo 3, letra b), e registre na proveniência o que mudou. [AF1] é item novo: procure-o antes pela linha de data e hora, pelo nome da seção, pela etiqueta [AF1] e pelo conteúdo; se não existir, grave na ordem de chegada, depois do último item já gravado, com o próximo número livre, sem alterar a ordem dos itens existentes.
+
+Contexto: na seção "Make sales while you sleep" de clickfunnels.com/features/sales-funnels, enviada pelo dono, aparece a lista de funis com os totais da conta no alto (vendas, pedidos, produtos), uma linha por funil com compradores, preço e total vendido, e três cartões de afiliados (afiliados ativos, total vendido pelos afiliados desde o começo e total ganho por eles). Os números são de exemplo e grandes. No Marktmorgen, o 525 [FN1] já pede a receita dentro de cada funil; o estúdio de afiliados (components/affiliate-studio.tsx, lib/affiliates.ts readBook) já mostra, por afiliado, o que ele tem a receber, o que aguarda o prazo e o que pode ser pago hoje, com o total devido e o arquivo de pagamento.
+
+Complemento ao 525 [FN1]: na página que lista os funis da loja, cada funil numa linha com compradores, número de vendas e receita do período escolhido, ordenável por cada coluna; no alto, os totais da loja no mesmo período (receita, pedidos e produtos à venda). Os mesmos números e as mesmas regras do 525: lidos das vendas reais na conta Stripe ou PayPal do próprio criador, "Counts unavailable" quando faltar dado, nunca zero inventado, reembolsos descontados, nenhum dado pessoal de comprador, e um total nunca diferente da soma das linhas.
+
+532. [AF1] Resumo do programa de afiliados.
+Estado inicial: na fila.
+O que fazer: no alto do estúdio de afiliados, três números do programa, com a escolha de período (o mês, 90 dias, desde o começo): afiliados ativos (os que trouxeram ao menos uma visita ou venda no período), total vendido pelos afiliados e total ganho por eles (já pago mais o que ainda é devido), todos lidos do mesmo livro de lib/affiliates.ts que já calcula o que cada um tem a receber. O total devido e o arquivo de pagamento continuam como estão. Moeda da loja; vendas em outra moeda aparecem à parte, como já acontece hoje.
+Testes automáticos: contagem de afiliados ativos no período, totais iguais à soma dos afiliados, reembolsos descontados e moedas separadas.
+Lucro: o criador vê quanto o programa de afiliados rende, o que aumenta a retenção e o valor percebido dos planos; sem custo variável novo além das leituras já contadas.
+
+Para os dois: acessibilidade AX274 (tabela com cabeçalhos, números legíveis por leitor de tela, nada só por cor, contraste de 7:1); custo de cada leitura nova entra no pior caso do plano, com teto automático antes do gasto.
+
+Regra de margem: segue a REGRA DE MARGEM vigente (MR, 27/10/2026, 07h42), a política tributária TX e FX275; custo desconhecido reprova, nunca é zero.
+
+Proibido: criar item novo além do [AF1] ou mudar número, posição ou estado do 525; inventar, estimar ou arredondar para cima qualquer número; mostrar dado pessoal de comprador; mudar preços, limites visíveis, comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a, a revisão comercial ou stripePlatformEligibilityReady; afrouxar qualquer trava; mostrar recurso que não funciona hoje; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
