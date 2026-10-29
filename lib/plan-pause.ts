@@ -498,7 +498,17 @@ export async function runBreaks(nowSeconds = Math.floor(Date.now() / 1000)): Pro
         idempotencyKey: `restart:${record.subscription}:${record.until}`,
         ...(record.funding ? { funding: { statsId: store.statsId ?? "", sourceSubscriptionId: record.subscription, sourceGrantId: record.funding.grantId, ref, paused: stored.raw ?? "" } } : {}),
       });
-      await setSubscription(ref, started);
+      let saved: Store | null;
+      try { saved = await setSubscription(ref, started); }
+      catch {
+        // Saving failed after the provider answered. This is not a card
+        // refusal and must not enter the legacy charge-failure cleanup.
+        counts.failed += 1;
+        continue;
+      }
+      // A provider response is not an acknowledged store write. Retain the
+      // exact pause and due evidence when the nullable writer cannot confirm.
+      if (!saved) { counts.failed += 1; continue; }
       await forget(ref, false);
       await tell(store, "restarted", record).catch(() => false);
       counts.restarted += 1;
