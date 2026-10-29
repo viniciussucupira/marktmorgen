@@ -24,25 +24,38 @@ export async function resetVoiceOverRunner(options={}){
   return result;
  }
  function owned(pid){
-  const line=command("/bin/ps",["-p",String(pid),"-o","uid=","-o","comm="]).trim();
-  const match=/^(\d+)\s+(.+)$/.exec(line);
-  if(!match||Number(match[1])!==uid||match[2]!==EXECUTABLE)
+  const line=command("/bin/ps",["-p",String(pid),"-o","uid=","-o","stat=","-o","comm="]).trim();
+  const match=/^(\d+)\s+([A-Za-z+<>=-]{1,16})\s+(.+)$/.exec(line);
+  if(!match||Number(match[1])!==uid||match[3]!==EXECUTABLE)
    throw Error("Refusing VoiceOver reset outside the runner user and exact Apple executable");
+  return {pid,state:match[2],zombie:match[2].startsWith("Z")};
  }
  const found=pids();
- // Validate the entire bounded inventory before sending any signal.
- for(const pid of found)owned(pid);
- for(const pid of found){owned(pid);kill(pid,"SIGTERM");}
- if(found.length)await wait(250);
- const remaining=pids();
- for(const pid of remaining){
-  if(!found.includes(pid))throw Error("VoiceOver process changed during runner preflight");
-  owned(pid);
+ // A verified zombie has exited and cannot speak or handle events; it is not a live reader.
+ // Keep it in the identity inventory, never signal it, and never treat an unknown state as stopped.
+ const initial=found.map(owned);
+ for(const process of initial)if(!process.zombie){
+  if(!owned(process.pid).zombie)kill(process.pid,"SIGTERM");
  }
- for(const pid of remaining){owned(pid);kill(pid,"SIGKILL");}
+ if(initial.some(process=>!process.zombie))await wait(250);
+ const remaining=pids().map(pid=>{
+  if(!found.includes(pid))throw Error("VoiceOver process changed during runner preflight");
+  return owned(pid);
+ });
+ let forced=0;
+ for(const process of remaining)if(!process.zombie){
+  if(!owned(process.pid).zombie){kill(process.pid,"SIGKILL");forced++;}
+ }
+ let observed=[];
  for(let attempt=0;attempt<20;attempt++){
-  if(pids().length===0)return {initialProcesses:found.length,forcedProcesses:remaining.length};
+  observed=pids().map(pid=>{
+   if(!found.includes(pid))throw Error("VoiceOver process changed during runner preflight");
+   return owned(pid);
+  });
+  if(observed.every(process=>process.zombie))
+   return {initialProcesses:found.length,forcedProcesses:forced};
   await wait(100);
  }
- throw Error("VoiceOver runner preflight did not prove a stopped reader");
+ throw Error("VoiceOver runner preflight did not prove a stopped reader: "+
+  JSON.stringify(observed.map(({pid,state})=>({pid,state}))));
 }

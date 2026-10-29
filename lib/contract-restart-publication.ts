@@ -1,5 +1,5 @@
 import {prepareRestartActivation,type RestartContractActivation} from "@/lib/contract-restart-activation";
-import {canonicalFinancialSnapshot,CURRENT_CONTRACT_FUNDING_POLICY,type ContractFundingPolicy,type ContractFundingContext} from "@/lib/contract-funding-rules";
+import {CURRENT_CONTRACT_FUNDING_POLICY,type ContractFundingPolicy,type ContractFundingContext} from "@/lib/contract-funding-rules";
 import {CURRENT_COMMERCIAL_MARGIN_REVIEW,CURRENT_PRICE_AND_RIGHTS_SNAPSHOT} from "@/lib/commercial-margin";
 import {redisPipeline} from "@/lib/redis";
 import {withRestartPublicationRecord,type RestartPublicationGoal} from "@/lib/store";
@@ -273,12 +273,23 @@ return {2,o.finish}
 
 type PublishedRestart=StartedSubscription&{fundedPublication:true};
 function publicationAck(reply:unknown,finish:number):boolean|null{
- const encoded=canonicalFinancialSnapshot(reply);if(!encoded)return null;
- const values=JSON.parse(encoded);
- if(!Array.isArray(values)||values.length!==1)return null;
- const ack=values[0];
- if(ack===0)return false;
- return Array.isArray(ack)&&ack.length===2&&(ack[0]===1||ack[0]===2)&&ack[1]===finish?true:null;
+ try{
+  if(!Array.isArray(reply))return null;
+  const outerLength=Object.getOwnPropertyDescriptor(reply,"length");
+  if(!outerLength||!Object.hasOwn(outerLength,"value")||outerLength.value!==1)return null;
+  if(Object.getOwnPropertySymbols(reply).length!==0)return null;
+  const entry=Object.getOwnPropertyDescriptor(reply,"0");
+  if(!entry||!Object.hasOwn(entry,"value"))return null;
+  const ack=entry.value;
+  if(ack===0)return false;
+  if(!Array.isArray(ack))return null;
+  const innerLength=Object.getOwnPropertyDescriptor(ack,"length");
+  if(!innerLength||!Object.hasOwn(innerLength,"value")||innerLength.value!==2)return null;
+  if(Object.getOwnPropertySymbols(ack).length!==0)return null;
+  const flag=Object.getOwnPropertyDescriptor(ack,"0"),end=Object.getOwnPropertyDescriptor(ack,"1");
+  if(!flag||!end||!Object.hasOwn(flag,"value")||!Object.hasOwn(end,"value"))return null;
+  return (flag.value===1||flag.value===2)&&end.value===finish?true:null;
+ }catch{return null;}
 }
 /** Acknowledged Store/index/generation publication only. Never another provider operation.
  * Notice funding and remaining lifecycle gates are separate; current coverage stays false.
