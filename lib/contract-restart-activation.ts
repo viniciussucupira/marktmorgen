@@ -32,7 +32,7 @@ local function decode(raw,limit)
 end
 if #KEYS~=4 or #ARGV~=11 then return 0 end
 local e,s,o=decode(ARGV[3],4096),decode(ARGV[4],512),decode(ARGV[5],256)
-if not e or not s or not o then return 0 end
+if not e or not s or not o or type(o.renews)~='boolean' or type(o.shared)~='boolean' then return 0 end
 local fields={'version','grant','review','statsId','sourceSubscription','sourceGrant','ref','handle','paused','claim','created','deadline','sourceBinding','sourceReceipt','restartReceipt','reservedCents','carriedCents','annual'}
 local count=0
 for _ in pairs(e) do count=count+1 end
@@ -61,7 +61,7 @@ if not oldCharge or oldCharge<=0 or oldCharge+charge>e.reservedCents-e.carriedCe
 local pause=decode(e.paused,1536)
 if not pause or pause.subscription~=e.sourceSubscription or pause.from~=oldFinish or not integer(pause['until']) or pause['until']<=oldFinish or pause['until']>e.created or type(pause.funding)~='table' or pause.funding.version~=1 or pause.funding.grantId~=e.sourceGrant then return 0 end
 if redis.call('TYPE',KEYS[1]).ok~='hash' or redis.call('TTL',KEYS[1])~=-1 then return 0 end
-local v=redis.call('HMGET',KEYS[1],'policy','review','pending:'..e.statsId,'active:'..e.statsId,'restart-owner:'..e.sourceGrant,'restart-intent:'..e.grant,'grant:'..e.sourceGrant,'activated:'..e.sourceGrant,'grant:'..e.grant,'reserved','carried','slots:'..receipt[3],'activated:'..e.grant)
+local v=redis.call('HMGET',KEYS[1],'policy','review','pending:'..e.statsId,'active:'..e.statsId,'restart-owner:'..e.sourceGrant,'restart-intent:'..e.grant,'grant:'..e.sourceGrant,'activated:'..e.sourceGrant,'grant:'..e.grant,'reserved','carried','slots:'..receipt[3],'activated:'..e.grant,'restart-publication:'..e.grant)
 if v[1]~=ARGV[1] or v[2]~=e.review or v[3]~=e.grant or v[5]~=e.grant or v[7]~=e.sourceReceipt or v[8]~=e.sourceBinding or v[9]~=e.restartReceipt then return 0 end
 local actual=decode(v[6],4096)
 if not actual then return 0 end
@@ -78,16 +78,31 @@ local annual=amount(redis.call('GET',KEYS[4]))
 if not annual or annual<=0 or annual>now or annual~=e.annual then return 0 end
 local binding=e.grant..'|'..o.id..'|'..receipt[3]..'|'..o.created..'|paid|'..o.start..'|'..o.finish
 if #binding>256 then return 0 end
+local checkpoint={version=1,binding=binding,renews=o.renews,shared=o.shared}
+local encodedCheckpoint=cjson.encode(checkpoint)
+if #encodedCheckpoint>384 then return 0 end
 if v[13] then
  if v[13]~=binding or v[4]~=binding then return 0 end
+ local existing=decode(v[14],384)
+ if not existing then return 0 end
+ local n=0 for _ in pairs(existing) do n=n+1 end
+ if n~=4 or existing.version~=1 or existing.binding~=binding or existing.renews~=o.renews or existing.shared~=o.shared then return 0 end
+ local retained=a.publication
+ if type(retained)~='table' then return 0 end
+ local retainedFields=0 for _ in pairs(retained) do retainedFields=retainedFields+1 end
+ if retainedFields~=2 or retained.renews~=o.renews or retained.shared~=o.shared then return 0 end
  return {2,o.finish}
 end
+if v[14] or a.publication~=nil then return 0 end
 if now>deadline or v[4]~=e.sourceBinding then return 0 end
-redis.call('HSET',KEYS[1],'activated:'..e.grant,binding,'active:'..e.statsId,binding)
+a.publication={renews=o.renews,shared=o.shared}
+local retainedIntent=cjson.encode(actual)
+if #retainedIntent>4096 then return 0 end
+redis.call('HSET',KEYS[1],'activated:'..e.grant,binding,'active:'..e.statsId,binding,'restart-publication:'..e.grant,encodedCheckpoint,'restart-intent:'..e.grant,retainedIntent)
 return {1,deadline}
 `;
 
-export type RestartContractActivation={armed:ArmedRestartSubmission;subscriptionId:string;createdSeconds:number;periodStartSeconds:number;periodEndSeconds:number};
+export type RestartContractActivation={armed:ArmedRestartSubmission;subscriptionId:string;createdSeconds:number;periodStartSeconds:number;periodEndSeconds:number;renews:boolean;shared:boolean};
 export async function activateRestartContract(
  input:RestartContractActivation,
  policy:ContractFundingPolicy|null=CURRENT_CONTRACT_FUNDING_POLICY,
@@ -97,7 +112,8 @@ export async function activateRestartContract(
  try{
   const encoded=canonicalFinancialSnapshot({input,policy,context});if(!encoded)return false;
   ({input,policy,context}=JSON.parse(encoded));
-  const {armed,subscriptionId,createdSeconds,periodStartSeconds,periodEndSeconds}=input;
+  const {armed,subscriptionId,createdSeconds,periodStartSeconds,periodEndSeconds,renews,shared}=input;
+  if(typeof renews!=='boolean'||typeof shared!=='boolean')return false;
   const {intent}=armed,{grant}=intent;
   const before=new Date(),seconds=Math.floor(before.getTime()/1000),config=contractFundingConfiguration(policy,context,before);
   if(!config||!commercialMarginReady(context.review)||config.reviewId!==grant.reviewId||config.grantCents[grant.key]!==grant.reservedCents||!isRedisConfigured())return false;
@@ -106,7 +122,7 @@ export async function activateRestartContract(
   if(!ownedRestartIntentFromAcknowledgement({grant,ref:intent.ref,handle:intent.handle,paused:intent.paused,claim:intent.claim,sourceGrantId},intent.claimedAtSeconds,config,[1,JSON.stringify(expected)]))return false;
   if(typeof subscriptionId!=="string"||!/^sub_[A-Za-z0-9]{6,64}$/.test(subscriptionId)||subscriptionId===grant.sourceSubscriptionId||![createdSeconds,periodStartSeconds,periodEndSeconds].every(n=>Number.isSafeInteger(n)&&n>0)||periodStartSeconds<createdSeconds||periodStartSeconds>seconds||periodEndSeconds<=seconds)return false;
   const submission={priceId:armed.priceId,bodyHash:armed.bodyHash,idempotencyKey:armed.idempotencyKey,armedAt:armed.armedAtSeconds};
-  const observation={id:subscriptionId,created:createdSeconds,start:periodStartSeconds,finish:periodEndSeconds};
+  const observation={id:subscriptionId,created:createdSeconds,start:periodStartSeconds,finish:periodEndSeconds,renews,shared};
   const span=CONTRACT_FUNDING_RULES.longestMonthDays*86400;
   const reply=await redisPipeline([["EVAL",ACTIVATE_RESTART_CONTRACT,4,"nl:contract-reserve:v1","nl:pause:"+intent.ref,"nl:pause:due","nl:pause:last:"+intent.ref,contractFundingBinding(config),config.reviewId,JSON.stringify(expected),JSON.stringify(submission),JSON.stringify(observation),seconds,config.grantCents[grant.key],config.cashLimitCents,config.carryForwardCents,config.fundedGrants[grant.key],span]]);
   const current=contractFundingConfiguration(policy,context,new Date()),checkedAt=Date.now(),ack=reply[0];

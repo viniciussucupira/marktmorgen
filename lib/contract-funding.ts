@@ -656,8 +656,19 @@ if active~=sourceBinding then
  local deadline,through=number(receipt[8]),tonumber(receipt[9])
  if #bound~=7 or table.concat(bound,'|')~=active or bound[1]~=owner or bound[2]~=s.subscriptionId or bound[3]~=source[3] or bound[5]~='paid' or not created or not start or not finish or created<s.armedAt or created>now or start<created or start>now or finish<=now or finish<=start or finish-start>31*86400 then return 0 end
  if #receipt~=10 or table.concat(receipt,'|')~=intent.restartReceipt or receipt[1]~=intent.review or receipt[2]~=intent.statsId or receipt[3]~=source[3] or receipt[4]~='restart' or receipt[10]~=ARGV[3] or not deadline or created>deadline or not through or through<=0 or not string.match(receipt[9],'^%d+$') or (#receipt[9]>1 and string.sub(receipt[9],1,1)=='0') or through~=math.floor(through) or through>9007199254740991 or finish*1000>through then return 0 end
- return {'activated',raw,active}
+ local checkpointRaw=redis.call('HGET',KEYS[1],'restart-publication:'..owner)
+ if not checkpointRaw or #checkpointRaw>384 then return 0 end
+ local validCheckpoint,checkpoint=pcall(cjson.decode,checkpointRaw)
+ if not validCheckpoint or type(checkpoint)~='table' then return 0 end
+ local checkpointFields=0 for _ in pairs(checkpoint) do checkpointFields=checkpointFields+1 end
+ if checkpointFields~=4 or checkpoint.version~=1 or checkpoint.binding~=active or type(checkpoint.renews)~='boolean' or type(checkpoint.shared)~='boolean' then return 0 end
+ local retained=s.publication
+ if type(retained)~='table' then return 0 end
+ local retainedFields=0 for _ in pairs(retained) do retainedFields=retainedFields+1 end
+ if retainedFields~=2 or retained.renews~=checkpoint.renews or retained.shared~=checkpoint.shared then return 0 end
+ return {'activated',raw,active,checkpointRaw}
 end
+if s.publication~=nil then return 0 end
 if reads>=3 then return {'held'} end
 s.recoveryReads=reads+1
 s.lastRecoveryAt=now
@@ -667,7 +678,7 @@ redis.call('HSET',KEYS[1],'restart-intent:'..owner,encoded)
 return {'read',encoded}
 `;
 export type RestartRecoveryInput={statsId:string;sourceSubscriptionId:string;sourceGrantId:string;ref:string;handle:string;paused:string};
-export type RestartRecovery={kind:'absent'}|{kind:'held'}|{kind:'read';armed:ArmedRestartSubmission;subscriptionId:string|null}|{kind:'activated';armed:ArmedRestartSubmission;subscriptionId:string;createdSeconds:number;periodStartSeconds:number;periodEndSeconds:number};
+export type RestartRecovery={kind:'absent'}|{kind:'held'}|{kind:'read';armed:ArmedRestartSubmission;subscriptionId:string|null}|{kind:'activated';armed:ArmedRestartSubmission;subscriptionId:string;createdSeconds:number;periodStartSeconds:number;periodEndSeconds:number;renews:boolean;shared:boolean};
 /** At most three lifetime provider reads per source owner. Lost ACK consumes
  * a provider-read allowance; committed paid evidence returns without consuming one.
  * No POST, new owner, reserve, release or activation.
@@ -688,7 +699,7 @@ export async function takeRestartRecovery(
   const ack=reply[0];
   if(ack.length===1&&(ack[0]==='absent'||ack[0]==='held'))return {kind:ack[0]};
   const activated=ack[0]==='activated';
-  if((activated?ack.length!==3||typeof ack[2]!=='string'||Buffer.byteLength(ack[2])>256:ack.length!==2||ack[0]!=='read')||typeof ack[1]!=='string'||Buffer.byteLength(ack[1])>4096)return null;
+  if((activated?ack.length!==4||typeof ack[2]!=='string'||Buffer.byteLength(ack[2])>256||typeof ack[3]!=='string'||Buffer.byteLength(ack[3])>384:ack.length!==2||ack[0]!=='read')||typeof ack[1]!=='string'||Buffer.byteLength(ack[1])>4096)return null;
   const {submission,...original}=JSON.parse(ack[1]);
   if(typeof original.claim!=='string'||!/^claim_[A-Za-z0-9_-]{1,80}$/.test(original.claim))return null;
   const receipt=original.restartReceipt.split('|'),through=Number(receipt[8]);
@@ -704,8 +715,13 @@ export async function takeRestartRecovery(
   if(activated){
    const bound=(ack[2] as string).split('|'),created=Number(bound[3]),start=Number(bound[5]),finish=Number(bound[6]);
    if(!id||submission.phase!=='observed'||bound.length!==7||bound.join('|')!==ack[2]||bound[0]!==grant.id||bound[1]!==id||bound[2]!==grant.key||bound[4]!=='paid'||![created,start,finish].every(n=>Number.isSafeInteger(n)&&n>0)||created<submission.armedAt||created>grant.activationUntilSeconds||start<created||start>now||finish<=now||finish-start>31*86400||finish*1000>through||Math.floor(Date.now()/1000)>=finish)return null;
-   return {kind:'activated',armed,subscriptionId:id,createdSeconds:created,periodStartSeconds:start,periodEndSeconds:finish};
+   const checkpoint=JSON.parse(ack[3] as string);
+   if(!checkpoint||typeof checkpoint!=='object'||Array.isArray(checkpoint)||Object.keys(checkpoint).length!==4||checkpoint.version!==1||checkpoint.binding!==ack[2]||typeof checkpoint.renews!=='boolean'||typeof checkpoint.shared!=='boolean')return null;
+   const retained=submission.publication;
+   if(!retained||typeof retained!=='object'||Array.isArray(retained)||Object.keys(retained).length!==2||retained.renews!==checkpoint.renews||retained.shared!==checkpoint.shared)return null;
+   return {kind:'activated',armed,subscriptionId:id,createdSeconds:created,periodStartSeconds:start,periodEndSeconds:finish,renews:checkpoint.renews,shared:checkpoint.shared};
   }
+  if(submission.publication!==undefined)return null;
   return {kind:'read',armed,subscriptionId:id};
  }catch{return null;}
 }
