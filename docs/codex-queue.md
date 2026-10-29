@@ -16817,3 +16817,12 @@ Inspeção real deStoreLayoutEditor mostrou controlesSSRhabilitados antesdehandl
 Regressão real comcontextojavaScriptdesligadocomprovaSSRsemprontidão/controlesbloqueados/0APIwrites;contextos normais390/1280observamprontidãoreale seguemeditandopeloteclado/controlesnativos. Todos48writesinterceptados/casosdeACK/asserções/timeouts/limiaresoriginais mantidos. Nãoéretentativa dormindo ou apagandoprova; NOVOheadexigesuítaCOMPLETA. Sóarquivossintéticos/serviçosinterceptados;semcliente/conta/Stripe/envio.
 
 Custo:reusahooklocal,semnovoIOprodutivo/provedor/envio/chave/retenção/retry,compequenamudançadeJS/markup/rendercujo custo totalnãoézero conhecido.Mediçãomóvel/AXe39checksnovosobrigatórios,CI100%FX275;nãocertificarmargem/AAA.0→0ações/decisõesadicionais,controlesconservadospelotecladoquando prontos. Gates/flags/preços/direitos/limites/comissão/optins/conteúdo/Hazelsong/idiomas/IDs preservados;contador254sempublicação/provainterativa. Históricoanteriorpermanece.
+
+
+### Falha real do cenário sem JavaScript e reparo do harness — 29/10/2026
+
+Head354ac0e856dddfc39cfa5df04b359629399ff311nãoaprovado:verify123747139280falhou21:50:12.6090236UTC ao fechar contextoJSdesligado. Asasserçõesda nova regressãoSSRpassaram21:49:12:prontidãofalse/busytrue/controlesreaisdisabled/0APIwrites. Depois,owrapperglobalcontext.closeemstore-copy.mjs:283esperoupage.waitForFunction/RAFpor60s numdocumentoqueexplicitamentenãoexecutascript. Nãoérecusa financeira,nãoéprova dos fluxosJSligados nemapaga a falha anteriorWebKit.
+
+Correção restrita ao harness: quando options.javaScriptEnabled===false,semfetch/RSCcliente,settle/close não aguardam RAF/navegação de cliente impossível. TODOcontextoJSligado conserva o drain/fetchRSC,200msestáveis,timeout60s e regrasatuais. RegressãoSSRpermanece integral,agora tambémconfirmaquecontextofechou; todas48asserçõesdewrites/ACK/layoutdosfluxosinterativos continuam. Semsleep/retry/reduçãodelimiar/remoçãodeasserção oujobisoladoparadeclararconclusão. NOVOheadexigeNOVAsuítaCOMPLETA.
+
+Nenhumoutrocomponente/fluxoprodutivo/IO/provedor/email/preço/limite/flag/revisão/cobertura/reserva/optin/conteúdo/Hazelsong/idioma/IDalterado. CustosCIpertencem100%FX275,desconhecidonãozero,semcertificaçãomargem/AAA/INPdecampo. Contador254,nãopublicado.Históricoefalhaspreservados.

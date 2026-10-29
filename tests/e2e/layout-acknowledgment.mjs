@@ -33,6 +33,7 @@ export async function checkLayoutAcknowledgment({browser,LOCAL,fixture,is}){
   for(const control of controls)is("layout controls cannot take edits before handlers",await control.isDisabled(),true);
   is("layout preparation starts no API write",writes,0);
  }finally{await beforeReady.close();}
+ is("layout no-script context closes without waiting for client navigation",beforeReady.pages().length,0);
  for(const width of [390,1280]){
   const context=await browser.newContext({viewport:{width,height:900}});
   try{
