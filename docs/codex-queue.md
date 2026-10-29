@@ -15284,6 +15284,34 @@ Aplicar a regra VR.
 PR1210 incorporado em29/10/2026,11:11:04Fortaleza/14:11:04UTC,merge51030ab4096c01143c928a1580226580fb67c260,headd21991c7dd1be9ebd6748c069ffe54a9e4075761,árvoree2f5e69ed5cf8fb43c869773d17aa33cd2718210,paise13e8504+d21991c.27checksdocumentais16success11skips+Vercel.525FN1mantémnafilaapós524,briefingintegral/ordem/estado preservados;375/32complementoTBcontinuanestePR1208comcódigoreal. Suíteinteira novamente no novohead combinado; nenhuma prova antiga é certificação destehead. Counter254inalterado.
 
 
+FN — Complemento ao 525 [FN1]: cliques na página de obrigado e gráfico por dia (29/10/2026)
+Etiqueta: [FN1]
+
+Solicitação do dono (29/10/2026, 12h01, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: é complemento ao item 525 [FN1] já gravado. Aplique só a diferença ao item existente, mantendo número, posição e estado (regra "Pedidos repetidos", passo 3, letra b), e registre na proveniência o que mudou.
+
+Estado inicial: o do próprio 525.
+
+Contexto: na nova captura do painel de resultados do funil da ClickFunnels enviada pelo dono, a etapa "Thank you page" mostra "Click-through" (quantas pessoas clicaram para seguir adiante), e o resumo tem um ícone de gráfico ao lado da escolha do período. A demonstração deles também mostra números que se contradizem ("Rec. Sales" 802,528 como quantidade, "Recurring Sales" $802,528.00 e "Rec. Revenue" $0.00), o que o 525 já proíbe.
+
+O que acrescentar ao 525 [FN1]:
+- na última etapa do funil (página de obrigado ou de confirmação): quantas pessoas clicaram num link ou botão dela para seguir adiante, e a porcentagem sobre as visitas dessa etapa, contadas pelo mesmo método de contagem do Marktmorgen, sem rastreamento novo nem dado pessoal;
+- botão de gráfico no painel de resumo, que mostra visitas, vendas e receita por dia no período escolhido, com uma tabela equivalente ao lado para leitor de tela (AX274);
+- regra de coerência: receita recorrente, quantidade de renovações e receita à vista nunca se contradizem; um teste automático falha se a mesma quantia aparecer como quantidade e como dinheiro, ou se um total for diferente da soma das suas partes.
+
+Testes automáticos: contagem de cliques na última etapa, porcentagem, gráfico e tabela com os mesmos números, e as regras de coerência.
+
+Regra de margem: segue a REGRA DE MARGEM vigente (MR, 27/10/2026, 07h42), a política tributária TX e FX275; custo desconhecido reprova, nunca é zero.
+
+Proibido: criar item novo ou mudar número, posição ou estado do 525; inventar, estimar ou arredondar para cima qualquer número; criar rastreamento novo ou coletar dado pessoal; mudar preços, limites visíveis, comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a, a revisão comercial ou stripePlatformEligibilityReady; afrouxar qualquer trava; mostrar recurso que não funciona hoje; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+
+Proveniência/diferença do complemento: pedido direto do dono acima; descrição da captura e números contraditórios atribuídos ao briefing, não dados de compradores/receita doMarktmorgen nem inspeção independente de imagem não anexada nesta mensagem. Acrescentados só cliques/porcentagem na últimaetapa pelo mesmo método,gráficodiário/tabelaequivalente e testes de coerência quantidade/moeda/somapartes.525número/posição/estadona filaeescopoanteriorpreservados;nenhumitem527. Counts unavailable distinto de zero,moeda/reembolsos/fuso/período/semPII/semrastreamentonovo e tetosantesleiturascontinuam. Deduplicação main332a38d,PR1208aberto,20PRsrecentes/19heads codexdistintos e764refs,semcomplemento12h01equivalente. Registro na alteração de códigoPR1208jáemcurso;reconferir código antes eaplicar sódiferença.MR/TX/FX275/AX274/VRpreservados.
+
 ## FN2 — registro integral; item526 (29/10/2026,11h10Fortaleza)
 
 Proveniência: pedido direto do dono nesta conversa; descrição da captura e do estado do produto atribuída ao briefing, sem alegar inspeção independente de imagem não anexada nesta mensagem. Deduplicação: main51030ab,PR1208aberto,20PRsrecentes/19heads codexdistintos e763refs,sem etiqueta/título/data/conteúdo equivalente. Próximo livre526após525FN1,sem alterar ordem/estado/escopo existentes. Reaproveitar377TB3/headline-test/flows/funnel-metrics;receitas só quando525funcionar;reconferir código antes e aplicar apenasdiferença. MR/TX/FX275/AX274/VR,custosdetetos antesoperação e desconhecido reprova vinculantes. Registro somente,sem implementar/ativar/anunciar recurso; AVcontinua,TB375/32permanece noPR1208comcódigo.
