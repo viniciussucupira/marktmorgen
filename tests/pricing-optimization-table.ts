@@ -265,7 +265,8 @@ export const profit = (tier: Tier, monthCents: number, shares: Shares, e: number
 /** The lower share of each #553 figure an alternative allows: A keeps every one; C allows cuts down to a tenth (the proposal's MIN_INCLUDED_SHARE). */
 export const ALTERNATIVES = { A: 1, C: 0.1 } as const;
 export type Alternative = keyof typeof ALTERNATIVES;
-const SAFETY_CENTS = 3;
+// Reserve exceeds the measured four-cent rounding gap; it reduces both solver budgets.
+export const SAFETY_CENTS = 5;
 
 export type MilpInput = {
   generatedBy: string;
@@ -277,7 +278,7 @@ export type MilpInput = {
   plans: Record<Tier, {
     anchorCents: number;
     figures: Record<Printed, number>;
-    options: { monthCents: number; roomMonth: number; roomYear: number; netAtOnes: number; usageMonthAtOnes: number; demand: Record<string, number> }[];
+    options: { monthCents: number; roomMonth: number; roomYear: number; netAtOnes: number; usageMonthAtOnes: number; exactKeepsAtOnes: boolean; demand: Record<string, number> }[];
     baseMonth: number; baseYear: number; coefMonth: Record<Printed, number>; coefYear: Record<Printed, number>;
   }>;
 };
@@ -297,6 +298,7 @@ export function milpInput(): MilpInput {
         roomYear: unitUnder(monthCents * 10, 0, SIZING_READING, true).usageRoomCents - PLAN_ROOM.year - SAFETY_CENTS,
         netAtOnes: unitAt(tier, "month", monthCents, ones()).netCents,
         usageMonthAtOnes: usageFor(tier, "month", ones()),
+        exactKeepsAtOnes: keeps(tier, monthCents, ones()),
         // Twelve significant digits: Math.pow may differ in its last bit between Node versions.
         demand: Object.fromEntries(ELASTICITIES.map((e) => [String(e), Number(demand(tier, monthCents, e).toPrecision(12))])),
       })),
@@ -576,7 +578,7 @@ export function renderPricingOptimization(): string {
   push("");
   push("**Decisions.** For each plan, its monthly price on the grid of every $X9 from $9 to twice today's (the year at ten monthly payments, Marktmorgen's convention), and the share of each of #553's eight per-use figures (visits, orders, list emails, AI, storage, video hours, access emails, store emails).");
   push("");
-  push("**Constraints.** Every plan, alone, at full use of every figure, keeps 60% on both intervals with the spend floor test's room (25¢ a month, $1 a year), under the sizing reading: the program's room per price is `unitUnder`'s, less 3¢ of safety for rounding, and its usage is linear in the shares, with coefficients read from `usageCents` (the largest gap between that line and `usageCents` at today's figures is " + `${linearityGap()}¢` + "). Prices rise from Store to Studio to Scale; no figure of a plan is above the same figure of the plan above it. The number of plans stays three. Then each solution, as a page would print it, is checked again by `unitUnder` itself.");
+  push("**Constraints.** Every plan, alone, at full use of every figure, keeps 60% on both intervals with the spend floor test's room (25¢ a month, $1 a year), under the sizing reading: the program's room per price is `unitUnder`'s, less " + `${SAFETY_CENTS}¢` + " of safety for rounding, and its usage is linear in the shares, with coefficients read from `usageCents` (the largest gap between that line and `usageCents` at today's figures is " + `${linearityGap()}¢` + "). Prices rise from Store to Studio to Scale; no figure of a plan is above the same figure of the plan above it. The number of plans stays three. Then each solution, as a page would print it, is checked again by `unitUnder` itself.");
   push("");
   push("**Objective.** Demand at each price is q = (price ÷ the band's median price)^ε, one scenario for each ε in −0.5, −1, −1.5 and −2; the objective is the sum over plans of q times the monthly payment's net at full use: **a profit index in dollars per customer the band's median price would bring**, comparable within a scenario only. No scenario is a measurement: no sale has ever been open.");
   push("");

@@ -45,6 +45,14 @@ def main():
     if not restart_activation_match or '$' + '{' in restart_activation_match.group(1):
         raise RuntimeError('Expected static funded restart activation Lua')
     restart_activation_script = restart_activation_match.group(1)
+    publication_source = (Path(__file__).resolve().parents[1] / 'lib/contract-restart-publication.ts').read_text(encoding='utf-8')
+    publication_match = re.search(r'export const PUBLISH_RESTART_STORE = `([^`]+)`;', publication_source)
+    readback_match = re.search(r'export const READ_RESTART_PUBLICATION = `([^`]+)`;', publication_source)
+    if not publication_match or not readback_match or chr(36)+'{' in publication_match.group(1) or chr(36)+'{' in readback_match.group(1):
+        raise RuntimeError('Expected static actual joint publication/readback Lua')
+    publication_script,readback_script = publication_match.group(1),readback_match.group(1)
+    assert publication_script.count(restart_activation_script) == 1, 'Joint publisher must replay the exact current financial activation script'
+
     resource_source = (Path(__file__).resolve().parents[1] / 'lib/contract-resource-window.ts').read_text(encoding='utf-8')
     resource_match = re.search(r'export const RESERVE_PAID_RESOURCE_WINDOW = `([^`]+)`;', resource_source)
     if not resource_match or '$' + '{' in resource_match.group(1):
@@ -54,6 +62,7 @@ def main():
     keys = [prefix + str(i) for i in range(45)]
     intent_refs = ['synthetic-restart-intent-' + uuid.uuid4().hex + '-' + str(i) for i in range(3)]
     redis = Redis()
+    joint_owned_keys = []
     def snapshot(key):
         fields = redis.command('HGETALL', key)
         assert len(fields) % 2 == 0
@@ -1472,6 +1481,182 @@ def main():
         print('PASS:pause notice8negative cases, exact generation/due, lostACK, replacement and KEEPTTL;commands=' + json.dumps(notice_counts, sort_keys=True))
 
 
+
+        # Actual joint publisher uses canonical app key names only on this disposable CI Redis.
+        import hashlib
+        from datetime import datetime, timezone
+        joint_ledger='nl:contract-reserve:v1'
+        joint_indexes=['nl:plan:ended','nl:plan:paying','nl:share:stores']
+        for fixed in [joint_ledger,*joint_indexes]:
+            assert redis.command('EXISTS',fixed)==0, 'Refuse an unrelated existing canonical CI fixture'
+        joint_ref=intent_refs[0]
+        joint_owner='nl:store:owner:'+hashlib.sha256(('nimbus-store:'+joint_ref.lower()).encode()).hexdigest()[:40]
+        joint_lock=joint_owner.replace('nl:store:owner:','nl:store:lock:')
+        for owned in [joint_owner,joint_lock]:
+            assert redis.command('EXISTS',owned)==0
+        joint_owned_keys.extend([joint_ledger,*joint_indexes,joint_owner,joint_lock])
+        def joint_ready(shared=False):
+            redis.command('DEL',*joint_owned_keys)
+            fixture=activation_ready()
+            fixture=(*fixture[:4],{**fixture[4],'shared':shared})
+            assert activate_restart(redis,fixture)==[1,1800086400]
+            valid_stats='c'*32
+            fields=[]
+            for field,value in snapshot(keys[42]):
+                fields.extend([field.replace('restart-store',valid_stats),value.replace('restart-store',valid_stats)])
+            redis.command('HSET',joint_ledger,*fields)
+            retained=json.loads(redis.command('HGET',joint_ledger,'restart-intent:ctr_restart_new'))
+            sent={field:retained['submission'][field] for field in ('priceId','bodyHash','idempotencyKey','armedAt')}
+            expected={key:value for key,value in retained.items() if key!='submission'}
+            observed=fixture[4]
+            paused=json.loads(fixture[1])
+            before=dict(handle=expected['handle'],name='Synthetic creator',email=joint_ref,sid='b'*32,extra=False,
+                        statsId=valid_stats,subscriptionId=expected['sourceSubscription'],stripeCustomerId=paused['customer'],
+                        subscriptionActive=False,tier='creator',cycle='month',trialEnds=0,shared=False,period=None,
+                        planEndedAt='2026-01-01T00:00:00.000Z',
+                        catalog=dict(id='a'*32,items=[['d'*32,0,'e'*32]],head=[]),
+                        creatorContent=dict(emptyArray=[],emptyObject={},languages=['pt','en'],price=1.25),futureField=dict(enabled=True))
+            after={**json.loads(json.dumps(before)),'subscriptionId':observed['id'],'subscriptionActive':True,
+                   'subscriptionCheckedAt':datetime.fromtimestamp(observed['start'],timezone.utc).strftime('%Y-%m-%dT%H:%M:%S.000Z'),
+                   'trialEnds':0,'shared':observed['shared'],'planEndedAt':'',
+                   'period':dict(start=observed['start'],end=observed['finish'],renews=observed['renews'],funded=True)}
+            binding='|'.join([expected['grant'],observed['id'],'creator_month',str(observed['created']),'paid',str(observed['start']),str(observed['finish'])])
+            receipt=dict(version=1,policy='binding',review='review',grant=expected['grant'],sourceGrant=expected['sourceGrant'],
+                         claim=expected['claim'],ref=joint_ref,statsId=valid_stats,handle=expected['handle'],sid=before['sid'],
+                         customerId=paused['customer'],sourceSubscriptionId=expected['sourceSubscription'],subscriptionId=observed['id'],
+                         binding=binding,start=observed['start'],finish=observed['finish'],tier='creator',
+                         renews=observed['renews'],shared=observed['shared'],annual=expected['annual'])
+            encode=lambda value:json.dumps(value,separators=(',',':'),ensure_ascii=False)
+            before_raw,after_raw,receipt_raw=encode(before),encode(after),encode(receipt)
+            assert len(receipt_raw.encode())<=1536
+            redis.command('SET',joint_owner,before_raw)
+            redis.command('SET',joint_lock,'joint-synthetic-token','PX',15000)
+            redis.command('ZADD',joint_indexes[0],1799999999,joint_ref)
+            ks=[joint_ledger,joint_lock,joint_owner,'nl:pause:'+joint_ref,'nl:pause:due','nl:pause:last:'+joint_ref,*joint_indexes]
+            args=['binding','review',encode(expected),encode(sent),encode(observed),1800000004,50,140,0,2,31*86400,
+                  'joint-synthetic-token',before_raw,after_raw,receipt_raw]
+            return ks,args,before,after,receipt
+        def joint_call(client,ks,args,read=False):
+            return client.command('EVAL',readback_script if read else publication_script,9,*ks,*args)
+        def joint_state(ks):
+            result=[]
+            for key in ks:
+                kind=redis.command('TYPE',key)
+                if kind=='hash': value=snapshot(key)
+                elif kind=='string': value=redis.command('GET',key)
+                elif kind=='set': value=sorted(redis.command('SMEMBERS',key))
+                elif kind=='zset': value=redis.command('ZRANGE',key,0,-1,'WITHSCORES')
+                else: value=None
+                result.append((key,kind,value))
+            return result
+        for shared in (False,True):
+            ks,args,before,after,receipt=joint_ready(shared)
+            cash=snapshot(joint_ledger)
+            annual=redis.command('GET',ks[5])
+            counts=command_counts()
+            ignored=joint_call(redis,ks,args) # Deliberately lose the write ACK.
+            write_counts=difference(counts,command_counts())
+            assert ignored==[1,1801000000]
+            assert sum(write_counts.values())<=64,write_counts
+            assert json.loads(redis.command('GET',joint_owner))==after
+            assert after['catalog']==before['catalog'] and after['creatorContent']==before['creatorContent']
+            for field,value in cash:
+                if field=='pending:'+'c'*32:
+                    assert redis.command('HGET',joint_ledger,field) is None
+                else:
+                    assert redis.command('HGET',joint_ledger,field)==value,field
+            assert json.loads(redis.command('HGET',joint_ledger,'restart-published:ctr_restart_new'))==receipt
+            assert redis.command('GET',ks[3]) is None and redis.command('ZSCORE',ks[4],joint_ref) is None
+            assert redis.command('GET',ks[5])==annual
+            assert redis.command('ZSCORE',joint_indexes[0],joint_ref) is None
+            assert redis.command('SISMEMBER',joint_indexes[1],joint_ref)==1
+            assert redis.command('SISMEMBER',joint_indexes[2],joint_ref)==int(shared)
+            state=joint_state(ks)
+            counts=command_counts()
+            assert joint_call(redis,ks,args,True)==[2,1801000000]
+            read_counts=difference(counts,command_counts())
+            assert sum(read_counts.values())<=64,read_counts
+            assert all(name not in read_counts for name in ('set','hset','hdel','del','zadd','zrem','sadd','srem'))
+            def joint_readback(_index):
+                client=Redis()
+                try:return joint_call(client,ks,args,True)
+                finally:client.close()
+            with concurrent.futures.ThreadPoolExecutor(max_workers=16) as pool:
+                assert list(pool.map(joint_readback,range(64)))==[[2,1801000000]]*64
+            assert joint_state(ks)==state
+            expired=[*args];expired[5]=1801000000
+            assert joint_call(redis,ks,expired,True)==0
+            assert joint_state(ks)==state
+        print('PASS:joint Store/index/pause-due publication lostACK plus64readbacks preserves catalog,creator fields,cash,source,annual and permanent owner for both share states')
+        print('RESTART_JOINT_WRITE_COMMANDS:'+json.dumps(write_counts,sort_keys=True))
+        print('RESTART_JOINT_READ_COMMANDS:'+json.dumps(read_counts,sort_keys=True))
+        ks,args,_,_,_=joint_ready()
+        def joint_first_writer(_index):
+            client=Redis()
+            try:return joint_call(client,ks,args)
+            finally:client.close()
+        with concurrent.futures.ThreadPoolExecutor(max_workers=16) as pool:
+            contenders=list(pool.map(joint_first_writer,range(64)))
+        assert contenders.count([1,1801000000])==1 and contenders.count(0)==63
+        print('PASS:64joint publication contenders produce exactly1commit without another provider operation or grant release')
+        scenarios=('lock-foreign','lock-expired','lock-too-long','owner-changed','owner-ttl','source-active','next-content',
+                   'next-subscription','next-unfunded','next-renews','checkpoint','pause','due','annual','policy','cash',
+                   'ended-type','paying-type','sharing-type','published-foreign','oversized','receipt-foreign')
+        for scenario in scenarios:
+            ks,args,before,after,receipt=joint_ready()
+            if scenario=='lock-foreign':redis.command('SET',joint_lock,'foreign-token','PX',15000)
+            elif scenario=='lock-expired':redis.command('DEL',joint_lock)
+            elif scenario=='lock-too-long':redis.command('PEXPIRE',joint_lock,30000)
+            elif scenario=='owner-changed':redis.command('SET',joint_owner,args[12]+' ')
+            elif scenario=='owner-ttl':redis.command('EXPIRE',joint_owner,300)
+            elif scenario=='source-active':
+                before['subscriptionActive']=True;args[12]=json.dumps(before,separators=(',',':'));redis.command('SET',joint_owner,args[12])
+            elif scenario.startswith('next-'):
+                if scenario=='next-content':after['creatorContent']['languages']=['foreign']
+                elif scenario=='next-subscription':after['subscriptionId']='sub_ForeignJoint01'
+                elif scenario=='next-unfunded':after['period']['funded']=False
+                elif scenario=='next-renews':after['period']['renews']=False if after['period']['renews'] else True
+                args[13]=json.dumps(after,separators=(',',':'))
+            elif scenario=='checkpoint':redis.command('HDEL',joint_ledger,'restart-publication:ctr_restart_new')
+            elif scenario=='pause':redis.command('SET',ks[3],args[2])
+            elif scenario=='due':redis.command('ZADD',ks[4],json.loads(json.loads(args[2])['paused'])['until']+1,joint_ref)
+            elif scenario=='annual':redis.command('SET',ks[5],1799999999)
+            elif scenario=='policy':redis.command('HSET',joint_ledger,'policy','foreign')
+            elif scenario=='cash':redis.command('HSET',joint_ledger,'reserved',1)
+            elif scenario.endswith('-type'):
+                index={'ended-type':0,'paying-type':1,'sharing-type':2}[scenario]
+                redis.command('DEL',joint_indexes[index]);redis.command('SET',joint_indexes[index],'wrong-type')
+            elif scenario=='published-foreign':redis.command('HSET',joint_ledger,'restart-published:ctr_restart_new','foreign')
+            elif scenario=='oversized':args[13]='x'*1000001
+            elif scenario=='receipt-foreign':
+                receipt['customerId']='cus_ForeignJoint01';args[14]=json.dumps(receipt,separators=(',',':'))
+            state=joint_state(ks)
+            assert joint_call(redis,ks,args)==0,scenario
+            assert joint_state(ks)==state,scenario
+        print('PASS:22unknown/foreign/expired-lock/raw-CAS/type/financial/generation joint refusals preserve every key')
+        for scenario in ('receipt','pending','active','cash','pause-returned','due-returned','ended-returned','paying-missing','sharing-wrong','annual','owner-plan','owner-content'):
+            ks,args,_,after,_=joint_ready()
+            assert joint_call(redis,ks,args)==[1,1801000000]
+            if scenario=='receipt':redis.command('HDEL',joint_ledger,'restart-published:ctr_restart_new')
+            elif scenario=='pending':redis.command('HSET',joint_ledger,'pending:'+'c'*32,'ctr_restart_new')
+            elif scenario=='active':redis.command('HSET',joint_ledger,'active:'+'c'*32,'foreign')
+            elif scenario=='cash':redis.command('HSET',joint_ledger,'reserved',1)
+            elif scenario=='pause-returned':redis.command('SET',ks[3],'foreign')
+            elif scenario=='due-returned':redis.command('ZADD',ks[4],1800000001,joint_ref)
+            elif scenario=='ended-returned':redis.command('ZADD',ks[6],1800000001,joint_ref)
+            elif scenario=='paying-missing':redis.command('SREM',ks[7],joint_ref)
+            elif scenario=='sharing-wrong':redis.command('SADD',ks[8],joint_ref)
+            elif scenario=='annual':redis.command('SET',ks[5],1799999999)
+            elif scenario=='owner-plan':
+                after['tier']='pro';redis.command('SET',joint_owner,json.dumps(after,separators=(',',':')))
+            elif scenario=='owner-content':
+                after['creatorContent']['newContent']='preserve future creator edit'
+                redis.command('SET',joint_owner,json.dumps(after,separators=(',',':')))
+            state=joint_state(ks)
+            assert joint_call(redis,ks,args,True)==([2,1801000000] if scenario=='owner-content' else 0),scenario
+            assert joint_state(ks)==state,scenario
+        print('PASS:joint readback refuses11partial/foreign financial/index/generation states and preserves a later creator-only edit without writes')
+
         bounded_key = prefix + ':bounded-restart-source'
         keys.append(bounded_key)
         redis.command('SET', bounded_key, 'x' * 1000002)
@@ -1487,6 +1672,11 @@ def main():
 
 
     finally:
+        allowed_joint={'nl:contract-reserve:v1','nl:plan:ended','nl:plan:paying','nl:share:stores'}
+        for key in joint_owned_keys:
+            if key not in allowed_joint and not re.fullmatch(r'nl:store:(owner|lock):[a-f0-9]{40}',key):
+                raise RuntimeError('Refuse cleanup outside explicitly owned disposable joint fixture')
+            redis.command('DEL',key)
         for ref in intent_refs:
             if not ref.startswith('synthetic-restart-intent-'):
                 raise RuntimeError('Refuse unrelated synthetic pause cleanup')

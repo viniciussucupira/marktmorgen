@@ -1,4 +1,5 @@
 import {activateRestartContract,type RestartContractActivation} from "@/lib/contract-restart-activation";
+import {publishRestartStore} from "@/lib/contract-restart-publication";
 import {createHash,randomUUID} from 'node:crypto';
 import {canonicalFinancialSnapshot,CONTRACT_FUNDING_RULES} from '@/lib/contract-funding-rules';
 import {takeRestartRecovery,restartSubmissionOpenNow,recordRestartResult,armRestartSubmission,claimRestartIntent,reserveRestartContractFunding,activateCheckoutContract,activateSwitchContract,type ContractGrant,type OwnedRestartIntent,type ArmedRestartSubmission} from '@/lib/contract-funding';
@@ -390,6 +391,8 @@ export type StartedSubscription = {
   customerId: string;
   subscriptionId: string;
   active: boolean;
+  /** Only the joint funded Store/index/generation publisher returns this acknowledgement. */
+  fundedPublication?: true;
   tier: Tier;
   cycle: Cycle;
   trialEnds: number;
@@ -738,9 +741,12 @@ export async function restartPlan(input: {
       const paused=JSON.parse(armed.intent.paused) as {customer?:unknown;paymentMethod?:unknown;tier?:unknown};
       if(paused.customer!==input.customerId||paused.paymentMethod!==input.paymentMethod||paused.tier!==input.tier||armed.intent.handle!==input.store.handle)
         throw new Error("The committed restart source does not match its durable owner");
-      if(!(await activateRestartContract({armed,subscriptionId,createdSeconds,periodStartSeconds,periodEndSeconds,renews,shared})))
+      const activation={armed,subscriptionId,createdSeconds,periodStartSeconds,periodEndSeconds,renews,shared};
+      if(!(await activateRestartContract(activation)))
         throw new Error("The retained paid restart activation was not acknowledged");
-      throw new Error("The retained activated restart still requires acknowledged Store publication and generation-aware cleanup");
+      const published=await publishRestartStore(activation);
+      if(!published)throw new Error("The funded Store/index/generation publication remains unacknowledged");
+      return published;
     }
     if (recovery.kind === "read") {
       const {armed}=recovery,paused=JSON.parse(armed.intent.paused) as {customer?:unknown;paymentMethod?:unknown;tier?:unknown};
@@ -764,7 +770,9 @@ export async function restartPlan(input: {
       if(!recovery.subscriptionId)throw new Error("The identified restart ID is retained; a separately budgeted exact-ID GET is required before state adoption");
       const activation=observeFundedRestartActivation(armed,{customerId:ownedCustomer,tier:ownedTier},subscription);
       if(!(await activateRestartContract(activation)))throw new Error("The recovered funded restart activation was not acknowledged");
-      throw new Error("The recovered activated restart still requires acknowledged Store publication and generation-aware cleanup");
+      const published=await publishRestartStore(activation);
+      if(!published)throw new Error("The funded Store/index/generation publication remains unacknowledged");
+      return published;
     }
     const grant = await reserveRestartContractFunding(source.statsId, source.sourceSubscriptionId, input.tier);
     const intent = grant ? await claimRestartIntent({ grant, ref: source.ref, handle: input.store.handle, paused: source.paused, sourceGrantId: source.sourceGrantId, claim: "claim_" + randomUUID() }) : null;
@@ -814,7 +822,9 @@ export async function restartPlan(input: {
     if(!(await activateRestartContract(activation)))throw new Error("The funded restart activation was not acknowledged");
     // Publication still needs its own store ACK and generation-aware cleanup.
     // No rights, pause removal or notification can follow this stage yet.
-    throw new Error("The activated funded restart requires acknowledged Store publication and generation-aware cleanup");
+    const published=await publishRestartStore(activation);
+      if(!published)throw new Error("The funded Store/index/generation publication remains unacknowledged");
+      return published;
   }
   const priceId = await ensurePrice(input.tier, "month");
   const body = new URLSearchParams({

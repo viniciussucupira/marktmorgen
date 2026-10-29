@@ -16,7 +16,7 @@ import { PLANS_ON_SALE } from "@/lib/opening";
 import { PLAN_PRICES, TIERS } from "@/lib/plan";
 import { MOST_TAX_READING } from "./historical-margin-model";
 import {
-  DOC_FILE, ELASTICITIES, INPUT_FILE, dataset, exhaustive, hedonic, keeps, linearityGap, milpInput, milpOutput, minimaxRegret, ones,
+  DOC_FILE, ELASTICITIES, INPUT_FILE, SAFETY_CENTS, dataset, exhaustive, hedonic, keeps, linearityGap, milpInput, milpOutput, minimaxRegret, ones,
   renderPricingOptimization, unitAt, verified,
 } from "./pricing-optimization-table";
 
@@ -39,7 +39,8 @@ test("the program's input is what the repository's margin code gives today (run 
     assert.equal(a, b, `${INPUT_FILE} is stale at ${path}`);
   };
   close(JSON.parse(read(INPUT_FILE)), JSON.parse(JSON.stringify(milpInput())), "input");
-  assert.ok(linearityGap() <= 3, "the linear usage stays within the safety cents");
+  assert.ok(SAFETY_CENTS >= 5, "the actual solver deducts at least five cents on both intervals");
+  assert.ok(linearityGap() < SAFETY_CENTS, "the linear usage stays strictly inside the deducted safety reserve");
 });
 
 test("every solution keeps 60% at full use on both intervals, fails the most-tax gate, respects the plan order, and equals the exhaustive search", () => {

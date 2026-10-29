@@ -59,15 +59,22 @@ def solve(data, scenario, alternative):
             integrality[x] = 1
             q = o["demand"][scenario]
             # Profit: q times the net at today's figures, plus what lower usage leaves after the profit tax.
-            c[x] -= q * (o["netAtOnes"] + kept * sum(plan["coefMonth"][r] for r in printed)) / 100
+            # Fixed full-use A has exact repository feasibility/profit, without linear rounding.
+            fixed = alternative == "A"
+            if fixed:
+                ub[x] = 1 if o["exactKeepsAtOnes"] is True else 0
+                c[x] -= q * o["netAtOnes"] / 100
+            else:
+                c[x] -= q * (o["netAtOnes"] + kept * sum(plan["coefMonth"][r] for r in printed)) / 100
             for r in printed:
                 s = index[(t, j, r)]
-                c[s] += q * kept * plan["coefMonth"][r] / 100
+                if not fixed:
+                    c[s] += q * kept * plan["coefMonth"][r] / 100
                 share_floor = lower if plan["figures"][r] > 0 else 1
                 # share_floor * x <= s <= x
                 add({s: 1, x: -share_floor}, 0, np.inf)
                 add({s: 1, x: -1}, -np.inf, 0)
-            for cycle in ("Month", "Year"):
+            for cycle in (() if fixed else ("Month", "Year")):
                 coeffs = {x: plan["base" + cycle] - o["room" + cycle]}
                 for r in printed:
                     coeffs[index[(t, j, r)]] = plan["coef" + cycle][r]

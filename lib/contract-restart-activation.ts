@@ -103,30 +103,47 @@ return {1,deadline}
 `;
 
 export type RestartContractActivation={armed:ArmedRestartSubmission;subscriptionId:string;createdSeconds:number;periodStartSeconds:number;periodEndSeconds:number;renews:boolean;shared:boolean};
+/** One immutable, bounded activation request shared by activation and the future joint publisher.
+ * Current coverage refuses before input getters or any IO. Preparation is not authorization.
+ */
+export function prepareRestartActivation(
+ input:RestartContractActivation,
+ policy:ContractFundingPolicy|null=CURRENT_CONTRACT_FUNDING_POLICY,
+ context:ContractFundingContext={termsSnapshot:CURRENT_PRICE_AND_RIGHTS_SNAPSHOT,review:CURRENT_COMMERCIAL_MARGIN_REVIEW},
+){
+ if(!Boolean(CONTRACT_ADMISSION_COVERAGE.pauseRestart))return null;
+ try{
+  const encoded=canonicalFinancialSnapshot({input,policy,context});if(!encoded)return null;
+  ({input,policy,context}=JSON.parse(encoded));
+  const {armed,subscriptionId,createdSeconds,periodStartSeconds,periodEndSeconds,renews,shared}=input;
+  if(typeof renews!=='boolean'||typeof shared!=='boolean')return null;
+  const {intent}=armed,{grant}=intent;
+  const before=new Date(),seconds=Math.floor(before.getTime()/1000),config=contractFundingConfiguration(policy,context,before);
+  if(!config||!commercialMarginReady(context.review)||config.reviewId!==grant.reviewId||config.grantCents[grant.key]!==grant.reservedCents||!isRedisConfigured())return null;
+  const sourceGrantId=intent.source.binding.split("|")[0];
+  const expected={version:1,grant:grant.id,review:grant.reviewId,statsId:grant.statsId,sourceSubscription:grant.sourceSubscriptionId,sourceGrant:sourceGrantId,ref:intent.ref,handle:intent.handle,paused:intent.paused,claim:intent.claim,created:intent.claimedAtSeconds,deadline:grant.submitUntilSeconds,sourceBinding:intent.source.binding,sourceReceipt:intent.source.receipt,restartReceipt:intent.source.restartReceipt,reservedCents:intent.source.reservedCents,carriedCents:intent.source.carriedCents,annual:intent.source.annual};
+  if(!ownedRestartIntentFromAcknowledgement({grant,ref:intent.ref,handle:intent.handle,paused:intent.paused,claim:intent.claim,sourceGrantId},intent.claimedAtSeconds,config,[1,JSON.stringify(expected)]))return null;
+  if(typeof subscriptionId!=="string"||!/^sub_[A-Za-z0-9]{6,64}$/.test(subscriptionId)||subscriptionId===grant.sourceSubscriptionId||![createdSeconds,periodStartSeconds,periodEndSeconds].every(n=>Number.isSafeInteger(n)&&n>0)||periodStartSeconds<createdSeconds||periodStartSeconds>seconds||periodEndSeconds<=seconds)return null;
+  const submission={priceId:armed.priceId,bodyHash:armed.bodyHash,idempotencyKey:armed.idempotencyKey,armedAt:armed.armedAtSeconds};
+  const observation={id:subscriptionId,created:createdSeconds,start:periodStartSeconds,finish:periodEndSeconds,renews,shared};
+  const span=CONTRACT_FUNDING_RULES.longestMonthDays*86400;
+  return {input,policy,context,binding:config.binding,startedAt:before.getTime(),
+   keys:["nl:contract-reserve:v1","nl:pause:"+intent.ref,"nl:pause:due","nl:pause:last:"+intent.ref],args:[contractFundingBinding(config),config.reviewId,JSON.stringify(expected),JSON.stringify(submission),JSON.stringify(observation),seconds,config.grantCents[grant.key],config.cashLimitCents,config.carryForwardCents,config.fundedGrants[grant.key],span] as (string|number)[]};
+ }catch{return null;}
+}
+
 export async function activateRestartContract(
  input:RestartContractActivation,
  policy:ContractFundingPolicy|null=CURRENT_CONTRACT_FUNDING_POLICY,
  context:ContractFundingContext={termsSnapshot:CURRENT_PRICE_AND_RIGHTS_SNAPSHOT,review:CURRENT_COMMERCIAL_MARGIN_REVIEW},
 ):Promise<boolean>{
- if(!Boolean(CONTRACT_ADMISSION_COVERAGE.pauseRestart))return false;
+ const prepared=prepareRestartActivation(input,policy,context);
+ if(!prepared)return false;
  try{
-  const encoded=canonicalFinancialSnapshot({input,policy,context});if(!encoded)return false;
-  ({input,policy,context}=JSON.parse(encoded));
-  const {armed,subscriptionId,createdSeconds,periodStartSeconds,periodEndSeconds,renews,shared}=input;
-  if(typeof renews!=='boolean'||typeof shared!=='boolean')return false;
-  const {intent}=armed,{grant}=intent;
-  const before=new Date(),seconds=Math.floor(before.getTime()/1000),config=contractFundingConfiguration(policy,context,before);
-  if(!config||!commercialMarginReady(context.review)||config.reviewId!==grant.reviewId||config.grantCents[grant.key]!==grant.reservedCents||!isRedisConfigured())return false;
-  const sourceGrantId=intent.source.binding.split("|")[0];
-  const expected={version:1,grant:grant.id,review:grant.reviewId,statsId:grant.statsId,sourceSubscription:grant.sourceSubscriptionId,sourceGrant:sourceGrantId,ref:intent.ref,handle:intent.handle,paused:intent.paused,claim:intent.claim,created:intent.claimedAtSeconds,deadline:grant.submitUntilSeconds,sourceBinding:intent.source.binding,sourceReceipt:intent.source.receipt,restartReceipt:intent.source.restartReceipt,reservedCents:intent.source.reservedCents,carriedCents:intent.source.carriedCents,annual:intent.source.annual};
-  if(!ownedRestartIntentFromAcknowledgement({grant,ref:intent.ref,handle:intent.handle,paused:intent.paused,claim:intent.claim,sourceGrantId},intent.claimedAtSeconds,config,[1,JSON.stringify(expected)]))return false;
-  if(typeof subscriptionId!=="string"||!/^sub_[A-Za-z0-9]{6,64}$/.test(subscriptionId)||subscriptionId===grant.sourceSubscriptionId||![createdSeconds,periodStartSeconds,periodEndSeconds].every(n=>Number.isSafeInteger(n)&&n>0)||periodStartSeconds<createdSeconds||periodStartSeconds>seconds||periodEndSeconds<=seconds)return false;
-  const submission={priceId:armed.priceId,bodyHash:armed.bodyHash,idempotencyKey:armed.idempotencyKey,armedAt:armed.armedAtSeconds};
-  const observation={id:subscriptionId,created:createdSeconds,start:periodStartSeconds,finish:periodEndSeconds,renews,shared};
-  const span=CONTRACT_FUNDING_RULES.longestMonthDays*86400;
-  const reply=await redisPipeline([["EVAL",ACTIVATE_RESTART_CONTRACT,4,"nl:contract-reserve:v1","nl:pause:"+intent.ref,"nl:pause:due","nl:pause:last:"+intent.ref,contractFundingBinding(config),config.reviewId,JSON.stringify(expected),JSON.stringify(submission),JSON.stringify(observation),seconds,config.grantCents[grant.key],config.cashLimitCents,config.carryForwardCents,config.fundedGrants[grant.key],span]]);
-  const current=contractFundingConfiguration(policy,context,new Date()),checkedAt=Date.now(),ack=reply[0];
-  if(!current||current.binding!==config.binding||!commercialMarginReady(context.review)||checkedAt<before.getTime()||checkedAt<periodStartSeconds*1000||checkedAt>=periodEndSeconds*1000||reply.length!==1||!Array.isArray(ack)||ack.length!==2||!Number.isSafeInteger(ack[1]))return false;
-  return ack[0]===2?ack[1]===periodEndSeconds:ack[0]===1&&ack[1]===grant.activationUntilSeconds&&checkedAt<=ack[1]*1000;
+  const reply=await redisPipeline([["EVAL",ACTIVATE_RESTART_CONTRACT,4,...prepared.keys,...prepared.args]]);
+  const current=contractFundingConfiguration(prepared.policy,prepared.context,new Date()),checkedAt=Date.now(),ack=reply[0];
+  const {periodStartSeconds,periodEndSeconds,armed}=prepared.input;
+  if(!current||current.binding!==prepared.binding||!commercialMarginReady(prepared.context.review)||checkedAt<prepared.startedAt||checkedAt<periodStartSeconds*1000||checkedAt>=periodEndSeconds*1000||reply.length!==1||!Array.isArray(ack)||ack.length!==2||!Number.isSafeInteger(ack[1]))return false;
+  return ack[0]===2?ack[1]===periodEndSeconds:ack[0]===1&&ack[1]===armed.intent.grant.activationUntilSeconds&&checkedAt<=ack[1]*1000;
  }catch{return false;}
 }
