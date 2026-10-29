@@ -8507,6 +8507,39 @@ Aplicar a regra VR.
 
 Proveniência/diferença: briefing direto do dono acima, descrição de capturas atribuída ao dono/Claude, sem alegar inspeção independente das imagens nesta conversa. Apenas acrescentados menu lateral/linha de destino/Add here,linhas1–3colunas,elementos pequenos seguros,edição direta/barra e prévia dupla ao375existente e referência no32; não refazer21blocos/galeria/reordenação/undo/redo/seções salvas. Número/posição/estado de ambos intactos. Deduplicação no main13e8504,PR1208aberto,20PRsrecentes/20heads codexdistintos incluindobriefTBoriginal e762refs,sem complemento10h58 equivalente. Preservado complemento24/10/2026,23h26; registrado com a próxima alteração de código já prevista,noPR1208,semcommit/PRexclusivo documental. Intenção de custo do briefing não dispensaMR/TX/FX275/limites/reserva/retencãoantesoperação.
 
+TB — Segundo complemento ao 375 [TB1]: categorias do menu lateral (29/10/2026)
+Etiqueta: [TB1]
+
+Solicitação do dono (29/10/2026, 11h22, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: é complemento ao item 375 [TB1], que já recebeu o complemento de 29/10/2026, 10h58 (menu lateral de elementos). Aplique só a diferença ao item existente, mantendo número, posição e estado (regra "Pedidos repetidos", passo 3, letra b), e registre na proveniência o que mudou.
+
+Estado inicial: o do próprio 375.
+
+Contexto: na captura do editor da ClickFunnels enviada pelo dono, o menu lateral agrupa os elementos em "Nested Rows", "Media", "Form", "Checkout", "Misc", "Navigation", "Collections", "Countdown Timers", "Advanced" e "Event Types". O complemento de 10h58 cobriu linhas, conteúdo e mídia, mas não listou as demais categorias.
+
+O que acrescentar ao menu lateral do 375 [TB1], cada grupo com cartões arrastáveis e a mesma alternativa por clique ou teclado:
+- "Forms": os formulários, pesquisas e questionários já existentes (bloco "form" de lib/sales-page.ts);
+- "Checkout": o botão para o checkout e o checkout embutido que já existem, sempre levando ao pagamento na conta do próprio criador;
+- "Products": produto da loja (bloco "product") e coleções de produtos já existentes;
+- "Navigation": barra de navegação da página, com links para as páginas e as seções da própria loja, que vira menu recolhido no celular;
+- "Countdown": a contagem regressiva já existente, sempre até uma data real, igual para todos os visitantes;
+- "Bookings": a escolha de horário dos agendamentos já existentes (lib/calls.ts), embutida na página;
+- "Trust": avaliações verificadas, garantia e números da loja, os blocos já existentes.
+A categoria "Advanced" da ClickFunnels (código livre) NÃO entra: nenhum HTML, CSS ou script livre, como já exige o 375.
+
+Testes automáticos: cada grupo aparece no menu, cada cartão entra na página por arrastar e pela alternativa por teclado, e nenhum elemento aceita código.
+
+Regra de margem: segue a REGRA DE MARGEM vigente (MR, 27/10/2026, 07h42), a política tributária TX e FX275; custo desconhecido reprova, nunca é zero.
+
+Proibido: criar item novo ou mudar número, posição ou estado do 375; aceitar HTML, CSS ou script livres; contagem regressiva sem data real; mudar preços, limites visíveis, comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a, a revisão comercial ou stripePlatformEligibilityReady; afrouxar qualquer trava; mostrar recurso que não funciona hoje; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+
+Proveniência/diferença do segundo complemento: pedido direto do dono acima; descrição da captura atribuída ao briefing, sem alegar inspeção independente de imagem não anexada nesta mensagem. Acrescentadas somente as7categoriasForms/Checkout/Products/Navigation/Countdown/Bookings/Trust aos cartões e alternativas do primeirocomplemento10h58,sem duplicarblocos/lógicasexistentes. Advanced/códigolivreexcluídos;datarealigualparatodosobrigatória. Número375,posição,estado eprimeirocomplemento preservados;nenhumitem527. Deduplicação: main332a38d,PR1208aberto,20PRsrecentes/19heads codexdistintos e764refs,semsegundocomplemento11h22equivalente. Registro na mesma alteração de códigoPR1208;reconferircapacidadesreaisantesdeexecutar eaplicarsóadiferença.MR/TX/FX275/AX274/VRpreservados.
+
 Complemento aos375[TB1]/376[TB2] — Solicitação do dono (24/10/2026, 23h26, horário de Fortaleza), regraPedidos repetidospasso3. TBjáregistrado978antesdestecomplemento;nãorenumerar/criarseção/item/mudarposiçãoestado;aplicarjuntoàpróximaalteraçãojáprevista,SEMcommitexclusivo.Conferidoscontinuidade,mainc49bc039a0555d673ac2df2af1f282ca6d2e6358,fila978/head30f802f853ed9e476a286f160d7ccd3834306e7a,12PRsabertos e534refscodex/*;23h26equivalenteausente. MetaqualidadesuperioràClickFunnels requerAUDITORIAcomparável+fonte,nãoalegaçãopúblicaautomática.
 
 TB1diferenças:
@@ -15120,3 +15153,42 @@ Aplicar a regra VR.
 ### FN1 preservado na árvore combinada
 
 PR1210 incorporado em29/10/2026,11:11:04Fortaleza/14:11:04UTC,merge51030ab4096c01143c928a1580226580fb67c260,headd21991c7dd1be9ebd6748c069ffe54a9e4075761,árvoree2f5e69ed5cf8fb43c869773d17aa33cd2718210,paise13e8504+d21991c.27checksdocumentais16success11skips+Vercel.525FN1mantémnafilaapós524,briefingintegral/ordem/estado preservados;375/32complementoTBcontinuanestePR1208comcódigoreal. Suíteinteira novamente no novohead combinado; nenhuma prova antiga é certificação destehead. Counter254inalterado.
+
+
+## FN2 — registro integral; item526 (29/10/2026,11h10Fortaleza)
+
+Proveniência: pedido direto do dono nesta conversa; descrição da captura e do estado do produto atribuída ao briefing, sem alegar inspeção independente de imagem não anexada nesta mensagem. Deduplicação: main51030ab,PR1208aberto,20PRsrecentes/19heads codexdistintos e763refs,sem etiqueta/título/data/conteúdo equivalente. Próximo livre526após525FN1,sem alterar ordem/estado/escopo existentes. Reaproveitar377TB3/headline-test/flows/funnel-metrics;receitas só quando525funcionar;reconferir código antes e aplicar apenasdiferença. MR/TX/FX275/AX274/VR,custosdetetos antesoperação e desconhecido reprova vinculantes. Registro somente,sem implementar/ativar/anunciar recurso; AVcontinua,TB375/32permanece noPR1208comcódigo.
+
+FN — Mapa visual do funil, caminho condicional e teste dividido no funil (29/10/2026)
+Etiqueta: [FN2]
+
+Solicitação do dono (29/10/2026, 11h10, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: antes de gravar, aplique a regra permanente "Pedidos repetidos". Confira o main, os PRs abertos e os ramos codex/* recentes e procure esta solicitação pela linha de data e hora, pelo nome da seção, pela etiqueta [FN2] e pelo conteúdo. Se já estiver gravada, não crie nada novo. Grave na ordem de chegada, depois do último item já gravado, com o próximo número livre, sem alterar a ordem dos itens existentes.
+
+526. [FN2] Mapa visual do funil, caminho condicional e teste dividido no funil.
+Estado inicial: na fila.
+Problema que resolve: o dono enviou a captura da aba "Your Funnel" de clickfunnels.com (29/10/2026). No editor de funis deles, cada etapa aparece como miniatura da própria página (Cart Page, OTO Page, Thank you page), ligada à seguinte por uma linha vertical, e um painel ao lado acrescenta "Page" (nova página), "Conditional split path" (dividir o caminho por condições) e "Split test" (dividir o caminho por porcentagem do tráfego). No Marktmorgen, o funil é uma lista de etapas com nome e contagens (components/page-funnel-editor.tsx, lib/page-funnel.ts); caminho com condição só existe nas sequências de e-mail (lib/flows.ts, IF/ELSE desde 17/10/2026). Já existem e NÃO devem ser refeitos: a lógica de teste de versões de 377 [TB3], o teste de títulos (lib/headline-test.ts), as condições de lib/flows.ts e as contagens por etapa de lib/funnel-metrics.ts.
+O que fazer:
+- mapa visual do funil no estúdio: cada etapa como miniatura real da página, gerada a partir da própria página com os dados do criador, com nome, endereço e as contagens (e, quando 525 [FN1] existir, a receita) de cada etapa, ligadas por uma linha na ordem do visitante;
+- painel ao lado do mapa com "Page" (acrescentar página ou produto da loja), "Conditional path" e "Split test", para inserir no ponto escolhido do mapa;
+- caminho condicional: o visitante segue para uma etapa ou outra conforme comprou ou recusou a oferta anterior, a origem ou campanha da visita, ou o tipo de aparelho; sem dado pessoal novo, sem rastreamento entre sites e com uma etapa padrão para quem não se encaixa;
+- teste dividido como etapa: o tráfego se divide entre duas a quatro páginas pela lógica de 377 [TB3], com a mesma regra de vencedor por vendas líquidas de reembolsos e sem declarar vencedor com dados insuficientes;
+- alternativa sem arrastar para tudo no mapa (AX274, 2.5.7): escolher o ponto e a ação por clique ou teclado.
+Acessibilidade: AX274 completo; o mapa também é lido como lista ordenada pelo leitor de tela, com cada ramo anunciado.
+Testes automáticos: miniaturas atualizadas quando a página muda, cada condição, etapa padrão, divisão do teste e alternativa por teclado.
+Custos: a geração e o armazenamento das miniaturas e as leituras novas entram no custo de pior caso do plano, com teto automático antes do gasto; custo desconhecido reprova.
+Lucro: o criador vê e monta o funil inteiro de uma vez e manda cada visitante para a oferta certa, o que aumenta o valor percebido dos planos.
+
+Regra de margem: segue a REGRA DE MARGEM vigente (MR, 27/10/2026, 07h42), a política tributária TX e FX275; custo desconhecido reprova, nunca é zero.
+
+Proibido: refazer a lógica de 377 [TB3] ou as condições de lib/flows.ts; criar rastreamento entre sites ou coletar dado pessoal novo; mudar preços, limites visíveis (inclusive o número máximo de páginas e funis), comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a, a revisão comercial ou stripePlatformEligibilityReady; afrouxar qualquer trava; mostrar recurso que não funciona hoje; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+
+
+### FN2 preservado no head combinado
+
+PR1211 incorporado em29/10/2026,11:22:11Fortaleza/14:22:11UTC,merge332a38db16d7a2907a5c6fed08e5169403853c01,headef36df797b7c92e54e2f44de638cf188a08b93ec,árvore0fb59845e268c29b85937a6ceae4e9b93c5ca03b,paise51030ab+ef36df7.27checksdocumentais16success11skips+Vercel.526FN2nafilaapós525,briefingintegral/reaproveitamento/ordem/estado preservados.375/32complementoTBpermanece nestePRcomcódigo. Suíteinteira novamente na árvorecombinada;provas antigas não certificamnovohead. Counter254inalterado.
