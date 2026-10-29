@@ -1,9 +1,3 @@
-/** LQ1, owner28 October2026 20:20 Fortaleza: ITIN/acceptance-agent and
- * US-resident representative requirements were canceled after SR5/SD1.
- * Only those two categories are removed; the real US business address and
- * every remaining applicable cost still require reviewed ceilings and reserves.
- * The prior SR observation below is historical, not the current requirement.
- */
 /** Owner SR,27 October2026 08:00 Fortaleza: existing mailbox/registered-agent
  * observations below do not establish a Stripe-accepted real business address
  * or US-resident legal representative. ITIN/acceptance-agent and other required
@@ -20,7 +14,7 @@ export const LLC_FIXED_COST_ALLOCATION = { marktmorgenBps: 10000, hazelsongBps: 
  * No form, account, submission, paid service or operational IO is prepared here. */
 export const LLC_COMPLIANCE_COST_IDS = [
  "us-form-5472", "us-pro-forma-1120", "br-irpf", "br-cbe", "vat-oss-and-local-compliance",
- "us-business-address",
+ "itin-and-acceptance-agent", "us-resident-representative", "us-business-address",
 ] as const;
 export const LLC_FIXED_COST_IDS = ["delaware", "california-tax", "california-fee", "registered-agent", "owner-inss", "domains", "tools", "us-mailbox", "eu-gdpr-representative", "eu-dsa-representative", "uk-gdpr-representative", ...LLC_COMPLIANCE_COST_IDS] as const;
 export type FixedCostId = typeof LLC_FIXED_COST_IDS[number];
