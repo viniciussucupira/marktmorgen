@@ -1,3 +1,4 @@
+import { PAGE_TEST_PAID_WORDS, PAGE_TEST_RUNNING_WORDS } from "@/lib/headline-test-words";
 /**
  * The page coach: what a product's sales page has, what it is missing, and a
  * score out of 100 for how complete it is as a page that sells.
@@ -218,7 +219,7 @@ export function coachChecks(input: CoachInput): CoachCheck[] {
     checks.push({
       id: "test",
       label: "Two headlines, tested",
-      why: "Half your visitors see each, and the one that brings more of them to the checkout is kept by itself.",
+      why: PAGE_TEST_PAID_WORDS + " " + PAGE_TEST_RUNNING_WORDS,
       // A second version of the whole page tests the headline too, and more.
       done: Boolean(input.page.test) || Boolean(input.page.variant),
       weight: 1,
