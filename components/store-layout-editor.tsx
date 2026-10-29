@@ -2,6 +2,7 @@
 
 import { useId, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useHydrated } from "@/components/use-hydrated";
 import { Icon } from "@/components/icons";
 import { toast } from "@/components/toast";
 import { parseSections, parseAnnouncement, type Announcement, MAX_ANNOUNCEMENT, MAX_SECTIONS, MAX_SECTION_TITLE, type StoreSection } from "@/lib/store-sections";
@@ -36,6 +37,7 @@ export function StoreLayoutEditor({
   products: { id: string; title: string }[];
 }) {
   const router = useRouter();
+  const hydrated = useHydrated();
   const fieldId = useId();
   const [savedRows, setSavedRows] = useState(sections);
   const [savedNews, setSavedNews] = useState(announcement);
@@ -45,6 +47,7 @@ export function StoreLayoutEditor({
   const [busy, setBusy] = useState<"sections" | "news" | null>(null);
   const [error, setError] = useState<{ on: "sections" | "news"; text: string } | null>(null);
 
+  const unavailable = !hydrated || busy !== null;
   const order = new Map(products.map((product, index) => [product.id, index]));
   const taken = new Set(rows.map((row) => row.at));
   const free = products.filter((product) => !taken.has(product.id));
@@ -53,7 +56,7 @@ export function StoreLayoutEditor({
   const newsChanged = text.trim() !== (savedNews?.text ?? "") || link !== (savedNews?.product ?? "");
 
   async function save(what: "sections" | "news") {
-    if (busy !== null) return;
+    if (unavailable) return;
     setBusy(what);
     setError(null);
     const expectedSections = parseSections([...rows].sort((a, b) => (order.get(a.at) ?? 0) - (order.get(b.at) ?? 0)));
@@ -73,7 +76,7 @@ export function StoreLayoutEditor({
   }
 
   return (
-    <div data-layout-editor aria-busy={busy !== null} className="card p-6 sm:p-8">
+    <div data-layout-editor data-layout-ready={hydrated} aria-busy={unavailable} className="card p-6 sm:p-8">
       <p className="text-lg font-semibold tracking-[-0.02em] text-ink">Sections and news on your store</p>
       <p className="mt-2 text-ink-soft">
         Cut a long store into sections with a heading over each, and put one line of your own news across the top.
@@ -93,7 +96,7 @@ export function StoreLayoutEditor({
                 <li key={index} className="flex flex-wrap items-end gap-3 rounded-2xl bg-paper p-3 ring-1 ring-line">
                   <label className="min-w-[12rem] flex-1">
                     <span className="field-label">{`Heading ${index + 1}`}</span>
-                    <input disabled={busy !== null}
+                    <input disabled={unavailable}
                       className="field mt-1"
                       maxLength={MAX_SECTION_TITLE}
                       value={row.title}
@@ -106,7 +109,7 @@ export function StoreLayoutEditor({
                   </label>
                   <label className="min-w-[12rem] flex-1">
                     <span id={`${fieldId}-start-label-${index}`} className="field-label">Starts at</span>
-                    <select aria-labelledby={`${fieldId}-start-label-${index}`} disabled={busy !== null} className="field mt-1" value={row.at} onChange={(event) => {
+                    <select aria-labelledby={`${fieldId}-start-label-${index}`} disabled={unavailable} className="field mt-1" value={row.at} onChange={(event) => {
                       const at = event.currentTarget.value;
                       setRows((all) => all.map((r, i) => (i === index ? { ...r, at } : r)));
                     }}>
@@ -122,7 +125,7 @@ export function StoreLayoutEditor({
                   </label>
                   <button
                     type="button"
-                    disabled={busy !== null}
+                    disabled={unavailable}
                     onClick={() => setRows((all) => all.filter((_, i) => i !== index))}
                     className="inline-flex h-11 w-11 items-center justify-center rounded-full text-ink-soft hover:bg-danger-soft hover:text-danger"
                     aria-label={`Remove heading ${index + 1}`}
@@ -134,12 +137,12 @@ export function StoreLayoutEditor({
             </ul>
             <div className="mt-3 flex flex-wrap items-center gap-3">
               {rows.length < MAX_SECTIONS && free.length > 0 ? (
-                <button type="button" disabled={busy !== null} className="btn btn-secondary btn-sm" onClick={() => setRows((all) => [...all, { title: "", at: free[0].id }])}>
+                <button type="button" disabled={unavailable} className="btn btn-secondary btn-sm" onClick={() => setRows((all) => [...all, { title: "", at: free[0].id }])}>
                   <Icon name="plus" size={15} />
                   {`Add a section (${rows.length} of ${MAX_SECTIONS})`}
                 </button>
               ) : null}
-              <button type="button" className="btn btn-primary btn-sm" onClick={() => void save("sections")} disabled={busy !== null || !sectionsChanged || incomplete} aria-busy={busy === "sections"}>
+              <button type="button" className="btn btn-primary btn-sm" onClick={() => void save("sections")} disabled={unavailable || !sectionsChanged || incomplete} aria-busy={busy === "sections"}>
                 {busy === "sections" ? "Saving…" : "Save sections"}
               </button>
               {incomplete ? <span className="text-xs text-ink-soft">Give every section a heading.</span> : null}
@@ -164,11 +167,11 @@ export function StoreLayoutEditor({
               <span className="field-label">What it says</span>
               <span className="text-xs tabular-nums text-ink-mute">{`${text.length}/${MAX_ANNOUNCEMENT}`}</span>
             </span>
-            <input disabled={busy !== null} className="field mt-1" maxLength={MAX_ANNOUNCEMENT} value={text} placeholder="New: the spring meal plan is out" onChange={(event) => setText(event.target.value)} />
+            <input disabled={unavailable} className="field mt-1" maxLength={MAX_ANNOUNCEMENT} value={text} placeholder="New: the spring meal plan is out" onChange={(event) => setText(event.target.value)} />
           </label>
           <label className="min-w-[12rem] flex-1">
             <span className="field-label">Leads to</span>
-            <select disabled={busy !== null} className="field mt-1" value={link} onChange={(event) => setLink(event.target.value)}>
+            <select disabled={unavailable} className="field mt-1" value={link} onChange={(event) => setLink(event.target.value)}>
               <option value="">Nowhere</option>
               {link && !order.has(link) ? <option value={link}>A product that is no longer published</option> : null}
               {products.map((product) => (
@@ -178,7 +181,7 @@ export function StoreLayoutEditor({
               ))}
             </select>
           </label>
-          <button type="button" className="btn btn-primary" onClick={() => void save("news")} disabled={busy !== null || !newsChanged} aria-busy={busy === "news"}>
+          <button type="button" className="btn btn-primary" onClick={() => void save("news")} disabled={unavailable || !newsChanged} aria-busy={busy === "news"}>
             {busy === "news" ? "Saving…" : "Save"}
           </button>
         </div>

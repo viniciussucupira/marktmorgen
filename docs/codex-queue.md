@@ -16781,3 +16781,56 @@ Margem (regra MR vigente, 27/10/2026, 07h42): nenhum cliente pagante, isoladamen
 Proibido: segundo motor de agendamento; marcar chamada paga sem pagamento ou gratuita sem e-mail confirmado; escassez ou número de vagas inventado; HTML, CSS ou script livres; mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
 
 Aplicar a regra VR.
+
+
+### AB(a) — limite do ACK da leitura de pausa antes do trabalho financeiro (29/10/2026)
+
+Em implementação, sem nova cobertura liberada. Benefício: impedir que resposta malformada force travessia/serialização antes do limite4096bytes, preservar pausa/índice/vigência anual e conteúdo em estado desconhecido, evitar trabalho financeiro adicional. Mesma storedPauseAt/PAUSE_OBSERVATION usada por pauseOf,onBreak e runBreaks; sem segundo leitor/motor. Decodificador aceita apenas[[0]]ou[[1,raw]],comprimentosantesmembros,own-data/semgetters/symbols/sparse,limiteUTF16antesUTF8. Testes sintéticos instrumentam arrays exteriores/interiores acima do limite com autoprova positiva,ASCII/UTF8/getters,verificam0owner/provider/email/cleanup e evidênciafundedinalterada. Testes existentesválidos/ausênciaexplícita mantidos. Suíte completa no novohead ainda obrigatória; não é resultado aprovado neste registro.
+
+Custo:nenhum novo comandoRedis/key/campo/job/retenção/envio/provedor,mesmoslimites; transporte/decoderexterno/global/lifetime/aviso comreserva de caixa/renovações/settlement/custeiointegral continuam pendentes e desconhecidoreprova. Não zerarcustoCI/operação.MR/TX/FX275/VR,preços/direitos/flags/coberturasfalse/optins/conteúdo/Hazelsong/idiomas/IDs preservados.0→0ações/decisõesUI; sem certificaçãoAAA/interativa,contador254. Provas detalhadas no documento técnico desta unidade,sem promessa de aviso resolvido.
+
+RegistroTR1:PR1222incorporado29/10/2026às17:32:34Fortaleza/20:32:34UTC,merge9dacb88d4c417185c06e78bcdbe78769d6bb1aa1,árvore7aa82a33d209dad4407ccdcf4e53b227487e812e,head9b42be9c79a1eb244abe682e35c5e83206b57905,27checksdocumentais16sucessos11skips+Vercelsuccess.548continua na fila; não é entrega funcional.Histórico intacto.
+
+
+### AB(a) — ACK próprio na reserva de exposição; reconciliação em preparo (29/10/2026)
+
+PR1224corrige reserveFundedExposure real: respostaRedis tem de ser array de1elemento próprio de dados,número1; getter/herança/sparse/symbols/objeto/sobrec cardinalidade não admitem gasto. A correção não invoca acessores,não libera dinheiro incerto,não cria segundo motor. Teste sintético do entrypoint reserva primeiro e mantém cash/receipt/slot intactos quando resposta posterior é malformada; autoprova positiva da instrumentação e resposta válida retida. MesmaLua/chave/campos/TTL/tentativas/quantia/IO,nenhum novo envio/provedor. Não é reserva de aviso vinculada ao contrato de origem: é exposição loja/escopo/mês preexistente. Custos completos/global/lifetime/avisosfonte/renovações/settlement seguem pendentes,desconhecidoreprova. Coberturasfalse/policiesnull/MR/TX/FX275/VR/travas/direitos/preços/conteúdo intactos,contador254.0→0passos/decisõesUI,sem provaAAAhumana ou interativa.
+
+Preparada união das fontes/testes/docs independentes1223e1224 com fila main892de72b,retendo549SI1/550IX1 e todo histórico. Preparar árvore não é testar/incorporar/publicar; as duas execuções individuais não são canceladas e a nova união exige suíte completa em head próprio. Registro549SI1:PR1225merge4e986178d598d7d75c0e994f4f639d8d7f99b777,29/10/2026 às17:53:29Fortaleza/20:53:29UTC,árvore9e8810808403743b4733ed3d9deb93a2cb80ab6b,27checks16success11skips+Vercel. Registro550IX1:PR1226merge892de72bb218df1db103f2e5c72d4ad56def0a5a,29/10/2026 às17:57:18Fortaleza/20:57:18UTC,árvore02d1e15a3d2e745cd6f0e1d72041f2152b28c2d7,27checks16success11skips+Vercel. Ambos somente fila,sem recurso implementado.Histórico preservado.
+
+
+### União atualizada e provas individuais — 29/10/2026
+
+As duas suítes individuais terminaram39/39+Vercel sem cancelamento:1223head865679db219aeaa2d65191745c31fb58d470dd9a,verify123716816178234/234bundles/Everythingpassing20:39:34.3818637UTC,instrumentação real e retenção de pausa aprovadas20:38:24;mobile1237168162019coldLCPmáx1076ms/CLS0/proxyinteração104ms/0writes.1224head6ad1b28ee18a559859dc69d84257a81cd3f12f04,verify123718217432234/234Everythingpassing20:44:59.0540117UTC,regressão de ACKpróprio20:42:43;mobile1237182171909coldLCP828ms/CLS0/proxy72ms/0writes. Não éINPdecampo nem provainterativa/AAAintegral/margem certificada.
+
+A união agora inclui main9760076e4c6c4a7c2e31d50366572acceeaa1094,retendo549SI1/550IX1+complemento18h00/551FB1/552BB1 e todos os históricos. PR1227complemento550mergeaf59b6cc7ae42dcbf92117bc43a55c84e0af2179,29/10às18:03:41Fortaleza/21:03:41UTC,árvore12c987d1725ce4b592cdd2a418c32ad50ca0121d. PR1228registros551/552merge9760076e4c6c4a7c2e31d50366572acceeaa1094,29/10às18:09:31Fortaleza/21:09:31UTC,árvore8f998cfcc9974cd1095092aafab74765e2a4ffef;ambos27checksdocumentais16success11skips+Vercel. Estados dosrecursos continuam na fila,sem entrega funcional.
+
+Novo head combinado exige NOVA suíte COMPLETA; provas individuais não a substituem. Nenhuma regra/cobertura/flag/preço/direito/teto/reserva/consentimento/dado/idioma/identificador alterado; custos completos/global/lifetime/noticefunding/renovações/settlement permanecem desconhecidos/reprovados. Sem novoIOprodutivo/provedor/email/retenção,reuso nãozero,CI100%FX275nãozerado. Contador254 aguardaprovainterativa;semretentativaChrome/troca. Histórico integral preservado.
+
+
+### Falha real WebKit e correção de prontidão do editor — 29/10/2026
+
+Head60b4b154939796d41dbd5cdf894fe80d6714ffc1nãoaprovado:Cross-browserWebKit123734592076falhou21:31:34.1023783UTC,locator.fillTimeout30000ms aguardando[data-layout-editor]/Heading1,apóscliqueAddasection terretornado emtests/e2e/layout-acknowledgment.mjs:37;nãofoifalhafinanceiraassertivadosACKs. Outrosjobs ainda rodavam,nenhumresultadofaltanteépresumido.Não repetir jobisolado nem usar39/39dosheadsindividuaisparaconcluirunião.
+
+Inspeção real deStoreLayoutEditor mostrou controlesSSRhabilitados antesdehandlersprontos;networkidle/elementovisível não provam queReactjárecebecliques. Correção de produto reutilizauseHydratedexistente:inputs/selects/buttons indisponíveis até pronta a interação,aria-busy/data-layout-ready coerentes,guard interno do save,semnovaesperafixa/retry/IO. Benefício:clique e rascunho deixam de poder ser aceitos visualmente antesdehandler. NãoafirmarqueseráúnicacausaouqueWebKitpassouantesdosnovostestes.
+
+Regressão real comcontextojavaScriptdesligadocomprovaSSRsemprontidão/controlesbloqueados/0APIwrites;contextos normais390/1280observamprontidãoreale seguemeditandopeloteclado/controlesnativos. Todos48writesinterceptados/casosdeACK/asserções/timeouts/limiaresoriginais mantidos. Nãoéretentativa dormindo ou apagandoprova; NOVOheadexigesuítaCOMPLETA. Sóarquivossintéticos/serviçosinterceptados;semcliente/conta/Stripe/envio.
+
+Custo:reusahooklocal,semnovoIOprodutivo/provedor/envio/chave/retenção/retry,compequenamudançadeJS/markup/rendercujo custo totalnãoézero conhecido.Mediçãomóvel/AXe39checksnovosobrigatórios,CI100%FX275;nãocertificarmargem/AAA.0→0ações/decisõesadicionais,controlesconservadospelotecladoquando prontos. Gates/flags/preços/direitos/limites/comissão/optins/conteúdo/Hazelsong/idiomas/IDs preservados;contador254sempublicação/provainterativa. Históricoanteriorpermanece.
+
+
+### Falha real do cenário sem JavaScript e reparo do harness — 29/10/2026
+
+Head354ac0e856dddfc39cfa5df04b359629399ff311nãoaprovado:verify123747139280falhou21:50:12.6090236UTC ao fechar contextoJSdesligado. Asasserçõesda nova regressãoSSRpassaram21:49:12:prontidãofalse/busytrue/controlesreaisdisabled/0APIwrites. Depois,owrapperglobalcontext.closeemstore-copy.mjs:283esperoupage.waitForFunction/RAFpor60s numdocumentoqueexplicitamentenãoexecutascript. Nãoérecusa financeira,nãoéprova dos fluxosJSligados nemapaga a falha anteriorWebKit.
+
+Correção restrita ao harness: quando options.javaScriptEnabled===false,semfetch/RSCcliente,settle/close não aguardam RAF/navegação de cliente impossível. TODOcontextoJSligado conserva o drain/fetchRSC,200msestáveis,timeout60s e regrasatuais. RegressãoSSRpermanece integral,agora tambémconfirmaquecontextofechou; todas48asserçõesdewrites/ACK/layoutdosfluxosinterativos continuam. Semsleep/retry/reduçãodelimiar/remoçãodeasserção oujobisoladoparadeclararconclusão. NOVOheadexigeNOVAsuítaCOMPLETA.
+
+Nenhumoutrocomponente/fluxoprodutivo/IO/provedor/email/preço/limite/flag/revisão/cobertura/reserva/optin/conteúdo/Hazelsong/idioma/IDalterado. CustosCIpertencem100%FX275,desconhecidonãozero,semcertificaçãomargem/AAA/INPdecampo. Contador254,nãopublicado.Históricoefalhaspreservados.
+
+## Incorporação de proteção financeira e prontidão do editor — 29/10/2026, 19h20min34s Fortaleza
+
+PR1224 incorporado22:20:34UTC/19:20:34Fortaleza, merge50e129647bac595e73ecee0cd85286fd5f3faefc, pais9760076e4c6c4a7c2e31d50366572acceeaa1094/ce83b2251de14bc5279786de4799adca69918276, árvorea6fc0e94162023baa6edaa4de0cdf9a7c5223923. Headce83b225 recebeu39/39checks eVercelsuccess;verify123754997575:234/234bundles/Everythingpassing21:58:23.8795193Z. Firefox123754997625 eWebKit123754997589 passaram incluindo controleSSRsemJavaScript, fechamento dessecontexto e edição real390/1280;48casos originais de escrita mantidos. As duas falhas anteriores permanecem no histórico;nenhum job isolado foi reexecutado para aprovar o conjunto.
+
+Leitura do registro de pausa e ACK da reserva rejeitam entradas não próprias, acessores, cardinalidade ou tamanho inválidos antes da travessia; evidência e reservas ficam retidas no desconhecido. Editor usa useHydrated existente para impedir ações antes dos handlers; harness só dispensa espera clientRSC no contexto explicitamente semJavaScript, mantendo a espera original nos demais. Mobile123754997606:9amostras sintéticas frias,LCPmáx904ms,CLS0,proxyinteração96ms,0escritasAPI;proxy não éINP de campo. Pequeno custo localJS/markup/render,sem novoIOprodutivo;CI/pesquisa seguemFX275,desconhecido≠zero. Não conclui obrigações de avisos financiados,renovações,liquidação ou margem global;travas e preços preservados.
+
+Produção dpl_EEpG62ZUNoRSKUbNzz9RurKZj8E9 no SHAexato acima estavaBUILDING na conferência22:21UTC;READY/domínio/HTML ainda pendentes. Não declarar entrega funcional/255:contador254 e bloqueio anterior da prova interativa mantidos,sem repetirChrome ou trocar navegador. PR1229 traz fonte primáriaTX1Califórnia e é reconciliado sobre essa árvore para preservar integralmente o código incorporado;novo head exige suas próprias verificações documentais.
