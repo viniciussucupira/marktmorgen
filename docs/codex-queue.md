@@ -13600,3 +13600,14 @@ O escritor existente setSubscription aceita snapshot opcional de origem; o rein�
 
 
 Complemento da comparação de origem: antes de qualquer chamada do reinício devido, assinatura e cliente atuais precisam corresponder àpausa retida. Após mudança concorrente paraoutraorigem inativa, próxima passagem fica retida semGET/POSTdo provedor ouaviso. Terceiro caso sintético cobre assinatura diferente inativa; customer/inactive repetem passagem e comprovam0provedor. Não usa registro antigo para cobrarorigemdiferente nem removeprovas. Mesmoleitura/locksemnovoscomandos;suíteintegral no novohead obrigatória.
+
+
+### PR1186 — ACKStore preservado, incorporação e publicação exatas (28/10/2026 Fortaleza)
+
+Headc5cf8b03e19f9659959373584f62f8044b2ac50f aprovado31/31+Vercel;8scopes10+7/fulltrue,semrerunisolado. Merge7ff9c5e7616a2088326cccff93687e7ab958731d em28/10/2026 às22:49:42Fortaleza (29/10 01:49:42UTC),treef056ee9b65c745dcc0b1085ec6c1892877fd52a1,pais958709aa+c5cf8b03,igual àtestada. dpl_AcGT9xKV1KYURKsoBKNtDpZe5yEi READY,SHAexato;marktmorgen.com em/ e/preços /pricing,/platform/path,/help,/proof/comparisons retornouIDexato. Metadadoinicial tinha2aliasesdebranch: domínio confirmado pelarespostaexata,sem presumir lista7atualizada.
+
+Verify123206607462:quatrocasos do caminho runBreaks confirmados01:29:11UTC e Everythingpassing01:30:49.5306899UTC;ausência/corrupção/respostaincompleta/erro4diasapósdue,1respostasintéticadoprovedor,cada;pausa/ano/due intactos,loja inativa,0avisos. Signup3motores×30casos/150auditorias/0falhas;mobile123206607516,9amostrasfrias,LCPmáx1472ms,CLS0,interaçãomáx112ms,0writes. Leitores de tela somenteentrada,não aprovaçãoAAAhumana ou fluxoprivadoprodutivo.
+
+Resultado concreto: retorno nulo ouexceção do escritor após resposta do provedor não removem pausa/não anunciam reinício;exceção não cai nolimitede3diaslegado. Custosnovos nãosucessos0comandos/0bytespersistidos nos6contratosmensal/anual,semchaveTTLserviçonovo;obrigaçõesretidas/retentativas/retenção/custointegral desconhecidosreprovadosMR/TX/FX275. NãocompletaCASgeraçõesfinanciado/AB(a),nãoautorizaoutracobrança,policiesNULL/flagsfalse/preços/direitos/comissãopreservados. Contador254,sem entrega255porfaltaprova interativaautorizada.
+
+Prova acompanha implementação real1187,semPRexclusivodedocumentação. Atualizarheadexige suíteintegralnova;aprovaçãoantecessora nãosubstitui.
