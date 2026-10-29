@@ -945,6 +945,7 @@ Proveniência AB: passou a fazer parte do Bloco de abertura, posição (j), por 
    - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 43/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
    - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Custo e margem: Dimensionar payload, storage, renderização e limites antes de expandir envelope.
+   - ComplementoTB1do dono29/10/2026,10h58Fortaleza: escopo detalhado no375[TB1] (menu lateral,inserção por arrasto/Add here,colunas/elementos seguros,edição direta/prévia dupla),incorporado aoeditor visual deste32sem itemduplicado,nem mudança de número/posição/estado;preservar blocos existentes eMR/TX/FX275/AX274/VR.
 
 33. **[F2] Podcast público Apple/Spotify e importação RSS de podcast existente.**
    - Pedido: P2 F2; datas/horas e grau de certeza em Proveniência.
@@ -8473,6 +8474,38 @@ LevantamentoClaude24/10/2026baseadoemdocs/clickfunnels-feature-audit.json,docs/c
 375. [TB1] Editor visual de arrastar e soltar para páginas da loja e do funil.
 
 Estado: na fila.Seções/colunas/elementos,blocosatuaispreservados,préviadesktop/mobile,SEMHTML/CSS/scriptlivre(F10segurança).OperaçãoequivalenteporTECLADO/botõesmover(alémarrastar),ordemdefoco/semântica,títulosordenados,contraste7:1/alvos44px/AX274automático;gatesaindanãocertificamAAAtotal. Reusareditores/funisexistentes,limites/versionamento/sanitização/importação;salvar/aprovarrevisão,nãosobrescreverconteúdosemaceite.ReferênciaeditorClickFunnelsareconferir.
+
+Complemento ao375[TB1] e32[F1] — solicitação direta do dono (29/10/2026,10h58Fortaleza).
+TB — Complemento ao 375 [TB1]: menu lateral de elementos e arrastar para a página (29/10/2026)
+Etiqueta: [TB1]
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: é complemento ao item 375 [TB1] já gravado (e ao 32 [F1], que incorpora o editor visual). Aplique só a diferença ao item existente, mantendo número, posição e estado (regra "Pedidos repetidos", passo 3, letra b), e registre na proveniência o que mudou.
+
+Estado inicial: o do próprio 375.
+
+Contexto: o dono enviou capturas do vídeo da aba "Your Funnel" de clickfunnels.com (29/10/2026). No editor deles, um menu lateral fixo mostra "My Elements" (Saved, Universal) e "Elements" por categoria (Nested Rows, Media, Form, Checkout, Misc, Navigation, Collections, Countdown Timers, Advanced, Event Types); ao lado, cartões com ícone: linhas de 1, 2 e 3 colunas; Headline, Sub Headline, Paragraph, Bullet List, Icon, Link; Image, Video, Video Popup, Audio; e uma busca "Search Elements". O cursor arrasta um cartão para o lugar exato da página e edita o título direto na página, com uma barra flutuante (negrito, itálico, sublinhado, alinhamento, link). Já existem e NÃO devem ser refeitos: os 21 blocos de lib/sales-page.ts, a galeria com busca de components/block-picker.tsx, o arrastar para reordenar com setas de teclado de components/page-editor.tsx, desfazer e refazer e as seções salvas de lib/saved-blocks.ts.
+
+O que acrescentar ao 375 [TB1]:
+- menu lateral fixo de elementos, ao lado da prévia da página, com a busca e os grupos da galeria existente, "Saved sections" no topo e cartões com ícone e nome;
+- arrastar um cartão do menu para a página, com uma linha de destino visível entre os blocos mostrando onde ele vai entrar; alternativa sem arrastar, obrigatória (AX274, 2.5.7): escolher o cartão e o lugar por clique ou teclado ("Add here");
+- linhas de 1, 2 e 3 colunas, cada coluna aceitando elementos, que viram uma coluna só no celular, na ordem de leitura;
+- elementos pequenos, além dos 21 blocos: título, subtítulo, parágrafo, lista, ícone, link em forma de botão, imagem, vídeo, vídeo em janela e áudio, todos em texto simples e arquivos do próprio criador, sem HTML, CSS ou script livres;
+- edição do texto direto na prévia, com barra flutuante de negrito, itálico, sublinhado, alinhamento e link, mantendo a edição pelo formulário de cada bloco;
+- prévia lado a lado de computador e celular, alternável com um clique.
+
+Acessibilidade: AX274 completo, inclusive ordem de foco igual à ordem visual, títulos em ordem, contraste de 7:1, alvos de 44 × 44 px e avisos antes de publicar.
+Testes automáticos: arrastar do menu para cada posição, a alternativa por teclado e clique, colunas no computador e no celular, edição direta com a barra, desfazer de cada ação e ausência de HTML ou script em qualquer elemento.
+Lucro: o criador monta páginas mais bonitas sem ajuda, o que aumenta o valor percebido de todos os planos; sem custo variável novo além do armazenamento já contado.
+
+Regra de margem: segue a REGRA DE MARGEM vigente (MR, 27/10/2026, 07h42), a política tributária TX e FX275; custo desconhecido reprova, nunca é zero.
+
+Proibido: criar item novo ou mudar número, posição ou estado do 375 ou do 32; remover blocos ou recursos existentes; aceitar HTML, CSS ou script livres; publicar algo sem o clique do criador; mudar preços, limites visíveis, comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a, a revisão comercial ou stripePlatformEligibilityReady; afrouxar qualquer trava; mostrar recurso que não funciona hoje; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+
+Proveniência/diferença: briefing direto do dono acima, descrição de capturas atribuída ao dono/Claude, sem alegar inspeção independente das imagens nesta conversa. Apenas acrescentados menu lateral/linha de destino/Add here,linhas1–3colunas,elementos pequenos seguros,edição direta/barra e prévia dupla ao375existente e referência no32; não refazer21blocos/galeria/reordenação/undo/redo/seções salvas. Número/posição/estado de ambos intactos. Deduplicação no main13e8504,PR1208aberto,20PRsrecentes/20heads codexdistintos incluindobriefTBoriginal e762refs,sem complemento10h58 equivalente. Preservado complemento24/10/2026,23h26; registrado com a próxima alteração de código já prevista,noPR1208,semcommit/PRexclusivo documental. Intenção de custo do briefing não dispensaMR/TX/FX275/limites/reserva/retencãoantesoperação.
 
 Complemento aos375[TB1]/376[TB2] — Solicitação do dono (24/10/2026, 23h26, horário de Fortaleza), regraPedidos repetidospasso3. TBjáregistrado978antesdestecomplemento;nãorenumerar/criarseção/item/mudarposiçãoestado;aplicarjuntoàpróximaalteraçãojáprevista,SEMcommitexclusivo.Conferidoscontinuidade,mainc49bc039a0555d673ac2df2af1f282ca6d2e6358,fila978/head30f802f853ed9e476a286f160d7ccd3834306e7a,12PRsabertos e534refscodex/*;23h26equivalenteausente. MetaqualidadesuperioràClickFunnels requerAUDITORIAcomparável+fonte,nãoalegaçãopúblicaautomática.
 

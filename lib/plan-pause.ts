@@ -547,7 +547,8 @@ export async function runBreaks(nowSeconds = Math.floor(Date.now() / 1000)): Pro
   if (!isRedisConfigured() || !isBillingConfigured()) return counts;
   const deadline=nowSeconds+RESTART_NOTICE_DAYS*DAY;
   if(!Number.isSafeInteger(nowSeconds)||nowSeconds<0||!Number.isSafeInteger(deadline)||deadline>1_000_000_000_000){counts.failed+=1;return counts;}
-  const reply = await redisPipeline([["EVAL", PAUSE_DUE_OBSERVATION, 1, DUE, deadline]]);
+  let reply:unknown;
+  try{reply=await redisPipeline([["EVAL", PAUSE_DUE_OBSERVATION, 1, DUE, deadline]]);}catch{counts.failed+=1;return counts;}
   const encoded=canonicalFinancialSnapshot(reply);
   const observed:unknown=encoded?JSON.parse(encoded):null;
   const raw = Array.isArray(observed) && observed.length === 1 ? observed[0] : null;

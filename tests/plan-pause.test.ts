@@ -1112,6 +1112,29 @@ async function main() {
     }
   }
 
+
+  part("Lost due observation and accessor replies never start per-store work");
+  {
+    const original=pauseRedis.pipeline;let extra=0,getters=0;
+    const refs:string[]=[];
+    Object.defineProperty(refs,"0",{get(){getters++;return"synthetic@example.com";},enumerable:true});
+    try{
+      for(const mode of ["lost","accessor"]){
+        pauseRedis.pipeline=async commands=>{
+          if(commands.length===1&&commands[0][0]==="EVAL"&&commands[0][1]===PAUSE_DUE_OBSERVATION){
+            if(mode==="lost")throw new Error("Synthetic lost read acknowledgement");
+            return [refs];
+          }
+          extra+=commands.length;return original(commands);
+        };
+        const before=providerCalls;emails.length=0;
+        is("unknown due observation is held without throwing or effects",await runBreaks(NOW),{told:0,restarted:0,failed:1,dropped:0});
+        is("unknown due reply has no per-store/provider/mail operation",[extra,providerCalls-before,emails.length],[0,0,0]);
+      }
+      is("due reply accessors are never invoked",getters,0);
+    }finally{pauseRedis.pipeline=original;}
+  }
+
   done();
 }
 
