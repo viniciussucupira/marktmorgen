@@ -5517,6 +5517,42 @@ Head `3afaed2e75b540d150295f1999d3dd6af5e71f7e` reprovado, sem incorporação/pu
 
 Proveniência da revisão comercial: passou a fazer parte do Bloco de abertura, posição (a), por solicitação do dono de 24/10/2026, 00h11 (Fortaleza). A ligação com SY2 não autoriza executar ou contar o mesmo trabalho duas vezes.
 
+### 538 [AB1] — Correção dos textos públicos do teste A/B
+
+Estado: na fila. Posição: Bloco de abertura, correções de verdade operacional junto deAB(a), sem interromper o trabalho atual e sem antecipar sobreSD1/AV1; ordem relativa dos demais itens intacta. Proveniência: pedido direto do dono29/10/2026,16h03Fortaleza,VRParteA2. Deduplicação: maind20cffcc,nenhumPRaberto e20heads codex/*dos20PRsrecentes, sem AB1/data/título/conteúdo equivalente; próximo número livre538após537PH1, com posição excepcional expressamente solicitada. Não confundir a etiquetaAB1com a posição históricaAB(a). Relato deClaude/constantes/textos abaixo é o briefing recebido, a reconferir na execução; não é alegação de auditoria própria. Texto integral:
+
+AB — Correção dos textos públicos do teste A/B, que descrevem a regra antiga (29/10/2026) [AB1]
+
+Solicitação do dono (29/10/2026, 16h03, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: antes de gravar, aplique a regra "Pedidos repetidos" (23/10/2026). Procure esta solicitação no main, nos PRs abertos e nos ramos codex/* recentes, pela linha de data e hora, pelo nome da seção, pela etiqueta [AB1] e pelo conteúdo. Se já existir item que corrija os textos públicos do teste A/B, aplique só a diferença dentro dele, mantendo número, posição e estado; caso contrário, crie um único item com o próximo número livre. Por ser defeito de texto público que não corresponde ao sistema (regra VR, Parte A, item 2), posicione-o no Bloco de abertura, entre as correções de verdade operacional, sem interromper o trabalho em andamento.
+
+Estado inicial: na fila.
+
+Contexto: o Claude conferiu em 29/10/2026, no main, que os textos públicos do teste A/B descrevem uma regra antiga. O código (lib/headline-test-rules.ts) decide, num produto pago, pelo dinheiro por visitante a partir das vendas pagas na conta Stripe do criador, com MIN_VIEWS = 200, MIN_SALES = 10, linha de decisão por boundary() (sequência de confiança válida a cada leitura, FALSE_WINNER = 0.05 no teste inteiro), espera de REFUND_DAYS = 14 dias antes de decidir por dinheiro e verificação de divisão de visitantes (p < 0.001); num produto grátis, por cadastros, com MIN_EXPECTED_SIGNUPS = 5 por versão. WIN_CHANCE = 0.975 é só a chance mostrada no estúdio, não a regra. Textos desatualizados encontrados:
+- lib/feature-pages.ts, página "insights": "A test compares two versions of one product's page, or two headlines, by checkouts opened: not prices, and not more than two at once." (errado para produto pago);
+- lib/feature-pages.ts, cartão "Two headlines, tested": "(10 paid sales each and a 97.5% chance)" e "(at least 10 between them, 95% confidence)" (regra antiga, sem a espera de 14 dias);
+- lib/feature-pages.ts, cartão "Two whole pages, tested": "once one brings clearly more of them to the checkout (95% confidence)" (errado para produto pago e regra antiga);
+- lib/help-content.ts, explicação de "Make version B": "one has a 97.5% chance of bringing more" como regra, sem a espera de 14 dias.
+
+[AB1] Textos do teste A/B iguais ao que o código faz.
+(a) Reescreva esses quatro textos, em inglês americano simples (AX274, 3.1.5), dizendo o que o código faz hoje: num produto pago, vence a versão que traz mais dinheiro por visitante, depois de cada versão ter sido vista pelo menos 200 vezes e ter 10 vendas pagas, de o teste ter rodado 14 dias e de a diferença ser clara o bastante para valer mesmo olhando o resultado todos os dias; num produto grátis, vence a que traz claramente mais cadastros; sem dados suficientes, o teste continua ("Still running"); preços nunca são testados.
+(b) Os números dos textos (200, 10, 14 dias, a chance de vencedor falso) vêm das constantes de lib/headline-test-rules.ts, nunca digitados.
+(c) Procure em todo o site, na central de ajuda, no blog, nas comparações e nos e-mails do Marktmorgen qualquer outra descrição do teste A/B com a regra antiga ("checkouts opened" para produto pago, "97.5% chance" ou "95% confidence" como regra) e corrija do mesmo jeito.
+(d) Teste automático que falha se um texto público citar "checkouts opened" como critério de produto pago, "97.5%" ou "95% confidence" como regra de vitória, ou números diferentes das constantes.
+
+Acessibilidade (AX274): linguagem simples, "Still running" explicado no lugar, nenhum termo estatístico sem explicação.
+
+Custo: só texto; nenhum custo novo.
+
+Margem (regra MR vigente, 27/10/2026, 07h42): nenhum cliente pagante, isoladamente e usando 100% dos direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo, depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto. A empresa como um todo não pode dar prejuízo a partir da base mínima calculada, com 100% dos custos fixos atribuídos ao Marktmorgen (FX275). A meta de 60% de margem líquida é medida todo mês no relatório real. Política tributária TX vigente. Custo desconhecido reprova, nunca é zero; cota grátis de fornecedor não conta como custo zero.
+
+Proibido: mudar a regra do teste A/B, as constantes ou a forma de decidir; mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+
 (b) 275 [FX1] — custos fixos da LLC e base mínima de clientes.
 
 (c) 89 [C2-CAPACITY] — capacidade máxima de cada franquia.
