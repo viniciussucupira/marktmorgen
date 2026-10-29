@@ -16601,3 +16601,47 @@ Margem (regra MR vigente, 27/10/2026, 07h42): nenhum cliente pagante, isoladamen
 Proibido: buscar páginas ou imagens na internet; entrar em contas de terceiros; importar página de outra pessoa; deixar entrar script, estilo, pixel, rastreador ou HTML livre; executar qualquer código dos arquivos; sobrescrever páginas; segundo leitor de páginas; mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
 
 Aplicar a regra VR.
+
+
+## 550 [IX1] — Contexto da pessoa e vendas depois de uma conversa
+
+Estado: na fila. Ordem de chegada após549SI1,subordinadaàAV1; unidade iniciada segue sem interrupção. Proveniência: pedido direto integral do dono29/10/2026 às17h53Fortaleza, preservado abaixo. Pedidos repetidos: main4e986178,PRs1223/1224abertos,20headsrecentes distintos e778refs codex/* conferidos por data/hora,seção,IX1 e conteúdo; nenhum painel de compras ou contagem de vendas após conversa equivalente encontrado.265CI3resume/classifica/rascunha,não é este painel;395CX6chat,502RX1respostas e lib/crm.ts/next-offer.tsreutilizados,sem refazer caixa de entrada/CRM/atribuição.
+
+Para o e-mail de quem escreveu e SOMENTE a própria loja: compras+datas na conta Stripe do criador/importadas,estado assinatura ativa/pausada/cancelada,lista/rótulos,negócioCRMaberto+link. Falha de leitura=Unavailable,nunca “no purchases”. Autorização no servidor e mesmos papéis da equipe; sem permissão de vendas,não ler/expor compras/receita porUI/API/cache/export. Cache privado por loja/pessoa/escopo de permissão,sem vazamento entre criadores.
+
+Topo agregado por período: conversas abertas/respondidas e conversas seguidas de compra paga da mesma pessoa em até30dias,com receita real,“Sales after a conversation”. Texto explícito: coincidência de tempo,não causalidade. Definir contagem/deduplicação temporal verificável sem duplicar a mesma compra por retry ou inflar receita; moedas e leituras indisponíveis não inventadas. Sem pixel/rastreamento fora da loja/dado a terceiros/novaIA. Privacidade informa histórico próprio ao responder; preservar consentimento/RBAC/retenção atuais.
+
+AX274: região com título,números/datas reais rotulados,7:1/44×44px/teclado/sem depender de cor. Testes futuros só Stripe e dados sintéticos para isolamento loja+email,papéis,Unavailable,janela30dias/receita e ausência de outra loja. LeiturasStripe/cache/gravações/processamento entram nos tetos por loja/mês/reserva antes;não chamar custo desconhecido de0nem usar franquia gratuita como0. MR27/10/07h42/TX/FX275:100%direitos+complementos pior mês mensal/anual sem prejuízo isolado,empresa sem prejuízo na base mínima/100%fixos,recebimento mais caro/reservas/impostos;60%meta mensal real. VR: somente registro,nenhum recurso implementado/testadofuncional/publicado,contador254. Flags/preços/limites/comissão/travas/optins/conteúdo/Hazelsong/idiomas/IDs preservados.
+
+### Briefing integral do dono — 550IX1
+
+IX — Na caixa de entrada, quem é a pessoa e se a conversa virou venda (29/10/2026) [IX1]
+
+Solicitação do dono (29/10/2026, 17h53, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: antes de gravar, aplique a regra "Pedidos repetidos" (23/10/2026). Procure esta solicitação no main, nos PRs abertos e nos ramos codex/* recentes, pela linha de data e hora, pelo nome da seção, pela etiqueta [IX1] e pelo conteúdo. Se já existir item que peça mostrar na caixa de entrada as compras da pessoa ou as vendas depois de uma conversa, aplique só a diferença dentro dele, mantendo número, posição e estado; caso contrário, crie um único item com o próximo número livre, na posição que a ordem AV1 indicar. Ligue este item a 395 [CX6] (chat ao vivo), a 502 [RX1] (respostas aos e-mails no estúdio) e ao CRM existente (lib/crm.ts), sem duplicá-los.
+
+Estado inicial: na fila.
+
+Contexto: o Claude conferiu em 29/10/2026 a seção "Every message is money in motion" de clickfunnels.com/apps/message-hub: uma regra "Message Created / Message Content contains 'I want that!' / Send email to sales team" e a promessa "See exactly which messages drive results". No Marktmorgen, a caixa de entrada (lib/inbox.ts, lib/inbox-rules.ts, components/inbox-studio.tsx) já tem chat nas páginas da loja, respostas salvas, conversa entregue a uma pessoa da equipe, aviso por e-mail a quem está com ela, resposta sugerida pela IA e fechamento; mas a conversa não mostra quem é a pessoa na loja (compras, assinatura, negócio no CRM) nem há contagem de conversas que terminaram em venda.
+
+[IX1] O contexto da pessoa ao lado da conversa, e as vendas que vieram depois.
+(a) Ao abrir uma conversa, um painel ao lado mostra, para o e-mail de quem escreveu e só nesta loja: o que a pessoa comprou e quando (lido da conta Stripe do criador e das compras importadas, como já é feito em lib/next-offer.ts); se tem assinatura ativa, pausada ou cancelada; se está na lista e com quais rótulos; e o negócio aberto no quadro do CRM, com link para a página dela no CRM.
+(b) Leitura que falhar aparece como "Unavailable", nunca como "no purchases"; nada de outra loja nem de outro criador aparece.
+(c) Contagem agregada no topo da caixa de entrada, por período: conversas abertas, respondidas, e quantas tiveram uma compra paga da mesma pessoa em até 30 dias depois, com a receita dessas compras, chamada "Sales after a conversation", com a explicação de que é uma coincidência de tempo, não prova de que a conversa causou a venda.
+(d) O painel respeita os papéis da equipe que já existem: quem não pode ver vendas não vê compras nem receita.
+(e) Nenhum rastreamento fora da loja, nenhum pixel, nenhum dado enviado a terceiros; a política de privacidade diz que o criador vê, ao responder, o histórico da pessoa na própria loja.
+
+Acessibilidade (AX274): o painel é uma região com título; números e datas em texto real; nada só por cor; contraste de 7:1; alvos de pelo menos 44 × 44 px; operável só pelo teclado.
+
+Testes automáticos: o painel mostra só dados da mesma loja e do mesmo e-mail; "Unavailable" quando a leitura falha; papéis respeitados; contagem de vendas em até 30 dias a partir de compras simuladas; nenhum dado de outra loja; somente Stripe simulado e dados sintéticos.
+
+Custo: leituras da conta Stripe do criador com cache, já dentro do plano, com teto automático por loja e por mês e reserva antes; nenhuma chamada de IA nova; desconhecido reprova, nunca é zero.
+
+Margem (regra MR vigente, 27/10/2026, 07h42): nenhum cliente pagante, isoladamente e usando 100% dos direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo, depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto. A empresa como um todo não pode dar prejuízo a partir da base mínima calculada, com 100% dos custos fixos atribuídos ao Marktmorgen (FX275). A meta de 60% de margem líquida é medida todo mês no relatório real. Política tributária TX vigente. Custo desconhecido reprova, nunca é zero; cota grátis de fornecedor não conta como custo zero.
+
+Proibido: mostrar dados de outra loja ou de outro criador; mostrar "no purchases" quando a leitura falhou; dizer que a conversa causou a venda; rastrear fora da loja ou enviar dados a terceiros; ignorar os papéis da equipe; mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
