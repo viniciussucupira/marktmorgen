@@ -14794,7 +14794,7 @@ Em cada item, qualquer parte necessária para abrir vendas, conformidade legal, 
 | 215 | OR apósA,206–272; antesB | Fim, após todos os nãoFIM1; ordem relativa anterior | Somente posição; escopo/estado/provas mantidos. Salvaguardas já devidas dos recursos atuais permanecem imediatas. |
 | 222 | OR apósA,206–272; antesB | Fim, após todos os nãoFIM1; ordem relativa anterior | Somente posição; escopo/estado/provas mantidos. Salvaguardas já devidas dos recursos atuais permanecem imediatas. |
 | 236 | OR apósA,206–272; antesB | Fim, após todos os nãoFIM1; ordem relativa anterior | Somente posição; escopo/estado/provas mantidos. Salvaguardas já devidas dos recursos atuais permanecem imediatas. |
-| 241 | OR apósA,206–272; antesB | Fim, após todos os nãoFIM1; ordem relativa anterior | Somente posição; escopo/estado/provas mantidos. Salvaguardas já devidas dos recursos atuais permanecem imediatas. |
+| 241 | OR apósA,206–272; antesB; levado ao fim por FIM1 em28/10/2026,23h43Fortaleza | Logo depois de 531 [VP1], por VP2 (29/10/2026,13h24 Fortaleza) | VP2 altera somente posição em29/10/2026,13h24Fortaleza; escopo/estado/provas mantidos. Nenhum outro itemFIM1 muda; PF8/206após519preservado. Salvaguardas já devidas dos recursos atuais permanecem imediatas. |
 | 252 | OR apósA,206–272; antesB | Fim, após todos os nãoFIM1; ordem relativa anterior | Somente posição; escopo/estado/provas mantidos. Salvaguardas já devidas dos recursos atuais permanecem imediatas. |
 | 255 | OR apósA,206–272; antesB | Fim, após todos os nãoFIM1; ordem relativa anterior | OpenAPI/SDK/loja de testes novos no fim; segurança, isolamento e teto da API já operante ficam na posição atual. |
 | 280 | Após itens anteriores/OR/AX274B–C | Fim, após todos os nãoFIM1; ordem relativa anterior | Somente posição; escopo/estado/provas mantidos. Salvaguardas já devidas dos recursos atuais permanecem imediatas. |
@@ -15469,3 +15469,39 @@ Aplicar a regra VR.
 ### PR1208 — preservar leitura imediata das declarações da home
 
 Head1aa3acb: Firefox123554605587 reprovou6 eWebKit123554605209 reprovou7 verificações, incluindo textos HT7(390/1280)de demonstração fictícia,ausência de listagem real e data de revisão;WebKit também wording da FAQ. A contenção nativa fora da tela impediu leitura imediata por innerText desses textos, apesar do DOM e links. Correção real: FAQ e seção data-creator-showcase ficam renderizadas desde o início, junto com hero e pricing, preservando as declarações de honestidade e a redação. Sem mudar textos,seletores de teste,asserções,limites LCP/AX ou amostras. Suíte inteira do novo head obrigatória; resultados antigos não autorizam incorporação. FT528–530,HE527 e todos os complementos TB/FN preservados;nenhum deles implementado por este ajuste.
+
+
+## VP — registro integral; item531 e posição do241 (29/10/2026,13h24Fortaleza)
+
+Proveniência: pedido direto do dono nesta conversa. Deduplicação main332a38db16d7a2907a5c6fed08e5169403853c01,PR1208aberto,20PRsrecentes/19ramoscodex e764refs,semVP1/VP2,data,título ou conteúdo equivalente. Próximo número livre531após530FT3; estado na fila. VP2 não cria532nem duplica241: altera somente a linha241na tabela únicaFIM1 para depois531,com data/hora desta ordem. Texto operativo,estado,escopo e provas de241 preservados byte a byte; demais linhasFIM1 e posição206PF8 preservadas. Contexto ClickFunnels/31páginas é relato atribuído ao dono/Claude,sem verificação independente neste registro;reconferir código real antes de executar. 241/509devem compartilhar mecanismo,sem vídeos duplicados. MR/TX/FX275/AX274/VR/SF1/ME2vinculantes;foto nãoécliente,custo desconhecido reprova. Registro apenas; nenhum hero,imagem,vídeo ou promessa ativado. Nova suíte inteira do head combinado obrigatória.
+
+VP — Topo das páginas de recursos com foto e tela real do produto (29/10/2026)
+Etiquetas: [VP1] [VP2]
+
+Solicitação do dono (29/10/2026, 13h24, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: antes de gravar, aplique a regra permanente "Pedidos repetidos". Confira o main, os PRs abertos e os ramos codex/* recentes e procure esta solicitação pela linha de data e hora, pelo nome da seção, pelas etiquetas [VP1] e [VP2] e pelo conteúdo. Se já estiver gravada, não crie nada novo. Grave na ordem de chegada, depois do último item já gravado, com o próximo número livre para [VP1], sem alterar a ordem dos itens existentes, exceto a mudança de posição pedida em [VP2].
+
+Contexto: o Claude conferiu em 29/10/2026 o topo de clickfunnels.com/features/sales-funnels: título, frase e campo de e-mail à esquerda; à direita, uma foto de pessoa usando o produto com o cartão "Funnel Type" (Opt In, Application, Webinar, Summit, Bridge, Video Series) sobreposto, com sombra pontilhada. Foto e cartão são uma única imagem PNG, então o cartão não é texto, não responde a clique e não é lido pelo leitor de tela (falha 1.4.9, AAA). As 31 páginas de recursos do Marktmorgen (marktmorgen.com/platform/*) têm o topo só com texto e o quadro "On this page", sem foto nem tela do produto.
+
+531. [VP1] Topo de cada página de recursos com foto e cartão real do produto.
+Estado inicial: na fila.
+O que fazer: em cada página de marktmorgen.com/platform/*, o lado direito do topo ganha uma foto e, sobreposto a ela, um cartão com um pedaço real da tela daquele recurso, feito em HTML e CSS (não imagem): por exemplo, na página de funis, a lista dos tipos de funil de lib/funnel-types.ts; na de checkout, as opções de pagamento; na de cursos, a lista de aulas com o progresso. Os nomes do cartão vêm do próprio código, para nunca mostrar algo que não existe. O quadro "On this page" continua, logo abaixo do topo ou ao lado, sem sumir.
+Fotos: da mesma fonte licenciada já usada na página inicial, com a mesma nota de que são fotos de banco e não clientes; uma foto diferente em cada página, nenhuma repetida em todo o site (regra do dono), e coerente com o recurso; texto alternativo descrevendo a foto.
+Desenho: o cartão segue a paleta, as fontes e os cantos do site, com a sombra pontilhada ou um detalhe equivalente; em 390 × 844 px o cartão fica abaixo da foto, sem cobrir o rosto nem transbordar; versões clara e escura.
+Acessibilidade: o cartão é texto real, lido pelo leitor de tela na ordem certa, ou marcado como decorativo se repetir o que a página já diz; contraste de 7:1; nada de imagem de texto.
+Desempenho: foto em formato moderno, com tamanho certo para cada tela, sem atrasar a primeira tela; cada página continua dentro do orçamento de 281 [SF1] e 497 [ME2]. O custo de entrega das fotos é contado, nunca tratado como zero.
+Testes automáticos: cada página de recursos tem foto e cartão; nenhuma foto se repete no site; os nomes do cartão existem no código; o cartão é texto real; encaixe em 390 × 844 e 1280 × 720 px.
+Lucro: as páginas de recursos ficam tão bonitas quanto as da ClickFunnels e mais honestas, o que aumenta o interesse de quem chega por busca.
+
+[VP2] Vídeos reais do produto nas páginas de recursos de volta para perto da frente da fila.
+Estado inicial: mudança de posição.
+O item 241 [CF4] (vídeos curtos e reais de cada recurso, gravados na loja de demonstração, com legenda, transcrição e teto de custo), que o FIM1 de 28/10/2026 levou para o fim da fila, passa para logo depois de [VP1], com escopo, estado e provas intactos. Só a posição muda; nenhum outro item do FIM1 muda de lugar. Registre a mudança na tabela de posições do FIM1 com esta data e hora. Os vídeos do 241 e o vídeo das abas de 509 [CK1] usam o mesmo mecanismo de gravação e não se repetem entre si.
+
+Regra de margem: cada item segue a REGRA DE MARGEM vigente (MR, 27/10/2026, 07h42): nenhum cliente pagante dá prejuízo, usando 100% de todos os direitos do plano e de cada complemento no pior mês, no mensal e no anual, com teto automático e reserva antes de cada gasto; a empresa fica sem prejuízo a partir da base mínima; 60% é meta mensal real, não trava. Política tributária TX. Custo desconhecido reprova, nunca é zero; nenhuma cota grátis de fornecedor conta como zero; taxas de recebimento mais caras de lib/receiving-costs.ts; todos os custos fixos são 100% do Marktmorgen (FX275).
+
+Proibido: imagem de texto; foto repetida; foto ou cartão sugerindo que a pessoa da foto é cliente; mostrar recurso que não funciona hoje; tirar o quadro "On this page" ou qualquer conteúdo das páginas (só mover); mudar preços, limites visíveis, comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a, a revisão comercial ou stripePlatformEligibilityReady; afrouxar qualquer trava; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
