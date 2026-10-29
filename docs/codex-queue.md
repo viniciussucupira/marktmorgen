@@ -15592,6 +15592,33 @@ Proibido: criar item novo ou mudar número, posição ou estado do 531; carrosse
 
 Aplicar a regra VR.
 
+### Quarto complemento de531VP1 — 29/10/2026,14h16Fortaleza
+
+Proveniência: pedido direto do dono nesta conversa. Somente diferença visual ao Works well with do complemento14h13: hover/foco desloca8–12px em até200ms/sombra;reducedmotionsem deslocamento,sóborda/sombra;clique/Entercontinuaúnicaabertura. Testes de foco/reducedmotion/ordemleitura/tamanhodapágina obrigatórios. 531mantémnúmero/posição/estado na fila,241logoapós531e532AF1/533DP1preservados;nenhumitemnovo. ContextoClickFunnelsérelato do dono,semobservaçãoindependente;MR/TX/FX275/AX274/VRmantidos. Registroapenas,sem alterar UI nem alegar custo zero;suíteinteira novoheadcombinadoobrigatória.
+
+VP — Quarto complemento ao 531 [VP1]: cartão que sobe ao passar o mouse (29/10/2026)
+Etiqueta: [VP1]
+
+Solicitação do dono (29/10/2026, 14h16, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: é complemento ao item 531 [VP1], que já recebeu os complementos de 29/10/2026, 14h02, 14h08 e 14h13. Aplique só a diferença ao item existente, mantendo número, posição e estado (regra "Pedidos repetidos", passo 3, letra b), e registre na proveniência o que mudou.
+
+Estado inicial: o do próprio 531.
+
+Contexto: no carrossel "Try our apps" da ClickFunnels, ao passar o mouse, o cartão sobe alguns pixels (de 10 a 15 px) e volta quando o mouse sai, mostrando que é clicável.
+
+O que acrescentar ao 531 [VP1], nos cartões coloridos da seção "Works well with" (complemento de 14h13): ao passar o mouse ou ao receber o foco do teclado, o cartão sobe suavemente cerca de 8 a 12 px, com sombra um pouco maior, em até 200 ms, e volta ao sair; o mesmo efeito vale para o foco, para quem usa teclado; com prefers-reduced-motion, o cartão não se move e só a borda ou a sombra muda. O efeito é só visual: abrir o cartão continua sendo por clique ou Enter.
+
+Testes automáticos: o cartão muda ao receber foco; com movimento reduzido não há deslocamento; o efeito não altera a ordem de leitura nem o tamanho da página.
+
+Regra de margem: segue a REGRA DE MARGEM vigente (MR, 27/10/2026, 07h42), a política tributária TX e FX275; custo desconhecido reprova, nunca é zero.
+
+Proibido: criar item novo ou mudar número, posição ou estado do 531; abrir o cartão só ao passar o mouse; movimento com prefers-reduced-motion; mudar preços, limites visíveis, comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a, a revisão comercial ou stripePlatformEligibilityReady; afrouxar qualquer trava; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+
 [VP2] Vídeos reais do produto nas páginas de recursos de volta para perto da frente da fila.
 Estado inicial: mudança de posição.
 O item 241 [CF4] (vídeos curtos e reais de cada recurso, gravados na loja de demonstração, com legenda, transcrição e teto de custo), que o FIM1 de 28/10/2026 levou para o fim da fila, passa para logo depois de [VP1], com escopo, estado e provas intactos. Só a posição muda; nenhum outro item do FIM1 muda de lugar. Registre a mudança na tabela de posições do FIM1 com esta data e hora. Os vídeos do 241 e o vídeo das abas de 509 [CK1] usam o mesmo mecanismo de gravação e não se repetem entre si.
