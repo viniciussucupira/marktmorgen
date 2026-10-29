@@ -627,6 +627,44 @@ async function main() {
   }
 
 
+  part("A restart needs an acknowledged store write before cleanup or notice");
+  for (const answer of ["missing", "corrupt", "empty"] as const) {
+    const email = "restart-ack-" + answer + "@example.com", id = "sub_RestartAck" + answer;
+    subs[id] = subscription(id);
+    const store = await storeWith(email, "restartack" + answer, id);
+    const paused = await pausePlan(store, 1, NOW);
+    if (paused.kind !== "paused") throw new Error("Synthetic restart acknowledgement pause was refused");
+    await setSubscription(email, { active: false });
+    const ref = storeRef(store), key = `nl:pause:${ref}`, year = `nl:pause:last:${ref}`;
+    const pipeline = pauseRedis.pipeline;
+    const evidence = await pipeline([["GET", key], ["GET", year]]);
+    const before = created.length;
+    let refusedReads = 0;
+    emails.length = 0;
+    pauseRedis.pipeline = async commands => {
+      if (created.length > before && commands.length === 1 && commands[0][0] === "GET" &&
+          String(commands[0][1]).startsWith("nl:store:owner:")) {
+        refusedReads++;
+        return answer === "empty" ? [] : [answer === "missing" ? null : "{not-json"];
+      }
+      return pipeline(commands);
+    };
+    try {
+      is("unknown saved store is held rather than announced as restarted", await runBreaks(paused.record.until + 60),
+        { told: 0, restarted: 0, failed: 1, dropped: 0 });
+      is("the fixture reaches the nullable writer after one synthetic provider result",
+        [created.length - before, refusedReads > 0], [1, true]);
+      is("no success or refusal email follows an unacknowledged write", emails.length, 0);
+      const [record, last, due] = await pipeline([
+        ["GET", key], ["GET", year], ["ZRANGEBYSCORE", "nl:pause:due", "-inf", String(paused.record.until + 60)],
+      ]);
+      is("exact pause and annual evidence survive missing store acknowledgement", [record, last], evidence);
+      is("due membership survives missing store acknowledgement", Array.isArray(due) && due.includes(ref), true);
+    } finally { pauseRedis.pipeline = pipeline; }
+    is("unacknowledged restart never activates the store", (await storeForEmail(email))?.subscriptionActive, false);
+    await undoPause(store, paused.record.until + 60);
+  }
+
   part("An unreadable store cannot erase a known pause");
   {
     const email="unreadable-pause-owner@example.com",id="sub_UnreadableOwner01";

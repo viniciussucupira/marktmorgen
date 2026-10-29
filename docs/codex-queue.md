@@ -13575,3 +13575,8 @@ Depende do dono: nomes exatos das telas privadas de ativação Stripe e provas d
 
 
 Integração LQ final: decisões completas LQ1–LQ8 do PR1184/head9b753969b9061d17835f7db2bfcdf10ccd8a031b preservadas aditivamente, inclusive192linhasatuais da tabela única. O headMeta309a8ac51475894dd5ef9c105d1c6882228ae968 concluiu31/31verificações; esta integração muda o head e exige suíte integral nova, sem inferir aprovação por antecessor. Incorporar1184 antes de1185, confirmar READY/domínio/SHA e manter contador254 sem prova interativa produtiva autorizada.
+
+
+### AV(a) — confirmação da gravação antes de encerrar pausa
+
+Correção concreta: runBreaks exige retorno não nulo do escritorStore já existente antes de esquecer pausa/due ou avisar reinício. Resposta do provedor não é confirmação de gravação; ausência/corrupção/cardinalidade incompleta depois da resposta sintética preservam pausa/ano/due e não enviam sucesso. Três regressões do caminho real, sem provedor/pagamento/email real. Novas operações/chaves/TTL0 nos6contratos/mês/ano para retorno bem-sucedido; custeio completo do trabalho retido/retentativas segue desconhecido,reprovado,MR/TX/FX275. Não completa CASgerações financiado, não abre pauseRestart/políticas/vendas. Incorporar somente depois de1184/1185 e suíte integral do novo head; contador254.
