@@ -15496,6 +15496,37 @@ Desempenho: foto em formato moderno, com tamanho certo para cada tela, sem atras
 Testes automáticos: cada página de recursos tem foto e cartão; nenhuma foto se repete no site; os nomes do cartão existem no código; o cartão é texto real; encaixe em 390 × 844 e 1280 × 720 px.
 Lucro: as páginas de recursos ficam tão bonitas quanto as da ClickFunnels e mais honestas, o que aumenta o interesse de quem chega por busca.
 
+### Complemento de531VP1 — 29/10/2026,14h02Fortaleza
+
+Proveniência: pedido direto do dono nesta conversa; diferença ao531existente,sem novo número/posição/estado. Acrescenta visuais reais também às seções principais,alternância no computador/abaixo no celular,HTML/CSS a partir do código ou captura real de demo fictícia pelo mecanismo existente241/home-studio-capture. Exemplos pequenos/rotulados;semurgência/escassez/depoimento/vendagrandeinventada;unicidade/altcompletooudecorativocomtexto,7:1,desempenho/custodelivery/AX274/VR/MR/TX/FX275mantidos. Comparação atribuída ao material do dono,não verificação independente. Original531segue na fila;241continua logoapós531pelaVP2,semoutramudançaFIM1. Registro apenas,sem produzircapturaouimplementarrecurso;suíte inteira do novoheadcombinadoobrigatória.
+
+VP — Complemento ao 531 [VP1]: imagem real em cada seção das páginas de recursos (29/10/2026)
+Etiqueta: [VP1]
+
+Solicitação do dono (29/10/2026, 14h02, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: é complemento ao item 531 [VP1] já gravado. Aplique só a diferença ao item existente, mantendo número, posição e estado (regra "Pedidos repetidos", passo 3, letra b), e registre na proveniência o que mudou.
+
+Estado inicial: o do próprio 531.
+
+Contexto: na seção "Everything is a funnel" de clickfunnels.com/features/sales-funnels, enviada pelo dono, o texto fica à esquerda e, à direita, uma imagem montada com a página de venda de exemplo em computador e celular e os cartões das etapas do funil com números. Em toda a página, cada seção alterna texto e imagem. A página de exemplo deles mostra "Time is running out to use this secret!" e valores de venda de exemplo grandes. O 531 [VP1] põe foto e cartão só no topo das páginas de recursos do Marktmorgen; as seções de baixo continuam só com texto.
+
+O que acrescentar ao 531 [VP1]:
+- em cada página de marktmorgen.com/platform/*, as seções principais (por exemplo, "How a funnel works") ganham ao lado do texto uma imagem real do recurso, alternando esquerda e direita no computador e ficando abaixo do texto no celular;
+- cada imagem é um cartão em HTML e CSS com um pedaço real da tela, com nomes tirados do código (como no topo), ou uma captura real do estúdio feita sobre a loja de demonstração rotulada como fictícia (o mesmo mecanismo de tests/e2e/home-studio-capture.mjs e de 241 [CF4]);
+- números de exemplo, quando aparecem, são pequenos e marcados como exemplo; nunca urgência, escassez, depoimento ou valor de venda grande inventado.
+Continuam valendo todas as regras do 531: nenhuma imagem repetida no site, nada de imagem de texto (captura de tela tem texto alternativo completo ou fica decorativa ao lado do mesmo conteúdo em texto), contraste de 7:1, carregamento sem atrasar a primeira tela e custo de entrega contado.
+
+Testes automáticos: cada seção principal tem imagem; nenhuma imagem se repete; números de exemplo marcados; nenhuma palavra de urgência; encaixe em 390 × 844 e 1280 × 720 px.
+
+Regra de margem: segue a REGRA DE MARGEM vigente (MR, 27/10/2026, 07h42), a política tributária TX e FX275; custo desconhecido reprova, nunca é zero.
+
+Proibido: criar item novo ou mudar número, posição ou estado do 531; imagem repetida ou imagem de texto; urgência, escassez, depoimento ou número inventado; mostrar recurso que não funciona hoje; tirar qualquer conteúdo das páginas (só mover); mudar preços, limites visíveis, comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a, a revisão comercial ou stripePlatformEligibilityReady; afrouxar qualquer trava; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+
 [VP2] Vídeos reais do produto nas páginas de recursos de volta para perto da frente da fila.
 Estado inicial: mudança de posição.
 O item 241 [CF4] (vídeos curtos e reais de cada recurso, gravados na loja de demonstração, com legenda, transcrição e teto de custo), que o FIM1 de 28/10/2026 levou para o fim da fila, passa para logo depois de [VP1], com escopo, estado e provas intactos. Só a posição muda; nenhum outro item do FIM1 muda de lugar. Registre a mudança na tabela de posições do FIM1 com esta data e hora. Os vídeos do 241 e o vídeo das abas de 509 [CK1] usam o mesmo mecanismo de gravação e não se repetem entre si.
