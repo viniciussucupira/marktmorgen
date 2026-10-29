@@ -4370,6 +4370,36 @@ Crie, para cada plataforma de origem que os importadores aceitam (por exemplo, S
 Estado: OR: após o Bloco A, na ordem já existente entre 206 [SH3] e 272 [HM1]; 232 [CA1] foi antecipado e não se repete; antes do Bloco B. Registro de posição; os estados e provas históricos abaixo permanecem válidos.
 Na primeira tela da página inicial, ofereça um campo de e-mail que inicia o cadastro pelo mesmo link de acesso que já existe, com a proteção contra robôs que já existe (Vercel BotID). Se a pessoa não concluir o cadastro, envie no máximo um lembrete, e somente se ela tiver marcado uma caixa, desmarcada por padrão, pedindo esse lembrete. Ofereça também, separadamente e com outra caixa desmarcada por padrão, um boletim do Marktmorgen para criadores, com conteúdo útil e verificável (ligado à academia do item 221 [HL2]), link de cancelamento em um clique e o endereço postal exigido por lei. Cumpra a lei americana CAN-SPAM, o GDPR, a lei canadense CASL e as regras do Reino Unido. O custo desses e-mails entra nos custos fixos da empresa e tem teto automático. Meça a conversão do cadastro antes e depois.
 
+**Proveniência complementar do240[CF3],29/10/2026,14h57Fortaleza:** pedido direto do dono nesta conversa,aplicado dentro do próprio240antesdo241,sem criaritem,númeroou seção. Número,posição,estado na fila eescopooriginalpreservados;ligação expressa com448[LE1],semduplicá-lo. Diferença:mesmocomponenteemailtopo/fimhome/fim31páginas;PLANS_ON_SALE=falseusaapenaslistaespera448/duplaconfirmação/consentimento/saída;apósaberturalinkcadastroexistente;BotID/limites/dedupumaconfirmaçãomesmoemail/métricasagregadassempixelouPII/AX274rótulopersistente/errosemperdertexto/contrastes7:1e3:1/44px obrigatórios. Semnovoenvioalém240/448;tetosereservasemreceitaantesgasto,desconhecidoreprova. Deduplicação main63fb030,PR1212aberto,20PRsrecentes/19headscodex e765refs,semdata/título/conteúdoequivalente. ContextoClickFunnelsatribuídoaorelatoClaude,nãoobservaçãoindependente. MR/TX/FX275/VRmantidos;registroapenas,semUI,enviooualteraçãoflag;suíteinteiranovoheadcombinadoobrigatória.
+
+CF — Complemento ao 240 [CF3]: campo de e-mail também na faixa final das páginas (29/10/2026)
+
+Solicitação do dono (29/10/2026, 14h57, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: antes de gravar, aplique a regra "Pedidos repetidos" (23/10/2026). Procure esta solicitação no main, nos PRs abertos e nos ramos codex/* recentes, pela linha de data e hora, pelo nome da seção, pela etiqueta [CF3] e pelo conteúdo. Isto é um complemento ao item 240 [CF3], já existente: grave-o dentro desse item, mantendo o número, a posição e o estado dele, sem criar item, número ou seção nova, e registre na proveniência do 240 o que mudou. Indique nele a ligação com o item 448 [LE1], sem duplicar esse item.
+
+Estado inicial: na fila, como parte do item 240 [CF3], na posição que ele já ocupa.
+
+Contexto: o Claude conferiu em 29/10/2026 o fim de clickfunnels.com/features/sales-funnels: título grande "Ready to get started?", com a palavra "started?" sobre uma forma colorida, e, abaixo, um campo de e-mail com o texto de exemplo "Enter Your Email Address" e o botão "Try for Free". O Marktmorgen já termina a página inicial com a faixa "Open your store", o botão "Start your store" e o link "See the live demo" (app/page.tsx), e as 31 páginas marktmorgen.com/platform/* com o botão "Start your store" (components/topic-page.tsx), mas sem campo de e-mail. O item 240 pede o campo só na primeira tela da página inicial; o item 448 pede a lista de espera junto ao botão "Start your store".
+
+240 [CF3] — complemento: o mesmo campo de e-mail na faixa final.
+(a) Coloque o campo de e-mail do item 240 também na faixa final da página inicial e na faixa final das 31 páginas de recursos, com um único componente reutilizado nos três lugares (topo da página inicial, fim da página inicial e fim das páginas de recursos), sem cópia de código e sem um segundo comportamento.
+(b) Enquanto PLANS_ON_SALE for false, esse campo é a lista de espera do item 448 [LE1], com o botão e a frase honesta daquele item (por exemplo, "Notify me when selling opens"), a dupla confirmação, o consentimento registrado e a saída em um clique. Depois da abertura, ele inicia o cadastro pelo link de acesso existente, como pede o item 240. Nunca mostre um campo que prometa um cadastro que ainda não existe.
+(c) Texto do botão em inglês americano simples, sem começar pela palavra "free" e sem "Try for Free": por exemplo, "Start your store" depois da abertura. Mantenha o link "See the live demo" ao lado.
+(d) Acessibilidade (AX274): rótulo visível acima do campo, que não some ao digitar (o texto de exemplo não substitui o rótulo); type="email" e autocomplete="email"; mensagem de erro em texto, junto ao campo e anunciada ao leitor de tela, sem apagar o que foi digitado; contraste de 7:1 no texto e de 3:1 na borda do campo e no botão, inclusive sobre o fundo escuro da faixa final; alvos de pelo menos 44 × 44 px; tudo operável só por teclado; nada piscando nem se mexendo.
+(e) A mesma proteção contra robôs (Vercel BotID) e o mesmo limite de envios do item 240 e do item 448; o mesmo endereço enviado no topo e no fim conta uma única vez e recebe uma única confirmação.
+(f) Meça, de forma agregada e sem dados pessoais, nem pixel de rastreamento, quantas inscrições confirmadas vêm do topo e quantas vêm do fim, para o dono ver se o campo no fim ajuda.
+
+Custo: os e-mails de confirmação e o aviso de abertura usam os tetos automáticos e a reserva já exigidos nos itens 240 e 448, calculados antes, dentro dos custos sem receita; nenhum envio novo além dos desses itens. Desconhecido reprova, nunca é zero.
+
+Margem (regra MR vigente, 27/10/2026, 07h42): nenhum cliente pagante, isoladamente e usando 100% dos direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo, depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto. A empresa como um todo não pode dar prejuízo a partir da base mínima calculada, com 100% dos custos fixos atribuídos ao Marktmorgen (FX275). A meta de 60% de margem líquida é medida todo mês no relatório real. Política tributária TX vigente. Custo desconhecido reprova, nunca é zero; cota grátis de fornecedor não conta como custo zero.
+
+Proibido: mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; usar escassez falsa, contagem pública de inscritos, desconto inventado, promessa de data ou depoimento inventado; começar o texto pela palavra "free"; instalar widget ou overlay de acessibilidade; enviar e-mail real, criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+
 241. [CF4] Vídeos curtos e reais do produto nas páginas de recursos
 
 Estado: OR: após o Bloco A, na ordem já existente entre 206 [SH3] e 272 [HM1]; 232 [CA1] foi antecipado e não se repete; antes do Bloco B. Registro de posição; os estados e provas históricos abaixo permanecem válidos.
