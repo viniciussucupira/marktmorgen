@@ -21,6 +21,13 @@ globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) =>
 }) as typeof fetch;
 
 async function main(): Promise<void> {
+  part("Only the countries Stripe confirmed for a US platform are offered (Stripe support, 28 October 2026)");
+  is("42 countries are offered", COUNTRIES.length, 42);
+  is("Malaysia is not offered: direct charges are not available there for a US platform", COUNTRIES.some((c) => c.code === "my"), false);
+  is("Brazil is not offered: direct charges there are a public beta", COUNTRIES.some((c) => c.code === "br"), false);
+  is("India is not offered: Stripe India accounts are by invitation only", COUNTRIES.some((c) => c.code === "in"), false);
+  is("every offered country appears once", new Set(COUNTRIES.map((c) => c.code)).size, COUNTRIES.length);
+
   part("Every offered country keeps the creator's full Stripe dashboard and Stripe responsibilities");
   for (const country of COUNTRIES) {
     const before = calls.length;

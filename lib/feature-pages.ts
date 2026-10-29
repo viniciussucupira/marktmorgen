@@ -628,7 +628,7 @@ const BASE_FEATURE_PAGES: TopicPage[] = [
         title: "The honest limits",
         items: [
           "Stripe only. Buyers meet the ways to pay your Stripe account has on, and PayPal is not one to count on: Stripe offers it only to accounts in the EU (except Hungary), the UK, Switzerland, Norway and Liechtenstein, and its documentation lists it as not supported for direct charges, which is how every sale here is charged. Stan lets creators connect a PayPal Business account.",
-          "You need a Stripe account in one of the 43 countries the studio offers — the United States, Canada, the United Kingdom, Australia, Japan, Singapore, Mexico and most of Europe among them, but not everywhere.",
+          "You need a Stripe account in one of the 42 countries the studio offers — the United States, Canada, the United Kingdom, Australia, Japan, Singapore, Mexico and most of Europe among them, but not everywhere.",
           "Because we never touch your money, we cannot advance it, split it with an affiliate automatically, or refund a buyer for you.",
         ],
       },
