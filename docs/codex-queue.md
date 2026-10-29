@@ -8598,6 +8598,45 @@ Aplicar a regra VR.
 
 Proveniência/diferença do quarto complemento: pedido direto do dono acima; descrição da captura atribuída ao briefing, sem alegar inspeção independente de imagem não anexada nesta mensagem. Acrescentados só moldura por clique/foco,tipo/açõesreutilizadas,Add element na posição selecionada,confirmação/undo da remoção e operaçãoTab/Enter/nomesacessíveis;sem botão de código. Preservados375número/posição/estado e complementos10h58/11h22/11h32;nenhumitem527. Deduplicação no main332a38d,PR1208aberto,20PRsrecentes/19heads codexdistintos e764refs,semquartocomplemento11h36equivalente. Registro na alteração de códigoPR1208jáemcurso;reconferir código antes eaplicar sódiferença.MR/TX/FX275/AX274/VRpreservados.
 
+TB — Quinto complemento ao 375 [TB1]: grupos "More" e "Embeds" no menu lateral (29/10/2026)
+Etiqueta: [TB1]
+
+Solicitação do dono (29/10/2026, 11h53, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: é complemento ao item 375 [TB1], que já recebeu os complementos de 29/10/2026, 10h58, 11h22, 11h32 e 11h37. Aplique só a diferença ao item existente, mantendo número, posição e estado (regra "Pedidos repetidos", passo 3, letra b), e registre na proveniência o que mudou.
+
+Estado inicial: o do próprio 375.
+
+Contexto: a coluna de categorias do menu lateral da ClickFunnels, enviada de novo pelo dono, tem um grupo "Misc" (diversos), que os complementos anteriores não cobriram, e um grupo "Advanced", onde o criador cola HTML, JavaScript e CSS próprios. O "Advanced" continua fora do Marktmorgen pela regra de segurança já registrada (F10): todas as lojas ficam em marktmorgen.com, e código livre de um criador rodaria nesse endereço, com risco de roubo de sessão, formulário falso de pagamento, rastreamento sem consentimento e quebra de acessibilidade (AX274) e de desempenho (281 [SF1], 497 [ME2]). Já existem com segurança: pixels de anúncio por número (menu "Numbers and pixels"), vídeos do YouTube, Vimeo e Loom (lib/sales-page.ts, embedUrl) e o estilo da página.
+
+O que acrescentar ao menu lateral do 375 [TB1]:
+- um grupo "More", com os blocos já existentes de lib/sales-page.ts que não estão em outro grupo (por exemplo: perguntas, como funciona, para quem é, comparação, bônus, o que tem dentro, sobre você e números da loja), cada um como cartão arrastável;
+- dois elementos novos de arrumação, sem texto do criador nem custo: separador (uma linha) e espaço em branco (pequeno, médio ou grande);
+- um grupo "Embeds", com a lista fechada abaixo. O criador cola o endereço público do conteúdo; o Marktmorgen reconstrói o endereço de embutir só a partir do identificador, como já faz com os vídeos; nada carrega até a pessoa clicar ("Click to load"), com aviso de que o conteúdo vem de outro serviço; o quadro fica isolado da loja (iframe com sandbox, sem acesso à sessão, aos cookies nem à página); qualquer endereço fora da lista é recusado com uma mensagem clara;
+- todo bloco existente aparece em exatamente um grupo do menu; a busca encontra todos.
+A categoria "Advanced" (código livre) continua fora.
+
+Lista de embeds aprovada: o dono delegou ao Claude a verificação e a aprovação (29/10/2026, 11h53). O Claude conferiu na documentação oficial, em 29/10/2026:
+- Spotify (developer.spotify.com/documentation/embeds): quadro de open.spotify.com/embed para episódios, programas, álbuns e listas, sem chave. Aprovado.
+- Apple Podcasts (podcasters.apple.com/support/apple-podcasts-embed-player): quadro de embed.podcasts.apple.com para programa ou episódio, sem chave; respeitar o tamanho mínimo de 290 px de largura (175 px de altura para episódio, 450 px para programa). Aprovado.
+- SoundCloud (developers.soundcloud.com/docs/api/html5-widget): quadro de w.soundcloud.com/player com o parâmetro url, sem chave nos exemplos oficiais. Aprovado.
+- TikTok (developers.tiktok.com/doc/embed-player): quadro de www.tiktok.com/player/v1/{id}, sem chave; usar autoplay=0 e rel=0 (sem vídeos recomendados). Aprovado.
+- Instagram: REPROVADO. Desde 15/06/2026 o oEmbed da Meta funciona sem token, mas exige que o Marktmorgen consulte graph.facebook.com a cada post, e o código devolvido não é garantido como simples iframe sem script; falha o critério 1.
+Critérios que continuam valendo na implementação: (1) forma oficial e documentada de embutir por endereço (iframe), sem exigir script do serviço na página nem conta ou chave do Marktmorgen; (2) HTTPS; (3) funciona dentro de iframe com sandbox; (4) não recebe pagamento nem coleta dados do comprador dentro do quadro; (5) política de privacidade pública. Se algum serviço aprovado falhar um critério ao ser implementado, fica fora, com o motivo registrado na proveniência, sem nova decisão do dono. Leia os termos de uso de embutir de cada serviço e registre o resumo com data, como já vale para YouTube, Vimeo e Loom; não aceite nenhum termo novo, não crie conta e não peça chave. Nenhum serviço fora desta lista entra sem nova ordem do dono. Criadores e compradores não aprovam nem acrescentam serviços.
+
+Privacidade: cada serviço liberado entra na política de privacidade antes de funcionar, com o que ele recebe ao ser clicado.
+Testes automáticos: cada bloco existente aparece em um único grupo; separador, espaço e embeds entram por arrastar e pela alternativa por teclado; espaço não cria título vazio nem quebra a ordem de leitura; endereço fora da lista (inclusive Instagram) é recusado; nada carrega antes do clique; o quadro do embed não lê cookies nem a página; o TikTok sai com autoplay=0 e rel=0; o Apple Podcasts respeita o tamanho mínimo.
+
+Regra de margem: segue a REGRA DE MARGEM vigente (MR, 27/10/2026, 07h42), a política tributária TX e FX275; custo desconhecido reprova, nunca é zero.
+
+Proibido: criar item novo ou mudar número, posição ou estado do 375; aceitar HTML, CSS, JavaScript ou código de embed colado; aceitar serviço ou endereço fora da lista aprovada; chamar a API de qualquer serviço para montar o embed; carregar conteúdo de terceiros antes do clique; mudar preços, limites visíveis, comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a, a revisão comercial ou stripePlatformEligibilityReady; afrouxar qualquer trava; mostrar recurso que não funciona hoje; criar contas ou chaves em qualquer serviço, aceitar termos, contratar, pagar ou contatar terceiros; apagar qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+
+Proveniência/diferença do quinto complemento: anexo direto do dono,29/10/2026,11h53Fortaleza. Briefing integral preservado. Acrescentados ao375somenteMore/distribuiçãoúnicadosblocos/busca,separador/espaçotipadoeEmbedscomlistafechada econdições. Aprovação/verificaçãooficialSpotify/ApplePodcasts/SoundCloud/TikToke reprovaçãoInstagram são relatadas pelo dono como delegadas aoClaude, não constituem verificação independente deste registro. Antes de implementar, conferir termos/fontes oficiais datados,HTTPS/sandbox/privacidade/ausência de API/chave/pagamento/coleta,excluir serviço se falhar qualquer critério registrando motivo sem nova decisão;nenhumforadalista. Privacidade atualizadaantesdefuncionar,Clicktoload/TikTokautoplay0rel0/Apple290px175ou450px/AX274/testes permanecem. “Semcusto”deelementoséintenção do briefing,nãodispensaMR/TX/FX275/CPU/bytes/storage/retencão/tetos/reserva;desconhecidoreprova. Oanexo mencionaquarto11h37;proveniência original do pedido direto anterior11h36mantida,semreescreverhistórico.375número/posição/estadoe quatrocomplementosanteriorespreservados;nenhumitem527. Deduplicação main332a38d,PR1208aberto,20PRsrecentes/19heads codexdistintos e764refs,semquintocomplemento11h53equivalente. Registro na alteração de códigoPR1208jáemcurso,sem ativar recursos/gastos/contas/termos.
+
 Complemento aos375[TB1]/376[TB2] — Solicitação do dono (24/10/2026, 23h26, horário de Fortaleza), regraPedidos repetidospasso3. TBjáregistrado978antesdestecomplemento;nãorenumerar/criarseção/item/mudarposiçãoestado;aplicarjuntoàpróximaalteraçãojáprevista,SEMcommitexclusivo.Conferidoscontinuidade,mainc49bc039a0555d673ac2df2af1f282ca6d2e6358,fila978/head30f802f853ed9e476a286f160d7ccd3834306e7a,12PRsabertos e534refscodex/*;23h26equivalenteausente. MetaqualidadesuperioràClickFunnels requerAUDITORIAcomparável+fonte,nãoalegaçãopúblicaautomática.
 
 TB1diferenças:
