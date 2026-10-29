@@ -389,10 +389,10 @@ test('closed recovery wrapper performs no Redis reads or writes for fabricated o
 
 test('actual checkout and switch activation reject non-own ACKs before member traversal',async()=>{
  for(const mode of ['checkout','switch'] as const){
-  const f=mode==='switch'?await switchSetup():start();
+  const f=mode==='switch'?await switchSetup():{...start(),input:activation()};
   if(mode==='checkout')assert.ok(await reserveContractFunding('one','creator','month','checkout',f.policy,f.context,'ctr_activate'));
   // A switch keeps the exact provider subscription and original creation time.
-  const input='input' in f?f.input:activation();
+  const input=f.input;
   const invoke=()=>mode==='checkout'?activateCheckoutContract(input,f.policy,f.context):activateSwitchContract(input,f.policy,f.context);
   const snapshot=[...ledger.get(key)!];let getters=0,members=0;
   const outerGetter=Object.defineProperty(new Array(1),'0',{get(){getters++;return [2,input.periodEndSeconds];}});
