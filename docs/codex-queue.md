@@ -16365,3 +16365,43 @@ Contexto: o Claude conferiu em 29/10/2026 a seção "Your success is our obsessi
 Acessibilidade (AX274): números em texto real, tabela com cabeçalhos, valor negativo indicado por texto ("loss") e não só pela cor, contraste de 7:1, alvos de pelo menos 44 × 44 px.
 
 Testes automáticos: custo vazio aparece como incompleto e nunca como zero; taxa do Stripe igual à da transação simulada; reembolso descontado; moedas separadas; CSV
+
+
+## 546 [EB1] — Editor de e-mail: produto da loja, redes sociais e arrastar
+
+Estado: na fila. Ordem de chegada após545LU1,sobAV1; nenhumitemanterior movido. Proveniência: anexo direto do dono29/10/2026,17h14Fortaleza,íntegro abaixo. Deduplicação: main946fb1a,PRs1221/1217/1216 e20headsrecentes,sem EB1/data/título/conteúdo equivalente. Ligar375TB1(menu/arrastarsinglemecanismo/Addhere/teclado/setas/undo) e537PH1(preheader),não refazer editor/render/motoresdeenvio.
+
+Products1–4sópublicadospróprialoja,foto/nome/preçoreallidosnoenvio;removidosaviso/blocovazioimpedesend;descontorealpublicadodatado,não urgência.Socialsóredescadastradas,Spaceropçõesfixas,textoplaincompleto.SemHTMLlivre/scripts/estilos/pixel/linkrastreado;“etiquetadoemail”reusarexistente,nãoautorizartracking.Fotosdeprodutoreusamstorage,nãocopiamnemconsomem6fotosautoraismaspesototalcontinualimitado;nenhumaampliaçãodefranquia. Custosleituras/bytesentrega/cpu/enviojácontadosrequeremcálculo/teto/reserva;desconhecidoéfalha,nãozero.AplicarVR/MR/TX/FX275/AX274.Somente fila,semimplementação/envioouoperaçãoexterna.Textointegral:
+
+EB — Editor de e-mail: bloco de produto da loja, redes sociais e arrastar (29/10/2026) [EB1]
+
+Solicitação do dono (29/10/2026, 17h14, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: antes de gravar, aplique a regra "Pedidos repetidos" (23/10/2026). Procure esta solicitação no main, nos PRs abertos e nos ramos codex/* recentes, pela linha de data e hora, pelo nome da seção, pela etiqueta [EB1] e pelo conteúdo. Se já existir item que peça bloco de produto, ícones de redes sociais ou arrastar no editor de e-mail, aplique só a diferença dentro dele, mantendo número, posição e estado; caso contrário, crie um único item com o próximo número livre, na posição que a ordem AV1 indicar. Ligue este item a 375 [TB1] (editor visual de páginas, para reaproveitar o mesmo menu lateral e o mesmo arrastar, sem segundo mecanismo) e a 537 [PH1] (texto de prévia).
+
+Estado inicial: na fila.
+
+Contexto: o Claude conferiu em 29/10/2026 a seção "Design emails that make you proud (in minutes!)" de clickfunnels.com/apps/email: um editor de arrastar e soltar com os elementos Title, Paragraph, List, Image, Button, Divider, Spacer, Social e HTML, e um modelo de e-mail que termina numa grade de produtos com foto, nome e preço. No Marktmorgen, o editor de e-mail ("Design an email in blocks", lib/feature-pages.ts; components/email-studio.tsx; lib/mail-pictures.ts com MAX_MAIL_PICTURES = 6) já tem títulos, texto, listas, botões na cor da loja, divisórias e até 6 fotos, uma coluna, prévia ao lado e 4 modelos com partes marcadas; não tem bloco de produto da loja, nem ícones de redes sociais, nem arrastar do menu para o e-mail.
+
+[EB1] Três blocos e o mesmo arrastar das páginas.
+(a) Bloco "Products": o criador escolhe de 1 a 4 produtos publicados da própria loja; cada um aparece com a foto, o nome e o preço lidos do produto no momento do envio (nunca digitados), e um botão "View" para a página do produto com a etiqueta do e-mail, como os links de hoje. Em tela larga, até 2 por linha; no celular, um embaixo do outro. Produto despublicado ou apagado antes do envio sai do bloco sozinho, e o criador é avisado; se o bloco ficar vazio, o e-mail não sai até ele mudar o bloco.
+(b) Preço honesto: o preço mostrado é o preço atual da loja; desconto só aparece se for um desconto real e publicado da loja, com a data em que termina; nunca "de/por" inventado nem urgência.
+(c) Bloco "Social": ícones das redes que o criador já cadastrou na loja (lib/store-socials.ts), com o nome da rede como texto alternativo; sem rede cadastrada, o bloco não aparece para escolher.
+(d) Bloco "Spacer": espaço em branco de tamanho escolhido entre opções fixas.
+(e) Arrastar: os blocos do e-mail podem ser arrastados de um menu lateral para o lugar exato e reordenados, com o mesmo componente e a mesma alternativa por teclado e clique ("Add here") do 375 [TB1], sem segundo mecanismo; as setas para mover e o desfazer continuam.
+(f) As fotos do bloco de produto usam as fotos já guardadas do produto e não contam no limite de 6 fotos do e-mail, nem criam cópia nova de arquivo; o peso do e-mail continua dentro do limite já existente.
+(g) Sem bloco de HTML, script ou estilo livre; nenhum pixel nem link de rastreamento acrescentado; a versão em texto simples do e-mail lista os produtos com nome, preço e link.
+
+Acessibilidade (AX274): cada produto com texto alternativo da foto, nome e preço em texto real; ícones de redes com nome; botões com texto claro; contraste de 7:1; a versão em texto simples completa; alvos de pelo menos 44 × 44 px no editor, operável só pelo teclado.
+
+Testes automáticos: preço e foto lidos do produto no envio; produto despublicado sai do bloco com aviso; bloco vazio impede o envio; nenhum "de/por" inventado; ícones só das redes cadastradas; arrastar e alternativa por teclado; nenhum HTML livre, pixel ou link de rastreamento; versão em texto com os produtos; somente envios simulados.
+
+Custo: leituras dos produtos no envio já contadas no plano, com teto automático; nenhuma imagem nova armazenada; nenhum e-mail a mais; desconhecido reprova, nunca é zero.
+
+Margem (regra MR vigente, 27/10/2026, 07h42): nenhum cliente pagante, isoladamente e usando 100% dos direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo, depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto. A empresa como um todo não pode dar prejuízo a partir da base mínima calculada, com 100% dos custos fixos atribuídos ao Marktmorgen (FX275). A meta de 60% de margem líquida é medida todo mês no relatório real. Política tributária TX vigente. Custo desconhecido reprova, nunca é zero; cota grátis de fornecedor não conta como custo zero.
+
+Proibido: bloco de HTML, script ou estilo livre; pixel ou link de rastreamento; preço digitado ou "de/por" inventado; urgência ou escassez; segundo mecanismo de arrastar; aumentar limites de envio ou de fotos; mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; enviar e-mail real em testes; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
