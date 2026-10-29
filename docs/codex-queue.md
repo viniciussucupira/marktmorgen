@@ -16136,3 +16136,43 @@ Margem (regra MR vigente, 27/10/2026, 07h42): nenhum cliente pagante, isoladamen
 Proibido: publicar ou sobrescrever qualquer curso sem o clique do criador; criar além dos limites do plano; usar resultados, promessas, números ou depoimentos nos exemplos; um segundo catálogo de modelos; mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
 
 Aplicar a regra VR.
+
+
+## 541 [FC4] — Curso grátis em troca do e-mail confirmado
+
+Estado: na fila. Ordem de chegada após540CU1,subordinada àAV1; demaisitens intactos. Proveniência: anexo direto do dono29/10/2026,16h45Fortaleza,íntegro abaixo. Pedidos repetidos: main877a8f9b,PRs1220/1217/1216 e20headsrecentes conferidos por data/título/FC1/conteúdo; nenhum cursointeirográtis equivalente. COLISÃO:438[FC1]já é transferência bancária paraLLC; conforme ordem expressa do próprio briefing,este novo item usa541[FC4],sem alterar438FC1/439FC2/440FC3. Menções[FC1]no texto original abaixo são proveniência do rótulo recebido; a etiqueta operacional deste curso é[FC4]. Ligar540CU1(Minicourse) e lead-magnet de lib/funnel-types.ts,sem duplicar catálogo/funil.
+
+Reutilizar acesso confirmado/produtosgrátis/courses/drip/progresso/quizzes/certificados/course-finish. Teto próprio de vídeo dos alunosgrátis deve ser quantificado e testado antes da operação,sem consumir a garantia de alunos pagos;20%é EXEMPLO do dono, não limite aprovado nem autorização para aumentar direitos. Contabilizar100%vídeo/armazenamento/leituras/emailacessocadaaluno nas seis situaçõesmensais/anuais,reserva antes de cada gasto,custo desconhecido reprova. Acesso transacional não inscreve em marketing,caixa opt-in continua desmarcada. Sem implementação antecipada. AplicarVR. Texto integral recebido:
+
+FC — Curso grátis em troca do e-mail, como produto grátis (29/10/2026) [FC1]
+
+Solicitação do dono (29/10/2026, 16h45, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: antes de gravar, aplique a regra "Pedidos repetidos" (23/10/2026). Procure esta solicitação no main, nos PRs abertos e nos ramos codex/* recentes, pela linha de data e hora, pelo nome da seção, pela etiqueta [FC1] e pelo conteúdo. Atenção: a etiqueta FC já foi usada em outro item (440 [FC3], estado da LLC); se [FC1] já existir com outro assunto, use [FC4] para este item, sem mudar o item existente. Se já existir item que peça curso grátis em troca do e-mail, aplique só a diferença dentro dele, mantendo número, posição e estado; caso contrário, crie um único item com o próximo número livre, na posição que a ordem AV1 indicar. Ligue este item a 540 [CU1] (modelo "Mini course") e ao funil "lead-magnet" de lib/funnel-types.ts, sem duplicá-los.
+
+Estado inicial: na fila.
+
+Contexto: o Claude conferiu em 29/10/2026 a seção "Drive more course sales with a funnel" de clickfunnels.com/apps/courses: "Turn free courses into lead magnets". No Marktmorgen, só quem pagou abre um curso (lib/learn.ts: "a student is someone whose email address paid for"); os produtos grátis entregam arquivo ou link em troca do e-mail; existem aulas grátis de amostra (free preview), mas não um curso inteiro grátis. A página de recursos diz: "Any paid product with no file, link or price options of its own can become a course".
+
+[FC1] Um curso inteiro grátis, em troca de um e-mail confirmado.
+(a) Um produto grátis pode ser um curso: a pessoa informa o e-mail, confirma pelo link enviado (o mesmo fluxo dos produtos grátis de hoje) e passa a abrir o curso com esse e-mail, sem senha, como os alunos que pagaram.
+(b) Tudo o que o curso pago tem funciona igual: módulos, aulas que abrem com o tempo, progresso, quizzes e certificados; perguntas embaixo das aulas e comunidade só se o criador ligar, para o curso grátis à parte.
+(c) Custo do vídeo sob controle: as horas de vídeo assistidas por alunos de cursos grátis contam nas horas de vídeo do plano, com um teto próprio, que o criador escolhe até um máximo fixo e testado (por exemplo, no máximo 20% das horas do plano no mês); quando o teto dos alunos grátis acaba, as aulas grátis mostram o texto e os arquivos da aula e uma mensagem honesta de que o vídeo volta no próximo mês; quem pagou nunca é afetado. Reserva antes de cada reprodução, como hoje.
+(d) Limites: tamanho máximo do curso grátis (aulas e armazenamento) dentro dos limites do plano; o curso grátis conta no número de produtos e cursos do plano.
+(e) Sem forçar a lista: a pessoa só entra na lista de notícias do criador se marcar a caixa desmarcada que já existe; o e-mail de acesso ao curso não é marketing.
+(f) O curso grátis pode ser a primeira etapa do funil "lead-magnet" e aparecer como modelo "Mini course" de 540 [CU1]; ao terminar, a página de conclusão pode mostrar um produto pago do criador (lib/course-finish.ts), escolhido por ele.
+(g) Política de privacidade e termos atualizados: o que é guardado do aluno grátis, por quanto tempo e como apagar.
+
+Acessibilidade (AX274): o mesmo player e as mesmas regras dos cursos pagos (legendas, teclado, contraste de 7:1, alvos de 44 × 44 px); a mensagem de teto esgotado é texto, anunciada ao leitor de tela.
+
+Testes automáticos: acesso só com e-mail confirmado; teto próprio dos alunos grátis nunca atinge os alunos pagos; ao esgotar o teto, texto e arquivos continuam e o vídeo para; nenhuma entrada na lista sem a caixa marcada; o curso grátis conta nos limites do plano; somente dados e envios simulados.
+
+Custo: horas de vídeo, armazenamento, leituras e o e-mail de acesso de cada aluno grátis entram no pior caso do plano, com o teto próprio e reserva antes de cada gasto, sem diminuir o que o plano garante a quem paga; desconhecido reprova, nunca é zero.
+
+Margem (regra MR vigente, 27/10/2026, 07h42): nenhum cliente pagante, isoladamente e usando 100% dos direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo, depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto. A empresa como um todo não pode dar prejuízo a partir da base mínima calculada, com 100% dos custos fixos atribuídos ao Marktmorgen (FX275). A meta de 60% de margem líquida é medida todo mês no relatório real. Política tributária TX vigente. Custo desconhecido reprova, nunca é zero; cota grátis de fornecedor não conta como custo zero.
+
+Proibido: deixar alunos grátis consumirem as horas de vídeo garantidas a quem paga; abrir curso sem e-mail confirmado; pôr alguém na lista sem a caixa marcada; aumentar limites visíveis ou criar uso sem teto; mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; enviar e-mail real em testes; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
