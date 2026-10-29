@@ -42,7 +42,6 @@
  * added up in tests/plan-margin.test.ts.
  */
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
-import { canonicalFinancialSnapshot } from "@/lib/contract-funding-rules";
 import {
   BillingError,
   hasContractFunding,
@@ -163,22 +162,39 @@ local raw=redis.call('GETRANGE',KEYS[1],0,4096)
 if #raw==0 or #raw>4096 then return {-1} end
 return {1,raw}`;
 
+/** Decode only the two finite own-data shapes emitted by PAUSE_OBSERVATION. */
+function boundedPauseObservation(reply: unknown): { missing: true; raw: null } | { missing: false; raw: string } | null {
+  try {
+    if (!Array.isArray(reply) || Object.getOwnPropertySymbols(reply).length) return null;
+    const outerLength = Object.getOwnPropertyDescriptor(reply, "length");
+    if (!outerLength || !Object.hasOwn(outerLength, "value") || outerLength.value !== 1) return null;
+    const entry = Object.getOwnPropertyDescriptor(reply, "0");
+    if (!entry || !Object.hasOwn(entry, "value") || !Array.isArray(entry.value)) return null;
+    const ack: unknown[] = entry.value;
+    if (Object.getOwnPropertySymbols(ack).length) return null;
+    const length = Object.getOwnPropertyDescriptor(ack, "length");
+    if (!length || !Object.hasOwn(length, "value") || (length.value !== 1 && length.value !== 2)) return null;
+    const flag = Object.getOwnPropertyDescriptor(ack, "0");
+    if (!flag || !Object.hasOwn(flag, "value")) return null;
+    if (length.value === 1) return flag.value === 0 ? { missing: true, raw: null } : null;
+    if (flag.value !== 1) return null;
+    const field = Object.getOwnPropertyDescriptor(ack, "1");
+    if (!field || !Object.hasOwn(field, "value") || typeof field.value !== "string") return null;
+    const raw = field.value;
+    if (raw.length === 0 || raw.length > 4096 || Buffer.byteLength(raw, "utf8") > 4096) return null;
+    return { missing: false, raw };
+  } catch { return null; }
+}
+
 async function storedPauseAt(ref: string): Promise<{ record: PauseRecord | null; missing: boolean; raw: string | null }> {
   if (!isRedisConfigured()) return { record: null, missing: true, raw: null };
   const reply = await redisPipeline([["EVAL", PAUSE_OBSERVATION, 1, recordKey(ref)]]);
-  const encoded = canonicalFinancialSnapshot(reply);
-  if (!encoded) return { record: null, missing: false, raw: null };
-  const observed: unknown = JSON.parse(encoded);
-  if (!Array.isArray(observed) || observed.length !== 1 || !Array.isArray(observed[0])) {
-    return { record: null, missing: false, raw: null };
-  }
-  const ack = observed[0];
-  if (ack.length === 1 && ack[0] === 0) return { record: null, missing: true, raw: null };
-  if (ack.length !== 2 || ack[0] !== 1 || typeof ack[1] !== "string" ||
-      ack[1].length === 0 || Buffer.byteLength(ack[1], "utf8") > 4096) {
-    return { record: null, missing: false, raw: null };
-  }
-  const raw = ack[1];
+  // Bound the acknowledgement shape before touching members or encoding raw
+  // bytes. A generic snapshot would first traverse an oversized response.
+  const observation = boundedPauseObservation(reply);
+  if (!observation) return { record: null, missing: false, raw: null };
+  if (observation.missing) return { record: null, missing: true, raw: null };
+  const raw = observation.raw;
   return { record: parseRecord(raw), missing: false, raw };
 }
 

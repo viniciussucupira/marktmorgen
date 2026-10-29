@@ -261,7 +261,9 @@ try {
     context.newPage = async (...args) => {
       const page = await newPage(...args);
       const settle = async () => {
-        if(page.isClosed() || page.url()==="about:blank")return;
+        // A no-script document cannot start fetch/RSC work or RAF polling.
+        // Keep the full drain for every JavaScript-enabled helper context.
+        if(options.javaScriptEnabled===false || page.isClosed() || page.url()==="about:blank")return;
         await page.waitForFunction(()=>{
           if(window.__mmNavigationRsc?.some(entry=>!entry.done)){delete window.__mmRscIdleSince;return false;}
           window.__mmRscIdleSince??=performance.now();
@@ -279,7 +281,7 @@ try {
     const closeContext=context.close.bind(context);
     context.close=async (...args)=>{
       for(const page of context.pages()){
-        if(page.isClosed()||page.url()==="about:blank")continue;
+        if(options.javaScriptEnabled===false||page.isClosed()||page.url()==="about:blank")continue;
         await page.waitForFunction(()=>{
           if(window.__mmNavigationRsc?.some(entry=>!entry.done)){delete window.__mmRscIdleSince;return false;}
           window.__mmRscIdleSince??=performance.now();

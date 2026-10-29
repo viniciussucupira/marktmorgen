@@ -86,3 +86,34 @@ test('missing waitlist scope, changed review or absent current approval refuses 
  assert.equal(await reserveFundedExposure('platform','platform_waitlist'),false);
  assert.equal(calls.length,0);
 });
+
+test('exposure ACK must be an own numeric array entry without invoking accessors',async()=>{
+ const f=start();
+ assert.equal(await reserveFundedExposure('one','trial',f.policy,f.context),true);
+ const before=[...ledger.get(f.key)!];
+ let getters=0,memberReads=0;
+ const accessor:unknown[]=[1];
+ Object.defineProperty(accessor,'0',{get(){getters++;return 1;}});
+ const inherited:unknown[]=new Array(1);
+ Object.setPrototypeOf(inherited,Object.assign(Object.create(Array.prototype),{0:1}));
+ const symbol:unknown[]=[1];Object.defineProperty(symbol,Symbol('synthetic'),{value:1});
+ const oversized=new Proxy([1,1],{
+  getOwnPropertyDescriptor(target,key){
+   if(typeof key==='string'&&String(Number(key))===key)memberReads++;
+   return Reflect.getOwnPropertyDescriptor(target,key);
+  },
+ });
+ Object.getOwnPropertyDescriptor(oversized,'0');
+ assert.equal(memberReads,1,'descriptor instrumentation is live');memberReads=0;
+ const malformed:unknown[]=[accessor,inherited,symbol,oversized,{length:1,0:1},new Array(1)];
+ for(const response of malformed){
+  settings({response:response as unknown[]});
+  assert.equal(await reserveFundedExposure('one','trial',f.policy,f.context),false);
+  assert.deepEqual([...ledger.get(f.key)!],before,'uncertain ACK retains allocated cash, receipt and slot');
+ }
+ assert.equal(getters,0,'financial ACK accessor must not execute');
+ assert.equal(memberReads,0,'over-cardinality ACK rejected before visiting entries');
+ settings({response:null});
+ assert.equal(await reserveFundedExposure('one','trial',f.policy,f.context),true,'ordinary numeric own ACK still reuses allocation');
+ assert.deepEqual([...ledger.get(f.key)!],before);
+});

@@ -41,7 +41,13 @@ export async function reserveFundedExposure(statsId:string,scope:ExposureScope,p
  if(allocation.slots===0)return false;
  try{
   const result=await redisPipeline([['EVAL',RESERVE_EXPOSURE,1,'nl:exposure:v1:'+config.month,config.reviewId,config.binding,scope,statsId,allocation.cents,config.budgetCents,allocation.slots]]);
-  if(result.length!==1||result[0]!==1)return false;
+  // Only an own numeric Redis ACK admits spending; never execute a getter
+  // or accept an inherited entry while inspecting financial evidence.
+  if(!Array.isArray(result)||Object.getOwnPropertySymbols(result).length)return false;
+  const length=Object.getOwnPropertyDescriptor(result,'length');
+  if(!length||!Object.hasOwn(length,'value')||length.value!==1)return false;
+  const ack=Object.getOwnPropertyDescriptor(result,'0');
+  if(!ack||!Object.hasOwn(ack,'value')||ack.value!==1)return false;
   // A delayed acknowledgement cannot authorize work under changed or expired
   // evidence. Keep the committed reservation even when revalidation refuses.
   const current=exposureBudgetConfiguration(policy,context);
