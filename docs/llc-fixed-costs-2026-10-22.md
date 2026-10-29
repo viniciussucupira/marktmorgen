@@ -1,7 +1,5 @@
 # Full LLC fixed costs — 22 October2026
 
-> **LQ1 vigente — dono28/10/2026 20h20 Fortaleza; SR5/SD1.** Canceladas somente as categorias ITIN/agente de aceitação e representante residente nos EUA. Removidas do catálogo, sem atribuir custo zero. Endereço comercial real nos EUA, sem caixa postal, banco no nome exato da LLC e todos os demais custos aplicáveis permanecem; total, tetos e reservas continuam desconhecidos e reprovados. Os inventários e requisitos anteriores abaixo ficam preservados como histórico. Quantificação vigente somente da rota LLC em275[FX1]; não executar a rota brasileira. Nenhum serviço contratado ou obrigação jurídica universal certificada.
-
 ## TX4/SR — inventário explícito de custos de conformidade (27/10/2026)
 
 O catálogo de revisão emlib/llc-fixed-costs.ts passa a incluir5472,proforma1120,IRPF,CBE,conformidadeIVA/OSS/local,ITIN/acceptance-agent,representante residenteUS e endereço empresarialUS. As linhas começam com tetos mensal/anual desconhecidos e reserva não revisada. Não são preços nem afirmação de obrigação incondicional: cada aplicabilidade, trabalho interno, custo de ferramenta/serviço, moeda, teto e reserva precisam de prova. Mailbox/registered-agent não substituem automaticamente endereço/representante aceitos peloStripe.
@@ -57,3 +55,10 @@ No prices, visible rights, commissions, PLANS_ON_SALE, tax gate, Article9a or co
 A [regra SR](stripe-platform-eligibility.md),dono27/10/2026 08h00Fortaleza, exige a leitura menos favorável das respostas contraditórias:SSN/ITIN,representante legal residente eendereço comercial realnosEUA semcaixapostal paraoplanejamento da plataformaUS. A cotação histórica demailbox/Stable eoregistered agent não comprovam essesrequisitos,aceiteStripe nemcustos máximos. RepresentantesGDPR/DSA não sãosubstitutos semprova.
 
 Valores anteriores preservados como histórico decada serviço, semtratá-los como preço do novo requisito.469[SR3]deve obter fonte oficialdatada,aceite/cobertura e custosmensais/anuais deITIN/agente deaceitação seaplicável,representanteresidente,endereçoreal eextras,100%MarktmorgenFX275;desconhecido reprova,nãozero. Não adicionada cotação inventada nem alterado oregistro de custos/revisão.468[SR2]ainda precisa da condição explícita decontaempresaUS;470[SR4]sóroteiro. Sem contratação/contato/pagamento ouafrouxamento dequalquergate.
+
+
+## Histórico da limpeza desfeita — LQ17/LQ18
+
+**Desfeito por decisão do dono em 28/10/2026, 23h37 (LQ17)**. O trecho acima foi restaurado integralmente à referência9c224622c0f93fc864026f48114267e6b6d79998. A antiga marca abaixo não é requisito vigente; TX,SD1 e demais regras atuais prevalecem na execução. Categorias de revisão desconhecidas não afirmam contratação nem obrigação universal.
+
+> **LQ1 vigente — dono28/10/2026 20h20 Fortaleza; SR5/SD1.** Canceladas somente as categorias ITIN/agente de aceitação e representante residente nos EUA. Removidas do catálogo, sem atribuir custo zero. Endereço comercial real nos EUA, sem caixa postal, banco no nome exato da LLC e todos os demais custos aplicáveis permanecem; total, tetos e reservas continuam desconhecidos e reprovados. Os inventários e requisitos anteriores abaixo ficam preservados como histórico. Quantificação vigente somente da rota LLC em275[FX1]; não executar a rota brasileira. Nenhum serviço contratado ou obrigação jurídica universal certificada.

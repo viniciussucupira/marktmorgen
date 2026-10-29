@@ -22,7 +22,7 @@ test("source observations preserve full taxes, INSS and higher monthly mailbox r
 });
 
 test("TX4 and SR obligations cannot disappear inside the old fixed-cost inventory",()=>{
- const required = ["us-form-5472","us-pro-forma-1120","br-irpf","br-cbe","vat-oss-and-local-compliance","us-business-address"];
+ const required = ["us-form-5472","us-pro-forma-1120","br-irpf","br-cbe","vat-oss-and-local-compliance","itin-and-acceptance-agent","us-resident-representative","us-business-address"];
  for(const id of required){
   assert.ok((LLC_FIXED_COST_IDS as readonly string[]).includes(id));
   assert.equal(allocateEntireLlcFixedCosts(fixture().filter(line=>line.id!==id)),null);
@@ -65,19 +65,4 @@ test("detached cost evidence retains valid totals and refuses unsafe aggregate a
  assert.equal(allocateEntireLlcFixedCosts(overflow),null);
  const annual=fixture();annual[0].fullAnnualUsdCents=Number.MAX_SAFE_INTEGER;
  assert.equal(allocateEntireLlcFixedCosts(annual),null);
-});
-
-test("LQ1 removes only canceled identity categories and retains unresolved real US address",()=>{
- const ids=LLC_FIXED_COST_IDS as readonly string[];
- assert.ok(!ids.includes("itin-and-acceptance-agent"));
- assert.ok(!ids.includes("us-resident-representative"));
- assert.ok(ids.includes("us-business-address"));
- const address=CURRENT_LLC_FIXED_COST_CEILINGS.find(line=>line.id==="us-business-address")!;
- assert.deepEqual(address,{id:"us-business-address",fullMonthlyUsdCents:null,fullAnnualUsdCents:null,evidence:"",reserveReviewed:false});
- assert.equal(allocateEntireLlcFixedCosts(CURRENT_LLC_FIXED_COST_CEILINGS),null);
- for(const obsolete of ["itin-and-acceptance-agent","us-resident-representative"]){
-  const lines=fixture();
-  lines[0]={...lines[0],id:obsolete as FixedCostCeiling["id"]};
-  assert.equal(allocateEntireLlcFixedCosts(lines),null);
- }
 });
