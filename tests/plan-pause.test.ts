@@ -628,7 +628,7 @@ async function main() {
 
 
   part("A restart needs an acknowledged store write before cleanup or notice");
-  for (const answer of ["missing", "corrupt", "empty"] as const) {
+  for (const answer of ["missing", "corrupt", "empty", "unavailable"] as const) {
     const email = "restart-ack-" + answer + "@example.com", id = "sub_RestartAck" + answer;
     subs[id] = subscription(id);
     const store = await storeWith(email, "restartack" + answer, id);
@@ -645,18 +645,19 @@ async function main() {
       if (created.length > before && commands.length === 1 && commands[0][0] === "GET" &&
           String(commands[0][1]).startsWith("nl:store:owner:")) {
         refusedReads++;
+        if (answer === "unavailable") throw new Error("Synthetic restart store write unavailable");
         return answer === "empty" ? [] : [answer === "missing" ? null : "{not-json"];
       }
       return pipeline(commands);
     };
     try {
-      is("unknown saved store is held rather than announced as restarted", await runBreaks(paused.record.until + 60),
+      is("unknown saved store is held rather than announced as restarted", await runBreaks(paused.record.until + (answer === "unavailable" ? 4 * DAY : 60)),
         { told: 0, restarted: 0, failed: 1, dropped: 0 });
       is("the fixture reaches the nullable writer after one synthetic provider result",
         [created.length - before, refusedReads > 0], [1, true]);
       is("no success or refusal email follows an unacknowledged write", emails.length, 0);
       const [record, last, due] = await pipeline([
-        ["GET", key], ["GET", year], ["ZRANGEBYSCORE", "nl:pause:due", "-inf", String(paused.record.until + 60)],
+        ["GET", key], ["GET", year], ["ZRANGEBYSCORE", "nl:pause:due", "-inf", String(paused.record.until + 4 * DAY)],
       ]);
       is("exact pause and annual evidence survive missing store acknowledgement", [record, last], evidence);
       is("due membership survives missing store acknowledgement", Array.isArray(due) && due.includes(ref), true);
