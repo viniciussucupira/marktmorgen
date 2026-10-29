@@ -622,6 +622,9 @@ Proveniência AB: passou a fazer parte do Bloco de abertura, posição (c), por 
    - Custo e margem: Antes de construir: conferir capacidade existente no main e preservar Claude. Custo unitário pago mais caro, uso integral simultâneo por plano mensal/anual, taxas de receiving-costs e leitura fiscal mais onerosa (nunca abaixo de27,5%); teto por fornecedor/loja e reserva antes da operação, plan-cost-registry/spend-floor. Desconhecido reprova; sem cortar limite visível, mudar preço ou afrouxar gates.
 
 90. **[C2-EMAIL-HONESTY] Corrigir imediatamente a contradição pública sobre modelos de e-mail**
+
+- Decisão vigente do complemento LQ4 (dono,28/10/2026 às20h38): **Feito — concluído na conferência LQ4**. Correção editorial dos quatro modelos de email confirmada em feature-pages e publicação exata; não representa novas capacidades do editor. Texto e provas originais abaixo preservados; MR/TX vigentes prevalecem sobre regras históricas incompatíveis.
+
    - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
    - Estado: **concluído; PR637 incorporado em19/10/2026 às22:31:33Fortaleza; entrega54 verificada**.
    - Escopo e prova: Conferir os quatro modelos reais e o editor em lib/mail-body.ts/components/mail-designer.tsx. Em lib/feature-pages.ts, a seção de recursos anuncia quatro, mas a seção What it does not do yet ainda diz No templates. Corrigir a limitação para descrever o que existe e o que falta, com regressão na página real; sem prometer colunas ou capacidades ausentes.
@@ -711,6 +714,9 @@ Proveniência AB: passou a fazer parte do Bloco de abertura, posição (h), por 
    - Custo e margem: Antes de construir: conferir capacidade existente no main e preservar Claude. Custo unitário pago mais caro, uso integral simultâneo por plano mensal/anual, taxas de receiving-costs e leitura fiscal mais onerosa (nunca abaixo de27,5%); teto por fornecedor/loja e reserva antes da operação, plan-cost-registry/spend-floor. Desconhecido reprova; sem cortar limite visível, mudar preço ou afrouxar gates.
 
 95. **[D2-DEMAND-RADAR] Radar mensal do que o público solicita**
+
+- Decisão vigente do complemento LQ5 (dono,28/10/2026 às20h38): **Mantido — diferença ou prova pendente LQ5**. Radar existente usa cancel/question/review/search com limites e reserva. Restam motivos de reembolso e listas de espera, integrados ao mesmo radar com consentimento/permissão/retenção/custeio; não criar segundo motor. Texto e provas originais abaixo preservados; MR/TX vigentes prevalecem sobre regras históricas incompatíveis.
+
    - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
    - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 11/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
    - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
@@ -873,6 +879,9 @@ Texto, estados, posições e provas anteriores preservados como histórico, sem 
    - Custo e margem: Quantificar pior caso por lugar, RBAC/retencão e tetos; aumento de limite só se ambos intervalos permitirem.
 
 30. **[E13] Aviso ao sair do checkout, sem urgência falsa nem desconto inventado.**
+
+- Decisão vigente do complemento LQ5 (dono,28/10/2026 às20h38): **Mantido — diferença ou prova pendente LQ5**. ExitOffer existente é popup de produto gratuito na vitrine desktop, não interceptação do checkout hospedado Stripe. Manter diferença de escopo; não duplicar popup nem afirmar extensão dentro do Stripe sem suporte comprovado. Texto e provas originais abaixo preservados; MR/TX vigentes prevalecem sobre regras históricas incompatíveis.
+
    - Pedido: P2 E13; datas/horas e grau de certeza em Proveniência.
    - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 26/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
    - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
@@ -1039,6 +1048,9 @@ Proveniência AB: passou a fazer parte do Bloco de abertura, posição (j), por 
    - Custo e margem: Antes de construir: conferir capacidade existente no main e preservar Claude. Custo unitário pago mais caro, uso integral simultâneo por plano mensal/anual, taxas de receiving-costs e leitura fiscal mais onerosa (nunca abaixo de27,5%); teto por fornecedor/loja e reserva antes da operação, plan-cost-registry/spend-floor. Desconhecido reprova; sem cortar limite visível, mudar preço ou afrouxar gates.
 
 115. **[E2-FOUNDING-MEMBERS] Plano fundador de preço maior nas assinaturas**
+
+- Decisão vigente do complemento LQ5 (dono,28/10/2026 às20h38): **Mantido — diferença ou prova pendente LQ5**. Níveis de preço do criador já existem em tier-rules. Restam rótulo de fundador e apresentação fiel das condições; preservar contratos dos membros existentes e preços Marktmorgen. Texto e provas originais abaixo preservados; MR/TX vigentes prevalecem sobre regras históricas incompatíveis.
+
    - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
    - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 42/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
    - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
@@ -1456,6 +1468,9 @@ Texto, estados, posições e provas anteriores preservados como histórico, sem 
    - Custo e margem: Documentação/teste, sem fornecedor novo. Preços externos são pesquisa fornecida de19/10/2026; capacidade futura com custo depende da conta completa e reservas, não da matriz.
 
 54. **[J2] Registrar diferenças favoráveis já existentes somente com prova no código: Stripe direto, domínio, lojas/equipe/opções, presentes/equipe/waitlist/pré-venda/avaliações, podcast privado/licenças/PDF/Discord/provas, ofertas/API/Zapier/e-mail/importação/A-B e recursos do plano69. Velocidade comparativa exige metodologia/evidência real.**
+
+- Decisão vigente do complemento LQ5 (dono,28/10/2026 às20h38): **Mantido — diferença ou prova pendente LQ5**. Comparações favoráveis já publicadas e fonte única existem. Reduzir à conferência das diferenças específicas ainda não sustentadas e manutenção das fontes; não refazer15páginas ou inventar superioridade de velocidade. Texto e provas originais abaixo preservados; MR/TX vigentes prevalecem sobre regras históricas incompatíveis.
+
    - Pedido: P2 J2; datas/horas e grau de certeza em Proveniência.
    - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 76/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
    - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
@@ -1850,17 +1865,26 @@ Pedido P5: anexo524cc7f9-78af-42b5-ae37-4c05dc91a193/Texto colado.txt, lido19/10
 - Cada item: PR codex/* com escopo, lacunas, M0 antes/depois e custo; lint/typecheck/testes integrais no novo head. Documento ou PR pendente não é entrega funcional; só contar após READY, SHA e domínio exatos. Não esperar confirmação para o próximo item.
 
 142. **[S1-COMPARISONS] Comparações oficiais e índice público**
+
+- Decisão vigente do complemento LQ4 (dono,28/10/2026 às20h38): **Feito — concluído na conferência LQ4**. Índice publicado contém os15 comparadores pedidos; site-pages/final-comparison-pages/competitor-prices preservam fontes e ressalvas. Sem nova certificação de preços ou velocidade. Texto e provas originais abaixo preservados; MR/TX vigentes prevalecem sobre regras históricas incompatíveis.
+
    - Estado: **concluído; 15 comparações e índice publicados, entrega69, PR655, 20/10/2026 01:22:54 Fortaleza**.
    - Escopo: lib/site-pages.ts, seção proof, resumo curto, tabela com fontes/datas, citação literal curta apenas se útil, SEO "Marktmorgen vs Kajabi" e descrição "A Kajabi alternative where...", mesmo padrão adaptado aos demais. Índice ligado no menu/rodapé. Ordem: Kajabi, Skool, ClickFunnels, Circle, Kit, Whop, Hotmart, HighLevel; depois Teachable, Substack, Patreon, Linktree, Podia, Thinkific, Systeme.io.
    - Conferir cada lado no main: comissão zero, conta própria Stripe, produtos/cursos/comunidade/email/funis/CRM conforme limites/capacidades reais, sem declarar venda aberta. Não confundir pagamento direto com dispensa das obrigações fiscais de plataforma. Cada concorrente tem vantagens/lacunas verificadas e "Where they are ahead" do mesmo tamanho. ClickFunnels liga para /platform/move-from-clickfunnels e vice-versa, sem duplicar migração.
    - Prova: fontes oficiais datadas e condições de taxas, URLs/SEO/índice/nav/footer/sitemap, teclado/390px/contraste, testes de dados e de páginas reais. Sub-PR por concorrente pode registrar progresso; S1 só fica concluído com os15e índice. Custo: conteúdo estático, sem chamada paga por visita; M0 antes/depois igual se envelope não aumenta.
 
 143. **[S2-PRICING] Página própria /pricing**
+
+- Decisão vigente do complemento LQ4 (dono,28/10/2026 às20h38): **Feito — concluído na conferência LQ4**. Página/pricing publicada e código canônico preservam planos mensal/anual, limites e complementos; nenhum preço alterado. Texto e provas originais abaixo preservados; MR/TX vigentes prevalecem sobre regras históricas incompatíveis.
+
    - Estado: **concluído; PR656, entrega70, READY20/10/2026 02:13:44Fortaleza, commit02ea6ed454c405dd01aa4728340f4ce90ad0f753**.
    - Escopo: três planos mensal/anual diretamente de lib/plan.ts, todos os limites das respectivas regras, "0% of each sale" com taxa do processador explicada; assistente e legendas de IA com preços reais, FAQ e espaço integrado para S3. Home#pricing liga /pricing; indexável/sitemap.
    - Prova: preços/limites coincidem com fontes canônicas e gates fechados; navegação/semântica/390px. Custo: renderização estática, M0 igual sem novo envelope; S3 é o próximo incremento, não fingir calculadora pronta.
 
 144. **[S3-TOOLS-CALCULATOR] One plan instead of several tools**
+
+- Decisão vigente do complemento LQ4 (dono,28/10/2026 às20h38): **Mantido — diferença ou prova pendente LQ4**. ToolsCalculator existente usa estado local e fonte compartilhada de comparação; código e página publicada conferidos. Não promete receita ou margem. Conferência parcial confirma presença, mas não revalida todos os critérios do pedido nesta revisão; manter estado anterior e provas históricas, sem declarar nova conclusão integral. Texto e provas originais abaixo preservados; MR/TX vigentes prevalecem sobre regras históricas incompatíveis.
+
    - Estado: **concluído; entrega71 em produção confirmada, PR657 incorporado20/10/2026 02:39:00Fortaleza**.
    - Escopo: calculadora exclusivamente no navegador dentro de /pricing. Seleção de ferramentas e vendas mensais; assinaturas e comissões oficiais aplicáveis contra plano próprio com comissão zero. lib/competitor-prices.ts único, compartilhado com S1, com fonte/data por preço. Estimativa clara, processamento nos dois lados, sem promessa de resultado; não somar taxas inclusas duas vezes nem tratar taxa por transação como percentual sem quantidade.
    - Prova: preços próprios de lib/plan.ts, dados concorrentes sem fonte/data reprovam; condições/volumes/limites explícitos; entradas inválidas e nenhuma chamada de servidor. Custo: cálculo local, sem novo custo operacional por cálculo; M0 preservada.
@@ -1871,16 +1895,25 @@ Pedido P5: anexo524cc7f9-78af-42b5-ae37-4c05dc91a193/Texto colado.txt, lido19/10
    - Prova: links/recursos/preços verdadeiros, screenshots sintéticos com origem e sem repetição, layout390px/teclado/contraste/performance. Vídeo só com custo fixo/teto aprovado antes; não é requisito para completar o item. M0/custos explicitados.
 
 146. **[S5-PUBLIC-CRM] People, deals and pipelines**
+
+- Decisão vigente do complemento LQ4 (dono,28/10/2026 às20h38): **Feito — concluído na conferência LQ4**. Página CRM e respectivos limites já estão no catálogo e publicação; sem telefonia/SMS/WhatsApp inventados. Texto e provas originais abaixo preservados; MR/TX vigentes prevalecem sobre regras históricas incompatíveis.
+
    - Estado: **concluído; entrega73, PR659, incorporado2026-10-20 03:07:39Fortaleza, domínio/READY/versão confirmados**.
    - Escopo: página em lib/feature-pages.ts para capacidades reais de app/studio/deals e people; pipelineLimit e demais limites por plano de lib/crm-rules.ts. "What it does not do": sem SMS, WhatsApp ou telefone. Menu/homeS4/comparaçãoHighLevel ligados; sitemap.
    - Prova: regras por plano e permissões existentes, links, leitura acessível/390px. Custo: página estática, sem operação nova de CRM; M0 igual.
 
 147. **[S6-FEATURE-MECHANISMS] Como cada recurso ajuda a vender ou reter**
+
+- Decisão vigente do complemento LQ4 (dono,28/10/2026 às20h38): **Feito — concluído na conferência LQ4**. Textos de mecanismos compartilhados já integram feature-pages/publicação; fechamento editorial, sem ativar funcionalidades. Texto e provas originais abaixo preservados; MR/TX vigentes prevalecem sobre regras históricas incompatíveis.
+
    - Estado: **concluído; entrega74, PR660, incorporado2026-10-20 03:11:56Fortaleza, domínio/READY/versão confirmados**.
    - Escopo: bloco curto em cada página de lib/feature-pages.ts explicando mecanismo factual, por exemplo oferta no checkout e menor barreira inicial de assinatura, sem números/percentuais/promessas de resultado. Não afirmar integração/capacidade que não exista no main.
    - Prova: inventário completo de páginas/links, revisão US English, semântica/390px/contraste. Custo: texto estático, sem novo envelope, M0 igual.
 
 148. **[S7-CREATOR-PAGES] Páginas por situação de criador**
+
+- Decisão vigente do complemento LQ4 (dono,28/10/2026 às20h38): **Mantido — diferença ou prova pendente LQ4**. Páginas por atividade já integram site-pages/publicação; textos e imagens de demonstração preservados, sem clientes/resultados inventados. Conferência parcial confirma presença, mas não revalida todos os critérios do pedido nesta revisão; manter estado anterior e provas históricas, sem declarar nova conclusão integral. Texto e provas originais abaixo preservados; MR/TX vigentes prevalecem sobre regras históricas incompatíveis.
+
    - Estado: **concluído; entrega75, PR661, incorporado2026-10-20 03:17:00Fortaleza, domínio/READY/versão confirmados**.
    - Escopo: course creators, community builders, newsletter writers, consultants and mentors, preservando coaches/cooks/fitness/designers. Padrão existente com ladder e foto única por página; situação descrita, nunca depoimento atribuído. Consultoria: chamadas pagas, pagamentos agendados Stripe, formulários, contratos assinados e lembretes apenas conforme código; sem argumento de parcelamento brasileiro.
    - Prova: capacidades e fontes próprias, imagens únicas/licença/aviso não-cliente, links reais/sitemap/teclado/390px/contraste. Sem novas operações, M0 igual.
@@ -1896,6 +1929,9 @@ Estados e provas anteriores abaixo preservados como histórico.
    - Dependências: PLANS_ON_SALE continua false; exige todos os gates fiscais/comerciais/custos, não apenas ato manual de abertura. Nenhum contato ao criador/Stripe real autorizado neste trabalho. Custo de leitura/armazenamento/modelo/tetos reservado no93 antes de operar; desconhecido reprova. M0 não certificada.
 
 150. **[S9-DECISION-BLOG] Posts úteis para decisão**
+
+- Decisão vigente do complemento LQ4 (dono,28/10/2026 às20h38): **Feito — concluído na conferência LQ4**. Três artigos de decisão já integram blog e publicação canônica; fontes/datas históricas preservadas, sem alegar pesquisa de preços nova. Texto e provas originais abaixo preservados; MR/TX vigentes prevalecem sobre regras históricas incompatíveis.
+
    - Estado: **concluído; entrega76, PR662, incorporado2026-10-20 03:19:57Fortaleza, domínio/READY/versão confirmados**.
    - Escopo: textos honestos como How much Kajabi costs in2026, Skool fees explained, Kajabi vs Teachable vs Marktmorgen, com fontes oficiais datadas e links para S1. Conferir posts/categorias atuais no main; criar categoria Courses/Community/Email/Sales apenas com primeiro post real.
    - Prova: nenhum dado inventado/desatualizado, condições de preço/taxa e limites visíveis, links/sitemap/SEO/390px/teclado. Custo: posts estáticos, nenhum pedido externo ao leitor; M0 igual. Depois seguir S10–S12 e a fila acionável sem confirmação.
@@ -2362,6 +2398,9 @@ Estados e provas anteriores abaixo preservados como histórico.
 - Head7c77a6b/Product39379624206 verify118485495851,Redis118485496028,segurança39379624198 verdes. Preservar7missões/5pares eúltimoPR664comopai;filaehistóricoscanônicossemperda. Nova suíteintegralobrigatóriaantesdeincorporar,nãocontarcabeçalhoverdeanteriorcomoconclusãodonovo.
 
 154. **[B2-CONTACT-ACKNOWLEDGMENT] Confirmar a configuração do formulário de contato sem confundir com publicação**
+
+- Decisão vigente do complemento LQ4 (dono,28/10/2026 às20h38): **Mantido — diferença ou prova pendente LQ4**. Implementação e provas históricas preservadas; configuração/fluxo privado no main já existe, sem reconstrução. Conferência nova no studio publicado não foi realizada porque a conexão interativa autorizada permanece indisponível; código e deployment exato não substituem essa prova. Manter estado anterior, sem declarar feito por mero rótulo histórico. Texto e provas originais abaixo preservados; MR/TX vigentes prevalecem sobre regras históricas incompatíveis.
+
    - Pedido: continuaçãoB2/P0/P3 após implementaçõesS; nenhum número/estado anterior alterado.
    - Estado: **concluído; PR666 incorporado20/10/2026 04:18:34 Fortaleza; publicação funcional80 confirmada**.
    - Escopo: comparar HTTP/okbooleano/ausênciadeerro/snapshotcontact já devolvido pelo servidor com parseJoin canônico; bloquearcampos enquantoespera,aria-busy,semduplosenvios;perdaderespostamandaconferirsemalegarnadamudou. Sucessoconfirmaconfiguração,nãovisibilidadedependente deemail/plano. Conteúdodocriador/idiomaspreservados.
@@ -2396,6 +2435,9 @@ Estados e provas anteriores abaixo preservados como histórico.
 ```
 
 155. **[B2-RECOVERY-ACKNOWLEDGMENT] Confirmar preferências de lembrete sem alterar consentimento**
+
+- Decisão vigente do complemento LQ4 (dono,28/10/2026 às20h38): **Mantido — diferença ou prova pendente LQ4**. Implementação e provas históricas preservadas; configuração/fluxo privado no main já existe, sem reconstrução. Conferência nova no studio publicado não foi realizada porque a conexão interativa autorizada permanece indisponível; código e deployment exato não substituem essa prova. Manter estado anterior, sem declarar feito por mero rótulo histórico. Texto e provas originais abaixo preservados; MR/TX vigentes prevalecem sobre regras históricas incompatíveis.
+
    - Pedido: continuaçãoB2/P0/P3, apósSacionáveis; preservar estados/IDsanteriores.
    - Estado: **concluído; PR667 incorporado20/10/2026 04:24:41 Fortaleza; publicação funcional81 confirmada**.
    - Escopo: respostaHTTP/okbooleano/semcontradição eRecoverySettingcomenabled/addresscanônicos easksbooleano. asksseguepaísdaStripejádecididopeloservidor,nãopreferênciainventadadocliente. Bloquearcamposduranteespera,aria-busy,semduplosenvios;errodesconhecidosóusaentradaspróprias,perdaderespostamandaconferirsemalegarnadamudou. Nãoalterar política/envio/opt-in/tetos.
@@ -2403,6 +2445,9 @@ Estados e provas anteriores abaixo preservados como histórico.
    - Custo: fontecliente+656caracteres,mesmoPOST/resposta/parseRecovery;semnovafranquia/operação/fornecedor/preço/gate. M0antes/depois12,02–12,21%,reprova60%;vendasfechadas.
 
 156. **[B2-SOCIAL-PROFILE-ACKNOWLEDGMENT] Confirmar perfis canônicos, ordem e remoção sem perder o rascunho**
+
+- Decisão vigente do complemento LQ4 (dono,28/10/2026 às20h38): **Mantido — diferença ou prova pendente LQ4**. Implementação e provas históricas preservadas; configuração/fluxo privado no main já existe, sem reconstrução. Conferência nova no studio publicado não foi realizada porque a conexão interativa autorizada permanece indisponível; código e deployment exato não substituem essa prova. Manter estado anterior, sem declarar feito por mero rótulo histórico. Texto e provas originais abaixo preservados; MR/TX vigentes prevalecem sobre regras históricas incompatíveis.
+
    - Pedido: continuaçãoB2/P0/P3, publicar apósS e154/155; números/estadosanteriorespreservados.
    - Estado: **concluído; PR668 incorporado20/10/2026 04:27:15 Fortaleza; publicação funcional82 confirmada**.
    - Escopo: HTTP/okbooleano/semcontradição earrayexatocomparseSocials,mesmaordem/URLs/canonicalização/remoçãovazia. Nenhumaentrada inválida édeclaradasalva. Bloquearcampos,reordenar/remover/adicionar/cancelarduranteespera;errosherdadosnãoescolhempropriedades;índicesrejeitadosinteirosválidos;incertezamandaconferir. Alerta/errodecampousadanger-text existente;conteúdooriginalpreservado.
@@ -2411,6 +2456,9 @@ Estados e provas anteriores abaixo preservados como histórico.
 
 
 157. **[B2-SIGNUP-SETTING-ACKNOWLEDGMENT] Confirmar configuração de inscrição sem prometer publicação**
+
+- Decisão vigente do complemento LQ4 (dono,28/10/2026 às20h38): **Mantido — diferença ou prova pendente LQ4**. Implementação e provas históricas preservadas; configuração/fluxo privado no main já existe, sem reconstrução. Conferência nova no studio publicado não foi realizada porque a conexão interativa autorizada permanece indisponível; código e deployment exato não substituem essa prova. Manter estado anterior, sem declarar feito por mero rótulo histórico. Texto e provas originais abaixo preservados; MR/TX vigentes prevalecem sobre regras históricas incompatíveis.
+
    - Estado: **concluído; PR669 incorporado20/10/2026 04:30:29 Fortaleza; publicação funcional83 confirmada**.
    - Escopo: sucesso apenas com HTTP válido, ok booleano, sem erro contraditório e snapshot join canônico já retornado; bloquear campos enquanto salva, anunciar aria-busy e preservar rascunho. Incerteza pede recarregar para conferir. Confirmação dupla, disponibilidade por plano/email, idiomas e conteúdo preservados.
    - Prova: 14 respostas interceptadas em390/1280,28casos; nenhuma inscrição, conta, mensagem ou POST real; contraste real do alerta e largura integral mantidos. CI integral obrigatório no head final.
@@ -2665,6 +2713,9 @@ Ao concluir cada item: registrar data, commit e testes; seguir ao próximo. Dado
 ## Continuação da revisão de excelência após os itens acionáveis
 
 158. **[B2-WELCOME-VIDEO-ACKNOWLEDGMENT] Confirmar configuração do vídeo sem perder o endereço digitado**
+
+- Decisão vigente do complemento LQ4 (dono,28/10/2026 às20h38): **Mantido — diferença ou prova pendente LQ4**. Implementação e provas históricas preservadas; configuração/fluxo privado no main já existe, sem reconstrução. Conferência nova no studio publicado não foi realizada porque a conexão interativa autorizada permanece indisponível; código e deployment exato não substituem essa prova. Manter estado anterior, sem declarar feito por mero rótulo histórico. Texto e provas originais abaixo preservados; MR/TX vigentes prevalecem sobre regras históricas incompatíveis.
+
    - Estado: **concluído; PR671 incorporado20/10/2026 04:53:09 Fortaleza; publicação funcional84 confirmada**.
    - Origem: revisão B2 do editor existente, sem implementar recurso HT condicionado à margem. HT1–HT17 continuam no lugar e sob o gate fiscal.
    - Escopo: comparar HTTP, ok booleano, ausência de erro contraditório e provider/id/hash canônicos já devolvidos por /api/store/intro; remoção exige null confirmado. Bloquear entrada durante espera, aria-busy, mensagem honesta e contraste do alerta. Não abrir vídeo nem chamar fornecedor; idiomas/conteúdo preservados.
@@ -2673,6 +2724,9 @@ Ao concluir cada item: registrar data, commit e testes; seguir ao próximo. Dado
 
 
 159. **[B2-SUPPORT-SETTING-ACKNOWLEDGMENT] Confirmar configuração e valores de apoio sem alegar publicação**
+
+- Decisão vigente do complemento LQ4 (dono,28/10/2026 às20h38): **Mantido — diferença ou prova pendente LQ4**. Implementação e provas históricas preservadas; configuração/fluxo privado no main já existe, sem reconstrução. Conferência nova no studio publicado não foi realizada porque a conexão interativa autorizada permanece indisponível; código e deployment exato não substituem essa prova. Manter estado anterior, sem declarar feito por mero rótulo histórico. Texto e provas originais abaixo preservados; MR/TX vigentes prevalecem sobre regras históricas incompatíveis.
+
    - Estado: **concluído; PR672 incorporado20/10/2026 04:57:39 Fortaleza; publicação funcional85 confirmada**.
    - Escopo: reusar parseTips/readTipAmount e snapshot existente; comparar HTTP,okbooleano,ausência de erro,on/heading/line e valores na mesma ordem. Campos bloqueados/aria-busy; índices de erro inteiros válidos; preservar rascunho e mensagem honesta. Sem alterar operação de pagamento,impostos,limites,consentimento ou disponibilidade.
    - Prova:34respostas sintéticas em390/1280 com requisições interceptadas; padrão USD confirmado em lib/money.ts/store.ts e fixture sem troca de moeda. Valores,ordem,índices,JSON/perda/contradição,campos pendentes,contraste e largura. Nenhum checkout/conta/mensagem/pagamento real. Verificação completa obrigatória.
@@ -2726,6 +2780,9 @@ Ao concluir cada item: registrar data, commit e testes; seguir ao próximo. Dado
 
 
 160. **[B2-STORE-FAQ-ACKNOWLEDGMENT] Confirmar lista canônica de perguntas e evitar corrida de edição**
+
+- Decisão vigente do complemento LQ4 (dono,28/10/2026 às20h38): **Mantido — diferença ou prova pendente LQ4**. Implementação e provas históricas preservadas; configuração/fluxo privado no main já existe, sem reconstrução. Conferência nova no studio publicado não foi realizada porque a conexão interativa autorizada permanece indisponível; código e deployment exato não substituem essa prova. Manter estado anterior, sem declarar feito por mero rótulo histórico. Texto e provas originais abaixo preservados; MR/TX vigentes prevalecem sobre regras históricas incompatíveis.
+
    - Estado: **concluído; PR674 incorporado20/10/2026 05:22:36 Fortaleza; publicação funcional86 confirmada**.
    - Escopo: manual save só confirma HTTP/okbooleano/semcontradição e lista exata parseFaq,ordem/perguntas/respostas. Bloquear edição,reordenar,remover,adicionar,rascunhar enquanto salva, e salvar enquanto rascunha; aria-busy; incerteza pede conferir sem alegar nada mudou. Requisição de IA,pool/reserva/tetos/gates intactos.
    - Prova:30respostas manuais interceptadas em390/1280,normalização/ordem/lista/campos/perda/JSON/contradição,draftpreservado,controlesbloqueados,larguraglobal;nenhuma chamada deIAou gravação real. Remoção vazia e conclusão real deIA não estão cobertas nesta matriz.
@@ -2757,6 +2814,9 @@ Ao concluir cada item: registrar data, commit e testes; seguir ao próximo. Dado
 
 
 161. **[B2-PDF-PREVIEW-ACKNOWLEDGMENT] Confirmar páginas de prévia sem prometer disponibilidade**
+
+- Decisão vigente do complemento LQ4 (dono,28/10/2026 às20h38): **Mantido — diferença ou prova pendente LQ4**. Implementação e provas históricas preservadas; configuração/fluxo privado no main já existe, sem reconstrução. Conferência nova no studio publicado não foi realizada porque a conexão interativa autorizada permanece indisponível; código e deployment exato não substituem essa prova. Manter estado anterior, sem declarar feito por mero rótulo histórico. Texto e provas originais abaixo preservados; MR/TX vigentes prevalecem sobre regras históricas incompatíveis.
+
    - Estado: **concluído; PR676 incorporado20/10/2026 05:50:10 Fortaleza; publicação funcional87 confirmada**.
    - Escopo: resposta POST usa id/preview do result.product já retornado pelo setter, sem leitura adicional; cliente exige HTTP/okbooleano/semcontradição/id/páginas exatos,aria-busy,duploenvio bloqueado,incerteza honesta. Sucesso confirma configuração, não geração/disponibilidade.
    - Prova:24respostas interceptadas em390/1280 com fixturegrowthPDFexistente de metadados;nenhumGETdeprévia/download/geração/upload/pagamento/conta real. Off e geração real não são alegados como cobertos pela matriz. Verificação completa obrigatória.
@@ -2788,6 +2848,9 @@ Ao concluir cada item: registrar data, commit e testes; seguir ao próximo. Dado
 
 
 162. **[B2-PDF-STAMP-ACKNOWLEDGMENT] Confirmar configuração de marcação sem prometer que todo PDF será marcado**
+
+- Decisão vigente do complemento LQ4 (dono,28/10/2026 às20h38): **Mantido — diferença ou prova pendente LQ4**. Implementação e provas históricas preservadas; configuração/fluxo privado no main já existe, sem reconstrução. Conferência nova no studio publicado não foi realizada porque a conexão interativa autorizada permanece indisponível; código e deployment exato não substituem essa prova. Manter estado anterior, sem declarar feito por mero rótulo histórico. Texto e provas originais abaixo preservados; MR/TX vigentes prevalecem sobre regras históricas incompatíveis.
+
    - Estado: **concluído; PR678 incorporado20/10/2026 06:14:38 Fortaleza; publicação funcional88 confirmada**.
    - Escopo: retornoPOST id/on a partir de result.product existente;clienteexigeHTTP/okbooleano/semcontradição/id/onexatos,erroapenaspropriedadespróprias,aria-busy e semduploenvio. Sucesso confirma configuração; fallback por tamanho/senha/arquivo permanece. GETnotas/efeito existente intactos.
    - Prova:26respostas interceptadas em390/1280 comgrowthPDFmetadata,zeroGETdecarimbo,semgeração/download/upload/pagamento real. Off e processamento real não cobertos;verificação integral obrigatória.
@@ -2819,6 +2882,9 @@ Ao concluir cada item: registrar data, commit e testes; seguir ao próximo. Dado
 
 
 163. **[B2-MEMBER-NUDGE-ACKNOWLEDGMENT] Confirmar configuração de retorno sem prometer envio**
+
+- Decisão vigente do complemento LQ4 (dono,28/10/2026 às20h38): **Mantido — diferença ou prova pendente LQ4**. Implementação e provas históricas preservadas; configuração/fluxo privado no main já existe, sem reconstrução. Conferência nova no studio publicado não foi realizada porque a conexão interativa autorizada permanece indisponível; código e deployment exato não substituem essa prova. Manter estado anterior, sem declarar feito por mero rótulo histórico. Texto e provas originais abaixo preservados; MR/TX vigentes prevalecem sobre regras históricas incompatíveis.
+
    - Estado: **concluído; PR680 incorporado20/10/2026 06:42:37 Fortaleza; publicação funcional89 confirmada**.
    - Escopo: parseNudge/snapshotexistentes,HTTP/okbooleano/semcontradição/on/addresscanônicos;bloquearcampos,aria-busy,semduploenvio;errosapenaspróprios;incertezahonesta e sucesso deconfiguração. Nãoalterarenvio/destinatários/consentimento/horários/limites/spend.
    - Prova:28respostasinterceptadas em390/1280 reutilizandopauseFixtures[0]recorrente,semnova conta;campos/errosherdados/JSON/perda/contradição/recusaconhecida/sucesso/globalfit;nenhumPOSTrealouemail. Desativação/envio realnãoalegadoscomocobertos;suíteintegralobrigatória.
@@ -2850,12 +2916,18 @@ Ao concluir cada item: registrar data, commit e testes; seguir ao próximo. Dado
 
 
 164. **[B2-164] Confirm the browser visit-exclusion setting accurately.**
+
+- Decisão vigente do complemento LQ4 (dono,28/10/2026 às20h38): **Mantido — diferença ou prova pendente LQ4**. Implementação e provas históricas preservadas; configuração/fluxo privado no main já existe, sem reconstrução. Conferência nova no studio publicado não foi realizada porque a conexão interativa autorizada permanece indisponível; código e deployment exato não substituem essa prova. Manter estado anterior, sem declarar feito por mero rótulo histórico. Texto e provas originais abaixo preservados; MR/TX vigentes prevalecem sobre regras históricas incompatíveis.
+
 - Estado: **Concluído e publicado na entrega 90**.
 - Existing device setting must require successful HTTP, boolean confirmation, no contradictory error and the exact requested boolean before changing its displayed state. Pending controls lock and announce busy; uncertain replies request reloading to check.
 - Synthetic intercepted cases cover both directions at 390/1280; no real cookie or account writes. Preserve cookie scope/expiry, stats permission and all limits. Same existing operation, no new provider or recurring cost; source +430 characters is not a bundled-byte measurement. Binding M0 remains 12.02–12.21%, fails 60%; sales closed and Hotmart features gated. Full final-head CI required before incorporation.
 
 
 165. **[B2-165] Confirm after-payment note saves and removals accurately.**
+
+- Decisão vigente do complemento LQ4 (dono,28/10/2026 às20h38): **Mantido — diferença ou prova pendente LQ4**. Implementação e provas históricas preservadas; configuração/fluxo privado no main já existe, sem reconstrução. Conferência nova no studio publicado não foi realizada porque a conexão interativa autorizada permanece indisponível; código e deployment exato não substituem essa prova. Manter estado anterior, sem declarar feito por mero rótulo histórico. Texto e provas originais abaixo preservados; MR/TX vigentes prevalecem sobre regras históricas incompatíveis.
+
 - Estado: **Concluído e publicado na entrega 91**.
 - Require successful HTTP, strict boolean confirmation, no contradictory error and the matching canonical note; removals require explicit null. Lock all fields while pending and preserve the creator draft on uncertain replies. Reuse existing note parsers and existing response; no additional data/provider operation.
 - Synthetic intercepted save/removal cases at 390/1280; full final-head CI pending. Preserve creator content, all note limits and delivery behavior. Client source +728 characters is not bundled size; existing M0 12.02–12.21% still fails60%, sales and Hotmart features remain gated.
@@ -2922,6 +2994,9 @@ Ao concluir cada item: registrar data, commit e testes; seguir ao próximo. Dado
 
 
 166. **[B2-166] Confirm existing buyer-language settings accurately.**
+
+- Decisão vigente do complemento LQ4 (dono,28/10/2026 às20h38): **Mantido — diferença ou prova pendente LQ4**. Implementação e provas históricas preservadas; configuração/fluxo privado no main já existe, sem reconstrução. Conferência nova no studio publicado não foi realizada porque a conexão interativa autorizada permanece indisponível; código e deployment exato não substituem essa prova. Manter estado anterior, sem declarar feito por mero rótulo histórico. Texto e provas originais abaixo preservados; MR/TX vigentes prevalecem sobre regras históricas incompatíveis.
+
 - Estado: **Concluído e publicado na entrega 92**.
 - Require successful HTTP, strict boolean confirmation, no error and the exact supported selected language. Lock the selector while pending and retain the draft on uncertainty. Preserve existing en/es/fr/de/it/nl/pt identifiers and creator content; no platform translation, new buyer language, AI call or gate activation.
 - Synthetic26 intercepted cases at390/1280, full final-head CI pending. Existing settings operation only; client source+260 characters is not measured bundle size. M0 12.02–12.21% still fails60%; sales closed and future translations remain deferred under docs/site-languages.md.
@@ -2994,6 +3069,9 @@ Prior run39404559381 failed four synthetic contradictory-response wording checks
 
 
 167. **[B2-167] Confirm saved appearance choices accurately.**
+
+- Decisão vigente do complemento LQ4 (dono,28/10/2026 às20h38): **Mantido — diferença ou prova pendente LQ4**. Implementação e provas históricas preservadas; configuração/fluxo privado no main já existe, sem reconstrução. Conferência nova no studio publicado não foi realizada porque a conexão interativa autorizada permanece indisponível; código e deployment exato não substituem essa prova. Manter estado anterior, sem declarar feito por mero rótulo histórico. Texto e provas originais abaixo preservados; MR/TX vigentes prevalecem sobre regras históricas incompatíveis.
+
 - Estado: **Concluído e publicado na entrega 93**.
 - Require successful HTTP, boolean confirmation, no contradictory error and exact saved theme/accent/badge/sold/font/backdrop. Lock appearance fields and Undo while pending; preserve draft on uncertainty. Existing response already returns look, no additional read or provider operation. Keep photo processing/requests, branding permission, counted-proof opt-in and contrast transforms unchanged.
 - Synthetic32 intercepted appearance replies at390/1280, no photo operation; full final-head CI pending. Source+1086 characters is not a bundle measurement. M0 12.02–12.21% still fails60%; sales remain closed.
@@ -3123,18 +3201,27 @@ Pricing FAQ repair history: run39407143422 caught mobile target-size;39409356932
 
 
 168. **[B2-168] Confirm store sections and news saves/removals accurately.**
+
+- Decisão vigente do complemento LQ4 (dono,28/10/2026 às20h38): **Mantido — diferença ou prova pendente LQ4**. Implementação e provas históricas preservadas; configuração/fluxo privado no main já existe, sem reconstrução. Conferência nova no studio publicado não foi realizada porque a conexão interativa autorizada permanece indisponível; código e deployment exato não substituem essa prova. Manter estado anterior, sem declarar feito por mero rótulo histórico. Texto e provas originais abaixo preservados; MR/TX vigentes prevalecem sobre regras históricas incompatíveis.
+
 - Estado: **Publicado — entrega94**.
 - Require successful HTTP, strict boolean confirmation, no error and exact canonical section/news snapshots. Preserve legacy response count/on fields and add snapshots from the existing setter result, without an additional read. Pending controls lock and announce busy; uncertainty preserves creator drafts and confirms settings rather than public availability.
 - Synthetic96 intercepted save/removal cases at390/1280; full final-head CI pending. Sections remain capped20/title60 and news120characters, same product IDs/permissions. Response snapshots bounded by existing caps, below existing40KB studio request sizing; no new operation/provider/paid unit or recurring cost. Client source growth is not measured bundle cost; binding M0 remains12.02–12.21%, fails60%; sales closed.
 
 
 169. **[B2-169] Confirm collection content and persistent identifiers accurately.**
+
+- Decisão vigente do complemento LQ4 (dono,28/10/2026 às20h38): **Mantido — diferença ou prova pendente LQ4**. Implementação e provas históricas preservadas; configuração/fluxo privado no main já existe, sem reconstrução. Conferência nova no studio publicado não foi realizada porque a conexão interativa autorizada permanece indisponível; código e deployment exato não substituem essa prova. Manter estado anterior, sem declarar feito por mero rótulo histórico. Texto e provas originais abaixo preservados; MR/TX vigentes prevalecem sobre regras históricas incompatíveis.
+
 - Estado: **Publicado — entrega95**.
 - Require successful HTTP, strict confirmation, no contradictory error and matching canonical collections/order. Existing IDs must match; new server IDs must be valid, unique and not reuse existing IDs. No browser ID is created for storage. Lock pending controls, retain uncertain drafts, update saved baseline after confirmation and confirm settings rather than public visibility. Wrap long collection addresses without hiding content.
 - Synthetic84 intercepted create/edit/removal replies at390/1280; full final-head CI pending. Existing snapshot and parser, same operation/provider cost;12collections/24products/title60/blurb200 caps preserved. M0 remains12.02–12.21%, fails60%; sales closed.
 
 
 170. **[B2-170] Confirm creator product picks accurately.**
+
+- Decisão vigente do complemento LQ4 (dono,28/10/2026 às20h38): **Mantido — diferença ou prova pendente LQ4**. Implementação e provas históricas preservadas; configuração/fluxo privado no main já existe, sem reconstrução. Conferência nova no studio publicado não foi realizada porque a conexão interativa autorizada permanece indisponível; código e deployment exato não substituem essa prova. Manter estado anterior, sem declarar feito por mero rótulo histórico. Texto e provas originais abaixo preservados; MR/TX vigentes prevalecem sobre regras históricas incompatíveis.
+
 - Estado: **Publicado — entrega96**.
 - Require successful HTTP, strict confirmation, no error, matching product id and exact ordered pairs from the existing setter result. Add only the product id to the existing pairs response, no extra read. Lock pending selections, retain uncertain drafts and confirm settings rather than public availability. Preserve MAX_PAIRS3, identifiers and creator-attribution copy; no buyer/sales evidence is manufactured.
 - Synthetic48 intercepted save/removal cases at390/1280; full final-head CI pending. Same operation/provider unit and visible caps, bounded response64-byte id plus3existing product ids; no new recurring cost. Source+634client characters not measured bundle size; M0 remains12.02–12.21%, fails60%, sales closed.
@@ -3150,12 +3237,18 @@ Pricing FAQ repair history: run39407143422 caught mobile target-size;39409356932
 
 
 171. **[B2-171] Confirm existing course/podcast enable acknowledgments before navigation.**
+
+- Decisão vigente do complemento LQ4 (dono,28/10/2026 às20h38): **Mantido — diferença ou prova pendente LQ4**. Implementação e provas históricas preservadas; configuração/fluxo privado no main já existe, sem reconstrução. Conferência nova no studio publicado não foi realizada porque a conexão interativa autorizada permanece indisponível; código e deployment exato não substituem essa prova. Manter estado anterior, sem declarar feito por mero rótulo histórico. Texto e provas originais abaixo preservados; MR/TX vigentes prevalecem sobre regras históricas incompatíveis.
+
 - Estado: **Publicado — entrega97**.
 - Existing controls must require successful HTTP, strict boolean confirmation, no contradictory error and a valid32hex server course/podcast identity before navigation. Pending guard and own-property error lookup preserve honest uncertainty. No server operation or entitlement is added, no gated HT feature is activated.
 - Synthetic48 intercepted replies planned at390/1280, including valid navigation and uncertain/invalid replies remaining in studio. Full final-head CI pending. Same request/response/provider/limits; no recurring cost or paid unit. Binding M0 remains12.02–12.21%, fails60%; sales closed. Existing creator content and persisted identifiers preserved.
 
 
 172. **[B2-172] Confirm existing cart deal settings accurately.**
+
+- Decisão vigente do complemento LQ4 (dono,28/10/2026 às20h38): **Mantido — diferença ou prova pendente LQ4**. Implementação e provas históricas preservadas; configuração/fluxo privado no main já existe, sem reconstrução. Conferência nova no studio publicado não foi realizada porque a conexão interativa autorizada permanece indisponível; código e deployment exato não substituem essa prova. Manter estado anterior, sem declarar feito por mero rótulo histórico. Texto e provas originais abaixo preservados; MR/TX vigentes prevalecem sobre regras históricas incompatíveis.
+
 - Estado: **Publicado — entrega98**.
 - Require successful HTTP, strict confirmation, no contradictory error and exact existing deal snapshot. Lock pending checkbox/minimum/percentage, preserve uncertain drafts, and confirm settings without claiming live checkout charges. Same request and setter response, no additional read or checkout operation.
 - Synthetic52 intercepted on/off replies at390/1280 planned; full final-head CI pending. Preserve percentage5–50, minimum2/3/4 and MAX_CART4, prices, permissions and opt-in. No new provider/paid unit/recurring cost. Binding M0 remains12.02–12.21%, fails60%; sales closed. No HT feature activated.
@@ -3169,6 +3262,9 @@ Pricing FAQ repair history: run39407143422 caught mobile target-size;39409356932
 
 
 173. **[B2-173] Confirm existing exit offer settings accurately.**
+
+- Decisão vigente do complemento LQ4 (dono,28/10/2026 às20h38): **Mantido — diferença ou prova pendente LQ4**. Implementação e provas históricas preservadas; configuração/fluxo privado no main já existe, sem reconstrução. Conferência nova no studio publicado não foi realizada porque a conexão interativa autorizada permanece indisponível; código e deployment exato não substituem essa prova. Manter estado anterior, sem declarar feito por mero rótulo histórico. Texto e provas originais abaixo preservados; MR/TX vigentes prevalecem sobre regras históricas incompatíveis.
+
 - Estado: **Publicado — entrega99**.
 - Require successful HTTP, strict confirmation, no contradictory error and exact existing exitOffer id/null snapshot. Lock pending selection, preserve uncertain drafts and advance saved baseline only after confirmation. Confirm settings without claiming public delivery. Reuse existing setter response; no new operation.
 - Synthetic44 intercepted enable/removal replies at390/1280 planned; full final-head CI pending. Free-published-product requirement, monthly frequency, desktop timing, unchecked email consent, page permission, prices and all identifiers/content preserved. No visitor/email/payment write in tests. No provider/paid unit/recurring cost added; binding M0 remains12.02–12.21%, fails60%; sales closed, no HT activation.
@@ -3211,6 +3307,9 @@ Pricing FAQ repair history: run39407143422 caught mobile target-size;39409356932
 
 
 174. **[B2-174] Confirm existing page-part ordering accurately.**
+
+- Decisão vigente do complemento LQ4 (dono,28/10/2026 às20h38): **Mantido — diferença ou prova pendente LQ4**. Implementação e provas históricas preservadas; configuração/fluxo privado no main já existe, sem reconstrução. Conferência nova no studio publicado não foi realizada porque a conexão interativa autorizada permanece indisponível; código e deployment exato não substituem essa prova. Manter estado anterior, sem declarar feito por mero rótulo histórico. Texto e provas originais abaixo preservados; MR/TX vigentes prevalecem sobre regras históricas incompatíveis.
+
 - Estado: **Publicado — entrega100**.
 - Require successful HTTP, strict confirmation, no contradictory error and the exact returned order before confirming save/reset. Reuse existing bounded setter snapshot; no new read or operation. Lock and announce pending controls, preserve uncertain draft order and only advance local saved baseline after confirmation. Confirm settings rather than public visibility.
 - Synthetic48 intercepted move-save/usual-reset cases planned at390/1280; full final-head CI pending. Preserve all eight persisted part IDs, usual-order and search-first behavior, creator content, page permissions and visible limits. No provider/paid unit/recurring cost added. M0 remains12.02–12.21%, fails60%; sales closed and no HT activated.
@@ -3226,6 +3325,9 @@ Pricing FAQ repair history: run39407143422 caught mobile target-size;39409356932
 
 
 175. **[B2-175] Confirm existing membership tier settings accurately.**
+
+- Decisão vigente do complemento LQ4 (dono,28/10/2026 às20h38): **Mantido — diferença ou prova pendente LQ4**. Implementação e provas históricas preservadas; configuração/fluxo privado no main já existe, sem reconstrução. Conferência nova no studio publicado não foi realizada porque a conexão interativa autorizada permanece indisponível; código e deployment exato não substituem essa prova. Manter estado anterior, sem declarar feito por mero rótulo histórico. Texto e provas originais abaixo preservados; MR/TX vigentes prevalecem sobre regras históricas incompatíveis.
+
 - Estado: **Publicado — entrega101**.
 - Require successful HTTP, strict confirmation, no contradictory error and exact ordered tier IDs from the existing setter response. Lock pending selections, announce busy, preserve uncertain drafts and saved on/off status, and confirm settings without asserting live member switches. No new read, switch, payment, email or operation.
 - Synthetic44 intercepted enable/disable replies plus single-selection refusal planned at390/1280, using an isolated local fixture with2memberships; full final-head CI pending. MIN_TIERS2/MAX_TIERS6, eligibility, product IDs/prices, entitlements and existing member-switch mechanics unchanged. No provider/paid unit/recurring cost added; M0 remains12.02–12.21%, fails60%; sales closed, no HT activation.
@@ -3241,6 +3343,9 @@ Pricing FAQ repair history: run39407143422 caught mobile target-size;39409356932
 
 
 176. **[B2-176] Confirm existing failed-payment reminder settings accurately.**
+
+- Decisão vigente do complemento LQ4 (dono,28/10/2026 às20h38): **Mantido — diferença ou prova pendente LQ4**. Implementação e provas históricas preservadas; configuração/fluxo privado no main já existe, sem reconstrução. Conferência nova no studio publicado não foi realizada porque a conexão interativa autorizada permanece indisponível; código e deployment exato não substituem essa prova. Manter estado anterior, sem declarar feito por mero rótulo histórico. Texto e provas originais abaixo preservados; MR/TX vigentes prevalecem sobre regras históricas incompatíveis.
+
 - Estado: **Publicado — entrega102**.
 - Require successful HTTP, strict confirmation, no contradictory error and exact reminder-count/card-notice snapshot from the existing setter result. Lock pending controls, announce busy and update local saved baseline only after confirmation. Preserve uncertain drafts and avoid claiming that nothing changed after an uncertain write.
 - Synthetic48 intercepted settings replies planned at390/1280 for2/3reminders and card notice off/on, reusing the isolated local recurring fixture; full final-head CI pending. No email, Stripe/card mutation or payment occurs. Existing1–3reminder bounds,0/3/7day cadence,10day card horizon, eligibility/stop rules, permissions and costs unchanged. No new provider/paid unit/operation; M0 remains12.02–12.21%, fails60%; sales closed, HT gates preserved.
@@ -3256,6 +3361,9 @@ Pricing FAQ repair history: run39407143422 caught mobile target-size;39409356932
 
 
 177. **[B2-177] Confirm existing yearly offer email settings accurately.**
+
+- Decisão vigente do complemento LQ4 (dono,28/10/2026 às20h38): **Mantido — diferença ou prova pendente LQ4**. Implementação e provas históricas preservadas; configuração/fluxo privado no main já existe, sem reconstrução. Conferência nova no studio publicado não foi realizada porque a conexão interativa autorizada permanece indisponível; código e deployment exato não substituem essa prova. Manter estado anterior, sem declarar feito por mero rótulo histórico. Texto e provas originais abaixo preservados; MR/TX vigentes prevalecem sobre regras históricas incompatíveis.
+
 - Estado: **Publicado — entrega103**.
 - Require successful HTTP, strict confirmation, no contradictory error and exact canonical on/address snapshot from existing setter. Reuse browser-safe parseYearlyAsk normalization; lock pending controls and only update saved status/address after confirmation. Preserve uncertain creator drafts; confirm settings without claiming delivery or that nothing changed after uncertainty.
 - Synthetic48 intercepted on/off replies planned at390/1280 using isolated recurring fixture and synthetic French address; full final-head CI pending. No email, yearly price, member switch, Stripe or payment operation occurs. Existing opt-in/list exclusion, once-per-membership cadence, eligibility/affiliate/cost rules and300character cap unchanged. No new provider/paid unit/operation; M0 remains12.02–12.21%, fails60%; sales closed, HT gates preserved.
@@ -3271,24 +3379,36 @@ Pricing FAQ repair history: run39407143422 caught mobile target-size;39409356932
 
 
 178. **[B2-178] Confirm existing read-only numbers links accurately.**
+
+- Decisão vigente do complemento LQ4 (dono,28/10/2026 às20h38): **Mantido — diferença ou prova pendente LQ4**. Implementação e provas históricas preservadas; configuração/fluxo privado no main já existe, sem reconstrução. Conferência nova no studio publicado não foi realizada porque a conexão interativa autorizada permanece indisponível; código e deployment exato não substituem essa prova. Manter estado anterior, sem declarar feito por mero rótulo histórico. Texto e provas originais abaixo preservados; MR/TX vigentes prevalecem sobre regras históricas incompatíveis.
+
 - Estado: **Publicado — entrega104**.
 - Require successful HTTP, strict true, no contradictory error, canonical label/revenue choice, valid existing20character ID, exact canonical URL and exact server-created lifetime (using the existing record creation time, independent of the creator device clock) before displaying a created link or clearing drafts. Removal confirms the existing requested ID in the same response; no extra read/write. Lock and announce pending controls; preserve uncertain label/password/choices and instruct reload before retry.
 - Synthetic94 intercepted creation/revocation replies at390/1280 planned, with isolated local link fixture; full final-head CI pending. No link opened, password sent, third-party message, real account or payment. Existing5live-link cap,7/30/90days,8–100password bounds,300opens/day, read-only scope/revenue opt-in and settings permissions unchanged. No new provider/unit/operation/cost; M0 binding12.02–12.21% fails60%; sales and HT gates closed.
 
 
 179. **[B2-179] Confirm existing session package settings accurately.**
+
+- Decisão vigente do complemento LQ4 (dono,28/10/2026 às20h38): **Mantido — diferença ou prova pendente LQ4**. Implementação e provas históricas preservadas; configuração/fluxo privado no main já existe, sem reconstrução. Conferência nova no studio publicado não foi realizada porque a conexão interativa autorizada permanece indisponível; código e deployment exato não substituem essa prova. Manter estado anterior, sem declarar feito por mero rótulo histórico. Texto e provas originais abaixo preservados; MR/TX vigentes prevalecem sobre regras históricas incompatíveis.
+
 - Estado: **Publicado — entrega105**.
 - Require successful HTTP, strict true, no contradictory error and exact sessions/priceCents/days or explicit null from the existing setter response. Lock and announce pending controls, retain creator drafts and saved summary on uncertainty, and confirm settings without claiming checkout availability. No route change, new booking/payment or additional operation.
 - Synthetic48 intercepted save/stop replies planned at390/1280 with isolated local weekly-call fixture. No real booking, account, message or payment. Existing2–20sessions, allowed use periods, prices/currency and already-bought session entitlements unchanged. No new provider/unit/cost; binding M0 still fails60%; PLANS_ON_SALE=false, COMMISSION_LIVE=false, HT gates closed.
 
 
 180. **[B2-180] Confirm existing cancellation-question settings and retain reason IDs.**
+
+- Decisão vigente do complemento LQ4 (dono,28/10/2026 às20h38): **Mantido — diferença ou prova pendente LQ4**. Implementação e provas históricas preservadas; configuração/fluxo privado no main já existe, sem reconstrução. Conferência nova no studio publicado não foi realizada porque a conexão interativa autorizada permanece indisponível; código e deployment exato não substituem essa prova. Manter estado anterior, sem declarar feito por mero rótulo histórico. Texto e provas originais abaixo preservados; MR/TX vigentes prevalecem sobre regras históricas incompatíveis.
+
 - Estado: **Publicado — entrega106**.
 - Require successful HTTP, strict true, no contradictory error and exact canonical on/reasons/creator words, valid unique own-reason IDs and unchanged previously persisted IDs. Adopt newly assigned IDs only after confirmed save, so the next save reuses the same counted reasons. Pending fields lock and announce busy; uncertain drafts and saved status remain; confirmation describes settings only.
 - Synthetic58 intercepted enable/disable replies at390/1280 planned, including refusal to replace a known persisted ID. Existing mandatory other-reason choice,3custom reasons/80characters, opt-in, immediate cancellation route, entitlements, language/content and permissions unchanged. No real member cancellation, Stripe, message, account or payment; no extra read/write/provider/cost. M0 binding12.02–12.21% fails60%; sales and HT gates closed.
 
 
 181. **[B2-181] Confirm existing checkout website allowlist accurately.**
+
+- Decisão vigente do complemento LQ4 (dono,28/10/2026 às20h38): **Mantido — diferença ou prova pendente LQ4**. Implementação e provas históricas preservadas; configuração/fluxo privado no main já existe, sem reconstrução. Conferência nova no studio publicado não foi realizada porque a conexão interativa autorizada permanece indisponível; código e deployment exato não substituem essa prova. Manter estado anterior, sem declarar feito por mero rótulo histórico. Texto e provas originais abaixo preservados; MR/TX vigentes prevalecem sobre regras históricas incompatíveis.
+
 - Estado: **Publicado — entrega107**.
 - Require successful HTTP, strict true, no contradictory error and exact ordered canonical origins from the existing setter snapshot. Preserve raw uncertain drafts and saved allowlist baseline, lock the pending website list and announce busy/error. Confirm settings without claiming an actual checkout. The separate code generator keeps using the last confirmed list.
 - Synthetic48 intercepted save/clear replies planned at390/1280 with existing isolated demo fixture; no listed website visited, checkout opened, signup submitted, third-party message, account or payment. Existing10origin cap, HTTPS-only parsing, strict origin/return-address permissions, buyer opt-in and visible limits unchanged. No new request/read/provider/unit/cost; binding M0 fails60%, sales and HT gates closed.
@@ -3347,6 +3467,9 @@ Estados e provas anteriores abaixo preservados como histórico.
 
 
 183. **[HT1] Hero orientado ao resultado do criador**
+
+- Decisão vigente do complemento LQ4 (dono,28/10/2026 às20h38): **Feito — concluído na conferência LQ4**. Hero e chamadas existentes conferidos no código da home e publicação exata; sem garantia de vendas. Texto e provas originais abaixo preservados; MR/TX vigentes prevalecem sobre regras históricas incompatíveis.
+
 - Estado: **Publicado como funcional108; CI integral e produção exata confirmados**.
 - Início:20/10/2026 às12:36:27 de Fortaleza, após conclusão/publicação dos PRs708/709/710 e implementação documental HT0 no PR712. Base conferida `586e6df03f485e6e0fee68e8a8a86db4b9d1aa9c`; commit de implementação: `04b77e0f1088ef0087ac8d5b388023ead2083321` (criado em2026-10-20 12:38:35 de Fortaleza).
 - Reutiliza a home e HomeActions existentes, sem criar segundo mecanismo. Headline em inglês americano orientada ao trabalho/negócio do criador, subheadline primeira venda→próximas ofertas, pilar exato “Your store. Your Stripe. Your money.” preservado. Um CTA dominante para /signin; demo como link secundário; mesmo CTA grande repetido pela página. Sem promessa de ganhos, vendas garantidas ou recurso inexistente.
@@ -3358,6 +3481,9 @@ Estados e provas anteriores abaixo preservados como histórico.
 
 
 184. **[HT2] Jornada do criador na página de recursos existente**
+
+- Decisão vigente do complemento LQ4 (dono,28/10/2026 às20h38): **Feito — concluído na conferência LQ4**. Jornada canônica CREATOR_JOURNEY em/platform e publicação conferidas; nenhum segundo catálogo. Texto e provas originais abaixo preservados; MR/TX vigentes prevalecem sobre regras históricas incompatíveis.
+
 - Estado: **Publicado como funcional109; CI integral e produção exata confirmados**.
 - Registro:20/10/2026 às12:41:40 de Fortaleza. Base conferida `fb2aab77bdead03f6cb212ae13a09d6b5c75d26e`; commit de implementação: `ecb387de5484b68d56d7be6462bc54c17abf45e5` (criado em2026-10-20 12:42:33 de Fortaleza).
 - Reorganiza /platform, sem segunda página paralela: Create→Charge→Deliver→Sell more→Automate→Grow,18links para recursos reais já existentes em lib/feature-pages.ts, catálogo/âncora e escolhas por criador preservados. Texto em inglês americano, sem previsão de vendas; requisitos de Stripe, disponibilidade, plano, consentimento, custos e domínio visíveis nas páginas vinculadas. Aviso explícito de venda fechada enquanto PLANS_ON_SALE=false.
@@ -3369,6 +3495,9 @@ Estados e provas anteriores abaixo preservados como histórico.
 
 
 185. **[HT3] Valor antes do preço e comparação honesta do modelo de taxas**
+
+- Decisão vigente do complemento LQ4 (dono,28/10/2026 às20h38): **Feito — concluído na conferência LQ4**. PricingValue compartilhado em home/preços, fontes e aviso de vendas fechadas conferidos no código/publicação. Texto e provas originais abaixo preservados; MR/TX vigentes prevalecem sobre regras históricas incompatíveis.
+
 - Estado: **Publicado — publicação funcional110 confirmada**.
 - Registro:20/10/2026 às12:48:20 de Fortaleza. Base conferida `54865f3c02c18bb1f77a866a2e4b1e6ca195c709`; commit de implementação: `440f43d01e961e2b93f435fb23cd8e92d20926ac` (criado em2026-10-20 12:49:13 de Fortaleza).
 - Home #pricing e /pricing reutilizam um componente estático único, com Checkout, Upsells, Affiliates, Funnels, Email automation, Community, Courses, Video calls, Analytics e CRM antes dos preços. Cada grupo aponta a recurso real já existente; nenhum recurso é ativado. Preços/limites/termos anuais/add-ons preservados.
@@ -3380,6 +3509,9 @@ Estados e provas anteriores abaixo preservados como histórico.
 - Verificação HT3: CI integral39451939003 no head `6dfd61c1a9b0e3189a0929ebea7107cbebb5b83a` reprovou o inventário de acessibilidade porque o componente compartilhado novo não estava listado. Registro adicionado a docs/accessibility-inventory.json; exige nova execução integral no novo head, sem rerun isolado. HT0 incorporado via PR712, merge `7e5b166093cbcb9737b6900f8abcde2285eb1902`, em20/10/2026 às12:55:08 de Fortaleza; Product39449636974, verify118720699159, Redis118720696721 e security39449637090 aprovados. Alteração documental, sem incrementar publicação funcional.
 
 186. **[HT4] Completar a comparação existente com a Hotmart**
+
+- Decisão vigente do complemento LQ4 (dono,28/10/2026 às20h38): **Feito — concluído na conferência LQ4**. Comparação/proof/hotmart publicada no mesmo deployment; tradeoffs e condições de payout/domínio preservados. Texto e provas originais abaixo preservados; MR/TX vigentes prevalecem sobre regras históricas incompatíveis.
+
 - Estado: **Publicado — publicação funcional111 confirmada**.
 - Registro:20/10/2026 às12:56:49 de Fortaleza. Base conferida `e19fc44a46ac799088bb70ad05631c081675789d`; commit de implementação: `b1277da95f9586100d11dffa65d8f7f2ce707fef` (criado em2026-10-20T15:57:28Z, UTC; Fortaleza UTC−3).
 - A página existente /proof/hotmart recebe comparação de prazos de saque, marca/domínio e dependências do ecossistema. Preserva preços canônicos, taxas e ressalvas existentes, vantagens reais da Hotmart, SEO, rota e inventário de comparações; nenhuma página duplicada.
@@ -3389,6 +3521,9 @@ Estados e provas anteriores abaixo preservados como histórico.
 - Documentação: docs/ht4-hotmart-comparison.md. Próximo itemHT5, apenas reaproveitando o rascunho de IA existente com mesmo pool/tetos/reserva e nenhuma chamada nova; B2 continua depois da sequência HT.
 
 187. **[HT5] Reaproveitar o rascunho existente e guiar até a primeira oferta publicada**
+
+- Decisão vigente do complemento LQ4 (dono,28/10/2026 às20h38): **Mantido — diferença ou prova pendente LQ4**. Implementação e provas históricas preservadas; configuração/fluxo privado no main já existe, sem reconstrução. Conferência nova no studio publicado não foi realizada porque a conexão interativa autorizada permanece indisponível; código e deployment exato não substituem essa prova. Manter estado anterior, sem declarar feito por mero rótulo histórico. Texto e provas originais abaixo preservados; MR/TX vigentes prevalecem sobre regras históricas incompatíveis.
+
 - Estado: **Publicado — publicação funcional112 confirmada**.
 - Registro:20/10/2026 às13:04:00 de Fortaleza. Base conferida `8fdb7d499120e7de70bd05dcfedbe67ea49f98f4`; commit de implementação: `483bfb8d79ded92c62f3efa67e9dcf59ac5c9b71` (criado em2026-10-20T16:04:43Z; Fortaleza UTC−3).
 - O mesmo rascunho aparece antes do checklist, com nome atual preservado, bio/FAQ e até3 produtos propostos revisados pelo criador. Mesma elegibilidade, rota, operação, pool, teto2500 e reserva; nenhuma chamada automática ou geração adicional. Nome continua sob controle do criador em Store details.
@@ -3403,6 +3538,9 @@ Estados e provas anteriores abaixo preservados como histórico.
 - Documentação: docs/ht5-store-activation.md. Próximo itemHT6; B2 continua depois de todos os HT liberados/condicionados.
 
 188. **[HT6] Esclarecer cadastro sem cartão, preços mensais e elegibilidade do teste**
+
+- Decisão vigente do complemento LQ4 (dono,28/10/2026 às20h38): **Feito — concluído na conferência LQ4**. Clareza de cadastro/prices e aviso fechado conferidos em/signin publicado; nenhuma submissão de email ou conta realizada. Texto e provas originais abaixo preservados; MR/TX vigentes prevalecem sobre regras históricas incompatíveis.
+
 - Estado: **Publicado; verificação integral e READY/domínio/SHA confirmados abaixo**.
 - Registro:20/10/2026 às13:10:00 de Fortaleza. Base conferida `8af68eadf24ef80262471d3842c0078a8a390b22`; commit de implementação: `19b7368b4b1a4bbb604e8c7a1a8e9f3abee7979b` (criado em2026-10-20T16:10:27Z; Fortaleza UTC−3).
 - Formulário existente já exige somente email visível, sem senha/cartão, com proteção antibot, passkeys, termos e privacidade preservados. CTA Email me a link descreve a ação real. Nenhum campo/request novo.
@@ -3476,6 +3614,9 @@ HT1/PR713 incorporado em20/10/2026 às13:09:39 de Fortaleza; READY em13:11:16. H
 ```
 
 189. **[HT7] Vitrine com autorização datada e somente demo enquanto não houver permissão real**
+
+- Decisão vigente do complemento LQ4 (dono,28/10/2026 às20h38): **Feito — concluído na conferência LQ4**. Registro de permissões real vazio e fallback Harbor Kitchen explicitamente fictício confirmados em código/publicação; não inserir criador sem autorização. Texto e provas originais abaixo preservados; MR/TX vigentes prevalecem sobre regras históricas incompatíveis.
+
 - Estado: **Publicado; verificação integral e READY/domínio/SHA confirmados abaixo**.
 - Registro:20/10/2026 às13:15:00 de Fortaleza. Base conferida `3fdac83c8b70726342035f1c1915a34d4c8916ac`; commit de implementação: `fa47ee1c416fd607345833c45f3e3bc092c3c24e` (criado em2026-10-20T16:15:40Z; Fortaleza UTC−3).
 - Home e /proof/creator-showcase reutilizam um registro estático de permissões revisadas. Nenhuma autorização real encontrada: somente Harbor Kitchen, explicitamente demo fictícia, sem foto/resultado/depoimento de cliente adicionado.
@@ -3485,6 +3626,9 @@ HT1/PR713 incorporado em20/10/2026 às13:09:39 de Fortaleza; READY em13:11:16. H
 - Documentação: docs/ht7-creator-showcase.md. PróximoHT8; B2 fica depois da sequência HT.
 
 190. **[HT8] Preparar contadores reais ocultos e corrigir datas não comprovadas de compras recentes**
+
+- Decisão vigente do complemento LQ4 (dono,28/10/2026 às20h38): **Feito — concluído na conferência LQ4**. Snapshot nulo confirmado em platform-proof; contadores desconhecidos continuam ocultos, sem zero inventado. Provas históricas de recent-sales preservadas. Texto e provas originais abaixo preservados; MR/TX vigentes prevalecem sobre regras históricas incompatíveis.
+
 - Estado: **Publicado; verificação integral e READY/domínio/SHA confirmados abaixo**.
 - Registro:20/10/2026 às13:19:59 de Fortaleza. Base conferida `d6780f8f4afab4f6c3f7dd1c5829d248843b7de3`; commit de implementação: `2011d6a8d6a20eb864dc4cd43b883914978088ea` (criado em2026-10-20T16:20:29Z; Fortaleza UTC−3).
 - Sem conjunto global auditado disponível: snapshot nulo e todos os contadores permanecem ausentes, nunca zero inventado. Preparados limiares configuráveis separados100lojas/1000vendas liquidadas/50criadores ativos30dias, contagem inteira exata e data visível. Evidência real/live, exclusão demo/teste, fonte, definição/janela e data válidas são obrigatórias; desconhecido, abaixo do limiar, fracionário, futuro ou desatualizado permanece oculto. Nenhum "+X", arredondamento para cima ou "vendo agora".
@@ -3495,6 +3639,9 @@ HT1/PR713 incorporado em20/10/2026 às13:09:39 de Fortaleza; READY em13:11:16. H
 - Documentação: docs/ht8-platform-proof.md. PróximoHT9; B2 depois da sequência HT.
 
 191. **[HT9] Reunir alavancas e evidência de pagamentos no studio sem estimativas**
+
+- Decisão vigente do complemento LQ4 (dono,28/10/2026 às20h38): **Mantido — diferença ou prova pendente LQ4**. Implementação e provas históricas preservadas; configuração/fluxo privado no main já existe, sem reconstrução. Conferência nova no studio publicado não foi realizada porque a conexão interativa autorizada permanece indisponível; código e deployment exato não substituem essa prova. Manter estado anterior, sem declarar feito por mero rótulo histórico. Texto e provas originais abaixo preservados; MR/TX vigentes prevalecem sobre regras históricas incompatíveis.
+
 - Estado: **Publicado; verificação integral e READY/domínio/SHA confirmados abaixo**.
 - Registro:20/10/2026 às13:25:17 de Fortaleza. Base conferida `664147426333d0f87ab2fd4f9ec20c2b214d27c0`; commit de implementação: `12b37c83d560cc241c3b45842bf0e3fe3ed29e9b` (criado em2026-10-20T16:26:13Z; Fortaleza UTC−3).
 - /studio/growth aponta, para quem pode ler estatísticas, à seção Grow your sales do studio. Seis alavancas com estado salvo/limitação da configuração e links existentes: order bump, upsell, downsell, bundles, checkout recovery e next offer. Mesma Store e leitura financeira já carregadas; nenhuma query Redis/provedor extra.
@@ -3572,6 +3719,9 @@ HT2/PR714 incorporado em20/10/2026 às13:32:08 de Fortaleza. READY em13:33:12.64
 ```
 
 192. **[HT12] Cluster evergreen de guias práticos com FAQ visível e dados estruturados**
+
+- Decisão vigente do complemento LQ4 (dono,28/10/2026 às20h38): **Mantido — diferença ou prova pendente LQ4**. Guias e FAQ existentes conferidos no blog/publicação e histórico integral; nenhum CMS de aluno convertido nem conteúdo de criador modificado. Conferência parcial confirma presença, mas não revalida todos os critérios do pedido nesta revisão; manter estado anterior e provas históricas, sem declarar nova conclusão integral. Texto e provas originais abaixo preservados; MR/TX vigentes prevalecem sobre regras históricas incompatíveis.
+
 - Estado: **Publicado; verificação integral e READY/domínio/SHA confirmados abaixo**.
 - Registro:20/10/2026 às13:35:31 de Fortaleza. Base conferida `275ef11290de759759efbb2fb5832120ff294bc9`; commit de implementação: `f27debb5147fec8a5824b7446b768ab6768e3af9` (criado em2026-10-20T16:35:30Z; Fortaleza UTC−3).
 - Reutiliza journal/blog estático, template, sitemap e capas existentes. Quatro guias distintos: cursos, memberships, sessões pagas e programas de afiliados; URL e corpo anterior do guia de arquivo digital preservados e aprofundados. Cada guia tem escopo/entrega/aceite/testes específicos, links de recursos reais, interligação do cluster e CTA existente, sem promessas de demanda/ganhos/margem.
@@ -3603,6 +3753,9 @@ O CI integral do head d8b5f7c2bc0162f776da886429deb5d05759f7ad encontrou uma oco
 
 193. **[HT15] Reunir os modelos existentes numa biblioteca com filtros, prévia e uso em rascunho**
 
+- Decisão vigente do complemento LQ4 (dono,28/10/2026 às20h38): **Mantido — diferença ou prova pendente LQ4**. Implementação e provas históricas preservadas; configuração/fluxo privado no main já existe, sem reconstrução. Conferência nova no studio publicado não foi realizada porque a conexão interativa autorizada permanece indisponível; código e deployment exato não substituem essa prova. Manter estado anterior, sem declarar feito por mero rótulo histórico. Texto e provas originais abaixo preservados; MR/TX vigentes prevalecem sobre regras históricas incompatíveis.
+
+
 - Estado: **Publicado; verificação integral e READY/domínio/SHA confirmados abaixo**.
 - Registro:20/10/2026 às13:56:53 de Fortaleza. Base remota conferida `47f19942b46348ae36e0d61cce059cc8a5bc0f4c`; implementação `c488f4c03f38634c078331600575f8e957c17b70` (2026-10-20T16:56:53Z).
 - Biblioteca privada em Growth reúne definições existentes de páginas, funnel-starters, mail-starters, layouts de email e saved-blocks; filtros por objetivo/tipo/texto e prévias locais. Sessões salvas só lidas por botão explícito na API privada existente; falha continua desconhecida, nunca vazia por suposição.
@@ -3619,6 +3772,9 @@ As execuções integrais identificaram contraste durante entrada animada no temp
 
 194. **[HT16] Mostrar o studio real, esclarecer confiança e medir renderização móvel antes/depois**
 
+- Decisão vigente do complemento LQ4 (dono,28/10/2026 às20h38): **Mantido — diferença ou prova pendente LQ4**. Composição pública, capturas sintéticas e sinais de confiança presentes; medições históricas e CI móvel preservados, sem alegar INP real ou estudo humano. Conferência parcial confirma presença, mas não revalida todos os critérios do pedido nesta revisão; manter estado anterior e provas históricas, sem declarar nova conclusão integral. Texto e provas originais abaixo preservados; MR/TX vigentes prevalecem sobre regras históricas incompatíveis.
+
+
 - Estado: **Publicado; verificação integral e READY/domínio/SHA confirmados abaixo**.
 - Registro em Fortaleza:2026-10-20 14:09:21.000 (UTC−3); implementação `9d13587ac912d35c6784ebf600966fcc789ab266` (2026-10-20T17:09:21Z); base remota `36219ed767b8d7ec128d23475c603653f759968a` conferida.
 - Home com cards de categoria limpos e espaçosos, sem8fotos de banco; duas capturas distintas do próprio app com fixture fictícia, data e legenda honesta, sem imagem repetida ou cliente/resultado implícito. Capturas revisadas visualmente: studio/checklist e editor de página; origem verify118743492412/head6e145f31243af004b1feece62cbbb52f7ef7eb2d. Benefício, evidência e CTA existente agrupados. Conteúdo principal visível desde o início, sem entrada por opacidade.
@@ -3630,6 +3786,9 @@ As execuções integrais identificaram contraste durante entrada animada no temp
 
 
 195. **[HT17] Dar um próximo passo claro aos textos compartilhados do site e do studio**
+
+- Decisão vigente do complemento LQ4 (dono,28/10/2026 às20h38): **Mantido — diferença ou prova pendente LQ4**. STUDIO_MESSAGES e templates públicos já trazem próxima ação; nenhuma chave persistida reescrita. Não equivale a prova nova de todos os fluxos privados. Conferência parcial confirma presença, mas não revalida todos os critérios do pedido nesta revisão; manter estado anterior e provas históricas, sem declarar nova conclusão integral. Texto e provas originais abaixo preservados; MR/TX vigentes prevalecem sobre regras históricas incompatíveis.
+
 
 - Estado: **Publicado; verificação integral e READY/domínio/SHA confirmados abaixo**.
 - Registro em Fortaleza:2026-10-20 14:12:43.000 (UTC−3); implementação `e168a4071963102057805cb4d8a593db9dbddc42` (2026-10-20T17:12:43Z); base remota `ea90ac789031f02b9661b9509cbfef973557e444` conferida.
@@ -3883,6 +4042,9 @@ verify118824851029 reprovou somente HT10 matching window confirmed1280: save lim
 
 200. **[B2-200] Explicar tentativas de título sem prometer uso gratuito**
 
+- Decisão vigente do complemento LQ4 (dono,28/10/2026 às20h38): **Mantido — diferença ou prova pendente LQ4**. Implementação e provas históricas preservadas; configuração/fluxo privado no main já existe, sem reconstrução. Conferência nova no studio publicado não foi realizada porque a conexão interativa autorizada permanece indisponível; código e deployment exato não substituem essa prova. Manter estado anterior, sem declarar feito por mero rótulo histórico. Texto e provas originais abaixo preservados; MR/TX vigentes prevalecem sobre regras históricas incompatíveis.
+
+
 Pedido: revisão em andamento antes do pedido P0 de 20/10/2026; registro em 20/10/2026 16:51 de Fortaleza.
 
 Estado: concluído; PR729 incorporado em20/10/2026 17:25:41 de Fortaleza, publicação123 confirmada. Implementação inicial preservada no histórico; head integralmente testado b21710d58b1b4a346cd6c79a47e2c4c55770b30a.
@@ -3905,6 +4067,9 @@ Escopo e prova: acrescentar Firefox e WebKit (Safari) aos testes Playwright exis
 Custo e margem: calcular minutos de CI e qualquer outro custo. Testes não têm custo por cliente; eventual custo fixo novo entra nos custos fixos da empresa, nunca em preços ou limites. Não contratar serviço. Mínimo60% líquido por cliente isolado com100% dos direitos no pior mês e no consolidado, após todos os custos/impostos inclusive brasileiros; desconhecido reprova. PLANS_ON_SALE, tax gate, art.9a, revisão comercial, preços, limites e comissão intactos.
 
 202. **[P0-REAL-PEOPLE] Planejar testes com pessoas reais com deficiência e calcular o custo**
+
+- Decisão vigente do complemento LQ5 (dono,28/10/2026 às20h38): **Mantido — diferença ou prova pendente LQ5**. Plano inclusivo existente e documento integral conferidos. Restam decisões do dono sobre orçamento completo/fornecedor/participantes e execução humana; nenhuma contratação/recrutamento autorizada. Fórmulas históricas60%por unidade subordinadas a MR/TX; custo total desconhecido reprova. Texto e provas originais abaixo preservados; MR/TX vigentes prevalecem sobre regras históricas incompatíveis.
+
 
 Pedido: P0, pedido de excelência/acessibilidade de 19/10/2026; acrescentado por pedido do dono em 20/10/2026, às16:51 de Fortaleza.
 
@@ -4365,6 +4530,9 @@ Verifique os importadores que já existem e acrescente a importação a partir d
 
 211. [SH8] Compra com um toque e conta do comprador
 
+- Decisão vigente do complemento LQ5 (dono,28/10/2026 às20h38): **Mantido — diferença ou prova pendente LQ5**. Biblioteca por comprador e Checkout direto no Stripe do criador confirmados no main. Restam conferir carteiras por elegibilidade de conta/navegador/moeda sem pagamento real; não prometer ApplePay/GooglePay/Link universalmente nem refazer biblioteca. Texto e provas originais abaixo preservados; MR/TX vigentes prevalecem sobre regras históricas incompatíveis.
+
+
 Estado: OR: após o Bloco A, na ordem já existente entre 206 [SH3] e 272 [HM1]; 232 [CA1] foi antecipado e não se repete; antes do Bloco B. Registro de posição; os estados e provas históricos abaixo permanecem válidos.
 Verifique se o Link, o Apple Pay e o Google Pay estão disponíveis no checkout com cobrança direta na conta do criador e se a biblioteca do comprador reúne as compras feitas em todas as lojas Marktmorgen. Corrija o que faltar, sem custo novo para a plataforma.
 
@@ -4574,6 +4742,9 @@ Estado: OR: após o Bloco A, na ordem já existente entre 206 [SH3] e 272 [HM1];
 Amplie a calculadora do item 218 [OP4] (que compara apenas com a Shopify) para uma única ferramenta pública que some o que o criador paga hoje em ferramentas separadas (por exemplo, Kajabi, Teachable, Skool, Circle, Linktree, Stan, Calendly, Kit, Mailchimp, ClickFunnels, HighLevel e Shopify com aplicativos) e compare a soma com o plano do Marktmorgen que entrega o mesmo. Use somente preços de fontes oficiais, com a data da consulta exibida e uma rotina que acuse preços com mais de 90 dias sem revisão. Não crie calculadora de "quanto você vai ganhar": nada de projeção de receita.
 
 226. [HL7] Painéis de valor do comprador ao longo do tempo (LTV) e de coortes para o criador
+
+- Decisão vigente do complemento LQ5 (dono,28/10/2026 às20h38): **Mantido — diferença ou prova pendente LQ5**. Coortes mensais de retenção já existem em memberships e semanais de recompra em weekly-cohorts; não duplicar. Falta provar valor médio ao longo do histórico observado e sua cobertura/limites/custos; buyer-channel-rules diz expressamente que primeira compra observada não é lifetime. Não rotular receita bruta parcial como LTV completo. Texto e provas originais abaixo preservados; MR/TX vigentes prevalecem sobre regras históricas incompatíveis.
+
 
 Estado: OR: após o Bloco A, na ordem já existente entre 206 [SH3] e 272 [HM1]; 232 [CA1] foi antecipado e não se repete; antes do Bloco B. Registro de posição; os estados e provas históricos abaixo permanecem válidos.
 Verifique o que os relatórios e lib/stats já mostram. Acrescente, a partir dos dados que a loja já guarda, o valor médio gerado por comprador ao longo do tempo e a retenção por coorte de mês de compra (especialmente para assinaturas e comunidades), com explicação simples de cada número. Calcule o custo de leitura e de armazenamento e mantenha os limites do plano.
@@ -6180,6 +6351,9 @@ Hoje o acesso é feito por link enviado por e-mail e por chave de acesso (passke
 Meça, em celular simulado e com rede lenta, o tempo entre o clique em comprar e o momento em que a página de pagamento está pronta para receber os dados, em todos os caminhos de compra (página do produto, link de checkout e checkout embutido no site do criador). Crie um teste com limite máximo de tempo (orçamento de desempenho) que faça o CI falhar sempre que houver piora. Corrija o que estiver sob o controle do código do Marktmorgen, por exemplo a pré-conexão aos domínios do Stripe e a redução do processamento anterior ao redirecionamento. A parte servida pelo Stripe não está sob o controle do Marktmorgen: registre-a como tal, sem prometer tempo. Nenhuma afirmação pública de velocidade sem medição registrada.
 
 278. [H3-3] Um link por vídeo curto, com as vendas que cada vídeo gerou
+
+- Decisão vigente do complemento LQ5 (dono,28/10/2026 às20h38): **Mantido — diferença ou prova pendente LQ5**. Link único por vídeo/post, nome/UTM, visitas/vendas/receita já existem em short-links. Restante limitado à prova do percurso/UI/último clique/consentimento/GPC com dados sintéticos; não rastrear entre sites nem ler TikTok/Instagram. Fluxo privado publicado não revalidado interativamente. Texto e provas originais abaixo preservados; MR/TX vigentes prevalecem sobre regras históricas incompatíveis.
+
    - Estado: **na fila**. Posição: depois de todos os itens existentes, inclusive OR e 274 [AX1] Partes B/C; executar H3-1 a H3-5 nesta ordem. Não bloqueia outros itens.
 
 A auditoria aponta como lacuna da Hotmart a atribuição de ponta a ponta entre o vídeo curto (TikTok, Reels e Shorts) e a venda. Verifique os links curtos com QR code e a atribuição por canal que já existem e implemente apenas a diferença: o criador cria, com um clique, um link para cada vídeo, identificado pelo nome do vídeo, e vê, por vídeo, as visitas, as compras e a receita, com atribuição por último clique, a partir dos dados que a loja já registra. Não rastreie a pessoa entre sites nem leia dados das contas do TikTok ou do Instagram. Respeite o consentimento e o sinal GPC já implementados. Os números exibidos são sempre os dados reais da loja, nunca estimados nem arredondados para cima.
@@ -6659,6 +6833,9 @@ Estado: na fila.
 Permita que o aluno escreva notas privadas em cada aula, visíveis somente para ele, nunca para o criador nem para outros alunos. As notas ficam guardadas por aluno e por aula, podem ser exportadas pelo aluno em arquivo de texto e são apagadas de imediato quando a pessoa pede a exclusão dos seus dados (lib/person-data.ts). Defina um limite de tamanho por nota e de quantidade por aluno, verificado antes de gravar, e inclua o armazenamento no cálculo do pior caso do plano. Atualize a política de privacidade junto com o recurso.
 
 291. [SQ2] Busca dentro do curso
+
+- Decisão vigente do complemento LQ5 (dono,28/10/2026 às20h38): **Mantido — diferença ou prova pendente LQ5**. CoursePage e CourseOutline canônicos conferidos; neste percurso não foi localizada busca de aulas. Não fechar a busca só pela afirmação inicial: localizar seu percurso exato ou registrar diferença antes de reutilizar. Transcrição e salto ao momento seguem pendentes com acesso/custo/reserva; não indexar conteúdo privado publicamente. Texto e provas originais abaixo preservados; MR/TX vigentes prevalecem sobre regras históricas incompatíveis.
+
 
 Estado: na fila.
 
@@ -7505,6 +7682,9 @@ Estado informado no pedido: no main, o último item é o317 [EU1]; o PR #872 gra
 
 328. [PC1] Redução de custos dentro do Bloco de abertura.
 
+- Decisão vigente do complemento LQ4 (dono,28/10/2026 às20h38): **Feito — concluído na conferência LQ4**. Feita a instrução de ordenação: ordem antiga substituída pela AV1 vigente na fila. Não conclui implementações de custo nem conserva prioridade antiga incompatível. Texto e provas originais abaixo preservados; MR/TX vigentes prevalecem sobre regras históricas incompatíveis.
+
+
 Proveniência posterior EV: pedido de24/10/2026 02h35(Fortaleza) insere329[EV1] e330[EV2] em AB(k), logo depois de326[IN2] e antes de325[IN1]. A lista original abaixo é mantida como histórico; a ordem vigente está na seção AB. TK6 e os números existentes ficam preservados.
 
 Estado: instrução de ordenação em vigor por pedido direto do dono; implementações de custo na fila do Bloco de abertura, posição(k). Este registro documental não conclui esses itens.
@@ -7993,6 +8173,9 @@ addFeed exige coorte após URL/config/capacidade/duplicidade, antes de homeZone/
 Solicitação do dono24/10/2026,14h58 Fortaleza. Registro após335[FR1], preservando itens anteriores e os trabalhos funcionais em andamento. Conferidos mainbb50779c9fb4c06a718674ef001d375e5d8aca95, filas candidatas918–921 e15PRs abertos:336–338 livres, sem HZ repetido. Heads antigos738–754 permanecem idênticos aos já auditados; não duplicar nem renumerar. HZ2 integra AB(f) junto317[EU1]; demais subpartes ligadas275[FX1]/proteção do orçamento, sem interromper AB(a).
 
 336. [HZ1] Hazelsong guardada e custos residuais integrais no Marktmorgen.
+
+- Decisão vigente do complemento LQ4 (dono,28/10/2026 às20h38): **Feito — concluído na conferência LQ4**. Regra expressamente confirmada em AGENTS.md: Hazelsong guardada, sem exclusão, custos residuais100%FX275. Medição/reconciliação continua275, não certificada aqui. Texto e provas originais abaixo preservados; MR/TX vigentes prevalecem sobre regras históricas incompatíveis.
+
 
 Estado: regra de preservação registrada em AGENTS.md juntoFX275/Hazelsong encerrada; medição/reconciliação de custos na fila, vinculada275[FX1]. A Hazelsong não é apagada: repositório, projeto Vercel, armazenamentos, dados e domínios preservados; nada pode ser apagado sem ordem expressa do dono. Todo custo residual, inclusive renovações hazelsong.com/getkudobox.com, armazenamentos hazelsong-private-media/kudobox-media na Vercel, chaves dela no Upstash compartilhado e uso do projeto hazelsong entra100%nos custos fixos do Marktmorgen, por valor medido/fonte/data/escopo, sem desconto ou divisão. Medir mensal/anual, maior preço pago, tetos e reserva; desconhecido reprova. Se voltar daqui a anos, contas/custos/cálculos totalmente separados, sem divisão com Marktmorgen. O texto de23/10 que dizia nenhum custo dela pago pela LLC permanece somente histórico, expressamente substituído neste ponto.
 
@@ -9393,6 +9576,9 @@ APROVADOrecebelink+KITIMEDIATAMENTE noPAINELexistente,podendo copiar;avisosópel
 
 409. [AM4] Dia de pagamento com lote preparado e lembrete, sem pagar pelo criador.
 
+- Decisão vigente do complemento LQ5 (dono,28/10/2026 às20h38): **Mantido — diferença ou prova pendente LQ5**. Worker affiliate-payday já existe; AffiliateStudio configura dia e condições. Resta lembrete dentro do estúdio, sem segundo email/worker nem transferência pela plataforma. Texto e provas originais abaixo preservados; MR/TX vigentes prevalecem sobre regras históricas incompatíveis.
+
+
 Estado: na fila. CriadorESCOLHEdia de pagamentoprograma. Nesse dia,loteJÁMONTADO NOESTÚDIO+LEMBRETE,usandoARQUIVODELOTEexistentePayPal/Wise,semAPIdetransferência. Definirfuso/dia29–31mesescurtos/feriados seaplicável/obrigaçõesvencidas/periodicidadecomavisoclaro,semadiarvencimentojáaceito/alterarprazohistóricoAM1. Calcularsomentevaloresdevid osconfirmadosreconciliadosapósreembolso/contestação/pagamentosp ré vios/coprodução/taxformselegíveis;semduplolote/pagamentorepetidoemrerunconcorrente,draftversionado mudouvalores→revisararquivoantesuso. Quantia/currency/beneficiárioexatosesempreprivados;desconhecido bloqueiaquantialinha,nãopree nchez eroouenvio.
 
 CRIADORfazUMENVIOPRÓPRIO doARQUIVOàPRÓPRIAcontaPayPalouWise eELECONFIRMA/PAGA lá,comoregraatual;MMNÃO enviaarquivoaAPI,nãotransfere,nãoMANDAtransferir,nãoexecutacliquepelocriador. Criador REGISTRApagamentofeito,reusandoAM1confirmações/recibosehistórico,semconfundir“arquivoexportado”/“loteregistrado”comrecebimentoefetivo. Notificaçãonoestúdio nãoépromessa dequepagamentoocorreu. Semguardarcredencialdepayoutnova oucontratarprovedor.
@@ -9469,6 +9655,9 @@ Estado: na fila. Diferença sobre caixasEXISTENTESatéMAX_BUMPS(3,lib/product-ex
 Validarcombinaçõesdeintervalo/moeda/preço/trial/assinaturasnaAPIrealemfontesoficiaisantesconstruir,nãopresumircarrinhomistosemsuporte;MOSTRARtotalhoje/frequênciavalorfuturo/diastrial/impostos/refund/cancelamentoporcadaitemCOMCONSENTIMENTOexpressoKX1/HT13. Mudançavariant/inventory/priceinvalidaofertaincompatívelsemcobrançaoculta;fallbacknãopublicaofertaquenãoexecuta. Art9a/lib/deemed-supplier.ts/taxgatecorrentesaplicados,cobrançaDIRETAnaStripeDOCriador,semMMcustódia;somentedepoisgates. Reembolsos/cancelamentosparciais/contestação/proration/entrega/idempotência/reconconciliadosporitem/assinaturareais,nãoatribuirprodutográtiscomocomprafinanciadaoucomissãodoMM.Nenhumpreçoplanoalterado.
 
 416. [KX3] Liberação de aulas por data fixa no fuso da loja.
+
+- Decisão vigente do complemento LQ5 (dono,28/10/2026 às20h38): **Mantido — diferença ou prova pendente LQ5**. startsAt do curso e dripDays dos módulos existentes. Restam data por aula e fuso IANA da loja, prioridade/liberação e verificação no servidor; preservar direitos comprados e regra de horário de verão. Texto e provas originais abaixo preservados; MR/TX vigentes prevalecem sobre regras históricas incompatíveis.
+
 
 Estado: na fila. AlémdedripDaysexistente,pormóduloouaulaDAT AEHORAFIXAdefinidasPELOCRIADORnofusoIANA DALOJA,paraturmascominíciocomum. QuemcompraDEPOISdadatarecebeconteúdoj áliberadoseentitlementválido;alunovêdatasCOMANTECEDÊNCIA,naáreaautorizada,acessível/textual/s emdepend erdecornemcontagemfalsa.Semschedul erduplicado: leitura de releaseinstantnoacessousandoautorizaçãoexistente,cronsó se necessárioecustado,nãopushporusuário.
 
@@ -11958,6 +12147,9 @@ Estado inicial: na fila.
 Para cada uma destas 12 tarefas, conte os passos, as decisões e os campos obrigatórios na Stan (pela central de ajuda oficial, datada) e no Marktmorgen (pelo código real, de ponta a ponta, com dados sintéticos): criar a loja; publicar o primeiro produto digital; criar um curso; oferecer agendamento; enviar um e-mail para a lista; criar um cupom; criar um upsell; reembolsar um comprador; receber o dinheiro; ligar o AutoDM; importar contatos; cancelar o plano. A meta é o Marktmorgen exigir menos passos e menos decisões em todas. Onde não exigir, corrija a tela, respeitando AX274 e a regra VR (item 4). Registre a tabela em docs/ease-vs-stan.md e o antes e depois em cada PR. Reaproveite 38 [F7] e 251 [ST4], sem duplicar. Nenhuma página pública pode dizer "easier than Stan" antes de a tabela inteira estar medida, com fonte e data.
 
 482. [SB5] Proposta para marcas a partir do kit de mídia.
+
+- Decisão vigente do complemento LQ5 (dono,28/10/2026 às20h38): **Mantido — diferença ou prova pendente LQ5**. Reutilizar outreach/writePitch existente; faltam números verificados425 do kit e preços publicados do criador no contexto autorizado. Não inventar métricas/receita e nenhuma mensagem enviada. Texto e provas originais abaixo preservados; MR/TX vigentes prevalecem sobre regras históricas incompatíveis.
+
 Estado inicial: na fila.
 O criador escolhe uma marca e a IA escreve, em rascunho, um e-mail de proposta de parceria com os números conferidos do kit de mídia (425 [BX1]) e os preços que o próprio criador publicou. O Marktmorgen não envia nada: o criador copia e envia do próprio e-mail. Sem números inventados, sem promessa de resultado. Custo dentro do orçamento de IA do plano, com reserva antes da chamada. Comparar com o AI Brand Outreach da Beacons, com fonte oficial datada.
 
@@ -12585,6 +12777,9 @@ Pedidos repetidos: antes de gravar, aplique a regra permanente "Pedidos repetido
 Contexto: o repositório é público. Já existem e NÃO devem ser refeitos: lib/csp.ts, next.config.ts (HSTS, nosniff, Referrer-Policy, Permissions-Policy, X-Frame-Options), lib/request-guard.ts, lib/request-origin.ts, lib/bot-check.ts, lib/local-limit.ts, lib/safe-fetch.ts, lib/secret-box.ts, lib/passkeys.ts, lib/two-step.ts, lib/totp.ts, lib/api-guard.ts, .github/workflows/dependency-security.yml, docs/security-audit-2026-10-18.md (MM-SA-01 a MM-SA-12), 247 [SP4] e 273 [BK1].
 
 505 [SG2] Dados pessoais fora do repositório público (urgente).
+
+- Decisão vigente do complemento LQ5 (dono,28/10/2026 às20h38): **Mantido — diferença ou prova pendente LQ5**. Fechado somente passo pendente de presença das duas variáveis Production: metadadosSensitive/decryptfalse confirmados, fonte house-store sem fallback pessoal e publicação exata9c/READY conferida. Valores não lidos/revelados. Não certifica saneamento universal do histórico, valor interno correto ou acesso admin interativo. Texto e provas originais abaixo preservados; MR/TX vigentes prevalecem sobre regras históricas incompatíveis.
+
 Estado inicial: na fila.
 1. Troque, em AGENTS.md, CLAUDE.md, docs/codex-queue.md e docs/stripe-platform-eligibility.md, todo endereço de e-mail pessoal do dono por "Gmail do dono" e o ID da conta Stripe por "conta de plataforma brasileira do dono", sem mudar o sentido de nenhum registro.
 2. Em lib/house-store.ts, troque o e-mail escrito em DEMO_STUDIO_ADMIN por uma variável de ambiente (sem valor no código), mantendo o comportamento atual, com teste.
@@ -13100,6 +13295,7 @@ As decisões LQ1/LQ3 abaixo foram aplicadas documentalmente neste PR; LQ2 contin
 | 24 | mantido | Incorporar112: pontos por posts/comentários/aulas, níveis/limites do criador, fatos do servidor, antirrepetição/reversão e lib/community-points.ts. Preservar a expiração de acesso em data escolhida já pedida no24; não perder esse escopo distinto. |
 | 27 | mantido | Válido menor do mesmo pedido MCP de rascunhos; incorporar confirmaçãoStudio, sequência/funil/cupom e permissões separadas/revogação/limites de258. |
 | 28 | mantido | Válido menor de publicações premium: acrescentar blog/letters,arquivo,prévia opt-in e proteção/revogação/caches/RSS/sitemap de100/428. |
+| 30 | mantido | ExitOffer existente é popup de produto gratuito na vitrine desktop, não interceptação do checkout hospedado Stripe. Manter diferença de escopo; não duplicar popup nem afirmar extensão dentro do Stripe sem suporte comprovado. |
 | 31 | mantido | Regionalização dos planosMarktmorgen com estudo/aprovação de preço;393éprodutodocriador,208éFX e22idioma/moedas. |
 | 32 | mantido | Menor pedido de construtor de páginas; incorporar editor visual/acessibilidade/rascunhos/undo/versões/IAde375. ComplementoTB2continua376. |
 | 34 | mantido | Menor portal privado de mentoria; incorporar mensagens/tarefas/materiais/permissões/retenção de385, sem confundir plano de estudo259. |
@@ -13115,15 +13311,19 @@ As decisões LQ1/LQ3 abaixo foram aplicadas documentalmente neste PR; LQ2 contin
 | 51 | mantido | Texto integral51 pede proposta de franquia Store;309 exige arquitetura SES/fila/capacidade e dimensionamento de todos os planos. Não são o mesmo pedido integral. A avaliação Store é compartilhada e deve ser feita uma única vez em309;51 fica referência dessa diferença, sem segundo cálculo ou alteração de limites. |
 | 52 | mantido | Estudo comparativo crédito versus dinheiro é distinto das implementações216(crédito só a clientes) e220(comissão em dinheiro a clientes ou não), mantidas separadas emLQ3. Incorporar comparação e custo aos dois escopos coordenados sem ativar50%/20% ou construir programa duplicado;52 não é autorização de percentual. |
 | 53 | cancelado | Matrizes internas cobertas pelas páginas de comparação publicadas, conforme decisão expressa do dono; preservar documentos e provas existentes. |
+| 54 | mantido | Comparações favoráveis já publicadas e fonte única existem. Reduzir à conferência das diferenças específicas ainda não sustentadas e manutenção das fontes; não refazer15páginas ou inventar superioridade de velocidade. |
 | 57 | mantido | Submissão externaZapier somente apósabertura/autorização; distinta do estudo/construção localZapier+Make217. |
 | 58 | mantido | Cancelado por decisão do dono em 28/10/2026 (LQ7); não executar — somente a futura tradução para português do Brasil. Restante do58 continua aguardando decisão/autorização e gates próprios. Preservar idiomas dos compradores, conteúdo e identificadores existentes; nenhuma tradução ativada. |
 | 59 | concluído | Fechado somente o acompanhamento duplicado: texto59 já absorvido por274[AX1], conferido no canônico. AX274 permanece transversal e com seus próprios remanescentes; não declarar auditoria/AAA concluída. |
+| 90 | concluído | Correção editorial dos quatro modelos de email confirmada em feature-pages e publicação exata; não representa novas capacidades do editor. |
+| 95 | mantido | Radar existente usa cancel/question/review/search com limites e reserva. Restam motivos de reembolso e listas de espera, integrados ao mesmo radar com consentimento/permissão/retenção/custeio; não criar segundo motor. |
 | 100 | absorvido | Mesmo conteúdo de membros; arquivo/blog/letters incorporados no28. |
 | 107 | mantido | A/B deconteúdodebroadcastemail/denominadores/consentimento é distinto de páginas/automaçõesaté4versões377;compartilhar medição. |
 | 108 | mantido | Menor publicação→email/RSS; SUjádeclaraunicidade. Incorporar confirmação porpost,audiência/supressão/cotaSES,idempotência e revisãoexata de364. |
 | 109 | absorvido | Absorvido pelo item36 (LQ6); não executar. Aplicado o critério explícito do número menor; todas as diferenças de eventos recorrentes/waitlist/cupom/presença vão ao36, sem renumerar ou antecipar AV1. |
 | 112 | absorvido | Absorvido pelo item24 (LQ6); não executar. Diferenças de pontuação incorporadas ao24 sem remover expiração de acesso nem refazer motor existente. |
 | 113 | mantido | Filtro de palavras/regras e spam é distinto do agente/triagemIA122/263;reusar infraestrutura de moderação semduplicar. |
+| 115 | mantido | Níveis de preço do criador já existem em tier-rules. Restam rótulo de fundador e apresentação fiel das condições; preservar contratos dos membros existentes e preços Marktmorgen. |
 | 117 | mantido | Menor notificações/resumo comunitário; incorporar264periodicidadesemanal,permissõespormembro/opt-inIA/rótulo/revisãoopcional/unsubscribe/custos. |
 | 118 | mantido | Menor indicação de leitores/alunos; BHjádeclaraunicidade. Incorporar marcos/link/duplaconfirmação/antiabuso/prêmiospróprios/franquia/privacidade de267. |
 | 120 | mantido | Menor importador inclui posts/listas e cursosTeachable; incorporar260fontesKajabi/Thinkific/Podia/exports/arquivos/módulos/vídeos/preview/limites/declaraçãotitular. |
@@ -13134,16 +13334,67 @@ As decisões LQ1/LQ3 abaixo foram aplicadas documentalmente neste PR; LQ2 contin
 | 130 | cancelado | Matrizes internas cobertas pelas páginas de comparação publicadas, conforme decisão expressa do dono; preservar documentos e provas existentes. |
 | 131 | cancelado | Matrizes internas cobertas pelas páginas de comparação publicadas, conforme decisão expressa do dono; preservar documentos e provas existentes. |
 | 132 | cancelado | Matrizes internas cobertas pelas páginas de comparação publicadas, conforme decisão expressa do dono; preservar documentos e provas existentes. |
+| 142 | concluído | Índice publicado contém os15 comparadores pedidos; site-pages/final-comparison-pages/competitor-prices preservam fontes e ressalvas. Sem nova certificação de preços ou velocidade. |
+| 143 | concluído | Página/pricing publicada e código canônico preservam planos mensal/anual, limites e complementos; nenhum preço alterado. |
+| 144 | mantido | ToolsCalculator existente usa estado local e fonte compartilhada de comparação; código e página publicada conferidos. Não promete receita ou margem. Conferência parcial confirma presença, mas não revalida todos os critérios do pedido nesta revisão; manter estado anterior e provas históricas, sem declarar nova conclusão integral. |
+| 146 | concluído | Página CRM e respectivos limites já estão no catálogo e publicação; sem telefonia/SMS/WhatsApp inventados. |
+| 147 | concluído | Textos de mecanismos compartilhados já integram feature-pages/publicação; fechamento editorial, sem ativar funcionalidades. |
+| 148 | mantido | Páginas por atividade já integram site-pages/publicação; textos e imagens de demonstração preservados, sem clientes/resultados inventados. Conferência parcial confirma presença, mas não revalida todos os critérios do pedido nesta revisão; manter estado anterior e provas históricas, sem declarar nova conclusão integral. |
 | 149 | concluído | Fechada somente a referência duplicada ao93, com mesmo escopo de prova social real consentida. O93 e suas dependências permanecem aguardando caso real/abertura válida; nenhuma prova social inventada ou exibida. |
+| 150 | concluído | Três artigos de decisão já integram blog e publicação canônica; fontes/datas históricas preservadas, sem alegar pesquisa de preços nova. |
 | 151 | concluído | FAQ compartilhado conferido em lib/home-faq.ts, pricing-page-data e testes atuais; seis perguntas presentes no HTML real da home/pricing, deployment dpl_6LZ7m1vcT8tdbAMdCTnxxBfWRkpH/main9c. Escopo de conteúdo fechado, sem certificar AAA ou venda. |
 | 152 | concluído | HomeActions canônico usa /signin e /demo com nomes consistentes; cinco posições no código e CTAs no HTML publicado exato. Teste home-actions mantém destinos e ausência de operação paga. Não contar nova entrega. |
 | 153 | mantido | A home atual tem resumo e link; os sete passos What you do/What Marktmorgen checks renderizam em /platform/path. Manter aberto até conciliar a mudança com o escopo aprovado; histórico179 sozinho não prova requisito na home atual. |
+| 154 | mantido | Implementação e provas históricas preservadas; configuração/fluxo privado no main já existe, sem reconstrução. Conferência nova no studio publicado não foi realizada porque a conexão interativa autorizada permanece indisponível; código e deployment exato não substituem essa prova. Manter estado anterior, sem declarar feito por mero rótulo histórico. |
+| 155 | mantido | Implementação e provas históricas preservadas; configuração/fluxo privado no main já existe, sem reconstrução. Conferência nova no studio publicado não foi realizada porque a conexão interativa autorizada permanece indisponível; código e deployment exato não substituem essa prova. Manter estado anterior, sem declarar feito por mero rótulo histórico. |
+| 156 | mantido | Implementação e provas históricas preservadas; configuração/fluxo privado no main já existe, sem reconstrução. Conferência nova no studio publicado não foi realizada porque a conexão interativa autorizada permanece indisponível; código e deployment exato não substituem essa prova. Manter estado anterior, sem declarar feito por mero rótulo histórico. |
+| 157 | mantido | Implementação e provas históricas preservadas; configuração/fluxo privado no main já existe, sem reconstrução. Conferência nova no studio publicado não foi realizada porque a conexão interativa autorizada permanece indisponível; código e deployment exato não substituem essa prova. Manter estado anterior, sem declarar feito por mero rótulo histórico. |
+| 158 | mantido | Implementação e provas históricas preservadas; configuração/fluxo privado no main já existe, sem reconstrução. Conferência nova no studio publicado não foi realizada porque a conexão interativa autorizada permanece indisponível; código e deployment exato não substituem essa prova. Manter estado anterior, sem declarar feito por mero rótulo histórico. |
+| 159 | mantido | Implementação e provas históricas preservadas; configuração/fluxo privado no main já existe, sem reconstrução. Conferência nova no studio publicado não foi realizada porque a conexão interativa autorizada permanece indisponível; código e deployment exato não substituem essa prova. Manter estado anterior, sem declarar feito por mero rótulo histórico. |
+| 160 | mantido | Implementação e provas históricas preservadas; configuração/fluxo privado no main já existe, sem reconstrução. Conferência nova no studio publicado não foi realizada porque a conexão interativa autorizada permanece indisponível; código e deployment exato não substituem essa prova. Manter estado anterior, sem declarar feito por mero rótulo histórico. |
+| 161 | mantido | Implementação e provas históricas preservadas; configuração/fluxo privado no main já existe, sem reconstrução. Conferência nova no studio publicado não foi realizada porque a conexão interativa autorizada permanece indisponível; código e deployment exato não substituem essa prova. Manter estado anterior, sem declarar feito por mero rótulo histórico. |
+| 162 | mantido | Implementação e provas históricas preservadas; configuração/fluxo privado no main já existe, sem reconstrução. Conferência nova no studio publicado não foi realizada porque a conexão interativa autorizada permanece indisponível; código e deployment exato não substituem essa prova. Manter estado anterior, sem declarar feito por mero rótulo histórico. |
+| 163 | mantido | Implementação e provas históricas preservadas; configuração/fluxo privado no main já existe, sem reconstrução. Conferência nova no studio publicado não foi realizada porque a conexão interativa autorizada permanece indisponível; código e deployment exato não substituem essa prova. Manter estado anterior, sem declarar feito por mero rótulo histórico. |
+| 164 | mantido | Implementação e provas históricas preservadas; configuração/fluxo privado no main já existe, sem reconstrução. Conferência nova no studio publicado não foi realizada porque a conexão interativa autorizada permanece indisponível; código e deployment exato não substituem essa prova. Manter estado anterior, sem declarar feito por mero rótulo histórico. |
+| 165 | mantido | Implementação e provas históricas preservadas; configuração/fluxo privado no main já existe, sem reconstrução. Conferência nova no studio publicado não foi realizada porque a conexão interativa autorizada permanece indisponível; código e deployment exato não substituem essa prova. Manter estado anterior, sem declarar feito por mero rótulo histórico. |
+| 166 | mantido | Implementação e provas históricas preservadas; configuração/fluxo privado no main já existe, sem reconstrução. Conferência nova no studio publicado não foi realizada porque a conexão interativa autorizada permanece indisponível; código e deployment exato não substituem essa prova. Manter estado anterior, sem declarar feito por mero rótulo histórico. |
+| 167 | mantido | Implementação e provas históricas preservadas; configuração/fluxo privado no main já existe, sem reconstrução. Conferência nova no studio publicado não foi realizada porque a conexão interativa autorizada permanece indisponível; código e deployment exato não substituem essa prova. Manter estado anterior, sem declarar feito por mero rótulo histórico. |
+| 168 | mantido | Implementação e provas históricas preservadas; configuração/fluxo privado no main já existe, sem reconstrução. Conferência nova no studio publicado não foi realizada porque a conexão interativa autorizada permanece indisponível; código e deployment exato não substituem essa prova. Manter estado anterior, sem declarar feito por mero rótulo histórico. |
+| 169 | mantido | Implementação e provas históricas preservadas; configuração/fluxo privado no main já existe, sem reconstrução. Conferência nova no studio publicado não foi realizada porque a conexão interativa autorizada permanece indisponível; código e deployment exato não substituem essa prova. Manter estado anterior, sem declarar feito por mero rótulo histórico. |
+| 170 | mantido | Implementação e provas históricas preservadas; configuração/fluxo privado no main já existe, sem reconstrução. Conferência nova no studio publicado não foi realizada porque a conexão interativa autorizada permanece indisponível; código e deployment exato não substituem essa prova. Manter estado anterior, sem declarar feito por mero rótulo histórico. |
+| 171 | mantido | Implementação e provas históricas preservadas; configuração/fluxo privado no main já existe, sem reconstrução. Conferência nova no studio publicado não foi realizada porque a conexão interativa autorizada permanece indisponível; código e deployment exato não substituem essa prova. Manter estado anterior, sem declarar feito por mero rótulo histórico. |
+| 172 | mantido | Implementação e provas históricas preservadas; configuração/fluxo privado no main já existe, sem reconstrução. Conferência nova no studio publicado não foi realizada porque a conexão interativa autorizada permanece indisponível; código e deployment exato não substituem essa prova. Manter estado anterior, sem declarar feito por mero rótulo histórico. |
+| 173 | mantido | Implementação e provas históricas preservadas; configuração/fluxo privado no main já existe, sem reconstrução. Conferência nova no studio publicado não foi realizada porque a conexão interativa autorizada permanece indisponível; código e deployment exato não substituem essa prova. Manter estado anterior, sem declarar feito por mero rótulo histórico. |
+| 174 | mantido | Implementação e provas históricas preservadas; configuração/fluxo privado no main já existe, sem reconstrução. Conferência nova no studio publicado não foi realizada porque a conexão interativa autorizada permanece indisponível; código e deployment exato não substituem essa prova. Manter estado anterior, sem declarar feito por mero rótulo histórico. |
+| 175 | mantido | Implementação e provas históricas preservadas; configuração/fluxo privado no main já existe, sem reconstrução. Conferência nova no studio publicado não foi realizada porque a conexão interativa autorizada permanece indisponível; código e deployment exato não substituem essa prova. Manter estado anterior, sem declarar feito por mero rótulo histórico. |
+| 176 | mantido | Implementação e provas históricas preservadas; configuração/fluxo privado no main já existe, sem reconstrução. Conferência nova no studio publicado não foi realizada porque a conexão interativa autorizada permanece indisponível; código e deployment exato não substituem essa prova. Manter estado anterior, sem declarar feito por mero rótulo histórico. |
+| 177 | mantido | Implementação e provas históricas preservadas; configuração/fluxo privado no main já existe, sem reconstrução. Conferência nova no studio publicado não foi realizada porque a conexão interativa autorizada permanece indisponível; código e deployment exato não substituem essa prova. Manter estado anterior, sem declarar feito por mero rótulo histórico. |
+| 178 | mantido | Implementação e provas históricas preservadas; configuração/fluxo privado no main já existe, sem reconstrução. Conferência nova no studio publicado não foi realizada porque a conexão interativa autorizada permanece indisponível; código e deployment exato não substituem essa prova. Manter estado anterior, sem declarar feito por mero rótulo histórico. |
+| 179 | mantido | Implementação e provas históricas preservadas; configuração/fluxo privado no main já existe, sem reconstrução. Conferência nova no studio publicado não foi realizada porque a conexão interativa autorizada permanece indisponível; código e deployment exato não substituem essa prova. Manter estado anterior, sem declarar feito por mero rótulo histórico. |
+| 180 | mantido | Implementação e provas históricas preservadas; configuração/fluxo privado no main já existe, sem reconstrução. Conferência nova no studio publicado não foi realizada porque a conexão interativa autorizada permanece indisponível; código e deployment exato não substituem essa prova. Manter estado anterior, sem declarar feito por mero rótulo histórico. |
+| 181 | mantido | Implementação e provas históricas preservadas; configuração/fluxo privado no main já existe, sem reconstrução. Conferência nova no studio publicado não foi realizada porque a conexão interativa autorizada permanece indisponível; código e deployment exato não substituem essa prova. Manter estado anterior, sem declarar feito por mero rótulo histórico. |
 | 182 | concluído | Conferidos seção HT, HT0 e item182 na fila canônica, com classificação/histórico preservados. Correção documental absorvida; publicação atual exata verificada, sem transformar isso em prova de função ou margem. |
+| 183 | concluído | Hero e chamadas existentes conferidos no código da home e publicação exata; sem garantia de vendas. |
+| 184 | concluído | Jornada canônica CREATOR_JOURNEY em/platform e publicação conferidas; nenhum segundo catálogo. |
+| 185 | concluído | PricingValue compartilhado em home/preços, fontes e aviso de vendas fechadas conferidos no código/publicação. |
+| 186 | concluído | Comparação/proof/hotmart publicada no mesmo deployment; tradeoffs e condições de payout/domínio preservados. |
+| 187 | mantido | Implementação e provas históricas preservadas; configuração/fluxo privado no main já existe, sem reconstrução. Conferência nova no studio publicado não foi realizada porque a conexão interativa autorizada permanece indisponível; código e deployment exato não substituem essa prova. Manter estado anterior, sem declarar feito por mero rótulo histórico. |
+| 188 | concluído | Clareza de cadastro/prices e aviso fechado conferidos em/signin publicado; nenhuma submissão de email ou conta realizada. |
+| 189 | concluído | Registro de permissões real vazio e fallback Harbor Kitchen explicitamente fictício confirmados em código/publicação; não inserir criador sem autorização. |
+| 190 | concluído | Snapshot nulo confirmado em platform-proof; contadores desconhecidos continuam ocultos, sem zero inventado. Provas históricas de recent-sales preservadas. |
+| 191 | mantido | Implementação e provas históricas preservadas; configuração/fluxo privado no main já existe, sem reconstrução. Conferência nova no studio publicado não foi realizada porque a conexão interativa autorizada permanece indisponível; código e deployment exato não substituem essa prova. Manter estado anterior, sem declarar feito por mero rótulo histórico. |
+| 192 | mantido | Guias e FAQ existentes conferidos no blog/publicação e histórico integral; nenhum CMS de aluno convertido nem conteúdo de criador modificado. Conferência parcial confirma presença, mas não revalida todos os critérios do pedido nesta revisão; manter estado anterior e provas históricas, sem declarar nova conclusão integral. |
+| 193 | mantido | Implementação e provas históricas preservadas; configuração/fluxo privado no main já existe, sem reconstrução. Conferência nova no studio publicado não foi realizada porque a conexão interativa autorizada permanece indisponível; código e deployment exato não substituem essa prova. Manter estado anterior, sem declarar feito por mero rótulo histórico. |
+| 194 | mantido | Composição pública, capturas sintéticas e sinais de confiança presentes; medições históricas e CI móvel preservados, sem alegar INP real ou estudo humano. Conferência parcial confirma presença, mas não revalida todos os critérios do pedido nesta revisão; manter estado anterior e provas históricas, sem declarar nova conclusão integral. |
+| 195 | mantido | STUDIO_MESSAGES e templates públicos já trazem próxima ação; nenhuma chave persistida reescrita. Não equivale a prova nova de todos os fluxos privados. Conferência parcial confirma presença, mas não revalida todos os critérios do pedido nesta revisão; manter estado anterior e provas históricas, sem declarar nova conclusão integral. |
 | 196 | mantido | PixelEditor atual conserva navegação, consentimento e confirmação estrita; prova publicada histórica179 preservada. Fluxo autenticado atual não foi conferido interativamente em produção: conexão Chrome permanece impedida pelo dono. Não fechar por código/CI apenas; sem repetir solicitação ou usar outro navegador. |
 | 197 | concluído | Somente avaliação concluída e reprovada por operação/teto/reserva desconhecidos: docs/ht11-community-cost-review.md conferido integralmente. Comunidade do Marktmorgen não foi entregue/aberta. MR/TX posteriores prevalecem sobre números históricos; desconhecido continua reprovação. |
 | 198 | absorvido | Absorvido pelo item18 (LQ6); não executar. Avaliação já concluída e reprovada permanece como prova/histórico no18; não repetir avaliação nem construir tutor sem novo custeio aprovado. Substitui somente acompanhamento duplicado, não a reprovação. Histórico da decisão LQ1–LQ3 preservado: Somente avaliação concluída e reprovada por recuperação privada/custo/teto desconhecidos: docs/ht13-student-tutor-cost-review.md conferido integralmente. Tutor novo não foi entregue/ativado; Q&A e add-on existentes não são autorização implícita. Não certificar números antigos sob MR/TX. |
 | 199 | mantido | OfferPlanning, regra local e teste de aceitar/editar/recusar sem writes conferidos no main; prova histórica179 preservada. Jornada autenticada atual em produção não foi verificada interativamente porque a conexão Chrome continua impedida. Manter aberto, sem criar teste ou operação real fora da autorização. |
+| 200 | mantido | Implementação e provas históricas preservadas; configuração/fluxo privado no main já existe, sem reconstrução. Conferência nova no studio publicado não foi realizada porque a conexão interativa autorizada permanece indisponível; código e deployment exato não substituem essa prova. Manter estado anterior, sem declarar feito por mero rótulo histórico. |
+| 202 | mantido | Plano inclusivo existente e documento integral conferidos. Restam decisões do dono sobre orçamento completo/fornecedor/participantes e execução humana; nenhuma contratação/recrutamento autorizada. Fórmulas históricas60%por unidade subordinadas a MR/TX; custo total desconhecido reprova. |
 | 208 | mantido | Estudo de conversão automáticaStripe/AdaptivePricing,opcional semcustoplataforma;22/393sãopreçosmanuais e31planosMM. |
+| 211 | mantido | Biblioteca por comprador e Checkout direto no Stripe do criador confirmados no main. Restam conferir carteiras por elegibilidade de conta/navegador/moeda sem pagamento real; não prometer ApplePay/GooglePay/Link universalmente nem refazer biblioteca. |
 | 213 | mantido | Página pública específica Shopify, reutilizada no modelo 238; não é a matriz interna 50 nem a página Skool 237. |
 | 214 | mantido | Aplicar MR vigente em vez de60% por cliente/plano: unidade positiva com folga existente,100%dos direitos/complementos no pior mês mensal/anual; empresa sem prejuízo desde base mínima calculada com100%FX275/exposições;60%meta mensal real da empresa. Recebimento mais caro,reservas/tetos,custeio e TX preservados; desconhecido reprova. Somente atualização de regra antes da execução,sem preço/limite/gate novo. |
 | 215 | cancelado | Cancelado por decisão do dono em 28/10/2026 (LQ7); não executar. Texto integral e estado anterior lidos; cancelamento vale para o trabalho futuro deste item, sem apagar código, conteúdo, histórico ou provas existentes. Não cancelar recursos de outros itens por semelhança. |
@@ -13154,6 +13405,7 @@ As decisões LQ1/LQ3 abaixo foram aplicadas documentalmente neste PR; LQ2 contin
 | 220 | mantido | Comissão recorrente em dinheiro, elegibilidade e pagamentos/fiscalidade são distintos de crédito216. Reusar comparação52 e infraestrutura comum; nenhuma porcentagem, transferência ou aprovação externa autorizada. Histórico da decisão LQ1–LQ3 preservado: Afiliado clienteounão/comissãorecorrente,pósreembolso/formulários fiscais/pagamentoexterior;216écréditoparaclientes. Reusar antifraude semunir. |
 | 221 | mantido | Academia gratuita do próprio Marktmorgen para aquisição, com custos fixos e consentimento; 249 organiza cursos dos criadores em trilhas vendáveis. Públicos e produtos distintos. |
 | 225 | absorvido | Extensão explicitamente de218paraumaúnicacalculadora; incorporar fornecedores/diferenças semduplicartool. |
+| 226 | mantido | Coortes mensais de retenção já existem em memberships e semanais de recompra em weekly-cohorts; não duplicar. Falta provar valor médio ao longo do histórico observado e sua cobertura/limites/custos; buyer-channel-rules diz expressamente que primeira compra observada não é lifetime. Não rotular receita bruta parcial como LTV completo. |
 | 227 | absorvido | Mesmo objetivo→rascunhodefluxoIA; diferenças incorporadasno20semativação automática. |
 | 228 | absorvido | Mesmo agendador social precedido de estudo; diferenças de plataformas/aprovação/documento incorporadasno40. |
 | 234 | mantido | Diretório público de lojas/comunidades por tema/idioma/preço;46catálogoprodutos e349feedseguir/criadores/biblioteca/app sãoescoposdistintos. |
@@ -13168,15 +13420,19 @@ As decisões LQ1/LQ3 abaixo foram aplicadas documentalmente neste PR; LQ2 contin
 | 263 | absorvido | Mesma moderação assistida porIA do agente122; diferenças de escopo posts/comentários/chat, recurso/fallback incorporadas,sempromovergratuidadenempreço. |
 | 264 | absorvido | Mesmo resumo periódico por email, extensão semanalIA com opt-in/permissões/custosincorporada; respostas/menções de117preservadas. |
 | 267 | absorvido | Mesmo programa por decisãoBH anterior; diferenças incorporadasno118semcustódia/dinheiro/duploenvio. |
+| 278 | mantido | Link único por vídeo/post, nome/UTM, visitas/vendas/receita já existem em short-links. Restante limitado à prova do percurso/UI/último clique/consentimento/GPC com dados sintéticos; não rastrear entre sites nem ler TikTok/Instagram. Fluxo privado publicado não revalidado interativamente. |
 | 280 | cancelado | Cancelado por decisão do dono em 28/10/2026 (LQ7); não executar. Texto integral e estado anterior lidos; cancelamento vale para o trabalho futuro deste item, sem apagar código, conteúdo, histórico ou provas existentes. Não cancelar recursos de outros itens por semelhança. |
 | 282 | mantido | Relatório por venda/mês de taxas e saldo Stripe do criador; 392 acrescenta atribuição por funil/afiliado e 426 agrega fontes externas declaradas. Reusar conciliação sem fundir escopos. |
+| 291 | mantido | CoursePage e CourseOutline canônicos conferidos; neste percurso não foi localizada busca de aulas. Não fechar a busca só pela afirmação inicial: localizar seu percurso exato ou registrar diferença antes de reutilizar. Transcrição e salto ao momento seguem pendentes com acesso/custo/reserva; não indexar conteúdo privado publicamente. |
 | 309 | mantido | Mantido: SES exclusivo para lista/fila durável/capacidade global/serviço com fallback/custos completos extrapolam proposta Store51. Incorporar a avaliação Store51 uma vez no passo6, preservar demais requisitos e posição AV1. MR/TX vigentes substituem pisos fiscais/margem antigos; nenhuma cota aprovada por esta revisão. |
 | 317 | cancelado | Residência integral na UE deixou de ser condição de abertura. DPF/SCC dos fornecedores atuais segue no Bloco de abertura; retirada técnica de EU_HOSTING_CONFIRMED permanece em 472 [TX2]. |
 | 318 | cancelado | TX vigente proíbe consultas tributárias; a resposta da Prefeitura deixou de ser dependência. |
 | 319 | mantido | Motivo histórico de manter Paddle no modelo era o alinhamento à Hazelsong encerrada, confirmado no comentário de receiving-costs. ItemStripe-only permanece: provar em código/teste que plano/complemento/legenda não cobra Paddle antes de retirar tarifa/documentação. Não reduzir agora providerFeeCents, reservas ou leitura de custo sem essa prova. |
 | 324 | mantido | Aplicar MR vigente em vez de60% por cliente/plano: unidade positiva com folga existente,100%dos direitos/complementos no pior mês mensal/anual; empresa sem prejuízo desde base mínima calculada com100%FX275/exposições;60%meta mensal real da empresa. Recebimento mais caro,reservas/tetos,custeio e TX preservados; desconhecido reprova. Somente atualização de regra antes da execução,sem preço/limite/gate novo. |
 | 327 | cancelado | Estudo de servidor UE motivado pela trava fiscal antiga cancelado; custos atuais continuam em 275. |
+| 328 | concluído | Feita a instrução de ordenação: ordem antiga substituída pela AV1 vigente na fila. Não conclui implementações de custo nem conserva prioridade antiga incompatível. |
 | 332 | mantido | Menor débito opcional ao lado do cartão; incorporar436todos custosACH/microdepósitos/confirmação e cálculo por duração,sem preçosouperíodosativados. |
+| 336 | concluído | Regra expressamente confirmada em AGENTS.md: Hazelsong guardada, sem exclusão, custos residuais100%FX275. Medição/reconciliação continua275, não certificada aqui. |
 | 337 | cancelado | Guarda condicionada à UE cancelada. Preservação integral da Hazelsong e custos residuais 100% Marktmorgen continuam; nenhuma retirada ou migração. |
 | 347 | cancelado | Cancelado por decisão do dono em 28/10/2026 (LQ7); não executar. Texto integral e estado anterior lidos; cancelamento vale para o trabalho futuro deste item, sem apagar código, conteúdo, histórico ou provas existentes. Não cancelar recursos de outros itens por semelhança. |
 | 349 | mantido | Discover inclui seguir/publicações/recomendações na biblioteca eapp,semredesocialaberta; não é só marketplace46 nem diretório234. |
@@ -13198,6 +13454,8 @@ As decisões LQ1/LQ3 abaixo foram aplicadas documentalmente neste PR; LQ2 contin
 | 402 | cancelado | Cancelado por decisão do dono em 28/10/2026 (LQ7); não executar. Texto integral e estado anterior lidos; cancelamento vale para o trabalho futuro deste item, sem apagar código, conteúdo, histórico ou provas existentes. Não cancelar recursos de outros itens por semelhança. |
 | 403 | absorvido | Mesmo complemento pago de conteúdo social; diferenças do lifecycle/limites/fatos/preço condicionado/custeio incorporadasno21,sem publicar redes. |
 | 404 | cancelado | Cancelado por decisão do dono em 28/10/2026 (LQ7); não executar. Texto integral e estado anterior lidos; cancelamento vale para o trabalho futuro deste item, sem apagar código, conteúdo, histórico ou provas existentes. Não cancelar recursos de outros itens por semelhança. |
+| 409 | mantido | Worker affiliate-payday já existe; AffiliateStudio configura dia e condições. Resta lembrete dentro do estúdio, sem segundo email/worker nem transferência pela plataforma. |
+| 416 | mantido | startsAt do curso e dripDays dos módulos existentes. Restam data por aula e fuso IANA da loja, prioridade/liberação e verificação no servidor; preservar direitos comprados e regra de horário de verão. |
 | 420 | cancelado | Cancelado por decisão do dono em 28/10/2026 (LQ7); não executar. Texto integral e estado anterior lidos; cancelamento vale para o trabalho futuro deste item, sem apagar código, conteúdo, histórico ou provas existentes. Não cancelar recursos de outros itens por semelhança. |
 | 426 | mantido | Painel mensal por fonte, incluindo patrocínio e receita externa declarada; distinto do saldo por venda 282 e atribuição 392. Evitar dupla contagem e não chamar líquido incompleto de lucro. |
 | 428 | absorvido | Mesmas publicações restritas; prévia/servidor/biblioteca/revogação/semvazamentoincorporadosno28. |
@@ -13218,6 +13476,8 @@ As decisões LQ1/LQ3 abaixo foram aplicadas documentalmente neste PR; LQ2 contin
 | 455 | mantido | Inscrição empresarial/submissão exclusiva do dono e testesautorizados naordem; distinta de estudo44/telas449/450. Semenviosemordem. |
 | 456 | mantido | ParidadeAndroid do MESMO appcriador/AP,compolíticasGoogle/FCM/TalkBack/AABcustos/empresa; reutiliza449–455, não segundoappnemestudooffline44. |
 | 469 | mantido | Canceladas somente obtenção de ITIN/agente de aceitação e representante residente nos EUA (LQ1). Endereço comercial real nos EUA, demais custos aplicáveis e 275 [FX1] continuam. |
+| 482 | mantido | Reutilizar outreach/writePitch existente; faltam números verificados425 do kit e preços publicados do criador no contexto autorizado. Não inventar métricas/receita e nenhuma mensagem enviada. |
+| 505 | mantido | Fechado somente passo pendente de presença das duas variáveis Production: metadadosSensitive/decryptfalse confirmados, fonte house-store sem fallback pessoal e publicação exata9c/READY conferida. Valores não lidos/revelados. Não certifica saneamento universal do histórico, valor interno correto ou acesso admin interativo. |
 
 LQ1(c): retirada somente das duas categorias de identidade canceladas pelo dono. Endereço US real permanece desconhecido, assim como tetos, reserva e total dos demais custos. Nenhuma conclusão de custo zero ou base mínima aprovada. Sem IO operacional novo: incremento por plano mensal/anual 0/0 no produto; custo efetivo de CI/documentação continua desconhecido em FX275. Acessibilidade: 0→0 passos e decisões de interface, sem nova tela ou alegação AAA. Contador funcional254 preservado.
 
@@ -13292,3 +13552,10 @@ Registro documental do complemento, ainda sem execução comprovada. Regressões
 ### LQ6–LQ8: aplicação das decisões já conferidas — 28/10/2026
 
 Aplicadas36 decisões na mesma tabela LQ3 e nos próprios itens: cancelamentos LQ7 com escopo parcial do58, quatro absorções198→18/109→36/112→24/386→219 e suas diferenças nos menores, manutenção motivada dos pedidos distintos51/309 e52/216/220, e atualizações normativas LQ8. Textos, provas e numeração preservados. Nenhuma tarifa Paddle retirada, consulta fiscal preparada, condição técnica removida ou tradução ativada. LQ4/LQ5 continuam em conferência; este registro não autoriza incorporar o PR antes do complemento completo e da suíte integral do novo head. Código de custo LQ1/testes permanece sujeito à verificação completa; custo adicional deste registro documental: nenhuma operação de produto nova, sem certificar margem. MR/TX atuais prevalecem sobre afirmações históricas incompatíveis. AV1/SD1 continuam; nenhuma publicação funcional contada.
+
+
+### LQ4–LQ8: resultado da conferência do complemento — 28/10/2026
+
+Todos101 alvos receberam decisão na mesma tabela LQ3, sem renumerar ou apagar texto/prova. LQ4 fecha15escopos comprovados; os demais mantêm seus estados históricos quando a conferência foi parcial ou faltou prova interativa privada, sem reconstruir funcionalidade existente. LQ5 reduz o trabalho às diferenças documentadas;505 fecha somente a presença das variáveisProduction, sem revelar valores ou certificar saneamento universal. Código canônico9c224622c0f93fc864026f48114267e6b6d79998 e respostas públicas do deploymentdpl_6LZ7m1vcT8tdbAMdCTnxxBfWRkpH conferidos em home,preços,platform,signin,help,comparações,Hotmart,email,CRM e artigos/índiceblog. Conferência HTTP não equivale a operação privada ou teste humano. Conexão interativa autorizada continua indisponível; nenhuma troca de navegador/conta ou pagamento para obter prova. LQ6/LQ7/LQ8 já aplicados no head e67271c23b5eed274c1346a78a5eed395545d4ee; escopos distintos permanecem justificados e diferenças nos menores preservadas.
+
+Verificação: nova suíte integral obrigatória neste head final, pois o PR também contém retirada LQ1 das duas linhas obsoletas de custos/teste/regeneração. Sem rerun isolado, abertura de vendas ou publicação funcional contada; contador254. Sem operação de produto nova ou custo de provedor acrescido pela limpeza; custos de CI/empresa seguemFX275 e desconhecidos não viram zero. Nenhum preço, direito, comissão, segredo, gate ou conteúdo de criador/Hazelsong alterado. AV1/SD1 e implementaçãoMeta1185 continuam; integrar este resultado aditivamente ao1185 antes de sua incorporação.
