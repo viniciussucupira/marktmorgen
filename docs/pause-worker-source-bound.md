@@ -19,3 +19,8 @@ Cold-LCP and public geometry/wording failures were corrected in real CSS across 
 Productiondpl_HSwdRbxvJZxbJn1WUNysQtGyXmnu READYexactmergeSHA,7aliasesincludingmarktmorgen.com. ActualHTML /,/pricing,/platform/path,/help,/proof/comparisons allreturnedtheexactdata-dpl-id. Counter254held: the ownerChromeinteractiveblocker remains, HTTP/CIisnotinteractiveproof. No255claimed.
 
 Queue records and full provenance through533DP1, allTB375/FN525/FN526/CK509complements,HE527,FT528–530,VP531andfourcomplements,AF532,DP533strictlypostopening are incorporated as queue-only,not feature implementations. Only requested241CF4positionafter531VP1 and earlier206SH3after519PF7overrideFIM1; otherstates/positions/scopes/proofs preserved. No pricing,limits,PLANS_ON_SALE,OPENING_REQUESTED,permissions,opt-in,fiscal gates,art9a,commercialreview,creatorcontent,buyer languages or persistedIDs changed.
+
+
+## CI interruption retained, full fresh-head verification required
+
+Initialheade41b1fd8e9a22e1ee464959e5c051342456b4b62 publicChromiumjob123630279521 was stopped by the runner shutdown signal at2026-10-29T17:53:53.2417307UTC, then reported operation canceled. No PUBLIC_MATRIX_CASE or PUBLIC_MATRIX_SUMMARY was produced. This is infrastructure evidence, not an inferred product assertion defect. It cannot count as passed coverage. Preserve the failed job and rerun no isolated job: this follow-up documentation commit launches the complete PR new-head suite with unchanged source, fixtures, assertions, budgets and workflows. All current-head jobs must pass before incorporation; prior partial successes do not certify the new head. No claim that a commit repairs GitHub runner infrastructure.

@@ -15705,3 +15705,8 @@ Aplicar a regra VR.
 PR1208incorporado29/10/2026,14:48:14Fortaleza/17:48:14UTC,merge63fb0308a49e46e76d8d31c3553ad02e5650925a,head62fa89236ebd1cebf04e56c5f0e8c4b0e511ac49,árvoree6de942b138479701fc234511f48dd191639d1f4/pais332a38d+62fa892.39/39checks+Vercel,234bundles/Everythingpassing;READYdpl_HSwdRbxvJZxbJn1WUNysQtGyXmnu/SHAexato/7aliases/5HTMLexatos conferidos. Contador254mantido porprova interativaChromeaindabloqueada;nenhum255. Todos registros até533ecomplementos incorporados apenas como fila. Detalhes/custos/provas emdocs/pause-worker-source-bound.md,carregados com esta mudança real,semPRexclusivodeprovas.
 
 O caminho realrunBreaksdepausafinanciada reutiliza storeForRestartSource:1GETRANGEemvezdeGETilimitado,limite1.000.000bytes+1detecção,primitivosfinanceiroscrusobrigatóriosantesnormalização/admissão. Legadopreservado;fonte ilegível/oversize/accessor/estrangeira/ausente/transporteincertoretém pausa/ano/due,semprovedor/ledger/escrita/email. Mesmo1comando,nãocustozero;frequência/globalM/Y/CPU/overhead/impostos desconhecidosreprovam,nenhumaoperaçãofinanceiraavisohabilitada. Coberturasfalse/políticasnull/preços/direitos/gatespreservados;suíteinteira novoheadobrigatória.
+
+
+### PR1212 — interrupção de infraestrutura preservada, semrerunisolado
+
+Heade41b1fd8publicChromium123630279521recebeushutdownsignal17:53:53.2417307UTC/operação cancelada,antesdematriz/sumário. Nãoéasserçãodoproduto,nãoéaprovação,nãoinventarcorreçãodecódigo. Evidênciaretida emdocs/pause-worker-source-bound.md;novohead/documentação dispara suíteCOMPLETA doPR,sem alterarcódigo/testes/assertivas/limites/workflows nemrerunjobisolado. Falhaoutrabalhoparcialanteriornãocertificanovohead;incorporação somenteapóstodaschecagens. Semnovoitem/prioridade/custooperacionalautorizado.
