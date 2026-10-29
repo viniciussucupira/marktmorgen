@@ -140,6 +140,20 @@ export async function pauseOf(store: Pick<Store, "email" | "sid" | "extra">): Pr
 }
 
 /** Read at most4097 raw bytes; missing and unreadable evidence stay distinct. */
+/** Bound due-member response bytes before Redis returns them; never erase malformed evidence. */
+export const PAUSE_DUE_OBSERVATION = `-- marktmorgen:pause-due-observation:v1
+if #KEYS~=1 or #ARGV~=1 or not string.match(ARGV[1],'^%d+$') then return {-1} end
+local deadline=tonumber(ARGV[1])
+if not deadline or deadline>1000000000000 or (#ARGV[1]>1 and string.sub(ARGV[1],1,1)=='0') then return {-1} end
+local kind=redis.call('TYPE',KEYS[1]).ok
+if kind=='none' then return {} end
+if kind~='zset' then return {-1} end
+local refs=redis.call('ZRANGEBYSCORE',KEYS[1],'-inf',ARGV[1],'LIMIT',0,200)
+for _,ref in ipairs(refs) do
+ if #ref==0 or #ref>1280 then return {-1} end
+end
+return refs`;
+
 export const PAUSE_OBSERVATION = `-- marktmorgen:pause-observation:v1
 if #KEYS~=1 or #ARGV~=0 then return {-1} end
 local kind=redis.call('TYPE',KEYS[1]).ok
@@ -531,11 +545,15 @@ export async function confirmPause(store: Store, record: PauseRecord): Promise<v
 export async function runBreaks(nowSeconds = Math.floor(Date.now() / 1000)): Promise<{ told: number; restarted: number; failed: number; dropped: number }> {
   const counts = { told: 0, restarted: 0, failed: 0, dropped: 0 };
   if (!isRedisConfigured() || !isBillingConfigured()) return counts;
-  const reply = await redisPipeline([["ZRANGEBYSCORE", DUE, "-inf", String(nowSeconds + RESTART_NOTICE_DAYS * DAY), "LIMIT", "0", "200"]]);
-  const raw = Array.isArray(reply) && reply.length === 1 ? reply[0] : null;
+  const deadline=nowSeconds+RESTART_NOTICE_DAYS*DAY;
+  if(!Number.isSafeInteger(nowSeconds)||nowSeconds<0||!Number.isSafeInteger(deadline)||deadline>1_000_000_000_000){counts.failed+=1;return counts;}
+  const reply = await redisPipeline([["EVAL", PAUSE_DUE_OBSERVATION, 1, DUE, deadline]]);
+  const encoded=canonicalFinancialSnapshot(reply);
+  const observed:unknown=encoded?JSON.parse(encoded):null;
+  const raw = Array.isArray(observed) && observed.length === 1 ? observed[0] : null;
   // The provider query is bounded to 200 distinct members. An ambiguous or
   // over-limit observation cannot authorize per-store reads, charges or cleanup.
-  if (!Array.isArray(raw) || raw.length > 200 || raw.some(ref => typeof ref !== "string" || ref.length === 0) || new Set(raw).size !== raw.length) {
+  if (!Array.isArray(raw) || raw.length > 200 || raw.some(ref => typeof ref !== "string" || ref.length === 0 || new TextEncoder().encode(ref).length>1280) || new Set(raw).size !== raw.length) {
     counts.failed += 1;
     return counts;
   }

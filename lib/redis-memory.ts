@@ -113,6 +113,16 @@ export class MemoryRedis {
         return to < from ? "" : new TextDecoder().decode(bytes.slice(from, to + 1));
       }
       case "EVAL": {
+        if (key.startsWith("-- marktmorgen:pause-due-observation:v1\n") && args[0] === "1" && args.length === 3) {
+          const [,target,deadline]=args;
+          if(!/^(0|[1-9][0-9]*)$/.test(deadline)||Number(deadline)>1_000_000_000_000)return [-1];
+          this.live(target);
+          const value=this.data.get(target);
+          if(value===undefined)return [];
+          if(!Array.isArray(value))return [-1];
+          const refs=this.run(["ZRANGEBYSCORE",target,"-inf",deadline,"LIMIT",0,200]) as string[];
+          return refs.some(ref=>ref.length===0||new TextEncoder().encode(ref).length>1280)?[-1]:refs;
+        }
         if (key.startsWith("-- marktmorgen:pause-observation:v1\n") && args[0] === "1" && args.length === 2) {
           const target = args[1];
           this.live(target);

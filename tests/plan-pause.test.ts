@@ -17,7 +17,7 @@
  *   - a store that started again by hand is left alone.
  */
 import { MAX_STORE_BYTES, claimHandle, setSubscription, storeForEmail, storeForRestartSource, storeRef } from "@/lib/store";
-import { PAUSE_OBSERVATION, confirmPause, onBreak, pauseEmail, pauseOf, pausePlan, pauseRefusal, runBreaks, undoPause } from "@/lib/plan-pause";
+import { PAUSE_DUE_OBSERVATION, PAUSE_OBSERVATION, confirmPause, onBreak, pauseEmail, pauseOf, pausePlan, pauseRefusal, runBreaks, undoPause } from "@/lib/plan-pause";
 import { addPeriods } from "@/lib/plans";
 import { done, is, part } from "./check";
 import { paidPeriod } from "./billing-period-fixture";
@@ -469,13 +469,13 @@ async function main() {
     const originalPipeline = pauseRedis.pipeline;
     const replies: unknown[][] = [
       [], [null], [["unknown@example.com"], "unrelated"], [[null]],
-      [["unknown@example.com", "unknown@example.com"]], [[""]],
+      [["unknown@example.com", "unknown@example.com"]], [[""]], [["x".repeat(1281)]], [["é".repeat(641)]],
       [Array.from({length:201},(_,index)=>`over-limit-${index}@example.com`)],
     ];
     for (const reply of replies) {
       let otherCommands=0;
       pauseRedis.pipeline = async (commands) => {
-        if (commands.length === 1 && commands[0][0] === "ZRANGEBYSCORE" && commands[0][1] === "nl:pause:due") return reply;
+        if (commands.length === 1 && commands[0][0] === "EVAL" && commands[0][1] === PAUSE_DUE_OBSERVATION) return reply;
         otherCommands += commands.length;
         return originalPipeline(commands);
       };
@@ -489,7 +489,7 @@ async function main() {
       }
     }
     pauseRedis.pipeline=async(commands)=>{
-      if(commands.length===1&&commands[0][0]==="ZRANGEBYSCORE"&&commands[0][1]==="nl:pause:due")return [[]];
+      if(commands.length===1&&commands[0][0]==="EVAL"&&commands[0][1]===PAUSE_DUE_OBSERVATION)return [[]];
       return originalPipeline(commands);
     };
     try {
@@ -907,7 +907,7 @@ async function main() {
           if(answer==="corrupt")return ["{not-json"];
           return [];
         }
-        mutations+=commands.filter(command=>!["GET","ZRANGEBYSCORE"].includes(String(command[0])) && !(command[0]==="EVAL"&&command[1]===PAUSE_OBSERVATION)).length;
+        mutations+=commands.filter(command=>!["GET","ZRANGEBYSCORE"].includes(String(command[0])) && !(command[0]==="EVAL"&&(command[1]===PAUSE_OBSERVATION||command[1]===PAUSE_DUE_OBSERVATION))).length;
         return pipeline(commands);
       };
       try{
@@ -945,7 +945,7 @@ async function main() {
     const beforeEvidence=await original(refs.flatMap(ref=>[["GET",`nl:pause:${ref}`],["GET",`nl:pause:last:${ref}`]]));
     let followingOwnerReads=0;
     pauseRedis.pipeline=async commands=>{
-      if(commands.length===1&&commands[0][0]==="ZRANGEBYSCORE"&&commands[0][1]==="nl:pause:due")return [refs];
+      if(commands.length===1&&commands[0][0]==="EVAL"&&commands[0][1]===PAUSE_DUE_OBSERVATION)return [refs];
       if(commands.length===1&&commands[0][0]==="EVAL"&&commands[0][1]===PAUSE_OBSERVATION&&commands[0][3]===`nl:pause:${refs[0]}`)throw new Error("Synthetic unavailable pause record");
       if(commands.length===1&&commands[0][0]==="GET"&&String(commands[0][1]).startsWith("nl:store:owner:")){
         const reply=await original(commands);
@@ -998,7 +998,7 @@ async function main() {
     pauseRedis.pipeline=async commands=>{
       ledgerCommands+=commands.filter(command=>command.some(value=>value==="nl:contract-reserve:v1")).length;
       ownerReads+=commands.filter(command=>command[0]==="GET"&&String(command[1]).startsWith("nl:store:owner:")).length;
-      mutations+=commands.filter(command=>!["GET","ZRANGEBYSCORE"].includes(String(command[0])) && !(command[0]==="EVAL"&&command[1]===PAUSE_OBSERVATION)).length;
+      mutations+=commands.filter(command=>!["GET","ZRANGEBYSCORE"].includes(String(command[0])) && !(command[0]==="EVAL"&&(command[1]===PAUSE_OBSERVATION||command[1]===PAUSE_DUE_OBSERVATION))).length;
       return original(commands);
     };
     try{
@@ -1077,6 +1077,39 @@ async function main() {
       }
       is("notice admission does not invoke funding or period accessors",getters,0);
     }finally{pauseRedis.pipeline=original;}
+  }
+
+
+  part("Due selection bounds returned bytes without deleting malformed evidence");
+  {
+    const key="nl:pause:due",original=pauseRedis.pipeline;
+    const [prior]=await original([["ZRANGEBYSCORE",key,"-inf","+inf","WITHSCORES"]]);
+    try{
+      await original([["DEL",key]]);
+      is("missing due index is an explicit empty batch",await original([["EVAL",PAUSE_DUE_OBSERVATION,1,key,NOW]]),[[]]);
+      for(const ref of ["x".repeat(1280),"é".repeat(640)]){
+        await original([["DEL",key],["ZADD",key,NOW,ref],["EXPIRE",key,600]]);
+        is("ASCII and UTF8 1280byte boundary remains exact",await original([["EVAL",PAUSE_DUE_OBSERVATION,1,key,NOW]]),[[ref]]);
+      }
+      for(const ref of ["","x".repeat(1281),"é".repeat(641)]){
+        await original([["DEL",key],["ZADD",key,NOW,ref],["EXPIRE",key,600]]);
+        is("oversize member yields no member payload",await original([["EVAL",PAUSE_DUE_OBSERVATION,1,key,NOW]]),[[-1]]);
+        is("malformed member remains stored",await original([["ZRANGEBYSCORE",key,"-inf","+inf"]]),[[ref]]);
+      }
+      await original([["DEL",key],["SET",key,"foreign"]]);
+      is("wrong due type remains unreadable",await original([["EVAL",PAUSE_DUE_OBSERVATION,1,key,NOW]]),[[-1]]);
+      is("wrong due type is retained",await original([["GET",key]]),["foreign"]);
+      let calls=0;
+      pauseRedis.pipeline=async commands=>{calls+=commands.length;return original(commands);};
+      for(const time of [NaN,Infinity,-1,1.5,1_000_000_000_000]){
+        is("invalid due clock cannot authorize any IO",await runBreaks(time),{told:0,restarted:0,failed:1,dropped:0});
+      }
+      is("invalid clocks consume no Redis/provider request",calls,0);
+    }finally{
+      pauseRedis.pipeline=original;
+      await original([["DEL",key]]);
+      if(Array.isArray(prior))for(let i=0;i<prior.length;i+=2)await original([["ZADD",key,String(prior[i+1]),String(prior[i])]]);
+    }
   }
 
   done();
