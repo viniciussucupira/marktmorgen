@@ -16690,3 +16690,49 @@ Margem (regra MR vigente, 27/10/2026, 07h42): nenhum cliente pagante, isoladamen
 Proibido: mostrar dados de outra loja ou de outro criador; mostrar "no purchases" quando a leitura falhou; dizer que a conversa causou a venda; rastrear fora da loja ou enviar dados a terceiros; ignorar os papéis da equipe; mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
 
 Aplicar a regra VR.
+
+
+## 551 [FB1] — Chamada gratuita de apresentação com e-mail confirmado
+
+Estado: na fila. Ordem de chegada após550IX1,subordinadaàAV1,sem interromper a unidade iniciada. Proveniência: anexo integral do dono29/10/2026 às18h01Fortaleza,5c08467c-7473-43db-ae7f-aeccc9db50c4/Texto colado.txt,preservado abaixo. Pedidos repetidos: mainaf59b6cc,PRs1223/1224abertos,20headsrecentes distintos e780refs codex/*conferidos por data/seção/FB1/conteúdo; nenhuma chamada gratuita confirmada sem pagamento equivalente. Ligar520LB1,funilapplication existente e548TR1,sem segundo motor de agenda/formulário/entrega/aviso.
+
+Free intro call individual,duração curta escolhida pelo criador (15/20/30min são EXEMPLOS,não novos limites já aprovados),mesmas agendas/horas/sala/fuso/equipe/lembretes/remarcação atuais. SemStripe/cartão/cobrança: escolhehorário/nome/email/até3perguntas viaforms; holdprovisório≤15min,SEM reserva definitiva antesde confirmar link de email; expirelibera automaticamente. BotID/rate limitsatuais,no máximo1chamada gratuita futura/email/loja,aprovação manual opcional/bloqueio de endereço sem contornar confirmação. Concorrência/idempotência/expiração não podem permitir reserva dupla nem renovarholdilimitadamente; custo/tetogarantido antesIO.
+
+Cancelar/remarcar porlink/regrasatuais,falta explicitamente marcada pode acionar548TR1,sem taxa por falta. Ligação548não autoriza disparo por holdnão confirmado: novo tipo gratuito só em eventos reaisconfirmados/presençaoufaltamarcada,sem segundo fluxo. Confirmação/lembretes são serviço na cota; newsletter somente checkboxdesmarcada+regrasatuaisdeconfirmação,não presumir consentimento por agendar. Depoiscriadorpodecomcliqueenviarlink próprio produto/chamadapaga publicadono preço real,sem desconto/prazo falso,não marketingautomático sem permissão. Termos/privacidade/retenção/exclusão pessoa→reserva atualizados.
+
+AX274: seletoratual/fusoemtexto/teclado/errosreais/7:1/44×44px. Testes futuros somente agendas/Stripe/enviossimulados: holdnãoreservasemconfirmação,expiração,únicafutura,email+aprovação/bloqueio,0Stripe,lembretes/remarcação atuais/optin. Fixar e testar máximo mensal de chamadas gratuitas ANTES de operar; não inventar quantidade ou usar exemplo como direito. E-mails/sala/agendas/armazenamento/consultas/retries entram nos mesmos tetos de plano/reservas anteriores,sem supor que reuso é custozero nem consumir garantia de pagantes sem cobertura. MR27/10/07h42/TX/FX275:100%direitos+complementos pior mês mensal/anual sem prejuízo isolado,empresa sem prejuízo na base mínima/100%fixos,recebimento mais caro/reservas/impostos;60%meta mensalreal. Desconhecido reprova,franquia grátis nãozero. VR:somente registro,nenhum recurso implementado/testadofuncional/publicado,nem contador. Flags/preços/limites/comissão/travas/consentimento/conteúdo/Hazelsong/idiomas/IDs preservados.
+
+### Briefing integral do dono — 551FB1
+
+FB — Chamada gratuita de apresentação, marcada sem pagamento (29/10/2026) [FB1]
+
+Solicitação do dono (29/10/2026, 18h01, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: antes de gravar, aplique a regra "Pedidos repetidos" (23/10/2026). Procure esta solicitação no main, nos PRs abertos e nos ramos codex/* recentes, pela linha de data e hora, pelo nome da seção, pela etiqueta [FB1] e pelo conteúdo. Se já existir item que peça chamada gratuita marcada sem pagamento, aplique só a diferença dentro dele, mantendo número, posição e estado; caso contrário, crie um único item com o próximo número livre, na posição que a ordem AV1 indicar. Ligue este item a 520 [LB1] (atendimento presencial agendado), ao funil "application" de lib/funnel-types.ts e a 548 [TR1] (gatilhos de chamada marcada, comparecida e perdida), sem duplicá-los.
+
+Estado inicial: na fila.
+
+Contexto: o Claude conferiu em 29/10/2026 o topo de clickfunnels.com/apps/appointments: "Turn leads into booked meetings… Perfect for coaches, consultants, and sales teams". No Marktmorgen, o agendamento (lib/calls.ts, lib/call-setup.ts, lib/team-booking.ts) é completo para chamadas pagas: individual, grupo de até MAX_SEATS = 50, sessão ao vivo de até 500, fuso do comprador, horários ocupados de até 3 agendas, Google Meet, Zoom ou sala própria, lembretes de um dia e de uma hora, remarcação pelo comprador até MAX_MOVES = 2, equipe em round robin ou coletiva, e pacotes de sessões. Toda chamada passa por um checkout pago do Stripe, salvo a sessão de um pacote já pago; não existe chamada gratuita de apresentação para quem ainda não comprou.
+
+[FB1] Uma chamada gratuita que só fica reservada para quem confirmou o e-mail.
+(a) O criador pode marcar um tipo de chamada como gratuito ("Free intro call"), só individual, com duração curta escolhida por ele (por exemplo, 15, 20 ou 30 minutos); usa as mesmas horas semanais, agendas, salas, lembretes, fuso e equipe das chamadas pagas, sem segundo motor de agendamento.
+(b) Sem passar pelo Stripe: a pessoa escolhe o horário, informa nome e e-mail e, se o criador quiser, responde até 3 perguntas (o formulário de lib/forms.ts); o horário fica segurado por até 15 minutos e só vira reserva quando ela clicar no link de confirmação enviado ao e-mail; sem confirmação, o horário volta a ficar livre sozinho.
+(c) Proteção contra abuso: a mesma proteção contra robôs que já existe (Vercel BotID) e os mesmos limites de pedidos; no máximo uma chamada gratuita futura por e-mail em cada loja; o criador pode pedir aprovação manual antes de confirmar e pode bloquear um endereço.
+(d) Falta: a pessoa pode cancelar ou remarcar pelo link do e-mail, pelas regras atuais; a falta marcada pelo criador pode acionar os gatilhos de 548 [TR1]; nenhuma cobrança por falta.
+(e) Consentimento: o e-mail de confirmação e os lembretes são e-mails de serviço da reserva; a pessoa só entra na lista de notícias do criador se marcar a caixa desmarcada que já existe.
+(f) Depois da chamada, o criador pode, com um clique, mandar à pessoa o link de um produto ou de uma chamada paga dele, ao preço publicado, sem desconto inventado nem prazo falso.
+(g) Política de privacidade e termos atualizados: o que é guardado da reserva gratuita e por quanto tempo; apagar a pessoa apaga a reserva.
+
+Acessibilidade (AX274): o mesmo seletor de horários das chamadas pagas, operável só pelo teclado, com o fuso dito em texto; erros em texto; contraste de 7:1; alvos de pelo menos 44 × 44 px.
+
+Testes automáticos: o horário só vira reserva com o e-mail confirmado; volta a ficar livre sem confirmação; uma chamada gratuita futura por e-mail; aprovação manual e bloqueio; nada passa pelo Stripe; lembretes e remarcação pelas regras atuais; nenhuma entrada na lista sem a caixa marcada; somente envios simulados.
+
+Custo: os e-mails de confirmação e lembrete contam na cota de e-mails da loja, com teto automático e reserva antes; a sala de vídeo e as agendas usam o que já existe, sem custo novo por chamada; o número máximo de chamadas gratuitas por mês é limitado e testado; desconhecido reprova, nunca é zero.
+
+Margem (regra MR vigente, 27/10/2026, 07h42): nenhum cliente pagante, isoladamente e usando 100% dos direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo, depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto. A empresa como um todo não pode dar prejuízo a partir da base mínima calculada, com 100% dos custos fixos atribuídos ao Marktmorgen (FX275). A meta de 60% de margem líquida é medida todo mês no relatório real. Política tributária TX vigente. Custo desconhecido reprova, nunca é zero; cota grátis de fornecedor não conta como custo zero.
+
+Proibido: reservar horário sem e-mail confirmado; cobrar por falta; pôr alguém na lista sem a caixa marcada; segundo motor de agendamento; desconto inventado ou prazo falso depois da chamada; enviar e-mail real em testes; mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
