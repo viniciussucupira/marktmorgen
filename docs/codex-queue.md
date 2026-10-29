@@ -16834,3 +16834,50 @@ PR1224 incorporado22:20:34UTC/19:20:34Fortaleza, merge50e129647bac595e73ecee0cd8
 Leitura do registro de pausa e ACK da reserva rejeitam entradas não próprias, acessores, cardinalidade ou tamanho inválidos antes da travessia; evidência e reservas ficam retidas no desconhecido. Editor usa useHydrated existente para impedir ações antes dos handlers; harness só dispensa espera clientRSC no contexto explicitamente semJavaScript, mantendo a espera original nos demais. Mobile123754997606:9amostras sintéticas frias,LCPmáx904ms,CLS0,proxyinteração96ms,0escritasAPI;proxy não éINP de campo. Pequeno custo localJS/markup/render,sem novoIOprodutivo;CI/pesquisa seguemFX275,desconhecido≠zero. Não conclui obrigações de avisos financiados,renovações,liquidação ou margem global;travas e preços preservados.
 
 Produção dpl_EEpG62ZUNoRSKUbNzz9RurKZj8E9 no SHAexato acima estavaBUILDING na conferência22:21UTC;READY/domínio/HTML ainda pendentes. Não declarar entrega funcional/255:contador254 e bloqueio anterior da prova interativa mantidos,sem repetirChrome ou trocar navegador. PR1229 traz fonte primáriaTX1Califórnia e é reconciliado sobre essa árvore para preservar integralmente o código incorporado;novo head exige suas próprias verificações documentais.
+
+## 553 [DB1] — Arrastar negócios entre etapas no quadro do CRM
+
+Estado: na fila. Ordem de chegada após552[BB1],subordinada àAV1; não interromper unidade iniciada. Proveniência: pedido direto integral do dono29/10/2026,19h44Fortaleza, abaixo. Contexto ClickFunnels atribuído ao relato de conferência do Claude, sem nova inspeção externa deste registro. Pedidos repetidos: main7a2756074cda996ccbc533855bd4c6018fd1a788,PRaberto1230(título/corpo/fila),20heads recentes distintos com filas lidas e783refs codex/* inventariadas; nenhuma correspondência por data/hora,seção,[DB1]ouconteúdo equivalente.509[CK1] contém vídeo demonstrativo de mover negociação, não implementação do arrastar/Undo/contagem; não absorver nem duplicar509. Máximo552,atribuição única553; números/posições/estados anteriores preservados.
+
+Vincular375[TB1]e526[FN2]: MESMO componente de arrastar/soltar e alternativa por teclado,sem segundo mecanismo. Cartão somente entre colunas do MESMO pipeline; marcador de destino/posição,gravação/regras/validação/gatilho stage existentes iguais à lista. Lista permanece disponível inclusive no toque; teclado com foco visível/anúncio,sem capturar setas de controles internos. Apenas papéis autorizados podem mover,com a mesma verificação no servidor. Fechamento won/lost exige confirmação e regra atual de valor ganho em todos os caminhos.
+
+Aviso textualMovedto[etapa].Undo por alguns segundos, retorno à etapa anterior apenas nas condições do pedido,sem duplicar sequência e sem prometer desfazer envio já ocorrido. Implementar com execução existente/idempotência e prova de ainda não enviado; falha de leitura/concorrência não autoriza reverter ou reenviar às cegas. Quantidade por coluna dos mesmos negócios já carregados,ao lado dos totais existentes; não aumentar limites nem inventar/converter moedas.
+
+AX274/2.5.7:arrastar não é caminho único;lista/teclado/toque,foco visível,live announcement,7:1,44×44px,reducedmotionsem animação. Testes futuros sintéticos:paridade drag/teclado/lista na mesma gravação;Undo/concorrência/umgatilho;won/lostconfirmados;contagem;RBACfrontend/servidor;toque. VR:nenhuma ação/decisão extra exigida para mover normalmente,a confirmação aplica-se ao fechamento pedido;alternativas completas preservadas,desfazer sem segundo motor.
+
+Custos existentes de gravação/gatilho/desfazer/processamento devem permanecer dentro dos tetos e reserva antes de operação;reuso não prova custo0. MR27/10/07h42/TX/FX275 vinculantes,100%direitos+complementos pior mês mensal/anual sem prejuízo isolado,empresa basemínima com100%fixos,recebimento maiscaro/reservas/impostos,60%meta mensalreal,desconhecido reprova e franquia grátis nãozero. Preços/limites/comissão/flagsfalse/taxgate/art9a/revisãocomercial/stripePlatformEligibilityReady/conteúdo/idiomas/IDs/Hazelsong preservados. Somente registro na fila; não implementado/publicado/entrega funcional,não incrementarcontador254.
+
+### Pedido integral e proveniência — 553 [DB1]
+
+DB — Arrastar o negócio de uma etapa para outra no quadro do CRM (29/10/2026) [DB1]
+
+Solicitação do dono (29/10/2026, 19h44, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: antes de gravar, aplique a regra "Pedidos repetidos" (23/10/2026). Procure esta solicitação no main, nos PRs abertos e nos ramos codex/* recentes, pela linha de data e hora, pelo nome da seção, pela etiqueta [DB1] e pelo conteúdo. Se já existir item que peça arrastar negócios entre etapas no quadro do CRM, aplique só a diferença dentro dele, mantendo número, posição e estado; caso contrário, crie um único item com o próximo número livre, na posição que a ordem AV1 indicar. Ligue este item a 375 [TB1] e a 526 [FN2] para reaproveitar o mesmo componente de arrastar, com a mesma alternativa por teclado, sem segundo mecanismo.
+
+Estado inicial: na fila.
+
+Contexto: o Claude conferiu em 29/10/2026 a seção "Keep every deal moving forward" de clickfunnels.com/apps/opportunities: colunas "New Leads" e "Contacted", cada uma com o número de negócios e o total em dinheiro, e um cartão arrastado de uma coluna para a outra. No Marktmorgen, o quadro (components/deals-board.tsx, lib/crm.ts, lib/crm-rules.ts) já tem colunas por etapa, o total de cada uma, vários pipelines conforme o plano, cartões com valor, pessoa e responsável, próxima ação, data e agenda; mas mover um negócio exige abrir o cartão e escolher a etapa numa lista, e as colunas não mostram a quantidade de negócios.
+
+[DB1] Arrastar o cartão, com a mesma regra de mudança de etapa de hoje.
+(a) Cada cartão do quadro pode ser arrastado para outra coluna do mesmo pipeline; enquanto é arrastado, a coluna de destino fica marcada e mostra onde o cartão vai entrar; ao soltar, o negócio muda de etapa pela mesma gravação e pelas mesmas regras da mudança pela lista, inclusive os gatilhos de sequência "stage" que já existem.
+(b) Alternativa obrigatória sem arrastar (AX274, 2.5.7): a lista de etapas no cartão continua, e o cartão também pode ser movido pelo teclado (por exemplo, setas para a esquerda e para a direita com o cartão em foco); o movimento é anunciado ao leitor de tela.
+(c) Desfazer: logo depois de mover, um aviso "Moved to [etapa]. Undo" por alguns segundos; desfazer volta à etapa anterior sem disparar de novo a sequência, se ela ainda não tiver enviado nada.
+(d) Mover para uma etapa "won" ou "lost" pede confirmação, porque fecha o negócio; com a mesma regra de hoje para o valor ganho.
+(e) Cada coluna mostra, além do total em dinheiro que já existe, a quantidade de negócios ("12 deals"), lida dos mesmos dados.
+(f) Só quem tem papel para mudar negócios pode arrastar; os outros veem o quadro sem poder mover.
+(g) Funciona no celular com toque e, como alternativa, pela lista de etapas.
+
+Acessibilidade (AX274): foco visível no cartão, movimento pelo teclado, anúncio do movimento, contraste de 7:1, alvos de pelo menos 44 × 44 px, sem animação sob prefers-reduced-motion.
+
+Testes automáticos: arrastar e soltar muda a etapa pela mesma gravação da lista; teclado e lista fazem o mesmo; desfazer; confirmação para ganho e perda; quantidade por coluna; papéis respeitados; o gatilho de sequência dispara uma vez; somente dados sintéticos.
+
+Custo: as mesmas gravações da mudança de etapa de hoje, já contadas no plano; nenhum custo novo; desconhecido reprova, nunca é zero.
+
+Margem (regra MR vigente, 27/10/2026, 07h42): nenhum cliente pagante, isoladamente e usando 100% dos direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo, depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto. A empresa como um todo não pode dar prejuízo a partir da base mínima calculada, com 100% dos custos fixos atribuídos ao Marktmorgen (FX275). A meta de 60% de margem líquida é medida todo mês no relatório real. Política tributária TX vigente. Custo desconhecido reprova, nunca é zero; cota grátis de fornecedor não conta como custo zero.
+
+Proibido: segundo mecanismo de arrastar; tirar a lista de etapas; disparar a sequência duas vezes; fechar negócio sem confirmação; ignorar os papéis da equipe; aumentar limites de negócios ou de pipelines; mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
