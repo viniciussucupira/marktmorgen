@@ -278,7 +278,7 @@ export type MilpInput = {
   plans: Record<Tier, {
     anchorCents: number;
     figures: Record<Printed, number>;
-    options: { monthCents: number; roomMonth: number; roomYear: number; netAtOnes: number; usageMonthAtOnes: number; demand: Record<string, number> }[];
+    options: { monthCents: number; roomMonth: number; roomYear: number; netAtOnes: number; usageMonthAtOnes: number; exactKeepsAtOnes: boolean; demand: Record<string, number> }[];
     baseMonth: number; baseYear: number; coefMonth: Record<Printed, number>; coefYear: Record<Printed, number>;
   }>;
 };
@@ -298,6 +298,7 @@ export function milpInput(): MilpInput {
         roomYear: unitUnder(monthCents * 10, 0, SIZING_READING, true).usageRoomCents - PLAN_ROOM.year - SAFETY_CENTS,
         netAtOnes: unitAt(tier, "month", monthCents, ones()).netCents,
         usageMonthAtOnes: usageFor(tier, "month", ones()),
+        exactKeepsAtOnes: keeps(tier, monthCents, ones()),
         // Twelve significant digits: Math.pow may differ in its last bit between Node versions.
         demand: Object.fromEntries(ELASTICITIES.map((e) => [String(e), Number(demand(tier, monthCents, e).toPrecision(12))])),
       })),
