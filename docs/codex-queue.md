@@ -15809,3 +15809,37 @@ Margem (regra MR vigente, 27/10/2026, 07h42): nenhum cliente pagante, isoladamen
 Proibido: mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; usar números inventados ou não verificáveis, depoimentos inventados, escassez falsa ou promessa de resultado; começar o texto pela palavra "free"; instalar widget ou overlay de acessibilidade; enviar e-mail real, criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
 
 Aplicar a regra VR.
+
+
+## MV — registro integral; item535 (29/10/2026,15h14Fortaleza)
+
+Proveniência: pedido direto do dono via anexo e878a3e0-c166-4eae-af23-ee66ed1d5d09/Texto colado.txt. Deduplicação main63fb030,PR1212aberto,20PRsrecentes/19headscodex e765refs,semMV1/data/título/conteúdoouitemdeimagemdepréviadosmodelosequivalente. 193HT15jápublicadooferecepréviaslocais/listas,masnãoesteescopo deimagensreaisdesktop/mobilegeradasnobuild;preservarpublicação193semrefazerbiblioteca. Próximolivre535após534FQ1;DA1foidiferençaao274,nãocriou535. Estadonafila,ordemAV1vinculante,semadiantaràtarefaemcurso. Ligaçõesobrigatórias193HT15/242CF5/526FN2/375TB1,semduplicar;reusarumúnicomecanismodominiaturareal526,quandoexistir,semsegundogerador. Novoscustosbuild/arquivos/entregacontadosFX275comtetoporimagem/totalantesoperação;nãoháleiturapagaextranemIAporprodutolocal,mascustodesconhecidoreprova. Demofictícia/previewrealnavegável/acessível/semgravaçãoautomática/semimagensrepetidas/semtextodepromessa obrigatórios. ContextoClickFunnelsérelatododono/Claude,nãoobservaçãoindependente. MR/TX/FX275/AX274/VRmantidos;registrosomente,semgerarimagensoureimplementarmodelos;suíteinteira novoheadcombinadoobrigatória.
+
+MV — Prévia visual dos modelos de página e de funil (29/10/2026) [MV1]
+
+Solicitação do dono (29/10/2026, 15h14, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: antes de gravar, aplique a regra "Pedidos repetidos" (23/10/2026). Procure esta solicitação no main, nos PRs abertos e nos ramos codex/* recentes, pela linha de data e hora, pelo nome da seção, pela etiqueta [MV1] e pelo conteúdo. Se já existir item que peça imagem de prévia dos modelos da biblioteca, aplique só a diferença dentro dele, mantendo número, posição e estado; caso contrário, crie um único item com o próximo número livre, na posição que a ordem AV1 indicar. Ligue este item a 193 [HT15] (biblioteca de modelos, já publicada), 242 [CF5] (modelos por nicho), 526 [FN2] (miniaturas reais das etapas do funil) e 375 [TB1] (editor visual), sem duplicá-los e sem refazer o que já foi publicado.
+
+Estado inicial: na fila.
+
+Contexto: o Claude conferiu em 29/10/2026 a seção "Design with confidence" de clickfunnels.com/features/clickfunnels-editor: ao lado do menu lateral de elementos, uma galeria de modelos prontos em que cada modelo aparece como imagem da página pronta, para o criador escolher pelo que vê. No Marktmorgen, a biblioteca de modelos (components/template-library.tsx, item 193 [HT15]) e a galeria de funis prontos (components/funnel-starter-gallery.tsx) mostram cada modelo só como cartão de texto, e a prévia é uma lista com os nomes dos blocos; o criador não vê como a página vai ficar antes de usá-la. Os textos dos modelos da ClickFunnels prometem resultado ("Unveil the Proven $25k+ Client Funnel", "Big, Juicy Wins!").
+
+535. [MV1] Imagem real de cada modelo antes de escolher.
+(a) Para cada modelo de página (lib/sales-page.ts), cada funil pronto (lib/funnel-starters.ts) e cada layout de e-mail da biblioteca, mostre uma imagem de prévia da página pronta, no computador e no celular, ao lado do cartão de texto existente, que continua como está.
+(b) A imagem é gerada automaticamente pelo próprio código de renderização das páginas, com o conteúdo da loja de demonstração Harbor Kitchen (rotulada como fictícia), no momento da publicação do site (build), não por cliente nem a cada visita. Quando um bloco ou um modelo mudar, a imagem é gerada de novo; um teste automático falha se a imagem estiver desatualizada em relação ao modelo. Reaproveite o mecanismo de miniatura real de 526 [FN2], sem um segundo gerador.
+(c) Ao abrir a prévia, mostre a página de demonstração de verdade, navegável, no tamanho real, rotulada "Example store (fictional)", com o botão "Use this template" já existente.
+(d) Depois de escolher o produto no seletor "Page product" existente, a prévia pode mostrar o nome, o preço e a imagem do próprio produto do criador, lidos localmente, sem gravar nada, sem chamada de IA e sem nova leitura paga.
+(e) Textos de exemplo dos modelos honestos, como já exige 242 [CF5]: nenhum resultado, número de faturamento, depoimento, escassez ou promessa ("proven", "guaranteed"); um teste automático falha se um modelo contiver esses termos.
+(f) Imagens: cada prévia é uma imagem diferente, sem repetir imagem nem foto entre modelos, nem miniatura de imagem já usada em tamanho maior (regra do dono de 03/10/2026); fotos de banco identificadas como ilustrativas.
+(g) Acessibilidade (AX274): cada imagem com texto alternativo que descreve a ordem dos blocos da página; nenhuma informação só na imagem (a lista de blocos continua em texto); a imagem não é imagem de texto que substitua texto real (1.4.9); prévia ao vivo operável só pelo teclado, com foco preso só enquanto aberta e fechada pela tecla Escape; contraste de 7:1, alvos de pelo menos 44 × 44 px, sem animação sob prefers-reduced-motion.
+
+Custo: imagens geradas no build a partir do repositório, guardadas como arquivos estáticos do próprio site; o armazenamento e a banda dessas imagens entram nos custos fixos (FX275), com tamanho máximo por imagem e total máximo definidos e testados antes; nenhum custo por cliente, nenhuma chamada de IA. Desconhecido reprova, nunca é zero.
+
+Margem (regra MR vigente, 27/10/2026, 07h42): nenhum cliente pagante, isoladamente e usando 100% dos direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo, depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto. A empresa como um todo não pode dar prejuízo a partir da base mínima calculada, com 100% dos custos fixos atribuídos ao Marktmorgen (FX275). A meta de 60% de margem líquida é medida todo mês no relatório real. Política tributária TX vigente. Custo desconhecido reprova, nunca é zero; cota grátis de fornecedor não conta como custo zero.
+
+Proibido: refazer a biblioteca de modelos ou a galeria de funis já publicadas; gravar, publicar ou enviar qualquer coisa sem o clique do criador; usar textos com resultados, números, depoimentos, escassez ou promessas inventados; repetir imagens; mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
