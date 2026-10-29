@@ -16176,3 +16176,51 @@ Margem (regra MR vigente, 27/10/2026, 07h42): nenhum cliente pagante, isoladamen
 Proibido: deixar alunos grátis consumirem as horas de vídeo garantidas a quem paga; abrir curso sem e-mail confirmado; pôr alguém na lista sem a caixa marcada; aumentar limites visíveis ou criar uso sem teto; mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; enviar e-mail real em testes; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
 
 Aplicar a regra VR.
+
+
+## 542 [CM1] — Espaço trancado visível na comunidade
+
+Estado: na fila. Ordem de chegada após541FC4,sobAV1; demaisitens intactos. Proveniência: anexo direto do dono29/10/2026,16h52Fortaleza. Deduplicação: main946fb1a,PRs1216/1217 e20headsrecentes, sem CM1/data/título/conteúdo equivalente. EscolhaHidden(padrãolegado)ouVisibleandlocked só expõe nome/frase/Locked/linkproduto publicado; conteúdo,arquivos,eventos,membros e contagens nunca chegam ao navegador sem maySeeSpace/holdsAnyOf servidor. A compra abre pelo mecanismo atual; sem pressão/contagem. Testes de ausência de vazamento,link correto,compra eAX274; custos leituras/gravações/franquia comtetos,reserva eMR/TX/FX275,desconhecidoreprova. Escopo integral e proibições no briefing conjunto preservado após543CM2; sem implementação antecipada.
+
+## 543 [CM2] — Aprovação opcional de posts e comentários antes de publicar
+
+Estado: na fila. Ordem de chegada após542CM1,sobAV1. Proveniência/deduplicação do mesmo pedido,sem equivalente em main/PRs/recentes. Link263CI1:IAquandoexistirsó sugere,criador decide;113E2-COMMUNITY-MODERATION(filtrospam)não equivale à aprovação prévia e não é refeito. Reusar fila/notificações atuais:modoPublishrightaway(padrão),primeiros1–5ouaprovarcada,posts/comentários separadamente;pendente sóautor/criador,Waitingforapproval;aprovarpublica/recusacomfrasedocriadoravisa. Umavisodiárioexistente na cota,nenhumemailreal. Expiração30diascomaviso,limitetestado porcomunidade,eliminação da pessoa inclui pendentes;privacy/terms/AX274/testes e custos integrais. Nenhuma fila ilimitada,exposição indevida,serviçoIA novo oualteração degate/direitos. Texto integral do anexo conjunto abaixo é fonte dosDOISitens542CM1/543CM2,sem duplicar outro catálogo/regra:
+
+CM — Espaço trancado visível na comunidade e aprovação de posts antes de publicar (29/10/2026) [CM1] [CM2]
+
+Solicitação do dono (29/10/2026, 16h52, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: antes de gravar, aplique a regra "Pedidos repetidos" (23/10/2026). Procure esta solicitação no main, nos PRs abertos e nos ramos codex/* recentes, pela linha de data e hora, pelo nome da seção, pelas etiquetas [CM1] e [CM2] e pelo conteúdo. Se já existir item que peça espaço trancado visível ou aprovação prévia de posts na comunidade, aplique só a diferença dentro dele, mantendo número, posição e estado; caso contrário, crie os dois itens com os próximos números livres, na posição que a ordem AV1 indicar. Ligue o CM2 a 263 [CI1] (moderação assistida por IA), sem duplicá-lo.
+
+Estado inicial: na fila.
+
+Contexto: o Claude conferiu em 29/10/2026 a seção "Build your community, your way" de clickfunnels.com/apps/community: grupos "Open" (qualquer membro vê e entra), "Private" (os outros membros veem a tela trancada, com o link de compra) e "Secret" (invisível a quem não é membro), e as opções de aprovar posts e comentários antes de aparecerem. No Marktmorgen (lib/community-access.ts, maySeeSpace e visibleSpaces), um espaço é aberto a toda a comunidade ou "kept for the buyers of the products you choose", e esse espaço fica escondido de quem não comprou; não existe espaço trancado visível. A moderação (lib/community.ts) é posterior: denúncia, fila do criador, esconder, apagar, silenciar ou tirar o membro; não existe aprovação antes de publicar.
+
+[CM1] Espaço trancado e visível, com o caminho para comprar.
+(a) Para um espaço guardado para compradores de certos produtos, o criador escolhe "Hidden" (como hoje, padrão) ou "Visible and locked".
+(b) "Visible and locked": os membros que não têm o produto veem na lista o nome e a frase do espaço, com um cadeado e o botão "Unlock with [nome do produto]", que leva à página de venda desse produto na loja, ao preço publicado; nunca veem posts, comentários, membros, arquivos ou eventos do espaço, nem a contagem de posts ou de membros.
+(c) A decisão de mostrar o conteúdo continua só em maySeeSpace, no servidor; a tela trancada não carrega nada do conteúdo; um teste falha se qualquer conteúdo do espaço trancado chegar ao navegador de quem não tem o produto.
+(d) Depois de comprar, o espaço abre sozinho, pela mesma regra de hoje (holdsAnyOf), sem o criador aprovar à mão.
+(e) Sem pressão: o espaço trancado não mostra contagem regressiva, escassez nem número de pessoas lá dentro.
+
+[CM2] Aprovação de posts e comentários antes de publicar, opcional.
+(a) Por espaço, o criador escolhe: "Publish right away" (padrão, como hoje), "Approve first posts of new members" (os primeiros 1 a 5 posts ou comentários de cada membro novo, número escolhido pelo criador) ou "Approve every post"; o mesmo para comentários, separadamente.
+(b) O que aguarda aprovação só é visto pelo autor, marcado "Waiting for approval", e pelo criador, na fila de moderação que já existe, junto das denúncias; aprovar publica; recusar avisa o autor com uma frase do criador, sem apagar sem aviso.
+(c) Aviso ao criador de que há itens aguardando, pelas notificações que já existem; nenhum e-mail novo além do aviso diário único, dentro da cota de e-mails do plano.
+(d) Itens aguardando há mais de 30 dias são recusados sozinhos, com o aviso ao autor, para a fila nunca crescer sem limite; tamanho máximo da fila por comunidade, testado.
+(e) A moderação assistida por IA de 263 [CI1], quando existir, pode só sugerir; a decisão é sempre do criador.
+(f) Política de privacidade e termos atualizados: posts aguardando aprovação e o prazo de 30 dias; apagar a pessoa apaga também os itens aguardando.
+
+Acessibilidade (AX274): cadeado com texto ("Locked"), não só ícone; botões com rótulo; estado "Waiting for approval" em texto, anunciado ao leitor de tela; contraste de 7:1; alvos de pelo menos 44 × 44 px.
+
+Testes automáticos: CM1, nada do conteúdo do espaço trancado chega a quem não tem o produto, o botão leva à página de venda certa, abre sozinho depois da compra; CM2, cada modo, só autor e criador veem o pendente, aprovar publica, recusar avisa, expiração em 30 dias, limite da fila, apagar a pessoa apaga o pendente; somente dados sintéticos.
+
+Custo: leituras e gravações já contadas no plano, com teto automático; o aviso diário conta na cota de e-mails; nenhuma chamada de IA nova; desconhecido reprova, nunca é zero.
+
+Margem (regra MR vigente, 27/10/2026, 07h42): nenhum cliente pagante, isoladamente e usando 100% dos direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo, depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto. A empresa como um todo não pode dar prejuízo a partir da base mínima calculada, com 100% dos custos fixos atribuídos ao Marktmorgen (FX275). A meta de 60% de margem líquida é medida todo mês no relatório real. Política tributária TX vigente. Custo desconhecido reprova, nunca é zero; cota grátis de fornecedor não conta como custo zero.
+
+Proibido: mostrar qualquer conteúdo de espaço trancado a quem não tem o produto; abrir espaço sem a regra atual de compra; contagem regressiva, escassez ou número de membros no espaço trancado; apagar post sem avisar o autor; fila sem limite; mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; enviar e-mail real em testes; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
