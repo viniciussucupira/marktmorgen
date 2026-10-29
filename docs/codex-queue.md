@@ -15560,6 +15560,38 @@ Proibido: criar item novo ou mudar número, posição ou estado do 531; foto rep
 
 Aplicar a regra VR.
 
+### Terceiro complemento de531VP1 — 29/10/2026,14h13Fortaleza
+
+Proveniência: pedido direto do dono nesta conversa; somente diferença ao531,sem novo item/número/posição/estado. Acrescenta Works well with colorido/paleta/desenhos SVGouHTML,relacionados primeiro/todos acessíveis/setas/Every feature preservado,expansão clique/Enter comvídeo real241apenasquandoexistir,alternativa de tela real e navegação direta semvídeo conformebrief. Preservar integralmente ambas as regras de alternativa do dono,reconferindo mecanismo real ao executar;nenhum vídeo/recurso fictício. Semautomovimento/autoplay/hoverexclusivo/pressa;legenda/reducedmotion/7:1/44px/lazyload/SF1/ME2eMR/TX/FX275/AX274/VRvinculantes. Comparação atribuída ao dono/Claude,não observação independente. 241continua logoapós531;outrosFIM1/532AF1/533DP1preservados. Registroapenas,sem implementaçãoantecipada;suíteinteira novoheadcombinadoobrigatória.
+
+VP — Terceiro complemento ao 531 [VP1]: seção "Works well with" em cartões coloridos que se abrem com o vídeo do recurso (29/10/2026)
+Etiqueta: [VP1]
+
+Solicitação do dono (29/10/2026, 14h13, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: é complemento ao item 531 [VP1], que já recebeu os complementos de 29/10/2026, 14h02 e 14h08. Aplique só a diferença ao item existente, mantendo número, posição e estado (regra "Pedidos repetidos", passo 3, letra b), e registre na proveniência o que mudou.
+
+Estado inicial: o do próprio 531.
+
+Contexto: no fim das páginas de recursos da ClickFunnels, o bloco "Try our apps" é um carrossel de cartões grandes, cada um com cor própria, título, uma frase e um desenho simples do app; ao clicar, o cartão se alarga, mostra um vídeo de apresentação e o botão "Learn More". O cartão "Countdown Funnels" diz "to get prospects to act now". No Marktmorgen, a seção "Works well with" das páginas de recursos (por exemplo, marktmorgen.com/platform/funnels, conferida pelo Claude em 29/10/2026) mostra quatro cartões brancos com ícone, título e uma linha, e o link "Every feature".
+
+O que acrescentar ao 531 [VP1]:
+- a seção "Works well with" vira uma fileira de cartões coloridos, cada recurso com uma cor tirada da paleta do site, título, a frase que já existe e um desenho simples do recurso, feito em SVG ou HTML (não imagem de texto);
+- ao clicar ou apertar Enter num cartão, ele se abre ali mesmo e mostra o vídeo real daquele recurso do 241 [CF4], quando existir, ou o cartão de tela real do topo, mais o botão "Learn more" para a página do recurso; sem vídeo, o cartão leva direto à página;
+- a fileira mostra os recursos ligados primeiro e, com as setas, todos os demais; o link "Every feature" continua;
+- nenhuma frase de pressa ("act now") nem contador: a contagem regressiva aparece descrita como é, até uma data real.
+Acessibilidade (AX274): o carrossel não anda sozinho; setas com nome para leitor de tela e alcançáveis por teclado; abrir o cartão por clique e por teclado, nunca só ao passar o mouse; o vídeo não começa sozinho e tem legenda; com prefers-reduced-motion, os cartões abrem sem animação; contraste de 7:1 e alvos de 44 × 44 px.
+Desempenho: os vídeos só carregam ao abrir o cartão; cada página continua dentro de 281 [SF1] e 497 [ME2].
+Testes automáticos: cartões com cor e desenho; abertura por clique e teclado; nenhum movimento automático; vídeo só ao abrir; nenhuma palavra de pressa; o link "Every feature" presente.
+
+Regra de margem: segue a REGRA DE MARGEM vigente (MR, 27/10/2026, 07h42), a política tributária TX e FX275; custo desconhecido reprova, nunca é zero.
+
+Proibido: criar item novo ou mudar número, posição ou estado do 531; carrossel que anda sozinho; abrir só ao passar o mouse; vídeo que começa sozinho; frase de pressa ou contador falso; imagem de texto ou imagem repetida; mostrar recurso que não funciona hoje; tirar qualquer conteúdo das páginas (só mover); mudar preços, limites visíveis, comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a, a revisão comercial ou stripePlatformEligibilityReady; afrouxar qualquer trava; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+
 [VP2] Vídeos reais do produto nas páginas de recursos de volta para perto da frente da fila.
 Estado inicial: mudança de posição.
 O item 241 [CF4] (vídeos curtos e reais de cada recurso, gravados na loja de demonstração, com legenda, transcrição e teto de custo), que o FIM1 de 28/10/2026 levou para o fim da fila, passa para logo depois de [VP1], com escopo, estado e provas intactos. Só a posição muda; nenhum outro item do FIM1 muda de lugar. Registre a mudança na tabela de posições do FIM1 com esta data e hora. Os vídeos do 241 e o vídeo das abas de 509 [CK1] usam o mesmo mecanismo de gravação e não se repetem entre si.
