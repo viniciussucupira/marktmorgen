@@ -871,6 +871,14 @@ async function main() {
         pauseRedis.pipeline=async commands=>{calls.push(...commands);return reply;};
         is("unknown oversized or foreign preflight refuses",await storeForRestartSource(ref),null);
       }
+      const sourceRaw=JSON.parse(raw) as Record<string,unknown>;
+      for(const field of ["handle","statsId","subscriptionId","stripeCustomerId","tier","cycle","email","sid","subscriptionActive","extra"]){
+        for(const value of [undefined,null,field==="subscriptionActive"?"false":field==="extra"?"false":{}]){
+          const malformed={...sourceRaw,[field]:value};
+          pauseRedis.pipeline=async()=>[JSON.stringify(malformed)];
+          is("missing or malformed raw source never receives legacy defaults",await storeForRestartSource(ref),null);
+        }
+      }
       let reads=0;const accessor:unknown[]=[];
       Object.defineProperty(accessor,"0",{enumerable:true,get(){reads++;throw Error("unexpected reply getter");}});
       pauseRedis.pipeline=async()=>accessor;
