@@ -72,7 +72,13 @@ class DocumentationScopeTests(unittest.TestCase):
             self.assertNotIn(scope_name, names)
             names.add(scope_name)
             # Each existing heavy job has exactly one gate and condition.
-            chunks = __import__("re").split(r"(?m)^  [a-z][a-z0-9-]*:\n", jobs)[2:]
+            parts = __import__("re").split(r"(?m)^  ([a-z][a-z0-9-]*):\n", jobs)
+            named = list(zip(parts[1::2], parts[2::2]))
+            self.assertEqual(named[0][0], "documentation-scope", str(path))
+            # The final check is the last job; its own rules (always runs, reads every job)
+            # are held by scripts/test_ci_all_checks.py. Every job between keeps the rules below.
+            self.assertEqual(named[-1][0], "all-checks", str(path))
+            chunks = [body for _, body in named[1:-1]]
             self.assertTrue(chunks, str(path))
             for chunk in chunks:
                 self.assertEqual(chunk.count("    needs: documentation-scope\n"), 1)

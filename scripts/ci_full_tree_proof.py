@@ -16,6 +16,9 @@ for key, label in [("buyer-actions", "Buyer action"), ("product-actions", "Produ
                    ("public-matrix", "Public"), ("signup-actions", "Signup action"),
                    ("studio-matrix", "Studio")]:
     WORKFLOWS["accessibility-" + key] = {label + " AAA (" + browser + ")" for browser in ("chromium", "firefox", "webkit")}
+# Every workflow ends with its final check (scripts/ci_all_checks.py), which must have passed too.
+for workflow in WORKFLOWS:
+    WORKFLOWS[workflow] = WORKFLOWS[workflow] | {"All checks (" + workflow + ")"}
 
 def prove_full_tree(candidate, tree, api):
     if not SHA.fullmatch(candidate) or not SHA.fullmatch(tree):
