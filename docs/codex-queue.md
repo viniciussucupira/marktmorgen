@@ -14593,7 +14593,7 @@ Em cada item, qualquer parte necessária para abrir vendas, conformidade legal, 
 | 131 | OR BlocoB 80/81 | Fim, após todos os nãoFIM1; ordem relativa anterior | Somente posição; escopo/estado/provas mantidos. Salvaguardas já devidas dos recursos atuais permanecem imediatas. |
 | 132 | OR BlocoB 81/81 | Fim, após todos os nãoFIM1; ordem relativa anterior | Somente posição; escopo/estado/provas mantidos. Salvaguardas já devidas dos recursos atuais permanecem imediatas. |
 | 203 | Após202/trabalhos em andamento | Fim, após todos os nãoFIM1; ordem relativa anterior | Somente posição; escopo/estado/provas mantidos. Salvaguardas já devidas dos recursos atuais permanecem imediatas. |
-| 206 | OR apósA,206–272; antesB | Fim, após todos os nãoFIM1; ordem relativa anterior | Somente posição; escopo/estado/provas mantidos. Salvaguardas já devidas dos recursos atuais permanecem imediatas. |
+| 206 | OR apósA,206–272; antesB | Logo depois de 519 [PF7], por PF8 (29/10/2026,09h48 Fortaleza) | PF8 altera somente posição em29/10/2026,09h48Fortaleza; escopo/estado/provas mantidos. Salvaguardas já devidas dos recursos atuais permanecem imediatas. |
 | 207 | OR apósA,206–272; antesB | Fim, após todos os nãoFIM1; ordem relativa anterior | Somente posição; escopo/estado/provas mantidos. Salvaguardas já devidas dos recursos atuais permanecem imediatas. |
 | 209 | OR apósA,206–272; antesB | Fim, após todos os nãoFIM1; ordem relativa anterior | Somente posição; escopo/estado/provas mantidos. Salvaguardas já devidas dos recursos atuais permanecem imediatas. |
 | 215 | OR apósA,206–272; antesB | Fim, após todos os nãoFIM1; ordem relativa anterior | Somente posição; escopo/estado/provas mantidos. Salvaguardas já devidas dos recursos atuais permanecem imediatas. |
@@ -14862,6 +14862,140 @@ Proibido: mudar preços, cortar limites visíveis, retirar recursos ou direitos 
 Aplicar a regra VR.
 
 
+## PF — registro integral; itens513–519 e reposicionamento206 (29/10/2026,09h48Fortaleza)
+
+Proveniência: pedido direto do dono, anexo PF; comparação ClickFunnels atribuída ao Claude, sem nova certificação deste registro. Deduplicação: main ec25ab040f1470f424de5d969df4919c87111d91, PRs abertos,20PRs recentes e21heads codex distintos (incluindo físicos/FIM), sem etiquetas/título/data/conteúdo equivalentes. Nenhuma implementação iniciada. PF8 reutiliza206SH3, não cria520 nem duplica o item: posição imediatamente após519PF7; escopo,estado,provas originais preservados e nenhum outro FIM1 muda. MR/TX/VR/AX274 vinculantes; custo desconhecido reprova. AV em andamento continua.
+
+PF — Qualquer produto físico lícito nas lojas dos criadores (29/10/2026)
+Etiquetas: [PF1] [PF2] [PF3] [PF4] [PF5] [PF6] [PF7] [PF8]
+
+Solicitação do dono (29/10/2026, 09h48, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: antes de gravar, aplique a regra permanente "Pedidos repetidos". Confira o main, os PRs abertos e os ramos codex/* recentes e procure esta solicitação pela linha de data e hora, pelo nome da seção, pelas etiquetas [PF1] a [PF8] e pelo conteúdo. Se já estiver gravada, não crie nada novo. Grave na ordem de chegada, depois do último item já gravado, com os próximos números livres, sem alterar a ordem dos itens existentes, exceto a mudança de posição pedida em [PF8].
+
+Contexto: o dono quer que os criadores possam vender qualquer produto físico lícito, tão bem quanto na ClickFunnels (Store Funnels e Add to Cart, conferidos pelo Claude no Chrome em 28 e 29/10/2026) ou melhor. O limite continua sendo a seção "What you may not sell" dos Termos (app/terms/page.tsx): nada ilegal, nada que infrinja direitos, nenhum conteúdo sexual, nada que engane o comprador, nenhuma promessa de dinheiro fácil e nada da lista de negócios restritos da Stripe. Hoje, além disso, o código limita o produto físico: lib/shipping.ts o vende sozinho, "not with a price the buyer names, a payment plan, a cart, a gift or a group purchase, and it delivers no file, link, course or call besides". Já existem e NÃO devem ser refeitos: produto físico enviado pelo criador, com países de envio, frete único por pedido ou grátis e prazo de envio (lib/shipping.ts); tamanhos e versões com preço, estoque e código próprios (205 [SH2]); estoque limitado (lib/stock.ts); endereço lido do checkout (lib/shipping-address.ts); "Mark as shipped" com aviso e rastreio (lib/shipments.ts); carrinho de produtos digitais (lib/cart-*.ts); pré-venda de produtos digitais (lib/preorder-rules.ts). Antes de cada item, confira de novo o código e a fila e faça só a diferença.
+
+513 [PF1] Produtos físicos no carrinho.
+Estado inicial: na fila.
+O que fazer: permita produtos físicos no carrinho existente, juntos entre si e com produtos digitais, numa única cobrança direta na conta Stripe do criador. A Stripe pede um único endereço, aceito só se estiver em país que todos os físicos do carrinho atendem; se um item não for enviado para lá, o carrinho diz qual é antes do pagamento. O estoque de cada variante é reservado como em lib/stock.ts; os digitais são entregues como hoje e os físicos aparecem no estúdio para envio.
+Testes automáticos, com Stripe simulado: carrinho misto, país não atendido, estoque reservado e devolvido.
+
+514 [PF2] Produto físico com tudo o que os outros produtos já têm.
+Estado inicial: na fila.
+O que fazer: retire do produto físico as exclusões de lib/shipping.ts, uma a uma, reutilizando os mecanismos que já existem para os demais produtos:
+- arquivo, link, curso ou chamada junto do físico (por exemplo, livro impresso com o PDF);
+- parcelamento, com envio só depois do primeiro pagamento confirmado;
+- presente, com endereço de entrega diferente do endereço de quem paga e mensagem opcional;
+- compra em grupo;
+- preço escolhido pelo comprador, com o mínimo definido pelo criador;
+- pré-venda de físico, com a data prevista de envio e a mesma regra de reembolso integral da pré-venda digital.
+Testes automáticos de cada combinação, com Stripe simulado.
+
+515 [PF3] Frete por país e por quantidade, e frete grátis acima de um valor.
+Estado inicial: na fila.
+O que fazer: para cada região de envio já existente (ou país), o criador define um valor para o primeiro item e um valor para cada item a mais, e pode marcar frete grátis a partir de um valor de pedido, por região. A Stripe mostra o frete como linha própria antes do pagamento. A configuração atual de frete único continua funcionando sem o criador mexer em nada; nada de frete grátis por omissão.
+Testes automáticos: cálculo por região e quantidade, limite de frete grátis e compatibilidade com a configuração antiga.
+
+516 [PF4] Etiqueta de envio pela conta Shippo do próprio criador.
+Estado inicial: na fila.
+O que fazer: estude com data a API oficial e os termos do Shippo. Ligue a conta do próprio criador (chave dele, guardada com a mesma proteção dos demais tokens). No pedido físico, o botão "Buy label" mostra as tarifas; o criador escolhe uma, a etiqueta é comprada na conta dele e o rastreio preenche sozinho o "Mark as shipped". O Shippo cobra o criador diretamente; o Marktmorgen nunca paga nem adianta valores. Se a chamada falhar, nada é comprado em dobro e o estúdio diz o que aconteceu.
+Testes automáticos, com Shippo simulado: compra, falha, repetição sem compra em dobro e rastreio preenchido.
+
+517 [PF5] Assinatura de produto físico (caixa mensal).
+Estado inicial: na fila.
+O que fazer: o criador vende uma assinatura que envia um produto físico a cada período (mês, trimestre ou ano), cobrada na conta Stripe dele. A cada cobrança paga, um pedido de envio aparece no estúdio com o endereço atual. O assinante troca o endereço, pula um envio ou cancela sozinho, sem falar com ninguém; o cancelamento vale antes da próxima cobrança. O estoque de cada envio é reservado antes da cobrança; sem estoque, a cobrança não acontece e o criador e o assinante são avisados.
+Testes automáticos, com Stripe simulado: renovação, troca de endereço, envio pulado, cancelamento e falta de estoque.
+
+518 [PF6] Personalização e produto feito sob encomenda.
+Estado inicial: na fila.
+O que fazer: o criador acrescenta ao produto físico até três campos que o comprador preenche antes de pagar (por exemplo, o nome a gravar), com tamanho máximo definido pelo criador, e o prazo de produção, mostrado antes do pagamento. O que o comprador escreveu aparece no pedido do estúdio e no e-mail de confirmação. O texto do comprador é tratado como dado: neutralizado contra injeção e guardado só pelo tempo do pedido e da política de reembolso.
+Testes automáticos: limite de caracteres, texto no pedido e no e-mail, neutralização.
+
+519 [PF7] Retirada no local e entrega na cidade.
+Estado inicial: na fila.
+O que fazer: além do envio pelo correio, o criador pode oferecer retirada num endereço dele (com horários escritos por ele) e entrega numa área que ele descreve, cada uma com o valor dele ou grátis. O comprador escolhe no checkout; na retirada, a Stripe não pede endereço de entrega. O pedido mostra no estúdio como será entregue, e "Mark as shipped" vira "Mark as ready for pickup" ou "Mark as delivered".
+Testes automáticos: as três formas de entrega e os avisos ao comprador.
+
+206 [SH3] — [PF8] Impressão sob demanda de volta para perto da frente da fila.
+Estado inicial: mudança de posição.
+O item 206 [SH3] (impressão sob demanda pela conta Printful ou Printify do próprio criador), que o FIM1 de 28/10/2026 levou para o fim da fila, passa para logo depois de [PF7], com escopo, estado e provas intactos. Só a posição muda; nenhum outro item do FIM1 muda de lugar. Registre a mudança na tabela de posições do FIM1 com esta data e hora.
+
+Para todos os itens:
+- Acessibilidade AX274 em cada tela e campo novo: rótulos, exemplo na própria tela, prevenção de erro (3.3.6), nada de redigitar dados (3.3.7).
+- A página de recursos só passa a citar cada novidade quando ela funcionar de verdade, conforme a regra VR.
+- Lucro: pedido maior, mais tipos de criador atendidos e valor percebido maior do plano, sem dinheiro de frete, etiqueta, impressão ou produto passando pelo Marktmorgen.
+- Custos: cada chamada à API, leitura, e-mail e armazenamento novo entra no custo de pior caso do plano, com teto automático antes do gasto; custo desconhecido reprova.
+- Impostos: produtos físicos seguem a política tributária TX e a leitura de bens físicos já registrada (regra 3 do 206 [SH3]); nenhum item liga cobrança de imposto nem muda o tax gate ou o art. 9a.
+
+Regra de margem: cada item segue a REGRA DE MARGEM vigente (MR, 27/10/2026, 07h42): nenhum cliente pagante dá prejuízo, usando 100% de todos os direitos do plano e de cada complemento no pior mês, no mensal e no anual, com teto automático e reserva antes de cada gasto; a empresa fica sem prejuízo a partir da base mínima; 60% é meta mensal real, não trava. Política tributária TX. Custo desconhecido reprova, nunca é zero; nenhuma cota grátis de fornecedor conta como zero; taxas de recebimento mais caras de lib/receiving-costs.ts; todos os custos fixos são 100% do Marktmorgen (FX275).
+
+Proibido: mudar preços, cortar limites visíveis, retirar recursos ou direitos de qualquer plano, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a, a revisão comercial ou stripePlatformEligibilityReady; afrouxar qualquer trava; afrouxar a seção "What you may not sell" dos Termos; o Marktmorgen pagar, adiantar ou guardar dinheiro de frete, etiqueta, impressão ou produto; mostrar recurso que não funciona hoje; alterar o conteúdo do criador sem aprovação; criar contas, aceitar termos, contratar, pagar ou contatar terceiros (Shippo, Printful, Printify ou outros); apagar qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+
+## LB — registro integral; itens520–523 (29/10/2026,09h51Fortaleza)
+
+Proveniência: pedido direto do dono, anexo LB. Mesma deduplicação do registro PF, sem equivalente. Ordem de chegada PF→LB preservada;206 permanece entre519PF7 e520LB1 por ordemPF8. EstudosMeta/Apple apenas, conclusão futura em Depende do dono; nenhuma conta, contato ou implantação autorizada por este registro. MR/TX/VR/AX274 vinculantes; custo desconhecido reprova. AV continua em andamento.
+
+LB — Negócio com endereço: salão de beleza e outros atendimentos presenciais (29/10/2026)
+Etiquetas: [LB1] [LB2] [LB3] [LB4]
+
+Solicitação do dono (29/10/2026, 09h51, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: antes de gravar, aplique a regra permanente "Pedidos repetidos". Confira o main, os PRs abertos e os ramos codex/* recentes e procure esta solicitação pela linha de data e hora, pelo nome da seção, pelas etiquetas [LB1] a [LB4] e pelo conteúdo. Se já estiver gravada, não crie nada novo. Grave na ordem de chegada, depois do último item já gravado, com os próximos números livres, sem alterar a ordem dos itens existentes.
+
+Contexto: o dono quer que um negócio com endereço físico, como um salão de beleza, use a loja do Marktmorgen para mostrar o lugar em vídeo e para que os clientes dele agendem e paguem pelo site, ou comecem o agendamento pelo WhatsApp ou pelo iPhone. Já existem e NÃO devem ser refeitos: vídeo de boas-vindas do YouTube, Vimeo ou Loom abaixo do nome da loja (lib/store.ts, intro; components/intro-editor.tsx); agendamento pago com horário reservado durante o pagamento, cobrança direta na conta Stripe do criador, arquivo de calendário, lembretes e remarcação (lib/calls.ts, lib/call-setup.ts, lib/call-reminders.ts); equipe com distribuição entre os profissionais (lib/team-booking.ts); WhatsApp como rede social da loja (lib/store-socials.ts); envio de vídeo de aulas (lib/course-videos.ts). Antes de cada item, confira de novo o código e a fila e faça só a diferença.
+
+520 [LB1] Atendimento presencial agendado e pago pelo site.
+Estado inicial: na fila.
+Problema que resolve: hoje o agendamento é sempre uma chamada (link, sala de vídeo, Meet ou Zoom); um salão precisa de horário no próprio endereço.
+O que fazer:
+- em lib/call-setup.ts, um novo lugar de atendimento, "In person", com o endereço do negócio, mostrado ao cliente antes de pagar, no e-mail de confirmação, no arquivo de calendário (campo LOCATION, que o Calendário do iPhone e o Google Agenda abrem no mapa) e nos lembretes;
+- cada serviço é um produto com duração, preço e intervalo opcional entre atendimentos; com a equipe de lib/team-booking.ts, o cliente escolhe o profissional ou "Any available";
+- pagamento pelo site: preço inteiro ou sinal, com o valor do sinal definido pelo criador e a frase "The rest is paid at the salon" mostrada antes de pagar; o restante nunca passa pelo Marktmorgen;
+- prazo de cancelamento e de remarcação e regra para falta, definidos pelo criador, coerentes com a política de reembolso e mostrados antes de pagar.
+Testes automáticos, com Stripe simulado: reserva presencial, sinal, escolha do profissional, cancelamento dentro e fora do prazo e arquivo de calendário com o endereço.
+
+521 [LB2] Página da loja para negócio com endereço, com vídeo próprio.
+Estado inicial: na fila.
+O que fazer:
+- um bloco opcional "Visit us" na loja: endereço, horários de funcionamento escritos pelo criador, telefone e botões "Open in Apple Maps" e "Open in Google Maps" (só links, sem mapa embutido, sem custo de fornecedor e sem rastreamento);
+- vídeo de boas-vindas enviado como arquivo, além dos links do YouTube, Vimeo e Loom, com o mesmo envio, armazenamento e horas de vídeo do plano já usados nas aulas (lib/course-videos.ts), legendas e transcrição conforme AX274 e carregado só quando a pessoa aperta o play.
+Testes automáticos: bloco com e sem dados, links de mapa, envio do vídeo dentro do limite do plano e recusa acima dele.
+
+522 [LB3] Agendar pelo WhatsApp.
+Estado inicial: na fila.
+O que fazer:
+- botão opcional "Book on WhatsApp" na loja e em cada serviço, que abre a conversa com o número de WhatsApp da loja (wa.me) já com uma mensagem escrita: o nome do serviço e o link da página de agendamento, para o salão responder ou o cliente pagar pelo link;
+- no e-mail de confirmação, o botão "Message us on WhatsApp";
+- só estudo, com fontes oficiais datadas: o agendamento automático dentro do WhatsApp pela WhatsApp Business Platform da Meta, na conta do próprio criador (custos por mensagem cobrados pela Meta ao criador, verificação do negócio, regras de modelos de mensagem). Registre a conclusão em "Depende do dono"; não construa, não crie conta e não aceite termos.
+Testes automáticos: o link wa.me com o número da loja e a mensagem codificada corretamente.
+
+523 [LB4] Agendar pelo iPhone.
+Estado inicial: na fila.
+O que fazer:
+- botão opcional "Text to book", que abre o app de mensagens do celular (sms:, que no iPhone abre o Mensagens e usa iMessage entre iPhones) com o número da loja e a mesma mensagem do [LB3];
+- no estúdio, uma página de ajuda que mostra o link de agendamento da loja e os passos para o próprio criador colocá-lo, de graça, como link de ação no cartão do negócio no Apple Maps (Apple Business Connect) e como link de agendamento no Google Maps (Perfil da Empresa no Google). O Marktmorgen não cria nem acessa essas contas;
+- só estudo, com fontes oficiais datadas: o Apple Messages for Business, que exige provedor de mensagens aprovado pela Apple, revisão da Apple e atendimento humano em horário comercial. Registre a conclusão em "Depende do dono"; não construa nem contate a Apple.
+Testes automáticos: o link sms: com o número e a mensagem, e o link de agendamento mostrado na ajuda.
+
+Para todos os itens:
+- Acessibilidade AX274 em cada tela, botão e campo novo.
+- A página de recursos só cita cada novidade quando ela funcionar de verdade, conforme a regra VR.
+- Lucro: atende negócios locais (salões, estúdios, clínicas de estética, professores presenciais), um público novo e grande, sem dinheiro de terceiros passando pelo Marktmorgen.
+- Custos: armazenamento e entrega de vídeo, e-mails e leituras novas entram no custo de pior caso do plano, com teto automático antes do gasto; custo desconhecido reprova.
+
+Regra de margem: cada item segue a REGRA DE MARGEM vigente (MR, 27/10/2026, 07h42): nenhum cliente pagante dá prejuízo, usando 100% de todos os direitos do plano e de cada complemento no pior mês, no mensal e no anual, com teto automático e reserva antes de cada gasto; a empresa fica sem prejuízo a partir da base mínima; 60% é meta mensal real, não trava. Política tributária TX. Custo desconhecido reprova, nunca é zero; nenhuma cota grátis de fornecedor conta como zero; taxas de recebimento mais caras de lib/receiving-costs.ts; todos os custos fixos são 100% do Marktmorgen (FX275).
+
+Proibido: mudar preços, cortar limites visíveis, retirar recursos ou direitos de qualquer plano, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a, a revisão comercial ou stripePlatformEligibilityReady; afrouxar qualquer trava; o Marktmorgen receber, guardar ou adiantar o pagamento do cliente do salão; mostrar recurso que não funciona hoje; alterar o conteúdo do criador sem aprovação; criar contas, aceitar termos, contratar, pagar ou contatar terceiros (Meta, Apple, Google ou outros); apagar qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+
+
 ## PR1203 — incorporação e produção verificadas
 
 PR https://github.com/viniciussucupira/marktmorgen/pull/1203, headb944c4d6baedbeb5a1f0a1c62d6e004e2753f2ec, mergef1b54f6956eb328801cc0f5980def6931970131d às09:37:31Fortaleza/12:37:31UTC29/10/2026; paisead3641+b944c4d, árvore3d75f83004e6481ca6aef3af51c9575c9ac9a6a0igualàtestada.39/39+Vercel;verify123437614825Everythingpassing12:14:45.2515339UTC/bundles234/234. Redis12343761497012:09:49.4213677UTC: ambosshared,lostACK64replays,14recusas,caixa/ledgerpreservados,25comandos medidos(EVAL1,HGET21,HSET1,TTL1,TYPE1)≤40. Oitoscopesfulltrue;signup3engines30/150/0;mobile9coldLCPmax1384/CLS0/interação152ms/0writes(labonly);NVDA/VoiceOver2headings0writes/foreign,não tarefascompletas. Firefox123437615009/WebKit123437615043aprovados. READYdpl_HSQBed1VZxcWvgY1tCsLxEhKZyZP,SHAexato7aliases5HTMLpúblicosmarktmorgen.com confirmados antes da incorporação documental1204. Contador254semprovainterativa; nenhuma cobertura/flag/review habilitada.
@@ -14869,3 +15003,8 @@ PR https://github.com/viniciussucupira/marktmorgen/pull/1203, headb944c4d6baedbe
 ## AV — admissão do aviso imediato de pausa financiada
 
 Corrige o caminho real confirmPause→tell(company): qualquer funding ou períodofinanciado/ACKestruturaldesconhecido permanece retido antes de IO, sem retirar o aviso legado nem mudar opt-in. Fonte/geração/reserva/tetoglobal dos avisos financiados continuam obrigatórios e incompletos; não declarar prontidão. Testes positivoslegados e negativosfinanciados/accessors preparados, suíte integral pendente. Binding atualizado,semnovachave/comando/provedor; custos completos desconhecidos reprovados. CK509–512eSC1incorporadoClaude1192preservados no prefixo.
+
+
+### Integração da fila PF/LB durante PR1205
+
+PR1206 incorporado em29/10/2026,10:01:20Fortaleza/13:01:20UTC,merge860461bb3b40d00b9a89dfe95a1395a6a44ffeea,head8f9bb25188cea52092030e2700091a5233d77b19,árvore84aadb9470d7f45ec93f968823bffa3fc8775b92,paiec25ab0+8f9bb25.27checks documentais16success11skips+Vercel; sem entrega funcional/counter254inalterado. BriefingsPF513–519/LB520–523e206SH3após519preservados integralmente. PR1205 atualiza seu head para incorporar essa fila sem sobrescrever e roda novamente a suíte inteira da árvore combinada; resultados antigos f2358f5 não certificam o novohead.
