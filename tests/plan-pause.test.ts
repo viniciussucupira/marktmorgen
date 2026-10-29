@@ -715,6 +715,45 @@ async function main() {
     await undoPause(store, paused.record.until + 60);
   }
 
+  part("A restart cannot overwrite a changed plan with the same customer and subscription");
+  for (const changed of ["tier", "cycle"] as const) {
+    const email = "restart-plan-race-" + changed + "@example.com", id = "sub_PlanRace" + changed;
+    subs[id] = subscription(id);
+    const store = await storeWith(email, "restartplanrace" + changed, id);
+    const paused = await pausePlan(store, 1, NOW);
+    if (paused.kind !== "paused") throw new Error("Synthetic plan source pause was refused");
+    await setSubscription(email, { active: false });
+    const ref = storeRef(store), key = `nl:pause:${ref}`, year = `nl:pause:last:${ref}`;
+    const evidence = await pauseRedis.pipeline([["GET", key], ["GET", year]]);
+    const before = created.length;
+    let intervened = false;
+    beforeRestartAnswer = async () => {
+      const saved = await setSubscription(email, changed === "tier"
+        ? { active: false, tier: "pro" } : { active: false, cycle: "year" });
+      if (!saved) throw new Error("Synthetic intervening plan write failed");
+      intervened = true;
+    };
+    emails.length = 0;
+    try {
+      is("changed plan source remains unresolved", await runBreaks(paused.record.until + 60),
+        { told: 0, restarted: 0, failed: 1, dropped: 0 });
+      is("plan race happens during one synthetic provider response", [intervened, created.length - before], [true, 1]);
+      const current = await storeForEmail(email);
+      is("same subscription and customer are preserved", [current?.subscriptionId, current?.stripeCustomerId], [id, store.stripeCustomerId]);
+      is("newer tier and interval are preserved", [current?.tier, current?.cycle, current?.subscriptionActive],
+        [changed === "tier" ? "pro" : "creator", changed === "cycle" ? "year" : "month", false]);
+      is("plan mismatch retains exact pause and annual evidence", await pauseRedis.pipeline([["GET", key], ["GET", year]]), evidence);
+      const [due] = await pauseRedis.pipeline([["ZRANGEBYSCORE", "nl:pause:due", "-inf", String(paused.record.until + 60)]]);
+      is("plan mismatch retains due membership", Array.isArray(due) && due.includes(ref), true);
+      is("no false plan restart notice", emails.length, 0);
+      const calls = providerCalls, charges = created.length;
+      is("next due pass keeps the changed plan held", await runBreaks(paused.record.until + 120),
+        { told: 0, restarted: 0, failed: 1, dropped: 0 });
+      is("changed plan causes no later provider read or new charge", [providerCalls, created.length, emails.length], [calls, charges, 0]);
+    } finally { beforeRestartAnswer = null; }
+    await undoPause(store, paused.record.until + 60);
+  }
+
   part("An unreadable store cannot erase a known pause");
   {
     const email="unreadable-pause-owner@example.com",id="sub_UnreadableOwner01";

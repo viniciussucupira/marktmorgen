@@ -490,7 +490,8 @@ export async function runBreaks(nowSeconds = Math.floor(Date.now() / 1000)): Pro
       continue;
     }
     // A retained pause never authorizes charging a different current source.
-    if (store.subscriptionId !== record.subscription || store.stripeCustomerId !== record.customer) {
+    if (store.subscriptionId !== record.subscription || store.stripeCustomerId !== record.customer ||
+        store.tier !== record.tier || store.cycle !== "month") {
       counts.failed += 1;
       continue;
     }
