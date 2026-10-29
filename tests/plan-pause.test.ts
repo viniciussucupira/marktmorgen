@@ -796,6 +796,58 @@ async function main() {
     }
   }
 
+
+  part("A notice completion cannot overwrite a newer pause");
+  for (const change of ["replacement", "removed", "due-score", "unknown-ack", "extra-field"] as const) {
+    const suffix = change.replaceAll("-", ""), email = "notice-generation-" + suffix + "@example.com", id = "sub_NoticeGeneration" + suffix;
+    subs[id] = subscription(id);
+    const store = await storeWith(email, "ng" + suffix, id);
+    const paused = await pausePlan(store, 1, NOW);
+    if (paused.kind !== "paused") throw new Error("Synthetic notice fixture failed");
+    const ref = storeRef(store), key = `nl:pause:${ref}`, year = `nl:pause:last:${ref}`;
+    const pipeline = pauseRedis.pipeline, at = paused.record.until - DAY;
+    let replacement = JSON.stringify({ ...paused.record, until: paused.record.until + DAY });
+    if (change === "extra-field") {
+      replacement = JSON.stringify({ ...paused.record, futureEvidence: "must remain" });
+    }
+    const [annual] = await pipeline([["GET", year]]);
+    let reached = false;
+    pauseRedis.pipeline = async commands => {
+      if (!reached && commands.some(c => c[0] === "EVAL" && String(c[1]).startsWith("-- marktmorgen:pause-worker-notice:v1"))) {
+        reached = true;
+        if (change === "replacement") await pipeline([["SET", key, replacement], ["ZADD", "nl:pause:due", paused.record.until + DAY, ref]]);
+        if (change === "extra-field") await pipeline([["SET", key, replacement]]);
+        if (change === "removed") await pipeline([["DEL", key], ["ZREM", "nl:pause:due", ref]]);
+        if (change === "due-score") await pipeline([["ZADD", "nl:pause:due", paused.record.until + DAY, ref]]);
+        if (change === "unknown-ack") { await pipeline(commands); return []; }
+      }
+      return pipeline(commands);
+    };
+    emails.length = 0;
+    try {
+      is("unacknowledged notice marker is held", await runBreaks(at), { told: 0, restarted: 0, failed: 1, dropped: 0 });
+      is("notice completion race reached", reached, true);
+      is("only the already-sent synthetic notice exists", emails.length, 1);
+      const [raw, last, due] = await pipeline([["GET", key], ["GET", year], ["ZSCORE", "nl:pause:due", ref]]);
+      is("notice never changes annual eligibility", last, annual);
+      if (change === "replacement" || change === "extra-field") is("new raw generation and future evidence retained", raw, replacement);
+      if (change === "removed") is("removed pause and due are never recreated", [raw, due], [null, null]);
+      if (change === "due-score") is("new due score is never overwritten", due, String(paused.record.until + DAY));
+      if (change === "extra-field") {
+        is("unknown future fields are held before another email", await runBreaks(at + 60), { told: 0, restarted: 0, failed: 1, dropped: 0 });
+        is("future evidence does not cause repeated synthetic notices", emails.length, 1);
+      }
+      if (change === "unknown-ack") {
+        is("lost ACK keeps the committed told marker", typeof raw === "string" && JSON.parse(raw).told, at);
+        is("next pass does not send the committed notice again", await runBreaks(at + 60), { told: 0, restarted: 0, failed: 0, dropped: 0 });
+        is("committed marker avoids a duplicate synthetic email", emails.length, 1);
+      }
+    } finally {
+      pauseRedis.pipeline = pipeline;
+      await undoPause(store, paused.record.until + 2 * DAY);
+    }
+  }
+
   part("An unreadable store cannot erase a known pause");
   {
     const email="unreadable-pause-owner@example.com",id="sub_UnreadableOwner01";

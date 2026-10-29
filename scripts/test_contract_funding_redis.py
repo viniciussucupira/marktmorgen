@@ -1355,6 +1355,48 @@ def main():
         print('PASS:pause worker exact raw/due cleanup preserves replacements, changed score, funded ownership and lostACK;known=' + json.dumps(worker_counts, sort_keys=True) + ';missing=' + json.dumps(missing_counts, sort_keys=True))
 
 
+        notice_match = re.search(r'export const PAUSE_WORKER_NOTICE = `([^`]+)`;', pause_source)
+        assert notice_match and chr(36) + '{' not in notice_match.group(1)
+        notice_script = notice_match.group(1)
+        notice_record = {'subscription': 'sub_NoticeFixture', 'customer': 'cus_NoticeFixture', 'paymentMethod': 'pm_NoticeFixture', 'tier': 'creator', 'from': 1790000000, 'until': 1800000000, 'told': 0}
+        notice_raw = json.dumps(notice_record)
+        notice_next = json.dumps(dict(notice_record, told=1799999000))
+        def notice(raw=notice_raw, next_raw=notice_next, now=1799999000):
+            return redis.command('EVAL', notice_script, 2, pause_key, due_key, 'synthetic-member', raw, next_raw, now)
+        for scenario in ('replacement', 'removed', 'due', 'funded', 'future', 'changed-plan', 'already-told', 'expired'):
+            raw = notice_raw
+            score = 1800000000
+            if scenario == 'replacement': raw = json.dumps(dict(notice_record, until=1800086400)); score=1800086400
+            elif scenario == 'removed': raw=None
+            elif scenario == 'due': score=1800086400
+            elif scenario == 'funded': raw=json.dumps(dict(notice_record, funding={'version': 1}))
+            elif scenario == 'future': raw=json.dumps(dict(notice_record, futureEvidence='retain'))
+            elif scenario == 'already-told': raw=notice_next
+            seed_worker(raw, score)
+            before_raw=redis.command('GET', pause_key)
+            before_due=redis.command('ZSCORE', due_key, 'synthetic-member')
+            expected = raw if scenario in ('funded','future','already-told') else notice_raw
+            changed = json.dumps(dict(notice_record, told=1799999000, tier='pro')) if scenario == 'changed-plan' else notice_next
+            assert notice(expected, changed, 1800000000 if scenario == 'expired' else 1799999000) == 0, scenario
+            assert redis.command('GET', pause_key) == before_raw, scenario
+            assert redis.command('ZSCORE', due_key, 'synthetic-member') == before_due, scenario
+        seed_worker(notice_raw)
+        redis.command('PEXPIRE', pause_key, 60000)
+        ttl_before = redis.command('PTTL', pause_key)
+        before_notice = command_counts()
+        assert notice() == 1
+        notice_counts = difference(before_notice, command_counts())
+        assert sum(notice_counts.values()) <= 4, notice_counts
+        ttl_after = redis.command('PTTL', pause_key)
+        assert 0 < ttl_after <= ttl_before
+        assert redis.command('GET', pause_key) == notice_next
+        assert notice() == 0  # Lost ACK cannot replay a marker write.
+        seed_worker(replacement, 1800086400)
+        assert notice() == 0
+        assert redis.command('GET', pause_key) == replacement
+        print('PASS:pause notice8negative cases, exact generation/due, lostACK, replacement and KEEPTTL;commands=' + json.dumps(notice_counts, sort_keys=True))
+
+
     finally:
         for ref in intent_refs:
             if not ref.startswith('synthetic-restart-intent-'):
