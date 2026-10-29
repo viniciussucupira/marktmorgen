@@ -16099,3 +16099,40 @@ Regra de margem: segue a REGRA DE MARGEM vigente (MR, 27/10/2026, 07h42), a pol�
 Proibido: criar item novo ou mudar número, posição ou estado do 539; mandar para endereço de fora da loja; pôr dados da resposta no endereço; segundo mecanismo de caminho condicional; mudar preços, limites visíveis, comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a, a revisão comercial ou stripePlatformEligibilityReady; afrouxar qualquer trava; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar qualquer coisa da Hazelsong. Somente testes sintéticos.
 
 Aplicar a regra VR.
+
+
+## 540 [CU1] — Modelos de estrutura de curso ao criar
+
+Estado: na fila. Ordem de chegada após539AR1,subordinada àAV1,sem deslocar itens existentes. Proveniência: anexo direto do dono29/10/2026,16h43Fortaleza,íntegro abaixo. Deduplicação: main877a8f9b,PRs1216/1217abertos e20heads codex/*recentes, sem pedido equivalente por CU1/data/título/conteúdo/modelosdeestrutura. Ligar193HT15(bibliotecaúnica),535MV1(préviareal) e242CF5(nichos); reutilizar course/dripDays/quiz/certificate/funnel-types,sem segundo catálogo e sem refazer aulas/quizzes/certificados/IAexistentes. Nenhuma estrutura sobrescreve curso existente,excede direitos ou se publica sem clique. O orçamento de estrutura e mídia da prévia segue tetos/reserva/maiorpreçopago,desconhecido reprova; “semIA/vídeo/emailnovo” não converte CPU/gravação/entrega em custo zero. AplicarVR. Registro de escopo,sem implementação antecipada.
+
+CU — Modelos de estrutura de curso ao criar (29/10/2026) [CU1]
+
+Solicitação do dono (29/10/2026, 16h43, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: antes de gravar, aplique a regra "Pedidos repetidos" (23/10/2026). Procure esta solicitação no main, nos PRs abertos e nos ramos codex/* recentes, pela linha de data e hora, pelo nome da seção, pela etiqueta [CU1] e pelo conteúdo. Se já existir item que peça modelos de estrutura de curso, aplique só a diferença dentro dele, mantendo número, posição e estado; caso contrário, crie um único item com o próximo número livre, na posição que a ordem AV1 indicar. Ligue este item a 193 [HT15] (biblioteca de modelos), 535 [MV1] (imagem real de cada modelo) e 242 [CF5] (modelos por nicho), sem duplicá-los.
+
+Estado inicial: na fila.
+
+Contexto: o Claude conferiu em 29/10/2026 a seção "Get started in minutes with course templates" de clickfunnels.com/apps/courses: ao criar um curso, o criador escolhe entre "Simple Course" (um módulo), "Drip Course" (conteúdo liberado aos poucos) e "Custom". No Marktmorgen, os cursos (lib/course.ts) já têm módulos, aulas, módulos que abrem um número de dias depois de o aluno entrar (dripDays, com e-mail no dia), aulas grátis de amostra, quizzes e certificados (lib/quiz.ts, lib/certificate.ts) e roteiro por IA nos planos com IA; mas o curso começa vazio, sem escolha de estrutura pronta, e a biblioteca de modelos de 193 [HT15] não tem modelos de curso.
+
+[CU1] Escolher uma estrutura pronta, sem custo e sem IA.
+(a) Ao transformar um produto em curso, o estúdio oferece modelos de estrutura, em inglês americano simples, cada um com uma frase do que é e para quem serve, por exemplo: "Mini course" (um módulo com 3 a 5 aulas, tudo aberto no primeiro dia); "Weekly course" (um módulo por semana, cada um abrindo 7 dias depois do anterior, com o e-mail que já existe); "5-day challenge" (cinco aulas curtas, uma por dia); "Course with quizzes and a certificate" (módulos com um quiz no fim de cada e o certificado ao concluir); "Start from scratch" (vazio, como hoje).
+(b) O modelo só cria a estrutura (módulos, títulos de exemplo das aulas e a configuração de abertura), como rascunho que o criador revisa e salva; nada é publicado, nenhum conteúdo do criador é trocado, e um curso que já existe nunca é sobrescrito.
+(c) Os títulos de exemplo são neutros e marcados como exemplo para o criador trocar (por exemplo, "Lesson 1: your title here"); nenhum resultado, promessa, número ou depoimento; um teste falha se aparecerem.
+(d) Cada modelo respeita os limites atuais do plano (aulas, armazenamento, quizzes); um modelo que passe de algum limite do plano do criador não aparece para ele, ou aparece com a explicação de qual limite, nunca cria além dele.
+(e) Os modelos aparecem também na biblioteca de 193 [HT15], com a imagem real de 535 [MV1], e se ligam aos tipos de funil que já existem (por exemplo, "5-day challenge" com o funil "challenge" de lib/funnel-types.ts), sem segundo catálogo.
+(f) O roteiro por IA continua como opção à parte, nos planos que já o têm.
+
+Acessibilidade (AX274): escolha por botões com rótulo e descrição, operável só pelo teclado; contraste de 7:1; alvos de pelo menos 44 × 44 px; o rascunho criado é anunciado ao leitor de tela.
+
+Testes automáticos: cada modelo cria a estrutura certa como rascunho; nada é publicado nem sobrescrito; limites do plano respeitados; títulos de exemplo sem termos proibidos; o modelo semanal usa o dripDays e o e-mail que já existem; somente dados sintéticos.
+
+Custo: só gravações de estrutura já contadas no plano, sem IA, sem armazenamento de vídeo e sem e-mail novo; desconhecido reprova, nunca é zero.
+
+Margem (regra MR vigente, 27/10/2026, 07h42): nenhum cliente pagante, isoladamente e usando 100% dos direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo, depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto. A empresa como um todo não pode dar prejuízo a partir da base mínima calculada, com 100% dos custos fixos atribuídos ao Marktmorgen (FX275). A meta de 60% de margem líquida é medida todo mês no relatório real. Política tributária TX vigente. Custo desconhecido reprova, nunca é zero; cota grátis de fornecedor não conta como custo zero.
+
+Proibido: publicar ou sobrescrever qualquer curso sem o clique do criador; criar além dos limites do plano; usar resultados, promessas, números ou depoimentos nos exemplos; um segundo catálogo de modelos; mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
