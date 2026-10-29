@@ -8540,6 +8540,34 @@ Aplicar a regra VR.
 
 Proveniência/diferença do segundo complemento: pedido direto do dono acima; descrição da captura atribuída ao briefing, sem alegar inspeção independente de imagem não anexada nesta mensagem. Acrescentadas somente as7categoriasForms/Checkout/Products/Navigation/Countdown/Bookings/Trust aos cartões e alternativas do primeirocomplemento10h58,sem duplicarblocos/lógicasexistentes. Advanced/códigolivreexcluídos;datarealigualparatodosobrigatória. Número375,posição,estado eprimeirocomplemento preservados;nenhumitem527. Deduplicação: main332a38d,PR1208aberto,20PRsrecentes/19heads codexdistintos e764refs,semsegundocomplemento11h22equivalente. Registro na mesma alteração de códigoPR1208;reconferircapacidadesreaisantesdeexecutar eaplicarsóadiferença.MR/TX/FX275/AX274/VRpreservados.
 
+TB — Terceiro complemento ao 375 [TB1]: barra de texto com IA e barra superior do editor (29/10/2026)
+Etiqueta: [TB1]
+
+Solicitação do dono (29/10/2026, 11h32, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: é complemento ao item 375 [TB1], que já recebeu os complementos de 29/10/2026, 10h58 e 11h22. Aplique só a diferença ao item existente, mantendo número, posição e estado (regra "Pedidos repetidos", passo 3, letra b), e registre na proveniência o que mudou.
+
+Estado inicial: o do próprio 375.
+
+Contexto: na captura do editor da ClickFunnels enviada pelo dono, o título é editado direto na página, com uma barra flutuante de negrito, itálico, sublinhado, riscado, alinhamento à esquerda, ao centro e à direita, link e um botão "AI"; no alto do editor, uma barra com Help, Info, Layout, My assets, Popup, Style Guide, Settings e a troca entre computador e celular. Já existem e NÃO devem ser refeitos: a reescrita de um bloco com IA de quatro jeitos (lib/block-rewrite-rules.ts), o estilo da página (components/page-style-picker.tsx), título e descrição para busca (lib/sales-page.ts), a oferta ao sair da página (item 30, ExitOffer), as fotos do criador, desfazer e refazer.
+
+O que acrescentar ao 375 [TB1]:
+- na barra flutuante de texto: riscado, além do que o complemento de 10h58 já pede, e o botão "AI", que reescreve só o trecho selecionado com a mesma reescrita de lib/block-rewrite-rules.ts (os mesmos quatro jeitos e a mesma checagem de honestidade), com a franquia e a reserva de IA já existentes antes de cada chamada; o resultado aparece como sugestão, e só entra na página quando o criador aceitar;
+- uma barra superior fixa no editor, que só reúne o que já existe: Help (a ajuda do estúdio), Pictures (as fotos já enviadas pelo criador, para usar de novo sem reenviar), Exit offer (a oferta ao sair já existente), Style (o estilo da página), Settings (título e descrição para busca e o endereço da página), a troca entre computador e celular, desfazer, refazer e o estado do salvamento ("Saved", "Saving…" ou "Not saved").
+O que não fazer: nenhum selo, faixa de urgência ou garantia aparece por padrão em modelo ou exemplo; selos e garantias só entram com o texto e o compromisso do próprio criador.
+
+Testes automáticos: o riscado, a reescrita do trecho selecionado como sugestão (aceitar e recusar), a reserva de IA antes da chamada, cada botão da barra superior levando ao recurso existente e o estado do salvamento.
+
+Regra de margem: segue a REGRA DE MARGEM vigente (MR, 27/10/2026, 07h42), a política tributária TX e FX275; custo desconhecido reprova, nunca é zero.
+
+Proibido: criar item novo ou mudar número, posição ou estado do 375; refazer recursos já existentes; chamar a IA sem a reserva prévia; publicar texto da IA sem o clique do criador; acrescentar selo, urgência ou garantia que o criador não escreveu; mudar preços, limites visíveis, comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a, a revisão comercial ou stripePlatformEligibilityReady; afrouxar qualquer trava; mostrar recurso que não funciona hoje; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+
+Proveniência/diferença do terceiro complemento: pedido direto do dono acima; descrição da captura atribuída ao briefing, sem alegar inspeção independente de imagem não anexada nesta mensagem. Acrescentados só riscado/IA no trecho selecionado como sugestão com reserva/aceite e barra superior agregadora dos recursos existentes/estado de salvamento; nenhum selo/urgência/garantia padrão. Complementos10h58e11h22/375número/posição/estado preservados;nenhumitem527. Deduplicação no main332a38d,PR1208aberto,20PRsrecentes/19heads codexdistintos e764refs,semterceirocomplemento11h32equivalente. Registro na alteração de códigoPR1208jáemcurso;reconferir código antes da implementação e aplicar só diferença. MR/TX/FX275/AX274/VR e custos desconhecidos reprovados continuam vinculantes.
+
 Complemento aos375[TB1]/376[TB2] — Solicitação do dono (24/10/2026, 23h26, horário de Fortaleza), regraPedidos repetidospasso3. TBjáregistrado978antesdestecomplemento;nãorenumerar/criarseção/item/mudarposiçãoestado;aplicarjuntoàpróximaalteraçãojáprevista,SEMcommitexclusivo.Conferidoscontinuidade,mainc49bc039a0555d673ac2df2af1f282ca6d2e6358,fila978/head30f802f853ed9e476a286f160d7ccd3834306e7a,12PRsabertos e534refscodex/*;23h26equivalenteausente. MetaqualidadesuperioràClickFunnels requerAUDITORIAcomparável+fonte,nãoalegaçãopúblicaautomática.
 
 TB1diferenças:
