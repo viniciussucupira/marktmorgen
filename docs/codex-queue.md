@@ -15682,6 +15682,20 @@ Proibido: criar item novo ou mudar número, posição ou estado do 531; abrir o 
 
 Aplicar a regra VR.
 
+
+
+### Quinto complemento ao 531 [VP1] — 29/10/2026, 15h23, Fortaleza
+
+Proveniência: solicitação direta do dono, “VP — Quinto complemento ao 531 [VP1]: desenhos dos cartões como ícones, e a regra de não repetir imagens”. Aplicada somente a diferença, conforme Pedidos repetidos, passo 3(b); número, posição, estado e complementos de 14h02, 14h08, 14h13 e 14h16 preservados. Não cria item. Aplicar VR.
+
+Os desenhos dos cartões Works well with são ícones de identidade, como os do menu e rodapé: um único desenho por recurso em SVG ou HTML, igual em todas as páginas. Exceção expressa do dono à regra de 03/10/2026 SOMENTE para esses desenhos simples, sem foto, captura ou texto desenhado, no máximo do tamanho do cartão e nunca versão reduzida de imagem grande do site. Em cada página, cada ícone aparece uma única vez; a página do recurso não mostra cartão do próprio recurso.
+
+A proibição de repetição continua integral para fotos, capturas, imagens de seção e topo, miniaturas (inclusive redução de imagem maior) e vídeos. O vídeo aberto pelo cartão é sempre o vídeo real canônico daquele recurso, 241 [CF4], um só por recurso; nenhum vídeo ou captura aparece em duas páginas diferentes como imagem de seção. A exceção dos ícones não autoriza duplicar mídias.
+
+AX274: ícone decorativo aria-hidden quando o título já identifica o recurso; contraste mínimo 3:1 nas partes informativas; nada de imagem de texto. Testes automáticos: única definição de ícone por recurso, idêntica entre páginas; nenhum ícone repetido na mesma página ou cartão do próprio recurso; nenhuma foto, captura, miniatura ou vídeo repetidos no site; ícone não reduz imagem grande.
+
+MR de 27/10/2026, 07h42, TX e FX275 vigentes; custo desconhecido reprova, nunca é zero. Preservar preços, limites visíveis, comissão, PLANS_ON_SALE, OPENING_REQUESTED, tax gate, art. 9a, revisão comercial e stripePlatformEligibilityReady; não afrouxar travas, mostrar recurso inoperante, criar contas, aceitar termos, contratar, pagar, contatar terceiros ou apagar Hazelsong. Somente testes sintéticos. Registro de escopo, sem implementação antecipada e sem entrega funcional.
+
 [VP2] Vídeos reais do produto nas páginas de recursos de volta para perto da frente da fila.
 Estado inicial: mudança de posição.
 O item 241 [CF4] (vídeos curtos e reais de cada recurso, gravados na loja de demonstração, com legenda, transcrição e teto de custo), que o FIM1 de 28/10/2026 levou para o fim da fila, passa para logo depois de [VP1], com escopo, estado e provas intactos. Só a posição muda; nenhum outro item do FIM1 muda de lugar. Registre a mudança na tabela de posições do FIM1 com esta data e hora. Os vídeos do 241 e o vídeo das abas de 509 [CK1] usam o mesmo mecanismo de gravação e não se repetem entre si.
@@ -15841,5 +15855,41 @@ Custo: imagens geradas no build a partir do repositório, guardadas como arquivo
 Margem (regra MR vigente, 27/10/2026, 07h42): nenhum cliente pagante, isoladamente e usando 100% dos direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo, depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto. A empresa como um todo não pode dar prejuízo a partir da base mínima calculada, com 100% dos custos fixos atribuídos ao Marktmorgen (FX275). A meta de 60% de margem líquida é medida todo mês no relatório real. Política tributária TX vigente. Custo desconhecido reprova, nunca é zero; cota grátis de fornecedor não conta como custo zero.
 
 Proibido: refazer a biblioteca de modelos ou a galeria de funis já publicadas; gravar, publicar ou enviar qualquer coisa sem o clique do criador; usar textos com resultados, números, depoimentos, escassez ou promessas inventados; repetir imagens; mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+
+
+## 536 [CB1] — Checkout do Stripe com as cores e a fonte da loja do criador
+
+Estado: na fila. Ordem de chegada após 535 [MV1], subordinada à prioridade AV1; não desloca itens existentes nem altera FIM1. Proveniência: anexo original do dono de 29/10/2026, 15h28 Fortaleza. Pedidos repetidos: conferidos main, PR aberto 1212 e os heads codex/* dos 20 PRs recentes, além do inventário remoto de 765 ramos; não encontrado pedido equivalente de envio de branding por sessão. Estudo de Embedded Checkout existente não equivale à aplicação do tema por branding_settings. Campos/valores mencionados pelo dono são referências a reconferir na documentação oficial Stripe datada antes de implementar, não fato verificado neste registro. Aplicar VR. Texto integral recebido:
+
+CB — Checkout do Stripe com as cores e a fonte da loja do criador (29/10/2026) [CB1]
+
+Solicitação do dono (29/10/2026, 15h28, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: antes de gravar, aplique a regra "Pedidos repetidos" (23/10/2026). Procure esta solicitação no main, nos PRs abertos e nos ramos codex/* recentes, pela linha de data e hora, pelo nome da seção, pela etiqueta [CB1] e pelo conteúdo. Se já existir item que peça enviar ao Stripe as cores, a fonte ou o logotipo da loja no checkout, aplique só a diferença dentro dele, mantendo número, posição e estado; caso contrário, crie um único item com o próximo número livre, na posição que a ordem AV1 indicar.
+
+Estado inicial: na fila.
+
+Contexto: o Claude conferiu em 29/10/2026 a seção "Super customizable" de clickfunnels.com/features/smart-checkout: o checkout deles "automatically adopts your brand's colors and style". No Marktmorgen, as sessões de pagamento do Stripe (lib/store-checkout.ts, lib/cart-checkout.ts, lib/payment-requests.ts, lib/store-tip-checkout.ts e demais criadores de sessão) enviam apenas branding_settings[display_name]; as cores, a fonte e o formato dos botões ficam com o padrão do Stripe ou com o que o criador ajustar à mão na própria conta Stripe. A loja já guarda o tema, a cor de destaque, a fonte e o fundo (store.look em lib/store.ts). A API de sessões do Stripe aceita, por sessão, branding_settings com background_color, button_color (hexadecimal), border_style (pill, rectangular, rounded), font_family (uma lista fechada de famílias, como inter, lato, montserrat, roboto, lora, open_sans e outras), logo e icon; conferir os campos e valores na documentação oficial do Stripe, com data, antes de implementar.
+
+[CB1] Checkout com a aparência da loja, sem o criador configurar nada.
+(a) Em toda sessão de pagamento do Stripe criada pelo Marktmorgen, envie, além do display_name já enviado, branding_settings[background_color], [button_color], [border_style] e [font_family] calculados a partir de store.look, num único ponto reutilizado por todos os criadores de sessão, sem cópia de código.
+(b) Fonte: mapeie a fonte da loja para a família equivalente da lista do Stripe; se não houver equivalente, use "default". Formato: derive border_style do arredondamento do tema da loja.
+(c) Contraste (AX274): só envie as cores se o texto mais legível (preto ou branco) sobre a cor do botão tiver contraste de pelo menos 7:1, e se o texto sobre o fundo também tiver pelo menos 7:1; caso contrário, não envie a cor que reprova e deixe o padrão do Stripe. Calcule com a fórmula do WCAG e teste os temas existentes.
+(d) Logotipo e ícone: somente se o criador já tiver uma imagem de loja e clicar para usá-la no checkout; o envio da imagem ao Stripe é feito na conta do próprio criador, uma única vez por imagem, com a finalidade exigida pelo Stripe, e reaproveitado nas sessões seguintes; nunca a cada pagamento. Sem imagem ou sem clique, nada de logotipo.
+(e) No estúdio, mostre ao criador uma prévia de como fica o checkout (cores, fonte e botão), com o aviso de quando uma cor não passou no contraste e ficou o padrão, e um interruptor para voltar ao padrão do Stripe.
+(f) Se o Stripe recusar algum valor de branding_settings, a sessão é criada de novo sem esses campos, e o pagamento nunca falha por causa da aparência; registre o motivo sem dados pessoais.
+(g) O que já existe continua igual: perguntas no checkout (lib/checkout-fields.ts), frete, formas de pagamento da conta do criador, ofertas no checkout e depois de pagar.
+
+Testes automáticos: cada criador de sessão envia os mesmos campos a partir do mesmo ponto; mapeamento de cada fonte e de cada tema; cor reprovada no contraste não é enviada; recusa do Stripe recria a sessão sem os campos; logotipo só depois do clique e enviado uma vez; somente com Stripe simulado.
+
+Custo: os campos vão na mesma chamada que já cria a sessão, sem chamada nova; o envio do logotipo é uma chamada única por imagem, contada nos custos e limitada por loja, com teto automático; desconhecido reprova, nunca é zero.
+
+Margem (regra MR vigente, 27/10/2026, 07h42): nenhum cliente pagante, isoladamente e usando 100% dos direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo, depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto. A empresa como um todo não pode dar prejuízo a partir da base mínima calculada, com 100% dos custos fixos atribuídos ao Marktmorgen (FX275). A meta de 60% de margem líquida é medida todo mês no relatório real. Política tributária TX vigente. Custo desconhecido reprova, nunca é zero; cota grátis de fornecedor não conta como custo zero.
+
+Proibido: alterar preço, valor cobrado, impostos, formas de pagamento ou qualquer dado da cobrança; mudar configurações da conta Stripe do criador; enviar imagem ao Stripe sem o clique do criador; usar cor que reprove o contraste; mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos, com Stripe simulado.
 
 Aplicar a regra VR.
