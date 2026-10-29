@@ -64,6 +64,28 @@ jobs:
         run: npm run lint
       - name: Behavior regressions
         run: npm test
+      - name: Collect exact generated financial documents after failed verification
+        if: ${{ failure() && github.head_ref == 'codex/av-joint-restart-publication' }}
+        run: |
+          python3 -m pip install --disable-pip-version-check numpy==2.3.3 scipy==1.16.2
+          node scripts/margin-alignment.mjs
+          node scripts/pricing-optimization.mjs
+          node scripts/pricing-usage-proposal.mjs
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          files = [
+            "docs/margin-alignment-2026-10-18.md",
+            "docs/pricing-optimization-milp-input-2026-10-18.json",
+            "docs/pricing-optimization-milp-output-2026-10-18.json",
+            "docs/pricing-optimization-2026-10-18.md",
+            "docs/pricing-usage-proposal-2026-10-18.md",
+          ]
+          for name in files:
+              content = Path(name).read_text()
+              for index, offset in enumerate(range(0, len(content), 3000)):
+                  print("AV_FINANCIAL_GENERATED " + json.dumps({"path": name, "index": index, "content": content[offset:offset+3000]}))
+          PY
       - name: Production build and route types
         run: npm run build
       - name: Verify reviewed development dependencies stay outside runtime
