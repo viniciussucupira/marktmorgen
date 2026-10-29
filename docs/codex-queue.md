@@ -16298,3 +16298,35 @@ Margem (regra MR vigente, 27/10/2026, 07h42): nenhum cliente pagante, isoladamen
 Proibido: ligar ou enviar qualquer sequência importada sem o criador; manter HTML, scripts, pixels ou links de rastreamento do serviço antigo; criar contas ou usar chaves em serviços de terceiros; duplicar o conversor de 394 [CX5]; aumentar limites; mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; enviar e-mail real em testes; aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
 
 Aplicar a regra VR.
+
+
+## 545 [LU1] — Lucro do criador por pedido e produto, antes dos impostos
+
+Estado: na fila. Ordem de chegada após544SQ9,sobAV1,sem alterar itens existentes. Proveniência: pedido direto do dono29/10/2026,17h07Fortaleza,recebido abaixo. Deduplicação: main946fb1a,PRs1221/1217/1216 e20headsrecentes,sem LU1/data/título/conteúdo equivalente de custo deproduto+taxarealStripe. Ligar525FN1(receita),516PF4(etiqueta),206SH3(POD),sem duplicar; NÃOmisturar comcompany-margin-report/MRdoMarktmorgen. Insumo manual permanece declaradopelocriador,nãoverificado;taxa devevirbalanceTransactionreal,não lib/receiving-costs.ts daempresa.O aviso antesdosimpostos éobrigatório,sem lucro líquido/conselhofiscal;unknownnãovira0;moedasseparadas.
+
+Integridade: a mensagem termina literalmente em “moedas separadas; CSV”, no começo dos testes;restante não recebido nem inventado. RequisitospermanentesVR/AX274/MR27/10/07h42/TX/FX275 continuam:maiorpreçopago/tetoe reservaANTESleiturasStripe/IO/armazenamento/gravações/CSV/custos100%direitosnas seis situaçõesmensaisanuais,nenhumclienteem prejuízo,empresa sem prejuízo nabasemínima,60%meta mensalreal;desconhecidoreprova,nãozero.Semnovoenvio,pagamento,conta,aceite,contratação,contatoexterno oualterarpreços/limites/comissão/PLANS_ON_SALE/OPENING_REQUESTED/taxgate/art9a/revisãocomercial/stripePlatformEligibilityReady;preservarconteúdos/idiomas/IDs/Hazelsong.Somente testessintéticos. Texto recebido:
+
+LU — Lucro do criador por pedido e por produto, antes dos impostos (29/10/2026) [LU1]
+
+Solicitação do dono (29/10/2026, 17h07, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: antes de gravar, aplique a regra "Pedidos repetidos" (23/10/2026). Procure esta solicitação no main, nos PRs abertos e nos ramos codex/* recentes, pela linha de data e hora, pelo nome da seção, pela etiqueta [LU1] e pelo conteúdo. Se já existir item que peça mostrar ao criador o lucro com custo de produto e taxa do Stripe, aplique só a diferença dentro dele, mantendo número, posição e estado; caso contrário, crie um único item com o próximo número livre, na posição que a ordem AV1 indicar. Ligue este item a 525 [FN1] (receita por etapa do funil), a 516 [PF4] (etiqueta de envio) e a 206 [SH3] (impressão sob demanda), sem duplicá-los. Não confundir com o relatório de margem da empresa do próprio Marktmorgen (lib/company-margin-report.ts, regra MR), que é outra coisa.
+
+Estado inicial: na fila.
+
+Contexto: o Claude conferiu em 29/10/2026 a seção "Your success is our obsession" de clickfunnels.com/apps/store: um cartão com "Orders 29", "Sales $1,735.00", "Costs $197.64" e "Profit $1,537.36". No Marktmorgen, o painel (components/stats-panel.tsx) mostra "Revenue" com a nota "Before Stripe's fee", e o fluxo de caixa por canal (lib/insights.ts) mostra recebido menos reembolsos menos anúncios registrados, com o aviso "it is not profit". Não existe campo de custo do produto, nem desconto da taxa do Stripe, nem do custo do frete; o criador não vê o próprio lucro.
+
+[LU1] O lucro do criador, com cada número de onde vem.
+(a) No estúdio, cada produto (e cada opção, quando houver opções) ganha um campo opcional "Your cost per sale" (custo do criador por unidade), em texto e número, visível só ao criador; vazio significa "not set", nunca zero.
+(b) Painel "Profit before taxes" por período, por produto e por pedido: vendas pagas, menos reembolsos, menos a taxa real do Stripe de cada pagamento lida da conta Stripe do próprio criador (balance transaction), menos o custo informado de cada produto, menos o custo das etiquetas de envio de 516 [PF4] e da impressão sob demanda de 206 [SH3] quando existirem, menos os anúncios já registrados.
+(c) Cada linha mostra de onde vem o número ("from your Stripe account", "you entered", "recorded ads"); quando um custo não estiver informado ou não puder ser lido, o lucro daquele produto aparece como "Incomplete: cost not set" ou "Count unavailable", nunca como se o custo fosse zero.
+(d) Sempre com o aviso em texto: "Before taxes. Marktmorgen does not know your taxes; check with your own tax rules." Nunca chamar de lucro líquido, nunca dar conselho fiscal.
+(e) A taxa do Stripe é lida, não estimada; moedas diferentes mostradas separadas, sem conversão inventada.
+(f) Exportação em CSV dos mesmos números, para o criador levar à própria contabilidade.
+(g) Os custos informados pelo criador ficam só na conta dele, entram na exportação de dados e são apagados com a loja; política de privacidade atualizada.
+
+Acessibilidade (AX274): números em texto real, tabela com cabeçalhos, valor negativo indicado por texto ("loss") e não só pela cor, contraste de 7:1, alvos de pelo menos 44 × 44 px.
+
+Testes automáticos: custo vazio aparece como incompleto e nunca como zero; taxa do Stripe igual à da transação simulada; reembolso descontado; moedas separadas; CSV
