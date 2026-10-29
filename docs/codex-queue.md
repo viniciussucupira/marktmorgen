@@ -8952,6 +8952,48 @@ Estado: na fila.BuscaFONTESPÚBLICAS,mostraCADAfontecomlink/DATA,separaFATOdesug
 
 Estado: na fila.MESMASlib/flows.tscomocaixas/setas,ramos“se/senão”,editáveisporclique;listapassosatualcontinuaALTERNATIVAcompletaTECLADO/leituradetelaAX274,ordemsemântica/foco/labels/contraste/semdependênciadecorouarrastar.Sincronizarumamesmaárvorevalidada,semsegundomotor,loopsinválidos/rascunhoautomaçãoativadasozinha.Idempotência/preview/aceite/gatesatuaispreservados.
 
+### Complemento ao391CX2 — números por etapa (29/10/2026,17h24Fortaleza)
+
+Proveniência: instrução direta do dono, complemento ao391existente, regra Pedidos repetidos3.b. Diferença: acrescentar contadores agregados por etapa e por ramo ao mapa E à lista acessível atual; reutilizar os números/regras de547ER1 nas etapas de e-mail. O número391, sua posição e seu estado “na fila” acima ficam idênticos; sem item novo e sem segundo motor. Deduplicação conferida em main46c61bc6, fila doPR1221/fd6b83cc e20headsrecentes/data/título/CX2/conteúdo; somente o mapa já existente foi localizado, não este complemento.
+
+No motor existente lib/flows.ts/lib/flow-stats.ts contar esperando/a caminho agora, passagens anteriores e divisão de cada ramo; ações de rótulo/CRM/campo/aviso/webhook com feitas/falhas. E-mails usam fonte única547ER1 para enviados/entregues/devolvidos/descadastros/visitas/vendas, sem abertura, pessoa que clicou ou contador identificável. Falha de leitura=Count unavailable, nunca0; “Most people stop here” indicado em texto com dados válidos, não só cor. Sem alterar critériosA/B/saúde/consentimentos/identificadores persistidos.
+
+AX274: mesmas contagens em texto real rotulado na caixa e lista, teclado completo,7:1/44×44px. Testes futuros só execuções sintéticas: estado atual/passagens/ramos/ações feitas/falhas/paridadeER1/semaberturas/semPII/indisponibilidade. Gravações e leituras por etapa exigem teto e reserva dentro do plano antes da operação; desconhecido reprova,nunca custo0. MR27/10/07h42/TX/FX275/VR vinculantes, maior recebimento/reservas/impostos,100%direitosmensal/anual/100%fixos; sem certificação de margem. Somente registro,nenhuma implementação/publicação funcional ou incremento do contador; travas/preços/limites/comissão/conteúdo/Hazelsong preservados.
+
+#### Briefing integral — complemento391CX2
+
+CX — Complemento ao 391 [CX2]: números de cada etapa no mapa da automação (29/10/2026)
+Etiqueta: [CX2]
+
+Solicitação do dono (29/10/2026, 17h24, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: é complemento ao item 391 [CX2] já gravado. Aplique só a diferença ao item existente, mantendo número, posição e estado (regra "Pedidos repetidos", passo 3, letra b), e registre na proveniência o que mudou. Ligue também ao item do relatório de cada e-mail [ER1] (29/10/2026), para usar os mesmos números, sem duplicá-lo.
+
+Estado inicial: o do próprio 391.
+
+Contexto: o Claude conferiu em 29/10/2026 a seção "Turn customer actions into instant results" de clickfunnels.com/apps/automations: no mapa da automação, cada etapa mostra "Are Here" (quem está nela agora), "Were Here" (quem já passou), envios, aberturas, cliques e receita. No Marktmorgen, lib/flow-stats.ts conta por sequência inteira (started, sent, reached, skipped, acted, em nl:mail:flowstats:<flowId>), sem números por etapa e sem quem está parado em cada uma; o 391 [CX2] pede o mapa em caixas e setas, mas não os números.
+
+O que acrescentar ao 391 [CX2]:
+- em cada caixa do mapa e, igual, em cada linha da lista de etapas que já existe: quantas pessoas estão nessa etapa agora (esperando ou a caminho), quantas já passaram por ela, e, nos ramos "se/senão", quantas seguiram por cada caminho;
+- nas etapas de e-mail: enviados, entregues, devolvidos, descadastros, visitas pelos links e vendas, com os mesmos números e as mesmas regras do relatório [ER1], sem aberturas e sem quem clicou;
+- nas etapas que agem (rótulo, CRM, campo, aviso, webhook): quantas vezes a ação foi feita e quantas falharam;
+- contagens agregadas por etapa, gravadas pelo motor que já existe em lib/flows.ts, sem guardar quem é quem no contador; "Count unavailable" quando a leitura falhar, nunca zero;
+- a etapa onde mais pessoas param fica indicada em texto ("Most people stop here"), sem cor como único sinal.
+
+Acessibilidade (AX274): números em texto real com rótulo, na caixa e na lista; nada só por cor; contraste de 7:1; alvos de pelo menos 44 × 44 px; tudo operável só pelo teclado.
+
+Testes automáticos: contagem por etapa a partir de execuções simuladas; quem está na etapa agora e quem passou; divisão pelos ramos; mesmos números do [ER1] nas etapas de e-mail; nenhuma abertura contada; nenhum dado pessoal no contador; "Count unavailable" quando a leitura falha.
+
+Custo: gravações de contadores por etapa e leituras já dentro do plano, com teto automático; desconhecido reprova, nunca é zero.
+
+Regra de margem: segue a REGRA DE MARGEM vigente (MR, 27/10/2026, 07h42), a política tributária TX e FX275; custo desconhecido reprova, nunca é zero.
+
+Proibido: criar item novo ou mudar número, posição ou estado do 391; segundo motor de automação; contar aberturas ou guardar quem clicou; mostrar zero no lugar de número desconhecido; mudar preços, limites visíveis, comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a, a revisão comercial ou stripePlatformEligibilityReady; afrouxar qualquer trava; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+
 392. [CX3] Receita conciliada por funil e afiliado.
 
 Estado: na fila.F51lidaCONTAStripeDOPRÓPRIOcriador,líquidadereembolsos/contestações;F52PayPaldisputasSOMENTEquandoPayPalaprovado/ligado.Nãosuporintegraçãoativa/incluiroutroprocessador.Reusarreceipts/attributions/refunddisputerecon/currency/fees,intervalo/estado/atualizaçãotransparente,deduplicarwebhook+consulta/paginação;indisponível/incompleto=DESCONHECIDO,nunca0. Auditoriadadossegregadaloja,equiperespeitaRBAC,custoreconleituras/tetos/reservasantesgasto.Semcustódia/comissãonova/receitabrutafingindolucro.
