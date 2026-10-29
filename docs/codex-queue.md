@@ -4370,6 +4370,36 @@ Crie, para cada plataforma de origem que os importadores aceitam (por exemplo, S
 Estado: OR: após o Bloco A, na ordem já existente entre 206 [SH3] e 272 [HM1]; 232 [CA1] foi antecipado e não se repete; antes do Bloco B. Registro de posição; os estados e provas históricos abaixo permanecem válidos.
 Na primeira tela da página inicial, ofereça um campo de e-mail que inicia o cadastro pelo mesmo link de acesso que já existe, com a proteção contra robôs que já existe (Vercel BotID). Se a pessoa não concluir o cadastro, envie no máximo um lembrete, e somente se ela tiver marcado uma caixa, desmarcada por padrão, pedindo esse lembrete. Ofereça também, separadamente e com outra caixa desmarcada por padrão, um boletim do Marktmorgen para criadores, com conteúdo útil e verificável (ligado à academia do item 221 [HL2]), link de cancelamento em um clique e o endereço postal exigido por lei. Cumpra a lei americana CAN-SPAM, o GDPR, a lei canadense CASL e as regras do Reino Unido. O custo desses e-mails entra nos custos fixos da empresa e tem teto automático. Meça a conversão do cadastro antes e depois.
 
+**Proveniência complementar do240[CF3],29/10/2026,14h57Fortaleza:** pedido direto do dono nesta conversa,aplicado dentro do próprio240antesdo241,sem criaritem,númeroou seção. Número,posição,estado na fila eescopooriginalpreservados;ligação expressa com448[LE1],semduplicá-lo. Diferença:mesmocomponenteemailtopo/fimhome/fim31páginas;PLANS_ON_SALE=falseusaapenaslistaespera448/duplaconfirmação/consentimento/saída;apósaberturalinkcadastroexistente;BotID/limites/dedupumaconfirmaçãomesmoemail/métricasagregadassempixelouPII/AX274rótulopersistente/errosemperdertexto/contrastes7:1e3:1/44px obrigatórios. Semnovoenvioalém240/448;tetosereservasemreceitaantesgasto,desconhecidoreprova. Deduplicação main63fb030,PR1212aberto,20PRsrecentes/19headscodex e765refs,semdata/título/conteúdoequivalente. ContextoClickFunnelsatribuídoaorelatoClaude,nãoobservaçãoindependente. MR/TX/FX275/VRmantidos;registroapenas,semUI,enviooualteraçãoflag;suíteinteiranovoheadcombinadoobrigatória.
+
+CF — Complemento ao 240 [CF3]: campo de e-mail também na faixa final das páginas (29/10/2026)
+
+Solicitação do dono (29/10/2026, 14h57, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: antes de gravar, aplique a regra "Pedidos repetidos" (23/10/2026). Procure esta solicitação no main, nos PRs abertos e nos ramos codex/* recentes, pela linha de data e hora, pelo nome da seção, pela etiqueta [CF3] e pelo conteúdo. Isto é um complemento ao item 240 [CF3], já existente: grave-o dentro desse item, mantendo o número, a posição e o estado dele, sem criar item, número ou seção nova, e registre na proveniência do 240 o que mudou. Indique nele a ligação com o item 448 [LE1], sem duplicar esse item.
+
+Estado inicial: na fila, como parte do item 240 [CF3], na posição que ele já ocupa.
+
+Contexto: o Claude conferiu em 29/10/2026 o fim de clickfunnels.com/features/sales-funnels: título grande "Ready to get started?", com a palavra "started?" sobre uma forma colorida, e, abaixo, um campo de e-mail com o texto de exemplo "Enter Your Email Address" e o botão "Try for Free". O Marktmorgen já termina a página inicial com a faixa "Open your store", o botão "Start your store" e o link "See the live demo" (app/page.tsx), e as 31 páginas marktmorgen.com/platform/* com o botão "Start your store" (components/topic-page.tsx), mas sem campo de e-mail. O item 240 pede o campo só na primeira tela da página inicial; o item 448 pede a lista de espera junto ao botão "Start your store".
+
+240 [CF3] — complemento: o mesmo campo de e-mail na faixa final.
+(a) Coloque o campo de e-mail do item 240 também na faixa final da página inicial e na faixa final das 31 páginas de recursos, com um único componente reutilizado nos três lugares (topo da página inicial, fim da página inicial e fim das páginas de recursos), sem cópia de código e sem um segundo comportamento.
+(b) Enquanto PLANS_ON_SALE for false, esse campo é a lista de espera do item 448 [LE1], com o botão e a frase honesta daquele item (por exemplo, "Notify me when selling opens"), a dupla confirmação, o consentimento registrado e a saída em um clique. Depois da abertura, ele inicia o cadastro pelo link de acesso existente, como pede o item 240. Nunca mostre um campo que prometa um cadastro que ainda não existe.
+(c) Texto do botão em inglês americano simples, sem começar pela palavra "free" e sem "Try for Free": por exemplo, "Start your store" depois da abertura. Mantenha o link "See the live demo" ao lado.
+(d) Acessibilidade (AX274): rótulo visível acima do campo, que não some ao digitar (o texto de exemplo não substitui o rótulo); type="email" e autocomplete="email"; mensagem de erro em texto, junto ao campo e anunciada ao leitor de tela, sem apagar o que foi digitado; contraste de 7:1 no texto e de 3:1 na borda do campo e no botão, inclusive sobre o fundo escuro da faixa final; alvos de pelo menos 44 × 44 px; tudo operável só por teclado; nada piscando nem se mexendo.
+(e) A mesma proteção contra robôs (Vercel BotID) e o mesmo limite de envios do item 240 e do item 448; o mesmo endereço enviado no topo e no fim conta uma única vez e recebe uma única confirmação.
+(f) Meça, de forma agregada e sem dados pessoais, nem pixel de rastreamento, quantas inscrições confirmadas vêm do topo e quantas vêm do fim, para o dono ver se o campo no fim ajuda.
+
+Custo: os e-mails de confirmação e o aviso de abertura usam os tetos automáticos e a reserva já exigidos nos itens 240 e 448, calculados antes, dentro dos custos sem receita; nenhum envio novo além dos desses itens. Desconhecido reprova, nunca é zero.
+
+Margem (regra MR vigente, 27/10/2026, 07h42): nenhum cliente pagante, isoladamente e usando 100% dos direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo, depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto. A empresa como um todo não pode dar prejuízo a partir da base mínima calculada, com 100% dos custos fixos atribuídos ao Marktmorgen (FX275). A meta de 60% de margem líquida é medida todo mês no relatório real. Política tributária TX vigente. Custo desconhecido reprova, nunca é zero; cota grátis de fornecedor não conta como custo zero.
+
+Proibido: mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; usar escassez falsa, contagem pública de inscritos, desconto inventado, promessa de data ou depoimento inventado; começar o texto pela palavra "free"; instalar widget ou overlay de acessibilidade; enviar e-mail real, criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+
 241. [CF4] Vídeos curtos e reais do produto nas páginas de recursos
 
 Estado: OR: após o Bloco A, na ordem já existente entre 206 [SH3] e 272 [HM1]; 232 [CA1] foi antecipado e não se repete; antes do Bloco B. Registro de posição; os estados e provas históricos abaixo permanecem válidos.
@@ -5084,6 +5114,39 @@ PARTE B — Regulações governamentais (fazer depois, na ordem da fila):
 - Brasil: Lei Brasileira de Inclusão (Lei 13.146/2015, art. 63), eMAG e ABNT NBR 17225.
 - Outros mercados relevantes: Disability Discrimination Act 1992 (Austrália), JIS X 8341-3 (Japão) e IS 5568 (Israel).
 2. Declaração de acessibilidade: crie a página pública /accessibility, em inglês americano, honesta, com as normas adotadas, o que já foi testado e como, as lacunas conhecidas, a data da última revisão e um canal de contato (support@marktmorgen.com) com prazo de resposta que o dono possa cumprir sem trabalho manual extra. Ligue-a no rodapé de todas as páginas e cumpra o que o European Accessibility Act exige sobre a informação de acessibilidade do serviço.
+
+**Proveniência complementar DA1 do274[AX1],Parte B.2 —29/10/2026,15h06Fortaleza:** pedido direto do dono via anexo81c29614-d23f-472c-bc34-3018981cfa83/Texto colado.txt. Pedidosrepetidos:jáexistepágina pública/accessibilityem274B.2e310AX2§6;aplicarsóadiferençaaqui,semnovoitem535,semduplicarpágina/programa/AX2. Número,posição,estadooriginalde274e310preservados. Reutilizaredocumentar ligação comdocs/accessibility-programme.md,docs/accessibility-inventory.jsonematrizes/evidênciasexistentes. Acrescenta listasgeradassemcópiamanual/evidência+dataconsistente,metAAA/AAcomometa,nãoconformidade;lacunasporárea/pessoasreais202nãofeitas/alternativas;rodapécompletoeslim;canalsuporteexistente,semnovoe-mailnemcontato. AordemmaisrecenteDA1(c)deNÃOprometerprazoderespostaouequipe24horasprevalecesobreomençãoantigaaprazoem274B.2,quepermanecehistóricoacima. Semoverlay/selo/superioridade;explicarverificaçãodestúdioeresponsabilidadeconteúdocriador,semaprovaraçãouniversal. AX274glossário/hierarquia/regiões/skip/7:1/44pxetestsfonte/data/termosproibidosvinculantes. ContextoEqualWeb/ausênciaderotaérelatodo dono/Claude,conferircódigoaexecutar;nenhumavisitaauditoriadeproduçãoimplícita. Deduplicação main63fb030,PR1212aberto,20PRsrecentes/19headscodex e765refs,DA1nãoexistente,pedidoequivalentedeclaraçãojálocalizado. MR/TX/FX275/VRpreservados;textostáticosemprovedor/email/IA,nãocertificaCPU/bytes/entregazero;desconhecidoreprova. Registroapenas,semcriarpáginaourota;suíteinteira novoheadcombinadoobrigatória.
+
+DA — Declaração de acessibilidade do Marktmorgen, no lugar de overlay (29/10/2026) [DA1]
+
+Solicitação do dono (29/10/2026, 15h06, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: antes de gravar, aplique a regra "Pedidos repetidos" (23/10/2026). Procure esta solicitação no main, nos PRs abertos e nos ramos codex/* recentes, pela linha de data e hora, pelo nome da seção, pela etiqueta [DA1] e pelo conteúdo. Se já existir item que peça uma página pública de declaração de acessibilidade, aplique só a diferença dentro dele, mantendo número, posição e estado; caso contrário, crie um único item com o próximo número livre, na posição que a ordem AV1 indicar. Ligue este item a 274 [AX1] e a docs/accessibility-programme.md, sem duplicá-los.
+
+Estado inicial: na fila.
+
+Contexto: o Claude conferiu em 29/10/2026 o rodapé de clickfunnels.com/features/sales-funnels. O link "Accessibility Options" abre um overlay de acessibilidade da EqualWeb (a página carrega https://cdn.equalweb.com/core/5.1.15/accessibility.js), exatamente o tipo de widget proibido pela Parte A, item 7, de AX274. O Marktmorgen não tem overlay, mas também não tem página pública que diga o que já foi conferido em acessibilidade, o que falta e como avisar de um problema: o rodapé (components/site-footer.tsx) não tem link de acessibilidade, e não existe rota app/accessibility. O material para essa página já existe em docs/accessibility-programme.md, docs/accessibility-inventory.json e nas matrizes e evidências de docs/accessibility-*.
+
+[DA1] Página "Accessibility" honesta e link no rodapé.
+(a) Crie a página marktmorgen.com/accessibility, em inglês americano simples (AX274, 3.1.5), com: a meta adotada (WCAG 2.2 nível AAA em todos os critérios aplicáveis, AA como mínimo legal), dita como meta e não como conformidade; o que já foi conferido, com método e data (testes automáticos, navegador por teclado, leitores de tela com evidência registrada); as lacunas conhecidas, por área, inclusive os testes com pessoas reais ainda não feitos (item 202); as alternativas oferecidas onde houver lacuna; e a data da última revisão.
+(b) Gere as listas de conferido e de lacunas a partir dos arquivos já existentes (docs/accessibility-inventory.json e as evidências registradas), sem segunda cópia manual, para que a página nunca diga mais do que os registros provam. Um teste automático falha se a página citar um critério como conferido sem evidência registrada, ou se a data de revisão estiver desatualizada em relação aos registros.
+(c) Como avisar de um problema: o e-mail de suporte já existente, com o que convém informar (página, aparelho, tecnologia assistiva), sem prometer prazo de resposta nem equipe 24 horas; e o formulário de contato, se já existir, operável só por teclado.
+(d) Diga expressamente que o Marktmorgen não usa widget nem overlay de acessibilidade, porque eles não tornam um site acessível, e que a acessibilidade é feita no próprio código das páginas.
+(e) Inclua uma seção sobre as lojas dos criadores: o que o estúdio verifica e avisa antes de publicar (AX274, item 6) e que o conteúdo do criador é responsabilidade dele, sem prometer que toda loja é acessível.
+(f) Link "Accessibility" no rodapé completo, na coluna "Company" ou junto aos termos e à política de privacidade, e também no rodapé reduzido (variante "slim").
+(g) Nenhuma frase como "fully accessible", "ADA compliant", "WCAG AAA certified", "the most accessible platform", selo, nota ou comparação de superioridade; um teste automático falha se alguma delas aparecer na página.
+(h) A própria página cumpre AX274: títulos em hierarquia, regiões nomeadas, link para pular ao conteúdo, contraste de 7:1, alvos de pelo menos 44 × 44 px, glossário para termos como "WCAG" e "screen reader", expansão de abreviações.
+
+Custo: página estática gerada de arquivos do repositório, sem fornecedor, sem e-mail novo e sem chamada de IA; nenhum custo novo.
+
+Margem (regra MR vigente, 27/10/2026, 07h42): nenhum cliente pagante, isoladamente e usando 100% dos direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo, depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto. A empresa como um todo não pode dar prejuízo a partir da base mínima calculada, com 100% dos custos fixos atribuídos ao Marktmorgen (FX275). A meta de 60% de margem líquida é medida todo mês no relatório real. Política tributária TX vigente. Custo desconhecido reprova, nunca é zero; cota grátis de fornecedor não conta como custo zero.
+
+Proibido: instalar widget ou overlay de acessibilidade; afirmar conformidade, certificação ou superioridade sem auditoria completa e fonte; mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; enviar e-mail real, criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+
 3. Ferramentas para os criadores superarem as leis deles: texto alternativo assistido, verificação de contraste do tema, aviso de vídeo sem legenda, legendas e transcrições com teto automático, orientação para PDF e EPUB acessíveis e um modelo de declaração de acessibilidade da loja do criador. Toda ajuda por IA respeita a regra dos 60% e tem teto automático.
 
 PARTE C — Prova e testes:
@@ -15619,6 +15682,20 @@ Proibido: criar item novo ou mudar número, posição ou estado do 531; abrir o 
 
 Aplicar a regra VR.
 
+
+
+### Quinto complemento ao 531 [VP1] — 29/10/2026, 15h23, Fortaleza
+
+Proveniência: solicitação direta do dono, “VP — Quinto complemento ao 531 [VP1]: desenhos dos cartões como ícones, e a regra de não repetir imagens”. Aplicada somente a diferença, conforme Pedidos repetidos, passo 3(b); número, posição, estado e complementos de 14h02, 14h08, 14h13 e 14h16 preservados. Não cria item. Aplicar VR.
+
+Os desenhos dos cartões Works well with são ícones de identidade, como os do menu e rodapé: um único desenho por recurso em SVG ou HTML, igual em todas as páginas. Exceção expressa do dono à regra de 03/10/2026 SOMENTE para esses desenhos simples, sem foto, captura ou texto desenhado, no máximo do tamanho do cartão e nunca versão reduzida de imagem grande do site. Em cada página, cada ícone aparece uma única vez; a página do recurso não mostra cartão do próprio recurso.
+
+A proibição de repetição continua integral para fotos, capturas, imagens de seção e topo, miniaturas (inclusive redução de imagem maior) e vídeos. O vídeo aberto pelo cartão é sempre o vídeo real canônico daquele recurso, 241 [CF4], um só por recurso; nenhum vídeo ou captura aparece em duas páginas diferentes como imagem de seção. A exceção dos ícones não autoriza duplicar mídias.
+
+AX274: ícone decorativo aria-hidden quando o título já identifica o recurso; contraste mínimo 3:1 nas partes informativas; nada de imagem de texto. Testes automáticos: única definição de ícone por recurso, idêntica entre páginas; nenhum ícone repetido na mesma página ou cartão do próprio recurso; nenhuma foto, captura, miniatura ou vídeo repetidos no site; ícone não reduz imagem grande.
+
+MR de 27/10/2026, 07h42, TX e FX275 vigentes; custo desconhecido reprova, nunca é zero. Preservar preços, limites visíveis, comissão, PLANS_ON_SALE, OPENING_REQUESTED, tax gate, art. 9a, revisão comercial e stripePlatformEligibilityReady; não afrouxar travas, mostrar recurso inoperante, criar contas, aceitar termos, contratar, pagar, contatar terceiros ou apagar Hazelsong. Somente testes sintéticos. Registro de escopo, sem implementação antecipada e sem entrega funcional.
+
 [VP2] Vídeos reais do produto nas páginas de recursos de volta para perto da frente da fila.
 Estado inicial: mudança de posição.
 O item 241 [CF4] (vídeos curtos e reais de cada recurso, gravados na loja de demonstração, com legenda, transcrição e teto de custo), que o FIM1 de 28/10/2026 levou para o fim da fila, passa para logo depois de [VP1], com escopo, estado e provas intactos. Só a posição muda; nenhum outro item do FIM1 muda de lugar. Registre a mudança na tabela de posições do FIM1 com esta data e hora. Os vídeos do 241 e o vídeo das abas de 509 [CK1] usam o mesmo mecanismo de gravação e não se repetem entre si.
@@ -15696,5 +15773,123 @@ Lucro: prova verdadeira de que o Marktmorgen funciona, que aumenta as contas cri
 Regra de margem: segue a REGRA DE MARGEM vigente (MR, 27/10/2026, 07h42), a política tributária TX e FX275; custo desconhecido reprova, nunca é zero.
 
 Proibido: depoimento, foto, nome ou número inventados ou de exemplo apresentados como reais; texto de depoimento escrito pela IA ou pelo Marktmorgen; publicar sem consentimento; pagar ou dar desconto em troca de depoimento sem dizer isso ao lado; construir antes da abertura; mudar preços, limites visíveis, comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a, a revisão comercial ou stripePlatformEligibilityReady; afrouxar qualquer trava; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+
+
+### AV(a) — limitar a fonte atual antes do worker de reinício financiado
+
+PR1208incorporado29/10/2026,14:48:14Fortaleza/17:48:14UTC,merge63fb0308a49e46e76d8d31c3553ad02e5650925a,head62fa89236ebd1cebf04e56c5f0e8c4b0e511ac49,árvoree6de942b138479701fc234511f48dd191639d1f4/pais332a38d+62fa892.39/39checks+Vercel,234bundles/Everythingpassing;READYdpl_HSwdRbxvJZxbJn1WUNysQtGyXmnu/SHAexato/7aliases/5HTMLexatos conferidos. Contador254mantido porprova interativaChromeaindabloqueada;nenhum255. Todos registros até533ecomplementos incorporados apenas como fila. Detalhes/custos/provas emdocs/pause-worker-source-bound.md,carregados com esta mudança real,semPRexclusivodeprovas.
+
+O caminho realrunBreaksdepausafinanciada reutiliza storeForRestartSource:1GETRANGEemvezdeGETilimitado,limite1.000.000bytes+1detecção,primitivosfinanceiroscrusobrigatóriosantesnormalização/admissão. Legadopreservado;fonte ilegível/oversize/accessor/estrangeira/ausente/transporteincertoretém pausa/ano/due,semprovedor/ledger/escrita/email. Mesmo1comando,nãocustozero;frequência/globalM/Y/CPU/overhead/impostos desconhecidosreprovam,nenhumaoperaçãofinanceiraavisohabilitada. Coberturasfalse/políticasnull/preços/direitos/gatespreservados;suíteinteira novoheadobrigatória.
+
+
+### PR1212 — interrupção de infraestrutura preservada, semrerunisolado
+
+Heade41b1fd8publicChromium123630279521recebeushutdownsignal17:53:53.2417307UTC/operação cancelada,antesdematriz/sumário. Nãoéasserçãodoproduto,nãoéaprovação,nãoinventarcorreçãodecódigo. Evidênciaretida emdocs/pause-worker-source-bound.md;novohead/documentação dispara suíteCOMPLETA doPR,sem alterarcódigo/testes/assertivas/limites/workflows nemrerunjobisolado. Falhaoutrabalhoparcialanteriornãocertificanovohead;incorporação somenteapóstodaschecagens. Semnovoitem/prioridade/custooperacionalautorizado.
+
+
+## FQ — registro integral; item534 (29/10/2026,14h59Fortaleza)
+
+Proveniência: pedido direto do dono via anexo d09de6b3-2be3-4da8-bfcf-dec0bf6b5d11/Texto colado.txt. Deduplicação main63fb030,PR1212aberto,20PRsrecentes/19ramoscodex,765refs e3ramosFAQ relacionados:nenhum item de perguntas de iniciante naspáginas derecursos equivalente;HT12édistinto,clusterblog/learnSEO,nãorecebecomplemento. Próximo livre534após533,estado na fila;posição segueAV1semanteciparaosgatesprioritários,semalterarordemanterior. ReutilizarQuestions/details/FAQPageexistentes,semnovo componente/segunda cópia;conteúdoderivadodocódigo/constantes/contagensreais/indisponibilidadeexplícita,noemailopens,trialgatedemocomvendasfechadas,semresultado/prazo/24horas. Aplicardepoisàsdemaispáginaspertinentessemcontradição. Custo estático semprovedor/email/IAéescopodobrief,não comprovação deCPU/bytes/entregazero;desconhecidoreprova,MR/TX/FX275/AX274/VRmantidos. ComparaçãoClickFunnelsérelatoatribuídoao dono/Claude,semvisitaindependente. Registroapenas;suíteinteira novoheadcombinadoobrigatória.
+
+FQ — Perguntas de quem está começando nas páginas de recursos (29/10/2026) [FQ1]
+
+Solicitação do dono (29/10/2026, 14h59, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: antes de gravar, aplique a regra "Pedidos repetidos" (23/10/2026). Procure esta solicitação no main, nos PRs abertos e nos ramos codex/* recentes, pela linha de data e hora, pelo nome da seção, pela etiqueta [FQ1] e pelo conteúdo. Se já existir item que peça perguntas de iniciante nas páginas de recursos, aplique só a diferença dentro dele; caso contrário, crie um único item com o próximo número livre, na posição que a ordem AV1 indicar.
+
+Estado inicial: na fila.
+
+Contexto: o Claude conferiu em 29/10/2026 a seção "Frequently asked questions" do fim de clickfunnels.com/features/sales-funnels: seis perguntas que abrem e fecham ("What is a sales funnel?", "Do sales funnels work?", "How do I know what type of funnel to use?", "Is it easy to build a funnel?", "Can I build my sales funnel for free?", "Can ClickFunnels track and opens and clicks?"). As respostas trazem números não verificáveis ("over 100,000 active businesses", "over 2,000 people" no "Two Comma Club"), promessas de resultado ("proven to convert", "and boom! You're done"), linguagem informal ("kinda like a bridge", "with their credit cards in hand") e uma resposta trocada: a pergunta sobre aberturas e cliques é respondida com "a first class support team… 24 hours a day, 7 days a week" e um link http://. O Marktmorgen já tem o bloco "Questions" com <details> e dados FAQPage (components/topic-page.tsx), mas a página marktmorgen.com/platform/funnels (lib/feature-pages.ts, slug "funnels") só responde a quatro perguntas sobre ofertas e preços, sem as perguntas de quem está começando.
+
+534. [FQ1] Perguntas de quem está começando, respondidas pelo que o código faz.
+(a) Na página de funis, acrescente ao bloco "Questions" já existente, sem criar outro componente, as perguntas de quem está começando, em inglês americano simples (AX274, 3.1.5), por exemplo: "What is a funnel?", "Which kind of funnel should I use?", "How long does it take to build one?", "Can I try it before paying?", "Does it count opens and clicks?" e "Do funnels work?".
+(b) Cada resposta responde exatamente à pergunta feita e só diz o que o código faz hoje, lido das próprias fontes: os tipos de funil de lib/funnel-types.ts, cada um com para quem serve e o link do modelo pronto de lib/funnel-starters.ts; os passos reais para montar um funil a partir de um modelo, contados no estúdio, sem "boom", "in minutes" ou promessa de prazo; as contagens de lib/funnel-metrics.ts (aberturas da página e pagamentos por etapa, e "Counts unavailable" quando não houver contagem).
+(c) "Does it count opens and clicks?": diga com clareza que não há contagem de aberturas de e-mail, de propósito, e que os links de cada e-mail e de cada etapa contam visitas e vendas, reaproveitando as frases já usadas em lib/feature-pages.ts e lib/help-content.ts, sem contradizê-las.
+(d) "Can I try it before paying?": enquanto PLANS_ON_SALE for false, diga que os planos pagos ainda não estão à venda e aponte a demonstração (/demo), identificada como demonstração; depois da abertura, o número de dias de teste lido de TRIAL_DAYS, nunca digitado. Não comece a resposta pela palavra "free".
+(e) "Do funnels work?": nenhum número de clientes, de faturamento ou de "clube" enquanto não houver contagem real, agregada e verificável; explique o que o criador vê nos próprios números do funil para saber se o dele funciona. Nada de "proven to convert".
+(f) Nenhuma resposta promete atendimento 24 horas, equipe, prazo de resposta ou resultado; todo link é https:// e interno quando possível.
+(g) Os dados FAQPage são gerados do mesmo texto, sem segunda cópia. Depois da página de funis, aplique o mesmo critério às demais páginas de recursos onde essas perguntas fizerem sentido, sem repetir a mesma pergunta em duas páginas com respostas diferentes.
+(h) Testes automáticos: todo número, plano, prazo ou limite citado nas respostas vem das constantes do código; nenhuma resposta tem link http://; nenhuma resposta tem os termos proibidos ("proven", "guaranteed", "24/7", "boom"); o texto do FAQPage é igual ao texto mostrado.
+(i) Acessibilidade (AX274): perguntas como botões de <summary> com estado aberto/fechado anunciado, ordem de títulos correta, ícones de mais e de menos decorativos, contraste de 7:1, alvos de pelo menos 44 × 44 px, tudo pelo teclado, sem animação sob prefers-reduced-motion.
+
+Custo: texto estático, sem fornecedor, sem e-mail e sem chamada de IA; nenhum custo novo.
+
+Margem (regra MR vigente, 27/10/2026, 07h42): nenhum cliente pagante, isoladamente e usando 100% dos direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo, depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto. A empresa como um todo não pode dar prejuízo a partir da base mínima calculada, com 100% dos custos fixos atribuídos ao Marktmorgen (FX275). A meta de 60% de margem líquida é medida todo mês no relatório real. Política tributária TX vigente. Custo desconhecido reprova, nunca é zero; cota grátis de fornecedor não conta como custo zero.
+
+Proibido: mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; usar números inventados ou não verificáveis, depoimentos inventados, escassez falsa ou promessa de resultado; começar o texto pela palavra "free"; instalar widget ou overlay de acessibilidade; enviar e-mail real, criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+
+
+## MV — registro integral; item535 (29/10/2026,15h14Fortaleza)
+
+Proveniência: pedido direto do dono via anexo e878a3e0-c166-4eae-af23-ee66ed1d5d09/Texto colado.txt. Deduplicação main63fb030,PR1212aberto,20PRsrecentes/19headscodex e765refs,semMV1/data/título/conteúdoouitemdeimagemdepréviadosmodelosequivalente. 193HT15jápublicadooferecepréviaslocais/listas,masnãoesteescopo deimagensreaisdesktop/mobilegeradasnobuild;preservarpublicação193semrefazerbiblioteca. Próximolivre535após534FQ1;DA1foidiferençaao274,nãocriou535. Estadonafila,ordemAV1vinculante,semadiantaràtarefaemcurso. Ligaçõesobrigatórias193HT15/242CF5/526FN2/375TB1,semduplicar;reusarumúnicomecanismodominiaturareal526,quandoexistir,semsegundogerador. Novoscustosbuild/arquivos/entregacontadosFX275comtetoporimagem/totalantesoperação;nãoháleiturapagaextranemIAporprodutolocal,mascustodesconhecidoreprova. Demofictícia/previewrealnavegável/acessível/semgravaçãoautomática/semimagensrepetidas/semtextodepromessa obrigatórios. ContextoClickFunnelsérelatododono/Claude,nãoobservaçãoindependente. MR/TX/FX275/AX274/VRmantidos;registrosomente,semgerarimagensoureimplementarmodelos;suíteinteira novoheadcombinadoobrigatória.
+
+MV — Prévia visual dos modelos de página e de funil (29/10/2026) [MV1]
+
+Solicitação do dono (29/10/2026, 15h14, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: antes de gravar, aplique a regra "Pedidos repetidos" (23/10/2026). Procure esta solicitação no main, nos PRs abertos e nos ramos codex/* recentes, pela linha de data e hora, pelo nome da seção, pela etiqueta [MV1] e pelo conteúdo. Se já existir item que peça imagem de prévia dos modelos da biblioteca, aplique só a diferença dentro dele, mantendo número, posição e estado; caso contrário, crie um único item com o próximo número livre, na posição que a ordem AV1 indicar. Ligue este item a 193 [HT15] (biblioteca de modelos, já publicada), 242 [CF5] (modelos por nicho), 526 [FN2] (miniaturas reais das etapas do funil) e 375 [TB1] (editor visual), sem duplicá-los e sem refazer o que já foi publicado.
+
+Estado inicial: na fila.
+
+Contexto: o Claude conferiu em 29/10/2026 a seção "Design with confidence" de clickfunnels.com/features/clickfunnels-editor: ao lado do menu lateral de elementos, uma galeria de modelos prontos em que cada modelo aparece como imagem da página pronta, para o criador escolher pelo que vê. No Marktmorgen, a biblioteca de modelos (components/template-library.tsx, item 193 [HT15]) e a galeria de funis prontos (components/funnel-starter-gallery.tsx) mostram cada modelo só como cartão de texto, e a prévia é uma lista com os nomes dos blocos; o criador não vê como a página vai ficar antes de usá-la. Os textos dos modelos da ClickFunnels prometem resultado ("Unveil the Proven $25k+ Client Funnel", "Big, Juicy Wins!").
+
+535. [MV1] Imagem real de cada modelo antes de escolher.
+(a) Para cada modelo de página (lib/sales-page.ts), cada funil pronto (lib/funnel-starters.ts) e cada layout de e-mail da biblioteca, mostre uma imagem de prévia da página pronta, no computador e no celular, ao lado do cartão de texto existente, que continua como está.
+(b) A imagem é gerada automaticamente pelo próprio código de renderização das páginas, com o conteúdo da loja de demonstração Harbor Kitchen (rotulada como fictícia), no momento da publicação do site (build), não por cliente nem a cada visita. Quando um bloco ou um modelo mudar, a imagem é gerada de novo; um teste automático falha se a imagem estiver desatualizada em relação ao modelo. Reaproveite o mecanismo de miniatura real de 526 [FN2], sem um segundo gerador.
+(c) Ao abrir a prévia, mostre a página de demonstração de verdade, navegável, no tamanho real, rotulada "Example store (fictional)", com o botão "Use this template" já existente.
+(d) Depois de escolher o produto no seletor "Page product" existente, a prévia pode mostrar o nome, o preço e a imagem do próprio produto do criador, lidos localmente, sem gravar nada, sem chamada de IA e sem nova leitura paga.
+(e) Textos de exemplo dos modelos honestos, como já exige 242 [CF5]: nenhum resultado, número de faturamento, depoimento, escassez ou promessa ("proven", "guaranteed"); um teste automático falha se um modelo contiver esses termos.
+(f) Imagens: cada prévia é uma imagem diferente, sem repetir imagem nem foto entre modelos, nem miniatura de imagem já usada em tamanho maior (regra do dono de 03/10/2026); fotos de banco identificadas como ilustrativas.
+(g) Acessibilidade (AX274): cada imagem com texto alternativo que descreve a ordem dos blocos da página; nenhuma informação só na imagem (a lista de blocos continua em texto); a imagem não é imagem de texto que substitua texto real (1.4.9); prévia ao vivo operável só pelo teclado, com foco preso só enquanto aberta e fechada pela tecla Escape; contraste de 7:1, alvos de pelo menos 44 × 44 px, sem animação sob prefers-reduced-motion.
+
+Custo: imagens geradas no build a partir do repositório, guardadas como arquivos estáticos do próprio site; o armazenamento e a banda dessas imagens entram nos custos fixos (FX275), com tamanho máximo por imagem e total máximo definidos e testados antes; nenhum custo por cliente, nenhuma chamada de IA. Desconhecido reprova, nunca é zero.
+
+Margem (regra MR vigente, 27/10/2026, 07h42): nenhum cliente pagante, isoladamente e usando 100% dos direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo, depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto. A empresa como um todo não pode dar prejuízo a partir da base mínima calculada, com 100% dos custos fixos atribuídos ao Marktmorgen (FX275). A meta de 60% de margem líquida é medida todo mês no relatório real. Política tributária TX vigente. Custo desconhecido reprova, nunca é zero; cota grátis de fornecedor não conta como custo zero.
+
+Proibido: refazer a biblioteca de modelos ou a galeria de funis já publicadas; gravar, publicar ou enviar qualquer coisa sem o clique do criador; usar textos com resultados, números, depoimentos, escassez ou promessas inventados; repetir imagens; mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+
+
+## 536 [CB1] — Checkout do Stripe com as cores e a fonte da loja do criador
+
+Estado: na fila. Ordem de chegada após 535 [MV1], subordinada à prioridade AV1; não desloca itens existentes nem altera FIM1. Proveniência: anexo original do dono de 29/10/2026, 15h28 Fortaleza. Pedidos repetidos: conferidos main, PR aberto 1212 e os heads codex/* dos 20 PRs recentes, além do inventário remoto de 765 ramos; não encontrado pedido equivalente de envio de branding por sessão. Estudo de Embedded Checkout existente não equivale à aplicação do tema por branding_settings. Campos/valores mencionados pelo dono são referências a reconferir na documentação oficial Stripe datada antes de implementar, não fato verificado neste registro. Aplicar VR. Texto integral recebido:
+
+CB — Checkout do Stripe com as cores e a fonte da loja do criador (29/10/2026) [CB1]
+
+Solicitação do dono (29/10/2026, 15h28, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: antes de gravar, aplique a regra "Pedidos repetidos" (23/10/2026). Procure esta solicitação no main, nos PRs abertos e nos ramos codex/* recentes, pela linha de data e hora, pelo nome da seção, pela etiqueta [CB1] e pelo conteúdo. Se já existir item que peça enviar ao Stripe as cores, a fonte ou o logotipo da loja no checkout, aplique só a diferença dentro dele, mantendo número, posição e estado; caso contrário, crie um único item com o próximo número livre, na posição que a ordem AV1 indicar.
+
+Estado inicial: na fila.
+
+Contexto: o Claude conferiu em 29/10/2026 a seção "Super customizable" de clickfunnels.com/features/smart-checkout: o checkout deles "automatically adopts your brand's colors and style". No Marktmorgen, as sessões de pagamento do Stripe (lib/store-checkout.ts, lib/cart-checkout.ts, lib/payment-requests.ts, lib/store-tip-checkout.ts e demais criadores de sessão) enviam apenas branding_settings[display_name]; as cores, a fonte e o formato dos botões ficam com o padrão do Stripe ou com o que o criador ajustar à mão na própria conta Stripe. A loja já guarda o tema, a cor de destaque, a fonte e o fundo (store.look em lib/store.ts). A API de sessões do Stripe aceita, por sessão, branding_settings com background_color, button_color (hexadecimal), border_style (pill, rectangular, rounded), font_family (uma lista fechada de famílias, como inter, lato, montserrat, roboto, lora, open_sans e outras), logo e icon; conferir os campos e valores na documentação oficial do Stripe, com data, antes de implementar.
+
+[CB1] Checkout com a aparência da loja, sem o criador configurar nada.
+(a) Em toda sessão de pagamento do Stripe criada pelo Marktmorgen, envie, além do display_name já enviado, branding_settings[background_color], [button_color], [border_style] e [font_family] calculados a partir de store.look, num único ponto reutilizado por todos os criadores de sessão, sem cópia de código.
+(b) Fonte: mapeie a fonte da loja para a família equivalente da lista do Stripe; se não houver equivalente, use "default". Formato: derive border_style do arredondamento do tema da loja.
+(c) Contraste (AX274): só envie as cores se o texto mais legível (preto ou branco) sobre a cor do botão tiver contraste de pelo menos 7:1, e se o texto sobre o fundo também tiver pelo menos 7:1; caso contrário, não envie a cor que reprova e deixe o padrão do Stripe. Calcule com a fórmula do WCAG e teste os temas existentes.
+(d) Logotipo e ícone: somente se o criador já tiver uma imagem de loja e clicar para usá-la no checkout; o envio da imagem ao Stripe é feito na conta do próprio criador, uma única vez por imagem, com a finalidade exigida pelo Stripe, e reaproveitado nas sessões seguintes; nunca a cada pagamento. Sem imagem ou sem clique, nada de logotipo.
+(e) No estúdio, mostre ao criador uma prévia de como fica o checkout (cores, fonte e botão), com o aviso de quando uma cor não passou no contraste e ficou o padrão, e um interruptor para voltar ao padrão do Stripe.
+(f) Se o Stripe recusar algum valor de branding_settings, a sessão é criada de novo sem esses campos, e o pagamento nunca falha por causa da aparência; registre o motivo sem dados pessoais.
+(g) O que já existe continua igual: perguntas no checkout (lib/checkout-fields.ts), frete, formas de pagamento da conta do criador, ofertas no checkout e depois de pagar.
+
+Testes automáticos: cada criador de sessão envia os mesmos campos a partir do mesmo ponto; mapeamento de cada fonte e de cada tema; cor reprovada no contraste não é enviada; recusa do Stripe recria a sessão sem os campos; logotipo só depois do clique e enviado uma vez; somente com Stripe simulado.
+
+Custo: os campos vão na mesma chamada que já cria a sessão, sem chamada nova; o envio do logotipo é uma chamada única por imagem, contada nos custos e limitada por loja, com teto automático; desconhecido reprova, nunca é zero.
+
+Margem (regra MR vigente, 27/10/2026, 07h42): nenhum cliente pagante, isoladamente e usando 100% dos direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo, depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto. A empresa como um todo não pode dar prejuízo a partir da base mínima calculada, com 100% dos custos fixos atribuídos ao Marktmorgen (FX275). A meta de 60% de margem líquida é medida todo mês no relatório real. Política tributária TX vigente. Custo desconhecido reprova, nunca é zero; cota grátis de fornecedor não conta como custo zero.
+
+Proibido: alterar preço, valor cobrado, impostos, formas de pagamento ou qualquer dado da cobrança; mudar configurações da conta Stripe do criador; enviar imagem ao Stripe sem o clique do criador; usar cor que reprove o contraste; mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos, com Stripe simulado.
 
 Aplicar a regra VR.

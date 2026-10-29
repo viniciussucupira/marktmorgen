@@ -59,7 +59,7 @@ import { NIMBUS_FROM, isSenderConfigured, sendEmail } from "@/lib/email";
 import { SITE_URL } from "@/lib/site-url";
 import { SUPPORT_EMAIL } from "@/lib/creator-research";
 import { PLAN_NAMES, PLAN_PRICES, type Tier, parseTier } from "@/lib/plan";
-import { setSubscription, storeForEmail, storeRef, type Store } from "@/lib/store";
+import { setSubscription, storeForEmail, storeForRestartSource, storeRef, type Store } from "@/lib/store";
 import {
   PAID_MONTHS_BEFORE_PAUSE,
   PAUSE_EVERY_DAYS,
@@ -594,7 +594,9 @@ export async function runBreaks(nowSeconds = Math.floor(Date.now() / 1000)): Pro
     // pause, its due entry, or its once-a-year evidence.
     let store: Store | null;
     try {
-      store = await storeForEmail(ref);
+      // Funded due work must bound the source bytes and reject missing raw
+      // financial primitives before restart admission; legacy lookup stays intact.
+      store = record.funding ? await storeForRestartSource(ref) : await storeForEmail(ref);
     } catch {
       counts.failed += 1;
       continue;
