@@ -15012,6 +15012,39 @@ Corrige o caminho real confirmPause→tell(company): qualquer funding ou períod
 PR1206 incorporado em29/10/2026,10:01:20Fortaleza/13:01:20UTC,merge860461bb3b40d00b9a89dfe95a1395a6a44ffeea,head8f9bb25188cea52092030e2700091a5233d77b19,árvore84aadb9470d7f45ec93f968823bffa3fc8775b92,paiec25ab0+8f9bb25.27checks documentais16success11skips+Vercel; sem entrega funcional/counter254inalterado. BriefingsPF513–519/LB520–523e206SH3após519preservados integralmente. PR1205 atualiza seu head para incorporar essa fila sem sobrescrever e roda novamente a suíte inteira da árvore combinada; resultados antigos f2358f5 não certificam o novohead.
 
 
+## NV — registro integral; item524 (29/10/2026,10h43Fortaleza)
+
+Proveniência: pedido direto do dono nesta conversa. Observações de Chrome/ClickFunnels e medidas atribuídas ao Claude conforme briefing, sem nova validação externa deste registro. Deduplicação: main1284741,PRaberto1208,20PRsrecentes/19heads codex distintos lidos e761refs codex, sem etiqueta,título,data/hora ou conteúdo equivalente. Próximo número livre524 após523LB4; ordem/estado/escopo dos existentes e206SH3após519 preservados. Antes da implementação,reconferir código e aplicar só a diferença. Registro somente,sem antecipar execução ou interromperAV. MR/TX/FX275/AX274/VR e desconhecido reprova mantidos; “sem custo variável novo” é intenção do briefing, não dispensa de verificar o custo total.
+
+NV — Menu "Product" inteiro numa tela só (29/10/2026)
+Etiqueta: [NV1]
+
+Solicitação do dono (29/10/2026, 10h43, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: antes de gravar, aplique a regra permanente "Pedidos repetidos". Confira o main, os PRs abertos e os ramos codex/* recentes e procure esta solicitação pela linha de data e hora, pelo nome da seção, pela etiqueta [NV1] e pelo conteúdo. Se já estiver gravada, não crie nada novo. Grave na ordem de chegada, depois do último item já gravado, com o próximo número livre, sem alterar a ordem dos itens existentes.
+
+524. [NV1] Menu "Product" inteiro numa tela só.
+Estado inicial: na fila.
+Problema que resolve: o Claude abriu o menu "Product" de marktmorgen.com no Chrome do dono em 29/10/2026, numa janela de 1536 × 639 px. O painel (components/site-nav.tsx, classe nb-pop) tem 22 links e precisa de 769 px de altura, mas mostra só 542 px; aparece uma barra de rolagem dentro do menu e itens como "Community" e "Your own domain" ficam escondidos. O menu "Platform" da ClickFunnels, conferido no mesmo dia, mostra 25 itens de uma vez, sem rolagem, em três colunas (4 itens com frase e 16 só com ícone e nome).
+O que fazer: no computador, reorganize o menu "Product" para caber inteiro, sem rolagem interna, em 1280 × 720 px e em 1536 × 639 px, mantendo todos os 22 itens, os três grupos ("Sell", "Get paid" e "Deliver and grow"), os ícones e o painel da esquerda. Use quantas colunas forem necessárias e reduza a frase de cada item a uma única linha curta em inglês americano simples, sem perder o sentido nem prometer o que não existe. Os menus "Creators" e "Why Marktmorgen" seguem a mesma regra. No celular, a gaveta atual continua com rolagem normal.
+O que manter: botões com aria-expanded, links reais, teclado (Tab, Esc, setas), foco visível e a ordem de leitura igual à ordem visual (AX274); contraste de 7:1 e alvos de 44 × 44 px.
+Testes automáticos: nas duas medidas, o painel de cada menu não tem rolagem interna e todos os seus links ficam visíveis; nenhum item some; frase de cada item em uma linha.
+Lucro: quem procura um recurso o encontra sem rolar, o que aumenta a percepção de valor; sem custo variável novo.
+
+Regra de margem: segue a REGRA DE MARGEM vigente (MR, 27/10/2026, 07h42), a política tributária TX e FX275; custo desconhecido reprova, nunca é zero.
+
+Proibido: retirar item, recurso ou página do menu; mudar preços, limites visíveis, comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a, a revisão comercial ou stripePlatformEligibilityReady; afrouxar qualquer trava; mostrar recurso que não funciona hoje; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+
+
 ## AV — limite de bytes na seleção real das pausas devidas (29/10/2026)
 
 runBreaks passa a selecionar pelo Lua estático somenteleitura: máximo200membros de1280bytesUTF8 cada, validação noRedis antes de devolverpayload e snapshot estrito no consumidor antes de ler lojas/enviar/cobrar. Vazio inválido,tipo errado,referência excessiva ou resposta ambígua retêm o lote e toda evidência; relógio inválido0IO. IDsUnicode preservados pelo envelope1280bytes/até320caracteres4bytes,nenhumrename/descarte. Payloadmáximo256000bytesmaisoverhead; isso não certifica memóriaRedisinterna,cardinalidadetotal,frequência/global/lifetime. Suítes reais com limitesASCII/UTF8,TTL,201→200e recusas; suíteinteira obrigatória no novohead. Custo componente3comandos/lote=$0.000006a$2/M,incremental$0.000004; para os6contratos mensal=incremental*B_m/anual=incremental*B_a; contagens/totalcustos/impostos desconhecidos continuam reprovados,sem autorização de gasto/flags/preços/direitos alterados. Detalhes eprova realPR1205/1207 emdocs/pause-due-selection-bound.md,comcódigoreal,nãoPRsódeprovas. AV1/MR/TX/FX275/SD1/VR/AX274 e filaCK/PF/LB/FIM1 preservados.
+
+
+### NV1 preservado no head combinado
+
+PR1209 incorporado em29/10/2026,10:49:27Fortaleza/13:49:27UTC,merge13e850487edd961e7b14eacf2c4e9372230fe9e3,head996d5b18c73ba0925fe8c8fd1447b123952e74bb,árvore4187ca75e25721b4392789afdb920b375e42c2f4,paise1284741+996d5b1.27checksdocumentais16success11skips+Vercel. Item524NV1nafila,briefingintegral/ordem/estado preservados,sem implementação/publicfeature/counter. PR1208 incorpora a fila sem sobrescrever e exige novamente suíteinteira na árvorecombinada; provaRedis do head5164ff5não substitui os testes do novohead.
