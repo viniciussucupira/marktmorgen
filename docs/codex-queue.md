@@ -15416,3 +15416,8 @@ Aplicar a regra VR.
 ### PR1208 — falha móvel corrigida com alteração real de renderização
 
 Head9c9366falhoujob123531991576primeirahomecoldLCP2568ms>2500ms,H1home-hero-heading;9samplesCLS0/interaçãomax128ms. Não descartar amostra,aquecer,reexecutarsójobouafrouxarlimite. Renderização real da home usa content-visibility:auto nativo só nas seções diretas fora do hero,com tamanho intrínseco lembrado;conteúdo/DOM/acessibilidade/scroll/foco/print preservados,semnovobiblioteca/JS/ocultarrecursos. Suíteinteira nova obrigatória,prova ainda pendente; HE527éregistro apenas,sem animação antecipada. Detalhes docs/pause-due-selection-bound.md. Direitos/preços/flags/tetos/comissões/optin/controlesfiscais/custos mantidos.
+
+
+### PR1208 — regressão de geometria acessível corrigida antes de incorporar
+
+Head514734b:Public AAA Chromium123537645697/Firefox123537645753/WebKit123537645841reprovaramumaúnica target-size porengine na home390px/text-spacing,CTAStart your storeemdata-home-actionsplanslogoapóspricing. Móvel123538496414passou,masnãoafastafalhaAX. Seletor nativo decontenção exclui#pricing,que mantém layout integral eagendageometria doCTA;demaisseçõesforaheroaindapodemdeferir.Nenhumlink/botão/recurso/44px/teste ocultado/removido/afrouxado;suíteinteiranovoheadobrigatória,nãojobisolado,correçãoaindapendenteverificação.HE527eseiscomplementosTB/FNpreservados.

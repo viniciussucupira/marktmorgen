@@ -4759,7 +4759,7 @@ html:has([data-product-editor]) {
  * The visible hero and navigation are outside this containment; print is intact. */
 @media screen {
   @supports (content-visibility: auto) {
-    main[data-home-page] > section:not([data-home-hero]) {
+    main[data-home-page] > section:not([data-home-hero]):not(#pricing) {
       content-visibility: auto;
       contain-intrinsic-block-size: auto 800px;
     }
