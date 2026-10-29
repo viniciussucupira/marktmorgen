@@ -15246,6 +15246,41 @@ Estado inicial: na fila.
 O que fazer: permita produtos físicos no carrinho existente, juntos entre si e com produtos digitais, numa única cobrança direta na conta Stripe do criador. A Stripe pede um único endereço, aceito só se estiver em país que todos os físicos do carrinho atendem; se um item não for enviado para lá, o carrinho diz qual é antes do pagamento. O estoque de cada variante é reservado como em lib/stock.ts; os digitais são entregues como hoje e os físicos aparecem no estúdio para envio.
 Testes automáticos, com Stripe simulado: carrinho misto, país não atendido, estoque reservado e devolvido.
 
+**Complemento ao513PF1 —29/10/2026,17h11Fortaleza.** Proveniência: pedido direto do dono; sódiferença conformePedidos repetidospasso3(b),número/posição/estado preservados. Conferidos main946fb1a e filasabertas1221/1217/1216,sem complemento específico. Ligação515PF3 parafreteporquantidade,sem segundaexecução.10é padrão máximo escolhido pelo criador,nuncaautorizaestoqueacima;4produtosdistintospermanece.MAXunidades/pedidoexigecódigo/teste/tetocustoantesimplementar.Nãofísicoscontinuam1.Reembolso/estoqueexigemackidempotente,nãosereturnsemprova;sem pagamento real.SegueVR/MR/TX/FX275.Testossintéticos.Todoescopo recebido:
+
+PF — Complemento ao 513 [PF1]: quantidade de cada produto físico no carrinho (29/10/2026)
+Etiqueta: [PF1]
+
+Solicitação do dono (29/10/2026, 17h11, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: é complemento ao item 513 [PF1] já gravado. Aplique só a diferença ao item existente, mantendo número, posição e estado (regra "Pedidos repetidos", passo 3, letra b), e registre na proveniência o que mudou. Ligue também a 515 [PF3] (frete por quantidade), sem duplicá-lo.
+
+Estado inicial: o do próprio 513.
+
+Contexto: o Claude conferiu em 29/10/2026 as perguntas frequentes de clickfunnels.com/apps/store: no carrinho deles, o comprador "adjust quantities". No Marktmorgen, o carrinho (lib/cart-rules.ts, lib/cart-checkout.ts) leva no máximo MAX_CART = 4 produtos e cada um com quantidade 1 (line_items[i][quantity] = "1"); não é possível comprar 3 unidades do mesmo produto físico num pedido. O frete por quantidade de 515 [PF3] ("um valor para o primeiro item e um valor para cada item a mais") depende disso.
+
+O que acrescentar ao 513 [PF1]:
+- para produto físico (e só para ele), o comprador escolhe a quantidade na página do produto e no carrinho, com botões de mais e de menos e um campo numérico;
+- quantidade máxima por produto definida pelo criador (padrão 10) e nunca acima do estoque disponível de lib/stock.ts; o estoque de todas as unidades é reservado antes do pagamento e devolvido se o pagamento não se concluir, como hoje;
+- produto digital, curso, assinatura, chamada e evento continuam com quantidade 1, como hoje;
+- o limite de 4 produtos diferentes por pedido continua; a quantidade de cada um conta à parte, até o máximo de unidades por pedido definido no código e testado;
+- o total, o frete de 515 [PF3], o imposto do Stripe Tax e os descontos ("Buy more, save more") são calculados pela quantidade, e o Stripe recebe a quantidade real em cada linha;
+- reembolso parcial por unidade, pelo estúdio, na conta Stripe do criador, devolvendo a unidade ao estoque.
+
+Acessibilidade (AX274): botões de mais e de menos com nome para leitor de tela ("Increase quantity", "Decrease quantity"), quantidade anunciada ao mudar, campo numérico com rótulo visível, alvos de pelo menos 44 × 44 px, contraste de 7:1, operável só pelo teclado.
+
+Testes automáticos: quantidade só em produto físico; limite do criador e do estoque; reserva e devolução de todas as unidades; total, frete, imposto e desconto pela quantidade; quantidade real enviada ao Stripe; reembolso por unidade; somente Stripe simulado.
+
+Custo: leituras e gravações de estoque já contadas no plano, com teto automático; desconhecido reprova, nunca é zero.
+
+Regra de margem: segue a REGRA DE MARGEM vigente (MR, 27/10/2026, 07h42), a política tributária TX e FX275; custo desconhecido reprova, nunca é zero.
+
+Proibido: criar item novo ou mudar número, posição ou estado do 513; vender além do estoque; quantidade maior que 1 em produto que não é físico; mudar preços, limites visíveis, comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a, a revisão comercial ou stripePlatformEligibilityReady; afrouxar qualquer trava; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar qualquer coisa da Hazelsong. Somente testes sintéticos, com Stripe simulado.
+
+Aplicar a regra VR.
+
 514 [PF2] Produto físico com tudo o que os outros produtos já têm.
 Estado inicial: na fila.
 O que fazer: retire do produto físico as exclusões de lib/shipping.ts, uma a uma, reutilizando os mecanismos que já existem para os demais produtos:
