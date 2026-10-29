@@ -14762,3 +14762,101 @@ PR https://github.com/viniciussucupira/marktmorgen/pull/1202, head48f283a9411254
 ## AV — origem da coorte de recursos após reinício publicado
 
 Correção concreta em reservePaidResourceWindow conforme docs/restart-resource-lineage.md: reciborestart só pode reservarcoorte quandoorigempermanente+publicação conjunta+checkpoint+intent+sourceativação/recibo conferem. Caixa e seis slotsretidos,janelaatual,coorteúnica/idempotente;sememail/novogrant/flags. Redisrealambosshared/64replays/14recusaspreparados, suíte completa pendente. Teto40comandos,7leiturasadicionais e limitesrawvinculados; custosglobaismensaisanuaisdesconhecidosreprovados,semdeclaraçãodeABcompletoouentrega255.
+
+
+## SC1 — Países dos criadores: incorporado pelo Claude
+
+Instrução direta do dono recebida em29/10/2026: **incorporado ao main, não executar novamente**. PR https://github.com/viniciussucupira/marktmorgen/pull/1192 confirmado merged, commit ef984b9a53308fe8678c1ee81b60dfa996ab5ee1, head30f380e834df143c538aea815dbe5e9e6322ff42. Horário merged_at retornado pelo GitHub:29/10/2026,01:16:13Fortaleza/04:16:13UTC; qualquer horário anterior04:16:09 é registro histórico, esta observação explicita o campo atual. Escopo informado pelo dono:42países,Malásiaretirada,teste tests/connect-configuration.test.ts. Preservar implementação do Claude; este registro não refaz código nem adiciona país ou aprovação Stripe.
+
+## CK — Registro de chegada e verificação de pedidos repetidos
+
+Solicitação do dono:29/10/2026,09h35Fortaleza; arquivo anexado «CK — O que a ClickFunnels mostra e o Marktmorgen ainda não tem». Registro somente na fila; não interrompe AV/SD1 em andamento e não inicia implementação destes itens. Main f1b54f6956eb328801cc0f5980def6931970131d,0PRsabertos,756refs codex/* conferidos; filas dos18heads codex nos20PRs recentemente atualizados e5ramos relevantes de comparação/registro conferidas por etiqueta,data/hora,seção e conteúdo,sem correspondência. Próximos números livres após508:509–512; prefixo e ordem dos registros existentes preservados integralmente. Antes de executar cada item, reconferir código/fila e implementar só a diferença; provas e relato de Claude abaixo são proveniência do dono, não nova pesquisa independente do Codex. Expressões do briefing sobre «sem custo novo» não dispensam MR/TX: desconhecido reprova e nunca é zero, incluindo leituras, chamadas e banda. VR obrigatória; registro documental não é entrega funcional nem incremento do contador254.
+
+CK — O que a ClickFunnels mostra e o Marktmorgen ainda não tem (29/10/2026)
+Etiquetas: [CK1] [CK2] [CK3] [CK4]
+
+Solicitação do dono (29/10/2026, 09h35, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: antes de gravar, aplique a regra permanente "Pedidos repetidos". Confira o main, os PRs abertos e os ramos codex/* recentes e procure esta solicitação pela linha de data e hora, pelo nome da seção, pelas etiquetas [CK1] a [CK4] e pelo conteúdo. Se já estiver gravada, não crie nada novo. Grave na ordem de chegada, depois do último item já gravado, com os próximos números livres, sem alterar a ordem dos itens existentes.
+
+Contexto: o Claude percorreu no Chrome do dono, em 28 e 29/10/2026, 36 páginas públicas da ClickFunnels (página inicial, apps, recursos, preços, integrações, afiliados, parceiros e ferramentas grátis) e assistiu a cada vídeo até o fim. Depois conferiu o código do Marktmorgen no main ef984b9a. Os quatro itens abaixo são o que a ClickFunnels oferece e o código do Marktmorgen ainda não tem. Já existem e NÃO devem ser refeitos: carrinho (lib/cart-*.ts), área do comprador (lib/buyer-library.ts), afiliados com segundo nível (lib/affiliates.ts), recuperação de pagamento (lib/dunning-rules.ts, lib/payment-recovery.ts), frete e estoque (lib/shipping.ts, lib/stock.ts), biblioteca de modelos (lib/template-library.ts), links curtos (lib/short-links.ts), códigos de desconto com data de fim (lib/discount.ts), telas reais do estúdio (components/studio-screens.tsx, tests/e2e/home-studio-capture.mjs), a calculadora da página de preços (components/tools-calculator.tsx) e os limites da página inicial de 498 [ME3]. Antes de cada item, confira de novo o código e a fila e faça só a diferença.
+
+Não copiar da ClickFunnels: o botão de acessibilidade "Powered by EqualWeb", que é um overlay proibido por AX274 (item 7); contadores de urgência; o prêmio de carro para afiliados; textos com "!!!"; números de usuários diferentes de uma página para outra (100 mil numa, 200 mil noutra); a demonstração trancada atrás de nome e e-mail.
+
+509. [CK1] Abas com demonstração em vídeo das ferramentas na página inicial.
+Estado inicial: na fila.
+Problema que resolve: quem chega à página inicial não vê o produto funcionando; hoje o bloco "Everything in one place" (app/page.tsx, id home-modules-heading) é só um título e um link.
+Como a ClickFunnels faz (conferido pelo Claude no Chrome em 29/10/2026, aba "Your Funnel" de clickfunnels.com): cinco abas ("Your Funnel", "Your Store", "Your CRM", "Your Email Marketing" e "Your Online Courses"); cada uma com título, uma frase, o botão "Try for Free" e um vídeo mudo de 51 segundos gravado do produto real. No vídeo, um cursor monta um funil do começo ao fim: acrescenta uma página ao mapa do funil, arrasta uma imagem para a página no editor, edita o título ao vivo, rola até o formulário de pedido e mostra o painel de resultados. Defeitos que NÃO serão copiados:
+- o vídeo começa sozinho, repete sem fim e não tem botão de pausar;
+- as abas não usam role="tablist";
+- a página ignora prefers-reduced-motion;
+- a página de exemplo do vídeo mostra urgência ("HURRY! WE'RE WAIVING THE SHIPPING FEE FOR 24 HOURS" no segundo 26, "This deal won't last forever…" no segundo 37), um bloco "Real Customer Testimonials" com texto de preenchimento (segundo 37) e números de venda de exemplo, como "$988,597.00 Upfront sales" (segundos 40 a 46).
+O que fazer: troque o bloco "Everything in one place" por cinco abas com as ferramentas principais do Marktmorgen que já funcionam no código: "Your store", "Your checkout", "Your courses", "Your emails" e "Your affiliates". Cada aba mostra um título, uma frase, o botão "Start your store" e um vídeo mudo de no máximo 60 segundos, gravado automaticamente do estúdio real com dados fictícios isolados, como em tests/e2e/home-studio-capture.mjs. No vídeo, o cursor faz a tarefa principal da ferramenta do começo ao fim (por exemplo, em "Your store": criar o produto, escrever o título, pôr o preço e publicar). O vídeo é identificado como exemplo e nele não aparecem urgência, escassez, depoimento, número de vendas nem recurso que não funciona hoje. Regrave o vídeo automaticamente sempre que a tela gravada mudar, para nunca mostrar uma tela antiga.
+Desenho, para ficar igual ou mais bonito que o da ClickFunnels:
+- mesma paleta, fontes e cantos do site; painel com sombra suave; uma cor de destaque diferente por aba, tirada da paleta existente; versões clara e escura;
+- troca de aba com transição suave de até 300 ms, desligada com prefers-reduced-motion;
+- vídeo gravado com o dobro da densidade de pixels (nítido em tela de alta resolução), cursor ampliado com marca suave em cada clique, aproximação suave da câmera na parte que está sendo editada e nenhum tempo parado: cada ação em cerca de 2 segundos;
+- abaixo do vídeo, os passos numerados da tarefa, que se acendem junto com o vídeo; clicar num passo leva o vídeo àquele ponto; essa lista é também a transcrição em texto (1.2.8);
+- barra fina de progresso do vídeo na aba ativa;
+- em 390 × 844 px (celular), as abas cabem na tela com rolagem lateral visível, o vídeo ocupa a largura e nada transborda; em 1280 × 720 px (computador), título e frase à esquerda e vídeo à direita, como na ClickFunnels;
+- nenhuma imagem repetida no site: as telas do vídeo e sua capa não podem ser as mesmas imagens já usadas noutra parte do site;
+- critérios de beleza do dono para o desenho: integridade (nada faltando nem sobrando), proporção (tamanhos e espaços equilibrados) e clareza (cada aba entendida de imediato).
+Acessibilidade (AX274), obrigatória:
+- abas no padrão Tabs do WAI-ARIA Authoring Practices Guide (role="tablist", setas do teclado, Home e End);
+- nenhuma troca automática de aba;
+- o vídeo só começa quando a pessoa escolhe a aba;
+- botão visível de pausar e continuar;
+- ao terminar, o vídeo para na última tela, com o botão "Replay", sem repetir sozinho;
+- com prefers-reduced-motion, mostra só uma imagem parada e a lista de passos;
+- nada pisca;
+- contraste de 7:1 e alvos de 44 × 44 px.
+Desempenho: cada vídeo tem imagem de capa e só carrega quando a aba é escolhida; nada bloqueia a primeira tela; a página inicial continua dentro do orçamento de 281 [SF1] e de 497 [ME2]. O custo de banda dos vídeos é calculado e contado, nunca tratado como zero.
+Limites: a página inicial continua dentro dos limites de 498 [ME3] (no máximo 600 palavras e 30 links, contando as cinco abas e as listas de passos).
+Testes automáticos: o padrão de teclado das abas; a imagem parada com movimento reduzido; a ausência de início automático, de repetição e de troca automática; a sincronia dos passos com o vídeo; o encaixe em 390 × 844 e 1280 × 720 px nos modos claro e escuro; o limite de palavras e links; a ausência de palavras de urgência no vídeo e na página.
+Comparação visual: o PR traz capturas, lado a lado, da seção nova e da seção de abas da ClickFunnels, nas duas medidas, para o dono comparar. O item só é chamado de pronto depois de publicado em marktmorgen.com e usado de ponta a ponta, conforme a regra VR.
+Lucro: a pessoa vê em segundos o que vai usar, o que pode aumentar as contas criadas. Não prometer resultado de conversão.
+
+510. [CK2] Link curto com destino alternativo e com validade.
+Estado inicial: na fila.
+Problema que resolve: o criador não sabe qual página vende mais a partir do mesmo post e, quando uma oferta acaba, o link antigo continua levando a ela.
+O que fazer, em lib/short-links.ts e lib/short-link-rules.ts, sem novo fornecedor:
+- destino alternativo opcional: as visitas se dividem entre dois destinos da própria loja (a loja ou um produto) e o estúdio mostra, na linha do link, as visitas, as vendas e a receita de cada destino, com o mesmo método de contagem que já existe;
+- data de validade opcional: depois da data, o link leva a um destino escolhido pelo criador, nunca a uma página de erro.
+Privacidade: a divisão é sorteada a cada visita, sem cookie nem dado pessoal; só contagens agregadas.
+Acessibilidade: AX274 nos novos campos (rótulos, mensagens de erro, prevenção de erro 3.3.6).
+Testes automáticos: a divisão, a validade, o destino depois do vencimento e a contagem separada por destino.
+Lucro: recurso de vendas que aumenta o valor percebido dos planos, sem custo variável novo além das leituras já contadas.
+
+511. [CK3] Promoção com data de início e de fim marcadas antes.
+Estado inicial: na fila.
+Problema que resolve: hoje o código de desconto tem só data de fim (lib/discount.ts, expiresAt, pela Stripe); o criador precisa estar presente para lançar uma promoção de feriado na hora certa.
+O que fazer:
+- o criador marca de antemão a data e a hora de início e de fim de um código;
+- o código começa inativo na conta Stripe do próprio criador e é ativado sozinho no início, pelos trabalhos agendados que já existem;
+- o fim continua com a validade da Stripe;
+- o estúdio mostra o estado ("Scheduled", "Live", "Ended") com a data no fuso do criador.
+O que não fazer: nenhum contador regressivo nem aviso de escassez é acrescentado por este item. Se a ativação falhar, o código continua inativo e o estúdio diz isso ao criador, nunca em silêncio.
+Acessibilidade: AX274 (seletores de data acessíveis por teclado, sem limite de tempo para preencher).
+Testes automáticos, com relógio sintético e Stripe simulado: a ativação no horário, o fim e a falha.
+Lucro: promoções sem trabalho manual, valor percebido maior, sem custo novo além de uma chamada à Stripe por código.
+
+512. [CK4] Ferramentas grátis abertas no marktmorgen.com.
+Estado inicial: na fila.
+Problema que resolve: o Marktmorgen não tem páginas que tragam visitantes de busca. A ClickFunnels mantém 20 ferramentas grátis em /business-tools (QR code, redimensionar imagem, calculadoras e outras).
+O que fazer: crie três ferramentas públicas, sem cadastro, que rodam inteiramente no navegador do visitante, sem servidor, sem fornecedor e sem guardar nada:
+- gerador de QR code para um link;
+- redimensionador de imagem para capas de produto, nos tamanhos que a loja usa;
+- calculadora do que sobra de uma venda digital: a pessoa digita o preço e as taxas dela, sem nenhum número de imposto presumido pelo site.
+Cada ferramenta tem sua própria página, com título, uma frase de explicação e um link para "Start your store". As páginas entram no mapa do site sem passar dos limites de 498 [ME3] na página inicial.
+Custos: o custo de banda dessas páginas é contado, nunca tratado como zero.
+Acessibilidade: AX274 completo; a ferramenta inteira opera só por teclado e a imagem gerada tem texto alternativo.
+Testes automáticos: o resultado de cada ferramenta e a ausência de chamadas de rede ao usá-la.
+Lucro: tráfego de busca grátis para a página de cadastro; custo variável só de banda estática.
+
+Regra de margem: cada item segue a REGRA DE MARGEM vigente (MR, 27/10/2026, 07h42): nenhum cliente pagante dá prejuízo, usando 100% de todos os direitos do plano e de cada complemento no pior mês, no mensal e no anual, com teto automático e reserva antes de cada gasto; a empresa fica sem prejuízo a partir da base mínima; 60% é meta mensal real, não trava. Política tributária TX. Custo desconhecido reprova, nunca é zero; nenhuma cota grátis de fornecedor conta como zero; taxas de recebimento mais caras de lib/receiving-costs.ts; todos os custos fixos são 100% do Marktmorgen (FX275).
+
+Proibido: mudar preços, cortar limites visíveis, retirar recursos ou direitos de qualquer plano, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a, a revisão comercial ou stripePlatformEligibilityReady; afrouxar qualquer trava; instalar overlay ou widget de acessibilidade; acrescentar contador regressivo, escassez, depoimento ou número inventado; mostrar recurso que não funciona hoje; apagar páginas ou conteúdo (só mover); alterar o conteúdo do criador sem aprovação; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar qualquer coisa da Hazelsong; afirmar em público superioridade sobre a ClickFunnels sem a prova exigida em AX274 (item 7) e na regra VR (item 7). Somente testes sintéticos.
+
+Aplicar a regra VR.
