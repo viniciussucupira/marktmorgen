@@ -271,6 +271,35 @@ export async function pausePlan(store: Store, months: PauseMonths, nowSeconds = 
 }
 
 /** Drops a store's break. `andTheYear` gives the once-a-year break back too: for one that never began. */
+
+/** Worker cleanup may only remove the generation it actually observed.
+ * An ambiguous reply keeps the evidence and never falls back to DEL/ZREM.
+ * Creator-initiated undo/drop keep their existing separate semantics. */
+export const PAUSE_WORKER_FORGET = `-- marktmorgen:pause-worker-forget:v1
+if #KEYS~=2 or #ARGV~=3 or KEYS[1]==KEYS[2] then return 0 end
+local current=redis.call('GET',KEYS[1])
+if ARGV[2]=='missing' then
+ if current then return 0 end
+ redis.call('ZREM',KEYS[2],ARGV[1])
+ return 1
+end
+if ARGV[2]~='known' or current~=ARGV[3] then return 0 end
+local ok,p=pcall(cjson.decode,current)
+if not ok or type(p)~='table' or p.funding~=nil or type(p['until'])~='number' then return 0 end
+if redis.call('ZSCORE',KEYS[2],ARGV[1])~=tostring(p['until']) then return 0 end
+redis.call('DEL',KEYS[1])
+redis.call('ZREM',KEYS[2],ARGV[1])
+return 1
+`;
+async function forgetObserved(ref: string, raw: string | null): Promise<boolean> {
+  try {
+    const reply = await redisPipeline([["EVAL", PAUSE_WORKER_FORGET, 2, recordKey(ref), DUE, ref, raw === null ? "missing" : "known", raw ?? ""]]);
+    if (!Array.isArray(reply) || reply.length !== 1) return false;
+    const ack = Object.getOwnPropertyDescriptor(reply, "0");
+    return Boolean(ack && Object.hasOwn(ack, "value") && ack.value === 1);
+  } catch { return false; }
+}
+
 async function forget(ref: string, andTheYear: boolean): Promise<void> {
   await redisPipeline([
     ["DEL", recordKey(ref)],
@@ -441,7 +470,7 @@ export async function runBreaks(nowSeconds = Math.floor(Date.now() / 1000)): Pro
     }
     if (!record) {
       // The explicit pause miss above proves this is only a stale due member.
-      await forget(ref, false);
+      if (!(await forgetObserved(ref, stored.raw))) { counts.failed += 1; continue; }
       counts.dropped += 1;
       continue;
     }
@@ -471,7 +500,7 @@ export async function runBreaks(nowSeconds = Math.floor(Date.now() / 1000)): Pro
     // Started again by hand, from the studio, on a subscription of its own:
     // there is nothing left to start.
     if (!record.funding && store.subscriptionActive && store.subscriptionId !== record.subscription) {
-      await forget(ref, false);
+      if (!(await forgetObserved(ref, stored.raw))) { counts.failed += 1; continue; }
       counts.dropped += 1;
       continue;
     }
@@ -515,7 +544,7 @@ export async function runBreaks(nowSeconds = Math.floor(Date.now() / 1000)): Pro
       // A provider response is not an acknowledged store write. Retain the
       // exact pause and due evidence when the nullable writer cannot confirm.
       if (!saved) { counts.failed += 1; continue; }
-      await forget(ref, false);
+      if (!(await forgetObserved(ref, stored.raw))) { counts.failed += 1; continue; }
       await tell(store, "restarted", record).catch(() => false);
       counts.restarted += 1;
     } catch (error) {
@@ -529,7 +558,7 @@ export async function runBreaks(nowSeconds = Math.floor(Date.now() / 1000)): Pro
         counts.failed += 1;
         continue;
       }
-      await forget(ref, false);
+      if (!(await forgetObserved(ref, stored.raw))) { counts.failed += 1; continue; }
       await tell(store, declined(error) ? "failed" : "unconfirmed", record).catch(() => false);
       counts.failed += 1;
     }

@@ -1311,6 +1311,65 @@ def main():
         print('PASS:strict release5negative cases and actual INFO commands=' + json.dumps(release_counts,sort_keys=True))
 
 
+        pause_source = (Path(__file__).resolve().parents[1] / 'lib/plan-pause.ts').read_text(encoding='utf-8')
+        forget_match = re.search(r'export const PAUSE_WORKER_FORGET = `([^`]+)`;', pause_source)
+        assert forget_match and '
+        for ref in intent_refs:
+            if not ref.startswith('synthetic-restart-intent-'):
+                raise RuntimeError('Refuse unrelated synthetic pause cleanup')
+            redis.command('DEL', 'nl:pause:' + ref, 'nl:pause:last:' + ref)
+            redis.command('ZREM', 'nl:pause:due', ref)
+        for key in keys:
+            if not key.startswith(prefix):
+                raise RuntimeError('Refuse cleanup outside this generated CI namespace')
+            redis.command('DEL', key)
+        redis.close()
+
+
+if __name__ == '__main__':
+    main()
+ + '{' not in forget_match.group(1)
+        forget_script = forget_match.group(1)
+        pause_key, due_key = prefix + ':worker-pause', prefix + ':worker-due'
+        keys.extend([pause_key, due_key])
+        worker_raw = json.dumps({'until': 1800000000, 'subscription': 'sub_SyntheticWorker'})
+        replacement = json.dumps({'until': 1800086400, 'subscription': 'sub_SyntheticWorker'})
+        def worker_forget(mode, raw):
+            return redis.command('EVAL', forget_script, 2, pause_key, due_key, 'synthetic-member', mode, raw)
+        def seed_worker(raw=worker_raw, score=1800000000):
+            redis.command('DEL', pause_key, due_key)
+            if raw is not None: redis.command('SET', pause_key, raw)
+            redis.command('ZADD', due_key, score, 'synthetic-member')
+        for mode in ('missing', 'known'):
+            seed_worker(replacement, 1800086400)
+            assert worker_forget(mode, '' if mode == 'missing' else worker_raw) == 0
+            assert redis.command('GET', pause_key) == replacement
+            assert redis.command('ZSCORE', due_key, 'synthetic-member') == '1800086400'
+        seed_worker(worker_raw, 1800086400)
+        assert worker_forget('known', worker_raw) == 0
+        assert redis.command('GET', pause_key) == worker_raw
+        funded_raw = json.dumps({'until': 1800000000, 'funding': {'version': 1}})
+        seed_worker(funded_raw)
+        assert worker_forget('known', funded_raw) == 0
+        assert redis.command('GET', pause_key) == funded_raw
+        seed_worker()
+        before_worker = command_counts()
+        assert worker_forget('known', worker_raw) == 1
+        worker_counts = difference(before_worker, command_counts())
+        assert sum(worker_counts.values()) <= 5, worker_counts
+        assert redis.command('GET', pause_key) is None
+        assert redis.command('ZSCORE', due_key, 'synthetic-member') is None
+        seed_worker(replacement, 1800086400)
+        assert worker_forget('known', worker_raw) == 0  # Lost ACK never removes a replacement.
+        seed_worker(None)
+        before_worker = command_counts()
+        assert worker_forget('missing', '') == 1
+        missing_counts = difference(before_worker, command_counts())
+        assert sum(missing_counts.values()) <= 3, missing_counts
+        assert redis.command('ZSCORE', due_key, 'synthetic-member') is None
+        print('PASS:pause worker exact raw/due cleanup preserves replacements, changed score, funded ownership and lostACK;known=' + json.dumps(worker_counts, sort_keys=True) + ';missing=' + json.dumps(missing_counts, sort_keys=True))
+
+
     finally:
         for ref in intent_refs:
             if not ref.startswith('synthetic-restart-intent-'):
