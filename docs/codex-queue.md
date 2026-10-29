@@ -15930,3 +15930,38 @@ Margem (regra MR vigente, 27/10/2026, 07h42): nenhum cliente pagante, isoladamen
 Proibido: alterar preço, valor cobrado, impostos, formas de pagamento ou qualquer dado da cobrança; mudar configurações da conta Stripe do criador; enviar imagem ao Stripe sem o clique do criador; usar cor que reprove o contraste; mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos, com Stripe simulado.
 
 Aplicar a regra VR.
+
+
+## 537 [PH1] — Texto de prévia do e-mail, também no teste A/B
+
+Estado: na fila. Ordem de chegada após536CB1, subordinada à prioridadeAV1; sem alteração dos itens existentes. Proveniência: pedido direto do dono de29/10/2026,16h00Fortaleza. Deduplicação: main2cd4fbda,PR1213aberto e20heads codex/*recentes, inventário766ramos; sem pedido equivalente por PH1/preheader/Preview text/data/título/conteúdo. Reusar mail-test/broadcasts/flows/modelos existentes, sem refazer testes nem mudar a regra por visitas/vendas. Aplicar VR.
+
+Nota de integridade: a mensagem recebida termina literalmente em “nenhum cliente”, no começo do parágrafo de margem; o restante não foi recebido nem reconstruído como citação do dono. Permanecem integralmente vinculantes MR27/10/2026 07h42, TX, FX275 e as proibições permanentes: nenhum cliente pagante em prejuízo com100%dos direitos/complementos no pior mês mensal/anual, taxas mais caras de lib/receiving-costs.ts, reservas antes do gasto e empresa sem prejuízo na base mínima com100%custos fixos;60%meta mensalreal,não trava; custo desconhecido reprova,não zero. Preservar preços,limites,comissão,PLANS_ON_SALE=false,OPENING_REQUESTED,tax gate,art.9a,revisão comercial,stripePlatformEligibilityReady,opt-in,conteúdo/idiomas/IDs e Hazelsong. Nenhum envio real,conta,aceite,contratação,pagamento ou contato externo; somente testes sintéticos. Texto recebido preservado abaixo, sem presumir uma continuação ausente:
+
+PH — Texto de prévia do e-mail (preheader), também no teste A/B (29/10/2026) [PH1]
+
+Solicitação do dono (29/10/2026, 16h00, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: antes de gravar, aplique a regra "Pedidos repetidos" (23/10/2026). Procure esta solicitação no main, nos PRs abertos e nos ramos codex/* recentes, pela linha de data e hora, pelo nome da seção, pela etiqueta [PH1] e pelo conteúdo. Se já existir item que peça o texto de prévia (preheader) nos e-mails, aplique só a diferença dentro dele, mantendo número, posição e estado; caso contrário, crie um único item com o próximo número livre, na posição que a ordem AV1 indicar.
+
+Estado inicial: na fila.
+
+Contexto: o Claude conferiu em 29/10/2026 a seção "Supercharge your email marketing" de clickfunnels.com/features/ab-testing: o teste A/B de e-mail deles troca o assunto ("Alternate subject line") e o texto de prévia ("Alternate preheader"), e decide por aberturas e cliques. O Marktmorgen já testa dois assuntos (lib/mail-test.ts, envio em lib/broadcasts.ts), decidido por visitas à loja ou vendas, sem pixel e sem link rastreado (promessa da política de privacidade). Mas os e-mails do Marktmorgen não têm texto de prévia: nenhum campo em lib/broadcasts.ts, lib/flows.ts ou nos modelos; sem ele, o aplicativo de e-mail mostra as primeiras palavras do corpo.
+
+[PH1] Texto de prévia em todos os e-mails escritos pelo criador.
+(a) Acrescente o campo opcional "Preview text" aos envios avulsos, aos e-mails das sequências e aos modelos de e-mail existentes, com até 120 caracteres, em texto simples, sem HTML, link ou imagem, e com a contagem de caracteres ao lado.
+(b) No e-mail enviado, o texto de prévia é o primeiro texto do corpo, escondido visualmente pela técnica padrão de e-mail, seguido de espaçadores que impedem o aplicativo de completar a prévia com o resto do corpo; na versão em texto simples, ele é a primeira linha. Sem texto de prévia preenchido, nada é acrescentado e o comportamento de hoje continua.
+(c) No teste A/B existente (lib/mail-test.ts), o criador pode testar, além do assunto, o par assunto + texto de prévia, com a mesma regra de hoje: sorteio da lista, decisão por visitas ou vendas, sem pixel, e o primeiro vai ao resto da lista quando nenhum for melhor, dito no estúdio com os números.
+(d) Prévia no estúdio de como o e-mail aparece na caixa de entrada (remetente, assunto e texto de prévia), no computador e no celular.
+(e) Quando houver IA ligada no plano, ela pode sugerir um texto de prévia a partir do próprio e-mail, dentro do orçamento de IA já reservado do plano, com reserva antes da chamada; o criador revisa e salva. Sem IA, o campo funciona igual.
+(f) Honestidade: o texto de prévia não pode prometer o que o e-mail não tem nem usar pressa ou escassez falsa; os exemplos e as sugestões da IA nunca usam frases como "This Only Happens Once a Year" ou "Deals Inside" se o e-mail não tiver isso.
+
+Acessibilidade (AX274): o texto de prévia escondido não repete o assunto nem atrapalha o leitor de tela; o campo no estúdio tem rótulo visível, contagem anunciada e mensagem de erro em texto; contraste de 7:1.
+
+Testes automáticos: o texto de prévia aparece como primeiro texto e primeira linha da versão em texto simples; sem preenchimento, o e-mail sai como hoje; limite de 120 caracteres; sem HTML, link ou imagem; teste A/B do par assunto + texto de prévia com a regra atual; nenhum pixel ou link rastreado acrescentado; somente envios simulados.
+
+Custo: um campo de texto sem chamada nova; a sugestão de IA usa só o orçamento de IA já reservado do plano, com reserva antes; nenhum e-mail a mais é enviado; desconhecido reprova, nunca é zero.
+
+Margem (regra MR vigente, 27/10/2026, 07h42): nenhum cliente
