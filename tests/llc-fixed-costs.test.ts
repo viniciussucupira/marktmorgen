@@ -66,3 +66,14 @@ test("detached cost evidence retains valid totals and refuses unsafe aggregate a
  const annual=fixture();annual[0].fullAnnualUsdCents=Number.MAX_SAFE_INTEGER;
  assert.equal(allocateEntireLlcFixedCosts(annual),null);
 });
+
+test("SD1 initial LLC formation cannot disappear from the complete company cost review",()=>{
+ assert.ok((LLC_FIXED_COST_IDS as readonly string[]).includes("llc-formation"));
+ assert.equal(allocateEntireLlcFixedCosts(fixture().filter(line=>line.id!=="llc-formation")),null);
+ const current=CURRENT_LLC_FIXED_COST_CEILINGS.find(line=>line.id==="llc-formation")!;
+ assert.deepEqual([current.fullMonthlyUsdCents,current.fullAnnualUsdCents,current.reserveReviewed],[null,null,false]);
+ assert.equal(sources.formation.initialMinor,50000);
+ assert.equal(sources.formation.includesGovernmentFees,true);
+ assert.equal(sources.formation.includesFirstAgentYear,true);
+ assert.equal(sources.registeredAgent.annualMinor,10000);
+});
