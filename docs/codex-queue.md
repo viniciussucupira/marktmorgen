@@ -13087,3 +13087,62 @@ LQ1 aplicado sem exclusão de histórico;25grupos LQ3 examinados e diferenças a
 
 
 LQ — falha e correção preservadas: head27b51f6d767511d1c0ab51a6d50ea5246fb3370f,verify123173453886,reprovado28/10/2026 20h57Fortaleza. O inventário linguístico encontrou grafia britânica cancelled no título do novo teste de custos. Corrigido para canceled, inglês americano, também no comentário do catálogo. Nenhuma asserção, teste, limiar, custo ou trava removido/afrouxado. Documento gerado e teste de igualdade não causaram a falha. Exigir toda a suíte no novo head corrigido; não reexecutar apenas o job. Nada incorporado/publicado por esse head reprovado; contador254.
+
+
+## LQ — Segunda limpeza da fila, conferida no código (28/10/2026)
+
+Solicitação do dono (28/10/2026, 20h38, horário de Fortaleza). Complemento único de LQ1–LQ3 no mesmo PR1184, ainda aberto; nenhum novo PR ou número global.
+
+Estado: **na fila, em conferência no mesmo PR1184; não incorporar enquanto LQ4–LQ8 não forem confrontados com texto integral, código canônico e publicação**. Mantidos os estados anteriores até essa conferência. Não transformar a lista fornecida em prova de conclusão/cancelamento/absorção. Resultados entram na tabela única LQ3 já existente; não criar segunda tabela. AV1/SD1 e a branch1185 continuam, sem editar a mesma branch em paralelo.
+
+Pedidos repetidos: main9c224622c0f93fc864026f48114267e6b6d79998, três PRs abertos1184/1185/1173, filas de40heads distintos recentes e nomes739refs codex/* conferidos por data20h38, título, etiquetasLQ4–LQ8 e conteúdo; nenhuma ocorrência equivalente. As40leituras concluíram sem erro. O novo texto é complemento com data/hora própria, não repetição sem mudança. Proveniência: anexo fornecido pelo dono ffa24b07-4e31-43b5-a199-e66f6a3970c8/Texto colado.txt; texto literal abaixo preservado.
+
+Cuidados de execução: conferir separadamente a regra do menor número e as remissões de LQ6 antes de escolher absorção; escopos diferentes permanecem distintos. Em58 cancelar somente a parteBR solicitada, preservando restante, conteúdo/idiomas de compradores e identificadores existentes. Em505 conferir somente metadados de presença/escopoProduction e publicação, nunca valores secretos. EmLQ8 mudar aplicação vigente sem apagar texto/provas históricos nem retirar tecnicamente outras travas. Nenhuma dependência/pagamento/conta/operação externa ou idioma é ativado por este registro.
+
+LQ — Segunda limpeza da fila, conferida no código (28/10/2026)
+Etiquetas: [LQ4] [LQ5] [LQ6] [LQ7] [LQ8]
+
+Solicitação do dono (28/10/2026, 20h38, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: antes de gravar, aplique a regra permanente "Pedidos repetidos". Confira o main, os PRs abertos e os ramos codex/* recentes, e procure esta solicitação pela linha de data e hora, pelo nome da seção, pelas etiquetas [LQ4] a [LQ8] e pelo conteúdo. É complemento de [LQ1]–[LQ3] (PR #1184): execute no mesmo PR, se ainda estiver aberto, sem criar outro. Esta decisão é mais recente que os itens citados e prevalece sobre eles (passo 3b), sem renumerar nada.
+
+Estado inicial: na fila, junto com [LQ1]–[LQ3], sem interromper [AV1] nem [SD1].
+
+Regra comum: antes de marcar qualquer item, confira o texto completo dele, o código no main e o site publicado. Se a conferência não confirmar o motivo indicado, mantenha o item como está e registre por quê. Preserve texto, histórico e provas de todos os itens. Registre o resultado na mesma tabela única de [LQ3] (item, decisão, motivo).
+
+[LQ4] Fechar como concluídos os itens que a própria fila registra como publicados ou concluídos, mas ainda não marcados como "feito": 90, 142, 143, 144, 146, 147, 148, 150, 154 a 181, 183 a 195, 200, 328 (instrução de ordem já substituída por [AV1]) e 336 (regra já gravada em AGENTS.md; a medição dos custos fica em 275 [FX1]).
+
+[LQ5] Itens que já existem no main. Reduza cada um somente à diferença que falta; se não faltar nada, feche-o:
+(a) 30 [E13]: components/exit-offer.tsx já existe; o checkout é hospedado pelo Stripe.
+(b) 54 [J2]: diferenças favoráveis já publicadas em lib/site-pages.ts, lib/final-comparison-pages.ts e lib/competitor-prices.ts.
+(c) 95 [D2-DEMAND-RADAR]: lib/customer-voice.ts já existe; restam motivos de reembolso e listas de espera.
+(d) 115 [E2-FOUNDING-MEMBERS]: níveis de preço maiores já existem (lib/tier-rules.ts); resta só o rótulo de fundador.
+(e) 202 [P0-REAL-PEOPLE]: plano em docs/accessibility-real-people-plan.md; o restante é decisão do dono.
+(f) 211 [SH8]: biblioteca do comprador e carteiras pelo Stripe do criador já existem; resta conferir as carteiras.
+(g) 226 [HL7]: coortes já existem (app/studio/memberships, components/weekly-cohorts.tsx).
+(h) 278 [H3-3]: lib/short-links.ts já faz um link por vídeo com visitas, vendas e receita.
+(i) 291 [SQ2]: a busca de aulas já existe; restam a busca na transcrição e o salto ao momento da aula.
+(j) 409 [AM4]: lib/affiliate-payday.ts já existe; resta o lembrete dentro do estúdio.
+(k) 416 [KX3]: startsAt e dripDays já existem em lib/course.ts; restam a data por aula e o fuso da loja.
+(l) 482 [SB5]: lib/outreach.ts e writePitch já existem; resta incluir os números do kit de mídia, junto com 425 [BX1].
+(m) 505 [SG2]: o dono informa que DEMO_STUDIO_ADMIN e STRIPE_DEMO_ACCOUNT_ID foram criados na Vercel, em Production, em 28/10/2026, pelo Claude a pedido dele. Confira na publicação, sem revelar valores, e feche o passo pendente se confirmado.
+
+[LQ6] Pedidos repetidos, com o mesmo procedimento de [LQ3] (número menor válido, diferenças incorporadas, os demais "Absorvido pelo item N (LQ6); não executar"): 18 [E1] e 198 [HT13] (198 já avaliado e reprovado por custo; o tutor fica reprovado até nova avaliação de custo); 36 [F5] em 109 [E2-EVENTS]; 112 [E2-POINTS] em 24 [E7]; 51 [I2] em 309 [EM1]; 52 [I3] em 216 [OP2]/220 [HL1], conforme [LQ3]; 386 [TB12] em 219 [OP5].
+
+[LQ7] Cancelar por pouco valor ou por contrariar regra do dono, marcando "Cancelado por decisão do dono em 28/10/2026 (LQ7); não executar": 16 [D13], 37 [F6], 41 [G3], 47 [H4], 49 [H6], 127 [H7-CUSTOM-CSS], 215 [OP1], 236 [SK4], 280 [H3-5], 347 [FL2], 352 [DN4], 395 [CX6], 398 [SL2], 402 [WX3], 404 [RF1], 420 [CC4] (regra do dono: produto e estúdio 100% em inglês) e, em 58 [K3-LANG/PATH14], somente a parte do português do Brasil (regra do dono: nunca construir para o mercado brasileiro); o restante do 58 continua.
+
+[LQ8] Atualizar partes que perderam o motivo, sem executar nada novo:
+(a) 432 [PV2] parte (c) e 435 [PV5] parte (b): retirar a hospedagem na UE como exigência ([LQ1](d)).
+(b) 435 [PV5] parte (f)(1): cancelar a preparação de consulta à Receita (política TX: nenhuma consulta).
+(c) 214 [SH11], 261 [KJ6] e 324 [TK6]: trocar a referência aos "60% por cliente/plano" pela REGRA DE MARGEM vigente abaixo, antes de executar.
+(d) 319 [TK1]: registrar que o motivo de manter a Paddle em lib/receiving-costs.ts era alinhar com a Hazelsong, que foi encerrada; o item continua.
+
+REGRA DE MARGEM (MR, 27/10/2026, 07h42): nenhum cliente pagante, isoladamente, usando 100% de todos os direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo depois de todos os custos e impostos; a empresa nunca dá prejuízo no pior caso a partir da base mínima calculada; 60% é a meta líquida mensal real da empresa. Taxas de recebimento mais caras de lib/receiving-costs.ts, reservas, exposição e custeio preservados; desconhecido reprova, nunca é zero; 100% dos custos fixos da LLC pertencem ao Marktmorgen (FX275); política tributária TX vigente.
+
+Proibido: ligar OPENING_REQUESTED ou PLANS_ON_SALE; afrouxar travas ou testes; mudar preços, limites visíveis ou comissão; apagar texto, histórico ou provas de qualquer item; renumerar itens; revelar valores de variáveis secretas; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+
+Registro documental do complemento, ainda sem execução comprovada. Regressões do head9bab66cc passaram até o passo de comportamento/compilação, mas a suíte anterior estava em andamento; nenhum resultado anterior substitui o novo head deste complemento. Sem publicação funcional/contador;254 preservado.
