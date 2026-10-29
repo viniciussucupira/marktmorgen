@@ -994,12 +994,22 @@ async function main() {
     is("the ordinary inactive store has no funded period",current?.period,null);
     const original=pauseRedis.pipeline;
     const evidence=await original([["GET",`nl:pause:${ref}`],["GET",`nl:pause:last:${ref}`]]);
-    let ledgerCommands=0,ownerReads=0,mutations=0;
+    let ledgerCommands=0,ownerReads=0,mutations=0,ownerRanges=0,ownerGets=0;
+    let rawOwner:unknown,overrideSource=false,sourceThrows=false,sourceReply:unknown[]=[];
     pauseRedis.pipeline=async commands=>{
       ledgerCommands+=commands.filter(command=>command.some(value=>value==="nl:contract-reserve:v1")).length;
-      ownerReads+=commands.filter(command=>command[0]==="GET"&&String(command[1]).startsWith("nl:store:owner:")).length;
-      mutations+=commands.filter(command=>!["GET","ZRANGEBYSCORE"].includes(String(command[0])) && !(command[0]==="EVAL"&&(command[1]===PAUSE_OBSERVATION||command[1]===PAUSE_DUE_OBSERVATION))).length;
-      return original(commands);
+      const ownerCommands=commands.filter(command=>["GET","GETRANGE"].includes(String(command[0]))&&String(command[1]).startsWith("nl:store:owner:"));
+      ownerReads+=ownerCommands.length;
+      ownerRanges+=ownerCommands.filter(command=>command[0]==="GETRANGE").length;
+      ownerGets+=ownerCommands.filter(command=>command[0]==="GET").length;
+      mutations+=commands.filter(command=>!["GET","GETRANGE","ZRANGEBYSCORE"].includes(String(command[0])) && !(command[0]==="EVAL"&&(command[1]===PAUSE_OBSERVATION||command[1]===PAUSE_DUE_OBSERVATION))).length;
+      if(overrideSource&&ownerCommands.length){
+        if(sourceThrows)throw Error("synthetic funded owner read unavailable");
+        return sourceReply;
+      }
+      const reply=await original(commands);
+      if(ownerCommands.some(command=>command[0]==="GETRANGE"))rawOwner=reply[0];
+      return reply;
     };
     try{
       for(const offset of [-2*DAY,-DAY,-60]){
@@ -1011,13 +1021,39 @@ async function main() {
         is("held notice retains the due member for later reconciliation",Array.isArray(due)&&due.includes(ref),true);
       }
       for(const offset of [60,4*DAY]){
-        const calls=providerCalls,before=created.length;emails.length=0;
+        const calls=providerCalls,before=created.length,rangesBefore=ownerRanges,getsBefore=ownerGets;emails.length=0;
         is("the closed integrated funded branch stays unresolved beyond the legacy retry window",await runBreaks(set.record.until+offset),{told:0,restarted:0,failed:1,dropped:0});
+        is("funded due worker uses one bounded source read and no unbounded owner GET",[ownerRanges-rangesBefore,ownerGets-getsBefore],[1,0]);
         is("coverage refuses before ensurePrice, provider GET/POST, grant or intent IO",[providerCalls-calls,created.length-before,ledgerCommands,emails.length],[0,0,0,0]);
         is("exact pause and annual evidence remain",await original([["GET",`nl:pause:${ref}`],["GET",`nl:pause:last:${ref}`]]),evidence);
         const [due]=await original([["ZRANGEBYSCORE","nl:pause:due","-inf","+inf"]]);
         is("funded due ownership is retained",Array.isArray(due)&&due.includes(ref),true);
         is("unresolved funded restart cannot authorize content closing",await onBreak(ref,set.record.until+offset),true);
+      }
+      if(suffix==="known"){
+        if(typeof rawOwner!=="string")throw Error("Synthetic funded owner source was not observed");
+        const owner=JSON.parse(rawOwner) as Record<string,unknown>;
+        let getters=0;
+        const accessor:unknown[]=[];
+        Object.defineProperty(accessor,"0",{enumerable:true,get(){getters++;throw Error("source reply getter must not run");}});
+        const malformed:unknown[][]=[[],[null],["{"],["x".repeat(MAX_STORE_BYTES+1)],["é".repeat(Math.floor(MAX_STORE_BYTES/2)+1)],accessor,
+          [JSON.stringify({...owner,email:"foreign-funded-worker@example.com"})]];
+        for(const field of ["handle","statsId","subscriptionId","stripeCustomerId","tier","cycle","email","sid","subscriptionActive","extra"]){
+          malformed.push([JSON.stringify({...owner,[field]:undefined})]);
+        }
+        overrideSource=true;
+        for(const reply of malformed){
+          sourceReply=reply;const calls=providerCalls,writes=mutations,ranges=ownerRanges;emails.length=0;
+          is("unknown funded owner source is retained before restart admission",await runBreaks(set.record.until+60),{told:0,restarted:0,failed:1,dropped:0});
+          is("unknown source performs one bounded read and no subsequent provider, ledger, write or email",[ownerRanges-ranges,providerCalls-calls,ledgerCommands,mutations-writes,emails.length],[1,0,0,0,0]);
+          is("unknown source preserves exact pause and annual evidence",await original([["GET",`nl:pause:${ref}`],["GET",`nl:pause:last:${ref}`]]),evidence);
+        }
+        sourceThrows=true;const calls=providerCalls,writes=mutations;
+        is("transport-unknown funded owner source stays held",await runBreaks(set.record.until+60),{told:0,restarted:0,failed:1,dropped:0});
+        is("transport-unknown source performs no follow-on mutation or provider work",[providerCalls-calls,mutations-writes,ledgerCommands,emails.length,getters],[0,0,0,0,0]);
+        overrideSource=false;sourceThrows=false;
+        const [due]=await original([["ZRANGEBYSCORE","nl:pause:due","-inf","+inf"]]);
+        is("all source refusals retain the funded due member",Array.isArray(due)&&due.includes(ref),true);
       }
       const raw=JSON.parse(evidence[0] as string);
       for(const funding of [null,{version:2,grantId:sourceGrant},{version:1,grantId:"foreign"}]){

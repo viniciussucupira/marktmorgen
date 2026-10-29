@@ -15698,3 +15698,10 @@ Regra de margem: segue a REGRA DE MARGEM vigente (MR, 27/10/2026, 07h42), a pol�
 Proibido: depoimento, foto, nome ou número inventados ou de exemplo apresentados como reais; texto de depoimento escrito pela IA ou pelo Marktmorgen; publicar sem consentimento; pagar ou dar desconto em troca de depoimento sem dizer isso ao lado; construir antes da abertura; mudar preços, limites visíveis, comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a, a revisão comercial ou stripePlatformEligibilityReady; afrouxar qualquer trava; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar qualquer coisa da Hazelsong. Somente testes sintéticos.
 
 Aplicar a regra VR.
+
+
+### AV(a) — limitar a fonte atual antes do worker de reinício financiado
+
+PR1208incorporado29/10/2026,14:48:14Fortaleza/17:48:14UTC,merge63fb0308a49e46e76d8d31c3553ad02e5650925a,head62fa89236ebd1cebf04e56c5f0e8c4b0e511ac49,árvoree6de942b138479701fc234511f48dd191639d1f4/pais332a38d+62fa892.39/39checks+Vercel,234bundles/Everythingpassing;READYdpl_HSwdRbxvJZxbJn1WUNysQtGyXmnu/SHAexato/7aliases/5HTMLexatos conferidos. Contador254mantido porprova interativaChromeaindabloqueada;nenhum255. Todos registros até533ecomplementos incorporados apenas como fila. Detalhes/custos/provas emdocs/pause-worker-source-bound.md,carregados com esta mudança real,semPRexclusivodeprovas.
+
+O caminho realrunBreaksdepausafinanciada reutiliza storeForRestartSource:1GETRANGEemvezdeGETilimitado,limite1.000.000bytes+1detecção,primitivosfinanceiroscrusobrigatóriosantesnormalização/admissão. Legadopreservado;fonte ilegível/oversize/accessor/estrangeira/ausente/transporteincertoretém pausa/ano/due,semprovedor/ledger/escrita/email. Mesmo1comando,nãocustozero;frequência/globalM/Y/CPU/overhead/impostos desconhecidosreprovam,nenhumaoperaçãofinanceiraavisohabilitada. Coberturasfalse/políticasnull/preços/direitos/gatespreservados;suíteinteira novoheadobrigatória.
