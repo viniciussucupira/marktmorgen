@@ -15448,6 +15448,43 @@ Proveniência/diferença: pedido direto do dono acima; descrição da captura at
 PR1211 incorporado em29/10/2026,11:22:11Fortaleza/14:22:11UTC,merge332a38db16d7a2907a5c6fed08e5169403853c01,headef36df797b7c92e54e2f44de638cf188a08b93ec,árvore0fb59845e268c29b85937a6ceae4e9b93c5ca03b,paise51030ab+ef36df7.27checksdocumentais16success11skips+Vercel.526FN2nafilaapós525,briefingintegral/reaproveitamento/ordem/estado preservados.375/32complementoTBpermanece nestePRcomcódigo. Suíteinteira novamente na árvorecombinada;provas antigas não certificamnovohead. Counter254inalterado.
 
 
+
+### Complemento ao 526 [FN2] — 29/10/2026, 15h57 Fortaleza
+
+Proveniência: solicitação direta do dono, preservada integralmente abaixo. Pedidos repetidos passo3(b): main2cd4fbda, nenhum PR aberto e19heads codex/* de20PRsrecentes conferidos por data, título, FN2 e conteúdo; diferença ainda ausente. Acrescenta visualização dos resultados ao526existente; número, posição, estado, mapa/caminho condicional e histórico intactos. Reusar o gerador de526/535MV1; não refaz contagem, regra estatística ou seleção de vencedor. Ordem AV1 mantida. Registro apenas, sem implementação antecipada.
+
+FN — Complemento ao 526 [FN2]: resultado do teste A/B em dois cartões lado a lado, com a imagem de cada versão (29/10/2026)
+Etiqueta: [FN2]
+
+Solicitação do dono (29/10/2026, 15h57, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: é complemento ao item 526 [FN2] já gravado, que já recebeu o complemento de 29/10/2026 sobre o mapa e o caminho condicional. Aplique só a diferença ao item existente, mantendo número, posição e estado (regra "Pedidos repetidos", passo 3, letra b), e registre na proveniência o que mudou.
+
+Estado inicial: o do próprio 526.
+
+Contexto: o Claude conferiu em 29/10/2026 a seção "Start small, see big wins" de clickfunnels.com/features/ab-testing: as versões A e B aparecem lado a lado, cada uma como cartão com a miniatura da página, o nome, o endereço e uma grade de números (visitas, cadastros, vendas, valor de ofertas extras, receita e receita recorrente). No Marktmorgen, o teste de página já existe e é mais rigoroso (lib/headline-test.ts, lib/headline-test-rules.ts: vencedor por dinheiro por visitante a partir das vendas pagas na conta Stripe do criador, linha válida a cada leitura, espera do prazo de reembolso, "Still running" sem dados suficientes), mas o resultado aparece só como linhas de texto em components/page-editor.tsx ("Version A: seen…, … sales paid, … in gross payments, … per visitor").
+
+O que acrescentar ao 526 [FN2]:
+- no teste de página que já existe (título ou versão inteira) e no teste dividido do funil pedido neste item, mostre o resultado em dois a quatro cartões lado a lado, um por versão, cada um com a miniatura real da página daquela versão (o mesmo gerador de miniaturas deste item e de 535 [MV1], sem segundo gerador), o nome ("Version A", "Version B"), o endereço e a grade de números já calculados hoje: vezes vista, cadastros ou checkouts abertos, vendas pagas, valor bruto e dinheiro por visitante;
+- em cada cartão, a chance de aquela versão ser a melhor, com as palavras e a regra que já existem; o cartão da versão que venceu recebe o selo "Winner" só quando a regra atual declarar o vencedor, e "Still running" enquanto não houver;
+- os números vêm dos mesmos contadores de hoje (lib/headline-test-counts.ts e as vendas da conta Stripe do criador), sem contagem nova, sem pixel de rastreamento e sem dados pessoais; quando um número não puder ser lido, mostre "Count unavailable", nunca zero;
+- no celular, os cartões ficam um embaixo do outro, na ordem A, B, C, D.
+- O texto atual em linhas continua disponível abaixo dos cartões, para leitor de tela e para quem preferir.
+
+Acessibilidade (AX274): cada cartão é uma região com título; números em texto real, não em imagem; a miniatura com texto alternativo; a versão vencedora indicada por texto, não só por cor; contraste de 7:1 e alvos de pelo menos 44 × 44 px.
+
+Testes automáticos: cartões com os mesmos números do texto em linhas; selo "Winner" só quando a regra atual declara vencedor; "Count unavailable" quando a leitura falha; encaixe em 390 × 844 e 1280 × 720 px; somente dados sintéticos.
+
+Custo: nenhuma leitura nova; as miniaturas usam o gerador e o armazenamento já contados neste item e em 535 [MV1]; desconhecido reprova, nunca é zero.
+
+Regra de margem: segue a REGRA DE MARGEM vigente (MR, 27/10/2026, 07h42), a política tributária TX e FX275; custo desconhecido reprova, nunca é zero.
+
+Proibido: criar item novo ou mudar número, posição ou estado do 526; mudar a regra estatística, o mínimo de visitas e de vendas, a espera do prazo de reembolso ou a forma de escolher o vencedor; declarar vencedor antes da regra atual; mostrar zero no lugar de um número desconhecido; números inventados; mudar preços, limites visíveis, comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a, a revisão comercial ou stripePlatformEligibilityReady; afrouxar qualquer trava; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+
 ## HE — registro integral; item527 (29/10/2026,12h04Fortaleza)
 
 Proveniência: pedido direto do dono nesta conversa; comparaçãoClickFunnels atribuída ao relatoClaude,semverificação independente deste registro. Deduplicação main332a38d,PR1208aberto,20PRsrecentes/19heads codexdistintos e764refs,semHE1/título/data/conteúdo equivalente. Próximo livre527após526; nenhum estado/ordem anterior alterado. ComplementosTB/FN continuam sendo complementossemitemduplicado;527éeste novoHEexplicitamente solicitado. Antes da implementação,conferir cada tipo deproduto funcional no código; não antecipar animação no registro. MR/TX/FX275/AX274/VR/SF1/ME2/ME3eCF3não refazervinculantes. Registro noPR1208jáemcurso; implementação deHEcontinua na fila.
