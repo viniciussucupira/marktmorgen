@@ -1201,6 +1201,60 @@ async function main() {
     }finally{pauseRedis.pipeline=original;}
   }
 
+
+  part("Pause record acknowledgement bounds precede traversal and retain funded evidence");
+  {
+    const email="bounded-pause-ack@example.com",id="sub_BoundedAck01";
+    subs[id]=subscription(id);
+    const store=await storeWith(email,"boundedpauseack",id);
+    const set=await pausePlan(store,1,NOW);
+    if(set.kind!=="paused")throw new Error("Synthetic pause setup refused");
+    const ref=storeRef(store),key=`nl:pause:${ref}`;
+    const raw=JSON.stringify({...set.record,funding:{version:1,grantId:null}});
+    const original=pauseRedis.pipeline;
+    await original([["SET",key,raw]]);
+    let outerReads=0,innerReads=0,getters=0,extra=0;
+    const outer=new Proxy(new Array(2),{
+      getOwnPropertyDescriptor(target,key){
+        if(typeof key==="string"&&String(Number(key))===key)outerReads++;
+        return Reflect.getOwnPropertyDescriptor(target,key);
+      },
+    });
+    const inner=new Proxy(new Array(3),{
+      getOwnPropertyDescriptor(target,key){
+        if(typeof key==="string"&&String(Number(key))===key)innerReads++;
+        return Reflect.getOwnPropertyDescriptor(target,key);
+      },
+    });
+    Object.getOwnPropertyDescriptor(outer,"0");Object.getOwnPropertyDescriptor(inner,"0");
+    is("outer and inner ACK instrumentation observes descriptor reads",[outerReads,innerReads],[1,1]);
+    outerReads=0;innerReads=0;
+    const accessor:unknown[]=[1,"unused"];
+    Object.defineProperty(accessor,"1",{get(){getters++;throw new Error("pause raw getter must not run");}});
+    const symbolAck:unknown[]=[1,raw];Object.defineProperty(symbolAck,Symbol("synthetic"),{value:1});
+    const replies:unknown[]=[outer,[inner],[[1,"x".repeat(4097)]],[[1,"é".repeat(2049)]],
+      [accessor],[new Array(2)],[symbolAck],[[0,raw]],[[1,{}]]];
+    try{
+      for(const reply of replies){
+        extra=0;
+        pauseRedis.pipeline=async commands=>{
+          if(commands.length===1&&commands[0][0]==="EVAL"&&commands[0][1]===PAUSE_DUE_OBSERVATION)return [[ref]];
+          if(commands.length===1&&commands[0][0]==="EVAL"&&commands[0][1]===PAUSE_OBSERVATION)return reply as unknown[];
+          extra+=commands.length;return original(commands);
+        };
+        const calls=providerCalls;emails.length=0;
+        is("malformed record ACK is unknown rather than missing",await pauseOf(store),null);
+        is("unknown record ACK keeps creator content protected",await onBreak(ref,set.record.until+60),true);
+        is("due worker retains unknown funded pause",await runBreaks(set.record.until+60),{told:0,restarted:0,failed:1,dropped:0});
+        is("rejected record ACK starts no owner/provider/email/cleanup",[extra,providerCalls-calls,emails.length],[0,0,0]);
+        const [retained,due,last]=await original([["GET",key],["ZRANGEBYSCORE","nl:pause:due","-inf","+inf"],["EXISTS",`nl:pause:last:${ref}`]]);
+        is("funded record, due membership and annual marker remain",[retained,Array.isArray(due)&&due.includes(ref),last],[raw,true,1]);
+      }
+      is("invalid cardinalities are rejected before visiting their entries",[outerReads,innerReads],[0,0]);
+      is("raw ACK accessor is never invoked",getters,0);
+    }finally{pauseRedis.pipeline=original;}
+  }
+
   done();
 }
 
