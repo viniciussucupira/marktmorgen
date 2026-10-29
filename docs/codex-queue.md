@@ -16835,6 +16835,147 @@ Leitura do registro de pausa e ACK da reserva rejeitam entradas não próprias, 
 
 Produção dpl_EEpG62ZUNoRSKUbNzz9RurKZj8E9 no SHAexato acima estavaBUILDING na conferência22:21UTC;READY/domínio/HTML ainda pendentes. Não declarar entrega funcional/255:contador254 e bloqueio anterior da prova interativa mantidos,sem repetirChrome ou trocar navegador. PR1229 traz fonte primáriaTX1Califórnia e é reconciliado sobre essa árvore para preservar integralmente o código incorporado;novo head exige suas próprias verificações documentais.
 
+## 553 [DB1] — Arrastar negócios entre etapas no quadro do CRM
+
+Estado: na fila. Ordem de chegada após552[BB1],subordinada àAV1; não interromper unidade iniciada. Proveniência: pedido direto integral do dono29/10/2026,19h44Fortaleza, abaixo. Contexto ClickFunnels atribuído ao relato de conferência do Claude, sem nova inspeção externa deste registro. Pedidos repetidos: main7a2756074cda996ccbc533855bd4c6018fd1a788,PRaberto1230(título/corpo/fila),20heads recentes distintos com filas lidas e783refs codex/* inventariadas; nenhuma correspondência por data/hora,seção,[DB1]ouconteúdo equivalente.509[CK1] contém vídeo demonstrativo de mover negociação, não implementação do arrastar/Undo/contagem; não absorver nem duplicar509. Máximo552,atribuição única553; números/posições/estados anteriores preservados.
+
+Vincular375[TB1]e526[FN2]: MESMO componente de arrastar/soltar e alternativa por teclado,sem segundo mecanismo. Cartão somente entre colunas do MESMO pipeline; marcador de destino/posição,gravação/regras/validação/gatilho stage existentes iguais à lista. Lista permanece disponível inclusive no toque; teclado com foco visível/anúncio,sem capturar setas de controles internos. Apenas papéis autorizados podem mover,com a mesma verificação no servidor. Fechamento won/lost exige confirmação e regra atual de valor ganho em todos os caminhos.
+
+Aviso textualMovedto[etapa].Undo por alguns segundos, retorno à etapa anterior apenas nas condições do pedido,sem duplicar sequência e sem prometer desfazer envio já ocorrido. Implementar com execução existente/idempotência e prova de ainda não enviado; falha de leitura/concorrência não autoriza reverter ou reenviar às cegas. Quantidade por coluna dos mesmos negócios já carregados,ao lado dos totais existentes; não aumentar limites nem inventar/converter moedas.
+
+AX274/2.5.7:arrastar não é caminho único;lista/teclado/toque,foco visível,live announcement,7:1,44×44px,reducedmotionsem animação. Testes futuros sintéticos:paridade drag/teclado/lista na mesma gravação;Undo/concorrência/umgatilho;won/lostconfirmados;contagem;RBACfrontend/servidor;toque. VR:nenhuma ação/decisão extra exigida para mover normalmente,a confirmação aplica-se ao fechamento pedido;alternativas completas preservadas,desfazer sem segundo motor.
+
+Custos existentes de gravação/gatilho/desfazer/processamento devem permanecer dentro dos tetos e reserva antes de operação;reuso não prova custo0. MR27/10/07h42/TX/FX275 vinculantes,100%direitos+complementos pior mês mensal/anual sem prejuízo isolado,empresa basemínima com100%fixos,recebimento maiscaro/reservas/impostos,60%meta mensalreal,desconhecido reprova e franquia grátis nãozero. Preços/limites/comissão/flagsfalse/taxgate/art9a/revisãocomercial/stripePlatformEligibilityReady/conteúdo/idiomas/IDs/Hazelsong preservados. Somente registro na fila; não implementado/publicado/entrega funcional,não incrementarcontador254.
+
+### Pedido integral e proveniência — 553 [DB1]
+
+DB — Arrastar o negócio de uma etapa para outra no quadro do CRM (29/10/2026) [DB1]
+
+Solicitação do dono (29/10/2026, 19h44, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: antes de gravar, aplique a regra "Pedidos repetidos" (23/10/2026). Procure esta solicitação no main, nos PRs abertos e nos ramos codex/* recentes, pela linha de data e hora, pelo nome da seção, pela etiqueta [DB1] e pelo conteúdo. Se já existir item que peça arrastar negócios entre etapas no quadro do CRM, aplique só a diferença dentro dele, mantendo número, posição e estado; caso contrário, crie um único item com o próximo número livre, na posição que a ordem AV1 indicar. Ligue este item a 375 [TB1] e a 526 [FN2] para reaproveitar o mesmo componente de arrastar, com a mesma alternativa por teclado, sem segundo mecanismo.
+
+Estado inicial: na fila.
+
+Contexto: o Claude conferiu em 29/10/2026 a seção "Keep every deal moving forward" de clickfunnels.com/apps/opportunities: colunas "New Leads" e "Contacted", cada uma com o número de negócios e o total em dinheiro, e um cartão arrastado de uma coluna para a outra. No Marktmorgen, o quadro (components/deals-board.tsx, lib/crm.ts, lib/crm-rules.ts) já tem colunas por etapa, o total de cada uma, vários pipelines conforme o plano, cartões com valor, pessoa e responsável, próxima ação, data e agenda; mas mover um negócio exige abrir o cartão e escolher a etapa numa lista, e as colunas não mostram a quantidade de negócios.
+
+[DB1] Arrastar o cartão, com a mesma regra de mudança de etapa de hoje.
+(a) Cada cartão do quadro pode ser arrastado para outra coluna do mesmo pipeline; enquanto é arrastado, a coluna de destino fica marcada e mostra onde o cartão vai entrar; ao soltar, o negócio muda de etapa pela mesma gravação e pelas mesmas regras da mudança pela lista, inclusive os gatilhos de sequência "stage" que já existem.
+(b) Alternativa obrigatória sem arrastar (AX274, 2.5.7): a lista de etapas no cartão continua, e o cartão também pode ser movido pelo teclado (por exemplo, setas para a esquerda e para a direita com o cartão em foco); o movimento é anunciado ao leitor de tela.
+(c) Desfazer: logo depois de mover, um aviso "Moved to [etapa]. Undo" por alguns segundos; desfazer volta à etapa anterior sem disparar de novo a sequência, se ela ainda não tiver enviado nada.
+(d) Mover para uma etapa "won" ou "lost" pede confirmação, porque fecha o negócio; com a mesma regra de hoje para o valor ganho.
+(e) Cada coluna mostra, além do total em dinheiro que já existe, a quantidade de negócios ("12 deals"), lida dos mesmos dados.
+(f) Só quem tem papel para mudar negócios pode arrastar; os outros veem o quadro sem poder mover.
+(g) Funciona no celular com toque e, como alternativa, pela lista de etapas.
+
+Acessibilidade (AX274): foco visível no cartão, movimento pelo teclado, anúncio do movimento, contraste de 7:1, alvos de pelo menos 44 × 44 px, sem animação sob prefers-reduced-motion.
+
+Testes automáticos: arrastar e soltar muda a etapa pela mesma gravação da lista; teclado e lista fazem o mesmo; desfazer; confirmação para ganho e perda; quantidade por coluna; papéis respeitados; o gatilho de sequência dispara uma vez; somente dados sintéticos.
+
+Custo: as mesmas gravações da mudança de etapa de hoje, já contadas no plano; nenhum custo novo; desconhecido reprova, nunca é zero.
+
+Margem (regra MR vigente, 27/10/2026, 07h42): nenhum cliente pagante, isoladamente e usando 100% dos direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo, depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto. A empresa como um todo não pode dar prejuízo a partir da base mínima calculada, com 100% dos custos fixos atribuídos ao Marktmorgen (FX275). A meta de 60% de margem líquida é medida todo mês no relatório real. Política tributária TX vigente. Custo desconhecido reprova, nunca é zero; cota grátis de fornecedor não conta como custo zero.
+
+Proibido: segundo mecanismo de arrastar; tirar a lista de etapas; disparar a sequência duas vezes; fechar negócio sem confirmação; ignorar os papéis da equipe; aumentar limites de negócios ou de pipelines; mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+
+## 554 [DS1] — Regras opcionais dos códigos de desconto pelo Stripe
+
+Estado: na fila. Ordem de chegada após553[DB1],subordinada àAV1,sem interromper unidade iniciada. Proveniência: solicitação do dono29/10/2026,19h53Fortaleza,anexo fb10f783-92e7-4009-bbfd-7134e94fabdd/Texto colado.txt,integral abaixo. Contexto ClickFunnels atribuído ao Claude,sem nova inspeção externa. Pedidos repetidos: main84fa0587a12d39d26a731fd80c600b3b56967990,PRaberto1230(título/corpo/fila),20heads recentes distintos com filas lidas e784refs codex/*inventariadas,por data/hora,seção,[DS1]e conteúdo. Ocorrências antigas de19h53 tratam outros dias/assuntos,descontos de carrinho/validação de respostas e comissão de descoberta não equivalem às quatro restrições. Nenhum pedido equivalente;máximo553,atribuição única554;nenhum número/posição/estado anterior alterado.
+
+Reutilizar lib/discount.ts e Coupon/PromotionCode da contaStripe do próprio criador. Antes de implementar,conferir campos/valores/combinações na documentação OFICIAL com data e versãoAPI fixada no código,sem presumir disponibilidade de duration/repeating: se campo/combinação não existir nessa versão,registrar limitação real e não emular cálculo. Quatro regras opcionais:seleção de produtos próprios com correspondênciaStripe existente viaapplies_to(sem correspondência não selecionável+explicação);first_time_transaction decidido peloStripe/histórico na conta do criador;minimum_amount na moeda da loja;duraçãofirstpaymentonly/1–24meses/forever pelos campos suportadosStripe. Manter códigos legados eMAX_CODES20 intactos.
+
+Stripe é fonte única do desconto/preço final,sem conta aritmética de desconto noMarktmorgen. Mensagem textual de falta para mínimo só com dado válido do próprioStripe,sem inventar valor ou segundo calculador;erro real legível no campo,sem expor segredo/dado de outra conta. Página e confirmação dizem duração e preço posterior com informação autorizada real;não inventar preço depois nem alterar preços publicados. Somente combinações aceitas peloStripe. Expiração real mostrada;sem ends today/last chance/contador/depor se incompatíveis com prazo/preço reais. Não mudar outros dados da conta do criador além dos códigos que ele solicitar.
+
+AX274:rótulos visíveis/explicações locais/erros emtexto/teclado/7:1/44×44px. Testes futuros Stripe SIMULADO:campos certos na versãofixada,combinaçõesinválidas,delegação integral de cálculo,preço/duração nas páginas/email,legados semmudança,20mantido,ausência de pressa falsa. VR:regras opcionais com padrões atuais preservados,sem decisão extra obrigatória para código simples.
+
+Custos decriação/leitura existentes comtetoautomático/reserva,não adicionar chamada porvenda para justificar mensagem ou calcular desconto;reuso não significa custo0. MR27/10/07h42/TX/FX275 vinculantes:100%direitos/complementos pior mês mensal/anual sem prejuízo isolado,empresa basemínima100%fixos,recebimentomaiscaro/impostos/reservas,meta60%mensalreal,desconhecido reprova e franquia grátis nãozero. Preços/limites/comissão/flagsfalse/taxgate/art9a/revisão/stripePlatformEligibilityReady/conteúdo/idiomas/IDs/Hazelsong preservados. Somente registro,não implementação/teste funcional/publicação/número deentrega;contador254.
+
+
+### Complemento vinculante — 29/10/2026, 19h57 Fortaleza — compradores anteriores
+
+Aplicar somente a diferença a554[DS1]: número554, posição após553/subordinaçãoAV1 e estado na fila preservados; nenhum555 criado. Proveniência: pedido direto integral abaixo;main81c708f83b222bff65f69c2dbe9ed9c8cbbb9891 ePRaberto1230/fila conferidos,785refs codex/*inventariadas,sem complemento equivalente. Relato ClickFunnels é do Claude,não nova conferência independente.
+
+Regra opcionalOnlyforpeoplewhoboughtfromme,ou comprador de produto escolhido: conferir NO SERVIDOR,antes de aplicar código,o email de quem paga e compra PAGA da própria loja,via fonte existente lib/next-offer.ts/contaStripe do criador/comprasimportadas,sem outro motor e sem cruzar lojas/contas. Elegibilidade não é cálculo de desconto:Stripe continua única fonte de preço descontado. Falha de leitura/identidade/atribuição incompleta recusa com explicação honesta,nunca aprova como se ausência/zero fosse dado conhecido. Email nãoelegível:mensagemtextualjuntoaocampo/anunciada7:1,sem revelar nomes/listas/histórico de compradores nem pedir dadoextra. Linkcompartilhado?code= não substitui prova de elegibilidade.
+
+Envioavulso atual para compradores pode inserir link com esse código e validadereal,com mesmos opt-in/supressões/cotas,sem email adicional ou novoenvio em teste. Convive com produtos/mínimo/duração somente combinações queStripeaceitar e documentação datada/API fixada do pedido original. Regrafirst_time_transaction e compradorprévio não devem ser oferecidas numa combinação contraditória sem validação real da semânticaStripe;desconhecido não autoriza prometer aceitação ou emular desconto.
+
+Exceção expressa posterior ao custo original19h53 e resumo “não adicionar chamada porvenda”: este complemento19h57 autoriza UMA leitura limitada de compras do email PORCHECKOUTCOMESTECÓDIGO,comcache/tetoautomático/reserva dentrodoplano,antesdeaplicar. Não autoriza leiturassemcódigo/ilimitadas,gratuidadedeAPIouliberaroperação semMR/TX/FX275;os demais limites/criação/leitura/cálculopeloStripe permanecem. Implementação deve provar orçamento mensal/anual e piorcaso,deduplicação/cache isolado por loja/email,desconhecidoreprova,nãozero.
+
+Testessintéticos:compra paga mesma loja/email e produtoescolhido;outraloja/emailemérito recusado;falha de leitura recusa;erroacessívelsemPII;linkreal/validade/combinações;nenhumpreçocalculadolocalmente. VR:opcional,padrõesatuaispreservados,sem nova decisão/dado obrigatório do comprador;sem tiraralternativas/gates/preços/limites/comissão/conteúdo/Hazelsong. Não implementado/publicado,nãoentregafuncional,contador254.
+
+#### Pedido integral do complemento19h57 — 554 [DS1]
+
+DS — Complemento ao 554 [DS1]: código só para quem já comprou (29/10/2026)
+Etiqueta: [DS1]
+
+Solicitação do dono (29/10/2026, 19h57, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: é complemento ao item 554 [DS1] já gravado. Aplique só a diferença ao item existente, mantendo número, posição e estado (regra "Pedidos repetidos", passo 3, letra b), e registre na proveniência o que mudou.
+
+Estado inicial: o do próprio 554.
+
+Contexto: o Claude conferiu em 29/10/2026 a seção "Reward your best customers" de clickfunnels.com/apps/discounts: "Send special discount codes to your most valuable customers. Create personalized offers based on purchase history". No Marktmorgen, o envio avulso já vai só para compradores (lib/contacts.ts, WHO: "all", "buyers", "leads") ou para quem tem ou não tem certo produto, e o link com ?code= aplica o código; mas um código repassado vale para qualquer pessoa, porque não há código restrito a quem já comprou.
+
+O que acrescentar ao 554 [DS1]:
+- nova regra opcional "Only for people who bought from me", ou só para quem comprou um produto escolhido: o checkout só aceita o código quando o e-mail de quem paga já tem uma compra paga nesta loja (lida da conta Stripe do criador e das compras importadas, como já é feito em lib/next-offer.ts), conferido no servidor antes de aplicar o código;
+- quando o e-mail não se encaixa, o checkout diz em texto que o código é para quem já comprou, sem revelar quem comprou e sem pedir dados a mais;
+- no envio avulso para compradores, o estúdio oferece pôr no e-mail o link com esse código, com a data de término real;
+- a regra convive com as outras do 554 (produtos, valor mínimo, duração) dentro das combinações que o Stripe aceitar, e o Marktmorgen continua sem calcular o preço com desconto.
+
+Acessibilidade (AX274): a mensagem de código recusado em texto junto ao campo, anunciada ao leitor de tela; contraste de 7:1.
+
+Testes automáticos: o código só vale para e-mail com compra paga na loja; vale para o produto escolhido quando houver; mensagem de recusa sem dados de outros; leitura que falhar recusa o código com explicação, nunca o aceita por engano; somente Stripe simulado e dados sintéticos.
+
+Custo: uma leitura das compras do e-mail por checkout com o código, com cache e teto automático, dentro do plano; desconhecido reprova, nunca é zero.
+
+Regra de margem: segue a REGRA DE MARGEM vigente (MR, 27/10/2026, 07h42), a política tributária TX e FX275; custo desconhecido reprova, nunca é zero.
+
+Proibido: criar item novo ou mudar número, posição ou estado do 554; revelar quem comprou; aceitar o código quando a leitura falhar; calcular o desconto fora do Stripe; pressa falsa ou "de/por" inventado; mudar preços, limites visíveis, comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a, a revisão comercial ou stripePlatformEligibilityReady; afrouxar qualquer trava; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+
+### Pedido integral e proveniência — 554 [DS1]
+
+DS — Regras dos códigos de desconto: produtos, primeira compra, valor mínimo e duração (29/10/2026) [DS1]
+
+Solicitação do dono (29/10/2026, 19h53, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: antes de gravar, aplique a regra "Pedidos repetidos" (23/10/2026). Procure esta solicitação no main, nos PRs abertos e nos ramos codex/* recentes, pela linha de data e hora, pelo nome da seção, pela etiqueta [DS1] e pelo conteúdo. Se já existir item que peça código de desconto só para certos produtos, só para a primeira compra, com valor mínimo ou com duração em assinaturas, aplique só a diferença dentro dele, mantendo número, posição e estado; caso contrário, crie um único item com o próximo número livre, na posição que a ordem AV1 indicar.
+
+Estado inicial: na fila.
+
+Contexto: o Claude conferiu em 29/10/2026 o topo de clickfunnels.com/apps/discounts ("Whether you're running a flash sale or rewarding loyal customers"). No Marktmorgen, os códigos (lib/discount.ts) são um Coupon e um Promotion Code na conta Stripe do próprio criador, com porcentagem ou valor, limite de usos (maxRedemptions), data de término (expiresAt), até MAX_CODES = 20 e duration "once" (só o pagamento em que o código é digitado). O Stripe calcula e conta tudo. Não há código só para certos produtos, só para a primeira compra, com valor mínimo do pedido, nem com duração nas assinaturas.
+
+[DS1] Quatro regras opcionais, todas pelo próprio Stripe, nunca calculadas pelo Marktmorgen.
+(a) Só para certos produtos: o criador escolhe um ou mais produtos da loja; o código vale só para eles, pelo campo de produtos do cupom do Stripe (applies_to), usando os produtos do Stripe já criados para cada um; produto sem correspondência no Stripe não pode ser escolhido, com a explicação.
+(b) Só para a primeira compra: pela restrição de primeira compra do código promocional do Stripe (first_time_transaction); o estúdio explica que o Stripe decide pelo histórico de pagamentos daquele cliente na conta do criador.
+(c) Valor mínimo do pedido: pela restrição de valor mínimo do Stripe (minimum_amount, na moeda da loja); o checkout diz em texto quanto falta quando o código não vale.
+(d) Duração nas assinaturas: "first payment only" (como hoje), "for N months" (de 1 a 24) ou "forever", pelos campos de duração do cupom do Stripe; a página do produto e o e-mail de confirmação dizem em texto quanto tempo o desconto dura e qual será o preço depois.
+(e) Sem combinar regras que o Stripe não aceite junto; o estúdio só oferece as combinações válidas e mostra o erro do Stripe em texto quando houver.
+(f) Honestidade: a data de término é a real e é mostrada; nenhuma página diz "ends today", "last chance" ou mostra contador para um código que não acaba nesse prazo; nenhum "de/por" inventado.
+(g) O limite de 20 códigos continua; códigos que já existem continuam funcionando sem mudança.
+(h) Conferir os campos e valores na documentação oficial do Stripe, com data, antes de implementar, na versão de API fixada em lib/discount.ts.
+
+Acessibilidade (AX274): cada regra com rótulo visível e explicação no lugar; erros em texto junto ao campo; contraste de 7:1; alvos de pelo menos 44 × 44 px; operável só pelo teclado.
+
+Testes automáticos: cada regra enviada ao Stripe com os campos certos; o Marktmorgen nunca calcula o preço com desconto; combinações inválidas recusadas; duração dita na página e no e-mail; códigos antigos sem mudança; nenhuma frase de pressa; somente Stripe simulado.
+
+Custo: chamadas ao Stripe só na criação e na leitura dos códigos, como hoje, com teto automático; nenhum custo novo por venda; desconhecido reprova, nunca é zero.
+
+Margem (regra MR vigente, 27/10/2026, 07h42): nenhum cliente pagante, isoladamente e usando 100% dos direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo, depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto. A empresa como um todo não pode dar prejuízo a partir da base mínima calculada, com 100% dos custos fixos atribuídos ao Marktmorgen (FX275). A meta de 60% de margem líquida é medida todo mês no relatório real. Política tributária TX vigente. Custo desconhecido reprova, nunca é zero; cota grátis de fornecedor não conta como custo zero.
+
+Proibido: calcular o desconto fora do Stripe; mudar códigos que já existem; aumentar o limite de 20 códigos; pressa falsa, contador falso ou "de/por" inventado; mudar dados da conta Stripe do criador além dos códigos que ele criar; mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos, com Stripe simulado.
+
+Aplicar a regra VR.
+
 ## AV — limite do ACK de publicação do reinício — 29/10/2026, 19h32 Fortaleza
 
 Continuação concreta do caminho financeiro: publicação real deStore/index/geração passa a validar cardinalidade e descritores próprios antes de atravessar o ACKRedis. Zero explícito continua recusa;desconhecido mantém no máximo a única leitura de conferência já existente. Teste sintético chama publishRestartStore real com fronteiras isoladas de preparação/lock/Redis,sem exportar decoder privado e sem ativar coverage. Não certifica admissão real nem persistência por esse mock;suíteRedis real eCIintegral continuam obrigatórios. Sem novoIOprodutivo/provider/custo operacional,pequeno trabalho local;CI/revisão100%FX275,desconhecido≠zero. Preços,limites,flagsfalse,reservas,conteúdo/idiomas/IDs preservados. Estado:em verificação,não incorporado/publicado.
@@ -16846,3 +16987,7 @@ Proveniência anterior:PR1224 produção dpl_EEpG62ZUNoRSKUbNzz9RurKZj8E9 READY,
 Head663fdedcac3bc122f3bf7bb133c877638063f894 reprovado:job123773154635,22:40:03.0632780UTC,preflight do runner descartável não provou leitor parado;agregador também falhou. Nenhuma asserção de leitura foi alcançada,não é aprovação parcial. Lint/comportamento/build haviam passado;demais jobs ainda rodavam na observação. Log antigo não identifica estado do processo:causa zombie/respawn não é certificada.
 
 Correção do preflight verifica UID+executávelApple exato+estado em todas as fases. ProcessoZ já encerrado permanece no inventário de identidade,sem sinais;processo vivo persistente,identidade nova/estrangeira/estado ilegível continuam falha. Diagnóstico final limitado aPID/estado,sem dados do produto. Mantém8processos/8s/2scomando/20sondagens100ms/sinais já existentes,sem terceiro disparo ou repetição de asserções. Testes adicionados:Zinicial/ZapósSIGKILL,vivo persistente,estrangeiro/substituído. Sem mudar política de acesso ao leitor,headings,limiares ou asserts reais;novohead exigeCIintegral,não rerun isolado. Somente runnerCI descartável marcado,nenhuma máquina do dono/conta/produção alterada. Sem custo produtivo novo;CI100%FX275,desconhecido≠zero. Não incorporado/publicado,contador254.
+
+### Reconciliação com pedidos do dono — 29/10/2026, 20h01 Fortaleza
+
+Preservados integralmente553DB1(PR1231,merge84fa0587a12d39d26a731fd80c600b3b56967990,19:48:45Fortaleza),554DS1(PR1232,merge81c708f83b222bff65f69c2dbe9ed9c8cbbb9891,19:57:05Fortaleza)ecomplemento55419h57(PR1233,merge93df518960218d1a7bdd5258efa2e2de2d0ce096,20:00:53Fortaleza),todos27checks16sucessos11skips+Vercel. Nenhum item/estado/posição alterado,nem novaentregafuncional. Ramo de código e53ec128 tinha35sucessos/3emexecução às23:01UTC,semfalhaobservada,mas não concluído nem aprovado;novohead reconciliado exigeCIintegralpróprio,não herda aprovação parcial. Histórico dafalha663fded e limites dasprovas mantidos. Código/testes/Lua/reservas/políticas do ramo preservados,alteração dareconciliação somente fila. CustosCI/revisão100%FX275,desconhecidonãozero,contador254.
