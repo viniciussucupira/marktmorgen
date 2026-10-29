@@ -389,13 +389,10 @@ test('closed recovery wrapper performs no Redis reads or writes for fabricated o
 
 test('actual checkout and switch activation reject non-own ACKs before member traversal',async()=>{
  for(const mode of ['checkout','switch'] as const){
-  const f=start();
-  if(mode==='switch'){
-   assert.ok(await reserveContractFunding('one','creator','month','checkout',f.policy,f.context,'ctr_source'));
-   assert.equal(await activateCheckoutContract(activation('one','ctr_source'),f.policy,f.context),true);
-   assert.ok(await reserveSwitchContractFunding('one','sub_Activation001','creator','month',f.policy,f.context,'ctr_activate'));
-  }else assert.ok(await reserveContractFunding('one','creator','month','checkout',f.policy,f.context,'ctr_activate'));
-  const input={...activation(),...(mode==='switch'?{subscriptionId:'sub_SwitchAck001'}:{})};
+  const f=mode==='switch'?await switchSetup():start();
+  if(mode==='checkout')assert.ok(await reserveContractFunding('one','creator','month','checkout',f.policy,f.context,'ctr_activate'));
+  // A switch keeps the exact provider subscription and original creation time.
+  const input='input' in f?f.input:activation();
   const invoke=()=>mode==='checkout'?activateCheckoutContract(input,f.policy,f.context):activateSwitchContract(input,f.policy,f.context);
   const snapshot=[...ledger.get(key)!];let getters=0,members=0;
   const outerGetter=Object.defineProperty(new Array(1),'0',{get(){getters++;return [2,input.periodEndSeconds];}});
