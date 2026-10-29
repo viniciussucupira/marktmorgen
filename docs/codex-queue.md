@@ -15081,3 +15081,42 @@ runBreaks passa a selecionar pelo Lua estático somenteleitura: máximo200membro
 ### NV1 preservado no head combinado
 
 PR1209 incorporado em29/10/2026,10:49:27Fortaleza/13:49:27UTC,merge13e850487edd961e7b14eacf2c4e9372230fe9e3,head996d5b18c73ba0925fe8c8fd1447b123952e74bb,árvore4187ca75e25721b4392789afdb920b375e42c2f4,paise1284741+996d5b1.27checksdocumentais16success11skips+Vercel. Item524NV1nafila,briefingintegral/ordem/estado preservados,sem implementação/publicfeature/counter. PR1208 incorpora a fila sem sobrescrever e exige novamente suíteinteira na árvorecombinada; provaRedis do head5164ff5não substitui os testes do novohead.
+
+
+## FN — registro integral; item525 (29/10/2026,11h06Fortaleza)
+
+Proveniência: pedido direto do dono nesta conversa; descrição da capturaClickFunnels e do estado do produto atribuída ao briefing, sem alegar leitura independente de imagem não anexada nesta mensagem. Deduplicação: main13e8504,PR1208aberto,20PRsrecentes/19heads codexdistintos e762refs,sem etiqueta/título/data/conteúdo equivalente. Próximo livre525após524NV1,sem alterar ordem/estado/escopo existentes. Antes da implementação,reconferir lib/stats.ts,funnel-metrics e editor e fazer só a diferença. AVcontinua; o complementoTB375/32 fica noPR1208 jáemcurso,sem duplicá-lo neste registro. MR/TX/FX275/AX274/VR e desconhecido reprova vinculantes; registro não autoriza leituras/gastos/publicação de recurso.
+
+FN — Resultados do funil com receita, como na ClickFunnels (29/10/2026)
+Etiqueta: [FN1]
+
+Solicitação do dono (29/10/2026, 11h06, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: antes de gravar, aplique a regra permanente "Pedidos repetidos". Confira o main, os PRs abertos e os ramos codex/* recentes e procure esta solicitação pela linha de data e hora, pelo nome da seção, pela etiqueta [FN1] e pelo conteúdo. Se já estiver gravada, não crie nada novo. Grave na ordem de chegada, depois do último item já gravado, com o próximo número livre, sem alterar a ordem dos itens existentes.
+
+525. [FN1] Resultados do funil com receita por etapa e painel de resumo.
+Estado inicial: na fila.
+Problema que resolve: o dono enviou a captura do painel de resultados do funil da ClickFunnels (aba "Your Funnel" de clickfunnels.com, 29/10/2026): um resumo do período ("Custom") com valor médio do carrinho, ganho por clique, vendas à vista, vendas recorrentes, cadastros e visualizações, e, em cada etapa (Landing Page, Order Form, Thank you page), visitas, cadastros, vendas e receita. Hoje o funil do Marktmorgen mostra em cada etapa só quantas pessoas abriram e quantas pagaram ou se cadastraram, com a porcentagem (lib/funnel-metrics.ts, components/page-funnel-editor.tsx).
+O que fazer, reaproveitando lib/stats.ts (readPaidSales, renewalsFrom, saleChannel) e as contagens que já existem:
+- em cada etapa: visitas, cadastros, vendas e receita da etapa;
+- painel de resumo do funil: visitas da primeira etapa, cadastros, número de vendas, receita à vista, receita recorrente (renovações de assinaturas que começaram no funil), valor médio do pedido e receita por visita da primeira etapa (receita dividida pelas visitas);
+- escolha do período: hoje, 7, 30 e 90 dias e intervalo escolhido pelo criador, no fuso dele;
+- moeda da loja, reembolsos descontados e mostrados à parte.
+Honestidade: só números lidos das vendas reais na conta Stripe (ou PayPal) do próprio criador e das contagens do Marktmorgen, nunca digitados. Dado indisponível aparece como "Counts unavailable", nunca como zero (regra já existente em lib/funnel-metrics.ts). Cada número tem uma frase curta que explica como é contado. Nenhum dado pessoal de comprador aparece no painel.
+Custos: as leituras na Stripe e no armazenamento entram no custo de pior caso do plano, com cache e teto automático antes do gasto; custo desconhecido reprova.
+Acessibilidade: AX274 (tabela com cabeçalhos, números legíveis por leitor de tela, nada só por cor, contraste de 7:1).
+Testes automáticos, com Stripe simulado: receita por etapa, recorrente, reembolso, período, fuso, dado indisponível diferente de zero e ausência de dado pessoal.
+Lucro: o criador vê quanto cada funil rende, o que aumenta a retenção e o valor percebido dos planos.
+
+Regra de margem: segue a REGRA DE MARGEM vigente (MR, 27/10/2026, 07h42), a política tributária TX e FX275; custo desconhecido reprova, nunca é zero.
+
+Proibido: inventar, estimar ou arredondar para cima qualquer número; mostrar dado pessoal de comprador; mudar preços, limites visíveis, comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a, a revisão comercial ou stripePlatformEligibilityReady; afrouxar qualquer trava; mostrar recurso que não funciona hoje; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+
+
+### FN1 preservado na árvore combinada
+
+PR1210 incorporado em29/10/2026,11:11:04Fortaleza/14:11:04UTC,merge51030ab4096c01143c928a1580226580fb67c260,headd21991c7dd1be9ebd6748c069ffe54a9e4075761,árvoree2f5e69ed5cf8fb43c869773d17aa33cd2718210,paise13e8504+d21991c.27checksdocumentais16success11skips+Vercel.525FN1mantémnafilaapós524,briefingintegral/ordem/estado preservados;375/32complementoTBcontinuanestePR1208comcódigoreal. Suíteinteira novamente no novohead combinado; nenhuma prova antiga é certificação destehead. Counter254inalterado.
