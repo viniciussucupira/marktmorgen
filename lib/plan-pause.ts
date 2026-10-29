@@ -578,6 +578,12 @@ export async function runBreaks(nowSeconds = Math.floor(Date.now() / 1000)): Pro
         idempotencyKey: `restart:${record.subscription}:${record.until}`,
         ...(record.funding ? { funding: { statsId: store.statsId ?? "", sourceSubscriptionId: record.subscription, sourceGrantId: record.funding.grantId, ref, paused: stored.raw ?? "" } } : {}),
       });
+      if(started.fundedPublication===true){
+        // The joint publisher already acknowledged Store, indexes and exact generation cleanup.
+        // Funded notice obligations remain held; no unbudgeted legacy email is sent here.
+        counts.restarted+=1;
+        continue;
+      }
       let saved: Store | null;
       try { saved = await setSubscription(ref, started, store); }
       catch {

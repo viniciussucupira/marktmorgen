@@ -46,7 +46,8 @@ import { cache } from "react";
 import { pointDomain } from "@/lib/domains";
 import { rememberListing } from "@/lib/directory-index";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
-import { type Held, LockBusyError, holdLock, releaseLock, setIfHeld, takeLock } from "@/lib/redis-lock";
+import { type Held, LockBusyError, holdLock, releaseLock, releaseLockStrict, setIfHeld, takeLock } from "@/lib/redis-lock";
+import {CONTRACT_ADMISSION_COVERAGE,canonicalFinancialSnapshot} from "@/lib/contract-funding-rules";
 import { type ProductFile } from "@/lib/product-file";
 import {
   MAX_OPTIONS,
@@ -1065,6 +1066,73 @@ export async function storeForRestartSource(ref: string): Promise<Store | null> 
   if (!store || strings.some(key => store[key] !== raw[key]) ||
       store.subscriptionActive !== raw.subscriptionActive || store.extra !== raw.extra) return null;
   return storeRef(store).toLowerCase() === ref.toLowerCase() ? store : null;
+}
+
+
+export type RestartPublicationGoal={
+ handle:string;statsId:string;sourceSubscriptionId:string;customerId:string;tier:Tier;
+ subscriptionId:string;periodStartSeconds:number;periodEndSeconds:number;renews:boolean;shared:boolean;
+};
+export type RestartPublicationRecord={expected:string;next:string;store:Store};
+/** Pure raw-preserving preparation; never financial authorization or a write. */
+export function restartPublicationRecord(raw:unknown,ref:string,goal:RestartPublicationGoal,observedAtSeconds=Math.floor(Date.now()/1000)):RestartPublicationRecord|null{
+ if(typeof raw!=="string"||!raw||byteLength(raw)>MAX_STORE_BYTES)return null;
+ const snapshot=canonicalFinancialSnapshot({ref,goal,observedAtSeconds});if(!snapshot)return null;
+ ({ref,goal,observedAtSeconds}=JSON.parse(snapshot));
+ if(typeof raw!=="string"||!raw||byteLength(raw)>MAX_STORE_BYTES||typeof ref!=="string"||!ref||ref.length>320||
+    !goal||Object.keys(goal).length!==10||["handle","statsId","sourceSubscriptionId","customerId","tier","subscriptionId"].some(key=>typeof (goal as unknown as Record<string,unknown>)[key]!=="string")||typeof goal.renews!=="boolean"||typeof goal.shared!=="boolean"||!Number.isSafeInteger(observedAtSeconds)||
+    !Number.isSafeInteger(goal.periodStartSeconds)||!Number.isSafeInteger(goal.periodEndSeconds)||goal.periodStartSeconds<=0||
+    goal.periodStartSeconds>observedAtSeconds||goal.periodEndSeconds<=observedAtSeconds||goal.periodEndSeconds-goal.periodStartSeconds>31*86400||
+    !CUSTOMER_PATTERN.test(goal.customerId)||!SUBSCRIPTION_PATTERN.test(goal.sourceSubscriptionId)||
+    !SUBSCRIPTION_PATTERN.test(goal.subscriptionId)||goal.subscriptionId===goal.sourceSubscriptionId||
+    !["creator","pro","scale"].includes(goal.tier))return null;
+ try{
+  const value=JSON.parse(raw) as Record<string,unknown>;
+  if(!value||typeof value!=="object"||Array.isArray(value))return null;
+  const strings=["handle","statsId","subscriptionId","stripeCustomerId","tier","cycle","email","sid"] as const;
+  if(strings.some(key=>!Object.hasOwn(value,key)||typeof value[key]!=="string")||
+     !Object.hasOwn(value,"subscriptionActive")||value.subscriptionActive!==false||
+     !Object.hasOwn(value,"extra")||typeof value.extra!=="boolean")return null;
+  const store=parseStore(raw);
+  if(!store||strings.some(key=>store[key]!==value[key])||store.extra!==value.extra||storeRef(store)!==ref||
+     store.handle!==goal.handle||store.statsId!==goal.statsId||store.subscriptionId!==goal.sourceSubscriptionId||
+     store.stripeCustomerId!==goal.customerId||store.tier!==goal.tier||store.cycle!=="month"||!store.catalog.id)return null;
+  const catalog=value.catalog as Record<string,unknown>|null;
+  if(!catalog||typeof catalog!=="object"||Array.isArray(catalog)||catalog.id!==store.catalog.id)return null;
+  const nextRaw={...value,stripeCustomerId:goal.customerId,subscriptionId:goal.subscriptionId,subscriptionActive:true,
+   subscriptionCheckedAt:new Date(goal.periodStartSeconds*1000).toISOString(),tier:goal.tier,cycle:"month",trialEnds:0,
+   shared:goal.shared,period:{start:goal.periodStartSeconds,end:goal.periodEndSeconds,renews:goal.renews,funded:true},planEndedAt:""};
+  const json=JSON.stringify(nextRaw);if(byteLength(json)>MAX_STORE_BYTES)return null;
+  const saved=parseStore(json);if(!saved)return null;
+  guardRecord(store,saved);
+  return {expected:raw,next:json,store:saved};
+ }catch{return null;}
+}
+/** One lock attempt and one bounded raw read, without migration/product IO.
+ * Only the coupled financial publisher may use the callback as write authority.
+ */
+export async function withRestartPublicationRecord<T>(
+ ref:string,goal:RestartPublicationGoal,
+ work:(record:RestartPublicationRecord&{owner:string;held:Held})=>Promise<T>,
+):Promise<T|null>{
+ if(!Boolean(CONTRACT_ADMISSION_COVERAGE.pauseRestart)||!isRedisConfigured())return null;
+ const snapshot=canonicalFinancialSnapshot({ref,goal});if(!snapshot)return null;
+ ({ref,goal}=JSON.parse(snapshot));
+ if(typeof ref!=="string"||!ref||ref.length>320)return null;
+ const owner=await ownerKey(ref),held:Held={key:lockKeyOf(owner),token:"restart_"+crypto.randomUUID(),ttlSeconds:LOCK_SECONDS};
+ try{
+  const locked=await redisPipeline([["SET",held.key,held.token,"NX","EX",LOCK_SECONDS]]);
+  if(!Array.isArray(locked)||locked.length!==1)return null;
+  const ack=Object.getOwnPropertyDescriptor(locked,"0");
+  if(!ack||!Object.hasOwn(ack,"value")||ack.value!=="OK")return null;
+  const reply=await redisPipeline([["GETRANGE",owner,0,MAX_STORE_BYTES]]);
+  if(!Array.isArray(reply)||reply.length!==1)return null;
+  const entry=Object.getOwnPropertyDescriptor(reply,"0");
+  if(!entry||!Object.hasOwn(entry,"value"))return null;
+  const record=restartPublicationRecord(entry.value,ref,goal);if(!record)return null;
+  return await work({...record,owner,held});
+ }catch{return null;}
+ finally{await releaseLockStrict(held);}
 }
 
 /** The store behind a public address, or null if that handle is free. */
