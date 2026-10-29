@@ -62,3 +62,31 @@ Valores anteriores preservados como histórico decada serviço, semtratá-los co
 **Desfeito por decisão do dono em 28/10/2026, 23h37 (LQ17)**. O trecho acima foi restaurado integralmente à referência9c224622c0f93fc864026f48114267e6b6d79998. A antiga marca abaixo não é requisito vigente; TX,SD1 e demais regras atuais prevalecem na execução. Categorias de revisão desconhecidas não afirmam contratação nem obrigação universal.
 
 > **LQ1 vigente — dono28/10/2026 20h20 Fortaleza; SR5/SD1.** Canceladas somente as categorias ITIN/agente de aceitação e representante residente nos EUA. Removidas do catálogo, sem atribuir custo zero. Endereço comercial real nos EUA, sem caixa postal, banco no nome exato da LLC e todos os demais custos aplicáveis permanecem; total, tetos e reservas continuam desconhecidos e reprovados. Os inventários e requisitos anteriores abaixo ficam preservados como histórico. Quantificação vigente somente da rota LLC em275[FX1]; não executar a rota brasileira. Nenhum serviço contratado ou obrigação jurídica universal certificada.
+
+
+## SD1/FX275 — formação inicial da LLC é custo explícito (29/10/2026)
+
+Achado concreto: a observação de registered-agent já tinha US$100/ano, mas o inventário obrigatório usado por allocateEntireLlcFixedCosts não tinha formação inicial. O custo não pode desaparecer da revisão do primeiro ciclo. A nova categoria llc-formation entra com tetos mensal/anual desconhecidos e reserva não revisada; omiti-la agora reprova a entrada completa. Nenhuma das categorias anteriores, inclusive as restauradas porLQ17, é retirada ou reduzida.
+
+Fonte oficial consultada em29/10: [Stripe Atlas](https://stripe.com/atlas) informa US$500 na formação, incluindo taxas governamentais e o primeiro ano de registered-agent; renovação deste agenteUS$100/ano após o primeiro. Não são contratação, teto completo aprovado, obrigação de usarAtlas, gratuidade deEIN/contabilidade/impostos/endereço/ITIN/representante, nem garantia de aprovação Stripe. Créditos,descontos ou restituição condicionada a depósitoUS$5000 não reduzem a leitura onerosa.
+
+Componente observado: caixa inicialUS$500 deve estar coberto antes de contratar. Dividir por12 produzUS$41,67/mês arredondado para cima somente como componente de alocação do primeiro ciclo; não transforma pagamento antecipado em mensalidade nem zera o caixa. O primeiroano de agente já incluído não autoriza zerar renovação futura; o teto completo e a reserva temporal permanecem desconhecidos.100%pertenceMarktmorgen,0%Hazelsong.
+
+| Plano | Componente de formação da empresa no primeiro ciclo | Alocação mensal/annual por cliente revisada |
+| --- | --- | --- |
+| Creator mensal | US$500 antecipado / referênciaUS$41,67por12meses | desconhecida,reprovada |
+| Creator anual | US$500 antecipado / referênciaUS$41,67por12meses | desconhecida,reprovada |
+| Pro mensal | US$500 antecipado / referênciaUS$41,67por12meses | desconhecida,reprovada |
+| Pro anual | US$500 antecipado / referênciaUS$41,67por12meses | desconhecida,reprovada |
+| Scale mensal | US$500 antecipado / referênciaUS$41,67por12meses | desconhecida,reprovada |
+| Scale anual | US$500 antecipado / referênciaUS$41,67por12meses | desconhecida,reprovada |
+
+A tabela repete a despesa da empresa para localizar os seis contratos, não cobraUS$500seisvezes nem a divide por base de clientes inventada. A base mínima,expósitos,tetos/reservas,maior tarifa paga,100%de direitos/complementos,impostosBrasil/EUA e meta60%líquidomensal real ainda exigem cálculo completo. Observação pública não vira custo zero ou margem aprovada.
+
+FW1 continua pendente de execução com o passo de custos previsto: a presente correção de inventário não afirma medição de tráfego,NAT ou custo máximo WAF, não concluiMM-SA-11 e não altera regra Vercel. Seu custo desconhecido continua impeditivo; nada é gasto/configurado por este registro. SD1/AV1 continuam prioritários; políticaTX proíbe consulta e preparação de consulta. OPENING_REQUESTED=false,PLANS_ON_SALE=false,preços/limites/comissão/permissões e conteúdo preservados.
+
+### Prova da implementação anterior com esta correção de código
+
+PR1196: merge e4c251468cc7d26fff9f6c56552efbb5bae71d95 em29/10/2026,03h09:18Fortaleza(06:09:18UTC); head eb4d55862f3d887a9e671f17b6cf69938c48ab20;árvore935e43dcccf45c7932eba09c6a2b7515c8318585real=prevista=testada,parentsbase da5cd6664eb913cda66aeed98da53246f9679c58ehead testado.39/39+Vercel nessehead,sem inventar39do pushmain. Cinco casos do worker05:42:45UTC/job123284981398;Redisreal123284981556/8casosnegativos/KEEPTTL/4comandos.8escoposfulltrue/10+7/productextra6,signup3x30/150/0,mobile9frias LCPmáx1220ms/CLS0/interação112ms/0writes(apenaslaboratório),NVDA/VoiceOver2cabeçalhoscada/0writesforeign,semjornadaintegral. Falha móvel original272ms preservada na fila/continuidade; suíteinteira rodou no novohead,sem alterar teto/descarte/retryisolado.
+
+READY dpl_98stSAM9Fpic63eQSMhZQkYSh7QJ,SHAexato e4c251468cc7d26fff9f6c56552efbb5bae71d95,setealiases e cincorespostasHTMLde marktmorgen.com(/,/pricing,/platform/path,/help,/proof/comparisons)conferidos. Contador254permanece,provainterativapendente. Este registro acompanha código financeiro real;nenhumPRexclusivo de provas.
