@@ -16062,3 +16062,40 @@ Contexto: o Claude conferiu em 29/10/2026 a seção "Sell more, automatically" d
 (c) Até 10 regras por formulário; uma resposta pode acionar mais de uma regra, cada ação no máximo uma vez por envio; nenhuma regra dispara outra regra de formulário, para não haver laço.
 (d) Consentimento: a sequência só envia e-mail a quem confirmou que quer receber do criador, pelas regras atuais de sequência e de lista; quem não deu e-mail ou não confirmou recebe só o rótulo e a etapa do CRM, que ficam visíveis apenas ao criador. Nenhuma regra põe alguém na lista sem a confirmação.
 (e) A página de política de privacidade diz que as respostas a formulários podem dar rótulos e iniciar sequências escolhidas pelo criador, e apagar a pessoa apaga
+
+
+### Complemento do539AR1 —29/10/2026,16h31Fortaleza
+
+Proveniência: solicitação direta do dono; somente diferença conformePedidos repetidospasso3(b),número/posição/estado intactos. Conferidos main4c250d8c e PRs1216/1217,sem este complemento por data/título/AR1/conteúdo. Ligação expressa ao526FN2 para reaproveitar a representação condicional; não cria outro mecanismo. A leitura adicional por envio exige teto/reserva/cálculo de custo antes da operação, não é custo zero por estar na franquia. O texto integral abaixo é nova mensagem, não continuação presumida do item(e) truncado no briefing original, cuja nota permanece. Histórico preservado; somente fila,sem implementação:
+
+AR — Complemento ao 539 [AR1]: a página seguinte conforme a resposta (29/10/2026)
+Etiqueta: [AR1]
+
+Solicitação do dono (29/10/2026, 16h31, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: é complemento ao item 539 [AR1] já gravado. Aplique só a diferença ao item existente, mantendo número, posição e estado (regra "Pedidos repetidos", passo 3, letra b), e registre na proveniência o que mudou. Ligue também a 526 [FN2], sem duplicar o caminho condicional dele.
+
+Estado inicial: o do próprio 539.
+
+Contexto: o Claude conferiu em 29/10/2026 as perguntas frequentes de clickfunnels.com/apps/survey-workflows: as ações por resposta incluem "redirect them to different funnel steps". No Marktmorgen, depois de enviar um formulário a pessoa segue sempre para a mesma próxima etapa (lib/forms.ts), ou vê o resultado do quiz com o produto escolhido. O caminho condicional de 526 [FN2] divide por compra ou recusa, origem da visita ou aparelho, não pela resposta de formulário; as ações de 539 [AR1] são sequência, rótulo, etapa do CRM e aviso ao criador, sem a página seguinte.
+
+O que acrescentar ao 539 [AR1]:
+- nova ação "then go to [página]": depois do envio, a pessoa vai para a página escolhida pelo criador, entre as páginas da própria loja e as etapas do mesmo funil; nunca para endereço de fora da loja;
+- quando mais de uma regra de página casar com as respostas, vale a primeira da lista, na ordem que o criador definiu e que o estúdio mostra; sem nenhuma regra de página que case, a pessoa segue para a próxima etapa de hoje;
+- a página escolhida precisa existir e estar publicada quando a regra é salva; se ela for apagada ou despublicada depois, a regra para de valer sozinha, a pessoa segue para a próxima etapa de hoje e o estúdio avisa o criador ao lado da regra;
+- no mapa do funil de 526 [FN2], o formulário com regras de página aparece como ramificação, com o nome de cada caminho, reaproveitando o desenho do caminho condicional, sem um segundo mecanismo;
+- a escolha da página é feita no servidor, pelas mesmas regras de pathOf em lib/forms.ts, também com JavaScript desligado; nenhum dado da resposta vai no endereço da página seguinte.
+
+Acessibilidade (AX274): a mudança de página só acontece depois que a pessoa aperta o botão de enviar (3.2.5); a página seguinte tem título próprio e o foco no início do conteúdo.
+
+Testes automáticos: cada condição leva à página certa; ordem das regras; página apagada ou despublicada volta à próxima etapa de hoje com aviso no estúdio; nenhum endereço de fora da loja; nenhum dado da resposta no endereço; funciona com JavaScript desligado.
+
+Custo: uma leitura a mais por envio, já dentro das leituras do plano, com teto automático; desconhecido reprova, nunca é zero.
+
+Regra de margem: segue a REGRA DE MARGEM vigente (MR, 27/10/2026, 07h42), a política tributária TX e FX275; custo desconhecido reprova, nunca é zero.
+
+Proibido: criar item novo ou mudar número, posição ou estado do 539; mandar para endereço de fora da loja; pôr dados da resposta no endereço; segundo mecanismo de caminho condicional; mudar preços, limites visíveis, comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a, a revisão comercial ou stripePlatformEligibilityReady; afrouxar qualquer trava; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
