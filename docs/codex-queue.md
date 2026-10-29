@@ -8637,6 +8637,38 @@ Aplicar a regra VR.
 
 Proveniência/diferença do quinto complemento: anexo direto do dono,29/10/2026,11h53Fortaleza. Briefing integral preservado. Acrescentados ao375somenteMore/distribuiçãoúnicadosblocos/busca,separador/espaçotipadoeEmbedscomlistafechada econdições. Aprovação/verificaçãooficialSpotify/ApplePodcasts/SoundCloud/TikToke reprovaçãoInstagram são relatadas pelo dono como delegadas aoClaude, não constituem verificação independente deste registro. Antes de implementar, conferir termos/fontes oficiais datados,HTTPS/sandbox/privacidade/ausência de API/chave/pagamento/coleta,excluir serviço se falhar qualquer critério registrando motivo sem nova decisão;nenhumforadalista. Privacidade atualizadaantesdefuncionar,Clicktoload/TikTokautoplay0rel0/Apple290px175ou450px/AX274/testes permanecem. “Semcusto”deelementoséintenção do briefing,nãodispensaMR/TX/FX275/CPU/bytes/storage/retencão/tetos/reserva;desconhecidoreprova. Oanexo mencionaquarto11h37;proveniência original do pedido direto anterior11h36mantida,semreescreverhistórico.375número/posição/estadoe quatrocomplementosanteriorespreservados;nenhumitem527. Deduplicação main332a38d,PR1208aberto,20PRsrecentes/19heads codexdistintos e764refs,semquintocomplemento11h53equivalente. Registro na alteração de códigoPR1208jáemcurso,sem ativar recursos/gastos/contas/termos.
 
+TB — Sexto complemento ao 375 [TB1]: equipe editando junto, prévia, esqueleto e situação da página (29/10/2026)
+Etiqueta: [TB1]
+
+Solicitação do dono (29/10/2026, 11h59, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: é complemento ao item 375 [TB1], que já recebeu os complementos de 29/10/2026, 10h58, 11h22, 11h32, 11h37 e 11h53. Aplique só a diferença ao item existente, mantendo número, posição e estado (regra "Pedidos repetidos", passo 3, letra b), e registre na proveniência o que mudou.
+
+Estado inicial: o do próprio 375.
+
+Contexto: na captura da barra superior do editor da ClickFunnels enviada pelo dono aparecem, além do que o complemento de 11h32 já pede, as fotos de quem está com a página aberta, "Info", "Layout" e um olho de prévia. Já existem e NÃO devem ser refeitos: a equipe com permissões (lib/team.ts), a lista de blocos do editor (components/page-editor.tsx) e o link de prévia já pedido no próprio 375.
+
+O que acrescentar à barra superior do 375 [TB1]:
+- fotos ou iniciais das pessoas da equipe que estão com a mesma página aberta agora, com o nome ao passar o mouse ou focar; se outra pessoa salvar enquanto alguém edita, aparece um aviso antes de salvar ("Saved by [nome] at [hora]. Review the changes before saving."), com a opção de ver a versão nova, sem nunca sobrescrever em silêncio;
+- olho "Preview": abre a página como o visitante vê, numa nova aba, pelo link de prévia privado já pedido no 375, sem publicar nada;
+- "Outline": o esqueleto da página, a lista ordenada dos blocos e das seções, para pular direto a um deles e reordenar pelas funções que já existem;
+- "Info": a situação da página (rascunho ou publicada), o endereço, quando foi salva pela última vez e por quem.
+
+Privacidade: a presença mostra só nome e foto de quem já é da equipe da loja, apenas para a própria equipe; nada disso aparece para compradores. A presença expira sozinha quando a pessoa fecha a página.
+Custos: cada aviso de presença e cada leitura entram no custo de pior caso do plano, com teto automático antes do gasto; custo desconhecido reprova.
+Acessibilidade: AX274 completo; as mudanças de presença são anunciadas ao leitor de tela sem interromper (região ao vivo educada).
+Testes automáticos: presença de duas pessoas, aviso antes de sobrescrever, expiração da presença, prévia sem publicar, "Outline" levando ao bloco certo e "Info" com a situação correta.
+
+Regra de margem: segue a REGRA DE MARGEM vigente (MR, 27/10/2026, 07h42), a política tributária TX e FX275; custo desconhecido reprova, nunca é zero.
+
+Proibido: criar item novo ou mudar número, posição ou estado do 375; sobrescrever o trabalho de outra pessoa sem aviso; mostrar dados da equipe a quem não é da equipe; publicar pela prévia; mudar preços, limites visíveis (inclusive o número de pessoas da equipe), comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a, a revisão comercial ou stripePlatformEligibilityReady; afrouxar qualquer trava; mostrar recurso que não funciona hoje; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+
+Proveniência/diferença do sexto complemento: pedido direto do dono acima; descrição da captura atribuída ao briefing, sem alegar inspeção independente de imagem não anexada nesta mensagem. Acrescentados só presença autorizada/expiração,avisoconcorrênciaeversãonovaantesdesalvar,Previewprivadosempublicar,Outline/Infoagregandoequipe/lista/prévia existentes.375número/posição/estadoe cinco complementosanteriorespreservados;nenhumitem527. Referência11h37do briefing preservada,sem reescrever proveniência original11h36do quarto. Deduplicação main332a38d,PR1208aberto,20PRsrecentes/19heads codexdistintos e764refs,semsextocomplemento11h59equivalente. Registro na alteração de códigoPR1208jáemcurso;reconferir código antes eaplicar sódiferença. Custorealtime/presença/leitura/storage/expiração/retencão comtetoantesgasto,desconhecidoreprova;nenhumprovêdor/limite novo autorizado.MR/TX/FX275/AX274/VRpreservados.
+
 Complemento aos375[TB1]/376[TB2] — Solicitação do dono (24/10/2026, 23h26, horário de Fortaleza), regraPedidos repetidospasso3. TBjáregistrado978antesdestecomplemento;nãorenumerar/criarseção/item/mudarposiçãoestado;aplicarjuntoàpróximaalteraçãojáprevista,SEMcommitexclusivo.Conferidoscontinuidade,mainc49bc039a0555d673ac2df2af1f282ca6d2e6358,fila978/head30f802f853ed9e476a286f160d7ccd3834306e7a,12PRsabertos e534refscodex/*;23h26equivalenteausente. MetaqualidadesuperioràClickFunnels requerAUDITORIAcomparável+fonte,nãoalegaçãopúblicaautomática.
 
 TB1diferenças:
