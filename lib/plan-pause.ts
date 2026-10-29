@@ -489,6 +489,11 @@ export async function runBreaks(nowSeconds = Math.floor(Date.now() / 1000)): Pro
       counts.failed += 1;
       continue;
     }
+    // A retained pause never authorizes charging a different current source.
+    if (store.subscriptionId !== record.subscription || store.stripeCustomerId !== record.customer) {
+      counts.failed += 1;
+      continue;
+    }
     try {
       const started = await restartPlan({
         store,

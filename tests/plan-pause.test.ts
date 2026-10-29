@@ -671,7 +671,7 @@ async function main() {
   }
 
   part("A restart cannot overwrite a store changed while the provider answered");
-  for (const changed of ["subscription", "customer"] as const) {
+  for (const changed of ["subscription", "customer", "inactive"] as const) {
     const email = "restart-race-" + changed + "@example.com", id = "sub_RestartRace" + changed;
     subs[id] = subscription(id);
     const store = await storeWith(email, "restartrace" + changed, id);
@@ -683,8 +683,8 @@ async function main() {
     const before = created.length;
     let intervened = false;
     beforeRestartAnswer = async () => {
-      const saved = await setSubscription(email, changed === "subscription"
-        ? { active: true, subscriptionId: "sub_ManualRestartRace01", period: paidPeriod() }
+      const saved = await setSubscription(email, changed !== "customer"
+        ? { active: changed === "subscription", subscriptionId: "sub_ManualRestartRace01", period: changed === "subscription" ? paidPeriod() : null }
         : { active: false, customerId: "cus_ChangedRestartRace01" });
       if (!saved) throw new Error("Synthetic intervening store write failed");
       intervened = true;
@@ -695,7 +695,7 @@ async function main() {
         { told: 0, restarted: 0, failed: 1, dropped: 0 });
       is("the race occurs during one synthetic provider response", [intervened, created.length - before], [true, 1]);
       const current = await storeForEmail(email);
-      is("the intervening subscription is preserved", current?.subscriptionId, changed === "subscription" ? "sub_ManualRestartRace01" : id);
+      is("the intervening subscription is preserved", current?.subscriptionId, changed !== "customer" ? "sub_ManualRestartRace01" : id);
       is("the intervening customer is preserved", current?.stripeCustomerId, changed === "customer" ? "cus_ChangedRestartRace01" : store.stripeCustomerId);
       is("the intervening active state is preserved", current?.subscriptionActive, changed === "subscription");
       is("no restart success or refusal notice is sent", emails.length, 0);
@@ -705,6 +705,13 @@ async function main() {
       is("source mismatch retains exact pause and annual evidence", [record, last], evidence);
       is("source mismatch retains its due member", Array.isArray(due) && due.includes(ref), true);
     } finally { beforeRestartAnswer = null; }
+    if (changed !== "subscription") {
+      const calls = providerCalls, beforeRetry = created.length;
+      is("a changed inactive source remains held on the next due pass", await runBreaks(paused.record.until + 120),
+        { told: 0, restarted: 0, failed: 1, dropped: 0 });
+      is("a source mismatch performs no provider read or new charge", [providerCalls, created.length], [calls, beforeRetry]);
+      is("a source mismatch sends no later notice", emails.length, 0);
+    }
     await undoPause(store, paused.record.until + 60);
   }
 
