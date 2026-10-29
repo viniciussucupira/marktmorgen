@@ -349,7 +349,7 @@ test('first-owner acknowledgement carries the exact immutable atomic source and 
  const sourceBinding='ctr_restart_source|sub_RestartSource01|creator_month|1799999000|paid|1799999000|1800000000';
  const sourceReceipt='review|restart-store|creator_month|checkout|40|1799999300|1800000000|1800000200|2000000000000';
  const restartReceipt='review|restart-store|creator_month|restart|50|1800000300|1800003600|1800086400|2000000000000|ctr_restart_source';
- const frame={version:1,grant:grant.id,review:grant.reviewId,statsId:grant.statsId,sourceSubscription:grant.sourceSubscriptionId,sourceGrant:input.sourceGrantId,ref:input.ref,handle:input.handle,paused,claim:input.claim,created:now,deadline:grant.submitUntilSeconds,sourceBinding,sourceReceipt,restartReceipt,reservedCents:90,carriedCents:0};
+ const frame={version:1,grant:grant.id,review:grant.reviewId,statsId:grant.statsId,sourceSubscription:grant.sourceSubscriptionId,sourceGrant:input.sourceGrantId,ref:input.ref,handle:input.handle,paused,claim:input.claim,created:now,deadline:grant.submitUntilSeconds,sourceBinding,sourceReceipt,restartReceipt,reservedCents:90,carriedCents:0,annual:1799999000};
  const decode=(value:unknown)=>ownedRestartIntentFromAcknowledgement(input,now,budget,value);
  for(const action of ['switch','restart']){
   const prior=sourceReceipt.replace('|checkout|','|'+action+'|')+'|ctr_upstream_source';
@@ -362,8 +362,11 @@ test('first-owner acknowledgement carries the exact immutable atomic source and 
  for(const handle of ['ab','a'.repeat(25),'.abc','abc_','abc.']){
   assert.equal(ownedRestartIntentFromAcknowledgement({...input,handle},now,budget,[1,JSON.stringify({...frame,handle})]),null);
  }
+ for(const annual of [undefined,null,0,-1,1.5,1800000001,Number.MAX_SAFE_INTEGER,"1799999000"]){
+  assert.equal(decode([1,JSON.stringify({...frame,annual})]),null);
+ }
  const owned=decode([1,JSON.stringify(frame)]);assert.ok(owned);
- assert.deepEqual(owned.source,{binding:sourceBinding,receipt:sourceReceipt,restartReceipt,reservedCents:90,carriedCents:0});
+ assert.deepEqual(owned.source,{binding:sourceBinding,receipt:sourceReceipt,restartReceipt,reservedCents:90,carriedCents:0,annual:1799999000});
  assert.equal(owned.claim,input.claim);assert.equal(owned.paused,paused);
  assert.ok(Object.isFrozen(owned)&&Object.isFrozen(owned.source)&&Object.isFrozen(owned.grant));
  for(const ack of [null,[],[1],[1,null],[1,'{'],[1,JSON.stringify(frame),1],[2,JSON.stringify(frame)],[1,JSON.stringify({...frame,claim:'claim_other'})],[1,JSON.stringify({...frame,sourceSubscription:'sub_ForeignIntent01'})],[1,JSON.stringify({...frame,sourceBinding:sourceBinding.replace('|paid|','|trial|')})],[1,JSON.stringify({...frame,sourceReceipt:sourceReceipt.replace('|40|','|41|'),reservedCents:90})],[1,JSON.stringify({...frame,restartReceipt:restartReceipt.replace('|50|','|49|')})],[1,JSON.stringify({...frame,reservedCents:89})],[1,JSON.stringify({...frame,carriedCents:1})],[1,JSON.stringify({...frame,extra:'not an owned field'})],[1,'x'.repeat(4097)]]){

@@ -366,6 +366,7 @@ intent.sourceReceipt=sourceRaw
 intent.restartReceipt=restartRaw
 intent.reservedCents=reserved
 intent.carriedCents=carried
+intent.annual=annual
 local owned=cjson.encode(intent)
 if #owned>4096 then return 0 end
 redis.call('HSET',KEYS[1],'restart-intent:'..ARGV[5],owned,'restart-owner:'..source[1],ARGV[5])
@@ -377,7 +378,7 @@ export type RestartIntentInput={
 
 export type OwnedRestartIntent=Readonly<{
  claim:string;grant:Readonly<ContractGrant>;ref:string;handle:string;paused:string;claimedAtSeconds:number;
- source:Readonly<{binding:string;receipt:string;restartReceipt:string;reservedCents:number;carriedCents:number}>;
+ source:Readonly<{binding:string;receipt:string;restartReceipt:string;reservedCents:number;carriedCents:number;annual:number}>;
 }>;
 /** Pure wire validation, not submission permission. Only claimRestartIntent's
  * first owned ACK and current financial checks can produce a live preparation.
@@ -398,7 +399,7 @@ export function ownedRestartIntentFromAcknowledgement(
   if(!owned||typeof owned!=='object'||Array.isArray(owned))return null;
   const {grant,ref,handle,paused,claim,sourceGrantId}=input;
   const expected={version:1,grant:grant.id,review:grant.reviewId,statsId:grant.statsId,sourceSubscription:grant.sourceSubscriptionId,sourceGrant:sourceGrantId,ref,handle,paused,claim,created:now,deadline:grant.submitUntilSeconds};
-  const fields=[...Object.keys(expected),'sourceBinding','sourceReceipt','restartReceipt','reservedCents','carriedCents'].sort();
+  const fields=[...Object.keys(expected),'sourceBinding','sourceReceipt','restartReceipt','reservedCents','carriedCents','annual'].sort();
   if(JSON.stringify(Object.keys(owned).sort())!==JSON.stringify(fields)||Object.entries(expected).some(([key,value])=>owned[key]!==value))return null;
   if(typeof owned.sourceBinding!=='string'||typeof owned.sourceReceipt!=='string'||typeof owned.restartReceipt!=='string'||owned.sourceBinding.length>256||owned.sourceReceipt.length>1024||owned.restartReceipt.length>1024)return null;
   const binding=owned.sourceBinding.split('|'),receipt=owned.sourceReceipt.split('|'),restart=owned.restartReceipt.split('|');
@@ -413,9 +414,11 @@ export function ownedRestartIntentFromAcknowledgement(
   if(receipt[0]!==grant.reviewId||receipt[1]!==grant.statsId||receipt[2]!==grant.key||!((receipt.length===9&&receipt[3]==='checkout')||(receipt.length===10&&['switch','restart'].includes(receipt[3])&&/^ctr_[A-Za-z0-9_-]{1,80}$/.test(receipt[9])))||sourceCharge===null||sourceCharge<=0||[5,6,7].some(i=>amount(receipt[i]??'')===null)||through===null||finish*1000>through)return null;
   const expectedRestart=[grant.reviewId,grant.statsId,grant.key,'restart',grant.reservedCents,grant.submitUntilSeconds,grant.checkoutExpiresAtSeconds,grant.activationUntilSeconds,Date.parse(grant.liabilitiesThrough),sourceGrantId].join('|');
   if(restart.length!==10||owned.restartReceipt!==expectedRestart)return null;
+  const annual=owned.annual;
+  if(typeof annual!=='number'||!Number.isSafeInteger(annual)||annual<=0||annual>finish||annual>now)return null;
   const reserved=owned.reservedCents,carried=owned.carriedCents;
   if(typeof reserved!=='number'||typeof carried!=='number'||!Number.isSafeInteger(reserved)||!Number.isSafeInteger(carried)||carried!==budget.carryForwardCents||carried<0||reserved<carried||reserved>budget.cashLimitCents||sourceCharge+grant.reservedCents>reserved-carried)return null;
-  return Object.freeze({claim,grant:Object.freeze({...grant}),ref,handle,paused,claimedAtSeconds:now,source:Object.freeze({binding:owned.sourceBinding,receipt:owned.sourceReceipt,restartReceipt:owned.restartReceipt,reservedCents:reserved,carriedCents:carried})});
+  return Object.freeze({claim,grant:Object.freeze({...grant}),ref,handle,paused,claimedAtSeconds:now,source:Object.freeze({binding:owned.sourceBinding,receipt:owned.sourceReceipt,restartReceipt:owned.restartReceipt,reservedCents:reserved,carriedCents:carried,annual})});
  }catch{return null;}
 }
 export async function claimRestartIntent(
@@ -464,7 +467,7 @@ local ok,intent=pcall(cjson.decode,raw)
 if not ok or type(intent)~='table' or intent.submission~=nil then return 0 end
 local fields=0
 for _ in pairs(intent) do fields=fields+1 end
-if fields~=17 then return 0 end
+if fields~=18 then return 0 end
 if intent.version~=1 or intent.review~=ARGV[2] or intent.statsId~=ARGV[3] or intent.grant~=ARGV[4] or intent.claim~=ARGV[5] or intent.created~=claimed or intent.deadline~=deadline or intent.ref~=ARGV[9] or intent.paused~=ARGV[10] or intent.sourceBinding~=ARGV[11] then return 0 end
 if redis.call('HGET',KEYS[1],'active:'..ARGV[3])~=intent.sourceBinding or redis.call('HGET',KEYS[1],'pending:'..ARGV[3])~=ARGV[4] then return 0 end
 if redis.call('HGET',KEYS[1],'grant:'..intent.sourceGrant)~=intent.sourceReceipt or redis.call('HGET',KEYS[1],'grant:'..ARGV[4])~=intent.restartReceipt then return 0 end
@@ -472,7 +475,7 @@ if redis.call('HGET',KEYS[1],'restart-owner:'..intent.sourceGrant)~=ARGV[4] then
 local reserved,carried=amount(redis.call('HGET',KEYS[1],'reserved')),amount(redis.call('HGET',KEYS[1],'carried'))
 if not reserved or not carried or reserved~=intent.reservedCents or carried~=intent.carriedCents then return 0 end
 local annual=amount(redis.call('GET',KEYS[4]))
-if redis.call('GET',KEYS[2])~=ARGV[10] or not annual or annual<=0 or annual>now then return 0 end
+if redis.call('GET',KEYS[2])~=ARGV[10] or not annual or annual<=0 or annual>now or annual~=intent.annual then return 0 end
 local parsed,pause=pcall(cjson.decode,ARGV[10])
 if not parsed or type(pause)~='table' or type(pause["until"])~='number' or pause["until"]>now then return 0 end
 if tonumber(redis.call('ZSCORE',KEYS[3],ARGV[9]))~=pause["until"] then return 0 end
@@ -623,7 +626,7 @@ if #owner>84 or not string.match(owner,'^ctr_[%w_-]+$') or pending~=owner then r
 local raw=redis.call('HGET',KEYS[1],'restart-intent:'..owner)
 if not raw or #raw>4096 then return 0 end
 local valid,intent=pcall(cjson.decode,raw)
-if not valid or type(intent)~='table' or intent.version~=1 or intent.grant~=owner or intent.statsId~=ARGV[1] or intent.sourceSubscription~=ARGV[2] or intent.sourceGrant~=ARGV[3] or intent.ref~=ARGV[4] or intent.handle~=ARGV[5] or intent.paused~=ARGV[6] or intent.sourceBinding~=sourceBinding then return 0 end
+if not valid or type(intent)~='table' or intent.version~=1 or intent.grant~=owner or intent.statsId~=ARGV[1] or intent.sourceSubscription~=ARGV[2] or intent.sourceGrant~=ARGV[3] or intent.ref~=ARGV[4] or intent.handle~=ARGV[5] or intent.paused~=ARGV[6] or intent.sourceBinding~=sourceBinding or not integer(intent.annual) or intent.annual<=0 or intent.annual~=annual then return 0 end
 if redis.call('HGET',KEYS[1],'grant:'..owner)~=intent.restartReceipt or redis.call('HGET',KEYS[1],'grant:'..ARGV[3])~=intent.sourceReceipt then return 0 end
 local reserved,carried=number(redis.call('HGET',KEYS[1],'reserved')),number(redis.call('HGET',KEYS[1],'carried'))
 if not reserved or not carried or reserved<carried or not integer(intent.reservedCents) or not integer(intent.carriedCents) or reserved<intent.reservedCents or carried<intent.carriedCents then return 0 end

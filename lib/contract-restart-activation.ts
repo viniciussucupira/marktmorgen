@@ -33,7 +33,7 @@ end
 if #KEYS~=4 or #ARGV~=11 then return 0 end
 local e,s,o=decode(ARGV[3],4096),decode(ARGV[4],512),decode(ARGV[5],256)
 if not e or not s or not o then return 0 end
-local fields={'version','grant','review','statsId','sourceSubscription','sourceGrant','ref','handle','paused','claim','created','deadline','sourceBinding','sourceReceipt','restartReceipt','reservedCents','carriedCents'}
+local fields={'version','grant','review','statsId','sourceSubscription','sourceGrant','ref','handle','paused','claim','created','deadline','sourceBinding','sourceReceipt','restartReceipt','reservedCents','carriedCents','annual'}
 local count=0
 for _ in pairs(e) do count=count+1 end
 if count~=#fields then return 0 end
@@ -75,7 +75,7 @@ local reserved,carried,slots=amount(v[10]),amount(v[11]),amount(v[12])
 if not reserved or not carried or not slots or carried~=carry or carried~=e.carriedCents or reserved<e.reservedCents or reserved>limit or reserved-carried<oldCharge+charge or slots<1 or slots>funded then return 0 end
 if redis.call('GET',KEYS[2])~=e.paused or redis.call('ZSCORE',KEYS[3],e.ref)~=tostring(pause['until']) then return 0 end
 local annual=amount(redis.call('GET',KEYS[4]))
-if not annual or annual<=0 or annual>now then return 0 end
+if not annual or annual<=0 or annual>now or annual~=e.annual then return 0 end
 local binding=e.grant..'|'..o.id..'|'..receipt[3]..'|'..o.created..'|paid|'..o.start..'|'..o.finish
 if #binding>256 then return 0 end
 if v[13] then
@@ -102,7 +102,7 @@ export async function activateRestartContract(
   const before=new Date(),seconds=Math.floor(before.getTime()/1000),config=contractFundingConfiguration(policy,context,before);
   if(!config||!commercialMarginReady(context.review)||config.reviewId!==grant.reviewId||config.grantCents[grant.key]!==grant.reservedCents||!isRedisConfigured())return false;
   const sourceGrantId=intent.source.binding.split("|")[0];
-  const expected={version:1,grant:grant.id,review:grant.reviewId,statsId:grant.statsId,sourceSubscription:grant.sourceSubscriptionId,sourceGrant:sourceGrantId,ref:intent.ref,handle:intent.handle,paused:intent.paused,claim:intent.claim,created:intent.claimedAtSeconds,deadline:grant.submitUntilSeconds,sourceBinding:intent.source.binding,sourceReceipt:intent.source.receipt,restartReceipt:intent.source.restartReceipt,reservedCents:intent.source.reservedCents,carriedCents:intent.source.carriedCents};
+  const expected={version:1,grant:grant.id,review:grant.reviewId,statsId:grant.statsId,sourceSubscription:grant.sourceSubscriptionId,sourceGrant:sourceGrantId,ref:intent.ref,handle:intent.handle,paused:intent.paused,claim:intent.claim,created:intent.claimedAtSeconds,deadline:grant.submitUntilSeconds,sourceBinding:intent.source.binding,sourceReceipt:intent.source.receipt,restartReceipt:intent.source.restartReceipt,reservedCents:intent.source.reservedCents,carriedCents:intent.source.carriedCents,annual:intent.source.annual};
   if(!ownedRestartIntentFromAcknowledgement({grant,ref:intent.ref,handle:intent.handle,paused:intent.paused,claim:intent.claim,sourceGrantId},intent.claimedAtSeconds,config,[1,JSON.stringify(expected)]))return false;
   if(typeof subscriptionId!=="string"||!/^sub_[A-Za-z0-9]{6,64}$/.test(subscriptionId)||subscriptionId===grant.sourceSubscriptionId||![createdSeconds,periodStartSeconds,periodEndSeconds].every(n=>Number.isSafeInteger(n)&&n>0)||periodStartSeconds<createdSeconds||periodStartSeconds>seconds||periodEndSeconds<=seconds)return false;
   const submission={priceId:armed.priceId,bodyHash:armed.bodyHash,idempotencyKey:armed.idempotencyKey,armedAt:armed.armedAtSeconds};
