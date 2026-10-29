@@ -113,6 +113,17 @@ export class MemoryRedis {
         return to < from ? "" : new TextDecoder().decode(bytes.slice(from, to + 1));
       }
       case "EVAL": {
+        if (key.startsWith("-- marktmorgen:pause-observation:v1\n") && args[0] === "1" && args.length === 2) {
+          const target = args[1];
+          this.live(target);
+          const current = this.data.get(target);
+          if (current === undefined) return [0];
+          if (typeof current !== "string") return [-1];
+          const bytes = new TextEncoder().encode(current);
+          const bounded = bytes.slice(0, 4097);
+          if (bounded.length === 0 || bounded.length > 4096) return [-1];
+          return [1, new TextDecoder().decode(bounded)];
+        }
         if (key.startsWith("-- marktmorgen:pause-worker-notice:v1\n") && args[0] === "2" && args.length === 7) {
           const [, target, due, ref, expected, next, rawNow] = args;
           const now = Number(rawNow);

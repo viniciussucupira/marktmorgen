@@ -17,7 +17,7 @@
  *   - a store that started again by hand is left alone.
  */
 import { MAX_STORE_BYTES, claimHandle, setSubscription, storeForEmail, storeForRestartSource, storeRef } from "@/lib/store";
-import { onBreak, pauseEmail, pauseOf, pausePlan, pauseRefusal, runBreaks, undoPause } from "@/lib/plan-pause";
+import { PAUSE_OBSERVATION, onBreak, pauseEmail, pauseOf, pausePlan, pauseRefusal, runBreaks, undoPause } from "@/lib/plan-pause";
 import { addPeriods } from "@/lib/plans";
 import { done, is, part } from "./check";
 import { paidPeriod } from "./billing-period-fixture";
@@ -401,6 +401,7 @@ async function main() {
     const key = `nl:pause:${ref}`;
     const good = set.kind === "paused" ? set.record : {};
     for (const raw of [
+      "", "x".repeat(4097), JSON.stringify({ ...good, extra: "é".repeat(2100) }),
       "{", "null", JSON.stringify({ subscription: "sub_InvalidRecord" }),
       JSON.stringify({ ...good, from: -1 }),
       JSON.stringify({ ...good, until: until + 0.5 }),
@@ -424,9 +425,9 @@ async function main() {
       is("no provider charge or notice follows unreadable evidence", [created.length - before, emails.length], [0, 0]);
     }
     const originalPipeline = pauseRedis.pipeline;
-    for (const reply of [[], [null, "unrelated"], [JSON.stringify(good), "unrelated"]]) {
+    for (const reply of [[], [null, "unrelated"], [JSON.stringify(good), "unrelated"], [null], [[0, "extra"]], [[1]], [[1, JSON.stringify(good), "extra"]], [[1, "x".repeat(4097)]], [[2, JSON.stringify(good)]]]) {
       pauseRedis.pipeline = async (commands) => {
-        if (commands.length === 1 && commands[0][0] === "GET" && commands[0][1] === key) return reply;
+        if (commands.length === 1 && commands[0][0] === "EVAL" && commands[0][1] === PAUSE_OBSERVATION && commands[0][3] === key) return reply;
         return originalPipeline(commands);
       };
       try {
@@ -771,10 +772,10 @@ async function main() {
     if (stage === "after-provider") await setSubscription(ref, { active: false });
     let changed = false;
     pauseRedis.pipeline = async commands => {
-      if (!changed && stage === "missing" && commands.length === 1 && commands[0][0] === "GET" && commands[0][1] === key) {
+      if (!changed && stage === "missing" && commands.length === 1 && commands[0][0] === "EVAL" && commands[0][1] === PAUSE_OBSERVATION && commands[0][3] === key) {
         changed = true;
         await pipeline([["SET", key, replacement], ["ZADD", "nl:pause:due", paused.record.until + DAY, ref]]);
-        return [null];
+        return [[0]];
       }
       if (!changed && stage !== "missing" && commands.some(command => command[0] === "EVAL" && String(command[1]).startsWith("-- marktmorgen:pause-worker-forget:v1"))) {
         changed = true;
@@ -906,7 +907,7 @@ async function main() {
           if(answer==="corrupt")return ["{not-json"];
           return [];
         }
-        mutations+=commands.filter(command=>!["GET","ZRANGEBYSCORE"].includes(String(command[0]))).length;
+        mutations+=commands.filter(command=>!["GET","ZRANGEBYSCORE"].includes(String(command[0])) && !(command[0]==="EVAL"&&command[1]===PAUSE_OBSERVATION)).length;
         return pipeline(commands);
       };
       try{
@@ -945,7 +946,7 @@ async function main() {
     let followingOwnerReads=0;
     pauseRedis.pipeline=async commands=>{
       if(commands.length===1&&commands[0][0]==="ZRANGEBYSCORE"&&commands[0][1]==="nl:pause:due")return [refs];
-      if(commands.length===1&&commands[0][0]==="GET"&&commands[0][1]===`nl:pause:${refs[0]}`)throw new Error("Synthetic unavailable pause record");
+      if(commands.length===1&&commands[0][0]==="EVAL"&&commands[0][1]===PAUSE_OBSERVATION&&commands[0][3]===`nl:pause:${refs[0]}`)throw new Error("Synthetic unavailable pause record");
       if(commands.length===1&&commands[0][0]==="GET"&&String(commands[0][1]).startsWith("nl:store:owner:")){
         const reply=await original(commands);
         const owner=typeof reply[0]==="string"?JSON.parse(reply[0]):null;
@@ -997,7 +998,7 @@ async function main() {
     pauseRedis.pipeline=async commands=>{
       ledgerCommands+=commands.filter(command=>command.some(value=>value==="nl:contract-reserve:v1")).length;
       ownerReads+=commands.filter(command=>command[0]==="GET"&&String(command[1]).startsWith("nl:store:owner:")).length;
-      mutations+=commands.filter(command=>!["GET","ZRANGEBYSCORE"].includes(String(command[0]))).length;
+      mutations+=commands.filter(command=>!["GET","ZRANGEBYSCORE"].includes(String(command[0])) && !(command[0]==="EVAL"&&command[1]===PAUSE_OBSERVATION)).length;
       return original(commands);
     };
     try{
