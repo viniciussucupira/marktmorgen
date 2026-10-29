@@ -1427,6 +1427,44 @@ def main():
         assert observe_pause() == [0]
         print('PASS:bounded pause observation distinguishes absent,empty,wrongtype,oversize;4096byte ASCII/UTF8 exact;no writes or TTL change;actual commands=' + json.dumps(observed_counts, sort_keys=True))
 
+
+        due_observation_match = re.search(r'export const PAUSE_DUE_OBSERVATION = `([^`]+)`;', pause_source)
+        assert due_observation_match and chr(36) + '{' not in due_observation_match.group(1)
+        due_observation_script = due_observation_match.group(1)
+        bounded_due_key = prefix + ':bounded-due'
+        keys.append(bounded_due_key)
+        def observe_due(deadline='1800000000'):
+            return redis.command('EVAL',due_observation_script,1,bounded_due_key,deadline)
+        assert observe_due() == []
+        for value in ('x' * 1280, 'é' * 640):
+            redis.command('ZADD',bounded_due_key,1800000000,value)
+            redis.command('EXPIRE',bounded_due_key,600)
+            before_due = command_counts()
+            assert observe_due() == [value]
+            due_counts = difference(before_due,command_counts())
+            assert sum(due_counts.values()) <= 3, due_counts
+            assert 0 < redis.command('TTL',bounded_due_key) <= 600
+            redis.command('DEL',bounded_due_key)
+        for value in ('', 'x' * 1281, 'é' * 641):
+            redis.command('ZADD',bounded_due_key,1800000000,value)
+            redis.command('EXPIRE',bounded_due_key,600)
+            assert observe_due() == [-1]
+            assert redis.command('ZRANGE',bounded_due_key,0,-1) == [value]
+            assert 0 < redis.command('TTL',bounded_due_key) <= 600
+            redis.command('DEL',bounded_due_key)
+        redis.command('SET',bounded_due_key,'foreign')
+        assert observe_due() == [-1]
+        assert redis.command('GET',bounded_due_key) == 'foreign'
+        redis.command('DEL',bounded_due_key)
+        for index in range(201):
+            redis.command('ZADD',bounded_due_key,1800000000,'synthetic-' + str(index).zfill(3))
+        assert observe_due() == ['synthetic-' + str(index).zfill(3) for index in range(200)]
+        for deadline in ('-1','1.5','NaN','01','1000000000001'):
+            assert observe_due(deadline) == [-1]
+        assert redis.command('ZCARD',bounded_due_key) == 201
+        redis.command('DEL',bounded_due_key)
+        print('PASS:due observation returns at most200members/1280UTF8bytes each;ASCII/UTF8 boundary,oversize,empty,wrongtype,clock refusals preserve evidence/TTL;commands='+json.dumps(due_counts,sort_keys=True))
+
         forget_match = re.search(r'export const PAUSE_WORKER_FORGET = `([^`]+)`;', pause_source)
         assert forget_match and chr(36) + '{' not in forget_match.group(1)
         forget_script = forget_match.group(1)

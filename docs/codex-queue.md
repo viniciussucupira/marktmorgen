@@ -945,6 +945,7 @@ Proveniência AB: passou a fazer parte do Bloco de abertura, posição (j), por 
    - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 43/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
    - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Custo e margem: Dimensionar payload, storage, renderização e limites antes de expandir envelope.
+   - ComplementoTB1do dono29/10/2026,10h58Fortaleza: escopo detalhado no375[TB1] (menu lateral,inserção por arrasto/Add here,colunas/elementos seguros,edição direta/prévia dupla),incorporado aoeditor visual deste32sem itemduplicado,nem mudança de número/posição/estado;preservar blocos existentes eMR/TX/FX275/AX274/VR.
 
 33. **[F2] Podcast público Apple/Spotify e importação RSS de podcast existente.**
    - Pedido: P2 F2; datas/horas e grau de certeza em Proveniência.
@@ -8474,6 +8475,200 @@ LevantamentoClaude24/10/2026baseadoemdocs/clickfunnels-feature-audit.json,docs/c
 
 Estado: na fila.Seções/colunas/elementos,blocosatuaispreservados,préviadesktop/mobile,SEMHTML/CSS/scriptlivre(F10segurança).OperaçãoequivalenteporTECLADO/botõesmover(alémarrastar),ordemdefoco/semântica,títulosordenados,contraste7:1/alvos44px/AX274automático;gatesaindanãocertificamAAAtotal. Reusareditores/funisexistentes,limites/versionamento/sanitização/importação;salvar/aprovarrevisão,nãosobrescreverconteúdosemaceite.ReferênciaeditorClickFunnelsareconferir.
 
+Complemento ao375[TB1] e32[F1] — solicitação direta do dono (29/10/2026,10h58Fortaleza).
+TB — Complemento ao 375 [TB1]: menu lateral de elementos e arrastar para a página (29/10/2026)
+Etiqueta: [TB1]
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: é complemento ao item 375 [TB1] já gravado (e ao 32 [F1], que incorpora o editor visual). Aplique só a diferença ao item existente, mantendo número, posição e estado (regra "Pedidos repetidos", passo 3, letra b), e registre na proveniência o que mudou.
+
+Estado inicial: o do próprio 375.
+
+Contexto: o dono enviou capturas do vídeo da aba "Your Funnel" de clickfunnels.com (29/10/2026). No editor deles, um menu lateral fixo mostra "My Elements" (Saved, Universal) e "Elements" por categoria (Nested Rows, Media, Form, Checkout, Misc, Navigation, Collections, Countdown Timers, Advanced, Event Types); ao lado, cartões com ícone: linhas de 1, 2 e 3 colunas; Headline, Sub Headline, Paragraph, Bullet List, Icon, Link; Image, Video, Video Popup, Audio; e uma busca "Search Elements". O cursor arrasta um cartão para o lugar exato da página e edita o título direto na página, com uma barra flutuante (negrito, itálico, sublinhado, alinhamento, link). Já existem e NÃO devem ser refeitos: os 21 blocos de lib/sales-page.ts, a galeria com busca de components/block-picker.tsx, o arrastar para reordenar com setas de teclado de components/page-editor.tsx, desfazer e refazer e as seções salvas de lib/saved-blocks.ts.
+
+O que acrescentar ao 375 [TB1]:
+- menu lateral fixo de elementos, ao lado da prévia da página, com a busca e os grupos da galeria existente, "Saved sections" no topo e cartões com ícone e nome;
+- arrastar um cartão do menu para a página, com uma linha de destino visível entre os blocos mostrando onde ele vai entrar; alternativa sem arrastar, obrigatória (AX274, 2.5.7): escolher o cartão e o lugar por clique ou teclado ("Add here");
+- linhas de 1, 2 e 3 colunas, cada coluna aceitando elementos, que viram uma coluna só no celular, na ordem de leitura;
+- elementos pequenos, além dos 21 blocos: título, subtítulo, parágrafo, lista, ícone, link em forma de botão, imagem, vídeo, vídeo em janela e áudio, todos em texto simples e arquivos do próprio criador, sem HTML, CSS ou script livres;
+- edição do texto direto na prévia, com barra flutuante de negrito, itálico, sublinhado, alinhamento e link, mantendo a edição pelo formulário de cada bloco;
+- prévia lado a lado de computador e celular, alternável com um clique.
+
+Acessibilidade: AX274 completo, inclusive ordem de foco igual à ordem visual, títulos em ordem, contraste de 7:1, alvos de 44 × 44 px e avisos antes de publicar.
+Testes automáticos: arrastar do menu para cada posição, a alternativa por teclado e clique, colunas no computador e no celular, edição direta com a barra, desfazer de cada ação e ausência de HTML ou script em qualquer elemento.
+Lucro: o criador monta páginas mais bonitas sem ajuda, o que aumenta o valor percebido de todos os planos; sem custo variável novo além do armazenamento já contado.
+
+Regra de margem: segue a REGRA DE MARGEM vigente (MR, 27/10/2026, 07h42), a política tributária TX e FX275; custo desconhecido reprova, nunca é zero.
+
+Proibido: criar item novo ou mudar número, posição ou estado do 375 ou do 32; remover blocos ou recursos existentes; aceitar HTML, CSS ou script livres; publicar algo sem o clique do criador; mudar preços, limites visíveis, comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a, a revisão comercial ou stripePlatformEligibilityReady; afrouxar qualquer trava; mostrar recurso que não funciona hoje; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+
+Proveniência/diferença: briefing direto do dono acima, descrição de capturas atribuída ao dono/Claude, sem alegar inspeção independente das imagens nesta conversa. Apenas acrescentados menu lateral/linha de destino/Add here,linhas1–3colunas,elementos pequenos seguros,edição direta/barra e prévia dupla ao375existente e referência no32; não refazer21blocos/galeria/reordenação/undo/redo/seções salvas. Número/posição/estado de ambos intactos. Deduplicação no main13e8504,PR1208aberto,20PRsrecentes/20heads codexdistintos incluindobriefTBoriginal e762refs,sem complemento10h58 equivalente. Preservado complemento24/10/2026,23h26; registrado com a próxima alteração de código já prevista,noPR1208,semcommit/PRexclusivo documental. Intenção de custo do briefing não dispensaMR/TX/FX275/limites/reserva/retencãoantesoperação.
+
+TB — Segundo complemento ao 375 [TB1]: categorias do menu lateral (29/10/2026)
+Etiqueta: [TB1]
+
+Solicitação do dono (29/10/2026, 11h22, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: é complemento ao item 375 [TB1], que já recebeu o complemento de 29/10/2026, 10h58 (menu lateral de elementos). Aplique só a diferença ao item existente, mantendo número, posição e estado (regra "Pedidos repetidos", passo 3, letra b), e registre na proveniência o que mudou.
+
+Estado inicial: o do próprio 375.
+
+Contexto: na captura do editor da ClickFunnels enviada pelo dono, o menu lateral agrupa os elementos em "Nested Rows", "Media", "Form", "Checkout", "Misc", "Navigation", "Collections", "Countdown Timers", "Advanced" e "Event Types". O complemento de 10h58 cobriu linhas, conteúdo e mídia, mas não listou as demais categorias.
+
+O que acrescentar ao menu lateral do 375 [TB1], cada grupo com cartões arrastáveis e a mesma alternativa por clique ou teclado:
+- "Forms": os formulários, pesquisas e questionários já existentes (bloco "form" de lib/sales-page.ts);
+- "Checkout": o botão para o checkout e o checkout embutido que já existem, sempre levando ao pagamento na conta do próprio criador;
+- "Products": produto da loja (bloco "product") e coleções de produtos já existentes;
+- "Navigation": barra de navegação da página, com links para as páginas e as seções da própria loja, que vira menu recolhido no celular;
+- "Countdown": a contagem regressiva já existente, sempre até uma data real, igual para todos os visitantes;
+- "Bookings": a escolha de horário dos agendamentos já existentes (lib/calls.ts), embutida na página;
+- "Trust": avaliações verificadas, garantia e números da loja, os blocos já existentes.
+A categoria "Advanced" da ClickFunnels (código livre) NÃO entra: nenhum HTML, CSS ou script livre, como já exige o 375.
+
+Testes automáticos: cada grupo aparece no menu, cada cartão entra na página por arrastar e pela alternativa por teclado, e nenhum elemento aceita código.
+
+Regra de margem: segue a REGRA DE MARGEM vigente (MR, 27/10/2026, 07h42), a política tributária TX e FX275; custo desconhecido reprova, nunca é zero.
+
+Proibido: criar item novo ou mudar número, posição ou estado do 375; aceitar HTML, CSS ou script livres; contagem regressiva sem data real; mudar preços, limites visíveis, comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a, a revisão comercial ou stripePlatformEligibilityReady; afrouxar qualquer trava; mostrar recurso que não funciona hoje; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+
+Proveniência/diferença do segundo complemento: pedido direto do dono acima; descrição da captura atribuída ao briefing, sem alegar inspeção independente de imagem não anexada nesta mensagem. Acrescentadas somente as7categoriasForms/Checkout/Products/Navigation/Countdown/Bookings/Trust aos cartões e alternativas do primeirocomplemento10h58,sem duplicarblocos/lógicasexistentes. Advanced/códigolivreexcluídos;datarealigualparatodosobrigatória. Número375,posição,estado eprimeirocomplemento preservados;nenhumitem527. Deduplicação: main332a38d,PR1208aberto,20PRsrecentes/19heads codexdistintos e764refs,semsegundocomplemento11h22equivalente. Registro na mesma alteração de códigoPR1208;reconferircapacidadesreaisantesdeexecutar eaplicarsóadiferença.MR/TX/FX275/AX274/VRpreservados.
+
+TB — Terceiro complemento ao 375 [TB1]: barra de texto com IA e barra superior do editor (29/10/2026)
+Etiqueta: [TB1]
+
+Solicitação do dono (29/10/2026, 11h32, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: é complemento ao item 375 [TB1], que já recebeu os complementos de 29/10/2026, 10h58 e 11h22. Aplique só a diferença ao item existente, mantendo número, posição e estado (regra "Pedidos repetidos", passo 3, letra b), e registre na proveniência o que mudou.
+
+Estado inicial: o do próprio 375.
+
+Contexto: na captura do editor da ClickFunnels enviada pelo dono, o título é editado direto na página, com uma barra flutuante de negrito, itálico, sublinhado, riscado, alinhamento à esquerda, ao centro e à direita, link e um botão "AI"; no alto do editor, uma barra com Help, Info, Layout, My assets, Popup, Style Guide, Settings e a troca entre computador e celular. Já existem e NÃO devem ser refeitos: a reescrita de um bloco com IA de quatro jeitos (lib/block-rewrite-rules.ts), o estilo da página (components/page-style-picker.tsx), título e descrição para busca (lib/sales-page.ts), a oferta ao sair da página (item 30, ExitOffer), as fotos do criador, desfazer e refazer.
+
+O que acrescentar ao 375 [TB1]:
+- na barra flutuante de texto: riscado, além do que o complemento de 10h58 já pede, e o botão "AI", que reescreve só o trecho selecionado com a mesma reescrita de lib/block-rewrite-rules.ts (os mesmos quatro jeitos e a mesma checagem de honestidade), com a franquia e a reserva de IA já existentes antes de cada chamada; o resultado aparece como sugestão, e só entra na página quando o criador aceitar;
+- uma barra superior fixa no editor, que só reúne o que já existe: Help (a ajuda do estúdio), Pictures (as fotos já enviadas pelo criador, para usar de novo sem reenviar), Exit offer (a oferta ao sair já existente), Style (o estilo da página), Settings (título e descrição para busca e o endereço da página), a troca entre computador e celular, desfazer, refazer e o estado do salvamento ("Saved", "Saving…" ou "Not saved").
+O que não fazer: nenhum selo, faixa de urgência ou garantia aparece por padrão em modelo ou exemplo; selos e garantias só entram com o texto e o compromisso do próprio criador.
+
+Testes automáticos: o riscado, a reescrita do trecho selecionado como sugestão (aceitar e recusar), a reserva de IA antes da chamada, cada botão da barra superior levando ao recurso existente e o estado do salvamento.
+
+Regra de margem: segue a REGRA DE MARGEM vigente (MR, 27/10/2026, 07h42), a política tributária TX e FX275; custo desconhecido reprova, nunca é zero.
+
+Proibido: criar item novo ou mudar número, posição ou estado do 375; refazer recursos já existentes; chamar a IA sem a reserva prévia; publicar texto da IA sem o clique do criador; acrescentar selo, urgência ou garantia que o criador não escreveu; mudar preços, limites visíveis, comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a, a revisão comercial ou stripePlatformEligibilityReady; afrouxar qualquer trava; mostrar recurso que não funciona hoje; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+
+Proveniência/diferença do terceiro complemento: pedido direto do dono acima; descrição da captura atribuída ao briefing, sem alegar inspeção independente de imagem não anexada nesta mensagem. Acrescentados só riscado/IA no trecho selecionado como sugestão com reserva/aceite e barra superior agregadora dos recursos existentes/estado de salvamento; nenhum selo/urgência/garantia padrão. Complementos10h58e11h22/375número/posição/estado preservados;nenhumitem527. Deduplicação no main332a38d,PR1208aberto,20PRsrecentes/19heads codexdistintos e764refs,semterceirocomplemento11h32equivalente. Registro na alteração de códigoPR1208jáemcurso;reconferir código antes da implementação e aplicar só diferença. MR/TX/FX275/AX274/VR e custos desconhecidos reprovados continuam vinculantes.
+
+TB — Quarto complemento ao 375 [TB1]: moldura de seleção com ações no próprio elemento (29/10/2026)
+Etiqueta: [TB1]
+
+Solicitação do dono (29/10/2026, 11h36, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: é complemento ao item 375 [TB1], que já recebeu os complementos de 29/10/2026, 10h58, 11h22 e 11h32. Aplique só a diferença ao item existente, mantendo número, posição e estado (regra "Pedidos repetidos", passo 3, letra b), e registre na proveniência o que mudou.
+
+Estado inicial: o do próprio 375.
+
+Contexto: na captura do editor da ClickFunnels enviada pelo dono, ao clicar num elemento da página aparece uma moldura em volta dele com uma etiqueta do tipo do elemento ("Headline") e os botões mover, configurações, duplicar, código, salvar e apagar, e, logo abaixo, o botão "ADD ELEMENT". Já existem e NÃO devem ser refeitos: mover para cima e para baixo, duplicar, remover e salvar como seção, na lista de blocos de components/page-editor.tsx (lib/saved-blocks.ts).
+
+O que acrescentar ao 375 [TB1]:
+- ao clicar ou focar um elemento na prévia, uma moldura em volta dele com a etiqueta do tipo do elemento e os botões: mover (arrastar ou setas), configurações (abre o formulário do próprio bloco), duplicar, salvar como seção e remover, usando as mesmas funções que já existem na lista de blocos;
+- logo abaixo do elemento selecionado, o botão "Add element", que abre o menu lateral já pedido no 375 para acrescentar ali;
+- remover pede confirmação e pode ser desfeito;
+- tudo também pelo teclado: Tab chega ao elemento, Enter o seleciona, e cada botão tem nome para leitor de tela.
+O botão de código da ClickFunnels NÃO entra: nenhum HTML, CSS ou script livre, como já exige o 375.
+
+Testes automáticos: seleção por clique e por teclado, cada botão da moldura, "Add element" no lugar certo, confirmação e desfazer da remoção.
+
+Regra de margem: segue a REGRA DE MARGEM vigente (MR, 27/10/2026, 07h42), a política tributária TX e FX275; custo desconhecido reprova, nunca é zero.
+
+Proibido: criar item novo ou mudar número, posição ou estado do 375; refazer funções já existentes; aceitar HTML, CSS ou script livres; mudar preços, limites visíveis, comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a, a revisão comercial ou stripePlatformEligibilityReady; afrouxar qualquer trava; mostrar recurso que não funciona hoje; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+
+Proveniência/diferença do quarto complemento: pedido direto do dono acima; descrição da captura atribuída ao briefing, sem alegar inspeção independente de imagem não anexada nesta mensagem. Acrescentados só moldura por clique/foco,tipo/açõesreutilizadas,Add element na posição selecionada,confirmação/undo da remoção e operaçãoTab/Enter/nomesacessíveis;sem botão de código. Preservados375número/posição/estado e complementos10h58/11h22/11h32;nenhumitem527. Deduplicação no main332a38d,PR1208aberto,20PRsrecentes/19heads codexdistintos e764refs,semquartocomplemento11h36equivalente. Registro na alteração de códigoPR1208jáemcurso;reconferir código antes eaplicar sódiferença.MR/TX/FX275/AX274/VRpreservados.
+
+TB — Quinto complemento ao 375 [TB1]: grupos "More" e "Embeds" no menu lateral (29/10/2026)
+Etiqueta: [TB1]
+
+Solicitação do dono (29/10/2026, 11h53, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: é complemento ao item 375 [TB1], que já recebeu os complementos de 29/10/2026, 10h58, 11h22, 11h32 e 11h37. Aplique só a diferença ao item existente, mantendo número, posição e estado (regra "Pedidos repetidos", passo 3, letra b), e registre na proveniência o que mudou.
+
+Estado inicial: o do próprio 375.
+
+Contexto: a coluna de categorias do menu lateral da ClickFunnels, enviada de novo pelo dono, tem um grupo "Misc" (diversos), que os complementos anteriores não cobriram, e um grupo "Advanced", onde o criador cola HTML, JavaScript e CSS próprios. O "Advanced" continua fora do Marktmorgen pela regra de segurança já registrada (F10): todas as lojas ficam em marktmorgen.com, e código livre de um criador rodaria nesse endereço, com risco de roubo de sessão, formulário falso de pagamento, rastreamento sem consentimento e quebra de acessibilidade (AX274) e de desempenho (281 [SF1], 497 [ME2]). Já existem com segurança: pixels de anúncio por número (menu "Numbers and pixels"), vídeos do YouTube, Vimeo e Loom (lib/sales-page.ts, embedUrl) e o estilo da página.
+
+O que acrescentar ao menu lateral do 375 [TB1]:
+- um grupo "More", com os blocos já existentes de lib/sales-page.ts que não estão em outro grupo (por exemplo: perguntas, como funciona, para quem é, comparação, bônus, o que tem dentro, sobre você e números da loja), cada um como cartão arrastável;
+- dois elementos novos de arrumação, sem texto do criador nem custo: separador (uma linha) e espaço em branco (pequeno, médio ou grande);
+- um grupo "Embeds", com a lista fechada abaixo. O criador cola o endereço público do conteúdo; o Marktmorgen reconstrói o endereço de embutir só a partir do identificador, como já faz com os vídeos; nada carrega até a pessoa clicar ("Click to load"), com aviso de que o conteúdo vem de outro serviço; o quadro fica isolado da loja (iframe com sandbox, sem acesso à sessão, aos cookies nem à página); qualquer endereço fora da lista é recusado com uma mensagem clara;
+- todo bloco existente aparece em exatamente um grupo do menu; a busca encontra todos.
+A categoria "Advanced" (código livre) continua fora.
+
+Lista de embeds aprovada: o dono delegou ao Claude a verificação e a aprovação (29/10/2026, 11h53). O Claude conferiu na documentação oficial, em 29/10/2026:
+- Spotify (developer.spotify.com/documentation/embeds): quadro de open.spotify.com/embed para episódios, programas, álbuns e listas, sem chave. Aprovado.
+- Apple Podcasts (podcasters.apple.com/support/apple-podcasts-embed-player): quadro de embed.podcasts.apple.com para programa ou episódio, sem chave; respeitar o tamanho mínimo de 290 px de largura (175 px de altura para episódio, 450 px para programa). Aprovado.
+- SoundCloud (developers.soundcloud.com/docs/api/html5-widget): quadro de w.soundcloud.com/player com o parâmetro url, sem chave nos exemplos oficiais. Aprovado.
+- TikTok (developers.tiktok.com/doc/embed-player): quadro de www.tiktok.com/player/v1/{id}, sem chave; usar autoplay=0 e rel=0 (sem vídeos recomendados). Aprovado.
+- Instagram: REPROVADO. Desde 15/06/2026 o oEmbed da Meta funciona sem token, mas exige que o Marktmorgen consulte graph.facebook.com a cada post, e o código devolvido não é garantido como simples iframe sem script; falha o critério 1.
+Critérios que continuam valendo na implementação: (1) forma oficial e documentada de embutir por endereço (iframe), sem exigir script do serviço na página nem conta ou chave do Marktmorgen; (2) HTTPS; (3) funciona dentro de iframe com sandbox; (4) não recebe pagamento nem coleta dados do comprador dentro do quadro; (5) política de privacidade pública. Se algum serviço aprovado falhar um critério ao ser implementado, fica fora, com o motivo registrado na proveniência, sem nova decisão do dono. Leia os termos de uso de embutir de cada serviço e registre o resumo com data, como já vale para YouTube, Vimeo e Loom; não aceite nenhum termo novo, não crie conta e não peça chave. Nenhum serviço fora desta lista entra sem nova ordem do dono. Criadores e compradores não aprovam nem acrescentam serviços.
+
+Privacidade: cada serviço liberado entra na política de privacidade antes de funcionar, com o que ele recebe ao ser clicado.
+Testes automáticos: cada bloco existente aparece em um único grupo; separador, espaço e embeds entram por arrastar e pela alternativa por teclado; espaço não cria título vazio nem quebra a ordem de leitura; endereço fora da lista (inclusive Instagram) é recusado; nada carrega antes do clique; o quadro do embed não lê cookies nem a página; o TikTok sai com autoplay=0 e rel=0; o Apple Podcasts respeita o tamanho mínimo.
+
+Regra de margem: segue a REGRA DE MARGEM vigente (MR, 27/10/2026, 07h42), a política tributária TX e FX275; custo desconhecido reprova, nunca é zero.
+
+Proibido: criar item novo ou mudar número, posição ou estado do 375; aceitar HTML, CSS, JavaScript ou código de embed colado; aceitar serviço ou endereço fora da lista aprovada; chamar a API de qualquer serviço para montar o embed; carregar conteúdo de terceiros antes do clique; mudar preços, limites visíveis, comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a, a revisão comercial ou stripePlatformEligibilityReady; afrouxar qualquer trava; mostrar recurso que não funciona hoje; criar contas ou chaves em qualquer serviço, aceitar termos, contratar, pagar ou contatar terceiros; apagar qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+
+Proveniência/diferença do quinto complemento: anexo direto do dono,29/10/2026,11h53Fortaleza. Briefing integral preservado. Acrescentados ao375somenteMore/distribuiçãoúnicadosblocos/busca,separador/espaçotipadoeEmbedscomlistafechada econdições. Aprovação/verificaçãooficialSpotify/ApplePodcasts/SoundCloud/TikToke reprovaçãoInstagram são relatadas pelo dono como delegadas aoClaude, não constituem verificação independente deste registro. Antes de implementar, conferir termos/fontes oficiais datados,HTTPS/sandbox/privacidade/ausência de API/chave/pagamento/coleta,excluir serviço se falhar qualquer critério registrando motivo sem nova decisão;nenhumforadalista. Privacidade atualizadaantesdefuncionar,Clicktoload/TikTokautoplay0rel0/Apple290px175ou450px/AX274/testes permanecem. “Semcusto”deelementoséintenção do briefing,nãodispensaMR/TX/FX275/CPU/bytes/storage/retencão/tetos/reserva;desconhecidoreprova. Oanexo mencionaquarto11h37;proveniência original do pedido direto anterior11h36mantida,semreescreverhistórico.375número/posição/estadoe quatrocomplementosanteriorespreservados;nenhumitem527. Deduplicação main332a38d,PR1208aberto,20PRsrecentes/19heads codexdistintos e764refs,semquintocomplemento11h53equivalente. Registro na alteração de códigoPR1208jáemcurso,sem ativar recursos/gastos/contas/termos.
+
+TB — Sexto complemento ao 375 [TB1]: equipe editando junto, prévia, esqueleto e situação da página (29/10/2026)
+Etiqueta: [TB1]
+
+Solicitação do dono (29/10/2026, 11h59, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: é complemento ao item 375 [TB1], que já recebeu os complementos de 29/10/2026, 10h58, 11h22, 11h32, 11h37 e 11h53. Aplique só a diferença ao item existente, mantendo número, posição e estado (regra "Pedidos repetidos", passo 3, letra b), e registre na proveniência o que mudou.
+
+Estado inicial: o do próprio 375.
+
+Contexto: na captura da barra superior do editor da ClickFunnels enviada pelo dono aparecem, além do que o complemento de 11h32 já pede, as fotos de quem está com a página aberta, "Info", "Layout" e um olho de prévia. Já existem e NÃO devem ser refeitos: a equipe com permissões (lib/team.ts), a lista de blocos do editor (components/page-editor.tsx) e o link de prévia já pedido no próprio 375.
+
+O que acrescentar à barra superior do 375 [TB1]:
+- fotos ou iniciais das pessoas da equipe que estão com a mesma página aberta agora, com o nome ao passar o mouse ou focar; se outra pessoa salvar enquanto alguém edita, aparece um aviso antes de salvar ("Saved by [nome] at [hora]. Review the changes before saving."), com a opção de ver a versão nova, sem nunca sobrescrever em silêncio;
+- olho "Preview": abre a página como o visitante vê, numa nova aba, pelo link de prévia privado já pedido no 375, sem publicar nada;
+- "Outline": o esqueleto da página, a lista ordenada dos blocos e das seções, para pular direto a um deles e reordenar pelas funções que já existem;
+- "Info": a situação da página (rascunho ou publicada), o endereço, quando foi salva pela última vez e por quem.
+
+Privacidade: a presença mostra só nome e foto de quem já é da equipe da loja, apenas para a própria equipe; nada disso aparece para compradores. A presença expira sozinha quando a pessoa fecha a página.
+Custos: cada aviso de presença e cada leitura entram no custo de pior caso do plano, com teto automático antes do gasto; custo desconhecido reprova.
+Acessibilidade: AX274 completo; as mudanças de presença são anunciadas ao leitor de tela sem interromper (região ao vivo educada).
+Testes automáticos: presença de duas pessoas, aviso antes de sobrescrever, expiração da presença, prévia sem publicar, "Outline" levando ao bloco certo e "Info" com a situação correta.
+
+Regra de margem: segue a REGRA DE MARGEM vigente (MR, 27/10/2026, 07h42), a política tributária TX e FX275; custo desconhecido reprova, nunca é zero.
+
+Proibido: criar item novo ou mudar número, posição ou estado do 375; sobrescrever o trabalho de outra pessoa sem aviso; mostrar dados da equipe a quem não é da equipe; publicar pela prévia; mudar preços, limites visíveis (inclusive o número de pessoas da equipe), comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a, a revisão comercial ou stripePlatformEligibilityReady; afrouxar qualquer trava; mostrar recurso que não funciona hoje; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+
+Proveniência/diferença do sexto complemento: pedido direto do dono acima; descrição da captura atribuída ao briefing, sem alegar inspeção independente de imagem não anexada nesta mensagem. Acrescentados só presença autorizada/expiração,avisoconcorrênciaeversãonovaantesdesalvar,Previewprivadosempublicar,Outline/Infoagregandoequipe/lista/prévia existentes.375número/posição/estadoe cinco complementosanteriorespreservados;nenhumitem527. Referência11h37do briefing preservada,sem reescrever proveniência original11h36do quarto. Deduplicação main332a38d,PR1208aberto,20PRsrecentes/19heads codexdistintos e764refs,semsextocomplemento11h59equivalente. Registro na alteração de códigoPR1208jáemcurso;reconferir código antes eaplicar sódiferença. Custorealtime/presença/leitura/storage/expiração/retencão comtetoantesgasto,desconhecidoreprova;nenhumprovêdor/limite novo autorizado.MR/TX/FX275/AX274/VRpreservados.
+
 Complemento aos375[TB1]/376[TB2] — Solicitação do dono (24/10/2026, 23h26, horário de Fortaleza), regraPedidos repetidospasso3. TBjáregistrado978antesdestecomplemento;nãorenumerar/criarseção/item/mudarposiçãoestado;aplicarjuntoàpróximaalteraçãojáprevista,SEMcommitexclusivo.Conferidoscontinuidade,mainc49bc039a0555d673ac2df2af1f282ca6d2e6358,fila978/head30f802f853ed9e476a286f160d7ccd3834306e7a,12PRsabertos e534refscodex/*;23h26equivalenteausente. MetaqualidadesuperioràClickFunnels requerAUDITORIAcomparável+fonte,nãoalegaçãopúblicaautomática.
 
 TB1diferenças:
@@ -14599,7 +14794,7 @@ Em cada item, qualquer parte necessária para abrir vendas, conformidade legal, 
 | 215 | OR apósA,206–272; antesB | Fim, após todos os nãoFIM1; ordem relativa anterior | Somente posição; escopo/estado/provas mantidos. Salvaguardas já devidas dos recursos atuais permanecem imediatas. |
 | 222 | OR apósA,206–272; antesB | Fim, após todos os nãoFIM1; ordem relativa anterior | Somente posição; escopo/estado/provas mantidos. Salvaguardas já devidas dos recursos atuais permanecem imediatas. |
 | 236 | OR apósA,206–272; antesB | Fim, após todos os nãoFIM1; ordem relativa anterior | Somente posição; escopo/estado/provas mantidos. Salvaguardas já devidas dos recursos atuais permanecem imediatas. |
-| 241 | OR apósA,206–272; antesB | Fim, após todos os nãoFIM1; ordem relativa anterior | Somente posição; escopo/estado/provas mantidos. Salvaguardas já devidas dos recursos atuais permanecem imediatas. |
+| 241 | OR apósA,206–272; antesB; levado ao fim por FIM1 em28/10/2026,23h43Fortaleza | Logo depois de 531 [VP1], por VP2 (29/10/2026,13h24 Fortaleza) | VP2 altera somente posição em29/10/2026,13h24Fortaleza; escopo/estado/provas mantidos. Nenhum outro itemFIM1 muda; PF8/206após519preservado. Salvaguardas já devidas dos recursos atuais permanecem imediatas. |
 | 252 | OR apósA,206–272; antesB | Fim, após todos os nãoFIM1; ordem relativa anterior | Somente posição; escopo/estado/provas mantidos. Salvaguardas já devidas dos recursos atuais permanecem imediatas. |
 | 255 | OR apósA,206–272; antesB | Fim, após todos os nãoFIM1; ordem relativa anterior | OpenAPI/SDK/loja de testes novos no fim; segurança, isolamento e teto da API já operante ficam na posição atual. |
 | 280 | Após itens anteriores/OR/AX274B–C | Fim, após todos os nãoFIM1; ordem relativa anterior | Somente posição; escopo/estado/provas mantidos. Salvaguardas já devidas dos recursos atuais permanecem imediatas. |
@@ -15040,6 +15235,16 @@ Proibido: retirar item, recurso ou página do menu; mudar preços, limites visí
 Aplicar a regra VR.
 
 
+## AV — limite de bytes na seleção real das pausas devidas (29/10/2026)
+
+runBreaks passa a selecionar pelo Lua estático somenteleitura: máximo200membros de1280bytesUTF8 cada, validação noRedis antes de devolverpayload e snapshot estrito no consumidor antes de ler lojas/enviar/cobrar. Vazio inválido,tipo errado,referência excessiva ou resposta ambígua retêm o lote e toda evidência; relógio inválido0IO. IDsUnicode preservados pelo envelope1280bytes/até320caracteres4bytes,nenhumrename/descarte. Payloadmáximo256000bytesmaisoverhead; isso não certifica memóriaRedisinterna,cardinalidadetotal,frequência/global/lifetime. Suítes reais com limitesASCII/UTF8,TTL,201→200e recusas; suíteinteira obrigatória no novohead. Custo componente3comandos/lote=$0.000006a$2/M,incremental$0.000004; para os6contratos mensal=incremental*B_m/anual=incremental*B_a; contagens/totalcustos/impostos desconhecidos continuam reprovados,sem autorização de gasto/flags/preços/direitos alterados. Detalhes eprova realPR1205/1207 emdocs/pause-due-selection-bound.md,comcódigoreal,nãoPRsódeprovas. AV1/MR/TX/FX275/SD1/VR/AX274 e filaCK/PF/LB/FIM1 preservados.
+
+
+### NV1 preservado no head combinado
+
+PR1209 incorporado em29/10/2026,10:49:27Fortaleza/13:49:27UTC,merge13e850487edd961e7b14eacf2c4e9372230fe9e3,head996d5b18c73ba0925fe8c8fd1447b123952e74bb,árvore4187ca75e25721b4392789afdb920b375e42c2f4,paise1284741+996d5b1.27checksdocumentais16success11skips+Vercel. Item524NV1nafila,briefingintegral/ordem/estado preservados,sem implementação/publicfeature/counter. PR1208 incorpora a fila sem sobrescrever e exige novamente suíteinteira na árvorecombinada; provaRedis do head5164ff5não substitui os testes do novohead.
+
+
 ## FN — registro integral; item525 (29/10/2026,11h06Fortaleza)
 
 Proveniência: pedido direto do dono nesta conversa; descrição da capturaClickFunnels e do estado do produto atribuída ao briefing, sem alegar leitura independente de imagem não anexada nesta mensagem. Deduplicação: main13e8504,PR1208aberto,20PRsrecentes/19heads codexdistintos e762refs,sem etiqueta/título/data/conteúdo equivalente. Próximo livre525após524NV1,sem alterar ordem/estado/escopo existentes. Antes da implementação,reconferir lib/stats.ts,funnel-metrics e editor e fazer só a diferença. AVcontinua; o complementoTB375/32 fica noPR1208 jáemcurso,sem duplicá-lo neste registro. MR/TX/FX275/AX274/VR e desconhecido reprova vinculantes; registro não autoriza leituras/gastos/publicação de recurso.
@@ -15074,6 +15279,45 @@ Proibido: inventar, estimar ou arredondar para cima qualquer número; mostrar da
 Aplicar a regra VR.
 
 
+### FN1 preservado na árvore combinada
+
+PR1210 incorporado em29/10/2026,11:11:04Fortaleza/14:11:04UTC,merge51030ab4096c01143c928a1580226580fb67c260,headd21991c7dd1be9ebd6748c069ffe54a9e4075761,árvoree2f5e69ed5cf8fb43c869773d17aa33cd2718210,paise13e8504+d21991c.27checksdocumentais16success11skips+Vercel.525FN1mantémnafilaapós524,briefingintegral/ordem/estado preservados;375/32complementoTBcontinuanestePR1208comcódigoreal. Suíteinteira novamente no novohead combinado; nenhuma prova antiga é certificação destehead. Counter254inalterado.
+
+
+FN — Complemento ao 525 [FN1]: cliques na página de obrigado e gráfico por dia (29/10/2026)
+Etiqueta: [FN1]
+
+Solicitação do dono (29/10/2026, 12h01, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: é complemento ao item 525 [FN1] já gravado. Aplique só a diferença ao item existente, mantendo número, posição e estado (regra "Pedidos repetidos", passo 3, letra b), e registre na proveniência o que mudou.
+
+Estado inicial: o do próprio 525.
+
+Contexto: na nova captura do painel de resultados do funil da ClickFunnels enviada pelo dono, a etapa "Thank you page" mostra "Click-through" (quantas pessoas clicaram para seguir adiante), e o resumo tem um ícone de gráfico ao lado da escolha do período. A demonstração deles também mostra números que se contradizem ("Rec. Sales" 802,528 como quantidade, "Recurring Sales" $802,528.00 e "Rec. Revenue" $0.00), o que o 525 já proíbe.
+
+O que acrescentar ao 525 [FN1]:
+- na última etapa do funil (página de obrigado ou de confirmação): quantas pessoas clicaram num link ou botão dela para seguir adiante, e a porcentagem sobre as visitas dessa etapa, contadas pelo mesmo método de contagem do Marktmorgen, sem rastreamento novo nem dado pessoal;
+- botão de gráfico no painel de resumo, que mostra visitas, vendas e receita por dia no período escolhido, com uma tabela equivalente ao lado para leitor de tela (AX274);
+- regra de coerência: receita recorrente, quantidade de renovações e receita à vista nunca se contradizem; um teste automático falha se a mesma quantia aparecer como quantidade e como dinheiro, ou se um total for diferente da soma das suas partes.
+
+Testes automáticos: contagem de cliques na última etapa, porcentagem, gráfico e tabela com os mesmos números, e as regras de coerência.
+
+Regra de margem: segue a REGRA DE MARGEM vigente (MR, 27/10/2026, 07h42), a política tributária TX e FX275; custo desconhecido reprova, nunca é zero.
+
+Proibido: criar item novo ou mudar número, posição ou estado do 525; inventar, estimar ou arredondar para cima qualquer número; criar rastreamento novo ou coletar dado pessoal; mudar preços, limites visíveis, comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a, a revisão comercial ou stripePlatformEligibilityReady; afrouxar qualquer trava; mostrar recurso que não funciona hoje; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+
+Proveniência/diferença do complemento: pedido direto do dono acima; descrição da captura e números contraditórios atribuídos ao briefing, não dados de compradores/receita doMarktmorgen nem inspeção independente de imagem não anexada nesta mensagem. Acrescentados só cliques/porcentagem na últimaetapa pelo mesmo método,gráficodiário/tabelaequivalente e testes de coerência quantidade/moeda/somapartes.525número/posição/estadona filaeescopoanteriorpreservados;nenhumitem527. Counts unavailable distinto de zero,moeda/reembolsos/fuso/período/semPII/semrastreamentonovo e tetosantesleiturascontinuam. Deduplicação main332a38d,PR1208aberto,20PRsrecentes/19heads codexdistintos e764refs,semcomplemento12h01equivalente. Registro na alteração de códigoPR1208jáemcurso;reconferir código antes eaplicar sódiferença.MR/TX/FX275/AX274/VRpreservados.
+
+### Segundo complemento de525FN1 — 29/10/2026,14h06Fortaleza
+
+Proveniência: pedido direto do dono; aplica só diferença ao525,sem novo número,sem mudar posição/estado. O briefing integral conjunto FN1/AF1 está preservado no registro532ao fim desta fila; esta diferença pertence ao525. Comparação e nomes de módulos são relato do dono,reconferir código antes de executar. Acrescenta lista ordenável de funis e totais do mesmo período; mesmas fontes reais,indisponibilidade explícita,reembolsos,coerência,semPII. AX274/7:1,custo cada nova leitura/teto prévio,MR/TX/FX275/VRvinculantes;sem anúncio/implementação neste registro.
+
+Complemento ao 525 [FN1]: na página que lista os funis da loja, cada funil numa linha com compradores, número de vendas e receita do período escolhido, ordenável por cada coluna; no alto, os totais da loja no mesmo período (receita, pedidos e produtos à venda). Os mesmos números e as mesmas regras do 525: lidos das vendas reais na conta Stripe ou PayPal do próprio criador, "Counts unavailable" quando faltar dado, nunca zero inventado, reembolsos descontados, nenhum dado pessoal de comprador, e um total nunca diferente da soma das linhas.
+
 ## FN2 — registro integral; item526 (29/10/2026,11h10Fortaleza)
 
 Proveniência: pedido direto do dono nesta conversa; descrição da captura e do estado do produto atribuída ao briefing, sem alegar inspeção independente de imagem não anexada nesta mensagem. Deduplicação: main51030ab,PR1208aberto,20PRsrecentes/19heads codexdistintos e763refs,sem etiqueta/título/data/conteúdo equivalente. Próximo livre526após525FN1,sem alterar ordem/estado/escopo existentes. Reaproveitar377TB3/headline-test/flows/funnel-metrics;receitas só quando525funcionar;reconferir código antes e aplicar apenasdiferença. MR/TX/FX275/AX274/VR,custosdetetos antesoperação e desconhecido reprova vinculantes. Registro somente,sem implementar/ativar/anunciar recurso; AVcontinua,TB375/32permanece noPR1208comcódigo.
@@ -15104,5 +15348,353 @@ Lucro: o criador vê e monta o funil inteiro de uma vez e manda cada visitante p
 Regra de margem: segue a REGRA DE MARGEM vigente (MR, 27/10/2026, 07h42), a política tributária TX e FX275; custo desconhecido reprova, nunca é zero.
 
 Proibido: refazer a lógica de 377 [TB3] ou as condições de lib/flows.ts; criar rastreamento entre sites ou coletar dado pessoal novo; mudar preços, limites visíveis (inclusive o número máximo de páginas e funis), comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a, a revisão comercial ou stripePlatformEligibilityReady; afrouxar qualquer trava; mostrar recurso que não funciona hoje; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+
+
+FN — Complemento ao 526 [FN2]: arrastar etapas para o mapa do funil (29/10/2026)
+Etiqueta: [FN2]
+
+Solicitação do dono (29/10/2026, 11h40, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: é complemento ao item 526 [FN2] já gravado. Aplique só a diferença ao item existente, mantendo número, posição e estado (regra "Pedidos repetidos", passo 3, letra b), e registre na proveniência o que mudou.
+
+Estado inicial: o do próprio 526.
+
+Contexto: na captura da aba "Your Funnel" de clickfunnels.com enviada pelo dono, o cursor arrasta o cartão "Page – Create a new page" do painel lateral até o mapa do funil; um retângulo pontilhado mostra onde a etapa vai entrar, e a linha do funil termina num marcador "End of Funnel".
+
+O que acrescentar ao 526 [FN2]:
+- os cartões "Page", "Conditional path" e "Split test" do painel podem ser arrastados até o mapa; enquanto o cartão é arrastado, um espaço pontilhado aparece entre as etapas, ou no fim, mostrando exatamente onde a nova etapa vai entrar;
+- a linha do funil termina num marcador "End of funnel", e cada ramo do caminho condicional e do teste dividido tem o seu;
+- a mesma ação continua possível sem arrastar, por clique ou teclado, como o 526 já exige (AX274, 2.5.7).
+
+Testes automáticos: arrastar cada cartão para o começo, o meio e o fim; o espaço pontilhado no lugar certo; o marcador de fim em cada ramo; a alternativa por teclado.
+
+Regra de margem: segue a REGRA DE MARGEM vigente (MR, 27/10/2026, 07h42), a política tributária TX e FX275; custo desconhecido reprova, nunca é zero.
+
+Proibido: criar item novo ou mudar número, posição ou estado do 526; mudar preços, limites visíveis, comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a, a revisão comercial ou stripePlatformEligibilityReady; afrouxar qualquer trava; mostrar recurso que não funciona hoje; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+
+Proveniência/diferença: pedido direto do dono acima; descrição da captura atribuída ao briefing, sem alegar inspeção independente de imagem não anexada nesta mensagem. Acrescentados somente arrasto dos3cartões/espaço pontilhado de inserção eEnd of funnel porramo,testescomeço/meio/fim e alternativaAX2742.5.7.526número/posição/estadoeescopoanteriorpreservados;nenhumitem527. Deduplicação no main332a38d,PR1208aberto,20PRsrecentes/19heads codexdistintos e764refs,semcomplemento11h40equivalente. Registro na alteração de códigoPR1208jáemcurso;reconferir código antes da execução e aplicarsóadiferença.MR/TX/FX275/AX274/VRpreservados.
+
+### FN2 preservado no head combinado
+
+PR1211 incorporado em29/10/2026,11:22:11Fortaleza/14:22:11UTC,merge332a38db16d7a2907a5c6fed08e5169403853c01,headef36df797b7c92e54e2f44de638cf188a08b93ec,árvore0fb59845e268c29b85937a6ceae4e9b93c5ca03b,paise51030ab+ef36df7.27checksdocumentais16success11skips+Vercel.526FN2nafilaapós525,briefingintegral/reaproveitamento/ordem/estado preservados.375/32complementoTBpermanece nestePRcomcódigo. Suíteinteira novamente na árvorecombinada;provas antigas não certificamnovohead. Counter254inalterado.
+
+
+## HE — registro integral; item527 (29/10/2026,12h04Fortaleza)
+
+Proveniência: pedido direto do dono nesta conversa; comparaçãoClickFunnels atribuída ao relatoClaude,semverificação independente deste registro. Deduplicação main332a38d,PR1208aberto,20PRsrecentes/19heads codexdistintos e764refs,semHE1/título/data/conteúdo equivalente. Próximo livre527após526; nenhum estado/ordem anterior alterado. ComplementosTB/FN continuam sendo complementossemitemduplicado;527éeste novoHEexplicitamente solicitado. Antes da implementação,conferir cada tipo deproduto funcional no código; não antecipar animação no registro. MR/TX/FX275/AX274/VR/SF1/ME2/ME3eCF3não refazervinculantes. Registro noPR1208jáemcurso; implementação deHEcontinua na fila.
+
+HE — Palavra que muda no título da página inicial (29/10/2026)
+Etiqueta: [HE1]
+
+Solicitação do dono (29/10/2026, 12h04, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: antes de gravar, aplique a regra permanente "Pedidos repetidos". Confira o main, os PRs abertos e os ramos codex/* recentes e procure esta solicitação pela linha de data e hora, pelo nome da seção, pela etiqueta [HE1] e pelo conteúdo. Se já estiver gravada, não crie nada novo. Grave na ordem de chegada, depois do último item já gravado, com o próximo número livre, sem alterar a ordem dos itens existentes.
+
+527. [HE1] Palavra que muda no título da página inicial.
+Estado inicial: na fila.
+Problema que resolve: o título da página inicial (app/page.tsx, id home-hero-heading: "Sell your work. Build your business.") é parado. O título da ClickFunnels, conferido pelo Claude no Chrome em 29/10/2026, digita e apaga o fim da frase "You're one funnel away from…", alternando "changing the world", "your first $10k month", "launching your course", "the Two Comma Club" e "replacing your 9-5"; isso dá movimento ao topo, mas promete renda, nunca para, não tem pausa, muda o texto dentro do próprio h1 (o leitor de tela lê pedaços) e ignora prefers-reduced-motion.
+O que fazer: na primeira linha do título, a palavra depois de "Sell your" alterna, com animação suave, entre tipos de produto que o Marktmorgen vende hoje: "work", "courses", "templates", "coaching", "memberships" e "paid calls" (confira cada um no código antes; só entra o que funciona hoje). O restante do título continua igual. Nenhuma palavra fala de dinheiro, renda, prazo ou resultado.
+Acessibilidade (AX274), obrigatória:
+- o título lido pelo leitor de tela é sempre a frase completa e fixa ("Sell your work. Build your business."); a palavra animada fica aria-hidden;
+- a animação faz uma volta pela lista e para em "work", ou tem botão visível de pausar, cumprindo a regra de conteúdo em movimento por mais de 5 segundos (2.2.2);
+- com prefers-reduced-motion, a palavra fica parada em "work";
+- nada pisca; contraste de 7:1; a largura do título não muda de uma palavra para outra, para a página não pular.
+Desempenho: sem biblioteca nova; a animação não atrasa a primeira tela e a página inicial continua dentro de 281 [SF1], 497 [ME2] e dos limites de 498 [ME3].
+O que não fazer: não copiar "Start for free today" nem começar pela palavra "free"; o campo de e-mail na primeira tela é o item 240 [CF3], já na fila, e não deve ser refeito aqui.
+Testes automáticos: o h1 lido pelo leitor de tela é a frase fixa; a animação para ou pausa; o movimento reduzido deixa a palavra parada; a largura não muda; nenhuma palavra da lista fala de dinheiro ou resultado.
+Lucro: o topo da página mostra em segundos tudo o que se pode vender, sem prometer resultado.
+
+Regra de margem: segue a REGRA DE MARGEM vigente (MR, 27/10/2026, 07h42), a política tributária TX e FX275; custo desconhecido reprova, nunca é zero.
+
+Proibido: prometer renda, dinheiro, prazo ou resultado; animação sem parada nem pausa; mudar preços, limites visíveis, comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a, a revisão comercial ou stripePlatformEligibilityReady; afrouxar qualquer trava; mostrar recurso que não funciona hoje; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+
+
+### PR1208 — falha móvel corrigida com alteração real de renderização
+
+Head9c9366falhoujob123531991576primeirahomecoldLCP2568ms>2500ms,H1home-hero-heading;9samplesCLS0/interaçãomax128ms. Não descartar amostra,aquecer,reexecutarsójobouafrouxarlimite. Renderização real da home usa content-visibility:auto nativo só nas seções diretas fora do hero,com tamanho intrínseco lembrado;conteúdo/DOM/acessibilidade/scroll/foco/print preservados,semnovobiblioteca/JS/ocultarrecursos. Suíteinteira nova obrigatória,prova ainda pendente; HE527éregistro apenas,sem animação antecipada. Detalhes docs/pause-due-selection-bound.md. Direitos/preços/flags/tetos/comissões/optin/controlesfiscais/custos mantidos.
+
+
+### PR1208 — regressão de geometria acessível corrigida antes de incorporar
+
+Head514734b:Public AAA Chromium123537645697/Firefox123537645753/WebKit123537645841reprovaramumaúnica target-size porengine na home390px/text-spacing,CTAStart your storeemdata-home-actionsplanslogoapóspricing. Móvel123538496414passou,masnãoafastafalhaAX. Seletor nativo decontenção exclui#pricing,que mantém layout integral eagendageometria doCTA;demaisseçõesforaheroaindapodemdeferir.Nenhumlink/botão/recurso/44px/teste ocultado/removido/afrouxado;suíteinteiranovoheadobrigatória,nãojobisolado,correçãoaindapendenteverificação.HE527eseiscomplementosTB/FNpreservados.
+
+
+## FT — registro integral; itens528–530 (29/10/2026,12h37Fortaleza)
+
+Proveniência: pedido direto do dono via anexo Texto colado.txt (f157dc4b-e967-4e6c-a12c-af2c1203b86c). Deduplicação: main332a38db16d7a2907a5c6fed08e5169403853c01, PR1208 aberto,20PRs recentes/19ramos codex e764refs; sem etiqueta,data,título ou conteúdo equivalente. Próximos números livres528–530 após527HE1 já registrado noPR1208, sem alterar número,posição ou estado anterior. Estado dos três: na fila. Contexto sobre ClickFunnels e capacidades existentes é relato do dono; reconferir código/fila antes de cada execução e fazer somente a diferença. Reutilizar sessões live,salas,lembretes,cursos/equipe e players existentes, sem anúncio público antecipado. MR27/10 07h42,TX,FX275,AX274 eVR vinculantes;60%meta real,não trava; custos desconhecidos reprovam. Registro na mesma branch já em curso,sem execução concorrente nem implementação antecipada desses tipos; nova suíte inteira do head combinado será obrigatória.
+
+FT — Tipos de funil que faltam: webinar ao vivo, evento com palestrantes e página-ponte (29/10/2026)
+Etiquetas: [FT1] [FT2] [FT3]
+
+Solicitação do dono (29/10/2026, 12h37, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: antes de gravar, aplique a regra permanente "Pedidos repetidos". Confira o main, os PRs abertos e os ramos codex/* recentes e procure esta solicitação pela linha de data e hora, pelo nome da seção, pelas etiquetas [FT1] a [FT3] e pelo conteúdo. Se já estiver gravada, não crie nada novo. Grave na ordem de chegada, depois do último item já gravado, com os próximos números livres, sem alterar a ordem dos itens existentes.
+
+Contexto: o filtro "Funnel Type" da ClickFunnels, enviado pelo dono em 29/10/2026, oferece Opt In, Application, Webinar, Summit, Bridge e Video Series. O Marktmorgen já tem, em lib/funnel-types.ts e lib/funnel-starters.ts: lead magnet e guide-signup (Opt In), application e coaching-application (Application), video training e recorded-workshop (webinar gravado), challenge e product launch (Video Series), além de book, first-purchase, quiz, membership, course-free-lesson, paid-call, digital-product, launch-waitlist e course-launch. A regra já gravada em lib/funnel-types.ts continua: nenhum tipo escreve frase, inventa preço, promete resultado ou conta tempo para trás, e não existe webinar que finge ser ao vivo. Já existem e NÃO devem ser refeitos: sessões ao vivo com data e até 500 lugares (lib/call-setup.ts, kind "live"), salas de vídeo (lib/call-rooms.ts), lembretes (lib/call-reminders.ts), cursos com aulas (lib/course.ts) e equipe (lib/team.ts). Antes de cada item, confira de novo o código e a fila e faça só a diferença.
+
+528. [FT1] Tipo de funil "Live webinar", ao vivo de verdade.
+Estado inicial: na fila.
+O que fazer: um tipo que monta, com os produtos e as páginas do próprio criador: página de inscrição para uma sessão ao vivo com data e hora reais (as sessões "live" que já existem), inscrição grátis ou paga, conforme o criador escolher; e-mails de lembrete que já existem; a sala ao vivo; depois, a página da gravação, que o criador envia, disponível pelo prazo que ele definir; e a oferta paga no fim. A data mostrada é sempre a da sessão real; não existe "ao vivo" gravado nem horário que muda para cada visitante. Se a sessão for cancelada, os inscritos são avisados e, se pagaram, reembolsados pelas regras já existentes.
+Testes automáticos: montagem do funil, inscrição grátis e paga, lembretes, gravação com prazo e cancelamento com aviso.
+
+529. [FT2] Tipo de funil "Online event" (vários palestrantes).
+Estado inicial: na fila.
+O que fazer: um tipo para evento online com datas reais de início e fim: página do evento com a programação; um palestrante por sessão (pessoa da equipe ou convidada como coanfitriã da sessão, sem acesso ao resto da loja); passe grátis, que deixa assistir às sessões durante o evento; e passe pago, que dá acesso às gravações depois, como um curso com uma aula por sessão. Palestrantes podem divulgar com o link de afiliado que já existe. Nada de contagem de inscritos inventada nem prazo falso: o fim do acesso grátis é a data real do fim do evento.
+Custos: salas, gravações e e-mails entram no custo de pior caso do plano, com teto automático antes do gasto; custo desconhecido reprova.
+Testes automáticos: programação, acesso por passe, fim do acesso grátis na data real, gravações no passe pago e coanfitrião sem acesso ao resto da loja.
+
+530. [FT3] Tipo de funil "Bridge page" (página-ponte).
+Estado inicial: na fila.
+O que fazer: um tipo de uma página só, entre um post ou anúncio e um produto do próprio criador: título, vídeo curto do criador (os players já existentes) e um único botão para a página do produto ou para o checkout; sem formulário. Os blocos começam vazios, como nos outros tipos.
+Testes automáticos: montagem da página e o botão levando ao produto certo.
+
+Para todos os itens:
+- Acessibilidade AX274 em cada página e tela nova.
+- A página de recursos só cita cada tipo quando ele funcionar de verdade, conforme a regra VR.
+- Lucro: mais tipos de criador atendidos (quem faz webinars e eventos online) e valor percebido maior dos planos.
+
+Regra de margem: cada item segue a REGRA DE MARGEM vigente (MR, 27/10/2026, 07h42): nenhum cliente pagante dá prejuízo, usando 100% de todos os direitos do plano e de cada complemento no pior mês, no mensal e no anual, com teto automático e reserva antes de cada gasto; a empresa fica sem prejuízo a partir da base mínima; 60% é meta mensal real, não trava. Política tributária TX. Custo desconhecido reprova, nunca é zero; nenhuma cota grátis de fornecedor conta como zero; taxas de recebimento mais caras de lib/receiving-costs.ts; todos os custos fixos são 100% do Marktmorgen (FX275).
+
+Proibido: webinar gravado apresentado como ao vivo; horário, prazo ou contagem que muda para cada visitante; números de inscritos inventados; mudar preços, limites visíveis (inclusive lugares por sessão e número de funis), comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a, a revisão comercial ou stripePlatformEligibilityReady; afrouxar qualquer trava; mostrar recurso que não funciona hoje; alterar o conteúdo do criador sem aprovação; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+
+
+### PR1208 — preservar leitura imediata das declarações da home
+
+Head1aa3acb: Firefox123554605587 reprovou6 eWebKit123554605209 reprovou7 verificações, incluindo textos HT7(390/1280)de demonstração fictícia,ausência de listagem real e data de revisão;WebKit também wording da FAQ. A contenção nativa fora da tela impediu leitura imediata por innerText desses textos, apesar do DOM e links. Correção real: FAQ e seção data-creator-showcase ficam renderizadas desde o início, junto com hero e pricing, preservando as declarações de honestidade e a redação. Sem mudar textos,seletores de teste,asserções,limites LCP/AX ou amostras. Suíte inteira do novo head obrigatória; resultados antigos não autorizam incorporação. FT528–530,HE527 e todos os complementos TB/FN preservados;nenhum deles implementado por este ajuste.
+
+
+## VP — registro integral; item531 e posição do241 (29/10/2026,13h24Fortaleza)
+
+Proveniência: pedido direto do dono nesta conversa. Deduplicação main332a38db16d7a2907a5c6fed08e5169403853c01,PR1208aberto,20PRsrecentes/19ramoscodex e764refs,semVP1/VP2,data,título ou conteúdo equivalente. Próximo número livre531após530FT3; estado na fila. VP2 não cria532nem duplica241: altera somente a linha241na tabela únicaFIM1 para depois531,com data/hora desta ordem. Texto operativo,estado,escopo e provas de241 preservados byte a byte; demais linhasFIM1 e posição206PF8 preservadas. Contexto ClickFunnels/31páginas é relato atribuído ao dono/Claude,sem verificação independente neste registro;reconferir código real antes de executar. 241/509devem compartilhar mecanismo,sem vídeos duplicados. MR/TX/FX275/AX274/VR/SF1/ME2vinculantes;foto nãoécliente,custo desconhecido reprova. Registro apenas; nenhum hero,imagem,vídeo ou promessa ativado. Nova suíte inteira do head combinado obrigatória.
+
+VP — Topo das páginas de recursos com foto e tela real do produto (29/10/2026)
+Etiquetas: [VP1] [VP2]
+
+Solicitação do dono (29/10/2026, 13h24, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: antes de gravar, aplique a regra permanente "Pedidos repetidos". Confira o main, os PRs abertos e os ramos codex/* recentes e procure esta solicitação pela linha de data e hora, pelo nome da seção, pelas etiquetas [VP1] e [VP2] e pelo conteúdo. Se já estiver gravada, não crie nada novo. Grave na ordem de chegada, depois do último item já gravado, com o próximo número livre para [VP1], sem alterar a ordem dos itens existentes, exceto a mudança de posição pedida em [VP2].
+
+Contexto: o Claude conferiu em 29/10/2026 o topo de clickfunnels.com/features/sales-funnels: título, frase e campo de e-mail à esquerda; à direita, uma foto de pessoa usando o produto com o cartão "Funnel Type" (Opt In, Application, Webinar, Summit, Bridge, Video Series) sobreposto, com sombra pontilhada. Foto e cartão são uma única imagem PNG, então o cartão não é texto, não responde a clique e não é lido pelo leitor de tela (falha 1.4.9, AAA). As 31 páginas de recursos do Marktmorgen (marktmorgen.com/platform/*) têm o topo só com texto e o quadro "On this page", sem foto nem tela do produto.
+
+531. [VP1] Topo de cada página de recursos com foto e cartão real do produto.
+Estado inicial: na fila.
+O que fazer: em cada página de marktmorgen.com/platform/*, o lado direito do topo ganha uma foto e, sobreposto a ela, um cartão com um pedaço real da tela daquele recurso, feito em HTML e CSS (não imagem): por exemplo, na página de funis, a lista dos tipos de funil de lib/funnel-types.ts; na de checkout, as opções de pagamento; na de cursos, a lista de aulas com o progresso. Os nomes do cartão vêm do próprio código, para nunca mostrar algo que não existe. O quadro "On this page" continua, logo abaixo do topo ou ao lado, sem sumir.
+Fotos: da mesma fonte licenciada já usada na página inicial, com a mesma nota de que são fotos de banco e não clientes; uma foto diferente em cada página, nenhuma repetida em todo o site (regra do dono), e coerente com o recurso; texto alternativo descrevendo a foto.
+Desenho: o cartão segue a paleta, as fontes e os cantos do site, com a sombra pontilhada ou um detalhe equivalente; em 390 × 844 px o cartão fica abaixo da foto, sem cobrir o rosto nem transbordar; versões clara e escura.
+Acessibilidade: o cartão é texto real, lido pelo leitor de tela na ordem certa, ou marcado como decorativo se repetir o que a página já diz; contraste de 7:1; nada de imagem de texto.
+Desempenho: foto em formato moderno, com tamanho certo para cada tela, sem atrasar a primeira tela; cada página continua dentro do orçamento de 281 [SF1] e 497 [ME2]. O custo de entrega das fotos é contado, nunca tratado como zero.
+Testes automáticos: cada página de recursos tem foto e cartão; nenhuma foto se repete no site; os nomes do cartão existem no código; o cartão é texto real; encaixe em 390 × 844 e 1280 × 720 px.
+Lucro: as páginas de recursos ficam tão bonitas quanto as da ClickFunnels e mais honestas, o que aumenta o interesse de quem chega por busca.
+
+### Complemento de531VP1 — 29/10/2026,14h02Fortaleza
+
+Proveniência: pedido direto do dono nesta conversa; diferença ao531existente,sem novo número/posição/estado. Acrescenta visuais reais também às seções principais,alternância no computador/abaixo no celular,HTML/CSS a partir do código ou captura real de demo fictícia pelo mecanismo existente241/home-studio-capture. Exemplos pequenos/rotulados;semurgência/escassez/depoimento/vendagrandeinventada;unicidade/altcompletooudecorativocomtexto,7:1,desempenho/custodelivery/AX274/VR/MR/TX/FX275mantidos. Comparação atribuída ao material do dono,não verificação independente. Original531segue na fila;241continua logoapós531pelaVP2,semoutramudançaFIM1. Registro apenas,sem produzircapturaouimplementarrecurso;suíte inteira do novoheadcombinadoobrigatória.
+
+VP — Complemento ao 531 [VP1]: imagem real em cada seção das páginas de recursos (29/10/2026)
+Etiqueta: [VP1]
+
+Solicitação do dono (29/10/2026, 14h02, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: é complemento ao item 531 [VP1] já gravado. Aplique só a diferença ao item existente, mantendo número, posição e estado (regra "Pedidos repetidos", passo 3, letra b), e registre na proveniência o que mudou.
+
+Estado inicial: o do próprio 531.
+
+Contexto: na seção "Everything is a funnel" de clickfunnels.com/features/sales-funnels, enviada pelo dono, o texto fica à esquerda e, à direita, uma imagem montada com a página de venda de exemplo em computador e celular e os cartões das etapas do funil com números. Em toda a página, cada seção alterna texto e imagem. A página de exemplo deles mostra "Time is running out to use this secret!" e valores de venda de exemplo grandes. O 531 [VP1] põe foto e cartão só no topo das páginas de recursos do Marktmorgen; as seções de baixo continuam só com texto.
+
+O que acrescentar ao 531 [VP1]:
+- em cada página de marktmorgen.com/platform/*, as seções principais (por exemplo, "How a funnel works") ganham ao lado do texto uma imagem real do recurso, alternando esquerda e direita no computador e ficando abaixo do texto no celular;
+- cada imagem é um cartão em HTML e CSS com um pedaço real da tela, com nomes tirados do código (como no topo), ou uma captura real do estúdio feita sobre a loja de demonstração rotulada como fictícia (o mesmo mecanismo de tests/e2e/home-studio-capture.mjs e de 241 [CF4]);
+- números de exemplo, quando aparecem, são pequenos e marcados como exemplo; nunca urgência, escassez, depoimento ou valor de venda grande inventado.
+Continuam valendo todas as regras do 531: nenhuma imagem repetida no site, nada de imagem de texto (captura de tela tem texto alternativo completo ou fica decorativa ao lado do mesmo conteúdo em texto), contraste de 7:1, carregamento sem atrasar a primeira tela e custo de entrega contado.
+
+Testes automáticos: cada seção principal tem imagem; nenhuma imagem se repete; números de exemplo marcados; nenhuma palavra de urgência; encaixe em 390 × 844 e 1280 × 720 px.
+
+Regra de margem: segue a REGRA DE MARGEM vigente (MR, 27/10/2026, 07h42), a política tributária TX e FX275; custo desconhecido reprova, nunca é zero.
+
+Proibido: criar item novo ou mudar número, posição ou estado do 531; imagem repetida ou imagem de texto; urgência, escassez, depoimento ou número inventado; mostrar recurso que não funciona hoje; tirar qualquer conteúdo das páginas (só mover); mudar preços, limites visíveis, comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a, a revisão comercial ou stripePlatformEligibilityReady; afrouxar qualquer trava; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+
+### Segundo complemento de531VP1 — 29/10/2026,14h08Fortaleza
+
+Proveniência: pedido direto do dono nesta conversa; ajusta somente o complemento14h02,sem apagar seu histórico. Agora seções alternam tela real e foto de pessoas,com no máximo1foto em cada2seções e ao menos1tela porpágina. 531mantém número,posição eestado na fila;241permanece logoapós531;nenhuma mudançaFIM1adicional. Intenção estética alegria,saúde,paz/tranquilidade não autoriza alegação de resultado. Fonte licenciada existente,notabanco/nãoclientes,unicidadeglobal,altcoerente,nenhuma associação com números/cartões/frases de resultado;custos/AX274/MR/TX/FX275/VRmantidos. Contexto é material do dono,sem comprovação independente neste registro.
+
+VP — Segundo complemento ao 531 [VP1]: fotos de pessoas alternando com telas do produto (29/10/2026)
+Etiqueta: [VP1]
+
+Solicitação do dono (29/10/2026, 14h08, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: é complemento ao item 531 [VP1], que já recebeu o complemento de 29/10/2026, 14h02 (imagem real em cada seção). Aplique só a diferença ao item existente, mantendo número, posição e estado (regra "Pedidos repetidos", passo 3, letra b), e registre na proveniência o que mudou.
+
+Estado inicial: o do próprio 531.
+
+Contexto: na seção "Scale what works" de clickfunnels.com/features/sales-funnels, enviada pelo dono, a imagem é só uma foto de três pessoas sorrindo, sem tela do produto; ao longo da página, a ClickFunnels alterna seções com tela do produto e seções com foto de pessoas. O complemento de 14h02 pediu, em cada seção, cartão ou captura do produto. O dono quer sites que transmitam alegria, saúde, paz e tranquilidade.
+
+O que muda no 531 [VP1]: nas seções das páginas de recursos, as imagens alternam entre tela real do produto (cartão em HTML e CSS ou captura da loja de demonstração, como já pedido) e foto de pessoas, com no máximo uma foto de pessoas a cada duas seções e pelo menos uma tela do produto em toda página. As fotos de pessoas seguem as mesmas regras do topo: mesma fonte licenciada da página inicial, a nota de que são fotos de banco e não clientes, nenhuma repetida no site, coerentes com o tema da seção, texto alternativo descrevendo a cena, e nenhum número, cartão ou frase ao lado sugerindo que a pessoa é cliente ou obteve algum resultado.
+
+Testes automáticos: alternância por página (no máximo uma foto de pessoas a cada duas seções, pelo menos uma tela do produto), nenhuma foto repetida e nenhuma foto de pessoas junto a número de resultado.
+
+Regra de margem: segue a REGRA DE MARGEM vigente (MR, 27/10/2026, 07h42), a política tributária TX e FX275; custo desconhecido reprova, nunca é zero.
+
+Proibido: criar item novo ou mudar número, posição ou estado do 531; foto repetida; foto de pessoas junto a número ou frase de resultado; sugerir que a pessoa da foto é cliente; mudar preços, limites visíveis, comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a, a revisão comercial ou stripePlatformEligibilityReady; afrouxar qualquer trava; mostrar recurso que não funciona hoje; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+
+### Terceiro complemento de531VP1 — 29/10/2026,14h13Fortaleza
+
+Proveniência: pedido direto do dono nesta conversa; somente diferença ao531,sem novo item/número/posição/estado. Acrescenta Works well with colorido/paleta/desenhos SVGouHTML,relacionados primeiro/todos acessíveis/setas/Every feature preservado,expansão clique/Enter comvídeo real241apenasquandoexistir,alternativa de tela real e navegação direta semvídeo conformebrief. Preservar integralmente ambas as regras de alternativa do dono,reconferindo mecanismo real ao executar;nenhum vídeo/recurso fictício. Semautomovimento/autoplay/hoverexclusivo/pressa;legenda/reducedmotion/7:1/44px/lazyload/SF1/ME2eMR/TX/FX275/AX274/VRvinculantes. Comparação atribuída ao dono/Claude,não observação independente. 241continua logoapós531;outrosFIM1/532AF1/533DP1preservados. Registroapenas,sem implementaçãoantecipada;suíteinteira novoheadcombinadoobrigatória.
+
+VP — Terceiro complemento ao 531 [VP1]: seção "Works well with" em cartões coloridos que se abrem com o vídeo do recurso (29/10/2026)
+Etiqueta: [VP1]
+
+Solicitação do dono (29/10/2026, 14h13, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: é complemento ao item 531 [VP1], que já recebeu os complementos de 29/10/2026, 14h02 e 14h08. Aplique só a diferença ao item existente, mantendo número, posição e estado (regra "Pedidos repetidos", passo 3, letra b), e registre na proveniência o que mudou.
+
+Estado inicial: o do próprio 531.
+
+Contexto: no fim das páginas de recursos da ClickFunnels, o bloco "Try our apps" é um carrossel de cartões grandes, cada um com cor própria, título, uma frase e um desenho simples do app; ao clicar, o cartão se alarga, mostra um vídeo de apresentação e o botão "Learn More". O cartão "Countdown Funnels" diz "to get prospects to act now". No Marktmorgen, a seção "Works well with" das páginas de recursos (por exemplo, marktmorgen.com/platform/funnels, conferida pelo Claude em 29/10/2026) mostra quatro cartões brancos com ícone, título e uma linha, e o link "Every feature".
+
+O que acrescentar ao 531 [VP1]:
+- a seção "Works well with" vira uma fileira de cartões coloridos, cada recurso com uma cor tirada da paleta do site, título, a frase que já existe e um desenho simples do recurso, feito em SVG ou HTML (não imagem de texto);
+- ao clicar ou apertar Enter num cartão, ele se abre ali mesmo e mostra o vídeo real daquele recurso do 241 [CF4], quando existir, ou o cartão de tela real do topo, mais o botão "Learn more" para a página do recurso; sem vídeo, o cartão leva direto à página;
+- a fileira mostra os recursos ligados primeiro e, com as setas, todos os demais; o link "Every feature" continua;
+- nenhuma frase de pressa ("act now") nem contador: a contagem regressiva aparece descrita como é, até uma data real.
+Acessibilidade (AX274): o carrossel não anda sozinho; setas com nome para leitor de tela e alcançáveis por teclado; abrir o cartão por clique e por teclado, nunca só ao passar o mouse; o vídeo não começa sozinho e tem legenda; com prefers-reduced-motion, os cartões abrem sem animação; contraste de 7:1 e alvos de 44 × 44 px.
+Desempenho: os vídeos só carregam ao abrir o cartão; cada página continua dentro de 281 [SF1] e 497 [ME2].
+Testes automáticos: cartões com cor e desenho; abertura por clique e teclado; nenhum movimento automático; vídeo só ao abrir; nenhuma palavra de pressa; o link "Every feature" presente.
+
+Regra de margem: segue a REGRA DE MARGEM vigente (MR, 27/10/2026, 07h42), a política tributária TX e FX275; custo desconhecido reprova, nunca é zero.
+
+Proibido: criar item novo ou mudar número, posição ou estado do 531; carrossel que anda sozinho; abrir só ao passar o mouse; vídeo que começa sozinho; frase de pressa ou contador falso; imagem de texto ou imagem repetida; mostrar recurso que não funciona hoje; tirar qualquer conteúdo das páginas (só mover); mudar preços, limites visíveis, comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a, a revisão comercial ou stripePlatformEligibilityReady; afrouxar qualquer trava; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+
+### Quarto complemento de531VP1 — 29/10/2026,14h16Fortaleza
+
+Proveniência: pedido direto do dono nesta conversa. Somente diferença visual ao Works well with do complemento14h13: hover/foco desloca8–12px em até200ms/sombra;reducedmotionsem deslocamento,sóborda/sombra;clique/Entercontinuaúnicaabertura. Testes de foco/reducedmotion/ordemleitura/tamanhodapágina obrigatórios. 531mantémnúmero/posição/estado na fila,241logoapós531e532AF1/533DP1preservados;nenhumitemnovo. ContextoClickFunnelsérelato do dono,semobservaçãoindependente;MR/TX/FX275/AX274/VRmantidos. Registroapenas,sem alterar UI nem alegar custo zero;suíteinteira novoheadcombinadoobrigatória.
+
+VP — Quarto complemento ao 531 [VP1]: cartão que sobe ao passar o mouse (29/10/2026)
+Etiqueta: [VP1]
+
+Solicitação do dono (29/10/2026, 14h16, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: é complemento ao item 531 [VP1], que já recebeu os complementos de 29/10/2026, 14h02, 14h08 e 14h13. Aplique só a diferença ao item existente, mantendo número, posição e estado (regra "Pedidos repetidos", passo 3, letra b), e registre na proveniência o que mudou.
+
+Estado inicial: o do próprio 531.
+
+Contexto: no carrossel "Try our apps" da ClickFunnels, ao passar o mouse, o cartão sobe alguns pixels (de 10 a 15 px) e volta quando o mouse sai, mostrando que é clicável.
+
+O que acrescentar ao 531 [VP1], nos cartões coloridos da seção "Works well with" (complemento de 14h13): ao passar o mouse ou ao receber o foco do teclado, o cartão sobe suavemente cerca de 8 a 12 px, com sombra um pouco maior, em até 200 ms, e volta ao sair; o mesmo efeito vale para o foco, para quem usa teclado; com prefers-reduced-motion, o cartão não se move e só a borda ou a sombra muda. O efeito é só visual: abrir o cartão continua sendo por clique ou Enter.
+
+Testes automáticos: o cartão muda ao receber foco; com movimento reduzido não há deslocamento; o efeito não altera a ordem de leitura nem o tamanho da página.
+
+Regra de margem: segue a REGRA DE MARGEM vigente (MR, 27/10/2026, 07h42), a política tributária TX e FX275; custo desconhecido reprova, nunca é zero.
+
+Proibido: criar item novo ou mudar número, posição ou estado do 531; abrir o cartão só ao passar o mouse; movimento com prefers-reduced-motion; mudar preços, limites visíveis, comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a, a revisão comercial ou stripePlatformEligibilityReady; afrouxar qualquer trava; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+
+[VP2] Vídeos reais do produto nas páginas de recursos de volta para perto da frente da fila.
+Estado inicial: mudança de posição.
+O item 241 [CF4] (vídeos curtos e reais de cada recurso, gravados na loja de demonstração, com legenda, transcrição e teto de custo), que o FIM1 de 28/10/2026 levou para o fim da fila, passa para logo depois de [VP1], com escopo, estado e provas intactos. Só a posição muda; nenhum outro item do FIM1 muda de lugar. Registre a mudança na tabela de posições do FIM1 com esta data e hora. Os vídeos do 241 e o vídeo das abas de 509 [CK1] usam o mesmo mecanismo de gravação e não se repetem entre si.
+
+Regra de margem: cada item segue a REGRA DE MARGEM vigente (MR, 27/10/2026, 07h42): nenhum cliente pagante dá prejuízo, usando 100% de todos os direitos do plano e de cada complemento no pior mês, no mensal e no anual, com teto automático e reserva antes de cada gasto; a empresa fica sem prejuízo a partir da base mínima; 60% é meta mensal real, não trava. Política tributária TX. Custo desconhecido reprova, nunca é zero; nenhuma cota grátis de fornecedor conta como zero; taxas de recebimento mais caras de lib/receiving-costs.ts; todos os custos fixos são 100% do Marktmorgen (FX275).
+
+Proibido: imagem de texto; foto repetida; foto ou cartão sugerindo que a pessoa da foto é cliente; mostrar recurso que não funciona hoje; tirar o quadro "On this page" ou qualquer conteúdo das páginas (só mover); mudar preços, limites visíveis, comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a, a revisão comercial ou stripePlatformEligibilityReady; afrouxar qualquer trava; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+
+
+### PR1208 — conter somente a faixa de tipos de produto, não textos editoriais
+
+Head615a130:WebKit123583492129reprovou1verificação reviewed US-English wording /,porque a frase Canceling is two clicks in your studio está emhome-reasons,nãoFAQ. Firefox passou,mas não resolve diferença entre engines. A regra genérica de contenção de seções é substituída por seletor exclusivo da faixa Things people sell from a Marktmorgen store. Todos os textos editoriais,razões,disclosures,FAQ,pricing e explicações de recursos passam a layout/renderização imediatos,sem exceções seletivas por frases de testes. Nenhum texto/asserção/teste/limite/amostra relaxado; a faixa continua DOM/leitor/scroll/foco eprint intactos. Nova suíte inteira obrigatória, incluindo9amostrasfriasLCP/CLS/interação e regressões completas dos browsers. VP531/posição241,FT528–530,HE527 ecomplementos TB/FN preservados.
+
+
+## FN/AF — registro integral; complemento525 e item532 (29/10/2026,14h06Fortaleza)
+
+Proveniência: pedido direto do dono. Deduplicação main332a38d,PR1208aberto,20PRsrecentes/19ramoscodex e764refs,semAF1/data/título/conteúdo equivalente. Próximo número livre532após531VP1; estado na fila. ApenasAF1éitemnovo;FN1continua complemento525no próprio item,semrenumerar/mover/alterarestado. Demais posições,incluindo241logoapós531e206após519,mantidas. Reutilizar readBook/affiliate-studioexistentes;nenhum dado inventado,nenhumPII;moedas/refundos/totais/arquivo de pagamento preservados;custos desconhecidosreprovam,novasleiturascomtetoantesgasto. MR/TX/FX275/AX274/VRvinculantes. Registro somente,sem recurso novo ativado;suíte inteira do novoheadcombinadoobrigatória.
+
+FN — Complemento ao 525 [FN1] e resumo dos afiliados (29/10/2026)
+Etiquetas: [FN1] [AF1]
+
+Solicitação do dono (29/10/2026, 14h06, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: [FN1] é complemento ao item 525 [FN1] já gravado; aplique só a diferença ao item existente, mantendo número, posição e estado (regra "Pedidos repetidos", passo 3, letra b), e registre na proveniência o que mudou. [AF1] é item novo: procure-o antes pela linha de data e hora, pelo nome da seção, pela etiqueta [AF1] e pelo conteúdo; se não existir, grave na ordem de chegada, depois do último item já gravado, com o próximo número livre, sem alterar a ordem dos itens existentes.
+
+Contexto: na seção "Make sales while you sleep" de clickfunnels.com/features/sales-funnels, enviada pelo dono, aparece a lista de funis com os totais da conta no alto (vendas, pedidos, produtos), uma linha por funil com compradores, preço e total vendido, e três cartões de afiliados (afiliados ativos, total vendido pelos afiliados desde o começo e total ganho por eles). Os números são de exemplo e grandes. No Marktmorgen, o 525 [FN1] já pede a receita dentro de cada funil; o estúdio de afiliados (components/affiliate-studio.tsx, lib/affiliates.ts readBook) já mostra, por afiliado, o que ele tem a receber, o que aguarda o prazo e o que pode ser pago hoje, com o total devido e o arquivo de pagamento.
+
+Complemento ao 525 [FN1]: na página que lista os funis da loja, cada funil numa linha com compradores, número de vendas e receita do período escolhido, ordenável por cada coluna; no alto, os totais da loja no mesmo período (receita, pedidos e produtos à venda). Os mesmos números e as mesmas regras do 525: lidos das vendas reais na conta Stripe ou PayPal do próprio criador, "Counts unavailable" quando faltar dado, nunca zero inventado, reembolsos descontados, nenhum dado pessoal de comprador, e um total nunca diferente da soma das linhas.
+
+532. [AF1] Resumo do programa de afiliados.
+Estado inicial: na fila.
+O que fazer: no alto do estúdio de afiliados, três números do programa, com a escolha de período (o mês, 90 dias, desde o começo): afiliados ativos (os que trouxeram ao menos uma visita ou venda no período), total vendido pelos afiliados e total ganho por eles (já pago mais o que ainda é devido), todos lidos do mesmo livro de lib/affiliates.ts que já calcula o que cada um tem a receber. O total devido e o arquivo de pagamento continuam como estão. Moeda da loja; vendas em outra moeda aparecem à parte, como já acontece hoje.
+Testes automáticos: contagem de afiliados ativos no período, totais iguais à soma dos afiliados, reembolsos descontados e moedas separadas.
+Lucro: o criador vê quanto o programa de afiliados rende, o que aumenta a retenção e o valor percebido dos planos; sem custo variável novo além das leituras já contadas.
+
+Para os dois: acessibilidade AX274 (tabela com cabeçalhos, números legíveis por leitor de tela, nada só por cor, contraste de 7:1); custo de cada leitura nova entra no pior caso do plano, com teto automático antes do gasto.
+
+Regra de margem: segue a REGRA DE MARGEM vigente (MR, 27/10/2026, 07h42), a política tributária TX e FX275; custo desconhecido reprova, nunca é zero.
+
+Proibido: criar item novo além do [AF1] ou mudar número, posição ou estado do 525; inventar, estimar ou arredondar para cima qualquer número; mostrar dado pessoal de comprador; mudar preços, limites visíveis, comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a, a revisão comercial ou stripePlatformEligibilityReady; afrouxar qualquer trava; mostrar recurso que não funciona hoje; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+
+
+## DP — registro integral; item533 (29/10/2026,14h10Fortaleza)
+
+Proveniência: pedido direto do dono nesta conversa. Deduplicação main332a38d,PR1208aberto,20PRsrecentes/19ramoscodex e764refs,semDP1/data/título/conteúdo equivalente. Próximo número livre533após532AF1,sem alterar ordem/estado anterior; estado na fila,somente depois da abertura das vendas. PROIBIDO CONSTRUIR ANTES DA ABERTURA. Não é repetição93/284,dedicados às lojas decriadores. Convite/consentimentos/revogação/venda real/números verificáveis/autoria exclusiva do criador/ausência de bloco sem aprovação obrigatórios;nenhum contato,convite real,imagem ou depoimento produzido agora. Contexto comparativo e situação comercial são relato atribuído ao dono/Claude,não prova independente deste registro. MR/TX/FX275/AX274/VRpreservados,desconhecido reprova. Registro apenas;suíte inteira do novoheadcombinadoobrigatória.
+
+DP — Depoimentos reais de criadores no site do Marktmorgen, depois da abertura (29/10/2026)
+Etiqueta: [DP1]
+
+Solicitação do dono (29/10/2026, 14h10, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: antes de gravar, aplique a regra permanente "Pedidos repetidos". Confira o main, os PRs abertos e os ramos codex/* recentes e procure esta solicitação pela linha de data e hora, pelo nome da seção, pela etiqueta [DP1] e pelo conteúdo. Se já estiver gravada, não crie nada novo. Grave na ordem de chegada, depois do último item já gravado, com o próximo número livre, sem alterar a ordem dos itens existentes.
+
+533. [DP1] Depoimentos reais de criadores no site do Marktmorgen.
+Estado inicial: na fila, somente depois da abertura das vendas.
+Contexto: as páginas da ClickFunnels terminam com o bloco "What Real Customers Say About ClickFunnels" (foto, frase com resultado, nome e "Verified ClickFunnels User"), conferido pelo Claude em 29/10/2026. O Marktmorgen ainda não tem clientes, e nenhum depoimento pode ser inventado; os itens 93 [D2-VERIFIED-SOCIAL] e 284 [HG3] tratam das lojas dos criadores, não do site do Marktmorgen.
+O que fazer, depois da abertura:
+- no estúdio, um convite opcional para o criador que já vendeu de verdade pelo Marktmorgen escrever, com as próprias palavras, o que achou; nunca texto sugerido, escrito ou melhorado pela IA nem pelo Marktmorgen;
+- consentimento explícito e separado para publicar nome, foto e frase, com a possibilidade de retirar a qualquer momento, e a retirada vale na hora;
+- o selo "Verified Marktmorgen creator" só aparece quando a loja tem venda real paga na conta do próprio criador; ao lado, a data do depoimento e o plano usado;
+- se a frase citar um número (vendas, cadastros, receita), ele é conferido com os dados reais da loja na data; se não bater, o número não é publicado; nunca promessa de resultado nem "results not typical" para esconder exagero;
+- o bloco aparece nas páginas do site só quando houver depoimento real aprovado; enquanto não houver, não aparece nada no lugar (nenhum texto de exemplo).
+Acessibilidade: AX274 (foto com texto alternativo, citação marcada como citação, contraste de 7:1).
+Testes automáticos: sem depoimento aprovado não aparece bloco; retirada remove na hora; selo só com venda real; número da frase conferido com os dados.
+Lucro: prova verdadeira de que o Marktmorgen funciona, que aumenta as contas criadas, sem risco de propaganda enganosa.
+
+Regra de margem: segue a REGRA DE MARGEM vigente (MR, 27/10/2026, 07h42), a política tributária TX e FX275; custo desconhecido reprova, nunca é zero.
+
+Proibido: depoimento, foto, nome ou número inventados ou de exemplo apresentados como reais; texto de depoimento escrito pela IA ou pelo Marktmorgen; publicar sem consentimento; pagar ou dar desconto em troca de depoimento sem dizer isso ao lado; construir antes da abertura; mudar preços, limites visíveis, comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a, a revisão comercial ou stripePlatformEligibilityReady; afrouxar qualquer trava; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar qualquer coisa da Hazelsong. Somente testes sintéticos.
 
 Aplicar a regra VR.

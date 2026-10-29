@@ -4751,3 +4751,18 @@ html:has([data-static-reading] a:focus) {
 html:has([data-product-editor]) {
   scroll-behavior: auto;
 }
+
+
+/* Limit native off-screen rendering deferral to the long decorative product
+ * strip. All editorial sections, feature explanations, pricing, disclosures and
+ * cancellation wording stay eagerly rendered, including before any scrolling.
+ * The strip remains in the DOM/accessibility tree and renders when approached
+ * or focused; this screen-only optimization does not change print. */
+@media screen {
+  @supports (content-visibility: auto) {
+    main[data-home-page] > section[aria-label="Things people sell from a Marktmorgen store"] {
+      content-visibility: auto;
+      contain-intrinsic-block-size: auto 800px;
+    }
+  }
+}
