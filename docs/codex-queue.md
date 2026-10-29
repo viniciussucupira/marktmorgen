@@ -14753,3 +14753,12 @@ PR https://github.com/viniciussucupira/marktmorgen/pull/1201 head07916faf356ec1f
 ## AV — leitura limitada da pausa antes de avisos/cobrança (29/10/2026)
 
 Implementação real conforme docs/pause-bounded-observation.md: TYPE+GETRANGE atômicos,4KBregistro/4097raw/3comandos incluindoEVAL. Só ausência explícita permite limpeza; vazio/tipoestranho/oversize/ACKincerto preservam evidência e bloqueiam cobrança/fechamento. Sem novas chaves, email,TTLou permissões. Testes legados mantêm hooks de corrida/falhas e recebem identificação do novo leitor; casos de UTF8/limite/erro e Redisreal adicionados. Componente incremental máximo$0.000004/observação, sem teto globalmensalanual demonstrado; desconhecido continua reprovado. Suíte integral pendente; não declarar ABavisos/ciclo completo ou entrega255.
+
+
+## PR1202 — prova de incorporação e produção
+
+PR https://github.com/viniciussucupira/marktmorgen/pull/1202, head48f283a941125432e7ff02e5082052475a3eb593, mergeead3641549a3eab4b82abc7303d3875bcc64a036 às09:00:40Fortaleza/12:00:40UTC29/10/2026; paisa892c7a+48f283a, árvorefa37a16eebddb3234e7f97a3c5fc5323dae5d497 igualàtestada.39/39+Vercel, verify123422921544Everythingpassing11:41:28.0970906UTC/bundles234/234. Redis123422921430scriptatual TYPE+GETRANGE+EVAL3comandos11:36:17.7544980UTC,4096ASCII/UTF8/noTTL/noWrites. Oitoscopesfulltrue;signup3engines30/150/0;mobile9coldLCPmax1104/CLS0/interação120ms/0writes(labonly);NVDA/VoiceOver2headings0writes/foreign,não tarefascompletas. Firefox123422921467/WebKit123422921454aprovados. READYdpl_5ArkTrSXXGzi2xjyvSCHyjtUQHpJ SHAexato7aliases5HTMLpúblicosmarktmorgen.com. Contador254semprovainterativa; nenhuma cobertura/flag/review habilitada.
+
+## AV — origem da coorte de recursos após reinício publicado
+
+Correção concreta em reservePaidResourceWindow conforme docs/restart-resource-lineage.md: reciborestart só pode reservarcoorte quandoorigempermanente+publicação conjunta+checkpoint+intent+sourceativação/recibo conferem. Caixa e seis slotsretidos,janelaatual,coorteúnica/idempotente;sememail/novogrant/flags. Redisrealambosshared/64replays/14recusaspreparados, suíte completa pendente. Teto40comandos,7leiturasadicionais e limitesrawvinculados; custosglobaismensaisanuaisdesconhecidosreprovados,semdeclaraçãodeABcompletoouentrega255.

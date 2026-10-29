@@ -1630,6 +1630,73 @@ def main():
             contenders=list(pool.map(joint_first_writer,range(64)))
         assert contenders.count([1,1801000000])==1 and contenders.count(0)==63
         print('PASS:64joint publication contenders produce exactly1commit without another provider operation or grant release')
+        # Resource cohorts use a complete synthetic two-grant50cent allocation.
+        def restart_resource_ready(shared=False):
+            ks,args,_,after,published=joint_ready(shared)
+            assert joint_call(redis,ks,args)==[1,1801000000]
+            source_raw=redis.command('HGET',joint_ledger,'grant:ctr_restart_source')
+            source_parts=source_raw.split('|');source_parts[4]='50'
+            source_raw='|'.join(source_parts)
+            intent=json.loads(redis.command('HGET',joint_ledger,'restart-intent:ctr_restart_new'))
+            intent['sourceReceipt']=source_raw;intent['reservedCents']=100
+            redis.command('HSET',joint_ledger,'grant:ctr_restart_source',source_raw,'reserved',100,
+                          'restart-intent:ctr_restart_new',json.dumps(intent,separators=(',',':')),
+                          'slots:creator_month',0,'slots:creator_year',0,'slots:pro_month',0,
+                          'slots:pro_year',0,'slots:scale_month',0,'slots:scale_year',0)
+            return after,published
+        def restart_resource(client,**over):
+            args=['binding','review','c'*32,'sub_ObservedRestart01','creator_month',
+                  1800000003,1801000000,1800000003000,1801000000000,1800000004000,0,1,
+                  50,140,0,2,2,50,0,1,0,1,0,1,0,1,0,1]
+            for index,value in over.items():args[int(index)]=value
+            return client.command('EVAL',resource_script,1,joint_ledger,*args)
+        for shared in (False,True):
+            restart_resource_ready(shared)
+            before=snapshot(joint_ledger)
+            before_counts=command_counts()
+            ignored=restart_resource(redis) # Lost ACK retains one existing cohort.
+            cohort_counts=difference(before_counts,command_counts())
+            assert ignored==[1,1801000000000]
+            assert sum(cohort_counts.values())<=40,cohort_counts
+            field='resource:ctr_restart_new:0'
+            assert redis.command('HGET',joint_ledger,field)=='1800000003000|1801000000000'
+            assert [(k,v) for k,v in snapshot(joint_ledger) if k!=field]==before
+            committed=snapshot(joint_ledger)
+            def repeat_resource(_):
+                client=Redis()
+                try:return restart_resource(client)
+                finally:client.close()
+            with concurrent.futures.ThreadPoolExecutor(max_workers=16) as pool:
+                assert list(pool.map(repeat_resource,range(64)))==[[1,1801000000000]]*64
+            assert snapshot(joint_ledger)==committed
+        for scenario in ('owner','published-missing','published-binding','published-source','published-type',
+                         'checkpoint','intent-source','intent-publication','old-activation','old-receipt',
+                         'cash','slots','period','expired'):
+            restart_resource_ready()
+            if scenario=='owner':redis.command('HSET',joint_ledger,'restart-owner:ctr_restart_source','ctr_foreign')
+            elif scenario=='published-missing':redis.command('HDEL',joint_ledger,'restart-published:ctr_restart_new')
+            elif scenario.startswith('published-'):
+                pub=json.loads(redis.command('HGET',joint_ledger,'restart-published:ctr_restart_new'))
+                if scenario=='published-binding':pub['binding']='foreign'
+                elif scenario=='published-source':pub['sourceGrant']='ctr_foreign'
+                else:pub['tier']=None
+                redis.command('HSET',joint_ledger,'restart-published:ctr_restart_new',json.dumps(pub))
+            elif scenario=='checkpoint':redis.command('HDEL',joint_ledger,'restart-publication:ctr_restart_new')
+            elif scenario.startswith('intent-'):
+                intent=json.loads(redis.command('HGET',joint_ledger,'restart-intent:ctr_restart_new'))
+                if scenario=='intent-source':intent['sourceReceipt']='foreign'
+                else:intent['submission']['publication']['shared']=True
+                redis.command('HSET',joint_ledger,'restart-intent:ctr_restart_new',json.dumps(intent,separators=(',',':')))
+            elif scenario=='old-activation':redis.command('HDEL',joint_ledger,'activated:ctr_restart_source')
+            elif scenario=='old-receipt':redis.command('HDEL',joint_ledger,'grant:ctr_restart_source')
+            elif scenario=='cash':redis.command('HSET',joint_ledger,'reserved',99)
+            elif scenario=='slots':redis.command('HSET',joint_ledger,'slots:pro_year',1)
+            before=snapshot(joint_ledger)
+            overrides={'6':1801000001} if scenario=='period' else {'9':1801000000000} if scenario=='expired' else {}
+            assert restart_resource(redis,**overrides)==0,scenario
+            assert snapshot(joint_ledger)==before,scenario
+        print('PASS:published restart resource cohort both share states,lostACK64replays,14lineage/financial/window refusals retain cash and fullledger;commands='+json.dumps(cohort_counts,sort_keys=True))
+
         scenarios=('lock-foreign','lock-expired','lock-too-long','owner-changed','owner-ttl','source-active','next-content',
                    'next-subscription','next-unfunded','next-renews','checkpoint','pause','due','annual','policy','cash',
                    'ended-type','paying-type','sharing-type','published-foreign','oversized','receipt-foreign')
