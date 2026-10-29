@@ -4410,6 +4410,39 @@ Grave, por automação de navegador sobre a loja de demonstração (Harbor Kitch
 Estado: OR: após o Bloco A, na ordem já existente entre 206 [SH3] e 272 [HM1]; 232 [CA1] foi antecipado e não se repete; antes do Bloco B. Registro de posição; os estados e provas históricos abaixo permanecem válidos.
 Amplie os modelos de funil por objetivo (lib/funnel-starter-catalog.ts) com versões por nicho (por exemplo, coach, professor de ioga, fotógrafo, músico, consultor e educador), com textos de exemplo honestos, sem resultados, números ou depoimentos inventados. Coordene com a biblioteca de modelos do item HT15 e com as páginas por nicho do item 230 [HL11], para que cada nicho tenha o mesmo conjunto coerente de modelos, páginas e exemplos.
 
+**Complemento de242CF5 —29/10/2026,17h02Fortaleza.** Proveniência: pedido direto do dono; aplicar só diferença conformePedidos repetidospasso3(b),número/posição/estado do242 preservados. Conferidos main946fb1a e filas dosPRs1221/1217/1216,sem complemento específico. Ligar513–519PF1–PF7,535MV1 e193HT15 sem segundo catálogo ou implementação duplicada. Modelos dependem de capacidades realmente ligadas na loja; recurso apenas na fila não pode aparecer funcionando antes de existir. Mensagem recebida termina em “art.9a,”; restante não recebido nem reconstruído. Todasproibiçõespermanentes/MR/TX/FX275/VR/AX274 e stripePlatformEligibilityReady continuamvinculantes,sem novoitem,conta,aceite,contratação,pagamento,contatoterceiros ouexclusãoHazelsong;testessintéticos. Custos entrega/gravação/imagens desconhecidosreprovam,nãozero. Texto recebido:
+
+CF — Complemento ao 242 [CF5]: modelos para quem vende produto físico (29/10/2026)
+Etiqueta: [CF5]
+
+Solicitação do dono (29/10/2026, 17h02, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: é complemento ao item 242 [CF5] já gravado. Aplique só a diferença ao item existente, mantendo número, posição e estado (regra "Pedidos repetidos", passo 3, letra b), e registre na proveniência o que mudou. Ligue também a 513–519 [PF1–PF7] (produtos físicos), a 535 [MV1] (imagem real de cada modelo) e a 193 [HT15] (biblioteca de modelos), sem duplicá-los.
+
+Estado inicial: o do próprio 242.
+
+Contexto: o Claude conferiu em 29/10/2026 a seção "Create your dream store in minutes" de clickfunnels.com/apps/store: três modelos de loja de produto físico (brinquedos para cachorro, colete de postura com o título "Better Posture, Less Pain" e cozinha natural). O 242 [CF5] pede modelos por nicho só de criadores de conhecimento (coach, professor de ioga, fotógrafo, músico, consultor e educador); não há modelo para quem vende produto físico, que o Marktmorgen já vende (lib/shipping.ts, lib/stock.ts) e que os itens 513–519 completam.
+
+O que acrescentar ao 242 [CF5]:
+- modelos de loja e de página de produto para quem vende produto físico, por exemplo: artesanato e peças feitas à mão; roupas e camisetas com a marca do criador; comida e doces feitos em casa; livros impressos; arte e fotografia impressas; produtos para animais; e o kit físico que acompanha um curso;
+- cada modelo usa só o que já existe ou está na fila para produto físico: opções como tamanho e cor, estoque, frete por país e frete grátis acima de um valor (515 [PF3]), feito sob encomenda (518 [PF6]), retirada no local (519 [PF7]), e mostra só o que estiver ligado na loja;
+- blocos próprios do produto físico na página: o que vem na caixa, medidas e materiais, prazo de envio e de entrega lido das configurações de frete, política de troca e devolução do criador, sem prazo inventado;
+- textos de exemplo neutros e marcados como exemplo; nenhuma promessa de saúde, beleza, emagrecimento, cura, alívio de dor ou resultado ("Less Pain", "Better Posture", "detox", "burn fat"), nenhum selo, avaliação, estrelas, "best seller" ou depoimento; um teste automático falha se algum aparecer;
+- os modelos de comida avisam no lugar o que o criador precisa conferir nas regras do próprio país (rótulo, ingredientes, alergênicos), sem dar conselho jurídico nem prometer conformidade;
+- cada modelo aparece com a imagem real de 535 [MV1], da loja de demonstração rotulada como fictícia, sem repetir imagem.
+
+Acessibilidade (AX274): as mesmas regras dos outros modelos: títulos em ordem, texto alternativo das fotos, contraste de 7:1, alvos de pelo menos 44 × 44 px.
+
+Testes automáticos: cada modelo cria rascunho sem publicar nem sobrescrever; só mostra o que a loja tem ligado; prazos lidos das configurações de frete; nenhum termo proibido de saúde, resultado ou prova social; somente dados sintéticos.
+
+Custo: só gravações de rascunho já contadas no plano e as imagens de 535 [MV1], já contadas nos custos fixos; desconhecido reprova, nunca é zero.
+
+Regra de margem: segue a REGRA DE MARGEM vigente (MR, 27/10/2026, 07h42), a política tributária TX e FX275; custo desconhecido reprova, nunca é zero.
+
+Proibido: criar item novo ou mudar número, posição ou estado do 242; promessas de saúde, beleza, emagrecimento, cura ou resultado; selos, estrelas, avaliações, "best seller" ou depoimentos inventados; prazo de entrega inventado; conselho jurídico sobre rótulos; publicar sem o clique do criador; mudar preços, limites visíveis, comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a,
+
 243. [CF6] Economia anual explícita e plano recomendado na página de preços
 
 Estado: OR: após o Bloco A, na ordem já existente entre 206 [SH3] e 272 [HM1]; 232 [CA1] foi antecipado e não se repete; antes do Bloco B. Registro de posição; os estados e provas históricos abaixo permanecem válidos.
@@ -8918,6 +8951,48 @@ Estado: na fila.BuscaFONTESPÚBLICAS,mostraCADAfontecomlink/DATA,separaFATOdesug
 391. [CX2] Mapa visual das automações.
 
 Estado: na fila.MESMASlib/flows.tscomocaixas/setas,ramos“se/senão”,editáveisporclique;listapassosatualcontinuaALTERNATIVAcompletaTECLADO/leituradetelaAX274,ordemsemântica/foco/labels/contraste/semdependênciadecorouarrastar.Sincronizarumamesmaárvorevalidada,semsegundomotor,loopsinválidos/rascunhoautomaçãoativadasozinha.Idempotência/preview/aceite/gatesatuaispreservados.
+
+### Complemento ao391CX2 — números por etapa (29/10/2026,17h24Fortaleza)
+
+Proveniência: instrução direta do dono, complemento ao391existente, regra Pedidos repetidos3.b. Diferença: acrescentar contadores agregados por etapa e por ramo ao mapa E à lista acessível atual; reutilizar os números/regras de547ER1 nas etapas de e-mail. O número391, sua posição e seu estado “na fila” acima ficam idênticos; sem item novo e sem segundo motor. Deduplicação conferida em main46c61bc6, fila doPR1221/fd6b83cc e20headsrecentes/data/título/CX2/conteúdo; somente o mapa já existente foi localizado, não este complemento.
+
+No motor existente lib/flows.ts/lib/flow-stats.ts contar esperando/a caminho agora, passagens anteriores e divisão de cada ramo; ações de rótulo/CRM/campo/aviso/webhook com feitas/falhas. E-mails usam fonte única547ER1 para enviados/entregues/devolvidos/descadastros/visitas/vendas, sem abertura, pessoa que clicou ou contador identificável. Falha de leitura=Count unavailable, nunca0; “Most people stop here” indicado em texto com dados válidos, não só cor. Sem alterar critériosA/B/saúde/consentimentos/identificadores persistidos.
+
+AX274: mesmas contagens em texto real rotulado na caixa e lista, teclado completo,7:1/44×44px. Testes futuros só execuções sintéticas: estado atual/passagens/ramos/ações feitas/falhas/paridadeER1/semaberturas/semPII/indisponibilidade. Gravações e leituras por etapa exigem teto e reserva dentro do plano antes da operação; desconhecido reprova,nunca custo0. MR27/10/07h42/TX/FX275/VR vinculantes, maior recebimento/reservas/impostos,100%direitosmensal/anual/100%fixos; sem certificação de margem. Somente registro,nenhuma implementação/publicação funcional ou incremento do contador; travas/preços/limites/comissão/conteúdo/Hazelsong preservados.
+
+#### Briefing integral — complemento391CX2
+
+CX — Complemento ao 391 [CX2]: números de cada etapa no mapa da automação (29/10/2026)
+Etiqueta: [CX2]
+
+Solicitação do dono (29/10/2026, 17h24, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: é complemento ao item 391 [CX2] já gravado. Aplique só a diferença ao item existente, mantendo número, posição e estado (regra "Pedidos repetidos", passo 3, letra b), e registre na proveniência o que mudou. Ligue também ao item do relatório de cada e-mail [ER1] (29/10/2026), para usar os mesmos números, sem duplicá-lo.
+
+Estado inicial: o do próprio 391.
+
+Contexto: o Claude conferiu em 29/10/2026 a seção "Turn customer actions into instant results" de clickfunnels.com/apps/automations: no mapa da automação, cada etapa mostra "Are Here" (quem está nela agora), "Were Here" (quem já passou), envios, aberturas, cliques e receita. No Marktmorgen, lib/flow-stats.ts conta por sequência inteira (started, sent, reached, skipped, acted, em nl:mail:flowstats:<flowId>), sem números por etapa e sem quem está parado em cada uma; o 391 [CX2] pede o mapa em caixas e setas, mas não os números.
+
+O que acrescentar ao 391 [CX2]:
+- em cada caixa do mapa e, igual, em cada linha da lista de etapas que já existe: quantas pessoas estão nessa etapa agora (esperando ou a caminho), quantas já passaram por ela, e, nos ramos "se/senão", quantas seguiram por cada caminho;
+- nas etapas de e-mail: enviados, entregues, devolvidos, descadastros, visitas pelos links e vendas, com os mesmos números e as mesmas regras do relatório [ER1], sem aberturas e sem quem clicou;
+- nas etapas que agem (rótulo, CRM, campo, aviso, webhook): quantas vezes a ação foi feita e quantas falharam;
+- contagens agregadas por etapa, gravadas pelo motor que já existe em lib/flows.ts, sem guardar quem é quem no contador; "Count unavailable" quando a leitura falhar, nunca zero;
+- a etapa onde mais pessoas param fica indicada em texto ("Most people stop here"), sem cor como único sinal.
+
+Acessibilidade (AX274): números em texto real com rótulo, na caixa e na lista; nada só por cor; contraste de 7:1; alvos de pelo menos 44 × 44 px; tudo operável só pelo teclado.
+
+Testes automáticos: contagem por etapa a partir de execuções simuladas; quem está na etapa agora e quem passou; divisão pelos ramos; mesmos números do [ER1] nas etapas de e-mail; nenhuma abertura contada; nenhum dado pessoal no contador; "Count unavailable" quando a leitura falha.
+
+Custo: gravações de contadores por etapa e leituras já dentro do plano, com teto automático; desconhecido reprova, nunca é zero.
+
+Regra de margem: segue a REGRA DE MARGEM vigente (MR, 27/10/2026, 07h42), a política tributária TX e FX275; custo desconhecido reprova, nunca é zero.
+
+Proibido: criar item novo ou mudar número, posição ou estado do 391; segundo motor de automação; contar aberturas ou guardar quem clicou; mostrar zero no lugar de número desconhecido; mudar preços, limites visíveis, comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a, a revisão comercial ou stripePlatformEligibilityReady; afrouxar qualquer trava; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
 
 392. [CX3] Receita conciliada por funil e afiliado.
 
@@ -15213,6 +15288,41 @@ Estado inicial: na fila.
 O que fazer: permita produtos físicos no carrinho existente, juntos entre si e com produtos digitais, numa única cobrança direta na conta Stripe do criador. A Stripe pede um único endereço, aceito só se estiver em país que todos os físicos do carrinho atendem; se um item não for enviado para lá, o carrinho diz qual é antes do pagamento. O estoque de cada variante é reservado como em lib/stock.ts; os digitais são entregues como hoje e os físicos aparecem no estúdio para envio.
 Testes automáticos, com Stripe simulado: carrinho misto, país não atendido, estoque reservado e devolvido.
 
+**Complemento ao513PF1 —29/10/2026,17h11Fortaleza.** Proveniência: pedido direto do dono; sódiferença conformePedidos repetidospasso3(b),número/posição/estado preservados. Conferidos main946fb1a e filasabertas1221/1217/1216,sem complemento específico. Ligação515PF3 parafreteporquantidade,sem segundaexecução.10é padrão máximo escolhido pelo criador,nuncaautorizaestoqueacima;4produtosdistintospermanece.MAXunidades/pedidoexigecódigo/teste/tetocustoantesimplementar.Nãofísicoscontinuam1.Reembolso/estoqueexigemackidempotente,nãosereturnsemprova;sem pagamento real.SegueVR/MR/TX/FX275.Testossintéticos.Todoescopo recebido:
+
+PF — Complemento ao 513 [PF1]: quantidade de cada produto físico no carrinho (29/10/2026)
+Etiqueta: [PF1]
+
+Solicitação do dono (29/10/2026, 17h11, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: é complemento ao item 513 [PF1] já gravado. Aplique só a diferença ao item existente, mantendo número, posição e estado (regra "Pedidos repetidos", passo 3, letra b), e registre na proveniência o que mudou. Ligue também a 515 [PF3] (frete por quantidade), sem duplicá-lo.
+
+Estado inicial: o do próprio 513.
+
+Contexto: o Claude conferiu em 29/10/2026 as perguntas frequentes de clickfunnels.com/apps/store: no carrinho deles, o comprador "adjust quantities". No Marktmorgen, o carrinho (lib/cart-rules.ts, lib/cart-checkout.ts) leva no máximo MAX_CART = 4 produtos e cada um com quantidade 1 (line_items[i][quantity] = "1"); não é possível comprar 3 unidades do mesmo produto físico num pedido. O frete por quantidade de 515 [PF3] ("um valor para o primeiro item e um valor para cada item a mais") depende disso.
+
+O que acrescentar ao 513 [PF1]:
+- para produto físico (e só para ele), o comprador escolhe a quantidade na página do produto e no carrinho, com botões de mais e de menos e um campo numérico;
+- quantidade máxima por produto definida pelo criador (padrão 10) e nunca acima do estoque disponível de lib/stock.ts; o estoque de todas as unidades é reservado antes do pagamento e devolvido se o pagamento não se concluir, como hoje;
+- produto digital, curso, assinatura, chamada e evento continuam com quantidade 1, como hoje;
+- o limite de 4 produtos diferentes por pedido continua; a quantidade de cada um conta à parte, até o máximo de unidades por pedido definido no código e testado;
+- o total, o frete de 515 [PF3], o imposto do Stripe Tax e os descontos ("Buy more, save more") são calculados pela quantidade, e o Stripe recebe a quantidade real em cada linha;
+- reembolso parcial por unidade, pelo estúdio, na conta Stripe do criador, devolvendo a unidade ao estoque.
+
+Acessibilidade (AX274): botões de mais e de menos com nome para leitor de tela ("Increase quantity", "Decrease quantity"), quantidade anunciada ao mudar, campo numérico com rótulo visível, alvos de pelo menos 44 × 44 px, contraste de 7:1, operável só pelo teclado.
+
+Testes automáticos: quantidade só em produto físico; limite do criador e do estoque; reserva e devolução de todas as unidades; total, frete, imposto e desconto pela quantidade; quantidade real enviada ao Stripe; reembolso por unidade; somente Stripe simulado.
+
+Custo: leituras e gravações de estoque já contadas no plano, com teto automático; desconhecido reprova, nunca é zero.
+
+Regra de margem: segue a REGRA DE MARGEM vigente (MR, 27/10/2026, 07h42), a política tributária TX e FX275; custo desconhecido reprova, nunca é zero.
+
+Proibido: criar item novo ou mudar número, posição ou estado do 513; vender além do estoque; quantidade maior que 1 em produto que não é físico; mudar preços, limites visíveis, comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a, a revisão comercial ou stripePlatformEligibilityReady; afrouxar qualquer trava; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar qualquer coisa da Hazelsong. Somente testes sintéticos, com Stripe simulado.
+
+Aplicar a regra VR.
+
 514 [PF2] Produto físico com tudo o que os outros produtos já têm.
 Estado inicial: na fila.
 O que fazer: retire do produto físico as exclusões de lib/shipping.ts, uma a uma, reutilizando os mecanismos que já existem para os demais produtos:
@@ -16178,6 +16288,167 @@ Proibido: deixar alunos grátis consumirem as horas de vídeo garantidas a quem 
 Aplicar a regra VR.
 
 
+## 542 [CM1] — Espaço trancado visível na comunidade
+
+Estado: na fila. Ordem de chegada após541FC4,sobAV1; demaisitens intactos. Proveniência: anexo direto do dono29/10/2026,16h52Fortaleza. Deduplicação: main946fb1a,PRs1216/1217 e20headsrecentes, sem CM1/data/título/conteúdo equivalente. EscolhaHidden(padrãolegado)ouVisibleandlocked só expõe nome/frase/Locked/linkproduto publicado; conteúdo,arquivos,eventos,membros e contagens nunca chegam ao navegador sem maySeeSpace/holdsAnyOf servidor. A compra abre pelo mecanismo atual; sem pressão/contagem. Testes de ausência de vazamento,link correto,compra eAX274; custos leituras/gravações/franquia comtetos,reserva eMR/TX/FX275,desconhecidoreprova. Escopo integral e proibições no briefing conjunto preservado após543CM2; sem implementação antecipada.
+
+## 543 [CM2] — Aprovação opcional de posts e comentários antes de publicar
+
+Estado: na fila. Ordem de chegada após542CM1,sobAV1. Proveniência/deduplicação do mesmo pedido,sem equivalente em main/PRs/recentes. Link263CI1:IAquandoexistirsó sugere,criador decide;113E2-COMMUNITY-MODERATION(filtrospam)não equivale à aprovação prévia e não é refeito. Reusar fila/notificações atuais:modoPublishrightaway(padrão),primeiros1–5ouaprovarcada,posts/comentários separadamente;pendente sóautor/criador,Waitingforapproval;aprovarpublica/recusacomfrasedocriadoravisa. Umavisodiárioexistente na cota,nenhumemailreal. Expiração30diascomaviso,limitetestado porcomunidade,eliminação da pessoa inclui pendentes;privacy/terms/AX274/testes e custos integrais. Nenhuma fila ilimitada,exposição indevida,serviçoIA novo oualteração degate/direitos. Texto integral do anexo conjunto abaixo é fonte dosDOISitens542CM1/543CM2,sem duplicar outro catálogo/regra:
+
+CM — Espaço trancado visível na comunidade e aprovação de posts antes de publicar (29/10/2026) [CM1] [CM2]
+
+Solicitação do dono (29/10/2026, 16h52, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: antes de gravar, aplique a regra "Pedidos repetidos" (23/10/2026). Procure esta solicitação no main, nos PRs abertos e nos ramos codex/* recentes, pela linha de data e hora, pelo nome da seção, pelas etiquetas [CM1] e [CM2] e pelo conteúdo. Se já existir item que peça espaço trancado visível ou aprovação prévia de posts na comunidade, aplique só a diferença dentro dele, mantendo número, posição e estado; caso contrário, crie os dois itens com os próximos números livres, na posição que a ordem AV1 indicar. Ligue o CM2 a 263 [CI1] (moderação assistida por IA), sem duplicá-lo.
+
+Estado inicial: na fila.
+
+Contexto: o Claude conferiu em 29/10/2026 a seção "Build your community, your way" de clickfunnels.com/apps/community: grupos "Open" (qualquer membro vê e entra), "Private" (os outros membros veem a tela trancada, com o link de compra) e "Secret" (invisível a quem não é membro), e as opções de aprovar posts e comentários antes de aparecerem. No Marktmorgen (lib/community-access.ts, maySeeSpace e visibleSpaces), um espaço é aberto a toda a comunidade ou "kept for the buyers of the products you choose", e esse espaço fica escondido de quem não comprou; não existe espaço trancado visível. A moderação (lib/community.ts) é posterior: denúncia, fila do criador, esconder, apagar, silenciar ou tirar o membro; não existe aprovação antes de publicar.
+
+[CM1] Espaço trancado e visível, com o caminho para comprar.
+(a) Para um espaço guardado para compradores de certos produtos, o criador escolhe "Hidden" (como hoje, padrão) ou "Visible and locked".
+(b) "Visible and locked": os membros que não têm o produto veem na lista o nome e a frase do espaço, com um cadeado e o botão "Unlock with [nome do produto]", que leva à página de venda desse produto na loja, ao preço publicado; nunca veem posts, comentários, membros, arquivos ou eventos do espaço, nem a contagem de posts ou de membros.
+(c) A decisão de mostrar o conteúdo continua só em maySeeSpace, no servidor; a tela trancada não carrega nada do conteúdo; um teste falha se qualquer conteúdo do espaço trancado chegar ao navegador de quem não tem o produto.
+(d) Depois de comprar, o espaço abre sozinho, pela mesma regra de hoje (holdsAnyOf), sem o criador aprovar à mão.
+(e) Sem pressão: o espaço trancado não mostra contagem regressiva, escassez nem número de pessoas lá dentro.
+
+[CM2] Aprovação de posts e comentários antes de publicar, opcional.
+(a) Por espaço, o criador escolhe: "Publish right away" (padrão, como hoje), "Approve first posts of new members" (os primeiros 1 a 5 posts ou comentários de cada membro novo, número escolhido pelo criador) ou "Approve every post"; o mesmo para comentários, separadamente.
+(b) O que aguarda aprovação só é visto pelo autor, marcado "Waiting for approval", e pelo criador, na fila de moderação que já existe, junto das denúncias; aprovar publica; recusar avisa o autor com uma frase do criador, sem apagar sem aviso.
+(c) Aviso ao criador de que há itens aguardando, pelas notificações que já existem; nenhum e-mail novo além do aviso diário único, dentro da cota de e-mails do plano.
+(d) Itens aguardando há mais de 30 dias são recusados sozinhos, com o aviso ao autor, para a fila nunca crescer sem limite; tamanho máximo da fila por comunidade, testado.
+(e) A moderação assistida por IA de 263 [CI1], quando existir, pode só sugerir; a decisão é sempre do criador.
+(f) Política de privacidade e termos atualizados: posts aguardando aprovação e o prazo de 30 dias; apagar a pessoa apaga também os itens aguardando.
+
+Acessibilidade (AX274): cadeado com texto ("Locked"), não só ícone; botões com rótulo; estado "Waiting for approval" em texto, anunciado ao leitor de tela; contraste de 7:1; alvos de pelo menos 44 × 44 px.
+
+Testes automáticos: CM1, nada do conteúdo do espaço trancado chega a quem não tem o produto, o botão leva à página de venda certa, abre sozinho depois da compra; CM2, cada modo, só autor e criador veem o pendente, aprovar publica, recusar avisa, expiração em 30 dias, limite da fila, apagar a pessoa apaga o pendente; somente dados sintéticos.
+
+Custo: leituras e gravações já contadas no plano, com teto automático; o aviso diário conta na cota de e-mails; nenhuma chamada de IA nova; desconhecido reprova, nunca é zero.
+
+Margem (regra MR vigente, 27/10/2026, 07h42): nenhum cliente pagante, isoladamente e usando 100% dos direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo, depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto. A empresa como um todo não pode dar prejuízo a partir da base mínima calculada, com 100% dos custos fixos atribuídos ao Marktmorgen (FX275). A meta de 60% de margem líquida é medida todo mês no relatório real. Política tributária TX vigente. Custo desconhecido reprova, nunca é zero; cota grátis de fornecedor não conta como custo zero.
+
+Proibido: mostrar qualquer conteúdo de espaço trancado a quem não tem o produto; abrir espaço sem a regra atual de compra; contagem regressiva, escassez ou número de membros no espaço trancado; apagar post sem avisar o autor; fila sem limite; mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; enviar e-mail real em testes; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+
+
+## 544 [SQ9] — Trazer sequências de e-mail de outros serviços
+
+Estado: na fila. Ordem de chegada após543CM2,sobAV1; nenhumitemanterior alterado. Proveniência: anexo direto do dono29/10/2026,16h58Fortaleza,íntegro abaixo. Deduplicação: main946fb1a,PRs1221/1217/1216 e20headsrecentes.290[SQ1]já é notasprivadasdoaluno e291–297usamSQ2–SQ8; para manteridentidades antigas e não confundir assuntos,este novoitemusa544[SQ9]. O rótulo[SQ1]do original abaixo fica apenas como proveniência,sem renomear290.394CX5jáconverteautomaçõesClickFunnels,masnãopegaCSVgenéricooucolagemdeserviçosdiversos: implementar só adaptador/entrada diferençareutilizando seuconversor; ligar239CF2(migração) e537PH1(preheaderquandoconstruído). Não criar segundo motorFlows/conversor.
+
+CSVmodelo/colagem→sequênciaPAUSADA,relatórioexatolinhacolunamotivo,variáveldesconhecidanãovaicrua,HTML/scripts/pixels/rastreamentoexternoretirados,imagenssóuploadautorizadocontado,triggerexistenteescolhidocriador/condiçãonãosuportadarelatada.Semnovoenvio/conta/APIexterna,chaves/ativaçãoautomática. EstudogdeexportaçõesoficiaisMailchimp/Kit/ActiveCampaign/Beehiiv/MailerLite ésópesquisaoficialdatada,futuraimportaçãodiretanãoconstruída. Respeitarpolíticaprivacidadesempixel/linkrastreado;menção“etiquetadoemail”no briefingnãoliberanovotracking. CustosCPU/bytes/leitura/gravação/tetosreservados/MR/TX/FX275desconhecidoreprova,nuncazero. AplicarVR. Original integral:
+
+SQ — Trazer sequências de e-mail de outros serviços (29/10/2026) [SQ1]
+
+Solicitação do dono (29/10/2026, 16h58, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: antes de gravar, aplique a regra "Pedidos repetidos" (23/10/2026). Procure esta solicitação no main, nos PRs abertos e nos ramos codex/* recentes, pela linha de data e hora, pelo nome da seção, pela etiqueta [SQ1] e pelo conteúdo. Se já existir item que peça importar sequências de e-mail de serviços como Mailchimp, Kit ou ActiveCampaign, aplique só a diferença dentro dele, mantendo número, posição e estado; caso contrário, crie um único item com o próximo número livre, na posição que a ordem AV1 indicar. Ligue este item a 394 [CX5] (importador de automações da ClickFunnels, sem duplicar seu conversor) e a 239 [CF2] (guias de migração).
+
+Estado inicial: na fila.
+
+Contexto: o Claude conferiu em 29/10/2026 as perguntas frequentes de clickfunnels.com/apps/community: a pergunta "Can I migrate my list and email sequences from the service I'm using?" tem resposta trocada, sobre engajamento. No Marktmorgen, a lista já pode ser importada em todos os planos, de um CSV de até 50.000 linhas, com a confirmação de consentimento (lib/imports.ts, lib/import-limits.ts); as sequências (lib/flows.ts) só podem ser criadas à mão, e a única importação de automações na fila é a da ClickFunnels, em 394 [CX5].
+
+[SQ1] Sequências trazidas de um arquivo simples, revisadas antes de ligar.
+(a) No estúdio, "Bring in a sequence": o criador sobe um arquivo CSV de um modelo baixável (colunas: ordem, dias depois do anterior, assunto, texto de prévia de 537 [PH1] quando existir, corpo em texto simples ou em Markdown) ou cola os e-mails um a um num formulário com os mesmos campos.
+(b) O Marktmorgen monta a sequência no formato de lib/flows.ts, sempre PAUSADA, com um relatório exato do que entrou e do que não entrou (linha, coluna e motivo); nada é enviado sem o criador revisar e ligar.
+(c) O corpo entra como texto: HTML, scripts, estilos, rastreadores, pixels e links de rastreamento do serviço antigo são retirados; os links comuns são mantidos e marcados com a etiqueta do e-mail, como já é feito hoje; imagens só se o criador as subir de novo, dentro da cota de armazenamento.
+(d) Variáveis do serviço antigo (como *|FNAME|* ou {{ subscriber.first_name }}) viram as variáveis equivalentes que o Marktmorgen já tem, quando existirem; as que não existirem são listadas no relatório, nunca enviadas cruas.
+(e) Gatilho da sequência escolhido pelo criador entre os que já existem; condições do serviço antigo não convertidas ficam no relatório, sem prometer comportamento igual.
+(f) Limites: número de e-mails por sequência e de sequências pelos limites atuais do plano; tamanho máximo do arquivo; um arquivo que passe do limite é recusado com a explicação.
+(g) Estudo, sem construir nem criar contas: quais serviços (Mailchimp, Kit, ActiveCampaign, Beehiiv, MailerLite) oferecem exportação oficial ou API de sequências, com fonte oficial datada, para uma importação direta futura.
+(h) A página de ajuda e o guia de migração de 239 [CF2] explicam como copiar os e-mails do serviço antigo para o modelo.
+
+Acessibilidade (AX274): formulário com rótulos visíveis, relatório em texto, operável só pelo teclado; contraste de 7:1; alvos de pelo menos 44 × 44 px.
+
+Testes automáticos: o arquivo vira sequência pausada; nada é enviado; HTML, scripts, pixels e links de rastreamento retirados; variáveis convertidas ou listadas; limites do plano respeitados; relatório exato; somente arquivos sintéticos.
+
+Custo: leitura do arquivo no navegador e gravações já contadas no plano, com teto automático; nenhum e-mail enviado pela importação; desconhecido reprova, nunca é zero.
+
+Margem (regra MR vigente, 27/10/2026, 07h42): nenhum cliente pagante, isoladamente e usando 100% dos direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo, depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto. A empresa como um todo não pode dar prejuízo a partir da base mínima calculada, com 100% dos custos fixos atribuídos ao Marktmorgen (FX275). A meta de 60% de margem líquida é medida todo mês no relatório real. Política tributária TX vigente. Custo desconhecido reprova, nunca é zero; cota grátis de fornecedor não conta como custo zero.
+
+Proibido: ligar ou enviar qualquer sequência importada sem o criador; manter HTML, scripts, pixels ou links de rastreamento do serviço antigo; criar contas ou usar chaves em serviços de terceiros; duplicar o conversor de 394 [CX5]; aumentar limites; mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; enviar e-mail real em testes; aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+
+
+## 545 [LU1] — Lucro do criador por pedido e produto, antes dos impostos
+
+Estado: na fila. Ordem de chegada após544SQ9,sobAV1,sem alterar itens existentes. Proveniência: pedido direto do dono29/10/2026,17h07Fortaleza,recebido abaixo. Deduplicação: main946fb1a,PRs1221/1217/1216 e20headsrecentes,sem LU1/data/título/conteúdo equivalente de custo deproduto+taxarealStripe. Ligar525FN1(receita),516PF4(etiqueta),206SH3(POD),sem duplicar; NÃOmisturar comcompany-margin-report/MRdoMarktmorgen. Insumo manual permanece declaradopelocriador,nãoverificado;taxa devevirbalanceTransactionreal,não lib/receiving-costs.ts daempresa.O aviso antesdosimpostos éobrigatório,sem lucro líquido/conselhofiscal;unknownnãovira0;moedasseparadas.
+
+Integridade: a mensagem termina literalmente em “moedas separadas; CSV”, no começo dos testes;restante não recebido nem inventado. RequisitospermanentesVR/AX274/MR27/10/07h42/TX/FX275 continuam:maiorpreçopago/tetoe reservaANTESleiturasStripe/IO/armazenamento/gravações/CSV/custos100%direitosnas seis situaçõesmensaisanuais,nenhumclienteem prejuízo,empresa sem prejuízo nabasemínima,60%meta mensalreal;desconhecidoreprova,nãozero.Semnovoenvio,pagamento,conta,aceite,contratação,contatoexterno oualterarpreços/limites/comissão/PLANS_ON_SALE/OPENING_REQUESTED/taxgate/art9a/revisãocomercial/stripePlatformEligibilityReady;preservarconteúdos/idiomas/IDs/Hazelsong.Somente testessintéticos. Texto recebido:
+
+LU — Lucro do criador por pedido e por produto, antes dos impostos (29/10/2026) [LU1]
+
+Solicitação do dono (29/10/2026, 17h07, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: antes de gravar, aplique a regra "Pedidos repetidos" (23/10/2026). Procure esta solicitação no main, nos PRs abertos e nos ramos codex/* recentes, pela linha de data e hora, pelo nome da seção, pela etiqueta [LU1] e pelo conteúdo. Se já existir item que peça mostrar ao criador o lucro com custo de produto e taxa do Stripe, aplique só a diferença dentro dele, mantendo número, posição e estado; caso contrário, crie um único item com o próximo número livre, na posição que a ordem AV1 indicar. Ligue este item a 525 [FN1] (receita por etapa do funil), a 516 [PF4] (etiqueta de envio) e a 206 [SH3] (impressão sob demanda), sem duplicá-los. Não confundir com o relatório de margem da empresa do próprio Marktmorgen (lib/company-margin-report.ts, regra MR), que é outra coisa.
+
+Estado inicial: na fila.
+
+Contexto: o Claude conferiu em 29/10/2026 a seção "Your success is our obsession" de clickfunnels.com/apps/store: um cartão com "Orders 29", "Sales $1,735.00", "Costs $197.64" e "Profit $1,537.36". No Marktmorgen, o painel (components/stats-panel.tsx) mostra "Revenue" com a nota "Before Stripe's fee", e o fluxo de caixa por canal (lib/insights.ts) mostra recebido menos reembolsos menos anúncios registrados, com o aviso "it is not profit". Não existe campo de custo do produto, nem desconto da taxa do Stripe, nem do custo do frete; o criador não vê o próprio lucro.
+
+[LU1] O lucro do criador, com cada número de onde vem.
+(a) No estúdio, cada produto (e cada opção, quando houver opções) ganha um campo opcional "Your cost per sale" (custo do criador por unidade), em texto e número, visível só ao criador; vazio significa "not set", nunca zero.
+(b) Painel "Profit before taxes" por período, por produto e por pedido: vendas pagas, menos reembolsos, menos a taxa real do Stripe de cada pagamento lida da conta Stripe do próprio criador (balance transaction), menos o custo informado de cada produto, menos o custo das etiquetas de envio de 516 [PF4] e da impressão sob demanda de 206 [SH3] quando existirem, menos os anúncios já registrados.
+(c) Cada linha mostra de onde vem o número ("from your Stripe account", "you entered", "recorded ads"); quando um custo não estiver informado ou não puder ser lido, o lucro daquele produto aparece como "Incomplete: cost not set" ou "Count unavailable", nunca como se o custo fosse zero.
+(d) Sempre com o aviso em texto: "Before taxes. Marktmorgen does not know your taxes; check with your own tax rules." Nunca chamar de lucro líquido, nunca dar conselho fiscal.
+(e) A taxa do Stripe é lida, não estimada; moedas diferentes mostradas separadas, sem conversão inventada.
+(f) Exportação em CSV dos mesmos números, para o criador levar à própria contabilidade.
+(g) Os custos informados pelo criador ficam só na conta dele, entram na exportação de dados e são apagados com a loja; política de privacidade atualizada.
+
+Acessibilidade (AX274): números em texto real, tabela com cabeçalhos, valor negativo indicado por texto ("loss") e não só pela cor, contraste de 7:1, alvos de pelo menos 44 × 44 px.
+
+Testes automáticos: custo vazio aparece como incompleto e nunca como zero; taxa do Stripe igual à da transação simulada; reembolso descontado; moedas separadas; CSV
+
+
+## 546 [EB1] — Editor de e-mail: produto da loja, redes sociais e arrastar
+
+Estado: na fila. Ordem de chegada após545LU1,sobAV1; nenhumitemanterior movido. Proveniência: anexo direto do dono29/10/2026,17h14Fortaleza,íntegro abaixo. Deduplicação: main946fb1a,PRs1221/1217/1216 e20headsrecentes,sem EB1/data/título/conteúdo equivalente. Ligar375TB1(menu/arrastarsinglemecanismo/Addhere/teclado/setas/undo) e537PH1(preheader),não refazer editor/render/motoresdeenvio.
+
+Products1–4sópublicadospróprialoja,foto/nome/preçoreallidosnoenvio;removidosaviso/blocovazioimpedesend;descontorealpublicadodatado,não urgência.Socialsóredescadastradas,Spaceropçõesfixas,textoplaincompleto.SemHTMLlivre/scripts/estilos/pixel/linkrastreado;“etiquetadoemail”reusarexistente,nãoautorizartracking.Fotosdeprodutoreusamstorage,nãocopiamnemconsomem6fotosautoraismaspesototalcontinualimitado;nenhumaampliaçãodefranquia. Custosleituras/bytesentrega/cpu/enviojácontadosrequeremcálculo/teto/reserva;desconhecidoéfalha,nãozero.AplicarVR/MR/TX/FX275/AX274.Somente fila,semimplementação/envioouoperaçãoexterna.Textointegral:
+
+EB — Editor de e-mail: bloco de produto da loja, redes sociais e arrastar (29/10/2026) [EB1]
+
+Solicitação do dono (29/10/2026, 17h14, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: antes de gravar, aplique a regra "Pedidos repetidos" (23/10/2026). Procure esta solicitação no main, nos PRs abertos e nos ramos codex/* recentes, pela linha de data e hora, pelo nome da seção, pela etiqueta [EB1] e pelo conteúdo. Se já existir item que peça bloco de produto, ícones de redes sociais ou arrastar no editor de e-mail, aplique só a diferença dentro dele, mantendo número, posição e estado; caso contrário, crie um único item com o próximo número livre, na posição que a ordem AV1 indicar. Ligue este item a 375 [TB1] (editor visual de páginas, para reaproveitar o mesmo menu lateral e o mesmo arrastar, sem segundo mecanismo) e a 537 [PH1] (texto de prévia).
+
+Estado inicial: na fila.
+
+Contexto: o Claude conferiu em 29/10/2026 a seção "Design emails that make you proud (in minutes!)" de clickfunnels.com/apps/email: um editor de arrastar e soltar com os elementos Title, Paragraph, List, Image, Button, Divider, Spacer, Social e HTML, e um modelo de e-mail que termina numa grade de produtos com foto, nome e preço. No Marktmorgen, o editor de e-mail ("Design an email in blocks", lib/feature-pages.ts; components/email-studio.tsx; lib/mail-pictures.ts com MAX_MAIL_PICTURES = 6) já tem títulos, texto, listas, botões na cor da loja, divisórias e até 6 fotos, uma coluna, prévia ao lado e 4 modelos com partes marcadas; não tem bloco de produto da loja, nem ícones de redes sociais, nem arrastar do menu para o e-mail.
+
+[EB1] Três blocos e o mesmo arrastar das páginas.
+(a) Bloco "Products": o criador escolhe de 1 a 4 produtos publicados da própria loja; cada um aparece com a foto, o nome e o preço lidos do produto no momento do envio (nunca digitados), e um botão "View" para a página do produto com a etiqueta do e-mail, como os links de hoje. Em tela larga, até 2 por linha; no celular, um embaixo do outro. Produto despublicado ou apagado antes do envio sai do bloco sozinho, e o criador é avisado; se o bloco ficar vazio, o e-mail não sai até ele mudar o bloco.
+(b) Preço honesto: o preço mostrado é o preço atual da loja; desconto só aparece se for um desconto real e publicado da loja, com a data em que termina; nunca "de/por" inventado nem urgência.
+(c) Bloco "Social": ícones das redes que o criador já cadastrou na loja (lib/store-socials.ts), com o nome da rede como texto alternativo; sem rede cadastrada, o bloco não aparece para escolher.
+(d) Bloco "Spacer": espaço em branco de tamanho escolhido entre opções fixas.
+(e) Arrastar: os blocos do e-mail podem ser arrastados de um menu lateral para o lugar exato e reordenados, com o mesmo componente e a mesma alternativa por teclado e clique ("Add here") do 375 [TB1], sem segundo mecanismo; as setas para mover e o desfazer continuam.
+(f) As fotos do bloco de produto usam as fotos já guardadas do produto e não contam no limite de 6 fotos do e-mail, nem criam cópia nova de arquivo; o peso do e-mail continua dentro do limite já existente.
+(g) Sem bloco de HTML, script ou estilo livre; nenhum pixel nem link de rastreamento acrescentado; a versão em texto simples do e-mail lista os produtos com nome, preço e link.
+
+Acessibilidade (AX274): cada produto com texto alternativo da foto, nome e preço em texto real; ícones de redes com nome; botões com texto claro; contraste de 7:1; a versão em texto simples completa; alvos de pelo menos 44 × 44 px no editor, operável só pelo teclado.
+
+Testes automáticos: preço e foto lidos do produto no envio; produto despublicado sai do bloco com aviso; bloco vazio impede o envio; nenhum "de/por" inventado; ícones só das redes cadastradas; arrastar e alternativa por teclado; nenhum HTML livre, pixel ou link de rastreamento; versão em texto com os produtos; somente envios simulados.
+
+Custo: leituras dos produtos no envio já contadas no plano, com teto automático; nenhuma imagem nova armazenada; nenhum e-mail a mais; desconhecido reprova, nunca é zero.
+
+Margem (regra MR vigente, 27/10/2026, 07h42): nenhum cliente pagante, isoladamente e usando 100% dos direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo, depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto. A empresa como um todo não pode dar prejuízo a partir da base mínima calculada, com 100% dos custos fixos atribuídos ao Marktmorgen (FX275). A meta de 60% de margem líquida é medida todo mês no relatório real. Política tributária TX vigente. Custo desconhecido reprova, nunca é zero; cota grátis de fornecedor não conta como custo zero.
+
+Proibido: bloco de HTML, script ou estilo livre; pixel ou link de rastreamento; preço digitado ou "de/por" inventado; urgência ou escassez; segundo mecanismo de arrastar; aumentar limites de envio ou de fotos; mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; enviar e-mail real em testes; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+
+
 ### AB(a) — limites do ACK de seleção de pausas antes de percorrer os membros (29/10/2026)
 
 Implementação concreta do worker: checa cardinalidade e tamanho antes de serializar/percorrer resposta, no máximo200descritores/1280bytes por referência; recusa ACK201membros sem visitar membro algum, ASCII/UTF8excedido,duplicata,buraco e shapeextra antes de qualquerIOposterior. Não altera Lua/limites/flags/preços/coberturas/cash nem envia aviso. Testes sintéticos do worker mantêm caminhos válidos e exigem0IOposterior/0getters; suíte integral do novohead pendente. Custos/tetos/limites da prova em docs/pause-due-ack-bound.md; desconhecido continua reprovado,não zero.
@@ -16188,3 +16459,48 @@ Prova1212carregada nesta alteração real: merge2cd4fbda3b5880658db7bc88ab20c490
 ### União verificável — correção538AB1 e ACK limitado do worker (29/10/2026)
 
 As alterações reais dosPRs1216/1217 foram reunidas com main946fb1a, preservando integralmente os pedidos539AR1/complemento,540CU1 e541FC4 incorporados1218–1220. Fonte/teste do worker e fonte/teste público não se sobrepõem. O teste instrumental do1216foi corrigido por inspeção: chave numérica validada sem regexescapada e autoprova positiva; nenhuma asserção enfraquecida. Head1217d340c9e7teve39/39+Vercel,verify123677845359234/234Everythingpassing19:26:23UTC/mobile9cold1136/CLS0/interação120. Head1216corrigido9419ba21teveverify123679131578234/234Everythingpassing19:29:36UTC/mobile9cold964/CLS0/interação96,últimoWebKit ainda rodando na união. Essas provas individuais não substituem a suíte COMPLETA da nova árvore combinada; incorporação/publicação/estadofinal538pendentes. Regras estatísticas/coberturas/flags/preços/direitos econtador254 intactos. Sem nova operação externa,serviço ou custo presumidozero. Históricopreservado.
+
+
+## 547 [ER1] — Relatório de cada e-mail, sem contar aberturas
+
+Estado: na fila. Ordem de chegada após546EB1, subordinada àAV1, sem interromper o trabalho em andamento ou mover itens anteriores. Proveniência: solicitação direta integral do dono29/10/2026 às17h19Fortaleza, preservada abaixo. Pedidos repetidos: main46c61bc6, PR aberto1221 e20heads distintos dos PRs codex/* recentemente atualizados conferidos por data/hora, seção, ER1 e conteúdo; refs codex/* inventariados; nenhum relatório por e-mail equivalente encontrado. Saúde agregada/descadastros gerais e atribuição de visitas/vendas existentes não são refeitos. Ligar525FN1 e526FN2, sem duplicar motores/contadores/cartões ou mudar critério estatístico.
+
+Reusar eventos do provedor e contadores existentes por envio avulso/e-mail de sequência: enviados, entregues=enviados−devolvidos, devoluções definitivas/temporárias quando informadas, denúncias, descadastros agregados por e-mail de origem sem ligar pessoa ao cartão, visitas existentes, vendas pagas/receita reais da conta Stripe do criador e receita/enviados. Sem abertura, pixel, contagem de pessoa que clicou/recebeu ou clique único; explicar a opção por não contar aberturas. Desconhecido=Count unavailable, nunca0; divisor0/indisponível não pode inventar receita por destinatário. Atualizações tardias até30dias; mesmos números nos cartões do A/B de assunto com critério atual intacto e CSV sem dados pessoais. Não interpretar a expressão “visitas pelos links” como autorização para criar rastreamento novo.
+
+AX274: números reais rotulados, tabela com cabeçalhos, nenhum sinal só por cor/gráfico, contraste7:1. Testes futuros exclusivamente sintéticos para eventos, cálculo, atribuição agregada do descadastro, ausência de dados pessoais/aberturas, falha de leitura e eventos tardios. Pausas atuais2%devolução/0,08%denúncia permanecem vinculantes; não relaxar. Nenhum código/envio/fornecedor novo ativado neste registro.
+
+Custo: reutilização não significa custo zero; leituras/eventos/gravações/retenção30dias/exportação devem caber nos tetos e reservas do plano antes da operação. Nenhum e-mail extra. MR27/10/07h42/TX/FX275: cada cliente100%direitos+complementos no pior mês mensal/anual sem prejuízo após todos os custos/impostos, recebimento mais caro e reservas; empresa sem prejuízo na base mínima com100%fixos; meta60%líquido no relatório mensal real. Desconhecido reprova, franquia gratuita não é custo zero. Flags/preços/limites/comissão/travas/opt-ins/conteúdo/idiomas/IDs/Hazelsong preservados. VR: somente registro na fila, sem alegação de implementação/teste funcional/publicação ou incremento do contador.
+
+### Briefing integral do dono — 547ER1
+
+ER — Relatório de cada e-mail, sem contar aberturas (29/10/2026) [ER1]
+
+Solicitação do dono (29/10/2026, 17h19, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: antes de gravar, aplique a regra "Pedidos repetidos" (23/10/2026). Procure esta solicitação no main, nos PRs abertos e nos ramos codex/* recentes, pela linha de data e hora, pelo nome da seção, pela etiqueta [ER1] e pelo conteúdo. Se já existir item que peça o relatório de entregas, devoluções e descadastros por e-mail, aplique só a diferença dentro dele, mantendo número, posição e estado; caso contrário, crie um único item com o próximo número livre, na posição que a ordem AV1 indicar. Ligue este item a 525 [FN1] (receita por etapa do funil) e a 526 [FN2] (cartões do teste A/B), sem duplicá-los.
+
+Estado inicial: na fila.
+
+Contexto: o Claude conferiu em 29/10/2026 a seção "Stop guessing, start selling" de clickfunnels.com/apps/email: receita total, por destinatário, por abertura única e por clique único, e um painel com entregues, abertos, clicados, devolvidos e descadastrados. No Marktmorgen, cada e-mail já conta as visitas pelos links e as vendas na conta Stripe do criador ("What each email brought", lib/feature-pages.ts), sem pixel e sem taxa de abertura; a saúde de envio (lib/mail-health.ts) conta enviados, devolvidos e denúncias somados por loja e por dia e pausa os envios sozinha acima de 2% de devoluções ou 0,08% de denúncias; o estúdio mostra os descadastros da lista inteira (components/email-studio.tsx). Não há relatório por e-mail com entregues, devolvidos, denúncias e descadastros, nem a receita por destinatário.
+
+[ER1] Um cartão por e-mail com o que de fato aconteceu.
+(a) Para cada envio avulso e para cada e-mail de sequência, um cartão com: enviados; entregues (enviados menos devolvidos); devolvidos, separando definitivos e temporários quando o provedor informar; denúncias de spam; descadastros feitos pelo link daquele e-mail; visitas pelos links; vendas pagas e receita, lidas da conta Stripe do criador; receita por destinatário (receita dividida pelos enviados).
+(b) Os números vêm do provedor de envio (eventos de entrega, devolução e denúncia) e dos contadores que já existem, gravados por e-mail, sem guardar quem abriu, quem clicou ou quem foi entregue; os descadastros são contados pelo e-mail de origem, sem ligar a pessoa ao cartão.
+(c) Sem taxa de abertura, sem "por abertura" e sem "por clique único": o cartão diz em texto que o Marktmorgen não conta aberturas, de propósito, e por quê.
+(d) Número que não pôde ser lido aparece "Count unavailable", nunca zero; devoluções e denúncias que chegam depois do envio atualizam o cartão por até 30 dias.
+(e) Os cartões do teste A/B de assunto usam estes mesmos números, ao lado do critério de decisão de hoje, sem mudá-lo.
+(f) Os mesmos números exportáveis em CSV, sem dados pessoais.
+
+Acessibilidade (AX274): números em texto real, com rótulo; nada só por cor ou gráfico circular sem número; tabela com cabeçalhos; contraste de 7:1.
+
+Testes automáticos: cada contagem a partir de eventos simulados; entregues igual a enviados menos devolvidos; descadastro atribuído ao e-mail de origem; nenhum dado pessoal guardado no cartão; nenhuma abertura contada; "Count unavailable" quando a leitura falha; atualização tardia de devoluções; somente envios simulados.
+
+Custo: os eventos do provedor que já chegam e as leituras de vendas já contadas no plano, com teto automático; nenhum e-mail a mais; desconhecido reprova, nunca é zero.
+
+Margem (regra MR vigente, 27/10/2026, 07h42): nenhum cliente pagante, isoladamente e usando 100% dos direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo, depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto. A empresa como um todo não pode dar prejuízo a partir da base mínima calculada, com 100% dos custos fixos atribuídos ao Marktmorgen (FX275). A meta de 60% de margem líquida é medida todo mês no relatório real. Política tributária TX vigente. Custo desconhecido reprova, nunca é zero; cota grátis de fornecedor não conta como custo zero.
+
+Proibido: pixel de rastreamento, contagem de aberturas ou de quem clicou; guardar quem recebeu, abriu ou clicou no relatório; mudar o critério do teste A/B; afrouxar a pausa automática da saúde de envio; mostrar zero no lugar de número desconhecido; mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; enviar e-mail real em testes; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
