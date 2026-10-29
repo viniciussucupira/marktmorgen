@@ -1178,10 +1178,13 @@ async function main() {
     let memberReads=0,extra=0;
     const oversized=new Proxy(Array.from({length:201},(_,i)=>"synthetic-"+i+"@example.com"),{
       getOwnPropertyDescriptor(target,key){
-        if(/^\\d+$/.test(String(key)))memberReads++;
+        if(typeof key === "string" && String(Number(key)) === key)memberReads++;
         return Reflect.getOwnPropertyDescriptor(target,key);
       },
     });
+    Object.getOwnPropertyDescriptor(oversized,"0");
+    is("instrumented ACK observes actual member descriptor reads",memberReads,1);
+    memberReads=0;
     const replies:unknown[]=[[oversized],[["x".repeat(1281)]],[["é".repeat(641)]],
       [["same@example.com","same@example.com"]],[new Array(1)],[["ok@example.com"],[]]];
     try{
