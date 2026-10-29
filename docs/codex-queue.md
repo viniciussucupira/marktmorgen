@@ -8568,6 +8568,36 @@ Aplicar a regra VR.
 
 Proveniência/diferença do terceiro complemento: pedido direto do dono acima; descrição da captura atribuída ao briefing, sem alegar inspeção independente de imagem não anexada nesta mensagem. Acrescentados só riscado/IA no trecho selecionado como sugestão com reserva/aceite e barra superior agregadora dos recursos existentes/estado de salvamento; nenhum selo/urgência/garantia padrão. Complementos10h58e11h22/375número/posição/estado preservados;nenhumitem527. Deduplicação no main332a38d,PR1208aberto,20PRsrecentes/19heads codexdistintos e764refs,semterceirocomplemento11h32equivalente. Registro na alteração de códigoPR1208jáemcurso;reconferir código antes da implementação e aplicar só diferença. MR/TX/FX275/AX274/VR e custos desconhecidos reprovados continuam vinculantes.
 
+TB — Quarto complemento ao 375 [TB1]: moldura de seleção com ações no próprio elemento (29/10/2026)
+Etiqueta: [TB1]
+
+Solicitação do dono (29/10/2026, 11h36, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: é complemento ao item 375 [TB1], que já recebeu os complementos de 29/10/2026, 10h58, 11h22 e 11h32. Aplique só a diferença ao item existente, mantendo número, posição e estado (regra "Pedidos repetidos", passo 3, letra b), e registre na proveniência o que mudou.
+
+Estado inicial: o do próprio 375.
+
+Contexto: na captura do editor da ClickFunnels enviada pelo dono, ao clicar num elemento da página aparece uma moldura em volta dele com uma etiqueta do tipo do elemento ("Headline") e os botões mover, configurações, duplicar, código, salvar e apagar, e, logo abaixo, o botão "ADD ELEMENT". Já existem e NÃO devem ser refeitos: mover para cima e para baixo, duplicar, remover e salvar como seção, na lista de blocos de components/page-editor.tsx (lib/saved-blocks.ts).
+
+O que acrescentar ao 375 [TB1]:
+- ao clicar ou focar um elemento na prévia, uma moldura em volta dele com a etiqueta do tipo do elemento e os botões: mover (arrastar ou setas), configurações (abre o formulário do próprio bloco), duplicar, salvar como seção e remover, usando as mesmas funções que já existem na lista de blocos;
+- logo abaixo do elemento selecionado, o botão "Add element", que abre o menu lateral já pedido no 375 para acrescentar ali;
+- remover pede confirmação e pode ser desfeito;
+- tudo também pelo teclado: Tab chega ao elemento, Enter o seleciona, e cada botão tem nome para leitor de tela.
+O botão de código da ClickFunnels NÃO entra: nenhum HTML, CSS ou script livre, como já exige o 375.
+
+Testes automáticos: seleção por clique e por teclado, cada botão da moldura, "Add element" no lugar certo, confirmação e desfazer da remoção.
+
+Regra de margem: segue a REGRA DE MARGEM vigente (MR, 27/10/2026, 07h42), a política tributária TX e FX275; custo desconhecido reprova, nunca é zero.
+
+Proibido: criar item novo ou mudar número, posição ou estado do 375; refazer funções já existentes; aceitar HTML, CSS ou script livres; mudar preços, limites visíveis, comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a, a revisão comercial ou stripePlatformEligibilityReady; afrouxar qualquer trava; mostrar recurso que não funciona hoje; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+
+Proveniência/diferença do quarto complemento: pedido direto do dono acima; descrição da captura atribuída ao briefing, sem alegar inspeção independente de imagem não anexada nesta mensagem. Acrescentados só moldura por clique/foco,tipo/açõesreutilizadas,Add element na posição selecionada,confirmação/undo da remoção e operaçãoTab/Enter/nomesacessíveis;sem botão de código. Preservados375número/posição/estado e complementos10h58/11h22/11h32;nenhumitem527. Deduplicação no main332a38d,PR1208aberto,20PRsrecentes/19heads codexdistintos e764refs,semquartocomplemento11h36equivalente. Registro na alteração de códigoPR1208jáemcurso;reconferir código antes eaplicar sódiferença.MR/TX/FX275/AX274/VRpreservados.
+
 Complemento aos375[TB1]/376[TB2] — Solicitação do dono (24/10/2026, 23h26, horário de Fortaleza), regraPedidos repetidospasso3. TBjáregistrado978antesdestecomplemento;nãorenumerar/criarseção/item/mudarposiçãoestado;aplicarjuntoàpróximaalteraçãojáprevista,SEMcommitexclusivo.Conferidoscontinuidade,mainc49bc039a0555d673ac2df2af1f282ca6d2e6358,fila978/head30f802f853ed9e476a286f160d7ccd3834306e7a,12PRsabertos e534refscodex/*;23h26equivalenteausente. MetaqualidadesuperioràClickFunnels requerAUDITORIAcomparável+fonte,nãoalegaçãopúblicaautomática.
 
 TB1diferenças:
