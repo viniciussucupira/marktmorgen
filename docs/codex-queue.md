@@ -14721,3 +14721,6 @@ PR1200: merge5f713e708f7c7400b98c4a0035306e19162dd53f em29/10/2026 06:10:14Forta
 
 
 Verificação PR1201 — head8d1c778c95440adb874669cccd2710aafa4640ed/job123374495953 falhou no teste negativo due: a fixture escrevia1800000001, exatamente o until original, portanto não alterava a geração. Corrigido para until observado+1, mantendo assert de recusa0 e preservação integral; não afrouxa código/gate. Naquelehead, publicação conjunta+ACKperdido/64readbacks/1de64writers passaram,medidos31comandoswrite/18readback dentro64cada,mas não são aprovação doheadnovo. Toda a suíte é executada novamente após a correção,sem rerun isolado/merge/publicação/contador antecipados.
+
+
+Verificação PR1201 — head10dfbe43/job123375885969: 4testes puros de publicação passaram eRedisreal passou(lostACK/concorrência/22recusas/11readback),mas verificação global falhou porque9famílias existentes passaram a ter novo caller lib/contract-restart-publication.ts ausente no registro de armazenamento. Registro agora declara cada alias/função/teto,novo recibo1536porgrant/retentionunknown echeckpoint384 já existente; não ignora caller nem relaxa teste/gate. Owner/lock/pause/annual mantêm tetos conservadores eLedger/índicesglobais continuam sujeitos à revisão;custos desconhecidos não viramzero. Nova suíte inteira obrigatória no novohead; nenhuma conclusão porjobisolado ou prova antiga.
