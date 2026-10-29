@@ -15421,3 +15421,46 @@ Head9c9366falhoujob123531991576primeirahomecoldLCP2568ms>2500ms,H1home-hero-head
 ### PR1208 — regressão de geometria acessível corrigida antes de incorporar
 
 Head514734b:Public AAA Chromium123537645697/Firefox123537645753/WebKit123537645841reprovaramumaúnica target-size porengine na home390px/text-spacing,CTAStart your storeemdata-home-actionsplanslogoapóspricing. Móvel123538496414passou,masnãoafastafalhaAX. Seletor nativo decontenção exclui#pricing,que mantém layout integral eagendageometria doCTA;demaisseçõesforaheroaindapodemdeferir.Nenhumlink/botão/recurso/44px/teste ocultado/removido/afrouxado;suíteinteiranovoheadobrigatória,nãojobisolado,correçãoaindapendenteverificação.HE527eseiscomplementosTB/FNpreservados.
+
+
+## FT — registro integral; itens528–530 (29/10/2026,12h37Fortaleza)
+
+Proveniência: pedido direto do dono via anexo Texto colado.txt (f157dc4b-e967-4e6c-a12c-af2c1203b86c). Deduplicação: main332a38db16d7a2907a5c6fed08e5169403853c01, PR1208 aberto,20PRs recentes/19ramos codex e764refs; sem etiqueta,data,título ou conteúdo equivalente. Próximos números livres528–530 após527HE1 já registrado noPR1208, sem alterar número,posição ou estado anterior. Estado dos três: na fila. Contexto sobre ClickFunnels e capacidades existentes é relato do dono; reconferir código/fila antes de cada execução e fazer somente a diferença. Reutilizar sessões live,salas,lembretes,cursos/equipe e players existentes, sem anúncio público antecipado. MR27/10 07h42,TX,FX275,AX274 eVR vinculantes;60%meta real,não trava; custos desconhecidos reprovam. Registro na mesma branch já em curso,sem execução concorrente nem implementação antecipada desses tipos; nova suíte inteira do head combinado será obrigatória.
+
+FT — Tipos de funil que faltam: webinar ao vivo, evento com palestrantes e página-ponte (29/10/2026)
+Etiquetas: [FT1] [FT2] [FT3]
+
+Solicitação do dono (29/10/2026, 12h37, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: antes de gravar, aplique a regra permanente "Pedidos repetidos". Confira o main, os PRs abertos e os ramos codex/* recentes e procure esta solicitação pela linha de data e hora, pelo nome da seção, pelas etiquetas [FT1] a [FT3] e pelo conteúdo. Se já estiver gravada, não crie nada novo. Grave na ordem de chegada, depois do último item já gravado, com os próximos números livres, sem alterar a ordem dos itens existentes.
+
+Contexto: o filtro "Funnel Type" da ClickFunnels, enviado pelo dono em 29/10/2026, oferece Opt In, Application, Webinar, Summit, Bridge e Video Series. O Marktmorgen já tem, em lib/funnel-types.ts e lib/funnel-starters.ts: lead magnet e guide-signup (Opt In), application e coaching-application (Application), video training e recorded-workshop (webinar gravado), challenge e product launch (Video Series), além de book, first-purchase, quiz, membership, course-free-lesson, paid-call, digital-product, launch-waitlist e course-launch. A regra já gravada em lib/funnel-types.ts continua: nenhum tipo escreve frase, inventa preço, promete resultado ou conta tempo para trás, e não existe webinar que finge ser ao vivo. Já existem e NÃO devem ser refeitos: sessões ao vivo com data e até 500 lugares (lib/call-setup.ts, kind "live"), salas de vídeo (lib/call-rooms.ts), lembretes (lib/call-reminders.ts), cursos com aulas (lib/course.ts) e equipe (lib/team.ts). Antes de cada item, confira de novo o código e a fila e faça só a diferença.
+
+528. [FT1] Tipo de funil "Live webinar", ao vivo de verdade.
+Estado inicial: na fila.
+O que fazer: um tipo que monta, com os produtos e as páginas do próprio criador: página de inscrição para uma sessão ao vivo com data e hora reais (as sessões "live" que já existem), inscrição grátis ou paga, conforme o criador escolher; e-mails de lembrete que já existem; a sala ao vivo; depois, a página da gravação, que o criador envia, disponível pelo prazo que ele definir; e a oferta paga no fim. A data mostrada é sempre a da sessão real; não existe "ao vivo" gravado nem horário que muda para cada visitante. Se a sessão for cancelada, os inscritos são avisados e, se pagaram, reembolsados pelas regras já existentes.
+Testes automáticos: montagem do funil, inscrição grátis e paga, lembretes, gravação com prazo e cancelamento com aviso.
+
+529. [FT2] Tipo de funil "Online event" (vários palestrantes).
+Estado inicial: na fila.
+O que fazer: um tipo para evento online com datas reais de início e fim: página do evento com a programação; um palestrante por sessão (pessoa da equipe ou convidada como coanfitriã da sessão, sem acesso ao resto da loja); passe grátis, que deixa assistir às sessões durante o evento; e passe pago, que dá acesso às gravações depois, como um curso com uma aula por sessão. Palestrantes podem divulgar com o link de afiliado que já existe. Nada de contagem de inscritos inventada nem prazo falso: o fim do acesso grátis é a data real do fim do evento.
+Custos: salas, gravações e e-mails entram no custo de pior caso do plano, com teto automático antes do gasto; custo desconhecido reprova.
+Testes automáticos: programação, acesso por passe, fim do acesso grátis na data real, gravações no passe pago e coanfitrião sem acesso ao resto da loja.
+
+530. [FT3] Tipo de funil "Bridge page" (página-ponte).
+Estado inicial: na fila.
+O que fazer: um tipo de uma página só, entre um post ou anúncio e um produto do próprio criador: título, vídeo curto do criador (os players já existentes) e um único botão para a página do produto ou para o checkout; sem formulário. Os blocos começam vazios, como nos outros tipos.
+Testes automáticos: montagem da página e o botão levando ao produto certo.
+
+Para todos os itens:
+- Acessibilidade AX274 em cada página e tela nova.
+- A página de recursos só cita cada tipo quando ele funcionar de verdade, conforme a regra VR.
+- Lucro: mais tipos de criador atendidos (quem faz webinars e eventos online) e valor percebido maior dos planos.
+
+Regra de margem: cada item segue a REGRA DE MARGEM vigente (MR, 27/10/2026, 07h42): nenhum cliente pagante dá prejuízo, usando 100% de todos os direitos do plano e de cada complemento no pior mês, no mensal e no anual, com teto automático e reserva antes de cada gasto; a empresa fica sem prejuízo a partir da base mínima; 60% é meta mensal real, não trava. Política tributária TX. Custo desconhecido reprova, nunca é zero; nenhuma cota grátis de fornecedor conta como zero; taxas de recebimento mais caras de lib/receiving-costs.ts; todos os custos fixos são 100% do Marktmorgen (FX275).
+
+Proibido: webinar gravado apresentado como ao vivo; horário, prazo ou contagem que muda para cada visitante; números de inscritos inventados; mudar preços, limites visíveis (inclusive lugares por sessão e número de funis), comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a, a revisão comercial ou stripePlatformEligibilityReady; afrouxar qualquer trava; mostrar recurso que não funciona hoje; alterar o conteúdo do criador sem aprovação; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
