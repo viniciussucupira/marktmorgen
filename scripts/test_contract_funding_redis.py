@@ -1619,7 +1619,7 @@ def main():
                 args[13]=json.dumps(after,separators=(',',':'))
             elif scenario=='checkpoint':redis.command('HDEL',joint_ledger,'restart-publication:ctr_restart_new')
             elif scenario=='pause':redis.command('SET',ks[3],args[2])
-            elif scenario=='due':redis.command('ZADD',ks[4],1800000001,joint_ref)
+            elif scenario=='due':redis.command('ZADD',ks[4],json.loads(json.loads(args[2])['paused'])['until']+1,joint_ref)
             elif scenario=='annual':redis.command('SET',ks[5],1799999999)
             elif scenario=='policy':redis.command('HSET',joint_ledger,'policy','foreign')
             elif scenario=='cash':redis.command('HSET',joint_ledger,'reserved',1)
