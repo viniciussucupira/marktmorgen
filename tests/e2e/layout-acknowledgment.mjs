@@ -14,6 +14,25 @@ export async function checkLayoutAcknowledgment({browser,LOCAL,fixture,is}){
  {name:"inherited",reply:()=>({ok:false,error:"__proto__"})},
  {name:"confirmed",reply:value=>value,confirmed:true}
  ];
+ // The server-rendered controls must not accept a click or draft before
+ // React has attached their handlers. This is a real no-script page, not a timer.
+ const beforeReady=await browser.newContext({viewport:{width:390,height:900},javaScriptEnabled:false});
+ try{
+  await beforeReady.addCookies([{name:"nl_session",value:fixture.session,url:LOCAL}]);
+  const initial=await beforeReady.newPage();let writes=0;
+  await initial.route("**/api/**",async route=>{
+   if(route.request().method()!=="GET")writes++;
+   await route.abort("blockedbyclient");
+  });
+  await initial.goto(LOCAL+"/studio?store="+fixture.sid,{waitUntil:"domcontentloaded",timeout:60000});
+  const unready=initial.locator("[data-layout-editor]");await unready.waitFor({state:"attached"});
+  is("layout server render does not claim handlers are ready",await unready.getAttribute("data-layout-ready"),"false");
+  is("layout server render exposes preparation as busy",await unready.getAttribute("aria-busy"),"true");
+  const controls=await unready.locator("input,select,button").all();
+  is("layout readiness regression exercises real controls",controls.length>0,true);
+  for(const control of controls)is("layout controls cannot take edits before handlers",await control.isDisabled(),true);
+  is("layout preparation starts no API write",writes,0);
+ }finally{await beforeReady.close();}
  for(const width of [390,1280]){
   const context=await browser.newContext({viewport:{width,height:900}});
   try{
@@ -30,6 +49,8 @@ export async function checkLayoutAcknowledgment({browser,LOCAL,fixture,is}){
    await page.goto(LOCAL+"/studio?store="+fixture.sid,{waitUntil:"networkidle",timeout:60000});
    await page.locator("main details").evaluateAll(nodes=>nodes.forEach(n=>{n.open=true;}));
    const section=page.locator("[data-layout-editor]");await section.waitFor();
+   await page.locator('[data-layout-editor][data-layout-ready="true"]').waitFor();
+   is("layout handlers are ready before native editing "+width,await section.getAttribute("aria-busy"),"false");
    for(const kind of ["sections","news"]){
     let chosenStart=null;
     if(kind==="sections"){
