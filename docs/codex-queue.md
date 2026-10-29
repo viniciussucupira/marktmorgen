@@ -16405,3 +16405,60 @@ Margem (regra MR vigente, 27/10/2026, 07h42): nenhum cliente pagante, isoladamen
 Proibido: bloco de HTML, script ou estilo livre; pixel ou link de rastreamento; preço digitado ou "de/por" inventado; urgência ou escassez; segundo mecanismo de arrastar; aumentar limites de envio ou de fotos; mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; enviar e-mail real em testes; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
 
 Aplicar a regra VR.
+
+
+### AB(a) — limites do ACK de seleção de pausas antes de percorrer os membros (29/10/2026)
+
+Implementação concreta do worker: checa cardinalidade e tamanho antes de serializar/percorrer resposta, no máximo200descritores/1280bytes por referência; recusa ACK201membros sem visitar membro algum, ASCII/UTF8excedido,duplicata,buraco e shapeextra antes de qualquerIOposterior. Não altera Lua/limites/flags/preços/coberturas/cash nem envia aviso. Testes sintéticos do worker mantêm caminhos válidos e exigem0IOposterior/0getters; suíte integral do novohead pendente. Custos/tetos/limites da prova em docs/pause-due-ack-bound.md; desconhecido continua reprovado,não zero.
+
+Prova1212carregada nesta alteração real: merge2cd4fbda3b5880658db7bc88ab20c49089b32060,29/10/2026 às15:57:09Fortaleza,head26857b7b6af9ae9e2cf797772d94d2de9a2aa9f0,tree d330d1d0efaa3f6a19eb336f34aae16b6396968a,39/39+Vercel,READYdpl_AKUhYUYi7yBFqWrhiDuCbAgyFsGB/7aliases/5HTMLexatos verificados. Mobile9cold1088ms/CLS0/interação152/0writes;NVDA/VoiceOver2headingscada0writes/foreign,escopo limitado. Contador254semprovainterativa;Chromebloqueadosemretentativa. Registros1213/1214/1215são fila,sem implementação dos respectivos recursos. Histórico e ordens intactos.
+
+
+### União verificável — correção538AB1 e ACK limitado do worker (29/10/2026)
+
+As alterações reais dosPRs1216/1217 foram reunidas com main946fb1a, preservando integralmente os pedidos539AR1/complemento,540CU1 e541FC4 incorporados1218–1220. Fonte/teste do worker e fonte/teste público não se sobrepõem. O teste instrumental do1216foi corrigido por inspeção: chave numérica validada sem regexescapada e autoprova positiva; nenhuma asserção enfraquecida. Head1217d340c9e7teve39/39+Vercel,verify123677845359234/234Everythingpassing19:26:23UTC/mobile9cold1136/CLS0/interação120. Head1216corrigido9419ba21teveverify123679131578234/234Everythingpassing19:29:36UTC/mobile9cold964/CLS0/interação96,últimoWebKit ainda rodando na união. Essas provas individuais não substituem a suíte COMPLETA da nova árvore combinada; incorporação/publicação/estadofinal538pendentes. Regras estatísticas/coberturas/flags/preços/direitos econtador254 intactos. Sem nova operação externa,serviço ou custo presumidozero. Históricopreservado.
+
+
+## 547 [ER1] — Relatório de cada e-mail, sem contar aberturas
+
+Estado: na fila. Ordem de chegada após546EB1, subordinada àAV1, sem interromper o trabalho em andamento ou mover itens anteriores. Proveniência: solicitação direta integral do dono29/10/2026 às17h19Fortaleza, preservada abaixo. Pedidos repetidos: main46c61bc6, PR aberto1221 e20heads distintos dos PRs codex/* recentemente atualizados conferidos por data/hora, seção, ER1 e conteúdo; refs codex/* inventariados; nenhum relatório por e-mail equivalente encontrado. Saúde agregada/descadastros gerais e atribuição de visitas/vendas existentes não são refeitos. Ligar525FN1 e526FN2, sem duplicar motores/contadores/cartões ou mudar critério estatístico.
+
+Reusar eventos do provedor e contadores existentes por envio avulso/e-mail de sequência: enviados, entregues=enviados−devolvidos, devoluções definitivas/temporárias quando informadas, denúncias, descadastros agregados por e-mail de origem sem ligar pessoa ao cartão, visitas existentes, vendas pagas/receita reais da conta Stripe do criador e receita/enviados. Sem abertura, pixel, contagem de pessoa que clicou/recebeu ou clique único; explicar a opção por não contar aberturas. Desconhecido=Count unavailable, nunca0; divisor0/indisponível não pode inventar receita por destinatário. Atualizações tardias até30dias; mesmos números nos cartões do A/B de assunto com critério atual intacto e CSV sem dados pessoais. Não interpretar a expressão “visitas pelos links” como autorização para criar rastreamento novo.
+
+AX274: números reais rotulados, tabela com cabeçalhos, nenhum sinal só por cor/gráfico, contraste7:1. Testes futuros exclusivamente sintéticos para eventos, cálculo, atribuição agregada do descadastro, ausência de dados pessoais/aberturas, falha de leitura e eventos tardios. Pausas atuais2%devolução/0,08%denúncia permanecem vinculantes; não relaxar. Nenhum código/envio/fornecedor novo ativado neste registro.
+
+Custo: reutilização não significa custo zero; leituras/eventos/gravações/retenção30dias/exportação devem caber nos tetos e reservas do plano antes da operação. Nenhum e-mail extra. MR27/10/07h42/TX/FX275: cada cliente100%direitos+complementos no pior mês mensal/anual sem prejuízo após todos os custos/impostos, recebimento mais caro e reservas; empresa sem prejuízo na base mínima com100%fixos; meta60%líquido no relatório mensal real. Desconhecido reprova, franquia gratuita não é custo zero. Flags/preços/limites/comissão/travas/opt-ins/conteúdo/idiomas/IDs/Hazelsong preservados. VR: somente registro na fila, sem alegação de implementação/teste funcional/publicação ou incremento do contador.
+
+### Briefing integral do dono — 547ER1
+
+ER — Relatório de cada e-mail, sem contar aberturas (29/10/2026) [ER1]
+
+Solicitação do dono (29/10/2026, 17h19, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: antes de gravar, aplique a regra "Pedidos repetidos" (23/10/2026). Procure esta solicitação no main, nos PRs abertos e nos ramos codex/* recentes, pela linha de data e hora, pelo nome da seção, pela etiqueta [ER1] e pelo conteúdo. Se já existir item que peça o relatório de entregas, devoluções e descadastros por e-mail, aplique só a diferença dentro dele, mantendo número, posição e estado; caso contrário, crie um único item com o próximo número livre, na posição que a ordem AV1 indicar. Ligue este item a 525 [FN1] (receita por etapa do funil) e a 526 [FN2] (cartões do teste A/B), sem duplicá-los.
+
+Estado inicial: na fila.
+
+Contexto: o Claude conferiu em 29/10/2026 a seção "Stop guessing, start selling" de clickfunnels.com/apps/email: receita total, por destinatário, por abertura única e por clique único, e um painel com entregues, abertos, clicados, devolvidos e descadastrados. No Marktmorgen, cada e-mail já conta as visitas pelos links e as vendas na conta Stripe do criador ("What each email brought", lib/feature-pages.ts), sem pixel e sem taxa de abertura; a saúde de envio (lib/mail-health.ts) conta enviados, devolvidos e denúncias somados por loja e por dia e pausa os envios sozinha acima de 2% de devoluções ou 0,08% de denúncias; o estúdio mostra os descadastros da lista inteira (components/email-studio.tsx). Não há relatório por e-mail com entregues, devolvidos, denúncias e descadastros, nem a receita por destinatário.
+
+[ER1] Um cartão por e-mail com o que de fato aconteceu.
+(a) Para cada envio avulso e para cada e-mail de sequência, um cartão com: enviados; entregues (enviados menos devolvidos); devolvidos, separando definitivos e temporários quando o provedor informar; denúncias de spam; descadastros feitos pelo link daquele e-mail; visitas pelos links; vendas pagas e receita, lidas da conta Stripe do criador; receita por destinatário (receita dividida pelos enviados).
+(b) Os números vêm do provedor de envio (eventos de entrega, devolução e denúncia) e dos contadores que já existem, gravados por e-mail, sem guardar quem abriu, quem clicou ou quem foi entregue; os descadastros são contados pelo e-mail de origem, sem ligar a pessoa ao cartão.
+(c) Sem taxa de abertura, sem "por abertura" e sem "por clique único": o cartão diz em texto que o Marktmorgen não conta aberturas, de propósito, e por quê.
+(d) Número que não pôde ser lido aparece "Count unavailable", nunca zero; devoluções e denúncias que chegam depois do envio atualizam o cartão por até 30 dias.
+(e) Os cartões do teste A/B de assunto usam estes mesmos números, ao lado do critério de decisão de hoje, sem mudá-lo.
+(f) Os mesmos números exportáveis em CSV, sem dados pessoais.
+
+Acessibilidade (AX274): números em texto real, com rótulo; nada só por cor ou gráfico circular sem número; tabela com cabeçalhos; contraste de 7:1.
+
+Testes automáticos: cada contagem a partir de eventos simulados; entregues igual a enviados menos devolvidos; descadastro atribuído ao e-mail de origem; nenhum dado pessoal guardado no cartão; nenhuma abertura contada; "Count unavailable" quando a leitura falha; atualização tardia de devoluções; somente envios simulados.
+
+Custo: os eventos do provedor que já chegam e as leituras de vendas já contadas no plano, com teto automático; nenhum e-mail a mais; desconhecido reprova, nunca é zero.
+
+Margem (regra MR vigente, 27/10/2026, 07h42): nenhum cliente pagante, isoladamente e usando 100% dos direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo, depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto. A empresa como um todo não pode dar prejuízo a partir da base mínima calculada, com 100% dos custos fixos atribuídos ao Marktmorgen (FX275). A meta de 60% de margem líquida é medida todo mês no relatório real. Política tributária TX vigente. Custo desconhecido reprova, nunca é zero; cota grátis de fornecedor não conta como custo zero.
+
+Proibido: pixel de rastreamento, contagem de aberturas ou de quem clicou; guardar quem recebeu, abriu ou clicou no relatório; mudar o critério do teste A/B; afrouxar a pausa automática da saúde de envio; mostrar zero no lugar de número desconhecido; mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; enviar e-mail real em testes; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
