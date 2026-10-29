@@ -14994,3 +14994,17 @@ Regra de margem: cada item segue a REGRA DE MARGEM vigente (MR, 27/10/2026, 07h4
 Proibido: mudar preços, cortar limites visíveis, retirar recursos ou direitos de qualquer plano, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a, a revisão comercial ou stripePlatformEligibilityReady; afrouxar qualquer trava; o Marktmorgen receber, guardar ou adiantar o pagamento do cliente do salão; mostrar recurso que não funciona hoje; alterar o conteúdo do criador sem aprovação; criar contas, aceitar termos, contratar, pagar ou contatar terceiros (Meta, Apple, Google ou outros); apagar qualquer coisa da Hazelsong. Somente testes sintéticos.
 
 Aplicar a regra VR.
+
+
+## PR1203 — incorporação e produção verificadas
+
+PR https://github.com/viniciussucupira/marktmorgen/pull/1203, headb944c4d6baedbeb5a1f0a1c62d6e004e2753f2ec, mergef1b54f6956eb328801cc0f5980def6931970131d às09:37:31Fortaleza/12:37:31UTC29/10/2026; paisead3641+b944c4d, árvore3d75f83004e6481ca6aef3af51c9575c9ac9a6a0igualàtestada.39/39+Vercel;verify123437614825Everythingpassing12:14:45.2515339UTC/bundles234/234. Redis12343761497012:09:49.4213677UTC: ambosshared,lostACK64replays,14recusas,caixa/ledgerpreservados,25comandos medidos(EVAL1,HGET21,HSET1,TTL1,TYPE1)≤40. Oitoscopesfulltrue;signup3engines30/150/0;mobile9coldLCPmax1384/CLS0/interação152ms/0writes(labonly);NVDA/VoiceOver2headings0writes/foreign,não tarefascompletas. Firefox123437615009/WebKit123437615043aprovados. READYdpl_HSQBed1VZxcWvgY1tCsLxEhKZyZP,SHAexato7aliases5HTMLpúblicosmarktmorgen.com confirmados antes da incorporação documental1204. Contador254semprovainterativa; nenhuma cobertura/flag/review habilitada.
+
+## AV — admissão do aviso imediato de pausa financiada
+
+Corrige o caminho real confirmPause→tell(company): qualquer funding ou períodofinanciado/ACKestruturaldesconhecido permanece retido antes de IO, sem retirar o aviso legado nem mudar opt-in. Fonte/geração/reserva/tetoglobal dos avisos financiados continuam obrigatórios e incompletos; não declarar prontidão. Testes positivoslegados e negativosfinanciados/accessors preparados, suíte integral pendente. Binding atualizado,semnovachave/comando/provedor; custos completos desconhecidos reprovados. CK509–512eSC1incorporadoClaude1192preservados no prefixo.
+
+
+### Integração da fila PF/LB durante PR1205
+
+PR1206 incorporado em29/10/2026,10:01:20Fortaleza/13:01:20UTC,merge860461bb3b40d00b9a89dfe95a1395a6a44ffeea,head8f9bb25188cea52092030e2700091a5233d77b19,árvore84aadb9470d7f45ec93f968823bffa3fc8775b92,paiec25ab0+8f9bb25.27checks documentais16success11skips+Vercel; sem entrega funcional/counter254inalterado. BriefingsPF513–519/LB520–523e206SH3após519preservados integralmente. PR1205 atualiza seu head para incorporar essa fila sem sobrescrever e roda novamente a suíte inteira da árvore combinada; resultados antigos f2358f5 não certificam o novohead.
