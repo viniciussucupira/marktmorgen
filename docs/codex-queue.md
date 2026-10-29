@@ -15740,3 +15740,39 @@ O caminho realrunBreaksdepausafinanciada reutiliza storeForRestartSource:1GETRAN
 ### PR1212 — interrupção de infraestrutura preservada, semrerunisolado
 
 Heade41b1fd8publicChromium123630279521recebeushutdownsignal17:53:53.2417307UTC/operação cancelada,antesdematriz/sumário. Nãoéasserçãodoproduto,nãoéaprovação,nãoinventarcorreçãodecódigo. Evidênciaretida emdocs/pause-worker-source-bound.md;novohead/documentação dispara suíteCOMPLETA doPR,sem alterarcódigo/testes/assertivas/limites/workflows nemrerunjobisolado. Falhaoutrabalhoparcialanteriornãocertificanovohead;incorporação somenteapóstodaschecagens. Semnovoitem/prioridade/custooperacionalautorizado.
+
+
+## FQ — registro integral; item534 (29/10/2026,14h59Fortaleza)
+
+Proveniência: pedido direto do dono via anexo d09de6b3-2be3-4da8-bfcf-dec0bf6b5d11/Texto colado.txt. Deduplicação main63fb030,PR1212aberto,20PRsrecentes/19ramoscodex,765refs e3ramosFAQ relacionados:nenhum item de perguntas de iniciante naspáginas derecursos equivalente;HT12édistinto,clusterblog/learnSEO,nãorecebecomplemento. Próximo livre534após533,estado na fila;posição segueAV1semanteciparaosgatesprioritários,semalterarordemanterior. ReutilizarQuestions/details/FAQPageexistentes,semnovo componente/segunda cópia;conteúdoderivadodocódigo/constantes/contagensreais/indisponibilidadeexplícita,noemailopens,trialgatedemocomvendasfechadas,semresultado/prazo/24horas. Aplicardepoisàsdemaispáginaspertinentessemcontradição. Custo estático semprovedor/email/IAéescopodobrief,não comprovação deCPU/bytes/entregazero;desconhecidoreprova,MR/TX/FX275/AX274/VRmantidos. ComparaçãoClickFunnelsérelatoatribuídoao dono/Claude,semvisitaindependente. Registroapenas;suíteinteira novoheadcombinadoobrigatória.
+
+FQ — Perguntas de quem está começando nas páginas de recursos (29/10/2026) [FQ1]
+
+Solicitação do dono (29/10/2026, 14h59, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: antes de gravar, aplique a regra "Pedidos repetidos" (23/10/2026). Procure esta solicitação no main, nos PRs abertos e nos ramos codex/* recentes, pela linha de data e hora, pelo nome da seção, pela etiqueta [FQ1] e pelo conteúdo. Se já existir item que peça perguntas de iniciante nas páginas de recursos, aplique só a diferença dentro dele; caso contrário, crie um único item com o próximo número livre, na posição que a ordem AV1 indicar.
+
+Estado inicial: na fila.
+
+Contexto: o Claude conferiu em 29/10/2026 a seção "Frequently asked questions" do fim de clickfunnels.com/features/sales-funnels: seis perguntas que abrem e fecham ("What is a sales funnel?", "Do sales funnels work?", "How do I know what type of funnel to use?", "Is it easy to build a funnel?", "Can I build my sales funnel for free?", "Can ClickFunnels track and opens and clicks?"). As respostas trazem números não verificáveis ("over 100,000 active businesses", "over 2,000 people" no "Two Comma Club"), promessas de resultado ("proven to convert", "and boom! You're done"), linguagem informal ("kinda like a bridge", "with their credit cards in hand") e uma resposta trocada: a pergunta sobre aberturas e cliques é respondida com "a first class support team… 24 hours a day, 7 days a week" e um link http://. O Marktmorgen já tem o bloco "Questions" com <details> e dados FAQPage (components/topic-page.tsx), mas a página marktmorgen.com/platform/funnels (lib/feature-pages.ts, slug "funnels") só responde a quatro perguntas sobre ofertas e preços, sem as perguntas de quem está começando.
+
+534. [FQ1] Perguntas de quem está começando, respondidas pelo que o código faz.
+(a) Na página de funis, acrescente ao bloco "Questions" já existente, sem criar outro componente, as perguntas de quem está começando, em inglês americano simples (AX274, 3.1.5), por exemplo: "What is a funnel?", "Which kind of funnel should I use?", "How long does it take to build one?", "Can I try it before paying?", "Does it count opens and clicks?" e "Do funnels work?".
+(b) Cada resposta responde exatamente à pergunta feita e só diz o que o código faz hoje, lido das próprias fontes: os tipos de funil de lib/funnel-types.ts, cada um com para quem serve e o link do modelo pronto de lib/funnel-starters.ts; os passos reais para montar um funil a partir de um modelo, contados no estúdio, sem "boom", "in minutes" ou promessa de prazo; as contagens de lib/funnel-metrics.ts (aberturas da página e pagamentos por etapa, e "Counts unavailable" quando não houver contagem).
+(c) "Does it count opens and clicks?": diga com clareza que não há contagem de aberturas de e-mail, de propósito, e que os links de cada e-mail e de cada etapa contam visitas e vendas, reaproveitando as frases já usadas em lib/feature-pages.ts e lib/help-content.ts, sem contradizê-las.
+(d) "Can I try it before paying?": enquanto PLANS_ON_SALE for false, diga que os planos pagos ainda não estão à venda e aponte a demonstração (/demo), identificada como demonstração; depois da abertura, o número de dias de teste lido de TRIAL_DAYS, nunca digitado. Não comece a resposta pela palavra "free".
+(e) "Do funnels work?": nenhum número de clientes, de faturamento ou de "clube" enquanto não houver contagem real, agregada e verificável; explique o que o criador vê nos próprios números do funil para saber se o dele funciona. Nada de "proven to convert".
+(f) Nenhuma resposta promete atendimento 24 horas, equipe, prazo de resposta ou resultado; todo link é https:// e interno quando possível.
+(g) Os dados FAQPage são gerados do mesmo texto, sem segunda cópia. Depois da página de funis, aplique o mesmo critério às demais páginas de recursos onde essas perguntas fizerem sentido, sem repetir a mesma pergunta em duas páginas com respostas diferentes.
+(h) Testes automáticos: todo número, plano, prazo ou limite citado nas respostas vem das constantes do código; nenhuma resposta tem link http://; nenhuma resposta tem os termos proibidos ("proven", "guaranteed", "24/7", "boom"); o texto do FAQPage é igual ao texto mostrado.
+(i) Acessibilidade (AX274): perguntas como botões de <summary> com estado aberto/fechado anunciado, ordem de títulos correta, ícones de mais e de menos decorativos, contraste de 7:1, alvos de pelo menos 44 × 44 px, tudo pelo teclado, sem animação sob prefers-reduced-motion.
+
+Custo: texto estático, sem fornecedor, sem e-mail e sem chamada de IA; nenhum custo novo.
+
+Margem (regra MR vigente, 27/10/2026, 07h42): nenhum cliente pagante, isoladamente e usando 100% dos direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo, depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto. A empresa como um todo não pode dar prejuízo a partir da base mínima calculada, com 100% dos custos fixos atribuídos ao Marktmorgen (FX275). A meta de 60% de margem líquida é medida todo mês no relatório real. Política tributária TX vigente. Custo desconhecido reprova, nunca é zero; cota grátis de fornecedor não conta como custo zero.
+
+Proibido: mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; usar números inventados ou não verificáveis, depoimentos inventados, escassez falsa ou promessa de resultado; começar o texto pela palavra "free"; instalar widget ou overlay de acessibilidade; enviar e-mail real, criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
