@@ -231,6 +231,21 @@ async function main(): Promise<void> {
   is("canceling remains available", new URL(financialDecline.headers.get("location")!).searchParams.get("metaads"), "declined");
   is("no provider request or extra integration allowance", [asked.length, await allowanceUsed(funded, "integration")], [beforeMetaRequests, beforeMetaUnits]);
 
+  part("Marked paid Meta spend reads require the current store cohort before new work");
+  await finishMeta({ statsId: funded.statsId!, sid: funded.sid, code: "good-code", redirect, by: "funded-meta@example.com", owner: { email: funded.email, handle: funded.handle }, currency: funded.currency });
+  const keptConnection = (await metaView(funded.statsId!, funded.currency))!;
+  for (const tier of ["creator", "pro", "scale"] as const) for (const cycle of ["month", "year"] as const) {
+    await setSubscription("funded-meta@example.com", { customerId: "cus_MetaFunded001", subscriptionId: "sub_MetaFunded001", active: true, tier, cycle, trialEnds: 0, period: { ...paidPeriod(Date.now(), { behind: 10, ahead: cycle === "year" ? 355 : 20 }), funded: true } });
+    const beforeProvider = asked.length;
+    is("fresh paid read refuses without a cohort " + tier + " " + cycle, await readMetaSpend(funded.statsId!, funded.currency), "busy");
+    is("no provider request or spend/read record " + tier + " " + cycle, [asked.length, await readSpends(funded.statsId!), (await metaView(funded.statsId!, funded.currency))?.read], [beforeProvider, [], keptConnection.read]);
+  }
+  const beforeDailyProvider = asked.length;
+  const dueWithoutFunds = await readMetaDue(Date.now() + 10_000, storeForId);
+  is("the actual daily pass skips the unfunded new read", [dueWithoutFunds.read, dueWithoutFunds.skipped, asked.length], [0, 1, beforeDailyProvider]);
+  is("connection and cached view remain readable", (await metaView(funded.statsId!, funded.currency))?.connected, true);
+  is("retained disconnect still works without a cohort", Boolean(await disconnectMeta(funded.statsId!)), true);
+
   part("Meta's notice, and disconnecting");
   const payload = Buffer.from(JSON.stringify({ algorithm: "HMAC-SHA256", user_id: USER, issued_at: 1 })).toString("base64url");
   const signed = `${createHmac("sha256", SECRET).update(payload).digest("base64url")}.${payload}`;
