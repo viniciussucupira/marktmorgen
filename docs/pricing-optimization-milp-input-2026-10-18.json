@@ -46,6 +46,7 @@
      "roomYear": 288,
      "netAtOnes": 340,
      "usageMonthAtOnes": 257,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 1.91485421551,
       "-1": 3.66666666667,
@@ -59,6 +60,7 @@
      "roomYear": 799,
      "netAtOnes": 977,
      "usageMonthAtOnes": 257,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 1.31789305532,
       "-1": 1.73684210526,
@@ -72,6 +74,7 @@
      "roomYear": 1307,
      "netAtOnes": 1615,
      "usageMonthAtOnes": 257,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 1.06673850333,
       "-1": 1.13793103448,
@@ -85,6 +88,7 @@
      "roomYear": 1817,
      "netAtOnes": 2251,
      "usageMonthAtOnes": 257,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 0.919866211008,
       "-1": 0.846153846154,
@@ -98,6 +102,7 @@
      "roomYear": 2325,
      "netAtOnes": 2887,
      "usageMonthAtOnes": 257,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 0.820651806648,
       "-1": 0.673469387755,
@@ -111,6 +116,7 @@
      "roomYear": 2835,
      "netAtOnes": 3525,
      "usageMonthAtOnes": 257,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 0.747878355014,
       "-1": 0.559322033898,
@@ -124,6 +130,7 @@
      "roomYear": 3342,
      "netAtOnes": 4162,
      "usageMonthAtOnes": 257,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.691564074808,
       "-1": 0.478260869565,
@@ -137,6 +144,7 @@
      "roomYear": 3852,
      "netAtOnes": 4798,
      "usageMonthAtOnes": 257,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.646313792973,
       "-1": 0.417721518987,
@@ -150,6 +158,7 @@
      "roomYear": 4360,
      "netAtOnes": 5435,
      "usageMonthAtOnes": 257,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.608922422689,
       "-1": 0.370786516854,
@@ -163,6 +172,7 @@
      "roomYear": 4869,
      "netAtOnes": 6073,
      "usageMonthAtOnes": 257,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.57735026919,
       "-1": 0.333333333333,
@@ -176,6 +186,7 @@
      "roomYear": 5378,
      "netAtOnes": 6709,
      "usageMonthAtOnes": 257,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.550229309995,
       "-1": 0.302752293578,
@@ -189,6 +200,7 @@
      "roomYear": 5889,
      "netAtOnes": 7346,
      "usageMonthAtOnes": 257,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.526603194417,
       "-1": 0.27731092437,
@@ -202,6 +214,7 @@
      "roomYear": 6396,
      "netAtOnes": 7984,
      "usageMonthAtOnes": 257,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.505780538859,
       "-1": 0.255813953488,
@@ -252,6 +265,7 @@
      "roomYear": 288,
      "netAtOnes": -1254,
      "usageMonthAtOnes": 1980,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 3.31662479036,
       "-1": 11,
@@ -265,6 +279,7 @@
      "roomYear": 799,
      "netAtOnes": -375,
      "usageMonthAtOnes": 1980,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 2.28265773076,
       "-1": 5.21052631579,
@@ -278,6 +293,7 @@
      "roomYear": 1307,
      "netAtOnes": 366,
      "usageMonthAtOnes": 1980,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 1.84764528615,
       "-1": 3.41379310345,
@@ -291,6 +307,7 @@
      "roomYear": 1817,
      "netAtOnes": 1002,
      "usageMonthAtOnes": 1980,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 1.59325501363,
       "-1": 2.53846153846,
@@ -304,6 +321,7 @@
      "roomYear": 2325,
      "netAtOnes": 1638,
      "usageMonthAtOnes": 1980,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 1.42141062444,
       "-1": 2.02040816327,
@@ -317,6 +335,7 @@
      "roomYear": 2835,
      "netAtOnes": 2276,
      "usageMonthAtOnes": 1980,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 1.29536330877,
       "-1": 1.67796610169,
@@ -330,6 +349,7 @@
      "roomYear": 3342,
      "netAtOnes": 2913,
      "usageMonthAtOnes": 1980,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 1.19782411426,
       "-1": 1.4347826087,
@@ -343,6 +363,7 @@
      "roomYear": 3852,
      "netAtOnes": 3549,
      "usageMonthAtOnes": 1980,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 1.11944832706,
       "-1": 1.25316455696,
@@ -356,6 +377,7 @@
      "roomYear": 4360,
      "netAtOnes": 4186,
      "usageMonthAtOnes": 1980,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 1.05468457397,
       "-1": 1.11235955056,
@@ -369,6 +391,7 @@
      "roomYear": 4869,
      "netAtOnes": 4824,
      "usageMonthAtOnes": 1980,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 1,
       "-1": 1,
@@ -382,6 +405,7 @@
      "roomYear": 5378,
      "netAtOnes": 5460,
      "usageMonthAtOnes": 1980,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 0.953025120726,
       "-1": 0.908256880734,
@@ -395,6 +419,7 @@
      "roomYear": 5889,
      "netAtOnes": 6097,
      "usageMonthAtOnes": 1980,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 0.912103488158,
       "-1": 0.831932773109,
@@ -408,6 +433,7 @@
      "roomYear": 6396,
      "netAtOnes": 6735,
      "usageMonthAtOnes": 1980,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 0.876037590783,
       "-1": 0.767441860465,
@@ -421,6 +447,7 @@
      "roomYear": 6906,
      "netAtOnes": 7371,
      "usageMonthAtOnes": 1980,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 0.843937329324,
       "-1": 0.712230215827,
@@ -434,6 +461,7 @@
      "roomYear": 7414,
      "netAtOnes": 8008,
      "usageMonthAtOnes": 1980,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 0.815125468993,
       "-1": 0.664429530201,
@@ -447,6 +475,7 @@
      "roomYear": 7924,
      "netAtOnes": 8646,
      "usageMonthAtOnes": 1980,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 0.789076364767,
       "-1": 0.622641509434,
@@ -460,6 +489,7 @@
      "roomYear": 8431,
      "netAtOnes": 9282,
      "usageMonthAtOnes": 1980,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 0.76537495162,
       "-1": 0.585798816568,
@@ -473,6 +503,7 @@
      "roomYear": 8942,
      "netAtOnes": 9918,
      "usageMonthAtOnes": 1980,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 0.743688527341,
       "-1": 0.553072625698,
@@ -486,6 +517,7 @@
      "roomYear": 9450,
      "netAtOnes": 10553,
      "usageMonthAtOnes": 1980,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 0.723746864456,
       "-1": 0.52380952381,
@@ -499,6 +531,7 @@
      "roomYear": 9959,
      "netAtOnes": 11193,
      "usageMonthAtOnes": 1980,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 0.705327893384,
       "-1": 0.497487437186,
@@ -512,6 +545,7 @@
      "roomYear": 10467,
      "netAtOnes": 11829,
      "usageMonthAtOnes": 1980,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 0.688247201612,
       "-1": 0.473684210526,
@@ -525,6 +559,7 @@
      "roomYear": 10978,
      "netAtOnes": 12465,
      "usageMonthAtOnes": 1980,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 0.672350202291,
       "-1": 0.452054794521,
@@ -538,6 +573,7 @@
      "roomYear": 11485,
      "netAtOnes": 13103,
      "usageMonthAtOnes": 1980,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 0.657506205659,
       "-1": 0.43231441048,
@@ -551,6 +587,7 @@
      "roomYear": 11995,
      "netAtOnes": 13740,
      "usageMonthAtOnes": 1980,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 0.643603869956,
       "-1": 0.414225941423,
@@ -564,6 +601,7 @@
      "roomYear": 12504,
      "netAtOnes": 14376,
      "usageMonthAtOnes": 1980,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 0.630547667862,
       "-1": 0.397590361446,
@@ -577,6 +615,7 @@
      "roomYear": 13014,
      "netAtOnes": 15014,
      "usageMonthAtOnes": 1980,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 0.618255110969,
       "-1": 0.382239382239,
@@ -590,6 +629,7 @@
      "roomYear": 13521,
      "netAtOnes": 15651,
      "usageMonthAtOnes": 1980,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 0.606654547314,
       "-1": 0.368029739777,
@@ -603,6 +643,7 @@
      "roomYear": 14031,
      "netAtOnes": 16287,
      "usageMonthAtOnes": 1980,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 0.595683397181,
       "-1": 0.354838709677,
@@ -616,6 +657,7 @@
      "roomYear": 14539,
      "netAtOnes": 16924,
      "usageMonthAtOnes": 1980,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 0.58528672771,
       "-1": 0.342560553633,
@@ -629,6 +671,7 @@
      "roomYear": 15048,
      "netAtOnes": 17562,
      "usageMonthAtOnes": 1980,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 0.575416091998,
       "-1": 0.33110367893,
@@ -642,6 +685,7 @@
      "roomYear": 15556,
      "netAtOnes": 18198,
      "usageMonthAtOnes": 1980,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 0.566028576588,
       "-1": 0.320388349515,
@@ -655,6 +699,7 @@
      "roomYear": 16068,
      "netAtOnes": 18835,
      "usageMonthAtOnes": 1980,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 0.557086014531,
       "-1": 0.310344827586,
@@ -668,6 +713,7 @@
      "roomYear": 16575,
      "netAtOnes": 19473,
      "usageMonthAtOnes": 1980,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 0.548554331041,
       "-1": 0.300911854103,
@@ -681,6 +727,7 @@
      "roomYear": 17085,
      "netAtOnes": 20109,
      "usageMonthAtOnes": 1980,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 0.540402996134,
       "-1": 0.29203539823,
@@ -694,6 +741,7 @@
      "roomYear": 17593,
      "netAtOnes": 20745,
      "usageMonthAtOnes": 1980,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 0.532604564172,
       "-1": 0.283667621777,
@@ -707,6 +755,7 @@
      "roomYear": 18103,
      "netAtOnes": 21383,
      "usageMonthAtOnes": 1980,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 0.525134284458,
       "-1": 0.275766016713,
@@ -720,6 +769,7 @@
      "roomYear": 18610,
      "netAtOnes": 22019,
      "usageMonthAtOnes": 1980,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 0.517969770283,
       "-1": 0.268292682927,
@@ -733,6 +783,7 @@
      "roomYear": 19120,
      "netAtOnes": 22657,
      "usageMonthAtOnes": 1980,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 0.511090716328,
       "-1": 0.261213720317,
@@ -746,6 +797,7 @@
      "roomYear": 19628,
      "netAtOnes": 23292,
      "usageMonthAtOnes": 1980,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 0.504478656291,
       "-1": 0.254498714653,
@@ -759,6 +811,7 @@
      "roomYear": 20138,
      "netAtOnes": 23930,
      "usageMonthAtOnes": 1980,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 0.498116754137,
       "-1": 0.248120300752,
@@ -772,6 +825,7 @@
      "roomYear": 20646,
      "netAtOnes": 24567,
      "usageMonthAtOnes": 1980,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 0.491989623601,
       "-1": 0.242053789731,
@@ -785,6 +839,7 @@
      "roomYear": 21157,
      "netAtOnes": 25203,
      "usageMonthAtOnes": 1980,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 0.486083171527,
       "-1": 0.236276849642,
@@ -798,6 +853,7 @@
      "roomYear": 21664,
      "netAtOnes": 25841,
      "usageMonthAtOnes": 1980,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 0.480384461415,
       "-1": 0.230769230769,
@@ -811,6 +867,7 @@
      "roomYear": 22174,
      "netAtOnes": 26478,
      "usageMonthAtOnes": 1980,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 0.474881594162,
       "-1": 0.225512528474,
@@ -824,6 +881,7 @@
      "roomYear": 22682,
      "netAtOnes": 27114,
      "usageMonthAtOnes": 1980,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.469563603496,
       "-1": 0.220489977728,
@@ -837,6 +895,7 @@
      "roomYear": 23192,
      "netAtOnes": 27752,
      "usageMonthAtOnes": 1980,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.464420364013,
       "-1": 0.21568627451,
@@ -850,6 +909,7 @@
      "roomYear": 23700,
      "netAtOnes": 28389,
      "usageMonthAtOnes": 1980,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.459442510052,
       "-1": 0.211087420043,
@@ -863,6 +923,7 @@
      "roomYear": 24210,
      "netAtOnes": 29025,
      "usageMonthAtOnes": 1980,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.454621363941,
       "-1": 0.206680584551,
@@ -876,6 +937,7 @@
      "roomYear": 24718,
      "netAtOnes": 29662,
      "usageMonthAtOnes": 1980,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.449948872351,
       "-1": 0.20245398773,
@@ -889,6 +951,7 @@
      "roomYear": 25227,
      "netAtOnes": 30300,
      "usageMonthAtOnes": 1980,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.445417549707,
       "-1": 0.198396793587,
@@ -902,6 +965,7 @@
      "roomYear": 25735,
      "netAtOnes": 30936,
      "usageMonthAtOnes": 1980,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.441020427737,
       "-1": 0.194499017682,
@@ -915,6 +979,7 @@
      "roomYear": 26246,
      "netAtOnes": 31573,
      "usageMonthAtOnes": 1980,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.436751010401,
       "-1": 0.190751445087,
@@ -928,6 +993,7 @@
      "roomYear": 26753,
      "netAtOnes": 32211,
      "usageMonthAtOnes": 1980,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.432603233525,
       "-1": 0.187145557656,
@@ -941,6 +1007,7 @@
      "roomYear": 27264,
      "netAtOnes": 32846,
      "usageMonthAtOnes": 1980,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.428571428571,
       "-1": 0.183673469388,
@@ -954,6 +1021,7 @@
      "roomYear": 27772,
      "netAtOnes": 33484,
      "usageMonthAtOnes": 1980,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.424650290065,
       "-1": 0.180327868852,
@@ -967,6 +1035,7 @@
      "roomYear": 28282,
      "netAtOnes": 34122,
      "usageMonthAtOnes": 1980,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.420834846228,
       "-1": 0.1771019678,
@@ -980,6 +1049,7 @@
      "roomYear": 28789,
      "netAtOnes": 34758,
      "usageMonthAtOnes": 1980,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.417120432471,
       "-1": 0.173989455185,
@@ -993,6 +1063,7 @@
      "roomYear": 29299,
      "netAtOnes": 35395,
      "usageMonthAtOnes": 1980,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.413502667414,
       "-1": 0.170984455959,
@@ -1006,6 +1077,7 @@
      "roomYear": 29807,
      "netAtOnes": 36030,
      "usageMonthAtOnes": 1980,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.409977431157,
       "-1": 0.168081494058,
@@ -1019,6 +1091,7 @@
      "roomYear": 30316,
      "netAtOnes": 36668,
      "usageMonthAtOnes": 1980,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.406540845548,
       "-1": 0.165275459098,
@@ -1032,6 +1105,7 @@
      "roomYear": 30825,
      "netAtOnes": 37305,
      "usageMonthAtOnes": 1980,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.403189256249,
       "-1": 0.162561576355,
@@ -1045,6 +1119,7 @@
      "roomYear": 31336,
      "netAtOnes": 37941,
      "usageMonthAtOnes": 1980,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.399919216398,
       "-1": 0.159935379645,
@@ -1058,6 +1133,7 @@
      "roomYear": 31843,
      "netAtOnes": 38579,
      "usageMonthAtOnes": 1980,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.396727471704,
       "-1": 0.157392686804,
@@ -1071,6 +1147,7 @@
      "roomYear": 32353,
      "netAtOnes": 39215,
      "usageMonthAtOnes": 1980,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.39361094683,
       "-1": 0.154929577465,
@@ -1084,6 +1161,7 @@
      "roomYear": 32861,
      "netAtOnes": 39852,
      "usageMonthAtOnes": 1980,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.390566732942,
       "-1": 0.152542372881,
@@ -1097,6 +1175,7 @@
      "roomYear": 33371,
      "netAtOnes": 40490,
      "usageMonthAtOnes": 1980,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.38759207629,
       "-1": 0.150227617602,
@@ -1110,6 +1189,7 @@
      "roomYear": 33878,
      "netAtOnes": 41127,
      "usageMonthAtOnes": 1980,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.384684367736,
       "-1": 0.14798206278,
@@ -1123,6 +1203,7 @@
      "roomYear": 34388,
      "netAtOnes": 41763,
      "usageMonthAtOnes": 1980,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.38184113314,
       "-1": 0.145802650957,
@@ -1136,6 +1217,7 @@
      "roomYear": 34897,
      "netAtOnes": 42400,
      "usageMonthAtOnes": 1980,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.379060024504,
       "-1": 0.143686502177,
@@ -1149,6 +1231,7 @@
      "roomYear": 35406,
      "netAtOnes": 43038,
      "usageMonthAtOnes": 1980,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.376338811827,
       "-1": 0.141630901288,
@@ -1162,6 +1245,7 @@
      "roomYear": 35914,
      "netAtOnes": 43674,
      "usageMonthAtOnes": 1980,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.373675375585,
       "-1": 0.139633286319,
@@ -1175,6 +1259,7 @@
      "roomYear": 36425,
      "netAtOnes": 44310,
      "usageMonthAtOnes": 1980,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.371067699794,
       "-1": 0.13769123783,
@@ -1188,6 +1273,7 @@
      "roomYear": 36932,
      "netAtOnes": 44949,
      "usageMonthAtOnes": 1980,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.368513865595,
       "-1": 0.135802469136,
@@ -1201,6 +1287,7 @@
      "roomYear": 37442,
      "netAtOnes": 45585,
      "usageMonthAtOnes": 1980,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.366012045322,
       "-1": 0.133964817321,
@@ -1214,6 +1301,7 @@
      "roomYear": 37950,
      "netAtOnes": 46222,
      "usageMonthAtOnes": 1980,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.363560497001,
       "-1": 0.13217623498,
@@ -1227,6 +1315,7 @@
      "roomYear": 38461,
      "netAtOnes": 46860,
      "usageMonthAtOnes": 1980,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.361157559257,
       "-1": 0.130434782609,
@@ -1240,6 +1329,7 @@
      "roomYear": 38968,
      "netAtOnes": 47496,
      "usageMonthAtOnes": 1980,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.358801646577,
       "-1": 0.128738621586,
@@ -1253,6 +1343,7 @@
      "roomYear": 39478,
      "netAtOnes": 48132,
      "usageMonthAtOnes": 1980,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.356491244917,
       "-1": 0.127086007702,
@@ -1266,6 +1357,7 @@
      "roomYear": 39986,
      "netAtOnes": 48768,
      "usageMonthAtOnes": 1980,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.35422490761,
       "-1": 0.125475285171,
@@ -1279,6 +1371,7 @@
      "roomYear": 40495,
      "netAtOnes": 49406,
      "usageMonthAtOnes": 1980,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.352001251562,
       "-1": 0.123904881101,
@@ -1292,6 +1385,7 @@
      "roomYear": 41003,
      "netAtOnes": 50043,
      "usageMonthAtOnes": 1980,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.349818953704,
       "-1": 0.122373300371,
@@ -1305,6 +1399,7 @@
      "roomYear": 41514,
      "netAtOnes": 50678,
      "usageMonthAtOnes": 1980,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.347676747683,
       "-1": 0.120879120879,
@@ -1318,6 +1413,7 @@
      "roomYear": 42022,
      "netAtOnes": 51317,
      "usageMonthAtOnes": 1980,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.345573420771,
       "-1": 0.119420989144,
@@ -1331,6 +1427,7 @@
      "roomYear": 42532,
      "netAtOnes": 51954,
      "usageMonthAtOnes": 1980,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.343507810988,
       "-1": 0.11799761621,
@@ -1344,6 +1441,7 @@
      "roomYear": 43040,
      "netAtOnes": 52590,
      "usageMonthAtOnes": 1980,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.341478804396,
       "-1": 0.116607773852,
@@ -1357,6 +1455,7 @@
      "roomYear": 43550,
      "netAtOnes": 53228,
      "usageMonthAtOnes": 1980,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.339485332579,
       "-1": 0.115250291036,
@@ -1370,6 +1469,7 @@
      "roomYear": 44057,
      "netAtOnes": 53865,
      "usageMonthAtOnes": 1980,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.337526370278,
       "-1": 0.113924050633,
@@ -1383,6 +1483,7 @@
      "roomYear": 44567,
      "netAtOnes": 54501,
      "usageMonthAtOnes": 1980,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.335600933175,
       "-1": 0.112627986348,
@@ -1396,6 +1497,7 @@
      "roomYear": 45075,
      "netAtOnes": 55137,
      "usageMonthAtOnes": 1980,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.333708075816,
       "-1": 0.111361079865,
@@ -1446,6 +1548,7 @@
      "roomYear": 288,
      "netAtOnes": -3647,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 6.82316316349,
       "-1": 46.5555555556,
@@ -1459,6 +1562,7 @@
      "roomYear": 799,
      "netAtOnes": -2768,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 4.69602295341,
       "-1": 22.0526315789,
@@ -1472,6 +1576,7 @@
      "roomYear": 1307,
      "netAtOnes": -1888,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 3.80108877324,
       "-1": 14.4482758621,
@@ -1485,6 +1590,7 @@
      "roomYear": 1817,
      "netAtOnes": -1010,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 3.27774156144,
       "-1": 10.7435897436,
@@ -1498,6 +1604,7 @@
      "roomYear": 2325,
      "netAtOnes": -133,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 2.92421278435,
       "-1": 8.55102040816,
@@ -1511,6 +1618,7 @@
      "roomYear": 2835,
      "netAtOnes": 541,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 2.6649005451,
       "-1": 7.10169491525,
@@ -1524,6 +1632,7 @@
      "roomYear": 3342,
      "netAtOnes": 1178,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 2.46423695454,
       "-1": 6.07246376812,
@@ -1537,6 +1646,7 @@
      "roomYear": 3852,
      "netAtOnes": 1814,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 2.30299749638,
       "-1": 5.30379746835,
@@ -1550,6 +1660,7 @@
      "roomYear": 4360,
      "netAtOnes": 2451,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 2.16976154647,
       "-1": 4.70786516854,
@@ -1563,6 +1674,7 @@
      "roomYear": 4869,
      "netAtOnes": 3089,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 2.0572610997,
       "-1": 4.23232323232,
@@ -1576,6 +1688,7 @@
      "roomYear": 5378,
      "netAtOnes": 3725,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 1.9606215079,
       "-1": 3.84403669725,
@@ -1589,6 +1702,7 @@
      "roomYear": 5889,
      "netAtOnes": 4362,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 1.87643502508,
       "-1": 3.52100840336,
@@ -1602,6 +1716,7 @@
      "roomYear": 6396,
      "netAtOnes": 5000,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 1.80223805739,
       "-1": 3.2480620155,
@@ -1615,6 +1730,7 @@
      "roomYear": 6906,
      "netAtOnes": 5636,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 1.7361994382,
       "-1": 3.01438848921,
@@ -1628,6 +1744,7 @@
      "roomYear": 7414,
      "netAtOnes": 6273,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 1.67692591873,
       "-1": 2.81208053691,
@@ -1641,6 +1758,7 @@
      "roomYear": 7924,
      "netAtOnes": 6911,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 1.62333610992,
       "-1": 2.63522012579,
@@ -1654,6 +1772,7 @@
      "roomYear": 8431,
      "netAtOnes": 7547,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 1.57457611465,
       "-1": 2.47928994083,
@@ -1667,6 +1786,7 @@
      "roomYear": 8942,
      "netAtOnes": 8183,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 1.52996147759,
       "-1": 2.34078212291,
@@ -1680,6 +1800,7 @@
      "roomYear": 9450,
      "netAtOnes": 8818,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 1.48893627027,
       "-1": 2.21693121693,
@@ -1693,6 +1814,7 @@
      "roomYear": 9959,
      "netAtOnes": 9458,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 1.45104363759,
       "-1": 2.10552763819,
@@ -1706,6 +1828,7 @@
      "roomYear": 10467,
      "netAtOnes": 10094,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 1.41590419485,
       "-1": 2.004784689,
@@ -1719,6 +1842,7 @@
      "roomYear": 10978,
      "netAtOnes": 10730,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 1.38319991655,
       "-1": 1.91324200913,
@@ -1732,6 +1856,7 @@
      "roomYear": 11485,
      "netAtOnes": 11368,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 1.35266193971,
       "-1": 1.82969432314,
@@ -1745,6 +1870,7 @@
      "roomYear": 11995,
      "netAtOnes": 12005,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 1.32406120527,
       "-1": 1.75313807531,
@@ -1758,6 +1884,7 @@
      "roomYear": 12504,
      "netAtOnes": 12641,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 1.2972011886,
       "-1": 1.68273092369,
@@ -1771,6 +1898,7 @@
      "roomYear": 13014,
      "netAtOnes": 13279,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 1.27191218949,
       "-1": 1.61776061776,
@@ -1784,6 +1912,7 @@
      "roomYear": 13521,
      "netAtOnes": 13916,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 1.24804680114,
       "-1": 1.55762081784,
@@ -1797,6 +1926,7 @@
      "roomYear": 14031,
      "netAtOnes": 14552,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 1.22547628076,
       "-1": 1.5017921147,
@@ -1810,6 +1940,7 @@
      "roomYear": 14539,
      "netAtOnes": 15189,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 1.20408761709,
       "-1": 1.44982698962,
@@ -1823,6 +1954,7 @@
      "roomYear": 15048,
      "netAtOnes": 15827,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 1.18378114221,
       "-1": 1.40133779264,
@@ -1836,6 +1968,7 @@
      "roomYear": 15556,
      "netAtOnes": 16463,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 1.16446857193,
       "-1": 1.35598705502,
@@ -1849,6 +1982,7 @@
      "roomYear": 16068,
      "netAtOnes": 17100,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 1.14607138688,
       "-1": 1.31347962382,
@@ -1862,6 +1996,7 @@
      "roomYear": 16575,
      "netAtOnes": 17738,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 1.12851948632,
       "-1": 1.273556231,
@@ -1875,6 +2010,7 @@
      "roomYear": 17085,
      "netAtOnes": 18374,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 1.1117500621,
       "-1": 1.23598820059,
@@ -1888,6 +2024,7 @@
      "roomYear": 17593,
      "netAtOnes": 19010,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 1.09570665139,
       "-1": 1.2005730659,
@@ -1901,6 +2038,7 @@
      "roomYear": 18103,
      "netAtOnes": 19648,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 1.08033833553,
       "-1": 1.16713091922,
@@ -1914,6 +2052,7 @@
      "roomYear": 18610,
      "netAtOnes": 20284,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 1.06559905922,
       "-1": 1.13550135501,
@@ -1927,6 +2066,7 @@
      "roomYear": 19120,
      "netAtOnes": 20922,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 1.05144704912,
       "-1": 1.1055408971,
@@ -1940,6 +2080,7 @@
      "roomYear": 19628,
      "netAtOnes": 21557,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 1.03784431521,
       "-1": 1.07712082262,
@@ -1953,6 +2094,7 @@
      "roomYear": 20138,
      "netAtOnes": 22195,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 1.02475622139,
       "-1": 1.05012531328,
@@ -1966,6 +2108,7 @@
      "roomYear": 20646,
      "netAtOnes": 22832,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 1.01215111409,
       "-1": 1.02444987775,
@@ -1979,6 +2122,7 @@
      "roomYear": 21157,
      "netAtOnes": 23468,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 1,
       "-1": 1,
@@ -1992,6 +2136,7 @@
      "roomYear": 21664,
      "netAtOnes": 24106,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 0.988276265368,
       "-1": 0.97668997669,
@@ -2005,6 +2150,7 @@
      "roomYear": 22174,
      "netAtOnes": 24743,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 0.976955430631,
       "-1": 0.95444191344,
@@ -2018,6 +2164,7 @@
      "roomYear": 22682,
      "netAtOnes": 25379,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 0.966014935306,
       "-1": 0.933184855234,
@@ -2031,6 +2178,7 @@
      "roomYear": 23192,
      "netAtOnes": 26017,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 0.95543394879,
       "-1": 0.912854030501,
@@ -2044,6 +2192,7 @@
      "roomYear": 23700,
      "netAtOnes": 26654,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 0.945193203476,
       "-1": 0.893390191898,
@@ -2057,6 +2206,7 @@
      "roomYear": 24210,
      "netAtOnes": 27290,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 0.935274847126,
       "-1": 0.874739039666,
@@ -2070,6 +2220,7 @@
      "roomYear": 24718,
      "netAtOnes": 27927,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 0.92566231194,
       "-1": 0.856850715746,
@@ -2083,6 +2234,7 @@
      "roomYear": 25227,
      "netAtOnes": 28565,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 0.916340198135,
       "-1": 0.839679358717,
@@ -2096,6 +2248,7 @@
      "roomYear": 25735,
      "netAtOnes": 29201,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 0.907294170156,
       "-1": 0.823182711198,
@@ -2109,6 +2262,7 @@
      "roomYear": 26246,
      "netAtOnes": 29838,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 0.898510863952,
       "-1": 0.80732177264,
@@ -2122,6 +2276,7 @@
      "roomYear": 26753,
      "netAtOnes": 30476,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 0.889977803933,
       "-1": 0.792060491493,
@@ -2135,6 +2290,7 @@
      "roomYear": 27264,
      "netAtOnes": 31111,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 0.881683328441,
       "-1": 0.777365491651,
@@ -2148,6 +2304,7 @@
      "roomYear": 27772,
      "netAtOnes": 31749,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 0.873616522726,
       "-1": 0.76320582878,
@@ -2161,6 +2318,7 @@
      "roomYear": 28282,
      "netAtOnes": 32387,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 0.865767158541,
       "-1": 0.749552772809,
@@ -2174,6 +2332,7 @@
      "roomYear": 28789,
      "netAtOnes": 33023,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 0.85812563961,
       "-1": 0.736379613357,
@@ -2187,6 +2346,7 @@
      "roomYear": 29299,
      "netAtOnes": 33660,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 0.850682952292,
       "-1": 0.72366148532,
@@ -2200,6 +2360,7 @@
      "roomYear": 29807,
      "netAtOnes": 34295,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 0.843430620872,
       "-1": 0.711375212224,
@@ -2213,6 +2374,7 @@
      "roomYear": 30316,
      "netAtOnes": 34933,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 0.836360666983,
       "-1": 0.699499165275,
@@ -2226,6 +2388,7 @@
      "roomYear": 30825,
      "netAtOnes": 35570,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 0.829465572697,
       "-1": 0.688013136289,
@@ -2239,6 +2402,7 @@
      "roomYear": 31336,
      "netAtOnes": 36206,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 0.822738246917,
       "-1": 0.67689822294,
@@ -2252,6 +2416,7 @@
      "roomYear": 31843,
      "netAtOnes": 36844,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 0.816171994717,
       "-1": 0.66613672496,
@@ -2265,6 +2430,7 @@
      "roomYear": 32353,
      "netAtOnes": 37481,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 0.809760489329,
       "-1": 0.655712050078,
@@ -2278,6 +2444,7 @@
      "roomYear": 32861,
      "netAtOnes": 38117,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 0.803497746518,
       "-1": 0.645608628659,
@@ -2291,6 +2458,7 @@
      "roomYear": 33371,
      "netAtOnes": 38755,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 0.797378101101,
       "-1": 0.635811836115,
@@ -2304,6 +2472,7 @@
      "roomYear": 33878,
      "netAtOnes": 39392,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 0.791396185404,
       "-1": 0.626307922272,
@@ -2317,6 +2486,7 @@
      "roomYear": 34388,
      "netAtOnes": 40028,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 0.785546909472,
       "-1": 0.617083946981,
@@ -2330,6 +2500,7 @@
      "roomYear": 34897,
      "netAtOnes": 40665,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 0.779825442862,
       "-1": 0.608127721335,
@@ -2343,6 +2514,7 @@
      "roomYear": 35406,
      "netAtOnes": 41303,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 0.774227197878,
       "-1": 0.599427753934,
@@ -2356,6 +2528,7 @@
      "roomYear": 35914,
      "netAtOnes": 41939,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 0.768747814106,
       "-1": 0.590973201693,
@@ -2369,6 +2542,7 @@
      "roomYear": 36425,
      "netAtOnes": 42575,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 0.76338314414,
       "-1": 0.582753824757,
@@ -2382,6 +2556,7 @@
      "roomYear": 36932,
      "netAtOnes": 43214,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 0.758129240387,
       "-1": 0.57475994513,
@@ -2395,6 +2570,7 @@
      "roomYear": 37442,
      "netAtOnes": 43850,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 0.752982342861,
       "-1": 0.56698240866,
@@ -2408,6 +2584,7 @@
      "roomYear": 37950,
      "netAtOnes": 44487,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 0.747938867867,
       "-1": 0.559412550067,
@@ -2421,6 +2598,7 @@
      "roomYear": 38461,
      "netAtOnes": 45125,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 0.742995397521,
       "-1": 0.552042160738,
@@ -2434,6 +2612,7 @@
      "roomYear": 38968,
      "netAtOnes": 45761,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 0.73814867001,
       "-1": 0.544863459038,
@@ -2447,6 +2626,7 @@
      "roomYear": 39478,
      "netAtOnes": 46397,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 0.733395570549,
       "-1": 0.537869062901,
@@ -2460,6 +2640,7 @@
      "roomYear": 39986,
      "netAtOnes": 47033,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 0.728733122969,
       "-1": 0.531051964512,
@@ -2473,6 +2654,7 @@
      "roomYear": 40495,
      "netAtOnes": 47671,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 0.724158481883,
       "-1": 0.524405506884,
@@ -2486,6 +2668,7 @@
      "roomYear": 41003,
      "netAtOnes": 48308,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 0.719668925392,
       "-1": 0.517923362176,
@@ -2499,6 +2682,7 @@
      "roomYear": 41514,
      "netAtOnes": 48944,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 0.715261848276,
       "-1": 0.5115995116,
@@ -2512,6 +2696,7 @@
      "roomYear": 42022,
      "netAtOnes": 49582,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 0.710934755642,
       "-1": 0.505428226779,
@@ -2525,6 +2710,7 @@
      "roomYear": 42532,
      "netAtOnes": 50219,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 0.706685256987,
       "-1": 0.499404052443,
@@ -2538,6 +2724,7 @@
      "roomYear": 43040,
      "netAtOnes": 50855,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 0.702511060654,
       "-1": 0.493521790342,
@@ -2551,6 +2738,7 @@
      "roomYear": 43550,
      "netAtOnes": 51493,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 0.698409968632,
       "-1": 0.487776484284,
@@ -2564,6 +2752,7 @@
      "roomYear": 44057,
      "netAtOnes": 52130,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 0.694379871694,
       "-1": 0.482163406214,
@@ -2577,6 +2766,7 @@
      "roomYear": 44567,
      "netAtOnes": 52766,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 0.690418744843,
       "-1": 0.476678043231,
@@ -2590,6 +2780,7 @@
      "roomYear": 45075,
      "netAtOnes": 53402,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 0.686524643031,
       "-1": 0.471316085489,
@@ -2603,6 +2794,7 @@
      "roomYear": 45585,
      "netAtOnes": 54040,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 0.682695697149,
       "-1": 0.466073414905,
@@ -2616,6 +2808,7 @@
      "roomYear": 46093,
      "netAtOnes": 54677,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 0.678930110254,
       "-1": 0.460946094609,
@@ -2629,6 +2822,7 @@
      "roomYear": 46604,
      "netAtOnes": 55314,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 0.67522615403,
       "-1": 0.455930359086,
@@ -2642,6 +2836,7 @@
      "roomYear": 47111,
      "netAtOnes": 55952,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 0.671582165451,
       "-1": 0.451022604952,
@@ -2655,6 +2850,7 @@
      "roomYear": 47621,
      "netAtOnes": 56588,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 0.667996543645,
       "-1": 0.446219382322,
@@ -2668,6 +2864,7 @@
      "roomYear": 48129,
      "netAtOnes": 57224,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 0.66446774694,
       "-1": 0.441517386723,
@@ -2681,6 +2878,7 @@
      "roomYear": 48639,
      "netAtOnes": 57863,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 0.660994290075,
       "-1": 0.436913451512,
@@ -2694,6 +2892,7 @@
      "roomYear": 49146,
      "netAtOnes": 58499,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 0.65757474158,
       "-1": 0.432404540764,
@@ -2707,6 +2906,7 @@
      "roomYear": 49657,
      "netAtOnes": 59136,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": false,
      "demand": {
       "-0.5": 0.654207721289,
       "-1": 0.427987742594,
@@ -2720,6 +2920,7 @@
      "roomYear": 50165,
      "netAtOnes": 59771,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.650891898008,
       "-1": 0.423660262892,
@@ -2733,6 +2934,7 @@
      "roomYear": 50674,
      "netAtOnes": 60409,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.647625987295,
       "-1": 0.419419419419,
@@ -2746,6 +2948,7 @@
      "roomYear": 51182,
      "netAtOnes": 61045,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.644408749377,
       "-1": 0.415262636274,
@@ -2759,6 +2962,7 @@
      "roomYear": 51693,
      "netAtOnes": 61683,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.641238987169,
       "-1": 0.411187438665,
@@ -2772,6 +2976,7 @@
      "roomYear": 52200,
      "netAtOnes": 62321,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.638115544402,
       "-1": 0.407191448008,
@@ -2785,6 +2990,7 @@
      "roomYear": 52710,
      "netAtOnes": 62957,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.635037303854,
       "-1": 0.403272377286,
@@ -2798,6 +3004,7 @@
      "roomYear": 53219,
      "netAtOnes": 63593,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.632003185666,
       "-1": 0.399428026692,
@@ -2811,6 +3018,7 @@
      "roomYear": 53729,
      "netAtOnes": 64231,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.629012145756,
       "-1": 0.395656279509,
@@ -2824,6 +3032,7 @@
      "roomYear": 54236,
      "netAtOnes": 64867,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.626063174306,
       "-1": 0.391955098223,
@@ -2837,6 +3046,7 @@
      "roomYear": 54746,
      "netAtOnes": 65504,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.623155294331,
       "-1": 0.388322520853,
@@ -2850,6 +3060,7 @@
      "roomYear": 55254,
      "netAtOnes": 66141,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.620287560317,
       "-1": 0.384756657484,
@@ -2863,6 +3074,7 @@
      "roomYear": 55763,
      "netAtOnes": 66779,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.617459056933,
       "-1": 0.381255686988,
@@ -2876,6 +3088,7 @@
      "roomYear": 56271,
      "netAtOnes": 67415,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.6146688978,
       "-1": 0.377817853922,
@@ -2889,6 +3102,7 @@
      "roomYear": 56783,
      "netAtOnes": 68052,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.611916224327,
       "-1": 0.374441465594,
@@ -2902,6 +3116,7 @@
      "roomYear": 57290,
      "netAtOnes": 68690,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.609200204598,
       "-1": 0.371124889283,
@@ -2915,6 +3130,7 @@
      "roomYear": 57800,
      "netAtOnes": 69326,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.60652003232,
       "-1": 0.367866549605,
@@ -2928,6 +3144,7 @@
      "roomYear": 58308,
      "netAtOnes": 69963,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.60387492581,
       "-1": 0.364664926023,
@@ -2941,6 +3158,7 @@
      "roomYear": 58818,
      "netAtOnes": 70601,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.601264127048,
       "-1": 0.361518550475,
@@ -2954,6 +3172,7 @@
      "roomYear": 59325,
      "netAtOnes": 71237,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.598686900752,
       "-1": 0.358426005133,
@@ -2967,6 +3186,7 @@
      "roomYear": 59835,
      "netAtOnes": 71873,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.59614253352,
       "-1": 0.355385920271,
@@ -2980,6 +3200,7 @@
      "roomYear": 60344,
      "netAtOnes": 72508,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.59363033299,
       "-1": 0.352396972246,
@@ -2993,6 +3214,7 @@
      "roomYear": 60853,
      "netAtOnes": 73148,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.591149627056,
       "-1": 0.349457881568,
@@ -3006,6 +3228,7 @@
      "roomYear": 61361,
      "netAtOnes": 73784,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.588699763108,
       "-1": 0.346567411084,
@@ -3019,6 +3242,7 @@
      "roomYear": 61872,
      "netAtOnes": 74420,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.586280107315,
       "-1": 0.343724364233,
@@ -3032,6 +3256,7 @@
      "roomYear": 62379,
      "netAtOnes": 75058,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.58389004393,
       "-1": 0.340927583401,
@@ -3045,6 +3270,7 @@
      "roomYear": 62889,
      "netAtOnes": 75695,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.58152897464,
       "-1": 0.338175948345,
@@ -3058,6 +3284,7 @@
      "roomYear": 63397,
      "netAtOnes": 76330,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.579196317927,
       "-1": 0.3354683747,
@@ -3071,6 +3298,7 @@
      "roomYear": 63907,
      "netAtOnes": 76969,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.576891508474,
       "-1": 0.33280381255,
@@ -3084,6 +3312,7 @@
      "roomYear": 64415,
      "netAtOnes": 77606,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.574613996588,
       "-1": 0.330181245075,
@@ -3097,6 +3326,7 @@
      "roomYear": 64925,
      "netAtOnes": 78242,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.572363247646,
       "-1": 0.327599687256,
@@ -3110,6 +3340,7 @@
      "roomYear": 65433,
      "netAtOnes": 78879,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.57013874157,
       "-1": 0.325058184639,
@@ -3123,6 +3354,7 @@
      "roomYear": 65942,
      "netAtOnes": 79517,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.567939972324,
       "-1": 0.322555812163,
@@ -3136,6 +3368,7 @@
      "roomYear": 66450,
      "netAtOnes": 80153,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.565766447426,
       "-1": 0.320091673033,
@@ -3149,6 +3382,7 @@
      "roomYear": 66961,
      "netAtOnes": 80790,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.563617687488,
       "-1": 0.31766489765,
@@ -3162,6 +3396,7 @@
      "roomYear": 67468,
      "netAtOnes": 81428,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.561493225773,
       "-1": 0.315274642588,
@@ -3175,6 +3410,7 @@
      "roomYear": 67979,
      "netAtOnes": 82064,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.559392607762,
       "-1": 0.312920089619,
@@ -3188,6 +3424,7 @@
      "roomYear": 68487,
      "netAtOnes": 82700,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.557315390756,
       "-1": 0.310600444774,
@@ -3201,6 +3438,7 @@
      "roomYear": 68997,
      "netAtOnes": 83338,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.555261143476,
       "-1": 0.308314937454,
@@ -3214,6 +3452,7 @@
      "roomYear": 69504,
      "netAtOnes": 83974,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.553229445688,
       "-1": 0.306062819576,
@@ -3227,6 +3466,7 @@
      "roomYear": 70014,
      "netAtOnes": 84612,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.551219887846,
       "-1": 0.303843364757,
@@ -3240,6 +3480,7 @@
      "roomYear": 70522,
      "netAtOnes": 85247,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.549232070741,
       "-1": 0.301655867531,
@@ -3253,6 +3494,7 @@
      "roomYear": 71031,
      "netAtOnes": 85885,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.54726560517,
       "-1": 0.299499642602,
@@ -3266,6 +3508,7 @@
      "roomYear": 71540,
      "netAtOnes": 86522,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.545320111614,
       "-1": 0.297374024131,
@@ -3279,6 +3522,7 @@
      "roomYear": 72051,
      "netAtOnes": 87158,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.543395219933,
       "-1": 0.295278365046,
@@ -3292,6 +3536,7 @@
      "roomYear": 72558,
      "netAtOnes": 87796,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.541490569068,
       "-1": 0.293212036389,
@@ -3305,6 +3550,7 @@
      "roomYear": 73068,
      "netAtOnes": 88433,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.539605806756,
       "-1": 0.291174426685,
@@ -3318,6 +3564,7 @@
      "roomYear": 73576,
      "netAtOnes": 89069,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.537740589261,
       "-1": 0.289164941339,
@@ -3331,6 +3578,7 @@
      "roomYear": 74086,
      "netAtOnes": 89707,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.535894581104,
       "-1": 0.287183002056,
@@ -3344,6 +3592,7 @@
      "roomYear": 74593,
      "netAtOnes": 90344,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.534067454813,
       "-1": 0.28522804629,
@@ -3357,6 +3606,7 @@
      "roomYear": 75104,
      "netAtOnes": 90980,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.532258890679,
       "-1": 0.283299526707,
@@ -3370,6 +3620,7 @@
      "roomYear": 75612,
      "netAtOnes": 91617,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.530468576523,
       "-1": 0.281396910678,
@@ -3383,6 +3634,7 @@
      "roomYear": 76121,
      "netAtOnes": 92255,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.528696207464,
       "-1": 0.279519679787,
@@ -3396,6 +3648,7 @@
      "roomYear": 76629,
      "netAtOnes": 92891,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.526941485705,
       "-1": 0.277667329357,
@@ -3409,6 +3662,7 @@
      "roomYear": 77140,
      "netAtOnes": 93527,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.525204120324,
       "-1": 0.275839368005,
@@ -3422,6 +3676,7 @@
      "roomYear": 77647,
      "netAtOnes": 94165,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.523483827067,
       "-1": 0.274035317201,
@@ -3435,6 +3690,7 @@
      "roomYear": 78157,
      "netAtOnes": 94801,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.521780328157,
       "-1": 0.272254710851,
@@ -3448,6 +3704,7 @@
      "roomYear": 78665,
      "netAtOnes": 95439,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.520093352101,
       "-1": 0.2704970949,
@@ -3461,6 +3718,7 @@
      "roomYear": 79176,
      "netAtOnes": 96077,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.518422633515,
       "-1": 0.26876202694,
@@ -3474,6 +3732,7 @@
      "roomYear": 79683,
      "netAtOnes": 96713,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.51676791294,
       "-1": 0.267049075844,
@@ -3487,6 +3746,7 @@
      "roomYear": 80193,
      "netAtOnes": 97350,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.515128936681,
       "-1": 0.265357821406,
@@ -3500,6 +3760,7 @@
      "roomYear": 80701,
      "netAtOnes": 97985,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.513505456637,
       "-1": 0.263687853996,
@@ -3513,6 +3774,7 @@
      "roomYear": 81210,
      "netAtOnes": 98623,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.511897230149,
       "-1": 0.262038774234,
@@ -3526,6 +3788,7 @@
      "roomYear": 81718,
      "netAtOnes": 99260,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.510304019841,
       "-1": 0.260410192666,
@@ -3539,6 +3802,7 @@
      "roomYear": 82229,
      "netAtOnes": 99896,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.508725593481,
       "-1": 0.258801729463,
@@ -3552,6 +3816,7 @@
      "roomYear": 82737,
      "netAtOnes": 100534,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.507161723831,
       "-1": 0.257213014119,
@@ -3565,6 +3830,7 @@
      "roomYear": 83247,
      "netAtOnes": 101170,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.505612188514,
       "-1": 0.255643685174,
@@ -3578,6 +3844,7 @@
      "roomYear": 83755,
      "netAtOnes": 101807,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.504076769881,
       "-1": 0.254093389933,
@@ -3591,6 +3858,7 @@
      "roomYear": 84265,
      "netAtOnes": 102445,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.50255525488,
       "-1": 0.252561784207,
@@ -3604,6 +3872,7 @@
      "roomYear": 84772,
      "netAtOnes": 103082,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.501047434935,
       "-1": 0.251048532055,
@@ -3617,6 +3886,7 @@
      "roomYear": 85282,
      "netAtOnes": 103718,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.499553105825,
       "-1": 0.249553305539,
@@ -3630,6 +3900,7 @@
      "roomYear": 85790,
      "netAtOnes": 104355,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.498072067564,
       "-1": 0.248075784488,
@@ -3643,6 +3914,7 @@
      "roomYear": 86300,
      "netAtOnes": 104993,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.496604124297,
       "-1": 0.246615656268,
@@ -3656,6 +3928,7 @@
      "roomYear": 86808,
      "netAtOnes": 105628,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.49514908418,
       "-1": 0.245172615565,
@@ -3669,6 +3942,7 @@
      "roomYear": 87319,
      "netAtOnes": 106265,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.493706759287,
       "-1": 0.243746364165,
@@ -3682,6 +3956,7 @@
      "roomYear": 87826,
      "netAtOnes": 106904,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.492276965496,
       "-1": 0.242336610758,
@@ -3695,6 +3970,7 @@
      "roomYear": 88336,
      "netAtOnes": 107540,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.4908595224,
       "-1": 0.24094307073,
@@ -3708,6 +3984,7 @@
      "roomYear": 88844,
      "netAtOnes": 108177,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.489454253205,
       "-1": 0.239565465981,
@@ -3721,6 +3998,7 @@
      "roomYear": 89354,
      "netAtOnes": 108815,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.488060984642,
       "-1": 0.23820352473,
@@ -3734,6 +4012,7 @@
      "roomYear": 89862,
      "netAtOnes": 109451,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.486679546874,
       "-1": 0.236856981345,
@@ -3747,6 +4026,7 @@
      "roomYear": 90372,
      "netAtOnes": 110087,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.485309773409,
       "-1": 0.235525576166,
@@ -3760,6 +4040,7 @@
      "roomYear": 90880,
      "netAtOnes": 110723,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.483951501019,
       "-1": 0.234209055338,
@@ -3773,6 +4054,7 @@
      "roomYear": 91389,
      "netAtOnes": 111361,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.482604569653,
       "-1": 0.23290717065,
@@ -3786,6 +4068,7 @@
      "roomYear": 91897,
      "netAtOnes": 111998,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.481268822365,
       "-1": 0.231619679381,
@@ -3799,6 +4082,7 @@
      "roomYear": 92408,
      "netAtOnes": 112633,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.47994410523,
       "-1": 0.230346344145,
@@ -3812,6 +4096,7 @@
      "roomYear": 92915,
      "netAtOnes": 113272,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.478630267273,
       "-1": 0.22908693275,
@@ -3825,6 +4110,7 @@
      "roomYear": 93425,
      "netAtOnes": 113909,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.477327160398,
       "-1": 0.227841218053,
@@ -3838,6 +4124,7 @@
      "roomYear": 93934,
      "netAtOnes": 114545,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.476034639313,
       "-1": 0.226608977826,
@@ -3851,6 +4138,7 @@
      "roomYear": 94444,
      "netAtOnes": 115183,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.474752561468,
       "-1": 0.225389994621,
@@ -3864,6 +4152,7 @@
      "roomYear": 94951,
      "netAtOnes": 115820,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.473480786986,
       "-1": 0.224184055645,
@@ -3877,6 +4166,7 @@
      "roomYear": 95461,
      "netAtOnes": 116456,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.472219178597,
       "-1": 0.222990952634,
@@ -3890,6 +4180,7 @@
      "roomYear": 95969,
      "netAtOnes": 117092,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.470967601578,
       "-1": 0.221810481736,
@@ -3903,6 +4194,7 @@
      "roomYear": 96478,
      "netAtOnes": 117730,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.469725923695,
       "-1": 0.220642443391,
@@ -3916,6 +4208,7 @@
      "roomYear": 96986,
      "netAtOnes": 118367,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.468494015139,
       "-1": 0.219486642221,
@@ -3929,6 +4222,7 @@
      "roomYear": 97498,
      "netAtOnes": 119004,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.467271748472,
       "-1": 0.21834288692,
@@ -3942,6 +4236,7 @@
      "roomYear": 98005,
      "netAtOnes": 119642,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.466058998572,
       "-1": 0.21721099015,
@@ -3955,6 +4250,7 @@
      "roomYear": 98515,
      "netAtOnes": 120278,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.464855642579,
       "-1": 0.216090768437,
@@ -3968,6 +4264,7 @@
      "roomYear": 99023,
      "netAtOnes": 120914,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.46366155984,
       "-1": 0.214982042073,
@@ -3981,6 +4278,7 @@
      "roomYear": 99533,
      "netAtOnes": 121553,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.462476631861,
       "-1": 0.213884635018,
@@ -3994,6 +4292,7 @@
      "roomYear": 100040,
      "netAtOnes": 122189,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.46130074226,
       "-1": 0.21279837481,
@@ -4007,6 +4306,7 @@
      "roomYear": 100550,
      "netAtOnes": 122825,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.460133776712,
       "-1": 0.211723092471,
@@ -4020,6 +4320,7 @@
      "roomYear": 101059,
      "netAtOnes": 123460,
      "usageMonthAtOnes": 4373,
+     "exactKeepsAtOnes": true,
      "demand": {
       "-0.5": 0.458975622908,
       "-1": 0.210658622423,

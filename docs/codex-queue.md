@@ -14742,3 +14742,5 @@ Coleta d0998f08/job123397355011 concluída: solver real deduz5¢ em cada interva
 
 
 Head a3e6eae6/job123400901093: input/doc/reserva conferem, mas A(-1.5)/Store escolheu79 contra69 na busca exata. A fixa todos os shares em1; aproximar sua viabilidade com reserva linear5¢ exclui uma opção que passa no cálculo exato. Correção do modelo: exportar por opção exactKeepsAtOnes calculado pelo mesmo keeps de ambos os intervalos; no solver A, opção inviável tem teto0 e objetivo usa netAtOnes exato, shares continuam1 e ordenação entre planos permanece. C mantém reserva conservadora5¢ e restrições lineares. Não alterar comparação com busca exaustiva ou verificações exatas60%. Regenerar outputs reais e executar suíte completa.
+
+Coleta93c0431/job123404389190 concluída; input contém os booleanos exatos por opção e8soluções ótimas foram geradas pelo solver corrigido. Os testes anteriores à geração rejeitaram corretamente input/output antigos. Cinco arquivos exatos atualizados, workflow temporário removido e original restaurado; validação completa do novo head ainda obrigatória. Nenhuma reexecução isolada ou alteração dos testes de busca exata/margem.
