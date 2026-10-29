@@ -695,6 +695,7 @@ export function fundedRestartSourceMatches(intent: OwnedRestartIntent, current: 
         ![Object.prototype, null].includes(Object.getPrototypeOf(current))) return false;
     const owned = JSON.parse(encoded) as OwnedRestartIntent;
     const paused = JSON.parse(owned.paused) as { customer?: unknown; tier?: unknown };
+    if (typeof paused.customer !== "string" || typeof paused.tier !== "string") return false;
     const names = ["handle", "statsId", "subscriptionId", "stripeCustomerId", "subscriptionActive", "tier", "cycle", "email", "sid", "extra"] as const;
     const descriptors = Object.getOwnPropertyDescriptors(current);
     const value: Record<string, unknown> = {};
