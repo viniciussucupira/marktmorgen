@@ -1,3 +1,7 @@
+import { readFileSync, readdirSync } from "node:fs";
+import { join } from "node:path";
+import { MIN_SALES, REFUND_DAYS, FALSE_WINNER } from "@/lib/headline-test-rules";
+import { PAGE_TEST_WORDS, PAGE_TEST_PAID_WORDS, PAGE_TEST_FREE_WORDS, PAGE_TEST_RUNNING_WORDS, PAGE_TEST_FALSE_WINNER_WORDS } from "@/lib/headline-test-words";
 /**
  * A/B test of a sales page's headline (lib/headline-test.ts). What is checked:
  * a group always sees the same version of a test, and the halves are near
@@ -41,6 +45,34 @@ async function main(): Promise<void> {
   await count("stats1", "prod1", "t1", "c", "b");
   const added = await readCounts("stats1", "prod1", "t1");
   is("adds up per version, and keeps when it was first seen", [{ va: added.va, vb: added.vb, ca: added.ca, cb: added.cb }, (added.t0 ?? 0) > 0], [{ va: 2, vb: 0, ca: 0, cb: 1 }, true]);
+
+  part("Public page test words follow the actual decision, not displayed chance");
+  is("paid minimum views comes from the rules",PAGE_TEST_PAID_WORDS.includes(`${MIN_VIEWS} views`),true);
+  is("paid minimum sales comes from the rules",PAGE_TEST_PAID_WORDS.includes(`${MIN_SALES} paid sales`),true);
+  is("refund waiting time comes from the rules",PAGE_TEST_PAID_WORDS.includes(`${REFUND_DAYS} days`),true);
+  is("whole-test false winner figure comes from the rules",PAGE_TEST_FALSE_WINNER_WORDS.includes(`${FALSE_WINNER*100}%`),true);
+  is("paid criterion is money from actual paid sales",PAGE_TEST_PAID_WORDS.includes("more money per visitor")&&PAGE_TEST_PAID_WORDS.includes("sales paid on your own Stripe account"),true);
+  is("free criterion remains sign-ups",PAGE_TEST_FREE_WORDS.includes("more sign-ups"),true);
+  is("still running and display-only chance are explained",PAGE_TEST_RUNNING_WORDS.includes("no winner yet")&&PAGE_TEST_RUNNING_WORDS.includes("not the rule"),true);
+  is("the full explanation retains all conditions",PAGE_TEST_WORDS,[PAGE_TEST_PAID_WORDS,PAGE_TEST_FREE_WORDS,PAGE_TEST_RUNNING_WORDS,PAGE_TEST_FALSE_WINNER_WORDS].join(" "));
+  for(const [path,minimum] of [["lib/feature-pages.ts",3],["lib/help-content.ts",1]] as const){
+    const source=readFileSync(path,"utf8");
+    is("public consumer uses shared constant-derived explanation "+path,(source.match(/\+ PAGE_TEST_WORDS/g)??[]).length>=minimum,true);
+  }
+  const stale:string[]=[];
+  function scanPublic(dir:string):void{
+    for(const entry of readdirSync(dir,{withFileTypes:true})){
+      const path=join(dir,entry.name);
+      if(entry.isDirectory())scanPublic(path);
+      else if(/\.(?:ts|tsx|mdx)$/.test(entry.name)){
+        const source=readFileSync(path,"utf8").replace(/\/\*[\s\S]*?\*\//g,"").replace(/^\s*\/\/.*$/gm,"");
+        if(/97\.5%|95% confidence|by checkouts opened|one that brings more of them to the checkout|once one brings clearly more of them to the checkout/i.test(source))stale.push(path);
+      }
+    }
+  }
+  for(const dir of ["app","lib","components"])scanPublic(dir);
+  is("site, help, blog, comparisons and email sources do not restore old winner copy",stale,[]);
+
   done();
 }
 

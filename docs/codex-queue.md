@@ -16176,3 +16176,15 @@ Margem (regra MR vigente, 27/10/2026, 07h42): nenhum cliente pagante, isoladamen
 Proibido: deixar alunos grátis consumirem as horas de vídeo garantidas a quem paga; abrir curso sem e-mail confirmado; pôr alguém na lista sem a caixa marcada; aumentar limites visíveis ou criar uso sem teto; mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; enviar e-mail real em testes; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
 
 Aplicar a regra VR.
+
+
+### AB(a) — limites do ACK de seleção de pausas antes de percorrer os membros (29/10/2026)
+
+Implementação concreta do worker: checa cardinalidade e tamanho antes de serializar/percorrer resposta, no máximo200descritores/1280bytes por referência; recusa ACK201membros sem visitar membro algum, ASCII/UTF8excedido,duplicata,buraco e shapeextra antes de qualquerIOposterior. Não altera Lua/limites/flags/preços/coberturas/cash nem envia aviso. Testes sintéticos do worker mantêm caminhos válidos e exigem0IOposterior/0getters; suíte integral do novohead pendente. Custos/tetos/limites da prova em docs/pause-due-ack-bound.md; desconhecido continua reprovado,não zero.
+
+Prova1212carregada nesta alteração real: merge2cd4fbda3b5880658db7bc88ab20c49089b32060,29/10/2026 às15:57:09Fortaleza,head26857b7b6af9ae9e2cf797772d94d2de9a2aa9f0,tree d330d1d0efaa3f6a19eb336f34aae16b6396968a,39/39+Vercel,READYdpl_AKUhYUYi7yBFqWrhiDuCbAgyFsGB/7aliases/5HTMLexatos verificados. Mobile9cold1088ms/CLS0/interação152/0writes;NVDA/VoiceOver2headingscada0writes/foreign,escopo limitado. Contador254semprovainterativa;Chromebloqueadosemretentativa. Registros1213/1214/1215são fila,sem implementação dos respectivos recursos. Histórico e ordens intactos.
+
+
+### União verificável — correção538AB1 e ACK limitado do worker (29/10/2026)
+
+As alterações reais dosPRs1216/1217 foram reunidas com main946fb1a, preservando integralmente os pedidos539AR1/complemento,540CU1 e541FC4 incorporados1218–1220. Fonte/teste do worker e fonte/teste público não se sobrepõem. O teste instrumental do1216foi corrigido por inspeção: chave numérica validada sem regexescapada e autoprova positiva; nenhuma asserção enfraquecida. Head1217d340c9e7teve39/39+Vercel,verify123677845359234/234Everythingpassing19:26:23UTC/mobile9cold1136/CLS0/interação120. Head1216corrigido9419ba21teveverify123679131578234/234Everythingpassing19:29:36UTC/mobile9cold964/CLS0/interação96,últimoWebKit ainda rodando na união. Essas provas individuais não substituem a suíte COMPLETA da nova árvore combinada; incorporação/publicação/estadofinal538pendentes. Regras estatísticas/coberturas/flags/preços/direitos econtador254 intactos. Sem nova operação externa,serviço ou custo presumidozero. Históricopreservado.
