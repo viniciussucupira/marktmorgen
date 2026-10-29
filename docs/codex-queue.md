@@ -9359,6 +9359,9 @@ Estado: na fila.F56reusarlib/clickfunnels-page.ts/importatual:converterautomaç�
 
 395. [CX6] Chat ao vivo com o comprador.
 
+- Decisão vigente: **Reaberto por decisão do dono em 28/10/2026, 23h22 (LQ12)**. Estado retomado: **na fila**, com o mesmo número, texto, escopo e posição anteriores aLQ7, na ordemAV1 **depois da abertura**. O cancelamento LQ7 abaixo permanece somente histórico. Continuam obrigatórios custo com teto automático/reserva antes de cada gasto, privacidade e consentimento de cada membro, regras próprias do item e MR/TX/FX275. Este registro não implementa nem ativa o recurso.
+
+
 - Decisão vigente em 28/10/2026, complemento LQ7 do dono às20h38: **Cancelado por decisão do dono em 28/10/2026 (LQ7); não executar**. Cancelado por decisão do dono em 28/10/2026 (LQ7); não executar. Texto integral e estado anterior lidos; cancelamento vale para o trabalho futuro deste item, sem apagar código, conteúdo, histórico ou provas existentes. Não cancelar recursos de outros itens por semelhança. Texto, estado e provas anteriores abaixo permanecem históricos nos pontos incompatíveis; nenhuma implementação ou operação externa autorizada por este registro.
 
 
@@ -9397,6 +9400,9 @@ PagamentoafiliadoPELOPRÓPRIOCRIADOR,noPayPalouWiseDELEconformepedidoeimplementa
 MembrovirarafiliadoumcliqueSÓsecriadorpermitir eprópriomembroescolher,semadesãopadrãoouenvioconvitesautomáticos;aceiteinformadotaxa/prazo/taxformsobrigatórios,controlesselfreferral/fraude/consentimento. Diretório/páginasexpõemrecorrênciaEXATA/truthstate/semganhoprometido/ordempaga,reusardiretórioatual/nãorecriarprogramadeconvitesentrecriadores.
 
 398. [SL2] Mapa dos membros.
+
+- Decisão vigente: **Reaberto por decisão do dono em 28/10/2026, 23h22 (LQ12)**. Estado retomado: **na fila**, com o mesmo número, texto, escopo e posição anteriores aLQ7, na ordemAV1 **depois da abertura**. O cancelamento LQ7 abaixo permanece somente histórico. Continuam obrigatórios custo com teto automático/reserva antes de cada gasto, privacidade e consentimento de cada membro, regras próprias do item e MR/TX/FX275. Este registro não implementa nem ativa o recurso.
+
 
 - Decisão vigente em 28/10/2026, complemento LQ7 do dono às20h38: **Cancelado por decisão do dono em 28/10/2026 (LQ7); não executar**. Cancelado por decisão do dono em 28/10/2026 (LQ7); não executar. Texto integral e estado anterior lidos; cancelamento vale para o trabalho futuro deste item, sem apagar código, conteúdo, histórico ou provas existentes. Não cancelar recursos de outros itens por semelhança. Texto, estado e provas anteriores abaixo permanecem históricos nos pontos incompatíveis; nenhuma implementação ou operação externa autorizada por este registro.
 
@@ -13449,8 +13455,8 @@ As decisões LQ1/LQ3 abaixo foram aplicadas documentalmente neste PR; LQ2 contin
 | 392 | mantido | Conciliação e atribuição por funil/afiliado; diferente do detalhamento de taxas 282 e das fontes externas manuais 426. |
 | 393 | mantido | Preço fixo de produto do criador por país, distinto de moedas/idioma22,planosMM31 eFXautomático208;reusarsó mecanismo comum. |
 | 394 | mantido | ConversãoClickFunnels deautomações/imagens é distinta de cursos/posts/listas120/260; reutilizar infraestrutura/segurança semunirpedido. |
-| 395 | cancelado | Cancelado por decisão do dono em 28/10/2026 (LQ7); não executar. Texto integral e estado anterior lidos; cancelamento vale para o trabalho futuro deste item, sem apagar código, conteúdo, histórico ou provas existentes. Não cancelar recursos de outros itens por semelhança. |
-| 398 | cancelado | Cancelado por decisão do dono em 28/10/2026 (LQ7); não executar. Texto integral e estado anterior lidos; cancelamento vale para o trabalho futuro deste item, sem apagar código, conteúdo, histórico ou provas existentes. Não cancelar recursos de outros itens por semelhança. |
+| 395 | reaberto | Reaberto por decisão do dono em 28/10/2026, 23h22 (LQ12). Estado original: na fila; mesmo escopo/posição, depois da abertura na ordemAV1; teto automático/reserva antes do gasto, privacidade/consentimento individuais e MR/TX/FX275 preservados. Histórico da decisão anterior: Cancelado por decisão do dono em 28/10/2026 (LQ7); não executar. Texto integral e estado anterior lidos; cancelamento vale para o trabalho futuro deste item, sem apagar código, conteúdo, histórico ou provas existentes. Não cancelar recursos de outros itens por semelhança. |
+| 398 | reaberto | Reaberto por decisão do dono em 28/10/2026, 23h22 (LQ12). Estado original: na fila; mesmo escopo/posição, depois da abertura na ordemAV1; teto automático/reserva antes do gasto, privacidade/consentimento individuais e MR/TX/FX275 preservados. Histórico da decisão anterior: Cancelado por decisão do dono em 28/10/2026 (LQ7); não executar. Texto integral e estado anterior lidos; cancelamento vale para o trabalho futuro deste item, sem apagar código, conteúdo, histórico ou provas existentes. Não cancelar recursos de outros itens por semelhança. |
 | 402 | cancelado | Cancelado por decisão do dono em 28/10/2026 (LQ7); não executar. Texto integral e estado anterior lidos; cancelamento vale para o trabalho futuro deste item, sem apagar código, conteúdo, histórico ou provas existentes. Não cancelar recursos de outros itens por semelhança. |
 | 403 | absorvido | Mesmo complemento pago de conteúdo social; diferenças do lifecycle/limites/fatos/preço condicionado/custeio incorporadasno21,sem publicar redes. |
 | 404 | cancelado | Cancelado por decisão do dono em 28/10/2026 (LQ7); não executar. Texto integral e estado anterior lidos; cancelamento vale para o trabalho futuro deste item, sem apagar código, conteúdo, histórico ou provas existentes. Não cancelar recursos de outros itens por semelhança. |
@@ -13611,3 +13617,16 @@ Verify123206607462:quatrocasos do caminho runBreaks confirmados01:29:11UTC e Eve
 Resultado concreto: retorno nulo ouexceção do escritor após resposta do provedor não removem pausa/não anunciam reinício;exceção não cai nolimitede3diaslegado. No caminho bem-sucedido,0comandos/0bytespersistidos incrementais nos6contratosmensal/anual,semchaveTTLserviçonovo;obrigaçõesretidas/retentativas/retenção/custointegral desconhecidosreprovadosMR/TX/FX275. NãocompletaCASgeraçõesfinanciado/AB(a),nãoautorizaoutracobrança,policiesNULL/flagsfalse/preços/direitos/comissãopreservados. Contador254,sem entrega255porfaltaprova interativaautorizada.
 
 Prova acompanha implementação real1187,semPRexclusivodedocumentação. Atualizarheadexige suíteintegralnova;aprovaçãoantecessora nãosubstitui.
+
+
+### LQ — Reabrir o chat ao vivo e o mapa de membros (28/10/2026) [LQ12]
+
+Solicitação direta do dono,28/10/2026 às23h22Fortaleza. Estado inicial: na fila, em um único PR curto de documentação, sem interromperAV1 nemSD1. Decisão posterior aLQ7/PR1184, prevalece somente nos itens395[CX6] e398[SL2], sem renumerar.
+
+Aplicado aos dois itens e às mesmas linhas da tabela únicaLQ3: **Reaberto por decisão do dono em 28/10/2026, 23h22 (LQ12)**. Retomados estado na fila, número/texto/escopo/posição originais; execução depois da abertura conformeAV1. Cancelamento e provas anteriores preservados como histórico, sem outro item ou implementador duplicado.395mantém reaproveitamento inbox/passagem humana/fallback de formulário/avisos existentes e teto total de realtime;398mantém opt-in desligado por padrão para cada membro, cidade aproximada confirmada, retirada/privacidade/safety e alternativa acessível. Não executar ou escolher fornecedor agora.
+
+Pedidos repetidos: mainb33fdc70105f18225bd72503b134963fc395e68d,PRaberto1173 e39heads distintos das40PRsrecentes/branchescodex conferidos integralmente para etiqueta/título/data-hora/conteúdo equivalente;nenhuma correspondência. Busca adicional de branchesLQ12 e conteúdo canônico sem resultado. Nenhuma edição no PR/trabalho doClaude ou branchesAV.
+
+MR27/10/2026 07h42/TX/FX275 vigentes: cliente isolado sem prejuízo com100% dos direitos/plano/complementos no pior mês mensal/anual,folga existente e recebimento mais caro/reservas/exposição/custeio preservados;empresa sem prejuízo desde base mínima calculada e60%meta líquida mensal real.100%dos custosLLC pertencem aoMarktmorgen;desconhecido reprova,nãozero. Teto automático e reserva antes de qualquer gasto continuam específicos a cada item. Nenhuma conta/termo/contrato/pagamento/mensagem externa, mudança de preço/limite/comissão/gate/flag, exclusão de conteúdo/Hazelsong ou operação de chat/mapa autorizada.
+
+VR: alteração administrativa concreta no estado dos dois itens, sem recurso ativado/publicação funcional;0→0passos e decisões de interface,nenhuma tradução,tratamento de localização ou conversa real. Sem operação/serviço/armazenamento produtivo novo por esta decisão; custos futuros de ambos permanecem desconhecidos/reprovados,CI/fixos seguemFX275 sem assumirzero. Conferência do texto remoto confirma mesmos192itens na tabela,nenhum renumerado,escopos originais intactos e histórico preservado; verificações remotas do head final ainda obrigatórias. Contador254,sem entrega255.
