@@ -13592,3 +13592,8 @@ Este registro acompanha a correção concreta de ACKStore doPR1186,sem novoPRexc
 
 
 Correção complementar ACKStore: exceção do escritor após resposta do provedor também é confirmação desconhecida, não recusa do cartão. Agora permanece retida antes do catchlegado, inclusive4dias após vencimento. Quarto caso sintético lança na leitura interna do escritor somente depois do resultado do provedor e exige pausa/ano/due intactos,0aviso/loja inativa. Não reclassificar esse erro como falha da cobrança nem remover prova depois de3dias. Mesmos comandos no sucesso,sem nova chave/TTL/provedor/custo aprovado;MR/TX/FX275/gatespreservados. Suíte integral no novohead obrigatória.
+
+
+### AV(a) — preservar alteração concorrente na loja durante resposta de reinício
+
+O escritor existente setSubscription aceita snapshot opcional de origem; o reinício captura sid/statsId/customer/subscription/active antes de esperarlock e compara sob o mesmo lock/leitura atuais, recusando mudança antes desalvar. Dois testes do caminho real alteram assinatura ativa ou cliente enquanto aguarda resposta sintética, comprovando estado concorrente/provas/0avisos preservados. Casos ACKanteriores permanecem.0comandos/bytesarmazenados incrementais no sucesso para6contratosmensal/anual,sem nova chave/TTL/serviço;obrigaçõesretidas/repetições/total seguem desconhecidos,reprovadosMR/TX/FX275. Não é CASgeraçõesfinanciado completo nem autorização derepetircobrança;gatesfalse/policiesnull/preços/direitospreservados. Branch separada baseada no1186,incorporar depois dele e da suíte integral do própriohead;contador254.

@@ -499,7 +499,7 @@ export async function runBreaks(nowSeconds = Math.floor(Date.now() / 1000)): Pro
         ...(record.funding ? { funding: { statsId: store.statsId ?? "", sourceSubscriptionId: record.subscription, sourceGrantId: record.funding.grantId, ref, paused: stored.raw ?? "" } } : {}),
       });
       let saved: Store | null;
-      try { saved = await setSubscription(ref, started); }
+      try { saved = await setSubscription(ref, started, store); }
       catch {
         // Saving failed after the provider answered. This is not a card
         // refusal and must not enter the legacy charge-failure cleanup.

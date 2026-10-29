@@ -37,6 +37,7 @@ let keepScheduledStop = false;
 let refuseScheduledStop = false;
 let loseScheduledStopAck = false;
 let scheduledStopWrites = 0;
+let beforeRestartAnswer: (() => Promise<void>) | null = null;
 let createAnswer: "ok" | "declined" | "down" | "otherCustomer" | "otherTier" | "yearly" | "trial" | "pastDue" | "otherPrice" | "amount" | "currency" | "intervalCount" | "extraItem" | "intervalMismatch" | "quantity" | "missingQuantity" | "missingPeriod" | "expiredPeriod" | "futurePeriod" | "fractionPeriod" | "longPeriod" = "ok";
 
 function subscription(id: string, over: Record<string, unknown> = {}): Record<string, unknown> {
@@ -117,6 +118,9 @@ globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) =>
       if (createAnswer === "trial") { fresh.status = "trialing"; fresh.trial_end = NOW + DAY; }
       if (createAnswer === "pastDue") fresh.status = "past_due";
       subs.sub_Restarted00001 = fresh;
+      const pendingStoreChange = beforeRestartAnswer;
+      beforeRestartAnswer = null;
+      if (pendingStoreChange) await pendingStoreChange();
       return new Response(JSON.stringify(fresh), { status: 200 });
     }
     const m = url.pathname.match(/^\/v1\/subscriptions\/(sub_[A-Za-z0-9]+)$/);
@@ -663,6 +667,44 @@ async function main() {
       is("due membership survives missing store acknowledgement", Array.isArray(due) && due.includes(ref), true);
     } finally { pauseRedis.pipeline = pipeline; }
     is("unacknowledged restart never activates the store", (await storeForEmail(email))?.subscriptionActive, false);
+    await undoPause(store, paused.record.until + 60);
+  }
+
+  part("A restart cannot overwrite a store changed while the provider answered");
+  for (const changed of ["subscription", "customer"] as const) {
+    const email = "restart-race-" + changed + "@example.com", id = "sub_RestartRace" + changed;
+    subs[id] = subscription(id);
+    const store = await storeWith(email, "restartrace" + changed, id);
+    const paused = await pausePlan(store, 1, NOW);
+    if (paused.kind !== "paused") throw new Error("Synthetic restart source pause was refused");
+    await setSubscription(email, { active: false });
+    const ref = storeRef(store), key = `nl:pause:${ref}`, year = `nl:pause:last:${ref}`;
+    const evidence = await pauseRedis.pipeline([["GET", key], ["GET", year]]);
+    const before = created.length;
+    let intervened = false;
+    beforeRestartAnswer = async () => {
+      const saved = await setSubscription(email, changed === "subscription"
+        ? { active: true, subscriptionId: "sub_ManualRestartRace01", period: paidPeriod() }
+        : { active: false, customerId: "cus_ChangedRestartRace01" });
+      if (!saved) throw new Error("Synthetic intervening store write failed");
+      intervened = true;
+    };
+    emails.length = 0;
+    try {
+      is("a changed source is unresolved rather than overwritten", await runBreaks(paused.record.until + 60),
+        { told: 0, restarted: 0, failed: 1, dropped: 0 });
+      is("the race occurs during one synthetic provider response", [intervened, created.length - before], [true, 1]);
+      const current = await storeForEmail(email);
+      is("the intervening subscription is preserved", current?.subscriptionId, changed === "subscription" ? "sub_ManualRestartRace01" : id);
+      is("the intervening customer is preserved", current?.stripeCustomerId, changed === "customer" ? "cus_ChangedRestartRace01" : store.stripeCustomerId);
+      is("the intervening active state is preserved", current?.subscriptionActive, changed === "subscription");
+      is("no restart success or refusal notice is sent", emails.length, 0);
+      const [record, last, due] = await pauseRedis.pipeline([
+        ["GET", key], ["GET", year], ["ZRANGEBYSCORE", "nl:pause:due", "-inf", String(paused.record.until + 60)],
+      ]);
+      is("source mismatch retains exact pause and annual evidence", [record, last], evidence);
+      is("source mismatch retains its due member", Array.isArray(due) && due.includes(ref), true);
+    } finally { beforeRestartAnswer = null; }
     await undoPause(store, paused.record.until + 60);
   }
 

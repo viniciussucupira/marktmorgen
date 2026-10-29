@@ -1829,8 +1829,17 @@ export async function setSubscription(
     /** The period paid for; null forgets it (a plan not running, a trial). Left as it is when not given. */
     period?: BillingPeriod | null;
   },
+  expected?: Pick<Store, "sid" | "statsId" | "stripeCustomerId" | "subscriptionId" | "subscriptionActive">,
 ): Promise<Store | null> {
+  // Capture the source before waiting for the writer lock. Ordinary callers
+  // keep their existing behavior; a restart can refuse an intervening change.
+  const source = expected ? { sid: expected.sid, statsId: expected.statsId,
+    stripeCustomerId: expected.stripeCustomerId, subscriptionId: expected.subscriptionId,
+    subscriptionActive: expected.subscriptionActive } : null;
   const result = await withStore<Store | null>(email, async (store, save) => {
+    if (source && (store.sid !== source.sid || store.statsId !== source.statsId ||
+        store.stripeCustomerId !== source.stripeCustomerId || store.subscriptionId !== source.subscriptionId ||
+        store.subscriptionActive !== source.subscriptionActive)) return null;
     const customerId =
       fields.customerId === undefined ? store.stripeCustomerId : fields.customerId;
     const subscriptionId =
