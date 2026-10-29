@@ -16736,3 +16736,48 @@ Margem (regra MR vigente, 27/10/2026, 07h42): nenhum cliente pagante, isoladamen
 Proibido: reservar horário sem e-mail confirmado; cobrar por falta; pôr alguém na lista sem a caixa marcada; segundo motor de agendamento; desconto inventado ou prazo falso depois da chamada; enviar e-mail real em testes; mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
 
 Aplicar a regra VR.
+
+
+## 552 [BB1] — Bloco de agendamento nas páginas e funis
+
+Estado: na fila. Ordem de chegada após551FB1,subordinadaàAV1; sem interromper unidade iniciada. Proveniência: pedido direto integral do dono29/10/2026 às18h05Fortaleza,preservado abaixo. Pedidos repetidos: mainaf59b6cc,PRs1223/1224/1228abertos,20headsrecentes distintos e781refs codex/*conferidos por data/seção/BB1/conteúdo; nenhum bloco de agendamento equivalente.551FB1criafreeintro,scheduleratualpágina própria/375TB1editor/526FN2mapa não são refeitos; ligar551/375/526 e mesmafontedecontagemsemsegundoexecutor.
+
+Booking emlib/sales-page.tsparaqualquerpáginaprópria/etapafunil,selecionachamadadapróprialojapaga/pacote/grátis551; renderiza MESMO seletor/cálculo/calendários/fuso/duração/local lidosdachamada. Pago:holdatual→Stripecontacriador→sóconfirmaapóspagamento; pacote usa autorização/saldoatuais,não pagaoureserva sessão nova indevida; grátis551somenteemailconfirmado. Sóapósagendamentorealpróximaetapafunilouagradecimentoatual,sem pôrdadospessoaisnarotaouautorizarredirecionamentoexterno.
+
+Leiturashoráriosapenasvisívelouescolhadedia,reusarcache/tetos/singleflightatuais; testarbrowsereflow/tempo/custosantesdeafirmarque não impacta restante. Semdisponibilidade:textohonesto+waitlistseligada,nãofalsaescassez.526mostracontagemrealdequemmarcou,semnovotrackingouduplicarcontador;falhadesconhecida não vira0. AX274:botõesdias/horárioscomnomerealcompletoefusocorreto(exemploéformato,nãodatapersistida),seleçãoanunciada/teclado/7:1/44×44px. TestesfuturossóStripe/envios/agenda sintéticosparaparidadeseletor/hold/pagamento551/leituravisível/ausênciadehorário/fluxofinal.
+
+Custosdeleitura/calendários/cache/render/processamentojánoplanoexigemtetose reservaantesoperações; reusarnãosignificacusto0ouconsulta ilimitada porbloco. MR27/10/07h42/TX/FX275/VRvinculantes,100%direitos+complementos pior mês mensal/anual sem prejuízo isolado,empresa na basemínima100%fixos,recebimentomaiscaro/reservas/impostos,60%meta mensalreal;desconhecidoreprova/franquia grátis nãozero. Somenteregistro,nãorecursoimplementado/testadofuncional/publicadooucontador. SemHTML/CSS/scriptlivre,semsegundomotor,travas/preços/limites/comissão/flags/consentimento/conteúdo/Hazelsong/idiomas/IDs preservados.
+
+### Briefing integral do dono — 552BB1
+
+BB — Bloco de agendamento dentro das páginas e dos funis (29/10/2026) [BB1]
+
+Solicitação do dono (29/10/2026, 18h05, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: antes de gravar, aplique a regra "Pedidos repetidos" (23/10/2026). Procure esta solicitação no main, nos PRs abertos e nos ramos codex/* recentes, pela linha de data e hora, pelo nome da seção, pela etiqueta [BB1] e pelo conteúdo. Se já existir item que peça um bloco de agendamento nas páginas de venda ou nos funis, aplique só a diferença dentro dele, mantendo número, posição e estado; caso contrário, crie um único item com o próximo número livre, na posição que a ordem AV1 indicar. Ligue este item a 551 [FB1] (chamada gratuita), a 375 [TB1] (editor visual) e a 526 [FN2] (mapa do funil), sem duplicá-los.
+
+Estado inicial: na fila.
+
+Contexto: o Claude conferiu em 29/10/2026 a seção "Make your funnel your best booking agent" de clickfunnels.com/apps/appointments: um formulário de agendamento (calendário, fuso, duração, local e lista de horários) colocado dentro de qualquer página do funil, "No more sending leads to other scheduling tools". No Marktmorgen, a tela de agendamento existe na página própria de cada chamada (/@<loja>/book/<produto>, lib/calls.ts, lib/call-setup.ts), mas os 21 tipos de bloco de lib/sales-page.ts não têm bloco de agendamento: para marcar, o visitante sai da página do funil.
+
+[BB1] Um bloco "Booking" com o mesmo agendamento que já existe.
+(a) Novo tipo de bloco "Booking" em lib/sales-page.ts, para qualquer página da loja e qualquer etapa do funil: o criador escolhe uma das chamadas da loja (paga, de pacote ou gratuita de 551 [FB1]); o bloco mostra o mesmo seletor de dia e horário, o fuso do visitante, a duração e o local, lidos da chamada, sem segundo motor de agendamento.
+(b) Chamada paga: ao escolher o horário, o horário é segurado e o visitante segue para o checkout do Stripe na conta do criador, pelas mesmas regras de hoje; chamada gratuita: segue o fluxo de e-mail confirmado de 551 [FB1].
+(c) Depois de marcar, o visitante segue para a próxima etapa do funil, se houver, ou para a página de agradecimento de hoje.
+(d) Os horários são lidos só quando o bloco aparece na tela ou quando o visitante escolhe um dia, com o mesmo cache e os mesmos limites da página de agendamento; uma página com o bloco não fica mais lenta para carregar o resto.
+(e) Sem horário livre, o bloco diz isso em texto e oferece a lista de espera, se ligada; nada de "vagas acabando" nem número de vagas inventado.
+(f) No mapa do funil de 526 [FN2], a etapa com o bloco mostra quantos marcaram.
+
+Acessibilidade (AX274): o seletor operável só pelo teclado, com os dias e horários como botões com nome completo ("Monday, January 13, 9:00 AM, Los Angeles time"), o fuso dito em texto, o horário escolhido anunciado ao leitor de tela, contraste de 7:1 e alvos de pelo menos 44 × 44 px.
+
+Testes automáticos: o bloco usa o mesmo cálculo de horários da página de agendamento; chamada paga vai ao checkout com o horário segurado; chamada gratuita segue o 551; leitura só quando visível; sem horário livre, texto honesto; somente Stripe e envios simulados.
+
+Custo: as leituras de horários e agendas já contadas no plano, com cache e teto automático; nenhum custo novo por bloco; desconhecido reprova, nunca é zero.
+
+Margem (regra MR vigente, 27/10/2026, 07h42): nenhum cliente pagante, isoladamente e usando 100% dos direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo, depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto. A empresa como um todo não pode dar prejuízo a partir da base mínima calculada, com 100% dos custos fixos atribuídos ao Marktmorgen (FX275). A meta de 60% de margem líquida é medida todo mês no relatório real. Política tributária TX vigente. Custo desconhecido reprova, nunca é zero; cota grátis de fornecedor não conta como custo zero.
+
+Proibido: segundo motor de agendamento; marcar chamada paga sem pagamento ou gratuita sem e-mail confirmado; escassez ou número de vagas inventado; HTML, CSS ou script livres; mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
