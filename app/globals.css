@@ -4756,10 +4756,13 @@ html:has([data-product-editor]) {
 /* Keep the complete home in the DOM and accessibility tree. Let the browser
  * defer layout/paint of off-screen sections until scrolling or focus needs them,
  * so the first cold hero paint does not lay out every lower-page pricing list.
- * The visible hero and navigation are outside this containment; print is intact. */
+ * Hero/navigation, pricing geometry, FAQ wording and creator proof disclosures
+ * remain eagerly rendered. Honesty labels must stay readable before scrolling;
+ * native off-screen skipping can otherwise omit them from rendered page text.
+ * Print is intact. */
 @media screen {
   @supports (content-visibility: auto) {
-    main[data-home-page] > section:not([data-home-hero]):not(#pricing) {
+    main[data-home-page] > section:not([data-home-hero]):not(#pricing):not(#faq):not([data-creator-showcase]) {
       content-visibility: auto;
       contain-intrinsic-block-size: auto 800px;
     }

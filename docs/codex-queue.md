@@ -15464,3 +15464,8 @@ Regra de margem: cada item segue a REGRA DE MARGEM vigente (MR, 27/10/2026, 07h4
 Proibido: webinar gravado apresentado como ao vivo; horário, prazo ou contagem que muda para cada visitante; números de inscritos inventados; mudar preços, limites visíveis (inclusive lugares por sessão e número de funis), comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a, a revisão comercial ou stripePlatformEligibilityReady; afrouxar qualquer trava; mostrar recurso que não funciona hoje; alterar o conteúdo do criador sem aprovação; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar qualquer coisa da Hazelsong. Somente testes sintéticos.
 
 Aplicar a regra VR.
+
+
+### PR1208 — preservar leitura imediata das declarações da home
+
+Head1aa3acb: Firefox123554605587 reprovou6 eWebKit123554605209 reprovou7 verificações, incluindo textos HT7(390/1280)de demonstração fictícia,ausência de listagem real e data de revisão;WebKit também wording da FAQ. A contenção nativa fora da tela impediu leitura imediata por innerText desses textos, apesar do DOM e links. Correção real: FAQ e seção data-creator-showcase ficam renderizadas desde o início, junto com hero e pricing, preservando as declarações de honestidade e a redação. Sem mudar textos,seletores de teste,asserções,limites LCP/AX ou amostras. Suíte inteira do novo head obrigatória; resultados antigos não autorizam incorporação. FT528–530,HE527 e todos os complementos TB/FN preservados;nenhum deles implementado por este ajuste.
