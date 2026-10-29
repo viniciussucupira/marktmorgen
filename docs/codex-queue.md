@@ -16224,3 +16224,44 @@ Margem (regra MR vigente, 27/10/2026, 07h42): nenhum cliente pagante, isoladamen
 Proibido: mostrar qualquer conteúdo de espaço trancado a quem não tem o produto; abrir espaço sem a regra atual de compra; contagem regressiva, escassez ou número de membros no espaço trancado; apagar post sem avisar o autor; fila sem limite; mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; enviar e-mail real em testes; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
 
 Aplicar a regra VR.
+
+
+## 544 [SQ9] — Trazer sequências de e-mail de outros serviços
+
+Estado: na fila. Ordem de chegada após543CM2,sobAV1; nenhumitemanterior alterado. Proveniência: anexo direto do dono29/10/2026,16h58Fortaleza,íntegro abaixo. Deduplicação: main946fb1a,PRs1221/1217/1216 e20headsrecentes.290[SQ1]já é notasprivadasdoaluno e291–297usamSQ2–SQ8; para manteridentidades antigas e não confundir assuntos,este novoitemusa544[SQ9]. O rótulo[SQ1]do original abaixo fica apenas como proveniência,sem renomear290.394CX5jáconverteautomaçõesClickFunnels,masnãopegaCSVgenéricooucolagemdeserviçosdiversos: implementar só adaptador/entrada diferençareutilizando seuconversor; ligar239CF2(migração) e537PH1(preheaderquandoconstruído). Não criar segundo motorFlows/conversor.
+
+CSVmodelo/colagem→sequênciaPAUSADA,relatórioexatolinhacolunamotivo,variáveldesconhecidanãovaicrua,HTML/scripts/pixels/rastreamentoexternoretirados,imagenssóuploadautorizadocontado,triggerexistenteescolhidocriador/condiçãonãosuportadarelatada.Semnovoenvio/conta/APIexterna,chaves/ativaçãoautomática. EstudogdeexportaçõesoficiaisMailchimp/Kit/ActiveCampaign/Beehiiv/MailerLite ésópesquisaoficialdatada,futuraimportaçãodiretanãoconstruída. Respeitarpolíticaprivacidadesempixel/linkrastreado;menção“etiquetadoemail”no briefingnãoliberanovotracking. CustosCPU/bytes/leitura/gravação/tetosreservados/MR/TX/FX275desconhecidoreprova,nuncazero. AplicarVR. Original integral:
+
+SQ — Trazer sequências de e-mail de outros serviços (29/10/2026) [SQ1]
+
+Solicitação do dono (29/10/2026, 16h58, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: antes de gravar, aplique a regra "Pedidos repetidos" (23/10/2026). Procure esta solicitação no main, nos PRs abertos e nos ramos codex/* recentes, pela linha de data e hora, pelo nome da seção, pela etiqueta [SQ1] e pelo conteúdo. Se já existir item que peça importar sequências de e-mail de serviços como Mailchimp, Kit ou ActiveCampaign, aplique só a diferença dentro dele, mantendo número, posição e estado; caso contrário, crie um único item com o próximo número livre, na posição que a ordem AV1 indicar. Ligue este item a 394 [CX5] (importador de automações da ClickFunnels, sem duplicar seu conversor) e a 239 [CF2] (guias de migração).
+
+Estado inicial: na fila.
+
+Contexto: o Claude conferiu em 29/10/2026 as perguntas frequentes de clickfunnels.com/apps/community: a pergunta "Can I migrate my list and email sequences from the service I'm using?" tem resposta trocada, sobre engajamento. No Marktmorgen, a lista já pode ser importada em todos os planos, de um CSV de até 50.000 linhas, com a confirmação de consentimento (lib/imports.ts, lib/import-limits.ts); as sequências (lib/flows.ts) só podem ser criadas à mão, e a única importação de automações na fila é a da ClickFunnels, em 394 [CX5].
+
+[SQ1] Sequências trazidas de um arquivo simples, revisadas antes de ligar.
+(a) No estúdio, "Bring in a sequence": o criador sobe um arquivo CSV de um modelo baixável (colunas: ordem, dias depois do anterior, assunto, texto de prévia de 537 [PH1] quando existir, corpo em texto simples ou em Markdown) ou cola os e-mails um a um num formulário com os mesmos campos.
+(b) O Marktmorgen monta a sequência no formato de lib/flows.ts, sempre PAUSADA, com um relatório exato do que entrou e do que não entrou (linha, coluna e motivo); nada é enviado sem o criador revisar e ligar.
+(c) O corpo entra como texto: HTML, scripts, estilos, rastreadores, pixels e links de rastreamento do serviço antigo são retirados; os links comuns são mantidos e marcados com a etiqueta do e-mail, como já é feito hoje; imagens só se o criador as subir de novo, dentro da cota de armazenamento.
+(d) Variáveis do serviço antigo (como *|FNAME|* ou {{ subscriber.first_name }}) viram as variáveis equivalentes que o Marktmorgen já tem, quando existirem; as que não existirem são listadas no relatório, nunca enviadas cruas.
+(e) Gatilho da sequência escolhido pelo criador entre os que já existem; condições do serviço antigo não convertidas ficam no relatório, sem prometer comportamento igual.
+(f) Limites: número de e-mails por sequência e de sequências pelos limites atuais do plano; tamanho máximo do arquivo; um arquivo que passe do limite é recusado com a explicação.
+(g) Estudo, sem construir nem criar contas: quais serviços (Mailchimp, Kit, ActiveCampaign, Beehiiv, MailerLite) oferecem exportação oficial ou API de sequências, com fonte oficial datada, para uma importação direta futura.
+(h) A página de ajuda e o guia de migração de 239 [CF2] explicam como copiar os e-mails do serviço antigo para o modelo.
+
+Acessibilidade (AX274): formulário com rótulos visíveis, relatório em texto, operável só pelo teclado; contraste de 7:1; alvos de pelo menos 44 × 44 px.
+
+Testes automáticos: o arquivo vira sequência pausada; nada é enviado; HTML, scripts, pixels e links de rastreamento retirados; variáveis convertidas ou listadas; limites do plano respeitados; relatório exato; somente arquivos sintéticos.
+
+Custo: leitura do arquivo no navegador e gravações já contadas no plano, com teto automático; nenhum e-mail enviado pela importação; desconhecido reprova, nunca é zero.
+
+Margem (regra MR vigente, 27/10/2026, 07h42): nenhum cliente pagante, isoladamente e usando 100% dos direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo, depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto. A empresa como um todo não pode dar prejuízo a partir da base mínima calculada, com 100% dos custos fixos atribuídos ao Marktmorgen (FX275). A meta de 60% de margem líquida é medida todo mês no relatório real. Política tributária TX vigente. Custo desconhecido reprova, nunca é zero; cota grátis de fornecedor não conta como custo zero.
+
+Proibido: ligar ou enviar qualquer sequência importada sem o criador; manter HTML, scripts, pixels ou links de rastreamento do serviço antigo; criar contas ou usar chaves em serviços de terceiros; duplicar o conversor de 394 [CX5]; aumentar limites; mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; enviar e-mail real em testes; aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
