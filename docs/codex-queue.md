@@ -5114,6 +5114,39 @@ PARTE B — Regulações governamentais (fazer depois, na ordem da fila):
 - Brasil: Lei Brasileira de Inclusão (Lei 13.146/2015, art. 63), eMAG e ABNT NBR 17225.
 - Outros mercados relevantes: Disability Discrimination Act 1992 (Austrália), JIS X 8341-3 (Japão) e IS 5568 (Israel).
 2. Declaração de acessibilidade: crie a página pública /accessibility, em inglês americano, honesta, com as normas adotadas, o que já foi testado e como, as lacunas conhecidas, a data da última revisão e um canal de contato (support@marktmorgen.com) com prazo de resposta que o dono possa cumprir sem trabalho manual extra. Ligue-a no rodapé de todas as páginas e cumpra o que o European Accessibility Act exige sobre a informação de acessibilidade do serviço.
+
+**Proveniência complementar DA1 do274[AX1],Parte B.2 —29/10/2026,15h06Fortaleza:** pedido direto do dono via anexo81c29614-d23f-472c-bc34-3018981cfa83/Texto colado.txt. Pedidosrepetidos:jáexistepágina pública/accessibilityem274B.2e310AX2§6;aplicarsóadiferençaaqui,semnovoitem535,semduplicarpágina/programa/AX2. Número,posição,estadooriginalde274e310preservados. Reutilizaredocumentar ligação comdocs/accessibility-programme.md,docs/accessibility-inventory.jsonematrizes/evidênciasexistentes. Acrescenta listasgeradassemcópiamanual/evidência+dataconsistente,metAAA/AAcomometa,nãoconformidade;lacunasporárea/pessoasreais202nãofeitas/alternativas;rodapécompletoeslim;canalsuporteexistente,semnovoe-mailnemcontato. AordemmaisrecenteDA1(c)deNÃOprometerprazoderespostaouequipe24horasprevalecesobreomençãoantigaaprazoem274B.2,quepermanecehistóricoacima. Semoverlay/selo/superioridade;explicarverificaçãodestúdioeresponsabilidadeconteúdocriador,semaprovaraçãouniversal. AX274glossário/hierarquia/regiões/skip/7:1/44pxetestsfonte/data/termosproibidosvinculantes. ContextoEqualWeb/ausênciaderotaérelatodo dono/Claude,conferircódigoaexecutar;nenhumavisitaauditoriadeproduçãoimplícita. Deduplicação main63fb030,PR1212aberto,20PRsrecentes/19headscodex e765refs,DA1nãoexistente,pedidoequivalentedeclaraçãojálocalizado. MR/TX/FX275/VRpreservados;textostáticosemprovedor/email/IA,nãocertificaCPU/bytes/entregazero;desconhecidoreprova. Registroapenas,semcriarpáginaourota;suíteinteira novoheadcombinadoobrigatória.
+
+DA — Declaração de acessibilidade do Marktmorgen, no lugar de overlay (29/10/2026) [DA1]
+
+Solicitação do dono (29/10/2026, 15h06, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: antes de gravar, aplique a regra "Pedidos repetidos" (23/10/2026). Procure esta solicitação no main, nos PRs abertos e nos ramos codex/* recentes, pela linha de data e hora, pelo nome da seção, pela etiqueta [DA1] e pelo conteúdo. Se já existir item que peça uma página pública de declaração de acessibilidade, aplique só a diferença dentro dele, mantendo número, posição e estado; caso contrário, crie um único item com o próximo número livre, na posição que a ordem AV1 indicar. Ligue este item a 274 [AX1] e a docs/accessibility-programme.md, sem duplicá-los.
+
+Estado inicial: na fila.
+
+Contexto: o Claude conferiu em 29/10/2026 o rodapé de clickfunnels.com/features/sales-funnels. O link "Accessibility Options" abre um overlay de acessibilidade da EqualWeb (a página carrega https://cdn.equalweb.com/core/5.1.15/accessibility.js), exatamente o tipo de widget proibido pela Parte A, item 7, de AX274. O Marktmorgen não tem overlay, mas também não tem página pública que diga o que já foi conferido em acessibilidade, o que falta e como avisar de um problema: o rodapé (components/site-footer.tsx) não tem link de acessibilidade, e não existe rota app/accessibility. O material para essa página já existe em docs/accessibility-programme.md, docs/accessibility-inventory.json e nas matrizes e evidências de docs/accessibility-*.
+
+[DA1] Página "Accessibility" honesta e link no rodapé.
+(a) Crie a página marktmorgen.com/accessibility, em inglês americano simples (AX274, 3.1.5), com: a meta adotada (WCAG 2.2 nível AAA em todos os critérios aplicáveis, AA como mínimo legal), dita como meta e não como conformidade; o que já foi conferido, com método e data (testes automáticos, navegador por teclado, leitores de tela com evidência registrada); as lacunas conhecidas, por área, inclusive os testes com pessoas reais ainda não feitos (item 202); as alternativas oferecidas onde houver lacuna; e a data da última revisão.
+(b) Gere as listas de conferido e de lacunas a partir dos arquivos já existentes (docs/accessibility-inventory.json e as evidências registradas), sem segunda cópia manual, para que a página nunca diga mais do que os registros provam. Um teste automático falha se a página citar um critério como conferido sem evidência registrada, ou se a data de revisão estiver desatualizada em relação aos registros.
+(c) Como avisar de um problema: o e-mail de suporte já existente, com o que convém informar (página, aparelho, tecnologia assistiva), sem prometer prazo de resposta nem equipe 24 horas; e o formulário de contato, se já existir, operável só por teclado.
+(d) Diga expressamente que o Marktmorgen não usa widget nem overlay de acessibilidade, porque eles não tornam um site acessível, e que a acessibilidade é feita no próprio código das páginas.
+(e) Inclua uma seção sobre as lojas dos criadores: o que o estúdio verifica e avisa antes de publicar (AX274, item 6) e que o conteúdo do criador é responsabilidade dele, sem prometer que toda loja é acessível.
+(f) Link "Accessibility" no rodapé completo, na coluna "Company" ou junto aos termos e à política de privacidade, e também no rodapé reduzido (variante "slim").
+(g) Nenhuma frase como "fully accessible", "ADA compliant", "WCAG AAA certified", "the most accessible platform", selo, nota ou comparação de superioridade; um teste automático falha se alguma delas aparecer na página.
+(h) A própria página cumpre AX274: títulos em hierarquia, regiões nomeadas, link para pular ao conteúdo, contraste de 7:1, alvos de pelo menos 44 × 44 px, glossário para termos como "WCAG" e "screen reader", expansão de abreviações.
+
+Custo: página estática gerada de arquivos do repositório, sem fornecedor, sem e-mail novo e sem chamada de IA; nenhum custo novo.
+
+Margem (regra MR vigente, 27/10/2026, 07h42): nenhum cliente pagante, isoladamente e usando 100% dos direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo, depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto. A empresa como um todo não pode dar prejuízo a partir da base mínima calculada, com 100% dos custos fixos atribuídos ao Marktmorgen (FX275). A meta de 60% de margem líquida é medida todo mês no relatório real. Política tributária TX vigente. Custo desconhecido reprova, nunca é zero; cota grátis de fornecedor não conta como custo zero.
+
+Proibido: instalar widget ou overlay de acessibilidade; afirmar conformidade, certificação ou superioridade sem auditoria completa e fonte; mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; enviar e-mail real, criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+
 3. Ferramentas para os criadores superarem as leis deles: texto alternativo assistido, verificação de contraste do tema, aviso de vídeo sem legenda, legendas e transcrições com teto automático, orientação para PDF e EPUB acessíveis e um modelo de declaração de acessibilidade da loja do criador. Toda ajuda por IA respeita a regra dos 60% e tem teto automático.
 
 PARTE C — Prova e testes:
