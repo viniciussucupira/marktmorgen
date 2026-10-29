@@ -16036,3 +16036,10 @@ Testes automáticos: o texto de prévia aparece como primeiro texto e primeira l
 Custo: um campo de texto sem chamada nova; a sugestão de IA usa só o orçamento de IA já reservado do plano, com reserva antes; nenhum e-mail a mais é enviado; desconhecido reprova, nunca é zero.
 
 Margem (regra MR vigente, 27/10/2026, 07h42): nenhum cliente
+
+
+### AB(a) — limites do ACK de seleção de pausas antes de percorrer os membros (29/10/2026)
+
+Implementação concreta do worker: checa cardinalidade e tamanho antes de serializar/percorrer resposta, no máximo200descritores/1280bytes por referência; recusa ACK201membros sem visitar membro algum, ASCII/UTF8excedido,duplicata,buraco e shapeextra antes de qualquerIOposterior. Não altera Lua/limites/flags/preços/coberturas/cash nem envia aviso. Testes sintéticos do worker mantêm caminhos válidos e exigem0IOposterior/0getters; suíte integral do novohead pendente. Custos/tetos/limites da prova em docs/pause-due-ack-bound.md; desconhecido continua reprovado,não zero.
+
+Prova1212carregada nesta alteração real: merge2cd4fbda3b5880658db7bc88ab20c49089b32060,29/10/2026 às15:57:09Fortaleza,head26857b7b6af9ae9e2cf797772d94d2de9a2aa9f0,tree d330d1d0efaa3f6a19eb336f34aae16b6396968a,39/39+Vercel,READYdpl_AKUhYUYi7yBFqWrhiDuCbAgyFsGB/7aliases/5HTMLexatos verificados. Mobile9cold1088ms/CLS0/interação152/0writes;NVDA/VoiceOver2headingscada0writes/foreign,escopo limitado. Contador254semprovainterativa;Chromebloqueadosemretentativa. Registros1213/1214/1215são fila,sem implementação dos respectivos recursos. Histórico e ordens intactos.

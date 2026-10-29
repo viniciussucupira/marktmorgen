@@ -1171,6 +1171,33 @@ async function main() {
     }finally{pauseRedis.pipeline=original;}
   }
 
+
+  part("Due acknowledgement bounds are checked before visiting members");
+  {
+    const original=pauseRedis.pipeline;
+    let memberReads=0,extra=0;
+    const oversized=new Proxy(Array.from({length:201},(_,i)=>"synthetic-"+i+"@example.com"),{
+      getOwnPropertyDescriptor(target,key){
+        if(/^\\d+$/.test(String(key)))memberReads++;
+        return Reflect.getOwnPropertyDescriptor(target,key);
+      },
+    });
+    const replies:unknown[]=[[oversized],[["x".repeat(1281)]],[["é".repeat(641)]],
+      [["same@example.com","same@example.com"]],[new Array(1)],[["ok@example.com"],[]]];
+    try{
+      for(const reply of replies){
+        pauseRedis.pipeline=async commands=>{
+          if(commands.length===1&&commands[0][0]==="EVAL"&&commands[0][1]===PAUSE_DUE_OBSERVATION)return reply as unknown[];
+          extra+=commands.length;return original(commands);
+        };
+        const before=providerCalls;emails.length=0;
+        is("oversized, duplicate, sparse or malformed due ACK is held",await runBreaks(NOW),{told:0,restarted:0,failed:1,dropped:0});
+        is("rejected due ACK starts no owner, provider, email or cleanup work",[extra,providerCalls-before,emails.length],[0,0,0]);
+      }
+      is("over-limit batch is rejected before visiting any member",memberReads,0);
+    }finally{pauseRedis.pipeline=original;}
+  }
+
   done();
 }
 

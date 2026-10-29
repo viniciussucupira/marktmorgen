@@ -536,6 +536,33 @@ export async function confirmPause(store: Store, record: PauseRecord): Promise<v
   await tell(store, "set", record).catch((error) => console.error("confirming a break failed", error));
 }
 
+/** Read only the bounded own-data response from PAUSE_DUE_OBSERVATION. */
+function boundedPauseDueRefs(reply: unknown): string[] | null {
+  try {
+    if (!Array.isArray(reply) || Object.getOwnPropertySymbols(reply).length) return null;
+    const outerLength = Object.getOwnPropertyDescriptor(reply, "length");
+    if (!outerLength || !Object.hasOwn(outerLength, "value") || outerLength.value !== 1) return null;
+    const entry = Object.getOwnPropertyDescriptor(reply, "0");
+    if (!entry || !Object.hasOwn(entry, "value") || !Array.isArray(entry.value)) return null;
+    const batch: unknown[] = entry.value;
+    if (Object.getOwnPropertySymbols(batch).length) return null;
+    const length = Object.getOwnPropertyDescriptor(batch, "length");
+    if (!length || !Object.hasOwn(length, "value") ||
+        !Number.isSafeInteger(length.value) || length.value < 0 || length.value > 200) return null;
+    const refs: string[] = [], seen = new Set<string>();
+    for (let i = 0; i < length.value; i++) {
+      const field = Object.getOwnPropertyDescriptor(batch, String(i));
+      if (!field || !Object.hasOwn(field, "value") || typeof field.value !== "string") return null;
+      const ref = field.value;
+      if (ref.length === 0 || ref.length > 1280 ||
+          new TextEncoder().encode(ref).length > 1280 || seen.has(ref)) return null;
+      seen.add(ref);
+      refs.push(ref);
+    }
+    return refs;
+  } catch { return null; }
+}
+
 /**
  * The daily pass: tells every creator whose break ends within the notice, and
  * starts again every plan whose break has ended. Safe to run as often as it is
@@ -549,16 +576,14 @@ export async function runBreaks(nowSeconds = Math.floor(Date.now() / 1000)): Pro
   if(!Number.isSafeInteger(nowSeconds)||nowSeconds<0||!Number.isSafeInteger(deadline)||deadline>1_000_000_000_000){counts.failed+=1;return counts;}
   let reply:unknown;
   try{reply=await redisPipeline([["EVAL", PAUSE_DUE_OBSERVATION, 1, DUE, deadline]]);}catch{counts.failed+=1;return counts;}
-  const encoded=canonicalFinancialSnapshot(reply);
-  const observed:unknown=encoded?JSON.parse(encoded):null;
-  const raw = Array.isArray(observed) && observed.length === 1 ? observed[0] : null;
-  // The provider query is bounded to 200 distinct members. An ambiguous or
-  // over-limit observation cannot authorize per-store reads, charges or cleanup.
-  if (!Array.isArray(raw) || raw.length > 200 || raw.some(ref => typeof ref !== "string" || ref.length === 0 || new TextEncoder().encode(ref).length>1280) || new Set(raw).size !== raw.length) {
+  // Check cardinality and string sizes before visiting or encoding the reply.
+  // A malformed acknowledgement must not turn this bounded reader into an
+  // unbounded financial-snapshot traversal.
+  const refs = boundedPauseDueRefs(reply);
+  if (refs === null) {
     counts.failed += 1;
     return counts;
   }
-  const refs = raw as string[];
   for (const ref of refs) {
     let stored: Awaited<ReturnType<typeof storedPauseAt>>;
     try {
