@@ -300,6 +300,50 @@ async function forgetObserved(ref: string, raw: string | null): Promise<boolean>
   } catch { return false; }
 }
 
+
+/** A sent legacy notice cannot overwrite a pause replaced while email waited.
+ * This is only an exact-generation marker ACK, not exactly-once email delivery. */
+export const PAUSE_WORKER_NOTICE = `-- marktmorgen:pause-worker-notice:v1
+if #KEYS~=2 or #ARGV~=4 or KEYS[1]==KEYS[2] then return 0 end
+local now=tonumber(ARGV[4])
+if not now or now<=0 or now~=math.floor(now) then return 0 end
+local current=redis.call('GET',KEYS[1])
+if current~=ARGV[2] then return 0 end
+local ok,p=pcall(cjson.decode,current)
+local nextOK,q=pcall(cjson.decode,ARGV[3])
+if not ok or not nextOK or type(p)~='table' or type(q)~='table' or p.funding~=nil or q.funding~=nil then return 0 end
+local fields={subscription=true,customer=true,paymentMethod=true,tier=true,from=true,['until']=true,told=true}
+for k,_ in pairs(p) do if not fields[k] then return 0 end end
+local count=0
+for k,_ in pairs(q) do if not fields[k] then return 0 end count=count+1 end
+if count~=7 or (p.told~=nil and p.told~=0) or q.told~=now or type(p['until'])~='number' or p['until']<=now then return 0 end
+for k,_ in pairs(fields) do if k~='told' and p[k]~=q[k] then return 0 end end
+if redis.call('ZSCORE',KEYS[2],ARGV[1])~=tostring(p['until']) then return 0 end
+redis.call('SET',KEYS[1],ARGV[3],'KEEPTTL')
+return 1
+`;
+
+function knownNoticeSource(raw: string | null): boolean {
+  if (raw === null) return false;
+  try {
+    const value = JSON.parse(raw) as Record<string, unknown>;
+    const fields = ["subscription", "customer", "paymentMethod", "tier", "from", "until", "told"];
+    return Boolean(value && typeof value === "object" && !Array.isArray(value) &&
+      Object.keys(value).every(key => fields.includes(key)));
+  } catch { return false; }
+}
+
+async function markObservedNotice(ref: string, raw: string | null, record: PauseRecord, nowSeconds: number): Promise<boolean> {
+  if (raw === null || !Number.isSafeInteger(nowSeconds) || nowSeconds <= 0) return false;
+  try {
+    const next = JSON.stringify({ ...record, told: nowSeconds });
+    const reply = await redisPipeline([["EVAL", PAUSE_WORKER_NOTICE, 2, recordKey(ref), DUE, ref, raw, next, nowSeconds]]);
+    if (!Array.isArray(reply) || reply.length !== 1) return false;
+    const ack = Object.getOwnPropertyDescriptor(reply, "0");
+    return Boolean(ack && Object.hasOwn(ack, "value") && ack.value === 1);
+  } catch { return false; }
+}
+
 async function forget(ref: string, andTheYear: boolean): Promise<void> {
   await redisPipeline([
     ["DEL", recordKey(ref)],
@@ -505,8 +549,9 @@ export async function runBreaks(nowSeconds = Math.floor(Date.now() / 1000)): Pro
       continue;
     }
     if (record.until > nowSeconds) {
+      if (!record.told && !knownNoticeSource(stored.raw)) { counts.failed += 1; continue; }
       if (!record.told && (await tell(store, "soon", record).catch(() => false))) {
-        await redisPipeline([["SET", recordKey(ref), JSON.stringify({ ...record, told: nowSeconds })]]);
+        if (!(await markObservedNotice(ref, stored.raw, record, nowSeconds))) { counts.failed += 1; continue; }
         counts.told += 1;
       }
       continue;

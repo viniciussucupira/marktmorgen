@@ -103,6 +103,29 @@ export class MemoryRedis {
 
     switch (name) {
       case "EVAL": {
+        if (key.startsWith("-- marktmorgen:pause-worker-notice:v1\n") && args[0] === "2" && args.length === 7) {
+          const [, target, due, ref, expected, next, rawNow] = args;
+          const now = Number(rawNow);
+          if (target === due || !Number.isSafeInteger(now) || now <= 0) return 0;
+          this.live(target); this.live(due);
+          const current = this.data.get(target), index = this.data.get(due);
+          if (current !== undefined && typeof current !== "string") throw new Error("WRONGTYPE");
+          if (current !== expected) return 0;
+          let p: Record<string, unknown>, q: Record<string, unknown>;
+          try { p = JSON.parse(current as string); q = JSON.parse(next); } catch { return 0; }
+          const fields = ["subscription", "customer", "paymentMethod", "tier", "from", "until", "told"];
+          if (!p || !q || typeof p !== "object" || typeof q !== "object" ||
+              Object.keys(p).some(k => !fields.includes(k)) || Object.keys(q).length !== 7 ||
+              Object.keys(q).some(k => !fields.includes(k)) || (p.told !== undefined && p.told !== 0) ||
+              q.told !== now || typeof p.until !== "number" || p.until <= now ||
+              fields.some(k => k !== "told" && p[k] !== q[k])) return 0;
+          if (index !== undefined && (!Array.isArray(index) || (index.length > 0 && typeof index[0] !== "object"))) throw new Error("WRONGTYPE");
+          if (this.run(["ZSCORE", due, ref]) !== String(p.until)) return 0;
+          // Match SET KEEPTTL: no expiry extension or removal.
+          this.data.set(target, next);
+          return 1;
+        }
+
         if (key.startsWith("-- marktmorgen:pause-worker-forget:v1\n") && args[0] === "2" && args.length === 6) {
           const [, target, due, ref, mode, expected] = args;
           if (target === due) return 0;
