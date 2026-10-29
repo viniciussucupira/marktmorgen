@@ -76,7 +76,7 @@ function stoppedFixture(): { intent: OwnedRestartIntent; original: Record<string
   grant:{id:"ctr_NewStopped01",reviewId:review,statsId:"synthetic",key:"creator_month",action:"restart",sourceSubscriptionId:id,
    reservedCents:50,submitUntilSeconds:NOW+120,checkoutExpiresAtSeconds:NOW+3600,activationUntilSeconds:NOW+7200,liabilitiesThrough:new Date((NOW+40*DAY)*1000).toISOString()},
   paused:JSON.stringify({customer:input.customerId,paymentMethod:"pm_StoppedSource01",tier:input.tier,subscription:id,from:end,until:NOW-60,funding:{version:1,grantId:source}}),
-  source:{binding:[source,id,"creator_month",created,"paid",start,end].join("|"),receipt:"retained",restartReceipt:"retained",reservedCents:100,carriedCents:0},
+  source:{binding:[source,id,"creator_month",created,"paid",start,end].join("|"),receipt:"retained",restartReceipt:"retained",reservedCents:100,carriedCents:0,annual:end-DAY},
  };
  const original={...observed(),id,status:"canceled",created,ended_at:end,canceled_at:end-DAY,cancel_at_period_end:true,pending_update:null,
   metadata:{funding_grant:source,funding_review:review},
