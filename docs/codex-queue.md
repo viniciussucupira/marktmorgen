@@ -15606,3 +15606,36 @@ Regra de margem: segue a REGRA DE MARGEM vigente (MR, 27/10/2026, 07h42), a pol�
 Proibido: criar item novo além do [AF1] ou mudar número, posição ou estado do 525; inventar, estimar ou arredondar para cima qualquer número; mostrar dado pessoal de comprador; mudar preços, limites visíveis, comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a, a revisão comercial ou stripePlatformEligibilityReady; afrouxar qualquer trava; mostrar recurso que não funciona hoje; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar qualquer coisa da Hazelsong. Somente testes sintéticos.
 
 Aplicar a regra VR.
+
+
+## DP — registro integral; item533 (29/10/2026,14h10Fortaleza)
+
+Proveniência: pedido direto do dono nesta conversa. Deduplicação main332a38d,PR1208aberto,20PRsrecentes/19ramoscodex e764refs,semDP1/data/título/conteúdo equivalente. Próximo número livre533após532AF1,sem alterar ordem/estado anterior; estado na fila,somente depois da abertura das vendas. PROIBIDO CONSTRUIR ANTES DA ABERTURA. Não é repetição93/284,dedicados às lojas decriadores. Convite/consentimentos/revogação/venda real/números verificáveis/autoria exclusiva do criador/ausência de bloco sem aprovação obrigatórios;nenhum contato,convite real,imagem ou depoimento produzido agora. Contexto comparativo e situação comercial são relato atribuído ao dono/Claude,não prova independente deste registro. MR/TX/FX275/AX274/VRpreservados,desconhecido reprova. Registro apenas;suíte inteira do novoheadcombinadoobrigatória.
+
+DP — Depoimentos reais de criadores no site do Marktmorgen, depois da abertura (29/10/2026)
+Etiqueta: [DP1]
+
+Solicitação do dono (29/10/2026, 14h10, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: antes de gravar, aplique a regra permanente "Pedidos repetidos". Confira o main, os PRs abertos e os ramos codex/* recentes e procure esta solicitação pela linha de data e hora, pelo nome da seção, pela etiqueta [DP1] e pelo conteúdo. Se já estiver gravada, não crie nada novo. Grave na ordem de chegada, depois do último item já gravado, com o próximo número livre, sem alterar a ordem dos itens existentes.
+
+533. [DP1] Depoimentos reais de criadores no site do Marktmorgen.
+Estado inicial: na fila, somente depois da abertura das vendas.
+Contexto: as páginas da ClickFunnels terminam com o bloco "What Real Customers Say About ClickFunnels" (foto, frase com resultado, nome e "Verified ClickFunnels User"), conferido pelo Claude em 29/10/2026. O Marktmorgen ainda não tem clientes, e nenhum depoimento pode ser inventado; os itens 93 [D2-VERIFIED-SOCIAL] e 284 [HG3] tratam das lojas dos criadores, não do site do Marktmorgen.
+O que fazer, depois da abertura:
+- no estúdio, um convite opcional para o criador que já vendeu de verdade pelo Marktmorgen escrever, com as próprias palavras, o que achou; nunca texto sugerido, escrito ou melhorado pela IA nem pelo Marktmorgen;
+- consentimento explícito e separado para publicar nome, foto e frase, com a possibilidade de retirar a qualquer momento, e a retirada vale na hora;
+- o selo "Verified Marktmorgen creator" só aparece quando a loja tem venda real paga na conta do próprio criador; ao lado, a data do depoimento e o plano usado;
+- se a frase citar um número (vendas, cadastros, receita), ele é conferido com os dados reais da loja na data; se não bater, o número não é publicado; nunca promessa de resultado nem "results not typical" para esconder exagero;
+- o bloco aparece nas páginas do site só quando houver depoimento real aprovado; enquanto não houver, não aparece nada no lugar (nenhum texto de exemplo).
+Acessibilidade: AX274 (foto com texto alternativo, citação marcada como citação, contraste de 7:1).
+Testes automáticos: sem depoimento aprovado não aparece bloco; retirada remove na hora; selo só com venda real; número da frase conferido com os dados.
+Lucro: prova verdadeira de que o Marktmorgen funciona, que aumenta as contas criadas, sem risco de propaganda enganosa.
+
+Regra de margem: segue a REGRA DE MARGEM vigente (MR, 27/10/2026, 07h42), a política tributária TX e FX275; custo desconhecido reprova, nunca é zero.
+
+Proibido: depoimento, foto, nome ou número inventados ou de exemplo apresentados como reais; texto de depoimento escrito pela IA ou pelo Marktmorgen; publicar sem consentimento; pagar ou dar desconto em troca de depoimento sem dizer isso ao lado; construir antes da abertura; mudar preços, limites visíveis, comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a, a revisão comercial ou stripePlatformEligibilityReady; afrouxar qualquer trava; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
