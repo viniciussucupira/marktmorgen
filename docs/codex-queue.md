@@ -16881,3 +16881,51 @@ Margem (regra MR vigente, 27/10/2026, 07h42): nenhum cliente pagante, isoladamen
 Proibido: segundo mecanismo de arrastar; tirar a lista de etapas; disparar a sequência duas vezes; fechar negócio sem confirmação; ignorar os papéis da equipe; aumentar limites de negócios ou de pipelines; mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
 
 Aplicar a regra VR.
+
+## 554 [DS1] — Regras opcionais dos códigos de desconto pelo Stripe
+
+Estado: na fila. Ordem de chegada após553[DB1],subordinada àAV1,sem interromper unidade iniciada. Proveniência: solicitação do dono29/10/2026,19h53Fortaleza,anexo fb10f783-92e7-4009-bbfd-7134e94fabdd/Texto colado.txt,integral abaixo. Contexto ClickFunnels atribuído ao Claude,sem nova inspeção externa. Pedidos repetidos: main84fa0587a12d39d26a731fd80c600b3b56967990,PRaberto1230(título/corpo/fila),20heads recentes distintos com filas lidas e784refs codex/*inventariadas,por data/hora,seção,[DS1]e conteúdo. Ocorrências antigas de19h53 tratam outros dias/assuntos,descontos de carrinho/validação de respostas e comissão de descoberta não equivalem às quatro restrições. Nenhum pedido equivalente;máximo553,atribuição única554;nenhum número/posição/estado anterior alterado.
+
+Reutilizar lib/discount.ts e Coupon/PromotionCode da contaStripe do próprio criador. Antes de implementar,conferir campos/valores/combinações na documentação OFICIAL com data e versãoAPI fixada no código,sem presumir disponibilidade de duration/repeating: se campo/combinação não existir nessa versão,registrar limitação real e não emular cálculo. Quatro regras opcionais:seleção de produtos próprios com correspondênciaStripe existente viaapplies_to(sem correspondência não selecionável+explicação);first_time_transaction decidido peloStripe/histórico na conta do criador;minimum_amount na moeda da loja;duraçãofirstpaymentonly/1–24meses/forever pelos campos suportadosStripe. Manter códigos legados eMAX_CODES20 intactos.
+
+Stripe é fonte única do desconto/preço final,sem conta aritmética de desconto noMarktmorgen. Mensagem textual de falta para mínimo só com dado válido do próprioStripe,sem inventar valor ou segundo calculador;erro real legível no campo,sem expor segredo/dado de outra conta. Página e confirmação dizem duração e preço posterior com informação autorizada real;não inventar preço depois nem alterar preços publicados. Somente combinações aceitas peloStripe. Expiração real mostrada;sem ends today/last chance/contador/depor se incompatíveis com prazo/preço reais. Não mudar outros dados da conta do criador além dos códigos que ele solicitar.
+
+AX274:rótulos visíveis/explicações locais/erros emtexto/teclado/7:1/44×44px. Testes futuros Stripe SIMULADO:campos certos na versãofixada,combinaçõesinválidas,delegação integral de cálculo,preço/duração nas páginas/email,legados semmudança,20mantido,ausência de pressa falsa. VR:regras opcionais com padrões atuais preservados,sem decisão extra obrigatória para código simples.
+
+Custos decriação/leitura existentes comtetoautomático/reserva,não adicionar chamada porvenda para justificar mensagem ou calcular desconto;reuso não significa custo0. MR27/10/07h42/TX/FX275 vinculantes:100%direitos/complementos pior mês mensal/anual sem prejuízo isolado,empresa basemínima100%fixos,recebimentomaiscaro/impostos/reservas,meta60%mensalreal,desconhecido reprova e franquia grátis nãozero. Preços/limites/comissão/flagsfalse/taxgate/art9a/revisão/stripePlatformEligibilityReady/conteúdo/idiomas/IDs/Hazelsong preservados. Somente registro,não implementação/teste funcional/publicação/número deentrega;contador254.
+
+### Pedido integral e proveniência — 554 [DS1]
+
+DS — Regras dos códigos de desconto: produtos, primeira compra, valor mínimo e duração (29/10/2026) [DS1]
+
+Solicitação do dono (29/10/2026, 19h53, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: antes de gravar, aplique a regra "Pedidos repetidos" (23/10/2026). Procure esta solicitação no main, nos PRs abertos e nos ramos codex/* recentes, pela linha de data e hora, pelo nome da seção, pela etiqueta [DS1] e pelo conteúdo. Se já existir item que peça código de desconto só para certos produtos, só para a primeira compra, com valor mínimo ou com duração em assinaturas, aplique só a diferença dentro dele, mantendo número, posição e estado; caso contrário, crie um único item com o próximo número livre, na posição que a ordem AV1 indicar.
+
+Estado inicial: na fila.
+
+Contexto: o Claude conferiu em 29/10/2026 o topo de clickfunnels.com/apps/discounts ("Whether you're running a flash sale or rewarding loyal customers"). No Marktmorgen, os códigos (lib/discount.ts) são um Coupon e um Promotion Code na conta Stripe do próprio criador, com porcentagem ou valor, limite de usos (maxRedemptions), data de término (expiresAt), até MAX_CODES = 20 e duration "once" (só o pagamento em que o código é digitado). O Stripe calcula e conta tudo. Não há código só para certos produtos, só para a primeira compra, com valor mínimo do pedido, nem com duração nas assinaturas.
+
+[DS1] Quatro regras opcionais, todas pelo próprio Stripe, nunca calculadas pelo Marktmorgen.
+(a) Só para certos produtos: o criador escolhe um ou mais produtos da loja; o código vale só para eles, pelo campo de produtos do cupom do Stripe (applies_to), usando os produtos do Stripe já criados para cada um; produto sem correspondência no Stripe não pode ser escolhido, com a explicação.
+(b) Só para a primeira compra: pela restrição de primeira compra do código promocional do Stripe (first_time_transaction); o estúdio explica que o Stripe decide pelo histórico de pagamentos daquele cliente na conta do criador.
+(c) Valor mínimo do pedido: pela restrição de valor mínimo do Stripe (minimum_amount, na moeda da loja); o checkout diz em texto quanto falta quando o código não vale.
+(d) Duração nas assinaturas: "first payment only" (como hoje), "for N months" (de 1 a 24) ou "forever", pelos campos de duração do cupom do Stripe; a página do produto e o e-mail de confirmação dizem em texto quanto tempo o desconto dura e qual será o preço depois.
+(e) Sem combinar regras que o Stripe não aceite junto; o estúdio só oferece as combinações válidas e mostra o erro do Stripe em texto quando houver.
+(f) Honestidade: a data de término é a real e é mostrada; nenhuma página diz "ends today", "last chance" ou mostra contador para um código que não acaba nesse prazo; nenhum "de/por" inventado.
+(g) O limite de 20 códigos continua; códigos que já existem continuam funcionando sem mudança.
+(h) Conferir os campos e valores na documentação oficial do Stripe, com data, antes de implementar, na versão de API fixada em lib/discount.ts.
+
+Acessibilidade (AX274): cada regra com rótulo visível e explicação no lugar; erros em texto junto ao campo; contraste de 7:1; alvos de pelo menos 44 × 44 px; operável só pelo teclado.
+
+Testes automáticos: cada regra enviada ao Stripe com os campos certos; o Marktmorgen nunca calcula o preço com desconto; combinações inválidas recusadas; duração dita na página e no e-mail; códigos antigos sem mudança; nenhuma frase de pressa; somente Stripe simulado.
+
+Custo: chamadas ao Stripe só na criação e na leitura dos códigos, como hoje, com teto automático; nenhum custo novo por venda; desconhecido reprova, nunca é zero.
+
+Margem (regra MR vigente, 27/10/2026, 07h42): nenhum cliente pagante, isoladamente e usando 100% dos direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo, depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto. A empresa como um todo não pode dar prejuízo a partir da base mínima calculada, com 100% dos custos fixos atribuídos ao Marktmorgen (FX275). A meta de 60% de margem líquida é medida todo mês no relatório real. Política tributária TX vigente. Custo desconhecido reprova, nunca é zero; cota grátis de fornecedor não conta como custo zero.
+
+Proibido: calcular o desconto fora do Stripe; mudar códigos que já existem; aumentar o limite de 20 códigos; pressa falsa, contador falso ou "de/por" inventado; mudar dados da conta Stripe do criador além dos códigos que ele criar; mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos, com Stripe simulado.
+
+Aplicar a regra VR.
