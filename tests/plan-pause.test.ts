@@ -17,7 +17,7 @@
  *   - a store that started again by hand is left alone.
  */
 import { MAX_STORE_BYTES, claimHandle, setSubscription, storeForEmail, storeForRestartSource, storeRef } from "@/lib/store";
-import { PAUSE_OBSERVATION, onBreak, pauseEmail, pauseOf, pausePlan, pauseRefusal, runBreaks, undoPause } from "@/lib/plan-pause";
+import { PAUSE_OBSERVATION, confirmPause, onBreak, pauseEmail, pauseOf, pausePlan, pauseRefusal, runBreaks, undoPause } from "@/lib/plan-pause";
 import { addPeriods } from "@/lib/plans";
 import { done, is, part } from "./check";
 import { paidPeriod } from "./billing-period-fixture";
@@ -1043,6 +1043,40 @@ async function main() {
     const before = created.length;
     const counts = await runBreaks(until + 60);
     is("is left alone", [counts.dropped, created.length - before], [1, 0]);
+  }
+
+  part("Funded immediate confirmation cannot use the unreserved company email meter");
+  {
+    const store = await storeWith("pause-notice-admission@example.com", "pausenoticeadmission", "sub_PauseNoticeAdmission");
+    const record = {subscription:"sub_PauseNoticeAdmission",customer:"cus_TestPause0001",paymentMethod:"pm_TestCard00001",
+      tier:"creator" as const,from:NOW+DAY,until:NOW+31*DAY,told:0};
+    emails.length=0;
+    await confirmPause(store,record);
+    is("the existing legacy transactional confirmation is still sent",emails.length,1);
+    let getters=0;
+    const fundingGetter=Object.defineProperty({...record},"funding",{get(){getters++;throw new Error("funding getter must not run");}});
+    const periodGetter=Object.defineProperty({...store},"period",{get(){getters++;throw new Error("period getter must not run");}});
+    const fundedGetter=Object.defineProperty({...paidPeriod()},"funded",{get(){getters++;throw new Error("funded getter must not run");}});
+    const cases=[
+      {store,record:{...record,funding:{version:1 as const,grantId:"ctr_notice_source"}}},
+      {store,record:{...record,funding:{version:1 as const,grantId:null}}},
+      {store,record:{...record,funding:null}},
+      {store,record:{...record,funding:undefined}},
+      {store,record:fundingGetter},
+      {store:periodGetter,record},
+      {store:{...store,period:{...paidPeriod(),funded:true as const}},record},
+      {store:{...store,period:fundedGetter},record},
+    ];
+    const original=pauseRedis.pipeline;let redisCalls=0;
+    pauseRedis.pipeline=async commands=>{redisCalls++;return original(commands);};
+    try {
+      for(const candidate of cases){
+        const before=providerCalls;emails.length=0;
+        await confirmPause(candidate.store,candidate.record as Parameters<typeof confirmPause>[1]);
+        is("funded, unknown or accessor evidence sends no unreserved confirmation",[emails.length,providerCalls-before,redisCalls],[0,0,0]);
+      }
+      is("notice admission does not invoke funding or period accessors",getters,0);
+    }finally{pauseRedis.pipeline=original;}
   }
 
   done();

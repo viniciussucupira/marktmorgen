@@ -488,7 +488,30 @@ export function pauseEmail(kind: "set" | "soon" | "restarted" | "failed" | "unco
   };
 }
 
+/** Funded account notices need their own reviewed reservation and durable generation.
+ * The company meter alone is not proof of this liability. Keep them held until
+ * that path is built; a missing inactive period cannot erase the pause marker. */
+function legacyNoticeAdmitted(store: Store, record: PauseRecord): boolean {
+  try {
+    if (!record || typeof record !== "object" ||
+        ![Object.prototype, null].includes(Object.getPrototypeOf(record))) return false;
+    if (Object.getOwnPropertyDescriptor(record, "funding")) return false;
+    if (!store || typeof store !== "object" ||
+        ![Object.prototype, null].includes(Object.getPrototypeOf(store))) return false;
+    const period = Object.getOwnPropertyDescriptor(store, "period");
+    if (period && !Object.hasOwn(period, "value")) return false;
+    if (period?.value !== null && period?.value !== undefined) {
+      if (typeof period.value !== "object" ||
+          ![Object.prototype, null].includes(Object.getPrototypeOf(period.value))) return false;
+      const funded = Object.getOwnPropertyDescriptor(period.value, "funded");
+      if (funded && (!Object.hasOwn(funded, "value") || funded.value !== false)) return false;
+    }
+    return true;
+  } catch { return false; }
+}
+
 async function tell(store: Store, kind: "set" | "soon" | "restarted" | "failed" | "unconfirmed", record: PauseRecord): Promise<boolean> {
+  if (!legacyNoticeAdmitted(store, record)) return false;
   if (!isSenderConfigured() || !store.email) return false;
   const { subject, text } = pauseEmail(kind, record);
   return sendEmail({ meter: { by: "company" }, from: NIMBUS_FROM, to: store.email, subject, text, replyTo: SUPPORT_EMAIL });

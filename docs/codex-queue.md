@@ -14860,3 +14860,12 @@ Regra de margem: cada item segue a REGRA DE MARGEM vigente (MR, 27/10/2026, 07h4
 Proibido: mudar preços, cortar limites visíveis, retirar recursos ou direitos de qualquer plano, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a, a revisão comercial ou stripePlatformEligibilityReady; afrouxar qualquer trava; instalar overlay ou widget de acessibilidade; acrescentar contador regressivo, escassez, depoimento ou número inventado; mostrar recurso que não funciona hoje; apagar páginas ou conteúdo (só mover); alterar o conteúdo do criador sem aprovação; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar qualquer coisa da Hazelsong; afirmar em público superioridade sobre a ClickFunnels sem a prova exigida em AX274 (item 7) e na regra VR (item 7). Somente testes sintéticos.
 
 Aplicar a regra VR.
+
+
+## PR1203 — incorporação e produção verificadas
+
+PR https://github.com/viniciussucupira/marktmorgen/pull/1203, headb944c4d6baedbeb5a1f0a1c62d6e004e2753f2ec, mergef1b54f6956eb328801cc0f5980def6931970131d às09:37:31Fortaleza/12:37:31UTC29/10/2026; paisead3641+b944c4d, árvore3d75f83004e6481ca6aef3af51c9575c9ac9a6a0igualàtestada.39/39+Vercel;verify123437614825Everythingpassing12:14:45.2515339UTC/bundles234/234. Redis12343761497012:09:49.4213677UTC: ambosshared,lostACK64replays,14recusas,caixa/ledgerpreservados,25comandos medidos(EVAL1,HGET21,HSET1,TTL1,TYPE1)≤40. Oitoscopesfulltrue;signup3engines30/150/0;mobile9coldLCPmax1384/CLS0/interação152ms/0writes(labonly);NVDA/VoiceOver2headings0writes/foreign,não tarefascompletas. Firefox123437615009/WebKit123437615043aprovados. READYdpl_HSQBed1VZxcWvgY1tCsLxEhKZyZP,SHAexato7aliases5HTMLpúblicosmarktmorgen.com confirmados antes da incorporação documental1204. Contador254semprovainterativa; nenhuma cobertura/flag/review habilitada.
+
+## AV — admissão do aviso imediato de pausa financiada
+
+Corrige o caminho real confirmPause→tell(company): qualquer funding ou períodofinanciado/ACKestruturaldesconhecido permanece retido antes de IO, sem retirar o aviso legado nem mudar opt-in. Fonte/geração/reserva/tetoglobal dos avisos financiados continuam obrigatórios e incompletos; não declarar prontidão. Testes positivoslegados e negativosfinanciados/accessors preparados, suíte integral pendente. Binding atualizado,semnovachave/comando/provedor; custos completos desconhecidos reprovados. CK509–512eSC1incorporadoClaude1192preservados no prefixo.
