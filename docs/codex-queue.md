@@ -15072,3 +15072,37 @@ Regra de margem: segue a REGRA DE MARGEM vigente (MR, 27/10/2026, 07h42), a pol�
 Proibido: inventar, estimar ou arredondar para cima qualquer número; mostrar dado pessoal de comprador; mudar preços, limites visíveis, comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a, a revisão comercial ou stripePlatformEligibilityReady; afrouxar qualquer trava; mostrar recurso que não funciona hoje; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar qualquer coisa da Hazelsong. Somente testes sintéticos.
 
 Aplicar a regra VR.
+
+
+## FN2 — registro integral; item526 (29/10/2026,11h10Fortaleza)
+
+Proveniência: pedido direto do dono nesta conversa; descrição da captura e do estado do produto atribuída ao briefing, sem alegar inspeção independente de imagem não anexada nesta mensagem. Deduplicação: main51030ab,PR1208aberto,20PRsrecentes/19heads codexdistintos e763refs,sem etiqueta/título/data/conteúdo equivalente. Próximo livre526após525FN1,sem alterar ordem/estado/escopo existentes. Reaproveitar377TB3/headline-test/flows/funnel-metrics;receitas só quando525funcionar;reconferir código antes e aplicar apenasdiferença. MR/TX/FX275/AX274/VR,custosdetetos antesoperação e desconhecido reprova vinculantes. Registro somente,sem implementar/ativar/anunciar recurso; AVcontinua,TB375/32permanece noPR1208comcódigo.
+
+FN — Mapa visual do funil, caminho condicional e teste dividido no funil (29/10/2026)
+Etiqueta: [FN2]
+
+Solicitação do dono (29/10/2026, 11h10, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: antes de gravar, aplique a regra permanente "Pedidos repetidos". Confira o main, os PRs abertos e os ramos codex/* recentes e procure esta solicitação pela linha de data e hora, pelo nome da seção, pela etiqueta [FN2] e pelo conteúdo. Se já estiver gravada, não crie nada novo. Grave na ordem de chegada, depois do último item já gravado, com o próximo número livre, sem alterar a ordem dos itens existentes.
+
+526. [FN2] Mapa visual do funil, caminho condicional e teste dividido no funil.
+Estado inicial: na fila.
+Problema que resolve: o dono enviou a captura da aba "Your Funnel" de clickfunnels.com (29/10/2026). No editor de funis deles, cada etapa aparece como miniatura da própria página (Cart Page, OTO Page, Thank you page), ligada à seguinte por uma linha vertical, e um painel ao lado acrescenta "Page" (nova página), "Conditional split path" (dividir o caminho por condições) e "Split test" (dividir o caminho por porcentagem do tráfego). No Marktmorgen, o funil é uma lista de etapas com nome e contagens (components/page-funnel-editor.tsx, lib/page-funnel.ts); caminho com condição só existe nas sequências de e-mail (lib/flows.ts, IF/ELSE desde 17/10/2026). Já existem e NÃO devem ser refeitos: a lógica de teste de versões de 377 [TB3], o teste de títulos (lib/headline-test.ts), as condições de lib/flows.ts e as contagens por etapa de lib/funnel-metrics.ts.
+O que fazer:
+- mapa visual do funil no estúdio: cada etapa como miniatura real da página, gerada a partir da própria página com os dados do criador, com nome, endereço e as contagens (e, quando 525 [FN1] existir, a receita) de cada etapa, ligadas por uma linha na ordem do visitante;
+- painel ao lado do mapa com "Page" (acrescentar página ou produto da loja), "Conditional path" e "Split test", para inserir no ponto escolhido do mapa;
+- caminho condicional: o visitante segue para uma etapa ou outra conforme comprou ou recusou a oferta anterior, a origem ou campanha da visita, ou o tipo de aparelho; sem dado pessoal novo, sem rastreamento entre sites e com uma etapa padrão para quem não se encaixa;
+- teste dividido como etapa: o tráfego se divide entre duas a quatro páginas pela lógica de 377 [TB3], com a mesma regra de vencedor por vendas líquidas de reembolsos e sem declarar vencedor com dados insuficientes;
+- alternativa sem arrastar para tudo no mapa (AX274, 2.5.7): escolher o ponto e a ação por clique ou teclado.
+Acessibilidade: AX274 completo; o mapa também é lido como lista ordenada pelo leitor de tela, com cada ramo anunciado.
+Testes automáticos: miniaturas atualizadas quando a página muda, cada condição, etapa padrão, divisão do teste e alternativa por teclado.
+Custos: a geração e o armazenamento das miniaturas e as leituras novas entram no custo de pior caso do plano, com teto automático antes do gasto; custo desconhecido reprova.
+Lucro: o criador vê e monta o funil inteiro de uma vez e manda cada visitante para a oferta certa, o que aumenta o valor percebido dos planos.
+
+Regra de margem: segue a REGRA DE MARGEM vigente (MR, 27/10/2026, 07h42), a política tributária TX e FX275; custo desconhecido reprova, nunca é zero.
+
+Proibido: refazer a lógica de 377 [TB3] ou as condições de lib/flows.ts; criar rastreamento entre sites ou coletar dado pessoal novo; mudar preços, limites visíveis (inclusive o número máximo de páginas e funis), comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a, a revisão comercial ou stripePlatformEligibilityReady; afrouxar qualquer trava; mostrar recurso que não funciona hoje; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
