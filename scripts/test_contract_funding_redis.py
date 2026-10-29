@@ -649,7 +649,7 @@ def main():
         assert claimed['sourceBinding'] == original['active:restart-store']
         assert claimed['sourceReceipt'] == original['grant:ctr_restart_source']
         assert claimed['restartReceipt'] == original['grant:ctr_restart_new']
-        assert claimed['reservedCents'] == 90 and claimed['carriedCents'] == 0
+        assert claimed['reservedCents'] == 90 and claimed['carriedCents'] == 0 and claimed['annual'] == 1799999000
         winner = next(result for result in results if isinstance(result, list))
         assert winner[1] == redis.command('HGET', keys[42], 'restart-intent:ctr_restart_new')
         assert redis.command('TTL', keys[42]) == -1
@@ -838,7 +838,7 @@ def main():
         assert arm(redis, keys[44], race_ref, race_pause, claim='claim_new') == 0
         print('PASS:64 actual first submission contenders produce exactly one durable barrier ACK;new claim cannot rearm')
 
-        for scenario in ('claim','binding','review','deadline','rollback','price','digest','pause','due','annual','source','pending','cash','overflow','owner-index'):
+        for scenario in ('claim','binding','review','deadline','rollback','price','digest','pause','due','annual','annual-changed','source','pending','cash','overflow','owner-index'):
             ref = intent_refs[1]
             pause = intent_ready(keys[43], ref)
             assert intent_claim(redis, keys[43], ref, pause)[0] == 1
@@ -853,6 +853,7 @@ def main():
             elif scenario == 'pause': redis.command('SET', 'nl:pause:' + ref, pause + ' ')
             elif scenario == 'due': redis.command('ZADD', 'nl:pause:due', 1800000003, ref)
             elif scenario == 'annual': redis.command('DEL', 'nl:pause:last:' + ref)
+            elif scenario == 'annual-changed': redis.command('SET', 'nl:pause:last:' + ref, '1799999999')
             elif scenario == 'source': redis.command('HSET', keys[43], 'active:restart-store', 'changed')
             elif scenario == 'pending': redis.command('HSET', keys[43], 'pending:restart-store', 'ctr_other')
             elif scenario == 'cash': redis.command('HSET', keys[43], 'reserved', 89)
@@ -863,7 +864,7 @@ def main():
             snapshot_before = snapshot(keys[43])
             assert arm(redis, keys[43], ref, pause, **over) == 0, scenario
             assert snapshot(keys[43]) == snapshot_before, scenario
-        print('PASS:15 foreign, stale, changed, incomplete, index and oversize barrier cases preserve exact ledger evidence')
+        print('PASS:16 foreign, stale, changed, incomplete, annual generation, index and oversize barrier cases preserve exact ledger evidence')
 
         # A result ID is evidence, not a new submission or rights activation.
         # Policy/month/deadline changes must not discard an already observed ID.
@@ -978,7 +979,7 @@ def main():
         print('PASS:permanent source index blocks a new owner even without pending;ignored recoveryACK+64contenders consume at most3lifetime provider reads')
         print('RESTART_RECOVERY_COMMANDS:'+json.dumps(recovery_counts,sort_keys=True))
 
-        for scenario in ('raw','ref','handle','source','grant','due','annual','cash','index','rollback'):
+        for scenario in ('raw','ref','handle','source','grant','due','annual','annual-changed','cash','index','rollback'):
             ref = intent_refs[1]
             pause = intent_ready(keys[43],ref)
             assert intent_claim(redis,keys[43],ref,pause)[0] == 1
@@ -991,13 +992,14 @@ def main():
             elif scenario == 'grant': over['source_grant'] = 'ctr_foreign'
             elif scenario == 'due': redis.command('ZADD','nl:pause:due',1800000004,ref)
             elif scenario == 'annual': redis.command('DEL','nl:pause:last:'+ref)
+            elif scenario == 'annual-changed': redis.command('SET','nl:pause:last:'+ref,'1799999999')
             elif scenario == 'cash': redis.command('HSET',keys[43],'reserved',89)
             elif scenario == 'index': redis.command('HSET',keys[43],'restart-owner:ctr_restart_source','ctr_missing')
             elif scenario == 'rollback': over['now'] = 1800000001
             before = snapshot(keys[43])
             assert recovery(redis,keys[43],ref,pause,**over) == 0,scenario
             assert snapshot(keys[43]) == before,scenario
-        print('PASS:10unknown/foreign/missing/cash/clock recovery cases retain every ledger field')
+        print('PASS:11unknown/foreign/missing/annual-generation/cash/clock recovery cases retain every ledger field')
 
         ref = intent_refs[0]
         pause = intent_ready(keys[42],ref)
@@ -1082,7 +1084,7 @@ def main():
         print('PASS:64first restart activation contenders produce exactly1committed binding without releasing or reusing principal')
 
         for scenario in ('raw','ref','claim','price','digest','id','source-id','created','period','span',
-                         'deadline','pending','index','source','receipt','cash','slots','policy','due','annual','ttl','phase'):
+                         'deadline','pending','index','source','receipt','cash','slots','policy','due','annual','annual-changed','ttl','phase'):
             fixture = activation_ready()
             owner_ref,owner_pause,owner,sent,observed = fixture
             over = {}
@@ -1106,6 +1108,7 @@ def main():
             elif scenario=='policy': redis.command('HSET',keys[42],'policy','foreign')
             elif scenario=='due': redis.command('ZADD','nl:pause:due',1800000002,owner_ref)
             elif scenario=='annual': redis.command('DEL','nl:pause:last:'+owner_ref)
+            elif scenario=='annual-changed': redis.command('SET','nl:pause:last:'+owner_ref,'1799999999')
             elif scenario=='ttl': redis.command('EXPIRE',keys[42],300)
             elif scenario=='phase':
                 retained = json.loads(redis.command('HGET',keys[42],'restart-intent:ctr_restart_new'))
@@ -1118,7 +1121,7 @@ def main():
             assert snapshot(keys[42]) == before,scenario
             assert [redis.command('GET','nl:pause:'+owner_ref),redis.command('GET','nl:pause:last:'+owner_ref),
                     redis.command('ZSCORE','nl:pause:due',owner_ref)] == evidence,scenario
-        print('PASS:22foreign/unknown/late restart activation cases preserve every field and pause/year/due')
+        print('PASS:23foreign/unknown/late/annual-generation restart activation cases preserve every field and pause/year/due')
 
 
         # The same lifetime recovery allowance must work after activation
