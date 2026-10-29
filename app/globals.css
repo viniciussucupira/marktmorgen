@@ -4753,16 +4753,14 @@ html:has([data-product-editor]) {
 }
 
 
-/* Keep the complete home in the DOM and accessibility tree. Let the browser
- * defer layout/paint of off-screen sections until scrolling or focus needs them,
- * so the first cold hero paint does not lay out every lower-page pricing list.
- * Hero/navigation, pricing geometry, FAQ wording and creator proof disclosures
- * remain eagerly rendered. Honesty labels must stay readable before scrolling;
- * native off-screen skipping can otherwise omit them from rendered page text.
- * Print is intact. */
+/* Limit native off-screen rendering deferral to the long decorative product
+ * strip. All editorial sections, feature explanations, pricing, disclosures and
+ * cancellation wording stay eagerly rendered, including before any scrolling.
+ * The strip remains in the DOM/accessibility tree and renders when approached
+ * or focused; this screen-only optimization does not change print. */
 @media screen {
   @supports (content-visibility: auto) {
-    main[data-home-page] > section:not([data-home-hero]):not(#pricing):not(#faq):not([data-creator-showcase]) {
+    main[data-home-page] > section[aria-label="Things people sell from a Marktmorgen store"] {
       content-visibility: auto;
       contain-intrinsic-block-size: auto 800px;
     }

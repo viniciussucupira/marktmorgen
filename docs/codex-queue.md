@@ -15505,3 +15505,8 @@ Regra de margem: cada item segue a REGRA DE MARGEM vigente (MR, 27/10/2026, 07h4
 Proibido: imagem de texto; foto repetida; foto ou cartão sugerindo que a pessoa da foto é cliente; mostrar recurso que não funciona hoje; tirar o quadro "On this page" ou qualquer conteúdo das páginas (só mover); mudar preços, limites visíveis, comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a, a revisão comercial ou stripePlatformEligibilityReady; afrouxar qualquer trava; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar qualquer coisa da Hazelsong. Somente testes sintéticos.
 
 Aplicar a regra VR.
+
+
+### PR1208 — conter somente a faixa de tipos de produto, não textos editoriais
+
+Head615a130:WebKit123583492129reprovou1verificação reviewed US-English wording /,porque a frase Canceling is two clicks in your studio está emhome-reasons,nãoFAQ. Firefox passou,mas não resolve diferença entre engines. A regra genérica de contenção de seções é substituída por seletor exclusivo da faixa Things people sell from a Marktmorgen store. Todos os textos editoriais,razões,disclosures,FAQ,pricing e explicações de recursos passam a layout/renderização imediatos,sem exceções seletivas por frases de testes. Nenhum texto/asserção/teste/limite/amostra relaxado; a faixa continua DOM/leitor/scroll/foco eprint intactos. Nova suíte inteira obrigatória, incluindo9amostrasfriasLCP/CLS/interação e regressões completas dos browsers. VP531/posição241,FT528–530,HE527 ecomplementos TB/FN preservados.
