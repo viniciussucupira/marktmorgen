@@ -67,6 +67,7 @@ jobs:
       - name: Collect exact generated financial documents after failed verification
         if: ${{ failure() && github.head_ref == 'codex/av-joint-restart-publication' }}
         run: |
+          python3 -m pip install --disable-pip-version-check numpy==2.3.3 scipy==1.16.2
           node scripts/margin-alignment.mjs
           node scripts/pricing-optimization.mjs
           node scripts/pricing-usage-proposal.mjs
