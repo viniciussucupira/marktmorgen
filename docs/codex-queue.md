@@ -16555,3 +16555,49 @@ PR1221 incorporado29/10/2026 às17:28:33Fortaleza/20:28:33UTC,mergeb87cfae9deeee
 PR1217 incorporado29/10/2026 às17:18:52Fortaleza/20:18:52UTC,merge46c61bc6dd5b4353f0da8df942c0cc092a51d55b,árvorebaeca0a0dc68c0c068bbf8e759b71552ffae5293igualàuniãotestada.39/39checks+Vercel,verify123693596539234/234bundles/Everythingpassing19:56:18.9619921UTC;mobile1236935964829coldLCPmáx884ms/CLS0/proxyinteração64ms/0writes,nãoINPdecampo. Inclui correção pública538AB1 e worker1216ACKlimitado,sem mudar regra estatística ou habilitar cobertura financeira. PR1216 marcado incorporado via ancestralidade1217,não entrega separada.
 
 Produção1217:READYdpl_Fw4G8QQL7PTi6xeFJLPvGbgKAvLG,SHAexato46c61bc6dd5b4353f0da8df942c0cc092a51d55b,7aliasesincluindo marktmorgen.com/wwwmarktmorgen. HTMLrealem/,/pricing,/platform/path,/help,/proof/comparisons e/platform/insights conferidocommesmodata-dpl-id;help/insightscontêm regra dinheiro por visitante e14dias. Não é prova interativa de cliente. Chromecontinua bloqueado,sem retentativa/troca;contador254mantido. CustosCI/produção não medidos não sãozero; nenhuma margem certificada. Obrigações de aviso/funding/renewals/settlement/global/lifetime continuam pendentes e coberturasfalse;histórico preservado.
+
+
+## 549 [SI1] — Trazer páginas de qualquer construtor de sites
+
+Estado: na fila. Ordem de chegada após548TR1, subordinada àAV1, sem interromper a unidade em andamento. Proveniência: solicitação integral do dono29/10/2026 às17h47Fortaleza, anexo399d473e-9c27-41b6-bdff-e618f3cffd56/Texto colado.txt preservado abaixo. Pedidos repetidos: main9dacb88d,PRs1223/1224 abertos,20heads recentes distintos e777refs codex/* conferidos por data/hora,seção,SI1 e conteúdo; nenhum importador genérico de páginas de construtores equivalente.120F2-IMPORTS cobre inscritos/posts/cursos de exports,239CF2guias,394CX5automações/imagensClickFunnels e544SQ9sequências: ligar239/394/544semduplicar leitor,executor ou guias.
+
+Generalizar UM leitor lib/clickfunnels-page.ts e suas regras para arquivoHTMLsalvo da própria página,estúdio “Bring in a page from another site”,sem segundo leitor. Títulos/parágrafos/listas/botões/vídeosYouTubeVimeoLoom/perguntas-respostas/textosdeformulário→blocoslib/sales-page.ts; rascunho escondido até liberação pelo criador,sem sobrescrever. Reconhecer marcasKajabi/Wix/Squarespace/WordPress/equivalentes para partes conhecidas; fallbackgeral sem reconhecimento. Arquivo é dado,nunca executado. Confirmar titularidade/direitos do texto,sem entrar em contas/copiar terceiros/buscarURL.
+
+Excluir scripts/estilos/pixels/rastreadores/pagamento/consentimento/contadores/menus/embeds/HTMLlivre,com relatório de reparo completo e motivo. Imagens APENAS listadas no relatório,criador sobe novamente na cota: a ligação394CX5NÃO autoriza download de imagens nesteSI1,cuja proibição de rede é expressa. Sem chamadaIA/rede para páginas ou imagens. Até10páginasporvez e mesmo tamanho máximo de arquivo do importador atual,conferido antes de implementar,sem afrouxar limites/travas.239CF2explica salvar arquivo com fontes oficiais datadas quando cada plataforma for implementada; contexto concorrente é relatoClaude,não alegar pesquisa independente neste registro.
+
+AX274: passar avisos reais de contraste/alt/hierarquia/linkpropósito antes de publicar; relatório em texto/teclado/7:1. Testes futuros somente arquivos sintéticos por construtor/fallback,blocos corretos/relatório/nãoexecutar/nãorede/nãosobrescrever/escondidoatéliberação. Custo de leitura/processamento/gravações/storage dentro dos tetos/reservas do plano antes da operação; ausência de rede/IA não torna custo desconhecido zero. MR27/10/07h42/TX/FX275:100%direitos+complementos pior mês mensal/anual sem prejuízo isolado,empresa sem prejuízo na base mínima com100%fixos,recebimento mais caro/reservas/impostos,60%meta mensal real; desconhecido reprova,franquia grátis não ézero. VR: somente registro,nenhuma implementação/teste funcional/publicação ou incremento do contador. Flags/preços/direitos/comissão/travas/opt-ins/conteúdo/Hazelsong/idiomas/IDs preservados.
+
+### Briefing integral do dono — 549SI1
+
+SI — Trazer páginas de qualquer construtor de sites, não só da ClickFunnels (29/10/2026) [SI1]
+
+Solicitação do dono (29/10/2026, 17h47, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: antes de gravar, aplique a regra "Pedidos repetidos" (23/10/2026). Procure esta solicitação no main, nos PRs abertos e nos ramos codex/* recentes, pela linha de data e hora, pelo nome da seção, pela etiqueta [SI1] e pelo conteúdo. Se já existir item que peça importar páginas de outros construtores de sites, aplique só a diferença dentro dele, mantendo número, posição e estado; caso contrário, crie um único item com o próximo número livre, na posição que a ordem AV1 indicar. Ligue este item a 239 [CF2] (guias de migração), a 394 [CX5] (importador ClickFunnels para automações e imagens) e a 544 [SQ9] (sequências de outros serviços), sem duplicá-los.
+
+Estado inicial: na fila.
+
+Contexto: o Claude conferiu em 29/10/2026 as perguntas frequentes de clickfunnels.com/apps/site: a resposta a "Can I migrate my existing website to ClickFunnels?" diz "we don't offer automatic migration". O Marktmorgen já importa páginas salvas da ClickFunnels (lib/clickfunnels-page.ts, lib/clickfunnels-funnel.ts, lib/clickfunnels-csv.ts, docs/clickfunnels-import.md): títulos, parágrafos, listas, botões, vídeos do YouTube, Vimeo e Loom e formulários viram blocos de uma página da loja, escondida até o criador liberar, com relatório do que não veio; nunca entra na conta da ClickFunnels, nunca busca páginas nem carrega imagens, e nenhum código dos arquivos roda. Para páginas de Kajabi, Stan, Wix, Squarespace, WordPress, Linktree, Beacons, Carrd e outros, não há importação.
+
+[SI1] O mesmo importador, para o arquivo de página de qualquer construtor.
+(a) No estúdio, "Bring in a page from another site": o criador sobe o arquivo da própria página, salvo pelo navegador (HTML), de qualquer construtor; reaproveite o mesmo leitor e as mesmas regras de lib/clickfunnels-page.ts, generalizados, sem segundo leitor.
+(b) O que vem: títulos, parágrafos, listas, botões com link, vídeos do YouTube, Vimeo e Loom, perguntas e respostas, e textos de formulários, convertidos nos blocos da loja (lib/sales-page.ts); a página fica escondida dos visitantes até o criador liberar; nenhuma página existente é sobrescrita.
+(c) O que nunca vem: scripts, estilos, rastreadores, pixels, campos de pagamento, caixas de consentimento, contadores, menus, código incorporado e qualquer HTML livre; tudo listado no relatório de reparo, com o motivo, como já é feito para a ClickFunnels.
+(d) Imagens: não são buscadas na internet; o relatório lista cada uma, e o criador as sobe de novo, dentro da cota de armazenamento do plano.
+(e) Só arquivos do próprio criador: o estúdio pede que ele confirme que a página é dele e que tem os direitos sobre o texto; nunca buscar uma página por endereço, nunca entrar em conta de terceiros, nunca copiar a página de outra pessoa.
+(f) Reconhecimento por construtor, quando o arquivo tiver as marcas dele (por exemplo, Kajabi, Wix, Squarespace, WordPress), para converter melhor as partes conhecidas; sem reconhecimento, a leitura geral continua funcionando.
+(g) Limites: até 10 páginas por vez e tamanho máximo do arquivo, os mesmos do importador da ClickFunnels; o guia de migração de 239 [CF2] explica como salvar a página em cada construtor.
+
+Acessibilidade (AX274): os blocos importados passam pelos avisos de acessibilidade do estúdio antes de publicar (contraste, texto alternativo, ordem dos títulos, link sem propósito claro); o relatório é texto, operável só pelo teclado; contraste de 7:1.
+
+Testes automáticos: páginas sintéticas de cada construtor viram os blocos certos; scripts, estilos, pixels e HTML livre nunca entram; nada é buscado na internet; nenhuma página existente sobrescrita; a página fica escondida até ser liberada; relatório completo; somente arquivos sintéticos.
+
+Custo: leitura do arquivo e gravações já contadas no plano, com teto automático; nenhuma chamada de rede para buscar páginas ou imagens; nenhuma chamada de IA; desconhecido reprova, nunca é zero.
+
+Margem (regra MR vigente, 27/10/2026, 07h42): nenhum cliente pagante, isoladamente e usando 100% dos direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo, depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto. A empresa como um todo não pode dar prejuízo a partir da base mínima calculada, com 100% dos custos fixos atribuídos ao Marktmorgen (FX275). A meta de 60% de margem líquida é medida todo mês no relatório real. Política tributária TX vigente. Custo desconhecido reprova, nunca é zero; cota grátis de fornecedor não conta como custo zero.
+
+Proibido: buscar páginas ou imagens na internet; entrar em contas de terceiros; importar página de outra pessoa; deixar entrar script, estilo, pixel, rastreador ou HTML livre; executar qualquer código dos arquivos; sobrescrever páginas; segundo leitor de páginas; mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
