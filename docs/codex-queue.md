@@ -15448,6 +15448,43 @@ Proveniência/diferença: pedido direto do dono acima; descrição da captura at
 PR1211 incorporado em29/10/2026,11:22:11Fortaleza/14:22:11UTC,merge332a38db16d7a2907a5c6fed08e5169403853c01,headef36df797b7c92e54e2f44de638cf188a08b93ec,árvore0fb59845e268c29b85937a6ceae4e9b93c5ca03b,paise51030ab+ef36df7.27checksdocumentais16success11skips+Vercel.526FN2nafilaapós525,briefingintegral/reaproveitamento/ordem/estado preservados.375/32complementoTBpermanece nestePRcomcódigo. Suíteinteira novamente na árvorecombinada;provas antigas não certificamnovohead. Counter254inalterado.
 
 
+
+### Complemento ao 526 [FN2] — 29/10/2026, 15h57 Fortaleza
+
+Proveniência: solicitação direta do dono, preservada integralmente abaixo. Pedidos repetidos passo3(b): main2cd4fbda, nenhum PR aberto e19heads codex/* de20PRsrecentes conferidos por data, título, FN2 e conteúdo; diferença ainda ausente. Acrescenta visualização dos resultados ao526existente; número, posição, estado, mapa/caminho condicional e histórico intactos. Reusar o gerador de526/535MV1; não refaz contagem, regra estatística ou seleção de vencedor. Ordem AV1 mantida. Registro apenas, sem implementação antecipada.
+
+FN — Complemento ao 526 [FN2]: resultado do teste A/B em dois cartões lado a lado, com a imagem de cada versão (29/10/2026)
+Etiqueta: [FN2]
+
+Solicitação do dono (29/10/2026, 15h57, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: é complemento ao item 526 [FN2] já gravado, que já recebeu o complemento de 29/10/2026 sobre o mapa e o caminho condicional. Aplique só a diferença ao item existente, mantendo número, posição e estado (regra "Pedidos repetidos", passo 3, letra b), e registre na proveniência o que mudou.
+
+Estado inicial: o do próprio 526.
+
+Contexto: o Claude conferiu em 29/10/2026 a seção "Start small, see big wins" de clickfunnels.com/features/ab-testing: as versões A e B aparecem lado a lado, cada uma como cartão com a miniatura da página, o nome, o endereço e uma grade de números (visitas, cadastros, vendas, valor de ofertas extras, receita e receita recorrente). No Marktmorgen, o teste de página já existe e é mais rigoroso (lib/headline-test.ts, lib/headline-test-rules.ts: vencedor por dinheiro por visitante a partir das vendas pagas na conta Stripe do criador, linha válida a cada leitura, espera do prazo de reembolso, "Still running" sem dados suficientes), mas o resultado aparece só como linhas de texto em components/page-editor.tsx ("Version A: seen…, … sales paid, … in gross payments, … per visitor").
+
+O que acrescentar ao 526 [FN2]:
+- no teste de página que já existe (título ou versão inteira) e no teste dividido do funil pedido neste item, mostre o resultado em dois a quatro cartões lado a lado, um por versão, cada um com a miniatura real da página daquela versão (o mesmo gerador de miniaturas deste item e de 535 [MV1], sem segundo gerador), o nome ("Version A", "Version B"), o endereço e a grade de números já calculados hoje: vezes vista, cadastros ou checkouts abertos, vendas pagas, valor bruto e dinheiro por visitante;
+- em cada cartão, a chance de aquela versão ser a melhor, com as palavras e a regra que já existem; o cartão da versão que venceu recebe o selo "Winner" só quando a regra atual declarar o vencedor, e "Still running" enquanto não houver;
+- os números vêm dos mesmos contadores de hoje (lib/headline-test-counts.ts e as vendas da conta Stripe do criador), sem contagem nova, sem pixel de rastreamento e sem dados pessoais; quando um número não puder ser lido, mostre "Count unavailable", nunca zero;
+- no celular, os cartões ficam um embaixo do outro, na ordem A, B, C, D.
+- O texto atual em linhas continua disponível abaixo dos cartões, para leitor de tela e para quem preferir.
+
+Acessibilidade (AX274): cada cartão é uma região com título; números em texto real, não em imagem; a miniatura com texto alternativo; a versão vencedora indicada por texto, não só por cor; contraste de 7:1 e alvos de pelo menos 44 × 44 px.
+
+Testes automáticos: cartões com os mesmos números do texto em linhas; selo "Winner" só quando a regra atual declara vencedor; "Count unavailable" quando a leitura falha; encaixe em 390 × 844 e 1280 × 720 px; somente dados sintéticos.
+
+Custo: nenhuma leitura nova; as miniaturas usam o gerador e o armazenamento já contados neste item e em 535 [MV1]; desconhecido reprova, nunca é zero.
+
+Regra de margem: segue a REGRA DE MARGEM vigente (MR, 27/10/2026, 07h42), a política tributária TX e FX275; custo desconhecido reprova, nunca é zero.
+
+Proibido: criar item novo ou mudar número, posição ou estado do 526; mudar a regra estatística, o mínimo de visitas e de vendas, a espera do prazo de reembolso ou a forma de escolher o vencedor; declarar vencedor antes da regra atual; mostrar zero no lugar de um número desconhecido; números inventados; mudar preços, limites visíveis, comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a, a revisão comercial ou stripePlatformEligibilityReady; afrouxar qualquer trava; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+
 ## HE — registro integral; item527 (29/10/2026,12h04Fortaleza)
 
 Proveniência: pedido direto do dono nesta conversa; comparaçãoClickFunnels atribuída ao relatoClaude,semverificação independente deste registro. Deduplicação main332a38d,PR1208aberto,20PRsrecentes/19heads codexdistintos e764refs,semHE1/título/data/conteúdo equivalente. Próximo livre527após526; nenhum estado/ordem anterior alterado. ComplementosTB/FN continuam sendo complementossemitemduplicado;527éeste novoHEexplicitamente solicitado. Antes da implementação,conferir cada tipo deproduto funcional no código; não antecipar animação no registro. MR/TX/FX275/AX274/VR/SF1/ME2/ME3eCF3não refazervinculantes. Registro noPR1208jáemcurso; implementação deHEcontinua na fila.
@@ -15893,3 +15930,38 @@ Margem (regra MR vigente, 27/10/2026, 07h42): nenhum cliente pagante, isoladamen
 Proibido: alterar preço, valor cobrado, impostos, formas de pagamento ou qualquer dado da cobrança; mudar configurações da conta Stripe do criador; enviar imagem ao Stripe sem o clique do criador; usar cor que reprove o contraste; mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos, com Stripe simulado.
 
 Aplicar a regra VR.
+
+
+## 537 [PH1] — Texto de prévia do e-mail, também no teste A/B
+
+Estado: na fila. Ordem de chegada após536CB1, subordinada à prioridadeAV1; sem alteração dos itens existentes. Proveniência: pedido direto do dono de29/10/2026,16h00Fortaleza. Deduplicação: main2cd4fbda,PR1213aberto e20heads codex/*recentes, inventário766ramos; sem pedido equivalente por PH1/preheader/Preview text/data/título/conteúdo. Reusar mail-test/broadcasts/flows/modelos existentes, sem refazer testes nem mudar a regra por visitas/vendas. Aplicar VR.
+
+Nota de integridade: a mensagem recebida termina literalmente em “nenhum cliente”, no começo do parágrafo de margem; o restante não foi recebido nem reconstruído como citação do dono. Permanecem integralmente vinculantes MR27/10/2026 07h42, TX, FX275 e as proibições permanentes: nenhum cliente pagante em prejuízo com100%dos direitos/complementos no pior mês mensal/anual, taxas mais caras de lib/receiving-costs.ts, reservas antes do gasto e empresa sem prejuízo na base mínima com100%custos fixos;60%meta mensalreal,não trava; custo desconhecido reprova,não zero. Preservar preços,limites,comissão,PLANS_ON_SALE=false,OPENING_REQUESTED,tax gate,art.9a,revisão comercial,stripePlatformEligibilityReady,opt-in,conteúdo/idiomas/IDs e Hazelsong. Nenhum envio real,conta,aceite,contratação,pagamento ou contato externo; somente testes sintéticos. Texto recebido preservado abaixo, sem presumir uma continuação ausente:
+
+PH — Texto de prévia do e-mail (preheader), também no teste A/B (29/10/2026) [PH1]
+
+Solicitação do dono (29/10/2026, 16h00, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: antes de gravar, aplique a regra "Pedidos repetidos" (23/10/2026). Procure esta solicitação no main, nos PRs abertos e nos ramos codex/* recentes, pela linha de data e hora, pelo nome da seção, pela etiqueta [PH1] e pelo conteúdo. Se já existir item que peça o texto de prévia (preheader) nos e-mails, aplique só a diferença dentro dele, mantendo número, posição e estado; caso contrário, crie um único item com o próximo número livre, na posição que a ordem AV1 indicar.
+
+Estado inicial: na fila.
+
+Contexto: o Claude conferiu em 29/10/2026 a seção "Supercharge your email marketing" de clickfunnels.com/features/ab-testing: o teste A/B de e-mail deles troca o assunto ("Alternate subject line") e o texto de prévia ("Alternate preheader"), e decide por aberturas e cliques. O Marktmorgen já testa dois assuntos (lib/mail-test.ts, envio em lib/broadcasts.ts), decidido por visitas à loja ou vendas, sem pixel e sem link rastreado (promessa da política de privacidade). Mas os e-mails do Marktmorgen não têm texto de prévia: nenhum campo em lib/broadcasts.ts, lib/flows.ts ou nos modelos; sem ele, o aplicativo de e-mail mostra as primeiras palavras do corpo.
+
+[PH1] Texto de prévia em todos os e-mails escritos pelo criador.
+(a) Acrescente o campo opcional "Preview text" aos envios avulsos, aos e-mails das sequências e aos modelos de e-mail existentes, com até 120 caracteres, em texto simples, sem HTML, link ou imagem, e com a contagem de caracteres ao lado.
+(b) No e-mail enviado, o texto de prévia é o primeiro texto do corpo, escondido visualmente pela técnica padrão de e-mail, seguido de espaçadores que impedem o aplicativo de completar a prévia com o resto do corpo; na versão em texto simples, ele é a primeira linha. Sem texto de prévia preenchido, nada é acrescentado e o comportamento de hoje continua.
+(c) No teste A/B existente (lib/mail-test.ts), o criador pode testar, além do assunto, o par assunto + texto de prévia, com a mesma regra de hoje: sorteio da lista, decisão por visitas ou vendas, sem pixel, e o primeiro vai ao resto da lista quando nenhum for melhor, dito no estúdio com os números.
+(d) Prévia no estúdio de como o e-mail aparece na caixa de entrada (remetente, assunto e texto de prévia), no computador e no celular.
+(e) Quando houver IA ligada no plano, ela pode sugerir um texto de prévia a partir do próprio e-mail, dentro do orçamento de IA já reservado do plano, com reserva antes da chamada; o criador revisa e salva. Sem IA, o campo funciona igual.
+(f) Honestidade: o texto de prévia não pode prometer o que o e-mail não tem nem usar pressa ou escassez falsa; os exemplos e as sugestões da IA nunca usam frases como "This Only Happens Once a Year" ou "Deals Inside" se o e-mail não tiver isso.
+
+Acessibilidade (AX274): o texto de prévia escondido não repete o assunto nem atrapalha o leitor de tela; o campo no estúdio tem rótulo visível, contagem anunciada e mensagem de erro em texto; contraste de 7:1.
+
+Testes automáticos: o texto de prévia aparece como primeiro texto e primeira linha da versão em texto simples; sem preenchimento, o e-mail sai como hoje; limite de 120 caracteres; sem HTML, link ou imagem; teste A/B do par assunto + texto de prévia com a regra atual; nenhum pixel ou link rastreado acrescentado; somente envios simulados.
+
+Custo: um campo de texto sem chamada nova; a sugestão de IA usa só o orçamento de IA já reservado do plano, com reserva antes; nenhum e-mail a mais é enviado; desconhecido reprova, nunca é zero.
+
+Margem (regra MR vigente, 27/10/2026, 07h42): nenhum cliente
