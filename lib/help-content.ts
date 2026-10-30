@@ -112,7 +112,7 @@ export const HELP_SECTIONS: HelpSection[] = [
         a: [
           "Yes to both, from your studio, whenever you like. Monthly to yearly charges the year that day, less what is left of the month you already paid for. Yearly to monthly keeps what is left of your year as credit on your account, and that credit pays your months until it runs out.",
           `Moving up to Studio charges that day the difference for what is left of the period you already paid for; going back to the ${PLAN_AT.creator} plan keeps what is left of Studio as credit on your account. Inside the trial, no switch charges anything.`,
-          "On a yearly plan we email you about a month before it renews, with the date, the amount and the link to cancel.",
+          "On a yearly plan we email you between 15 and 45 days before it renews, with the date, the amount and the link to cancel.",
         ],
       },
       {
