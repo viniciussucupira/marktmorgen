@@ -35,7 +35,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { path: "/platform", priority: 0.8 },
     { path: "/grow-sales", priority: 0.8 },
     { path: "/mission", priority: 0.6 },
-    { path: "/products", priority: 0.6 },
     { path: "/help", priority: 0.6 },
     { path: "/developers", priority: 0.4 },
     { path: "/developers/checkout-script", priority: 0.4 },
