@@ -590,7 +590,11 @@ export async function recordRestartResult(input:{armed:ArmedRestartSubmission;su
  try{
   const {intent}=armed;
   const reply=await redisPipeline([['EVAL',RECORD_RESTART_RESULT,1,'nl:contract-reserve:v1',intent.grant.id,intent.grant.reviewId,intent.grant.statsId,intent.claim,armed.priceId,armed.bodyHash,subscriptionId,now,armed.armedAtSeconds]]);
-  return Array.isArray(reply)&&reply.length===1&&(reply[0]===1||reply[0]===2);
+  if(!Array.isArray(reply))return false;
+  const length=Object.getOwnPropertyDescriptor(reply,'length');
+  if(!length||!Object.hasOwn(length,'value')||length.value!==1)return false;
+  const ack=Object.getOwnPropertyDescriptor(reply,'0');
+  return Boolean(ack&&Object.hasOwn(ack,'value')&&(ack.value===1||ack.value===2));
  }catch{return false;}
 }
 
