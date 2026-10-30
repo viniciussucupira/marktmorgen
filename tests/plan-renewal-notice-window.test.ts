@@ -3,9 +3,8 @@
  * 30 October 2026, docs/kx1-renewal-legal-matrix-2026-10-30.md). What is
  * checked, with synthetic subscriptions only:
  *
- *   - a yearly renewal is first due with 45 days left (California's top of
- *     15 to 45), not only from 30, so a missed run has later runs before 15;
- *   - nothing is due with more than 45 days left;
+ *   - a yearly renewal is first due with 30 days left, never earlier (the
+ *     strictest maximum read: Massachusetts' 30 days, inside California's 45);
  *   - a notice found with fewer than 15 days left (yearly) or fewer than 7
  *     (trial) is still due, but marked late, never as on time;
  *   - inside the window it is not marked late;
@@ -42,9 +41,9 @@ function sub(cycle: "year" | "month", left: number, status = "active"): Record<s
 }
 
 part("yearly renewal");
-is("46 days left: nothing yet", dueReminder(sub("year", 46 * DAY), NOW), null);
-const at44 = dueReminder(sub("year", 44 * DAY), NOW);
-is("44 days left: due, on time", [at44?.kind, at44?.late], ["renewal", false]);
+is("31 days left: nothing yet", dueReminder(sub("year", 31 * DAY), NOW), null);
+const at30 = dueReminder(sub("year", 30 * DAY), NOW);
+is("30 days left: due, on time", [at30?.kind, at30?.late], ["renewal", false]);
 const at15 = dueReminder(sub("year", 15 * DAY), NOW);
 is("15 days left: due, on time", [at15?.kind, at15?.late], ["renewal", false]);
 const at10 = dueReminder(sub("year", 10 * DAY), NOW);

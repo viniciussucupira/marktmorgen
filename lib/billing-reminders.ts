@@ -25,12 +25,14 @@ const TRIAL_NOTICE_SECONDS = 8 * DAY;
  */
 export const TRIAL_FLOOR_SECONDS = 7 * DAY;
 /**
- * Sent on the first daily run with at most 45 days left: the top of
- * California's 15-to-45-day window (Bus. & Prof. Code §17602(b)(2); queue
- * 414 [KX1], docs/kx1-renewal-legal-matrix-2026-10-30.md), so a run that
- * fails has thirty days of later runs before the floor.
+ * Sent on the first daily run with at most 30 days left. Not earlier:
+ * California allows 15 to 45 days (Bus. & Prof. Code §17602(b)(2)), but
+ * Massachusetts' rule as reported (940 CMR 38.05) allows at most 30, and
+ * the stricter maximum is kept (queue 414 [KX1],
+ * docs/kx1-renewal-legal-matrix-2026-10-30.md, where Utah's reported
+ * 30-to-60-day window and the conflict are recorded for the owner).
  */
-export const YEAR_NOTICE_SECONDS = 45 * DAY;
+export const YEAR_NOTICE_SECONDS = 30 * DAY;
 /** Below this, a yearly renewal notice is late. */
 export const YEAR_FLOOR_SECONDS = 15 * DAY;
 /** Too close to the charge to be of use: left alone. */
