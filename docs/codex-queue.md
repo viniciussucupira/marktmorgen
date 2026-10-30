@@ -34,6 +34,8 @@ Entrada posterior no Grupo B: **555[AK1]**, pedido do dono29/10/2026,23h30Fortal
 
 Entrada posterior no Grupo B: **557[BG1]**, com complementos **BG2 e BG3 dentro do mesmo item**, na fila, **ABAIXO DO MARCO MQ1 por indicação expressa do dono**. Depois de555[AK1] entre os remanescentesB e antes da caudaFIM1;556[CT1] continuaA, depois513[PF1]. Nenhum outro item ou Bloco de abertura muda de ordem/estado.
 
+Entrada posterior no Grupo B: **558[LK1]**, na fila, **ABAIXO DO MARCO MQ1 por indicação expressa do dono30/10/2026,00h18Fortaleza**, depois557[BG1] entre os remanescentesB e antesFIM1. Sem mudança de qualquer outro item ou do Bloco de abertura.
+
 ### Por último — os59 remanescentesFIM1
 
 FIM1 continua depois de todos os demais, na ordem relativa anterior e com a mesma regra de partes. São os61localizadores históricos da tabelaFIM1 menos206 e241, já retirados da cauda por decisões de posição. Localizadores para conferência (não ordem nova): 16, 26, 37, 38, 41, 42, 45, 47, 48, 49, 53, 56, 58, 92, 104, 127, 128, 129, 130, 131, 132, 203, 207, 209, 215, 222, 236, 252, 255, 280, 284, 286, 289, 296, 317, 318, 327, 337, 345, 346, 347, 348, 351, 352, 359, 363, 383, 401, 402, 404, 406, 419, 420, 425, 429, 430, 440, 441, 442. O item58 continua afetado **somente no português doBrasil**; os demais idiomas mantêm posição/gates atuais. Concluídos e andamentos já existentes não são reconstruídos, reiniciados ou movidos novamente.
@@ -51,6 +53,8 @@ Uma linha por item, três grupos possíveis: A, B ou sem mudança. “Sem mudan�
 **Atualização posterior CT1 (29/10/2026,23h50):** as contagens554/555 acima permanecem como retratos históricos. Estado atual: **556linhas únicas,109A,233B,214sem mudança**. Acrescenta somente556[CT1] ao Grupo A depois de513[PF1];555[AK1/AK2] permanece no Grupo B, sem alteração de estado ou posição. A tabela abaixo continua de localização numérica, nunca sequência de execução.
 
 **Atualização BG1/BG2/BG3:** as bases554/555/556 acima são históricas. A tabela atual tem **557linhas únicas:109A,234B,214sem mudança**. Só557[BG1] é acrescentado ao Grupo B;BG2/BG3 não ganham números. A ordenação numérica é localização, não execução; posições anteriores continuam vigentes.
+
+**Atualização LK1 (30/10/2026,00h18):** bases554–557 anteriores são históricas; tabela atual **558linhas únicas,109A,235B,214sem mudança**. Só558[LK1] acrescentadoB, depois557; tabela numérica não redefine execução.
 
 | Item | Grupo | Motivo |
 | --- | --- | --- |
@@ -611,6 +615,7 @@ Uma linha por item, três grupos possíveis: A, B ou sem mudança. “Sem mudan�
 | 555 [AK1] | B | Pedido29/10/2026,23h30: abaixo do marco expresso; após remanescentesB, antesFIM1. |
 | 556 [CT1] | A | Dono29/10/2026,23h50: acima do marco, imediatamente depois de513[PF1]; demais posições e abertura preservadas. |
 | 557 [BG1] | B | Dono29/10/2026,23h58;BG2/BG3 dentro do mesmo item; abaixo do marco, após555 no Grupo B, antesFIM1. |
+| 558 [LK1] | B | Dono30/10/2026,00h18: abaixo do marco, depois557no Grupo B e antesFIM1; demais posições preservadas. |
 
 ### Proveniência, Pedidos repetidos e VR
 
@@ -18006,6 +18011,55 @@ Custo: as visitas já contam no limite de visitas que cada plano tem; o contador
 REGRA DE MARGEM (MR, 27/10/2026): nenhum cliente pagante, considerado isoladamente e usando 100% de todos os direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto; a empresa como um todo não pode dar prejuízo no pior caso a partir da base mínima de clientes pagantes, com 100% dos custos fixos da LLC atribuídos ao Marktmorgen (FX275); a meta de 60% de margem líquida é medida todo mês com números reais. Impostos pela política TX vigente.
 
 Proibido: mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; cookie, perfil, pixel ou rastreamento de abertura novos; imagem repetida; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+```
+
+
+## 558 [LK1] — Estilo da loja: formato dos botões, cantos e logotipo
+
+**Estado:** na fila. **Posição:** ABAIXO DO MARCO MQ1, Grupo B, depois557[BG1] entre os remanescentesB e antesFIM1.558 estava livre. Não altera ordem/estado de outros itens ou Bloco de abertura e não interrompe1239/1243.
+
+**Proveniência/Pedidos repetidos:** dono30/10/2026,00h18Fortaleza, pedido direto nesta conversa. Conferidos mainfc43fa48dc0efdeaed1179cc17342572f00acd63, PRs abertos1239/a1957c472d020d778dc731c488583abfd431d8aa e1243/bec5abbb0f46113f6fa89ae4e5655953e089d514,24heads recentes de PR/codex e inventário796refs codex/*. Busca por data/hora, seção, etiqueta e conteúdo não encontrouLK1. A coincidência de formato/logotipo no536[CB1] é branding de sessãoStripe, não editor/formato/cantos/logo da loja; vincular e reutilizar campos/mapeamento quando aplicável,sem reimplementar536 nem movê-lo. Nova recepção só proveniência,sem número/commit exclusivo.
+
+**Conferência real:** leitura integral de lib/store-look.ts(15.957caracteres),components/look-editor.tsx(25.875) eAGENTS no main exato. StoreLook/DEFAULT_LOOK/parseLook atuais têm theme/accent/badge/sold/font/backdrop;4temas e5fontes. Editor tem foto comrecortequadrado ePNG/JPEG/WebP,tema/cor/fonte/fundo/prévia; não possui opçõesSquare/Rounded/Pill,Sharp/Soft/Round ou fluxo de logoSVGsanitizado. Classesrounded existentes não são escolha persistida de formato. Conclusão limitada a essas entradas,revalidar nohead deimplementação. A aritmética atual documenta7:1botões,4,5:1destaques e3:1borda;isso é estado observado, não certificaçãoAAA: a implementação deve cumprirAX274/contraste7:1pedido para texto e nunca usar4,5como permissão para baixar a exigência. Não afirmar todososrenderers/checkout/áreacomprador cobertos só por estasleituras.
+
+**Aceite:** formatoSquare/Rounded/Pill aplicado emtodososbotões daspáginas de loja/checkoutembutido/áreacomprador/blog/cursos/comunidade;Sharp/Soft/Round emcartões/quadros/imagens;defaultantigo paraquemnãoescolher. LogoPNG/WebP/SVGverificadoelimpo noservidorsem script,altobrigatório(defaultnomedaloja),armazenamento/entrega doplano,escolhalogoOUfoto,nuncajuntosnamesmapágina. Semcontroleslivresdesombra/borda. Prévialocalantesdesalvar. Preservar contraste,foco2.4.13,44×44,forced-colors emtodascombinações;gruposrotulados/préviatextual/teclado/7:1/320px/400%,Acessibilidade noPRantes/depois. TestarSVGmalicioso/externo/invalidoinofensivocomdadossintéticos epermissões/custoantesupload,semrelaxarrotas existentes; não assumiruploadfoto atual aceitaSVG.
+
+**Custos/gates:** dois camposcurtos e arquivo dentrocotasexistentesnãoequivalemcustozero. CálculoM/Ydos6contratos ecomplementos100%direitosnopior mês,preçopagomaiscaro/leituras/gravações/storage/entrega/processamentoseguro,reservas/tetosANTESgasto;MR/TX/FX275100%fixosLLCbase mínima e60%meta mensalreal. Desconhecido reprova,nãozero;nenhumcustoprodutivoadicionado porregistrodocumental. Preservarpreços/limitesvisíveis/comissão/flagsfalse/taxgate/art9a/revisãocomercial/travas/conteúdo/Hazelsong/idiomas/IDs. SemHTML/CSS/JSlivres/SVGscript/overlay/logo+foto/conta/termos/contratar/pagar/contatar;testessintéticosapenas. AplicarVR. ContextoClickFunnelséproveniênciadodono,nãopesquisaindependente. Registro nãoimplementa,nãocertificamargem,nãocontaentregafuncional.
+
+### Pedido literal LK1
+
+```text
+LK — Estilo da loja: formato dos botões, cantos e logotipo (30/10/2026) [LK1]
+
+Solicitação do dono (30/10/2026, 00h18, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: aplique a regra "Pedidos repetidos" de AGENTS.md antes de gravar. Procure esta solicitação pela linha de data e hora, pelo nome da seção, pela etiqueta [LK1] e pelo conteúdo, no main, nos PRs abertos e nos ramos codex/* recentes. Se já estiver gravada, registre apenas a nova recepção na proveniência, sem novo número nem commit exclusivo.
+
+Estado inicial: na fila, ABAIXO DO MARCO (MQ1, Grupo B), no próximo número livre (558, se ainda estiver livre). Não altera a ordem de nenhum outro item nem o Bloco de abertura.
+
+Contexto: a página pública clickfunnels.com/features/customer-center (lida em 30/10/2026) mostra um "Style Guide" com fontes, cores, sombra, borda, botões e cantos, e diz que o criador personaliza "colors and logos". O estilo da loja do Marktmorgen (lib/store-look.ts, components/look-editor.tsx) já tem 4 temas, qualquer cor com ajuste automático de contraste (7:1 no texto dos botões, 4,5:1 no texto de destaque, 3:1 na borda do botão), 5 pares de fontes, fundos e prévia ao vivo. Faltam o formato dos botões, o arredondamento dos quadros e o logotipo da loja. Verifique antes no código atual que isso continua assim.
+
+1. Formato dos botões: o criador escolhe entre "Square", "Rounded" e "Pill"; vale para todos os botões das páginas da loja, do checkout embutido, da área do comprador, do blog, dos cursos e da comunidade, com o padrão de hoje mantido para quem não escolher.
+
+2. Cantos dos quadros: o criador escolhe entre "Sharp", "Soft" e "Round" para os cartões de produto, os quadros e as imagens das páginas da loja, com o padrão de hoje mantido.
+
+3. Logotipo: o criador pode enviar um logotipo (PNG, WebP ou SVG verificado e limpo no servidor, sem script) e escolher se o cabeçalho da loja mostra o logotipo ou a foto de hoje, nunca os dois na mesma página. Texto alternativo obrigatório, com o nome da loja como padrão. O logotipo conta no armazenamento que cada plano já tem.
+
+4. A mesma regra de contraste e de foco continua valendo para qualquer escolha: nenhuma combinação pode baixar o contraste, o tamanho mínimo de 44 × 44 px dos alvos, o indicador de foco (2.4.13) nem o modo de alto contraste (forced-colors). A prévia ao vivo mostra cada escolha antes de salvar.
+
+5. Sem sombra nem borda livres: não acrescente controles de sombra ou de espessura e cor de borda, porque mudam pouco o resultado e podem baixar o contraste de 3:1 das bordas exigido pelo AX274.
+
+6. Acessibilidade (AX274): as escolhas são grupos de opções com rótulo e prévia em texto; tudo por teclado; contraste de 7:1, 320 px e 400% de zoom; nunca informação só por cor. Seção "Acessibilidade" no PR, com os passos e as decisões da tarefa principal antes e depois.
+
+Custo: dois campos curtos no registro da loja e um arquivo de logotipo dentro do armazenamento e da entrega que cada plano já tem. Calcule o pior caso mensal e anual de cada plano com 100% dos direitos usados e aplique teto automático antes do gasto. Custo desconhecido reprova, nunca é zero.
+
+REGRA DE MARGEM (MR, 27/10/2026): nenhum cliente pagante, considerado isoladamente e usando 100% de todos os direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto; a empresa como um todo não pode dar prejuízo no pior caso a partir da base mínima de clientes pagantes, com 100% dos custos fixos da LLC atribuídos ao Marktmorgen (FX275); a meta de 60% de margem líquida é medida todo mês com números reais. Impostos pela política TX vigente.
+
+Proibido: mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; HTML, CSS ou JavaScript livres; SVG com script; overlay de acessibilidade; logotipo e foto juntos na mesma página; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
 
 Aplicar a regra VR.
 ```
