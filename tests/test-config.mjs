@@ -2,6 +2,7 @@ import {join} from 'node:path';
 /** One wiring source for the repository runner and local parallel verification. */
 export function testAliases(file,root,here){
  const aliases={'@':root,'@/lib/redis':['range-traffic-coverage.test.ts','stats-traffic-coverage.test.ts'].includes(file)?join(root,'lib/redis.ts'):join(here,'redis-stub.ts')};
+ if(file==='plan-break-off-cron.test.ts')for(const name of ['request-guard','billing-reminders','trial-nudges','payment-requests'])aliases['@/lib/'+name]=join(here,'plan-break-off-cron-world.ts');
  if(file==='billing-resume-unknown-route.test.ts')for(const name of ['studio-route','request-guard'])aliases['@/lib/'+name]=join(here,'billing-resume-route-world.ts');
  if(['ai-spend.test.ts','ai-spend-provider.test.ts','automatic-ai-spend.test.ts'].includes(file))aliases['@/lib/redis']=join(here,'ai-spend-redis.ts');
  else aliases['@/lib/ai-spend']=join(here,'ai-spend-regression-stub.ts');

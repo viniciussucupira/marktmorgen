@@ -47,6 +47,12 @@ export async function checkBillingStudioObservation({ browser, LOCAL, services, 
         is(width + " " + name + ": raw pause evidence stays unchanged", await services.redis([["GET", pauseKey]]), ["{synthetic-unreadable"]);
         is(width + " " + name + ": studio renders its main task", await page.locator("main").count(), 1);
       }
+      await services.redis([["SET", fixture.key, original],["DEL",pauseKey]]);
+      services.setStudioObservation({id});
+      await page.goto(LOCAL + "/studio?store=" + fixture.sid,{waitUntil:"networkidle",timeout:120_000});
+      is(width + ": absent pause still has no disabled offer",await page.getByText("Take a break instead",{exact:true}).count(),0);
+      is(width + ": absent pause has no pause form",await page.locator('form[action^="/api/billing/pause"]').count(),0);
+      is(width + ": ordinary cancellation remains rendered",await page.getByText("Cancel the subscription",{exact:true}).count(),1);
       is(width + ": browser has no page exception in these cases", errors, []);
     } finally {
       await context.close();

@@ -38,3 +38,7 @@ export function parsePauseMonths(raw: unknown): PauseMonths | null {
   const n = Number(raw);
   return (PAUSE_MONTHS as readonly number[]).includes(n) ? (n as PauseMonths) : null;
 }
+
+/** AV3, 30 October 2026: plan breaks, restart and their notices stay off at opening.
+ * Existing implementation and records are retained for queue566 FF2. */
+export const PLAN_BREAKS_ENABLED: boolean = false;
