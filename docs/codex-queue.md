@@ -42,6 +42,8 @@ Entrada posterior no Grupo B: **560[AS1]**, na fila, **ABAIXO DO MARCO MQ1 por i
 
 Entrada posterior no Grupo B: **561[NE1]**, na fila, **ABAIXO DO MARCO MQ1 por indicação expressa do dono30/10/2026,02h58Fortaleza**, depois560[AS1] entre os remanescentesB e antesFIM1. Sem mudança de qualquer outro item ou do Bloco de abertura.
 
+Entrada posterior no Grupo B: **562[QZ1]**, na fila, **ABAIXO DO MARCO MQ1 por indicação expressa do dono30/10/2026,09h20Fortaleza**, depois561[NE1] entre os remanescentesB e antesFIM1. Sem mudança de qualquer outro item ou do Bloco de abertura.
+
 ### Por último — os59 remanescentesFIM1
 
 FIM1 continua depois de todos os demais, na ordem relativa anterior e com a mesma regra de partes. São os61localizadores históricos da tabelaFIM1 menos206 e241, já retirados da cauda por decisões de posição. Localizadores para conferência (não ordem nova): 16, 26, 37, 38, 41, 42, 45, 47, 48, 49, 53, 56, 58, 92, 104, 127, 128, 129, 130, 131, 132, 203, 207, 209, 215, 222, 236, 252, 255, 280, 284, 286, 289, 296, 317, 318, 327, 337, 345, 346, 347, 348, 351, 352, 359, 363, 383, 401, 402, 404, 406, 419, 420, 425, 429, 430, 440, 441, 442. O item58 continua afetado **somente no português doBrasil**; os demais idiomas mantêm posição/gates atuais. Concluídos e andamentos já existentes não são reconstruídos, reiniciados ou movidos novamente.
@@ -67,6 +69,8 @@ Uma linha por item, três grupos possíveis: A, B ou sem mudança. “Sem mudan�
 **Atualização AS1 (30/10/2026,01h25):** bases554–559 anteriores são históricas; tabela atual **560linhas únicas,109A,237B,214sem mudança**. Só560[AS1] acrescentadoB, depois559; tabela numérica não redefine execução.
 
 **Atualização NE1 (30/10/2026,02h58):** bases554–560 anteriores são históricas; tabela atual **561linhas únicas,109A,238B,214sem mudança**. Só561[NE1] acrescentadoB, depois560; tabela numérica não redefine execução.
+
+**Atualização QZ1 (30/10/2026,09h20):** bases554–561 anteriores são históricas; tabela atual **562linhas únicas,109A,239B,214sem mudança**. Só562[QZ1] acrescentadoB, depois561; tabela numérica não redefine execução.
 
 | Item | Grupo | Motivo |
 | --- | --- | --- |
@@ -631,6 +635,7 @@ Uma linha por item, três grupos possíveis: A, B ou sem mudança. “Sem mudan�
 | 559 [CM3] | B | Dono30/10/2026,01h22: abaixo do marco, depois558no Grupo B e antesFIM1; demais posições preservadas. |
 | 560 [AS1] | B | Dono30/10/2026,01h25: abaixo do marco, depois559no Grupo B e antesFIM1; demais posições preservadas. |
 | 561 [NE1] | B | Dono30/10/2026,02h58: abaixo do marco, depois560no Grupo B e antesFIM1; demais posições preservadas. |
+| 562 [QZ1] | B | Dono30/10/2026,09h20: abaixo do marco, depois561no Grupo B e antesFIM1; demais posições preservadas. |
 
 ### Proveniência, Pedidos repetidos e VR
 
@@ -18505,3 +18510,44 @@ Provas1260AV2comcódigo:headcca9d394beaaf1dee96f1aefab90b7119d1651a5,39/39+Verce
 
 
 Falhahead5563252verify124021478966:10:51:56.7088977UTCplan-cost-registry scanner não reconhecia novo nomewithinEssentialLimit e marcou studio-essential comoscope removido. Actualhelper/countStudio regressões passaram10:50:52UTC. Corrigidosomentescannerparaincluirhelper,SCOPES/classificação/tetos/assertionsmantidos;CIintegralnovonovohead,nãorerunisolado. Nenhumaaprovaçãodoheadfailed;cancelamentosautomáticosrestantesregistrarquandoobservados.
+
+
+## 562 [QZ1] — Teste curto no site que mostra por onde o visitante deve começar
+
+**Estado:** na fila. **Posição:** ABAIXO DO MARCO MQ1, Grupo B, depois561[NE1] entre os remanescentesB e antesFIM1.562 estava livre e a etiqueta[QZ1] não existia. Não altera ordem/estado de outros itens ou Bloco de abertura.
+
+**Proveniência/Pedidos repetidos:** pedido direto do dono na conversa com o Claude,30/10/2026,09h20Fortaleza; texto redigido pelo Claude e aprovado pelo dono (“envia”); gravado diretamente pelo Claude para não interromper o Codex. Conferido no main 00423a1dd016f65e25541f47eca9297ec5eaff7e: não existe teste para os visitantes do site; app/for/[slug] (com lib/creator-situations.ts), lib/funnel-starter-catalog.ts, lib/forms.ts, 192 [HT12] e 271 [SEO1] já existem e não são refeitos nem movidos. Nova recepção só proveniência,sem número/commit exclusivo.
+
+**Conferência real (limitada, revalidar no head de implementação):** não existe app/start-here; as ocorrências de “quiz” no código são dos cursos (app/api/store/course/quiz) e dos formulários dos criadores (lib/forms.ts, app/api/store/form*), não um teste para visitantes do site; app/for/[slug]/page.tsx, lib/creator-situations.ts e lib/funnel-starter-catalog.ts existem. Registro documental: não implementa, não certifica margem, não conta entrega funcional.
+
+### Pedido literal QZ1
+
+```text
+QZ — Teste curto no site que mostra por onde o visitante deve começar (30/10/2026) [QZ1]
+
+Solicitação do dono (30/10/2026, 09h20, horário de Fortaleza).
+
+Pedidos repetidos: aplique a regra "Pedidos repetidos" de AGENTS.md. Conferido antes de gravar: não existe teste para os visitantes do site do Marktmorgen. Já existem e não são refeitos: as páginas por tipo de criador (app/for/[slug], lib/creator-situations.ts), os modelos de funil por objetivo (lib/funnel-starter-catalog.ts), os testes e formulários dos criadores para os compradores deles (lib/forms.ts), os guias do blog (192 [HT12]) e a melhoria de busca (271 [SEO1]).
+
+Estado inicial: na fila, ABAIXO DO MARCO (MQ1, Grupo B), no fim do Grupo B, antes de FIM1, no próximo número livre. Não altera a ordem de nenhum outro item.
+
+Contexto: o blog de clickfunnels.com (lido em 30/10/2026) mostra ao lado de cada artigo o teste "Take this short quiz to find out which funnel will work best for your business", que pergunta o tipo de negócio e recomenda um funil. No Marktmorgen, o visitante do site não tem um caminho guiado até a página do seu tipo de criador e o modelo certo. Verifique antes no código atual que isso continua assim.
+
+1. Um teste de no máximo 3 perguntas, em inglês americano simples, por exemplo: o que a pessoa vende ou quer vender (arquivo, curso, chamadas, assinatura ou comunidade, produto físico quando o 513 [PF1] existir), se já tem público e se já vende em outra plataforma. As opções são só as que o Marktmorgen atende de verdade hoje.
+
+2. O resultado mostra, sem pedir e-mail: a página do tipo de criador mais próxima (app/for/[slug]), o modelo de funil que combina (lib/funnel-starter-catalog.ts), o plano cujo recurso a pessoa vai precisar, com o preço publicado e sem desconto inventado, e o botão para abrir a loja. Se a pessoa vende em outra plataforma, aparece também o guia de importação.
+
+3. O teste aparece no índice do blog, no fim de cada artigo do blog e numa página própria (por exemplo /start-here), incluída no mapa do site.
+
+4. Privacidade e honestidade: o teste roda no navegador; as respostas não são enviadas nem guardadas; nenhum e-mail é pedido; nenhum cookie, pixel ou perfil novo. O resultado não promete venda, renda nem resultado, e repete o aviso do 561 [NE1] quando ele existir.
+
+5. Acessibilidade (AX274, Parte A, integral): máxima acessibilidade em tudo o que este item criar ou alterar — WCAG 2.2 nível AAA em todos os critérios aplicáveis, em todas as telas, estados, e-mails e arquivos, mais as demais normas e orientações da Parte A; a impossibilidade de um critério AAA precisa ser demonstrada e registrada em docs/accessibility-programme.md, nunca presumida. Os pontos a seguir são verificações obrigatórias deste item, não o limite do que se exige: perguntas como grupos de opções com legenda, avanço e volta pelo teclado, resultado anunciado ao leitor de tela, nenhum limite de tempo, linguagem simples, contraste de 7:1, 320 px e 400% de zoom. Seção "Acessibilidade" no PR, com os passos e as decisões da tarefa principal antes e depois.
+
+Custo: página estática e código no navegador, sem leitura, gravação, fornecedor ou chamada de IA. Custo desconhecido reprova, nunca é zero.
+
+REGRA DE MARGEM (MR, 27/10/2026): nenhum cliente pagante, considerado isoladamente e usando 100% de todos os direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto; a empresa como um todo não pode dar prejuízo no pior caso a partir da base mínima de clientes pagantes, com 100% dos custos fixos da LLC atribuídos ao Marktmorgen (FX275); a meta de 60% de margem líquida é medida todo mês com números reais. Impostos pela política TX vigente.
+
+Proibido: mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; pedir e-mail ou guardar respostas; recomendar recurso que não existe; liderar com "free"; promessa de resultado, urgência ou escassez; imagem repetida; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+```
