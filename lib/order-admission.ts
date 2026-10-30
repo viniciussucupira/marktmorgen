@@ -155,12 +155,19 @@ export async function admitOrders(store: Store, n = 1, now = Date.now(), items =
     const room = dataKey(store);
     if (!room) return { ok: false, reason: "unavailable" };
     const hour = hourOf(now);
-    const [answer] = await redisPipeline([
+    const reply: unknown = await redisPipeline([
       ["EVAL", ADMIT_ORDERS, 4, countKey(folder, window.id), openKey(folder), room, heldKey(folder), limit, n, hour, hour - (OPEN_HOURS - 1), (OPEN_HOURS + 1) * 3_600, dataRoomFor(store, now / 1000), n * orderDataBytes(items)],
     ]);
-    if (Number(answer) === 1) return { ok: true, hour };
+    // SET-like effects may already have committed: inspect one own numeric
+    // acknowledgement without coercion, iteration or releasing uncertain holds.
+    if (!Array.isArray(reply)) return { ok: false, reason: "unavailable" };
+    const length = Object.getOwnPropertyDescriptor(reply, "length");
+    if (!length || !Object.hasOwn(length, "value") || length.value !== 1) return { ok: false, reason: "unavailable" };
+    const answer = Object.getOwnPropertyDescriptor(reply, "0");
+    if (!answer || !Object.hasOwn(answer, "value")) return { ok: false, reason: "unavailable" };
+    if (answer.value === 1) return { ok: true, hour };
     // The figure is reached, or the data room has no space for this order's records: either way the store rests.
-    if (Number(answer) === 0 || Number(answer) === 2) return { ok: false, reason: "paused" };
+    if (answer.value === 0 || answer.value === 2) return { ok: false, reason: "paused" };
     return { ok: false, reason: "unavailable" };
   } catch (error) {
     console.error("could not admit an order", error);
