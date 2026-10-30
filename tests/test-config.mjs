@@ -2,10 +2,6 @@ import {join} from 'node:path';
 /** One wiring source for the repository runner and local parallel verification. */
 export function testAliases(file,root,here){
  const aliases={'@':root,'@/lib/redis':['range-traffic-coverage.test.ts','stats-traffic-coverage.test.ts'].includes(file)?join(root,'lib/redis.ts'):join(here,'redis-stub.ts')};
- if(file==='email-disconnect-idempotent.test.ts'){
-  aliases['next/server']=join(here,'next-server-after-world.ts');
-  aliases['@/lib/account-notice']=join(here,'email-disconnect-world.ts');
- }
  if(file==='meeting-withdrawal-page.test.ts'){
   for(const name of ['next/headers','next/navigation'])aliases[name]=join(here,'meeting-withdrawal-page-world.ts');
   for(const name of ['studio-header','studio-store-pin'])aliases['@/components/'+name]=join(here,'meeting-withdrawal-page-world.ts');
@@ -115,6 +111,21 @@ export function testAliases(file,root,here){
  if(file==='dispute-purchase-review.test.ts')for(const name of ['store','stripe-account','contract-resource-window','store-allowance'])aliases['@/lib/'+name]=join(here,'dispute-review-world.ts');
  if(file==='dispute-review-route.test.ts')for(const name of ['store-request','dispute-purchase-review','dispute-preorder-review'])aliases['@/lib/'+name]=join(here,'dispute-review-route-world.ts');
  if(file==='dispute-preorder-review.test.ts')for(const name of ['redis','contract-resource-window','store-allowance'])aliases['@/lib/'+name]=join(here,'dispute-preorder-world.ts');
+ if(file==='closing-plan-routes.test.ts'){
+  aliases['@/lib/studio-route']=join(here,'closing-route-studio.ts');
+  aliases['@/lib/opening']=join(here,'closing-route-opening.ts');
+  aliases['@/lib/contract-funding']=join(here,'closing-route-funding.ts');
+ }
+ if(file==='email-disconnect-idempotent.test.ts'){
+  aliases['next/server']=join(here,'next-server-after-world.ts');
+  aliases['@/lib/account-notice']=join(here,'email-disconnect-world.ts');
+ }
+ if(['commercial-terms-snapshot.test.ts','net-margin.test.ts','customer-base.test.ts','plan-revenue-ceilings.test.ts','commercial-ai-coverage.test.ts','exposure-release.test.ts'].includes(file))aliases['@/lib/llc-fixed-costs']=join(here,'llc-fixed-approved-policy.ts');
+ if(file==='commercial-llc-costs.test.ts'){
+  aliases['@/lib/llc-fixed-costs']=join(here,'llc-retention-approved-policy.ts');
+  aliases['@/lib/upload-budget-policy']=join(here,'upload-budget-approved-policy.ts');
+  aliases['@/lib/ai-spend-policy']=join(here,'commercial-ai-approved-policy.ts');
+ }
  return aliases;
 }
 export function testEnvironment(env){return{...env,DEMO_STUDIO_ADMIN:'operator@example.test',STRIPE_DEMO_ACCOUNT_ID:'acct_fixtureDemo',NIMBUS_DATA_KEY:env.NIMBUS_DATA_KEY??'tests-only-not-a-real-deployment-secret'};}

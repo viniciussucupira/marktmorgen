@@ -77,3 +77,13 @@ test("SD1 initial LLC formation cannot disappear from the complete company cost 
  assert.equal(sources.formation.includesFirstAgentYear,true);
  assert.equal(sources.registeredAgent.annualMinor,10000);
 });
+
+
+test("deployment and function artifact retention is an explicit unknown whole-LLC cost",()=>{
+ assert.ok(LLC_FIXED_COST_IDS.includes("deployment-artifact-retention"));
+ assert.equal(allocateEntireLlcFixedCosts(fixture().filter(line=>line.id!=="deployment-artifact-retention")),null);
+ const current=CURRENT_LLC_FIXED_COST_CEILINGS.find(line=>line.id==="deployment-artifact-retention")!;
+ assert.deepEqual([current.fullMonthlyUsdCents,current.fullAnnualUsdCents,current.reserveReviewed],[null,null,false]);
+ assert.equal(sources.deploymentArtifacts.perGbMonthMinorEach,10);
+ assert.equal(sources.deploymentArtifacts.approvedCeiling,false);
+});
