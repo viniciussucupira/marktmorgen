@@ -36,6 +36,8 @@ Entrada posterior no Grupo B: **557[BG1]**, com complementos **BG2 e BG3 dentro 
 
 Entrada posterior no Grupo B: **558[LK1]**, na fila, **ABAIXO DO MARCO MQ1 por indicação expressa do dono30/10/2026,00h18Fortaleza**, depois557[BG1] entre os remanescentesB e antesFIM1. Sem mudança de qualquer outro item ou do Bloco de abertura.
 
+Entrada posterior no Grupo B: **559[CM3]**, na fila, **ABAIXO DO MARCO MQ1 por indicação expressa do dono30/10/2026,01h22Fortaleza**, depois558[LK1] entre os remanescentesB e antesFIM1. Sem mudança de qualquer outro item ou do Bloco de abertura.
+
 ### Por último — os59 remanescentesFIM1
 
 FIM1 continua depois de todos os demais, na ordem relativa anterior e com a mesma regra de partes. São os61localizadores históricos da tabelaFIM1 menos206 e241, já retirados da cauda por decisões de posição. Localizadores para conferência (não ordem nova): 16, 26, 37, 38, 41, 42, 45, 47, 48, 49, 53, 56, 58, 92, 104, 127, 128, 129, 130, 131, 132, 203, 207, 209, 215, 222, 236, 252, 255, 280, 284, 286, 289, 296, 317, 318, 327, 337, 345, 346, 347, 348, 351, 352, 359, 363, 383, 401, 402, 404, 406, 419, 420, 425, 429, 430, 440, 441, 442. O item58 continua afetado **somente no português doBrasil**; os demais idiomas mantêm posição/gates atuais. Concluídos e andamentos já existentes não são reconstruídos, reiniciados ou movidos novamente.
@@ -55,6 +57,8 @@ Uma linha por item, três grupos possíveis: A, B ou sem mudança. “Sem mudan�
 **Atualização BG1/BG2/BG3:** as bases554/555/556 acima são históricas. A tabela atual tem **557linhas únicas:109A,234B,214sem mudança**. Só557[BG1] é acrescentado ao Grupo B;BG2/BG3 não ganham números. A ordenação numérica é localização, não execução; posições anteriores continuam vigentes.
 
 **Atualização LK1 (30/10/2026,00h18):** bases554–557 anteriores são históricas; tabela atual **558linhas únicas,109A,235B,214sem mudança**. Só558[LK1] acrescentadoB, depois557; tabela numérica não redefine execução.
+
+**Atualização CM3 (30/10/2026,01h22):** bases554–558 anteriores são históricas; tabela atual **559linhas únicas,109A,236B,214sem mudança**. Só559[CM3] acrescentadoB, depois558; tabela numérica não redefine execução.
 
 | Item | Grupo | Motivo |
 | --- | --- | --- |
@@ -616,6 +620,7 @@ Uma linha por item, três grupos possíveis: A, B ou sem mudança. “Sem mudan�
 | 556 [CT1] | A | Dono29/10/2026,23h50: acima do marco, imediatamente depois de513[PF1]; demais posições e abertura preservadas. |
 | 557 [BG1] | B | Dono29/10/2026,23h58;BG2/BG3 dentro do mesmo item; abaixo do marco, após555 no Grupo B, antesFIM1. |
 | 558 [LK1] | B | Dono30/10/2026,00h18: abaixo do marco, depois557no Grupo B e antesFIM1; demais posições preservadas. |
+| 559 [CM3] | B | Dono30/10/2026,01h22: abaixo do marco, depois558no Grupo B e antesFIM1; demais posições preservadas. |
 
 ### Proveniência, Pedidos repetidos e VR
 
@@ -18232,3 +18237,44 @@ Falha inicial1243/head dabd4941e0d3a6e9e8bcc56903b24a41974cc64b: compilaçãoTyp
 IndividuaisfinalizadosANTESdaunião:1239a1957c472d020d778dc731c488583abfd431d8aa e1243bec5abbb0f46113f6fa89ae4e5655953e089d514,cada39/39+Vercelsuccess. Resourceverify123870261037:actualACK03:20:52.0483582UTC,234/234+Everythingpassing03:23:56.8031851UTC. Restartverify123870206718:actualentry/clock03:19:19.0315132/0316802UTC,234/234+Everythingpassing03:20:23.8203753UTC. Mobilecorrigido123870206711:9frias,LCPmáx708ms,CLS0,proxy72ms,0escritasAPI;laboratório,nãoINPcampo. FalhaTS7022inicialdabd494eacorreçãobec5permanecemhistóricas,nãoaprovação doheadfalho.
 
 União preservamain391360125789de9b16e1b802282539cfda00372b:LK1/1244f502b6fe incorporado03:20:33UTC(00:20:33Fortaleza),LK2/12451d5d003de incorporado03:39:12UTC(00:39:12Fortaleza),PF9/1246391360125 incorporado03:46:07UTC(00:46:07Fortaleza),todosdocumentais27checks+Vercel nosheads próprios.516GrupoBconfirmadoexplicitamentepelodono,PF8/206intactos;LK2JPEG/WebPsemSVGvigente. Nenhumandamentoválidocancelado;novoheadcombinadoexigeCIintegralpróprio,semherdaraprovaçãoindividual. Políticas/reviewsnull,coberturasfechadas,reservasretidas,preços/direitos/flags/idiomas/IDs/Hazelsongpreservados;semIOprodutivonovo. CustoCI/revisãoFX275continua desconhecido,nãozero;semcertificaçãomargem/abertura. Contador254retidoatéprovaexigida;semduplapublicação porancestralidadedosPRs.
+
+
+## 559 [CM3] — Posts da comunidade com até 4 fotos e vídeo por link
+
+**Estado:** na fila. **Posição:** ABAIXO DO MARCO MQ1, Grupo B, depois558[LK1] entre os remanescentesB e antesFIM1.559 estava livre e a etiqueta[CM3] não existia. Não altera ordem/estado de outros itens ou Bloco de abertura.
+
+**Proveniência/Pedidos repetidos:** pedido direto do dono na conversa com o Claude,30/10/2026,01h22Fortaleza; texto redigido pelo Claude e aprovado pelo dono (“envia”); gravado diretamente pelo Claude para não interromper o Codex. Conferido no main b421b12fa79031ef75d08594514417f8e7881f7c: nenhum item pede várias fotos por post nem vídeo por link nos posts da comunidade;542[CM1] (espaço trancado) e543[CM2] (aprovação prévia) tratam de outras coisas e não são refeitos nem movidos. Nova recepção só proveniência,sem número/commit exclusivo.
+
+**Conferência real (limitada, revalidar no head de implementação):** lib/community-image.ts começa por “The one picture a community post may carry”, só JPEG/WebP conferidos pelos primeiros bytes, redução a1600px/1MB e servido apenas a quem pode ler a comunidade; COMMUNITY_PICTURES em lib/community-picture-rules.ts existe por plano; lib/community-events.ts e components/community-events-studio.tsx aceitam endereço do YouTube, do Vimeo ou do Loom para a gravação dos eventos. Nenhum campo de vídeo em post foi encontrado em lib/community*.ts. Registro documental: não implementa, não certifica margem, não conta entrega funcional.
+
+### Pedido literal CM3
+
+```text
+CM — Posts da comunidade com até 4 fotos e vídeo por link (30/10/2026) [CM3]
+
+Solicitação do dono (30/10/2026, 01h22, horário de Fortaleza).
+
+Pedidos repetidos: aplique a regra "Pedidos repetidos" de AGENTS.md. Conferido antes de gravar: nenhum item pede várias fotos por post nem vídeo por link nos posts da comunidade; 542 [CM1] (espaço trancado) e 543 [CM2] (aprovação prévia) tratam de outras coisas e não são refeitos.
+
+Estado inicial: na fila, ABAIXO DO MARCO (MQ1, Grupo B), no fim do Grupo B, antes de FIM1. Não altera a ordem de nenhum outro item.
+
+Contexto: a página pública clickfunnels.com/features/membership-sites (lida em 30/10/2026) mostra, na seção "Build a loyal community that sticks around", um post da comunidade com um vídeo e várias fotos. No Marktmorgen, um post da comunidade leva uma única foto (lib/community-image.ts, "The one picture a community post may carry") e nenhum vídeo; a gravação dos eventos da comunidade já aceita um endereço do YouTube, do Vimeo ou do Loom (lib/community-events.ts, components/community-events-studio.tsx). Verifique antes no código atual que isso continua assim.
+
+1. Até 4 fotos por post: o membro pode anexar de 1 a 4 fotos a um post, cada uma pelo mesmo caminho de hoje (JPEG ou WebP, reduzida no navegador a no máximo 1600 pixels e 1 MB, conferida pelos primeiros bytes, servida só a quem pode ler a comunidade). Cada foto ocupa um lugar do limite de fotos da comunidade de cada plano (COMMUNITY_PICTURES em lib/community-picture-rules.ts), reservado antes do envio; sem lugar, o envio é recusado com uma frase clara, sem cortar nenhum limite visível. No post, as fotos aparecem numa grade, cada uma uma única vez, e abrem em tamanho maior ao toque; a mesma foto nunca aparece duas vezes na mesma tela.
+
+2. Vídeo por link: o membro pode colar um endereço do YouTube, do Vimeo ou do Loom, validado pelas mesmas regras da gravação dos eventos; o vídeo toca no post pelo modo de privacidade aprimorada do YouTube e pelos players oficiais do Vimeo e do Loom, carregado só quando o leitor aperta o play. Não há envio de arquivo de vídeo pelo membro.
+
+3. Texto alternativo: cada foto pede uma descrição curta antes de publicar, com um aviso que explica o motivo; o vídeo mostra o título do link e um rótulo do serviço de origem.
+
+4. Moderação e privacidade: fotos e vídeos seguem as denúncias de hoje e, quando o 543 [CM2] existir, a aprovação prévia; ao apagar o post ou a pessoa, as fotos saem com ele e devolvem os seus lugares, como hoje.
+
+5. Acessibilidade (AX274): grade de fotos navegável por teclado, com foco visível e descrição lida pelo leitor de tela; player com nome claro, legendas quando o serviço as oferecer e nada tocando sozinho; contraste de 7:1, 320 px e 400% de zoom. Seção "Acessibilidade" no PR, com os passos e as decisões da tarefa principal antes e depois.
+
+Custo: as fotos contam no limite de fotos da comunidade que cada plano já tem e no armazenamento e na entrega já calculados (tests/plan-cost-registry.ts); o vídeo por link não é hospedado nem transmitido pelo Marktmorgen. Calcule o pior caso mensal e anual de cada plano com 100% dos direitos usados e aplique teto automático antes do gasto. Custo desconhecido reprova, nunca é zero.
+
+REGRA DE MARGEM (MR, 27/10/2026): nenhum cliente pagante, considerado isoladamente e usando 100% de todos os direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto; a empresa como um todo não pode dar prejuízo no pior caso a partir da base mínima de clientes pagantes, com 100% dos custos fixos da LLC atribuídos ao Marktmorgen (FX275); a meta de 60% de margem líquida é medida todo mês com números reais. Impostos pela política TX vigente.
+
+Proibido: mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; envio de arquivo de vídeo pelo membro; SVG ou qualquer arquivo que leve script; vídeo tocando sozinho; imagem repetida; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+```
