@@ -236,9 +236,9 @@ export default async function ThanksPage({ params, searchParams }: Params) {
             <p className="st-muted mt-4 text-sm">{p.refund(store.name)}</p>
             {order.email ? <p className="st-muted mt-4 text-sm">{t.receiptTo(order.email)}</p> : null}
             <div className="mt-8">
-              <Link href={`/@${store.handle}`} className="st-footer-link text-sm font-semibold">
+              <a href={`/@${store.handle}`} className="st-footer-link text-sm font-semibold">
                 {t.backTo(store.name)}
-              </Link>
+              </a>
               <StoreTracking
                 store={store}
                 event={{
@@ -303,9 +303,9 @@ export default async function ThanksPage({ params, searchParams }: Params) {
             </p>
             {order.email ? <p className="st-muted mt-4 text-sm">{t.receiptTo(order.email)}</p> : null}
             <div className="mt-8">
-              <Link href={`/@${store.handle}`} className="st-footer-link text-sm font-semibold">
+              <a href={`/@${store.handle}`} className="st-footer-link text-sm font-semibold">
                 {t.backTo(store.name)}
-              </Link>
+              </a>
               <StoreTracking
                 store={store}
                 event={{
@@ -379,9 +379,9 @@ export default async function ThanksPage({ params, searchParams }: Params) {
             )}
             {order.email && !isHouseStore(store) ? <p className="st-muted mt-5 text-sm">{t.groupReceipt(order.email)}</p> : null}
             <div className="mt-8">
-              <Link href={`/@${store.handle}`} className="st-footer-link text-sm font-semibold">
+              <a href={`/@${store.handle}`} className="st-footer-link text-sm font-semibold">
                 {t.backTo(store.name)}
-              </Link>
+              </a>
               <StoreTracking
                 store={store}
                 event={{
@@ -1387,9 +1387,9 @@ async function PayPalThanks({ store, order }: { store: Store; order: string }) {
             </>
           )}
           <div className="mt-8">
-            <Link href={`/@${store.handle}`} className="st-footer-link text-sm font-semibold">
+            <a href={`/@${store.handle}`} className="st-footer-link text-sm font-semibold">
               {t.backTo(store.name)}
-            </Link>
+            </a>
           </div>
         </div>
       </main>

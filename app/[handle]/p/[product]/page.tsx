@@ -480,7 +480,7 @@ export default async function ProductPage({ params, searchParams }: Params) {
   );
 
   const storeChip = (
-    <Link href={`/@${store.handle}`} className="st-title-link mx-auto flex w-fit items-center gap-3 rounded-full py-1 pr-2">
+    <a href={`/@${store.handle}`} className="st-title-link mx-auto flex w-fit items-center gap-3 rounded-full py-1 pr-2">
       {store.photoId ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={photoUrl(store.photoId)} alt="" width={40} height={40} className="st-avatar !mx-0" style={{ width: 40, height: 40 }} />
@@ -490,7 +490,7 @@ export default async function ProductPage({ params, searchParams }: Params) {
         </span>
       )}
       <span className="font-semibold">{store.name}</span>
-    </Link>
+    </a>
   );
 
   // The creator's other products, from what the store record already holds.
@@ -525,9 +525,9 @@ export default async function ProductPage({ params, searchParams }: Params) {
 
   const footer = (
     <div className="mt-10 text-center">
-      <Link href={`/@${store.handle}`} className="st-footer-link text-sm font-semibold">
+      <a href={`/@${store.handle}`} className="st-footer-link text-sm font-semibold">
         {w.everythingFrom(store.name)}
-      </Link>
+      </a>
       <StoreTracking store={store} presence product={product.id} />
       {here ? <FunnelBeacon handle={store.handle} funnel={here.funnel.id} kind="product" id={product.id} /> : null}
       {cartOn ? <CartButton handle={store.handle} lang={store.language} remind={assistReminderShown(store) ? store.name : ""} notice={cartNotice} restore={typeof query.restore === "string" ? readCartIds(query.restore.slice(0, 400).split(",")) : []} /> : null}

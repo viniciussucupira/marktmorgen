@@ -9,3 +9,10 @@ The ledger double and postcommit model are not production RedisLua or lifecycle 
 ## Acessibilidade
 
 No interface/wording/task change,0to0steps/decisions; no AAA/human-use claim. Benefit is refusing provider-facing contract admission on invented acknowledgement evidence while retaining possibly committed financial obligations. No extra productive IO, key, retention, paid service or cost authority. Bounded local descriptor work only; CI/review remain100%company FX275 costs, unknown notzero. Prices, rights, limits, commission, all tax/commercial/opening/opt-in gates and creator/Hazelsong content preserved. Funded notice lifetime reservation/attempt/settlement remains required.
+
+
+## Full-CI WebKit failure and native return links
+
+Head99dc7221 failed Buyer action AAA WebKit job123946020198: baseline320 buyer-orders captured an unhandled store-home RSC fetch access-control failure;1of30cases/150audits failed. The source product/receipt still contained six default-prefetch store-home Links. They now use native anchors with identical destinations, text and styles, removing speculative router fetches and client routing work for this document navigation. Cause is an instrumented working diagnosis, not a claim of sole causality.
+
+The actual buyer browser regression keeps every error/foreign/mutation check and additionally requires zero store-home RSC GETs before an explicit store visit. No test error is ignored, no delay/warmup/threshold/sample change, and no isolated rerun. Full new-head CI required. React best-practices review: server-owned native navigation, fewer client boundaries/prefetches, same focus/keyboard/names/44px rules and0additional steps/decisions; no conformance claim. No extra productive IO/cost, prices or gates changed.
