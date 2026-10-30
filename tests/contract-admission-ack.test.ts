@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {prepareRestartActivation,type RestartContractActivation} from '@/lib/contract-restart-activation';
-import {CONTRACT_KEYS,contractFundingConfiguration} from '@/lib/contract-funding-rules';
+import {CONTRACT_KEYS,CONTRACT_FUNDING_RULES,contractFundingConfiguration} from '@/lib/contract-funding-rules';
 import {reserveContractFunding,reserveSwitchContractFunding,activateCheckoutContract,claimRestartIntent,contractFundingBinding,ownedRestartIntentFromAcknowledgement} from '@/lib/contract-funding';
 import {contractFixture} from './contract-funding-fixture';
 import {reset,setTransform,seed,calls,ledger,retained} from './contract-admission-ack-world';
@@ -25,9 +25,13 @@ function setup(){
 const ledgerKey='nl:contract-reserve:v1';
 function start(){reset();const f=contractFixture(),config=contractFundingConfiguration(f.policy,f.context,f.now);assert.ok(config);seed(config);return{...f,config};}
 async function source(){
- const f=start(),now=Math.floor(Date.now()/1000);
- assert.ok(await reserveContractFunding('admission','creator','month','checkout',f.policy,f.context,'ctr_SourceAck'));
- assert.equal(await activateCheckoutContract({statsId:'admission',grantId:'ctr_SourceAck',reviewId:f.policy.reviewId,subscriptionId:'sub_AdmissionSource01',tier:'creator',cycle:'month',createdSeconds:now,trialing:false,periodStartSeconds:now,periodEndSeconds:now+30*86400},f.policy,f.context),true);
+ const f=start();
+ const grant=await reserveContractFunding('admission','creator','month','checkout',f.policy,f.context,'ctr_SourceAck');
+ assert.ok(grant);
+ // Use the actually issued reservation's start, not a timestamp sampled
+ // before asynchronous financial admission that may cross a second boundary.
+ const created=grant.submitUntilSeconds-CONTRACT_FUNDING_RULES.submissionSeconds;
+ assert.equal(await activateCheckoutContract({statsId:'admission',grantId:'ctr_SourceAck',reviewId:f.policy.reviewId,subscriptionId:'sub_AdmissionSource01',tier:'creator',cycle:'month',createdSeconds:created,trialing:false,periodStartSeconds:created,periodEndSeconds:created+30*86400},f.policy,f.context),true);
  return f;
 }
 let getters=0,members=0;

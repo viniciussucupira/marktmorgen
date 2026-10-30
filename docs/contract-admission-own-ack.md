@@ -16,3 +16,8 @@ No interface/wording/task change,0to0steps/decisions; no AAA/human-use claim. Be
 Head99dc7221 failed Buyer action AAA WebKit job123946020198: baseline320 buyer-orders captured an unhandled store-home RSC fetch access-control failure;1of30cases/150audits failed. The source product/receipt still contained six default-prefetch store-home Links. They now use native anchors with identical destinations, text and styles, removing speculative router fetches and client routing work for this document navigation. Cause is an instrumented working diagnosis, not a claim of sole causality.
 
 The actual buyer browser regression keeps every error/foreign/mutation check and additionally requires zero store-home RSC GETs before an explicit store visit. No test error is ignored, no delay/warmup/threshold/sample change, and no isolated rerun. Full new-head CI required. React best-practices review: server-owned native navigation, fewer client boundaries/prefetches, same focus/keyboard/names/44px rules and0additional steps/decisions; no conformance claim. No extra productive IO/cost, prices or gates changed.
+
+
+## Financial fixture timing failure
+
+The same failed99dc head's verify123946076843 also failed source bootstrap in the postcommit reservation matrix: activation returnedfalse because the fixture sampled createdSeconds before awaiting actual reservation. Crossing a second made it precede the actual issued reservation start. Source setup now derives createdSeconds from the returned grant's submitUntilSeconds minus the unchanged300-second submission window. It still executes actual checkout activation and requires true; no ownership/period/deadline assertion or production guard is relaxed. Full new-head CI remains mandatory.
