@@ -212,3 +212,142 @@ None so far: one annual notice on one day meets every window read. If G12
 requires a notice before each monthly renewal for Utah customers, that is one
 email a month per monthly subscription in Utah, at the email rate of the cost
 table, capped before it is sent; it will be priced in the PR that builds it.
+
+## 7. More official texts read on 30 Oct 2026 (18h00–18h20 Fortaleza), and what they change in PR #1296
+
+Read the same way as section 6 (official pages, through a page reader that
+returns summaries and short quotations).
+
+| # | Jurisdiction and text | Official page read | Contracts covered | Window | Counted from | Required content |
+| --- | --- | --- | --- | --- | --- | --- |
+| O8 | Colorado, C.R.S. §6-1-732, as enacted by HB 21-1239 (effective 1 Jan 2022, for contracts made on or after it) | content.leg.colorado.gov/sites/default/files/documents/2021A/bills/2021a_1239_enr.pdf (the enrolled act; later amendments **not read**) | A paid subscription or purchasing agreement automatically renewed (exemptions in (5)) | (4)(b) "at least twenty-five and no more than forty days before the first automatic renewal" and each later one; for a term under twelve months, once in that window before the renewal that extends the contract past each continuous twelve months. Trial: no day count, cancel before paying. Material change: clear notice, no day count | The renewal | Per (4) (not quoted here) |
+| O9 | District of Columbia Code §28A-203 (D.C. Law 22-235, 2019; amended by D.C. Law 23-16) | code.dccouncil.gov/us/dc/council/code/sections/28A-203 | (b) an initial term of 12 months or more renewing for one month or more; (c) free trials | (b) "no fewer than 30 days and no more than 60 days before the cancellation deadline", at the first renewal and annually after; (c) "at least 15 and no more than 30 days before the expiration of the free trial period" | The cancellation deadline; the trial's expiry | That it renews unless canceled, the renewal term's cost, the deadline to cancel, how to get the procedures; by email, active links to cancel. The page carries two conflicting notes on whether the section is implemented (budget approval); the protective reading treats it as in force |
+| O10 | Minnesota Statutes 2026, §§325G.56–325G.63 | revisor.mn.gov/statutes/cite/325G/pdf | Agreements with a consumer in Minnesota subject to automatic renewal or continuous service | 325G.57 subd. 4: a free trial over 30 days, "no fewer than five days and no more than 30 days before the end"; subd. 5: a written reminder "at least once per calendar year via mail or email" (continuous service); subd. 3: a material change "prior to the implementation" | The trial's end | Terms and how to end or manage the service (subd. 5) |
+
+Not found or not read: Oregon ORS 646A.293–295 (the 2025 edition page was
+read but the reader did not reach the two sections; the 2026 amendments table
+was not read); Utah §13-70-101 (the page returned only navigation, so G12
+stays open).
+
+### The windows after sections 6 and 7
+
+- **Annual renewal.** Utah 30–60 before the renewal (O1), Illinois 30–60
+  before the cancellation deadline (O2), Virginia 30–60 (O3), Massachusetts
+  5–30 (O4), Colorado 25–40 (O8), DC 30–60 (O9), California 15–45 (S3,
+  secondary). With the deadline at the renewal, **the only day allowed by all
+  of them is the 30th calendar day before the renewal.**
+- **Trial ending** (a trial over 31 days). DC 15–30 (O9), Minnesota 5–30
+  (O10), California 3–21 (S3, secondary), Utah at least 3 (O1): **15 to 21
+  days before the trial ends.**
+- **New gap G13 — Colorado and monthly plans (O8).** A plan with a term under
+  twelve months needs a notice 25–40 days before the renewal that carries it
+  past each twelve continuous months. Together with Minnesota's yearly
+  reminder (O10) and California's annual reminder (S3), a monthly plan needs
+  one notice a year, sent 25–40 days before the renewal that completes each
+  twelve months, with the terms and how to cancel.
+
+### What PR #1296 must change before it can be merged
+
+PR #1296 marks a yearly notice late only under 15 days left (California's
+floor) and a trial notice only under 7. Against the official texts read:
+
+1. A yearly renewal notice sent with fewer than 30 days left is outside Utah's,
+   Illinois', Virginia's and DC's windows: the floor must be the 30th day,
+   so anything later is marked late, never on time.
+2. A trial notice must start 21 days before the trial ends and is late under
+   15 days.
+3. G12 (Utah, monthly) and G13 (Colorado, monthly: one notice a year) need
+   their own notices.
+4. Calendar days are counted in the customer's own date where known; with an
+   unknown location, the 30th day is taken in the earliest time zone that
+   could apply, so it is never early or late anywhere.
+
+These changes go into PR #1296 (claude/kx1-notice-floors); it stays unmerged
+until California's official text and the remaining jurisdictions of section 6
+are read.
+
+## 8. New York, the United Kingdom, Germany and Canada, read on 30 Oct 2026 (18h00–18h10 Fortaleza)
+
+Read the same way as sections 6 and 7.
+
+| # | Jurisdiction and text | Official page read | Contracts covered | Window | Counted from |
+| --- | --- | --- | --- | --- | --- |
+| O11 | New York GBL §527-a, current text (no date on the document) | legislation.nysenate.gov/pdf/laws/GBS527-A | (1)(f) an initial paid term of one year or more renewing for six months or more; (1)(h) a free gift or trial of more than a month; (1)(g) any material change or price increase | (f) "at least fifteen days before, but not more than forty-five days before, the cancellation deadline"; (h) "at least three days before but not more than twenty-one days before the cancellation deadline"; (g) "at least five business days prior, but no more than thirty days prior" to the change; (1)(b-1) after a price increase charged without affirmative consent, cancel within at least 14 days with a pro rata refund | The cancellation deadline; the change's date |
+| O12 | UK, DMCC Act 2024 ss. 258–259 | legislation.gov.uk/ukpga/2024/13/section/258 and /part/4 | All subscription contracts with consumers | No fixed days: a reminder "within the period specified by the trader", which must be "a period in advance of the last cancellation date which is reasonable" (s. 259(3)–(4)); a reminder for each renewal payment at the end of each six-month period, and before the first full-price payment after a concessionary period (s. 258). **s. 259 not in force**; s. 258 in force only for specified purposes | The last cancellation date |
+| O13 | UK, draft Consumer Subscription Contracts (Cancellation and Information) Regulations 2026 | legislation.gov.uk/ukdsi/2026/9780348287912 | Subscription contracts made on or after s. 254 comes into force | **Draft, not made.** Would come into force 1 Jan 2027; reminders in writing on a durable medium (reg. 34); end the contract at any time (reg. 32); refunds within 14 days to the original method (reg. 21) | — |
+| O14 | Germany, BGB §309 Nr. 9 | gesetze-im-internet.de/bgb/__309.html | Standard terms of contracts for the regular supply of goods or services (B2C, see §310) | Invalid: an initial term binding over two years (a); a tacit extension unless it turns into an open-ended contract the customer may end at any time with at most one month's notice (b); a notice period over one month before the end (c) | — |
+
+Canada: Ontario's consumer page (ontario.ca, updated 1 Apr 2025) sets no
+renewal-notice rule for subscriptions; the Consumer Protection Act, 2023 and
+Quebec's law were **not read**. The EU Art. 11a text on EUR-Lex was **not
+read** (it is a withdrawal function, not a renewal notice).
+
+### The windows after sections 6 to 8
+
+- **Annual renewal:** New York 15–45 before the deadline (O11) adds nothing
+  narrower; **the 30th calendar day before the renewal** still fits every
+  rule read. PR #1296 (head abb7a19) applies it.
+- **Trial over a month:** New York 3–21 (O11), DC 15–30, Minnesota 5–30,
+  California 3–21: still **15 to 21 days before the end**. Marktmorgen's own
+  trial is 14 days (`TRIAL_DAYS`), under New York's, Minnesota's and
+  California's thresholds; DC's §28A-203(c) as read states no threshold, so
+  **gap G14:** a 14-day trial cannot get a notice 15–30 days before it ends;
+  the protective reading needs the notice at sign-up for DC customers, or a
+  reading of §28A-202's definition of free trial. To read next.
+- **Price change:** New York at least five business days and at most 30 days
+  before the change (O11), California 7–30 (secondary): **7 calendar days
+  and five business days, whichever is later, to 30 days.** No price change
+  is planned.
+- **New gap G15 — Germany (O14).** A German consumer's annual subscription
+  in a creator's store may not renew tacitly for another year under standard
+  terms: after the first term it must become open-ended and cancelable with
+  at most one month's notice. This touches buyers' annual memberships
+  (Stripe Billing on the creator's account) and Marktmorgen's own yearly
+  plan for a consumer in Germany; it is a contract-terms and refund question,
+  and goes into the cancellation PR (G5/G8/G10) of section 4.
+- **UK (O12–O13):** nothing fixed before 1 Jan 2027; the design keeps a
+  reminder before every renewal of a six-month or longer term.
+
+Still to read: California (leginfo), Oregon, Utah §13-70-101, DC §28A-202,
+Virginia §59.1-207.45 and its 2026 amendments, Colorado's later amendments,
+EUR-Lex 2023/2673, Canada (federal and provinces). PR #1296 stays unmerged.
+
+## 9. Who the rules protect: creators included (read 30 Oct 2026, 18h10–18h20 Fortaleza)
+
+| # | Text | Official page read | Finding |
+| --- | --- | --- | --- |
+| O15 | Virginia Code §59.1-207.45 (history 2018 c. 704; 2023 c. 288; 2024 c. 452; 2026 cc. 931, 932) | law.lis.virginia.gov/vacode/title59.1/chapter17.8/section59.1-207.45/ | "Consumer" is (i) an individual for personal, family or household purposes, or (ii) **a small business acquiring goods or services for business purposes** (at least 51% independently owned and controlled by individuals, or a qualifying cooperative). "Automatic renewal" is a paid subscription renewed at the end of a definite term for a further term of more than one month. |
+| O16 | Virginia Code §59.1-207.46(D) | as O3 | A free trial over 30 days: the notice comes "within 30 days of the end of any such free trial" (read protectively as no more than 30 days before the end). |
+| O17 | DC Code §28A-202 | code.dccouncil.gov/us/dc/council/code/sections/28A-202 | "Consumer" is any person who seeks or acquires goods or services (no personal-use condition read); "free trial" is not defined there. The page says the section's creation "has not been implemented"; the protective reading treats it as in force. |
+
+**What it changes.** Marktmorgen's creators are small businesses. Virginia's
+annual notice (O3) reaches a Virginia creator's yearly plan, and DC's
+definition as read does not exclude businesses; Utah's (O1) speaks of "an
+individual" who receives the service. So the creator-plan notices of PR #1296
+are required for creators too, not only a courtesy, and stay on for every
+creator whatever their location. G14 stays open (DC's trial notice and a
+14-day trial; "free trial" has no definition in §28A-202). Utah §13-70-101
+could not be read (the page returned no text).
+
+## 10. PR #1296 after review, and gap G16 (30 Oct 2026, 18h10 Fortaleza)
+
+An independent review of PR #1296 found that "the 30th day" was decided by
+elapsed seconds: with the daily run at 10:00 UTC, a renewal charged late in
+the UTC day was first noticed on the 29th calendar day and still reported on
+time. Fixed on the branch (82fd087 and after): the yearly window compares UTC
+calendar dates, the notice is first due on the 30th day before the charge's
+date whatever the hour, and any later day is sent but marked late. A
+mutation back to elapsed days makes 2 of 10 checks fail.
+
+**Gap G16 — local dates.** The statutes count days in the customer's own
+calendar. The daily run (10:00 UTC) falls on the same date in every US zone
+from UTC−4 to UTC−10, but a charge between 00:00 and about 10:00 UTC falls on
+the previous local date for some or all US zones, so the UTC count can be a
+day off for them. Settling it needs the creator's time zone (or a run per
+zone) and a rule for an unknown zone; until then PR #1296 stays unmerged,
+with the other open points: California's official text, Oregon, Utah
+§13-70-101, Canada, G12–G15, and two review findings recorded for the next
+unit: a notice missed until one day or less before the charge is dropped
+without being counted as missed (`TOO_LATE_SECONDS`), and a cancellation
+scheduled after the next renewal (`cancel_at` later than the charge) gets no
+notice for that renewal.
