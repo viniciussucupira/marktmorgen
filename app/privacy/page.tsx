@@ -465,18 +465,19 @@ export default function PrivacyPage() {
           their own.
         </p>
         <p id="instant-access" className="scroll-mt-24">
-          <strong className="text-black">Starting access right away.</strong>{" "}
+          <strong className="text-black">Starting before the 14 days end.</strong>{" "}
           Before you pay for something you can open right away, such as a
           download, a course or a membership, the checkout asks you to check a
-          box saying you want access as soon as it is available and that you
-          lose a 14-day right to cancel once it starts. When you check it, we
-          write &ldquo;yes&rdquo;, the version of that sentence and the time on
-          the order itself, in the creator&apos;s own Stripe account (or with
-          the PayPal order), and the confirmation email quotes it back to you.
+          box about starting before a 14-day right to cancel ends. When you
+          check it, we write &ldquo;yes&rdquo;, the version and kind of that
+          sentence and the time on the order, and the confirmation email quotes
+          it back to you. For a card payment it is kept on the order itself, in
+          the creator&apos;s own Stripe account, for as long as the creator
+          keeps their Stripe records. For a PayPal payment it is kept with our
+          own record of that PayPal order, which we keep for 400 days for
+          refunds, disputes and the creator&apos;s books, and then delete.
           Nothing else is kept for it: no new detail about you, no cookie and
-          no tracking. It stays with the order for as long as the creator
-          keeps their Stripe records, because it is part of the record of the
-          sale.
+          no tracking.
         </p>
         <p id="preorders">
           <strong className="text-black">Pre-orders.</strong>{" "}

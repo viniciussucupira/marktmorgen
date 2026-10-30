@@ -158,13 +158,18 @@ export default function RefundsPage() {
         </p>
         <p>
           If you bought something you could open right away, the checkout
-          asked you to check a box saying you wanted access as soon as it was
-          available and that you lose a 14-day right to cancel once it starts.
+          asked you to check a box saying it may start before your 14-day right
+          to cancel ends, and that you lose that right once access starts.
           Where the law where you live gives that right, as in the European
-          Union and the United Kingdom, it ended when your access started; the
-          confirmation email quotes the box you checked. The creator may still
-          agree to a refund, and their own terms, and the law, still apply to
-          anything that was not as described or did not work.
+          Union and the United Kingdom, it ended when your access started; for
+          a pre-order, it lasts until the release day, and an item shipped to
+          you keeps its own right from the day you receive it. For a
+          membership, the box asked for it to start now: if you cancel within
+          14 days of joining, you keep that right and pay only for what you
+          were given until then. The confirmation email quotes the box you
+          checked. The creator may still agree to a refund, and their own
+          terms, and the law, still apply to anything that was not as
+          described or did not work.
         </p>
         <p>
           If you cannot reach them, write to us at{" "}

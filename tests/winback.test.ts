@@ -162,6 +162,8 @@ async function main(): Promise<void> {
   is("it is for Dana, on this product", [grant?.email, grant?.product], ["dana@example.com", club.product.id]);
   is("with the offer as it was sent", [grant?.percent, grant?.months], [25, 2]);
   is("it opens nothing for another product", await readWinBack(store!, yearly.product.id, link[2]), null);
+  const unasked = await openWinBack(store!, link[1], link[2], "https://marktmorgen.com");
+  is("without the box to start the membership before the 14 days end (lib/digital-consent.ts), no checkout opens", unasked.ok ? "opened" : unasked.reason, "consent");
   const opened = await openWinBack(store!, link[1], link[2], "https://marktmorgen.com", TEST_CONSENT);
   is("the checkout opens", opened.ok, true);
   const body = checkouts[0];

@@ -54,7 +54,7 @@ import { type BundleContents, contentsOf } from "@/lib/bundles";
 import { isHouseStore } from "@/lib/house-store";
 import { preorderProblem } from "@/lib/preorder-rules";
 import { type MayComeOff, applyShare, leastPaid, linesTotal, shareBps } from "@/lib/platform-share";
-import { CONSENT_META, type DigitalConsent, consentMetaValue, deliversDigitally, requireDigitalConsent } from "@/lib/digital-consent";
+import { CONSENT_META, type DigitalConsent, consentKind, consentMetaValue, deliversDigitally, keepConsentOn, requireDigitalConsent } from "@/lib/digital-consent";
 
 /**
  * How long a paid link keeps working.
@@ -451,18 +451,13 @@ export async function createCheckout(
   }
   if (added.length) body.set("metadata[title]", [name, ...added.map((a) => a.target.title)].join(" + ").slice(0, 480));
 
-  // Digital content handed over at once (lib/digital-consent.ts): refused
-  // here, before an order is admitted or anything reaches Stripe, unless the
-  // buyer checked the box; kept on the order with its version and its time.
-  // Written on the payment too, for a one-off charge, so the record a dispute
-  // reads carries it.
+  // Digital content or a membership (lib/digital-consent.ts): refused here,
+  // before an order is admitted or anything reaches Stripe, unless the buyer
+  // checked the box; kept on the order below, once every other field is
+  // written, so it is counted against Stripe's 50.
   const digital = deliversDigitally(product, chosen?.id ?? null) || added.some((offer) => deliversDigitally(offer.target));
   requireDigitalConsent(digital, extras.digitalConsent);
-  if (digital && extras.digitalConsent) {
-    body.set(`metadata[${CONSENT_META}]`, consentMetaValue(extras.digitalConsent));
-    if (!recurring) body.set(`payment_intent_data[metadata][${CONSENT_META}]`, consentMetaValue(extras.digitalConsent));
-    else body.set(`subscription_data[metadata][${CONSENT_META}]`, consentMetaValue(extras.digitalConsent));
-  }
+  const kind = consentKind(product);
 
   // A limited product's unit is held while this checkout is open, so the
   // checkout closes before the hold does. The time is set just before the
@@ -700,6 +695,17 @@ export async function createCheckout(
   // The share of the sale, when the store's plan has one. A choose-your-price
   // line is still at its floor here, which is the least it can be.
   applyShare(body, store, { recurring, least: leastPaid(linesTotal(body).cents, mayComeOff) });
+
+  // The yes, with its version, its kind and its time, written last before the
+  // order is admitted, with a field held back for the admitted mark: refused
+  // rather than dropped when Stripe's fields have no room for it
+  // (DigitalConsentNoRoom). On the payment too, or the membership, so the
+  // record a dispute reads carries it.
+  if (digital && extras.digitalConsent) {
+    keepConsentOn(body, extras.digitalConsent, kind, 1);
+    if (!recurring) body.set(`payment_intent_data[metadata][${CONSENT_META}]`, consentMetaValue(extras.digitalConsent, kind));
+    else body.set(`subscription_data[metadata][${CONSENT_META}]`, consentMetaValue(extras.digitalConsent, kind));
+  }
 
   // A paid store's new orders stop at its plan's figure (lib/order-admission.ts):
   // admitted here, before Stripe's page opens, so nobody is stopped while paying.

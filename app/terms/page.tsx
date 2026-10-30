@@ -161,21 +161,27 @@ export default function TermsPage() {
           yours to moderate, and the rules in section 4 apply to it.
         </p>
         <p id="instant-access" className="scroll-mt-24">
-          <strong className="text-black">Starting access right away.</strong>{" "}
+          <strong className="text-black">Starting before the 14 days end.</strong>{" "}
           In the European Union, the United Kingdom and some other places, a
-          consumer who buys digital content online usually has 14 days to
-          cancel, and loses that right once access starts only if they asked
-          for access to start right away, said they understood they would lose
-          the right, and got a confirmation of both. So before a buyer pays for
-          something your store hands over digitally (a file, a link, a course,
-          a private podcast, a bundle or a membership), the checkout asks them
-          to check a box that says both things, in your store&apos;s language,
-          and does not open the payment without it. Each one-click offer after
-          paying asks again. The buyer&apos;s &ldquo;yes&rdquo;, the version of
-          the sentence and the time are kept on the order in your Stripe
-          account, and the confirmation email quotes them. We ask the same
-          way for every buyer, because a page cannot know who has the right;
-          the words say it is for buyers who have it where they live. Your own
+          consumer who buys online usually has 14 days to cancel. For digital
+          content (a file, a link, a course, a private podcast or a bundle),
+          they lose that right once access starts only if they agreed that it
+          may start before the 14 days end, said they understood they would
+          lose the right, and got a confirmation of both. A membership is at
+          least partly a service: they ask for it to start now, keep the right
+          to cancel within the 14 days, and if they do, pay only for what they
+          were given until then. So before a buyer pays, the checkout asks them
+          to check one box that says the one that fits, in your store&apos;s
+          language, and does not open the payment without it. Each one-click
+          offer after paying asks again. The buyer&apos;s &ldquo;yes&rdquo;,
+          the version and kind of the sentence and the time are kept on the
+          order in your Stripe account, and the confirmation email quotes
+          them. A pre-order&apos;s buyer keeps the right until its release day,
+          and a shipped item keeps its own. If a member cancels within the 14
+          days, refunding what they paid beyond what they were given until
+          then is yours to do, from your Stripe account. We ask the same way
+          for every buyer, because a page cannot know who has the right; the
+          words say it is for buyers who have it where they live. Your own
           terms, refund policy and descriptions are yours: do not promise
           less than this, for example &ldquo;no refunds&rdquo; to a buyer who
           did not check the box. We do not give legal advice, and this box

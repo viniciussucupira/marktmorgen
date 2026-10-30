@@ -67,7 +67,7 @@ import type { ProductImage } from "@/lib/product-image";
 import { bundleFromMeta, bundleMeta, deliverableItems, deliveredIds } from "@/lib/bundle-rules";
 import { type BundleContents, contentsOf, offerableAfterPaying } from "@/lib/bundles";
 import { applyShareToPayment } from "@/lib/platform-share";
-import { CONSENT_META, type DigitalConsent, consentMetaValue, deliversDigitally, validConsent } from "@/lib/digital-consent";
+import { CONSENT_META, type DigitalConsent, consentKind, consentMetaValue, deliversDigitally, validConsent } from "@/lib/digital-consent";
 
 export const UPSELL_COOKIE = "nl_upsell";
 export const UPSELL_WINDOW_SECONDS = 60 * 60;
@@ -356,7 +356,7 @@ export async function takeUpsell(input: {
   body.set("metadata[step_id]", step.id);
   body.set("metadata[step_number]", String(funnel.steps.findIndex((s) => s.id === step.id) + 1));
   // The yes to start access at once, its version and its time, on the offer's own payment.
-  if (digital && input.consent) body.set(`metadata[${CONSENT_META}]`, consentMetaValue(input.consent));
+  if (digital && input.consent) body.set(`metadata[${CONSENT_META}]`, consentMetaValue(input.consent, consentKind(target)));
   if (email) body.set("receipt_email", email);
   // An order that came through an affiliate's link carries them on to what
   // is added after it, at the share this product earns today.

@@ -207,6 +207,10 @@ async function main(): Promise<void> {
   part("The order");
   const now = Math.floor(Date.now() / 1000);
   const onSale: Store = { ...store, sale: { ...store.sale, percent: 20, starts: now - 60, ends: now + 3600, all: true, products: [], coupon: "c_sale" } as Store["sale"] };
+  // Without the box to start access before the 14 days end (lib/digital-consent.ts): refused before an order is admitted or PayPal is asked.
+  const unasked = await openOrder(onSale, product, "https://marktmorgen.com");
+  const forgedYes = await openOrder(onSale, product, "https://marktmorgen.com", { digitalConsent: { ...TEST_CONSENT, version: "2020-01-01.1" } });
+  is("no yes, or a yes of another version: no PayPal order", [unasked.ok ? "opened" : unasked.reason, forgedYes.ok ? "opened" : forgedYes.reason], ["consent", "consent"]);
   const first = await openOrder(onSale, product, "https://marktmorgen.com", { digitalConsent: TEST_CONSENT });
   is("sent to PayPal's page", first.ok ? first.url : first.reason, `https://www.paypal.com/checkoutnow?token=${orderId(1)}`);
   const sent = seen.find((s) => s.path === "/v2/checkout/orders")!;

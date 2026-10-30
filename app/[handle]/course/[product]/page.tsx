@@ -255,7 +255,9 @@ export default async function CoursePage({ params, searchParams }: Params) {
                   <input type="hidden" name="handle" value={store.handle} />
                   <input type="hidden" name="product" value={product.id} />
                   {/* A course is handed over at once: the box to start access first (lib/digital-consent.ts). */}
-                  <DigitalConsentBox id={`dc-course-${product.id}`} lang={store.language} className="mb-5" />
+                  {/* Sent back here, not to the product's page, when the box was not checked (app/api/store/checkout, `from`). */}
+                  <input type="hidden" name="from" value="course" />
+                  <DigitalConsentBox id={`dc-course-${product.id}`} lang={store.language} refused={query.consent === "needed"} className="mb-5" />
                   <button type="submit" className="btn st-btn btn-lg btn-block">{w.buyCourse(access.state === "ended", price)}</button>
                 </form>
               ) : paypalReady(store, product) ? (

@@ -12,7 +12,7 @@ import { canManage } from "@/lib/membership-manage";
 import { canRecover } from "@/lib/buyer-orders";
 import { productPath } from "@/components/store-product";
 import { DigitalConsentBox } from "@/components/digital-consent-box";
-import { deliversDigitally } from "@/lib/digital-consent";
+import { consentKind, deliversDigitally } from "@/lib/digital-consent";
 import { readListing } from "@/lib/catalog";
 import { readWinBack } from "@/lib/winback-send";
 
@@ -114,7 +114,7 @@ export default async function RenewPage({ params, searchParams }: Params) {
                 {m.offerFor(offer.email, until)}
               </p>
               {/* A membership hands over its content digitally: the box to start access at once (lib/digital-consent.ts). */}
-              {deliversDigitally(product) ? <DigitalConsentBox id={`dc-back-${product.id}`} lang={store.language} refused={status === "consent"} className="mt-5" /> : null}
+              {deliversDigitally(product) ? <DigitalConsentBox id={`dc-back-${product.id}`} kind={consentKind(product)} lang={store.language} refused={status === "consent"} className="mt-5" /> : null}
               <button type="submit" className="btn st-btn btn-lg btn-block mt-5">
                 {m.comeBackWith}
               </button>
@@ -128,7 +128,9 @@ export default async function RenewPage({ params, searchParams }: Params) {
               <form action="/api/store/checkout" method="post" target="_top" className="mt-7" data-checkout="">
                 <input type="hidden" name="handle" value={store.handle} />
                 <input type="hidden" name="product" value={product.id} />
-                {deliversDigitally(product) ? <DigitalConsentBox id={`dc-renew-${product.id}`} lang={store.language} className="mb-5" /> : null}
+                {/* Sent back here, not to the product's page, when the box was not checked (app/api/store/checkout, `from`). */}
+                <input type="hidden" name="from" value="renew" />
+                {deliversDigitally(product) ? <DigitalConsentBox id={`dc-renew-${product.id}`} kind={consentKind(product)} lang={store.language} refused={!back && query.consent === "needed"} className="mb-5" /> : null}
                 <button type="submit" className="btn st-btn btn-lg btn-block">
                   {price ? m.renewPrice(price) : m.renew}
                 </button>

@@ -1,64 +1,87 @@
 /**
- * The buyer's yes before digital content is handed over at once, and what is
- * kept of it (queue item 91 [D2-EU-WITHDRAWAL], 30 October 2026).
+ * The buyer's yes before something is handed over during the 14-day
+ * cancellation period, and what is kept of it (queue item 91
+ * [D2-EU-WITHDRAWAL], 30 October 2026; corrected the same day after an
+ * independent review).
  *
- * The law, read on 30 October 2026 in Directive 2011/83/EU as amended by
- * Directive (EU) 2019/2161 (art. 4(11)–(12) of 2019/2161 and arts. 6(1)(k),
- * 8(2) and 8(7) of 2011/83, from the adopted text reproduced on
- * legislation.gov.uk; EUR-Lex's own article text could not be fetched): a
- * consumer who buys digital content that is not supplied on a tangible
- * medium has 14 days to withdraw (art. 9, not reread that day), and loses
- * that right once performance has begun only where, for a contract with an
- * obligation to pay, (i) they gave prior express consent to begin during the
- * withdrawal period, (ii) they acknowledged that they thereby lose the right,
- * and (iii) the trader confirmed it on a durable medium under art. 8(7)
- * (art. 16(m)). Without those, they owe nothing for what they used
- * (art. 14(4)(b)). The United Kingdom's rules are read the same way here;
- * their own text was not read on that date.
+ * The law, read on 30 October 2026 from the adopted texts reproduced on
+ * legislation.gov.uk (EUR-Lex's own article text could not be fetched from
+ * here): Directive 2011/83/EU arts. 6(1)(k), 8(2), 8(7), 9(1), 9(2)(c) and
+ * 14(3), as amended by Directive (EU) 2019/2161 art. 4(6), (7)(b), (11) and
+ * (12), which replaced arts. 7(3), 8(8), 14(4)(b)(i), 16(a) and 16(m); and,
+ * for the German words, § 356(6) no. 2 BGB (gesetze-im-internet.de). Two
+ * rules apply, and the box says the one that fits:
  *
- * Here, the creator is the trader (app/terms, section 3); the store's
- * checkout asks on the creator's behalf, the same way for every buyer:
+ *   - "digital" — digital content not on a tangible medium, sold once
+ *     (a file, a link, a course, a private podcast, a bundle, a pre-order of
+ *     one): the right to withdraw (14 days from the contract, art. 9(2)(c))
+ *     is lost once supply has begun only if the consumer gave prior express
+ *     consent to begin before the period ends, acknowledged that they
+ *     thereby lose the right, and got the trader's confirmation on a durable
+ *     medium (art. 16(m), art. 8(7)(b)). A pre-order begins on its release
+ *     day, so its buyer keeps the right until then.
+ *   - "membership" — a membership (a subscription that may hold a community,
+ *     live events and coaching as well as content; the code cannot tell the
+ *     service parts apart, so every membership is read this way): at least
+ *     partly a service. The consumer asks expressly for it to start during
+ *     the period (art. 8(8)); the right is lost only once the service is fully
+ *     performed (art. 16(a)), and one who withdraws after asking pays in
+ *     proportion to what was provided (art. 14(3)). So the box asks for the
+ *     start and says what a cancellation in those 14 days costs, and never
+ *     says the right is lost.
+ *
+ * The United Kingdom's rules are read the same way here; their own text was
+ * not read on that date.
+ *
+ * Here the creator is the trader (app/terms, section 3); the store's checkout
+ * asks on the creator's behalf, the same way for every buyer:
  *
  *   - one unchecked box before paying, on every form that pays for something
- *     handed over digitally (deliversDigitally), with one sentence that holds
- *     both the consent and the acknowledgement, in the store's language
+ *     handed over digitally (deliversDigitally), with the sentence of its
+ *     kind (consentKind) in the store's language
  *     (lib/buyer-words/digital-consent.ts). Shown to every buyer, because the
  *     page cannot know who has the right; the note under it says it is for
- *     buyers who have that right where they live, so nobody is told they had
- *     a right they did not have;
+ *     buyers who have that right where they live;
  *   - the server refuses to open the payment without it (consentFromForm,
  *     requireDigitalConsent): a forged form, a page from before the words
- *     changed (another version) or a missing box opens nothing and charges
- *     nothing;
- *   - each one-click offer after paying is its own contract, so it asks
- *     again, on its own button (lib/upsell.ts). Consent given for one order
- *     is never read as consent for another;
- *   - what is kept is "yes", the version of the sentence and the time, on the
- *     order itself in the creator's own Stripe account (CONSENT_META): no new
- *     personal data, no cookie, nothing kept by us;
+ *     changed (another version) or a missing box opens nothing;
+ *   - each one-click offer after paying is its own contract, so it asks again
+ *     on its own button (lib/upsell.ts);
+ *   - what is kept is "yes", the version, the kind and the time, under
+ *     CONSENT_META: on the order in the creator's own Stripe account, or, for
+ *     a PayPal order, in Marktmorgen's own record of that order, which is
+ *     kept 400 days (lib/paypal-sales.ts, PAID_KEPT_SECONDS). No other
+ *     personal data, no cookie, no tracking;
  *   - the confirmation email (the durable medium) quotes the sentence, its
- *     version and the day, and says the right to cancel ended when access
- *     started (lib/purchase-email.ts and the receipts it calls on).
+ *     version and the day, and says what follows for that order: access
+ *     started, starts on the release day, or the membership's 14 days
+ *     (lib/digital-consent-email.ts).
  *
- * A physical product with nothing digital in it is not asked; neither is a
- * booked call (a service, through its own door) nor anything free.
+ * A product shipped by the creator delivers nothing digital (lib/shipping.ts,
+ * shipProblem refuses one with a file, link, course, podcast or bundle, on
+ * the product or on any option), so it is never asked, whichever option is
+ * picked. An order of one with a digital product added at checkout asks
+ * about the added one only, and the email says the shipped item keeps its own
+ * right. A booked call (a service, through its own door) and anything free
+ * are not asked.
  *
  * Browser-safe: plain data and small functions, nothing from the server.
  */
+import { shipProblem } from "@/lib/shipping";
 
 /**
  * The version of the sentence the buyer checks, in every language. Bumped
  * whenever the words change in any language, with CONSENT_WORDS_FINGERPRINT
  * (tests/digital-consent.test.ts fails when the words change and it does not).
  */
-export const EU_WITHDRAWAL_CONSENT_VERSION = "2026-10-30.1";
+export const EU_WITHDRAWAL_CONSENT_VERSION = "2026-10-30.2";
 
 /**
- * The SHA-256, in hex, of every language's sentence joined by "\n" in the
- * order en, es, fr, de, it, nl, pt. Not read at run time: it is what ties the
+ * The SHA-256, in hex, of every language's two sentences (digital, then
+ * membership) joined by "\n" in the order en, es, fr, de, it, nl, pt. Not read at run time: it is what ties the
  * version to the exact words, held by tests/digital-consent.test.ts.
  */
-export const CONSENT_WORDS_FINGERPRINT = "cef78f566e8c4b23118f09da94eca09795c90c53fb2d0b9e324e9ec4f4594024";
+export const CONSENT_WORDS_FINGERPRINT = "44168ca087aa8dcbdd0418727253054f29c67c020c2e2f6e5db4981dd1e7804d";
 
 /** The checkbox's name and value, and the hidden field with the version the page showed. */
 export const CONSENT_FIELD = "dc";
@@ -67,51 +90,84 @@ export const CONSENT_VERSION_FIELD = "dc_v";
 /** The metadata key on the order (Stripe checkout session, payment, PayPal order record). */
 export const CONSENT_META = "dc";
 
-/** The buyer's yes, as it is kept: the version of the sentence and the time, in seconds. */
+/** Which sentence the box says, and which rule follows (see above). */
+export type ConsentKind = "digital" | "membership";
+
+/** The buyer's yes, as the form gave it: the version of the words and the time, in seconds. */
 export type DigitalConsent = { version: string; at: number };
+
+/** The yes as it is kept on an order, with the kind of sentence that was shown. */
+export type KeptConsent = DigitalConsent & { kind: ConsentKind };
 
 /** Thrown where a charge is built without the yes it needs: nothing is opened and nothing is charged. */
 export class DigitalConsentMissing extends Error {
   constructor() {
-    super("Immediate digital delivery needs the buyer's consent first");
+    super("This order needs the buyer's yes to start during the cancellation period");
     this.name = "DigitalConsentMissing";
   }
 }
 
+/**
+ * Thrown where Stripe's 50 metadata fields have no room left for the yes
+ * (one is always kept for a choose-your-price line). The yes is never the
+ * field dropped: the checkout is refused instead, and nothing is charged.
+ */
+export class DigitalConsentNoRoom extends Error {
+  constructor() {
+    super("This checkout has no room left to keep the buyer's yes");
+    this.name = "DigitalConsentNoRoom";
+  }
+}
+
+/** The most metadata fields a checkout may carry before the yes, so it and a choose-your-price mark still fit in Stripe's 50. */
+export const METADATA_ROOM_BEFORE_CONSENT = 48;
+
 /** What deciding whether a product hands something over digitally reads. */
 export type DeliveryCandidate = {
+  priceCents?: number;
   call?: unknown;
   course?: unknown;
   podcast?: unknown;
-  bundle?: readonly string[] | null;
+  bundle?: unknown;
   recurring?: unknown;
   shipping?: unknown;
+  pwyw?: unknown;
+  plan?: unknown;
   file?: unknown;
   link?: unknown;
-  options?: readonly { id: string; file?: unknown; link?: unknown }[];
+  options?: readonly { id?: string; file?: unknown; link?: unknown }[];
 };
 
 /**
- * Whether buying this product hands over digital content (a file, a link, a
- * course, a private podcast, a bundle of products, a membership's content).
- * A product the creator ships, with no file or link on it or on the option
- * bought, is the only paid product here that does not; a call is a service.
- * An option id that names nothing is read as the product's every option, so
- * a doubt asks rather than skips.
+ * Whether buying this product hands over digital content or a membership.
+ * Only a product the creator ships does not, and only a booked call (a
+ * service with its own door). A shipped product can hold nothing digital on
+ * any option (lib/shipping.ts, shipProblem), so the answer is the same for
+ * every option: the page and the server ask the same question and agree.
+ * The option is taken so callers say which one, and is otherwise unused.
  */
 export function deliversDigitally(product: DeliveryCandidate, optionId: string | null = null): boolean {
+  void optionId;
   if (product.call) return false;
-  if (product.course || product.podcast || product.recurring) return true;
-  if (Array.isArray(product.bundle) && product.bundle.length > 0) return true;
-  if (!product.shipping) return true;
-  if (present(product.file) || present(product.link)) return true;
-  const options = product.options ?? [];
-  const chosen = optionId ? options.filter((option) => option.id === optionId) : [];
-  return (chosen.length ? chosen : options).some((option) => present(option.file) || present(option.link));
+  if (product.shipping && shipProblem({
+    priceCents: product.priceCents ?? 0,
+    recurring: product.recurring ?? null,
+    call: product.call ?? null,
+    options: [...(product.options ?? [])],
+    pwyw: product.pwyw ?? null,
+    plan: product.plan ?? null,
+    file: product.file ?? null,
+    link: product.link ?? null,
+    course: product.course ?? null,
+    podcast: product.podcast ?? null,
+    bundle: product.bundle ?? null,
+  }) === null) return false;
+  return true;
 }
 
-function present(value: unknown): boolean {
-  return value !== null && value !== undefined && value !== "";
+/** The sentence a product's box says: a membership's, or the one for digital content sold once. */
+export function consentKind(product: Pick<DeliveryCandidate, "recurring">): ConsentKind {
+  return product.recurring ? "membership" : "digital";
 }
 
 /**
@@ -134,18 +190,36 @@ export function requireDigitalConsent(needed: boolean, consent: DigitalConsent |
   if (needed && !validConsent(consent)) throw new DigitalConsentMissing();
 }
 
-/** The value kept under CONSENT_META: "yes:<version>:<seconds>", 27 characters. */
-export function consentMetaValue(consent: DigitalConsent): string {
-  return `yes:${consent.version}:${consent.at}`;
+/** The value kept under CONSENT_META: "yes:<version>:<d|m>:<seconds>", 29 characters. */
+export function consentMetaValue(consent: DigitalConsent, kind: ConsentKind): string {
+  return `yes:${consent.version}:${kind === "membership" ? "m" : "d"}:${consent.at}`;
 }
 
-const META_VALUE = /^yes:([0-9]{4}-[0-9]{2}-[0-9]{2}\.[0-9]{1,3}):([0-9]{10})$/;
+/**
+ * Writes the yes onto a checkout's metadata, under Stripe's 50-field limit
+ * (with one field kept for a choose-your-price mark and `after` for the rest):
+ * refused (DigitalConsentNoRoom) rather than written over the limit or left
+ * out, so the yes is never the field that is dropped.
+ */
+export function keepConsentOn(
+  body: URLSearchParams,
+  consent: DigitalConsent,
+  kind: ConsentKind,
+  /** Fields still to be written after the yes (the admitted-order mark), held back for. */
+  after = 0,
+): void {
+  const fields = [...body.keys()].filter((key) => key.startsWith("metadata[") && key !== `metadata[${CONSENT_META}]`).length;
+  if (fields + after > METADATA_ROOM_BEFORE_CONSENT) throw new DigitalConsentNoRoom();
+  body.set(`metadata[${CONSENT_META}]`, consentMetaValue(consent, kind));
+}
+
+const META_VALUE = /^yes:([0-9]{4}-[0-9]{2}-[0-9]{2}\.[0-9]{1,3}):(d|m):([0-9]{10})$/;
 
 /** The yes read back from an order's metadata, or null when it has none (or one this code did not write). */
-export function readConsentMeta(meta: Record<string, string | undefined> | null | undefined): DigitalConsent | null {
+export function readConsentMeta(meta: Record<string, string | undefined> | null | undefined): KeptConsent | null {
   const raw = meta?.[CONSENT_META];
   if (typeof raw !== "string") return null;
   const found = META_VALUE.exec(raw);
   if (!found) return null;
-  return { version: found[1], at: Number(found[2]) };
+  return { version: found[1], at: Number(found[3]), kind: found[2] === "m" ? "membership" : "digital" };
 }
