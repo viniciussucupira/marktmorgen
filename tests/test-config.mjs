@@ -45,6 +45,12 @@ export function testAliases(file,root,here){
   aliases['@/lib/ai-spend-policy']=join(here,'commercial-ai-approved-policy.ts');
   aliases['@/lib/upload-budget-policy']=join(here,'upload-budget-approved-policy.ts');
  }
+ if(file==='restart-submission-ack.test.ts'){
+  aliases['@/lib/redis']=join(here,'restart-submission-ack-world.ts');
+  aliases['@/lib/contract-funding-rules']=join(here,'restart-activation-enabled-rules.ts');
+  aliases['@/lib/ai-spend-policy']=join(here,'commercial-ai-approved-policy.ts');
+  aliases['@/lib/upload-budget-policy']=join(here,'upload-budget-approved-policy.ts');
+ }
  if(file==='restart-activation-ack.test.ts'){
   aliases['@/lib/redis']=join(here,'restart-activation-ack-world.ts');
   aliases['@/lib/contract-funding-rules']=join(here,'restart-activation-enabled-rules.ts');

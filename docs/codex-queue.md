@@ -18278,3 +18278,13 @@ Proibido: mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_S
 
 Aplicar a regra VR.
 ```
+
+
+### AB(a) — barreira de envio do reinício: ACK próprio antes de permissão (30/10/2026)
+
+armRestartSubmission lia result[0]/ack0,1 semdadospróprios;getter/herança comframeválido poderia devolverArmedRestartSubmission na barreira depréPOST. Agoraouter1/inner2 próprios,numeric1,stringcodeunits/bytes≤4096antesparse,semreadback/rearm/retry/compensação. Lua/uncertain permanente/sourcecash/binding/review/mês/clock/prazo/ownershipcomparaçõesincólumes. Testeactualentry usa financialconfig/ownedintent/prepare reais e aliascoverageSÓteste;modelo póscommitretém16badresponses/primeiraperdida/repetiçãorecusada/clock/prazo. Modelo nãoprovaLua/ciclodevida;suíteRedisrealetesteproduçãofalsecoveragepreservados. NenhumaIOprodutivanova,custoCI/revisãoFX275desconhecidonãozero;políticasreviewsnull,coberturasfalse,flags/preços/direitosmantidos. ExigeCIintegral headnovo.
+
+Provas da incorporação anterior1243/1239: mergeb421b12fa79031ef75d08594514417f8e7881f7c,árvore1b5950ec4cc98e2543a888f04c5b3c5b00efea06,04:17:38UTC(30/10,01:17:38Fortaleza),pais391360125789de9b16e1b802282539cfda00372b/c3839e5bfc250bcd540ced9db896e78eb7c7b420;39/39+Vercel noheadcombinadoc3839e5antesmerge. Verify123880236259:ACKrecursos03:51:28.5757610UTC,actualreinício03:53:25.9985333UTC,234/234+Everything03:54:34.1318194UTC. Mobile123880236289:9frias,LCPmáx1020ms,CLS0,proxy96ms,0escritas;laboratório,nãoINPcampo. Produdpl_6vR4X7MFnQ6GZGFH3p11MSsAkzoW READY SHAexato b421b12,7aliases/5HTMLexatos;janelaerror/fatal04:17:38→04:19:54.226UTCsemocorrências,semgarantiauniversal.1239incorporadoporanterioridade04:17:40UTC,nãosegundaentrega. Contador254retidoaguardandoprovainterativaanterior;sem255.
+
+
+AntesdoPR,mainavançoupeloClaudeem1247/b3f50ce90c12cf2ebdbfd3f048c11dee9aecd8e6,adicionando559CM3somentedocumental. Delta conferido:apenasfila46adições,nenhumcódigoconflitante. Registrointeiro/posição/estadoCM3preservados;basenovaconferidaantescriarbranch,semreset/descarte/localmp.

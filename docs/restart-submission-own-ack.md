@@ -1,0 +1,7 @@
+# Restart submission acknowledgement
+
+armRestartSubmission is the one-way boundary before provider permission. Its actual wrapper now requires outer1/inner2 own data, numeric1 and a string bounded by both code units and the existing4096UTF8-byte cap before parsing. Unknown ACK never returns ArmedRestartSubmission. Existing actual configuration, source ownership, financial snapshot, month, clock, deadline and idempotency checks remain; the Lua and permanent uncertain state are unchanged. No recovery/readback/rearm or provider operation is added.
+
+The test calls actual preparation, actual financial config/owned-intent decoder and actual armRestartSubmission with a test-only enabled coverage alias. A postcommit boundary model records the uncertain state and keeps source receipts/cash/pause/annual fields before corrupting or losing the response. Positive descriptor probe proves the actual path;16bad responses, known repeat denial, clock and deadline tests retain the state and permit no second commit. This boundary model is not a Lua or lifetime-funding proof; existing actualRedisLua and original production falsecoverage tests remain.
+
+No new productive supplierIO, price, right, visible limit, real policy/review or production coverage. CI/review remains FX275, unknown notzero. Full exact-head CI and READY/domain/exactSHA proof required; no margin/opening certification and no counter increment while prior interactive proof remains missing.
