@@ -54,20 +54,25 @@ Found by reading the code; file references are to main above.
 **Marktmorgen's own plans**
 
 - Notices: `lib/billing-reminders.ts`, sent by the daily cron
-  `app/api/cron/reminders/route.ts`. Trial end: at most 8 days before
-  (`TRIAL_NOTICE_SECONDS`), inside the 3–21 window. Yearly renewal: on the
-  first daily run with **at most 30 days** left (`YEAR_NOTICE_SECONDS`), and
+  `app/api/cron/reminders/route.ts`. Trial end: on the first daily run with
+  at most 8 days left (`TRIAL_NOTICE_SECONDS`). Yearly renewal: on the first
+  daily run with **at most 30 days** left (`YEAR_NOTICE_SECONDS`). Both are
   still sent down to 1 day before (`TOO_LATE_SECONDS`).
-  **Gap G1:** a notice missed until fewer than 15 days remain is sent late and
-  looks on time; nothing records that the 15-day floor was missed.
+  **Gap G1:** neither has a floor. A trial notice missed until fewer than 3
+  days remain, or a renewal notice missed until fewer than 15, is sent late
+  and looks on time; nothing records that the window was missed.
 - No monthly notice (not required by the rows read), no price-change notice
   (**gap G2**), no annual reminder (**gap G3**), no notice for add-ons such as
   the Store assistant (**gap G4**, `isAddOn` skips them).
-- Cancellation: `POST /api/billing/cancel` (`setCancelAtPeriodEnd`), no save
-  offer, buttons are forms with `method="post"`. **Gap G5 to confirm:** the
-  studio's "Cancel the subscription" button is shown only in some pause
-  states (`app/studio/page.tsx`); a direct cancel control must be reachable
-  in every state, and an emailed acknowledgment must follow.
+- Cancellation: `POST /api/billing/cancel` (`setCancelAtPeriodEnd`); the
+  buttons are forms with `method="post"`. **Gap G5:** in the studio's paid
+  view (`app/studio/page.tsx`) the cancel form sits closed inside a
+  `<details>`, after the plan-switch options, so it is reachable but not a
+  prominent direct control. There is no save offer today only because
+  `PLAN_BREAKS_ENABLED` is false (`lib/plan-pause-rules.ts`); with it on,
+  "Take a break instead" is a save offer shown before the cancel control,
+  which must meet the same-screen rule before the flag is turned on. No
+  emailed acknowledgment follows a cancellation.
 - Consent: the plan checkout (`lib/billing.ts`) records no recurring-charge
   consent (**gap G6**).
 
@@ -75,7 +80,9 @@ Found by reading the code; file references are to main above.
 creator's Stripe account)
 
 - No notice of any kind before a renewal, a trial end or a price change
-  (**gap G7**). Only static words at checkout and on the thanks page
+  (**gap G7**). Creators' trials may last up to 90 days (`MAX_TRIAL_DAYS`,
+  `lib/product-recurring.ts`), so the 3–21-day notice for trials over 31 days
+  is owed on some of them. Only static words at checkout and on the thanks page
   (`lib/buyer-words/thanks.ts`).
 - Cancellation: an emailed one-hour link to `app/[handle]/manage`, whose
   Cancel is a POST to `app/api/store/manage/cancel` that opens Stripe's
@@ -86,6 +93,10 @@ creator's Stripe account)
   in the sense of §17602(e)(2); no emailed acknowledgment of the
   cancellation from Marktmorgen (Stripe's own email, if enabled on the
   creator's account, is the creator's setting and is not proof here).
+- **Gap G10:** where a store has no manage page (`canManage(store)` false),
+  the thanks page tells the buyer to cancel by replying to the order email
+  (`renewsForReply`, `renewsUntilReply` in `lib/buyer-words/thanks.ts`): an
+  email-only path that the strictest row rules out.
 - Consent: the EU digital-withdrawal consent (`lib/digital-consent.ts`) is a
   different consent; it stores version, kind and time but not the renewal
   terms, the price or the text. **Gap G9:** no specific consent to the
@@ -108,7 +119,7 @@ creator's Stripe account)
    Marktmorgen's own polling of the creator's Stripe account, paid from a
    measured cap per store before the obligation is taken on; a failed send is
    recorded as not sent, never as sent.
-4. **Cancellation (G5, G8).** A direct cancel control in every state, POST
+4. **Cancellation (G5, G8, G10).** A direct cancel control in every state, POST
    only, one confirmation, emailed acknowledgment; the coupon offer only with
    the cancel control on the same screen.
 5. **Matrix completion.** Read on the official sites, with dates: leginfo
