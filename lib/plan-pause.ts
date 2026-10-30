@@ -146,6 +146,18 @@ export async function pauseOf(store: Pick<Store, "email" | "sid" | "extra">): Pr
   return pauseAt(storeRef(store));
 }
 
+/** A UI observation preserves unknown evidence without another Redis read. */
+export async function pauseView(store: Pick<Store, "email" | "sid" | "extra">): Promise<
+  { kind: "known"; record: PauseRecord } | { kind: "missing" } | { kind: "unknown" }
+> {
+  if (!isRedisConfigured()) return { kind: "unknown" };
+  try {
+    const observed = await storedPauseAt(storeRef(store));
+    if (observed.missing) return { kind: "missing" };
+    return observed.record ? { kind: "known", record: observed.record } : { kind: "unknown" };
+  } catch { return { kind: "unknown" }; }
+}
+
 /** Read at most4097 raw bytes; missing and unreadable evidence stay distinct. */
 /** Bound due-member response bytes before Redis returns them; never erase malformed evidence. */
 export const PAUSE_DUE_OBSERVATION = `-- marktmorgen:pause-due-observation:v1

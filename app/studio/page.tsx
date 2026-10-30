@@ -8,7 +8,7 @@ import { dataFullWords, dataWords } from "@/lib/store-data-rules";
 import { isDiscordConfigured } from "@/lib/discord";
 import { RecentSalesSwitch } from "@/components/recent-sales-switch";
 import { firstSaleAt } from "@/lib/yearly-offer";
-import { breakRunning, pauseOf } from "@/lib/plan-pause";
+import { breakRunning, pauseView } from "@/lib/plan-pause";
 import { PAID_MONTHS_BEFORE_PAUSE, PAUSE_MONTHS, PAUSE_EVERY_DAYS } from "@/lib/plan-pause-rules";
 import { MarkShipped } from "@/components/mark-shipped";
 import { paypalSalesConfigured } from "@/lib/paypal-sales";
@@ -797,7 +797,9 @@ export default async function StudioPage({
   const firstSale = store && paid && !billedYearly ? await firstSaleAt(store) : 0;
   // A break the creator chose (lib/plan-pause.ts): set and not yet begun on
   // this subscription, or begun, with the plan starting again on its day.
-  const pause = store && isBillingConfigured() ? await pauseOf(store).catch(() => null) : null;
+  const pauseObservation = store && isBillingConfigured() ? await pauseView(store) : { kind: "missing" as const };
+  const pause = pauseObservation.kind === "known" ? pauseObservation.record : null;
+  const pauseUnknown = pauseObservation.kind === "unknown";
   const pauseSet = Boolean(pause && store && pause.subscription === store.subscriptionId && paid);
   const onBreakNow = Boolean(pause && !paid && breakRunning(pause));
   const breakDay = (seconds: number) =>
@@ -2509,7 +2511,16 @@ export default async function StudioPage({
                   {feeWords(COMMISSION_LIVE && store.shared).studioPay} Visits and lesson video have finite monthly thresholds, shown above. Public pages and new video playback pause at their respective thresholds.
                 </p>
 
-                {paid && cancelling && pauseSet && pause ? (
+                {pauseUnknown ? (
+                  <p className="mt-5 notice notice-warn" role="status" data-pause-unconfirmed="">
+                    We could not confirm your break status. Check your billing status before changing or starting a plan.
+                  </p>
+                ) : null}
+                {paid && cancelling && pauseUnknown ? (
+                  <p className="mt-3 text-ink-soft">
+                    Your subscription is set to stop at the end of its paid period. We could not confirm whether a break is scheduled after that.
+                  </p>
+                ) : paid && cancelling && pauseSet && pause ? (
                   <>
                     <p className="mt-5 notice notice-success font-semibold">
                       {`Break set. Your store keeps taking payments until ${breakDay(pause.from)}. From then until ${breakDay(pause.until)} nothing is charged and your checkout is closed, and on ${breakDay(pause.until)} your plan starts again by itself at ${priceWords(pause.tier, "month")}.`}
@@ -2682,7 +2693,7 @@ export default async function StudioPage({
                       creator who is stopping for a season keeps everything
                       and is started again by itself, instead of leaving.
                     */}
-                    {!trialing && !billedYearly && !changePending ? (
+                    {!pauseUnknown && !trialing && !billedYearly && !changePending ? (
                       <details className="mt-4">
                         <summary className="cursor-pointer text-sm font-bold text-ink underline underline-offset-2">
                           Take a break instead
@@ -2725,6 +2736,8 @@ export default async function StudioPage({
                       the day it stops.
                     </p>
                   </>
+                ) : pauseUnknown ? (
+                  <p className="mt-3 text-ink-soft">Your store and its content stay as they are while your break status is unconfirmed.</p>
                 ) : !PLANS_ON_SALE ? (
                   <>
                     <p className="mt-5 text-ink-soft">

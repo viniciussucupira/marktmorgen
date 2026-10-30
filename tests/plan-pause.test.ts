@@ -17,7 +17,7 @@
  *   - a store that started again by hand is left alone.
  */
 import { MAX_STORE_BYTES, claimHandle, setSubscription, storeForEmail, storeForRestartSource, storeRef } from "@/lib/store";
-import { PAUSE_DUE_OBSERVATION, PAUSE_OBSERVATION, confirmPause, onBreak, pauseEmail, pauseOf, pausePlan, pauseRefusal, runBreaks, undoPause } from "@/lib/plan-pause";
+import { PAUSE_DUE_OBSERVATION, PAUSE_OBSERVATION, pauseView, confirmPause, onBreak, pauseEmail, pauseOf, pausePlan, pauseRefusal, runBreaks, undoPause } from "@/lib/plan-pause";
 import { addPeriods } from "@/lib/plans";
 import { done, is, part } from "./check";
 import { paidPeriod } from "./billing-period-fixture";
@@ -150,6 +150,24 @@ async function storeWith(email: string, handle: string, sub: string) {
 }
 
 async function main() {
+  part("The actual pause view distinguishes missing, known and unreadable");
+  {
+    const store = await storeWith("pause-view@example.com", "pauseview", "sub_PauseView0001");
+    const key = "nl:pause:" + storeRef(store), pipeline = pauseRedis.pipeline;
+    is("missing is explicit", await pauseView(store), { kind: "missing" });
+    await pipeline([["SET", key, "{broken"]]);
+    is("malformed is unknown", await pauseView(store), { kind: "unknown" });
+    const raw = { subscription: "sub_PauseView0001", customer: "cus_TestPause0001", paymentMethod: "pm_TestCard00001", tier: "creator", from: NOW + DAY, until: NOW + 32 * DAY, told: 0 };
+    await pipeline([["SET", key, JSON.stringify(raw)]]);
+    is("known record stays exact", await pauseView(store), { kind: "known", record: raw });
+    let reads = 0;
+    pauseRedis.pipeline = async commands => { reads++; return []; };
+    try {
+      is("lost view ACK is unknown", await pauseView(store), { kind: "unknown" });
+      is("no extra observation or retry", reads, 1);
+    } finally { pauseRedis.pipeline = pipeline; }
+    await pipeline([["DEL", key]]);
+  }
   part("Undo never reports an unreadable pause as removed");
   {
     const id = "sub_UndoUnknown0001";
