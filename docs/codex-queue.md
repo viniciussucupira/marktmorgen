@@ -8,6 +8,8 @@ Solicitação do dono: **29/10/2026,20h52Fortaleza**. Estado inicial: na fila; e
 
 **AV3 — 30/10/2026, 10h20 Fortaleza:** passo 3 da AV1 aplicado ao pé da letra: pausa do plano, reinício e avisos da pausa começam DESLIGADOS na abertura; concluir #1262 e seguir aos passos 4–12 (texto integral na seção AV). Complemento 10h27: o trabalho que falta da pausa e de todo recurso deixado desligado vai para o FIM DA FILA, nunca é descartado.
 
+**MQ2 — 30/10/2026, 10h30 Fortaleza:** nenhum recurso bom é descartado (vai ao fim da fila); dentro de cada grupo, do mais ao menos importante; reordenação única feita pelo Claude (texto integral junto da MQ1).
+
 AV1/SD1 e Bloco de abertura (a)–(k) ficam na ordem vigente, inclusive custos(k),538[AB1] e448[LE1] em paralelo. Não se antecipam estudos ou recursos por causa desta classificação. Ficam na posição e no estado atuais todos os concluídos/publicados, andamentos (inclusive4,88,140,141,201,547,549),505[SG2] e registros59,60,336,464–477,494,495. As referências a547/549 são exceções expressas do pedido; suas linhas canônicas continuam literalmente “na fila”, sem convertê-las em andamento. A proteção de andamento também respeita a posição atualmente vigente: não ressuscita ordemOR já substituída porFIM1.
 
 ### Em seguida — o que AV1 já manda fazer logo depois da abertura
@@ -54,6 +56,8 @@ Entrada posterior no Grupo B: **564[HC1]**, na fila, **ABAIXO DO MARCO MQ1 por i
 
 FIM1 continua depois de todos os demais, na ordem relativa anterior e com a mesma regra de partes. São os61localizadores históricos da tabelaFIM1 menos206 e241, já retirados da cauda por decisões de posição. Localizadores para conferência (não ordem nova): 16, 26, 37, 38, 41, 42, 45, 47, 48, 49, 53, 56, 58, 92, 104, 127, 128, 129, 130, 131, 132, 203, 207, 209, 215, 222, 236, 252, 255, 280, 284, 286, 289, 296, 317, 318, 327, 337, 345, 346, 347, 348, 351, 352, 359, 363, 383, 401, 402, 404, 406, 419, 420, 425, 429, 430, 440, 441, 442. O item58 continua afetado **somente no português doBrasil**; os demais idiomas mantêm posição/gates atuais. Concluídos e andamentos já existentes não são reconstruídos, reiniciados ou movidos novamente.
 
+Entrada posterior depois da cauda FIM1: **565[FF1]**, na fila, **NO FIM DA FILA, depois do último item da cauda FIM1, pela regra MQ2, por indicação expressa do dono30/10/2026,10h30Fortaleza**; nenhuma parte antes da abertura. Sem mudança de qualquer outro item, da cauda FIM1 ou do Bloco de abertura.
+
 ### Itens novos e critério permanente de classificação
 
 Pedido novo com lado expresso respeita “acima do marco” ou “abaixo do marco”. Se não disser, aplicar MQ1(f) e registrar **uma linha na proveniência com o lado escolhido e o motivo**: A para vendas/retenção dos criadores, migração de outras plataformas, vendas dos planosMarktmorgen, redução de custo ou obrigação legal/fiscal/segurança/AX274/VR; B para estudos/propostas/comparações internas, nichos, comunidade/afiliados avançados, IA adicional, aplicativo móvel e o que depende de clientes reais. Aplicar antes as exceçõesAV1/abertura/andamentos/concluídos/regras e a divisão de partes. Nenhum cancelamento, absorção, fechamento, renumeração ou mudança de estado/escopo é autorizado.
@@ -81,6 +85,8 @@ Uma linha por item, três grupos possíveis: A, B ou sem mudança. “Sem mudan�
 **Atualização WN1 (30/10/2026,09h50):** bases554–562 anteriores são históricas; tabela atual **563linhas únicas,109A,240B,214sem mudança**. Só563[WN1] acrescentadoB, depois562; tabela numérica não redefine execução.
 
 **Atualização HC1 (30/10/2026,09h54):** bases554–563 anteriores são históricas; tabela atual **564linhas únicas,109A,241B,214sem mudança**. Só564[HC1] acrescentadoB, depois563; tabela numérica não redefine execução.
+
+**Atualização FF1 (30/10/2026,10h30):** bases554–564 anteriores são históricas; tabela atual **565linhas únicas,109A,241B,215sem mudança**. Só565[FF1] acrescentado como “sem mudança”, rótulo que a tabela usa para a cauda FIM1, no fim da fila depois do último item FIM1 pela MQ2; tabela numérica não redefine execução.
 
 | Item | Grupo | Motivo |
 | --- | --- | --- |
@@ -648,6 +654,7 @@ Uma linha por item, três grupos possíveis: A, B ou sem mudança. “Sem mudan�
 | 562 [QZ1] | B | Dono30/10/2026,09h20: abaixo do marco, depois561no Grupo B e antesFIM1; demais posições preservadas. |
 | 563 [WN1] | B | Dono30/10/2026,09h50: abaixo do marco, depois562no Grupo B e antesFIM1; demais posições preservadas. |
 | 564 [HC1] | B | Dono30/10/2026,09h54: abaixo do marco, depois563no Grupo B e antesFIM1; demais posições preservadas. |
+| 565 [FF1] | sem mudança | Dono30/10/2026,10h30: fim da fila, depois do último item da cauda FIM1, pela regra MQ2; demais posições preservadas. |
 
 ### Proveniência, Pedidos repetidos e VR
 
@@ -693,6 +700,39 @@ Pedido do dono: haverá na fila um ponto a partir do qual os itens, que continua
 Margem (regra MR vigente, 27/10/2026, 07h42): nenhum cliente pagante, isoladamente e usando 100% dos direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo, depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto. A empresa como um todo não pode dar prejuízo a partir da base mínima calculada, com 100% dos custos fixos atribuídos ao Marktmorgen (FX275). A meta de 60% de margem líquida é medida todo mês no relatório real. Política tributária TX vigente. Custo desconhecido reprova, nunca é zero; cota grátis de fornecedor não conta como custo zero.
 
 Proibido: mudar a ordem de AV1 ou do Bloco de abertura; cancelar, absorver, fechar, renumerar ou apagar qualquer item, texto, histórico ou prova; mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava ou teste; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+```
+
+### MQ2 — Nenhum recurso bom é descartado; cada grupo ordenado por importância (30/10/2026, 10h30 Fortaleza)
+
+Proveniência: pedido direto do dono na conversa com o Claude, 30/10/2026, 10h30 Fortaleza; texto redigido pelo Claude e aprovado pelo dono; gravado diretamente pelo Claude para não interromper o Codex. Regra de ordem, sem número novo; registrada junto da MQ1, com aviso curto no alto da fila. Pedidos repetidos: a etiqueta [MQ2] não existia no main 16c914a65e85b29a8d65b0c8e0a42435cbec237e; confirma e amplia o complemento de 10h27 ao [AV3]. A reordenação única do item 4 NÃO foi feita por este registro: o Claude prepara uma proposta, revista com o dono antes de qualquer gravação; até lá, nenhum item muda de lugar, de grupo ou de estado. Texto do dono preservado integralmente abaixo.
+
+```text
+MQ — Nenhum recurso bom é descartado, e cada grupo da fila é ordenado por importância (30/10/2026) [MQ2]
+
+Solicitação do dono (30/10/2026, 10h30, horário de Fortaleza).
+
+Pedidos repetidos: aplique a regra "Pedidos repetidos" de AGENTS.md. É regra de ordem, sem número novo, registrada junto da MQ1 (marco de importância). Confirma e amplia o complemento de 30/10/2026, 10h27, ao [AV3]; prevalece (passo 3, letra b) sobre instrução anterior incompatível; histórico, números e trabalhos existentes preservados.
+
+Palavras do dono, reescritas em norma culta: "Nunca, jamais, jogue fora ou descarte recursos bons e úteis. Se houver coisas mais importantes a fazer antes, mande-os para o final da fila. Em cada categoria de importância da fila, ordene os itens para fazer primeiro o mais importante e depois os menos importantes."
+
+1. Regra permanente: nenhum recurso bom para o cliente ou para o lucro é descartado, cancelado, absorvido, fechado ou apagado por não ser necessário agora. Se houver coisa mais importante antes, ele vai para o fim da fila, preservando número, texto, histórico e provas. Só fica de fora o que viola uma regra do dono (por exemplo: depoimento ou número inventado, "free" na chamada, overlay de acessibilidade, alegação sem prova, urgência ou escassez falsas), e o motivo é registrado.
+
+2. Ordenação dentro de cada grupo: dentro do Grupo A (acima do marco), dentro do Grupo B (abaixo do marco) e dentro da cauda FIM1, os itens ficam do mais importante ao menos importante, por esta ordem de critérios:
+(a) obrigação legal, segurança, direitos do cliente e correção de algo quebrado;
+(b) o que traz receita direta ou aumenta a venda dos planos;
+(c) o que evita cancelamento e mantém o cliente;
+(d) o que reduz custo;
+(e) o que aumenta o valor percebido e a facilidade de uso;
+(f) estudos e documentos.
+Em empate: primeiro o que atinge mais clientes; um item que depende de outro fica depois dele.
+
+3. Não mudam de lugar: a AV1 e o Bloco de abertura, na ordem vigente, inclusive o [AV3] e seu complemento; itens concluídos, publicados ou em andamento; as posições que o dono fixou por escrito (por exemplo: 556 [CT1] logo depois de 513 [PF1], 206 [SH3] logo depois de 515 [PF3], 241 [CF4] logo depois de 531 [VP1]); o grupo de cada item (A continua A, B continua B); a cauda FIM1 continua no fim. Nenhum item é renumerado.
+
+4. Reordenação única, agora: feita pelo Claude num PR só de documentação, sem interromper a AV1, com a lista nova de cada grupo e, em cada item que mudou de lugar, uma linha curta com o critério que decidiu. Itens novos daqui em diante entram já na posição que esses critérios indicarem dentro do grupo escolhido pelo dono.
+
+Proibido: apagar, cancelar, absorver ou fechar item, código, teste, prova ou histórico; renumerar itens; mudar o grupo de um item; mexer na AV1, no Bloco de abertura ou nas posições fixadas pelo dono; ligar OPENING_REQUESTED, PLANS_ON_SALE ou qualquer recurso desligado; mudar preços, limites visíveis ou comissão; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong.
 
 Aplicar a regra VR.
 ```
@@ -18939,6 +18979,47 @@ Custo: as imagens são geradas no CI e servidas como arquivos estáticos; o arma
 REGRA DE MARGEM (MR, 27/10/2026): nenhum cliente pagante, considerado isoladamente e usando 100% de todos os direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto; a empresa como um todo não pode dar prejuízo no pior caso a partir da base mínima de clientes pagantes, com 100% dos custos fixos da LLC atribuídos ao Marktmorgen (FX275); a meta de 60% de margem líquida é medida todo mês com números reais. Impostos pela política TX vigente.
 
 Proibido: criar item novo ou mudar número, posição ou estado do 564; segundo mecanismo de captura além do 280 [H3-5]; dado real de criador ou comprador em qualquer imagem; imagem desatualizada; informação só na imagem; imagem repetida; mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+```
+
+
+## 565 [FF1] — Recursos bons vistos no ClickFunnels em 30/10/2026, para depois da abertura, no fim da fila
+
+**Estado:** na fila. **Posição:** NO FIM DA FILA, depois do último item da cauda FIM1, pela regra [MQ2]; nenhuma parte antes da abertura.565 estava livre e a etiqueta[FF1] não existia. Não altera ordem/estado de outros itens, da cauda FIM1 ou do Bloco de abertura.
+
+**Proveniência/Pedidos repetidos:** pedido direto do dono na conversa com o Claude,30/10/2026,10h30Fortaleza; texto redigido pelo Claude e aprovado pelo dono; gravado diretamente pelo Claude para não interromper o Codex. Conferido no main 16c914a65e85b29a8d65b0c8e0a42435cbec237e pela etiqueta, pela linha de data e hora e pelo conteúdo. Sobreposições encontradas na conferência, registradas sem alterar o texto do dono: a parte (e) sobrepõe-se ao 223 [HL4] (programa de parceiros e especialistas, “Marktmorgen Experts”, com diretório) e a parte (f) sobrepõe-se ao 39 [G1] (requisitos da Meta para AutoDM, comentários e caixa de entrada do Instagram/Messenger e do WhatsApp). Quando chegar a vez dessas partes, reutilizar o 223 e o 39 e acrescentar só o que faltar, sem refazê-los nem movê-los. Nova recepção só proveniência,sem número/commit exclusivo.
+
+### Pedido literal FF1
+
+```text
+FF — Recursos bons vistos no ClickFunnels em 30/10/2026, para depois da abertura, no fim da fila (30/10/2026) [FF1]
+
+Solicitação do dono (30/10/2026, 10h30, horário de Fortaleza).
+
+Pedidos repetidos: aplique a regra "Pedidos repetidos" de AGENTS.md. Conferido antes de gravar: nenhum item pede os recursos abaixo; os itens citados em cada um já existem e não são refeitos.
+
+Estado inicial: na fila, NO FIM DA FILA, depois do último item da cauda FIM1, no próximo número livre, pela regra [MQ2] (recurso bom, menos importante agora, nunca descartado). Não altera a ordem de nenhum outro item. Cada parte, quando chegar a vez, confere de novo o código e a fila, e vira item próprio se for grande.
+
+Contexto: em 30/10/2026, o Claude percorreu páginas públicas do ClickFunnels (blog, construtor de funis, central de ajuda) e registrou o que é bom e ainda não existe no Marktmorgen, mas não é necessário antes da abertura.
+
+(a) No blog do Marktmorgen, material para baixar (por exemplo, uma lista de verificação do tema do artigo) entregue por e-mail, só com consentimento explícito e caixa desmarcada, com descadastro em um clique; nunca chamado de "free" na chamada principal; ligado ao 192 [HT12] e ao 562 [QZ1].
+(b) Na central de ajuda, botão "Export PDF" de cada resposta, em PDF marcado no padrão PDF/UA, além da impressão pedida no 564 [HC1].
+(c) Assistente de ajuda com IA na central pública, para quem ainda não tem conta, respondendo só com as respostas da central, como lib/help-ask.ts; custo como custo fixo, com teto automático financiado e proteção contra abuso antes de cada chamada.
+(d) Comunidade dos criadores que usam o Marktmorgen, para ajuda mútua, quando houver clientes reais; sem número de membros inventado; reaproveitando a comunidade que já existe.
+(e) Diretório de especialistas que trabalham com o Marktmorgen, quando houver especialistas reais, com critérios públicos de entrada e sem selo de qualidade sem prova.
+(f) Na caixa de entrada da loja (lib/inbox.ts), as mensagens do Instagram, do Facebook e do WhatsApp do próprio criador, depois da aprovação da Meta; primeiro um estudo com fontes oficiais datadas de requisitos, custos e prazos, sem criar conta nem aceitar termos.
+(g) Subáreas na central de ajuda quando uma área do 564 [HC1] passar de 15 respostas.
+(h) Página pública "Legal" que reúne os Termos, a Privacidade, os Reembolsos, os direitos autorais, a denúncia de conteúdo e as condições dos afiliados, sem texto novo além de uma frase por documento.
+(i) Estudo, com fontes oficiais datadas, de uma regra antidiscriminação nos Termos de Uso, para o dono decidir.
+
+Acessibilidade (AX274, Parte A, integral): máxima acessibilidade em tudo o que este item criar ou alterar — WCAG 2.2 nível AAA em todos os critérios aplicáveis, em todas as telas, estados, e-mails e arquivos, mais as demais normas e orientações da Parte A; a impossibilidade de um critério AAA precisa ser demonstrada e registrada em docs/accessibility-programme.md, nunca presumida. Seção "Acessibilidade" em cada PR, com os passos e as decisões da tarefa principal antes e depois.
+
+Custo: cada parte calcula o pior caso mensal e anual de cada plano com 100% dos direitos usados, ou o custo fixo e a base mínima, e aplica teto automático antes do gasto. Custo desconhecido reprova, nunca é zero.
+
+REGRA DE MARGEM (MR, 27/10/2026): nenhum cliente pagante, considerado isoladamente e usando 100% de todos os direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto; a empresa como um todo não pode dar prejuízo no pior caso a partir da base mínima de clientes pagantes, com 100% dos custos fixos da LLC atribuídos ao Marktmorgen (FX275); a meta de 60% de margem líquida é medida todo mês com números reais. Impostos pela política TX vigente.
+
+Proibido: executar qualquer parte antes da abertura; depoimento, número de clientes ou de membros inventado; liderar com "free"; e-mail sem consentimento; selo ou comparação de superioridade sem prova; mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
 
 Aplicar a regra VR.
 ```
