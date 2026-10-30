@@ -14,6 +14,7 @@
  *     what it was, and a come-back offer replaces it;
  *   - the confirmation says both prices.
  */
+import { TEST_CONSENT } from "./digital-consent-fixture";
 import { MAX_INTRO_COUNT, activeIntro, introCouponId, introLineEnglish, introProblem, parseIntro } from "@/lib/intro-price";
 import { membershipLine } from "@/lib/buyer-words";
 import { LANGUAGE_CODES } from "@/lib/store-language";
@@ -104,7 +105,7 @@ async function main(): Promise<void> {
   const open = async (more: Parameters<typeof createCheckout>[4] = {}) => {
     checkouts.length = 0;
     const store = (await storeForEmail(OWNER))!;
-    await createCheckout(store, (await readProduct(store, made.product.id))!, "https://marktmorgen.com", "", more);
+    await createCheckout(store, (await readProduct(store, made.product.id))!, "https://marktmorgen.com", "", { ...more, digitalConsent: TEST_CONSENT });
     return checkouts[0];
   };
   let sent = await open();

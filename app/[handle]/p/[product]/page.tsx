@@ -302,8 +302,14 @@ export default async function ProductPage({ params, searchParams }: Params) {
   const giftProblem = typeof query.gift === "string" ? query.gift : "";
   // A cart, where two or more products could go in one (lib/cart-rules.ts).
   const cartOn = selling && offersCart(store);
-  const cartNotice = query.cart === "changed" || query.cart === "error" ? query.cart : null;
+  const cartNotice = query.cart === "changed" || query.cart === "error" || query.cart === "consent" ? query.cart : null;
   const groupProblem = typeof query.group === "string" ? query.group : "";
+  // Sent back because the box to start access at once was not checked (lib/digital-consent.ts): said beside it.
+  const consentAgain = query.consent === "needed";
+  // Sent from a card on one of the creator's listed sites (app/embed): the site and the way back, carried to the
+  // checkout, which checks both against the store's list again; anything else is ignored there.
+  const embedSite = typeof query.site === "string" ? query.site.slice(0, 300) : "";
+  const embedReturn = typeof query.return === "string" ? query.return.slice(0, 700) : "";
   // A reminder asked for below the buy box, and what came of it (lib/checkout-ask.ts).
   const remindAsked = typeof query.asked === "string" ? query.asked.slice(0, 20) : "";
   const remindWhen = typeof query.when === "string" ? query.when.slice(0, 10) : "";
@@ -444,7 +450,7 @@ export default async function ProductPage({ params, searchParams }: Params) {
           </a>
         </p>
       ) : null}
-      <BuyBox store={store} product={product} related={related} remaining={remaining} writes={canWrite(store)} selling={selling} ready={bundleReady} soon={soon} preorder={preorder} bundleItems={inside} pickAgain={query.pick === "count"} />
+      <BuyBox store={store} product={product} related={related} remaining={remaining} writes={canWrite(store)} selling={selling} ready={bundleReady} soon={soon} preorder={preorder} bundleItems={inside} pickAgain={query.pick === "count"} consentAgain={consentAgain && !giftProblem && !groupProblem} embed={embedSite || embedReturn ? { site: embedSite, back: embedReturn } : null} />
       {cartOn && !soon && cartable(product) ? <AddToCart handle={store.handle} productId={product.id} lang={store.language} deal={store.cartDeal.on ? store.cartDeal : null} /> : null}
       {/* A question before buying, answered from this page (lib/answers.ts): only where the creator switched it on. */}
       {selling && answersOn(store) ? (
@@ -466,8 +472,8 @@ export default async function ProductPage({ params, searchParams }: Params) {
         />
       ) : null}
       {remindable ? <RemindBox store={store} product={product} asked={remindAsked} when={remindWhen} /> : null}
-      {giftable ? <GiftBox store={store} product={product} problem={giftProblem} /> : null}
-      {groupable ? <GroupBox store={store} product={product} problem={groupProblem} /> : null}
+      {giftable ? <GiftBox store={store} product={product} problem={giftProblem} consentAgain={consentAgain} /> : null}
+      {groupable ? <GroupBox store={store} product={product} problem={groupProblem} consentAgain={consentAgain} /> : null}
       {product.recurring && canManage(store) ? (
         <p className="mt-3 text-center text-sm">
           <Link href={`/@${store.handle}/manage`} className="st-footer-link font-semibold">

@@ -1,4 +1,5 @@
 import { type NextRequest, after } from "next/server";
+import { type DigitalConsent, consentFromForm } from "@/lib/digital-consent";
 import { linkOrigin, originFrom } from "@/lib/request-origin";
 import { normaliseHandle, storeForHandle } from "@/lib/store";
 import { readListings, readProduct } from "@/lib/catalog";
@@ -25,8 +26,12 @@ export async function POST(request: NextRequest) {
 
   let handle = "";
   let productId = "";
+  // The box to start access at once (lib/digital-consent.ts): from the PayPal
+  // form, or from the card checkout's form when its PayPal button sent it.
+  let digitalConsent: DigitalConsent | null = null;
   try {
-    const form = await (await limited(request, 4_000)).formData();
+    const form = await (await limited(request, 8_000)).formData();
+    digitalConsent = consentFromForm(form);
     const h = form.get("handle");
     const p = form.get("product");
     handle = typeof h === "string" ? normaliseHandle(h) : "";
@@ -61,7 +66,8 @@ export async function POST(request: NextRequest) {
       return { ...(page.source ? { utm_source: page.source } : {}), ...(page.medium ? { utm_medium: page.medium } : {}), ...(page.campaign ? { utm_campaign: page.campaign } : {}) };
     })(),
   };
-  const opened = await openOrder(store, product, linkOrigin(request, store), { meta, via: via && via.rate > 0 ? { aff: via.aff, rate: via.rate } : null });
+  const opened = await openOrder(store, product, linkOrigin(request, store), { meta, via: via && via.rate > 0 ? { aff: via.aff, rate: via.rate } : null, digitalConsent });
+  if (!opened.ok && opened.reason === "consent") return away(`/@${store.handle}/p/${product.id}?consent=needed#buy`);
   if (!opened.ok) return away(opened.reason === "paused" ? `/@${store.handle}?status=paused` : `/@${store.handle}/p/${product.id}?paypal=error`);
   after(() => countHit(request, store, { kind: "checkout", id: product.id }));
   return new Response(null, { status: 303, headers: { Location: opened.url, "Cache-Control": "no-store" } });

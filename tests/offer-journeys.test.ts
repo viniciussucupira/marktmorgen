@@ -24,6 +24,7 @@
  *     own share of a bump: the defect this file was written with (the bump's
  *     amount was only written when the buyer came through a link).
  */
+import { TEST_CONSENT } from "./digital-consent-fixture";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import {
@@ -129,7 +130,7 @@ async function main(): Promise<void> {
   const course = (await readProduct(store, ids.Course))!;
   const open = async (at: Store, bumps: string[]) => {
     checkouts.length = 0;
-    await createCheckout(at, course, "https://marktmorgen.com", "", { bumps });
+    await createCheckout(at, course, "https://marktmorgen.com", "", { bumps, digitalConsent: TEST_CONSENT });
     return checkouts[0];
   };
 
@@ -209,7 +210,7 @@ async function main(): Promise<void> {
     customer_details: { email: "buyer@example.com" },
     payment_intent: { id: "pi_front0001", payment_method: { id: "pm_card0001", type: "card", customer: "cus_Buyer0001" } },
   };
-  const take = (step: string, answer: "yes" | "no", secret = SECRET, at: Store = store) => takeUpsell({ store: at, session: SESSION, secret, origin: "https://marktmorgen.com", step, answer });
+  const take = (step: string, answer: "yes" | "no", secret = SECRET, at: Store = store) => takeUpsell({ store: at, session: SESSION, secret, origin: "https://marktmorgen.com", step, answer, consent: TEST_CONSENT });
   is("another browser, without the buyer's secret, can charge nothing", (await take("offerone", "yes", "someone-else")).kind, "unavailable");
   is("with sales tax on, nothing is offered after paying", (await take("offerone", "yes", SECRET, { ...store, tax: { ...store.tax, enabled: true } })).kind, "unavailable");
   session = { ...session, currency: "eur" };
@@ -246,13 +247,13 @@ async function main(): Promise<void> {
   const workbook = (await readProduct(store, ids.Workbook))!;
   const checklist = (await readProduct(store, ids.Checklist))!;
   checkouts.length = 0;
-  await createCartCheckout(cartStore, [course, workbook, checklist], "https://marktmorgen.com");
+  await createCartCheckout(cartStore, [course, workbook, checklist], "https://marktmorgen.com", { digitalConsent: TEST_CONSENT });
   sent = checkouts[0];
   is("each line already at the deal's price, in the store's currency", lines(sent), [["Course", 4410, "usd"], ["Workbook", 2610, "usd"], ["Checklist", 810, "usd"]]);
   is("so no coupon and no code box is added on top", [sent.has("discounts[0][coupon]"), sent.get("allow_promotion_codes")], [false, null]);
   is("every product named so each is handed over as if bought alone", deliveredIds(metadataOf(sent)), [ids.Course, ids.Workbook, ids.Checklist]);
   checkouts.length = 0;
-  await createCartCheckout({ ...cartStore, cartDeal: { on: false, min: 2, percent: 10 } }, [course, workbook], "https://marktmorgen.com");
+  await createCartCheckout({ ...cartStore, cartDeal: { on: false, min: 2, percent: 10 } }, [course, workbook], "https://marktmorgen.com", { digitalConsent: TEST_CONSENT });
   is("nothing taken off: the lines at their prices, and the code box", [lines(checkouts[0]).map(([, cents]) => cents), checkouts[0].get("allow_promotion_codes")], [[4900, 2900], "true"]);
   is("a cart refunded in full closes all of it", refundedInFull({ object: "charge", amount: 7830, amount_refunded: 7830 }), true);
 

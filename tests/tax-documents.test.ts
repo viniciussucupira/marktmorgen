@@ -8,6 +8,7 @@
  * takes a VAT ID at checkout; Stan's help center names neither. Here both are
  * Stripe's own, on the creator's account, so the creator stays the seller.
  */
+import { TEST_CONSENT } from "./digital-consent-fixture";
 import { addProduct, claimHandle, ensureStatsId, setProductLink, setStripeAccount, setSubscription, setTax, storeForEmail, type Listing, type Product, type Store } from "@/lib/store";
 import { readProduct } from "@/lib/catalog";
 import { createCheckout } from "@/lib/store-checkout";
@@ -70,7 +71,7 @@ async function main(): Promise<void> {
   const open = async (product: string): Promise<URLSearchParams> => {
     const store = (await storeForEmail(OWNER))!;
     const full = (await readProduct(store, product))!;
-    await createCheckout(store, full, "https://marktmorgen.com", "", {});
+    await createCheckout(store, full, "https://marktmorgen.com", "", { digitalConsent: TEST_CONSENT });
     return checkouts[checkouts.length - 1];
   };
 

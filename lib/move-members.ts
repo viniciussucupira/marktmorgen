@@ -13,6 +13,7 @@
  * it holds an ordinary membership on the creator's Stripe account, and every
  * door reads that, as it reads any other.
  */
+import { type DigitalConsent, DigitalConsentMissing } from "@/lib/digital-consent";
 import { OrdersPausedError } from "@/lib/order-admission";
 import { randomBytes } from "node:crypto";
 import { EMAIL_PATTERN, normaliseEmail } from "@/lib/auth";
@@ -257,10 +258,18 @@ export async function readMove(store: Store, productId: string, token: string): 
   }
 }
 
-export type MoveOpen = { ok: true; url: string } | { ok: false; reason: "expired" | "unavailable" | "refused" };
+export type MoveOpen = { ok: true; url: string } | { ok: false; reason: "expired" | "unavailable" | "refused" | "consent" };
 
 /** The checkout a member's link opens: this membership, this address, first charged on the renewal date. */
-export async function openMove(store: Store, productId: string, token: string, origin: string, now = Date.now()): Promise<MoveOpen> {
+export async function openMove(
+  store: Store,
+  productId: string,
+  token: string,
+  origin: string,
+  now = Date.now(),
+  /** The box to start access at once, checked on the button's page (lib/digital-consent.ts). */
+  consent: DigitalConsent | null = null,
+): Promise<MoveOpen> {
   const invite = await readMove(store, productId, token);
   if (!invite) return { ok: false, reason: "expired" };
   const product: Product | null = await readProduct(store, productId);
@@ -271,13 +280,15 @@ export async function openMove(store: Store, productId: string, token: string, o
   if (product.options.length && !option) return { ok: false, reason: "unavailable" };
   try {
     const held = await withStockHold(store, product, (holding) =>
-      createCheckout(store, product, origin, option, { email: invite.e, noTrial: true, held: holding, moved: { firstChargeAt: firstChargeAt(invite.r, now) } }),
+      createCheckout(store, product, origin, option, { email: invite.e, noTrial: true, held: holding, moved: { firstChargeAt: firstChargeAt(invite.r, now) }, digitalConsent: consent }),
     );
     if (!held.ok) return { ok: false, reason: "unavailable" };
     return { ok: true, url: held.value.url };
   } catch (error) {
     // The store's orders for the month are reached (lib/order-admission.ts): not open right now, nothing charged.
     if (error instanceof OrdersPausedError) return { ok: false, reason: "unavailable" };
+    // The box to start access at once was not checked: said beside it, nothing opened.
+    if (error instanceof DigitalConsentMissing) return { ok: false, reason: "consent" };
     console.error("opening a moved member's checkout failed", store.handle, error);
     return { ok: false, reason: "refused" };
   }

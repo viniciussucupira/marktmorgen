@@ -14,6 +14,7 @@
  *     rather than turning the buyer away;
  *   - a store-wide sale still wins.
  */
+import { TEST_CONSENT } from "./digital-consent-fixture";
 import { addProduct, claimHandle, ensureStatsId, setHasDiscounts, setProductLink, setStripeAccount, setSubscription, storeForEmail } from "@/lib/store";
 import { readProduct } from "@/lib/catalog";
 import { CODE_PATTERN } from "@/lib/discount";
@@ -69,20 +70,20 @@ async function main(): Promise<void> {
 
   part("A live code of the creator's");
   live = { SPRING: "promo_1Spring" };
-  await createCheckout(store, product, "https://marktmorgen.com", undefined, { code: "SPRING" });
+  await createCheckout(store, product, "https://marktmorgen.com", undefined, { code: "SPRING", digitalConsent: TEST_CONSENT });
   let sent = sessions.at(-1)!;
   is("goes on by itself", sent.get("discounts[0][promotion_code]"), "promo_1Spring");
   is("and the box is not offered beside it", sent.get("allow_promotion_codes"), null);
   is("kept with the sale", sent.get("metadata[code]"), "SPRING");
 
   part("A code nobody made");
-  await createCheckout(store, product, "https://marktmorgen.com", undefined, { code: "NOPE" });
+  await createCheckout(store, product, "https://marktmorgen.com", undefined, { code: "NOPE", digitalConsent: TEST_CONSENT });
   sent = sessions.at(-1)!;
   is("leaves the box, as without a code", [sent.get("discounts[0][promotion_code]"), sent.get("allow_promotion_codes")], [null, "true"]);
 
   part("A code that does not fit this sale");
   refuse = true;
-  const opened = await createCheckout(store, product, "https://marktmorgen.com", undefined, { code: "SPRING" });
+  const opened = await createCheckout(store, product, "https://marktmorgen.com", undefined, { code: "SPRING", digitalConsent: TEST_CONSENT });
   sent = sessions.at(-1)!;
   is("the checkout still opens", opened.url, "https://checkout.stripe.com/c/pay/test");
   is("with the box instead", [sent.get("discounts[0][promotion_code]"), sent.get("allow_promotion_codes"), sent.get("metadata[code]")], [null, "true", null]);

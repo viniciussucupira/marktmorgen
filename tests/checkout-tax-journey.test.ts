@@ -13,6 +13,7 @@
  *   - the price the buyer was shown is the unit amount sent, whichever way;
  *   - the currency of every line is the store's, never converted.
  */
+import { TEST_CONSENT } from "./digital-consent-fixture";
 import { addProduct, claimHandle, ensureStatsId, setProductExtras, setProductLink, setStripeAccount, setSubscription, setTax, storeForEmail } from "@/lib/store";
 import { readProduct } from "@/lib/catalog";
 import { createCheckout } from "@/lib/store-checkout";
@@ -77,7 +78,7 @@ async function main(): Promise<void> {
   const open = async (id: string, bumps: string[] = []) => {
     checkouts.length = 0;
     const store = await load();
-    await createCheckout(store, (await readProduct(store, id))!, "https://marktmorgen.com", "", { bumps });
+    await createCheckout(store, (await readProduct(store, id))!, "https://marktmorgen.com", "", { bumps, digitalConsent: TEST_CONSENT });
     return checkouts[0];
   };
 
@@ -106,7 +107,7 @@ async function main(): Promise<void> {
   is("a membership", [sent.get("mode"), sent.get("automatic_tax[enabled]"), lines(sent).map((l) => l[2])], ["subscription", "true", ["exclusive"]]);
   checkouts.length = 0;
   const store = await load();
-  await createCartCheckout(store, [(await readProduct(store, course))!, (await readProduct(store, pattern))!], "https://marktmorgen.com");
+  await createCartCheckout(store, [(await readProduct(store, course))!, (await readProduct(store, pattern))!], "https://marktmorgen.com", { digitalConsent: TEST_CONSENT });
   is("every product of a cart, at its own price", [checkouts[0].get("automatic_tax[enabled]"), lines(checkouts[0])], ["true", [["4900", "usd", "exclusive"], ["1900", "usd", "exclusive"]]]);
   const cartConverts = checkouts[0].get("adaptive_pricing[enabled]");
   sent = await open(course, [pattern]);

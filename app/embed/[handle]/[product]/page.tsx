@@ -168,6 +168,18 @@ export default async function EmbedCard({ params, searchParams }: Params) {
   const { action, label } = plain && computed.action.kind === "checkout" ? { action: { kind: "link" as const, href: productPath(store, product) }, label: computed.label } : computed;
   // A product page link with the place on it, and the part of the page it was meant for.
   const into = (href: string) => (href.startsWith("#") ? `${page.split("#")[0]}${href}` : tag(href));
+  // Something handed over digitally is paid for from the product's buy box,
+  // where the buyer first checks the box to start access at once
+  // (lib/digital-consent.ts), which this card has no room to hold. A live card
+  // on a listed site passes that site and the way back on, so the sale still
+  // names the site and returns the buyer to it; the checkout checks both
+  // against the store's list again (app/api/store/checkout).
+  const toBuyBox = (href: string) => {
+    if (plain || !open?.live || !(open.site || open.back)) return href;
+    const [path, hash] = href.split("#");
+    const extra = new URLSearchParams({ ...(open.site ? { site: open.site } : {}), ...(open.back ? { return: open.back } : {}) }).toString();
+    return `${path}${path.includes("?") ? "&" : "?"}${extra}${hash ? `#${hash}` : ""}`;
+  };
   const testMode = selling && sellsInTestMode(store);
   const { w, num, lang } = speech(store);
   const note = testMode
@@ -254,7 +266,7 @@ export default async function EmbedCard({ params, searchParams }: Params) {
             </form>
           )
         ) : action.kind === "link" ? (
-          <a href={into(action.href)} {...aside} className="btn st-btn btn-block mt-3">
+          <a href={action.href === "#buy" ? toBuyBox(into(action.href)) : into(action.href)} {...aside} className="btn st-btn btn-block mt-3">
             {label}
           </a>
         ) : (

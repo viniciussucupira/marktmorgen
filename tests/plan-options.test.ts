@@ -13,6 +13,7 @@
  *   - it is said without one amount where several apply, in every store
  *     language, and with each price's own amount in the store's answers.
  */
+import { TEST_CONSENT } from "./digital-consent-fixture";
 import { activePlan, parsePlan, planFor, planPauseWords, planState, planWords } from "@/lib/product-extras";
 import { planLine } from "@/lib/buyer-words";
 import { LANGUAGE_CODES } from "@/lib/store-language";
@@ -81,14 +82,14 @@ async function main(): Promise<void> {
   is("the studio says how many, and from what", planWords(product.plan!, "usd"), "3 monthly payments");
 
   checkouts.length = 0;
-  await createCheckout(store, product, "https://marktmorgen.com", five.id, { plan: true });
+  await createCheckout(store, product, "https://marktmorgen.com", five.id, { plan: true, digitalConsent: TEST_CONSENT });
   const sent = checkouts[0];
   is("the picked price's payment, charged monthly", [sent.get("mode"), sent.get("line_items[0][price_data][unit_amount]"), sent.get("line_items[0][price_data][recurring][interval]")], ["subscription", "1300", "month"]);
   is("a plan of 3 payments", [sent.get("metadata[kind]"), sent.get("metadata[plan_payments]")], ["plan", "3"]);
   is("and the order keeps which price it was, on the charge and on the plan", [sent.get("metadata[option]"), sent.get("subscription_data[metadata][option]")], [five.id, five.id]);
   is("named with the price and its payments", sent.get("line_items[0][price_data][product_data][name]"), "Meal Planner (5 weeks) (3 monthly payments of $13)");
   checkouts.length = 0;
-  await createCheckout(store, product, "https://marktmorgen.com", one.id, {});
+  await createCheckout(store, product, "https://marktmorgen.com", one.id, { digitalConsent: TEST_CONSENT });
   is("paying in full is unchanged", [checkouts[0].get("mode"), checkouts[0].get("line_items[0][price_data][unit_amount]")], ["payment", "2700"]);
 
   part("Stopped by a price it does not cover, and said why");
@@ -102,7 +103,7 @@ async function main(): Promise<void> {
   is("once it can be bought, the plan stops until it has a payment", paused && "paused" in paused ? paused.paused : "offered", "options");
   is("and the studio is told which price", planPauseWords("options", product.plan!, product, "usd"), "The plan has no payment for the “10 weeks” price. Change the plan and set one, so every price can be paid in it.");
   let refused = false;
-  await createCheckout(store, product, "https://marktmorgen.com", one.id, { plan: true }).catch(() => (refused = true));
+  await createCheckout(store, product, "https://marktmorgen.com", one.id, { plan: true, digitalConsent: TEST_CONSENT }).catch(() => (refused = true));
   is("a checkout that asks for it is refused rather than charged in full", refused, true);
   await save({ [one.id]: 900, [five.id]: 1300, [ten.id]: 2000 });
   await editOption(OWNER, five.id, "5 weeks", "45");

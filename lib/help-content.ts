@@ -298,6 +298,13 @@ export const HELP_SECTIONS: HelpSection[] = [
         ],
       },
       {
+        q: "Why does my checkout ask buyers to check a box about access?",
+        a: [
+          "In the EU, the UK and some other places, a buyer of digital content online usually has 14 days to cancel. They lose that right once access starts only if they asked for access to start right away, said they understood they would lose the right, and got a confirmation of both. So before anyone pays for something your store hands over digitally (a file, a link, a course, a private podcast, a bundle or a membership), the checkout shows one unchecked box that says both things, in your store's language. The payment does not open until it is checked, and each one-click offer after paying asks again. A product you ship with nothing digital in it is not asked.",
+          "The buyer's \u201cyes\u201d, the version of the words and the time are kept on the order in your own Stripe account, and the confirmation email quotes them. It is asked of every buyer, because a page cannot know who has the right, and its words say it is for buyers who have it where they live. It does not replace your own terms, and it is not legal advice.",
+        ],
+      },
+      {
         q: "What about refunds on the Marktmorgen subscription itself?",
         a: [
           `Your first payment to us is refunded in full if you ask within ${REFUND_DAYS} days of it, for any reason or none. A yearly plan is refunded at any time for the months you have not started, with the months you used charged at the monthly price and Stripe's card fee on that payment kept, since Stripe does not give it back. You can cancel at any time and keep access until the end of the period you already paid for; a renewal is not refunded, except where the law requires it. The refund policy page has the exact wording.`,

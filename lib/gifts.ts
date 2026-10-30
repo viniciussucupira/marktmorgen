@@ -13,6 +13,7 @@
  * the list of purchases, the course, the community — opens it for them, and
  * the buyer's own checkout opens nothing (lib/bundle-rules.ts deliveredIds).
  */
+import { consentEmailLines } from "@/lib/digital-consent-email";
 import { randomBytes } from "node:crypto";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { EMAIL_PATTERN, MAX_EMAIL_LENGTH, normaliseEmail } from "@/lib/auth";
@@ -206,6 +207,7 @@ export async function deliverGift(input: {
         g.giftFor(gift.to),
         g.paidLine(formatMoney(amount, currency, speech(store).lang.locale)),
         g.orderRef(sessionId),
+        ...consentEmailLines(store, session.metadata),
         "",
         g.weEmailed(gift.to, Boolean(gift.message)),
         "",

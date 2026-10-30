@@ -26,7 +26,7 @@ export default function PrivacyPage() {
   // Named only while the files creators sell are kept there (lib/vault.ts).
   const cloudflare = isVaultConfigured();
   return (
-    <LegalPage title="Privacy Policy" lastUpdated="October 18, 2026">
+    <LegalPage title="Privacy Policy" lastUpdated="October 30, 2026">
       <p>
         Marktmorgen (“Marktmorgen,” “we,” “us,” or “our”) is operated by
         Solrenning, an independent software studio. This Privacy Policy
@@ -463,6 +463,20 @@ export default function PrivacyPage() {
           nothing else from it unless they ask. You get the receipt. What was
           given is kept under the recipient&apos;s address, like a purchase of
           their own.
+        </p>
+        <p id="instant-access" className="scroll-mt-24">
+          <strong className="text-black">Starting access right away.</strong>{" "}
+          Before you pay for something you can open right away, such as a
+          download, a course or a membership, the checkout asks you to check a
+          box saying you want access as soon as it is available and that you
+          lose a 14-day right to cancel once it starts. When you check it, we
+          write &ldquo;yes&rdquo;, the version of that sentence and the time on
+          the order itself, in the creator&apos;s own Stripe account (or with
+          the PayPal order), and the confirmation email quotes it back to you.
+          Nothing else is kept for it: no new detail about you, no cookie and
+          no tracking. It stays with the order for as long as the creator
+          keeps their Stripe records, because it is part of the record of the
+          sale.
         </p>
         <p id="preorders">
           <strong className="text-black">Pre-orders.</strong>{" "}

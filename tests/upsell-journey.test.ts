@@ -16,6 +16,7 @@
  *     and the charge is settled from what Stripe says, without a second charge;
  *   - a store with tax on offers nothing (a one-click charge carries no tax).
  */
+import { TEST_CONSENT } from "./digital-consent-fixture";
 import { addProduct, claimHandle, ensureStatsId, setProductFunnel, setProductLink, setStripeAccount, setSubscription, setTax, storeForEmail } from "@/lib/store";
 import { readUpsell, settleUpsells, takeUpsell, newUpsellKey } from "@/lib/upsell";
 import { NO_TAX } from "@/lib/tax";
@@ -123,7 +124,7 @@ async function main(): Promise<void> {
   part("Only the browser that paid, within the hour");
   sessions = { cs_test_order0000000001: paidCheckout("cs_test_order0000000001", front, browser.fingerprint) };
   const take = (session: string, step: string, answer: "yes" | "no", secret: string | undefined = browser.secret) =>
-    takeUpsell({ store, session, secret, origin, step, answer });
+    takeUpsell({ store, session, secret, origin, step, answer, consent: TEST_CONSENT });
   is("another browser, even with the order's address, is offered nothing", (await take("cs_test_order0000000001", "kit001", "yes", newUpsellKey().secret)).kind, "unavailable");
   is("no browser key at all: nothing", (await take("cs_test_order0000000001", "kit001", "yes", "")).kind, "unavailable");
   sessions.cs_test_order0000000002 = paidCheckout("cs_test_order0000000002", front, browser.fingerprint, { created: NOW - 2 * 3600 });
@@ -142,6 +143,13 @@ async function main(): Promise<void> {
   is("the downsell cannot be skipped to", (await take("cs_test_order0000000001", "list01", "yes")).kind, "unavailable");
   is("still nothing charged", charges.length, 0);
 
+  part("Each offer asks its own box to start access at once (lib/digital-consent.ts)");
+  const bare = (step: string, consent: typeof TEST_CONSENT | null) =>
+    takeUpsell({ store, session: "cs_test_order0000000001", secret: browser.secret, origin, step, answer: "yes", consent });
+  is("a yes without it charges nothing and asks for it", (await bare("kit001", null)).kind, "consent");
+  is("a yes with another version of the words: the same", (await bare("kit001", { ...TEST_CONSENT, version: "2020-01-01.1" })).kind, "consent");
+  is("and nothing is written, so the same offer can still be answered", [charges.length, await readUpsell("cs_test_order0000000001", "")], [0, null]);
+
   part("No thanks, then yes to the downsell: one charge, at the offer's price");
   is("no to the upsell charges nothing", (await take("cs_test_order0000000001", "kit001", "no")).kind, "declined");
   is("no again is still no", (await take("cs_test_order0000000001", "kit001", "yes")).kind, "declined");
@@ -153,6 +161,7 @@ async function main(): Promise<void> {
     [1, "900", "usd", "cus_TestBuyer01", "pm_test_card0001", "true", "upsell", "cs_test_order0000000001", "2"],
   );
   is("one idempotency key per offer of the order", first?.key, "nimbus-upsell:cs_test_order0000000001:list01");
+  is("the offer's own yes, its version and its time, on its own payment", first?.body.get("metadata[dc]"), `yes:${TEST_CONSENT.version}:${TEST_CONSENT.at}`);
   is("pressed again: done, and not charged again", [(await take("cs_test_order0000000001", "list01", "yes")).kind, charges.length], ["done", 1]);
   is("the answer is kept as paid, with its own payment", [(await readUpsell("cs_test_order0000000001", "list01"))?.state, (await readUpsell("cs_test_order0000000001", "list01"))?.pi], ["paid", "pi_test_0000000001"]);
 
