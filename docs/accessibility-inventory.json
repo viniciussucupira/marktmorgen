@@ -1370,6 +1370,7 @@
     "components/podcast-editor.tsx",
     "components/podcast-toggle.tsx",
     "components/post-cover.tsx",
+    "components/pricing-cycle-controls.tsx",
     "components/pricing-cycle.tsx",
     "components/pricing-value.tsx",
     "components/print-button.tsx",

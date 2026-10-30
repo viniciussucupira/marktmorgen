@@ -40,12 +40,18 @@ is("historical wording remains selectable",feeWords(false).editor,"Marktmorgen t
 is("pricing approval is not margin certification",commercialMarginReady(),false);
 is("commercial sales remain closed",PLANS_ON_SALE,false);
 const html=renderToStaticMarkup(createElement(Pricing));
+// Inert billing templates are not rendered/spoken terms. Keep exact visible
+// counts while checking that both canonical alternatives remain available.
+const templates=html.match(/<template\b[^>]*>[\s\S]*?<\/template>/g)??[];
+const visibleHtml=html.replace(/<template\b[^>]*>[\s\S]*?<\/template>/g, "");
+is("three plans each retain both inert billing alternatives",templates.length,6);
+is("three visible definition lists remain",(visibleHtml.match(/<dl\b/g)??[]).length,3);
 for(const name of ["Store","Studio","Scale"]) is(name+" appears as a plan",html.includes(">"+name+"</p>"),true);
 is("every card says 0% of sales",(html.match(/>0% of sales</g)??[]).length,3);
 for(const rate of ["6.25%","2.75%"]) is(rate+" is not shown",html.includes(rate),false);
 for(const price of ["$69","$449","$999"]) is(price+" is the card's monthly price",html.includes(">"+price+"<"),true);
 for(const tier of TIERS) is(tier+" setup link preserves the selected plan",html.includes("plan="+tier+"&amp;billing=month"),true);
-is("all three plans say sales are not open",(html.match(/Not yet\. Marktmorgen is still being built/g)??[]).length,3);
+is("all three plans say sales are not open",(visibleHtml.match(/Not yet\. Marktmorgen is still being built/g)??[]).length,3);
 is("no blanket zero-fee claim",html.includes("We take none of it"),false);
 const hostile = pricingPerksMarkup(['<img src=x onerror="alert(1)">', "A & B's <plan>", "</span><script>bad()</script>"]);
 is("plan words never create executable disclosure markup", /<img|<script|onerror="/.test(hostile), false);
@@ -58,6 +64,9 @@ is("term labels retain literal HTML as escaped text", terms.includes('&lt;img sr
 is("term values retain punctuation and escaped markup", terms.includes("A &amp; B&#39;s &lt;terms&gt;"), true);
 is("static terms retain one definition pair per row", [(terms.match(/<dt /g) ?? []).length, (terms.match(/<dd /g) ?? []).length], [2, 2]);
 for (const label of ["Free trial", "First charge", "Money back", "Canceling", "Fees"]) {
- is("every plan preserves its " + label + " term", (html.match(new RegExp(">" + label + "</dt>", "g")) ?? []).length, 3);
+ is("every plan preserves its " + label + " term", (visibleHtml.match(new RegExp(">" + label + "</dt>", "g")) ?? []).length, 3);
+}
+for(const label of ["Free trial","First charge","Money back","Canceling","Fees"]) {
+ is("both inert alternatives preserve every "+label+" term",templates.filter(fragment=>fragment.includes(">"+label+"</dt>")).length,6);
 }
 done();

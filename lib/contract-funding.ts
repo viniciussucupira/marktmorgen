@@ -500,6 +500,22 @@ export type ArmedRestartSubmission=Readonly<{intent:OwnedRestartIntent;priceId:s
 /** First durable submission barrier ACK only; no provider IO or activation.
  * Lost ACK keeps phase=uncertain forever, never a fresh submission permission.
  */
+/** A submission ACK grants provider permission only from bounded own data.
+ * Unknown replies keep the possibly committed one-way uncertain barrier held. */
+function restartSubmissionAcknowledged(reply:unknown):string|null{
+ try{
+  if(!Array.isArray(reply))return null;
+  const length=Object.getOwnPropertyDescriptor(reply,'length');
+  if(!length||!Object.hasOwn(length,'value')||length.value!==1)return null;
+  const entry=Object.getOwnPropertyDescriptor(reply,'0');
+  if(!entry||!Object.hasOwn(entry,'value')||!Array.isArray(entry.value))return null;
+  const ack=entry.value,innerLength=Object.getOwnPropertyDescriptor(ack,'length');
+  if(!innerLength||!Object.hasOwn(innerLength,'value')||innerLength.value!==2)return null;
+  const flag=Object.getOwnPropertyDescriptor(ack,'0'),body=Object.getOwnPropertyDescriptor(ack,'1');
+  if(!flag||!Object.hasOwn(flag,'value')||flag.value!==1||!body||!Object.hasOwn(body,'value')||typeof body.value!=='string'||body.value.length>CONTRACT_FUNDING_RULES.restartIntent.maxIntentBytes)return null;
+  return Buffer.byteLength(body.value)<=CONTRACT_FUNDING_RULES.restartIntent.maxIntentBytes?body.value:null;
+ }catch{return null;}
+}
 export async function armRestartSubmission(
  input:{intent:OwnedRestartIntent;priceId:string;bodyHash:string},
  policy:ContractFundingPolicy|null=CURRENT_CONTRACT_FUNDING_POLICY,
@@ -515,12 +531,11 @@ export async function armRestartSubmission(
  const now=Math.floor(before.getTime()/1000),grant=intent.grant;
  if(now<intent.claimedAtSeconds||now>grant.submitUntilSeconds)return null;
  try{
-  const result=await redisPipeline([['EVAL',ARM_RESTART_SUBMISSION,4,'nl:contract-reserve:v1','nl:pause:'+intent.ref,'nl:pause:due','nl:pause:last:'+intent.ref,contractFundingBinding(config),config.reviewId,grant.statsId,grant.id,intent.claim,now,intent.claimedAtSeconds,grant.submitUntilSeconds,intent.ref,intent.paused,intent.source.binding,priceId,bodyHash]]);
+  const result:unknown=await redisPipeline([['EVAL',ARM_RESTART_SUBMISSION,4,'nl:contract-reserve:v1','nl:pause:'+intent.ref,'nl:pause:due','nl:pause:last:'+intent.ref,contractFundingBinding(config),config.reviewId,grant.statsId,grant.id,intent.claim,now,intent.claimedAtSeconds,grant.submitUntilSeconds,intent.ref,intent.paused,intent.source.binding,priceId,bodyHash]]);
   const after=Date.now(),current=contractFundingConfiguration(policy,context,new Date(after));
-  if(current===null||current.binding!==config.binding||!commercialMarginReady(context.review)||after<before.getTime()||after>grant.submitUntilSeconds*1000||new Date(after).toISOString().slice(0,7)!==context.review?.fundedExposure?.month||result.length!==1)return null;
-  const ack=result[0];
-  if(!Array.isArray(ack)||ack.length!==2||ack[0]!==1||typeof ack[1]!=='string'||Buffer.byteLength(ack[1])>CONTRACT_FUNDING_RULES.restartIntent.maxIntentBytes)return null;
-  const stored=JSON.parse(ack[1]),{submission,...original}=stored;
+  if(current===null||current.binding!==config.binding||!commercialMarginReady(context.review)||after<before.getTime()||after>grant.submitUntilSeconds*1000||new Date(after).toISOString().slice(0,7)!==context.review?.fundedExposure?.month )return null;
+  const acknowledged=restartSubmissionAcknowledged(result);if(acknowledged===null)return null;
+  const stored=JSON.parse(acknowledged),{submission,...original}=stored;
   const owned=ownedRestartIntentFromAcknowledgement({grant,ref:intent.ref,handle:intent.handle,paused:intent.paused,claim:intent.claim,sourceGrantId:intent.source.binding.split('|')[0]},intent.claimedAtSeconds,{cashLimitCents:config.cashLimitCents,carryForwardCents:config.carryForwardCents},[1,JSON.stringify(original)]);
   const expected={version:1,phase:'uncertain',priceId,bodyHash,armedAt:now,idempotencyKey:'restart:'+grant.id+':'+intent.claim};
   if(!owned||canonicalFinancialSnapshot(owned)!==canonicalFinancialSnapshot(intent)||canonicalFinancialSnapshot(submission)!==canonicalFinancialSnapshot(expected))return null;
