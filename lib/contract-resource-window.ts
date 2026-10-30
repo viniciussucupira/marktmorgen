@@ -91,6 +91,20 @@ end
 redis.call('HSET',KEYS[1],field,cohort)
 return {1,untilMs}
 `;
+/** Only the exact own-data resource acknowledgement can authorize work. */
+function resourceWindowAcknowledged(reply:unknown,end:number):boolean{
+ try{
+  if(!Array.isArray(reply))return false;
+  const length=Object.getOwnPropertyDescriptor(reply,'length');
+  if(!length||!Object.hasOwn(length,'value')||length.value!==1)return false;
+  const entry=Object.getOwnPropertyDescriptor(reply,'0');
+  if(!entry||!Object.hasOwn(entry,'value')||!Array.isArray(entry.value))return false;
+  const ack:unknown[]=entry.value,innerLength=Object.getOwnPropertyDescriptor(ack,'length');
+  if(!innerLength||!Object.hasOwn(innerLength,'value')||innerLength.value!==2)return false;
+  const flag=Object.getOwnPropertyDescriptor(ack,'0'),finish=Object.getOwnPropertyDescriptor(ack,'1');
+  return Boolean(flag&&Object.hasOwn(flag,'value')&&flag.value===1&&finish&&Object.hasOwn(finish,'value')&&finish.value===end);
+ }catch{return false;}
+}
 export type PaidResourceStore=WindowFields&{statsId:string|null;tier:Tier};
 /** A cohort spends no new principal: its full paid-term liability is already
  * reserved. It binds at most one monthly or twelve annual resource windows to
@@ -125,9 +139,10 @@ export async function reservePaidResourceWindow(
  try{
   const commands:(string|number)[][]=[['EVAL',RESERVE_PAID_RESOURCE_WINDOW,1,'nl:contract-reserve:v1',contractFundingBinding(config),config.reviewId,store.statsId,store.subscriptionId,key,store.period.start,store.period.end,window.start,window.end,now.getTime(),index,count,config.grantCents[key],config.cashLimitCents,config.carryForwardCents,config.fundedGrants[key],...CONTRACT_KEYS.flatMap(choice=>[config.fundedGrants[choice],config.grantCents[choice]])]];
   if(new TextEncoder().encode(JSON.stringify(commands)).length>CONTRACT_FUNDING_RULES.resourceCohortRequestBytes)return false;
-  const result=await redisPipeline(commands);
-  const ack=result[0],current=contractFundingConfiguration(policy,context,new Date()),ready=commercialMarginReady(context.review);
+  const result:unknown=await redisPipeline(commands);
+  const acknowledged=resourceWindowAcknowledged(result,window.end);
+  const current=contractFundingConfiguration(policy,context,new Date()),ready=commercialMarginReady(context.review);
   const checkedAt=Date.now();
-  return current!==null&&current.binding===config.binding&&ready&&checkedAt<=config.admissionsUntilMs&&new Date(checkedAt).toISOString().slice(0,7)===context.review?.fundedExposure?.month&&result.length===1&&Array.isArray(ack)&&ack.length===2&&ack[0]===1&&ack[1]===window.end&&checkedAt>=now.getTime()&&checkedAt>=window.start&&checkedAt<window.end;
+  return current!==null&&current.binding===config.binding&&ready&&checkedAt<=config.admissionsUntilMs&&new Date(checkedAt).toISOString().slice(0,7)===context.review?.fundedExposure?.month&&acknowledged&&checkedAt>=now.getTime()&&checkedAt>=window.start&&checkedAt<window.end;
  }catch{return false;}
 }
