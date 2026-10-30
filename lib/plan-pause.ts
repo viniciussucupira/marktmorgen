@@ -365,7 +365,13 @@ export async function pausePlan(store: Store, months: PauseMonths, nowSeconds = 
  * Creator-initiated undo/drop keep their existing separate semantics. */
 export const PAUSE_WORKER_FORGET = `-- marktmorgen:pause-worker-forget:v1
 if #KEYS~=2 or #ARGV~=3 or KEYS[1]==KEYS[2] then return 0 end
-local current=redis.call('GET',KEYS[1])
+local current
+if ARGV[2]=='known' then
+ current=redis.call('GETRANGE',KEYS[1],0,4096)
+ if #current==0 or #current>4096 then return 0 end
+else
+ current=redis.call('GET',KEYS[1])
+end
 if ARGV[2]=='missing' then
  if current then return 0 end
  redis.call('ZREM',KEYS[2],ARGV[1])
@@ -464,7 +470,12 @@ export async function undoPause(store: Store, nowSeconds = Math.floor(Date.now()
     await forget(ref, true);
     return state.state === "active" ? "kept" : "stopped";
   }
-  await forget(ref, false);
+  // A stopped break may have been replaced since the bounded observation.
+  // Reuse the worker\'s exact-raw/due CAS: unknown ACKs and funded evidence
+  // never authorize blind cleanup, and annual eligibility is not returned.
+  if (!await forgetObserved(ref, observed.raw)) {
+    throw new Error("the break removal could not be confirmed");
+  }
   return "stopped";
 }
 
