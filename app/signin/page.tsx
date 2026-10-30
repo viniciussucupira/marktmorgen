@@ -11,6 +11,7 @@ import { PLANS_ON_SALE } from "@/lib/opening";
 import { formatMoney } from "@/lib/money";
 import { INVITE_PROGRAM_OPEN, INVITE_BONUS_CENTS, INVITE_HOLD_DAYS } from "@/lib/creator-invite-rules";
 import { feeWords } from "@/lib/fee-words";
+import { handleProblem, normaliseHandle } from "@/lib/store";
 
 /** Somebody who came back to a store they have: by Log in, or sent here to log in again. */
 const RETURNING_STATUSES = new Set(["reauth", "out", "out-everywhere"]);
@@ -146,6 +147,14 @@ export default async function SignInPage({
       }
     : null;
 
+  /*
+   * The address typed on the home page, said back the same way (VS1). It is
+   * not reserved here and not kept anywhere: the address is taken on the
+   * address step after the emailed link, under the same rules as below.
+   */
+  const asked = typeof params.handle === "string" ? normaliseHandle(params.handle.slice(0, 64)) : "";
+  const askedProblem = asked ? handleProblem(asked) : null;
+
   return (
     <div className="min-h-screen bg-paper text-ink lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
       <aside className="surface-night nb-grid-lines on-dark hidden flex-col justify-between p-10 lg:flex xl:p-14">
@@ -205,6 +214,26 @@ export default async function SignInPage({
                   ? `Nothing is paid here. Your store is made first and an eligible first store can start a ${TRIAL_DAYS}-day trial when you choose a plan separately in your studio. Returning or additional stores may not qualify. ${picked.name} at ${picked.words} is one of the plan choices. You can take the other one instead, or move between them later.`
                   : `Nothing is paid here, and no plan is on sale yet. Your store is made first, and you can set it up today. ${picked.name} at ${picked.words} is one of the plans that will be in your studio on the day they open.`}
               </p>
+            </div>
+          ) : null}
+
+          {asked && !returning ? (
+            <div className={`notice mt-6${askedProblem ? " notice-warn" : ""}`} role="status" data-signin-handle>
+              {askedProblem === null ? (
+                <>
+                  <p className="font-semibold">{`You picked marktmorgen.com/@${asked}`}</p>
+                  <p className="mt-1">It is not held for you yet. After you open the emailed link, type it on the address step to take it, if nobody has taken it first.</p>
+                </>
+              ) : (
+                <>
+                  <p className="font-semibold">{`marktmorgen.com/@${asked} cannot be a store address`}</p>
+                  <p className="mt-1">
+                    {askedProblem === "reserved"
+                      ? "That name belongs to the site itself. You pick another one after the emailed link."
+                      : "Use 3 to 24 letters, numbers, dots, hyphens or underscores, starting and ending with a letter or number. You pick the address after the emailed link."}
+                  </p>
+                </>
+              )}
             </div>
           ) : null}
 
