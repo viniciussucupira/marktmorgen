@@ -75,8 +75,7 @@ export default async function StudioCoursePage({
   // who may spend on the plan's card, on a store with a plan, may ask for.
   const writing = await autoWriting(videoPaths).catch(() => ({}));
   // Refunds for AI captions Stripe has not confirmed yet, shown to whoever may see the plan's card.
-  const owed: Awaited<ReturnType<typeof autoRefundsOwed>> = can(view.role, "billing") ? await autoRefundsOwed(videoPaths).catch(() => ({})) : {};
-  const owedRows = Object.values(owed);
+  const owedRows: Awaited<ReturnType<typeof autoRefundsOwed>> = can(view.role, "billing") ? await autoRefundsOwed(folder).catch(() => []) : [];
   const autoCan =
     can(view.role, "billing") && store.subscriptionActive && Boolean(store.subscriptionId && store.stripeCustomerId) && isBillingConfigured() && isStreamConfigured();
   const { students, total } = await studentsOf(course, 500);
@@ -167,8 +166,8 @@ export default async function StudioCoursePage({
               Refunds for AI captions not confirmed yet
             </h2>
             <ul className="mt-2 space-y-1 text-sm text-ink">
-              {owedRows.map((row, i) => (
-                <li key={i}>
+              {owedRows.map((row) => (
+                <li key={row.id}>
                   {row.stuck
                     ? `A refund of $${(row.cents / 100).toFixed(2)} for AI captions was not confirmed by Stripe, and we have stopped checking it on our own. Write to ${SUPPORT_EMAIL} about it.`
                     : `A refund of $${(row.cents / 100).toFixed(2)} for AI captions was asked for, and Stripe has not confirmed it yet. We check it again on our own; you do not need to do anything.`}

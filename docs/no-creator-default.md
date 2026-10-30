@@ -89,3 +89,10 @@ Bounds: at most `REFUND_LOOKS_MAX` (40) looks, 10 minutes apart and doubling to 
 `tests/auto-captions.test.ts` models a Stripe that answers pending, failed and 500, replays idempotency keys, lists refunds, and fails to list them (500 and `has_more`). Mutations that delete the record on an unconfirmed refund, ignore a pending refund, reuse the first key after a failed one, or count any listed amount as enough each make it fail.
 
 Cost per plan and interval (Store, Studio, Scale; monthly and annual): no new supplier, service or paid operation. Each owed refund adds at most 40 list reads and 40 refund requests on Stripe's API (no per-call price on Stripe's pricing page for these reads; not counted as zero) and one Redis record of under 1 KB for at most 400 days, only when a refund was not confirmed; the captions price already funds its own refund. Sales remain closed; nothing here certifies margin, settlement at the bank or complete CA232 protection. Units 2 to 6 of CA232 remain.
+
+Review fixes (same unit, 30 October 2026): the amount asked back is capped at what the card paid, read from the PaymentIntent's `amount_received`; an invoice can take part of the price from the customer's credit balance, and that part cannot go back to the card. Owed refunds are also listed by store folder, so one owed for a video deleted since is still shown. A new caption request for a video whose refund is owed answers `auto_owed`. A refused request whose refund is not confirmed answers `auto_refund_pending`, which says the card was charged and the refund is not confirmed yet. The Terms state the ten-day limit and what follows it. The test's Stripe now replays a saved 500 under its key, as Stripe does.
+
+Remaining gaps, recorded and not claimed as closed:
+- the part of a price paid from a credit balance is not put back on that balance;
+- a refund still legitimately pending after the ten days of looks is marked stuck and needs a person;
+- two looks at once can lose one count of `looks`, which never touches money.

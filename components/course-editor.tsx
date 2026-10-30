@@ -69,6 +69,8 @@ const MESSAGES: Record<string, string> = {
   auto_plan: "Captions written by AI are charged to the card your plan is paid with, so they need a plan first.",
   auto_card: "There is no card on your plan to charge. Add one under Plan and billing, then try again.",
   auto_declined: "Your card was declined, so nothing was charged and nothing is being written.",
+  auto_owed: "A refund for an earlier request for this video's captions is not confirmed by Stripe yet, so new AI captions can't be bought for it until it is. Its state is shown at the top of this page.",
+  auto_refund_pending: "The video service would not write these captions. The charge is being refunded, but Stripe has not confirmed the refund yet; its state is shown at the top of this page.",
   auto_unavailable: "The video service could not take this just now. Nothing was charged; try again in a moment.",
   auto_unknown: "That video is not there anymore. Reload the page.",
   forbidden: "Your role on this store does not include charging the plan's card. Ask the owner to do this.",

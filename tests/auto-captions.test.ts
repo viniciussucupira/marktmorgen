@@ -43,6 +43,9 @@ const replays = new Map<string, FakeRefund>();
 let refundAnswer: "succeeded" | "pending" | "failed" | "error" = "succeeded";
 let listAnswer: "ok" | "error" | "more" = "ok";
 const CHARGED = 12000;
+/** What the card paid on the captions invoice (less than the price when a credit balance paid part). */
+let cardPaid = CHARGED;
+const FOLDER = "a".repeat(32);
 
 globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) => {
   const url = new URL(String(input));
@@ -63,6 +66,10 @@ globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) =>
   if (path.endsWith("/finalize")) return json({ id: "in_Captions00001", status: "open" });
   if (path.endsWith("/pay")) return declineCard ? json({ error: { code: "card_declined", message: "Your card was declined." } }, 402) : json(paidReceipt !== undefined ? paidReceipt : { id: "in_Captions00001", status: "paid", payment_intent: "pi_Captions000001" });
   if (path.endsWith("/void")) return json({ id: "in_Captions00001", status: "void" });
+  if (path.startsWith("/payment_intents/") && method === "GET") {
+    if (listAnswer === "error") return json({ error: { type: "api_error", message: "down" } }, 500);
+    return json({ object: "payment_intent", id: decodeURIComponent(path.slice("/payment_intents/".length)), currency: "usd", amount_received: cardPaid });
+  }
   if (path === "/refunds" && method === "GET") {
     if (listAnswer === "error") return json({ error: { type: "api_error", message: "down" } }, 500);
     const intent = url.searchParams.get("payment_intent");
@@ -72,9 +79,17 @@ globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) =>
     const key = new Headers(init?.headers).get("Idempotency-Key") ?? "";
     // Stripe replays the first answer to a key it has seen.
     const seen = replays.get(key);
-    if (seen) return json(seen);
-    if (refundAnswer === "error") return json({ error: { type: "api_error", message: "down" } }, 500);
-    const made: FakeRefund = { id: `re_Refund${String(refunds.length + 1).padStart(6, "0")}`, object: "refund", amount: Number(body.get("amount") ?? CHARGED), currency: "usd", payment_intent: String(body.get("payment_intent")), status: refundAnswer };
+    if (seen) return seen.status === "error" ? json({ error: { type: "api_error", message: "down" } }, 500) : json(seen);
+    if (refundAnswer === "error") {
+      // Stripe saves a 500 under its key and replays it.
+      replays.set(key, { id: "", object: "refund", amount: 0, currency: "usd", payment_intent: "", status: "error" });
+      return json({ error: { type: "api_error", message: "down" } }, 500);
+    }
+    // Without an amount Stripe refunds whatever is left of the payment.
+    const left = cardPaid - refunds.filter((r) => r.status === "succeeded" || r.status === "pending").reduce((sum, r) => sum + r.amount, 0);
+    const asked = body.has("amount") ? Number(body.get("amount")) : left;
+    if (asked <= 0 || asked > left) return json({ error: { type: "invalid_request_error", code: "amount_too_large", message: "too much" } }, 400);
+    const made: FakeRefund = { id: `re_Refund${String(refunds.length + 1).padStart(6, "0")}`, object: "refund", amount: asked, currency: "usd", payment_intent: String(body.get("payment_intent")), status: refundAnswer };
     refunds.push(made);
     replays.set(key, { ...made });
     return json(made);
@@ -229,7 +244,7 @@ async function main(): Promise<void> {
   await asOwed(["en"]);
   refundAnswer = "pending";
   is("a pending refund: still waiting, the record kept with what is owed, looked at again", [await syncAutoCaptions(VIDEO, lateNow), JSON.parse(String(redis.run(["GET", owedKey]))).owed?.cents, queued() !== null], ["waiting", 6000, true]);
-  is("not shown as being written; shown to the creator as a refund not confirmed", [(await autoWriting([PATH]))[PATH], (await autoRefundsOwed([PATH]))[PATH]], [undefined, { cents: 6000, stuck: false }]);
+  is("not shown as being written; shown to the creator as a refund not confirmed", [(await autoWriting([PATH]))[PATH], (await autoRefundsOwed(FOLDER)).map((r) => ({ cents: r.cents, stuck: r.stuck }))[0]], [undefined, { cents: 6000, stuck: false }]);
   is("a look while Stripe lists it pending asks for nothing new", [await syncAutoCaptions(VIDEO, lateNow + 1), posts()], ["waiting", 1]);
   refunds[0].status = "succeeded";
   is("listed succeeded: done, the record gone, one refund of 6000 in all", [await syncAutoCaptions(VIDEO, lateNow + 2), redis.run(["GET", owedKey]), posts(), succeededCents()], ["done", null, 1, 6000]);
@@ -239,8 +254,10 @@ async function main(): Promise<void> {
   refundAnswer = "error";
   is("a refund request that errs keeps the record", [await syncAutoCaptions(VIDEO, lateNow), redis.run(["GET", owedKey]) !== null], ["waiting", true]);
   refundAnswer = "succeeded";
+  is("while Stripe replays the saved 500 for the first key: still waiting, nothing refunded", [await syncAutoCaptions(VIDEO, lateNow + 1), succeededCents(), redis.run(["GET", owedKey]) !== null], ["waiting", 0, true]);
+  replays.clear(); // Stripe drops the key after about a day; the list is still empty, so the same key is safe.
   const firstKeyed = stripe.filter((s) => s.path === "POST /refunds").length;
-  is("the next look asks again for exactly what is owed, and is done", [await syncAutoCaptions(VIDEO, lateNow + 1), posts() - firstKeyed, succeededCents(), redis.run(["GET", owedKey])], ["done", 1, 6000, null]);
+  is("once the key is dropped: asked again for exactly what is owed, and done", [await syncAutoCaptions(VIDEO, lateNow + 2), posts() - firstKeyed, succeededCents(), redis.run(["GET", owedKey])], ["done", 1, 6000, null]);
 
   // 3. A refund that failed: a new one for what is left, under a new key; never more than owed.
   await asOwed(["en"]);
@@ -254,6 +271,7 @@ async function main(): Promise<void> {
   refundAnswer = "error";
   await syncAutoCaptions(VIDEO, lateNow);
   refundAnswer = "succeeded";
+  replays.clear();
   await Promise.all([syncAutoCaptions(VIDEO, lateNow + 1), syncAutoCaptions(VIDEO, lateNow + 1)]);
   is("two looks at once: one refund made, 6000 returned", [refunds.length, succeededCents()], [1, 6000]);
 
@@ -269,7 +287,7 @@ async function main(): Promise<void> {
   listAnswer = "error";
   for (let i = 0; i < REFUND_LOOKS_MAX; i += 1) await syncAutoCaptions(VIDEO, lateNow + 2 + i);
   const stuckBefore = stripe.length;
-  is("after every look: kept, marked stuck, out of the queue, shown as stuck, and no more calls", [redis.run(["GET", owedKey]) !== null, queued(), (await autoRefundsOwed([PATH]))[PATH], await syncAutoCaptions(VIDEO, lateNow + 999), stripe.length - stuckBefore], [true, null, { cents: 6000, stuck: true }, "waiting", 0]);
+  is("after every look: kept, marked stuck, out of the queue, shown as stuck, and no more calls", [redis.run(["GET", owedKey]) !== null, queued(), (await autoRefundsOwed(FOLDER)).map((r) => ({ cents: r.cents, stuck: r.stuck }))[0], await syncAutoCaptions(VIDEO, lateNow + 999), stripe.length - stuckBefore], [true, null, { cents: 6000, stuck: true }, "waiting", 0]);
   listAnswer = "ok";
 
   // 6. An owed record that cannot be read is never refunded by guesswork.
@@ -277,7 +295,7 @@ async function main(): Promise<void> {
   replays.clear();
   stripe = [];
   redis.run(["SET", owedKey, JSON.stringify({ langs: ["en", "es"], got: ["en"], at: 1_000, cents: CHARGED, pi: "pi_Captions000001", path: PATH, owed: { cents: "x" } }), "EX", 3600]);
-  is("an unreadable owed refund stops for a person, with no call to Stripe", [await syncAutoCaptions(VIDEO, lateNow), stripe.length, (await autoRefundsOwed([PATH]))[PATH]?.stuck], ["waiting", 0, true]);
+  is("an unreadable owed refund stops for a person, with no call to Stripe", [await syncAutoCaptions(VIDEO, lateNow), stripe.length, (await autoRefundsOwed(FOLDER)).map((r) => ({ cents: r.cents, stuck: r.stuck }))[0]?.stuck], ["waiting", 0, true]);
 
   // 7. The service refusing, and the refund not confirmed: kept as owed in full, and the video waits.
   redis.run(["DEL", owedKey]);
@@ -288,13 +306,29 @@ async function main(): Promise<void> {
   stripe = [];
   const refusedPending = await requestAutoCaptions(store, PATH, "fr", []);
   const kept = JSON.parse(String(redis.run(["GET", owedKey])));
-  is("refused and the refund pending: kept owed in full, queued, shown", [refusedPending.ok ? "asked" : refusedPending.reason, kept.owed?.cents, queued() !== null, (await autoRefundsOwed([PATH]))[PATH]], ["unavailable", null, true, { cents: 6000, stuck: false }]);
+  is("refused and the refund pending: says so, kept owed in full, queued, shown", [refusedPending.ok ? "asked" : refusedPending.reason, kept.owed?.cents, queued() !== null, (await autoRefundsOwed(FOLDER)).map((r) => ({ cents: r.cents, stuck: r.stuck }))[0]], ["refund_pending", null, true, { cents: 6000, stuck: false }]);
   serviceRefuses = false;
   const charges = stripe.filter((s) => s.path.endsWith("/pay")).length;
-  is("no new request is charged for that video while its refund is owed", [(await requestAutoCaptions(store, PATH, "fr", [])).ok, stripe.filter((s) => s.path.endsWith("/pay")).length - charges], [false, 0]);
+  const again = await requestAutoCaptions(store, PATH, "fr", []);
+  is("no new request is charged for that video while its refund is owed, and it says why", [again.ok ? "asked" : again.reason, stripe.filter((s) => s.path.endsWith("/pay")).length - charges], ["owed", 0]);
   refunds[0].status = "succeeded";
-  is("once Stripe lists it succeeded: done", [await syncAutoCaptions(VIDEO, Date.now()), redis.run(["GET", owedKey])], ["done", null]);
+  is("once Stripe lists it succeeded: done, and no longer listed for the store", [await syncAutoCaptions(VIDEO, Date.now()), redis.run(["GET", owedKey]), await autoRefundsOwed(FOLDER)], ["done", null, []]);
   refundAnswer = "succeeded";
+
+  // 8. A credit balance paid part of the invoice: never more than the card paid is asked back.
+  await asOwed([]);
+  cardPaid = 4000;
+  refundAnswer = "failed";
+  redis.run(["SET", owedKey, JSON.stringify({ langs: ["en", "es"], got: [], at: 1_000, cents: CHARGED, pi: "pi_Captions000001", path: PATH, owed: { cents: null, key: "k-credit", since: 1, looks: 0 } }), "EX", 3600]);
+  refunds.push({ id: "re_Failed000001", object: "refund", amount: 4000, currency: "usd", payment_intent: "pi_Captions000001", status: "failed" });
+  refundAnswer = "succeeded";
+  is("the card paid 4000 of 12000: 4000 asked back, done", [await syncAutoCaptions(VIDEO, lateNow), stripe.find((s) => s.path === "POST /refunds")?.body.get("amount"), succeededCents(), redis.run(["GET", owedKey])], ["done", "4000", 4000, null]);
+  cardPaid = CHARGED;
+
+  // 9. A refund owed for a video since deleted is still shown for the store.
+  redis.run(["SADD", `nl:stream:autoowed:${FOLDER}`, "1b7c1d2e-3f40-4a5b-8c6d-7e8f9a0b1c2d"]);
+  redis.run(["SET", "nl:stream:auto:1b7c1d2e-3f40-4a5b-8c6d-7e8f9a0b1c2d", JSON.stringify({ langs: ["en"], got: [], at: 1_000, cents: 3500, pi: "pi_Captions000002", path: streamPath(FOLDER, "lesson000002", "1b7c1d2e-3f40-4a5b-8c6d-7e8f9a0b1c2d"), owed: { cents: null, key: "k-gone", since: 1, looks: 0 } }), "EX", 3600]);
+  is("a deleted video's owed refund is listed for its store, and not for another", [await autoRefundsOwed(FOLDER), await autoRefundsOwed("b".repeat(32))], [[{ id: "1b7c1d2e-3f40-4a5b-8c6d-7e8f9a0b1c2d", cents: 3500, stuck: false }], []]);
 
   done();
 }

@@ -1625,16 +1625,20 @@ export async function refundCharge(paymentIntent: string, cents: number | null, 
  * payments, read from its own list (GET /v1/refunds?payment_intent=…, newest
  * first, at most 100). `returned` counts only succeeded USD refunds of this
  * intent; `inFlight` those pending or waiting for an action; `failed` those
- * failed or canceled. Null when the list cannot be read whole, so a caller
+ * failed or canceled; `paid` what the card paid (the PaymentIntent's
+ * amount_received). Null when the list cannot be read whole, so a caller
  * never takes "unread" for "none".
  */
-export async function refundsOnIntent(paymentIntent: string): Promise<{ returned: number; inFlight: number; failed: number } | null> {
+export async function refundsOnIntent(paymentIntent: string): Promise<{ returned: number; inFlight: number; failed: number; paid: number } | null> {
   if (!/^pi_[A-Za-z0-9]{8,64}$/.test(paymentIntent)) return null;
   try {
+    // What the card actually paid (an invoice can take part of a price from the customer's credit balance).
+    const intent = await onPlatform("GET", `/payment_intents/${encodeURIComponent(paymentIntent)}`, undefined, { version: CHARGE_VERSION });
+    if (!intent || intent.object !== "payment_intent" || intent.id !== paymentIntent || intent.currency !== "usd" || typeof intent.amount_received !== "number" || !Number.isSafeInteger(intent.amount_received) || intent.amount_received < 0) return null;
     const query = new URLSearchParams({ payment_intent: paymentIntent, limit: "100" });
     const listed = await onPlatform("GET", `/refunds?${query}`, undefined, { version: CHARGE_VERSION });
     if (!listed || listed.object !== "list" || !Array.isArray(listed.data) || listed.has_more !== false) return null;
-    const out = { returned: 0, inFlight: 0, failed: 0 };
+    const out = { returned: 0, inFlight: 0, failed: 0, paid: intent.amount_received as number };
     for (const row of listed.data as Record<string, unknown>[]) {
       if (!row || row.object !== "refund" || typeof row.id !== "string") return null;
       const intent = typeof row.payment_intent === "string" ? row.payment_intent : (row.payment_intent as { id?: unknown } | null | undefined)?.id;

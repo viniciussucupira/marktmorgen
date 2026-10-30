@@ -28,6 +28,8 @@ import type { Store } from "@/lib/store";
 import { GIVE_UP_HOURS, MAX_AUTO_MINUTES, autoCaptionCents, chargedMinutes, readAutoAsk } from "@/lib/auto-captions-rules";
 
 const pendingKey = (id: string) => `nl:stream:auto:${id}`;
+/** The videos of one store folder with a captions refund owed. */
+const owedKey = (folder: string) => `nl:stream:autoowed:${folder}`;
 const QUEUE = "nl:stream:autoq";
 const KEEP_SECONDS = 7 * 86_400;
 const LOOK_FIRST_MS = 3 * 60_000;
@@ -93,7 +95,7 @@ function parsePending(raw: unknown): Pending | null {
 
 export type AutoAnswer =
   | { ok: true; writing: string[]; cents: number }
-  | { ok: false; reason: "off" | "unknown" | "not_ready" | "language" | "long" | "busy" | "plan" | "card" | "declined" | "unavailable" };
+  | { ok: false; reason: "off" | "unknown" | "not_ready" | "language" | "long" | "busy" | "owed" | "refund_pending" | "plan" | "card" | "declined" | "unavailable" };
 
 /** What captions for this video cost, by how many languages: its length as charged. Null when it cannot have them yet. */
 export async function autoQuote(pathname: string): Promise<{ minutes: number; seconds: number } | null> {
@@ -124,7 +126,11 @@ export async function requestAutoCaptions(store: Store, pathname: string, spoken
   const receipt = await redisPipeline([["SET", key, "charging", "NX", "EX", 300]]);
   // An uncertain claim must not authorize a charge or remove another request.
   if (!Array.isArray(receipt) || receipt.length !== 1) return { ok: false, reason: "unavailable" };
-  if (receipt[0] === null) return { ok: false, reason: "busy" };
+  if (receipt[0] === null) {
+    // A refund still owed for this video holds it: say so, not that captions are being written.
+    const [held] = await redisPipeline([["GET", key]]);
+    return { ok: false, reason: parsePending(held)?.owed ? "owed" : "busy" };
+  }
   if (receipt[0] !== "OK") return { ok: false, reason: "unavailable" };
 
   const cents = autoCaptionCents(record.seconds, asked.languages.length);
@@ -156,7 +162,10 @@ export async function requestAutoCaptions(store: Store, pathname: string, spoken
     console.error("the video service would not write captions", answer.status, answer.data);
     const refundKey = `nl-${sign}:refund`;
     if (await refundCharge(charged.paymentIntent, null, refundKey)) await redisPipeline([["DEL", key]]);
-    else await owe(record.id, { langs: asked.languages, got: [], at: now, cents, pi: charged.paymentIntent, path: pathname }, null, refundKey, now);
+    else {
+      await owe(record.id, { langs: asked.languages, got: [], at: now, cents, pi: charged.paymentIntent, path: pathname }, null, refundKey, now);
+      return { ok: false, reason: "refund_pending" };
+    }
     return { ok: false, reason: "unavailable" };
   }
   const pending: Pending = { langs: asked.languages, got: [], at: now, cents, pi: charged.paymentIntent, path: pathname };
@@ -240,10 +249,19 @@ async function settle(id: string, pending: Pending, got: string[], now: number):
 async function owe(id: string, pending: Pending, cents: number | null, key: string, now: number): Promise<void> {
   const owed: Owed = { cents, key, since: now, looks: 0 };
   console.error("a captions refund was not confirmed; it is kept and looked at again", id);
+  const folder = readStreamPath(pending.path)?.folder;
   await redisPipeline([
     ["SET", pendingKey(id), JSON.stringify({ ...pending, owed }), "EX", REFUND_KEEP_SECONDS],
     ["ZADD", QUEUE, now + LOOK_AGAIN_MS, id],
+    // Listed by store too, so a refund owed for a video since deleted is still shown.
+    ...(folder ? [["SADD", owedKey(folder), id], ["EXPIRE", owedKey(folder), REFUND_KEEP_SECONDS]] : []),
   ]);
+}
+
+/** A refund owed is settled: the record and its listings go. */
+async function closeOwed(id: string, pending: Pending): Promise<void> {
+  const folder = readStreamPath(pending.path)?.folder;
+  await redisPipeline([["DEL", pendingKey(id)], ["ZREM", QUEUE, id], ...(folder ? [["SREM", owedKey(folder), id]] : [])]);
 }
 
 /**
@@ -259,19 +277,21 @@ async function collectRefund(id: string, pending: Pending, owed: Owed, now: numb
     await redisPipeline([["ZREM", QUEUE, id]]);
     return "waiting";
   }
-  const target = owed.cents ?? pending.cents;
   const listed = await refundsOnIntent(pending.pi);
+  // Never more than the card paid: what an invoice took from a credit balance cannot go back to the card.
+  const target = listed ? Math.min(owed.cents ?? pending.cents, listed.paid) : owed.cents ?? pending.cents;
   if (listed && listed.returned >= target) {
-    await redisPipeline([["DEL", pendingKey(id)], ["ZREM", QUEUE, id]]);
+    await closeOwed(id, pending);
     return "done";
   }
   if (listed && listed.inFlight === 0) {
-    const fresh = listed.failed === 0 && listed.returned === 0;
+    // The first key while Stripe lists nothing: had a refund been made under it, it would be listed.
+    const fresh = listed.failed === 0 && listed.returned === 0 && target === (owed.cents ?? pending.cents);
     const left = target - listed.returned;
     const cents = fresh ? owed.cents : left;
     const key = fresh ? owed.key : `${owed.key}:${listed.failed}:${listed.returned}`;
     if (await refundCharge(pending.pi, cents, key)) {
-      await redisPipeline([["DEL", pendingKey(id)], ["ZREM", QUEUE, id]]);
+      await closeOwed(id, pending);
       return "done";
     }
   }
@@ -322,18 +342,15 @@ export async function autoWriting(pathnames: string[]): Promise<Record<string, s
   return out;
 }
 
-/** Refunds for AI captions not yet confirmed by Stripe, by path: the cents owed and whether automatic looks have stopped. */
-export async function autoRefundsOwed(pathnames: string[]): Promise<Record<string, { cents: number; stuck: boolean }>> {
-  const wanted = pathnames.flatMap((path) => {
-    const parts = readStreamPath(path);
-    return parts ? [{ path, id: parts.id }] : [];
-  });
-  if (!wanted.length || !isRedisConfigured()) return {};
-  const rows = await redisPipeline(wanted.map(({ id }) => ["GET", pendingKey(id)]));
-  const out: Record<string, { cents: number; stuck: boolean }> = {};
-  wanted.forEach(({ path }, i) => {
+/** Refunds for AI captions not yet confirmed by Stripe in one store folder, deleted videos included: cents owed and whether automatic looks have stopped. */
+export async function autoRefundsOwed(folder: string): Promise<{ id: string; cents: number; stuck: boolean }[]> {
+  if (!isRedisConfigured() || !/^[0-9a-f]{32}$/.test(folder)) return [];
+  const [members] = await redisPipeline([["SMEMBERS", owedKey(folder)]]);
+  const ids = (Array.isArray(members) ? members : []).filter((m): m is string => typeof m === "string" && STREAM_ID_PATTERN.test(m)).sort().slice(0, 100);
+  if (!ids.length) return [];
+  const rows = await redisPipeline(ids.map((id) => ["GET", pendingKey(id)]));
+  return ids.flatMap((id, i) => {
     const pending = parsePending(rows[i]);
-    if (pending?.owed) out[path] = { cents: pending.owed.cents ?? pending.cents, stuck: pending.owed.stuck === true };
+    return pending?.owed && readStreamPath(pending.path)?.folder === folder ? [{ id, cents: pending.owed.cents ?? pending.cents, stuck: pending.owed.stuck === true }] : [];
   });
-  return out;
 }
