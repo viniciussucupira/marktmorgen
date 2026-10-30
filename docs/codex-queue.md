@@ -13,6 +13,10 @@ Solicitação do dono: **29/10/2026,20h52Fortaleza**. Estado inicial: na fila; e
 
 **MQ2 — 30/10/2026, 10h30 Fortaleza:** nenhum recurso bom é descartado (vai ao fim da fila); dentro de cada grupo, do mais ao menos importante; reordenação única feita pelo Claude (texto integral junto da MQ1).
 
+**AV4 — 30/10/2026, 13h41 Fortaleza:** Codex faz os passos 3–6 e 10–12 da AV1; Claude faz 7–9 (sem o 89, que está com o Codex) e depois o Grupo A; quem começa marca "em andamento" no item; ninguém mexe no PR do outro (texto integral na seção AV).
+
+Claude agendado — última rodada: 30/10/2026, 13h41 Fortaleza; fazendo agora: 307 [EC1]; últimos PRs: #1279, #1282, #1287, #1289.
+
 AV1/SD1 e Bloco de abertura (a)–(k) ficam na ordem vigente, inclusive custos(k),538[AB1] e448[LE1] em paralelo. Não se antecipam estudos ou recursos por causa desta classificação. Ficam na posição e no estado atuais todos os concluídos/publicados, andamentos (inclusive4,88,140,141,201,547,549),505[SG2] e registros59,60,336,464–477,494,495. As referências a547/549 são exceções expressas do pedido; suas linhas canônicas continuam literalmente “na fila”, sem convertê-las em andamento. A proteção de andamento também respeita a posição atualmente vigente: não ressuscita ordemOR já substituída porFIM1.
 
 ### Em seguida — o que AV1 já manda fazer logo depois da abertura
@@ -13707,6 +13711,42 @@ O que muda no [AV3]:
 - regra permanente a partir de agora: nada que seja bom para o cliente ou para o lucro é descartado, cancelado, absorvido ou apagado por não ser necessário agora; o que não for importante agora vai para o fim da fila, na ordem em que sair, preservando número, texto, histórico e provas.
 
 Proibido: apagar, cancelar, absorver ou fechar item, código, teste, prova ou histórico; renumerar itens existentes; ligar OPENING_REQUESTED, PLANS_ON_SALE ou qualquer recurso desligado; afrouxar qualquer trava ou teste; mudar preços, limites visíveis ou comissão; criar contas, abrir empresa, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+```
+
+
+### AV4 — Divisão do trabalho entre o Codex e o Claude (30/10/2026, 13h41 Fortaleza)
+
+Proveniência: pedido direto do dono na conversa com o Claude, 30/10/2026, 11h03, confirmado às 13h41 Fortaleza (com a ordem de o Claude trabalhar sem parar nas 24 horas seguintes); texto redigido pelo Claude e aprovado pelo dono; gravado diretamente pelo Claude para não interromper o Codex. Instrução de ordem, sem número novo; não muda a ordem interna de nenhum passo, nem número, grupo, linha da tabela do MQ1 ou estado de item. Pedidos repetidos: a etiqueta [AV4] não existia no main 3c2164696648f2e54e97c1aece382e0a2aef0964. No alto da fila ficam o aviso curto do AV4 e a linha de situação “Claude agendado — última rodada: …”, que o Claude atualiza em cada rodada. Texto do dono preservado integralmente abaixo.
+
+```text
+AV — Divisão do trabalho da AV1 entre o Codex e o Claude, sem conflito (30/10/2026) [AV4]
+
+Solicitação do dono (30/10/2026, 11h03, confirmada às 13h41, horário de Fortaleza).
+
+Pedidos repetidos: aplique a regra "Pedidos repetidos" de AGENTS.md. É instrução de ordem, sem número novo, registrada junto da AV1, do [AV3] e da [MQ2]; não muda a ordem interna de nenhum passo.
+
+Palavras do dono, reescritas em norma culta: o Claude deve trabalhar continuamente junto com o Codex nas coisas mais importantes, sem o dono precisar pedir, cuidando para não haver conflito. Às 13h41, o dono mandou o Claude trabalhar sem parar nas próximas 24 horas, escolhendo as coisas mais importantes.
+
+1. Divisão dos passos da AV1:
+- Codex: passos 3, 4, 5 e 6, depois 10, 11 e 12, na ordem gravada, com o [AV3].
+- Claude: passos 7, 8 e 9, na ordem gravada: 89 [C2-CAPACITY] (somente se o Codex não estiver com ele em andamento; hoje está, no ramo codex/capacity-precheck, então fica com o Codex) e 232 [CA1]; 305 [SY1], 306 [SY2], 307 [EC1], 91 [D2-EU-WITHDRAWAL] (pronto e desligado) e 98 [D2-COMPLIANCE-REVIEW]; 114 [E2-AFFILIATE-TAX-FORMS].
+O Claude trabalha por uma tarefa agendada que roda a cada hora, sem pedido do dono. Ao terminar a sua parte, o Claude segue para o próximo item ainda não iniciado do Grupo A, na ordem da [MQ2], que não esteja com o Codex nem dependa da parte dele.
+
+2. Sem conflito:
+- quem começa um item marca na fila, na linha do item, "em andamento pelo Codex" ou "em andamento pelo Claude", com a data, a hora e o ramo (codex/* ou claude/*), e retira a marca ao incorporar;
+- antes de começar, cada um confere os PRs abertos e os ramos recentes do outro; se um PR aberto do outro mexe nos mesmos arquivos, escolhe outra tarefa da sua parte ou espera a incorporação;
+- ninguém altera, refaz ou incorpora um PR do outro;
+- se um precisar de algo que está na parte do outro, registra o pedido na fila em vez de fazer.
+
+3. Linha de situação: no alto da fila, uma linha "Claude agendado — última rodada: [data e hora de Fortaleza]; fazendo agora: [item]; últimos PRs: [números]", atualizada pelo Claude em cada rodada.
+
+4. Mesmas regras para os dois: incorporar só com a suíte completa aprovada no head exato; o Claude faz revisão independente de cada item de código antes de incorporar; conferir a publicação; a anotação diária da AV2 lista o trabalho dos dois.
+
+REGRA DE MARGEM (MR, 27/10/2026): nenhum cliente pagante, considerado isoladamente e usando 100% de todos os direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto; a empresa como um todo não pode dar prejuízo no pior caso a partir da base mínima de clientes pagantes, com 100% dos custos fixos da LLC atribuídos ao Marktmorgen (FX275); a meta de 60% de margem líquida é medida todo mês com números reais. Impostos pela política TX vigente.
+
+Proibido: alterar, refazer ou incorporar o PR do outro; ligar OPENING_REQUESTED, PLANS_ON_SALE ou qualquer recurso desligado; afrouxar qualquer trava ou teste; apagar código, testes, provas ou histórico; mudar preços, limites visíveis ou comissão; criar contas, abrir empresa, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
 
 Aplicar a regra VR.
 ```
