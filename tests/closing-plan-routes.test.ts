@@ -14,6 +14,8 @@
  *   - a store that does not close being given the short checkout.
  */
 import { createHash } from "node:crypto";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { NextRequest } from "next/server";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
@@ -69,7 +71,7 @@ globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) =>
   if (path === "/invoices" && method === "GET") return json({ object: "list", data: world.invoices.filter((row) => row.subscription === url.searchParams.get("subscription")), has_more: false });
   const intent = path.match(/^\/payment_intents\/(pi_\w+)$/);
   if (intent) return json({ id: intent[1], latest_charge: { id: `ch_${intent[1].slice(3)}`, currency: "usd", amount: 6_900, amount_refunded: 0, disputed: false } });
-  if (path === "/refunds" && method === "GET") return json({ object: "list", data: world.refunds, has_more: false });
+  if (path === "/refunds" && method === "GET") return json({ object: "list", data: world.refunds.filter((row) => row.charge === url.searchParams.get("charge")), has_more: false });
   if (path === "/refunds" && method === "POST") {
     const refund = { id: `re_${String(world.refunds.length + 1).padStart(8, "0")}`, object: "refund", charge: `ch_${String(form.get("payment_intent")).slice(3)}`, payment_intent: form.get("payment_intent"), amount: Number(form.get("amount")), status: "succeeded", currency: "usd" };
     world.refunds.push(refund);
@@ -102,7 +104,8 @@ async function main() {
   part("The way back from a plan checkout finished on the closing day");
   const ana = await ended("ana");
   const day = realNow();
-  await redisPipeline([["ZADD", FINAL_INDEX, ana.endedAt, storeRef(ana.store)]]);
+  // In its closing day; its last plan ended a month before (the line's score is that end).
+  await redisPipeline([["ZADD", FINAL_INDEX, day - 30 * 86_400_000, storeRef(ana.store)]]);
   await markShut(ana.store, day);
   world.subs.set("sub_analate001", { id: "sub_analate001", status: "active", customer: "cus_ana0001", metadata: { store: "ana" }, created: S(day) - 600, items: { data: [] } });
   world.invoices.push({ id: "in_analate001", subscription: "sub_analate001", status: "paid", amount_paid: 6_900, payment_intent: "pi_analate001", created: S(day) - 600, status_transitions: { paid_at: S(day) + 60 } });
@@ -114,6 +117,13 @@ async function main() {
   is("and the creator is emailed once", sent.filter((m) => m.to === ana.email).length, 1);
   is("pressing back again changes nothing", [billingOf(await back(new NextRequest("https://marktmorgen.test/api/billing/return?session_id=cs_test_analate0001"))), world.refunds.length, sent.filter((m) => m.to === ana.email).length], ["closing-returned", 1, 1]);
   is("a new plan checkout on that day is refused, and Stripe is not asked", [billingOf(await checkout(plan())), world.opened.length], ["closing", 0]);
+  world.subs.set("sub_anaearly01", { id: "sub_anaearly01", status: "active", customer: "cus_ana0001", metadata: { store: "ana" }, created: S(day) - 600, items: { data: [] } });
+  world.invoices.push({ id: "in_anaearly01", subscription: "sub_anaearly01", status: "paid", amount_paid: 6_900, payment_intent: "pi_anaearly01", created: S(day) - 600, status_transitions: { paid_at: S(day) - 300 } });
+  world.sessions.set("cs_test_anaearly001", { id: "cs_test_anaearly001", mode: "subscription", status: "complete", customer: "cus_ana0001", subscription: "sub_anaearly01", metadata: { store: "ana" } });
+  is("one paid just before the day began, coming back after: refunded, and told it came too late to stop the closing", [billingOf(await back(new NextRequest("https://marktmorgen.test/api/billing/return?session_id=cs_test_anaearly001"))), world.refunds.filter((row) => row.payment_intent === "pi_anaearly01").length], ["closing-returned-early", 1]);
+  const studioPage = readFileSync(join(process.cwd(), "app/studio/page.tsx"), "utf8");
+  const notice = (key: string) => studioPage.slice(studioPage.indexOf(`"${key}": {`), studioPage.indexOf("},", studioPage.indexOf(`"${key}": {`)));
+  is("the studio says each truthfully", [notice("closing-returned").includes("paid for after your store's closing day began"), notice("closing-returned-early").includes("too late to stop"), notice("closing-returned-early").includes("after your store's closing day began")], [true, true, false]);
 
   part("In the closing period, a plan checkout lasts the shortest time Stripe allows");
   const ben = await ended("ben");
@@ -142,9 +152,10 @@ async function main() {
   part("A store whose plan has not ended is not touched");
   await claimHandle("cleo@example.com", "cleo", "Cleo Shop", "");
   signedIn.email = "cleo@example.com";
+  const refundsBefore = world.refunds.length;
   await checkout(plan());
   is("its checkout keeps the funding grant's hour", Number(world.opened.at(-1)?.get("expires_at")) >= S(realNow()) + 3_500, true);
-  is("nothing refunded or written for it", [world.refunds.length, sent.filter((m) => m.to === "cleo@example.com").length], [1, 0]);
+  is("nothing refunded or written for it", [world.refunds.length - refundsBefore, sent.filter((m) => m.to === "cleo@example.com").length], [0, 0]);
 
   done();
 }

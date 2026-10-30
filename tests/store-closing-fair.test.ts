@@ -47,6 +47,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { DigitalConsentBox } from "@/components/digital-consent-box";
 import { addProduct, setProductLink, setProductShipping } from "@/lib/store";
 import { readProduct } from "@/lib/catalog";
+import { PLAN_PRICES } from "@/lib/plan";
 import { parseShipping } from "@/lib/shipping";
 import { confirmationFor, offerConfirmationFor } from "@/lib/purchase-email";
 
@@ -94,6 +95,8 @@ const world = {
   charged: [] as { sub: string; at: number }[],
   failHolds: 0,
   writes: [] as { method: string; path: string; body: string }[],
+  /** Plans on our own account that Stripe's list shows at once and its search does not show yet (its index lags). */
+  plans: [] as Record<string, unknown>[],
 };
 
 const lengthOf = (sub: Sub) => (sub.metadata.yearly ? 365 : 30) * 86_400;
@@ -154,7 +157,13 @@ globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) =>
   if (method !== "GET") world.writes.push({ method, path, body: method === "DELETE" ? "DELETE" : String(init?.body ?? "") });
   // Our own account: the store's plan, which has ended.
   if (!account) {
+    const plan = world.plans.find((row) => path === `/subscriptions/${String(row.id)}`);
+    if (plan) return json(plan);
     if (path.startsWith("/subscriptions/")) return json({ id: path.split("/").pop(), status: "canceled", items: { data: [] } });
+    if (path === "/subscriptions" && method === "GET") {
+      const customer = url.searchParams.get("customer");
+      return json({ object: "list", data: world.plans.filter((row) => (row.customer as { id: string }).id === customer && (url.searchParams.get("status") === "all" || row.status !== "canceled")), has_more: false });
+    }
     return json({ object: "list", data: [], has_more: false });
   }
   if (path === "/subscriptions/search") {
@@ -585,6 +594,25 @@ async function main() {
   is("no \"it stays open\" is sent: what its buyers paid for has ended", sent.slice(nedBefore).filter((m) => m.subject.includes("staying open")).length, 0);
   const next = await closeOne(ned, N + (CLOSING_DAYS + 1) * DAY, hands, Number.POSITIVE_INFINITY);
   is("and the next day the closing is seen through", next.state, "removed");
+
+  part("A plan paid three minutes before the closing day, not in Stripe's search yet: the store is saved");
+  const nina = await storeWith("nina");
+  member("nina", "ninamonth", 1_000, S(Date.UTC(2027, 0, 30)));
+  clockAt(Date.UTC(2026, 10, 15, 13));
+  const Ni = await ended(nina);
+  console.error = () => {};
+  await daily(nina, Ni, 0, CLOSING_DAYS - 1);
+  console.error = real;
+  const ninaDay = (await closingOf((await storeForEmail(nina))!, Ni + (CLOSING_DAYS - 1) * DAY + 60_000))!.day;
+  const paidAt = S(ninaDay) - 180;
+  world.plans.push({ id: "sub_ninaplan02", object: "subscription", status: "active", created: paidAt, customer: { id: "cus_nina0001", email: nina }, metadata: { store: "nina", tier: "creator" }, cancel_at_period_end: false, items: { data: [{ quantity: 1, current_period_start: paidAt, current_period_end: paidAt + 30 * 86_400, price: { unit_amount: PLAN_PRICES.creator.month, currency: "usd", recurring: { interval: "month", interval_count: 1 } } }] } });
+  const ninaBefore = sent.length;
+  const ninaWrites = world.writes.length;
+  clockAt(ninaDay + 60_000);
+  const saved = await closeOne(nina, ninaDay + 60_000, hands, Number.POSITIVE_INFINITY);
+  is("the closing check reads Stripe's list by customer, so the plan keeps the store: it runs", [saved.state, (await storeForEmail(nina))?.subscriptionActive, (await storeForEmail(nina))?.subscriptionId], ["running", true, "sub_ninaplan02"]);
+  is("nothing is refunded, its memberships are not ended and no closing letter goes", [world.writes.slice(ninaWrites).filter((w) => w.path === "/refunds" || w.body === "DELETE").length, world.subs.get("sub_ninamonth")!.status, sent.slice(ninaBefore).filter((m) => m.to === nina).length], [0, "active", 0]);
+  world.plans.length = 0;
 
   part("A paid invoice with a proration: the membership's own line is what counts");
   world.refunds.length = 0;

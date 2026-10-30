@@ -555,9 +555,13 @@ const BILLING_NOTICES: Record<string, { title: string; body: string }> = {
     title: "Your store's closing day had begun, so your payment was returned",
     body: "The plan was paid for after your store's closing day began, so it could not keep the store. We ended the plan and returned the payment in full. Nothing else will be charged. We emailed you the same.",
   },
+  "closing-returned-early": {
+    title: "Your plan came too late to stop your store's closing, so your payment was returned",
+    body: "The plan went through just before your store's closing day began, too late to stop the closing, which had already started. So it could not keep the store. We ended the plan and returned the payment in full. Nothing else will be charged. We emailed you the same.",
+  },
   "closing-returning": {
-    title: "Your store's closing day had begun, so your payment is being returned",
-    body: "The plan was paid for after your store's closing day began, so it could not keep the store. We are ending the plan and returning the payment in full, and we email you once it is done. Nothing else will be charged.",
+    title: "Your plan came too late to keep your store, so your payment is being returned",
+    body: "The plan reached us too late to stop your store's closing, so it could not keep the store. We are ending the plan and returning the payment in full, and we email you once it is done. Nothing else will be charged.",
   },
   "closing-late": {
     title: "It is too late to start a plan for this store",

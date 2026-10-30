@@ -92,7 +92,7 @@ import { buyerPagesCap, forgetTold, tellBuyers, tellRefundShort } from "@/lib/cl
 import { giveBackUnused, unusedRows, unusedSummary } from "@/lib/closing-refunds";
 import { stillToGive, unusedOf, type PaidPeriod } from "@/lib/closing-buyers-rules";
 import { formatMoney } from "@/lib/money";
-import { CLOSING_CHECKOUT_SECONDS, expirePlanCheckouts, lastPlanMoment, markShut, refusePlanIfClosing } from "@/lib/closing-plan-guard";
+import { CLOSING_CHECKOUT_SECONDS, expirePlanCheckouts, lastPlanMoment, liveByCustomer, markShut, plansByCustomer, refusePlanIfClosing } from "@/lib/closing-plan-guard";
 
 export { CLOSING_DAYS, RECHECK_DAYS, WARN_MONTH_DAYS, WARN_WEEK_DAYS };
 
@@ -758,7 +758,9 @@ export async function closeOne(key: string, now = Date.now(), hands: Hands = HAN
         return { key, state: "running", note: "Stripe says the plan runs" };
       }
     }
-    live = (await findStoreSubscriptions(store)).live;
+    // Stripe's search can lag about a minute; its list by the store's customer does not, so a plan paid just
+    // before this check still keeps the store (the owner's decision: a plan started in time saves it).
+    live = (await findStoreSubscriptions(store)).live ?? (await liveByCustomer(store));
   } catch (error) {
     console.error("asking Stripe about an ended plan failed", error);
     return { key, state: "held", note: "Stripe could not be asked" };
@@ -868,11 +870,13 @@ async function refuseLatePlans(store: Store): Promise<void> {
   if (!isBillingConfigured()) return;
   try {
     const found = await findStoreSubscriptions(store);
-    const ids = [...new Set([...(found.live ? [found.live.subscriptionId] : []), ...found.lapsed])];
-    for (const id of ids) {
-      const customerId = found.live?.subscriptionId === id ? found.live.customerId : found.customerId ?? "";
-      await refusePlanIfClosing({ store, handle: store.handle, subscriptionId: id, customerId });
+    const ids = new Map<string, string>([...(found.live ? [[found.live.subscriptionId, found.live.customerId] as const] : []), ...found.lapsed.map((id) => [id, found.customerId ?? ""] as const)]);
+    // And what Stripe's list by customer shows already that its search may not yet.
+    for (const row of await plansByCustomer(store)) {
+      if (row.status === "canceled" || row.status === "incomplete_expired") continue;
+      if (!ids.has(String(row.id))) ids.set(String(row.id), store.stripeCustomerId ?? "");
     }
+    for (const [id, customerId] of ids) await refusePlanIfClosing({ store, handle: store.handle, subscriptionId: id, customerId });
   } catch (error) {
     console.error("looking for a plan paid for a closing store failed", error);
   }

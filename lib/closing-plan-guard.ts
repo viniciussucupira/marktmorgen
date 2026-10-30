@@ -36,7 +36,7 @@
  *                             (hashed), expiring by itself after SHUT_DAYS
  */
 import { createHash } from "node:crypto";
-import { BillingError, isBillingConfigured, onPlatform } from "@/lib/billing";
+import { BillingError, type StartedSubscription, isBillingConfigured, onPlatform, ownedBy, startedFromObservedSubscription } from "@/lib/billing";
 import { NIMBUS_FROM, isSenderConfigured, sendEmail } from "@/lib/email";
 import { SUPPORT_EMAIL } from "@/lib/creator-research";
 import { EMAIL_PATTERN, normaliseEmail } from "@/lib/auth";
@@ -95,6 +95,8 @@ export type Undo = {
   done?: number;
   /** The creator was told: never told twice, even when a refund is made again later. */
   t?: 1;
+  /** It was paid before the closing day began: it came too late to stop the closing, not after it began. */
+  e?: 1;
 };
 
 /** Stripe: a refund can fail up to 30 days after it was asked for (docs.stripe.com/refunds, "Handle failed refunds", read 30/10/2026). A settled one is looked at again until then, and a little after. */
@@ -104,6 +106,38 @@ const shutKey = (handle: string) => `${SHUT_PREFIX}${createHash("sha256").update
 
 /** When a store's closing day began and when the plan before it ended (ms; 0 when not known). */
 export type ClosingTimes = { since: number; ended: number };
+
+/**
+ * The store's plan subscriptions on our account, read from Stripe's list by
+ * the store's customer: unlike its search, whose index can lag about a
+ * minute, the list shows one made a moment ago. GET /v1/subscriptions takes
+ * `customer`, `status` ("all": every status, canceled ones too) and `limit`
+ * up to 100 (docs.stripe.com/api/subscriptions/list, read 30/10/2026). Only
+ * those that name one of the store's addresses and are its own.
+ */
+export async function plansByCustomer(store: Store): Promise<Record<string, unknown>[]> {
+  const customer = store.stripeCustomerId;
+  if (!customer || !CUSTOMER_PATTERN.test(customer) || !isBillingConfigured()) return [];
+  const query = new URLSearchParams({ customer, status: "all", limit: "100" });
+  query.append("expand[]", "data.customer");
+  const page = await onPlatform("GET", `/subscriptions?${query}`);
+  const handles = saleHandles(store);
+  return (Array.isArray(page.data) ? (page.data as Record<string, unknown>[]) : [])
+    .filter((row) => {
+      const meta = row.metadata as Record<string, string> | null | undefined;
+      return typeof row.id === "string" && SUBSCRIPTION_PATTERN.test(row.id) && typeof meta?.store === "string" && handles.has(meta.store) && ownedBy(store, row);
+    })
+    .sort((a, b) => (Number(b.created) || 0) - (Number(a.created) || 0));
+}
+
+/** A plan of the store in good standing that Stripe's list shows: what keeps a closing store when its search has not caught up yet. */
+export async function liveByCustomer(store: Store): Promise<StartedSubscription | null> {
+  for (const row of await plansByCustomer(store)) {
+    const started = await startedFromObservedSubscription(store, row);
+    if (started) return started;
+  }
+  return null;
+}
 
 /**
  * Marks every address a closing store sells under, from its closing day's
@@ -146,7 +180,8 @@ export async function closingSince(store: Store): Promise<ClosingTimes | null> {
   return { since: marked?.since ?? ended, ended };
 }
 
-export type Refused = "no" | "returned" | "returning";
+/** "returned-early": returned, and it had been paid just before the closing day began (too late to stop it). */
+export type Refused = "no" | "returned" | "returned-early" | "returning";
 
 /**
  * Whether this plan subscription belongs to a store in its closing day (or,
@@ -171,7 +206,9 @@ export async function refusePlanIfClosing(input: { store: Store | null; handle: 
   };
   // In line first: whatever fails after this is tried again by the closing job.
   await redisPipeline([["HSETNX", UNDO_KEY, input.subscriptionId, JSON.stringify(entry)]]);
-  return (await settleOne(input.subscriptionId)) ? "returned" : "returning";
+  if (!(await settleOne(input.subscriptionId))) return "returning";
+  const [raw] = await redisPipeline([["HGET", UNDO_KEY, input.subscriptionId]]);
+  return readUndo(raw)?.e ? "returned-early" : "returned";
 }
 
 /**
@@ -259,6 +296,7 @@ function readUndo(raw: unknown): Undo | null {
       n: typeof value.n === "number" ? value.n : 0,
       ...(typeof value.done === "number" ? { done: value.done } : {}),
       ...(value.t === 1 ? { t: 1 as const } : {}),
+      ...(value.e === 1 ? { e: 1 as const } : {}),
     };
   } catch {
     return null;
@@ -370,6 +408,7 @@ export async function settleOne(id: string, recheck = false): Promise<boolean> {
       // Paid before the closing day began: a payment for a plan the store had, not this one.
       if (Math.max(paidAt, created) * 1000 < cutoff) continue;
       const outcome = await giveBack(id, invoice);
+      if (paidAt > 0 && paidAt * 1000 < entry.since && (outcome.returned > 0 || outcome.disputed > 0)) entry.e = 1;
       returned += outcome.returned;
       disputed += outcome.disputed;
       if (outcome.currency) currency = outcome.currency;
@@ -387,7 +426,7 @@ export async function settleOne(id: string, recheck = false): Promise<boolean> {
       await redisPipeline([["HSET", UNDO_KEY, id, JSON.stringify(entry)]]);
     }
     // Settled: only its dates are kept, for a retry or a recheck to find (no address, no customer, no name).
-    await redisPipeline([["HSET", UNDO_KEY, id, JSON.stringify({ h: "", c: "", to: "", name: "", since: entry.since, ...(entry.ended ? { ended: entry.ended } : {}), at: entry.at, n: entry.n, done: Date.now(), t: 1 })]]);
+    await redisPipeline([["HSET", UNDO_KEY, id, JSON.stringify({ h: "", c: "", to: "", name: "", since: entry.since, ...(entry.ended ? { ended: entry.ended } : {}), at: entry.at, n: entry.n, done: Date.now(), t: 1, ...(entry.e ? { e: 1 } : {}) })]]);
     return true;
   } catch (error) {
     return keep("Stripe did not answer", error);
@@ -395,11 +434,13 @@ export async function settleOne(id: string, recheck = false): Promise<boolean> {
 }
 
 /** The letter to the creator: what happened, honestly, and that nothing more is charged. */
-export function planReturnedLetter(name: string, returned: number, disputed: number, currency: string): { subject: string; text: string } {
+export function planReturnedLetter(name: string, returned: number, disputed: number, currency: string, early = false): { subject: string; text: string } {
   const store = name || "your store";
   const money = (cents: number) => formatMoney(cents, currency.toUpperCase());
   const lines = [
-    `Your store ${store} had already begun closing on Marktmorgen when this plan went through, so the plan could not be given.`,
+    early
+      ? `Your plan for ${store} went through just before its closing day began on Marktmorgen, too late to stop the closing, which had already started. So the plan could not keep the store.`
+      : `Your store ${store} had already begun closing on Marktmorgen when this plan went through, so the plan could not be given.`,
     "",
     "We ended that plan at once.",
   ];
@@ -423,7 +464,7 @@ async function tell(id: string, entry: Undo, returned: number, disputed: number,
     return true;
   }
   if (!isSenderConfigured()) return false;
-  const { subject, text } = planReturnedLetter(entry.name, returned, disputed, currency);
+  const { subject, text } = planReturnedLetter(entry.name, returned, disputed, currency, entry.e === 1);
   return sendEmail({ meter: { by: "company" }, from: NIMBUS_FROM, to: address, replyTo: SUPPORT_EMAIL, subject, text, idempotencyKey: `closing-plan-told:${id}` }).catch((error) => {
     console.error("telling a creator their plan payment was returned failed", error);
     return false;

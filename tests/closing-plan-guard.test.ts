@@ -224,6 +224,20 @@ async function main() {
   const doraBefore = sent.filter((m) => m.to === dora.email).length;
   await refusePlanIfClosing({ store: (await storeForEmail(dora.email))!, handle: "dora", subscriptionId: "sub_doralate02", customerId: dora.customer });
   is("a plan started after the last one ended is refunded whatever minute it was paid, and its creator told", [world.subs.get("sub_doralate02")?.status, refundsOf("pi_doralate02").map((row) => row.amount), sent.filter((m) => m.to === dora.email).length - doraBefore], ["canceled", [6_900], 1]);
+  const doraLetter = sent.filter((m) => m.to === dora.email).at(-1)?.text ?? "";
+  is("its letter says truthfully it came too late to stop the closing, not that it was paid once the day had begun", [doraLetter.includes("too late to stop"), doraLetter.includes("could not be given"), doraLetter.includes("$69 in full")], [true, false, true]);
+  const rosaLetter = sent.find((m) => m.to === rosa.email)?.text ?? "";
+  is("a plan paid once the day had begun keeps its own words", [rosaLetter.includes("had already begun closing on Marktmorgen when this plan went through, so the plan could not be given"), rosaLetter.includes("too late to stop")], [true, false]);
+
+  part("A store already deleted, its plan found by the daily sync: one started after its last plan ended is refunded, never taken for its old one");
+  const goneTwo = { handle: "gone-two", previousHandles: [], releasedHandles: [] };
+  await markShut(goneTwo, day, day - 30 * 86_400_000);
+  world.customers.set("cus_gonetwo01", "gonetwo@example.com");
+  world.subs.set("sub_gonetwo001", { id: "sub_gonetwo001", status: "active", customer: "cus_gonetwo01", metadata: { store: "gone-two" }, created: S(day) - 10 * 86_400 });
+  world.invoices.push({ id: "in_gonetwo001", subscription: "sub_gonetwo001", status: "paid", amount_paid: 6_900, payment_intent: "pi_gonetwo001", created: S(day) - 10 * 86_400, paid_at: S(day) - 10 * 86_400 });
+  world.charges.set("pi_gonetwo001", { amount: 6_900, disputed: false });
+  await refusePlanIfClosing({ store: null, handle: "gone-two", subscriptionId: "sub_gonetwo001", customerId: "cus_gonetwo01" });
+  is("refunded in full and its creator told, from the end of its last plan kept with the address's mark", [world.subs.get("sub_gonetwo001")?.status, refundsOf("pi_gonetwo001").map((row) => row.amount), sent.filter((m) => m.to === "gonetwo@example.com").length], ["canceled", [6_900], 1]);
 
   part("The letter is marked sent as soon as it goes: a write that fails after it, and a retry days later, never send a second");
   const ezra = await closingStore("ezra", day);
