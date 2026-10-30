@@ -42,6 +42,14 @@ export const TRIAL_FLOOR_SECONDS = 7 * DAY;
  */
 export const YEAR_NOTICE_DAYS = 30;
 
+/** The end of one full billing period that starts at `at` (calendar, UTC). */
+export function fullPeriodAfter(at: number, cycle: Cycle): number {
+  const date = new Date(at * 1000);
+  if (cycle === "year") date.setUTCFullYear(date.getUTCFullYear() + 1);
+  else date.setUTCMonth(date.getUTCMonth() + 1);
+  return Math.floor(date.getTime() / 1000);
+}
+
 /** Whole UTC calendar days from the day of `now` to the day of `at`. */
 export function calendarDaysBefore(at: number, now: number): number {
   return Math.floor(at / DAY) - Math.floor(now / DAY);
@@ -160,11 +168,17 @@ function noticeFor(subscription: Record<string, unknown>, nowSeconds: number, to
   const at = periodEnd(subscription, trialing);
   const left = at - nowSeconds;
   if (!at || (!tooLate && left <= TOO_LATE_SECONDS)) return null;
-  // Set to stop on or before this charge: nothing will be charged, so there
-  // is nothing to warn of. One set to stop later still charges this renewal.
-  if (typeof subscription.cancel_at === "number" && subscription.cancel_at > 0 && subscription.cancel_at <= at) return null;
   const plan = planOf(subscription);
   if (!plan.amountCents) return null;
+  // A cancellation already scheduled. On or before this charge: nothing will
+  // be charged, so there is nothing to warn of. At least a full period after
+  // it: this charge is the full price for a full period, which the email
+  // says. In between, Stripe prorates the last period (API reference,
+  // cancel_at), so the email's amount and "another year" would be untrue:
+  // nothing is sent, and the gap is recorded (queue 414 [KX1], G17).
+  if (typeof subscription.cancel_at === "number" && subscription.cancel_at > 0) {
+    if (subscription.cancel_at < fullPeriodAfter(at, plan.cycle)) return null;
+  }
 
   if (trialing) {
     return left <= TRIAL_NOTICE_SECONDS

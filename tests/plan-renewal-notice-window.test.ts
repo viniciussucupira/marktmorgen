@@ -71,8 +71,13 @@ is("a yearly notice found 12 hours before the charge is not sent", dueReminder(s
 const miss = missedReminder(sub("year", 12 * 3600), NOW);
 is("but it is reported as missed", [miss?.kind, miss?.late], ["renewal", true]);
 is("a charge 10 days away is not missed", missedReminder(sub("year", 10 * DAY), NOW), null);
-const laterCancel = { ...sub("year", charge(30, 5)), cancel_at: NOW + 400 * DAY };
-is("cancellation set after the renewal: the renewal is still noticed", dueReminder(laterCancel, NOW)?.kind, "renewal");
+const renewsAt = NOW + charge(30, 5);
+const fullYearCancel = { ...sub("year", charge(30, 5)), cancel_at: renewsAt + 366 * DAY };
+is("cancellation a full year after the renewal: the full renewal is noticed", dueReminder(fullYearCancel, NOW)?.kind, "renewal");
+const partCancel = { ...sub("year", charge(30, 5)), cancel_at: renewsAt + 200 * DAY };
+is("cancellation inside the renewed year (prorated by Stripe): no full-price notice", dueReminder(partCancel, NOW), null);
+const atCharge = { ...sub("year", charge(30, 5)), cancel_at: renewsAt };
+is("cancellation at the charge itself: no notice", dueReminder(atCharge, NOW), null);
 const sooner = { ...sub("year", charge(30, 5)), cancel_at: NOW + 10 * DAY };
 is("cancellation set before the renewal: no notice", dueReminder(sooner, NOW), null);
 
