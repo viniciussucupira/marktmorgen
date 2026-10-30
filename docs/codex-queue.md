@@ -16089,6 +16089,12 @@ Aplicar a regra VR.
 
 **Resposta posterior do dono nesta conversa:** “Manter Grupo B atual”. A posiçãoBcanônica prevalece sobre mençãoGrupoA dos textos literais acima;semqualqueroutrodeltadeposição/estado.
 
+**Complemento [AX3] — 30/10/2026, 01h25 Fortaleza (pedido direto do dono na conversa com o Claude, aprovado com "envia"; gravado pelo Claude):**
+
+> Acessibilidade (AX274, Parte A, integral): máxima acessibilidade em tudo o que este item criar ou alterar — WCAG 2.2 nível AAA em todos os critérios aplicáveis, em todas as telas, estados, e-mails e arquivos, mais as demais normas e orientações da Parte A; a impossibilidade de um critério AAA precisa ser demonstrada e registrada em docs/accessibility-programme.md, nunca presumida. Os pontos citados no trecho 'Acessibilidade' deste item são verificações obrigatórias, não o limite do que se exige.
+
+Texto integral do pedido [AX3] no 555 [AK1]. Nada mais muda neste item: número, posição, estado, custo, REGRA DE MARGEM e proibições continuam iguais.
+
 
 517 [PF5] Assinatura de produto físico (caixa mensal).
 Estado inicial: na fila.
@@ -17884,6 +17890,28 @@ Aplicar a regra VR.
 
 **Contexto recebido, sem tratá-lo como pesquisa independente:** dono cita a página pública clickfunnels.com/apps/affiliate-center, lida em 29/10/2026, e os textos “instant visibility into referrals, commissions, and future payouts” e “track referral effectiveness”, com ativos, vendas e comissões no topo. O pedido é complementar o resumo no estúdio, não copiar números ou promessas do fornecedor.
 
+**Complemento [AX3] — 30/10/2026, 01h25 Fortaleza (pedido direto do dono na conversa com o Claude, aprovado com "envia"; gravado pelo Claude):**
+
+> Acessibilidade (AX274, Parte A, integral): máxima acessibilidade em tudo o que este item criar ou alterar — WCAG 2.2 nível AAA em todos os critérios aplicáveis, em todas as telas, estados, e-mails e arquivos, mais as demais normas e orientações da Parte A; a impossibilidade de um critério AAA precisa ser demonstrada e registrada em docs/accessibility-programme.md, nunca presumida. Os pontos citados no trecho 'Acessibilidade' deste item são verificações obrigatórias, não o limite do que se exige.
+
+Texto integral do pedido [AX3], preservado aqui como proveniência (único registro integral; os demais itens apontam para este):
+
+```text
+AX — Esclarecimento de acessibilidade nos itens gravados em 29 e 30/10/2026 (30/10/2026) [AX3]
+
+Solicitação do dono (30/10/2026, 01h25, horário de Fortaleza).
+
+Pedidos repetidos: aplique a regra "Pedidos repetidos" de AGENTS.md. Este registro não cria item de trabalho novo: acrescenta a mesma nota de proveniência dentro de cada item listado abaixo, mantendo o número, a posição, o estado e todo o texto já gravado (passo 3, letra b).
+
+Itens: 555 [AK1] (com AK2), 556 [CT1], 557 [BG1] (com BG2, BG3 e BG4), 558 [LK1] (com LK2), o complemento [PF9] dentro de 516 [PF4], 559 [CM3] e 560 [AS1].
+
+Nota a acrescentar em cada um: "Acessibilidade (AX274, Parte A, integral): máxima acessibilidade em tudo o que este item criar ou alterar — WCAG 2.2 nível AAA em todos os critérios aplicáveis, em todas as telas, estados, e-mails e arquivos, mais as demais normas e orientações da Parte A; a impossibilidade de um critério AAA precisa ser demonstrada e registrada em docs/accessibility-programme.md, nunca presumida. Os pontos citados no trecho 'Acessibilidade' deste item são verificações obrigatórias, não o limite do que se exige."
+
+Nada mais muda nesses itens: custo, REGRA DE MARGEM, proibições, posição e estado continuam iguais. Proibido instalar overlay de acessibilidade ou declarar conformidade sem auditoria.
+
+Aplicar a regra VR.
+```
+
 
 ## 556 [CT1] — Ofertas de um clique depois de pagar pelo carrinho
 
@@ -17932,6 +17960,12 @@ Proibido: mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_S
 
 Aplicar a regra VR.
 ```
+
+**Complemento [AX3] — 30/10/2026, 01h25 Fortaleza (pedido direto do dono na conversa com o Claude, aprovado com "envia"; gravado pelo Claude):**
+
+> Acessibilidade (AX274, Parte A, integral): máxima acessibilidade em tudo o que este item criar ou alterar — WCAG 2.2 nível AAA em todos os critérios aplicáveis, em todas as telas, estados, e-mails e arquivos, mais as demais normas e orientações da Parte A; a impossibilidade de um critério AAA precisa ser demonstrada e registrada em docs/accessibility-programme.md, nunca presumida. Os pontos citados no trecho 'Acessibilidade' deste item são verificações obrigatórias, não o limite do que se exige.
+
+Texto integral do pedido [AX3] no 555 [AK1]. Nada mais muda neste item: número, posição, estado, custo, REGRA DE MARGEM e proibições continuam iguais.
 
 
 ## 557 [BG1] — Blog das lojas: categorias, agendamento, busca, autor e formulário
@@ -18095,6 +18129,12 @@ Proibido: mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_S
 Aplicar a regra VR.
 ```
 
+**Complemento [AX3] — 30/10/2026, 01h25 Fortaleza (pedido direto do dono na conversa com o Claude, aprovado com "envia"; gravado pelo Claude):**
+
+> Acessibilidade (AX274, Parte A, integral): máxima acessibilidade em tudo o que este item criar ou alterar — WCAG 2.2 nível AAA em todos os critérios aplicáveis, em todas as telas, estados, e-mails e arquivos, mais as demais normas e orientações da Parte A; a impossibilidade de um critério AAA precisa ser demonstrada e registrada em docs/accessibility-programme.md, nunca presumida. Os pontos citados no trecho 'Acessibilidade' deste item são verificações obrigatórias, não o limite do que se exige.
+
+Texto integral do pedido [AX3] no 555 [AK1]. Nada mais muda neste item: número, posição, estado, custo, REGRA DE MARGEM e proibições continuam iguais.
+
 
 ## 558 [LK1] — Estilo da loja: formato dos botões, cantos e logotipo
 
@@ -18209,6 +18249,12 @@ Todo o restante do [LK1] continua igual, inclusive custo, REGRA DE MARGEM, acess
 Aplicar a regra VR.
 ```
 
+**Complemento [AX3] — 30/10/2026, 01h25 Fortaleza (pedido direto do dono na conversa com o Claude, aprovado com "envia"; gravado pelo Claude):**
+
+> Acessibilidade (AX274, Parte A, integral): máxima acessibilidade em tudo o que este item criar ou alterar — WCAG 2.2 nível AAA em todos os critérios aplicáveis, em todas as telas, estados, e-mails e arquivos, mais as demais normas e orientações da Parte A; a impossibilidade de um critério AAA precisa ser demonstrada e registrada em docs/accessibility-programme.md, nunca presumida. Os pontos citados no trecho 'Acessibilidade' deste item são verificações obrigatórias, não o limite do que se exige.
+
+Texto integral do pedido [AX3] no 555 [AK1]. Nada mais muda neste item: número, posição, estado, custo, REGRA DE MARGEM e proibições continuam iguais.
+
 
 ### AB(a) — ACK próprio da janela real de recursos pagos — 29/10/2026
 
@@ -18284,6 +18330,12 @@ Proibido: mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_S
 Aplicar a regra VR.
 ```
 
+**Complemento [AX3] — 30/10/2026, 01h25 Fortaleza (pedido direto do dono na conversa com o Claude, aprovado com "envia"; gravado pelo Claude):**
+
+> Acessibilidade (AX274, Parte A, integral): máxima acessibilidade em tudo o que este item criar ou alterar — WCAG 2.2 nível AAA em todos os critérios aplicáveis, em todas as telas, estados, e-mails e arquivos, mais as demais normas e orientações da Parte A; a impossibilidade de um critério AAA precisa ser demonstrada e registrada em docs/accessibility-programme.md, nunca presumida. Os pontos citados no trecho 'Acessibilidade' deste item são verificações obrigatórias, não o limite do que se exige.
+
+Texto integral do pedido [AX3] no 555 [AK1]. Nada mais muda neste item: número, posição, estado, custo, REGRA DE MARGEM e proibições continuam iguais.
+
 
 ## 560 [AS1] — Próximo passo dentro do curso e progresso na lista de compras
 
@@ -18324,3 +18376,9 @@ Proibido: mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_S
 
 Aplicar a regra VR.
 ```
+
+**Complemento [AX3] — 30/10/2026, 01h25 Fortaleza (pedido direto do dono na conversa com o Claude, aprovado com "envia"; gravado pelo Claude):**
+
+> Acessibilidade (AX274, Parte A, integral): máxima acessibilidade em tudo o que este item criar ou alterar — WCAG 2.2 nível AAA em todos os critérios aplicáveis, em todas as telas, estados, e-mails e arquivos, mais as demais normas e orientações da Parte A; a impossibilidade de um critério AAA precisa ser demonstrada e registrada em docs/accessibility-programme.md, nunca presumida. Os pontos citados no trecho 'Acessibilidade' deste item são verificações obrigatórias, não o limite do que se exige.
+
+Texto integral do pedido [AX3] no 555 [AK1]. Nada mais muda neste item: número, posição, estado, custo, REGRA DE MARGEM e proibições continuam iguais.
