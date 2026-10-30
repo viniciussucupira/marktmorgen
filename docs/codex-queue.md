@@ -16010,6 +16010,76 @@ Estado inicial: na fila.
 O que fazer: estude com data a API oficial e os termos do Shippo. Ligue a conta do próprio criador (chave dele, guardada com a mesma proteção dos demais tokens). No pedido físico, o botão "Buy label" mostra as tarifas; o criador escolhe uma, a etiqueta é comprada na conta dele e o rastreio preenche sozinho o "Mark as shipped". O Shippo cobra o criador diretamente; o Marktmorgen nunca paga nem adianta valores. Se a chamada falhar, nada é comprado em dobro e o estúdio diz o que aconteceu.
 Testes automáticos, com Shippo simulado: compra, falha, repetição sem compra em dobro e rastreio preenchido.
 
+
+### Complemento PF9 dentro do516[PF4] — peso, medidas e alfândega
+
+**Estado/número/posição:** mesmo516[PF4],nafila,**Grupo B abaixo do marcoMQ1**,semnovonúmero. O dono confirmou nesta conversa **“Manter Grupo B atual”** ao ser informado de que a tabelaMQ1marca516B. Essa resposta resolve somente a menção“acimadomarco/GrupoA”nos textos00h43/00h46; todoorestantedocomplementoépreservado. Não mover516nemoutrositens/Blocodeabertura.
+
+**Proveniência/Pedidos repetidos3b:** pedido30/10/2026,00h43Fortaleza chegou cometiquetaPF8;correçãoexpressa00h46determina**PF9**,no mesmo516. Ainda não gravado antesda correção;gravadosjuntos neste registro. PF8originalpertenceàposição206[SH3]e permaneceintegralmenteintacto,nãotratarcomorepetição. Conferidos main1d5d003de87dd76aec8e782cc3b97a04892a8385,2PRsabertos,24headsrecentes e798refs codex/* por data/hora/título/etiqueta/conteúdo,semcomplementopesoalfândegaPF9prévio. Nova recepção somenteproveniência.
+
+**Código atual conferido:** lib/shipping.ts(8.162caracteres),components/shipping-editor.tsx(8.992),lib/stock.ts(7.734),integralmente no mainexato. Shipping/editor têmfrete/região/países/nota/SKU e não têmWeight/Package size/Country of manufacture/Customs description/HScode;stockcontinualeituraestritareservaantescheckout,nãopermitirvendaacimaestoque. Ausêncialimitadaaessasentradas,revalidarheadnaimplementação. NãoalegarShippojáintegrado. FerramentaoficialHScode/API/termosShippo serãoconferidoscomdataNAEXECUÇÃO,dentro516,nãocriarconta/aceitartermos/contatar/comprar para conferir.
+
+**Critérios adicionais516:** peso g/kg/oz/lb e dimensõescm/in noproduto/opção quando necessário,paísdefabricaçãodaseleção e descriçãoaduaneiracurta,HScodeopcionalcomlinkoficialdatado. Sem peso/medidas ocultarBuylabel e explicar faltante;fretefixo515continua semessesdados. Internacionaismontamdeclaraçãocomcampos+valorpedido,mostramantesconfirmação e somenteenviam/compramcomconfirmaçãoexplícitadocriador;guardar idempotência/falhas/rastreiodo516. Shipposimulado:nacional/internacionalcomdeclaração/faltantes/conversões/opçãopesopróprio. Nãoalterarestoque/libstock,nemadicionarContinue selling when out of stock.
+
+**AX274/custos/proibições:** rótulos/unidadesanunciadas,errotextualjunto/prevençãoantesconfirmar/teclado7:1/320px/400%,AcessibilidadePRantes/depois. Camposcurtos eShipponacontadocriador,cobradodiretamentedele;Marktmorgennuncapaga/adiantafrete. TodaIOprópria(calls/read/write/storage/email)exigepiorM/Ydos6contratos100%direitos+addons,tetos/reservasANTESgasto,recebimentomaiscaro/reembolsodisputa/TX/FX275100%fixos/base mínima;60%metamensalreal.MR/VRincólumes,desconhecidonãozero. Nãoalterarpreços/limites/comissão/flagsfalse/taxgate/art9a/revisãocomercial/travas/conteúdo/Hazelsong;semconta/termos/contratação/pagamento/contatoterceiros,inclusiveShippo. Somentetestessintéticos. Registrodocumentalnãoimplementa/certificamargem/contaentrega.
+
+### Texto integral00h43, somente etiqueta corrigidaPF8→PF9 por00h46
+
+```text
+PF — Complemento ao 516 [PF4]: peso e dados de alfândega do produto físico (30/10/2026) [PF9]
+
+Solicitação do dono (30/10/2026, 00h43, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: aplique a regra "Pedidos repetidos" de AGENTS.md. Este é um complemento ao item 516 [PF4] ("Etiqueta de envio pela conta Shippo do próprio criador"), já gravado: aplique somente esta diferença DENTRO do item 516, mantendo o número, a posição e o estado dele (passo 3, letra b), e registre na proveniência o que mudou. Se a etiqueta [PF9] já estiver gravada com este conteúdo, registre apenas a nova recepção.
+
+Estado inicial: o do próprio 516 [PF4], acima do marco (MQ1, Grupo A).
+
+Contexto: a página pública clickfunnels.com/features/store-funnels (lida em 30/10/2026) mostra, no produto físico, os campos de peso e de país de fabricação ("Weight" e "Country of manufacture"). No Marktmorgen, o produto físico (lib/shipping.ts, components/shipping-editor.tsx) tem valor de frete, região, países, observação e SKU, mas não tem peso, medidas nem dados de alfândega. O Shippo do 516 [PF4] precisa do peso e das medidas para mostrar as tarifas e comprar a etiqueta, e o envio para outro país exige declaração de alfândega. Verifique antes no código atual que isso continua assim.
+
+O que acrescentar ao 516 [PF4]:
+- no produto físico (e em cada opção dele, quando o peso mudar), os campos "Weight" com unidade (g, kg, oz ou lb), "Package size" (comprimento, largura e altura, em cm ou in), "Country of manufacture" (lista de países) e "Customs description" (texto curto do que é o produto); opcional "HS code" (código tarifário), com um link para a ferramenta oficial de busca do código, conferida com data na execução;
+- sem peso e medidas, o botão "Buy label" não aparece e o estúdio diz em uma frase o que falta; o frete fixo do 515 [PF3] continua funcionando sem esses campos;
+- para envio a outro país, a declaração de alfândega é montada a partir desses campos e do valor do pedido, enviada ao Shippo na compra da etiqueta e mostrada ao criador antes de ele confirmar; nada é comprado sem a confirmação dele;
+- não acrescentar "Continue selling when out of stock": o estoque de lib/stock.ts continua nunca vendendo uma unidade a mais.
+
+Testes automáticos, com Shippo simulado: etiqueta nacional, etiqueta internacional com declaração de alfândega, falta de peso ou medidas, conversão de unidades e opção com peso próprio.
+
+Acessibilidade (AX274): campos com rótulo visível e unidade anunciada; erros em texto ao lado do campo; prevenção de erro antes de confirmar a etiqueta; teclado, contraste de 7:1, 320 px e 400% de zoom. Seção "Acessibilidade" no PR, com os passos e as decisões da tarefa principal antes e depois.
+
+Custo: campos curtos no registro do produto e chamadas ao Shippo do próprio criador, que o Shippo cobra diretamente dele; o Marktmorgen nunca paga nem adianta valores. Calcule o pior caso mensal e anual de cada plano com 100% dos direitos usados e aplique teto automático antes de qualquer gasto próprio. Custo desconhecido reprova, nunca é zero.
+
+REGRA DE MARGEM (MR, 27/10/2026): nenhum cliente pagante, considerado isoladamente e usando 100% de todos os direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto; a empresa como um todo não pode dar prejuízo no pior caso a partir da base mínima de clientes pagantes, com 100% dos custos fixos da LLC atribuídos ao Marktmorgen (FX275); a meta de 60% de margem líquida é medida todo mês com números reais. Impostos pela política TX vigente.
+
+Proibido: mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; vender acima do estoque; comprar etiqueta sem confirmação do criador; o Marktmorgen pagar ou adiantar frete; criar contas, aceitar termos, contratar, pagar ou contatar terceiros, inclusive o Shippo; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+```
+
+### Correção literal00h46 e proveniência da etiqueta
+
+```text
+PF — Correção da etiqueta: o complemento do peso e da alfândega é [PF9], não [PF8] (30/10/2026) [PF9]
+
+Solicitação do dono (30/10/2026, 00h46, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: o texto "PF — Complemento ao 516 [PF4]: peso e dados de alfândega do produto físico (30/10/2026) [PF8]", solicitação de 30/10/2026, 00h43, usou por engano a etiqueta [PF8], que já pertence a outro pedido da seção PF (a volta de 206 [SH3], impressão sob demanda, para perto da frente da fila). Não são o mesmo pedido: não trate o texto das 00h43 como repetição do [PF8] existente, não altere nada do [PF8] existente nem do 206 [SH3], e não pare o trabalho por causa da divergência.
+
+O que fazer: grave o conteúdo integral do texto das 00h43 como complemento DENTRO do item 516 [PF4], com a etiqueta [PF9] no lugar de [PF8], mantendo o número, a posição e o estado do 516 (passo 3, letra b). Na proveniência, registre que a etiqueta enviada às 00h43 foi corrigida para [PF9] por esta solicitação das 00h46. Se o texto das 00h43 já tiver sido gravado com [PF8], troque nesse registro somente a etiqueta para [PF9], sem mudar o conteúdo nem a posição.
+
+Estado inicial: o do próprio 516 [PF4], acima do marco (MQ1, Grupo A).
+
+Todo o restante do texto das 00h43 continua igual, inclusive custo, REGRA DE MARGEM, acessibilidade e proibições.
+
+Aplicar a regra VR.
+```
+
+**Resposta posterior do dono nesta conversa:** “Manter Grupo B atual”. A posiçãoBcanônica prevalece sobre mençãoGrupoA dos textos literais acima;semqualqueroutrodeltadeposição/estado.
+
+
 517 [PF5] Assinatura de produto físico (caixa mensal).
 Estado inicial: na fila.
 O que fazer: o criador vende uma assinatura que envia um produto físico a cada período (mês, trimestre ou ano), cobrada na conta Stripe dele. A cada cobrança paga, um pedido de envio aparece no estúdio com o endereço atual. O assinante troca o endereço, pula um envio ou cancela sozinho, sem falar com ninguém; o cancelamento vale antes da próxima cobrança. O estoque de cada envio é reservado antes da cobrança; sem estoque, a cobrança não acontece e o criador e o assinante são avisados.
