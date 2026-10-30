@@ -18780,3 +18780,39 @@ Proibido: criar item novo ou mudar número, posição ou estado do 564; data inv
 
 Aplicar a regra VR.
 ```
+
+### Segundo complemento ao 564 [HC1] — 30/10/2026, 10h00 Fortaleza
+
+Proveniência: pedido direto do dono na conversa com o Claude, 30/10/2026, 10h00 Fortaleza; texto redigido pelo Claude e aprovado pelo dono; gravado diretamente pelo Claude para não interromper o Codex. Pedidos repetidos passo3(b): conferido no main 376ffd89d19a53f7503bc048c9d286858d90295b que não havia complemento HC1 de 30/10/2026, 10h00; somente a diferença abaixo foi acrescentada, e o 564 [HC1] mantém número, posição (Grupo B, abaixo do marco MQ1) e estado. Conferência limitada no mesmo main: app/help tem page.tsx (uma única página) e a subpasta zoom, sem rotas /help/[área] nem /help/[área]/[resposta]; revalidar no head de implementação. Texto do dono preservado integralmente abaixo.
+
+```text
+HC — Segundo complemento ao 564 [HC1]: página própria para cada área e para cada resposta da ajuda (30/10/2026)
+Etiqueta: [HC1]
+
+Solicitação do dono (30/10/2026, 10h00, horário de Fortaleza).
+
+Pedidos repetidos: é complemento ao item 564 [HC1] já gravado, que já recebeu o complemento de 30/10/2026, 09h56 (datas das respostas). Aplique só a diferença ao item existente, mantendo número, posição e estado (regra "Pedidos repetidos", passo 3, letra b), e registre na proveniência o que mudou. As áreas, os cartões, as datas e a trilha de navegação já estão pedidos no 564 e não são repetidos aqui.
+
+Estado inicial: o do próprio 564.
+
+Contexto: a central de ajuda do ClickFunnels (support.myclickfunnels.com/docs/getting-started/, lida em 30/10/2026) tem uma página por área, com a trilha "Documentation › Getting Started", uma lista lateral das áreas com o campo "Filter by name", e a lista de artigos da área, cada um com título, "Updated" e "Published" e um resumo de duas linhas; cada artigo tem página própria, com botões de compartilhar, "Print" e "Export PDF". No Marktmorgen, a central é uma única página (app/help/page.tsx) em que cada resposta abre e fecha no lugar, sem endereço próprio. Verifique antes no código atual que isso continua assim.
+
+O que acrescentar ao 564 [HC1]:
+- uma página por área, /help/[área], com a trilha "Help › [área]", o título, a lista das respostas da área (título, as datas do complemento de 09h56 e um resumo de uma ou duas frases tirado do começo da própria resposta, sem texto novo) e o link para a página de cada resposta;
+- uma página por resposta, /help/[área]/[resposta], com a trilha completa, o título, as datas, o texto, os links para a tela do estúdio e para a página de recurso que o 564 já pede, e as respostas vizinhas da mesma área; título e descrição próprios para busca e cartão de link, e inclusão no mapa do site;
+- a página /help continua com a busca, os cartões de área e as listas de respostas novas e atualizadas, e cada resultado da busca leva à página da resposta;
+- uma lista lateral das áreas, em todas as páginas da ajuda, com o campo "Filter by name" que filtra só a lista, no navegador; no celular, a lista fica recolhida num botão "All help topics";
+- em cada resposta, o botão "Copy link" e uma versão para impressão (folha de estilo de impressão, sem menus nem rodapé), com o botão "Print"; nenhum PDF gerado pelo servidor;
+- os links antigos com âncora (/help#answerId) continuam funcionando, levando à página da resposta; um teste automático falha se algum answerId antigo não levar à página certa, se uma resposta ficar sem página ou se duas páginas tiverem o mesmo texto como principal (uma única página canônica por resposta);
+- o assistente de ajuda do estúdio (lib/help-ask.ts) passa a citar o link da página de cada resposta, lendo o mesmo conteúdo, sem segundo mecanismo.
+
+Acessibilidade (AX274, Parte A, integral): máxima acessibilidade em tudo o que este item criar ou alterar — WCAG 2.2 nível AAA em todos os critérios aplicáveis, em todas as telas, estados, e-mails e arquivos, mais as demais normas e orientações da Parte A; a impossibilidade de um critério AAA precisa ser demonstrada e registrada em docs/accessibility-programme.md, nunca presumida. Os pontos a seguir são verificações obrigatórias deste item, não o limite do que se exige: trilha como navegação com nome e a página atual anunciada (2.4.8, aria-current); lista lateral como região de navegação com nome; o filtro com rótulo visível e o número de áreas encontradas anunciado ao leitor de tela; "Copy link" anunciando o resultado; título de página único por página (2.4.2); link para pular ao conteúdo; versão de impressão legível; contraste de 7:1, 320 px e 400% de zoom; tudo por teclado. Seção "Acessibilidade" no PR, com os passos e as decisões da tarefa principal antes e depois (achar e mandar a alguém o link de uma resposta).
+
+Custo: páginas estáticas geradas no build a partir do mesmo conteúdo, filtro e impressão no navegador, sem leitura, gravação, fornecedor ou chamada de IA novos. Custo desconhecido reprova, nunca é zero.
+
+REGRA DE MARGEM (MR, 27/10/2026): nenhum cliente pagante, considerado isoladamente e usando 100% de todos os direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto; a empresa como um todo não pode dar prejuízo no pior caso a partir da base mínima de clientes pagantes, com 100% dos custos fixos da LLC atribuídos ao Marktmorgen (FX275); a meta de 60% de margem líquida é medida todo mês com números reais. Impostos pela política TX vigente.
+
+Proibido: criar item novo ou mudar número, posição ou estado do 564; quebrar links antigos da ajuda; conteúdo duplicado sem página canônica; texto novo inventado no resumo; PDF gerado pelo servidor; mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; liderar com "free"; imagem repetida; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+```
