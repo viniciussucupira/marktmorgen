@@ -1,6 +1,6 @@
 # Fila de trabalho do Codex — Marktmorgen
 
-**AV2 — 30/10/2026:** passo3 da AV1: #1262 publicado; aplicação do AV3 (pausa desligada) em implementação neste PR. Falta aprovar/publicar esta mudança e seguir os passos4–12. A retomada está no566FF2 existente.
+**AV2 — 30/10/2026:** passos1–2 concluídos conforme histórico; passo3 em andamento. #1262 e #1280 publicados, pausa opcional desligada e retomada no566FF2. Faltam coberturas essenciais comprovadas, depois passos4–6 e10–12 a cargo do Codex; passos7–9 com Claude pelaAV4 (89já iniciado ficaCodex). Nenhum retorno à proteção opcional da pausa.
 
 
 ## MQ — Marco dos itens menos importantes na fila (29/10/2026) [MQ1]
@@ -13825,6 +13825,8 @@ Aplicar a regra VR.
 
 ### AV3 — Aplicação literal do passo 3 da AV1 (30/10/2026, 10h20 Fortaleza)
 
+Em andamento pelo Codex:30/10/2026, 13:47 Fortaleza, revisão essencial do passo3 em codex/av-essential-lifecycle-requirements (#1285); consumo confirmado de franquias em codex/av-resource-confirmed-count (#1288). Marcas anteriores à AV4 preservadas no histórico; retirar ao incorporar cada PR.
+
 Proveniência: pedido direto do dono na conversa com o Claude, 30/10/2026, 10h20 Fortaleza; texto redigido pelo Claude e aprovado pelo dono; gravado diretamente pelo Claude para não interromper o Codex. Instrução de ordem, sem número novo: nenhum número, grupo, linha da tabela do MQ1 ou estado de item muda; aviso curto também no alto da fila, em “Primeiro — AV1, Bloco de abertura e posições protegidas”. Pedidos repetidos: a etiqueta [AV3] não existia no main fc93fe0a6f1bac7c5cf3840a45796993a28c538a. Conferência do Claude no GitHub, 30/10/2026: desde 2026-10-28T22:37Z foram incorporados 37 PRs de código de ramos codex/av-*, dos quais 26 com pausa, reinício, retomada, aviso ou publicação do reinício no nome do ramo; o #1262 (codex/av-stopped-undo-generation) continua aberto; os passos 1 e 2 tiveram os PRs #1175 (SR6), #1179 (SD1) e #1180 (SR4) incorporados em 28/10/2026; em lib/contract-funding-rules.ts, CONTRACT_ADMISSION_COVERAGE tem pauseRestart:false. Texto do dono preservado integralmente abaixo.
 
 ```text
@@ -19894,3 +19896,13 @@ Proibido: lista negra entre lojas; coletar dado pessoal além do que a lei exigi
 
 Aplicar a regra VR.
 ```
+
+### AV3 — requisitos essenciais da revisão de abertura,30/10/2026
+Pode começar desligado sem quebrar assinatura ou direito? pauseRestart:sim, já desligado no1280, retomada566FF2. resourceAllocations:não para entrega/franquias pagas; renewals:não para renovação ordinária; settlementAndReserveReconciliation:não para dinheiro/reembolso/contestação/obrigações. Checkout e troca de plano continuam essenciais. A avaliação de integrações opcionais permanece individual, sem corte de direito.
+Mudança concreta: revisão comercial usa lista explícita das cinco coberturas essenciais; a opcional exige prova sempre que seu interruptor real estiver ligado. Nenhum false vira true. Todos os false essenciais e revisões null ainda reprovam. Lista/interruptor entram no vínculo financeiro do protocolo, sem aceitar revisão antiga. Não é nova proteção da pausa: a implementação opcional permanece desligada e não recebe operação nova.
+Prova #1280: merge6ddb489ec1aa9d6f05275ba2918c0ab470acd301 em30/10/2026 13:00:17Fortaleza(16:00:17UTC); head480b0dbedf09091624de760744e6e0244f188a4e/tree45b761ab586e831ef7f7b5e69af923b35980a382,39/39+Vercel. READY dpl_4mdLDo2CDMWNa5rsuCaVUegPtH6w exato nos7aliases e5HTML; /help confirma indisponibilidade. Logs error/fatal limit10 de16:00:17→16:04:08.104UTC sem resultado para critérios, somente janela limitada. Claude1279/1281preservados;307EC1reservado aoClaude#1283.
+Custo: nenhum serviço/IO/retentiva/teto/preço novo; classificação pequena via canonicador financeiro existente, CPU não presumida gratuita. Custos mensal/anual de todos os planos e100%empresa continuam sujeitos às revisões reais null/desconhecido reprova. Acessibilidade0→0passos/decisões deUI, nenhuma conformidade humana presumida. Exige39checks+Vercel no novo head. Contador254mantido pela prova interativa pendente.
+
+Union PR1285: head2c227f8ec539881dfe3a2b227a874842e3a17074 aprovou39/39+Vercel; incorporada a base canônica576dba74587905db085ec36ebcf0f5a5975b62c1 com todos os pedidos/estados doClaude, incluindoGD1/GD2/AV4. Nenhum PR doClaude foi editado/incorporado peloCodex. Nova árvore requer CIintegral.
+
+Segunda union1285: preservadas integralmenteMQ3(#1291), sua auditoria e o complementoAV4(#1293), inclusive414KX1na parte doClaude. Headb0903878e9aadb1cd808ebfd3324250bf98014fa passou39/39+Vercel; nova combinação comc98eb4e281413ebe5811fb9cbfdb423639a59ea7 requer verificação integral, sem certificar árvore diferente.

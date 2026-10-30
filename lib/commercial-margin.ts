@@ -1,4 +1,4 @@
-import {CONTRACT_FUNDING_RULES,CONTRACT_ADMISSION_COVERAGE,CURRENT_CONTRACT_FUNDING_POLICY,contractFundingConfiguration,canonicalFinancialSnapshot} from '@/lib/contract-funding-rules';
+import {CONTRACT_FUNDING_RULES,contractLifecycleReady,CURRENT_CONTRACT_FUNDING_POLICY,contractFundingConfiguration,canonicalFinancialSnapshot} from '@/lib/contract-funding-rules';
 import { CURRENT_EXPOSURE_BUDGET_POLICY, exposureBudgetConfiguration, EXPOSURE_ADMISSION_RULES } from '@/lib/exposure-budget-policy';
 import { assessFundedExposure, FUNDED_EXPOSURE_RULES, type FundedExposureReview } from '@/lib/funded-exposure-rules';
 import { AI_ENTITLEMENT_RULES, aiEntitlementsFunded } from '@/lib/ai-entitlement-rules';
@@ -186,7 +186,7 @@ export function commercialPlansMayOpen(requested:boolean,review:CommercialMargin
  const commissionReady=!COMMISSION_PLANS_PUBLISHED||(COMMISSION_LIVE&&SHARE_PROVED_IN_TEST_MODE);
  const exposureReady=review!==null&&exposureBudgetConfiguration(CURRENT_EXPOSURE_BUDGET_POLICY,{termsSnapshot:CURRENT_PRICE_AND_RIGHTS_SNAPSHOT,review:review.fundedExposure})!==null;
  const contractReady=review!==null&&contractFundingConfiguration(CURRENT_CONTRACT_FUNDING_POLICY,{termsSnapshot:CURRENT_PRICE_AND_RIGHTS_SNAPSHOT,review})!==null;
- const lifecycleReady=Object.values(CONTRACT_ADMISSION_COVERAGE).every(Boolean);
+ const lifecycleReady=contractLifecycleReady();
  return requested===true&&commissionReady&&exposureReady&&contractReady&&lifecycleReady&&commercialMarginDataReady(review);
 }
 
