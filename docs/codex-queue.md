@@ -13,7 +13,7 @@ Solicitação do dono: **29/10/2026,20h52Fortaleza**. Estado inicial: na fila; e
 
 **MQ2 — 30/10/2026, 10h30 Fortaleza:** nenhum recurso bom é descartado (vai ao fim da fila); dentro de cada grupo, do mais ao menos importante; reordenação única feita pelo Claude (texto integral junto da MQ1).
 
-**AV4 — 30/10/2026, 13h41 Fortaleza:** Codex faz os passos 3–6 e 10–12 da AV1; Claude faz 7–9 (sem o 89, que está com o Codex) e depois o Grupo A; quem começa marca "em andamento" no item; ninguém mexe no PR do outro (texto integral na seção AV).
+**AV4 — 30/10/2026, 13h41 Fortaleza:** Codex faz os passos 3–6 e 10–12 da AV1; Claude faz 7–9 (sem o 89, que está com o Codex) e depois o Grupo A; quem começa marca "em andamento" no item; ninguém mexe no PR do outro (texto integral na seção AV). Complemento 13h57: 414 [KX1] entra na AV1, primeiro da parte do Claude, antes da abertura.
 
 Claude agendado — última rodada: 30/10/2026, 13h41 Fortaleza; fazendo agora: 307 [EC1]; últimos PRs: #1279, #1282, #1287, #1289.
 
@@ -10624,7 +10624,7 @@ FontesClaude24–25/10/2026aRECONFERIRoficiaisdatadasnaexecução: kajabi.com/up
 414. [KX1] Avisos de renovação/preço, cancelamento e prova de consentimento — compradores e planos Marktmorgen.
 
 Estado: na fila; PRÉREQUISITOANTESDAABERTURA. Avaliaçãoautorizadapelo dono: ANTECIPAR A CONCLUSÃO/VERIFICAÇÃO DESTEESCOPO paraANTESdeQUALQUERabertura devendas/novasobrigaçõesrecorrentesaplicáveis. Motivo:obrigaçãodeconsentimento/cancelamento/avisoéprév iaoucontínua,nãodiferencialopcionalpósabertura; oalertaoficialconfirmaexistência/relevância.ConservadoramentenãopresumirMMB2Bisento/paísdesconhecidoisento:documentarjurisdição/consumidor/regrasaplicáveis,adotarmaiorproteçãona dúvida,semcertificarleiuniversal.AB(a)segueprimeiro,EI363seguepróximapósAB(a)conformeordemdodono;414mantémnúmero/posiçãoregistral,masnão podeserignoradonarevisão finalpréabertura. AoterminarAB/EI,coordenarimplementaçãoreusandofluxorecorrente/legalantesdeabrir,semcriarsegundoitemouremovergateexistente. NenhumPLANS_ON_SALE/taxgate/art9a/revisãocomercialéhabilitado por essaavaliação.Nãoadiarcorreçãodeobrigaçãojáexistente/clientelegadoseacharbrecha;preservardireitos/serviçoadequado.
-Estado a conferir (MQ3, 30/10/2026, 13h45): o estado diz “PRÉ-REQUISITO ANTES DA ABERTURA”, mas o item está no Grupo A; o mínimo legal (consentimento da recorrência, aviso antes da renovação, cancelamento em um clique) deve ser conferido nos passos 3 ou 12 da AV1; decisão do dono.
+Decisão do dono 30/10/2026, 13h57: faz parte da AV1, pré-requisito antes da abertura, primeiro da parte do Claude (Complemento ao AV4). Anterior, preservado: Estado a conferir (MQ3, 30/10/2026, 13h45): o estado diz “PRÉ-REQUISITO ANTES DA ABERTURA”, mas o item está no Grupo A; o mínimo legal (consentimento da recorrência, aviso antes da renovação, cancelamento em um clique) deve ser conferido nos passos 3 ou 12 da AV1; decisão do dono.
 
 Escopodopedido(areconciliartextolegaloficialvigente): (a)antesdeCADArenovaçãoANUALaviso15–45dias;mensalopcionalcriadorSALVOseoutraregraaplicáveloexigir;(b)7–30diasANTESmudançapreço;(c)3–21diasANTESfimdeteste/promoção>31dias;(d)LEMBRETEANUAL. Reutilizaravisostrial/renovação/calendárioexistentes,nãoduplicare-mailsquandoambosrequisitoscumpridosnomesmoavisodentrodeambasjanelas.Avisoidentificaproduto,frequência,valor/moeda,renovase não cancelado,termosrelevanteselinkDIRETOCANCELAR;SERVIÇOSEMoferta/upsell,linguagemacessível/versãotexto/idiomapersistido. NãoincluircomportamentoqueexigealterarPREÇO,nemautoriza reajustarplano/checkoutporoperaçãoexterna.Novaprevisãocobrança/valorincerto=desconhecido,tratamentoconservadorantescobrar,nãomontaravisoenganoso.
 
@@ -13909,6 +13909,29 @@ O Claude trabalha por uma tarefa agendada que roda a cada hora, sem pedido do do
 REGRA DE MARGEM (MR, 27/10/2026): nenhum cliente pagante, considerado isoladamente e usando 100% de todos os direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto; a empresa como um todo não pode dar prejuízo no pior caso a partir da base mínima de clientes pagantes, com 100% dos custos fixos da LLC atribuídos ao Marktmorgen (FX275); a meta de 60% de margem líquida é medida todo mês com números reais. Impostos pela política TX vigente.
 
 Proibido: alterar, refazer ou incorporar o PR do outro; ligar OPENING_REQUESTED, PLANS_ON_SALE ou qualquer recurso desligado; afrouxar qualquer trava ou teste; apagar código, testes, provas ou histórico; mudar preços, limites visíveis ou comissão; criar contas, abrir empresa, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+```
+
+
+### Complemento ao AV4 — 30/10/2026, 13h57 Fortaleza
+
+Proveniência: pedido direto do dono na conversa com o Claude, 30/10/2026, 13h57 Fortaleza (“inclui o 414”); texto redigido pelo Claude e aprovado pelo dono; gravado diretamente pelo Claude. Pedidos repetidos passo3(b): conferido no main 39a742ba3b17c31ba01689c572c228971649c57a que não havia complemento ao AV4 de 13h57; somente a diferença foi acrescentada. Aplicado neste registro: o aviso curto do AV4 no alto da fila foi estendido, e no 414 [KX1] a linha “Estado a conferir (MQ3)” foi substituída por esta decisão, com o texto anterior preservado na mesma linha. A posição do 414 no Grupo A (2º lugar, MQ3) não muda; a linha de situação “Claude agendado — última rodada:” e as linhas de “em andamento” não foram tocadas. Texto do dono preservado integralmente abaixo.
+
+```text
+AV — Complemento ao [AV4]: 414 [KX1] entra na AV1, na parte do Claude, antes da abertura (30/10/2026) [AV4]
+
+Solicitação do dono (30/10/2026, 13h57, horário de Fortaleza): "inclui o 414".
+
+Pedidos repetidos: complemento ao [AV4]; aplica só a diferença. Resolve o "Estado a conferir (MQ3)" do 414 [KX1], que dizia haver conflito com a AV1 sobre ser pré-requisito da abertura.
+
+O que muda:
+- 414 [KX1] (avisos de renovação e de preço, cancelamento e prova de consentimento, para compradores e criadores) passa a fazer parte da AV1, como pré-requisito antes da abertura, porque as leis de renovação automática dos EUA e da UE valem para as assinaturas dos planos do Marktmorgen desde a primeira venda; o próprio texto do item já diz "PRÉ-REQUISITO ANTES DA ABERTURA".
+- Fica na parte do Claude, como o primeiro item da parte dele ainda não iniciado (antes de 232 [CA1]), sem mudar a ordem dos passos do Codex.
+- A posição do 414 no Grupo A (2º lugar, MQ3) continua a mesma; o resumo final do passo 12 da AV1 passa a citá-lo.
+- O "Estado a conferir (MQ3)" do 414 é substituído por esta decisão, preservado como histórico.
+
+Proibido: mudar a ordem dos passos do Codex; ligar OPENING_REQUESTED, PLANS_ON_SALE ou qualquer recurso desligado; afrouxar qualquer trava ou teste; mudar preços, limites visíveis ou comissão; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong.
 
 Aplicar a regra VR.
 ```
