@@ -92,6 +92,7 @@ import { buyerPagesCap, forgetTold, tellBuyers, tellRefundShort } from "@/lib/cl
 import { giveBackUnused, unusedRows, unusedSummary } from "@/lib/closing-refunds";
 import { stillToGive, unusedOf, type PaidPeriod } from "@/lib/closing-buyers-rules";
 import { formatMoney } from "@/lib/money";
+import { expirePlanCheckouts, markShut, refusePlanIfClosing } from "@/lib/closing-plan-guard";
 
 export { CLOSING_DAYS, RECHECK_DAYS, WARN_MONTH_DAYS, WARN_WEEK_DAYS };
 
@@ -174,6 +175,8 @@ export async function closingOf(store: Store, now = Date.now()): Promise<{ ended
     const [finalScore, rawFinal] = await redisPipeline([["ZSCORE", FINAL_INDEX, storeRef(store)], ["GET", stateKey(storeRef(store))]]);
     if (finalScore !== null && finalScore !== undefined) {
       const kept = parseState(rawFinal);
+      // Removed already, and waiting for the walk that deletes its records.
+      if (kept.removed) return null;
       return { endedAt: Number(finalScore), day: kept.day ?? now, today: true };
     }
   }
@@ -603,6 +606,17 @@ export async function closeOne(key: string, now = Date.now(), hands: Hands = HAN
     const [rawFinal] = await redisPipeline([["GET", stateKey(key)]]);
     const kept = parseState(rawFinal);
     const final: State = kept.of === was ? kept : { of: was, renewals: now };
+    // A plan paid for it since its day began (a checkout opened before and
+    // finished on it) is ended and returned in full (lib/closing-plan-guard.ts).
+    await markShut(store, final.day ?? now);
+    await refuseLatePlans(store);
+    if (final.removed) {
+      if (!final.due) {
+        await markDue(key, now);
+        await redisPipeline([["SET", stateKey(key), JSON.stringify({ ...final, due: now })]]);
+      }
+      return { key, state: "removed", note: "its records are deleted by the next walk" };
+    }
     const folderFinal = await storeFolder(storeRef(store));
     return closingDay(store, key, final, was, final.day ?? now, folderFinal, now, hands, until, (next) => redisPipeline([["SET", stateKey(key), JSON.stringify(next)]]));
   }
@@ -782,6 +796,10 @@ async function closingDay(store: Store, key: string, state: State, endedAt: numb
       next = { ...next, day };
       await save(next);
     }
+    // No plan can be paid for it from here: its open plan checkouts are
+    // expired, and its address is marked for after its records are gone.
+    await markShut(store, next.day ?? day);
+    await expirePlanCheckouts(store, store.stripeCustomerId ? [store.stripeCustomerId] : []);
     try {
       const stopped = await stopRenewals(store, until);
       if (!stopped.done) return { key, state: "held", note: "the renewals it sold are not all stopped yet" };
@@ -829,9 +847,30 @@ async function closingDay(store: Store, key: string, state: State, endedAt: numb
   await forgetTold(folder);
   await forgetCredit(folder);
   await markDue(key, now);
-  await redisPipeline([["ZREM", FINAL_INDEX, key]]);
+  // Kept in FINAL_INDEX until its records are gone (closeOne, "gone"), so a
+  // plan checkout is refused, and a plan paid for it returned, until then.
   await save({ ...next, removed: now, due: now });
   return { key, state: "removed", note: `closed, ${done.files} files: its records are deleted by the next walk` };
+}
+
+/**
+ * Any plan subscription Stripe has for a store in its closing day, in good
+ * standing or still able to charge, is ended and its payment since the day
+ * began returned (lib/closing-plan-guard.ts). Stripe not answering is tried
+ * again on the next run; the daily sync and the way back check it too.
+ */
+async function refuseLatePlans(store: Store): Promise<void> {
+  if (!isBillingConfigured()) return;
+  try {
+    const found = await findStoreSubscriptions(store);
+    const ids = [...new Set([...(found.live ? [found.live.subscriptionId] : []), ...found.lapsed])];
+    for (const id of ids) {
+      const customerId = found.live?.subscriptionId === id ? found.live.customerId : found.customerId ?? "";
+      await refusePlanIfClosing({ store, handle: store.handle, subscriptionId: id, customerId });
+    }
+  } catch (error) {
+    console.error("looking for a plan paid for a closing store failed", error);
+  }
 }
 
 /**

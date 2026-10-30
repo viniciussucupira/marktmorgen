@@ -194,6 +194,8 @@ export const FAMILIES: Record<string, Family> = {
   "nl:closing:told:@lib/closing-buyers.ts": { what: "The addresses told that a store closes, until it closes or stays", line: "closure" },
   "nl:closing:paid:@lib/closing-holds.ts": { what: "A closing store's members' last payments, from its plan's end to its closing", line: "closure" },
   "nl:closing:work:@lib/closing-holds.ts": { what: "Where a closing store's hold and release stopped, its members not held yet and its call budget", line: "closure" },
+  "nl:closing:undo@lib/closing-plan-guard.ts": company("Plans paid for a store already closing, until each is ended, returned in full and its creator told", "One hash for the company: a field a plan subscription; once settled only its dates are kept, looked at again and taken out DONE_KEEP_DAYS (40) later (lib/closing-plan-guard.ts); a step that fails keeps it for the next run."),
+  "nl:closing:shut:@lib/closing-plan-guard.ts": company("A closing store's address, hashed, with the day its closing began", "One key an address, the company's, expiring by itself SHUT_DAYS (30) after the store's last closing run (lib/closing-plan-guard.ts)."),
   "nl:closing:final@lib/closing-holds.ts": company("Stores whose closing day has begun, seen through to the end", "One sorted set for every store, a member a store from its closing day's start to its end (lib/plan-closing.ts)."),
   "nl:closing:held@lib/closing-holds.ts": company("Stores whose members' charges are held until they close or run again", "One sorted set for every store, a member a store; taken out when it closes or runs again (lib/closing-holds.ts)."),
   "nl:courses:lock@app/api/cron/courses/route.ts": lock("The courses job"),

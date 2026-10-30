@@ -704,7 +704,7 @@ async function main() {
   is("the studio says buyers are told and when, and leads to the review screen", [studio.includes("we email everyone who bought from it, once, from Marktmorgen"), studio.includes('"closing-refunds"')], [true, true]);
   const review = readFileSync(join(process.cwd(), "app/studio/closing-refunds/page.tsx"), "utf8");
   is("the review screen shows each amount before the one button, with a way back", [review.includes("<table"), review.includes("ClosingRefundsConfirm"), readFileSync(join(process.cwd(), "components/closing-refunds-confirm.tsx"), "utf8").includes("Go back without refunding")], [true, true, true]);
-  is("the closing job lets restarted stores go every day", readFileSync(join(process.cwd(), "app/api/cron/closing/route.ts"), "utf8").includes("releaseRestarted(Date.now() + 12_000, tellStaysOpen)"), true);
+  is("the closing job lets restarted stores go every day", readFileSync(join(process.cwd(), "app/api/cron/closing/route.ts"), "utf8").includes("releaseRestarted(start + 12_000, tellStaysOpen)"), true);
   is("and the two notices before it are still the creator's", [WARN_MONTH_DAYS, WARN_WEEK_DAYS], [14, 7]);
 
   part("Before buying: the fixed sentence on every checkout of what lasts, and on the receipt");

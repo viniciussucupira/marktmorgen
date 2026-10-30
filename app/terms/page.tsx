@@ -851,7 +851,10 @@ export default function TermsPage() {
           if the store stays open after that email, we tell them so. These
           emails go to as many buyers as the closing&rsquo;s cap allows ({BUYER_CAP_MONTHS}{" "}
           months of the plan&rsquo;s orders); the creator is told how many,
-          if any, we could not write to.
+          if any, we could not write to. A plan for a store whose closing
+          day has begun cannot be started; if one opened before that day is
+          paid on it, we end that plan at once, refund its payment in full and
+          email the creator.
         </p>
         <p>
           <strong className="text-black">Download what you want to keep before that day.</strong>{" "}

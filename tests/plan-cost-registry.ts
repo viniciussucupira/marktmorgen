@@ -1000,7 +1000,7 @@ export const EMAIL_SITES: Record<string, string[]> = {
   "lib/email.ts": ["company", "order", "monthly", "store"],
   "app/api/cron/mail-check/route.ts": COMPANY, "app/api/cron/monthly/route.ts": COMPANY, "app/api/cron/stripe-check/route.ts": COMPANY,
   "app/api/cron/usage/route.ts": COMPANY, "app/api/cron/weekly/route.ts": COMPANY, "lib/account-notice.ts": COMPANY, "lib/auth.ts": COMPANY,
-  "lib/billing-reminders.ts": COMPANY, "lib/passkeys.ts": COMPANY, "lib/plan-closing.ts": COMPANY, "lib/closing-buyers.ts": COMPANY, "lib/plan-pause.ts": COMPANY,
+  "lib/billing-reminders.ts": COMPANY, "lib/passkeys.ts": COMPANY, "lib/plan-closing.ts": COMPANY, "lib/closing-buyers.ts": COMPANY, "lib/closing-plan-guard.ts": COMPANY, "lib/plan-pause.ts": COMPANY,
   "lib/recovery-address.ts": COMPANY, "lib/stats-report.ts": COMPANY, "lib/store-alerts.ts": COMPANY, "lib/takedown.ts": COMPANY,
   "lib/trial-nudges.ts": COMPANY, "lib/two-step.ts": COMPANY, "lib/verify-mail.ts": COMPANY, "lib/yearly-offer.ts": COMPANY,
   "lib/inbound-mail.ts": ["store", "company"],

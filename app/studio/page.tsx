@@ -550,6 +550,14 @@ const BILLING_NOTICES: Record<string, { title: string; body: string }> = {
     title: "Your store is closing today",
     body: "Its closing day has begun: its memberships have ended and it is being removed, so a plan can no longer be started for it. Nothing was charged. You can open a new store from your account.",
   },
+  "closing-returned": {
+    title: "Your store had already closed, so your payment was returned",
+    body: "Its closing day had begun when the plan was paid for, so the plan could not be given. We ended it and returned the payment in full. Nothing else will be charged. We emailed you the same.",
+  },
+  "closing-returning": {
+    title: "Your store had already closed, so your payment is being returned",
+    body: "Its closing day had begun when the plan was paid for, so the plan could not be given. We are ending it and returning the payment in full, and we email you once it is done. Nothing else will be charged.",
+  },
   "not-open": {
     title: "Plans are not on sale yet",
     body: "Marktmorgen is still being built, so no plan can be started. Nothing was charged and nothing was changed.",

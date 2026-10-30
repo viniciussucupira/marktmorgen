@@ -59,6 +59,8 @@ What Marktmorgen pays for it is bounded per closing, before any of it is spent: 
 
 No company postal address exists yet (`lib/company-postal.ts`, empty): until it does, no buyer is emailed, and a store whose buyers must be told does not close (its retention continues inside the existing closing-days exposure). This is a release condition, not a cost.
 
+**A plan paid for a store already closing (queue item 307 [EC1], with item 569 [NC1]).** From the start of its closing day a store refuses a plan checkout, but one opened before can still be finished on it. That plan is ended at once and its payment refunded in full from Marktmorgen's own Stripe account (`lib/closing-plan-guard.ts`): it is the money the creator paid us, given back, so the refund itself is not a cost, but the receiving cost of that one payment (`lib/receiving-costs.ts`, the dearer provider's fee on the amount charged) is not given back by Stripe on a refund and is the company's. It is a full-refund occurrence of this review, never offset by another scope. Occurrences are kept rare by code, not counted: the store's open plan checkouts are expired when the day starts (`expirePlanCheckouts`), a checkout lasts a day at most, and a new one is refused from then until the store's records are gone. There is no occurrence cap of its own yet ("Depende do dono" (d) of item 307), so, like every scope here, the exposure review stays null and release stays closed.
+
 ## LE448 — exposição própria da lista de pré-abertura (em implementação)
 
 Pedido do dono26/10/2026 00h19Fortaleza. A lista da plataforma não é uma loja
