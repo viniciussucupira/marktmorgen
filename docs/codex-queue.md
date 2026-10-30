@@ -44,6 +44,8 @@ Entrada posterior no Grupo B: **561[NE1]**, na fila, **ABAIXO DO MARCO MQ1 por i
 
 Entrada posterior no Grupo B: **562[QZ1]**, na fila, **ABAIXO DO MARCO MQ1 por indicação expressa do dono30/10/2026,09h20Fortaleza**, depois561[NE1] entre os remanescentesB e antesFIM1. Sem mudança de qualquer outro item ou do Bloco de abertura.
 
+Entrada posterior no Grupo B: **563[WN1]**, na fila, **ABAIXO DO MARCO MQ1 por indicação expressa do dono30/10/2026,09h50Fortaleza**, depois562[QZ1] entre os remanescentesB e antesFIM1. Sem mudança de qualquer outro item ou do Bloco de abertura.
+
 ### Por último — os59 remanescentesFIM1
 
 FIM1 continua depois de todos os demais, na ordem relativa anterior e com a mesma regra de partes. São os61localizadores históricos da tabelaFIM1 menos206 e241, já retirados da cauda por decisões de posição. Localizadores para conferência (não ordem nova): 16, 26, 37, 38, 41, 42, 45, 47, 48, 49, 53, 56, 58, 92, 104, 127, 128, 129, 130, 131, 132, 203, 207, 209, 215, 222, 236, 252, 255, 280, 284, 286, 289, 296, 317, 318, 327, 337, 345, 346, 347, 348, 351, 352, 359, 363, 383, 401, 402, 404, 406, 419, 420, 425, 429, 430, 440, 441, 442. O item58 continua afetado **somente no português doBrasil**; os demais idiomas mantêm posição/gates atuais. Concluídos e andamentos já existentes não são reconstruídos, reiniciados ou movidos novamente.
@@ -71,6 +73,8 @@ Uma linha por item, três grupos possíveis: A, B ou sem mudança. “Sem mudan�
 **Atualização NE1 (30/10/2026,02h58):** bases554–560 anteriores são históricas; tabela atual **561linhas únicas,109A,238B,214sem mudança**. Só561[NE1] acrescentadoB, depois560; tabela numérica não redefine execução.
 
 **Atualização QZ1 (30/10/2026,09h20):** bases554–561 anteriores são históricas; tabela atual **562linhas únicas,109A,239B,214sem mudança**. Só562[QZ1] acrescentadoB, depois561; tabela numérica não redefine execução.
+
+**Atualização WN1 (30/10/2026,09h50):** bases554–562 anteriores são históricas; tabela atual **563linhas únicas,109A,240B,214sem mudança**. Só563[WN1] acrescentadoB, depois562; tabela numérica não redefine execução.
 
 | Item | Grupo | Motivo |
 | --- | --- | --- |
@@ -636,6 +640,7 @@ Uma linha por item, três grupos possíveis: A, B ou sem mudança. “Sem mudan�
 | 560 [AS1] | B | Dono30/10/2026,01h25: abaixo do marco, depois559no Grupo B e antesFIM1; demais posições preservadas. |
 | 561 [NE1] | B | Dono30/10/2026,02h58: abaixo do marco, depois560no Grupo B e antesFIM1; demais posições preservadas. |
 | 562 [QZ1] | B | Dono30/10/2026,09h20: abaixo do marco, depois561no Grupo B e antesFIM1; demais posições preservadas. |
+| 563 [WN1] | B | Dono30/10/2026,09h50: abaixo do marco, depois562no Grupo B e antesFIM1; demais posições preservadas. |
 
 ### Proveniência, Pedidos repetidos e VR
 
@@ -18650,6 +18655,49 @@ Custo: página estática e código no navegador, sem leitura, gravação, fornec
 REGRA DE MARGEM (MR, 27/10/2026): nenhum cliente pagante, considerado isoladamente e usando 100% de todos os direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto; a empresa como um todo não pode dar prejuízo no pior caso a partir da base mínima de clientes pagantes, com 100% dos custos fixos da LLC atribuídos ao Marktmorgen (FX275); a meta de 60% de margem líquida é medida todo mês com números reais. Impostos pela política TX vigente.
 
 Proibido: mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; pedir e-mail ou guardar respostas; recomendar recurso que não existe; liderar com "free"; promessa de resultado, urgência ou escassez; imagem repetida; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+```
+
+
+## 563 [WN1] — Página pública de novidades do Marktmorgen
+
+**Estado:** na fila. **Posição:** ABAIXO DO MARCO MQ1, Grupo B, depois562[QZ1] entre os remanescentesB e antesFIM1.563 estava livre e a etiqueta[WN1] não existia. Não altera ordem/estado de outros itens ou Bloco de abertura.
+
+**Proveniência/Pedidos repetidos:** pedido direto do dono na conversa com o Claude,30/10/2026,09h50Fortaleza; texto redigido pelo Claude e aprovado pelo dono; gravado diretamente pelo Claude para não interromper o Codex. Conferido no main c5e3527c4da5264157ac42a1ee7eb091f8c04fd7 pela etiqueta, pela linha de data e hora e pelo conteúdo: nenhum item pede página de novidades; app/help (com lib/help-content.ts), lib/help-ask.ts, lib/feature-pages.ts e app/blog já existem e não são refeitos nem movidos. Nova recepção só proveniência,sem número/commit exclusivo.
+
+**Conferência real (limitada, revalidar no head de implementação):** não existe app/whats-new nem app/changelog, e nenhum arquivo de app, components ou lib menciona “whats-new”, “What's new” ou “changelog”. Registro documental: não implementa, não certifica margem, não conta entrega funcional.
+
+### Pedido literal WN1
+
+```text
+WN — Página pública de novidades do Marktmorgen (30/10/2026) [WN1]
+
+Solicitação do dono (30/10/2026, 09h50, horário de Fortaleza).
+
+Pedidos repetidos: aplique a regra "Pedidos repetidos" de AGENTS.md. Conferido antes de gravar: não existe página de novidades no site nem item na fila que a peça. Já existem e não são refeitos: a central de ajuda com busca e seções (app/help, lib/help-content.ts), o assistente de ajuda do estúdio (lib/help-ask.ts), as páginas de recursos (lib/feature-pages.ts) e o blog (app/blog).
+
+Estado inicial: na fila, ABAIXO DO MARCO (MQ1, Grupo B), no fim do Grupo B, antes de FIM1, no próximo número livre. Não altera a ordem de nenhum outro item.
+
+Contexto: a central de ajuda do ClickFunnels (support.myclickfunnels.com, lida em 30/10/2026) tem, ao lado de "Browse articles", o botão "See what's new", que leva às novidades do produto. No Marktmorgen, o criador e o visitante não têm onde ver o que passou a funcionar e quando. Verifique antes no código atual que isso continua assim.
+
+1. Uma página pública /whats-new, em inglês americano simples, com uma entrada por novidade, da mais nova para a mais antiga: data (en-US), título curto, duas ou três frases sobre o que o criador ou o comprador pode fazer agora, em qual plano, e o link para a página de recurso ou da ajuda que explica.
+
+2. Só entra o que está "disponível ao cliente" pelo item 1 da regra VR: incorporado, publicado com a versão conferida em marktmorgen.com e usado de ponta a ponta. Nada "em breve", nada da fila, nada desligado pelas travas (tax gate, art. 9a, revisão comercial, PLANS_ON_SALE) e nenhuma data futura. Correções de erro visíveis ao cliente podem entrar numa linha curta, sem expor dado de cliente ou detalhe de segurança.
+
+3. As entradas ficam num único arquivo de dados no repositório, com data, título, texto, plano e link, e cada PR que leva um recurso ao estado "disponível ao cliente" acrescenta a sua entrada no mesmo PR. Um teste automático falha se uma entrada tiver data futura, link quebrado, recurso inexistente no código ou plano diferente do que o código permite.
+
+4. Links para a página: botão "See what's new" na central de ajuda, ao lado da busca; link "What's new" no rodapé; inclusão no mapa do site; feed RSS da página, se o mecanismo do blog já o oferecer, sem segundo mecanismo.
+
+5. Honestidade: sem número de clientes, depoimento, comparação de superioridade, "X% faster", urgência ou promessa de resultado; nenhuma novidade descrita como maior do que é.
+
+6. Acessibilidade (AX274, Parte A, integral): máxima acessibilidade em tudo o que este item criar ou alterar — WCAG 2.2 nível AAA em todos os critérios aplicáveis, em todas as telas, estados, e-mails e arquivos, mais as demais normas e orientações da Parte A; a impossibilidade de um critério AAA precisa ser demonstrada e registrada em docs/accessibility-programme.md, nunca presumida. Os pontos a seguir são verificações obrigatórias deste item, não o limite do que se exige: cada entrada com título de seção em hierarquia e data em elemento de data legível; propósito de cada link compreensível pelo próprio texto (2.4.9); linguagem simples (3.1.5); nenhuma imagem de texto; contraste de 7:1, 320 px e 400% de zoom; leitor de tela e teclado. Seção "Acessibilidade" no PR, com os passos e as decisões da tarefa principal antes e depois.
+
+Custo: página estática gerada no build a partir do arquivo de dados, sem leitura, gravação, fornecedor ou chamada de IA. Custo desconhecido reprova, nunca é zero.
+
+REGRA DE MARGEM (MR, 27/10/2026): nenhum cliente pagante, considerado isoladamente e usando 100% de todos os direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto; a empresa como um todo não pode dar prejuízo no pior caso a partir da base mínima de clientes pagantes, com 100% dos custos fixos da LLC atribuídos ao Marktmorgen (FX275); a meta de 60% de margem líquida é medida todo mês com números reais. Impostos pela política TX vigente.
+
+Proibido: listar recurso que não está disponível ao cliente hoje; data futura ou "coming soon"; mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; liderar com "free"; depoimento, número de clientes, urgência ou promessa de resultado; imagem repetida; o nome do dono, endereço ou país fora dos Termos e da Política de Privacidade; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
 
 Aplicar a regra VR.
 ```
