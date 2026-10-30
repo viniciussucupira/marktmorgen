@@ -6,6 +6,8 @@ Solicitação do dono: **29/10/2026,20h52Fortaleza**. Estado inicial: na fila; e
 
 ### Primeiro — AV1, Bloco de abertura e posições protegidas
 
+**AV3 — 30/10/2026, 10h20 Fortaleza:** passo 3 da AV1 aplicado ao pé da letra: pausa do plano, reinício e avisos da pausa começam DESLIGADOS na abertura; concluir #1262 e seguir aos passos 4–12 (texto integral na seção AV). Complemento 10h27: o trabalho que falta da pausa e de todo recurso deixado desligado vai para o FIM DA FILA, nunca é descartado.
+
 AV1/SD1 e Bloco de abertura (a)–(k) ficam na ordem vigente, inclusive custos(k),538[AB1] e448[LE1] em paralelo. Não se antecipam estudos ou recursos por causa desta classificação. Ficam na posição e no estado atuais todos os concluídos/publicados, andamentos (inclusive4,88,140,141,201,547,549),505[SG2] e registros59,60,336,464–477,494,495. As referências a547/549 são exceções expressas do pedido; suas linhas canônicas continuam literalmente “na fila”, sem convertê-las em andamento. A proteção de andamento também respeita a posição atualmente vigente: não ressuscita ordemOR já substituída porFIM1.
 
 ### Em seguida — o que AV1 já manda fazer logo depois da abertura
@@ -13155,6 +13157,61 @@ Proibido: ligar OPENING_REQUESTED ou PLANS_ON_SALE; preencher revisões ou regis
 Aplicar a regra VR.
 
 
+### AV3 — Aplicação literal do passo 3 da AV1 (30/10/2026, 10h20 Fortaleza)
+
+Proveniência: pedido direto do dono na conversa com o Claude, 30/10/2026, 10h20 Fortaleza; texto redigido pelo Claude e aprovado pelo dono; gravado diretamente pelo Claude para não interromper o Codex. Instrução de ordem, sem número novo: nenhum número, grupo, linha da tabela do MQ1 ou estado de item muda; aviso curto também no alto da fila, em “Primeiro — AV1, Bloco de abertura e posições protegidas”. Pedidos repetidos: a etiqueta [AV3] não existia no main fc93fe0a6f1bac7c5cf3840a45796993a28c538a. Conferência do Claude no GitHub, 30/10/2026: desde 2026-10-28T22:37Z foram incorporados 37 PRs de código de ramos codex/av-*, dos quais 26 com pausa, reinício, retomada, aviso ou publicação do reinício no nome do ramo; o #1262 (codex/av-stopped-undo-generation) continua aberto; os passos 1 e 2 tiveram os PRs #1175 (SR6), #1179 (SD1) e #1180 (SR4) incorporados em 28/10/2026; em lib/contract-funding-rules.ts, CONTRACT_ADMISSION_COVERAGE tem pauseRestart:false. Texto do dono preservado integralmente abaixo.
+
+```text
+AV — Aplicação literal do passo 3 da AV1: pausa do plano começa desligada e o trabalho segue (30/10/2026) [AV3]
+
+Solicitação do dono (30/10/2026, 10h20, horário de Fortaleza).
+
+Pedidos repetidos: aplique a regra "Pedidos repetidos" de AGENTS.md. É instrução de ordem, sem número novo, registrada junto da AV1 (seção "AV — Ordem vigente para abrir as vendas"); prevalece (passo 3, letra b) sobre qualquer prioridade anterior incompatível; histórico, números e trabalhos existentes preservados.
+
+Contexto conferido pelo Claude no GitHub em 30/10/2026: os passos 1 e 2 da AV1 foram concluídos em 28/10/2026 (PRs de SR6, SD1 e SR4). Desde então, cerca de 35 PRs de código ficaram no passo 3, quase todos sobre a pausa do plano ("plan break"), o reinício depois da pausa e os avisos financiados da pausa (ramos codex/av-pause-*, codex/av-restart-*), enquanto os próprios PRs registram que a cobertura de produção da pausa e do reinício continua false. Os passos 4 a 12 não começaram. O passo 3 da AV1 manda: tudo o que puder começar DESLIGADO na abertura fica desligado, com registro, e o trabalho segue; constrói-se somente o que não puder começar desligado.
+
+1. Pausa do plano, reinício depois da pausa e avisos financiados da pausa começam DESLIGADOS na abertura: interruptor no código, desligado; nenhuma página, botão, e-mail, texto de ajuda ou de termos oferecendo pausa a quem não tem uma; o criador que quiser parar vê o cancelamento que já existe, com todos os direitos atuais de cancelamento, exportação e acesso. Testes automáticos provam que, com o interruptor desligado, nenhuma rota aceita pedido de pausa ou de reinício, e que a assinatura renova e cancela normalmente.
+
+2. Nada é apagado: o código, os testes e as provas da pausa e do reinício ficam no repositório, desligados, para voltar depois da abertura, na ordem já existente. O PR #1262, já aberto, é concluído como está; depois dele, nenhum PR novo de proteção da pausa, do reinício ou dos avisos da pausa antes da abertura, salvo falha de segurança grave ou algo quebrado em produção.
+
+3. Para cada cobertura ainda false em CONTRACT_ADMISSION_COVERAGE e cada recurso cuja proteção não esteja comprovada, primeiro registre por escrito, no PR, a resposta a "pode começar desligado na abertura sem quebrar a assinatura nem um direito do cliente?". Se sim, desligue no mesmo PR, registre e siga para o próximo. Construa somente o que não puder começar desligado (por exemplo: checkout, entrega, renovação, reembolso, cancelamento e exportação).
+
+4. Terminado o passo 3, siga os passos 4 a 12 da AV1, na ordem gravada, sem voltar a recursos já deixados desligados.
+
+5. Na anotação diária da AV2, escreva no alto, em linguagem simples: qual passo da AV1 está em andamento, quais já terminaram e quais faltam.
+
+REGRA DE MARGEM (MR, 27/10/2026): nenhum cliente pagante, considerado isoladamente e usando 100% de todos os direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto; a empresa como um todo não pode dar prejuízo no pior caso a partir da base mínima de clientes pagantes, com 100% dos custos fixos da LLC atribuídos ao Marktmorgen (FX275); a meta de 60% de margem líquida é medida todo mês com números reais. Impostos pela política TX vigente.
+
+Proibido: apagar código, testes, provas ou histórico; ligar OPENING_REQUESTED, PLANS_ON_SALE ou qualquer recurso desligado; afrouxar qualquer trava ou teste; tirar do cliente um direito de cancelamento, exportação ou acesso; mudar preços, limites visíveis ou comissão; criar contas, abrir empresa, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+```
+
+
+### Complemento ao AV3 — 30/10/2026, 10h27 Fortaleza
+
+Proveniência: pedido direto do dono na conversa com o Claude, 30/10/2026, 10h27 Fortaleza; texto redigido pelo Claude e aprovado pelo dono; gravado diretamente pelo Claude para não interromper o Codex. Pedidos repetidos passo3(b): conferido no main 8de4672d9e7a85cfb625c3f25bd2620566370920 que não havia complemento AV3 de 30/10/2026, 10h27; somente a diferença abaixo foi acrescentada ao [AV3], que mantém o restante; sem número novo; nenhum número, grupo, linha da tabela do MQ1 ou estado de item muda. A entrada de retomada no fim da fila, pedida abaixo, NÃO foi criada por este registro: cabe ao Codex criá-la. O aviso curto do alto da fila foi estendido com a frase do complemento. Texto do dono preservado integralmente abaixo.
+
+```text
+AV — Complemento ao [AV3]: o que não é necessário agora vai para o fim da fila, nunca é descartado (30/10/2026) [AV3]
+
+Solicitação do dono (30/10/2026, 10h27, horário de Fortaleza).
+
+Pedidos repetidos: é complemento ao [AV3] de 30/10/2026, 10h20, já gravado ou em gravação. Aplique só a diferença, mantendo o restante do [AV3], e registre na proveniência o que mudou.
+
+Palavras do dono, reescritas em norma culta: "Não é para deixar de fazer o que for bom. Pode ir para o final da fila. Nunca jogue fora coisas boas. Se não for importante fazer agora, mande para o final da fila."
+
+O que muda no [AV3]:
+- itens 1 e 2: o trabalho que ainda falta na pausa do plano, no reinício depois da pausa e nos avisos financiados da pausa não é abandonado; ele vai para o FIM DA FILA, depois do último item existente, como uma entrada própria de retomada, com referência ao código, aos testes e às provas já feitos; o recurso continua desligado na abertura até essa entrada ser executada;
+- item 3: todo recurso deixado desligado por esse item segue a mesma regra: a construção da proteção que falta vai para o FIM DA FILA, numa entrada que diz o que já está feito e o que falta, sem perder nenhum trabalho;
+- regra permanente a partir de agora: nada que seja bom para o cliente ou para o lucro é descartado, cancelado, absorvido ou apagado por não ser necessário agora; o que não for importante agora vai para o fim da fila, na ordem em que sair, preservando número, texto, histórico e provas.
+
+Proibido: apagar, cancelar, absorver ou fechar item, código, teste, prova ou histórico; renumerar itens existentes; ligar OPENING_REQUESTED, PLANS_ON_SALE ou qualquer recurso desligado; afrouxar qualquer trava ou teste; mudar preços, limites visíveis ou comissão; criar contas, abrir empresa, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+```
+
+
 ### Investigação e correção da alternância de layout — 28/10/2026
 
 A falha móvel208ms no head6b9bfca810a56b71464558e37385091775ae047f, job122947729764, continua vinculante para essa candidata. O primeiro clique frio fez a página rolar até o disclosure de preços (scrollY14339); frame195.6ms/bloqueio114.6ms sem script atribuído não certifica causa única. Inspeção concreta encontrou alternância de leitura getBoundingClientRect com escrita de classe is-in em cada elemento reveal, tanto no script inicial quanto no componente de navegação. Cada escrita pode invalidar o layout antes da leitura seguinte. A correção faz primeiro todas as leituras, depois todas as escritas/observações, preservando o conteúdo, início antes da hidratação, posição da dobra, reduced-motion, fallback e limpeza do observer. Não promete resolver sozinha a amostra208ms: exige nova medição integral e mantém os nove casos frios e limites existentes.
@@ -15930,6 +15987,41 @@ Privacidade: a divisão é sorteada a cada visita, sem cookie nem dado pessoal; 
 Acessibilidade: AX274 nos novos campos (rótulos, mensagens de erro, prevenção de erro 3.3.6).
 Testes automáticos: a divisão, a validade, o destino depois do vencimento e a contagem separada por destino.
 Lucro: recurso de vendas que aumenta o valor percebido dos planos, sem custo variável novo além das leituras já contadas.
+
+### Complemento ao 510 [CK2] — 30/10/2026, 10h06 Fortaleza
+
+Proveniência: pedido direto do dono na conversa com o Claude, 30/10/2026, 10h06 Fortaleza; texto redigido pelo Claude e aprovado pelo dono; gravado diretamente pelo Claude para não interromper o Codex. Pedidos repetidos passo3(b): conferido no main 550c1cda7c09356ec1510f8244bd81a6db1bb4c2 que não havia complemento CK2 de 30/10/2026, 10h06; somente a diferença abaixo foi acrescentada, e o 510 [CK2] mantém número, posição (Grupo B, abaixo do marco MQ1) e estado. Conferência limitada no mesmo main: LinkTarget em lib/short-link-rules.ts aceita só { kind: "store" } e { kind: "product" }; MAX_LINKS = 100; revalidar no head de implementação. Texto do dono preservado integralmente abaixo.
+
+```text
+CK — Complemento ao 510 [CK2]: link curto para páginas e funis da loja, e divisão entre até 4 destinos (30/10/2026)
+Etiqueta: [CK2]
+
+Solicitação do dono (30/10/2026, 10h06, horário de Fortaleza).
+
+Pedidos repetidos: é complemento ao item 510 [CK2] já gravado. Aplique só a diferença ao item existente, mantendo número, posição e estado (regra "Pedidos repetidos", passo 3, letra b), e registre na proveniência o que mudou. Conferido antes de gravar: os links curtos com QR code, nome, lugar e contagem de visitas, vendas e receita (lib/short-links.ts, lib/short-link-rules.ts, components/short-links.tsx) já existem; o destino alternativo e a validade já estão no 510. Nada disso é refeito.
+
+Estado inicial: o do próprio 510.
+
+Contexto: a central de ajuda do ClickFunnels (support.myclickfunnels.com/docs/getting-started/, lida em 30/10/2026) descreve os Short Links como redirecionamentos que levam "to specific pages or split-test between multiple destinations". No Marktmorgen, o destino de um link curto é só a loja ou um produto (LinkTarget em lib/short-link-rules.ts), e o 510 divide as visitas entre dois destinos. Verifique antes no código atual que isso continua assim.
+
+O que acrescentar ao 510 [CK2]:
+- novos destinos possíveis para um link curto: uma página própria da loja e um funil da loja (o endereço /go/[funil]), além da loja e de um produto; só destinos publicados e visíveis; se o destino for despublicado ou apagado, o link leva à loja e o estúdio avisa na linha do link, nunca uma página de erro;
+- a divisão do 510 aceita de 2 a 4 destinos, com a porcentagem de cada um escolhida pelo criador (somando 100%) ou igual para todos; cada destino tem visitas, vendas e receita próprias, pelo mesmo método de contagem que já existe;
+- se um dos destinos sair do ar, a parte dele passa aos outros, sem perder visitas;
+- a mesma regra de privacidade do 510: sorteio a cada visita, sem cookie nem dado pessoal, só contagens agregadas; o vencedor não é declarado pelo link, e se o criador quiser saber qual vende mais, o estúdio mostra os números lado a lado e, quando houver, a mesma regra de vencedor de 377 [TB3], sem segunda regra estatística.
+
+Acessibilidade (AX274, Parte A, integral): máxima acessibilidade em tudo o que este item criar ou alterar — WCAG 2.2 nível AAA em todos os critérios aplicáveis, em todas as telas, estados, e-mails e arquivos, mais as demais normas e orientações da Parte A; a impossibilidade de um critério AAA precisa ser demonstrada e registrada em docs/accessibility-programme.md, nunca presumida. Os pontos a seguir são verificações obrigatórias deste item, não o limite do que se exige: escolha de destino com rótulo e grupo nomeado; porcentagens com rótulo, soma anunciada e erro explicado em texto quando não somar 100% (3.3.1, 3.3.3); prevenção de erro (3.3.6); números de cada destino em texto real com rótulo; contraste de 7:1, 320 px e 400% de zoom; tudo por teclado. Seção "Acessibilidade" no PR, com os passos e as decisões da tarefa principal antes e depois.
+
+Testes automáticos: cada novo tipo de destino; destino despublicado levando à loja com aviso; divisão de 2, 3 e 4 destinos com porcentagens e sem cookie; parte redistribuída quando um destino sai do ar; contagem separada por destino; mesma regra de 377 [TB3] quando aplicada.
+
+Custo: as mesmas leituras e contagens que um link curto já faz, dentro do limite de links (MAX_LINKS) e de requisições que cada plano já tem, sem fornecedor novo. Calcule o pior caso mensal e anual de cada plano com 100% dos direitos usados e aplique teto automático antes do gasto. Custo desconhecido reprova, nunca é zero.
+
+REGRA DE MARGEM (MR, 27/10/2026): nenhum cliente pagante, considerado isoladamente e usando 100% de todos os direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto; a empresa como um todo não pode dar prejuízo no pior caso a partir da base mínima de clientes pagantes, com 100% dos custos fixos da LLC atribuídos ao Marktmorgen (FX275); a meta de 60% de margem líquida é medida todo mês com números reais. Impostos pela política TX vigente.
+
+Proibido: criar item novo ou mudar número, posição ou estado do 510; destino fora da própria loja; cookie, pixel ou dado pessoal para a divisão; segunda regra estatística; página de erro no lugar de destino; mudar preços, cortar limites visíveis (inclusive MAX_LINKS), alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+```
 
 511. [CK3] Promoção com data de início e de fim marcadas antes.
 Estado inicial: na fila.
@@ -18813,6 +18905,40 @@ Custo: páginas estáticas geradas no build a partir do mesmo conteúdo, filtro 
 REGRA DE MARGEM (MR, 27/10/2026): nenhum cliente pagante, considerado isoladamente e usando 100% de todos os direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto; a empresa como um todo não pode dar prejuízo no pior caso a partir da base mínima de clientes pagantes, com 100% dos custos fixos da LLC atribuídos ao Marktmorgen (FX275); a meta de 60% de margem líquida é medida todo mês com números reais. Impostos pela política TX vigente.
 
 Proibido: criar item novo ou mudar número, posição ou estado do 564; quebrar links antigos da ajuda; conteúdo duplicado sem página canônica; texto novo inventado no resumo; PDF gerado pelo servidor; mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; liderar com "free"; imagem repetida; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+```
+
+### Terceiro complemento ao 564 [HC1] — 30/10/2026, 10h14 Fortaleza
+
+Proveniência: pedido direto do dono na conversa com o Claude, 30/10/2026, 10h14 Fortaleza; texto redigido pelo Claude e aprovado pelo dono; gravado diretamente pelo Claude para não interromper o Codex. Pedidos repetidos passo3(b): conferido no main fdec80b54a3e84c61abdf1db439acf6cc655fd04 que não havia complemento HC1 de 30/10/2026, 10h14; somente a diferença abaixo foi acrescentada, e o 564 [HC1] mantém número, posição (Grupo B, abaixo do marco MQ1) e estado. Conferência limitada no mesmo main: as respostas de lib/help-content.ts são só texto (pergunta e parágrafos), sem índice e sem imagem; app/api/auth/code e app/api/auth/passkey existem; revalidar no head de implementação. Texto do dono preservado integralmente abaixo.
+
+```text
+HC — Terceiro complemento ao 564 [HC1]: índice "On this page" e imagens reais da tela nas respostas da ajuda (30/10/2026)
+Etiqueta: [HC1]
+
+Solicitação do dono (30/10/2026, 10h14, horário de Fortaleza).
+
+Pedidos repetidos: é complemento ao item 564 [HC1] já gravado, que já recebeu os complementos de 30/10/2026, 09h56 (datas) e 10h00 (páginas por área e por resposta). Aplique só a diferença ao item existente, mantendo número, posição e estado (regra "Pedidos repetidos", passo 3, letra b), e registre na proveniência o que mudou. Conferido antes de gravar: o login por código e por chave de acesso (app/api/auth/code, app/api/auth/passkey), a troca de e-mail e a recuperação da conta já existem; os vídeos de ajuda gravados automaticamente estão no 280 [H3-5]. Nada disso é refeito.
+
+Estado inicial: o do próprio 564.
+
+Contexto: a página de artigo da central de ajuda do ClickFunnels (support.myclickfunnels.com/docs/customizing-your-profile/, lida em 30/10/2026) mostra, à direita, o índice "On this page" com as partes do artigo (Overview, Requirements, Accessing Your Profile e outras), e, no texto, imagens da tela real em que a pessoa vai mexer. No Marktmorgen, as respostas da central (lib/help-content.ts) são só texto, sem índice e sem imagem. Verifique antes no código atual que isso continua assim.
+
+O que acrescentar ao 564 [HC1]:
+- índice "On this page" na página de cada resposta que tiver três ou mais partes com título, com um link para cada parte; ao lado do texto no computador e no alto da resposta no celular; a parte que está na tela fica marcada também por texto, não só por cor;
+- imagens reais da tela do estúdio nas respostas que explicam uma tarefa, capturadas automaticamente pelo mesmo mecanismo e na mesma loja sintética do 280 [H3-5] (Playwright, sem dado real de nenhum criador ou comprador), e capturadas de novo sempre que a tela correspondente mudar, para que nenhuma imagem mostre uma tela desatualizada; um teste automático falha se uma imagem for mais antiga que a última mudança da tela que ela mostra;
+- cada imagem tem texto alternativo que diz o que ela mostra e onde fica o botão citado; a imagem só complementa o texto: todo passo e todo nome de botão continuam escritos na resposta, para quem não vê a imagem;
+- regra das imagens do site: cada imagem aparece uma única vez em todo o site, e nenhuma miniatura repete uma imagem já usada em tamanho maior;
+- as imagens seguem o modo escuro quando a pessoa o usa, com uma captura para cada modo, sem repetir a mesma captura.
+
+Acessibilidade (AX274, Parte A, integral): máxima acessibilidade em tudo o que este item criar ou alterar — WCAG 2.2 nível AAA em todos os critérios aplicáveis, em todas as telas, estados, e-mails e arquivos, mais as demais normas e orientações da Parte A; a impossibilidade de um critério AAA precisa ser demonstrada e registrada em docs/accessibility-programme.md, nunca presumida. Os pontos a seguir são verificações obrigatórias deste item, não o limite do que se exige: índice como região de navegação com nome e a parte atual anunciada; texto alternativo em cada imagem; nenhuma informação só na imagem (a imagem de tela é registrada em docs/accessibility-programme.md como caso do 1.4.9, com o texto equivalente completo ao lado); imagens ampliáveis sem perder nitidez até 400% de zoom; contraste de 7:1 no texto; 320 px; leitor de tela e teclado. Seção "Acessibilidade" no PR, com os passos e as decisões da tarefa principal antes e depois.
+
+Custo: as imagens são geradas no CI e servidas como arquivos estáticos; o armazenamento e a entrega entram como custo fixo, com teto, como os vídeos do 280 [H3-5]. Custo desconhecido reprova, nunca é zero.
+
+REGRA DE MARGEM (MR, 27/10/2026): nenhum cliente pagante, considerado isoladamente e usando 100% de todos os direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto; a empresa como um todo não pode dar prejuízo no pior caso a partir da base mínima de clientes pagantes, com 100% dos custos fixos da LLC atribuídos ao Marktmorgen (FX275); a meta de 60% de margem líquida é medida todo mês com números reais. Impostos pela política TX vigente.
+
+Proibido: criar item novo ou mudar número, posição ou estado do 564; segundo mecanismo de captura além do 280 [H3-5]; dado real de criador ou comprador em qualquer imagem; imagem desatualizada; informação só na imagem; imagem repetida; mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
 
 Aplicar a regra VR.
 ```
