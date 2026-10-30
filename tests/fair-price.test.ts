@@ -19,6 +19,7 @@
  *     coupon is used instead when it takes off more; no country, no plan, a
  *     membership, or a store with it off: nothing.
  */
+import { TEST_CONSENT } from "./digital-consent-fixture";
 import { DEFAULT_FAIR, countryOff, fairCouponId, fairOff, parseFair, readCountry, storeCountryOff } from "@/lib/fair-price";
 import { PRICE_LEVELS } from "@/lib/fair-price-data";
 import { addProduct, claimHandle, ensureStatsId, setFair, setProductExtras, setProductLink, setStripeAccount, setSubscription, storeForEmail } from "@/lib/store";
@@ -106,7 +107,7 @@ async function main(): Promise<void> {
   const open = async (country: string, more: Parameters<typeof createCheckout>[4] = {}) => {
     checkouts.length = 0;
     const store = (await storeForEmail(OWNER))!;
-    await createCheckout(store, (await readProduct(store, made.product.id))!, "https://marktmorgen.com", "", { country, ...more });
+    await createCheckout(store, (await readProduct(store, made.product.id))!, "https://marktmorgen.com", "", { country, ...more, digitalConsent: TEST_CONSENT });
     return checkouts[0];
   };
   let sent = await open("IN");

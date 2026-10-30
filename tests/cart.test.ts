@@ -12,6 +12,7 @@
  *     already reads them; a code box only when nothing was taken off;
  *   - an affiliate's share is kept for each line.
  */
+import { TEST_CONSENT } from "./digital-consent-fixture";
 import { MAX_CART, NO_DEAL, cartable, dealOff, parseCartDeal, readCartIds } from "@/lib/cart-rules";
 import { NO_RECOVERY } from "@/lib/recovery-setting";
 import { cartPrice, createCartCheckout, offersCart } from "@/lib/cart-checkout";
@@ -89,18 +90,18 @@ async function main(): Promise<void> {
   is("or the fair price for the buyer's country when it takes off more", cartPrice(store, product("a", 2000), "IN", now), { cents: 1200, off: 40 });
 
   part("The checkout");
-  await createCartCheckout(shop(), [product("a", 1900), product("b", 900), product("c", 2700)], "https://marktmorgen.com", { via: { aff: "affid0000001", rate: 20 } });
+  await createCartCheckout(shop(), [product("a", 1900), product("b", 900), product("c", 2700)], "https://marktmorgen.com", { digitalConsent: TEST_CONSENT, via: { aff: "affid0000001", rate: 20 } });
   const body = sent.at(-1) as URLSearchParams;
   is("one line each, at its price", [body.get("line_items[0][price_data][unit_amount]"), body.get("line_items[1][price_data][unit_amount]"), body.get("line_items[2][price_data][unit_amount]")], ["1900", "900", "2700"]);
   is("the first is the order's product, the rest named as added ones", [body.get("metadata[product]"), body.get("metadata[bump]"), body.get("metadata[bump2]"), body.get("metadata[bump3]"), body.get("metadata[cart]")], ["a", "b", "c", null, "yes"]);
   is("with what each added one was charged", [body.get("metadata[bump_cents]"), body.get("metadata[bump2_cents]")], ["900", "2700"]);
   is("and each one's share for the affiliate who sent the buyer", [body.get("metadata[via]"), body.get("metadata[via_rate]"), body.get("metadata[bump_rate]")], ["affid0000001", "20", "20"]);
   is("a code box, since nothing was taken off", body.get("allow_promotion_codes"), "true");
-  await createCartCheckout(store, [product("a", 2000), product("b", 2000)], "https://marktmorgen.com", { country: "US" });
+  await createCartCheckout(store, [product("a", 2000), product("b", 2000)], "https://marktmorgen.com", { digitalConsent: TEST_CONSENT, country: "US" });
   const onSale = sent.at(-1) as URLSearchParams;
   is("a sale taken off its own line, and then no code box", [onSale.get("line_items[0][price_data][unit_amount]"), onSale.get("line_items[1][price_data][unit_amount]"), onSale.get("allow_promotion_codes")], ["1500", "2000", null]);
   let refused = "";
-  await createCartCheckout(shop(), [1, 2, 3, 4, 5].map((n) => product(`p${n}`, 100)), "https://marktmorgen.com").catch((error: Error) => {
+  await createCartCheckout(shop(), [1, 2, 3, 4, 5].map((n) => product(`p${n}`, 100)), "https://marktmorgen.com", { digitalConsent: TEST_CONSENT }).catch((error: Error) => {
     refused = error.message;
   });
   is("never more than four", refused.includes("one to four"), true);
@@ -113,7 +114,7 @@ async function main(): Promise<void> {
   ], [{ on: false, min: 2, percent: 10 }, { on: true, min: 3, percent: 15 }, { on: true, min: 2, percent: 10 }]);
   const deal = { on: true, min: 3, percent: 15 };
   is("taken off from that many, and not before", [dealOff(deal, 2), dealOff(deal, 3), dealOff(deal, 4), dealOff({ ...deal, on: false }, 4)], [0, 15, 15, 0]);
-  await createCartCheckout(shop({ cartDeal: deal }), [product("a", 2000), product("b", 1000), product("c", 3000)], "https://marktmorgen.com");
+  await createCartCheckout(shop({ cartDeal: deal }), [product("a", 2000), product("b", 1000), product("c", 3000)], "https://marktmorgen.com", { digitalConsent: TEST_CONSENT });
   const dealt = sent.at(-1) as URLSearchParams;
   is("each line that much cheaper, said on the order, and no code box", [
     dealt.get("line_items[0][price_data][unit_amount]"),
@@ -123,7 +124,7 @@ async function main(): Promise<void> {
     dealt.get("metadata[bump_cents]"),
     dealt.get("allow_promotion_codes"),
   ], ["1700", "850", "2550", "15", "850", null]);
-  await createCartCheckout(shop({ cartDeal: deal }), [product("a", 2000), product("b", 1000)], "https://marktmorgen.com");
+  await createCartCheckout(shop({ cartDeal: deal }), [product("a", 2000), product("b", 1000)], "https://marktmorgen.com", { digitalConsent: TEST_CONSENT });
   is("two are not enough for a deal from three", (sent.at(-1) as URLSearchParams).get("metadata[cart_deal]"), null);
 
   done();

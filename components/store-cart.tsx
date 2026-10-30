@@ -5,6 +5,7 @@ import { cartWords } from "@/lib/buyer-words/cart";
 import { MAX_CART } from "@/lib/cart-rules";
 import type { LanguageCode } from "@/lib/store-language";
 import { AssistReminderBox } from "@/components/assistant-reminder-box";
+import { DigitalConsentBox } from "@/components/digital-consent-box";
 
 /**
  * A store's cart (lib/cart-rules.ts), kept in the visitor's own browser and
@@ -117,7 +118,7 @@ export function CartButton({
 }: {
   handle: string;
   lang: LanguageCode;
-  notice: "changed" | "error" | null;
+  notice: "changed" | "error" | "consent" | null;
   /** The store's name when its checkout offers the Store assistant's box for one reminder (lib/assistant-reminder.ts); "" when not. */
   remind?: string;
   /** A cart put back as it was, from a reminder's link or the way back from its checkout (lib/checkout-recovery.ts, cartLink). */
@@ -190,7 +191,7 @@ export function CartButton({
               {c.close}
             </button>
           </div>
-          {notice ? (
+          {notice && notice !== "consent" ? (
             <p className="st-note mt-3 text-sm" role="alert">{notice === "changed" ? c.changed : c.error}</p>
           ) : null}
           {ids.length === 0 ? (
@@ -304,6 +305,8 @@ export function CartButton({
                     <span className="tabular-nums">{total}</span>
                   </p>
                   {remind ? <AssistReminderBox id={`r-cart-${handle}`} lang={lang} store={remind} /> : null}
+                  {/* Everything a cart holds is handed over digitally (lib/cart-rules.ts, cartable), so it always asks. */}
+                  <DigitalConsentBox id={`dc-cart-${handle}`} lang={lang} refused={notice === "consent"} />
                   <button type="submit" className="btn st-btn btn-block">{c.checkout(total)}</button>
                   <p className="st-muted text-xs">{c.note}</p>
                 </form>

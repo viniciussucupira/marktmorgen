@@ -24,6 +24,7 @@
  *     and every form that opens a payment page leaves the frame the home
  *     page shows the store in.
  */
+import { TEST_CONSENT } from "./digital-consent-fixture";
 import { readFileSync, readdirSync, statSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { offersCart } from "@/lib/cart-checkout";
@@ -270,7 +271,7 @@ async function main(): Promise<void> {
   const product = (await readProduct(store, listing.id))!;
   const five = product.options.find((o) => o.label === "5 weeks")!;
   stripe.length = 0;
-  const opened = await createCheckout(store, product, "https://marktmorgen.com", five.id);
+  const opened = await createCheckout(store, product, "https://marktmorgen.com", five.id, { digitalConsent: TEST_CONSENT });
   const sent = stripe[0];
   is("one request, and it opens", [stripe.length, opened.url], [1, "https://checkout.stripe.com/c/pay/demo"]);
   is("signed with the demo's key, on the demo's account", [sent.key, sent.account], [DEMO_KEY, DEMO_CONNECTED_ACCOUNT]);
@@ -280,14 +281,14 @@ async function main(): Promise<void> {
 
   stripe.length = 0;
   refuseName = true;
-  const unnamed = await createCheckout(store, product, "https://marktmorgen.com", five.id);
+  const unnamed = await createCheckout(store, product, "https://marktmorgen.com", five.id, { digitalConsent: TEST_CONSENT });
   refuseName = false;
   is("a refused name never costs the checkout: it opens without", [stripe.length, stripe[1]?.body.has("branding_settings[display_name]"), unnamed.url], [2, false, "https://checkout.stripe.com/c/pay/demo"]);
 
   // The day our own key is a live one.
   process.env.STRIPE_SECRET_KEY = OUR_LIVE_KEY;
   stripe.length = 0;
-  await createCheckout(store, product, "https://marktmorgen.com", five.id);
+  await createCheckout(store, product, "https://marktmorgen.com", five.id, { digitalConsent: TEST_CONSENT });
   is("with a live key of ours, the demo still asks with its test key", [stripe[0].key, stripe[0].account], [DEMO_KEY, DEMO_CONNECTED_ACCOUNT]);
   is("and still says it sells in test mode", sellsInTestMode(store), true);
   is("which a creator's store then does not", sellsInTestMode({ stripeAccountId: "acct_1Creator00001" }), false);
@@ -305,7 +306,7 @@ async function main(): Promise<void> {
   await setProductLink("owner@example.com", made.product.id, "https://example.com/guide");
   const theirs = (await storeForEmail("owner@example.com"))!;
   stripe.length = 0;
-  await createCheckout(theirs, (await readProduct(theirs, made.product.id))!, "https://marktmorgen.com");
+  await createCheckout(theirs, (await readProduct(theirs, made.product.id))!, "https://marktmorgen.com", undefined, { digitalConsent: TEST_CONSENT });
   is("a creator's checkout is asked with our key and carries no name of ours", [stripe[0].key, stripe[0].account, stripe[0].body.has("branding_settings[display_name]")], [OUR_TEST_KEY, "acct_1Creator00001", false]);
 
   part("The ways it is not like other stores");

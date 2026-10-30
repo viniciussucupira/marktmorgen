@@ -15,6 +15,7 @@
  *     free trial on top;
  *   - one reminder, never to somebody who already kept it.
  */
+import { TEST_CONSENT } from "./digital-consent-fixture";
 import { addProduct, claimHandle, ensureStatsId, setProductLink, setStripeAccount, setSubscription, storeForEmail } from "@/lib/store";
 import { MIN_DEFER_SECONDS, datesInFile, firstChargeAt, letteredDate, readRenewal, reminderAt } from "@/lib/move-rules";
 import { addRows, finishUpload, runImport, sendMoveReminders, startImport } from "@/lib/imports";
@@ -162,14 +163,14 @@ async function main(): Promise<void> {
   is("it is Ada's, for this membership", (await readMove(store, adaLink[1], adaLink[2]))?.e, "ada@example.com");
   is("it opens nothing for another product", await readMove(store, guide.product.id, adaLink[2]), null);
   is("and nothing with a token made up", await readMove(store, adaLink[1], "f".repeat(40)), null);
-  const opened = await openMove(store, adaLink[1], adaLink[2], "https://marktmorgen.com", now);
+  const opened = await openMove(store, adaLink[1], adaLink[2], "https://marktmorgen.com", now, TEST_CONSENT);
   is("the checkout opens", opened.ok, true);
   const body = checkouts.at(-1)!;
   is("for her address only", body.get("customer_email"), "ada@example.com");
   is("first charged on the renewal date", body.get("subscription_data[trial_end]"), String(in20));
   is("with no free trial on top", body.get("subscription_data[trial_period_days]"), null);
   is("marked as moved, on the payment and on the subscription", [body.get("metadata[moved]"), body.get("subscription_data[metadata][moved]"), body.get("metadata[first_charge]")], ["yes", "yes", String(in20)]);
-  await openMove(store, benLink[1], benLink[2], "https://marktmorgen.com", now);
+  await openMove(store, benLink[1], benLink[2], "https://marktmorgen.com", now, TEST_CONSENT);
   const due = checkouts.at(-1)!;
   is("a payment already due is taken at checkout", [due.get("subscription_data[trial_end]"), due.get("metadata[moved]")], [null, "yes"]);
 

@@ -1,4 +1,5 @@
 import { withinStore } from "@/lib/metered-limits";
+import { type DigitalConsent, consentFromForm } from "@/lib/digital-consent";
 import type { NextRequest } from "next/server";
 import { linkOrigin, originFrom } from "@/lib/request-origin";
 import { normaliseHandle, storeForHandle } from "@/lib/store";
@@ -19,8 +20,11 @@ export async function POST(request: NextRequest) {
 
   let handle = "";
   let token = "";
+  // The box to start access at once (lib/digital-consent.ts), checked again where the charge is built.
+  let consent: DigitalConsent | null = null;
   try {
     const form = await (await limited(request, MAX_BODY_BYTES)).formData();
+    consent = consentFromForm(form);
     handle = normaliseHandle(String(form.get("handle") ?? ""));
     token = String(form.get("token") ?? "").slice(0, 80);
   } catch {
@@ -32,7 +36,7 @@ export async function POST(request: NextRequest) {
   const back = (status: string) =>
     new Response(null, { status: 303, headers: { Location: `${origin}/@${store.handle}/free?token=${encodeURIComponent(token)}&welcome=${status}`, "Cache-Control": "no-store" } });
   if (!(await withinStore("welcome-open", `${clientAddress(request)}|${store.handle}`, 20, 600, store))) return back("limited");
-  const opened = await openWelcome(store, token, linkOrigin(request, store));
+  const opened = await openWelcome(store, token, linkOrigin(request, store), Math.floor(Date.now() / 1000), consent);
   if (!opened.ok) return back(opened.reason);
   return new Response(null, { status: 303, headers: { Location: opened.url, "Cache-Control": "no-store" } });
 }

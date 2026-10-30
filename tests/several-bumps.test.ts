@@ -19,6 +19,7 @@
  *   - every product checked, and every product of a bundle among them, is
  *     handed over (deliveredIds), and a buyer's list of purchases has each.
  */
+import { TEST_CONSENT } from "./digital-consent-fixture";
 import { addProduct, claimHandle, editProduct, ensureStatsId, setProductExtras, setProductLink, setStripeAccount, setSubscription, storeForEmail } from "@/lib/store";
 import { readListing, readProduct } from "@/lib/catalog";
 import { MAX_BUMPS, activeBumps, bumpTargets, parseBumps } from "@/lib/product-extras";
@@ -103,7 +104,7 @@ async function main(): Promise<void> {
   part("At checkout");
   const open = async (bumps: string[], more: Parameters<typeof createCheckout>[4] = {}) => {
     checkouts.length = 0;
-    await createCheckout(store, course, "https://marktmorgen.com", "", { bumps, ...more });
+    await createCheckout(store, course, "https://marktmorgen.com", "", { bumps, ...more, digitalConsent: TEST_CONSENT });
     return checkouts[0];
   };
   const lines = (sent: URLSearchParams) => {

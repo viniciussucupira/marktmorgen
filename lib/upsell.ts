@@ -67,6 +67,7 @@ import type { ProductImage } from "@/lib/product-image";
 import { bundleFromMeta, bundleMeta, deliverableItems, deliveredIds } from "@/lib/bundle-rules";
 import { type BundleContents, contentsOf, offerableAfterPaying } from "@/lib/bundles";
 import { applyShareToPayment } from "@/lib/platform-share";
+import { CONSENT_META, type DigitalConsent, consentMetaValue, deliversDigitally, validConsent } from "@/lib/digital-consent";
 
 export const UPSELL_COOKIE = "nl_upsell";
 export const UPSELL_WINDOW_SECONDS = 60 * 60;
@@ -181,7 +182,9 @@ export type TakeResult =
   | { kind: "failed" }
   /** Stripe's answer did not arrive; the thanks page finds out what happened. */
   | { kind: "checking" }
-  | { kind: "unavailable" };
+  | { kind: "unavailable" }
+  /** A yes without the box to start access at once checked on this offer's own button (lib/digital-consent.ts): nothing written, nothing charged. */
+  | { kind: "consent" };
 
 type SessionView = {
   status?: unknown;
@@ -238,6 +241,12 @@ export async function takeUpsell(input: {
   /** The offer the page showed; the answer only counts for that one. */
   step: string;
   answer: "yes" | "no";
+  /**
+   * The box to start access at once, checked on this offer's own button
+   * (lib/digital-consent.ts). Each offer is its own contract, so the yes
+   * given for the order before it never counts for this one.
+   */
+  consent?: DigitalConsent | null;
 }): Promise<TakeResult> {
   const { store, session, secret, origin, answer } = input;
   if (!store.stripeAccountId || !isRedisConfigured()) return { kind: "unavailable" };
@@ -284,6 +293,12 @@ export async function takeUpsell(input: {
     ]);
     return { kind: "declined" };
   }
+
+  // Handed over digitally at once: not without this offer's own yes, asked
+  // before anything is written or charged, so the buyer can check it and
+  // answer the same offer again.
+  const digital = deliversDigitally(target);
+  if (digital && !validConsent(input.consent)) return { kind: "consent" };
 
   // Once, however many times the button is pressed.
   const [claimed] = await redisPipeline([
@@ -340,6 +355,8 @@ export async function takeUpsell(input: {
   // lib/webhooks.ts) can say which step was taken.
   body.set("metadata[step_id]", step.id);
   body.set("metadata[step_number]", String(funnel.steps.findIndex((s) => s.id === step.id) + 1));
+  // The yes to start access at once, its version and its time, on the offer's own payment.
+  if (digital && input.consent) body.set(`metadata[${CONSENT_META}]`, consentMetaValue(input.consent));
   if (email) body.set("receipt_email", email);
   // An order that came through an affiliate's link carries them on to what
   // is added after it, at the share this product earns today.
@@ -411,7 +428,8 @@ async function afterPaid(store: Store, session: string, target: Listing, pi: Rec
   // A bundle added this way: its products, from the list on its own payment.
   const listed = bundleFromMeta(pi.metadata as Record<string, string> | null, "bundle");
   const items = listed.length ? (await contentsOf(store, listed).catch(() => null))?.items : undefined;
-  await confirmOffer(store, { reference, parent: session, product: target, email, amountCents, currency, items }).catch((error) =>
+  const metadata = (pi.metadata as Record<string, string> | null) ?? null;
+  await confirmOffer(store, { reference, parent: session, product: target, email, amountCents, currency, items, metadata }).catch((error) =>
     console.error("sending an offer's confirmation failed", error),
   );
   await noteOfferSale(store, target, pi).catch((error) => console.error("telling about an offer's sale failed", error));

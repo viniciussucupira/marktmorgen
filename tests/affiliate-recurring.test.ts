@@ -15,6 +15,7 @@
  *     every payment until the creator releases it;
  *   - visits through an affiliate's link are their own channel.
  */
+import { TEST_CONSENT } from "./digital-consent-fixture";
 import { NO_AFFILIATES, RECURRING_ALWAYS, parseAffiliateSetting, readBonuses } from "@/lib/affiliate-setting";
 import { canonicalEmail, readBook, recordClick, releaseHold, withinMonths } from "@/lib/affiliates";
 import { owedLines } from "@/lib/affiliate-payouts";
@@ -97,7 +98,7 @@ async function main(): Promise<void> {
   const open = async () => {
     checkouts.length = 0;
     const store = (await storeForEmail(OWNER))!;
-    await createCheckout(store, (await readProduct(store, club.product.id))!, "https://marktmorgen.com", "", { via: { aff: SARA, rate: 30 }, cameFrom: { source: "instagram", medium: "post", campaign: "launch", content: "story-a" } });
+    await createCheckout(store, (await readProduct(store, club.product.id))!, "https://marktmorgen.com", "", { digitalConsent: TEST_CONSENT, via: { aff: SARA, rate: 30 }, cameFrom: { source: "instagram", medium: "post", campaign: "launch", content: "story-a" } });
     return checkouts[0];
   };
   await setAffiliateSetting(OWNER, { ...NO_AFFILIATES, enabled: true, percent: 30 });

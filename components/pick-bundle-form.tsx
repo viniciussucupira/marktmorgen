@@ -4,6 +4,7 @@ import { useState } from "react";
 import { formatMoney } from "@/lib/money";
 import { pickWords } from "@/lib/buyer-words/pick";
 import type { LanguageCode } from "@/lib/store-language";
+import { DigitalConsentBox } from "@/components/digital-consent-box";
 
 export type PickItem = { id: string; title: string; cents: number };
 
@@ -28,6 +29,7 @@ export function PickBundleForm({
   lang,
   again,
   place = "",
+  consentAgain = false,
 }: {
   handle: string;
   productId: string;
@@ -41,6 +43,8 @@ export function PickBundleForm({
   /** The page came back because the choice was not that many. */
   again: boolean;
   place?: string;
+  /** The page came back because the box to start access at once was not checked (lib/digital-consent.ts). */
+  consentAgain?: boolean;
 }) {
   const p = pickWords(lang);
   const [chosen, setChosen] = useState<string[]>([]);
@@ -104,6 +108,8 @@ export function PickBundleForm({
         {p.chosen(chosen.length, pick)}
         {done && worth > priceCents ? <span className="st-muted font-normal">{` · ${p.worth(money(worth), money(priceCents))}`}</span> : null}
       </p>
+      {/* A bundle hands over its products digitally, so it always asks (lib/digital-consent.ts). */}
+      <DigitalConsentBox id={`${base}-dc`} lang={lang} refused={consentAgain} />
       <button type="submit" className="btn st-btn btn-block">
         {done ? p.button(pick, money(priceCents)) : p.chooseFirst(pick)}
       </button>

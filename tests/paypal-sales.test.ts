@@ -20,6 +20,7 @@
  *     one whose answer was lost, is handed over when PayPal completes it;
  *   - a full refund takes it back, unless another payment of theirs stands.
  */
+import { TEST_CONSENT } from "./digital-consent-fixture";
 import { claimHandle, ensureStoreId, ensureStatsId, addProduct, setProductLink, setSubscription, setPayPalSeller, storeForEmail, type Listing, type Store } from "@/lib/store";
 import { readListing } from "@/lib/catalog";
 import { CURRENCIES } from "@/lib/money";
@@ -206,7 +207,7 @@ async function main(): Promise<void> {
   part("The order");
   const now = Math.floor(Date.now() / 1000);
   const onSale: Store = { ...store, sale: { ...store.sale, percent: 20, starts: now - 60, ends: now + 3600, all: true, products: [], coupon: "c_sale" } as Store["sale"] };
-  const first = await openOrder(onSale, product, "https://marktmorgen.com");
+  const first = await openOrder(onSale, product, "https://marktmorgen.com", { digitalConsent: TEST_CONSENT });
   is("sent to PayPal's page", first.ok ? first.url : first.reason, `https://www.paypal.com/checkoutnow?token=${orderId(1)}`);
   const sent = seen.find((s) => s.path === "/v2/checkout/orders")!;
   const unit = (sent.body!.purchase_units as Record<string, unknown>[])[0];
@@ -223,7 +224,7 @@ async function main(): Promise<void> {
   is("nothing is handed over", [declined.ok ? "paid" : declined.reason, (await importedFor((await storeForEmail("owner@example.com"))!, "buyer@example.com")).length], ["declined", 0]);
 
   part("Paid");
-  const second = await openOrder(store, product, "https://marktmorgen.com");
+  const second = await openOrder(store, product, "https://marktmorgen.com", { digitalConsent: TEST_CONSENT });
   if (!second.ok) throw new Error("no order");
   captureWith = (o) => ({ status: 201, body: completed(o, "49.00") });
   const paid = await captureOrder(store, second.order);
@@ -245,7 +246,7 @@ async function main(): Promise<void> {
   is("and the list's email says who charged it", chargedLine("Harbor Kitchen", listed), "Every purchase was charged by Harbor Kitchen on their own Stripe or PayPal account.");
 
   part("Not what was asked");
-  const third3 = await openOrder(store, product, "https://marktmorgen.com");
+  const third3 = await openOrder(store, product, "https://marktmorgen.com", { digitalConsent: TEST_CONSENT });
   if (!third3.ok) throw new Error("no order");
   captureWith = (o) => ({ status: 201, body: completed(o, "1.00", "COMPLETED", "other@example.com") });
   const wrong = await captureOrder(store, third3.order);
@@ -253,8 +254,8 @@ async function main(): Promise<void> {
   is("an order of another store is not taken here", (await captureOrder({ ...store, statsId: "another" }, third3.order)).ok, false);
 
   part("Pending, or the answer lost");
-  const fourth = await openOrder(store, product, "https://marktmorgen.com");
-  const fifth = await openOrder(store, product, "https://marktmorgen.com");
+  const fourth = await openOrder(store, product, "https://marktmorgen.com", { digitalConsent: TEST_CONSENT });
+  const fifth = await openOrder(store, product, "https://marktmorgen.com", { digitalConsent: TEST_CONSENT });
   if (!fourth.ok || !fifth.ok) throw new Error("no order");
   captureWith = (o) => ({ status: 201, body: completed(o, "49.00", "PENDING", "slow@example.com") });
   is("a pending payment hands nothing over yet", (await captureOrder(store, fourth.order)).ok, false);
@@ -262,7 +263,7 @@ async function main(): Promise<void> {
   captureWith = () => ({ status: 500, body: { name: "INTERNAL_SERVER_ERROR" } });
   is("an answer lost on the way", (await captureOrder(store, fifth.order)).ok ? "paid" : "error", "error");
   orders.set(fifth.order, completed(fifth.order, "49.00", "COMPLETED", "lost@example.com"));
-  const seventh = await openOrder(store, product, "https://marktmorgen.com");
+  const seventh = await openOrder(store, product, "https://marktmorgen.com", { digitalConsent: TEST_CONSENT });
   if (!seventh.ok) throw new Error("no order");
   orders.set(seventh.order, completed(seventh.order, "49.00", "COMPLETED", "early@example.com"));
   captureWith = () => ({ status: 422, body: { name: "UNPROCESSABLE_ENTITY", details: [{ issue: "ORDER_ALREADY_CAPTURED" }] } });
@@ -281,7 +282,7 @@ async function main(): Promise<void> {
   part("Refunds");
   is("asked often at first, then less, until PayPal's 180 days", [nextLook(0, 60), nextLook(0, 10 * 86_400), nextLook(0, 40 * 86_400), nextLook(0, 181 * 86_400)], [3660, 10 * 86_400 + 21_600, 40 * 86_400 + 86_400, null]);
   // The same buyer pays twice for the same guide; the first is refunded.
-  const sixth = await openOrder(store, product, "https://marktmorgen.com");
+  const sixth = await openOrder(store, product, "https://marktmorgen.com", { digitalConsent: TEST_CONSENT });
   if (!sixth.ok) throw new Error("no order");
   captureWith = (o) => ({ status: 201, body: completed(o, "49.00") });
   const twice = await captureOrder(store, sixth.order);
@@ -322,7 +323,7 @@ async function main(): Promise<void> {
   part("Disconnected");
   await setPayPalSeller("owner@example.com", null);
   store = (await storeForEmail("owner@example.com"))!;
-  is("no PayPal button, no order", [paypalReady(store, product), (await openOrder(store, product, "https://marktmorgen.com")).ok], [false, false]);
+  is("no PayPal button, no order", [paypalReady(store, product), (await openOrder(store, product, "https://marktmorgen.com", { digitalConsent: TEST_CONSENT })).ok], [false, false]);
 
   done();
 }

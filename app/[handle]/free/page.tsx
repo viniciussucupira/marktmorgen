@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { DigitalConsentBox } from "@/components/digital-consent-box";
+import { deliversDigitally } from "@/lib/digital-consent";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { type Listing, type Store, normaliseHandle, storeForPage } from "@/lib/store";
@@ -238,6 +240,8 @@ export default async function FreePage({ params, searchParams }: Params) {
                 <form action="/api/store/welcome/open" method="post" className="mt-4">
                   <input type="hidden" name="handle" value={store.handle} />
                   <input type="hidden" name="token" value={token} />
+                  {/* The box to start access at once (lib/digital-consent.ts), before the offer's checkout opens. */}
+                  {deliversDigitally(welcome.product) ? <DigitalConsentBox id="dc-welcome" lang={store.language} refused={query.welcome === "consent"} className="mb-4" /> : null}
                   <button type="submit" className="btn st-btn btn-lg">
                     {ww.button(welcome.percent)}
                   </button>

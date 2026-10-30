@@ -1,4 +1,6 @@
 import { withinStore } from "@/lib/metered-limits";
+import { DigitalConsentBox } from "@/components/digital-consent-box";
+import { deliversDigitally } from "@/lib/digital-consent";
 import { isDiscordConfigured } from "@/lib/discord";
 import { discordFor } from "@/lib/discord-store";
 import { discordWords } from "@/lib/buyer-words/discord";
@@ -1158,6 +1160,10 @@ export default async function ThanksPage({ params, searchParams }: Params) {
                     {offer.step.priceCents < offer.target.priceCents ? (
                       <p className="st-muted mt-1 text-xs">{t.onItsOwn(money(offer.target.priceCents, store.currency))}</p>
                     ) : null}
+                    {/* Its own contract, so its own box to start access at once (lib/digital-consent.ts); "No thanks" never needs it. */}
+                    {deliversDigitally(offer.target) ? (
+                      <DigitalConsentBox id={`dc-offer-${offer.step.id}`} lang={store.language} refused={query.upsell === "consent"} className="mt-4" />
+                    ) : null}
                     <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2">
                       <button type="submit" name="answer" value="yes" className="btn st-btn">
                         {t.yesAdd(money(offer.step.priceCents, store.currency))}
@@ -1166,6 +1172,7 @@ export default async function ThanksPage({ params, searchParams }: Params) {
                         type="submit"
                         name="answer"
                         value="no"
+                        formNoValidate
                         className="st-footer-link inline-flex min-h-11 items-center px-1 text-sm font-semibold"
                       >
                         {t.noThanks}

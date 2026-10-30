@@ -32,6 +32,7 @@
  * the store's access emails (lib/store-allowance-rules.ts), counted before
  * they go.
  */
+import { consentEmailLines } from "@/lib/digital-consent-email";
 import { countOrder } from "@/lib/orders";
 import { ADMITTED_FIELD, OPEN_HOURS, admitOrders, settleAdmitted } from "@/lib/order-admission";
 import { allowanceFor } from "@/lib/store-allowance-rules";
@@ -251,6 +252,7 @@ async function sendReceipt(input: {
       g.forWho(title, peopleWords(group.people, store.language)),
       g.paidLine(formatMoney(amount, currency, speech(store).lang.locale)),
       g.orderRef(group.session ?? ""),
+      ...consentEmailLines(store, input.session?.metadata),
       "",
       g.passLinkOn,
       groupLink(input.base, group.id),

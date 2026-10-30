@@ -35,6 +35,7 @@ import { funnelHere } from "@/lib/page-funnel-store";
 import { listedReturn, listedSite } from "@/lib/embed-sites";
 import { assistReminderOffered, keepAssistReminder } from "@/lib/assistant-reminder";
 import { EMAIL_PATTERN, MAX_EMAIL_LENGTH, normaliseEmail } from "@/lib/auth";
+import { type DigitalConsent, DigitalConsentMissing, consentFromForm, deliversDigitally } from "@/lib/digital-consent";
 
 /** The checkout this browser last opened for a limited product. */
 const HOLD_COOKIE = "nl_stock_hold";
@@ -91,8 +92,14 @@ export async function POST(request: NextRequest) {
   let remind = false;
   let remindEmail = "";
   let remindVersion = "";
+  // The box to start access at once, which loses the right to cancel once
+  // it starts (lib/digital-consent.ts): only the checked box, with the
+  // version of the sentence this code shows. Checked again where the charge
+  // is built, so nothing digital is opened without it.
+  let digitalConsent: DigitalConsent | null = null;
   try {
     const form = await (await limited(request, 8_000)).formData();
+    digitalConsent = consentFromForm(form);
     const h = form.get("handle");
     const p = form.get("product");
     // An id, and only an id. The amount that goes to Stripe is read from the
@@ -169,6 +176,11 @@ export async function POST(request: NextRequest) {
   // Every license key in the pool is given: nobody is charged for one that
   // does not exist. The creator was emailed when the pool ran low.
   if (await outOfKeys(store, product).catch(() => false)) return away(`/@${store.handle}?status=soldout`);
+
+  // Asked before a gift or a group is written down, so a refused yes leaves
+  // nothing behind; the charge itself checks again, with what was added.
+  const consentBack = `/@${store.handle}/p/${product.id}?consent=needed${giftTo.trim() && !preorder ? "&gift=consent#gift" : people.trim() && !preorder ? "&group=consent#group" : preorder ? "#preorder" : "#buy"}`;
+  if (!digitalConsent && deliversDigitally(product, optionId || null)) return away(consentBack);
 
   // A gift: written down before its checkout opens, and its checkout is one
   // plain payment with nothing added and no offer after it.
@@ -277,6 +289,7 @@ export async function POST(request: NextRequest) {
         funnel: funnel ?? undefined,
         ab,
         embedSite: listedReturn(store.embedSites, returnAsked) ?? listedSite(store.embedSites, siteAsked) ?? undefined,
+        digitalConsent,
       }),
     );
     if (!held.ok) return away(`/@${store.handle}?status=${held.reason}`);
@@ -305,6 +318,10 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     // The store's orders for the month are reached (lib/order-admission.ts): said plainly, nothing charged.
     if (error instanceof OrdersPausedError) return away(`/@${store.handle}?status=${error.reason === "paused" ? "paused" : "error"}`);
+    // The box was not checked, or the page was from before its words
+    // changed: back to the form it belongs to, said beside the box. Refused
+    // before Stripe is reached, so nothing is charged and no unit is held.
+    if (error instanceof DigitalConsentMissing) return away(consentBack);
     console.error("checkout failed", error);
     // A checkout Stripe would not open: counted, and the creator told (lib/checkout-trouble.ts).
     after(() => noteCheckoutTrouble(store, error).catch(() => {}));

@@ -1,4 +1,5 @@
 import type { NextRequest } from "next/server";
+import { type DigitalConsent, consentFromForm } from "@/lib/digital-consent";
 import { linkOrigin, originFrom } from "@/lib/request-origin";
 import { normaliseHandle, storeForHandle } from "@/lib/store";
 import { UPSELL_COOKIE, takeUpsell } from "@/lib/upsell";
@@ -24,8 +25,11 @@ export async function POST(request: NextRequest) {
   let session = "";
   let step = "";
   let answer: "yes" | "no" | "" = "";
+  // This offer's own box to start access at once (lib/digital-consent.ts), read only with a yes.
+  let consent: DigitalConsent | null = null;
   try {
     const form = await (await limited(request, MAX_BODY_BYTES)).formData();
+    consent = consentFromForm(form);
     const h = form.get("handle");
     const s = form.get("session_id");
     const t = form.get("step");
@@ -54,6 +58,7 @@ export async function POST(request: NextRequest) {
     origin: linkOrigin(request, store),
     step,
     answer,
+    consent: answer === "yes" ? consent : null,
   });
   const back = (status: string) =>
     new Response(null, {

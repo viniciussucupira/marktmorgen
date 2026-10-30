@@ -14,6 +14,7 @@
  *   - a buyer brought over from another platform is in the list's groups as
  *     history: nothing spent, no purchase date here, "imported".
  */
+import { TEST_CONSENT } from "./digital-consent-fixture";
 import { claimHandle, ensureStatsId, addProduct, setProductLink, setSubscription, setPayPalSeller, setAffiliateSetting, storeForEmail } from "@/lib/store";
 import { readListing } from "@/lib/catalog";
 import { captureOrder, openOrder, readPayPalSales, watchPayPal } from "@/lib/paypal-sales";
@@ -93,11 +94,11 @@ async function main(): Promise<void> {
   part("The order keeps what the visit carried");
   const now = Math.floor(Date.now() / 1000);
   const onSale = { ...store, sale: { ...store.sale, percent: 20, starts: now - 60, ends: now + 3600, all: true, products: [], coupon: "c_sale" } } as typeof store;
-  const opened = await openOrder(onSale, product, "https://marktmorgen.com", { meta: { channel: "instagram", channel_first: "tiktok", bad_KEY: "x" }, via: { aff: AFF, rate: 30 } });
+  const opened = await openOrder(onSale, product, "https://marktmorgen.com", { meta: { channel: "instagram", channel_first: "tiktok", bad_KEY: "x" }, via: { aff: AFF, rate: 30 }, digitalConsent: TEST_CONSENT });
   if (!opened.ok) throw new Error("no order");
   const paid = await captureOrder(onSale, opened.order);
   if (!paid.ok) throw new Error(`not paid: ${paid.reason}`);
-  is("the channel, the affiliate and the sale, on the payment", [paid.paid.meta, paid.paid.via, paid.paid.off, paid.paid.sale, paid.paid.handle], [{ channel: "instagram", channel_first: "tiktok" }, { aff: AFF, rate: 30 }, 980, 20, "harbor"]);
+  is("the channel, the affiliate, the sale and the yes to start access at once, on the payment", [paid.paid.meta, paid.paid.via, paid.paid.off, paid.paid.sale, paid.paid.handle], [{ dc: `yes:${TEST_CONSENT.version}:${TEST_CONSENT.at}`, channel: "instagram", channel_first: "tiktok" }, { aff: AFF, rate: 30 }, 980, 20, "harbor"]);
   await handOverPayPal(store, paid.paid);
   await handOverPayPal(store, paid.paid);
 

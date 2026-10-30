@@ -18,6 +18,7 @@
  * it, and its buyer is emailed the way in. A refund in full, before or after,
  * takes it back.
  */
+import { consentEmailLines } from "@/lib/digital-consent-email";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { sendEmail } from "@/lib/email";
 import { grantImported, importedKey } from "@/lib/imported-purchases";
@@ -261,6 +262,7 @@ async function sendReceipt(store: Store, product: Listing, session: Session, to:
       p.receiptWhat(product.title),
       p.receiptPaid(formatMoney(amount, currency, said.lang.locale)),
       p.receiptRef(reference),
+      ...consentEmailLines(store, session.metadata),
       "",
       day ? p.receiptWhen(said.date(Date.parse(`${day}T00:00:00Z`))) : p.receiptLater,
       "",

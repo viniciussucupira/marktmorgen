@@ -28,6 +28,8 @@ import { pickWords } from "@/lib/buyer-words/pick";
 import { PickBundleForm } from "@/components/pick-bundle-form";
 import { AddToCart } from "@/components/store-cart";
 import { AssistReminderBox } from "@/components/assistant-reminder-box";
+import { DigitalConsentBox } from "@/components/digital-consent-box";
+import { deliversDigitally } from "@/lib/digital-consent";
 import { assistReminderOffered } from "@/lib/assistant-reminder";
 import { type AskWhen, isAskWhen } from "@/lib/ask-when";
 import { type UnitLine, unitLines } from "@/lib/option-units";
@@ -282,7 +284,7 @@ function GivenOptionPicker({ store, product, each = false }: { store: Store; pro
  * message, then Stripe's page as for anything else (lib/gifts.ts). Folded
  * away under the buy box, because most buyers buy for themselves.
  */
-export function GiftBox({ store, product, problem = "" }: { store: Store; product: Listing; problem?: string }) {
+export function GiftBox({ store, product, problem = "", consentAgain = false }: { store: Store; product: Listing; problem?: string; consentAgain?: boolean }) {
   const { w, money } = speech(store);
   const problems = w.giftProblems;
   return (
@@ -309,6 +311,7 @@ export function GiftBox({ store, product, problem = "" }: { store: Store; produc
           <span className="st-label">{w.messageOptional}</span>
           <textarea className="st-field mt-2" name="gift_message" rows={3} maxLength={500} />
         </label>
+        {deliversDigitally(product) ? <DigitalConsentBox id={`dc-gift-${product.id}`} lang={store.language} refused={consentAgain && problem === "consent"} /> : null}
         <button type="submit" className="btn st-btn btn-block">
           {product.options.length > 0 ? w.buyAsGift : w.buyAsGiftFor(money(salePrice(product.priceCents, offNow(store, product))))}
         </button>
@@ -392,7 +395,7 @@ export function RemindBox({ store, product, asked = "", when = "hour" }: { store
   );
 }
 
-export function GroupBox({ store, product, problem = "" }: { store: Store; product: Listing; problem?: string }) {
+export function GroupBox({ store, product, problem = "", consentAgain = false }: { store: Store; product: Listing; problem?: string; consentAgain?: boolean }) {
   const { w, money } = speech(store);
   const each = money(salePrice(product.priceCents, offNow(store, product)));
   const problems = w.teamProblems(MIN_PEOPLE, MAX_PEOPLE);
@@ -422,6 +425,7 @@ export function GroupBox({ store, product, problem = "" }: { store: Store; produ
             inputMode="numeric"
           />
         </label>
+        {deliversDigitally(product) ? <DigitalConsentBox id={`dc-group-${product.id}`} lang={store.language} refused={consentAgain && problem === "consent"} /> : null}
         <button type="submit" className="btn st-btn btn-block">
           {product.options.length > 0 ? w.buyForTeam : w.buyForTeamEach(each)}
         </button>
@@ -483,7 +487,7 @@ export function WaitlistForm({ store, product, writes = false }: { store: Store;
  * it does not come out, and the waitlist still there for whoever would rather
  * wait. Plain HTML, like every form that opens a payment page.
  */
-export function PreorderForm({ store, product, day, writes = false }: { store: Store; product: Listing; day: string; writes?: boolean }) {
+export function PreorderForm({ store, product, day, writes = false, consentAgain = false }: { store: Store; product: Listing; day: string; writes?: boolean; consentAgain?: boolean }) {
   const { money, date } = speech(store);
   const p = preorderWords(store.language);
   const price = money(salePrice(product.priceCents, offNow(store, product)));
@@ -495,6 +499,7 @@ export function PreorderForm({ store, product, day, writes = false }: { store: S
         <input type="hidden" name="product" value={product.id} />
         <input type="hidden" name="preorder" value="yes" />
         <p className="text-sm font-bold" style={{ color: "var(--st-accent-text)" }}>{p.expected(expected)}</p>
+        {deliversDigitally(product) ? <DigitalConsentBox id={`dc-pre-${product.id}`} lang={store.language} refused={consentAgain} /> : null}
         <button type="submit" className="btn st-btn btn-block">
           {p.button(price)}
         </button>
@@ -548,6 +553,8 @@ export function BuyBox({
   bundleItems = null,
   pickAgain = false,
   place = "",
+  consentAgain = false,
+  embed = null,
 }: {
   store: Store;
   product: Listing;
@@ -575,8 +582,12 @@ export function BuyBox({
    * so the two forms' fields keep ids of their own.
    */
   place?: string;
+  /** The page came back because the box to start access at once was not checked (lib/digital-consent.ts). */
+  consentAgain?: boolean;
+  /** Opened from a card on one of the creator's listed sites: carried to the checkout, which checks it against the store's list. */
+  embed?: { site: string; back: string } | null;
 }) {
-  if (soon && !isFree(product)) return preorder ? <PreorderForm store={store} product={product} day={preorder} writes={writes} /> : <WaitlistForm store={store} product={product} writes={writes} />;
+  if (soon && !isFree(product)) return preorder ? <PreorderForm store={store} product={product} day={preorder} writes={writes} consentAgain={consentAgain} /> : <WaitlistForm store={store} product={product} writes={writes} />;
   const { w, money } = speech(store);
   const options = sellableOptions(product);
   const every = product.recurring ? ` ${w.every(product.recurring.interval)}` : "";
@@ -669,7 +680,7 @@ export function BuyBox({
   // The creator's own PayPal, as well as Stripe or instead of it (lib/paypal-sales.ts).
   const withPayPal = ready && paypalReady(store, product);
   if (!canSellProduct(store, product) || !ready) {
-    if (withPayPal) return <PayPalButton store={store} product={product} alone />;
+    if (withPayPal) return <PayPalButton store={store} product={product} alone consentAgain={consentAgain} />;
     /*
       Sellable store, but this one has nothing attached to hand over. Better to
       say so than to take the money and work out the delivery afterward.
@@ -700,15 +711,25 @@ export function BuyBox({
         lang={store.language}
         again={pickAgain}
         place={place}
+        consentAgain={consentAgain}
       />
     );
   }
 
+  // The box to start access at once (lib/digital-consent.ts): required where
+  // the product itself hands something over digitally; offered, and asked
+  // for by the server only if one is checked, where only an added product
+  // does. Its form also carries the PayPal button, so one box serves both.
+  const formId = `buy-${place}${product.id}`;
+  const digitalHere = deliversDigitally(product);
+  const digitalAdded = !digitalHere && extras.some((extra) => deliversDigitally(extra.target));
   return (
     <>
-    <form action="/api/store/checkout" method="post" target="_top" className="mt-4" data-checkout="">
+    <form id={formId} action="/api/store/checkout" method="post" target="_top" className="mt-4" data-checkout="">
       <input type="hidden" name="handle" value={store.handle} />
       <input type="hidden" name="product" value={product.id} />
+      {embed?.site ? <input type="hidden" name="site" value={embed.site} /> : null}
+      {embed?.back ? <input type="hidden" name="return" value={embed.back} /> : null}
       {/*
         target="_top", here and on every form that opens a payment page:
         Stripe and PayPal refuse to be drawn inside a frame, and the home
@@ -859,6 +880,7 @@ export function BuyBox({
       ) : null}
       {/* Starts unchecked: one reminder if this checkout is left unpaid, only when asked for here (lib/assistant-reminder.ts). */}
       {assistReminderOffered(store, product) ? <AssistReminderBox id={`r-${place}${product.id}`} lang={store.language} store={store.name} className="mb-4" /> : null}
+      {digitalHere || digitalAdded ? <DigitalConsentBox id={`dc-${place}${product.id}`} lang={store.language} refused={consentAgain} required={digitalHere} className="mb-4" /> : null}
       <button type="submit" className="btn st-btn btn-block">
         <span className="bump-off">
           {pwyw
@@ -941,7 +963,7 @@ export function BuyBox({
       ) : null}
       <SaleNote store={store} product={product} />
     </form>
-    {withPayPal ? <PayPalButton store={store} product={product} alone={false} /> : null}
+    {withPayPal ? <PayPalButton store={store} product={product} alone={false} formId={formId} /> : null}
     </>
   );
 }
@@ -950,12 +972,27 @@ export function BuyBox({
  * Paying with PayPal, into the creator's own PayPal account: one product at
  * its one price, nothing added. A plain form; the price is read on the server.
  */
-function PayPalButton({ store, product, alone }: { store: Store; product: Listing; alone: boolean }) {
+function PayPalButton({ store, product, alone, formId = "", consentAgain = false }: { store: Store; product: Listing; alone: boolean; formId?: string; consentAgain?: boolean }) {
   const { w, money } = speech(store);
+  if (!alone && formId) {
+    // Beside the card checkout: the same form, sent to PayPal instead, so the
+    // box above it (lib/digital-consent.ts) is the one this payment needs too.
+    // The PayPal route reads only the handle, the product and that box.
+    return (
+      <div className="mt-3">
+        <button type="submit" form={formId} formAction="/api/store/paypal/checkout" formMethod="post" formTarget="_top" className="btn btn-block st-btn-ghost">
+          {w.payPal(alone, money(payPalPrice(store, product)))}
+        </button>
+        <p className="st-muted mt-2 text-center text-xs">{w.payPalNote(store.name)}</p>
+      </div>
+    );
+  }
   return (
     <form action="/api/store/paypal/checkout" method="post" target="_top" className={alone ? "mt-4" : "mt-3"}>
       <input type="hidden" name="handle" value={store.handle} />
       <input type="hidden" name="product" value={product.id} />
+      {/* Everything PayPal sells here is handed over digitally (lib/paypal-sales.ts, sellsWithPayPal). */}
+      <DigitalConsentBox id={`dc-pp-${product.id}`} lang={store.language} refused={consentAgain} className="mb-4" />
       <button type="submit" className={`btn btn-block ${alone ? "st-btn" : "st-btn-ghost"}`}>
         {w.payPal(alone, money(payPalPrice(store, product)))}
       </button>
@@ -1021,8 +1058,13 @@ export function pageAction(
   if (sellableOptions(product).length > 0 || activePlan(product) || activeBumps(related, product).length > 0 || activeYearly(product, store.tiers)) {
     return { action: { kind: "link", href: "#buy" }, label: trial ? w.startTrial(trial) : w.chooseAndBuy };
   }
+  // Handed over digitally: the buyer first checks the box to start access at
+  // once (lib/digital-consent.ts), which is in the buy box, so the buttons
+  // lead there, as they do for anything to choose before paying. Only a
+  // product that is shipped with nothing digital goes straight to paying.
+  const direct = !deliversDigitally(product);
   return {
-    action: { kind: "checkout", handle: store.handle, product: product.id },
+    action: direct ? { kind: "checkout", handle: store.handle, product: product.id } : { kind: "link", href: "#buy" },
     label: activePwyw(product)
       ? w.chooseYourPrice
       : trial

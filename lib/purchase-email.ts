@@ -34,6 +34,7 @@
  * its license key when it hands one out — kept under the offer's payment,
  * the same reference the thanks page and the list of purchases use.
  */
+import { consentEmailLines } from "@/lib/digital-consent-email";
 import { ADMITTED_FIELD, settleAdmitted } from "@/lib/order-admission";
 import { countOrder } from "@/lib/orders";
 import { shippingWords } from "@/lib/buyer-words/shipping";
@@ -254,6 +255,8 @@ export function confirmationFor(
     ...ticked.flatMap((added) => (added.items.length ? [words.insideOf(added.listing.title, added.items.map((p) => p.title).join(", "))] : [])),
     words.paid(paid),
     words.orderReference(id),
+    // The yes to start access at once, confirmed on a durable medium (lib/digital-consent-email.ts).
+    ...consentEmailLines(store, meta),
   ];
 
   if (plan) {
@@ -613,6 +616,8 @@ export type TakenOffer = {
   currency: string;
   /** When what was added is a bundle: the products it hands over. */
   items?: Listing[];
+  /** The offer's own payment metadata, where its yes to start access at once is kept (lib/digital-consent.ts). */
+  metadata?: Record<string, string> | null;
 };
 
 /** The email for an offer taken after paying, with its license key when it has one. */
@@ -629,6 +634,7 @@ export function offerConfirmationFor(store: Store, offer: TakenOffer, key: SaleK
     ...(offer.items?.length ? [words.insideIt(offer.items.map((p) => p.title).join(", "))] : []),
     words.paidOnce(money(offer.amountCents)),
     words.reference(offer.reference),
+    ...consentEmailLines(store, offer.metadata),
     "",
     words.openItAt(`${base}/thanks?session_id=${offer.parent}`),
     "",

@@ -107,11 +107,23 @@ try{
    const extras=buyForm.locator('input[name="bump"]');
    if(await extras.evaluateAll(nodes=>nodes.some(n=>n.checked)))throw Error("An extra was selected for the buyer");
    if(mode==="baseline"){await page.keyboard.press("Tab");if(!await page.evaluate(()=>document.activeElement!==document.body))throw Error("Native keyboard focus missing");}
+   // The box to start access at once (lib/digital-consent.ts): a real, labelled, required checkbox, never checked for the buyer.
+   const consent=buyForm.locator('input[name="dc"]');
+   if(await consent.count()!==1)throw Error("Immediate-access consent box missing");
+   const box=await consent.evaluate(n=>({checked:n.checked,required:n.required,type:n.type,labelled:Boolean(n.labels&&n.labels.length&&n.labels[0].innerText.trim()),described:Boolean(n.getAttribute("aria-describedby")&&document.getElementById(n.getAttribute("aria-describedby").split(" ")[0])),height:n.labels&&n.labels[0]?n.labels[0].getBoundingClientRect().height:0}));
+   if(box.checked||!box.required||box.type!=="checkbox"||!box.labelled||!box.described||box.height<44)throw Error("Consent box is not an unchecked, required, labelled, described 44px target "+JSON.stringify(box));
+   // Unchecked, the browser itself stops the form: nothing is sent.
+   phase="consent-missing";await buyForm.locator('button[type="submit"]').focus();await page.keyboard.press("Enter");await page.waitForTimeout(400);
+   if(mutations.some(m=>m.path==="/api/store/checkout"))throw Error("Checkout was sent without the consent box");
+   if(!await consent.evaluate(n=>!n.validity.valid))throw Error("The unchecked box is not reported invalid");
+   await consent.focus();await page.keyboard.press("Space");
+   if(!await consent.isChecked())throw Error("The consent box cannot be checked with the keyboard");
    phase="checkout";const checkout=page.waitForResponse(r=>new URL(r.url()).pathname==="/api/store/checkout"&&r.request().method()==="POST");
    await buyForm.locator('button[type="submit"]').focus();await page.keyboard.press("Enter");await checkout;
    await page.waitForURL(url=>url.pathname==="/@localshop/thanks"&&url.searchParams.has("session_id"));await page.waitForLoadState("networkidle");await restoreDarkAfterNavigation();
    const created=services.checkouts().slice(beforeCheckouts);
    if(created.length!==1||created[0].amount_total!==1900||created[0].metadata.product!==ids["Weeknight Dinners"])throw Error("Simulated checkout amount/product mismatch");
+   if(!/^yes:\d{4}-\d{2}-\d{2}\.\d{1,3}:\d{10}$/.test(String(created[0].metadata.dc??"")))throw Error("The checked box was not kept on the simulated order");
    phase="receipt";await audit("simulated-paid-receipt");
    if(!(await page.locator("main").innerText()).includes("Weeknight Dinners"))throw Error("Receipt did not hand over selected product");
    phase="library-request";await page.goto(origin+"/library",{waitUntil:"networkidle"});await restoreDarkAfterNavigation();await audit("buyer-library-request");
