@@ -23,11 +23,11 @@ secondary source is never treated as the law (TX rule: unknown does not pass).
 | S2 | FTC Negative Option Rule ("click to cancel", 16 CFR Part 425 as amended 2024) | Latham & Watkins client alert of 11 Jul 2025 on *Custom Communications, Inc. v. FTC*, No. 24-3137 (8th Cir., 8 Jul 2025) | **Secondary.** Reports the amended rule vacated in its entirety. The FTC docket and any later rulemaking were not read. |
 | S3 | California Automatic Renewal Law, Bus. & Prof. Code §17602 | california.public.law mirror, page marked "Verified: Oct. 26, 2026" (its source dates disagree) | **Secondary (unofficial mirror).** To be read on leginfo. |
 | S4 | EU withdrawal function, Directive (EU) 2023/2673 inserting Art. 11a into Directive 2011/83/EU | Van Bael & Bellis note of 8 Jun 2026 | **Secondary.** Applies from 19 Jun 2026; EUR-Lex text not read. |
+| S6 | Utah (from 1 Jan 2025), Minnesota (from 1 Jan 2025), Massachusetts 940 CMR 38.05 (from 2 Sep 2025) | Kelley Drye "Auto-renewal laws: 2025 round-up", 31 Mar 2025 | **Secondary.** Reported: Utah, notice 30–60 days before a renewal of a term over 45 days and 3 days before a trial ends; Minnesota, a written notice of the terms and how to end them at least once a calendar year, retention offers only with consent, simple online cancel where the site has account management; Massachusetts, notice 5–30 days before a renewal of a term over 31 days, and for shorter terms a pre-renewal notice or a receipt with every charge showing the amount and how to cancel, and cancellation through the same site or app used to sign up. |
 | S5 | UK DMCC Act 2024, Part 4 Chapter 2 (subscription contracts) | Carson McDowell article of 3 Sep 2026 | **Secondary.** Reports commencement brought forward to January 2027; the secondary legislation on exit and notices is still to come. Other secondary pages of 2026 said "spring 2027", so the date itself is uncertain. |
 
 Other US states with automatic-renewal laws (New York GBL §527-a, Colorado,
-Virginia, Minnesota, Vermont, Oregon, Illinois, others) were **not read** in
-this part. Until each is read, the matrix applies the strictest window found
+Virginia, Vermont, Oregon, Illinois, others) were **not read** in this part. Until each is read, the matrix applies the strictest window found
 above to every buyer and plan, wherever they are.
 
 ## 2. The matrix: what each rule asks
@@ -41,9 +41,10 @@ row read so far.
 | Express, affirmative consent to the recurring charge | "Express informed consent" (§8403(2)) | "Express affirmative consent" ((a)(4)) | — | Expected | A separate, unchecked consent to the renewal terms; payment refused without it. |
 | Keep proof of consent | Implied by the burden of proof | Implied | — | — | Store text version, price, currency, frequency, time, channel, subscription id; keep per the owner's rule: 3 years or 1 year after the subscription ends, whichever is longer. |
 | Notice before a free trial or promotional period of **more than 31 days** ends | — | 3–21 days ((b)(1)(A)) | — | Expected | 3–21 days. |
-| Notice before an **annual** (or longer) term renews | — | 15–45 days ((b)(2)) | — | Expected (reminders) | 15–45 days, and never sent late inside the last 15 days as if it were on time. |
+| Notice before an **annual** (or longer) term renews | — | 15–45 days ((b)(2)) | — | Expected (reminders) | **Conflict (S6):** California 15–45, Massachusetts 5–30, Utah 30–60 as reported; the only day all three allow is the 30th. Applied: send from 30 days (never earlier than the stricter maximum) and never report one sent inside the last 15 days as on time. **Depende do dono** once the official texts are read: whether Utah's minimum is met by a notice 29–30 days before. |
+| Notice before each renewal of a term of 31 days or less (monthly) | — | — | — | — | Massachusetts as reported (S6): a pre-renewal notice or a receipt with every charge, with the amount and how to cancel. **Gap G11.** |
 | Notice before a **price change** | — | 7–30 days ((g)(2)) | — | Expected | 7–30 days. |
-| Annual reminder of the terms | — | (h)(1)–(2): annual reminder with frequency and amount (scope to confirm on leginfo) | — | Expected | One reminder a year per subscription, with frequency and amount. |
+| Annual reminder of the terms | — | Minnesota (S6): once a calendar year, terms and how to end them. California (h)(1)–(2): annual reminder with frequency and amount (scope to confirm on leginfo) | — | Expected | One reminder a year per subscription, with frequency and amount. |
 | Online cancellation | "Simple mechanisms" (§8403(3)) | Exclusively online, at will, no obstructing step; prominent direct link or button ((d)(1)) | "Withdraw from contract here" + "confirm withdrawal", during the withdrawal period, acknowledgment on a durable medium (Art. 11a) | Easy exit (rules pending) | A direct cancel control in one press plus one confirmation, never a GET, no phone, email or new sign-up; an acknowledgment by email. |
 | Save offers | — | Allowed only if the cancel control stays prominent, continuous and beside the offer ((e), (e)(2)) | — | — | The cancel control stays on the same screen as any offer, and declining is one press. |
 
@@ -58,10 +59,10 @@ Found by reading the code; file references are to main above.
   at most 8 days left (`TRIAL_NOTICE_SECONDS`). Yearly renewal: on the first
   daily run with **at most 30 days** left (`YEAR_NOTICE_SECONDS`). Both are
   still sent down to 1 day before (`TOO_LATE_SECONDS`).
-  **Gap G1:** neither has a floor. A trial notice missed until fewer than 3
+  **Gap G1:** neither has a floor (PR #1296 marks a late notice, keeps the 30-day start). A trial notice missed until fewer than 3
   days remain, or a renewal notice missed until fewer than 15, is sent late
   and looks on time; nothing records that the window was missed.
-- No monthly notice (not required by the rows read), no price-change notice
+- No monthly notice or per-charge receipt from Marktmorgen (Massachusetts' rule for terms of 31 days or less, **gap G11**; Stripe's own receipts, if switched on, are not proof here), no price-change notice
   (**gap G2**), no annual reminder (**gap G3**), no notice for add-ons such as
   the Store assistant (**gap G4**, `isAddOn` skips them).
 - Cancellation: `POST /api/billing/cancel` (`setCancelAtPeriodEnd`); the
@@ -119,7 +120,7 @@ creator's Stripe account)
    Marktmorgen's own polling of the creator's Stripe account, paid from a
    measured cap per store before the obligation is taken on; a failed send is
    recorded as not sent, never as sent.
-4. **Cancellation (G5, G8, G10).** A direct cancel control in every state, POST
+4. **Cancellation (G5, G8, G10)**, and the per-charge receipt or notice of G11. A direct cancel control in every state, POST
    only, one confirmation, emailed acknowledgment; the coupon offer only with
    the cancel control on the same screen.
 5. **Matrix completion.** Read on the official sites, with dates: leginfo
