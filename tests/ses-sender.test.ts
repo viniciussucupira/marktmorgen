@@ -13,7 +13,7 @@
  * bounced (app/api/mail/ses), believed only from our own topic and with
  * Amazon's signature.
  */
-import { createSign, generateKeyPairSync } from "node:crypto";
+import { createHash, createSign, generateKeyPairSync } from "node:crypto";
 import { NextRequest } from "next/server";
 import { POST } from "@/app/api/mail/ses/route";
 import { claimHandle, ensureListId, ensureStatsId, setMailSettings, setSubscription, storeForEmail } from "@/lib/store";
@@ -173,6 +173,73 @@ async function main(): Promise<void> {
   const receipt = { ...letter("buyer@example.com", "Your receipt"), idempotencyKey: "receipt:cs_test_1" };
   is("the same receipt asked for twice", [await sendEmail(receipt), await sendEmail(receipt)], [true, true]);
   is("is sent one time", [amazon.length, resend.length], [1, 0]);
+
+  part("An uncertain once-only claim holds both actual senders");
+  const originalPipeline = redis.pipeline;
+  let memberReads = 0;
+  let getterReads = 0;
+  const malformed: [string, () => unknown][] = [
+    ["undefined", () => undefined],
+    ["non-array", () => ({ 0: "OK", length: 1 })],
+    ["empty", () => []],
+    ["sparse", () => new Array(1)],
+    ["inherited", () => Object.setPrototypeOf(new Array(1), { 0: "OK" })],
+    ["accessor", () => Object.defineProperty(new Array(1), "0", { get() { getterReads += 1; return "OK"; } })],
+    ["symbol", () => [Symbol("OK")]],
+    ["unexpected", () => [true]],
+    ["oversized", () => new Proxy(["OK", "extra"], {
+      getOwnPropertyDescriptor(target, key) {
+        if (key === "0") memberReads += 1;
+        return Reflect.getOwnPropertyDescriptor(target, key);
+      },
+    })],
+    ["throw after commit", () => { throw new Error("synthetic lost claim acknowledgement"); }],
+  ];
+  for (const [name, answer] of malformed) {
+    clear();
+    const key = `receipt:uncertain:${name}`;
+    const claim = `nl:ses:once:${createHash("sha256").update(key).digest("hex").slice(0, 40)}`;
+    const counted = [await sesSentLast24h(), await sentThisMonth()];
+    let claims = 0;
+    let deletes = 0;
+    redis.pipeline = async (commands) => {
+      if (commands.some((command) => command[0] === "DEL" && command[1] === claim)) deletes += 1;
+      if (commands.length === 1 && commands[0][0] === "SET" && commands[0][1] === claim) {
+        claims += 1;
+        await originalPipeline(commands); // Actual synthetic claim committed first.
+        return answer() as unknown[];
+      }
+      return originalPipeline(commands);
+    };
+    try {
+      is(`${name}: no delivery claim or provider fallback`,
+        [await sendEmail({ ...letter("uncertain@example.com"), idempotencyKey: key }), amazon.length, resend.length],
+        [false, 0, 0]);
+    } finally {
+      redis.pipeline = originalPipeline;
+    }
+    is(`${name}: one claim, no deletion, committed claim retained`, [claims, deletes, redis.run(["GET", claim])], [1, 0, "1"]);
+    is(`${name}: no sender count consumed`, [await sesSentLast24h(), await sentThisMonth()], counted);
+  }
+  is("malformed members were never read", [getterReads, memberReads], [0, 0]);
+  clear();
+  const controlKey = "receipt:own-ack-control";
+  const controlClaim = `nl:ses:once:${createHash("sha256").update(controlKey).digest("hex").slice(0, 40)}`;
+  redis.pipeline = async (commands) => {
+    const result = await originalPipeline(commands);
+    return commands.length === 1 && commands[0][0] === "SET" && commands[0][1] === controlClaim
+      ? new Proxy(result, { getOwnPropertyDescriptor(target, key) {
+        if (key === "0") memberReads += 1;
+        return Reflect.getOwnPropertyDescriptor(target, key);
+      } })
+      : result;
+  };
+  try {
+    is("a confirmed own OK still reaches Amazon", await sendEmail({ ...letter("control@example.com"), idempotencyKey: controlKey }), true);
+  } finally {
+    redis.pipeline = originalPipeline;
+  }
+  is("the positive probe sees the sole member and one sender", [memberReads, amazon.length, resend.length], [1, 1, 0]);
 
   part("A batch, one email at a time");
   clear();
