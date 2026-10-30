@@ -16428,6 +16428,41 @@ Proibido: criar item novo ou mudar número, posição ou estado do 526; mudar a 
 
 Aplicar a regra VR.
 
+### Complemento ao 526 [FN2] — 30/10/2026, 09h33 Fortaleza
+
+Proveniência: pedido direto do dono na conversa com o Claude, 30/10/2026, 09h33 Fortaleza; texto redigido pelo Claude e aprovado pelo dono; gravado diretamente pelo Claude para não interromper o Codex. Pedidos repetidos passo3(b): conferido no main 0832cb8e5a8be372daa5909e0d6de07ae43a99ad que não havia complemento FN2 de 30/10/2026, 09h33; somente a diferença abaixo foi acrescentada, e o 526 [FN2] mantém número, posição (Grupo B, abaixo do marco MQ1) e estado. Conferência limitada no mesmo main: components/page-funnel-editor.tsx e lib/funnel-editor-links.ts existem e não são refeitos; app/studio/site e app/studio/pages não mostram lista de etapas, "Previous step"/"Next step" nem "Funnel steps"; revalidar no head de implementação. Texto do dono preservado integralmente abaixo.
+
+FN — Complemento ao 526 [FN2]: lista das etapas do funil ao lado da página em edição, para pular de uma etapa a outra (30/10/2026)
+Etiqueta: [FN2]
+
+Solicitação do dono (30/10/2026, 09h33, horário de Fortaleza).
+
+Pedidos repetidos: é complemento ao item 526 [FN2] já gravado, que já recebeu os complementos de 29/10/2026. Aplique só a diferença ao item existente, mantendo número, posição e estado (regra "Pedidos repetidos", passo 3, letra b), e registre na proveniência o que mudou. Conferido antes de gravar: a lista de etapas com o botão "Edit page" ou "Edit product page" de cada uma (components/page-funnel-editor.tsx, lib/funnel-editor-links.ts) já existe e não é refeita; o mapa com miniaturas pedido neste 526 também não é refeito.
+
+Estado inicial: o do próprio 526.
+
+Contexto: a página clickfunnels.com/features/funnel-builder (lida em 30/10/2026) mostra, na seção "Build funnels 300% faster than before", a lista das etapas do funil (Opt In /opt-in, Thank you /thanks, Order Form /start-here, OTO 1 /upgrade, OTO 2 /coaching, Confirmation /confirmation), cada uma com a miniatura e o endereço, ao lado da página em edição; um clique numa etapa abre aquela página no editor. No Marktmorgen, quem edita uma página do funil (app/studio/site, app/studio/pages) não vê as outras etapas e precisa voltar à tela de funis para abrir a próxima. Verifique antes no código atual que isso continua assim.
+
+O que acrescentar ao 526 [FN2]:
+- no editor de uma página ou de uma página de produto que seja etapa de um funil, uma lista lateral com as etapas desse funil na ordem do visitante: número da etapa, nome, endereço e, quando o mapa deste item existir, a mesma miniatura real dele (sem segundo gerador); a etapa em edição fica marcada por texto ("Editing now") e não só por cor;
+- um clique numa etapa abre aquela etapa no editor dela, pelo mesmo link de lib/funnel-editor-links.ts, que confere de novo a permissão; etapa sem permissão de edição aparece sem link, com uma frase curta que diz por quê;
+- botões "Previous step" e "Next step" no alto do editor, com o nome da etapa de destino;
+- sem perder trabalho: se houver alteração não salva, antes de trocar de etapa aparece a escolha "Save and go", "Go without saving" ou "Stay here"; nada é salvo ou descartado sem essa escolha;
+- se a página fizer parte de mais de um funil, aparece primeiro a escolha do funil, com o funil de onde o criador veio já selecionado;
+- no celular, a lista fica recolhida num botão "Funnel steps", acima da página.
+
+Acessibilidade (AX274, Parte A, integral): máxima acessibilidade em tudo o que este item criar ou alterar — WCAG 2.2 nível AAA em todos os critérios aplicáveis, em todas as telas, estados, e-mails e arquivos, mais as demais normas e orientações da Parte A; a impossibilidade de um critério AAA precisa ser demonstrada e registrada em docs/accessibility-programme.md, nunca presumida. Os pontos a seguir são verificações obrigatórias deste item, não o limite do que se exige: lista como região de navegação com nome, em lista ordenada, com a etapa atual anunciada (aria-current); cada link com o nome da etapa (2.4.9); trilha de onde a pessoa está (2.4.8); mudança de contexto só quando a pessoa pedir (3.2.5); prevenção de perda de dados (3.3.6); foco devolvido ao título da página aberta; tudo por teclado; alvos de 44 × 44 px; contraste de 7:1, 320 px e 400% de zoom. Seção "Acessibilidade" no PR, com os passos e as decisões da tarefa principal antes e depois (hoje: voltar à tela de funis e abrir a próxima etapa; depois: um clique).
+
+Testes automáticos: lista na ordem certa, etapa atual marcada, link conferindo a permissão, anterior e próximo nas pontas do funil, escolha antes de trocar com alteração não salva, página em mais de um funil e alternativa por teclado.
+
+Custo: leitura do funil que o estúdio já faz, sem fornecedor, chamada de IA ou armazenamento novo; as miniaturas são as do próprio 526, já com custo e teto. Custo desconhecido reprova, nunca é zero.
+
+REGRA DE MARGEM (MR, 27/10/2026): nenhum cliente pagante, considerado isoladamente e usando 100% de todos os direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto; a empresa como um todo não pode dar prejuízo no pior caso a partir da base mínima de clientes pagantes, com 100% dos custos fixos da LLC atribuídos ao Marktmorgen (FX275); a meta de 60% de margem líquida é medida todo mês com números reais. Impostos pela política TX vigente.
+
+Proibido: criar item novo ou mudar número, posição ou estado do 526; salvar ou descartar alteração sem a escolha do criador; afirmar em público que o Marktmorgen é "X% mais rápido" sem medição e fonte; mudar preços, limites visíveis (inclusive o número máximo de etapas e de funis), comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a, a revisão comercial ou stripePlatformEligibilityReady; afrouxar qualquer trava; mostrar recurso que não funciona hoje; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+
 ## HE — registro integral; item527 (29/10/2026,12h04Fortaleza)
 
 Proveniência: pedido direto do dono nesta conversa; comparaçãoClickFunnels atribuída ao relatoClaude,semverificação independente deste registro. Deduplicação main332a38d,PR1208aberto,20PRsrecentes/19heads codexdistintos e764refs,semHE1/título/data/conteúdo equivalente. Próximo livre527após526; nenhum estado/ordem anterior alterado. ComplementosTB/FN continuam sendo complementossemitemduplicado;527éeste novoHEexplicitamente solicitado. Antes da implementação,conferir cada tipo deproduto funcional no código; não antecipar animação no registro. MR/TX/FX275/AX274/VR/SF1/ME2/ME3eCF3não refazervinculantes. Registro noPR1208jáemcurso; implementação deHEcontinua na fila.
