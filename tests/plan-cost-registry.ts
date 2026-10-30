@@ -73,6 +73,7 @@ import { MAX_TEAM } from "@/lib/team";
 import { MAX_TASK_FILE_BYTES, TASK_ROOM_BYTES, TRIAL_TASK_ROOM_BYTES } from "@/lib/assignment-rules";
 import { COMMUNITY_PICTURES, PICTURE_BYTES, TRIAL_COMMUNITY_PICTURES } from "@/lib/community-picture-rules";
 import { CLOSING_DAYS, DEL_BATCH, ENDED_STORE_EXPORTS, FOLLOW_BATCH, RENEWALS_AT_ONCE, WARN_WEEK_DAYS } from "@/lib/plan-closing-rules";
+import { BUYER_SEND_DAYS, EMAILS_PER_BUYER_PER_ENDING, buyerNoticeCap } from "@/lib/closing-buyers-rules";
 import { MAX_STORE_BYTES } from "@/lib/store";
 import { BODIES_PER_READ } from "@/lib/course";
 import { MAX_LEADS } from "@/lib/contact-rules";
@@ -146,6 +147,35 @@ export const STRIPE_WAIT_SECONDS = 2;
  * round of RENEWALS_AT_ONCE and of a page of a hundred found.
  */
 export const ORDER_RENEWAL_STOP = (STRIPE_WAIT_SECONDS / RENEWALS_AT_ONCE + STRIPE_WAIT_SECONDS / 100) * MEMORY_SECOND;
+/**
+ * Queue item 307 [EC1]: not a line of any plan. What telling a closing
+ * store's buyers and settling its members costs at the most, for each buyer
+ * its cap allows (queue item 307 [EC1],
+ * lib/closing-buyers.ts, lib/closing-holds.ts, lib/closing-refunds.ts): its
+ * EMAILS_PER_BUYER_PER_ENDING emails at PER_EMAIL; its address and a
+ * member's last payment kept until the store closes or stays, a few
+ * kilobytes for the closing days, the day its notice may come early and the
+ * week a late last notice adds; its share of a page of a hundred checkouts
+ * read to find it; and, as if every one were a member, the calls to Stripe a
+ * membership's closing makes (its hold, its release, its end, and its
+ * refund: the invoice, the payment, the refunds made, the refund, the
+ * balance), each waited on STRIPE_WAIT_SECONDS at 2 GB, and a few commands.
+ * One closing's whole cost is closingBuyersCost (below): a post-cancellation
+ * funded exposure of docs/funded-exposure-review.md, the company's, bounded
+ * per closing by its cap before any of it is spent (lib/closing-credit.ts).
+ * At the price list of 18 October 2026 no plan has the room to carry it at
+ * every payment (tests/limits-proposal.test.ts would cut Store's figures for
+ * a few cents), so whether it moves into the closure line is the owner's.
+ */
+export const CLOSING_STRIPE_CALLS = 8;
+export const CLOSING_BUYER_COST = EMAILS_PER_BUYER_PER_ENDING * PER_EMAIL
+  + 2 * 1024 * ((CLOSING_DAYS + WARN_WEEK_DAYS + BUYER_SEND_DAYS) / 30) * DB_BYTE_MONTH
+  + (CLOSING_STRIPE_CALLS + 1 / 100) * STRIPE_WAIT_SECONDS * MEMORY_SECOND + 6 * COMMAND;
+/** One closing's buyers and members at its cap, in dollars: a store of this plan that paid, or one that never did. */
+export function closingBuyersCost(tier: Tier, paid = true): number {
+  return buyerNoticeCap(tier, paid) * CLOSING_BUYER_COST;
+}
+
 /** What one order costs at the most: its confirmation, the email that says it shipped, its compute, and what it leaves for its store's closing. */
 export const ORDER_COST = 2 * PER_EMAIL + ORDER_COMPUTE + ORDER_LIBRARY + ORDER_RENEWAL_STOP;
 
@@ -859,6 +889,11 @@ export const OPEN: OpenItem[] = [];
 
 /** Exported limit or cost constants that are not a per-store monthly cost, and why. */
 export const NOT_A_COST: Record<string, string> = {
+  BUYER_CAP_MONTHS: "Queue item 307 EC1: the cap on one closing's buyers (lib/closing-buyers-rules.ts, buyerNoticeCap), a post-cancellation funded exposure of docs/funded-exposure-review.md (closingBuyersCost above), the company's, not a plan's line.",
+  BUYER_PAGES_PER_RUN: "Pages of a closing store's checkouts read in one run of the daily closing job (lib/closing-buyers.ts): inside the same exposure, bounded by its cap.",
+  HOLD_PAGES_PER_RUN: "Pages of a closing store's memberships held, released or ended in one run (lib/closing-holds.ts): inside the same exposure.",
+  REFUNDS_PER_REQUEST: "Refunds of members' unused time in one request (lib/closing-refunds.ts): the creator's money on the creator's account; its calls inside the same exposure.",
+  EMAILS_PER_BUYER_PER_ENDING: "Emails one closing takes for a buyer (lib/closing-buyers-rules.ts), inside the same exposure's cap.",
   PICTURES_PER_MINUTE: "A pace on the pictures a function answers (lib/picture-pace.ts, MM-SA-04), held in memory with no store command: it only refuses, and what it lets through is the CDN's picture of line visits.",
   PICTURE_READS_PER_MINUTE: "A pace on how often one picture is read by a function (lib/picture-pace.ts, MM-SA-04), held in memory with no store command: it only refuses.",
   CENTS_PER_MINUTE: "AI captions are bought at their own price, charged before the work (lib/auto-captions-rules.ts).",
@@ -961,7 +996,7 @@ export const EMAIL_SITES: Record<string, string[]> = {
   "lib/email.ts": ["company", "order", "monthly", "store"],
   "app/api/cron/mail-check/route.ts": COMPANY, "app/api/cron/monthly/route.ts": COMPANY, "app/api/cron/stripe-check/route.ts": COMPANY,
   "app/api/cron/usage/route.ts": COMPANY, "app/api/cron/weekly/route.ts": COMPANY, "lib/account-notice.ts": COMPANY, "lib/auth.ts": COMPANY,
-  "lib/billing-reminders.ts": COMPANY, "lib/passkeys.ts": COMPANY, "lib/plan-closing.ts": COMPANY, "lib/plan-pause.ts": COMPANY,
+  "lib/billing-reminders.ts": COMPANY, "lib/passkeys.ts": COMPANY, "lib/plan-closing.ts": COMPANY, "lib/closing-buyers.ts": COMPANY, "lib/plan-pause.ts": COMPANY,
   "lib/recovery-address.ts": COMPANY, "lib/stats-report.ts": COMPANY, "lib/store-alerts.ts": COMPANY, "lib/takedown.ts": COMPANY,
   "lib/trial-nudges.ts": COMPANY, "lib/two-step.ts": COMPANY, "lib/verify-mail.ts": COMPANY, "lib/yearly-offer.ts": COMPANY,
   "lib/inbound-mail.ts": ["store", "company"],

@@ -24,7 +24,9 @@
  *     library, which points at nothing;
  *   - the other store exactly as it was, the shared buyer's library showing
  *     it alone, every company list keeping its members;
- *   - its memberships' renewals stopped at Stripe, its owner told three times;
+ *   - its memberships held from the day its plan ended (not charged, queue
+ *     item 307 EC1) and ended at once on its day, its owner told three
+ *     times, and its buyer told once, at least seven days before its day;
  *   - every key it made under a name no longer than the cost registry prices
  *     a name at (tests/plan-cost-registry.ts, KEY_NAME_BYTES).
  */
@@ -100,6 +102,10 @@ export function standIns(stripe: StripeWorld, sent: Sent[], passThrough: ((input
         stripe.posted.push({ path, body: String(init?.body ?? ""), account });
         return json({ id: path.split("/").pop(), object: "subscription", cancel_at_period_end: true });
       }
+      if (method === "DELETE") {
+        stripe.posted.push({ path, body: "DELETE", account });
+        return json({ id: path.split("/").pop(), object: "subscription", status: "canceled" });
+      }
       if (path === "/checkout/sessions" && account) {
         const since = Number(url.searchParams.get("created[gte]") ?? 0), until = Number(url.searchParams.get("created[lt]") ?? Infinity);
         return json({ object: "list", data: stripe.sessions.filter((s) => s.account === account && Number(s.created) >= since && Number(s.created) < until), has_more: false });
@@ -149,7 +155,9 @@ async function everyFamily(world: World, tag: string): Promise<void> {
       await redisPipeline([["SET", key, JSON.stringify({ s: s.statsId, probe: tag })]]);
     } else if (rule.how === "index" && prefix !== "nl:plan:ended") {
       // (The stores whose plan ended are read by the daily job as stores: a probe there would be looked at as one.)
-      await addMember(prefix.endsWith(":") ? `${prefix}2026-11` : prefix, `${s.sid}|probe-${tag}`);
+      // (The stores whose members are held is a sorted set, as lib/closing-holds.ts keeps it.)
+      if (prefix === "nl:closing:held") await redisPipeline([["ZADD", prefix, 1, `${s.sid}|probe-${tag}`]]);
+      else await addMember(prefix.endsWith(":") ? `${prefix}2026-11` : prefix, `${s.sid}|probe-${tag}`);
     } else if (rule.how === "expires") {
       await redisPipeline([["SET", `${prefix}${sha(`${prefix}${tag}`).slice(0, 32)}`, JSON.stringify({ s: s.statsId }), "EX", Math.min(rule.days, 2) * 86_400]]);
     }
@@ -235,6 +243,8 @@ async function pdfOn(world: World, files: Map<string, number>): Promise<ProductF
 }
 
 export async function runClosingJourney(is: Check, sent: Sent[], stripe: StripeWorld): Promise<void> {
+  // A synthetic company address: without one the buyers' notice is not sent and the store does not close (lib/company-postal.ts).
+  process.env.COMPANY_POSTAL_ADDRESS = "100 Example Street, Example City, NY 10001, United States";
   const files = new Map<string, number>();
   const hands: Hands = {
     measure: async (folder) => [...files].filter(([path]) => path.startsWith(`vault/${folder}/`)).reduce((sum, [, n]) => sum + n, 0),
@@ -314,12 +324,15 @@ export async function runClosingJourney(is: Check, sent: Sent[], stripe: StripeW
     notices.map((m) => [m.text.includes("your store closes"), m.text.includes("everything else it keeps with us is"), m.text.includes("We keep no copy of your sales"), m.text.includes("course certificates"), m.text.includes("/studio#closing"), m.text.includes("you can download it once")]),
     [[true, true, true, true, true, true], [true, true, true, true, true, true], [true, true, true, true, true, true]],
   );
-  is("before the day nothing is touched", [(await closeOne(CLOSER, E + (CLOSING_DAYS - 1) * DAY, hands, Number.POSITIVE_INFINITY)).state, files.size, stripe.posted.length], ["waiting", 2, 0]);
+  const holds = stripe.posted.map((p) => [p.account, p.body.includes("pause_collection%5Bbehavior%5D=void")]);
+  is("before the day nothing is touched, but its members' charges were held on the day its plan ended, on its own Stripe account only", [(await closeOne(CLOSER, E + (CLOSING_DAYS - 1) * DAY, hands, Number.POSITIVE_INFINITY)).state, files.size, holds], ["waiting", 2, [[close.store.stripeAccountId, true], [close.store.stripeAccountId, true]]]);
+  const buyerMail = sent.filter((m) => m.to === tess);
+  is("its buyer was told once, by Marktmorgen, at least seven days before its day", [buyerMail.length, buyerMail[0]?.subject, buyerMail[0]?.text.includes("download what can be downloaded")], [1, "closing-shop closes on " + new Date(E + CLOSING_DAYS * DAY + 60_000).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric", timeZone: "UTC" }), true]);
 
   // ---------------------------------------------------------------- its day
   const day = await closeOne(CLOSER, E + CLOSING_DAYS * DAY + 60_000, hands, Number.POSITIVE_INFINITY);
   is("on its day its files go and it is put in line for the walk", [day.state, [...files.keys()].some((p) => p.includes(closeFolder)), [...files.keys()].some((p) => p.includes(keepFolder))], ["removed", false, true]);
-  is("its memberships' renewals are stopped at the end of what was paid, on its own Stripe account only", stripe.posted.map((p) => [p.account, p.body.includes("cancel_at_period_end=true")]), [[close.store.stripeAccountId, true], [close.store.stripeAccountId, true]]);
+  is("its memberships end at once on its day, not at the end of a period, on its own Stripe account only", stripe.posted.filter((p) => p.body === "DELETE").map((p) => [p.account, p.path.startsWith("/subscriptions/sub_")]), [[close.store.stripeAccountId, true], [close.store.stripeAccountId, true]]);
 
   // ---------------------------------------------------------------- the walk
   let report = await eraseClosed(Date.now() + 60_000, finishClosed, E + CLOSING_DAYS * DAY + 3_600_000);

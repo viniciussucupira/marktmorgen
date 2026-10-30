@@ -235,6 +235,8 @@ const clockAt = (ms: number) => {
 };
 
 async function main(): Promise<void> {
+  // A synthetic company address, so the buyers' notice of a plan that ends from 31 October 2026 can go (lib/company-postal.ts).
+  process.env.COMPANY_POSTAL_ADDRESS = "100 Example Street, Example City, NY 10001, United States";
   redis.clear();
   // A plan that ended before 18 October 2026 keeps a store with no plan's room (lib/plan-closing-rules.ts).
   clockAt(Date.UTC(2026, 9, 10, 12, 0, 0));
@@ -581,7 +583,7 @@ async function main(): Promise<void> {
   is("ten megabytes and two pictures are not a store that fits: it is written to", [zoeFirst.state, zoeFirst.note], ["told", "ended"]);
   is("its letter gives the day, and one way out, and says what goes", [
     zoeLetter.text.includes(`On ${dateWords(Z + C * DAY)}, ${CLOSING_DAYS} days after your plan ended`),
-    zoeLetter.text.includes(`Starting a plan again before ${dateWords(Z + C * DAY)} stops all of it`),
+    zoeLetter.text.includes(`Starting a plan again before ${dateWords(Z + C * DAY)} keeps your store`),
     zoeLetter.text.includes("delete files or lessons"),
     zoeLetter.text.includes("the files your students handed in and the\n    pictures in your community's posts"),
   ], [true, true, false, true]);

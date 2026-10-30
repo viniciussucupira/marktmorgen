@@ -85,6 +85,13 @@ import { type Store, setPodcastEpisodes, setProductFile, setSubscription, storeF
 import { dropAllStreams, dropStream } from "@/lib/stream";
 import { readStreamPath } from "@/lib/stream-rules";
 import { SUPPORT_EMAIL } from "@/lib/creator-research";
+import { BUYER_NOTICE_DAYS, BUYER_NOTICE_FROM, EMAILS_PER_BUYER_PER_ENDING, afterBuyersTold, buyerNoticeCap, buyersStartOn, paidBefore } from "@/lib/closing-buyers-rules";
+import { forgetCredit, startClosingCredit } from "@/lib/closing-credit";
+import { forgetHeld, holdCharges, paidPeriods, savePaidPeriod } from "@/lib/closing-holds";
+import { forgetTold, tellBuyers, tellRefundShort } from "@/lib/closing-buyers";
+import { giveBackUnused, unusedRows, unusedSummary } from "@/lib/closing-refunds";
+import { stillToGive, unusedOf, type PaidPeriod } from "@/lib/closing-buyers-rules";
+import { formatMoney } from "@/lib/money";
 
 export { CLOSING_DAYS, RECHECK_DAYS, WARN_MONTH_DAYS, WARN_WEEK_DAYS };
 
@@ -109,16 +116,35 @@ type State = {
   renewals?: number;
   due?: number;
   erased?: number;
+  /**
+   * Queue item 307 [EC1]: when its members' charges were held (the day its
+   * plan ended); when its buyers' notices started and when the last went
+   * out, where in its checkouts they stopped, and how many addresses its
+   * closing emails did not cover; when what members paid for past the day
+   * was settled on the closing day.
+   */
+  hold?: number;
+  buyersFrom?: number;
+  buyersDone?: number;
+  buyersAfter?: string;
+  untold?: number;
+  refunds?: number;
 };
+
+/** Whether a plan that ended at `endedAt` has its buyers told before its store closes (lib/closing-buyers-rules.ts). */
+export function tellsBuyers(endedAt: number): boolean {
+  return closesStore(endedAt) && endedAt >= BUYER_NOTICE_FROM;
+}
 
 function parseState(raw: unknown): State {
   if (typeof raw !== "string") return {};
   try {
     const value = JSON.parse(raw) as Record<string, unknown>;
     const out: State = {};
-    for (const name of ["of", "ended", "month", "week", "removed", "said", "fit", "renewals", "due", "erased"] as const) {
+    for (const name of ["of", "ended", "month", "week", "removed", "said", "fit", "renewals", "due", "erased", "hold", "buyersFrom", "buyersDone", "untold", "refunds"] as const) {
       if (typeof value[name] === "number" && Number.isFinite(value[name] as number)) out[name] = value[name] as number;
     }
+    if (typeof value.buyersAfter === "string" && /^(start|cs_[A-Za-z0-9_]{6,200})$/.test(value.buyersAfter)) out.buyersAfter = value.buyersAfter;
     return out;
   } catch {
     return {};
@@ -136,7 +162,7 @@ export function removalDay(endedAt: number): number {
  * what it kept has been removed already. Whether the store keeps more than
  * its room, which is what makes the day matter, is for the caller to measure.
  */
-export async function closingOf(store: Store, now = Date.now()): Promise<{ endedAt: number; day: number } | null> {
+export async function closingOf(store: Store, now = Date.now()): Promise<{ endedAt: number; day: number; buyers?: { by: number; done: boolean; untold: number } } | null> {
   const endedAt = Date.parse(store.planEndedAt);
   if (standingOf(store, now / 1000) !== "ended" || !Number.isFinite(endedAt) || !isRedisConfigured()) return null;
   // A break the creator chose keeps everything until it ends (lib/plan-pause.ts).
@@ -146,8 +172,12 @@ export async function closingOf(store: Store, now = Date.now()): Promise<{ ended
   const state: State = read.of === endedAt ? read : {};
   if (state.removed) return null;
   // Never sooner than a week after the last notice, which, where it has not
-  // gone out yet, is today at the soonest.
-  return { endedAt, day: Math.max(removalDay(endedAt), (state.week ?? now) + WARN_WEEK_DAYS * DAY_MS) };
+  // gone out yet, is today at the soonest; nor sooner than BUYER_NOTICE_DAYS
+  // after the last buyer was told.
+  const day = Math.max(removalDay(endedAt), (state.week ?? now) + WARN_WEEK_DAYS * DAY_MS);
+  if (!tellsBuyers(endedAt)) return { endedAt, day };
+  const closes = afterBuyersTold(day, state.buyersDone);
+  return { endedAt, day: closes, buyers: { by: state.buyersDone ?? closes - BUYER_NOTICE_DAYS * DAY_MS, done: Boolean(state.buyersDone), untold: state.untold ?? 0 } };
 }
 
 /** Which notice is the one for today: the first, the one two weeks before, or the last. */
@@ -251,33 +281,71 @@ function letter(kind: "ended" | "month" | "week" | "removed", store: Store, held
 }
 
 /**
+ * What a closing store's notices say about its buyers and members (queue
+ * item 307 [EC1], parts 4 and 6): when its buyers are told, how many members
+ * paid for time past the day and what that time is in all, already written
+ * as money. Left out, the notices say nothing of either.
+ */
+export type ClosingNews = {
+  /** The day every buyer is emailed by at the latest (ms), or null when they are not (a plan ended before BUYER_NOTICE_FROM). */
+  buyersBy: number | null;
+  /** Addresses the store's closing emails did not cover: the creator is asked to tell them. */
+  untold: number;
+  members: number;
+  /** "$120 and €40", or "" for none. */
+  unused: string;
+};
+
+/**
  * The notices of a store that closes (plans that end from 18 October 2026):
  * the three before its day. What they say is what lib/closed-store-data.ts
  * does, and the download they point to is the studio's (app/api/store/export,
  * what=store), which a store whose plan has ended has ENDED_STORE_EXPORTS of,
  * its own, never refused for want of room.
  */
-export function closingLetter(kind: "ended" | "month" | "week", name: string, endedAt: number, day: number, now: number): { subject: string; text: string } {
+export function closingLetter(kind: "ended" | "month" | "week", name: string, endedAt: number, day: number, now: number, news?: ClosingNews): { subject: string; text: string } {
   const studio = `${SITE_URL}/studio#closing`;
   const days = Math.max(1, Math.ceil((day - now) / DAY_MS));
+  const buyers = news?.buyersBy
+    ? [
+        `By ${dateWords(Math.min(news.buyersBy, day - BUYER_NOTICE_DAYS * DAY_MS))}, at least ${BUYER_NOTICE_DAYS} days before your store closes, we email everyone who bought from it,`,
+        "once, from Marktmorgen: the day it closes, and to download what they can before then.",
+        ...(news.untold > 0
+          ? [`${news.untold} ${news.untold === 1 ? "address was" : "addresses were"} not covered by your store's closing emails: please tell ${news.untold === 1 ? "that buyer" : "those buyers"} yourself.`]
+          : []),
+        "",
+      ]
+    : [];
+  const members = news && news.members > 0 && news.unused
+    ? [
+        `${news.members} ${news.members === 1 ? "member has" : "members have"} paid for time after ${dateWords(day)}: ${news.unused} in all.`,
+        `On ${dateWords(day)} each is given back the unused part of their last payment, from your own`,
+        "Stripe account, if its balance covers it. You can give it back sooner, after checking",
+        "each amount, from your studio. Marktmorgen never pays it and never takes it.",
+        "",
+      ]
+    : [];
   return {
     subject: kind === "ended" ? `${name}: your plan has ended, and your store closes on ${dateWords(day)}` : `${days} days until ${name} closes`,
     text: [
       `Your Marktmorgen plan for ${name} ended on ${dateWords(endedAt)}.`,
       "",
       kind === "ended" ? "Your store is still there and nothing has been removed." : "Nothing has been removed yet.",
+      "Since your plan ended, none of your members is charged again, and they keep their access.",
       `On ${dateWords(day)}, ${CLOSING_DAYS} days after your plan ended, your store closes:`,
       "",
       "  - its files are removed: the files your products hand over, your lessons' videos and",
       "    downloads, your podcast's episodes, the files your students handed in and the",
       "    pictures in your community's posts;",
-      "  - the renewals of the memberships and payment plans you sold through it are stopped at",
-      "    Stripe, each at the end of the period already paid (refunds stay your decision);",
+      "  - every membership and payment plan you sold through it ends that day, on your own",
+      "    Stripe account, and nobody is charged for it again;",
       `  - within ${ERASE_WITHIN_DAYS} days, and usually the same day, everything else it keeps with us is`,
       "    deleted: its page, products and prices, pages and posts, courses and the certificates",
       "    they gave, community, contacts, forms and their answers, numbers, and your buyers'",
       "    access to what they bought from it.",
       "",
+      ...buyers,
+      ...members,
       "We keep no copy of your sales: every sale, refund and payout is on your own Stripe",
       "account, and stays there. Your Marktmorgen account and your sign-in stay.",
       "",
@@ -289,11 +357,11 @@ export function closingLetter(kind: "ended" | "month" | "week", name: string, en
       "    whatever your store's size, so download it when you are ready to keep it;",
       "  - tell your students to download their course certificates: they can until that day,",
       "    and not after;",
-      "  - tell your buyers, and give them another way to what they bought if you sell elsewhere.",
+      "  - give your buyers another way to what they bought if you sell elsewhere.",
       "",
       studio,
       "",
-      `Starting a plan again before ${dateWords(day)} stops all of it, and everything stays exactly as it is.`,
+      `Starting a plan again before ${dateWords(day)} keeps your store: everything stays exactly as it is, your members' payments go on as they were (nothing is charged for the days in between), and nothing is refunded.`,
       "",
       kind === "ended"
         ? `We will write to you again ${WARN_MONTH_DAYS} days before that day and ${WARN_WEEK_DAYS} days before it. Nothing is removed without a notice at least a week old.`
@@ -303,6 +371,17 @@ export function closingLetter(kind: "ended" | "month" | "week", name: string, en
       "",
       `Questions: reply to this email or write to ${SUPPORT_EMAIL}.`,
     ].join("\n"),
+  };
+}
+
+/** What a closing store's notice says of its buyers and members today, read from what was written down (no call to Stripe). */
+export async function closingNews(store: Store, endedAt: number, day: number, untold: number): Promise<ClosingNews> {
+  const summary = await unusedSummary(store, day).catch(() => ({ members: 0, totals: [] as { cur: string; amount: number }[] }));
+  return {
+    buyersBy: tellsBuyers(endedAt) ? day - BUYER_NOTICE_DAYS * DAY_MS : null,
+    untold,
+    members: summary.members,
+    unused: summary.totals.map((t) => formatMoney(t.amount, t.cur)).join(" and "),
   };
 }
 
@@ -455,6 +534,11 @@ export async function removeStored(key: string, hands: Pick<Hands, "list" | "rem
   return { files: gone.length, clean };
 }
 
+/** What a member whose refund could not be made is told it was: the unused part, less what was given back already. */
+function unusedOfRow(row: PaidPeriod, day: number): number {
+  return row.want ?? stillToGive(unusedOf(row, day), row.back ?? 0);
+}
+
 export type Closing = {
   key: string;
   /**
@@ -495,7 +579,8 @@ export async function closeOne(key: string, now = Date.now(), hands: Hands = HAN
   const save = (next: State) => redisPipeline([["SET", stateKey(key), JSON.stringify(next)]]);
   const closes = closesStore(endedAt);
   const send = async (kind: "ended" | "month" | "week" | "removed", day: number, held: number): Promise<boolean> => {
-    const { subject, text } = closes && kind !== "removed" ? closingLetter(kind, store.name, endedAt, day, now) : letter(kind, store, held, endedAt, day, now);
+    const { subject, text } =
+      closes && kind !== "removed" ? closingLetter(kind, store.name, endedAt, day, now, await closingNews(store, endedAt, day, state.untold ?? 0)) : letter(kind, store, held, endedAt, day, now);
     // The same notice asked for twice in a day is sent once (a record that
     // could not be written after it went out).
     const idempotencyKey = `${stateKey(key)}:${endedAt}:${kind}`;
@@ -532,10 +617,45 @@ export async function closeOne(key: string, now = Date.now(), hands: Hands = HAN
     return { key, state: "fits" };
   }
 
+  // Queue item 307 [EC1]: from the day the plan ended no member is charged
+  // again (lib/closing-holds.ts); the creator's first notice says what that
+  // means for them, so it waits on it, and the hold is tried again each day.
+  if (closes && !state.hold) {
+    const hold = await holdCharges(store, endedAt, until).catch((error) => {
+      console.error("holding a closing store's members' charges failed", error);
+      return null;
+    });
+    if (!hold?.done) return { key, state: "held", note: "its members' charges are not all held yet" };
+    // The addresses told about an earlier ending say nothing about this one;
+    // this one's emails are capped before any goes (lib/closing-credit.ts).
+    await forgetTold(folder);
+    await startClosingCredit(folder, buyerNoticeCap(store.tier, paidBefore(store)) * EMAILS_PER_BUYER_PER_ENDING);
+    Object.assign(state, { hold: now });
+    await save(state);
+  }
+
   if (!isSenderConfigured()) return { key, state: "held", note: "no way to write to the creator" };
 
-  // The day is never sooner than a week after the last notice went out.
-  const day = Math.max(removalDay(endedAt), state.week ? state.week + WARN_WEEK_DAYS * DAY_MS : 0);
+  // The day is never sooner than a week after the last notice went out, nor
+  // sooner than BUYER_NOTICE_DAYS after the last buyer was told.
+  const buyersApply = tellsBuyers(endedAt);
+  let day = Math.max(removalDay(endedAt), state.week ? state.week + WARN_WEEK_DAYS * DAY_MS : 0);
+  if (buyersApply) day = afterBuyersTold(day, state.buyersDone);
+  if (buyersApply && !state.buyersDone && now >= buyersStartOn(day)) {
+    const told = await tellBuyers(store, endedAt, day, state.buyersAfter ?? "", until).catch((error) => {
+      console.error("telling a closing store's buyers failed", error);
+      return null;
+    });
+    if (!told) return { key, state: "held", note: "its buyers could not all be read or told yet" };
+    if (told.blocked === "postal") {
+      console.error("plan-closing: a store's buyers cannot be told: Marktmorgen has no postal address (lib/company-postal.ts); it does not close until they are");
+      return { key, state: "held", note: "no company postal address for its buyers' notice" };
+    }
+    Object.assign(state, { buyersFrom: state.buyersFrom ?? now, buyersAfter: told.after, untold: (state.untold ?? 0) + told.untold, ...(told.done ? { buyersDone: now } : {}) });
+    await save(state);
+    if (told.done) day = afterBuyersTold(day, now);
+    else return { key, state: "told", note: "buyers, in part" };
+  }
   const due = noticeFor(endedAt, now);
   if (!state[due]) {
     // The last notice names the day it makes true: a week from today, when
@@ -545,7 +665,7 @@ export async function closeOne(key: string, now = Date.now(), hands: Hands = HAN
     await save({ ...state, [due]: now });
     return { key, state: "told", note: due };
   }
-  if (!state.week || now < day) return { key, state: "waiting" };
+  if (!state.week || now < day || (buyersApply && !state.buyersDone)) return { key, state: "waiting" };
 
   // The day has come. Stripe is asked, today, before anything is touched:
   // about the subscription this store has written down, and then for any
@@ -574,7 +694,7 @@ export async function closeOne(key: string, now = Date.now(), hands: Hands = HAN
     return { key, state: "running", note: "Stripe says the plan runs" };
   }
 
-  if (closes) return closingDay(store, key, state, endedAt, folder, now, hands, until, save);
+  if (closes) return closingDay(store, key, state, endedAt, day, folder, now, hands, until, save);
 
   const done = await removeStored(key, hands, until);
   if (!done.clean) return { key, state: "held", note: `removed ${done.files}, and something could not be removed` };
@@ -594,7 +714,7 @@ export async function closeOne(key: string, now = Date.now(), hands: Hands = HAN
  * deleteSalesTraces); its files removed; and its line for the walk that
  * deletes its records.
  */
-async function closingDay(store: Store, key: string, state: State, endedAt: number, folder: string, now: number, hands: Hands, until: number, save: (next: State) => Promise<unknown>): Promise<Closing> {
+async function closingDay(store: Store, key: string, state: State, endedAt: number, day: number, folder: string, now: number, hands: Hands, until: number, save: (next: State) => Promise<unknown>): Promise<Closing> {
   let next: State = state;
   if (!next.renewals) {
     try {
@@ -607,6 +727,28 @@ async function closingDay(store: Store, key: string, state: State, endedAt: numb
     next = { ...next, renewals: now };
     await save(next);
   }
+  // Queue item 307 [EC1], part 4: what members paid for past this day and the
+  // creator did not give back, given back now from the creator's own
+  // account, once (lib/closing-refunds.ts); a member whose refund the balance
+  // did not cover is told so, with the creator's contact.
+  if (!next.refunds) {
+    const settled = await giveBackUnused(store, day).catch((error) => {
+      console.error("giving back a closing store's members' unused time failed", error);
+      return null;
+    });
+    if (settled === null || settled === "busy") return { key, state: "held", note: "its members' unused time is not settled yet" };
+    const shortLeft = [...(await paidPeriods(store))].filter(([, row]) => row.r === "short" && !row.m);
+    if (shortLeft.length) {
+      const told = await tellRefundShort(store, shortLeft.map(([, row]) => ({ email: row.e, amount: unusedOfRow(row, day), cur: row.cur })), endedAt);
+      if (!told.ok) return { key, state: "held", note: "its members whose refund could not be made are not all told yet" };
+      for (const [sub, row] of shortLeft) await savePaidPeriod(store, sub, { ...row, m: 1 });
+      if (told.untold) console.error(`plan-closing: ${told.untold} members whose refund could not be made were not covered by the store's closing emails`);
+    }
+    const left = (await unusedRows(store, day)).filter((row) => row.paid.r !== "pending");
+    if (settled !== "changed" && settled !== "unavailable" && (settled.failed > 0 || left.length > 0)) return { key, state: "held", note: "its members' unused time is not all settled yet" };
+    next = { ...next, refunds: now };
+    await save(next);
+  }
   try {
     await deleteSalesTraces(store);
   } catch (error) {
@@ -617,6 +759,10 @@ async function closingDay(store: Store, key: string, state: State, endedAt: numb
   if (!done.clean) return { key, state: "held", note: `removed ${done.files}, and something could not be removed` };
   const after = (await hands.measure(folder)) + (store.community && hands.pictures ? await hands.pictures(store.community.id) : 0);
   if (after > keptRoomFor(endedAt)) return { key, state: "held", note: `removed ${done.files} and it still keeps ${bytesWords(after)}` };
+  // Its members' last payments and the addresses told, kept only for the closing.
+  await forgetHeld(store, folder);
+  await forgetTold(folder);
+  await forgetCredit(folder);
   await markDue(key, now);
   await save({ ...next, removed: now, due: now });
   return { key, state: "removed", note: `closed, ${done.files} files: its records are deleted by the next walk` };

@@ -189,6 +189,7 @@ import { AI_MONTHLY } from "@/lib/ai-rules";
 import { COMMISSION_LIVE, canUse, hasPro, PLAN_PRICES, PRO_MONTHLY_EMAILS, PRO_ON_SALE, SCALE_MONTHLY_EMAILS, priceWords, yearSaving } from "@/lib/plan";
 import { ASSISTANT_ON_SALE, PLANS_ON_SALE } from "@/lib/opening";
 import { studioPath, studioView } from "@/lib/studio-route";
+import { unusedSummary } from "@/lib/closing-refunds";
 import { type Permission, type Role, ROLE_NAMES, ROLE_SUMMARIES, can } from "@/lib/team-roles";
 import { MAX_TEAM, readTeam } from "@/lib/team";
 import { MAX_FUNNEL_STEPS } from "@/lib/funnel";
@@ -886,6 +887,8 @@ export default async function StudioPage({
   // A plan ended from 18 October 2026 closes the whole store on that day, files or none (lib/plan-closing-rules.ts, closesStore).
   const closesWhole = closingAt ? closesStore(closingAt.endedAt) : false;
   const closing = closingAt && (closesWhole || keptNow > keptRoom) ? { ...closingAt, bytes: keptNow, room: keptRoom, whole: closesWhole } : null;
+  // Queue item 307 [EC1]: what members paid for past the closing day, from what was written down when the plan ended (no call to Stripe).
+  const unusedTime = closing?.whole ? await unusedSummary(store!, closing.day).catch(() => null) : null;
   const dayWords = (ms: number) => new Date(ms).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric", timeZone: "UTC" });
   // The list is shown once there is something that fills it, or once it holds
   // anybody — a creator who stops giving things away still owns what came in.
@@ -2212,10 +2215,35 @@ export default async function StudioPage({
                 <p className="mt-4 notice notice-warn">
                   {`Your plan ended on ${dayWords(closing.endedAt)}. `}
                   <strong>{`On ${dayWords(closing.day)} your store closes`}</strong>
-                  {`: its files are removed (the files your products hand over, your lessons' videos and downloads, your podcast's episodes, the files your students handed in and the pictures in your community's posts), the renewals of the memberships and payment plans you sold through it are stopped at Stripe at the end of the period already paid, and within ${ERASE_WITHIN_DAYS} days, usually the same day, everything else it keeps with us is deleted: its page, products, pages, posts, courses and the certificates they gave, community, contacts, forms, numbers and your buyers' access to what they bought.`}
+                  {`: its files are removed (the files your products hand over, your lessons' videos and downloads, your podcast's episodes, the files your students handed in and the pictures in your community's posts), every membership and payment plan you sold through it ends that day on your Stripe account, and within ${ERASE_WITHIN_DAYS} days, usually the same day, everything else it keeps with us is deleted: its page, products, pages, posts, courses and the certificates they gave, community, contacts, forms, numbers and your buyers' access to what they bought.`}
                 </p>
                 <p className="mt-4 text-ink-soft">
-                  {`We keep no copy of your sales: every sale, refund and payout is on your own Stripe account, and stays there. Your account and sign-in stay. Tell your students to download their course certificates before that day: they can until then, and not after. Starting a plan again before that day stops all of it.`}
+                  Since your plan ended, none of your members is charged again, and they keep their access until that day.
+                </p>
+                {closing.buyers ? (
+                  <p className="mt-4 text-ink-soft">
+                    {closing.buyers.done
+                      ? `Everyone who bought from your store was emailed on ${dayWords(closing.buyers.by)}, once, from Marktmorgen: the day it closes, and to download what they can before then.`
+                      : `By ${dayWords(closing.buyers.by)}, at least 7 days before your store closes, we email everyone who bought from it, once, from Marktmorgen: the day it closes, and to download what they can before then.`}
+                    {closing.buyers.untold > 0
+                      ? ` ${closing.buyers.untold} ${closing.buyers.untold === 1 ? "address was" : "addresses were"} not covered by your store's closing emails: please tell ${closing.buyers.untold === 1 ? "that buyer" : "those buyers"} yourself.`
+                      : ""}
+                  </p>
+                ) : null}
+                {unusedTime && unusedTime.members > 0 ? (
+                  <div className="mt-4">
+                    <p className="text-ink">
+                      {`${unusedTime.members} ${unusedTime.members === 1 ? "member has" : "members have"} paid for time after ${dayWords(closing.day)}: ${unusedTime.totals.map((t) => formatMoney(t.amount, t.cur)).join(" and ")} in all. On that day each is refunded the unused part of their last payment from your own Stripe account, if its balance covers it. Marktmorgen never pays it and never takes it.`}
+                    </p>
+                    <p className="mt-3">
+                      <a href={studioPath(store!, "", "closing-refunds")} className="btn btn-secondary">
+                        Review and refund unused time now
+                      </a>
+                    </p>
+                  </div>
+                ) : null}
+                <p className="mt-4 text-ink-soft">
+                  {`We keep no copy of your sales: every sale, refund and payout is on your own Stripe account, and stays there. Your account and sign-in stay. Tell your students to download their course certificates before that day: they can until then, and not after. Starting a plan again before that day keeps your store: everything stays as it is, your members' payments go on as they were with nothing charged for the days in between, and nothing is refunded.`}
                 </p>
                 {/* A GET form, not a link: a link may be prefetched, and each prefetch would read the whole store. */}
                 <div className="mt-5 flex flex-wrap items-center gap-3">
