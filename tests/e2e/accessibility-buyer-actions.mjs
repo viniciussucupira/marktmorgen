@@ -54,7 +54,7 @@ try{
  for(const width of [320,390,768,1280,1920])for(const mode of ["baseline","text-spacing","reduced-motion","forced-colors","reflow-320",...(process.env.AX2_PUBLIC_STANDARD==="true"?["dark"]:[])]){
   const index=cases+1,viewportWidth=mode==="reflow-320"?320:width;
   const context=await browser.newContext({...(mode==="dark"?{colorScheme:"dark"}:{}),viewport:{width:viewportWidth,height:900},serviceWorkers:"block",reducedMotion:mode==="reduced-motion"?"reduce":"no-preference",forcedColors:mode==="forced-colors"?"active":"none",extraHTTPHeaders:{"x-forwarded-for":"192.0.2."+index,"sec-gpc":"1"}});
-  let phase="open",foreign=0,storeRouteReads=0;const mutations=[],errors=[],beforeEmails=services.emails().length,beforeCheckouts=services.checkouts().length;let libraryRequested=false;
+  let phase="open",foreign=0,storeRouteReads=0;const storeRouteReadPages={},mutations=[],errors=[],beforeEmails=services.emails().length,beforeCheckouts=services.checkouts().length;let libraryRequested=false;
   try{
    await context.addInitScript(()=>{Object.defineProperty(navigator,"globalPrivacyControl",{value:true,configurable:true});});
    if(mode==="text-spacing")await context.addInitScript(()=>document.addEventListener("DOMContentLoaded",()=>{const style=document.createElement("style");style.textContent="*{line-height:1.5!important;letter-spacing:.12em!important;word-spacing:.16em!important}p{margin-bottom:2em!important}";document.head.append(style);},{once:true}));
@@ -75,7 +75,10 @@ try{
    await context.route("**/*",route=>{
     const request=route.request(),url=new URL(request.url());
     if(url.origin!==origin&&url.origin!==FAKE){foreign++;return route.abort();}
-    if(request.method()==="GET"&&url.origin===origin&&url.pathname==="/@localshop"&&url.searchParams.has("_rsc"))storeRouteReads++;
+    if(request.method()==="GET"&&url.origin===origin&&url.pathname==="/@localshop"&&url.searchParams.has("_rsc")){
+     storeRouteReads++;const source=new URL(request.headers()["referer"]??page.url()).pathname;
+     storeRouteReadPages[source]=(storeRouteReadPages[source]??0)+1;
+    }
     if(url.origin===origin&&request.method()==="POST"&&url.pathname==="/api/store/hit")return route.fulfill({status:204,body:""});
     if(!["GET","HEAD"].includes(request.method())){
      mutations.push({method:request.method(),path:url.pathname});
@@ -130,7 +133,7 @@ try{
    const orderLink=localLink(purchases??"");if(new URL(orderLink,origin).origin!==origin)throw Error("Orders escaped synthetic origin");
    phase="buyer-orders";await page.goto(new URL(orderLink,origin).href,{waitUntil:"networkidle"});await restoreDarkAfterNavigation();await audit("buyer-orders");
    if(!(await page.locator("main").innerText()).includes("Weeknight Dinners"))throw Error("Purchased product missing in buyer area");
-   if(storeRouteReads!==0)throw Error("Store-home route was fetched before a buyer chose to visit it: "+storeRouteReads);
+   if(storeRouteReads!==0)throw Error("Store-home route was fetched before a buyer chose to visit it: "+JSON.stringify({count:storeRouteReads,pages:storeRouteReadPages}));
    const expected=libraryRequested?2:1;
    if(foreign||errors.length||mutations.length!==expected||mutations.filter(m=>m.path==="/api/store/checkout").length!==1)throw Error("Unexpected operation/page error "+JSON.stringify({foreign,errors,mutations}));
    gaps.push({width,mode,reason:"Local simulated paid return only; Stripe-hosted UI, real card/wallet, external delivery, actual400%zoom, physical devices/AT and manual sticky-scroll not proven. Library token from one real local fake-inbox request per engine is reused for remaining viewport cases."});

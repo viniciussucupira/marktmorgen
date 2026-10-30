@@ -21,3 +21,8 @@ The actual buyer browser regression keeps every error/foreign/mutation check and
 ## Financial fixture timing failure
 
 The same failed99dc head's verify123946076843 also failed source bootstrap in the postcommit reservation matrix: activation returnedfalse because the fixture sampled createdSeconds before awaiting actual reservation. Crossing a second made it precede the actual issued reservation start. Source setup now derives createdSeconds from the returned grant's submitUntilSeconds minus the unchanged300-second submission window. It still executes actual checkout activation and requires true; no ownership/period/deadline assertion or production guard is relaxed. Full new-head CI remains mandatory.
+
+
+## Remaining receipt return link found by the stricter regression
+
+Corrected31fc still failed the newly added zero-store-home-RSC assertion in Chromium job123949599258:30cases/150audits,2requests per case, summary07:45:11.5391299UTC. All actual flow/audits ran; the zero-read assertion remained binding. Source review found a fifth receipt return Link formatted across multiple lines, missed by the first exact-match edit. It now is a native anchor too (seven total including two product links). The harness keeps zero reads and additionally reports source page paths for any occurrence, without query tokens, error suppression or timing changes. Whole new-head CI required; prior31fc not approved.

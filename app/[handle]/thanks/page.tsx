@@ -1238,12 +1238,12 @@ export default async function ThanksPage({ params, searchParams }: Params) {
           <div className="mt-8">
             {/* Paid for from the cart: it is emptied (components/store-cart.tsx). */}
             {order.state === "paid" && (order.record.metadata as Record<string, string> | null)?.cart === "yes" ? <ClearCart handle={store.handle} /> : null}
-            <Link
+            <a
               href={`/@${store.handle}`}
               className="st-footer-link text-sm font-semibold"
             >
               {t.backTo(store.name)}
-            </Link>
+            </a>
             <StoreTracking
               store={store}
               event={
