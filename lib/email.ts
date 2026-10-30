@@ -10,8 +10,9 @@
  * says the account may write to the public. Resend is the one this site
  * started on, and stays underneath as the floor: every email Amazon does not
  * take — the account is still being looked at, is paused, has used its day,
- * is not answering — goes through Resend in the same breath, so no email
- * waits on Amazon and none is lost to it. With Amazon's settings absent,
+ * is not answering — can go through Resend. An uncertain once-only claim
+ * holds both senders and reports failure instead of risking a second send.
+ * With Amazon's settings absent,
  * everything goes through Resend exactly as before.
  *
  * Nobody chooses between them by hand. Which one sends is decided here, for
@@ -237,20 +238,29 @@ const onceKey = (key: string) => `nl:ses:once:${createHash("sha256").update(key)
 
 /**
  * One email through Amazon, when Amazon may be used. True when Amazon took
- * it (or had already, under the same key); false for every reason it did
- * not, and then the caller sends it through Resend.
+ * it (or an existing claim was confirmed under the same key); false when
+ * fallback is allowed; null when claim ownership is unknown. A claim is
+ * not proof of delivery, nor a source-funded lifetime reservation.
  */
-async function viaAmazon(message: OneMessage, to: string): Promise<boolean> {
+async function viaAmazon(message: OneMessage, to: string): Promise<boolean | null> {
   const config = sesConfig();
   if (!config || !(await sesReady())) return false;
   // Amazon keeps no record of a key, so the once-only promise is kept here.
   const once = message.idempotencyKey ? onceKey(message.idempotencyKey) : null;
   if (once) {
     try {
-      const [fresh] = await redisPipeline([["SET", once, "1", "NX", "EX", 86_400]]);
-      if (fresh === null) return true;
+      const reply: unknown = await redisPipeline([["SET", once, "1", "NX", "EX", 86_400]]);
+      // Bound the envelope before inspecting its sole own data member.
+      if (!Array.isArray(reply)) return null;
+      const length = Object.getOwnPropertyDescriptor(reply, "length");
+      if (!length || !("value" in length) || length.value !== 1) return null;
+      const fresh = Object.getOwnPropertyDescriptor(reply, "0");
+      if (!fresh || !("value" in fresh)) return null;
+      if (fresh.value === null) return true;
+      if (fresh.value !== "OK") return null;
     } catch {
-      return false;
+      // SET may have committed. Keep the claim; neither sender may proceed.
+      return null;
     }
   }
   const headers = cleanHeaders(message.headers);
@@ -290,7 +300,11 @@ export async function sendEmail(message: OneMessage): Promise<boolean> {
   const to = oneAddress(message.to);
   if (!to) return false;
   if (!isSenderConfigured() || !(await metered(message.meter, 1))) return false;
-  if (isSesConfigured() && (await viaAmazon(message, to))) return true;
+  if (isSesConfigured()) {
+    const amazon = await viaAmazon(message, to);
+    if (amazon === true) return true;
+    if (amazon === null) return false;
+  }
   return viaResend(message);
 }
 

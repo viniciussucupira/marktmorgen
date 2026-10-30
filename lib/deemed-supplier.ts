@@ -83,7 +83,10 @@ function ownTreatmentRecords(value: unknown): DeemedSupplierRecord[] | null {
   try {
     if (!Array.isArray(value) || Object.getPrototypeOf(value) !== Array.prototype) return null;
     const length = Object.getOwnPropertyDescriptor(value, "length")?.value;
-    if (!Number.isSafeInteger(length) || length < 0 || Reflect.ownKeys(value).length !== length + 1) return null;
+    // At most one record per known jurisdiction can ever form a valid review.
+    // Reject larger arrays before enumerating keys or inspecting members.
+    if (!Number.isSafeInteger(length) || length < 0 || length > DEEMED_SUPPLIER_JURISDICTIONS.length) return null;
+    if (Reflect.ownKeys(value).length !== length + 1) return null;
     const keys = ["jurisdiction", "treatment", "implementedIn", "recordedOn", "registration", "evidence"] as const;
     const records: DeemedSupplierRecord[] = [];
     for (let index = 0; index < length; index += 1) {
