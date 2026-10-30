@@ -6,6 +6,8 @@ Solicitação do dono: **29/10/2026,20h52Fortaleza**. Estado inicial: na fila; e
 
 ### Primeiro — AV1, Bloco de abertura e posições protegidas
 
+**AV3 — 30/10/2026, 10h20 Fortaleza:** passo 3 da AV1 aplicado ao pé da letra: pausa do plano, reinício e avisos da pausa começam DESLIGADOS na abertura; concluir #1262 e seguir aos passos 4–12 (texto integral na seção AV).
+
 AV1/SD1 e Bloco de abertura (a)–(k) ficam na ordem vigente, inclusive custos(k),538[AB1] e448[LE1] em paralelo. Não se antecipam estudos ou recursos por causa desta classificação. Ficam na posição e no estado atuais todos os concluídos/publicados, andamentos (inclusive4,88,140,141,201,547,549),505[SG2] e registros59,60,336,464–477,494,495. As referências a547/549 são exceções expressas do pedido; suas linhas canônicas continuam literalmente “na fila”, sem convertê-las em andamento. A proteção de andamento também respeita a posição atualmente vigente: não ressuscita ordemOR já substituída porFIM1.
 
 ### Em seguida — o que AV1 já manda fazer logo depois da abertura
@@ -13153,6 +13155,37 @@ REGRA DE MARGEM (MR, 27/10/2026, 07h42): nenhum cliente pagante, isoladamente, u
 Proibido: ligar OPENING_REQUESTED ou PLANS_ON_SALE; preencher revisões ou registros sem tratamento construído, testado e comprovado; afrouxar qualquer trava ou teste; mudar preços, limites visíveis ou comissão; criar contas, abrir empresa, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
 
 Aplicar a regra VR.
+
+
+### AV3 — Aplicação literal do passo 3 da AV1 (30/10/2026, 10h20 Fortaleza)
+
+Proveniência: pedido direto do dono na conversa com o Claude, 30/10/2026, 10h20 Fortaleza; texto redigido pelo Claude e aprovado pelo dono; gravado diretamente pelo Claude para não interromper o Codex. Instrução de ordem, sem número novo: nenhum número, grupo, linha da tabela do MQ1 ou estado de item muda; aviso curto também no alto da fila, em “Primeiro — AV1, Bloco de abertura e posições protegidas”. Pedidos repetidos: a etiqueta [AV3] não existia no main fc93fe0a6f1bac7c5cf3840a45796993a28c538a. Conferência do Claude no GitHub, 30/10/2026: desde 2026-10-28T22:37Z foram incorporados 37 PRs de código de ramos codex/av-*, dos quais 26 com pausa, reinício, retomada, aviso ou publicação do reinício no nome do ramo; o #1262 (codex/av-stopped-undo-generation) continua aberto; os passos 1 e 2 tiveram os PRs #1175 (SR6), #1179 (SD1) e #1180 (SR4) incorporados em 28/10/2026; em lib/contract-funding-rules.ts, CONTRACT_ADMISSION_COVERAGE tem pauseRestart:false. Texto do dono preservado integralmente abaixo.
+
+```text
+AV — Aplicação literal do passo 3 da AV1: pausa do plano começa desligada e o trabalho segue (30/10/2026) [AV3]
+
+Solicitação do dono (30/10/2026, 10h20, horário de Fortaleza).
+
+Pedidos repetidos: aplique a regra "Pedidos repetidos" de AGENTS.md. É instrução de ordem, sem número novo, registrada junto da AV1 (seção "AV — Ordem vigente para abrir as vendas"); prevalece (passo 3, letra b) sobre qualquer prioridade anterior incompatível; histórico, números e trabalhos existentes preservados.
+
+Contexto conferido pelo Claude no GitHub em 30/10/2026: os passos 1 e 2 da AV1 foram concluídos em 28/10/2026 (PRs de SR6, SD1 e SR4). Desde então, cerca de 35 PRs de código ficaram no passo 3, quase todos sobre a pausa do plano ("plan break"), o reinício depois da pausa e os avisos financiados da pausa (ramos codex/av-pause-*, codex/av-restart-*), enquanto os próprios PRs registram que a cobertura de produção da pausa e do reinício continua false. Os passos 4 a 12 não começaram. O passo 3 da AV1 manda: tudo o que puder começar DESLIGADO na abertura fica desligado, com registro, e o trabalho segue; constrói-se somente o que não puder começar desligado.
+
+1. Pausa do plano, reinício depois da pausa e avisos financiados da pausa começam DESLIGADOS na abertura: interruptor no código, desligado; nenhuma página, botão, e-mail, texto de ajuda ou de termos oferecendo pausa a quem não tem uma; o criador que quiser parar vê o cancelamento que já existe, com todos os direitos atuais de cancelamento, exportação e acesso. Testes automáticos provam que, com o interruptor desligado, nenhuma rota aceita pedido de pausa ou de reinício, e que a assinatura renova e cancela normalmente.
+
+2. Nada é apagado: o código, os testes e as provas da pausa e do reinício ficam no repositório, desligados, para voltar depois da abertura, na ordem já existente. O PR #1262, já aberto, é concluído como está; depois dele, nenhum PR novo de proteção da pausa, do reinício ou dos avisos da pausa antes da abertura, salvo falha de segurança grave ou algo quebrado em produção.
+
+3. Para cada cobertura ainda false em CONTRACT_ADMISSION_COVERAGE e cada recurso cuja proteção não esteja comprovada, primeiro registre por escrito, no PR, a resposta a "pode começar desligado na abertura sem quebrar a assinatura nem um direito do cliente?". Se sim, desligue no mesmo PR, registre e siga para o próximo. Construa somente o que não puder começar desligado (por exemplo: checkout, entrega, renovação, reembolso, cancelamento e exportação).
+
+4. Terminado o passo 3, siga os passos 4 a 12 da AV1, na ordem gravada, sem voltar a recursos já deixados desligados.
+
+5. Na anotação diária da AV2, escreva no alto, em linguagem simples: qual passo da AV1 está em andamento, quais já terminaram e quais faltam.
+
+REGRA DE MARGEM (MR, 27/10/2026): nenhum cliente pagante, considerado isoladamente e usando 100% de todos os direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto; a empresa como um todo não pode dar prejuízo no pior caso a partir da base mínima de clientes pagantes, com 100% dos custos fixos da LLC atribuídos ao Marktmorgen (FX275); a meta de 60% de margem líquida é medida todo mês com números reais. Impostos pela política TX vigente.
+
+Proibido: apagar código, testes, provas ou histórico; ligar OPENING_REQUESTED, PLANS_ON_SALE ou qualquer recurso desligado; afrouxar qualquer trava ou teste; tirar do cliente um direito de cancelamento, exportação ou acesso; mudar preços, limites visíveis ou comissão; criar contas, abrir empresa, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+```
 
 
 ### Investigação e correção da alternância de layout — 28/10/2026
