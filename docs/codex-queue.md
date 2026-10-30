@@ -38,6 +38,8 @@ Entrada posterior no Grupo B: **558[LK1]**, na fila, **ABAIXO DO MARCO MQ1 por i
 
 Entrada posterior no Grupo B: **559[CM3]**, na fila, **ABAIXO DO MARCO MQ1 por indicação expressa do dono30/10/2026,01h22Fortaleza**, depois558[LK1] entre os remanescentesB e antesFIM1. Sem mudança de qualquer outro item ou do Bloco de abertura.
 
+Entrada posterior no Grupo B: **560[AS1]**, na fila, **ABAIXO DO MARCO MQ1 por indicação expressa do dono30/10/2026,01h25Fortaleza**, depois559[CM3] entre os remanescentesB e antesFIM1. Sem mudança de qualquer outro item ou do Bloco de abertura.
+
 ### Por último — os59 remanescentesFIM1
 
 FIM1 continua depois de todos os demais, na ordem relativa anterior e com a mesma regra de partes. São os61localizadores históricos da tabelaFIM1 menos206 e241, já retirados da cauda por decisões de posição. Localizadores para conferência (não ordem nova): 16, 26, 37, 38, 41, 42, 45, 47, 48, 49, 53, 56, 58, 92, 104, 127, 128, 129, 130, 131, 132, 203, 207, 209, 215, 222, 236, 252, 255, 280, 284, 286, 289, 296, 317, 318, 327, 337, 345, 346, 347, 348, 351, 352, 359, 363, 383, 401, 402, 404, 406, 419, 420, 425, 429, 430, 440, 441, 442. O item58 continua afetado **somente no português doBrasil**; os demais idiomas mantêm posição/gates atuais. Concluídos e andamentos já existentes não são reconstruídos, reiniciados ou movidos novamente.
@@ -59,6 +61,8 @@ Uma linha por item, três grupos possíveis: A, B ou sem mudança. “Sem mudan�
 **Atualização LK1 (30/10/2026,00h18):** bases554–557 anteriores são históricas; tabela atual **558linhas únicas,109A,235B,214sem mudança**. Só558[LK1] acrescentadoB, depois557; tabela numérica não redefine execução.
 
 **Atualização CM3 (30/10/2026,01h22):** bases554–558 anteriores são históricas; tabela atual **559linhas únicas,109A,236B,214sem mudança**. Só559[CM3] acrescentadoB, depois558; tabela numérica não redefine execução.
+
+**Atualização AS1 (30/10/2026,01h25):** bases554–559 anteriores são históricas; tabela atual **560linhas únicas,109A,237B,214sem mudança**. Só560[AS1] acrescentadoB, depois559; tabela numérica não redefine execução.
 
 | Item | Grupo | Motivo |
 | --- | --- | --- |
@@ -621,6 +625,7 @@ Uma linha por item, três grupos possíveis: A, B ou sem mudança. “Sem mudan�
 | 557 [BG1] | B | Dono29/10/2026,23h58;BG2/BG3 dentro do mesmo item; abaixo do marco, após555 no Grupo B, antesFIM1. |
 | 558 [LK1] | B | Dono30/10/2026,00h18: abaixo do marco, depois557no Grupo B e antesFIM1; demais posições preservadas. |
 | 559 [CM3] | B | Dono30/10/2026,01h22: abaixo do marco, depois558no Grupo B e antesFIM1; demais posições preservadas. |
+| 560 [AS1] | B | Dono30/10/2026,01h25: abaixo do marco, depois559no Grupo B e antesFIM1; demais posições preservadas. |
 
 ### Proveniência, Pedidos repetidos e VR
 
@@ -18275,6 +18280,47 @@ Custo: as fotos contam no limite de fotos da comunidade que cada plano já tem e
 REGRA DE MARGEM (MR, 27/10/2026): nenhum cliente pagante, considerado isoladamente e usando 100% de todos os direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto; a empresa como um todo não pode dar prejuízo no pior caso a partir da base mínima de clientes pagantes, com 100% dos custos fixos da LLC atribuídos ao Marktmorgen (FX275); a meta de 60% de margem líquida é medida todo mês com números reais. Impostos pela política TX vigente.
 
 Proibido: mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; envio de arquivo de vídeo pelo membro; SVG ou qualquer arquivo que leve script; vídeo tocando sozinho; imagem repetida; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+```
+
+
+## 560 [AS1] — Próximo passo dentro do curso e progresso na lista de compras
+
+**Estado:** na fila. **Posição:** ABAIXO DO MARCO MQ1, Grupo B, depois559[CM3] entre os remanescentesB e antesFIM1.560 estava livre e a etiqueta[AS1] não existia. Não altera ordem/estado de outros itens ou Bloco de abertura.
+
+**Proveniência/Pedidos repetidos:** pedido direto do dono na conversa com o Claude,30/10/2026,01h25Fortaleza; texto redigido pelo Claude e aprovado pelo dono (“envia”); gravado diretamente pelo Claude para não interromper o Codex. Conferido no main b3f50ce90c12cf2ebdbfd3f048c11dee9aecd8e6: nenhum item pede oferta do próximo produto dentro da área do curso nem porcentagem de progresso na lista de compras; o gatilho de e-mail “finished” (lib/flow-rules.ts), as ofertas depois de pagar (lib/upsell.ts, lib/funnel.ts) e a sugestão do próximo produto (lib/next-offer*.ts) já existem e não são refeitos nem movidos. Nova recepção só proveniência,sem número/commit exclusivo.
+
+**Conferência real (limitada, revalidar no head de implementação):** app/[handle]/course/[product]/page.tsx tem a barra de progresso (role="progressbar") dentro do curso; app/[handle]/orders/page.tsx e app/library/page.tsx não mostram progresso nem porcentagem; nenhum “Next step” nas páginas do curso, das compras ou da Library; lib/flow-rules.ts tem o gatilho “finished”, e lib/upsell.ts, lib/funnel.ts, lib/next-offer.ts e lib/next-offer-rules.ts existem. Registro documental: não implementa, não certifica margem, não conta entrega funcional.
+
+### Pedido literal AS1
+
+```text
+AS — Próximo passo dentro do curso e progresso na lista de compras (30/10/2026) [AS1]
+
+Solicitação do dono (30/10/2026, 01h25, horário de Fortaleza).
+
+Pedidos repetidos: aplique a regra "Pedidos repetidos" de AGENTS.md. Conferido antes de gravar: nenhum item pede oferta do próximo produto dentro da área do curso nem a porcentagem de progresso na lista de compras; a sequência de e-mails ao terminar um curso (gatilho "finished" em lib/flow-rules.ts), as ofertas depois de pagar (lib/upsell.ts, lib/funnel.ts) e a sugestão do próximo produto (lib/next-offer*.ts) já existem e não são refeitas.
+
+Estado inicial: na fila, ABAIXO DO MARCO (MQ1, Grupo B), no fim do Grupo B, antes de FIM1, no próximo número livre. Não altera a ordem de nenhum outro item.
+
+Contexto: a página pública clickfunnels.com/features/membership-sites (lida em 30/10/2026) mostra, na seção "Scale without the guesswork", a lista de cursos do aluno com "0% complete" em cada um e um quadro "Add An Ascension — Elevate Your Customers", que oferece o próximo produto dentro da própria área de membros. No Marktmorgen, o progresso aparece só dentro de cada curso (app/[handle]/course/[product]/page.tsx), e a oferta do próximo produto chega por e-mail ou logo depois do pagamento, nunca dentro da área do curso. Verifique antes no código atual que isso continua assim.
+
+1. Próximo passo dentro do curso: no estúdio, em cada curso, o criador pode escolher um produto da própria loja como "Next step", com uma frase curta dele. O aluno vê um cartão "Next step" na página do curso e ao marcar a última aula como concluída, com o título, o preço publicado, a frase do criador e um botão para a página de venda desse produto. O cartão nunca aparece se o aluno já tem o produto (lido das compras na conta Stripe do criador e das compras importadas; desconhecido = não aparece), se o produto estiver oculto, esgotado ou fora de venda, ou se o aluno o dispensou com "No thanks", que fica guardado.
+
+2. Sem pressão: nada de desconto inventado, contagem regressiva, escassez, número de compradores ou depoimento; só o produto, o preço publicado e a frase do criador. Se o criador não escolher, nada aparece; nenhuma IA escolhe por ele neste item.
+
+3. Progresso na lista de compras: em cada curso listado nas compras da loja (app/[handle]/orders) e na Library (app/library), a porcentagem de aulas concluídas, lida do mesmo registro de progresso de lib/learn.ts, em texto ("3 of 12 lessons done"), além da barra.
+
+4. Números: na página do curso no estúdio, quantos alunos viram o cartão e quantas vendas confirmadas vieram dele, com números reais lidos das vendas na conta Stripe do criador; dado indisponível aparece como "Counts unavailable", nunca como zero.
+
+5. Acessibilidade (AX274): cartão com título de seção, botão com o nome do produto, "No thanks" como botão real; progresso em texto e em barra com nome; contraste de 7:1, 320 px e 400% de zoom; tudo por teclado. Seção "Acessibilidade" no PR, com os passos e as decisões da tarefa principal antes e depois.
+
+Custo: leituras do progresso e das compras que as páginas já fazem, e um contador por curso, dentro dos limites de requisições que cada plano já tem; nenhuma chamada de IA. Calcule o pior caso mensal e anual de cada plano com 100% dos direitos usados e aplique teto automático antes do gasto. Custo desconhecido reprova, nunca é zero.
+
+REGRA DE MARGEM (MR, 27/10/2026): nenhum cliente pagante, considerado isoladamente e usando 100% de todos os direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto; a empresa como um todo não pode dar prejuízo no pior caso a partir da base mínima de clientes pagantes, com 100% dos custos fixos da LLC atribuídos ao Marktmorgen (FX275); a meta de 60% de margem líquida é medida todo mês com números reais. Impostos pela política TX vigente.
+
+Proibido: mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; oferecer produto que o aluno já tem; desconto, contagem regressiva, escassez ou depoimento inventados; pixel ou rastreamento de abertura; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
 
 Aplicar a regra VR.
 ```
