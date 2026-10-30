@@ -24,10 +24,15 @@ export async function POST(request: NextRequest) {
 
   try {
     const loaded = guarded.store;
+    const action = text(guarded.body.action, 20);
+    // A supported legacy store may have no statistics id and therefore no
+    // connection. Withdrawing an absent connection must not create that id.
+    if (action === "disconnect" && !loaded.statsId) {
+      return Response.json({ ok: true, view: await disconnect(loaded) });
+    }
     const store = loaded.statsId ? loaded : await ensureStatsId(guarded.ref);
     if (!store || !store.statsId) return Response.json({ ok: false, error: "none" }, { status: 400 });
     // Every action but disconnecting reaches the platform, so they are counted.
-    const action = text(guarded.body.action, 20);
     if (action !== "disconnect" && !(await withinService("esync", store.statsId, PER_MINUTE, 60, store))) {
       return Response.json({ ok: false, error: "limited" }, { status: 429 });
     }
