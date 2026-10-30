@@ -7751,6 +7751,35 @@ Regras para o item: é proibido criar contas, aceitar termos, contratar serviço
 
 Estado inicial: na fila. Ao concluir, registre a data e a hora de Fortaleza, o commit, o resultado da suíte completa e a publicação.
 
+### Complemento ao 307 [EC1] — 30/10/2026, 13h12 Fortaleza
+
+Proveniência: pedido direto do dono na conversa com o Claude, 30/10/2026, 13h12 Fortaleza; texto redigido pelo Claude e aprovado pelo dono; gravado diretamente pelo Claude. Pedidos repetidos passo3(b): conferido no main 8502a17eb053d7921e2225bfb31238ebecee1f77 que não havia complemento EC1 de 30/10/2026, 13h12; somente a diferença abaixo (devolução automática do tempo pago e não usado no dia do encerramento, na parte 4) foi acrescentada, e o 307 [EC1] mantém número, posição (Bloco de abertura, posição (g)) e estado, inclusive a linha “Em andamento pelo Claude” (ramo claude/store-closing-fair-buyers, PR #1283). Texto do dono preservado integralmente abaixo.
+
+```text
+EC — Complemento ao 307 [EC1]: devolução automática do tempo pago e não usado no dia do encerramento (30/10/2026)
+Etiqueta: [EC1]
+
+Solicitação do dono (30/10/2026, 13h12, horário de Fortaleza).
+
+Pedidos repetidos: é complemento ao item 307 [EC1], já gravado e em andamento pelo Claude (ramo claude/store-closing-fair-buyers). Aplique só a diferença ao item existente, mantendo número, posição e estado (regra "Pedidos repetidos", passo 3, letra b), e registre na proveniência o que mudou.
+
+Estado inicial: o do próprio 307.
+
+O que muda no 307 [EC1], parte 4:
+- se, até o dia do encerramento, a criadora não tiver devolvido o tempo pago e não usado pelos membros, o código devolve automaticamente, no dia do encerramento, a parte proporcional de cada membro, pela conta Stripe da própria criadora, pelo mesmo cálculo do botão da parte 4, uma única vez (operação idempotente);
+- conferir na documentação oficial e datada do Stripe que a plataforma pode criar esse reembolso na conta conectada; se não puder, registrar em "Depende do dono" e manter só o botão;
+- os avisos de encerramento à criadora dizem, desde o primeiro, que isso vai acontecer e quanto será devolvido, e que ela pode voltar a assinar para manter a loja;
+- saldo insuficiente na conta da criadora: o membro recebe um e-mail de serviço dizendo que não foi possível devolver e qual é o contato publicado pela criadora; a plataforma nunca paga do próprio caixa nem cria dívida;
+- os Termos de Uso e a política de reembolso passam a dizer, em inglês americano simples, que no encerramento da loja o tempo pago e não usado é devolvido automaticamente pela conta da criadora, quando houver saldo;
+- testes: devolução automática no dia certo; valor proporcional; nenhuma devolução dupla quando a criadora já devolveu; saldo insuficiente; criadora que volta a assinar antes do encerramento não tem devolução.
+
+REGRA DE MARGEM (MR, 27/10/2026): nenhum cliente pagante, considerado isoladamente e usando 100% de todos os direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto; a empresa como um todo não pode dar prejuízo no pior caso a partir da base mínima de clientes pagantes, com 100% dos custos fixos da LLC atribuídos ao Marktmorgen (FX275); a meta de 60% de margem líquida é medida todo mês com números reais. Impostos pela política TX vigente.
+
+Proibido: criar item novo ou mudar número, posição ou estado do 307; pagar reembolso com dinheiro da plataforma; criar dívida para a plataforma; devolver duas vezes; mudar preços, limites visíveis, comissão, CLOSING_DAYS, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; reembolso real; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+```
+
 ## TC — Lições da auditoria da ThriveCart (23/10/2026)
 
 **Ordem:** após todos os itens anteriores; este item não bloqueia nenhum outro. Inclusão documental após concluir a tarefa corrente; nada implementado agora.
