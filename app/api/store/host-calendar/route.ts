@@ -37,13 +37,17 @@ export async function POST(request: NextRequest) {
   const { email, body } = guarded;
   const store = guarded.store.statsId ? guarded.store : ((await ensureStatsId(guarded.ref)) ?? guarded.store);
   if (!store.statsId) return Response.json({ ok: false, error: "none" }, { status: 400 });
-  if (!(await withinService("host-calendar", `${store.statsId}|${email}`, PER_TEN_MINUTES, 600, store))) {
+  const action = text(body.action, 20);
+  // member admission already enforces the existing authenticated daily bound.
+  // Removing access must not depend on the monthly figure for new service work.
+  const removing = action === "disconnect" || action === "ics-remove";
+  if (!removing && !(await withinService("host-calendar", `${store.statsId}|${email}`, PER_TEN_MINUTES, 600, store))) {
     return Response.json({ ok: false, error: "limited" }, { status: 429 });
   }
   const tz = isTimeZone(body.tz) ? (body.tz as string) : "UTC";
   const view = () => hostCalendarView(store, email, tz);
   try {
-    switch (text(body.action, 20)) {
+    switch (action) {
       case "source": {
         const source = body.source === "google" || body.source === "ics" ? body.source : "none";
         const problem = await setHostSource(store, email, source);
