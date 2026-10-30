@@ -27,7 +27,7 @@ Manter a ordem já gravada para7[C-UE],8[C-UK],300–303, relatório mensal465[M
 
 Percorrer **somente os remanescentes acionáveis**, na ordem relativa já vigente (inclusiveOR e dependências), filtrando pela classificaçãoA; números abaixo são localizadores, não sequência numérica nova. Exceções de MQ1(b) continuam no lugar atual mesmo quando constam da listaA.
 
-**Ordem vigente do Grupo A pela MQ2 (dono, 30/10/2026, 10h58 Fortaleza):** 310 [AX2], 17 [D15], 273 [BK1], 274 [AX1], 427 [VR1], 567 [GD1], 568 [GD2], 388 [TB14], 389 [TB15], 414 [KX1], 417 [CC1], 437 [AC2], 457 [EL1], 459 [EL3], 460 [EL4], 461 [EL5], 462 [EL6], 506 [SG1], 507 [SG3], 508 [SG4], 335 [FR1], 374 [SU7], 378 [TB4], 93 [D2-VERIFIED-SOCIAL], 149 [S8-VERIFIED-SOCIAL-REFERENCE], 94 [D2-BUYER-TRUST], 145 [S4-HOME-SALES], 219 [OP5], 488 [IT5], 220 [HL1], 238 [CF1], 239 [CF2], 240 [CF3], 243 [CF6], 248 [ST1], 251 [ST4], 256 [KJ1], 271 [SEO1], 276 [H3-1], 281 [SF1], 497 [ME2], 308 [TC1], 443 [TS1], 444 [TS2], 490 [PP1], 496 [ME1], 498 [ME3], 531 [VP1], 241 [CF4], 534 [FQ1], 14 [D11], 22 [E5], 28 [E11], 99 [E2-TAG-BROADCAST], 100 [E2-MEMBER-PUBLICATIONS], 120 [F2-IMPORTS], 260 [KJ5], 394 [CX5], 397 [SL1], 428 [BV1], 513 [PF1], 556 [CT1], 514 [PF2], 515 [PF3], 206 [SH3], 520 [LB1], 521 [LB2], 522 [LB3], 541 [FC4], 544 [SQ9], 548 [TR1], 551 [FB1], 552 [BB1], 554 [DS1], 533 [DP1], 491 [PP2], 362 [AP2], 479 [SB2], 113 [E2-COMMUNITY-MODERATION], 436 [AC1], 312 [HQ1], 492 [DE1], 338 [HZ3], 438 [FC1], 439 [FC2], 32 [F1], 375 [TB1], 484 [IT1], 485 [IT2], 487 [IT4], 524 [NV1], 103 [E2-LESSON-MEDIA], 242 [CF5], 282 [HG1], 356 [ES2], 370 [SU3], 380 [TB6], 399 [SL3], 525 [FN1], 535 [MV1], 536 [CB1], 537 [PH1], 540 [CU1], 545 [LU1], 546 [EB1], 39 [G1], 480 [SB3]. Ficam no lugar atual, fora desta sequência: 143 [S2-PRICING], 182 [HT0], 202 [P0-REAL-PEOPLE], 205 [SH2], 431 [PV1], 432 [PV2], 433 [PV3], 434 [PV4] (concluídos, absorvidos, andamentos protegidos e itens do Bloco de abertura). Critério e motivo de cada mudança na seção “MQ2 — reordenação única aplicada”.
+**Ordem vigente do Grupo A (MQ2 de 30/10/2026, 10h58, corrigida pela MQ3 de 30/10/2026, 13h45 Fortaleza):** 310 [AX2], 414 [KX1], 17 [D15], 273 [BK1], 274 [AX1], 427 [VR1], 567 [GD1], 568 [GD2], 388 [TB14], 389 [TB15], 437 [AC2], 457 [EL1], 506 [SG1], 507 [SG3], 247 [SP4], 508 [SG4], 335 [FR1], 378 [TB4], 93 [D2-VERIFIED-SOCIAL], 149 [S8-VERIFIED-SOCIAL-REFERENCE], 94 [D2-BUYER-TRUST], 145 [S4-HOME-SALES], 219 [OP5], 488 [IT5], 220 [HL1], 238 [CF1], 213 [SH10], 237 [SK5], 239 [CF2], 240 [CF3], 243 [CF6], 459 [EL3], 248 [ST1], 281 [SF1], 497 [ME2], 251 [ST4], 256 [KJ1], 271 [SEO1], 276 [H3-1], 308 [TC1], 443 [TS1], 444 [TS2], 490 [PP1], 496 [ME1], 498 [ME3], 531 [VP1], 241 [CF4], 534 [FQ1], 14 [D11], 22 [E5], 393 [CX4], 28 [E11], 99 [E2-TAG-BROADCAST], 100 [E2-MEMBER-PUBLICATIONS], 120 [F2-IMPORTS], 260 [KJ5], 394 [CX5], 397 [SL1], 428 [BV1], 513 [PF1], 556 [CT1], 514 [PF2], 515 [PF3], 206 [SH3], 520 [LB1], 521 [LB2], 522 [LB3], 541 [FC4], 544 [SQ9], 548 [TR1], 551 [FB1], 552 [BB1], 554 [DS1], 491 [PP2], 417 [CC1], 362 [AP2], 374 [SU7], 479 [SB2], 113 [E2-COMMUNITY-MODERATION], 436 [AC1], 312 [HQ1], 492 [DE1], 338 [HZ3], 438 [FC1], 439 [FC2], 461 [EL5], 460 [EL4], 32 [F1], 375 [TB1], 484 [IT1], 485 [IT2], 487 [IT4], 524 [NV1], 103 [E2-LESSON-MEDIA], 242 [CF5], 282 [HG1], 356 [ES2], 370 [SU3], 380 [TB6], 399 [SL3], 525 [FN1], 536 [CB1], 537 [PH1], 540 [CU1], 545 [LU1], 546 [EB1], 462 [EL6], 39 [G1], 480 [SB3]. Pela MQ3, 247, 393, 213 e 237 vieram do Grupo B e 533 e 535 desceram ao Grupo B. Ficam no lugar atual, fora desta sequência: 143 [S2-PRICING], 182 [HT0], 202 [P0-REAL-PEOPLE], 205 [SH2], 431 [PV1], 432 [PV2], 433 [PV3], 434 [PV4] (concluídos, absorvidos, andamentos protegidos e itens do Bloco de abertura). Critério e motivo de cada mudança na seção “MQ2 — reordenação única aplicada”.
 
 Ordem anterior à MQ2, preservada como histórico — Localizadores do Grupo A solicitado: 14, 17, 22, 28, 32, 39, 93, 94, 99, 100, 103, 113, 120, 143, 145, 149, 182, 202, 205, 206, 219, 220, 238, 239, 240, 241, 242, 243, 248, 251, 256, 260, 271, 273, 274, 276, 281, 282, 308, 310, 312, 335, 338, 356, 362, 370, 374, 375, 378, 380, 388, 389, 394, 397, 399, 414, 417, 427, 428, 431, 432, 433, 434, 436, 437, 438, 439, 443, 444, 457, 459, 460, 461, 462, 479, 480, 484, 485, 487, 488, 490, 491, 492, 496, 497, 498, 506, 507, 508, 513, 514, 515, 520, 521, 522, 524, 525, 531, 533, 534, 535, 536, 537, 540, 541, 544, 545, 546, 548, 551, 552, 554.
 
@@ -43,7 +43,7 @@ Ordem anterior à MQ2, preservada como histórico — Localizadores do Grupo A s
 
 ### Grupo B — abaixo do marco
 
-**Ordem vigente do Grupo B pela MQ2 (dono, 30/10/2026, 10h58 Fortaleza):** 97 [D2-OPEN-EXIT], 247 [SP4], 561 [NE1], 13 [D10], 43 [G5], 55 [K1], 500 [OX2], 422 [PT2], 30 [E13], 211 [SH8], 216 [OP2], 253 [WH2], 266 [CI4], 269 [KT3], 277 [H3-2], 458 [EL2], 509 [CK1], 562 [QZ1], 10 [D7], 21 [E4], 31 [E14], 393 [CX4], 106 [E2-CHECKOUT-EXTRAS], 107 [E2-BROADCAST-CONTENT-AB], 118 [F2-READER-REFERRALS], 119 [F2-FREE-RECOMMENDATIONS], 208 [SH5], 210 [SH7], 213 [SH10], 218 [OP4], 221 [HL2], 224 [HL5], 225 [HL6], 230 [HL11], 233 [SK1], 237 [SK5], 244 [SP1], 245 [SP2], 254 [WH3], 257 [KJ2], 267 [KT1], 278 [H3-3], 292 [SQ3], 299 [H5-2], 343 [RN1], 357 [ES3], 361 [AP1], 366 [EZ3], 373 [SU6], 377 [TB3], 387 [TB13], 395 [CX6], 403 [SN1], 408 [AM3], 415 [KX2], 503 [AG1], 504 [AG2], 510 [CK2], 511 [CK3], 512 [CK4], 526 [FN2], 560 [AS1], 35 [F4], 36 [F5], 46 [H3], 57 [K3-ZAPIER], 109 [E2-EVENTS], 115 [E2-FOUNDING-MEMBERS], 121 [F2-SUBSCRIPTION-GIFTS], 123 [F2-COMMUNITY-DIRECTORY], 134 [X10-PAID-RECOMMENDATIONS], 223 [HL4], 229 [HL10], 231 [EQ1], 234 [SK2], 304 [GH1], 349 [DN1], 350 [DN2], 355 [ES1], 384 [TB10], 400 [WX1], 407 [AM2], 410 [AM5], 411 [AM6], 489 [IT6], 516 [PF4], 517 [PF5], 518 [PF6], 519 [PF7], 523 [LB4], 528 [FT1], 529 [FT2], 530 [FT3], 542 [CM1], 555 [AK1], 11 [D8], 564 [HC1], 19 [E2], 96 [D2-LESSON-DROPOFF], 283 [HG2], 285 [SX1], 287 [H4-1], 360 [NL1], 421 [PT1], 502 [RX1], 112 [E2-POINTS], 116 [F2-COMMUNITY-CHANNELS], 117 [F2-COMMUNITY-MAIL], 263 [CI1], 264 [CI2], 424 [MN1], 543 [CM2], 445 [GE1], 446 [GE2], 447 [GE3], 486 [IT3], 527 [HE1], 558 [LK1], 563 [WN1], 18 [E1], 20 [E3], 23 [E6], 95 [D2-DEMAND-RADAR], 101 [E2-PUBLICATION-REACTIONS], 105 [E2-COURSE-AI-DRAFT], 108 [E2-BLOG-RSS-MAIL], 124 [F2-EDIT-SENT-LINKS], 212 [SH9], 217 [OP3], 226 [HL7], 227 [HL8], 249 [ST2], 265 [CI3], 268 [KT2], 270 [GR1], 288 [H4-2], 290 [SQ1], 291 [SQ2], 294 [SQ5], 297 [SQ8], 311 [HS1], 354 [EP1], 364 [EZ1], 365 [EZ2], 367 [EZ4], 368 [SU1], 369 [SU2], 371 [SU4], 372 [SU5], 376 [TB2], 386 [TB12], 391 [CX2], 392 [CX3], 423 [LT1], 426 [BX2], 499 [OX1], 532 [AF1], 539 [AR1], 550 [IX1], 557 [BG1], 12 [D9], 24 [E7], 25 [E8], 27 [E10], 29 [E12], 33 [F2], 34 [F3], 102 [E2-COURSE-COMPLIANCE], 110 [E2-MEMBER-PROFILES], 111 [E2-COMMUNITY-AUTOMATION], 122 [F2-COMMUNITY-AI], 125 [F2-EMAIL-POLLS], 126 [F2-MULTIPLE-COMMUNITIES], 235 [SK3], 258 [KJ3], 259 [KJ4], 272 [HM1], 279 [H3-4], 293 [SQ4], 295 [SQ6], 298 [H5-1], 353 [BH1], 358 [EA1], 379 [TB5], 381 [TB7], 382 [TB8], 385 [TB11], 390 [CX1], 398 [SL2], 405 [HX1], 409 [AM4], 412 [AM7], 413 [AM8], 416 [KX3], 418 [CC2], 449 [AP1], 450 [AP2], 451 [AP3], 452 [AP4], 453 [AP5], 454 [AP6], 455 [AP7], 456 [AN1], 478 [SB1], 501 [OX3], 553 [DB1], 559 [CM3], 40 [G2], 44 [H1], 228 [HL9], 15 [D12], 50 [I1], 51 [I2], 52 [I3], 54 [J2], 214 [SH11], 246 [SP3], 250 [ST3], 261 [KJ6], 262 [KJ7], 344 [RN2], 396 [CX7], 463 [EL7], 481 [SB4], 482 [SB5], 483 [SB6]. Ficam no lugar atual, fora desta sequência: 197 [HT11], 198 [HT13], 204 [SH1], 435 [PV5]. Saíram do Grupo B pelo 566 [FF2]: 61, 63, 64, 65, 66, 67, 68, 135, 136 e 137 (fim da fila, depois do 566); 62 [X2] e 133 [X9-OPEN-ENGAGEMENT] continuam cancelados, com motivo. Critério e motivo de cada mudança na seção “MQ2 — reordenação única aplicada”.
+**Ordem vigente do Grupo B (MQ2 de 30/10/2026, 10h58, corrigida pela MQ3 de 30/10/2026, 13h45 Fortaleza):** 97 [D2-OPEN-EXIT], 561 [NE1], 13 [D10], 43 [G5], 55 [K1], 30 [E13], 211 [SH8], 216 [OP2], 253 [WH2], 266 [CI4], 269 [KT3], 277 [H3-2], 458 [EL2], 509 [CK1], 562 [QZ1], 10 [D7], 21 [E4], 31 [E14], 106 [E2-CHECKOUT-EXTRAS], 107 [E2-BROADCAST-CONTENT-AB], 118 [F2-READER-REFERRALS], 119 [F2-FREE-RECOMMENDATIONS], 208 [SH5], 210 [SH7], 218 [OP4], 221 [HL2], 224 [HL5], 225 [HL6], 230 [HL11], 233 [SK1], 244 [SP1], 245 [SP2], 254 [WH3], 257 [KJ2], 267 [KT1], 278 [H3-3], 292 [SQ3], 299 [H5-2], 343 [RN1], 357 [ES3], 361 [AP1], 366 [EZ3], 373 [SU6], 377 [TB3], 387 [TB13], 395 [CX6], 408 [AM3], 415 [KX2], 503 [AG1], 504 [AG2], 510 [CK2], 511 [CK3], 526 [FN2], 535 [MV1], 560 [AS1], 35 [F4], 36 [F5], 46 [H3], 57 [K3-ZAPIER], 109 [E2-EVENTS], 115 [E2-FOUNDING-MEMBERS], 121 [F2-SUBSCRIPTION-GIFTS], 123 [F2-COMMUNITY-DIRECTORY], 134 [X10-PAID-RECOMMENDATIONS], 223 [HL4], 229 [HL10], 533 [DP1], 231 [EQ1], 234 [SK2], 304 [GH1], 349 [DN1], 350 [DN2], 355 [ES1], 384 [TB10], 400 [WX1], 407 [AM2], 410 [AM5], 411 [AM6], 516 [PF4], 517 [PF5], 518 [PF6], 519 [PF7], 523 [LB4], 528 [FT1], 529 [FT2], 530 [FT3], 542 [CM1], 555 [AK1], 11 [D8], 564 [HC1], 19 [E2], 96 [D2-LESSON-DROPOFF], 283 [HG2], 285 [SX1], 287 [H4-1], 360 [NL1], 421 [PT1], 422 [PT2], 502 [RX1], 24 [E7], 112 [E2-POINTS], 116 [F2-COMMUNITY-CHANNELS], 117 [F2-COMMUNITY-MAIL], 263 [CI1], 264 [CI2], 424 [MN1], 543 [CM2], 445 [GE1], 446 [GE2], 447 [GE3], 15 [D12], 489 [IT6], 486 [IT3], 527 [HE1], 558 [LK1], 563 [WN1], 18 [E1], 20 [E3], 23 [E6], 95 [D2-DEMAND-RADAR], 101 [E2-PUBLICATION-REACTIONS], 105 [E2-COURSE-AI-DRAFT], 108 [E2-BLOG-RSS-MAIL], 124 [F2-EDIT-SENT-LINKS], 212 [SH9], 217 [OP3], 226 [HL7], 227 [HL8], 249 [ST2], 265 [CI3], 268 [KT2], 270 [GR1], 288 [H4-2], 290 [SQ1], 291 [SQ2], 294 [SQ5], 297 [SQ8], 311 [HS1], 354 [EP1], 364 [EZ1], 365 [EZ2], 367 [EZ4], 368 [SU1], 369 [SU2], 371 [SU4], 372 [SU5], 376 [TB2], 386 [TB12], 391 [CX2], 392 [CX3], 423 [LT1], 426 [BX2], 499 [OX1], 500 [OX2], 532 [AF1], 539 [AR1], 550 [IX1], 557 [BG1], 12 [D9], 25 [E8], 27 [E10], 29 [E12], 33 [F2], 34 [F3], 102 [E2-COURSE-COMPLIANCE], 110 [E2-MEMBER-PROFILES], 111 [E2-COMMUNITY-AUTOMATION], 122 [F2-COMMUNITY-AI], 125 [F2-EMAIL-POLLS], 126 [F2-MULTIPLE-COMMUNITIES], 235 [SK3], 258 [KJ3], 259 [KJ4], 272 [HM1], 279 [H3-4], 293 [SQ4], 295 [SQ6], 298 [H5-1], 353 [BH1], 358 [EA1], 379 [TB5], 381 [TB7], 382 [TB8], 385 [TB11], 390 [CX1], 398 [SL2], 405 [HX1], 406 [AM1], 409 [AM4], 412 [AM7], 413 [AM8], 416 [KX3], 418 [CC2], 449 [AP1], 450 [AP2], 451 [AP3], 452 [AP4], 453 [AP5], 454 [AP6], 455 [AP7], 456 [AN1], 478 [SB1], 501 [OX3], 553 [DB1], 559 [CM3], 40 [G2], 44 [H1], 228 [HL9], 50 [I1], 51 [I2], 52 [I3], 54 [J2], 214 [SH11], 246 [SP3], 250 [ST3], 261 [KJ6], 262 [KJ7], 344 [RN2], 396 [CX7], 463 [EL7], 481 [SB4], 483 [SB6]. Ficam no lugar atual, fora desta sequência: 197 [HT11], 198 [HT13], 204 [SH1], 435 [PV5]. Pela MQ3, 533 [DP1] e 535 [MV1] vieram do Grupo A e 406 [AM1] veio da cauda FIM1; 247, 393, 213 e 237 subiram ao Grupo A e 482 desceu à cauda. Saíram do Grupo B pelo 566 [FF2]: 61, 63, 64, 65, 66, 67, 68, 135, 136 e 137 (fim da fila, depois do 566); 62 [X2] e 133 [X9-OPEN-ENGAGEMENT] continuam cancelados, com motivo. Critério e motivo de cada mudança na seção “MQ2 — reordenação única aplicada”. Duplicados pela MQ3, não executar: 403 [SN1] (do 21 [E4]) e 512 [CK4] (do 244 [SP1]); 198 [HT13] (do 18 [E1]) já estava fora da sequência.
 
 Ordem anterior à MQ2, preservada como histórico — Percorrer os remanescentes do Grupo B na **ordem relativa já vigente**, sem ordenação nova por número. Localizadores solicitados: 10, 11, 12, 13, 15, 18, 19, 20, 21, 23, 24, 25, 27, 29, 30, 31, 33, 34, 35, 36, 40, 43, 44, 46, 50, 51, 52, 54, 55, 57, 61, 62, 63, 64, 65, 66, 67, 68, 95, 96, 97, 101, 102, 105, 106, 107, 108, 109, 110, 111, 112, 115, 116, 117, 118, 119, 121, 122, 123, 124, 125, 126, 133, 134, 135, 136, 137, 197, 198, 204, 208, 210, 211, 212, 213, 214, 216, 217, 218, 221, 223, 224, 225, 226, 227, 228, 229, 230, 231, 233, 234, 235, 237, 244, 245, 246, 247, 249, 250, 253, 254, 257, 258, 259, 261, 262, 263, 264, 265, 266, 267, 268, 269, 270, 272, 277, 278, 279, 283, 285, 287, 288, 290, 291, 292, 293, 294, 295, 297, 298, 299, 304, 311, 343, 344, 349, 350, 353, 354, 355, 357, 358, 360, 361, 364, 365, 366, 367, 368, 369, 371, 372, 373, 376, 377, 379, 381, 382, 384, 385, 386, 387, 390, 391, 392, 393, 395, 396, 398, 400, 403, 405, 407, 408, 409, 410, 411, 412, 413, 415, 416, 418, 421, 422, 423, 424, 426, 435, 445, 446, 447, 449, 450, 451, 452, 453, 454, 455, 456, 458, 463, 478, 481, 482, 483, 486, 489, 499, 500, 501, 502, 503, 504, 509, 510, 511, 512, 516, 517, 518, 519, 523, 526, 527, 528, 529, 530, 532, 539, 542, 543, 550, 553.
 
@@ -69,7 +69,7 @@ Entrada posterior no Grupo B: **564[HC1]**, na fila, **ABAIXO DO MARCO MQ1 por i
 
 ### Por último — os59 remanescentesFIM1
 
-**Ordem vigente da cauda FIM1 pela MQ2 (dono, 30/10/2026, 10h58 Fortaleza):** 47 [H4], 207 [SH4], 209 [SH6], 215 [OP1], 284 [HG3], 45 [H2], 48 [H5], 92 [D2-PREORDER-GOAL], 222 [HL3], 346 [FL1], 348 [ED1], 351 [DN3], 58 [K3-LANG/PATH14], 404 [RF1], 425 [BX1], 127 [H7-CUSTOM-CSS], 429 [BV2], 430 [TM1], 280 [H3-5], 289 [H4-3], 16 [D13], 104 [E2-MODULE-PUSH], 296 [SQ7], 37 [F6], 26 [E9], 56 [K2], 203 [TEAMS], 255 [WH4], 286 [SX2], 359 [EA2], 383 [TB9], 406 [AM1], 419 [CC3], 38 [F7], 317 [EU1], 318 [IW1], 41 [G3], 337 [HZ2], 42 [G4], 49 [H6], 53 [J1], 128 [J1-SKOOL], 129 [J1-KIT], 130 [J1-CIRCLE], 131 [J1-TEACHABLE], 132 [J1-SUBSTACK], 236 [SK4], 252 [WH1], 327 [IN3], 345 [RN3], 347 [FL2], 352 [DN4], 420 [CC4], 363 [EI1], 401 [WX2], 402 [WX3], 440 [FC3], 441 [SV1], 442 [SV2]. Ficam na mesma posição da cauda: 58 (só pt-BR, sem execução), 127, 318, 420 e o grupo da UE 317 [EU1], 337 [HZ2], 441 [SV1] e 442 [SV2]; 363 [EI1] continua na cauda (a FIM1, mais recente, prevalece). Depois da cauda, sem reordenação: 565 [FF1], 566 [FF2] e os reativados pelo FF2, na ordem dos números. Regra de partes e proibições da FIM1 inalteradas.
+**Ordem vigente da cauda FIM1 (MQ2 de 30/10/2026, 10h58, corrigida pela MQ3 de 30/10/2026, 13h45 Fortaleza):** 47 [H4], 207 [SH4], 209 [SH6], 215 [OP1], 284 [HG3], 45 [H2], 48 [H5], 92 [D2-PREORDER-GOAL], 222 [HL3], 346 [FL1], 348 [ED1], 351 [DN3], 58 [K3-LANG/PATH14], 404 [RF1], 425 [BX1], 482 [SB5], 127 [H7-CUSTOM-CSS], 429 [BV2], 430 [TM1], 280 [H3-5], 289 [H4-3], 16 [D13], 104 [E2-MODULE-PUSH], 296 [SQ7], 37 [F6], 26 [E9], 56 [K2], 203 [TEAMS], 255 [WH4], 286 [SX2], 359 [EA2], 383 [TB9], 419 [CC3], 38 [F7], 317 [EU1], 318 [IW1], 41 [G3], 337 [HZ2], 42 [G4], 49 [H6], 53 [J1], 128 [J1-SKOOL], 129 [J1-KIT], 130 [J1-CIRCLE], 131 [J1-TEACHABLE], 132 [J1-SUBSTACK], 236 [SK4], 252 [WH1], 327 [IN3], 345 [RN3], 347 [FL2], 352 [DN4], 420 [CC4], 363 [EI1], 401 [WX2], 402 [WX3], 440 [FC3], 441 [SV1], 442 [SV2]. Ficam na mesma posição da cauda: 58 (só pt-BR, sem execução), 127, 318, 420 e o grupo da UE 317 [EU1], 337 [HZ2], 441 [SV1] e 442 [SV2]; 363 [EI1] continua na cauda (a FIM1, mais recente, prevalece). Pela MQ3, 406 [AM1] saiu da cauda para o Grupo B, logo antes de 409 [AM4] (exceção à FIM1 aprovada pelo dono), e 482 [SB5] entrou logo depois de 425 [BX1]. Depois da cauda, sem reordenação: 565 [FF1], 566 [FF2] e os reativados pelo FF2, na ordem dos números. Regra de partes e proibições da FIM1 inalteradas.
 
 Ordem anterior à MQ2, preservada como histórico — FIM1 continua depois de todos os demais, na ordem relativa anterior e com a mesma regra de partes. São os61localizadores históricos da tabelaFIM1 menos206 e241, já retirados da cauda por decisões de posição. Localizadores para conferência (não ordem nova): 16, 26, 37, 38, 41, 42, 45, 47, 48, 49, 53, 56, 58, 92, 104, 127, 128, 129, 130, 131, 132, 203, 207, 209, 215, 222, 236, 252, 255, 280, 284, 286, 289, 296, 317, 318, 327, 337, 345, 346, 347, 348, 351, 352, 359, 363, 383, 401, 402, 404, 406, 419, 420, 425, 429, 430, 440, 441, 442. O item58 continua afetado **somente no português doBrasil**; os demais idiomas mantêm posição/gates atuais. Concluídos e andamentos já existentes não são reconstruídos, reiniciados ou movidos novamente.
 
@@ -113,6 +113,8 @@ Uma linha por item, três grupos possíveis: A, B ou sem mudança. “Sem mudan�
 
 **Atualização GD2 (30/10/2026,13h23):** bases554–567 anteriores são históricas; tabela atual **568linhas únicas,111A,231B,226sem mudança**. Só568[GD2] acrescentadoA, logo depois de567[GD1] na ordem vigente da MQ2 (A#7); os itens seguintes do Grupo A descem uma posição na sequência, sem mudar número, grupo ou estado. Tabela numérica não redefine execução.
 
+**Atualização MQ3 (30/10/2026,13h45):** bases554–568 anteriores são históricas; tabela atual **568linhas únicas,113A,229B,226sem mudança**. Pela MQ3, 247, 393, 213 e 237 passam de B para A; 533 e 535 de A para B; 406 da cauda FIM1 (sem mudança) para B; 482 de B para a cauda FIM1 (sem mudança). As notas “MQ2: X#n” das demais linhas são históricas; a posição vigente é a das linhas de ordem no alto do arquivo. 403, 512 e 198 marcados “Duplicado do item N; não executar”. Tabela numérica não redefine execução.
+
 | Item | Grupo | Motivo |
 | --- | --- | --- |
 | 1 [ATUAL-D6] | sem mudança | MQ1(b): já concluído/publicado, sem reconstrução. |
@@ -129,7 +131,7 @@ Uma linha por item, três grupos possíveis: A, B ou sem mudança. “Sem mudan�
 | 12 [D9] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. MQ2(30/10/2026,10h58): B#161. |
 | 13 [D10] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. MQ2(30/10/2026,10h58): B#4. |
 | 14 [D11] | A | MQ1(c): prioridadeA; ordem relativa mantida. MQ2(30/10/2026,10h58): A#49. |
-| 15 [D12] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. MQ2(30/10/2026,10h58): B#211. |
+| 15 [D12] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. MQ2(30/10/2026,10h58): B#211. MQ3(30/10/2026,13h45): B#111. |
 | 16 [D13] | sem mudança | FIM1: cauda vigente; partes essenciais no lugar. MQ2(30/10/2026,10h58): FIM1#21. |
 | 17 [D15] | A | MQ1(c): prioridadeA; ordem relativa mantida. MQ2(30/10/2026,10h58): A#2. |
 | 18 [E1] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. MQ2(30/10/2026,10h58): B#120. |
@@ -138,7 +140,7 @@ Uma linha por item, três grupos possíveis: A, B ou sem mudança. “Sem mudan�
 | 21 [E4] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. MQ2(30/10/2026,10h58): B#20. |
 | 22 [E5] | A | MQ1(c): prioridadeA; ordem relativa mantida. MQ2(30/10/2026,10h58): A#50. |
 | 23 [E6] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. MQ2(30/10/2026,10h58): B#122. |
-| 24 [E7] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. MQ2(30/10/2026,10h58): B#162. |
+| 24 [E7] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. MQ2(30/10/2026,10h58): B#162. MQ3(30/10/2026,13h45): B#100. |
 | 25 [E8] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. MQ2(30/10/2026,10h58): B#163. |
 | 26 [E9] | sem mudança | FIM1: cauda vigente; partes essenciais no lugar. MQ2(30/10/2026,10h58): FIM1#25. |
 | 27 [E10] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. MQ2(30/10/2026,10h58): B#164. |
@@ -312,7 +314,7 @@ Uma linha por item, três grupos possíveis: A, B ou sem mudança. “Sem mudan�
 | 195 [HT17] | sem mudança | MQ1(b): já concluído/publicado, sem reconstrução. |
 | 196 [HT10] | sem mudança | MQ1(b): já concluído/publicado, sem reconstrução. |
 | 197 [HT11] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
-| 198 [HT13] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 198 [HT13] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. MQ3(30/10/2026,13h45): Duplicado do item 18; não executar. |
 | 199 [HT14] | sem mudança | MQ1(b): já concluído/publicado, sem reconstrução. |
 | 200 [B2-200] | sem mudança | MQ1(b): já concluído/publicado, sem reconstrução. |
 | 201 [P0-BROWSERS-DEVICES] | sem mudança | MQ1(b): andamento/posição protegidos; estado intacto. |
@@ -327,7 +329,7 @@ Uma linha por item, três grupos possíveis: A, B ou sem mudança. “Sem mudan�
 | 210 [SH7] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. MQ2(30/10/2026,10h58): B#28. |
 | 211 [SH8] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. MQ2(30/10/2026,10h58): B#10. |
 | 212 [SH9] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. MQ2(30/10/2026,10h58): B#128. |
-| 213 [SH10] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. MQ2(30/10/2026,10h58): B#29. |
+| 213 [SH10] | A | MQ1(d): restante abaixo; partesMQ1(g) no lugar. MQ2(30/10/2026,10h58): B#29. MQ3(30/10/2026,13h45): A#27. |
 | 214 [SH11] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. MQ2(30/10/2026,10h58): B#216. |
 | 215 [OP1] | sem mudança | FIM1: cauda vigente; partes essenciais no lugar. MQ2(30/10/2026,10h58): FIM1#4. |
 | 216 [OP2] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. MQ2(30/10/2026,10h58): B#11. |
@@ -351,7 +353,7 @@ Uma linha por item, três grupos possíveis: A, B ou sem mudança. “Sem mudan�
 | 234 [SK2] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. MQ2(30/10/2026,10h58): B#75. |
 | 235 [SK3] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. MQ2(30/10/2026,10h58): B#174. |
 | 236 [SK4] | sem mudança | FIM1: cauda vigente; partes essenciais no lugar. MQ2(30/10/2026,10h58): FIM1#47. |
-| 237 [SK5] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. MQ2(30/10/2026,10h58): B#36. |
+| 237 [SK5] | A | MQ1(d): restante abaixo; partesMQ1(g) no lugar. MQ2(30/10/2026,10h58): B#36. MQ3(30/10/2026,13h45): A#28. |
 | 238 [CF1] | A | MQ1(c): prioridadeA; ordem relativa mantida. MQ2(30/10/2026,10h58): A#29. |
 | 239 [CF2] | A | MQ1(c): prioridadeA; ordem relativa mantida. MQ2(30/10/2026,10h58): A#30. |
 | 240 [CF3] | A | MQ1(c): prioridadeA; ordem relativa mantida. MQ2(30/10/2026,10h58): A#31. |
@@ -361,7 +363,7 @@ Uma linha por item, três grupos possíveis: A, B ou sem mudança. “Sem mudan�
 | 244 [SP1] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. MQ2(30/10/2026,10h58): B#37. |
 | 245 [SP2] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. MQ2(30/10/2026,10h58): B#38. |
 | 246 [SP3] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. MQ2(30/10/2026,10h58): B#217. |
-| 247 [SP4] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. MQ2(30/10/2026,10h58): B#2. |
+| 247 [SP4] | A | MQ1(d): restante abaixo; partesMQ1(g) no lugar. MQ2(30/10/2026,10h58): B#2. MQ3(30/10/2026,13h45): A#15. |
 | 248 [ST1] | A | MQ1(c): prioridadeA; ordem relativa mantida. MQ2(30/10/2026,10h58): A#33. |
 | 249 [ST2] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. MQ2(30/10/2026,10h58): B#132. |
 | 250 [ST3] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. MQ2(30/10/2026,10h58): B#218. |
@@ -395,7 +397,7 @@ Uma linha por item, três grupos possíveis: A, B ou sem mudança. “Sem mudan�
 | 278 [H3-3] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. MQ2(30/10/2026,10h58): B#42. |
 | 279 [H3-4] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. MQ2(30/10/2026,10h58): B#178. |
 | 280 [H3-5] | sem mudança | FIM1: cauda vigente; partes essenciais no lugar. MQ2(30/10/2026,10h58): FIM1#19. |
-| 281 [SF1] | A | MQ1(c): prioridadeA; ordem relativa mantida. MQ2(30/10/2026,10h58): A#38. |
+| 281 [SF1] | A | MQ1(c): prioridadeA; ordem relativa mantida. MQ2(30/10/2026,10h58): A#38. MQ3(30/10/2026,13h45): A#34. |
 | 282 [HG1] | A | MQ1(c): prioridadeA; ordem relativa mantida. MQ2(30/10/2026,10h58): A#92. |
 | 283 [HG2] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. MQ2(30/10/2026,10h58): B#100. |
 | 284 [HG3] | sem mudança | FIM1: cauda vigente; partes essenciais no lugar. MQ2(30/10/2026,10h58): FIM1#5. |
@@ -488,7 +490,7 @@ Uma linha por item, três grupos possíveis: A, B ou sem mudança. “Sem mudan�
 | 371 [SU4] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. MQ2(30/10/2026,10h58): B#148. |
 | 372 [SU5] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. MQ2(30/10/2026,10h58): B#149. |
 | 373 [SU6] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. MQ2(30/10/2026,10h58): B#49. |
-| 374 [SU7] | A | MQ1(c): prioridadeA; ordem relativa mantida. MQ2(30/10/2026,10h58): A#20. |
+| 374 [SU7] | A | MQ1(c): prioridadeA; ordem relativa mantida. MQ2(30/10/2026,10h58): A#20. MQ3(30/10/2026,13h45): A#77. |
 | 375 [TB1] | A | MQ1(c): prioridadeA; ordem relativa mantida. MQ2(30/10/2026,10h58): A#85. |
 | 376 [TB2] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. MQ2(30/10/2026,10h58): B#150. |
 | 377 [TB3] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. MQ2(30/10/2026,10h58): B#50. |
@@ -507,7 +509,7 @@ Uma linha por item, três grupos possíveis: A, B ou sem mudança. “Sem mudan�
 | 390 [CX1] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. MQ2(30/10/2026,10h58): B#188. |
 | 391 [CX2] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. MQ2(30/10/2026,10h58): B#152. |
 | 392 [CX3] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. MQ2(30/10/2026,10h58): B#153. |
-| 393 [CX4] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. MQ2(30/10/2026,10h58): B#22. |
+| 393 [CX4] | A | MQ1(d): restante abaixo; partesMQ1(g) no lugar. MQ2(30/10/2026,10h58): B#22. MQ3(30/10/2026,13h45): A#51. |
 | 394 [CX5] | A | MQ1(c): prioridadeA; ordem relativa mantida. MQ2(30/10/2026,10h58): A#56. |
 | 395 [CX6] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. MQ2(30/10/2026,10h58): B#52. |
 | 396 [CX7] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. MQ2(30/10/2026,10h58): B#222. |
@@ -517,10 +519,10 @@ Uma linha por item, três grupos possíveis: A, B ou sem mudança. “Sem mudan�
 | 400 [WX1] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. MQ2(30/10/2026,10h58): B#81. |
 | 401 [WX2] | sem mudança | FIM1: cauda vigente; partes essenciais no lugar. MQ2(30/10/2026,10h58): FIM1#55. |
 | 402 [WX3] | sem mudança | FIM1: cauda vigente; partes essenciais no lugar. MQ2(30/10/2026,10h58): FIM1#56. |
-| 403 [SN1] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. MQ2(30/10/2026,10h58): B#53. |
+| 403 [SN1] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. MQ2(30/10/2026,10h58): B#53. MQ3(30/10/2026,13h45): Duplicado do item 21; não executar. |
 | 404 [RF1] | sem mudança | FIM1: cauda vigente; partes essenciais no lugar. MQ2(30/10/2026,10h58): FIM1#14. |
 | 405 [HX1] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. MQ2(30/10/2026,10h58): B#190. |
-| 406 [AM1] | sem mudança | FIM1: cauda vigente; partes essenciais no lugar. MQ2(30/10/2026,10h58): FIM1#32. |
+| 406 [AM1] | B | FIM1: cauda vigente; partes essenciais no lugar. MQ2(30/10/2026,10h58): FIM1#32. MQ3(30/10/2026,13h45): B#188. |
 | 407 [AM2] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. MQ2(30/10/2026,10h58): B#82. |
 | 408 [AM3] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. MQ2(30/10/2026,10h58): B#54. |
 | 409 [AM4] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. MQ2(30/10/2026,10h58): B#191. |
@@ -528,15 +530,15 @@ Uma linha por item, três grupos possíveis: A, B ou sem mudança. “Sem mudan�
 | 411 [AM6] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. MQ2(30/10/2026,10h58): B#84. |
 | 412 [AM7] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. MQ2(30/10/2026,10h58): B#192. |
 | 413 [AM8] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. MQ2(30/10/2026,10h58): B#193. |
-| 414 [KX1] | A | MQ1(c): prioridadeA; ordem relativa mantida. MQ2(30/10/2026,10h58): A#8. |
+| 414 [KX1] | A | MQ1(c): prioridadeA; ordem relativa mantida. MQ2(30/10/2026,10h58): A#8. MQ3(30/10/2026,13h45): A#2. |
 | 415 [KX2] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. MQ2(30/10/2026,10h58): B#55. |
 | 416 [KX3] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. MQ2(30/10/2026,10h58): B#194. |
-| 417 [CC1] | A | MQ1(c): prioridadeA; ordem relativa mantida. MQ2(30/10/2026,10h58): A#9. |
+| 417 [CC1] | A | MQ1(c): prioridadeA; ordem relativa mantida. MQ2(30/10/2026,10h58): A#9. MQ3(30/10/2026,13h45): A#75. |
 | 418 [CC2] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. MQ2(30/10/2026,10h58): B#195. |
 | 419 [CC3] | sem mudança | FIM1: cauda vigente; partes essenciais no lugar. MQ2(30/10/2026,10h58): FIM1#33. |
 | 420 [CC4] | sem mudança | FIM1: cauda vigente; partes essenciais no lugar. MQ2(30/10/2026,10h58): FIM1#53. |
 | 421 [PT1] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. MQ2(30/10/2026,10h58): B#104. |
-| 422 [PT2] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. MQ2(30/10/2026,10h58): B#8. |
+| 422 [PT2] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. MQ2(30/10/2026,10h58): B#8. MQ3(30/10/2026,13h45): B#98. |
 | 423 [LT1] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. MQ2(30/10/2026,10h58): B#154. |
 | 424 [MN1] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. MQ2(30/10/2026,10h58): B#111. |
 | 425 [BX1] | sem mudança | FIM1: cauda vigente; partes essenciais no lugar. MQ2(30/10/2026,10h58): FIM1#15. |
@@ -573,10 +575,10 @@ Uma linha por item, três grupos possíveis: A, B ou sem mudança. “Sem mudan�
 | 456 [AN1] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. MQ2(30/10/2026,10h58): B#203. |
 | 457 [EL1] | A | MQ1(c): prioridadeA; ordem relativa mantida. MQ2(30/10/2026,10h58): A#11. |
 | 458 [EL2] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. MQ2(30/10/2026,10h58): B#16. |
-| 459 [EL3] | A | MQ1(c): prioridadeA; ordem relativa mantida. MQ2(30/10/2026,10h58): A#12. |
-| 460 [EL4] | A | MQ1(c): prioridadeA; ordem relativa mantida. MQ2(30/10/2026,10h58): A#13. |
-| 461 [EL5] | A | MQ1(c): prioridadeA; ordem relativa mantida. MQ2(30/10/2026,10h58): A#14. |
-| 462 [EL6] | A | MQ1(c): prioridadeA; ordem relativa mantida. MQ2(30/10/2026,10h58): A#15. |
+| 459 [EL3] | A | MQ1(c): prioridadeA; ordem relativa mantida. MQ2(30/10/2026,10h58): A#12. MQ3(30/10/2026,13h45): A#32. |
+| 460 [EL4] | A | MQ1(c): prioridadeA; ordem relativa mantida. MQ2(30/10/2026,10h58): A#13. MQ3(30/10/2026,13h45): A#87. |
+| 461 [EL5] | A | MQ1(c): prioridadeA; ordem relativa mantida. MQ2(30/10/2026,10h58): A#14. MQ3(30/10/2026,13h45): A#86. |
+| 462 [EL6] | A | MQ1(c): prioridadeA; ordem relativa mantida. MQ2(30/10/2026,10h58): A#15. MQ3(30/10/2026,13h45): A#107. |
 | 463 [EL7] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. MQ2(30/10/2026,10h58): B#223. |
 | 464 [MR1] | sem mudança | MQ1(b): registro de regra, sem alteração. |
 | 465 [MR2] | sem mudança | MQ1(b): registro de regra, sem alteração. |
@@ -596,14 +598,14 @@ Uma linha por item, três grupos possíveis: A, B ou sem mudança. “Sem mudan�
 | 479 [SB2] | A | MQ1(c): prioridadeA; ordem relativa mantida. MQ2(30/10/2026,10h58): A#76. |
 | 480 [SB3] | A | MQ1(c): prioridadeA; ordem relativa mantida. MQ2(30/10/2026,10h58): A#105. |
 | 481 [SB4] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. MQ2(30/10/2026,10h58): B#224. |
-| 482 [SB5] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. MQ2(30/10/2026,10h58): B#225. |
+| 482 [SB5] | sem mudança | MQ1(d): restante abaixo; partesMQ1(g) no lugar. MQ2(30/10/2026,10h58): B#225. MQ3(30/10/2026,13h45): FIM1#16. |
 | 483 [SB6] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. MQ2(30/10/2026,10h58): B#226. |
 | 484 [IT1] | A | MQ1(c): prioridadeA; ordem relativa mantida. MQ2(30/10/2026,10h58): A#86. |
 | 485 [IT2] | A | MQ1(c): prioridadeA; ordem relativa mantida. MQ2(30/10/2026,10h58): A#87. |
 | 486 [IT3] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. MQ2(30/10/2026,10h58): B#116. |
 | 487 [IT4] | A | MQ1(c): prioridadeA; ordem relativa mantida. MQ2(30/10/2026,10h58): A#88. |
 | 488 [IT5] | A | MQ1(c): prioridadeA; ordem relativa mantida. MQ2(30/10/2026,10h58): A#27. |
-| 489 [IT6] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. MQ2(30/10/2026,10h58): B#85. |
+| 489 [IT6] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. MQ2(30/10/2026,10h58): B#85. MQ3(30/10/2026,13h45): B#112. |
 | 490 [PP1] | A | MQ1(c): prioridadeA; ordem relativa mantida. MQ2(30/10/2026,10h58): A#43. |
 | 491 [PP2] | A | MQ1(c): prioridadeA; ordem relativa mantida. MQ2(30/10/2026,10h58): A#74. |
 | 492 [DE1] | A | MQ1(c): prioridadeA; ordem relativa mantida. MQ2(30/10/2026,10h58): A#80. |
@@ -611,10 +613,10 @@ Uma linha por item, três grupos possíveis: A, B ou sem mudança. “Sem mudan�
 | 494 [SR5] | sem mudança | MQ1(b): registro de regra, sem alteração. |
 | 495 [SR6] | sem mudança | MQ1(b): registro de regra, sem alteração. |
 | 496 [ME1] | A | MQ1(c): prioridadeA; ordem relativa mantida. MQ2(30/10/2026,10h58): A#44. |
-| 497 [ME2] | A | MQ1(c): prioridadeA; ordem relativa mantida. MQ2(30/10/2026,10h58): A#39. |
+| 497 [ME2] | A | MQ1(c): prioridadeA; ordem relativa mantida. MQ2(30/10/2026,10h58): A#39. MQ3(30/10/2026,13h45): A#35. |
 | 498 [ME3] | A | MQ1(c): prioridadeA; ordem relativa mantida. MQ2(30/10/2026,10h58): A#45. |
 | 499 [OX1] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. MQ2(30/10/2026,10h58): B#156. |
-| 500 [OX2] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. MQ2(30/10/2026,10h58): B#7. |
+| 500 [OX2] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. MQ2(30/10/2026,10h58): B#7. MQ3(30/10/2026,13h45): B#154. |
 | 501 [OX3] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. MQ2(30/10/2026,10h58): B#205. |
 | 502 [RX1] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. MQ2(30/10/2026,10h58): B#105. |
 | 503 [AG1] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. MQ2(30/10/2026,10h58): B#56. |
@@ -626,7 +628,7 @@ Uma linha por item, três grupos possíveis: A, B ou sem mudança. “Sem mudan�
 | 509 [CK1] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. MQ2(30/10/2026,10h58): B#17. |
 | 510 [CK2] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. MQ2(30/10/2026,10h58): B#58. |
 | 511 [CK3] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. MQ2(30/10/2026,10h58): B#59. |
-| 512 [CK4] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. MQ2(30/10/2026,10h58): B#60. |
+| 512 [CK4] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. MQ2(30/10/2026,10h58): B#60. MQ3(30/10/2026,13h45): Duplicado do item 244; não executar. |
 | 513 [PF1] | A | MQ1(c): prioridadeA; ordem relativa mantida. MQ2(30/10/2026,10h58): A#59. |
 | 514 [PF2] | A | MQ1(c): prioridadeA; ordem relativa mantida. MQ2(30/10/2026,10h58): A#61. |
 | 515 [PF3] | A | MQ1(c): prioridadeA; ordem relativa mantida. MQ2(30/10/2026,10h58): A#62. |
@@ -647,9 +649,9 @@ Uma linha por item, três grupos possíveis: A, B ou sem mudança. “Sem mudan�
 | 530 [FT3] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. MQ2(30/10/2026,10h58): B#93. |
 | 531 [VP1] | A | MQ1(c): prioridadeA; ordem relativa mantida. MQ2(30/10/2026,10h58): A#46. |
 | 532 [AF1] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. MQ2(30/10/2026,10h58): B#157. |
-| 533 [DP1] | A | MQ1(c): prioridadeA; ordem relativa mantida. MQ2(30/10/2026,10h58): A#73. |
+| 533 [DP1] | B | MQ1(c): prioridadeA; ordem relativa mantida. MQ2(30/10/2026,10h58): A#73. MQ3(30/10/2026,13h45): B#67. |
 | 534 [FQ1] | A | MQ1(c): prioridadeA; ordem relativa mantida. MQ2(30/10/2026,10h58): A#48. |
-| 535 [MV1] | A | MQ1(c): prioridadeA; ordem relativa mantida. MQ2(30/10/2026,10h58): A#98. |
+| 535 [MV1] | B | MQ1(c): prioridadeA; ordem relativa mantida. MQ2(30/10/2026,10h58): A#98. MQ3(30/10/2026,13h45): B#54. |
 | 536 [CB1] | A | MQ1(c): prioridadeA; ordem relativa mantida. MQ2(30/10/2026,10h58): A#99. |
 | 537 [PH1] | A | MQ1(c): prioridadeA; ordem relativa mantida. MQ2(30/10/2026,10h58): A#100. |
 | 538 [AB1] | sem mudança | MQ1(a–b): AV1/abertura/vínculo vigente mantido. |
@@ -1153,6 +1155,103 @@ Pontos fixos mantidos: AV1, SD1 e o Bloco de abertura, inclusive [AV3] e seu com
 | FIM1 | 54 | 363 [EI1] | 46 | f | estudo de servidores de envio |
 | FIM1 | 55 | 401 [WX2] | 48 | f | estudo de anúncios Meta |
 | FIM1 | 56 | 402 [WX3] | 49 | f | estudo de stablecoin |
+
+### MQ3 — Correções pela leitura integral (30/10/2026, 13h45 Fortaleza)
+
+Proveniência: pedido do dono de 30/10/2026, 13h27, aprovado às 13h45 Fortaleza; proposta preparada pelo Claude pela leitura integral de cada item pendente, em [docs/queue-audit-2026-10-30.md](queue-audit-2026-10-30.md) (preservada como foi aprovada, com o motivo completo de cada mudança); gravado diretamente pelo Claude a partir do main 576dba74587905db085ec36ebcf0f5a5975b62c1. Complementa a MQ2. Os itens 567 [GD1] e 568 [GD2] entraram depois da numeração da auditoria; as âncoras “logo depois de N” foram seguidas, não as posições numéricas. Não mudaram: AV1, SD1, o Bloco de abertura, andamentos e concluídos, as posições fixadas pelo dono (310, 556, 206, 241, 567, 568), os pontos fixos da cauda FIM1, nenhum número e nenhum texto de item. A linha “Claude agendado — última rodada:” e as linhas de reserva (“em andamento”) não foram tocadas. Cada item, antes de ser executado, confere de novo o próprio texto e o código.
+
+```text
+MQ — Correção das posições, dos estados e das repetições da fila pela leitura integral dos itens (30/10/2026) [MQ3]
+
+Solicitação do dono (30/10/2026, 13h27, horário de Fortaleza): verificar a fila e mudar de lugar o que estiver em posição errada.
+
+Pedidos repetidos: aplique a regra "Pedidos repetidos" de AGENTS.md. Complementa a [MQ2]: a reordenação de 30/10/2026, 10h58, usou só títulos e estados; esta conferência leu o texto integral de cada item pendente. Proposta completa, com o motivo de cada mudança, em anexo ao PR (queue-audit.md).
+
+1. Aplicar as 22 mudanças de posição da proposta, inclusive as 8 trocas de grupo, com o critério da [MQ2] e o motivo de cada uma registrados no PR. Inclui 406 [AM1] saindo da cauda FIM1 para logo antes de 409 [AM4], porque 409 e 413 dependem dele; o dono aprovou esta exceção à decisão FIM1.
+
+2. Corrigir os 7 estados errados só depois de conferir no código e nos PRs incorporados: 496 [ME1] e 498 [ME3] com partes publicadas (PRs 1153 e 1154); 273 [BK1] iniciado e aguardando o dono; 278 [H3-3] se já feito no código; 440 [FC3] superado pela decisão do SD1 (Delaware), preservado como histórico; e os demais da proposta. Nenhum estado é mudado sem prova.
+
+3. Repetições claras, pela regra "Pedidos repetidos", passo 6: o número menor continua válido e recebe, como complemento, tudo o que o maior pede a mais, sem perder nenhum recurso; o maior fica marcado "Duplicado do item N; não executar": 403 [SN1] em 21 [E4]; 512 [CK4] em 244 [SP1]; 198 [HT13] em 18 [E1]. As outras 25 possíveis repetições da proposta ficam listadas numa seção própria, para conferência na execução de cada item, sem mudança agora.
+
+4. Não mudam: AV1, SD1, o Bloco de abertura, os itens em andamento ou concluídos, as posições fixadas pelo dono (556, 206, 241, 310, 567 e 568), nenhum número e nenhum texto de item.
+
+Proibido: apagar, cancelar ou absorver item sem levar o conteúdo ao número válido; mudar estado sem prova; renumerar; mudar preços, limites visíveis, comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong.
+
+Aplicar a regra VR.
+```
+
+#### Mudanças de posição aplicadas (22)
+
+| Item | Grupo antes | Posição nova | Critério e motivo |
+| --- | --- | --- | --- |
+| 247 [SP4] | B | A#15 | (a) segurança; o 508 [SG4] liga o security.txt à página de segurança do 247 |
+| 393 [CX4] | B | A#51 | (b) mesma área do 22 [E5] (preço do produto do criador por moeda/país), não do 31 |
+| 213 [SH10] | B | A#27 | (b) o 238 [CF1] reúne num modelo único as comparações do 213 e do 237 |
+| 237 [SK5] | B | A#28 | (b) idem, logo depois do 213 |
+| 533 [DP1] | A | B#67 | (b) depende de clientes reais (“somente depois da abertura das vendas”), junto do 229 [HL10] |
+| 535 [MV1] | A | B#54 | (e) reaproveita o mecanismo de miniatura real do 526 [FN2] |
+| 406 [AM1] | FIM1 | B#188 | dependência: 409 [AM4] e 413 [AM8] usam o AM1; exceção à FIM1 aprovada pelo dono |
+| 482 [SB5] | B | FIM1#16 | dependência: o que falta no SB5 são os números do kit de mídia do 425 [BX1]; não é estudo (f) |
+| 414 [KX1] | A | A#2 | (a) obrigação legal de renovação automática que vale desde a primeira cobrança |
+| 461 [EL5] | A | A#86 | (d) a própria MQ2 o classificou como (d) |
+| 460 [EL4] | A | A#87 | (e) o 457 [EL1] diz que o EL4 depende do EL5 |
+| 459 [EL3] | A | A#32 | (e)/(b) mexe na página de preços, a mesma do 243 [CF6] |
+| 462 [EL6] | A | A#107 | (f) somente leitura e estudo, no começo do trecho (f) |
+| 417 [CC1] | A | A#75 | (c) recurso novo contra perda acidental, não obrigação legal |
+| 374 [SU7] | A | A#77 | (c) proteção além do mínimo legal, como a do 362 [AP2] |
+| 281 [SF1] | A | A#34 | (b) o próprio item fixa “logo depois de 248 [ST1]” (PR #809) |
+| 497 [ME2] | A | A#35 | (b) complemento do 281, logo depois dele |
+| 500 [OX2] | B | B#154 | (b)/(e) recurso da família Outreach (OX), não obrigação legal |
+| 422 [PT2] | B | B#98 | (c) ferramenta do estúdio para cumprir benefícios prometidos, ao lado do 421 [PT1] |
+| 15 [D12] | B | B#111 | mesmo painel do 445–447 [GE1–GE3]; é construção, não estudo |
+| 489 [IT6] | B | B#112 | dependência: o IT6 é calculado a partir do 15 [D12] |
+| 24 [E7] | B | B#100 | junção já ordenada: o 112 [E2-POINTS] manda “Juntar a E7” |
+
+#### Estados
+
+Mudados com prova (linha nova no item, estado anterior preservado): 496 [ME1] e 498 [ME3] em andamento, parcialmente publicados (PRs #1153 e #1154); 273 [BK1] iniciado (PRs #785 e #786); 440 [FC3] superado pela decisão do SD1 (PR #1179). Marcados “Estado a conferir (MQ3)”, sem mudança: 273 (parte “aguardando o dono”), 278 [H3-3], 414 [KX1], 23 [E6], 30 [E13], 95 [D2-DEMAND-RADAR], 115 [E2-FOUNDING-MEMBERS], 211 [SH8], 226 [HL7], 291 [SQ2], 409 [AM4], 416 [KX3] e 482 [SB5].
+
+#### Repetições resolvidas (Pedidos repetidos, passo 6)
+
+403 [SN1] → 21 [E4]; 512 [CK4] → 244 [SP1]; 198 [HT13] → 18 [E1]. O número menor recebeu, como complemento cláusula por cláusula, tudo o que o maior pede a mais (reforço do dono, 30/10/2026, 13h47: nada pode se perder); o maior está marcado “Duplicado do item N; não executar — todo o conteúdo a mais foi levado ao item N em 30/10/2026 (MQ3)”, com o texto integral preservado, e saiu da sequência de execução.
+
+#### Possíveis repetições a conferir (MQ3)
+
+Sem mudança agora; cada item confere na sua execução e faz só a diferença:
+
+- **40 [G2] ↔ 228 [HL9]:** agendamento de posts no Meta e no TikTok ou em todas as redes. A linha 6973 já pedia para conferir os dois juntos.
+- **42 [G4] ↔ 401 [WX2]:** criação de anúncios dentro do produto e estudo de anúncios do Meta no painel.
+- **20 [E3] ↔ 227 [HL8]:** automação montada por IA a partir de um objetivo, com aprovação do criador.
+- **27 [E10] ↔ 258 [KJ3]:** ações de escrita no MCP criando rascunhos. A linha 6973 já apontava.
+- **34 [F3] ↔ 385 [TB11]:** portal ou área individual do cliente de mentoria.
+- **15 [D12] ↔ 445–447 [GE1–GE3]:** painel do dono (ver a mudança 1.3).
+- **51 [I2] ↔ 309 [EM1]:** a cota de e-mails do Store já é tratada no complemento do passo 6 do 309, que está no Bloco (k). A LQ6 já tinha juntado os dois.
+- **22 [E5] ↔ 393 [CX4]**, em parte também ↔ 208 [SH5]: preço do produto do criador por moeda e por país.
+- **28 [E11]/100 ↔ 428 [BV1]:** posts e edições só para quem paga. O BV1 acrescenta a prévia, mas é a mesma restrição de acesso.
+- **110 [E2-MEMBER-PROFILES] ↔ 398 [SL2]:** os dois pedem "mapa de membros" com cidade aproximada e opt-in.
+- **117 [F2-COMMUNITY-MAIL] ↔ 264 [CI2]:** resumo periódico da comunidade por e-mail, só para quem optou.
+- **122 [F2-COMMUNITY-AI] ↔ 263 [CI1]**, e em parte ↔ 113: moderação da comunidade com IA. A linha 6973 já apontava.
+- **25 [E8] ↔ 405 [HX1]**, e em parte ↔ 11 [D8]: relatórios agendados por e-mail.
+- **299 [H5-2] ↔ 560 [AS1]:** oferta do próximo produto dentro do curso ou ao concluir. A proveniência do 560 diz "nenhum item pede oferta do próximo produto dentro da área do curso", mas o 299 já pede o mesmo "ao final de no máximo uma aula escolhida".
+- **509 [CK1] ↔ 241 [CF4]:** os dois gravam vídeos reais do produto por automação. O CK1 não cita o CF4; deveria reaproveitar os vídeos dele.
+- **525 [FN1] ↔ 392 [CX3]:** receita por funil e por etapa.
+- **508 [SG4], parte 3 ↔ 568 [GD2], parte (k):** os dois pedem um plano escrito de resposta a incidentes. A proveniência do 568 diz que "nenhum item pede ... plano de resposta a incidentes", mas o 508 manda "Escreva docs/incident-response.md". Como o 568 vem antes, o 508 deve só reaproveitar o plano.
+- **17 [D15] ↔ 310 [AX2], partes 4 e 5:** testes com NVDA, VoiceOver e TalkBack reais.
+- **389 [TB15] ⊂ 427 [VR1]:** corrigir explicações públicas falsas é uma parte da varredura "faz de conta" do VR1.
+- **23 [E6], parte checkbox ↔ 387 [TB13]:** pergunta do tipo checkbox no checkout.
+- **120 [F2-IMPORTS], parte Teachable ↔ 260 [KJ5]:** importador de cursos. A linha 6973 já pedia para conferir com o 210.
+- **44 [H1] ↔ 449–456 [AP1–AP7, AN1]:** o pedido do app reabriu o app de iPhone "sobrepondo ... a referência 44 [H1]". O estudo H1 ficou depois da construção.
+- **218 [OP4] ⊂ 225 [HL6]:** o HL6 manda "Amplie a calculadora do item 218 ... para uma única ferramenta".
+- **436 [AC1] ↔ 332 [RD1]:** custos do débito em conta ACH. O 332 está no Bloco (k); o AC1 é um complemento e deve fazer só a diferença.
+- **567 [GD1], parte (h) "Trust and safety" ↔ 247 [SP4] "página de segurança":** duas páginas públicas sobre práticas de segurança e confiança.
+
+#### Ordens anteriores à MQ3, preservadas como histórico
+
+**Ordem vigente do Grupo A pela MQ2 (dono, 30/10/2026, 10h58 Fortaleza):** 310 [AX2], 17 [D15], 273 [BK1], 274 [AX1], 427 [VR1], 567 [GD1], 568 [GD2], 388 [TB14], 389 [TB15], 414 [KX1], 417 [CC1], 437 [AC2], 457 [EL1], 459 [EL3], 460 [EL4], 461 [EL5], 462 [EL6], 506 [SG1], 507 [SG3], 508 [SG4], 335 [FR1], 374 [SU7], 378 [TB4], 93 [D2-VERIFIED-SOCIAL], 149 [S8-VERIFIED-SOCIAL-REFERENCE], 94 [D2-BUYER-TRUST], 145 [S4-HOME-SALES], 219 [OP5], 488 [IT5], 220 [HL1], 238 [CF1], 239 [CF2], 240 [CF3], 243 [CF6], 248 [ST1], 251 [ST4], 256 [KJ1], 271 [SEO1], 276 [H3-1], 281 [SF1], 497 [ME2], 308 [TC1], 443 [TS1], 444 [TS2], 490 [PP1], 496 [ME1], 498 [ME3], 531 [VP1], 241 [CF4], 534 [FQ1], 14 [D11], 22 [E5], 28 [E11], 99 [E2-TAG-BROADCAST], 100 [E2-MEMBER-PUBLICATIONS], 120 [F2-IMPORTS], 260 [KJ5], 394 [CX5], 397 [SL1], 428 [BV1], 513 [PF1], 556 [CT1], 514 [PF2], 515 [PF3], 206 [SH3], 520 [LB1], 521 [LB2], 522 [LB3], 541 [FC4], 544 [SQ9], 548 [TR1], 551 [FB1], 552 [BB1], 554 [DS1], 533 [DP1], 491 [PP2], 362 [AP2], 479 [SB2], 113 [E2-COMMUNITY-MODERATION], 436 [AC1], 312 [HQ1], 492 [DE1], 338 [HZ3], 438 [FC1], 439 [FC2], 32 [F1], 375 [TB1], 484 [IT1], 485 [IT2], 487 [IT4], 524 [NV1], 103 [E2-LESSON-MEDIA], 242 [CF5], 282 [HG1], 356 [ES2], 370 [SU3], 380 [TB6], 399 [SL3], 525 [FN1], 535 [MV1], 536 [CB1], 537 [PH1], 540 [CU1], 545 [LU1], 546 [EB1], 39 [G1], 480 [SB3]. Ficam no lugar atual, fora desta sequência: 143 [S2-PRICING], 182 [HT0], 202 [P0-REAL-PEOPLE], 205 [SH2], 431 [PV1], 432 [PV2], 433 [PV3], 434 [PV4] (concluídos, absorvidos, andamentos protegidos e itens do Bloco de abertura). Critério e motivo de cada mudança na seção “MQ2 — reordenação única aplicada”.
+
+**Ordem vigente do Grupo B pela MQ2 (dono, 30/10/2026, 10h58 Fortaleza):** 97 [D2-OPEN-EXIT], 247 [SP4], 561 [NE1], 13 [D10], 43 [G5], 55 [K1], 500 [OX2], 422 [PT2], 30 [E13], 211 [SH8], 216 [OP2], 253 [WH2], 266 [CI4], 269 [KT3], 277 [H3-2], 458 [EL2], 509 [CK1], 562 [QZ1], 10 [D7], 21 [E4], 31 [E14], 393 [CX4], 106 [E2-CHECKOUT-EXTRAS], 107 [E2-BROADCAST-CONTENT-AB], 118 [F2-READER-REFERRALS], 119 [F2-FREE-RECOMMENDATIONS], 208 [SH5], 210 [SH7], 213 [SH10], 218 [OP4], 221 [HL2], 224 [HL5], 225 [HL6], 230 [HL11], 233 [SK1], 237 [SK5], 244 [SP1], 245 [SP2], 254 [WH3], 257 [KJ2], 267 [KT1], 278 [H3-3], 292 [SQ3], 299 [H5-2], 343 [RN1], 357 [ES3], 361 [AP1], 366 [EZ3], 373 [SU6], 377 [TB3], 387 [TB13], 395 [CX6], 403 [SN1], 408 [AM3], 415 [KX2], 503 [AG1], 504 [AG2], 510 [CK2], 511 [CK3], 512 [CK4], 526 [FN2], 560 [AS1], 35 [F4], 36 [F5], 46 [H3], 57 [K3-ZAPIER], 109 [E2-EVENTS], 115 [E2-FOUNDING-MEMBERS], 121 [F2-SUBSCRIPTION-GIFTS], 123 [F2-COMMUNITY-DIRECTORY], 134 [X10-PAID-RECOMMENDATIONS], 223 [HL4], 229 [HL10], 231 [EQ1], 234 [SK2], 304 [GH1], 349 [DN1], 350 [DN2], 355 [ES1], 384 [TB10], 400 [WX1], 407 [AM2], 410 [AM5], 411 [AM6], 489 [IT6], 516 [PF4], 517 [PF5], 518 [PF6], 519 [PF7], 523 [LB4], 528 [FT1], 529 [FT2], 530 [FT3], 542 [CM1], 555 [AK1], 11 [D8], 564 [HC1], 19 [E2], 96 [D2-LESSON-DROPOFF], 283 [HG2], 285 [SX1], 287 [H4-1], 360 [NL1], 421 [PT1], 502 [RX1], 112 [E2-POINTS], 116 [F2-COMMUNITY-CHANNELS], 117 [F2-COMMUNITY-MAIL], 263 [CI1], 264 [CI2], 424 [MN1], 543 [CM2], 445 [GE1], 446 [GE2], 447 [GE3], 486 [IT3], 527 [HE1], 558 [LK1], 563 [WN1], 18 [E1], 20 [E3], 23 [E6], 95 [D2-DEMAND-RADAR], 101 [E2-PUBLICATION-REACTIONS], 105 [E2-COURSE-AI-DRAFT], 108 [E2-BLOG-RSS-MAIL], 124 [F2-EDIT-SENT-LINKS], 212 [SH9], 217 [OP3], 226 [HL7], 227 [HL8], 249 [ST2], 265 [CI3], 268 [KT2], 270 [GR1], 288 [H4-2], 290 [SQ1], 291 [SQ2], 294 [SQ5], 297 [SQ8], 311 [HS1], 354 [EP1], 364 [EZ1], 365 [EZ2], 367 [EZ4], 368 [SU1], 369 [SU2], 371 [SU4], 372 [SU5], 376 [TB2], 386 [TB12], 391 [CX2], 392 [CX3], 423 [LT1], 426 [BX2], 499 [OX1], 532 [AF1], 539 [AR1], 550 [IX1], 557 [BG1], 12 [D9], 24 [E7], 25 [E8], 27 [E10], 29 [E12], 33 [F2], 34 [F3], 102 [E2-COURSE-COMPLIANCE], 110 [E2-MEMBER-PROFILES], 111 [E2-COMMUNITY-AUTOMATION], 122 [F2-COMMUNITY-AI], 125 [F2-EMAIL-POLLS], 126 [F2-MULTIPLE-COMMUNITIES], 235 [SK3], 258 [KJ3], 259 [KJ4], 272 [HM1], 279 [H3-4], 293 [SQ4], 295 [SQ6], 298 [H5-1], 353 [BH1], 358 [EA1], 379 [TB5], 381 [TB7], 382 [TB8], 385 [TB11], 390 [CX1], 398 [SL2], 405 [HX1], 409 [AM4], 412 [AM7], 413 [AM8], 416 [KX3], 418 [CC2], 449 [AP1], 450 [AP2], 451 [AP3], 452 [AP4], 453 [AP5], 454 [AP6], 455 [AP7], 456 [AN1], 478 [SB1], 501 [OX3], 553 [DB1], 559 [CM3], 40 [G2], 44 [H1], 228 [HL9], 15 [D12], 50 [I1], 51 [I2], 52 [I3], 54 [J2], 214 [SH11], 246 [SP3], 250 [ST3], 261 [KJ6], 262 [KJ7], 344 [RN2], 396 [CX7], 463 [EL7], 481 [SB4], 482 [SB5], 483 [SB6]. Ficam no lugar atual, fora desta sequência: 197 [HT11], 198 [HT13], 204 [SH1], 435 [PV5]. Saíram do Grupo B pelo 566 [FF2]: 61, 63, 64, 65, 66, 67, 68, 135, 136 e 137 (fim da fila, depois do 566); 62 [X2] e 133 [X9-OPEN-ENGAGEMENT] continuam cancelados, com motivo. Critério e motivo de cada mudança na seção “MQ2 — reordenação única aplicada”.
+
+**Ordem vigente da cauda FIM1 pela MQ2 (dono, 30/10/2026, 10h58 Fortaleza):** 47 [H4], 207 [SH4], 209 [SH6], 215 [OP1], 284 [HG3], 45 [H2], 48 [H5], 92 [D2-PREORDER-GOAL], 222 [HL3], 346 [FL1], 348 [ED1], 351 [DN3], 58 [K3-LANG/PATH14], 404 [RF1], 425 [BX1], 127 [H7-CUSTOM-CSS], 429 [BV2], 430 [TM1], 280 [H3-5], 289 [H4-3], 16 [D13], 104 [E2-MODULE-PUSH], 296 [SQ7], 37 [F6], 26 [E9], 56 [K2], 203 [TEAMS], 255 [WH4], 286 [SX2], 359 [EA2], 383 [TB9], 406 [AM1], 419 [CC3], 38 [F7], 317 [EU1], 318 [IW1], 41 [G3], 337 [HZ2], 42 [G4], 49 [H6], 53 [J1], 128 [J1-SKOOL], 129 [J1-KIT], 130 [J1-CIRCLE], 131 [J1-TEACHABLE], 132 [J1-SUBSTACK], 236 [SK4], 252 [WH1], 327 [IN3], 345 [RN3], 347 [FL2], 352 [DN4], 420 [CC4], 363 [EI1], 401 [WX2], 402 [WX3], 440 [FC3], 441 [SV1], 442 [SV2]. Ficam na mesma posição da cauda: 58 (só pt-BR, sem execução), 127, 318, 420 e o grupo da UE 317 [EU1], 337 [HZ2], 441 [SV1] e 442 [SV2]; 363 [EI1] continua na cauda (a FIM1, mais recente, prevalece). Depois da cauda, sem reordenação: 565 [FF1], 566 [FF2] e os reativados pelo FF2, na ordem dos números. Regra de partes e proibições da FIM1 inalteradas.
 
 
 ## SD — Decisão: abertura pela LLC americana e conta Stripe americana (28/10/2026) [SD1]
@@ -1862,6 +1961,7 @@ Proveniência AB: passou a fazer parte do Bloco de abertura, posição (h), por 
 95. **[D2-DEMAND-RADAR] Radar mensal do que o público solicita**
    - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
    - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 11/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
+   - Estado a conferir (MQ3, 30/10/2026, 13h45): a conferência LQ5 achou customer-voice já existente; fazer só a diferença.
    - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Escopo e prova: A partir das perguntas no assistente/chat, perguntas sem resposta, motivos de reembolso e waitlists da própria loja. Sugestão por IA somente quando o criador pedir, paga pela franquia com reserva. Definir consentimento, retenção, agregação e acesso; sem expor compradores ou dados de outra loja.
    - Custo e margem: Antes de construir: conferir capacidade existente no main e preservar Claude. Custo unitário pago mais caro, uso integral simultâneo por plano mensal/anual, taxas de receiving-costs e leitura fiscal mais onerosa (nunca abaixo de27,5%); teto por fornecedor/loja e reserva antes da operação, plan-cost-registry/spend-floor. Desconhecido reprova; sem cortar limite visível, mudar preço ou afrouxar gates.
@@ -1892,6 +1992,17 @@ Proveniência AB: passou a fazer parte do Bloco de abertura, posição (i), por 
 18. **[E1] Tutor por IA nas aulas, só conteúdo do curso, reaproveitando pool/heldToFacts e encaminhamento ao criador; add-on ou franquia, nunca trial.**
    - Pedido: P2 E1; datas/horas e grau de certeza em Proveniência.
    - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 14/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
+   - Complemento (MQ3, 30/10/2026, 13h45), por duplicação com 198 [HT13] (regra “Pedidos repetidos”, passo 6): este item passa a pedir também tudo o que o 198 pede e que não estava escrito aqui, cláusula por cláusula, conforme o texto integral do 198, preservado:
+     - (1) antes de oferecer o tutor: calcular o custo e verificar as fontes privadas;
+     - (2) a avaliação já feita (docs/ht13-student-tutor-cost-review.md, commit c3ea20f2d81f, 20/10/2026) foi concluída e REPROVADA, porque o custo completo e o teto de recuperação do curso são desconhecidos; o tutor não foi implementado; aguarda o dono para escopo e reserva precificados; uma nova avaliação aprovada é exigida antes de implementar, sem nenhuma chamada de teste ao modelo;
+     - (3) fontes: as respostas atuais (answers-rules/answers) respondem antes da compra com fatos públicos, não carregam aulas nem provam acesso ao curso; as respostas incluídas (Store 0, Studio 250, Scale 400) já são direitos existentes no pior mês e não financiam um tutor novo; o Store assistant é complemento separado e não autoriza novas leituras privadas nem transcrição;
+     - (4) referência de dimensionamento, não oferta nem limite novo: 700 respostas a mais × US$ 0,003539 = US$ 2,48 por mês e US$ 29,76 por ano, antes de recuperação, acesso e transcrição; cinco das seis margens de referência ficaram abaixo de 60% e os custos completos desconhecidos reprovam todas (números históricos, que não certificam a regra de margem vigente);
+     - (5) falta um método revisado para todos os bytes, leituras, permissões, revalidação, cache, retenção e fontes autorizadas por curso;
+     - (6) vídeo sem transcrição existente não autoriza nova operação de legenda nem resposta por conhecimento geral;
+     - (7) não reduzir limites visíveis, não inventar cota minúscula para forçar aprovação, não mudar preço nem consumir a reserva de outro direito ou cliente;
+     - (8) o desenho futuro exige custo por plano e intervalo e reserva antes de operar, fonte exclusiva do curso, rótulo desenhado pela página (nunca pelo modelo) e encaminhamento ao criador;
+     - (9) preservar o Q&A público, o Store assistant, o encaminhamento e o acesso do aluno existentes; tutor novo, endpoint, interruptor, chamadas e alegações públicas não implementados até a nova avaliação;
+     - (10) nenhuma conta real, pagamento, fornecedor ou IA nova, mensagem, submissão externa ou tradução ativada; PLANS_ON_SALE=false, comissão, preços, limites, permissões, opt-in, tax gate, art. 9a e revisão comercial intactos; leitura tributária pela política TX vigente.
    - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Custo e margem: Pool/modelo ainda não dimensionados para esta finalidade; unitário mais caro, franquias/tetos e margens por plano/intervalo antes do código.
 
@@ -1910,6 +2021,28 @@ Proveniência AB: passou a fazer parte do Bloco de abertura, posição (i), por 
 21. **[E4] Coach de conteúdo por IA como add-on: reels/carrosséis/ideias/plano a partir dos próprios produtos/página/respostas; sem ler Instagram inicialmente; nunca trial.**
    - Pedido: P2 E4; datas/horas e grau de certeza em Proveniência.
    - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 17/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
+   - Complemento (MQ3, 30/10/2026, 13h45), por duplicação com 403 [SN1] (regra “Pedidos repetidos”, passo 6): este item passa a pedir também tudo o que o 403 pede e que não estava escrito aqui, cláusula por cláusula, conforme o texto integral do 403, preservado:
+     - (1) gerar “IDEIAS, LEGENDAS, GANCHOS, ROTEIROS CURTOS EM TEXTO e PLANO SEMANAL”;
+     - (2) para Instagram, TikTok, YouTube Shorts, X, LinkedIn e Threads;
+     - (3) a partir “EXCLUSIVAMENTE de fatos publicados da própria loja”: produtos, preços, aulas, posts, newsletters e avaliações de compradores verificados, mais exemplos que o próprio criador cola para orientar a própria voz;
+     - (4) “Roteiro textual não autoriza geração/edição de vídeo ou áudio”; fora do escopo: editor ou gerador de vídeo por IA (como o Stanley Studio) e app nativo;
+     - (5) não coletar texto privado de terceiros nem treinar modelo externo em silêncio; minimizar retenção; separar referências de estilo dos fatos autorizados;
+     - (6) nunca escrever como outra pessoa;
+     - (7) reutilizar heldToFacts e as regras de honestidade: nenhuma invenção de resultado, número, depoimento, escassez, urgência ou desconto; frase com número, link ou oferta só se constar nos fatos publicados validados;
+     - (8) conteúdo colado não é prova de venda ou resultado nem instrução para contornar regras; fontes públicas podem conter instruções maliciosas e são dados, não comandos;
+     - (9) o criador copia ou edita o rascunho; nada publica sozinho; nenhuma integração ou publicação social em nome do criador; a publicação depende do estudo 228 [HL9], sem duplicá-lo;
+     - (10) reutilizar o Path, o 216 [OP2] e o Store assistant nos mecanismos compartilhados, sem usar seus roteiros fixos ou franquias como novo direito grátis nem confundir as assinaturas;
+     - (11) assinatura própria com metadata própria, “NUNCA metadata[store]”; somente lojas com plano pago; somente depois de PLANS_ON_SALE habilitado pelo processo autorizado e de todos os gates fiscais e comerciais;
+     - (12) ciclo de vida, cancelamento, cobrança, reembolso, falhas e idempotência distinguem a assinatura do complemento da assinatura principal e de outros complementos, sem marcar o plano da loja como pago pelo webhook do complemento;
+     - (13) modelo de IA mais barato adequado, escolhido com preços oficiais datados; limitar entradas e saídas, tamanho e número de fontes, chamadas e novas tentativas, e armazenamento;
+     - (14) reservar o PIOR CUSTO antes de CADA chamada, não só a estimativa de tokens médios; reserva, concorrência e reconciliação idempotentes;
+     - (15) teto mensal de gerações definido pelo cálculo de direitos e informado antes da compra; esgotado o teto, bloquear a chamada e explicar em inglês americano simples no estúdio, sem cobrança ou upgrade automático nem corte oculto de limites; nenhum uso ilimitado nem empréstimo de receita incerta;
+     - (16) preço RECOMENDADO pelo dono: US$ 49 por mês, condicionado ao pior caso em lib/receiving-costs.ts, com a taxa do Stripe na cobrança própria, tributo por fora de 27%, remessa, reservas e ADD_ON_ROOM_CENTS, além de todos os demais custos e impostos (hoje pela REGRA DE MARGEM vigente e pela política TX); se 49 não passar, registrar o menor preço redondo que passe e pedir nova decisão, sem aplicar; se desconhecido ou estruturalmente inviável, registrar assim, sem inventar mínimo; nenhum preço de plano muda; mensal é a recomendação recebida; avaliar também o horizonte anual e a concentração de uso, sem inventar preço anual nem vender intervalo não aprovado;
+     - (17) incluir a receita líquida do complemento na fonte add_ons do quadro DD em lib/commercial-margin.ts e nos documentos (PR983 e descendentes), com receita própria, custo, tributo, reserva e parcela dos fixos da LLC; sem décima fonte duplicada nem soma dupla; sem dados reais reconciliados continua desconhecido, não zero; nenhum quadro financia a margem mínima de outro cliente nem substitui aprovação individual;
+     - (18) AX274, inglês americano simples, rótulos, limites e estado da reserva visíveis e acessíveis; aprovação, cópia e edição sob controle do criador;
+     - (19) testes sintéticos de fatos, isolamento entre lojas, reserva antes da chamada, concorrência e esgotamento, ciclo de vida da metadata, formatos e limites e ausência de publicação externa;
+     - (20) custear processamento, leituras, armazenamento, novas tentativas e capacidade no pior caso de cada plano e nos dois intervalos, antes de operar; sem subsídio por comissões ou patrocínios incertos;
+     - (21) proibido: mudar preços dos planos, limites visíveis, comissão, PLANS_ON_SALE=false, tax gate, art. 9a e revisão comercial; IA sem reserva; publicar nas redes em nome do criador; conteúdo inventado; criar contas, aceitar termos, contratar, pagar ou contatar terceiros.
    - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Custo e margem: Preço proposto precisa de aprovação; dimensionar franquia/pool/tetos e60% na leitura mais onerosa mensal/anual antes de implementação que custe.
 
@@ -1922,6 +2055,7 @@ Proveniência AB: passou a fazer parte do Bloco de abertura, posição (i), por 
 23. **[E6] Perguntas de telefone e checkbox no checkout.**
    - Pedido: P2 E6; datas/horas e grau de certeza em Proveniência.
    - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 19/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
+   - Estado a conferir (MQ3, 30/10/2026, 13h45): o 389 [TB15] diz que a pergunta de telefone no checkout já existe e a parte de checkbox repete o 387 [TB13].
    - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Custo e margem: Conferir campos existentes; calcular bytes/validação nas franquias atuais, sem custo de fornecedor novo.
 
@@ -1964,6 +2098,7 @@ Proveniência AB: passou a fazer parte do Bloco de abertura, posição (i), por 
 30. **[E13] Aviso ao sair do checkout, sem urgência falsa nem desconto inventado.**
    - Pedido: P2 E13; datas/horas e grau de certeza em Proveniência.
    - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 26/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
+   - Estado a conferir (MQ3, 30/10/2026, 13h45): a conferência LQ5 achou o aviso de saída já existente (exit-offer) e o checkout hospedado pelo Stripe; fazer só a diferença.
    - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Custo e margem: Sem fornecedor novo; demonstrar acessibilidade e ausência de bloqueio/coerção antes de publicar.
 
@@ -2093,6 +2228,7 @@ Proveniência AB: passou a fazer parte do Bloco de abertura, posição (j), por 
 115. **[E2-FOUNDING-MEMBERS] Plano fundador de preço maior nas assinaturas**
    - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
    - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 42/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
+   - Estado a conferir (MQ3, 30/10/2026, 13h45): a conferência LQ5 diz que falta só o rótulo de fundador.
    - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Escopo e prova: Opção de preço do produto/membro definida pelo criador; não altera preço dos planos Marktmorgen, assinaturas existentes ou cobranças sem escolha. Conferir Stripe, avisos, direitos e custos fiscais.
    - Custo e margem: Antes de construir: conferir capacidade existente no main e preservar Claude. Custo unitário pago mais caro, uso integral simultâneo por plano mensal/anual, taxas de receiving-costs e leitura fiscal mais onerosa (nunca abaixo de27,5%); teto por fornecedor/loja e reserva antes da operação, plan-cost-registry/spend-floor. Desconhecido reprova; sem cortar limite visível, mudar preço ou afrouxar gates.
@@ -4572,6 +4708,7 @@ Diagnóstico detalhado deHT7 identificou que os blocos .reveal do corpo ainda es
 198. **[HT13] Calcular o custo e verificar fontes privadas antes de oferecer tutor de aluno**
 
 - Estado: **Avaliação concluída; custo completo/teto de recuperação de curso desconhecido; reprovado; tutor não implementado; aguardando dono para escopo/reserva precificados**.
+   - **Duplicado do item 18 [E1]; não executar — todo o conteúdo a mais foi levado ao item 18 [E1] em 30/10/2026 (MQ3).** Regra “Pedidos repetidos”, passo 6; o texto integral abaixo fica preservado.
 - Fontes: answers-rules/answers atuais respondem pré-compra com fatos públicos; não carregam lições nem provam acesso ao curso. Store0/Studio250/Scale400 respostas incluídas já são direitos existentes no pior mês; não podem financiar tutor novo quando100%já é usado. Store assistant é add-on separado, não autorização implícita de novas leituras privadas/transcrição.
 - Referência de dimensionamento, não oferta/limite novo:700respostas adicionais×US$0,003539 dáUS$2,4773, arredondado conservadoramenteUS$2,48/mês eUS$29,76/ano, antes de recuperação/acesso/transcrição. Com custos/taxas/reservas e27,5% de imposto de lucro do dimensionamento existente, líquido de referência:Store mês57,71%, ano57,47%;Studio mês59,99%, ano59,59%;Scale mês60,29%, ano59,86%. Cinco de6já ficam abaixo de60%; os custos completos desconhecidos reprovam todos. Valores usam linhas em centavos da tabela vigente; não são cotação de um tutor ou certificação tributária.
 - docs/ht13-student-tutor-cost-review.md registra ausência de método revisado para todos bytes/leituras/permissões/revalidação/cache/retenção e fontes autorizadas por curso. Vídeo sem transcrição existente não autoriza operação nova de legenda nem resposta por conhecimento geral. Não reduzir limites visíveis, inventar cota minúscula para forçar aprovação, mudar preço ou consumir reserva de outro direito/cliente.
@@ -5221,6 +5358,7 @@ Verifique os importadores que já existem e acrescente a importação a partir d
 211. [SH8] Compra com um toque e conta do comprador
 
 Estado: OR: após o Bloco A, na ordem já existente entre 206 [SH3] e 272 [HM1]; 232 [CA1] foi antecipado e não se repete; antes do Bloco B. Registro de posição; os estados e provas históricos abaixo permanecem válidos.
+Estado a conferir (MQ3, 30/10/2026, 13h45): a conferência LQ5 diz que falta só conferir as carteiras.
 Verifique se o Link, o Apple Pay e o Google Pay estão disponíveis no checkout com cobrança direta na conta do criador e se a biblioteca do comprador reúne as compras feitas em todas as lojas Marktmorgen. Corrija o que faltar, sem custo novo para a plataforma.
 
 212. [SH9] Assistente que executa tarefas do criador (comparação com o Sidekick da Shopify)
@@ -5375,6 +5513,7 @@ Amplie a calculadora do item 218 [OP4] (que compara apenas com a Shopify) para u
 226. [HL7] Painéis de valor do comprador ao longo do tempo (LTV) e de coortes para o criador
 
 Estado: OR: após o Bloco A, na ordem já existente entre 206 [SH3] e 272 [HM1]; 232 [CA1] foi antecipado e não se repete; antes do Bloco B. Registro de posição; os estados e provas históricos abaixo permanecem válidos.
+Estado a conferir (MQ3, 30/10/2026, 13h45): a conferência LQ5 achou as coortes já existentes; fazer só a diferença.
 Verifique o que os relatórios e lib/stats já mostram. Acrescente, a partir dos dados que a loja já guarda, o valor médio gerado por comprador ao longo do tempo e a retenção por coorte de mês de compra (especialmente para assinaturas e comunidades), com explicação simples de cada número. Calcule o custo de leitura e de armazenamento e mantenha os limites do plano.
 
 227. [HL8] Automação recomendada a partir de um objetivo
@@ -5639,6 +5778,18 @@ Regras: valem para estes itens todas as regras da seção SH (itens 204 a 214), 
 244. [SP1] Central de ferramentas gratuitas para criadores, sem cadastro
 
 Estado: OR: após o Bloco A, na ordem já existente entre 206 [SH3] e 272 [HM1]; 232 [CA1] foi antecipado e não se repete; antes do Bloco B. Registro de posição; os estados e provas históricos abaixo permanecem válidos.
+Complemento (MQ3, 30/10/2026, 13h45), por duplicação com 512 [CK4] (regra “Pedidos repetidos”, passo 6): este item passa a pedir também tudo o que o 512 pede e que não estava escrito aqui, cláusula por cláusula, conforme o texto integral do 512, preservado:
+- (1) problema que resolve: o Marktmorgen não tem páginas que tragam visitantes de busca (referência: as 20 ferramentas grátis da ClickFunnels em /business-tools);
+- (2) entre os exemplos, três ferramentas obrigatórias, públicas e sem cadastro: gerador de QR code para um link; redimensionador de imagem para capas de produto, nos tamanhos que a loja usa; e calculadora do que sobra de uma venda digital em que “a pessoa digita o preço e as taxas dela, sem nenhum número de imposto presumido pelo site” (a calculadora com as taxas oficiais do Stripe, já pedida aqui, continua; conferir na execução se as duas viram uma só, com as duas opções);
+- (3) essas três rodam “inteiramente no navegador do visitante, sem servidor, sem fornecedor e sem guardar nada” (aqui estava “sempre que possível”);
+- (4) cada ferramenta tem página própria com título, uma frase de explicação e um link para “Start your store”;
+- (5) as páginas entram no mapa do site sem passar dos limites do 498 [ME3] na página inicial;
+- (6) o custo de banda dessas páginas é contado, nunca tratado como zero;
+- (7) acessibilidade: AX274 completo; a ferramenta inteira opera só por teclado e a imagem gerada tem texto alternativo;
+- (8) testes automáticos: o resultado de cada ferramenta e a ausência de chamadas de rede ao usá-la;
+- (9) lucro: tráfego de busca grátis para a página de cadastro; custo variável só de banda estática;
+- (10) REGRA DE MARGEM vigente (MR, 27/10/2026), política TX, custo desconhecido reprova, nenhuma cota grátis de fornecedor conta como zero, taxas de recebimento mais caras de lib/receiving-costs.ts e 100% dos custos fixos no Marktmorgen (FX275);
+- (11) proibido, além do que já estava aqui: mudar preços, cortar limites visíveis, retirar recursos ou direitos de qualquer plano, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a, a revisão comercial ou stripePlatformEligibilityReady; afrouxar qualquer trava; instalar overlay ou widget de acessibilidade; acrescentar contador regressivo, escassez, depoimento ou número inventado; mostrar recurso que não funciona hoje; apagar páginas ou conteúdo (só mover); alterar o conteúdo do criador sem aprovação; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar qualquer coisa da Hazelsong; afirmar em público superioridade sobre a ClickFunnels sem a prova exigida em AX274 (item 7) e na regra VR (item 7); somente testes sintéticos; aplicar a regra VR.
 Crie uma seção pública de ferramentas gratuitas, cada uma com página própria otimizada para busca e com uma chamada discreta para abrir a loja no Marktmorgen. Exemplos: quanto sobra de uma venda depois das taxas da Stripe; preço final com IVA ou imposto sobre vendas incluído; quanto o comprador economiza no plano anual; desconto por quantidade para equipes; código QR do link da loja; redimensionador de imagens para a página de produto; e verificador do tamanho de títulos e descrições. Faça os cálculos e o processamento no próprio navegador do visitante, sempre que possível, para não haver custo de servidor; quando houver, calcule-o e coloque teto automático. Todas as taxas e regras usadas vêm de fontes oficiais com a data da consulta, com uma rotina que acuse dados com mais de 90 dias sem revisão. Não crie geradores de documentos jurídicos (termos de uso ou políticas), nem ferramentas que projetem ganhos; se alguma ferramenta usar IA, ela segue a reserva antes da chamada e o teto dos orçamentos de IA que já existem. Nenhum dado digitado pelo visitante é guardado.
 
 245. [SP2] Página "Grow without switching"
@@ -6211,6 +6362,7 @@ Escopo:
 É proibido neste item: criar contas, criar buckets, criar chaves de acesso, aceitar termos ou contratar serviço; tudo isso depende do dono. Liste em docs/backup.md, passo a passo, exatamente o que o dono precisa fazer (por exemplo, criar o bucket de backup no Cloudflare R2, criar uma chave de acesso que só possa gravar nesse bucket e cadastrar na Vercel as variáveis de ambiente com os nomes que você definir), e deixe o job pronto e desligado até essas variáveis existirem. Nunca grave segredos, chaves ou valores de variáveis no repositório, nos registros ou nos backups em texto aberto. Testes somente com fornecedores simulados.
 
 Estado: na fila, com prioridade sobre os recursos novos ainda não iniciados. Ao concluir, registre o commit, o resultado da suíte completa e a publicação, e altere o estado para "pronto e desligado, aguardando os passos do dono". Posição vigente: OR: prioridade já definida 1/2, após os andamentos e antes do Bloco A; remanescente aguardando o dono conforme evidência histórica de bloqueio por mais de uma hora; não trava os seguintes.
+Estado (MQ3, 30/10/2026, 13h45): **iniciado** — PR #785 (restauração offline criptografada, merge 4722c925e366) e PR #786 (leitura sintética de volta do backup, merge 58f14c23db3f) incorporados em 22/10/2026; o restante continua na fila. Estado a conferir (MQ3): “aguardando o dono”, que aparece só no histórico da fila. O estado anterior acima fica como histórico.
    - Histórico OR — estado anterior à atualização documental: Estado: na fila, com prioridade sobre os recursos novos ainda não iniciados. Ao concluir, registre o commit, o resultado da suíte completa e a publicação, e altere o estado para "pronto e desligado, aguardando os passos do dono".
 
 
@@ -7036,6 +7188,7 @@ Meça, em celular simulado e com rede lenta, o tempo entre o clique em comprar e
 
 278. [H3-3] Um link por vídeo curto, com as vendas que cada vídeo gerou
    - Estado: **na fila**. Posição: depois de todos os itens existentes, inclusive OR e 274 [AX1] Partes B/C; executar H3-1 a H3-5 nesta ordem. Não bloqueia outros itens.
+Estado a conferir (MQ3, 30/10/2026, 13h45): lib/short-links.ts já mostra, por link curto com nome e lugar, as visitas, as vendas e a receita; falta confirmar a criação com um clique por vídeo e a atribuição por último clique antes de mudar o estado.
 
 A auditoria aponta como lacuna da Hotmart a atribuição de ponta a ponta entre o vídeo curto (TikTok, Reels e Shorts) e a venda. Verifique os links curtos com QR code e a atribuição por canal que já existem e implemente apenas a diferença: o criador cria, com um clique, um link para cada vídeo, identificado pelo nome do vídeo, e vê, por vídeo, as visitas, as compras e a receita, com atribuição por último clique, a partir dos dados que a loja já registra. Não rastreie a pessoa entre sites nem leia dados das contas do TikTok ou do Instagram. Respeite o consentimento e o sinal GPC já implementados. Os números exibidos são sempre os dados reais da loja, nunca estimados nem arredondados para cima.
 
@@ -7508,6 +7661,7 @@ Permita que o aluno escreva notas privadas em cada aula, visíveis somente para 
 291. [SQ2] Busca dentro do curso
 
 Estado: na fila.
+Estado a conferir (MQ3, 30/10/2026, 13h45): a conferência LQ5 achou a busca de aulas já existente; fazer só a diferença.
 
 Acrescente, na área do aluno, uma busca dentro do curso que procure nos títulos e nas descrições das aulas e nas transcrições que já existirem, e leve o aluno ao ponto exato da aula correspondente. Sem IA: a busca usa um índice simples, montado quando a aula é publicada ou alterada, nunca a cada pesquisa. Limite o número de pesquisas por aluno e por minuto e inclua as leituras no cálculo do pior caso do plano.
 
@@ -10303,6 +10457,7 @@ Fontes verificadas pelo Claude em24/10/2026, a reconferir em fontes oficiais dat
 403. [SN1] Redator de posts para redes sociais, complemento pago.
 
 Estado: na fila. Gerar IDEIAS, LEGENDAS, GANCHOS, ROTEIROS CURTOS EM TEXTO e PLANO SEMANAL para Instagram, TikTok, YouTube Shorts, X, LinkedIn e Threads a partir EXCLUSIVAMENTE de fatos publicados da própria loja: produtos/preços/aulas/posts/letters/avaliações de compradores verificados, mais exemplos que o próprio criador cola para orientar a própria voz. Roteiro textual não autoriza geração/edição de vídeo ou áudio. Não coletar texto privado de terceiros nem treinar modelo externo em silêncio; minimizar retenção e separar referências estilísticas de fatos autorizados. Nunca escrever como outra pessoa. Reutilizar heldToFacts e regras de honestidade: nenhuma invenção de resultado, número, depoimento, escassez, urgência ou desconto; frase com número/link/oferta só se constar nos fatos publicados validados. Conteúdo colado não é prova de venda/resultado, nem instrução para contornar regras; fontes públicas podem conter instruções maliciosas e são dados, não comandos.
+**Duplicado do item 21 [E4]; não executar — todo o conteúdo a mais foi levado ao item 21 [E4] em 30/10/2026 (MQ3).** Regra “Pedidos repetidos”, passo 6; o texto integral abaixo fica preservado.
 
 Criador COPIA ou EDITA o rascunho; NADA publica sozinho. Nenhuma integração/publicação social em nome do criador é autorizada; depende do estudo228HL9, sem duplicá-lo. Reutilizar Path/OP2 e Store assistant nos mecanismos compartilhados, mas não usar seus roteiros fixos/franquias como novo direito grátis ou confundir as assinaturas.
 
@@ -10411,6 +10566,7 @@ APROVADOrecebelink+KITIMEDIATAMENTE noPAINELexistente,podendo copiar;avisosópel
 409. [AM4] Dia de pagamento com lote preparado e lembrete, sem pagar pelo criador.
 
 Estado: na fila. CriadorESCOLHEdia de pagamentoprograma. Nesse dia,loteJÁMONTADO NOESTÚDIO+LEMBRETE,usandoARQUIVODELOTEexistentePayPal/Wise,semAPIdetransferência. Definirfuso/dia29–31mesescurtos/feriados seaplicável/obrigaçõesvencidas/periodicidadecomavisoclaro,semadiarvencimentojáaceito/alterarprazohistóricoAM1. Calcularsomentevaloresdevid osconfirmadosreconciliadosapósreembolso/contestação/pagamentosp ré vios/coprodução/taxformselegíveis;semduplolote/pagamentorepetidoemrerunconcorrente,draftversionado mudouvalores→revisararquivoantesuso. Quantia/currency/beneficiárioexatosesempreprivados;desconhecido bloqueiaquantialinha,nãopree nchez eroouenvio.
+Estado a conferir (MQ3, 30/10/2026, 13h45): a conferência LQ5 achou affiliate-payday já existente; falta o lembrete.
 
 CRIADORfazUMENVIOPRÓPRIO doARQUIVOàPRÓPRIAcontaPayPalouWise eELECONFIRMA/PAGA lá,comoregraatual;MMNÃO enviaarquivoaAPI,nãotransfere,nãoMANDAtransferir,nãoexecutacliquepelocriador. Criador REGISTRApagamentofeito,reusandoAM1confirmações/recibosehistórico,semconfundir“arquivoexportado”/“loteregistrado”comrecebimentoefetivo. Notificaçãonoestúdio nãoépromessa dequepagamentoocorreu. Semguardarcredencialdepayoutnova oucontratarprovedor.
 
@@ -10468,6 +10624,7 @@ FontesClaude24–25/10/2026aRECONFERIRoficiaisdatadasnaexecução: kajabi.com/up
 414. [KX1] Avisos de renovação/preço, cancelamento e prova de consentimento — compradores e planos Marktmorgen.
 
 Estado: na fila; PRÉREQUISITOANTESDAABERTURA. Avaliaçãoautorizadapelo dono: ANTECIPAR A CONCLUSÃO/VERIFICAÇÃO DESTEESCOPO paraANTESdeQUALQUERabertura devendas/novasobrigaçõesrecorrentesaplicáveis. Motivo:obrigaçãodeconsentimento/cancelamento/avisoéprév iaoucontínua,nãodiferencialopcionalpósabertura; oalertaoficialconfirmaexistência/relevância.ConservadoramentenãopresumirMMB2Bisento/paísdesconhecidoisento:documentarjurisdição/consumidor/regrasaplicáveis,adotarmaiorproteçãona dúvida,semcertificarleiuniversal.AB(a)segueprimeiro,EI363seguepróximapósAB(a)conformeordemdodono;414mantémnúmero/posiçãoregistral,masnão podeserignoradonarevisão finalpréabertura. AoterminarAB/EI,coordenarimplementaçãoreusandofluxorecorrente/legalantesdeabrir,semcriarsegundoitemouremovergateexistente. NenhumPLANS_ON_SALE/taxgate/art9a/revisãocomercialéhabilitado por essaavaliação.Nãoadiarcorreçãodeobrigaçãojáexistente/clientelegadoseacharbrecha;preservardireitos/serviçoadequado.
+Estado a conferir (MQ3, 30/10/2026, 13h45): o estado diz “PRÉ-REQUISITO ANTES DA ABERTURA”, mas o item está no Grupo A; o mínimo legal (consentimento da recorrência, aviso antes da renovação, cancelamento em um clique) deve ser conferido nos passos 3 ou 12 da AV1; decisão do dono.
 
 Escopodopedido(areconciliartextolegaloficialvigente): (a)antesdeCADArenovaçãoANUALaviso15–45dias;mensalopcionalcriadorSALVOseoutraregraaplicáveloexigir;(b)7–30diasANTESmudançapreço;(c)3–21diasANTESfimdeteste/promoção>31dias;(d)LEMBRETEANUAL. Reutilizaravisostrial/renovação/calendárioexistentes,nãoduplicare-mailsquandoambosrequisitoscumpridosnomesmoavisodentrodeambasjanelas.Avisoidentificaproduto,frequência,valor/moeda,renovase não cancelado,termosrelevanteselinkDIRETOCANCELAR;SERVIÇOSEMoferta/upsell,linguagemacessível/versãotexto/idiomapersistido. NãoincluircomportamentoqueexigealterarPREÇO,nemautoriza reajustarplano/checkoutporoperaçãoexterna.Novaprevisãocobrança/valorincerto=desconhecido,tratamentoconservadorantescobrar,nãomontaravisoenganoso.
 
@@ -10488,6 +10645,7 @@ Validarcombinaçõesdeintervalo/moeda/preço/trial/assinaturasnaAPIrealemfonteso
 416. [KX3] Liberação de aulas por data fixa no fuso da loja.
 
 Estado: na fila. AlémdedripDaysexistente,pormóduloouaulaDAT AEHORAFIXAdefinidasPELOCRIADORnofusoIANA DALOJA,paraturmascominíciocomum. QuemcompraDEPOISdadatarecebeconteúdoj áliberadoseentitlementválido;alunovêdatasCOMANTECEDÊNCIA,naáreaautorizada,acessível/textual/s emdepend erdecornemcontagemfalsa.Semschedul erduplicado: leitura de releaseinstantnoacessousandoautorizaçãoexistente,cronsó se necessárioecustado,nãopushporusuário.
+Estado a conferir (MQ3, 30/10/2026, 13h45): a conferência LQ5 achou startsAt e dripDays já existentes; fazer só a diferença.
 
 DefinirconflitoexclusivodatefixaVSdiasdecompra,noUIcampoclaro;herançamódulo/aula/ordem/override/fus omudou/inexistent eouambíguaDSTantesgravarconverterinstanteUTCsnapshot,datas nãose movemsilenciosamenteaotrocarfusoloja,revisão/avisoantesmaterialmudançadecronogramaseaplicável. Regraspre-requisitos/progresso/tier/pause/contestarrefund/acessoválidoexistentespreservadas;“jáliberado”nãoconcedeprodutoquemnãotem.NãoalterarIDs/conteúdocriador/idiomaspersistidosnemrecursosdedripsemnecessidade.Semfeed público expondo aulaatrásdepagamento,prefetch/mediaURL/cacherevalidamliberaçãotambémservidor,nãosóCSS/TZcliente. Custocheckporacesso/índices/storage/comunicadosantesoperação.
 
@@ -11204,6 +11362,7 @@ A pesquisa não presume que endereço postal, endereço físico/comercial, ender
 
 440. [FC3] Estado de abertura da LLC.
 Estado: na fila.
+Estado (MQ3, 30/10/2026, 13h45): **superado pela decisão do SD1** — o dono escolheu a LLC de Delaware (PR #1179, merge 24968f206044, 28/10/2026); a comparação Delaware/Wyoming/New Mexico não é executada e fica preservada como histórico. O estado anterior acima fica como histórico.
 A LLC ainda não foi aberta (informação do dono nesta solicitação). Comparar, em fontes oficiais datadas dos estados, Delaware com Wyoming e New Mexico: taxa de abertura, imposto ou relatório anual, custo e exigência de agente registrado, sigilo do dono, aceitação pelo Stripe e pelos bancos de[FC1], exigências para dono estrangeiro e qualquer efeito nos impostos dos EUA e do Brasil (docs/tax-uncertainty.md). Registrar o custo fixo anual de cada um, o efeito na base mínima de clientes e o que muda nos serviços de abertura (o Stripe Atlas abre somente em Delaware, ponto indicado pelo dono a reconferir em fonte oficial). Decisão do estado fica em "Depende do dono"; nenhuma abertura, conta ou contato.
 
 Esta pesquisa complementa275[FX1]/PV5(f), sem trocar o estado assumido nos modelos ou reduzir tributos por antecipação. Comparar o custo total obrigatório, não apenas taxa estadual; sigilo público não equivale a dispensa de identificação perante banco, processador ou autoridade. Reutilizar docs/tax-uncertainty.md, manter leitura onerosa onde houver dúvida e registrar a decisão futura sem inventá-la.
@@ -12897,6 +13056,7 @@ Para cada uma destas 12 tarefas, conte os passos, as decisões e os campos obrig
 
 482. [SB5] Proposta para marcas a partir do kit de mídia.
 Estado inicial: na fila.
+Estado a conferir (MQ3, 30/10/2026, 13h45): a conferência LQ5(l) diz que lib/outreach.ts e writePitch já existem; falta incluir os números do kit de mídia do 425 [BX1].
 O criador escolhe uma marca e a IA escreve, em rascunho, um e-mail de proposta de parceria com os números conferidos do kit de mídia (425 [BX1]) e os preços que o próprio criador publicou. O Marktmorgen não envia nada: o criador copia e envia do próprio e-mail. Sem números inventados, sem promessa de resultado. Custo dentro do orçamento de IA do plano, com reserva antes da chamada. Comparar com o AI Brand Outreach da Beacons, com fonte oficial datada.
 
 483. [SB6] Estudo: começar sem pagar.
@@ -13240,6 +13400,7 @@ Já existem e NÃO devem ser refeitos: 281 [SF1] orçamento de desempenho das lo
 
 496 [ME1] Produtos na primeira tela da loja.
 Estado inicial: na fila.
+Estado (MQ3, 30/10/2026, 13h45): **em andamento, parcialmente publicado** — parte incorporada no PR #1153 (merge 729c64eaedac, 28/10/2026, 09h36 Fortaleza); o restante continua na fila. O estado anterior acima fica como histórico.
 Na página da loja, o primeiro produto, com nome, preço e botão, deve aparecer inteiro na primeira tela, sem rolar, em 390 × 844 px (celular) e em 1280 × 720 px (computador), em todos os temas e predefinições existentes, inclusive no modo escuro. Para isso: perfil compacto (foto, nome, uma linha de apresentação e redes), e o quadro "Not sure which one is for you?" de lib/store-guide.ts depois da lista de produtos ou recolhido num link curto, sem perder a função. Nada do conteúdo do criador é retirado ou alterado sem aprovação dele; só a ordem padrão muda, e o criador pode reordenar. Teste automático que falhe se o primeiro produto sair da primeira tela nessas duas medidas. Seguir AX274 (ordem de leitura igual à ordem visual).
 
 497 [ME2] Complemento ao 281 [SF1], aplicando só a diferença, sem mudar número, posição ou estado do item 281.
@@ -13248,6 +13409,7 @@ Acrescente às metas do SF1, para as páginas públicas das lojas (loja, produto
 
 498 [ME3] Página inicial curta e direta.
 Estado inicial: na fila.
+Estado (MQ3, 30/10/2026, 13h45): **em andamento, parcialmente publicado** — parte incorporada no PR #1154 (merge 7951dad4dc5f, 28/10/2026, 09h38 Fortaleza); o restante continua na fila. O estado anterior acima fica como histórico.
 Hoje a página inicial tem 4.218 palavras e 130 links; a da Stan, 232 palavras e 27 links. Deixe a página inicial com no máximo 600 palavras e 30 links: um título, uma frase do que é o Marktmorgen, uma ação principal ("Start your store"), a loja de demonstração real, até 5 vantagens verificáveis no código, o link para os preços e o aviso honesto de que as vendas ainda não abriram. Todo o conteúdo que sair da página inicial vai para as páginas de recursos, de preços, de comparação e de ajuda já existentes, com links claros: nada é apagado. Os itens de página inicial já na fila (183 [HT1], 145 [S4-HOME-SALES], 151 [S10-HOME-PRICING-FAQ], 152 [S11-HOME-CTAS], 153 [S12-HOME-PATH], 240 [CF3]) passam a respeitar esse limite, colocando o que não couber nas páginas internas. Teste automático que conte palavras e links da página inicial e falhe acima do limite. Seguir AX274 (3.1.5, linguagem simples) e a regra VR.
 
 Regra de margem: cada item segue a REGRA DE MARGEM vigente (MR, 27/10/2026, 07h42): nenhum cliente pagante dá prejuízo, usando 100% de todos os direitos do plano e de cada complemento no pior mês, no mensal e no anual, com teto automático e reserva antes de cada gasto; a empresa sem prejuízo a partir da base mínima; 60% é meta mensal real, não trava. Política tributária TX. Custo desconhecido reprova, nunca é zero; nenhuma cota grátis de fornecedor conta como zero; taxas de recebimento mais caras de lib/receiving-costs.ts; todos os custos fixos são 100% do Marktmorgen (FX275).
@@ -16578,6 +16740,7 @@ Lucro: promoções sem trabalho manual, valor percebido maior, sem custo novo al
 
 512. [CK4] Ferramentas grátis abertas no marktmorgen.com.
 Estado inicial: na fila.
+**Duplicado do item 244 [SP1]; não executar — todo o conteúdo a mais foi levado ao item 244 [SP1] em 30/10/2026 (MQ3).** Regra “Pedidos repetidos”, passo 6; o texto integral abaixo fica preservado.
 Problema que resolve: o Marktmorgen não tem páginas que tragam visitantes de busca. A ClickFunnels mantém 20 ferramentas grátis em /business-tools (QR code, redimensionar imagem, calculadoras e outras).
 O que fazer: crie três ferramentas públicas, sem cadastro, que rodam inteiramente no navegador do visitante, sem servidor, sem fornecedor e sem guardar nada:
 - gerador de QR code para um link;
