@@ -7730,6 +7730,8 @@ Proveniência AB: passou a fazer parte do Bloco de abertura, posição (g), por 
 
 Estado: na fila.
 
+Em andamento pelo Claude: 30/10/2026, 13h04 Fortaleza, ramo claude/store-closing-fair-buyers (autorizado pelo dono; regra Pedidos repetidos passo 5).
+
 Falhas encontradas no código atual:
 (a) durante os CLOSING_DAYS entre o fim do plano e o encerramento, as assinaturas e os planos de pagamento dos membros continuam renovando na conta Stripe do criador; no dia do encerramento, stopRenewals apenas marca cancel_at_period_end, mas o conteúdo é apagado nesse mesmo dia, então um membro pode pagar por um período inteiro, inclusive anual, que não receberá;
 (b) os avisos de encerramento vão somente ao criador; os compradores não são avisados pelo Marktmorgen;
