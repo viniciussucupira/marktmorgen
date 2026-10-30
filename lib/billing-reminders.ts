@@ -4,8 +4,8 @@
  * one after a charge that did not go through (failedPlanEmail, below).
  *
  * The card networks require the first (Visa: at least seven days before the
- * first charge after a trial, with a way to cancel), California requires the
- * second (15 to 45 days before a yearly plan renews), and both are simply how
+ * first charge after a trial, with a way to cancel), the renewal laws require the
+ * second (the 30th day before a yearly plan renews, see YEAR_NOTICE_SECONDS), and both are simply how
  * a subscription should treat the person paying for it. Each is sent once per
  * charge, and says the date, the amount and the one click that stops it.
  */
@@ -25,16 +25,21 @@ const TRIAL_NOTICE_SECONDS = 8 * DAY;
  */
 export const TRIAL_FLOOR_SECONDS = 7 * DAY;
 /**
- * Sent on the first daily run with at most 30 days left. Not earlier:
- * California allows 15 to 45 days (Bus. & Prof. Code §17602(b)(2)), but
- * Massachusetts' rule as reported (940 CMR 38.05) allows at most 30, and
- * the stricter maximum is kept (queue 414 [KX1],
- * docs/kx1-renewal-legal-matrix-2026-10-30.md, where Utah's reported
- * 30-to-60-day window and the conflict are recorded for the owner).
+ * Sent on the first daily run with at most 30 days left, never earlier.
+ * The official texts read on 30 Oct 2026 (queue 414 [KX1],
+ * docs/kx1-renewal-legal-matrix-2026-10-30.md, sections 6 and 7) allow only
+ * the 30th calendar day before an annual renewal in every jurisdiction read:
+ * Utah 30-60 days (Utah Code §13-70-201), Illinois, Virginia and DC 30-60
+ * before the cancellation deadline, Colorado 25-40, Massachusetts 5-30
+ * (940 CMR 38.05(4)), California 15-45 (secondary).
  */
 export const YEAR_NOTICE_SECONDS = 30 * DAY;
-/** Below this, a yearly renewal notice is late. */
-export const YEAR_FLOOR_SECONDS = 15 * DAY;
+/**
+ * In whole days left, rounded up, below which a yearly notice is late: any
+ * day after the 30th is outside Utah's, Illinois', Virginia's and DC's
+ * windows, so only the run that finds 29 to 30 days left is on time.
+ */
+export const YEAR_FLOOR_DAYS = 30;
 /** Too close to the charge to be of use: left alone. */
 const TOO_LATE_SECONDS = DAY;
 const MAX_PAGES = 50;
@@ -144,7 +149,7 @@ export function dueReminder(subscription: Record<string, unknown>, nowSeconds: n
       : null;
   }
   if (subscription.status === "active" && plan.cycle === "year" && left <= YEAR_NOTICE_SECONDS) {
-    return { kind: "renewal", subscription: id, email, at, ...plan, late: left < YEAR_FLOOR_SECONDS };
+    return { kind: "renewal", subscription: id, email, at, ...plan, late: Math.ceil(left / DAY) < YEAR_FLOOR_DAYS };
   }
   return null;
 }
