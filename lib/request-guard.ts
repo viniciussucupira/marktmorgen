@@ -126,6 +126,28 @@ async function sha256Hex(value: string): Promise<string> {
  * these limits keep abuse down, and a buyer must never be kept from paying
  * because a counter was out of reach.
  */
+/** Essential authenticated actions need a confirmed finite allowance before
+ * provider or data work. Same existing counter/key/TTL; uncertainty consumes
+ * any committed increment and never authorizes a retry or readback. */
+export async function withinEssentialLimit(scope: string, who: string, limit: number, windowSeconds: number): Promise<boolean> {
+  if (!isRedisConfigured() || !Number.isSafeInteger(limit) || limit <= 0 ||
+      !Number.isSafeInteger(windowSeconds) || windowSeconds <= 0) return false;
+  try {
+    const key = `nl:rl:${scope}:${(await sha256Hex(`nimbus-${scope}:${who}`)).slice(0, 32)}`;
+    const reply: unknown = await redisPipeline([
+      ["SET", key, "0", "EX", windowSeconds, "NX"],
+      ["INCR", key],
+    ]);
+    if (!Array.isArray(reply)) return false;
+    const length = Object.getOwnPropertyDescriptor(reply, "length");
+    if (!length || !Object.hasOwn(length, "value") || length.value !== 2) return false;
+    const set = Object.getOwnPropertyDescriptor(reply, "0"), count = Object.getOwnPropertyDescriptor(reply, "1");
+    if (!set || !Object.hasOwn(set, "value") || (set.value !== null && set.value !== "OK") ||
+        !count || !Object.hasOwn(count, "value") || !Number.isSafeInteger(count.value) || count.value <= 0) return false;
+    return count.value <= limit;
+  } catch { return false; }
+}
+
 export async function withinLimit(scope: string, who: string, limit: number, windowSeconds: number): Promise<boolean> {
   if (!isRedisConfigured()) return true;
   try {

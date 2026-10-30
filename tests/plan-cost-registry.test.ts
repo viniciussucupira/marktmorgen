@@ -50,7 +50,7 @@ function scopesInCode(): Map<string, string[]> {
   const add = (scope: string, file: string) => found.set(scope, [...(found.get(scope) ?? []), file]);
   for (const file of code) {
     const text = read(file);
-    for (const m of text.matchAll(/\bwithin(Limit|Month|Store|Service)\(([^,]+),/g)) {
+    for (const m of text.matchAll(/\bwithin(EssentialLimit|Limit|Month|Store|Service)\(([^,]+),/g)) {
       const literals = [...m[2].matchAll(/"([^"]+)"/g)].map((l) => l[1]);
       if (literals.length) for (const l of literals) { add(l, file); counters.set(l, new Set([...(counters.get(l) ?? []), m[1]])); }
       else add(`<dynamic:${m[2].trim()}>`, file);
