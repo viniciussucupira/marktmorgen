@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { LegalPage, LegalSection } from "@/components/legal-page";
 import { REFUND_DAYS, TRIAL_DAYS } from "@/lib/plan";
 import { PLANS_ON_SALE } from "@/lib/opening";
@@ -170,6 +171,27 @@ export default function RefundsPage() {
           checked. The creator may still agree to a refund, and their own
           terms, and the law, still apply to anything that was not as
           described or did not work.
+        </p>
+        <p id="store-closes">
+          <strong className="text-black">If the store closes.</strong>{" "}
+          From the day the store&rsquo;s plan ends, we pause the payments of
+          a membership or payment plan you have there, so you are not charged
+          again, unless the store is past its closing&rsquo;s limit or Stripe
+          does not let us pause yours; the creator is then told and asked to
+          refund any charge (see our{" "}
+          <Link href="/terms#closing-members" className="text-black underline underline-offset-2 hover:no-underline">
+            Terms
+          </Link>
+          ). On the day the
+          store closes, the part of your last payment that paid for time after
+          that day is refunded to you automatically from the creator&rsquo;s
+          own Stripe account, if its balance covers it, unless the creator
+          already refunded it. Marktmorgen does not hold that money and never
+          pays it. If the balance does not cover it, the refund is not made,
+          and we email you to say so, with the creator&rsquo;s contact. If the
+          creator keeps the store open, nothing is refunded and your
+          membership goes on as it was, with nothing charged for the days in
+          between.
         </p>
         <p>
           If you cannot reach them, write to us at{" "}

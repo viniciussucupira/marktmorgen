@@ -189,6 +189,9 @@ import { AI_MONTHLY } from "@/lib/ai-rules";
 import { COMMISSION_LIVE, canUse, hasPro, PLAN_PRICES, PRO_MONTHLY_EMAILS, PRO_ON_SALE, SCALE_MONTHLY_EMAILS, priceWords, yearSaving } from "@/lib/plan";
 import { ASSISTANT_ON_SALE, PLANS_ON_SALE } from "@/lib/opening";
 import { studioPath, studioView } from "@/lib/studio-route";
+import { unusedSummary } from "@/lib/closing-refunds";
+import { holdCounts } from "@/lib/closing-holds";
+import { CLOSING_CHECKOUT_SECONDS, lastPlanMoment } from "@/lib/closing-plan-guard";
 import { type Permission, type Role, ROLE_NAMES, ROLE_SUMMARIES, can } from "@/lib/team-roles";
 import { MAX_TEAM, readTeam } from "@/lib/team";
 import { MAX_FUNNEL_STEPS } from "@/lib/funnel";
@@ -544,6 +547,26 @@ const BILLING_NOTICES: Record<string, { title: string; body: string }> = {
     title: "That plan is not open yet",
     body: "Nothing was charged and nothing was changed.",
   },
+  closing: {
+    title: "Your store is closing today",
+    body: "Its closing day has begun: its memberships have ended and it is being removed, so a plan can no longer be started for it. Nothing was charged. You can open a new store from your account.",
+  },
+  "closing-returned": {
+    title: "Your store's closing day had begun, so your payment was returned",
+    body: "The plan was paid for after your store's closing day began, so it could not keep the store. We ended the plan and returned the payment in full. Nothing else will be charged. We emailed you the same.",
+  },
+  "closing-returned-early": {
+    title: "Your plan came too late to stop your store's closing, so your payment was returned",
+    body: "The plan went through just before your store's closing day began, too late to stop the closing, which had already started. So it could not keep the store. We ended the plan and returned the payment in full. Nothing else will be charged. We emailed you the same.",
+  },
+  "closing-returning": {
+    title: "Your plan came too late to keep your store, so your payment is being returned",
+    body: "The plan reached us too late to stop your store's closing, so it could not keep the store. We are ending the plan and returning the payment in full, and we email you once it is done. Nothing else will be charged.",
+  },
+  "closing-late": {
+    title: "It is too late to start a plan for this store",
+    body: "A plan can keep a store only if it is started before the last moment shown under \"Your plan has ended\" below, so that its checkout ends before the closing day begins. That moment has passed. Nothing was charged. You can open a new store from your account.",
+  },
   "not-open": {
     title: "Plans are not on sale yet",
     body: "Marktmorgen is still being built, so no plan can be started. Nothing was charged and nothing was changed.",
@@ -886,7 +909,12 @@ export default async function StudioPage({
   // A plan ended from 18 October 2026 closes the whole store on that day, files or none (lib/plan-closing-rules.ts, closesStore).
   const closesWhole = closingAt ? closesStore(closingAt.endedAt) : false;
   const closing = closingAt && (closesWhole || keptNow > keptRoom) ? { ...closingAt, bytes: keptNow, room: keptRoom, whole: closesWhole } : null;
+  // Queue item 307 [EC1]: what members paid for past the closing day, from what was written down when the plan ended (no call to Stripe).
+  const unusedTime = closing?.whole ? await unusedSummary(store!, closing.day).catch(() => null) : null;
+  const notPaused = closing?.whole ? await holdCounts(folder).catch(() => null) : null;
   const dayWords = (ms: number) => new Date(ms).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric", timeZone: "UTC" });
+  /** A moment to the minute, in UTC, said so. */
+  const momentWords = (ms: number) => `${new Date(ms).toLocaleString("en-US", { year: "numeric", month: "long", day: "numeric", hour: "numeric", minute: "2-digit", timeZone: "UTC" })} UTC`;
   // The list is shown once there is something that fills it, or once it holds
   // anybody — a creator who stops giving things away still owns what came in.
   const list = store && may("export") ? await listSize(store) : null;
@@ -2207,16 +2235,58 @@ export default async function StudioPage({
             {closing && closing.whole ? (
               <div id="closing" className="card mt-8 scroll-mt-32 p-6 sm:p-8">
                 <p className="text-lg font-semibold tracking-[-0.02em] text-ink">
-                  {`Your plan has ended, and your store closes on ${dayWords(closing.day)}`}
+                  {closing.today ? "Your store is closing today" : `Your plan has ended, and your store closes on ${dayWords(closing.day)}`}
                 </p>
+                {closing.today ? (
+                  <p className="mt-4 notice notice-warn">
+                    Its closing day has begun: every membership and payment plan sold through it has ended, and it is being removed. A plan can no longer be started for it, and nothing will be charged for one. You can open a new store from your account.
+                  </p>
+                ) : null}
                 <p className="mt-4 notice notice-warn">
                   {`Your plan ended on ${dayWords(closing.endedAt)}. `}
                   <strong>{`On ${dayWords(closing.day)} your store closes`}</strong>
-                  {`: its files are removed (the files your products hand over, your lessons' videos and downloads, your podcast's episodes, the files your students handed in and the pictures in your community's posts), the renewals of the memberships and payment plans you sold through it are stopped at Stripe at the end of the period already paid, and within ${ERASE_WITHIN_DAYS} days, usually the same day, everything else it keeps with us is deleted: its page, products, pages, posts, courses and the certificates they gave, community, contacts, forms, numbers and your buyers' access to what they bought.`}
+                  {`: its files are removed (the files your products hand over, your lessons' videos and downloads, your podcast's episodes, the files your students handed in and the pictures in your community's posts), every membership and payment plan you sold through it ends that day on your Stripe account, and within ${ERASE_WITHIN_DAYS} days, usually the same day, everything else it keeps with us is deleted: its page, products, pages, posts, courses and the certificates they gave, community, contacts, forms, numbers and your buyers' access to what they bought.`}
                 </p>
                 <p className="mt-4 text-ink-soft">
-                  {`We keep no copy of your sales: every sale, refund and payout is on your own Stripe account, and stays there. Your account and sign-in stay. Tell your students to download their course certificates before that day: they can until then, and not after. Starting a plan again before that day stops all of it.`}
+                  Since your plan ended, none of your members is charged again, and they keep their access until that day.
                 </p>
+                {closing.buyers ? (
+                  <p className="mt-4 text-ink-soft">
+                    {closing.buyers.done
+                      ? `Everyone who bought from your store was emailed on ${dayWords(closing.buyers.by)}, once, from Marktmorgen: the day it closes, and to download what they can before then.`
+                      : `By ${dayWords(closing.buyers.by)}, at least 7 days before your store closes, we email everyone who bought from it, once, from Marktmorgen: the day it closes, and to download what they can before then.`}
+                    {closing.buyers.untold > 0
+                      ? ` ${closing.buyers.untold} ${closing.buyers.untold === 1 ? "address was" : "addresses were"} not covered by your store's closing emails: please tell ${closing.buyers.untold === 1 ? "that buyer" : "those buyers"} yourself.`
+                      : ""}
+                  </p>
+                ) : null}
+                {notPaused && notPaused.failed + notPaused.over > 0 ? (
+                  <p className="mt-4 notice notice-warn">
+                    {`${notPaused.failed + notPaused.over} ${notPaused.failed + notPaused.over === 1 ? "membership's payments are" : "memberships' payments are"} not paused${notPaused.failed ? " yet: we try again every day" : ""}${notPaused.over ? `${notPaused.failed ? ", and some are" : ":"} past this closing's limit` : ""}. Every one of them ends on ${dayWords(closing.day)}. If a member is charged before then, please refund them from Stripe.`}
+                  </p>
+                ) : null}
+                {unusedTime && unusedTime.members > 0 ? (
+                  <div className="mt-4">
+                    <p className="text-ink">
+                      {`${unusedTime.members} ${unusedTime.members === 1 ? "member has" : "members have"} paid for time after ${dayWords(closing.day)}: ${unusedTime.totals.map((t) => formatMoney(t.amount, t.cur)).join(" and ")} in all. On that day each is refunded the unused part of their last payment from your own Stripe account, if its balance covers it. Marktmorgen never pays it and never takes it.`}
+                    </p>
+                    <p className="mt-3">
+                      <a href={studioPath(store!, "", "closing-refunds")} className="btn btn-secondary">
+                        Review and refund unused time now
+                      </a>
+                    </p>
+                  </div>
+                ) : null}
+                <p className="mt-4 text-ink-soft">
+                  {`We keep no copy of your sales: every sale, refund and payout is on your own Stripe account, and stays there. Your account and sign-in stay. Tell your students to download their course certificates before that day: they can until then, and not after. Starting a plan again before that day keeps your store: everything stays as it is, your members' payments go on as they were with nothing charged for the days in between, and nothing is refunded.`}
+                </p>
+                {closing.today ? null : (
+                  <p className="mt-4 text-ink" data-last-plan-moment="">
+                    {nowSeconds() * 1000 < lastPlanMoment(closing.day)
+                      ? <>{"To keep your store, start a plan before "}<strong>{momentWords(lastPlanMoment(closing.day))}</strong>{`. A plan's checkout started then lasts ${CLOSING_CHECKOUT_SECONDS / 60} minutes, so it ends before the closing day begins.`}</>
+                      : <>{"The last moment to start a plan and keep this store was "}<strong>{momentWords(lastPlanMoment(closing.day))}</strong>{". It has passed, so a plan can no longer be started for it."}</>}
+                  </p>
+                )}
                 {/* A GET form, not a link: a link may be prefetched, and each prefetch would read the whole store. */}
                 <div className="mt-5 flex flex-wrap items-center gap-3">
                   <form action="/api/store/export" method="get" className="max-w-full">

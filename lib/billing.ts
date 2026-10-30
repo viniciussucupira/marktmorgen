@@ -307,6 +307,8 @@ export async function createBillingCheckout(
   choice: { tier: Tier; cycle: Cycle } = { tier: "creator", cycle: "month" },
   customerId: string | null = store.stripeCustomerId,
   funding?:ContractGrant,
+  /** Sooner than its usual end (a store in its closing period, lib/closing-plan-guard.ts): never later than this. */
+  expiresAtSeconds?: number,
 ): Promise<string> {
   const { tier, cycle } = choice;
   assertFunding(funding,tier,cycle,'checkout',store.statsId??'');
@@ -328,6 +330,10 @@ export async function createBillingCheckout(
     cancel_url: `${origin}/studio?${store.sid ? `store=${store.sid}&` : ""}billing=canceled`,
   });
   if(funding){body.set('expires_at',String(funding.checkoutExpiresAtSeconds));body.set('metadata[funding_grant]',funding.id);body.set('metadata[funding_review]',funding.reviewId);body.set('subscription_data[metadata][funding_grant]',funding.id);body.set('subscription_data[metadata][funding_review]',funding.reviewId);}
+  if (expiresAtSeconds !== undefined && Number.isSafeInteger(expiresAtSeconds)) {
+    const usual = Number(body.get("expires_at"));
+    body.set("expires_at", String(usual > 0 ? Math.min(usual, expiresAtSeconds) : expiresAtSeconds));
+  }
   if (customerId && CUSTOMER_PATTERN.test(customerId)) {
     body.set("customer", customerId);
   } else {
