@@ -44,6 +44,10 @@ Entrada posterior no Grupo B: **561[NE1]**, na fila, **ABAIXO DO MARCO MQ1 por i
 
 Entrada posterior no Grupo B: **562[QZ1]**, na fila, **ABAIXO DO MARCO MQ1 por indicação expressa do dono30/10/2026,09h20Fortaleza**, depois561[NE1] entre os remanescentesB e antesFIM1. Sem mudança de qualquer outro item ou do Bloco de abertura.
 
+Entrada posterior no Grupo B: **563[WN1]**, na fila, **ABAIXO DO MARCO MQ1 por indicação expressa do dono30/10/2026,09h50Fortaleza**, depois562[QZ1] entre os remanescentesB e antesFIM1. Sem mudança de qualquer outro item ou do Bloco de abertura.
+
+Entrada posterior no Grupo B: **564[HC1]**, na fila, **ABAIXO DO MARCO MQ1 por indicação expressa do dono30/10/2026,09h54Fortaleza**, depois563[WN1] entre os remanescentesB e antesFIM1. Sem mudança de qualquer outro item ou do Bloco de abertura.
+
 ### Por último — os59 remanescentesFIM1
 
 FIM1 continua depois de todos os demais, na ordem relativa anterior e com a mesma regra de partes. São os61localizadores históricos da tabelaFIM1 menos206 e241, já retirados da cauda por decisões de posição. Localizadores para conferência (não ordem nova): 16, 26, 37, 38, 41, 42, 45, 47, 48, 49, 53, 56, 58, 92, 104, 127, 128, 129, 130, 131, 132, 203, 207, 209, 215, 222, 236, 252, 255, 280, 284, 286, 289, 296, 317, 318, 327, 337, 345, 346, 347, 348, 351, 352, 359, 363, 383, 401, 402, 404, 406, 419, 420, 425, 429, 430, 440, 441, 442. O item58 continua afetado **somente no português doBrasil**; os demais idiomas mantêm posição/gates atuais. Concluídos e andamentos já existentes não são reconstruídos, reiniciados ou movidos novamente.
@@ -71,6 +75,10 @@ Uma linha por item, três grupos possíveis: A, B ou sem mudança. “Sem mudan�
 **Atualização NE1 (30/10/2026,02h58):** bases554–560 anteriores são históricas; tabela atual **561linhas únicas,109A,238B,214sem mudança**. Só561[NE1] acrescentadoB, depois560; tabela numérica não redefine execução.
 
 **Atualização QZ1 (30/10/2026,09h20):** bases554–561 anteriores são históricas; tabela atual **562linhas únicas,109A,239B,214sem mudança**. Só562[QZ1] acrescentadoB, depois561; tabela numérica não redefine execução.
+
+**Atualização WN1 (30/10/2026,09h50):** bases554–562 anteriores são históricas; tabela atual **563linhas únicas,109A,240B,214sem mudança**. Só563[WN1] acrescentadoB, depois562; tabela numérica não redefine execução.
+
+**Atualização HC1 (30/10/2026,09h54):** bases554–563 anteriores são históricas; tabela atual **564linhas únicas,109A,241B,214sem mudança**. Só564[HC1] acrescentadoB, depois563; tabela numérica não redefine execução.
 
 | Item | Grupo | Motivo |
 | --- | --- | --- |
@@ -636,6 +644,8 @@ Uma linha por item, três grupos possíveis: A, B ou sem mudança. “Sem mudan�
 | 560 [AS1] | B | Dono30/10/2026,01h25: abaixo do marco, depois559no Grupo B e antesFIM1; demais posições preservadas. |
 | 561 [NE1] | B | Dono30/10/2026,02h58: abaixo do marco, depois560no Grupo B e antesFIM1; demais posições preservadas. |
 | 562 [QZ1] | B | Dono30/10/2026,09h20: abaixo do marco, depois561no Grupo B e antesFIM1; demais posições preservadas. |
+| 563 [WN1] | B | Dono30/10/2026,09h50: abaixo do marco, depois562no Grupo B e antesFIM1; demais posições preservadas. |
+| 564 [HC1] | B | Dono30/10/2026,09h54: abaixo do marco, depois563no Grupo B e antesFIM1; demais posições preservadas. |
 
 ### Proveniência, Pedidos repetidos e VR
 
@@ -16324,6 +16334,39 @@ Proveniência: pedido direto do dono; aplica só diferença ao525,sem novo núme
 
 Complemento ao 525 [FN1]: na página que lista os funis da loja, cada funil numa linha com compradores, número de vendas e receita do período escolhido, ordenável por cada coluna; no alto, os totais da loja no mesmo período (receita, pedidos e produtos à venda). Os mesmos números e as mesmas regras do 525: lidos das vendas reais na conta Stripe ou PayPal do próprio criador, "Counts unavailable" quando faltar dado, nunca zero inventado, reembolsos descontados, nenhum dado pessoal de comprador, e um total nunca diferente da soma das linhas.
 
+### Complemento ao 525 [FN1] — 30/10/2026, 09h37 Fortaleza
+
+Proveniência: pedido direto do dono na conversa com o Claude, 30/10/2026, 09h37 Fortaleza; texto redigido pelo Claude e aprovado pelo dono; gravado diretamente pelo Claude para não interromper o Codex. Pedidos repetidos passo3(b): conferido no main a468d42260d959ccdaa6081697c6fea9db6351cd que não havia complemento FN1 de 30/10/2026, 09h37; somente a diferença abaixo foi acrescentada, e o 525 [FN1] mantém número, posição (Grupo A, acima do marco MQ1, conforme sua linha atual na tabela do MQ1, sem mudança) e estado. Conferência limitada no mesmo main: saleChannel existe em lib/stats.ts; não há “Sign-ups from this funnel”, “Orders from this funnel” nem “Funnel not recorded” em app, components ou lib; revalidar no head de implementação. Texto do dono preservado integralmente abaixo.
+
+FN — Complemento ao 525 [FN1]: à vista e recorrente em cada etapa, e listas de cadastros e pedidos do funil (30/10/2026)
+Etiqueta: [FN1]
+
+Solicitação do dono (30/10/2026, 09h37, horário de Fortaleza).
+
+Pedidos repetidos: é complemento ao item 525 [FN1] já gravado, que já recebeu os complementos de 29/10/2026. Aplique só a diferença ao item existente, mantendo número, posição e estado (regra "Pedidos repetidos", passo 3, letra b), e registre na proveniência o que mudou. Conferido antes de gravar: o cartão de cada etapa com miniatura, nome, endereço e números está no 526 [FN2]; visitas, cadastros, vendas e receita por etapa e a receita recorrente no resumo estão neste 525; as sequências e automações (lib/flows.ts) já existem. Nada disso é refeito.
+
+Estado inicial: o do próprio 525.
+
+Contexto: a página clickfunnels.com/features/funnel-builder (lida em 30/10/2026) mostra, na seção "Get more important funnel stats at a glance", o cartão de uma etapa com Pageviews, Opt-Ins, Upf. Orders, Upf. Sales, Rec. Orders e Rec. Sales, e, no alto do funil, as abas Funnel, Editor, Workflows, Opt Ins, Orders e Stats. No Marktmorgen, a separação entre à vista e recorrente está pedida só no resumo do funil, e a lista de contatos e a de vendas do criador não dizem de qual funil cada pessoa veio. Verifique antes no código atual que isso continua assim.
+
+O que acrescentar ao 525 [FN1]:
+- em cada etapa: pedidos à vista e receita à vista; pedidos recorrentes (renovações de assinaturas que começaram naquela etapa) e receita recorrente; com as mesmas fontes, o mesmo período, a mesma moeda, os reembolsos descontados e a mesma regra de coerência do 525 (quantidade nunca escrita como dinheiro, total igual à soma das partes);
+- registrar em cada cadastro e em cada venda feitos dentro de um funil o identificador do funil e da etapa, pelo mesmo caminho que já guarda a origem da venda (saleChannel em lib/stats.ts), sem dado pessoal novo, sem rastreamento entre sites e com o mesmo prazo de guarda do contato ou da venda;
+- na página do funil, dois links, "Sign-ups from this funnel" e "Orders from this funnel", que abrem a lista de contatos e a lista de vendas que o criador já tem, filtradas por aquele funil, com as mesmas permissões e a mesma exportação de hoje; nenhuma lista nova e nenhum dado de comprador no painel de resumo;
+- cadastros e vendas anteriores a este registro aparecem como "Funnel not recorded", nunca atribuídos a um funil por suposição.
+
+Acessibilidade (AX274, Parte A, integral): máxima acessibilidade em tudo o que este item criar ou alterar — WCAG 2.2 nível AAA em todos os critérios aplicáveis, em todas as telas, estados, e-mails e arquivos, mais as demais normas e orientações da Parte A; a impossibilidade de um critério AAA precisa ser demonstrada e registrada em docs/accessibility-programme.md, nunca presumida. Os pontos a seguir são verificações obrigatórias deste item, não o limite do que se exige: números em texto real com rótulo por extenso ("One-time orders", "Recurring revenue"), sem abreviação sem explicação (3.1.4); quantidade e dinheiro distinguidos por texto, não só por cor ou fonte; filtro anunciado ao leitor de tela, com o nome do funil, e removível; propósito de cada link compreensível pelo próprio texto (2.4.9); contraste de 7:1, 320 px e 400% de zoom; tudo por teclado. Seção "Acessibilidade" no PR, com os passos e as decisões da tarefa principal antes e depois.
+
+Testes automáticos, com Stripe simulado: à vista e recorrente por etapa, coerência entre etapas e resumo, registro do funil no cadastro e na venda, filtro das duas listas, permissões, "Funnel not recorded" para registros antigos e ausência de dado pessoal no painel.
+
+Custo: um campo a mais em registros que já são gravados e o filtro de listas que já são lidas, dentro dos limites de armazenamento e de requisições que cada plano já tem. Calcule o pior caso mensal e anual de cada plano com 100% dos direitos usados e aplique teto automático antes do gasto. Custo desconhecido reprova, nunca é zero.
+
+REGRA DE MARGEM (MR, 27/10/2026): nenhum cliente pagante, considerado isoladamente e usando 100% de todos os direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto; a empresa como um todo não pode dar prejuízo no pior caso a partir da base mínima de clientes pagantes, com 100% dos custos fixos da LLC atribuídos ao Marktmorgen (FX275); a meta de 60% de margem líquida é medida todo mês com números reais. Impostos pela política TX vigente.
+
+Proibido: criar item novo ou mudar número, posição ou estado do 525; inventar, estimar ou atribuir por suposição qualquer número ou funil; mostrar dado pessoal de comprador no painel; criar rastreamento novo, pixel ou perfil; mudar preços, limites visíveis, comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a, a revisão comercial ou stripePlatformEligibilityReady; afrouxar qualquer trava; mostrar recurso que não funciona hoje; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+
 ## FN2 — registro integral; item526 (29/10/2026,11h10Fortaleza)
 
 Proveniência: pedido direto do dono nesta conversa; descrição da captura e do estado do produto atribuída ao briefing, sem alegar inspeção independente de imagem não anexada nesta mensagem. Deduplicação: main51030ab,PR1208aberto,20PRsrecentes/19heads codexdistintos e763refs,sem etiqueta/título/data/conteúdo equivalente. Próximo livre526após525FN1,sem alterar ordem/estado/escopo existentes. Reaproveitar377TB3/headline-test/flows/funnel-metrics;receitas só quando525funcionar;reconferir código antes e aplicar apenasdiferença. MR/TX/FX275/AX274/VR,custosdetetos antesoperação e desconhecido reprova vinculantes. Registro somente,sem implementar/ativar/anunciar recurso; AVcontinua,TB375/32permanece noPR1208comcódigo.
@@ -16460,6 +16503,40 @@ Custo: leitura do funil que o estúdio já faz, sem fornecedor, chamada de IA ou
 REGRA DE MARGEM (MR, 27/10/2026): nenhum cliente pagante, considerado isoladamente e usando 100% de todos os direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto; a empresa como um todo não pode dar prejuízo no pior caso a partir da base mínima de clientes pagantes, com 100% dos custos fixos da LLC atribuídos ao Marktmorgen (FX275); a meta de 60% de margem líquida é medida todo mês com números reais. Impostos pela política TX vigente.
 
 Proibido: criar item novo ou mudar número, posição ou estado do 526; salvar ou descartar alteração sem a escolha do criador; afirmar em público que o Marktmorgen é "X% mais rápido" sem medição e fonte; mudar preços, limites visíveis (inclusive o número máximo de etapas e de funis), comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a, a revisão comercial ou stripePlatformEligibilityReady; afrouxar qualquer trava; mostrar recurso que não funciona hoje; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+
+### Complemento ao 526 [FN2] — 30/10/2026, 09h40 Fortaleza
+
+Proveniência: pedido direto do dono na conversa com o Claude, 30/10/2026, 09h40 Fortaleza; texto redigido pelo Claude e aprovado pelo dono; gravado diretamente pelo Claude para não interromper o Codex. Pedidos repetidos passo3(b): conferido no main 8036b25cdaea9482212b97746f24b2e136cb598c que não havia complemento FN2 de 30/10/2026, 09h40; somente a diferença abaixo foi acrescentada, e o 526 [FN2] mantém número, posição (Grupo B, abaixo do marco MQ1) e estado. Conferência limitada no mesmo main: lib/flows.ts e FLOW_TRIGGERS (lib/flow-rules.ts) existem; app/studio/funnels/page.tsx só oferece salvar como sequência desligada os e-mails de acompanhamento redigidos e já tem a frase de permissão (can(view.role, "send")); não mostra as sequências de cada etapa nem o botão “Add a sequence for this step”; revalidar no head de implementação. Texto do dono preservado integralmente abaixo.
+
+FN — Complemento ao 526 [FN2]: sequências ligadas a cada etapa do funil (30/10/2026)
+Etiqueta: [FN2]
+
+Solicitação do dono (30/10/2026, 09h40, horário de Fortaleza).
+
+Pedidos repetidos: é complemento ao item 526 [FN2] já gravado, que já recebeu os complementos de 29/10/2026 e o de 30/10/2026, 09h33. Aplique só a diferença ao item existente, mantendo número, posição e estado (regra "Pedidos repetidos", passo 3, letra b), e registre na proveniência o que mudou. Conferido antes de gravar: as sequências e seus gatilhos (lib/flows.ts, FLOW_TRIGGERS em lib/flow-rules.ts) já existem; os números de cada etapa da sequência ("are here", "were here") estão no complemento de 29/10/2026 ao 391 [CX2]; a ação de dar acesso a um curso está no 548 [TR1]. Nada disso é refeito.
+
+Estado inicial: o do próprio 526.
+
+Contexto: a página clickfunnels.com/features/funnel-builder (lida em 30/10/2026) mostra, na seção "Everything you need is just one click away", o cartão de uma etapa do funil com um botão que abre as automações ligadas a ela (gatilho, "Add Tag(s)", "Enroll in Course") e as abas Funnel, Editor, Workflows, Opt Ins, Orders e Stats no alto do funil. No Marktmorgen, a tela de funis (app/studio/funnels, components/page-funnel-editor.tsx) não mostra quais sequências começam numa etapa, e criar uma exige ir ao Email Studio e escolher o gatilho sozinho. Verifique antes no código atual que isso continua assim.
+
+O que acrescentar ao 526 [FN2]:
+- em cada etapa do funil, no mapa e na lista que já existe: as sequências da loja cujo gatilho é aquela etapa (o envio do formulário daquela página, a compra do produto daquela etapa, ou o cadastro feito nela), com o nome, se está ligada ou desligada e um link para abri-la no Email Studio;
+- botão "Add a sequence for this step", que abre o Email Studio com uma sequência nova, desligada, já com o gatilho daquela etapa escolhido; o criador escreve, revisa e liga; nada é enviado nem ligado sozinho;
+- quando a etapa não tiver gatilho possível (por exemplo, uma página sem formulário e sem produto), o botão não aparece e uma frase curta explica por quê;
+- respeitar as permissões de hoje: quem não pode enviar e-mail (can(view.role, "send")) vê as sequências, mas não o botão, com a frase que já existe na tela de funis;
+- no alto da página do funil, atalhos com nome por extenso para o mapa, a edição das páginas, as sequências deste funil e, quando o 525 [FN1] existir, os cadastros, os pedidos e os números; nenhuma tela nova além das que este item e o 525 já pedem.
+
+Acessibilidade (AX274, Parte A, integral): máxima acessibilidade em tudo o que este item criar ou alterar — WCAG 2.2 nível AAA em todos os critérios aplicáveis, em todas as telas, estados, e-mails e arquivos, mais as demais normas e orientações da Parte A; a impossibilidade de um critério AAA precisa ser demonstrada e registrada em docs/accessibility-programme.md, nunca presumida. Os pontos a seguir são verificações obrigatórias deste item, não o limite do que se exige: botão com nome por extenso (nunca só um ícone); estado ligada ou desligada em texto; atalhos como região de navegação com nome e a página atual anunciada (aria-current); propósito de cada link compreensível pelo próprio texto (2.4.9); mudança de contexto só quando a pessoa pedir (3.2.5); alvos de 44 × 44 px; contraste de 7:1, 320 px e 400% de zoom; tudo por teclado. Seção "Acessibilidade" no PR, com os passos e as decisões da tarefa principal antes e depois (hoje: ir ao Email Studio, criar a sequência e escolher o gatilho; depois: um botão com o gatilho já escolhido).
+
+Testes automáticos: sequências certas em cada etapa por formulário, produto e cadastro; sequência nova criada desligada com o gatilho certo; nenhum envio nem ativação automática; botão ausente sem gatilho possível e sem permissão; atalhos e alternativa por teclado.
+
+Custo: leitura das sequências que o estúdio já faz e a criação de uma sequência desligada dentro do limite de sequências que cada plano já tem, sem envio, fornecedor ou chamada de IA novos. Calcule o pior caso mensal e anual de cada plano com 100% dos direitos usados e aplique teto automático antes do gasto. Custo desconhecido reprova, nunca é zero.
+
+REGRA DE MARGEM (MR, 27/10/2026): nenhum cliente pagante, considerado isoladamente e usando 100% de todos os direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto; a empresa como um todo não pode dar prejuízo no pior caso a partir da base mínima de clientes pagantes, com 100% dos custos fixos da LLC atribuídos ao Marktmorgen (FX275); a meta de 60% de margem líquida é medida todo mês com números reais. Impostos pela política TX vigente.
+
+Proibido: criar item novo ou mudar número, posição ou estado do 526; segundo motor de sequências; ligar ou enviar uma sequência sem o criador; e-mail sem consentimento; mudar preços, limites visíveis (inclusive o número máximo de sequências, etapas e funis), comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a, a revisão comercial ou stripePlatformEligibilityReady; afrouxar qualquer trava; mostrar recurso que não funciona hoje; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
 
 Aplicar a regra VR.
 
@@ -18583,6 +18660,159 @@ Custo: página estática e código no navegador, sem leitura, gravação, fornec
 REGRA DE MARGEM (MR, 27/10/2026): nenhum cliente pagante, considerado isoladamente e usando 100% de todos os direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto; a empresa como um todo não pode dar prejuízo no pior caso a partir da base mínima de clientes pagantes, com 100% dos custos fixos da LLC atribuídos ao Marktmorgen (FX275); a meta de 60% de margem líquida é medida todo mês com números reais. Impostos pela política TX vigente.
 
 Proibido: mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; pedir e-mail ou guardar respostas; recomendar recurso que não existe; liderar com "free"; promessa de resultado, urgência ou escassez; imagem repetida; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+```
+
+
+## 563 [WN1] — Página pública de novidades do Marktmorgen
+
+**Estado:** na fila. **Posição:** ABAIXO DO MARCO MQ1, Grupo B, depois562[QZ1] entre os remanescentesB e antesFIM1.563 estava livre e a etiqueta[WN1] não existia. Não altera ordem/estado de outros itens ou Bloco de abertura.
+
+**Proveniência/Pedidos repetidos:** pedido direto do dono na conversa com o Claude,30/10/2026,09h50Fortaleza; texto redigido pelo Claude e aprovado pelo dono; gravado diretamente pelo Claude para não interromper o Codex. Conferido no main c5e3527c4da5264157ac42a1ee7eb091f8c04fd7 pela etiqueta, pela linha de data e hora e pelo conteúdo: nenhum item pede página de novidades; app/help (com lib/help-content.ts), lib/help-ask.ts, lib/feature-pages.ts e app/blog já existem e não são refeitos nem movidos. Nova recepção só proveniência,sem número/commit exclusivo.
+
+**Conferência real (limitada, revalidar no head de implementação):** não existe app/whats-new nem app/changelog, e nenhum arquivo de app, components ou lib menciona “whats-new”, “What's new” ou “changelog”. Registro documental: não implementa, não certifica margem, não conta entrega funcional.
+
+### Pedido literal WN1
+
+```text
+WN — Página pública de novidades do Marktmorgen (30/10/2026) [WN1]
+
+Solicitação do dono (30/10/2026, 09h50, horário de Fortaleza).
+
+Pedidos repetidos: aplique a regra "Pedidos repetidos" de AGENTS.md. Conferido antes de gravar: não existe página de novidades no site nem item na fila que a peça. Já existem e não são refeitos: a central de ajuda com busca e seções (app/help, lib/help-content.ts), o assistente de ajuda do estúdio (lib/help-ask.ts), as páginas de recursos (lib/feature-pages.ts) e o blog (app/blog).
+
+Estado inicial: na fila, ABAIXO DO MARCO (MQ1, Grupo B), no fim do Grupo B, antes de FIM1, no próximo número livre. Não altera a ordem de nenhum outro item.
+
+Contexto: a central de ajuda do ClickFunnels (support.myclickfunnels.com, lida em 30/10/2026) tem, ao lado de "Browse articles", o botão "See what's new", que leva às novidades do produto. No Marktmorgen, o criador e o visitante não têm onde ver o que passou a funcionar e quando. Verifique antes no código atual que isso continua assim.
+
+1. Uma página pública /whats-new, em inglês americano simples, com uma entrada por novidade, da mais nova para a mais antiga: data (en-US), título curto, duas ou três frases sobre o que o criador ou o comprador pode fazer agora, em qual plano, e o link para a página de recurso ou da ajuda que explica.
+
+2. Só entra o que está "disponível ao cliente" pelo item 1 da regra VR: incorporado, publicado com a versão conferida em marktmorgen.com e usado de ponta a ponta. Nada "em breve", nada da fila, nada desligado pelas travas (tax gate, art. 9a, revisão comercial, PLANS_ON_SALE) e nenhuma data futura. Correções de erro visíveis ao cliente podem entrar numa linha curta, sem expor dado de cliente ou detalhe de segurança.
+
+3. As entradas ficam num único arquivo de dados no repositório, com data, título, texto, plano e link, e cada PR que leva um recurso ao estado "disponível ao cliente" acrescenta a sua entrada no mesmo PR. Um teste automático falha se uma entrada tiver data futura, link quebrado, recurso inexistente no código ou plano diferente do que o código permite.
+
+4. Links para a página: botão "See what's new" na central de ajuda, ao lado da busca; link "What's new" no rodapé; inclusão no mapa do site; feed RSS da página, se o mecanismo do blog já o oferecer, sem segundo mecanismo.
+
+5. Honestidade: sem número de clientes, depoimento, comparação de superioridade, "X% faster", urgência ou promessa de resultado; nenhuma novidade descrita como maior do que é.
+
+6. Acessibilidade (AX274, Parte A, integral): máxima acessibilidade em tudo o que este item criar ou alterar — WCAG 2.2 nível AAA em todos os critérios aplicáveis, em todas as telas, estados, e-mails e arquivos, mais as demais normas e orientações da Parte A; a impossibilidade de um critério AAA precisa ser demonstrada e registrada em docs/accessibility-programme.md, nunca presumida. Os pontos a seguir são verificações obrigatórias deste item, não o limite do que se exige: cada entrada com título de seção em hierarquia e data em elemento de data legível; propósito de cada link compreensível pelo próprio texto (2.4.9); linguagem simples (3.1.5); nenhuma imagem de texto; contraste de 7:1, 320 px e 400% de zoom; leitor de tela e teclado. Seção "Acessibilidade" no PR, com os passos e as decisões da tarefa principal antes e depois.
+
+Custo: página estática gerada no build a partir do arquivo de dados, sem leitura, gravação, fornecedor ou chamada de IA. Custo desconhecido reprova, nunca é zero.
+
+REGRA DE MARGEM (MR, 27/10/2026): nenhum cliente pagante, considerado isoladamente e usando 100% de todos os direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto; a empresa como um todo não pode dar prejuízo no pior caso a partir da base mínima de clientes pagantes, com 100% dos custos fixos da LLC atribuídos ao Marktmorgen (FX275); a meta de 60% de margem líquida é medida todo mês com números reais. Impostos pela política TX vigente.
+
+Proibido: listar recurso que não está disponível ao cliente hoje; data futura ou "coming soon"; mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; liderar com "free"; depoimento, número de clientes, urgência ou promessa de resultado; imagem repetida; o nome do dono, endereço ou país fora dos Termos e da Política de Privacidade; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+```
+
+
+## 564 [HC1] — Central de ajuda organizada por área do estúdio, com cartões e respostas para cada uma
+
+**Estado:** na fila. **Posição:** ABAIXO DO MARCO MQ1, Grupo B, depois563[WN1] entre os remanescentesB e antesFIM1.564 estava livre e a etiqueta[HC1] não existia. Não altera ordem/estado de outros itens ou Bloco de abertura.
+
+**Proveniência/Pedidos repetidos:** pedido direto do dono na conversa com o Claude,30/10/2026,09h54Fortaleza; texto redigido pelo Claude e aprovado pelo dono; gravado diretamente pelo Claude para não interromper o Codex. Conferido no main 19906c4c8b2a6ffa426478c1ff13ded9378d3cf0 pela etiqueta, pela linha de data e hora e pelo conteúdo: nenhum item pede a reorganização da central de ajuda por área; app/help, lib/help-content.ts, components/help-search.tsx, lib/help-ask.ts, lib/feature-pages.ts, os vídeos de ajuda do 280 [H3-5] (que amplia o 241 [CF4]) e o 563 [WN1] já existem ou estão na fila e não são refeitos nem movidos. Nova recepção só proveniência,sem número/commit exclusivo.
+
+**Conferência real (limitada, revalidar no head de implementação):** lib/help-content.ts tem HELP_SECTIONS com 7 seções (Getting started, The demo store, Money, fees and payouts, Your store, Files and delivery, Outreach, Your data) e 107 perguntas. answerId(q) (lib/help-content.ts, linha 47) é derivado do texto da pergunta, então mudar o texto de uma pergunta mudaria o seu identificador; a implementação deve manter os identificadores antigos, como o texto exige. A contagem de respostas por área não foi conferida neste registro. Registro documental: não implementa, não certifica margem, não conta entrega funcional.
+
+### Pedido literal HC1
+
+```text
+HC — Central de ajuda organizada por área do estúdio, com cartões e respostas para cada uma (30/10/2026) [HC1]
+
+Solicitação do dono (30/10/2026, 09h54, horário de Fortaleza).
+
+Pedidos repetidos: aplique a regra "Pedidos repetidos" de AGENTS.md. Conferido antes de gravar: nenhum item pede a reorganização da central de ajuda por área. Já existem e não são refeitos: a central (app/help, lib/help-content.ts, 7 seções e 107 perguntas), a busca (components/help-search.tsx), o assistente de ajuda do estúdio (lib/help-ask.ts), as páginas de recursos (lib/feature-pages.ts), os vídeos de ajuda pedidos no 280 [H3-5] e a página de novidades do 563 [WN1].
+
+Estado inicial: na fila, ABAIXO DO MARCO (MQ1, Grupo B), no fim do Grupo B, antes de FIM1, no próximo número livre. Não altera a ordem de nenhum outro item.
+
+Contexto: a central de ajuda do ClickFunnels (support.myclickfunnels.com, lida em 30/10/2026) mostra, abaixo da busca, um cartão por área do produto (Getting Started, Account, Funnels, Products, Customers, Domains, Site, Affiliate Center, Analytics, Appointments, Automations, Community, Courses, Discounts, Email, Landing Pages, Store, Survey Workflows, Workspace Settings e outras), cada um levando às respostas daquela área. No Marktmorgen, a central tem 7 seções, e áreas que já funcionam no estúdio têm poucas respostas ou nenhuma: funis, cursos, afiliados e domínio próprio têm uma ou duas; sequências de e-mail, webhooks e importação de outra plataforma não têm nenhuma. Verifique antes no código atual que isso continua assim.
+
+1. Áreas: a central passa a ter uma seção por área que o estúdio realmente tem hoje (a lista sai das áreas e dos cartões do próprio estúdio, app/studio, e não de uma lista digitada à parte), mais "Getting started", "Money, fees and payouts" e "Your data". No alto da página, abaixo da busca, um cartão por área, com nome e ícone, levando à seção.
+
+2. Respostas: as 107 respostas atuais são mantidas e só mudam de seção, sem mudar o texto, exceto onde o texto já não corresponder ao código; os identificadores de cada resposta (answerId) continuam os mesmos, para nenhum link existente quebrar. Em cada área, acrescente as respostas das tarefas principais que ainda faltam (por exemplo: criar e ligar uma sequência, ligar um webhook, trazer contatos e produtos de outra plataforma, ligar um domínio, montar um funil, abrir um programa de afiliados), escritas a partir do código atual, em inglês americano simples, com o passo a passo pelos nomes exatos dos botões da tela.
+
+3. Verdade: cada resposta descreve só o que funciona hoje para quem lê; o que está fechado pelas travas é dito como fechado, como a central já faz ("Not yet"). Cada resposta tem o link para a tela do estúdio que ela explica e para a página de recurso, quando houver.
+
+4. Testes automáticos: falham se uma área do estúdio ficar sem seção na central; se uma seção não tiver resposta para a tarefa principal da área; se um link de resposta não abrir uma rota existente; se um nome de botão citado não existir no código; ou se um answerId antigo deixar de existir. O assistente de ajuda (lib/help-ask.ts) continua lendo o mesmo conteúdo, sem segundo mecanismo.
+
+5. Acessibilidade (AX274, Parte A, integral): máxima acessibilidade em tudo o que este item criar ou alterar — WCAG 2.2 nível AAA em todos os critérios aplicáveis, em todas as telas, estados, e-mails e arquivos, mais as demais normas e orientações da Parte A; a impossibilidade de um critério AAA precisa ser demonstrada e registrada em docs/accessibility-programme.md, nunca presumida. Os pontos a seguir são verificações obrigatórias deste item, não o limite do que se exige: cartões como lista de links com nome por extenso (o ícone é decorativo); títulos de seção em hierarquia (2.4.10); trilha de onde a pessoa está (2.4.8); linguagem simples (3.1.5) e glossário para termos incomuns (3.1.3); ajuda sempre no mesmo lugar (3.2.6); contraste de 7:1, 320 px e 400% de zoom; leitor de tela e teclado. Seção "Acessibilidade" no PR, com os passos e as decisões da tarefa principal antes e depois (achar a resposta de uma área).
+
+Custo: páginas estáticas e conteúdo no repositório; o assistente de ajuda continua com o teto e a reserva que já tem, sem aumento de limite. Custo desconhecido reprova, nunca é zero.
+
+REGRA DE MARGEM (MR, 27/10/2026): nenhum cliente pagante, considerado isoladamente e usando 100% de todos os direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto; a empresa como um todo não pode dar prejuízo no pior caso a partir da base mínima de clientes pagantes, com 100% dos custos fixos da LLC atribuídos ao Marktmorgen (FX275); a meta de 60% de margem líquida é medida todo mês com números reais. Impostos pela política TX vigente.
+
+Proibido: descrever recurso que não funciona hoje; apagar ou renumerar respostas existentes; quebrar links ou answerId antigos; segundo mecanismo de busca ou de assistente; mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; liderar com "free"; depoimento, número de clientes, urgência ou promessa de resultado; imagem repetida; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+```
+
+### Complemento ao 564 [HC1] — 30/10/2026, 09h56 Fortaleza
+
+Proveniência: pedido direto do dono na conversa com o Claude, 30/10/2026, 09h56 Fortaleza; texto redigido pelo Claude e aprovado pelo dono; gravado diretamente pelo Claude para não interromper o Codex. Pedidos repetidos passo3(b): conferido no main 60185a7e47c1b807bc80760785bdd061754d5d0b que não havia complemento HC1 de 30/10/2026, 09h56; somente a diferença abaixo foi acrescentada, e o 564 [HC1] mantém número, posição (Grupo B, abaixo do marco MQ1) e estado. Conferência limitada no mesmo main: o tipo HelpSection de lib/help-content.ts guarda só q e a em cada resposta, sem data de criação nem de atualização; revalidar no head de implementação. Texto do dono preservado integralmente abaixo.
+
+```text
+HC — Complemento ao 564 [HC1]: data de cada resposta e listas de respostas novas e atualizadas (30/10/2026)
+Etiqueta: [HC1]
+
+Solicitação do dono (30/10/2026, 09h56, horário de Fortaleza).
+
+Pedidos repetidos: é complemento ao item 564 [HC1] já gravado. Aplique só a diferença ao item existente, mantendo número, posição e estado (regra "Pedidos repetidos", passo 3, letra b), e registre na proveniência o que mudou.
+
+Estado inicial: o do próprio 564.
+
+Contexto: a central de ajuda do ClickFunnels (support.myclickfunnels.com, lida em 30/10/2026) mostra, abaixo dos vídeos, duas listas: "Recently Modified Articles" e "Recently Created Articles", com as respostas mudadas ou criadas por último. No Marktmorgen, as respostas da central (lib/help-content.ts) não têm data, e quem volta à central não sabe o que é novo nem se uma resposta ainda vale para a tela atual. Verifique antes no código atual que isso continua assim.
+
+O que acrescentar ao 564 [HC1]:
+- cada resposta guarda duas datas no próprio conteúdo: quando foi criada e quando o texto mudou pela última vez; as 107 respostas atuais recebem como data de criação a do commit que as acrescentou, lida do histórico do repositório uma única vez, e nunca uma data inventada;
+- em cada resposta, a linha "Last updated" com a data en-US, também lida pelo leitor de tela;
+- no alto da central, abaixo dos cartões de área, duas listas curtas: "New answers" e "Recently updated", com as 5 respostas mais recentes de cada uma, o título e a data; uma correção de vírgula ou de link não conta como atualização, só uma mudança no que a resposta diz;
+- um teste automático falha se o texto de uma resposta mudar sem a data de atualização mudar no mesmo PR, se uma data for futura ou se uma resposta não tiver data de criação.
+
+Acessibilidade (AX274, Parte A, integral): máxima acessibilidade em tudo o que este item criar ou alterar — WCAG 2.2 nível AAA em todos os critérios aplicáveis, em todas as telas, estados, e-mails e arquivos, mais as demais normas e orientações da Parte A; a impossibilidade de um critério AAA precisa ser demonstrada e registrada em docs/accessibility-programme.md, nunca presumida. Os pontos a seguir são verificações obrigatórias deste item, não o limite do que se exige: datas em elemento de data legível; listas com título de seção; propósito de cada link compreensível pelo próprio texto (2.4.9); contraste de 7:1, 320 px e 400% de zoom; leitor de tela e teclado. Seção "Acessibilidade" no PR, com os passos e as decisões da tarefa principal antes e depois.
+
+Custo: datas no conteúdo do repositório e páginas estáticas, sem leitura, gravação, fornecedor ou chamada de IA. Custo desconhecido reprova, nunca é zero.
+
+REGRA DE MARGEM (MR, 27/10/2026): nenhum cliente pagante, considerado isoladamente e usando 100% de todos os direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto; a empresa como um todo não pode dar prejuízo no pior caso a partir da base mínima de clientes pagantes, com 100% dos custos fixos da LLC atribuídos ao Marktmorgen (FX275); a meta de 60% de margem líquida é medida todo mês com números reais. Impostos pela política TX vigente.
+
+Proibido: criar item novo ou mudar número, posição ou estado do 564; data inventada ou futura; apagar, renumerar ou mudar o answerId de respostas existentes; mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+```
+
+### Segundo complemento ao 564 [HC1] — 30/10/2026, 10h00 Fortaleza
+
+Proveniência: pedido direto do dono na conversa com o Claude, 30/10/2026, 10h00 Fortaleza; texto redigido pelo Claude e aprovado pelo dono; gravado diretamente pelo Claude para não interromper o Codex. Pedidos repetidos passo3(b): conferido no main 376ffd89d19a53f7503bc048c9d286858d90295b que não havia complemento HC1 de 30/10/2026, 10h00; somente a diferença abaixo foi acrescentada, e o 564 [HC1] mantém número, posição (Grupo B, abaixo do marco MQ1) e estado. Conferência limitada no mesmo main: app/help tem page.tsx (uma única página) e a subpasta zoom, sem rotas /help/[área] nem /help/[área]/[resposta]; revalidar no head de implementação. Texto do dono preservado integralmente abaixo.
+
+```text
+HC — Segundo complemento ao 564 [HC1]: página própria para cada área e para cada resposta da ajuda (30/10/2026)
+Etiqueta: [HC1]
+
+Solicitação do dono (30/10/2026, 10h00, horário de Fortaleza).
+
+Pedidos repetidos: é complemento ao item 564 [HC1] já gravado, que já recebeu o complemento de 30/10/2026, 09h56 (datas das respostas). Aplique só a diferença ao item existente, mantendo número, posição e estado (regra "Pedidos repetidos", passo 3, letra b), e registre na proveniência o que mudou. As áreas, os cartões, as datas e a trilha de navegação já estão pedidos no 564 e não são repetidos aqui.
+
+Estado inicial: o do próprio 564.
+
+Contexto: a central de ajuda do ClickFunnels (support.myclickfunnels.com/docs/getting-started/, lida em 30/10/2026) tem uma página por área, com a trilha "Documentation › Getting Started", uma lista lateral das áreas com o campo "Filter by name", e a lista de artigos da área, cada um com título, "Updated" e "Published" e um resumo de duas linhas; cada artigo tem página própria, com botões de compartilhar, "Print" e "Export PDF". No Marktmorgen, a central é uma única página (app/help/page.tsx) em que cada resposta abre e fecha no lugar, sem endereço próprio. Verifique antes no código atual que isso continua assim.
+
+O que acrescentar ao 564 [HC1]:
+- uma página por área, /help/[área], com a trilha "Help › [área]", o título, a lista das respostas da área (título, as datas do complemento de 09h56 e um resumo de uma ou duas frases tirado do começo da própria resposta, sem texto novo) e o link para a página de cada resposta;
+- uma página por resposta, /help/[área]/[resposta], com a trilha completa, o título, as datas, o texto, os links para a tela do estúdio e para a página de recurso que o 564 já pede, e as respostas vizinhas da mesma área; título e descrição próprios para busca e cartão de link, e inclusão no mapa do site;
+- a página /help continua com a busca, os cartões de área e as listas de respostas novas e atualizadas, e cada resultado da busca leva à página da resposta;
+- uma lista lateral das áreas, em todas as páginas da ajuda, com o campo "Filter by name" que filtra só a lista, no navegador; no celular, a lista fica recolhida num botão "All help topics";
+- em cada resposta, o botão "Copy link" e uma versão para impressão (folha de estilo de impressão, sem menus nem rodapé), com o botão "Print"; nenhum PDF gerado pelo servidor;
+- os links antigos com âncora (/help#answerId) continuam funcionando, levando à página da resposta; um teste automático falha se algum answerId antigo não levar à página certa, se uma resposta ficar sem página ou se duas páginas tiverem o mesmo texto como principal (uma única página canônica por resposta);
+- o assistente de ajuda do estúdio (lib/help-ask.ts) passa a citar o link da página de cada resposta, lendo o mesmo conteúdo, sem segundo mecanismo.
+
+Acessibilidade (AX274, Parte A, integral): máxima acessibilidade em tudo o que este item criar ou alterar — WCAG 2.2 nível AAA em todos os critérios aplicáveis, em todas as telas, estados, e-mails e arquivos, mais as demais normas e orientações da Parte A; a impossibilidade de um critério AAA precisa ser demonstrada e registrada em docs/accessibility-programme.md, nunca presumida. Os pontos a seguir são verificações obrigatórias deste item, não o limite do que se exige: trilha como navegação com nome e a página atual anunciada (2.4.8, aria-current); lista lateral como região de navegação com nome; o filtro com rótulo visível e o número de áreas encontradas anunciado ao leitor de tela; "Copy link" anunciando o resultado; título de página único por página (2.4.2); link para pular ao conteúdo; versão de impressão legível; contraste de 7:1, 320 px e 400% de zoom; tudo por teclado. Seção "Acessibilidade" no PR, com os passos e as decisões da tarefa principal antes e depois (achar e mandar a alguém o link de uma resposta).
+
+Custo: páginas estáticas geradas no build a partir do mesmo conteúdo, filtro e impressão no navegador, sem leitura, gravação, fornecedor ou chamada de IA novos. Custo desconhecido reprova, nunca é zero.
+
+REGRA DE MARGEM (MR, 27/10/2026): nenhum cliente pagante, considerado isoladamente e usando 100% de todos os direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto; a empresa como um todo não pode dar prejuízo no pior caso a partir da base mínima de clientes pagantes, com 100% dos custos fixos da LLC atribuídos ao Marktmorgen (FX275); a meta de 60% de margem líquida é medida todo mês com números reais. Impostos pela política TX vigente.
+
+Proibido: criar item novo ou mudar número, posição ou estado do 564; quebrar links antigos da ajuda; conteúdo duplicado sem página canônica; texto novo inventado no resumo; PDF gerado pelo servidor; mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; liderar com "free"; imagem repetida; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
 
 Aplicar a regra VR.
 ```
