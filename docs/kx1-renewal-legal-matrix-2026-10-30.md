@@ -381,3 +381,53 @@ renewal, and no notice goes. A truthful notice needs Stripe's upcoming
 invoice for the amount and words for a shortened last period; recorded for
 the next unit. Also open from the review: tests of `sendReminders` itself
 (a sent notice never counted as missed, a second run, a failed send).
+
+## 12. Utah's definitions, and three texts still not read (30 Oct 2026, 20h45–20h55 Fortaleza)
+
+Read the same way as sections 6 to 8 (a page reader returning short
+quotations; open the page before relying on a figure). Nothing here is legal
+advice, and nothing certifies that Marktmorgen complies with any law.
+
+| # | Jurisdiction and text | Official page read | Finding |
+| --- | --- | --- | --- |
+| O18 | Utah Code §13-70-101, "Effective 5/6/2026" | le.utah.gov/xcode/Title13/Chapter70/C13-70-S101_2026050620260506.html | "Automatic renewal provision" means a provision under a contract that is automatically renewed at the end of a definite, paid term "for a subsequent, paid term that is longer than 45 days". "Trial period offer" means an offer to provide a period of time to sample or use a product or service without payment. "Consumer" is not defined in this section, and nothing in it addresses business customers. |
+
+**What it changes.**
+
+- **G12 (Utah, monthly plans) closes for monthly renewals.** A monthly plan
+  renews for a term of about 30 days, not "longer than 45 days", so Utah's
+  30–60-day renewal notice (O1, §13-70-201) does not reach it. A yearly
+  renewal is still reached, and the 30th calendar day before the renewal
+  still fits Utah's 30–60 days. A plan or membership that renews for a term
+  longer than 45 days but shorter than a year (a quarter, six months) is
+  reached: none is sold today; if one is added, it needs a notice 30–60 days
+  before each renewal for Utah customers.
+- **Utah's trial notice** (O1: "at least three days before" a trial
+  expires) depends on "trial period offer", which has no length condition:
+  Marktmorgen's 14-day trial (`TRIAL_DAYS`) is reached, so the trial notice
+  goes at least three days before the trial ends for every creator whatever
+  their location, as the protective reading. The window of 15 to 21 days of
+  section 8 already sits inside it for trials long enough to have one.
+- **Not changed:** O1 was read in its version "Effective 1/1/2025"; whether
+  §13-70-201 itself was amended with §13-70-101 on 6 May 2026 was not read.
+  The protective reading keeps O1's windows.
+
+**Still not read on an official site, with the reason:**
+
+- **California, Bus. & Prof. Code §17602 and §17601:** leginfo answered with
+  a client error on both the section page and the article page (20h50
+  Fortaleza). S3 stays "official analysis, statute unread" (section 11).
+- **Oregon, ORS 646A.293 and 646A.295:** the official chapter page
+  (oregonlegislature.gov/bills_laws/ors/ors646a.html, "2025 EDITION", with a
+  note that some sections were amended or repealed in the 2026 session) is
+  longer than the page reader returns; both its parts end before 646A.293,
+  and the 2023 archive edition likewise. The table of contents names
+  646A.295 "Prohibited actions; requirements; timing; failure to obtain
+  consent; exceptions". Oregon stays at the protective reading.
+- **Canada:** Ontario's "Consumer protection laws in Ontario" page (updated
+  9 Sep 2026) says nothing about subscriptions, automatic renewal or notices,
+  and names no Consumer Protection Act, 2023; the 2023 Act and Quebec's law
+  were not read on an official site.
+
+PR #1296 stays unmerged: California, Oregon and Canada are still unread, and
+G13–G17 are open.
