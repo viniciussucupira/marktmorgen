@@ -46,3 +46,28 @@ test("detached data preserves existing validation and never creates real treatme
   }
   assert.deepEqual([DEEMED_SUPPLIER_RECORDS.length, deemedSupplierReady(), PLANS_ON_SALE], [0, false, false]);
 });
+
+test("oversized treatment reviews stop before key enumeration or member inspection", () => {
+  let enumerations = 0, members = 0;
+  const observed = (records: ReturnType<typeof rows>) => new Proxy(records, {
+    ownKeys(target) { enumerations++; return Reflect.ownKeys(target); },
+    getOwnPropertyDescriptor(target, key) {
+      if (key !== "length") members++;
+      return Reflect.getOwnPropertyDescriptor(target, key);
+    },
+  });
+  // Prove both probes observe a normal complete review first.
+  assert.equal(deemedSupplierReady(observed(rows())), true);
+  assert.ok(enumerations > 0);
+  assert.ok(members > 0);
+  enumerations = 0; members = 0;
+  for (const size of [DEEMED_SUPPLIER_JURISDICTIONS.length + 1, 1_000_000]) {
+    const records = rows();
+    records.length = size;
+    assert.equal(deemedSupplierReady(observed(records)), false);
+    assert.deepEqual([enumerations, members], [0, 0]);
+  }
+  // Partial reviews keep the existing specific missing-jurisdiction reasons.
+  assert.equal(deemedSupplierProblems([]).length, DEEMED_SUPPLIER_JURISDICTIONS.length);
+  assert.deepEqual([DEEMED_SUPPLIER_RECORDS.length, deemedSupplierReady(), PLANS_ON_SALE], [0, false, false]);
+});
