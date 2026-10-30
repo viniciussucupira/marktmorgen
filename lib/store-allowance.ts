@@ -58,12 +58,14 @@ export async function takeAllowance(store: AllowanceStore, kind: AllowanceKind, 
   if (!(await admitNonPaying(store, now))) return refuse("pool", POOL_FULL_WORDS);
   try {
     const k = key(kind, id, window.id);
-    const [, total] = await redisPipeline([
+    const reply: unknown = await redisPipeline([
       ["SET", k, "0", "NX", "EX", keepSecondsFor(window, now)],
       ["INCRBY", k, n],
     ]);
-    const counted = Number(total);
-    if (!Number.isSafeInteger(counted) || counted < n) return refuse("unknown", "This can't be counted right now. Try again in a minute.");
+    // A committed increment with a lost or malformed reply remains consumed.
+    // Never coerce unknown evidence, inspect getters, retry or read it back.
+    const counted = acknowledgedAllowanceCount(reply, n);
+    if (counted === null) return refuse("unknown", "This can't be counted right now. Try again in a minute.");
     if (counted <= limit) return { ok: true, left: limit - counted };
     // Over: what this asked for is given back, so a refused use costs the figure nothing.
     await redisPipeline([["DECRBY", k, n]]).catch(() => {});
@@ -71,6 +73,20 @@ export async function takeAllowance(store: AllowanceStore, kind: AllowanceKind, 
   } catch {
     return refuse("unknown", "This can't be counted right now. Try again in a minute.");
   }
+}
+
+/** Fixed-size own-data reply from the existing SET NX + INCRBY pipeline. */
+function acknowledgedAllowanceCount(reply: unknown, n: number): number | null {
+ try {
+  if (!Array.isArray(reply) || Object.getOwnPropertySymbols(reply).length) return null;
+  const length = Object.getOwnPropertyDescriptor(reply, "length");
+  if (!length || !Object.hasOwn(length, "value") || length.value !== 2) return null;
+  if (Object.getOwnPropertyNames(reply).length !== 3) return null;
+  const set = Object.getOwnPropertyDescriptor(reply, "0"), count = Object.getOwnPropertyDescriptor(reply, "1");
+  if (!set || !Object.hasOwn(set, "value") || (set.value !== null && set.value !== "OK") ||
+      !count || !Object.hasOwn(count, "value") || !Number.isSafeInteger(count.value) || count.value < n) return null;
+  return count.value;
+ } catch { return null; }
 }
 
 /** What has been taken of a kind in the store's window, for the studio; 0 when it cannot be read. */
