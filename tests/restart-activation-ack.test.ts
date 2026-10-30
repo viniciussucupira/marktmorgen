@@ -50,7 +50,7 @@ test('actual restart activation requires own bounded acknowledgement after a mod
    // Preserve a known prior activation for repeated cases; only change the response.
    // reset would lose that state, so reinstall the transform after copying evidence.
    const prior=[...retained];reset(transform);for(const [k,v]of prior)retained.set(k,v);
-   const callCount=calls.length;
+   const callCount:number=calls.length;
    assert.equal(await invoke(),false);
    assert.equal(calls.length,callCount+1,'one call, no compensation or readback');
    assert.equal(retained.get('source'),'retained');assert.equal(retained.get('cash'),100);
