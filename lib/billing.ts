@@ -1620,6 +1620,39 @@ export async function refundCharge(paymentIntent: string, cents: number | null, 
   }
 }
 
+/**
+ * What Stripe says has happened to the refunds of one of chargeNow's USD
+ * payments, read from its own list (GET /v1/refunds?payment_intent=…, newest
+ * first, at most 100). `returned` counts only succeeded USD refunds of this
+ * intent; `inFlight` those pending or waiting for an action; `failed` those
+ * failed or canceled. Null when the list cannot be read whole, so a caller
+ * never takes "unread" for "none".
+ */
+export async function refundsOnIntent(paymentIntent: string): Promise<{ returned: number; inFlight: number; failed: number } | null> {
+  if (!/^pi_[A-Za-z0-9]{8,64}$/.test(paymentIntent)) return null;
+  try {
+    const query = new URLSearchParams({ payment_intent: paymentIntent, limit: "100" });
+    const listed = await onPlatform("GET", `/refunds?${query}`, undefined, { version: CHARGE_VERSION });
+    if (!listed || listed.object !== "list" || !Array.isArray(listed.data) || listed.has_more !== false) return null;
+    const out = { returned: 0, inFlight: 0, failed: 0 };
+    for (const row of listed.data as Record<string, unknown>[]) {
+      if (!row || row.object !== "refund" || typeof row.id !== "string") return null;
+      const intent = typeof row.payment_intent === "string" ? row.payment_intent : (row.payment_intent as { id?: unknown } | null | undefined)?.id;
+      if (intent !== paymentIntent) return null;
+      if (row.status === "succeeded") {
+        if (row.currency !== "usd" || typeof row.amount !== "number" || !Number.isSafeInteger(row.amount) || row.amount <= 0) return null;
+        out.returned += row.amount;
+      } else if (row.status === "pending" || row.status === "requires_action") out.inFlight += 1;
+      else if (row.status === "failed" || row.status === "canceled") out.failed += 1;
+      else return null;
+    }
+    return out;
+  } catch (error) {
+    console.error("reading a payment's refunds failed", error);
+    return null;
+  }
+}
+
 /** Whether a line with this mark was added to this customer since `sinceSeconds`, billed yet or not. */
 export async function findInvoiceLine(customerId: string, mark: string, sinceSeconds: number): Promise<boolean> {
   if (!CUSTOMER_PATTERN.test(customerId)) return false;

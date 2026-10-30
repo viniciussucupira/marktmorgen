@@ -505,7 +505,10 @@ export default function TermsPage() {
           price is shown before you confirm and is charged at once to the card
           your plan is paid with, on an invoice of its own. If the captions in
           a language are not delivered within {GIVE_UP_HOURS} hours, what was
-          paid for that language is refunded automatically. They are written
+          paid for that language is refunded automatically. A refund counts as
+          made only once Stripe confirms it; until then we check it again on
+          our own, and the course&apos;s page in your studio shows the refund as
+          not confirmed yet. They are written
           by a machine from what is said in the video and may contain
           mistakes; you are responsible for reviewing them before your
           students rely on them.

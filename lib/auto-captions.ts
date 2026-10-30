@@ -11,12 +11,19 @@
  *
  *   nl:stream:auto:<video>   what is being written, and the charge for it
  *   nl:stream:autoq          which videos to ask about, and when
+ *
+ * A refund Stripe has not confirmed as succeeded is never taken as done: the
+ * record is kept with what is owed (`owed`), the video is asked about again,
+ * and each look first reads the payment's refunds from Stripe. A new refund
+ * is asked for only when Stripe lists none still in flight and not enough
+ * returned, under a key that follows what Stripe listed, so two looks at
+ * once ask for the same one and money is never returned twice.
  */
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { askStream, noteCaptionLanguages, streamCaptions, streamConfig, streamRecord } from "@/lib/stream";
 import { readStreamPath, STREAM_ID_PATTERN } from "@/lib/stream-rules";
 import { captionLabel } from "@/lib/captions";
-import { chargeNow, isBillingConfigured, refundCharge } from "@/lib/billing";
+import { chargeNow, isBillingConfigured, refundCharge, refundsOnIntent } from "@/lib/billing";
 import type { Store } from "@/lib/store";
 import { GIVE_UP_HOURS, MAX_AUTO_MINUTES, autoCaptionCents, chargedMinutes, readAutoAsk } from "@/lib/auto-captions-rules";
 
@@ -25,6 +32,22 @@ const QUEUE = "nl:stream:autoq";
 const KEEP_SECONDS = 7 * 86_400;
 const LOOK_FIRST_MS = 3 * 60_000;
 const LOOK_AGAIN_MS = 10 * 60_000;
+/** A refund owed is looked at again at most this many times, 10 minutes apart and doubling to six hours: about ten days. */
+export const REFUND_LOOKS_MAX = 40;
+const REFUND_LOOK_MAX_MS = 6 * 3_600_000;
+/** A refund owed is kept long after the last look, so it is never lost while somebody may still ask about it. */
+const REFUND_KEEP_SECONDS = 400 * 86_400;
+
+type Owed = {
+  /** Cents to return, or null for the whole payment. */
+  cents: number | null;
+  /** The idempotency key of the first refund asked for. */
+  key: string;
+  since: number;
+  looks: number;
+  /** Looked at REFUND_LOOKS_MAX times without being confirmed: no more automatic looks. */
+  stuck?: true;
+};
 
 type Pending = {
   /** The languages asked for, the one spoken first. */
@@ -37,7 +60,17 @@ type Pending = {
   /** The payment it was charged with, for a refund. */
   pi: string;
   path: string;
+  /** A refund asked for and not yet confirmed by Stripe. */
+  owed?: Owed;
 };
+
+function parseOwed(raw: unknown): Owed | undefined {
+  const value = raw as Partial<Owed> | null | undefined;
+  if (!value || typeof value !== "object") return undefined;
+  const cents = value.cents === null ? null : Number.isSafeInteger(value.cents) && (value.cents as number) > 0 ? (value.cents as number) : undefined;
+  if (cents === undefined || typeof value.key !== "string" || !value.key || typeof value.since !== "number" || !Number.isSafeInteger(value.looks)) return undefined;
+  return { cents, key: value.key, since: value.since, looks: value.looks as number, ...(value.stuck === true ? { stuck: true as const } : {}) };
+}
 
 function parsePending(raw: unknown): Pending | null {
   if (typeof raw !== "string" || !raw.startsWith("{")) return null;
@@ -51,6 +84,7 @@ function parsePending(raw: unknown): Pending | null {
       cents: value.cents,
       pi: value.pi,
       path: value.path,
+      ...(value.owed !== undefined ? { owed: parseOwed(value.owed) ?? { cents: null, key: `nl-captions:unreadable:${value.at}:refund`, since: value.at, looks: REFUND_LOOKS_MAX, stuck: true as const } } : {}),
     };
   } catch {
     return null;
@@ -120,8 +154,9 @@ export async function requestAutoCaptions(store: Store, pathname: string, spoken
   const success = (answer.data as { success?: unknown } | null)?.success;
   if (answer.status !== 200 || success === false) {
     console.error("the video service would not write captions", answer.status, answer.data);
-    await refundCharge(charged.paymentIntent, null, `nl-${sign}:refund`);
-    await redisPipeline([["DEL", key]]);
+    const refundKey = `nl-${sign}:refund`;
+    if (await refundCharge(charged.paymentIntent, null, refundKey)) await redisPipeline([["DEL", key]]);
+    else await owe(record.id, { langs: asked.languages, got: [], at: now, cents, pi: charged.paymentIntent, path: pathname }, null, refundKey, now);
     return { ok: false, reason: "unavailable" };
   }
   const pending: Pending = { langs: asked.languages, got: [], at: now, cents, pi: charged.paymentIntent, path: pathname };
@@ -156,11 +191,11 @@ export async function syncAutoCaptions(id: string, now = Date.now()): Promise<"d
     if (raw !== "charging") await redisPipeline([["ZREM", QUEUE, id]]);
     return "none";
   }
+  if (pending.owed) return collectRefund(id, pending, pending.owed, now);
   const answer = await askStream("GET", `/videos/${id}`);
   if (answer.status === 404) {
     // The video is gone, deleted with its lesson: what was not written is given back.
-    await settle(id, pending, pending.got);
-    return "done";
+    return (await settle(id, pending, pending.got, now)) ? "done" : "waiting";
   }
   if (answer.status !== 200) {
     await redisPipeline([["ZADD", QUEUE, now + LOOK_AGAIN_MS, id]]);
@@ -171,8 +206,7 @@ export async function syncAutoCaptions(id: string, now = Date.now()): Promise<"d
   const fresh = got.filter((lang) => !pending.got.includes(lang));
   if (fresh.length) await noteCaptionLanguages(id, fresh);
   if (got.length === pending.langs.length || now - pending.at > GIVE_UP_HOURS * 3_600_000) {
-    await settle(id, pending, got);
-    return "done";
+    return (await settle(id, pending, got, now)) ? "done" : "waiting";
   }
   await redisPipeline([
     ["SET", key, JSON.stringify({ ...pending, got }), "EX", KEEP_SECONDS],
@@ -181,14 +215,80 @@ export async function syncAutoCaptions(id: string, now = Date.now()): Promise<"d
   return "waiting";
 }
 
-/** The request is over: a refund for each language that never came, and nothing kept. */
-async function settle(id: string, pending: Pending, got: string[]): Promise<void> {
+/**
+ * The request is over: a refund for each language that never came. The
+ * record goes only once Stripe confirms the refund succeeded; otherwise what
+ * is owed is kept and looked at again (collectRefund).
+ */
+async function settle(id: string, pending: Pending, got: string[], now: number): Promise<boolean> {
   const missing = pending.langs.length - got.length;
   if (missing > 0) {
     const cents = got.length === 0 ? null : Math.floor((pending.cents * missing) / pending.langs.length);
-    if (cents === null || cents > 0) await refundCharge(pending.pi, cents, `nl-captions:${id}:${pending.at}:refund`);
+    if (cents === null || cents > 0) {
+      const key = `nl-captions:${id}:${pending.at}:refund`;
+      if (!(await refundCharge(pending.pi, cents, key))) {
+        await owe(id, { ...pending, got }, cents, key, now);
+        return false;
+      }
+    }
   }
   await redisPipeline([["DEL", pendingKey(id)], ["ZREM", QUEUE, id]]);
+  return true;
+}
+
+/** Keeps a refund that was not confirmed, and asks about it again in LOOK_AGAIN_MS. */
+async function owe(id: string, pending: Pending, cents: number | null, key: string, now: number): Promise<void> {
+  const owed: Owed = { cents, key, since: now, looks: 0 };
+  console.error("a captions refund was not confirmed; it is kept and looked at again", id);
+  await redisPipeline([
+    ["SET", pendingKey(id), JSON.stringify({ ...pending, owed }), "EX", REFUND_KEEP_SECONDS],
+    ["ZADD", QUEUE, now + LOOK_AGAIN_MS, id],
+  ]);
+}
+
+/**
+ * One look at a refund owed: Stripe's own list of the payment's refunds
+ * decides. Enough returned: done. One pending or waiting for an action: wait.
+ * None in flight and not enough returned: ask for what is left, under a key
+ * that follows what was listed (the first key while nothing was listed).
+ * Unreadable, unconfirmed or still waiting: looked at again, at most
+ * REFUND_LOOKS_MAX times; then kept, marked stuck, and no longer queued.
+ */
+async function collectRefund(id: string, pending: Pending, owed: Owed, now: number): Promise<"done" | "waiting"> {
+  if (owed.stuck) {
+    await redisPipeline([["ZREM", QUEUE, id]]);
+    return "waiting";
+  }
+  const target = owed.cents ?? pending.cents;
+  const listed = await refundsOnIntent(pending.pi);
+  if (listed && listed.returned >= target) {
+    await redisPipeline([["DEL", pendingKey(id)], ["ZREM", QUEUE, id]]);
+    return "done";
+  }
+  if (listed && listed.inFlight === 0) {
+    const fresh = listed.failed === 0 && listed.returned === 0;
+    const left = target - listed.returned;
+    const cents = fresh ? owed.cents : left;
+    const key = fresh ? owed.key : `${owed.key}:${listed.failed}:${listed.returned}`;
+    if (await refundCharge(pending.pi, cents, key)) {
+      await redisPipeline([["DEL", pendingKey(id)], ["ZREM", QUEUE, id]]);
+      return "done";
+    }
+  }
+  const looks = owed.looks + 1;
+  if (looks >= REFUND_LOOKS_MAX) {
+    console.error("a captions refund is still not confirmed after every automatic look", id);
+    await redisPipeline([
+      ["SET", pendingKey(id), JSON.stringify({ ...pending, owed: { ...owed, looks, stuck: true } }), "EX", REFUND_KEEP_SECONDS],
+      ["ZREM", QUEUE, id],
+    ]);
+    return "waiting";
+  }
+  await redisPipeline([
+    ["SET", pendingKey(id), JSON.stringify({ ...pending, owed: { ...owed, looks } }), "EX", REFUND_KEEP_SECONDS],
+    ["ZADD", QUEUE, now + Math.min(REFUND_LOOK_MAX_MS, LOOK_AGAIN_MS * 2 ** Math.min(looks, 10)), id],
+  ]);
+  return "waiting";
 }
 
 /** The five-minute job's part: every video whose captions are due a look, until `deadline`. */
@@ -215,8 +315,25 @@ export async function autoWriting(pathnames: string[]): Promise<Record<string, s
   const out: Record<string, string[]> = {};
   wanted.forEach(({ path }, i) => {
     const pending = parsePending(rows[i]);
-    const left = pending ? pending.langs.filter((lang) => !pending.got.includes(lang)) : [];
+    // A request whose refund is owed is no longer being written.
+    const left = pending && !pending.owed ? pending.langs.filter((lang) => !pending.got.includes(lang)) : [];
     if (left.length) out[path] = left;
+  });
+  return out;
+}
+
+/** Refunds for AI captions not yet confirmed by Stripe, by path: the cents owed and whether automatic looks have stopped. */
+export async function autoRefundsOwed(pathnames: string[]): Promise<Record<string, { cents: number; stuck: boolean }>> {
+  const wanted = pathnames.flatMap((path) => {
+    const parts = readStreamPath(path);
+    return parts ? [{ path, id: parts.id }] : [];
+  });
+  if (!wanted.length || !isRedisConfigured()) return {};
+  const rows = await redisPipeline(wanted.map(({ id }) => ["GET", pendingKey(id)]));
+  const out: Record<string, { cents: number; stuck: boolean }> = {};
+  wanted.forEach(({ path }, i) => {
+    const pending = parsePending(rows[i]);
+    if (pending?.owed) out[path] = { cents: pending.owed.cents ?? pending.cents, stuck: pending.owed.stuck === true };
   });
   return out;
 }
