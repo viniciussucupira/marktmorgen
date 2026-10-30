@@ -150,6 +150,54 @@ async function storeWith(email: string, handle: string, sub: string) {
 }
 
 async function main() {
+  part("Undo never reports an unreadable pause as removed");
+  {
+    const id = "sub_UndoUnknown0001";
+    subs[id] = subscription(id);
+    const store = await storeWith("undo-unknown@example.com", "undounknown", id);
+    const paused = await pausePlan(store, 1, NOW);
+    if (paused.kind !== "paused") throw new Error("Synthetic unknown undo fixture failed");
+    const ref = storeRef(store), key = `nl:pause:${ref}`, annual = `nl:pause:last:${ref}`;
+    const pipeline = pauseRedis.pipeline;
+    const original = await pipeline([["GET", key], ["GET", annual], ["ZSCORE", "nl:pause:due", ref]]);
+    for (const mode of ["malformed", "wrong-type", "lost-ack", "invalid-shape", "inherited-ack", "throw"] as const) {
+      await pipeline([["DEL", key]]);
+      if (mode === "wrong-type") await pipeline([["HSET", key, "evidence", "retain"]]);
+      else await pipeline([["SET", key, mode === "malformed" ? "{broken" : String(original[0])]]);
+      const before = providerCalls;
+      let reads = 0, writes = 0;
+      pauseRedis.pipeline = async commands => {
+        if (commands.some(command => command[0] !== "EVAL" || command[1] !== PAUSE_OBSERVATION)) writes++;
+        if (commands.length === 1 && commands[0][0] === "EVAL" && commands[0][1] === PAUSE_OBSERVATION) {
+          reads++;
+          if (mode === "lost-ack") return [];
+          if (mode === "invalid-shape") return [[1]];
+          if (mode === "inherited-ack") {
+            const reply: unknown[] = new Array(1);
+            Object.setPrototypeOf(reply, { 0: [0] });
+            return reply;
+          }
+          if (mode === "throw") throw new Error("synthetic observation unavailable");
+        }
+        return pipeline(commands);
+      };
+      let refused = false;
+      try { await undoPause(store, NOW + DAY); } catch { refused = true; }
+      finally { pauseRedis.pipeline = pipeline; }
+      is("unreadable undo refuses " + mode, refused, true);
+      is("one bounded observation without retry " + mode, reads, 1);
+      is("unknown undo makes no provider or cleanup write " + mode, [providerCalls - before, writes], [0, 0]);
+      is("annual and due evidence remain " + mode, await pipeline([["GET", annual], ["ZSCORE", "nl:pause:due", ref]]), original.slice(1));
+      if (mode === "wrong-type") is("wrong-type evidence remains", await pipeline([["HGET", key, "evidence"]]), ["retain"]);
+      else is("raw evidence remains " + mode, await pipeline([["GET", key]]), [mode === "malformed" ? "{broken" : original[0]]);
+    }
+    await pipeline([["DEL", key]]);
+    const before = providerCalls;
+    is("atomic known absence still returns none", await undoPause(store, NOW + DAY), "none");
+    is("known absence performs no provider request", providerCalls, before);
+    await pipeline([["SET", key, String(original[0])]]);
+    is("a later known pause can still be undone", await undoPause(store, NOW + DAY), "kept");
+  }
   part("Stored pause fields must be owned JSON evidence");
   {
     const store = await storeWith("pause-own-fields@example.com", "pauseownfields", "sub_OwnFields0001");
