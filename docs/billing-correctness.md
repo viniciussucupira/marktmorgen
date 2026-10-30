@@ -78,12 +78,21 @@ a path today; "a cron run twice, or two runs at once" is.
    not specifically for memberships, payment plans, gifts, preorders or team
    purchases. Step 2 requires a record with the text's version and time
    before each such charge.
-2. **Amounts (unit 2).** The plan checkout's amount is asserted
-   (`billing-trial-policy`, corrected 30 Oct 2026 after this file first said
-   it was not); no test was found asserting that a store charge equals the
-   published price net of the one discount applied.
-   The proration of `switchPlan`, `tier-switch` and `yearly-switch` is
-   Stripe's and is not compared with the published price afterward.
+2. **Amounts (unit 2), already held by tests.** Checked on 30 Oct 2026
+   (21h05 Fortaleza): the plan checkout sends the published amount for every
+   tier and cycle (`billing-trial-policy`); a store checkout sends the
+   product's own price with the discount as a separate coupon or promotion
+   code that Stripe takes off (`store-sale`: "the price sent is the
+   product's; Stripe takes the sale off"; `intro-price`, `fair-price`,
+   `code-link`, `offer-journeys`), and bumps, carts, gifts, team purchases,
+   tips, payment requests and call packages assert their line amounts
+   (`several-bumps`, `cart`, `gifts`, `group-buy`, `store-tips`,
+   `payment-requests`, `call-packages`). So unit 2 needs no new rule before a
+   charge. What is not held anywhere is the check AFTER the charge: that
+   what Stripe actually charged (net of the discount, in the currency shown)
+   equals what was sent. That is units 5 and 6. The proration of
+   `switchPlan`, `tier-switch` and `yearly-switch` is Stripe's and is
+   compared there too.
 3. **Idempotency (unit 3).** Writes with no key: every Checkout Session
    (plan, assistant, store, cart, calls, packages, tips, payment requests),
    the subscription updates of `switchPlan`, `tier-switch`, `yearly-switch`,
