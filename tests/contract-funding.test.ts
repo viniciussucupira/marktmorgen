@@ -386,3 +386,35 @@ test('closed result retention wrapper cannot perform Redis IO for a fabricated r
 test('closed final submission check cannot authorize POST for fabricated ownership',()=>{assert.equal(restartSubmissionOpenNow(null as never),false);});
 
 test('closed recovery wrapper performs no Redis reads or writes for fabricated ownership',async()=>{reset();assert.equal(await takeRestartRecovery(null as never),null);assert.equal(calls.length,0);});
+
+test('actual checkout and switch activation reject non-own ACKs before member traversal',async()=>{
+ for(const mode of ['checkout','switch'] as const){
+  const f=mode==='switch'?await switchSetup():{...start(),input:activation()};
+  if(mode==='checkout')assert.ok(await reserveContractFunding('one','creator','month','checkout',f.policy,f.context,'ctr_activate'));
+  // A switch keeps the exact provider subscription and original creation time.
+  const input=f.input;
+  const invoke=()=>mode==='checkout'?activateCheckoutContract(input,f.policy,f.context):activateSwitchContract(input,f.policy,f.context);
+  const snapshot=[...ledger.get(key)!];let getters=0,members=0;
+  const outerGetter=Object.defineProperty(new Array(1),'0',{get(){getters++;return [2,input.periodEndSeconds];}});
+  const innerGetter=Object.defineProperty([2,0],'1',{get(){getters++;return input.periodEndSeconds;}});
+  const inherited=new Array(2),proto=Object.create(Array.prototype);
+  Object.defineProperty(proto,'0',{value:2});Object.defineProperty(proto,'1',{value:input.periodEndSeconds});Object.setPrototypeOf(inherited,proto);
+  const symbol=[2,input.periodEndSeconds];Object.defineProperty(symbol,Symbol('extra'),{value:1});
+  const oversized=(value:unknown[])=>new Proxy(value,{getOwnPropertyDescriptor(target,key){
+   if(key==='0'||key==='1'){members++;throw Error('oversized ACK member');}
+   return Reflect.getOwnPropertyDescriptor(target,key);
+  }});
+  const outerLarge=oversized([null,null]),innerLarge=oversized([2,input.periodEndSeconds,0]);
+  assert.throws(()=>Object.getOwnPropertyDescriptor(outerLarge,'0'));assert.equal(members,1);members=0;
+  for(const response of [outerGetter,[innerGetter],[inherited],[symbol],outerLarge,[innerLarge],new Array(1),[new Array(2)],[[2,input.periodEndSeconds+1]],[[true,input.periodEndSeconds]]]){
+   settings({response});assert.equal(await invoke(),false,mode);
+   assert.deepEqual([...ledger.get(key)!],snapshot,'unknown ACK retains cash, slots, source and pending receipt');
+  }
+  assert.equal(getters,0);assert.equal(members,0);
+  settings({response:null});assert.equal(await invoke(),true,'normal simulated ledger acknowledgement still works');
+  const committed=[...ledger.get(key)!];assert.equal(await invoke(),true,'identical committed binding still observed');
+  assert.deepEqual([...ledger.get(key)!],committed);
+  assert.equal(ledger.get(key)!.get('reserved'),new Map(snapshot).get('reserved'));
+  assert.equal(ledger.get(key)!.get('slots:creator_month'),new Map(snapshot).get('slots:creator_month'));
+ }
+});

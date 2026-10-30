@@ -203,9 +203,8 @@ export async function activateCheckoutContract(
  if(createdSeconds>seconds||periodEndSeconds<=seconds)return false;
  try{
   const result=await redisPipeline([['EVAL',ACTIVATE_CONTRACT,1,'nl:contract-reserve:v1',contractFundingBinding(config),reviewId,statsId,key,grantId,subscriptionId,createdSeconds,seconds,config.grantCents[key],config.cashLimitCents,config.carryForwardCents,CONTRACT_FUNDING_RULES.submissionSeconds,config.fundedGrants[key],trialing?'trial':'paid',periodStartSeconds,periodEndSeconds]]);
-  const ack=result[0];
   const current=contractFundingConfiguration(policy,context,new Date());
-  return current!==null&&current.binding===config.binding&&commercialMarginReady(context.review)&&Date.now()>=now.getTime()&&contractObservationAcknowledged(result,ack,createdSeconds,periodStartSeconds,periodEndSeconds);
+  return current!==null&&current.binding===config.binding&&commercialMarginReady(context.review)&&Date.now()>=now.getTime()&&contractObservationAcknowledged(result,createdSeconds,periodStartSeconds,periodEndSeconds);
  }catch{return false;}
 }
 
@@ -280,20 +279,31 @@ export async function activateSwitchContract(
  const seconds=Math.floor(now.getTime()/1000);if(createdSeconds>seconds||periodStartSeconds>seconds||periodEndSeconds<=seconds)return false;
  try{
   const result=await redisPipeline([['EVAL',ACTIVATE_SWITCH_CONTRACT,1,'nl:contract-reserve:v1',contractFundingBinding(config),reviewId,statsId,key,grantId,subscriptionId,createdSeconds,seconds,config.grantCents[key],config.cashLimitCents,config.carryForwardCents,CONTRACT_FUNDING_RULES.submissionSeconds,config.fundedGrants[key],trialing?'trial':'paid',periodStartSeconds,periodEndSeconds,span]]);
-  const ack=result[0];
   const current=contractFundingConfiguration(policy,context,new Date());
-  return current!==null&&current.binding===config.binding&&commercialMarginReady(context.review)&&Date.now()>=now.getTime()&&contractObservationAcknowledged(result,ack,seconds,periodStartSeconds,periodEndSeconds);
+  return current!==null&&current.binding===config.binding&&commercialMarginReady(context.review)&&Date.now()>=now.getTime()&&contractObservationAcknowledged(result,seconds,periodStartSeconds,periodEndSeconds);
  }catch{return false;}
 }
 
 /** A committed proof may be observed for its exact current period. This never
  * turns an expired, unconsumed grant into an activation or a renewal. Admission
  * policy and commercial review must still be current; archives are separate. */
-function contractObservationAcknowledged(result:unknown[],ack:unknown,earliestDeadline:number,start:number,finish:number):boolean{
+function contractObservationAcknowledged(result:unknown,earliestDeadline:number,start:number,finish:number):boolean{
  const checkedAt=Date.now();
- if(result.length!==1||!Array.isArray(ack)||ack.length!==2||!Number.isSafeInteger(ack[1])||checkedAt<start*1000||checkedAt>=finish*1000)return false;
- if(ack[0]===2)return ack[1]===finish;
- return ack[0]===1&&ack[1]>=earliestDeadline&&ack[1]<=earliestDeadline+CONTRACT_FUNDING_RULES.activationDelayDays*86400&&checkedAt<=ack[1]*1000;
+ try{
+  if(!Array.isArray(result))return false;
+  const length=Object.getOwnPropertyDescriptor(result,'length');
+  if(!length||!Object.hasOwn(length,'value')||length.value!==1)return false;
+  if(Object.getOwnPropertySymbols(result).length!==0)return false;
+  const entry=Object.getOwnPropertyDescriptor(result,'0');
+  if(!entry||!Object.hasOwn(entry,'value')||!Array.isArray(entry.value))return false;
+  const ack=entry.value,innerLength=Object.getOwnPropertyDescriptor(ack,'length');
+  if(!innerLength||!Object.hasOwn(innerLength,'value')||innerLength.value!==2)return false;
+  if(Object.getOwnPropertySymbols(ack).length!==0)return false;
+  const flag=Object.getOwnPropertyDescriptor(ack,'0'),deadline=Object.getOwnPropertyDescriptor(ack,'1');
+  if(!flag||!deadline||!Object.hasOwn(flag,'value')||!Object.hasOwn(deadline,'value')||!Number.isSafeInteger(deadline.value)||checkedAt<start*1000||checkedAt>=finish*1000)return false;
+  if(flag.value===2)return deadline.value===finish;
+  return flag.value===1&&deadline.value>=earliestDeadline&&deadline.value<=earliestDeadline+CONTRACT_FUNDING_RULES.activationDelayDays*86400&&checkedAt<=deadline.value*1000;
+ }catch{return false;}
 }
 
 /** Integrated preparation only; real funded restart remains uncovered. A claim
