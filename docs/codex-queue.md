@@ -18783,7 +18783,7 @@ Aplicar a regra VR.
 
 ### Segundo complemento ao 564 [HC1] — 30/10/2026, 10h00 Fortaleza
 
-Proveniência: pedido direto do dono na conversa com o Claude, 30/10/2026, 10h00 Fortaleza; texto redigido pelo Claude e aprovado pelo dono; gravado diretamente pelo Claude para não interromper o Codex. Pedidos repetidos passo3(b): conferido no main 376ffd89d19a53f7503bc048c9d286858d90295b que não havia complemento HC1 de 30/10/2026, 10h00; somente a diferença abaixo foi acrescentada, e o 564 [HC1] mantém número, posição (Grupo B, abaixo do marco MQ1) e estado. Conferência limitada no mesmo main: app/help tem só page.tsx, sem rotas /help/[área] nem /help/[área]/[resposta]; revalidar no head de implementação. Texto do dono preservado integralmente abaixo.
+Proveniência: pedido direto do dono na conversa com o Claude, 30/10/2026, 10h00 Fortaleza; texto redigido pelo Claude e aprovado pelo dono; gravado diretamente pelo Claude para não interromper o Codex. Pedidos repetidos passo3(b): conferido no main 376ffd89d19a53f7503bc048c9d286858d90295b que não havia complemento HC1 de 30/10/2026, 10h00; somente a diferença abaixo foi acrescentada, e o 564 [HC1] mantém número, posição (Grupo B, abaixo do marco MQ1) e estado. Conferência limitada no mesmo main: app/help tem page.tsx (uma única página) e a subpasta zoom, sem rotas /help/[área] nem /help/[área]/[resposta]; revalidar no head de implementação. Texto do dono preservado integralmente abaixo.
 
 ```text
 HC — Segundo complemento ao 564 [HC1]: página própria para cada área e para cada resposta da ajuda (30/10/2026)
