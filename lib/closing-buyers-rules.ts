@@ -355,6 +355,27 @@ export function refundShortLetter(input: { store: string; amount: string; contac
   };
 }
 
+/**
+ * The email to a member whose refund was not made on the closing day because
+ * the closing's limit of calls to Stripe did not reach it: said as that, not
+ * as a balance that did not cover it. `amount` is what was left to give,
+ * which the creator may have refunded already at Stripe.
+ */
+export function refundUnmadeLetter(input: { store: string; amount: string; contact: string }): BuyerLetter {
+  return {
+    subject: `Your refund from ${input.store} was not made automatically`,
+    text: [
+      `${input.store} closed today. You had paid for time after today, and up to ${input.amount} of it`,
+      "was to be given back to you from the store's own Stripe account. We could not make this",
+      "refund automatically, so it was not made.",
+      "",
+      `If ${input.store} has not refunded it to you already, please contact them directly: ${input.contact}`,
+      "",
+      "Marktmorgen does not hold the store's money and cannot make the refund.",
+    ].join("\n"),
+  };
+}
+
 const escape = (text: string) => text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 
 /**

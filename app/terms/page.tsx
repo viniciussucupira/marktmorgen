@@ -1,5 +1,6 @@
 import { PAID_STORAGE_BYTES } from "@/lib/storage-rules";
 import { BUYER_CAP_MONTHS, BUYER_NOTICE_DAYS } from "@/lib/closing-buyers-rules";
+import { CLOSING_CHECKOUT_SECONDS } from "@/lib/closing-plan-guard";
 import { CENTS_PER_MINUTE, GIVE_UP_HOURS, MIN_CENTS, dollars } from "@/lib/auto-captions-rules";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -851,10 +852,13 @@ export default function TermsPage() {
           if the store stays open after that email, we tell them so. These
           emails go to as many buyers as the closing&rsquo;s cap allows ({BUYER_CAP_MONTHS}{" "}
           months of the plan&rsquo;s orders); the creator is told how many,
-          if any, we could not write to. A plan for a store whose closing
-          day has begun cannot be started; if one opened before that day is
-          paid on it, we end that plan at once, refund its payment in full and
-          email the creator.
+          if any, we could not write to. Starting a plan again before the
+          closing day keeps the store. It can be started until{" "}
+          {CLOSING_CHECKOUT_SECONDS / 60 + 1} minutes before that day begins
+          (the studio shows the exact time), and
+          its checkout lasts {CLOSING_CHECKOUT_SECONDS / 60} minutes. If a plan
+          is still paid once the closing day has begun, we end that plan at
+          once, refund its payment in full and email the creator.
         </p>
         <p>
           <strong className="text-black">Download what you want to keep before that day.</strong>{" "}

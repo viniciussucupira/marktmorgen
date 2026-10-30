@@ -194,10 +194,7 @@ async function holdOne(account: string, folder: string, sub: Row, endedAt: numbe
     await onAccount("POST", account, `/invoices/${encodeURIComponent(invoice.id as string)}`, new URLSearchParams({ auto_advance: "false", "metadata[closing_draft]": String(endedAt) }), undefined, `closing-draft:${invoice.id}:${endedAt}`);
   }
   if (drafts.length) await redisPipeline([["HSET", workKey(folder), `d:${id}`, drafts.map((d) => d.id).join(",")]]);
-  const customer = sub.customer && typeof sub.customer === "object" ? (sub.customer as { email?: unknown }) : null;
-  const email = typeof customer?.email === "string" ? normaliseEmail(customer.email) : "";
-  // Every held member's address, payment plans' too, for the buyers' notice (lib/closing-buyers.ts).
-  if (email) await redisPipeline([["HSET", workKey(folder), `m:${id}`, email]]);
+  const email = memberEmail(sub);
   if (!plan) {
     const query = new URLSearchParams({ subscription: id, status: "paid", limit: "10" });
     query.append("expand[]", "data.payments");
@@ -212,13 +209,25 @@ async function holdOne(account: string, folder: string, sub: Row, endedAt: numbe
   return "held";
 }
 
-/** The addresses of every member held for this ending, payment plans included. */
+/** What a member with no address on Stripe is marked with: it cannot be told, and is counted. */
+const NO_ADDRESS = "-";
+
+/** The addresses of every member of this ending (held, past the budget or not held yet), payment plans included. */
 export async function memberAddresses(folder: string): Promise<string[]> {
-  if (!isRedisConfigured()) return [];
+  return (await membersOf(folder)).emails;
+}
+
+/** Every member of this ending: the addresses, and the members with none (by subscription). */
+export async function membersOf(folder: string): Promise<{ emails: string[]; missing: string[] }> {
+  if (!isRedisConfigured()) return { emails: [], missing: [] };
   const [raw] = await redisPipeline([["HGETALL", workKey(folder)]]);
   const flat = Array.isArray(raw) ? (raw as unknown[]).map(String) : [];
-  const out: string[] = [];
-  for (let i = 0; i + 1 < flat.length; i += 2) if (flat[i].startsWith("m:") && flat[i + 1]) out.push(flat[i + 1]);
+  const out = { emails: [] as string[], missing: [] as string[] };
+  for (let i = 0; i + 1 < flat.length; i += 2) {
+    if (!flat[i].startsWith("m:")) continue;
+    if (flat[i + 1] === NO_ADDRESS) out.missing.push(flat[i].slice(2));
+    else if (flat[i + 1]) out.emails.push(flat[i + 1]);
+  }
   return out;
 }
 
@@ -238,8 +247,23 @@ export async function holdCounts(folder: string): Promise<{ failed: number; over
   return { failed: keys.filter((k) => k.startsWith("f:")).length, over: keys.filter((k) => k.startsWith("o:")).length };
 }
 
+/** A member's address, from the customer Stripe expanded on its subscription. */
+function memberEmail(sub: Row): string {
+  const customer = sub.customer && typeof sub.customer === "object" ? (sub.customer as { email?: unknown }) : null;
+  return typeof customer?.email === "string" ? normaliseEmail(customer.email) : "";
+}
+
 async function holdRows(account: string, folder: string, rows: Row[], endedAt: number, until: number): Promise<boolean> {
   const todo = rows.filter((sub) => typeof sub.id === "string" && SUB_ID.test(sub.id) && chargeable(sub) && !(sub.metadata?.store_hold === String(endedAt) && sub.pause_collection));
+  // Every member's address is written down from the row itself, before any
+  // budget or call, so one that is past the budget or that Stripe refused is
+  // still told the store closes (lib/closing-buyers.ts); one with no address
+  // is marked so, and counted as not told.
+  const marks = todo.map((sub) => {
+    const email = memberEmail(sub);
+    return email ? ["HSET", workKey(folder), `m:${sub.id as string}`, email] : ["HSETNX", workKey(folder), `m:${sub.id as string}`, NO_ADDRESS];
+  });
+  if (marks.length) await redisPipeline(marks);
   return inTurn(todo, until, async (sub) => {
     const id = sub.id as string;
     try {

@@ -191,6 +191,7 @@ import { ASSISTANT_ON_SALE, PLANS_ON_SALE } from "@/lib/opening";
 import { studioPath, studioView } from "@/lib/studio-route";
 import { unusedSummary } from "@/lib/closing-refunds";
 import { holdCounts } from "@/lib/closing-holds";
+import { CLOSING_CHECKOUT_SECONDS, lastPlanMoment } from "@/lib/closing-plan-guard";
 import { type Permission, type Role, ROLE_NAMES, ROLE_SUMMARIES, can } from "@/lib/team-roles";
 import { MAX_TEAM, readTeam } from "@/lib/team";
 import { MAX_FUNNEL_STEPS } from "@/lib/funnel";
@@ -551,12 +552,16 @@ const BILLING_NOTICES: Record<string, { title: string; body: string }> = {
     body: "Its closing day has begun: its memberships have ended and it is being removed, so a plan can no longer be started for it. Nothing was charged. You can open a new store from your account.",
   },
   "closing-returned": {
-    title: "Your store had already closed, so your payment was returned",
-    body: "Its closing day had begun when the plan was paid for, so the plan could not be given. We ended it and returned the payment in full. Nothing else will be charged. We emailed you the same.",
+    title: "Your store's closing day had begun, so your payment was returned",
+    body: "The plan was paid for after your store's closing day began, so it could not keep the store. We ended the plan and returned the payment in full. Nothing else will be charged. We emailed you the same.",
   },
   "closing-returning": {
-    title: "Your store had already closed, so your payment is being returned",
-    body: "Its closing day had begun when the plan was paid for, so the plan could not be given. We are ending it and returning the payment in full, and we email you once it is done. Nothing else will be charged.",
+    title: "Your store's closing day had begun, so your payment is being returned",
+    body: "The plan was paid for after your store's closing day began, so it could not keep the store. We are ending the plan and returning the payment in full, and we email you once it is done. Nothing else will be charged.",
+  },
+  "closing-late": {
+    title: "It is too late to start a plan for this store",
+    body: "A plan can keep a store only if it is started before the last moment shown under \"Your plan has ended\" below, so that its checkout ends before the closing day begins. That moment has passed. Nothing was charged. You can open a new store from your account.",
   },
   "not-open": {
     title: "Plans are not on sale yet",
@@ -904,6 +909,8 @@ export default async function StudioPage({
   const unusedTime = closing?.whole ? await unusedSummary(store!, closing.day).catch(() => null) : null;
   const notPaused = closing?.whole ? await holdCounts(folder).catch(() => null) : null;
   const dayWords = (ms: number) => new Date(ms).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric", timeZone: "UTC" });
+  /** A moment to the minute, in UTC, said so. */
+  const momentWords = (ms: number) => `${new Date(ms).toLocaleString("en-US", { year: "numeric", month: "long", day: "numeric", hour: "numeric", minute: "2-digit", timeZone: "UTC" })} UTC`;
   // The list is shown once there is something that fills it, or once it holds
   // anybody — a creator who stops giving things away still owns what came in.
   const list = store && may("export") ? await listSize(store) : null;
@@ -2269,6 +2276,13 @@ export default async function StudioPage({
                 <p className="mt-4 text-ink-soft">
                   {`We keep no copy of your sales: every sale, refund and payout is on your own Stripe account, and stays there. Your account and sign-in stay. Tell your students to download their course certificates before that day: they can until then, and not after. Starting a plan again before that day keeps your store: everything stays as it is, your members' payments go on as they were with nothing charged for the days in between, and nothing is refunded.`}
                 </p>
+                {closing.today ? null : (
+                  <p className="mt-4 text-ink" data-last-plan-moment="">
+                    {nowSeconds() * 1000 < lastPlanMoment(closing.day)
+                      ? <>{"To keep your store, start a plan before "}<strong>{momentWords(lastPlanMoment(closing.day))}</strong>{`. A plan's checkout started then lasts ${CLOSING_CHECKOUT_SECONDS / 60} minutes, so it ends before the closing day begins.`}</>
+                      : <>{"The last moment to start a plan and keep this store was "}<strong>{momentWords(lastPlanMoment(closing.day))}</strong>{". It has passed, so a plan can no longer be started for it."}</>}
+                  </p>
+                )}
                 {/* A GET form, not a link: a link may be prefetched, and each prefetch would read the whole store. */}
                 <div className="mt-5 flex flex-wrap items-center gap-3">
                   <form action="/api/store/export" method="get" className="max-w-full">

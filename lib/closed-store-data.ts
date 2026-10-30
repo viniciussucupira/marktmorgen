@@ -59,6 +59,7 @@ import { idsIn } from "@/lib/data-recount";
 import { readAllListings } from "@/lib/catalog";
 import { readCourses } from "@/lib/course";
 import { readFlows } from "@/lib/flows";
+import { FINAL_INDEX } from "@/lib/closing-holds";
 import { type Store, accountStores, closeStoreRecord, saleHandles, storeFolder, storeForEmail, storeRef } from "@/lib/store";
 import { domainKey } from "@/lib/domains";
 import { dropTeam, memberStores, readTeam } from "@/lib/team";
@@ -231,6 +232,10 @@ export async function prepareStore(store: Store, now = Date.now()): Promise<Batc
   await forgetPath(store);
   if (store.domain?.name) extra.push(domainKey(store.domain.name));
   await del(extra);
+  // Out of the closing day's line before its record goes (queue item 307 [EC1]): a new store its owner opens
+  // under the same key is never taken for this one. A plan paid under this store's addresses after this is
+  // still found by their mark (lib/closing-plan-guard.ts, markShut).
+  await redisPipeline([["ZREM", FINAL_INDEX, ref]]);
   await closeStoreRecord(store);
   return {
     ref,

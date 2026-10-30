@@ -75,6 +75,8 @@ export function reviewMark(rows: UnusedRow[]): string {
 export type Settled = {
   done: { sub: string; amount: number; cur: string }[];
   short: { sub: string; amount: number; cur: string; email: string }[];
+  /** On the closing day, refunds the call budget could not cover: not made, and told so honestly. */
+  unmade: { sub: string; amount: number; cur: string; email: string }[];
   pending: number;
   disputed: number;
   none: number;
@@ -86,10 +88,12 @@ export type Settled = {
 };
 
 /** The payment intent an invoice was paid by, whichever way this account's API version names it. */
-async function intentOf(account: string, invoice: string): Promise<string> {
+async function intentOf(account: string, invoice: string, count: () => void): Promise<string> {
+  count();
   const read = await onAccount("GET", account, `/invoices/${encodeURIComponent(invoice)}`);
   const direct = typeof read.payment_intent === "string" ? read.payment_intent : (read.payment_intent as { id?: unknown } | null)?.id;
   if (typeof direct === "string" && INTENT_ID.test(direct)) return direct;
+  count();
   const listed = await onAccount("GET", account, `/invoice_payments?${new URLSearchParams({ invoice, limit: "10" })}`);
   for (const row of Array.isArray(listed.data) ? (listed.data as Record<string, unknown>[]) : []) {
     if (row.status !== "paid") continue;
@@ -150,7 +154,7 @@ export async function giveBackUnused(
       rows = rows.filter((r) => wanted.has(r.sub));
     }
     if (options.mark !== undefined && options.mark !== reviewMark(rows)) return "changed";
-    const out: Settled = { done: [], short: [], pending: 0, disputed: 0, none: 0, over: 0, failed: 0, left: Math.max(0, rows.length - REFUNDS_PER_REQUEST) };
+    const out: Settled = { done: [], short: [], unmade: [], pending: 0, disputed: 0, none: 0, over: 0, failed: 0, left: Math.max(0, rows.length - REFUNDS_PER_REQUEST) };
     rows = rows.slice(0, REFUNDS_PER_REQUEST);
     if (!rows.length) return out;
     let funds: Map<string, number>;
@@ -167,32 +171,59 @@ export async function giveBackUnused(
         continue;
       }
       const settle = async (r: PaidPeriod["r"], amount?: number) =>
-        savePaidPeriod(store, row.sub, { ...row.paid, r, ...(r === "short" && options.final ? { f: 1 as const } : {}), ...(amount ? (r === "short" ? { want: amount } : { back: amount }) : {}) });
+        savePaidPeriod(store, row.sub, { ...row.paid, r, ...((r === "short" || r === "over") && options.final ? { f: 1 as const } : {}), ...(amount ? (r === "short" || r === "over" ? { want: amount } : { back: amount }) : {}) });
       const short = async (give: number) => {
         await settle("short", give);
         out.short.push({ sub: row.sub, amount: give, cur: row.paid.cur, email: row.paid.e });
       };
-      try {
-        // Its payment, the refunds already made on it and the refund itself: the calls set aside for it when it was held,
-        // and two more from the budget when Stripe did not name its payment then.
-        // A later try (after a short one) takes them from the budget; the holds' daily retries never touch the reserve.
-        const pool: "calls" | "rcalls" | null = (await takeCalls(folder, 3, "rcalls")) ? "rcalls" : (await takeCalls(folder, 3)) ? "calls" : null;
-        const extra = pool !== null && (row.paid.pi ? true : await takeCalls(folder, 2));
-        if (pool === null || !extra) {
-          if (pool) await redisPipeline([["HINCRBY", workKey(folder), pool, 3]]);
-          // On the closing day it is told as a refund that could not be made: the member is emailed with the creator's contact.
-          if (options.final) await short(row.unused);
-          else out.over += 1;
-          continue;
+      // Its payment, the refunds already made on it and the refund itself, and two more when Stripe did not name its
+      // payment when it was held. Before the closing day they come from the budget; only the closing day uses the
+      // calls set aside when it was held (rcalls), so pressing the button again can never drain them. Every call not
+      // made is given back to where it was taken from.
+      const need = row.paid.pi ? 3 : 5;
+      const taken: ["calls" | "rcalls", number][] = [];
+      const take = async (from: "calls" | "rcalls", n: number) => {
+        if (!(await takeCalls(folder, n, from))) return false;
+        taken.push([from, n]);
+        return true;
+      };
+      let used = 0;
+      const count = () => {
+        used += 1;
+      };
+      const giveCallsBack = async () => {
+        let left = taken.reduce((sum, [, n]) => sum + n, 0) - used;
+        for (const [from, n] of [...taken].reverse()) {
+          const back = Math.min(n, left);
+          if (back > 0) await redisPipeline([["HINCRBY", workKey(folder), from, back]]);
+          left -= back;
         }
-        /** The refund's own call, given back when it was not made. */
-        const unspent = () => redisPipeline([["HINCRBY", workKey(folder), pool, 1]]);
-        const intent = row.paid.pi ?? (await intentOf(account, row.paid.inv));
+        taken.length = 0;
+      };
+      const have = options.final
+        ? (await take("rcalls", 3))
+          ? need === 3 || (await take("calls", need - 3)) || (await take("rcalls", need - 3))
+          : await take("calls", need)
+        : await take("calls", need);
+      if (!have) {
+        await giveCallsBack();
+        // On the closing day it is final, and its member is told honestly that it was not made automatically (not
+        // that the balance did not cover it), with what is left to give and the creator's contact.
+        if (options.final) {
+          const amount = stillToGive(row.unused, row.paid.back ?? 0);
+          await settle("over", amount);
+          out.unmade.push({ sub: row.sub, amount, cur: row.paid.cur, email: row.paid.e });
+        } else out.over += 1;
+        continue;
+      }
+      try {
+        const intent = row.paid.pi ?? (await intentOf(account, row.paid.inv, count));
         if (!intent) {
           await settle("none");
           out.none += 1;
           continue;
         }
+        count();
         const pi = await onAccount("GET", account, `/payment_intents/${encodeURIComponent(intent)}?expand[]=latest_charge.balance_transaction`);
         const charge = pi.latest_charge && typeof pi.latest_charge === "object" ? (pi.latest_charge as Record<string, unknown>) : {};
         if (charge.disputed === true) {
@@ -201,6 +232,7 @@ export async function giveBackUnused(
           continue;
         }
         // One made here before, under this invoice: never a second.
+        count();
         const made = await onAccount("GET", account, `/refunds?${new URLSearchParams({ payment_intent: intent, limit: "100" })}`);
         const ours = (Array.isArray(made.data) ? (made.data as Record<string, unknown>[]) : []).find(
           (r) => (r.metadata as Record<string, string> | null)?.closing_refund === row.paid.inv && r.status !== "failed" && r.status !== "canceled",
@@ -220,12 +252,12 @@ export async function giveBackUnused(
         }
         const cost = settledCost(give, charge);
         if ((funds.get(cost.cur) ?? 0) < cost.amount) {
-          await unspent();
           await short(give);
           continue;
         }
         let refund: Record<string, unknown>;
         try {
+          count();
           refund = await onAccount(
             "POST",
             account,
@@ -263,6 +295,8 @@ export async function giveBackUnused(
       } catch (error) {
         console.error("giving a member's unused time back failed; tried again", error);
         out.failed += 1;
+      } finally {
+        await giveCallsBack();
       }
     }
     return out;

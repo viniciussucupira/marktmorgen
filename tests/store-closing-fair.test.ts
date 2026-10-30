@@ -484,6 +484,8 @@ async function main() {
   const joFolder = await storeFolder(jo);
   const { createHash } = await import("node:crypto");
   await startCallBudget(joFolder, 8);
+  // Its emails, as the daily job sets them with the budget (lib/closing-credit.ts).
+  await redis.pipeline([["SET", creditKey(joFolder), 100]]);
   await redis.pipeline([["SET", `nl:plan:closing:${createHash("sha256").update(jo).digest("hex").slice(0, 40)}`, JSON.stringify({ of: J, holdFrom: J })]]);
   console.error = () => {};
   await daily(jo, J, 0, 0);
@@ -491,6 +493,10 @@ async function main() {
   const joHeld = [...world.subs.values()].filter((s) => s.metadata.store === "joan" && s.pause_collection).length;
   const joNotice = sent.filter((m) => m.to === jo)[0];
   is("only what the budget covers is called, and the member past it is counted in the notice", [joHeld, joNotice?.text.includes("past this closing's limit")], [1, true]);
+  console.error = () => {};
+  await daily(jo, J, 1, CLOSING_DAYS);
+  console.error = real;
+  is("the member past the budget is still told the store closes, like the one held", [sent.some((m) => m.to === "joanone@buyers.example.com"), sent.some((m) => m.to === "joantwo@buyers.example.com")], [true, true]);
 
   part("A refund the balance did not cover is tried again when the creator adds funds; only the closing day makes it final");
   world.refunds.length = 0;
@@ -502,7 +508,12 @@ async function main() {
   const kitStore = (await storeForEmail(kit))!;
   const kitDay = (await closingOf(kitStore, K + 10 * DAY))!.day;
   world.balance = 50;
+  const kitFolder = await storeFolder(kit);
+  const budgetOf = async () => ((await redis.pipeline([["HMGET", `nl:closing:work:${kitFolder}`, "calls", "rcalls"]]))[0] as unknown[]).map(Number);
+  const [kitCalls, kitReserve] = await budgetOf();
   const noFunds = await giveBackUnused(kitStore, kitDay, { mark: reviewMark(await unusedRows(kitStore, kitDay)) });
+  const [kitCallsAfter, kitReserveAfter] = await budgetOf();
+  is("a press that cannot refund takes only the two calls it made, from the budget, never the reserve", [kitCalls - kitCallsAfter, kitReserveAfter - kitReserve], [2, 0]);
   is("pressed without the funds: nothing refunded, and the member is still listed to try again", [typeof noFunds === "object" && noFunds.short.length, world.refunds.length, (await unusedRows(kitStore, kitDay)).length], [1, 0, 1]);
   world.balance = 1_000_000;
   const withFunds = await giveBackUnused(kitStore, kitDay, { mark: reviewMark(await unusedRows(kitStore, kitDay)) });
@@ -603,6 +614,9 @@ async function main() {
   is("the membership's worth is its line less the coupon, as a share of what was paid", [qPaid.amt, qPaid.tot], [1_000, 1_000]);
   is("half its period left is half of the $10 paid, never half of $20", unusedOf(qPaid, S(qDay) * 1000 >= 0 ? qDay : qDay), Math.round((1_000 * (qSub.pe - S(qDay))) / (30 * 86_400)));
   is("and the rule reads the coupon from the line", membershipLineOf({ lines: { data: [{ type: "subscription", proration: false, amount: 2_000, discount_amounts: [{ amount: 1_000 }], period: { start: 0, end: 30 } }] }, amount_paid: 1_000 })?.amt, 1_000);
+  // A coupon on the membership's line only, beside a one-off line at full price: $20 less $10 off, and $10 more, $20 paid.
+  // The membership is worth $10 of it; read without the coupon it would be $13.33.
+  is("a coupon on the membership's line beside another line is taken off that line only", membershipLineOf({ lines: { data: [{ type: "subscription", proration: false, amount: 2_000, discount_amounts: [{ amount: 1_000 }], period: { start: 0, end: 30 } }, { type: "invoiceitem", proration: false, amount: 1_000, discount_amounts: [], period: { start: 0, end: 0 } }] }, amount_paid: 2_000 })?.amt, 1_000);
 
   part("The membership's own paid invoice is found behind a proration-only one");
   const rae = await storeWith("raelyn");
@@ -640,8 +654,10 @@ async function main() {
   console.error = () => {};
   const tiaLast = await daily(tia, T, CLOSING_DAYS, CLOSING_DAYS);
   console.error = real;
-  const tiaShort = sent.slice(tiaBefore).filter((m) => m.subject === "Your refund from Tiago Shop could not be made");
-  is("the reserve makes one refund; the member it does not cover is emailed, never left silent; the store closes", [world.refunds.length, tiaShort.length, tiaLast[0].split(":")[1]], [1, 1, "removed"]);
+  const tiaUnmade = sent.slice(tiaBefore).filter((m) => m.subject === "Your refund from Tiago Shop was not made automatically");
+  const tiaBalance = sent.slice(tiaBefore).filter((m) => m.subject === "Your refund from Tiago Shop could not be made");
+  is("the reserve makes one refund; the member it does not cover is emailed, never left silent; the store closes", [world.refunds.length, tiaUnmade.length, tiaLast[0].split(":")[1]], [1, 1, "removed"]);
+  is("and told honestly: not made automatically, never that the balance did not cover it, with what was left to give and the creator's contact", [tiaBalance.length, tiaUnmade[0]?.text.includes("balance"), /up to \$\d/.test(tiaUnmade[0]?.text ?? ""), tiaUnmade[0]?.text.includes("If Tiago Shop has not refunded it to you already")], [0, false, true, true]);
 
   part("Buyers are found by the store's own payments, a capped number of pages, and the rest counted, never waited on");
   const uma = await storeWith("uma", { trial: true });

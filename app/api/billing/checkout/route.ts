@@ -7,6 +7,9 @@ import { PLANS_ON_SALE } from "@/lib/opening";
 import { accountStores, setSubscription } from "@/lib/store";
 import { limited } from "@/lib/request-guard";
 import { inClosingDay } from "@/lib/closing-holds";
+import { CLOSING_CHECKOUT_SECONDS, lastPlanMoment } from "@/lib/closing-plan-guard";
+import { closingOf } from "@/lib/plan-closing";
+import { closesStore } from "@/lib/plan-closing-rules";
 
 /**
  * Sends the creator to Stripe to start paying us, monthly or yearly.
@@ -39,6 +42,20 @@ export async function POST(request: NextRequest) {
   // Only a store whose plan ended can be in its closing day.
   const closingToday = store.planEndedAt ? await inClosingDay(ref).catch(() => true) : false;
   if (closingToday) return away(origin, studio("billing=closing"));
+  // In its closing period, starting a plan again keeps the store (the owner's
+  // decision of 30/10/2026, 18h16), so it is offered until the last moment a
+  // checkout opened now would expire before the closing day begins; the
+  // checkout lasts the shortest time Stripe allows. Refused, too, when the
+  // day cannot be read.
+  let expiresAtSeconds: number | undefined;
+  if (store.planEndedAt) {
+    const closing = await closingOf(store).catch(() => "unknown" as const);
+    if (closing === "unknown") return away(origin, studio("billing=error"));
+    if (closing && closesStore(closing.endedAt)) {
+      if (Date.now() >= lastPlanMoment(closing.day)) return away(origin, studio("billing=closing-late"));
+      expiresAtSeconds = Math.floor(Date.now() / 1000) + CLOSING_CHECKOUT_SECONDS;
+    }
+  }
 
   let fields: FormData | null = null;
   try {
@@ -88,7 +105,7 @@ export async function POST(request: NextRequest) {
   const grant=await reserveContractFunding(store.statsId??'',tier,cycle,'checkout');
   if(!grant)return away(origin,studio('billing=not-open'));
   try {
-    const url = await createBillingCheckout(store, origin, { tier, cycle }, customerId,grant);
+    const url = await createBillingCheckout(store, origin, { tier, cycle }, customerId, grant, expiresAtSeconds);
     return new Response(null, { status: 303, headers: { Location: url } });
   } catch (error) {
     console.error("billing checkout failed", error);

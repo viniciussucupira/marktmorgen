@@ -820,11 +820,13 @@ async function closingDay(store: Store, key: string, state: State, endedAt: numb
       return null;
     });
     if (settled === null || settled === "busy") return { key, state: "held", note: "its members' unused time is not settled yet" };
-    const shortLeft = [...(await paidPeriods(store))].filter(([, row]) => row.r === "short" && row.f === 1 && !row.m);
-    if (shortLeft.length) {
-      const told = await tellRefundShort(store, shortLeft.map(([, row]) => ({ email: row.e, amount: unusedOfRow(row, next.day ?? day), cur: row.cur })), endedAt);
+    // Told for what happened: the balance did not cover it, or the closing's limit of calls did not reach it.
+    for (const [why, r] of [["balance", "short"], ["limit", "over"]] as const) {
+      const left = [...(await paidPeriods(store))].filter(([, row]) => row.r === r && row.f === 1 && !row.m);
+      if (!left.length) continue;
+      const told = await tellRefundShort(store, left.map(([, row]) => ({ email: row.e, amount: unusedOfRow(row, next.day ?? day), cur: row.cur })), endedAt, why);
       if (!told.ok) return { key, state: "held", note: "its members whose refund could not be made are not all told yet" };
-      for (const [sub, row] of shortLeft) await savePaidPeriod(store, sub, { ...row, m: 1 });
+      for (const [sub, row] of left) await savePaidPeriod(store, sub, { ...row, m: 1 });
       if (told.untold) console.error(`plan-closing: ${told.untold} members whose refund could not be made were not covered by the store's closing emails`);
     }
     const left = (await unusedRows(store, next.day ?? day)).filter((row) => row.paid.r !== "pending");

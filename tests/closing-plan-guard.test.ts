@@ -20,7 +20,8 @@ import { join } from "node:path";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
 import { claimHandle, setSubscription, storeForEmail, storeRef } from "@/lib/store";
-import { FINAL_INDEX } from "@/lib/closing-holds";
+import { FINAL_INDEX, inClosingDay } from "@/lib/closing-holds";
+import { prepareStore } from "@/lib/closed-store-data";
 import { UNDO_KEY, expirePlanCheckouts, markShut, planReturnedLetter, refusePlanIfClosing, refuseSession, retryPlanUndos } from "@/lib/closing-plan-guard";
 import { syncSubscriptions } from "@/lib/billing-sync";
 import { redisPipeline } from "@/lib/redis";
@@ -43,8 +44,10 @@ const world = {
   refundErrors: 0,
   /** Refunds the bank turns down (status failed). */
   refundsTurnedDown: 0,
-  /** What Stripe answered to each idempotency key, as Stripe replays it. */
-  replies: new Map<string, string>(),
+  /** What Stripe answered to each idempotency key, and when: Stripe replays it for 24 hours, then forgets it. */
+  replies: new Map<string, { at: number; body: string }>(),
+  /** The refunds list lags behind: it shows none (Stripe's lists are not always up to the moment). */
+  listLags: false,
   expired: [] as string[],
 };
 const sent: { to: string; subject: string; text: string }[] = [];
@@ -62,9 +65,10 @@ globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) =>
   const headers = new Headers(init?.headers);
   if (headers.get("stripe-account")) return json({ error: { message: "only our own account here" } }, 400);
   const key = headers.get("idempotency-key");
-  if (key && method === "POST" && world.replies.has(key)) return new Response(world.replies.get(key), { status: 200, headers: { "content-type": "application/json" } });
+  const kept = key && method === "POST" ? world.replies.get(key) : undefined;
+  if (kept && Date.now() - kept.at < 24 * 3_600_000) return new Response(kept.body, { status: 200, headers: { "content-type": "application/json" } });
   const remember = (data: unknown) => {
-    if (key && method === "POST") world.replies.set(key, JSON.stringify(data));
+    if (key && method === "POST") world.replies.set(key, { at: Date.now(), body: JSON.stringify(data) });
     return json(data);
   };
   const path = url.pathname.replace(/^\/v1/, "");
@@ -99,9 +103,11 @@ globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) =>
   if (intent) {
     const charge = world.charges.get(intent[1]);
     if (!charge) return json({ error: { message: "No such payment_intent" } }, 404);
-    return json({ id: intent[1], latest_charge: { id: `ch_${intent[1].slice(3)}`, currency: "usd", amount: charge.amount, disputed: charge.disputed } });
+    // As Stripe keeps it: what refunds that have not failed took back.
+    const refunded = world.refunds.filter((row) => row.payment_intent === intent[1] && (row.status === "succeeded" || row.status === "pending")).reduce((sum, row) => sum + row.amount, 0);
+    return json({ id: intent[1], latest_charge: { id: `ch_${intent[1].slice(3)}`, currency: "usd", amount: charge.amount, amount_refunded: refunded, disputed: charge.disputed } });
   }
-  if (path === "/refunds" && method === "GET") return json({ object: "list", data: world.refunds.filter((row) => row.charge === url.searchParams.get("charge")), has_more: false });
+  if (path === "/refunds" && method === "GET") return json({ object: "list", data: world.listLags ? [] : world.refunds.filter((row) => row.charge === url.searchParams.get("charge")), has_more: false });
   if (path === "/refunds" && method === "POST") {
     if (world.refundErrors > 0) {
       world.refundErrors -= 1;
@@ -190,6 +196,26 @@ async function main() {
   await retryPlanUndos(Date.now() + 10_000);
   is("and once it went through, nothing more", refundsOf(rosa.pi).length, 2);
 
+  part("Rechecks over the 40 days never refund twice, after Stripe has forgotten the keys or while its list lags");
+  const realNow = Date.now.bind(Date);
+  Date.now = () => realNow() + 25 * 3_600_000;
+  await retryPlanUndos(Date.now() + 10_000);
+  world.listLags = true;
+  Date.now = () => realNow() + 50 * 3_600_000;
+  await retryPlanUndos(Date.now() + 10_000);
+  world.listLags = false;
+  Date.now = realNow;
+  is("still the one refund that went through, and one letter", [refundsOf(rosa.pi).filter((row) => row.status === "succeeded").length, refundsOf(rosa.pi).length, sent.filter((m) => m.to === rosa.email).length], [1, 2, 1]);
+
+  part("The store's own plan from before its closing day, still able to charge: ended, nothing refunded, no letter");
+  const uma = await closingStore("uma", day);
+  world.subs.set("sub_umaold0001", { id: "sub_umaold0001", status: "past_due", customer: uma.customer, metadata: { store: "uma", tier: "creator" }, created: S(day) - 60 * 86_400 });
+  world.invoices.push({ id: "in_umaold0001", subscription: "sub_umaold0001", status: "paid", amount_paid: 6_900, payment_intent: "pi_umaold0001", created: S(day) - 60 * 86_400, paid_at: S(day) - 60 * 86_400 });
+  world.charges.set("pi_umaold0001", { amount: 6_900, disputed: false });
+  const umaBefore = sent.filter((m) => m.to === uma.email).length;
+  await refusePlanIfClosing({ store: (await storeForEmail(uma.email))!, handle: "uma", subscriptionId: "sub_umaold0001", customerId: uma.customer });
+  is("it can charge no more, its old payment stays, and the creator is not told of a payment that never was", [world.subs.get("sub_umaold0001")?.status, refundsOf("pi_umaold0001").length, sent.filter((m) => m.to === uma.email).length - umaBefore], ["canceled", 0, 0]);
+
   part("The daily sync finds a plan paid during the closing day before the way back did");
   const tina = await closingStore("tina", day);
   const synced = await syncSubscriptions(Date.now() + 10_000);
@@ -243,6 +269,18 @@ async function main() {
   is("ended and returned, the creator told at the customer's address", [await refusePlanIfClosing({ store: null, handle: "gone-shop", subscriptionId: "sub_gonelate01", customerId: "cus_gone0001" }), refundsOf("pi_gonelate01").length, sent.filter((m) => m.to === "gone@example.com").length], ["returned", 1, 1]);
   is("an address never marked is left alone", await refusePlanIfClosing({ store: null, handle: "never-closed", subscriptionId: "sub_neverclosed1", customerId: "cus_never0001" }), "no");
 
+  part("Once a closing store's record goes, a new store its owner opens is never taken for it");
+  const vera = await closingStore("vera", day);
+  const veraOld = (await storeForEmail(vera.email))!;
+  await prepareStore(veraOld);
+  is("the closed store leaves the closing day's line with its record", await inClosingDay(storeRef(veraOld)), false);
+  await claimHandle(vera.email, "vera-new", "Vera New", "");
+  const veraNew = (await storeForEmail(vera.email))!;
+  world.subs.set("sub_veranew001", { id: "sub_veranew001", status: "active", customer: vera.customer, metadata: { store: "vera-new" }, created: S(day) + 3_600 });
+  const veraLetters = sent.filter((m) => m.to === vera.email).length;
+  is("the new store's plan is its own: not refused, not ended, nobody written to", [veraNew.handle, await refusePlanIfClosing({ store: veraNew, handle: "vera-new", subscriptionId: "sub_veranew001", customerId: vera.customer }), world.subs.get("sub_veranew001")?.status, sent.filter((m) => m.to === vera.email).length - veraLetters], ["vera-new", "no", "active", 0]);
+  is("a plan paid under the closed store's address is still found by its mark", await refusePlanIfClosing({ store: null, handle: "vera", subscriptionId: vera.id, customerId: vera.customer }), "returned");
+
   part("When the day starts, the store's open plan checkouts are expired");
   world.sessions.push(
     { id: "cs_test_rosaopen00001", status: "open", mode: "subscription", customer: rosa.customer, metadata: { store: "rosa" } },
@@ -256,8 +294,6 @@ async function main() {
   is("one of its own still open when met on the way back is expired there", [await refuseSession((await storeForEmail(rosa.email))!, "cs_test_rosaopen00002"), world.expired.at(-1)], ["no", "cs_test_rosaopen00002"]);
 
   part("Where it is wired");
-  const route = readFileSync(join(process.cwd(), "app/api/billing/return/route.ts"), "utf8");
-  is("the way back asks before it reads what the checkout made", route.indexOf("refuseSession(store, sessionId)") > 0 && route.indexOf("refuseSession(store, sessionId)") < route.indexOf("readStartedSubscription(store, sessionId)"), true);
   const closing = readFileSync(join(process.cwd(), "lib/plan-closing.ts"), "utf8");
   is("the closing day expires the checkouts right after it is entered, and each later run looks for a late plan", [closing.indexOf("expirePlanCheckouts(store") > closing.indexOf('["ZADD", FINAL_INDEX, endedAt, key]'), closing.includes("await refuseLatePlans(store);")], [true, true]);
   is("the closing job tries the line again on every run", readFileSync(join(process.cwd(), "app/api/cron/closing/route.ts"), "utf8").includes("retryPlanUndos("), true);

@@ -49,6 +49,25 @@ export const UNDO_KEY = "nl:closing:undo";
 const SHUT_PREFIX = "nl:closing:shut:";
 /** How long a closed store's address is still known after its last closing run: past any checkout it had open (Stripe keeps one at most a day) and the daily sync after it. */
 export const SHUT_DAYS = 30;
+/**
+ * How long a plan checkout opened for a store in its closing period lasts:
+ * the shortest Stripe allows ("anywhere from 30 minutes to 24 hours after
+ * Checkout Session creation", docs.stripe.com/api/checkout/sessions/create,
+ * expires_at, read 30/10/2026), and a minute more so a clock a little
+ * ahead of Stripe's is never refused.
+ */
+export const CLOSING_CHECKOUT_SECONDS = 31 * 60;
+
+/**
+ * The last moment a plan can be started to keep a store whose closing day
+ * is `day` (ms): a checkout opened then has expired a minute before the day
+ * begins, so none can be paid on it. Started again before then, the store
+ * stays (the owner's decision of 30/10/2026, 18h16: starting again saves it).
+ */
+export function lastPlanMoment(day: number): number {
+  return day - CLOSING_CHECKOUT_SECONDS * 1000 - 60_000;
+}
+
 /** The API version these reads are made at: a paid invoice names its `payment_intent` there. */
 const AT = "2024-06-20";
 const SESSION = /^cs_(test|live)_[A-Za-z0-9]{10,200}$/;
@@ -227,17 +246,17 @@ function readUndo(raw: unknown): Undo | null {
 }
 
 /** Ends the subscription at once. True once Stripe says it is ended. */
-async function endIt(id: string): Promise<boolean> {
+async function endIt(id: string): Promise<{ ended: boolean; created: number }> {
+  const over = (sub: Record<string, unknown>) => ({ ended: sub.status === "canceled" || sub.status === "incomplete_expired", created: Number(sub.created) || 0 });
   try {
     // A DELETE is idempotent at Stripe by itself; no key is sent with it.
-    const ended = await onPlatform("DELETE", `/subscriptions/${encodeURIComponent(id)}`, undefined, { version: AT });
-    if (ended.status === "canceled" || ended.status === "incomplete_expired") return true;
+    const ended = over(await onPlatform("DELETE", `/subscriptions/${encodeURIComponent(id)}`, undefined, { version: AT }));
+    if (ended.ended) return ended;
   } catch (error) {
     if (!(error instanceof BillingError)) throw error;
   }
   // Already ended (a second DELETE is refused), or not: Stripe is asked which.
-  const now = await onPlatform("GET", `/subscriptions/${encodeURIComponent(id)}`, undefined, { version: AT });
-  return now.status === "canceled" || now.status === "incomplete_expired";
+  return over(await onPlatform("GET", `/subscriptions/${encodeURIComponent(id)}`, undefined, { version: AT }));
 }
 
 type ChargeOutcome = { settled: boolean; returned: number; disputed: number; currency: string };
@@ -259,10 +278,14 @@ async function giveBack(id: string, invoice: Record<string, unknown>): Promise<C
   const sum = (status: string) => refunds.filter((row) => row.status === status).reduce((total, row) => total + (Number(row.amount) || 0), 0);
   const succeeded = sum("succeeded");
   const pending = sum("pending") + sum("requires_action");
+  const failed = refunds.filter((row) => row.status === "failed" || row.status === "canceled").length;
   if (succeeded >= amount) return { settled: true, returned: succeeded, disputed: 0, currency };
   // On its way: looked at again on the next run.
   if (pending > 0) return { settled: false, returned: succeeded, disputed: 0, currency };
-  const failed = refunds.filter((row) => row.status === "failed" || row.status === "canceled").length;
+  // The charge itself says it was refunded although the list does not show it yet: never a second one. (Only
+  // while no refund of it has failed: a failed refund's amount goes back, and the list is then what counts.)
+  const onCharge = Number(charge.amount_refunded) || 0;
+  if (failed === 0 && onCharge >= amount) return { settled: false, returned: succeeded, disputed: 0, currency };
   const made = await onPlatform(
     "POST",
     "/refunds",
@@ -297,7 +320,8 @@ export async function settleOne(id: string, recheck = false): Promise<boolean> {
   };
   if (!isBillingConfigured()) return keep("Stripe is not configured");
   try {
-    if (!(await endIt(id))) return keep("Stripe did not end it");
+    const plan = await endIt(id);
+    if (!plan.ended) return keep("Stripe did not end it");
     const listed = await onPlatform("GET", `/invoices?${new URLSearchParams({ subscription: id, limit: "100" })}`, undefined, { version: AT });
     const invoices = Array.isArray(listed.data) ? (listed.data as Record<string, unknown>[]) : [];
     let settled = true;
@@ -328,7 +352,15 @@ export async function settleOne(id: string, recheck = false): Promise<boolean> {
     }
     if (!settled) return keep("a refund is not made in full yet");
     if (entry.done) return true;
-    if (!entry.t && !(await tell(id, entry, returned, disputed, currency))) return keep("the creator could not be told yet");
+    // The store's own plan from before its closing day, never paid since: ended so it can charge no more, and no
+    // letter (there is no payment to speak of, and it was not started on the day).
+    const own = plan.created > 0 && plan.created * 1000 < entry.since && returned === 0 && disputed === 0;
+    if (!entry.t && !own) {
+      if (!(await tell(id, entry, returned, disputed, currency))) return keep("the creator could not be told yet");
+      // Written at once, so whatever happens next the creator is never written to twice.
+      entry.t = 1;
+      await redisPipeline([["HSET", UNDO_KEY, id, JSON.stringify(entry)]]);
+    }
     // Settled: only its dates are kept, for a retry or a recheck to find (no address, no customer, no name).
     await redisPipeline([["HSET", UNDO_KEY, id, JSON.stringify({ h: "", c: "", to: "", name: "", since: entry.since, at: entry.at, n: entry.n, done: Date.now(), t: 1 })]]);
     return true;

@@ -39,7 +39,7 @@ import { importedBuyers } from "@/lib/imported-purchases";
 import { storeBase } from "@/lib/purchase-email";
 import { formatMoney } from "@/lib/money";
 import { companyPostal } from "@/lib/company-postal";
-import { memberAddresses, paidPeriods } from "@/lib/closing-holds";
+import { membersOf, paidPeriods } from "@/lib/closing-holds";
 import { returnCredit, takeCredit } from "@/lib/closing-credit";
 import {
   BUYER_PAGES_PER_RUN,
@@ -47,7 +47,7 @@ import {
   type BuyerLetter,
   buyerNotice,
   letterHtml,
-  refundShortLetter,
+  refundShortLetter, refundUnmadeLetter,
   staysOpenLetter,
   unusedOf,
 } from "@/lib/closing-buyers-rules";
@@ -118,8 +118,8 @@ export async function tellBuyers(store: Store, endedAt: number, day: number, aft
     const unused = unusedOf(paid, day);
     if (paid.e) members.set(paid.e, unused > 0 ? formatMoney(unused, paid.cur) : members.get(paid.e) ?? "");
   }
-  const held = await memberAddresses(folder);
-  for (const email of held) if (!members.has(email)) members.set(email, "");
+  const held = await membersOf(folder);
+  for (const email of held.emails) if (!members.has(email)) members.set(email, "");
   const base = storeBase(store);
   const tell = async (raw: string[]): Promise<boolean> => {
     const fresh = [...new Set(raw.map((e) => normaliseEmail(e)).filter((e) => EMAIL_PATTERN.test(e)))];
@@ -152,6 +152,11 @@ export async function tellBuyers(store: Store, endedAt: number, day: number, aft
 
   if (!out.after) {
     // (The told list of an earlier ending was let go when this one's members were held: lib/plan-closing.ts.)
+    // A member with no address on Stripe cannot be told: counted, once.
+    for (const sub of held.missing) {
+      const [fresh] = await redisPipeline([["HSETNX", toldKey(folder), `#${sub}`, UNTOLD]]);
+      if (Number(fresh) === 1) out.untold += 1;
+    }
     const kept: string[] = [...members.keys()];
     kept.push(...(await importedBuyers(store.statsId)).keys());
     kept.push(...(await readPayPalSales(store.statsId, 0, 100_000)).sales.map((sale) => sale.email));
@@ -214,7 +219,7 @@ export async function tellStaysOpen(store: Store, until: number): Promise<boolea
  * takes it from the store's credit now. True when every one went or was
  * counted as not coverable.
  */
-export async function tellRefundShort(store: Store, short: { email: string; amount: number; cur: string }[], endedAt: number): Promise<{ sent: number; untold: number; ok: boolean }> {
+export async function tellRefundShort(store: Store, short: { email: string; amount: number; cur: string }[], endedAt: number, why: "balance" | "limit" = "balance"): Promise<{ sent: number; untold: number; ok: boolean }> {
   const postal = companyPostal();
   const out = { sent: 0, untold: 0, ok: true };
   if (!short.length) return out;
@@ -234,10 +239,11 @@ export async function tellRefundShort(store: Store, short: { email: string; amou
       continue;
     }
     addresses.push(email);
-    going.push(message(store, email, refundShortLetter({ store: store.name, amount: formatMoney(row.amount, row.cur), contact: contactOf(store) }), postal));
+    const letter = why === "limit" ? refundUnmadeLetter : refundShortLetter;
+    going.push(message(store, email, letter({ store: store.name, amount: formatMoney(row.amount, row.cur), contact: contactOf(store) }), postal));
   }
   for (let i = 0; i < going.length; i += 100) {
-    if (!(await send(going.slice(i, i + 100), batchKey("short", folder, endedAt, addresses.slice(i, i + 100))))) return { ...out, ok: false };
+    if (!(await send(going.slice(i, i + 100), batchKey(why === "limit" ? "unmade" : "short", folder, endedAt, addresses.slice(i, i + 100))))) return { ...out, ok: false };
     out.sent += Math.min(100, going.length - i);
   }
   return out;
