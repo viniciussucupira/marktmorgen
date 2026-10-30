@@ -104,10 +104,18 @@ function parseRecord(raw: unknown): PauseRecord | null {
   if (typeof raw !== "string") return null;
   try {
     const value = JSON.parse(raw) as Record<string, unknown>;
+    // JSON parsing does not make inherited fields evidence. A polluted prototype
+    // must not fill missing ownership, dates, or an optional funding marker.
+    if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+    for (const key of ["subscription", "customer", "paymentMethod", "tier", "from", "until"]) {
+      if (!Object.hasOwn(value, key)) return null;
+    }
+    if ((!Object.hasOwn(value, "told") && "told" in value) ||
+        (!Object.hasOwn(value, "funding") && "funding" in value)) return null;
     const tier = parseTier(value.tier);
     const told = value.told === undefined ? 0 : value.told;
     const funding = value.funding as { version?: unknown; grantId?: unknown } | null | undefined;
-    if (value.funding !== undefined && (!funding || typeof funding !== 'object' || Array.isArray(funding) || funding.version !== 1 || (funding.grantId !== null && (typeof funding.grantId !== 'string' || !/^ctr_[A-Za-z0-9_-]{1,80}$/.test(funding.grantId))))) return null;
+    if (value.funding !== undefined && (!funding || typeof funding !== 'object' || Array.isArray(funding) || !Object.hasOwn(funding, 'version') || !Object.hasOwn(funding, 'grantId') || funding.version !== 1 || (funding.grantId !== null && (typeof funding.grantId !== 'string' || !/^ctr_[A-Za-z0-9_-]{1,80}$/.test(funding.grantId))))) return null;
     if (
       typeof value.subscription !== "string" || !SUBSCRIPTION_ID.test(value.subscription) ||
       typeof value.customer !== "string" || !CUSTOMER_ID.test(value.customer) ||

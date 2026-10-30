@@ -150,6 +150,54 @@ async function storeWith(email: string, handle: string, sub: string) {
 }
 
 async function main() {
+  part("Stored pause fields must be owned JSON evidence");
+  {
+    const store = await storeWith("pause-own-fields@example.com", "pauseownfields", "sub_OwnFields0001");
+    const ref = storeRef(store), key = `nl:pause:${ref}`;
+    const raw = { subscription: "sub_OwnFields0001", customer: "cus_TestPause0001",
+      paymentMethod: "pm_TestCard00001", tier: "creator", from: NOW + DAY,
+      until: NOW + 32 * DAY, told: 0 };
+    const pipeline = pauseRedis.pipeline;
+    for (const field of ["subscription", "customer", "paymentMethod", "tier", "from", "until", "told", "funding"] as const) {
+      const descriptor = Object.getOwnPropertyDescriptor(Object.prototype, field);
+      const missing = { ...raw } as Record<string, unknown>;
+      delete missing[field];
+      await pipeline([["SET", key, JSON.stringify(missing)]]);
+      let reads = 0;
+      try {
+        Object.defineProperty(Object.prototype, field, { configurable: true,
+          get() { reads++; return field === "funding" ? { version: 1, grantId: null } : raw[field as keyof typeof raw]; } });
+        const observed = await pauseOf(store);
+        is("inherited " + field + " cannot complete a pause", observed, null);
+        is("inherited " + field + " getter is never invoked", reads, 0);
+      } finally {
+        if (descriptor) Object.defineProperty(Object.prototype, field, descriptor);
+        else Reflect.deleteProperty(Object.prototype, field);
+      }
+    }
+    await pipeline([["SET", key, JSON.stringify(raw)]]);
+    is("the own legacy record still decodes", await pauseOf(store), raw);
+    const funded = { ...raw, funding: { version: 1, grantId: null } };
+    await pipeline([["SET", key, JSON.stringify(funded)]]);
+    is("the own unknown funded marker remains funded evidence", await pauseOf(store), funded);
+    for (const field of ["version", "grantId"] as const) {
+      const partial = { ...funded, funding: { ...funded.funding } as Record<string, unknown> };
+      delete partial.funding[field];
+      await pipeline([["SET", key, JSON.stringify(partial)]]);
+      const descriptor = Object.getOwnPropertyDescriptor(Object.prototype, field);
+      let reads = 0;
+      try {
+        Object.defineProperty(Object.prototype, field, { configurable: true,
+          get() { reads++; return field === "version" ? 1 : null; } });
+        is("inherited funding " + field + " is refused", await pauseOf(store), null);
+        is("funding getter remains untouched " + field, reads, 0);
+      } finally {
+        if (descriptor) Object.defineProperty(Object.prototype, field, descriptor);
+        else Reflect.deleteProperty(Object.prototype, field);
+      }
+    }
+    await pipeline([["DEL", key]]);
+  }
   part("Who may take a break");
   {
     is("a monthly plan paid for months, never paused", pauseRefusal(subscription("sub_a"), NOW, false), null);
