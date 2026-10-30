@@ -1,5 +1,651 @@
 # Fila de trabalho do Codex — Marktmorgen
 
+## MQ — Marco dos itens menos importantes na fila (29/10/2026) [MQ1]
+
+Solicitação do dono: **29/10/2026,20h52Fortaleza**. Estado inicial: na fila; este registro aplica somente posição, em PR documental próprio. Nenhum número novo: continuam os mesmos554itens. Esta é a instrução de posição mais recente, prevalecendo somente sobre posições incompatíveis; SD1/AV1 e os trabalhos iniciados continuam. Os corpos originais ficam integralmente no histórico abaixo; este índice de execução e a tabela única são a referência atual de posição, como no registroFIM1. Tabela numérica serve para localização, nunca para reordenar os grupos.
+
+### Primeiro — AV1, Bloco de abertura e posições protegidas
+
+AV1/SD1 e Bloco de abertura (a)–(k) ficam na ordem vigente, inclusive custos(k),538[AB1] e448[LE1] em paralelo. Não se antecipam estudos ou recursos por causa desta classificação. Ficam na posição e no estado atuais todos os concluídos/publicados, andamentos (inclusive4,88,140,141,201,547,549),505[SG2] e registros59,60,336,464–477,494,495. As referências a547/549 são exceções expressas do pedido; suas linhas canônicas continuam literalmente “na fila”, sem convertê-las em andamento. A proteção de andamento também respeita a posição atualmente vigente: não ressuscita ordemOR já substituída porFIM1.
+
+### Em seguida — o que AV1 já manda fazer logo depois da abertura
+
+Manter a ordem já gravada para7[C-UE],8[C-UK],300–303, relatório mensal465[MR2] e114[E2-AFFILIATE-TAX-FORMS] se adiado, e os demais remanescentes explicitamente pós-abertura deAV1. Este registro não recompõe nem inverte essa sequência. ItensFIM1 continuam por último; só suas partes necessárias preservadas pelas regras de partes ficam no lugar atual.
+
+### Grupo A — acima do marco
+
+Percorrer **somente os remanescentes acionáveis**, na ordem relativa já vigente (inclusiveOR e dependências), filtrando pela classificaçãoA; números abaixo são localizadores, não sequência numérica nova. Exceções de MQ1(b) continuam no lugar atual mesmo quando constam da listaA.
+
+Localizadores do Grupo A solicitado: 14, 17, 22, 28, 32, 39, 93, 94, 99, 100, 103, 113, 120, 143, 145, 149, 182, 202, 205, 206, 219, 220, 238, 239, 240, 241, 242, 243, 248, 251, 256, 260, 271, 273, 274, 276, 281, 282, 308, 310, 312, 335, 338, 356, 362, 370, 374, 375, 378, 380, 388, 389, 394, 397, 399, 414, 417, 427, 428, 431, 432, 433, 434, 436, 437, 438, 439, 443, 444, 457, 459, 460, 461, 462, 479, 480, 484, 485, 487, 488, 490, 491, 492, 496, 497, 498, 506, 507, 508, 513, 514, 515, 520, 521, 522, 524, 525, 531, 533, 534, 535, 536, 537, 540, 541, 544, 545, 546, 548, 551, 552, 554.
+
+**206[SH3] passa a ficar imediatamente depois de515[PF3];241[CF4] continua imediatamente depois de531[VP1].** Ambos ficam acima do marco. As duas linhas da tabela de posiçõesFIM1 recebem esta data/hora; posições anteriores permanecem citadas como histórico, sem reativação.
+
+## MARCO — DAQUI EM DIANTE, OS MENOS IMPORTANTES (MQ1, 29/10/2026)
+
+### Grupo B — abaixo do marco
+
+Percorrer os remanescentes do Grupo B na **ordem relativa já vigente**, sem ordenação nova por número. Localizadores solicitados: 10, 11, 12, 13, 15, 18, 19, 20, 21, 23, 24, 25, 27, 29, 30, 31, 33, 34, 35, 36, 40, 43, 44, 46, 50, 51, 52, 54, 55, 57, 61, 62, 63, 64, 65, 66, 67, 68, 95, 96, 97, 101, 102, 105, 106, 107, 108, 109, 110, 111, 112, 115, 116, 117, 118, 119, 121, 122, 123, 124, 125, 126, 133, 134, 135, 136, 137, 197, 198, 204, 208, 210, 211, 212, 213, 214, 216, 217, 218, 221, 223, 224, 225, 226, 227, 228, 229, 230, 231, 233, 234, 235, 237, 244, 245, 246, 247, 249, 250, 253, 254, 257, 258, 259, 261, 262, 263, 264, 265, 266, 267, 268, 269, 270, 272, 277, 278, 279, 283, 285, 287, 288, 290, 291, 292, 293, 294, 295, 297, 298, 299, 304, 311, 343, 344, 349, 350, 353, 354, 355, 357, 358, 360, 361, 364, 365, 366, 367, 368, 369, 371, 372, 373, 376, 377, 379, 381, 382, 384, 385, 386, 387, 390, 391, 392, 393, 395, 396, 398, 400, 403, 405, 407, 408, 409, 410, 411, 412, 413, 415, 416, 418, 421, 422, 423, 424, 426, 435, 445, 446, 447, 449, 450, 451, 452, 453, 454, 455, 456, 458, 463, 478, 481, 482, 483, 486, 489, 499, 500, 501, 502, 503, 504, 509, 510, 511, 512, 516, 517, 518, 519, 523, 526, 527, 528, 529, 530, 532, 539, 542, 543, 550, 553.
+
+**Regra de partes MQ1(g):** em cada itemB, só o restante não essencial vem para baixo do marco. Conformidade legal, segurança, impostos, acessibilidade, cobrança e redução de custo dos primeiros meses necessárias às operações atuais ficam na posição atual; obrigações de operações existentes nunca são adiadas. Um recurso futuro não ganha prioridade de construção só por mencionar uma dessas salvaguardas. As proibições continuam valendo em qualquer posição: consultas318/435, CSS livre127 e português doBrasil58/420, entre outras. Não ativar idiomas nem remover idiomas de compradores, conteúdo ou IDs.
+
+### Por último — os59 remanescentesFIM1
+
+FIM1 continua depois de todos os demais, na ordem relativa anterior e com a mesma regra de partes. São os61localizadores históricos da tabelaFIM1 menos206 e241, já retirados da cauda por decisões de posição. Localizadores para conferência (não ordem nova): 16, 26, 37, 38, 41, 42, 45, 47, 48, 49, 53, 56, 58, 92, 104, 127, 128, 129, 130, 131, 132, 203, 207, 209, 215, 222, 236, 252, 255, 280, 284, 286, 289, 296, 317, 318, 327, 337, 345, 346, 347, 348, 351, 352, 359, 363, 383, 401, 402, 404, 406, 419, 420, 425, 429, 430, 440, 441, 442. O item58 continua afetado **somente no português doBrasil**; os demais idiomas mantêm posição/gates atuais. Concluídos e andamentos já existentes não são reconstruídos, reiniciados ou movidos novamente.
+
+### Itens novos e critério permanente de classificação
+
+Pedido novo com lado expresso respeita “acima do marco” ou “abaixo do marco”. Se não disser, aplicar MQ1(f) e registrar **uma linha na proveniência com o lado escolhido e o motivo**: A para vendas/retenção dos criadores, migração de outras plataformas, vendas dos planosMarktmorgen, redução de custo ou obrigação legal/fiscal/segurança/AX274/VR; B para estudos/propostas/comparações internas, nichos, comunidade/afiliados avançados, IA adicional, aplicativo móvel e o que depende de clientes reais. Aplicar antes as exceçõesAV1/abertura/andamentos/concluídos/regras e a divisão de partes. Nenhum cancelamento, absorção, fechamento, renumeração ou mudança de estado/escopo é autorizado.
+
+### Tabela única do resultadoMQ1 —554itens
+
+Uma linha por item, três grupos possíveis: A, B ou sem mudança. “Sem mudança/FIM1” mantém a cauda vigente; “sem mudança” por conclusão/andamento/AV1 preserva a posição atual. Os conjuntos pedidos têm112localizadoresA,233B e59FIM1. Aplicadas as exceções de posição/estado deMQ1(b), o resultado é108A,232B e214sem mudança.143/182 já publicados,202/205 com andamento/posiçãoOR protegidos e204 com andamento protegido são as exceções dentro das listasA/B; isso não altera seus estados. A tabela é índice de posição, não substitui o texto integral de cada item nem atesta sua conclusão.
+
+| Item | Grupo | Motivo |
+| --- | --- | --- |
+| 1 [ATUAL-D6] | sem mudança | MQ1(b): já concluído/publicado, sem reconstrução. |
+| 2 [FILA] | sem mudança | MQ1(b): já concluído/publicado, sem reconstrução. |
+| 3 [B1] | sem mudança | MQ1(b): já concluído/publicado, sem reconstrução. |
+| 4 [B2] | sem mudança | MQ1(b): andamento/posição protegidos; estado intacto. |
+| 5 [B3] | sem mudança | MQ1(b): já concluído/publicado, sem reconstrução. |
+| 6 [B4] | sem mudança | MQ1(b): já concluído/publicado, sem reconstrução. |
+| 7 [C-UE] | sem mudança | MQ1(b): andamento/posição protegidos; estado intacto. |
+| 8 [C-UK] | sem mudança | MQ1(a–b): AV1/abertura/vínculo vigente mantido. |
+| 9 [C-US] | sem mudança | MQ1(a–b): AV1/abertura/vínculo vigente mantido. |
+| 10 [D7] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 11 [D8] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 12 [D9] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 13 [D10] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 14 [D11] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 15 [D12] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 16 [D13] | sem mudança | FIM1: cauda vigente; partes essenciais no lugar. |
+| 17 [D15] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 18 [E1] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 19 [E2] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 20 [E3] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 21 [E4] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 22 [E5] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 23 [E6] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 24 [E7] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 25 [E8] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 26 [E9] | sem mudança | FIM1: cauda vigente; partes essenciais no lugar. |
+| 27 [E10] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 28 [E11] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 29 [E12] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 30 [E13] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 31 [E14] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 32 [F1] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 33 [F2] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 34 [F3] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 35 [F4] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 36 [F5] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 37 [F6] | sem mudança | FIM1: cauda vigente; partes essenciais no lugar. |
+| 38 [F7] | sem mudança | FIM1: cauda vigente; partes essenciais no lugar. |
+| 39 [G1] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 40 [G2] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 41 [G3] | sem mudança | FIM1: cauda vigente; partes essenciais no lugar. |
+| 42 [G4] | sem mudança | FIM1: cauda vigente; partes essenciais no lugar. |
+| 43 [G5] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 44 [H1] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 45 [H2] | sem mudança | FIM1: cauda vigente; partes essenciais no lugar. |
+| 46 [H3] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 47 [H4] | sem mudança | FIM1: cauda vigente; partes essenciais no lugar. |
+| 48 [H5] | sem mudança | FIM1: cauda vigente; partes essenciais no lugar. |
+| 49 [H6] | sem mudança | FIM1: cauda vigente; partes essenciais no lugar. |
+| 50 [I1] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 51 [I2] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 52 [I3] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 53 [J1] | sem mudança | FIM1: cauda vigente; partes essenciais no lugar. |
+| 54 [J2] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 55 [K1] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 56 [K2] | sem mudança | FIM1: cauda vigente; partes essenciais no lugar. |
+| 57 [K3-ZAPIER] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 58 [K3-LANG/PATH14] | sem mudança | FIM1 só pt-BR; outros idiomas/gates intactos. |
+| 59 [EXCELENCIA] | sem mudança | MQ1(b): registro de regra, sem alteração. |
+| 60 [ABERTURA-DONO] | sem mudança | MQ1(b): registro de regra, sem alteração. |
+| 61 [X1] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 62 [X2] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 63 [X3] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 64 [X4] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 65 [X5] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 66 [X6] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 67 [X7] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 68 [X8] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 69 [PATH-FEITO-612] | sem mudança | MQ1(b): já concluído/publicado, sem reconstrução. |
+| 70 [PATH-FEITO-613] | sem mudança | MQ1(b): já concluído/publicado, sem reconstrução. |
+| 71 [PATH-FEITO-616] | sem mudança | MQ1(b): já concluído/publicado, sem reconstrução. |
+| 72 [PATH-FEITO-617] | sem mudança | MQ1(b): já concluído/publicado, sem reconstrução. |
+| 73 [PATH-FEITO-619] | sem mudança | MQ1(b): já concluído/publicado, sem reconstrução. |
+| 74 [CLAUDE-614] | sem mudança | MQ1(b): já concluído/publicado, sem reconstrução. |
+| 75 [CLAUDE-615] | sem mudança | MQ1(b): já concluído/publicado, sem reconstrução. |
+| 76 [CLAUDE-618] | sem mudança | MQ1(b): já concluído/publicado, sem reconstrução. |
+| 77 [CLAUDE-BING] | sem mudança | MQ1(b): já concluído/publicado, sem reconstrução. |
+| 78 [B2-PUBLIC] | sem mudança | MQ1(b): já concluído/publicado, sem reconstrução. |
+| 79 [B2-LEGAL] | sem mudança | MQ1(b): já concluído/publicado, sem reconstrução. |
+| 80 [B2-SHARED] | sem mudança | MQ1(b): já concluído/publicado, sem reconstrução. |
+| 81 [B2-COMPOSER] | sem mudança | MQ1(b): já concluído/publicado, sem reconstrução. |
+| 82 [C-UE-RECORD] | sem mudança | MQ1(b): já concluído/publicado, sem reconstrução. |
+| 83 [C-ANSWER-RECORD] | sem mudança | MQ1(b): já concluído/publicado, sem reconstrução. |
+| 84 [C-UE-TAX-SCOPE] | sem mudança | MQ1(b): já concluído/publicado, sem reconstrução. |
+| 85 [C-UE-RETENTION-COST] | sem mudança | MQ1(b): já concluído/publicado, sem reconstrução. |
+| 86 [C-TAX-SAVE-CONFIRMATION] | sem mudança | MQ1(b): já concluído/publicado, sem reconstrução. |
+| 87 [B2-SIGNIN-ACKNOWLEDGMENT] | sem mudança | MQ1(b): já concluído/publicado, sem reconstrução. |
+| 88 [B2-ADDRESS-ACKNOWLEDGMENT] | sem mudança | MQ1(b): andamento/posição protegidos; estado intacto. |
+| 89 [C2-CAPACITY] | sem mudança | MQ1(b): andamento/posição protegidos; estado intacto. |
+| 90 [C2-EMAIL-HONESTY] | sem mudança | MQ1(b): já concluído/publicado, sem reconstrução. |
+| 91 [D2-EU-WITHDRAWAL] | sem mudança | MQ1(a–b): AV1/abertura/vínculo vigente mantido. |
+| 92 [D2-PREORDER-GOAL] | sem mudança | FIM1: cauda vigente; partes essenciais no lugar. |
+| 93 [D2-VERIFIED-SOCIAL] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 94 [D2-BUYER-TRUST] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 95 [D2-DEMAND-RADAR] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 96 [D2-LESSON-DROPOFF] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 97 [D2-OPEN-EXIT] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 98 [D2-COMPLIANCE-REVIEW] | sem mudança | MQ1(a–b): AV1/abertura/vínculo vigente mantido. |
+| 99 [E2-TAG-BROADCAST] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 100 [E2-MEMBER-PUBLICATIONS] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 101 [E2-PUBLICATION-REACTIONS] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 102 [E2-COURSE-COMPLIANCE] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 103 [E2-LESSON-MEDIA] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 104 [E2-MODULE-PUSH] | sem mudança | FIM1: cauda vigente; partes essenciais no lugar. |
+| 105 [E2-COURSE-AI-DRAFT] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 106 [E2-CHECKOUT-EXTRAS] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 107 [E2-BROADCAST-CONTENT-AB] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 108 [E2-BLOG-RSS-MAIL] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 109 [E2-EVENTS] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 110 [E2-MEMBER-PROFILES] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 111 [E2-COMMUNITY-AUTOMATION] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 112 [E2-POINTS] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 113 [E2-COMMUNITY-MODERATION] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 114 [E2-AFFILIATE-TAX-FORMS] | sem mudança | MQ1(a–b): AV1/abertura/vínculo vigente mantido. |
+| 115 [E2-FOUNDING-MEMBERS] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 116 [F2-COMMUNITY-CHANNELS] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 117 [F2-COMMUNITY-MAIL] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 118 [F2-READER-REFERRALS] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 119 [F2-FREE-RECOMMENDATIONS] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 120 [F2-IMPORTS] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 121 [F2-SUBSCRIPTION-GIFTS] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 122 [F2-COMMUNITY-AI] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 123 [F2-COMMUNITY-DIRECTORY] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 124 [F2-EDIT-SENT-LINKS] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 125 [F2-EMAIL-POLLS] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 126 [F2-MULTIPLE-COMMUNITIES] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 127 [H7-CUSTOM-CSS] | sem mudança | FIM1: cauda vigente; partes essenciais no lugar. |
+| 128 [J1-SKOOL] | sem mudança | FIM1: cauda vigente; partes essenciais no lugar. |
+| 129 [J1-KIT] | sem mudança | FIM1: cauda vigente; partes essenciais no lugar. |
+| 130 [J1-CIRCLE] | sem mudança | FIM1: cauda vigente; partes essenciais no lugar. |
+| 131 [J1-TEACHABLE] | sem mudança | FIM1: cauda vigente; partes essenciais no lugar. |
+| 132 [J1-SUBSTACK] | sem mudança | FIM1: cauda vigente; partes essenciais no lugar. |
+| 133 [X9-OPEN-ENGAGEMENT] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 134 [X10-PAID-RECOMMENDATIONS] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 135 [X11-SKOOL-GAMES] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 136 [X12-MOR-PRODUCT] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 137 [X13-SSO-WHITE-LABEL] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 138 [P0-BUTTON-CONTRAST] | sem mudança | MQ1(b): já concluído/publicado, sem reconstrução. |
+| 139 [B2-CLAIM-ACKNOWLEDGMENT] | sem mudança | MQ1(b): já concluído/publicado, sem reconstrução. |
+| 140 [B2-SAFE-ERROR-MESSAGES] | sem mudança | MQ1(b): andamento/posição protegidos; estado intacto. |
+| 141 [B2-PAUSE-ACKNOWLEDGMENT] | sem mudança | MQ1(b): andamento/posição protegidos; estado intacto. |
+| 142 [S1-COMPARISONS] | sem mudança | MQ1(b): já concluído/publicado, sem reconstrução. |
+| 143 [S2-PRICING] | sem mudança | MQ1(b): já concluído/publicado, sem reconstrução. |
+| 144 [S3-TOOLS-CALCULATOR] | sem mudança | MQ1(b): já concluído/publicado, sem reconstrução. |
+| 145 [S4-HOME-SALES] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 146 [S5-PUBLIC-CRM] | sem mudança | MQ1(b): já concluído/publicado, sem reconstrução. |
+| 147 [S6-FEATURE-MECHANISMS] | sem mudança | MQ1(b): já concluído/publicado, sem reconstrução. |
+| 148 [S7-CREATOR-PAGES] | sem mudança | MQ1(b): já concluído/publicado, sem reconstrução. |
+| 149 [S8-VERIFIED-SOCIAL-REFERENCE] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 150 [S9-DECISION-BLOG] | sem mudança | MQ1(b): já concluído/publicado, sem reconstrução. |
+| 151 [S10-HOME-PRICING-FAQ] | sem mudança | MQ1(b): já concluído/publicado, sem reconstrução. |
+| 152 [S11-HOME-CTAS] | sem mudança | MQ1(b): já concluído/publicado, sem reconstrução. |
+| 153 [S12-HOME-PATH] | sem mudança | MQ1(b): já concluído/publicado, sem reconstrução. |
+| 154 [B2-CONTACT-ACKNOWLEDGMENT] | sem mudança | MQ1(b): já concluído/publicado, sem reconstrução. |
+| 155 [B2-RECOVERY-ACKNOWLEDGMENT] | sem mudança | MQ1(b): já concluído/publicado, sem reconstrução. |
+| 156 [B2-SOCIAL-PROFILE-ACKNOWLEDGMENT] | sem mudança | MQ1(b): já concluído/publicado, sem reconstrução. |
+| 157 [B2-SIGNUP-SETTING-ACKNOWLEDGMENT] | sem mudança | MQ1(b): já concluído/publicado, sem reconstrução. |
+| 158 [B2-WELCOME-VIDEO-ACKNOWLEDGMENT] | sem mudança | MQ1(b): já concluído/publicado, sem reconstrução. |
+| 159 [B2-SUPPORT-SETTING-ACKNOWLEDGMENT] | sem mudança | MQ1(b): já concluído/publicado, sem reconstrução. |
+| 160 [B2-STORE-FAQ-ACKNOWLEDGMENT] | sem mudança | MQ1(b): já concluído/publicado, sem reconstrução. |
+| 161 [B2-PDF-PREVIEW-ACKNOWLEDGMENT] | sem mudança | MQ1(b): já concluído/publicado, sem reconstrução. |
+| 162 [B2-PDF-STAMP-ACKNOWLEDGMENT] | sem mudança | MQ1(b): já concluído/publicado, sem reconstrução. |
+| 163 [B2-MEMBER-NUDGE-ACKNOWLEDGMENT] | sem mudança | MQ1(b): já concluído/publicado, sem reconstrução. |
+| 164 [B2-164] | sem mudança | MQ1(b): já concluído/publicado, sem reconstrução. |
+| 165 [B2-165] | sem mudança | MQ1(b): já concluído/publicado, sem reconstrução. |
+| 166 [B2-166] | sem mudança | MQ1(b): já concluído/publicado, sem reconstrução. |
+| 167 [B2-167] | sem mudança | MQ1(b): já concluído/publicado, sem reconstrução. |
+| 168 [B2-168] | sem mudança | MQ1(b): já concluído/publicado, sem reconstrução. |
+| 169 [B2-169] | sem mudança | MQ1(b): já concluído/publicado, sem reconstrução. |
+| 170 [B2-170] | sem mudança | MQ1(b): já concluído/publicado, sem reconstrução. |
+| 171 [B2-171] | sem mudança | MQ1(b): já concluído/publicado, sem reconstrução. |
+| 172 [B2-172] | sem mudança | MQ1(b): já concluído/publicado, sem reconstrução. |
+| 173 [B2-173] | sem mudança | MQ1(b): já concluído/publicado, sem reconstrução. |
+| 174 [B2-174] | sem mudança | MQ1(b): já concluído/publicado, sem reconstrução. |
+| 175 [B2-175] | sem mudança | MQ1(b): já concluído/publicado, sem reconstrução. |
+| 176 [B2-176] | sem mudança | MQ1(b): já concluído/publicado, sem reconstrução. |
+| 177 [B2-177] | sem mudança | MQ1(b): já concluído/publicado, sem reconstrução. |
+| 178 [B2-178] | sem mudança | MQ1(b): já concluído/publicado, sem reconstrução. |
+| 179 [B2-179] | sem mudança | MQ1(b): já concluído/publicado, sem reconstrução. |
+| 180 [B2-180] | sem mudança | MQ1(b): já concluído/publicado, sem reconstrução. |
+| 181 [B2-181] | sem mudança | MQ1(b): já concluído/publicado, sem reconstrução. |
+| 182 [HT0] | sem mudança | MQ1(b): já concluído/publicado, sem reconstrução. |
+| 183 [HT1] | sem mudança | MQ1(b): já concluído/publicado, sem reconstrução. |
+| 184 [HT2] | sem mudança | MQ1(b): já concluído/publicado, sem reconstrução. |
+| 185 [HT3] | sem mudança | MQ1(b): já concluído/publicado, sem reconstrução. |
+| 186 [HT4] | sem mudança | MQ1(b): já concluído/publicado, sem reconstrução. |
+| 187 [HT5] | sem mudança | MQ1(b): já concluído/publicado, sem reconstrução. |
+| 188 [HT6] | sem mudança | MQ1(b): já concluído/publicado, sem reconstrução. |
+| 189 [HT7] | sem mudança | MQ1(b): já concluído/publicado, sem reconstrução. |
+| 190 [HT8] | sem mudança | MQ1(b): já concluído/publicado, sem reconstrução. |
+| 191 [HT9] | sem mudança | MQ1(b): já concluído/publicado, sem reconstrução. |
+| 192 [HT12] | sem mudança | MQ1(b): já concluído/publicado, sem reconstrução. |
+| 193 [HT15] | sem mudança | MQ1(b): já concluído/publicado, sem reconstrução. |
+| 194 [HT16] | sem mudança | MQ1(b): já concluído/publicado, sem reconstrução. |
+| 195 [HT17] | sem mudança | MQ1(b): já concluído/publicado, sem reconstrução. |
+| 196 [HT10] | sem mudança | MQ1(b): já concluído/publicado, sem reconstrução. |
+| 197 [HT11] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 198 [HT13] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 199 [HT14] | sem mudança | MQ1(b): já concluído/publicado, sem reconstrução. |
+| 200 [B2-200] | sem mudança | MQ1(b): já concluído/publicado, sem reconstrução. |
+| 201 [P0-BROWSERS-DEVICES] | sem mudança | MQ1(b): andamento/posição protegidos; estado intacto. |
+| 202 [P0-REAL-PEOPLE] | sem mudança | MQ1(b): andamento/posição protegidos; estado intacto. |
+| 203 [TEAMS] | sem mudança | FIM1: cauda vigente; partes essenciais no lugar. |
+| 204 [SH1] | sem mudança | MQ1(b): andamento/posição protegidos; estado intacto. |
+| 205 [SH2] | sem mudança | MQ1(b): andamento/posição protegidos; estado intacto. |
+| 206 [SH3] | A | MQ1(e): imediatamente após515[PF3], acima. |
+| 207 [SH4] | sem mudança | FIM1: cauda vigente; partes essenciais no lugar. |
+| 208 [SH5] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 209 [SH6] | sem mudança | FIM1: cauda vigente; partes essenciais no lugar. |
+| 210 [SH7] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 211 [SH8] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 212 [SH9] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 213 [SH10] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 214 [SH11] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 215 [OP1] | sem mudança | FIM1: cauda vigente; partes essenciais no lugar. |
+| 216 [OP2] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 217 [OP3] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 218 [OP4] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 219 [OP5] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 220 [HL1] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 221 [HL2] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 222 [HL3] | sem mudança | FIM1: cauda vigente; partes essenciais no lugar. |
+| 223 [HL4] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 224 [HL5] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 225 [HL6] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 226 [HL7] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 227 [HL8] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 228 [HL9] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 229 [HL10] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 230 [HL11] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 231 [EQ1] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 232 [CA1] | sem mudança | MQ1(a–b): AV1/abertura/vínculo vigente mantido. |
+| 233 [SK1] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 234 [SK2] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 235 [SK3] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 236 [SK4] | sem mudança | FIM1: cauda vigente; partes essenciais no lugar. |
+| 237 [SK5] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 238 [CF1] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 239 [CF2] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 240 [CF3] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 241 [CF4] | A | MQ1(e): imediatamente após531[VP1], acima. |
+| 242 [CF5] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 243 [CF6] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 244 [SP1] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 245 [SP2] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 246 [SP3] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 247 [SP4] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 248 [ST1] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 249 [ST2] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 250 [ST3] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 251 [ST4] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 252 [WH1] | sem mudança | FIM1: cauda vigente; partes essenciais no lugar. |
+| 253 [WH2] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 254 [WH3] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 255 [WH4] | sem mudança | FIM1: cauda vigente; partes essenciais no lugar. |
+| 256 [KJ1] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 257 [KJ2] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 258 [KJ3] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 259 [KJ4] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 260 [KJ5] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 261 [KJ6] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 262 [KJ7] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 263 [CI1] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 264 [CI2] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 265 [CI3] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 266 [CI4] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 267 [KT1] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 268 [KT2] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 269 [KT3] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 270 [GR1] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 271 [SEO1] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 272 [HM1] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 273 [BK1] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 274 [AX1] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 275 [FX1] | sem mudança | MQ1(a–b): AV1/abertura/vínculo vigente mantido. |
+| 276 [H3-1] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 277 [H3-2] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 278 [H3-3] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 279 [H3-4] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 280 [H3-5] | sem mudança | FIM1: cauda vigente; partes essenciais no lugar. |
+| 281 [SF1] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 282 [HG1] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 283 [HG2] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 284 [HG3] | sem mudança | FIM1: cauda vigente; partes essenciais no lugar. |
+| 285 [SX1] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 286 [SX2] | sem mudança | FIM1: cauda vigente; partes essenciais no lugar. |
+| 287 [H4-1] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 288 [H4-2] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 289 [H4-3] | sem mudança | FIM1: cauda vigente; partes essenciais no lugar. |
+| 290 [SQ1] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 291 [SQ2] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 292 [SQ3] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 293 [SQ4] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 294 [SQ5] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 295 [SQ6] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 296 [SQ7] | sem mudança | FIM1: cauda vigente; partes essenciais no lugar. |
+| 297 [SQ8] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 298 [H5-1] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 299 [H5-2] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 300 [9A-1] | sem mudança | MQ1(a–b): AV1/abertura/vínculo vigente mantido. |
+| 301 [9A-2] | sem mudança | MQ1(a–b): AV1/abertura/vínculo vigente mantido. |
+| 302 [9A-3] | sem mudança | MQ1(a–b): AV1/abertura/vínculo vigente mantido. |
+| 303 [9A-4] | sem mudança | MQ1(a–b): AV1/abertura/vínculo vigente mantido. |
+| 304 [GH1] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 305 [SY1] | sem mudança | MQ1(a–b): AV1/abertura/vínculo vigente mantido. |
+| 306 [SY2] | sem mudança | MQ1(a–b): AV1/abertura/vínculo vigente mantido. |
+| 307 [EC1] | sem mudança | MQ1(a–b): AV1/abertura/vínculo vigente mantido. |
+| 308 [TC1] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 309 [EM1] | sem mudança | MQ1(a–b): AV1/abertura/vínculo vigente mantido. |
+| 310 [AX2] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 311 [HS1] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 312 [HQ1] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 313 [CV1] | sem mudança | MQ1(a–b): AV1/abertura/vínculo vigente mantido. |
+| 314 [MG1] | sem mudança | MQ1(a–b): AV1/abertura/vínculo vigente mantido. |
+| 315 [MG2] | sem mudança | MQ1(a–b): AV1/abertura/vínculo vigente mantido. |
+| 316 [MG3] | sem mudança | MQ1(a–b): AV1/abertura/vínculo vigente mantido. |
+| 317 [EU1] | sem mudança | FIM1: cauda vigente; partes essenciais no lugar. |
+| 318 [IW1] | sem mudança | FIM1: cauda vigente; partes essenciais no lugar. |
+| 319 [TK1] | sem mudança | MQ1(a–b): AV1/abertura/vínculo vigente mantido. |
+| 320 [TK2] | sem mudança | MQ1(a–b): AV1/abertura/vínculo vigente mantido. |
+| 321 [TK3] | sem mudança | MQ1(a–b): AV1/abertura/vínculo vigente mantido. |
+| 322 [TK4] | sem mudança | MQ1(a–b): AV1/abertura/vínculo vigente mantido. |
+| 323 [TK5] | sem mudança | MQ1(a–b): AV1/abertura/vínculo vigente mantido. |
+| 324 [TK6] | sem mudança | MQ1(a–b): AV1/abertura/vínculo vigente mantido. |
+| 325 [IN1] | sem mudança | MQ1(a–b): AV1/abertura/vínculo vigente mantido. |
+| 326 [IN2] | sem mudança | MQ1(a–b): AV1/abertura/vínculo vigente mantido. |
+| 327 [IN3] | sem mudança | FIM1: cauda vigente; partes essenciais no lugar. |
+| 328 [PC1] | sem mudança | MQ1(a–b): AV1/abertura/vínculo vigente mantido. |
+| 329 [EV1] | sem mudança | MQ1(a–b): AV1/abertura/vínculo vigente mantido. |
+| 330 [EV2] | sem mudança | MQ1(a–b): AV1/abertura/vínculo vigente mantido. |
+| 331 [RC1] | sem mudança | MQ1(a–b): AV1/abertura/vínculo vigente mantido. |
+| 332 [RD1] | sem mudança | MQ1(a–b): AV1/abertura/vínculo vigente mantido. |
+| 333 [RE1] | sem mudança | MQ1(a–b): AV1/abertura/vínculo vigente mantido. |
+| 334 [RE2] | sem mudança | MQ1(a–b): AV1/abertura/vínculo vigente mantido. |
+| 335 [FR1] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 336 [HZ1] | sem mudança | MQ1(b): registro de regra, sem alteração. |
+| 337 [HZ2] | sem mudança | FIM1: cauda vigente; partes essenciais no lugar. |
+| 338 [HZ3] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 339 [WS1] | sem mudança | MQ1(a–b): AV1/abertura/vínculo vigente mantido. |
+| 340 [WS2] | sem mudança | MQ1(a–b): AV1/abertura/vínculo vigente mantido. |
+| 341 [WS3] | sem mudança | MQ1(a–b): AV1/abertura/vínculo vigente mantido. |
+| 342 [WS4] | sem mudança | MQ1(a–b): AV1/abertura/vínculo vigente mantido. |
+| 343 [RN1] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 344 [RN2] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 345 [RN3] | sem mudança | FIM1: cauda vigente; partes essenciais no lugar. |
+| 346 [FL1] | sem mudança | FIM1: cauda vigente; partes essenciais no lugar. |
+| 347 [FL2] | sem mudança | FIM1: cauda vigente; partes essenciais no lugar. |
+| 348 [ED1] | sem mudança | FIM1: cauda vigente; partes essenciais no lugar. |
+| 349 [DN1] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 350 [DN2] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 351 [DN3] | sem mudança | FIM1: cauda vigente; partes essenciais no lugar. |
+| 352 [DN4] | sem mudança | FIM1: cauda vigente; partes essenciais no lugar. |
+| 353 [BH1] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 354 [EP1] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 355 [ES1] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 356 [ES2] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 357 [ES3] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 358 [EA1] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 359 [EA2] | sem mudança | FIM1: cauda vigente; partes essenciais no lugar. |
+| 360 [NL1] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 361 [AP1] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 362 [AP2] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 363 [EI1] | sem mudança | FIM1: cauda vigente; partes essenciais no lugar. |
+| 364 [EZ1] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 365 [EZ2] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 366 [EZ3] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 367 [EZ4] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 368 [SU1] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 369 [SU2] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 370 [SU3] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 371 [SU4] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 372 [SU5] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 373 [SU6] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 374 [SU7] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 375 [TB1] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 376 [TB2] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 377 [TB3] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 378 [TB4] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 379 [TB5] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 380 [TB6] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 381 [TB7] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 382 [TB8] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 383 [TB9] | sem mudança | FIM1: cauda vigente; partes essenciais no lugar. |
+| 384 [TB10] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 385 [TB11] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 386 [TB12] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 387 [TB13] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 388 [TB14] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 389 [TB15] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 390 [CX1] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 391 [CX2] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 392 [CX3] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 393 [CX4] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 394 [CX5] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 395 [CX6] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 396 [CX7] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 397 [SL1] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 398 [SL2] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 399 [SL3] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 400 [WX1] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 401 [WX2] | sem mudança | FIM1: cauda vigente; partes essenciais no lugar. |
+| 402 [WX3] | sem mudança | FIM1: cauda vigente; partes essenciais no lugar. |
+| 403 [SN1] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 404 [RF1] | sem mudança | FIM1: cauda vigente; partes essenciais no lugar. |
+| 405 [HX1] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 406 [AM1] | sem mudança | FIM1: cauda vigente; partes essenciais no lugar. |
+| 407 [AM2] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 408 [AM3] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 409 [AM4] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 410 [AM5] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 411 [AM6] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 412 [AM7] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 413 [AM8] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 414 [KX1] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 415 [KX2] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 416 [KX3] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 417 [CC1] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 418 [CC2] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 419 [CC3] | sem mudança | FIM1: cauda vigente; partes essenciais no lugar. |
+| 420 [CC4] | sem mudança | FIM1: cauda vigente; partes essenciais no lugar. |
+| 421 [PT1] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 422 [PT2] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 423 [LT1] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 424 [MN1] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 425 [BX1] | sem mudança | FIM1: cauda vigente; partes essenciais no lugar. |
+| 426 [BX2] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 427 [VR1] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 428 [BV1] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 429 [BV2] | sem mudança | FIM1: cauda vigente; partes essenciais no lugar. |
+| 430 [TM1] | sem mudança | FIM1: cauda vigente; partes essenciais no lugar. |
+| 431 [PV1] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 432 [PV2] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 433 [PV3] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 434 [PV4] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 435 [PV5] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 436 [AC1] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 437 [AC2] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 438 [FC1] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 439 [FC2] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 440 [FC3] | sem mudança | FIM1: cauda vigente; partes essenciais no lugar. |
+| 441 [SV1] | sem mudança | FIM1: cauda vigente; partes essenciais no lugar. |
+| 442 [SV2] | sem mudança | FIM1: cauda vigente; partes essenciais no lugar. |
+| 443 [TS1] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 444 [TS2] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 445 [GE1] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 446 [GE2] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 447 [GE3] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 448 [LE1] | sem mudança | MQ1(a–b): AV1/abertura/vínculo vigente mantido. |
+| 449 [AP1] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 450 [AP2] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 451 [AP3] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 452 [AP4] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 453 [AP5] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 454 [AP6] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 455 [AP7] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 456 [AN1] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 457 [EL1] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 458 [EL2] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 459 [EL3] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 460 [EL4] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 461 [EL5] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 462 [EL6] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 463 [EL7] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 464 [MR1] | sem mudança | MQ1(b): registro de regra, sem alteração. |
+| 465 [MR2] | sem mudança | MQ1(b): registro de regra, sem alteração. |
+| 466 [MR3] | sem mudança | MQ1(b): registro de regra, sem alteração. |
+| 467 [SR1] | sem mudança | MQ1(b): registro de regra, sem alteração. |
+| 468 [SR2] | sem mudança | MQ1(b): registro de regra, sem alteração. |
+| 469 [SR3] | sem mudança | MQ1(b): registro de regra, sem alteração. |
+| 470 [SR4] | sem mudança | MQ1(b): registro de regra, sem alteração. |
+| 471 [TX1] | sem mudança | MQ1(b): registro de regra, sem alteração. |
+| 472 [TX2] | sem mudança | MQ1(b): registro de regra, sem alteração. |
+| 473 [TX3] | sem mudança | MQ1(b): registro de regra, sem alteração. |
+| 474 [TX4] | sem mudança | MQ1(b): registro de regra, sem alteração. |
+| 475 [TX5] | sem mudança | MQ1(b): registro de regra, sem alteração. |
+| 476 [TX6] | sem mudança | MQ1(b): registro de regra, sem alteração. |
+| 477 [TX7] | sem mudança | MQ1(b): registro de regra, sem alteração. |
+| 478 [SB1] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 479 [SB2] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 480 [SB3] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 481 [SB4] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 482 [SB5] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 483 [SB6] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 484 [IT1] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 485 [IT2] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 486 [IT3] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 487 [IT4] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 488 [IT5] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 489 [IT6] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 490 [PP1] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 491 [PP2] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 492 [DE1] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 493 [DE2] | sem mudança | MQ1(a–b): AV1/abertura/vínculo vigente mantido. |
+| 494 [SR5] | sem mudança | MQ1(b): registro de regra, sem alteração. |
+| 495 [SR6] | sem mudança | MQ1(b): registro de regra, sem alteração. |
+| 496 [ME1] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 497 [ME2] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 498 [ME3] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 499 [OX1] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 500 [OX2] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 501 [OX3] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 502 [RX1] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 503 [AG1] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 504 [AG2] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 505 [SG2] | sem mudança | MQ1(b): SG2 protegido. |
+| 506 [SG1] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 507 [SG3] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 508 [SG4] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 509 [CK1] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 510 [CK2] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 511 [CK3] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 512 [CK4] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 513 [PF1] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 514 [PF2] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 515 [PF3] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 516 [PF4] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 517 [PF5] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 518 [PF6] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 519 [PF7] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 520 [LB1] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 521 [LB2] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 522 [LB3] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 523 [LB4] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 524 [NV1] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 525 [FN1] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 526 [FN2] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 527 [HE1] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 528 [FT1] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 529 [FT2] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 530 [FT3] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 531 [VP1] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 532 [AF1] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 533 [DP1] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 534 [FQ1] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 535 [MV1] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 536 [CB1] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 537 [PH1] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 538 [AB1] | sem mudança | MQ1(a–b): AV1/abertura/vínculo vigente mantido. |
+| 539 [AR1] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 540 [CU1] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 541 [FC4] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 542 [CM1] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 543 [CM2] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 544 [SQ9] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 545 [LU1] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 546 [EB1] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 547 [ER1] | sem mudança | MQ1(b): andamento/posição protegidos; estado intacto. |
+| 548 [TR1] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 549 [SI1] | sem mudança | MQ1(b): andamento/posição protegidos; estado intacto. |
+| 550 [IX1] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 551 [FB1] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 552 [BB1] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 553 [DB1] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 554 [DS1] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+
+### Proveniência, Pedidos repetidos e VR
+
+Conferidos primeiro a continuidade e depois main1119c7a8be669cdf7aff5815f3032215e44f8a04;2PRs abertos1235/1236 com seus heads/filas;789refs codex/* inventariados;20heads recentes distintos de PRs codex/* com filas lidas. Busca por29/10/2026,20h52,título,MQ1,marco e conteúdo: nenhum registro equivalente encontrado. A classificação considera todos os554itens do main, com554localizadores únicos e os59FIM1 atuais. Etiquetas AP1/AP2 repetidas continuam distinguidas pelos números361/449 e362/450. Nenhum item555criado. Origem: anexo88fc0b0f-ea49-4c4d-9271-7629da88fbfb/Texto colado.txt; pedido integral preservado a seguir.
+
+Verificação documental preparada: o arquivo anterior permanece byte a byte fora da inserção deste índice e das duas linhas de posiçãoFIM1 explicitamente autorizadas; conteúdo anterior dessas linhas fica preservado nas próprias células de histórico. Cabeçalhos, textos, estados, histórico e provas dos554itens não são editados. Testes sintéticos de consistência dos conjuntos/linhas e escopo documental; CI pertinente no head antes de incorporar. Não é recurso novo, publicação funcional, prova interativa, certificaçãoAX/margem/fiscal nem nova entrega; contador254. PRs1235/1236 continuam suas suítes sem edição/cancelamento.
+
+Custos: documentação, revisão e CI100%MarktmorgenFX275; nenhum novo fornecedor/IO produtivo, contratação, conta, mensagem, pagamento, submissão ou gasto operacional autorizado. CI/custo desconhecido não é zero. MR27/10/2026 07h42, TX, taxas mais caras/reservas/tetos, preços/limites/comissão/opt-in, PLANS_ON_SALE/OPENING_REQUESTED e gates integralmente preservados. Conteúdo, idiomas, IDs e Hazelsong intactos.
+
+### Pedido integral preservado — MQ1
+
+```text
+MQ — Marco dos itens menos importantes na fila (29/10/2026) [MQ1]
+
+Solicitação do dono (29/10/2026, 20h52, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: antes de gravar, aplique a regra "Pedidos repetidos" (23/10/2026). Procure esta solicitação no main, nos PRs abertos e nos ramos codex/* recentes, pela linha de data e hora, pelo nome da seção, pela etiqueta [MQ1] e pelo conteúdo. Se já estiver gravada, não crie nada novo. Esta é a instrução de posição mais recente do dono e prevalece (passo 3b) sobre posições anteriores incompatíveis dos itens citados, sem renumerar nada; AV1, o Bloco de abertura e o FIM1 continuam valendo como descrito abaixo.
+
+Estado inicial: na fila, num único PR curto de documentação, sem interromper o trabalho em andamento nem AV1/SD1.
+
+Pedido do dono: haverá na fila um ponto a partir do qual os itens, que continuam a ser feitos no futuro, são considerados menos importantes que os anteriores. Marque esse ponto na fila; daí em diante ficam os menos importantes. A classificação abaixo considerou todos os 554 itens do main em 29/10/2026.
+
+[MQ1] Marco "Daqui em diante, os menos importantes".
+(a) Ordem vigente da fila, de cima para baixo:
+1. AV1 e Bloco de abertura, como estão hoje, inclusive (a) a (k), 538 [AB1] e 448 [LE1] em paralelo;
+2. o que AV1 já manda fazer logo depois da abertura, na ordem já gravada (7 [C-UE], 8 [C-UK], 300 a 303, o relatório mensal de 465 [MR2] e 114 [E2-AFFILIATE-TAX-FORMS], se ficar para depois);
+3. Grupo A, os mais importantes, na ordem relativa que já têm hoje;
+4. uma seção visível "MARCO — DAQUI EM DIANTE, OS MENOS IMPORTANTES (MQ1, 29/10/2026)";
+5. Grupo B, os menos importantes, na ordem relativa que já têm hoje;
+6. os 59 itens do FIM1 (28/10/2026, 23h43), por último, na ordem já vigente entre eles.
+(b) Não mudam de lugar nem de estado: itens concluídos ou publicados; itens em andamento (por exemplo 4, 88, 140, 141, 201, 547 e 549); todos os itens da lista AV1 e do Bloco de abertura, inclusive os de custo da posição (k); 505 [SG2]; e os registros de regras (59, 60, 336, 464 a 477, 494 e 495).
+(c) Grupo A, acima do marco: 14 [D11], 17 [D15], 22 [E5], 28 [E11], 32 [F1], 39 [G1], 93 [D2-VERIFIED-SOCIAL], 94 [D2-BUYER-TRUST], 99 [E2-TAG-BROADCAST], 100 [E2-MEMBER-PUBLICATIONS], 103 [E2-LESSON-MEDIA], 113 [E2-COMMUNITY-MODERATION], 120 [F2-IMPORTS], 143 [S2-PRICING], 145 [S4-HOME-SALES], 149 [S8-VERIFIED-SOCIAL-REFERENCE], 182 [HT0], 202 [P0-REAL-PEOPLE], 205 [SH2], 206 [SH3], 219 [OP5], 220 [HL1], 238 [CF1], 239 [CF2], 240 [CF3], 241 [CF4], 242 [CF5], 243 [CF6], 248 [ST1], 251 [ST4], 256 [KJ1], 260 [KJ5], 271 [SEO1], 273 [BK1], 274 [AX1], 276 [H3-1], 281 [SF1], 282 [HG1], 308 [TC1], 310 [AX2], 312 [HQ1], 335 [FR1], 338 [HZ3], 356 [ES2], 362 [AP2], 370 [SU3], 374 [SU7], 375 [TB1], 378 [TB4], 380 [TB6], 388 [TB14], 389 [TB15], 394 [CX5], 397 [SL1], 399 [SL3], 414 [KX1], 417 [CC1], 427 [VR1], 428 [BV1], 431 [PV1], 432 [PV2], 433 [PV3], 434 [PV4], 436 [AC1], 437 [AC2], 438 [FC1], 439 [FC2], 443 [TS1], 444 [TS2], 457 [EL1], 459 [EL3], 460 [EL4], 461 [EL5], 462 [EL6], 479 [SB2], 480 [SB3], 484 [IT1], 485 [IT2], 487 [IT4], 488 [IT5], 490 [PP1], 491 [PP2], 492 [DE1], 496 [ME1], 497 [ME2], 498 [ME3], 506 [SG1], 507 [SG3], 508 [SG4], 513 [PF1], 514 [PF2], 515 [PF3], 520 [LB1], 521 [LB2], 522 [LB3], 524 [NV1], 525 [FN1], 531 [VP1], 533 [DP1], 534 [FQ1], 535 [MV1], 536 [CB1], 537 [PH1], 540 [CU1], 541 [FC4], 544 [SQ9], 545 [LU1], 546 [EB1], 548 [TR1], 551 [FB1], 552 [BB1], 554 [DS1].
+(d) Grupo B, abaixo do marco: 10 [D7], 11 [D8], 12 [D9], 13 [D10], 15 [D12], 18 [E1], 19 [E2], 20 [E3], 21 [E4], 23 [E6], 24 [E7], 25 [E8], 27 [E10], 29 [E12], 30 [E13], 31 [E14], 33 [F2], 34 [F3], 35 [F4], 36 [F5], 40 [G2], 43 [G5], 44 [H1], 46 [H3], 50 [I1], 51 [I2], 52 [I3], 54 [J2], 55 [K1], 57 [K3-ZAPIER], 61 [X1], 62 [X2], 63 [X3], 64 [X4], 65 [X5], 66 [X6], 67 [X7], 68 [X8], 95 [D2-DEMAND-RADAR], 96 [D2-LESSON-DROPOFF], 97 [D2-OPEN-EXIT], 101 [E2-PUBLICATION-REACTIONS], 102 [E2-COURSE-COMPLIANCE], 105 [E2-COURSE-AI-DRAFT], 106 [E2-CHECKOUT-EXTRAS], 107 [E2-BROADCAST-CONTENT-AB], 108 [E2-BLOG-RSS-MAIL], 109 [E2-EVENTS], 110 [E2-MEMBER-PROFILES], 111 [E2-COMMUNITY-AUTOMATION], 112 [E2-POINTS], 115 [E2-FOUNDING-MEMBERS], 116 [F2-COMMUNITY-CHANNELS], 117 [F2-COMMUNITY-MAIL], 118 [F2-READER-REFERRALS], 119 [F2-FREE-RECOMMENDATIONS], 121 [F2-SUBSCRIPTION-GIFTS], 122 [F2-COMMUNITY-AI], 123 [F2-COMMUNITY-DIRECTORY], 124 [F2-EDIT-SENT-LINKS], 125 [F2-EMAIL-POLLS], 126 [F2-MULTIPLE-COMMUNITIES], 133 [X9-OPEN-ENGAGEMENT], 134 [X10-PAID-RECOMMENDATIONS], 135 [X11-SKOOL-GAMES], 136 [X12-MOR-PRODUCT], 137 [X13-SSO-WHITE-LABEL], 197 [HT11], 198 [HT13], 204 [SH1], 208 [SH5], 210 [SH7], 211 [SH8], 212 [SH9], 213 [SH10], 214 [SH11], 216 [OP2], 217 [OP3], 218 [OP4], 221 [HL2], 223 [HL4], 224 [HL5], 225 [HL6], 226 [HL7], 227 [HL8], 228 [HL9], 229 [HL10], 230 [HL11], 231 [EQ1], 233 [SK1], 234 [SK2], 235 [SK3], 237 [SK5], 244 [SP1], 245 [SP2], 246 [SP3], 247 [SP4], 249 [ST2], 250 [ST3], 253 [WH2], 254 [WH3], 257 [KJ2], 258 [KJ3], 259 [KJ4], 261 [KJ6], 262 [KJ7], 263 [CI1], 264 [CI2], 265 [CI3], 266 [CI4], 267 [KT1], 268 [KT2], 269 [KT3], 270 [GR1], 272 [HM1], 277 [H3-2], 278 [H3-3], 279 [H3-4], 283 [HG2], 285 [SX1], 287 [H4-1], 288 [H4-2], 290 [SQ1], 291 [SQ2], 292 [SQ3], 293 [SQ4], 294 [SQ5], 295 [SQ6], 297 [SQ8], 298 [H5-1], 299 [H5-2], 304 [GH1], 311 [HS1], 343 [RN1], 344 [RN2], 349 [DN1], 350 [DN2], 353 [BH1], 354 [EP1], 355 [ES1], 357 [ES3], 358 [EA1], 360 [NL1], 361 [AP1], 364 [EZ1], 365 [EZ2], 366 [EZ3], 367 [EZ4], 368 [SU1], 369 [SU2], 371 [SU4], 372 [SU5], 373 [SU6], 376 [TB2], 377 [TB3], 379 [TB5], 381 [TB7], 382 [TB8], 384 [TB10], 385 [TB11], 386 [TB12], 387 [TB13], 390 [CX1], 391 [CX2], 392 [CX3], 393 [CX4], 395 [CX6], 396 [CX7], 398 [SL2], 400 [WX1], 403 [SN1], 405 [HX1], 407 [AM2], 408 [AM3], 409 [AM4], 410 [AM5], 411 [AM6], 412 [AM7], 413 [AM8], 415 [KX2], 416 [KX3], 418 [CC2], 421 [PT1], 422 [PT2], 423 [LT1], 424 [MN1], 426 [BX2], 435 [PV5], 445 [GE1], 446 [GE2], 447 [GE3], 449 [AP1], 450 [AP2], 451 [AP3], 452 [AP4], 453 [AP5], 454 [AP6], 455 [AP7], 456 [AN1], 458 [EL2], 463 [EL7], 478 [SB1], 481 [SB4], 482 [SB5], 483 [SB6], 486 [IT3], 489 [IT6], 499 [OX1], 500 [OX2], 501 [OX3], 502 [RX1], 503 [AG1], 504 [AG2], 509 [CK1], 510 [CK2], 511 [CK3], 512 [CK4], 516 [PF4], 517 [PF5], 518 [PF6], 519 [PF7], 523 [LB4], 526 [FN2], 527 [HE1], 528 [FT1], 529 [FT2], 530 [FT3], 532 [AF1], 539 [AR1], 542 [CM1], 543 [CM2], 550 [IX1], 553 [DB1]. As etiquetas AP1 e AP2 repetidas (361/449 e 362/450) são distinguidas pelo número.
+(e) Ajustes de posição já pedidos pelo dono: 206 [SH3], antes "logo depois de 519 [PF7]" (PF8), passa a ficar logo depois de 515 [PF3], acima do marco, porque 519 foi para o Grupo B; 241 [CF4] continua logo depois de 531 [VP1]. Registre os dois na tabela de posições do FIM1 com esta data e hora.
+(f) Critério do Grupo A, para conferência e para itens novos: aumenta as vendas ou a retenção dos criadores, traz criadores de outras plataformas, aumenta as vendas dos planos do próprio Marktmorgen, reduz custo, ou é obrigação legal, fiscal, de segurança, de acessibilidade (AX274) ou de verdade operacional (VR). Grupo B: estudos, propostas, comparações internas, recursos de nicho, comunidade e afiliados avançados, IA adicional, aplicativo de celular e o que depende de clientes reais para valer.
+(g) Regra de partes, como no FIM1: em qualquer item do Grupo B, a parte necessária a conformidade legal, segurança, impostos, acessibilidade, cobrança ou redução de custo dos primeiros meses fica no lugar de hoje; só o restante vai para baixo do marco. Obrigações de operações que já existem nunca são adiadas. Proibições já vigentes continuam, mesmo abaixo do marco (por exemplo, consultas tributárias em 318 e 435, CSS livre em 127, português do Brasil em 58 e 420).
+(h) Itens novos: cada solicitação nova do dono dirá "acima do marco" ou "abaixo do marco"; se não disser, aplique o critério de (f) e registre o lado escolhido numa linha da proveniência do item.
+(i) Somente posição muda: número, texto, escopo, estado, histórico e provas de cada item ficam iguais. Nada é cancelado, absorvido, fechado ou renumerado. A ordem relativa dentro de cada grupo é a já vigente; os números das listas servem só para localizar os itens.
+(j) Registre o resultado numa tabela única: item, grupo (A, B ou sem mudança) e motivo em uma linha.
+
+Margem (regra MR vigente, 27/10/2026, 07h42): nenhum cliente pagante, isoladamente e usando 100% dos direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo, depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto. A empresa como um todo não pode dar prejuízo a partir da base mínima calculada, com 100% dos custos fixos atribuídos ao Marktmorgen (FX275). A meta de 60% de margem líquida é medida todo mês no relatório real. Política tributária TX vigente. Custo desconhecido reprova, nunca é zero; cota grátis de fornecedor não conta como custo zero.
+
+Proibido: mudar a ordem de AV1 ou do Bloco de abertura; cancelar, absorver, fechar, renumerar ou apagar qualquer item, texto, histórico ou prova; mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava ou teste; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+```
+
+
 ## SD — Decisão: abertura pela LLC americana e conta Stripe americana (28/10/2026) [SD1]
 
 Solicitação direta do dono: 28/10/2026, 18h41, Fortaleza. Estado inicial: na fila, execução imediata. Esta decisão é posterior a 495 [SR6]/PR1175 e [AV1] e prevalece onde divergir, sem renumerar itens nem apagar histórico.
@@ -14997,13 +15643,13 @@ Em cada item, qualquer parte necessária para abrir vendas, conformidade legal, 
 | 131 | OR BlocoB 80/81 | Fim, após todos os nãoFIM1; ordem relativa anterior | Somente posição; escopo/estado/provas mantidos. Salvaguardas já devidas dos recursos atuais permanecem imediatas. |
 | 132 | OR BlocoB 81/81 | Fim, após todos os nãoFIM1; ordem relativa anterior | Somente posição; escopo/estado/provas mantidos. Salvaguardas já devidas dos recursos atuais permanecem imediatas. |
 | 203 | Após202/trabalhos em andamento | Fim, após todos os nãoFIM1; ordem relativa anterior | Somente posição; escopo/estado/provas mantidos. Salvaguardas já devidas dos recursos atuais permanecem imediatas. |
-| 206 | OR apósA,206–272; antesB | Logo depois de 519 [PF7], por PF8 (29/10/2026,09h48 Fortaleza) | PF8 altera somente posição em29/10/2026,09h48Fortaleza; escopo/estado/provas mantidos. Salvaguardas já devidas dos recursos atuais permanecem imediatas. |
+| 206 | OR apósA,206–272; antesB | Logo depois de515[PF3], no Grupo A acima do marco; MQ1 (29/10/2026,20h52Fortaleza) | Somente posição; número/escopo/estado/provas intactos. Histórico da posição anterior: Logo depois de 519 [PF7], por PF8 (29/10/2026,09h48 Fortaleza). Histórico da regra anterior: PF8 altera somente posição em29/10/2026,09h48Fortaleza; escopo/estado/provas mantidos. Salvaguardas já devidas dos recursos atuais permanecem imediatas. MQ1(e) prevalece;206 não fica mais após519,241 continua após531. |
 | 207 | OR apósA,206–272; antesB | Fim, após todos os nãoFIM1; ordem relativa anterior | Somente posição; escopo/estado/provas mantidos. Salvaguardas já devidas dos recursos atuais permanecem imediatas. |
 | 209 | OR apósA,206–272; antesB | Fim, após todos os nãoFIM1; ordem relativa anterior | Somente posição; escopo/estado/provas mantidos. Salvaguardas já devidas dos recursos atuais permanecem imediatas. |
 | 215 | OR apósA,206–272; antesB | Fim, após todos os nãoFIM1; ordem relativa anterior | Somente posição; escopo/estado/provas mantidos. Salvaguardas já devidas dos recursos atuais permanecem imediatas. |
 | 222 | OR apósA,206–272; antesB | Fim, após todos os nãoFIM1; ordem relativa anterior | Somente posição; escopo/estado/provas mantidos. Salvaguardas já devidas dos recursos atuais permanecem imediatas. |
 | 236 | OR apósA,206–272; antesB | Fim, após todos os nãoFIM1; ordem relativa anterior | Somente posição; escopo/estado/provas mantidos. Salvaguardas já devidas dos recursos atuais permanecem imediatas. |
-| 241 | OR apósA,206–272; antesB; levado ao fim por FIM1 em28/10/2026,23h43Fortaleza | Logo depois de 531 [VP1], por VP2 (29/10/2026,13h24 Fortaleza) | VP2 altera somente posição em29/10/2026,13h24Fortaleza; escopo/estado/provas mantidos. Nenhum outro itemFIM1 muda; PF8/206após519preservado. Salvaguardas já devidas dos recursos atuais permanecem imediatas. |
+| 241 | OR apósA,206–272; antesB; levado ao fim por FIM1 em28/10/2026,23h43Fortaleza | Logo depois de531[VP1], no Grupo A acima do marco; reafirmado por MQ1 (29/10/2026,20h52Fortaleza) | Somente posição; número/escopo/estado/provas intactos. Histórico da posição anterior: Logo depois de 531 [VP1], por VP2 (29/10/2026,13h24 Fortaleza). Histórico da regra anterior: VP2 altera somente posição em29/10/2026,13h24Fortaleza; escopo/estado/provas mantidos. Nenhum outro itemFIM1 muda; PF8/206após519preservado. Salvaguardas já devidas dos recursos atuais permanecem imediatas. MQ1(e) prevalece;206 não fica mais após519,241 continua após531. |
 | 252 | OR apósA,206–272; antesB | Fim, após todos os nãoFIM1; ordem relativa anterior | Somente posição; escopo/estado/provas mantidos. Salvaguardas já devidas dos recursos atuais permanecem imediatas. |
 | 255 | OR apósA,206–272; antesB | Fim, após todos os nãoFIM1; ordem relativa anterior | OpenAPI/SDK/loja de testes novos no fim; segurança, isolamento e teto da API já operante ficam na posição atual. |
 | 280 | Após itens anteriores/OR/AX274B–C | Fim, após todos os nãoFIM1; ordem relativa anterior | Somente posição; escopo/estado/provas mantidos. Salvaguardas já devidas dos recursos atuais permanecem imediatas. |
@@ -17005,6 +17651,15 @@ Proveniência de1230: incorporado23:27:42UTC/20:27:42Fortaleza,merge0d7969881e3a
 Custos1230/1234:trabalho local finito de descritores substitui travessia/dereferência não validada;nenhuma nova chamada produtiva/gravação/provedor/retry/preço/limite/comissão/optin/idioma/ID/conteúdo/Hazelsong. CI/revisão100%MarktmorgenFX275,desconhecidonãozero,MR/TX e reservas intactos. PR1234ainda nãoincorporado/publicado;reconciliação é código+fila e requer suíteinteira no novocombinado.
 
 
+### AV1 — Transporte real de e-mail: confirmação própria da tomada de envio (29/10/2026, 21h16 Fortaleza)
+
+Continuação técnica de AB(a), sem item novo nem habilitação de avisos financiados. Base1119c7a8be669cdf7aff5815f3032215e44f8a04. Em lib/email.ts, a tomada SET NX EX para SES exigirá envelope de uma resposta e membro próprio de dados, aceitando apenas OK ou null explícitos. Resposta desconhecida, accessor, herdada, esparsa, símbolo, cardinalidade excessiva ou exceção após possível gravação suspende ambos os provedores, retorna falha e retém a tomada; não afirma entrega nem libera fallback Resend. Casos normais de fallback e tomada existente mantêm comportamento anterior. Uma tomada existente ainda não é recibo de entrega; o TTL existente não prova exatamente uma entrega nem financiamento vitalício.
+
+Teste pelo sendEmail real no harness SES existente, apenas provedores e Redis sintéticos: SET primeiro gravado, depois resposta adulterada/exceção; nenhum envio SES/Resend, exclusão ou contador de envio, tomada preservada; getters e membros fora da cardinalidade não lidos; controle positivo próprio OK e testes existentes mantidos. Verificação completa no novo head é obrigatória antes de incorporar; ainda não aprovado/publicado. Sem nova chamada produtiva, teto, reserva, preço, limite ou gate. A operação local finita de descritores substitui leitura não validada; testes/revisão100%MarktmorgenFX275, custo desconhecido não zero. Permanecem necessários orçamento da fonte original e reserva de cada tentativa antes do ciclo financiado; company meter e exposição mensal não substituem isso. Coverage de reinício/renovação permanecefalse, MR/TX/opt-in/Hazelsong preservados.
+
+Proveniência1234: incorporação efetiva30/10/2026 00:11:00UTC =29/10/2026 21:11:00Fortaleza, merge1119c7a8be669cdf7aff5815f3032215e44f8a04, pais0d7969881e3aa44739af2bad286a4143dba7dee2/7cfe990ca7a812479afe3bf77d7e6c36cbdeb45b, árvoree190ef7174492a9615ce0bfdba594305ca2ec7a5. Head combinado7cfe:39/39+Vercel; verify123800889789234/234/Everything23:48:53UTC; testes reais de ativação com dados sintéticos23:45:46UTC. Mobile123800889866:9amostras frias sintéticas,LCPmáximo1164ms,CLS0,proxy interação112ms,zeroAPIwrites; não INP de campo. Produção dpl_FPf7NktEiAJLD52QELmSNDuSzkKR READY00:13UTC,SHAexato1119c7a8,7aliases e HTML real de /,/pricing,/platform/path,/help,/proof/comparisons com mesmo deployment. Janela error/fatal00:11:00–00:13:41UTC sem correspondência, somente essa janela. Falhas anteriores e correções de fixture/compilação acima preservadas; nenhuma aprovação por job isolado. Prova interativa do dono continua bloqueada, sem repetir Chrome/trocar navegador; contador254, não255. Esta proveniência acompanha alteração real, não PR só de prova.
+
+
 ### TX3 — Leitura limitada dos registros de tratamento (29/10/2026, 21h27 Fortaleza)
 
 Continuação técnica473[TX3], sem item novo, sem mudar posição/estado global e sem inventar tratamento tributário. Base1119c7a8be669cdf7aff5815f3032215e44f8a04. O gate real deemedSupplierReady já exige exatamente um registro por cada uma das quatro jurisdições conhecidas; uma lista maior não pode ser válida. ownTreatmentRecords passa a recusar cardinalidade superior ao número de jurisdições ANTES de Reflect.ownKeys e da leitura de membros, evitando enumerar evidência excessiva que sempre seria recusada. Listas parciais continuam informando jurisdições faltantes; validação de tratamento, registro, data e evidência fica integral.
@@ -17012,3 +17667,14 @@ Continuação técnica473[TX3], sem item novo, sem mudar posição/estado global
 Teste pelo gate real: proxy positivo com quatro registros sintéticos prova enumeração/leitura; depois listas de cinco e um milhão de posições falham sem nenhuma enumeração ou inspeção de membro. Registros reais continuam vazios, deemedSupplierReady=false e PLANS_ON_SALE=false. Isso não implementa cobrança, contador por estado/país, OSS, registro fiscal ou recusa geográfica; não certifica cumprimento de473nem concluiTX. Verificação completa no novo head é obrigatória antes de incorporar. Trabalho em branch distinta de1235, sem editar lib/email.ts ou tests/ses-sender.test.ts; união de código requer novo head e suíte integral.
 
 Custos: comparação local constante substitui enumeração excessiva de entrada inválida; nenhuma nova chamada produtiva, fornecedor, gravação, preço, limite visível, comissão ou gate aberto. CI/revisão100%FX275Marktmorgen, custo desconhecido não é zero; MR/TX e reservas permanecem. Conteúdo, idiomas, IDs e Hazelsong preservados. Contador254; sem nova publicação funcional neste registro.
+
+
+### União de1235/1236 com MQ1 — 29/10/2026, após21h41Fortaleza
+
+Composição de código em codex/tx-treatment-cardinality-bound a partir dos heads individuais1235/11ae83dde5c0c96b9d88cf02da83cdd41691f097 e1236/e471183597cd562fe7b6417df0988a80199e1c77, com main0852c75c58c55dd30049f871af7e20cfbfad54f2. Fontes, testes e documentos de cada correção conferidos integralmente no remoto antes de compor; seus arquivos distintos entram sem mudança adicional. Filas reconciliadas por prefixo exato: índiceMQ1 e todas as notas anteriores preservados, seguidos dos dois apêndices sem sobrescrever texto. Nenhum item555criado, nenhum estado ou posiçãoMQ1alterado.
+
+1235individual: verify123815063771 aprovou testes reais de sendEmail com Redis/provedores sintéticos às00:26:20UTC, os10cenários de tomada incerta sem envio/fallback/exclusão/contagem e controleOK;234/234bundles/Everything às00:27:17.9882911UTC. Mobile123815063665,9frias:LCPmáximo880ms,CLS0,proxyinteração112ms,zeroAPIwrites; laboratório, não INPde campo. Verificação inteira individual ainda tem WebKit em andamento no momento desta composição; não declarar39/39 a partir de partes. 1236individual ainda tem verify/cross-browser em andamento; não foi aprovado por antecipação. Ambas as execuções individuais continuam, sem cancelamento nem reexecução isolada. A união exige suíte INTEIRA no novo head e Vercel antes de incorporar, independentemente desses resultados individuais.
+
+MQ1/PR1237: incorporação efetiva30/10/2026 00:41:48UTC =29/10/2026 21:41:48Fortaleza, merge0852c75c58c55dd30049f871af7e20cfbfad54f2, pais1119c7a8be669cdf7aff5815f3032215e44f8a04/4208dbb9f503d6b2e4a2b50dd4decb5ef068a16b, árvore933ae050a5ca7f42d19422a7770d0210ffe7d31a.27checksdocumentais16sucessos/11skips pertinentes+Vercel.554localizadores únicos,108A/232B/214sem mudança após exceções,59FIM1na cauda; arquivo anterior recuperável fora da inserção e2linhasFIM1 autorizadas, histórico das linhas e briefing integral preservados. Produção dpl_GKTsnQxakUWD2HVSnh4MhRJij7zJ READY,SHAexato0852c75c,7aliases eHTMLreal de /,/pricing,/platform/path,/help,/proof/comparisons com mesmoID. Janela error/fatal00:41:48–00:43:22.978UTC sem correspondências; somente essa janela. Documento não é entrega funcional nem incrementa contador. ProvaChromecontinua bloqueada,semretry/troca;254mantido.
+
+Custos da união: não adiciona operação produtiva,fornecedor,preço,limite,gatilho,retentativa ou gate. Decodificação limitada mantém tomadas incertas e recusa listas impossíveis antes de enumerar. CI/revisão100%MarktmorgenFX275,custo desconhecido nãozero; financiamento de avisos por fonte continua não implementado/coberturafalse,sem substituição por companymeter. PLANS_ON_SALE/OPENING_REQUESTEDfalse,revisões/políticas/recebimento/impostos/reservas/optin/Hazelsong preservados. Anexação dosPRs1235/1236/1237tentada; ferramenta informa limite100identidades,URLs preservadas,nenhum anexo antigo removido; não é rejeição de aprovação.
