@@ -435,8 +435,13 @@ async function forget(ref: string, andTheYear: boolean): Promise<void> {
  */
 export async function undoPause(store: Store, nowSeconds = Math.floor(Date.now() / 1000)): Promise<"kept" | "stopped" | "none"> {
   const ref = storeRef(store);
-  const record = await pauseAt(ref);
-  if (!record) return "none";
+  // Unknown evidence cannot mean that the break was removed. Preserve the
+  // existing bounded observation and refuse before provider or cleanup writes.
+  if (!isRedisConfigured()) throw new Error("the break could not be confirmed");
+  const observed = await storedPauseAt(ref);
+  if (observed.missing) return "none";
+  const record = observed.record;
+  if (!record) throw new Error("the break could not be confirmed");
   if (nowSeconds < record.from && record.subscription === store.subscriptionId) {
     const state = await setCancelAtPeriodEnd(record.subscription, false);
     // Being active is not acknowledgement that the scheduled stop was removed.
