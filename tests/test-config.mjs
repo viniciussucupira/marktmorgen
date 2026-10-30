@@ -2,7 +2,7 @@ import {join} from 'node:path';
 /** One wiring source for the repository runner and local parallel verification. */
 export function testAliases(file,root,here){
  const aliases={'@':root,'@/lib/redis':['range-traffic-coverage.test.ts','stats-traffic-coverage.test.ts'].includes(file)?join(root,'lib/redis.ts'):join(here,'redis-stub.ts')};
- if(file==='meeting-disabled-settings.test.ts')aliases['next/navigation']=join(here,'next-navigation-stub.ts');
+ if(['meeting-disabled-settings.test.ts','zoom-arrival.test.ts'].includes(file))aliases['next/navigation']=join(here,'next-navigation-stub.ts');
  if(file==='meeting-disabled-withdrawal.test.ts'){
   aliases['next/server']=join(here,'next-server-after-world.ts');
   for(const name of ['meet-test','account-notice'])aliases['@/lib/'+name]=join(here,'meeting-disabled-world.ts');
