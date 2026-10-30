@@ -5,6 +5,16 @@ import {commercialMarginReady,CURRENT_COMMERCIAL_MARGIN_REVIEW,CURRENT_PRICE_AND
 import {CONTRACT_FUNDING_RULES,CONTRACT_ADMISSION_COVERAGE,CONTRACT_KEYS,CURRENT_CONTRACT_FUNDING_POLICY,canonicalFinancialSnapshot,contractFundingConfiguration,type ContractKey,type ContractFundingPolicy,type ContractFundingContext,type ContractFundingConfiguration} from '@/lib/contract-funding-rules';
 import type {Tier,Cycle} from '@/lib/plan';
 export const contractFundingBinding=(c:ContractFundingConfiguration)=>createHash('sha256').update(c.binding).digest('hex');
+/** Require a single own data entry before interpreting a financial ACK. */
+function singleOwnContractAcknowledgement(reply: unknown): {value: unknown} | null {
+ try {
+  if(!Array.isArray(reply))return null;
+  const length=Object.getOwnPropertyDescriptor(reply,'length');
+  if(!length||!Object.hasOwn(length,'value')||length.value!==1)return null;
+  const entry=Object.getOwnPropertyDescriptor(reply,'0');
+  return entry&&Object.hasOwn(entry,'value')?{value:entry.value}:null;
+ }catch{return null;}
+}
 export const RESERVE_CONTRACT = `
 local function amount(value)
  if not value or not string.match(value,'^%d+$') or (#value>1 and string.sub(value,1,1)=='0') then return nil end
@@ -101,9 +111,10 @@ export async function reserveContractFunding(statsId:string,tier:Tier,cycle:Cycl
  const charge=config.grantCents[key],receipt=[config.reviewId,statsId,key,action,charge,submitUntilSeconds,checkoutExpiresAtSeconds,activationUntilSeconds,config.liabilitiesThroughMs].join('|');
  try{
   const result=await redisPipeline([['EVAL',RESERVE_CONTRACT,1,'nl:contract-reserve:v1',contractFundingBinding(config),config.reviewId,statsId,key,charge,config.cashLimitCents,config.carryForwardCents,config.fundedGrants[key],nonce,receipt,action,sourceSubscriptionId??'',seconds,...(action==='restart'?[CONTRACT_FUNDING_RULES.submissionSeconds]:[])]]);
+  const ack=singleOwnContractAcknowledgement(result);
   const current=contractFundingConfiguration(policy,context,new Date()),ready=commercialMarginReady(context.review);
   const checkedAt=Date.now();
-  const acknowledged=current!==null&&current.binding===config.binding&&ready&&checkedAt>=reservedAt.getTime()&&checkedAt<=config.admissionsUntilMs&&new Date(checkedAt).toISOString().slice(0,7)===context.review?.fundedExposure?.month&&result.length===1&&result[0]===1&&checkedAt<=submitUntilSeconds*1000;
+  const acknowledged=current!==null&&current.binding===config.binding&&ready&&checkedAt>=reservedAt.getTime()&&checkedAt<=config.admissionsUntilMs&&new Date(checkedAt).toISOString().slice(0,7)===context.review?.fundedExposure?.month&&ack!==null&&ack.value===1&&checkedAt<=submitUntilSeconds*1000;
   return acknowledged?{sourceSubscriptionId,action,id:nonce,reviewId:config.reviewId,statsId,key,reservedCents:charge,submitUntilSeconds,checkoutExpiresAtSeconds,activationUntilSeconds,liabilitiesThrough:new Date(config.liabilitiesThroughMs).toISOString()}:null;
  }catch{return null;}
 }
@@ -451,9 +462,10 @@ export async function claimRestartIntent(
  if(Buffer.byteLength(intent)>CONTRACT_FUNDING_RULES.restartIntent.maxIntentBytes)return null;
  try{
   const result=await redisPipeline([['EVAL',CLAIM_RESTART_INTENT,4,'nl:contract-reserve:v1','nl:pause:'+ref,'nl:pause:due','nl:pause:last:'+ref,contractFundingBinding(config),config.reviewId,grant.statsId,grant.key,grant.id,grant.sourceSubscriptionId!,now,grant.reservedCents,config.cashLimitCents,config.carryForwardCents,CONTRACT_FUNDING_RULES.submissionSeconds,ref,paused,claim,handle,intent]]);
+  const ack=singleOwnContractAcknowledgement(result);
   const current=contractFundingConfiguration(policy,context,new Date()),checked=Date.now();
-  if(current===null||current.binding!==config.binding||!commercialMarginReady(context.review)||checked<before.getTime()||checked>grant.submitUntilSeconds*1000||result.length!==1)return null;
-  const owned=ownedRestartIntentFromAcknowledgement(input,now,{cashLimitCents:config.cashLimitCents,carryForwardCents:config.carryForwardCents},result[0]);
+  if(current===null||current.binding!==config.binding||!commercialMarginReady(context.review)||checked<before.getTime()||checked>grant.submitUntilSeconds*1000||ack===null)return null;
+  const owned=ownedRestartIntentFromAcknowledgement(input,now,{cashLimitCents:config.cashLimitCents,carryForwardCents:config.carryForwardCents},ack.value);
   const finished=Date.now();
   return owned&&finished>=checked&&finished<=grant.submitUntilSeconds*1000&&new Date(finished).toISOString().slice(0,7)===context.review?.fundedExposure?.month?owned:null;
  }catch{return null;}
