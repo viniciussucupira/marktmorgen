@@ -16324,6 +16324,39 @@ Proveniência: pedido direto do dono; aplica só diferença ao525,sem novo núme
 
 Complemento ao 525 [FN1]: na página que lista os funis da loja, cada funil numa linha com compradores, número de vendas e receita do período escolhido, ordenável por cada coluna; no alto, os totais da loja no mesmo período (receita, pedidos e produtos à venda). Os mesmos números e as mesmas regras do 525: lidos das vendas reais na conta Stripe ou PayPal do próprio criador, "Counts unavailable" quando faltar dado, nunca zero inventado, reembolsos descontados, nenhum dado pessoal de comprador, e um total nunca diferente da soma das linhas.
 
+### Complemento ao 525 [FN1] — 30/10/2026, 09h37 Fortaleza
+
+Proveniência: pedido direto do dono na conversa com o Claude, 30/10/2026, 09h37 Fortaleza; texto redigido pelo Claude e aprovado pelo dono; gravado diretamente pelo Claude para não interromper o Codex. Pedidos repetidos passo3(b): conferido no main a468d42260d959ccdaa6081697c6fea9db6351cd que não havia complemento FN1 de 30/10/2026, 09h37; somente a diferença abaixo foi acrescentada, e o 525 [FN1] mantém número, posição (Grupo A, acima do marco MQ1, conforme sua linha atual na tabela do MQ1, sem mudança) e estado. Conferência limitada no mesmo main: saleChannel existe em lib/stats.ts; não há “Sign-ups from this funnel”, “Orders from this funnel” nem “Funnel not recorded” em app, components ou lib; revalidar no head de implementação. Texto do dono preservado integralmente abaixo.
+
+FN — Complemento ao 525 [FN1]: à vista e recorrente em cada etapa, e listas de cadastros e pedidos do funil (30/10/2026)
+Etiqueta: [FN1]
+
+Solicitação do dono (30/10/2026, 09h37, horário de Fortaleza).
+
+Pedidos repetidos: é complemento ao item 525 [FN1] já gravado, que já recebeu os complementos de 29/10/2026. Aplique só a diferença ao item existente, mantendo número, posição e estado (regra "Pedidos repetidos", passo 3, letra b), e registre na proveniência o que mudou. Conferido antes de gravar: o cartão de cada etapa com miniatura, nome, endereço e números está no 526 [FN2]; visitas, cadastros, vendas e receita por etapa e a receita recorrente no resumo estão neste 525; as sequências e automações (lib/flows.ts) já existem. Nada disso é refeito.
+
+Estado inicial: o do próprio 525.
+
+Contexto: a página clickfunnels.com/features/funnel-builder (lida em 30/10/2026) mostra, na seção "Get more important funnel stats at a glance", o cartão de uma etapa com Pageviews, Opt-Ins, Upf. Orders, Upf. Sales, Rec. Orders e Rec. Sales, e, no alto do funil, as abas Funnel, Editor, Workflows, Opt Ins, Orders e Stats. No Marktmorgen, a separação entre à vista e recorrente está pedida só no resumo do funil, e a lista de contatos e a de vendas do criador não dizem de qual funil cada pessoa veio. Verifique antes no código atual que isso continua assim.
+
+O que acrescentar ao 525 [FN1]:
+- em cada etapa: pedidos à vista e receita à vista; pedidos recorrentes (renovações de assinaturas que começaram naquela etapa) e receita recorrente; com as mesmas fontes, o mesmo período, a mesma moeda, os reembolsos descontados e a mesma regra de coerência do 525 (quantidade nunca escrita como dinheiro, total igual à soma das partes);
+- registrar em cada cadastro e em cada venda feitos dentro de um funil o identificador do funil e da etapa, pelo mesmo caminho que já guarda a origem da venda (saleChannel em lib/stats.ts), sem dado pessoal novo, sem rastreamento entre sites e com o mesmo prazo de guarda do contato ou da venda;
+- na página do funil, dois links, "Sign-ups from this funnel" e "Orders from this funnel", que abrem a lista de contatos e a lista de vendas que o criador já tem, filtradas por aquele funil, com as mesmas permissões e a mesma exportação de hoje; nenhuma lista nova e nenhum dado de comprador no painel de resumo;
+- cadastros e vendas anteriores a este registro aparecem como "Funnel not recorded", nunca atribuídos a um funil por suposição.
+
+Acessibilidade (AX274, Parte A, integral): máxima acessibilidade em tudo o que este item criar ou alterar — WCAG 2.2 nível AAA em todos os critérios aplicáveis, em todas as telas, estados, e-mails e arquivos, mais as demais normas e orientações da Parte A; a impossibilidade de um critério AAA precisa ser demonstrada e registrada em docs/accessibility-programme.md, nunca presumida. Os pontos a seguir são verificações obrigatórias deste item, não o limite do que se exige: números em texto real com rótulo por extenso ("One-time orders", "Recurring revenue"), sem abreviação sem explicação (3.1.4); quantidade e dinheiro distinguidos por texto, não só por cor ou fonte; filtro anunciado ao leitor de tela, com o nome do funil, e removível; propósito de cada link compreensível pelo próprio texto (2.4.9); contraste de 7:1, 320 px e 400% de zoom; tudo por teclado. Seção "Acessibilidade" no PR, com os passos e as decisões da tarefa principal antes e depois.
+
+Testes automáticos, com Stripe simulado: à vista e recorrente por etapa, coerência entre etapas e resumo, registro do funil no cadastro e na venda, filtro das duas listas, permissões, "Funnel not recorded" para registros antigos e ausência de dado pessoal no painel.
+
+Custo: um campo a mais em registros que já são gravados e o filtro de listas que já são lidas, dentro dos limites de armazenamento e de requisições que cada plano já tem. Calcule o pior caso mensal e anual de cada plano com 100% dos direitos usados e aplique teto automático antes do gasto. Custo desconhecido reprova, nunca é zero.
+
+REGRA DE MARGEM (MR, 27/10/2026): nenhum cliente pagante, considerado isoladamente e usando 100% de todos os direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto; a empresa como um todo não pode dar prejuízo no pior caso a partir da base mínima de clientes pagantes, com 100% dos custos fixos da LLC atribuídos ao Marktmorgen (FX275); a meta de 60% de margem líquida é medida todo mês com números reais. Impostos pela política TX vigente.
+
+Proibido: criar item novo ou mudar número, posição ou estado do 525; inventar, estimar ou atribuir por suposição qualquer número ou funil; mostrar dado pessoal de comprador no painel; criar rastreamento novo, pixel ou perfil; mudar preços, limites visíveis, comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a, a revisão comercial ou stripePlatformEligibilityReady; afrouxar qualquer trava; mostrar recurso que não funciona hoje; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+
 ## FN2 — registro integral; item526 (29/10/2026,11h10Fortaleza)
 
 Proveniência: pedido direto do dono nesta conversa; descrição da captura e do estado do produto atribuída ao briefing, sem alegar inspeção independente de imagem não anexada nesta mensagem. Deduplicação: main51030ab,PR1208aberto,20PRsrecentes/19heads codexdistintos e763refs,sem etiqueta/título/data/conteúdo equivalente. Próximo livre526após525FN1,sem alterar ordem/estado/escopo existentes. Reaproveitar377TB3/headline-test/flows/funnel-metrics;receitas só quando525funcionar;reconferir código antes e aplicar apenasdiferença. MR/TX/FX275/AX274/VR,custosdetetos antesoperação e desconhecido reprova vinculantes. Registro somente,sem implementar/ativar/anunciar recurso; AVcontinua,TB375/32permanece noPR1208comcódigo.
