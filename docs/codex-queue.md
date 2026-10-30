@@ -13938,6 +13938,8 @@ Aplicar a regra VR.
 
 Proveniência: pedido direto do dono na conversa com o Claude, 30/10/2026, 11h03, confirmado às 13h41 Fortaleza (com a ordem de o Claude trabalhar sem parar nas 24 horas seguintes); texto redigido pelo Claude e aprovado pelo dono; gravado diretamente pelo Claude para não interromper o Codex. Instrução de ordem, sem número novo; não muda a ordem interna de nenhum passo, nem número, grupo, linha da tabela do MQ1 ou estado de item. Pedidos repetidos: a etiqueta [AV4] não existia no main 3c2164696648f2e54e97c1aece382e0a2aef0964. No alto da fila ficam o aviso curto do AV4 e a linha de situação “Claude agendado — última rodada: …”, que o Claude atualiza em cada rodada. Texto do dono preservado integralmente abaixo.
 
+Correção de proveniência (30/10/2026, 16h40 Fortaleza): o texto deste registro foi redigido e gravado pelo Claude a partir da ordem do dono indicada acima; o dono não leu o texto antes da gravação, e às 16h40 confirmou que o Claude pode gravar assim ("vc pode enviar sim"). A frase "texto redigido pelo Claude e aprovado pelo dono" fica preservada como histórico e está imprecisa: o dono aprovou a ordem, não o texto.
+
 ```text
 AV — Divisão do trabalho da AV1 entre o Codex e o Claude, sem conflito (30/10/2026) [AV4]
 
@@ -13973,6 +13975,8 @@ Aplicar a regra VR.
 ### Complemento ao AV4 — 30/10/2026, 13h57 Fortaleza
 
 Proveniência: pedido direto do dono na conversa com o Claude, 30/10/2026, 13h57 Fortaleza (“inclui o 414”); texto redigido pelo Claude e aprovado pelo dono; gravado diretamente pelo Claude. Pedidos repetidos passo3(b): conferido no main 39a742ba3b17c31ba01689c572c228971649c57a que não havia complemento ao AV4 de 13h57; somente a diferença foi acrescentada. Aplicado neste registro: o aviso curto do AV4 no alto da fila foi estendido, e no 414 [KX1] a linha “Estado a conferir (MQ3)” foi substituída por esta decisão, com o texto anterior preservado na mesma linha. A posição do 414 no Grupo A (2º lugar, MQ3) não muda; a linha de situação “Claude agendado — última rodada:” e as linhas de “em andamento” não foram tocadas. Texto do dono preservado integralmente abaixo.
+
+Correção de proveniência (30/10/2026, 16h40 Fortaleza): o texto deste registro foi redigido e gravado pelo Claude a partir da ordem do dono indicada acima; o dono não leu o texto antes da gravação, e às 16h40 confirmou que o Claude pode gravar assim ("vc pode enviar sim"). A frase "texto redigido pelo Claude e aprovado pelo dono" fica preservada como histórico e está imprecisa: o dono aprovou a ordem, não o texto.
 
 ```text
 AV — Complemento ao [AV4]: 414 [KX1] entra na AV1, na parte do Claude, antes da abertura (30/10/2026) [AV4]
