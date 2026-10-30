@@ -9,7 +9,7 @@ import {contractFixture} from './contract-funding-fixture';
 import {reset,seed,ledger,calls,resourceSettings} from './contract-resource-redis';
 const ledgerKey='nl:contract-reserve:v1',statsId='a'.repeat(32);
 async function setup(cycle:'month'|'year'='month',options:{admissionMs?:number;durationSeconds?:number}={}){
- reset();resourceSettings({lost:false,failure:false,response:null,afterAck:null});const f=contractFixture();
+ reset();resourceSettings({lost:false,failure:false,response:null,afterAck:null,acknowledge:null});const f=contractFixture();
  f.policy.admissionsUntil=new Date(Date.now()+(options.admissionMs??10*86400000)).toISOString();
  const config=contractFundingConfiguration(f.policy,f.context)!;assert.ok(config);seed(config);
  assert.ok(await reserveContractFunding(statsId,'creator',cycle,'checkout',f.policy,f.context,'ctr_resources'));
@@ -95,5 +95,58 @@ test('a backwards clock refuses first and repeated cohort acknowledgements even 
   assert.equal(f.h.get('resource:ctr_resources:0'),window.start+'|'+window.end);
   assert.equal(f.h.size,before.size+(existing?0:1),'only the first cohort field may be added');
   assert.equal(calls.length,count+1,'no compensating Redis request');
+ }
+});
+
+test('resource ACK own-data bounds retain committed cohorts and never grant unknown work',async()=>{
+ for(const cycle of ['month','year'] as const){
+  let probes=0,getters=0;
+  const probe=(value:unknown[])=>new Proxy(value,{getOwnPropertyDescriptor(target,key){
+   if(key==='0'||key==='1')probes++;
+   return Reflect.getOwnPropertyDescriptor(target,key);
+  }});
+  // Prove the same descriptor probe sees a normal outer and inner response.
+  let f=await setup(cycle),end=allowanceWindow(f.store)!.end;
+  resourceSettings({acknowledge:()=>probe([probe([1,end])])});
+  assert.equal(await reservePaidResourceWindow(f.store,f.policy,f.context),true);
+  assert.equal(probes,3);
+  probes=0;
+  const cases:[string,(end:number)=>unknown][]=[
+   ['nonarray',end=>({0:[1,end],length:1})],
+   ['empty',()=>[]],['sparse outer',()=>new Array(1)],
+   ['inherited outer',end=>Object.setPrototypeOf(new Array(1),{0:[1,end]})],
+   ['outer accessor',end=>Object.defineProperty(new Array(1),'0',{get(){getters++;return[1,end];}})],
+   ['oversized outer',end=>probe([[1,end],[1,end]])],
+   ['nonarray inner',end=>[{0:1,1:end,length:2}]],
+   ['sparse inner',()=>[new Array(2)]],
+   ['inherited inner',end=>[Object.setPrototypeOf(new Array(2),{0:1,1:end})]],
+   ['flag accessor',end=>[Object.defineProperty([1,end],'0',{get(){getters++;return 1;}})]],
+   ['end accessor',end=>[Object.defineProperty([1,end],'1',{get(){getters++;return end;}})]],
+   ['oversized inner',end=>[probe([1,end,0])]],
+   ['symbol flag',end=>[[Symbol('1'),end]]],
+   ['string flag',end=>[['1',end]]],
+   ['string end',end=>[[1,String(end)]]],
+   ['wrong end',end=>[[1,end+1]]],
+   ['throw after commit',()=>{throw Error('synthetic resource acknowledgement lost');}],
+  ];
+  for(const [name,answer] of cases){
+   for(const existing of [false,true]){
+    f=await setup(cycle);end=allowanceWindow(f.store)!.end;
+    if(existing)assert.equal(await reservePaidResourceWindow(f.store,f.policy,f.context),true);
+    const before=new Map(f.h),count=calls.length;
+    resourceSettings({acknowledge:()=>answer(end) as unknown[]});
+    assert.equal(await reservePaidResourceWindow(f.store,f.policy,f.context),false,cycle+' '+name);
+    assert.equal(calls.length,count+1,'one reservation call, no compensation/readback');
+    for(const [key,value]of before)assert.equal(f.h.get(key),value,'retained financial field '+key);
+    assert.equal(f.h.get('resource:ctr_resources:0'),allowanceWindow(f.store)!.start+'|'+end);
+    assert.equal(f.h.size,before.size+(existing?0:1),'only first cohort may be added');
+    assert.equal(getters,0,'no executable ACK field');
+    assert.equal(probes,0,'reject oversize before member inspection');
+    const committed=[...f.h];
+    resourceSettings({acknowledge:null});
+    assert.equal(await reservePaidResourceWindow(f.store,f.policy,f.context),true,'valid repeat still recovers same cohort');
+    assert.deepEqual([...f.h],committed,'valid repeat allocates nothing twice');
+   }
+  }
  }
 });

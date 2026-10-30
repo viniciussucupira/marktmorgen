@@ -34,6 +34,8 @@ Entrada posterior no Grupo B: **555[AK1]**, pedido do dono29/10/2026,23h30Fortal
 
 Entrada posterior no Grupo B: **557[BG1]**, com complementos **BG2 e BG3 dentro do mesmo item**, na fila, **ABAIXO DO MARCO MQ1 por indicação expressa do dono**. Depois de555[AK1] entre os remanescentesB e antes da caudaFIM1;556[CT1] continuaA, depois513[PF1]. Nenhum outro item ou Bloco de abertura muda de ordem/estado.
 
+Entrada posterior no Grupo B: **558[LK1]**, na fila, **ABAIXO DO MARCO MQ1 por indicação expressa do dono30/10/2026,00h18Fortaleza**, depois557[BG1] entre os remanescentesB e antesFIM1. Sem mudança de qualquer outro item ou do Bloco de abertura.
+
 ### Por último — os59 remanescentesFIM1
 
 FIM1 continua depois de todos os demais, na ordem relativa anterior e com a mesma regra de partes. São os61localizadores históricos da tabelaFIM1 menos206 e241, já retirados da cauda por decisões de posição. Localizadores para conferência (não ordem nova): 16, 26, 37, 38, 41, 42, 45, 47, 48, 49, 53, 56, 58, 92, 104, 127, 128, 129, 130, 131, 132, 203, 207, 209, 215, 222, 236, 252, 255, 280, 284, 286, 289, 296, 317, 318, 327, 337, 345, 346, 347, 348, 351, 352, 359, 363, 383, 401, 402, 404, 406, 419, 420, 425, 429, 430, 440, 441, 442. O item58 continua afetado **somente no português doBrasil**; os demais idiomas mantêm posição/gates atuais. Concluídos e andamentos já existentes não são reconstruídos, reiniciados ou movidos novamente.
@@ -51,6 +53,8 @@ Uma linha por item, três grupos possíveis: A, B ou sem mudança. “Sem mudan�
 **Atualização posterior CT1 (29/10/2026,23h50):** as contagens554/555 acima permanecem como retratos históricos. Estado atual: **556linhas únicas,109A,233B,214sem mudança**. Acrescenta somente556[CT1] ao Grupo A depois de513[PF1];555[AK1/AK2] permanece no Grupo B, sem alteração de estado ou posição. A tabela abaixo continua de localização numérica, nunca sequência de execução.
 
 **Atualização BG1/BG2/BG3:** as bases554/555/556 acima são históricas. A tabela atual tem **557linhas únicas:109A,234B,214sem mudança**. Só557[BG1] é acrescentado ao Grupo B;BG2/BG3 não ganham números. A ordenação numérica é localização, não execução; posições anteriores continuam vigentes.
+
+**Atualização LK1 (30/10/2026,00h18):** bases554–557 anteriores são históricas; tabela atual **558linhas únicas,109A,235B,214sem mudança**. Só558[LK1] acrescentadoB, depois557; tabela numérica não redefine execução.
 
 | Item | Grupo | Motivo |
 | --- | --- | --- |
@@ -611,6 +615,7 @@ Uma linha por item, três grupos possíveis: A, B ou sem mudança. “Sem mudan�
 | 555 [AK1] | B | Pedido29/10/2026,23h30: abaixo do marco expresso; após remanescentesB, antesFIM1. |
 | 556 [CT1] | A | Dono29/10/2026,23h50: acima do marco, imediatamente depois de513[PF1]; demais posições e abertura preservadas. |
 | 557 [BG1] | B | Dono29/10/2026,23h58;BG2/BG3 dentro do mesmo item; abaixo do marco, após555 no Grupo B, antesFIM1. |
+| 558 [LK1] | B | Dono30/10/2026,00h18: abaixo do marco, depois557no Grupo B e antesFIM1; demais posições preservadas. |
 
 ### Proveniência, Pedidos repetidos e VR
 
@@ -16005,6 +16010,76 @@ Estado inicial: na fila.
 O que fazer: estude com data a API oficial e os termos do Shippo. Ligue a conta do próprio criador (chave dele, guardada com a mesma proteção dos demais tokens). No pedido físico, o botão "Buy label" mostra as tarifas; o criador escolhe uma, a etiqueta é comprada na conta dele e o rastreio preenche sozinho o "Mark as shipped". O Shippo cobra o criador diretamente; o Marktmorgen nunca paga nem adianta valores. Se a chamada falhar, nada é comprado em dobro e o estúdio diz o que aconteceu.
 Testes automáticos, com Shippo simulado: compra, falha, repetição sem compra em dobro e rastreio preenchido.
 
+
+### Complemento PF9 dentro do516[PF4] — peso, medidas e alfândega
+
+**Estado/número/posição:** mesmo516[PF4],nafila,**Grupo B abaixo do marcoMQ1**,semnovonúmero. O dono confirmou nesta conversa **“Manter Grupo B atual”** ao ser informado de que a tabelaMQ1marca516B. Essa resposta resolve somente a menção“acimadomarco/GrupoA”nos textos00h43/00h46; todoorestantedocomplementoépreservado. Não mover516nemoutrositens/Blocodeabertura.
+
+**Proveniência/Pedidos repetidos3b:** pedido30/10/2026,00h43Fortaleza chegou cometiquetaPF8;correçãoexpressa00h46determina**PF9**,no mesmo516. Ainda não gravado antesda correção;gravadosjuntos neste registro. PF8originalpertenceàposição206[SH3]e permaneceintegralmenteintacto,nãotratarcomorepetição. Conferidos main1d5d003de87dd76aec8e782cc3b97a04892a8385,2PRsabertos,24headsrecentes e798refs codex/* por data/hora/título/etiqueta/conteúdo,semcomplementopesoalfândegaPF9prévio. Nova recepção somenteproveniência.
+
+**Código atual conferido:** lib/shipping.ts(8.162caracteres),components/shipping-editor.tsx(8.992),lib/stock.ts(7.734),integralmente no mainexato. Shipping/editor têmfrete/região/países/nota/SKU e não têmWeight/Package size/Country of manufacture/Customs description/HScode;stockcontinualeituraestritareservaantescheckout,nãopermitirvendaacimaestoque. Ausêncialimitadaaessasentradas,revalidarheadnaimplementação. NãoalegarShippojáintegrado. FerramentaoficialHScode/API/termosShippo serãoconferidoscomdataNAEXECUÇÃO,dentro516,nãocriarconta/aceitartermos/contatar/comprar para conferir.
+
+**Critérios adicionais516:** peso g/kg/oz/lb e dimensõescm/in noproduto/opção quando necessário,paísdefabricaçãodaseleção e descriçãoaduaneiracurta,HScodeopcionalcomlinkoficialdatado. Sem peso/medidas ocultarBuylabel e explicar faltante;fretefixo515continua semessesdados. Internacionaismontamdeclaraçãocomcampos+valorpedido,mostramantesconfirmação e somenteenviam/compramcomconfirmaçãoexplícitadocriador;guardar idempotência/falhas/rastreiodo516. Shipposimulado:nacional/internacionalcomdeclaração/faltantes/conversões/opçãopesopróprio. Nãoalterarestoque/libstock,nemadicionarContinue selling when out of stock.
+
+**AX274/custos/proibições:** rótulos/unidadesanunciadas,errotextualjunto/prevençãoantesconfirmar/teclado7:1/320px/400%,AcessibilidadePRantes/depois. Camposcurtos eShipponacontadocriador,cobradodiretamentedele;Marktmorgennuncapaga/adiantafrete. TodaIOprópria(calls/read/write/storage/email)exigepiorM/Ydos6contratos100%direitos+addons,tetos/reservasANTESgasto,recebimentomaiscaro/reembolsodisputa/TX/FX275100%fixos/base mínima;60%metamensalreal.MR/VRincólumes,desconhecidonãozero. Nãoalterarpreços/limites/comissão/flagsfalse/taxgate/art9a/revisãocomercial/travas/conteúdo/Hazelsong;semconta/termos/contratação/pagamento/contatoterceiros,inclusiveShippo. Somentetestessintéticos. Registrodocumentalnãoimplementa/certificamargem/contaentrega.
+
+### Texto integral00h43, somente etiqueta corrigidaPF8→PF9 por00h46
+
+```text
+PF — Complemento ao 516 [PF4]: peso e dados de alfândega do produto físico (30/10/2026) [PF9]
+
+Solicitação do dono (30/10/2026, 00h43, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: aplique a regra "Pedidos repetidos" de AGENTS.md. Este é um complemento ao item 516 [PF4] ("Etiqueta de envio pela conta Shippo do próprio criador"), já gravado: aplique somente esta diferença DENTRO do item 516, mantendo o número, a posição e o estado dele (passo 3, letra b), e registre na proveniência o que mudou. Se a etiqueta [PF9] já estiver gravada com este conteúdo, registre apenas a nova recepção.
+
+Estado inicial: o do próprio 516 [PF4], acima do marco (MQ1, Grupo A).
+
+Contexto: a página pública clickfunnels.com/features/store-funnels (lida em 30/10/2026) mostra, no produto físico, os campos de peso e de país de fabricação ("Weight" e "Country of manufacture"). No Marktmorgen, o produto físico (lib/shipping.ts, components/shipping-editor.tsx) tem valor de frete, região, países, observação e SKU, mas não tem peso, medidas nem dados de alfândega. O Shippo do 516 [PF4] precisa do peso e das medidas para mostrar as tarifas e comprar a etiqueta, e o envio para outro país exige declaração de alfândega. Verifique antes no código atual que isso continua assim.
+
+O que acrescentar ao 516 [PF4]:
+- no produto físico (e em cada opção dele, quando o peso mudar), os campos "Weight" com unidade (g, kg, oz ou lb), "Package size" (comprimento, largura e altura, em cm ou in), "Country of manufacture" (lista de países) e "Customs description" (texto curto do que é o produto); opcional "HS code" (código tarifário), com um link para a ferramenta oficial de busca do código, conferida com data na execução;
+- sem peso e medidas, o botão "Buy label" não aparece e o estúdio diz em uma frase o que falta; o frete fixo do 515 [PF3] continua funcionando sem esses campos;
+- para envio a outro país, a declaração de alfândega é montada a partir desses campos e do valor do pedido, enviada ao Shippo na compra da etiqueta e mostrada ao criador antes de ele confirmar; nada é comprado sem a confirmação dele;
+- não acrescentar "Continue selling when out of stock": o estoque de lib/stock.ts continua nunca vendendo uma unidade a mais.
+
+Testes automáticos, com Shippo simulado: etiqueta nacional, etiqueta internacional com declaração de alfândega, falta de peso ou medidas, conversão de unidades e opção com peso próprio.
+
+Acessibilidade (AX274): campos com rótulo visível e unidade anunciada; erros em texto ao lado do campo; prevenção de erro antes de confirmar a etiqueta; teclado, contraste de 7:1, 320 px e 400% de zoom. Seção "Acessibilidade" no PR, com os passos e as decisões da tarefa principal antes e depois.
+
+Custo: campos curtos no registro do produto e chamadas ao Shippo do próprio criador, que o Shippo cobra diretamente dele; o Marktmorgen nunca paga nem adianta valores. Calcule o pior caso mensal e anual de cada plano com 100% dos direitos usados e aplique teto automático antes de qualquer gasto próprio. Custo desconhecido reprova, nunca é zero.
+
+REGRA DE MARGEM (MR, 27/10/2026): nenhum cliente pagante, considerado isoladamente e usando 100% de todos os direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto; a empresa como um todo não pode dar prejuízo no pior caso a partir da base mínima de clientes pagantes, com 100% dos custos fixos da LLC atribuídos ao Marktmorgen (FX275); a meta de 60% de margem líquida é medida todo mês com números reais. Impostos pela política TX vigente.
+
+Proibido: mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; vender acima do estoque; comprar etiqueta sem confirmação do criador; o Marktmorgen pagar ou adiantar frete; criar contas, aceitar termos, contratar, pagar ou contatar terceiros, inclusive o Shippo; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+```
+
+### Correção literal00h46 e proveniência da etiqueta
+
+```text
+PF — Correção da etiqueta: o complemento do peso e da alfândega é [PF9], não [PF8] (30/10/2026) [PF9]
+
+Solicitação do dono (30/10/2026, 00h46, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: o texto "PF — Complemento ao 516 [PF4]: peso e dados de alfândega do produto físico (30/10/2026) [PF8]", solicitação de 30/10/2026, 00h43, usou por engano a etiqueta [PF8], que já pertence a outro pedido da seção PF (a volta de 206 [SH3], impressão sob demanda, para perto da frente da fila). Não são o mesmo pedido: não trate o texto das 00h43 como repetição do [PF8] existente, não altere nada do [PF8] existente nem do 206 [SH3], e não pare o trabalho por causa da divergência.
+
+O que fazer: grave o conteúdo integral do texto das 00h43 como complemento DENTRO do item 516 [PF4], com a etiqueta [PF9] no lugar de [PF8], mantendo o número, a posição e o estado do 516 (passo 3, letra b). Na proveniência, registre que a etiqueta enviada às 00h43 foi corrigida para [PF9] por esta solicitação das 00h46. Se o texto das 00h43 já tiver sido gravado com [PF8], troque nesse registro somente a etiqueta para [PF9], sem mudar o conteúdo nem a posição.
+
+Estado inicial: o do próprio 516 [PF4], acima do marco (MQ1, Grupo A).
+
+Todo o restante do texto das 00h43 continua igual, inclusive custo, REGRA DE MARGEM, acessibilidade e proibições.
+
+Aplicar a regra VR.
+```
+
+**Resposta posterior do dono nesta conversa:** “Manter Grupo B atual”. A posiçãoBcanônica prevalece sobre mençãoGrupoA dos textos literais acima;semqualqueroutrodeltadeposição/estado.
+
+
 517 [PF5] Assinatura de produto físico (caixa mensal).
 Estado inicial: na fila.
 O que fazer: o criador vende uma assinatura que envia um produto físico a cada período (mês, trimestre ou ano), cobrada na conta Stripe dele. A cada cobrança paga, um pedido de envio aparece no estúdio com o endereço atual. O assinante troca o endereço, pula um envio ou cancela sozinho, sem falar com ninguém; o cancelamento vale antes da próxima cobrança. O estoque de cada envio é reservado antes da cobrança; sem estoque, a cobrança não acontece e o criador e o assinante são avisados.
@@ -18011,6 +18086,137 @@ Aplicar a regra VR.
 ```
 
 
+## 558 [LK1] — Estilo da loja: formato dos botões, cantos e logotipo
+
+**Estado:** na fila. **Posição:** ABAIXO DO MARCO MQ1, Grupo B, depois557[BG1] entre os remanescentesB e antesFIM1.558 estava livre. Não altera ordem/estado de outros itens ou Bloco de abertura e não interrompe1239/1243.
+
+**Proveniência/Pedidos repetidos:** dono30/10/2026,00h18Fortaleza, pedido direto nesta conversa. Conferidos mainfc43fa48dc0efdeaed1179cc17342572f00acd63, PRs abertos1239/a1957c472d020d778dc731c488583abfd431d8aa e1243/bec5abbb0f46113f6fa89ae4e5655953e089d514,24heads recentes de PR/codex e inventário796refs codex/*. Busca por data/hora, seção, etiqueta e conteúdo não encontrouLK1. A coincidência de formato/logotipo no536[CB1] é branding de sessãoStripe, não editor/formato/cantos/logo da loja; vincular e reutilizar campos/mapeamento quando aplicável,sem reimplementar536 nem movê-lo. Nova recepção só proveniência,sem número/commit exclusivo.
+
+**Conferência real:** leitura integral de lib/store-look.ts(15.957caracteres),components/look-editor.tsx(25.875) eAGENTS no main exato. StoreLook/DEFAULT_LOOK/parseLook atuais têm theme/accent/badge/sold/font/backdrop;4temas e5fontes. Editor tem foto comrecortequadrado ePNG/JPEG/WebP,tema/cor/fonte/fundo/prévia; não possui opçõesSquare/Rounded/Pill,Sharp/Soft/Round ou fluxo de logoSVGsanitizado. Classesrounded existentes não são escolha persistida de formato. Conclusão limitada a essas entradas,revalidar nohead deimplementação. A aritmética atual documenta7:1botões,4,5:1destaques e3:1borda;isso é estado observado, não certificaçãoAAA: a implementação deve cumprirAX274/contraste7:1pedido para texto e nunca usar4,5como permissão para baixar a exigência. Não afirmar todososrenderers/checkout/áreacomprador cobertos só por estasleituras.
+
+**Aceite:** formatoSquare/Rounded/Pill aplicado emtodososbotões daspáginas de loja/checkoutembutido/áreacomprador/blog/cursos/comunidade;Sharp/Soft/Round emcartões/quadros/imagens;defaultantigo paraquemnãoescolher. Logo somenteJPEG/WebP,tipo pelos primeirosbytes(comoimagensdeprodutos),reduzidononavegadorantesenvio,servidodoendereço públicodasfotos enuncadapastadosarquivospagos;qualquerSVGrecusado,altobrigatório(defaultnomedaloja),armazenamento/entrega doplano,escolhalogoOUfoto,nuncajuntosnamesmapágina. Semcontroleslivresdesombra/borda. Prévialocalantesdesalvar. Preservar contraste,foco2.4.13,44×44,forced-colors emtodascombinações;gruposrotulados/préviatextual/teclado/7:1/320px/400%,Acessibilidade noPRantes/depois. Testar recusa dequalquerSVG e arquivosmaliciosos/tipofalso comdadossintéticos epermissões/custoantesupload,semrelaxarrotas existentes; não assumiruploadfoto atual aceitaSVG.
+
+**Custos/gates:** dois camposcurtos e arquivo dentrocotasexistentesnãoequivalemcustozero. CálculoM/Ydos6contratos ecomplementos100%direitosnopior mês,preçopagomaiscaro/leituras/gravações/storage/entrega/processamentoseguro,reservas/tetosANTESgasto;MR/TX/FX275100%fixosLLCbase mínima e60%meta mensalreal. Desconhecido reprova,nãozero;nenhumcustoprodutivoadicionado porregistrodocumental. Preservarpreços/limitesvisíveis/comissão/flagsfalse/taxgate/art9a/revisãocomercial/travas/conteúdo/Hazelsong/idiomas/IDs. SemHTML/CSS/JSlivres/qualquerarquivoSVG/overlay/logo+foto/conta/termos/contratar/pagar/contatar;testessintéticosapenas. AplicarVR. ContextoClickFunnelséproveniênciadodono,nãopesquisaindependente. Registro nãoimplementa,nãocertificamargem,nãocontaentregafuncional.
+
+### Texto LK1 com a correção vigente LK2 aplicada ao ponto3 e à proibiçãoSVG
+
+```text
+LK — Estilo da loja: formato dos botões, cantos e logotipo (30/10/2026) [LK1]
+
+Solicitação do dono (30/10/2026, 00h18, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: aplique a regra "Pedidos repetidos" de AGENTS.md antes de gravar. Procure esta solicitação pela linha de data e hora, pelo nome da seção, pela etiqueta [LK1] e pelo conteúdo, no main, nos PRs abertos e nos ramos codex/* recentes. Se já estiver gravada, registre apenas a nova recepção na proveniência, sem novo número nem commit exclusivo.
+
+Estado inicial: na fila, ABAIXO DO MARCO (MQ1, Grupo B), no próximo número livre (558, se ainda estiver livre). Não altera a ordem de nenhum outro item nem o Bloco de abertura.
+
+Contexto: a página pública clickfunnels.com/features/customer-center (lida em 30/10/2026) mostra um "Style Guide" com fontes, cores, sombra, borda, botões e cantos, e diz que o criador personaliza "colors and logos". O estilo da loja do Marktmorgen (lib/store-look.ts, components/look-editor.tsx) já tem 4 temas, qualquer cor com ajuste automático de contraste (7:1 no texto dos botões, 4,5:1 no texto de destaque, 3:1 na borda do botão), 5 pares de fontes, fundos e prévia ao vivo. Faltam o formato dos botões, o arredondamento dos quadros e o logotipo da loja. Verifique antes no código atual que isso continua assim.
+
+1. Formato dos botões: o criador escolhe entre "Square", "Rounded" e "Pill"; vale para todos os botões das páginas da loja, do checkout embutido, da área do comprador, do blog, dos cursos e da comunidade, com o padrão de hoje mantido para quem não escolher.
+
+2. Cantos dos quadros: o criador escolhe entre "Sharp", "Soft" e "Round" para os cartões de produto, os quadros e as imagens das páginas da loja, com o padrão de hoje mantido.
+
+3. Logotipo: o criador pode enviar um logotipo (somente JPEG ou WebP; tipo decidido pelos primeiros bytes, reduzido no navegador antes do envio e servido do mesmo endereço público das fotos, nunca da pasta dos arquivos pagos) e escolher se o cabeçalho da loja mostra o logotipo ou a foto de hoje, nunca os dois na mesma página. Texto alternativo obrigatório, com o nome da loja como padrão. O logotipo conta no armazenamento que cada plano já tem.
+
+4. A mesma regra de contraste e de foco continua valendo para qualquer escolha: nenhuma combinação pode baixar o contraste, o tamanho mínimo de 44 × 44 px dos alvos, o indicador de foco (2.4.13) nem o modo de alto contraste (forced-colors). A prévia ao vivo mostra cada escolha antes de salvar.
+
+5. Sem sombra nem borda livres: não acrescente controles de sombra ou de espessura e cor de borda, porque mudam pouco o resultado e podem baixar o contraste de 3:1 das bordas exigido pelo AX274.
+
+6. Acessibilidade (AX274): as escolhas são grupos de opções com rótulo e prévia em texto; tudo por teclado; contraste de 7:1, 320 px e 400% de zoom; nunca informação só por cor. Seção "Acessibilidade" no PR, com os passos e as decisões da tarefa principal antes e depois.
+
+Custo: dois campos curtos no registro da loja e um arquivo de logotipo dentro do armazenamento e da entrega que cada plano já tem. Calcule o pior caso mensal e anual de cada plano com 100% dos direitos usados e aplique teto automático antes do gasto. Custo desconhecido reprova, nunca é zero.
+
+REGRA DE MARGEM (MR, 27/10/2026): nenhum cliente pagante, considerado isoladamente e usando 100% de todos os direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto; a empresa como um todo não pode dar prejuízo no pior caso a partir da base mínima de clientes pagantes, com 100% dos custos fixos da LLC atribuídos ao Marktmorgen (FX275); a meta de 60% de margem líquida é medida todo mês com números reais. Impostos pela política TX vigente.
+
+Proibido: mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; HTML, CSS ou JavaScript livres; qualquer arquivo SVG; overlay de acessibilidade; logotipo e foto juntos na mesma página; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+```
+
+
+### Complemento LK2 dentro de558[LK1] — correção vigente30/10/2026,00h37Fortaleza
+
+**Pedidos repetidos3b/proveniência:** complemento direto do dono, data mais recente. Só muda formatos/fluxo do logotipo e proibiçãoSVG;mesmo558,nafila,GrupoBabaixodomarco,depois557antesFIM1. Conferidos mainf502b6fe7d5765c2fa3c66f26f929600c0c28ab1,2PRs abertos e24heads recentes,797refs codex/*;semLK2prévio. O aceite acima e o ponto3/proibição do textoLK1 foram atualizados somente nessa diferença. O cabeçalhoPedido literalLK1 registra abaixo a correçãoLK2;original30/10,00h18 é preservado nesta proveniência como histórico,não autorização atual.
+
+**Antes (histórico substituído, não implementar):** ponto3 dizia “PNG, WebP ou SVG verificado e limpo no servidor, sem script”;proibição dizia “SVG com script”. **Agora:** somenteJPEGouWebP,assinaturadosprimeirosbytes,nãoContent-Type/extensão/autodeclaração;reduzidononavegador;endereçopúblicodasfotos,armazenamento deimagens separado dosarquivospagos;nenhumSVGaceito/servido,mesmo semscript. SemsanitizadorSVGnovo. Altobrigatório,logoOUfoto,cotas/custos/MR/TX/FX275/AX/VR e demaisrequisitos preservados.
+
+**Código conferido:** lib/product-image.ts integral no mesmo main: IMAGE_CONTENT_TYPES=[image/webp,image/jpeg],IMAGE_FILE_PATTERN sówebp|jpg,imageUrl=/api/image/...,pastaimages própria separada deprodutospagos;comentáriodocumentadetecçãoporprimeirosbytes e redução préviaaté1600px/1MB. IMAGE_ACCEPTatualpermitefontesrasterqueonavegadorreencoda,masnãoautoriza armazenar/servirPNG/SVGcomologo. Esse arquivoéregra/helper;detecçãoserverevalidaçãorotadeupload devemserconferidas/reusadasnaimplementação,nãodeclaradasjáprovadassópelocomentário. TestessintéticosdeMIMEfalso,bytesSVG,reencodificação,rota/pasta/isolamento/limitesantesgasto. Semmudançadeprodução/novaentregafuncionalneste registro.
+
+### LK1 original preservado como histórico substituído somente nos formatos/proibiçãoSVG
+
+```text
+LK — Estilo da loja: formato dos botões, cantos e logotipo (30/10/2026) [LK1]
+
+Solicitação do dono (30/10/2026, 00h18, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: aplique a regra "Pedidos repetidos" de AGENTS.md antes de gravar. Procure esta solicitação pela linha de data e hora, pelo nome da seção, pela etiqueta [LK1] e pelo conteúdo, no main, nos PRs abertos e nos ramos codex/* recentes. Se já estiver gravada, registre apenas a nova recepção na proveniência, sem novo número nem commit exclusivo.
+
+Estado inicial: na fila, ABAIXO DO MARCO (MQ1, Grupo B), no próximo número livre (558, se ainda estiver livre). Não altera a ordem de nenhum outro item nem o Bloco de abertura.
+
+Contexto: a página pública clickfunnels.com/features/customer-center (lida em 30/10/2026) mostra um "Style Guide" com fontes, cores, sombra, borda, botões e cantos, e diz que o criador personaliza "colors and logos". O estilo da loja do Marktmorgen (lib/store-look.ts, components/look-editor.tsx) já tem 4 temas, qualquer cor com ajuste automático de contraste (7:1 no texto dos botões, 4,5:1 no texto de destaque, 3:1 na borda do botão), 5 pares de fontes, fundos e prévia ao vivo. Faltam o formato dos botões, o arredondamento dos quadros e o logotipo da loja. Verifique antes no código atual que isso continua assim.
+
+1. Formato dos botões: o criador escolhe entre "Square", "Rounded" e "Pill"; vale para todos os botões das páginas da loja, do checkout embutido, da área do comprador, do blog, dos cursos e da comunidade, com o padrão de hoje mantido para quem não escolher.
+
+2. Cantos dos quadros: o criador escolhe entre "Sharp", "Soft" e "Round" para os cartões de produto, os quadros e as imagens das páginas da loja, com o padrão de hoje mantido.
+
+3. Logotipo: o criador pode enviar um logotipo (PNG, WebP ou SVG verificado e limpo no servidor, sem script) e escolher se o cabeçalho da loja mostra o logotipo ou a foto de hoje, nunca os dois na mesma página. Texto alternativo obrigatório, com o nome da loja como padrão. O logotipo conta no armazenamento que cada plano já tem.
+
+4. A mesma regra de contraste e de foco continua valendo para qualquer escolha: nenhuma combinação pode baixar o contraste, o tamanho mínimo de 44 × 44 px dos alvos, o indicador de foco (2.4.13) nem o modo de alto contraste (forced-colors). A prévia ao vivo mostra cada escolha antes de salvar.
+
+5. Sem sombra nem borda livres: não acrescente controles de sombra ou de espessura e cor de borda, porque mudam pouco o resultado e podem baixar o contraste de 3:1 das bordas exigido pelo AX274.
+
+6. Acessibilidade (AX274): as escolhas são grupos de opções com rótulo e prévia em texto; tudo por teclado; contraste de 7:1, 320 px e 400% de zoom; nunca informação só por cor. Seção "Acessibilidade" no PR, com os passos e as decisões da tarefa principal antes e depois.
+
+Custo: dois campos curtos no registro da loja e um arquivo de logotipo dentro do armazenamento e da entrega que cada plano já tem. Calcule o pior caso mensal e anual de cada plano com 100% dos direitos usados e aplique teto automático antes do gasto. Custo desconhecido reprova, nunca é zero.
+
+REGRA DE MARGEM (MR, 27/10/2026): nenhum cliente pagante, considerado isoladamente e usando 100% de todos os direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto; a empresa como um todo não pode dar prejuízo no pior caso a partir da base mínima de clientes pagantes, com 100% dos custos fixos da LLC atribuídos ao Marktmorgen (FX275); a meta de 60% de margem líquida é medida todo mês com números reais. Impostos pela política TX vigente.
+
+Proibido: mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; HTML, CSS ou JavaScript livres; SVG com script; overlay de acessibilidade; logotipo e foto juntos na mesma página; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+```
+
+### Pedido literal LK2
+
+```text
+LK — Complemento ao [LK1]: logotipo só em JPEG ou WebP, sem SVG (30/10/2026) [LK2]
+
+Solicitação do dono (30/10/2026, 00h37, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: aplique a regra "Pedidos repetidos" de AGENTS.md. Este é um complemento ao item [LK1] ("LK — Estilo da loja: formato dos botões, cantos e logotipo (30/10/2026)", solicitação de 30/10/2026, 00h18), já gravado: aplique somente esta diferença DENTRO do item [LK1], mantendo o número, a posição e o estado dele (passo 3, letra b), e registre na proveniência o que mudou.
+
+Estado inicial: o do próprio [LK1].
+
+Correção: no ponto 3 do [LK1], o logotipo deixa de aceitar SVG. Ele segue a mesma regra que o código já aplica às fotos dos produtos (lib/product-image.ts): somente JPEG ou WebP, com o tipo decidido pelos primeiros bytes do arquivo e não pelo que o envio diz, reduzido no navegador do criador antes do envio e servido do mesmo endereço público das fotos, nunca da pasta dos arquivos pagos. Nada que possa levar um script, SVG inclusive, é aceito ou servido. Retire também "SVG com script" da lista de proibições do [LK1], substituindo por "qualquer arquivo SVG".
+
+Todo o restante do [LK1] continua igual, inclusive custo, REGRA DE MARGEM, acessibilidade e proibições.
+
+Aplicar a regra VR.
+```
+
+
+### AB(a) — ACK próprio da janela real de recursos pagos — 29/10/2026
+
+Continuação financeira necessária, acima do marcoMQ1 porAV1/AB(a), sem item novo, número ou mudança de ordem/estado. Base154c399584371e62fe6f75de0fe683659470a9b7. O caminho real reservePaidResourceWindow lia result[0] e os dois membros antes de exigir dados próprios, permitindo getter/herança na resposta usada para liberar trabalho de recurso pago. A leitura privada agora limita outer1/inner2 antes dos membros e exige flag numérico1próprio/fim exato próprio. Resposta incerta não autoriza trabalho, não limpa caixa/coorte, não gera retry/readback nem fornecedor. Lua, vínculos, preços/limites/direitos,1ou12coortes/teto12288bytes/clock/deadline/mês da revisão ficam intactos. Coberturas e revisões reais continuamfalse/null; não é conclusão do ciclo de avisos, renovação ou reconciliação financeira.
+
+Teste existente pelo reservePaidResourceWindow real com livro sintético de caixa da fonte: transformador somente de teste DEPOIS do commit válido;17formas desconhecidas/exceção × mensal/anual × primeira/repetida =68cenários. Conserva caixa/slot/grant/ativos/campos anteriores, só acrescenta uma coorte quando primeira, exatamente uma chamada/nenhuma compensação, nenhum getter/membro excessivo; resposta normal posterior recupera a mesma coorte sem segunda alocação. Controle positivo primeiro comprova as sondas outer/inner. Casos anteriores de64observações,expiração/admissão/mês/relógio regressivo permanecem, assim como suíteLua real. Limite de prova: mock financeiro não certifica sozinho aLua ou cobertura integral; exige suíte inteira no novohead antes de incorporar. docs/resource-window-own-ack.md registra escopo.
+
+Proveniência1238: incorporado efetivamente30/10/2026 02:05:43UTC =29/10/2026 23:05:43Fortaleza,merge154c399584371e62fe6f75de0fe683659470a9b7,pais3f0d193944de8aa78daa221d2513fcd33a68d511/c0c853184a7b017670c12f1d35c6cc3271588fef,árvore7a56d85ded9fddc7febfe61acb610166bbb854b2igual à testada. Head combinado c0c853:39/39+Vercel;verify123840949359admitOrdersreal com dados sintéticos aprovado01:44:01UTC,234/234/Everything01:45:56.3674660UTC. Mobile1238409493219frias:LCPmáximo944ms,CLS0,proxyinteração128ms,0APIwrites(laboratório,não INPde campo). Falha TS2552/6ef403cceimport corretivo permanecem no histórico;individual a917aprovado não substituiu a suíte do combinado. Produção dpl_GfQ5sodZPJrrc7287vMNYHpqodnk READY,SHAexato154c3995,7aliases eHTMLreal /,/pricing,/platform/path,/help,/proof/comparisons com mesmoID. Janela error/fatal02:05:43–02:08:01.950UTC sem correspondências, somente essa janela. ProvaChromeanteriorbloqueada,semretry/troca;contador254,não255. Provas acompanham código real,sem PRsó de prova.
+
+Custos: trabalho local finito de descritores, sem nova chamada/gravação produtiva/provedor/retry/formato persistido ou operação. CPU/revisão/CI não são zero presumido;100%FX275Marktmorgen, custos/tetos/reservas/MR/TX preservados e desconhecido continua reprovação. PLANS_ON_SALE/OPENING_REQUESTEDfalse,sem afrouxar revisão/política/optin/identificador/idioma/conteúdo/Hazelsong.
+
+
+Registro de reconciliação: PR1240 (AK1/AK2 no555, GrupoB) incorporado em29/10/2026 às23:44:32 Fortaleza, commit5ec160de16e5f84e969775bdd39992c97fc5246b, árvorec34d9649c0edf92df5aafae99bdaab48868596b3, após27 verificações documentais sem falha e Vercel success. Sem entrega funcional/contador. PR1239 individual e732e9971249cc2b1e20a8b55689c79384003aaa concluiu39/39 e Vercel antes desta reconciliação; a união exige nova verificação completa, sem cancelar execução válida.
+
+
+Reconciliação1239 após CIintegral terminado: head8de6c24f9214d2f82ba83b28bc154e384a7cc3fe concluiu39/39 e Vercelsuccess antes de mudar ohead. Verify123861577032: teste real resourceACK em2026-10-30T02:49:00.7168400Z;234/234bundles/Everythingpassing02:52:06.2901027Z. Mobile123861576945:9amostrasfrias,LCPmáx896ms,CLS0,proxyinteração96ms,0escritasAPI;laboratório,nãoINPcampo. Mainfc43fa48dc0efdeaed1179cc17342572f00acd63 preserva CT1556/PR1241 incorporado30/10/2026,02:50:21UTC(29/10,23:50:21Fortaleza) e BG1–BG4557/PR1242 incorporado03:05:24UTC(30/10,00:05:24Fortaleza),27checksdocumentais+Vercel nosheads próprios. Nova união exigeCIintegral próprio,semherdar aprovação;nenhuma execução válida cancelada. Semnovaentregafuncional/contador atéREADY/domínio/SHA/provainterativa exigida.
+
+
 ### AB(a) — própria confirmação da ativação do reinício (30/10/2026)
 
 Achado real em lib/contract-restart-activation.ts: reply[0]/ack[0,1] eram lidos sem exigir campos próprios e antes da cardinalidade externa; resposta herdada/acessora poderia autorizar a ativação. Wrapper agora limita outer1/inner2 antes dos membros e aceita somente dados próprios numéricos1/2 e prazo inteiro, preservando binding/review/clock/período e prazos distintos. Lua inalterado; sem retry/readback/compensação/fornecedor novo. Políticas/reviews reais continuamnull e coveragepauseRestart/resourceAllocations/renewals/settlementfalse; não certifica ciclo completo/avisos/margem/abertura.
@@ -18019,3 +18225,10 @@ Teste novo chama activateRestartContract/prepareRestartActivation reais com cont
 
 
 Falha inicial1243/head dabd4941e0d3a6e9e8bcc56903b24a41974cc64b: compilaçãoTypeScriptTS7022 emtests/restart-activation-ack.test.ts:53,callCount sem anotação explícita. Mobile123868852666 em2026-10-30T03:12:42.1055714Z e jobs123868859663/123868857081/123868845333 repetem a mesma causa de build, não quatro defeitos de interação. Correção mínima: callCount:number, sem alterar produção/assertivas/gates. Exige novaCIintegral noheadcorrigido;headfalho não aprovado,nenhumjobisolado comprova conclusão.
+
+
+### União das confirmações de recursos e ativação — 30/10/2026
+
+IndividuaisfinalizadosANTESdaunião:1239a1957c472d020d778dc731c488583abfd431d8aa e1243bec5abbb0f46113f6fa89ae4e5655953e089d514,cada39/39+Vercelsuccess. Resourceverify123870261037:actualACK03:20:52.0483582UTC,234/234+Everythingpassing03:23:56.8031851UTC. Restartverify123870206718:actualentry/clock03:19:19.0315132/0316802UTC,234/234+Everythingpassing03:20:23.8203753UTC. Mobilecorrigido123870206711:9frias,LCPmáx708ms,CLS0,proxy72ms,0escritasAPI;laboratório,nãoINPcampo. FalhaTS7022inicialdabd494eacorreçãobec5permanecemhistóricas,nãoaprovação doheadfalho.
+
+União preservamain391360125789de9b16e1b802282539cfda00372b:LK1/1244f502b6fe incorporado03:20:33UTC(00:20:33Fortaleza),LK2/12451d5d003de incorporado03:39:12UTC(00:39:12Fortaleza),PF9/1246391360125 incorporado03:46:07UTC(00:46:07Fortaleza),todosdocumentais27checks+Vercel nosheads próprios.516GrupoBconfirmadoexplicitamentepelodono,PF8/206intactos;LK2JPEG/WebPsemSVGvigente. Nenhumandamentoválidocancelado;novoheadcombinadoexigeCIintegralpróprio,semherdaraprovaçãoindividual. Políticas/reviewsnull,coberturasfechadas,reservasretidas,preços/direitos/flags/idiomas/IDs/Hazelsongpreservados;semIOprodutivonovo. CustoCI/revisãoFX275continua desconhecido,nãozero;semcertificaçãomargem/abertura. Contador254retidoatéprovaexigida;semduplapublicação porancestralidadedosPRs.
