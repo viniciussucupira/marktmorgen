@@ -64,39 +64,29 @@ try{
    if(label==="candidate"&&Object.values(result.targets).some(value=>!value))failed=true;
    // After preserving every cold performance measurement, exercise the real
    // cycle slots and native disclosure. No warm-up or threshold changes.
-   if(path==="/pricing"&&sample===1){ // VS1: the three plan cards live on pricing; the home page shows one.
+   if(path==="/"&&sample===1){
     // This check is after every cold measurement above; it neither warms
     // the disclosure nor changes timing, thresholds, samples or input events.
     if(!await control.evaluate(node=>node===document.activeElement))throw Error("Native pointer focus was not retained");
     if(await page.evaluate(()=>getComputedStyle(document.documentElement).scrollBehavior)!=="auto")throw Error("Native disclosure pointer focus still animates document scrolling");
-    const cards=page.locator("[data-pricing-card]");
-    if(await cards.count()!==3)throw Error("Expected three canonical plan cards");
-    const summaries=cards.locator('details[class~="group/perks"] > summary');
-    const disclosures=cards.locator('details[class~="group/perks"]');
-    const nativeState=await disclosures.evaluateAll(nodes=>nodes.map(node=>node.open));
-    const cycle=page.getByRole("group",{name:"How often you pay"});
-    const year=cycle.getByRole("button",{name:/^Yearly/}),month=cycle.getByRole("button",{name:"Monthly",exact:true});
-    await year.focus();await page.keyboard.press("Enter");
-    if(await year.getAttribute("aria-pressed")!=="true"||await month.getAttribute("aria-pressed")!=="false")throw Error("Yearly keyboard selection not reflected");
-    const annual=["$690","$4,490","$9,990"],monthly=["$69","$449","$999"],tiers=["creator","pro","scale"];
+    // VS1 (owner, 30/10/2026): the home page shows one plan, Store, read from
+    // lib/plan.ts, with a link to compare all plans. The three-card monthly/
+    // yearly switch it used to carry is no longer drawn on any page; the
+    // published prices stay checked here and on pricing.
+    const plan=page.locator("[data-home-plan]");
+    if(!(await plan.innerText()).includes("$69 a month"))throw Error("Home plan price mismatch");
+    if(await plan.getByRole("link",{name:"Start free",exact:true}).getAttribute("href")!=="/signin")throw Error("Home plan start lost");
+    if(await page.getByRole("link",{name:"Compare Store, Studio and Scale",exact:true}).getAttribute("href")!=="/pricing")throw Error("Compare plans link lost");
+   }
+   if(path==="/pricing"&&sample===1){
+    const plans=page.locator("[data-plan-prices] article");
+    if(await plans.count()!==3)throw Error("Expected three canonical plans on pricing");
+    const annual=["$690","$4,490","$9,990"],monthly=["$69","$449","$999"];
     for(let i=0;i<3;i++){
-     const card=cards.nth(i);
-     if((await card.locator("p.mt-7 > span").first().innerText()).trim()!==annual[i])throw Error("Annual card price mismatch");
-     if(!await card.locator("dl").innerText().then(text=>text.includes(annual[i]+" for the year")))throw Error("Annual first-charge terms mismatch");
-     if(await card.getByRole("link",{name:/^Start on/}).getAttribute("href")!=="/signin?plan="+tiers[i]+"&billing=year")throw Error("Annual signup choice lost");
+     const text=await plans.nth(i).innerText();
+     if(!text.includes(monthly[i])||!text.includes(annual[i]))throw Error("Pricing plan price mismatch "+i);
     }
-    await month.click();
-    for(let i=0;i<3;i++){
-     const card=cards.nth(i);
-     if((await card.locator("p.mt-7 > span").first().innerText()).trim()!==monthly[i])throw Error("Monthly card price mismatch");
-     if(!await card.locator("dl").innerText().then(text=>text.includes(monthly[i]+" for the month")))throw Error("Monthly first-charge terms mismatch");
-     if(await card.getByRole("link",{name:/^Start on/}).getAttribute("href")!=="/signin?plan="+tiers[i]+"&billing=month")throw Error("Monthly signup choice lost");
-    }
-    if(JSON.stringify(await disclosures.evaluateAll(nodes=>nodes.map(node=>node.open)))!==JSON.stringify(nativeState))throw Error("Billing selection replaced native disclosure state");
-    const before=await disclosures.first().evaluate(node=>node.open);
-    await summaries.first().focus();await page.keyboard.press("Enter");
-    if(await disclosures.first().evaluate(node=>node.open)===before)throw Error("Native keyboard disclosure did not toggle");
-    console.log("PRICING_CYCLE_REGRESSION: three monthly/yearly prices, first-charge terms, signup URLs, pressed state, native state retention and keyboard disclosure passed");
+    console.log("PRICING_PRICE_REGRESSION: home Store price and start, compare link, and the three monthly and annual prices on pricing passed");
    }
   }finally{await context.close();}
  }
