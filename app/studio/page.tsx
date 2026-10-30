@@ -433,8 +433,8 @@ const BILLING_NOTICES: Record<string, { title: string; body: string }> = {
     body: "Stripe says it is over, so there was nothing left to cancel and nothing was charged.",
   },
   "cancel-error": {
-    title: "Stripe did not answer",
-    body: "Nothing changed. Try again in a moment.",
+    title: "We could not confirm the change",
+    body: "Check your billing status before trying again. The subscription may have changed.",
   },
   pending: {
     title: "Stripe has not confirmed the payment yet",
@@ -533,8 +533,8 @@ const BILLING_NOTICES: Record<string, { title: string; body: string }> = {
     body: "Stripe says it is not in good standing. Nothing was changed.",
   },
   "pause-error": {
-    title: "Stripe did not answer",
-    body: "Nothing changed and nothing was charged. Try again in a moment.",
+    title: "We could not confirm the break",
+    body: "Check your billing status before trying again. The break or subscription may have changed.",
   },
   "pro-closed": {
     title: "That plan is not open yet",
