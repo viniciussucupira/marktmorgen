@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-html-link-for-pages -- Static home navigation intentionally uses native anchors to avoid client link hydration; hrefs and browser/keyboard regressions remain checked. */
 import { TrustChecks } from "@/components/trust-checks";
 import { CreatorShowcase, PlatformProof } from "@/components/creator-showcase";
 import { PricingValue } from "@/components/pricing-value";
