@@ -6,7 +6,7 @@ Solicitação do dono: **29/10/2026,20h52Fortaleza**. Estado inicial: na fila; e
 
 ### Primeiro — AV1, Bloco de abertura e posições protegidas
 
-**AV3 — 30/10/2026, 10h20 Fortaleza:** passo 3 da AV1 aplicado ao pé da letra: pausa do plano, reinício e avisos da pausa começam DESLIGADOS na abertura; concluir #1262 e seguir aos passos 4–12 (texto integral na seção AV).
+**AV3 — 30/10/2026, 10h20 Fortaleza:** passo 3 da AV1 aplicado ao pé da letra: pausa do plano, reinício e avisos da pausa começam DESLIGADOS na abertura; concluir #1262 e seguir aos passos 4–12 (texto integral na seção AV). Complemento 10h27: o trabalho que falta da pausa e de todo recurso deixado desligado vai para o FIM DA FILA, nunca é descartado.
 
 AV1/SD1 e Bloco de abertura (a)–(k) ficam na ordem vigente, inclusive custos(k),538[AB1] e448[LE1] em paralelo. Não se antecipam estudos ou recursos por causa desta classificação. Ficam na posição e no estado atuais todos os concluídos/publicados, andamentos (inclusive4,88,140,141,201,547,549),505[SG2] e registros59,60,336,464–477,494,495. As referências a547/549 são exceções expressas do pedido; suas linhas canônicas continuam literalmente “na fila”, sem convertê-las em andamento. A proteção de andamento também respeita a posição atualmente vigente: não ressuscita ordemOR já substituída porFIM1.
 
@@ -13183,6 +13183,30 @@ Contexto conferido pelo Claude no GitHub em 30/10/2026: os passos 1 e 2 da AV1 f
 REGRA DE MARGEM (MR, 27/10/2026): nenhum cliente pagante, considerado isoladamente e usando 100% de todos os direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto; a empresa como um todo não pode dar prejuízo no pior caso a partir da base mínima de clientes pagantes, com 100% dos custos fixos da LLC atribuídos ao Marktmorgen (FX275); a meta de 60% de margem líquida é medida todo mês com números reais. Impostos pela política TX vigente.
 
 Proibido: apagar código, testes, provas ou histórico; ligar OPENING_REQUESTED, PLANS_ON_SALE ou qualquer recurso desligado; afrouxar qualquer trava ou teste; tirar do cliente um direito de cancelamento, exportação ou acesso; mudar preços, limites visíveis ou comissão; criar contas, abrir empresa, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+```
+
+
+### Complemento ao AV3 — 30/10/2026, 10h27 Fortaleza
+
+Proveniência: pedido direto do dono na conversa com o Claude, 30/10/2026, 10h27 Fortaleza; texto redigido pelo Claude e aprovado pelo dono; gravado diretamente pelo Claude para não interromper o Codex. Pedidos repetidos passo3(b): conferido no main 8de4672d9e7a85cfb625c3f25bd2620566370920 que não havia complemento AV3 de 30/10/2026, 10h27; somente a diferença abaixo foi acrescentada ao [AV3], que mantém o restante; sem número novo; nenhum número, grupo, linha da tabela do MQ1 ou estado de item muda. A entrada de retomada no fim da fila, pedida abaixo, NÃO foi criada por este registro: cabe ao Codex criá-la. O aviso curto do alto da fila foi estendido com a frase do complemento. Texto do dono preservado integralmente abaixo.
+
+```text
+AV — Complemento ao [AV3]: o que não é necessário agora vai para o fim da fila, nunca é descartado (30/10/2026) [AV3]
+
+Solicitação do dono (30/10/2026, 10h27, horário de Fortaleza).
+
+Pedidos repetidos: é complemento ao [AV3] de 30/10/2026, 10h20, já gravado ou em gravação. Aplique só a diferença, mantendo o restante do [AV3], e registre na proveniência o que mudou.
+
+Palavras do dono, reescritas em norma culta: "Não é para deixar de fazer o que for bom. Pode ir para o final da fila. Nunca jogue fora coisas boas. Se não for importante fazer agora, mande para o final da fila."
+
+O que muda no [AV3]:
+- itens 1 e 2: o trabalho que ainda falta na pausa do plano, no reinício depois da pausa e nos avisos financiados da pausa não é abandonado; ele vai para o FIM DA FILA, depois do último item existente, como uma entrada própria de retomada, com referência ao código, aos testes e às provas já feitos; o recurso continua desligado na abertura até essa entrada ser executada;
+- item 3: todo recurso deixado desligado por esse item segue a mesma regra: a construção da proteção que falta vai para o FIM DA FILA, numa entrada que diz o que já está feito e o que falta, sem perder nenhum trabalho;
+- regra permanente a partir de agora: nada que seja bom para o cliente ou para o lucro é descartado, cancelado, absorvido ou apagado por não ser necessário agora; o que não for importante agora vai para o fim da fila, na ordem em que sair, preservando número, texto, histórico e provas.
+
+Proibido: apagar, cancelar, absorver ou fechar item, código, teste, prova ou histórico; renumerar itens existentes; ligar OPENING_REQUESTED, PLANS_ON_SALE ou qualquer recurso desligado; afrouxar qualquer trava ou teste; mudar preços, limites visíveis ou comissão; criar contas, abrir empresa, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
 
 Aplicar a regra VR.
 ```
