@@ -46,6 +46,8 @@ Entrada posterior no Grupo B: **562[QZ1]**, na fila, **ABAIXO DO MARCO MQ1 por i
 
 Entrada posterior no Grupo B: **563[WN1]**, na fila, **ABAIXO DO MARCO MQ1 por indicação expressa do dono30/10/2026,09h50Fortaleza**, depois562[QZ1] entre os remanescentesB e antesFIM1. Sem mudança de qualquer outro item ou do Bloco de abertura.
 
+Entrada posterior no Grupo B: **564[HC1]**, na fila, **ABAIXO DO MARCO MQ1 por indicação expressa do dono30/10/2026,09h54Fortaleza**, depois563[WN1] entre os remanescentesB e antesFIM1. Sem mudança de qualquer outro item ou do Bloco de abertura.
+
 ### Por último — os59 remanescentesFIM1
 
 FIM1 continua depois de todos os demais, na ordem relativa anterior e com a mesma regra de partes. São os61localizadores históricos da tabelaFIM1 menos206 e241, já retirados da cauda por decisões de posição. Localizadores para conferência (não ordem nova): 16, 26, 37, 38, 41, 42, 45, 47, 48, 49, 53, 56, 58, 92, 104, 127, 128, 129, 130, 131, 132, 203, 207, 209, 215, 222, 236, 252, 255, 280, 284, 286, 289, 296, 317, 318, 327, 337, 345, 346, 347, 348, 351, 352, 359, 363, 383, 401, 402, 404, 406, 419, 420, 425, 429, 430, 440, 441, 442. O item58 continua afetado **somente no português doBrasil**; os demais idiomas mantêm posição/gates atuais. Concluídos e andamentos já existentes não são reconstruídos, reiniciados ou movidos novamente.
@@ -75,6 +77,8 @@ Uma linha por item, três grupos possíveis: A, B ou sem mudança. “Sem mudan�
 **Atualização QZ1 (30/10/2026,09h20):** bases554–561 anteriores são históricas; tabela atual **562linhas únicas,109A,239B,214sem mudança**. Só562[QZ1] acrescentadoB, depois561; tabela numérica não redefine execução.
 
 **Atualização WN1 (30/10/2026,09h50):** bases554–562 anteriores são históricas; tabela atual **563linhas únicas,109A,240B,214sem mudança**. Só563[WN1] acrescentadoB, depois562; tabela numérica não redefine execução.
+
+**Atualização HC1 (30/10/2026,09h54):** bases554–563 anteriores são históricas; tabela atual **564linhas únicas,109A,241B,214sem mudança**. Só564[HC1] acrescentadoB, depois563; tabela numérica não redefine execução.
 
 | Item | Grupo | Motivo |
 | --- | --- | --- |
@@ -641,6 +645,7 @@ Uma linha por item, três grupos possíveis: A, B ou sem mudança. “Sem mudan�
 | 561 [NE1] | B | Dono30/10/2026,02h58: abaixo do marco, depois560no Grupo B e antesFIM1; demais posições preservadas. |
 | 562 [QZ1] | B | Dono30/10/2026,09h20: abaixo do marco, depois561no Grupo B e antesFIM1; demais posições preservadas. |
 | 563 [WN1] | B | Dono30/10/2026,09h50: abaixo do marco, depois562no Grupo B e antesFIM1; demais posições preservadas. |
+| 564 [HC1] | B | Dono30/10/2026,09h54: abaixo do marco, depois563no Grupo B e antesFIM1; demais posições preservadas. |
 
 ### Proveniência, Pedidos repetidos e VR
 
@@ -18698,6 +18703,47 @@ Custo: página estática gerada no build a partir do arquivo de dados, sem leitu
 REGRA DE MARGEM (MR, 27/10/2026): nenhum cliente pagante, considerado isoladamente e usando 100% de todos os direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto; a empresa como um todo não pode dar prejuízo no pior caso a partir da base mínima de clientes pagantes, com 100% dos custos fixos da LLC atribuídos ao Marktmorgen (FX275); a meta de 60% de margem líquida é medida todo mês com números reais. Impostos pela política TX vigente.
 
 Proibido: listar recurso que não está disponível ao cliente hoje; data futura ou "coming soon"; mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; liderar com "free"; depoimento, número de clientes, urgência ou promessa de resultado; imagem repetida; o nome do dono, endereço ou país fora dos Termos e da Política de Privacidade; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+```
+
+
+## 564 [HC1] — Central de ajuda organizada por área do estúdio, com cartões e respostas para cada uma
+
+**Estado:** na fila. **Posição:** ABAIXO DO MARCO MQ1, Grupo B, depois563[WN1] entre os remanescentesB e antesFIM1.564 estava livre e a etiqueta[HC1] não existia. Não altera ordem/estado de outros itens ou Bloco de abertura.
+
+**Proveniência/Pedidos repetidos:** pedido direto do dono na conversa com o Claude,30/10/2026,09h54Fortaleza; texto redigido pelo Claude e aprovado pelo dono; gravado diretamente pelo Claude para não interromper o Codex. Conferido no main 19906c4c8b2a6ffa426478c1ff13ded9378d3cf0 pela etiqueta, pela linha de data e hora e pelo conteúdo: nenhum item pede a reorganização da central de ajuda por área; app/help, lib/help-content.ts, components/help-search.tsx, lib/help-ask.ts, lib/feature-pages.ts, os vídeos de ajuda do 280 [H3-5] (que amplia o 241 [CF4]) e o 563 [WN1] já existem ou estão na fila e não são refeitos nem movidos. Nova recepção só proveniência,sem número/commit exclusivo.
+
+**Conferência real (limitada, revalidar no head de implementação):** lib/help-content.ts tem HELP_SECTIONS com 7 seções (Getting started, The demo store, Money, fees and payouts, Your store, Files and delivery, Outreach, Your data) e 107 perguntas. answerId(q) (lib/help-content.ts, linha 47) é derivado do texto da pergunta, então mudar o texto de uma pergunta mudaria o seu identificador; a implementação deve manter os identificadores antigos, como o texto exige. A contagem de respostas por área não foi conferida neste registro. Registro documental: não implementa, não certifica margem, não conta entrega funcional.
+
+### Pedido literal HC1
+
+```text
+HC — Central de ajuda organizada por área do estúdio, com cartões e respostas para cada uma (30/10/2026) [HC1]
+
+Solicitação do dono (30/10/2026, 09h54, horário de Fortaleza).
+
+Pedidos repetidos: aplique a regra "Pedidos repetidos" de AGENTS.md. Conferido antes de gravar: nenhum item pede a reorganização da central de ajuda por área. Já existem e não são refeitos: a central (app/help, lib/help-content.ts, 7 seções e 107 perguntas), a busca (components/help-search.tsx), o assistente de ajuda do estúdio (lib/help-ask.ts), as páginas de recursos (lib/feature-pages.ts), os vídeos de ajuda pedidos no 280 [H3-5] e a página de novidades do 563 [WN1].
+
+Estado inicial: na fila, ABAIXO DO MARCO (MQ1, Grupo B), no fim do Grupo B, antes de FIM1, no próximo número livre. Não altera a ordem de nenhum outro item.
+
+Contexto: a central de ajuda do ClickFunnels (support.myclickfunnels.com, lida em 30/10/2026) mostra, abaixo da busca, um cartão por área do produto (Getting Started, Account, Funnels, Products, Customers, Domains, Site, Affiliate Center, Analytics, Appointments, Automations, Community, Courses, Discounts, Email, Landing Pages, Store, Survey Workflows, Workspace Settings e outras), cada um levando às respostas daquela área. No Marktmorgen, a central tem 7 seções, e áreas que já funcionam no estúdio têm poucas respostas ou nenhuma: funis, cursos, afiliados e domínio próprio têm uma ou duas; sequências de e-mail, webhooks e importação de outra plataforma não têm nenhuma. Verifique antes no código atual que isso continua assim.
+
+1. Áreas: a central passa a ter uma seção por área que o estúdio realmente tem hoje (a lista sai das áreas e dos cartões do próprio estúdio, app/studio, e não de uma lista digitada à parte), mais "Getting started", "Money, fees and payouts" e "Your data". No alto da página, abaixo da busca, um cartão por área, com nome e ícone, levando à seção.
+
+2. Respostas: as 107 respostas atuais são mantidas e só mudam de seção, sem mudar o texto, exceto onde o texto já não corresponder ao código; os identificadores de cada resposta (answerId) continuam os mesmos, para nenhum link existente quebrar. Em cada área, acrescente as respostas das tarefas principais que ainda faltam (por exemplo: criar e ligar uma sequência, ligar um webhook, trazer contatos e produtos de outra plataforma, ligar um domínio, montar um funil, abrir um programa de afiliados), escritas a partir do código atual, em inglês americano simples, com o passo a passo pelos nomes exatos dos botões da tela.
+
+3. Verdade: cada resposta descreve só o que funciona hoje para quem lê; o que está fechado pelas travas é dito como fechado, como a central já faz ("Not yet"). Cada resposta tem o link para a tela do estúdio que ela explica e para a página de recurso, quando houver.
+
+4. Testes automáticos: falham se uma área do estúdio ficar sem seção na central; se uma seção não tiver resposta para a tarefa principal da área; se um link de resposta não abrir uma rota existente; se um nome de botão citado não existir no código; ou se um answerId antigo deixar de existir. O assistente de ajuda (lib/help-ask.ts) continua lendo o mesmo conteúdo, sem segundo mecanismo.
+
+5. Acessibilidade (AX274, Parte A, integral): máxima acessibilidade em tudo o que este item criar ou alterar — WCAG 2.2 nível AAA em todos os critérios aplicáveis, em todas as telas, estados, e-mails e arquivos, mais as demais normas e orientações da Parte A; a impossibilidade de um critério AAA precisa ser demonstrada e registrada em docs/accessibility-programme.md, nunca presumida. Os pontos a seguir são verificações obrigatórias deste item, não o limite do que se exige: cartões como lista de links com nome por extenso (o ícone é decorativo); títulos de seção em hierarquia (2.4.10); trilha de onde a pessoa está (2.4.8); linguagem simples (3.1.5) e glossário para termos incomuns (3.1.3); ajuda sempre no mesmo lugar (3.2.6); contraste de 7:1, 320 px e 400% de zoom; leitor de tela e teclado. Seção "Acessibilidade" no PR, com os passos e as decisões da tarefa principal antes e depois (achar a resposta de uma área).
+
+Custo: páginas estáticas e conteúdo no repositório; o assistente de ajuda continua com o teto e a reserva que já tem, sem aumento de limite. Custo desconhecido reprova, nunca é zero.
+
+REGRA DE MARGEM (MR, 27/10/2026): nenhum cliente pagante, considerado isoladamente e usando 100% de todos os direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto; a empresa como um todo não pode dar prejuízo no pior caso a partir da base mínima de clientes pagantes, com 100% dos custos fixos da LLC atribuídos ao Marktmorgen (FX275); a meta de 60% de margem líquida é medida todo mês com números reais. Impostos pela política TX vigente.
+
+Proibido: descrever recurso que não funciona hoje; apagar ou renumerar respostas existentes; quebrar links ou answerId antigos; segundo mecanismo de busca ou de assistente; mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; liderar com "free"; depoimento, número de clientes, urgência ou promessa de resultado; imagem repetida; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
 
 Aplicar a regra VR.
 ```
