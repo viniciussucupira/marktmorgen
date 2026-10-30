@@ -92,7 +92,7 @@ import { buyerPagesCap, forgetTold, tellBuyers, tellRefundShort } from "@/lib/cl
 import { giveBackUnused, unusedRows, unusedSummary } from "@/lib/closing-refunds";
 import { stillToGive, unusedOf, type PaidPeriod } from "@/lib/closing-buyers-rules";
 import { formatMoney } from "@/lib/money";
-import { expirePlanCheckouts, markShut, refusePlanIfClosing } from "@/lib/closing-plan-guard";
+import { CLOSING_CHECKOUT_SECONDS, expirePlanCheckouts, lastPlanMoment, markShut, refusePlanIfClosing } from "@/lib/closing-plan-guard";
 
 export { CLOSING_DAYS, RECHECK_DAYS, WARN_MONTH_DAYS, WARN_WEEK_DAYS };
 
@@ -204,6 +204,9 @@ export function noticeFor(endedAt: number, now: number): "ended" | "month" | "we
   if (now >= day - WARN_MONTH_DAYS * DAY_MS) return "month";
   return "ended";
 }
+
+/** A moment to the minute, in UTC, said so: as the studio shows the last moment a plan can be started (app/studio/page.tsx). */
+const momentWords = (ms: number) => `${new Date(ms).toLocaleString("en-US", { year: "numeric", month: "long", day: "numeric", hour: "numeric", minute: "2-digit", timeZone: "UTC" })} UTC`;
 
 const dateWords = (ms: number) => new Date(ms).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric", timeZone: "UTC" });
 
@@ -393,7 +396,7 @@ export function closingLetter(kind: "ended" | "month" | "week", name: string, en
       "",
       studio,
       "",
-      `Starting a plan again before ${dateWords(day)} keeps your store: everything stays exactly as it is, your members' payments go on as they were (nothing is charged for the days in between, and invoices we voided when your plan ended do not come back), and nothing is refunded. On that day itself a plan can no longer be started for it.`,
+      `Starting a plan again before ${momentWords(lastPlanMoment(day))} keeps your store: everything stays exactly as it is, your members' payments go on as they were (nothing is charged for the days in between, and invoices we voided when your plan ended do not come back), and nothing is refunded. After that moment a plan can no longer be started for it: a plan's checkout lasts ${CLOSING_CHECKOUT_SECONDS / 60} minutes, and it must end before the closing day begins.`,
       "",
       kind === "ended"
         ? `We will write to you again ${WARN_MONTH_DAYS} days before that day and ${WARN_WEEK_DAYS} days before it. Nothing is removed without a notice at least a week old.`
@@ -608,7 +611,7 @@ export async function closeOne(key: string, now = Date.now(), hands: Hands = HAN
     const final: State = kept.of === was ? kept : { of: was, renewals: now };
     // A plan paid for it since its day began (a checkout opened before and
     // finished on it) is ended and returned in full (lib/closing-plan-guard.ts).
-    await markShut(store, final.day ?? now);
+    await markShut(store, final.day ?? now, was);
     await refuseLatePlans(store);
     if (final.removed) {
       if (!final.due) {
@@ -798,7 +801,7 @@ async function closingDay(store: Store, key: string, state: State, endedAt: numb
     }
     // No plan can be paid for it from here: its open plan checkouts are
     // expired, and its address is marked for after its records are gone.
-    await markShut(store, next.day ?? day);
+    await markShut(store, next.day ?? day, endedAt);
     await expirePlanCheckouts(store, store.stripeCustomerId ? [store.stripeCustomerId] : []);
     try {
       const stopped = await stopRenewals(store, until);

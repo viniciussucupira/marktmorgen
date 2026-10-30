@@ -120,6 +120,8 @@ export async function tellBuyers(store: Store, endedAt: number, day: number, aft
   }
   const held = await membersOf(folder);
   for (const email of held.emails) if (!members.has(email)) members.set(email, "");
+  // Members whose payments were not paused (any of their memberships): never told they stopped.
+  const unpaused = new Set(held.unpaused);
   const base = storeBase(store);
   const tell = async (raw: string[]): Promise<boolean> => {
     const fresh = [...new Set(raw.map((e) => normaliseEmail(e)).filter((e) => EMAIL_PATTERN.test(e)))];
@@ -138,7 +140,7 @@ export async function tellBuyers(store: Store, endedAt: number, day: number, aft
         }
       }
       const letters = going.map((email) =>
-        message(store, email, buyerNotice({ store: store.name, storeUrl: base, day, contact: contactOf(store), member: members.has(email), refund: members.get(email) || undefined }), postal),
+        message(store, email, buyerNotice({ store: store.name, storeUrl: base, day, contact: contactOf(store), member: members.has(email), paused: !unpaused.has(email), refund: members.get(email) || undefined }), postal),
       );
       if (!(await send(letters, batchKey("notice", folder, endedAt, going)))) {
         await returnCredit(folder, going.length * EMAILS_PER_BUYER_PER_ENDING);

@@ -293,6 +293,8 @@ export function buyerNotice(input: {
   /** For a member who paid for time past the day: what is given back, already written as money. */
   refund?: string;
   member?: boolean;
+  /** Whether that member's payments were paused (lib/closing-holds.ts). One Stripe refused, or past the closing's budget, may still be charged. */
+  paused?: boolean;
 }): BuyerLetter {
   const day = dateWords(input.day);
   return {
@@ -308,8 +310,13 @@ export function buyerNotice(input: {
       "",
       ...(input.member
         ? [
-            "Your membership payments have stopped: nothing more will be charged, and you keep",
-            "your access until that day.",
+            ...(input.paused === false
+              ? [
+                  "We could not pause your membership payments, so you may still be charged until that day.",
+                  `If you are charged before then, ${input.store} has been asked to refund you. You keep`,
+                  "your access until that day.",
+                ]
+              : ["Your membership payments have stopped: nothing more will be charged, and you keep", "your access until that day."]),
             ...(input.refund
               ? [`You paid for time after that day. ${input.refund} will be given back to you from the store's`, "own Stripe account by that day. If it cannot be, we will email you."]
               : []),

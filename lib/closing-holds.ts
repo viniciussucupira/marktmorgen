@@ -218,15 +218,24 @@ export async function memberAddresses(folder: string): Promise<string[]> {
 }
 
 /** Every member of this ending: the addresses, and the members with none (by subscription). */
-export async function membersOf(folder: string): Promise<{ emails: string[]; missing: string[] }> {
-  if (!isRedisConfigured()) return { emails: [], missing: [] };
+export async function membersOf(folder: string): Promise<{ emails: string[]; missing: string[]; unpaused: string[] }> {
+  if (!isRedisConfigured()) return { emails: [], missing: [], unpaused: [] };
   const [raw] = await redisPipeline([["HGETALL", workKey(folder)]]);
   const flat = Array.isArray(raw) ? (raw as unknown[]).map(String) : [];
-  const out = { emails: [] as string[], missing: [] as string[] };
-  for (let i = 0; i + 1 < flat.length; i += 2) {
-    if (!flat[i].startsWith("m:")) continue;
-    if (flat[i + 1] === NO_ADDRESS) out.missing.push(flat[i].slice(2));
-    else if (flat[i + 1]) out.emails.push(flat[i + 1]);
+  const fields = new Map<string, string>();
+  for (let i = 0; i + 1 < flat.length; i += 2) fields.set(flat[i], flat[i + 1]);
+  const out = { emails: [] as string[], missing: [] as string[], unpaused: [] as string[] };
+  for (const [field, value] of fields) {
+    if (!field.startsWith("m:")) continue;
+    const sub = field.slice(2);
+    if (value === NO_ADDRESS) {
+      out.missing.push(sub);
+      continue;
+    }
+    if (!value) continue;
+    out.emails.push(value);
+    // Not paused: Stripe refused it (f:) or the closing's budget did not reach it (o:). It may still be charged.
+    if (fields.has(`f:${sub}`) || fields.has(`o:${sub}`)) out.unpaused.push(value);
   }
   return out;
 }

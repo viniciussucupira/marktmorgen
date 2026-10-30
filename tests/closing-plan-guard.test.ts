@@ -216,6 +216,38 @@ async function main() {
   await refusePlanIfClosing({ store: (await storeForEmail(uma.email))!, handle: "uma", subscriptionId: "sub_umaold0001", customerId: uma.customer });
   is("it can charge no more, its old payment stays, and the creator is not told of a payment that never was", [world.subs.get("sub_umaold0001")?.status, refundsOf("pi_umaold0001").length, sent.filter((m) => m.to === uma.email).length - umaBefore], ["canceled", 0, 0]);
 
+  part("A plan paid by card three minutes before the day, found only once the day has begun: refunded, and the creator told");
+  const dora = await closingStore("dora", day);
+  world.subs.set("sub_doralate02", { id: "sub_doralate02", status: "active", customer: dora.customer, metadata: { store: "dora", tier: "creator" }, created: S(day) - 180 });
+  world.invoices.push({ id: "in_doralate02", subscription: "sub_doralate02", status: "paid", amount_paid: 6_900, payment_intent: "pi_doralate02", created: S(day) - 180, paid_at: S(day) - 180 });
+  world.charges.set("pi_doralate02", { amount: 6_900, disputed: false });
+  const doraBefore = sent.filter((m) => m.to === dora.email).length;
+  await refusePlanIfClosing({ store: (await storeForEmail(dora.email))!, handle: "dora", subscriptionId: "sub_doralate02", customerId: dora.customer });
+  is("a plan started after the last one ended is refunded whatever minute it was paid, and its creator told", [world.subs.get("sub_doralate02")?.status, refundsOf("pi_doralate02").map((row) => row.amount), sent.filter((m) => m.to === dora.email).length - doraBefore], ["canceled", [6_900], 1]);
+
+  part("The letter is marked sent as soon as it goes: a write that fails after it, and a retry days later, never send a second");
+  const ezra = await closingStore("ezra", day);
+  const realPipeline = redis.pipeline.bind(redis);
+  let failDone = true;
+  redis.pipeline = ((commands: (string | number)[][]) => {
+    if (failDone && commands.some((c) => c[0] === "HSET" && c[1] === UNDO_KEY && String(c[3]).includes('"done":'))) {
+      failDone = false;
+      return Promise.reject(new Error("a stand-in failure of the database"));
+    }
+    return realPipeline(commands);
+  }) as typeof redis.pipeline;
+  const quiet = console.error;
+  console.error = () => {};
+  await refusePlanIfClosing({ store: (await storeForEmail(ezra.email))!, handle: "ezra", subscriptionId: ezra.id, customerId: ezra.customer });
+  const ezraFirst = sent.filter((m) => m.to === ezra.email).length;
+  const nowWas = Date.now.bind(Date);
+  Date.now = () => nowWas() + 30 * 3_600_000;
+  await retryPlanUndos(Date.now() + 10_000);
+  Date.now = nowWas;
+  console.error = quiet;
+  redis.pipeline = realPipeline;
+  is("one letter, though the settled mark failed once and the retry came after Stripe and the sender forgot the keys", [ezraFirst, sent.filter((m) => m.to === ezra.email).length, refundsOf(ezra.pi).length], [1, 1, 1]);
+
   part("The daily sync finds a plan paid during the closing day before the way back did");
   const tina = await closingStore("tina", day);
   const synced = await syncSubscriptions(Date.now() + 10_000);

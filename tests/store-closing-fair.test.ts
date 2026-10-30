@@ -342,8 +342,9 @@ async function main() {
     firstLetter.text.includes("we email everyone who bought from it"),
     /1 member has paid for time after .*: \$/.test(firstLetter.text),
     firstLetter.text.includes("each is given back the unused part of their last payment"),
-    firstLetter.text.includes(`Starting a plan again before ${closesOn} keeps your store`),
+    firstLetter.text.includes(`Starting a plan again before ${closesOn}`),
   ], [true, true, true, true, true]);
+  is("it names the exact last moment, in UTC, as the studio and the checkout count it, and no longer says a plan can be started until the day itself", [/Starting a plan again before [A-Z][a-z]+ \d{1,2}, \d{4},? (at )?\d{1,2}:\d{2}\s?[AP]M UTC keeps your store/.test(firstLetter.text), firstLetter.text.includes("On that day itself")], [true, false]);
   const run = await daily(anna, E, 1, CLOSING_DAYS - 1);
   is("between the plan's end and the closing no member is charged", world.charged.filter((c) => c.sub.startsWith("sub_")), []);
   is("the creator is told three times, the buyers once, at least seven days before", [sent.filter((m) => m.to === anna).length, run.filter((r) => r.includes(":told:")).map((r) => r.split(":").slice(2).join(":"))], [3, ["month", "week"]]);
@@ -455,6 +456,8 @@ async function main() {
   const eveEnd = await daily(eve, Ev, 2, CLOSING_DAYS);
   console.error = real;
   is("one that never pauses does not keep the store from closing on its day, where it ends with the rest", [eveEnd.at(-1)?.split(":")[1], stuck.status], ["removed", "canceled"]);
+  const eveNotice = (email: string) => sent.find((m) => m.to === email && m.subject.startsWith("Eve Shop closes on"))?.text ?? "";
+  is("the member Stripe never let us pause is not told its payments stopped: it may be charged until the day", [eveNotice("evestuck@buyers.example.com").includes("Your membership payments have stopped"), eveNotice("evestuck@buyers.example.com").includes("you may still be charged until that day"), eveNotice("evemonth@buyers.example.com").includes("Your membership payments have stopped")], [false, true, true]);
 
   part("More than fifty pages of members: read a part a day, from where the last run stopped");
   const hal = await storeWith("hal", { tier: "scale" });
@@ -497,6 +500,13 @@ async function main() {
   await daily(jo, J, 1, CLOSING_DAYS);
   console.error = real;
   is("the member past the budget is still told the store closes, like the one held", [sent.some((m) => m.to === "joanone@buyers.example.com"), sent.some((m) => m.to === "joantwo@buyers.example.com")], [true, true]);
+  const noticeTo = (email: string) => sent.find((m) => m.to === email && m.subject.startsWith("Joan Shop closes on"))?.text ?? "";
+  is("the held member is told its payments stopped; the one past the budget, still charged, is told the truth instead", [
+    noticeTo("joanone@buyers.example.com").includes("Your membership payments have stopped"),
+    noticeTo("joantwo@buyers.example.com").includes("Your membership payments have stopped"),
+    noticeTo("joantwo@buyers.example.com").includes("you may still be charged until that day"),
+    noticeTo("joantwo@buyers.example.com").includes("asked to refund you"),
+  ], [true, false, true, true]);
 
   part("A refund the balance did not cover is tried again when the creator adds funds; only the closing day makes it final");
   world.refunds.length = 0;

@@ -85,6 +85,8 @@ export type Undo = {
   name: string;
   /** When the closing day began (ms): payments since then are refunded. */
   since: number;
+  /** When the store's last plan ended (ms): a plan started after it is refunded whatever minute it was paid. */
+  ended?: number;
   /** When it was put in line (ms). */
   at: number;
   /** Runs that could not settle it yet. */
@@ -100,32 +102,48 @@ export const DONE_KEEP_DAYS = 40;
 
 const shutKey = (handle: string) => `${SHUT_PREFIX}${createHash("sha256").update(handle.toLowerCase()).digest("hex").slice(0, 32)}`;
 
-/** Marks every address a closing store sells under, from its closing day's start; renewed on each closing run. */
-export async function markShut(store: Pick<Store, "handle" | "previousHandles" | "releasedHandles">, since: number): Promise<void> {
+/** When a store's closing day began and when the plan before it ended (ms; 0 when not known). */
+export type ClosingTimes = { since: number; ended: number };
+
+/**
+ * Marks every address a closing store sells under, from its closing day's
+ * start, with the end of its last plan; renewed on each closing run.
+ */
+export async function markShut(store: Pick<Store, "handle" | "previousHandles" | "releasedHandles"> & { planEndedAt?: string }, since: number, ended = Date.parse(store.planEndedAt ?? "")): Promise<void> {
   if (!isRedisConfigured()) return;
   const handles = [...saleHandles(store)].filter(Boolean);
   if (!handles.length) return;
-  await redisPipeline(handles.map((handle) => ["SET", shutKey(handle), String(Math.floor(since)), "EX", SHUT_DAYS * 86_400]));
+  const value = `${Math.floor(since)}|${Number.isFinite(ended) && ended > 0 ? Math.floor(ended) : 0}`;
+  await redisPipeline(handles.map((handle) => ["SET", shutKey(handle), value, "EX", SHUT_DAYS * 86_400]));
+}
+
+/** When the closing day of the store that sold under this address began, and its last plan ended, while that is still known. */
+export async function shutOf(handle: string): Promise<ClosingTimes | null> {
+  if (!handle || !isRedisConfigured()) return null;
+  const [raw] = await redisPipeline([["GET", shutKey(handle)]]);
+  if (raw === null || raw === undefined) return null;
+  const [since, ended] = String(raw).split("|").map(Number);
+  return Number.isFinite(since) && since > 0 ? { since, ended: Number.isFinite(ended) && ended > 0 ? ended : 0 } : null;
 }
 
 /** When the closing day of the store that sold under this address began, while that is still known. */
 export async function shutSince(handle: string): Promise<number | null> {
-  if (!handle || !isRedisConfigured()) return null;
-  const [raw] = await redisPipeline([["GET", shutKey(handle)]]);
-  const since = Number(raw);
-  return raw !== null && raw !== undefined && Number.isFinite(since) && since > 0 ? since : null;
+  return (await shutOf(handle))?.since ?? null;
 }
 
 /**
- * When this store's closing day began, or null when it is not in one. Only
- * a store whose plan ended can be. A failed read throws: the caller does not
- * adopt a plan it could not check.
+ * When this store's closing day began and its plan ended, or null when it is
+ * not in one. Only a store whose plan ended can be. A failed read throws:
+ * the caller does not adopt a plan it could not check.
  */
-export async function closingSince(store: Store): Promise<number | null> {
+export async function closingSince(store: Store): Promise<ClosingTimes | null> {
   if (!store.planEndedAt || !isRedisConfigured()) return null;
   const [score] = await redisPipeline([["ZSCORE", FINAL_INDEX, storeRef(store)]]);
   if (score === null || score === undefined || !Number.isFinite(Number(score))) return null;
-  return (await shutSince(store.handle)) ?? Number(score);
+  // The line's score is the end of the plan (lib/plan-closing.ts, closingDay).
+  const ended = Number(score);
+  const marked = await shutOf(store.handle);
+  return { since: marked?.since ?? ended, ended };
 }
 
 export type Refused = "no" | "returned" | "returning";
@@ -139,14 +157,15 @@ export type Refused = "no" | "returned" | "returning";
  */
 export async function refusePlanIfClosing(input: { store: Store | null; handle: string; subscriptionId: string; customerId: string }): Promise<Refused> {
   if (!SUBSCRIPTION_PATTERN.test(input.subscriptionId)) return "no";
-  const since = input.store ? await closingSince(input.store) : await shutSince(input.handle);
-  if (since === null) return "no";
+  const times = input.store ? await closingSince(input.store) : await shutOf(input.handle);
+  if (times === null) return "no";
   const entry: Undo = {
     h: input.handle,
     c: CUSTOMER_PATTERN.test(input.customerId) ? input.customerId : "",
     to: input.store?.email ?? "",
     name: input.store?.name ?? "",
-    since,
+    since: times.since,
+    ...(times.ended ? { ended: times.ended } : {}),
     at: Date.now(),
     n: 0,
   };
@@ -235,6 +254,7 @@ function readUndo(raw: unknown): Undo | null {
       to: typeof value.to === "string" ? value.to : "",
       name: typeof value.name === "string" ? value.name.slice(0, 200) : "",
       since: value.since,
+      ...(typeof value.ended === "number" && value.ended > 0 ? { ended: value.ended } : {}),
       at: typeof value.at === "number" ? value.at : 0,
       n: typeof value.n === "number" ? value.n : 0,
       ...(typeof value.done === "number" ? { done: value.done } : {}),
@@ -322,6 +342,11 @@ export async function settleOne(id: string, recheck = false): Promise<boolean> {
   try {
     const plan = await endIt(id);
     if (!plan.ended) return keep("Stripe did not end it");
+    // A plan started after the store's last one ended is a plan for a closing store: every payment of it is given
+    // back, whatever minute it was paid (one paid just before the day began and found only after it, too). The
+    // store's own plan from before that end gives back only what it was paid since the closing day began.
+    const before = plan.created > 0 && (entry.ended ? plan.created * 1000 < entry.ended : plan.created * 1000 < entry.since);
+    const cutoff = before ? entry.since : (entry.ended ?? entry.since);
     const listed = await onPlatform("GET", `/invoices?${new URLSearchParams({ subscription: id, limit: "100" })}`, undefined, { version: AT });
     const invoices = Array.isArray(listed.data) ? (listed.data as Record<string, unknown>[]) : [];
     let settled = true;
@@ -343,7 +368,7 @@ export async function settleOne(id: string, recheck = false): Promise<boolean> {
       const paidAt = Number((invoice.status_transitions as { paid_at?: unknown } | null | undefined)?.paid_at) || 0;
       const created = Number(invoice.created) || 0;
       // Paid before the closing day began: a payment for a plan the store had, not this one.
-      if (Math.max(paidAt, created) * 1000 < entry.since) continue;
+      if (Math.max(paidAt, created) * 1000 < cutoff) continue;
       const outcome = await giveBack(id, invoice);
       returned += outcome.returned;
       disputed += outcome.disputed;
@@ -352,9 +377,9 @@ export async function settleOne(id: string, recheck = false): Promise<boolean> {
     }
     if (!settled) return keep("a refund is not made in full yet");
     if (entry.done) return true;
-    // The store's own plan from before its closing day, never paid since: ended so it can charge no more, and no
-    // letter (there is no payment to speak of, and it was not started on the day).
-    const own = plan.created > 0 && plan.created * 1000 < entry.since && returned === 0 && disputed === 0;
+    // The store's own plan, started before its last plan ended and never paid since the closing day began: ended
+    // so it can charge no more, and no letter (there is no payment to speak of, and it was not started anew).
+    const own = before && returned === 0 && disputed === 0;
     if (!entry.t && !own) {
       if (!(await tell(id, entry, returned, disputed, currency))) return keep("the creator could not be told yet");
       // Written at once, so whatever happens next the creator is never written to twice.
@@ -362,7 +387,7 @@ export async function settleOne(id: string, recheck = false): Promise<boolean> {
       await redisPipeline([["HSET", UNDO_KEY, id, JSON.stringify(entry)]]);
     }
     // Settled: only its dates are kept, for a retry or a recheck to find (no address, no customer, no name).
-    await redisPipeline([["HSET", UNDO_KEY, id, JSON.stringify({ h: "", c: "", to: "", name: "", since: entry.since, at: entry.at, n: entry.n, done: Date.now(), t: 1 })]]);
+    await redisPipeline([["HSET", UNDO_KEY, id, JSON.stringify({ h: "", c: "", to: "", name: "", since: entry.since, ...(entry.ended ? { ended: entry.ended } : {}), at: entry.at, n: entry.n, done: Date.now(), t: 1 })]]);
     return true;
   } catch (error) {
     return keep("Stripe did not answer", error);

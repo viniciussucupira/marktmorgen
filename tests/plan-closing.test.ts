@@ -36,6 +36,7 @@ import { type Course, readCourse, saveCourse } from "@/lib/course";
 import { deleteFile, listFiles } from "@/lib/file-store";
 import { CLOSING_DAYS, type Hands, RECHECK_DAYS, WARN_MONTH_DAYS, WARN_WEEK_DAYS, closeEnded, closeOne, closingOf, finishClosed, noticeFor, removalDay } from "@/lib/plan-closing";
 import { eraseClosed } from "@/lib/closed-store-data";
+import { lastPlanMoment } from "@/lib/closing-plan-guard";
 import { KEEP_NOTHING_FROM, keptRoomFor } from "@/lib/plan-closing-rules";
 import { communityFolder } from "@/lib/community-image";
 import { picturesKept, takePicturePlace } from "@/lib/community-files";
@@ -583,7 +584,7 @@ async function main(): Promise<void> {
   is("ten megabytes and two pictures are not a store that fits: it is written to", [zoeFirst.state, zoeFirst.note], ["told", "ended"]);
   is("its letter gives the day, and one way out, and says what goes", [
     zoeLetter.text.includes(`On ${dateWords(Z + C * DAY)}, ${CLOSING_DAYS} days after your plan ended`),
-    zoeLetter.text.includes(`Starting a plan again before ${dateWords(Z + C * DAY)} keeps your store`),
+    zoeLetter.text.includes(`Starting a plan again before ${new Date(lastPlanMoment(Z + C * DAY)).toLocaleString("en-US", { year: "numeric", month: "long", day: "numeric", hour: "numeric", minute: "2-digit", timeZone: "UTC" })} UTC keeps your store`),
     zoeLetter.text.includes("delete files or lessons"),
     zoeLetter.text.includes("the files your students handed in and the\n    pictures in your community's posts"),
   ], [true, true, false, true]);
