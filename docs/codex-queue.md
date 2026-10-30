@@ -23,7 +23,7 @@ Manter a ordem já gravada para7[C-UE],8[C-UK],300–303, relatório mensal465[M
 
 Percorrer **somente os remanescentes acionáveis**, na ordem relativa já vigente (inclusiveOR e dependências), filtrando pela classificaçãoA; números abaixo são localizadores, não sequência numérica nova. Exceções de MQ1(b) continuam no lugar atual mesmo quando constam da listaA.
 
-**Ordem vigente do Grupo A pela MQ2 (dono, 30/10/2026, 10h58 Fortaleza):** 310 [AX2], 17 [D15], 273 [BK1], 274 [AX1], 427 [VR1], 567 [GD1], 388 [TB14], 389 [TB15], 414 [KX1], 417 [CC1], 437 [AC2], 457 [EL1], 459 [EL3], 460 [EL4], 461 [EL5], 462 [EL6], 506 [SG1], 507 [SG3], 508 [SG4], 335 [FR1], 374 [SU7], 378 [TB4], 93 [D2-VERIFIED-SOCIAL], 149 [S8-VERIFIED-SOCIAL-REFERENCE], 94 [D2-BUYER-TRUST], 145 [S4-HOME-SALES], 219 [OP5], 488 [IT5], 220 [HL1], 238 [CF1], 239 [CF2], 240 [CF3], 243 [CF6], 248 [ST1], 251 [ST4], 256 [KJ1], 271 [SEO1], 276 [H3-1], 281 [SF1], 497 [ME2], 308 [TC1], 443 [TS1], 444 [TS2], 490 [PP1], 496 [ME1], 498 [ME3], 531 [VP1], 241 [CF4], 534 [FQ1], 14 [D11], 22 [E5], 28 [E11], 99 [E2-TAG-BROADCAST], 100 [E2-MEMBER-PUBLICATIONS], 120 [F2-IMPORTS], 260 [KJ5], 394 [CX5], 397 [SL1], 428 [BV1], 513 [PF1], 556 [CT1], 514 [PF2], 515 [PF3], 206 [SH3], 520 [LB1], 521 [LB2], 522 [LB3], 541 [FC4], 544 [SQ9], 548 [TR1], 551 [FB1], 552 [BB1], 554 [DS1], 533 [DP1], 491 [PP2], 362 [AP2], 479 [SB2], 113 [E2-COMMUNITY-MODERATION], 436 [AC1], 312 [HQ1], 492 [DE1], 338 [HZ3], 438 [FC1], 439 [FC2], 32 [F1], 375 [TB1], 484 [IT1], 485 [IT2], 487 [IT4], 524 [NV1], 103 [E2-LESSON-MEDIA], 242 [CF5], 282 [HG1], 356 [ES2], 370 [SU3], 380 [TB6], 399 [SL3], 525 [FN1], 535 [MV1], 536 [CB1], 537 [PH1], 540 [CU1], 545 [LU1], 546 [EB1], 39 [G1], 480 [SB3]. Ficam no lugar atual, fora desta sequência: 143 [S2-PRICING], 182 [HT0], 202 [P0-REAL-PEOPLE], 205 [SH2], 431 [PV1], 432 [PV2], 433 [PV3], 434 [PV4] (concluídos, absorvidos, andamentos protegidos e itens do Bloco de abertura). Critério e motivo de cada mudança na seção “MQ2 — reordenação única aplicada”.
+**Ordem vigente do Grupo A pela MQ2 (dono, 30/10/2026, 10h58 Fortaleza):** 310 [AX2], 17 [D15], 273 [BK1], 274 [AX1], 427 [VR1], 567 [GD1], 568 [GD2], 388 [TB14], 389 [TB15], 414 [KX1], 417 [CC1], 437 [AC2], 457 [EL1], 459 [EL3], 460 [EL4], 461 [EL5], 462 [EL6], 506 [SG1], 507 [SG3], 508 [SG4], 335 [FR1], 374 [SU7], 378 [TB4], 93 [D2-VERIFIED-SOCIAL], 149 [S8-VERIFIED-SOCIAL-REFERENCE], 94 [D2-BUYER-TRUST], 145 [S4-HOME-SALES], 219 [OP5], 488 [IT5], 220 [HL1], 238 [CF1], 239 [CF2], 240 [CF3], 243 [CF6], 248 [ST1], 251 [ST4], 256 [KJ1], 271 [SEO1], 276 [H3-1], 281 [SF1], 497 [ME2], 308 [TC1], 443 [TS1], 444 [TS2], 490 [PP1], 496 [ME1], 498 [ME3], 531 [VP1], 241 [CF4], 534 [FQ1], 14 [D11], 22 [E5], 28 [E11], 99 [E2-TAG-BROADCAST], 100 [E2-MEMBER-PUBLICATIONS], 120 [F2-IMPORTS], 260 [KJ5], 394 [CX5], 397 [SL1], 428 [BV1], 513 [PF1], 556 [CT1], 514 [PF2], 515 [PF3], 206 [SH3], 520 [LB1], 521 [LB2], 522 [LB3], 541 [FC4], 544 [SQ9], 548 [TR1], 551 [FB1], 552 [BB1], 554 [DS1], 533 [DP1], 491 [PP2], 362 [AP2], 479 [SB2], 113 [E2-COMMUNITY-MODERATION], 436 [AC1], 312 [HQ1], 492 [DE1], 338 [HZ3], 438 [FC1], 439 [FC2], 32 [F1], 375 [TB1], 484 [IT1], 485 [IT2], 487 [IT4], 524 [NV1], 103 [E2-LESSON-MEDIA], 242 [CF5], 282 [HG1], 356 [ES2], 370 [SU3], 380 [TB6], 399 [SL3], 525 [FN1], 535 [MV1], 536 [CB1], 537 [PH1], 540 [CU1], 545 [LU1], 546 [EB1], 39 [G1], 480 [SB3]. Ficam no lugar atual, fora desta sequência: 143 [S2-PRICING], 182 [HT0], 202 [P0-REAL-PEOPLE], 205 [SH2], 431 [PV1], 432 [PV2], 433 [PV3], 434 [PV4] (concluídos, absorvidos, andamentos protegidos e itens do Bloco de abertura). Critério e motivo de cada mudança na seção “MQ2 — reordenação única aplicada”.
 
 Ordem anterior à MQ2, preservada como histórico — Localizadores do Grupo A solicitado: 14, 17, 22, 28, 32, 39, 93, 94, 99, 100, 103, 113, 120, 143, 145, 149, 182, 202, 205, 206, 219, 220, 238, 239, 240, 241, 242, 243, 248, 251, 256, 260, 271, 273, 274, 276, 281, 282, 308, 310, 312, 335, 338, 356, 362, 370, 374, 375, 378, 380, 388, 389, 394, 397, 399, 414, 417, 427, 428, 431, 432, 433, 434, 436, 437, 438, 439, 443, 444, 457, 459, 460, 461, 462, 479, 480, 484, 485, 487, 488, 490, 491, 492, 496, 497, 498, 506, 507, 508, 513, 514, 515, 520, 521, 522, 524, 525, 531, 533, 534, 535, 536, 537, 540, 541, 544, 545, 546, 548, 551, 552, 554.
 
@@ -32,6 +32,8 @@ Ordem anterior à MQ2, preservada como histórico — Localizadores do Grupo A s
 **Entrada posterior CT1 — 29/10/2026,23h50Fortaleza:** **556[CT1]**, na fila, **ACIMA DO MARCO MQ1, Grupo A, imediatamente depois de513[PF1]**, por indicação expressa do dono. Inserir somente este novo item nessa posição lógica; os itens anteriores conservam entre si a ordem, inclusive Bloco de abertura, AV1/SD1, andamentos e exceções. O número556 é localizador, não prioridade numérica.
 
 **Entrada posterior GD1 — 30/10/2026,13h18Fortaleza:** **567[GD1]**, na fila, **ACIMA DO MARCO MQ1, Grupo A, logo depois de427[VR1]** na ordem vigente da MQ2 (posição6), pelo critério (a) da MQ2, por indicação expressa do dono. Inserir somente este novo item nessa posição; os demais conservam entre si a ordem, inclusive Bloco de abertura, AV1/SD1, andamentos e exceções. O número567 é localizador, não prioridade numérica.
+
+**Entrada posterior GD2 — 30/10/2026,13h23Fortaleza:** **568[GD2]**, na fila, **ACIMA DO MARCO MQ1, Grupo A, logo depois de567[GD1]** na ordem vigente da MQ2 (posição7), pelo critério (a) da MQ2, por indicação expressa do dono. Inserir somente este novo item nessa posição; os demais conservam entre si a ordem, inclusive Bloco de abertura, AV1/SD1, andamentos e exceções. O número568 é localizador, não prioridade numérica.
 
 ## MARCO — DAQUI EM DIANTE, OS MENOS IMPORTANTES (MQ1, 29/10/2026)
 
@@ -104,6 +106,8 @@ Uma linha por item, três grupos possíveis: A, B ou sem mudança. “Sem mudan�
 **Atualização FF2 (30/10/2026,10h39):** bases554–565 anteriores são históricas; tabela atual **566linhas únicas,109A,231B,226sem mudança**. Acrescentado566[FF2] no fim da fila, depois de565; pela Parte2 do FF2, saem do GrupoB para o fim da fila, depois de566 e na ordem dos números, os reativados61,63,64,65,66,67,68,135,136(só estudo) e137. Continuam como estão62,133 e a parte pt-BR do58; o134 já estava reaberto desde24/10/2026,18h56 e fica na posição e no estado atuais. Tabela numérica não redefine execução.
 
 **Atualização GD1 (30/10/2026,13h18):** bases554–566 anteriores são históricas; tabela atual **567linhas únicas,110A,231B,226sem mudança**. Só567[GD1] acrescentadoA, logo depois de427[VR1] na ordem vigente da MQ2 (A#6); os itens seguintes do Grupo A descem uma posição na sequência, sem mudar número, grupo ou estado. Tabela numérica não redefine execução.
+
+**Atualização GD2 (30/10/2026,13h23):** bases554–567 anteriores são históricas; tabela atual **568linhas únicas,111A,231B,226sem mudança**. Só568[GD2] acrescentadoA, logo depois de567[GD1] na ordem vigente da MQ2 (A#7); os itens seguintes do Grupo A descem uma posição na sequência, sem mudar número, grupo ou estado. Tabela numérica não redefine execução.
 
 | Item | Grupo | Motivo |
 | --- | --- | --- |
@@ -674,6 +678,7 @@ Uma linha por item, três grupos possíveis: A, B ou sem mudança. “Sem mudan�
 | 565 [FF1] | sem mudança | Dono30/10/2026,10h30: fim da fila, depois do último item da cauda FIM1, pela regra MQ2; demais posições preservadas. |
 | 566 [FF2] | sem mudança | Dono30/10/2026,10h39: fim da fila, depois de565[FF1], pela regra MQ2; demais posições preservadas. |
 | 567 [GD1] | A | Dono30/10/2026,13h18: acima do marco, logo depois de427[VR1] pelo critério (a) da MQ2; demais posições preservadas. MQ2: A#6. |
+| 568 [GD2] | A | Dono30/10/2026,13h23: acima do marco, logo depois de567[GD1] pelo critério (a) da MQ2; demais posições preservadas. MQ2: A#7. |
 
 ### Proveniência, Pedidos repetidos e VR
 
@@ -19603,6 +19608,63 @@ Custo: cada parte calcula o pior caso mensal e anual de cada plano com 100% dos 
 REGRA DE MARGEM (MR, 27/10/2026): nenhum cliente pagante, considerado isoladamente e usando 100% de todos os direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto; a empresa como um todo não pode dar prejuízo no pior caso a partir da base mínima de clientes pagantes, com 100% dos custos fixos da LLC atribuídos ao Marktmorgen (FX275); a meta de 60% de margem líquida é medida todo mês com números reais. Impostos pela política TX vigente.
 
 Proibido: lista negra entre lojas ou mostrar dado de um criador ou comprador a outra loja; tirar acesso já pago sem aviso e sem as regras de encerramento; alterar conteúdo do criador sem a aprovação dele; decisão manual do dono como condição de funcionamento; mostrar zero no lugar de dado indisponível; registrar o agente da DMCA, criar contas, aceitar termos, contratar, pagar ou contatar terceiros; mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+```
+
+
+## 568 [GD2] — Segundo conjunto de proteções: obrigações legais da plataforma, golpes, pirataria, abuso e incidentes
+
+**Estado:** na fila. **Posição:** ACIMA DO MARCO MQ1, Grupo A, logo depois de567[GD1] na ordem vigente da MQ2 (posição7), pelo critério (a) da MQ2; itens da AV1 e do Bloco de abertura continuam antes.568 estava livre e a etiqueta[GD2] não existia. Não altera ordem/estado de outros itens.
+
+**Proveniência/Pedidos repetidos:** pedido direto do dono na conversa com o Claude,30/10/2026,13h23Fortaleza; texto redigido pelo Claude e aprovado pelo dono; gravado diretamente pelo Claude para não interromper o Codex. Conferido no main 31daa6c5acd572f0f77dd910b4dc388194aa2ab6 pela etiqueta, pela linha de data e hora e pelo conteúdo: nenhum item pede o estudo do INFORM Consumers Act/art. 30 do DSA, verificação de vírus nos arquivos, limite de tentativas contra teste de cartões, limite de sessões ao mesmo tempo, plano de resposta a incidentes, nomes de loja reservados ou o motivo “Impersonation”. Ligações a reutilizar sem refazer: a parte (e) com 362 [AP2] (validação de lista importada) e 374 [SU7] (frequência de e-mails); a parte (j) com o mecanismo de advertências de app/report e lib/takedown-response.ts; a parte (l) com 275 [FX1] (custos fixos). Nova recepção só proveniência,sem número/commit exclusivo.
+
+### Pedido literal GD2
+
+```text
+GD — Segundo conjunto de proteções: obrigações legais da plataforma, golpes, pirataria, abuso e incidentes (30/10/2026) [GD2]
+
+Solicitação do dono (30/10/2026, 13h23, horário de Fortaleza).
+
+Palavras do dono, reescritas em norma culta: quer ainda mais cuidados para proteger os clientes, os membros, os criadores e o próprio dono, e uns dos outros, caso qualquer um deles seja irresponsável, não cumpra suas obrigações ou seja desonesto, protegendo a reputação do dono.
+
+Pedidos repetidos: aplique a regra "Pedidos repetidos" de AGENTS.md. É um segundo conjunto, sem repetir o 567 [GD1]. Conferido antes de gravar, e não refeito: o carimbo em PDFs e as chaves de licença (/platform/pdf-stamping, /platform/license-keys), a equipe com papéis, os avisos de mudança de conta (lib/account-notice.ts), a página de denúncia (app/report), a página de status do 247 [SP4] e o 567 [GD1]. Em cada parte, confira o código e a fila antes e faça só a diferença.
+
+Estado inicial: na fila, ACIMA DO MARCO (Grupo A), logo depois de 567 [GD1], pelo critério (a) da [MQ2]. Não altera a ordem de nenhum outro item. Itens da AV1 e do Bloco de abertura continuam antes.
+
+Regra geral: tudo age sozinho, pelo código, sem o dono acompanhar painel nem decidir caso a caso; nenhuma proteção tira de um comprador o acesso já pago sem aviso e sem as regras do 307 [EC1]; nada de lista negra entre lojas; nenhum dado pessoal novo além do que a lei exigir.
+
+(a) Identificação de quem vende: estudo, com fontes oficiais e datadas, de se o Marktmorgen é "online marketplace" pelo INFORM Consumers Act dos EUA (15 U.S.C. 45f, vendedores de alto volume) e "online platform allowing consumers to conclude distance contracts with traders" pelo art. 30 do Regulamento (UE) 2022/2065 (DSA). Se se aplicar, coletar e conferir só os dados exigidos (aproveitando os dados da conta Stripe do criador quando a lei permitir), mostrar ao comprador o que a lei manda mostrar, e pausar sozinho as vendas novas de quem não cumprir, com aviso e prazo. O resultado do estudo e o que só o dono pode decidir vão para "Depende do dono".
+
+(b) Produto proibido: na criação e na edição de um produto, regras do código (sem IA) conferem o título, a descrição e a categoria contra a lista dos Termos ("What you may not sell") e contra a lista de negócios restritos do Stripe, conferida em fonte oficial e datada; o que for claramente proibido não publica, com a explicação; o duvidoso mostra aviso.
+
+(c) Golpe e roubo de dados: os formulários do criador não aceitam campos que peçam senha, número completo de cartão, código de segurança ou número de documento de identidade; páginas que imitam o login, o checkout ou a marca do Marktmorgen não publicam. Estudo, sem criar conta, de listas públicas e gratuitas de endereços maliciosos para conferir os links das páginas.
+
+(d) Arquivo com vírus: cada arquivo enviado por um criador para entrega é verificado por um verificador de código aberto antes de ser entregue; arquivo reprovado não é entregue e o criador é avisado. Calcule o custo de processamento no pior caso de cada plano e aplique teto automático; se o custo não couber, registre em "Depende do dono" em vez de ligar.
+
+(e) Spam por e-mail: verificar o que já existe (consentimento, descadastro, devoluções, supressões) e completar: pausa automática dos envios de lista de uma loja quando a taxa de reclamações ou de devoluções passar dos limites oficiais do fornecedor de e-mail, conferidos em fonte datada, com aviso ao criador e retomada sozinha quando a taxa voltar ao normal; lista importada só com a declaração de consentimento do criador.
+
+(f) Teste de cartões roubados: limite de tentativas de pagamento recusadas por checkout e por janela curta, contado sem guardar dado pessoal além do tempo da janela, para impedir que o checkout de um criador seja usado para testar cartões; mensagem clara ao comprador legítimo.
+
+(g) Pirataria e conta compartilhada: verificar o carimbo em PDFs, as chaves de licença e os links de download que já existem, e completar: links de download que expiram, e limite de sessões ao mesmo tempo por comprador nos cursos e nas áreas de membros, com aviso ao comprador e sem bloquear quem usa dois aparelhos próprios dentro do limite.
+
+(h) Equipe: verificar e completar o registro de quem fez o quê nas ações de dinheiro, de dados e de exclusão da loja, visível ao dono da loja, sem dado pessoal de comprador; confirmação antes de toda ação que não pode ser desfeita.
+
+(i) Menores de idade: os Termos dizem a idade mínima para criar loja e para comprar, conforme a lei aplicável, conferida em fonte oficial e datada, e proíbem lojas voltadas a crianças menores de 13 anos (COPPA); o cadastro do criador confirma a idade mínima por uma caixa desmarcada.
+
+(j) Alguém se passando por outro: nomes de loja e endereços reservados (por exemplo: marktmorgen, support, help, admin, official, security, billing) não podem ser usados por criadores; a página de denúncia ganha o motivo "Impersonation"; as denúncias entram no mesmo mecanismo de advertências que já existe.
+
+(k) Vazamento de dados: um plano escrito de resposta a incidentes em docs/, com os prazos legais conferidos em fontes oficiais e datadas (por exemplo, 72 horas no art. 33 do RGPD e as leis estaduais dos EUA), os modelos de aviso aos criadores e compradores, e o que o código faz sozinho (por exemplo, trocar chaves e encerrar sessões); sem contratar serviço.
+
+(l) Proteção do dono: estudo, com fontes datadas e sem contratar, do custo de seguro empresarial para a LLC (seguro contra ataques digitais e de responsabilidade profissional), como possível custo fixo do 275 [FX1], registrado em "Depende do dono".
+
+Acessibilidade (AX274, Parte A, integral): máxima acessibilidade em tudo o que este item criar ou alterar — WCAG 2.2 nível AAA em todos os critérios aplicáveis, em todas as telas, estados, e-mails e arquivos, mais as demais normas e orientações da Parte A; a impossibilidade de um critério AAA precisa ser demonstrada e registrada em docs/accessibility-programme.md, nunca presumida. Seção "Acessibilidade" em cada PR, com os passos e as decisões da tarefa principal antes e depois.
+
+Custo: cada parte calcula o pior caso mensal e anual de cada plano com 100% dos direitos usados, ou o custo fixo e a base mínima, e aplica teto automático antes do gasto; nenhuma chamada de IA. Custo desconhecido reprova, nunca é zero.
+
+REGRA DE MARGEM (MR, 27/10/2026): nenhum cliente pagante, considerado isoladamente e usando 100% de todos os direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto; a empresa como um todo não pode dar prejuízo no pior caso a partir da base mínima de clientes pagantes, com 100% dos custos fixos da LLC atribuídos ao Marktmorgen (FX275); a meta de 60% de margem líquida é medida todo mês com números reais. Impostos pela política TX vigente.
+
+Proibido: lista negra entre lojas; coletar dado pessoal além do que a lei exigir; tirar acesso já pago sem aviso e sem as regras do 307; decisão manual do dono como condição de funcionamento; contratar seguro, verificador pago ou qualquer serviço; criar contas, aceitar termos, pagar ou contatar terceiros; mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
 
 Aplicar a regra VR.
 ```
