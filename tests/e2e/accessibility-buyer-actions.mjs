@@ -100,6 +100,17 @@ try{
     if(result.scroll>result.client||result.violations.length)throw Error("Accessibility/overflow failure at "+state);
     if(result.incomplete.length)gaps.push({width,mode,state,manualReview:result.incomplete});
    }
+   // Sent back without the box (app/api/store/checkout, consent=needed): the reason is written beside it and tied to it, the box is
+   // marked invalid and takes the focus, the reason is announced from a live region filled after the page is drawn (never an alert
+   // present from the start), and checking the box by its label clears the mark and the reason.
+   await page.goto(origin+"/@localshop/p/"+ids["Weeknight Dinners"]+"?consent=needed#buy",{waitUntil:"networkidle"});await restoreDarkAfterNavigation();
+   const refusedBox=page.locator('#buy form[data-checkout] input[name="dc"]').first();
+   await page.waitForTimeout(400);
+   const refusedState=await refusedBox.evaluate(n=>{const ids=(n.getAttribute("aria-describedby")||"").split(" ");const error=document.getElementById(ids[0]);const wrap=n.closest("[data-digital-consent]");const live=wrap&&wrap.querySelector('[aria-live="assertive"]');return {invalid:n.getAttribute("aria-invalid"),error:error?error.textContent.trim():"",focused:document.activeElement===n,live:live?live.textContent.trim():"",alertAtLoad:Boolean(wrap&&wrap.querySelector('[role="alert"]'))};});
+   if(refusedState.invalid!=="true"||!refusedState.error||!refusedState.focused||refusedState.live!==refusedState.error||refusedState.alertAtLoad)throw Error("Refused consent box state wrong "+JSON.stringify(refusedState));
+   await page.locator('#buy form[data-checkout] label:has(> input[name="dc"])').first().click();
+   const cleared=await refusedBox.evaluate(n=>({checked:n.checked,invalid:n.getAttribute("aria-invalid"),described:n.getAttribute("aria-describedby")}));
+   if(!cleared.checked||cleared.invalid!==null||/-error/.test(cleared.described||""))throw Error("Checking the box did not clear the error "+JSON.stringify(cleared));
    const response=await page.goto(origin+"/@localshop/p/"+ids["Weeknight Dinners"],{waitUntil:"networkidle"});await restoreDarkAfterNavigation();
    if(response.status()!==200)throw Error("Synthetic product page failed");
    await audit("product-checkout-form");
@@ -107,7 +118,7 @@ try{
    const extras=buyForm.locator('input[name="bump"]');
    if(await extras.evaluateAll(nodes=>nodes.some(n=>n.checked)))throw Error("An extra was selected for the buyer");
    if(mode==="baseline"){await page.keyboard.press("Tab");if(!await page.evaluate(()=>document.activeElement!==document.body))throw Error("Native keyboard focus missing");}
-   // The box to start access at once (lib/digital-consent.ts): a real, labelled, required checkbox, never checked for the buyer.
+   // The box to start during the cancellation period (lib/digital-consent.ts): a real, labelled, required checkbox, never checked for the buyer.
    const consent=buyForm.locator('input[name="dc"]');
    if(await consent.count()!==1)throw Error("Immediate-access consent box missing");
    const box=await consent.evaluate(n=>({checked:n.checked,required:n.required,type:n.type,labelled:Boolean(n.labels&&n.labels.length&&n.labels[0].innerText.trim()),described:Boolean(n.getAttribute("aria-describedby")&&document.getElementById(n.getAttribute("aria-describedby").split(" ")[0])),height:n.labels&&n.labels[0]?n.labels[0].getBoundingClientRect().height:0}));
@@ -123,7 +134,7 @@ try{
    await page.waitForURL(url=>url.pathname==="/@localshop/thanks"&&url.searchParams.has("session_id"));await page.waitForLoadState("networkidle");await restoreDarkAfterNavigation();
    const created=services.checkouts().slice(beforeCheckouts);
    if(created.length!==1||created[0].amount_total!==1900||created[0].metadata.product!==ids["Weeknight Dinners"])throw Error("Simulated checkout amount/product mismatch");
-   if(!/^yes:\d{4}-\d{2}-\d{2}\.\d{1,3}:\d{10}$/.test(String(created[0].metadata.dc??"")))throw Error("The checked box was not kept on the simulated order");
+   if(!/^yes:\d{4}-\d{2}-\d{2}\.\d{1,3}:d:\d{10}$/.test(String(created[0].metadata.dc??"")))throw Error("The checked box was not kept on the simulated order");
    phase="receipt";await audit("simulated-paid-receipt");
    if(!(await page.locator("main").innerText()).includes("Weeknight Dinners"))throw Error("Receipt did not hand over selected product");
    phase="library-request";await page.goto(origin+"/library",{waitUntil:"networkidle"});await restoreDarkAfterNavigation();await audit("buyer-library-request");

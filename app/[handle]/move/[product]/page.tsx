@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { DigitalConsentBox } from "@/components/digital-consent-box";
-import { deliversDigitally } from "@/lib/digital-consent";
+import { consentKind, deliversDigitally } from "@/lib/digital-consent";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { normaliseHandle, storeForPage } from "@/lib/store";
@@ -100,7 +100,7 @@ export default async function MovePage({ params, searchParams }: Params) {
               </p>
               <p className="st-muted mt-3 text-sm">{m.forAddress(invite.e)}</p>
               {/* A membership's content is handed over digitally: the box to start access at once (lib/digital-consent.ts). */}
-              {deliversDigitally(product) ? <DigitalConsentBox id={`dc-move-${product.id}`} lang={store.language} refused={status === "consent"} className="mt-5" /> : null}
+              {deliversDigitally(product) ? <DigitalConsentBox id={`dc-move-${product.id}`} kind={consentKind(product)} lang={store.language} refused={status === "consent"} className="mt-5" /> : null}
               <button type="submit" className="btn st-btn btn-lg btn-block mt-5">
                 {m.keep}
               </button>

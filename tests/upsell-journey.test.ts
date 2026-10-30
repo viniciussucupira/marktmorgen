@@ -161,7 +161,7 @@ async function main(): Promise<void> {
     [1, "900", "usd", "cus_TestBuyer01", "pm_test_card0001", "true", "upsell", "cs_test_order0000000001", "2"],
   );
   is("one idempotency key per offer of the order", first?.key, "nimbus-upsell:cs_test_order0000000001:list01");
-  is("the offer's own yes, its version and its time, on its own payment", first?.body.get("metadata[dc]"), `yes:${TEST_CONSENT.version}:${TEST_CONSENT.at}`);
+  is("the offer's own yes, its version, its kind and its time, on its own payment", first?.body.get("metadata[dc]"), `yes:${TEST_CONSENT.version}:d:${TEST_CONSENT.at}`);
   is("pressed again: done, and not charged again", [(await take("cs_test_order0000000001", "list01", "yes")).kind, charges.length], ["done", 1]);
   is("the answer is kept as paid, with its own payment", [(await readUpsell("cs_test_order0000000001", "list01"))?.state, (await readUpsell("cs_test_order0000000001", "list01"))?.pi], ["paid", "pi_test_0000000001"]);
 

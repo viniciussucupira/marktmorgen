@@ -371,8 +371,8 @@ try {
   await page.locator("#group summary").click();
   is("offered under the buy box, at the price for each", await words(page.locator("#group button[type=submit]")), "Buy for your team — $27 per person");
   await page.fill('#group input[name="people"]', "3");
-  // The box to start access at once (lib/digital-consent.ts), checked as a buyer checks it before paying.
-  await page.locator('input[name="dc"]').evaluateAll((all) => all.forEach((box) => { box.checked = true; }));
+  // The box to start during the cancellation period (lib/digital-consent.ts), checked by clicking its label, as a buyer does.
+  for (const label of await page.locator('label:visible:has(> input[name="dc"]:not(:checked))').all()) await label.click();
   await Promise.all([page.waitForURL(/\/thanks\?session_id=/, { timeout: 120_000 }), page.locator("#group button[type=submit]").click()]);
   await page.waitForLoadState("networkidle");
   is("paid: the price, three times", [await words(page.locator("h1")), (await words(page.locator("main"))).includes("for 3 people, for $81.")], ["Your 3 places are ready", true]);
@@ -423,8 +423,8 @@ try {
   if (process.env.E2E_SHOTS) await page.locator("#buy").screenshot({ path: join(process.env.E2E_SHOTS, "two-boxes.png") });
   is("the button says the total of what is checked, whichever it is", says, ["Buy for $19", "Buy both for $34", "Buy all three for $39", "Buy both for $24"]);
   await boxes.nth(1).check();
-  // The box to start access at once (lib/digital-consent.ts), checked as a buyer checks it before paying.
-  await page.locator('input[name="dc"]').evaluateAll((all) => all.forEach((box) => { box.checked = true; }));
+  // The box to start during the cancellation period (lib/digital-consent.ts), checked by clicking its label, as a buyer does.
+  for (const label of await page.locator('label:visible:has(> input[name="dc"]:not(:checked))').all()) await label.click();
   await Promise.all([page.waitForURL(/\/thanks\?session_id=/, { timeout: 120_000 }), buy.click()]);
   await page.waitForLoadState("networkidle");
   const both = services.checkouts().at(-1);
@@ -465,8 +465,8 @@ try {
   await page.fill('#gift input[name="gift_to"]', "friend@example.com");
   await page.fill('#gift input[name="gift_from"]', "Ana");
   await page.fill('#gift textarea[name="gift_message"]', "Happy birthday!");
-  // The box to start access at once (lib/digital-consent.ts), checked as a buyer checks it before paying.
-  await page.locator('input[name="dc"]').evaluateAll((all) => all.forEach((box) => { box.checked = true; }));
+  // The box to start during the cancellation period (lib/digital-consent.ts), checked by clicking its label, as a buyer does.
+  for (const label of await page.locator('label:visible:has(> input[name="dc"]:not(:checked))').all()) await label.click();
   await Promise.all([page.waitForURL(/\/thanks\?session_id=/, { timeout: 120_000 }), page.locator("#gift button[type=submit]").click()]);
   is("paid, and the page says where it went", await words(page.locator("h1")), "Your gift is on its way");
   // The gift is handed over once the page has been sent: its emails follow by a moment.
@@ -805,8 +805,8 @@ try {
   tab.on("pageerror", (error) => errors.push(String(error)));
   watchPolicy(tab);
   await tab.waitForLoadState("networkidle");
-  // The box to start access at once (lib/digital-consent.ts), checked as a buyer checks it before paying.
-  await tab.locator('input[name="dc"]').evaluateAll((all) => all.forEach((box) => { box.checked = true; }));
+  // The box to start during the cancellation period (lib/digital-consent.ts), checked by clicking its label, as a buyer does.
+  for (const label of await tab.locator('label:visible:has(> input[name="dc"]:not(:checked))').all()) await label.click();
   await Promise.all([tab.waitForURL(/\/thanks\?session_id=/, { timeout: 120_000 }), tab.locator("#buy form[data-checkout] button[type=submit]").first().click()]);
   is("the button opens the product's buy box in a new tab, paid there with the box checked, and the blog stays as it was", [site.url().startsWith(FAKE), /\/@localshop\/thanks\?session_id=/.test(tab.url())], [true, true]);
   const sale = services.checkouts().at(-1);
@@ -857,8 +857,8 @@ try {
         await there.locator("main").screenshot({ path: join(process.env.E2E_SHOTS, "fair-india.png") });
         await fairCard.screenshot({ path: join(process.env.E2E_SHOTS, "fair-studio.png") });
       }
-      // The box to start access at once (lib/digital-consent.ts), checked as a buyer checks it before paying.
-      await there.locator('input[name="dc"]').evaluateAll((all) => all.forEach((box) => { box.checked = true; }));
+      // The box to start during the cancellation period (lib/digital-consent.ts), checked by clicking its label, as a buyer does.
+      for (const label of await there.locator('label:visible:has(> input[name="dc"]:not(:checked))').all()) await label.click();
       await Promise.all([there.waitForURL(/\/thanks\?session_id=/, { timeout: 120_000 }), there.locator('#buy form[action="/api/store/checkout"] button[type=submit]').first().click()]);
       const paid = services.checkouts().at(-1);
       is("and pays it: the creator's own coupon at the same percentage, written on the order", [paid.discount_coupon, paid.metadata.fair], ["mm_fair_50", "IN:50"]);
@@ -917,8 +917,8 @@ try {
     is("the store page too", front.includes("Hecho con Marktmorgen") || front.includes("Comprar por"), true);
     if (process.env.E2E_SHOTS) await there.locator("main").screenshot({ path: join(process.env.E2E_SHOTS, "spanish-store.png") });
     await open(there, `${LOCAL}/@localshop/p/${ids["Pantry Checklist"]}`);
-    // The box to start access at once (lib/digital-consent.ts), checked as a buyer checks it before paying.
-    await there.locator('input[name="dc"]').evaluateAll((all) => all.forEach((box) => { box.checked = true; }));
+    // The box to start during the cancellation period (lib/digital-consent.ts), checked by clicking its label, as a buyer does.
+    for (const label of await there.locator('label:visible:has(> input[name="dc"]:not(:checked))').all()) await label.click();
     await Promise.all([there.waitForURL(/\/thanks\?session_id=/, { timeout: 120_000 }), there.locator('#buy form[action="/api/store/checkout"] button[type=submit]').first().click()]);
     is("Stripe's page is asked to speak Spanish", services.checkouts().at(-1).locale, "es");
     const thanks = await words(there.locator("main"));
@@ -1206,8 +1206,8 @@ try {
     await page.context().addCookies([{ name: "nl_ab", value: String(seen.b.group), url: LOCAL }]);
     await open(page, `${LOCAL}/@localshop/p/${product}`);
     is("and a visitor keeps reading the same one", await words(page.locator("h1")), second);
-    // The box to start access at once (lib/digital-consent.ts), checked as a buyer checks it before paying.
-    await page.locator('input[name="dc"]').evaluateAll((all) => all.forEach((box) => { box.checked = true; }));
+    // The box to start during the cancellation period (lib/digital-consent.ts), checked by clicking its label, as a buyer does.
+    for (const label of await page.locator('label:visible:has(> input[name="dc"]:not(:checked))').all()) await label.click();
     await Promise.all([page.waitForURL(/\/thanks\?session_id=/, { timeout: 120_000 }), page.locator("#buy form[data-checkout] button[type=submit]").first().click()]);
     const counts = async () => {
       for (let i = 0; i < 20; i += 1) {
@@ -1261,8 +1261,8 @@ try {
     await page.getByRole("button", { name: "Turn off ad measurement" }).waitFor();
     const yes = (await page.context().cookies()).find((c) => c.name === "nl_ads_localshop");
     is("the yes is kept where the server can read it, with the ad click", /^y&fbclid=IwAR0e2etest&at=\d+$/.test(yes?.value ?? ""), true);
-    // The box to start access at once (lib/digital-consent.ts), checked as a buyer checks it before paying.
-    await page.locator('input[name="dc"]').evaluateAll((all) => all.forEach((box) => { box.checked = true; }));
+    // The box to start during the cancellation period (lib/digital-consent.ts), checked by clicking its label, as a buyer does.
+    for (const label of await page.locator('label:visible:has(> input[name="dc"]:not(:checked))').all()) await label.click();
     await Promise.all([page.waitForURL(/\/thanks\?session_id=/, { timeout: 120_000 }), page.locator("#buy form[data-checkout] button[type=submit]").first().click()]);
     const bought = services.checkouts().at(-1);
     is("the checkout carries it to Stripe", /^[0-9a-f]{24}$/.test(bought.metadata?.ads ?? ""), true);
@@ -2141,8 +2141,8 @@ try {
     if (process.env.E2E_SHOTS) await page.locator("#buy").screenshot({ path: join(process.env.E2E_SHOTS, "preorder.png") });
 
     const before = services.emails().length;
-    // The box to start access at once (lib/digital-consent.ts), checked as a buyer checks it before paying.
-    await page.locator('input[name="dc"]').evaluateAll((all) => all.forEach((box) => { box.checked = true; }));
+    // The box to start during the cancellation period (lib/digital-consent.ts), checked by clicking its label, as a buyer does.
+    for (const label of await page.locator('label:visible:has(> input[name="dc"]:not(:checked))').all()) await label.click();
     await Promise.all([page.waitForURL(/\/thanks\?session_id=/, { timeout: 120_000 }), box.locator("button[type=submit]").click()]);
     const paid = services.checkouts().at(-1);
     is("one payment, marked a pre-order, with nothing added and no offer after it", [paid.amount_total, paid.metadata.preorder, paid.metadata.bump ?? null, paid.metadata.upsell_key ?? null, paid.metadata.buyer_key ?? null], [2500, "yes", null, null, null]);
@@ -2188,8 +2188,8 @@ try {
       (await words(box)).includes("$36 of products for $20"),
     ], [true, "Buy your 2 for $20", true]);
     if (process.env.E2E_SHOTS) await box.screenshot({ path: join(process.env.E2E_SHOTS, "pick-bundle.png") });
-    // The box to start access at once (lib/digital-consent.ts), checked as a buyer checks it before paying.
-    await page.locator('input[name="dc"]').evaluateAll((all) => all.forEach((box) => { box.checked = true; }));
+    // The box to start during the cancellation period (lib/digital-consent.ts), checked by clicking its label, as a buyer does.
+    for (const label of await page.locator('label:visible:has(> input[name="dc"]:not(:checked))').all()) await label.click();
     await Promise.all([page.waitForURL(/\/thanks\?session_id=/, { timeout: 120_000 }), button.click()]);
     const paid = services.checkouts().at(-1);
     is("the checkout carries exactly those two, in the bundle's order", [paid.amount_total, paid.metadata.bundle], [2000, `${ids["Pantry Checklist"]},${ids["Meal Planner"]}`]);
@@ -2228,8 +2228,8 @@ try {
     is("it lists them with their prices now, what the deal takes off, and the total", [shown.includes("Weeknight Dinners"), shown.includes("Pantry Checklist"), /10% off for buying more\s*−\$\d/.test(shown), /Total\s*\$\d/.test(shown)], [true, true, true, true]);
     is("and it reads from the left, whatever the store's header is centered on", await panel.evaluate((el) => getComputedStyle(el).textAlign), "left");
     if (process.env.E2E_SHOTS) await page.screenshot({ path: join(process.env.E2E_SHOTS, "cart.png") });
-    // The box to start access at once (lib/digital-consent.ts), checked as a buyer checks it before paying.
-    await page.locator('input[name="dc"]').evaluateAll((all) => all.forEach((box) => { box.checked = true; }));
+    // The box to start during the cancellation period (lib/digital-consent.ts), checked by clicking its label, as a buyer does.
+    for (const label of await page.locator('label:visible:has(> input[name="dc"]:not(:checked))').all()) await label.click();
     await Promise.all([page.waitForURL(/\/thanks\?session_id=/, { timeout: 120_000 }), panel.locator("form[data-checkout] button[type=submit]").click()]);
     const paid = services.checkouts().at(-1);
     const total = shown.match(/Check out · (\$[\d.,]+)/)?.[1] ?? "";
@@ -2464,8 +2464,8 @@ try {
     is("saved, and on", await words(card.locator(".tag-live")), "On");
 
     await open(page, `${LOCAL}/@localshop/p/${product}`);
-    // The box to start access at once (lib/digital-consent.ts), checked as a buyer checks it before paying.
-    await page.locator('input[name="dc"]').evaluateAll((all) => all.forEach((box) => { box.checked = true; }));
+    // The box to start during the cancellation period (lib/digital-consent.ts), checked by clicking its label, as a buyer does.
+    for (const label of await page.locator('label:visible:has(> input[name="dc"]:not(:checked))').all()) await label.click();
     await Promise.all([page.waitForURL(/\/thanks\?session_id=/, { timeout: 120_000 }), page.locator("#buy form[data-checkout] button[type=submit]").first().click()]);
     const note = page.locator("section[aria-labelledby=note-title]");
     await note.waitFor({ timeout: 30_000 });
@@ -2522,8 +2522,8 @@ try {
     const buy = page.locator("#buy form[data-checkout] button[type=submit]").first();
     is("the button says the first price, and how long", await words(buy), "Subscribe — $5 a month for the first 3 months");
     is("and the line under it both prices, before anybody pays", (await words(page.locator("#buy"))).includes("$5 a month for the first 3 months, then $20 a month."), true);
-    // The box to start access at once (lib/digital-consent.ts), checked as a buyer checks it before paying.
-    await page.locator('input[name="dc"]').evaluateAll((all) => all.forEach((box) => { box.checked = true; }));
+    // The box to start during the cancellation period (lib/digital-consent.ts), checked by clicking its label, as a buyer does.
+    for (const label of await page.locator('label:visible:has(> input[name="dc"]:not(:checked))').all()) await label.click();
     await Promise.all([page.waitForURL(/\/thanks\?session_id=/, { timeout: 120_000 }), buy.click()]);
     const paid = services.checkouts().at(-1);
     is("Stripe charges the regular price less a coupon for the first 3 months", [paid.mode, paid.amount_total, paid.metadata.intro, paid.discount_coupon], ["subscription", 500, "3", "mm_intro_usd_1500_3"]);
@@ -2576,8 +2576,8 @@ try {
     ], [true, true, true, "Subscribe — $20 a month"]);
     await box.locator("input[name=billing][value=year]").check();
     is("and the button says the year's price once yearly is picked", await words(buy), "Subscribe — $200 a year");
-    // The box to start access at once (lib/digital-consent.ts), checked as a buyer checks it before paying.
-    await page.locator('input[name="dc"]').evaluateAll((all) => all.forEach((box) => { box.checked = true; }));
+    // The box to start during the cancellation period (lib/digital-consent.ts), checked by clicking its label, as a buyer does.
+    for (const label of await page.locator('label:visible:has(> input[name="dc"]:not(:checked))').all()) await label.click();
     await Promise.all([page.waitForURL(/\/thanks\?session_id=/, { timeout: 120_000 }), buy.click()]);
     const paid = services.checkouts().at(-1);
     is("Stripe charges the year, said on the order", [paid.mode, paid.amount_total, paid.metadata.every], ["subscription", 20000, "year"]);
@@ -2793,8 +2793,8 @@ try {
     await box.locator(`input[name=option][value="${five}"]`).check();
     await box.locator("input[name=pay][value=plan]").check();
     is("the button still asks for the price picked", await words(buy), "Continue with this option");
-    // The box to start access at once (lib/digital-consent.ts), checked as a buyer checks it before paying.
-    await page.locator('input[name="dc"]').evaluateAll((all) => all.forEach((box) => { box.checked = true; }));
+    // The box to start during the cancellation period (lib/digital-consent.ts), checked by clicking its label, as a buyer does.
+    for (const label of await page.locator('label:visible:has(> input[name="dc"]:not(:checked))').all()) await label.click();
     await Promise.all([page.waitForURL(/\/thanks\?session_id=/, { timeout: 120_000 }), buy.click()]);
     const paid = services.checkouts().at(-1);
     is("Stripe charges that price's first payment, in a plan, and keeps which price", [paid.mode, paid.amount_total, paid.metadata.kind, paid.metadata.plan_payments, paid.metadata.option], ["subscription", 1300, "plan", "3", five]);
@@ -3236,8 +3236,8 @@ try {
     is("the address opens the first step, with the funnel's mark and the link's tags", [entered.pathname.includes(ids["Pantry Checklist"]), /^[a-z0-9]{10}$/.test(mark), entered.searchParams.get("utm_source")], [true, true, "newsletter"]);
     const skip = page.getByRole("link", { name: "No thanks, continue" });
     is("a paid step says how to go on without buying", [await skip.count(), (await skip.getAttribute("href"))?.includes(ids["Sunday Baking"]) && (await skip.getAttribute("href"))?.endsWith(`f=${mark}`)], [1, true]);
-    // The box to start access at once (lib/digital-consent.ts), checked as a buyer checks it before paying.
-    await page.locator('input[name="dc"]').evaluateAll((all) => all.forEach((box) => { box.checked = true; }));
+    // The box to start during the cancellation period (lib/digital-consent.ts), checked by clicking its label, as a buyer does.
+    for (const label of await page.locator('label:visible:has(> input[name="dc"]:not(:checked))').all()) await label.click();
     await Promise.all([page.waitForURL(/\/thanks\?session_id=/, { timeout: 120_000 }), page.locator("#buy form[action='/api/store/checkout'] button[type=submit]").first().click()]);
     await page.waitForLoadState("networkidle");
     is("the checkout carries the funnel, from the page it was opened on", services.checkouts().at(-1).metadata.funnel, mark);
@@ -3468,8 +3468,8 @@ try {
       (await words(page.locator("main"))).includes("Nothing is charged today. Your first payment here, $15, is taken on"),
       (await words(page.locator("main"))).includes("This link is for mover@example.com."),
     ], ["open", true, true]);
-    // The box to start access at once (lib/digital-consent.ts), checked as a buyer checks it before paying.
-    await page.locator('input[name="dc"]').evaluateAll((all) => all.forEach((box) => { box.checked = true; }));
+    // The box to start during the cancellation period (lib/digital-consent.ts), checked by clicking its label, as a buyer does.
+    for (const label of await page.locator('label:visible:has(> input[name="dc"]:not(:checked))').all()) await label.click();
     await Promise.all([page.waitForURL(/\/thanks\?session_id=/, { timeout: 120_000 }), page.getByRole("button", { name: "Keep my membership" }).click()]);
     const kept = services.checkouts().at(-1);
     const due = Math.floor(Date.parse(`${renews}T12:00:00Z`) / 1000);
@@ -3546,8 +3546,8 @@ try {
     await form.getByRole("button", { name: "Save the questions" }).click();
     await studio.getByText("Asks at checkout: “Phone number”").first().waitFor({ timeout: 30_000 });
     await open(page, `${LOCAL}/@localshop/p/${notes}`);
-    // The box to start access at once (lib/digital-consent.ts), checked as a buyer checks it before paying.
-    await page.locator('input[name="dc"]').evaluateAll((all) => all.forEach((box) => { box.checked = true; }));
+    // The box to start during the cancellation period (lib/digital-consent.ts), checked by clicking its label, as a buyer does.
+    for (const label of await page.locator('label:visible:has(> input[name="dc"]:not(:checked))').all()) await label.click();
     await Promise.all([page.waitForURL(/\/thanks\?session_id=/, { timeout: 120_000 }), page.locator("#buy form[data-checkout] button[type=submit]").first().click()]);
     const paid = services.checkouts().at(-1);
     is("Stripe is asked for its phone box, and nothing is added to its questions", [paid.customer_details?.phone, paid.metadata.product], [("+" + "15125550142"), notes]);
@@ -3621,8 +3621,8 @@ try {
     await open(page, `${LOCAL}/@localshop/p/${book}`);
     is("its page says what shipping costs, where it goes and when", await words(page.locator("#buy [data-shipping]").first()), "+ $6 shipping · Ships to: United States and Canada · Ships within 3 business days");
     await page.locator("#buy").getByLabel(/Signed/).first().check();
-    // The box to start access at once (lib/digital-consent.ts), checked as a buyer checks it before paying.
-    await page.locator('input[name="dc"]').evaluateAll((all) => all.forEach((box) => { box.checked = true; }));
+    // The box to start during the cancellation period (lib/digital-consent.ts), checked by clicking its label, as a buyer does.
+    for (const label of await page.locator('label:visible:has(> input[name="dc"]:not(:checked))').all()) await label.click();
     await Promise.all([page.waitForURL(/\/thanks\?session_id=/, { timeout: 120_000 }), page.locator("#buy form[data-checkout] button[type=submit]").first().click()]);
     const paid = services.checkouts().at(-1);
     is("Stripe asks for the address and adds the shipping, for the version picked", [paid.metadata.ship, paid.shipping_cost?.amount_total, paid.amount_total, paid.metadata.title], ["yes", 600, 4500, "The Supper Book (Signed)"]);

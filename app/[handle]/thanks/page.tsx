@@ -1,6 +1,6 @@
 import { withinStore } from "@/lib/metered-limits";
 import { DigitalConsentBox } from "@/components/digital-consent-box";
-import { deliversDigitally } from "@/lib/digital-consent";
+import { consentKind, deliversDigitally } from "@/lib/digital-consent";
 import { isDiscordConfigured } from "@/lib/discord";
 import { discordFor } from "@/lib/discord-store";
 import { discordWords } from "@/lib/buyer-words/discord";
@@ -1162,7 +1162,7 @@ export default async function ThanksPage({ params, searchParams }: Params) {
                     ) : null}
                     {/* Its own contract, so its own box to start access at once (lib/digital-consent.ts); "No thanks" never needs it. */}
                     {deliversDigitally(offer.target) ? (
-                      <DigitalConsentBox id={`dc-offer-${offer.step.id}`} lang={store.language} refused={query.upsell === "consent"} className="mt-4" />
+                      <DigitalConsentBox id={`dc-offer-${offer.step.id}`} kind={consentKind(offer.target)} lang={store.language} refused={query.upsell === "consent"} className="mt-4" />
                     ) : null}
                     <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2">
                       <button type="submit" name="answer" value="yes" className="btn st-btn">

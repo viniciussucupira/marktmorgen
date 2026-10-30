@@ -123,7 +123,7 @@ export const PERSON_DATA: PersonData[] = [
   { file: "lib/community-dm.ts", how: "kept", what: "Another member's choice to decline their messages", why: "It is that other member's protection, and holds only a one-way key." },
 
   // ---------------------------------------------------------------- orders and money
-  { file: "lib/paypal-sales.ts", how: "kept", what: "PayPal orders: the order and capture ids, the product, the amount, the date and the buyer's address", why: "They are the sale's own record, kept 400 days for refunds, disputes and your books, and nowhere else but in PayPal." },
+  { file: "lib/paypal-sales.ts", how: "kept", what: "PayPal orders: the order and capture ids, the product, the amount, the date, the buyer's address and, for something opened right away, the box they checked before paying (\"yes\", the version and kind of its words and the time)", why: "They are the sale's own record, kept 400 days for refunds, disputes and your books, and nowhere else but in PayPal." },
   { file: "lib/licence-keys.ts", how: "kept", what: "License keys sold: the key, the sale it came from and the buyer's address", why: "The key is what was bought; it stays theirs, and the sale needs it for refunds." },
   { file: "lib/gifts.ts", how: "kept", what: "Gifts bought: who paid, who it was for, and the payment", why: "They are the order's record, for refunds and delivery." },
   { file: "lib/group-buy.ts", how: "kept", what: "Places bought for a group: the purchase and the address each place went to", why: "They are the order's record, for refunds and delivery." },

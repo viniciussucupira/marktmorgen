@@ -377,7 +377,7 @@ export async function openOrder(store: Store, product: Listing, origin: string, 
       m: store.paypalSeller.merchant,
       at: Math.floor(Date.now() / 1000),
       // The yes first, so the cap on kept fields can never leave it out.
-      meta: cleanMeta(digital && extras.digitalConsent ? { [CONSENT_META]: consentMetaValue(extras.digitalConsent), ...extras.meta } : extras.meta),
+      meta: cleanMeta(digital && extras.digitalConsent ? { [CONSENT_META]: consentMetaValue(extras.digitalConsent, "digital"), ...extras.meta } : extras.meta),
       ...(extras.via && /^[a-z0-9]{12}$/.test(extras.via.aff) ? { via: { aff: extras.via.aff, rate: Math.max(0, Math.min(100, Number(extras.via.rate) || 0)) } } : {}),
       ...(salePercent > 0 ? { off: Math.max(0, product.priceCents - cents), sale: salePercent } : {}),
     };
