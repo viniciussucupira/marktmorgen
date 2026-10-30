@@ -39,7 +39,7 @@ import { onAccount, StripeError } from "@/lib/stripe-account";
 import { redisPipeline } from "@/lib/redis";
 import { type Store, storeFolder, storeRef } from "@/lib/store";
 import { type PaidPeriod, REFUNDS_PER_REQUEST, stillToGive, totalsOf, unusedOf } from "@/lib/closing-buyers-rules";
-import { paidPeriods, savePaidPeriod, takeCalls } from "@/lib/closing-holds";
+import { paidPeriods, savePaidPeriod, takeCalls, workKey } from "@/lib/closing-holds";
 
 const INTENT_ID = /^pi_[A-Za-z0-9]{6,64}$/;
 const lockKey = (folder: string) => `nl:closing:refund:${folder}`;
@@ -173,12 +173,20 @@ export async function giveBackUnused(
         out.short.push({ sub: row.sub, amount: give, cur: row.paid.cur, email: row.paid.e });
       };
       try {
-        // Its payment, the refunds already made on it and the refund itself, each taken from the closing's budget first.
-        if (!(await takeCalls(folder, row.paid.pi ? 3 : 5))) {
-          if (options.final) await settle("over");
-          out.over += 1;
+        // Its payment, the refunds already made on it and the refund itself: the calls set aside for it when it was held,
+        // and two more from the budget when Stripe did not name its payment then.
+        // A later try (after a short one) takes them from the budget; the holds' daily retries never touch the reserve.
+        const pool: "calls" | "rcalls" | null = (await takeCalls(folder, 3, "rcalls")) ? "rcalls" : (await takeCalls(folder, 3)) ? "calls" : null;
+        const extra = pool !== null && (row.paid.pi ? true : await takeCalls(folder, 2));
+        if (pool === null || !extra) {
+          if (pool) await redisPipeline([["HINCRBY", workKey(folder), pool, 3]]);
+          // On the closing day it is told as a refund that could not be made: the member is emailed with the creator's contact.
+          if (options.final) await short(row.unused);
+          else out.over += 1;
           continue;
         }
+        /** The refund's own call, given back when it was not made. */
+        const unspent = () => redisPipeline([["HINCRBY", workKey(folder), pool, 1]]);
         const intent = row.paid.pi ?? (await intentOf(account, row.paid.inv));
         if (!intent) {
           await settle("none");
@@ -212,6 +220,7 @@ export async function giveBackUnused(
         }
         const cost = settledCost(give, charge);
         if ((funds.get(cost.cur) ?? 0) < cost.amount) {
+          await unspent();
           await short(give);
           continue;
         }

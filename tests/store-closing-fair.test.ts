@@ -37,7 +37,7 @@ import {
   stillToGive,
   unusedOf,
 } from "@/lib/closing-buyers-rules";
-import { HELD_INDEX, paidPeriods, releaseRestarted, startCallBudget } from "@/lib/closing-holds";
+import { HELD_INDEX, inClosingDay, paidPeriods, releaseRestarted, startCallBudget } from "@/lib/closing-holds";
 import { creditKey } from "@/lib/closing-credit";
 import { tellStaysOpen } from "@/lib/closing-buyers";
 import { giveBackUnused, reviewMark, unusedRows } from "@/lib/closing-refunds";
@@ -69,12 +69,21 @@ type Sub = Record<string, unknown> & {
   proration?: number;
   /** Always refused: a membership Stripe never lets us pause. */
   stuck?: boolean;
+  /** A coupon on the membership's line, in cents off. */
+  discount?: number;
+  /** The latest paid invoice holds only a proration; the membership's own is the one before. */
+  prorationOnlyLast?: boolean;
+  /** A draft invoice, and whether Stripe would finalize it by itself. */
+  draft?: { id: string; auto_advance: boolean; metadata: Record<string, string> };
 };
 type Charge = { amount: number; amount_refunded: number; disputed: boolean };
 
 const world = {
   subs: new Map<string, Sub>(),
   sessions: [] as Record<string, unknown>[],
+  /** One-off payments, each naming its store in its metadata (what the buyers' search finds). */
+  payments: [] as Record<string, unknown>[],
+  searches: 0,
   charges: new Map<string, Charge>(),
   refunds: [] as { id: string; payment_intent: string; amount: number; status: string; metadata: Record<string, string> }[],
   balance: 1_000_000,
@@ -97,11 +106,18 @@ function subscriptionOf(sub: Sub) {
 function paidInvoiceOf(sub: Sub) {
   const id = sub.id.slice(4);
   const lines = [
-    ...(sub.proration ? [{ type: "invoiceitem", proration: true, amount: -sub.proration, period: { start: sub.pe - lengthOf(sub) - 86_400 * 10, end: sub.pe - lengthOf(sub) } }] : []),
-    { type: "subscription", proration: false, amount: sub.amount, period: { start: sub.pe - lengthOf(sub), end: sub.pe } },
+    ...(sub.proration ? [{ type: "invoiceitem", proration: true, amount: -sub.proration, discount_amounts: [] as { amount: number }[], period: { start: sub.pe - lengthOf(sub) - 86_400 * 10, end: sub.pe - lengthOf(sub) } }] : []),
+    { type: "subscription", proration: false, amount: sub.amount, discount_amounts: sub.discount ? [{ amount: sub.discount }] : [], period: { start: sub.pe - lengthOf(sub), end: sub.pe } },
   ];
-  const subtotal = lines.reduce((sum, line) => sum + line.amount, 0);
-  return { id: `in_${id}`, status: "paid", amount_paid: subtotal, subtotal, total: subtotal, currency: "usd", payment_intent: `pi_${id}`, lines: { data: lines } };
+  const paid = lines.reduce((sum, line) => sum + line.amount - line.discount_amounts.reduce((a, d) => a + d.amount, 0), 0);
+  return { id: `in_${id}`, status: "paid", amount_paid: paid, subtotal: paid, total: paid, currency: "usd", payment_intent: `pi_${id}`, lines: { data: lines } };
+}
+
+/** The member's paid invoices, newest first: a proration-only one on top when it has one. */
+function paidInvoicesOf(sub: Sub) {
+  const own = paidInvoiceOf(sub);
+  if (!sub.prorationOnlyLast) return [own];
+  return [{ id: `in_${sub.id.slice(4)}pr`, status: "paid", amount_paid: 300, subtotal: 300, total: 300, currency: "usd", payment_intent: `pi_${sub.id.slice(4)}pr`, lines: { data: [{ type: "invoiceitem", proration: true, amount: 300, period: { start: sub.pe - 86_400, end: sub.pe } }] } }, own];
 }
 
 /** Stripe renews every membership whose period is over by `at`, and retries an open invoice: one with collection paused gets a voided invoice, any other is charged. */
@@ -153,9 +169,23 @@ globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) =>
     const row = world.subs.get(url.searchParams.get("subscription") ?? "");
     const status = url.searchParams.get("status");
     if (!row) return json({ object: "list", data: [], has_more: false });
-    if (status === "paid") return json({ object: "list", data: [paidInvoiceOf(row)], has_more: false });
+    if (status === "paid") return json({ object: "list", data: paidInvoicesOf(row).slice(0, Number(url.searchParams.get("limit") ?? 10)), has_more: false });
+    if (status === "draft") return json({ object: "list", data: row.draft ? [{ id: row.draft.id, status: "draft", auto_advance: row.draft.auto_advance, metadata: row.draft.metadata }] : [], has_more: false });
     if (status === "open") return json({ object: "list", data: row.open?.status === "open" ? [{ id: row.open.id, status: "open" }] : [], has_more: false });
     return json({ object: "list", data: [], has_more: false });
+  }
+  const drafted = path.match(/^\/invoices\/(in_\w+)$/);
+  if (drafted && method === "POST") {
+    const row = [...world.subs.values()].find((s) => s.draft?.id === drafted[1]);
+    if (row?.draft) {
+      if (form.has("auto_advance")) row.draft.auto_advance = form.get("auto_advance") === "true";
+      const mark = form.get("metadata[closing_draft]");
+      if (mark !== null) {
+        if (mark === "") delete row.draft.metadata.closing_draft;
+        else row.draft.metadata.closing_draft = mark;
+      }
+    }
+    return json({ id: drafted[1], status: "draft" });
   }
   const voided = path.match(/^\/invoices\/(in_\w+)\/void$/);
   if (voided) {
@@ -207,6 +237,14 @@ globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) =>
     world.refunds.push(refund);
     return json(refund);
   }
+  if (path === "/payment_intents/search") {
+    world.searches += 1;
+    const query = url.searchParams.get("query") ?? "";
+    const all = world.payments.filter((p) => query.includes(`'${(p.metadata as Record<string, string>).store}'`) && query.includes("status:'succeeded'"));
+    const from = Number(url.searchParams.get("page") ?? 0);
+    const more = from + 100 < all.length;
+    return json({ object: "search_result", data: all.slice(from, from + 100), has_more: more, next_page: more ? String(from + 100) : null });
+  }
   if (path === "/balance") return json({ object: "balance", available: [{ amount: world.balance, currency: world.settles }], pending: [] });
   if (path === "/checkout/sessions") {
     const after = url.searchParams.get("starting_after");
@@ -243,7 +281,7 @@ function member(handle: string, id: string, amount: number, periodEnd: number, e
 }
 
 function buyer(handle: string, id: string) {
-  world.sessions.push({ id: `cs_${id}`, status: "complete", payment_status: "paid", mode: "payment", customer_details: { email: `${id}@buyers.example.com` }, metadata: { store: handle } });
+  world.payments.push({ id: `pi_${id}${world.payments.length}`, status: "succeeded", receipt_email: `${id}@buyers.example.com`, metadata: { store: handle } });
 }
 
 async function ended(email: string) {
@@ -442,10 +480,10 @@ async function main() {
   member("joan", "joantwo", 1_000, S(Date.UTC(2026, 11, 1)));
   clockAt(Date.UTC(2026, 10, 11, 12));
   const J = await ended(jo);
-  // This ending's budget, set before any call as the daily job sets it, cut here to one member's worth (5 calls) to see the cap work.
+  // This ending's budget, set before any call as the daily job sets it, cut here to one member's worth (8 calls) to see the cap work.
   const joFolder = await storeFolder(jo);
   const { createHash } = await import("node:crypto");
-  await startCallBudget(joFolder, 5);
+  await startCallBudget(joFolder, 8);
   await redis.pipeline([["SET", `nl:plan:closing:${createHash("sha256").update(jo).digest("hex").slice(0, 40)}`, JSON.stringify({ of: J, holdFrom: J })]]);
   console.error = () => {};
   await daily(jo, J, 0, 0);
@@ -552,6 +590,88 @@ async function main() {
   const patNotice = sent.find((m) => m.to === "patx000@buyers.example.com")!;
   is("a buyer's notice gives the creator's published way to reach them, never their sign-in address", [patNotice.text.includes("reply to this email"), patNotice.text.includes("pat@example.com"), patNotice.reply_to], [true, false, "pat@example.com"]);
 
+  part("A coupon: the refund is of what was really paid, not the list price");
+  world.refunds.length = 0;
+  const qin = await storeWith("quinn");
+  // $20 a month at 50% off: $10 paid. The closing day falls half-way through the period.
+  clockAt(Date.UTC(2026, 10, 18, 12));
+  const Q = await ended(qin);
+  const qDay = Q + CLOSING_DAYS * DAY + 60_000;
+  const qSub = member("quinn", "quinnhalf", 2_000, S(qDay) + 15 * 86_400, { discount: 1_000 });
+  await daily(qin, Q, 0, 0);
+  const qPaid = (await paidPeriods((await storeForEmail(qin))!)).get("sub_quinnhalf")!;
+  is("the membership's worth is its line less the coupon, as a share of what was paid", [qPaid.amt, qPaid.tot], [1_000, 1_000]);
+  is("half its period left is half of the $10 paid, never half of $20", unusedOf(qPaid, S(qDay) * 1000 >= 0 ? qDay : qDay), Math.round((1_000 * (qSub.pe - S(qDay))) / (30 * 86_400)));
+  is("and the rule reads the coupon from the line", membershipLineOf({ lines: { data: [{ type: "subscription", proration: false, amount: 2_000, discount_amounts: [{ amount: 1_000 }], period: { start: 0, end: 30 } }] }, amount_paid: 1_000 })?.amt, 1_000);
+
+  part("The membership's own paid invoice is found behind a proration-only one");
+  const rae = await storeWith("raelyn");
+  member("raelyn", "raeyear1", 12_000, S(Date.UTC(2027, 9, 1)), { metadata: { store: "raelyn", yearly: "1" }, prorationOnlyLast: true });
+  clockAt(Date.UTC(2026, 10, 19, 12));
+  const Ra = await ended(rae);
+  await daily(rae, Ra, 0, 0);
+  const raePaid = (await paidPeriods((await storeForEmail(rae))!)).get("sub_raeyear1");
+  is("looked back past the proration, in the same one call: its own line and payment are written down", [raePaid?.inv, raePaid?.amt], ["in_raeyear1", 12_000]);
+
+  part("A draft kept at the hold goes on again when the plan starts again; voided invoices do not come back");
+  const sam = await storeWith("samira");
+  const samSub = member("samira", "samdraft1", 1_000, S(Date.UTC(2026, 11, 5)), { draft: { id: "in_samdraft1d", auto_advance: true, metadata: {} } });
+  clockAt(Date.UTC(2026, 10, 20, 12));
+  const Sm = await ended(sam);
+  await daily(sam, Sm, 0, 0);
+  is("at the hold the draft is kept as a draft, marked", [samSub.draft!.auto_advance, samSub.draft!.metadata.closing_draft], [false, String(Sm)]);
+  await setSubscription(sam, { customerId: "cus_sam0001", subscriptionId: "sub_samplan02", active: true, tier: "creator", cycle: "month", trialEnds: 0 });
+  await releaseRestarted(Date.now() + 60_000, tellStaysOpen, Date.now());
+  is("on the release it goes on as it was", [samSub.draft!.auto_advance, samSub.draft!.metadata.closing_draft], [true, undefined]);
+  is("and the creator's letter says voided invoices do not come back", sent.filter((m) => m.to === sam)[0]?.text.includes("invoices we voided when your plan ended do not come back"), true);
+
+  part("On the closing day with the budget spent, the refunds set aside at the hold are still made; with none left, the member is told");
+  world.refunds.length = 0;
+  const tia = await storeWith("tiago");
+  member("tiago", "tiagoyear", 24_000, S(Date.UTC(2027, 9, 1)), { metadata: { store: "tiago", yearly: "1" } });
+  member("tiago", "tiagonone", 24_000, S(Date.UTC(2027, 9, 1)), { metadata: { store: "tiago", yearly: "1" } });
+  clockAt(Date.UTC(2026, 10, 21, 12));
+  const T = await ended(tia);
+  await daily(tia, T, 0, CLOSING_DAYS - 1);
+  const tiaFolder = await storeFolder(tia);
+  // Daily retries and everything else have spent the budget; and one member's reserve is gone too.
+  await redis.pipeline([["HSET", `nl:closing:work:${tiaFolder}`, "calls", 0, "rcalls", 3]]);
+  const tiaBefore = sent.length;
+  console.error = () => {};
+  const tiaLast = await daily(tia, T, CLOSING_DAYS, CLOSING_DAYS);
+  console.error = real;
+  const tiaShort = sent.slice(tiaBefore).filter((m) => m.subject === "Your refund from Tiago Shop could not be made");
+  is("the reserve makes one refund; the member it does not cover is emailed, never left silent; the store closes", [world.refunds.length, tiaShort.length, tiaLast[0].split(":")[1]], [1, 1, "removed"]);
+
+  part("Buyers are found by the store's own payments, a capped number of pages, and the rest counted, never waited on");
+  const uma = await storeWith("uma", { trial: true });
+  // A trial's cap is 100 buyers: buyerPagesCap(100) = 7 pages. 1,000 payments by 1,000 buyers is 10 pages.
+  for (let i = 0; i < 1_000; i += 1) buyer("uma", `uma${String(i).padStart(4, "0")}`);
+  world.payments.push({ id: "pi_someoneelse01", status: "succeeded", receipt_email: "other@buyers.example.com", metadata: { store: "another-store" } });
+  clockAt(Date.UTC(2026, 10, 22, 12));
+  const U = await ended(uma);
+  const searchesBefore = world.searches;
+  const umaDays = await daily(uma, U, 0, CLOSING_DAYS);
+  const umaNotice = sent.filter((m) => m.to === uma).at(-1)!;
+  is("it reads at most its cap of pages, then closes on its day with the rest counted", [world.searches - searchesBefore, umaDays.at(-1)?.split(":")[1], umaNotice.text.includes("more payments than this closing can read")], [7, "removed", true]);
+  is("and never a payment of another store", sent.some((m) => m.to === "other@buyers.example.com"), false);
+
+  part("On its closing day a store cannot be given a plan: the checkout refuses, and refuses when it cannot tell");
+  const route = readFileSync(join(process.cwd(), "app/api/billing/checkout/route.ts"), "utf8");
+  is("the plan checkout asks first, and a failure to ask is a refusal", [route.includes("store.planEndedAt ? await inClosingDay(ref).catch(() => true) : false"), route.includes('studio("billing=closing")')], [true, true]);
+  const vic = await storeWith("victor");
+  member("victor", "victormonth", 1_000, S(Date.UTC(2026, 11, 30)));
+  clockAt(Date.UTC(2026, 10, 23, 12));
+  const V = await ended(vic);
+  await daily(vic, V, 0, CLOSING_DAYS - 1);
+  console.error = () => {};
+  clockAt(V + CLOSING_DAYS * DAY + 60_000);
+  await closeOne(vic, V + CLOSING_DAYS * DAY + 60_000, { ...hands, remove: async () => { throw new Error("stand-in file store down"); }, list: async () => ["vault/x/y.pdf"] }, Number.POSITIVE_INFINITY);
+  console.error = real;
+  is("while its closing day runs, the checkout's question says so", await inClosingDay(vic), true);
+  const vicClosing = await closingOf((await storeForEmail(vic))!);
+  is("and the studio says it is closing today", [vicClosing?.today, readFileSync(join(process.cwd(), "app/studio/page.tsx"), "utf8").includes('"Your store is closing today"')], [true, true]);
+
   part("The closing's emails are capped before any goes; none past the cap, never silent");
   const fay = await storeWith("fay", { trial: true });
   for (let i = 0; i < 103; i += 1) buyer("fay", `fay${String(i).padStart(3, "0")}`);
@@ -610,6 +730,8 @@ async function main() {
   is("the receipt of something that lasts says it; a shipped book's does not", [confirmationFor(shop, paid(digital.id) as never, Date.now() / 1000, [], [digital])?.text.includes(CLOSING_ACCESS_SENTENCE), confirmationFor(shop, paid(physical.id) as never, Date.now() / 1000, [], [physical])?.text.includes(CLOSING_ACCESS_SENTENCE)], [true, false]);
   const offer = (product: typeof digital) => offerConfirmationFor(shop, { reference: `pi_${"a".repeat(24)}`, parent: `cs_test_${"f".repeat(24)}`, product, email: "buyer@example.com", amountCents: 900, currency: "usd" });
   is("an offer taken after paying says it only for what lasts", [offer(digital)?.text.includes(CLOSING_ACCESS_SENTENCE), offer(physical)?.text.includes(CLOSING_ACCESS_SENTENCE)], [true, false]);
+  is("the box links the limit to the exact place in the Terms, and the receipt gives its address", [box.includes('href="/terms#closing-members"'), confirmationFor(shop, paid(digital.id) as never, Date.now() / 1000, [], [digital])?.text.includes("Our Terms explain the limit: "), readFileSync(join(process.cwd(), "app/terms/page.tsx"), "utf8").includes('id="closing-members"')], [true, true, true]);
+  is("the Terms and the Refund policy no longer promise that no member is ever charged", [readFileSync(join(process.cwd(), "app/terms/page.tsx"), "utf8").includes("A member we could not pause may"), readFileSync(join(process.cwd(), "app/refunds/page.tsx"), "utf8").includes("unless the store is past its closing&rsquo;s limit")], [true, true]);
   is("and the sentence states the limit, as the Terms do", [CLOSING_ACCESS_SENTENCE.includes("up to a limit set by its plan"), readFileSync(join(process.cwd(), "app/terms/page.tsx"), "utf8").includes("we cannot promise that you are among those we")], [true, true]);
   const terms = readFileSync(join(process.cwd(), "app/terms/page.tsx"), "utf8"), refunds = readFileSync(join(process.cwd(), "app/refunds/page.tsx"), "utf8"), privacy = readFileSync(join(process.cwd(), "app/privacy/page.tsx"), "utf8");
   is("the Terms, the Refund policy and the Privacy policy say it in plain words", [terms.includes("refunded automatically from the creator&rsquo;s own Stripe account"), refunds.includes("refunded to you automatically from the creator&rsquo;s"), privacy.includes('id="store-closing"'), terms.includes("never pays these refunds")], [true, true, true, true]);

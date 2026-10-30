@@ -155,8 +155,8 @@ export const ORDER_RENEWAL_STOP = (STRIPE_WAIT_SECONDS / RENEWALS_AT_ONCE + STRI
  * EMAILS_PER_BUYER_PER_ENDING emails at PER_EMAIL; its address and a
  * member's last payment kept until the store closes or stays, a few
  * kilobytes for the closing days, the day its notice may come early and the
- * week a late last notice adds; its share of a page of a hundred checkouts
- * read to find it; and, as if every one were a member, the calls to Stripe a
+ * week a late last notice adds; its share of a page of a hundred of the
+ * store's own payments read to find it (lib/closing-buyers.ts, buyerPagesCap); and, as if every one were a member, the calls to Stripe a
  * membership's closing makes at the most, STRIPE_CALLS_PER_MEMBER, taken
  * from the closing's call budget before each is made (lib/closing-holds.ts,
  * takeCalls; its end is its order's, ORDER_RENEWAL_STOP), each waited on
@@ -897,6 +897,7 @@ export const NOT_A_COST: Record<string, string> = {
   EMAILS_PER_BUYER_PER_ENDING: "Emails one closing takes for a buyer (lib/closing-buyers-rules.ts), inside the same exposure's cap.",
   STRIPE_CALLS_PER_MEMBER: "Calls to the creator's Stripe account one member's closing takes at the most, the closing's call budget per buyer its cap allows (lib/closing-holds.ts, takeCalls): inside the same exposure (CLOSING_BUYER_COST).",
   MEMBERS_AT_ONCE: "How many members one closing works on at once: a pace inside the daily job's minute, not a figure of its own.",
+  REFUND_CALLS_PER_MEMBER: "The part of STRIPE_CALLS_PER_MEMBER set aside for a member's refund (lib/closing-holds.ts): inside the same budget, not added to it.",
   PICTURES_PER_MINUTE: "A pace on the pictures a function answers (lib/picture-pace.ts, MM-SA-04), held in memory with no store command: it only refuses, and what it lets through is the CDN's picture of line visits.",
   PICTURE_READS_PER_MINUTE: "A pace on how often one picture is read by a function (lib/picture-pace.ts, MM-SA-04), held in memory with no store command: it only refuses.",
   CENTS_PER_MINUTE: "AI captions are bought at their own price, charged before the work (lib/auto-captions-rules.ts).",

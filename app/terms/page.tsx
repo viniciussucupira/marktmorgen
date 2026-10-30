@@ -826,10 +826,16 @@ export default function TermsPage() {
         </p>
         <p id="closing-members">
           <strong className="text-black">Members and buyers of a store that closes.</strong>{" "}
-          From the day a store&rsquo;s plan ends, its members are not charged
-          again: we pause the collection of every membership and payment plan
-          on the creator&rsquo;s own Stripe account, and members keep their
-          access until the closing day. If the creator starts a plan again
+          From the day a store&rsquo;s plan ends, we pause the collection of
+          its memberships and payment plans on the creator&rsquo;s own Stripe
+          account and void their unpaid invoices, so those members are not
+          charged again, and they keep their access until the closing day. We
+          do this for as many members as the closing&rsquo;s limit covers (the
+          same limit as the emails below); a membership Stripe does not let us
+          pause is tried again every day. A member we could not pause may
+          still be charged until the closing day: the creator is told how
+          many, and asked to refund any such charge. Every membership ends on
+          the closing day. If the creator starts a plan again
           before then, each payment goes on as it was, and nothing is charged
           for the days in between. On the closing day, the part of a
           member&rsquo;s last payment that paid for time after that day is
@@ -874,8 +880,10 @@ export default function TermsPage() {
           What you buy from a store is delivered through that store while it
           is open on Marktmorgen. When it closes, what was bought from it can
           no longer be downloaded or opened here. From the day the
-          store&rsquo;s plan ends you are not charged again for what you
-          subscribe to there, and on the closing day it ends. We email the
+          store&rsquo;s plan ends we pause the payments for what you
+          subscribe to there (unless the store is past the limit described
+          above, or Stripe does not let us pause yours), and on the closing
+          day it ends. We email the
           store&rsquo;s buyers at least {BUYER_NOTICE_DAYS} days before it closes, up to
           the limit its plan sets: as many buyers as {BUYER_CAP_MONTHS} months of the
           plan&rsquo;s orders, or 100 for a store that never paid. If a store has

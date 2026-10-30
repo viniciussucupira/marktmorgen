@@ -546,6 +546,10 @@ const BILLING_NOTICES: Record<string, { title: string; body: string }> = {
     title: "That plan is not open yet",
     body: "Nothing was charged and nothing was changed.",
   },
+  closing: {
+    title: "Your store is closing today",
+    body: "Its closing day has begun: its memberships have ended and it is being removed, so a plan can no longer be started for it. Nothing was charged. You can open a new store from your account.",
+  },
   "not-open": {
     title: "Plans are not on sale yet",
     body: "Marktmorgen is still being built, so no plan can be started. Nothing was charged and nothing was changed.",
@@ -2212,8 +2216,13 @@ export default async function StudioPage({
             {closing && closing.whole ? (
               <div id="closing" className="card mt-8 scroll-mt-32 p-6 sm:p-8">
                 <p className="text-lg font-semibold tracking-[-0.02em] text-ink">
-                  {`Your plan has ended, and your store closes on ${dayWords(closing.day)}`}
+                  {closing.today ? "Your store is closing today" : `Your plan has ended, and your store closes on ${dayWords(closing.day)}`}
                 </p>
+                {closing.today ? (
+                  <p className="mt-4 notice notice-warn">
+                    Its closing day has begun: every membership and payment plan sold through it has ended, and it is being removed. A plan can no longer be started for it, and nothing will be charged for one. You can open a new store from your account.
+                  </p>
+                ) : null}
                 <p className="mt-4 notice notice-warn">
                   {`Your plan ended on ${dayWords(closing.endedAt)}. `}
                   <strong>{`On ${dayWords(closing.day)} your store closes`}</strong>

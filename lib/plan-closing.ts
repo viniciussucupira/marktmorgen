@@ -88,7 +88,7 @@ import { SUPPORT_EMAIL } from "@/lib/creator-research";
 import { BUYER_NOTICE_DAYS, BUYER_NOTICE_FROM, EMAILS_PER_BUYER_PER_ENDING, STRIPE_CALLS_PER_MEMBER, afterBuyersTold, buyerNoticeCap, buyersStartOn, paidBefore } from "@/lib/closing-buyers-rules";
 import { forgetCredit, startClosingCredit } from "@/lib/closing-credit";
 import { FINAL_INDEX, HELD_INDEX, forgetHeld, holdCharges, holdCounts, paidPeriods, retryHolds, savePaidPeriod, startCallBudget } from "@/lib/closing-holds";
-import { forgetTold, tellBuyers, tellRefundShort } from "@/lib/closing-buyers";
+import { buyerPagesCap, forgetTold, tellBuyers, tellRefundShort } from "@/lib/closing-buyers";
 import { giveBackUnused, unusedRows, unusedSummary } from "@/lib/closing-refunds";
 import { stillToGive, unusedOf, type PaidPeriod } from "@/lib/closing-buyers-rules";
 import { formatMoney } from "@/lib/money";
@@ -130,6 +130,9 @@ type State = {
   buyersFrom?: number;
   buyersDone?: number;
   buyersAfter?: string;
+  /** Pages of payments read for its buyers, and whether that stopped at the closing's cap (buyerPagesCap). */
+  buyersPages?: number;
+  buyersCapped?: number;
   untold?: number;
   refunds?: number;
 };
@@ -144,10 +147,10 @@ function parseState(raw: unknown): State {
   try {
     const value = JSON.parse(raw) as Record<string, unknown>;
     const out: State = {};
-    for (const name of ["of", "ended", "month", "week", "removed", "said", "fit", "renewals", "due", "erased", "hold", "holdFrom", "day", "buyersFrom", "buyersDone", "untold", "refunds"] as const) {
+    for (const name of ["of", "ended", "month", "week", "removed", "said", "fit", "renewals", "due", "erased", "hold", "holdFrom", "day", "buyersFrom", "buyersDone", "buyersPages", "buyersCapped", "untold", "refunds"] as const) {
       if (typeof value[name] === "number" && Number.isFinite(value[name] as number)) out[name] = value[name] as number;
     }
-    if (typeof value.buyersAfter === "string" && /^(start|cs_[A-Za-z0-9_]{6,200})$/.test(value.buyersAfter)) out.buyersAfter = value.buyersAfter;
+    if (typeof value.buyersAfter === "string" && /^(start|\d{1,3}\|[!-~]{0,800})$/.test(value.buyersAfter)) out.buyersAfter = value.buyersAfter;
     return out;
   } catch {
     return {};
@@ -165,7 +168,15 @@ export function removalDay(endedAt: number): number {
  * what it kept has been removed already. Whether the store keeps more than
  * its room, which is what makes the day matter, is for the caller to measure.
  */
-export async function closingOf(store: Store, now = Date.now()): Promise<{ endedAt: number; day: number; buyers?: { by: number; done: boolean; untold: number } } | null> {
+export async function closingOf(store: Store, now = Date.now()): Promise<{ endedAt: number; day: number; today?: boolean; buyers?: { by: number; done: boolean; untold: number } } | null> {
+  // Its closing day has begun (queue item 307 [EC1]): it closes today, whatever the plan says.
+  if (isRedisConfigured()) {
+    const [finalScore, rawFinal] = await redisPipeline([["ZSCORE", FINAL_INDEX, storeRef(store)], ["GET", stateKey(storeRef(store))]]);
+    if (finalScore !== null && finalScore !== undefined) {
+      const kept = parseState(rawFinal);
+      return { endedAt: Number(finalScore), day: kept.day ?? now, today: true };
+    }
+  }
   const endedAt = Date.parse(store.planEndedAt);
   if (standingOf(store, now / 1000) !== "ended" || !Number.isFinite(endedAt) || !isRedisConfigured()) return null;
   // A break the creator chose keeps everything until it ends (lib/plan-pause.ts).
@@ -300,6 +311,8 @@ export type ClosingNews = {
   /** Members whose charges could not be paused yet (tried again every day), and those past the closing's limit (not paused). */
   notHeld?: number;
   overLimit?: number;
+  /** Its payments were not all read within the closing's cap: some buyers may not be told. */
+  capped?: boolean;
 };
 
 /**
@@ -319,6 +332,7 @@ export function closingLetter(kind: "ended" | "month" | "week", name: string, en
         ...(news.untold > 0
           ? [`${news.untold} ${news.untold === 1 ? "address was" : "addresses were"} not covered by your store's closing emails: please tell ${news.untold === 1 ? "that buyer" : "those buyers"} yourself.`]
           : []),
+        ...(news.capped ? ["Your store has more payments than this closing can read, so some of your buyers may not get our email: please tell them yourself."] : []),
         "",
       ]
     : [];
@@ -376,7 +390,7 @@ export function closingLetter(kind: "ended" | "month" | "week", name: string, en
       "",
       studio,
       "",
-      `Starting a plan again before ${dateWords(day)} keeps your store: everything stays exactly as it is, your members' payments go on as they were (nothing is charged for the days in between), and nothing is refunded.`,
+      `Starting a plan again before ${dateWords(day)} keeps your store: everything stays exactly as it is, your members' payments go on as they were (nothing is charged for the days in between, and invoices we voided when your plan ended do not come back), and nothing is refunded. On that day itself a plan can no longer be started for it.`,
       "",
       kind === "ended"
         ? `We will write to you again ${WARN_MONTH_DAYS} days before that day and ${WARN_WEEK_DAYS} days before it. Nothing is removed without a notice at least a week old.`
@@ -390,12 +404,13 @@ export function closingLetter(kind: "ended" | "month" | "week", name: string, en
 }
 
 /** What a closing store's notice says of its buyers and members today, read from what was written down (no call to Stripe). */
-export async function closingNews(store: Store, endedAt: number, day: number, untold: number): Promise<ClosingNews> {
+export async function closingNews(store: Store, endedAt: number, day: number, untold: number, capped = false): Promise<ClosingNews> {
   const summary = await unusedSummary(store, day).catch(() => ({ members: 0, totals: [] as { cur: string; amount: number }[] }));
   const counts = await holdCounts(await storeFolder(storeRef(store))).catch(() => ({ failed: 0, over: 0 }));
   return {
     notHeld: counts.failed,
     overLimit: counts.over,
+    capped,
     buyersBy: tellsBuyers(endedAt) ? day - BUYER_NOTICE_DAYS * DAY_MS : null,
     untold,
     members: summary.members,
@@ -610,7 +625,7 @@ export async function closeOne(key: string, now = Date.now(), hands: Hands = HAN
   const closes = closesStore(endedAt);
   const send = async (kind: "ended" | "month" | "week" | "removed", day: number, held: number): Promise<boolean> => {
     const { subject, text } =
-      closes && kind !== "removed" ? closingLetter(kind, store.name, endedAt, day, now, await closingNews(store, endedAt, day, state.untold ?? 0)) : letter(kind, store, held, endedAt, day, now);
+      closes && kind !== "removed" ? closingLetter(kind, store.name, endedAt, day, now, await closingNews(store, endedAt, day, state.untold ?? 0, Boolean(state.buyersCapped))) : letter(kind, store, held, endedAt, day, now);
     // The same notice asked for twice in a day is sent once (a record that
     // could not be written after it went out).
     const idempotencyKey = `${stateKey(key)}:${endedAt}:${kind}`;
@@ -684,7 +699,8 @@ export async function closeOne(key: string, now = Date.now(), hands: Hands = HAN
   let day = Math.max(removalDay(endedAt), state.week ? state.week + WARN_WEEK_DAYS * DAY_MS : 0);
   if (buyersApply) day = afterBuyersTold(day, state.buyersDone);
   if (buyersApply && !state.buyersDone && now >= buyersStartOn(day)) {
-    const told = await tellBuyers(store, endedAt, day, state.buyersAfter ?? "", until).catch((error) => {
+    const cap = buyerNoticeCap(store.tier, paidBefore(store));
+    const told = await tellBuyers(store, endedAt, day, state.buyersAfter ?? "", until, state.buyersPages ?? 0, buyerPagesCap(cap)).catch((error) => {
       console.error("telling a closing store's buyers failed", error);
       return null;
     });
@@ -693,7 +709,8 @@ export async function closeOne(key: string, now = Date.now(), hands: Hands = HAN
       console.error("plan-closing: a store's buyers cannot be told: Marktmorgen has no postal address (lib/company-postal.ts); it does not close until they are");
       return { key, state: "held", note: "no company postal address for its buyers' notice" };
     }
-    Object.assign(state, { buyersFrom: state.buyersFrom ?? now, buyersAfter: told.after, untold: (state.untold ?? 0) + told.untold, ...(told.done ? { buyersDone: now } : {}) });
+    if (told.capped) console.error("plan-closing: a store's payments were not all read within its closing's cap; the rest are counted as not told");
+    Object.assign(state, { buyersFrom: state.buyersFrom ?? now, buyersAfter: told.after, buyersPages: told.pages, untold: (state.untold ?? 0) + told.untold, ...(told.capped ? { buyersCapped: 1 } : {}), ...(told.done ? { buyersDone: now } : {}) });
     await save(state);
     if (told.done) day = afterBuyersTold(day, now);
     else return { key, state: "told", note: "buyers, in part" };

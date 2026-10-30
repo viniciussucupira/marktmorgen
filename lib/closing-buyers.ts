@@ -4,10 +4,11 @@
  *
  *   tellBuyers     BUYER_NOTICE_DAYS days before the closing at the least:
  *                  one service email to everyone who bought from the store
- *                  (its paid checkouts on the creator's Stripe account, its
- *                  PayPal sales, and the buyers it brought over or was given
- *                  as gifts), each address once, a part a day for a store
- *                  with more than one run can read
+ *                  (its members held, the payments that name it in their
+ *                  metadata on the creator's Stripe account, its PayPal
+ *                  sales, and the buyers it brought over or was given as
+ *                  gifts), each address once, a part a day, up to a cap on
+ *                  what is read
  *   tellStaysOpen  the plan was started again after that: one short email to
  *                  each address that was told
  *   tellRefundShort  a member whose refund the store's balance did not cover
@@ -38,7 +39,7 @@ import { importedBuyers } from "@/lib/imported-purchases";
 import { storeBase } from "@/lib/purchase-email";
 import { formatMoney } from "@/lib/money";
 import { companyPostal } from "@/lib/company-postal";
-import { paidPeriods } from "@/lib/closing-holds";
+import { memberAddresses, paidPeriods } from "@/lib/closing-holds";
 import { returnCredit, takeCredit } from "@/lib/closing-credit";
 import {
   BUYER_PAGES_PER_RUN,
@@ -79,40 +80,46 @@ async function send(messages: BatchMessage[], key: string): Promise<boolean> {
 const batchKey = (what: string, folder: string, endedAt: number, to: string[]) =>
   `closing:${what}:${createHash("sha256").update(`${folder}:${endedAt}:${to.join(",")}`).digest("hex").slice(0, 40)}`;
 
-/** The addresses of a page of the store's checkouts that bought something it hands over: paid, or a membership's free start. */
-function buyersIn(rows: Record<string, unknown>[], handles: Set<string>): string[] {
-  const out: string[] = [];
-  for (const row of rows) {
-    const meta = (row.metadata ?? {}) as Record<string, string>;
-    if (!handles.has(meta.store ?? "")) continue;
-    if (row.status !== "complete") continue;
-    if (row.payment_status !== "paid" && !(row.mode === "subscription" && row.payment_status === "no_payment_required")) continue;
-    const details = (row.customer_details ?? {}) as { email?: unknown };
-    const email = typeof details.email === "string" ? details.email : typeof row.customer_email === "string" ? row.customer_email : "";
-    if (email) out.push(email);
-  }
-  return out;
+/** The address of a payment found by the store's own metadata: the receipt's, or the card's. */
+function payerOf(row: Record<string, unknown>): string {
+  if (typeof row.receipt_email === "string" && row.receipt_email) return row.receipt_email;
+  const charge = row.latest_charge && typeof row.latest_charge === "object" ? (row.latest_charge as { billing_details?: { email?: unknown } | null; receipt_email?: unknown }) : null;
+  if (typeof charge?.receipt_email === "string" && charge.receipt_email) return charge.receipt_email;
+  return typeof charge?.billing_details?.email === "string" ? charge.billing_details.email : "";
 }
 
-export type Told = { done: boolean; after: string; sent: number; untold: number; blocked?: "postal" };
+export type Told = { done: boolean; after: string; pages: number; sent: number; untold: number; capped?: boolean; blocked?: "postal" };
+
+/** The most pages of a hundred payments read for one closing: two for every hundred buyers its cap allows, and a few more. Past it the rest is counted as not read, never waited on. */
+export function buyerPagesCap(cap: number): number {
+  return Math.ceil((2 * cap) / 100) + 5;
+}
+
+const CURSOR = /^(start|\d{1,3}\|[!-~]{0,800})$/;
 
 /**
  * Tells the next part of the store's buyers. `after` is where the last run
- * stopped in the store's checkouts ("" the first time: then the buyers
- * kept here are told first; each address told is written down at once, so
- * a run that stops part-way never writes to anybody twice).
- * `day` is the closing day the emails name.
+ * stopped ("" the first time: then the buyers kept here, the members held
+ * and those brought over or paid with PayPal, are told first; each address
+ * told is written down at once, so a run that stops part-way never writes to
+ * anybody twice). Then the payments that name this store in their own
+ * metadata, found by Stripe's search on the creator's account (never the
+ * account's whole history), BUYER_PAGES_PER_RUN pages a run and `maxPages`
+ * in all; at that cap it is done, and says it was `capped`. `day` is the
+ * closing day the emails name.
  */
-export async function tellBuyers(store: Store, endedAt: number, day: number, after: string, until: number): Promise<Told> {
+export async function tellBuyers(store: Store, endedAt: number, day: number, after: string, until: number, pagesRead = 0, maxPages = Number.POSITIVE_INFINITY): Promise<Told> {
   const postal = companyPostal();
-  if (!postal) return { done: false, after, sent: 0, untold: 0, blocked: "postal" };
+  if (!postal) return { done: false, after, pages: pagesRead, sent: 0, untold: 0, blocked: "postal" };
   const folder = await storeFolder(storeRef(store));
-  const out: Told = { done: false, after, sent: 0, untold: 0 };
+  const out: Told = { done: false, after: CURSOR.test(after) ? after : "", pages: pagesRead, sent: 0, untold: 0 };
   const members = new Map<string, string>();
   for (const paid of (await paidPeriods(store)).values()) {
     const unused = unusedOf(paid, day);
     if (paid.e) members.set(paid.e, unused > 0 ? formatMoney(unused, paid.cur) : members.get(paid.e) ?? "");
   }
+  const held = await memberAddresses(folder);
+  for (const email of held) if (!members.has(email)) members.set(email, "");
   const base = storeBase(store);
   const tell = async (raw: string[]): Promise<boolean> => {
     const fresh = [...new Set(raw.map((e) => normaliseEmail(e)).filter((e) => EMAIL_PATTERN.test(e)))];
@@ -143,7 +150,7 @@ export async function tellBuyers(store: Store, endedAt: number, day: number, aft
     return true;
   };
 
-  if (!after) {
+  if (!out.after) {
     // (The told list of an earlier ending was let go when this one's members were held: lib/plan-closing.ts.)
     const kept: string[] = [...members.keys()];
     kept.push(...(await importedBuyers(store.statsId)).keys());
@@ -153,19 +160,24 @@ export async function tellBuyers(store: Store, endedAt: number, day: number, aft
   }
   const account = store.stripeAccountId;
   if (!account) return { ...out, done: true };
-  const handles = saleHandles(store);
-  let cursor = out.after === "start" ? "" : out.after;
-  for (let page = 0; page < BUYER_PAGES_PER_RUN; page += 1) {
+  const handles = [...saleHandles(store)];
+  let [h, page] = out.after === "start" ? [0, ""] : [Number(out.after.split("|")[0]), out.after.slice(out.after.indexOf("|") + 1)];
+  for (let run = 0; run < BUYER_PAGES_PER_RUN; run += 1) {
+    if (h >= handles.length) return { ...out, done: true };
+    if (out.pages >= maxPages) return { ...out, done: true, capped: true };
     if (Date.now() > until) return out;
-    const list = await onAccount("GET", account, `/checkout/sessions?limit=100${cursor ? `&starting_after=${encodeURIComponent(cursor)}` : ""}`);
+    const query = new URLSearchParams({ limit: "100", query: `metadata['store']:'${handles[h]}' AND status:'succeeded'` });
+    query.append("expand[]", "data.latest_charge");
+    if (page) query.set("page", page);
+    const list = await onAccount("GET", account, `/payment_intents/search?${query}`);
+    out.pages += 1;
     const rows = Array.isArray(list.data) ? (list.data as Record<string, unknown>[]) : [];
-    if (!(await tell(buyersIn(rows, handles)))) return out;
-    const last = rows[rows.length - 1];
-    if (list.has_more !== true || !last || typeof last.id !== "string") return { ...out, done: true };
-    cursor = last.id;
-    out.after = cursor;
+    if (!(await tell(rows.map(payerOf)))) return out;
+    const next = typeof list.next_page === "string" ? list.next_page : "";
+    [h, page] = list.has_more === true && next ? [h, next] : [h + 1, ""];
+    out.after = `${h}|${page}`;
   }
-  return out;
+  return h >= handles.length ? { ...out, done: true } : out;
 }
 
 /** The short email to everyone told, once the plan runs again; true when all of it went (or there was nobody). */

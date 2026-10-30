@@ -54,6 +54,7 @@ import {
   type HeldSub,
   MEMBERS_AT_ONCE,
   type PaidPeriod,
+  REFUND_CALLS_PER_MEMBER,
   chargeable,
   holdBody,
   isPaymentPlan,
@@ -134,16 +135,28 @@ export async function startCallBudget(folder: string, calls: number): Promise<vo
   await redisPipeline([["DEL", workKey(folder)], ["HSET", workKey(folder), "calls", Math.max(0, Math.floor(calls))]]);
 }
 
-/** Takes `n` calls from the budget, all or none. */
-export async function takeCalls(folder: string, n: number): Promise<boolean> {
-  const [left] = await redisPipeline([["HINCRBY", workKey(folder), "calls", -n]]);
+/**
+ * Takes `n` calls, all or none: from the budget ("calls"), or from the calls
+ * set aside for refunds ("rcalls", REFUND_CALLS_PER_MEMBER for each member
+ * held with a payment to give back), which nothing else may use.
+ */
+export async function takeCalls(folder: string, n: number, from: "calls" | "rcalls" = "calls"): Promise<boolean> {
+  if (n <= 0) return true;
+  const [left] = await redisPipeline([["HINCRBY", workKey(folder), from, -n]]);
   if (Number(left) >= 0) return true;
-  await redisPipeline([["HINCRBY", workKey(folder), "calls", n]]);
+  await redisPipeline([["HINCRBY", workKey(folder), from, n]]);
   return false;
 }
 
 /** A member's last paid invoice, as its membership line says, with the payment it was paid by. */
 export function paidPeriodOf(invoice: Record<string, unknown>, email: string, intent = ""): PaidPeriod | null {
+  // The payment it was paid by: on the invoice in older API versions, among its payments (expanded) in newer ones.
+  if (!intent) {
+    const payments = (invoice.payments as { data?: { status?: unknown; payment?: { payment_intent?: unknown } | null }[] } | undefined)?.data ?? [];
+    const found = payments.find((p) => p.status === "paid")?.payment?.payment_intent;
+    const id = typeof found === "string" ? found : (found as { id?: unknown } | null)?.id;
+    if (typeof id === "string") intent = id;
+  }
   if (invoice.status !== "paid" || typeof invoice.id !== "string" || !INVOICE_ID.test(invoice.id)) return null;
   const line = membershipLineOf(invoice as Parameters<typeof membershipLineOf>[0]);
   const tot = typeof invoice.amount_paid === "number" ? invoice.amount_paid : 0;
@@ -158,34 +171,63 @@ const listOf = (reply: Record<string, unknown>) => (Array.isArray(reply.data) ? 
 
 /**
  * Holds one member for an ending: its open invoices voided and its drafts
- * kept as drafts (so nothing issued before is collected), its last paid
- * invoice written down, then its collection paused. Each call is taken from
- * the budget first. Throws when Stripe could not be asked; answers "over"
- * when the budget did not cover it.
+ * kept as drafts (marked, so a release can let them go again), so nothing
+ * issued before is collected; its last paid invoice that holds its
+ * membership written down (up to ten looked back, in one call); then its
+ * collection paused. Every call is taken from the budget first, and its
+ * refund's calls are set aside once it is held. Throws when Stripe could not
+ * be asked; answers "over" when the budget did not cover it.
  */
 async function holdOne(account: string, folder: string, sub: Row, endedAt: number): Promise<"held" | "over"> {
   const id = sub.id as string;
-  // Its open and draft invoices listed, its last paid one read, its hold, and its release if the plan starts again.
-  if (!(await takeCalls(folder, 5))) return "over";
+  // Its open and draft invoices listed, its paid ones read, its hold and its release; and its refund's, set aside.
+  const plan = isPaymentPlan(sub);
+  if (!(await takeCalls(folder, 5 + (plan ? 0 : REFUND_CALLS_PER_MEMBER)))) return "over";
   const open = listOf(await onAccount("GET", account, `/invoices?${new URLSearchParams({ subscription: id, status: "open", limit: "10" })}`));
-  const drafts = listOf(await onAccount("GET", account, `/invoices?${new URLSearchParams({ subscription: id, status: "draft", limit: "10" })}`));
-  if (!(await takeCalls(folder, open.length + drafts.length))) return "over";
+  const drafts = listOf(await onAccount("GET", account, `/invoices?${new URLSearchParams({ subscription: id, status: "draft", limit: "10" })}`)).filter((d) => typeof d.id === "string" && INVOICE_ID.test(d.id) && d.auto_advance !== false);
+  // A void each; a draft kept now and let go again on a release.
+  if (!(await takeCalls(folder, open.length + 2 * drafts.length))) return "over";
   for (const invoice of open) {
     if (typeof invoice.id === "string" && INVOICE_ID.test(invoice.id)) await onAccount("POST", account, `/invoices/${encodeURIComponent(invoice.id)}/void`, undefined, undefined, `closing-void:${invoice.id}`);
   }
   for (const invoice of drafts) {
-    if (typeof invoice.id === "string" && INVOICE_ID.test(invoice.id)) await onAccount("POST", account, `/invoices/${encodeURIComponent(invoice.id)}`, new URLSearchParams({ auto_advance: "false" }), undefined, `closing-draft:${invoice.id}:${endedAt}`);
+    await onAccount("POST", account, `/invoices/${encodeURIComponent(invoice.id as string)}`, new URLSearchParams({ auto_advance: "false", "metadata[closing_draft]": String(endedAt) }), undefined, `closing-draft:${invoice.id}:${endedAt}`);
   }
-  if (!isPaymentPlan(sub)) {
-    const paid = listOf(await onAccount("GET", account, `/invoices?${new URLSearchParams({ subscription: id, status: "paid", limit: "1" })}`))[0];
-    const customer = sub.customer && typeof sub.customer === "object" ? (sub.customer as { email?: unknown }) : null;
-    const email = typeof customer?.email === "string" ? normaliseEmail(customer.email) : "";
-    const period = paid ? paidPeriodOf(paid, email) : null;
+  if (drafts.length) await redisPipeline([["HSET", workKey(folder), `d:${id}`, drafts.map((d) => d.id).join(",")]]);
+  const customer = sub.customer && typeof sub.customer === "object" ? (sub.customer as { email?: unknown }) : null;
+  const email = typeof customer?.email === "string" ? normaliseEmail(customer.email) : "";
+  // Every held member's address, payment plans' too, for the buyers' notice (lib/closing-buyers.ts).
+  if (email) await redisPipeline([["HSET", workKey(folder), `m:${id}`, email]]);
+  if (!plan) {
+    const query = new URLSearchParams({ subscription: id, status: "paid", limit: "10" });
+    query.append("expand[]", "data.payments");
+    const paid = listOf(await onAccount("GET", account, `/invoices?${query}`));
+    const period = paid.map((invoice) => paidPeriodOf(invoice, email)).find((p): p is PaidPeriod => p !== null) ?? null;
     // The first reading is the one before any hold (HSETNX).
     if (period) await redisPipeline([["HSETNX", paidKey(folder), id, JSON.stringify(period)]]);
   }
   await onAccount("POST", account, `/subscriptions/${encodeURIComponent(id)}`, holdBody(sub, endedAt), undefined, `closing-hold:${id}:${endedAt}`);
+  // Set aside only now that it is held: a hold that failed leaves its refund's calls spent, never a second reserve.
+  if (!plan) await redisPipeline([["HINCRBY", workKey(folder), "rcalls", REFUND_CALLS_PER_MEMBER]]);
   return "held";
+}
+
+/** The addresses of every member held for this ending, payment plans included. */
+export async function memberAddresses(folder: string): Promise<string[]> {
+  if (!isRedisConfigured()) return [];
+  const [raw] = await redisPipeline([["HGETALL", workKey(folder)]]);
+  const flat = Array.isArray(raw) ? (raw as unknown[]).map(String) : [];
+  const out: string[] = [];
+  for (let i = 0; i + 1 < flat.length; i += 2) if (flat[i].startsWith("m:") && flat[i + 1]) out.push(flat[i + 1]);
+  return out;
+}
+
+/** Whether a store's closing day has begun: then no plan may be started for it (app/api/billing/checkout). Throws when it cannot be read. */
+export async function inClosingDay(ref: string): Promise<boolean> {
+  // With no database there is no closing day to be in (the line lives there); one that does not answer throws, and the caller refuses.
+  if (!isRedisConfigured()) return false;
+  const [score] = await redisPipeline([["ZSCORE", FINAL_INDEX, ref]]);
+  return score !== null && score !== undefined;
 }
 
 /** How the hold stands: the members it could not reach yet, and those past the budget. */
@@ -266,6 +308,12 @@ export async function releaseHolds(store: Store, until: number, nowSeconds = Mat
       const id = sub.id as string;
       try {
         await onAccount("POST", account, `/subscriptions/${encodeURIComponent(id)}`, releaseBody(sub, nowSeconds), undefined, `closing-release:${id}:${sub.metadata?.store_hold}`);
+        // The drafts its hold kept as drafts go on as they were (their calls were taken with the hold); voided invoices do not come back.
+        const [kept] = await redisPipeline([["HGET", workKey(folder), `d:${id}`]]);
+        for (const draft of typeof kept === "string" ? kept.split(",").filter((d) => INVOICE_ID.test(d)) : []) {
+          await onAccount("POST", account, `/invoices/${encodeURIComponent(draft)}`, new URLSearchParams({ auto_advance: "true", "metadata[closing_draft]": "" }), undefined, `closing-draft-back:${draft}:${sub.metadata?.store_hold}`);
+        }
+        if (typeof kept === "string") await redisPipeline([["HDEL", workKey(folder), `d:${id}`]]);
         out.released += 1;
       } catch (error) {
         failed += 1;

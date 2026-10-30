@@ -6,6 +6,7 @@ import { PRO_ON_SALE, parseCycle, parseTier } from "@/lib/plan";
 import { PLANS_ON_SALE } from "@/lib/opening";
 import { accountStores, setSubscription } from "@/lib/store";
 import { limited } from "@/lib/request-guard";
+import { inClosingDay } from "@/lib/closing-holds";
 
 /**
  * Sends the creator to Stripe to start paying us, monthly or yearly.
@@ -32,6 +33,12 @@ export async function POST(request: NextRequest) {
   if (store.subscriptionActive) return away(origin, studio("billing=already"));
   // Not open yet (lib/opening.ts): no card is taken, and Stripe is not asked.
   if (!PLANS_ON_SALE) return away(origin, studio("billing=not-open"));
+  // Its closing day has begun (queue item 307 [EC1]): its members' memberships
+  // have ended and it is being removed, so a plan would be paid for and not
+  // given. Refused, and refused too when that cannot be read: no card is taken.
+  // Only a store whose plan ended can be in its closing day.
+  const closingToday = store.planEndedAt ? await inClosingDay(ref).catch(() => true) : false;
+  if (closingToday) return away(origin, studio("billing=closing"));
 
   let fields: FormData | null = null;
   try {

@@ -34,7 +34,7 @@
  * its license key when it hands one out — kept under the offer's payment,
  * the same reference the thanks page and the list of purchases use.
  */
-import { CLOSING_ACCESS_SENTENCE } from "@/lib/closing-buyers-rules";
+import { CLOSING_ACCESS_SENTENCE, CLOSING_TERMS_PATH, CLOSING_TERMS_WORDS } from "@/lib/closing-buyers-rules";
 import { deliversDigitally } from "@/lib/digital-consent";
 import { consentEmailLines } from "@/lib/digital-consent-email";
 import { ADMITTED_FIELD, settleAdmitted } from "@/lib/order-admission";
@@ -74,6 +74,9 @@ import { type NextOffer, nextOfferForEmail } from "@/lib/next-offer";
 import { nextOfferWords } from "@/lib/buyer-words/next-offer";
 import { pricePill } from "@/components/store-product";
 import { productSegment } from "@/lib/product-slug";
+
+/** The fixed sentence as a receipt carries it, with the address of the Terms that explain its limit (queue item 307 EC1). */
+const closingAccessLine = () => `${CLOSING_ACCESS_SENTENCE} ${CLOSING_TERMS_WORDS}: ${SITE_URL}${CLOSING_TERMS_PATH}`;
 
 const SESSION_ID_PATTERN = /^cs_(test|live)_[A-Za-z0-9]{10,200}$/;
 const INTENT_ID_PATTERN = /^pi_[A-Za-z0-9]{10,200}$/;
@@ -312,7 +315,7 @@ export function confirmationFor(
   }
 
   // What lasts depends on the store staying open (queue item 307 EC1): the fixed sentence, drawn here, never the creator's.
-  if (deliversDigitally(product)) lines.push("", CLOSING_ACCESS_SENTENCE);
+  if (deliversDigitally(product)) lines.push("", closingAccessLine());
 
   // The creator's own note after paying, as the thank-you page shows it: words, video, button.
   if (note) {
@@ -645,7 +648,7 @@ export function offerConfirmationFor(store: Store, offer: TakenOffer, key: SaleK
     "",
     words.offerThreeDays(`${base}/orders`, offer.email, name),
     // The fixed sentence (queue item 307 EC1), when what was added lasts.
-    ...(deliversDigitally(offer.product) ? ["", CLOSING_ACCESS_SENTENCE] : []),
+    ...(deliversDigitally(offer.product) ? ["", closingAccessLine()] : []),
   ];
   for (const line of [...(key ? [{ title: offer.product.title, key }] : []), ...keys]) {
     const label = words.yourKeyFor(line.title);

@@ -103,6 +103,8 @@ export const MEMBERS_AT_ONCE = 5;
  * held and is counted for the creator, never silently.
  */
 export const STRIPE_CALLS_PER_MEMBER = 8;
+/** Of those, the calls a member's refund takes (its payment, the refunds made, the refund), set aside when it is held so nothing else can use them. */
+export const REFUND_CALLS_PER_MEMBER = 3;
 /** The most members' payments refunded together in one request to the studio. */
 export const REFUNDS_PER_REQUEST = 200;
 
@@ -112,7 +114,10 @@ export const REFUNDS_PER_REQUEST = 200;
  * it or leave it out. Plain US English, about grade 7.
  */
 export const CLOSING_ACCESS_SENTENCE =
-  `Your access is provided by this store on Marktmorgen. If the store closes, we email its buyers at least ${BUYER_NOTICE_DAYS} days before, up to a limit set by its plan, so they can download what can be downloaded. Our Terms explain the limit.`;
+  `Your access is provided by this store on Marktmorgen. If the store closes, we email its buyers at least ${BUYER_NOTICE_DAYS} days before, up to a limit set by its plan, so they can download what can be downloaded.`;
+/** Where the Terms explain that limit, and the words that lead there (a link on a page, the address in an email). */
+export const CLOSING_TERMS_PATH = "/terms#closing-members";
+export const CLOSING_TERMS_WORDS = "Our Terms explain the limit";
 
 /** The Stripe subscription fields these rules read. */
 export type HeldSub = {
@@ -223,6 +228,7 @@ export function stillToGive(unused: number, refunded: number): number {
 /** A line of an invoice, as either API version gives it. */
 type InvoiceLine = {
   amount?: unknown;
+  discount_amounts?: { amount?: unknown }[] | null;
   proration?: unknown;
   type?: unknown;
   period?: { start?: unknown; end?: unknown } | null;
@@ -231,8 +237,10 @@ type InvoiceLine = {
 
 /**
  * A paid invoice's membership: the line that is the subscription's own
- * period, never a proration (a plan changed mid-period), its amount with its
- * share of the invoice's tax, and its period. Null when there is none.
+ * period, never a proration (a plan changed mid-period), and its period. Its
+ * worth is what was really paid for it: the line's amount less its discounts
+ * (a coupon), as its share of what the invoice took (amount_paid, tax and all)
+ * against every line's own net. Null when there is none.
  */
 export function membershipLineOf(invoice: { lines?: { data?: InvoiceLine[] } | null; subtotal?: unknown; total?: unknown; amount_paid?: unknown }): { amt: number; ps: number; pe: number } | null {
   const lines = invoice.lines?.data ?? [];
@@ -242,9 +250,10 @@ export function membershipLineOf(invoice: { lines?: { data?: InvoiceLine[] } | n
     return subscription && !proration && typeof line.amount === "number" && line.amount > 0 && typeof line.period?.end === "number";
   });
   if (!own) return null;
-  const subtotal = Number(invoice.subtotal), total = Number(invoice.total);
-  const taxed = subtotal > 0 && total >= subtotal ? total / subtotal : 1;
-  const amt = Math.round((own.amount as number) * taxed);
+  const net = (line: InvoiceLine) => (typeof line.amount === "number" ? line.amount : 0) - (line.discount_amounts ?? []).reduce((sum, d) => sum + (typeof d?.amount === "number" ? d.amount : 0), 0);
+  const nets = lines.reduce((sum, line) => sum + net(line), 0);
+  const paid = Number(invoice.amount_paid);
+  const amt = Math.round(nets > 0 && paid > 0 ? (net(own) * paid) / nets : net(own));
   const ps = Number(own.period?.start), pe = Number(own.period?.end);
   if (!(amt > 0) || !Number.isFinite(ps) || !(pe > ps)) return null;
   return { amt, ps, pe };
