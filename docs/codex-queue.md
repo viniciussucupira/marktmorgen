@@ -17662,3 +17662,8 @@ Registro imediato da interrupção anterior: a atualização da branch1236de e47
 1235individual11ae83dde5c0c96b9d88cf02da83cdd41691f097 completou39/39+Vercel,verify123815063771234/234/Everything00:27:17.9882911UTC; teste sendEmailreal com provedores sintéticos00:26:20UTC,Mobile9frias880msLCP/CLS0/proxy112ms/0APIwrites. Isso não aprova união1236. Nenhuma nova entrega funcional: contador254,provaChromeanteriorcontinua bloqueada,semretry/troca.
 
 Custos desta correção: descritores em quantidade constante substituem coerção/iteração não validada; mesmas operações e tetos antes do checkout, sem novo gasto operacional, fornecedor, preço, limite visível, comissão, idioma ou gate. CI/revisão100%FX275Marktmorgen,desconhecido nãozero; MR/TX,reservas,PLANS_ON_SALE/OPENING_REQUESTEDfalse e Hazelsong preservados.
+
+
+### Falha do head inicial1238 e correção do import de teste — 29/10/2026
+
+Head6ef403ccb34d9a54ca70958cd0cd5d7d96490dd7,árvore06940e04009fc957c39cbbe3b782a406ad3df9e1,REPROVADO. Build mobile123830164461 às30/10/2026 01:08:15.6909785UTC apontou TS2552 em tests/order-admission.test.ts:72,93,106:ADMIT_ORDERS não importado. O teste novo referenciava o script já exportado para interceptar só a admissão real; faltou incluí-lo no import existente. Múltiplosjobs de navegador falharam na mesma compilação, não são provas de falhas independentes de interação. Corrigido somente o import desse export já existente; nenhuma mudança/relaxamento da fonte, tipo, assert, teto ou gate. O head inicial não é aprovado por nenhum resultado parcial. Correção exige suíte inteira no novohead, sem rerunisolado. A mudança substitui um head já inválido por falha comprovada;1236em execução independente permanece intacto.

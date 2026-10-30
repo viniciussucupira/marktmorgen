@@ -5,3 +5,7 @@ The actual admitOrders entry now accepts only one own numeric pipeline response.
 The existing actual-entry MemoryRedis suite commits a real synthetic admission before each malformed response or exception. It checks refusal, exactly one admission attempt, retained order/data holds and no getter/coercion/member access for invalid envelopes. A valid numeric success observes the descriptor probe; explicit0/2 and existing quota/settlement tests remain covered. No private decoder is exported.
 
 This does not implement geographic tax refusal, prove source-funded lifecycle completeness, or enable any gate. The Lua reservation, limits,25-hour window, settlement of existing paid orders and customer rights stay unchanged. No new productive operation/provider/retry/price or visible limit. CI/review costs remain100%MarktmorgenFX275, unknown never zero. Whole new-head CI is required before merge.
+
+## Initial failed test build
+
+Head6ef403ccb34d9a54ca70958cd0cd5d7d96490dd7 failed TS2552 in the new regression at lines72,93,106: the existing ADMIT_ORDERS export was referenced without importing it. Mobile build123830164461 reported it at2026-10-30T01:08:15.6909785Z; dependent browser builds also failed compilation. Add that existing export to the test import. Production code, types, assertions and limits are unchanged. The failed head is not approved; the corrected head requires the whole suite, not an isolated rerun.

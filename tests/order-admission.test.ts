@@ -6,7 +6,7 @@
  */
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { ADMITTED_FIELD, OPEN_HOURS, admitOrders, settleAdmitted } from "@/lib/order-admission";
+import { ADMIT_ORDERS, ADMITTED_FIELD, OPEN_HOURS, admitOrders, settleAdmitted } from "@/lib/order-admission";
 import { ORDERS_INCLUDED, TRIAL_ORDERS, freeCopiesLimitFor, paidOrdersLimitFor } from "@/lib/order-rules";
 import { countOrder, storeOrdersThisMonth } from "@/lib/orders";
 import { claimHandle, ensureStatsId, setSubscription, storeForEmail } from "@/lib/store";
