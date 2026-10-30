@@ -20,6 +20,8 @@ Localizadores do Grupo A solicitado: 14, 17, 22, 28, 32, 39, 93, 94, 99, 100, 10
 
 **206[SH3] passa a ficar imediatamente depois de515[PF3];241[CF4] continua imediatamente depois de531[VP1].** Ambos ficam acima do marco. As duas linhas da tabela de posiçõesFIM1 recebem esta data/hora; posições anteriores permanecem citadas como histórico, sem reativação.
 
+**Entrada posterior CT1 — 29/10/2026,23h50Fortaleza:** **556[CT1]**, na fila, **ACIMA DO MARCO MQ1, Grupo A, imediatamente depois de513[PF1]**, por indicação expressa do dono. Inserir somente este novo item nessa posição lógica; os itens anteriores conservam entre si a ordem, inclusive Bloco de abertura, AV1/SD1, andamentos e exceções. O número556 é localizador, não prioridade numérica.
+
 ## MARCO — DAQUI EM DIANTE, OS MENOS IMPORTANTES (MQ1, 29/10/2026)
 
 ### Grupo B — abaixo do marco
@@ -29,6 +31,8 @@ Percorrer os remanescentes do Grupo B na **ordem relativa já vigente**, sem ord
 **Regra de partes MQ1(g):** em cada itemB, só o restante não essencial vem para baixo do marco. Conformidade legal, segurança, impostos, acessibilidade, cobrança e redução de custo dos primeiros meses necessárias às operações atuais ficam na posição atual; obrigações de operações existentes nunca são adiadas. Um recurso futuro não ganha prioridade de construção só por mencionar uma dessas salvaguardas. As proibições continuam valendo em qualquer posição: consultas318/435, CSS livre127 e português doBrasil58/420, entre outras. Não ativar idiomas nem remover idiomas de compradores, conteúdo ou IDs.
 
 Entrada posterior no Grupo B: **555[AK1]**, pedido do dono29/10/2026,23h30Fortaleza, **abaixo do marco por indicação expressa**. É o último remanescente do Grupo B na ordem de chegada, depois de553[DB1] entre os localizadores desse grupo e antes da caudaFIM1. Nenhum item anterior é deslocado entre si.
+
+Entrada posterior no Grupo B: **557[BG1]**, com complementos **BG2 e BG3 dentro do mesmo item**, na fila, **ABAIXO DO MARCO MQ1 por indicação expressa do dono**. Depois de555[AK1] entre os remanescentesB e antes da caudaFIM1;556[CT1] continuaA, depois513[PF1]. Nenhum outro item ou Bloco de abertura muda de ordem/estado.
 
 ### Por último — os59 remanescentesFIM1
 
@@ -43,6 +47,10 @@ Pedido novo com lado expresso respeita “acima do marco” ou “abaixo do marc
 Uma linha por item, três grupos possíveis: A, B ou sem mudança. “Sem mudança/FIM1” mantém a cauda vigente; “sem mudança” por conclusão/andamento/AV1 preserva a posição atual. Os conjuntos pedidos têm112localizadoresA,233B e59FIM1. Aplicadas as exceções de posição/estado deMQ1(b), o resultado é108A,232B e214sem mudança.143/182 já publicados,202/205 com andamento/posiçãoOR protegidos e204 com andamento protegido são as exceções dentro das listasA/B; isso não altera seus estados. A tabela é índice de posição, não substitui o texto integral de cada item nem atesta sua conclusão.
 
 **Entradas posteriores à baseMQ1:** o título554 e as contagens anteriores são o retrato histórico dos554itens de29/10/2026,20h52Fortaleza. AK1(23h30) acrescenta somente555no Grupo B por escolha expressa do dono; tabela atual555linhas únicas:108A,233B,214sem mudança. As554linhas anteriores, a ordem relativa, as exceções e os59FIM1 permanecem intactos.
+
+**Atualização posterior CT1 (29/10/2026,23h50):** as contagens554/555 acima permanecem como retratos históricos. Estado atual: **556linhas únicas,109A,233B,214sem mudança**. Acrescenta somente556[CT1] ao Grupo A depois de513[PF1];555[AK1/AK2] permanece no Grupo B, sem alteração de estado ou posição. A tabela abaixo continua de localização numérica, nunca sequência de execução.
+
+**Atualização BG1/BG2/BG3:** as bases554/555/556 acima são históricas. A tabela atual tem **557linhas únicas:109A,234B,214sem mudança**. Só557[BG1] é acrescentado ao Grupo B;BG2/BG3 não ganham números. A ordenação numérica é localização, não execução; posições anteriores continuam vigentes.
 
 | Item | Grupo | Motivo |
 | --- | --- | --- |
@@ -601,6 +609,8 @@ Uma linha por item, três grupos possíveis: A, B ou sem mudança. “Sem mudan�
 | 553 [DB1] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
 | 554 [DS1] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
 | 555 [AK1] | B | Pedido29/10/2026,23h30: abaixo do marco expresso; após remanescentesB, antesFIM1. |
+| 556 [CT1] | A | Dono29/10/2026,23h50: acima do marco, imediatamente depois de513[PF1]; demais posições e abertura preservadas. |
+| 557 [BG1] | B | Dono29/10/2026,23h58;BG2/BG3 dentro do mesmo item; abaixo do marco, após555 no Grupo B, antesFIM1. |
 
 ### Proveniência, Pedidos repetidos e VR
 
@@ -17790,6 +17800,217 @@ Aplicar a regra VR.
 **Contexto recebido, sem tratá-lo como pesquisa independente:** dono cita a página pública clickfunnels.com/apps/affiliate-center, lida em 29/10/2026, e os textos “instant visibility into referrals, commissions, and future payouts” e “track referral effectiveness”, com ativos, vendas e comissões no topo. O pedido é complementar o resumo no estúdio, não copiar números ou promessas do fornecedor.
 
 
+## 556 [CT1] — Ofertas de um clique depois de pagar pelo carrinho
+
+**Estado:** na fila. **Posição:** ACIMA DO MARCO MQ1, Grupo A, imediatamente depois de513[PF1], sem alterar outros itens ou o Bloco de abertura. Solicitação do dono29/10/2026,23h50Fortaleza. Não antecipar implementação ao trabalhoAV1/SD1 em andamento.
+
+**Pedidos repetidos e proveniência:** conferidos main5ec160de16e5f84e969775bdd39992c97fc5246b, PR aberto1239/head8de6c24f9214d2f82ba83b28bc154e384a7cc3fe,21heads recentes de PR/codex e inventário793refs codex/*. Buscas por data/hora, título, etiqueta e conteúdo não localizaram CT1. O resultado textual sobre refuse-consumers pertence aTX, não a ofertas pós-carrinho; não duplicar o motor de upsell existente.556 estava livre; se houver nova recepção, registrar só proveniência neste item conformeAGENTS.
+
+**Conferência no código atual antes do registro:** leitura integral de lib/instant-pay.ts, lib/store-checkout.ts, lib/cart-checkout.ts, lib/funnel.ts, lib/upsell.ts, lib/flow-stats.ts, lib/funnel-metrics.ts e app/studio/funnels/page.tsx no main exato. saveCardForOffers define payment_method_options[card][setup_future_usage]=on_session; store-checkout importa e chama a função; cart-checkout não a importa nem chama e mantém metadata cart=yes/produto inicial e URLthanks. MAX_FUNNEL_STEPS continua5; UPSELL_WINDOW_SECONDS continua60*60 e reusableMethod continua sendo proteção do caminho existente. Isso confirma a lacuna de preparação do cartão do carrinho; não é ensaio real de pagamento nem prova universal de todas as páginas de agradecimento. Revalidar no head de implementação, reutilizando lib/upsell.ts e os controles atuais, sem segundo motor.
+
+**Critérios de aceite:** aplicar integralmente os7pontos literais abaixo: selecionar o primeiro produto com funil na ordem do carrinho, máximo5; excluir produtos do carrinho/já comprados/recusados, terminar sem oferta se vazio; preservar recusa terminal sem oferta posterior, janela1h, navegador original, resposta única, SCA, confirmaçãoStripe antes de entrega e método reutilizável; preço da oferta sem reaplicar cartDeal; frase no estúdio e métricas reais nos mecanismos existentes. TestesStripe simulados abrangem todos os casos listados. AX274 no mesmo fluxo e seçãoAcessibilidade no PR antes/depois. Conferir custos de leituras/gravações e reserva/tetos por plano antes de qualquer gasto novo; nenhum fornecedor novo, desconhecido reprova. MR/TX/FX275 e VR vinculantes. Registro documental não implementa a função nem certifica margem/abertura; flagsfalse, direitos/preços/limites/comissão/Hazelsong preservados. Nenhuma cobrança, e-mail, conta, contato ou submissão externa real.
+
+### Pedido literal CT1 recebido nesta conversa
+
+```text
+CT — Ofertas de um clique depois de pagar pelo carrinho (29/10/2026) [CT1]
+
+Solicitação do dono (29/10/2026, 23h50, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: aplique a regra "Pedidos repetidos" de AGENTS.md antes de gravar. Procure esta solicitação pela linha de data e hora, pelo nome da seção, pela etiqueta [CT1] e pelo conteúdo, no main, nos PRs abertos e nos ramos codex/* recentes. Se já estiver gravada, registre apenas a nova recepção na proveniência, sem novo número nem commit exclusivo.
+
+Estado inicial: na fila, ACIMA DO MARCO (MQ1, Grupo A), logo depois de 513 [PF1], no próximo número livre. Não altera a ordem de nenhum outro item nem o Bloco de abertura.
+
+Contexto: a página pública clickfunnels.com/features/add-to-cart (lida em 29/10/2026) diz que, com o carrinho, "you can leverage dynamic 'Store Upsells'", ofertas escolhidas pelo que o cliente comprou, e que "all they have to do is click 'Buy Now'". No Marktmorgen, a compra de um único produto guarda o cartão para as ofertas de um clique (saveCardForOffers em lib/instant-pay.ts, chamado em lib/store-checkout.ts), mas a compra pelo carrinho (lib/cart-checkout.ts) não chama saveCardForOffers. Por isso, quem paga pelo carrinho nunca vê oferta depois de pagar. Verifique antes no código atual que isso continua assim.
+
+1. Quando ao menos um produto do carrinho tiver ofertas depois de pagar (lib/funnel.ts), o checkout do carrinho guarda o cartão exatamente como o de um produto sozinho (saveCardForOffers, "on_session"), e a página de agradecimento mostra essas ofertas.
+
+2. Quais ofertas: as do funil do primeiro produto do carrinho que tiver funil, na ordem do carrinho, no máximo as mesmas 5 de hoje. Nunca ofereça um produto que já está no carrinho, que o comprador já comprou na loja ou que ele recusou depois de pagar; pule-o e siga para o próximo do mesmo funil. Se não sobrar nenhum, nenhuma oferta aparece.
+
+3. Todas as proteções de lib/upsell.ts continuam iguais: cartão guardado só para pagamentos com o comprador presente; somente no navegador que pagou; uma hora para responder; cada oferta respondida uma vez; nenhuma oferta depois de uma recusa; confirmação do banco quando pedida; nada entregue antes de a Stripe confirmar; comprador que pagou com Klarna, iDEAL ou outro meio que não pode ser cobrado de novo não vê oferta; cada oferta é um pagamento próprio, com a confirmação curta por e-mail de hoje.
+
+4. Nas ofertas depois de um carrinho, o desconto "Buy more, save more" do carrinho não se soma de novo; vale o preço da oferta como o criador o definiu.
+
+5. No estúdio, a página de funis diz em uma frase que as ofertas também aparecem depois de uma compra pelo carrinho, e os números do funil (lib/flow-stats.ts, lib/funnel-metrics.ts) contam essas ofertas como as de hoje, com números reais, nunca estimados.
+
+6. Testes automáticos com Stripe simulado: carrinho com e sem produto com funil; oferta pulada por já estar no carrinho, já comprada ou recusada; pagamento por meio que não pode ser cobrado de novo; resposta repetida; confirmação do banco; agradecimento aberto em outro navegador.
+
+7. Acessibilidade (AX274): as ofertas depois do carrinho usam a mesma página e os mesmos controles acessíveis de hoje; confira teclado, leitor de tela, 320 px, 400% de zoom e contraste de 7:1. Seção "Acessibilidade" no PR, com os passos e as decisões do comprador antes e depois.
+
+Custo: leituras e gravações das ofertas, dentro dos limites de pedidos e de requisições que cada plano já tem; nenhum fornecedor novo. A cobrança de cada oferta é feita na conta Stripe do criador. Calcule o pior caso mensal e anual de cada plano com 100% dos direitos usados e aplique teto automático antes de qualquer gasto novo. Custo desconhecido reprova, nunca é zero.
+
+REGRA DE MARGEM (MR, 27/10/2026): nenhum cliente pagante, considerado isoladamente e usando 100% de todos os direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto; a empresa como um todo não pode dar prejuízo no pior caso a partir da base mínima de clientes pagantes, com 100% dos custos fixos da LLC atribuídos ao Marktmorgen (FX275); a meta de 60% de margem líquida é medida todo mês com números reais. Impostos pela política TX vigente.
+
+Proibido: mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; cobrar cartão sem o comprador presente; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; cobrança ou e-mail real; urgência, escassez ou contagem regressiva falsas; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+```
+
+
+## 557 [BG1] — Blog das lojas: categorias, agendamento, busca, autor e formulário
+
+**Estado:** na fila, **ABAIXO DO MARCO MQ1, Grupo B**, depois555[AK1] entre os remanescentesB, antesFIM1. Número557 livre antes do registro. BG2 e BG3 ficam DENTRO deste item, sem novo número/posição/estado. Não altera ordem de outros itens ou Bloco de abertura e não interrompe AV1/SD1/PR1239.
+
+**Proveniência e Pedidos repetidos:** BG1 recebido em anexo a1ec256e-698a-402c-9fb3-1bf8e6865662/Texto colado.txt, dono29/10/2026,23h58Fortaleza;BG2 direto30/10/2026,00h00Fortaleza;BG3 direto29/10/2026,23h59Fortaleza, recebido depoisBG2. Mantida a ordem expressa de registro **BG1 → BG2 → BG3**, sem corrigir/inventar horários. Conferidos main9423c5a46938328ab2a726713971e81055e3da08, único PR aberto1239/head8de6c24f9214d2f82ba83b28bc154e384a7cc3fe,22heads recentes de PR/codex e inventário794refs codex/*. Busca por linha data/hora, seção, etiquetas e conteúdo não encontrou estes pedidos. Coincidências de prévia opt-in premium/LQ e personalização de e-mails são outros escopos e não representam prévia privada do editor. Uma leitura remota transitória falhou; a nova leitura de todos22heads foi concluída antes do registro. Nova recepção deve gerar somente proveniência, nunca duplicação.
+
+**Conferência real de código:** lidos integralmente lib/store-blog.ts, components/blog-editor.tsx, app/[handle]/blog/page.tsx, app/[handle]/blog/[post]/page.tsx, lib/store-sitemap.ts, lib/forms.ts e components/blog-body.tsx no main exato. Blog tem MAX_POSTS200, título120, corpo20.000,12por página;PostMeta contém título/resumo/draft/datas/minutos,Post acrescenta corpo/produto;cleanPost aceita título/corpo/produto/draft;segmento deriva de título+ID e página usa permanentRedirect para o endereço atual. Metadados usam título/excerpt e autorOrganization da loja. Editor atual não tem Preview/Computer/Phone; corpo público usa PostBody e tema/lookStyle,produto final/links eStoreTracking. Página não tem BreadcrumbList/navBreadcrumb nem aside de apresentação. Nessas entradas não há categorias/agendamento/camposSEO próprios/autor de equipe/formulário no corpo/preview privada/trilha/bio. Revalidar head na implementação; não é certificação de ausência em todos os arquivos. Rota [slug] inicialmente consultada não existe; foi corrigida para [post] e lida antes desta conclusão.
+
+**Sem duplicar o que existe ou já está na fila:** preservar IDs persistidos, rascunhos, títulos/listas/links/produto final/tempo de leitura/RSS/BlogPosting/sitemap/redirecionamento. Vincular **364[EZ1]** (e seu vínculo vigente108) e **271[SEO1]**, sem refazer nem mover seus escopos. Categoria de questionário em lib/forms.ts é outra função, não categoria de blog. Não criar imagem de capa/miniatura; não repetir foto da loja no quadro do autor. Sem HTML/CSS/JS livres.
+
+**Aceite BG1:** até20categorias e3porpost; links/categoriaURL com título/descrição, sitemap só com post publicado e sem vazio indexável; Publish now ou data/hora no fuso do criador, Scheduled no estúdio, adiar/cancelar, reutilizar rotina existente sem fornecedor novo. SeEZ1 pronto, envio somente na publicação e com consentimentoEZ1. Search title60/Search description160 com prévia e fallbackatuais, slug editável preservandoID e redirect. Autor loja ou equipe com aceite próprio e Person/Organization correto. Formulário existente ou inscrição grátis no meio/fim, mesmas permissões/consentimento explícito/confirmação/privacidade. AX274: data/hora alternativa textual, contagem anunciada, filtroslinks, rótulos/erros/prevenção, teclado7:1/320px/400%, seçãoAcessibilidade no PR antes/depois.
+
+**Custo comum e limites:** cálculos mensais e anuais dos6contratos e complementos,100% direitos no pior mês, recebimento mais caro lib/receiving-costs.ts, reservas reembolso/contestação,100% fixosLLC/FX275,sem prejuízo por cliente e global na base mínima;60%meta mensal real;TX vigente. Leituras/gravações categorias/agendamentos/formulários dentro dos limites existentes e teto automático antes de gasto;desconhecido reprova,não zero. Limites20/3/60/160/400 são pedido futuro sujeito ao cálculo, não redução de limites já visíveis. Registro documental não implementa recurso, não certifica margem/abertura nem conta entrega funcional. Preservar preços/comissão/PLANS_ON_SALEfalse/OPENING_REQUESTEDfalse/tax gate/art9a/revisão comercial,conteúdo/Hazelsong/idiomas/IDs. Só testes sintéticos; sem conta/termos/contratação/pagamento/contato/e-mail real/pixel. AplicarVR.
+
+### BG1 — pedido literal recebido no anexo
+
+```text
+BG — Blog das lojas: categorias, agendamento, busca, autor e formulário (29/10/2026) [BG1]
+
+Solicitação do dono (29/10/2026, 23h58, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: aplique a regra "Pedidos repetidos" de AGENTS.md antes de gravar. Procure esta solicitação pela linha de data e hora, pelo nome da seção, pela etiqueta [BG1] e pelo conteúdo, no main, nos PRs abertos e nos ramos codex/* recentes. Se já estiver gravada, registre apenas a nova recepção na proveniência, sem novo número nem commit exclusivo.
+
+Estado inicial: na fila, ABAIXO DO MARCO (MQ1, Grupo B), no próximo número livre (557, se ainda estiver livre). Não altera a ordem de nenhum outro item nem o Bloco de abertura.
+
+Contexto: a página pública clickfunnels.com/features/blog (lida em 29/10/2026) oferece categorias e tags, "author management", "custom page titles and descriptions", "SEO-friendly URLs", controle de "exactly when and how your posts go live" e "form elements" dentro dos posts. O blog das lojas do Marktmorgen (lib/store-blog.ts, app/[handle]/blog, components/blog-editor.tsx) já tem posts com rascunho, títulos, listas e links, produto no fim do post, tempo de leitura, feed RSS, BlogPosting, mapa do site da loja e redirecionamento do endereço antigo. Já estão na fila e NÃO devem ser refeitos: 364 [EZ1] (post enviado por e-mail) e 271 [SEO1] (busca no Google). Verifique antes no código atual o que continua inexistente.
+
+1. Categorias: o criador cria até 20 categorias e põe cada post em até 3. A página do blog filtra por categoria, cada categoria tem endereço próprio (/@loja/blog/category/nome) com título e descrição, entra no mapa do site da loja só se tiver ao menos um post publicado e nunca gera página vazia indexada.
+
+2. Agendamento: ao salvar, o criador escolhe "Publish now" ou uma data e hora, mostradas no fuso horário dele; o post agendado aparece no estúdio como "Scheduled", publica sozinho na hora marcada pela rotina diária ou por minuto já existente, sem serviço novo, e pode ser adiado ou cancelado até lá. Se o [EZ1] estiver pronto, o envio por e-mail do post agendado só acontece na publicação, com o consentimento que o [EZ1] exige.
+
+3. Busca: campos opcionais "Search title" (até 60 caracteres) e "Search description" (até 160), com prévia de como o resultado aparece; vazios, valem o título e o resumo de hoje. Endereço editável a partir do título, mantendo o identificador do post e o redirecionamento permanente do endereço antigo que já existe.
+
+4. Autor: o criador escolhe o autor entre as pessoas da equipe da loja que aceitarem aparecer com o nome, ou deixa o nome da loja, como hoje; o BlogPosting usa Person ou Organization conforme o caso. Nenhum nome aparece sem o aceite da própria pessoa.
+
+5. Formulário no post: o criador pode pôr, no meio ou no fim do post, um dos formulários da loja (lib/forms.ts) ou a inscrição no produto grátis da loja, com o mesmo consentimento, a mesma confirmação e as mesmas regras de privacidade que esses formulários já seguem. Nenhum e-mail é coletado sem consentimento explícito.
+
+6. Sem imagem de capa: não acrescente imagem de capa nem miniatura nos posts, porque a regra do dono proíbe a mesma imagem aparecer duas vezes no site, e a miniatura na lista repetiria a imagem do post.
+
+7. Acessibilidade (AX274): seletor de data e hora acessível, com campo de texto alternativo; contagem de caracteres anunciada; filtros de categoria como links reais; formulário com rótulos visíveis, erros em texto e prevenção de erro; tudo por teclado, contraste de 7:1, 320 px e 400% de zoom. Seção "Acessibilidade" no PR, com os passos e as decisões da tarefa principal antes e depois.
+
+Custo: leituras e gravações das categorias, dos agendamentos e dos formulários, dentro dos limites que cada plano já tem. Calcule o pior caso mensal e anual de cada plano com 100% dos direitos usados e aplique teto automático antes do gasto. Custo desconhecido reprova, nunca é zero.
+
+REGRA DE MARGEM (MR, 27/10/2026): nenhum cliente pagante, considerado isoladamente e usando 100% de todos os direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto; a empresa como um todo não pode dar prejuízo no pior caso a partir da base mínima de clientes pagantes, com 100% dos custos fixos da LLC atribuídos ao Marktmorgen (FX275); a meta de 60% de margem líquida é medida todo mês com números reais. Impostos pela política TX vigente.
+
+Proibido: mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; HTML, CSS ou JavaScript livres nos posts; rastreamento de abertura ou pixel; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; enviar e-mail real; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+```
+
+### Complemento BG2 — prévia do post, dentro de557[BG1]
+
+**Estado/posição inalterados.** Renderizar estado local ainda não salvo ou rascunho com mesmoPostBody/página/cores/fonte/produto final e futuroscamposBG1;Preview com Computer/Phone390px. Privado só para editor autorizado no estúdio,semURLpública/sitemap/visita/coleta real;noindex. Botões reais/estado,Esc/foco de volta7:1/320px/400%;seçãoAcessibilidade antes/depois. Sem fornecedor/chave/campo/TTLnovo;qualquerIOextra exige cálculo e teto prévios. Formulário da prévia nunca coleta/submete de verdade. Pedido integral:
+
+```text
+BG — Complemento ao [BG1]: prévia do post antes de publicar (29/10/2026) [BG2]
+
+Solicitação do dono (30/10/2026, 00h00, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: aplique a regra "Pedidos repetidos" de AGENTS.md. Este é um complemento ao item [BG1] ("BG — Blog das lojas: categorias, agendamento, busca, autor e formulário (29/10/2026)", solicitação de 29/10/2026, 23h58): grave-o DENTRO do item que tiver a etiqueta [BG1], sem número novo, mantendo o número, a posição e o estado dele. Se o [BG1] ainda não estiver gravado, grave primeiro o [BG1] e, no mesmo registro, este complemento. Se este complemento já estiver gravado, registre apenas a nova recepção na proveniência.
+
+Estado inicial: na fila, ABAIXO DO MARCO (MQ1, Grupo B), junto do [BG1]. Não altera a ordem de nenhum outro item.
+
+Contexto: a página pública clickfunnels.com/features/blog (lida em 29/10/2026) mostra o editor de post com a prévia ao lado e botões de computador e celular. O editor do blog do Marktmorgen (components/blog-editor.tsx) tem título, texto, rascunho pela IA, produto no fim, publicar, salvar como rascunho, despublicar e apagar, mas nenhuma prévia: o criador só vê o post como o leitor o verá depois de publicá-lo. Verifique antes no código atual que isso continua assim.
+
+1. No editor, um botão "Preview" mostra o post exatamente como será publicado, com o mesmo componente da página pública (components/blog-body.tsx, app/[handle]/blog/[post]/page.tsx), as cores e a fonte da loja, o produto do fim e, quando o [BG1] estiver pronto, as categorias, o autor e o formulário.
+
+2. A prévia tem duas larguras, "Computer" e "Phone" (390 px), e funciona para rascunhos e para mudanças ainda não salvas de um post publicado, sem alterar o que está publicado.
+
+3. A prévia é privada: só no estúdio, só para quem pode editar o blog da loja, sem endereço público, sem entrar no mapa do site, com noindex, sem contar visita nos números da loja e sem pôr o formulário para coletar nada de verdade.
+
+4. Acessibilidade (AX274): o botão "Preview" e as larguras são botões reais com nome claro e estado anunciado; a prévia pode ser fechada pelo teclado (Esc) e devolve o foco ao botão; contraste de 7:1, 320 px e 400% de zoom. Seção "Acessibilidade" no PR, com os passos e as decisões da tarefa principal antes e depois.
+
+Custo: renderização no próprio estúdio, sem fornecedor, chave, campo ou TTL novo. Se a implementação precisar de leitura ou gravação nova, calcule o pior caso mensal e anual de cada plano com 100% dos direitos usados e aplique teto automático antes do gasto. Custo desconhecido reprova, nunca é zero.
+
+REGRA DE MARGEM (MR, 27/10/2026): nenhum cliente pagante, considerado isoladamente e usando 100% de todos os direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto; a empresa como um todo não pode dar prejuízo no pior caso a partir da base mínima de clientes pagantes, com 100% dos custos fixos da LLC atribuídos ao Marktmorgen (FX275); a meta de 60% de margem líquida é medida todo mês com números reais. Impostos pela política TX vigente.
+
+Proibido: mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; HTML, CSS ou JavaScript livres nos posts; imagem de capa ou miniatura repetida; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+```
+
+### Complemento BG3 — trilha e apresentação do autor, dentro de557[BG1]
+
+**Estado/posição inalterados.** Breadcrumb em post/categoria com loja/Blog/primeira categoria quandohouver/atual;navaria-labelBreadcrumb/ol/aria-currentpage,não clicar atual,links reais e BreadcrumbListigual;AX274AAA2.4.8. Bio até400texto simples semlinksHTML,loja/equipe com escrita/aceite da pessoa,AboutName em asidecomtítulo,desktoplado/mobiledepois,descriptiondoautorBlogPosting. Semfoto repetida;IA só rascunho de palavras próprias,semfatos/credenciais/números/clientesinventados e sempre aprovação. IA debita trabalho existenteAI_MONTHLY,semquota adicional;campo curto porloja/pessoa lido junto,sempre orçamento/teto pré-gastoMR/TX/FX275/VR. AX7:1/44×44/320semrolagem/teclado/leitor/seçãoAcessibilidade. Pedido integral:
+
+```text
+BG — Complemento ao [BG1]: trilha de navegação e apresentação do autor nos posts (29/10/2026) [BG3]
+
+Solicitação do dono (29/10/2026, 23h59, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: aplique a regra "Pedidos repetidos" de AGENTS.md. Este é um complemento ao item [BG1] ("BG — Blog das lojas: categorias, agendamento, busca, autor e formulário (29/10/2026)", solicitação de 29/10/2026, 23h58), que já tem o complemento [BG2] (prévia do post): grave-o DENTRO do item que tiver a etiqueta [BG1], sem número novo, mantendo o número, a posição e o estado dele. Se o [BG1] ainda não estiver gravado, grave o [BG1], o [BG2] e este complemento no mesmo registro, nessa ordem. Se este complemento já estiver gravado, registre apenas a nova recepção na proveniência.
+
+Estado inicial: na fila, ABAIXO DO MARCO (MQ1, Grupo B), junto do [BG1]. Não altera a ordem de nenhum outro item.
+
+Contexto: a página pública clickfunnels.com/features/blog (lida em 29/10/2026) mostra o post com uma trilha de navegação no alto ("Primary Blog / Strength Training / título do post") e um quadro de apresentação do autor ("Hi, I Am Tom") ao lado do texto. A página do post do Marktmorgen (app/[handle]/blog/[post]/page.tsx) já mostra a foto e o nome da loja, a data, o tempo de leitura, o produto do fim e os links para todos os posts e para a loja, mas não tem trilha de navegação nem apresentação do autor. Verifique antes no código atual que isso continua assim.
+
+1. Trilha de navegação: no alto de cada post e de cada página de categoria do [BG1], uma trilha com o nome da loja, "Blog", a primeira categoria do post (quando houver) e o título do post, em nav com aria-label "Breadcrumb", lista ordenada, o item atual marcado com aria-current="page" e não clicável, e os demais como links reais. Dados estruturados BreadcrumbList com os mesmos itens. Cumpre o critério 2.4.8 (AAA) exigido pelo AX274.
+
+2. Apresentação do autor: o criador escreve, no estúdio, uma apresentação curta (até 400 caracteres, texto simples, sem links nem HTML) para a loja e, quando o [BG1] permitir escolher o autor, uma para cada pessoa da equipe, escrita ou aceita pela própria pessoa. A apresentação aparece junto do post, com o nome do autor como título ("About Name"), ao lado do texto no computador e depois do texto no celular, e entra no BlogPosting como description do autor.
+
+3. Sem foto no quadro de apresentação: a foto da loja já aparece no alto da página do post, e a regra do dono proíbe a mesma imagem aparecer duas vezes no site.
+
+4. Honestidade: a apresentação é escrita pelo criador ou pela pessoa da equipe; a IA pode sugerir um rascunho a partir das palavras deles, sem inventar formação, certificado, resultado, número ou cliente; nada é publicado sem aprovação.
+
+5. Acessibilidade (AX274): trilha com contraste de 7:1, alvos de 44 × 44 px, quebra de linha em 320 px sem rolagem horizontal; quadro do autor como aside com título; linguagem simples; leitores de tela e teclado. Seção "Acessibilidade" no PR, com os passos e as decisões da tarefa principal antes e depois.
+
+Custo: um campo de texto curto por loja e por pessoa da equipe, lido com o post, dentro dos limites que cada plano já tem; um rascunho pela IA usa um dos trabalhos de escrita mensais da loja (lib/ai-rules.ts, AI_MONTHLY), já pagos pelo preço do plano. Calcule o pior caso mensal e anual de cada plano com 100% dos direitos usados e aplique teto automático antes do gasto. Custo desconhecido reprova, nunca é zero.
+
+REGRA DE MARGEM (MR, 27/10/2026): nenhum cliente pagante, considerado isoladamente e usando 100% de todos os direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto; a empresa como um todo não pode dar prejuízo no pior caso a partir da base mínima de clientes pagantes, com 100% dos custos fixos da LLC atribuídos ao Marktmorgen (FX275); a meta de 60% de margem líquida é medida todo mês com números reais. Impostos pela política TX vigente.
+
+Proibido: mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; HTML, CSS ou JavaScript livres; imagem repetida; depoimento, credencial ou número inventado; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+```
+
+
+### Complemento BG4 — posts recentes e números por post, dentro de557[BG1]
+
+**Proveniência:** dono30/10/2026,00h03Fortaleza;dedupmain9423c5a e23heads incluindoPR1242/54811e antes de gravar,semBG4. Manter557,nafila,GrupoBabaixodomarco,semoutroitem. OrdemBG1→BG2→BG3→BG4.
+
+**Conferência real:** página pública já lida não lista More from the blog; lidos agora lib/source-rules.ts, components/stats-panel.tsx, lib/came-from.ts e app/studio/blog/page.tsx no mesmo main. OrigemGoogle/Bing e contagens gerais existem;lista do estúdio lê allPosts/readPost e não mostra os números por post pedidos. cameFrom lê Referer próprio para utm_source/medium/campaign/content, não identifica atualmente o ID/caminho do post. Portanto reutilizar suas validações não autoriza afirmar atribuição por post já pronta: a implementação deve acrescentar só a identificação necessária da página própria, metadadoStripe e contagens reais, sem cookie/perfil/jornada. Não copiar URL arbitrária/query comPII. Revalidar tudo nohead da implementação; teste sintético dos limites de host/path/ID e origem, confirmação de venda e indisponibilidade.
+
+**Aceite/custos:** até3outros posts publicados maisrecentes/primeiro mesma categoria quandoBG1pronto,links/título/começo semimagem,anteslinksatuais. Reusar índice existente e leitura já feita oucache; qualquer leitura/gravação adicional porvisita é custo real novo, dentro limite de visitas mas nunca automaticamente grátis. Demonstrar piorM/Yde cada plano100% direitos/addons e tetos/reservas antesgasto MR/TX/FX275. Números de posts publicados nos4períodos pedidossomente reais,visitas/origembusca/vendasconfirmadas decheckoutaberto NA página do post;frase explica atribuição limitada,nãojornada. Counts unavailable,nãozero;moedasseparadas/semconversão/estimativa. AX274lista comtítulo,tabela/cabeçalhosordenaçãoteclado7:1/320/400eAcessibilidadeantes/depois. Semnovo rastreamento/cookie/perfil/pixel/abertura/imagemrepetida/contato/conta/operaçãoreal. VR e demaisgates preservados. Pedido literal:
+
+```text
+BG — Complemento ao [BG1]: posts recentes no fim do post e números de cada post (30/10/2026) [BG4]
+
+Solicitação do dono (30/10/2026, 00h03, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: aplique a regra "Pedidos repetidos" de AGENTS.md. Este é um complemento ao item [BG1] ("BG — Blog das lojas: categorias, agendamento, busca, autor e formulário (29/10/2026)", solicitação de 29/10/2026, 23h58), que já tem os complementos [BG2] e [BG3]: grave-o DENTRO do item que tiver a etiqueta [BG1], sem número novo, mantendo o número, a posição e o estado dele. Se o [BG1] ainda não estiver gravado, grave o [BG1], o [BG2], o [BG3] e este complemento no mesmo registro, nessa ordem. Se este complemento já estiver gravado, registre apenas a nova recepção na proveniência.
+
+Estado inicial: na fila, ABAIXO DO MARCO (MQ1, Grupo B), junto do [BG1]. Não altera a ordem de nenhum outro item.
+
+Contexto: a página pública clickfunnels.com/features/blog (lida em 29/10/2026) mostra um quadro "Recent Posts", com título e começo de cada post, e um gráfico "Organic Reach". No Marktmorgen, o fim do post (app/[handle]/blog/[post]/page.tsx) tem só os links para todos os posts e para a loja, e o painel de números já mostra as visitas por origem, inclusive Google e Bing (lib/source-rules.ts, components/stats-panel.tsx), mas só da loja inteira: não há número por post. Verifique antes no código atual que isso continua assim.
+
+1. Posts recentes: no fim de cada post, antes dos links de hoje, a lista "More from the blog" com até 3 outros posts publicados, os mais recentes ou, quando o [BG1] estiver pronto, primeiro os da mesma categoria; cada um com o título como link real e o começo do texto, sem imagem, porque a regra do dono proíbe repetir imagem no site. A lista é lida do índice de posts que o blog já mantém (lib/store-blog.ts), sem leitura nova por visita além da que a página já faz ou de uma leitura guardada em cache.
+
+2. Números de cada post: na lista de posts do estúdio (app/studio/blog), para cada post publicado e no período escolhido (últimos 30 dias, este mês, mês passado, desde o início): visitas; visitas vindas de mecanismos de busca, pelas mesmas regras de origem de lib/source-rules.ts; e vendas confirmadas cujo checkout foi aberto a partir da página do post, lidas do Referer do checkout como lib/came-from.ts já faz e gravadas nos metadados da sessão na conta Stripe do criador, sem cookie, sem perfil e sem seguir a pessoa entre visitas, dito em texto na própria tela.
+
+3. Honestidade: somente números reais; dado indisponível aparece como "Counts unavailable", nunca como zero; moedas separadas, nunca convertidas; nenhuma estimativa nem projeção. A tela diz em uma frase que uma venda conta para o post somente quando o checkout foi aberto na página dele.
+
+4. Acessibilidade (AX274): lista de posts recentes como lista com título de seção; números como texto real em tabela com cabeçalhos, ordenável por teclado; contraste de 7:1, 320 px e 400% de zoom. Seção "Acessibilidade" no PR, com os passos e as decisões da tarefa principal antes e depois.
+
+Custo: as visitas já contam no limite de visitas que cada plano tem; o contador por post e a leitura dos posts recentes são leituras e gravações novas por visita, que precisam caber nesse limite. Calcule o pior caso mensal e anual de cada plano com 100% dos direitos usados e aplique teto automático antes do gasto. Custo desconhecido reprova, nunca é zero.
+
+REGRA DE MARGEM (MR, 27/10/2026): nenhum cliente pagante, considerado isoladamente e usando 100% de todos os direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto; a empresa como um todo não pode dar prejuízo no pior caso a partir da base mínima de clientes pagantes, com 100% dos custos fixos da LLC atribuídos ao Marktmorgen (FX275); a meta de 60% de margem líquida é medida todo mês com números reais. Impostos pela política TX vigente.
+
+Proibido: mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; cookie, perfil, pixel ou rastreamento de abertura novos; imagem repetida; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+```
+
+
 ### AB(a) — ACK próprio da janela real de recursos pagos — 29/10/2026
 
 Continuação financeira necessária, acima do marcoMQ1 porAV1/AB(a), sem item novo, número ou mudança de ordem/estado. Base154c399584371e62fe6f75de0fe683659470a9b7. O caminho real reservePaidResourceWindow lia result[0] e os dois membros antes de exigir dados próprios, permitindo getter/herança na resposta usada para liberar trabalho de recurso pago. A leitura privada agora limita outer1/inner2 antes dos membros e exige flag numérico1próprio/fim exato próprio. Resposta incerta não autoriza trabalho, não limpa caixa/coorte, não gera retry/readback nem fornecedor. Lua, vínculos, preços/limites/direitos,1ou12coortes/teto12288bytes/clock/deadline/mês da revisão ficam intactos. Coberturas e revisões reais continuamfalse/null; não é conclusão do ciclo de avisos, renovação ou reconciliação financeira.
@@ -17802,3 +18023,6 @@ Custos: trabalho local finito de descritores, sem nova chamada/gravação produt
 
 
 Registro de reconciliação: PR1240 (AK1/AK2 no555, GrupoB) incorporado em29/10/2026 às23:44:32 Fortaleza, commit5ec160de16e5f84e969775bdd39992c97fc5246b, árvorec34d9649c0edf92df5aafae99bdaab48868596b3, após27 verificações documentais sem falha e Vercel success. Sem entrega funcional/contador. PR1239 individual e732e9971249cc2b1e20a8b55689c79384003aaa concluiu39/39 e Vercel antes desta reconciliação; a união exige nova verificação completa, sem cancelar execução válida.
+
+
+Reconciliação1239 após CIintegral terminado: head8de6c24f9214d2f82ba83b28bc154e384a7cc3fe concluiu39/39 e Vercelsuccess antes de mudar ohead. Verify123861577032: teste real resourceACK em2026-10-30T02:49:00.7168400Z;234/234bundles/Everythingpassing02:52:06.2901027Z. Mobile123861576945:9amostrasfrias,LCPmáx896ms,CLS0,proxyinteração96ms,0escritasAPI;laboratório,nãoINPcampo. Mainfc43fa48dc0efdeaed1179cc17342572f00acd63 preserva CT1556/PR1241 incorporado30/10/2026,02:50:21UTC(29/10,23:50:21Fortaleza) e BG1–BG4557/PR1242 incorporado03:05:24UTC(30/10,00:05:24Fortaleza),27checksdocumentais+Vercel nosheads próprios. Nova união exigeCIintegral próprio,semherdar aprovação;nenhuma execução válida cancelada. Semnovaentregafuncional/contador atéREADY/domínio/SHA/provainterativa exigida.
