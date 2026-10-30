@@ -258,6 +258,22 @@ function cardOf(subscription: Record<string, unknown>): string {
   return typeof source === "string" ? source : "";
 }
 
+/** Copy only a small own-data ACK before interpreting eligibility or writes. */
+function ownPauseAcknowledgement(reply: unknown, expected: 1 | 3): unknown[] | null {
+  try {
+    if (!Array.isArray(reply)) return null;
+    const length = Object.getOwnPropertyDescriptor(reply, "length");
+    if (!length || !Object.hasOwn(length, "value") || length.value !== expected) return null;
+    const values: unknown[] = [];
+    for (let index = 0; index < expected; index++) {
+      const field = Object.getOwnPropertyDescriptor(reply, String(index));
+      if (!field || !Object.hasOwn(field, "value")) return null;
+      values.push(field.value);
+    }
+    return values;
+  } catch { return null; }
+}
+
 export type PauseResult = { kind: "paused"; record: PauseRecord } | { kind: "refused"; reason: PauseRefusal | "card" };
 
 /** Sets a break of `months`, starting when the period already paid for ends. */
@@ -277,10 +293,11 @@ export async function pausePlan(store: Store, months: PauseMonths, nowSeconds = 
   const lastReply = await redisPipeline([["EXISTS", lastKey(ref)]]);
   // Unknown annual eligibility must fail before a due record or provider stop
   // is created. Only the single numeric EXISTS result proves this state.
-  if (!Array.isArray(lastReply) || lastReply.length !== 1 || (lastReply[0] !== 0 && lastReply[0] !== 1)) {
+  const eligibility = ownPauseAcknowledgement(lastReply, 1);
+  if (!eligibility || (eligibility[0] !== 0 && eligibility[0] !== 1)) {
     return { kind: "refused", reason: "standing" };
   }
-  const refusal = pauseRefusal(subscription, nowSeconds, lastReply[0] === 1);
+  const refusal = pauseRefusal(subscription, nowSeconds, eligibility[0] === 1);
   if (refusal) return { kind: "refused", reason: refusal };
   const paymentMethod = cardOf(subscription);
   // Without a card on the subscription there is nothing to start it again on,
@@ -307,8 +324,9 @@ export async function pausePlan(store: Store, months: PauseMonths, nowSeconds = 
     ["ZADD", DUE, record.until, ref],
     ["SET", lastKey(ref), String(nowSeconds), "EX", PAUSE_EVERY_DAYS * DAY],
   ]);
-  if (!Array.isArray(written) || written.length !== 3 || written[0] !== "OK"
-    || (written[1] !== 0 && written[1] !== 1) || written[2] !== "OK") {
+  const persisted = ownPauseAcknowledgement(written, 3);
+  if (!persisted || persisted[0] !== "OK"
+    || (persisted[1] !== 0 && persisted[1] !== 1) || persisted[2] !== "OK") {
     return { kind: "refused", reason: "standing" };
   }
   // A provider error or lost acknowledgement cannot prove that its scheduled

@@ -221,7 +221,20 @@ async function main() {
     subs[id]=subscription(id);
     const store=await storeWith(email,"pausewriteack",id),ref=storeRef(store);
     const original=pauseRedis.pipeline;
+    let ackGetters=0,oversizedMembers=0;
+    const inherited=(values:unknown[])=>{
+      const reply=new Array(values.length),prototype=Object.create(Array.prototype);
+      values.forEach((value,index)=>Object.defineProperty(prototype,String(index),{value}));
+      Object.setPrototypeOf(reply,prototype);return reply;
+    };
     const replies:unknown[][]=[[],[null],["OK",1],["OK","1","OK"],["OK",2,"OK"],[true,1,"OK"],["OK",1,null],["OK",1,"OK","extra"]];
+    replies.push(inherited(["OK",1,"OK"]));
+    for(const index of [0,1,2]){
+      const reply:unknown[]=["OK",1,"OK"];
+      Object.defineProperty(reply,String(index),{get(){ackGetters++;return ["OK",1,"OK"][index];}});
+      replies.push(reply);
+    }
+    replies.push(new Proxy(["OK",1,"OK","extra"],{getOwnPropertyDescriptor(target,key){if(key==="0"){oversizedMembers++;throw Error("oversized scheduling ACK");}return Reflect.getOwnPropertyDescriptor(target,key);}}));
     for(const reply of replies){
       pauseRedis.pipeline=async commands=>{
         if(commands.length===3&&commands[0][0]==="SET"&&commands[0][1]===`nl:pause:${ref}`){
@@ -241,6 +254,7 @@ async function main() {
         await original([["DEL",`nl:pause:${ref}`],["DEL",`nl:pause:last:${ref}`],["ZREM","nl:pause:due",ref]]);
       }
     }
+    is("scheduling ACK getters and invalid-shape members were not read",[ackGetters,oversizedMembers],[0,0]);
   }
 
   part("A provider-applied stop with a lost acknowledgement retains the pause");
@@ -506,7 +520,16 @@ async function main() {
     const store=await storeWith(email,"unknowneligibility",id);
     const ref=storeRef(store),lastKey=`nl:pause:last:${ref}`;
     const originalPipeline=pauseRedis.pipeline;
+    let ackGetters=0,oversizedMembers=0;
+    const inherited=(values:unknown[])=>{
+      const reply=new Array(values.length),prototype=Object.create(Array.prototype);
+      values.forEach((value,index)=>Object.defineProperty(prototype,String(index),{value}));
+      Object.setPrototypeOf(reply,prototype);return reply;
+    };
     const replies:unknown[][]=[[],[undefined],[null],["0"],["1"],[true],[-1],[2],[0,"extra"],[1,"extra"]];
+    replies.push(inherited([0]),inherited([1]));
+    for(const value of [0,1])replies.push(Object.defineProperty(new Array(1),"0",{get(){ackGetters++;return value;}}));
+    replies.push(new Proxy([0,"extra"],{getOwnPropertyDescriptor(target,key){if(key==="0"){oversizedMembers++;throw Error("oversized eligibility ACK");}return Reflect.getOwnPropertyDescriptor(target,key);}}));
     for(const reply of replies){
       let otherCommands=0;
       pauseRedis.pipeline=async(commands)=>{
@@ -525,6 +548,7 @@ async function main() {
         is("uncertain eligibility leaves both pause and annual marker absent",[record,last],[null,null]);
       }finally{pauseRedis.pipeline=originalPipeline;}
     }
+    is("eligibility ACK getters and invalid-shape members were not read",[ackGetters,oversizedMembers],[0,0]);
   }
 
   part("Pause source identity and customer must match the store before any write");
