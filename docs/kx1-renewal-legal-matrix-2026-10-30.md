@@ -351,3 +351,33 @@ unit: a notice missed until one day or less before the charge is dropped
 without being counted as missed (`TOO_LATE_SECONDS`), and a cancellation
 scheduled after the next renewal (`cancel_at` later than the charge) gets no
 notice for that renewal.
+
+## 11. California's legislature, a second review, and gap G17 (30 Oct 2026, 18h20 Fortaleza)
+
+**California.** The statute on leginfo still could not be read (the page asks
+for a permission a scheduled run cannot get, and the bill page failed). Read
+instead, on the Legislature's own site: the Senate Judiciary Committee's
+analysis of AB 2863 (bill as amended 17 Jun 2024, hearing 25 Jun 2024),
+sjud.senate.ca.gov/system/files/2024-06/ab-2863-schiavo-sjud-analysis.pdf.
+It describes existing law as a notice "at least 15 days and not more than 45
+days before the automatic renewal offer or continuous service offer renews"
+for an initial term of one year or longer, and "at least 3 days before and at
+most 21 days before" the end of a trial or promotion over 31 days; the bill
+added 7–30 days before a fee change and an annual reminder. It is an official
+legislative document but not the enacted text: S3 is now "official analysis,
+statute unread". The 30th day still falls inside 15–45.
+
+**Second review of PR #1296** (head 5eead52): the missed-notice count is
+correct and never blocks a real send. It found that noticing a renewal whose
+cancellation is scheduled inside the renewed period would send an untrue
+email (Stripe prorates that last period, API reference for `cancel_at`, so
+neither the full amount nor "another year" holds). Fixed in c2567aa: the
+full-price notice goes only when the scheduled cancellation is at least a
+full period after the charge.
+
+**Gap G17 — a renewal that ends early.** When a cancellation is scheduled
+inside the renewed period, Stripe still charges a prorated amount at the
+renewal, and no notice goes. A truthful notice needs Stripe's upcoming
+invoice for the amount and words for a shortened last period; recorded for
+the next unit. Also open from the review: tests of `sendReminders` itself
+(a sent notice never counted as missed, a second run, a failed send).
