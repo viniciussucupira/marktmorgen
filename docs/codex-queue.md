@@ -15,7 +15,7 @@ Solicitação do dono: **29/10/2026,20h52Fortaleza**. Estado inicial: na fila; e
 
 **AV4 — 30/10/2026, 13h41 Fortaleza:** Codex faz os passos 3–6 e 10–12 da AV1; Claude faz 7–9 (sem o 89, que está com o Codex) e depois o Grupo A; quem começa marca "em andamento" no item; ninguém mexe no PR do outro (texto integral na seção AV). Complemento 13h57: 414 [KX1] entra na AV1, primeiro da parte do Claude, antes da abertura. Complemento 16h35: 569 [NC1] (nenhuma cobrança indevida) entra na AV1, na parte do Claude, logo depois de 414 [KX1].
 
-Claude agendado — última rodada: 30/10/2026, 18h25 Fortaleza (fim da rodada); próxima: 414 [KX1], lacunas G12–G17 e textos oficiais que faltam, PR #1296 ainda sem incorporar (cabeça c2567aa, CI em andamento); depois 569 [NC1]; últimos PRs: #1315, #1316, #1318, #1319, #1321.
+Claude agendado — última rodada: 30/10/2026, 18h55 Fortaleza (fim da rodada); próxima: 414 [KX1], lacunas G12–G17 e textos oficiais que faltam; PR #1296 testado num PR (cabeça ded3867, CI 38/38 sucesso), sem incorporar pela decisão do dono de 16h29; depois 569 [NC1]; últimos PRs: #1315, #1316, #1318, #1319, #1321, #1324.
 
 AV1/SD1 e Bloco de abertura (a)–(k) ficam na ordem vigente, inclusive custos(k),538[AB1] e448[LE1] em paralelo. Não se antecipam estudos ou recursos por causa desta classificação. Ficam na posição e no estado atuais todos os concluídos/publicados, andamentos (inclusive4,88,140,141,201,547,549),505[SG2] e registros59,60,336,464–477,494,495. As referências a547/549 são exceções expressas do pedido; suas linhas canônicas continuam literalmente “na fila”, sem convertê-las em andamento. A proteção de andamento também respeita a posição atualmente vigente: não ressuscita ordemOR já substituída porFIM1.
 
