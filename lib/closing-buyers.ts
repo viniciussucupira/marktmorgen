@@ -13,9 +13,8 @@
  *   tellRefundShort  a member whose refund the store's balance did not cover
  *
  * The cap, before every email: the closing's emails, set when its members
- * were held (lib/closing-credit.ts, buyerNoticeCap), priced against every
- * payment with the rest of the closing (tests/plan-cost-registry.ts,
- * closure). Telling a buyer takes EMAILS_PER_BUYER_PER_ENDING from it at
+ * were held (lib/closing-credit.ts, buyerNoticeCap), a post-cancellation
+ * funded exposure of docs/funded-exposure-review.md. Telling a buyer takes EMAILS_PER_BUYER_PER_ENDING from it at
  * once, the notice and the one follow-up either of the two others can be,
  * so a follow-up is never short of what it costs. An address the cap no
  * longer covers is not written to, and is counted (`untold`) for the

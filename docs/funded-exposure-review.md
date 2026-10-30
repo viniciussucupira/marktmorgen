@@ -42,6 +42,23 @@ The database is priced as one region. A read region added in Upstash keeps a cop
 
 Moving orders older than 90 days to R2 was asked for and is not built: docs/order-data.md ("Asked for, and not built here") says why, with the measured sizes, for the owner's decision. Deleting a closed store's records at its closing day is built (above); keeping its sales in R2 for 7 years was built and taken out the same day, because they are the creator's records, not Marktmorgen's.
 
+## EC1 — A closing store fair to its buyers: post-cancellation exposure (queue item 307, 30 October 2026)
+
+Queue item 307 [EC1] (owner's request of 23/10/2026, 15h58 Fortaleza, and its complement of 30/10/2026, 13h12) adds to every closing of a store whose plan ended from 31 October 2026 (`BUYER_NOTICE_FROM`): its members held from the plan's end (Stripe pause of collection, invoices voided, `lib/closing-holds.ts`), one service email to each of its buyers at least 7 days before the closing and one follow-up ("the store stays" or "your refund could not be made", `lib/closing-buyers.ts`), and its members' unused time refunded from the creator's own Stripe account (`lib/closing-refunds.ts`). The refunds are the creator's money on the creator's account, never Marktmorgen's: each is made only when the account's available balance, read first, covers it.
+
+What Marktmorgen pays for it is bounded per closing, before any of it is spent: the closing's emails are set once, when its members are held, at `EMAILS_PER_BUYER_PER_ENDING` (2) for each buyer `buyerNoticeCap` allows (`BUYER_CAP_MONTHS` = 24 months of the plan's orders; a free trial's 100 orders for a store that never paid), and every email is taken from them first (`lib/closing-credit.ts`). Each buyer at its cap is costed at `CLOSING_BUYER_COST` (tests/plan-cost-registry.ts): two emails at the dearer provider's $0.0009, its address and a member's last payment kept for the closing days, its share of a page of checkouts, and the eight calls to Stripe a membership's closing makes at the most, each held two seconds at 2 GB. One closing at its cap (`closingBuyersCost`):
+
+| Plan that ended | Buyers at the cap | Ceiling of one closing |
+|---|---|---|
+| Store | 4,800 | $9.15 |
+| Studio | 10,800 | $20.60 |
+| Scale | 36,000 | $68.65 |
+| A store that never paid | 100 | $0.19 |
+
+**Why it is here and not in the closure line.** The item asked for it in the closure line (`PER_PAYMENT_LINES`). Priced there, at the price list of 18 October 2026 Store's monthly unit no longer keeps the historical 60% sizing floor that tests/limits-proposal.test.ts, tests/pricing-optimization.test.ts and tests/pricing-usage-proposal.test.ts hold (they propose cutting Store's visible figures for a few cents a month), and no test may be relaxed. So it is carried as the company's post-cancellation exposure, one occurrence per closing (a closing follows at least a payment or a trial), at the ceilings above; the exposure review stays null and release stays closed, as before. Whether to move it into the closure line (with a price change) or lower the cap is in "Depende do dono" of docs/codex-queue.md, item 307. Buyers past the cap are not written to by Marktmorgen and are counted for the creator in every notice and in the studio, so nothing is silent; while the cap is what it is, a store with more distinct buyers than its cap is the one case the checkout's sentence does not cover in full.
+
+No company postal address exists yet (`lib/company-postal.ts`, empty): until it does, no buyer is emailed, and a store whose buyers must be told does not close (its retention continues inside the existing closing-days exposure). This is a release condition, not a cost.
+
 ## LE448 — exposição própria da lista de pré-abertura (em implementação)
 
 Pedido do dono26/10/2026 00h19Fortaleza. A lista da plataforma não é uma loja

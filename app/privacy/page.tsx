@@ -488,6 +488,20 @@ export default function PrivacyPage() {
           refunded. We email you a receipt with the day it is expected, and
           once more when it comes out, with the way to open it.
         </p>
+        <p id="store-closing">
+          <strong className="text-black">When a store you bought from closes.</strong>{" "}
+          From the day the store&rsquo;s plan ends until it closes or stays
+          open, we keep, for that store only: the email address of each buyer
+          we email that it closes, so nobody is emailed twice and each can be
+          told if it stays open; and, for each member, their last payment (the
+          amount, the period it paid for and the address on the
+          creator&rsquo;s Stripe account), to refund the time paid for after
+          the closing day from the creator&rsquo;s account and to tell them if
+          that could not be done. These are read from the creator&rsquo;s own
+          Stripe account and the store&rsquo;s records, used for nothing else,
+          and deleted the day the store closes or the day it stays open. The
+          emails come from Marktmorgen, with our postal address.
+        </p>
         <p id="buyer-questions">
           <strong className="text-black">Questions on a product&apos;s page.</strong>{" "}
           Some stores answer questions on their product pages. If you type

@@ -7957,6 +7957,13 @@ Estado: na fila.
 
 Em andamento pelo Claude: 30/10/2026, 13h04 Fortaleza, ramo claude/store-closing-fair-buyers (autorizado pelo dono; regra Pedidos repetidos passo 5).
 
+Proveniência do complemento: Solicitação do dono (30/10/2026, 13h12, horário de Fortaleza), etiqueta [EC1], complemento à parte 4 deste item (regra Pedidos repetidos, passo 3, letra b): mesmo número, posição e estado. O que mudou: no dia do encerramento, o tempo pago e não usado que a criadora não devolveu é devolvido automaticamente pela conta Stripe dela, pelo mesmo cálculo do botão, uma única vez; os avisos à criadora dizem isso desde o primeiro, com o valor, e que voltar a assinar mantém a loja; saldo insuficiente gera e-mail de serviço ao membro com o contato da criadora, sem pagamento nem dívida da plataforma; Termos e política de reembolso dizem isso; testes correspondentes. Fonte do Stripe conferida em 30/10/2026: docs.stripe.com/connect/saas/tasks/refunds-disputes (a plataforma cria o reembolso autenticada como a conta conectada; o valor sai do saldo da conta conectada).
+
+Depende do dono (307 [EC1]), registrado pelo Claude em 30/10/2026:
+(a) endereço postal da empresa: COMPANY_POSTAL_ADDRESS em lib/company-postal.ts está vazio; sem ele nenhum comprador recebe o aviso e a loja cujo plano terminar a partir de 31/10/2026 não encerra. Preencher quando o endereço comercial real nos EUA existir (item 275 [FX1]);
+(b) custo dos avisos aos compradores: o item pede que entre na linha closure; com a lista de preços de 18/10/2026 isso derruba o piso histórico de 60% do Store nos testes de proposta (limits-proposal, pricing-optimization, pricing-usage-proposal), que não podem ser afrouxados. Ficou como exposição financiada pós-cancelamento (docs/funded-exposure-review.md, seção EC1: teto de US$ 9,15 Store, US$ 20,60 Studio, US$ 68,65 Scale por encerramento). Decidir: manter assim, mudar preço ou baixar o teto (BUYER_CAP_MONTHS = 24);
+(c) lojas com mais compradores distintos que o teto: os excedentes não recebem o e-mail do Marktmorgen; a criadora é avisada do número em cada aviso e no estúdio. Decidir se o teto deve ser maior.
+
 Falhas encontradas no código atual:
 (a) durante os CLOSING_DAYS entre o fim do plano e o encerramento, as assinaturas e os planos de pagamento dos membros continuam renovando na conta Stripe do criador; no dia do encerramento, stopRenewals apenas marca cancel_at_period_end, mas o conteúdo é apagado nesse mesmo dia, então um membro pode pagar por um período inteiro, inclusive anual, que não receberá;
 (b) os avisos de encerramento vão somente ao criador; os compradores não são avisados pelo Marktmorgen;

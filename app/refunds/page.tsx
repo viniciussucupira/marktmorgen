@@ -171,6 +171,20 @@ export default function RefundsPage() {
           terms, and the law, still apply to anything that was not as
           described or did not work.
         </p>
+        <p id="store-closes">
+          <strong className="text-black">If the store closes.</strong>{" "}
+          From the day the store&rsquo;s plan ends, you are not charged again
+          for a membership or payment plan you have there. On the day the
+          store closes, the part of your last payment that paid for time after
+          that day is refunded to you automatically from the creator&rsquo;s
+          own Stripe account, if its balance covers it, unless the creator
+          already refunded it. Marktmorgen does not hold that money and never
+          pays it. If the balance does not cover it, the refund is not made,
+          and we email you to say so, with the creator&rsquo;s contact. If the
+          creator keeps the store open, nothing is refunded and your
+          membership goes on as it was, with nothing charged for the days in
+          between.
+        </p>
         <p>
           If you cannot reach them, write to us at{" "}
           <a

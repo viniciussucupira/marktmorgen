@@ -41,6 +41,13 @@ import { creditKey } from "@/lib/closing-credit";
 import { tellStaysOpen } from "@/lib/closing-buyers";
 import { giveBackUnused, reviewMark, unusedRows } from "@/lib/closing-refunds";
 import { companyPostal } from "@/lib/company-postal";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import { DigitalConsentBox } from "@/components/digital-consent-box";
+import { addProduct, setProductLink, setProductShipping } from "@/lib/store";
+import { readProduct } from "@/lib/catalog";
+import { parseShipping } from "@/lib/shipping";
+import { confirmationFor } from "@/lib/purchase-email";
 
 const DAY = 86_400_000;
 const S = (ms: number) => Math.floor(ms / 1000);
@@ -392,7 +399,30 @@ async function main() {
   is("the closing job lets restarted stores go every day", readFileSync(join(process.cwd(), "app/api/cron/closing/route.ts"), "utf8").includes("releaseRestarted(Date.now() + 12_000, tellStaysOpen)"), true);
   is("and the two notices before it are still the creator's", [WARN_MONTH_DAYS, WARN_WEEK_DAYS], [14, 7]);
 
+  part("Before buying: the fixed sentence on every checkout of what lasts, and on the receipt");
   Date.now = realNow;
+  const box = renderToStaticMarkup(createElement(DigitalConsentBox, { id: "dc-test", lang: "de" }));
+  is("the box every paying checkout of something digital draws carries the sentence, marked as English, whatever the store's language", [box.includes(CLOSING_ACCESS_SENTENCE.replace(/'/g, "&#x27;")), box.includes('lang="en"')], [true, true]);
+  // Every place a buyer pays for a course, a download, a private podcast, a community or a membership (tests/digital-consent.test.ts holds that each draws the box).
+  const paths = ["components/store-product.tsx", "components/store-cart.tsx", "components/pick-bundle-form.tsx", "app/[handle]/course/[product]/page.tsx", "app/[handle]/renew/[product]/page.tsx", "app/[handle]/move/[product]/page.tsx", "app/[handle]/free/page.tsx", "app/[handle]/thanks/page.tsx"];
+  is("every checkout path listed draws it", paths.filter((path) => !readFileSync(join(process.cwd(), path), "utf8").includes("<DigitalConsentBox")), []);
+  is("and the creator cannot change or remove it: it is drawn by the code, from one constant", readFileSync(join(process.cwd(), "components/digital-consent-box.tsx"), "utf8").includes("{CLOSING_ACCESS_SENTENCE}"), true);
+  const owner = "receipt@example.com";
+  await claimHandle(owner, "receiptshop", "Receipt Shop", "");
+  await setSubscription(owner, { customerId: "cus_Receipt0001", subscriptionId: "sub_Receipt0001", active: true });
+  const pdf = await addProduct(owner, "Recipe pack", "", "27", null);
+  const book = await addProduct(owner, "Printed cookbook", "", "35", null);
+  if (!pdf.ok || !book.ok) throw new Error("no products");
+  await setProductLink(owner, pdf.product.id, "https://example.com/pack");
+  await setProductShipping(owner, book.product.id, parseShipping({ cents: 600, region: "na", note: "" })!);
+  const shop = (await storeForEmail(owner))!;
+  const digital = (await readProduct(shop, pdf.product.id))!;
+  const physical = (await readProduct(shop, book.product.id))!;
+  const paid = (product: string) => ({ id: `cs_test_${"f".repeat(24)}`, status: "complete", payment_status: "paid", created: Math.floor(Date.now() / 1000), amount_total: 2700, currency: "usd", customer_details: { email: "buyer@example.com" }, metadata: { store: shop.handle, product } });
+  is("the receipt of something that lasts says it; a shipped book's does not", [confirmationFor(shop, paid(digital.id) as never, Date.now() / 1000, [], [digital])?.text.includes(CLOSING_ACCESS_SENTENCE), confirmationFor(shop, paid(physical.id) as never, Date.now() / 1000, [], [physical])?.text.includes(CLOSING_ACCESS_SENTENCE)], [true, false]);
+  const terms = readFileSync(join(process.cwd(), "app/terms/page.tsx"), "utf8"), refunds = readFileSync(join(process.cwd(), "app/refunds/page.tsx"), "utf8"), privacy = readFileSync(join(process.cwd(), "app/privacy/page.tsx"), "utf8");
+  is("the Terms, the Refund policy and the Privacy policy say it in plain words", [terms.includes("refunded automatically from the creator&rsquo;s own Stripe account"), refunds.includes("refunded to you automatically from the creator&rsquo;s"), privacy.includes('id="store-closing"'), terms.includes("never pays these refunds")], [true, true, true, true]);
+
   done();
 }
 

@@ -34,6 +34,8 @@
  * its license key when it hands one out — kept under the offer's payment,
  * the same reference the thanks page and the list of purchases use.
  */
+import { CLOSING_ACCESS_SENTENCE } from "@/lib/closing-buyers-rules";
+import { deliversDigitally } from "@/lib/digital-consent";
 import { consentEmailLines } from "@/lib/digital-consent-email";
 import { ADMITTED_FIELD, settleAdmitted } from "@/lib/order-admission";
 import { countOrder } from "@/lib/orders";
@@ -308,6 +310,9 @@ export function confirmationFor(
         : `${schedule} ${words.cancelByReply(endsAfter > 0, name)}`,
     );
   }
+
+  // What lasts depends on the store staying open (queue item 307 EC1): the fixed sentence, drawn here, never the creator's.
+  if (deliversDigitally(product)) lines.push("", CLOSING_ACCESS_SENTENCE);
 
   // The creator's own note after paying, as the thank-you page shows it: words, video, button.
   if (note) {
@@ -639,6 +644,9 @@ export function offerConfirmationFor(store: Store, offer: TakenOffer, key: SaleK
     words.openItAt(`${base}/thanks?session_id=${offer.parent}`),
     "",
     words.offerThreeDays(`${base}/orders`, offer.email, name),
+    // The fixed sentence (queue item 307 EC1): what is added after paying is handed over by the store too.
+    "",
+    CLOSING_ACCESS_SENTENCE,
   ];
   for (const line of [...(key ? [{ title: offer.product.title, key }] : []), ...keys]) {
     const label = words.yourKeyFor(line.title);

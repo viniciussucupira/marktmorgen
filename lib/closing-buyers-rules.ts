@@ -62,13 +62,15 @@ export const EMAILS_PER_BUYER_PER_ENDING = 2;
  * The cap on one closing's buyers, set before any of them is written to
  * (lib/closing-credit.ts): the orders a store of its plan may take in
  * BUYER_CAP_MONTHS months at full use (every buyer comes from at least one
- * order), and a free trial's orders for a store that never paid. Priced
- * against every payment, with the rest of the closing
- * (tests/plan-cost-registry.ts, closure), as the closing itself is: a store
- * closes after any payment. Addresses past the cap are not written to, and
- * are counted for the creator, who is asked to tell them (never silent).
+ * order), and a free trial's orders for a store that never paid. A
+ * post-cancellation funded exposure, the company's, at its cap
+ * (docs/funded-exposure-review.md; tests/plan-cost-registry.ts,
+ * closingBuyersCost): the price list of 18 October 2026 has no room to carry
+ * it at every payment, so whether it moves into the closure line is the
+ * owner's. Addresses past the cap are not written to, and are counted for
+ * the creator, who is asked to tell them (never silent).
  */
-export const BUYER_CAP_MONTHS = 2;
+export const BUYER_CAP_MONTHS = 24;
 
 export function buyerNoticeCap(tier: Tier, paid: boolean): number {
   return paid ? (ORDERS_INCLUDED[tier] ?? ORDERS_INCLUDED.creator) * BUYER_CAP_MONTHS : TRIAL_ORDERS;

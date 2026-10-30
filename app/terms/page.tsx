@@ -1,4 +1,5 @@
 import { PAID_STORAGE_BYTES } from "@/lib/storage-rules";
+import { BUYER_CAP_MONTHS, BUYER_NOTICE_DAYS } from "@/lib/closing-buyers-rules";
 import { CENTS_PER_MINUTE, GIVE_UP_HOURS, MIN_CENTS, dollars } from "@/lib/auto-captions-rules";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -812,11 +813,9 @@ export default function TermsPage() {
           On the closing day the files the store keeps are removed (the files
           its products hand over, its lessons&rsquo; videos and downloads, its
           podcast&rsquo;s episodes, the files its students handed in and the
-          pictures in its community&rsquo;s posts), and the renewals of the
-          memberships and payment plans sold through it are set to end on the
-          creator&rsquo;s own Stripe account, each at the end of the period its
-          buyer already paid for; any refund remains the creator&rsquo;s
-          decision. Within {ERASE_WITHIN_DAYS} days, and usually the same day,
+          pictures in its community&rsquo;s posts), and every membership and
+          payment plan sold through it ends that day on the creator&rsquo;s
+          own Stripe account. Within {ERASE_WITHIN_DAYS} days, and usually the same day,
           everything else the store keeps with us is deleted: its page and
           settings, products and prices, pages, posts, courses and the
           certificates they gave, community, contacts, forms and their
@@ -824,6 +823,29 @@ export default function TermsPage() {
           from it. Its address is held back from
           anyone else for {RELEASE_QUARANTINE_DAYS} days. Your account and sign-in stay until you
           delete them, and you may open a new store.
+        </p>
+        <p id="closing-members">
+          <strong className="text-black">Members and buyers of a store that closes.</strong>{" "}
+          From the day a store&rsquo;s plan ends, its members are not charged
+          again: we pause the collection of every membership and payment plan
+          on the creator&rsquo;s own Stripe account, and members keep their
+          access until the closing day. If the creator starts a plan again
+          before then, each payment goes on as it was, and nothing is charged
+          for the days in between. On the closing day, the part of a
+          member&rsquo;s last payment that paid for time after that day is
+          refunded automatically from the creator&rsquo;s own Stripe account,
+          if its balance covers it, unless the creator already refunded it.
+          The creator can make these refunds sooner from the studio, after
+          seeing each amount. Marktmorgen never pays these refunds and never
+          takes any part of them. If the balance does not cover a refund, it
+          is not made, and we email the member to say so, with the
+          creator&rsquo;s contact. At least {BUYER_NOTICE_DAYS} days before the
+          closing day, we email everyone who bought from the store once, from
+          Marktmorgen, with the date and what they can download before then;
+          if the store stays open after that email, we tell them so. These
+          emails go to as many buyers as the closing&rsquo;s cap allows ({BUYER_CAP_MONTHS}{" "}
+          months of the plan&rsquo;s orders); the creator is told how many,
+          if any, we could not write to.
         </p>
         <p>
           <strong className="text-black">Download what you want to keep before that day.</strong>{" "}
@@ -851,11 +873,16 @@ export default function TermsPage() {
           <strong className="text-black">If you bought from a creator&rsquo;s store.</strong>{" "}
           What you buy from a store is delivered through that store while it
           is open on Marktmorgen. When it closes, what was bought from it can
-          no longer be downloaded or opened here, and renewals of what you
-          subscribe to there stop at the end of the period you paid for. The
-          creator is told {CLOSING_DAYS} days ahead and asked to give buyers
-          another way to what they bought. Download the files and course
-          certificates you want to keep before then. The store leaves your
+          no longer be downloaded or opened here. From the day the
+          store&rsquo;s plan ends you are not charged again for what you
+          subscribe to there, and on the closing day it ends. We email you at
+          least {BUYER_NOTICE_DAYS} days before the store closes. If you paid for time after
+          that day, the unused part is refunded to you from the
+          creator&rsquo;s Stripe account, if its balance covers it; if it does
+          not, we email you with the creator&rsquo;s contact. The creator is
+          told {CLOSING_DAYS} days ahead and asked to give buyers another way
+          to what they bought. Download the files and course certificates you
+          want to keep before then. The store leaves your
           library on Marktmorgen when it closes; nothing else in it changes.
           A refund is a matter between you and the creator (section 9).
         </p>
