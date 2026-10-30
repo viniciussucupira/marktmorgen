@@ -85,7 +85,7 @@ export default async function StudioMeetingsPage({ searchParams }: Params) {
   });
   // What the store is offered, and any account it has connected either way.
   const offered = view ? view.providers : offeredProviders(store, review);
-  if (view !== null && offered.length === 0) notFound();
+  if (view !== null && offered.length === 0 && configured.length > 0) notFound();
   // The test meeting each connected account has, where one was made (lib/meet-test.ts).
   const tests = view
     ? await readTests(store.statsId, offered.filter((p) => configured.includes(p) && view.connected[p])).catch(() => ({}))
@@ -110,7 +110,9 @@ export default async function StudioMeetingsPage({ searchParams }: Params) {
           <p className="mt-3 max-w-2xl text-ink-soft">
             {active.length
               ? `Connect your own ${active.map((p) => ACCOUNT_NAMES[p]).join(" or ")} account, and each call you set to use it gets a meeting on that account for every booking, with the link in the buyer's confirmation, reminders and calendar file. Nothing to copy and paste.`
-              : "These services are currently unavailable. You can disconnect an account below. Existing meetings stay with the provider."}
+              : view !== null && offered.length === 0
+                ? "No video call accounts are connected. These services are currently unavailable."
+                : "These services are currently unavailable. You can disconnect an account below. Existing meetings stay with the provider."}
           </p>
 
           {said?.tone === "ok" ? <ToastOnLoad message={said.text} param="meet" /> : null}
