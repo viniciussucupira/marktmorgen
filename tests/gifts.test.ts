@@ -16,6 +16,7 @@
  *   - a product with price options is given at the one the buyer picked: its
  *     price is charged, and its link is what the recipient opens.
  */
+import { TEST_CONSENT } from "./digital-consent-fixture";
 import { addOption, addProduct, claimHandle, ensureStatsId, setProductLink, setStripeAccount, setSubscription, storeForEmail, type Listing } from "@/lib/store";
 import { readListing, readProduct } from "@/lib/catalog";
 import { canGift, givableOptions } from "@/lib/gift-rules";
@@ -87,7 +88,7 @@ async function main(): Promise<void> {
   is("kept, the address as one", [started.gift.to, started.gift.from, started.gift.message], ["friend@example.com", "Ana", "Happy birthday!\n\nEnjoy."]);
 
   part("Its checkout");
-  await createCheckout(store, (await readProduct(store, product.id))!, "https://marktmorgen.com", "", { gift: started.gift.id, bumps: ["yes"], plan: true, upsellKey: "f".repeat(40) });
+  await createCheckout(store, (await readProduct(store, product.id))!, "https://marktmorgen.com", "", { gift: started.gift.id, bumps: ["yes"], plan: true, upsellKey: "f".repeat(40), digitalConsent: TEST_CONSENT });
   const sent = checkouts[0];
   is("marked as a gift", [sent.get("metadata[gift]"), sent.get("payment_intent_data[metadata][gift]")], [started.gift.id, started.gift.id]);
   is("one payment, nothing added, no offer after", [sent.get("mode"), sent.get("line_items[1][quantity]"), sent.get("metadata[upsell_key]"), sent.get("customer_creation")], ["payment", null, null, null]);
@@ -158,7 +159,7 @@ async function main(): Promise<void> {
   const picked = await startGift(store, planner, { to: "pal@example.com", from: "Ana", message: "" }, second.id);
   if (!picked.ok) throw new Error("no gift at an option");
   is("the option is kept with the gift", picked.gift.o, second.id);
-  await createCheckout(store, planner, "https://marktmorgen.com", second.id, { gift: picked.gift.id });
+  await createCheckout(store, planner, "https://marktmorgen.com", second.id, { gift: picked.gift.id, digitalConsent: TEST_CONSENT });
   const optioned = checkouts.at(-1)!;
   is("its price is what is charged", [optioned.get("line_items[0][price_data][unit_amount]"), optioned.get("metadata[option]"), optioned.get("metadata[gift]")], ["3900", second.id, picked.gift.id]);
   emails.length = 0;

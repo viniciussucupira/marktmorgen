@@ -1,3 +1,4 @@
+import { type DigitalConsent, DigitalConsentMissing, consentFromForm } from "@/lib/digital-consent";
 import { withinStore } from "@/lib/metered-limits";
 import { type NextRequest, after } from "next/server";
 import { OrdersPausedError } from "@/lib/order-admission";
@@ -197,8 +198,11 @@ export async function POST(request: NextRequest) {
   let remind = false;
   let remindEmail = "";
   let remindVersion = "";
+  // The box to start access at once, which loses the right to cancel once it starts (lib/digital-consent.ts).
+  let digitalConsent: DigitalConsent | null = null;
   try {
     const form = await (await limited(request, 4_000)).formData();
+    digitalConsent = consentFromForm(form);
     const h = form.get("handle");
     handle = typeof h === "string" ? normaliseHandle(h.slice(0, 40)) : "";
     ids = readCartIds(form.getAll("id"));
@@ -238,12 +242,15 @@ export async function POST(request: NextRequest) {
         // one remembered for this visitor (lib/visit-channel.ts), else direct.
         channel: { ...channelOfRequest(request, store.handle, new URL(origin).hostname, Date.now() / 1000, store.attributionDays), ...(await adsCheckout(request, store)) },
       via,
+      digitalConsent,
     });
     if (reminding) await keepAssistReminder({ store, session: opened.id, email: remindEmail, version: remindVersion });
     for (const product of products) after(() => countHit(request, store, { kind: "checkout", id: product.id }));
     return new Response(null, { status: 303, headers: { Location: opened.url, "Cache-Control": "no-store" } });
   } catch (error) {
     if (error instanceof OrdersPausedError) return away(`/@${store.handle}?status=${error.reason === "paused" ? "paused" : "error"}`);
+    // The box was not checked (or the page was from before its words changed): back to the cart, nothing charged.
+    if (error instanceof DigitalConsentMissing) return away(`/@${store.handle}?cart=consent#cart`);
     console.error("a cart's checkout failed", error);
     after(() => noteCheckoutTrouble(store, error).catch(() => {}));
     return away(`/@${store.handle}?cart=error#cart`);

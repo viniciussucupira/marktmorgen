@@ -17,6 +17,7 @@
  *   nl:wb:link:<token>                 who a link in an email is for
  *   nl:wb:n:<statsId>                  how many have been sent, for the studio
  */
+import { type DigitalConsent, DigitalConsentMissing } from "@/lib/digital-consent";
 import { OrdersPausedError } from "@/lib/order-admission";
 import { createHash, randomBytes } from "node:crypto";
 import { EMAIL_PATTERN, normaliseEmail } from "@/lib/auth";
@@ -250,10 +251,17 @@ export async function readWinBack(store: Store, product: string, token: string):
   }
 }
 
-export type OpenResult = { ok: true; url: string } | { ok: false; reason: "expired" | "unavailable" | "refused" };
+export type OpenResult = { ok: true; url: string } | { ok: false; reason: "expired" | "unavailable" | "refused" | "consent" };
 
 /** The checkout a come-back link opens: this product, this address, the offer applied, no second trial. */
-export async function openWinBack(store: Store, productId: string, token: string, origin: string): Promise<OpenResult> {
+export async function openWinBack(
+  store: Store,
+  productId: string,
+  token: string,
+  origin: string,
+  /** The box to start access at once, checked on the button's page (lib/digital-consent.ts). */
+  consent: DigitalConsent | null = null,
+): Promise<OpenResult> {
   const grant = await readWinBack(store, productId, token);
   if (!grant) return { ok: false, reason: "expired" };
   const product = await readProduct(store, productId);
@@ -265,7 +273,7 @@ export async function openWinBack(store: Store, productId: string, token: string
   try {
     // A limited product holds a unit while the checkout is open, as any other checkout does.
     const held = await withStockHold(store, product, (holding) =>
-      createCheckout(store, product, origin, option, { coupon: grant.coupon, email: grant.email, noTrial: true, held: holding }),
+      createCheckout(store, product, origin, option, { coupon: grant.coupon, email: grant.email, noTrial: true, held: holding, digitalConsent: consent }),
     );
     if (!held.ok) return { ok: false, reason: "unavailable" };
     return { ok: true, url: held.value.url };
@@ -275,6 +283,8 @@ export async function openWinBack(store: Store, productId: string, token: string
     // the email did not promise.
     // The store's orders for the month are reached (lib/order-admission.ts): not open right now, nothing charged.
     if (error instanceof OrdersPausedError) return { ok: false, reason: "unavailable" };
+    // The box to start access at once was not checked: said beside it, nothing opened.
+    if (error instanceof DigitalConsentMissing) return { ok: false, reason: "consent" };
     console.error("opening a come-back checkout failed", store.handle, error);
     return { ok: false, reason: "refused" };
   }

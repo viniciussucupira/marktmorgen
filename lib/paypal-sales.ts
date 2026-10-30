@@ -39,6 +39,8 @@
  * affiliate book and the webhooks count it (lib/stats.ts readPaidSales,
  * lib/paypal-delivery.ts).
  */
+import { CONSENT_META, type DigitalConsent, consentMetaValue, deliversDigitally, validConsent } from "@/lib/digital-consent";
+import { consentEmailLines } from "@/lib/digital-consent-email";
 import { reservePaidResourceWindow } from "@/lib/contract-resource-window";
 import { admitOrders } from "@/lib/order-admission";
 import { countOrder } from "@/lib/orders";
@@ -324,7 +326,12 @@ type Opened = {
 };
 
 /** What a visit carried into an order, read by the checkout route. */
-export type OrderExtras = { meta?: Record<string, string>; via?: { aff: string; rate: number } | null };
+export type OrderExtras = {
+  meta?: Record<string, string>;
+  via?: { aff: string; rate: number } | null;
+  /** The buyer's yes to start access at once (lib/digital-consent.ts): everything PayPal sells here is handed over digitally, so it is needed. */
+  digitalConsent?: DigitalConsent | null;
+};
 
 const META_KEY = /^[a-z_]{1,40}$/;
 /** The metadata kept on an order: short keys and values only, as Stripe would take them. Pure. */
@@ -336,11 +343,14 @@ export function cleanMeta(meta: Record<string, string> | undefined): Record<stri
   return out;
 }
 
-export type OrderResult = { ok: true; url: string; order: string } | { ok: false; reason: "unavailable" | "error" | "paused" };
+export type OrderResult = { ok: true; url: string; order: string } | { ok: false; reason: "unavailable" | "error" | "paused" | "consent" };
 
 /** Opens a PayPal order for one product and returns where the buyer approves it. */
 export async function openOrder(store: Store, product: Listing, origin: string, extras: OrderExtras = {}): Promise<OrderResult> {
   if (!paypalReady(store, product) || !store.statsId || !store.paypalSeller || !isRedisConfigured()) return { ok: false, reason: "unavailable" };
+  // Refused before an order is admitted or PayPal is asked (lib/digital-consent.ts).
+  const digital = deliversDigitally(product);
+  if (digital && !validConsent(extras.digitalConsent)) return { ok: false, reason: "consent" };
   // One of the month's orders: a paid store's stop at its plan's figure (lib/order-admission.ts),
   // before PayPal's page opens.
   const admitted = await admitOrders(store, 1);
@@ -366,7 +376,8 @@ export async function openOrder(store: Store, product: Listing, origin: string, 
       cur: store.currency,
       m: store.paypalSeller.merchant,
       at: Math.floor(Date.now() / 1000),
-      meta: cleanMeta(extras.meta),
+      // The yes first, so the cap on kept fields can never leave it out.
+      meta: cleanMeta(digital && extras.digitalConsent ? { [CONSENT_META]: consentMetaValue(extras.digitalConsent), ...extras.meta } : extras.meta),
       ...(extras.via && /^[a-z0-9]{12}$/.test(extras.via.aff) ? { via: { aff: extras.via.aff, rate: Math.max(0, Math.min(100, Number(extras.via.rate) || 0)) } } : {}),
       ...(salePercent > 0 ? { off: Math.max(0, product.priceCents - cents), sale: salePercent } : {}),
     };
@@ -570,6 +581,7 @@ export async function deliverPayPal(input: {
       g.ppWhat(product.title),
       g.ppPaid(formatMoney(paid.cents, paid.currency, speech(store).lang.locale)),
       g.ppTransaction(paid.capture),
+      ...consentEmailLines(store, paid.meta),
       "",
       g.openHere,
       link,

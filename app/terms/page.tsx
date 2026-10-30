@@ -36,7 +36,7 @@ export const metadata: Metadata = {
 export default function TermsPage() {
   const domains = isDomainsConfigured();
   return (
-    <LegalPage title="Terms of Service" lastUpdated="October 18, 2026">
+    <LegalPage title="Terms of Service" lastUpdated="October 30, 2026">
       <p>
         These Terms of Service (“Terms”) govern your access to and use of the
         websites, products, and subscription services operated by Solrenning
@@ -159,6 +159,27 @@ export default function TermsPage() {
           or reversing each lead is your decision, and you must not use it to
           pay for sign-ups or bookings that people did not make themselves. If you run a community, what is posted in it is
           yours to moderate, and the rules in section 4 apply to it.
+        </p>
+        <p id="instant-access" className="scroll-mt-24">
+          <strong className="text-black">Starting access right away.</strong>{" "}
+          In the European Union, the United Kingdom and some other places, a
+          consumer who buys digital content online usually has 14 days to
+          cancel, and loses that right once access starts only if they asked
+          for access to start right away, said they understood they would lose
+          the right, and got a confirmation of both. So before a buyer pays for
+          something your store hands over digitally (a file, a link, a course,
+          a private podcast, a bundle or a membership), the checkout asks them
+          to check a box that says both things, in your store&apos;s language,
+          and does not open the payment without it. Each one-click offer after
+          paying asks again. The buyer&apos;s &ldquo;yes&rdquo;, the version of
+          the sentence and the time are kept on the order in your Stripe
+          account, and the confirmation email quotes them. We ask the same
+          way for every buyer, because a page cannot know who has the right;
+          the words say it is for buyers who have it where they live. Your own
+          terms, refund policy and descriptions are yours: do not promise
+          less than this, for example &ldquo;no refunds&rdquo; to a buyer who
+          did not check the box. We do not give legal advice, and this box
+          does not make your sales meet every law where your buyers are.
         </p>
         <p>
           <strong className="text-black">Payment requests.</strong> Send a

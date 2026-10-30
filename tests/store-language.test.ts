@@ -12,6 +12,7 @@
  *   - prices, numbers, dates and countries are written the language's way;
  *   - Stripe's payment page is opened in the store's language.
  */
+import { TEST_CONSENT } from "./digital-consent-fixture";
 import { LANGUAGES, LANGUAGE_CODES, parseLanguage, timeLeft } from "@/lib/store-language";
 import { endsLine, planLine, speechFor, wordsIn } from "@/lib/buyer-words";
 import { en } from "@/lib/buyer-words/en";
@@ -245,7 +246,7 @@ async function main(): Promise<void> {
   const open = async () => {
     checkouts.length = 0;
     const store = (await storeForEmail(OWNER))!;
-    await createCheckout(store, (await readProduct(store, made.product.id))!, "https://marktmorgen.com", "", {});
+    await createCheckout(store, (await readProduct(store, made.product.id))!, "https://marktmorgen.com", "", { digitalConsent: TEST_CONSENT });
     return checkouts[0];
   };
   is("a new store's is English", [(await storeForEmail(OWNER))!.language, (await open()).get("locale")], ["en", "en"]);

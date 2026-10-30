@@ -13,6 +13,7 @@
  *   nl:wo:r:<statsId>:<hash>       that person's reminder is set, once
  *   nl:wo:n:<statsId>              how many people have been offered it, for the studio
  */
+import { type DigitalConsent, DigitalConsentMissing } from "@/lib/digital-consent";
 import { OrdersPausedError } from "@/lib/order-admission";
 import { createHash } from "node:crypto";
 import { isSenderConfigured, sendEmail } from "@/lib/email";
@@ -169,14 +170,21 @@ export async function welcomesOffered(store: Store): Promise<number> {
   return Number(n) || 0;
 }
 
-export type OpenResult = { ok: true; url: string } | { ok: false; reason: "expired" | "unavailable" | "refused" };
+export type OpenResult = { ok: true; url: string } | { ok: false; reason: "expired" | "unavailable" | "refused" | "consent" };
 
 /**
  * The checkout the offer's button opens: the offered product, the address
  * the free copy went to, the discount applied by Stripe, only while the
  * person's own time lasts.
  */
-export async function openWelcome(store: Store, token: string, origin: string, nowSeconds = Math.floor(Date.now() / 1000)): Promise<OpenResult> {
+export async function openWelcome(
+  store: Store,
+  token: string,
+  origin: string,
+  nowSeconds = Math.floor(Date.now() / 1000),
+  /** The box to start access at once, checked on the button's page (lib/digital-consent.ts). */
+  consent: DigitalConsent | null = null,
+): Promise<OpenResult> {
   const claim = await readClaimFull(token);
   if (!claim || claim.h !== store.handle) return { ok: false, reason: "expired" };
   const offer = await welcomeFor(store, claim, nowSeconds);
@@ -186,7 +194,7 @@ export async function openWelcome(store: Store, token: string, origin: string, n
   if (!product || !canOfferWelcome(store, offer.product)) return { ok: false, reason: "unavailable" };
   try {
     const held = await withStockHold(store, product, (holding) =>
-      createCheckout(store, product, origin, undefined, { coupon: store.welcomeOffer.coupon, email: claim.e, welcome: true, held: holding }),
+      createCheckout(store, product, origin, undefined, { coupon: store.welcomeOffer.coupon, email: claim.e, welcome: true, held: holding, digitalConsent: consent }),
     );
     if (!held.ok) return { ok: false, reason: "unavailable" };
     return { ok: true, url: held.value.url };
@@ -194,6 +202,8 @@ export async function openWelcome(store: Store, token: string, origin: string, n
     // A coupon the creator deleted in their own dashboard, most likely.
     // The store's orders for the month are reached (lib/order-admission.ts): not open right now, nothing charged.
     if (error instanceof OrdersPausedError) return { ok: false, reason: "unavailable" };
+    // The box to start access at once was not checked: said beside it, nothing opened.
+    if (error instanceof DigitalConsentMissing) return { ok: false, reason: "consent" };
     console.error("opening a welcome offer checkout failed", store.handle, error);
     return { ok: false, reason: "refused" };
   }

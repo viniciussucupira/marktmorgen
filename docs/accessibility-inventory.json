@@ -1248,6 +1248,7 @@
     "components/deals-unavailable.tsx",
     "components/demo-notes.tsx",
     "components/details-form.tsx",
+    "components/digital-consent-box.tsx",
     "components/discord-studio.tsx",
     "components/discount-editor.tsx",
     "components/discount-impact.tsx",

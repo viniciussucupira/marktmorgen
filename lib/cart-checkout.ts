@@ -36,6 +36,7 @@ import { MAX_CART, dealOff } from "@/lib/cart-rules";
 import { RECOVERY_OPEN_SECONDS, applyRecovery, recoveryOn, refusedRecovery, withoutRecovery } from "@/lib/recovery-setting";
 import { applyShare, leastPaid, linesTotal, shareBps } from "@/lib/platform-share";
 import { codesMayTakeOff } from "@/lib/discount";
+import { CONSENT_META, type DigitalConsent, consentMetaValue, deliversDigitally, requireDigitalConsent } from "@/lib/digital-consent";
 
 const DISPLAY_NAME = "branding_settings[display_name]";
 
@@ -79,10 +80,15 @@ export async function createCartCheckout(
     via?: { aff: string; rate: number; own?: number | null } | null;
     /** The buyer checked the Store assistant's box for one reminder (lib/assistant-reminder.ts): the checkout closes after an hour. */
     remind?: boolean;
+    /** The buyer's yes to access at once (lib/digital-consent.ts), needed when anything in the cart is handed over digitally. */
+    digitalConsent?: DigitalConsent | null;
   } = {},
 ): Promise<{ url: string; id: string }> {
   if (!store.stripeAccountId) throw new Error("This store has no account");
   if (products.length === 0 || products.length > MAX_CART) throw new Error("A cart holds one to four products");
+  // Refused before anything is admitted or opened, as for one product (lib/store-checkout.ts).
+  const digital = products.some((product) => deliversDigitally(product));
+  requireDigitalConsent(digital, extras.digitalConsent);
 
   const country = extras.country ?? "";
   const body = new URLSearchParams({
@@ -98,6 +104,11 @@ export async function createCartCheckout(
     success_url: `${origin}/@${store.handle}/thanks?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${origin}/@${store.handle}`,
   });
+
+  if (digital && extras.digitalConsent) {
+    body.set(`metadata[${CONSENT_META}]`, consentMetaValue(extras.digitalConsent));
+    body.set(`payment_intent_data[metadata][${CONSENT_META}]`, consentMetaValue(extras.digitalConsent));
+  }
 
   // The store's deal for buying more (lib/cart-rules.ts): every line that much cheaper again.
   const deal = dealOff(store.cartDeal, products.length);

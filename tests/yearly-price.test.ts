@@ -7,6 +7,7 @@
  * checkout, the year's price once a year only when the buyer picked it; the
  * confirmation says "a year"; the words in every store language.
  */
+import { TEST_CONSENT } from "./digital-consent-fixture";
 import { activeYearly, yearlyProblem, yearlySaving } from "@/lib/yearly-price";
 import { introProblem } from "@/lib/intro-price";
 import { canTier } from "@/lib/tier-rules";
@@ -73,7 +74,7 @@ async function main(): Promise<void> {
   const open = async (more: Parameters<typeof createCheckout>[4] = {}) => {
     checkouts.length = 0;
     const store = (await storeForEmail(OWNER))!;
-    await createCheckout(store, (await readProduct(store, made.product.id))!, "https://marktmorgen.com", "", more);
+    await createCheckout(store, (await readProduct(store, made.product.id))!, "https://marktmorgen.com", "", { ...more, digitalConsent: TEST_CONSENT });
     return checkouts[0];
   };
   let sent = await open();

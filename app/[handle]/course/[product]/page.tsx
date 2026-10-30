@@ -1,4 +1,5 @@
 import { countDay } from "@/lib/day-visit";
+import { DigitalConsentBox } from "@/components/digital-consent-box";
 import { isResting } from "@/lib/traffic";
 import { forVisitor } from "@/lib/visitor";
 import { activeIntro } from "@/lib/intro-price";
@@ -253,6 +254,8 @@ export default async function CoursePage({ params, searchParams }: Params) {
                 <form action="/api/store/checkout" method="post" target="_top" data-checkout="">
                   <input type="hidden" name="handle" value={store.handle} />
                   <input type="hidden" name="product" value={product.id} />
+                  {/* A course is handed over at once: the box to start access first (lib/digital-consent.ts). */}
+                  <DigitalConsentBox id={`dc-course-${product.id}`} lang={store.language} className="mb-5" />
                   <button type="submit" className="btn st-btn btn-lg btn-block">{w.buyCourse(access.state === "ended", price)}</button>
                 </form>
               ) : paypalReady(store, product) ? (

@@ -13,6 +13,7 @@
  *     with the link back to their page;
  *   - the numbers count those sales as "Welcome offer".
  */
+import { TEST_CONSENT } from "./digital-consent-fixture";
 import { NO_WELCOME_OFFER, endsAt, leftWords, parseWelcomeOffer, remindAt } from "@/lib/welcome-offer";
 import { openWelcome, scheduleReminder, sendWelcomeReminders, welcomeFor } from "@/lib/welcome-offer-send";
 import { readClaimFull, recordLead, requestCopy } from "@/lib/free";
@@ -91,11 +92,11 @@ async function main(): Promise<void> {
 
   part("The button, while it lasts and after");
   checkouts.length = 0;
-  const opened = await openWelcome(store, token, "https://marktmorgen.com", asked + HOUR);
+  const opened = await openWelcome(store, token, "https://marktmorgen.com", asked + HOUR, TEST_CONSENT);
   const body = checkouts[0];
   is("a checkout with the coupon, for that address, marked as a welcome offer", [opened.ok, body?.get("discounts[0][coupon]"), body?.get("customer_email"), body?.get("metadata[welcome]"), body?.has("metadata[winback]")], [true, "c_welcome25", "lead@example.com", "yes", false]);
   checkouts.length = 0;
-  const ended = await openWelcome(store, token, "https://marktmorgen.com", asked + 48 * HOUR);
+  const ended = await openWelcome(store, token, "https://marktmorgen.com", asked + 48 * HOUR, TEST_CONSENT);
   is("at the end, no checkout opens", [ended.ok ? "" : ended.reason, checkouts.length], ["expired", 0]);
   is("a link for another store opens nothing", (await openWelcome({ ...store, handle: "other" }, token, "https://marktmorgen.com", asked + HOUR)).ok, false);
 

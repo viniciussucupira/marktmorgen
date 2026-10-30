@@ -22,6 +22,7 @@
  *   - a product with price options is bought for everybody at the one the
  *     buyer picked: that price times the people, and that option's link.
  */
+import { TEST_CONSENT } from "./digital-consent-fixture";
 import { addOption, addProduct, claimHandle, ensureStatsId, setProductLink, setStripeAccount, setSubscription, storeForEmail, type Listing } from "@/lib/store";
 import { readListing, readProduct } from "@/lib/catalog";
 import { MAX_PEOPLE, canGroup, payable, placesWords, readPeople } from "@/lib/group-rules";
@@ -104,16 +105,16 @@ async function main(): Promise<void> {
 
   part("Its checkout");
   const full = (await readProduct(store, product.id))!;
-  await createCheckout(store, full, "https://marktmorgen.com", "", { group: { id, people: 2 }, bumps: ["yes"], plan: true, upsellKey: "f".repeat(40), buyerKey: "b".repeat(40) });
+  await createCheckout(store, full, "https://marktmorgen.com", "", { group: { id, people: 2 }, bumps: ["yes"], plan: true, upsellKey: "f".repeat(40), buyerKey: "b".repeat(40), digitalConsent: TEST_CONSENT });
   const sent = checkouts[0];
   is("the price, that many times, on one line", [sent.get("line_items[0][quantity]"), sent.get("line_items[0][price_data][unit_amount]")], ["2", "4900"]);
   is("marked", [sent.get("metadata[group]"), sent.get("metadata[people]"), sent.get("payment_intent_data[metadata][group]")], [id, "2", id]);
   is("named for what it is", sent.get("metadata[title]"), "Sourdough Course (for 2 people)");
   is("one payment, nothing added, no offer after, nothing opened for the buyer", [sent.get("mode"), sent.get("line_items[1][quantity]"), sent.get("metadata[upsell_key]"), sent.get("metadata[buyer_key]")], ["payment", null, null, null]);
   let refused = "";
-  await createCheckout(store, { ...full, stock: 10 }, "https://marktmorgen.com", "", { group: { id, people: 2 } }).catch((error: Error) => (refused = error.message));
+  await createCheckout(store, { ...full, stock: 10 }, "https://marktmorgen.com", "", { group: { id, people: 2 }, digitalConsent: TEST_CONSENT }).catch((error: Error) => (refused = error.message));
   is("refused where the charge is built, too", refused, "This cannot be bought for several people");
-  await createCheckout(store, full, "https://marktmorgen.com", "");
+  await createCheckout(store, full, "https://marktmorgen.com", "", { digitalConsent: TEST_CONSENT });
   is("an ordinary checkout is still for one", [checkouts.at(-1)!.get("line_items[0][quantity]"), checkouts.at(-1)!.get("metadata[group]")], ["1", null]);
 
   part("The buyer's own checkout");
@@ -218,7 +219,7 @@ async function main(): Promise<void> {
   const picked = await startGroup(store, planner, "3", weeks.id);
   if (!picked.ok) throw new Error("no purchase at an option");
   is("the option is kept with it, and named", [picked.group.o, groupTitle(planner, picked.group)], [weeks.id, "Meal Planner (5 weeks)"]);
-  await createCheckout(store, planner, "https://marktmorgen.com", weeks.id, { group: { id: picked.group.id, people: 3 } });
+  await createCheckout(store, planner, "https://marktmorgen.com", weeks.id, { group: { id: picked.group.id, people: 3 }, digitalConsent: TEST_CONSENT });
   const optioned = checkouts.at(-1)!;
   is("that option's price, times the people", [optioned.get("line_items[0][price_data][unit_amount]"), optioned.get("line_items[0][quantity]"), optioned.get("metadata[option]")], ["3900", "3", weeks.id]);
   is("named for all of it", optioned.get("metadata[title]"), "Meal Planner (5 weeks) (for 3 people)");

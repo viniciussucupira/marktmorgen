@@ -12,6 +12,7 @@
  *   - a cart's reminder asked for on the way back waits in the same queue and
  *     comes out as the same email, saying it was asked for.
  */
+import { TEST_CONSENT } from "./digital-consent-fixture";
 import { addProduct, claimHandle, ensureStatsId, setProductLink, setRecovery, setStripeAccount, setSubscription, storeForEmail } from "@/lib/store";
 import { readProduct } from "@/lib/catalog";
 import { createCartCheckout } from "@/lib/cart-checkout";
@@ -69,11 +70,11 @@ async function main(): Promise<void> {
   };
 
   part("The checkout of a cart");
-  await createCartCheckout(await load(), await both(), "https://marktmorgen.com");
+  await createCartCheckout(await load(), await both(), "https://marktmorgen.com", { digitalConsent: TEST_CONSENT });
   is("without reminders: the way back it always had, and Stripe asked nothing", [checkouts[0].get("cancel_url"), checkouts[0].get("consent_collection[promotions]")], ["https://marktmorgen.com/@harbor", null]);
   await setRecovery(OWNER, { enabled: true, address: "1 Main St, Austin, TX 78701", asks: true });
   checkouts.length = 0;
-  await createCartCheckout(await load(), await both(), "https://marktmorgen.com");
+  await createCartCheckout(await load(), await both(), "https://marktmorgen.com", { digitalConsent: TEST_CONSENT });
   is("with them: Stripe asks for consent, and keeps the address if the buyer leaves", [checkouts[0].get("consent_collection[promotions]"), checkouts[0].get("after_expiration[recovery][enabled]")], ["auto", "true"]);
   is("and the way back offers one reminder of the cart", checkouts[0].get("cancel_url"), `https://marktmorgen.com/@harbor/left?cart=${a},${b}`);
 

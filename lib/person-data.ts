@@ -131,7 +131,7 @@ export const PERSON_DATA: PersonData[] = [
   { file: "lib/call-packages.ts", how: "kept", what: "Packages of calls bought: the buyer's address and the sessions left", why: "They are the order's record: the calls still owed to them." },
   { file: "lib/meet-records.ts", how: "kept", what: "For a booked group call still to happen, their place on the meeting's guest list, until 60 days after the call", why: "It is how they get into the call they paid for." },
   { file: "lib/shipments.ts", how: "kept", what: "When a physical order was marked shipped, and its tracking link, for 400 days", why: "They are the order's delivery record." },
-  { file: "lib/stripe-account.ts", how: "kept", what: "Payments on your own Stripe account: what they paid, when, for what, refunds, and their billing details", why: "They are your sales and tax records. Marktmorgen never stores them; delete or keep them in Stripe as the law that applies to you says." },
+  { file: "lib/stripe-account.ts", how: "kept", what: "Payments on your own Stripe account: what they paid, when, for what, refunds, their billing details, and, for something opened right away, the box they checked to start access at once (\"yes\", the version of its words and the time)", why: "They are your sales and tax records. Marktmorgen never stores them; delete or keep them in Stripe as the law that applies to you says." },
 
   // ---------------------------------------------------------------- links and limits that run out by themselves
   { file: "lib/free.ts", how: "erased", via: "lib/erasure-index.ts", what: "Their free-product links" },

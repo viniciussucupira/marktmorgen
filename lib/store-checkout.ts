@@ -54,6 +54,7 @@ import { type BundleContents, contentsOf } from "@/lib/bundles";
 import { isHouseStore } from "@/lib/house-store";
 import { preorderProblem } from "@/lib/preorder-rules";
 import { type MayComeOff, applyShare, leastPaid, linesTotal, shareBps } from "@/lib/platform-share";
+import { CONSENT_META, type DigitalConsent, consentMetaValue, deliversDigitally, requireDigitalConsent } from "@/lib/digital-consent";
 
 /**
  * How long a paid link keeps working.
@@ -275,6 +276,13 @@ export async function createCheckout(
      * type one is shown as it always is.
      */
     code?: string;
+    /**
+     * The buyer's yes, checked on the form before paying, to start access at
+     * once and lose the right to cancel once it starts (lib/digital-consent.ts).
+     * Needed whenever this order hands over anything digitally: without it,
+     * nothing is opened (DigitalConsentMissing).
+     */
+    digitalConsent?: DigitalConsent | null;
   } = {},
 ): Promise<{ url: string; id: string }> {
   if (!store.stripeAccountId) throw new Error("This store has no account");
@@ -442,6 +450,19 @@ export async function createCheckout(
     added.push({ key, bump: offer.bump, target: offer.target });
   }
   if (added.length) body.set("metadata[title]", [name, ...added.map((a) => a.target.title)].join(" + ").slice(0, 480));
+
+  // Digital content handed over at once (lib/digital-consent.ts): refused
+  // here, before an order is admitted or anything reaches Stripe, unless the
+  // buyer checked the box; kept on the order with its version and its time.
+  // Written on the payment too, for a one-off charge, so the record a dispute
+  // reads carries it.
+  const digital = deliversDigitally(product, chosen?.id ?? null) || added.some((offer) => deliversDigitally(offer.target));
+  requireDigitalConsent(digital, extras.digitalConsent);
+  if (digital && extras.digitalConsent) {
+    body.set(`metadata[${CONSENT_META}]`, consentMetaValue(extras.digitalConsent));
+    if (!recurring) body.set(`payment_intent_data[metadata][${CONSENT_META}]`, consentMetaValue(extras.digitalConsent));
+    else body.set(`subscription_data[metadata][${CONSENT_META}]`, consentMetaValue(extras.digitalConsent));
+  }
 
   // A limited product's unit is held while this checkout is open, so the
   // checkout closes before the hold does. The time is set just before the

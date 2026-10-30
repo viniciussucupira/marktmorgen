@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 
 export default function RefundsPage() {
   return (
-    <LegalPage title="Refund Policy" lastUpdated="October 17, 2026">
+    <LegalPage title="Refund Policy" lastUpdated="October 30, 2026">
       <p>
         This Refund Policy applies to what you pay Marktmorgen, a product of
         Solrenning, an independent software studio, for the creator store at
@@ -155,6 +155,16 @@ export default function RefundsPage() {
           store is theirs: they
           set the terms of the sale, they received the money in their own
           Stripe account, and they are the only one who can return it.
+        </p>
+        <p>
+          If you bought something you could open right away, the checkout
+          asked you to check a box saying you wanted access as soon as it was
+          available and that you lose a 14-day right to cancel once it starts.
+          Where the law where you live gives that right, as in the European
+          Union and the United Kingdom, it ended when your access started; the
+          confirmation email quotes the box you checked. The creator may still
+          agree to a refund, and their own terms, and the law, still apply to
+          anything that was not as described or did not work.
         </p>
         <p>
           If you cannot reach them, write to us at{" "}
