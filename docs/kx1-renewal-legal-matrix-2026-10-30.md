@@ -328,3 +328,26 @@ are required for creators too, not only a courtesy, and stay on for every
 creator whatever their location. G14 stays open (DC's trial notice and a
 14-day trial; "free trial" has no definition in §28A-202). Utah §13-70-101
 could not be read (the page returned no text).
+
+## 10. PR #1296 after review, and gap G16 (30 Oct 2026, 18h10 Fortaleza)
+
+An independent review of PR #1296 found that "the 30th day" was decided by
+elapsed seconds: with the daily run at 10:00 UTC, a renewal charged late in
+the UTC day was first noticed on the 29th calendar day and still reported on
+time. Fixed on the branch (82fd087 and after): the yearly window compares UTC
+calendar dates, the notice is first due on the 30th day before the charge's
+date whatever the hour, and any later day is sent but marked late. A
+mutation back to elapsed days makes 2 of 10 checks fail.
+
+**Gap G16 — local dates.** The statutes count days in the customer's own
+calendar. The daily run (10:00 UTC) falls on the same date in every US zone
+from UTC−4 to UTC−10, but a charge between 00:00 and about 10:00 UTC falls on
+the previous local date for some or all US zones, so the UTC count can be a
+day off for them. Settling it needs the creator's time zone (or a run per
+zone) and a rule for an unknown zone; until then PR #1296 stays unmerged,
+with the other open points: California's official text, Oregon, Utah
+§13-70-101, Canada, G12–G15, and two review findings recorded for the next
+unit: a notice missed until one day or less before the charge is dropped
+without being counted as missed (`TOO_LATE_SECONDS`), and a cancellation
+scheduled after the next renewal (`cancel_at` later than the charge) gets no
+notice for that renewal.
