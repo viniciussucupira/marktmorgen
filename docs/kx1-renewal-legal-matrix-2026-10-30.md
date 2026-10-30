@@ -311,3 +311,20 @@ read** (it is a withdrawal function, not a renewal notice).
 Still to read: California (leginfo), Oregon, Utah §13-70-101, DC §28A-202,
 Virginia §59.1-207.45 and its 2026 amendments, Colorado's later amendments,
 EUR-Lex 2023/2673, Canada (federal and provinces). PR #1296 stays unmerged.
+
+## 9. Who the rules protect: creators included (read 30 Oct 2026, 18h10–18h20 Fortaleza)
+
+| # | Text | Official page read | Finding |
+| --- | --- | --- | --- |
+| O15 | Virginia Code §59.1-207.45 (history 2018 c. 704; 2023 c. 288; 2024 c. 452; 2026 cc. 931, 932) | law.lis.virginia.gov/vacode/title59.1/chapter17.8/section59.1-207.45/ | "Consumer" is (i) an individual for personal, family or household purposes, or (ii) **a small business acquiring goods or services for business purposes** (at least 51% independently owned and controlled by individuals, or a qualifying cooperative). "Automatic renewal" is a paid subscription renewed at the end of a definite term for a further term of more than one month. |
+| O16 | Virginia Code §59.1-207.46(D) | as O3 | A free trial over 30 days: the notice comes "within 30 days of the end of any such free trial" (read protectively as no more than 30 days before the end). |
+| O17 | DC Code §28A-202 | code.dccouncil.gov/us/dc/council/code/sections/28A-202 | "Consumer" is any person who seeks or acquires goods or services (no personal-use condition read); "free trial" is not defined there. The page says the section's creation "has not been implemented"; the protective reading treats it as in force. |
+
+**What it changes.** Marktmorgen's creators are small businesses. Virginia's
+annual notice (O3) reaches a Virginia creator's yearly plan, and DC's
+definition as read does not exclude businesses; Utah's (O1) speaks of "an
+individual" who receives the service. So the creator-plan notices of PR #1296
+are required for creators too, not only a courtesy, and stay on for every
+creator whatever their location. G14 stays open (DC's trial notice and a
+14-day trial; "free trial" has no definition in §28A-202). Utah §13-70-101
+could not be read (the page returned no text).
