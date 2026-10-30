@@ -2,7 +2,7 @@
 
 Checked30October2026. This is an admission-control change, not a supplier purchase, a complete cost approval or a margin certificate.
 
-The commercial gate now reads the same complete LLC inventory used by the company-cost report. Aggregate review flags cannot stand in for missing monthly/annual ceilings, evidence or reserve review. The company's fixed-cost plus fixed-tax ceiling must include the full monthly LLC total before the separate acquisition/closing exposure is added. This checks inclusion once; it does not add the LLC total again, infer a tax deduction, reclassify taxes or credit another business's revenue.
+The commercial gate now reads the same complete LLC inventory used by the company-cost report. Aggregate review flags cannot stand in for missing monthly/annual ceilings, evidence or reserve review. The company's fixed-cost plus fixed-tax ceiling must include the full worst-month LLC total before the separate acquisition/closing exposure is added. Twelve fixed monthly budgets must also cover the complete annual LLC ceiling, using exact integer arithmetic; a single missing annual cent fails. This is an additional inclusion check, not permission to amortize an annual cash invoice or evidence of a funded reserve. This checks inclusion once; it does not add the LLC total again, infer a tax deduction, reclassify taxes or credit another business's revenue.
 
 The commercial snapshot binds the inventory,100%Marktmorgen/0%Hazelsong allocation and every ceiling. Changing them requires a fresh review even when the customer price and rights have not changed. The actual records and commercial review remain unknown/absent; plans remain closed.
 
@@ -31,6 +31,6 @@ No annual amortization, registration, tax applicability, account cap or solvency
 
 ## Verification and cost
 
-Synthetic tests call the actual commercial gate with explicit hypothetical complete ceilings, then remove a required line, omit monthly/annual values/evidence/reserves or understate the company budget. Positive boundary controls remain assessable. Existing model tests use clearly labelled test-only zero ceilings; production records remain null. Exposure money cannot fill missing fixed overhead, and stale snapshots remain refused.
+Synthetic tests call the actual commercial gate with explicit hypothetical complete ceilings, then remove a required line, omit monthly/annual values/evidence/reserves or understate the company budget. Annual boundary controls include1200/1201 cents, an explicit zero monthly line with a nonzero annual liability, and the largest safe annual integer. Positive boundary controls remain assessable. Existing model tests use clearly labelled test-only zero ceilings; production records remain null. Exposure money cannot fill missing fixed overhead, and stale snapshots remain refused.
 
 The check is a bounded in-memory walk of the required inventory, with no provider/database request or new allowance. Computational/build/storage costs are not certified as zero. Complete39checks+Vercel and exact production proof are required on the combined head. This does not approve any previously unknown supplier maximum, full cash reserve, customer base or60%net margin.

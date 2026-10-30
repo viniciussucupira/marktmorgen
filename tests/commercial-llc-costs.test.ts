@@ -50,3 +50,23 @@ test("exposure money cannot replace missing fixed overhead and old inventory sna
  assert.equal(commercialMarginReady({...review(),priceAndRightsSnapshot:JSON.stringify(changed)}),false);
  assert.equal(commercialMarginReady(review()),true);
 });
+
+test("the full annual ceiling must fit too, including a single unpaid cent",()=>{
+ const row=lines.find(x=>x.id==="deployment-artifact-retention")!;
+ const original={...row};
+ try{
+  row.fullAnnualUsdCents=1201;
+  assert.equal(commercialMarginReady(review(100)),false,"twelve monthly budgets cover only1200");
+  assert.equal(commercialMarginReady(review(101)),true,"both complete ceilings fit");
+  row.fullMonthlyUsdCents=0;
+  assert.equal(commercialMarginReady(review(0)),false,"known annual liability is not monthly zero");
+  assert.equal(commercialMarginReady(review(100)),false,"annual comparison never rounds away a cent");
+  assert.equal(commercialMarginReady(review(101)),true);
+  const taxBudget=review(1);
+  taxBudget.companyBase!.monthlyFixedTaxesCeilingCents=100;
+  assert.equal(commercialMarginReady(taxBudget),true,"full fixed costs and taxes are checked once");
+  row.fullAnnualUsdCents=Number.MAX_SAFE_INTEGER;
+  assert.equal(commercialMarginReady(review(10000)),false,"safe annual amount is compared without overflow");
+ }finally{Object.assign(row,original);}
+ assert.equal(commercialMarginReady(review()),true);
+});
