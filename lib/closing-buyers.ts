@@ -53,7 +53,15 @@ import {
 
 export const toldKey = (folder: string) => `nl:closing:told:${folder}`;
 
-const contactOf = (store: Store) => `reply to this email, or write to ${store.email}`;
+/**
+ * How a buyer reaches the creator, as the creator published it: the contact
+ * form on the store's page when it is on, and otherwise a reply to this
+ * email, which goes to them (reply-to). The creator's own sign-in address is
+ * never printed.
+ */
+const contactOf = (store: Store) => (store.contact?.on ? `use the contact form on its page, ${storeBase(store)}#contact, or reply to this email` : "reply to this email: your reply goes to the store");
+/** The told list's mark for an address the cap did not cover: written once, so each is counted once. */
+const UNTOLD = "x";
 
 function message(store: Store, to: string, letter: BuyerLetter, postal: string): BatchMessage {
   const text = `${letter.text}\n\nMarktmorgen, ${postal}`;
@@ -116,7 +124,11 @@ export async function tellBuyers(store: Store, endedAt: number, day: number, aft
       const going: string[] = [];
       for (const email of todo.slice(i, i + 100)) {
         if (await takeCredit(folder, EMAILS_PER_BUYER_PER_ENDING)) going.push(email);
-        else out.untold += 1;
+        else {
+          // Counted once however many times the address turns up (HSETNX).
+          const [fresh] = await redisPipeline([["HSETNX", toldKey(folder), email, UNTOLD]]);
+          if (Number(fresh) === 1) out.untold += 1;
+        }
       }
       const letters = going.map((email) =>
         message(store, email, buyerNotice({ store: store.name, storeUrl: base, day, contact: contactOf(store), member: members.has(email), refund: members.get(email) || undefined }), postal),
@@ -167,8 +179,14 @@ export async function tellStaysOpen(store: Store, until: number): Promise<boolea
     const [reply] = await redisPipeline([["HSCAN", toldKey(folder), "0", "COUNT", 100]]);
     const flat = Array.isArray(reply) && Array.isArray(reply[1]) ? (reply[1] as unknown[]).map(String) : [];
     const told: { email: string; ending: string }[] = [];
-    for (let i = 0; i + 1 < flat.length; i += 2) told.push({ email: flat[i], ending: flat[i + 1] });
-    if (!told.length) return true;
+    const untold: string[] = [];
+    for (let i = 0; i + 1 < flat.length; i += 2) {
+      if (flat[i + 1] === UNTOLD) untold.push(flat[i]);
+      else told.push({ email: flat[i], ending: flat[i + 1] });
+    }
+    if (untold.length) await redisPipeline([["HDEL", toldKey(folder), ...untold]]);
+    if (!told.length && !untold.length) return true;
+    if (!told.length) continue;
     // Each was told with a follow-up paid for (tellBuyers takes both at once); without an address of ours to sign with, nothing goes.
     if (!postal) return false;
     const letters = told.map(({ email }) => message(store, email, staysOpenLetter({ store: store.name, storeUrl: base, contact: contactOf(store) }), postal));
@@ -199,7 +217,7 @@ export async function tellRefundShort(store: Store, short: { email: string; amou
       continue;
     }
     const [told] = await redisPipeline([["HGET", toldKey(folder), email]]);
-    if (told === null && !(await takeCredit(folder, 1))) {
+    if ((told === null || told === UNTOLD) && !(await takeCredit(folder, 1))) {
       out.untold += 1;
       continue;
     }

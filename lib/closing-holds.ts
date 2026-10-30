@@ -3,33 +3,45 @@
  * account (queue item 307 [EC1], parts 2 and 4; lib/closing-buyers-rules.ts
  * says why).
  *
- *   holdCharges     the day the plan ended: every membership and payment plan
- *                   the store sold stops being charged (Stripe's pause of
- *                   collection, invoices voided, no day to resume), and each
- *                   member's last payment is written down, for the time they
- *                   paid for past the closing day (lib/closing-refunds.ts)
+ *   holdCharges     from the day the plan ended: every membership and payment
+ *                   plan the store sold stops being charged (Stripe's pause of
+ *                   collection, invoices voided, no day to resume); its open
+ *                   invoices are voided and its drafts kept as drafts, so no
+ *                   invoice from before is collected either; and each
+ *                   member's last paid invoice is written down, for the time
+ *                   they paid for past the closing day (lib/closing-refunds.ts).
+ *                   Page by page from where the last run stopped; a member
+ *                   that could not be held is written down and tried again
+ *                   every day (retryHolds), and counted for the creator.
  *   releaseHolds    the plan was started again before the closing: each one
  *                   goes on exactly as it was, nothing charged for the days
  *                   between (voided invoices are never charged)
  *   releaseRestarted  the daily job's walk of the stores held, for the plans
  *                   started again since (the store record leaves the line of
  *                   ended plans the moment a plan runs, so the closing job
- *                   alone would never see it)
+ *                   alone would never see it). A store whose closing day has
+ *                   begun is not in it any more: from then on it closes.
  *
  * Read on 30 October 2026 in Stripe's documentation:
  * docs.stripe.com/billing/subscriptions/pause-payment ("the subscription
  * remains active and invoices continue to generate, but Stripe doesn't
  * collect payment"; void: "No record of charges is created for these
  * periods"; resume by unsetting pause_collection; "Invoices created before
- * you pause subscriptions continue to be retried unless you void them").
+ * you pause subscriptions continue to be retried unless you void them"; a
+ * draft is not collected while its auto_advance is false);
+ * docs.stripe.com/api/invoices/void ("Mark a finalized invoice as void").
  *
  *   nl:closing:paid:<folder>   hash  subscription -> its last payment (PaidPeriod), from the hold to the closing
+ *   nl:closing:work:<folder>   hash  where the hold and the release stopped, the members not held yet
+ *                                    ("f:<sub>"), those past the call budget ("o:<sub>"), and what is
+ *                                    left of the budget ("calls")
  *   nl:closing:held            sorted set  a store's key -> when its plan ended, while its members are held
+ *   nl:closing:final           sorted set  a store's key -> when its plan ended, from its closing day's start to its end
  *
- * Every write to Stripe carries an idempotency key, and a hold or a release
- * that did not reach every member says so: the daily job tries again the
- * next day, and the closing day does not wait on it (on that day every one
- * of them ends at once). Nothing here is silent: what was not done is logged.
+ * Every write to Stripe carries an idempotency key and every call is taken
+ * from the closing's budget first (STRIPE_CALLS_PER_MEMBER for each member
+ * the cap allows). Nothing here is silent: what was not done is logged and
+ * counted for the creator's notices.
  */
 import { onAccount } from "@/lib/stripe-account";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
@@ -37,87 +49,207 @@ import { type Store, saleHandles, storeFolder, storeForEmail, storeRef } from "@
 import { standingOf } from "@/lib/plan-standing";
 import { normaliseEmail } from "@/lib/auth";
 import { forgetCredit } from "@/lib/closing-credit";
-import { HOLD_PAGES_PER_RUN, type HeldSub, type PaidPeriod, chargeable, holdBody, isPaymentPlan, releaseBody } from "@/lib/closing-buyers-rules";
+import {
+  HOLD_PAGES_PER_RUN,
+  type HeldSub,
+  MEMBERS_AT_ONCE,
+  type PaidPeriod,
+  chargeable,
+  holdBody,
+  isPaymentPlan,
+  membershipLineOf,
+  releaseBody,
+} from "@/lib/closing-buyers-rules";
 
 export const paidKey = (folder: string) => `nl:closing:paid:${folder}`;
+export const workKey = (folder: string) => `nl:closing:work:${folder}`;
 export const HELD_INDEX = "nl:closing:held";
+/** Stores whose closing day has begun (their memberships ended at Stripe): seen through to the end, whatever the plan does since. */
+export const FINAL_INDEX = "nl:closing:final";
 const SUB_ID = /^sub_[A-Za-z0-9]{6,64}$/;
 const INVOICE_ID = /^in_[A-Za-z0-9]{6,64}$/;
+const INTENT_ID = /^pi_[A-Za-z0-9]{6,64}$/;
 
 type Row = HeldSub & Record<string, unknown>;
+type Cursor = { h: number; p: string };
 
-/** Every subscription the store sold, page by page, on its own account; bounded by `until` and HOLD_PAGES_PER_RUN. */
-async function eachSold(store: Store, until: number, each: (rows: Row[]) => Promise<void>): Promise<boolean> {
-  const account = store.stripeAccountId;
-  if (!account) return true;
-  let pages = 0;
-  for (const handle of saleHandles(store)) {
-    let page = "";
-    for (;;) {
-      if (Date.now() > until || pages >= HOLD_PAGES_PER_RUN) return false;
-      const query = new URLSearchParams({ limit: "100", query: `metadata['store']:'${handle}'` });
-      query.append("expand[]", "data.latest_invoice");
-      query.append("expand[]", "data.customer");
-      if (page) query.set("page", page);
-      const found = await onAccount("GET", account, `/subscriptions/search?${query}`);
-      pages += 1;
-      await each(Array.isArray(found.data) ? (found.data as Row[]) : []);
-      page = typeof found.next_page === "string" ? found.next_page : "";
-      if (found.has_more !== true || !page) break;
-    }
+const parseCursor = (raw: unknown): Cursor => {
+  try {
+    const value = typeof raw === "string" ? (JSON.parse(raw) as Cursor) : null;
+    return value && Number.isInteger(value.h) && value.h >= 0 && typeof value.p === "string" ? value : { h: 0, p: "" };
+  } catch {
+    return { h: 0, p: "" };
   }
-  return true;
-}
+};
 
-/** A member's last payment, from a subscription read with its latest invoice and customer: null when nothing paid stands for time. */
-export function paidPeriodOf(sub: Row): PaidPeriod | null {
-  if (isPaymentPlan(sub)) return null;
-  const invoice = sub.latest_invoice && typeof sub.latest_invoice === "object" ? (sub.latest_invoice as Record<string, unknown>) : null;
-  if (!invoice || invoice.status !== "paid" || typeof invoice.id !== "string" || !INVOICE_ID.test(invoice.id)) return null;
-  const amt = typeof invoice.amount_paid === "number" ? invoice.amount_paid : 0;
-  const cur = typeof invoice.currency === "string" ? invoice.currency.toLowerCase() : "";
-  const lines = (invoice.lines as { data?: { period?: { start?: unknown; end?: unknown } }[] } | undefined)?.data ?? [];
-  const period = lines.find((line) => line.period && typeof line.period.end === "number")?.period;
-  const ps = Number(period?.start), pe = Number(period?.end);
-  const customer = sub.customer && typeof sub.customer === "object" ? (sub.customer as { email?: unknown }) : null;
-  const e = typeof customer?.email === "string" ? normaliseEmail(customer.email) : "";
-  if (!(amt > 0) || !cur || !Number.isFinite(ps) || !Number.isFinite(pe) || pe <= ps) return null;
-  return { inv: invoice.id, amt, cur, ps, pe, e };
+/** Runs `each` over `items`, MEMBERS_AT_ONCE at a time, stopping once `until` has passed. */
+async function inTurn<T>(items: T[], until: number, each: (item: T) => Promise<void>): Promise<boolean> {
+  let at = 0;
+  const work = async () => {
+    while (at < items.length && Date.now() <= until) {
+      const item = items[at];
+      at += 1;
+      await each(item);
+    }
+  };
+  await Promise.all(Array.from({ length: MEMBERS_AT_ONCE }, work));
+  return at >= items.length;
 }
 
 /**
- * Holds every member's charges for a plan that ended at `endedAt` (ms).
- * `done` when every one the store sold was reached; safe to run again: a
- * membership held already for this ending is passed over, and its payment
- * is not written down twice.
+ * Every subscription the store sold, page by page on its own account, from
+ * the cursor kept under `field`; bounded by `until` and HOLD_PAGES_PER_RUN.
+ * Answers whether it reached the end (and lets the cursor go then).
  */
-export async function holdCharges(store: Store, endedAt: number, until: number): Promise<{ done: boolean; held: number; failed: number }> {
-  const out = { done: true, held: 0, failed: 0 };
-  if (!store.stripeAccountId) return out;
+async function eachSold(store: Store, folder: string, field: string, until: number, each: (rows: Row[]) => Promise<boolean>): Promise<boolean> {
   const account = store.stripeAccountId;
-  const folder = await storeFolder(storeRef(store));
-  const reached = await eachSold(store, until, async (rows) => {
-    const paid: (string | number)[] = [];
-    for (const sub of rows) {
-      const id = typeof sub.id === "string" ? sub.id : "";
-      if (!SUB_ID.test(id) || !chargeable(sub)) continue;
-      const period = paidPeriodOf(sub);
-      if (period) paid.push(id, JSON.stringify(period));
-      if (sub.metadata?.store_hold === String(endedAt) && sub.pause_collection) continue;
-      try {
-        await onAccount("POST", account, `/subscriptions/${encodeURIComponent(id)}`, holdBody(sub, endedAt), undefined, `closing-hold:${id}:${endedAt}`);
-        out.held += 1;
-      } catch (error) {
-        out.failed += 1;
-        console.error("holding a member's charges after the plan ended failed; tried again tomorrow", error);
-      }
+  if (!account) return true;
+  const handles = [...saleHandles(store)];
+  const [raw] = await redisPipeline([["HGET", workKey(folder), field]]);
+  let cursor = parseCursor(raw);
+  for (let pages = 0; pages < HOLD_PAGES_PER_RUN; pages += 1) {
+    if (cursor.h >= handles.length) {
+      await redisPipeline([["HDEL", workKey(folder), field]]);
+      return true;
     }
-    // Each payment written once (HSETNX): the first reading is the one before any hold.
-    for (let i = 0; i + 1 < paid.length; i += 2) await redisPipeline([["HSETNX", paidKey(folder), paid[i], paid[i + 1]]]);
+    if (Date.now() > until) return false;
+    const query = new URLSearchParams({ limit: "100", query: `metadata['store']:'${handles[cursor.h]}'` });
+    query.append("expand[]", "data.customer");
+    if (cursor.p) query.set("page", cursor.p);
+    const found = await onAccount("GET", account, `/subscriptions/search?${query}`);
+    if (!(await each(Array.isArray(found.data) ? (found.data as Row[]) : []))) return false;
+    const next = typeof found.next_page === "string" ? found.next_page : "";
+    cursor = found.has_more === true && next ? { h: cursor.h, p: next } : { h: cursor.h + 1, p: "" };
+    await redisPipeline([["HSET", workKey(folder), field, JSON.stringify(cursor)]]);
+  }
+  if (cursor.h >= handles.length) {
+    await redisPipeline([["HDEL", workKey(folder), field]]);
+    return true;
+  }
+  return false;
+}
+
+/** Sets the closing's budget of calls to the creator's Stripe account, once an ending, before any is made. */
+export async function startCallBudget(folder: string, calls: number): Promise<void> {
+  await redisPipeline([["DEL", workKey(folder)], ["HSET", workKey(folder), "calls", Math.max(0, Math.floor(calls))]]);
+}
+
+/** Takes `n` calls from the budget, all or none. */
+export async function takeCalls(folder: string, n: number): Promise<boolean> {
+  const [left] = await redisPipeline([["HINCRBY", workKey(folder), "calls", -n]]);
+  if (Number(left) >= 0) return true;
+  await redisPipeline([["HINCRBY", workKey(folder), "calls", n]]);
+  return false;
+}
+
+/** A member's last paid invoice, as its membership line says, with the payment it was paid by. */
+export function paidPeriodOf(invoice: Record<string, unknown>, email: string, intent = ""): PaidPeriod | null {
+  if (invoice.status !== "paid" || typeof invoice.id !== "string" || !INVOICE_ID.test(invoice.id)) return null;
+  const line = membershipLineOf(invoice as Parameters<typeof membershipLineOf>[0]);
+  const tot = typeof invoice.amount_paid === "number" ? invoice.amount_paid : 0;
+  const cur = typeof invoice.currency === "string" ? invoice.currency.toLowerCase() : "";
+  if (!line || !(tot > 0) || !cur) return null;
+  const direct = typeof invoice.payment_intent === "string" ? invoice.payment_intent : (invoice.payment_intent as { id?: unknown } | null)?.id;
+  const pi = typeof direct === "string" && INTENT_ID.test(direct) ? direct : INTENT_ID.test(intent) ? intent : "";
+  return { inv: invoice.id, ...(pi ? { pi } : {}), amt: line.amt, tot, cur, ps: line.ps, pe: line.pe, e: email };
+}
+
+const listOf = (reply: Record<string, unknown>) => (Array.isArray(reply.data) ? (reply.data as Record<string, unknown>[]) : []);
+
+/**
+ * Holds one member for an ending: its open invoices voided and its drafts
+ * kept as drafts (so nothing issued before is collected), its last paid
+ * invoice written down, then its collection paused. Each call is taken from
+ * the budget first. Throws when Stripe could not be asked; answers "over"
+ * when the budget did not cover it.
+ */
+async function holdOne(account: string, folder: string, sub: Row, endedAt: number): Promise<"held" | "over"> {
+  const id = sub.id as string;
+  // Its open and draft invoices listed, its last paid one read, its hold, and its release if the plan starts again.
+  if (!(await takeCalls(folder, 5))) return "over";
+  const open = listOf(await onAccount("GET", account, `/invoices?${new URLSearchParams({ subscription: id, status: "open", limit: "10" })}`));
+  const drafts = listOf(await onAccount("GET", account, `/invoices?${new URLSearchParams({ subscription: id, status: "draft", limit: "10" })}`));
+  if (!(await takeCalls(folder, open.length + drafts.length))) return "over";
+  for (const invoice of open) {
+    if (typeof invoice.id === "string" && INVOICE_ID.test(invoice.id)) await onAccount("POST", account, `/invoices/${encodeURIComponent(invoice.id)}/void`, undefined, undefined, `closing-void:${invoice.id}`);
+  }
+  for (const invoice of drafts) {
+    if (typeof invoice.id === "string" && INVOICE_ID.test(invoice.id)) await onAccount("POST", account, `/invoices/${encodeURIComponent(invoice.id)}`, new URLSearchParams({ auto_advance: "false" }), undefined, `closing-draft:${invoice.id}:${endedAt}`);
+  }
+  if (!isPaymentPlan(sub)) {
+    const paid = listOf(await onAccount("GET", account, `/invoices?${new URLSearchParams({ subscription: id, status: "paid", limit: "1" })}`))[0];
+    const customer = sub.customer && typeof sub.customer === "object" ? (sub.customer as { email?: unknown }) : null;
+    const email = typeof customer?.email === "string" ? normaliseEmail(customer.email) : "";
+    const period = paid ? paidPeriodOf(paid, email) : null;
+    // The first reading is the one before any hold (HSETNX).
+    if (period) await redisPipeline([["HSETNX", paidKey(folder), id, JSON.stringify(period)]]);
+  }
+  await onAccount("POST", account, `/subscriptions/${encodeURIComponent(id)}`, holdBody(sub, endedAt), undefined, `closing-hold:${id}:${endedAt}`);
+  return "held";
+}
+
+/** How the hold stands: the members it could not reach yet, and those past the budget. */
+export async function holdCounts(folder: string): Promise<{ failed: number; over: number }> {
+  if (!isRedisConfigured()) return { failed: 0, over: 0 };
+  const [fields] = await redisPipeline([["HKEYS", workKey(folder)]]);
+  const keys = Array.isArray(fields) ? (fields as unknown[]).map(String) : [];
+  return { failed: keys.filter((k) => k.startsWith("f:")).length, over: keys.filter((k) => k.startsWith("o:")).length };
+}
+
+async function holdRows(account: string, folder: string, rows: Row[], endedAt: number, until: number): Promise<boolean> {
+  const todo = rows.filter((sub) => typeof sub.id === "string" && SUB_ID.test(sub.id) && chargeable(sub) && !(sub.metadata?.store_hold === String(endedAt) && sub.pause_collection));
+  return inTurn(todo, until, async (sub) => {
+    const id = sub.id as string;
+    try {
+      const done = await holdOne(account, folder, sub, endedAt);
+      await redisPipeline(done === "held" ? [["HDEL", workKey(folder), `f:${id}`, `o:${id}`]] : [["HSET", workKey(folder), `o:${id}`, "1"], ["HDEL", workKey(folder), `f:${id}`]]);
+      if (done === "over") console.error("plan-closing: a member past the closing's call budget was not held; it ends on the closing day");
+    } catch (error) {
+      await redisPipeline([["HSET", workKey(folder), `f:${id}`, "1"]]);
+      console.error("holding a member's charges after the plan ended failed; tried again tomorrow", error);
+    }
   });
+}
+
+/**
+ * One run of the hold for a plan that ended at `endedAt` (ms): the next pages
+ * of the store's memberships. `done` once every page was read; members that
+ * could not be held are tried again by retryHolds and counted, never a
+ * reason to wait.
+ */
+export async function holdCharges(store: Store, endedAt: number, until: number): Promise<{ done: boolean; failed: number; over: number }> {
+  const folder = await storeFolder(storeRef(store));
+  const account = store.stripeAccountId;
+  let done = true;
+  if (account) done = await eachSold(store, folder, "hc", until, (rows) => holdRows(account, folder, rows, endedAt, until));
   await redisPipeline([["ZADD", HELD_INDEX, endedAt, storeRef(store)]]);
-  out.done = reached && out.failed === 0;
-  return out;
+  return { done, ...(await holdCounts(folder)) };
+}
+
+/** The members not held yet, tried again: read one by one, then held. */
+export async function retryHolds(store: Store, endedAt: number, until: number): Promise<{ failed: number; over: number }> {
+  const folder = await storeFolder(storeRef(store));
+  const account = store.stripeAccountId;
+  if (!account) return holdCounts(folder);
+  const [fields] = await redisPipeline([["HKEYS", workKey(folder)]]);
+  const ids = (Array.isArray(fields) ? (fields as unknown[]).map(String) : []).filter((k) => k.startsWith("f:")).map((k) => k.slice(2)).filter((id) => SUB_ID.test(id));
+  await inTurn(ids, until, async (id) => {
+    try {
+      if (!(await takeCalls(folder, 1))) {
+        await redisPipeline([["HSET", workKey(folder), `o:${id}`, "1"], ["HDEL", workKey(folder), `f:${id}`]]);
+        return;
+      }
+      const sub = (await onAccount("GET", account, `/subscriptions/${encodeURIComponent(id)}?expand[]=customer`)) as Row;
+      if (!chargeable(sub) || (sub.metadata?.store_hold === String(endedAt) && sub.pause_collection)) {
+        await redisPipeline([["HDEL", workKey(folder), `f:${id}`]]);
+        return;
+      }
+      await holdRows(account, folder, [sub], endedAt, until);
+    } catch (error) {
+      console.error("holding a member's charges failed again; tried again tomorrow", error);
+    }
+  });
+  return holdCounts(folder);
 }
 
 /** Lets every held member of the store go again, as they were. `done` when every one was reached. */
@@ -125,19 +257,24 @@ export async function releaseHolds(store: Store, until: number, nowSeconds = Mat
   const out = { done: true, released: 0, failed: 0 };
   const account = store.stripeAccountId;
   if (!account) return out;
-  const reached = await eachSold(store, until, async (rows) => {
-    for (const sub of rows) {
-      const id = typeof sub.id === "string" ? sub.id : "";
-      const hold = sub.metadata?.store_hold;
-      if (!SUB_ID.test(id) || !hold || !chargeable(sub)) continue;
+  const folder = await storeFolder(storeRef(store));
+  // Each held member's release was taken from the budget with its hold (STRIPE_CALLS_PER_MEMBER): it is never refused for want of it.
+  const reached = await eachSold(store, folder, "rc", until, async (rows) => {
+    const todo = rows.filter((sub) => typeof sub.id === "string" && SUB_ID.test(sub.id) && Boolean(sub.metadata?.store_hold) && chargeable(sub));
+    let failed = 0;
+    const all = await inTurn(todo, until, async (sub) => {
+      const id = sub.id as string;
       try {
-        await onAccount("POST", account, `/subscriptions/${encodeURIComponent(id)}`, releaseBody(sub, nowSeconds), undefined, `closing-release:${id}:${hold}`);
+        await onAccount("POST", account, `/subscriptions/${encodeURIComponent(id)}`, releaseBody(sub, nowSeconds), undefined, `closing-release:${id}:${sub.metadata?.store_hold}`);
         out.released += 1;
       } catch (error) {
-        out.failed += 1;
+        failed += 1;
         console.error("letting a held member's charges go again failed; tried again tomorrow", error);
       }
-    }
+    });
+    out.failed += failed;
+    // A page with a member not let go is read again the next day: its cursor does not move past it.
+    return all && failed === 0;
   });
   out.done = reached && out.failed === 0;
   return out;
@@ -167,7 +304,7 @@ export async function savePaidPeriod(store: Store, sub: string, row: PaidPeriod)
 
 /** Once the store is closed or runs again: its written-down payments are deleted, and it leaves the line. */
 export async function forgetHeld(store: Store, folder: string): Promise<void> {
-  await redisPipeline([["DEL", paidKey(folder)], ["ZREM", HELD_INDEX, storeRef(store)]]);
+  await redisPipeline([["DEL", paidKey(folder), workKey(folder)], ["ZREM", HELD_INDEX, storeRef(store)]]);
   await forgetCredit(folder);
 }
 

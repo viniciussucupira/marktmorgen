@@ -85,9 +85,9 @@ import { type Store, setPodcastEpisodes, setProductFile, setSubscription, storeF
 import { dropAllStreams, dropStream } from "@/lib/stream";
 import { readStreamPath } from "@/lib/stream-rules";
 import { SUPPORT_EMAIL } from "@/lib/creator-research";
-import { BUYER_NOTICE_DAYS, BUYER_NOTICE_FROM, EMAILS_PER_BUYER_PER_ENDING, afterBuyersTold, buyerNoticeCap, buyersStartOn, paidBefore } from "@/lib/closing-buyers-rules";
+import { BUYER_NOTICE_DAYS, BUYER_NOTICE_FROM, EMAILS_PER_BUYER_PER_ENDING, STRIPE_CALLS_PER_MEMBER, afterBuyersTold, buyerNoticeCap, buyersStartOn, paidBefore } from "@/lib/closing-buyers-rules";
 import { forgetCredit, startClosingCredit } from "@/lib/closing-credit";
-import { forgetHeld, holdCharges, paidPeriods, savePaidPeriod } from "@/lib/closing-holds";
+import { FINAL_INDEX, HELD_INDEX, forgetHeld, holdCharges, holdCounts, paidPeriods, retryHolds, savePaidPeriod, startCallBudget } from "@/lib/closing-holds";
 import { forgetTold, tellBuyers, tellRefundShort } from "@/lib/closing-buyers";
 import { giveBackUnused, unusedRows, unusedSummary } from "@/lib/closing-refunds";
 import { stillToGive, unusedOf, type PaidPeriod } from "@/lib/closing-buyers-rules";
@@ -124,6 +124,9 @@ type State = {
    * was settled on the closing day.
    */
   hold?: number;
+  holdFrom?: number;
+  /** The closing day, once it began (ms). */
+  day?: number;
   buyersFrom?: number;
   buyersDone?: number;
   buyersAfter?: string;
@@ -141,7 +144,7 @@ function parseState(raw: unknown): State {
   try {
     const value = JSON.parse(raw) as Record<string, unknown>;
     const out: State = {};
-    for (const name of ["of", "ended", "month", "week", "removed", "said", "fit", "renewals", "due", "erased", "hold", "buyersFrom", "buyersDone", "untold", "refunds"] as const) {
+    for (const name of ["of", "ended", "month", "week", "removed", "said", "fit", "renewals", "due", "erased", "hold", "holdFrom", "day", "buyersFrom", "buyersDone", "untold", "refunds"] as const) {
       if (typeof value[name] === "number" && Number.isFinite(value[name] as number)) out[name] = value[name] as number;
     }
     if (typeof value.buyersAfter === "string" && /^(start|cs_[A-Za-z0-9_]{6,200})$/.test(value.buyersAfter)) out.buyersAfter = value.buyersAfter;
@@ -294,6 +297,9 @@ export type ClosingNews = {
   members: number;
   /** "$120 and €40", or "" for none. */
   unused: string;
+  /** Members whose charges could not be paused yet (tried again every day), and those past the closing's limit (not paused). */
+  notHeld?: number;
+  overLimit?: number;
 };
 
 /**
@@ -313,6 +319,14 @@ export function closingLetter(kind: "ended" | "month" | "week", name: string, en
         ...(news.untold > 0
           ? [`${news.untold} ${news.untold === 1 ? "address was" : "addresses were"} not covered by your store's closing emails: please tell ${news.untold === 1 ? "that buyer" : "those buyers"} yourself.`]
           : []),
+        "",
+      ]
+    : [];
+  const unpaused = (news?.notHeld ?? 0) + (news?.overLimit ?? 0);
+  const holds = unpaused > 0
+    ? [
+        `${unpaused} ${unpaused === 1 ? "membership's payments are" : "memberships' payments are"} not paused${news?.notHeld ? " yet: we try again every day" : ""}${news?.overLimit ? `${news?.notHeld ? ", and some are" : ":"} past this closing's limit` : ""}.`,
+        `Every one of them ends on ${dateWords(day)}. If a member is charged before then, please refund them from Stripe.`,
         "",
       ]
     : [];
@@ -344,6 +358,7 @@ export function closingLetter(kind: "ended" | "month" | "week", name: string, en
       "    they gave, community, contacts, forms and their answers, numbers, and your buyers'",
       "    access to what they bought from it.",
       "",
+      ...holds,
       ...buyers,
       ...members,
       "We keep no copy of your sales: every sale, refund and payout is on your own Stripe",
@@ -377,7 +392,10 @@ export function closingLetter(kind: "ended" | "month" | "week", name: string, en
 /** What a closing store's notice says of its buyers and members today, read from what was written down (no call to Stripe). */
 export async function closingNews(store: Store, endedAt: number, day: number, untold: number): Promise<ClosingNews> {
   const summary = await unusedSummary(store, day).catch(() => ({ members: 0, totals: [] as { cur: string; amount: number }[] }));
+  const counts = await holdCounts(await storeFolder(storeRef(store))).catch(() => ({ failed: 0, over: 0 }));
   return {
+    notHeld: counts.failed,
+    overLimit: counts.over,
     buyersBy: tellsBuyers(endedAt) ? day - BUYER_NOTICE_DAYS * DAY_MS : null,
     untold,
     members: summary.members,
@@ -558,8 +576,20 @@ export type Closing = {
 export async function closeOne(key: string, now = Date.now(), hands: Hands = HANDS, until = Number.POSITIVE_INFINITY): Promise<Closing> {
   const store = await storeForEmail(key);
   if (!store) {
-    await redisPipeline([["ZREM", ENDED_INDEX, key], ["DEL", stateKey(key)]]);
+    await redisPipeline([["ZREM", ENDED_INDEX, key], ["ZREM", FINAL_INDEX, key], ["DEL", stateKey(key)]]);
     return { key, state: "gone" };
+  }
+  // A closing day that has begun (its memberships ended at Stripe) is seen
+  // through, whatever happens to the plan since: its buyers have lost what
+  // they paid for, so it can no longer "stay open" (queue item 307 [EC1]).
+  const [finalScore] = await redisPipeline([["ZSCORE", FINAL_INDEX, key]]);
+  if (finalScore !== null && finalScore !== undefined && Number.isFinite(Number(finalScore))) {
+    const was = Number(finalScore);
+    const [rawFinal] = await redisPipeline([["GET", stateKey(key)]]);
+    const kept = parseState(rawFinal);
+    const final: State = kept.of === was ? kept : { of: was, renewals: now };
+    const folderFinal = await storeFolder(storeRef(store));
+    return closingDay(store, key, final, was, final.day ?? now, folderFinal, now, hands, until, (next) => redisPipeline([["SET", stateKey(key), JSON.stringify(next)]]));
   }
   const endedAt = Date.parse(store.planEndedAt);
   if (standingOf(store, now / 1000) !== "ended" || !Number.isFinite(endedAt)) {
@@ -620,18 +650,30 @@ export async function closeOne(key: string, now = Date.now(), hands: Hands = HAN
   // Queue item 307 [EC1]: from the day the plan ended no member is charged
   // again (lib/closing-holds.ts); the creator's first notice says what that
   // means for them, so it waits on it, and the hold is tried again each day.
+  if (closes && !state.holdFrom) {
+    // The addresses told about an earlier ending say nothing about this one;
+    // this one's emails and calls to Stripe are capped before any is spent
+    // (lib/closing-credit.ts, lib/closing-holds.ts).
+    const cap = buyerNoticeCap(store.tier, paidBefore(store));
+    await forgetTold(folder);
+    await startClosingCredit(folder, cap * EMAILS_PER_BUYER_PER_ENDING);
+    await startCallBudget(folder, cap * STRIPE_CALLS_PER_MEMBER);
+    Object.assign(state, { holdFrom: now });
+    await save(state);
+  }
   if (closes && !state.hold) {
     const hold = await holdCharges(store, endedAt, until).catch((error) => {
       console.error("holding a closing store's members' charges failed", error);
       return null;
     });
-    if (!hold?.done) return { key, state: "held", note: "its members' charges are not all held yet" };
-    // The addresses told about an earlier ending say nothing about this one;
-    // this one's emails are capped before any goes (lib/closing-credit.ts).
-    await forgetTold(folder);
-    await startClosingCredit(folder, buyerNoticeCap(store.tier, paidBefore(store)) * EMAILS_PER_BUYER_PER_ENDING);
+    // Every page of its memberships is read first (a part a day for a store
+    // with more than one run can read); a member that could not be held does
+    // not hold up the notices: it is tried again every day, and counted.
+    if (!hold?.done) return { key, state: "held", note: "its members are not all reached yet" };
     Object.assign(state, { hold: now });
     await save(state);
+  } else if (closes && !state.renewals) {
+    await retryHolds(store, endedAt, until).catch((error) => console.error("trying a closing store's members again failed", error));
   }
 
   if (!isSenderConfigured()) return { key, state: "held", note: "no way to write to the creator" };
@@ -717,6 +759,12 @@ export async function closeOne(key: string, now = Date.now(), hands: Hands = HAN
 async function closingDay(store: Store, key: string, state: State, endedAt: number, day: number, folder: string, now: number, hands: Hands, until: number, save: (next: State) => Promise<unknown>): Promise<Closing> {
   let next: State = state;
   if (!next.renewals) {
+    // From here the closing is seen through (FINAL_INDEX): no release, no "it stays open".
+    await redisPipeline([["ZADD", FINAL_INDEX, endedAt, key], ["ZREM", HELD_INDEX, key]]);
+    if (!next.day) {
+      next = { ...next, day };
+      await save(next);
+    }
     try {
       const stopped = await stopRenewals(store, until);
       if (!stopped.done) return { key, state: "held", note: "the renewals it sold are not all stopped yet" };
@@ -732,19 +780,19 @@ async function closingDay(store: Store, key: string, state: State, endedAt: numb
   // account, once (lib/closing-refunds.ts); a member whose refund the balance
   // did not cover is told so, with the creator's contact.
   if (!next.refunds) {
-    const settled = await giveBackUnused(store, day).catch((error) => {
+    const settled = await giveBackUnused(store, next.day ?? day, { until, final: true }).catch((error) => {
       console.error("giving back a closing store's members' unused time failed", error);
       return null;
     });
     if (settled === null || settled === "busy") return { key, state: "held", note: "its members' unused time is not settled yet" };
-    const shortLeft = [...(await paidPeriods(store))].filter(([, row]) => row.r === "short" && !row.m);
+    const shortLeft = [...(await paidPeriods(store))].filter(([, row]) => row.r === "short" && row.f === 1 && !row.m);
     if (shortLeft.length) {
-      const told = await tellRefundShort(store, shortLeft.map(([, row]) => ({ email: row.e, amount: unusedOfRow(row, day), cur: row.cur })), endedAt);
+      const told = await tellRefundShort(store, shortLeft.map(([, row]) => ({ email: row.e, amount: unusedOfRow(row, next.day ?? day), cur: row.cur })), endedAt);
       if (!told.ok) return { key, state: "held", note: "its members whose refund could not be made are not all told yet" };
       for (const [sub, row] of shortLeft) await savePaidPeriod(store, sub, { ...row, m: 1 });
       if (told.untold) console.error(`plan-closing: ${told.untold} members whose refund could not be made were not covered by the store's closing emails`);
     }
-    const left = (await unusedRows(store, day)).filter((row) => row.paid.r !== "pending");
+    const left = (await unusedRows(store, next.day ?? day)).filter((row) => row.paid.r !== "pending");
     if (settled !== "changed" && settled !== "unavailable" && (settled.failed > 0 || left.length > 0)) return { key, state: "held", note: "its members' unused time is not all settled yet" };
     next = { ...next, refunds: now };
     await save(next);
@@ -764,6 +812,7 @@ async function closingDay(store: Store, key: string, state: State, endedAt: numb
   await forgetTold(folder);
   await forgetCredit(folder);
   await markDue(key, now);
+  await redisPipeline([["ZREM", FINAL_INDEX, key]]);
   await save({ ...next, removed: now, due: now });
   return { key, state: "removed", note: `closed, ${done.files} files: its records are deleted by the next walk` };
 }
@@ -796,10 +845,22 @@ const PAGE = 200;
  */
 export async function closeEnded(deadline: number, now = Date.now(), hands: Hands = HANDS): Promise<Closing[]> {
   if (!isRedisConfigured()) return [];
+  // First the stores whose closing day began and did not finish (queue item 307 [EC1]): a plan started since does not take them out of the line of ended plans' notice, but they are seen through.
+  const finals: Closing[] = [];
+  const [finalRefs] = await redisPipeline([["ZRANGEBYSCORE", FINAL_INDEX, "-inf", "+inf", "LIMIT", 0, PAGE]]);
+  for (const ref of Array.isArray(finalRefs) ? (finalRefs as unknown[]).map(String) : []) {
+    if (Date.now() > deadline) return finals;
+    try {
+      finals.push(await closeOne(ref, now, hands, deadline));
+    } catch (error) {
+      console.error("seeing a closing store through failed", error);
+      finals.push({ key: ref, state: "held", note: "failed" });
+    }
+  }
   const [saved] = await redisPipeline([["GET", AFTER]]);
   let from: string = typeof saved === "string" && /^\d+$/.test(saved) ? saved : "0";
-  const seen = new Set<string>();
-  const out: Closing[] = [];
+  const seen = new Set<string>(finals.map((row) => row.key));
+  const out: Closing[] = [...finals];
   for (;;) {
     const [raw] = await redisPipeline([["ZRANGEBYSCORE", ENDED_INDEX, from, now, "WITHSCORES", "LIMIT", 0, PAGE]]);
     const flat = Array.isArray(raw) ? raw : [];

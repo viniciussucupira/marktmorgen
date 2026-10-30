@@ -11,8 +11,9 @@
  *   1. Before buying, every buyer of something that lasts (a course, a
  *      download, a private podcast, a community, a membership) reads one
  *      fixed sentence, drawn here and never by the creator: access comes from
- *      the store on Marktmorgen, and if the store closes we email them at
- *      least BUYER_NOTICE_DAYS days first.
+ *      the store on Marktmorgen, and if the store closes we email its buyers
+ *      at least BUYER_NOTICE_DAYS days first, up to the closing's cap
+ *      (buyerNoticeCap), which the Terms state.
  *   2. On the day a plan ends, not on the closing day, no member is charged
  *      again until the closing: Stripe's own pause of collection with its
  *      invoices voided, on the creator's account (lib/closing-holds.ts). The
@@ -87,8 +88,21 @@ export function paidBefore(store: { trialEnds?: number }): boolean {
 
 /** Pages of a hundred checkouts read for one store in one daily run. The rest are read the next day. */
 export const BUYER_PAGES_PER_RUN = 20;
-/** Memberships held, released or ended at Stripe for one store in one run, a page of a hundred at a time. */
+/** Pages of a hundred memberships held or released for one store in one run; the next run carries on from where this one stopped. */
 export const HOLD_PAGES_PER_RUN = 50;
+/** Memberships held, released or refunded at once, so one store's run stays inside the daily job's minute. */
+export const MEMBERS_AT_ONCE = 5;
+/**
+ * The calls to the creator's Stripe account one member's closing takes at
+ * the most, outside the end itself (which its order already pays for:
+ * tests/plan-cost-registry.ts, ORDER_RENEWAL_STOP): its open and draft
+ * invoices listed, its last paid invoice read, its hold, its release, and
+ * its refund (the payment, the refunds made, the refund). One more is taken
+ * for each invoice voided or kept as a draft. Taken from the closing's call
+ * budget before each call (lib/closing-holds.ts); past it a member is not
+ * held and is counted for the creator, never silently.
+ */
+export const STRIPE_CALLS_PER_MEMBER = 8;
 /** The most members' payments refunded together in one request to the studio. */
 export const REFUNDS_PER_REQUEST = 200;
 
@@ -98,7 +112,7 @@ export const REFUNDS_PER_REQUEST = 200;
  * it or leave it out. Plain US English, about grade 7.
  */
 export const CLOSING_ACCESS_SENTENCE =
-  `Your access is provided by this store on Marktmorgen. If the store closes, we will email you at least ${BUYER_NOTICE_DAYS} days before, so you can download what can be downloaded.`;
+  `Your access is provided by this store on Marktmorgen. If the store closes, we email its buyers at least ${BUYER_NOTICE_DAYS} days before, up to a limit set by its plan, so they can download what can be downloaded. Our Terms explain the limit.`;
 
 /** The Stripe subscription fields these rules read. */
 export type HeldSub = {
@@ -155,18 +169,27 @@ export function releaseBody(sub: HeldSub, nowSeconds: number): URLSearchParams {
 
 /** One member's last payment, kept from the day the plan ended until the closing (lib/closing-holds.ts). */
 export type PaidPeriod = {
-  /** The invoice paid. */
+  /** The invoice paid, and the payment it was paid by when Stripe named it. */
   inv: string;
-  /** What was paid on it, in the currency's smallest unit, and the currency. */
+  pi?: string;
+  /** What its membership line came to, its share of the tax with it, in the currency's smallest unit, and the currency. */
   amt: number;
+  /** What the whole invoice took: a refund never goes past it. */
+  tot?: number;
   cur: string;
   /** The period it paid for, in seconds. */
   ps: number;
   pe: number;
   /** The member's address, for the one email that says a refund could not be made. */
   e: string;
-  /** What became of the refund: done, short (the balance did not cover it), disputed, pending at Stripe, none (nothing left to give). */
-  r?: "done" | "short" | "disputed" | "pending" | "none";
+  /**
+   * What became of the refund: done, short (the balance did not cover it:
+   * tried again, until the closing day makes it final, `f`), disputed,
+   * pending at Stripe, none (nothing left to give), over (past the closing's
+   * call budget: counted for the creator).
+   */
+  r?: "done" | "short" | "disputed" | "pending" | "none" | "over";
+  f?: 1;
   /** What was given back, when done or pending; what was to be, when short. */
   back?: number;
   want?: number;
@@ -195,6 +218,36 @@ export function unusedOf(paid: Pick<PaidPeriod, "amt" | "ps" | "pe">, closingDay
  */
 export function stillToGive(unused: number, refunded: number): number {
   return Math.max(0, unused - Math.max(0, refunded));
+}
+
+/** A line of an invoice, as either API version gives it. */
+type InvoiceLine = {
+  amount?: unknown;
+  proration?: unknown;
+  type?: unknown;
+  period?: { start?: unknown; end?: unknown } | null;
+  parent?: { type?: unknown; subscription_item_details?: { proration?: unknown } | null } | null;
+};
+
+/**
+ * A paid invoice's membership: the line that is the subscription's own
+ * period, never a proration (a plan changed mid-period), its amount with its
+ * share of the invoice's tax, and its period. Null when there is none.
+ */
+export function membershipLineOf(invoice: { lines?: { data?: InvoiceLine[] } | null; subtotal?: unknown; total?: unknown; amount_paid?: unknown }): { amt: number; ps: number; pe: number } | null {
+  const lines = invoice.lines?.data ?? [];
+  const own = lines.find((line) => {
+    const proration = line.proration === true || line.parent?.subscription_item_details?.proration === true;
+    const subscription = line.type === "subscription" || line.parent?.type === "subscription_item_details";
+    return subscription && !proration && typeof line.amount === "number" && line.amount > 0 && typeof line.period?.end === "number";
+  });
+  if (!own) return null;
+  const subtotal = Number(invoice.subtotal), total = Number(invoice.total);
+  const taxed = subtotal > 0 && total >= subtotal ? total / subtotal : 1;
+  const amt = Math.round((own.amount as number) * taxed);
+  const ps = Number(own.period?.start), pe = Number(own.period?.end);
+  if (!(amt > 0) || !Number.isFinite(ps) || !(pe > ps)) return null;
+  return { amt, ps, pe };
 }
 
 /** Totals by currency, for a creator to read. */

@@ -32,11 +32,12 @@ import {
   EMAILS_PER_BUYER_PER_ENDING,
   buyerNoticeCap,
   holdBody,
+  membershipLineOf,
   releaseBody,
   stillToGive,
   unusedOf,
 } from "@/lib/closing-buyers-rules";
-import { HELD_INDEX, paidPeriods, releaseRestarted } from "@/lib/closing-holds";
+import { HELD_INDEX, paidPeriods, releaseRestarted, startCallBudget } from "@/lib/closing-holds";
 import { creditKey } from "@/lib/closing-credit";
 import { tellStaysOpen } from "@/lib/closing-buyers";
 import { giveBackUnused, reviewMark, unusedRows } from "@/lib/closing-refunds";
@@ -47,7 +48,7 @@ import { DigitalConsentBox } from "@/components/digital-consent-box";
 import { addProduct, setProductLink, setProductShipping } from "@/lib/store";
 import { readProduct } from "@/lib/catalog";
 import { parseShipping } from "@/lib/shipping";
-import { confirmationFor } from "@/lib/purchase-email";
+import { confirmationFor, offerConfirmationFor } from "@/lib/purchase-email";
 
 const DAY = 86_400_000;
 const S = (ms: number) => Math.floor(ms / 1000);
@@ -55,7 +56,20 @@ const POSTAL = "100 Example Street, Example City, NY 10001, United States";
 
 // ------------------------------------------------------------------ Stripe, the creator's account
 
-type Sub = Record<string, unknown> & { id: string; status: string; metadata: Record<string, string>; pause_collection: { behavior: string; resumes_at?: number } | null; pe: number; amount: number };
+type Sub = Record<string, unknown> & {
+  id: string;
+  status: string;
+  metadata: Record<string, string>;
+  pause_collection: { behavior: string; resumes_at?: number } | null;
+  pe: number;
+  amount: number;
+  /** An invoice issued before the hold and not paid yet: Stripe retries it unless it is voided. */
+  open?: { id: string; amount: number; status: "open" | "void" | "paid" };
+  /** A credit for a plan changed mid-period, on the paid invoice beside the membership's own line. */
+  proration?: number;
+  /** Always refused: a membership Stripe never lets us pause. */
+  stuck?: boolean;
+};
 type Charge = { amount: number; amount_refunded: number; disputed: boolean };
 
 const world = {
@@ -64,27 +78,43 @@ const world = {
   charges: new Map<string, Charge>(),
   refunds: [] as { id: string; payment_intent: string; amount: number; status: string; metadata: Record<string, string> }[],
   balance: 1_000_000,
+  /** The currency the creator's account settles in, and what a dollar becomes in it. */
+  settles: "usd",
+  rate: 1,
   /** Payments taken from members, by subscription: what must never happen while held. */
   charged: [] as { sub: string; at: number }[],
   failHolds: 0,
   writes: [] as { method: string; path: string; body: string }[],
 };
 
+const lengthOf = (sub: Sub) => (sub.metadata.yearly ? 365 : 30) * 86_400;
+
 function subscriptionOf(sub: Sub) {
-  return {
-    ...sub,
-    customer: { id: `cus_${sub.id.slice(4)}`, email: `${sub.id.slice(4)}@buyers.example.com` },
-    latest_invoice: { id: `in_${sub.id.slice(4)}`, status: "paid", amount_paid: sub.amount, currency: "usd", lines: { data: [{ period: { start: sub.pe - (sub.metadata.yearly ? 365 : 30) * 86_400, end: sub.pe } }] } },
-  };
+  return { ...sub, customer: { id: `cus_${sub.id.slice(4)}`, email: `${sub.id.slice(4)}@buyers.example.com` } };
 }
 
-/** Stripe renews every membership whose period is over by `at`: one with collection paused gets a voided invoice, any other is charged. */
+/** The member's last paid invoice: its membership line, and a proration credit beside it when it has one. */
+function paidInvoiceOf(sub: Sub) {
+  const id = sub.id.slice(4);
+  const lines = [
+    ...(sub.proration ? [{ type: "invoiceitem", proration: true, amount: -sub.proration, period: { start: sub.pe - lengthOf(sub) - 86_400 * 10, end: sub.pe - lengthOf(sub) } }] : []),
+    { type: "subscription", proration: false, amount: sub.amount, period: { start: sub.pe - lengthOf(sub), end: sub.pe } },
+  ];
+  const subtotal = lines.reduce((sum, line) => sum + line.amount, 0);
+  return { id: `in_${id}`, status: "paid", amount_paid: subtotal, subtotal, total: subtotal, currency: "usd", payment_intent: `pi_${id}`, lines: { data: lines } };
+}
+
+/** Stripe renews every membership whose period is over by `at`, and retries an open invoice: one with collection paused gets a voided invoice, any other is charged. */
 function renewUntil(at: number) {
   for (const sub of world.subs.values()) {
+    if (sub.open?.status === "open" && ["active", "past_due"].includes(sub.status)) {
+      world.charged.push({ sub: sub.id, at: S(at) });
+      sub.open.status = "paid";
+    }
     while (["active", "trialing", "past_due"].includes(sub.status) && sub.pe <= S(at)) {
       const paused = sub.pause_collection && !(sub.pause_collection.resumes_at && sub.pause_collection.resumes_at <= sub.pe);
       if (!paused) world.charged.push({ sub: sub.id, at: sub.pe });
-      sub.pe += (sub.metadata.yearly ? 365 : 30) * 86_400;
+      sub.pe += lengthOf(sub);
     }
   }
 }
@@ -113,18 +143,37 @@ globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) =>
   }
   if (path === "/subscriptions/search") {
     const query = url.searchParams.get("query") ?? "";
-    return json({ object: "search_result", data: [...world.subs.values()].filter((s) => query.includes(`'${s.metadata.store}'`)).map(subscriptionOf), has_more: false, next_page: null });
+    const all = [...world.subs.values()].filter((s) => query.includes(`'${s.metadata.store}'`));
+    const from = Number(url.searchParams.get("page") ?? 0);
+    const page = all.slice(from, from + 100);
+    const more = from + 100 < all.length;
+    return json({ object: "search_result", data: page.map(subscriptionOf), has_more: more, next_page: more ? String(from + 100) : null });
+  }
+  if (path === "/invoices" && method === "GET") {
+    const row = world.subs.get(url.searchParams.get("subscription") ?? "");
+    const status = url.searchParams.get("status");
+    if (!row) return json({ object: "list", data: [], has_more: false });
+    if (status === "paid") return json({ object: "list", data: [paidInvoiceOf(row)], has_more: false });
+    if (status === "open") return json({ object: "list", data: row.open?.status === "open" ? [{ id: row.open.id, status: "open" }] : [], has_more: false });
+    return json({ object: "list", data: [], has_more: false });
+  }
+  const voided = path.match(/^\/invoices\/(in_\w+)\/void$/);
+  if (voided) {
+    const row = [...world.subs.values()].find((s) => s.open?.id === voided[1]);
+    if (row?.open) row.open.status = "void";
+    return json({ id: voided[1], status: "void" });
   }
   const sub = path.match(/^\/subscriptions\/(sub_\w+)$/);
   if (sub) {
     const row = world.subs.get(sub[1]);
     if (!row) return json({ error: { message: "no such subscription" } }, 404);
+    if (method === "GET") return json(subscriptionOf(row));
     if (method === "DELETE") {
       row.status = "canceled";
       return json(subscriptionOf(row));
     }
-    if (form.has("pause_collection[behavior]") && world.failHolds > 0) {
-      world.failHolds -= 1;
+    if (form.has("pause_collection[behavior]") && (row.stuck || world.failHolds > 0)) {
+      if (!row.stuck) world.failHolds -= 1;
       return json({ error: { type: "api_error", message: "a stand-in failure" } }, 500);
     }
     if (form.has("pause_collection") && form.get("pause_collection") === "") row.pause_collection = null;
@@ -138,28 +187,27 @@ globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) =>
     }
     return json(subscriptionOf(row));
   }
-  const invoice = path.match(/^\/invoices\/in_(\w+)$/);
-  if (invoice) return json({ id: `in_${invoice[1]}`, payment_intent: `pi_${invoice[1]}` });
   const intent = path.match(/^\/payment_intents\/pi_(\w+)$/);
   if (intent) {
-    const charge = world.charges.get(intent[1]) ?? { amount: world.subs.get(`sub_${intent[1]}`)?.amount ?? 0, amount_refunded: 0, disputed: false };
+    const row = world.subs.get(`sub_${intent[1]}`);
+    const charge = world.charges.get(intent[1]) ?? { amount: row ? paidInvoiceOf(row).amount_paid : 0, amount_refunded: 0, disputed: false };
     world.charges.set(intent[1], charge);
-    return json({ id: `pi_${intent[1]}`, latest_charge: { id: `ch_${intent[1]}`, ...charge } });
+    return json({ id: `pi_${intent[1]}`, latest_charge: { id: `ch_${intent[1]}`, currency: "usd", ...charge, balance_transaction: { amount: Math.round(charge.amount * world.rate), currency: world.settles } } });
   }
   if (path === "/refunds" && method === "GET") return json({ object: "list", data: world.refunds.filter((r) => r.payment_intent === url.searchParams.get("payment_intent")), has_more: false });
   if (path === "/refunds" && method === "POST") {
     const pi = String(form.get("payment_intent"));
     const amount = Number(form.get("amount"));
-    if (amount > world.balance) return json({ error: { code: "balance_insufficient", message: "not enough" } }, 400);
-    world.balance -= amount;
-    const key = pi.slice(3);
-    const charge = world.charges.get(key)!;
+    const cost = Math.ceil(amount * world.rate);
+    if (cost > world.balance) return json({ error: { code: "balance_insufficient", message: "not enough" } }, 400);
+    world.balance -= cost;
+    const charge = world.charges.get(pi.slice(3))!;
     charge.amount_refunded += amount;
     const refund = { id: `re_${world.refunds.length + 1}`, payment_intent: pi, amount, status: "succeeded", metadata: Object.fromEntries([...form].filter(([k]) => k.startsWith("metadata[")).map(([k, v]) => [k.slice(9, -1), v])) };
     world.refunds.push(refund);
     return json(refund);
   }
-  if (path === "/balance") return json({ object: "balance", available: [{ amount: world.balance, currency: "usd" }], pending: [] });
+  if (path === "/balance") return json({ object: "balance", available: [{ amount: world.balance, currency: world.settles }], pending: [] });
   if (path === "/checkout/sessions") {
     const after = url.searchParams.get("starting_after");
     const from = after ? world.sessions.findIndex((s) => s.id === after) + 1 : 0;
@@ -208,10 +256,11 @@ async function daily(email: string, E: number, from: number, to: number) {
   const out: string[] = [];
   for (let d = from; d <= to; d += 1) {
     const at = E + d * DAY + 60_000;
-    renewUntil(at);
     clockAt(at);
     const row = await closeOne(email, at, hands, Number.POSITIVE_INFINITY);
     out.push(`${d}:${row.state}${row.note ? `:${row.note}` : ""}`);
+    // Stripe renews and retries until the next look.
+    renewUntil(at + DAY - 120_000);
   }
   return out;
 }
@@ -325,7 +374,7 @@ async function main() {
   const cleoLast = await daily(cleo, Cl, CLOSING_DAYS, CLOSING_DAYS);
   const shortMail = sent.slice(before).filter((m) => m.to === "cleoyear@buyers.example.com");
   is("no refund is made and nothing is owed by Marktmorgen", [world.refunds.length, world.balance], [0, 100]);
-  is("the member is emailed that it could not be made, with the creator's contact", [shortMail.length, shortMail[0]?.subject, shortMail[0]?.text.includes("cleo@example.com"), shortMail[0]?.text.includes("Marktmorgen does not hold the store's money")], [1, "Your refund from Cleo Shop could not be made", true, true]);
+  is("the member is emailed that it could not be made, with the creator's published contact and never their sign-in address", [shortMail.length, shortMail[0]?.subject, shortMail[0]?.text.includes("reply to this email"), shortMail[0]?.text.includes("cleo@example.com"), shortMail[0]?.reply_to, shortMail[0]?.text.includes("Marktmorgen does not hold the store's money")], [1, "Your refund from Cleo Shop could not be made", true, false, "cleo@example.com", true]);
   is("and the store still closes that day", cleoLast[0].split(":")[1], "removed");
   world.balance = 1_000_000;
 
@@ -352,17 +401,156 @@ async function main() {
   is("nobody is refunded", world.refunds.length, 0);
   is("and it leaves the line", await redis.pipeline([["ZSCORE", HELD_INDEX, dan]]), [null]);
 
-  part("A hold that fails is tried again the next day, and nothing is said before it holds");
+  part("A hold that fails is tried again every day; the notices go anyway, with the count, and the store closes on its day");
   const eve = await storeWith("eve");
   member("eve", "evemonth", 1_000, S(Date.UTC(2026, 10, 30)));
+  const stuck = member("eve", "evestuck", 1_000, S(Date.UTC(2026, 10, 30)), { stuck: true });
   clockAt(Date.UTC(2026, 10, 6, 12));
   const Ev = await ended(eve);
   world.failHolds = 1;
   const real = console.error;
   console.error = () => {};
   const tries = await daily(eve, Ev, 0, 1);
+  const eveFirst = sent.filter((m) => m.to === eve)[0];
+  is("the first notice goes on the first day, saying how many are not paused yet", [tries, eveFirst?.text.includes("2 memberships' payments are not paused yet: we try again every day")], [["0:told:ended", "1:waiting"], true]);
+  is("the next day only the failure is tried again, and the one Stripe accepts is held", [world.subs.get("sub_evemonth")!.pause_collection?.behavior, stuck.pause_collection, world.writes.filter((w) => w.path === "/subscriptions/sub_evemonth" && w.body.includes("pause_collection")).length], ["void", null, 2]);
+  const eveEnd = await daily(eve, Ev, 2, CLOSING_DAYS);
   console.error = real;
-  is("the first day is held, with no notice; the next day holds it and the first notice goes", [tries, sent.filter((m) => m.to === eve).length, world.subs.get("sub_evemonth")!.pause_collection?.behavior], [["0:held:its members' charges are not all held yet", "1:told:ended"], 1, "void"]);
+  is("one that never pauses does not keep the store from closing on its day, where it ends with the rest", [eveEnd.at(-1)?.split(":")[1], stuck.status], ["removed", "canceled"]);
+
+  part("More than fifty pages of members: read a part a day, from where the last run stopped");
+  const hal = await storeWith("hal", { tier: "scale" });
+  for (let i = 0; i < 5_050; i += 1) world.subs.set(`sub_hal${String(i).padStart(5, "0")}`, { id: `sub_hal${String(i).padStart(5, "0")}`, status: "active", metadata: { store: "hal" }, pause_collection: null, pe: S(Date.UTC(2026, 11, 30)), amount: 500 });
+  clockAt(Date.UTC(2026, 10, 9, 12));
+  const H = await ended(hal);
+  const halDays = await daily(hal, H, 0, 1);
+  const halSubs = [...world.subs.values()].filter((s) => s.metadata.store === "hal");
+  is("the first run reads fifty pages and waits; the next reads the rest and the notice goes", [halDays, halSubs.filter((s) => s.pause_collection?.behavior === "void").length], [["0:held:its members are not all reached yet", "1:told:ended"], 5_050]);
+  for (const sub of halSubs) world.subs.delete(sub.id);
+
+  part("An invoice issued before the hold is voided, never collected during it");
+  const ivy = await storeWith("ivy");
+  const ivyLate = member("ivy", "ivylate", 1_200, S(Date.UTC(2026, 10, 25)), { status: "past_due", open: { id: "in_ivyopen1", amount: 1_200, status: "open" } });
+  clockAt(Date.UTC(2026, 10, 10, 12));
+  const Iv = await ended(ivy);
+  await daily(ivy, Iv, 0, 5);
+  is("its open invoice is voided at the hold, and Stripe's retries never charge it", [ivyLate.open?.status, world.charged.filter((c) => c.sub === "sub_ivylate")], ["void", []]);
+
+  part("The closing's calls to Stripe are capped before they are made; members past it are counted, never silent");
+  const jo = await storeWith("joan");
+  member("joan", "joanone", 1_000, S(Date.UTC(2026, 11, 1)));
+  member("joan", "joantwo", 1_000, S(Date.UTC(2026, 11, 1)));
+  clockAt(Date.UTC(2026, 10, 11, 12));
+  const J = await ended(jo);
+  // This ending's budget, set before any call as the daily job sets it, cut here to one member's worth (5 calls) to see the cap work.
+  const joFolder = await storeFolder(jo);
+  const { createHash } = await import("node:crypto");
+  await startCallBudget(joFolder, 5);
+  await redis.pipeline([["SET", `nl:plan:closing:${createHash("sha256").update(jo).digest("hex").slice(0, 40)}`, JSON.stringify({ of: J, holdFrom: J })]]);
+  console.error = () => {};
+  await daily(jo, J, 0, 0);
+  console.error = real;
+  const joHeld = [...world.subs.values()].filter((s) => s.metadata.store === "joan" && s.pause_collection).length;
+  const joNotice = sent.filter((m) => m.to === jo)[0];
+  is("only what the budget covers is called, and the member past it is counted in the notice", [joHeld, joNotice?.text.includes("past this closing's limit")], [1, true]);
+
+  part("A refund the balance did not cover is tried again when the creator adds funds; only the closing day makes it final");
+  world.refunds.length = 0;
+  const kit = await storeWith("kit");
+  member("kit", "kityear1", 24_000, S(Date.UTC(2027, 9, 1)), { metadata: { store: "kit", yearly: "1" } });
+  clockAt(Date.UTC(2026, 10, 12, 12));
+  const K = await ended(kit);
+  await daily(kit, K, 0, 10);
+  const kitStore = (await storeForEmail(kit))!;
+  const kitDay = (await closingOf(kitStore, K + 10 * DAY))!.day;
+  world.balance = 50;
+  const noFunds = await giveBackUnused(kitStore, kitDay, { mark: reviewMark(await unusedRows(kitStore, kitDay)) });
+  is("pressed without the funds: nothing refunded, and the member is still listed to try again", [typeof noFunds === "object" && noFunds.short.length, world.refunds.length, (await unusedRows(kitStore, kitDay)).length], [1, 0, 1]);
+  world.balance = 1_000_000;
+  const withFunds = await giveBackUnused(kitStore, kitDay, { mark: reviewMark(await unusedRows(kitStore, kitDay)) });
+  is("pressed again after the funds came: refunded once", [typeof withFunds === "object" && withFunds.done.length, world.refunds.length], [1, 1]);
+  is("the button's words say it can be tried again, not that it is final", readFileSync(join(process.cwd(), "components/closing-refunds-confirm.tsx"), "utf8").includes("press the button again. On the closing day they are tried once more"), true);
+
+  part("A balance in another currency than the sale: weighed in the currency it settles in");
+  world.refunds.length = 0;
+  const lia = await storeWith("lia");
+  member("lia", "liayear1", 24_000, S(Date.UTC(2027, 9, 1)), { metadata: { store: "lia", yearly: "1" } });
+  clockAt(Date.UTC(2026, 10, 13, 12));
+  const Li = await ended(lia);
+  await daily(lia, Li, 0, 10);
+  const liaStore = (await storeForEmail(lia))!;
+  const liaDay = (await closingOf(liaStore, Li + 10 * DAY))!.day;
+  const liaOwed = (await unusedRows(liaStore, liaDay))[0].unused;
+  // The account settles in euros at 0.9 a dollar; it holds a few euros less than the refund costs.
+  world.settles = "eur";
+  world.rate = 0.9;
+  world.balance = Math.ceil(liaOwed * 0.9) - 1;
+  await giveBackUnused(liaStore, liaDay, { mark: reviewMark(await unusedRows(liaStore, liaDay)) });
+  is("a euro balance a little short of the refund in euros: nothing refunded", world.refunds.length, 0);
+  world.balance = Math.ceil(liaOwed * 0.9);
+  await giveBackUnused(liaStore, liaDay, { mark: reviewMark(await unusedRows(liaStore, liaDay)) });
+  is("enough euros: refunded in the sale's currency, the proportional amount", world.refunds.map((r) => r.amount), [liaOwed]);
+  world.settles = "usd";
+  world.rate = 1;
+  world.balance = 1_000_000;
+
+  part("Out of time: the refunds stop and say what is left, never pretend it is done");
+  const max = await storeWith("maxine");
+  member("maxine", "maxyear1", 24_000, S(Date.UTC(2027, 9, 1)), { metadata: { store: "maxine", yearly: "1" } });
+  clockAt(Date.UTC(2026, 10, 14, 12));
+  const Mx = await ended(max);
+  await daily(max, Mx, 0, 2);
+  const maxStore = (await storeForEmail(max))!;
+  const maxDay = (await closingOf(maxStore, Mx + 2 * DAY))!.day;
+  const late = await giveBackUnused(maxStore, maxDay, { until: Date.now() - 1 });
+  is("with no time left, nothing is refunded and the row is counted as left", [typeof late === "object" && late.left, typeof late === "object" && late.done.length], [1, 0]);
+  is("the route sets its own maxDuration and a time budget below it", [readFileSync(join(process.cwd(), "app/api/store/closing-refunds/route.ts"), "utf8").includes("export const maxDuration = 60"), readFileSync(join(process.cwd(), "app/api/store/closing-refunds/route.ts"), "utf8").includes("{ mark, until }")], [true, true]);
+
+  part("Once its memberships ended at Stripe, a store closes: starting a plan does not bring it back");
+  const ned = await storeWith("ned");
+  member("ned", "nedmonth", 1_000, S(Date.UTC(2026, 11, 30)));
+  buyer("ned", "nedbuyer");
+  clockAt(Date.UTC(2026, 10, 15, 12));
+  const N = await ended(ned);
+  await daily(ned, N, 0, CLOSING_DAYS - 1);
+  // The closing day starts, and its files cannot be removed today (a stand-in failure), so it is not done yet.
+  const failing: Hands = { ...hands, remove: async () => { throw new Error("stand-in file store down"); }, list: async () => ["vault/x/y.pdf"] };
+  console.error = () => {};
+  clockAt(N + CLOSING_DAYS * DAY + 60_000);
+  const half = await closeOne(ned, N + CLOSING_DAYS * DAY + 60_000, failing, Number.POSITIVE_INFINITY);
+  console.error = real;
+  is("the day began: its membership ended, the store not removed yet", [half.state, world.subs.get("sub_nedmonth")!.status], ["held", "canceled"]);
+  await setSubscription(ned, { customerId: "cus_ned0001", subscriptionId: "sub_nedplan02", active: true, tier: "creator", cycle: "month", trialEnds: 0 });
+  const nedBefore = sent.length;
+  await releaseRestarted(Date.now() + 60_000, tellStaysOpen, Date.now());
+  is("no \"it stays open\" is sent: what its buyers paid for has ended", sent.slice(nedBefore).filter((m) => m.subject.includes("staying open")).length, 0);
+  const next = await closeOne(ned, N + (CLOSING_DAYS + 1) * DAY, hands, Number.POSITIVE_INFINITY);
+  is("and the next day the closing is seen through", next.state, "removed");
+
+  part("A paid invoice with a proration: the membership's own line is what counts");
+  world.refunds.length = 0;
+  const ola = await storeWith("ola");
+  const olaSub = member("ola", "olayear1", 12_000, S(Date.UTC(2027, 9, 1)), { metadata: { store: "ola", yearly: "1" }, proration: 3_000 });
+  clockAt(Date.UTC(2026, 10, 16, 12));
+  const O = await ended(ola);
+  await daily(ola, O, 0, 0);
+  const olaPaid = (await paidPeriods((await storeForEmail(ola))!)).get("sub_olayear1")!;
+  is("the period and amount are the membership line's, not the credit's; the invoice's total caps any refund", [olaPaid.ps, olaPaid.pe, olaPaid.amt, olaPaid.tot], [olaSub.pe - 365 * 86_400, olaSub.pe, 12_000, 9_000]);
+  is("and a line that is a proration is never taken for the membership", membershipLineOf({ lines: { data: [{ type: "invoiceitem", proration: true, amount: 500, period: { start: 1, end: 2 } }] }, subtotal: 500, total: 500 }), null);
+
+  part("Addresses the cap does not cover are counted once each, however often they bought");
+  const pat = await storeWith("pat", { trial: true });
+  for (let i = 0; i < 100; i += 1) buyer("pat", `patx${String(i).padStart(3, "0")}`);
+  for (let i = 0; i < 3; i += 1) {
+    buyer("pat", "patrepeat");
+    buyer("pat", "patrepeat");
+  }
+  clockAt(Date.UTC(2026, 10, 17, 12));
+  const P = await ended(pat);
+  await daily(pat, P, 0, CLOSING_DAYS - 1);
+  is("one address past the cap, bought from six times, is one not told", (await closingOf((await storeForEmail(pat))!, P + (CLOSING_DAYS - 1) * DAY))!.buyers?.untold, 1);
+  const patNotice = sent.find((m) => m.to === "patx000@buyers.example.com")!;
+  is("a buyer's notice gives the creator's published way to reach them, never their sign-in address", [patNotice.text.includes("reply to this email"), patNotice.text.includes("pat@example.com"), patNotice.reply_to], [true, false, "pat@example.com"]);
 
   part("The closing's emails are capped before any goes; none past the cap, never silent");
   const fay = await storeWith("fay", { trial: true });
@@ -420,6 +608,9 @@ async function main() {
   const physical = (await readProduct(shop, book.product.id))!;
   const paid = (product: string) => ({ id: `cs_test_${"f".repeat(24)}`, status: "complete", payment_status: "paid", created: Math.floor(Date.now() / 1000), amount_total: 2700, currency: "usd", customer_details: { email: "buyer@example.com" }, metadata: { store: shop.handle, product } });
   is("the receipt of something that lasts says it; a shipped book's does not", [confirmationFor(shop, paid(digital.id) as never, Date.now() / 1000, [], [digital])?.text.includes(CLOSING_ACCESS_SENTENCE), confirmationFor(shop, paid(physical.id) as never, Date.now() / 1000, [], [physical])?.text.includes(CLOSING_ACCESS_SENTENCE)], [true, false]);
+  const offer = (product: typeof digital) => offerConfirmationFor(shop, { reference: `pi_${"a".repeat(24)}`, parent: `cs_test_${"f".repeat(24)}`, product, email: "buyer@example.com", amountCents: 900, currency: "usd" });
+  is("an offer taken after paying says it only for what lasts", [offer(digital)?.text.includes(CLOSING_ACCESS_SENTENCE), offer(physical)?.text.includes(CLOSING_ACCESS_SENTENCE)], [true, false]);
+  is("and the sentence states the limit, as the Terms do", [CLOSING_ACCESS_SENTENCE.includes("up to a limit set by its plan"), readFileSync(join(process.cwd(), "app/terms/page.tsx"), "utf8").includes("we cannot promise that you are among those we")], [true, true]);
   const terms = readFileSync(join(process.cwd(), "app/terms/page.tsx"), "utf8"), refunds = readFileSync(join(process.cwd(), "app/refunds/page.tsx"), "utf8"), privacy = readFileSync(join(process.cwd(), "app/privacy/page.tsx"), "utf8");
   is("the Terms, the Refund policy and the Privacy policy say it in plain words", [terms.includes("refunded automatically from the creator&rsquo;s own Stripe account"), refunds.includes("refunded to you automatically from the creator&rsquo;s"), privacy.includes('id="store-closing"'), terms.includes("never pays these refunds")], [true, true, true, true]);
 

@@ -39,7 +39,7 @@ import { onAccount, StripeError } from "@/lib/stripe-account";
 import { redisPipeline } from "@/lib/redis";
 import { type Store, storeFolder, storeRef } from "@/lib/store";
 import { type PaidPeriod, REFUNDS_PER_REQUEST, stillToGive, totalsOf, unusedOf } from "@/lib/closing-buyers-rules";
-import { paidPeriods, savePaidPeriod } from "@/lib/closing-holds";
+import { paidPeriods, savePaidPeriod, takeCalls } from "@/lib/closing-holds";
 
 const INTENT_ID = /^pi_[A-Za-z0-9]{6,64}$/;
 const lockKey = (folder: string) => `nl:closing:refund:${folder}`;
@@ -47,11 +47,14 @@ const LOCK_SECONDS = 120;
 
 export type UnusedRow = { sub: string; paid: PaidPeriod; unused: number };
 
+/** A refund's outcome that is final: nothing more is tried for it. A short one is tried again until the closing day makes it final. */
+const settled = (paid: PaidPeriod) => paid.r === "done" || paid.r === "none" || paid.r === "disputed" || paid.r === "over" || (paid.r === "short" && paid.f === 1);
+
 /** Every member who paid for time past `day` (ms) and has not been settled yet, with what that time is worth. */
 export async function unusedRows(store: Store, day: number): Promise<UnusedRow[]> {
   const rows: UnusedRow[] = [];
   for (const [sub, paid] of await paidPeriods(store)) {
-    if (paid.r && paid.r !== "pending") continue;
+    if (settled(paid)) continue;
     const unused = unusedOf(paid, day);
     if (unused > 0) rows.push({ sub, paid, unused });
   }
@@ -75,8 +78,11 @@ export type Settled = {
   pending: number;
   disputed: number;
   none: number;
-  /** Not reached: Stripe could not be asked. Tried again. */
+  /** Past the closing's call budget (counted for the creator). */
+  over: number;
+  /** Not reached: Stripe could not be asked, or the time ran out. Tried again. */
   failed: number;
+  left: number;
 };
 
 /** The payment intent an invoice was paid by, whichever way this account's API version names it. */
@@ -105,13 +111,35 @@ async function available(account: string): Promise<Map<string, number>> {
 }
 
 /**
+ * What a refund of `give` (in the charge's currency) takes from the
+ * balance, in the currency the charge settled in: an account in Europe or
+ * Canada that sold in dollars holds euros or Canadian dollars. Read from the
+ * charge's balance transaction, rounded up; the charge's own currency when
+ * Stripe names none.
+ */
+export function settledCost(give: number, charge: { amount?: unknown; currency?: unknown; balance_transaction?: unknown }): { cur: string; amount: number } {
+  const bt = charge.balance_transaction && typeof charge.balance_transaction === "object" ? (charge.balance_transaction as { amount?: unknown; currency?: unknown }) : null;
+  const paid = Number(charge.amount);
+  if (bt && typeof bt.currency === "string" && Number(bt.amount) > 0 && paid > 0) return { cur: bt.currency.toLowerCase(), amount: Math.ceil((give * Number(bt.amount)) / paid) };
+  return { cur: typeof charge.currency === "string" ? charge.currency.toLowerCase() : "", amount: give };
+}
+
+/**
  * Gives back each member's unused part, from the creator's own account.
  * `subs` limits it to the rows a review screen showed; `mark` is that
  * screen's reviewMark, and nothing is done when the rows changed since.
+ * `final` is the closing day's: a refund the balance does not cover is then
+ * final (its member is emailed by the caller); before it, it is tried again.
+ * Bounded by `until`: what is not reached is counted in `left`.
  */
-export async function giveBackUnused(store: Store, day: number, options: { subs?: string[]; mark?: string } = {}): Promise<Settled | "changed" | "busy" | "unavailable"> {
+export async function giveBackUnused(
+  store: Store,
+  day: number,
+  options: { subs?: string[]; mark?: string; until?: number; final?: boolean } = {},
+): Promise<Settled | "changed" | "busy" | "unavailable"> {
   const account = store.stripeAccountId;
   if (!account) return "unavailable";
+  const until = options.until ?? Number.POSITIVE_INFINITY;
   const folder = await storeFolder(storeRef(store));
   const [got] = await redisPipeline([["SET", lockKey(folder), "1", "NX", "EX", LOCK_SECONDS]]);
   if (got === null) return "busy";
@@ -122,8 +150,8 @@ export async function giveBackUnused(store: Store, day: number, options: { subs?
       rows = rows.filter((r) => wanted.has(r.sub));
     }
     if (options.mark !== undefined && options.mark !== reviewMark(rows)) return "changed";
+    const out: Settled = { done: [], short: [], pending: 0, disputed: 0, none: 0, over: 0, failed: 0, left: Math.max(0, rows.length - REFUNDS_PER_REQUEST) };
     rows = rows.slice(0, REFUNDS_PER_REQUEST);
-    const out: Settled = { done: [], short: [], pending: 0, disputed: 0, none: 0, failed: 0 };
     if (!rows.length) return out;
     let funds: Map<string, number>;
     try {
@@ -132,17 +160,32 @@ export async function giveBackUnused(store: Store, day: number, options: { subs?
       console.error("reading a closing store's Stripe balance failed", error);
       return { ...out, failed: rows.length };
     }
+    // One at a time: each refund is counted off the balance before the next is weighed.
     for (const row of rows) {
+      if (Date.now() > until) {
+        out.left += 1;
+        continue;
+      }
       const settle = async (r: PaidPeriod["r"], amount?: number) =>
-        savePaidPeriod(store, row.sub, { ...row.paid, r, ...(amount ? (r === "short" ? { want: amount } : { back: amount }) : {}) });
+        savePaidPeriod(store, row.sub, { ...row.paid, r, ...(r === "short" && options.final ? { f: 1 as const } : {}), ...(amount ? (r === "short" ? { want: amount } : { back: amount }) : {}) });
+      const short = async (give: number) => {
+        await settle("short", give);
+        out.short.push({ sub: row.sub, amount: give, cur: row.paid.cur, email: row.paid.e });
+      };
       try {
-        const intent = await intentOf(account, row.paid.inv);
+        // Its payment, the refunds already made on it and the refund itself, each taken from the closing's budget first.
+        if (!(await takeCalls(folder, row.paid.pi ? 3 : 5))) {
+          if (options.final) await settle("over");
+          out.over += 1;
+          continue;
+        }
+        const intent = row.paid.pi ?? (await intentOf(account, row.paid.inv));
         if (!intent) {
           await settle("none");
           out.none += 1;
           continue;
         }
-        const pi = await onAccount("GET", account, `/payment_intents/${encodeURIComponent(intent)}?expand[]=latest_charge`);
+        const pi = await onAccount("GET", account, `/payment_intents/${encodeURIComponent(intent)}?expand[]=latest_charge.balance_transaction`);
         const charge = pi.latest_charge && typeof pi.latest_charge === "object" ? (pi.latest_charge as Record<string, unknown>) : {};
         if (charge.disputed === true) {
           await settle("disputed");
@@ -160,15 +203,16 @@ export async function giveBackUnused(store: Store, day: number, options: { subs?
           else out.done.push({ sub: row.sub, amount: Number(ours.amount) || 0, cur: row.paid.cur });
           continue;
         }
-        const give = stillToGive(row.unused, typeof charge.amount_refunded === "number" ? charge.amount_refunded : 0);
+        const refunded = typeof charge.amount_refunded === "number" ? charge.amount_refunded : 0;
+        const give = Math.min(stillToGive(row.unused, refunded), Math.max(0, (row.paid.tot ?? row.paid.amt) - refunded));
         if (give <= 0) {
           await settle("none");
           out.none += 1;
           continue;
         }
-        if ((funds.get(row.paid.cur) ?? 0) < give) {
-          await settle("short", give);
-          out.short.push({ sub: row.sub, amount: give, cur: row.paid.cur, email: row.paid.e });
+        const cost = settledCost(give, charge);
+        if ((funds.get(cost.cur) ?? 0) < cost.amount) {
+          await short(give);
           continue;
         }
         let refund: Record<string, unknown>;
@@ -183,8 +227,7 @@ export async function giveBackUnused(store: Store, day: number, options: { subs?
           );
         } catch (error) {
           if (error instanceof StripeError && error.code === "balance_insufficient") {
-            await settle("short", give);
-            out.short.push({ sub: row.sub, amount: give, cur: row.paid.cur, email: row.paid.e });
+            await short(give);
             continue;
           }
           if (error instanceof StripeError && (error.code === "charge_disputed" || error.code === "refund_disputed_payment")) {
@@ -199,7 +242,8 @@ export async function giveBackUnused(store: Store, day: number, options: { subs?
           }
           throw error;
         }
-        funds.set(row.paid.cur, (funds.get(row.paid.cur) ?? 0) - give);
+        funds.set(cost.cur, (funds.get(cost.cur) ?? 0) - cost.amount);
+        // Pending for want of funds is Stripe holding it on the creator's account until they come: made, never Marktmorgen's.
         if (refund.status === "pending") {
           await settle("pending", give);
           out.pending += 1;

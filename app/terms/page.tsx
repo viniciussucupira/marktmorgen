@@ -875,8 +875,13 @@ export default function TermsPage() {
           is open on Marktmorgen. When it closes, what was bought from it can
           no longer be downloaded or opened here. From the day the
           store&rsquo;s plan ends you are not charged again for what you
-          subscribe to there, and on the closing day it ends. We email you at
-          least {BUYER_NOTICE_DAYS} days before the store closes. If you paid for time after
+          subscribe to there, and on the closing day it ends. We email the
+          store&rsquo;s buyers at least {BUYER_NOTICE_DAYS} days before it closes, up to
+          the limit its plan sets: as many buyers as {BUYER_CAP_MONTHS} months of the
+          plan&rsquo;s orders, or 100 for a store that never paid. If a store has
+          more buyers than that, we cannot promise that you are among those we
+          email; the creator is told how many we could not write to and asked
+          to tell them. If you paid for time after
           that day, the unused part is refunded to you from the
           creator&rsquo;s Stripe account, if its balance covers it; if it does
           not, we email you with the creator&rsquo;s contact. The creator is

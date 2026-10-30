@@ -3,6 +3,9 @@ import { guardStoreWrite } from "@/lib/store-request";
 import { closingOf } from "@/lib/plan-closing";
 import { giveBackUnused } from "@/lib/closing-refunds";
 
+/** Seconds this route may run (route segment config, node_modules/next/dist/docs/.../maxDuration.md); the refunds stop well before it and say what is left. */
+export const maxDuration = 60;
+
 /**
  * The creator gives back the time members paid for past the store's closing
  * day, after reading every amount on the review screen
@@ -17,10 +20,11 @@ export async function POST(request: NextRequest) {
   if (!guarded.ok) return guarded.response;
   const mark = typeof guarded.body.mark === "string" && /^[0-9a-f]{64}$/.test(guarded.body.mark) ? guarded.body.mark : null;
   if (!mark) return Response.json({ ok: false, error: "invalid" }, { status: 400 });
+  const until = Date.now() + 40_000;
   try {
     const closing = await closingOf(guarded.store);
     if (!closing) return Response.json({ ok: false, error: "not_closing" }, { status: 409 });
-    const result = await giveBackUnused(guarded.store, closing.day, { mark });
+    const result = await giveBackUnused(guarded.store, closing.day, { mark, until });
     if (result === "changed") return Response.json({ ok: false, error: "changed" }, { status: 409 });
     if (result === "busy") return Response.json({ ok: false, error: "busy" }, { status: 409 });
     if (result === "unavailable") return Response.json({ ok: false, error: "unavailable" }, { status: 409 });
@@ -32,7 +36,9 @@ export async function POST(request: NextRequest) {
       pending: result.pending,
       disputed: result.disputed,
       none: result.none,
+      over: result.over,
       failed: result.failed,
+      left: result.left,
     }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
     console.error("giving back members' unused time from the studio failed", error);

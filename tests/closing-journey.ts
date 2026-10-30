@@ -116,6 +116,10 @@ export function standIns(stripe: StripeWorld, sent: Sent[], passThrough: ((input
         return json({ object: "search_result", data: stripe.memberships.filter((m) => m.account === account && query.includes(`'${(m.metadata as { store: string }).store}'`)), has_more: false, next_page: null });
       }
       if (path === "/subscriptions/search" || path === "/subscriptions") return json({ object: "list", data: [], has_more: false });
+      // A member's invoices (queue item 307 EC1, the hold): none open, none paid in this journey.
+      if (path === "/invoices" && account) return json({ object: "list", data: [], has_more: false });
+      const one = stripe.memberships.find((m) => m.account === account && path === `/subscriptions/${String(m.id)}`);
+      if (one) return json(one);
       return json({ error: { message: `no stand-in for ${method} ${path}`, type: "invalid_request_error" } }, 404);
     }
     if (url.hostname.endsWith("vercel-storage.com") || url.hostname.endsWith("vercel.com")) return json({ blobs: [], hasMore: false });
@@ -156,7 +160,7 @@ async function everyFamily(world: World, tag: string): Promise<void> {
     } else if (rule.how === "index" && prefix !== "nl:plan:ended") {
       // (The stores whose plan ended are read by the daily job as stores: a probe there would be looked at as one.)
       // (The stores whose members are held is a sorted set, as lib/closing-holds.ts keeps it.)
-      if (prefix === "nl:closing:held") await redisPipeline([["ZADD", prefix, 1, `${s.sid}|probe-${tag}`]]);
+      if (prefix === "nl:closing:held" || prefix === "nl:closing:final") await redisPipeline([["ZADD", prefix, 1, `${s.sid}|probe-${tag}`]]);
       else await addMember(prefix.endsWith(":") ? `${prefix}2026-11` : prefix, `${s.sid}|probe-${tag}`);
     } else if (rule.how === "expires") {
       await redisPipeline([["SET", `${prefix}${sha(`${prefix}${tag}`).slice(0, 32)}`, JSON.stringify({ s: s.statsId }), "EX", Math.min(rule.days, 2) * 86_400]]);

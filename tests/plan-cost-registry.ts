@@ -73,7 +73,7 @@ import { MAX_TEAM } from "@/lib/team";
 import { MAX_TASK_FILE_BYTES, TASK_ROOM_BYTES, TRIAL_TASK_ROOM_BYTES } from "@/lib/assignment-rules";
 import { COMMUNITY_PICTURES, PICTURE_BYTES, TRIAL_COMMUNITY_PICTURES } from "@/lib/community-picture-rules";
 import { CLOSING_DAYS, DEL_BATCH, ENDED_STORE_EXPORTS, FOLLOW_BATCH, RENEWALS_AT_ONCE, WARN_WEEK_DAYS } from "@/lib/plan-closing-rules";
-import { BUYER_SEND_DAYS, EMAILS_PER_BUYER_PER_ENDING, buyerNoticeCap } from "@/lib/closing-buyers-rules";
+import { BUYER_SEND_DAYS, EMAILS_PER_BUYER_PER_ENDING, STRIPE_CALLS_PER_MEMBER, buyerNoticeCap } from "@/lib/closing-buyers-rules";
 import { MAX_STORE_BYTES } from "@/lib/store";
 import { BODIES_PER_READ } from "@/lib/course";
 import { MAX_LEADS } from "@/lib/contact-rules";
@@ -157,9 +157,10 @@ export const ORDER_RENEWAL_STOP = (STRIPE_WAIT_SECONDS / RENEWALS_AT_ONCE + STRI
  * kilobytes for the closing days, the day its notice may come early and the
  * week a late last notice adds; its share of a page of a hundred checkouts
  * read to find it; and, as if every one were a member, the calls to Stripe a
- * membership's closing makes (its hold, its release, its end, and its
- * refund: the invoice, the payment, the refunds made, the refund, the
- * balance), each waited on STRIPE_WAIT_SECONDS at 2 GB, and a few commands.
+ * membership's closing makes at the most, STRIPE_CALLS_PER_MEMBER, taken
+ * from the closing's call budget before each is made (lib/closing-holds.ts,
+ * takeCalls; its end is its order's, ORDER_RENEWAL_STOP), each waited on
+ * STRIPE_WAIT_SECONDS at 2 GB, and a few commands.
  * One closing's whole cost is closingBuyersCost (below): a post-cancellation
  * funded exposure of docs/funded-exposure-review.md, the company's, bounded
  * per closing by its cap before any of it is spent (lib/closing-credit.ts).
@@ -167,7 +168,7 @@ export const ORDER_RENEWAL_STOP = (STRIPE_WAIT_SECONDS / RENEWALS_AT_ONCE + STRI
  * every payment (tests/limits-proposal.test.ts would cut Store's figures for
  * a few cents), so whether it moves into the closure line is the owner's.
  */
-export const CLOSING_STRIPE_CALLS = 8;
+export const CLOSING_STRIPE_CALLS = STRIPE_CALLS_PER_MEMBER;
 export const CLOSING_BUYER_COST = EMAILS_PER_BUYER_PER_ENDING * PER_EMAIL
   + 2 * 1024 * ((CLOSING_DAYS + WARN_WEEK_DAYS + BUYER_SEND_DAYS) / 30) * DB_BYTE_MONTH
   + (CLOSING_STRIPE_CALLS + 1 / 100) * STRIPE_WAIT_SECONDS * MEMORY_SECOND + 6 * COMMAND;
@@ -894,6 +895,8 @@ export const NOT_A_COST: Record<string, string> = {
   HOLD_PAGES_PER_RUN: "Pages of a closing store's memberships held, released or ended in one run (lib/closing-holds.ts): inside the same exposure.",
   REFUNDS_PER_REQUEST: "Refunds of members' unused time in one request (lib/closing-refunds.ts): the creator's money on the creator's account; its calls inside the same exposure.",
   EMAILS_PER_BUYER_PER_ENDING: "Emails one closing takes for a buyer (lib/closing-buyers-rules.ts), inside the same exposure's cap.",
+  STRIPE_CALLS_PER_MEMBER: "Calls to the creator's Stripe account one member's closing takes at the most, the closing's call budget per buyer its cap allows (lib/closing-holds.ts, takeCalls): inside the same exposure (CLOSING_BUYER_COST).",
+  MEMBERS_AT_ONCE: "How many members one closing works on at once: a pace inside the daily job's minute, not a figure of its own.",
   PICTURES_PER_MINUTE: "A pace on the pictures a function answers (lib/picture-pace.ts, MM-SA-04), held in memory with no store command: it only refuses, and what it lets through is the CDN's picture of line visits.",
   PICTURE_READS_PER_MINUTE: "A pace on how often one picture is read by a function (lib/picture-pace.ts, MM-SA-04), held in memory with no store command: it only refuses.",
   CENTS_PER_MINUTE: "AI captions are bought at their own price, charged before the work (lib/auto-captions-rules.ts).",

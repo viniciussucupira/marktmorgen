@@ -644,9 +644,8 @@ export function offerConfirmationFor(store: Store, offer: TakenOffer, key: SaleK
     words.openItAt(`${base}/thanks?session_id=${offer.parent}`),
     "",
     words.offerThreeDays(`${base}/orders`, offer.email, name),
-    // The fixed sentence (queue item 307 EC1): what is added after paying is handed over by the store too.
-    "",
-    CLOSING_ACCESS_SENTENCE,
+    // The fixed sentence (queue item 307 EC1), when what was added lasts.
+    ...(deliversDigitally(offer.product) ? ["", CLOSING_ACCESS_SENTENCE] : []),
   ];
   for (const line of [...(key ? [{ title: offer.product.title, key }] : []), ...keys]) {
     const label = words.yourKeyFor(line.title);

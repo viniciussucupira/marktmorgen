@@ -58,10 +58,12 @@ export function ClosingRefundsConfirm({ mark, label, back }: { mark: string; lab
       const short = Array.isArray(data.short) ? (data.short as Money[]) : [];
       const lines: string[] = [];
       lines.push(given.length ? `Refunded: ${given.length} ${given.length === 1 ? "member" : "members"}, ${sum(given)} in all.` : "Nothing was refunded.");
-      if (short.length) lines.push(`Not refunded: ${short.length} (${sum(short)}). Your Stripe balance did not cover them. Add funds in Stripe, then come back here.`);
+      if (short.length) lines.push(`Not refunded yet: ${short.length} (${sum(short)}). Your Stripe balance did not cover them. Add funds in Stripe, then reload this page and press the button again. On the closing day they are tried once more.`);
       if (Number(data.pending) > 0) lines.push(`Waiting at Stripe: ${data.pending}. Stripe sends them as soon as it can.`);
       if (Number(data.disputed) > 0) lines.push(`Not refunded because the payment is disputed: ${data.disputed}.`);
-      if (Number(data.failed) > 0) lines.push(`Not reached this time: ${data.failed}. Reload the page and press the button again; nothing is refunded twice.`);
+      if (Number(data.over) > 0) lines.push(`Not refunded by us: ${data.over}, past this closing's limit. Refund them from Stripe.`);
+      const notYet = Number(data.failed) + Number(data.left);
+      if (notYet > 0) lines.push(`Not done yet: ${notYet}. Reload the page and press the button again; nobody is refunded twice.`);
       setState({ kind: "done", lines });
     } catch {
       setState({ kind: "error", message: refusal("") });

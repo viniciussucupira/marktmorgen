@@ -190,6 +190,7 @@ import { COMMISSION_LIVE, canUse, hasPro, PLAN_PRICES, PRO_MONTHLY_EMAILS, PRO_O
 import { ASSISTANT_ON_SALE, PLANS_ON_SALE } from "@/lib/opening";
 import { studioPath, studioView } from "@/lib/studio-route";
 import { unusedSummary } from "@/lib/closing-refunds";
+import { holdCounts } from "@/lib/closing-holds";
 import { type Permission, type Role, ROLE_NAMES, ROLE_SUMMARIES, can } from "@/lib/team-roles";
 import { MAX_TEAM, readTeam } from "@/lib/team";
 import { MAX_FUNNEL_STEPS } from "@/lib/funnel";
@@ -889,6 +890,7 @@ export default async function StudioPage({
   const closing = closingAt && (closesWhole || keptNow > keptRoom) ? { ...closingAt, bytes: keptNow, room: keptRoom, whole: closesWhole } : null;
   // Queue item 307 [EC1]: what members paid for past the closing day, from what was written down when the plan ended (no call to Stripe).
   const unusedTime = closing?.whole ? await unusedSummary(store!, closing.day).catch(() => null) : null;
+  const notPaused = closing?.whole ? await holdCounts(folder).catch(() => null) : null;
   const dayWords = (ms: number) => new Date(ms).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric", timeZone: "UTC" });
   // The list is shown once there is something that fills it, or once it holds
   // anybody — a creator who stops giving things away still owns what came in.
@@ -2228,6 +2230,11 @@ export default async function StudioPage({
                     {closing.buyers.untold > 0
                       ? ` ${closing.buyers.untold} ${closing.buyers.untold === 1 ? "address was" : "addresses were"} not covered by your store's closing emails: please tell ${closing.buyers.untold === 1 ? "that buyer" : "those buyers"} yourself.`
                       : ""}
+                  </p>
+                ) : null}
+                {notPaused && notPaused.failed + notPaused.over > 0 ? (
+                  <p className="mt-4 notice notice-warn">
+                    {`${notPaused.failed + notPaused.over} ${notPaused.failed + notPaused.over === 1 ? "membership's payments are" : "memberships' payments are"} not paused${notPaused.failed ? " yet: we try again every day" : ""}${notPaused.over ? `${notPaused.failed ? ", and some are" : ":"} past this closing's limit` : ""}. Every one of them ends on ${dayWords(closing.day)}. If a member is charged before then, please refund them from Stripe.`}
                   </p>
                 ) : null}
                 {unusedTime && unusedTime.members > 0 ? (
