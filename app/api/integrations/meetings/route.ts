@@ -31,7 +31,10 @@ export async function POST(request: NextRequest) {
   const { store, body } = guarded;
   const provider = body.provider;
   const action = body.action;
-  if ((action !== "disconnect" && action !== "test" && action !== "movetest" && action !== "untest") || !isMeetProvider(provider) || !isConfigured(provider)) {
+  // A deployment may have removed its OAuth credentials while old tokens remain.
+  // Forgetting an existing connection must still reach the bounded cleanup below.
+  // Creating or testing meetings continues to require the configured provider.
+  if ((action !== "disconnect" && action !== "test" && action !== "movetest" && action !== "untest") || !isMeetProvider(provider) || (action !== "disconnect" && !isConfigured(provider))) {
     return Response.json({ ok: false, error: "invalid" }, { status: 400 });
   }
   if (!store.statsId) {
