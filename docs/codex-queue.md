@@ -18009,3 +18009,10 @@ Proibido: mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_S
 
 Aplicar a regra VR.
 ```
+
+
+### AB(a) — própria confirmação da ativação do reinício (30/10/2026)
+
+Achado real em lib/contract-restart-activation.ts: reply[0]/ack[0,1] eram lidos sem exigir campos próprios e antes da cardinalidade externa; resposta herdada/acessora poderia autorizar a ativação. Wrapper agora limita outer1/inner2 antes dos membros e aceita somente dados próprios numéricos1/2 e prazo inteiro, preservando binding/review/clock/período e prazos distintos. Lua inalterado; sem retry/readback/compensação/fornecedor novo. Políticas/reviews reais continuamnull e coveragepauseRestart/resourceAllocations/renewals/settlementfalse; não certifica ciclo completo/avisos/margem/abertura.
+
+Teste novo chama activateRestartContract/prepareRestartActivation reais com contractFixture e ownedRestartIntentFromAcknowledgement reais, alias de cobertura só no teste; teste anteriorfalsecoverage permanece. Modelo de fronteira registra commit retendo source/cash/pause/due/annual e checkpoint antes de transformar ACK/perder resposta,16casos×first/repeated,probe positivo e clock/período. Modelo não é prova deLua; suíte realRedis já existente preservada. Novas leituras locais de descriptors limitadas,semIOprodutivo/custo fornecedor novo;CI/reviewFX275desconhecido nãozero. ExigeCIintegralnoheadnovo e provasREADY/domínio/SHAantespublicação;contador254permanece retido.

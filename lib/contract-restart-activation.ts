@@ -132,6 +132,22 @@ export function prepareRestartActivation(
  }catch{return null;}
 }
 
+/** Bounded own data only: a possibly committed activation is never permission
+ * merely because a response has inherited fields or executable getters. */
+function restartActivationAcknowledged(reply:unknown):[number,number]|null{
+ try{
+  if(!Array.isArray(reply))return null;
+  const length=Object.getOwnPropertyDescriptor(reply,'length');
+  if(!length||!Object.hasOwn(length,'value')||length.value!==1)return null;
+  const entry=Object.getOwnPropertyDescriptor(reply,'0');
+  if(!entry||!Object.hasOwn(entry,'value')||!Array.isArray(entry.value))return null;
+  const ack=entry.value,innerLength=Object.getOwnPropertyDescriptor(ack,'length');
+  if(!innerLength||!Object.hasOwn(innerLength,'value')||innerLength.value!==2)return null;
+  const flag=Object.getOwnPropertyDescriptor(ack,'0'),end=Object.getOwnPropertyDescriptor(ack,'1');
+  if(!flag||!Object.hasOwn(flag,'value')||(flag.value!==1&&flag.value!==2)||!end||!Object.hasOwn(end,'value')||!Number.isSafeInteger(end.value))return null;
+  return [flag.value,end.value];
+ }catch{return null;}
+}
 export async function activateRestartContract(
  input:RestartContractActivation,
  policy:ContractFundingPolicy|null=CURRENT_CONTRACT_FUNDING_POLICY,
@@ -140,10 +156,11 @@ export async function activateRestartContract(
  const prepared=prepareRestartActivation(input,policy,context);
  if(!prepared)return false;
  try{
-  const reply=await redisPipeline([["EVAL",ACTIVATE_RESTART_CONTRACT,4,...prepared.keys,...prepared.args]]);
-  const current=contractFundingConfiguration(prepared.policy,prepared.context,new Date()),checkedAt=Date.now(),ack=reply[0];
+  const reply:unknown=await redisPipeline([["EVAL",ACTIVATE_RESTART_CONTRACT,4,...prepared.keys,...prepared.args]]);
+  const ack=restartActivationAcknowledged(reply);
+  const current=contractFundingConfiguration(prepared.policy,prepared.context,new Date()),checkedAt=Date.now();
   const {periodStartSeconds,periodEndSeconds,armed}=prepared.input;
-  if(!current||current.binding!==prepared.binding||!commercialMarginReady(prepared.context.review)||checkedAt<prepared.startedAt||checkedAt<periodStartSeconds*1000||checkedAt>=periodEndSeconds*1000||reply.length!==1||!Array.isArray(ack)||ack.length!==2||!Number.isSafeInteger(ack[1]))return false;
+  if(!current||current.binding!==prepared.binding||!commercialMarginReady(prepared.context.review)||checkedAt<prepared.startedAt||checkedAt<periodStartSeconds*1000||checkedAt>=periodEndSeconds*1000||!ack)return false;
   return ack[0]===2?ack[1]===periodEndSeconds:ack[0]===1&&ack[1]===armed.intent.grant.activationUntilSeconds&&checkedAt<=ack[1]*1000;
  }catch{return false;}
 }
