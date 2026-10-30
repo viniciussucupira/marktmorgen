@@ -3,7 +3,7 @@ import { away, creatorFrom } from "@/lib/studio-route";
 import { isBillingConfigured } from "@/lib/billing";
 import { limited } from "@/lib/request-guard";
 import { confirmPause, pausePlan, undoPause } from "@/lib/plan-pause";
-import { parsePauseMonths } from "@/lib/plan-pause-rules";
+import { PLAN_BREAKS_ENABLED, parsePauseMonths } from "@/lib/plan-pause-rules";
 
 /**
  * Takes a break from the plan, or takes the break back (lib/plan-pause.ts).
@@ -16,6 +16,7 @@ export async function POST(request: NextRequest) {
   const creator = await creatorFrom(request, "billing");
   if (creator instanceof Response) return creator;
   const { store, origin, studio } = creator;
+  if (!PLAN_BREAKS_ENABLED) return away(origin, studio("billing=pause-unavailable"));
   if (!isBillingConfigured()) return away(origin, studio("billing=unavailable"));
 
   let intent = "";

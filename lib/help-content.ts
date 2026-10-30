@@ -31,7 +31,7 @@ import { TEAM_LIMITS, teamLimitWords } from "@/lib/team-scheduling-rules";
 import { PLAN_TITLES, PRO_MONTHLY_EMAILS, REFUND_DAYS, TRIAL_MONTHLY_EMAILS, SCALE_MONTHLY_EMAILS } from "@/lib/plan";
 import { workflowLimitWords } from "@/lib/flow-limits";
 import { pipelineLimitWords } from "@/lib/crm-rules";
-import { PAID_MONTHS_BEFORE_PAUSE, PAUSE_MONTHS } from "@/lib/plan-pause-rules";
+import { PLAN_BREAKS_ENABLED, PAID_MONTHS_BEFORE_PAUSE, PAUSE_MONTHS } from "@/lib/plan-pause-rules";
 import { healthRuleWords, rampRuleWords } from "@/lib/mail-health-rules";
 import { formatMoney } from "@/lib/money";
 import { INVITE_BONUS_CENTS, INVITE_HOLD_DAYS, INVITE_SHARE_PERCENT } from "@/lib/creator-invite-rules";
@@ -313,7 +313,7 @@ export const HELP_SECTIONS: HelpSection[] = [
       {
         q: "Can I take a break instead of canceling?",
         a: [
-          `Yes, on a monthly plan that has been paid for at least ${PAID_MONTHS_BEFORE_PAUSE} months, once a year. In your studio, under What you pay us, choose Take a break instead and ${PAUSE_MONTHS.map((m) => (m === 1 ? "1 month" : `${m} months`)).join(" or ")}. Your store keeps taking payments until the end of the period you already paid for. Then nothing is charged and your checkout is closed, while your page stays up, everything you put up is kept and buyers can still download what they bought. On the last day your plan starts again by itself, at the price it had, on the card you pay with; we email you a week before, and you can say no in one click. To sell sooner, start your plan again from the studio on any day.`,
+          !PLAN_BREAKS_ENABLED ? "Plan breaks are not available. You can cancel at any time in your studio under What you pay us. Your subscription continues until the end of the period you paid for, and buyers keep access to what they bought." : `Yes, on a monthly plan that has been paid for at least ${PAID_MONTHS_BEFORE_PAUSE} months, once a year. In your studio, under What you pay us, choose Take a break instead and ${PAUSE_MONTHS.map((m) => (m === 1 ? "1 month" : `${m} months`)).join(" or ")}. Your store keeps taking payments until the end of the period you already paid for. Then nothing is charged and your checkout is closed, while your page stays up, everything you put up is kept and buyers can still download what they bought. On the last day your plan starts again by itself, at the price it had, on the card you pay with; we email you a week before, and you can say no in one click. To sell sooner, start your plan again from the studio on any day.`,
         ],
       },
       {

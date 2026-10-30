@@ -9,7 +9,7 @@ import { isDiscordConfigured } from "@/lib/discord";
 import { RecentSalesSwitch } from "@/components/recent-sales-switch";
 import { firstSaleAt } from "@/lib/yearly-offer";
 import { breakRunning, pauseView } from "@/lib/plan-pause";
-import { PAID_MONTHS_BEFORE_PAUSE, PAUSE_MONTHS, PAUSE_EVERY_DAYS } from "@/lib/plan-pause-rules";
+import { PLAN_BREAKS_ENABLED, PAID_MONTHS_BEFORE_PAUSE, PAUSE_MONTHS, PAUSE_EVERY_DAYS } from "@/lib/plan-pause-rules";
 import { MarkShipped } from "@/components/mark-shipped";
 import { paypalSalesConfigured } from "@/lib/paypal-sales";
 import { lowestPriceCents } from "@/lib/product-option";
@@ -531,6 +531,10 @@ const BILLING_NOTICES: Record<string, { title: string; body: string }> = {
   "pause-standing": {
     title: "This subscription cannot take a break right now",
     body: "Stripe says it is not in good standing. Nothing was changed.",
+  },
+  "pause-unavailable": {
+    title: "Plan breaks are not available",
+    body: "No break or restart was requested. You can still cancel your subscription and keep access through the period you paid for.",
   },
   "pause-error": {
     title: "We could not confirm the break",
@@ -2511,6 +2515,12 @@ export default async function StudioPage({
                   {feeWords(COMMISSION_LIVE && store.shared).studioPay} Visits and lesson video have finite monthly thresholds, shown above. Public pages and new video playback pause at their respective thresholds.
                 </p>
 
+                {!PLAN_BREAKS_ENABLED && (pauseSet || onBreakNow) ? (
+                  <form action={`/api/billing/cancel${pin}`} method="post" className="mt-4">
+                    <input type="hidden" name="intent" value="cancel" />
+                    <button type="submit" className="btn btn-secondary btn-sm">Cancel the subscription</button>
+                  </form>
+                ) : null}
                 {pauseUnknown ? (
                   <p className="mt-5 notice notice-warn" role="status" data-pause-unconfirmed="">
                     We could not confirm your break status. Check your billing status before changing or starting a plan.
@@ -2519,6 +2529,10 @@ export default async function StudioPage({
                 {paid && cancelling && pauseUnknown ? (
                   <p className="mt-3 text-ink-soft">
                     Your subscription is set to stop at the end of its paid period. We could not confirm whether a break is scheduled after that.
+                  </p>
+                ) : paid && cancelling && pauseSet && pause && !PLAN_BREAKS_ENABLED ? (
+                  <p className="mt-5 notice notice-warn" role="status">
+                    A previous break is recorded for your store. Automatic restart is unavailable. Your content and buyer access are preserved. You can cancel the subscription below.
                   </p>
                 ) : paid && cancelling && pauseSet && pause ? (
                   <>
@@ -2693,7 +2707,7 @@ export default async function StudioPage({
                       creator who is stopping for a season keeps everything
                       and is started again by itself, instead of leaving.
                     */}
-                    {!pauseUnknown && !trialing && !billedYearly && !changePending ? (
+                    {PLAN_BREAKS_ENABLED && !pauseUnknown && !trialing && !billedYearly && !changePending ? (
                       <details className="mt-4">
                         <summary className="cursor-pointer text-sm font-bold text-ink underline underline-offset-2">
                           Take a break instead
@@ -2755,7 +2769,7 @@ export default async function StudioPage({
                   </>
                 ) : (
                   <>
-                    {onBreakNow && pause ? (
+                    {PLAN_BREAKS_ENABLED && onBreakNow && pause ? (
                       <div className="mt-5">
                         <p className="notice notice-info font-semibold">
                           {`Your store is on a break until ${breakDay(pause.until)}. Nothing is charged, your checkout is closed, and everything you put up is kept. On ${breakDay(pause.until)} your plan starts again by itself at ${priceWords(pause.tier, "month")}. To sell sooner, start it below today.`}

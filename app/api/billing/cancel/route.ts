@@ -8,7 +8,8 @@ import {
 } from "@/lib/billing";
 import { setSubscription } from "@/lib/store";
 import { limited } from "@/lib/request-guard";
-import { dropPause, undoPause } from "@/lib/plan-pause";
+import { dropPause, pauseView, undoPause } from "@/lib/plan-pause";
+import { PLAN_BREAKS_ENABLED } from "@/lib/plan-pause-rules";
 
 /**
  * Cancels the creator's subscription, or takes the cancellation back.
@@ -41,7 +42,12 @@ export async function POST(request: NextRequest) {
     // "Keep my subscription" on a store with a break set takes the break back,
     // so it is not counted against the once a year (lib/plan-pause.ts).
     if (intent === "resume") {
-      const done = await undoPause(store);
+      if (!PLAN_BREAKS_ENABLED) {
+        const observation = await pauseView(store);
+        if (observation.kind === "unknown") return away(origin, studio("billing=cancel-error"));
+        if (observation.kind === "known") return away(origin, studio("billing=pause-unavailable"));
+      }
+      const done = PLAN_BREAKS_ENABLED ? await undoPause(store) : "none";
       if (done !== "none") return away(origin, studio(done === "kept" ? "billing=resumed" : "billing=ended"));
     }
     const state = await setCancelAtPeriodEnd(store.subscriptionId, intent === "cancel");

@@ -4,6 +4,7 @@ import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { isBillingConfigured } from "@/lib/billing";
 import { sendFailedPlanNotices, sendReminders } from "@/lib/billing-reminders";
 import { runBreaks } from "@/lib/plan-pause";
+import { PLAN_BREAKS_ENABLED } from "@/lib/plan-pause-rules";
 import { sendTrialNudges } from "@/lib/trial-nudges";
 import { sendDueReminders } from "@/lib/payment-requests";
 
@@ -38,7 +39,7 @@ export async function GET(request: NextRequest) {
   try {
     const counts = await sendReminders();
     const failed = await sendFailedPlanNotices();
-    const breaks = await runBreaks();
+    const breaks = PLAN_BREAKS_ENABLED ? await runBreaks() : { told: 0, restarted: 0, failed: 0, dropped: 0 };
     const nudges = await sendTrialNudges();
     // Creators' payment requests still unpaid, reminded on the day they asked for (lib/payment-requests.ts), within what is left of the run.
     const requests = await sendDueReminders(Date.now() + 20_000).catch((error) => {
