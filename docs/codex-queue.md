@@ -15931,6 +15931,41 @@ Acessibilidade: AX274 nos novos campos (rótulos, mensagens de erro, prevenção
 Testes automáticos: a divisão, a validade, o destino depois do vencimento e a contagem separada por destino.
 Lucro: recurso de vendas que aumenta o valor percebido dos planos, sem custo variável novo além das leituras já contadas.
 
+### Complemento ao 510 [CK2] — 30/10/2026, 10h06 Fortaleza
+
+Proveniência: pedido direto do dono na conversa com o Claude, 30/10/2026, 10h06 Fortaleza; texto redigido pelo Claude e aprovado pelo dono; gravado diretamente pelo Claude para não interromper o Codex. Pedidos repetidos passo3(b): conferido no main 550c1cda7c09356ec1510f8244bd81a6db1bb4c2 que não havia complemento CK2 de 30/10/2026, 10h06; somente a diferença abaixo foi acrescentada, e o 510 [CK2] mantém número, posição (Grupo B, abaixo do marco MQ1) e estado. Conferência limitada no mesmo main: LinkTarget em lib/short-link-rules.ts aceita só { kind: "store" } e { kind: "product" }; MAX_LINKS = 100; revalidar no head de implementação. Texto do dono preservado integralmente abaixo.
+
+```text
+CK — Complemento ao 510 [CK2]: link curto para páginas e funis da loja, e divisão entre até 4 destinos (30/10/2026)
+Etiqueta: [CK2]
+
+Solicitação do dono (30/10/2026, 10h06, horário de Fortaleza).
+
+Pedidos repetidos: é complemento ao item 510 [CK2] já gravado. Aplique só a diferença ao item existente, mantendo número, posição e estado (regra "Pedidos repetidos", passo 3, letra b), e registre na proveniência o que mudou. Conferido antes de gravar: os links curtos com QR code, nome, lugar e contagem de visitas, vendas e receita (lib/short-links.ts, lib/short-link-rules.ts, components/short-links.tsx) já existem; o destino alternativo e a validade já estão no 510. Nada disso é refeito.
+
+Estado inicial: o do próprio 510.
+
+Contexto: a central de ajuda do ClickFunnels (support.myclickfunnels.com/docs/getting-started/, lida em 30/10/2026) descreve os Short Links como redirecionamentos que levam "to specific pages or split-test between multiple destinations". No Marktmorgen, o destino de um link curto é só a loja ou um produto (LinkTarget em lib/short-link-rules.ts), e o 510 divide as visitas entre dois destinos. Verifique antes no código atual que isso continua assim.
+
+O que acrescentar ao 510 [CK2]:
+- novos destinos possíveis para um link curto: uma página própria da loja e um funil da loja (o endereço /go/[funil]), além da loja e de um produto; só destinos publicados e visíveis; se o destino for despublicado ou apagado, o link leva à loja e o estúdio avisa na linha do link, nunca uma página de erro;
+- a divisão do 510 aceita de 2 a 4 destinos, com a porcentagem de cada um escolhida pelo criador (somando 100%) ou igual para todos; cada destino tem visitas, vendas e receita próprias, pelo mesmo método de contagem que já existe;
+- se um dos destinos sair do ar, a parte dele passa aos outros, sem perder visitas;
+- a mesma regra de privacidade do 510: sorteio a cada visita, sem cookie nem dado pessoal, só contagens agregadas; o vencedor não é declarado pelo link, e se o criador quiser saber qual vende mais, o estúdio mostra os números lado a lado e, quando houver, a mesma regra de vencedor de 377 [TB3], sem segunda regra estatística.
+
+Acessibilidade (AX274, Parte A, integral): máxima acessibilidade em tudo o que este item criar ou alterar — WCAG 2.2 nível AAA em todos os critérios aplicáveis, em todas as telas, estados, e-mails e arquivos, mais as demais normas e orientações da Parte A; a impossibilidade de um critério AAA precisa ser demonstrada e registrada em docs/accessibility-programme.md, nunca presumida. Os pontos a seguir são verificações obrigatórias deste item, não o limite do que se exige: escolha de destino com rótulo e grupo nomeado; porcentagens com rótulo, soma anunciada e erro explicado em texto quando não somar 100% (3.3.1, 3.3.3); prevenção de erro (3.3.6); números de cada destino em texto real com rótulo; contraste de 7:1, 320 px e 400% de zoom; tudo por teclado. Seção "Acessibilidade" no PR, com os passos e as decisões da tarefa principal antes e depois.
+
+Testes automáticos: cada novo tipo de destino; destino despublicado levando à loja com aviso; divisão de 2, 3 e 4 destinos com porcentagens e sem cookie; parte redistribuída quando um destino sai do ar; contagem separada por destino; mesma regra de 377 [TB3] quando aplicada.
+
+Custo: as mesmas leituras e contagens que um link curto já faz, dentro do limite de links (MAX_LINKS) e de requisições que cada plano já tem, sem fornecedor novo. Calcule o pior caso mensal e anual de cada plano com 100% dos direitos usados e aplique teto automático antes do gasto. Custo desconhecido reprova, nunca é zero.
+
+REGRA DE MARGEM (MR, 27/10/2026): nenhum cliente pagante, considerado isoladamente e usando 100% de todos os direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto; a empresa como um todo não pode dar prejuízo no pior caso a partir da base mínima de clientes pagantes, com 100% dos custos fixos da LLC atribuídos ao Marktmorgen (FX275); a meta de 60% de margem líquida é medida todo mês com números reais. Impostos pela política TX vigente.
+
+Proibido: criar item novo ou mudar número, posição ou estado do 510; destino fora da própria loja; cookie, pixel ou dado pessoal para a divisão; segunda regra estatística; página de erro no lugar de destino; mudar preços, cortar limites visíveis (inclusive MAX_LINKS), alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+```
+
 511. [CK3] Promoção com data de início e de fim marcadas antes.
 Estado inicial: na fila.
 Problema que resolve: hoje o código de desconto tem só data de fim (lib/discount.ts, expiresAt, pela Stripe); o criador precisa estar presente para lançar uma promoção de feriado na hora certa.
