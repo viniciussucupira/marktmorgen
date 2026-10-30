@@ -21,7 +21,7 @@ test("actual calendar route preserves bounded withdrawal when integration allowa
  assert.ok(store.statsId);
  const token=await openSession(email);
  const request=(action:string,extra:Record<string,string>={})=>new NextRequest("https://local.example/api/store/host-calendar",{
-  method:"POST",headers:{"Content-Type":"application/json",Origin:"https://local.example",Cookie:SESSION_COOKIE+"="+token,...extra},
+  method:"POST",headers:{"Content-Type":"application/json",Origin:"https://local.example",Host:"local.example",Cookie:SESSION_COOKIE+"="+token,...extra},
   body:JSON.stringify({action,tz:"UTC",url:"https://calendar.example.test/private.ics"}),
  });
  const limit=allowanceFor(store,"integration");
