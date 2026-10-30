@@ -5,7 +5,8 @@
  *
  *   - a yearly renewal is first due on the 30th UTC calendar day before the
  *     charge's date, whatever the hour of either, and is on time only then (the one day every official window read
- *     allows: Utah, Illinois, Virginia, DC, Colorado, Massachusetts);
+ *     allows: Utah, Illinois,
+ *     Virginia, DC, Colorado, Massachusetts, New York, California);
  *   - a notice found later (yearly: any later day; trial: fewer
  *     than 7) is still due, but marked late, never as on time;
  *   - inside the window it is not marked late;

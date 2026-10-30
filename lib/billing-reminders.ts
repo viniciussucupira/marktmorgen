@@ -25,7 +25,8 @@ const TRIAL_NOTICE_SECONDS = 8 * DAY;
  */
 export const TRIAL_FLOOR_SECONDS = 7 * DAY;
 /**
- * Sent on the 30th calendar day before the charge's date, never earlier.
+ * Sent on the 30th calendar day before the charge's date, never earlier; if a
+ * run misses that day, it is sent on the next run and marked late.
  * The official texts read on 30 Oct 2026 (queue 414 [KX1],
  * docs/kx1-renewal-legal-matrix-2026-10-30.md, sections 6 to 9) allow only
  * that day before an annual renewal in every jurisdiction read: Utah 30-60
@@ -37,7 +38,7 @@ export const TRIAL_FLOOR_SECONDS = 7 * DAY;
  * the charge's UTC date: counting elapsed seconds would let a charge late in
  * the day be noticed on the 29th day and still look on time. A customer's own
  * local date can differ from UTC near midnight; that limit is recorded in the
- * matrix (gap G16) and this window is not merged until it is settled.
+ * matrix as gap G16.
  */
 export const YEAR_NOTICE_DAYS = 30;
 
