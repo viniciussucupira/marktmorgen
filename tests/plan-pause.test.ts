@@ -1028,9 +1028,19 @@ async function main() {
         is("next pass does not send the committed notice again", await runBreaks(at + 60), { told: 0, restarted: 0, failed: 0, dropped: 0 });
         is("committed marker avoids a duplicate synthetic email", emails.length, 1);
       }
+      if (change === "due-score") {
+        let refused = false;
+        try { await undoPause(store, paused.record.until + 2 * DAY); } catch { refused = true; }
+        is("explicit stopped undo also preserves the changed due evidence", refused, true);
+        is("refused explicit cleanup retains the same evidence",
+          await pipeline([["GET", key], ["GET", year], ["ZSCORE", "nl:pause:due", ref]]),
+          [raw, last, due]);
+      }
     } finally {
       pauseRedis.pipeline = pipeline;
-      await undoPause(store, paused.record.until + 2 * DAY);
+      // Fixture teardown is not a production undo: a deliberately mismatched
+      // generation must now refuse that action rather than silently erase it.
+      await pipeline([["DEL", key, year], ["ZREM", "nl:pause:due", ref]]);
     }
   }
 
@@ -1250,7 +1260,12 @@ async function main() {
       await original([["SET",`nl:pause:${ref}`,evidence[0] as string]]);
     }finally{
       pauseRedis.pipeline=original;
-      await undoPause(store,set.record.until+4*DAY);
+      let refused = false;
+      try { await undoPause(store,set.record.until+4*DAY); } catch { refused = true; }
+      is("funded stopped cleanup needs its own settlement protocol", refused, true);
+      is("funded cleanup refusal keeps exact source evidence",
+        await original([["GET",`nl:pause:${ref}`],["GET",`nl:pause:last:${ref}`]]), evidence);
+      await original([["DEL",`nl:pause:${ref}`,`nl:pause:last:${ref}`],["ZREM","nl:pause:due",ref]]);
     }
   }
 
