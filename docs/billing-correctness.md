@@ -37,7 +37,7 @@ a path today; "a cron run twice, or two runs at once" is.
 
 | Path | Where | When | Amount | Idempotency key on the write | Consent recorded before | Tests today |
 | --- | --- | --- | --- | --- | --- | --- |
-| Plan checkout, monthly or yearly | `createBillingCheckout` (`lib/billing.ts` ~304; `/checkout/sessions` ~369 and its retry ~387); route `app/api/billing/checkout` | When the creator completes Stripe Checkout (subscription mode) | `PLAN_PRICES[tier][cycle]` (`lib/plan.ts`) via `ensurePrice` (a Stripe price is used only when its amount matches), or inline `price_data`; no coupons | **No key** (a Checkout Session, not a charge) | Stripe's page only; a stored record of the creator's consent to the recurrence: **not found** | `billing-trial-policy`, `contract-billing-metadata`, `approved-plan-pricing`, `contract-routes` import it; the session body itself: **unverified** |
+| Plan checkout, monthly or yearly | `createBillingCheckout` (`lib/billing.ts` ~304; `/checkout/sessions` ~369 and its retry ~387); route `app/api/billing/checkout` | When the creator completes Stripe Checkout (subscription mode) | `PLAN_PRICES[tier][cycle]` (`lib/plan.ts`) via `ensurePrice` (a Stripe price is used only when its amount matches), or inline `price_data`; no coupons | **No key** (a Checkout Session, not a charge) | Stripe's page only; a stored record of the creator's consent to the recurrence: **not found** | `billing-trial-policy` asserts the session body for every tier and cycle: the published amount (inline and through the catalog price), USD, no promotion codes, and both one-time fallbacks; `contract-billing-metadata`, `approved-plan-pricing`, `contract-routes` import it |
 | Free trial | Same checkout, `trialOffered` (`trial_period_days` = `TRIAL_DAYS`, 14; `missing_payment_method=cancel`) | When the trial ends | As the plan | As the plan | As the plan; the trial-end notice is 414 [KX1] (PR #1296, open) | `billing-trial-policy`, `trial-nudges` |
 | Plan change with proration | `switchPlan` (`lib/billing.ts` ~1136; subscription updates with `proration_behavior=always_invoice`, `payment_behavior=pending_if_incomplete`); route `app/api/billing/switch` | At once, an invoice for the prorated difference | Stripe's proration between `lib/plan.ts` prices | **No key** on any of its writes | The page states the cost first; no stored record found | `plan-scale`, `contract-billing-metadata` import it |
 | Cancel / undo cancel | `setCancelAtPeriodEnd`; route `app/api/billing/cancel` | Stops future charges | — | No key | — | `billing-cancellation-observation` |
@@ -78,8 +78,10 @@ a path today; "a cron run twice, or two runs at once" is.
    not specifically for memberships, payment plans, gifts, preorders or team
    purchases. Step 2 requires a record with the text's version and time
    before each such charge.
-2. **Amounts (unit 2).** No test asserts the plan checkout body, or that a
-   store charge equals the published price net of the one discount applied.
+2. **Amounts (unit 2).** The plan checkout's amount is asserted
+   (`billing-trial-policy`, corrected 30 Oct 2026 after this file first said
+   it was not); no test was found asserting that a store charge equals the
+   published price net of the one discount applied.
    The proration of `switchPlan`, `tier-switch` and `yearly-switch` is
    Stripe's and is not compared with the published price afterward.
 3. **Idempotency (unit 3).** Writes with no key: every Checkout Session
