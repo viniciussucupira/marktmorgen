@@ -20,8 +20,8 @@ Under the one receiving model (the dearer of Stripe 6.6% + 30¢ and Paddle 5% + 
 | Plan | Lowest price with nothing per-use included, monthly | The same, yearly | Today's price |
 | --- | --- | --- | --- |
 | Store | $31.45 | $195.95 | $69 / $690 |
-| Studio | $84.25 | $805.75 | $449 / $4,490 |
-| Scale | $173.95 | $1,856.35 | $999 / $9,990 |
+| Studio | $84.58 | $806.00 | $449 / $4,490 |
+| Scale | $174.00 | $1,856.60 | $999 / $9,990 |
 
 Store cannot be sold at Stan Creator's $29 without cutting those unprinted ceilings too, which this proposal does not do.
 
@@ -57,12 +57,12 @@ For each monthly price (the year at ten monthly payments), the largest share of 
 | Monthly / yearly price | Share of #553's per-use figures included | Net, monthly | Net, yearly | Net a customer, a month | To equal one #553 customer |
 | --- | --- | --- | --- | --- | --- |
 | $199 / $1,990 | cannot keep 60% with only the video hours included | — | — | — | — |
-| $249 / $2,490 | 5.6% | 60.36% | 60.03% | $150.30 | 4.02 |
+| $249 / $2,490 | 5.6% | 60.36% | 60.02% | $150.30 | 4.02 |
 | $299 / $2,990 **(recommended)** | 12.2% | 60.37% | 60.02% | $180.53 | 3.35 |
 | $349 / $3,490 | 18.7% | 60.39% | 60.03% | $210.77 | 2.87 |
 | $399 / $3,990 | 25.0% | 60.41% | 60.05% | $241.07 | 2.51 |
 | $499 / $4,990 | 38.7% | 60.39% | 60.01% | $301.36 | 2.00 |
-| $999 / $9,990 | 100.0% | 60.46% | 60.07% | $604.09 | 1.00 |
+| $999 / $9,990 | 100.0% | 60.46% | 60.07% | $604.08 | 1.00 |
 
 **The rule for the recommended point**: the lowest price on the list at which every per-use figure is at least 10% of #553's (before rounding down) on both intervals. A lower price wins the comparison beside the competitor's card; below 10% the plan includes too little to read as a plan; everything above the included amount is sold in packs at 60% or more, so a heavy user pays for what they use. This is a rule, not a measurement: the price that maximizes profit depends on how many creators buy at each price, which is unknown until sales open. The table above gives the owner the figure to judge it by (customers needed to equal one #553 customer).
 
@@ -87,7 +87,7 @@ At the competitor's own price instead (Store $35, the lowest that keeps 60% at a
 | Net at full included use, yearly (sizing reading) | 61.21% | 60.07% | 60.02% |
 | Net at full use, monthly, under the most-tax reading (the gate) | 12.14% | 12.07% | 12.13% |
 | Net a customer, a month, at full included use | $23.58 | $77.69 | $180.53 |
-| The same at #553's price | $41.62 | $271.14 | $604.09 |
+| The same at #553's price | $41.62 | $271.14 | $604.08 |
 
 Every limit that costs nothing per use is **kept** as in #553 and on every plan: 2,000 products, 200 lessons a course, 20 forms, a team of 5, 0% of a sale, and every feature of the plan. One could be **raised** at no modelled cost: deal pipelines (Store 2, Studio 5, Scale 10), which tests/plan-cost-registry.ts lists under NOT_A_COST as a setting in a record the data room already prices; the proposal is 10 on every plan. No other visible figure is raised, because every other one is read by a priced line of the registry.
 
