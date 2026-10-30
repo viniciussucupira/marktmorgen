@@ -163,6 +163,8 @@ async function main(): Promise<void> {
   is("it is Ada's, for this membership", (await readMove(store, adaLink[1], adaLink[2]))?.e, "ada@example.com");
   is("it opens nothing for another product", await readMove(store, guide.product.id, adaLink[2]), null);
   is("and nothing with a token made up", await readMove(store, adaLink[1], "f".repeat(40)), null);
+  const unasked = await openMove(store, adaLink[1], adaLink[2], "https://marktmorgen.com", now);
+  is("without the box to start the membership before the 14 days end (lib/digital-consent.ts), no checkout opens", unasked.ok ? "opened" : unasked.reason, "consent");
   const opened = await openMove(store, adaLink[1], adaLink[2], "https://marktmorgen.com", now, TEST_CONSENT);
   is("the checkout opens", opened.ok, true);
   const body = checkouts.at(-1)!;

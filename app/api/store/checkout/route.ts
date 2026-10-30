@@ -97,9 +97,13 @@ export async function POST(request: NextRequest) {
   // version of the sentence this code shows. Checked again where the charge
   // is built, so nothing digital is opened without it.
   let digitalConsent: DigitalConsent | null = null;
+  // The page the form was on, when it is not the product's own (renew, course): only those two words count.
+  let from: "renew" | "course" | "" = "";
   try {
     const form = await (await limited(request, 8_000)).formData();
     digitalConsent = consentFromForm(form);
+    const sentFrom = form.get("from");
+    from = sentFrom === "renew" || sentFrom === "course" ? sentFrom : "";
     const h = form.get("handle");
     const p = form.get("product");
     // An id, and only an id. The amount that goes to Stripe is read from the
@@ -179,7 +183,9 @@ export async function POST(request: NextRequest) {
 
   // Asked before a gift or a group is written down, so a refused yes leaves
   // nothing behind; the charge itself checks again, with what was added.
-  const consentBack = `/@${store.handle}/p/${product.id}?consent=needed${giftTo.trim() && !preorder ? "&gift=consent#gift" : people.trim() && !preorder ? "&group=consent#group" : preorder ? "#preorder" : "#buy"}`;
+  const consentBack = from
+    ? `/@${store.handle}/${from}/${product.id}?consent=needed`
+    : `/@${store.handle}/p/${product.id}?consent=needed${giftTo.trim() && !preorder ? "&gift=consent#gift" : people.trim() && !preorder ? "&group=consent#group" : preorder ? "#preorder" : "#buy"}`;
   if (!digitalConsent && deliversDigitally(product, optionId || null)) return away(consentBack);
 
   // A gift: written down before its checkout opens, and its checkout is one

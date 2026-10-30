@@ -98,7 +98,7 @@ async function main(): Promise<void> {
   if (!opened.ok) throw new Error("no order");
   const paid = await captureOrder(onSale, opened.order);
   if (!paid.ok) throw new Error(`not paid: ${paid.reason}`);
-  is("the channel, the affiliate, the sale and the yes to start access at once, on the payment", [paid.paid.meta, paid.paid.via, paid.paid.off, paid.paid.sale, paid.paid.handle], [{ dc: `yes:${TEST_CONSENT.version}:${TEST_CONSENT.at}`, channel: "instagram", channel_first: "tiktok" }, { aff: AFF, rate: 30 }, 980, 20, "harbor"]);
+  is("the channel, the affiliate, the sale and the yes to start access at once, on the payment", [paid.paid.meta, paid.paid.via, paid.paid.off, paid.paid.sale, paid.paid.handle], [{ dc: `yes:${TEST_CONSENT.version}:d:${TEST_CONSENT.at}`, channel: "instagram", channel_first: "tiktok" }, { aff: AFF, rate: 30 }, 980, 20, "harbor"]);
   await handOverPayPal(store, paid.paid);
   await handOverPayPal(store, paid.paid);
 

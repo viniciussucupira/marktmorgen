@@ -29,7 +29,7 @@ import { PickBundleForm } from "@/components/pick-bundle-form";
 import { AddToCart } from "@/components/store-cart";
 import { AssistReminderBox } from "@/components/assistant-reminder-box";
 import { DigitalConsentBox } from "@/components/digital-consent-box";
-import { deliversDigitally } from "@/lib/digital-consent";
+import { consentKind, deliversDigitally } from "@/lib/digital-consent";
 import { assistReminderOffered } from "@/lib/assistant-reminder";
 import { type AskWhen, isAskWhen } from "@/lib/ask-when";
 import { type UnitLine, unitLines } from "@/lib/option-units";
@@ -311,7 +311,7 @@ export function GiftBox({ store, product, problem = "", consentAgain = false }: 
           <span className="st-label">{w.messageOptional}</span>
           <textarea className="st-field mt-2" name="gift_message" rows={3} maxLength={500} />
         </label>
-        {deliversDigitally(product) ? <DigitalConsentBox id={`dc-gift-${product.id}`} lang={store.language} refused={consentAgain && problem === "consent"} /> : null}
+        {deliversDigitally(product) ? <DigitalConsentBox id={`dc-gift-${product.id}`} kind={consentKind(product)} lang={store.language} refused={consentAgain && problem === "consent"} /> : null}
         <button type="submit" className="btn st-btn btn-block">
           {product.options.length > 0 ? w.buyAsGift : w.buyAsGiftFor(money(salePrice(product.priceCents, offNow(store, product))))}
         </button>
@@ -425,7 +425,7 @@ export function GroupBox({ store, product, problem = "", consentAgain = false }:
             inputMode="numeric"
           />
         </label>
-        {deliversDigitally(product) ? <DigitalConsentBox id={`dc-group-${product.id}`} lang={store.language} refused={consentAgain && problem === "consent"} /> : null}
+        {deliversDigitally(product) ? <DigitalConsentBox id={`dc-group-${product.id}`} kind={consentKind(product)} lang={store.language} refused={consentAgain && problem === "consent"} /> : null}
         <button type="submit" className="btn st-btn btn-block">
           {product.options.length > 0 ? w.buyForTeam : w.buyForTeamEach(each)}
         </button>
@@ -716,12 +716,15 @@ export function BuyBox({
     );
   }
 
-  // The box to start access at once (lib/digital-consent.ts): required where
-  // the product itself hands something over digitally; offered, and asked
-  // for by the server only if one is checked, where only an added product
-  // does. Its form also carries the PayPal button, so one box serves both.
+  // The box to start during the cancellation period (lib/digital-consent.ts):
+  // required where the product itself hands something over digitally, which
+  // is the same for every option (a shipped product holds nothing digital on
+  // any option, lib/shipping.ts), so the page and the server agree whichever
+  // option is picked; offered, and asked for by the server only if one is
+  // checked, where only an added product does (beside a shipped one). Its
+  // form also carries the PayPal button, so one box serves both.
   const formId = `buy-${place}${product.id}`;
-  const digitalHere = deliversDigitally(product);
+  const digitalHere = deliversDigitally(product, startingOption(options)?.id ?? null);
   const digitalAdded = !digitalHere && extras.some((extra) => deliversDigitally(extra.target));
   return (
     <>
@@ -880,7 +883,7 @@ export function BuyBox({
       ) : null}
       {/* Starts unchecked: one reminder if this checkout is left unpaid, only when asked for here (lib/assistant-reminder.ts). */}
       {assistReminderOffered(store, product) ? <AssistReminderBox id={`r-${place}${product.id}`} lang={store.language} store={store.name} className="mb-4" /> : null}
-      {digitalHere || digitalAdded ? <DigitalConsentBox id={`dc-${place}${product.id}`} lang={store.language} refused={consentAgain} required={digitalHere} className="mb-4" /> : null}
+      {digitalHere || digitalAdded ? <DigitalConsentBox id={`dc-${place}${product.id}`} kind={consentKind(product)} lang={store.language} refused={consentAgain} required={digitalHere} className="mb-4" /> : null}
       <button type="submit" className="btn st-btn btn-block">
         <span className="bump-off">
           {pwyw

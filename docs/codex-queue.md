@@ -1,6 +1,6 @@
 # Fila de trabalho do Codex — Marktmorgen
 
-**AV2 — 30/10/2026:** passos1–2 concluídos conforme histórico; passo3 em andamento. #1262 e #1280 publicados, pausa opcional desligada e retomada no566FF2. Faltam coberturas essenciais comprovadas, depois passos4–12; nenhum retorno à proteção opcional da pausa.
+**AV2 — 30/10/2026:** passos1–2 concluídos conforme histórico; passo3 em andamento. #1262 e #1280 publicados, pausa opcional desligada e retomada no566FF2. Faltam coberturas essenciais comprovadas, depois passos4–6 e10–12 a cargo do Codex; passos7–9 com Claude pelaAV4 (89já iniciado ficaCodex). Nenhum retorno à proteção opcional da pausa.
 
 
 ## MQ — Marco dos itens menos importantes na fila (29/10/2026) [MQ1]
@@ -13,6 +13,10 @@ Solicitação do dono: **29/10/2026,20h52Fortaleza**. Estado inicial: na fila; e
 
 **MQ2 — 30/10/2026, 10h30 Fortaleza:** nenhum recurso bom é descartado (vai ao fim da fila); dentro de cada grupo, do mais ao menos importante; reordenação única feita pelo Claude (texto integral junto da MQ1).
 
+**AV4 — 30/10/2026, 13h41 Fortaleza:** Codex faz os passos 3–6 e 10–12 da AV1; Claude faz 7–9 (sem o 89, que está com o Codex) e depois o Grupo A; quem começa marca "em andamento" no item; ninguém mexe no PR do outro (texto integral na seção AV).
+
+Claude agendado — última rodada: 30/10/2026, 13h41 Fortaleza; fazendo agora: 307 [EC1]; últimos PRs: #1279, #1282, #1287, #1289.
+
 AV1/SD1 e Bloco de abertura (a)–(k) ficam na ordem vigente, inclusive custos(k),538[AB1] e448[LE1] em paralelo. Não se antecipam estudos ou recursos por causa desta classificação. Ficam na posição e no estado atuais todos os concluídos/publicados, andamentos (inclusive4,88,140,141,201,547,549),505[SG2] e registros59,60,336,464–477,494,495. As referências a547/549 são exceções expressas do pedido; suas linhas canônicas continuam literalmente “na fila”, sem convertê-las em andamento. A proteção de andamento também respeita a posição atualmente vigente: não ressuscita ordemOR já substituída porFIM1.
 
 ### Em seguida — o que AV1 já manda fazer logo depois da abertura
@@ -23,13 +27,17 @@ Manter a ordem já gravada para7[C-UE],8[C-UK],300–303, relatório mensal465[M
 
 Percorrer **somente os remanescentes acionáveis**, na ordem relativa já vigente (inclusiveOR e dependências), filtrando pela classificaçãoA; números abaixo são localizadores, não sequência numérica nova. Exceções de MQ1(b) continuam no lugar atual mesmo quando constam da listaA.
 
-**Ordem vigente do Grupo A pela MQ2 (dono, 30/10/2026, 10h58 Fortaleza):** 310 [AX2], 17 [D15], 273 [BK1], 274 [AX1], 427 [VR1], 388 [TB14], 389 [TB15], 414 [KX1], 417 [CC1], 437 [AC2], 457 [EL1], 459 [EL3], 460 [EL4], 461 [EL5], 462 [EL6], 506 [SG1], 507 [SG3], 508 [SG4], 335 [FR1], 374 [SU7], 378 [TB4], 93 [D2-VERIFIED-SOCIAL], 149 [S8-VERIFIED-SOCIAL-REFERENCE], 94 [D2-BUYER-TRUST], 145 [S4-HOME-SALES], 219 [OP5], 488 [IT5], 220 [HL1], 238 [CF1], 239 [CF2], 240 [CF3], 243 [CF6], 248 [ST1], 251 [ST4], 256 [KJ1], 271 [SEO1], 276 [H3-1], 281 [SF1], 497 [ME2], 308 [TC1], 443 [TS1], 444 [TS2], 490 [PP1], 496 [ME1], 498 [ME3], 531 [VP1], 241 [CF4], 534 [FQ1], 14 [D11], 22 [E5], 28 [E11], 99 [E2-TAG-BROADCAST], 100 [E2-MEMBER-PUBLICATIONS], 120 [F2-IMPORTS], 260 [KJ5], 394 [CX5], 397 [SL1], 428 [BV1], 513 [PF1], 556 [CT1], 514 [PF2], 515 [PF3], 206 [SH3], 520 [LB1], 521 [LB2], 522 [LB3], 541 [FC4], 544 [SQ9], 548 [TR1], 551 [FB1], 552 [BB1], 554 [DS1], 533 [DP1], 491 [PP2], 362 [AP2], 479 [SB2], 113 [E2-COMMUNITY-MODERATION], 436 [AC1], 312 [HQ1], 492 [DE1], 338 [HZ3], 438 [FC1], 439 [FC2], 32 [F1], 375 [TB1], 484 [IT1], 485 [IT2], 487 [IT4], 524 [NV1], 103 [E2-LESSON-MEDIA], 242 [CF5], 282 [HG1], 356 [ES2], 370 [SU3], 380 [TB6], 399 [SL3], 525 [FN1], 535 [MV1], 536 [CB1], 537 [PH1], 540 [CU1], 545 [LU1], 546 [EB1], 39 [G1], 480 [SB3]. Ficam no lugar atual, fora desta sequência: 143 [S2-PRICING], 182 [HT0], 202 [P0-REAL-PEOPLE], 205 [SH2], 431 [PV1], 432 [PV2], 433 [PV3], 434 [PV4] (concluídos, absorvidos, andamentos protegidos e itens do Bloco de abertura). Critério e motivo de cada mudança na seção “MQ2 — reordenação única aplicada”.
+**Ordem vigente do Grupo A pela MQ2 (dono, 30/10/2026, 10h58 Fortaleza):** 310 [AX2], 17 [D15], 273 [BK1], 274 [AX1], 427 [VR1], 567 [GD1], 568 [GD2], 388 [TB14], 389 [TB15], 414 [KX1], 417 [CC1], 437 [AC2], 457 [EL1], 459 [EL3], 460 [EL4], 461 [EL5], 462 [EL6], 506 [SG1], 507 [SG3], 508 [SG4], 335 [FR1], 374 [SU7], 378 [TB4], 93 [D2-VERIFIED-SOCIAL], 149 [S8-VERIFIED-SOCIAL-REFERENCE], 94 [D2-BUYER-TRUST], 145 [S4-HOME-SALES], 219 [OP5], 488 [IT5], 220 [HL1], 238 [CF1], 239 [CF2], 240 [CF3], 243 [CF6], 248 [ST1], 251 [ST4], 256 [KJ1], 271 [SEO1], 276 [H3-1], 281 [SF1], 497 [ME2], 308 [TC1], 443 [TS1], 444 [TS2], 490 [PP1], 496 [ME1], 498 [ME3], 531 [VP1], 241 [CF4], 534 [FQ1], 14 [D11], 22 [E5], 28 [E11], 99 [E2-TAG-BROADCAST], 100 [E2-MEMBER-PUBLICATIONS], 120 [F2-IMPORTS], 260 [KJ5], 394 [CX5], 397 [SL1], 428 [BV1], 513 [PF1], 556 [CT1], 514 [PF2], 515 [PF3], 206 [SH3], 520 [LB1], 521 [LB2], 522 [LB3], 541 [FC4], 544 [SQ9], 548 [TR1], 551 [FB1], 552 [BB1], 554 [DS1], 533 [DP1], 491 [PP2], 362 [AP2], 479 [SB2], 113 [E2-COMMUNITY-MODERATION], 436 [AC1], 312 [HQ1], 492 [DE1], 338 [HZ3], 438 [FC1], 439 [FC2], 32 [F1], 375 [TB1], 484 [IT1], 485 [IT2], 487 [IT4], 524 [NV1], 103 [E2-LESSON-MEDIA], 242 [CF5], 282 [HG1], 356 [ES2], 370 [SU3], 380 [TB6], 399 [SL3], 525 [FN1], 535 [MV1], 536 [CB1], 537 [PH1], 540 [CU1], 545 [LU1], 546 [EB1], 39 [G1], 480 [SB3]. Ficam no lugar atual, fora desta sequência: 143 [S2-PRICING], 182 [HT0], 202 [P0-REAL-PEOPLE], 205 [SH2], 431 [PV1], 432 [PV2], 433 [PV3], 434 [PV4] (concluídos, absorvidos, andamentos protegidos e itens do Bloco de abertura). Critério e motivo de cada mudança na seção “MQ2 — reordenação única aplicada”.
 
 Ordem anterior à MQ2, preservada como histórico — Localizadores do Grupo A solicitado: 14, 17, 22, 28, 32, 39, 93, 94, 99, 100, 103, 113, 120, 143, 145, 149, 182, 202, 205, 206, 219, 220, 238, 239, 240, 241, 242, 243, 248, 251, 256, 260, 271, 273, 274, 276, 281, 282, 308, 310, 312, 335, 338, 356, 362, 370, 374, 375, 378, 380, 388, 389, 394, 397, 399, 414, 417, 427, 428, 431, 432, 433, 434, 436, 437, 438, 439, 443, 444, 457, 459, 460, 461, 462, 479, 480, 484, 485, 487, 488, 490, 491, 492, 496, 497, 498, 506, 507, 508, 513, 514, 515, 520, 521, 522, 524, 525, 531, 533, 534, 535, 536, 537, 540, 541, 544, 545, 546, 548, 551, 552, 554.
 
 **206[SH3] passa a ficar imediatamente depois de515[PF3];241[CF4] continua imediatamente depois de531[VP1].** Ambos ficam acima do marco. As duas linhas da tabela de posiçõesFIM1 recebem esta data/hora; posições anteriores permanecem citadas como histórico, sem reativação.
 
 **Entrada posterior CT1 — 29/10/2026,23h50Fortaleza:** **556[CT1]**, na fila, **ACIMA DO MARCO MQ1, Grupo A, imediatamente depois de513[PF1]**, por indicação expressa do dono. Inserir somente este novo item nessa posição lógica; os itens anteriores conservam entre si a ordem, inclusive Bloco de abertura, AV1/SD1, andamentos e exceções. O número556 é localizador, não prioridade numérica.
+
+**Entrada posterior GD1 — 30/10/2026,13h18Fortaleza:** **567[GD1]**, na fila, **ACIMA DO MARCO MQ1, Grupo A, logo depois de427[VR1]** na ordem vigente da MQ2 (posição6), pelo critério (a) da MQ2, por indicação expressa do dono. Inserir somente este novo item nessa posição; os demais conservam entre si a ordem, inclusive Bloco de abertura, AV1/SD1, andamentos e exceções. O número567 é localizador, não prioridade numérica.
+
+**Entrada posterior GD2 — 30/10/2026,13h23Fortaleza:** **568[GD2]**, na fila, **ACIMA DO MARCO MQ1, Grupo A, logo depois de567[GD1]** na ordem vigente da MQ2 (posição7), pelo critério (a) da MQ2, por indicação expressa do dono. Inserir somente este novo item nessa posição; os demais conservam entre si a ordem, inclusive Bloco de abertura, AV1/SD1, andamentos e exceções. O número568 é localizador, não prioridade numérica.
 
 ## MARCO — DAQUI EM DIANTE, OS MENOS IMPORTANTES (MQ1, 29/10/2026)
 
@@ -100,6 +108,10 @@ Uma linha por item, três grupos possíveis: A, B ou sem mudança. “Sem mudan�
 **Atualização FF1 (30/10/2026,10h30):** bases554–564 anteriores são históricas; tabela atual **565linhas únicas,109A,241B,215sem mudança**. Só565[FF1] acrescentado como “sem mudança”, rótulo que a tabela usa para a cauda FIM1, no fim da fila depois do último item FIM1 pela MQ2; tabela numérica não redefine execução.
 
 **Atualização FF2 (30/10/2026,10h39):** bases554–565 anteriores são históricas; tabela atual **566linhas únicas,109A,231B,226sem mudança**. Acrescentado566[FF2] no fim da fila, depois de565; pela Parte2 do FF2, saem do GrupoB para o fim da fila, depois de566 e na ordem dos números, os reativados61,63,64,65,66,67,68,135,136(só estudo) e137. Continuam como estão62,133 e a parte pt-BR do58; o134 já estava reaberto desde24/10/2026,18h56 e fica na posição e no estado atuais. Tabela numérica não redefine execução.
+
+**Atualização GD1 (30/10/2026,13h18):** bases554–566 anteriores são históricas; tabela atual **567linhas únicas,110A,231B,226sem mudança**. Só567[GD1] acrescentadoA, logo depois de427[VR1] na ordem vigente da MQ2 (A#6); os itens seguintes do Grupo A descem uma posição na sequência, sem mudar número, grupo ou estado. Tabela numérica não redefine execução.
+
+**Atualização GD2 (30/10/2026,13h23):** bases554–567 anteriores são históricas; tabela atual **568linhas únicas,111A,231B,226sem mudança**. Só568[GD2] acrescentadoA, logo depois de567[GD1] na ordem vigente da MQ2 (A#7); os itens seguintes do Grupo A descem uma posição na sequência, sem mudar número, grupo ou estado. Tabela numérica não redefine execução.
 
 | Item | Grupo | Motivo |
 | --- | --- | --- |
@@ -669,6 +681,8 @@ Uma linha por item, três grupos possíveis: A, B ou sem mudança. “Sem mudan�
 | 564 [HC1] | B | Dono30/10/2026,09h54: abaixo do marco, depois563no Grupo B e antesFIM1; demais posições preservadas. MQ2(30/10/2026,10h58): B#97. |
 | 565 [FF1] | sem mudança | Dono30/10/2026,10h30: fim da fila, depois do último item da cauda FIM1, pela regra MQ2; demais posições preservadas. |
 | 566 [FF2] | sem mudança | Dono30/10/2026,10h39: fim da fila, depois de565[FF1], pela regra MQ2; demais posições preservadas. |
+| 567 [GD1] | A | Dono30/10/2026,13h18: acima do marco, logo depois de427[VR1] pelo critério (a) da MQ2; demais posições preservadas. MQ2: A#6. |
+| 568 [GD2] | A | Dono30/10/2026,13h23: acima do marco, logo depois de567[GD1] pelo critério (a) da MQ2; demais posições preservadas. MQ2: A#7. |
 
 ### Proveniência, Pedidos repetidos e VR
 
@@ -1819,6 +1833,7 @@ Proveniência AB: passou a fazer parte do Bloco de abertura, posição (h), por 
    - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
    - Estado: **pronto e desligado, aguardando a abertura** (linha "Estado atual" abaixo; antes: a fazer). Posição vigente: OR: Bloco A, posição 5/8, após 275 [FX1] e antes de 206 [SH3].
    - Estado atual: **pronto e desligado, aguardando a abertura** (VR: incorporado; desligado pelas travas, PLANS_ON_SALE false; não disponível ao cliente). Incorporado em 30/10/2026, 12h19 Fortaleza, pelo PR #1279 (merge 2cfa966605eb158e6dd8664f6342e027c47ad60d), feito pelo Claude com autorização do dono de 30/10/2026, 11h16. CI completo verde no head testado 73fbda3dc4259c0218c2ae78588b2695993630ab (39 de 39 verificações). Caixa desmarcada e obrigatória antes de pagar por entrega digital imediata em todos os checkouts (produto, presente, grupo, pré-venda, pacote escolhido, curso, renovação, carrinho, ofertas de um clique com caixa própria, oferta de boas-vindas, volta, membro transferido e PayPal); recusa no servidor; "yes", versão 2026-10-30.1 e horário em metadata[dc] no Stripe do criador; linha no e-mail de confirmação; Termos, Reembolso, Privacidade, person-data e ajuda atualizados. Lacunas registradas no PR: texto do EUR-Lex lido pela reprodução oficial em legislation.gov.uk, regras do Reino Unido não relidas, e2e local não executado.
+   - Correção posterior (revisão independente): PR #1282, incorporado em 30/10/2026, 13h17 Fortaleza (merge 084a18442c855b6f9d399526c78142f2f5359bff), CI completo verde no head testado aaedd06d8b0432d9e8b873ccf8ab86f60ddc3d31 (39 de 39). Versão do texto 2026-10-30.2: frase própria para assinaturas (pedido expresso para começar já; direito mantido com pagamento proporcional, arts. 8(8), 14(3) e 16(a)); e-mail fiel a cada caso (acesso dado na confirmação, pré-venda no dia do lançamento, assinatura); alemão com "Sie" e § 356(6) BGB; produto enviado nunca pede a caixa em nenhuma opção; dc sob o limite de 50 campos do Stripe, recusando o checkout em vez de descartar; erro acessível limpo ao marcar; renovação e curso voltam à própria página; privacidade com os 400 dias do registro PayPal. Estado inalterado: pronto e desligado, aguardando a abertura. Depende do dono: a troca de nível de assinatura (tier-switch) e a troca para anual (yearly-switch) devem pedir a caixa de novo antes de cobrar? Leitura atual: mudança de contrato existente, nada é pedido.
    - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Escopo e prova: Urgente antes de venda digital a consumidor da UE. Conferir no EUR-Lex a Diretiva2011/83/UE arts.9,14,16 com a redação2019/2161. Consentimento expresso para entrega imediata e reconhecimento da perda do direito, texto versionado e horário guardados, confirmação no e-mail da compra. Atualizar Termos/reembolso/privacidade juntos. Cobrir os checkouts aplicáveis, sem inferir consentimento nem abrir vendas ou declarar conformidade antes de prova.
    - Custo e margem: Antes de construir: conferir capacidade existente no main e preservar Claude. Custo unitário pago mais caro, uso integral simultâneo por plano mensal/anual, taxas de receiving-costs e leitura fiscal mais onerosa (nunca abaixo de27,5%); teto por fornecedor/loja e reserva antes da operação, plan-cost-registry/spend-floor. Desconhecido reprova; sem cortar limite visível, mudar preço ou afrouxar gates.
@@ -7751,6 +7766,35 @@ Regras para o item: é proibido criar contas, aceitar termos, contratar serviço
 
 Estado inicial: na fila. Ao concluir, registre a data e a hora de Fortaleza, o commit, o resultado da suíte completa e a publicação.
 
+### Complemento ao 307 [EC1] — 30/10/2026, 13h12 Fortaleza
+
+Proveniência: pedido direto do dono na conversa com o Claude, 30/10/2026, 13h12 Fortaleza; texto redigido pelo Claude e aprovado pelo dono; gravado diretamente pelo Claude. Pedidos repetidos passo3(b): conferido no main 8502a17eb053d7921e2225bfb31238ebecee1f77 que não havia complemento EC1 de 30/10/2026, 13h12; somente a diferença abaixo (devolução automática do tempo pago e não usado no dia do encerramento, na parte 4) foi acrescentada, e o 307 [EC1] mantém número, posição (Bloco de abertura, posição (g)) e estado, inclusive a linha “Em andamento pelo Claude” (ramo claude/store-closing-fair-buyers, PR #1283). Texto do dono preservado integralmente abaixo.
+
+```text
+EC — Complemento ao 307 [EC1]: devolução automática do tempo pago e não usado no dia do encerramento (30/10/2026)
+Etiqueta: [EC1]
+
+Solicitação do dono (30/10/2026, 13h12, horário de Fortaleza).
+
+Pedidos repetidos: é complemento ao item 307 [EC1], já gravado e em andamento pelo Claude (ramo claude/store-closing-fair-buyers). Aplique só a diferença ao item existente, mantendo número, posição e estado (regra "Pedidos repetidos", passo 3, letra b), e registre na proveniência o que mudou.
+
+Estado inicial: o do próprio 307.
+
+O que muda no 307 [EC1], parte 4:
+- se, até o dia do encerramento, a criadora não tiver devolvido o tempo pago e não usado pelos membros, o código devolve automaticamente, no dia do encerramento, a parte proporcional de cada membro, pela conta Stripe da própria criadora, pelo mesmo cálculo do botão da parte 4, uma única vez (operação idempotente);
+- conferir na documentação oficial e datada do Stripe que a plataforma pode criar esse reembolso na conta conectada; se não puder, registrar em "Depende do dono" e manter só o botão;
+- os avisos de encerramento à criadora dizem, desde o primeiro, que isso vai acontecer e quanto será devolvido, e que ela pode voltar a assinar para manter a loja;
+- saldo insuficiente na conta da criadora: o membro recebe um e-mail de serviço dizendo que não foi possível devolver e qual é o contato publicado pela criadora; a plataforma nunca paga do próprio caixa nem cria dívida;
+- os Termos de Uso e a política de reembolso passam a dizer, em inglês americano simples, que no encerramento da loja o tempo pago e não usado é devolvido automaticamente pela conta da criadora, quando houver saldo;
+- testes: devolução automática no dia certo; valor proporcional; nenhuma devolução dupla quando a criadora já devolveu; saldo insuficiente; criadora que volta a assinar antes do encerramento não tem devolução.
+
+REGRA DE MARGEM (MR, 27/10/2026): nenhum cliente pagante, considerado isoladamente e usando 100% de todos os direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto; a empresa como um todo não pode dar prejuízo no pior caso a partir da base mínima de clientes pagantes, com 100% dos custos fixos da LLC atribuídos ao Marktmorgen (FX275); a meta de 60% de margem líquida é medida todo mês com números reais. Impostos pela política TX vigente.
+
+Proibido: criar item novo ou mudar número, posição ou estado do 307; pagar reembolso com dinheiro da plataforma; criar dívida para a plataforma; devolver duas vezes; mudar preços, limites visíveis, comissão, CLOSING_DAYS, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; reembolso real; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+```
+
 ## TC — Lições da auditoria da ThriveCart (23/10/2026)
 
 **Ordem:** após todos os itens anteriores; este item não bloqueia nenhum outro. Inclusão documental após concluir a tarefa corrente; nada implementado agora.
@@ -13619,6 +13663,8 @@ Aplicar a regra VR.
 
 ### AV3 — Aplicação literal do passo 3 da AV1 (30/10/2026, 10h20 Fortaleza)
 
+Em andamento pelo Codex:30/10/2026, 13:47 Fortaleza, revisão essencial do passo3 em codex/av-essential-lifecycle-requirements (#1285); consumo confirmado de franquias em codex/av-resource-confirmed-count (#1288). Marcas anteriores à AV4 preservadas no histórico; retirar ao incorporar cada PR.
+
 Proveniência: pedido direto do dono na conversa com o Claude, 30/10/2026, 10h20 Fortaleza; texto redigido pelo Claude e aprovado pelo dono; gravado diretamente pelo Claude para não interromper o Codex. Instrução de ordem, sem número novo: nenhum número, grupo, linha da tabela do MQ1 ou estado de item muda; aviso curto também no alto da fila, em “Primeiro — AV1, Bloco de abertura e posições protegidas”. Pedidos repetidos: a etiqueta [AV3] não existia no main fc93fe0a6f1bac7c5cf3840a45796993a28c538a. Conferência do Claude no GitHub, 30/10/2026: desde 2026-10-28T22:37Z foram incorporados 37 PRs de código de ramos codex/av-*, dos quais 26 com pausa, reinício, retomada, aviso ou publicação do reinício no nome do ramo; o #1262 (codex/av-stopped-undo-generation) continua aberto; os passos 1 e 2 tiveram os PRs #1175 (SR6), #1179 (SD1) e #1180 (SR4) incorporados em 28/10/2026; em lib/contract-funding-rules.ts, CONTRACT_ADMISSION_COVERAGE tem pauseRestart:false. Texto do dono preservado integralmente abaixo.
 
 ```text
@@ -13667,6 +13713,42 @@ O que muda no [AV3]:
 - regra permanente a partir de agora: nada que seja bom para o cliente ou para o lucro é descartado, cancelado, absorvido ou apagado por não ser necessário agora; o que não for importante agora vai para o fim da fila, na ordem em que sair, preservando número, texto, histórico e provas.
 
 Proibido: apagar, cancelar, absorver ou fechar item, código, teste, prova ou histórico; renumerar itens existentes; ligar OPENING_REQUESTED, PLANS_ON_SALE ou qualquer recurso desligado; afrouxar qualquer trava ou teste; mudar preços, limites visíveis ou comissão; criar contas, abrir empresa, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+```
+
+
+### AV4 — Divisão do trabalho entre o Codex e o Claude (30/10/2026, 13h41 Fortaleza)
+
+Proveniência: pedido direto do dono na conversa com o Claude, 30/10/2026, 11h03, confirmado às 13h41 Fortaleza (com a ordem de o Claude trabalhar sem parar nas 24 horas seguintes); texto redigido pelo Claude e aprovado pelo dono; gravado diretamente pelo Claude para não interromper o Codex. Instrução de ordem, sem número novo; não muda a ordem interna de nenhum passo, nem número, grupo, linha da tabela do MQ1 ou estado de item. Pedidos repetidos: a etiqueta [AV4] não existia no main 3c2164696648f2e54e97c1aece382e0a2aef0964. No alto da fila ficam o aviso curto do AV4 e a linha de situação “Claude agendado — última rodada: …”, que o Claude atualiza em cada rodada. Texto do dono preservado integralmente abaixo.
+
+```text
+AV — Divisão do trabalho da AV1 entre o Codex e o Claude, sem conflito (30/10/2026) [AV4]
+
+Solicitação do dono (30/10/2026, 11h03, confirmada às 13h41, horário de Fortaleza).
+
+Pedidos repetidos: aplique a regra "Pedidos repetidos" de AGENTS.md. É instrução de ordem, sem número novo, registrada junto da AV1, do [AV3] e da [MQ2]; não muda a ordem interna de nenhum passo.
+
+Palavras do dono, reescritas em norma culta: o Claude deve trabalhar continuamente junto com o Codex nas coisas mais importantes, sem o dono precisar pedir, cuidando para não haver conflito. Às 13h41, o dono mandou o Claude trabalhar sem parar nas próximas 24 horas, escolhendo as coisas mais importantes.
+
+1. Divisão dos passos da AV1:
+- Codex: passos 3, 4, 5 e 6, depois 10, 11 e 12, na ordem gravada, com o [AV3].
+- Claude: passos 7, 8 e 9, na ordem gravada: 89 [C2-CAPACITY] (somente se o Codex não estiver com ele em andamento; hoje está, no ramo codex/capacity-precheck, então fica com o Codex) e 232 [CA1]; 305 [SY1], 306 [SY2], 307 [EC1], 91 [D2-EU-WITHDRAWAL] (pronto e desligado) e 98 [D2-COMPLIANCE-REVIEW]; 114 [E2-AFFILIATE-TAX-FORMS].
+O Claude trabalha por uma tarefa agendada que roda a cada hora, sem pedido do dono. Ao terminar a sua parte, o Claude segue para o próximo item ainda não iniciado do Grupo A, na ordem da [MQ2], que não esteja com o Codex nem dependa da parte dele.
+
+2. Sem conflito:
+- quem começa um item marca na fila, na linha do item, "em andamento pelo Codex" ou "em andamento pelo Claude", com a data, a hora e o ramo (codex/* ou claude/*), e retira a marca ao incorporar;
+- antes de começar, cada um confere os PRs abertos e os ramos recentes do outro; se um PR aberto do outro mexe nos mesmos arquivos, escolhe outra tarefa da sua parte ou espera a incorporação;
+- ninguém altera, refaz ou incorpora um PR do outro;
+- se um precisar de algo que está na parte do outro, registra o pedido na fila em vez de fazer.
+
+3. Linha de situação: no alto da fila, uma linha "Claude agendado — última rodada: [data e hora de Fortaleza]; fazendo agora: [item]; últimos PRs: [números]", atualizada pelo Claude em cada rodada.
+
+4. Mesmas regras para os dois: incorporar só com a suíte completa aprovada no head exato; o Claude faz revisão independente de cada item de código antes de incorporar; conferir a publicação; a anotação diária da AV2 lista o trabalho dos dois.
+
+REGRA DE MARGEM (MR, 27/10/2026): nenhum cliente pagante, considerado isoladamente e usando 100% de todos os direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto; a empresa como um todo não pode dar prejuízo no pior caso a partir da base mínima de clientes pagantes, com 100% dos custos fixos da LLC atribuídos ao Marktmorgen (FX275); a meta de 60% de margem líquida é medida todo mês com números reais. Impostos pela política TX vigente.
+
+Proibido: alterar, refazer ou incorporar o PR do outro; ligar OPENING_REQUESTED, PLANS_ON_SALE ou qualquer recurso desligado; afrouxar qualquer trava ou teste; apagar código, testes, provas ou histórico; mudar preços, limites visíveis ou comissão; criar contas, abrir empresa, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
 
 Aplicar a regra VR.
 ```
@@ -19523,8 +19605,116 @@ PR1280, correção de fixture: head5d5707751dfa7d7e8b4aa0974fa91a65339f9af6, ver
 
 PR1280 union canônica: preservados integralmente #1279 (consentimento de entrega do Claude) e #1281 (estado91), main9ed7dc8917c6e52eef3ccec3bb634a5960529819. Headc0b10cf8328336f5b9249881ae6a33150cf7243e aprovou39/39+Vercel antes da union; árvore combinada exige toda a verificação de novo, sem cancelamento de execução válida. Help e configuração dos testes reconciliados em cima das versões novas do Claude, somente com os blocos AV3.
 
+
+## 567 [GD1] — Proteções contra criadores, compradores, membros e afiliados irresponsáveis ou desonestos, e da reputação do dono
+
+**Estado:** na fila. **Posição:** ACIMA DO MARCO MQ1, Grupo A, logo depois de427[VR1] na ordem vigente da MQ2 (posição6), pelo critério (a) da MQ2; itens da AV1 e do Bloco de abertura continuam antes.567 estava livre e a etiqueta[GD1] não existia. Não altera ordem/estado de outros itens.
+
+**Proveniência/Pedidos repetidos:** pedido direto do dono na conversa com o Claude,30/10/2026,13h18Fortaleza; texto redigido pelo Claude e aprovado pelo dono; gravado diretamente pelo Claude para não interromper o Codex. Conferido no main c6cd3080a567eab0acff6ccd8cc6367a14a2f21e pela etiqueta, pela linha de data e hora e pelo conteúdo. Sobreposições encontradas na conferência, registradas sem alterar o texto do dono: a parte (c) sobrepõe-se ao 492 [DE1] (pacote de provas montado sozinho quando o Stripe avisa uma contestação) e a parte (d) sobrepõe-se em parte ao 493 [DE2] (conferência dos termos antes de publicar, complemento ao 98 [D2-COMPLIANCE-REVIEW]). Quando chegar a vez dessas partes, reutilizar o 492 e o 493 e fazer só a diferença, sem refazê-los nem movê-los. Nova recepção só proveniência,sem número/commit exclusivo.
+
+### Pedido literal GD1
+
+```text
+GD — Proteções contra criadores, compradores, membros e afiliados irresponsáveis ou desonestos, e da reputação do dono (30/10/2026) [GD1]
+
+Solicitação do dono (30/10/2026, 13h18, horário de Fortaleza).
+
+Palavras do dono, reescritas em norma culta: quer mais cuidados para proteger os clientes, os membros, os criadores e o próprio dono, e uns dos outros, caso qualquer um deles seja irresponsável, não cumpra suas obrigações ou seja desonesto, protegendo a reputação do dono.
+
+Pedidos repetidos: aplique a regra "Pedidos repetidos" de AGENTS.md. Conferido antes de gravar, e não refeito: Termos com produtos proibidos, suspensão, indenização e limite de responsabilidade (app/terms); denúncias de conteúdo e de direitos autorais com advertências e suspensão (app/report, app/copyright, lib/takedown-response.ts, noteTakedown em lib/store.ts); estorno de comissão de afiliado em reembolso e contestação (lib/affiliates.ts); avisos de mudança de conta Stripe, moeda e domínio (lib/account-notice.ts); e os itens 232 [CA1], 113 [E2-COMMUNITY-MODERATION], 506 [SG1], 305 [SY1] e 307 [EC1]. Em cada parte abaixo, confira o código e a fila antes e faça só a diferença.
+
+Estado inicial: na fila, ACIMA DO MARCO (Grupo A), logo depois de 427 [VR1], pelo critério (a) da [MQ2] (direitos do cliente, segurança e obrigação legal). Não altera a ordem de nenhum outro item. Itens da AV1 e do Bloco de abertura continuam antes.
+
+Regra geral de todas as partes: tudo age sozinho, pelo código, sem o dono acompanhar painel, ler alerta ou decidir caso a caso. Nenhuma proteção tira de um comprador o acesso que ele já pagou sem aviso e sem o tempo das regras de encerramento (307 [EC1]); as pausas atingem só vendas novas. Nenhum dado de um criador ou comprador é mostrado a outra loja; nenhuma lista negra entre lojas.
+
+(a) Problema com um pedido: no recibo e na área do comprador, o botão "Report a problem with this order", com motivos simples (não recebi, não é o que foi descrito, não consigo acessar, outro). O pedido vai para a caixa de entrada do criador (lib/inbox.ts) com prazo de resposta de 7 dias, avisado por e-mail. Se o criador não responder no prazo, o comprador recebe o contato publicado e o caminho de reembolso que a loja oferece, e o caso conta para a loja. Acima de um limite de casos sem resposta em 30 dias (calculado e registrado no PR), as vendas novas da loja pausam sozinhas até o criador responder a todos, com aviso claro ao criador; a pausa sai sozinha quando os casos são respondidos.
+
+(b) Contestações e reembolsos: ler, da conta Stripe do próprio criador, a taxa de contestação e a taxa de reembolso dos últimos 30 e 90 dias, pelas leituras que já existem. Conferir em fontes oficiais e datadas os limites dos programas de monitoramento das bandeiras de cartão (Visa e Mastercard) e do Stripe. Aviso automático ao criador abaixo desses limites, e pausa automática de vendas novas acima deles, com o motivo e o que fazer; a pausa sai sozinha quando a taxa volta ao normal. Dado indisponível é mostrado como indisponível, nunca como zero, e não pausa nem libera nada às cegas.
+
+(c) Provas para contestação: em cada pedido, o criador vê e pode enviar ao Stripe, com um clique dele e pela conta dele, um resumo de provas: data e valor da compra, o consentimento do item 91 [D2-EU-WITHDRAWAL] com a versão e a hora, as entregas e os acessos registrados (downloads, aulas abertas e concluídas), os e-mails de confirmação enviados e a política de reembolso aceita. Sem dado pessoal novo; conferir no Stripe, com fonte datada, os campos de prova aceitos.
+
+(d) Página que engana: antes de publicar uma página, um produto ou um e-mail, regras do código (sem IA) procuram promessas de ganho ou de resultado garantido, dinheiro rápido ou fácil, contagem regressiva ou escassez que não correspondem a uma data ou quantidade real do produto, e depoimentos sem a indicação exigida. Conferir em fonte oficial e datada a regra da FTC sobre avaliações e depoimentos falsos (16 CFR Part 465) e as orientações sobre alegações de renda. O que já é proibido pelos Termos ("anything that promises fast or easy money") bloqueia a publicação com a explicação e a correção; o resto mostra aviso com a correção sugerida, sem alterar o conteúdo do criador sem a aprovação dele.
+
+(e) Avaliações: verificar o recurso de avaliações que já existe e garantir que só comprador verificado avalia, com a indicação "Verified purchase"; que o criador não edita o texto de ninguém; e que o criador não pode esconder só as avaliações negativas (só por motivo das regras, igual para todas, como exige a regra da FTC).
+
+(f) Comprador abusivo: o criador pode bloquear um comprador na própria loja (novas compras, mensagens e comunidade), com o motivo guardado só para ele; o acesso já pago segue as regras de reembolso e de encerramento. O criador vê, só na loja dele, se um mesmo comprador já pediu reembolso ou abriu contestação ali antes.
+
+(g) Afiliados: verificar o que já existe e completar só o que faltar: nada de comissão para o próprio comprador (mesmo e-mail, mesmo cartão no Stripe ou mesma conta); comissão retida até passar o prazo de reembolso da loja; estorno em contestação; e leads de pagamento por lead confirmados pelo próprio lead.
+
+(h) Proteção do dono: estudo, com fontes oficiais e datadas, do registro de agente designado no U.S. Copyright Office para a proteção da DMCA (custo, prazo e passos), registrado em "Depende do dono", sem fazer o registro; conferência de que os Termos já cobrem, com clareza, que o Marktmorgen não é o vendedor dos produtos dos criadores (salvo onde a lei de impostos diz o contrário, como no art. 9a), a indenização pelo criador e a suspensão; e uma página pública "Trust and safety" que descreve, em inglês americano simples e sem prometer perfeição, as regras de (a) a (g) que estiverem funcionando, com o caminho de denúncia.
+
+Acessibilidade (AX274, Parte A, integral): máxima acessibilidade em tudo o que este item criar ou alterar — WCAG 2.2 nível AAA em todos os critérios aplicáveis, em todas as telas, estados, e-mails e arquivos, mais as demais normas e orientações da Parte A; a impossibilidade de um critério AAA precisa ser demonstrada e registrada em docs/accessibility-programme.md, nunca presumida. Seção "Acessibilidade" em cada PR, com os passos e as decisões da tarefa principal antes e depois.
+
+Custo: cada parte calcula o pior caso mensal e anual de cada plano com 100% dos direitos usados (leituras no Stripe, e-mails, armazenamento) e aplica teto automático antes do gasto; nenhuma chamada de IA. Custo desconhecido reprova, nunca é zero.
+
+REGRA DE MARGEM (MR, 27/10/2026): nenhum cliente pagante, considerado isoladamente e usando 100% de todos os direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto; a empresa como um todo não pode dar prejuízo no pior caso a partir da base mínima de clientes pagantes, com 100% dos custos fixos da LLC atribuídos ao Marktmorgen (FX275); a meta de 60% de margem líquida é medida todo mês com números reais. Impostos pela política TX vigente.
+
+Proibido: lista negra entre lojas ou mostrar dado de um criador ou comprador a outra loja; tirar acesso já pago sem aviso e sem as regras de encerramento; alterar conteúdo do criador sem a aprovação dele; decisão manual do dono como condição de funcionamento; mostrar zero no lugar de dado indisponível; registrar o agente da DMCA, criar contas, aceitar termos, contratar, pagar ou contatar terceiros; mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+```
+
+
+## 568 [GD2] — Segundo conjunto de proteções: obrigações legais da plataforma, golpes, pirataria, abuso e incidentes
+
+**Estado:** na fila. **Posição:** ACIMA DO MARCO MQ1, Grupo A, logo depois de567[GD1] na ordem vigente da MQ2 (posição7), pelo critério (a) da MQ2; itens da AV1 e do Bloco de abertura continuam antes.568 estava livre e a etiqueta[GD2] não existia. Não altera ordem/estado de outros itens.
+
+**Proveniência/Pedidos repetidos:** pedido direto do dono na conversa com o Claude,30/10/2026,13h23Fortaleza; texto redigido pelo Claude e aprovado pelo dono; gravado diretamente pelo Claude para não interromper o Codex. Conferido no main 31daa6c5acd572f0f77dd910b4dc388194aa2ab6 pela etiqueta, pela linha de data e hora e pelo conteúdo: nenhum item pede o estudo do INFORM Consumers Act/art. 30 do DSA, verificação de vírus nos arquivos, limite de tentativas contra teste de cartões, limite de sessões ao mesmo tempo, plano de resposta a incidentes, nomes de loja reservados ou o motivo “Impersonation”. Ligações a reutilizar sem refazer: a parte (e) com 362 [AP2] (validação de lista importada) e 374 [SU7] (frequência de e-mails); a parte (j) com o mecanismo de advertências de app/report e lib/takedown-response.ts; a parte (l) com 275 [FX1] (custos fixos). Nova recepção só proveniência,sem número/commit exclusivo.
+
+### Pedido literal GD2
+
+```text
+GD — Segundo conjunto de proteções: obrigações legais da plataforma, golpes, pirataria, abuso e incidentes (30/10/2026) [GD2]
+
+Solicitação do dono (30/10/2026, 13h23, horário de Fortaleza).
+
+Palavras do dono, reescritas em norma culta: quer ainda mais cuidados para proteger os clientes, os membros, os criadores e o próprio dono, e uns dos outros, caso qualquer um deles seja irresponsável, não cumpra suas obrigações ou seja desonesto, protegendo a reputação do dono.
+
+Pedidos repetidos: aplique a regra "Pedidos repetidos" de AGENTS.md. É um segundo conjunto, sem repetir o 567 [GD1]. Conferido antes de gravar, e não refeito: o carimbo em PDFs e as chaves de licença (/platform/pdf-stamping, /platform/license-keys), a equipe com papéis, os avisos de mudança de conta (lib/account-notice.ts), a página de denúncia (app/report), a página de status do 247 [SP4] e o 567 [GD1]. Em cada parte, confira o código e a fila antes e faça só a diferença.
+
+Estado inicial: na fila, ACIMA DO MARCO (Grupo A), logo depois de 567 [GD1], pelo critério (a) da [MQ2]. Não altera a ordem de nenhum outro item. Itens da AV1 e do Bloco de abertura continuam antes.
+
+Regra geral: tudo age sozinho, pelo código, sem o dono acompanhar painel nem decidir caso a caso; nenhuma proteção tira de um comprador o acesso já pago sem aviso e sem as regras do 307 [EC1]; nada de lista negra entre lojas; nenhum dado pessoal novo além do que a lei exigir.
+
+(a) Identificação de quem vende: estudo, com fontes oficiais e datadas, de se o Marktmorgen é "online marketplace" pelo INFORM Consumers Act dos EUA (15 U.S.C. 45f, vendedores de alto volume) e "online platform allowing consumers to conclude distance contracts with traders" pelo art. 30 do Regulamento (UE) 2022/2065 (DSA). Se se aplicar, coletar e conferir só os dados exigidos (aproveitando os dados da conta Stripe do criador quando a lei permitir), mostrar ao comprador o que a lei manda mostrar, e pausar sozinho as vendas novas de quem não cumprir, com aviso e prazo. O resultado do estudo e o que só o dono pode decidir vão para "Depende do dono".
+
+(b) Produto proibido: na criação e na edição de um produto, regras do código (sem IA) conferem o título, a descrição e a categoria contra a lista dos Termos ("What you may not sell") e contra a lista de negócios restritos do Stripe, conferida em fonte oficial e datada; o que for claramente proibido não publica, com a explicação; o duvidoso mostra aviso.
+
+(c) Golpe e roubo de dados: os formulários do criador não aceitam campos que peçam senha, número completo de cartão, código de segurança ou número de documento de identidade; páginas que imitam o login, o checkout ou a marca do Marktmorgen não publicam. Estudo, sem criar conta, de listas públicas e gratuitas de endereços maliciosos para conferir os links das páginas.
+
+(d) Arquivo com vírus: cada arquivo enviado por um criador para entrega é verificado por um verificador de código aberto antes de ser entregue; arquivo reprovado não é entregue e o criador é avisado. Calcule o custo de processamento no pior caso de cada plano e aplique teto automático; se o custo não couber, registre em "Depende do dono" em vez de ligar.
+
+(e) Spam por e-mail: verificar o que já existe (consentimento, descadastro, devoluções, supressões) e completar: pausa automática dos envios de lista de uma loja quando a taxa de reclamações ou de devoluções passar dos limites oficiais do fornecedor de e-mail, conferidos em fonte datada, com aviso ao criador e retomada sozinha quando a taxa voltar ao normal; lista importada só com a declaração de consentimento do criador.
+
+(f) Teste de cartões roubados: limite de tentativas de pagamento recusadas por checkout e por janela curta, contado sem guardar dado pessoal além do tempo da janela, para impedir que o checkout de um criador seja usado para testar cartões; mensagem clara ao comprador legítimo.
+
+(g) Pirataria e conta compartilhada: verificar o carimbo em PDFs, as chaves de licença e os links de download que já existem, e completar: links de download que expiram, e limite de sessões ao mesmo tempo por comprador nos cursos e nas áreas de membros, com aviso ao comprador e sem bloquear quem usa dois aparelhos próprios dentro do limite.
+
+(h) Equipe: verificar e completar o registro de quem fez o quê nas ações de dinheiro, de dados e de exclusão da loja, visível ao dono da loja, sem dado pessoal de comprador; confirmação antes de toda ação que não pode ser desfeita.
+
+(i) Menores de idade: os Termos dizem a idade mínima para criar loja e para comprar, conforme a lei aplicável, conferida em fonte oficial e datada, e proíbem lojas voltadas a crianças menores de 13 anos (COPPA); o cadastro do criador confirma a idade mínima por uma caixa desmarcada.
+
+(j) Alguém se passando por outro: nomes de loja e endereços reservados (por exemplo: marktmorgen, support, help, admin, official, security, billing) não podem ser usados por criadores; a página de denúncia ganha o motivo "Impersonation"; as denúncias entram no mesmo mecanismo de advertências que já existe.
+
+(k) Vazamento de dados: um plano escrito de resposta a incidentes em docs/, com os prazos legais conferidos em fontes oficiais e datadas (por exemplo, 72 horas no art. 33 do RGPD e as leis estaduais dos EUA), os modelos de aviso aos criadores e compradores, e o que o código faz sozinho (por exemplo, trocar chaves e encerrar sessões); sem contratar serviço.
+
+(l) Proteção do dono: estudo, com fontes datadas e sem contratar, do custo de seguro empresarial para a LLC (seguro contra ataques digitais e de responsabilidade profissional), como possível custo fixo do 275 [FX1], registrado em "Depende do dono".
+
+Acessibilidade (AX274, Parte A, integral): máxima acessibilidade em tudo o que este item criar ou alterar — WCAG 2.2 nível AAA em todos os critérios aplicáveis, em todas as telas, estados, e-mails e arquivos, mais as demais normas e orientações da Parte A; a impossibilidade de um critério AAA precisa ser demonstrada e registrada em docs/accessibility-programme.md, nunca presumida. Seção "Acessibilidade" em cada PR, com os passos e as decisões da tarefa principal antes e depois.
+
+Custo: cada parte calcula o pior caso mensal e anual de cada plano com 100% dos direitos usados, ou o custo fixo e a base mínima, e aplica teto automático antes do gasto; nenhuma chamada de IA. Custo desconhecido reprova, nunca é zero.
+
+REGRA DE MARGEM (MR, 27/10/2026): nenhum cliente pagante, considerado isoladamente e usando 100% de todos os direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto; a empresa como um todo não pode dar prejuízo no pior caso a partir da base mínima de clientes pagantes, com 100% dos custos fixos da LLC atribuídos ao Marktmorgen (FX275); a meta de 60% de margem líquida é medida todo mês com números reais. Impostos pela política TX vigente.
+
+Proibido: lista negra entre lojas; coletar dado pessoal além do que a lei exigir; tirar acesso já pago sem aviso e sem as regras do 307; decisão manual do dono como condição de funcionamento; contratar seguro, verificador pago ou qualquer serviço; criar contas, aceitar termos, pagar ou contatar terceiros; mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+```
+
 ### AV3 — requisitos essenciais da revisão de abertura,30/10/2026
 Pode começar desligado sem quebrar assinatura ou direito? pauseRestart:sim, já desligado no1280, retomada566FF2. resourceAllocations:não para entrega/franquias pagas; renewals:não para renovação ordinária; settlementAndReserveReconciliation:não para dinheiro/reembolso/contestação/obrigações. Checkout e troca de plano continuam essenciais. A avaliação de integrações opcionais permanece individual, sem corte de direito.
 Mudança concreta: revisão comercial usa lista explícita das cinco coberturas essenciais; a opcional exige prova sempre que seu interruptor real estiver ligado. Nenhum false vira true. Todos os false essenciais e revisões null ainda reprovam. Lista/interruptor entram no vínculo financeiro do protocolo, sem aceitar revisão antiga. Não é nova proteção da pausa: a implementação opcional permanece desligada e não recebe operação nova.
 Prova #1280: merge6ddb489ec1aa9d6f05275ba2918c0ab470acd301 em30/10/2026 13:00:17Fortaleza(16:00:17UTC); head480b0dbedf09091624de760744e6e0244f188a4e/tree45b761ab586e831ef7f7b5e69af923b35980a382,39/39+Vercel. READY dpl_4mdLDo2CDMWNa5rsuCaVUegPtH6w exato nos7aliases e5HTML; /help confirma indisponibilidade. Logs error/fatal limit10 de16:00:17→16:04:08.104UTC sem resultado para critérios, somente janela limitada. Claude1279/1281preservados;307EC1reservado aoClaude#1283.
 Custo: nenhum serviço/IO/retentiva/teto/preço novo; classificação pequena via canonicador financeiro existente, CPU não presumida gratuita. Custos mensal/anual de todos os planos e100%empresa continuam sujeitos às revisões reais null/desconhecido reprova. Acessibilidade0→0passos/decisões deUI, nenhuma conformidade humana presumida. Exige39checks+Vercel no novo head. Contador254mantido pela prova interativa pendente.
+
+Union PR1285: head2c227f8ec539881dfe3a2b227a874842e3a17074 aprovou39/39+Vercel; incorporada a base canônica576dba74587905db085ec36ebcf0f5a5975b62c1 com todos os pedidos/estados doClaude, incluindoGD1/GD2/AV4. Nenhum PR doClaude foi editado/incorporado peloCodex. Nova árvore requer CIintegral.

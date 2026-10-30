@@ -92,6 +92,8 @@ async function main(): Promise<void> {
 
   part("The button, while it lasts and after");
   checkouts.length = 0;
+  const unasked = await openWelcome(store, token, "https://marktmorgen.com", asked + HOUR);
+  is("without the box to start before the 14 days end (lib/digital-consent.ts), no checkout opens", unasked.ok ? "opened" : unasked.reason, "consent");
   const opened = await openWelcome(store, token, "https://marktmorgen.com", asked + HOUR, TEST_CONSENT);
   const body = checkouts[0];
   is("a checkout with the coupon, for that address, marked as a welcome offer", [opened.ok, body?.get("discounts[0][coupon]"), body?.get("customer_email"), body?.get("metadata[welcome]"), body?.has("metadata[winback]")], [true, "c_welcome25", "lead@example.com", "yes", false]);

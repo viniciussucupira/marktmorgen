@@ -36,7 +36,7 @@ import { MAX_CART, dealOff } from "@/lib/cart-rules";
 import { RECOVERY_OPEN_SECONDS, applyRecovery, recoveryOn, refusedRecovery, withoutRecovery } from "@/lib/recovery-setting";
 import { applyShare, leastPaid, linesTotal, shareBps } from "@/lib/platform-share";
 import { codesMayTakeOff } from "@/lib/discount";
-import { CONSENT_META, type DigitalConsent, consentMetaValue, deliversDigitally, requireDigitalConsent } from "@/lib/digital-consent";
+import { CONSENT_META, type DigitalConsent, consentMetaValue, deliversDigitally, keepConsentOn, requireDigitalConsent } from "@/lib/digital-consent";
 
 const DISPLAY_NAME = "branding_settings[display_name]";
 
@@ -104,11 +104,6 @@ export async function createCartCheckout(
     success_url: `${origin}/@${store.handle}/thanks?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${origin}/@${store.handle}`,
   });
-
-  if (digital && extras.digitalConsent) {
-    body.set(`metadata[${CONSENT_META}]`, consentMetaValue(extras.digitalConsent));
-    body.set(`payment_intent_data[metadata][${CONSENT_META}]`, consentMetaValue(extras.digitalConsent));
-  }
 
   // The store's deal for buying more (lib/cart-rules.ts): every line that much cheaper again.
   const deal = dealOff(store.cartDeal, products.length);
@@ -183,6 +178,11 @@ export async function createCartCheckout(
   let named = isHouseStore(store);
   if (named) body.set(DISPLAY_NAME, store.name);
   let documents = store.tax.ids || store.tax.invoices;
+  // The yes, written last before the order is admitted and refused rather than dropped when Stripe has no room for it (lib/digital-consent.ts).
+  if (digital && extras.digitalConsent) {
+    keepConsentOn(body, extras.digitalConsent, "digital", 1);
+    body.set(`payment_intent_data[metadata][${CONSENT_META}]`, consentMetaValue(extras.digitalConsent, "digital"));
+  }
   // A cart is one order, admitted before Stripe's page opens (lib/order-admission.ts).
   const admitted = await admitOrders(store, 1, Date.now(), itemsHandedOver(products));
   if (!admitted.ok) throw new OrdersPausedError(admitted.reason);
