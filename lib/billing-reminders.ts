@@ -54,6 +54,11 @@ export function fullPeriodAfter(at: number, cycle: Cycle): number {
 export function calendarDaysBefore(at: number, now: number): number {
   return Math.floor(at / DAY) - Math.floor(now / DAY);
 }
+
+function daysWords(at: number, now: number): string {
+  const days = calendarDaysBefore(at, now);
+  return `${days} calendar day${days === 1 ? "" : "s"} (UTC)`;
+}
 /** Too close to the charge to be of use: left alone. */
 const TOO_LATE_SECONDS = DAY;
 const MAX_PAGES = 50;
@@ -354,7 +359,7 @@ export async function sendReminders(nowSeconds = Math.floor(Date.now() / 1000)):
             const [unsent] = await redisPipeline([["SET", missedKey, "1", "NX", "EX", 60 * DAY]]);
             if (unsent !== null) {
               counts.missed += 1;
-              console.warn(`billing reminder missed: ${missed.kind}, ${calendarDaysBefore(missed.at, nowSeconds)} calendar days (UTC) before the charge`);
+              console.warn(`billing reminder missed: ${missed.kind}, ${daysWords(missed.at, nowSeconds)} before the charge`);
             }
           }
           continue;
@@ -368,7 +373,7 @@ export async function sendReminders(nowSeconds = Math.floor(Date.now() / 1000)):
           counts.sent += 1;
           if (reminder.late) {
             counts.late += 1;
-            console.warn(`billing reminder sent late: ${reminder.kind}, ${calendarDaysBefore(reminder.at, nowSeconds)} calendar days (UTC) before the charge`);
+            console.warn(`billing reminder sent late: ${reminder.kind}, ${daysWords(reminder.at, nowSeconds)} before the charge`);
           }
         } else {
           counts.failed += 1;
