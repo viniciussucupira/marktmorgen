@@ -18851,3 +18851,37 @@ Proibido: criar item novo ou mudar número, posição ou estado do 564; quebrar 
 
 Aplicar a regra VR.
 ```
+
+### Terceiro complemento ao 564 [HC1] — 30/10/2026, 10h14 Fortaleza
+
+Proveniência: pedido direto do dono na conversa com o Claude, 30/10/2026, 10h14 Fortaleza; texto redigido pelo Claude e aprovado pelo dono; gravado diretamente pelo Claude para não interromper o Codex. Pedidos repetidos passo3(b): conferido no main fdec80b54a3e84c61abdf1db439acf6cc655fd04 que não havia complemento HC1 de 30/10/2026, 10h14; somente a diferença abaixo foi acrescentada, e o 564 [HC1] mantém número, posição (Grupo B, abaixo do marco MQ1) e estado. Conferência limitada no mesmo main: as respostas de lib/help-content.ts são só texto (pergunta e parágrafos), sem índice e sem imagem; app/api/auth/code e app/api/auth/passkey existem; revalidar no head de implementação. Texto do dono preservado integralmente abaixo.
+
+```text
+HC — Terceiro complemento ao 564 [HC1]: índice "On this page" e imagens reais da tela nas respostas da ajuda (30/10/2026)
+Etiqueta: [HC1]
+
+Solicitação do dono (30/10/2026, 10h14, horário de Fortaleza).
+
+Pedidos repetidos: é complemento ao item 564 [HC1] já gravado, que já recebeu os complementos de 30/10/2026, 09h56 (datas) e 10h00 (páginas por área e por resposta). Aplique só a diferença ao item existente, mantendo número, posição e estado (regra "Pedidos repetidos", passo 3, letra b), e registre na proveniência o que mudou. Conferido antes de gravar: o login por código e por chave de acesso (app/api/auth/code, app/api/auth/passkey), a troca de e-mail e a recuperação da conta já existem; os vídeos de ajuda gravados automaticamente estão no 280 [H3-5]. Nada disso é refeito.
+
+Estado inicial: o do próprio 564.
+
+Contexto: a página de artigo da central de ajuda do ClickFunnels (support.myclickfunnels.com/docs/customizing-your-profile/, lida em 30/10/2026) mostra, à direita, o índice "On this page" com as partes do artigo (Overview, Requirements, Accessing Your Profile e outras), e, no texto, imagens da tela real em que a pessoa vai mexer. No Marktmorgen, as respostas da central (lib/help-content.ts) são só texto, sem índice e sem imagem. Verifique antes no código atual que isso continua assim.
+
+O que acrescentar ao 564 [HC1]:
+- índice "On this page" na página de cada resposta que tiver três ou mais partes com título, com um link para cada parte; ao lado do texto no computador e no alto da resposta no celular; a parte que está na tela fica marcada também por texto, não só por cor;
+- imagens reais da tela do estúdio nas respostas que explicam uma tarefa, capturadas automaticamente pelo mesmo mecanismo e na mesma loja sintética do 280 [H3-5] (Playwright, sem dado real de nenhum criador ou comprador), e capturadas de novo sempre que a tela correspondente mudar, para que nenhuma imagem mostre uma tela desatualizada; um teste automático falha se uma imagem for mais antiga que a última mudança da tela que ela mostra;
+- cada imagem tem texto alternativo que diz o que ela mostra e onde fica o botão citado; a imagem só complementa o texto: todo passo e todo nome de botão continuam escritos na resposta, para quem não vê a imagem;
+- regra das imagens do site: cada imagem aparece uma única vez em todo o site, e nenhuma miniatura repete uma imagem já usada em tamanho maior;
+- as imagens seguem o modo escuro quando a pessoa o usa, com uma captura para cada modo, sem repetir a mesma captura.
+
+Acessibilidade (AX274, Parte A, integral): máxima acessibilidade em tudo o que este item criar ou alterar — WCAG 2.2 nível AAA em todos os critérios aplicáveis, em todas as telas, estados, e-mails e arquivos, mais as demais normas e orientações da Parte A; a impossibilidade de um critério AAA precisa ser demonstrada e registrada em docs/accessibility-programme.md, nunca presumida. Os pontos a seguir são verificações obrigatórias deste item, não o limite do que se exige: índice como região de navegação com nome e a parte atual anunciada; texto alternativo em cada imagem; nenhuma informação só na imagem (a imagem de tela é registrada em docs/accessibility-programme.md como caso do 1.4.9, com o texto equivalente completo ao lado); imagens ampliáveis sem perder nitidez até 400% de zoom; contraste de 7:1 no texto; 320 px; leitor de tela e teclado. Seção "Acessibilidade" no PR, com os passos e as decisões da tarefa principal antes e depois.
+
+Custo: as imagens são geradas no CI e servidas como arquivos estáticos; o armazenamento e a entrega entram como custo fixo, com teto, como os vídeos do 280 [H3-5]. Custo desconhecido reprova, nunca é zero.
+
+REGRA DE MARGEM (MR, 27/10/2026): nenhum cliente pagante, considerado isoladamente e usando 100% de todos os direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto; a empresa como um todo não pode dar prejuízo no pior caso a partir da base mínima de clientes pagantes, com 100% dos custos fixos da LLC atribuídos ao Marktmorgen (FX275); a meta de 60% de margem líquida é medida todo mês com números reais. Impostos pela política TX vigente.
+
+Proibido: criar item novo ou mudar número, posição ou estado do 564; segundo mecanismo de captura além do 280 [H3-5]; dado real de criador ou comprador em qualquer imagem; imagem desatualizada; informação só na imagem; imagem repetida; mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+```
