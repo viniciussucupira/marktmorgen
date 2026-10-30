@@ -8116,6 +8116,30 @@ Solicitação do dono (23/10/2026, 20h03, horário de Fortaleza): hoje a regra p
 
 REGRA DOS 60% (OBRIGATÓRIA): todo cliente pagante, considerado isoladamente e usando 100% de todos os direitos do plano no pior mês, deve manter margem de lucro líquido MÍNIMA de 60%, depois de todos os custos e de todos os impostos, inclusive os brasileiros; a margem pode ser maior, mas nunca menor, e a mesma regra vale para a empresa como um todo. O custo destes testes é fixo (minutos de execução no GitHub e eventuais licenças): calcule-o com preços oficiais datados, inclua-o nos custos fixos e na base mínima de clientes (item 275 [FX1]) e mantenha-o dentro do orçamento atual do GitHub Actions, com parada automática ao atingir o limite. Custo desconhecido não pode ser considerado zero. Use a leitura que resultar em MAIS imposto (docs/tax-uncertainty.md).
 
+Complemento ao 309 [EM1] — Solicitação do dono (30/10/2026, 16h43, horário de Fortaleza): reduzir ao mínimo a chance de a Amazon SES pausar o envio da conta, sem nenhum trabalho manual do dono. Pedidos repetidos passo 3(b): aplicar só a diferença ao 309, mantendo número, posição e estado; não refazer o que já existe em lib/mail-health.ts (pausa de 7 dias da loja com 2% de devoluções ou 0,08% de reclamações, endereço que devolve ou reclama nunca mais recebe, envio em porções que dobram depois de uma importação), em lib/ses.ts (leitura do estado da conta e troca automática para o Resend) nem nos itens 461 [EL5] (contatos ativos) e 462 [EL6] (estudo do SES Tenants).
+
+Fonte oficial lida pelo Claude em 30/10/2026 (docs.aws.amazon.com/ses/latest/dg/reputationdashboardmessages.html): a Amazon põe a conta "Under review" com 5% de devoluções definitivas ou 0,1% de reclamações e pode pausar o envio com 10% ou 0,5%; uma conta pausada só volta depois de o dono responder ao caso no AWS Support Center, e repetições podem levar à suspensão permanente. Também levam a revisão: listas compradas, armadilhas de spam (spamtraps), formulários abusados por robôs (listbombing), links para domínios em listas de bloqueio e credenciais vazadas.
+
+O que acrescentar:
+1. Trava da conta inteira, além da trava por loja: somar devoluções definitivas e reclamações de todas as lojas numa janela móvel; ao passar de 3% de devoluções ou 0,06% de reclamações (bem abaixo dos 5% e 0,1% da Amazon), pausar sozinho todos os e-mails para listas de todas as lojas, que esperam na fila durável do passo 3 e saem sozinhos quando a taxa voltar abaixo; e-mails de serviço continuam. Números conferidos na fonte no dia da implementação.
+2. Ler o EnforcementStatus da conta (GET /v2/email/account, já lido em lib/ses.ts) e agir sozinho: em revisão (PROBATION ou equivalente da API vigente), parar todos os e-mails para listas até a conta voltar a "HEALTHY"; nenhuma loja é cobrada por e-mail que não saiu.
+3. Prevenção na entrada:
+- confirmação por e-mail (dupla confirmação) para toda inscrição em lista, inclusive formulários e importações quando a origem não comprovar consentimento;
+- recusa de endereços descartáveis e de domínios sem MX na inscrição e na importação;
+- proteção contra robôs em todo formulário que inscreve alguém (a proteção já existente), com limite de inscrições por IP e por loja;
+- importação só com a declaração do criador de que os contatos deram consentimento, e as primeiras porções da importação já conferidas pela trava por loja;
+- proibição, nos Termos, de listas compradas, alugadas ou emprestadas, com a pausa automática da loja que importar lista com muitas devoluções.
+4. Higiene contínua: contatos sem clique nem compra por 180 dias deixam de receber e-mails para listas automaticamente, depois de um e-mail único perguntando se querem continuar (com 461 [EL5]); quem não confirmar sai da lista de envio, sem ser apagado.
+5. Conteúdo: todo link de e-mail para lista conferido contra a lista de bloqueio de domínios antes do envio; e-mail com domínio bloqueado não sai e o criador é avisado no estúdio com o link exato.
+6. Segurança da credencial: o envio usa somente o papel IAM de envio já previsto em lib/ses.ts (AWS_SES_ROLE_ARN), sem chave de acesso de usuário; nenhum segredo no repositório.
+7. Se, apesar de tudo, a Amazon pausar a conta: os e-mails de serviço seguem pelo Resend sozinhos (já existe), os e-mails para listas esperam na fila sem se perder, e o relatório automático ao dono traz o texto pronto, em inglês, para responder ao caso da Amazon, com as medidas já tomadas pelo sistema. Esta é a única situação que pode exigir um passo do dono, porque a Amazon só reabre a conta por resposta dele no Support Center; o objetivo deste complemento é que ela nunca aconteça.
+
+Testes automáticos: trava da conta ligando e desligando nos limites; estado de revisão parando listas e mantendo serviço; dupla confirmação; recusa de endereço descartável e sem MX; limite por IP; higiene de 180 dias com o e-mail único de confirmação; link bloqueado retendo o envio; nada perdido e nada enviado duas vezes quando a fila volta.
+
+Custo: leituras da Amazon e da lista de bloqueio, consultas de MX e o e-mail único da higiene, com teto automático por loja e por plano antes do gasto, no pior caso mensal e anual; sem fornecedor pago novo sem fonte oficial datada e teto. Custo desconhecido reprova, nunca é zero.
+
+Acessibilidade: AX274, Parte A, integral, em todo aviso no estúdio, e-mail de confirmação e e-mail de higiene. Regra de margem MR e política TX vigentes. Proibido: mudar preços, limites visíveis (inclusive a cota de e-mails), comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a, a revisão comercial ou stripePlatformEligibilityReady; afrouxar qualquer trava; usar pixel de rastreamento de abertura; apagar contatos; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos. Aplicar a regra VR.
+
 310. [AX2] Prova de acessibilidade em 100% das páginas, com leitores de tela reais
 
 Estado: na fila, com prioridade logo após os pedidos já recebidos.
