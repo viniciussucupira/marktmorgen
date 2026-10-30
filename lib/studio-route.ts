@@ -37,7 +37,7 @@ import { LOCKED_NEEDS, lockedUntil } from "@/lib/two-step";
 import { type Store, STORE_ID_PATTERN, accountStores, ensureStoreId, storeForEmail, storeForId, storeRef } from "@/lib/store";
 import { type Permission, type Role, PERMISSION_WORDS, can } from "@/lib/team-roles";
 import { logTeam, memberStores, roleIn } from "@/lib/team";
-import { withinLimit } from "@/lib/request-guard";
+import { withinEssentialLimit } from "@/lib/request-guard";
 import { takeAllowance } from "@/lib/store-allowance";
 import { refreshPeriod } from "@/lib/billing-sync";
 import { ESSENTIAL_NEEDS, ESSENTIAL_PER_DAY, STUDIO_PAGE_UNITS } from "@/lib/studio-allowance-rules";
@@ -214,7 +214,7 @@ export async function studioAccess(
  */
 export async function countStudio(store: Store, need: Need | null, units = 1): Promise<{ ok: true; store?: Store } | { ok: false; reason: "used" | "unknown" | "pool"; message: string }> {
   if (need && ESSENTIAL_NEEDS.includes(need)) {
-    return (await withinLimit("studio-essential", store.sid || store.handle, ESSENTIAL_PER_DAY, 86_400))
+    return (await withinEssentialLimit("studio-essential", store.sid || store.handle, ESSENTIAL_PER_DAY, 86_400))
       ? { ok: true }
       : { ok: false, reason: "used", message: "Too many of these today. Try again tomorrow, or write to support." };
   }
