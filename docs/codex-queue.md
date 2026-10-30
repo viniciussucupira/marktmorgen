@@ -16496,6 +16496,40 @@ Proibido: criar item novo ou mudar número, posição ou estado do 526; salvar o
 
 Aplicar a regra VR.
 
+### Complemento ao 526 [FN2] — 30/10/2026, 09h40 Fortaleza
+
+Proveniência: pedido direto do dono na conversa com o Claude, 30/10/2026, 09h40 Fortaleza; texto redigido pelo Claude e aprovado pelo dono; gravado diretamente pelo Claude para não interromper o Codex. Pedidos repetidos passo3(b): conferido no main 8036b25cdaea9482212b97746f24b2e136cb598c que não havia complemento FN2 de 30/10/2026, 09h40; somente a diferença abaixo foi acrescentada, e o 526 [FN2] mantém número, posição (Grupo B, abaixo do marco MQ1) e estado. Conferência limitada no mesmo main: lib/flows.ts e FLOW_TRIGGERS (lib/flow-rules.ts) existem; app/studio/funnels/page.tsx só oferece salvar como sequência desligada os e-mails de acompanhamento redigidos e já tem a frase de permissão (can(view.role, "send")); não mostra as sequências de cada etapa nem o botão “Add a sequence for this step”; revalidar no head de implementação. Texto do dono preservado integralmente abaixo.
+
+FN — Complemento ao 526 [FN2]: sequências ligadas a cada etapa do funil (30/10/2026)
+Etiqueta: [FN2]
+
+Solicitação do dono (30/10/2026, 09h40, horário de Fortaleza).
+
+Pedidos repetidos: é complemento ao item 526 [FN2] já gravado, que já recebeu os complementos de 29/10/2026 e o de 30/10/2026, 09h33. Aplique só a diferença ao item existente, mantendo número, posição e estado (regra "Pedidos repetidos", passo 3, letra b), e registre na proveniência o que mudou. Conferido antes de gravar: as sequências e seus gatilhos (lib/flows.ts, FLOW_TRIGGERS em lib/flow-rules.ts) já existem; os números de cada etapa da sequência ("are here", "were here") estão no complemento de 29/10/2026 ao 391 [CX2]; a ação de dar acesso a um curso está no 548 [TR1]. Nada disso é refeito.
+
+Estado inicial: o do próprio 526.
+
+Contexto: a página clickfunnels.com/features/funnel-builder (lida em 30/10/2026) mostra, na seção "Everything you need is just one click away", o cartão de uma etapa do funil com um botão que abre as automações ligadas a ela (gatilho, "Add Tag(s)", "Enroll in Course") e as abas Funnel, Editor, Workflows, Opt Ins, Orders e Stats no alto do funil. No Marktmorgen, a tela de funis (app/studio/funnels, components/page-funnel-editor.tsx) não mostra quais sequências começam numa etapa, e criar uma exige ir ao Email Studio e escolher o gatilho sozinho. Verifique antes no código atual que isso continua assim.
+
+O que acrescentar ao 526 [FN2]:
+- em cada etapa do funil, no mapa e na lista que já existe: as sequências da loja cujo gatilho é aquela etapa (o envio do formulário daquela página, a compra do produto daquela etapa, ou o cadastro feito nela), com o nome, se está ligada ou desligada e um link para abri-la no Email Studio;
+- botão "Add a sequence for this step", que abre o Email Studio com uma sequência nova, desligada, já com o gatilho daquela etapa escolhido; o criador escreve, revisa e liga; nada é enviado nem ligado sozinho;
+- quando a etapa não tiver gatilho possível (por exemplo, uma página sem formulário e sem produto), o botão não aparece e uma frase curta explica por quê;
+- respeitar as permissões de hoje: quem não pode enviar e-mail (can(view.role, "send")) vê as sequências, mas não o botão, com a frase que já existe na tela de funis;
+- no alto da página do funil, atalhos com nome por extenso para o mapa, a edição das páginas, as sequências deste funil e, quando o 525 [FN1] existir, os cadastros, os pedidos e os números; nenhuma tela nova além das que este item e o 525 já pedem.
+
+Acessibilidade (AX274, Parte A, integral): máxima acessibilidade em tudo o que este item criar ou alterar — WCAG 2.2 nível AAA em todos os critérios aplicáveis, em todas as telas, estados, e-mails e arquivos, mais as demais normas e orientações da Parte A; a impossibilidade de um critério AAA precisa ser demonstrada e registrada em docs/accessibility-programme.md, nunca presumida. Os pontos a seguir são verificações obrigatórias deste item, não o limite do que se exige: botão com nome por extenso (nunca só um ícone); estado ligada ou desligada em texto; atalhos como região de navegação com nome e a página atual anunciada (aria-current); propósito de cada link compreensível pelo próprio texto (2.4.9); mudança de contexto só quando a pessoa pedir (3.2.5); alvos de 44 × 44 px; contraste de 7:1, 320 px e 400% de zoom; tudo por teclado. Seção "Acessibilidade" no PR, com os passos e as decisões da tarefa principal antes e depois (hoje: ir ao Email Studio, criar a sequência e escolher o gatilho; depois: um botão com o gatilho já escolhido).
+
+Testes automáticos: sequências certas em cada etapa por formulário, produto e cadastro; sequência nova criada desligada com o gatilho certo; nenhum envio nem ativação automática; botão ausente sem gatilho possível e sem permissão; atalhos e alternativa por teclado.
+
+Custo: leitura das sequências que o estúdio já faz e a criação de uma sequência desligada dentro do limite de sequências que cada plano já tem, sem envio, fornecedor ou chamada de IA novos. Calcule o pior caso mensal e anual de cada plano com 100% dos direitos usados e aplique teto automático antes do gasto. Custo desconhecido reprova, nunca é zero.
+
+REGRA DE MARGEM (MR, 27/10/2026): nenhum cliente pagante, considerado isoladamente e usando 100% de todos os direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto; a empresa como um todo não pode dar prejuízo no pior caso a partir da base mínima de clientes pagantes, com 100% dos custos fixos da LLC atribuídos ao Marktmorgen (FX275); a meta de 60% de margem líquida é medida todo mês com números reais. Impostos pela política TX vigente.
+
+Proibido: criar item novo ou mudar número, posição ou estado do 526; segundo motor de sequências; ligar ou enviar uma sequência sem o criador; e-mail sem consentimento; mudar preços, limites visíveis (inclusive o número máximo de sequências, etapas e funis), comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a, a revisão comercial ou stripePlatformEligibilityReady; afrouxar qualquer trava; mostrar recurso que não funciona hoje; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+
 ## HE — registro integral; item527 (29/10/2026,12h04Fortaleza)
 
 Proveniência: pedido direto do dono nesta conversa; comparaçãoClickFunnels atribuída ao relatoClaude,semverificação independente deste registro. Deduplicação main332a38d,PR1208aberto,20PRsrecentes/19heads codexdistintos e764refs,semHE1/título/data/conteúdo equivalente. Próximo livre527após526; nenhum estado/ordem anterior alterado. ComplementosTB/FN continuam sendo complementossemitemduplicado;527éeste novoHEexplicitamente solicitado. Antes da implementação,conferir cada tipo deproduto funcional no código; não antecipar animação no registro. MR/TX/FX275/AX274/VR/SF1/ME2/ME3eCF3não refazervinculantes. Registro noPR1208jáemcurso; implementação deHEcontinua na fila.
