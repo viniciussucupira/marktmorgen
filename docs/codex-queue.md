@@ -40,6 +40,8 @@ Entrada posterior no Grupo B: **559[CM3]**, na fila, **ABAIXO DO MARCO MQ1 por i
 
 Entrada posterior no Grupo B: **560[AS1]**, na fila, **ABAIXO DO MARCO MQ1 por indicação expressa do dono30/10/2026,01h25Fortaleza**, depois559[CM3] entre os remanescentesB e antesFIM1. Sem mudança de qualquer outro item ou do Bloco de abertura.
 
+Entrada posterior no Grupo B: **561[NE1]**, na fila, **ABAIXO DO MARCO MQ1 por indicação expressa do dono30/10/2026,02h58Fortaleza**, depois560[AS1] entre os remanescentesB e antesFIM1. Sem mudança de qualquer outro item ou do Bloco de abertura.
+
 ### Por último — os59 remanescentesFIM1
 
 FIM1 continua depois de todos os demais, na ordem relativa anterior e com a mesma regra de partes. São os61localizadores históricos da tabelaFIM1 menos206 e241, já retirados da cauda por decisões de posição. Localizadores para conferência (não ordem nova): 16, 26, 37, 38, 41, 42, 45, 47, 48, 49, 53, 56, 58, 92, 104, 127, 128, 129, 130, 131, 132, 203, 207, 209, 215, 222, 236, 252, 255, 280, 284, 286, 289, 296, 317, 318, 327, 337, 345, 346, 347, 348, 351, 352, 359, 363, 383, 401, 402, 404, 406, 419, 420, 425, 429, 430, 440, 441, 442. O item58 continua afetado **somente no português doBrasil**; os demais idiomas mantêm posição/gates atuais. Concluídos e andamentos já existentes não são reconstruídos, reiniciados ou movidos novamente.
@@ -63,6 +65,8 @@ Uma linha por item, três grupos possíveis: A, B ou sem mudança. “Sem mudan�
 **Atualização CM3 (30/10/2026,01h22):** bases554–558 anteriores são históricas; tabela atual **559linhas únicas,109A,236B,214sem mudança**. Só559[CM3] acrescentadoB, depois558; tabela numérica não redefine execução.
 
 **Atualização AS1 (30/10/2026,01h25):** bases554–559 anteriores são históricas; tabela atual **560linhas únicas,109A,237B,214sem mudança**. Só560[AS1] acrescentadoB, depois559; tabela numérica não redefine execução.
+
+**Atualização NE1 (30/10/2026,02h58):** bases554–560 anteriores são históricas; tabela atual **561linhas únicas,109A,238B,214sem mudança**. Só561[NE1] acrescentadoB, depois560; tabela numérica não redefine execução.
 
 | Item | Grupo | Motivo |
 | --- | --- | --- |
@@ -626,6 +630,7 @@ Uma linha por item, três grupos possíveis: A, B ou sem mudança. “Sem mudan�
 | 558 [LK1] | B | Dono30/10/2026,00h18: abaixo do marco, depois557no Grupo B e antesFIM1; demais posições preservadas. |
 | 559 [CM3] | B | Dono30/10/2026,01h22: abaixo do marco, depois558no Grupo B e antesFIM1; demais posições preservadas. |
 | 560 [AS1] | B | Dono30/10/2026,01h25: abaixo do marco, depois559no Grupo B e antesFIM1; demais posições preservadas. |
+| 561 [NE1] | B | Dono30/10/2026,02h58: abaixo do marco, depois560no Grupo B e antesFIM1; demais posições preservadas. |
 
 ### Proveniência, Pedidos repetidos e VR
 
@@ -18403,6 +18408,50 @@ Reconciliado apósheadindividual8716beaea842c356d15860b5932739e6ff394ed0concluir
 30/10/2026 — Head41fdfd02838bb0f0dc673ba6ab1ac292b32f9853:Mobile123902714718 aprovou9frias(LCPmáx716ms,CLS0,proxy64ms,0APIwrites) e regressão realtrêsplanos05:08:26.2200701UTC/summary05:08:49.1567167UTC,nãoINPcampo. Verify123902714756reprovou05:10:29.5221653UTC:inventário sem novo pricing-cycle-controls e teste aprovado-plan-pricing contava templatesinertes como termos visíveis(9emvez3). Corrigidoinventário preservando todosstatus;teste mantém3dl/3avisos/3termosvisíveis e exige6alternativasinertes comtodos5rótulos,sem alterar produto/limiares/AAA. Verificaçãointegral no novohead obrigatória;nãoisolatedrerun/nãoaprovahead41f. Falha8424 anterior tambémcancelouautomaticamenteverify123899301350,Firefox123899301293,WebKit123899301195após substituição,járeprovadamobile;aggregate123902589265failure. Histórico preservado,contador254retido.
 
 
+## 561 [NE1] — Aviso de que o Marktmorgen não promete ganhos, no rodapé de todo o site
+
+**Estado:** na fila. **Posição:** ABAIXO DO MARCO MQ1, Grupo B, depois560[AS1] entre os remanescentesB e antesFIM1.561 estava livre e a etiqueta[NE1] não existia. Não altera ordem/estado de outros itens ou Bloco de abertura.
+
+**Proveniência/Pedidos repetidos:** pedido direto do dono na conversa com o Claude,30/10/2026,02h58Fortaleza; texto redigido pelo Claude e aprovado pelo dono (“envia”); gravado diretamente pelo Claude para não interromper o Codex. Etiqueta enviada como [ED1] por engano do Claude; [ED1] já pertence a 348; trocada para [NE1] antes da gravação, conteúdo aprovado inalterado. Conferido no main 11b3d0a35fe74e168a761e340b322b4b4ece111a: não há aviso único de ganhos no rodapé; as frases soltas como “No listing is a promise of sales, income or results” (lib/site-pages.ts) são mantidas; a declaração de acessibilidade pertence ao DA1 e não é refeita. Nova recepção só proveniência,sem número/commit exclusivo.
+
+**Conferência real (limitada, revalidar no head de implementação):** components/site-footer.tsx não tem aviso de ganhos (só o link “What we never do” para /proof/promises); app/terms não tem âncora “#no-earnings-claims”; lib/site-pages.ts tem a frase “No listing is a promise of sales, income or results.” numa página. Registro documental: não implementa, não certifica margem, não conta entrega funcional.
+
+### Pedido literal NE1
+
+```text
+NE — Aviso de que o Marktmorgen não promete ganhos, no rodapé de todo o site (30/10/2026) [NE1]
+
+Solicitação do dono (30/10/2026, 02h58, horário de Fortaleza).
+
+Pedidos repetidos: aplique a regra "Pedidos repetidos" de AGENTS.md. Conferido antes de gravar: não há aviso único de ganhos no rodapé; frases soltas como "No listing is a promise of sales, income or results" (lib/site-pages.ts) existem em algumas páginas e são mantidas. A declaração de acessibilidade está no DA1 e não é refeita aqui.
+
+Estado inicial: na fila, ABAIXO DO MARCO (MQ1, Grupo B), no fim do Grupo B, antes de FIM1, no próximo número livre. Não altera a ordem de nenhum outro item.
+
+Contexto: o rodapé de clickfunnels.com (lido em 30/10/2026) traz, em todas as páginas, um aviso de que a empresa não promete ganhos ("We make no claims or representation that by using ClickFunnels you will earn money"). No Marktmorgen esse aviso aparece só em algumas páginas e não existe no rodapé. Verifique antes no código atual que isso continua assim.
+
+1. No rodapé de todas as páginas públicas do Marktmorgen (components/site-footer.tsx), acima da linha de copyright, um parágrafo curto, em inglês americano simples, com este sentido: "Marktmorgen is software for selling your own work. We make no promise that using it will bring you sales, income or any result. What you earn depends on your products, your audience and your work." O texto final é conferido com as orientações oficiais e datadas da FTC sobre alegações de renda (inclusive a regra de 2024 sobre oportunidades de negócio, se aplicável), com fonte e data no PR.
+
+2. Não mencionar depoimentos nem resultados de clientes, porque o site não mostra nenhum. Se algum dia mostrar, o aviso deve ser revisto antes.
+
+3. O mesmo aviso, com link para ele, na página de termos (app/terms), numa seção própria com âncora ("#no-earnings-claims").
+
+4. Conferência única: listar no PR toda frase pública do site que possa ser lida como promessa de ganho, venda ou resultado, e corrigir as que forem, sem mudar preço, limite ou recurso.
+
+5. Acessibilidade (AX274, Parte A, integral): máxima acessibilidade em tudo o que este item criar ou alterar — WCAG 2.2 nível AAA em todos os critérios aplicáveis, em todas as telas, estados, e-mails e arquivos, mais as demais normas e orientações da Parte A; a impossibilidade de um critério AAA precisa ser demonstrada e registrada em docs/accessibility-programme.md, nunca presumida. Os pontos a seguir são verificações obrigatórias deste item, não o limite do que se exige: texto em linguagem simples (3.1.5), contraste de 7:1 no fundo escuro do rodapé, 320 px e 400% de zoom, leitor de tela. Seção "Acessibilidade" no PR, com os passos e as decisões da tarefa principal antes e depois.
+
+Custo: texto estático, sem leitura, fornecedor, chave ou campo novo. Custo desconhecido reprova, nunca é zero.
+
+REGRA DE MARGEM (MR, 27/10/2026): nenhum cliente pagante, considerado isoladamente e usando 100% de todos os direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto; a empresa como um todo não pode dar prejuízo no pior caso a partir da base mínima de clientes pagantes, com 100% dos custos fixos da LLC atribuídos ao Marktmorgen (FX275); a meta de 60% de margem líquida é medida todo mês com números reais. Impostos pela política TX vigente.
+
+Proibido: mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; mencionar depoimentos ou números de clientes; o nome do dono, endereço ou país fora dos Termos e da Política de Privacidade; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+```
+
+
 30/10/2026 — AV1/SD1, próxima proteção concreta: recordRestartResult emlib/contract-funding.ts aceitava reply[0] herdado/accessor comoackderetenção deID. Novaalteração exigeouterarraylength1próprio eentry0dadospróprios,numeric1ou2;unknownfalse,semretry/readback/cleanup/release/providerIO. Luauncertain→observed/mesmoID2/IDdivergente0/lateevidencepreservados,nãorearmaPOST,nãoativa direitos. Actual-entry financeiro/config/owneddecoder/preparereais +modelopóscommit14respostasmalformadas/perdidas retémcash/receipts/annual/pause;probespositivos,1/2idempotentes/IDdivergente/lateclock. ModelonãoprovaLua/ciclodevida,coberturaproduçãopauseRestartfalse. Acessibilidade0→0passos/decisões,semAAA/humano;benefícioveracidade daretençãofinanceira,reduzriscooperacional;semserviço/IOprodutivo/chave/retenção/custonovo,CIrevisão100%FX275desconhecidonãozero. ExigeCIintegralnovohead. Nenhumitem/posição/preço/direito/trava alterado.
 
 Provas da publicação anterior PR1249 carregadas com este código,semPRsódeprova(AV2):headtestadof0b25919af7afbcfd397b9e8e38fd00300f96d36,39/39+Vercel,árvore3e3ddf588a33808b4afce0e2685f9c3189b77051;merge11b3d0a35fe74e168a761e340b322b4b4ece111a,30/10/202605:43:40UTC=02:43:40Fortaleza,pais2e809eeadd8c4611a2d8892a6cf89d99f75bdcd5/f0b25919af7afbcfd397b9e8e38fd00300f96d36,árvoretestadaigual. Verify123904738449:inventário05:15:05.7077058UTC/termosvisíveis+inertes05:15:13UTC/restartactual05:17:43.7835489UTC/234bundles+Everythingpassing05:18:51.4963233UTC;Mobile1239047383639frias,LCPmáx840ms,CLS0,proxy96ms,0APIwrites/regressãotrêsplanos05:15:18.4083330UTC,nãoINPcampo. Produçãodpl_HiPnuSzz7fMusdDbxM6LoRehvxnD READY SHAexato11b3,7aliases e5HTML(/,/pricing,/platform/path,/help,/proof/comparisons)mesmodpl;error/fatal05:43:40→05:46:19.419UTCsemocorrêncianascondiçõesconsultadas,nãogarantiauniversal. Comparaçãoestáticanoser vidor/doisbotõesinterativos+ACKreinício publicados;contador254retidoporprovainterativaanterior,não255. Histórico8424mobile224ms e41fverifyinventário/termosmantidoacima;41fsubstituídoapósfalha,cancelamentosautomáticosWebKit123902714795/Firefox123902714743/leitorMac123902345993,agregados123904630443/123904597298failure,nãoprova deassertionnovas.
+
+
+Reconciliação após head6137afca535882804da60b2300821ef20b00b046 concluir39/39+Vercel:verify123915144742,actualresult05:52:13.4763484UTC/lateclock05:52:13.4764367UTC,234bundles+Everything05:53:08.6192435UTC;Mobile1239151448089friasLCP840/CLS0/proxy64ms/0APIwrites,nãoINPcampo. Mainf92fa36be7acf6461600580d1ca3c2f468499909preservaClaude1253NE1561abaixoMQ1,fila46adições e1251siterodapé/sitemap/inventário/redirectproducts,semconflitoemfunding/testes. Nenhumheadválidocancelado;novoheaduniãoexigeCIintegralpróprio. Nãoressuscitarcomponenteexcluído no main nemsobrescreverinventárioClaude. Contador254retido.

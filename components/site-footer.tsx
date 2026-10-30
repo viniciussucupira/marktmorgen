@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { Logo } from "@/components/logo";
-import MoreFromUs from "@/components/MoreFromUs";
 import { feeWords } from "@/lib/fee-words";
 
 const SUPPORT_EMAIL = "support@marktmorgen.com";
@@ -57,7 +56,6 @@ const COLUMNS: { title: string; links: FooterLink[] }[] = [
     title: "Company",
     links: [
       { label: "Our mission", href: "/mission" },
-      { label: "Our products", href: "/products" },
     ],
   },
   {
@@ -166,7 +164,6 @@ export function SiteFooter({ variant = "full" }: { variant?: "full" | "slim" }) 
         </div>
       </div>
 
-      <div className="container-page text-white/80"><MoreFromUs /></div>
       {/* pb clears the home indicator on an iPhone; the inset is zero everywhere else. */}
       <div className="container-page border-t border-white/12 pt-7 pb-[max(1.75rem,env(safe-area-inset-bottom))] text-[0.8125rem] leading-relaxed text-white/70">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-8">
