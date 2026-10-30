@@ -5,7 +5,7 @@
  *
  * The card networks require the first (Visa: at least seven days before the
  * first charge after a trial, with a way to cancel), the renewal laws require the
- * second (the 30th day before a yearly plan renews, see YEAR_NOTICE_SECONDS), and both are simply how
+ * second (the 30th day before a yearly plan renews, see YEAR_NOTICE_DAYS), and both are simply how
  * a subscription should treat the person paying for it. Each is sent once per
  * charge, and says the date, the amount and the one click that stops it.
  */
@@ -25,21 +25,26 @@ const TRIAL_NOTICE_SECONDS = 8 * DAY;
  */
 export const TRIAL_FLOOR_SECONDS = 7 * DAY;
 /**
- * Sent on the first daily run with at most 30 days left, never earlier.
+ * Sent on the 30th calendar day before the charge's date, never earlier.
  * The official texts read on 30 Oct 2026 (queue 414 [KX1],
- * docs/kx1-renewal-legal-matrix-2026-10-30.md, sections 6 and 7) allow only
- * the 30th calendar day before an annual renewal in every jurisdiction read:
- * Utah 30-60 days (Utah Code §13-70-201), Illinois, Virginia and DC 30-60
- * before the cancellation deadline, Colorado 25-40, Massachusetts 5-30
- * (940 CMR 38.05(4)), California 15-45 (secondary).
+ * docs/kx1-renewal-legal-matrix-2026-10-30.md, sections 6 to 9) allow only
+ * that day before an annual renewal in every jurisdiction read: Utah 30-60
+ * days (Utah Code §13-70-201), Illinois, Virginia and DC 30-60 before the
+ * cancellation deadline, Colorado 25-40, Massachusetts 5-30 (940 CMR
+ * 38.05(4)), New York 15-45, California 15-45 (secondary).
+ *
+ * Days are calendar days in UTC (the daily run's own date), compared with
+ * the charge's UTC date: counting elapsed seconds would let a charge late in
+ * the day be noticed on the 29th day and still look on time. A customer's own
+ * local date can differ from UTC near midnight; that limit is recorded in the
+ * matrix (gap G16) and this window is not merged until it is settled.
  */
-export const YEAR_NOTICE_SECONDS = 30 * DAY;
-/**
- * In whole days left, rounded up, below which a yearly notice is late: any
- * day after the 30th is outside Utah's, Illinois', Virginia's and DC's
- * windows, so only the run that finds 29 to 30 days left is on time.
- */
-export const YEAR_FLOOR_DAYS = 30;
+export const YEAR_NOTICE_DAYS = 30;
+
+/** Whole UTC calendar days from the day of `now` to the day of `at`. */
+export function calendarDaysBefore(at: number, now: number): number {
+  return Math.floor(at / DAY) - Math.floor(now / DAY);
+}
 /** Too close to the charge to be of use: left alone. */
 const TOO_LATE_SECONDS = DAY;
 const MAX_PAGES = 50;
@@ -148,8 +153,10 @@ export function dueReminder(subscription: Record<string, unknown>, nowSeconds: n
       ? { kind: "trial", subscription: id, email, at, ...plan, late: left < TRIAL_FLOOR_SECONDS }
       : null;
   }
-  if (subscription.status === "active" && plan.cycle === "year" && left <= YEAR_NOTICE_SECONDS) {
-    return { kind: "renewal", subscription: id, email, at, ...plan, late: Math.ceil(left / DAY) < YEAR_FLOOR_DAYS };
+  if (subscription.status === "active" && plan.cycle === "year") {
+    const days = calendarDaysBefore(at, nowSeconds);
+    if (days > YEAR_NOTICE_DAYS) return null;
+    return { kind: "renewal", subscription: id, email, at, ...plan, late: days < YEAR_NOTICE_DAYS };
   }
   return null;
 }
@@ -314,7 +321,7 @@ export async function sendReminders(nowSeconds = Math.floor(Date.now() / 1000)):
           counts.sent += 1;
           if (reminder.late) {
             counts.late += 1;
-            console.warn(`billing reminder sent late: ${reminder.kind}, ${Math.floor((reminder.at - nowSeconds) / DAY)} days before the charge`);
+            console.warn(`billing reminder sent late: ${reminder.kind}, ${calendarDaysBefore(reminder.at, nowSeconds)} calendar days (UTC) before the charge`);
           }
         } else {
           counts.failed += 1;

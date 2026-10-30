@@ -3,10 +3,10 @@
  * 30 October 2026, docs/kx1-renewal-legal-matrix-2026-10-30.md). What is
  * checked, with synthetic subscriptions only:
  *
- *   - a yearly renewal is first due with 30 days left, never earlier, and is
- *     on time only on that 30th day (the one day every official window read
+ *   - a yearly renewal is first due on the 30th UTC calendar day before the
+ *     charge's date, whatever the hour of either, and is on time only then (the one day every official window read
  *     allows: Utah, Illinois, Virginia, DC, Colorado, Massachusetts);
- *   - a notice found later (yearly: fewer than 30 whole days; trial: fewer
+ *   - a notice found later (yearly: any later day; trial: fewer
  *     than 7) is still due, but marked late, never as on time;
  *   - inside the window it is not marked late;
  *   - a monthly plan gets no renewal notice, as before.
@@ -41,14 +41,19 @@ function sub(cycle: "year" | "month", left: number, status = "active"): Record<s
   };
 }
 
-part("yearly renewal");
-is("31 days left: nothing yet", dueReminder(sub("year", 31 * DAY), NOW), null);
-const at30 = dueReminder(sub("year", 30 * DAY), NOW);
-is("30 days left: due, on time", [at30?.kind, at30?.late], ["renewal", false]);
-const at29 = dueReminder(sub("year", 29 * DAY + 3600), NOW);
-is("29 days and an hour left (the 30th day): due, on time", [at29?.kind, at29?.late], ["renewal", false]);
-const at28 = dueReminder(sub("year", 29 * DAY - 60), NOW);
-is("under 29 days left (the 29th day): still due, marked late", [at28?.kind, at28?.late], ["renewal", true]);
+part("yearly renewal: calendar days, not elapsed seconds");
+// NOW is 06:26 UTC. TODAY is its UTC day; a charge "on day N" is at an hour of
+// the UTC day N calendar days later.
+const TODAY = Math.floor(NOW / DAY) * DAY;
+const charge = (days: number, hour: number) => TODAY + days * DAY + hour * 3600 - NOW;
+is("the 31st day before, late in the day: nothing yet", dueReminder(sub("year", charge(31, 23)), NOW), null);
+is("the 31st day before, early in the day: nothing yet", dueReminder(sub("year", charge(31, 1)), NOW), null);
+const early = dueReminder(sub("year", charge(30, 1)), NOW);
+is("the 30th day, charge at 01:00 (under 30 x 24 h left): due, on time", [early?.kind, early?.late], ["renewal", false]);
+const lateHour = dueReminder(sub("year", charge(30, 23)), NOW);
+is("the 30th day, charge at 23:00 (over 30 x 24 h left): due, on time", [lateHour?.kind, lateHour?.late], ["renewal", false]);
+const day29 = dueReminder(sub("year", charge(29, 23)), NOW);
+is("the 29th day, charge at 23:00 (over 29 x 24 h left): due, marked late", [day29?.kind, day29?.late], ["renewal", true]);
 const at15 = dueReminder(sub("year", 15 * DAY), NOW);
 is("15 days left: outside Utah's and Illinois' windows, marked late", [at15?.kind, at15?.late], ["renewal", true]);
 const at10 = dueReminder(sub("year", 10 * DAY), NOW);
