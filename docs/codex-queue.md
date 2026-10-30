@@ -58,6 +58,8 @@ FIM1 continua depois de todos os demais, na ordem relativa anterior e com a mesm
 
 Entrada posterior depois da cauda FIM1: **565[FF1]**, na fila, **NO FIM DA FILA, depois do último item da cauda FIM1, pela regra MQ2, por indicação expressa do dono30/10/2026,10h30Fortaleza**; nenhuma parte antes da abertura. Sem mudança de qualquer outro item, da cauda FIM1 ou do Bloco de abertura.
 
+Entrada posterior depois de565[FF1]: **566[FF2]**, na fila, **NO FIM DA FILA, depois de565[FF1], pela regra MQ2, por indicação expressa do dono30/10/2026,10h39Fortaleza**; nenhuma parte antes da abertura. Logo depois dele, na ordem dos números, os itens reativados pela Parte2: 61[X1],63[X3],64[X4],65[X5],66[X6],67[X7],68[X8],135[X11-SKOOL-GAMES],136[X12-MOR-PRODUCT] (somente estudo, para o dono decidir) e137[X13-SSO-WHITE-LABEL]. Sem mudança de qualquer outro item, da cauda FIM1 ou do Bloco de abertura.
+
 ### Itens novos e critério permanente de classificação
 
 Pedido novo com lado expresso respeita “acima do marco” ou “abaixo do marco”. Se não disser, aplicar MQ1(f) e registrar **uma linha na proveniência com o lado escolhido e o motivo**: A para vendas/retenção dos criadores, migração de outras plataformas, vendas dos planosMarktmorgen, redução de custo ou obrigação legal/fiscal/segurança/AX274/VR; B para estudos/propostas/comparações internas, nichos, comunidade/afiliados avançados, IA adicional, aplicativo móvel e o que depende de clientes reais. Aplicar antes as exceçõesAV1/abertura/andamentos/concluídos/regras e a divisão de partes. Nenhum cancelamento, absorção, fechamento, renumeração ou mudança de estado/escopo é autorizado.
@@ -87,6 +89,8 @@ Uma linha por item, três grupos possíveis: A, B ou sem mudança. “Sem mudan�
 **Atualização HC1 (30/10/2026,09h54):** bases554–563 anteriores são históricas; tabela atual **564linhas únicas,109A,241B,214sem mudança**. Só564[HC1] acrescentadoB, depois563; tabela numérica não redefine execução.
 
 **Atualização FF1 (30/10/2026,10h30):** bases554–564 anteriores são históricas; tabela atual **565linhas únicas,109A,241B,215sem mudança**. Só565[FF1] acrescentado como “sem mudança”, rótulo que a tabela usa para a cauda FIM1, no fim da fila depois do último item FIM1 pela MQ2; tabela numérica não redefine execução.
+
+**Atualização FF2 (30/10/2026,10h39):** bases554–565 anteriores são históricas; tabela atual **566linhas únicas,109A,231B,226sem mudança**. Acrescentado566[FF2] no fim da fila, depois de565; pela Parte2 do FF2, saem do GrupoB para o fim da fila, depois de566 e na ordem dos números, os reativados61,63,64,65,66,67,68,135,136(só estudo) e137. Continuam como estão62,133 e a parte pt-BR do58; o134 já estava reaberto desde24/10/2026,18h56 e fica na posição e no estado atuais. Tabela numérica não redefine execução.
 
 | Item | Grupo | Motivo |
 | --- | --- | --- |
@@ -150,14 +154,14 @@ Uma linha por item, três grupos possíveis: A, B ou sem mudança. “Sem mudan�
 | 58 [K3-LANG/PATH14] | sem mudança | FIM1 só pt-BR; outros idiomas/gates intactos. |
 | 59 [EXCELENCIA] | sem mudança | MQ1(b): registro de regra, sem alteração. |
 | 60 [ABERTURA-DONO] | sem mudança | MQ1(b): registro de regra, sem alteração. |
-| 61 [X1] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 61 [X1] | sem mudança | Dono30/10/2026,10h39([FF2]): reativado pela MQ2; fim da fila, depois de566[FF2], na ordem dos números; antes: cancelado, GrupoB na MQ1. |
 | 62 [X2] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
-| 63 [X3] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
-| 64 [X4] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
-| 65 [X5] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
-| 66 [X6] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
-| 67 [X7] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
-| 68 [X8] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 63 [X3] | sem mudança | Dono30/10/2026,10h39([FF2]): reativado pela MQ2; fim da fila, depois de566[FF2], na ordem dos números; antes: cancelado, GrupoB na MQ1. |
+| 64 [X4] | sem mudança | Dono30/10/2026,10h39([FF2]): reativado pela MQ2; fim da fila, depois de566[FF2], na ordem dos números; antes: cancelado, GrupoB na MQ1. |
+| 65 [X5] | sem mudança | Dono30/10/2026,10h39([FF2]): reativado pela MQ2; fim da fila, depois de566[FF2], na ordem dos números; antes: cancelado, GrupoB na MQ1. |
+| 66 [X6] | sem mudança | Dono30/10/2026,10h39([FF2]): reativado pela MQ2; fim da fila, depois de566[FF2], na ordem dos números; antes: cancelado, GrupoB na MQ1. |
+| 67 [X7] | sem mudança | Dono30/10/2026,10h39([FF2]): reativado pela MQ2; fim da fila, depois de566[FF2], na ordem dos números; antes: cancelado, GrupoB na MQ1. |
+| 68 [X8] | sem mudança | Dono30/10/2026,10h39([FF2]): reativado pela MQ2; fim da fila, depois de566[FF2], na ordem dos números; antes: cancelado, GrupoB na MQ1. |
 | 69 [PATH-FEITO-612] | sem mudança | MQ1(b): já concluído/publicado, sem reconstrução. |
 | 70 [PATH-FEITO-613] | sem mudança | MQ1(b): já concluído/publicado, sem reconstrução. |
 | 71 [PATH-FEITO-616] | sem mudança | MQ1(b): já concluído/publicado, sem reconstrução. |
@@ -224,9 +228,9 @@ Uma linha por item, três grupos possíveis: A, B ou sem mudança. “Sem mudan�
 | 132 [J1-SUBSTACK] | sem mudança | FIM1: cauda vigente; partes essenciais no lugar. |
 | 133 [X9-OPEN-ENGAGEMENT] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
 | 134 [X10-PAID-RECOMMENDATIONS] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
-| 135 [X11-SKOOL-GAMES] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
-| 136 [X12-MOR-PRODUCT] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
-| 137 [X13-SSO-WHITE-LABEL] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
+| 135 [X11-SKOOL-GAMES] | sem mudança | Dono30/10/2026,10h39([FF2]): reativado pela MQ2; fim da fila, depois de566[FF2], na ordem dos números; antes: cancelado, GrupoB na MQ1. |
+| 136 [X12-MOR-PRODUCT] | sem mudança | Dono30/10/2026,10h39([FF2]): reativado pela MQ2; fim da fila, depois de566[FF2], na ordem dos números; antes: cancelado, GrupoB na MQ1. |
+| 137 [X13-SSO-WHITE-LABEL] | sem mudança | Dono30/10/2026,10h39([FF2]): reativado pela MQ2; fim da fila, depois de566[FF2], na ordem dos números; antes: cancelado, GrupoB na MQ1. |
 | 138 [P0-BUTTON-CONTRAST] | sem mudança | MQ1(b): já concluído/publicado, sem reconstrução. |
 | 139 [B2-CLAIM-ACKNOWLEDGMENT] | sem mudança | MQ1(b): já concluído/publicado, sem reconstrução. |
 | 140 [B2-SAFE-ERROR-MESSAGES] | sem mudança | MQ1(b): andamento/posição protegidos; estado intacto. |
@@ -655,6 +659,7 @@ Uma linha por item, três grupos possíveis: A, B ou sem mudança. “Sem mudan�
 | 563 [WN1] | B | Dono30/10/2026,09h50: abaixo do marco, depois562no Grupo B e antesFIM1; demais posições preservadas. |
 | 564 [HC1] | B | Dono30/10/2026,09h54: abaixo do marco, depois563no Grupo B e antesFIM1; demais posições preservadas. |
 | 565 [FF1] | sem mudança | Dono30/10/2026,10h30: fim da fila, depois do último item da cauda FIM1, pela regra MQ2; demais posições preservadas. |
+| 566 [FF2] | sem mudança | Dono30/10/2026,10h39: fim da fila, depois de565[FF1], pela regra MQ2; demais posições preservadas. |
 
 ### Proveniência, Pedidos repetidos e VR
 
@@ -1969,6 +1974,7 @@ Proveniência AB: passou a fazer parte do Bloco de abertura, posição (j), por 
 58. **[K3-LANG/PATH14] Tradução do site/Path: adiar item14 anterior; futuro alemão/francês/holandês/espanhol/italiano conforme documento B4, e português do Brasil quando autorizado.**
    - Pedido: P1 item14 adiado por P2 B1/B4/K3; datas/horas e grau de certeza em Proveniência.
    - Estado: **aguardando o dono (vendas abertas e autorização explícita para tradução)**.
+   - Continua fora pela regra MQ2 ([FF2], dono 30/10/2026, 10h39), somente na parte de tradução para português do Brasil: viola a regra de não fazer produto para o mercado brasileiro. Os demais idiomas deste item não mudam.
    - Custo e margem: Nenhuma tradução em runtime; conteúdo/custo/manutenção devem ser analisados antes de implementar.
 
 59. **[EXCELENCIA] Revisão contínua de todo site/estúdio por área após fila e como critério transversal em cada item: AAA como ponto de partida, teclado, baixa visão, audição, motor, cognição, dispositivos, navegadores e desempenho; referência GOV.UK/Apple; PRs pequenos e evidência em accessibility-programme.** ampliado pelo item 274 [AX1]
@@ -1984,42 +1990,50 @@ Proveniência AB: passou a fazer parte do Bloco de abertura, posição (j), por 
 
 61. **[X1] Revenda para agências com marca branca e hospedagem WordPress: produto vende direto ao criador; WordPress usa script de checkout.**
    - Pedido: P2 fora do escopo; datas/horas e grau de certeza em Proveniência.
-   - Estado: **cancelado (fora do escopo por decisão explícita do dono)**.
+   - Estado: **na fila, no fim da fila, depois de 566 [FF2]** (reativado pela regra MQ2, dono 30/10/2026, 10h39; antes: cancelado fora do escopo por decisão explícita do dono).
+   - Histórico preservado — estado anterior: **cancelado (fora do escopo por decisão explícita do dono)**.
    - Custo e margem: Nenhum custo autorizado; manter motivo nas matrizes, não construir.
 
 62. **[X2] Custódia do dinheiro do comprador, split garantido, garantia de comissão, saldo/cartão próprios e rede paga tipo Amplify.**
    - Pedido: P2 fora do escopo; datas/horas e grau de certeza em Proveniência.
    - Estado: **cancelado (fora do escopo por decisão explícita do dono)**.
+   - Continua fora pela regra MQ2 ([FF2], dono 30/10/2026, 10h39): guardar o dinheiro do comprador viola a regra de não ter custódia.
    - Custo e margem: Nenhum custo autorizado; manter motivo nas matrizes, não construir.
 
 63. **[X3] Pix, boleto, OXXO e Multibanco: confirmação posterior ao pagamento.**
    - Pedido: P2 fora do escopo; datas/horas e grau de certeza em Proveniência.
-   - Estado: **cancelado (fora do escopo por decisão explícita do dono)**.
+   - Estado: **na fila, no fim da fila, depois de 566 [FF2]** (reativado pela regra MQ2, dono 30/10/2026, 10h39; antes: cancelado fora do escopo por decisão explícita do dono).
+   - Histórico preservado — estado anterior: **cancelado (fora do escopo por decisão explícita do dono)**.
    - Custo e margem: Nenhum custo autorizado; manter motivo nas matrizes, não construir.
 
 64. **[X4] Conversão automática de moeda: taxa adicional de Stripe.**
    - Pedido: P2 fora do escopo; datas/horas e grau de certeza em Proveniência.
-   - Estado: **cancelado (fora do escopo por decisão explícita do dono)**.
+   - Estado: **na fila, no fim da fila, depois de 566 [FF2]** (reativado pela regra MQ2, dono 30/10/2026, 10h39; antes: cancelado fora do escopo por decisão explícita do dono).
+   - Histórico preservado — estado anterior: **cancelado (fora do escopo por decisão explícita do dono)**.
    - Custo e margem: Nenhum custo autorizado; manter motivo nas matrizes, não construir.
 
 65. **[X5] Atribuir crédito de afiliado dividido entre vários cliques.**
    - Pedido: P2 fora do escopo; datas/horas e grau de certeza em Proveniência.
-   - Estado: **cancelado (fora do escopo por decisão explícita do dono)**.
+   - Estado: **na fila, no fim da fila, depois de 566 [FF2]** (reativado pela regra MQ2, dono 30/10/2026, 10h39; antes: cancelado fora do escopo por decisão explícita do dono).
+   - Histórico preservado — estado anterior: **cancelado (fora do escopo por decisão explícita do dono)**.
    - Custo e margem: Nenhum custo autorizado; manter motivo nas matrizes, não construir.
 
 66. **[X6] Sala de vídeo própria para200pessoas com salas paralelas.**
    - Pedido: P2 fora do escopo; datas/horas e grau de certeza em Proveniência.
-   - Estado: **cancelado (fora do escopo por decisão explícita do dono)**.
+   - Estado: **na fila, no fim da fila, depois de 566 [FF2]** (reativado pela regra MQ2, dono 30/10/2026, 10h39; antes: cancelado fora do escopo por decisão explícita do dono).
+   - Histórico preservado — estado anterior: **cancelado (fora do escopo por decisão explícita do dono)**.
    - Custo e margem: Nenhum custo autorizado; manter motivo nas matrizes, não construir.
 
 67. **[X7] Conformidade HIPAA.**
    - Pedido: P2 fora do escopo; datas/horas e grau de certeza em Proveniência.
-   - Estado: **cancelado (fora do escopo por decisão explícita do dono)**.
+   - Estado: **na fila, no fim da fila, depois de 566 [FF2]** (reativado pela regra MQ2, dono 30/10/2026, 10h39; antes: cancelado fora do escopo por decisão explícita do dono).
+   - Histórico preservado — estado anterior: **cancelado (fora do escopo por decisão explícita do dono)**.
    - Custo e margem: Nenhum custo autorizado; manter motivo nas matrizes, não construir.
 
 68. **[X8] Gestão de listagens locais.**
    - Pedido: P2 fora do escopo; datas/horas e grau de certeza em Proveniência.
-   - Estado: **cancelado (fora do escopo por decisão explícita do dono)**.
+   - Estado: **na fila, no fim da fila, depois de 566 [FF2]** (reativado pela regra MQ2, dono 30/10/2026, 10h39; antes: cancelado fora do escopo por decisão explícita do dono).
+   - Histórico preservado — estado anterior: **cancelado (fora do escopo por decisão explícita do dono)**.
    - Custo e margem: Nenhum custo autorizado; manter motivo nas matrizes, não construir.
 
 ### X — Acréscimos fora do escopo por P4
@@ -2027,6 +2041,7 @@ Proveniência AB: passou a fazer parte do Bloco de abertura, posição (j), por 
 133. **[X9-OPEN-ENGAGEMENT] Pontuação por abertura de e-mail**
    - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
    - Estado: **cancelado (fora do escopo por decisão explícita do dono)**.
+   - Continua fora pela regra MQ2 ([FF2], dono 30/10/2026, 10h39): contar aberturas de e-mail viola a regra de não rastrear aberturas.
    - Escopo e prova: Excluída por contrariar a política de não rastrear aberturas. Não implementar pixel nem score de abertura.
    - Custo e margem: Nenhum custo/operação autorizado. Preservar a justificativa nas matrizes e os gates legais/comerciais existentes.
 
@@ -2042,6 +2057,7 @@ A indicação histórica de preço candidato ou aguardando decisão fica superad
    - Pedido original: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
    - Atualização vinculante: solicitação do dono (24/10/2026, 18h56, horário de Fortaleza), com o pedido das18h52 do mesmo dia, DN. Regra Pedidos repetidos3b: instrução mais recente prevalece neste ponto; manter número134 e posição original, sem criar outro item X10.
    - Estado: **reaberto, na fila; somente estudo e cálculo enquanto PLANS_ON_SALE=false**. Executar após o Bloco de abertura, respeitando sua posição já existente; a reabertura não antecipa sobre o trabalho atual. Construção somente depois de PLANS_ON_SALE=true e demais decisões/gates. Cancelamento anterior preservado abaixo como histórico.
+   - [FF2] (dono 30/10/2026, 10h39): 134 [X10] já estava reaberto desde 24/10/2026, 18h56; mantido na posição e no estado atuais, sem mudança.
    - Novo escopo: A define quanto paga por assinante confirmado; B recomenda a lista de A em caixa desmarcada, com rótulo claro de recomendação paga e divulgação de que B recebe pela recomendação. A paga B por cobrança direta na conta Stripe de B, com application fee do Marktmorgen; taxa Stripe fica na conta de B. Candidata20% como referência beehiiv, sem aprovação/ativação de comissão. Não guardar dinheiro de terceiros, criar carteira, saldo de repasse ou custódia; conferir viabilidade do fluxo direto no código/provedor antes de prometer operação.
    - Cobrança A–B somente após dupla confirmação do assinante e permanência inscrita14dias depois (referência SparkLoop a verificar oficialmente na execução), sem rastrear aberturas/item133. Confirmar exatamente a unidade pagante A e a unidade assinante, sem cobrar o assinante por ter optado pela lista. E-mail de confirmação entra na cota de A. Teto mensal de A, filtro de países, pausa automática de parceiro por descadastros/devoluções/reclamações acima de limite explícito, cobranças agrupadas por parA–B e mínimo calculado para diluir taxa fixa; definir janela, deduplicação, consentimento, estornos, reembolsos, idempotência, limites e reserva antes de construir.
    - Reutilizar119[F2-FREE-RECOMMENDATIONS],262[KJ7],267[KT1] e lib/platform-share.ts/lib/share-settle.ts quando compatíveis; só construir a diferença. Nenhuma ordenação comprada; divulgação conforme análise oficial datada FTC/DSAart.26, sem presumir conformidade jurídica pelo rótulo.
@@ -2051,19 +2067,22 @@ A indicação histórica de preço candidato ou aguardando decisão fica superad
 
 135. **[X11-SKOOL-GAMES] Concurso Skool Games**
    - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
-   - Estado: **cancelado (fora do escopo por decisão explícita do dono)**.
+   - Estado: **na fila, no fim da fila, depois de 566 [FF2]** (reativado pela regra MQ2, dono 30/10/2026, 10h39; antes: cancelado fora do escopo por decisão explícita do dono).
+   - Histórico preservado — estado anterior: **cancelado (fora do escopo por decisão explícita do dono)**.
    - Escopo e prova: Fora do escopo por decisão do dono; sem concurso, premiação ou gamificação de ganhos.
    - Custo e margem: Nenhum custo/operação autorizado. Preservar a justificativa nas matrizes e os gates legais/comerciais existentes.
 
 136. **[X12-MOR-PRODUCT] Modelo comercial de vendedor responsável como Skool/Teachable**
    - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
-   - Estado: **cancelado (fora do escopo por decisão explícita do dono)**.
+   - Estado: **na fila, no fim da fila, depois de 566 [FF2]**, somente como estudo, para o dono decidir (reativado pela regra MQ2, dono 30/10/2026, 10h39; antes: cancelado fora do escopo por decisão explícita do dono).
+   - Histórico preservado — estado anterior: **cancelado (fora do escopo por decisão explícita do dono)**.
    - Escopo e prova: Produto de custódia/MoR excluído; isso não é conclusão de isenção legal. IVA/art.9a/marketplace e demais obrigações continuam integralmente na seçãoC, mesmo com cobrança direta/sem segurar dinheiro. Não diminuir imposto nem abrir gates com essa exclusão.
    - Custo e margem: Nenhum custo/operação autorizado. Preservar a justificativa nas matrizes e os gates legais/comerciais existentes.
 
 137. **[X13-SSO-WHITE-LABEL] SSO e marca branca**
    - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
-   - Estado: **cancelado (fora do escopo por decisão explícita do dono)**.
+   - Estado: **na fila, no fim da fila, depois de 566 [FF2]** (reativado pela regra MQ2, dono 30/10/2026, 10h39; antes: cancelado fora do escopo por decisão explícita do dono).
+   - Histórico preservado — estado anterior: **cancelado (fora do escopo por decisão explícita do dono)**.
    - Escopo e prova: Fora do escopo; marca branca para agências já consta de X1 e permanece excluída. Não refazer autorização, identidade ou revenda para simular esses produtos.
    - Custo e margem: Nenhum custo/operação autorizado. Preservar a justificativa nas matrizes e os gates legais/comerciais existentes.
 
@@ -19020,6 +19039,39 @@ Custo: cada parte calcula o pior caso mensal e anual de cada plano com 100% dos 
 REGRA DE MARGEM (MR, 27/10/2026): nenhum cliente pagante, considerado isoladamente e usando 100% de todos os direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto; a empresa como um todo não pode dar prejuízo no pior caso a partir da base mínima de clientes pagantes, com 100% dos custos fixos da LLC atribuídos ao Marktmorgen (FX275); a meta de 60% de margem líquida é medida todo mês com números reais. Impostos pela política TX vigente.
 
 Proibido: executar qualquer parte antes da abertura; depoimento, número de clientes ou de membros inventado; liderar com "free"; e-mail sem consentimento; selo ou comparação de superioridade sem prova; mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+```
+
+
+## 566 [FF2] — Retomada da pausa do plano no fim da fila, e itens cancelados que voltam para o fim da fila
+
+**Estado:** na fila. **Posição:** NO FIM DA FILA, depois de565[FF1], pela regra [MQ2]; nenhuma parte antes da abertura. Logo depois dele, na ordem dos números, os itens reativados da Parte 2.566 estava livre e a etiqueta[FF2] não existia. Não altera ordem/estado de outros itens, da cauda FIM1 ou do Bloco de abertura.
+
+**Proveniência/Pedidos repetidos:** pedido direto do dono na conversa com o Claude,30/10/2026,10h39Fortaleza; texto redigido pelo Claude e aprovado pelo dono; gravado diretamente pelo Claude para não interromper o Codex. Conferido no main d3b15cd724d790e109e1dc38bf4a496a3e4aa346: não havia entrada de retomada da pausa no fim da fila. Parte 2 aplicada neste registro: nos itens 61, 63, 64, 65, 66, 67, 68, 135, 136 (somente estudo) e 137, a linha de estado passou a “na fila, no fim da fila, depois de 566 [FF2]”, com o estado anterior preservado como histórico, e as linhas da tabela do MQ1 foram atualizadas; nos itens 62, 133 e 58 (só a parte pt-BR), foi acrescentada uma linha com o motivo de continuarem fora. 134 [X10] já estava reaberto desde 24/10/2026, 18h56; mantido na posição e no estado atuais, sem mudança. A lista da Parte 1 (o que está feito e o que falta na pausa) ainda não foi escrita: cabe ao Codex, ao desligar a pausa pelo [AV3]. Nova recepção só proveniência,sem número/commit exclusivo.
+
+### Pedido literal FF2
+
+```text
+FF — Retomada da pausa do plano no fim da fila, e itens cancelados que voltam para o fim da fila (30/10/2026) [FF2]
+
+Solicitação do dono (30/10/2026, 10h39, horário de Fortaleza).
+
+Pedidos repetidos: aplique a regra "Pedidos repetidos" de AGENTS.md. Aplica a regra [MQ2] e o complemento de 30/10/2026, 10h27, ao [AV3]. Conferido antes de gravar: não existe entrada de retomada da pausa no fim da fila; os itens 61 a 68 e 133 a 137 estão com estado "cancelado (fora do escopo por decisão explícita do dono)".
+
+Estado inicial: na fila, NO FIM DA FILA, depois de 565 [FF1], no próximo número livre. Não altera a ordem de nenhum outro item.
+
+Parte 1 — Retomada da pausa do plano (este item).
+Retomar, depois da abertura, a pausa do plano ("plan break"), o reinício depois da pausa e os avisos financiados da pausa, que o [AV3] deixa desligados na abertura. Reaproveitar todo o código, os testes e as provas já feitos (ramos codex/av-pause-*, codex/av-restart-*, lib/contract-funding.ts, lib/contract-restart-activation.ts e os demais citados nos PRs) e construir só o que falta. Ao desligar a pausa pelo [AV3], o Codex escreve aqui, em linguagem simples, a lista do que já está feito e do que falta (por exemplo, o que os próprios PRs registram como pendente: desfazer a pausa antes de começar, a limpeza concorrente e o ciclo completo dos avisos financiados), e a cobertura pauseRestart de CONTRACT_ADMISSION_COVERAGE que precisa ficar true com prova antes de ligar.
+
+Parte 2 — Itens cancelados que voltam para a fila, no fim.
+Pela regra [MQ2], estes itens deixam de estar "cancelados" e passam a "na fila, no fim da fila, depois deste item", na ordem dos números, sem mudar número, texto, histórico ou provas: 61 [X1], 63 [X3], 64 [X4], 65 [X5], 66 [X6], 67 [X7], 68 [X8], 134 [X10-PAID-RECOMMENDATIONS], 135 [X11-SKOOL-GAMES], 136 [X12-MOR-PRODUCT] (somente como estudo, para o dono decidir) e 137 [X13-SSO-WHITE-LABEL]. Cada um, quando chegar a vez, confere de novo o código, a fila e as regras do dono antes de começar.
+
+Continuam fora, com o motivo registrado, porque violam regra do dono: 62 [X2] (guardar o dinheiro do comprador viola a regra de não ter custódia); 133 [X9-OPEN-ENGAGEMENT] (contar aberturas de e-mail viola a regra de não rastrear aberturas); e a parte de tradução para português do Brasil do 58 (viola a regra de não fazer produto para o mercado brasileiro).
+
+REGRA DE MARGEM (MR, 27/10/2026): nenhum cliente pagante, considerado isoladamente e usando 100% de todos os direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto; a empresa como um todo não pode dar prejuízo no pior caso a partir da base mínima de clientes pagantes, com 100% dos custos fixos da LLC atribuídos ao Marktmorgen (FX275); a meta de 60% de margem líquida é medida todo mês com números reais. Impostos pela política TX vigente.
+
+Proibido: executar qualquer parte antes da abertura; ligar a pausa sem a cobertura comprovada; apagar código, testes, provas ou histórico; renumerar itens; custódia do dinheiro do comprador; contar aberturas de e-mail; mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
 
 Aplicar a regra VR.
 ```
