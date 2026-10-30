@@ -171,7 +171,8 @@ export class MemoryRedis {
             if (current !== undefined) return 0;
             removeDue(); return 1;
           }
-          if (mode !== "known" || current !== expected) return 0;
+          if (mode !== "known" || current !== expected || typeof current !== "string" ||
+              current.length === 0 || new TextEncoder().encode(current).length > 4096) return 0;
           let p: { funding?: unknown; until?: unknown };
           try { p = JSON.parse(current as string); } catch { return 0; }
           if (!p || typeof p !== "object" || Object.hasOwn(p, "funding") || typeof p.until !== "number") return 0;

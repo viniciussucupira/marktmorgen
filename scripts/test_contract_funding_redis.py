@@ -1490,6 +1490,17 @@ def main():
         seed_worker(funded_raw)
         assert worker_forget('known', funded_raw) == 0
         assert redis.command('GET', pause_key) == funded_raw
+        for length in (4096, 4097, 100000):
+            bounded_worker_raw = worker_raw + ' ' * (length - len(worker_raw))
+            seed_worker(bounded_worker_raw)
+            before_bounded_worker = command_counts()
+            result = worker_forget('known', bounded_worker_raw)
+            bounded_worker_counts = difference(before_bounded_worker, command_counts())
+            assert sum(bounded_worker_counts.values()) <= 5, bounded_worker_counts
+            assert result == (1 if length == 4096 else 0)
+            assert redis.command('GET', pause_key) == (None if length == 4096 else bounded_worker_raw)
+            assert redis.command('ZSCORE', due_key, 'synthetic-member') == (None if length == 4096 else '1800000000')
+        print('PASS:known pause cleanup reads at most4097bytes;4096boundary accepts exact generation;oversized replacement retained without cleanup')
         seed_worker()
         before_worker = command_counts()
         assert worker_forget('known', worker_raw) == 1

@@ -2,10 +2,11 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {resetVoiceOverRunner} from "./reset-voiceover.mjs";
 function fixture(){
- const signals=[],state={running:true,foreign:false,unknown:false,changed:false,zombie:false,keepAlive:false,postKillZombie:false};
+ const signals=[],requests=[],state={running:true,foreign:false,unknown:false,changed:false,zombie:false,keepAlive:false,postKillZombie:false};
  const options={platform:"darwin",uid:501,env:{GITHUB_ACTIONS:"true",GITHUB_REPOSITORY:"viniciussucupira/marktmorgen",AX2_PUBLIC_DISPOSABLE_RUNNER:"true"},
   now:()=>1,wait:async()=>{},
-  run:(file)=>{
+  run:(file,args)=>{
+   if(file.endsWith("osascript")){requests.push(args[1]);if(args[1].startsWith("return"))return state.running?"true":"false";if(state.gracefulStop)state.running=false;return "";}
    if(file.endsWith("pgrep")){
     if(state.unknown)throw Object.assign(Error("inventory unavailable"),{status:2});
     if(!state.running)throw Object.assign(Error("no process"),{status:1});
@@ -15,7 +16,7 @@ function fixture(){
   },
   kill:(pid,signal)=>{signals.push([pid,signal]);if(signal==="SIGKILL"){if(state.postKillZombie)state.zombie=true;else if(!state.keepAlive)state.running=false;}},
  };
- return {options,signals,state};
+ return {options,signals,state,requests};
 }
 test("stuck exact owned runner process must stop before real reader startup",async()=>{
  const f=fixture();assert.deepEqual(await resetVoiceOverRunner(f.options),{initialProcesses:1,forcedProcesses:1});
@@ -56,4 +57,29 @@ test("foreign or replacement zombie cannot bypass ownership and identity checks"
  await assert.rejects(resetVoiceOverRunner(foreign.options),/exact Apple executable/);assert.deepEqual(foreign.signals,[]);
  const changed=fixture();changed.options.wait=async()=>{changed.state.changed=true;changed.state.zombie=true;};
  await assert.rejects(resetVoiceOverRunner(changed.options),/process changed/);assert.deepEqual(changed.signals,[[42,"SIGTERM"]]);
+});
+
+test("graceful quit ends the owned session before signals and never repeats",async()=>{
+ const f=fixture();f.state.gracefulStop=true;
+ assert.deepEqual(await resetVoiceOverRunner(f.options),{initialProcesses:1,forcedProcesses:0});
+ assert.deepEqual(f.signals,[]);
+ assert.deepEqual(f.requests,['return application id "com.apple.VoiceOver" is running','tell application id "com.apple.VoiceOver" to quit']);
+});
+test("empty, zombie and foreign inventories never request an application quit",async()=>{
+ for(const mode of ["empty","zombie","foreign"]){
+  const f=fixture();if(mode==="empty")f.state.running=false;if(mode==="zombie")f.state.zombie=true;if(mode==="foreign")f.state.foreign=true;
+  if(mode==="foreign")await assert.rejects(resetVoiceOverRunner(f.options),/exact Apple executable/);else await resetVoiceOverRunner(f.options);
+  assert.deepEqual(f.requests,[],mode);
+ }
+});
+test("a failed graceful quit retains the exact bounded signal fallback",async()=>{
+ const f=fixture(),run=f.options.run;
+ f.options.run=(file,args)=>{if(file.endsWith("osascript")&&args[1].startsWith("tell"))throw Error("AppleEvent timeout");return run(file,args);};
+ await resetVoiceOverRunner(f.options);
+ assert.deepEqual(f.signals,[[42,"SIGTERM"],[42,"SIGKILL"]]);
+});
+test("replacement during graceful quit is refused without any signal",async()=>{
+ const f=fixture(),run=f.options.run;
+ f.options.run=(file,args)=>{const result=run(file,args);if(file.endsWith("osascript")&&args[1].startsWith("tell"))f.state.changed=true;return result;};
+ await assert.rejects(resetVoiceOverRunner(f.options),/process changed/);assert.deepEqual(f.signals,[]);
 });

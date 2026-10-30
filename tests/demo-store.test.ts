@@ -338,7 +338,7 @@ async function main(): Promise<void> {
   const demo = withoutComments(read("app/demo/page.tsx"));
   is("/demo makes sure the store is there and sends the visitor to it", /await ensureDemoStore\(\)/.test(demo) && /if \(seed\.ok\) redirect\(`\/@\$\{HOUSE_HANDLE\}`\);/.test(demo), true);
   is("and draws no product or buy button of its own", /<form|<button|priceCents|\$\d/.test(demo), false);
-  is("the home page links to the store itself, and no longer squeezes it into a frame", [/<Link href="\/demo"/.test(read("app/page.tsx")), /<iframe/.test(read("components/home-parts.tsx"))], [true, false]);
+  is("the home page links to the store itself, and no longer squeezes it into a frame", [/<a href="\/demo"/.test(read("app/page.tsx")), /<iframe/.test(read("components/home-parts.tsx"))], [true, false]);
   const everything = [...sources("app"), ...sources("components"), ...sources("lib")];
   is(
     "nothing anywhere posts to the old demo routes",

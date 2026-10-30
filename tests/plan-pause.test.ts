@@ -216,6 +216,53 @@ async function main() {
     await pipeline([["SET", key, String(original[0])]]);
     is("a later known pause can still be undone", await undoPause(store, NOW + DAY), "kept");
   }
+
+  part("Undo of a stopped break only removes its observed generation");
+  {
+    const id = "sub_UndoGeneration01";
+    subs[id] = subscription(id);
+    const store = await storeWith("undo-generation@example.com", "undogeneration", id);
+    const ref = storeRef(store), key = `nl:pause:${ref}`, annual = `nl:pause:last:${ref}`;
+    const pipeline = pauseRedis.pipeline;
+    const record = { subscription: id, customer: "cus_TestPause0001", paymentMethod: "pm_TestCard00001",
+      tier: "creator", from: NOW + DAY, until: NOW + 32 * DAY, told: 0 };
+    const raw = JSON.stringify(record);
+    for (const mode of ["replacement", "due-only", "lost-ack", "funded"] as const) {
+      const initial = mode === "funded" ? JSON.stringify({ ...record, funding: { version: 1, grantId: null } }) : raw;
+      await pipeline([["SET", key, initial], ["SET", annual, String(NOW)],
+        ["ZADD", "nl:pause:due", record.until, ref]]);
+      let attempts = 0;
+      const before = providerCalls;
+      pauseRedis.pipeline = async (commands) => {
+        if (commands.length === 1 && commands[0][0] === "EVAL"
+          && String(commands[0][1]).startsWith("-- marktmorgen:pause-worker-forget:v1")) {
+          attempts++;
+          if (mode === "replacement") await pipeline([["SET", key, JSON.stringify({ ...record, told: NOW + DAY })],
+            ["SET", annual, String(NOW + DAY)]]);
+          if (mode === "due-only") await pipeline([["ZADD", "nl:pause:due", record.until + DAY, ref]]);
+          const reply = await pipeline(commands);
+          return mode === "lost-ack" ? [] : reply;
+        }
+        return pipeline(commands);
+      };
+      let refused = false;
+      try { await undoPause(store, NOW + 2 * DAY); } catch { refused = true; }
+      finally { pauseRedis.pipeline = pipeline; }
+      is("stopped undo refuses unknown or changed evidence " + mode, refused, true);
+      is("stopped undo has one cleanup attempt and no provider request " + mode, [attempts, providerCalls - before], [1, 0]);
+      const retained = await pipeline([["GET", key], ["GET", annual], ["ZSCORE", "nl:pause:due", ref]]);
+      is("stopped undo preserves the exact observed outcome " + mode, retained,
+        mode === "lost-ack" ? [null, String(NOW), null] :
+        mode === "replacement" ? [JSON.stringify({ ...record, told: NOW + DAY }), String(NOW + DAY), String(record.until)] :
+        [initial, String(NOW), String(record.until + (mode === "due-only" ? DAY : 0))]);
+    }
+    await pipeline([["SET", key, raw], ["SET", annual, String(NOW)],
+      ["ZADD", "nl:pause:due", record.until, ref]]);
+    is("known stopped generation can still be removed", await undoPause(store, NOW + 2 * DAY), "stopped");
+    is("stopped break never returns the annual eligibility", await pipeline([["GET", key], ["GET", annual],
+      ["ZSCORE", "nl:pause:due", ref]]), [null, String(NOW), null]);
+  }
+
   part("Stored pause fields must be owned JSON evidence");
   {
     const store = await storeWith("pause-own-fields@example.com", "pauseownfields", "sub_OwnFields0001");
@@ -981,9 +1028,19 @@ async function main() {
         is("next pass does not send the committed notice again", await runBreaks(at + 60), { told: 0, restarted: 0, failed: 0, dropped: 0 });
         is("committed marker avoids a duplicate synthetic email", emails.length, 1);
       }
+      if (change === "due-score") {
+        let refused = false;
+        try { await undoPause(store, paused.record.until + 2 * DAY); } catch { refused = true; }
+        is("explicit stopped undo also preserves the changed due evidence", refused, true);
+        is("refused explicit cleanup retains the same evidence",
+          await pipeline([["GET", key], ["GET", year], ["ZSCORE", "nl:pause:due", ref]]),
+          [raw, last, due]);
+      }
     } finally {
       pauseRedis.pipeline = pipeline;
-      await undoPause(store, paused.record.until + 2 * DAY);
+      // Fixture teardown is not a production undo: a deliberately mismatched
+      // generation must now refuse that action rather than silently erase it.
+      await pipeline([["DEL", key, year], ["ZREM", "nl:pause:due", ref]]);
     }
   }
 
@@ -1203,7 +1260,12 @@ async function main() {
       await original([["SET",`nl:pause:${ref}`,evidence[0] as string]]);
     }finally{
       pauseRedis.pipeline=original;
-      await undoPause(store,set.record.until+4*DAY);
+      let refused = false;
+      try { await undoPause(store,set.record.until+4*DAY); } catch { refused = true; }
+      is("funded stopped cleanup needs its own settlement protocol", refused, true);
+      is("funded cleanup refusal keeps exact source evidence",
+        await original([["GET",`nl:pause:${ref}`],["GET",`nl:pause:last:${ref}`]]), evidence);
+      await original([["DEL",`nl:pause:${ref}`,`nl:pause:last:${ref}`],["ZREM","nl:pause:due",ref]]);
     }
   }
 

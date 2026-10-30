@@ -34,7 +34,27 @@ export async function resetVoiceOverRunner(options={}){
  // A verified zombie has exited and cannot speak or handle events; it is not a live reader.
  // Keep it in the identity inventory, never signal it, and never treat an unknown state as stopped.
  const initial=found.map(owned);
- for(const process of initial)if(!process.zombie){
+ // Ask the application to end its session before force-stopping a stuck process.
+ // Guidepup 0.36.4 uses the same graceful-first lifecycle. A separate running
+ // query avoids compiling a quit tell-block for an already closed application.
+ if(initial.some(process=>!process.zombie)){
+  const running=command("/usr/bin/osascript",["-e",'return application id "com.apple.VoiceOver" is running']).trim();
+  if(!["true","false"].includes(running))throw Error("VoiceOver running state is unknown");
+  if(running==="true"){
+   // Recheck every identity before the application-wide quit request.
+   for(const pid of pids()){
+    if(!found.includes(pid))throw Error("VoiceOver process changed during runner preflight");
+    owned(pid);
+   }
+   try{command("/usr/bin/osascript",["-e",'tell application id "com.apple.VoiceOver" to quit']);}
+   catch{/* One bounded graceful request may fail on a stuck reader; inventory must still prove ownership below. */}
+  }
+ }
+ const beforeSignal=pids().map(pid=>{
+  if(!found.includes(pid))throw Error("VoiceOver process changed during runner preflight");
+  return owned(pid);
+ });
+ for(const process of beforeSignal)if(!process.zombie){
   if(!owned(process.pid).zombie)kill(process.pid,"SIGTERM");
  }
  if(initial.some(process=>!process.zombie))await wait(250);

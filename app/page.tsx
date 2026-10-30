@@ -1,10 +1,10 @@
+/* eslint-disable @next/next/no-html-link-for-pages -- Static home navigation intentionally uses native anchors to avoid client link hydration; hrefs and browser/keyboard regressions remain checked. */
 import { TrustChecks } from "@/components/trust-checks";
 import { CreatorShowcase, PlatformProof } from "@/components/creator-showcase";
 import { PricingValue } from "@/components/pricing-value";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { SITE_OG_IMAGE } from "@/lib/site-og";
-import Link from "next/link";
 import { SiteFooter } from "@/components/site-footer";
 import { BuyerPath } from "@/components/buyer-path";
 import { SiteNav } from "@/components/site-nav";
@@ -143,8 +143,8 @@ const CREATORS = [
 
 function HomeActions({place}:{place:string}) {
  return <div data-home-actions={place} role="group" aria-label={"Choose your next step: "+place} className="container-page flex flex-wrap items-center justify-center gap-x-6 gap-y-4 py-8">
-  <Link href="/signin" prefetch={false} className="btn btn-primary btn-lg">Start your store<Icon name="arrow-right" size={18}/></Link>
-  <Link href="/demo" prefetch={false} className="link-arrow">See the live demo<Icon name="arrow-right" size={18} className="arrow"/></Link>
+  <a href="/signin" className="btn btn-primary btn-lg">Start your store<Icon name="arrow-right" size={18}/></a>
+  <a href="/demo" className="link-arrow">See the live demo<Icon name="arrow-right" size={18} className="arrow"/></a>
  </div>;
 }
 
@@ -187,15 +187,15 @@ export default function Home() {
                   would beat the breakpoint that is meant to undo it and the
                   buttons would run the full column on a desktop too.
                 */}
-                <Link href="/signin" prefetch={false} className="btn btn-light btn-lg w-full min-[480px]:w-auto" data-home-primary>
+                <a href="/signin" className="btn btn-light btn-lg w-full min-[480px]:w-auto" data-home-primary>
                   Start your store
                   <Icon name="arrow-right" size={18} />
-                </Link>
+                </a>
                 {/* The demo stays available as a secondary link. */}
-                <Link href="/demo" prefetch={false} className="link-arrow on-dark inline-flex min-h-11 items-center justify-center min-[480px]:justify-start">
+                <a href="/demo" className="link-arrow on-dark inline-flex min-h-11 items-center justify-center min-[480px]:justify-start">
                   See the live demo
                   <Icon name="arrow-right" size={18} />
-                </Link>
+                </a>
               </div>
               {/*
                 The three chips are gone with the rest of the clutter.
@@ -311,18 +311,18 @@ export default function Home() {
               <div className="max-w-2xl">
                 <h2 className="t-h2 balance">People who sell what they know</h2>
               </div>
-              <Link prefetch={false} href="/creators" className="link-arrow">
+              <a href="/creators" className="link-arrow">
                 Tell us what you sell
                 <Icon name="arrow-right" size={16} className="arrow" />
-              </Link>
+              </a>
             </div>
 
             <ul className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {CREATORS.map(creator=><li key={creator.href}><Link href={creator.href} prefetch={false} className="card flex h-full min-h-36 flex-col justify-between gap-4 p-6">
+              {CREATORS.map(creator=><li key={creator.href}><a href={creator.href} className="card flex h-full min-h-36 flex-col justify-between gap-4 p-6">
                 <h3 className="text-lg font-semibold">{creator.label}</h3><p className="text-sm text-ink-soft">{creator.sells}</p><span className="link inline-flex min-h-11 items-center">Explore this kind of work<Icon name="arrow-right" size={16}/></span>
-              </Link></li>)}
+              </a></li>)}
             </ul>
-            <p className="mt-6 max-w-3xl text-sm text-ink-soft">These pages show fictional examples of work you can sell. They are not customer testimonials or evidence of earnings. <Link prefetch={false} href="/demo" className="link">Explore the live demo</Link>.</p>
+            <p className="mt-6 max-w-3xl text-sm text-ink-soft">These pages show fictional examples of work you can sell. They are not customer testimonials or evidence of earnings. <a href="/demo" className="link">Explore the live demo</a>.</p>
 
           </div>
         </section>
@@ -334,7 +334,7 @@ export default function Home() {
         <section aria-labelledby="studio-screens-title" data-home-studio-summary className="container-page py-12">
           <h2 id="studio-screens-title" className="t-h2">See the work before you start</h2>
           <p className="mt-4 max-w-3xl text-ink-soft">Two actual screens from isolated fictional fixtures show the guided setup and product-page editor. View the examples and their explanations on the feature page.</p>
-          <Link href="/platform#studio-screens-title" prefetch={false} className="link mt-4 inline-flex min-h-11 items-center">See the studio and product editor examples</Link>
+          <a href="/platform#studio-screens-title" className="link mt-4 inline-flex min-h-11 items-center">See the studio and product editor examples</a>
         </section>
         <Suspense fallback={null}><BuyerPath /></Suspense>
 
@@ -342,7 +342,7 @@ export default function Home() {
           <div className="container-page">
             <h2 id="home-modules-heading" className="t-h2 balance">Everything in one place</h2>
             <p className="mt-5 max-w-3xl text-ink-soft">Explore the tools, their limits and the cost calculator on the feature page.</p>
-            <Link href="/platform#home-modules-heading" prefetch={false} className="link mt-4 inline-flex min-h-11 items-center">Explore all 14 tools and their conditions</Link>
+            <a href="/platform#home-modules-heading" className="link mt-4 inline-flex min-h-11 items-center">Explore all 14 tools and their conditions</a>
           </div>
         </section>
 
@@ -353,7 +353,7 @@ export default function Home() {
           <div className="container-page">
             <h2 id="home-path-heading" className="t-h2 balance">Your next step, checked against real facts</h2>
             <p className="mt-5 max-w-3xl text-ink-soft">The Path names the work to do and checks records your store already keeps. These are its first seven missions, not a promise of a sale in seven days. Paid selling remains subject to availability; reminders and sharing are opt-in.</p>
-            <Link href="/platform/path" prefetch={false} className="link mt-8 inline-block">Read how the Path works</Link>
+            <a href="/platform/path" className="link mt-8 inline-block">Read how the Path works</a>
           </div>
         </section>
         </Suspense>
@@ -366,10 +366,10 @@ export default function Home() {
             <ul className="mt-8 grid gap-5 lg:grid-cols-3">
               {HOME_REASONS.map(reason=><li key={reason.href} className="rounded-2xl border border-line bg-white p-6">
                 <h3 className="t-h3">{reason.title}</h3>
-                <Link href={reason.href} prefetch={false} className="link mt-4 inline-flex min-h-11 items-center">{reason.link}</Link>
+                <a href={reason.href} className="link mt-4 inline-flex min-h-11 items-center">{reason.link}</a>
               </li>)}
             </ul>
-            <Link href="/platform#home-reasons-heading" prefetch={false} className="link mt-6 inline-flex min-h-11 items-center">Read the details, examples and current limitations</Link>
+            <a href="/platform#home-reasons-heading" className="link mt-6 inline-flex min-h-11 items-center">Read the details, examples and current limitations</a>
           </div>
         </section>
 
@@ -389,7 +389,7 @@ export default function Home() {
               <Suspense fallback={null}>
                 <Pricing domains={DOMAINS} />
               </Suspense>
-              <p className="mt-6 text-center"><Link prefetch={false} href="/pricing" className="link">Compare all plan limits, annual prices and optional add-ons</Link></p>
+              <p className="mt-6 text-center"><a href="/pricing" className="link">Compare all plan limits, annual prices and optional add-ons</a></p>
             </div>
           </div>
         </section>
@@ -407,9 +407,9 @@ export default function Home() {
               <h2 className="t-h2 balance">Questions</h2>
               <p className="mt-5 text-ink-soft">
                 Something else?{" "}
-                <Link prefetch={false} href="/help" className="link">
+                <a href="/help" className="link">
                   The help center
-                </Link>{" "}
+                </a>{" "}
                 answers the rest, in writing.
               </p>
             </div>
@@ -462,14 +462,14 @@ export default function Home() {
                 : `Take your address, connect Stripe, list what you sell. The plan is not on sale yet: $${PRICE} a month when it is.`}
             </p>
             <div className="mt-10 flex flex-wrap items-center justify-center gap-x-6 gap-y-4">
-              <Link prefetch={false} href="/signin" className="btn btn-light btn-lg">
+              <a href="/signin" className="btn btn-light btn-lg">
                 Start your store
                 <Icon name="arrow-right" size={18} />
-              </Link>
-              <Link prefetch={false} href="/demo" className="link-arrow on-dark">
+              </a>
+              <a href="/demo" className="link-arrow on-dark">
                 See the live demo
                 <Icon name="arrow-right" size={18} className="arrow" />
-              </Link>
+              </a>
             </div>
             <ul className="mx-auto mt-10 flex max-w-2xl flex-wrap items-center justify-center gap-x-6 gap-y-3 text-[0.9375rem] text-white/80">
               {[
