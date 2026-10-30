@@ -6,7 +6,7 @@
  */
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { ADMITTED_FIELD, OPEN_HOURS, admitOrders, settleAdmitted } from "@/lib/order-admission";
+import { ADMIT_ORDERS, ADMITTED_FIELD, OPEN_HOURS, admitOrders, settleAdmitted } from "@/lib/order-admission";
 import { ORDERS_INCLUDED, TRIAL_ORDERS, freeCopiesLimitFor, paidOrdersLimitFor } from "@/lib/order-rules";
 import { countOrder, storeOrdersThisMonth } from "@/lib/orders";
 import { claimHandle, ensureStatsId, setSubscription, storeForEmail } from "@/lib/store";
@@ -36,6 +36,81 @@ async function main() {
   is("without actual financial approval no new funded order can open", await admitOrders(funded, 1, now), { ok: false, reason: "unavailable" });
   is("refused funded admission holds neither order capacity nor data room", JSON.stringify(redis.keys().filter((key) => key.startsWith("nl:orders:"))), beforeFunded);
   is("invalid order units cannot open a funded admission", await admitOrders(funded, 0, now), { ok: false, reason: "unavailable" });
+
+  part("Only an exact own numeric acknowledgement admits an order");
+  const ACK_OWNER = "ack-orders@example.com";
+  await claimHandle(ACK_OWNER, "ackordershop", "ACK Orders", "");
+  await ensureStatsId(ACK_OWNER);
+  await setSubscription(ACK_OWNER, { customerId: "cus_AckOrders001", subscriptionId: "sub_AckOrders001", active: true, tier: "creator", period: paidPeriod(now) });
+  const ackStore = (await storeForEmail(ACK_OWNER))!;
+  const originalPipeline = redis.pipeline;
+  let getters = 0, coerced = 0, members = 0;
+  const cases: [string, () => unknown][] = [
+    ["missing envelope", () => undefined],
+    ["non-array", () => ({ 0: 1, length: 1 })],
+    ["empty", () => []],
+    ["null", () => [null]],
+    ["numeric string", () => ["1"]],
+    ["string refusal zero", () => ["0"]],
+    ["string refusal two", () => ["2"]],
+    ["nested number", () => [[1]]],
+    ["boolean", () => [true]],
+    ["symbol", () => [Symbol("1")]],
+    ["coercible object", () => [{ valueOf() { coerced++; return 1; } }]],
+    ["sparse", () => new Array(1)],
+    ["inherited", () => Object.setPrototypeOf(new Array(1), { 0: 1 })],
+    ["accessor", () => Object.defineProperty(new Array(1), "0", { get() { getters++; return 1; } })],
+    ["oversized", () => new Proxy([1, 1], { getOwnPropertyDescriptor(target, key) {
+      if (key === "0") members++;
+      return Reflect.getOwnPropertyDescriptor(target, key);
+    } })],
+    ["throw after commit", () => { throw new Error("synthetic lost admission acknowledgement"); }],
+  ];
+  for (const [name, answer] of cases) {
+    let admissions = 0, committed: unknown, heldKeys: string[] = [], snapshot = "";
+    redis.pipeline = async (commands) => {
+      if (commands.length === 1 && commands[0][0] === "EVAL" && commands[0][1] === ADMIT_ORDERS) {
+        admissions++;
+        committed = await originalPipeline(commands);
+        heldKeys = [String(commands[0][4]), String(commands[0][6])];
+        snapshot = JSON.stringify(heldKeys.map(key => redis.run(["HGETALL", key])));
+        return answer() as unknown[];
+      }
+      return originalPipeline(commands);
+    };
+    try {
+      is(`${name}: unknown never grants checkout`, await admitOrders(ackStore, 1, now), { ok: false, reason: "unavailable" });
+    } finally {
+      redis.pipeline = originalPipeline;
+    }
+    is(`${name}: one committed reservation, no second attempt`, [admissions, committed], [1, [1]]);
+    is(`${name}: uncertain order and data holds retained`, JSON.stringify(heldKeys.map(key => redis.run(["HGETALL", key]))), snapshot);
+  }
+  is("no malformed getter, coercion or oversized member executed", [getters, coerced, members], [0, 0, 0]);
+  // Observe the same descriptor probe on a real numeric success.
+  redis.pipeline = async (commands) => {
+    const reply = await originalPipeline(commands);
+    return commands.length === 1 && commands[0][0] === "EVAL" && commands[0][1] === ADMIT_ORDERS
+      ? new Proxy(reply, { getOwnPropertyDescriptor(target, key) {
+        if (key === "0") members++;
+        return Reflect.getOwnPropertyDescriptor(target, key);
+      } }) : reply;
+  };
+  try {
+    const admitted = await admitOrders(ackStore, 1, now);
+    is("own numeric success still admits the real reservation", [admitted.ok, admitted.ok && admitted.hour, members], [true, Math.floor(now / 3_600_000), 1]);
+  } finally {
+    redis.pipeline = originalPipeline;
+  }
+  for (const answer of [0, 2]) {
+    redis.pipeline = async (commands) => commands.length === 1 && commands[0][0] === "EVAL" && commands[0][1] === ADMIT_ORDERS
+      ? [answer] : originalPipeline(commands);
+    try {
+      is(`explicit numeric refusal ${answer} remains paused`, await admitOrders(ackStore, 1, now), { ok: false, reason: "paused" });
+    } finally {
+      redis.pipeline = originalPipeline;
+    }
+  }
 
   part("Checkouts are admitted up to the figure, counting those still open");
   const limit = ORDERS_INCLUDED.creator;
