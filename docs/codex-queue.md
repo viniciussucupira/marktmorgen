@@ -15,7 +15,7 @@ Solicitação do dono: **29/10/2026,20h52Fortaleza**. Estado inicial: na fila; e
 
 **AV4 — 30/10/2026, 13h41 Fortaleza:** Codex faz os passos 3–6 e 10–12 da AV1; Claude faz 7–9 (sem o 89, que está com o Codex) e depois o Grupo A; quem começa marca "em andamento" no item; ninguém mexe no PR do outro (texto integral na seção AV). Complemento 13h57: 414 [KX1] entra na AV1, primeiro da parte do Claude, antes da abertura.
 
-Claude agendado — última rodada: 30/10/2026, 13h41 Fortaleza; fazendo agora: 307 [EC1]; últimos PRs: #1279, #1282, #1287, #1289.
+Claude agendado — última rodada: 30/10/2026, 15h50 Fortaleza; fazendo agora: 232 [CA1], unidade 1 (o 414 [KX1] segue nos PRs #1294, #1295 e #1296, abertos por outra rodada); últimos PRs: #1279, #1282, #1287, #1289.
 
 AV1/SD1 e Bloco de abertura (a)–(k) ficam na ordem vigente, inclusive custos(k),538[AB1] e448[LE1] em paralelo. Não se antecipam estudos ou recursos por causa desta classificação. Ficam na posição e no estado atuais todos os concluídos/publicados, andamentos (inclusive4,88,140,141,201,547,549),505[SG2] e registros59,60,336,464–477,494,495. As referências a547/549 são exceções expressas do pedido; suas linhas canônicas continuam literalmente “na fila”, sem convertê-las em andamento. A proteção de andamento também respeita a posição atualmente vigente: não ressuscita ordemOR já substituída porFIM1.
 
@@ -5581,6 +5581,8 @@ Estado: na fila. Ao concluir, registre o commit, o resultado da suíte completa 
 
 **Estado:** na fila. **Ordem:** depois do item231 [EQ1] e de todos os trabalhos em andamento; não bloqueia nenhum outro. Escopo futuro, sem iniciar a implementação nesta inclusão. Posição vigente: OR: Bloco A, posição 4/8, após 275 [FX1] e antes de 206 [SH3]; antecipado da posição histórica após 231 [EQ1], sem repetir no trecho 206–272.
    - Histórico OR — estado anterior à atualização documental: **Estado:** na fila. **Ordem:** depois do item231 [EQ1] e de todos os trabalhos em andamento; não bloqueia nenhum outro. Escopo futuro, sem iniciar a implementação nesta inclusão.
+   - Em andamento pelo Claude: 30/10/2026 15h50 Fortaleza, ramo claude/ca1-caption-refund-owed (tarefa agendada; AV4).
+   - Unidades: 1) reembolso de legendas não confirmado pela Stripe fica guardado e é conferido de novo, sem reembolso em dobro e sem apagar o registro; 2) inventário de toda cobrança ao criador, antes ou depois do uso, em docs/no-creator-default.md; 3) addToNextInvoice substituído por crédito pré-pago ou teto demonstrado; 4) parada automática no primeiro dia de renovação recusada; 5) contestação do criador suspende os recursos cobertos; 6) reembolso da garantia nunca acima do pago.
 
 Pedido: dono, 21/10/2026, 01h26, 01h28 e 01h32 de Fortaleza: "eu vou querer ter modelo em que não tem como levar calote dos criadores" e "veja como faz Stan, Hotmart".
 
