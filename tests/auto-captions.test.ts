@@ -221,7 +221,7 @@ async function main(): Promise<void> {
   serviceRefuses = true;
   stripe = [];
   const refused = await requestAutoCaptions(store, PATH, "fr", []);
-  is("the service refusing: refunded in full at once", [refused.ok ? "asked" : refused.reason, stripe.filter((s) => s.path === "POST /refunds").length, stripe.find((s) => s.path === "POST /refunds")?.body.has("amount")], ["unavailable", 1, false]);
+  is("the service refusing: refunded in full at once", [refused.ok ? "asked" : refused.reason, stripe.filter((s) => s.path === "POST /refunds").length, stripe.find((s) => s.path === "POST /refunds")?.body.has("amount")], ["refunded", 1, false]);
   serviceRefuses = false;
   await redis.pipeline([["SET", `nl:stream:v:${VIDEO}`, JSON.stringify({ id: VIDEO, path: PATH, name: "x", type: "", bytes: 1, state: "working", at: Date.now(), seconds: 0, width: 0, height: 0, settled: false })]]);
   is("not before the video is ready", (await requestAutoCaptions(store, PATH, "fr", [])).ok ? "asked" : "refused", "refused");
@@ -323,6 +323,12 @@ async function main(): Promise<void> {
   refunds.push({ id: "re_Failed000001", object: "refund", amount: 4000, currency: "usd", payment_intent: "pi_Captions000001", status: "failed" });
   refundAnswer = "succeeded";
   is("the card paid 4000 of 12000: 4000 asked back, done", [await syncAutoCaptions(VIDEO, lateNow), stripe.find((s) => s.path === "POST /refunds")?.body.get("amount"), succeededCents(), redis.run(["GET", owedKey])], ["done", "4000", 4000, null]);
+  // A partial refund owed above what the card paid, nothing listed: what the card paid, under a key of its own.
+  await asOwed([]);
+  cardPaid = 4000;
+  redis.run(["SET", owedKey, JSON.stringify({ langs: ["en", "es"], got: ["en"], at: 1_000, cents: CHARGED, pi: "pi_Captions000001", path: PATH, owed: { cents: 6000, key: "k-capped", since: 1, looks: 0 } }), "EX", 3600]);
+  replays.set("k-capped", { id: "", object: "refund", amount: 0, currency: "usd", payment_intent: "", status: "error" });
+  is("capped at 4000 with a new key, never the first key's saved answer", [await syncAutoCaptions(VIDEO, lateNow), stripe.find((s) => s.path === "POST /refunds")?.body.get("amount"), succeededCents()], ["done", "4000", 4000]);
   cardPaid = CHARGED;
 
   // 9. A refund owed for a video since deleted is still shown for the store.

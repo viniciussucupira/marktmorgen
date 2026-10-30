@@ -95,7 +95,7 @@ function parsePending(raw: unknown): Pending | null {
 
 export type AutoAnswer =
   | { ok: true; writing: string[]; cents: number }
-  | { ok: false; reason: "off" | "unknown" | "not_ready" | "language" | "long" | "busy" | "owed" | "refund_pending" | "plan" | "card" | "declined" | "unavailable" };
+  | { ok: false; reason: "off" | "unknown" | "not_ready" | "language" | "long" | "busy" | "owed" | "refund_pending" | "refunded" | "plan" | "card" | "declined" | "unavailable" };
 
 /** What captions for this video cost, by how many languages: its length as charged. Null when it cannot have them yet. */
 export async function autoQuote(pathname: string): Promise<{ minutes: number; seconds: number } | null> {
@@ -161,8 +161,10 @@ export async function requestAutoCaptions(store: Store, pathname: string, spoken
   if (answer.status !== 200 || success === false) {
     console.error("the video service would not write captions", answer.status, answer.data);
     const refundKey = `nl-${sign}:refund`;
-    if (await refundCharge(charged.paymentIntent, null, refundKey)) await redisPipeline([["DEL", key]]);
-    else {
+    if (await refundCharge(charged.paymentIntent, null, refundKey)) {
+      await redisPipeline([["DEL", key]]);
+      return { ok: false, reason: "refunded" };
+    } else {
       await owe(record.id, { langs: asked.languages, got: [], at: now, cents, pi: charged.paymentIntent, path: pathname }, null, refundKey, now);
       return { ok: false, reason: "refund_pending" };
     }
@@ -258,6 +260,12 @@ async function owe(id: string, pending: Pending, cents: number | null, key: stri
   ]);
 }
 
+/** The store's listing lives as long as the record it points at. */
+function keepListed(pending: Pending): (string | number)[][] {
+  const parts = readStreamPath(pending.path);
+  return parts ? [["SADD", owedKey(parts.folder), parts.id], ["EXPIRE", owedKey(parts.folder), REFUND_KEEP_SECONDS]] : [];
+}
+
 /** A refund owed is settled: the record and its listings go. */
 async function closeOwed(id: string, pending: Pending): Promise<void> {
   const folder = readStreamPath(pending.path)?.folder;
@@ -281,6 +289,7 @@ async function collectRefund(id: string, pending: Pending, owed: Owed, now: numb
   // Never more than the card paid: what an invoice took from a credit balance cannot go back to the card.
   const target = listed ? Math.min(owed.cents ?? pending.cents, listed.paid) : owed.cents ?? pending.cents;
   if (listed && listed.returned >= target) {
+    if (target < (owed.cents ?? pending.cents)) console.error("a captions refund was capped at what the card paid; the rest was paid from a credit balance", id);
     await closeOwed(id, pending);
     return "done";
   }
@@ -301,11 +310,13 @@ async function collectRefund(id: string, pending: Pending, owed: Owed, now: numb
     await redisPipeline([
       ["SET", pendingKey(id), JSON.stringify({ ...pending, owed: { ...owed, looks, stuck: true } }), "EX", REFUND_KEEP_SECONDS],
       ["ZREM", QUEUE, id],
+      ...keepListed(pending),
     ]);
     return "waiting";
   }
   await redisPipeline([
     ["SET", pendingKey(id), JSON.stringify({ ...pending, owed: { ...owed, looks } }), "EX", REFUND_KEEP_SECONDS],
+    ...keepListed(pending),
     ["ZADD", QUEUE, now + Math.min(REFUND_LOOK_MAX_MS, LOOK_AGAIN_MS * 2 ** Math.min(looks, 10)), id],
   ]);
   return "waiting";
