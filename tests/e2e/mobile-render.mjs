@@ -64,7 +64,7 @@ try{
    if(label==="candidate"&&Object.values(result.targets).some(value=>!value))failed=true;
    // After preserving every cold performance measurement, exercise the real
    // cycle slots and native disclosure. No warm-up or threshold changes.
-   if(path==="/"&&sample===1){
+   if(path==="/pricing"&&sample===1){ // VS1: the three plan cards live on pricing; the home page shows one.
     // This check is after every cold measurement above; it neither warms
     // the disclosure nor changes timing, thresholds, samples or input events.
     if(!await control.evaluate(node=>node===document.activeElement))throw Error("Native pointer focus was not retained");

@@ -6,7 +6,7 @@ export async function checkPricingValue({browser,LOCAL,axeSource,is}){
   try{
    const page=await context.newPage();let writes=0;
    await page.route("**/api/**",async route=>{if(route.request().method()!=="GET"){writes++;await route.abort();}else await route.continue();});
-   for(const path of ["/","/pricing"]){
+   for(const path of ["/pricing"]){ // VS1: the home page keeps one plan card and a link here; the value list lives on pricing.
     await page.goto(LOCAL+path,{waitUntil:"domcontentloaded",timeout:60000});
    // These checks inspect the settled document, including streamed home sections.
    await page.waitForLoadState("networkidle");

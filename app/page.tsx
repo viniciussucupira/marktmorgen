@@ -137,8 +137,10 @@ export default function Home() {
 
       <main id="content" data-static-reading data-home-page className="hm-body">
         <section aria-labelledby="home-hero-heading" className="hm-hero" data-home-hero>
-          <div aria-hidden="true" className="hm-blob hm-sun-glow" />
-          <div aria-hidden="true" className="hm-blob hm-sun" />
+          <div aria-hidden="true" className="hm-sky-layer">
+            <div className="hm-blob hm-sun-glow" />
+            <div className="hm-blob hm-sun" />
+          </div>
           <div className="hm-wrap hm-rel">
             <HeroClaim offer={OFFER_LINE} items={PHONE_ITEMS} />
           </div>
@@ -214,7 +216,7 @@ export default function Home() {
 
         {INVITE_PROGRAM_OPEN ? <Invite /> : null}
 
-        <section id="pricing" aria-labelledby="hm-price-title" className="hm-section hm-scroll">
+        <section id="pricing" aria-labelledby="hm-price-title" className="hm-section hm-section-top0 hm-scroll">
           <div className="hm-wrap hm-price">
             <div className="hm-grow">
               <h2 id="hm-price-title" className="hm-h2">One plan to start.</h2>
@@ -257,7 +259,9 @@ export default function Home() {
         </section>
 
         <section aria-labelledby="hm-end-title" className="hm-end">
-          <div aria-hidden="true" className="hm-blob hm-sun-end" />
+          <div aria-hidden="true" className="hm-sky-layer">
+            <div className="hm-blob hm-sun-end" />
+          </div>
           <div className="hm-end-inner">
             <h2 id="hm-end-title" className="hm-h2">Pick your name today.</h2>
             <p className="hm-end-lead" id="hm-end-hint">

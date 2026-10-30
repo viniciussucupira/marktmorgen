@@ -209,6 +209,14 @@
   text-underline-offset: 3px;
 }
 
+/* The suns sit in a layer the size of their band, clipped there, so they
+   never widen the page or the band (no sideways scroll at any width). */
+.hm-sky-layer {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
 .hm-blob {
   position: absolute;
   pointer-events: none;
@@ -552,18 +560,21 @@
     position: absolute;
     margin: 0;
   }
+  .hm-float {
+    width: 13.5rem;
+  }
   .hm-float-a {
-    left: 0;
-    top: 7rem;
+    left: -0.5rem;
+    top: 4.5rem;
   }
   .hm-float-b {
-    right: 0;
-    top: 16rem;
+    right: -0.5rem;
+    top: 13.5rem;
   }
   .hm-float-c {
-    left: 1.75rem;
-    bottom: 6rem;
-    width: 13.25rem;
+    left: -0.5rem;
+    bottom: 4.5rem;
+    width: 12.5rem;
   }
   .hm-tilt-l {
     transform: rotate(-5deg);
@@ -693,7 +704,12 @@
   padding: 0;
   display: grid;
   gap: 1.25rem;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 21.25rem), 1fr));
+  grid-template-columns: minmax(0, 1fr);
+}
+@media (min-width: 768px) {
+  .hm-bento {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 .hm-tile {
   border-radius: 36px;
