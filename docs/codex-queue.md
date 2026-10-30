@@ -28,6 +28,8 @@ Percorrer os remanescentes do Grupo B na **ordem relativa já vigente**, sem ord
 
 **Regra de partes MQ1(g):** em cada itemB, só o restante não essencial vem para baixo do marco. Conformidade legal, segurança, impostos, acessibilidade, cobrança e redução de custo dos primeiros meses necessárias às operações atuais ficam na posição atual; obrigações de operações existentes nunca são adiadas. Um recurso futuro não ganha prioridade de construção só por mencionar uma dessas salvaguardas. As proibições continuam valendo em qualquer posição: consultas318/435, CSS livre127 e português doBrasil58/420, entre outras. Não ativar idiomas nem remover idiomas de compradores, conteúdo ou IDs.
 
+Entrada posterior no Grupo B: **555[AK1]**, pedido do dono29/10/2026,23h30Fortaleza, **abaixo do marco por indicação expressa**. É o último remanescente do Grupo B na ordem de chegada, depois de553[DB1] entre os localizadores desse grupo e antes da caudaFIM1. Nenhum item anterior é deslocado entre si.
+
 ### Por último — os59 remanescentesFIM1
 
 FIM1 continua depois de todos os demais, na ordem relativa anterior e com a mesma regra de partes. São os61localizadores históricos da tabelaFIM1 menos206 e241, já retirados da cauda por decisões de posição. Localizadores para conferência (não ordem nova): 16, 26, 37, 38, 41, 42, 45, 47, 48, 49, 53, 56, 58, 92, 104, 127, 128, 129, 130, 131, 132, 203, 207, 209, 215, 222, 236, 252, 255, 280, 284, 286, 289, 296, 317, 318, 327, 337, 345, 346, 347, 348, 351, 352, 359, 363, 383, 401, 402, 404, 406, 419, 420, 425, 429, 430, 440, 441, 442. O item58 continua afetado **somente no português doBrasil**; os demais idiomas mantêm posição/gates atuais. Concluídos e andamentos já existentes não são reconstruídos, reiniciados ou movidos novamente.
@@ -39,6 +41,8 @@ Pedido novo com lado expresso respeita “acima do marco” ou “abaixo do marc
 ### Tabela única do resultadoMQ1 —554itens
 
 Uma linha por item, três grupos possíveis: A, B ou sem mudança. “Sem mudança/FIM1” mantém a cauda vigente; “sem mudança” por conclusão/andamento/AV1 preserva a posição atual. Os conjuntos pedidos têm112localizadoresA,233B e59FIM1. Aplicadas as exceções de posição/estado deMQ1(b), o resultado é108A,232B e214sem mudança.143/182 já publicados,202/205 com andamento/posiçãoOR protegidos e204 com andamento protegido são as exceções dentro das listasA/B; isso não altera seus estados. A tabela é índice de posição, não substitui o texto integral de cada item nem atesta sua conclusão.
+
+**Entradas posteriores à baseMQ1:** o título554 e as contagens anteriores são o retrato histórico dos554itens de29/10/2026,20h52Fortaleza. AK1(23h30) acrescenta somente555no Grupo B por escolha expressa do dono; tabela atual555linhas únicas:108A,233B,214sem mudança. As554linhas anteriores, a ordem relativa, as exceções e os59FIM1 permanecem intactos.
 
 | Item | Grupo | Motivo |
 | --- | --- | --- |
@@ -596,6 +600,7 @@ Uma linha por item, três grupos possíveis: A, B ou sem mudança. “Sem mudan�
 | 552 [BB1] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
 | 553 [DB1] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
 | 554 [DS1] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
+| 555 [AK1] | B | Pedido29/10/2026,23h30: abaixo do marco expresso; após remanescentesB, antesFIM1. |
 
 ### Proveniência, Pedidos repetidos e VR
 
@@ -17707,3 +17712,79 @@ Compor com main3f0d193944de8aa78daa221d2513fcd33a68d511 preserva integralmente a
 Proveniência1236/1235: incorporação efetiva única30/10/2026 01:14:36UTC =29/10/2026 22:14:36Fortaleza,merge3f0d193944de8aa78daa221d2513fcd33a68d511,pais0852c75c58c55dd30049f871af7e20cfbfad54f2/2ea51aa83fe0c65601e259b17a7ca28b2259d550,árvoreee5316e99ce452bdd09dafdec621289b62845612igual à testada/prevista. Head combinado2ea51:39/39+Vercel,verify123823793434234/234/Everything00:53:14.2966829UTC;teste real do gate fiscal com cardinalidade excessiva00:50:29UTC,sendEmailreal com serviços sintéticos00:52:11UTC. Mobile1238237934559frias836msLCP/CLS0/proxy88ms/0APIwrites(laboratório). PR1235foi marcado incorporado por ancestralidade01:14:38UTC, não segunda incorporação funcional. Produção dpl_5KtkTbjBM9vcVJrkkD4jLsx7Nedo READY,SHAexato3f0d1939,7aliases eHTMLreal /,/pricing,/platform/path,/help,/proof/comparisons com mesmoID. Janela error/fatal01:14:36–01:16:48.482UTC sem correspondências, somente essa janela. Interrupção automática da antiga execução individuale471permanece reprovada e documentada acima; não foi usada como aprovação.
 
 Limites atuais: caixa por fonte/avisos financiados continuam incompletos, coberturas respectivasfalse; records fiscais reais vazios, sem implantação de tratamento geográfico. Correção1238não muda Lua,25h,limites,liquidação de pedidos pagos ou direitos. Nenhum gasto operacional/provedor/gravação/retry/preço/limite visível/comissão/optin/idioma/gate novo. CI/revisão100%MarktmorgenFX275,desconhecido nãozero,MR/TX/reservas e Hazelsong intactos. Contador254,provaChromeanteriorbloqueada,semretry/troca. Provas acompanham implementação real, sem PRexclusivo de prova.
+
+
+## 555 [AK1] — Materiais de divulgação do criador para os afiliados
+
+Estado: **na fila**. **Posição: ABAIXO DO MARCO MQ1, Grupo B**, por instrução expressa do dono29/10/2026,23h30Fortaleza; último remanescenteB na ordem de chegada, antes dos59FIM1, sem mover nenhum outro item, andamento ou Bloco de abertura/AV1/SD1. Proveniência de ladoMQ1(h): “abaixo do marco” escolhido explicitamente pelo dono, não classificação inferida. Nenhum recurso iniciado por este registro.
+
+Pedidos repetidos: continuidade lida primeiro; main154c399584371e62fe6f75de0fe683659470a9b7,PR1239aberto/head/fila e20heads distintos recentes com filas,792refs codex/* inventariados. Busca por29/10/2026,23h30,título,AK1 e conteúdo (materiais de divulgação, banners, marketing assets/promotional copy/material preparado): nenhum pedido equivalente localizado;555livre,554DS1/complemento intactos. Origem: anexo ccc6fb63-ce3d-49a4-924f-6adcb1634198/Texto colado.txt; pedido integral abaixo. Se reaparecer, registrar só recepção na proveniência, sem número ou commit exclusivo.
+
+Conferência limitada do código atual nesse main: lib/affiliate-kit.ts e lib/affiliate-kit-rules.ts oferecem rascunhosIA com finalização/aviso de comissão; lib/affiliate-hub.ts é o hub; components/affiliate-campaign-links.tsx e components/affiliate-promotion-results.tsx reutilizam rótulos de campanha e registros reais de comissão; app/studio/affiliates/page.tsx e app/[handle]/affiliates/page.tsx não oferecem nos caminhos conferidos upload/gestão de banners e textos escritos pelo criador. Não foi encontrada a biblioteca pedida nesses sete arquivos; não é alegação de auditoria de todo recurso/fornecedor. Reconfirmar o código na execução e implementar só o remanescente. A comparaçãoClickFunnels e as demais capacidades enumeradas no briefing são proveniência do dono/Claude, não uma nova auditoria externa neste registro.
+
+Escopo futuro, sem segundo kit, hub, motor de campanha ou checkout:
+- No estúdio de afiliados, imagens enviadas e textos escritos pelo próprio criador, cada um com título/tipo(e-mail,post,mensagem curta), para o programa inteiro ou produto próprio específico. Não gerar/reescrever texto por conta própria; quantidade/tamanho dependem do cálculo abaixo, sem cortar limite existente. Proibidos HTML/CSS/JS livres.
+- Na página do afiliado da loja, só afiliados aprovados e nos produtos que podem divulgar; autorização e isolamento também nas leituras/URLs/downloads, sem confundir ocultar na interface com permissão. Reusar as regras vigentes de programa/produto e links próprios do afiliado. Preencher o lugar indicado pelo criador com o link desse afiliado e acrescentar o aviso de comissão pelo código em cada idioma já suportado, como no kit atual; o criador não pode removê-lo. Copy para texto e Download para imagem. Não ativar idiomas futuros por este pedido.
+- Cada material recebe rótulo próprio nos links de campanha existentes; reusar componentes/contadores/atribuição e mostrar só visitas/vendas confirmadas que os dados reais sustentarem. Os resultados conferidos hoje distinguem compras/renovações/comissões e não reconstroem uma jornada: não inventar visitas/cliques/compradores ou causalidade para preencher lacuna. Desconhecido ou leitura incompleta = indisponível, nunca zero. Não refazer taxa/segundo nível/bônus/aprovação/pagamento/hub/diretório/kitIA já existentes.
+- Antes de salvar texto, aviso não bloqueante para possível promessa de resultado/ganho/renda e urgência/escassez; lembrar o acréscimo obrigatório do aviso de comissão. Não bloquear nem reescrever esse texto pelo aviso; nenhuma alteração do conteúdo do criador sem sua aprovação. Não criar depoimento/número sem fonte/urgência/escassez falsas.
+- AX274: alt obrigatório antes de salvar imagem e equivalente textual para informação em imagem de texto, teclado/leitor de tela,44×44px,7:1,320px/400%zoom. PR de implementação deve conter seção “Acessibilidade”. Sem overlay. Privacidade: nenhum pixel, abertura rastreada ou dado pessoal novo.
+
+Custo e trava antes de ligar: calcular armazenamento das imagens, entrega/download e leituras/gravações por material no pior mês de TODOS os seis contratos mensais/anuais e complementos aplicáveis com100%dos direitos; reservar/limitar antes de cada gasto dentro do armazenamento e entrega já pertencentes ao plano. Definir limites de quantidade/tamanho só depois da conta; nenhum número inventado neste registro. Custos desconhecidos reprovam, franquia grátis não vale custo zero. Taxas mais caras de lib/receiving-costs.ts, reembolso/contestação e demais custos/impostos Brasil/EUA pelaTX,MR vigente27/10/2026,FX275100%Marktmorgen; nenhum cliente isolado nem a empresa após a base mínima pode dar prejuízo; meta60%medida no relatório mensal real. Sem mudança de preços/comissão/limites visíveis/flags/tax gate/art9a/revisão ou qualquer afrouxamento. Documentação/CI/revisão também não são zero presumido.
+
+Testes de implementação, somente sintéticos: adicionar/ler material de programa e produto; isolamento de loja/afiliado aprovado/produto autorizado inclusive download; substituição do link próprio e aviso de comissão obrigatório não removível; Copy/Download com rótulo de campanha estável; números reais simulados/indisponibilidade sem falsozero; aviso textual não bloqueante sem reescrita; alt/equivalente/teclado/leitor/contraste/alvos/320px/400%; tetos e reserva negando custo desconhecido/esgotado antes de upload/download/IO. Reusar suites existentes e cobrir os caminhos alterados, sem mensagens, pagamento ou conta/submissão real.
+
+VR deste registro:555único,GrupoB abaixo do marco e tabelaMQ1 atualizada com uma linha,mesmos554itens anteriores; feature continua na fila/não construída/não verificada funcionalmente. PR1239segue sua suíte sem alteração/cancelamento. Nenhuma nova entrega funcional ou contador:254mantido. Conteúdo, idiomas de compradores, IDs,provas,histórico e Hazelsong preservados. Proibidas contas, termos, contratação, pagamento, contato, e-mail/pagamento real e exclusões.
+
+### Pedido integral e proveniência — 555 [AK1]
+
+```text
+AK — Materiais de divulgação do criador para os afiliados (29/10/2026) [AK1]
+
+Solicitação do dono (29/10/2026, 23h30, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: aplique a regra "Pedidos repetidos" de AGENTS.md antes de gravar. Procure esta solicitação pela linha de data e hora, pelo nome da seção, pela etiqueta [AK1] e pelo conteúdo, no main, nos PRs abertos e nos ramos codex/* recentes. Se já estiver gravada, registre apenas a nova recepção na proveniência, sem novo número nem commit exclusivo.
+
+Estado inicial: na fila, ABAIXO DO MARCO (MQ1, Grupo B), no próximo número livre (555, se ainda estiver livre). Não altera a ordem de nenhum outro item nem o Bloco de abertura.
+
+Contexto: o dono comparou a página pública do Affiliate Center da ClickFunnels (clickfunnels.com/apps/affiliate-center, lida em 29/10/2026), que oferece aos afiliados "marketing assets such as banners, email templates, and promotional copy" preparados pelo vendedor. O Marktmorgen já tem painel do afiliado, taxa por loja e por produto, segundo nível, bônus mensais, aprovação ou entrada automática de compradores, pagamento pelo PayPal do próprio criador na data prometida, rascunhos de posts pela IA com o aviso de comissão (lib/affiliate-kit.ts, lib/affiliate-kit-rules.ts), página única do afiliado (lib/affiliate-hub.ts), diretório e links de campanha. Falta apenas o material preparado pelo próprio criador. Verifique antes no código atual que ele continua inexistente; não refaça nada do que já existe.
+
+1. No estúdio, na página de afiliados (app/studio/affiliates), o criador pode adicionar materiais de divulgação para o programa inteiro ou para um produto específico: imagens (banners) enviadas por ele e textos prontos escritos por ele, cada um com um tipo (e-mail, post ou mensagem curta) e um título. Limites de quantidade e de tamanho definidos pelo cálculo de custo abaixo, sem cortar nenhum limite visível existente.
+
+2. Na página do afiliado na loja (app/[handle]/affiliates), somente afiliados aprovados veem os materiais do programa e dos produtos que podem divulgar. Cada texto aparece com o link do próprio afiliado já colocado no lugar indicado pelo criador e com o aviso de que o afiliado ganha comissão, escrito pelo código em cada idioma, como já ocorre nos rascunhos da IA; o criador não consegue remover esse aviso. Botões "Copy" para o texto e "Download" para a imagem.
+
+3. Cada material leva automaticamente o seu próprio rótulo de campanha nos links de campanha já existentes (components/affiliate-campaign-links.tsx, components/affiliate-promotion-results.tsx), para que o criador e o afiliado vejam quais materiais trouxeram visitas e vendas confirmadas, somente com números reais lidos das vendas, nunca estimados; dado indisponível aparece como indisponível, nunca como zero.
+
+4. Antes de salvar um texto, o estúdio avisa, sem bloquear nem reescrever, quando o texto parecer prometer resultado, ganho ou renda, ou usar urgência ou escassez, e lembra que o aviso de comissão será acrescentado. Nunca altere o texto do criador sem aprovação dele.
+
+5. Acessibilidade (AX274): toda imagem exige texto alternativo antes de ser salva; nenhuma imagem de texto sem a mesma informação em texto; tudo operável por teclado, alvos de 44 × 44 px, contraste de 7:1, leitores de tela, 320 px e 400% de zoom. Seção "Acessibilidade" no PR.
+
+6. Privacidade e honestidade: nenhum pixel de rastreamento, contagem de abertura ou dado pessoal novo; nada de depoimento inventado, números sem fonte, escassez ou urgência falsas.
+
+Custo: armazenamento das imagens, entrega das imagens baixadas e leituras/gravações por material. Conte tudo no armazenamento e na entrega que cada plano já tem, com teto automático antes do gasto; calcule o pior caso mensal e anual de cada plano com 100% dos direitos usados antes de ligar. Custo desconhecido reprova, nunca é zero; nenhuma cota grátis de fornecedor conta como zero.
+
+REGRA DE MARGEM (MR, 27/10/2026): nenhum cliente pagante, considerado isoladamente e usando 100% de todos os direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto; a empresa como um todo não pode dar prejuízo no pior caso a partir da base mínima de clientes pagantes, com 100% dos custos fixos da LLC atribuídos ao Marktmorgen (FX275); a meta de 60% de margem líquida é medida todo mês com números reais. Impostos pela política TX vigente.
+
+Proibido: mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; enviar e-mail ou pagamento real; apagar conteúdo de criadores ou qualquer coisa da Hazelsong; HTML, CSS ou JavaScript livres nos materiais; instalar overlay de acessibilidade. Somente testes sintéticos.
+
+Aplicar a regra VR.
+```
+
+### Complemento AK2 dentro do 555 [AK1] — 29/10/2026, 23h36, Fortaleza
+
+**Proveniência e posição:** solicitação direta do dono nesta conversa; aplicar Pedidos repetidos: complemento do AK1, sem número novo, mantendo **555, na fila, ABAIXO DO MARCO MQ1, Grupo B**. Nenhum outro item muda de ordem. Se novamente recebido, registrar somente nova recepção. Não interromper o trabalho em andamento.
+
+**Conferência real antes do registro:** main `154c399584371e62fe6f75de0fe683659470a9b7`, leitura integral de `components/affiliate-studio.tsx` (79.767 caracteres) e da página `app/studio/affiliates/page.tsx`: linhas individuais já recebem clicks/sales/earned/paid/owed/waiting/payable, há `owedTotal`, `waitingTotal` e total de lote; o texto global é “Owed now, in all”. O resumo completo pedido, com seletor de período e conversão, continua ausente nessas entradas. Não confundir os totais já usados pelo pagamento com o resumo completo nem prometer que dados históricos e receitas já estejam disponíveis. Revalidar no head da implementação.
+
+**Escopo aprovado do complemento:**
+1. No alto de app/studio/affiliates, somar os mesmos dados já lidos: afiliados aprovados (ativos), cliques, vendas confirmadas e receita dessas vendas descontados os reembolsos totais; comissões ganhas, pagas, devidas e parcela ainda no prazo de espera separada. Conversão = vendas confirmadas ÷ cliques, com fórmula dita em texto ao lado; não inventar percentual quando denominador/dados não permitirem.
+2. Períodos: últimos 30 dias, este mês, mês passado e desde o início; reutilizar quando possível o seletor do painel de números. Nunca apresentar totais de toda a vida como se fossem do período. Se as leituras atuais não permitirem o período, tratar a lacuna explicitamente antes de implementar, sem nova leitura implícita.
+3. Só números reais das vendas Stripe/PayPal do próprio criador e contagens Marktmorgen. Separar moedas, sem conversão/soma entre elas; dado indisponível = **Counts unavailable**, nunca zero. Sem estimativa, projeção ou comparação com outros criadores.
+4. **Acessibilidade (AX274):** texto real em lista de descrição dt/dd, nomes claros, contraste 7:1, sem informação só por cor, 320 px/400% e leitores de tela. PR de implementação deve incluir seção **Acessibilidade**, passos e decisões da tarefa principal antes e depois.
+
+**Custo e gates:** nenhuma leitura de fornecedor, chave, campo ou TTL novo; apenas soma dos dados já lidos. Se precisar de leitura nova, calcular antes pior caso mensal e anual de cada plano com 100% dos direitos e aplicar teto automático antes do gasto; desconhecido reprova, nunca zero. MR de 27/10/2026: nenhum cliente pagante isolado com todos os direitos e complementos no pior mês mensal/anual pode dar prejuízo após todos os custos/impostos, taxas mais caras de lib/receiving-costs.ts e reservas de reembolso/contestação; empresa sem prejuízo desde a base mínima, 100% custos fixos LLC no Marktmorgen (FX275); meta 60% líquida mensal medida com números reais; TX vigente. Este registro documental não certifica custo da futura implementação.
+
+**Proibições e VR:** preservar preços, limites visíveis, comissão, PLANS_ON_SALE, OPENING_REQUESTED, tax gate, art. 9a e revisão comercial; nenhuma trava afrouxada. Sem contas, termos, contratação, pagamento, contato a terceiros, e-mail/pagamento real, exclusão de conteúdo de criadores ou da Hazelsong, pixel/rastreamento de abertura. Só testes sintéticos. Aplicar VR e preservar controles e provas da tarefa principal.
+
+**Contexto recebido, sem tratá-lo como pesquisa independente:** dono cita a página pública clickfunnels.com/apps/affiliate-center, lida em 29/10/2026, e os textos “instant visibility into referrals, commissions, and future payouts” e “track referral effectiveness”, com ativos, vendas e comissões no topo. O pedido é complementar o resumo no estúdio, não copiar números ou promessas do fornecedor.
