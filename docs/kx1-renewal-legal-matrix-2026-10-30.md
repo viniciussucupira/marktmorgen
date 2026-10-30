@@ -135,3 +135,80 @@ priced in `lib/cost-table.ts`-style worst cases per plan (monthly and annual,
 
 No code, no email, no Stripe call, no account, no contact with any authority
 or third party. No figure or sentence in the product changes.
+
+## 6. Official texts read on 30 Oct 2026, after the owner's decision of 16h29
+
+The owner decided (30 Oct 2026, 16h29 Fortaleza, "faça o correto") that no
+notice window may rest on a secondary source. This section records what was
+read on the official site of each jurisdiction on 30 Oct 2026, between 17h50
+and 18h15 Fortaleza. Each page was read through a page reader that returns
+summaries and short quotations; the quotations below are as it returned them,
+and anybody relying on a figure should open the page. Nothing here is legal
+advice, and nothing certifies that Marktmorgen complies with any law.
+
+| # | Jurisdiction and text | Official page read | To whom | Contracts covered | Window | Counted from | Required content |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| O1 | Utah Code §13-70-201, "Effective 1/1/2025" (2024 c. 132) | le.utah.gov/xcode/Title13/Chapter70/C13-70-S201_2025010120240501.html | "an individual" who receives the product or service | Any contract with an automatic renewal provision; **the page reader found no condition on the length of the term** (exceptions: insurance, service contracts under Title 31A, some financial institutions, utilities, FCC/FERC-regulated services, rentals, property management) | Renewal: "at least 30 but not more than 60 days before the day on which the automatic renewal provision renews". Trial: "at least three days before" it expires (no upper bound read) | The renewal day; the trial's expiry | Renewal date, total renewal cost, options for cancellation. Trial: expiry date, price after it, cancellation options |
+| O2 | Illinois, 815 ILCS 601/10, "(Source: P.A. 102-517, eff. 1-1-22; 103-70, eff. 1-1-24.)" | witnessslips.ilga.gov/ftp/ILCS/Ch 0815/Act 0601/081506010K10.html (ILGA's own server) | The consumer | A specified term of 12 months or more that renews for more than one month | "no less than 30 days and no more than 60 days before the cancellation deadline" | The cancellation deadline | Written notice (content per the rest of the section, not quoted here) |
+| O3 | Virginia Code §59.1-207.46 (history: 2018 c. 704 … 2026 cc. 931, 932) | law.lis.virginia.gov/vacode/title59.1/chapter17.8/section59.1-207.46/ | A consumer in the Commonwealth (definition in §59.1-207.45, not read) | (E) offers that renew after more than 30 days and extend for more than 12 months; (D) free trials over 30 days; (C) any material change, price included | (E) "no less than 30 days and no more than 60 days before the cancellation deadline or the end of the current contract term"; (C) before the change, no day count; (D) trial wording to be re-read on the page, the reader's summary was unclear | The cancellation deadline or the term's end | (E) that it renews unless canceled, the cancellation deadline, how to cancel, a copy of the offer provisions; (C) how to cancel, retainable |
+| O4 | Massachusetts, 940 CMR 38.05, applying to practices "as of September 2, 2025" (38.09) | mass.gov/doc/junk-fee-regulations-940-cmr-3800-0/download | The consumer | (4) a negative option feature over 31 days; (6) one of 31 days or less | (4) "no more than thirty (30) and no fewer than five (5) calendar days prior to the date" the consumer must cancel to avoid a new charge; (6) the amount charged disclosed "at least as frequently as the consumer is charged" | The date by which the consumer must cancel | Financial obligations if not canceled, the products, the cancellation mechanism, the date to cancel by, the date of the charge; sent through a medium substantially similar to the sign-up's (38.05(5)); cancellation "at least as easy" as sign-up (38.05(3)) |
+| O5 | US federal, FTC, 16 CFR Part 425 | federalregister.gov/documents/2026/02/12/2026-02866 | — | — | The notice of 12 Feb 2026 (effective that day) restores Part 425 as it stood before the 2024 amendments, which the Eighth Circuit vacated; the 2024 "click to cancel" provisions are **not in force**. The restored rule covers prenotification negative option plans. ROSCA (S1) still applies. | — | — |
+| O6 | New York General Obligations Law §5-903 (revision of 22 Sep 2014) | nysenate.gov/legislation/laws/GOB/5-903 | The service recipient | Only contracts "for service, maintenance or repair to or for any real or personal property", renewal period over one month | 15–30 days before the date to serve notice of non-renewal, personally or by certified mail | That date | — |
+| O7 | New York, bill A3928-B (2025) amending GBL §527-a (15–45 days before the cancellation deadline; 7–30 days before a price change; 3–21 days before a trial over 31 days ends) | nysenate.gov/legislation/bills/2025/A3928 | — | — | **Not law:** the page shows it "died in senate" (Jan 2026). The current text of GBL §527-a was **not read** on an official page. | — | — |
+
+### What the official texts change
+
+1. **The annual notice: one day still fits every rule read.** For an annual
+   plan whose cancellation deadline is the renewal moment (Marktmorgen lets a
+   plan be canceled until the renewal), the windows read are: Utah 30–60
+   days before renewal (O1), Illinois 30–60 before the deadline (O2),
+   Virginia 30–60 (O3), Massachusetts 5–30 (O4), and California 15–45 (S3,
+   still secondary). The only day all of them allow is the 30th calendar day
+   before the renewal. PR #1296's start at 30 days stands; the "late" marking
+   of a notice found under the floor stands. Each day count is calendar days
+   in the customer's local date where known; an unknown location is held to
+   the 30th day in the earliest time zone that applies, so no window is
+   missed anywhere.
+2. **New gap G12 — Utah and monthly plans.** As read (O1), Utah's 30–60-day
+   renewal notice has no condition on the term's length. Taken literally, a
+   monthly plan renewing every 28–31 days cannot receive a notice 30–60 days
+   before each renewal. Whether a monthly term is covered is a question of
+   reading the whole chapter (definitions, §13-70-101) and any official
+   guidance; until then the protective reading applies to Utah customers:
+   **Depende do dono / to read next:** §13-70-101 and the Utah Division of
+   Consumer Protection's guidance. Possible protective designs, not built:
+   send each monthly renewal notice at the earliest moment the term allows,
+   or treat a Utah customer's monthly plan as needing a fresh notice of the
+   next renewal at sign-up. Nothing is switched on, so no customer is exposed
+   today (sales are closed).
+3. **G11 confirmed for Massachusetts (O4, 38.05(6)).** For a term of 31 days
+   or less the amount must be disclosed at least as often as the charge: a
+   per-charge receipt or notice with the amount meets the text as read. The
+   notice must go through a medium like the sign-up's: email for an online
+   sign-up.
+4. **Price changes.** Virginia (O3) asks a notice before any material change,
+   price included, with how to cancel, and sets no day count; California's
+   7–30 days (S3, secondary) stays the applied window. No price change is
+   planned (owner's rule), so nothing is sent.
+5. **The FTC rule (O5)** removes the federal "click to cancel" as a
+   requirement; the cancellation rules still come from ROSCA, California
+   (secondary), Massachusetts 38.05(3) and the EU (S4). The design already
+   holds the strictest.
+
+### Still not read on an official site (each stays at the protective reading)
+
+California §17602 and §17601 on leginfo (the page asked for a permission the
+scheduled run could not get; S3 remains secondary), New York GBL §527-a's
+current text, Colorado C.R.S. §6-1-732, Oregon ORS 646A.295, District of
+Columbia, Minnesota, Virginia's 2026 amendments (cc. 931, 932) by themselves
+and §59.1-207.45's definition of consumer, the EU text on EUR-Lex (Directive
+2023/2673, Art. 11a), the UK regulations under the DMCC Act once made, and
+Canada (federal and provincial). PR #1296 stays unmerged until those that can
+reach a buyer or creator are read; the next scheduled run continues the list.
+
+### Cost of extra notices
+
+None so far: one annual notice on one day meets every window read. If G12
+requires a notice before each monthly renewal for Utah customers, that is one
+email a month per monthly subscription in Utah, at the email rate of the cost
+table, capped before it is sent; it will be priced in the PR that builds it.
