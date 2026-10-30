@@ -19,8 +19,20 @@ import { PLAN_NAMES, PLAN_PRICES, type Cycle, type Tier } from "@/lib/plan";
 const DAY = 86_400;
 /** Sent on the first daily run with at most this long left: seven to eight days. */
 const TRIAL_NOTICE_SECONDS = 8 * DAY;
-/** Sent on the first daily run with at most thirty days left, and never later than needed. */
-const YEAR_NOTICE_SECONDS = 30 * DAY;
+/**
+ * Below this, a trial notice is late: the card networks' seven days
+ * (California's floor for a trial over 31 days, three days, is inside it).
+ */
+export const TRIAL_FLOOR_SECONDS = 7 * DAY;
+/**
+ * Sent on the first daily run with at most 45 days left: the top of
+ * California's 15-to-45-day window (Bus. & Prof. Code §17602(b)(2); queue
+ * 414 [KX1], docs/kx1-renewal-legal-matrix-2026-10-30.md), so a run that
+ * fails has thirty days of later runs before the floor.
+ */
+export const YEAR_NOTICE_SECONDS = 45 * DAY;
+/** Below this, a yearly renewal notice is late. */
+export const YEAR_FLOOR_SECONDS = 15 * DAY;
 /** Too close to the charge to be of use: left alone. */
 const TOO_LATE_SECONDS = DAY;
 const MAX_PAGES = 50;
@@ -34,6 +46,12 @@ export type Reminder = {
   tier: Tier;
   cycle: Cycle;
   amountCents: number;
+  /**
+   * Sent after its window's floor had passed (a missed run, or a plan made
+   * inside it). Still sent, because the person is better told late than not
+   * at all, but counted apart and never reported as on time.
+   */
+  late: boolean;
 };
 
 function day(seconds: number): string {
@@ -120,11 +138,11 @@ export function dueReminder(subscription: Record<string, unknown>, nowSeconds: n
 
   if (trialing) {
     return left <= TRIAL_NOTICE_SECONDS
-      ? { kind: "trial", subscription: id, email, at, ...plan }
+      ? { kind: "trial", subscription: id, email, at, ...plan, late: left < TRIAL_FLOOR_SECONDS }
       : null;
   }
   if (subscription.status === "active" && plan.cycle === "year" && left <= YEAR_NOTICE_SECONDS) {
-    return { kind: "renewal", subscription: id, email, at, ...plan };
+    return { kind: "renewal", subscription: id, email, at, ...plan, late: left < YEAR_FLOOR_SECONDS };
   }
   return null;
 }
@@ -264,10 +282,12 @@ export async function sendFailedPlanNotices(): Promise<{ sent: number; failed: n
  */
 export async function sendReminders(nowSeconds = Math.floor(Date.now() / 1000)): Promise<{
   sent: number;
+  /** Of those sent, how many went after their window's floor. */
+  late: number;
   failed: number;
   seen: number;
 }> {
-  const counts = { sent: 0, failed: 0, seen: 0 };
+  const counts = { sent: 0, late: 0, failed: 0, seen: 0 };
   if (!isRedisConfigured() || !isSenderConfigured()) return counts;
 
   for (const status of ["trialing", "active"] as const) {
@@ -283,8 +303,13 @@ export async function sendReminders(nowSeconds = Math.floor(Date.now() / 1000)):
         if (claimed === null) continue;
         const { subject, text } = reminderEmail(reminder);
         const ok = await sendEmail({ meter: { by: "company" }, from: NIMBUS_FROM, to: reminder.email, subject, text, replyTo: SUPPORT_EMAIL });
-        if (ok) counts.sent += 1;
-        else {
+        if (ok) {
+          counts.sent += 1;
+          if (reminder.late) {
+            counts.late += 1;
+            console.warn(`billing reminder sent late: ${reminder.kind}, ${Math.floor((reminder.at - nowSeconds) / DAY)} days before the charge`);
+          }
+        } else {
           counts.failed += 1;
           // Tried again on the next run rather than never.
           await redisPipeline([["DEL", key]]).catch(() => {});
