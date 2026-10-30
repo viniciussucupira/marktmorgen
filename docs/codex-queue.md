@@ -18747,3 +18747,36 @@ Proibido: descrever recurso que não funciona hoje; apagar ou renumerar resposta
 
 Aplicar a regra VR.
 ```
+
+### Complemento ao 564 [HC1] — 30/10/2026, 09h56 Fortaleza
+
+Proveniência: pedido direto do dono na conversa com o Claude, 30/10/2026, 09h56 Fortaleza; texto redigido pelo Claude e aprovado pelo dono; gravado diretamente pelo Claude para não interromper o Codex. Pedidos repetidos passo3(b): conferido no main 60185a7e47c1b807bc80760785bdd061754d5d0b que não havia complemento HC1 de 30/10/2026, 09h56; somente a diferença abaixo foi acrescentada, e o 564 [HC1] mantém número, posição (Grupo B, abaixo do marco MQ1) e estado. Conferência limitada no mesmo main: o tipo HelpSection de lib/help-content.ts guarda só q e a em cada resposta, sem data de criação nem de atualização; revalidar no head de implementação. Texto do dono preservado integralmente abaixo.
+
+```text
+HC — Complemento ao 564 [HC1]: data de cada resposta e listas de respostas novas e atualizadas (30/10/2026)
+Etiqueta: [HC1]
+
+Solicitação do dono (30/10/2026, 09h56, horário de Fortaleza).
+
+Pedidos repetidos: é complemento ao item 564 [HC1] já gravado. Aplique só a diferença ao item existente, mantendo número, posição e estado (regra "Pedidos repetidos", passo 3, letra b), e registre na proveniência o que mudou.
+
+Estado inicial: o do próprio 564.
+
+Contexto: a central de ajuda do ClickFunnels (support.myclickfunnels.com, lida em 30/10/2026) mostra, abaixo dos vídeos, duas listas: "Recently Modified Articles" e "Recently Created Articles", com as respostas mudadas ou criadas por último. No Marktmorgen, as respostas da central (lib/help-content.ts) não têm data, e quem volta à central não sabe o que é novo nem se uma resposta ainda vale para a tela atual. Verifique antes no código atual que isso continua assim.
+
+O que acrescentar ao 564 [HC1]:
+- cada resposta guarda duas datas no próprio conteúdo: quando foi criada e quando o texto mudou pela última vez; as 107 respostas atuais recebem como data de criação a do commit que as acrescentou, lida do histórico do repositório uma única vez, e nunca uma data inventada;
+- em cada resposta, a linha "Last updated" com a data en-US, também lida pelo leitor de tela;
+- no alto da central, abaixo dos cartões de área, duas listas curtas: "New answers" e "Recently updated", com as 5 respostas mais recentes de cada uma, o título e a data; uma correção de vírgula ou de link não conta como atualização, só uma mudança no que a resposta diz;
+- um teste automático falha se o texto de uma resposta mudar sem a data de atualização mudar no mesmo PR, se uma data for futura ou se uma resposta não tiver data de criação.
+
+Acessibilidade (AX274, Parte A, integral): máxima acessibilidade em tudo o que este item criar ou alterar — WCAG 2.2 nível AAA em todos os critérios aplicáveis, em todas as telas, estados, e-mails e arquivos, mais as demais normas e orientações da Parte A; a impossibilidade de um critério AAA precisa ser demonstrada e registrada em docs/accessibility-programme.md, nunca presumida. Os pontos a seguir são verificações obrigatórias deste item, não o limite do que se exige: datas em elemento de data legível; listas com título de seção; propósito de cada link compreensível pelo próprio texto (2.4.9); contraste de 7:1, 320 px e 400% de zoom; leitor de tela e teclado. Seção "Acessibilidade" no PR, com os passos e as decisões da tarefa principal antes e depois.
+
+Custo: datas no conteúdo do repositório e páginas estáticas, sem leitura, gravação, fornecedor ou chamada de IA. Custo desconhecido reprova, nunca é zero.
+
+REGRA DE MARGEM (MR, 27/10/2026): nenhum cliente pagante, considerado isoladamente e usando 100% de todos os direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto; a empresa como um todo não pode dar prejuízo no pior caso a partir da base mínima de clientes pagantes, com 100% dos custos fixos da LLC atribuídos ao Marktmorgen (FX275); a meta de 60% de margem líquida é medida todo mês com números reais. Impostos pela política TX vigente.
+
+Proibido: criar item novo ou mudar número, posição ou estado do 564; data inventada ou futura; apagar, renumerar ou mudar o answerId de respostas existentes; mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+```
