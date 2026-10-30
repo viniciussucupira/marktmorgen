@@ -265,3 +265,49 @@ floor) and a trial notice only under 7. Against the official texts read:
 These changes go into PR #1296 (claude/kx1-notice-floors); it stays unmerged
 until California's official text and the remaining jurisdictions of section 6
 are read.
+
+## 8. New York, the United Kingdom, Germany and Canada, read on 30 Oct 2026 (18h00–18h10 Fortaleza)
+
+Read the same way as sections 6 and 7.
+
+| # | Jurisdiction and text | Official page read | Contracts covered | Window | Counted from |
+| --- | --- | --- | --- | --- | --- |
+| O11 | New York GBL §527-a, current text (no date on the document) | legislation.nysenate.gov/pdf/laws/GBS527-A | (1)(f) an initial paid term of one year or more renewing for six months or more; (1)(h) a free gift or trial of more than a month; (1)(g) any material change or price increase | (f) "at least fifteen days before, but not more than forty-five days before, the cancellation deadline"; (h) "at least three days before but not more than twenty-one days before the cancellation deadline"; (g) "at least five business days prior, but no more than thirty days prior" to the change; (1)(b-1) after a price increase charged without affirmative consent, cancel within at least 14 days with a pro rata refund | The cancellation deadline; the change's date |
+| O12 | UK, DMCC Act 2024 ss. 258–259 | legislation.gov.uk/ukpga/2024/13/section/258 and /part/4 | All subscription contracts with consumers | No fixed days: a reminder "within the period specified by the trader", which must be "a period in advance of the last cancellation date which is reasonable" (s. 259(3)–(4)); a reminder for each renewal payment at the end of each six-month period, and before the first full-price payment after a concessionary period (s. 258). **s. 259 not in force**; s. 258 in force only for specified purposes | The last cancellation date |
+| O13 | UK, draft Consumer Subscription Contracts (Cancellation and Information) Regulations 2026 | legislation.gov.uk/ukdsi/2026/9780348287912 | Subscription contracts made on or after s. 254 comes into force | **Draft, not made.** Would come into force 1 Jan 2027; reminders in writing on a durable medium (reg. 34); end the contract at any time (reg. 32); refunds within 14 days to the original method (reg. 21) | — |
+| O14 | Germany, BGB §309 Nr. 9 | gesetze-im-internet.de/bgb/__309.html | Standard terms of contracts for the regular supply of goods or services (B2C, see §310) | Invalid: an initial term binding over two years (a); a tacit extension unless it turns into an open-ended contract the customer may end at any time with at most one month's notice (b); a notice period over one month before the end (c) | — |
+
+Canada: Ontario's consumer page (ontario.ca, updated 1 Apr 2025) sets no
+renewal-notice rule for subscriptions; the Consumer Protection Act, 2023 and
+Quebec's law were **not read**. The EU Art. 11a text on EUR-Lex was **not
+read** (it is a withdrawal function, not a renewal notice).
+
+### The windows after sections 6 to 8
+
+- **Annual renewal:** New York 15–45 before the deadline (O11) adds nothing
+  narrower; **the 30th calendar day before the renewal** still fits every
+  rule read. PR #1296 (head abb7a19) applies it.
+- **Trial over a month:** New York 3–21 (O11), DC 15–30, Minnesota 5–30,
+  California 3–21: still **15 to 21 days before the end**. Marktmorgen's own
+  trial is 14 days (`TRIAL_DAYS`), under New York's, Minnesota's and
+  California's thresholds; DC's §28A-203(c) as read states no threshold, so
+  **gap G14:** a 14-day trial cannot get a notice 15–30 days before it ends;
+  the protective reading needs the notice at sign-up for DC customers, or a
+  reading of §28A-202's definition of free trial. To read next.
+- **Price change:** New York at least five business days and at most 30 days
+  before the change (O11), California 7–30 (secondary): **7 calendar days
+  and five business days, whichever is later, to 30 days.** No price change
+  is planned.
+- **New gap G15 — Germany (O14).** A German consumer's annual subscription
+  in a creator's store may not renew tacitly for another year under standard
+  terms: after the first term it must become open-ended and cancelable with
+  at most one month's notice. This touches buyers' annual memberships
+  (Stripe Billing on the creator's account) and Marktmorgen's own yearly
+  plan for a consumer in Germany; it is a contract-terms and refund question,
+  and goes into the cancellation PR (G5/G8/G10) of section 4.
+- **UK (O12–O13):** nothing fixed before 1 Jan 2027; the design keeps a
+  reminder before every renewal of a six-month or longer term.
+
+Still to read: California (leginfo), Oregon, Utah §13-70-101, DC §28A-202,
+Virginia §59.1-207.45 and its 2026 amendments, Colorado's later amendments,
+EUR-Lex 2023/2673, Canada (federal and provinces). PR #1296 stays unmerged.
