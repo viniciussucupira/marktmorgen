@@ -212,3 +212,56 @@ None so far: one annual notice on one day meets every window read. If G12
 requires a notice before each monthly renewal for Utah customers, that is one
 email a month per monthly subscription in Utah, at the email rate of the cost
 table, capped before it is sent; it will be priced in the PR that builds it.
+
+## 7. More official texts read on 30 Oct 2026 (18h00–18h20 Fortaleza), and what they change in PR #1296
+
+Read the same way as section 6 (official pages, through a page reader that
+returns summaries and short quotations).
+
+| # | Jurisdiction and text | Official page read | Contracts covered | Window | Counted from | Required content |
+| --- | --- | --- | --- | --- | --- | --- |
+| O8 | Colorado, C.R.S. §6-1-732, as enacted by HB 21-1239 (effective 1 Jan 2022, for contracts made on or after it) | content.leg.colorado.gov/sites/default/files/documents/2021A/bills/2021a_1239_enr.pdf (the enrolled act; later amendments **not read**) | A paid subscription or purchasing agreement automatically renewed (exemptions in (5)) | (4)(b) "at least twenty-five and no more than forty days before the first automatic renewal" and each later one; for a term under twelve months, once in that window before the renewal that extends the contract past each continuous twelve months. Trial: no day count, cancel before paying. Material change: clear notice, no day count | The renewal | Per (4) (not quoted here) |
+| O9 | District of Columbia Code §28A-203 (D.C. Law 22-235, 2019; amended by D.C. Law 23-16) | code.dccouncil.gov/us/dc/council/code/sections/28A-203 | (b) an initial term of 12 months or more renewing for one month or more; (c) free trials | (b) "no fewer than 30 days and no more than 60 days before the cancellation deadline", at the first renewal and annually after; (c) "at least 15 and no more than 30 days before the expiration of the free trial period" | The cancellation deadline; the trial's expiry | That it renews unless canceled, the renewal term's cost, the deadline to cancel, how to get the procedures; by email, active links to cancel. The page carries two conflicting notes on whether the section is implemented (budget approval); the protective reading treats it as in force |
+| O10 | Minnesota Statutes 2026, §§325G.56–325G.63 | revisor.mn.gov/statutes/cite/325G/pdf | Agreements with a consumer in Minnesota subject to automatic renewal or continuous service | 325G.57 subd. 4: a free trial over 30 days, "no fewer than five days and no more than 30 days before the end"; subd. 5: a written reminder "at least once per calendar year via mail or email" (continuous service); subd. 3: a material change "prior to the implementation" | The trial's end | Terms and how to end or manage the service (subd. 5) |
+
+Not found or not read: Oregon ORS 646A.293–295 (the 2025 edition page was
+read but the reader did not reach the two sections; the 2026 amendments table
+was not read); Utah §13-70-101 (the page returned only navigation, so G12
+stays open).
+
+### The windows after sections 6 and 7
+
+- **Annual renewal.** Utah 30–60 before the renewal (O1), Illinois 30–60
+  before the cancellation deadline (O2), Virginia 30–60 (O3), Massachusetts
+  5–30 (O4), Colorado 25–40 (O8), DC 30–60 (O9), California 15–45 (S3,
+  secondary). With the deadline at the renewal, **the only day allowed by all
+  of them is the 30th calendar day before the renewal.**
+- **Trial ending** (a trial over 31 days). DC 15–30 (O9), Minnesota 5–30
+  (O10), California 3–21 (S3, secondary), Utah at least 3 (O1): **15 to 21
+  days before the trial ends.**
+- **New gap G13 — Colorado and monthly plans (O8).** A plan with a term under
+  twelve months needs a notice 25–40 days before the renewal that carries it
+  past each twelve continuous months. Together with Minnesota's yearly
+  reminder (O10) and California's annual reminder (S3), a monthly plan needs
+  one notice a year, sent 25–40 days before the renewal that completes each
+  twelve months, with the terms and how to cancel.
+
+### What PR #1296 must change before it can be merged
+
+PR #1296 marks a yearly notice late only under 15 days left (California's
+floor) and a trial notice only under 7. Against the official texts read:
+
+1. A yearly renewal notice sent with fewer than 30 days left is outside Utah's,
+   Illinois', Virginia's and DC's windows: the floor must be the 30th day,
+   so anything later is marked late, never on time.
+2. A trial notice must start 21 days before the trial ends and is late under
+   15 days.
+3. G12 (Utah, monthly) and G13 (Colorado, monthly: one notice a year) need
+   their own notices.
+4. Calendar days are counted in the customer's own date where known; with an
+   unknown location, the 30th day is taken in the earliest time zone that
+   could apply, so it is never early or late anywhere.
+
+These changes go into PR #1296 (claude/kx1-notice-floors); it stays unmerged
+until California's official text and the remaining jurisdictions of section 6
+are read.
