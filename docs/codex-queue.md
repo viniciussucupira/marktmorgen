@@ -18024,11 +18024,56 @@ Aplicar a regra VR.
 
 **Conferência real:** leitura integral de lib/store-look.ts(15.957caracteres),components/look-editor.tsx(25.875) eAGENTS no main exato. StoreLook/DEFAULT_LOOK/parseLook atuais têm theme/accent/badge/sold/font/backdrop;4temas e5fontes. Editor tem foto comrecortequadrado ePNG/JPEG/WebP,tema/cor/fonte/fundo/prévia; não possui opçõesSquare/Rounded/Pill,Sharp/Soft/Round ou fluxo de logoSVGsanitizado. Classesrounded existentes não são escolha persistida de formato. Conclusão limitada a essas entradas,revalidar nohead deimplementação. A aritmética atual documenta7:1botões,4,5:1destaques e3:1borda;isso é estado observado, não certificaçãoAAA: a implementação deve cumprirAX274/contraste7:1pedido para texto e nunca usar4,5como permissão para baixar a exigência. Não afirmar todososrenderers/checkout/áreacomprador cobertos só por estasleituras.
 
-**Aceite:** formatoSquare/Rounded/Pill aplicado emtodososbotões daspáginas de loja/checkoutembutido/áreacomprador/blog/cursos/comunidade;Sharp/Soft/Round emcartões/quadros/imagens;defaultantigo paraquemnãoescolher. LogoPNG/WebP/SVGverificadoelimpo noservidorsem script,altobrigatório(defaultnomedaloja),armazenamento/entrega doplano,escolhalogoOUfoto,nuncajuntosnamesmapágina. Semcontroleslivresdesombra/borda. Prévialocalantesdesalvar. Preservar contraste,foco2.4.13,44×44,forced-colors emtodascombinações;gruposrotulados/préviatextual/teclado/7:1/320px/400%,Acessibilidade noPRantes/depois. TestarSVGmalicioso/externo/invalidoinofensivocomdadossintéticos epermissões/custoantesupload,semrelaxarrotas existentes; não assumiruploadfoto atual aceitaSVG.
+**Aceite:** formatoSquare/Rounded/Pill aplicado emtodososbotões daspáginas de loja/checkoutembutido/áreacomprador/blog/cursos/comunidade;Sharp/Soft/Round emcartões/quadros/imagens;defaultantigo paraquemnãoescolher. Logo somenteJPEG/WebP,tipo pelos primeirosbytes(comoimagensdeprodutos),reduzidononavegadorantesenvio,servidodoendereço públicodasfotos enuncadapastadosarquivospagos;qualquerSVGrecusado,altobrigatório(defaultnomedaloja),armazenamento/entrega doplano,escolhalogoOUfoto,nuncajuntosnamesmapágina. Semcontroleslivresdesombra/borda. Prévialocalantesdesalvar. Preservar contraste,foco2.4.13,44×44,forced-colors emtodascombinações;gruposrotulados/préviatextual/teclado/7:1/320px/400%,Acessibilidade noPRantes/depois. Testar recusa dequalquerSVG e arquivosmaliciosos/tipofalso comdadossintéticos epermissões/custoantesupload,semrelaxarrotas existentes; não assumiruploadfoto atual aceitaSVG.
 
-**Custos/gates:** dois camposcurtos e arquivo dentrocotasexistentesnãoequivalemcustozero. CálculoM/Ydos6contratos ecomplementos100%direitosnopior mês,preçopagomaiscaro/leituras/gravações/storage/entrega/processamentoseguro,reservas/tetosANTESgasto;MR/TX/FX275100%fixosLLCbase mínima e60%meta mensalreal. Desconhecido reprova,nãozero;nenhumcustoprodutivoadicionado porregistrodocumental. Preservarpreços/limitesvisíveis/comissão/flagsfalse/taxgate/art9a/revisãocomercial/travas/conteúdo/Hazelsong/idiomas/IDs. SemHTML/CSS/JSlivres/SVGscript/overlay/logo+foto/conta/termos/contratar/pagar/contatar;testessintéticosapenas. AplicarVR. ContextoClickFunnelséproveniênciadodono,nãopesquisaindependente. Registro nãoimplementa,nãocertificamargem,nãocontaentregafuncional.
+**Custos/gates:** dois camposcurtos e arquivo dentrocotasexistentesnãoequivalemcustozero. CálculoM/Ydos6contratos ecomplementos100%direitosnopior mês,preçopagomaiscaro/leituras/gravações/storage/entrega/processamentoseguro,reservas/tetosANTESgasto;MR/TX/FX275100%fixosLLCbase mínima e60%meta mensalreal. Desconhecido reprova,nãozero;nenhumcustoprodutivoadicionado porregistrodocumental. Preservarpreços/limitesvisíveis/comissão/flagsfalse/taxgate/art9a/revisãocomercial/travas/conteúdo/Hazelsong/idiomas/IDs. SemHTML/CSS/JSlivres/qualquerarquivoSVG/overlay/logo+foto/conta/termos/contratar/pagar/contatar;testessintéticosapenas. AplicarVR. ContextoClickFunnelséproveniênciadodono,nãopesquisaindependente. Registro nãoimplementa,nãocertificamargem,nãocontaentregafuncional.
 
-### Pedido literal LK1
+### Texto LK1 com a correção vigente LK2 aplicada ao ponto3 e à proibiçãoSVG
+
+```text
+LK — Estilo da loja: formato dos botões, cantos e logotipo (30/10/2026) [LK1]
+
+Solicitação do dono (30/10/2026, 00h18, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: aplique a regra "Pedidos repetidos" de AGENTS.md antes de gravar. Procure esta solicitação pela linha de data e hora, pelo nome da seção, pela etiqueta [LK1] e pelo conteúdo, no main, nos PRs abertos e nos ramos codex/* recentes. Se já estiver gravada, registre apenas a nova recepção na proveniência, sem novo número nem commit exclusivo.
+
+Estado inicial: na fila, ABAIXO DO MARCO (MQ1, Grupo B), no próximo número livre (558, se ainda estiver livre). Não altera a ordem de nenhum outro item nem o Bloco de abertura.
+
+Contexto: a página pública clickfunnels.com/features/customer-center (lida em 30/10/2026) mostra um "Style Guide" com fontes, cores, sombra, borda, botões e cantos, e diz que o criador personaliza "colors and logos". O estilo da loja do Marktmorgen (lib/store-look.ts, components/look-editor.tsx) já tem 4 temas, qualquer cor com ajuste automático de contraste (7:1 no texto dos botões, 4,5:1 no texto de destaque, 3:1 na borda do botão), 5 pares de fontes, fundos e prévia ao vivo. Faltam o formato dos botões, o arredondamento dos quadros e o logotipo da loja. Verifique antes no código atual que isso continua assim.
+
+1. Formato dos botões: o criador escolhe entre "Square", "Rounded" e "Pill"; vale para todos os botões das páginas da loja, do checkout embutido, da área do comprador, do blog, dos cursos e da comunidade, com o padrão de hoje mantido para quem não escolher.
+
+2. Cantos dos quadros: o criador escolhe entre "Sharp", "Soft" e "Round" para os cartões de produto, os quadros e as imagens das páginas da loja, com o padrão de hoje mantido.
+
+3. Logotipo: o criador pode enviar um logotipo (somente JPEG ou WebP; tipo decidido pelos primeiros bytes, reduzido no navegador antes do envio e servido do mesmo endereço público das fotos, nunca da pasta dos arquivos pagos) e escolher se o cabeçalho da loja mostra o logotipo ou a foto de hoje, nunca os dois na mesma página. Texto alternativo obrigatório, com o nome da loja como padrão. O logotipo conta no armazenamento que cada plano já tem.
+
+4. A mesma regra de contraste e de foco continua valendo para qualquer escolha: nenhuma combinação pode baixar o contraste, o tamanho mínimo de 44 × 44 px dos alvos, o indicador de foco (2.4.13) nem o modo de alto contraste (forced-colors). A prévia ao vivo mostra cada escolha antes de salvar.
+
+5. Sem sombra nem borda livres: não acrescente controles de sombra ou de espessura e cor de borda, porque mudam pouco o resultado e podem baixar o contraste de 3:1 das bordas exigido pelo AX274.
+
+6. Acessibilidade (AX274): as escolhas são grupos de opções com rótulo e prévia em texto; tudo por teclado; contraste de 7:1, 320 px e 400% de zoom; nunca informação só por cor. Seção "Acessibilidade" no PR, com os passos e as decisões da tarefa principal antes e depois.
+
+Custo: dois campos curtos no registro da loja e um arquivo de logotipo dentro do armazenamento e da entrega que cada plano já tem. Calcule o pior caso mensal e anual de cada plano com 100% dos direitos usados e aplique teto automático antes do gasto. Custo desconhecido reprova, nunca é zero.
+
+REGRA DE MARGEM (MR, 27/10/2026): nenhum cliente pagante, considerado isoladamente e usando 100% de todos os direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto; a empresa como um todo não pode dar prejuízo no pior caso a partir da base mínima de clientes pagantes, com 100% dos custos fixos da LLC atribuídos ao Marktmorgen (FX275); a meta de 60% de margem líquida é medida todo mês com números reais. Impostos pela política TX vigente.
+
+Proibido: mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; HTML, CSS ou JavaScript livres; qualquer arquivo SVG; overlay de acessibilidade; logotipo e foto juntos na mesma página; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+```
+
+
+### Complemento LK2 dentro de558[LK1] — correção vigente30/10/2026,00h37Fortaleza
+
+**Pedidos repetidos3b/proveniência:** complemento direto do dono, data mais recente. Só muda formatos/fluxo do logotipo e proibiçãoSVG;mesmo558,nafila,GrupoBabaixodomarco,depois557antesFIM1. Conferidos mainf502b6fe7d5765c2fa3c66f26f929600c0c28ab1,2PRs abertos e24heads recentes,797refs codex/*;semLK2prévio. O aceite acima e o ponto3/proibição do textoLK1 foram atualizados somente nessa diferença. O cabeçalhoPedido literalLK1 registra abaixo a correçãoLK2;original30/10,00h18 é preservado nesta proveniência como histórico,não autorização atual.
+
+**Antes (histórico substituído, não implementar):** ponto3 dizia “PNG, WebP ou SVG verificado e limpo no servidor, sem script”;proibição dizia “SVG com script”. **Agora:** somenteJPEGouWebP,assinaturadosprimeirosbytes,nãoContent-Type/extensão/autodeclaração;reduzidononavegador;endereçopúblicodasfotos,armazenamento deimagens separado dosarquivospagos;nenhumSVGaceito/servido,mesmo semscript. SemsanitizadorSVGnovo. Altobrigatório,logoOUfoto,cotas/custos/MR/TX/FX275/AX/VR e demaisrequisitos preservados.
+
+**Código conferido:** lib/product-image.ts integral no mesmo main: IMAGE_CONTENT_TYPES=[image/webp,image/jpeg],IMAGE_FILE_PATTERN sówebp|jpg,imageUrl=/api/image/...,pastaimages própria separada deprodutospagos;comentáriodocumentadetecçãoporprimeirosbytes e redução préviaaté1600px/1MB. IMAGE_ACCEPTatualpermitefontesrasterqueonavegadorreencoda,masnãoautoriza armazenar/servirPNG/SVGcomologo. Esse arquivoéregra/helper;detecçãoserverevalidaçãorotadeupload devemserconferidas/reusadasnaimplementação,nãodeclaradasjáprovadassópelocomentário. TestessintéticosdeMIMEfalso,bytesSVG,reencodificação,rota/pasta/isolamento/limitesantesgasto. Semmudançadeprodução/novaentregafuncionalneste registro.
+
+### LK1 original preservado como histórico substituído somente nos formatos/proibiçãoSVG
 
 ```text
 LK — Estilo da loja: formato dos botões, cantos e logotipo (30/10/2026) [LK1]
@@ -18060,6 +18105,26 @@ Custo: dois campos curtos no registro da loja e um arquivo de logotipo dentro do
 REGRA DE MARGEM (MR, 27/10/2026): nenhum cliente pagante, considerado isoladamente e usando 100% de todos os direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto; a empresa como um todo não pode dar prejuízo no pior caso a partir da base mínima de clientes pagantes, com 100% dos custos fixos da LLC atribuídos ao Marktmorgen (FX275); a meta de 60% de margem líquida é medida todo mês com números reais. Impostos pela política TX vigente.
 
 Proibido: mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; HTML, CSS ou JavaScript livres; SVG com script; overlay de acessibilidade; logotipo e foto juntos na mesma página; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+```
+
+### Pedido literal LK2
+
+```text
+LK — Complemento ao [LK1]: logotipo só em JPEG ou WebP, sem SVG (30/10/2026) [LK2]
+
+Solicitação do dono (30/10/2026, 00h37, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: aplique a regra "Pedidos repetidos" de AGENTS.md. Este é um complemento ao item [LK1] ("LK — Estilo da loja: formato dos botões, cantos e logotipo (30/10/2026)", solicitação de 30/10/2026, 00h18), já gravado: aplique somente esta diferença DENTRO do item [LK1], mantendo o número, a posição e o estado dele (passo 3, letra b), e registre na proveniência o que mudou.
+
+Estado inicial: o do próprio [LK1].
+
+Correção: no ponto 3 do [LK1], o logotipo deixa de aceitar SVG. Ele segue a mesma regra que o código já aplica às fotos dos produtos (lib/product-image.ts): somente JPEG ou WebP, com o tipo decidido pelos primeiros bytes do arquivo e não pelo que o envio diz, reduzido no navegador do criador antes do envio e servido do mesmo endereço público das fotos, nunca da pasta dos arquivos pagos. Nada que possa levar um script, SVG inclusive, é aceito ou servido. Retire também "SVG com script" da lista de proibições do [LK1], substituindo por "qualquer arquivo SVG".
+
+Todo o restante do [LK1] continua igual, inclusive custo, REGRA DE MARGEM, acessibilidade e proibições.
 
 Aplicar a regra VR.
 ```
