@@ -132,12 +132,26 @@ export function reminderEmail(reminder: Reminder): { subject: string; text: stri
 
 /** Which reminder a subscription is due right now, if any. */
 export function dueReminder(subscription: Record<string, unknown>, nowSeconds: number): Reminder | null {
+  return noticeFor(subscription, nowSeconds, false);
+}
+
+/**
+ * A notice that was due but was never sent, found when the charge is a day
+ * or less away (too close to be of use, so it is not sent now): returned so
+ * the run can count it as missed instead of dropping it silently.
+ */
+export function missedReminder(subscription: Record<string, unknown>, nowSeconds: number): Reminder | null {
+  const at = periodEnd(subscription, subscription.status === "trialing");
+  if (!at || at - nowSeconds > TOO_LATE_SECONDS || at <= nowSeconds) return null;
+  return noticeFor(subscription, nowSeconds, true);
+}
+
+function noticeFor(subscription: Record<string, unknown>, nowSeconds: number, tooLate: boolean): Reminder | null {
   const id = typeof subscription.id === "string" ? subscription.id : "";
   // An add-on (the Store assistant) is not a plan: these words are about plans.
   if (!id || isAddOn(subscription)) return null;
   // Set to stop: nothing more will be charged, so there is nothing to warn of.
   if (subscription.cancel_at_period_end === true) return null;
-  if (typeof subscription.cancel_at === "number" && subscription.cancel_at > 0) return null;
   const customer = subscription.customer as { email?: unknown; deleted?: unknown } | string | null;
   const email = customer && typeof customer === "object" && typeof customer.email === "string" ? customer.email : "";
   if (!email) return null;
@@ -145,7 +159,10 @@ export function dueReminder(subscription: Record<string, unknown>, nowSeconds: n
   const trialing = subscription.status === "trialing";
   const at = periodEnd(subscription, trialing);
   const left = at - nowSeconds;
-  if (!at || left <= TOO_LATE_SECONDS) return null;
+  if (!at || (!tooLate && left <= TOO_LATE_SECONDS)) return null;
+  // Set to stop on or before this charge: nothing will be charged, so there
+  // is nothing to warn of. One set to stop later still charges this renewal.
+  if (typeof subscription.cancel_at === "number" && subscription.cancel_at > 0 && subscription.cancel_at <= at) return null;
   const plan = planOf(subscription);
   if (!plan.amountCents) return null;
 
@@ -299,10 +316,12 @@ export async function sendReminders(nowSeconds = Math.floor(Date.now() / 1000)):
   sent: number;
   /** Of those sent, how many went after their window's floor. */
   late: number;
+  /** Due but never sent, found a day or less before the charge: counted, not sent. */
+  missed: number;
   failed: number;
   seen: number;
 }> {
-  const counts = { sent: 0, late: 0, failed: 0, seen: 0 };
+  const counts = { sent: 0, late: 0, missed: 0, failed: 0, seen: 0 };
   if (!isRedisConfigured() || !isSenderConfigured()) return counts;
 
   for (const status of ["trialing", "active"] as const) {
@@ -312,7 +331,20 @@ export async function sendReminders(nowSeconds = Math.floor(Date.now() / 1000)):
       for (const subscription of data) {
         counts.seen += 1;
         const reminder = dueReminder(subscription, nowSeconds);
-        if (!reminder) continue;
+        if (!reminder) {
+          const missed = missedReminder(subscription, nowSeconds);
+          if (missed) {
+            // The same key a sent notice holds: claimed here only if no notice
+            // went for this charge, so a missed one is counted once.
+            const missedKey = `nl:remind:${missed.kind}:${missed.subscription}:${missed.at}`;
+            const [unsent] = await redisPipeline([["SET", missedKey, "1", "NX", "EX", 60 * DAY]]);
+            if (unsent !== null) {
+              counts.missed += 1;
+              console.warn(`billing reminder missed: ${missed.kind}, ${calendarDaysBefore(missed.at, nowSeconds)} calendar days (UTC) before the charge`);
+            }
+          }
+          continue;
+        }
         const key = `nl:remind:${reminder.kind}:${reminder.subscription}:${reminder.at}`;
         const [claimed] = await redisPipeline([["SET", key, "1", "NX", "EX", 60 * DAY]]);
         if (claimed === null) continue;

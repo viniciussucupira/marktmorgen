@@ -12,7 +12,7 @@
  *   - inside the window it is not marked late;
  *   - a monthly plan gets no renewal notice, as before.
  */
-import { dueReminder } from "@/lib/billing-reminders";
+import { dueReminder, missedReminder } from "@/lib/billing-reminders";
 import { done, is, part } from "./check";
 
 const NOW = 1_791_700_000;
@@ -65,6 +65,16 @@ const t8 = dueReminder(sub("month", 8 * DAY - 60, "trialing"), NOW);
 is("8 days left: due, on time", [t8?.kind, t8?.late], ["trial", false]);
 const t3 = dueReminder(sub("month", 3 * DAY, "trialing"), NOW);
 is("3 days left: still due, marked late", [t3?.kind, t3?.late], ["trial", true]);
+
+part("missed and scheduled cancellation");
+is("a yearly notice found 12 hours before the charge is not sent", dueReminder(sub("year", 12 * 3600), NOW), null);
+const miss = missedReminder(sub("year", 12 * 3600), NOW);
+is("but it is reported as missed", [miss?.kind, miss?.late], ["renewal", true]);
+is("a charge 10 days away is not missed", missedReminder(sub("year", 10 * DAY), NOW), null);
+const laterCancel = { ...sub("year", charge(30, 5)), cancel_at: NOW + 400 * DAY };
+is("cancellation set after the renewal: the renewal is still noticed", dueReminder(laterCancel, NOW)?.kind, "renewal");
+const sooner = { ...sub("year", charge(30, 5)), cancel_at: NOW + 10 * DAY };
+is("cancellation set before the renewal: no notice", dueReminder(sooner, NOW), null);
 
 part("monthly");
 is("a monthly plan gets no renewal notice", dueReminder(sub("month", 10 * DAY), NOW), null);
