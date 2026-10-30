@@ -17970,3 +17970,42 @@ Proibido: mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_S
 
 Aplicar a regra VR.
 ```
+
+
+### Complemento BG4 — posts recentes e números por post, dentro de557[BG1]
+
+**Proveniência:** dono30/10/2026,00h03Fortaleza;dedupmain9423c5a e23heads incluindoPR1242/54811e antes de gravar,semBG4. Manter557,nafila,GrupoBabaixodomarco,semoutroitem. OrdemBG1→BG2→BG3→BG4.
+
+**Conferência real:** página pública já lida não lista More from the blog; lidos agora lib/source-rules.ts, components/stats-panel.tsx, lib/came-from.ts e app/studio/blog/page.tsx no mesmo main. OrigemGoogle/Bing e contagens gerais existem;lista do estúdio lê allPosts/readPost e não mostra os números por post pedidos. cameFrom lê Referer próprio para utm_source/medium/campaign/content, não identifica atualmente o ID/caminho do post. Portanto reutilizar suas validações não autoriza afirmar atribuição por post já pronta: a implementação deve acrescentar só a identificação necessária da página própria, metadadoStripe e contagens reais, sem cookie/perfil/jornada. Não copiar URL arbitrária/query comPII. Revalidar tudo nohead da implementação; teste sintético dos limites de host/path/ID e origem, confirmação de venda e indisponibilidade.
+
+**Aceite/custos:** até3outros posts publicados maisrecentes/primeiro mesma categoria quandoBG1pronto,links/título/começo semimagem,anteslinksatuais. Reusar índice existente e leitura já feita oucache; qualquer leitura/gravação adicional porvisita é custo real novo, dentro limite de visitas mas nunca automaticamente grátis. Demonstrar piorM/Yde cada plano100% direitos/addons e tetos/reservas antesgasto MR/TX/FX275. Números de posts publicados nos4períodos pedidossomente reais,visitas/origembusca/vendasconfirmadas decheckoutaberto NA página do post;frase explica atribuição limitada,nãojornada. Counts unavailable,nãozero;moedasseparadas/semconversão/estimativa. AX274lista comtítulo,tabela/cabeçalhosordenaçãoteclado7:1/320/400eAcessibilidadeantes/depois. Semnovo rastreamento/cookie/perfil/pixel/abertura/imagemrepetida/contato/conta/operaçãoreal. VR e demaisgates preservados. Pedido literal:
+
+```text
+BG — Complemento ao [BG1]: posts recentes no fim do post e números de cada post (30/10/2026) [BG4]
+
+Solicitação do dono (30/10/2026, 00h03, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: aplique a regra "Pedidos repetidos" de AGENTS.md. Este é um complemento ao item [BG1] ("BG — Blog das lojas: categorias, agendamento, busca, autor e formulário (29/10/2026)", solicitação de 29/10/2026, 23h58), que já tem os complementos [BG2] e [BG3]: grave-o DENTRO do item que tiver a etiqueta [BG1], sem número novo, mantendo o número, a posição e o estado dele. Se o [BG1] ainda não estiver gravado, grave o [BG1], o [BG2], o [BG3] e este complemento no mesmo registro, nessa ordem. Se este complemento já estiver gravado, registre apenas a nova recepção na proveniência.
+
+Estado inicial: na fila, ABAIXO DO MARCO (MQ1, Grupo B), junto do [BG1]. Não altera a ordem de nenhum outro item.
+
+Contexto: a página pública clickfunnels.com/features/blog (lida em 29/10/2026) mostra um quadro "Recent Posts", com título e começo de cada post, e um gráfico "Organic Reach". No Marktmorgen, o fim do post (app/[handle]/blog/[post]/page.tsx) tem só os links para todos os posts e para a loja, e o painel de números já mostra as visitas por origem, inclusive Google e Bing (lib/source-rules.ts, components/stats-panel.tsx), mas só da loja inteira: não há número por post. Verifique antes no código atual que isso continua assim.
+
+1. Posts recentes: no fim de cada post, antes dos links de hoje, a lista "More from the blog" com até 3 outros posts publicados, os mais recentes ou, quando o [BG1] estiver pronto, primeiro os da mesma categoria; cada um com o título como link real e o começo do texto, sem imagem, porque a regra do dono proíbe repetir imagem no site. A lista é lida do índice de posts que o blog já mantém (lib/store-blog.ts), sem leitura nova por visita além da que a página já faz ou de uma leitura guardada em cache.
+
+2. Números de cada post: na lista de posts do estúdio (app/studio/blog), para cada post publicado e no período escolhido (últimos 30 dias, este mês, mês passado, desde o início): visitas; visitas vindas de mecanismos de busca, pelas mesmas regras de origem de lib/source-rules.ts; e vendas confirmadas cujo checkout foi aberto a partir da página do post, lidas do Referer do checkout como lib/came-from.ts já faz e gravadas nos metadados da sessão na conta Stripe do criador, sem cookie, sem perfil e sem seguir a pessoa entre visitas, dito em texto na própria tela.
+
+3. Honestidade: somente números reais; dado indisponível aparece como "Counts unavailable", nunca como zero; moedas separadas, nunca convertidas; nenhuma estimativa nem projeção. A tela diz em uma frase que uma venda conta para o post somente quando o checkout foi aberto na página dele.
+
+4. Acessibilidade (AX274): lista de posts recentes como lista com título de seção; números como texto real em tabela com cabeçalhos, ordenável por teclado; contraste de 7:1, 320 px e 400% de zoom. Seção "Acessibilidade" no PR, com os passos e as decisões da tarefa principal antes e depois.
+
+Custo: as visitas já contam no limite de visitas que cada plano tem; o contador por post e a leitura dos posts recentes são leituras e gravações novas por visita, que precisam caber nesse limite. Calcule o pior caso mensal e anual de cada plano com 100% dos direitos usados e aplique teto automático antes do gasto. Custo desconhecido reprova, nunca é zero.
+
+REGRA DE MARGEM (MR, 27/10/2026): nenhum cliente pagante, considerado isoladamente e usando 100% de todos os direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto; a empresa como um todo não pode dar prejuízo no pior caso a partir da base mínima de clientes pagantes, com 100% dos custos fixos da LLC atribuídos ao Marktmorgen (FX275); a meta de 60% de margem líquida é medida todo mês com números reais. Impostos pela política TX vigente.
+
+Proibido: mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; cookie, perfil, pixel ou rastreamento de abertura novos; imagem repetida; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+```
