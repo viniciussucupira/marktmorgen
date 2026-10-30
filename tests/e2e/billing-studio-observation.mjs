@@ -7,6 +7,9 @@ export async function checkBillingStudioObservation({ browser, LOCAL, services, 
   const [original] = await services.redis([["GET", fixture.key]]);
   if (typeof original !== "string") throw new Error("billing observation fixture not stored");
   const before = JSON.parse(original);
+  const pauseKey = "nl:pause:" + (before.extra && /^[0-9a-f]{32}$/.test(before.sid) ? "#" + before.sid : before.email);
+  const [originalPause] = await services.redis([["GET", pauseKey]]);
+  if (originalPause !== null && typeof originalPause !== "string") throw new Error("unexpected synthetic pause fixture type");
   if (!before.subscriptionActive || !before.period) throw new Error("fixture lacks paid rights");
   const rights = (s) => [s.subscriptionId, s.stripeCustomerId, s.subscriptionActive, s.period, s.planEndedAt, s.tier, s.cycle];
   const id = "sub_StudioObservation01";
@@ -25,6 +28,7 @@ export async function checkBillingStudioObservation({ browser, LOCAL, services, 
       page.on("pageerror", error => errors.push(String(error)));
       for (const [name, reply] of [...cases, ["identified cancellation", { id, status: "canceled" }]]) {
         await services.redis([["SET", fixture.key, original]]);
+        await services.redis([["SET", pauseKey, "{synthetic-unreadable"]]);
         services.setStudioObservation(reply);
         const response = await page.goto(LOCAL + "/studio?store=" + fixture.sid, { waitUntil: "networkidle", timeout: 120_000 });
         is(width + " " + name + ": studio responds", response?.status(), 200);
@@ -37,12 +41,18 @@ export async function checkBillingStudioObservation({ browser, LOCAL, services, 
         } else {
           is(width + " " + name + ": paid rights remain exact", rights(after), rights(before));
         }
+        is(width + " " + name + ": unreadable pause is visibly unconfirmed", await page.locator("[data-pause-unconfirmed]").count(), 1);
+        is(width + " " + name + ": no new pause offer on unknown evidence", await page.getByText("Take a break instead", {exact:true}).count(), 0);
+        is(width + " " + name + ": no checkout form on unknown evidence", await page.locator('form[action^="/api/billing/checkout"]').count(), 0);
+        is(width + " " + name + ": raw pause evidence stays unchanged", await services.redis([["GET", pauseKey]]), ["{synthetic-unreadable"]);
         is(width + " " + name + ": studio renders its main task", await page.locator("main").count(), 1);
       }
       is(width + ": browser has no page exception in these cases", errors, []);
     } finally {
       await context.close();
       await services.redis([["SET", fixture.key, original]]);
+      if (originalPause === null) await services.redis([["DEL", pauseKey]]);
+      else await services.redis([["SET", pauseKey, originalPause]]);
       services.setStudioObservation(null);
     }
   }
