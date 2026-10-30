@@ -706,6 +706,29 @@ if #encoded>4096 then return 0 end
 redis.call('HSET',KEYS[1],'restart-intent:'..owner,encoded)
 return {'read',encoded}
 `;
+/** Bound the recovery ACK before traversing data or encoding strings. */
+function boundedRestartRecoveryAcknowledgement(reply: unknown): unknown[] | null {
+ try {
+  if(!Array.isArray(reply))return null;
+  const outerLength=Object.getOwnPropertyDescriptor(reply,'length');
+  if(!outerLength||!Object.hasOwn(outerLength,'value')||outerLength.value!==1)return null;
+  const outer=Object.getOwnPropertyDescriptor(reply,'0');
+  if(!outer||!Object.hasOwn(outer,'value')||!Array.isArray(outer.value))return null;
+  const inner:unknown[]=outer.value,length=Object.getOwnPropertyDescriptor(inner,'length');
+  if(!length||!Object.hasOwn(length,'value')||![1,2,4].includes(length.value))return null;
+  const values:unknown[]=[];
+  for(let index=0;index<length.value;index++){
+   const field=Object.getOwnPropertyDescriptor(inner,String(index));
+   if(!field||!Object.hasOwn(field,'value'))return null;
+   values.push(field.value);
+  }
+  if(values.length===1)return values[0]==='absent'||values[0]==='held'?values:null;
+  if(values.length===2?values[0]!=='read':values[0]!=='activated')return null;
+  if(typeof values[1]!=='string'||values[1].length>4096)return null;
+  if(values.length===4&&(typeof values[2]!=='string'||values[2].length>256||typeof values[3]!=='string'||values[3].length>384))return null;
+  return values;
+ }catch{return null;}
+}
 export type RestartRecoveryInput={statsId:string;sourceSubscriptionId:string;sourceGrantId:string;ref:string;handle:string;paused:string};
 export type RestartRecovery={kind:'absent'}|{kind:'held'}|{kind:'read';armed:ArmedRestartSubmission;subscriptionId:string|null}|{kind:'activated';armed:ArmedRestartSubmission;subscriptionId:string;createdSeconds:number;periodStartSeconds:number;periodEndSeconds:number;renews:boolean;shared:boolean};
 /** At most three lifetime provider reads per source owner. Lost ACK consumes
@@ -724,8 +747,7 @@ export async function takeRestartRecovery(
  try{
   const before=new Date(),now=Math.floor(before.getTime()/1000),config=contractFundingConfiguration(policy,context,before);
   const reply=await redisPipeline([['EVAL',TAKE_RESTART_RECOVERY,4,'nl:contract-reserve:v1','nl:pause:'+input.ref,'nl:pause:due','nl:pause:last:'+input.ref,input.statsId,input.sourceSubscriptionId,input.sourceGrantId,input.ref,input.handle,input.paused,now,config?contractFundingBinding(config):'',config?.reviewId??'']]);
-  if(!Array.isArray(reply)||reply.length!==1||!Array.isArray(reply[0]))return null;
-  const ack=reply[0];
+  const ack=boundedRestartRecoveryAcknowledgement(reply);if(!ack)return null;
   if(ack.length===1&&(ack[0]==='absent'||ack[0]==='held'))return {kind:ack[0]};
   const activated=ack[0]==='activated';
   if((activated?ack.length!==4||typeof ack[2]!=='string'||Buffer.byteLength(ack[2])>256||typeof ack[3]!=='string'||Buffer.byteLength(ack[3])>384:ack.length!==2||ack[0]!=='read')||typeof ack[1]!=='string'||Buffer.byteLength(ack[1])>4096)return null;
