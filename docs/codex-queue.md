@@ -20,6 +20,8 @@ Localizadores do Grupo A solicitado: 14, 17, 22, 28, 32, 39, 93, 94, 99, 100, 10
 
 **206[SH3] passa a ficar imediatamente depois de515[PF3];241[CF4] continua imediatamente depois de531[VP1].** Ambos ficam acima do marco. As duas linhas da tabela de posiçõesFIM1 recebem esta data/hora; posições anteriores permanecem citadas como histórico, sem reativação.
 
+**Entrada posterior CT1 — 29/10/2026,23h50Fortaleza:** **556[CT1]**, na fila, **ACIMA DO MARCO MQ1, Grupo A, imediatamente depois de513[PF1]**, por indicação expressa do dono. Inserir somente este novo item nessa posição lógica; os itens anteriores conservam entre si a ordem, inclusive Bloco de abertura, AV1/SD1, andamentos e exceções. O número556 é localizador, não prioridade numérica.
+
 ## MARCO — DAQUI EM DIANTE, OS MENOS IMPORTANTES (MQ1, 29/10/2026)
 
 ### Grupo B — abaixo do marco
@@ -43,6 +45,8 @@ Pedido novo com lado expresso respeita “acima do marco” ou “abaixo do marc
 Uma linha por item, três grupos possíveis: A, B ou sem mudança. “Sem mudança/FIM1” mantém a cauda vigente; “sem mudança” por conclusão/andamento/AV1 preserva a posição atual. Os conjuntos pedidos têm112localizadoresA,233B e59FIM1. Aplicadas as exceções de posição/estado deMQ1(b), o resultado é108A,232B e214sem mudança.143/182 já publicados,202/205 com andamento/posiçãoOR protegidos e204 com andamento protegido são as exceções dentro das listasA/B; isso não altera seus estados. A tabela é índice de posição, não substitui o texto integral de cada item nem atesta sua conclusão.
 
 **Entradas posteriores à baseMQ1:** o título554 e as contagens anteriores são o retrato histórico dos554itens de29/10/2026,20h52Fortaleza. AK1(23h30) acrescenta somente555no Grupo B por escolha expressa do dono; tabela atual555linhas únicas:108A,233B,214sem mudança. As554linhas anteriores, a ordem relativa, as exceções e os59FIM1 permanecem intactos.
+
+**Atualização posterior CT1 (29/10/2026,23h50):** as contagens554/555 acima permanecem como retratos históricos. Estado atual: **556linhas únicas,109A,233B,214sem mudança**. Acrescenta somente556[CT1] ao Grupo A depois de513[PF1];555[AK1/AK2] permanece no Grupo B, sem alteração de estado ou posição. A tabela abaixo continua de localização numérica, nunca sequência de execução.
 
 | Item | Grupo | Motivo |
 | --- | --- | --- |
@@ -601,6 +605,7 @@ Uma linha por item, três grupos possíveis: A, B ou sem mudança. “Sem mudan�
 | 553 [DB1] | B | MQ1(d): restante abaixo; partesMQ1(g) no lugar. |
 | 554 [DS1] | A | MQ1(c): prioridadeA; ordem relativa mantida. |
 | 555 [AK1] | B | Pedido29/10/2026,23h30: abaixo do marco expresso; após remanescentesB, antesFIM1. |
+| 556 [CT1] | A | Dono29/10/2026,23h50: acima do marco, imediatamente depois de513[PF1]; demais posições e abertura preservadas. |
 
 ### Proveniência, Pedidos repetidos e VR
 
@@ -17788,3 +17793,52 @@ Aplicar a regra VR.
 **Proibições e VR:** preservar preços, limites visíveis, comissão, PLANS_ON_SALE, OPENING_REQUESTED, tax gate, art. 9a e revisão comercial; nenhuma trava afrouxada. Sem contas, termos, contratação, pagamento, contato a terceiros, e-mail/pagamento real, exclusão de conteúdo de criadores ou da Hazelsong, pixel/rastreamento de abertura. Só testes sintéticos. Aplicar VR e preservar controles e provas da tarefa principal.
 
 **Contexto recebido, sem tratá-lo como pesquisa independente:** dono cita a página pública clickfunnels.com/apps/affiliate-center, lida em 29/10/2026, e os textos “instant visibility into referrals, commissions, and future payouts” e “track referral effectiveness”, com ativos, vendas e comissões no topo. O pedido é complementar o resumo no estúdio, não copiar números ou promessas do fornecedor.
+
+
+## 556 [CT1] — Ofertas de um clique depois de pagar pelo carrinho
+
+**Estado:** na fila. **Posição:** ACIMA DO MARCO MQ1, Grupo A, imediatamente depois de513[PF1], sem alterar outros itens ou o Bloco de abertura. Solicitação do dono29/10/2026,23h50Fortaleza. Não antecipar implementação ao trabalhoAV1/SD1 em andamento.
+
+**Pedidos repetidos e proveniência:** conferidos main5ec160de16e5f84e969775bdd39992c97fc5246b, PR aberto1239/head8de6c24f9214d2f82ba83b28bc154e384a7cc3fe,21heads recentes de PR/codex e inventário793refs codex/*. Buscas por data/hora, título, etiqueta e conteúdo não localizaram CT1. O resultado textual sobre refuse-consumers pertence aTX, não a ofertas pós-carrinho; não duplicar o motor de upsell existente.556 estava livre; se houver nova recepção, registrar só proveniência neste item conformeAGENTS.
+
+**Conferência no código atual antes do registro:** leitura integral de lib/instant-pay.ts, lib/store-checkout.ts, lib/cart-checkout.ts, lib/funnel.ts, lib/upsell.ts, lib/flow-stats.ts, lib/funnel-metrics.ts e app/studio/funnels/page.tsx no main exato. saveCardForOffers define payment_method_options[card][setup_future_usage]=on_session; store-checkout importa e chama a função; cart-checkout não a importa nem chama e mantém metadata cart=yes/produto inicial e URLthanks. MAX_FUNNEL_STEPS continua5; UPSELL_WINDOW_SECONDS continua60*60 e reusableMethod continua sendo proteção do caminho existente. Isso confirma a lacuna de preparação do cartão do carrinho; não é ensaio real de pagamento nem prova universal de todas as páginas de agradecimento. Revalidar no head de implementação, reutilizando lib/upsell.ts e os controles atuais, sem segundo motor.
+
+**Critérios de aceite:** aplicar integralmente os7pontos literais abaixo: selecionar o primeiro produto com funil na ordem do carrinho, máximo5; excluir produtos do carrinho/já comprados/recusados, terminar sem oferta se vazio; preservar recusa terminal sem oferta posterior, janela1h, navegador original, resposta única, SCA, confirmaçãoStripe antes de entrega e método reutilizável; preço da oferta sem reaplicar cartDeal; frase no estúdio e métricas reais nos mecanismos existentes. TestesStripe simulados abrangem todos os casos listados. AX274 no mesmo fluxo e seçãoAcessibilidade no PR antes/depois. Conferir custos de leituras/gravações e reserva/tetos por plano antes de qualquer gasto novo; nenhum fornecedor novo, desconhecido reprova. MR/TX/FX275 e VR vinculantes. Registro documental não implementa a função nem certifica margem/abertura; flagsfalse, direitos/preços/limites/comissão/Hazelsong preservados. Nenhuma cobrança, e-mail, conta, contato ou submissão externa real.
+
+### Pedido literal CT1 recebido nesta conversa
+
+```text
+CT — Ofertas de um clique depois de pagar pelo carrinho (29/10/2026) [CT1]
+
+Solicitação do dono (29/10/2026, 23h50, horário de Fortaleza).
+
+NÃO PARE O QUE ESTÁ FAZENDO. COLOQUE NA FILA.
+
+Pedidos repetidos: aplique a regra "Pedidos repetidos" de AGENTS.md antes de gravar. Procure esta solicitação pela linha de data e hora, pelo nome da seção, pela etiqueta [CT1] e pelo conteúdo, no main, nos PRs abertos e nos ramos codex/* recentes. Se já estiver gravada, registre apenas a nova recepção na proveniência, sem novo número nem commit exclusivo.
+
+Estado inicial: na fila, ACIMA DO MARCO (MQ1, Grupo A), logo depois de 513 [PF1], no próximo número livre. Não altera a ordem de nenhum outro item nem o Bloco de abertura.
+
+Contexto: a página pública clickfunnels.com/features/add-to-cart (lida em 29/10/2026) diz que, com o carrinho, "you can leverage dynamic 'Store Upsells'", ofertas escolhidas pelo que o cliente comprou, e que "all they have to do is click 'Buy Now'". No Marktmorgen, a compra de um único produto guarda o cartão para as ofertas de um clique (saveCardForOffers em lib/instant-pay.ts, chamado em lib/store-checkout.ts), mas a compra pelo carrinho (lib/cart-checkout.ts) não chama saveCardForOffers. Por isso, quem paga pelo carrinho nunca vê oferta depois de pagar. Verifique antes no código atual que isso continua assim.
+
+1. Quando ao menos um produto do carrinho tiver ofertas depois de pagar (lib/funnel.ts), o checkout do carrinho guarda o cartão exatamente como o de um produto sozinho (saveCardForOffers, "on_session"), e a página de agradecimento mostra essas ofertas.
+
+2. Quais ofertas: as do funil do primeiro produto do carrinho que tiver funil, na ordem do carrinho, no máximo as mesmas 5 de hoje. Nunca ofereça um produto que já está no carrinho, que o comprador já comprou na loja ou que ele recusou depois de pagar; pule-o e siga para o próximo do mesmo funil. Se não sobrar nenhum, nenhuma oferta aparece.
+
+3. Todas as proteções de lib/upsell.ts continuam iguais: cartão guardado só para pagamentos com o comprador presente; somente no navegador que pagou; uma hora para responder; cada oferta respondida uma vez; nenhuma oferta depois de uma recusa; confirmação do banco quando pedida; nada entregue antes de a Stripe confirmar; comprador que pagou com Klarna, iDEAL ou outro meio que não pode ser cobrado de novo não vê oferta; cada oferta é um pagamento próprio, com a confirmação curta por e-mail de hoje.
+
+4. Nas ofertas depois de um carrinho, o desconto "Buy more, save more" do carrinho não se soma de novo; vale o preço da oferta como o criador o definiu.
+
+5. No estúdio, a página de funis diz em uma frase que as ofertas também aparecem depois de uma compra pelo carrinho, e os números do funil (lib/flow-stats.ts, lib/funnel-metrics.ts) contam essas ofertas como as de hoje, com números reais, nunca estimados.
+
+6. Testes automáticos com Stripe simulado: carrinho com e sem produto com funil; oferta pulada por já estar no carrinho, já comprada ou recusada; pagamento por meio que não pode ser cobrado de novo; resposta repetida; confirmação do banco; agradecimento aberto em outro navegador.
+
+7. Acessibilidade (AX274): as ofertas depois do carrinho usam a mesma página e os mesmos controles acessíveis de hoje; confira teclado, leitor de tela, 320 px, 400% de zoom e contraste de 7:1. Seção "Acessibilidade" no PR, com os passos e as decisões do comprador antes e depois.
+
+Custo: leituras e gravações das ofertas, dentro dos limites de pedidos e de requisições que cada plano já tem; nenhum fornecedor novo. A cobrança de cada oferta é feita na conta Stripe do criador. Calcule o pior caso mensal e anual de cada plano com 100% dos direitos usados e aplique teto automático antes de qualquer gasto novo. Custo desconhecido reprova, nunca é zero.
+
+REGRA DE MARGEM (MR, 27/10/2026): nenhum cliente pagante, considerado isoladamente e usando 100% de todos os direitos do plano e de cada complemento no pior mês, no mensal e no anual, pode dar prejuízo depois de todos os custos e impostos, com as taxas de recebimento mais caras de lib/receiving-costs.ts e as reservas de reembolso e de contestação, garantido por tetos automáticos antes de cada gasto; a empresa como um todo não pode dar prejuízo no pior caso a partir da base mínima de clientes pagantes, com 100% dos custos fixos da LLC atribuídos ao Marktmorgen (FX275); a meta de 60% de margem líquida é medida todo mês com números reais. Impostos pela política TX vigente.
+
+Proibido: mudar preços, cortar limites visíveis, alterar comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a ou a revisão comercial; afrouxar qualquer trava; cobrar cartão sem o comprador presente; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; cobrança ou e-mail real; urgência, escassez ou contagem regressiva falsas; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+Aplicar a regra VR.
+```
