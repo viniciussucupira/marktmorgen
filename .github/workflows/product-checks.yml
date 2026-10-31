@@ -146,7 +146,9 @@ jobs:
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: "24"
-          cache: npm
+          # Cache egress exhausted the account and consumed this bounded job.
+          # Install from the lockfile without a cache restore or save here.
+          package-manager-cache: false
       - run: npm ci
       - name: Synthetic self-hosted HTTP to actual Redis contract
         env:

@@ -21,7 +21,7 @@ import { isMailable, upsertContact } from "@/lib/contacts";
 import { hasResend, isSenderConfigured, sendBatch, sendEmail, sentThisMonth } from "@/lib/email";
 import { listCeiling, senderRoom } from "@/lib/mail";
 import { LIST_TAG, STORE_TAG, healthId, listHealth } from "@/lib/mail-health";
-import { HOLD_SECONDS, isSesConfigured, sesConfig, sesSentLast24h, sesState } from "@/lib/ses";
+import { HOLD_SECONDS, isSesConfigured, notYetTaken, sesConfig, sesSentLast24h, sesState } from "@/lib/ses";
 import { stringToSign, type SnsMessage } from "@/lib/sns";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
@@ -41,6 +41,8 @@ let asked = 0;
 let account: Record<string, unknown> | number = 0;
 /** What Amazon answers to a send, by recipient; anything not named is taken. */
 let amazonSays: (to: string, nth: number) => { status: number; type?: string; message?: string } = () => ({ status: 200 });
+/** Synthetic only: SES accepted the message before its acknowledgement was lost. */
+let amazonLosesReply: (to: string) => number | "throw" | null = () => null;
 const fetched: string[] = [];
 const exchanges: { role: string; token: string; action: string }[] = [];
 let stsRefuses = false;
@@ -62,6 +64,9 @@ globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) =>
       const says = amazonSays(to, amazon.filter((a) => a.to === to).length);
       if (says.status !== 200) return json({ message: says.message ?? "" }, says.status, says.type ? { "x-amzn-errortype": says.type } : {});
       amazon.push({ to, subject: body.Content.Simple.Subject.Data, body: body as unknown as Record<string, unknown>, headers: init?.headers as Record<string, string> });
+      const lost = amazonLosesReply(to);
+      if (lost === "throw") throw new TypeError("synthetic response lost after SES acceptance");
+      if (typeof lost === "number") return json({ message: "synthetic server error after acceptance" }, lost);
       return json({ MessageId: `m-${amazon.length}` });
     }
     return json({}, 404);
@@ -240,6 +245,157 @@ async function main(): Promise<void> {
     redis.pipeline = originalPipeline;
   }
   is("the positive probe sees the sole member and one sender", [memberReads, amazon.length, resend.length], [1, 1, 0]);
+
+  part("An uncertain individual SES acknowledgement never triggers another sender");
+  for (const loss of ["throw", 500, 503] as const) {
+    for (const keyed of [true, false]) {
+      account = approved();
+      askAgain();
+      clear();
+      const name = `${loss}, ${keyed ? "keyed" : "without key"}`;
+      const key = `receipt:uncertain-ses:${loss}:${keyed}`;
+      const claim = `nl:ses:once:${createHash("sha256").update(key).digest("hex").slice(0, 40)}`;
+      const counted = [await sesSentLast24h(), await sentThisMonth()];
+      let deletes = 0;
+      redis.pipeline = async (commands) => {
+        if (commands.some((command) => command[0] === "DEL" && command[1] === claim)) deletes += 1;
+        return originalPipeline(commands);
+      };
+      amazonLosesReply = () => loss;
+      try {
+        is(`${name}: actual single sender reports no confirmed acceptance`,
+          await sendEmail({ ...letter("uncertain-ses@example.com"), ...(keyed ? { idempotencyKey: key } : {}) }), false);
+      } finally {
+        amazonLosesReply = () => null;
+        redis.pipeline = originalPipeline;
+      }
+      is(`${name}: one possible acceptance, no second SES attempt or Resend fallback`,
+        [amazon.length, resend.length, deletes], [1, 0, 0]);
+      is(`${name}: an existing once-only claim is retained`, redis.run(["GET", claim]), keyed ? "1" : null);
+      is(`${name}: unknown acceptance is not counted as a known send`,
+        [await sesSentLast24h(), await sentThisMonth()], counted);
+    }
+  }
+  // Existing normal sends, confirmed throttling retries and refusal fallback
+  // below remain controls; this unit does not certify later unkeyed retries
+  // or the separate batch sender's delivery/idempotency behavior.
+
+  part("Unreadable batch marker evidence releases nobody to either sender");
+  let markerGetters = 0;
+  let oversizedMembers = 0;
+  const markerCases: [string, () => unknown, number?][] = [
+    ["missing envelope", () => undefined],
+    ["not an array", () => ({ 0: "1", length: 1 })],
+    ["empty", () => []],
+    ["sparse", () => new Array(1)],
+    ["inherited", () => Object.setPrototypeOf(new Array(1), { 0: "1" })],
+    ["getter", () => Object.defineProperty(new Array(1), "0", { get() { markerGetters += 1; return null; } })],
+    ["undefined member", () => [undefined]],
+    ["empty marker", () => [""]],
+    ["unexpected marker", () => [true]],
+    ["symbol", () => [Symbol("1")]],
+    ["oversized", () => new Proxy(["1", null], {
+      getOwnPropertyDescriptor(target, key) {
+        if (key === "0") oversizedMembers += 1;
+        return Reflect.getOwnPropertyDescriptor(target, key);
+      },
+    })],
+    ["million positions", () => new Proxy(new Array(1_000_000), {
+      getOwnPropertyDescriptor(target, key) {
+        if (key === "0") oversizedMembers += 1;
+        return Reflect.getOwnPropertyDescriptor(target, key);
+      },
+    })],
+    ["lost reply", () => { throw new Error("synthetic marker read response lost"); }],
+    ["later unknown", () => [null, undefined], 2],
+  ];
+  for (const [name, answer, count = 1] of markerCases) {
+    account = approved();
+    askAgain();
+    clear();
+    const batchKey = `bc:unknown-markers:${name}`;
+    const messages = Array.from({ length: count }, (_, i) => letter(`marker${i}@example.com`));
+    const markers = messages.map(m => `nl:ses:did:${createHash("sha256").update(`${batchKey}\n${m.to}`).digest("hex").slice(0, 40)}`);
+    await originalPipeline(markers.map(key => ["SET", key, "1", "EX", 2 * 86_400]));
+    const counted = [await sesSentLast24h(), await sentThisMonth()];
+    let reads = 0;
+    let deletes = 0;
+    redis.pipeline = async (commands) => {
+      if (commands.some(command => command[0] === "DEL" && markers.includes(String(command[1])))) deletes += 1;
+      const reply = await originalPipeline(commands);
+      if (commands.length === messages.length && commands.every(command => command[0] === "GET" && markers.includes(String(command[1])))) {
+        reads += 1;
+        return answer() as unknown[];
+      }
+      return reply;
+    };
+    try {
+      is(`${name}: actual batch remains retryable without sending`,
+        await sendBatch(messages, batchKey, { by: "company" }), "retry");
+    } finally {
+      redis.pipeline = originalPipeline;
+    }
+    is(`${name}: one existing read, neither sender or marker deletion`,
+      [reads, amazon.length, resend.length, deletes], [1, 0, 0, 0]);
+    is(`${name}: committed marker evidence stays intact`, markers.map(key => redis.run(["GET", key])), markers.map(() => "1"));
+    is(`${name}: no known-send counter changes`, [await sesSentLast24h(), await sentThisMonth()], counted);
+  }
+  is("marker getters and members outside the requested cardinality are not read", [markerGetters, oversizedMembers], [0, 0]);
+  clear();
+  const markerControlKey = "bc:own-marker-control";
+  const existingMarker = `nl:ses:did:${createHash("sha256").update(`${markerControlKey}\nmarker-old@example.com`).digest("hex").slice(0, 40)}`;
+  await originalPipeline([["SET", existingMarker, "1", "EX", 2 * 86_400]]);
+  is("own marker and explicit absence keep only the unsent recipient eligible",
+    await sendBatch([letter("marker-old@example.com"), letter("marker-new@example.com")], markerControlKey, { by: "company" }), "sent");
+  is("the valid positive control sends only the absent recipient", [amazon.map(m => m.to), resend.length], [["marker-new@example.com"], 0]);
+  const fullWindow = Array.from({ length: 100 }, (_, i) => letter(`full-marker${i}@example.com`));
+  is("all 100 existing batch positions remain available with confirmed absence",
+    (await notYetTaken("bc:full-marker-window", fullWindow))?.length, 100);
+
+  part("Unreadable handoff evidence selects neither sender");
+  for (const [name, answer] of markerCases) {
+    account = approved();
+    askAgain();
+    clear();
+    const batchKey = `bc:unknown-handoff:${name}`;
+    const handed = `nl:ses:rest:${createHash("sha256").update(batchKey).digest("hex").slice(0, 40)}`;
+    await originalPipeline([["SET", handed, "1", "EX", 2 * 86_400]]);
+    const counted = [await sesSentLast24h(), await sentThisMonth()];
+    let reads = 0;
+    let mutations = 0;
+    redis.pipeline = async (commands) => {
+      if (commands.some(command => command[1] === handed && command[0] !== "GET")) mutations += 1;
+      const reply = await originalPipeline(commands);
+      if (commands.length === 1 && commands[0][0] === "GET" && commands[0][1] === handed) {
+        reads += 1;
+        return answer() as unknown[];
+      }
+      return reply;
+    };
+    try {
+      is(`${name}: unknown handoff returns retry without choosing a sender`,
+        await sendBatch([letter("handoff@example.com")], batchKey, { by: "company" }), "retry");
+    } finally {
+      redis.pipeline = originalPipeline;
+    }
+    is(`${name}: one existing handoff read, no provider call or marker mutation`,
+      [reads, amazon.length, resend.length, mutations, redis.run(["GET", handed])], [1, 0, 0, 0, "1"]);
+    is(`${name}: unknown handoff is not counted as a known send`,
+      [await sesSentLast24h(), await sentThisMonth()], counted);
+  }
+  is("handoff getters and oversized reply members are not evaluated", [markerGetters, oversizedMembers], [0, 0]);
+  for (const handedBefore of [false, true]) {
+    account = approved();
+    askAgain();
+    clear();
+    const batchKey = `bc:handoff-control:${handedBefore}`;
+    const handed = `nl:ses:rest:${createHash("sha256").update(batchKey).digest("hex").slice(0, 40)}`;
+    if (handedBefore) await originalPipeline([["SET", handed, "1", "EX", 2 * 86_400]]);
+    is(`${handedBefore}: explicit handoff evidence preserves the known provider`,
+      await sendBatch([letter("handoff-control@example.com")], batchKey, { by: "company" }), "sent");
+    is(`${handedBefore}: exactly the selected provider accepts`,
+      [amazon.length, resend.length], handedBefore ? [0, 1] : [1, 0]);
+  }
 
   part("A batch, one email at a time");
   clear();
