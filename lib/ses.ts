@@ -497,11 +497,11 @@ const didKey = (batchKey: string, to: string) => `nl:ses:did:${createHash("sha25
 const DID_SECONDS = 2 * 86_400;
 
 /**
- * Those of a batch that Amazon has not already taken under this key. A batch
- * tried again — after a timeout, after the rest of it failed — never writes
- * to the same person twice.
+ * Recipients whose existing marker explicitly confirms absence. A known
+ * marker leaves that recipient out; null means evidence is unavailable,
+ * never permission to send. This preflight is not proof of delivery or
+ * lifetime idempotency after an uncertain provider response.
  */
-/** null means marker evidence is unavailable, never permission to send. */
 export async function notYetTaken<T extends { to: string }>(batchKey: string, messages: T[]): Promise<T[] | null> {
   if (!messages.length) return messages;
   // sendBatch already caps a request at 100; validate only that finite window.
