@@ -97,8 +97,9 @@ export default function RefundsPage() {
           Its plan ends on the day of the refund, as section 2 says.
         </p>
         <p>
-          If the yearly payment was your first payment to us, or was made
-          within {REFUND_DAYS} days of it, and you ask within {REFUND_DAYS}{" "}
+          If the yearly payment was your first payment to us, or was made for
+          the same store&apos;s plan within {REFUND_DAYS} days of it, and you
+          ask within {REFUND_DAYS}{" "}
           days of your first payment, section 2 applies instead and the whole
           payment comes back.
         </p>
