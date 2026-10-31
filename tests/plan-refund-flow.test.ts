@@ -141,9 +141,13 @@ async function main() {
   world.listDown = true;
   await finishPlanRefunds(Date.now() + 10_000, NOW + 60);
   is("refunds unreadable: kept for tomorrow", (await h.note()) !== null, true);
+  process.env.RESEND_API_KEY = "re_a_stand_in_key_for_tests_only";
+  world.emails = [];
   await finishPlanRefunds(Date.now() + 10_000, NOW + GIVE_UP_DAYS * DAY + 1);
   world.listDown = false;
-  is(`undecidable for ${GIVE_UP_DAYS} days: dropped`, await h.note(), null);
+  is(`undecidable for ${GIVE_UP_DAYS} days: dropped, the stop taken back`, [await h.note(), h.sub().cancel_at_period_end], [null, false]);
+  is("and the creator is told the refund could not be confirmed, the plan renews as usual, how to ask again", world.emails.map((e) => [e.text.includes("We could not confirm the refund"), e.text.includes("It renews as usual unless you cancel it"), e.text.includes("Refund my payment")]), [[true, true, true]]);
+  delete process.env.RESEND_API_KEY;
   await redisPipeline([["HSET", ENDING_KEY, "gone-store-id", JSON.stringify({ s: "sub_gonestore01", at: NOW, m: 1 })]]);
   await finishPlanRefunds(Date.now() + 10_000, NOW + 60);
   is("the note of a store that is gone is dropped", (await redisPipeline([["HGET", ENDING_KEY, "gone-store-id"]]))[0], null);
