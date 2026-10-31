@@ -554,6 +554,11 @@ export class MemoryRedis {
         if (!this.data.has(key)) return 0;
         this.until.set(key, Number(args[0]) * 1000);
         return 1;
+      case "PEXPIRETIME": {
+        // When the key ends, in ms since the epoch: -1 for none, -2 for a key that is not there (lib/backup-export.ts).
+        if (!this.data.has(key)) return -2;
+        return this.until.get(key) ?? -1;
+      }
       case "PTTL": {
         if (!this.data.has(key)) return -2;
         const ends = this.until.get(key);
