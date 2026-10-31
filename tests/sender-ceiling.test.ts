@@ -112,6 +112,62 @@ async function main(): Promise<void> {
   is("to everyone, once", new Set(batches.flat().map((m) => m.to[0])).size, 30);
   delete process.env.SENDER_MONTHLY_QUOTA;
 
+
+  part("Unconfirmed sender usage cannot authorize list admission");
+  const originalPipeline = redis.pipeline;
+  const usageRead = (commands: (string | number)[][]) =>
+    commands.length === 1 && commands[0][0] === "GET" && commands[0][1] === sentKey();
+  const inherited = new Array(1);
+  Object.setPrototypeOf(inherited, { 0: null });
+  let getterCalls = 0;
+  const computed = new Array(1);
+  Object.defineProperty(computed, "0", { get: () => { getterCalls += 1; return null; } });
+  const malformed: [string, unknown][] = [
+    ["not an array", {}], ["null envelope", null], ["empty", []],
+    ["extra position", [null, null]], ["sparse", new Array(1)],
+    ["inherited absence", inherited], ["computed absence", computed],
+    ["undefined", [undefined]], ["numeric coercion", [0]], ["boolean", [false]],
+    ["object coercion", [{ valueOf: () => 0 }]], ["empty string", [""]],
+    ["space", [" 0"]], ["leading zero", ["01"]], ["negative", ["-1"]],
+    ["fraction", ["0.5"]], ["exponent", ["1e2"]],
+    ["unsafe integer", ["9007199254740992"]], ["lost reply", new Error("synthetic usage read lost")],
+  ];
+  const beforeUsage = await usedThisMonth(store.listId, windowId(store));
+  batches.length = 0;
+  try {
+    for (const [name, reply] of malformed) {
+      redis.pipeline = async commands => {
+        if (usageRead(commands)) {
+          if (reply instanceof Error) throw reply;
+          return reply as unknown[];
+        }
+        return originalPipeline.call(redis, commands);
+      };
+      is(`${name}: missing proof remains distinct from zero`, await sentThisMonth(), null);
+      is(`${name}: no confirmed capacity for list admission`, await senderRoom(), 0);
+      is(`${name}: actual reservation waits before taking a store unit`, await reserve(store, 1), "sender");
+      is(`${name}: store allowance remains intact`, await usedThisMonth(store.listId, windowId(store)), beforeUsage);
+    }
+    is("usage getters were never invoked", getterCalls, 0);
+    is("no list provider batch was dispatched", batches.length, 0);
+    for (const [raw, expected] of [[null, 0], ["0", 0], ["37", 37], ["9007199254740991", Number.MAX_SAFE_INTEGER]] as const) {
+      redis.pipeline = async commands => usageRead(commands) ? [raw] : originalPipeline.call(redis, commands);
+      is(`confirmed ${String(raw)} has its exact value`, await sentThisMonth(), expected);
+    }
+
+    redis.pipeline = async commands => usageRead(commands) ? [] : originalPipeline.call(redis, commands);
+    redis.run(["DEL", `nl:sender:${new Date().toISOString().slice(0, 7)}:told`]);
+    single.length = 0;
+    await reserve(store, 1);
+    is("the existing owner notice names uncertainty rather than invented usage",
+      single.map(m => m.subject), ["List email is waiting: sender usage cannot be confirmed"]);
+    single.length = 0;
+    is("an essential login link remains available while list usage is unknown",
+      [await sendEmail({ ...message("buyer@example.com"), subject: "Your login link" }), single.length], [true, 1]);
+  } finally {
+    redis.pipeline = originalPipeline;
+  }
+
   done();
 }
 
