@@ -11,7 +11,7 @@ import { DataRoomError, dataKey, dataUsed, giveData, keepFor, needData, noteData
 import { orderWriteCharged } from "@/lib/order-data";
 import { DATA_FULL_BUYER_WORDS, DATA_ROOM_BYTES, NON_PAYING_DATA_ROOM_BYTES, ORDER_DATA_BYTES, contentRoomFor, dataBytes, dataFullWords, dataRoomFor, itemsHandedOver, orderDataBytes, orderReserveFor, utf8Length } from "@/lib/store-data-rules";
 import { StoreFullError } from "@/lib/store-full";
-import { cappedCount } from "@/lib/capped-count";
+import { cappedCount, cappedCountCommand } from "@/lib/capped-count";
 import { admitOrders } from "@/lib/order-admission";
 import { claimHandle, ensureStatsId, setSubscription, storeForEmail } from "@/lib/store";
 import { store as redis } from "./redis-stub";
@@ -111,6 +111,13 @@ async function main() {
   };
   is("counting names that all fit runs its length once and a count each", await inside(10, ["v", "r:a", "k:US", "d:mobile"]), 1 + 4);
   is("near its most, one read more says which are there", await inside(5, ["v", "r:b", "k:BR"]), 1 + 1 + 3);
+  let twice: unknown = null;
+  try {
+    await redis.pipeline([cappedCountCommand([{ key: "nl:test:capped-twice", most: 3 }, { key: "nl:test:capped-twice", most: 1 }], [{ hash: 0, field: "p", by: 1 }, { hash: 1, field: "q", by: 1 }])]);
+  } catch (error) {
+    twice = error;
+  }
+  is("the same hash named twice is refused, and nothing is written", [twice instanceof Error, redis.run(["HLEN", "nl:test:capped-twice"])], [true, 0]);
   is("and the same names again, past it, as many", [await inside(5, ["v", "r:c", "k:DE"]), redis.run(["HLEN", "nl:test:capped-calls"]), Number(redis.run(["HGET", "nl:test:capped-calls", "~"]))], [1 + 1 + 3, 6, 3]);
   done();
 }

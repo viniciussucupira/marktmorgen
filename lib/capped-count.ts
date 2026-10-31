@@ -26,15 +26,18 @@
  * (https://upstash.com/docs/redis/overall/billing, read 31 October 2026).
  * Version 1 asked HEXISTS, and for a new name HLEN, before each HINCRBY: a
  * view's nine counts (lib/stats.ts) were billed up to 28 commands (27
- * inside and the EVAL). Version 2
- * reads each hash's length once; when every name asked could be new and
- * still fit, it only counts; otherwise one HMGET says which names (and "~")
- * are there already, and the length is followed from that, exactly as
- * re-reading it would. One HINCRBY a count, one HLEN a hash and one HMGET for
- * a hash near its most: the same nine counts are billed 13 at the most. What it answers and keeps is the same as version 1's, which
- * scripts/test_capped_count_redis.py checks against a re-reading reference
- * on 400 random counts near and past their most, with the commands each run
- * counted by the server itself.
+ * inside and the EVAL). Version 2 reads each hash's length once; when every
+ * name asked could be new and still fit, it only counts; otherwise one HMGET
+ * says which names (and "~") are there already, and the length is followed
+ * from that, exactly as re-reading it would. One HINCRBY a count, one HLEN a
+ * hash and one HMGET for a hash near its most: the same nine counts are
+ * billed 12 commands below their hashes' most and 14 at the most (13 inside
+ * and the EVAL). It answers and keeps what version 1 did, which
+ * scripts/test_capped_count_redis.py checks against version 1 itself on
+ * random counts near and past their most, with the commands each run
+ * counted by the server. One difference, on purpose: the same hash named
+ * twice in KEYS is refused before anything is written (version 1 counted
+ * each name against a length the other copy did not see; no caller does it).
  *
  * scripts/test_capped_count_redis.py runs it on a real Redis.
  */
@@ -46,6 +49,11 @@ export const OVER_FIELD = "~";
 export const CAPPED_COUNT = `-- marktmorgen:capped-count:v2
 local n = #KEYS
 if n < 1 or #ARGV < n or (#ARGV - n) % 3 ~= 0 then return redis.error_reply('capped-count: arguments') end
+for i = 1, n do
+  for j = i + 1, n do
+    if KEYS[i] == KEYS[j] then return redis.error_reply('capped-count: arguments') end
+  end
+end
 local caps = {}
 for i = 1, n do
   local cap = tonumber(ARGV[i])

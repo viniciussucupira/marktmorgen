@@ -1229,7 +1229,7 @@ export class MemoryRedis {
     const n = Number(args[0]);
     const keys = args.slice(1, 1 + n);
     const argv = args.slice(1 + n);
-    if (!Number.isInteger(n) || n < 1 || argv.length < n || (argv.length - n) % 3 !== 0) throw new Error("ERR capped-count: arguments");
+    if (!Number.isInteger(n) || n < 1 || argv.length < n || (argv.length - n) % 3 !== 0 || new Set(keys).size !== keys.length) throw new Error("ERR capped-count: arguments");
     const caps = argv.slice(0, n).map(Number);
     if (caps.some((cap) => !Number.isInteger(cap) || cap < 1)) throw new Error("ERR capped-count: most");
     const rest = argv.slice(n);
