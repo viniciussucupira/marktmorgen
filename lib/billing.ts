@@ -1477,11 +1477,10 @@ export async function endLapsed(ids: string[]): Promise<void> {
 /**
  * Adds a line to what a store's subscription is billed next.
  *
- * The one thing here that is charged by use: video watched past what a plan
- * covers (lib/watch-rules.ts). It is not an invoice of its own. Stripe keeps
- * the line with the subscription and puts it on the next invoice that
- * subscription makes, charged to the card the plan is already paid with,
- * which is what the Terms say will happen and nothing more.
+ * Called only by lib/usage-billing.ts, whose meters all owe nothing since
+ * 31 October 2026 (232 [CA1] unit 3): nothing is charged after use, so this
+ * is not reached. Kept for that one caller; tests/watch.test.ts fails if any
+ * other file calls it.
  *
  * `mark` is written on the line so it can be found again (findInvoiceLine):
  * a request that timed out may still have gone through, and a second line
