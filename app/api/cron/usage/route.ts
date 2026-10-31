@@ -17,7 +17,7 @@ import { watchedFolders, watchedIn } from "@/lib/watch";
 import { firstWord, settleAll, storeOf } from "@/lib/watch-billing";
 import { allowanceWindow, calendarWindow, resetWords } from "@/lib/allowance-window";
 
-import { VIDEO_SECONDS_INCLUDED, canBeCharged, centsWords, videoOwedCents } from "@/lib/watch-rules";
+import { centsWords } from "@/lib/watch-rules";
 import { videoUsageNotice } from "@/lib/video-usage-notice";
 import { visitedFolders, visitsIn } from "@/lib/traffic";
 import { firstWordOnVisits } from "@/lib/traffic-billing";
@@ -54,12 +54,11 @@ async function foldersOfTwoMonths(read: (month: string) => Promise<string[]>): P
  *
  * Nothing in here blocks or limits anything. It writes.
  *
- * It is also the run that bills the one thing charged by use: lesson video
- * watched past the hours a plan covers (lib/watch-billing.ts). Each store
- * past them has the hours added to its next invoice, by itself, and its
- * creator is written to the first time a month passes them: what they have
- * come to, and that nobody is cut off. A store with no plan to charge is
- * written to as well, because its videos are paused (lib/learn.ts).
+ * It also settles lesson video watched past the hours a plan covers
+ * (lib/watch-billing.ts). Since 31 October 2026 (232 [CA1] unit 3) that
+ * meter owes nothing, so nothing is ever put on an invoice after use; each
+ * creator is written to the first time a month's videos are paused
+ * (lib/learn.ts).
  *
  * Visits and orders are not billed (since 17 October 2026, when their prices
  * past a plan no longer kept the owner's 60% after tax). Each creator is
@@ -115,12 +114,11 @@ async function videoRun(): Promise<VideoRun> {
       if (seconds < SETUP_VIDEO_SECONDS) continue;
       const limit = videoLimitFor(store);
       const paused = limit !== null && seconds >= limit;
-      const charged = canBeCharged(store) && seconds > VIDEO_SECONDS_INCLUDED;
-      if (!paused && !charged) continue;
+      if (!paused) continue;
       if (paused) out.paused += 1;
       if (!isSenderConfigured() || !(await firstWord(folder, month))) continue;
       const notice = videoUsageNotice({ seconds, limit, standing: standingOf(store),
-        legacyChargeCents: charged ? videoOwedCents(seconds) : 0,
+        legacyChargeCents: 0,
         studioUrl: `${SITE_URL}/studio`, supportEmail: SUPPORT_EMAIL });
       const sent = await sendEmail({ meter: { by: "company" },
         from: NIMBUS_FROM,
