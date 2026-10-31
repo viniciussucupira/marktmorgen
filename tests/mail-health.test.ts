@@ -19,7 +19,7 @@ import { importContacts, isMailable, listCounts, stopWriting, upsertContact } fr
 import { advanceBroadcast, createBroadcast } from "@/lib/broadcasts";
 import { sendEmail } from "@/lib/email";
 import { sendTo, usedThisMonth } from "@/lib/mail";
-import { LIST_TAG, PORTION_NOTE, STORE_TAG, healthId, heardFromSender, listHealth, noteSent, overTheLine, pauseEnds, pauseWords, pausedFor, rampBack, rampRoom, startRamp } from "@/lib/mail-health";
+import { LIST_TAG, PORTION_NOTE, STORE_TAG, healthId, heardFromSender, listHealth, noteSent, overTheLine, pauseEnds, pauseWords, pausedFor, pauseForSending, rampBack, rampRoom, startRamp } from "@/lib/mail-health";
 import { BOUNCE_FLOOR, COMPLAINT_FLOOR, PAUSE_DAYS, RAMP_FIRST, RAMP_GAP_MINUTES, RAMP_TRIGGER, healthRuleWords, rampPortions, rampRuleWords } from "@/lib/mail-health-rules";
 import { advance, store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
@@ -276,6 +276,71 @@ async function main(): Promise<void> {
   }
   is("100, then 200 more, then the rest: nobody pressed anything", [steps, h.status, h.note], [[100, 300, 450], "sent", ""]);
   is("to everyone, once", new Set(batches.flat().map((m) => m.to[0])).size, 450);
+
+  part("Unconfirmed health-pause evidence cannot admit list email");
+  const originalPipeline = redis.pipeline;
+  const pauseKey = `nl:mail:paused:${healthId(meadow)}`;
+  const inheritedPause = new Array(1);
+  Object.setPrototypeOf(inheritedPause, { 0: null });
+  let pauseGetterCalls = 0;
+  const computedPause = new Array(1);
+  Object.defineProperty(computedPause, "0", { get: () => { pauseGetterCalls += 1; return null; } });
+  const validPause = { reason: "bounces" as const, until: Math.floor(Date.now() / 1000) + 600, sent: 1_000, count: 25 };
+  const badPauseReads: [string, unknown][] = [
+    ["lost reply", new Error("synthetic pause read lost")], ["not an array", {}],
+    ["null envelope", null], ["empty", []], ["extra entry", [null, null]],
+    ["sparse", new Array(1)], ["inherited absence", inheritedPause], ["computed absence", computedPause],
+    ["undefined entry", [undefined]], ["numeric entry", [0]], ["invalid JSON", ["{"]],
+    ["JSON null", ["null"]], ["JSON array", ["[]"]], ["missing fields", ["{}"]],
+    ["wrong reason", [JSON.stringify({ ...validPause, reason: "other" })]],
+    ["string expiration", [JSON.stringify({ ...validPause, until: String(validPause.until) })]],
+    ["negative expiration", [JSON.stringify({ ...validPause, until: -1 })]],
+    ["fractional count", [JSON.stringify({ ...validPause, count: 0.5 })]],
+    ["unsafe count", [JSON.stringify({ ...validPause, count: Number.MAX_SAFE_INTEGER + 1 })]],
+    ["missing sent", [JSON.stringify({ reason: "bounces", until: validPause.until, count: 25 })]],
+    ["negative sent", [JSON.stringify({ ...validPause, sent: -1 })]],
+    ["oversized record", [" ".repeat(513)]],
+  ];
+  batches.length = 0;
+  const waitingRecipients = ["member0@example.com"];
+  try {
+    for (const [name, reply] of badPauseReads) {
+      const commandsSeen: (string | number)[][] = [];
+      redis.pipeline = async commands => {
+        commandsSeen.push(...commands);
+        if (commands.length === 1 && commands[0][0] === "GET" && commands[0][1] === pauseKey) {
+          if (reply instanceof Error) throw reply;
+          return reply as unknown[];
+        }
+        return originalPipeline.call(redis, commands);
+      };
+      is(`${name}: no invented permission or health pause`, await pauseForSending(healthId(meadow)), undefined);
+      const held = await sendTo(meadow, waitingRecipients, "Hello", "Still waiting.", `health-read:${name}`);
+      is(`${name}: actual list sender waits with every recipient intact`,
+        [held.done, held.rest, held.stopped, held.uncertain, held.pause], [[], waitingRecipients, "retry", undefined, undefined]);
+      is(`${name}: no extra read, reservation, ramp change or provider work`,
+        commandsSeen, [["GET", pauseKey], ["GET", pauseKey]]);
+    }
+    is("unknown health evidence sent no list batch", batches.length, 0);
+    is("health evidence getters were never invoked", pauseGetterCalls, 0);
+    for (const [name, raw, expected] of [
+      ["confirmed absence", null, null],
+      ["known current pause", JSON.stringify(validPause), validPause],
+      ["known complaint pause", JSON.stringify({ ...validPause, reason: "complaints" }), { ...validPause, reason: "complaints" }],
+      ["known expired pause", JSON.stringify({ ...validPause, until: Math.floor(Date.now() / 1000) - 1 }), null],
+    ] as const) {
+      redis.pipeline = async commands => commands.length === 1 && commands[0][0] === "GET" && commands[0][1] === pauseKey ? [raw] : originalPipeline.call(redis, commands);
+      is(`${name}: exact existing state`, await pauseForSending(healthId(meadow)), expected);
+    }
+    redis.pipeline = async commands => commands.length === 1 && commands[0][0] === "GET" && commands[0][1] === pauseKey ? [] : originalPipeline.call(redis, commands);
+    is("the existing display wrapper keeps its nullable contract", await pausedFor(healthId(meadow)), null);
+    single.length = 0;
+    is("an essential login link is still available while list health is unconfirmed",
+      [await sendEmail({ meter: { by: "company" }, from: "Marktmorgen <hello@marktmorgen.com>", to: "buyer@example.com", subject: "Your login link", text: "Hello." }), single.length], [true, 1]);
+  } finally {
+    redis.pipeline = originalPipeline;
+  }
+
   Date.now = realNow;
 
   done();

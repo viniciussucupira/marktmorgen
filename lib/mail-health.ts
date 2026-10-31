@@ -156,19 +156,39 @@ export function overTheLine(health: Health): { reason: PauseReason; count: numbe
   return null;
 }
 
-/** Whether this store's watched email is paused right now, and why. Null when it is not, or cannot be read. */
-export async function pausedFor(id: string, now = Date.now()): Promise<Pause | null> {
-  if (!id || !isRedisConfigured()) return null;
+/**
+ * Read the existing health-pause checkpoint before admitting list email.
+ * Null proves no current pause; undefined means the read is unconfirmed.
+ * No unknown result authorizes a marketing attempt.
+ */
+export async function pauseForSending(id: string, now = Date.now()): Promise<Pause | null | undefined> {
+  if (!id || !isRedisConfigured()) return undefined;
   try {
-    const [raw] = await redisPipeline([["GET", pausedKey(id)]]);
-    if (typeof raw !== "string") return null;
-    const value = JSON.parse(raw) as Partial<Pause>;
-    if ((value.reason !== "bounces" && value.reason !== "complaints") || typeof value.until !== "number") return null;
-    if (value.until * 1000 <= now) return null;
-    return { reason: value.reason, until: value.until, sent: Number(value.sent) || 0, count: Number(value.count) || 0 };
+    const reply: unknown = await redisPipeline([["GET", pausedKey(id)]]);
+    if (!Array.isArray(reply)) return undefined;
+    const length = Object.getOwnPropertyDescriptor(reply, "length");
+    if (!length || !("value" in length) || length.value !== 1) return undefined;
+    const item = Object.getOwnPropertyDescriptor(reply, "0");
+    if (!item || !("value" in item)) return undefined;
+    if (item.value === null) return null;
+    if (typeof item.value !== "string" || item.value.length > 512) return undefined;
+    const value = JSON.parse(item.value) as Partial<Pause> | null;
+    if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
+    if (value.reason !== "bounces" && value.reason !== "complaints") return undefined;
+    const { until, sent, count } = value;
+    if (typeof until !== "number" || !Number.isSafeInteger(until) || until < 0 ||
+        typeof sent !== "number" || !Number.isSafeInteger(sent) || sent < 0 ||
+        typeof count !== "number" || !Number.isSafeInteger(count) || count < 0) return undefined;
+    if (until * 1000 <= now) return null;
+    return { reason: value.reason, until, sent, count };
   } catch {
-    return null;
+    return undefined;
   }
+}
+
+/** Existing display/service contract; list admission uses pauseForSending instead. */
+export async function pausedFor(id: string, now = Date.now()): Promise<Pause | null> {
+  return (await pauseForSending(id, now)) ?? null;
 }
 
 /** Pauses the store when its seven days are over a line. A pause already running keeps its own end. */

@@ -29,7 +29,7 @@ import type { Store } from "@/lib/store";
 import { creatorAddress } from "@/lib/mail-from";
 import { type MailTag, taggedLink } from "@/lib/mail-links";
 import { rememberLinkKeys } from "@/lib/mail-clicks";
-import { type Pause, healthId, healthTags, noteSent, pausedFor, rampBack, rampRoom } from "@/lib/mail-health";
+import { type Pause, healthId, healthTags, noteSent, pauseForSending, rampBack, rampRoom } from "@/lib/mail-health";
 import { affiliatesWords } from "@/lib/buyer-words/affiliates";
 import { LANGUAGES, parseLanguage } from "@/lib/store-language";
 
@@ -481,7 +481,9 @@ export async function sendTo(
   // A store whose addresses turned out to be bad ones waits its week out
   // (lib/mail-health.ts). Nothing is taken from its month for it.
   const watched = healthId(store);
-  const pause = await pausedFor(watched);
+  const pause = await pauseForSending(watched);
+  // A missing checkpoint is not evidence that this list is safe to send.
+  if (pause === undefined) return { done, rest: emails, stopped: "retry" };
   if (pause) return { done, rest: emails, stopped: "paused", pause };
   const tags = healthTags(store, true);
   for (let i = 0; i < emails.length; ) {
