@@ -43,7 +43,7 @@ import { CUSTOMER_PATTERN, SUBSCRIPTION_PATTERN, type Store } from "@/lib/store"
 
 const AT = "2024-06-20";
 /** The most requests to Stripe one reading makes. */
-export const MAX_CALLS = 16;
+export const MAX_CALLS = 18;
 /** The most other customers with the same address whose charges are read. */
 export const MAX_OTHER_CUSTOMERS = 5;
 /** The whole reading's time, in milliseconds. */
@@ -104,7 +104,8 @@ export async function readPlanRefund(store: Store, nowSeconds = Math.floor(Date.
     if (!CUSTOMER_PATTERN.test(customer.id)) return { refund: { kind: "unknown", reason: "not_this_store" } };
 
     const paidPage = await get(`/invoices?${new URLSearchParams({ subscription: subscriptionId, status: "paid", limit: "100" })}`);
-    const paid = list(paidPage).filter((r) => idOf(r.subscription) === subscriptionId);
+    // A trial's invoice is paid with no charge: not a payment.
+    const paid = list(paidPage).filter((r) => idOf(r.subscription) === subscriptionId && idOf(r.charge) !== "");
     if (!paid.length) return { refund: { kind: "none", reason: "no_plan_payment" } };
 
     /** Reads an invoice's charge and judges it by the rules. */
@@ -203,7 +204,15 @@ export async function readPlanRefund(store: Store, nowSeconds = Math.floor(Date.
           // Given, or not decidable: that is the answer. A no (refunded already, a dispute) goes on to the latest payment.
           if (reading.refund.kind !== "none") return reading;
         } else if (paidPage.has_more === true) return { refund: { kind: "unknown", reason: "too_many" } };
-        // Otherwise the first payment was another store's (or the add-on's): the guarantee is there, not here.
+        else {
+          // Another store's, or the add-on's: the guarantee is there, not here. But one of this store's
+          // own earlier plans (started again since) is this store's: not decided here, never a silent no.
+          if (!INVOICE_ID.test(invoiceId)) return { refund: { kind: "unknown", reason: "unreadable" } };
+          const earlier = await get(`/invoices/${encodeURIComponent(invoiceId)}?expand[]=subscription`);
+          const named = obj(obj(earlier.subscription)?.metadata)?.store;
+          const handles = new Set([store.handle, ...store.previousHandles]);
+          if (typeof named === "string" && handles.has(named)) return { refund: { kind: "unknown", reason: "not_this_store" } };
+        }
       }
     }
 

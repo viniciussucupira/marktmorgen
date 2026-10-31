@@ -68,6 +68,13 @@ globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) =>
     const rows = world.charges.filter((c) => c.customer === q.get("customer") && c.created < lt).sort((a, b) => b.created - a.created).map((c) => ({ ...c, balance_transaction: "txn_unexpanded" }));
     return page(rows, world.moreCharges);
   }
+  const invoice = path.match(/^\/invoices\/(in_\w+)$/);
+  if (invoice) {
+    const row = world.invoices.find((i) => i.id === invoice[1]);
+    if (!row) return json({ error: { message: "No such invoice" } }, 404);
+    const sub = world.subs.get(String(row.subscription)) ?? { id: row.subscription, metadata: { store: "another-store" } };
+    return json({ ...row, subscription: q.getAll("expand[]").includes("subscription") ? sub : row.subscription });
+  }
   const charge = path.match(/^\/charges\/(ch_\w+)$/);
   if (charge) {
     const row = world.charges.find((c) => c.id === charge[1]);
@@ -154,6 +161,14 @@ async function main() {
   pay(i, { at: NOW - 5 * DAY, subscription: "sub_anotherstore01" });
   pay(i, { at: NOW - 2 * DAY });
   is("the account's first payment was another store's: not here", (await i.read()).refund, { kind: "none", reason: "renewal" });
+  const again = await shop();
+  world.subs.set("sub_againold0001", { id: "sub_againold0001", status: "canceled", customer: again.customer, metadata: { store: again.handle } });
+  pay(again, { at: NOW - 5 * DAY, subscription: "sub_againold0001" });
+  pay(again, { at: NOW - 2 * DAY });
+  is("the first payment was this store's earlier plan: unknown, never a silent no", (await again.read()).refund, { kind: "unknown", reason: "not_this_store" });
+  const trial = await shop();
+  world.invoices.push({ id: `in_trial${n}`, subscription: trial.subscriptionId, status: "paid", created: NOW - DAY, total: 0, tax: null, billing_reason: "subscription_create", charge: null, lines: { data: [] } });
+  is("a trial's invoice paid with no charge: no payment yet", (await trial.read()).refund, { kind: "none", reason: "no_plan_payment" });
   const many = await shop();
   for (let k = 0; k < 6; k += 1) world.customers.set(`cus_many${n}k${k}`, many.email);
   pay(many, { at: NOW - 3 * DAY });
@@ -214,7 +229,7 @@ async function main() {
 
   part("Bounds");
   let most = 0;
-  for (const shopOf of [a, g, h, y, many]) {
+  for (const shopOf of [a, g, h, y, many, again]) {
     const was = world.calls;
     await shopOf.read();
     most = Math.max(most, world.calls - was);
