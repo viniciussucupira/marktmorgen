@@ -440,7 +440,7 @@ export type SesOutcome = "sent" | "busy" | "account" | "refused";
 
 const ACCOUNT_ERRORS = /AccountSuspended|SendingPaused|MailFromDomainNotVerified|LimitExceeded|AccessDenied|InvalidClientTokenId|SignatureDoesNotMatch|UnrecognizedClient|ExpiredToken|NotFound/i;
 
-export async function sesSend(config: SesConfig, message: SesMessage): Promise<{ outcome: SesOutcome; why: string }> {
+export async function sesSend(config: SesConfig, message: SesMessage): Promise<{ outcome: SesOutcome; why: string; uncertain?: true }> {
   const payload = JSON.stringify({
     FromEmailAddress: message.from,
     Destination: { ToAddresses: [message.to] },
@@ -467,6 +467,10 @@ export async function sesSend(config: SesConfig, message: SesMessage): Promise<{
   try {
     const response = await call(config, "POST", "/v2/email/outbound-emails", payload);
     if (response.ok) return { outcome: "sent", why: "" };
+    // SES can accept a message before returning a server error. This is not
+    // a confirmed refusal; individual sends must not retry or change sender.
+    // Read no error body before preserving that distinction.
+    if (response.status >= 500) return { outcome: "busy", why: `SES ${response.status}: acceptance unknown`, uncertain: true };
     const type = response.headers.get("x-amzn-errortype") ?? "";
     let said = "";
     try {
@@ -477,14 +481,14 @@ export async function sesSend(config: SesConfig, message: SesMessage): Promise<{
     }
     const why = `${response.status} ${type} ${said}`.replace(/\s+/g, " ").trim().slice(0, 300);
     if (response.status === 429 && !/quota/i.test(why)) return { outcome: "busy", why };
-    if (response.status >= 500) return { outcome: "busy", why };
     if (response.status === 401 || response.status === 403 || response.status === 404 || response.status === 429) return { outcome: "account", why };
     // An address not proved, in an account still in its sandbox or sending
     // from a domain it has not proved, comes back as the email's own fault.
     if (ACCOUNT_ERRORS.test(why) || /not verified|sandbox|quota/i.test(why)) return { outcome: "account", why };
     return { outcome: "refused", why };
   } catch (error) {
-    return { outcome: "busy", why: error instanceof Error ? error.message.slice(0, 200) : "no answer" };
+    // A lost response is not proof that SES did not accept the message.
+    return { outcome: "busy", why: error instanceof Error ? error.message.slice(0, 200) : "no answer", uncertain: true };
   }
 }
 
@@ -493,17 +497,32 @@ const didKey = (batchKey: string, to: string) => `nl:ses:did:${createHash("sha25
 const DID_SECONDS = 2 * 86_400;
 
 /**
- * Those of a batch that Amazon has not already taken under this key. A batch
- * tried again — after a timeout, after the rest of it failed — never writes
- * to the same person twice.
+ * Recipients whose existing marker explicitly confirms absence. A known
+ * marker leaves that recipient out; null means evidence is unavailable,
+ * never permission to send. This preflight is not proof of delivery or
+ * lifetime idempotency after an uncertain provider response.
  */
-export async function notYetTaken<T extends { to: string }>(batchKey: string, messages: T[]): Promise<T[]> {
+export async function notYetTaken<T extends { to: string }>(batchKey: string, messages: T[]): Promise<T[] | null> {
   if (!messages.length) return messages;
+  // sendBatch already caps a request at 100; validate only that finite window.
+  if (messages.length > 100) return null;
   try {
-    const found = await redisPipeline(messages.map((m) => ["GET", didKey(batchKey, m.to)]));
-    return messages.filter((_, i) => found[i] === null || found[i] === undefined);
+    const found: unknown = await redisPipeline(messages.map((m) => ["GET", didKey(batchKey, m.to)]));
+    if (!Array.isArray(found)) return null;
+    const length = Object.getOwnPropertyDescriptor(found, "length");
+    if (!length || !("value" in length) || length.value !== messages.length) return null;
+    const pending: T[] = [];
+    for (let i = 0; i < messages.length; i += 1) {
+      const item = Object.getOwnPropertyDescriptor(found, String(i));
+      if (!item || !("value" in item)) return null;
+      // Only explicit absence permits sending. Missing, inherited, computed
+      // or unexpected evidence is not proof that SES never took the message.
+      if (item.value === null) pending.push(messages[i]);
+      else if (item.value !== "1") return null;
+    }
+    return pending;
   } catch {
-    return messages;
+    return null;
   }
 }
 

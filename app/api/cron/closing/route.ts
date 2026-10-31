@@ -3,6 +3,9 @@ import { cronAllowed } from "@/lib/request-guard";
 import { withCutoff } from "@/lib/fetch-timeout";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { closeEnded } from "@/lib/plan-closing";
+import { releaseRestarted } from "@/lib/closing-holds";
+import { tellStaysOpen } from "@/lib/closing-buyers";
+import { retryPlanUndos } from "@/lib/closing-plan-guard";
 
 export const maxDuration = 60;
 
@@ -35,7 +38,20 @@ async function run(request: NextRequest): Promise<Response> {
   const [got] = await redisPipeline([["SET", "nl:closing:lock", "1", "NX", "EX", 120]]);
   if (got === null) return Response.json({ ok: true, busy: true });
   try {
-    const looked = await closeEnded(Date.now() + 45_000);
+    // Stores whose plan was started again before their closing: their members
+    // go on being charged as they were, and their buyers are told it stays
+    // (lib/closing-holds.ts, queue item 307 [EC1]). First, and briefly.
+    const start = Date.now();
+    const released = await releaseRestarted(start + 12_000, tellStaysOpen);
+    for (const row of released) if (row.state === "held") console.error("plan-closing: a restarted store's members or buyers are not all reached yet; tried again tomorrow");
+    // Plans paid for stores already closing, not ended or returned in full
+    // yet (lib/closing-plan-guard.ts): tried again on every run, never dropped.
+    const undone = await retryPlanUndos(start + 20_000).catch((error) => {
+      console.error("returning plans paid for closing stores failed", error);
+      return null;
+    });
+    if (undone?.left) console.error(`plan-closing: ${undone.left} plans paid for closing stores are not all returned yet; tried again on the next run`);
+    const looked = await closeEnded(start + 52_000);
     const count = (state: string) => looked.filter((row) => row.state === state).length;
     const counts = { looked: looked.length, told: count("told"), waiting: count("waiting"), removed: count("removed"), held: count("held"), running: count("running") };
     if (counts.told || counts.removed || counts.held) {

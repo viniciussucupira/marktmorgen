@@ -7,7 +7,7 @@ import { StudioHeader } from "@/components/studio-header";
 import { StudioStorePin } from "@/components/studio-store-pin";
 import { MeetingConnections } from "@/components/meeting-connections";
 import { ToastOnLoad } from "@/components/toast";
-import { ACCOUNT_NAMES, meetView } from "@/lib/meet-connect";
+import { ACCOUNT_NAMES, meetSettingsView } from "@/lib/meet-connect";
 import { arrivedForZoom, cameForZoom, configuredProviders, offeredProviders } from "@/lib/meet-providers";
 import { readTests } from "@/lib/meet-test";
 import { MEET_NAMES, isMeetProvider } from "@/lib/call-setup";
@@ -64,7 +64,7 @@ export default async function StudioMeetingsPage({ searchParams }: Params) {
   // Read first, so the page is drawn for each visit: whether it exists at
   // all is decided by the deployment's settings now, never at build time.
   const jar = await cookies();
-  if (configuredProviders().length === 0) notFound();
+  const configured = configuredProviders();
   const query = await searchParams;
   const found = await studioView(jar, typeof query.store === "string" ? query.store : undefined, "settings");
   if (!found.ok) {
@@ -73,25 +73,26 @@ export default async function StudioMeetingsPage({ searchParams }: Params) {
   }
   const { view: access } = found;
   const loaded = access.store;
-  const store = loaded.statsId ? loaded : ((await ensureStatsId(access.ref)) ?? loaded);
+  const store = loaded.statsId || configured.length === 0 ? loaded : ((await ensureStatsId(access.ref)) ?? loaded);
   // The review link (`?zoom=review`) and the address Zoom's listing opens
   // (`?from=zoom`, lib/meet-providers.ts) offer Zoom on this visit to a store
   // it is not open to yet; so does a browser that arrived that way before
   // logging in (the cookie proxy.ts sets, lib/zoom-arrival.ts).
   const review = arrivedForZoom(query) || cameForZoom(jar);
-  const view = await meetView(store.statsId, store, review).catch((error) => {
+  const view = await meetSettingsView(store.statsId, store, review).catch((error) => {
     console.error("reading the meeting connections failed", error);
     return null;
   });
   // What the store is offered, and any account it has connected either way.
   const offered = view ? view.providers : offeredProviders(store, review);
-  if (offered.length === 0) notFound();
+  if (view !== null && offered.length === 0 && configured.length > 0) notFound();
   // The test meeting each connected account has, where one was made (lib/meet-test.ts).
   const tests = view
-    ? await readTests(store.statsId, offered.filter((p) => view.connected[p])).catch(() => ({}))
+    ? await readTests(store.statsId, offered.filter((p) => configured.includes(p) && view.connected[p])).catch(() => ({}))
     : {};
   const said = outcome(typeof query.meet === "string" ? query.meet : "", typeof query.p === "string" ? query.p : "");
-  const names = offered.map((p) => MEET_NAMES[p]);
+  const active = offered.filter((p) => configured.includes(p));
+  const names = active.map((p) => MEET_NAMES[p]);
 
   return (
     <div className="min-h-screen bg-paper text-ink">
@@ -105,9 +106,13 @@ export default async function StudioMeetingsPage({ searchParams }: Params) {
       <StudioStorePin sid={store.sid}>
         <main id="content" className="container-page pb-20 pt-10 sm:pt-14">
           <p className="eyebrow">Video calls</p>
-          <h1 className="t-h2 mt-3">{`${names.join(" and ")} links, made for your bookings`}</h1>
+          <h1 className="t-h2 mt-3">{active.length ? `${names.join(" and ")} links, made for your bookings` : "Your video call connections"}</h1>
           <p className="mt-3 max-w-2xl text-ink-soft">
-            {`Connect your own ${offered.map((p) => ACCOUNT_NAMES[p]).join(" or ")} account, and each call you set to use it gets a meeting on that account for every booking, with the link in the buyer's confirmation, reminders and calendar file. Nothing to copy and paste.`}
+            {active.length
+              ? `Connect your own ${active.map((p) => ACCOUNT_NAMES[p]).join(" or ")} account, and each call you set to use it gets a meeting on that account for every booking, with the link in the buyer's confirmation, reminders and calendar file. Nothing to copy and paste.`
+              : view !== null && offered.length === 0
+                ? "No video call accounts are connected. These services are currently unavailable."
+                : "These services are currently unavailable. You can disconnect an account below. Existing meetings stay with the provider."}
           </p>
 
           {said?.tone === "ok" ? <ToastOnLoad message={said.text} param="meet" /> : null}
@@ -125,7 +130,7 @@ export default async function StudioMeetingsPage({ searchParams }: Params) {
               We could not read your connections just now. Nothing was changed. Try again in a moment.
             </p>
           ) : (
-            <MeetingConnections view={view} pin={store.sid ? `?store=${store.sid}` : ""} review={review} tests={tests} />
+            <MeetingConnections view={view} pin={store.sid ? `?store=${store.sid}` : ""} review={review} tests={tests} disabledProviders={offered.filter((p) => !configured.includes(p))} />
           )}
         </main>
       </StudioStorePin>

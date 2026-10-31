@@ -6,9 +6,9 @@
  * (lib/traffic-rules.ts), and orders past a plan's orders
  * (lib/order-rules.ts). Since 17 October 2026 visits and orders are not:
  * their meters owe nothing and keep only the record that a creator was
- * written to (lib/traffic-billing.ts, lib/orders-billing.ts). Video's line
- * past 400 hours is never reached, because playback stops at each plan's
- * hours first (lib/video-admission-rules.ts). Each keeps its own count (lib/watch.ts,
+ * written to (lib/traffic-billing.ts, lib/orders-billing.ts). Since
+ * 31 October 2026 (232 [CA1] unit 3) video owes nothing either
+ * (lib/watch-billing.ts): no meter puts used service on an invoice. Each keeps its own count (lib/watch.ts,
  * lib/traffic.ts) and has its own price; this is the part they share, the
  * daily job's part (app/api/cron/usage): for every store past what its plan
  * covers it works out what the month has come to, takes away what was
@@ -193,6 +193,14 @@ export async function settleUsage(meter: Meter, folder: string, month: string, f
   let unfinished = parseAdding(addingRaw);
   if (unfinished && unfinished.from !== billed) {
     // Written down for a figure that has since moved on: it was carried out.
+    await redisPipeline([["DEL", addingKey(meter, folder, month)]]);
+    unfinished = null;
+  }
+  if (unfinished && unfinished.to > owed) {
+    // Written down for more than the meter owes now: never finished, so
+    // nothing past what is owed reaches an invoice. Since 31 October 2026
+    // every meter owes nothing (232 [CA1] unit 3), so a line begun before
+    // then is dropped here instead of being charged after use.
     await redisPipeline([["DEL", addingKey(meter, folder, month)]]);
     unfinished = null;
   }

@@ -1,3 +1,5 @@
+// Everything else of the real module, for what the route reaches through other modules (the closing day, lib/plan-closing.ts); the names below stand in.
+export * from '../lib/billing';
 import type {ContractGrant} from '@/lib/contract-funding';
 export const observations={checkout:[] as ContractGrant[],switches:[] as ContractGrant[],find:0,fail:false,live:null as unknown};
 export const resetBilling=()=>{observations.checkout.length=0;observations.switches.length=0;observations.find=0;observations.fail=false;observations.live=null;};

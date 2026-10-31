@@ -18,6 +18,9 @@
  *   - it is forgotten with the connection, and a provider that fails says so.
  */
 import { readFileSync } from "node:fs";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import { MeetingConnections } from "@/components/meeting-connections";
 import { NextRequest } from "next/server";
 import { SESSION_COOKIE, openSession } from "@/lib/auth";
 import { NotConnected, beginConsent, disconnect, finishConsent, meetView } from "@/lib/meet-connect";
@@ -227,7 +230,13 @@ async function main(): Promise<void> {
   const route = readFileSync("app/api/integrations/meetings/route.ts", "utf8");
   is("only the owner and Admins can make or delete one", /guardStoreWrite\(request, "settings"/.test(route) && route.includes('action === "test"'), true);
   is("a failure is written where every meeting's failure is", route.includes("logProblem("), true);
-  is("the card shows it only on a connection that works", readFileSync("components/meeting-connections.tsx", "utf8").includes("connection && !connection.broken ? ("), true);
+  // Render the real card instead of matching the spelling of its JSX guard.
+  // A working connection still offers the test; broken or disabled ones do not.
+  const card = (broken: string, disabled = false) => renderToStaticMarkup(createElement(MeetingConnections, {
+    view: { providers: ["zoom"], connected: { zoom: { provider: "zoom", account: "host@example.com", connectedAt: 1, by: "owner@example.com", broken } }, problems: [] },
+    pin: "", disabledProviders: disabled ? ["zoom"] : [],
+  }));
+  is("the card offers a test only for a working configured connection", [card("").includes('data-meet-test="zoom"'), card("Access was withdrawn").includes('data-meet-test="zoom"'), card("", true).includes('data-meet-test="zoom"')], [true, false, false]);
   is("and the guide says how", readFileSync("app/help/zoom/page.tsx", "utf8").includes("Make a test meeting"), true);
 
   done();

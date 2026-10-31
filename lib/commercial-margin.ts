@@ -1,3 +1,4 @@
+import { allocateEntireLlcFixedCosts, CURRENT_LLC_FIXED_COST_CEILINGS, LLC_FIXED_COST_IDS, LLC_FIXED_COST_ALLOCATION } from "@/lib/llc-fixed-costs";
 import {CONTRACT_FUNDING_RULES,contractLifecycleReady,CURRENT_CONTRACT_FUNDING_POLICY,contractFundingConfiguration,canonicalFinancialSnapshot} from '@/lib/contract-funding-rules';
 import { CURRENT_EXPOSURE_BUDGET_POLICY, exposureBudgetConfiguration, EXPOSURE_ADMISSION_RULES } from '@/lib/exposure-budget-policy';
 import { assessFundedExposure, FUNDED_EXPOSURE_RULES, type FundedExposureReview } from '@/lib/funded-exposure-rules';
@@ -68,12 +69,14 @@ function scenarioWithPlanRoom(key: MarginScenario, scenario: CustomerWorstCase |
  */
 export const CURRENT_COMMERCIAL_TERMS = {
  // Since 18 October 2026 (schema 22): the price list of the owner's decision of 11:21, one list with no share of a sale, and the limits raised with it.
- schemaVersion: 23,
+ // Schema24: a complete LLC inventory and its ceilings bind every financial review.
+ schemaVersion: 25,
  marginPolicy: { decision: '2026-10-27T07:42:00-03:00', unit: 'strictly-positive-net-cents', minimumNetProfitCents: MINIMUM_NET_PROFIT_CENTS, company: 'nonnegative-at-computed-minimum-base', companyTargetBps: 6000, targetBasis: 'monthly-reconciled-actual-not-a-sales-gate', spendFloorRoom: COMMERCIAL_SPEND_FLOOR_ROOM_CENTS, assistantCostRoomCents: ADD_ON_ROOM_CENTS },
  usageAdmission: { schema: 1, paidVisits: "finite-plan-threshold", paidVideo: "finite-explicit-threshold", unknownTraffic: "pause", supplierByteCeilingProven: false },
  uploadAdmission: { rules: UPLOAD_BUDGET_RULES, policy: AUTOMATIC_UPLOAD_BUDGET_CEILINGS },
  planningProfitTaxFloorBps: PLANNING_PROFIT_TAX_FLOOR_BPS,
  customerBaseRules: CUSTOMER_BASE_RULES,
+ llcFixedCosts: { allocation: LLC_FIXED_COST_ALLOCATION, required: LLC_FIXED_COST_IDS, ceilings: CURRENT_LLC_FIXED_COST_CEILINGS, budget: "full-month-and-year-included-before-separately-funded-exposure", annual: "complete-ceilings-and-reserve-review-no-automatic-amortization" },
  fundedExposureRules: FUNDED_EXPOSURE_RULES,
  exposureAdmissionRules: EXPOSURE_ADMISSION_RULES,
  contractFundingRules:CONTRACT_FUNDING_RULES,
@@ -147,6 +150,16 @@ function commercialMarginDataReady(review:CommercialMarginReview):boolean{
  if(!review||review.priceAndRightsSnapshot!==CURRENT_PRICE_AND_RIGHTS_SNAPSHOT)return false;
  if(typeof review.taxEvidence!=="string"||!review.taxEvidence.trim()||typeof review.costAndLimitEvidence!=="string"||!review.costAndLimitEvidence.trim())return false;
  if(review.allocatedFixedCostsVerified!==true||review.prepaidUsageEnforced!==true||!review.scenarios)return false;
+ // Aggregate flags cannot approve unknown or omitted lines in the actual LLC
+ // inventory. Include the full cost/tax total once; never add it a second time
+ // or borrow the separately earmarked acquisition/closing exposure budget.
+ const llc=allocateEntireLlcFixedCosts(CURRENT_LLC_FIXED_COST_CEILINGS);
+ const fixedCosts=review.companyBase?.monthlyFixedCostsCeilingCents;
+ const fixedTaxes=review.companyBase?.monthlyFixedTaxesCeilingCents;
+ if(!llc || typeof fixedCosts!=="number" || !Number.isSafeInteger(fixedCosts) || fixedCosts<0
+  || typeof fixedTaxes!=="number" || !Number.isSafeInteger(fixedTaxes) || fixedTaxes<0)return false;
+ const fixedBudget=BigInt(fixedCosts)+BigInt(fixedTaxes);
+ if(fixedBudget<BigInt(llc.monthlyUsdCents)||fixedBudget*BigInt(12)<BigInt(llc.annualUsdCents))return false;
  const exposure=assessFundedExposure(review.fundedExposure);
  if(!exposure.approved||!review.companyBase||review.companyBase.monthlyFixedCostsCeilingCents==null)return false;
  const combinedCosts=review.companyBase.monthlyFixedCostsCeilingCents+exposure.monthlyBudgetCents!;

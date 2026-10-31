@@ -307,6 +307,8 @@ export async function createBillingCheckout(
   choice: { tier: Tier; cycle: Cycle } = { tier: "creator", cycle: "month" },
   customerId: string | null = store.stripeCustomerId,
   funding?:ContractGrant,
+  /** Sooner than its usual end (a store in its closing period, lib/closing-plan-guard.ts): never later than this. */
+  expiresAtSeconds?: number,
 ): Promise<string> {
   const { tier, cycle } = choice;
   assertFunding(funding,tier,cycle,'checkout',store.statsId??'');
@@ -328,6 +330,10 @@ export async function createBillingCheckout(
     cancel_url: `${origin}/studio?${store.sid ? `store=${store.sid}&` : ""}billing=canceled`,
   });
   if(funding){body.set('expires_at',String(funding.checkoutExpiresAtSeconds));body.set('metadata[funding_grant]',funding.id);body.set('metadata[funding_review]',funding.reviewId);body.set('subscription_data[metadata][funding_grant]',funding.id);body.set('subscription_data[metadata][funding_review]',funding.reviewId);}
+  if (expiresAtSeconds !== undefined && Number.isSafeInteger(expiresAtSeconds)) {
+    const usual = Number(body.get("expires_at"));
+    body.set("expires_at", String(usual > 0 ? Math.min(usual, expiresAtSeconds) : expiresAtSeconds));
+  }
   if (customerId && CUSTOMER_PATTERN.test(customerId)) {
     body.set("customer", customerId);
   } else {
@@ -1471,11 +1477,10 @@ export async function endLapsed(ids: string[]): Promise<void> {
 /**
  * Adds a line to what a store's subscription is billed next.
  *
- * The one thing here that is charged by use: video watched past what a plan
- * covers (lib/watch-rules.ts). It is not an invoice of its own. Stripe keeps
- * the line with the subscription and puts it on the next invoice that
- * subscription makes, charged to the card the plan is already paid with,
- * which is what the Terms say will happen and nothing more.
+ * Called only by lib/usage-billing.ts, whose meters all owe nothing since
+ * 31 October 2026 (232 [CA1] unit 3): nothing is charged after use, so this
+ * is not reached. Kept for that one caller; tests/watch.test.ts fails if any
+ * other file calls it.
  *
  * `mark` is written on the line so it can be found again (findInvoiceLine):
  * a request that timed out may still have gone through, and a second line

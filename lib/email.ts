@@ -239,7 +239,7 @@ const onceKey = (key: string) => `nl:ses:once:${createHash("sha256").update(key)
 /**
  * One email through Amazon, when Amazon may be used. True when Amazon took
  * it (or an existing claim was confirmed under the same key); false when
- * fallback is allowed; null when claim ownership is unknown. A claim is
+ * fallback is allowed; null when claim ownership or SES acceptance is unknown. A claim is
  * not proof of delivery, nor a source-funded lifetime reservation.
  */
 async function viaAmazon(message: OneMessage, to: string): Promise<boolean | null> {
@@ -264,7 +264,7 @@ async function viaAmazon(message: OneMessage, to: string): Promise<boolean | nul
     }
   }
   const headers = cleanHeaders(message.headers);
-  let last = { outcome: "busy" as string, why: "" };
+  let last: Awaited<ReturnType<typeof sesSend>> = { outcome: "busy", why: "" };
   for (let attempt = 0; attempt < 3; attempt += 1) {
     last = await sesSend(config, {
       from: fromLine(message.from),
@@ -276,6 +276,10 @@ async function viaAmazon(message: OneMessage, to: string): Promise<boolean | nul
       headers,
       attachments: message.attachments,
     });
+    // A timeout or server error may follow acceptance. Keep any existing
+    // claim, report unknown, and make no second SES attempt or Resend send.
+    // This does not prove delivery or provide lifetime idempotency.
+    if (last.uncertain === true) return null;
     if (last.outcome === "sent") {
       await countSesSent(1);
       return true;
@@ -439,16 +443,28 @@ export async function sendBatch(
     const all = going.length;
     // Whoever Amazon already took under this key, in a batch that was then
     // cut short and is being tried again, is not written to twice.
-    going = await notYetTaken(batchKey, going);
+    const pending = await notYetTaken(batchKey, going);
+    // Unreadable evidence must not release recipients to either provider.
+    if (pending === null) return "retry";
+    going = pending;
     // And a batch whose rest was once handed to Resend goes back to Resend,
     // under the same key: if Resend took it and the answer was lost on the
     // way, only Resend can tell, and Amazon would write to them all again.
     const handed = `nl:ses:rest:${createHash("sha256").update(batchKey).digest("hex").slice(0, 40)}`;
     let toResend = false;
     try {
-      toResend = (await redisPipeline([["GET", handed]]))[0] !== null;
+      const reply: unknown = await redisPipeline([["GET", handed]]);
+      if (!Array.isArray(reply)) return "retry";
+      const length = Object.getOwnPropertyDescriptor(reply, "length");
+      if (!length || !("value" in length) || length.value !== 1) return "retry";
+      const marker = Object.getOwnPropertyDescriptor(reply, "0");
+      // Only explicit absence or our own handoff marker can select a sender.
+      // A lost or malformed read must not turn into another provider attempt.
+      if (!marker || !("value" in marker)) return "retry";
+      if (marker.value === "1") toResend = true;
+      else if (marker.value !== null) return "retry";
     } catch {
-      toResend = true;
+      return "retry";
     }
     const state = going.length && !toResend ? await sesReady() : null;
     // Many at a time use Amazon's day only up to a share of it; past that
