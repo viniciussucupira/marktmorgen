@@ -224,7 +224,7 @@ export default function Home() {
                 {feeWords().feesRow}
                 {PLANS_ON_SALE ? "" : " Not on sale yet."}
               </p>
-              <a href="/pricing" className="hm-text-link">{`Compare ${PLAN_TITLES.creator}, ${PLAN_TITLES.pro} and ${PLAN_TITLES.scale}`}</a>
+              <a href="/pricing#plans" className="hm-text-link">{`Compare ${PLAN_TITLES.creator}, ${PLAN_TITLES.pro} and ${PLAN_TITLES.scale}`}</a>
             </div>
             <div className="hm-plan" data-home-plan>
               <h3 className="hm-plan-name">{PLAN_TITLES.creator}</h3>

@@ -46,7 +46,7 @@ const templates=html.match(/<template\b[^>]*>[\s\S]*?<\/template>/g)??[];
 const visibleHtml=html.replace(/<template\b[^>]*>[\s\S]*?<\/template>/g, "");
 is("three plans each retain both inert billing alternatives",templates.length,6);
 is("three visible definition lists remain",(visibleHtml.match(/<dl\b/g)??[]).length,3);
-for(const name of ["Store","Studio","Scale"]) is(name+" appears as a plan",html.includes(">"+name+"</p>"),true);
+for(const name of ["Store","Studio","Scale"]) is(name+" appears as a plan",html.includes(">"+name+"</h3>"),true);
 is("every card says 0% of sales",(html.match(/>0% of sales</g)??[]).length,3);
 for(const rate of ["6.25%","2.75%"]) is(rate+" is not shown",html.includes(rate),false);
 for(const price of ["$69","$449","$999"]) is(price+" is the card's monthly price",html.includes(">"+price+"<"),true);

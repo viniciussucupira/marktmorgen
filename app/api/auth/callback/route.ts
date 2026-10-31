@@ -12,6 +12,7 @@ import {
 } from "@/lib/auth";
 import { HOLD_SECONDS, TWO_STEP_COOKIE, endRecoveryAccess, holdSignIn, resetIfDue, twoStepOn } from "@/lib/two-step";
 import { fromAnotherSite, limited } from "@/lib/request-guard";
+import { withPrefill } from "@/lib/handle-prefill";
 
 /**
  * Finishing the emailed link.
@@ -35,7 +36,7 @@ export async function GET(request: NextRequest) {
   if (!/^[0-9a-f]{64}$/.test(token)) {
     return redirectTo(origin, "/signin?status=expired");
   }
-  return redirectTo(origin, `/signin/confirm?token=${token}`);
+  return redirectTo(origin, withPrefill(`/signin/confirm?token=${token}`, request.nextUrl.searchParams.get("handle")));
 }
 
 export async function POST(request: NextRequest) {
@@ -48,10 +49,14 @@ export async function POST(request: NextRequest) {
   if (fromAnotherSite(request)) return new Response("forbidden", { status: 403 });
 
   let token = "";
+  let handle: unknown = null;
   try {
     const form = await (await limited(request, 8_000)).formData();
     const value = form.get("token");
     token = typeof value === "string" ? value : "";
+    // The store address from the home page, if the link carried a valid one:
+    // read again here and only ever put in the studio's address, never kept.
+    handle = form.get("handle");
   } catch {
     return redirectTo(origin, "/signin?status=expired");
   }
@@ -87,7 +92,7 @@ export async function POST(request: NextRequest) {
   const previous = request.cookies.get(SESSION_COOKIE)?.value;
   if (previous && previous !== sessionId) await endSession(previous);
 
-  const response = redirectTo(origin, "/studio");
+  const response = redirectTo(origin, withPrefill("/studio", handle));
   response.headers.append("Set-Cookie", sessionCookie(sessionId));
   // A browser this account has never signed in from is worth an email
   // (lib/auth.ts, noteSignIn); the cookie that names the browser goes back.

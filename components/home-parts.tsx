@@ -256,7 +256,8 @@ function PlanCard({
         business it suits, which is the only thing somebody holding two
         cards up against each other is trying to find out.
       */}
-      <p className="t-h3">{PLAN_TITLES[tier]}</p>
+      {/* A heading under the pricing page's "Plan prices" section (WCAG 1.3.1, 2.4.10). */}
+      <h3 className="t-h3">{PLAN_TITLES[tier]}</h3>
       <p className="measure mt-2 text-[0.9375rem] text-ink-soft">{bestFor}</p>
 
       <p className="mt-7 flex items-baseline gap-2">

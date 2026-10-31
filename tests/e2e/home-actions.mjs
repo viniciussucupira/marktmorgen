@@ -22,7 +22,7 @@ export async function checkHomeActions({browser,LOCAL,axeSource,is}){
    }
    const plan=page.locator("[data-home-plan]");
    is("plan button goes to the start page "+width,await plan.getByRole("link",{name:"Start free",exact:true}).getAttribute("href"),"/signin");
-   is("compare all plans "+width,await page.getByRole("link",{name:"Compare Store, Studio and Scale",exact:true}).getAttribute("href"),"/pricing");
+   is("compare all plans "+width,await page.getByRole("link",{name:"Compare Store, Studio and Scale",exact:true}).getAttribute("href"),"/pricing#plans");
    // The end form submits as a plain form, before or without any script.
    const end=forms.nth(1);await end.getByLabel("Pick your store address",{exact:true}).fill("ada");
    const arrival=page.waitForURL(url=>url.pathname==="/signin");await end.getByRole("button",{name:"Claim it",exact:true}).click();await arrival;

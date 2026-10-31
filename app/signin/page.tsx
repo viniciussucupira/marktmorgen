@@ -222,7 +222,7 @@ export default async function SignInPage({
               {askedProblem === null ? (
                 <>
                   <p className="font-semibold">{`You picked marktmorgen.com/@${asked}`}</p>
-                  <p className="mt-1">It is not held for you yet. After you open the emailed link, type it on the address step to take it, if nobody has taken it first.</p>
+                  <p className="mt-1">It is not held for you yet. After you open the emailed link, it is already filled in on the address step. Create your store there to take it, if nobody has taken it first.</p>
                 </>
               ) : (
                 <>
@@ -246,7 +246,7 @@ export default async function SignInPage({
           ) : null}
 
           <div className="card mt-8 p-6 sm:p-8">
-            <SignInForm />
+            <SignInForm handle={asked && !returning && askedProblem === null ? asked : ""} />
             <PasskeySignIn />
             {/* Lost the inbox this account logs in with (lib/recovery-address.ts). */}
             <p className="mt-4 text-sm text-ink-soft">

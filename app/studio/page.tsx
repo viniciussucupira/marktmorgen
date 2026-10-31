@@ -46,6 +46,7 @@ import {
 } from "@/lib/store";
 import { KIND, idsOfKind, productCount, readKind, readListings, sellsAny, studioShelf } from "@/lib/catalog";
 import { HandleForm } from "@/components/handle-form";
+import { prefillHandle } from "@/lib/handle-prefill";
 import { RenameForm } from "@/components/rename-form";
 import { OldAddresses } from "@/components/old-addresses";
 import { DetailsForm } from "@/components/details-form";
@@ -3186,7 +3187,7 @@ export default async function StudioPage({
               agonizing over it: you can change it later, and the old address
               keeps working and sends people to the new one.
             </p>
-            <HandleForm />
+            <HandleForm initial={prefillHandle(params.handle)} />
           </div>
         )}
 
