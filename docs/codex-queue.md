@@ -20664,3 +20664,51 @@ Custo:mesmosGETcache/GETaccount/SETcache,piorcadênciaexistente1consultadecontap
 
 
 Resultado implementado (não publicado): falhadorefresh marca readyfalse/unreachable na mesmaSETcache,semrenovarreadytrue;preservaquota/taxaapenascomometadado nãoautorizante e âncora60sjáusada.2cenáriosreaisdosendercomcachepositivoexpirado+500/perdaresposta: e-mailindividual e lotedeserviço usamfallbackexistente,nãoamplificamroomdalista,nãonovaconsultaantes60s,recuperaçãocomquotaconfirmada1000/taxa2. Controledecacheválido299saindanãofazGETaccount;após301s falha nãoautorizases. Nenhumachamada/campo/chave/TTLnovo;cadênciaigual. Testes1401/1402 eessenciais mantidos;suíte39+Vercelinteirapendente. Não concluireserva global/listaSES-only/fila.
+
+
+### 309 — Evidência temporal do cache SES (31/10/2026)
+
+Estado: em andamento pelo Codex, ramo codex/ses-cache-clock-evidence, antes do código; 2026-10-31T07:39:14.242Z. Um cache ready=true com at no futuro ou hold positivo pode prolongar autorização sem evidência válida. Aceitar autoridade positiva apenas com relógio finito seguro, at não futuro e hold=0; resposta não autorizante mantém a pausa existente. Reutilizar o caminho de consulta já existente, sem nova operação/chave/TTL/campo, sem aumentar limites. Testes sintéticos no remetente real, recuperação e controle da pausa. PR#1404 permanece válido e intacto, com CI em execução. Sem alterar a classificação serviço/lista, vendas, preços, idiomas ou controles fiscais.
+
+Resultado implementado: cache positivo exige hold=0 e at não futuro; relógio inválido retorna indisponível antes deIO.4cenários reais de envio com cache temporalmente impossível+falha500 não usamSES, preservamfallbackessencial,backoff60s e recuperação comnovaquotaconfirmada1000/2;4relógiosinválidosnãofazemconsulta. Controles de frescor299/301s e pausa real existentes preservados. Nenhumaoperação/chave/TTL/campo/limiteadicional; custos reais continuam desconhecidos, nunca zero. Suíte39+Vercel completa no novohead pendente.
+
+Publicação efetiva anterior #1402 (inclui1401,contauma): incorporação31/10/2026 04:32:56Fortaleza, mergeb0945d4de56aba64300b6aeb2433158b5ce386a3,árvore5c6e359fd0f73791d6ecacb01aa5216e5ecc5d25,headtestado3d46a68a52580a1c471e0f4fbf9bda98adb85602,39/39+Vercel. READYdpl_DW5axW5S9zQsBSaUf3jtX2MoF8Q1confirmado7aliases(incluimarktmorgen.com)+5HTMLreais; janelaerror/fatal07:32:56–07:36:01.333UTCsemregistros(limit10,janelaapenas). CI8runs39jobs10575segundosconhecidos,0intervalosdesconhecidos;1401ancestral11421segundos. Preçospagos/OS/arredondamento/créditos/cache/Verceldesconhecidos,nãozero. Contador254retidopelacondiçãoChromejáregistrada;vendasfechadas. Nenhumaalegaçãode309concluído,margemcertificadaouentregaexatamenteumavez.
+
+
+### 309 — União canônica da evidência temporal SES
+
+Estado: em andamento pelo Codex, 2026-10-31T08:03:03.100Z, ramo codex/ses-clock-canonical-union, antes do código. Main9c095a11incorporou CA1unidade5 doClaude, com mudanças executáveis/rotas/estúdio/termos/registrodedados/testes; não é mais união apenas documental. Incluir todos os blobs canônicos, mais somente lib/ses.ts e tests/ses-sender.test.ts da unidade temporal1405, com fila integral. Executar bateria39+Vercelnonovohead;1405válido/intacto,semcancelarCI. Nenhuma alteração aos arquivos de contestação doClaude,preços,vendas,idiomas,permissõesoufinanciamento.
+
+Publicação efetiva #1404: merge761134e4ac698ac3078f216cd85722f9c02a4681,árvoreb4810a834036db364151828ed0a6538e5927e21e,headtestado945b0a5b4861d3237608a064dce549671ab8ef81,incorporação31/10/2026 04:45:21Fortaleza;39/39+Vercel,READYdpl_QCggowomQPQSXECxjsC2HqmpzDFyconfirmado7aliases+5HTMLreais. Janelaerror/fatal07:45:21–07:47:56.250UTCsemregistros(limit10,janelaapenas). CI8runs39jobs11268segundosconhecidos,0intervalosdesconhecidos. Custospagos/OS/arredondamento/créditos/cache/Verceldesconhecidos,nãozero. Contador254retido,semaberturadevendas. Próximo pedidoClaude sobrecontestação perdida emcommercial-margin preservado na fila,semcertificarvaloresprivados.
+
+Resultado implementado: união integral da main9c095a11(CA1unidade5) com a correção temporal SES1405; somente lib/ses.ts/testsses-sender alterados na fonte canônica. Nenhum novo comportamento de contestação/refund/planpause; controles compartilhados doClaude retidos. Suíte39+Vercel inteira no novohead pendente; antigo1405mantémhead/CIintactos e não é suficiente para incorporar sobre código novo.
+
+
+### 309 — União SES com fonte canônica de31/10/2026 11h42Fortaleza
+
+Estado: em andamento pelo Codex, 2026-10-31T14:43:25.641Z, ramo codex/ses-clock-oct31-union, antes do código. A união1410 passou39/39, mas main175b3a26 contém novas mudanças executáveis doClaude: CA1unidade6/4b1/4b2/4b3/4b4a/4b4b1 e VS1página inicial/pricing/autenticação já incorporadas. Preservar cada blobcanônico, aplicar somente a correção temporalSES e seus testes já revisados1410, e executar39+Vercel inteiros nesta união. Heads1405/1410válidosintactos,nenhumaediçãoconcorrenteoucancelamentoCI. Fila integral canônica e histórico das unidades retidos. Nenhuma configuração externa, preço/limite/idioma/opt-in/venda alterados. Custos reais desconhecidos não sãozero. PedidoClaude de custear contestação perdida permanece acionável na fila, sem margem certificada.
+
+Resultado implementado: mantém todos os arquivos canônicos175b3a26, salvo as duas fontesSES/teste da unidade temporal1410 e os acréscimos de fila. Cache positivo sóautoriza com at não futuro e holdzero; relógio inválido nãoautoriza/nãoconsulta; falhadorefreshcontinuanãoautorizante; fallbackessencial,backoff e recuperação mantidos. Toda a suíte39+Vercel no novohead pendente. Não publicável apenas com os39sucessos das branchesancestrais, nem entrega funcional neste estado.
+
+
+### 309 — União temporal SES com CA1webhooks já incorporado
+
+Estado: em andamento pelo Codex, 2026-10-31T14:53:15.232Z, ramo codex/ses-clock-webhook-union, antes do código. Fonte55ff2b30 inclui1442webhooksrecusadosquandopausados,semfila/novastentativas/custos,Termos/ajuda/editor/testes e1444VS1estado/1445–1447fila. MantercadaarquivoClaude,maisapenaslibses/testesdatemporalSES. CI1443válidoemexecuçãointacto; nãoeditarhead, nãocancelar e nãoaproveitarseuschecksparaafirmarvalidadaestaunião. Bateria39+Vercel inteira no novohead. Nãoabrirvendas,nãoalterarpreços/limites/idiomas/consentimentos/financiamento. Custos reais ainda desconhecidos,nãozero.
+
+Resultado implementado: todos os blobs canônicos55ff2b30mantidos,excetolib/ses.ts/testesessender da correçãotemporal e filaaditiva. FontesSES/testesidênticasàsvalidadas1410; novaconfiguração conjunta incluiwebhooksCA1 e VS1canônicos e exige39checks completosnovamente. NenhumcódigoClaude substituído,nemcritériofinanceirorelaxado. Publicação econtadornãoconfirmadosnesteestado.
+
+
+### 309 — Correção concreta da falha de compilação sintética de fontes
+
+Estado: em andamento pelo Codex antes do código, 2026-10-31T15:01:28.265Z, ramo codex/ses-clock-webhook-union, headfalhado2ff3f6f7, job124569529121(BuyeractionAAAwebkit). ErroNext16.4.2aoresolverUnboundedGoogleFonts: querieshaveexactlyoneentry; falhaantesdotestenavegador. Provedornooficialhttps://github.com/vercel/next.js/issues/99114 ePR100158(explicaURLsfontsextensionless/queryparams). Usarfontes substitutas jáexistentes somente nascompilaçõesCI,comservidorloopbacktemporárioeGeistlocalqueNextjáinstala; incluirFigtree/Unboundednomockexistente. Produção/Vercel/fontes/visualaprovadonãomudam. Nenhum downloadexterno adicional,deppackage,IOdeproduçãoouassinatura. Apósfix: novohead+suíte39/Vercelcompletos,nãojobisolado. Demaisheadsvalidosintactos.
+
+Resultado implementado:7workflows(9buildsteps) passam pelomesmo scripts/ci-build.mjs,que exigeGitHubActions,forneceGeistWOFF2jáinstaladoemtamanhoaté1MiBporservidorloopbackportatemporária,sóGETcaminhofixo,fechadonomesmo processo aofimdobuild; nenhum downloadGooglefontnascompilaçõessintéticas. MockexistenteagoracobreFigtree300..900/Unbounded600;800comdisplayoptional;rootfontsmodoswapmantido. TestevalidapedidosNext exatos,faces/pesos/display eausênciadefontfileexterno. npmrunbuildprodução e fontesreaisVercelnãomudam;testesfuncionais/navegador continuam. Falha2ffregistrada,novosuíte39/Vercelcompleta pendente. Não reexecutar apenasjobfalhado nem declararpublicaçãocomCIparcial. Semcustooperaçãoaplicação/chave/TTLnovo;CIcontinuausandoarquivojáinstaladoeoperaçõeslocais temporárias.
+
+Revisãodocompatibilidadeantesdeconclusão: tests/run.mjscompilatestscomoCJS; testeusa createRequirecomcaminhoabsolutopackage.jsonemvezdeimport.meta, quenãotemURLnoCJS. Corrigidoemnovohead,novobateria39completa,semdeclararhead843218válido. Nenhumajobisoladoreexecutado.
+
+Correçãoapósfalhaconfirmadanohead717b574(StudioAAAChromium124572056970/ProductAAAWebkit124572011058/SignupAAAWebkit124572153570): fixtureantigadonossoCIcobriaGeist/InstrumentSerifdisplay=swap,masapplayoutdesde9Outusadisplay=optional; aoaplicaromocktambémaobuildinicial,doispedidosatuaisficaramsemresposta. Coberturaagoraincluios4pedidosoptionalreais(root+home),semretiraraliaseslegadosswap;regressãovalidaos4familias/pesos/displayeprodutocontinuamesmo. Nova bateria39+Vercel no novohead; nada de rerunjobisolado ou ignorarfalha.
+
+
+### 309 — União da correção SES/CI com leitor SY1canônico
+
+Estado: em andamento pelo Codex antes do código, 2026-10-31T15:29:56.120Z, ramo codex/ses-font-refund-union. Fonte04298feainclui1449plan-refundleitorread-only/testesdoClaude e registro1451. Preservarcadablobcanônico,maisapenasSESclock+CIloopbackfontfixtures. Head1448/7b850válidoemexecuçãointacto; novafonteexecutávelimpõe39+Vercelinteirosnonovohead,nãoreutilizarCIparcial. Guardaprévia parouantigabase4877antesdemutarporque mainavançou;agorafilaoficialatualcompleta retida. Visual/fontsreais/npmrunbuildprodução,vendasfechadas/preços/limites/idiomas/opt-ins/custos/controlesfiscaismantidos;desconhecidonãozero.
