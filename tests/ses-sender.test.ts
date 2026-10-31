@@ -352,6 +352,51 @@ async function main(): Promise<void> {
   is("all 100 existing batch positions remain available with confirmed absence",
     (await notYetTaken("bc:full-marker-window", fullWindow))?.length, 100);
 
+  part("Unreadable handoff evidence selects neither sender");
+  for (const [name, answer] of markerCases) {
+    account = approved();
+    askAgain();
+    clear();
+    const batchKey = `bc:unknown-handoff:${name}`;
+    const handed = `nl:ses:rest:${createHash("sha256").update(batchKey).digest("hex").slice(0, 40)}`;
+    await originalPipeline([["SET", handed, "1", "EX", 2 * 86_400]]);
+    const counted = [await sesSentLast24h(), await sentThisMonth()];
+    let reads = 0;
+    let mutations = 0;
+    redis.pipeline = async (commands) => {
+      if (commands.some(command => command[1] === handed && command[0] !== "GET")) mutations += 1;
+      const reply = await originalPipeline(commands);
+      if (commands.length === 1 && commands[0][0] === "GET" && commands[0][1] === handed) {
+        reads += 1;
+        return answer() as unknown[];
+      }
+      return reply;
+    };
+    try {
+      is(`${name}: unknown handoff returns retry without choosing a sender`,
+        await sendBatch([letter("handoff@example.com")], batchKey, { by: "company" }), "retry");
+    } finally {
+      redis.pipeline = originalPipeline;
+    }
+    is(`${name}: one existing handoff read, no provider call or marker mutation`,
+      [reads, amazon.length, resend.length, mutations, redis.run(["GET", handed])], [1, 0, 0, 0, "1"]);
+    is(`${name}: unknown handoff is not counted as a known send`,
+      [await sesSentLast24h(), await sentThisMonth()], counted);
+  }
+  is("handoff getters and oversized reply members are not evaluated", [markerGetters, oversizedMembers], [0, 0]);
+  for (const handedBefore of [false, true]) {
+    account = approved();
+    askAgain();
+    clear();
+    const batchKey = `bc:handoff-control:${handedBefore}`;
+    const handed = `nl:ses:rest:${createHash("sha256").update(batchKey).digest("hex").slice(0, 40)}`;
+    if (handedBefore) await originalPipeline([["SET", handed, "1", "EX", 2 * 86_400]]);
+    is(`${handedBefore}: explicit handoff evidence preserves the known provider`,
+      await sendBatch([letter("handoff-control@example.com")], batchKey, { by: "company" }), "sent");
+    is(`${handedBefore}: exactly the selected provider accepts`,
+      [amazon.length, resend.length], handedBefore ? [0, 1] : [1, 0]);
+  }
+
   part("A batch, one email at a time");
   clear();
   const thirty = Array.from({ length: 30 }, (_, i) => ({ ...letter(`reader${i}@example.com`, "News"), tags: { [STORE_TAG]: "a".repeat(32), [LIST_TAG]: "b".repeat(32) } }));

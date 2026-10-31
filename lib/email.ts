@@ -453,9 +453,18 @@ export async function sendBatch(
     const handed = `nl:ses:rest:${createHash("sha256").update(batchKey).digest("hex").slice(0, 40)}`;
     let toResend = false;
     try {
-      toResend = (await redisPipeline([["GET", handed]]))[0] !== null;
+      const reply: unknown = await redisPipeline([["GET", handed]]);
+      if (!Array.isArray(reply)) return "retry";
+      const length = Object.getOwnPropertyDescriptor(reply, "length");
+      if (!length || !("value" in length) || length.value !== 1) return "retry";
+      const marker = Object.getOwnPropertyDescriptor(reply, "0");
+      // Only explicit absence or our own handoff marker can select a sender.
+      // A lost or malformed read must not turn into another provider attempt.
+      if (!marker || !("value" in marker)) return "retry";
+      if (marker.value === "1") toResend = true;
+      else if (marker.value !== null) return "retry";
     } catch {
-      toResend = true;
+      return "retry";
     }
     const state = going.length && !toResend ? await sesReady() : null;
     // Many at a time use Amazon's day only up to a share of it; past that
