@@ -33,9 +33,12 @@ export const LOOKBACK_DAYS = 120;
 export const MAX_PAGES = 5;
 /** The most disputes still open re-read by id in one run. */
 export const MAX_REREADS = 50;
+/** How long a dispute that matched no plan is asked about again. */
+export const UNMATCHED_RETRY_DAYS = 7;
 /**
  * What each dispute already read turned out to be, by id: "final" (decided,
- * written), "unmatched" (not a plan payment), or "open:<store ref>". A known
+ * written), "unmatched:<seconds>" (not a plan payment, asked again for a
+ * week), or "open:<store ref>". A known
  * one costs no Stripe read when it is listed again, so the newest page is
  * always reached first and a run never spends its time on settled ones.
  */
@@ -58,7 +61,7 @@ async function remember(id: string, what: string): Promise<void> {
 async function writeStatus(ref: string, id: string, status: PlanDisputeStatus, at: number, coversUntil: number, nowSeconds: number): Promise<boolean> {
   const store = await storeForEmail(ref);
   if (!store) {
-    await remember(id, "unmatched");
+    await remember(id, `unmatched:${nowSeconds}`);
     return false;
   }
   const before = JSON.stringify(store.planDisputes ?? []);
@@ -74,7 +77,8 @@ async function applyDispute(dispute: Record<string, unknown>, known: string | un
   const created = Number.isSafeInteger(dispute.created) ? (dispute.created as number) : 0;
   if (!DISPUTE_ID.test(id) || created <= 0) return "unmatched";
   if (known === "final") return "unchanged";
-  if (known === "unmatched") return "unmatched";
+  // Not a plan payment: asked again for UNMATCHED_RETRY_DAYS, in case the store's record caught up.
+  if (known?.startsWith("unmatched:") && nowSeconds - Number(known.slice(10)) > UNMATCHED_RETRY_DAYS * 24 * 60 * 60) return "unmatched";
   const invoice = objectOf(objectOf(dispute.charge)?.invoice);
   const status = disputeStatusOf(dispute.status);
   if (known?.startsWith("open:")) {
@@ -82,7 +86,7 @@ async function applyDispute(dispute: Record<string, unknown>, known: string | un
   }
   const subscriptionId = idOf(invoice?.subscription);
   if (!invoice || !SUBSCRIPTION_ID.test(subscriptionId)) {
-    await remember(id, "unmatched");
+    await remember(id, known?.startsWith("unmatched:") ? known : `unmatched:${nowSeconds}`);
     return "unmatched";
   }
   const subscription = await onPlatformAt(DISPUTE_VERSION, "GET", `/subscriptions/${encodeURIComponent(subscriptionId)}`);
@@ -90,7 +94,7 @@ async function applyDispute(dispute: Record<string, unknown>, known: string | un
   const store = isAddOn(subscription) || typeof handle !== "string" || !handle ? null : await storeForHandle(handle);
   // Only a subscription this store wrote down as its plan, or one of the same Stripe customer.
   if (!store || (store.subscriptionId !== subscriptionId && !sameCustomer(store.stripeCustomerId, subscription))) {
-    await remember(id, "unmatched");
+    await remember(id, known?.startsWith("unmatched:") ? known : `unmatched:${nowSeconds}`);
     return "unmatched";
   }
   return (await writeStatus(storeRef(store), id, status, created, coveredUntil(invoice), nowSeconds)) ? "recorded" : "unchanged";

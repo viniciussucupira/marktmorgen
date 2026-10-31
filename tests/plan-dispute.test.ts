@@ -182,7 +182,14 @@ async function main() {
     asked.length = 0;
     const again = await syncPlanDisputes(Date.now() + 10_000, NOW);
     is("the same dispute again changes nothing", again.recorded, 0);
-    is("disputes already read cost no subscription read", asked.filter((line) => line.startsWith("GET /v1/subscriptions/") && !line.includes(BROKEN)).length, 0);
+    const unmatchedNow = asked.filter((line) => line.includes(OTHER)).length;
+    is("one that matched no plan is asked about again within the week", unmatchedNow, 1);
+    asked.length = 0;
+    await syncPlanDisputes(Date.now() + 10_000, NOW + 8 * DAY);
+    is("and no longer after it", asked.filter((line) => line.includes(OTHER)).length, 0);
+    asked.length = 0;
+    await syncPlanDisputes(Date.now() + 10_000, NOW);
+    is("disputes already read cost no subscription read", asked.filter((line) => line.startsWith("GET /v1/subscriptions/") && !line.includes(BROKEN) && !line.includes(OTHER) && !line.includes(ADDON)).length, 0);
     is("still one", (await storeForEmail(owner))!.planDisputes?.length, 1);
     pages = [{ data: [dispute("du_Plan1", "won", SUB)], has_more: false }];
     const won = await syncPlanDisputes(Date.now() + 10_000, NOW);
