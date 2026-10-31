@@ -261,7 +261,7 @@ export type SesState = {
   ready: boolean;
   /** Why not, in a word, when it does not: "sandbox", "off", "shutdown", "unreachable", or what a send was refused with. */
   why: string;
-  /** Emails a second, and in any 24 hours; 0 for no limit. */
+  /** Emails a second, and in any 24 hours; only max24 = -1 denotes unlimited quota. */
   rate: number;
   max24: number;
   /** When Amazon was last asked, and until when it is not asked again after a refusal (seconds). */
@@ -277,12 +277,28 @@ export const HOLD_SECONDS = 600;
 /** How long a state is kept at all: past this, with Amazon not answering, it is not used. */
 const KEPT_SECONDS = 3_600;
 
+/** Only documented numeric quota evidence may authorize SES. */
+function accountRate(raw: unknown): number | null {
+  return typeof raw === "number" && Number.isFinite(raw) && raw >= 1 && raw <= Number.MAX_SAFE_INTEGER ? raw : null;
+}
+
+function accountMax(raw: unknown): number | null {
+  if (raw === -1) return -1; // The documented unlimited-quota sentinel.
+  return typeof raw === "number" && Number.isFinite(raw) && raw >= 1 && raw <= Number.MAX_SAFE_INTEGER ? Math.floor(raw) : null;
+}
+
 function parseState(raw: unknown): SesState | null {
-  if (typeof raw !== "string") return null;
+  if (typeof raw !== "string" || raw.length > 1_024) return null;
   try {
-    const v = JSON.parse(raw) as Partial<SesState>;
-    if (typeof v.ready !== "boolean") return null;
-    return { ready: v.ready, why: typeof v.why === "string" ? v.why : "", rate: Number(v.rate) || 0, max24: Number(v.max24) || 0, at: Number(v.at) || 0, hold: Number(v.hold) || 0 };
+    const v = JSON.parse(raw) as Partial<SesState> | null;
+    if (!v || typeof v !== "object" || Array.isArray(v) || typeof v.ready !== "boolean" ||
+        typeof v.why !== "string" || v.why.length > 300 ||
+        typeof v.rate !== "number" || !Number.isFinite(v.rate) || v.rate < 0 || v.rate > Number.MAX_SAFE_INTEGER ||
+        typeof v.max24 !== "number" || !Number.isSafeInteger(v.max24) || v.max24 < -1 ||
+        typeof v.at !== "number" || !Number.isSafeInteger(v.at) || v.at < 0 ||
+        typeof v.hold !== "number" || !Number.isSafeInteger(v.hold) || v.hold < 0) return null;
+    if (v.ready && (v.why !== "" || accountRate(v.rate) === null || accountMax(v.max24) === null)) return null;
+    return { ready: v.ready, why: v.why, rate: v.rate, max24: v.max24, at: v.at, hold: v.hold };
   } catch {
     return null;
   }
@@ -305,10 +321,16 @@ async function askAccount(config: SesConfig, now: number): Promise<SesState | nu
       EnforcementStatus?: unknown;
       SendQuota?: { Max24HourSend?: unknown; MaxSendRate?: unknown };
     };
-    const why = a.ProductionAccessEnabled !== true ? "sandbox" : a.SendingEnabled !== true ? "off" : a.EnforcementStatus === "SHUTDOWN" ? "shutdown" : "";
-    const rate = Number(a.SendQuota?.MaxSendRate);
-    const max24 = Number(a.SendQuota?.Max24HourSend);
-    return { ready: why === "", why, rate: Number.isFinite(rate) && rate > 0 ? rate : 0, max24: Number.isFinite(max24) && max24 > 0 ? Math.floor(max24) : 0, at: now, hold: 0 };
+    if (!a || typeof a !== "object" || Array.isArray(a)) return { ready: false, why: "status", rate: 0, max24: 0, at: now, hold: 0 };
+    let why = a.ProductionAccessEnabled !== true ? "sandbox" : a.SendingEnabled !== true ? "off" :
+      a.EnforcementStatus === "SHUTDOWN" ? "shutdown" :
+      a.EnforcementStatus === "HEALTHY" || a.EnforcementStatus === "PROBATION" ? "" : "status";
+    const rate = accountRate(a.SendQuota?.MaxSendRate);
+    const max24 = accountMax(a.SendQuota?.Max24HourSend);
+    // The current batch pacer supports at least one email a second. Missing,
+    // zero, coerced or unsupported quota data is not permission to send.
+    if (!why && (rate === null || max24 === null)) why = "quota";
+    return { ready: why === "", why, rate: rate ?? 0, max24: max24 ?? 0, at: now, hold: 0 };
   } catch (error) {
     console.error("Amazon SES could not be reached", error);
     return null;
@@ -326,7 +348,13 @@ export async function sesState(now = Date.now()): Promise<SesState | null> {
   const seconds = Math.floor(now / 1000);
   let known: SesState | null = null;
   try {
-    known = parseState((await redisPipeline([["GET", STATE_KEY]]))[0]);
+    const reply: unknown = await redisPipeline([["GET", STATE_KEY]]);
+    if (!Array.isArray(reply)) return null;
+    const length = Object.getOwnPropertyDescriptor(reply, "length");
+    if (!length || !("value" in length) || length.value !== 1) return null;
+    const item = Object.getOwnPropertyDescriptor(reply, "0");
+    if (!item || !("value" in item)) return null;
+    known = parseState(item.value);
   } catch {
     return null;
   }
@@ -414,7 +442,9 @@ export const SES_BULK_SHARE = 0.8;
 
 /** Recorded bulk room; null when usage cannot be proved. Infinity for an account with no limit. */
 export async function sesBulkRoom(state: SesState, now = Date.now()): Promise<number | null> {
-  if (state.max24 <= 0) return Number.POSITIVE_INFINITY;
+  if (typeof state.max24 !== "number" || !Number.isSafeInteger(state.max24) || state.max24 < -1) return null;
+  if (state.max24 === -1) return Number.POSITIVE_INFINITY;
+  if (state.max24 === 0) return 0;
   const sent = await sesSentLast24h(now);
   return sent === null ? null : Math.max(0, Math.floor(state.max24 * SES_BULK_SHARE) - sent);
 }
