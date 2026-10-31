@@ -260,6 +260,12 @@ export function WebhookEditor({ view: initial }: { view: WebhooksView }) {
             An answer other than 2xx is tried again after 5 minutes, 15 minutes, 1 hour, 3, 12 and 24 hours: seven tries in
             all, then it is marked failed. Redirects are not followed.
           </li>
+          <li>
+            While your plan&apos;s renewal payment has not gone through, or a payment for it is disputed, webhooks are not
+            sent, and new endpoints and test messages wait. An event in that time is marked &ldquo;Not sent&rdquo; here with
+            the reason and is not tried again; it still counts as one of the month&apos;s webhook deliveries. Events after the
+            payment is recorded, or the dispute settled, are sent as usual.
+          </li>
           <li>The same event can arrive twice in rare cases; its id never changes, so a receiver can ignore a repeat.</li>
           <li>
             Every message is signed. The header <span className="font-mono">Marktmorgen-Signature</span> reads{" "}

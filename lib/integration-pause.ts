@@ -60,3 +60,19 @@ export const CALENDAR_LIST_PAUSED = "Your Google calendar list is not read while
  * added stay, can be changed and can be removed.
  */
 export const WEBHOOK_TEST_PAUSED_WORDS = pausedWords("webhook test messages cannot be sent", "You can still change or remove any endpoint.");
+
+/**
+ * 232 [CA1] unit 4b4b2: a new endpoint is new delivery work, so adding one
+ * waits too, through the studio and the API alike.
+ */
+export const WEBHOOK_ADD_PAUSED_WORDS = pausedWords("new webhook endpoints cannot be added", "You can still change or remove any endpoint.");
+
+/**
+ * 232 [CA1] unit 4b4b2: a delivery that comes due while the plan's costs are
+ * paused is not sent and not tried again; the studio's log shows why. It
+ * still counts as one of the month's webhook deliveries (lib/webhooks.ts).
+ */
+export const WEBHOOK_PAUSED_NOT_SENT_WORDS: Record<"paused_unpaid" | "paused_disputed", string> = {
+  paused_unpaid: "Not sent: your plan's renewal payment did not go through, so webhooks are not sent until it is paid. This one is not tried again, and it counts as one of this month's webhook deliveries. Events after the payment is recorded are sent as usual.",
+  paused_disputed: "Not sent: a payment for your plan is disputed with your bank, so webhooks are not sent until the dispute is settled. This one is not tried again, and it counts as one of this month's webhook deliveries. Events after the dispute is settled are sent as usual.",
+};

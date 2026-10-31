@@ -61,6 +61,7 @@ import { isSettled } from "@/lib/instant-pay";
 import { SafeFetchError, checkUrl, problemWords, safeFetch } from "@/lib/safe-fetch";
 import { type Store, storeForHandle, saleHandles } from "@/lib/store";
 import { takeAllowance } from "@/lib/store-allowance";
+import { WEBHOOK_ADD_PAUSED_WORDS, WEBHOOK_PAUSED_NOT_SENT_WORDS, integrationPauseWord } from "@/lib/integration-pause";
 import { reservePaidResourceWindow } from "@/lib/contract-resource-window";
 import { readListing } from "@/lib/catalog";
 import { SITE_URL } from "@/lib/site-url";
@@ -227,8 +228,17 @@ async function attempt(delivery: Delivery, endpoint: Endpoint | undefined, store
     return { ...next, state: "failed", next: 0, lastStatus: 0, lastError: "The endpoint was removed." };
   }
   if (!store) return { ...delivery, state: "failed", next: 0, lastAt: now, lastStatus: 0, lastError: "The store could not be found." };
+  // 232 [CA1] 4b4b2: while the plan's renewal is unpaid or its payment is
+  // disputed, nothing is sent and the endpoint is not called. The delivery is
+  // marked not sent at once, with the reason, and not tried again: a delivery
+  // kept waiting would be looked at again and again at a cost no figure
+  // carries. It still takes one of the month's webhook deliveries, so what is
+  // refused stays inside what the month is priced for. Events after the
+  // payment is recorded, or the dispute settled, are sent as usual.
+  const paused = store === "taken" || delivery.type === "test" ? null : integrationPauseWord(store, now / 1000);
   // One of the store's webhook deliveries for its month, before the endpoint is called.
   const taken = store === "taken" ? ({ ok: true } as const) : await takeAllowance(store, "webhook", 1, now);
+  if (paused && taken.ok) return { ...delivery, state: "failed", next: 0, lastAt: now, lastStatus: 0, lastError: WEBHOOK_PAUSED_NOT_SENT_WORDS[paused] };
   if (!taken.ok) {
     const retryIn = delivery.type === "test" ? undefined : RETRY_MINUTES[delivery.attempts];
     // A count that could not be made is tried again on the schedule; a month whose deliveries are used is not.
@@ -507,7 +517,7 @@ export function isWebhookEvent(value: unknown): value is WebhookEvent {
 
 export type AddEndpointResult =
   | { ok: true; secret: string; view: WebhooksView }
-  | { ok: false; reason: "full" | "invalid" | "events" | "duplicate" | "unavailable"; message: string };
+  | { ok: false; reason: "full" | "invalid" | "events" | "duplicate" | "unavailable" | "paused"; message: string };
 
 /**
  * Adds an endpoint. Its secret is made here and returned this once; the
@@ -516,6 +526,9 @@ export type AddEndpointResult =
  */
 export async function addEndpoint(store: Store, rawUrl: string, events: unknown, now = Date.now()): Promise<AddEndpointResult> {
   if (!store.statsId) return { ok: false, reason: "invalid", message: "Open the studio once more and try again." };
+  // 232 [CA1] 4b4b2: a new endpoint is new delivery work; it waits while the plan's costs are paused.
+  const paused = integrationPauseWord(store, now / 1000);
+  if (paused) return { ok: false, reason: "paused", message: WEBHOOK_ADD_PAUSED_WORDS[paused] };
   const chosen = Array.isArray(events) ? [...new Set(events.filter(isEvent))] : [];
   if (!chosen.length) return { ok: false, reason: "events", message: "Choose at least one event to send." };
   if (rawUrl.trim().length > MAX_ENDPOINT_URL) return { ok: false, reason: "invalid", message: "That address is too long." };

@@ -16,7 +16,7 @@ import { MAX_ENDPOINT_URL, addEndpoint, removeEndpoint, webhooksView } from "@/l
  * (lib/account-notice.ts). The same five endpoints a store may have
  * (MAX_ENDPOINTS) count both.
  */
-const ADD_ERRORS: Record<"full" | "invalid" | "events" | "duplicate" | "unavailable", number> = { full: 409, invalid: 400, events: 400, duplicate: 409, unavailable: 503 };
+const ADD_ERRORS: Record<"full" | "invalid" | "events" | "duplicate" | "unavailable" | "paused", number> = { full: 409, invalid: 400, events: 400, duplicate: 409, unavailable: 503, paused: 409 };
 
 /** After the answer when there is a request to wait for; at once otherwise (a check, a script). */
 function later(task: () => Promise<unknown>): void {
