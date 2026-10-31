@@ -11,6 +11,8 @@ import { studioPath, studioView } from "@/lib/studio-route";
 import { StudioHeader } from "@/components/studio-header";
 import { StudioStorePin } from "@/components/studio-store-pin";
 import { lessonCount, lessonsInOrder, readCourse } from "@/lib/course";
+import { captionsAnchor, lessonCaptionCheck } from "@/lib/course-access-check";
+import { CourseAccessCheck } from "@/components/course-access-check";
 import { emailKey, studentEmail, studentsOf } from "@/lib/learn";
 import { canSellProduct } from "@/lib/store-checkout";
 import { passedFor } from "@/lib/quiz";
@@ -176,8 +178,16 @@ export default async function StudioCoursePage({
             </ul>
           </section>
         ) : null}
+        <CourseAccessCheck
+          check={lessonCaptionCheck(course, streams, captions, writing)}
+          productId={product.id}
+          hrefOf={(id) => `${studioPath(store, `lesson=${encodeURIComponent(id)}`, `course/${product.id}`)}#${captionsAnchor(id)}`}
+          canWrite={autoCan}
+          canReupload={isStreamConfigured()}
+        />
         <CourseEditor
           productId={product.id}
+          openFirst={typeof query.lesson === "string" && lessonsInOrder(course).some(({ lesson }) => lesson.id === query.lesson) ? query.lesson : null}
           initial={course}
           folder={folder}
           streams={streams}
