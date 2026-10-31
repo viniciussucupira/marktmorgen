@@ -53,7 +53,7 @@ export async function resendUsageSince(fromMs: number, throughMs = Date.now()): 
       fromMs < 0 || throughMs < fromMs) return { ok: false, reason: "unknown" };
 
   let after = "";
-  let previousTime = throughMs;
+  let previousTime = Number.POSITIVE_INFINITY;
   let recipients = 0;
   let records = 0;
   const ids = new Set<string>();
@@ -100,9 +100,13 @@ export async function resendUsageSince(fromMs: number, throughMs = Date.now()): 
         return { ok: false, reason: "unknown" };
       }
       const at = Date.parse(created);
-      if (!Number.isFinite(at) || at > previousTime || at > throughMs) return { ok: false, reason: "unknown" };
+      if (!Number.isSafeInteger(at) || at < 0 || at > previousTime) return { ok: false, reason: "unknown" };
       previousTime = at;
       ids.add(id);
+      // Stable newest-first pagination may include a send created after the
+      // caller took its upper-bound snapshot. Skip it and keep walking to the
+      // exact window instead of turning concurrent delivery into false usage.
+      if (at > throughMs) continue;
       if (at < fromMs) {
         crossedWindow = true;
         continue;

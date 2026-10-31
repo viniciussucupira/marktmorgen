@@ -41,13 +41,23 @@ async function main(): Promise<void> {
     { object: "list", data: [], has_more: true },
     { object: "list", data: [idGetter], has_more: false },
     { object: "list", data: [{ id: uuid(5), created_at: "not-a-date", to: ["one@example.test"] }], has_more: false },
-    { object: "list", data: [{ id: uuid(6), created_at: at(201), to: ["one@example.test"] }], has_more: false },
-    { object: "list", data: [{ id: uuid(7), created_at: at(150), to: [] }], has_more: false },
+    { object: "list", data: [{ id: uuid(6), created_at: at(150), to: ["one@example.test"] }, { id: uuid(7), created_at: at(151), to: ["two@example.test"] }], has_more: false },
+    { object: "list", data: [{ id: uuid(8), created_at: at(150), to: [] }], has_more: false },
   ]) {
     globalThis.fetch = async () => ({ ok: true, status: 200, json: async () => page }) as Response;
     is("malformed provider evidence is unknown", await resendUsageSince(100_000, 200_000), { ok: false, reason: "unknown" });
   }
   is("provider getters were not executed", getterCalls, 0);
+
+  globalThis.fetch = async () => Response.json({
+    object: "list", has_more: false, data: [
+      { id: uuid(9), created_at: at(201), to: ["newer@example.test"] },
+      { id: uuid(10), created_at: at(150), to: ["inside@example.test"] },
+    ],
+  });
+  is("records after the snapshot are skipped while the exact window remains complete",
+    await resendUsageSince(100_000, 200_000),
+    { ok: true, recipients: 1, records: 1, pages: 1, from: at(100), through: at(200) });
 
   part("Authorization and provider failures stay distinct");
   let requests = 0;
