@@ -305,7 +305,11 @@ function PlanCard({
       </ul>
       {/* Native disclosure contents are escaped static HTML, with no React event
           handlers or child hydration work between a press and opening the list. */}
-      <details className="group/perks mt-6" dangerouslySetInnerHTML={{ __html: pricingPerksMarkup(perks) }} />
+      {/* A press can hydrate this native disclosure independently of the rest
+          of the card, preserving its first response during page hydration. */}
+      <Suspense fallback={null}>
+        <details className="group/perks mt-6" dangerouslySetInnerHTML={{ __html: pricingPerksMarkup(perks) }} />
+      </Suspense>
 
       <p className="mt-5 text-sm text-ink-soft">{uploadAllowanceWords(tier)}</p>
       <p className="mt-3 text-sm text-ink-soft">Up to {PAID_STORAGE_BYTES[tier] / (1024 ** 3)} GB of stored files and videos. New uploads must fit in the remaining space.</p>
