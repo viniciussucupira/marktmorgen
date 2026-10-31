@@ -11,7 +11,6 @@ import { ClaimForm, HeroClaim } from "@/components/home-claim";
 import { ExampleMembership, ExampleTimes } from "@/components/home-examples";
 import { HomeData } from "@/components/structured-data";
 import { homeQuestions } from "@/lib/home-faq";
-import { paypalSalesConfigured } from "@/lib/paypal-sales";
 import { PLAN_TITLES, PUBLISHED_PRICE_CENTS as PRICE_CENTS, TRIAL_DAYS } from "@/lib/plan";
 import { PLANS_ON_SALE } from "@/lib/opening";
 import { feeWords } from "@/lib/fee-words";
@@ -98,7 +97,7 @@ function Invite() {
 }
 
 export default function Home() {
-  const questions = homeQuestions(paypalSalesConfigured());
+  const questions = homeQuestions();
   return (
     <div className={`${MORNING_FONTS} hm`}>
       <MorningHeader />
@@ -189,7 +188,7 @@ export default function Home() {
             <div className="hm-grow">
               <h2 id="hm-price-title" className="hm-h2">One plan to start.</h2>
               <p className="hm-lead" data-home-fee>
-                {feeWords().feesRow}
+                {feeWords().homeFee}
                 {PLANS_ON_SALE ? "" : " Not on sale yet."}
               </p>
               <a href="/pricing#plans" className="hm-text-link">{`Compare ${PLAN_TITLES.creator}, ${PLAN_TITLES.pro} and ${PLAN_TITLES.scale}`}</a>
@@ -216,12 +215,13 @@ export default function Home() {
           <div className="hm-wrap hm-faq">
             <div>
               <h2 id="hm-faq-title" className="hm-h2">Questions.</h2>
-              <p className="hm-lead">
-                Something else? <a href="/help" className="hm-text-link hm-inline">The help center</a> answers the rest, in writing.
-              </p>
+              <p className="hm-lead">Short answers to what creators ask first.</p>
             </div>
-            <div className="hm-faq-list">
-              <Faq questions={questions} />
+            <div className="hm-grow">
+              <div className="hm-faq-list">
+                <Faq questions={questions} />
+              </div>
+              <a href="/help" className="hm-text-link">More answers in the help center</a>
             </div>
           </div>
         </section>
