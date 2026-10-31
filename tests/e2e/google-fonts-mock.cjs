@@ -12,6 +12,8 @@
  * getGoogleFontsUrl makes of the font's options.
  */
 const FONTS = {
+  "https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=optional": ["Geist", "100 900", "optional"],
+  "https://fonts.googleapis.com/css2?family=Instrument+Serif:ital,wght@0,400;1,400&display=optional": ["Instrument Serif", "400", "optional"],
   "https://fonts.googleapis.com/css2?family=Figtree:wght@300..900&display=optional": ["Figtree", "300 900", "optional"],
   "https://fonts.googleapis.com/css2?family=Unbounded:wght@600;800&display=optional": ["Unbounded", "600 800", "optional"],
   "https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap": ["Geist", "100 900"],
