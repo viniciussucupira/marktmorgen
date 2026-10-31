@@ -238,7 +238,8 @@ async function attempt(delivery: Delivery, endpoint: Endpoint | undefined, store
   const paused = store === "taken" || delivery.type === "test" ? null : integrationPauseWord(store, now / 1000);
   // One of the store's webhook deliveries for its month, before the endpoint is called.
   const taken = store === "taken" ? ({ ok: true } as const) : await takeAllowance(store, "webhook", 1, now);
-  if (paused && taken.ok) return { ...delivery, state: "failed", next: 0, lastAt: now, lastStatus: 0, lastError: WEBHOOK_PAUSED_NOT_SENT_WORDS[paused] };
+  // Paused: never retried, whatever the count answered; a month already used is said too.
+  if (paused) return { ...delivery, state: "failed", next: 0, lastAt: now, lastStatus: 0, lastError: taken.ok || taken.reason === "unknown" ? WEBHOOK_PAUSED_NOT_SENT_WORDS[paused] : `${WEBHOOK_PAUSED_NOT_SENT_WORDS[paused]} ${taken.message}` };
   if (!taken.ok) {
     const retryIn = delivery.type === "test" ? undefined : RETRY_MINUTES[delivery.attempts];
     // A count that could not be made is tried again on the schedule; a month whose deliveries are used is not.
@@ -938,6 +939,12 @@ export async function watchStripe(deadline: number): Promise<{ stores: number; e
     if (!wantsStripe(config)) continue;
     const store = await storeForHandle(config.handle).catch(() => null);
     if (!store || store.statsId !== statsId || !store.stripeAccountId) continue;
+    // 232 [CA1] 4b4b2: while the plan's costs are paused, the store's Stripe
+    // events are not read and its anchor stays where it is, so nothing is
+    // asked of Stripe and nothing is spent; once paid, the next run reads
+    // from the anchor and sends what happened meanwhile (Stripe keeps events
+    // thirty days, and so does the anchor).
+    if (integrationPauseWord(store)) continue;
     counts.stores += 1;
     try {
       counts.events += await watchStore(store, statsId, config);

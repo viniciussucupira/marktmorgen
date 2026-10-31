@@ -12,9 +12,14 @@
 import http from "node:http";
 import https from "node:https";
 import net from "node:net";
-import { addEndpoint, deliverDue, emitEvent, setSendHooksForTests, webhooksView } from "@/lib/webhooks";
+import { NextRequest } from "next/server";
+import { SESSION_COOKIE, openSession } from "@/lib/auth";
+import { POST as studioHooks } from "@/app/api/store/webhooks/route";
+import { addEndpoint, deliverDue, emitEvent, setSendHooksForTests, watchStripe, webhooksView } from "@/lib/webhooks";
+import { setStripeAccount } from "@/lib/store";
 import { claimHandle, ensureStatsId, recordPlanDispute, setSubscription, storeForEmail, storeRef } from "@/lib/store";
-import { allowanceUsed } from "@/lib/store-allowance";
+import { allowanceUsed, takeAllowance } from "@/lib/store-allowance";
+import { STORE_ALLOWANCES } from "@/lib/store-allowance-rules";
 import { WEBHOOK_ADD_PAUSED_WORDS, WEBHOOK_PAUSED_NOT_SENT_WORDS } from "@/lib/integration-pause";
 import { readFileSync } from "node:fs";
 import { RENEWAL_PAUSED_WORDS } from "@/lib/renewal-unpaid-words";
@@ -103,8 +108,27 @@ async function main(): Promise<void> {
   is("nothing was added", (await webhooksView(store)).endpoints.length, 1);
   is("the API answers it 409, as a refusal and not a fault", /paused: 409/.test(readFileSync("app/api/v1/hooks/route.ts", "utf8")), true);
   is("the Terms count a delivery not sent while paused", readFileSync("app/terms/page.tsx", "utf8").includes("and each one not sent because your"), true);
-  is("the notices name webhooks among what pauses", [RENEWAL_PAUSED_WORDS, DISPUTE_PAUSED_WORDS].every((w) => w.includes("webhooks to your endpoints and new webhook endpoints")), true);
-  is("the studio answers it 409 too", /result\.reason === "paused" \? 409/.test(readFileSync("app/api/store/webhooks/route.ts", "utf8")), true);
+  is("the notices name webhooks among what pauses", [RENEWAL_PAUSED_WORDS, DISPUTE_PAUSED_WORDS].every((w) => w.includes("New webhook endpoints wait, and webhooks are not sent to your endpoints (nor later), except events from your Stripe account")), true);
+  const cookie = `${SESSION_COOKIE}=${await openSession(OWNER)}`;
+  const viaStudio = await studioHooks(new NextRequest(`https://marktmorgen.com/api/store/webhooks?store=${store.sid}`, { method: "POST", headers: { host: "marktmorgen.com", origin: "https://marktmorgen.com", cookie, "content-type": "application/json" }, body: JSON.stringify({ action: "add", url: "https://hooks.example.com/route", events: ["sale.completed"] }) }));
+  is("the studio's route answers 409 with the sentence", [viaStudio.status, ((await viaStudio.json()) as { message?: string }).message], [409, WEBHOOK_ADD_PAUSED_WORDS.paused_unpaid]);
+
+  part("The Stripe watcher does not read a paused store, and keeps its place");
+  process.env.STRIPE_SECRET_KEY = "sk_test_webhook_wait_only";
+  const stripeCalls: string[] = [];
+  const realFetch = globalThis.fetch;
+  globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) => {
+    const url = new URL(String(input));
+    if (url.origin !== "https://api.stripe.com") return realFetch(input as never, init);
+    stripeCalls.push(url.search);
+    return Response.json({ data: [], has_more: false });
+  }) as typeof fetch;
+  is("the store's Stripe account is connected", (await setStripeAccount(OWNER, "acct_WebhookWait01")).ok, true);
+  store = (await storeForEmail(OWNER))!;
+  const anchorKey = `nl:hooks:anchor:${store.statsId}`;
+  await redis.pipeline([["SET", anchorKey, "evt_WaitAnchor01"]]);
+  is("paused: no store read, no Stripe call", [await watchStripe(Date.now() + 10_000), stripeCalls.length], [{ stores: 0, events: 0 }, 0]);
+  is("the anchor stays where it was", await redis.pipeline([["GET", anchorKey]]), ["evt_WaitAnchor01"]);
 
   part("Disputed: the dispute's sentence");
   await setSubscription(OWNER, { active: true, tier: "pro", cycle: "month", period: paidPeriod(), renewalUnpaid: false });
@@ -124,7 +148,18 @@ async function main(): Promise<void> {
   await emitEvent(store, "sale.completed", "cs_wait_0003", { amount_cents: 2900 });
   d = await latest();
   is("a new event is delivered", [d.state, received.length], ["delivered", 2]);
+  is("settled: the watcher reads on from the kept anchor", [(await watchStripe(Date.now() + 10_000)).stores, stripeCalls.length, new URLSearchParams(stripeCalls[0] ?? "").get("ending_before")], [1, 1, "evt_WaitAnchor01"]);
+  globalThis.fetch = realFetch;
   is("adding an endpoint works again", (await addEndpoint(store, "https://hooks.example.com/more", ["refund.issued"])).ok, true);
+  part("A month already used while paused: the pause and the month are both said, never retried");
+  await setSubscription(OWNER, { active: true, tier: "pro", cycle: "month", period: paidPeriod(), renewalUnpaid: true });
+  store = (await storeForEmail(OWNER))!;
+  const fill = STORE_ALLOWANCES.pro.webhook - (await used());
+  if (fill > 0) await takeAllowance(store, "webhook", fill);
+  await emitEvent(store, "sale.completed", "cs_wait_used", { amount_cents: 100 });
+  d = await latest();
+  is("failed, with the pause first and the month after", [d.state, d.next, d.lastError.startsWith(WEBHOOK_PAUSED_NOT_SENT_WORDS.paused_unpaid), d.lastError.length > WEBHOOK_PAUSED_NOT_SENT_WORDS.paused_unpaid.length, received.length], ["failed", 0, true, true, 2]);
+
   server.close();
   done();
 }
