@@ -233,6 +233,9 @@ export async function readPlanRefund(store: Store, nowSeconds = Math.floor(Date.
           // Only while the first payment's window is open (the rule's own measure, lib/plan-refund-rules.ts): asked later,
           // a renewal is never judged as a first payment.
           const windowOpen = nowSeconds <= firstPaid + REFUND_DAYS * DAY_SECONDS;
+          // A paid invoice whose time cannot be read is never left out silently: less would be refunded and the plan
+          // still ended (independent review, 31/10/2026); the whole is then not decided here.
+          if (windowOpen && paid.some((r) => r !== own && !Number.isFinite(num(obj(r.status_transitions)?.paid_at)))) return { refund: { kind: "unknown", reason: "unreadable" } };
           const since = windowOpen ? paid.filter((r) => r === own || num(obj(r.status_transitions)?.paid_at) >= firstPaid) : [own];
           if (!Number.isFinite(firstPaid) || since.length > MAX_PARTS) return { refund: { kind: "unknown", reason: "too_many" } };
           const parts: PlanRefundPart[] = [];

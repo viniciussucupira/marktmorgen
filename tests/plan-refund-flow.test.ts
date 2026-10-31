@@ -21,6 +21,8 @@ import { ENDING_KEY, GIVE_UP_DAYS, SETTLE_SECONDS, finishPlanRefunds, flowKeyOf,
 import { redisPipeline } from "@/lib/redis";
 import { DAY, NOW, n, paidShop, setAssistantPlan, world } from "./plan-refund-stripe-world";
 
+/** How many charges a kept note names. */
+const notedCharges = (raw: unknown) => (typeof raw === "string" ? ((JSON.parse(raw) as { p?: unknown[] }).p?.length ?? 0) : 0);
 const order = (subId: string) => world.calls.filter((c) => c.includes(subId) || c === "POST /refunds").map((c) => c.replace(`/${subId}`, "/:sub"));
 
 async function main() {
@@ -141,6 +143,12 @@ async function main() {
   const twice = await refundAndEndPlan(await feb.store(), NOW);
   is("pay 1 Feb, renew 1 Mar, ask 2 Mar: both payments back, the plan ended", [twice.ok && twice.cents, feb.allRefunds().map((r) => r.amount), feb.sub().status], [13_800, [6_900, 6_900], "canceled"]);
   is("one email with the whole amount", world.emails.map((e) => e.text.includes("We refunded $138")), [true]);
+  // A renewal whose time cannot be read is never left out of the whole (independent review, 31/10/2026).
+  const blur = await paidShop({ at: NOW - 20 * DAY });
+  blur.addPayment(NOW - 2 * DAY);
+  (world.invoices[world.invoices.length - 1] as { status_transitions: { paid_at: unknown } }).status_transitions.paid_at = "soon";
+  const blurred = await refundAndEndPlan(await blur.store(), NOW);
+  is("a payment inside the window whose time cannot be read: nothing refunded, the plan goes on", [blurred.ok, blur.allRefunds().length, blur.sub().status], [false, 0, "active"]);
   const half = await paidShop({ at: NOW - 20 * DAY });
   half.addPayment(NOW - 2 * DAY);
   world.refundsLeft = 1;
@@ -149,6 +157,15 @@ async function main() {
   is("only the first of two refunds went through: failed, not ended, the stop kept", [cut.ok, half.allRefunds().length, half.sub().status, half.sub().cancel_at_period_end], [false, 1, "active", true]);
   await finishPlanRefunds(Date.now() + 10_000, NOW + 3_600);
   is("the daily job never ends the plan on part of a refund", [half.sub().status, (await half.note()) !== null], ["active", true]);
+  // A second request that stops before it reads what is owed (the amount the page showed has changed, or one
+  // charge's refunds cannot be read) must still judge by every charge the first request was refunding: one of the
+  // two refunds made is never taken for the whole (independent review of 31/10/2026).
+  const stale = await refundAndEndPlan(await half.store(), NOW + 20, 13_800);
+  is("asked again with the old amount after part of it: not ended, nothing more refunded", [stale.ok, half.allRefunds().length, half.sub().status, notedCharges(await half.note())], [false, 1, "active", 2]);
+  world.chargeListDown = true;
+  const unread = await refundAndEndPlan(await half.store(), NOW + 40);
+  world.chargeListDown = false;
+  is("asked again while a charge's refunds cannot be read: not ended, the note keeps both charges", [unread.ok, half.allRefunds().length, half.sub().status, notedCharges(await half.note())], [false, 1, "active", 2]);
   const rest = await refundAndEndPlan(await half.store(), NOW + 60);
   is("asked again: the rest given back, once, and the plan ended", [rest.ok && rest.cents, half.allRefunds().map((r) => r.amount), half.sub().status, await half.note()], [6_900, [6_900, 6_900], "canceled", null]);
   delete process.env.RESEND_API_KEY;

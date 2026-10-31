@@ -7,8 +7,12 @@ import { refundUnderway } from "@/lib/plan-refund-underway";
 /**
  * Up to the subscription's reading and stop, the refund's reading and write
  * under its lock and the plan's ending, each Stripe call bounded by its own
- * timeout (about 125 seconds before the plan's ending at the worst); a
- * request cut short anyway is finished by the daily job.
+ * timeout. Since every plan payment inside the guarantee's days is refunded
+ * (305 [SY1] 2c), a slow Stripe at its worst can take longer than this
+ * route's 300 seconds (the write alone may run WRITE_BY_MS, lib/plan-refund-write.ts):
+ * a request cut short keeps its note with every charge it was refunding
+ * (lib/plan-refund-flow.ts, mergeParts), so the daily job and a later request
+ * judge by all of them, and the plan is never ended on part of a refund.
  */
 export const maxDuration = 300;
 
