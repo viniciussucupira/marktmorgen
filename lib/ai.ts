@@ -20,7 +20,7 @@ import { AI_ENTITLEMENT_RULES } from '@/lib/ai-entitlement-rules';
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { aiBudgetScopeFor, isAiBudgetConfigured, reserveAiSpend } from "@/lib/ai-spend";
 import { currentAiSpendPolicy } from "@/lib/ai-spend-policy";
-import { standingOf } from "@/lib/plan-standing";
+import { costStandingOf } from "@/lib/plan-standing";
 import { timed } from "@/lib/fetch-timeout";
 import { boundedAiRequest, isSupportedAiModel } from "@/lib/ai-request-rules";
 import { aiRequestHoldMicroUsd } from "@/lib/spend-cost-table";
@@ -97,7 +97,8 @@ export const aiMonthKey = monthKey;
 export function aiAvailableFor(store: Store | null | undefined, now = Date.now()): boolean {
   if (!store || !isAiConfigured() || aiAllowance(store, now) <= 0) return false;
   // Only a paying plan has a spending allocation (lib/ai-spend-policy.ts).
-  if (standingOf(store, now / 1000) !== "paid") return false;
+  // Not while a renewal is unpaid either (232 [CA1] unit 4, costStandingOf).
+  if (costStandingOf(store, now / 1000) !== "paid") return false;
   const policy = currentAiSpendPolicy(new Date(now));
   return !!policy && policy.storeMicroUsd[store.tier] > 0 && policy.fundedStores[store.tier] > 0;
 }

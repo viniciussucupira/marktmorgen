@@ -430,6 +430,14 @@ export type Store = {
    * keep and play goes by this (lib/plan-standing.ts).
    */
   planEndedAt: string;
+  /**
+   * When the renewal of the plan now running was first seen unpaid (Stripe's
+   * `past_due`), in seconds; 0 while it is paid up (232 [CA1] unit 4). The
+   * plan has not ended: what costs us to run stops (lib/plan-standing.ts,
+   * costStandingOf; lib/billing.ts, isPaidUp) and starts again the moment
+   * Stripe says it is paid. Absent from records written before.
+   */
+  renewalUnpaidSince?: number;
   /** How the creator's emails to their list are signed. Null until set up. */
   mail: MailSettings | null;
   /** The creator's own domain for the store, when they added one. */
@@ -925,6 +933,8 @@ function parseStore(raw: unknown): Store | null {
       shared: value.shared === true,
       // Stores written before this was kept have none: read as never ended.
       planEndedAt: typeof value.planEndedAt === "string" && !Number.isNaN(Date.parse(value.planEndedAt)) ? value.planEndedAt : "",
+      // Records from before this was kept have none: read as paid up.
+      renewalUnpaidSince: Number.isSafeInteger((value as { renewalUnpaidSince?: unknown }).renewalUnpaidSince) && ((value as { renewalUnpaidSince: number }).renewalUnpaidSince) > 0 ? (value as { renewalUnpaidSince: number }).renewalUnpaidSince : 0,
       mail: parseMail(value.mail),
       domain: parseDomain(value.domain),
       // A record from before products had records of their own still
@@ -1920,6 +1930,11 @@ export async function setSubscription(
     shared?: boolean;
     /** The period paid for; null forgets it (a plan not running, a trial). Left as it is when not given. */
     period?: BillingPeriod | null;
+    /**
+     * Whether Stripe says the renewal now running is unpaid (232 [CA1] unit 4).
+     * Not given: kept for the same subscription, cleared for another one.
+     */
+    renewalUnpaid?: boolean;
   },
   expected?: Pick<Store, "sid" | "statsId" | "stripeCustomerId" | "subscriptionId" | "subscriptionActive" | "tier" | "cycle">,
 ): Promise<Store | null> {
@@ -1964,6 +1979,12 @@ export async function setSubscription(
     // wiped when a plan runs again. A store that never started one has none.
     const had = store.subscriptionActive || store.subscriptionId !== null || subscriptionId !== null;
     const planEndedAt = fields.active ? "" : store.planEndedAt || (had ? new Date(Date.now()).toISOString() : "");
+    // The day a renewal was first seen unpaid is written down once and kept
+    // while it stays unpaid; paying it, a plan not running, or another
+    // subscription clears it.
+    const unpaidBefore = store.subscriptionId === subscriptionId ? store.renewalUnpaidSince ?? 0 : 0;
+    const unpaid = fields.active && (fields.renewalUnpaid ?? unpaidBefore > 0);
+    const renewalUnpaidSince = unpaid ? unpaidBefore || Math.floor(Date.now() / 1000) : 0;
 
     const saved = await save({
       ...store,
@@ -1978,6 +1999,7 @@ export async function setSubscription(
       // A plan that is not running has no period to follow.
       period,
       planEndedAt,
+      renewalUnpaidSince,
     });
     // Kept in line by the day its plan ended, for the daily job that looks
     // at what such a store still keeps (lib/plan-closing.ts), and taken out
@@ -1992,7 +2014,8 @@ export async function setSubscription(
     // (lib/free-pool-rules.ts): it grows only with them. A trial pays
     // nothing yet, and a plan with no subscription behind it pays nothing.
     const nowSeconds = Date.now() / 1000;
-    const paysNow = (record: Store) => record.subscriptionActive && Boolean(record.subscriptionId) && !(record.trialEnds > nowSeconds);
+    // A renewal Stripe could not collect pays nothing until it is paid.
+    const paysNow = (record: Store) => record.subscriptionActive && Boolean(record.subscriptionId) && !(record.trialEnds > nowSeconds) && !((record.renewalUnpaidSince ?? 0) > 0);
     await redisPipeline([[paysNow(saved) ? "SADD" : "SREM", PAYING_INDEX, storeRef(saved)]]).catch((error) =>
       console.error("could not keep the list of stores that pay", error),
     );

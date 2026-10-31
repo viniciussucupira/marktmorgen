@@ -153,7 +153,7 @@ test("the daily job writes a store down again when only its billing month moved"
   await setSubscription("renew@example.com", { customerId: "cus_Renew000001", subscriptionId: "sub_Renew000001", active: true, tier: "creator", cycle: "month", trialEnds: 0, shared: false, period: first });
   const store = (await storeForEmail("renew@example.com"))!;
   const next = { start: first.end, end: first.end + 30 * 86_400, renews: true };
-  const state = { state: "active" as const, trialing: false, until: next.end, cancelsAtEnd: false, tier: "creator" as const, cycle: "month" as const, amountCents: 2200, shared: false, changePending: false, period: next };
+  const state = { state: "active" as const, trialing: false, until: next.end, cancelsAtEnd: false, tier: "creator" as const, cycle: "month" as const, amountCents: 2200, shared: false, changePending: false, renewalUnpaid: false, period: next };
   assert.equal(await recordState(store, state), true);
   assert.deepEqual((await storeForEmail("renew@example.com"))!.period, next);
   assert.equal(await recordState((await storeForEmail("renew@example.com"))!, state), false, "and not again when nothing moved");

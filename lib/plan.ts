@@ -251,10 +251,12 @@ export type ProFeature = "email" | "domain" | "branding" | "stores" | "api";
  * the snapshot the studio refreshes, so a buyer's page never waits on Stripe.
  */
 export function canUse(
-  store: { subscriptionActive: boolean; tier: Tier },
+  store: { subscriptionActive: boolean; tier: Tier; renewalUnpaidSince?: number },
   feature: ProFeature,
 ): boolean {
-  void feature;
+  // Emails to the list stop while a renewal is unpaid (232 [CA1] unit 4);
+  // the store's own domain and look stay, so its page stays up as it was.
+  if (feature === "email" && (store.renewalUnpaidSince ?? 0) > 0) return false;
   return store.subscriptionActive && hasPro(store.tier);
 }
 

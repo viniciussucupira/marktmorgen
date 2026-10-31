@@ -7,6 +7,7 @@ import { isHeader } from "@/lib/store-link";
 import { imageFolder } from "@/lib/store";
 import { IMAGE_CONTENT_TYPES, MAX_IMAGE_BYTES, ownsImagePath } from "@/lib/product-image";
 import { fromAnotherSite, limited } from "@/lib/request-guard";
+import { renewalUnpaid } from "@/lib/plan-standing";
 
 /** How long the creator has to start the upload after asking for the door. */
 const UPLOAD_WINDOW_MS = 5 * 60 * 1000;
@@ -69,6 +70,8 @@ export async function POST(request: NextRequest) {
           throw new Error("unknown");
         }
         if (!ownsImagePath(pathname, await imageFolder(ref))) throw new Error("invalid");
+        // Nothing new is stored while a renewal is unpaid (232 [CA1] unit 4).
+        if (renewalUnpaid(store)) throw new Error("renewal_unpaid");
 
         const rules = {
           allowedContentTypes: [...IMAGE_CONTENT_TYPES],
@@ -84,11 +87,11 @@ export async function POST(request: NextRequest) {
     return Response.json(answer);
   } catch (error) {
     const reason = error instanceof Error ? error.message : "server_error";
-    const known = ["signed_out", "none", "unknown", "invalid", "forbidden", "gone"].includes(reason);
+    const known = ["signed_out", "none", "unknown", "invalid", "forbidden", "gone", "renewal_unpaid"].includes(reason);
     if (!known) console.error("signing a picture upload failed", error);
     return Response.json(
       { ok: false, error: known ? reason : "server_error" },
-      { status: reason === "signed_out" ? 401 : reason === "forbidden" || reason === "gone" ? 403 : known ? 400 : 500 },
+      { status: reason === "signed_out" ? 401 : reason === "forbidden" || reason === "gone" ? 403 : reason === "renewal_unpaid" ? 409 : known ? 400 : 500 },
     );
   }
 }
