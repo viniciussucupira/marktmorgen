@@ -195,7 +195,7 @@ import { CALL_ORDER_UNITS, TRIAL_ORDERS, ordersIncluded, ordersWords } from "@/l
 import { ordersIn } from "@/lib/orders";
 import { BUYER_RESERVE_BPS, SETUP_VISITS, TRIAL_VISITS, countWords, publicVisitLimit, visitLimitFor, visitsIncluded, visitsWords } from "@/lib/traffic-rules";
 import { AI_MONTHLY } from "@/lib/ai-rules";
-import { COMMISSION_LIVE, canUse, hasPro, PLAN_PRICES, PRO_MONTHLY_EMAILS, PRO_ON_SALE, SCALE_MONTHLY_EMAILS, priceWords, yearSaving } from "@/lib/plan";
+import { COMMISSION_LIVE, canUse, hasPro, PLAN_PRICES, PRO_MONTHLY_EMAILS, PRO_ON_SALE, REFUND_DAYS, SCALE_MONTHLY_EMAILS, priceWords, yearSaving } from "@/lib/plan";
 import { ASSISTANT_ON_SALE, PLANS_ON_SALE } from "@/lib/opening";
 import { studioPath, studioView } from "@/lib/studio-route";
 import { unusedSummary } from "@/lib/closing-refunds";
@@ -869,6 +869,19 @@ export default async function StudioPage({
       ? `$${live.amountCents % 100 ? (live.amountCents / 100).toFixed(2) : live.amountCents / 100} a ${live.cycle}`
       : priceWords(tier, billedYearly ? "year" : "month");
   const changePending = live?.state === "active" && live.changePending;
+  // The way to the plan refund's review page (305 [SY1]): for the owner of a paid plan that may have one today, a
+  // yearly plan or a period begun within the guarantee's days. The page itself reads the exact amount, or says why
+  // there is none, before anything changes.
+  const refundOffered = Boolean(store && paid && !trialing && role === "owner" && current?.period &&
+    (billedYearly || nowSeconds() - current.period.start < REFUND_DAYS * 86_400));
+  const refundLink = refundOffered && store ? (
+    <p className="mt-4 text-sm text-ink-soft">
+      <Link href={studioPath(store, "", "refund")} className="font-bold text-ink underline underline-offset-2">
+        Refund my payment
+      </Link>
+      {" "}— see the exact amount and what happens to your store before anything changes.
+    </p>
+  ) : null;
   const endsOn =
     live?.state === "active" && live.until > 0
       ? new Date(live.until * 1000).toLocaleDateString("en-US", {
@@ -2666,6 +2679,7 @@ export default async function StudioPage({
                         Keep my subscription
                       </button>
                     </form>
+                    {refundLink}
                   </>
                 ) : paid ? (
                   <>
@@ -2850,6 +2864,7 @@ export default async function StudioPage({
                       is the whole of it, and you can change your mind until
                       the day it stops.
                     </p>
+                    {refundLink}
                   </>
                 ) : pauseUnknown ? (
                   <p className="mt-3 text-ink-soft">Your store and its content stay as they are while your break status is unconfirmed.</p>

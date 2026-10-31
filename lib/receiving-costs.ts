@@ -122,6 +122,91 @@ export const EU_HOSTING_ISS_ZERO_BUSINESS: Reading = { ...EU_HOSTING_READING, id
 /** Business-only sales under the sizing reading. */
 export const SIZING_BUSINESS: Reading = { ...SIZING_READING, id: "sizing-b2b", label: "Sizing reading, business-only sales (tax on top 15%)", salesTaxOnTopBps: 1_500 };
 
+
+/**
+ * TX2 scenario (owner decisions 31 October 2026), not the binding release
+ * reading. IRPF and IOF have different bases: annual controlled-entity
+ * profit versus each incoming exchange operation. No existing gate, sizing
+ * reading, stress floor or historical reading is changed by this scenario.
+ * Legal sources and factual limits: docs/tx2-most-correct-model-2026-10-31.md.
+ */
+export const MOST_CORRECT_READING: Readonly<Reading & { incomingExchangeIofBps: number }> = Object.freeze({
+  id: "most-correct",
+  label: "TX scenario: annual IRPF 15%; IOF 0.38% per incoming exchange; buyer tax on top up to 27%",
+  salesTaxInsideBps: 0,
+  salesTaxOnTopBps: 2_700,
+  remittanceBps: REMITTANCE_BPS,
+  profitTaxBps: 1_500,
+  revenueTaxBps: 0,
+  incomingExchangeIofBps: 38,
+});
+
+/** Evidence-work bound only: larger annual books refuse, never truncate. */
+const MAX_INCOMING_EXCHANGE_ENTRIES = 10_000;
+
+export type MostCorrectTaxBases = {
+  /** Both bases must already be expressed in BRL cents, never USD cents. */
+  currency: "BRL";
+  /** The annual accounting profit at 31 December, after the applicable costs.
+   * A loss gives no IRPF here and never offsets IOF on an actual entry. */
+  annualProfitCents: number | null;
+  /** Each exchange operation separately. An explicit empty list means no
+   * incoming exchange; omitted/unknown operations must not become zero. */
+  incomingExchangeCents: readonly (number | null)[] | null;
+};
+export type MostCorrectTaxes = {
+  currency: "BRL";
+  annualProfitCents: number;
+  incomingExchangeCents: number;
+  irpfCents: number;
+  iofCents: number;
+  totalTaxCents: number;
+};
+
+/**
+ * Conservative whole-cent scenario arithmetic, not a tax review or a payment.
+ * IRPF is annual even with no distribution. A distribution of profit already
+ * taxed is not another annual profit; it can still create an exchange entry.
+ * No amount is inferred from another base and no currency conversion is
+ * invented. Every own data field/entry must be explicit; unknown refuses.
+ */
+export function mostCorrectTaxesOf(value: MostCorrectTaxBases | null): MostCorrectTaxes | null {
+  try {
+    if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+    const own = (record: object, key: string): unknown => {
+      const field = Object.getOwnPropertyDescriptor(record, key);
+      return field && Object.prototype.hasOwnProperty.call(field, "value") ? field.value : undefined;
+    };
+    const currency = own(value, "currency");
+    const annualProfit = own(value, "annualProfitCents");
+    const entries = own(value, "incomingExchangeCents");
+    if (currency !== "BRL" || typeof annualProfit !== "number" ||
+        !Number.isSafeInteger(annualProfit) || !Array.isArray(entries)) return null;
+    const length = own(entries, "length");
+    if (typeof length !== "number" || !Number.isSafeInteger(length) || length < 0 ||
+        length > MAX_INCOMING_EXCHANGE_ENTRIES) return null;
+    const ceiling = (cents: bigint, bps: number) =>
+      (cents * BigInt(bps) + BigInt(9_999)) / BigInt(10_000);
+    const maximum = BigInt(Number.MAX_SAFE_INTEGER);
+    let incoming = BigInt(0), iof = BigInt(0);
+    for (let index = 0; index < length; index += 1) {
+      const entry = own(entries, String(index));
+      if (typeof entry !== "number" || !Number.isSafeInteger(entry) || entry < 0) return null;
+      incoming += BigInt(entry);
+      iof += ceiling(BigInt(entry), MOST_CORRECT_READING.incomingExchangeIofBps);
+      if (incoming > maximum || iof > maximum) return null;
+    }
+    const irpf = ceiling(BigInt(Math.max(0, annualProfit)), MOST_CORRECT_READING.profitTaxBps);
+    const total = irpf + iof;
+    if (total > maximum) return null;
+    return { currency, annualProfitCents: annualProfit, incomingExchangeCents: Number(incoming),
+      irpfCents: Number(irpf), iofCents: Number(iof), totalTaxCents: Number(total) };
+  } catch {
+    // Unreadable/proxy-backed evidence is unknown, never a zero-tax result.
+    return null;
+  }
+}
+
 /** Every reading the alignment report prints, the sizing one first. */
 export const READINGS: readonly Reading[] = [SIZING_READING, SIZING_BUSINESS, MOST_TAX_READING, EU_HOSTING_READING, EU_HOSTING_ISS_ZERO, EU_HOSTING_BUSINESS, EU_HOSTING_ISS_ZERO_BUSINESS];
 
