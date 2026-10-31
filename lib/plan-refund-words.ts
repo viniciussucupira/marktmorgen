@@ -98,3 +98,19 @@ export function planRefundNotMadeLetter(o: { store: string; undecided: boolean }
   ];
   return { subject: `${store}: your refund was not made`, text: lines.join("\n") };
 }
+
+/** When only part of a refund went through and the rest could not be made in GIVE_UP_DAYS: the plan stops at its period's end, support settles the rest. */
+export function planRefundPartLetter(o: { store: string }): { subject: string; text: string } {
+  const store = o.store || "your store";
+  return {
+    subject: `${store}: part of your refund was not made`,
+    text: [
+      `Only part of the refund you asked for on your Marktmorgen plan for ${store} went through; our payment provider did not take the rest.`,
+      "",
+      "Your plan is set to stop at the end of the period you paid for, and nothing more will be charged for it.",
+      `Reply to this email or write to ${SUPPORT_ADDRESS}, and we will settle the rest of your refund.`,
+      "",
+      "Marktmorgen",
+    ].join("\n"),
+  };
+}
