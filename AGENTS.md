@@ -1,3 +1,7 @@
+## AV9 — Agentes nunca ficam parados (dono, 31/10/2026 18h08 Fortaleza)
+
+Vale para todo agente que trabalha neste repositório (Claude 1, Claude 2 e Codex), em toda sessão: nunca encerrar a vez só para esperar CI, revisão ou incorporação. Enquanto esperam, avançar outra unidade ou outro item da própria faixa da fila (docs/codex-queue.md, linhas AV5–AV9 e DR do topo). Só encerrar a vez quando não houver absolutamente nada que possa ser feito e, antes disso, agendar um aviso para a própria sessão em 10 minutos (Claude) ou manter a tarefa agendada de 10 minutos (Codex). Se a cota semanal estiver acabando, baixar o esforço para Médio em vez de parar. Esta regra não muda nenhum preço, limite, comissão, trava, flag ou proibição deste arquivo.
+
 ## TX — Política tributária vigente (dono,27/10/2026 12h34 Fortaleza)
 
 Esta decisão substitui a regra19 e toda instrução anterior conflitante, inclusive MR/SR, Hazelsong, AX274,FX275,VR e Pedidos repetidos. Texto antigo permanece histórico. Usar a interpretação juridicamente mais correta, fundamentada em lei, regulamentação e decisões oficiais, conferidas e citadas com artigo/data; não escolher automaticamente a hipótese que dá mais imposto nem somar regimes/países inaplicáveis. ISS5% não é fato certificado.
