@@ -15,7 +15,7 @@ Solicitação do dono: **29/10/2026,20h52Fortaleza**. Estado inicial: na fila; e
 
 **AV4 — 30/10/2026, 13h41 Fortaleza:** Codex faz os passos 3–6 e 10–12 da AV1; Claude faz 7–9 (sem o 89, que está com o Codex) e depois o Grupo A; quem começa marca "em andamento" no item; ninguém mexe no PR do outro (texto integral na seção AV). Complemento 13h57: 414 [KX1] entra na AV1, primeiro da parte do Claude, antes da abertura. Complemento 16h35: 569 [NC1] (nenhuma cobrança indevida) entra na AV1, na parte do Claude, logo depois de 414 [KX1].
 
-Claude agendado — última rodada: 31/10/2026, 11h52 Fortaleza (fim da rodada das 10h43; trabalho contínuo até 01/11/2026 13h41); próximo: 232 [CA1] unidade 4b4c (leituras da API e MCP enquanto pausado); 414 [KX1] segue com o PR #1296 aberto; últimos PRs: #1442 (código, unidade 4b4b2, publicado), #1445 e o registro da publicação; nenhuma reserva liberada.
+Claude agendado — última rodada: 31/10/2026, 11h58 Fortaleza (trabalho contínuo até 01/11/2026 13h41); fazendo agora: 305 [SY1] unidade 1 (leitura do reembolso do plano no Stripe, só leitura, PR #1449); em paralelo outro trabalhador do Claude faz 232 [CA1] unidade 4b4c; 414 [KX1] segue com o PR #1296 aberto; últimos PRs: #1442 (código, unidade 4b4b2, publicado), #1447, #1449.
 
 AV1/SD1 e Bloco de abertura (a)–(k) ficam na ordem vigente, inclusive custos(k),538[AB1] e448[LE1] em paralelo. Não se antecipam estudos ou recursos por causa desta classificação. Ficam na posição e no estado atuais todos os concluídos/publicados, andamentos (inclusive4,88,140,141,201,547,549),505[SG2] e registros59,60,336,464–477,494,495. As referências a547/549 são exceções expressas do pedido; suas linhas canônicas continuam literalmente “na fila”, sem convertê-las em andamento. A proteção de andamento também respeita a posição atualmente vigente: não ressuscita ordemOR já substituída porFIM1.
 
@@ -7944,6 +7944,7 @@ REGRA DOS 60% (OBRIGATÓRIA): todo cliente pagante, considerado isoladamente e u
 Proveniência AB: passou a fazer parte do Bloco de abertura, posição (g), por solicitação do dono de 24/10/2026, 00h11 (Fortaleza). Esta posição prevalece sobre a ordem OR/Bloco A anterior; histórico e estado de execução preservados.
 
 Estado: na fila.
+   - Em andamento pelo Claude: 31/10/2026 11h58 Fortaleza, unidade 1 (lib/plan-refund.ts: lê no Stripe da plataforma a cobrança, a taxa, a contestação e a primeira cobrança da pessoa, por e-mail e por cartão, e chama planRefund; só leitura, nada chama ainda), ramo claude/sy1-refund-read, PR #1449 (trabalho contínuo; AV4). Unidades seguintes: 2) rota e botão com tela de revisão, trava e chave de idempotência no reembolso; 3) textos dos Termos, da política e da Ajuda.
 
 Objetivo: cumprir sozinho, pelo código, a garantia que já está publicada, para que o dono não precise ler e-mails nem fazer reembolsos à mão.
 
@@ -20695,3 +20696,8 @@ Resultado implementado: mantém todos os arquivos canônicos175b3a26, salvo as d
 Estado: em andamento pelo Codex, 2026-10-31T14:53:15.232Z, ramo codex/ses-clock-webhook-union, antes do código. Fonte55ff2b30 inclui1442webhooksrecusadosquandopausados,semfila/novastentativas/custos,Termos/ajuda/editor/testes e1444VS1estado/1445–1447fila. MantercadaarquivoClaude,maisapenaslibses/testesdatemporalSES. CI1443válidoemexecuçãointacto; nãoeditarhead, nãocancelar e nãoaproveitarseuschecksparaafirmarvalidadaestaunião. Bateria39+Vercel inteira no novohead. Nãoabrirvendas,nãoalterarpreços/limites/idiomas/consentimentos/financiamento. Custos reais ainda desconhecidos,nãozero.
 
 Resultado implementado: todos os blobs canônicos55ff2b30mantidos,excetolib/ses.ts/testesessender da correçãotemporal e filaaditiva. FontesSES/testesidênticasàsvalidadas1410; novaconfiguração conjunta incluiwebhooksCA1 e VS1canônicos e exige39checks completosnovamente. NenhumcódigoClaude substituído,nemcritériofinanceirorelaxado. Publicação econtadornãoconfirmadosnesteestado.
+
+
+### 309 — Correção concreta da falha de compilação sintética de fontes
+
+Estado: em andamento pelo Codex antes do código, 2026-10-31T15:01:28.265Z, ramo codex/ses-clock-webhook-union, headfalhado2ff3f6f7, job124569529121(BuyeractionAAAwebkit). ErroNext16.4.2aoresolverUnboundedGoogleFonts: querieshaveexactlyoneentry; falhaantesdotestenavegador. Provedornooficialhttps://github.com/vercel/next.js/issues/99114 ePR100158(explicaURLsfontsextensionless/queryparams). Usarfontes substitutas jáexistentes somente nascompilaçõesCI,comservidorloopbacktemporárioeGeistlocalqueNextjáinstala; incluirFigtree/Unboundednomockexistente. Produção/Vercel/fontes/visualaprovadonãomudam. Nenhum downloadexterno adicional,deppackage,IOdeproduçãoouassinatura. Apósfix: novohead+suíte39/Vercelcompletos,nãojobisolado. Demaisheadsvalidosintactos.
