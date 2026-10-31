@@ -11,7 +11,7 @@
  * work on a huge text.
  */
 import { done, is, part } from "./check";
-import { MAX_TEXT, MAX_WARNINGS, checkCreatorTerms, type TermsCheckInput } from "@/lib/terms-check-rules";
+import { MAX_TEXT, MAX_WARNINGS, checkCreatorTerms, replaceWords, type TermsCheckInput, withoutSentence } from "@/lib/terms-check-rules";
 
 const base: TermsCheckInput = {
   text: "",
@@ -97,6 +97,22 @@ is("one of each kind", all.map((w) => w.kind).sort(), ["earnings_claim", "false_
 is("each has its passage, reason and fix", all.every((w) => w.excerpt.length > 0 && w.why.length > 20 && w.fix.length > 10), true);
 is("the passage shows the words themselves", all.find((w) => w.kind === "no_refunds")!.excerpt.includes("No refunds"), true);
 is("the same words twice are warned once", kinds("No refunds. No refunds.", { immediateAccessConsent: false }), ["no_refunds"]);
+
+part("The fix, applied only when the creator approves it");
+const text1 = "Ten lessons with worksheets. No refunds. Enjoy the course!";
+const w1 = checkCreatorTerms({ ...base, immediateAccessConsent: false, text: text1 })[0];
+is("each warning says where its words are", text1.slice(w1.at, w1.at + w1.length), "No refunds");
+is("removing the sentence leaves the rest as written", withoutSentence(text1, w1.at), "Ten lessons with worksheets. Enjoy the course!");
+const text2 = "Line one.\nAll sales are final.\nLine three.";
+const w2 = checkCreatorTerms({ ...base, immediateAccessConsent: false, text: text2 })[0];
+is("a sentence on its own line goes with its line", withoutSentence(text2, w2.at), "Line one.\nLine three.");
+const text3 = "The course costs $99 and includes ten lessons.";
+const w3 = checkCreatorTerms({ ...base, text: text3 })[0];
+is("a price fix carries the checkout's price", w3.replacement, "$49");
+is("and puts it in place of the amount only", replaceWords(text3, w3.at, w3.length, "$99", w3.replacement!), "The course costs $49 and includes ten lessons.");
+is("text changed since: nothing replaced", replaceWords("The course costs $89 now.", w3.at, w3.length, "$99", "$49"), "The course costs $89 now.");
+is("a place outside the text: unchanged", withoutSentence("Short.", 99), "Short.");
+is("no fix tells the creator to use a setting that does not exist", checkCreatorTerms({ ...base, immediateAccessConsent: false, text: "Visit othershop.com. Costs $99. No refunds. Get rich fast. Hurry! Only 3 left. Resale rights included." }).every((w) => !/in the studio/.test(w.fix)), true);
 
 part("Bounds");
 const huge = "Hurry! Only 2 left. ".repeat(10_000) + " Visit othershop.com.";
