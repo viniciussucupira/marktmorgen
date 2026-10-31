@@ -4,8 +4,9 @@
  * Who receives it is decided the moment it starts, from the people who agreed
  * and have not left, and written down, so a list that changes during a long
  * send neither skips anyone nor sends anyone two. It goes out a hundred at a
- * time, each batch with its own key so a retry never sends it twice, and a
- * send that outlives one run is picked up by the next.
+ * time, each batch with its own key. A saved uncertain outcome stops
+ * automatic retries for review; confirmed unfinished work continues on the
+ * next run. This is not a lifetime exactly-once delivery guarantee.
  *
  *   nl:mail:bc:<id>        the broadcast (JSON)
  *   nl:mail:bc:<id>:to     who it goes to, in order (a list)
@@ -481,6 +482,15 @@ export async function advanceBroadcast(
       // Whatever went before a stop counts, so the next run starts after it.
       const processed = emails.length - result.rest.length;
       if (processed > 0) b = { ...b, sent: b.sent + processed };
+      if (result.uncertain?.length) {
+        // Once this existing terminal progress write is confirmed, later
+        // workers must not repeat a batch the provider may already have taken.
+        // Keep the recipient snapshot; an unconfirmed write/crash before this
+        // checkpoint remains outside this safeguard.
+        b = { ...b, status: "failed", finishedAt: now,
+          note: "Sending could not be confirmed. Some emails may already have gone out. Automatic retries are stopped to avoid sending twice. The saved recipient list is retained." };
+        break;
+      }
       if (result.stopped === "allowance") {
         b = { ...b, status: "waiting", note: "This month's emails ran out. The rest go out when the month turns." };
         break;
