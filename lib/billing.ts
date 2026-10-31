@@ -1467,7 +1467,26 @@ export async function findStoreSubscriptions(
   });
   query.append("expand[]", "data.customer");
   const page = await onPlatform("GET", `/subscriptions/search?${query}`);
-  const rows = (Array.isArray(page.data) ? (page.data as Record<string, unknown>[]) : [])
+  // Only a complete, bounded page can be read as an empty result. Keep
+  // unknown provider evidence out of checkout and destructive maintenance.
+  // This does not make Stripe Search strongly consistent after a write.
+  if (!page || typeof page !== "object" || Array.isArray(page)) throw new Error("Subscription search page is unknown");
+  const data = Object.getOwnPropertyDescriptor(page, "data");
+  const more = Object.getOwnPropertyDescriptor(page, "has_more");
+  const cursor = Object.getOwnPropertyDescriptor(page, "next_page");
+  if (!data || !("value" in data) || !Array.isArray(data.value) ||
+      !more || !("value" in more) || more.value !== false ||
+      cursor && (!("value" in cursor) || cursor.value !== null && cursor.value !== undefined) ||
+      data.value.length > SEARCH_LIMIT) throw new Error("Subscription search page is incomplete");
+  const entries: Record<string, unknown>[] = [];
+  for (let index = 0; index < data.value.length; index++) {
+    const entry = Object.getOwnPropertyDescriptor(data.value, String(index));
+    if (!entry || !("value" in entry) || !entry.value || typeof entry.value !== "object" || Array.isArray(entry.value)) {
+      throw new Error("Subscription search member is unknown");
+    }
+    entries.push(entry.value as Record<string, unknown>);
+  }
+  const rows = entries
     .filter((subscription) => ownedBy(store, subscription))
     .sort((a, b) => (Number(b.created) || 0) - (Number(a.created) || 0));
 

@@ -72,7 +72,7 @@ test('missed-return observations and subscription search cannot adopt a funded p
  const old=globalThis.fetch,created=Math.floor(Date.now()/1000);
  const owner={...store,stripeCustomerId:'cus_Test000001',previousHandles:[],releasedHandles:[]} as Store;
  const subscription={id:'sub_Test000001',customer:{id:'cus_Test000001',email:owner.email},created,status:'active',metadata:{store:'harbor',funding_grant:'ctr_metadata',funding_review:'test_only'},items:{data:[{quantity:1,current_period_start:created,current_period_end:created+30*86400,price:{lookup_key:'nimbus_creator_month',unit_amount:6900,currency:'usd',recurring:{interval:'month',interval_count:1}}}]}};
- let reads=0,writes=0;globalThis.fetch=async(_input,init)=>{reads++;if(init?.method!=='GET')writes++;return Response.json({data:[subscription]});};
+ let reads=0,writes=0;globalThis.fetch=async(_input,init)=>{reads++;if(init?.method!=='GET')writes++;return Response.json({data:[subscription],has_more:false});};
  try{
   activationObservations.calls.length=0;activationObservations.accept=false;
   assert.equal(await startedFromObservedSubscription(owner,subscription),null);assert.equal(reads,0);
@@ -371,4 +371,49 @@ test('source phase is checked again after price, metadata and stale-price waits'
    assert.equal(metadataWrites,stage==='price'?0:1);assert.equal(changeWrites,stage==='fallback'?1:0);
   }
  }finally{globalThis.fetch=old;Date.now=oldNow;}
+});
+
+test('subscription search requires a complete bounded page before treating it as empty',async()=>{
+ const old=globalThis.fetch;
+ const owner={...store,previousHandles:[],releasedHandles:[]} as Store;
+ let getterCalls=0,reads=0,writes=0;
+ const dataGetter=Object.defineProperty({has_more:false},'data',{get(){getterCalls++;return [];}});
+ const moreGetter=Object.defineProperty({data:[]},'has_more',{get(){getterCalls++;return false;}});
+ const cursorGetter=Object.defineProperty({data:[],has_more:false},'next_page',{get(){getterCalls++;return null;}});
+ const memberGetter=Object.defineProperty([],'0',{get(){getterCalls++;return {};},configurable:true});
+ const inheritedMember=Array(1);Object.setPrototypeOf(inheritedMember,{'0':{},__proto__:Array.prototype});
+ const cases:unknown[]=[
+  undefined,null,[],{}, {data:null,has_more:false},{data:{},has_more:false},
+  {data:[]},{data:[],has_more:undefined},{data:[],has_more:null},
+  {data:[],has_more:'false'},{data:[],has_more:0},{data:[],has_more:true},
+  {data:[],has_more:false,next_page:'next_unknown'},
+  {data:[null],has_more:false},{data:['unknown'],has_more:false},
+  {data:[[]],has_more:false},{data:Array(1),has_more:false},
+  {data:inheritedMember,has_more:false},{data:memberGetter,has_more:false},
+  {data:Array.from({length:101},()=>({})),has_more:false},
+  Object.assign(Object.create({data:[]}),{has_more:false}),
+  Object.assign(Object.create({has_more:false}),{data:[]}),
+  dataGetter,moreGetter,cursorGetter,
+ ];
+ try{
+  for(const page of cases){
+   let attempts=0;
+   globalThis.fetch=async(input,init)=>{
+    reads++;attempts++;if(init?.method!=='GET')writes++;
+    assert.equal(new URL(String(input)).pathname,'/v1/subscriptions/search');
+    return {ok:true,json:async()=>page} as Response;
+   };
+   await assert.rejects(findStoreSubscriptions(owner),/Subscription search/);
+   assert.equal(attempts,1,'no additional page, retry or provider write');
+  }
+  for(const page of [{data:[],has_more:false},{data:[],has_more:false,next_page:null}]){
+   let attempts=0;
+   globalThis.fetch=async(_input,init)=>{reads++;attempts++;if(init?.method!=='GET')writes++;return {ok:true,json:async()=>page} as Response;};
+   assert.deepEqual(await findStoreSubscriptions(owner),{live:null,customerId:null,lapsed:[]});
+   assert.equal(attempts,1);
+  }
+  assert.equal(reads,cases.length+2);
+  assert.equal(writes,0);
+  assert.equal(getterCalls,0,'page or array-member getters are not evidence');
+ }finally{globalThis.fetch=old;}
 });
