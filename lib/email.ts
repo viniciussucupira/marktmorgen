@@ -522,6 +522,9 @@ async function dispatchBatch(
       // its caller without another SES wave or a switch to Resend. A durable
       // caller checkpoint is still needed before a later invocation.
       if (result.uncertain === true) return "retry";
+      // SES excludes definitively refused recipients from both accepted and
+      // pending lists. Missing recipients cannot establish a completed list.
+      if (listOnly && result.taken.length + result.left.length < going.length) return "refused";
       going = result.left.map((m) => m.original);
     }
     if (going.length === 0) return "sent";

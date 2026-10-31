@@ -1003,6 +1003,19 @@ async function main(): Promise<void> {
   is("the owner notice does not claim the list mail was delivered",
     resend.filter(m => m.to === SUPPORT).map(m => m.subject), ["Amazon SES is not sending: check the account"]);
   redis.clear(); resendKeys.clear(); clear(); account = approved();
+  amazonSays = () => ({ status: 400, type: "BadRequestException", message: "Synthetic confirmed recipient refusal" });
+  is("a known recipient refusal cannot be called a sent list",
+    [await sendListBatch([letter("list-rejected@example.com")], "list:rejected", { by: "monthly" }), amazon.length, resend.length],
+    ["refused", 0, 0]);
+  redis.clear(); resendKeys.clear(); clear(); account = approved();
+  amazonSays = to => to === "list-bad@example.com" ? { status: 400, type: "BadRequestException", message: "Synthetic confirmed refusal" } : { status: 200 };
+  const mixedList = [letter("list-good@example.com"), letter("list-bad@example.com")];
+  is("partial acceptance is refused, never reported as wholly sent",
+    await sendListBatch(mixedList, "list:mixed", { by: "monthly" }), "refused");
+  is("a retry retains the refusal without sending the accepted recipient twice",
+    [await sendListBatch(mixedList, "list:mixed", { by: "monthly" }), amazon.map(m => m.to), resend.length],
+    ["refused", ["list-good@example.com"], 0]);
+  redis.clear(); resendKeys.clear(); clear(); account = approved();
   amazonSays = () => ({ status: 200 });
   amazonLosesReply = to => to === "list-unknown@example.com" ? 500 : null;
   is("unknown SES acceptance never becomes safe waiting or fallback",
