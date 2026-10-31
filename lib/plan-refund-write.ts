@@ -5,8 +5,9 @@
  * next unit; nothing calls this yet, and no route may call it without them.
  *
  * Never twice:
- *   - one store at a time: a lock (LOCK_PREFIX, SET NX with LOCK_SECONDS),
- *     so a double click or two tabs wait for each other ("busy");
+ *   - one store at a time: a lock (lockKeyOf, lib/redis-lock.ts: SET NX
+ *     with LOCK_SECONDS, released only by its holder), so a double click or
+ *     two tabs do not both go through (the second is told "busy");
  *   - read again under the lock: the amount is what the published policy
  *     gives now, after what was refunded already (planRefund takes
  *     `amount_refunded` off), so once given it is not given again;
@@ -27,11 +28,13 @@
  */
 import { onPlatformAt } from "@/lib/billing";
 import { READ_BUDGET_MS, readPlanRefund } from "@/lib/plan-refund";
-import { isRedisConfigured, redisPipeline } from "@/lib/redis";
+import { isRedisConfigured } from "@/lib/redis";
+import { LockBusyError, releaseLock, takeLock } from "@/lib/redis-lock";
 import type { Store } from "@/lib/store";
 
 const AT = "2024-06-20";
-export const LOCK_PREFIX = "nl:plan-refund:lock:";
+/** The lock of one store's plan refund. */
+export const lockKeyOf = (sid: string): string => `nl:plan-refund:${sid}:lock`;
 /** Longer than the reading's budget and the write's 20-second time-out together. */
 export const LOCK_SECONDS = Math.ceil(READ_BUDGET_MS / 1000) + 60;
 const REFUND_ID = /^re_[A-Za-z0-9]{6,128}$/;
@@ -45,10 +48,13 @@ const rows = (page: Row): Row[] => (Array.isArray(page.data) ? (page.data as unk
 
 export async function refundPlanPayment(store: Store, nowSeconds = Math.floor(Date.now() / 1000)): Promise<PlanRefundMade> {
   if (!isRedisConfigured()) return { ok: false, reason: "no_lock" };
-  const lock = `${LOCK_PREFIX}${store.sid}`;
-  const token = `${nowSeconds}:${Math.random().toString(36).slice(2)}`;
-  const [taken] = await redisPipeline([["SET", lock, token, "NX", "EX", LOCK_SECONDS]]);
-  if (taken !== "OK") return { ok: false, reason: "busy" };
+  let held;
+  try {
+    held = await takeLock(lockKeyOf(store.sid), LOCK_SECONDS, 0);
+  } catch (error) {
+    if (error instanceof LockBusyError) return { ok: false, reason: "busy" };
+    throw error;
+  }
   try {
     const reading = await readPlanRefund(store, nowSeconds);
     // Not decidable (a failed read, a list too long…): said so, for the page to send the creator to support.
@@ -89,7 +95,6 @@ export async function refundPlanPayment(store: Store, nowSeconds = Math.floor(Da
     }
   } finally {
     // Only our own lock: one that expired and was taken by another request is left alone.
-    const [held] = await redisPipeline([["GET", lock]]);
-    if (held === token) await redisPipeline([["DEL", lock]]);
+    await releaseLock(held);
   }
 }

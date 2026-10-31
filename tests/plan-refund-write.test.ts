@@ -14,7 +14,7 @@
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
 import { claimHandle, setSubscription, storeForEmail } from "@/lib/store";
-import { LOCK_PREFIX, refundPlanPayment } from "@/lib/plan-refund-write";
+import { lockKeyOf, refundPlanPayment } from "@/lib/plan-refund-write";
 import { redisPipeline } from "@/lib/redis";
 
 const DAY = 86_400;
@@ -95,7 +95,7 @@ async function paidShop(o: { at?: number; disputed?: boolean } = {}) {
   const store = async () => (await storeForEmail(email))!;
   return { id, store, refunds: () => world.refunds.filter((r) => r.charge === id) };
 }
-const lockOf = async (s: { sid: string }) => (await redisPipeline([["GET", `${LOCK_PREFIX}${s.sid}`]]))[0];
+const lockOf = async (s: { sid: string }) => (await redisPipeline([["GET", lockKeyOf(s.sid)]]))[0];
 
 async function main() {
   redis.clear();
@@ -165,7 +165,7 @@ async function main() {
   world.charges.find((x) => x.id === u.id)!.amount_captured = 4_900;
   is("not decidable (part paid by a balance): unknown, nothing made", [await refundPlanPayment(await u.store(), NOW), u.refunds().length], [{ ok: false, reason: "unknown" }, 0]);
   const h = await paidShop();
-  await redisPipeline([["SET", `${LOCK_PREFIX}${(await h.store()).sid}`, "someone-else", "EX", 60]]);
+  await redisPipeline([["SET", lockKeyOf((await h.store()).sid), "someone-else", "EX", 60]]);
   is("another request holds the lock: busy, and its lock is left alone", [await refundPlanPayment(await h.store(), NOW), await lockOf(await h.store())], [{ ok: false, reason: "busy" }, "someone-else"]);
   done();
 }
