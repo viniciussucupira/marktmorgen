@@ -8097,6 +8097,8 @@ REGRA DOS 60% (OBRIGATÓRIA): todo cliente pagante, considerado isoladamente e u
 
 309. [EM1] E-mails para a lista somente pela Amazon SES, com fila de espera, e limites de envio maiores
 
+Estado da unidade de evidência das porções de envio: em andamento pelo Codex em31/10/2026, 03:22:12 Fortaleza, ramo codex/list-ramp-evidence, antes do código. rampRoom trata GET perdido/malformado como ausência de porção e ignora confirmação deSET. Exigir evidência no GET/SET já existentes antes de conceder capacidade; nenhumIO/chave/TTLnovo. Não altera pausa opcional de plano nem limiares de saúde. PR#1398headválidointacto.
+
 Estado da unidade de evidência da pausa por devoluções/reclamações da lista: em andamento pelo Codex em31/10/2026, 03:03:55 Fortaleza, ramo codex/list-health-pause-evidence, antes do código. Leitura perdida/malformada da pausa de saúde não pode liberar sendTo. Preservar contrato de leitura do estúdio e serviços essenciais; usar o mesmoGET antes da admissão, semIO/chave/TTLnovo. Não se refere à pausa opcional de plano, que continua desligada. PR#1397headválidointacto.
 
 Estado da unidade de evidência do mês do remetente: em andamento pelo Codex em31/10/2026, 02:46:21 Fortaleza, ramo codex/sender-month-evidence, antes do código. sentThisMonth transforma leitura perdida/malformada em0 e libera admissão de lista. Distinguir desconhecido de0 no GET já existente, impedir admissão nessa incerteza e tornar avisos honestos; sem IO/chave/TTLnovo. PR#1396 mantém head/CIválidos intactos.
@@ -20569,3 +20571,14 @@ Custo desta unidade: comparação finita da única respostaGET já executada por
 
 
 Resultado implementado (não publicado): pauseForSending distingue null(ausência/expiração comprovada) deundefined(leitura desconhecida), valida resposta única própria semgetter e registro limitado com motivo/data/contadores inteirosseguros; pausedFor conserva contrato null paraestúdio/serviços. sendTo recebe desconhecido e retorna retry/resto intacto antes de rampRoom/reserva/provedor, sem inventarpausa nem aceiteincerto.22cenáriosnegativos no leitor+sender reais confirmam somenteos2GETexistentes das2chamadasdoteste,nenhumoutrocomando;4controlespositivos,wrapperpreservado e login essencial. Pausa opcional de plano segue desligada;limiares/7dias/retencão/IDs iguais. Agregados/ramp e chamadas fora da lista permanecem remanescentes.39+Vercel completos no novohead exigidos.
+
+
+### 309/EM1 — evidência das porções antes de envio (31/10/2026)
+
+Estado da unidade de evidência das porções de envio: em andamento pelo Codex em31/10/2026, 03:22:12 Fortaleza, ramo codex/list-ramp-evidence, antes do código. rampRoom trata GET perdido/malformado como ausência de porção e ignora confirmação deSET. Exigir evidência no GET/SET já existentes antes de conceder capacidade; nenhumIO/chave/TTLnovo. Não altera pausa opcional de plano nem limiares de saúde. PR#1398headválidointacto.
+
+Achado real: rampRoom usa destructuring do GET; parseRamp inválido vira want inteiro, e SET sem confirmação ainda devolve take. Mesmo caminho já existente deve distinguir ausência null explícita de desconhecido, validar tamanho/contagem/tempo semcoerção e só liberar take após resposta SET própria/únicaOK. Em dúvida manter destinatários aguardando porção, sem inventar envio ou devolver consumo cuja gravação pode ter sido aplicada. ConcorrênciaGET/SET nãoatômica, startRamp e outros caminhos permanecem remanescentes; sem alegação de filaSEScompleta.
+
+Publicação funcional #1397: merge5a4f8b8e30cc178743fbefbdbeb736c9d94c8c7f,31/10/2026 03h17min13sFortaleza,headc45f287af7525c24a0f102af9405cacd3dd9dd8e,39/39+Vercel,READYdpl_3oAj7tSdUE7Jaf7QBaZN8PGDo5J3,7aliases5HTMLreais;error/fatal(limit10)06:17:13–06:19:29.669UTC semregistros,somenteessa janela. Leitura mensal desconhecida não libera lista;serviçoessencialpreservado. CI8runs39jobs11409segundosconhecidos,0intervalosdesconhecidos;faturamento/tarifas/OS/arredondamento/créditos/cache/Vercel desconhecidos,nunca0. Contador254retido;provas1395/1396preservadas.
+
+Custo: mesmosGET/SET/DELjáexistentes,nenhumIO/chave/TTL/retenção/provedor novos,nenhumaumento de capacidade/operações. Teto incremental de novas operações mensal/anual porStore/Studio/Scale0/0; custosfaturadosCI/Redis/hosting desconhecidos,nãozero. Resposta perdida apósSETaplicado pode consumir a porção semdispatch; não consome allowance mensal nesta etapa e destinatários ficam guardados para tentativa posterior. Preços/limitesvisíveis/flagsfechadas/fiscal/IDs/conteúdo iguais. Testes sintéticos somente; novoheadexige39+Vercelinteiros. PreservarClaudeCA1/NC1 e todososheadsválidos.
