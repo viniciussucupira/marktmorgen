@@ -20666,3 +20666,29 @@ Custo:mesmosGETcache/GETaccount/SETcache,piorcadênciaexistente1consultadecontap
 
 
 Resultado implementado (não publicado): falhadorefresh marca readyfalse/unreachable na mesmaSETcache,semrenovarreadytrue;preservaquota/taxaapenascomometadado nãoautorizante e âncora60sjáusada.2cenáriosreaisdosendercomcachepositivoexpirado+500/perdaresposta: e-mailindividual e lotedeserviço usamfallbackexistente,nãoamplificamroomdalista,nãonovaconsultaantes60s,recuperaçãocomquotaconfirmada1000/taxa2. Controledecacheválido299saindanãofazGETaccount;após301s falha nãoautorizases. Nenhumachamada/campo/chave/TTLnovo;cadênciaigual. Testes1401/1402 eessenciais mantidos;suíte39+Vercelinteirapendente. Não concluireserva global/listaSES-only/fila.
+
+
+## MT — O método Marktmorgen: passo a passo de funil guiado por IA (31/10/2026)
+
+**Proveniência/Pedidos repetidos:** pedido do dono na conversa com o Claude, 31/10/2026, 12h36 Fortaleza: ele admira a teoria de funis da ClickFunnels e quer aproveitar o que ela tem de bom, atualizado e reunido num método próprio, com IA, e passo a passo inspirado nela. Gravado diretamente pelo Claude, que pode gravar o que aplica ordem do dono. Conferido antes de gravar: não há item de método guiado na fila; reaproveita o que já existe em lib/funnel-starters.ts, lib/funnel-types.ts, lib/funnel-ai.ts, lib/funnel-ai-sequence.ts, lib/funnel-diagnosis.ts, lib/funnel-metrics.ts, lib/funnel-offer-review.ts, lib/page-coach.ts, lib/store-coach.ts, caixas no checkout (lib/product-extras.ts), oferta depois do pagamento (lib/upsell.ts), versão B das páginas e FT1–FT8 (528–530, 572–576). Etiqueta MT1 e número 577 livres.
+
+Referência: os conceitos públicos de Russell Brunson e da ClickFunnels (escada de ofertas do grátis ao mais caro; a pergunta de quem é o cliente, onde ele está, o que o atrai e que resultado ele quer; gancho, história e oferta em cada página; sequência de e-mails que conta a história do criador; ir aonde o público já se reúne). Ideias e métodos não são protegidos; textos, nomes e marcas são. Por isso: nada copiado dos livros, páginas, modelos ou vídeos dele, e nenhum nome próprio do método dele (por exemplo "Funnel Hacking", "Dream 100", "Attractive Character", "Soap Opera Sequence", "Perfect Webinar", "Hook, Story, Offer"). Nomes próprios em inglês americano simples.
+
+577. [MT1] "The Marktmorgen Method": oito passos guiados no estúdio, a IA fazendo o trabalho pesado
+Uma tela por passo, com uma ação principal, exemplo real dentro da tela, "Skip" e "Back" sempre, nada perdido ao sair (rascunho salvo), e no fim o funil inteiro criado de uma vez, escondido até o criador aprovar.
+1. Who you help: até cinco perguntas curtas; a IA resume o cliente ideal numa frase que o criador corrige.
+2. Where they already are: o criador marca as redes onde o público dele está (reaproveita as redes da loja); a IA sugere o que postar em cada uma, sem postar nada sozinha, sem contas falsas, sem automação de mensagens.
+3. The first yes: a IA propõe um brinde do próprio conteúdo do criador (guia, aula, lista) e o formulário de inscrição.
+4. Your offer ladder: os produtos do criador em degraus (grátis, primeiro valor pequeno, produto principal, chamada ou mentoria); a IA mostra o degrau que falta e propõe o que criar, sem inventar preço: o criador digita.
+5. One page per step: para cada degrau, a página com o modelo pronto correspondente; a IA escreve gancho, história e oferta só com os fatos da loja (heldToFacts), nunca depoimento, número ou prazo inventado.
+6. More per order: caixas no checkout e oferta depois do pagamento já existentes, sugeridas a partir dos produtos do próprio criador, nunca pré-marcadas.
+7. Stay in touch: sequência de cinco e-mails de boas-vindas contando a história do criador (lib/funnel-ai-sequence.ts), só para quem consentiu, com descadastro em um clique.
+8. See and improve: os números do funil por etapa (lib/funnel-metrics.ts, lib/funnel-diagnosis.ts) mostram onde as pessoas param; a IA sugere uma única mudança por vez e a versão B testa.
+
+Melhor que a ClickFunnels: na ClickFunnels o criador aprende a teoria em livros, cursos e desafios e monta cada parte à mão; aqui o método está dentro do produto, a IA preenche cada passo com os dados reais da loja, e o funil completo (páginas, produto, checkout, e-mails) sai pronto para aprovar.
+
+Honestidade e regras: VR; nada de urgência, escassez, contagem regressiva ou prova social inventadas; a IA só escreve com os fatos publicados; o criador aprova tudo antes de ir ao ar; conteúdo do criador nunca alterado sem aprovação. Acessibilidade AX274 integral (AAA). IA só pela reserva e teto existentes de lib/funnel-ai.ts, com pior caso mensal e anual por plano conferido; sem IA, os passos funcionam com perguntas e modelos neutros. Custo desconhecido reprova, nunca é zero; MR e TX vigentes.
+
+Testes automáticos: cada passo salva rascunho e volta; pular passo não quebra o fim; o funil final cria todas as partes escondidas e desligadas; nada público antes da aprovação; nenhuma frase de urgência, número, preço ou depoimento inventado; pool de IA esgotado cai nos modelos neutros; matriz de acessibilidade de cada tela.
+
+Proibido: mudar preços, limites visíveis, comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a, a revisão comercial ou stripePlatformEligibilityReady; afrouxar trava; copiar texto, imagem, modelo ou nome próprio da ClickFunnels ou de Russell Brunson; postar ou enviar mensagem em nome do criador; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
