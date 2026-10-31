@@ -25,7 +25,7 @@
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { isAddOn, isBillingConfigured, onPlatformAt } from "@/lib/billing";
 import { type PlanDisputeStatus, coveredUntil, disputeStatusOf } from "@/lib/plan-dispute-rules";
-import { recordPlanDispute, storeForHandle, storeForEmail, storeRef } from "@/lib/store";
+import { recordPlanDispute, storeForHandle, storeForId, storeRef } from "@/lib/store";
 
 /** The version whose charge still names its invoice and whose invoice names its subscription. */
 const DISPUTE_VERSION = "2024-06-20";
@@ -38,7 +38,7 @@ export const UNMATCHED_RETRY_DAYS = 7;
 /**
  * What each dispute already read turned out to be, by id: "final" (decided,
  * written), "unmatched:<seconds>" (not a plan payment, asked again for a
- * week), or "open:<store ref>". A known
+ * week), or "open:<store id>" (the store's id, never an address). A known
  * one costs no Stripe read when it is listed again, so the newest page is
  * always reached first and a run never spends its time on settled ones.
  */
@@ -58,16 +58,16 @@ async function remember(id: string, what: string): Promise<void> {
 }
 
 /** Writes a dispute's status on a store already known. Answers whether it changed. */
-async function writeStatus(ref: string, id: string, status: PlanDisputeStatus, at: number, coversUntil: number, nowSeconds: number): Promise<boolean> {
-  const store = await storeForEmail(ref);
+async function writeStatus(sid: string, id: string, status: PlanDisputeStatus, at: number, coversUntil: number, nowSeconds: number): Promise<boolean> {
+  const store = await storeForId(sid);
   if (!store) {
     await remember(id, `unmatched:${nowSeconds}`);
     return false;
   }
   const before = JSON.stringify(store.planDisputes ?? []);
-  const after = await recordPlanDispute(ref, { id, status, at, coversUntil }, nowSeconds);
+  const after = await recordPlanDispute(storeRef(store), { id, status, at, coversUntil }, nowSeconds);
   if (!after) throw new Error("the dispute could not be written down");
-  await remember(id, status === "open" ? `open:${ref}` : "final");
+  await remember(id, status === "open" ? `open:${sid}` : "final");
   return JSON.stringify(after.planDisputes ?? []) !== before;
 }
 
@@ -97,7 +97,7 @@ async function applyDispute(dispute: Record<string, unknown>, known: string | un
     await remember(id, known?.startsWith("unmatched:") ? known : `unmatched:${nowSeconds}`);
     return "unmatched";
   }
-  return (await writeStatus(storeRef(store), id, status, created, coveredUntil(invoice), nowSeconds)) ? "recorded" : "unchanged";
+  return (await writeStatus(store.sid, id, status, created, coveredUntil(invoice), nowSeconds)) ? "recorded" : "unchanged";
 }
 
 function sameCustomer(customerId: string | null | undefined, subscription: Record<string, unknown>): boolean {
