@@ -167,7 +167,7 @@ async function run(request: NextRequest): Promise<Response> {
       return null;
     });
     if (demo && demo.pending.length) console.error("the demo store is missing something", demo.pending);
-    const ok = plans !== null && (billing !== null || !isBillingConfigured());
+    const ok = plans !== null && ((billing !== null && disputes !== null) || !isBillingConfigured());
     return Response.json({ ok, ...(plans ?? {}), billing, disputes, recovered, comeBack, nudged, yearly, verified, benchmarks, invites, catalogs, demo }, { status: ok ? 200 : 500, headers: { "Cache-Control": "no-store" } });
   } finally {
     await redisPipeline([["DEL", "nl:plans:lock"]]).catch(() => {});

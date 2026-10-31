@@ -52,6 +52,7 @@ const ADDON = "sub_PlanDisputeAddon";
 const OTHER = "sub_PlanDisputeOther";
 const BROKEN = "sub_PlanDisputeBroken";
 
+let byId: Record<string, Record<string, unknown>> = {};
 let pages: { data: Record<string, unknown>[]; has_more: boolean }[] = [];
 const asked: string[] = [];
 globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) => {
@@ -60,6 +61,10 @@ globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) =>
   if (url.hostname === "api.stripe.com") {
     asked.push(`${method} ${url.pathname}${url.search}`);
     if (method !== "GET") return new Response("{}", { status: 400 });
+    if (url.pathname.startsWith("/v1/disputes/")) {
+      const id = url.pathname.split("/").pop() ?? "";
+      return byId[id] ? Response.json(byId[id]) : new Response(JSON.stringify({ error: { message: "missing" } }), { status: 404 });
+    }
     if (url.pathname === "/v1/disputes") {
       const after = url.searchParams.get("starting_after");
       const index = after ? pages.findIndex((page) => page.data.some((row) => row.id === after)) + 1 : 0;
@@ -116,6 +121,9 @@ async function main() {
   is("coveredUntil is 0 with no lines", coveredUntil(null), 0);
   const known = withPlanDispute([open], { ...open, status: "lost", at: 1, coversUntil: 2 }, NOW);
   is("a known dispute takes its new status and keeps what was first read", known, [{ ...open, status: "lost" }]);
+  is("a decided dispute is never reopened", withPlanDispute([{ ...open, status: "won" }], { ...open, status: "open" }, NOW), [{ ...open, status: "won" }]);
+  const twelve = Array.from({ length: 12 }, (_, i) => ({ ...open, id: `du_Keep${i}` }));
+  is("reading a record never drops one that still pauses", parsePlanDisputes(twelve).length, 12);
   let many: PlanDispute[] = [];
   for (let i = 0; i < PLAN_DISPUTES_KEPT; i += 1) many = withPlanDispute(many, { id: `du_Open${i}`, status: "open", at: NOW, coversUntil: NOW + DAY }, NOW);
   const full = withPlanDispute(many, { id: "du_Extra", status: "open", at: NOW, coversUntil: NOW + DAY }, NOW);
@@ -165,37 +173,49 @@ async function main() {
     await setup();
     pages = [{ data: [dispute("du_Plan1", "needs_response", SUB), dispute("du_Addon1", "needs_response", ADDON), dispute("du_NoInvoice", "needs_response", null), dispute("du_Other1", "needs_response", OTHER), dispute("du_Broken1", "needs_response", BROKEN)], has_more: false }];
     const first = await syncPlanDisputes(Date.now() + 10_000, NOW);
-    is("counts", first, { seen: 5, recorded: 1, unmatched: 3, failed: 1, complete: true });
+    is("counts", first, { seen: 5, recorded: 1, unmatched: 3, reread: 0, failed: 1, complete: true });
     const after = (await storeForEmail(owner))!;
     is("the plan's dispute is written down", after.planDisputes?.map((kept) => [kept.id, kept.status, kept.coversUntil]), [["du_Plan1", "open", NOW + 20 * DAY]]);
     is("and pauses the store's costs", costPauseCode(after, NOW), "plan_disputed");
     is("the list asked looks back 120 days and expands the invoice", asked.some((line) => line.startsWith("GET /v1/disputes?") && line.includes(`created%5Bgte%5D=${NOW - 120 * DAY}`) && line.includes("expand%5B%5D=data.charge.invoice")), true);
     is("nothing but reads is sent to Stripe", asked.every((line) => line.startsWith("GET ")), true);
+    asked.length = 0;
     const again = await syncPlanDisputes(Date.now() + 10_000, NOW);
     is("the same dispute again changes nothing", again.recorded, 0);
+    is("disputes already read cost no subscription read", asked.filter((line) => line.startsWith("GET /v1/subscriptions/") && !line.includes(BROKEN)).length, 0);
     is("still one", (await storeForEmail(owner))!.planDisputes?.length, 1);
     pages = [{ data: [dispute("du_Plan1", "won", SUB)], has_more: false }];
     const won = await syncPlanDisputes(Date.now() + 10_000, NOW);
     is("the bank's decision is written", won.recorded, 1);
     const lifted = (await storeForEmail(owner))!;
     is("won lifts the pause", [lifted.planDisputes?.[0]?.status, costPauseCode(lifted, NOW), isPaidUp(lifted)], ["won", null, true]);
+    asked.length = 0;
+    await syncPlanDisputes(Date.now() + 10_000, NOW);
+    is("a decided dispute listed again costs no subscription read", asked.filter((line) => line.startsWith("GET /v1/subscriptions/")).length, 0);
   }
 
-  part("Bounded: a deadline, a page cap and a cursor");
+  part("Bounded, newest first, and open ones past the window read by id");
   {
     await setup();
-    const many = Array.from({ length: MAX_PAGES + 2 }, (_, page) => ({ data: [dispute(`du_Page${page}`, "lost", SUB)], has_more: page < MAX_PAGES + 1 }));
-    pages = many;
+    pages = Array.from({ length: MAX_PAGES + 2 }, (_, page) => ({ data: [dispute(`du_Page${page}`, "lost", SUB)], has_more: page < MAX_PAGES + 1 }));
     const capped = await syncPlanDisputes(Date.now() + 10_000, NOW);
     is("stops at the page cap, not complete", [capped.seen, capped.complete], [MAX_PAGES, false]);
-    is("keeps the cursor", (await redis.pipeline([["GET", "nl:plan-disputes:after"]]))[0], `du_Page${MAX_PAGES - 1}`);
-    const rest = await syncPlanDisputes(Date.now() + 10_000, NOW);
-    is("the next run carries on from it and finishes", [rest.seen, rest.complete], [2, true]);
-    is("and clears it", (await redis.pipeline([["GET", "nl:plan-disputes:after"]]))[0], null);
-    is("every page's dispute is written", (await storeForEmail(owner))!.planDisputes?.length, MAX_PAGES + 2);
+    pages = [{ data: [dispute("du_Newest", "needs_response", SUB)], has_more: true }, ...pages];
+    const next = await syncPlanDisputes(Date.now() + 10_000, NOW);
+    is("a new dispute is read first in the next run", (await storeForEmail(owner))!.planDisputes?.some((kept) => kept.id === "du_Newest" && kept.status === "open"), true);
+    is("and only it costs a subscription read", next.recorded, 1);
     asked.length = 0;
     const late = await syncPlanDisputes(Date.now() - 1, NOW);
     is("a deadline already passed asks Stripe nothing", [late.seen, asked.length], [0, 0]);
+    pages = [{ data: [], has_more: false }];
+    byId = { du_Newest: { id: "du_Newest", object: "dispute", status: "won", created: NOW - 200 * DAY } };
+    const reread = await syncPlanDisputes(Date.now() + 10_000, NOW);
+    is("an open dispute the list no longer returns is read by id", [reread.reread, reread.recorded], [1, 1]);
+    const lifted = (await storeForEmail(owner))!;
+    is("and its decision is written", lifted.planDisputes?.find((kept) => kept.id === "du_Newest")?.status, "won");
+    asked.length = 0;
+    await syncPlanDisputes(Date.now() + 10_000, NOW);
+    is("once decided it is not read again", asked.filter((line) => line.startsWith("GET /v1/disputes/")).length, 0);
   }
 
   done();

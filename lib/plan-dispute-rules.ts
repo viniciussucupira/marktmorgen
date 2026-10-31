@@ -34,6 +34,8 @@ export type PlanDispute = {
 
 /** The most a store keeps; the oldest decided ones go first. */
 export const PLAN_DISPUTES_KEPT = 10;
+/** The most read back from a record, far above what withPlanDispute keeps. */
+const PARSE_CAP = 100;
 const YEAR = 366 * 24 * 60 * 60;
 const DISPUTE_ID = /^du_[A-Za-z0-9]{1,200}$/;
 
@@ -63,17 +65,19 @@ export function parsePlanDisputes(value: unknown): PlanDispute[] {
     const parsed = parsePlanDispute(row);
     if (parsed && !out.some((kept) => kept.id === parsed.id)) out.push(parsed);
   }
-  return out.slice(-PLAN_DISPUTES_KEPT);
+  // withPlanDispute trims spent ones; reading never drops one that still pauses.
+  return out.slice(-PARSE_CAP);
 }
 
 /**
- * The list with `entry` written in: a known dispute takes its new status
- * (the date it was opened and the period it covered stay as first read); a
+ * The list with `entry` written in: a known dispute still open takes its
+ * new status, a decided one stays as decided (the date it was opened and the period it covered stay as first read); a
  * new one is added. Past the limit, decided ones that no longer pause
  * anything go first, never one that still pauses.
  */
 export function withPlanDispute(list: PlanDispute[], entry: PlanDispute, nowSeconds: number): PlanDispute[] {
-  const next = list.map((kept) => (kept.id === entry.id ? { ...kept, status: entry.status } : kept));
+  // A decided dispute stays decided: a status Stripe adds later never reopens it.
+  const next = list.map((kept) => (kept.id === entry.id && kept.status === "open" ? { ...kept, status: entry.status } : kept));
   if (!next.some((kept) => kept.id === entry.id)) next.push(entry);
   while (next.length > PLAN_DISPUTES_KEPT) {
     const spent = next.findIndex((kept) => !pauses(kept, nowSeconds));
