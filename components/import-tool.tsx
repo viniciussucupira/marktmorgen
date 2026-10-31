@@ -336,6 +336,8 @@ export function ImportTool({
         const data = await post({ action: "step", id: job.id });
         if (data.ok && data.import) {
           moved = true;
+          // Paid again: the pause words go.
+          setError((e) => (e === MESSAGES.renewal_unpaid || e === MESSAGES.plan_disputed ? null : e));
           setJob(data.import);
           if (!running(data.import.state)) {
             toast(data.import.state === "done" ? "Import finished." : "Import stopped.");

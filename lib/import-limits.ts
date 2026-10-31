@@ -38,7 +38,7 @@
  * app/api/store/import and app/api/store/import/funnel).
  */
 import type { Tier } from "@/lib/plan";
-import { type PlanFields, costStandingOf } from "@/lib/plan-standing";
+import { type PlanFields, costStandingOf, standingOf } from "@/lib/plan-standing";
 
 export type ImportAllowance = {
   rows: number;
@@ -62,6 +62,15 @@ export const IMPORT_ALLOWANCES: Record<Tier, ImportAllowance> = {
 /** The figures a store has right now: its plan's while it is paid up and its costs are not paused, Store's otherwise. */
 export function importAllowanceFor(store: PlanFields & { tier: Tier }, nowSeconds = Date.now() / 1000): ImportAllowance {
   return costStandingOf(store, nowSeconds) === "paid" ? IMPORT_ALLOWANCES[store.tier] ?? IMPORT_ALLOWANCES.creator : IMPORT_ALLOWANCES.creator;
+}
+
+/**
+ * The rows an upload may bring in a month: the plan's own while it is paid
+ * up, even while its costs are paused (only an upload already under way can
+ * send rows then, and its plan's month bounds them), Store's otherwise.
+ */
+export function importRowsFor(store: PlanFields & { tier: Tier }, nowSeconds = Date.now() / 1000): number {
+  return standingOf(store, nowSeconds) === "paid" ? (IMPORT_ALLOWANCES[store.tier] ?? IMPORT_ALLOWANCES.creator).rows : IMPORT_ALLOWANCES.creator.rows;
 }
 
 /**

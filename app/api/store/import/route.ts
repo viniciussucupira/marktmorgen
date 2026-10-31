@@ -187,6 +187,8 @@ export async function POST(request: NextRequest) {
       if (!done.ok) return refuse(done.reason, 409);
       // The first few seconds of work right away, so a small file is done
       // by the time the page shows it; past the month's steps the five-minute job does it.
+      // Queued and left while the plan's costs are paused: no step is spent on it (unit 4b2).
+      if (costPauseCode(store)) return Response.json({ ok: true, import: view(done.job) });
       if (!(await withinMonth("import-step-month", store.sid || guarded.ref, importAllowanceFor(store).steps, windowId(store)))) return Response.json({ ok: true, import: view(done.job) });
       const after = await runImport(id, Date.now() + STEP_MS);
       return Response.json({ ok: true, import: view(after ?? done.job) });

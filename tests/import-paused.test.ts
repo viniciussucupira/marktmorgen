@@ -20,6 +20,7 @@ import { leadsKey } from "@/lib/contacts";
 import { RENEWAL_PAUSED_WORDS } from "@/lib/renewal-unpaid-words";
 import { DISPUTE_PAUSED_WORDS } from "@/lib/plan-dispute-rules";
 import { paidPeriod } from "./billing-period-fixture";
+import { windowId } from "@/lib/allowance-window";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
 
@@ -59,8 +60,10 @@ async function main() {
   await setSubscription(OWNER, { active: true, tier: "pro", cycle: "month", period: paidPeriod(), renewalUnpaid: true });
   store = (await storeForEmail(OWNER))!;
   is("costs paused", costsPaused(store), true);
+  // Store's 1,000 rows of the month already counted: the upload under way still has its plan's month.
+  await redis.pipeline([["SET", `nl:imports:rows:${store.sid}:${windowId(store)}`, String(IMPORT_ALLOWANCES.creator.rows)]]);
   const sent = await post(importPost, "/api/store/import", { action: "rows", id, rows: ROWS });
-  is("its rows are taken", sent.status, 200);
+  is("its rows are taken against the plan's own month, not Store's", sent.status, 200);
   const closed = await post(importPost, "/api/store/import", { action: "finish", id });
   is("and its upload finishes, queued with nothing applied", [closed.status, ((await closed.json()) as { import?: { state?: string; done?: number } }).import?.state, (await jobOf(store, id))?.done], [200, "queued", 0]);
 
@@ -70,6 +73,8 @@ async function main() {
   const waited = await runImport(id, Date.now() + 30_000);
   const [ttl] = await redis.pipeline([["TTL", `nl:import:${id}`]]);
   is("a paused pass keeps the import's record alive for its 14 days", Number(ttl) > 13 * 86_400, true);
+  const [busyTtl] = await redis.pipeline([["TTL", `nl:imports:busy:${store.sid}`]]);
+  is("and the store's one-import slot with it", Number(busyTtl) > 13 * 86_400, true);
   is("a step does no work and keeps the job", [waited?.state, waited?.done, waited?.counts.added], ["queued", 0, 0]);
   const cron = await advanceImports(Date.now() + 30_000);
   is("the five-minute job leaves it queued", [(await jobOf(store, id))?.state, (await jobOf(store, id))?.done], ["queued", 0]);
