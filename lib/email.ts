@@ -524,7 +524,11 @@ async function dispatchBatch(
       if (result.uncertain === true) return "retry";
       // SES excludes definitively refused recipients from both accepted and
       // pending lists. Missing recipients cannot establish a completed list.
-      if (listOnly && result.taken.length + result.left.length < going.length) return "refused";
+      if (listOnly && result.taken.length + result.left.length < going.length) {
+        // Accepted-recipient markers are not an acknowledged durable receipt.
+        // A partial send must hold the caller, never authorize automatic replay.
+        return result.taken.length > 0 ? "retry" : "refused";
+      }
       going = result.left.map((m) => m.original);
     }
     if (going.length === 0) return "sent";

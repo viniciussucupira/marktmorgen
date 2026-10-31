@@ -1010,11 +1010,10 @@ async function main(): Promise<void> {
   redis.clear(); resendKeys.clear(); clear(); account = approved();
   amazonSays = to => to === "list-bad@example.com" ? { status: 400, type: "BadRequestException", message: "Synthetic confirmed refusal" } : { status: 200 };
   const mixedList = [letter("list-good@example.com"), letter("list-bad@example.com")];
-  is("partial acceptance is refused, never reported as wholly sent",
-    await sendListBatch(mixedList, "list:mixed", { by: "monthly" }), "refused");
-  is("a retry retains the refusal without sending the accepted recipient twice",
-    [await sendListBatch(mixedList, "list:mixed", { by: "monthly" }), amazon.map(m => m.to), resend.length],
-    ["refused", ["list-good@example.com"], 0]);
+  is("partial acceptance holds the caller rather than authorizing automatic replay",
+    await sendListBatch(mixedList, "list:mixed", { by: "monthly" }), "retry");
+  is("the held partial batch has one accepted recipient and no fallback",
+    [amazon.map(m => m.to), resend.length], [["list-good@example.com"], 0]);
   redis.clear(); resendKeys.clear(); clear(); account = approved();
   amazonSays = () => ({ status: 200 });
   amazonLosesReply = to => to === "list-unknown@example.com" ? 500 : null;
