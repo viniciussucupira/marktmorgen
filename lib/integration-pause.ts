@@ -29,3 +29,21 @@ export const INTEGRATION_PAUSED_WORDS: Record<"paused_unpaid" | "paused_disputed
 
 /** Meta's own notice adds that its daily read waits too. */
 export const META_READ_PAUSED = "Reading your Meta ad spend also waits, and starts again on its own once the payment is recorded or the dispute is won.";
+
+/**
+ * 232 [CA1] unit 4b4a: tools on accounts already connected that reach the
+ * provider for the creator (a test meeting made or moved, a host's calendar
+ * read again, its calendars listed or chosen, an iCal address read, Google or
+ * iCal picked as the source of busy times) wait too. Taking something away
+ * stays open: disconnecting, removing a calendar address, choosing no source,
+ * and deleting a test meeting.
+ */
+const TOOLS_KEPT = "You can still disconnect any account, remove a calendar address, choose no calendar, or delete a test meeting.";
+
+export const TOOLS_PAUSED_WORDS: Record<"paused_unpaid" | "paused_disputed", string> = {
+  paused_unpaid: `Nothing was changed: your plan's renewal payment did not go through, so test meetings and calendar checks and changes wait until it is paid. Check the notice at the top of your studio to pay it. ${TOOLS_KEPT}`,
+  paused_disputed: `Nothing was changed: a payment for your plan is disputed with your bank, so test meetings and calendar checks and changes wait until the dispute is settled. Check the notice at the top of your studio for what happens next. ${TOOLS_KEPT}`,
+};
+
+/** Shown where the host's Google calendar list would be, while it is not read. */
+export const CALENDAR_LIST_PAUSED = "Your Google calendar list is not read while your plan's payment is unpaid or disputed. It is read again on its own once the payment is recorded or the dispute is won.";
