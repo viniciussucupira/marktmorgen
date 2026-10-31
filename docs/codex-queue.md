@@ -1587,6 +1587,8 @@ Estado inicial: na fila, dentro do Bloco de abertura, antes da revisão comercia
 Em lib/commercial-margin.ts, tests/margin-alignment.test.ts, tests/margin-alignment-table.ts, tests/spend-floor.test.ts, tests/tax-gate.test.ts, tests/store-assistant.test.ts, lib/store-assistant-rules.ts (assistantMeetsFloor), scripts/margin-alignment.mjs e no que mais usar o piso de 60%, troque o piso por unidade de 60% por "lucro líquido maior que zero no pior caso, com a folga já existente do spend floor". Os testes devem falhar se qualquer plano, intervalo ou complemento der prejuízo no pior caso, ou se a base mínima da empresa não for calculada. Regere docs/margin-alignment-2026-10-18.md. Construa o relatório mensal automático da margem real da empresa (item 3 da regra), sem dados pessoais.
 
 466. [MR3] Mostrar ao dono o resultado com os preços atuais.
+
+Estado vigente: **em andamento pelo Codex;30/10/2026,23:25:10Fortaleza;branch codex/mr3-current-results-refresh**. Atualizar apresentação466comfoto datada doalinhamentocanônico e gatesatuais;preservar27Octcomo histórico,sem preço/limite/taxa/gate/revisão alterados. Relatóriomensal465operacional continua pósabertura eaguardadados reconciliados.
 Estado inicial: na fila, logo depois de MR2.
 Com os preços em vigor (US$ 69 / 449 / 999 e o assistente de US$ 69), mostre por plano e intervalo o lucro líquido do pior caso e a base mínima da empresa, sob a leitura que der mais imposto. Liste quais travas da abertura continuam fechadas e por quê. Não proponha nem aplique preço novo.
 
@@ -1879,7 +1881,9 @@ Proveniência AB: passou a fazer parte do Bloco de abertura, posição (e), por 
 
 89. **[C2-CAPACITY] Calcular o máximo de cada franquia em cada plano e nos dois intervalos**
 
-   - Estado vigente: **em andamento pelo Codex;30/10/2026,22:53:39Fortaleza;branch codex/vault-listing-evidence**.1351 publicado em f0dd7dbdb699c6d68f11060b27df1a890decc161;1362 tem39sucessos+Vercel nohead9b277,mas incorporação devolveu405por conflito na fila. Conciliar fila canônica completa e executar nova suíte integral39+Vercel;sem mudança de código/testes/franquias/arquivos/downloads.
+   - Estado vigente: **remanescente financeiro aguardando o dono conforme1371;guardastécnicas1351/1362incorporadas epublicadas**.89não concluído: máximospagos/configuração/tetos/reservas e6casoscompletos continuam semprova. Não há unidade técnica emCI neste registro.
+
+   - Histórico da unidade técnica incorporada: **em andamento pelo Codex;30/10/2026,22:53:39Fortaleza;branch codex/vault-listing-evidence**.1351 publicado em f0dd7dbdb699c6d68f11060b27df1a890decc161;1362 tem39sucessos+Vercel nohead9b277,mas incorporação devolveu405por conflito na fila. Conciliar fila canônica completa e executar nova suíte integral39+Vercel;sem mudança de código/testes/franquias/arquivos/downloads.
 
 Proveniência AB: passou a fazer parte do Bloco de abertura, posição (c), por solicitação do dono de 24/10/2026, 00h11 (Fortaleza). Esta posição prevalece sobre a ordem OR/Bloco A anterior; histórico e estado de execução preservados.
    - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
