@@ -4,8 +4,11 @@
  * writes a backup once and reads it back before it counts. Off until the
  * owner creates that bucket and its own key and sets BACKUP_R2_ACCOUNT_ID,
  * BACKUP_R2_BUCKET, BACKUP_R2_ACCESS_KEY_ID and BACKUP_R2_SECRET_ACCESS_KEY
+ * (and BACKUP_R2_JURISDICTION=eu for a bucket made under the EU jurisdiction)
  * (docs/backup.md); nothing here creates a bucket, a key or a setting, and
- * nothing calls it yet.
+ * nothing calls it yet. The check against the sold files' bucket and key id
+ * compares names only: the key itself must be one the owner scoped to the
+ * backup bucket alone.
  *
  * Every write is create-only: PutObject with If-None-Match: *, which R2
  * evaluates atomically, so of two writes under one name at most one succeeds
@@ -37,7 +40,11 @@ export function backupStoreConfig(): BackupStoreConfig | null {
   if (!/^[a-z0-9][a-z0-9-]{1,61}[a-z0-9]$/.test(bucket)) return null;
   // Never the sold files' bucket or key (docs/backup.md, owner prerequisites 2 and 3).
   if (bucket === (process.env.R2_BUCKET ?? "").trim() || accessKeyId === (process.env.R2_ACCESS_KEY_ID ?? "").trim()) return null;
-  return { endpoint: `https://${account}.r2.cloudflarestorage.com`, bucket, key: { accessKeyId, secretAccessKey } };
+  // A bucket made under the EU jurisdiction has an address of its own (https://developers.cloudflare.com/r2/reference/data-location/).
+  const jurisdiction = (process.env.BACKUP_R2_JURISDICTION ?? "").trim().toLowerCase();
+  if (jurisdiction !== "" && jurisdiction !== "eu") return null;
+  const host = jurisdiction === "eu" ? `${account}.eu.r2.cloudflarestorage.com` : `${account}.r2.cloudflarestorage.com`;
+  return { endpoint: `https://${host}`, bucket, key: { accessKeyId, secretAccessKey } };
 }
 
 const objectUrl = (config: BackupStoreConfig, id: string) => {
@@ -61,7 +68,8 @@ export function r2BackupStore(config: BackupStoreConfig): BackupObjectStore {
         key: config.key,
       });
       const status = await timed(TIMEOUT_MS, async (signal) => {
-        const response = await fetch(url, { method: "PUT", headers, body: bytes as BodyInit, signal, cache: "no-store" });
+        // A redirect is refused, never followed: a PUT turned into a GET elsewhere could answer 200.
+        const response = await fetch(url, { method: "PUT", headers, body: bytes as BodyInit, signal, cache: "no-store", redirect: "error" });
         await response.body?.cancel().catch(() => {});
         return response.status;
       });
@@ -69,10 +77,11 @@ export function r2BackupStore(config: BackupStoreConfig): BackupObjectStore {
       if (status !== 200) throw new Error(`Backup write failed with status ${status}`);
     },
     read: async (id, maxBytes) => {
+      if (!Number.isSafeInteger(maxBytes) || maxBytes <= 0) throw new Error("Invalid backup read bound");
       const url = objectUrl(config, id);
       const headers = signV4({ method: "GET", url, headers: { "x-amz-content-sha256": EMPTY_HASH }, payloadHash: EMPTY_HASH, region: REGION, service: SERVICE, key: config.key });
       return timed(TIMEOUT_MS, async (signal) => {
-        const response = await fetch(url, { headers: { ...headers, "accept-encoding": "identity" }, signal, cache: "no-store" });
+        const response = await fetch(url, { headers: { ...headers, "accept-encoding": "identity" }, signal, cache: "no-store", redirect: "error" });
         if (response.status !== 200 || !response.body) {
           await response.body?.cancel().catch(() => {});
           throw new Error(`Backup read failed with status ${response.status}`);
