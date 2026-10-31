@@ -1,3 +1,5 @@
+import { PUBLISHED_PLAN_PRICES, type Tier, type Cycle } from "@/lib/plan";
+import { PLAN_PAYMENT_DISPUTE_KEYS, type PlanPaymentDisputeReview } from "@/lib/plan-payment-dispute-cost-rules";
 import { EXPOSURE_SCOPES, type FundedExposureReview } from '@/lib/funded-exposure-rules';
 import {CUSTOMER_COST_CATEGORIES,type CustomerWorstCase} from '@/lib/net-margin-rules';
 /** Synthetic economics only. Choose costs/taxes that leave an exact net amount
@@ -19,3 +21,12 @@ export function fundedCustomerWithAi(gross=10000,net=6000,aiCents=12):CustomerWo
 
 /** No exposure in this synthetic fixture only; never a production cost estimate. */
 export function zeroExposureFixture():FundedExposureReview{return{month:new Date().toISOString().slice(0,7),evidence:'TEST ONLY: no acquisition or legacy obligations',admissionLimitsEnforced:true,monthlyBudgetCents:0,cases:Object.fromEntries(EXPOSURE_SCOPES.map(scope=>[scope,{maximumMonthlyCases:0,worstCase:{collectedRevenueCents:0,refundableRevenueCents:0,taxesCeilingCents:0,costCeilings:Object.fromEntries(CUSTOMER_COST_CATEGORIES.map(key=>[key,0])),allCostsBounded:true,allTaxesReviewed:true,revenueCollected:true}}])) as FundedExposureReview['cases']};}
+
+/** Explicit hypothetical waiver, never evidence about a real provider or balance. */
+export function planPaymentDisputeFixture():PlanPaymentDisputeReview {
+ return Object.fromEntries(PLAN_PAYMENT_DISPUTE_KEYS.map(key=>{
+  const [tier,cycle]=key.split("_") as [Tier,Cycle];
+  return [key,{maximumPaidPrincipalCents:PUBLISHED_PLAN_PRICES[tier][cycle],maximumTotalFeesCents:0,
+   allContractPaymentsBounded:true,liabilityTailReviewed:true,evidence:"TEST ONLY: bounded single paid principal and explicitly waived lost-dispute fees, not real provider evidence"}];
+ }));
+}
