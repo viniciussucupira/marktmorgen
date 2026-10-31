@@ -53,7 +53,8 @@ export default function RefundsPage() {
           for switching plans. No reason is required and none will be asked
           for. The first payment is the first charge we make to you, on any
           plan, monthly or yearly, for any of your stores. The guarantee is
-          given once.
+          given once per person: a payment is not a first payment when the
+          same person, by email address or by card, has paid us before.
         </p>
         <p>
           This guarantee covers what happens once you have actually been
@@ -71,9 +72,11 @@ export default function RefundsPage() {
           <Link href="/terms#closing" className="text-black underline underline-offset-2 hover:no-underline">
             section 8 of our Terms
           </Link>{" "}
-          says; starting a plan again before then keeps it. Your own Stripe
-          account, its customers and its payout history are untouched: that
-          money was never ours to return.
+          says; starting a plan again before then keeps it. When it closes,
+          the renewals of the memberships and payment plans you sold through
+          it are stopped at Stripe, each at the end of the period already
+          paid. Every sale, refund and payout stays on your own Stripe
+          account: that money was never ours to return.
         </p>
         {!PLANS_ON_SALE ? (
           <p>
