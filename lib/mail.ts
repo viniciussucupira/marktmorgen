@@ -114,8 +114,19 @@ const dayKey = (now = new Date()) => `nl:mail:day:${now.toISOString().slice(0, 1
 async function dailyRoom(): Promise<number> {
   const cap = dailyCap();
   if (cap === 0) return Number.POSITIVE_INFINITY;
-  const [used] = await redisPipeline([["GET", dayKey()]]);
-  return Math.max(0, cap - (Number(used) || 0));
+  try {
+    const reply: unknown = await redisPipeline([["GET", dayKey()]]);
+    if (!Array.isArray(reply)) return 0;
+    const length = Object.getOwnPropertyDescriptor(reply, "length");
+    const field = Object.getOwnPropertyDescriptor(reply, "0");
+    if (!length || !("value" in length) || length.value !== 1 ||
+        !field || !("value" in field)) return 0;
+    // Only explicit absence means no emails used; unknown data grants no room.
+    if (field.value === null) return cap;
+    if (typeof field.value !== "string") return 0;
+    const used = confirmedCount(field.value, 0);
+    return used === null ? 0 : Math.max(0, cap - used);
+  } catch { return 0; }
 }
 
 /**
