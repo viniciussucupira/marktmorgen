@@ -341,6 +341,9 @@ export function ImportTool({
             toast(data.import.state === "done" ? "Import finished." : "Import stopped.");
             router.refresh();
           }
+        } else if (data.error === "renewal_unpaid" || data.error === "plan_disputed") {
+          // Said beside the import; it is tried again below and goes on once paid (232 [CA1] unit 4b2).
+          setError(MESSAGES[data.error]);
         }
       } catch {
         // Tried again below; the five-minute job carries on meanwhile.

@@ -124,11 +124,13 @@ export async function POST(request: NextRequest) {
   const id = text(body.id, 24);
   const refuse = (error: string, status = 400, extra: Record<string, unknown> = {}) => Response.json({ ok: false, error, ...extra }, { status });
   // While the plan's renewal is unpaid or a payment for it is disputed, an
-  // import does not start, take rows, check or move on (232 [CA1] unit 4b2,
+  // import does not start, check or move on (232 [CA1] unit 4b2,
   // lib/plan-standing.ts costPauseCode); one already started keeps its place
-  // (lib/imports.ts runImport). Canceling, reading where one stands and the
-  // report of rows not brought in stay open.
-  const paused = action === "cancel" ? null : costPauseCode(store);
+  // (lib/imports.ts runImport). An upload already under way may still send
+  // its rows and finish, so it is queued rather than lost; they count against
+  // the month's rows as always, and nothing is applied until it is paid.
+  // Canceling, reading where one stands and the report stay open.
+  const paused = action === "start" || action === "preview" || action === "step" ? costPauseCode(store) : null;
   if (paused) return refuse(paused, 409);
 
   try {

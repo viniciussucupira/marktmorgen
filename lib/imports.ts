@@ -1248,8 +1248,13 @@ export async function runImport(id: string, deadline: number): Promise<ImportJob
     // (lib/plan-standing.ts costsPaused, 232 [CA1] unit 4b2), the work an
     // import costs us waits: nothing is applied, nothing is emailed, and the
     // job stays as it is, so it goes on where it stopped once that is settled.
-    // Rows not yet brought in are kept RAW_DAYS from their upload, as always.
-    if (costsPaused(store, Date.now() / 1000)) return job;
+    // Rows not yet brought in are kept RAW_DAYS from their upload, as always;
+    // the job and the addresses still to be emailed are kept alive meanwhile
+    // (one write each, every five minutes), so a long pause loses neither.
+    if (costsPaused(store, Date.now() / 1000)) {
+      await redisPipeline([saveJob(job), ["EXPIRE", mailKey(id), KEEP_SECONDS]]);
+      return job;
+    }
     const [batches] = await redisPipeline([["LLEN", rowsKey(id)]]);
     const count = Number(batches) || 0;
     while (Date.now() < deadline) {

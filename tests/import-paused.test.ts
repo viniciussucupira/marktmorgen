@@ -1,8 +1,9 @@
 /**
  * 232 [CA1] unit 4b2: while a store's plan renewal is unpaid (or a payment
  * for its plan is disputed), moving a store from another platform is work
- * nobody is paying for. The import routes refuse to start, take rows, check
- * or move on, and say why; an import already started keeps its place and
+ * nobody is paying for. The import routes refuse to start, check
+ * or move on, and say why; an upload under way is queued, not lost; an
+ * import already started keeps its place (its record kept alive) and
  * goes on where it stopped once the plan is paid again; canceling, reading
  * where it stands and the report stay open; the five-minute job does not
  * work on it; and the allowance a paused plan shows is Store's, not its own.
@@ -12,7 +13,7 @@ import { GET as importGet, POST as importPost } from "@/app/api/store/import/rou
 import { POST as funnelPost } from "@/app/api/store/import/funnel/route";
 import { claimHandle, ensureListId, ensureStatsId, recordPlanDispute, setSubscription, storeForEmail, storeRef } from "@/lib/store";
 import { SESSION_COOKIE, openSession } from "@/lib/auth";
-import { RAW_DAYS, addRows, advanceImports, finishUpload, jobOf, runImport, startImport } from "@/lib/imports";
+import { RAW_DAYS, advanceImports, jobOf, runImport, startImport } from "@/lib/imports";
 import { FUNNEL_PAUSED, IMPORTS_PAUSED, IMPORT_ALLOWANCES, IMPORT_ROWS_KEPT_DAYS, importAllowanceFor } from "@/lib/import-limits";
 import { costsPaused } from "@/lib/plan-standing";
 import { leadsKey } from "@/lib/contacts";
@@ -52,16 +53,23 @@ async function main() {
   const started = await startImport(store, OWNER, "contacts", INPUT);
   if (!started.ok) throw new Error(`not started: ${started.reason}`);
   const id = started.job.id;
-  await addRows(store, id, ROWS);
-  await finishUpload(store, id);
-  is("queued, nothing applied yet", [(await jobOf(store, id))?.state, (await jobOf(store, id))?.done], ["queued", 0]);
+  is("receiving its rows", started.job.state, "receiving");
 
-  part("Renewal unpaid: the import waits where it is");
+  part("Renewal unpaid: an upload already under way is queued, not lost");
   await setSubscription(OWNER, { active: true, tier: "pro", cycle: "month", period: paidPeriod(), renewalUnpaid: true });
   store = (await storeForEmail(OWNER))!;
   is("costs paused", costsPaused(store), true);
+  const sent = await post(importPost, "/api/store/import", { action: "rows", id, rows: ROWS });
+  is("its rows are taken", sent.status, 200);
+  const closed = await post(importPost, "/api/store/import", { action: "finish", id });
+  is("and its upload finishes, queued with nothing applied", [closed.status, ((await closed.json()) as { import?: { state?: string; done?: number } }).import?.state, (await jobOf(store, id))?.done], [200, "queued", 0]);
+
+  part("Renewal unpaid: the import waits where it is");
   is("Store's rows while paused, not Studio's", importAllowanceFor(store).rows, IMPORT_ALLOWANCES.creator.rows);
+  await redis.pipeline([["EXPIRE", `nl:import:${id}`, 60]]);
   const waited = await runImport(id, Date.now() + 30_000);
+  const [ttl] = await redis.pipeline([["TTL", `nl:import:${id}`]]);
+  is("a paused pass keeps the import's record alive for its 14 days", Number(ttl) > 13 * 86_400, true);
   is("a step does no work and keeps the job", [waited?.state, waited?.done, waited?.counts.added], ["queued", 0, 0]);
   const cron = await advanceImports(Date.now() + 30_000);
   is("the five-minute job leaves it queued", [(await jobOf(store, id))?.state, (await jobOf(store, id))?.done], ["queued", 0]);
@@ -72,8 +80,6 @@ async function main() {
   for (const [label, body] of [
     ["start", { action: "start", kind: "contacts", ...INPUT }],
     ["dry run", { action: "preview", kind: "contacts", ...INPUT, rows: ROWS }],
-    ["rows", { action: "rows", id, rows: ROWS }],
-    ["finish", { action: "finish", id }],
     ["step", { action: "step", id }],
   ] as const) {
     const res = await post(importPost, "/api/store/import", body as Record<string, unknown>);
