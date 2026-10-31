@@ -64,7 +64,7 @@ export type PlanRefundReading =
   | PlanRefundFound
   | { refund: Extract<PlanRefund, { kind: "none" | "unknown" }> }
   | { refund: { kind: "none"; reason: "no_plan_payment" | "guarantee_used" } }
-  | { refund: { kind: "unknown"; reason: "stripe_unread" | "too_many" | "not_this_store" } };
+  | { refund: { kind: "unknown"; reason: "stripe_unread" | "too_many" | "not_this_store" | "customer_credit" } };
 
 type Row = Record<string, unknown>;
 const obj = (v: unknown): Row | null => (v && typeof v === "object" && !Array.isArray(v) ? (v as Row) : null);
@@ -102,6 +102,12 @@ export async function readPlanRefund(store: Store, nowSeconds = Math.floor(Date.
     if (sub.id !== subscriptionId || isAddOn(sub) || !ownedBy(store, sub)) return { refund: { kind: "unknown", reason: "not_this_store" } };
     const customer = customerOf(sub);
     if (!CUSTOMER_PATTERN.test(customer.id)) return { refund: { kind: "unknown", reason: "not_this_store" } };
+    // A credit on the customer's balance (negative), left by a downgrade's proration (lib/billing.ts switches with
+    // "always_invoice") or given by hand, pays later invoices: refunding the whole payment on top of it would give back
+    // more than was paid. Not decided here, for support to settle. An amount owed (positive) changes nothing.
+    const balance = obj(sub.customer)?.balance;
+    if (typeof balance !== "number" || !Number.isSafeInteger(balance)) return { refund: { kind: "unknown", reason: "unreadable" } };
+    if (balance < 0) return { refund: { kind: "unknown", reason: "customer_credit" } };
 
     const paidPage = await get(`/invoices?${new URLSearchParams({ subscription: subscriptionId, status: "paid", limit: "100" })}`);
     // A trial's invoice is paid with no charge: not a payment.
@@ -167,8 +173,12 @@ export async function readPlanRefund(store: Store, nowSeconds = Math.floor(Date.
     const oldestListed = succeeded.reduce<Row | null>((a, c) => (!a || num(c.created) < num(a.created) ? c : a), null);
     let first: Row | null = null;
     if (chargesPage.has_more === true) {
-      // Over a page: the first is older than every one listed; inside the window only if the oldest listed is.
-      if (oldestListed && num(oldestListed.created) >= windowStart) return { refund: { kind: "unknown", reason: "too_many" } };
+      // Over a page: every charge not listed is older than the oldest listed, of any status (a page of declined charges
+      // holds no succeeded one, and the first payment may be on the next page). Inside the window if that one is.
+      const listedTimes = list(chargesPage).map((c) => num(c.created));
+      if (!listedTimes.length || listedTimes.some((t) => !Number.isFinite(t)) || Math.min(...listedTimes) >= windowStart) {
+        return { refund: { kind: "unknown", reason: "too_many" } };
+      }
     } else if (chargesPage.has_more === false) first = oldestListed;
     else return { refund: { kind: "unknown", reason: "unreadable" } };
 

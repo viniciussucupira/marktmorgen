@@ -20,13 +20,17 @@
  *     hours instead of making a second, and only a refund the bank turned
  *     down (which gives the money back to the charge) is made again.
  * The lock is released at the end, even on an error; if the process dies it
- * expires by itself after LOCK_SECONDS, longer than the reading's budget plus
- * the write's time-out.
+ * expires by itself after LOCK_SECONDS. The reading's budget only stops new
+ * requests, so its last one may run a whole STRIPE_TIMEOUT_MS past it: the
+ * lock covers the budget, three time-outs (that last read, the list, the
+ * write) and a minute, and no write starts later than WRITE_BY_MS after the
+ * lock was taken, so a write always ends while the lock still holds.
  *
  * Bounded: one reading (lib/plan-refund.ts, at most MAX_CALLS requests), one
  * list and one write.
  */
 import { onPlatformAt } from "@/lib/billing";
+import { STRIPE_TIMEOUT_MS } from "@/lib/fetch-timeout";
 import { READ_BUDGET_MS, readPlanRefund } from "@/lib/plan-refund";
 import { isRedisConfigured } from "@/lib/redis";
 import { LockBusyError, releaseLock, takeLock } from "@/lib/redis-lock";
@@ -35,8 +39,10 @@ import type { Store } from "@/lib/store";
 const AT = "2024-06-20";
 /** The lock of one store's plan refund. */
 export const lockKeyOf = (sid: string): string => `nl:plan-refund:${sid}:lock`;
-/** Longer than the reading's budget and the write's 20-second time-out together. */
-export const LOCK_SECONDS = Math.ceil(READ_BUDGET_MS / 1000) + 60;
+/** The reading's budget, three Stripe time-outs (its last read, the list, the write) and a minute of room. */
+export const LOCK_SECONDS = Math.ceil((READ_BUDGET_MS + 3 * STRIPE_TIMEOUT_MS) / 1000) + 60;
+/** The last moment after taking the lock a write may start: it ends, time-out included, a minute before the lock expires. */
+export const WRITE_BY_MS = (LOCK_SECONDS - 60) * 1000 - STRIPE_TIMEOUT_MS;
 const REFUND_ID = /^re_[A-Za-z0-9]{6,128}$/;
 
 export type PlanRefundMade =
@@ -49,6 +55,7 @@ const rows = (page: Row): Row[] => (Array.isArray(page.data) ? (page.data as unk
 export async function refundPlanPayment(store: Store, nowSeconds = Math.floor(Date.now() / 1000)): Promise<PlanRefundMade> {
   if (!isRedisConfigured()) return { ok: false, reason: "no_lock" };
   let held;
+  const takenAt = Date.now();
   try {
     held = await takeLock(lockKeyOf(store.sid), LOCK_SECONDS, 0);
   } catch (error) {
@@ -75,6 +82,8 @@ export async function refundPlanPayment(store: Store, nowSeconds = Math.floor(Da
     if (refunds.some((r) => r.status === "pending" || r.status === "requires_action")) return { ok: false, reason: "pending" };
     if (refunds.some((r) => typeof r.status !== "string" || !["succeeded", "failed", "canceled"].includes(r.status))) return { ok: false, reason: "failed" };
     const turnedDown = refunds.filter((r) => r.status === "failed" || r.status === "canceled").length;
+    // Too late to be sure the write ends while the lock holds: nothing is made, the creator may ask again.
+    if (Date.now() - takenAt > WRITE_BY_MS) return { ok: false, reason: "failed" };
     try {
       const made = await onPlatformAt(
         AT,

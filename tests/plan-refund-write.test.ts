@@ -14,10 +14,13 @@
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
 import { claimHandle, setSubscription, storeForEmail } from "@/lib/store";
-import { lockKeyOf, refundPlanPayment } from "@/lib/plan-refund-write";
+import { LOCK_SECONDS, WRITE_BY_MS, lockKeyOf, refundPlanPayment } from "@/lib/plan-refund-write";
 import { redisPipeline } from "@/lib/redis";
 
 const DAY = 86_400;
+let clock = 0;
+const realNow = Date.now.bind(Date);
+Date.now = () => realNow() + clock;
 const NOW = Date.UTC(2026, 11, 2) / 1000;
 
 type Refund = { id: string; object: "refund"; charge: string; payment_intent: string; amount: number; currency: string; status: string };
@@ -35,6 +38,8 @@ const world = {
   /** Every refund write answers 500 before doing anything. */
   writesDown: false,
   slow: 0,
+  /** Milliseconds the clock jumps when a charge's refunds are listed (a slow reading before it). */
+  jump: 0,
 };
 
 globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) => {
@@ -65,7 +70,7 @@ globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) =>
   const sub = path.match(/^\/subscriptions\/(sub_\w+)$/);
   if (sub) {
     const row = world.subs.get(sub[1])!;
-    return json({ ...row, customer: { id: row.customer, email: world.customers.get(String(row.customer)) } });
+    return json({ ...row, customer: { id: row.customer, email: world.customers.get(String(row.customer)), balance: 0 } });
   }
   if (path === "/invoices") return page(world.invoices.filter((i) => i.subscription === q.get("subscription")));
   if (path === "/charges") return page(world.charges.filter((c) => c.customer === q.get("customer")));
@@ -73,6 +78,7 @@ globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) =>
   if (charge) return json(world.charges.find((c) => c.id === charge[1]));
   if (path === "/charges/search" || path === "/customers/search") return page([]);
   if (path === "/disputes") return page([{ charge: q.get("charge"), status: "needs_response", amount: 6_900 }]);
+  if (path === "/refunds" && world.jump) clock += world.jump;
   if (path === "/refunds") return page(world.refunds.filter((r) => r.charge === q.get("charge")));
   return json({ error: { message: `no stand-in for ${path}` } }, 404);
 }) as typeof fetch;
@@ -155,6 +161,14 @@ async function main() {
   world.refunds.push({ id: "re_pendingold1", object: "refund", charge: e.id, payment_intent: `pi_buy${n}x1`, amount: 100, currency: "usd", status: "pending" });
   world.charges.find((x) => x.id === e.id)!.amount_refunded = 100;
   is("a refund already pending on the charge: nothing new", [await refundPlanPayment(await e.store(), NOW), e.refunds().length], [{ ok: false, reason: "pending" }, 1]);
+
+  part("The lock outlasts the write");
+  is("the lock covers the reading's budget, three time-outs and a minute", [LOCK_SECONDS, WRITE_BY_MS], [145, 65_000]);
+  const late = await paidShop();
+  world.jump = WRITE_BY_MS + 1;
+  is("past the write's last moment: nothing made, failed, the lock released", [await refundPlanPayment(await late.store(), NOW), late.refunds().length, await lockOf(await late.store())], [{ ok: false, reason: "failed" }, 0, null]);
+  world.jump = 0;
+  is("asked again in time: made, once", [(await refundPlanPayment(await late.store(), NOW)).ok, late.refunds().length], [true, 1]);
 
   part("Nothing owed, nothing made");
   const f = await paidShop({ disputed: true });
