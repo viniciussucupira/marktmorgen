@@ -8097,6 +8097,8 @@ REGRA DOS 60% (OBRIGATÓRIA): todo cliente pagante, considerado isoladamente e u
 
 309. [EM1] E-mails para a lista somente pela Amazon SES, com fila de espera, e limites de envio maiores
 
+Estado da unidade de clareza do aviso de quota SES: em andamento pelo Codex em31/10/2026, 04:00:56 Fortaleza, ramo codex/ses-quota-notice, antes do código. O sentinelaAWS-1não pode aparecer como-1e-mails; usoResenddesconhecido não deve afirmar cotaesgotada nem pedirupgrade. Preservar avisoumapormês/rotaessencial,semIO/chave/TTLnovo. PR#1401headválidointacto;incorporação conjunta só apósnovohead39+Vercel,sempublicaravisoconhecidamenteincorreto.
+
 Estado da unidade de evidência da quota SES: em andamento pelo Codex em31/10/2026, 03:45:10 Fortaleza, ramo codex/ses-quota-evidence, antes do código. Quota ausente/inválida vira0 e sesBulkRoom interpreta0comoInfinity; somente-1équota ilimitada segundoAWS. Exigir tipos/status/cachecomprovados,semnovasoperações/chave/TTL e semativarvolumes. PR#1399headválidointacto.
 
 Estado da unidade de evidência das porções de envio: em andamento pelo Codex em31/10/2026, 03:22:12 Fortaleza, ramo codex/list-ramp-evidence, antes do código. rampRoom trata GET perdido/malformado como ausência de porção e ignora confirmação deSET. Exigir evidência no GET/SET já existentes antes de conceder capacidade; nenhumIO/chave/TTLnovo. Não altera pausa opcional de plano nem limiares de saúde. PR#1398headválidointacto.
@@ -20606,3 +20608,14 @@ Resultado implementado (não publicado): quota/rate numéricos finitos comprovad
 
 
 Complemento da mesma unidade: respostaaccount200 nãoobjeto(null,array,string) é estado nãoautorizado;3controlesnegativos reaisadicionais. Apenasquota/status emnovaresposta/cachevalidado autorizaSES; indisponibilidade500/rede e renovação temporal de cache positivo antigo continuamlimitação explícita, não afirmar fechamento completo daautoridade.
+
+
+### 309/EM1 — aviso honesto de quota e uso desconhecido (31/10/2026)
+
+Estado da unidade de clareza do aviso de quota SES: em andamento pelo Codex em31/10/2026, 04:00:56 Fortaleza, ramo codex/ses-quota-notice, antes do código. O sentinelaAWS-1não pode aparecer como-1e-mails; usoResenddesconhecido não deve afirmar cotaesgotada nem pedirupgrade. Preservar avisoumapormês/rotaessencial,semIO/chave/TTLnovo. PR#1401headválidointacto;incorporação conjunta só apósnovohead39+Vercel,sempublicaravisoconhecidamenteincorreto.
+
+Achado na integração: tellSenderIsFull imprime max24 e floor(max24*0.8); comsentinela-1geraquantidadenegativa. Mesmo com max24conhecido,usoResenddesconhecido ainda diziausedup e pediaupgrade. Descrever quota semteto diário apenas como informação da contaAWS, com taxa e direitos porloja mantidos; desconhecidoesperarecuperaçãodeevidência seminferircotaesgotada oumudançadeplano. Nenhumapromessadeenviosem limiteMarktmorgen. Testar aviso real com provedoressintéticos e frequênciamáximaexistente;nenhuma mensagem real.
+
+Publicação #1399: mergea43aafc78f8887f92eb38fd2dae9baa25321a952,31/10/2026 03h54min46sFortaleza,heada183e03b1c258360364f157a8649b0ff126905f9,39/39+Vercel,READYdpl_9kYsnBZx9jUoedH56sJrm3amdnCJ,7aliases5HTMLreais;error/fatal(limit10)06:54:46–06:57:32.160UTC semregistro,somenteajanela. CI8runs39jobs11229segundosconhecidos,0intervalosdesconhecidos;faturas/tarifas/OS/arredondamento/créditos/cache/Verceldesconhecidos,nunca0. União dafila9fee/Claude03h43conferidafolhaafolha;nenhumafonteforadounidadealterada. Contador254retido,provasanteriorespreservadas.
+
+Custo: somente palavras do mesmoaviso delimitado jáexistente,semnovaconsulta/comando/chave/TTL/provedor/retenção/frequência. Teto incremental de novasoperações Store/Studio/Scale mensal/anual0/0;faturamentorealCI/hosting/Redisdesconhecido,nãozero. Testessintéticos,novaárvore39+Vercel;preço/limitesvisíveis/fiscal/flags/permissões/conteúdoidentificadoresiguais. Não editar oucancelaroheadválido1401. Cachetemporal/stalerenewal,capacidadeglobal/classificaçãolista/filaSES continuamremanescentes.
