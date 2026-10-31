@@ -101,14 +101,22 @@ async function countSent(n: number): Promise<void> {
   ]).catch(() => {});
 }
 
-/** Every email handed to the sender this month, of every kind. 0 when it cannot be read. */
-export async function sentThisMonth(): Promise<number> {
-  if (!isRedisConfigured()) return 0;
+/** Confirmed sender usage this month; null when the existing read cannot prove it. */
+export async function sentThisMonth(): Promise<number | null> {
+  if (!isRedisConfigured()) return null;
   try {
-    const [raw] = await redisPipeline([["GET", sentKey()]]);
-    return Number(raw) || 0;
+    const reply: unknown = await redisPipeline([["GET", sentKey()]]);
+    if (!Array.isArray(reply)) return null;
+    const length = Object.getOwnPropertyDescriptor(reply, "length");
+    if (!length || !("value" in length) || length.value !== 1) return null;
+    const item = Object.getOwnPropertyDescriptor(reply, "0");
+    if (!item || !("value" in item)) return null;
+    if (item.value === null) return 0;
+    if (typeof item.value !== "string" || !/^(0|[1-9][0-9]*)$/.test(item.value)) return null;
+    const count = Number(item.value);
+    return Number.isSafeInteger(count) ? count : null;
   } catch {
-    return 0;
+    return null;
   }
 }
 

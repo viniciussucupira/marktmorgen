@@ -161,7 +161,10 @@ export function listCeiling(): number {
  * number is read from Amazon, and grows as the account proves itself.
  */
 export async function senderRoom(): Promise<number> {
-  const resend = hasResend() ? Math.max(0, listCeiling() - (await sentThisMonth())) : 0;
+  const resendUsed = hasResend() ? await sentThisMonth() : 0;
+  // Zero admission when usage is unknown, not a claim of zero usage.
+  if (resendUsed === null) return 0;
+  const resend = hasResend() ? Math.max(0, listCeiling() - resendUsed) : 0;
   const amazon = isSesConfigured() ? await sesReady() : null;
   if (!amazon) return resend;
   const room = await sesBulkRoom(amazon);
@@ -181,12 +184,13 @@ async function tellSenderIsFull(): Promise<void> {
     const [first] = await redisPipeline([["SET", toldKey(), "1", "NX", "EX", 40 * 86_400]]);
     if (first === null) return;
     const quota = senderQuota();
+    const resendSent = await sentThisMonth();
     const amazon = isSesConfigured() ? await sesReady() : null;
     const amazonSent = amazon ? await sesSentLast24h() : null;
     await sendEmail({ meter: { by: "company" },
       from: NIMBUS_FROM,
       to: SUPPORT_EMAIL,
-      subject: "List email is waiting: the sender's monthly volume is nearly used",
+      subject: resendSent === null ? "List email is waiting: sender usage cannot be confirmed" : "List email is waiting: the sender's monthly volume is nearly used",
       text: [
         ...(amazon
           ? [
@@ -196,7 +200,7 @@ async function tellSenderIsFull(): Promise<void> {
               "",
             ]
           : []),
-        `This month ${(await sentThisMonth()).toLocaleString("en-US")} emails have gone out through Resend, of every kind.`,
+        resendSent === null ? "Resend usage this month cannot currently be confirmed. List email waits until its available room can be confirmed." : `This month ${resendSent.toLocaleString("en-US")} emails have gone out through Resend, of every kind.`,
         `The sender's plan is ${quota.toLocaleString("en-US")} a month and it pauses the whole account at ${(quota * SENDER_PAUSES_AT).toLocaleString("en-US")}, so creators' list email now waits at ${listCeiling().toLocaleString("en-US")}.`,
         "",
         "Sign-in links, receipts and deliveries are still going out: the rest of the volume is kept for them.",
@@ -457,7 +461,7 @@ export type SendOutcome = {
 
 /** What a send that met the sender's ceiling says in the studio. */
 export const SENDER_WAIT_NOTE =
-  "Waiting on our side: the service that sends our email has reached the volume it allows us for now. The rest go out by themselves as soon as there is room again. Nothing is lost.";
+  "Waiting on our side: the service that sends our email has no confirmed room for this batch right now. The rest go out by themselves when room is confirmed. Nothing is lost.";
 
 /**
  * Sends one email to each address, in batches. Stops at the first batch the
