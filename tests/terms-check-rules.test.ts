@@ -31,7 +31,7 @@ is("a selling platform named", kinds("These terms apply to all purchases on Gumr
 is("Stan Store named", kinds("Bought through Stan Store, refunds follow its policy."), ["other_company"]);
 is("the creator's own site is fine", kinds("Visit mayamakes.com or www.mayamakes.com/faq or maya.marktmorgen.com."), []);
 is("Marktmorgen itself is fine", kinds("Payments are handled at marktmorgen.com."), []);
-is("an email address is not a site", kinds("Write to help@gmail.com with questions."), []);
+is("an email address is not a site", kinds("Write to help@example.com with questions."), []);
 
 part("A price that differs");
 is("a different price in the text", kinds("The course costs $99 and includes ten lessons."), ["price_mismatch"]);
