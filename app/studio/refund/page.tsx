@@ -8,6 +8,7 @@ import { withinLimit } from "@/lib/request-guard";
 import { readPlanRefund } from "@/lib/plan-refund";
 import { issueReview } from "@/lib/plan-refund-flow";
 import { SUPPORT_ADDRESS, moneyOf, refundEffects, refusalWords } from "@/lib/plan-refund-words";
+import { REFUND_DAYS } from "@/lib/plan";
 
 export const metadata: Metadata = {
   title: "Refund your payment — Marktmorgen",
@@ -18,6 +19,9 @@ type Params = { searchParams: Promise<{ [key: string]: string | string[] | undef
 
 /** Reviews a store may open in a day: each reads Stripe a bounded number of times (lib/plan-refund.ts, MAX_CALLS). */
 const SHOWN_PER_DAY = 20;
+
+/** A payment's date, as the receipt shows it. */
+const paidOn = (seconds: number) => new Date(seconds * 1000).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" });
 
 /** What the refund route came back with (app/api/billing/refund), in plain words. */
 const DONE: Record<string, { tone: "success" | "warn"; title: string; body: string }> = {
@@ -92,9 +96,17 @@ export default async function StudioRefundPage({ searchParams }: Params) {
               <h2 className="mt-6 text-lg font-semibold text-ink">What you get back</h2>
               <p className="mt-2 text-ink" data-refund-amount={owed.refund.cents}>
                 {owed.refund.kind === "guarantee"
-                  ? `${amount}: your first payment, in full, under the money-back guarantee.`
+                  ? owed.parts.length === 1
+                    ? `${amount}: your first payment, in full, under the money-back guarantee.`
+                    : `${amount}: your first payment and every plan payment since, made within ${REFUND_DAYS} days of it, each in full, under the money-back guarantee.`
                   : `${amount}: the months of your yearly plan that have not started. We keep ${owed.refund.monthsKept === 1 ? "the month that has started" : `the ${owed.refund.monthsKept} months that have started`}, each at the monthly price, and the card fee Stripe kept.`}
               </p>
+              <h3 className="mt-4 font-semibold text-ink">{owed.parts.length === 1 ? "The payment refunded" : `The ${owed.parts.length} payments refunded`}</h3>
+              <ul className="mt-2 list-disc space-y-1 pl-6 text-ink" data-refund-parts={owed.parts.length}>
+                {owed.parts.map((part) => (
+                  <li key={part.chargeId}>{`${moneyOf(part.cents, owed.currency)}${owed.refund.kind === "guarantee" ? "" : " of your yearly payment"}, paid on ${paidOn(part.paidAtSeconds)}`}</li>
+                ))}
+              </ul>
               <p className="mt-2 text-ink-soft">It goes back to the card or account you paid with. Your bank may take a few days to show it. No reason is needed.</p>
               <h2 className="mt-6 text-lg font-semibold text-ink">What happens to your store</h2>
               <ul className="mt-2 list-disc space-y-2 pl-6 text-ink-soft">
