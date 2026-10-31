@@ -5,6 +5,7 @@ import { CENTS_PER_MINUTE, GIVE_UP_HOURS, MIN_CENTS, dollars } from "@/lib/auto-
 import type { Metadata } from "next";
 import Link from "next/link";
 import { LegalPage, LegalSection } from "@/components/legal-page";
+import { RENEWAL_KEPT_WORDS, RENEWAL_PAUSED_WORDS, RENEWAL_RESUME_WORDS } from "@/lib/renewal-unpaid-words";
 import { isDomainsConfigured } from "@/lib/domains";
 import { formatMoney } from "@/lib/money";
 import { PRO_MONTHLY_EMAILS, REFUND_DAYS, SCALE_MONTHLY_EMAILS, TRIAL_MONTHLY_EMAILS, PLAN_TITLES } from "@/lib/plan";
@@ -761,6 +762,15 @@ export default function TermsPage() {
           leaves the unused part as credit on your account, applied to your
           next charges until it is used up. Credit is not paid out in cash,
           except where a refund applies under our Refund Policy.
+        </p>
+        <p id="renewal-unpaid" className="scroll-mt-24">
+          <strong className="text-black">If a renewal payment does not go through.</strong>{" "}
+          We learn it from Stripe at our daily check, or sooner when you open
+          your studio or when we email you about it. {RENEWAL_PAUSED_WORDS}{" "}
+          {RENEWAL_KEPT_WORDS} Your studio shows a link to Stripe&apos;s page
+          that pays the open invoice. {RENEWAL_RESUME_WORDS} We see it at our
+          next daily check, or at once when you open your studio. If Stripe
+          ends the plan after its last try, section 8 applies.
         </p>
       </LegalSection>
 

@@ -449,7 +449,8 @@ export type SendOutcome = {
    * Addresses of a batch that was handed to the provider when the answer
    * came back as "retry": it may have been sent before the answer was lost.
    * Also in `rest`. Sequences hold these runs instead of sending again
-   * (lib/flow-runs.ts); a broadcast retries under the same batch key.
+   * (lib/flow-runs.ts); a broadcast records a terminal review notice instead
+   * of retrying automatically after that checkpoint is confirmed.
    */
   uncertain?: string[];
 };

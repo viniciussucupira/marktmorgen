@@ -42,6 +42,7 @@ import {
 } from "@/lib/store";
 import { feeWords } from "@/lib/fee-words";
 import { type BillingPeriod, isPeriod } from "@/lib/allowance-window";
+import { renewalUnpaid } from "@/lib/plan-standing";
 
 /** Internal billing calls must keep their route-issued cash grant bound to the
  * published offer. This does not create or release a funding reservation. */
@@ -511,6 +512,13 @@ export type SubscriptionState =
       /** A change of plan is waiting on a payment the bank has not let through. */
       changePending: boolean;
       /**
+       * The renewal of the period now running did not go through and Stripe
+       * is still trying the card (`past_due`). The plan has not ended, but
+       * what costs us to run stops until it is paid (lib/plan-standing.ts,
+       * costStandingOf; queue item 232 [CA1] unit 4).
+       */
+      renewalUnpaid: boolean;
+      /**
        * The period being paid for, which the store's allowances follow
        * (lib/allowance-window.ts): null while trialing, and when Stripe did
        * not give both ends. `renews` is false when it is set to stop.
@@ -620,6 +628,7 @@ export function stateOf(subscription: Record<string, unknown>): SubscriptionStat
     cancelsAtEnd: subscription.cancel_at_period_end === true || cancelAt > 0,
     ...planOf(subscription),
     changePending: Boolean(subscription.pending_update),
+    renewalUnpaid: status === "past_due",
     period: periodOf(subscription, trialing, subscription.cancel_at_period_end === true || cancelAt > 0),
   };
 }
@@ -682,6 +691,32 @@ export async function subscriptionRecord(subscriptionId: string): Promise<Record
   } catch (error) {
     if (error instanceof BillingError && error.status === 404) return null;
     throw error;
+  }
+}
+
+/**
+ * Stripe's own page where an unpaid renewal is paid (232 [CA1] unit 4): the
+ * hosted page of the subscription's latest invoice, while the subscription
+ * is `past_due` and that invoice is open with money on it. Stripe's
+ * "Hosted invoice page" guide (read 31 October 2026) says the page takes
+ * any enabled payment method and that a URL retrieved through the API is
+ * valid for at least 10 days; this is read when the studio is drawn, so the
+ * link is always a fresh one. Null when there is none or Stripe could not
+ * be asked: the studio then says how to get it instead.
+ */
+export async function renewalInvoicePage(subscriptionId: string): Promise<string | null> {
+  if (!SUBSCRIPTION_PATTERN.test(subscriptionId)) return null;
+  try {
+    const subscription = await onPlatform("GET", `/subscriptions/${encodeURIComponent(subscriptionId)}?expand[]=latest_invoice`);
+    if (subscription?.id !== subscriptionId || subscription.status !== "past_due") return null;
+    const invoice = subscription.latest_invoice as { status?: unknown; amount_due?: unknown; hosted_invoice_url?: unknown } | string | null;
+    if (!invoice || typeof invoice !== "object" || invoice.status !== "open") return null;
+    if (typeof invoice.amount_due !== "number" || invoice.amount_due <= 0) return null;
+    const url = typeof invoice.hosted_invoice_url === "string" ? invoice.hosted_invoice_url : "";
+    return INVOICE_PAGE.test(url) ? url : null;
+  } catch (error) {
+    console.error("reading the page that pays a renewal failed", error);
+    return null;
   }
 }
 
@@ -1702,5 +1737,8 @@ export async function billAddedLinesMonthly(subscriptionId: string): Promise<voi
  * creator opens it, which is the moment they would notice it being wrong.
  */
 export function isPaidUp(store: Store): boolean {
-  return store.subscriptionActive;
+  // A renewal Stripe could not collect is not paid up (232 [CA1] unit 4):
+  // the checkout, sign-ups, free copies and emails that need a paid plan
+  // stop until it is paid, while the plan itself goes on and nothing closes.
+  return store.subscriptionActive && !renewalUnpaid(store);
 }

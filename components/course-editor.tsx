@@ -555,7 +555,7 @@ const SKIPPED_WORDS: Record<Skipped["reason"], string> = {
 };
 
 /** An upload that went wrong this way stops the rest: the next one would go wrong the same way. */
-const STOPS_THE_REST = new Set(["uploads_pending", "upload_refresh", "slow_down", "video_unavailable", "storage_full", "signed_out", "unavailable", "not_course", "too_many", "unknown", "forbidden"]);
+const STOPS_THE_REST = new Set(["renewal_unpaid", "uploads_pending", "upload_refresh", "slow_down", "video_unavailable", "storage_full", "signed_out", "unavailable", "not_course", "too_many", "unknown", "forbidden"]);
 
 const pause = (ms: number) => new Promise((done) => setTimeout(done, ms));
 
