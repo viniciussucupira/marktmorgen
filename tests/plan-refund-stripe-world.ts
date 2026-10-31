@@ -3,10 +3,11 @@
  * tests/plan-refund-route.test.ts): keeps idempotency keys as Stripe does, records every call and every email.
  * Nothing real is reached.
  */
-import { claimHandle, setSubscription, storeForEmail } from "@/lib/store";
+import { claimHandle, setAssistantPlan, setSubscription, storeForEmail } from "@/lib/store";
 import { ENDING_KEY } from "@/lib/plan-refund-flow";
 import { redisPipeline } from "@/lib/redis";
 
+export { setAssistantPlan };
 export const DAY = 86_400;
 export const NOW = Date.UTC(2026, 11, 2) / 1000;
 
@@ -30,6 +31,10 @@ export const world = {
   endDown: false,
   /** Listing the platform's refunds answers 500. */
   listDown: false,
+  /** New refunds come back with this status. */
+  refundStatus: "succeeded",
+  /** Subscriptions whose updates answer 500. */
+  postDownFor: new Set<string>(),
   slow: 0,
   /** Emails sent through the stand-in Resend. */
   emails: [] as { to: string; subject: string; text: string; key: string }[],
@@ -57,7 +62,7 @@ globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) =>
     const row = world.subs.get(sub[1]);
     if (!row) return json({ error: { message: "No such subscription", type: "invalid_request_error" } }, 404);
     if (method === "POST") {
-      if (world.stopDown) return fail();
+      if (world.stopDown || world.postDownFor.has(sub[1])) return fail();
       if (row.status === "canceled") return json({ error: { message: "canceled", type: "invalid_request_error" } }, 400);
       row.cancel_at_period_end = form.get("cancel_at_period_end") === "true";
     }
@@ -77,7 +82,7 @@ globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) =>
     if (kept) return new Response(kept, { status: 200, headers: { "content-type": "application/json" } });
     const charge = world.charges.find((c) => c.payment_intent === form.get("payment_intent"))!;
     const amount = Number(form.get("amount"));
-    const refund = { id: `re_made${world.refunds.length + 1}x`, object: "refund", charge: charge.id, payment_intent: charge.payment_intent, amount, currency: "usd", status: "succeeded", created: NOW, metadata: { plan_refund: form.get("metadata[plan_refund]") } };
+    const refund = { id: `re_made${world.refunds.length + 1}x`, object: "refund", charge: charge.id, payment_intent: charge.payment_intent, amount, currency: "usd", status: world.refundStatus, created: NOW, metadata: { plan_refund: form.get("metadata[plan_refund]") } };
     world.refunds.push(refund);
     charge.amount_refunded = Number(charge.amount_refunded) + amount;
     world.replies.set(key, JSON.stringify(refund));
@@ -88,7 +93,8 @@ globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) =>
     if (q.get("charge")) return page(world.refunds.filter((r) => r.charge === q.get("charge")));
     if (world.listDown) return fail();
     const since = Number(q.get("created[gte]"));
-    return page(world.refunds.filter((r) => Number(r.created) >= since).reverse());
+    const until = Number(q.get("created[lte]") ?? Infinity);
+    return page(world.refunds.filter((r) => Number(r.created) >= since && Number(r.created) <= until).reverse());
   }
   const voiding = path.match(/^\/invoices\/(in_\w+)\/void$/);
   if (voiding && method === "POST") {

@@ -21,13 +21,21 @@
  *      starts the closing rules of lib/plan-closing-rules.ts), a break taken
  *      back and the add-on set to stop at the end of its paid month as its
  *      policy says (lib/assistant-billing.ts); then the note is removed;
- *   5. not made: the stop set in step 2 is taken back, so a refused or
- *      failed refund never costs the creator their plan. A stop the creator
- *      had set themselves before is left as it was.
- * A refund whose answer was lost (a time-out after Stripe made it) is found
- * by its metadata (`plan_refund` = the store's id) among the platform's
- * refunds made since the note, now or by the daily job, and the plan is then
- * ended; one never found, a day after the note at most, means none was made.
+ *   5. refused (nothing was sent to Stripe): the stop set in step 2 is
+ *      taken back at once, so a refused refund never costs the creator their
+ *      plan. A stop the creator had set themselves before is left as it was;
+ *   6. maybe made (the write failed or timed out, the refunds could not be
+ *      read, or an earlier request left a note): the note AND the stop stay,
+ *      so no renewal can be charged before it is decided; the daily job ends
+ *      the plan if the refund turns up, and takes the stop back only once it
+ *      concludes none was made (SETTLE_SECONDS after the last try).
+ * The plan is ended only on a refund Stripe says succeeded: a pending one
+ * (it may still fail and give the money back to the charge) keeps the note
+ * and the stop for the daily job. A refund whose answer was lost is found by
+ * its metadata (`plan_refund` = the store's id) among the platform's refunds
+ * made between the note and SETTLE_SECONDS after its last try. Undecidable
+ * for GIVE_UP_DAYS: the stop is taken back and the plan goes on as it was,
+ * never ended without a refund that can be seen.
  *
  * One at a time per store (FLOW_LOCK_SECONDS, lib/redis-lock.ts); the daily
  * job skips a store whose lock is held.
@@ -42,7 +50,7 @@ import { SUBSCRIPTION_PATTERN, type Store, setSubscription, storeForId, storeRef
 import { EMAIL_PATTERN, normaliseEmail } from "@/lib/auth";
 import { NIMBUS_FROM, isSenderConfigured, sendEmail } from "@/lib/email";
 import { SUPPORT_EMAIL } from "@/lib/creator-research";
-import { planRefundLetter } from "@/lib/plan-refund-words";
+import { planRefundLetter, planRefundNotMadeLetter } from "@/lib/plan-refund-words";
 import { randomBytes } from "node:crypto";
 
 const AT = "2024-06-20";
@@ -75,8 +83,12 @@ const ENDED = ["canceled", "incomplete_expired"];
 const REFUND_ID = /^re_[A-Za-z0-9]{6,128}$/;
 const OBJECT_ID = /^[a-z]{2,4}_[A-Za-z0-9]{6,128}$/;
 
-/** A refund asked for and not finished: subscription, when it was asked (seconds), whether we set the stop. */
-export type Note = { s: string; at: number; m: 0 | 1 };
+/**
+ * A refund asked for and not finished: subscription, when it was first asked and last tried (seconds), whether we
+ * set the stop. While a note stands, the stop stays: a refund may still turn up, and no renewal may be charged
+ * before it is decided.
+ */
+export type Note = { s: string; at: number; t: number; m: 0 | 1 };
 
 export type PlanRefundFlow =
   /** Given back; `ended` false: the plan is ended by the daily job. `earlier`: given back by an earlier request. */
@@ -92,7 +104,8 @@ function readNote(raw: unknown): Note | null {
   try {
     const v = JSON.parse(raw) as Partial<Note>;
     if (typeof v.s !== "string" || !SUBSCRIPTION_PATTERN.test(v.s) || typeof v.at !== "number" || !Number.isSafeInteger(v.at) || v.at <= 0) return null;
-    return { s: v.s, at: v.at, m: v.m === 1 ? 1 : 0 };
+    const t = typeof v.t === "number" && Number.isSafeInteger(v.t) && v.t >= v.at ? v.t : v.at;
+    return { s: v.s, at: v.at, t, m: v.m === 1 ? 1 : 0 };
   } catch {
     return null;
   }
@@ -128,14 +141,18 @@ async function takeBackStop(id: string): Promise<boolean> {
   }
 }
 
-type Found = { kind: "found"; refund: Row } | { kind: "none" } | { kind: "unknown" };
-/** Our refund for this store made since `at`, still on its way or given: found by its metadata among the platform's refunds. */
-export async function findPlanRefund(sid: string, at: number): Promise<Found> {
+type Found = { kind: "found"; refund: Row; settled: boolean } | { kind: "none" } | { kind: "unknown" };
+/**
+ * Our refund for this store made between `at` and `until` (seconds), found by its metadata among the platform's
+ * refunds: `settled` when Stripe says it succeeded; one still pending or waiting for an action is found but not
+ * settled (it may yet fail and give the money back to the charge), so the plan is not ended on it.
+ */
+export async function findPlanRefund(sid: string, at: number, until: number): Promise<Found> {
   let after = "";
   for (let page = 0; page < MAX_REFUND_PAGES; page += 1) {
     let listed: Row;
     try {
-      const query = new URLSearchParams({ "created[gte]": String(at - CLOCK_SLACK), limit: "100" });
+      const query = new URLSearchParams({ "created[gte]": String(at - CLOCK_SLACK), "created[lte]": String(until + CLOCK_SLACK), limit: "100" });
       if (after) query.set("starting_after", after);
       listed = await onPlatform("GET", `/refunds?${query}`, undefined, { version: AT });
     } catch (error) {
@@ -145,7 +162,7 @@ export async function findPlanRefund(sid: string, at: number): Promise<Found> {
     const data = rows(listed);
     const ours = data.find((r) => (r.metadata as Row | null | undefined)?.plan_refund === sid && typeof r.id === "string" && REFUND_ID.test(r.id) &&
       (r.status === "succeeded" || r.status === "pending" || r.status === "requires_action"));
-    if (ours) return { kind: "found", refund: ours };
+    if (ours) return { kind: "found", refund: ours, settled: ours.status === "succeeded" };
     if (listed.has_more !== true) return listed.has_more === false ? { kind: "none" } : { kind: "unknown" };
     const last = data[data.length - 1];
     if (!last || typeof last.id !== "string") return { kind: "unknown" };
@@ -187,7 +204,11 @@ export async function endPlanNow(store: Store, id: string): Promise<boolean> {
     }
     await dropPause(fresh).catch((error) => console.error("dropping a break after a refund failed", error));
     const now = (await storeForId(store.sid)) ?? fresh;
-    if (now.assistantPlan?.active) await syncAssistant(now);
+    if (now.assistantPlan?.active) {
+      // The add-on is set to stop at the end of its paid month (its own policy); not confirmed means not done yet.
+      const synced = await syncAssistant(now);
+      if (synced.assistantPlan?.active && !synced.assistantPlan.cancelsAtEnd) return false;
+    }
     return true;
   } catch (error) {
     console.error("ending a refunded plan failed", error);
@@ -209,23 +230,23 @@ export async function takeReview(sid: string, token: string): Promise<number | n
   return m && m[1] === token ? Number(m[2]) : null;
 }
 
-/**
- * The confirmation email, once the plan has ended: to the store's own address, from the company's sending (metered as
- * the company's), with the refund's id as the idempotency key so a retry never sends it twice. Not sent only logs:
- * the money is back either way.
- */
-async function tell(store: Store, r: { cents: number; currency: string; refundId: string; status: "succeeded" | "pending" }): Promise<void> {
+/** One email to the store's own address, from the company's sending, under an idempotency key. Not sent only logs. */
+async function mail(store: Store, letter: { subject: string; text: string }, key: string): Promise<void> {
   const to = normaliseEmail(store.email);
   if (!EMAIL_PATTERN.test(to) || !isSenderConfigured()) {
-    console.error(`plan-refund: store ${store.sid}'s refund email was not sent (no address or no sender)`);
+    console.error(`plan-refund: store ${store.sid}'s email was not sent (no address or no sender)`);
     return;
   }
-  const { subject, text } = planRefundLetter({ store: store.name || store.handle, cents: r.cents, currency: r.currency, pending: r.status === "pending", assistant: Boolean(store.assistantPlan?.active) });
-  const sent = await sendEmail({ meter: { by: "company" }, from: NIMBUS_FROM, to, replyTo: SUPPORT_EMAIL, subject, text, idempotencyKey: `plan-refund-told:${r.refundId}` }).catch((error) => {
+  const sent = await sendEmail({ meter: { by: "company" }, from: NIMBUS_FROM, to, replyTo: SUPPORT_EMAIL, subject: letter.subject, text: letter.text, idempotencyKey: key }).catch((error) => {
     console.error("sending a plan refund email failed", error);
     return false;
   });
-  if (!sent) console.error(`plan-refund: store ${store.sid}'s refund email was not sent`);
+  if (!sent) console.error(`plan-refund: store ${store.sid}'s email was not sent`);
+}
+
+/** The confirmation, once the plan has ended; keyed by the refund, so a retry never sends it twice. */
+async function tell(store: Store, r: { cents: number; currency: string; refundId: string; status: "succeeded" | "pending" }): Promise<void> {
+  await mail(store, planRefundLetter({ store: store.name || store.handle, cents: r.cents, currency: r.currency, pending: r.status === "pending", assistant: Boolean(store.assistantPlan?.active) }), `plan-refund-told:${r.refundId}`);
 }
 
 const refundOf = (r: Row, earlier: boolean, ended: boolean): PlanRefundFlow => ({
@@ -257,15 +278,29 @@ export async function refundAndEndPlan(store: Store, nowSeconds = Math.floor(Dat
     const weStop = LIVE.includes(String(sub.status)) && !stopSet(sub);
     // A note for another subscription is an old one: this request's replaces it.
     const kept = before && before.s === id ? before : null;
-    let note: Note = { s: id, at: kept?.at ?? nowSeconds, m: kept?.m === 1 || weStop ? 1 : 0 };
+    let note: Note = { s: id, at: kept?.at ?? nowSeconds, t: nowSeconds, m: kept?.m === 1 || weStop ? 1 : 0 };
     await writeNote(store.sid, note);
 
-    // Takes back our stop when nothing was given back, and keeps the note only while a refund may still turn up.
-    const notMade = async (reason: Exclude<PlanRefundFlow, { ok: true }>["reason"], keep: boolean): Promise<PlanRefundFlow> => {
-      if (note.m === 1 && (await takeBackStop(id))) note = { ...note, m: 0 };
-      if (keep || note.m === 1) await writeNote(store.sid, note);
-      else await dropNote(store.sid);
+    // Nothing given back now. `maybe`: a refund may still turn up (a lost answer, an earlier request), so the note
+    // and the stop both stay, and only the daily job takes the stop back once it concludes none was made. Otherwise
+    // our stop is taken back at once and the note goes.
+    const notMade = async (reason: Exclude<PlanRefundFlow, { ok: true }>["reason"], maybe: boolean): Promise<PlanRefundFlow> => {
+      if (!maybe) {
+        if (note.m === 1 && (await takeBackStop(id))) note = { ...note, m: 0 };
+        if (note.m === 0) {
+          await dropNote(store.sid);
+          return { ok: false, reason, stopLeft: false };
+        }
+      }
+      await writeNote(store.sid, note);
       return { ok: false, reason, stopLeft: note.m === 1 };
+    };
+    // Ends the plan only on a refund Stripe says succeeded; a pending one leaves the note (and the stop) for the daily job.
+    const finish = async (settled: boolean): Promise<boolean> => {
+      if (!settled) return false;
+      const ended = await endPlanNow(store, id);
+      if (ended) await dropNote(store.sid);
+      return ended;
     };
 
     if (weStop) {
@@ -278,26 +313,18 @@ export async function refundAndEndPlan(store: Store, nowSeconds = Math.floor(Dat
     }
     const made = await refundPlanPayment(store, nowSeconds, expectCents);
     if (made.ok) {
-      const ended = await endPlanNow(store, id);
-      if (ended) {
-        await dropNote(store.sid);
-        await tell(store, made);
-      }
+      const ended = await finish(made.status === "succeeded");
+      if (ended) await tell(store, made);
       return { ok: true, cents: made.cents, currency: made.currency, refundId: made.refundId, status: made.status, ended, earlier: false };
     }
     // Not made now: one made before (an earlier request, or this one whose answer was lost) is looked for.
-    const found = await findPlanRefund(store.sid, note.at);
+    const found = await findPlanRefund(store.sid, note.at, nowSeconds);
     if (found.kind === "found") {
-      const ended = await endPlanNow(store, id);
-      const result = refundOf(found.refund, made.reason !== "failed", ended);
-      if (ended) {
-        await dropNote(store.sid);
-        if (result.ok) await tell(store, result);
-      }
+      const result = refundOf(found.refund, made.reason !== "failed", await finish(found.settled));
+      if (result.ok && result.ended) await tell(store, result);
       return result;
     }
-    // "failed" may hide a refund Stripe makes after we stopped waiting, and an earlier note one we have not seen:
-    // the note stays for the daily job, which ends the plan if it turns up.
+    // "failed" may hide a refund Stripe makes after we stopped waiting, and an earlier note one we have not seen.
     return notMade(made.reason, made.reason === "failed" || found.kind === "unknown" || Boolean(kept));
   } finally {
     await releaseLock(held);
@@ -339,9 +366,10 @@ export async function finishPlanRefunds(deadline: number, nowSeconds = Math.floo
         counts.dropped += 1;
         continue;
       }
-      const found = await findPlanRefund(sid, note.at);
+      const found = await findPlanRefund(sid, note.at, note.t + SETTLE_SECONDS);
       if (found.kind === "found") {
-        if (await endPlanNow(store, note.s)) {
+        // Still pending: looked at again tomorrow, the stop kept, so nothing renews meanwhile.
+        if (found.settled && (await endPlanNow(store, note.s))) {
           await dropNote(sid);
           const result = refundOf(found.refund, false, true);
           if (result.ok) await tell(store, result);
@@ -349,13 +377,13 @@ export async function finishPlanRefunds(deadline: number, nowSeconds = Math.floo
         } else counts.left += 1;
         continue;
       }
-      if (found.kind === "unknown" || nowSeconds - note.at < SETTLE_SECONDS) {
-        if (nowSeconds - note.at > GIVE_UP_DAYS * 86_400) {
-          console.error(`plan-refund: the refund asked for store ${sid} could not be decided in ${GIVE_UP_DAYS} days; its note is dropped`);
-          await dropNote(sid);
-          counts.dropped += 1;
-        } else counts.left += 1;
-        continue;
+      if (found.kind === "unknown" || nowSeconds - note.t < SETTLE_SECONDS) {
+        if (nowSeconds - note.at <= GIVE_UP_DAYS * 86_400) {
+          counts.left += 1;
+          continue;
+        }
+        // Undecidable for GIVE_UP_DAYS: the plan goes on as it was, never ended without a refund we can see.
+        console.error(`plan-refund: the refund asked for store ${sid} could not be decided in ${GIVE_UP_DAYS} days; its stop is taken back and its note dropped`);
       }
       // None was made: our stop goes, the plan goes on as it was.
       if (note.m === 1 && !(await takeBackStop(note.s))) {
@@ -366,6 +394,8 @@ export async function finishPlanRefunds(deadline: number, nowSeconds = Math.floo
         console.error(`plan-refund: the stop set for store ${sid}'s refund could not be taken back in ${GIVE_UP_DAYS} days; its note is dropped`);
       }
       await dropNote(sid);
+      // The creator saw "nothing was refunded" or "we check within a day": the outcome reaches them by email.
+      await mail(store, planRefundNotMadeLetter({ store: store.name || store.handle, undecided: found.kind === "unknown" }), `plan-refund-none:${sid}:${note.at}`);
       counts.dropped += 1;
     } catch (error) {
       console.error(`plan-refund: the note for store ${sid} is not decided yet; tried again tomorrow`, error);

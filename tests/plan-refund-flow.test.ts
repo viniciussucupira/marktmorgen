@@ -19,7 +19,7 @@ import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
 import { ENDING_KEY, GIVE_UP_DAYS, SETTLE_SECONDS, finishPlanRefunds, flowKeyOf, refundAndEndPlan } from "@/lib/plan-refund-flow";
 import { redisPipeline } from "@/lib/redis";
-import { DAY, NOW, n, paidShop, world } from "./plan-refund-stripe-world";
+import { DAY, NOW, n, paidShop, setAssistantPlan, world } from "./plan-refund-stripe-world";
 
 const order = (subId: string) => world.calls.filter((c) => c.includes(subId) || c === "POST /refunds").map((c) => c.replace(`/${subId}`, "/:sub"));
 
@@ -73,10 +73,35 @@ async function main() {
   world.refundsDown = true;
   const down = await refundAndEndPlan(await d.store(), NOW);
   world.refundsDown = false;
-  is("Stripe failing before the refund: failed, the stop taken back", [down, d.sub().cancel_at_period_end, d.refunds().length], [{ ok: false, reason: "failed", stopLeft: false }, false, 0]);
-  is("the note stays for the daily job, in case Stripe made it after all", JSON.parse(String(await d.note())).m, 0);
-  is("the daily job before SETTLE_SECONDS: left", (await finishPlanRefunds(Date.now() + 10_000, NOW + 60)).left >= 1, true);
-  is("after it, none found: the note dropped, the plan untouched", [await (async () => { await finishPlanRefunds(Date.now() + 10_000, NOW + SETTLE_SECONDS + 1); return d.note(); })(), d.sub().status], [null, "active"]);
+  is("Stripe failing at the refund: failed, and the stop KEPT while a refund may still turn up (no renewal meanwhile)", [down, d.sub().cancel_at_period_end, d.refunds().length], [{ ok: false, reason: "failed", stopLeft: true }, true, 0]);
+  is("the note stays for the daily job", JSON.parse(String(await d.note())).m, 1);
+  is("the daily job before SETTLE_SECONDS: left, stop still set", [(await finishPlanRefunds(Date.now() + 10_000, NOW + 60)).left >= 1, d.sub().cancel_at_period_end], [true, true]);
+  process.env.RESEND_API_KEY = "re_a_stand_in_key_for_tests_only";
+  world.emails = [];
+  is("after it, none found: the stop taken back, the note dropped, the plan untouched", [await (async () => { await finishPlanRefunds(Date.now() + 10_000, NOW + SETTLE_SECONDS + 1); return d.note(); })(), d.sub().status, d.sub().cancel_at_period_end], [null, "active", false]);
+
+  is("and the creator is told by email that nothing was refunded and the plan goes on", world.emails.map((e) => [e.subject.endsWith("your refund was not made"), e.text.includes("Nothing was refunded and your plan goes on as before.")]), [[true, true]]);
+  delete process.env.RESEND_API_KEY;
+  const t = await paidShop();
+  world.loseAnswer = true;
+  world.listDown = true;
+  const timeout = await refundAndEndPlan(await t.store(), NOW);
+  world.loseAnswer = false;
+  world.listDown = false;
+  is("made at Stripe but the answer lost and the list unread: the stop stays", [timeout.ok, t.sub().status, t.sub().cancel_at_period_end, t.refunds().length], [false, "active", true, 1]);
+  await finishPlanRefunds(Date.now() + 10_000, NOW + 3_600);
+  is("the daily job finds it and ends the plan; nothing renewed in between", [t.sub().status, await t.note()], ["canceled", null]);
+
+  const p = await paidShop();
+  world.refundStatus = "pending";
+  const pending = await refundAndEndPlan(await p.store(), NOW);
+  is("a pending refund: said so, the plan not ended on it, the stop and the note kept", [pending.ok && pending.status, pending.ok && pending.ended, p.sub().status, p.sub().cancel_at_period_end, (await p.note()) !== null], ["pending", false, "active", true, true]);
+  await finishPlanRefunds(Date.now() + 10_000, NOW + 3_600);
+  is("still pending at the daily job: left as it is", [p.sub().status, (await p.note()) !== null], ["active", true]);
+  p.refunds()[0].status = "succeeded";
+  world.refundStatus = "succeeded";
+  await finishPlanRefunds(Date.now() + 10_000, NOW + 7_200);
+  is("succeeded: the daily job ends the plan", [p.sub().status, await p.note()], ["canceled", null]);
 
   const lost = await paidShop();
   world.loseAnswer = true;
@@ -91,6 +116,18 @@ async function main() {
   is("refunded but not ended yet: said so, the stop and the note stay", [notEnded.ok && notEnded.ended, e.sub().cancel_at_period_end, (await e.store()).subscriptionActive, (await e.note()) !== null], [false, true, true, true]);
   const run = await finishPlanRefunds(Date.now() + 10_000, NOW + 60);
   is("the daily job ends it, once, and drops the note", [run.ended >= 1, e.sub().status, (await e.store()).subscriptionActive, await e.note(), e.refunds().length], [true, "canceled", false, null, 1]);
+
+  part("The add-on");
+  const ad = await paidShop();
+  const asst = `sub_asst${n}0001`;
+  world.subs.set(asst, { id: asst, customer: `cus_flow${n}0001`, status: "active", cancel_at_period_end: false, metadata: { addon: "assistant", assistant_for: `flow${n}` } });
+  await setAssistantPlan((await ad.store()).email, { subscriptionId: asst, active: true, period: null, cancelsAtEnd: false, disputedAt: "" });
+  world.postDownFor.add(asst);
+  const withAddOn = await refundAndEndPlan(await ad.store(), NOW);
+  is("the add-on could not be set to stop: the plan's ending is not done, the note stays for the daily job", [withAddOn.ok && withAddOn.ended, (await ad.note()) !== null], [false, true]);
+  world.postDownFor.delete(asst);
+  await finishPlanRefunds(Date.now() + 10_000, NOW + 60);
+  is("the daily job sets the add-on to stop at the end of its paid month and drops the note", [world.subs.get(asst)!.cancel_at_period_end, await ad.note(), ad.refunds().length], [true, null, 1]);
 
   part("The daily job");
   const h = await paidShop();
