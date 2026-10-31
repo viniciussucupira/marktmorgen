@@ -181,12 +181,21 @@ const toldKey = (now = new Date()) => `nl:sender:${now.toISOString().slice(0, 7)
  */
 async function tellSenderIsFull(): Promise<void> {
   try {
-    const [first] = await redisPipeline([["SET", toldKey(), "1", "NX", "EX", 40 * 86_400]]);
-    if (first === null) return;
+    const claim: unknown = await redisPipeline([["SET", toldKey(), "1", "NX", "EX", 40 * 86_400]]);
+    if (!Array.isArray(claim)) return;
+    const length = Object.getOwnPropertyDescriptor(claim, "length");
+    if (!length || !("value" in length) || length.value !== 1) return;
+    const first = Object.getOwnPropertyDescriptor(claim, "0");
+    // The existing claim may have applied before losing its acknowledgement.
+    // Only a confirmed fresh claim authorizes this bounded owner email.
+    if (!first || !("value" in first) || first.value !== "OK") return;
     const quota = senderQuota();
     const resendSent = await sentThisMonth();
     const amazon = isSesConfigured() ? await sesReady() : null;
     const amazonSent = amazon ? await sesSentLast24h() : null;
+    const amazonQuota = amazon?.max24 === -1
+      ? `Amazon SES reports no daily quota ceiling for this account. Its sending rate is ${amazon.rate.toLocaleString("en-US")} emails per second. Each store's existing email allowance and delivery controls still apply.`
+      : amazon ? `This account allows ${amazon.max24.toLocaleString("en-US")} in any 24 hours; creators' list email uses up to ${Math.floor(amazon.max24 * SES_BULK_SHARE).toLocaleString("en-US")} of them. Amazon raises that number by itself as the account proves itself, and a higher one can be asked for in the Amazon SES console, under Account dashboard.` : "";
     await sendEmail({ meter: { by: "company" },
       from: NIMBUS_FROM,
       to: SUPPORT_EMAIL,
@@ -194,18 +203,18 @@ async function tellSenderIsFull(): Promise<void> {
       text: [
         ...(amazon
           ? [
-              `${amazonSent === null ? "Amazon SES usage in the last 24 hours cannot currently be confirmed." : `In the last 24 hours ${amazonSent.toLocaleString("en-US")} emails went out through Amazon SES.`} This account allows ${amazon.max24.toLocaleString("en-US")} in any 24 hours; creators' list email uses up to ${Math.floor(amazon.max24 * SES_BULK_SHARE).toLocaleString("en-US")} of them. Amazon raises that number by itself as the account proves itself, and a higher one can be asked for in the Amazon SES console, under Account dashboard.`,
+              `${amazonSent === null ? "Amazon SES usage in the last 24 hours cannot currently be confirmed." : `In the last 24 hours ${amazonSent.toLocaleString("en-US")} emails went out through Amazon SES.`} ${amazonQuota}`,
               "",
-              "Past Amazon's day, list email goes through Resend, and that is used up too:",
+              "List admission also depends on Resend's confirmed monthly room:",
               "",
             ]
           : []),
         resendSent === null ? "Resend usage this month cannot currently be confirmed. List email waits until its available room can be confirmed." : `This month ${resendSent.toLocaleString("en-US")} emails have gone out through Resend, of every kind.`,
-        `The sender's plan is ${quota.toLocaleString("en-US")} a month and it pauses the whole account at ${(quota * SENDER_PAUSES_AT).toLocaleString("en-US")}, so creators' list email now waits at ${listCeiling().toLocaleString("en-US")}.`,
+        `Resend's configured quota is ${quota.toLocaleString("en-US")} a month and its whole-account ceiling is ${(quota * SENDER_PAUSES_AT).toLocaleString("en-US")}; creators' list email is held at ${listCeiling().toLocaleString("en-US")}.`,
         "",
-        "Sign-in links, receipts and deliveries are still going out: the rest of the volume is kept for them.",
+        "Sign-in links, receipts and deliveries keep their existing sending route.",
         "",
-        "To let list email continue before the month turns: move the sender to a larger plan, then set SENDER_MONTHLY_QUOTA on the host to that plan's number of emails. Waiting emails go out by themselves after that.",
+        resendSent === null ? "Usage is checked again automatically. Waiting email resumes when room can be confirmed." : "To let list email continue before the month turns: move the sender to a larger plan, then set SENDER_MONTHLY_QUOTA on the host to that plan's number of emails. Waiting emails go out by themselves after that.",
       ].join("\n"),
     });
   } catch (error) {

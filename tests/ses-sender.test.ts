@@ -18,10 +18,10 @@ import { NextRequest } from "next/server";
 import { POST } from "@/app/api/mail/ses/route";
 import { claimHandle, ensureListId, ensureStatsId, setMailSettings, setSubscription, storeForEmail } from "@/lib/store";
 import { isMailable, upsertContact } from "@/lib/contacts";
-import { hasResend, isSenderConfigured, sendBatch, sendEmail, sentThisMonth } from "@/lib/email";
-import { listCeiling, senderRoom } from "@/lib/mail";
+import { hasResend, isSenderConfigured, sendBatch, sendEmail, sentKey, sentThisMonth } from "@/lib/email";
+import { listCeiling, reserveDay, senderRoom } from "@/lib/mail";
 import { LIST_TAG, STORE_TAG, healthId, listHealth } from "@/lib/mail-health";
-import { HOLD_SECONDS, isSesConfigured, notYetTaken, sesConfig, sesSentLast24h, sesState } from "@/lib/ses";
+import { HOLD_SECONDS, isSesConfigured, notYetTaken, sesBulkRoom, sesConfig, sesSentLast24h, sesState } from "@/lib/ses";
 import { stringToSign, type SnsMessage } from "@/lib/sns";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
@@ -492,6 +492,196 @@ async function main(): Promise<void> {
   is("all 24 explicit stored counters contribute, including the last", await sesSentLast24h(usageAt), 300);
   await originalPipeline(usageKeys.map((key, i) => ["SET", key, i === 23 ? String(Number.MAX_SAFE_INTEGER) : "0", "EX", 26 * 3_600]));
   is("the last position can hold the largest exactly represented safe total", await sesSentLast24h(usageAt), Number.MAX_SAFE_INTEGER);
+
+
+  part("Missing or malformed account quota is never unlimited permission");
+  const badQuota: [string, unknown][] = [
+    ["missing", undefined], ["empty", {}],
+    ["zero maximum", { Max24HourSend: 0, MaxSendRate: 14 }],
+    ["unknown negative", { Max24HourSend: -2, MaxSendRate: 14 }],
+    ["string maximum", { Max24HourSend: "50000", MaxSendRate: 14 }],
+    ["null maximum", { Max24HourSend: null, MaxSendRate: 14 }],
+    ["boolean maximum", { Max24HourSend: true, MaxSendRate: 14 }],
+    ["unsafe maximum", { Max24HourSend: Number.MAX_SAFE_INTEGER + 1, MaxSendRate: 14 }],
+    ["zero rate", { Max24HourSend: 50_000, MaxSendRate: 0 }],
+    ["negative rate", { Max24HourSend: 50_000, MaxSendRate: -1 }],
+    ["unsupported sub-one rate", { Max24HourSend: 50_000, MaxSendRate: 0.5 }],
+    ["string rate", { Max24HourSend: 50_000, MaxSendRate: "14" }],
+    ["null rate", { Max24HourSend: 50_000, MaxSendRate: null }],
+    ["unsafe rate", { Max24HourSend: 50_000, MaxSendRate: Number.MAX_SAFE_INTEGER + 1 }],
+    ["missing maximum", { MaxSendRate: 14 }],
+    ["missing rate", { Max24HourSend: 50_000 }],
+  ];
+  for (const [name, quota] of badQuota) {
+    account = approved({ SendQuota: quota });
+    askAgain();
+    clear();
+    is(`${name}: essential email keeps its existing fallback`, await sendEmail(letter("quota-proof@example.com")), true);
+    is(`${name}: no SES send was authorized`, [amazon.length, resend.length, (await sesState())?.ready, (await sesState())?.why], [0, 1, false, "quota"]);
+  }
+  for (const status of [undefined, "UNKNOWN"]) {
+    account = approved({ EnforcementStatus: status });
+    askAgain();
+    clear();
+    is(`unconfirmed enforcement ${String(status)}: existing fallback`, await sendEmail(letter("status-proof@example.com")), true);
+    is(`unconfirmed enforcement ${String(status)}: no SES authorization`, [amazon.length, resend.length, (await sesState())?.why], [0, 1, "status"]);
+  }
+
+  for (const payload of [null, [], "not an account object"]) {
+    account = payload as unknown as Record<string, unknown>;
+    askAgain();
+    clear();
+    is("a non-object account response retains essential fallback", await sendEmail(letter("account-shape@example.com")), true);
+    is("a non-object account response cannot authorize SES", [amazon.length, resend.length, (await sesState())?.why], [0, 1, "status"]);
+  }
+
+  part("Malformed cached quota cannot renew SES permission");
+  const quotaCache = { ready: true, why: "", rate: 14, max24: 50_000, at: Math.floor(Date.now() / 1000), hold: 0 };
+  const badCache: [string, Record<string, unknown>][] = [
+    ["zero quota", { max24: 0 }], ["string quota", { max24: "50000" }],
+    ["string rate", { rate: "14" }], ["zero rate", { rate: 0 }],
+    ["unknown negative quota", { max24: -2 }], ["unsafe quota", { max24: Number.MAX_SAFE_INTEGER + 1 }],
+    ["string timestamp", { at: String(quotaCache.at) }], ["negative hold", { hold: -1 }],
+    ["unsafe timestamp", { at: Number.MAX_SAFE_INTEGER + 1 }], ["contradictory status", { why: "shutdown" }],
+  ];
+  for (const [name, fields] of badCache) {
+    redis.run(["SET", "nl:ses:state", JSON.stringify({ ...quotaCache, ...fields })]);
+    account = 500;
+    clear();
+    is(`${name}: cache cannot authorize a send while account is unreadable`, await sendEmail(letter("cache-quota@example.com")), true);
+    is(`${name}: fallback only, without invented SES capacity`, [amazon.length, resend.length], [0, 1]);
+  }
+
+  part("Unconfirmed cache envelopes do not invoke getters or ask the account");
+  const quotaPipeline = redis.pipeline;
+  let quotaGetterCalls = 0;
+  const quotaComputed = new Array(1);
+  Object.defineProperty(quotaComputed, "0", { get: () => { quotaGetterCalls += 1; return JSON.stringify(quotaCache); } });
+  const quotaInherited = new Array(1);
+  Object.setPrototypeOf(quotaInherited, { 0: JSON.stringify(quotaCache) });
+  try {
+    for (const [name, reply] of [
+      ["empty", []], ["extra", [JSON.stringify(quotaCache), null]], ["sparse", new Array(1)],
+      ["computed", quotaComputed], ["inherited", quotaInherited], ["not array", {}],
+    ] as [string, unknown][]) {
+      account = approved();
+      clear();
+      const askedBefore = asked;
+      redis.pipeline = async commands => commands.length === 1 && commands[0][0] === "GET" && commands[0][1] === "nl:ses:state" ? reply as unknown[] : quotaPipeline.call(redis, commands);
+      is(`${name}: essential email remains available`, await sendEmail(letter("cache-envelope@example.com")), true);
+      is(`${name}: no unproved SES send or extra account read`, [amazon.length, resend.length, asked], [0, 1, askedBefore]);
+    }
+    is("cached quota getters were not invoked", quotaGetterCalls, 0);
+  } finally {
+    redis.pipeline = quotaPipeline;
+  }
+
+  part("Only the documented minus-one sentinel is unlimited");
+  for (const [name, extra, max, rate] of [
+    ["known quota", {}, 50_000, 100],
+    ["documented unlimited", { SendQuota: { Max24HourSend: -1, MaxSendRate: 14 } }, -1, 14],
+    ["recognized probation", { EnforcementStatus: "PROBATION" }, 50_000, 100],
+    ["supported decimal rate", { SendQuota: { Max24HourSend: 50_000, MaxSendRate: 14.5 } }, 50_000, 14.5],
+  ] as [string, Record<string, unknown>, number, number][]) {
+    account = approved(extra);
+    askAgain();
+    clear();
+    is(`${name}: confirmed capability still sends through SES`, await sendEmail(letter("known-quota@example.com")), true);
+    const knownQuota = await sesState();
+    is(`${name}: exact quota evidence retained`, [amazon.length, resend.length, knownQuota?.max24, knownQuota?.rate], [1, 0, max, rate]);
+  }
+  is("zero daily quota is zero room, not infinity", await sesBulkRoom({ ...quotaCache, max24: 0 }), 0);
+  is("only explicit documented minus one yields unbounded daily room", await sesBulkRoom({ ...quotaCache, max24: -1 }), Number.POSITIVE_INFINITY);
+  for (const raw of [undefined, null, "50000", -2, 0.5, Number.NaN, Number.POSITIVE_INFINITY, Number.MAX_SAFE_INTEGER + 1]) {
+    is(`unproved direct quota ${String(raw)} grants no room`, await sesBulkRoom({ ...quotaCache, max24: raw as number }), null);
+  }
+  account = approved();
+  askAgain();
+  clear();
+
+
+
+  part("An uncertain existing owner-notice claim sends no email");
+  const claimPipeline = redis.pipeline;
+  const ownerNoticeKey = `nl:sender:${new Date().toISOString().slice(0, 7)}:told`;
+  let noticeGetterCalls = 0;
+  const computedNotice = new Array(1);
+  Object.defineProperty(computedNotice, "0", { get: () => { noticeGetterCalls += 1; return "OK"; } });
+  const inheritedNotice = new Array(1);
+  Object.setPrototypeOf(inheritedNotice, { 0: "OK" });
+  try {
+    for (const [name, reply] of [
+      ["empty", []], ["already claimed", [null]], ["boolean", [true]], ["lowercase", ["ok"]],
+      ["extra", ["OK", "OK"]], ["computed", computedNotice], ["inherited", inheritedNotice],
+      ["lost acknowledgement", new Error("synthetic applied owner claim reply lost")],
+    ] as [string, unknown][]) {
+      redis.run(["DEL", ownerNoticeKey]);
+      clear();
+      const askedBefore = asked;
+      redis.pipeline = async commands => {
+        if (commands.length === 1 && commands[0][0] === "GET" && commands[0][1] === sentKey()) return [];
+        if (commands.length === 1 && commands[0][0] === "SET" && commands[0][1] === ownerNoticeKey) {
+          await claimPipeline.call(redis, commands);
+          if (reply instanceof Error) throw reply;
+          return reply as unknown[];
+        }
+        return claimPipeline.call(redis, commands);
+      };
+      is(`${name}: unconfirmed notice claim keeps list admission held`, await reserveDay(1), false);
+      is(`${name}: no provider email or account query is authorized`, [amazon.length, resend.length, asked], [0, 0, askedBefore]);
+      is(`${name}: a possibly applied claim is retained`, (await claimPipeline.call(redis, [["GET", ownerNoticeKey]]))[0], "1");
+    }
+    is("owner-notice claim getters were never invoked", noticeGetterCalls, 0);
+  } finally {
+    redis.pipeline = claimPipeline;
+  }
+
+  part("The bounded owner notice describes quota evidence honestly");
+  const noticePipeline = redis.pipeline;
+  const noticeCases = [
+    { name: "documented no daily ceiling, usage unknown", max: -1, usage: null, want: 1 },
+    { name: "known daily ceiling, usage unknown", max: 50_000, usage: null, want: 1 },
+    { name: "known monthly ceiling met", max: 50_000, usage: String(listCeiling()), want: listCeiling() + 50_000 },
+  ];
+  try {
+    for (const sample of noticeCases) {
+      account = approved({ SendQuota: { Max24HourSend: sample.max, MaxSendRate: 14 } });
+      askAgain();
+      redis.run(["DEL", `nl:sender:${new Date().toISOString().slice(0, 7)}:told`]);
+      clear();
+      redis.pipeline = async commands => commands.length === 1 && commands[0][0] === "GET" && commands[0][1] === sentKey()
+        ? sample.usage === null ? [] : [sample.usage]
+        : noticePipeline.call(redis, commands);
+      is(`${sample.name}: list admission remains held`, await reserveDay(sample.want), false);
+      const notice = amazon.find(m => m.to === SUPPORT);
+      const content = notice?.body.Content as { Simple?: { Body?: { Text?: { Data?: string } } } } | undefined;
+      const words = content?.Simple?.Body?.Text?.Data ?? "";
+      is(`${sample.name}: existing subject distinguishes unknown usage`, notice?.subject,
+        sample.usage === null ? "List email is waiting: sender usage cannot be confirmed" : "List email is waiting: the sender's monthly volume is nearly used");
+      is(`${sample.name}: no quota sentinel is printed as a negative volume`,
+        [words.includes("allows -1"), words.includes("up to -1"), words.includes("used up too")], [false, false, false]);
+      is(`${sample.name}: daily account limit is described precisely`,
+        [words.includes("no daily quota ceiling for this account"), words.includes("allows 50,000"), words.includes("up to 40,000")],
+        [sample.max === -1, sample.max !== -1, sample.max !== -1]);
+      if (sample.max === -1) {
+        is("account information preserves rate and store allowances",
+          [words.includes("14 emails per second"), words.includes("Each store's existing email allowance and delivery controls still apply")], [true, true]);
+      }
+      is(`${sample.name}: unknown usage does not ask for a paid-plan change`,
+        words.includes("move the sender to a larger plan"), sample.usage !== null);
+      is(`${sample.name}: essential route remains explicit`,
+        words.includes("Sign-in links, receipts and deliveries keep their existing sending route"), true);
+      await reserveDay(sample.want);
+      await reserveDay(sample.want);
+      is(`${sample.name}: the existing once-a-month notice bound is unchanged`,
+        [amazon.filter(m => m.to === SUPPORT).length, resend.length], [1, 0]);
+    }
+  } finally {
+    redis.pipeline = noticePipeline;
+  }
+  account = approved();
+  askAgain();
+  clear();
 
   part("A batch, one email at a time");
   clear();

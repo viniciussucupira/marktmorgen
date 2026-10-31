@@ -8097,9 +8097,13 @@ REGRA DOS 60% (OBRIGATÓRIA): todo cliente pagante, considerado isoladamente e u
 
 309. [EM1] E-mails para a lista somente pela Amazon SES, com fila de espera, e limites de envio maiores
 
-Estado da unidade de evidência das porções de envio: em andamento pelo Codex em31/10/2026, 03:22:12 Fortaleza, ramo codex/list-ramp-evidence, antes do código. rampRoom trata GET perdido/malformado como ausência de porção e ignora confirmação deSET. Exigir evidência no GET/SET já existentes antes de conceder capacidade; nenhumIO/chave/TTLnovo. Não altera pausa opcional de plano nem limiares de saúde. PR#1398headválidointacto.
+Estado da unidade de clareza do aviso de quota SES: em andamento pelo Codex em31/10/2026, 04:00:56 Fortaleza, ramo codex/ses-quota-notice, antes do código. O sentinelaAWS-1não pode aparecer como-1e-mails; usoResenddesconhecido não deve afirmar cotaesgotada nem pedirupgrade. Preservar avisoumapormês/rotaessencial,semIO/chave/TTLnovo. PR#1401headválidointacto;incorporação conjunta só apósnovohead39+Vercel,sempublicaravisoconhecidamenteincorreto.
 
-Estado da unidade de evidência da pausa por devoluções/reclamações da lista: em andamento pelo Codex em31/10/2026, 03:03:55 Fortaleza, ramo codex/list-health-pause-evidence, antes do código. Leitura perdida/malformada da pausa de saúde não pode liberar sendTo. Preservar contrato de leitura do estúdio e serviços essenciais; usar o mesmoGET antes da admissão, semIO/chave/TTLnovo. Não se refere à pausa opcional de plano, que continua desligada. PR#1397headválidointacto.
+Estado da unidade de evidência da quota SES: em andamento pelo Codex em31/10/2026, 03:45:10 Fortaleza, ramo codex/ses-quota-evidence, antes do código. Quota ausente/inválida vira0 e sesBulkRoom interpreta0comoInfinity; somente-1équota ilimitada segundoAWS. Exigir tipos/status/cachecomprovados,semnovasoperações/chave/TTL e semativarvolumes. PR#1399headválidointacto.
+
+Histórico da unidade incorporada e publicada #1399: Estado da unidade de evidência das porções de envio: em andamento pelo Codex em31/10/2026, 03:22:12 Fortaleza, ramo codex/list-ramp-evidence, antes do código. rampRoom trata GET perdido/malformado como ausência de porção e ignora confirmação deSET. Exigir evidência no GET/SET já existentes antes de conceder capacidade; nenhumIO/chave/TTLnovo. Não altera pausa opcional de plano nem limiares de saúde. PR#1398headválidointacto.
+
+Histórico da unidade incorporada e publicada #1398: Estado da unidade de evidência da pausa por devoluções/reclamações da lista: em andamento pelo Codex em31/10/2026, 03:03:55 Fortaleza, ramo codex/list-health-pause-evidence, antes do código. Leitura perdida/malformada da pausa de saúde não pode liberar sendTo. Preservar contrato de leitura do estúdio e serviços essenciais; usar o mesmoGET antes da admissão, semIO/chave/TTLnovo. Não se refere à pausa opcional de plano, que continua desligada. PR#1397headválidointacto.
 
 Histórico da unidade incorporada e publicada #1397: Estado da unidade de evidência do mês do remetente: em andamento pelo Codex em31/10/2026, 02:46:21 Fortaleza, ramo codex/sender-month-evidence, antes do código. sentThisMonth transforma leitura perdida/malformada em0 e libera admissão de lista. Distinguir desconhecido de0 no GET já existente, impedir admissão nessa incerteza e tornar avisos honestos; sem IO/chave/TTLnovo. PR#1396 mantém head/CIválidos intactos.
 
@@ -20561,7 +20565,7 @@ Resultado implementado (não publicado): sentThisMonth retorna number|null, vali
 
 ### 309/EM1 — evidência da pausa de saúde antes de enviar à lista (31/10/2026)
 
-Estado da unidade de evidência da pausa por devoluções/reclamações da lista: em andamento pelo Codex em31/10/2026, 03:03:55 Fortaleza, ramo codex/list-health-pause-evidence, antes do código. Leitura perdida/malformada da pausa de saúde não pode liberar sendTo. Preservar contrato de leitura do estúdio e serviços essenciais; usar o mesmoGET antes da admissão, semIO/chave/TTLnovo. Não se refere à pausa opcional de plano, que continua desligada. PR#1397headválidointacto.
+Histórico da unidade incorporada e publicada #1398: Estado da unidade de evidência da pausa por devoluções/reclamações da lista: em andamento pelo Codex em31/10/2026, 03:03:55 Fortaleza, ramo codex/list-health-pause-evidence, antes do código. Leitura perdida/malformada da pausa de saúde não pode liberar sendTo. Preservar contrato de leitura do estúdio e serviços essenciais; usar o mesmoGET antes da admissão, semIO/chave/TTLnovo. Não se refere à pausa opcional de plano, que continua desligada. PR#1397headválidointacto.
 
 Achado confirmado por leitura: pausedFor transforma erro, ausência de posição e registro inválido emnull; sendTo entende isso como livre. Distinguir ausência explícita/pausa válida/resultado desconhecido no GET existente; desconhecido mantém resto intacto e retry antes de ramp/reserva/provedor. Wrapper do estúdio e chamadas fora da lista preservados; a leitura de rampRoom e agregados de saúde permanece remanescente. Sem alegar globalidade, capacidade atômica ou entrega exatamente uma vez.
 
@@ -20575,7 +20579,7 @@ Resultado implementado (não publicado): pauseForSending distingue null(ausênci
 
 ### 309/EM1 — evidência das porções antes de envio (31/10/2026)
 
-Estado da unidade de evidência das porções de envio: em andamento pelo Codex em31/10/2026, 03:22:12 Fortaleza, ramo codex/list-ramp-evidence, antes do código. rampRoom trata GET perdido/malformado como ausência de porção e ignora confirmação deSET. Exigir evidência no GET/SET já existentes antes de conceder capacidade; nenhumIO/chave/TTLnovo. Não altera pausa opcional de plano nem limiares de saúde. PR#1398headválidointacto.
+Histórico da unidade incorporada e publicada #1399: Estado da unidade de evidência das porções de envio: em andamento pelo Codex em31/10/2026, 03:22:12 Fortaleza, ramo codex/list-ramp-evidence, antes do código. rampRoom trata GET perdido/malformado como ausência de porção e ignora confirmação deSET. Exigir evidência no GET/SET já existentes antes de conceder capacidade; nenhumIO/chave/TTLnovo. Não altera pausa opcional de plano nem limiares de saúde. PR#1398headválidointacto.
 
 Achado real: rampRoom usa destructuring do GET; parseRamp inválido vira want inteiro, e SET sem confirmação ainda devolve take. Mesmo caminho já existente deve distinguir ausência null explícita de desconhecido, validar tamanho/contagem/tempo semcoerção e só liberar take após resposta SET própria/únicaOK. Em dúvida manter destinatários aguardando porção, sem inventar envio ou devolver consumo cuja gravação pode ter sido aplicada. ConcorrênciaGET/SET nãoatômica, startRamp e outros caminhos permanecem remanescentes; sem alegação de filaSEScompleta.
 
@@ -20585,3 +20589,39 @@ Custo: mesmosGET/SET/DELjáexistentes,nenhumIO/chave/TTL/retenção/provedor nov
 
 
 Resultado implementado (não publicado): rampRoom valida respostaGETúnicaprópria semgetter; só nullausência libera want, registroinválido mantém0deadmissão. Registro aceita apenas estágios reais100/200/400/800/1600/3200/6400,contageminteirasegura0..size,tempoaberturainteiroseguronãonegativo;semcoerção. SETpróprioúnicoOKnecessário antes de take;erro/respostaincerta mantém0 semrollback,mesmocomaplicação.22casosnegativosGETnoleitor+sendTo,7acknegativosSETaplicado+sendTo,2controlespositivos,TTL180diaspreservado,semgetters/lotedeprovedor/incrementomensal/rollback;controleessentialigual. Testesdeprogressãocompletos anteriores preservados. ReservaGET/SETaindanãoatômica e startRamp/agregadosficamremanescentes;semcertificação309.39+Vercelcompletosnoheadnovoexigidos.
+
+
+### 309/EM1 — quota SES comprovada antes de envio (31/10/2026)
+
+Estado da unidade de evidência da quota SES: em andamento pelo Codex em31/10/2026, 03:45:10 Fortaleza, ramo codex/ses-quota-evidence, antes do código. Quota ausente/inválida vira0 e sesBulkRoom interpreta0comoInfinity; somente-1équota ilimitada segundoAWS. Exigir tipos/status/cachecomprovados,semnovasoperações/chave/TTL e semativarvolumes. PR#1399headválidointacto.
+
+Fontes primárias AWS lidas31/10/2026: https://docs.aws.amazon.com/ses/latest/APIReference-V2/API_SendQuota.html defineMax24HourSend comoDouble e somente-1comoquota ilimitada;MaxSendRateéDouble. https://docs.aws.amazon.com/ses/latest/APIReference-V2/API_GetAccount.html descreveHEALTHY/PROBATION/SHUTDOWN e booleansdeprodução/envio. Camposopcionaisnãoautorizaminferir0ilimitado. PROBATIONreconhecido continua podendoenviar;travasdesaúdeseletivasdoitemseguemremanescentes.
+
+Unidade limitada à mesma leitura/cache de conta: tipos/quota/statuscomprovados e cachepróprioúnico semcoerção;quota0nãoéInfinity,somente-1explícito significa ilimitado nessecampo. Serviçoessencial mantémfallbackjáexistente quandoSESnãoautorizado;nenhumdireitovisívelaumenta. Cacheantigo/origemtemporal/renovaçãoquandoaccountinacessível,reservaatômicaquota/fila/classificaçãolista permanecem remanescentes,semaprovaçãodaoperação.
+
+Publicação #1398: mergefeaf01f51a3d5c82ad8bb33993002753be54a34a,31/10/2026 03h35min18sFortaleza,headfd87e28696457031fc52b1a81cd8ea45db99c2a1,39/39+Vercel,READYdpl_GZebdgzJ5TzjELEgLUjeBHV931d6,7aliases5HTMLreais;error/fatal(limit10)06:35:18–06:37:34.741UTC semregistros,somenteessa janela. CI8runs39jobs11067segundosconhecidos,0intervalosdesconhecidos;faturamento/tarifas/OS/arredondamento/créditos/cache/Vercel desconhecidos,nunca0. Contador254retido;histórico1395–1397preservado.
+
+Custo: mesmasoperaçõesGETcache/GETaccount/SETcache eTTL3600jáexistentes,mesmotetode1consultadecontapornovaconsultajáprevista;cache com resposta incompleta não faz nova consulta;conteúdoinválido usa consulta jáexistente no caminho de ausência/invalidez. Teto incremental de novasoperações Store/Studio/Scale mensal/anual0/0;faturamentorealdesconhecido,nãozero. Nenhumaconta/configuração/quotaAWSreal/preço/limitevisível/flag/fiscalalterados. Testes sintéticos; novoheadexige39+Vercelinteiros. União parte do canônico9fee2c67 com última rodadaCA1doClaude03h43 e todososdemaisarquivos preservados;ramo1399intacto.
+
+
+Resultado implementado (não publicado): quota/rate numéricos finitos comprovados;max24-1explícitopreservado,quota0temroom0,nuncaInfinity. Cachevalidaestado/campos/inteirosseguros e respostaúnicaprópriasemgetter;cacheincompleto não invocaaccount. Conta semquota/statuscomprovados nãoautorizases e preservafallbackessencial. Paceratual>=1/s: taxa<1aguardaSESsemexcedê-la; taxasfracionárias>=1mantidasepacerexistentecontinuaemfloor.16casosAPIquotainválida+2statusdesconhecidos,10cachemalformado,6envelopesincertoscomzeroGETaccount/getter,4controlespositivosincluindo-1/PROBATION/14.5,quota0e8valoresdiretosinválidos. Testes reaisdosender simulado,nenhumenvio/configuraçãoreais. Cachetemporal/stalerenewal eclasseSES-onlyseguemremanescentes;39+Vercelinteirosexigidos.
+
+
+Complemento da mesma unidade: respostaaccount200 nãoobjeto(null,array,string) é estado nãoautorizado;3controlesnegativos reaisadicionais. Apenasquota/status emnovaresposta/cachevalidado autorizaSES; indisponibilidade500/rede e renovação temporal de cache positivo antigo continuamlimitação explícita, não afirmar fechamento completo daautoridade.
+
+
+### 309/EM1 — aviso honesto de quota e uso desconhecido (31/10/2026)
+
+Estado da unidade de clareza do aviso de quota SES: em andamento pelo Codex em31/10/2026, 04:00:56 Fortaleza, ramo codex/ses-quota-notice, antes do código. O sentinelaAWS-1não pode aparecer como-1e-mails; usoResenddesconhecido não deve afirmar cotaesgotada nem pedirupgrade. Preservar avisoumapormês/rotaessencial,semIO/chave/TTLnovo. PR#1401headválidointacto;incorporação conjunta só apósnovohead39+Vercel,sempublicaravisoconhecidamenteincorreto.
+
+Achado na integração: tellSenderIsFull imprime max24 e floor(max24*0.8); comsentinela-1geraquantidadenegativa. Mesmo com max24conhecido,usoResenddesconhecido ainda diziausedup e pediaupgrade. Descrever quota semteto diário apenas como informação da contaAWS, com taxa e direitos porloja mantidos; desconhecidoesperarecuperaçãodeevidência seminferircotaesgotada oumudançadeplano. Nenhumapromessadeenviosem limiteMarktmorgen. Testar aviso real com provedoressintéticos e frequênciamáximaexistente;nenhuma mensagem real.
+
+Publicação #1399: mergea43aafc78f8887f92eb38fd2dae9baa25321a952,31/10/2026 03h54min46sFortaleza,heada183e03b1c258360364f157a8649b0ff126905f9,39/39+Vercel,READYdpl_9kYsnBZx9jUoedH56sJrm3amdnCJ,7aliases5HTMLreais;error/fatal(limit10)06:54:46–06:57:32.160UTC semregistro,somenteajanela. CI8runs39jobs11229segundosconhecidos,0intervalosdesconhecidos;faturas/tarifas/OS/arredondamento/créditos/cache/Verceldesconhecidos,nunca0. União dafila9fee/Claude03h43conferidafolhaafolha;nenhumafonteforadounidadealterada. Contador254retido,provasanteriorespreservadas.
+
+Custo: somente palavras do mesmoaviso delimitado jáexistente,semnovaconsulta/comando/chave/TTL/provedor/retenção/frequência. Teto incremental de novasoperações Store/Studio/Scale mensal/anual0/0;faturamentorealCI/hosting/Redisdesconhecido,nãozero. Testessintéticos,novaárvore39+Vercel;preço/limitesvisíveis/fiscal/flags/permissões/conteúdoidentificadoresiguais. Não editar oucancelaroheadválido1401. Cachetemporal/stalerenewal,capacidadeglobal/classificaçãolista/filaSES continuamremanescentes.
+
+
+Resultado implementado (não publicado): aviso trata-1apenascomoausênciadetetodiáriodacontaAWS,comtaxa e direitosporlojamantidos;quotaconhecida50000mostraquota eparte40000 corretamente. UsoResenddesconhecido não afirmaesgotamento nemmandaadquirirplano;repeteaverificaçãoautomáticajáexistente. QuotaResendéidentificadacomoconfigurada;rotaessencial descritasemgarantirentrega.3cenárioscomreserveDay/avisoreais eSESsimulado(desconhecido-1,desconhecido50000,ceilingmensalconhecido),semnúmeronegativo/pedidoupgradeporincerteza;3tentativasporcenáriomantêm1aviso,preços/limites/frequência/IO iguais. Suíte39+Vercelcompletanocabeçonovopendente;1401válidointacto e incorporado apenas comestacorreçãorevisada.
+
+
+Proteção do mesmo aviso limitado: SETNX existente só autoriza aviso com respostaúnicaprópriaOK;ackausente/malformado/computed/inherited não pode mandar e-mail,mantermarcatalvezaplicada semrollback.8casosnegativoscomSETaplicado testam reserveDayreal,nenhumprovedor/GETaccount/getter e marcaguardada;3controlespositivos de aviso continuam1por3tentativas. NenhumIO/chave/TTLnovo;apenasmenosautorização semprova. Escopo continuaavisodelimite/custo,semmudança noheadválido1401.
