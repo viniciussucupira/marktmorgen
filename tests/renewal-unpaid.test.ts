@@ -34,6 +34,8 @@ import { allowanceFor } from "@/lib/store-allowance-rules";
 import { PAYING_INDEX } from "@/lib/free-pool-rules";
 import { ENDED_INDEX } from "@/lib/plan-standing";
 import { STUDIO_MESSAGES } from "@/lib/studio-messages";
+import { picturesLimitFor } from "@/lib/community-picture-rules";
+import { taskRoomFor } from "@/lib/assignment-rules";
 import { RENEWAL_KEPT_WORDS, RENEWAL_PAUSED_WORDS, RENEWAL_RESUME_WORDS } from "@/lib/renewal-unpaid-words";
 import { RenewalUnpaidNotice } from "@/components/renewal-unpaid-notice";
 import { paidPeriod } from "./billing-period-fixture";
@@ -157,6 +159,8 @@ async function main() {
     // AI spending's scope (aiBudgetScopeFor, lib/ai-spend.ts) is held in tests/ai-spend.test.ts, which runs the real module.
     is("uploads are an ended store's", uploadScopeFor(store), "ended");
     is("lesson video is a store with no plan's", videoLimitFor(store), SETUP_VIDEO_SECONDS);
+    is("no new community pictures", [picturesLimitFor(store), picturesLimitFor({ ...store, renewalUnpaidSince: 0 }) > 0], [0, true]);
+    is("no new students' hand-ins", [taskRoomFor(store), taskRoomFor({ ...store, renewalUnpaidSince: 0 }) > 0], [0, true]);
     is("the studio keeps its plan's figure", allowanceFor(store, "studio"), allowanceFor({ ...store, renewalUnpaidSince: 0 }, "studio"));
     is("buyers keep their access emails", allowanceFor(store, "transactional"), allowanceFor({ ...store, renewalUnpaidSince: 0 }, "transactional"));
     const paid = { ...store, renewalUnpaidSince: 0 };
@@ -171,6 +175,11 @@ async function main() {
       const check = source.indexOf("renewalUnpaid(store)");
       is(`${file} checks before reserving`, check > 0 && check < source.indexOf("reserveStoreUpload(store"), true);
       is(`${file} answers renewal_unpaid`, source.slice(check, check + 160).includes("renewal_unpaid"), true);
+    }
+    for (const [file, before] of [["app/api/store/image/upload/route.ts", "issueSignedToken("], ["app/api/store/mail/picture/route.ts", "keepMailPicture("]] as const) {
+      const source = readFileSync(file, "utf8");
+      const check = source.indexOf("if (renewalUnpaid(store))");
+      is(`${file} refuses renewal_unpaid before storing`, check > 0 && check < source.indexOf(before) && source.slice(check, check + 120).includes("renewal_unpaid"), true);
     }
     const usage = readFileSync("app/api/cron/usage/route.ts", "utf8");
     is("the usage job does not send a 'video hours used' email for an unpaid renewal", usage.indexOf("if (renewalUnpaid(store)) continue;") > 0 && usage.indexOf("if (renewalUnpaid(store)) continue;") < usage.indexOf("videoUsageNotice({"), true);

@@ -9,7 +9,8 @@
  *   - emails to the list need it (lib/plan.ts canUse "email", lib/mail.ts);
  *   - AI drafts, uploads and lesson video follow costStandingOf
  *     (lib/plan-standing.ts: lib/ai.ts, lib/ai-spend.ts, lib/upload-budget.ts,
- *     videoLimitFor, and the upload routes' own refusal).
+ *     videoLimitFor, picturesLimitFor, taskRoomFor, and the upload routes'
+ *     own refusal).
  */
 export const RENEWAL_PAUSED_WORDS =
   "Until it is paid, your checkout takes no new orders, free copies or sign-ups, and emails to your list, AI drafts, lesson video and new uploads are paused.";
