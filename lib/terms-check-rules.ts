@@ -43,7 +43,11 @@ const AROUND = 40;
 
 export type TermsWarningKind = "other_company" | "price_mismatch" | "no_refunds" | "earnings_claim" | "false_urgency" | "resale_rights";
 
-export type TermsWarning = { kind: TermsWarningKind; excerpt: string; why: string; fix: string };
+/**
+ * `at` and `length` place the words in the text read (the first MAX_TEXT characters), for the studio to offer the
+ * fix on the creator's approval (withoutSentence, replaceWords); `replacement` is the exact words a price fix puts in.
+ */
+export type TermsWarning = { kind: TermsWarningKind; excerpt: string; why: string; fix: string; at: number; length: number; replacement?: string };
 
 export type TermsCheckInput = {
   /** The terms, refund policy and description, as the creator wrote them. */
@@ -162,11 +166,11 @@ export function checkCreatorTerms(input: TermsCheckInput): TermsWarning[] {
   const text = typeof input.text === "string" ? input.text.slice(0, MAX_TEXT) : "";
   const out: TermsWarning[] = [];
   const seen = new Set<string>();
-  const add = (kind: TermsWarningKind, index: number, length: number, why: string, fix: string) => {
+  const add = (kind: TermsWarningKind, index: number, length: number, why: string, fix: string, replacement?: string) => {
     const key = `${kind}:${text.slice(index, index + length).toLowerCase()}`;
     if (seen.has(key) || out.length >= MAX_WARNINGS) return;
     seen.add(key);
-    out.push({ kind, excerpt: excerptAt(text, index, length), why, fix });
+    out.push({ kind, excerpt: excerptAt(text, index, length), why, fix, at: index, length, ...(replacement ? { replacement } : {}) });
   };
   const own = new Set([...input.ownHosts.map(bareHost), ...OUR_HOSTS]);
 
@@ -203,7 +207,7 @@ export function checkCreatorTerms(input: TermsCheckInput): TermsWarning[] {
       if (cents === input.priceCents) continue;
       add("price_mismatch", index, m[0].length,
         `This says ${m[0].replace(/\s/g, "")}, but the page and checkout show ${formatUsd(input.priceCents)}. A buyer may expect the price written here.`,
-        `Change it to ${formatUsd(input.priceCents)}, or remove the amount.`);
+        `Change it to ${formatUsd(input.priceCents)}, or remove the amount.`, formatUsd(input.priceCents));
     }
   }
 
@@ -232,7 +236,7 @@ export function checkCreatorTerms(input: TermsCheckInput): TermsWarning[] {
       if (negated(text, m.index ?? 0, m[0].length)) continue;
       add("false_urgency", m.index ?? 0, m[0].length,
         "This says time is running out, but no end date or sale deadline is set for this product.",
-        "Set a real end date in the studio, or remove this sentence.");
+        "Remove this sentence, or say the real date the offer ends.");
     }
   }
   if (!input.realStockLimit) {
@@ -240,7 +244,7 @@ export function checkCreatorTerms(input: TermsCheckInput): TermsWarning[] {
       if (negated(text, m.index ?? 0, m[0].length)) continue;
       add("false_urgency", m.index ?? 0, m[0].length,
         "This says few are left, but no stock or seat limit is set for this product.",
-        "Set a real limit in the studio, or remove this sentence.");
+        "Set \u201cHow many can be sold, in total\u201d on this product, or remove this sentence.");
     }
   }
 
@@ -249,7 +253,7 @@ export function checkCreatorTerms(input: TermsCheckInput): TermsWarning[] {
       if (negated(text, m.index ?? 0, m[0].length)) continue;
       add("resale_rights", m.index ?? 0, m[0].length,
         "This mentions resale or private label rights. Our Terms allow selling such content only under a license that lets you sell it this way, which you keep and show on request.",
-        "Confirm in the studio that you hold that license, or remove this sentence.");
+        "Remove this sentence, unless you hold a license that lets you sell this content this way.");
     }
   }
   return out;
@@ -259,4 +263,31 @@ function formatUsd(cents: number): string {
   const dollars = Math.floor(cents / 100);
   const rest = cents % 100;
   return `$${dollars.toLocaleString("en-US")}${rest ? `.${String(rest).padStart(2, "0")}` : ""}`;
+}
+
+/** The sentence holding `at`: back to the previous ". ! ?" or line break, on to the next one (included). */
+function sentenceAt(text: string, at: number): [number, number] {
+  let start = at;
+  while (start > 0 && !/[.!?\n]/.test(text[start - 1])) start -= 1;
+  let end = at;
+  while (end < text.length && !/[.!?\n]/.test(text[end])) end += 1;
+  if (end < text.length && text[end] !== "\n") end += 1;
+  return [start, end];
+}
+
+/** The text without the sentence holding `at` (a warning's place), its spacing tidied; the rest is left exactly as written. */
+export function withoutSentence(text: string, at: number): string {
+  if (!Number.isSafeInteger(at) || at < 0 || at >= text.length) return text;
+  const [start, end] = sentenceAt(text, at);
+  const before = text.slice(0, start).replace(/[ \t]+$/, "");
+  let after = text.slice(end).replace(/^[ \t]+/, "");
+  if (/\n$/.test(before) && /^\n/.test(after)) after = after.slice(1);
+  const joined = before && after && !/\n$/.test(before) && !/^\n/.test(after) ? `${before} ${after}` : `${before}${after}`;
+  return joined.replace(/\n{3,}/g, "\n\n");
+}
+
+/** The text with the words at `at` (`length` of them) replaced: only when they are still the same words. */
+export function replaceWords(text: string, at: number, length: number, expected: string, replacement: string): string {
+  if (text.slice(at, at + length) !== expected) return text;
+  return `${text.slice(0, at)}${replacement}${text.slice(at + length)}`;
 }
