@@ -1121,6 +1121,12 @@
       ]
     },
     {
+      "source": "app/studio/refund/page.tsx",
+      "status": "AAA review not completed",
+      "routeTemplate": "/studio/refund",
+      "parameters": []
+    },
+    {
       "source": "app/studio/requests/page.tsx",
       "status": "AAA review not completed",
       "routeTemplate": "/studio/requests",
@@ -1513,6 +1519,7 @@
     "app/api/billing/cancel/route.ts",
     "app/api/billing/checkout/route.ts",
     "app/api/billing/pause/route.ts",
+    "app/api/billing/refund/route.ts",
     "app/api/billing/return/route.ts",
     "app/api/billing/switch/route.ts",
     "app/api/creators/route.ts",
@@ -1876,6 +1883,6 @@
   "routeInventory": {
     "generator": "scripts/accessibility-route-inventory.mjs",
     "scope": "Source templates and parameter shapes only. Existing review status is preserved; a route is not an exercised fixture or a passing accessibility test.",
-    "pageTemplates": 128
+    "pageTemplates": 129
   }
 }
