@@ -65,6 +65,8 @@ export function feeWords(live = COMMISSION_PLANS_PUBLISHED) {
       takesOfCreator: "Marktmorgen takes 0% of the sale.",
       /** The pricing table's line about fees. */
       feesRow: "0% of your sales. Stripe charges its own processing fee, on your own account.",
+      /** The home page's price line (VS1): the cost that is charged, without the 0% line. */
+      homeFee: "Stripe charges its own processing fee, on your own account.",
       /** Under the buy box in the product editor. */
       editor: "Marktmorgen takes no cut of the sale.",
       /** The 404 page's card about pricing. */
@@ -145,6 +147,7 @@ export function feeWords(live = COMMISSION_PLANS_PUBLISHED) {
     takes: `Marktmorgen takes the share of each sale your plan sets: ${store}, ${studio}, or none on Scale.`,
     takesOfCreator: `Marktmorgen takes the share of each sale the creator's plan sets: ${store}, ${studio}, or none.`,
     feesRow: `${store} of each sale on Store, ${studio} on Studio, none on Scale, taken by Stripe from the sale itself. Stripe charges its own processing fee, on your own account.`,
+    homeFee: `${store} of each sale on Store, ${studio} on Studio, none on Scale, taken by Stripe from the sale itself. Stripe charges its own processing fee, on your own account.`,
     editor: `Your plan's share of the sale, ${store} on Store, is taken from it by Stripe.`,
     pricingCard: `Three plans, each a monthly price and a share of each sale: ${store}, ${studio}, or none on Scale.`,
     missionPromise: "One subscription and one share of each sale, both written in one line. No fee that appears at the last screen, no feature listed on the site that does not exist in the product.",
