@@ -333,8 +333,9 @@ async function main(): Promise<void> {
   is("a lesson's video is no longer counted by the page that opens it", /recordDelivery\(file\.pathname, viewingBytes/.test(read("lib/learn.ts")), false);
   is("the daily job still runs and is scheduled", [/settleAll/.test(read("app/api/cron/usage/route.ts")), /\/api\/cron\/usage/.test(read("vercel.json"))], [true, true]);
   is("the daily job never tells a creator of a charge after use", /videoOwedCents|canBeCharged/.test(read("app/api/cron/usage/route.ts")), false);
-  const callers = ["lib", "app", "components"].flatMap((dir) => filesUnder(dir)).filter((f) => /addToNextInvoice\s*\(/.test(read(f)) && f !== "lib/billing.ts");
-  is("nothing but the usage meters calls addToNextInvoice", callers, ["lib/usage-billing.ts"]);
+  const naming = ["lib", "app", "components", "scripts"].flatMap((dir) => filesUnder(dir)).filter((f) => f !== "lib/billing.ts" && /\baddToNextInvoice\b/.test(read(f)));
+  is("nothing but the usage meters names addToNextInvoice, however it is imported", naming, ["lib/usage-billing.ts"]);
+  is("and lib/billing.ts only defines it", (read("lib/billing.ts").match(/\baddToNextInvoice\s*\(/g) ?? []).length, 1);
   is("no meter owes anything after use", [/owed: \(\) => 0/.test(read("lib/watch-billing.ts")), /owed: \(\) => 0/.test(read("lib/traffic-billing.ts")), /owed: \(\) => 0/.test(read("lib/orders-billing.ts"))], [true, true, true]);
   is("and the five-minute job is the one that reads", /measureDue/.test(read("app/api/cron/stream/route.ts")), true);
 
