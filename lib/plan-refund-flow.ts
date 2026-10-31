@@ -39,10 +39,23 @@ import { syncAssistant } from "@/lib/assistant-billing";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { LockBusyError, releaseLock, takeLock } from "@/lib/redis-lock";
 import { SUBSCRIPTION_PATTERN, type Store, setSubscription, storeForId, storeRef } from "@/lib/store";
+import { EMAIL_PATTERN, normaliseEmail } from "@/lib/auth";
+import { NIMBUS_FROM, isSenderConfigured, sendEmail } from "@/lib/email";
+import { SUPPORT_EMAIL } from "@/lib/creator-research";
+import { planRefundLetter } from "@/lib/plan-refund-words";
+import { randomBytes } from "node:crypto";
 
 const AT = "2024-06-20";
 /** The notes of plan refunds not finished yet: field a store's id, value a Note. */
 export const ENDING_KEY = "nl:plan-refund:ending";
+/** The review page's one-time pass: a refund is made only from the page that showed its amount. */
+export const reviewKeyOf = (sid: string): string => `nl:plan-refund:${sid}:review`;
+/**
+ * How long the review page's pass is kept: only so an unused one is cleaned up. It is not a time limit on the
+ * person (AX274 2.2.3): the pass carries the amount shown, and the refund is refused only when the policy gives
+ * another amount by then, and then the page shows the new one.
+ */
+export const REVIEW_SECONDS = 7 * 86_400;
 /** One store's whole refund at a time. */
 export const flowKeyOf = (sid: string): string => `nl:plan-refund:${sid}:flow`;
 /** The refund's own lock, plus the stop, the list and the ending (each request ends within 20 seconds). */
@@ -182,6 +195,39 @@ export async function endPlanNow(store: Store, id: string): Promise<boolean> {
   }
 }
 
+/** A new one-time pass for the review page that shows `cents`, replacing any earlier one. */
+export async function issueReview(sid: string, cents: number): Promise<string> {
+  const token = randomBytes(18).toString("base64url");
+  await redisPipeline([["SET", reviewKeyOf(sid), `${token}:${cents}`, "EX", REVIEW_SECONDS]]);
+  return token;
+}
+/** Takes the pass once: the amount it was issued for, only for the token the page issued and not yet used; else null. */
+export async function takeReview(sid: string, token: string): Promise<number | null> {
+  if (!/^[A-Za-z0-9_-]{20,40}$/.test(token)) return null;
+  const [kept] = await redisPipeline([["GETDEL", reviewKeyOf(sid)]]);
+  const m = typeof kept === "string" ? /^([A-Za-z0-9_-]{20,40}):(\d{1,12})$/.exec(kept) : null;
+  return m && m[1] === token ? Number(m[2]) : null;
+}
+
+/**
+ * The confirmation email, once the plan has ended: to the store's own address, from the company's sending (metered as
+ * the company's), with the refund's id as the idempotency key so a retry never sends it twice. Not sent only logs:
+ * the money is back either way.
+ */
+async function tell(store: Store, r: { cents: number; currency: string; refundId: string; status: "succeeded" | "pending" }): Promise<void> {
+  const to = normaliseEmail(store.email);
+  if (!EMAIL_PATTERN.test(to) || !isSenderConfigured()) {
+    console.error(`plan-refund: store ${store.sid}'s refund email was not sent (no address or no sender)`);
+    return;
+  }
+  const { subject, text } = planRefundLetter({ store: store.name || store.handle, cents: r.cents, currency: r.currency, pending: r.status === "pending", assistant: Boolean(store.assistantPlan?.active) });
+  const sent = await sendEmail({ meter: { by: "company" }, from: NIMBUS_FROM, to, replyTo: SUPPORT_EMAIL, subject, text, idempotencyKey: `plan-refund-told:${r.refundId}` }).catch((error) => {
+    console.error("sending a plan refund email failed", error);
+    return false;
+  });
+  if (!sent) console.error(`plan-refund: store ${store.sid}'s refund email was not sent`);
+}
+
 const refundOf = (r: Row, earlier: boolean, ended: boolean): PlanRefundFlow => ({
   ok: true,
   cents: Number(r.amount) || 0,
@@ -193,7 +239,7 @@ const refundOf = (r: Row, earlier: boolean, ended: boolean): PlanRefundFlow => (
 });
 
 /** The creator asked for their plan refund: the whole of it, in the safe order above. */
-export async function refundAndEndPlan(store: Store, nowSeconds = Math.floor(Date.now() / 1000)): Promise<PlanRefundFlow> {
+export async function refundAndEndPlan(store: Store, nowSeconds = Math.floor(Date.now() / 1000), expectCents?: number): Promise<PlanRefundFlow> {
   if (!isRedisConfigured()) return { ok: false, reason: "no_lock", stopLeft: false };
   const id = store.subscriptionId ?? "";
   if (!isBillingConfigured() || !SUBSCRIPTION_PATTERN.test(id)) return { ok: false, reason: "no_plan", stopLeft: false };
@@ -230,18 +276,25 @@ export async function refundAndEndPlan(store: Store, nowSeconds = Math.floor(Dat
         return notMade("stop_failed", Boolean(kept));
       }
     }
-    const made = await refundPlanPayment(store, nowSeconds);
+    const made = await refundPlanPayment(store, nowSeconds, expectCents);
     if (made.ok) {
       const ended = await endPlanNow(store, id);
-      if (ended) await dropNote(store.sid);
+      if (ended) {
+        await dropNote(store.sid);
+        await tell(store, made);
+      }
       return { ok: true, cents: made.cents, currency: made.currency, refundId: made.refundId, status: made.status, ended, earlier: false };
     }
     // Not made now: one made before (an earlier request, or this one whose answer was lost) is looked for.
     const found = await findPlanRefund(store.sid, note.at);
     if (found.kind === "found") {
       const ended = await endPlanNow(store, id);
-      if (ended) await dropNote(store.sid);
-      return refundOf(found.refund, made.reason !== "failed", ended);
+      const result = refundOf(found.refund, made.reason !== "failed", ended);
+      if (ended) {
+        await dropNote(store.sid);
+        if (result.ok) await tell(store, result);
+      }
+      return result;
     }
     // "failed" may hide a refund Stripe makes after we stopped waiting, and an earlier note one we have not seen:
     // the note stays for the daily job, which ends the plan if it turns up.
@@ -290,6 +343,8 @@ export async function finishPlanRefunds(deadline: number, nowSeconds = Math.floo
       if (found.kind === "found") {
         if (await endPlanNow(store, note.s)) {
           await dropNote(sid);
+          const result = refundOf(found.refund, false, true);
+          if (result.ok) await tell(store, result);
           counts.ended += 1;
         } else counts.left += 1;
         continue;
