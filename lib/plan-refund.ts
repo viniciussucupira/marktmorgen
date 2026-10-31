@@ -179,6 +179,12 @@ export async function readPlanRefund(store: Store, nowSeconds = Math.floor(Date.
       if (!listedTimes.length || listedTimes.some((t) => !Number.isFinite(t)) || Math.min(...listedTimes) >= windowStart) {
         return { refund: { kind: "unknown", reason: "too_many" } };
       }
+      // A succeeded charge inside the window may be the first payment, or there may be one before it on a page not
+      // read: whether the guarantee applies cannot be told, never a silent no.
+      // A succeeded charge already listed from before the window settles it: the one inside is not the first payment.
+      if (succeeded.some((c) => num(c.created) >= windowStart) && !succeeded.some((c) => num(c.created) < windowStart)) {
+        return { refund: { kind: "unknown", reason: "too_many" } };
+      }
     } else if (chargesPage.has_more === false) first = oldestListed;
     else return { refund: { kind: "unknown", reason: "unreadable" } };
 
