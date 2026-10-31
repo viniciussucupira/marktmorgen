@@ -26,9 +26,9 @@
  *   CURSOR_MAX_AGE_SECONDS old, it is abandoned and reported (`abandoned`),
  *   so one bad page never holds every later run.
  * - Newest first: while a window is being resumed, invoices created after it
- *   began are above the cursor and are read by the next fresh window (the
- *   window overlaps the last run on purpose). So an invoice can be handed on
- *   more than once: the caller decides each invoice id once.
+ *   began are above the cursor; the next fresh window starts no later than
+ *   that window's first run (`readUpTo`), so they are read then. An invoice
+ *   can be handed on more than once: the caller decides each invoice id once.
  *
  * It calls only the `get` it is handed, so it is tested against a fake
  * Stripe; `platformGet` is the real one. Nothing runs it yet: the cron and
@@ -43,7 +43,7 @@ export const WINDOW_SECONDS = 48 * 60 * 60;
 /**
  * A window is resumed until it is this old; after that it is abandoned (and
  * the result says so), so a backlog can never hold every new charge back
- * forever. Seven daily runs.
+ * forever. Measured from the window's first run (`ranAt`).
  */
 export const CURSOR_MAX_AGE_SECONDS = 7 * 24 * 60 * 60;
 /** List errors in a row at one cursor before that window is abandoned, reported. */
@@ -62,6 +62,8 @@ export type ChargeReadCursor = {
   windowStart: number;
   /** The last invoice id read in that window. */
   after: string;
+  /** When this window was first read, in seconds: every invoice created before it is in the window. */
+  ranAt: number;
   /** List errors in a row at this cursor. */
   failures?: number;
 };
@@ -79,6 +81,16 @@ export type ChargeReadResult = {
   abandoned: (ChargeReadCursor & { why: "too_old" | "list_failing" }) | null;
   /** Where to carry on next run; null when the window was read to its end. */
   cursor: ChargeReadCursor | null;
+  /**
+   * When the window was read to its end: every paid invoice created before
+   * this time has been handed on or set aside as unread. The caller passes it
+   * back as `readUpTo`, so the next fresh window starts no later than it and
+   * nothing created while a window was being resumed falls between windows.
+   * Null otherwise: keep the one you had.
+   */
+  readUpTo: number | null;
+  /** A stretch the next window could not reach back to (older than CURSOR_MAX_AGE_SECONDS), to be reported; null otherwise. */
+  gap: { from: number; to: number } | null;
   stopped: "done" | "budget" | "page_cap" | "call_cap" | "list_error";
   /** Requests made, for the run's own cap and report. */
   calls: number;
@@ -155,24 +167,39 @@ export async function readPaidInvoices(options: {
   now: number;
   until: number;
   cursor?: ChargeReadCursor | null;
+  /** The `readUpTo` of the last window read to its end, if any. */
+  readUpTo?: number | null;
   clock?: () => number;
 }): Promise<ChargeReadResult> {
   const { get, now, until } = options;
   const clock = options.clock ?? Date.now;
   const given = options.cursor;
-  const wellFormed = !!given && Number.isSafeInteger(given.windowStart) && INVOICE_ID.test(given.after);
+  const wellFormed =
+    !!given && Number.isSafeInteger(given.windowStart) && Number.isSafeInteger(given.ranAt) && INVOICE_ID.test(given.after);
   const failures = wellFormed && Number.isSafeInteger(given!.failures) ? Math.max(0, given!.failures!) : 0;
   let abandoned: ChargeReadResult["abandoned"] = null;
-  if (wellFormed && now - given!.windowStart >= CURSOR_MAX_AGE_SECONDS) {
-    abandoned = { windowStart: given!.windowStart, after: given!.after, why: "too_old" };
-  } else if (wellFormed && failures >= MAX_LIST_FAILURES) {
-    abandoned = { windowStart: given!.windowStart, after: given!.after, why: "list_failing" };
+  const base = wellFormed ? { windowStart: given!.windowStart, after: given!.after, ranAt: given!.ranAt } : null;
+  if (base && now - base.ranAt >= CURSOR_MAX_AGE_SECONDS) {
+    abandoned = { ...base, why: "too_old" };
+  } else if (base && failures >= MAX_LIST_FAILURES) {
+    abandoned = { ...base, why: "list_failing" };
   }
-  const resume = wellFormed && !abandoned ? { windowStart: given!.windowStart, after: given!.after } : null;
-  const windowStart = resume ? resume.windowStart : now - WINDOW_SECONDS;
+  const resume = base && !abandoned ? base : null;
+  // A fresh window reaches back to the last time everything was read, but
+  // never further than CURSOR_MAX_AGE_SECONDS; what is older is reported.
+  const floor = now - CURSOR_MAX_AGE_SECONDS;
+  const upTo = Number.isSafeInteger(options.readUpTo) ? (options.readUpTo as number) : null;
+  let gap: ChargeReadResult["gap"] = null;
+  let freshStart = now - WINDOW_SECONDS;
+  if (upTo !== null && upTo < freshStart) {
+    freshStart = Math.max(upTo, floor);
+    if (upTo < floor) gap = { from: upTo, to: floor };
+  }
+  const windowStart = resume ? resume.windowStart : freshStart;
+  const ranAt = resume ? resume.ranAt : now;
   let after = resume ? resume.after : null;
 
-  const out: ChargeReadResult = { invoices: [], unread: [], abandoned, cursor: resume, stopped: "done", calls: 0 };
+  const out: ChargeReadResult = { invoices: [], unread: [], abandoned, cursor: resume, readUpTo: null, gap, stopped: "done", calls: 0 };
   const hasTime = () => out.calls < MAX_CALLS && clock() < until;
   const why = () => (out.calls >= MAX_CALLS ? "call_cap" : "budget");
   const count = () => {
@@ -195,10 +222,10 @@ export async function readPaidInvoices(options: {
       count();
       got = list(await get(`/invoices?${query}`));
     } catch {
-      return listError(out, windowStart, after, failures);
+      return listError(out, windowStart, ranAt, after, failures);
     }
     if (!got || (got.hasMore && got.data.length === 0)) {
-      return listError(out, windowStart, after, failures);
+      return listError(out, windowStart, ranAt, after, failures);
     }
     for (const item of got.data) {
       const invoice = record(item);
@@ -206,7 +233,7 @@ export async function readPaidInvoices(options: {
       if (!invoice || typeof id !== "string" || !INVOICE_ID.test(id)) {
         // An entry with no id cannot be resumed after or decided: the page is
         // not what the pages describe, so nothing after it is taken.
-        return listError(out, windowStart, after, failures);
+        return listError(out, windowStart, ranAt, after, failures);
       }
       if (invoice.status !== "paid") {
         out.unread.push({ id, reason: "not_paid" });
@@ -224,10 +251,11 @@ export async function readPaidInvoices(options: {
         }
       }
       after = id;
-      out.cursor = { windowStart, after };
+      out.cursor = { windowStart, after, ranAt };
     }
     if (!got.hasMore) {
       out.cursor = null;
+      out.readUpTo = ranAt;
       out.stopped = "done";
       return out;
     }
@@ -240,45 +268,51 @@ export async function readPaidInvoices(options: {
  * that keeps failing is given up after MAX_LIST_FAILURES runs (reported)
  * instead of holding every run at the same place.
  */
-function listError(out: ChargeReadResult, windowStart: number, after: string | null, failures: number): ChargeReadResult {
+function listError(out: ChargeReadResult, windowStart: number, ranAt: number, after: string | null, failures: number): ChargeReadResult {
   out.stopped = "list_error";
   // A failure on a fresh window's first page leaves nothing to resume: the
   // next run starts the window again. Invoices read earlier in this run moved
   // the cursor, so the count starts again from there.
   const progressed = out.invoices.length + out.unread.length > 0;
-  out.cursor = after ? { windowStart, after, failures: progressed ? 1 : failures + 1 } : null;
+  out.cursor = after ? { windowStart, after, ranAt, failures: progressed ? 1 : failures + 1 } : null;
   return out;
 }
 
 /**
  * One paid invoice by id, whole, for an id a run set aside as unread
- * (`GET /v1/invoices/<id>`, then its lines as above). Null when it still
- * cannot be read whole or is not a paid invoice of ours; the caller keeps it
- * for a later run and never decides it before.
+ * (`GET /v1/invoices/<id>`, then its lines as above). `final` says the id can
+ * never be read as a paid invoice of ours (not found, not paid, another id):
+ * the caller reports it and stops trying. Otherwise it is tried on a later
+ * run and never decided before. `maxCalls` is what is left of the run's own
+ * MAX_CALLS, so retries share the run's cap.
  */
 export async function readPaidInvoice(options: {
   get: StripeGet;
   id: string;
   until: number;
+  maxCalls: number;
   clock?: () => number;
-}): Promise<Record<string, unknown> | null> {
+}): Promise<{ invoice: Record<string, unknown>; calls: number } | { reason: string; final: boolean; calls: number }> {
   const { get, id, until } = options;
-  if (!INVOICE_ID.test(id)) return null;
+  if (!INVOICE_ID.test(id)) return { reason: "bad_id", final: true, calls: 0 };
   const clock = options.clock ?? Date.now;
   let calls = 0;
-  const hasTime = () => calls < MAX_LINE_PAGES + 1 && clock() < until;
-  if (!hasTime()) return null;
+  const cap = Math.max(0, Math.min(options.maxCalls, MAX_LINE_PAGES + 1));
+  const hasTime = () => calls < cap && clock() < until;
+  if (!hasTime()) return { reason: "budget", final: false, calls };
   let invoice: Record<string, unknown> | null;
   try {
     calls += 1;
     invoice = record(await get(`/invoices/${id}`));
-  } catch {
-    return null;
+  } catch (error) {
+    const status = (error as { status?: unknown }).status;
+    return status === 404 ? { reason: "not_found", final: true, calls } : { reason: "not_answered", final: false, calls };
   }
-  if (!invoice || invoice.id !== id || invoice.status !== "paid") return null;
+  if (!invoice || invoice.id !== id) return { reason: "unexpected", final: false, calls };
+  if (invoice.status !== "paid") return { reason: "not_paid", final: true, calls };
   const read = await wholeLines(invoice, id, get, hasTime, () => {
     calls += 1;
   });
-  if ("reason" in read) return null;
-  return { ...invoice, lines: { ...record(invoice.lines), data: read.lines, has_more: false } };
+  if ("reason" in read) return { reason: read.reason, final: read.reason === "too_many_lines", calls };
+  return { invoice: { ...invoice, lines: { ...record(invoice.lines), data: read.lines, has_more: false } }, calls };
 }

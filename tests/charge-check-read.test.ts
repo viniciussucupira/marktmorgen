@@ -161,7 +161,7 @@ part("A list page not answered stops with the cursor unchanged");
   is("stopped list_error", r.stopped, "list_error");
   is("cursor after the 100 read", r.cursor?.after, "in_0100");
   const f2 = fake(10, { listFailAt: 1 });
-  const cursor = { windowStart: now - WINDOW_SECONDS, after: "in_0003" };
+  const cursor = { windowStart: now - WINDOW_SECONDS, after: "in_0003", ranAt: now };
   const r2 = await readPaidInvoices({ get: f2.get, now, until: far, cursor });
   is("a resumed run that fails keeps its place and counts the failure", r2.cursor, { ...cursor, failures: 1 });
   let c: typeof r2.cursor = r2.cursor;
@@ -206,14 +206,34 @@ part("A daily cron resumes the same window, and new charges reach the next one")
   // A charge made after the window began sits above the cursor: the next
   // fresh window reads it.
   f.all.unshift(inv(0, { created: now + 3600, id: "in_9000" }) as (typeof f.all)[number]);
-  const r3 = await readPaidInvoices({ get: f.get, now: now + 86400 * 2, until: far, cursor: r2.cursor });
+  is("the window read to its end says up to when", r2.readUpTo, now);
+  const r3 = await readPaidInvoices({ get: f.get, now: now + 86400 * 2, until: far, cursor: r2.cursor, readUpTo: r2.readUpTo });
   is("the next fresh window reads the newer charge", r3.invoices.some((i) => i.id === "in_9000"), true);
+}
+
+part("A window resumed over three runs loses nothing created meanwhile");
+{
+  const f = fake(MAX_LIST_PAGES * 100 * 2 + 300);
+  const r1 = await readPaidInvoices({ get: f.get, now, until: far });
+  // A charge made while the window is still being read, a day in.
+  f.all.unshift(inv(0, { created: now + 3600, id: "in_9001" }) as (typeof f.all)[number]);
+  const r2 = await readPaidInvoices({ get: f.get, now: now + 86400, until: far, cursor: r1.cursor });
+  const r3 = await readPaidInvoices({ get: f.get, now: now + 86400 * 2, until: far, cursor: r2.cursor });
+  is("third run finishes the window", r3.stopped, "done");
+  is("those three never saw the new charge", [r1, r2, r3].some((r) => r.invoices.some((i) => i.id === "in_9001")), false);
+  // Three days in, a fresh 48-hour window would start after it.
+  const before = f.calls.length;
+  const r4 = await readPaidInvoices({ get: f.get, now: now + 86400 * 3, until: far, cursor: r3.cursor, readUpTo: r3.readUpTo });
+  is("the next window reaches back to the first run", new URLSearchParams(f.calls[before].split("?")[1]).get("created[gte]"), String(now));
+  is("and reads the new charge", r4.invoices.some((i) => i.id === "in_9001"), true);
+  const g = await readPaidInvoices({ get: f.get, now: now + CURSOR_MAX_AGE_SECONDS + 86400, until: far, readUpTo: now });
+  is("a stretch too old to reach is reported, not hidden", g.gap, { from: now, to: now + 86400 });
 }
 
 part("Too old a window is abandoned, said, and a fresh one read");
 {
   const f = fake(5);
-  const old = { windowStart: now - CURSOR_MAX_AGE_SECONDS, after: "in_0002" };
+  const old = { windowStart: now - CURSOR_MAX_AGE_SECONDS - WINDOW_SECONDS, after: "in_0002", ranAt: now - CURSOR_MAX_AGE_SECONDS };
   const r = await readPaidInvoices({ get: f.get, now, until: far, cursor: old });
   is("reported", r.abandoned, { ...old, why: "too_old" });
   is("fresh window", new URLSearchParams(f.calls[0].split("?")[1]).get("starting_after"), null);
@@ -232,24 +252,39 @@ part("A cap on requests per run, whatever the clock");
 part("An unread invoice is read again by id");
 {
   const f = fake(3, { extraLines: { in_0002: 120 } });
-  const got = await readPaidInvoice({ get: f.get, id: "in_0002", until: far });
-  is("read whole by id", (got?.lines as { data: unknown[] }).data.length, 121);
+  const got = await readPaidInvoice({ get: f.get, id: "in_0002", until: far, maxCalls: MAX_CALLS });
+  is("read whole by id", "invoice" in got ? (got.invoice.lines as { data: unknown[] }).data.length : got, 121);
+  is("its calls counted for the run's cap", got.calls, 3);
   const f2 = fake(3, { lineFail: new Set(["in_0002"]) });
-  is("still failing: null, never decided", await readPaidInvoice({ get: f2.get, id: "in_0002", until: far }), null);
-  is("a malformed id asks nothing", await readPaidInvoice({ get: f.get, id: "../x", until: far }), null);
+  const failed = await readPaidInvoice({ get: f2.get, id: "in_0002", until: far, maxCalls: MAX_CALLS });
+  is("not answered: tried later, never decided", "reason" in failed ? [failed.reason, failed.final] : "read", ["not_answered", false]);
+  const lineOnly = fake(3, { extraLines: { in_0002: 120 } });
+  const lineGet: StripeGet = async (path) => (path.includes("/lines") ? Promise.reject(new Error("500")) : lineOnly.get(path));
+  const lf = await readPaidInvoice({ get: lineGet, id: "in_0002", until: far, maxCalls: MAX_CALLS });
+  is("its lines not answered: tried later", "reason" in lf ? [lf.reason, lf.final] : "read", ["lines_not_answered", false]);
+  const open = fake(3, { perInvoice: (n) => (n === 2 ? { status: "open" } : {}) });
+  const np = await readPaidInvoice({ get: open.get, id: "in_0002", until: far, maxCalls: MAX_CALLS });
+  is("not paid: final, reported", "reason" in np ? [np.reason, np.final] : "read", ["not_paid", true]);
+  const gone: StripeGet = async () => Promise.reject(Object.assign(new Error("404"), { status: 404 }));
+  const nf = await readPaidInvoice({ get: gone, id: "in_0002", until: far, maxCalls: MAX_CALLS });
+  is("not found: final", "reason" in nf ? [nf.reason, nf.final] : "read", ["not_found", true]);
+  const capped = await readPaidInvoice({ get: f.get, id: "in_0002", until: far, maxCalls: 2 });
+  is("the run's cap left holds the retry too", "reason" in capped ? [capped.reason, capped.final, capped.calls] : "read", ["budget", false, 2]);
+  const bad = await readPaidInvoice({ get: f.get, id: "../x", until: far, maxCalls: MAX_CALLS });
+  is("a malformed id asks nothing", bad.calls, 0);
 }
 
 part("Cursor rules");
 {
   const f = fake(5);
-  const stale = { windowStart: now - CURSOR_MAX_AGE_SECONDS - 1, after: "in_0002" };
+  const stale = { windowStart: now - CURSOR_MAX_AGE_SECONDS - 1, after: "in_0002", ranAt: now - CURSOR_MAX_AGE_SECONDS - 1 };
   await readPaidInvoices({ get: f.get, now, until: far, cursor: stale });
   is("a stale cursor starts a fresh window", new URLSearchParams(f.calls[0].split("?")[1]).get("starting_after"), null);
   const f2 = fake(5);
-  await readPaidInvoices({ get: f2.get, now, until: far, cursor: { windowStart: now - WINDOW_SECONDS, after: "bogus" } });
+  await readPaidInvoices({ get: f2.get, now, until: far, cursor: { windowStart: now - WINDOW_SECONDS, after: "bogus", ranAt: now } });
   is("a malformed cursor is not sent to Stripe", new URLSearchParams(f2.calls[0].split("?")[1]).get("starting_after"), null);
   const f3 = fake(5);
-  const r = await readPaidInvoices({ get: f3.get, now, until: far, cursor: { windowStart: now - WINDOW_SECONDS, after: "in_0002" } });
+  const r = await readPaidInvoices({ get: f3.get, now, until: far, cursor: { windowStart: now - WINDOW_SECONDS, after: "in_0002", ranAt: now } });
   is("a good cursor carries on after its invoice", r.invoices.map((i) => i.id), ["in_0003", "in_0004", "in_0005"]);
   is("calls counted", r.calls, 1);
 }
