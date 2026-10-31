@@ -419,7 +419,15 @@ export async function sesSentLast24h(now = Date.now()): Promise<number | null> {
   if (!isRedisConfigured()) return null;
   try {
     const keys = Array.from({ length: 24 }, (_, i) => hourKey(now - i * 3_600_000));
-    const rows: unknown = await redisPipeline(keys.map((key) => ["GET", key]));
+    // One Redis command, not one command for every hour: a workflow can need
+    // this proof before recording a bounded wait (tests/workflow-retries).
+    const reply: unknown = await redisPipeline([["MGET", ...keys]]);
+    if (!Array.isArray(reply)) return null;
+    const replyLength = Object.getOwnPropertyDescriptor(reply, "length");
+    if (!replyLength || !("value" in replyLength) || replyLength.value !== 1) return null;
+    const replyItem = Object.getOwnPropertyDescriptor(reply, "0");
+    if (!replyItem || !("value" in replyItem)) return null;
+    const rows: unknown = replyItem.value;
     if (!Array.isArray(rows)) return null;
     const length = Object.getOwnPropertyDescriptor(rows, "length");
     if (!length || !("value" in length) || length.value !== 24) return null;

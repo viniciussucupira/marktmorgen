@@ -469,9 +469,18 @@ async function main(): Promise<void> {
     rows[23] = value;
     return rows;
   };
-  const usageCases: [string, () => unknown][] = [
-    ["missing envelope", () => undefined],
-    ["not an array", () => ({ length: 24, 0: "10" })],
+  const usageCases: [string, () => unknown, boolean?][] = [
+    // The optional third member means the answer replaces the whole pipeline
+    // envelope; otherwise it is the sole MGET result inside that envelope.
+    ["missing pipeline envelope", () => undefined, true],
+    ["pipeline not an array", () => ({ length: 1, 0: Array(24).fill(null) }), true],
+    ["empty pipeline envelope", () => [], true],
+    ["sparse pipeline envelope", () => new Array(1), true],
+    ["inherited pipeline member", () => Object.setPrototypeOf(new Array(1), { 0: Array(24).fill(null) }), true],
+    ["pipeline getter", () => Object.defineProperty(new Array(1), "0", { get() { usageGetters += 1; return Array(24).fill(null); } }), true],
+    ["oversized pipeline envelope", () => [Array(24).fill(null), null], true],
+    ["missing MGET rows", () => undefined],
+    ["MGET rows not an array", () => ({ length: 24, 0: "10" })],
     ["empty envelope", () => []],
     ["short envelope", () => Array(23).fill(null)],
     ["sparse envelope", () => new Array(24)],
@@ -514,7 +523,7 @@ async function main(): Promise<void> {
   const usageKey = `nl:ses:h:${new Date().toISOString().slice(0, 13)}`;
   const oldUsage = redis.run(["GET", usageKey]);
   await originalPipeline([["SET", usageKey, "10", "EX", 26 * 3_600]]);
-  for (const [name, answer] of usageCases) {
+  for (const [name, answer, wholeEnvelope = false] of usageCases) {
     account = approved();
     askAgain();
     clear();
@@ -522,9 +531,11 @@ async function main(): Promise<void> {
     let reads = 0;
     redis.pipeline = async (commands) => {
       const reply = await originalPipeline(commands);
-      if (commands.length === 24 && commands.every(command => command[0] === "GET" && String(command[1]).startsWith("nl:ses:h:"))) {
+      if (commands.length === 1 && commands[0][0] === "MGET" && commands[0].length === 25 &&
+          commands[0].slice(1).every(key => String(key).startsWith("nl:ses:h:"))) {
         reads += 1;
-        return answer() as unknown[];
+        const value = answer();
+        return (wholeEnvelope ? value : [value]) as unknown[];
       }
       return reply;
     };
@@ -536,7 +547,7 @@ async function main(): Promise<void> {
     } finally {
       redis.pipeline = originalPipeline;
     }
-    is(`${name}: each existing call reads exactly its original 24-position pipeline`, reads, 3);
+    is(`${name}: each existing call uses one MGET for exactly 24 hourly buckets`, reads, 3);
     is(`${name}: neither provider accepted and the stored usage remains`,
       [amazon.length, resend.length, redis.run(["GET", usageKey]), await sentThisMonth()], [0, 0, "10", counted]);
   }
