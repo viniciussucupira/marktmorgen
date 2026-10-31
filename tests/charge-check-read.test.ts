@@ -1,4 +1,4 @@
-import { CHARGE_CHECK_VERSION, CURSOR_MAX_AGE_SECONDS, MAX_CALLS, MAX_LINE_PAGES, MAX_LIST_FAILURES, MAX_LIST_PAGES, WINDOW_SECONDS, readPaidInvoice, readPaidInvoices, type StripeGet } from "@/lib/charge-check-read";
+import { CHARGE_CHECK_VERSION, CLOCK_MARGIN_SECONDS, CURSOR_MAX_AGE_SECONDS, MAX_CALLS, MAX_LINE_PAGES, MAX_LIST_FAILURES, MAX_LIST_PAGES, WINDOW_SECONDS, readPaidInvoice, readPaidInvoices, type StripeGet } from "@/lib/charge-check-read";
 import { done, is, part } from "./check";
 
 const now = 1_790_000_000;
@@ -172,6 +172,7 @@ part("A list page not answered stops with the cursor unchanged");
     c = last.cursor;
   }
   is("after the cap of failures in a row the window is abandoned and reported", last.abandoned?.why, "list_failing");
+  is("and counts as reported, so the failing page is not reached again by every window", last.readUpTo, cursor.ranAt - CLOCK_MARGIN_SECONDS);
   const fresh = fake(10);
   const r3 = await readPaidInvoices({ get: fresh.get, now: now + 86400 * 4, until: far, cursor: { ...cursor, failures: MAX_LIST_FAILURES } });
   is("and a fresh window is read instead of the failing page", r3.stopped, "done");
@@ -206,7 +207,7 @@ part("A daily cron resumes the same window, and new charges reach the next one")
   // A charge made after the window began sits above the cursor: the next
   // fresh window reads it.
   f.all.unshift(inv(0, { created: now + 3600, id: "in_9000" }) as (typeof f.all)[number]);
-  is("the window read to its end says up to when", r2.readUpTo, now);
+  is("the window read to its end says up to when, with the clock margin", r2.readUpTo, now - CLOCK_MARGIN_SECONDS);
   const r3 = await readPaidInvoices({ get: f.get, now: now + 86400 * 2, until: far, cursor: r2.cursor, readUpTo: r2.readUpTo });
   is("the next fresh window reads the newer charge", r3.invoices.some((i) => i.id === "in_9000"), true);
 }
@@ -224,10 +225,13 @@ part("A window resumed over three runs loses nothing created meanwhile");
   // Three days in, a fresh 48-hour window would start after it.
   const before = f.calls.length;
   const r4 = await readPaidInvoices({ get: f.get, now: now + 86400 * 3, until: far, cursor: r3.cursor, readUpTo: r3.readUpTo });
-  is("the next window reaches back to the first run", new URLSearchParams(f.calls[before].split("?")[1]).get("created[gte]"), String(now));
+  is("the next window reaches back to the first run", new URLSearchParams(f.calls[before].split("?")[1]).get("created[gte]"), String(now - CLOCK_MARGIN_SECONDS));
   is("and reads the new charge", r4.invoices.some((i) => i.id === "in_9001"), true);
   const g = await readPaidInvoices({ get: f.get, now: now + CURSOR_MAX_AGE_SECONDS + 86400, until: far, readUpTo: now });
   is("a stretch too old to reach is reported, not hidden", g.gap, { from: now, to: now + 86400 });
+  const resumed = await readPaidInvoices({ get: f.get, now: now + CURSOR_MAX_AGE_SECONDS - 60, until: far, readUpTo: now - 86400, cursor: { windowStart: now - 86400, after: "in_0010", ranAt: now } });
+  is("no gap is claimed while a window that covers it is resumed", resumed.gap, null);
+  is("a stop before the end leaves readUpTo for the caller to keep", (await readPaidInvoices({ get: f.get, now, until: 0 })).readUpTo, null);
 }
 
 part("Too old a window is abandoned, said, and a fresh one read");

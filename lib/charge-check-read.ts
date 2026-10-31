@@ -30,6 +30,12 @@
  *   that window's first run (`readUpTo`), so they are read then. An invoice
  *   can be handed on more than once: the caller decides each invoice id once.
  *
+ * Known limit, for the unit that calls it: windows filter on `created`, so
+ * an invoice created more than 48 hours before it was paid (a renewal paid
+ * on a late retry, for instance) is not in any window; the caller must also
+ * read the invoices of the subscriptions it already holds (by
+ * `subscription=`) or check by payment date. Not done here.
+ *
  * It calls only the `get` it is handed, so it is tested against a fake
  * Stripe; `platformGet` is the real one. Nothing runs it yet: the cron and
  * the records it decides against come with the next units.
@@ -46,6 +52,8 @@ export const WINDOW_SECONDS = 48 * 60 * 60;
  * forever. Measured from the window's first run (`ranAt`).
  */
 export const CURSOR_MAX_AGE_SECONDS = 7 * 24 * 60 * 60;
+/** How far our clock may be ahead of Stripe's: `readUpTo` is kept that much earlier. */
+export const CLOCK_MARGIN_SECONDS = 5 * 60;
 /** List errors in a row at one cursor before that window is abandoned, reported. */
 export const MAX_LIST_FAILURES = 3;
 /** Requests per run, whatever the clock says. */
@@ -86,7 +94,9 @@ export type ChargeReadResult = {
    * this time has been handed on or set aside as unread. The caller passes it
    * back as `readUpTo`, so the next fresh window starts no later than it and
    * nothing created while a window was being resumed falls between windows.
-   * Null otherwise: keep the one you had.
+   * Also set when a window is abandoned (it is reported in `abandoned`).
+   * Null otherwise: keep the one you had. Kept CLOCK_MARGIN_SECONDS earlier
+   * than the window's first run.
    */
   readUpTo: number | null;
   /** A stretch the next window could not reach back to (older than CURSOR_MAX_AGE_SECONDS), to be reported; null otherwise. */
@@ -191,7 +201,7 @@ export async function readPaidInvoices(options: {
   const upTo = Number.isSafeInteger(options.readUpTo) ? (options.readUpTo as number) : null;
   let gap: ChargeReadResult["gap"] = null;
   let freshStart = now - WINDOW_SECONDS;
-  if (upTo !== null && upTo < freshStart) {
+  if (!resume && upTo !== null && upTo < freshStart) {
     freshStart = Math.max(upTo, floor);
     if (upTo < floor) gap = { from: upTo, to: floor };
   }
@@ -199,7 +209,18 @@ export async function readPaidInvoices(options: {
   const ranAt = resume ? resume.ranAt : now;
   let after = resume ? resume.after : null;
 
-  const out: ChargeReadResult = { invoices: [], unread: [], abandoned, cursor: resume, readUpTo: null, gap, stopped: "done", calls: 0 };
+  // An abandoned window is reported, so it counts as read up to its first
+  // run: a page that keeps failing is not reached again by every later window.
+  const out: ChargeReadResult = {
+    invoices: [],
+    unread: [],
+    abandoned,
+    cursor: resume,
+    readUpTo: abandoned ? abandoned.ranAt - CLOCK_MARGIN_SECONDS : null,
+    gap,
+    stopped: "done",
+    calls: 0,
+  };
   const hasTime = () => out.calls < MAX_CALLS && clock() < until;
   const why = () => (out.calls >= MAX_CALLS ? "call_cap" : "budget");
   const count = () => {
@@ -255,7 +276,7 @@ export async function readPaidInvoices(options: {
     }
     if (!got.hasMore) {
       out.cursor = null;
-      out.readUpTo = ranAt;
+      out.readUpTo = ranAt - CLOCK_MARGIN_SECONDS;
       out.stopped = "done";
       return out;
     }
@@ -305,10 +326,11 @@ export async function readPaidInvoice(options: {
     calls += 1;
     invoice = record(await get(`/invoices/${id}`));
   } catch (error) {
-    const status = (error as { status?: unknown }).status;
+    const status = (error as { status?: unknown } | null | undefined)?.status;
     return status === 404 ? { reason: "not_found", final: true, calls } : { reason: "not_answered", final: false, calls };
   }
-  if (!invoice || invoice.id !== id) return { reason: "unexpected", final: false, calls };
+  if (!invoice) return { reason: "unexpected", final: false, calls };
+  if (invoice.id !== id) return { reason: "another_invoice", final: true, calls };
   if (invoice.status !== "paid") return { reason: "not_paid", final: true, calls };
   const read = await wholeLines(invoice, id, get, hasTime, () => {
     calls += 1;
