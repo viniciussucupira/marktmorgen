@@ -405,6 +405,62 @@ async function main(): Promise<void> {
       [amazon.length, resend.length], handedBefore ? [0, 1] : [1, 0]);
   }
 
+  part("A new provider handoff needs its own exact acknowledgement");
+  let handoffGetters = 0, handoffOutside = 0;
+  const handoffWrites: [string, () => unknown][] = [
+    ["undefined", () => undefined], ["null", () => null],
+    ["non-array", () => ({ 0: "OK", length: 1 })], ["empty", () => []],
+    ["sparse", () => new Array(1)],
+    ["inherited", () => Object.setPrototypeOf(new Array(1), { 0: "OK" })],
+    ["accessor", () => Object.defineProperty(new Array(1), "0", { get() { handoffGetters += 1; return "OK"; } })],
+    ["null-member", () => [null]], ["wrong-member", () => [true]],
+    ["symbol", () => [Symbol("OK")]],
+    ["extra", () => new Proxy(["OK", "extra"], {
+      getOwnPropertyDescriptor(target, key) {
+        if (key === "0") handoffOutside += 1;
+        return Reflect.getOwnPropertyDescriptor(target, key);
+      },
+    })],
+    ["lost", () => { throw new Error("synthetic handoff acknowledgement lost"); }],
+  ];
+  for (const applied of [false, true]) for (const [name, answer] of handoffWrites) {
+    account = approved({ ProductionAccessEnabled: false });
+    askAgain(); clear();
+    const batchKey = `bc:handoff-write:${applied}:${name}`;
+    const handed = `nl:ses:rest:${createHash("sha256").update(batchKey).digest("hex").slice(0, 40)}`;
+    const counted = [await sesSentLast24h(), await sentThisMonth()];
+    let writes = 0, deletes = 0;
+    redis.pipeline = async commands => {
+      if (commands.some(command => command[0] === "DEL" && command[1] === handed)) deletes += 1;
+      if (commands.length === 1 && commands[0][0] === "SET" && commands[0][1] === handed) {
+        writes += 1;
+        if (applied) await originalPipeline(commands);
+        return answer() as unknown[];
+      }
+      return originalPipeline(commands);
+    };
+    try {
+      is(`${applied}/${name}: unknown handoff never posts to either sender`,
+        [await sendBatch([letter("handoff-write@example.com")], batchKey, { by: "company" }), amazon.length, resend.length],
+        ["retry", 0, 0]);
+    } finally { redis.pipeline = originalPipeline; }
+    is(`${applied}/${name}: one write and no destructive recovery`, [writes, deletes, redis.run(["GET", handed])], [1, 0, applied ? "1" : null]);
+    is(`${applied}/${name}: uncertain write grants no known send count`, [await sesSentLast24h(), await sentThisMonth()], counted);
+    // Amazon is now available, but a committed handoff still owns the choice.
+    account = approved(); askAgain(); clear();
+    is(`${applied}/${name}: the next invocation follows actual stored evidence`,
+      await sendBatch([letter("handoff-write@example.com")], batchKey, { by: "company" }), "sent");
+    is(`${applied}/${name}: exactly one provider sends`, [amazon.length, resend.length], applied ? [0, 1] : [1, 0]);
+    is(`${applied}/${name}: an applied handoff stays retained`, redis.run(["GET", handed]), applied ? "1" : null);
+  }
+  is("handoff acknowledgement getters and excess members never execute", [handoffGetters, handoffOutside], [0, 0]);
+  account = approved({ ProductionAccessEnabled: false }); askAgain(); clear();
+  const acknowledgedHandoffKey = "bc:handoff-write:own-ok-control";
+  is("a confirmed own OK permits the first fallback",
+    await sendBatch([letter("handoff-ok@example.com")], acknowledgedHandoffKey, { by: "company" }), "sent");
+  is("confirmed fallback chooses Resend once", [amazon.length, resend.length], [0, 1]);
+  account = approved(); askAgain();
+
   part("Unknown SES daily usage never grants a batch or changes provider");
   let usageGetters = 0;
   let usageOutside = 0;

@@ -1,6 +1,5 @@
 import { PendingSubmit } from "@/components/pending-submit";
-import Link from "next/link";
-import { Logo } from "@/components/logo";
+import { MorningLogo } from "@/components/morning-header";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { prefillHandle } from "@/lib/handle-prefill";
@@ -33,12 +32,10 @@ export default async function ConfirmPage({
   const handle = prefillHandle(params.handle);
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-paper text-ink">
+    <div className="relative min-h-screen overflow-hidden">
 
       <main id="content" className="relative mx-auto max-w-xl px-4 py-16">
-        <Link href="/" className="inline-block w-fit rounded-[10px]" aria-label="Marktmorgen, home">
-          <Logo />
-        </Link>
+        <MorningLogo />
 
         <h1 className="t-h1 mt-6">
           One tap and you are in
