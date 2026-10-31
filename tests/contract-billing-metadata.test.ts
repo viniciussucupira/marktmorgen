@@ -76,7 +76,7 @@ test('missed-return observations and subscription search cannot adopt a funded p
  try{
   activationObservations.calls.length=0;activationObservations.accept=false;
   assert.equal(await startedFromObservedSubscription(owner,subscription),null);assert.equal(reads,0);
-  assert.equal((await findStoreSubscriptions(owner)).live,null);assert.equal(reads,1);
+  await assert.rejects(findStoreSubscriptions(owner),/Subscription search activation is unknown/);assert.equal(reads,1);
   activationObservations.accept=true;
   assert.equal((await startedFromObservedSubscription(owner,subscription))?.subscriptionId,subscription.id);assert.equal(reads,1);
   assert.equal((await findStoreSubscriptions(owner)).live?.subscriptionId,subscription.id);assert.equal(reads,2);assert.equal(writes,0);
@@ -381,6 +381,9 @@ test('subscription search requires a complete bounded page before treating it as
  const moreGetter=Object.defineProperty({data:[]},'has_more',{get(){getterCalls++;return false;}});
  const cursorGetter=Object.defineProperty({data:[],has_more:false},'next_page',{get(){getterCalls++;return null;}});
  const memberGetter=Object.defineProperty([],'0',{get(){getterCalls++;return {};},configurable:true});
+ const idGetter=Object.defineProperty({status:'canceled',created:1,metadata:{store:'harbor'},customer:{id:'cus_Test000001',email:owner.email}},'id',{get(){getterCalls++;return 'sub_Test000001';}});
+ const customerGetter=Object.defineProperty({id:'sub_Test000001',status:'canceled',created:1,metadata:{store:'harbor'}},'customer',{get(){getterCalls++;return {id:'cus_Test000001',email:owner.email};}});
+ const partialIncomplete={id:'sub_Test000001',status:'incomplete',metadata:{store:'harbor'},customer:{id:'cus_Test000001',email:owner.email}};
  const inheritedMember=Array(1);Object.setPrototypeOf(inheritedMember,{'0':{},__proto__:Array.prototype});
  const cases:unknown[]=[
   undefined,null,[],{}, {data:null,has_more:false},{data:{},has_more:false},
@@ -388,8 +391,12 @@ test('subscription search requires a complete bounded page before treating it as
   {data:[],has_more:'false'},{data:[],has_more:0},{data:[],has_more:true},
   {data:[],has_more:false,next_page:'next_unknown'},
   {data:[null],has_more:false},{data:['unknown'],has_more:false},
-  {data:[[]],has_more:false},{data:Array(1),has_more:false},
+  {data:[[]],has_more:false},{data:[{}],has_more:false},{data:Array(1),has_more:false},
   {data:inheritedMember,has_more:false},{data:memberGetter,has_more:false},
+  {data:[idGetter],has_more:false},{data:[customerGetter],has_more:false},
+  {data:[partialIncomplete],has_more:false},
+  {data:[{...partialIncomplete,created:1,customer:{id:'cus_Test000001'}}],has_more:false},
+  {data:[{...partialIncomplete,created:1,metadata:{store:'unqueried'}}],has_more:false},
   {data:Array.from({length:101},()=>({})),has_more:false},
   Object.assign(Object.create({data:[]}),{has_more:false}),
   Object.assign(Object.create({has_more:false}),{data:[]}),

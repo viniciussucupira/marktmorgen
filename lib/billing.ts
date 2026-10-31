@@ -1434,6 +1434,51 @@ export async function startedFromObservedSubscription(store:Store,subscription:R
 
 /** How many of a store's subscriptions one search looks at. */
 const SEARCH_LIMIT = 100;
+const SEARCH_STATUSES = new Set(["active", "trialing", "past_due", "unpaid", "canceled", "incomplete", "incomplete_expired", "paused"]);
+
+/**
+ * Provider search members are evidence only when their identity, ownership
+ * fields and cancellation clock are explicit data properties. Stripe JSON is
+ * ordinary data; accessors, inherited fields and partial expanded customers
+ * are therefore an unknown observation, never proof that checkout is safe.
+ */
+function searchDataRecord(value: unknown, label: string): Record<string, unknown> {
+  if (!value || typeof value !== "object" || Array.isArray(value) ||
+      ![Object.prototype, null].includes(Object.getPrototypeOf(value))) {
+    throw new Error(`Subscription search ${label} is unknown`);
+  }
+  const copy: Record<string, unknown> = Object.create(null);
+  for (const key of Reflect.ownKeys(value)) {
+    if (typeof key !== "string") throw new Error(`Subscription search ${label} is unknown`);
+    const descriptor = Object.getOwnPropertyDescriptor(value, key);
+    if (!descriptor || !("value" in descriptor)) throw new Error(`Subscription search ${label} is unknown`);
+    copy[key] = descriptor.value;
+  }
+  return copy;
+}
+
+function searchMember(value: unknown, handles: Set<string>): Record<string, unknown> {
+  const member = searchDataRecord(value, "member");
+  if (typeof member.id !== "string" || !SUBSCRIPTION_PATTERN.test(member.id) ||
+      typeof member.status !== "string" || !SEARCH_STATUSES.has(member.status) ||
+      !Number.isSafeInteger(member.created) || (member.created as number) < 0) {
+    throw new Error("Subscription search member is unknown");
+  }
+  const metadata = searchDataRecord(member.metadata, "member metadata");
+  const named = metadata.store;
+  if (typeof named !== "string" || !HANDLE_PATTERN.test(named) || !handles.has(named)) {
+    throw new Error("Subscription search member ownership is unknown");
+  }
+  const customer = searchDataRecord(member.customer, "expanded customer");
+  if (typeof customer.id !== "string" || !CUSTOMER_PATTERN.test(customer.id) ||
+      !Object.prototype.hasOwnProperty.call(customer, "email") ||
+      customer.email !== null && typeof customer.email !== "string") {
+    throw new Error("Subscription search expanded customer is unknown");
+  }
+  member.metadata = metadata;
+  member.customer = customer;
+  return member;
+}
 
 /**
  * What Stripe already has for this store, looked up before a new checkout is
@@ -1482,21 +1527,22 @@ export async function findStoreSubscriptions(
       cursor && (!("value" in cursor) || cursor.value !== null && cursor.value !== undefined) ||
       data.value.length > SEARCH_LIMIT) throw new Error("Subscription search page is incomplete");
   const entries: Record<string, unknown>[] = [];
+  const coveredHandles = new Set(handles);
   for (let index = 0; index < data.value.length; index++) {
     const entry = Object.getOwnPropertyDescriptor(data.value, String(index));
-    if (!entry || !("value" in entry) || !entry.value || typeof entry.value !== "object" || Array.isArray(entry.value)) {
-      throw new Error("Subscription search member is unknown");
-    }
-    entries.push(entry.value as Record<string, unknown>);
+    if (!entry || !("value" in entry)) throw new Error("Subscription search member is unknown");
+    entries.push(searchMember(entry.value, coveredHandles));
   }
   const rows = entries
     .filter((subscription) => ownedBy(store, subscription))
-    .sort((a, b) => (Number(b.created) || 0) - (Number(a.created) || 0));
+    .sort((a, b) => (b.created as number) - (a.created as number));
 
   let live: StartedSubscription | null = null;
   for (const subscription of rows) {
-    live = await startedFromObservedSubscription(store,subscription);
-    if (live) break;
+    if (stateOf(subscription).state !== "active") continue;
+    live = await startedFromObservedSubscription(store, subscription);
+    if (!live) throw new Error("Subscription search activation is unknown");
+    break;
   }
   const last = rows.map((subscription) => customerOf(subscription).id).find((id) => CUSTOMER_PATTERN.test(id));
   // Not paying, but Stripe could still charge them: a card being retried, or
