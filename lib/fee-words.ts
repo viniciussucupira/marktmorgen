@@ -100,7 +100,6 @@ export function feeWords(live = COMMISSION_PLANS_PUBLISHED) {
       cardBody: "Our only income is your plan. Stripe charges its own card fee on your account, line by line.",
       /** Who holds the money, in one answer. */
       whoHolds: "You do, in your own Stripe account. We take 0% of your sales and charge only a subscription, paid monthly or yearly.",
-      whoHoldsLong: "You do. Payments go to your own Stripe account through direct charges, so payouts follow your Stripe settings and we never sit between you and your buyer's money. We charge a monthly subscription and take 0% of your sales.",
       /** "...a buyer can pay for it on your account, with nothing taken on top." */
       onTop: "with nothing taken on top",
       /** The invite page. */
@@ -165,7 +164,6 @@ export function feeWords(live = COMMISSION_PLANS_PUBLISHED) {
     cardTitle: "One share, set by your plan",
     cardBody: `${store}, ${studio} or none of each sale, taken by Stripe from the sale. Stripe charges its own card fee on your account, line by line.`,
     whoHolds: `You do, in your own Stripe account. We charge a subscription, monthly or yearly, and the share of each sale your plan sets, which Stripe takes from the sale.`,
-    whoHoldsLong: `You do. Payments go to your own Stripe account through direct charges, so payouts follow your Stripe settings and we never sit between you and your buyer's money. We charge a subscription and the share of each sale your plan sets: ${store}, ${studio}, or none on Scale.`,
     onTop: "with only your plan's share taken from it",
     inviteLead: `and your plan's share of each sale is the only thing we take from it: ${store}, ${studio}, or none on Scale.`,
     inviteMeta: "with your plan's share of each sale and nothing more",

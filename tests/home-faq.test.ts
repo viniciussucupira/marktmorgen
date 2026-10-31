@@ -38,6 +38,8 @@ test("home answers match the code",()=>{
  assert.ok(HOME_QUESTIONS[3].links?.some(link=>link.href==="/platform/switching-to-marktmorgen"));
  assert.match(HOME_QUESTIONS[3].a,/contacts who agreed/);assert.match(HOME_QUESTIONS[3].a,/yourself/);
  assert.match(HOME_QUESTIONS[0].a,/no set time/);
+ assert.match(HOME_QUESTIONS[4].a,/not charged again/);assert.match(HOME_QUESTIONS[4].a,/unless a refund applies/);
+ assert.match(HOME_QUESTIONS[2].a,/own Stripe account/);assert.match(HOME_QUESTIONS[2].a,/payout schedule/);
 });
 test("what left the home page still lives in the help center",()=>{
  const items=HELP_SECTIONS.flatMap(section=>section.items);

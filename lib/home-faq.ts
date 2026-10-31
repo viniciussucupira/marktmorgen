@@ -47,7 +47,7 @@ export function homeQuestions(): HomeQuestion[] {
     },
     {
       q: "Where does the money from my sales go?",
-      a: "Into your own Stripe account. Each sale is charged there directly and paid out on your Stripe settings; we never hold it.",
+      a: "Into your own Stripe account. Each sale is charged there directly and paid out to your bank on your Stripe payout schedule; we never hold it.",
       links: [{ label: "How payments reach you", href: "/platform/your-stripe" }],
     },
     {
@@ -57,7 +57,7 @@ export function homeQuestions(): HomeQuestion[] {
     },
     {
       q: "Can I cancel anytime?",
-      a: "Yes. Cancel in your studio at any time: you are not charged again, and you keep access until the period you paid for ends.",
+      a: "Yes. Cancel in your studio at any time: you are not charged again, and you keep access until the paid period ends, unless a refund applies.",
       links: [{ label: "Cancellation terms", href: "/terms#closing" }, { label: "Refund policy", href: "/refunds" }],
     },
     {
