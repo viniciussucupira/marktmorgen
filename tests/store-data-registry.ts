@@ -201,6 +201,7 @@ export const FAMILIES: Record<string, Family> = {
   "nl:courses:lock@app/api/cron/courses/route.ts": lock("The courses job"),
   "nl:dc:lock@app/api/cron/discord/route.ts": lock("The Discord job"),
   "nl:imports:lock@app/api/cron/imports/route.ts": lock("The imports job"),
+  "nl:@lib/backup-export.ts": company("Not a key: the start of every key the backup export copies (273 [BK1])", "Read only: SCAN with MATCH nl:*, then DUMP and PEXPIRETIME of each key found, under a command budget, a row cap and a size cap, all set before any is sent; nothing is written. Built and off: nothing calls it. Each key family keeps its own bound."),
   "nl:@lib/backup-codec.ts": company("Namespace filter for offline backup rows", "Not a Redis key or write: startsWith validates imported synthetic/exported names; codec has no provider adapter or persistence. Actual source key families retain their own bounds."),
   "nl:mail-check:last@app/api/cron/mail-check/route.ts": company("When the mail check last ran", "One key, the company's job."),
   "nl:indexnow:sent@lib/indexnow.ts": company("The site's own pages already announced to IndexNow", "One set, the company's: only addresses from its own sitemap (app/sitemap.ts), each once, so it is as large as the sitemap and never holds a store's data."),
