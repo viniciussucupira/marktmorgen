@@ -11,7 +11,7 @@
 | Plan | Monthly / yearly price | Included limits | Net at full use, monthly / yearly | Net under the most-tax reading (the gate) | Customers needed per $100 a month of fixed cost | Today (#553) |
 | --- | --- | --- | --- | --- | --- | --- |
 | Store | **$89 / $890** | every #553 figure, none cut | 60.95% / 61.15% | 12.34% | 118 | $69 / $690 |
-| Studio | **$589 / $5,890** | every #553 figure, none cut | 61.03% / 60.76% | 12.38% | 27 | $449 / $4,490 |
+| Studio | **$599 / $5,990** | every #553 figure, none cut | 61.07% / 60.81% | 12.40% | 25 | $449 / $4,490 |
 | Scale | **$1,299 / $12,990** | every #553 figure, none cut | 61.12% / 60.80% | 12.42% | 12 | $999 / $9,990 |
 
 **Usage above the included figures: prepaid credits** (docs/pack-cost-decomposition-2026-10-18.md, option 3), sold at $50, $100, $250, $500, $1,000, each keeping 60% however it is spent (60.36%, 60.18%, 60.07%, 60.03%, 60.01% on its dearest-to-serve resource), at the rates of that document's table (list email $27.11, $21.33, $19.01, $18.32, $17.99 per 1,000).
@@ -22,7 +22,7 @@
 | Studio | 30.9% | 4.54× | 3.81× |
 | Scale | 31.0% | 2.38× | 4.68× |
 
-The minimax-regret price hedges between scenarios in which demand barely falls with price (where higher is better without end) and scenarios in which it falls fast (where the lowest price that keeps 60%, about today's, is best). **If the owner reads the competitor evidence above (today's prices are already well above the band medians and above what the regression predicts for plans with these attributes) as a sign that demand is elastic, the scenario-best prices are instead the lowest that keep 60% with every #553 figure (Store $79, Studio $469, Scale $1,019)**, and the table above says how much regret today's prices carry. No data decides between them yet.
+The minimax-regret price hedges between scenarios in which demand barely falls with price (where higher is better without end) and scenarios in which it falls fast (where the lowest price that keeps 60%, about today's, is best). **If the owner reads the competitor evidence above (today's prices are already well above the band medians and above what the regression predicts for plans with these attributes) as a sign that demand is elastic, the scenario-best prices are instead the lowest that keep 60% with every #553 figure (Store $79, Studio $479, Scale $1,019)**, and the table above says how much regret today's prices carry. No data decides between them yet.
 
 How each figure was chosen: the price is the **minimax-regret** price over the four demand scenarios among the prices that keep 60% at full use of every #553 figure (alternative A below, the owner's rule "não remover limites visíveis"); the limits are #553's, because no scenario here gives demand a reason to value a cut, and cutting is the owner's decision (alternative C prices it); credits are the decomposition's best structural option. **None of it is in force.**
 
@@ -152,16 +152,16 @@ Solver: scipy.optimize.milp (HiGHS), scipy 1.x.
 
 | Scenario | Alternative | Store | Studio | Scale | Each plan keeps 60% (checked) | Same as the exhaustive search |
 | --- | --- | --- | --- | --- | --- | --- |
-| ε = -0.5 | A | $129 | $889 | $1,989 | yes (61.81% / 61.93%; 61.93% / 61.75%; 62.01% / 61.80%) | yes |
-| ε = -0.5 | C | $129 (video 1, storage 1 GB, orders 20, store-email 7, transactional-email 15, visits 340) | $889 (ai 4, video 3, storage 4 GB, orders 45, store-email 30, transactional-email 40, list-email 700, visits 1,200) | $1,989 (ai 8, video 6, storage 8 GB, orders 150, store-email 80, transactional-email 100, list-email 1,000, visits 4,000) | yes (62.80% / 63.05%; 63.21% / 63.19%; 63.23% / 63.19%) | yes |
-| ε = -1 | A | $129 | $889 | $1,989 | yes (61.81% / 61.93%; 61.93% / 61.75%; 62.01% / 61.80%) | yes |
-| ε = -1 | C | $129 (video 1, storage 1 GB, orders 20, store-email 7, transactional-email 15, visits 340) | $889 (ai 4, video 3, storage 4 GB, orders 45, store-email 30, transactional-email 40, list-email 700, visits 1,200) | $1,989 (ai 8, video 6, storage 8 GB, orders 150, store-email 80, transactional-email 100, list-email 1,000, visits 4,000) | yes (62.80% / 63.05%; 63.21% / 63.19%; 63.23% / 63.19%) | yes |
-| ε = -1.5 | A | $79 | $469 | $1,019 | yes (60.60% / 60.82%; 60.36% / 60.02%; 60.41% / 60.00%) | yes |
-| ε = -1.5 | C | $39 (video 1, storage 1 GB, orders 20, store-email 7, transactional-email 15, visits 340) | $129 (ai 4, video 3, storage 4 GB, orders 45, store-email 30, transactional-email 40, list-email 700, visits 1,200) | $279 (ai 8, video 6, storage 8 GB, orders 150, store-email 80, transactional-email 100, list-email 1,000, visits 4,000) | yes (60.76% / 61.58%; 60.40% / 60.28%; 60.46% / 60.15%) | yes |
-| ε = -2 | A | $79 | $469 | $1,019 | yes (60.60% / 60.82%; 60.36% / 60.02%; 60.41% / 60.00%) | yes |
-| ε = -2 | C | $39 (video 1, storage 1 GB, orders 20, store-email 7, transactional-email 15, visits 340) | $129 (ai 4, video 3, storage 4 GB, orders 45, store-email 30, transactional-email 40, list-email 700, visits 1,200) | $279 (ai 8, video 6, storage 8 GB, orders 150, store-email 80, transactional-email 100, list-email 1,000, visits 4,000) | yes (60.76% / 61.58%; 60.40% / 60.28%; 60.46% / 60.15%) | yes |
+| ε = -0.5 | A | $129 | $889 | $1,989 | yes (61.81% / 61.93%; 61.92% / 61.74%; 62.01% / 61.80%) | yes |
+| ε = -0.5 | C | $129 (video 1, storage 1 GB, orders 20, store-email 7, transactional-email 15, visits 340) | $889 (ai 4, video 3, storage 4 GB, orders 45, store-email 30, transactional-email 40, list-email 700, visits 1,000) | $1,989 (ai 8, video 6, storage 8 GB, orders 150, store-email 80, transactional-email 100, list-email 1,000, visits 4,000) | yes (62.80% / 63.05%; 63.16% / 63.13%; 63.23% / 63.19%) | yes |
+| ε = -1 | A | $129 | $889 | $1,989 | yes (61.81% / 61.93%; 61.92% / 61.74%; 62.01% / 61.80%) | yes |
+| ε = -1 | C | $129 (video 1, storage 1 GB, orders 20, store-email 7, transactional-email 15, visits 340) | $889 (ai 4, video 3, storage 4 GB, orders 45, store-email 30, transactional-email 40, list-email 700, visits 1,000) | $1,989 (ai 8, video 6, storage 8 GB, orders 150, store-email 80, transactional-email 100, list-email 1,000, visits 4,000) | yes (62.80% / 63.05%; 63.16% / 63.13%; 63.23% / 63.19%) | yes |
+| ε = -1.5 | A | $79 | $479 | $1,019 | yes (60.60% / 60.82%; 60.42% / 60.08%; 60.41% / 60.00%) | yes |
+| ε = -1.5 | C | $39 (video 1, storage 1 GB, orders 20, store-email 7, transactional-email 15, visits 340) | $139 (ai 4, video 3, storage 4 GB, orders 45, store-email 30, transactional-email 40, list-email 700, visits 1,000) | $279 (ai 8, video 6, storage 8 GB, orders 150, store-email 80, transactional-email 100, list-email 1,000, visits 4,000) | yes (60.76% / 61.58%; 60.33% / 60.15%; 60.46% / 60.15%) | yes |
+| ε = -2 | A | $79 | $479 | $1,019 | yes (60.60% / 60.82%; 60.42% / 60.08%; 60.41% / 60.00%) | yes |
+| ε = -2 | C | $39 (video 1, storage 1 GB, orders 20, store-email 7, transactional-email 15, visits 340) | $139 (ai 4, video 3, storage 4 GB, orders 45, store-email 30, transactional-email 40, list-email 700, visits 1,000) | $279 (ai 8, video 6, storage 8 GB, orders 150, store-email 80, transactional-email 100, list-email 1,000, visits 4,000) | yes (60.76% / 61.58%; 60.33% / 60.15%; 60.46% / 60.15%) | yes |
 
-**What the scenarios agree on, and where they part.** Under A the lowest price that keeps 60% with every #553 figure is Store $79, Studio $469, Scale $1,019 (today $69, $449, $999): nothing near the band medians is possible without cutting figures. With |ε| at most 1 (−0.5, −1), constant-elasticity demand has no finite best price, and the program goes to the top of the grid: that is the model's shape, not a finding that the market would pay it. With |ε| above 1 (−1.5, −2) the best price is that lowest one. So the scenarios disagree on direction and agree only on the floor.
+**What the scenarios agree on, and where they part.** Under A the lowest price that keeps 60% with every #553 figure is Store $79, Studio $479, Scale $1,019 (today $69, $449, $999): nothing near the band medians is possible without cutting figures. With |ε| at most 1 (−0.5, −1), constant-elasticity demand has no finite best price, and the program goes to the top of the grid: that is the model's shape, not a finding that the market would pay it. With |ε| above 1 (−1.5, −2) the best price is that lowest one. So the scenarios disagree on direction and agree only on the floor.
 
 **Usage above the included figures, and its billing structure.** Not in the program, because the demand for usage is not known even in scenario form. docs/pack-cost-decomposition-2026-10-18.md chose the structure (prepaid credits: no non-payment exposure, fixed cents spread over larger amounts) and priced each rate at the lowest that keeps 60%; under the same logic as above, that floor is the best price when demand for usage falls fast with its price (|ε| above 1), and no finite best exists otherwise.
 
@@ -170,7 +170,7 @@ Solver: scipy.optimize.milp (HiGHS), scipy 1.x.
 | Plan | Price | Worst regret | Regret at ε −0.5 / −1 / −1.5 / −2 | Customers needed per $100 a month of fixed cost |
 | --- | --- | --- | --- | --- |
 | Store | $89 | 18.1% | 18.1% / 1.4% / 5.2% / 10.7% | 118 |
-| Studio | $589 | 19.8% | 19.8% / 1.4% / 9.8% / 19.5% | 27 |
+| Studio | $599 | 19.2% | 19.0% / 1.4% / 9.6% / 19.2% | 25 |
 | Scale | $1,299 | 20.6% | 20.3% / 1.4% / 10.4% / 20.6% | 12 |
 
 **The minimum paying base at each price.** Company fixed costs are not reviewed for Marktmorgen (lib/customer-base-rules.ts needs them; the review is null), so the base is given per $100 a month of fixed cost, from that file's own rule (the worst of the monthly and the yearly unit): multiply by the real monthly figure once it is reviewed.
@@ -186,7 +186,7 @@ Solver: scipy.optimize.milp (HiGHS), scipy 1.x.
 | Plan | ε -0.5: C over A | ε -1: C over A | ε -1.5: C over A | ε -2: C over A |
 | --- | --- | --- | --- | --- |
 | Store | 1.02× ($129 against $129) | 1.02× ($129 against $129) | 1.43× ($39 against $79) | 2.03× ($39 against $79) |
-| Studio | 1.02× ($889 against $889) | 1.02× ($889 against $889) | 1.91× ($129 against $469) | 3.64× ($129 against $469) |
+| Studio | 1.02× ($889 against $889) | 1.02× ($889 against $889) | 1.85× ($139 against $479) | 3.44× ($139 against $479) |
 | Scale | 1.02× ($1,989 against $1,989) | 1.02× ($1,989 against $1,989) | 1.91× ($279 against $1,019) | 3.66× ($279 against $1,019) |
 
 **Each cut alone.** The same, one figure at a time cut to a tenth of #553's (rounded down as a page prints it), every other kept: the lowest price that keeps 60%, and the profit index over A's best in the two scenarios where a cut can lower the price.
@@ -199,14 +199,14 @@ Solver: scipy.optimize.milp (HiGHS), scipy 1.x.
 | Store | store-email | 7 | $79 | 1.00× | 1.00× |
 | Store | transactional-email | 15 | $69 | 1.06× | 1.14× |
 | Store | visits | 340 | $59 | 1.16× | 1.34× |
-| Studio | ai | 4 | $399 | 1.08× | 1.17× |
-| Studio | video | 3 | $459 | 1.01× | 1.02× |
-| Studio | storage | 4 GB | $449 | 1.02× | 1.05× |
-| Studio | orders | 45 | $449 | 1.02× | 1.04× |
-| Studio | store-email | 30 | $469 | 1.00× | 1.00× |
-| Studio | transactional-email | 40 | $469 | 1.00× | 1.00× |
-| Studio | list-email | 700 | $339 | 1.17× | 1.38× |
-| Studio | visits | 1,200 | $399 | 1.08× | 1.18× |
+| Studio | ai | 4 | $399 | 1.09× | 1.20× |
+| Studio | video | 3 | $469 | 1.01× | 1.02× |
+| Studio | storage | 4 GB | $449 | 1.03× | 1.07× |
+| Studio | orders | 45 | $459 | 1.02× | 1.04× |
+| Studio | store-email | 30 | $469 | 1.01× | 1.02× |
+| Studio | transactional-email | 40 | $469 | 1.01× | 1.02× |
+| Studio | list-email | 700 | $339 | 1.19× | 1.41× |
+| Studio | visits | 1,000 | $409 | 1.08× | 1.17× |
 | Scale | ai | 8 | $889 | 1.07× | 1.15× |
 | Scale | video | 6 | $999 | 1.01× | 1.02× |
 | Scale | storage | 8 GB | $979 | 1.02× | 1.04× |

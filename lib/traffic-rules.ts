@@ -27,11 +27,7 @@ import { type PlanFields, standingOf } from "@/lib/plan-standing";
 /** Visits every plan covers, per store, per calendar month. */
 export const VISITS_INCLUDED: Record<Tier, number> = {
   creator: 3_400,
-  // 10,000 until 31 October 2026 (313 [CV1]): with a visit costed as Upstash
-  // bills it, Studio kept more in its worst month than Scale; 12,000 puts
-  // Scale back above it (tests/plan-margin.test.ts), at about $0.61 more a
-  // month at the most, and a store on Studio gets 2,000 visits more.
-  pro: 12_000,
+  pro: 10_000,
   // 50,000 until 17 October 2026, when the uses that had no monthly figure
   // were priced into each plan's worst month (tests/plan-cost-registry.ts):
   // visits are Scale's largest cost, and 40,000 keeps it at the owner's 60%.
@@ -132,7 +128,7 @@ export function visitLimitFor(store: PlanFields & { tier?: Tier }, nowSeconds = 
 export const REQUESTS_PER_VISIT = 3;
 export const EXTRA_REQUESTS: Record<Tier, number> = {
   creator: 500,
-  pro: 2_000,
+  pro: 12_000,
   scale: 5_000,
 };
 /** A free trial's extra requests, and a store with no plan's. */
