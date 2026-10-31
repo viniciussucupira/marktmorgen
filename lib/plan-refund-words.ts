@@ -57,8 +57,10 @@ export function refusalWords(reading: { refund: { kind: Refusal; reason: string 
     already_refunded: "This payment has already been refunded.",
     guarantee_used: "The money-back guarantee is given once per person, and it was used before.",
     outside_window: `The money-back guarantee is for requests made within ${REFUND_DAYS} days of your first payment, and that time has passed.`,
-    renewal: `A monthly renewal made more than ${REFUND_DAYS} days after your first payment is not refunded. You can cancel your subscription in your studio, and it stops at the end of the month you paid for.`,
-    switch_charge: `A charge for switching plans made more than ${REFUND_DAYS} days after your first payment is not refunded. You can cancel your subscription in your studio, and it stops at the end of the period you paid for.`,
+    // True in every case that reaches it: a renewal or switch after the guarantee's days, one whose first payment
+    // was not under the guarantee (it was used before, by this person for any store), or one paid on its own.
+    renewal: `The money-back guarantee covers a monthly renewal only together with a first payment it covers, within ${REFUND_DAYS} days of that payment, and once per person. This renewal is not covered. You can cancel your subscription in your studio, and it stops at the end of the month you paid for.`,
+    switch_charge: `The money-back guarantee covers a charge for switching plans only together with a first payment it covers, within ${REFUND_DAYS} days of that payment, and once per person. This charge is not covered. You can cancel your subscription in your studio, and it stops at the end of the period you paid for.`,
     months_used: "Every month of your yearly plan has started, so there are no months left to refund.",
     fee_kept: "What is left of your yearly payment is not more than the card fee we keep, so there is nothing to refund.",
   };

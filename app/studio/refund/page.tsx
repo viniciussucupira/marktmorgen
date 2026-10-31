@@ -12,7 +12,6 @@ import { readPlanRefund } from "@/lib/plan-refund";
 import { issueReview } from "@/lib/plan-refund-flow";
 import { refundUnderway } from "@/lib/plan-refund-underway";
 import { REFUND_DONE, SUPPORT_ADDRESS, moneyOf, refundEffects, refusalWords } from "@/lib/plan-refund-words";
-import { REFUND_DAYS } from "@/lib/plan";
 
 type Params = { searchParams: Promise<{ [key: string]: string | string[] | undefined }> };
 
@@ -104,8 +103,8 @@ export default async function StudioRefundPage({ searchParams }: Params) {
                 <p className="mt-2 text-ink" data-refund-amount={owed.refund.cents}>
                   {owed.refund.kind === "guarantee"
                     ? owed.parts.length === 1
-                      ? `${amount}: your first payment, in full, under the money-back guarantee.`
-                      : `${amount}: your first payment and every plan payment since, made within ${REFUND_DAYS} days of it, each in full, under the money-back guarantee.`
+                      ? `${amount}: the plan payment listed below, in full, under the money-back guarantee.`
+                      : `${amount}: the ${owed.parts.length} plan payments listed below, each in full, under the money-back guarantee.`
                     : `${amount}: the months of your yearly plan that have not started. We keep ${owed.refund.monthsKept === 1 ? "the month that has started" : `the ${owed.refund.monthsKept} months that have started`}, each at the monthly price, and the card fee Stripe kept.`}
                 </p>
                 <h3 className="mt-4 font-semibold text-ink">{owed.parts.length === 1 ? "The payment refunded" : `The ${owed.parts.length} payments refunded`}</h3>

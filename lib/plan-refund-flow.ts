@@ -152,6 +152,17 @@ type Found = { kind: "found"; refund: Row; settled: boolean } | { kind: "partial
  * settled), some given and some not ("partial": never ended on, never taken back, until it is whole), none, or not
  * readable.
  */
+/**
+ * The charges to judge a refund by: an earlier request's and this one's. A charge in both keeps the larger amount,
+ * which is what our refunds on it must add up to (a charge already partly refunded by us is read again as owing
+ * only the rest). Never fewer charges than before, so a refund of part is never read as the whole.
+ */
+export function mergeParts(before: NotedPart[] | undefined, now: NotedPart[]): NotedPart[] {
+  const merged = new Map<string, number>();
+  for (const part of [...(before ?? []), ...now]) merged.set(part.c, Math.max(merged.get(part.c) ?? 0, part.a));
+  return [...merged].map(([c, a]) => ({ c, a }));
+}
+
 export async function partsOutcome(sid: string, parts: NotedPart[]): Promise<Found> {
   let succeededAll = true;
   let coveredAll = true;
@@ -317,7 +328,9 @@ export async function refundAndEndPlan(store: Store, nowSeconds = Math.floor(Dat
     const weStop = LIVE.includes(String(sub.status)) && !stopSet(sub);
     // A note for another subscription is an old one: this request's replaces it.
     const kept = before && before.s === id ? before : null;
-    let note: Note = { s: id, at: kept?.at ?? nowSeconds, t: nowSeconds, m: kept?.m === 1 || weStop ? 1 : 0 };
+    // The charges an earlier request was refunding stay in the note, so a refund of one of them is never taken
+    // for the whole: this request may stop before it reads what is owed (independent review, 31/10/2026).
+    let note: Note = { s: id, at: kept?.at ?? nowSeconds, t: nowSeconds, m: kept?.m === 1 || weStop ? 1 : 0, ...(kept?.p ? { p: kept.p } : {}) };
     await writeNote(store.sid, note);
 
     // Nothing given back now. `maybe`: a refund may still turn up (a lost answer, an earlier request), so the note
@@ -351,7 +364,7 @@ export async function refundAndEndPlan(store: Store, nowSeconds = Math.floor(Dat
       }
     }
     const made = await refundPlanPayment(store, nowSeconds, expectCents, async (parts) => {
-      note = { ...note, p: parts.map((part) => ({ c: part.chargeId, a: part.cents })) };
+      note = { ...note, p: mergeParts(note.p, parts.map((part) => ({ c: part.chargeId, a: part.cents }))) };
       await writeNote(store.sid, note);
     });
     if (made.ok) {
