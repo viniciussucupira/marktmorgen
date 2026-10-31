@@ -39,6 +39,7 @@
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { NIMBUS_FROM, isSenderConfigured, sendEmail } from "@/lib/email";
 import { isHouseAddress } from "@/lib/house-store";
+import { withPrefill } from "@/lib/handle-prefill";
 
 export const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export const MAX_EMAIL_LENGTH = 254;
@@ -248,6 +249,7 @@ export async function withinAddressLimit(email: string): Promise<boolean> {
 export async function sendSignInLink(
   email: string,
   origin: string,
+  handle?: unknown,
 ): Promise<boolean> {
   const address = normaliseEmail(email);
   // The demo store's owner is nobody (lib/house-store.ts): no link is made
@@ -262,7 +264,10 @@ export async function sendSignInLink(
 
   // The link lands on a page that asks for one tap. It deliberately does not
   // land on something a mail filter could spend by merely opening it.
-  const link = `${origin}/signin/confirm?token=${token}`;
+  // The store address typed on the home page rides in the link itself, only
+  // when it is a valid one, so the address step opens with it filled in
+  // (lib/handle-prefill.ts). It is not stored with the token or anywhere else.
+  const link = withPrefill(`${origin}/signin/confirm?token=${token}`, handle);
   return sendEmail({ meter: { by: "company" },
     from: NIMBUS_FROM,
     to: address,

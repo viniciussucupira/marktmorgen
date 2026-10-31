@@ -256,11 +256,14 @@ function PlanCard({
         business it suits, which is the only thing somebody holding two
         cards up against each other is trying to find out.
       */}
-      <p className="t-h3">{PLAN_TITLES[tier]}</p>
+      {/* A heading under the pricing page's "Plan prices" section (WCAG 1.3.1, 2.4.10). */}
+      <h3 className="t-h3">{PLAN_TITLES[tier]}</h3>
       <p className="measure mt-2 text-[0.9375rem] text-ink-soft">{bestFor}</p>
 
-      <p className="mt-7 flex items-baseline gap-2">
-        <span className="text-[3.5rem] font-semibold leading-none tracking-[-0.05em] text-ink tabular-nums">
+      {/* Wraps "a month" under the price, and a smaller price below 640px,
+          so a 320px screen with WCAG 1.4.12 text spacing never scrolls sideways (1.4.10). */}
+      <p className="mt-7 flex flex-wrap items-baseline gap-x-2 gap-y-1">
+        <span className="text-[2.75rem] sm:text-[3.5rem] font-semibold leading-none tracking-[-0.05em] text-ink tabular-nums">
           <CycleText month={usdWhole(month)} year={usdWhole(year)} />
         </span>
         <span className="text-ink-mute"><CycleText month="a month" year="a year" /></span>

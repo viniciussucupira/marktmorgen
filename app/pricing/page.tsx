@@ -2,6 +2,9 @@ import { TrustChecks } from "@/components/trust-checks";
 import { PricingValue } from "@/components/pricing-value";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Suspense } from "react";
+import { Pricing } from "@/components/home-parts";
+import { isDomainsConfigured } from "@/lib/domains";
 import { feeWords } from "@/lib/fee-words";
 import { SiteNav } from "@/components/site-nav";
 import { ToolsCalculator } from "@/components/tools-calculator";
@@ -14,6 +17,8 @@ export const metadata: Metadata = {
  alternates: { canonical: "/pricing" },
 };
 
+const DOMAINS = isDomainsConfigured();
+
 export default function PricingPage() {
  return <><SiteNav /><main id="content" tabIndex={-1} className="mx-auto max-w-6xl px-5 py-16 sm:px-8">
   <header className="max-w-3xl">
@@ -24,13 +29,18 @@ export default function PricingPage() {
    <div className="mt-6 flex flex-wrap gap-4"><Link className="inline-flex min-h-12 items-center rounded-full bg-neutral-950 px-6 py-3 font-semibold text-white" href="/signin">Start your store</Link><Link className="inline-flex min-h-12 items-center rounded-full border border-neutral-400 px-6 py-3 font-semibold" href="/demo">See the live demo</Link></div>
   </header>
   <div className="mt-12"><PricingValue place="plans" /></div>
-  <section data-plan-prices aria-label="Plan prices" className="mt-12 grid gap-6 md:grid-cols-3">
-   {PRICING_PLANS.map(plan=><article key={plan.tier} className="rounded-2xl border border-neutral-300 p-6">
-    <h2 className="text-2xl font-semibold">{plan.title}</h2><p className="mt-3 text-neutral-700">{plan.purpose}</p>
-    <p className="mt-6 text-3xl font-semibold">{plan.monthly}</p><p className="mt-3 text-lg">or {plan.annual}, paid annually</p>
-    <p className="mt-4">{plan.share} + Stripe processing</p>
-    <Link href="/signin" className="mt-6 inline-block rounded-full border border-neutral-400 px-5 py-3 font-semibold">Start your store<span className="sr-only"> — {plan.title}</span></Link>
-   </article>)}
+  {/*
+    VS1: the three plan cards with the monthly/yearly switch, moved here from
+    the old home page unchanged (components/home-parts.tsx Pricing). Each
+    "Start on" link carries the plan and the billing rhythm into sign-up
+    (/signin?plan=…&billing=…); prices come from lib/plan.ts. The home
+    page's "Compare Store, Studio and Scale" link points at #plans.
+  */}
+  <section id="plans" data-plan-prices aria-labelledby="plans-heading" className="mt-12 scroll-mt-24">
+   <h2 id="plans-heading" className="sr-only">Plan prices</h2>
+   <Suspense fallback={null}>
+    <Pricing domains={DOMAINS} />
+   </Suspense>
   </section>
   <section aria-labelledby="limits-heading" className="mt-20">
    <h2 id="limits-heading" className="text-3xl font-semibold">What each plan includes</h2>

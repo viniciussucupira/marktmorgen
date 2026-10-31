@@ -1,5 +1,6 @@
 import type { NextRequest } from "next/server";
 import { linkOrigin } from "@/lib/request-origin";
+import { prefillHandle } from "@/lib/handle-prefill";
 import {
   EMAIL_PATTERN,
   MAX_EMAIL_LENGTH,
@@ -76,7 +77,9 @@ export async function POST(request: NextRequest) {
       return Response.json({ ok: false, error: "rate_limited" }, { status: 429 });
     }
     // The link always points at this site, whatever host the request named.
-    await sendSignInLink(email, linkOrigin(request));
+    // A store address typed on the home page goes into the link only when it
+    // is a valid one (lib/handle-prefill.ts); it is checked again there.
+    await sendSignInLink(email, linkOrigin(request), prefillHandle(body.handle));
   } catch (error) {
     console.error("sign-in request failed", error);
     return Response.json({ ok: false, error: "server_error" }, { status: 500 });

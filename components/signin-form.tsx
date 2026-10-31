@@ -44,7 +44,13 @@ function startChallenge() {
 const LOOKS_LIKE_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 const RESEND_AFTER_SECONDS = 30;
 
-export function SignInForm() {
+/**
+ * `handle` is a store address typed on the home page, already checked by the
+ * server (lib/handle-prefill.ts). It goes with the request so the emailed
+ * link opens the address step with it filled in; the server checks it again
+ * and nothing is reserved.
+ */
+export function SignInForm({ handle = "" }: { handle?: string } = {}) {
   const [email, setEmail] = useState("");
   const [website, setWebsite] = useState("");
   const [state, setState] = useState<State>({ kind: "idle" });
@@ -75,7 +81,7 @@ export function SignInForm() {
         how("/api/auth/request", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, website }),
+          body: JSON.stringify(handle ? { email, website, handle } : { email, website }),
         });
       const response = await ask(fetch).catch((error: unknown) => {
         if (!plainFetch) throw error;

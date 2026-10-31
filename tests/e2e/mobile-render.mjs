@@ -69,7 +69,20 @@ try{
     // the disclosure nor changes timing, thresholds, samples or input events.
     if(!await control.evaluate(node=>node===document.activeElement))throw Error("Native pointer focus was not retained");
     if(await page.evaluate(()=>getComputedStyle(document.documentElement).scrollBehavior)!=="auto")throw Error("Native disclosure pointer focus still animates document scrolling");
-    const cards=page.locator("[data-pricing-card]");
+    // VS1 (owner, 30/10/2026): the home page shows one plan, Store, read from
+    // lib/plan.ts, with a link to compare all plans. The three-card monthly/
+    // yearly switch it used to carry moved, unchanged, to the pricing page,
+    // where the link points and where it is checked below.
+    const plan=page.locator("[data-home-plan]");
+    if(!(await plan.innerText()).includes("$69 a month"))throw Error("Home plan price mismatch");
+    if(await plan.getByRole("link",{name:"Start free",exact:true}).getAttribute("href")!=="/signin")throw Error("Home plan start lost");
+    if(await page.getByRole("link",{name:"Compare Store, Studio and Scale",exact:true}).getAttribute("href")!=="/pricing#plans")throw Error("Compare plans link lost");
+   }
+   if(path==="/pricing"&&sample===1){
+    // The plan cards and their monthly/yearly switch, moved here from the old
+    // home page (VS1): the same regression that protected them there.
+    if(await page.locator("#plans[data-plan-prices]").count()!==1)throw Error("Pricing plans anchor lost");
+    const cards=page.locator("[data-plan-prices] [data-pricing-card]");
     if(await cards.count()!==3)throw Error("Expected three canonical plan cards");
     const summaries=cards.locator('details[class~="group/perks"] > summary');
     const disclosures=cards.locator('details[class~="group/perks"]');
@@ -91,12 +104,13 @@ try{
      if((await card.locator("p.mt-7 > span").first().innerText()).trim()!==monthly[i])throw Error("Monthly card price mismatch");
      if(!await card.locator("dl").innerText().then(text=>text.includes(monthly[i]+" for the month")))throw Error("Monthly first-charge terms mismatch");
      if(await card.getByRole("link",{name:/^Start on/}).getAttribute("href")!=="/signin?plan="+tiers[i]+"&billing=month")throw Error("Monthly signup choice lost");
+     if(!(await card.innerText()).includes(annual[i]))throw Error("Pricing plan annual price missing "+i);
     }
     if(JSON.stringify(await disclosures.evaluateAll(nodes=>nodes.map(node=>node.open)))!==JSON.stringify(nativeState))throw Error("Billing selection replaced native disclosure state");
     const before=await disclosures.first().evaluate(node=>node.open);
     await summaries.first().focus();await page.keyboard.press("Enter");
     if(await disclosures.first().evaluate(node=>node.open)===before)throw Error("Native keyboard disclosure did not toggle");
-    console.log("PRICING_CYCLE_REGRESSION: three monthly/yearly prices, first-charge terms, signup URLs, pressed state, native state retention and keyboard disclosure passed");
+    console.log("PRICING_CYCLE_REGRESSION: home Store price and start, compare link to #plans, and on pricing three monthly/yearly prices, first-charge terms, signup URLs, pressed state, native state retention and keyboard disclosure passed");
    }
   }finally{await context.close();}
  }
