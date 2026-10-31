@@ -40,16 +40,23 @@ export const META_READ_PAUSED = "Reading your Meta ad spend also waits, and star
  */
 const CALENDAR_KEPT = "You can still remove your calendar address, choose no calendar, or disconnect Google Calendar.";
 const MEETING_KEPT = "You can still delete a test meeting or disconnect the account.";
+/** "what" is refused, not queued: the sentence asks the creator to try again once paid. */
 const pausedWords = (what: string, kept: string): Record<"paused_unpaid" | "paused_disputed", string> => ({
-  paused_unpaid: `Nothing was changed: your plan's renewal payment did not go through, so ${what} wait until it is paid. Check the notice at the top of your studio to pay it. ${kept}`,
-  paused_disputed: `Nothing was changed: a payment for your plan is disputed with your bank, so ${what} wait until the dispute is settled. Check the notice at the top of your studio for what happens next. ${kept}`,
+  paused_unpaid: `Nothing was changed: your plan's renewal payment did not go through, so ${what} until it is paid; try again then. Check the notice at the top of your studio to pay it. ${kept}`,
+  paused_disputed: `Nothing was changed: a payment for your plan is disputed with your bank, so ${what} until the dispute is settled; try again then. Check the notice at the top of your studio for what happens next. ${kept}`,
 });
 
 /** The host calendar page's refusals (app/api/store/host-calendar). */
-export const TOOLS_PAUSED_WORDS = pausedWords("calendar checks and changes", CALENDAR_KEPT);
+export const TOOLS_PAUSED_WORDS = pausedWords("calendar checks and changes cannot be made", CALENDAR_KEPT);
 
 /** The video calls page's refusals for a test meeting (app/api/integrations/meetings). */
-export const MEETING_TEST_PAUSED_WORDS = pausedWords("test meetings", MEETING_KEPT);
+export const MEETING_TEST_PAUSED_WORDS = pausedWords("test meetings cannot be made or moved", MEETING_KEPT);
 
 /** Shown where the host's Google calendar list would be, while it is not read. */
 export const CALENDAR_LIST_PAUSED = "Your Google calendar list is not read while your plan's payment is unpaid or disputed. It is read again on its own once the payment is recorded or the dispute is settled.";
+
+/**
+ * 232 [CA1] unit 4b4b1: a webhook test message waits too. Endpoints already
+ * added stay, can be changed and can be removed.
+ */
+export const WEBHOOK_TEST_PAUSED_WORDS = pausedWords("webhook test messages cannot be sent", "You can still change or remove any endpoint.");
