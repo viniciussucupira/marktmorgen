@@ -136,10 +136,14 @@ function negatedBefore(text: string, index: number): boolean {
   const clause = before.split(/[.!?;:,\n]/).pop() ?? "";
   return NEGATION.test(clause.trim().split(/\s+/).slice(-6).join(" "));
 }
-/** "my", "our" or "me" in the clause just before the words (its last six words): the creator speaking of their own page. */
+/**
+ * The creator's own page there, said right before the name: "my patreon.com/jane", "our Skool", "my community at
+ * skool.com/jane", "Support me at ko-fi.com/jane". A possessive elsewhere in the sentence ("Our refund policy
+ * follows Gumroad terms") is not one.
+ */
 function ownedNearby(text: string, index: number): boolean {
-  const clause = (text.slice(Math.max(0, index - 120), index).replace(/\u2019/g, "'").split(/[.!?;:,\n]/).pop() ?? "").trim();
-  return /\b(my|our|me)\b/i.test(clause.split(/\s+/).slice(-6).join(" "));
+  const before = text.slice(Math.max(0, index - 60), index).replace(/\u2019/g, "'");
+  return /\b(my|our)\s+$/i.test(before) || /\b(my|our)\s+(?:[a-z-]+\s+){0,2}(?:at|on)\s+$/i.test(before) || /\bme\s+(?:at|on)\s+$/i.test(before);
 }
 function negated(text: string, index: number, length: number): boolean {
   return negatedBefore(text, index) || NEGATED_AFTER.test(text.slice(index + length, index + length + 60).replace(/\u2019/g, "'"));
@@ -290,6 +294,8 @@ function endsSentence(text: string, i: number): boolean {
 function sentenceAt(text: string, at: number): [number, number] {
   let start = at;
   while (start > 0 && !endsSentence(text, start - 1)) start -= 1;
+  // The closing quote or bracket of the sentence before belongs to it ("no questions asked." Resale…).
+  while (start < at && /["'\u201d\u2019)\]]/.test(text[start])) start += 1;
   let end = at;
   while (end < text.length && !endsSentence(text, end)) end += 1;
   if (end < text.length && text[end] !== "\n") end += 1;

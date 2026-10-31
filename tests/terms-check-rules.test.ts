@@ -129,6 +129,17 @@ const after1 = withoutSentence(two, r1.at, two.slice(r1.at, r1.at + r1.length));
 is("the first fix applied", after1, "Ten lessons. All sales are final.");
 is("an old warning's fix on the changed text changes nothing", withoutSentence(after1, r2.at, two.slice(r2.at, r2.at + r2.length)), after1);
 
+part("Re-review: a possessive elsewhere is not the creator's own page; quotes stay with their sentence");
+is("our policy follows another platform's: warned", kinds("Our refund policy follows Gumroad terms."), ["other_company"]);
+is("our terms are another site's: warned", kinds("Our terms are the same as othershop.com/terms."), ["other_company"]);
+is("me, elsewhere in the sentence: warned", kinds("Email me about refunds under the Gumroad refund policy."), ["other_company"]);
+const quoted = 'Our promise is "no questions asked." Resale rights included. Thanks.';
+const q1 = checkCreatorTerms({ ...base, text: quoted })[0];
+is("the previous sentence keeps its closing quote", withoutSentence(quoted, q1.at, quoted.slice(q1.at, q1.at + q1.length)), 'Our promise is "no questions asked." Thanks.');
+const shout = '"Amazing!" Resale rights included. Thanks.';
+const q2 = checkCreatorTerms({ ...base, text: shout })[0];
+is("and after an exclamation", withoutSentence(shout, q2.at, shout.slice(q2.at, q2.at + q2.length)), '"Amazing!" Thanks.');
+
 part("Bounds");
 const huge = "Hurry! Only 2 left. ".repeat(10_000) + " Visit othershop.com.";
 const capped = checkCreatorTerms({ ...base, text: huge });
