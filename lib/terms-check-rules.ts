@@ -25,8 +25,8 @@
  * tell the creator to delete a protective sentence: a negation in the same
  * clause before the words ("No resale rights", "we do not guarantee any
  * income") or after them ("resale rights are not included"), and a refund
- * rule that keeps the 14 days ("no refunds after 30 days", or the text
- * saying buyers may cancel within 14 days). Ordinary product text is left
+ * rule that keeps the buyer's two weeks to cancel (closing refunds only
+ * after that, or the text granting it). Ordinary product text is left
  * alone: well-known tools a product is made with or delivered on
  * (TOOL_HOSTS), a short domain ending only when written as an address
  * (with "https://", "www." or a path), the creator's own community or tip
@@ -122,7 +122,7 @@ const NOT_PRICE_AFTER = /^\S*\s*(?:\)|,)?\s*(value|worth|off|discount|shipping|t
 const NEGATION = /\b(no|not|never|nor|without|cannot|can't|don't|doesn't|won't|isn't|aren't|didn't|neither|none|excludes?|excluding|make no|makes no)\b/i;
 /** A negation in the clause after the words ("resale rights are not included"). */
 const NEGATED_AFTER = /^[^.!?;:,\n]{0,30}?\b(?:not (?:included|granted|given|allowed|permitted|offered|transferable|available)|prohibited|forbidden|excluded)\b/i;
-/** The text keeps a buyer's 14 days: "cancel within 14 days", "a 14-day refund". */
+/** The text keeps a buyer's two weeks to cancel, in words like "cancel within N days" or "an N-day money-back". */
 const KEEPS_14_DAYS = /\b(?:cancel|withdraw|refund|return)\w*\b[^.!?\n]{0,60}?\bwithin (?:(\d+)|fourteen|thirty|30|sixty)[- ]days?\b|\b(?:(\d+)|fourteen|thirty|sixty)[- ]days? (?:money[- ]back|refund|return|cooling[- ]off|right to cancel)/i;
 const AFTER_DAYS = /^[^.!?;\n]{0,40}?\bafter (?:(\d+)|fourteen|thirty|sixty) days\b/i;
 
