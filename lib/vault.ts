@@ -429,7 +429,7 @@ export async function listVault(prefix: string, cursor?: string): Promise<{ file
   if (!answer.text.includes("<ListBucketResult") || !answer.text.includes("</ListBucketResult>") || (truncated !== "true" && truncated !== "false")) return null;
   const files: { pathname: string; bytes: number }[] = [];
   const entries = answer.text.match(/<Contents>[\s\S]*?<\/Contents>/g) ?? [];
-  if ((answer.text.match(/<Contents>/g) ?? []).length !== entries.length) return null;
+  if (entries.length > 1000 || (answer.text.match(/<Contents>/g) ?? []).length !== entries.length) return null;
   for (const entry of entries) {
     const pathname = tag(entry, "Key");
     const size = tag(entry, "Size");

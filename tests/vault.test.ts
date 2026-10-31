@@ -366,6 +366,21 @@ async function main() {
     return bucket(`<IsTruncated>${page<19}</IsTruncated>${page<19?`<NextContinuationToken>${page+1}</NextContinuationToken>`:""}`);
   };
   is("final page at page cap is complete",await vaultHeld(FOLDER),0);
+  const listed=(count:number,start=0,size=1)=>Array.from({length:count},(_,i)=>`<Contents><Key>vault/${FOLDER}/bounded-${start+i}</Key><Size>${size}</Size></Contents>`).join("");
+  listingOverride=()=>bucket("<IsTruncated>false</IsTruncated>"+listed(1000));
+  is("a full requested thousand-key page remains complete",[(await listVault(`vault/${FOLDER}/`))?.files.length,await vaultHeld(FOLDER)],[1000,1000]);
+  listingOverride=()=>bucket("<IsTruncated>false</IsTruncated>"+listed(1001,0,0));
+  is("an oversized S3 page cannot be exposed as a complete listing",await listVault(`vault/${FOLDER}/`),null);
+  is("an oversized zero-byte final page is unknown, never empty",await vaultHeld(FOLDER),null);
+  listingOverride=(url)=>url.searchParams.has("continuation-token")
+    ?bucket("<IsTruncated>false</IsTruncated>"+listed(1001,100,0))
+    :bucket("<IsTruncated>true</IsTruncated><NextContinuationToken>next</NextContinuationToken>"+listed(1,0,5));
+  is("an oversized later S3 page never returns the valid partial prefix",await vaultHeld(FOLDER),null);
+  listingOverride=(url)=>{
+    const page=Number(url.searchParams.get("continuation-token")??0);
+    return bucket(`<IsTruncated>${page<19}</IsTruncated>${listed(1000,page*1000)}${page<19?`<NextContinuationToken>${page+1}</NextContinuationToken>`:""}`);
+  };
+  is("twenty full requested S3 pages remain measurable",await vaultHeld(FOLDER),20000);
   listingOverride=null;
 
   part("A creator removes a file");
