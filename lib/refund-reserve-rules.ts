@@ -16,9 +16,13 @@
  *     rule the refund button uses (lib/plan-refund-rules.ts, `planRefund`):
  *     the first payment within REFUND_DAYS, the months not started of a
  *     yearly payment;
- *   - and the dispute reserve of lib/receiving-costs.ts for each charge a
- *     cardholder can still dispute: (the amount charged + both dispute fees)
- *     x DISPUTE_RESERVE_BPS, rounded up. "Card networks typically allow
+ *   - and a dispute part: the larger of (a) the dispute reserve of
+ *     lib/receiving-costs.ts summed over each charge a cardholder can still
+ *     dispute ((the amount charged + both dispute fees) x
+ *     DISPUTE_RESERVE_BPS, rounded up) and (b) one whole dispute on the
+ *     largest of those charges (its amount + both fees): the owner's
+ *     decision of 31/10/2026 15h41, so a few charges still cover one real
+ *     dispute. "Card networks typically allow
  *     cardholders to initiate disputes within 120 days of the original
  *     payment", and for a service paid ahead "the dispute window starts on
  *     the event date, not the payment date" (docs.stripe.com/disputes/how-
@@ -73,8 +77,15 @@ export function disputeReserveCents(chargedCents: number): number {
   return Math.ceil(((chargedCents + DISPUTE_FEE_CENTS + DISPUTE_COUNTER_FEE_CENTS) * DISPUTE_RESERVE_BPS) / 10_000);
 }
 
+/** One whole dispute lost on a charge: its amount and both of Stripe's dispute fees (lib/receiving-costs.ts). */
+export function fullDisputeCents(chargedCents: number): number {
+  return chargedCents + DISPUTE_FEE_CENTS + DISPUTE_COUNTER_FEE_CENTS;
+}
+
 export function refundReserve(charges: readonly ReserveCharge[], nowSeconds: number): Reserve {
   const byCurrency: Record<string, ReserveTotal> = {};
+  // The largest charge still disputable, per currency: one whole dispute on it is the floor of the dispute part.
+  const largest: Record<string, number> = {};
   for (const [index, c] of charges.entries()) {
     if (!c || !whole(c.chargedCents) || !whole(c.paidAtSeconds) || !whole(c.periodEndSeconds) || !Number.isFinite(nowSeconds)) return { kind: "unknown", reason: "unreadable", index };
     if (c.currency !== "usd") return { kind: "unknown", reason: "currency", index };
@@ -84,11 +95,21 @@ export function refundReserve(charges: readonly ReserveCharge[], nowSeconds: num
     // On the 120th day the window is still open.
     const disputable = nowSeconds <= Math.max(c.paidAtSeconds, c.periodEndSeconds) + DISPUTE_DAYS * DAY_SECONDS;
     const dispute = disputable ? disputeReserveCents(c.chargedCents) : 0;
+    if (disputable) largest[c.currency] = Math.max(largest[c.currency] ?? 0, c.chargedCents);
     const total = (byCurrency[c.currency] ??= { refundCents: 0, pendingCents: 0, disputeCents: 0, totalCents: 0 });
     total.refundCents += owed;
     total.pendingCents += c.pendingRefundCents;
     total.disputeCents += dispute;
     total.totalCents += owed + c.pendingRefundCents + dispute;
+  }
+  // The owner's decision of 31/10/2026 15h41: the dispute part is the larger of the statistical sum and one whole
+  // dispute on the largest charge still disputable, so a few charges still cover one real dispute.
+  for (const [currency, total] of Object.entries(byCurrency)) {
+    const floor = largest[currency] === undefined ? 0 : fullDisputeCents(largest[currency]);
+    if (floor > total.disputeCents) {
+      total.totalCents += floor - total.disputeCents;
+      total.disputeCents = floor;
+    }
   }
   return { kind: "known", byCurrency };
 }
