@@ -20,6 +20,10 @@ export async function checkPricing({browser,LOCAL,axeSource,is}){
    check(JSON.stringify(await page.locator('nav[aria-label="Main"] a').evaluateAll(nodes=>nodes.map(node=>node.getAttribute("href"))))===JSON.stringify(["/","/pricing","/signin?to=login","/signin"]),"pricing has the home menu "+width);
    check(await page.locator('nav[aria-label="Main"] a[aria-current="page"]').getAttribute("href")==="/pricing","pricing marked current "+width);
    is("pricing has no dark surface "+width,await darkGrounds(page),[]);
+   // The switch's names stay its words alone in either state (no drawn check mark read aloud).
+   const cycle=page.getByRole("group",{name:"How often you pay"});
+   check(await cycle.getByRole("button",{name:"Monthly",exact:true}).getAttribute("aria-pressed")==="true","pricing switch name and state "+width);
+   check(await cycle.getByRole("button",{name:/^Yearly/}).count()===1,"pricing yearly name "+width);
    check(!/Your Stripe\. Your money|Your store\. Your Stripe|Your store · Your Stripe/.test(await page.locator("body").innerText()),"pricing has no ownership slogan "+width);
    check(await page.locator("main header").getByText("Paid plans and paid selling are not open yet.",{exact:false}).isVisible(),"pricing keeps paid selling closed "+width);
    const text=await page.locator("main").innerText();

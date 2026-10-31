@@ -1205,8 +1205,9 @@
   background: var(--hm-sky-2);
   border: 2px solid var(--hm-sky);
 }
-/* The monthly/yearly switch: the chosen one gold, with a check mark and a
-   deep-blue edge, so it never rests on the fill alone (1.4.1). */
+/* The monthly/yearly switch: the chosen one gold, with a deep-blue edge and
+   heavier words, so it never rests on the fill alone (1.4.1). No check mark
+   drawn with CSS content: it would become part of the button's name. */
 .hm-page .seg {
   background: var(--hm-sky-2);
   border: 2px solid var(--line-strong);
@@ -1215,32 +1216,31 @@
 .hm-page .seg-item[aria-pressed="true"]:hover {
   background: var(--hm-gold);
   color: var(--hm-text);
-  box-shadow: inset 0 0 0 2px var(--hm-text);
-}
-.hm-page .seg-item[aria-pressed="true"]::before {
-  content: "\2713";
+  box-shadow: inset 0 0 0 3px var(--hm-text);
   font-weight: 800;
 }
-/* The note after logging out, drawn by the root layout's toast region
-   (outside .hm-page): white with a deep-blue edge, not violet. */
-:root:has(.hm-page) .nb-toast {
+/* The note after logging out, drawn by the root layout's toast region,
+   the page's next sibling in <body>: white with a deep-blue edge, not violet.
+   A sibling selector, not a has-selector on the root, which would make every
+   change on these long pages recheck the whole document's style. */
+.hm-page ~ .nb-toast-region .nb-toast {
   background: #fff;
   color: #1e3a8a;
   box-shadow: inset 0 0 0 2px #1e3a8a, 0 16px 36px -12px rgb(19 37 74 / 0.35);
 }
-:root:has(.hm-page) .nb-toast-icon {
+.hm-page ~ .nb-toast-region .nb-toast-icon {
   background: #cfe3ff;
 }
-:root:has(.hm-page) .nb-toast-close {
+.hm-page ~ .nb-toast-region .nb-toast-close {
   width: 44px;
   height: 44px;
   margin-block: -6px;
   color: #1e3a8a;
 }
-:root:has(.hm-page) .nb-toast-close:hover {
+.hm-page ~ .nb-toast-region .nb-toast-close:hover {
   background: #eaf3ff;
 }
-:root:has(.hm-page) .nb-toast-close:focus-visible {
+.hm-page ~ .nb-toast-region .nb-toast-close:focus-visible {
   outline-color: #1e3a8a;
 }
 
@@ -1331,7 +1331,7 @@
 
 @media (forced-colors: active) {
   .hm-page :is(.card, .card-flat, .notice, .seg, .hm-addon, .hm-faq-card),
-  :root:has(.hm-page) .nb-toast,
+  .hm-page ~ .nb-toast-region .nb-toast,
   .hm-page .btn {
     border: 2px solid CanvasText;
   }
