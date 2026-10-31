@@ -205,4 +205,4 @@ While a plan's renewal is unpaid or a payment for it is disputed (`integrationPa
 - **Recorded, not closed here:** adding writes through a write key (`POST /api/v1/leads`, `POST /api/v1/leads/labels`, `POST /api/v1/access` without a notice) still run while paused, inside the plan's month of API requests; whether they should wait too, with removals exempt from the month, is for the next part of unit 4b4 (or 4c).
 - **Told:** `RENEWAL_PAUSED_WORDS` and `DISPUTE_PAUSED_WORDS` (studio notice, failed-payment email, Terms) now end with "Reading your store through your API keys, AI assistants included, waits too."; the developers page lists the 409.
 - **Cost:** lower, never higher: one check of fields already loaded, before the month's count.
-- **Test:** `tests/api-reads-paused.test.ts` (29 checks, a lost dispute included; the guard removed fails 8 of them).
+- **Test:** `tests/api-reads-paused.test.ts` (29 checks, a lost dispute included; the guard removed fails 10 of them).

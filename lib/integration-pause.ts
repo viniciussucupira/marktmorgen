@@ -92,5 +92,5 @@ export const WEBHOOK_PAUSED_COUNTED = "It counts as one of this month's webhook 
  */
 export const API_READ_PAUSED_WORDS: Record<"paused_unpaid" | "paused_disputed", string> = {
   paused_unpaid: "Nothing was read: your plan's renewal payment did not go through, so reading your store through your API keys, AI assistants included, waits until it is paid; try again then. Check the notice at the top of your studio to pay it. Taking back access and removing webhook endpoints through the API are not paused.",
-  paused_disputed: "Nothing was read: a payment for your plan is disputed with your bank, so reading your store through your API keys, AI assistants included, waits until the dispute is decided for us or, if it is decided for you, until the period that payment covered ends. Check the notice at the top of your studio for what happens next. Taking back access and removing webhook endpoints through the API are not paused.",
+  paused_disputed: "Nothing was read: a payment for your plan is disputed with your bank, so reading your store through your API keys, AI assistants included, waits until the dispute is decided for us or, if it is decided for you, at most until the period that payment covered ends. Check the notice at the top of your studio for what happens next. Taking back access and removing webhook endpoints through the API are not paused.",
 };
