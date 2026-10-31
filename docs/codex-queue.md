@@ -8088,6 +8088,8 @@ REGRA DOS 60% (OBRIGATÓRIA): todo cliente pagante, considerado isoladamente e u
 
 Estado da unidade técnica: **em andamento pelo Codex;30/10/2026,23:34:18Fortaleza;branch codex/ses-individual-uncertain-outcome**. Guardar resultado incerto doPOSTindividualSES antes de retry/fallback;serviço recusado com certeza mantémfallback. Não conclui309,lotes/fila durável/capacidadeglobal/margem eclassificação completa permanecem remanescentes.
 
+Estado da unidade de evidência de lote: **em andamento pelo Codex;30/10/2026,23:39:56Fortaleza;branch codex/ses-batch-marker-evidence**.1373/head45bd segueCI válido,intacto;esta unidade valida somente a leitura dosmarcadores jáexistentes antes de admitir lote. Sem resolveraceiteincerto apósPOSTdolote,nemfila durável/completar309.
+
 Proveniência AB(k)/PC1: passou a integrar o Bloco de abertura, posição(k), por solicitação do dono de24/10/2026 02h29(Fortaleza); seguir a ordem vinculante de328[PC1] e a regra de324[TK6]. Histórico/estado preservados; nenhuma implementação duplicada.
 
 Estado: na fila.
@@ -20402,3 +20404,9 @@ Unidade: expor indicador deaceiteincerto noresultadoindividual e fazer viaAmazon
 Custo: não acrescentaoperação produtiva/retencão,evita tentativasincertas no mesmo envio;seiscasosmensaisanuais semnovocusto deproduto por esta unidade. CI/build/revisão/retencão100%LLCFX275,custospagos desconhecidos,nãozero;tetos/reservasreais continuamreprovados. Exigir bateria inteira39+Vercel emnovohead,READY/SHA/domínios/HTML/logsexatos;contador254retido. HeadsClaude1368NC1/1334VS1/1296KX1conferidos eintocados.
 
 Implementação desta unidade: sesSend sinaliza uncertain em5xxeexceção,antes de ler corpo5xx;viaAmazon individual retornaunknown antes de retry/DEL/fallback/contagem. Nenhuma chamadaRedis/fornecedor/key/TTLextra. Testes reais sendEmail:aceiteSESsintético seguido deexceção/500/503,com esemchave(6casos),umaaceitação possível,semsegundaSES/Resend/DEL/contagemconhecida,eclaimexistenteretido. Preservadoscontrolesenvionormal,429conhecido/serviço recusado e testesanteriores. Lotesmantêmcaminhoanteriorenãodeclaradoscorrigidos;repetiçãofutura semchaveeTTLnãoresolvidos. Nãoafirmaentrega/margem/309completo. Bateriainteira39+Vercel obrigatória.
+
+
+### 309/EM1 — evidência dos marcadores de lote, marca antes do código
+30/10/2026,23:39:56Fortaleza,branchcodex/ses-batch-marker-evidence,baseprópria45bd30d880b94d20327d51894bf4af19c91abda9 de1373emCIválido,nãocancelado/editado. Main55dd80c6302f29a9777e0d2c19ebdffb13b3e92f,fila completa eClaude1368NC1/1334VS1/1296KX1preservados. Busca notYetTaken no remoto efonte completa confirmam caller emlib/email.ts. HojefalhaRedis/arrayincompleto/membroausente transforma desconhecido emausência eautoriza destinatários novamente,mesmoseMarcadorjáexiste.
+Diferença: notYetTaken deve devolverunknown quando resposta nãoéarray comexatacardinalidade,comprópriosmembrosdadosnullou1;somente null explícitoprovaausência. sendBatchretornaretryantes deSES/Resendquando preflightunknown. SemnovoGET/SET/chave/TTL,sem reconstruirfila/fornecedor/cota. Teste real sendBatch comdid previamentegravado eGETadulterado/exception,provandoque não chama nenhumprovedor,nãoexcluimarcador,nãocontaenvio e nãoexecutagetters;controlesprópriosnull/1e todoscasosantigospreservados. Não declara entregaexatamenteuma,vitalícia oucorreçãodeaceiteSESincertodolote.
+Unidade local finita(≤100leituras,janela existente) semnovocusto/IOprodutivo nosseiscasosmensaisanuais,semcota/franquia/taxa/preço/flag/revisão/optin/ID/conteúdo/Hazelsongalterados. CPU/CI/build/revisão/retencão100%LLC são custospagosdesconhecidos,nãozero;semfornecedorgratuito presumido. Novos39+Vercel completos nohead,READY/SHA/aliases/HTML/logsantesdepublicar;1373válidointacto;contador254retido.
