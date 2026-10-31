@@ -109,6 +109,15 @@ async function main(): Promise<void> {
     is("the rest of the month is taken", (await takeAllowance(store, "api", left)).ok, true);
     const full = await call("tools/list");
     is("MCP says the month is used, not 'this minute'", [full.error?.code, /month/.test(full.error?.message ?? ""), /this minute/.test(full.error?.message ?? "")], [-32001, true, false]);
+
+    part("A dispute decided for the store keeps reads paused for the period it covered");
+    store = (await storeForEmail(OWNER))!;
+    is("a second dispute is written down", Boolean(await recordPlanDispute(storeRef(store), { id: "du_ApiReadsPause2", status: "open", at: now, coversUntil: now + 30 * 86_400 })), true);
+    store = (await storeForEmail(OWNER))!;
+    is("and is lost", Boolean(await recordPlanDispute(storeRef(store), { id: "du_ApiReadsPause2", status: "lost", at: now, coversUntil: now + 30 * 86_400 })), true);
+    const lost = await rest(reader.key);
+    is("reads still answer 409 with the dispute's sentence", [lost.status, lost.body.error], [409, "paused_disputed"]);
+    is("the sentence says it lasts for the period that payment covered", /until the period that payment covered ends/.test(lost.body.message ?? ""), true);
     is("nothing outside was reached", outside, 0);
   } finally {
     globalThis.fetch = previousFetch;

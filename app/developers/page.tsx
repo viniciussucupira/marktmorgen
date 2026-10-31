@@ -104,7 +104,7 @@ export default function DevelopersPage() {
           <code className="font-mono">paused_unpaid</code>
           {" (or "}
           <code className="font-mono">paused_disputed</code>
-          {" while a payment for the plan is disputed), before anything is counted, until it is settled. Taking back access and removing a webhook endpoint always work."}
+          {" while a payment for the plan is disputed, and for the period that payment covered if the dispute is decided for the store), before anything is counted. Writes are not paused this way, so taking back access and removing a webhook endpoint still work, counted as API requests as usual."}
         </p>
       </LegalSection>
 
