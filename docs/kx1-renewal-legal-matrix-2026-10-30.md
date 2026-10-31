@@ -431,3 +431,49 @@ advice, and nothing certifies that Marktmorgen complies with any law.
 
 PR #1296 stays unmerged: California, Oregon and Canada are still unread, and
 G13–G17 are open.
+
+## 13. Oregon read on its official site; Ontario and California still not (31 Oct 2026, 17h50–18h05 Fortaleza)
+
+Read by Claude 2 from the official pages themselves (the whole chapter
+fetched and searched, not a page reader's excerpt). Nothing here is legal
+advice, and nothing certifies that Marktmorgen complies with any law.
+
+| # | Jurisdiction and text | Official page read | Finding |
+| --- | --- | --- | --- |
+| O19 | Oregon, ORS 646A.293 and 646A.295, "2025 EDITION" | oregonlegislature.gov/bills_laws/ors/ors646a.html | Both sections carry only "[2011 c.509 §2]" and "[2011 c.509 §3]": unchanged since 2011. "Consumer" means "any individual who seeks or acquires … goods, services, money or credit for personal, family or household purposes" (646A.293(3)). 646A.295(1): present the offer terms clearly and conspicuously "in visual proximity … to the request for consent"; no charge "without first obtaining the consumer's affirmative consent"; an acknowledgment "capable of being retained by the consumer" with the offer terms and how to cancel, and with a free trial, "how to cancel and allow the consumer to cancel before the consumer pays". (2): a "toll-free telephone number, electronic mail address … or another cost-effective, timely and easy-to-use mechanism for cancellation", described in the acknowledgment. (3) and (4)(b): a "material change" in accepted terms needs a clear and conspicuous notice with how to cancel, "prior to implementation of the material change". **No notice before a renewal is required.** |
+| O20 | Oregon Laws 2026, table "ORS sections amended, repealed or 'added to'" | oregonlegislature.gov/bills_laws/lawsstatutes/2026OrLawAR.pdf (the table the chapter page links to) | In chapter 646A only 646A.115 (c.9) and 646A.694 (c.109) were amended in the 2026 session; 646A.293 and 646A.295 are not in the table. Chapter 11 of 2026 (HB 4029, solar energy) only names 646A.295 inside its own list of unlawful practices. |
+
+**What it changes.**
+
+- **Oregon adds no window.** The 30th calendar day before a yearly renewal
+  (sections 6 to 8) is not constrained by Oregon, and neither is the trial
+  notice. Oregon's own duties are the offer terms beside the consent, the
+  affirmative consent, the retained acknowledgment with how to cancel (and,
+  for a trial, how to cancel before paying), an easy cancellation mechanism,
+  and a notice with how to cancel before any material change in accepted
+  terms, such as a price change, takes effect: the price-change notice of
+  item 414 (b) already has to go before the change, so Oregon fixes no
+  extra number of days for it.
+- **Who it protects.** Only individuals buying for personal, family or
+  household purposes. A creator buying a plan for their store is not reached
+  by Oregon's definition; a store's buyer usually is. The protective reading
+  of section 9 (creators included where a text includes small businesses)
+  is unchanged for the other states.
+- **Not read here:** whether a 2026 session law outside the A&R table touches
+  automatic renewals in Oregon (the four 2026 laws the chapter page lists,
+  chapters 11, 17, 85 and 96, were opened: solar energy, child safety
+  systems, AI companions and data brokers; none mentions automatic renewal).
+
+**Still not read on an official site, with the reason (31 Oct 2026):**
+
+- **California, Bus. & Prof. Code §17602:** leginfo.legislature.ca.gov
+  answered 403 to this session at 18h00 Fortaleza, with and without a
+  browser's User-Agent. S3 stays "official analysis, statute unread".
+- **Ontario, Consumer Protection Act, 2023:** the e-Laws statute page
+  (ontario.ca/laws/statute/23c23) answered 403 to this session, and e-Laws
+  needs a browser running scripts; a headless browser through this session's
+  network was refused the same way. The 2002 Act's page opened only as its
+  "needs JavaScript" shell. Canada stays at the protective reading.
+
+PR #1296 stays unmerged: California and Canada are still unread, and G13–G17
+are open. Oregon no longer holds it.
