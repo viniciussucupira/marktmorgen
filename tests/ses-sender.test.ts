@@ -523,6 +523,47 @@ async function main(): Promise<void> {
   is("and still goes through Amazon", [amazon.length, resend.length, tries], [1, 0, 2]);
   amazonSays = () => ({ status: 200 });
 
+
+  part("A confirmed temporary SES batch refusal still retries");
+  clear();
+  let batchTries = 0;
+  amazonSays = () => {
+    batchTries += 1;
+    return batchTries === 1
+      ? { status: 429, type: "TooManyRequestsException", message: "Maximum sending rate exceeded." }
+      : { status: 200 };
+  };
+  is("a known rate refusal keeps the existing second round",
+    [await sendBatch([letter("batch-busy@example.com")], "bc:confirmed-busy", { by: "company" }), batchTries, amazon.length, resend.length],
+    ["sent", 2, 1, 0]);
+  amazonSays = () => ({ status: 200 });
+
+  part("An uncertain SES batch stops before retry or fallback");
+  for (const loss of ["throw", 500] as const) {
+    account = approved({ SendQuota: { Max24HourSend: 50_000, MaxSendRate: 2 } });
+    askAgain();
+    clear();
+    amazonLosesReply = to => to === "batch-unknown@example.com" ? loss : null;
+    const prefix = loss === "throw" ? "lost" : "server";
+    const messages = [
+      letter("batch-confirmed@example.com"),
+      letter("batch-unknown@example.com"),
+      letter("batch-not-attempted@example.com"),
+    ];
+    is(`${prefix}: the real sender reports an unresolved batch`,
+      await sendBatch(messages, `bc:uncertain:${prefix}`, { by: "company" }), "retry");
+    is(`${prefix}: one wave only, with no repeat or other provider`,
+      [amazon.map(m => m.to), resend.length],
+      [["batch-confirmed@example.com", "batch-unknown@example.com"], 0]);
+    const pending = await notYetTaken(`bc:uncertain:${prefix}`, messages);
+    is(`${prefix}: only confirmed acceptance gets the existing completion marker`,
+      pending?.map(m => m.to), ["batch-unknown@example.com", "batch-not-attempted@example.com"]);
+    amazonLosesReply = () => null;
+  }
+  account = approved();
+  askAgain();
+  clear();
+
   part("Amazon pauses the account");
   clear();
   amazonSays = () => ({ status: 400, type: "AccountSuspendedException", message: "Sending paused for this account." });

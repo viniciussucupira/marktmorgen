@@ -8097,6 +8097,8 @@ REGRA DOS 60% (OBRIGATÓRIA): todo cliente pagante, considerado isoladamente e u
 
 309. [EM1] E-mails para a lista somente pela Amazon SES, com fila de espera, e limites de envio maiores
 
+Estado da unidade de aceite incerto do lote SES: em andamento pelo Codex em31/10/2026, 02:16:12 Fortaleza, ramo codex/ses-batch-uncertain-stop, antes do código. sesBatch ignora uncertain e repete/troca para Resend um envio possivelmente aceito. Parar novas tentativas e fallback na mesma chamada; sem novos marcadores persistidos ou alegação de exatamente uma vez. PR#1395 segue CI completo válido e intacto em outro ramo.
+
 Estado da unidade de campanha com resultado incerto: em andamento pelo Codex em31/10/2026 02h07min16s Fortaleza, ramo codex/broadcast-uncertain-stop, antes do código. advanceBroadcast ignora result.uncertain e tenta de novo automaticamente; ao receber resultado incerto, usar o estado terminal existente failed com aviso honesto e preservar snapshot, sem novos campos/chaves/TTL. Não certifica crash entre envio e gravação, nova fila SES,72h ou entrega exatamente uma vez.
 
 Histórico da unidade incorporada e publicada: Estado da unidade IAM de envio: em andamento pelo Codex em31/10/2026 01h14min39s Fortaleza, ramo codex/ses-role-only, antes do código. Aplicar requisito expresso de somente papel IAM AWS_SES_ROLE_ARN, sem chave de usuário; testes sintéticos migram para STS/OIDC falso, preservando fallback essencial e todos os controles. Nenhuma configuração externa, conta ou credencial será alterada.
@@ -20523,3 +20525,15 @@ Resultado implementado (não publicado): resultado incerto de sendTo leva a camp
 União canônica antes da verificação: código completo de d1cec40043e60181b20ccbb7488bf6e53956f13f (CA1 unidade4a/PR#1392 do Claude) preservado. Nenhum dos três arquivos desta unidade ou a fila foi alterado por essa incorporação; nova árvore parte integralmente dela, mantendo todos os demais arquivos. Suíte39+Vercel será executada no novo head completo; não reutilizar resultados da base anterior.
 
 Fila canônica e9cd8627349b1965fae2eb38b29f558d9561e499 incluída integralmente: CA1 unidade5 do Claude e dependência NC1 sobre preço vendido preservadas; sem editar seus ramos. Nenhuma alteração de código entre d1cec400 e e9cd8627.
+
+
+### 309/EM1 — aceite incerto no lote SES, marca antes do código (31/10/2026)
+
+Estado da unidade de aceite incerto do lote SES: em andamento pelo Codex em31/10/2026, 02:16:12 Fortaleza, ramo codex/ses-batch-uncertain-stop, antes do código. sesBatch ignora uncertain e repete/troca para Resend um envio possivelmente aceito. Parar novas tentativas e fallback na mesma chamada; sem novos marcadores persistidos ou alegação de exatamente uma vez. PR#1395 segue CI completo válido e intacto em outro ramo.
+
+Unidade técnica limitada a lib/ses.ts, lib/email.ts e tests/ses-sender.test.ts, distintos dos arquivos de código do PR#1395. Sem editar seu head nem cancelar CI. Parte da árvore completa já unida ao canônico e9cd8627, preservando CA1 do Claude e fila inteira. Uma resposta SES500/perdida não prova recusa; nenhum próximo lote/round/fallback deve ser autorizado por isso. A janela entre efeito e checkpoint ainda existe; migração da lista, fila durável72h, reserva atômica/global e fatos de custo continuam remanescentes.
+
+Custo: nenhum novo comando/chave/TTL, conta/provedor ou recurso pago; somente interrompe chamadas que antes se repetiam. Teto incremental mensal/anual de operações novas porStore/Studio/Scale0/0; custo total faturado/CI/Vercel/Redis desconhecido, nunca0. Preços/limites/flags fechadas preservados. Testes somente sintéticos; nova suíte39+Vercel completa exigida antes de incorporar.
+
+
+Resultado implementado (não publicado): sesBatch propaga uncertain de sesSend, conserva os confirmados e o restante não resolvido, interrompe próximas ondas e segundo round; sendBatch retorna retry sem passar o restante ao Resend. Estado de conta recusado simultaneamente continua sendo registrado pelo caminho existente. Testes reais do sender: aceite sintético500/resposta perdida numa onda com outro aceite confirmado e destinatário ainda não tentado, sem segundoSES nem Resend; somente o confirmado recebe marca já existente. Controle429confirmado continua até o segundo round; testes prévios de fallbackessencial/contapausada/recusa individual e idempotência preservados. Não grava marca para aceite desconhecido e não afirma proteção entre invocações/crash; checkpoint de campanha no PR#1395 e dos fluxos permanece necessário. Nenhum campo persistido/IOextra ou configuração externa.

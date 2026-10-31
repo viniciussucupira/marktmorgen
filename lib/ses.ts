@@ -478,7 +478,7 @@ export async function sesSend(config: SesConfig, message: SesMessage): Promise<{
     const response = await call(config, "POST", "/v2/email/outbound-emails", payload);
     if (response.ok) return { outcome: "sent", why: "" };
     // SES can accept a message before returning a server error. This is not
-    // a confirmed refusal; individual sends must not retry or change sender.
+    // a confirmed refusal; sends must not retry or change sender.
     // Read no error body before preserving that distinction.
     if (response.status >= 500) return { outcome: "busy", why: `SES ${response.status}: acceptance unknown`, uncertain: true };
     const type = response.headers.get("x-amzn-errortype") ?? "";
@@ -544,23 +544,25 @@ const BATCH_MS = 9_000;
  * may send, and says which it took and which are left for the other sender:
  * the ones not reached in time, and all of them from the moment Amazon
  * refuses one for the account's own sake. One it refused for the email's own
- * sake is in neither: it is not sent by anybody.
+ * sake is in neither: it is not sent by anybody. An uncertain acceptance
+ * stops new waves and rounds; callers must not hand its remainder elsewhere.
  */
 export async function sesBatch<T extends SesMessage>(
   config: SesConfig,
   state: SesState,
   messages: T[],
   batchKey: string,
-): Promise<{ taken: T[]; left: T[]; down: string }> {
+): Promise<{ taken: T[]; left: T[]; down: string; uncertain?: true }> {
   const taken: T[] = [];
   const refused = new Set<T>();
   const perSecond = Math.max(1, Math.floor(state.rate || 1));
   const started = Date.now();
   let down = "";
+  let uncertain = false;
   let queue = [...messages];
-  for (let round = 0; round < 2 && queue.length && !down; round += 1) {
+  for (let round = 0; round < 2 && queue.length && !down && !uncertain; round += 1) {
     const again: T[] = [];
-    for (let i = 0; i < queue.length && !down; i += perSecond) {
+    for (let i = 0; i < queue.length && !down && !uncertain; i += perSecond) {
       if (Date.now() - started > BATCH_MS) {
         again.push(...queue.slice(i));
         break;
@@ -570,7 +572,12 @@ export async function sesBatch<T extends SesMessage>(
       const results = await Promise.all(wave.map((m) => sesSend(config, m)));
       const done: T[] = [];
       results.forEach((result, j) => {
-        if (result.outcome === "sent") done.push(wave[j]);
+        if (result.uncertain === true) {
+          // A provider may have accepted this email before losing its reply.
+          // Keep it unresolved, with no second attempt in this call.
+          uncertain = true;
+          again.push(wave[j]);
+        } else if (result.outcome === "sent") done.push(wave[j]);
         else if (result.outcome === "refused") {
           refused.add(wave[j]);
           console.error("Amazon SES refused an email", result.why);
@@ -585,14 +592,14 @@ export async function sesBatch<T extends SesMessage>(
         // leaves these people out.
         await redisPipeline(done.map((m) => ["SET", didKey(batchKey, m.to), "1", "EX", DID_SECONDS])).catch(() => {});
       }
-      if (down) again.push(...queue.slice(i + perSecond));
+      if (down || uncertain) again.push(...queue.slice(i + perSecond));
       else if (i + perSecond < queue.length) await pause(Math.max(0, 1_000 - (Date.now() - waveStarted)));
     }
     queue = again;
-    if (queue.length && !down && round === 0) {
+    if (queue.length && !down && !uncertain && round === 0) {
       if (Date.now() - started > BATCH_MS) break;
       await pause(1_000);
     }
   }
-  return { taken, left: queue.filter((m) => !refused.has(m)), down };
+  return { taken, left: queue.filter((m) => !refused.has(m)), down, ...(uncertain ? { uncertain: true as const } : {}) };
 }
