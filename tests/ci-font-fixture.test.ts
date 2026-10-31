@@ -4,7 +4,7 @@ import { join } from "node:path";
 import test from "node:test";
 
 test("synthetic font responses cover the approved home font requests", () => {
-  const require = createRequire(import.meta.url);
+  const require = createRequire(join(process.cwd(), "package.json"));
   const responses = require(join(process.cwd(), "tests/e2e/google-fonts-mock.cjs")) as Record<string, string>;
   for (const [query, family, weight] of [
     ["Figtree:wght@300..900", "Figtree", "300 900"],
