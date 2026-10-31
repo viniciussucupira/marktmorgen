@@ -341,6 +341,97 @@ async function main(): Promise<void> {
     redis.pipeline = originalPipeline;
   }
 
+
+  part("Unconfirmed portion reads never release the requested audience");
+  const rampPipeline = redis.pipeline;
+  const checkedRampKey = `nl:mail:ramp:${healthId(meadow)}`;
+  const checkedPauseKey = `nl:mail:paused:${healthId(meadow)}`;
+  const validRamp = { size: RAMP_FIRST, left: RAMP_FIRST, opens: 0 };
+  const inheritedRamp = new Array(1);
+  Object.setPrototypeOf(inheritedRamp, { 0: null });
+  let rampGetterCalls = 0;
+  const computedRamp = new Array(1);
+  Object.defineProperty(computedRamp, "0", { get: () => { rampGetterCalls += 1; return null; } });
+  const badRampReads: [string, unknown][] = [
+    ["lost reply", new Error("synthetic ramp read lost")], ["not an array", {}], ["null envelope", null],
+    ["empty", []], ["extra entry", [null, null]], ["sparse", new Array(1)],
+    ["inherited absence", inheritedRamp], ["computed absence", computedRamp],
+    ["undefined", [undefined]], ["numeric coercion", [0]], ["invalid JSON", ["{"]],
+    ["JSON null", ["null"]], ["JSON array", ["[]"]], ["missing fields", ["{}"]],
+    ["string size", [JSON.stringify({ ...validRamp, size: String(RAMP_FIRST) })]],
+    ["unknown size", [JSON.stringify({ ...validRamp, size: RAMP_FIRST + 1 })]],
+    ["fractional left", [JSON.stringify({ ...validRamp, left: 0.5 })]],
+    ["negative left", [JSON.stringify({ ...validRamp, left: -1 })]],
+    ["left above size", [JSON.stringify({ ...validRamp, left: RAMP_FIRST + 1 })]],
+    ["negative opening", [JSON.stringify({ ...validRamp, opens: -1 })]],
+    ["unsafe opening", [JSON.stringify({ ...validRamp, opens: Number.MAX_SAFE_INTEGER + 1 })]],
+    ["oversized record", [" ".repeat(513)]],
+  ];
+  batches.length = 0;
+  try {
+    for (const [name, reply] of badRampReads) {
+      const commandsSeen: (string | number)[][] = [];
+      redis.pipeline = async commands => {
+        commandsSeen.push(...commands);
+        if (commands.length === 1 && commands[0][0] === "GET" && commands[0][1] === checkedRampKey) {
+          if (reply instanceof Error) throw reply;
+          return reply as unknown[];
+        }
+        return rampPipeline.call(redis, commands);
+      };
+      is(`${name}: no confirmed portion capacity`, await rampRoom(healthId(meadow), 1), 0);
+      const held = await sendTo(meadow, ["member0@example.com"], "Hello", "Still waiting.", `ramp-read:${name}`);
+      is(`${name}: sender keeps its recipient waiting without unknown acceptance`,
+        [held.done, held.rest, held.stopped, held.uncertain], [[], ["member0@example.com"], "portion", undefined]);
+      is(`${name}: only existing reader calls, with no reservation or write`,
+        commandsSeen, [["GET", checkedRampKey], ["GET", checkedPauseKey], ["GET", checkedRampKey]]);
+    }
+
+    part("Unconfirmed portion writes grant no dispatch and are never refunded");
+    const computedAck = new Array(1);
+    Object.defineProperty(computedAck, "0", { get: () => { rampGetterCalls += 1; return "OK"; } });
+    const badAcks: [string, unknown][] = [
+      ["empty", []], ["null", [null]], ["boolean", [true]], ["lowercase", ["ok"]],
+      ["extra entry", ["OK", "OK"]], ["computed", computedAck],
+      ["lost acknowledgement", new Error("synthetic applied ramp write lost")],
+    ];
+    for (const [name, reply] of badAcks) {
+      redis.run(["SET", checkedRampKey, JSON.stringify(validRamp)]);
+      const commandsSeen: (string | number)[][] = [];
+      redis.pipeline = async commands => {
+        commandsSeen.push(...commands);
+        if (commands.length === 1 && commands[0][0] === "SET" && commands[0][1] === checkedRampKey) {
+          await rampPipeline.call(redis, commands);
+          if (reply instanceof Error) throw reply;
+          return reply as unknown[];
+        }
+        return rampPipeline.call(redis, commands);
+      };
+      const held = await sendTo(meadow, ["member0@example.com"], "Hello", "Still waiting.", `ramp-write:${name}`);
+      is(`${name}: sender waits with the whole recipient list`,
+        [held.done, held.rest, held.stopped], [[], ["member0@example.com"], "portion"]);
+      is(`${name}: no allowance increment or rollback command`,
+        commandsSeen.map(c => c[0]), ["GET", "GET", "SET"]);
+      const applied = JSON.parse(String((await rampPipeline.call(redis, [["GET", checkedRampKey]]))[0]));
+      is(`${name}: applied uncertain portion remains taken`, applied.left, RAMP_FIRST - 1);
+    }
+    is("unconfirmed portion checkpoints sent no provider batch", batches.length, 0);
+    is("no computed read or write acknowledgement was invoked", rampGetterCalls, 0);
+
+    redis.pipeline = async commands => commands.length === 1 && commands[0][0] === "GET" && commands[0][1] === checkedRampKey ? [null] : rampPipeline.call(redis, commands);
+    is("confirmed absence still permits the requested audience", await rampRoom(healthId(meadow), 17), 17);
+    redis.pipeline = rampPipeline;
+    redis.run(["SET", checkedRampKey, JSON.stringify(validRamp)]);
+    is("a known portion with confirmed write grants its exact amount", await rampRoom(healthId(meadow), 1), 1);
+    const kept = Number((await rampPipeline.call(redis, [["TTL", checkedRampKey]]))[0]);
+    is("existing 180-day portion retention is unchanged", kept <= 180 * 86_400 && kept >= 180 * 86_400 - 60, true);
+    single.length = 0;
+    is("essential email still uses its existing path",
+      [await sendEmail({ meter: { by: "company" }, from: "Marktmorgen <hello@marktmorgen.com>", to: "buyer@example.com", subject: "Your login link", text: "Hello." }), single.length], [true, 1]);
+  } finally {
+    redis.pipeline = rampPipeline;
+  }
+
   Date.now = realNow;
 
   done();

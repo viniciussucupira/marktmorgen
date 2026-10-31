@@ -214,15 +214,29 @@ type Ramp = { size: number; left: number; opens: number };
 const rampKey = (id: string) => `nl:mail:ramp:${id}`;
 const RAMP_KEPT_SECONDS = 180 * 86_400;
 
+/** A single, explicit own response to one existing ramp command. */
+function rampReply(reply: unknown): { value: unknown } | null {
+  if (!Array.isArray(reply)) return null;
+  const length = Object.getOwnPropertyDescriptor(reply, "length");
+  if (!length || !("value" in length) || length.value !== 1) return null;
+  const item = Object.getOwnPropertyDescriptor(reply, "0");
+  return item && "value" in item ? { value: item.value } : null;
+}
+
 function parseRamp(raw: unknown): Ramp | null {
-  if (typeof raw !== "string") return null;
+  if (typeof raw !== "string" || raw.length > 512) return null;
   try {
-    const value = JSON.parse(raw) as Partial<Ramp>;
-    const size = Number(value.size);
-    const left = Number(value.left);
-    const opens = Number(value.opens);
-    if (!Number.isFinite(size) || size < RAMP_FIRST || !Number.isFinite(left) || left < 0 || !Number.isFinite(opens)) return null;
-    return { size, left: Math.min(left, size), opens };
+    const value = JSON.parse(raw) as Partial<Ramp> | null;
+    if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+    const { size, left, opens } = value;
+    if (typeof size !== "number" || !Number.isSafeInteger(size) ||
+        typeof left !== "number" || !Number.isSafeInteger(left) || left < 0 || left > size ||
+        typeof opens !== "number" || !Number.isSafeInteger(opens) || opens < 0) return null;
+    let knownSize = false;
+    for (let portion = RAMP_FIRST; portion <= RAMP_LAST; portion *= 2) {
+      if (size === portion) knownSize = true;
+    }
+    return knownSize ? { size, left, opens } : null;
   } catch {
     return null;
   }
@@ -246,31 +260,41 @@ export async function startRamp(id: string, added: number): Promise<void> {
  * How many of `want` emails this store may send right now, taken from the
  * portion that is open. `want` itself for a store with no portions running,
  * which is nearly every store nearly all the time; 0 while the next portion
- * has not opened yet.
+ * has not opened yet, or when its read/write checkpoint is unconfirmed.
  */
 export async function rampRoom(id: string, want: number, now = Date.now()): Promise<number> {
-  if (!id || want <= 0 || !isRedisConfigured()) return want;
+  if (!id || !Number.isSafeInteger(want) || want <= 0 || !Number.isFinite(now) || !isRedisConfigured()) return 0;
   const key = rampKey(id);
-  const [raw] = await redisPipeline([["GET", key]]);
-  let ramp = parseRamp(raw);
-  if (!ramp) return want;
-  const seconds = Math.floor(now / 1000);
-  if (ramp.left <= 0) {
-    if (seconds < ramp.opens) return 0;
-    const next = ramp.size * 2;
-    if (next > RAMP_LAST) {
-      // The last portion went without the store being paused: the list has
-      // shown itself to be a real one, and goes out at once from here on.
-      await redisPipeline([["DEL", key]]);
-      return want;
+  try {
+    const found = rampReply(await redisPipeline([["GET", key]]));
+    if (!found) return 0;
+    // Only confirmed absence means no portions are running. An unreadable
+    // checkpoint cannot authorize the whole requested audience.
+    if (found.value === null) return want;
+    let ramp = parseRamp(found.value);
+    if (!ramp) return 0;
+    const seconds = Math.floor(now / 1000);
+    if (ramp.left <= 0) {
+      if (seconds < ramp.opens) return 0;
+      const next = ramp.size * 2;
+      if (next > RAMP_LAST) {
+        // The confirmed final portion has finished; this only cleans up
+        // its existing checkpoint, without changing the progression.
+        await redisPipeline([["DEL", key]]);
+        return want;
+      }
+      ramp = { size: next, left: next, opens: 0 };
     }
-    ramp = { size: next, left: next, opens: 0 };
+    const take = Math.min(want, ramp.left);
+    const left = ramp.left - take;
+    const after: Ramp = { size: ramp.size, left, opens: left === 0 ? seconds + RAMP_GAP_MINUTES * 60 : 0 };
+    const saved = rampReply(await redisPipeline([["SET", key, JSON.stringify(after), "EX", RAMP_KEPT_SECONDS]]));
+    // A missing acknowledgement may have applied. Keep that capacity taken
+    // and grant no dispatch; do not refund or overwrite an uncertain write.
+    return saved?.value === "OK" ? take : 0;
+  } catch {
+    return 0;
   }
-  const take = Math.min(want, ramp.left);
-  const left = ramp.left - take;
-  const after: Ramp = { size: ramp.size, left, opens: left === 0 ? seconds + RAMP_GAP_MINUTES * 60 : 0 };
-  await redisPipeline([["SET", key, JSON.stringify(after), "EX", RAMP_KEPT_SECONDS]]);
-  return take;
 }
 
 /** Gives back what rampRoom took, for a batch that did not go out. */
