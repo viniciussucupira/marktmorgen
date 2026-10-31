@@ -53,3 +53,9 @@ export const MEETING_TEST_PAUSED_WORDS = pausedWords("test meetings", MEETING_KE
 
 /** Shown where the host's Google calendar list would be, while it is not read. */
 export const CALENDAR_LIST_PAUSED = "Your Google calendar list is not read while your plan's payment is unpaid or disputed. It is read again on its own once the payment is recorded or the dispute is settled.";
+
+/**
+ * 232 [CA1] unit 4b4b1: a webhook test message waits too. Endpoints already
+ * added stay, can be changed and can be removed.
+ */
+export const WEBHOOK_TEST_PAUSED_WORDS = pausedWords("webhook test messages", "You can still change or remove any endpoint.");

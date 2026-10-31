@@ -2,6 +2,7 @@ import { type NextRequest, after } from "next/server";
 import { noticeCreator } from "@/lib/account-notice";
 import { ensureStatsId, storeForEmail } from "@/lib/store";
 import { guardStoreWrite, text } from "@/lib/store-request";
+import { WEBHOOK_TEST_PAUSED_WORDS, integrationPauseWord } from "@/lib/integration-pause";
 import { MAX_ENDPOINT_URL, addEndpoint, removeEndpoint, sendTest, setEndpointEvents, webhooksView } from "@/lib/webhooks";
 
 /**
@@ -43,6 +44,9 @@ export async function POST(request: NextRequest) {
       return Response.json({ ok: true, view });
     }
     if (action === "test") {
+      // 232 [CA1] 4b4b1: no test message while the plan's costs are paused; changing and removing stay open.
+      const paused = integrationPauseWord(store);
+      if (paused) return Response.json({ ok: false, error: paused, message: WEBHOOK_TEST_PAUSED_WORDS[paused] }, { status: 409 });
       const result = await sendTest(store, id);
       if (!result.ok) {
         if (result.reason === "unavailable") return Response.json({ ok: false, error: "unavailable", message: "The test could not be sent just now. Try again in a moment." }, { status: 503 });
