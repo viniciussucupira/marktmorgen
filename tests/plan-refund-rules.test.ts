@@ -170,7 +170,8 @@ part("The rule is the one the refund page states");
   is("the guarantee reads REFUND_DAYS", page.includes("({REFUND_DAYS}) days of the"), true);
   is("months kept at the monthly price", page.includes("the monthly price of that plan"), true);
   is("the card fee kept on a yearly refund", page.includes("card processing fee Stripe"), true);
-  is("renewals not refunded", page.includes("A monthly renewal, a charge made when you switch plans"), true);
+  is("renewals refunded only inside the guarantee's days", page.includes("After the {REFUND_DAYS} days of section 2, a monthly renewal, a\n          charge made when you switch plans"), true);
+  is("inside them, every payment for the same store since the first (owner, 31/10/2026 15h41; lib/plan-refund.ts)", page.includes("and in full every other payment for the same store&apos;s plan made\n          since then, within those days"), true);
 }
 
 done();

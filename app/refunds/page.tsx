@@ -8,7 +8,7 @@ import { CLOSING_DAYS } from "@/lib/plan-closing-rules";
 export const metadata: Metadata = {
   title: "Refund Policy — Marktmorgen",
   description:
-    `Cancel anytime. Your first payment refunded in full on request within ${REFUND_DAYS} days; a yearly plan refunded for the months not yet started, less Stripe's card fee.`,
+    `Cancel anytime. Within ${REFUND_DAYS} days of your first payment, it and every plan payment since for the same store refunded in full on request; a yearly plan refunded for the months not yet started, less Stripe's card fee.`,
 };
 
 export default function RefundsPage() {
@@ -44,13 +44,16 @@ export default function RefundsPage() {
         </p>
       </LegalSection>
 
-      <LegalSection id="guarantee" title={`2. ${REFUND_DAYS}-day money-back guarantee on your first payment`}>
+      <LegalSection id="guarantee" title={`2. ${REFUND_DAYS}-day money-back guarantee from your first payment`}>
         <p>
           If you request a refund within thirty ({REFUND_DAYS}) days of the
-          first payment on your account, we will refund that payment in full.
-          No reason is required and none will be asked for. The first payment
-          is the first charge we make to you, on any plan, monthly or yearly,
-          for any of your stores.
+          first payment on your account, we will refund that payment in full,
+          and in full every other payment for the same store&apos;s plan made
+          since then, within those days, such as a monthly renewal or a charge
+          for switching plans. No reason is required and none will be asked
+          for. The first payment is the first charge we make to you, on any
+          plan, monthly or yearly, for any of your stores. The guarantee is
+          given once.
         </p>
         <p>
           This guarantee covers what happens once you have actually been
@@ -91,8 +94,9 @@ export default function RefundsPage() {
           Its plan ends on the day of the refund, as section 2 says.
         </p>
         <p>
-          If the yearly payment was your first payment to us and you ask within{" "}
-          {REFUND_DAYS} days of it, section 2 applies instead and the whole
+          If the yearly payment was your first payment to us, or was made
+          within {REFUND_DAYS} days of it, and you ask within {REFUND_DAYS}{" "}
+          days of your first payment, section 2 applies instead and the whole
           payment comes back.
         </p>
       </LegalSection>
@@ -133,19 +137,20 @@ export default function RefundsPage() {
 
       <LegalSection title="5. Renewals and later charges">
         <p>
-          A monthly renewal, a charge made when you switch plans and any
-          charge after your first payment are not refunded, except where
-          applicable consumer law requires it. You may cancel at any time to
+          After the {REFUND_DAYS} days of section 2, a monthly renewal, a
+          charge made when you switch plans and any other later charge are not
+          refunded, except where applicable consumer law requires it. You may cancel at any time to
           stop future charges and keep access until the end of the period you
           have already paid for. The months of a yearly plan that have not
           started are always refunded, as section 3 says.
         </p>
         <p>
-          Why the guarantee is on the first payment: a refund gives back the
-          whole month after it has been used, including what that month cost us
-          to serve. We offer that once, so you can try the paid plan for real;
-          offering it on every month would make every month free for anyone who
-          asked, and the plans would have to cost everyone else more.
+          Why the guarantee is only for your first {REFUND_DAYS} days: a refund
+          gives back the whole month after it has been used, including what
+          that month cost us to serve. We offer that once, so you can try the
+          paid plan for real; offering it on every month would make every month
+          free for anyone who asked, and the plans would have to cost everyone
+          else more.
         </p>
       </LegalSection>
       <LegalSection id="store-assistant" title="5a. The Store assistant add-on">
@@ -153,7 +158,7 @@ export default function RefundsPage() {
           The Store assistant is a subscription of its own, beside your plan.
           Its payments, the first one included, are not refunded, except where
           applicable consumer law requires it: the money-back guarantee above
-          is for your plan&apos;s first payment. You can stop it at any time
+          is for your plan&apos;s payments. You can stop it at any time
           from your studio, and it stays on until the end of the month already
           paid. If your plan ends, it is set to stop at the end of the month
           already paid, and nothing more is charged for it.
