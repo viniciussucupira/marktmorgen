@@ -27,8 +27,7 @@ import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
 import { paidPeriod } from "./billing-period-fixture";
 import { ROOM } from "./data-room";
-
-type Sent = { to: string[]; headers?: Record<string, string>; text: string };
+import { installSesMailFixture } from "./ses-mail-fixture";
 
 async function main(): Promise<void> {
   redis.clear();
@@ -43,15 +42,10 @@ async function main(): Promise<void> {
   for (const email of everyone) await upsertContact(listId, email, { agreed: true, explicit: true, source: "free" }, ROOM);
 
   process.env.RESEND_API_KEY = "re_test_send_time_suppression_only";
-  const messages: Sent[] = [];
-  globalThis.fetch = (async (url: string | URL | Request, init?: RequestInit) => {
-    if (String(url).includes("api.resend.com/emails/batch")) {
-      messages.push(...(JSON.parse(String(init?.body)) as Sent[]));
-      return new Response(JSON.stringify({ data: [] }));
-    }
-    if (String(url).includes("api.resend.com")) return new Response(JSON.stringify({ id: "email_1" }));
-    return new Response("{}", { status: 404 });
-  }) as typeof fetch;
+  const mail = installSesMailFixture();
+  mail.configure();
+  await mail.setReady(true, { max24: 50_000, rate: 100 });
+  const messages = mail.ses;
 
   part("The list as it was written down when the email started");
   const id = "222222222222222222222222";
@@ -79,6 +73,7 @@ async function main(): Promise<void> {
   is("still unsubscribed, still stopped as bounced", [JSON.parse(String(left)).unsub, JSON.parse(String(bounced)).unsub, JSON.parse(String(bounced)).gone], [true, true, "bounced"]);
   is("and a second unsubscribe of the same address is the same", (await unsubscribe(tokens.get("left@example.com") ?? ""))?.email, "left@example.com");
 
+  mail.restore();
   done();
 }
 

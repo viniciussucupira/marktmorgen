@@ -19,6 +19,7 @@ import { done, is, part } from "./check";
 import { paidPeriod } from "./billing-period-fixture";
 import { windowId } from "@/lib/allowance-window";
 import { ROOM } from "./data-room";
+import { installSesMailFixture } from "./ses-mail-fixture";
 
 const OWNER = "owner@example.com";
 type Message = { to: string[]; subject: string };
@@ -97,20 +98,22 @@ async function main(): Promise<void> {
   const went = await sendEmail({ ...message("buyer@example.com"), subject: "Your login link" });
   is("a login link is sent all the same", [went, single.length], [true, 1]);
 
-  part("A broadcast waits, and goes on by itself");
+  part("A broadcast waits for SES, and goes on by itself");
   redis.run(["SET", sentKey(), String(listCeiling() - 10)]);
+  const mail = installSesMailFixture({ fallback: globalThis.fetch });
+  mail.configure();
+  await mail.setReady(false);
   const created = await createBroadcast(store, { subject: "The plan is here", body: "It is ready.", productId: "", notProductId: "", sendAt: undefined });
   if (!created.ok) throw new Error(`no broadcast: ${created.reason}`);
   batches.length = 0;
   let b = (await advanceBroadcast(created.broadcast.id, storeForHandle, Date.now() + 30_000))!;
   is("it waits, and says why in words a creator can read", [b.status, b.note === SENDER_WAIT_NOTE], ["waiting", true]);
-  is("nobody was written to, and nobody was dropped", [b.sent, b.total, batches.length], [0, 30, 0]);
-  // The owner moves the sender to a larger plan and says so on the host.
-  process.env.SENDER_MONTHLY_QUOTA = "100000";
+  is("nobody was written to, and nobody was dropped", [b.sent, b.total, mail.sesAttempts.length, batches.length], [0, 30, 0, 0]);
+  await mail.setReady(true);
   b = (await advanceBroadcast(created.broadcast.id, storeForHandle, Date.now() + 30_000))!;
-  is("with the plan raised, it finishes without anyone pressing anything", [b.status, b.sent, b.note], ["sent", 30, ""]);
-  is("to everyone, once", new Set(batches.flat().map((m) => m.to[0])).size, 30);
-  delete process.env.SENDER_MONTHLY_QUOTA;
+  is("with SES capacity confirmed, it finishes without anyone pressing anything", [b.status, b.sent, b.note], ["sent", 30, ""]);
+  is("to everyone through SES once, never through the Resend batch", [new Set(mail.ses.flatMap((m) => m.to)).size, batches.length], [30, 0]);
+  mail.restore();
 
 
   part("Unconfirmed sender usage cannot authorize list admission");
