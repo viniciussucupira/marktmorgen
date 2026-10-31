@@ -87,3 +87,43 @@ test("deployment and function artifact retention is an explicit unknown whole-LL
  assert.equal(sources.deploymentArtifacts.perGbMonthMinorEach,10);
  assert.equal(sources.deploymentArtifacts.approvedCeiling,false);
 });
+
+test("missing fixed-cost fields cannot inherit a zero ceiling or review evidence",()=>{
+ const replacements = {id:LLC_FIXED_COST_IDS[0],fullMonthlyUsdCents:0,fullAnnualUsdCents:0,evidence:"SYNTHETIC inherited review",reserveReviewed:true};
+ for(const key of ["id","fullMonthlyUsdCents","fullAnnualUsdCents","evidence","reserveReviewed"] as const){
+  const original=Object.getOwnPropertyDescriptor(Object.prototype,key);
+  const lines=fixture();
+  delete (lines[0] as Partial<FixedCostCeiling>)[key];
+  Object.defineProperty(lines[0],"unexpected",{value:"keeps the own-field count",enumerable:true});
+  try{
+   Object.defineProperty(Object.prototype,key,{configurable:true,writable:true,value:{value:replacements[key]}});
+   assert.equal(allocateEntireLlcFixedCosts(lines),null,key);
+  }finally{
+   if(original)Object.defineProperty(Object.prototype,key,original);
+   else Reflect.deleteProperty(Object.prototype,key);
+  }
+ }
+});
+test("missing fixed-cost fields never execute descriptor-map prototype getters",()=>{
+ for(const key of ["id","fullMonthlyUsdCents","fullAnnualUsdCents","evidence","reserveReviewed"] as const){
+  const original=Object.getOwnPropertyDescriptor(Object.prototype,key);
+  const lines=fixture();let reads=0;
+  delete (lines[0] as Partial<FixedCostCeiling>)[key];
+  Object.defineProperty(lines[0],"unexpected",{value:"keeps the own-field count",enumerable:true});
+  try{
+   Object.defineProperty(Object.prototype,key,{configurable:true,get(){reads++;return{value:0};}});
+   assert.equal(allocateEntireLlcFixedCosts(lines),null,key);
+   assert.equal(reads,0,key);
+  }finally{
+   if(original)Object.defineProperty(Object.prototype,key,original);
+   else Reflect.deleteProperty(Object.prototype,key);
+  }
+ }
+ const expected=fixture();
+ assert.deepEqual(allocateEntireLlcFixedCosts(expected),{
+  monthlyUsdCents:expected.reduce((sum,line)=>sum+line.fullMonthlyUsdCents!,0),
+  annualUsdCents:expected.reduce((sum,line)=>sum+line.fullAnnualUsdCents!,0),
+  marktmorgenBps:10000,hazelsongBps:0,
+ });
+ assert.equal(allocateEntireLlcFixedCosts(CURRENT_LLC_FIXED_COST_CEILINGS),null);
+});

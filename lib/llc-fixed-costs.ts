@@ -56,6 +56,8 @@ export function allocateEntireLlcFixedCosts(lines: readonly FixedCostCeiling[]) 
    const fields = Object.getOwnPropertyDescriptors(record);
    const data: Record<string, unknown> = {};
    for (const key of keys) {
+    // A missing cost must not resolve to an inherited descriptor or getter.
+    if (!Object.hasOwn(fields, key)) return null;
     const field = fields[key];
     if (!field || !Object.hasOwn(field, "value")) return null;
     data[key] = field.value;
