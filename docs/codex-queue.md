@@ -20639,3 +20639,8 @@ Custo:mesmosGETcache/GETaccount/SETcache,piorcadênciaexistente1consultadecontap
 
 
 Resultado implementado (não publicado): falhadorefresh marca readyfalse/unreachable na mesmaSETcache,semrenovarreadytrue;preservaquota/taxaapenascomometadado nãoautorizante e âncora60sjáusada.2cenáriosreaisdosendercomcachepositivoexpirado+500/perdaresposta: e-mailindividual e lotedeserviço usamfallbackexistente,nãoamplificamroomdalista,nãonovaconsultaantes60s,recuperaçãocomquotaconfirmada1000/taxa2. Controledecacheválido299saindanãofazGETaccount;após301s falha nãoautorizases. Nenhumachamada/campo/chave/TTLnovo;cadênciaigual. Testes1401/1402 eessenciais mantidos;suíte39+Vercelinteirapendente. Não concluireserva global/listaSES-only/fila.
+
+
+### 309 — Evidência temporal do cache SES (31/10/2026)
+
+Estado: em andamento pelo Codex, ramo codex/ses-cache-clock-evidence, antes do código; 2026-10-31T07:39:14.242Z. Um cache ready=true com at no futuro ou hold positivo pode prolongar autorização sem evidência válida. Aceitar autoridade positiva apenas com relógio finito seguro, at não futuro e hold=0; resposta não autorizante mantém a pausa existente. Reutilizar o caminho de consulta já existente, sem nova operação/chave/TTL/campo, sem aumentar limites. Testes sintéticos no remetente real, recuperação e controle da pausa. PR#1404 permanece válido e intacto, com CI em execução. Sem alterar a classificação serviço/lista, vendas, preços, idiomas ou controles fiscais.
