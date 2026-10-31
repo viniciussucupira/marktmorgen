@@ -49,6 +49,7 @@ import {
   visitsWords,
 } from "@/lib/traffic-rules";
 import { storeOf } from "@/lib/usage-billing";
+import { DAY_FIELDS_MAX, LIFE_WRITE_MAX } from "@/lib/stats";
 import { countHit, countVisit } from "@/lib/visit";
 import { isSoon, soonProducts } from "@/lib/waitlist";
 import { centsWords } from "@/lib/watch-rules";
@@ -123,17 +124,38 @@ globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) =>
 
 // ---------------------------------------------------------------- counting
 
-/** How many commands were sent to the database while something ran. */
+/**
+ * How many commands the database billed while something ran: each command
+ * sent, and each one a script ran inside it. Upstash bills an EVAL as one
+ * command plus one for every redis.call it runs
+ * (https://upstash.com/docs/redis/overall/billing, read 31 October 2026);
+ * until that day only what was sent was counted here, so a view's count,
+ * held at 12, was billed up to 32 for a returning visitor (313 [CV1]). The stand-in counts what
+ * lib/capped-count.ts runs inside (lib/redis-memory.ts, scriptCalls), and
+ * scripts/test_capped_count_redis.py holds it to what a real server runs.
+ */
 let commands = 0;
+/** Any other script a counted request sent: its inside is not counted here, so a visit must send none. */
+const uncounted: string[] = [];
+let measuring = false;
 const real = redis.pipeline.bind(redis);
 (redis as unknown as { pipeline: typeof redis.pipeline }).pipeline = ((list: (string | number)[][]) => {
   commands += list.length;
+  for (const command of list) {
+    if (measuring && command[0] === "EVAL" && !String(command[1]).startsWith("-- marktmorgen:capped-count:")) uncounted.push(String(command[1]).split("\n")[0]);
+  }
   return real(list);
 }) as typeof redis.pipeline;
 async function counted(work: () => Promise<unknown>): Promise<number> {
   commands = 0;
-  await work();
-  return commands;
+  const inside = redis.scriptCalls;
+  measuring = true;
+  try {
+    await work();
+  } finally {
+    measuring = false;
+  }
+  return commands + redis.scriptCalls - inside;
 }
 
 /** The request a page's count arrives as. */
@@ -345,6 +367,56 @@ async function main(): Promise<void> {
   await countLater("192.0.2.52");
   const laterCount = await counted(() => countLater("192.0.2.51"));
   is("and saying it was opened is too, with the product's own visitor", laterCount <= COMMANDS.laterCount, true);
+  // The heaviest view (313 [CV1], 31 October 2026): a medium and a campaign
+  // beside its source, nine counts in all (lib/stats.ts), with the day's
+  // record already at its most fields and the all-time one near its own, so
+  // the count script also asks which names are there (lib/capped-count.ts).
+  const countTagged = async (ip: string) => {
+    const store = (await storeForHandle("joy"))!;
+    await withinLimit("hit", `${ip}|${store.handle}`, 120, 600);
+    await countHit(asking(ip), store, { kind: "view", source: "newsletter", medium: "email", campaign: "fall" });
+    await countVisit(asking(ip), store);
+  };
+  const joyStats = (await storeForHandle("joy"))!.statsId;
+  const today = new Date().toISOString().slice(0, 10);
+  // The keys lib/stats.ts counts a day's and the all-time record under.
+  for (let i = 0; redis.run(["HLEN", `nl:stats:${joyStats}:${today}`]) as number < DAY_FIELDS_MAX; i += 1) redis.run(["HSET", `nl:stats:${joyStats}:${today}`, `f:${i}`, "1"]);
+  for (let i = 0; i < LIFE_WRITE_MAX - 2; i += 1) redis.run(["HSET", `nl:stats:${joyStats}:life`, `f:${i}`, "1"]);
+  const fullFirst = await counted(() => countTagged("192.0.2.60"));
+  const fullSecond = await counted(() => countTagged("192.0.2.60"));
+  is("the heaviest view is inside the model too, at its record's most", [fullSecond <= COMMANDS.frontCount, fullFirst - fullSecond <= COMMANDS.firstOfDay], [true, true]);
+  is("and what it counted beyond the most is kept under ~, so the day's total stays right", Number(redis.run(["HGET", `nl:stats:${joyStats}:${today}`, "~"])) >= 2, true);
+  // What was counted before 31 October 2026 for this view, and what it is now (printed for the record of 313 [CV1]).
+  console.log(`a view's count, billed: ${secondView} (${firstView} by somebody new to the day); the heaviest: ${fullSecond} (${fullFirst})`);
+  // The store's first view of the day, by somebody new, arriving when the
+  // day's record is already one name short of its most (products, links and
+  // checkouts counted earlier that day) and the all-time one at its own: the
+  // nine counts, both lookups of which names are there, and the writes made
+  // once a day with the day's first view (lib/stats.ts). The most a single
+  // view can send; held to the model with somebody new to the day's share.
+  const kim = await storeWith("kim", "paid");
+  const kimStore = (await storeForHandle("kim"))!;
+  const kimDay = `nl:stats:${kimStore.statsId}:${new Date().toISOString().slice(0, 10)}`;
+  const tagged = async (handle: string, ip: string) => {
+    const store = (await storeForHandle(handle))!;
+    await withinLimit("hit", `${ip}|${store.handle}`, 120, 600);
+    await countHit(asking(ip), store, { kind: "view", source: "newsletter", medium: "email", campaign: "fall" });
+    await countVisit(asking(ip), store);
+  };
+  // Somebody before them this month (so the month's first-visit writes are not in it), then the day's record made one short.
+  await tagged("kim", "192.0.2.70");
+  redis.run(["DEL", kimDay]);
+  for (let i = 0; i < DAY_FIELDS_MAX - 1; i += 1) redis.run(["HSET", kimDay, `f:${i}`, "1"]);
+  for (let i = 0; i < LIFE_WRITE_MAX; i += 1) redis.run(["HSET", `nl:stats:${kimStore.statsId}:life`, `f:${i}`, "1"]);
+  const dayFirst = await counted(() => tagged("kim", "192.0.2.71"));
+  is("the store's first view of the day, by somebody new, at its records' most, is inside the model", dayFirst <= COMMANDS.frontCount + COMMANDS.firstOfDay, true);
+  is("and it is the day's first: its expiry is written with it", redis.run(["TTL", kimDay]) as number > 0, true);
+  void kim;
+  console.log(`a view's count, billed, the store's first of the day at its records' most, by somebody new: ${dayFirst}`);
+  // A product page opened with the day's record at its most (made so above): its one count asks which names are there.
+  const laterFull = await counted(() => countLater("192.0.2.61"));
+  is("and so is a product's page with the day's record at its most", laterFull <= COMMANDS.laterCount, true);
+  console.log(`a later page's count, billed: ${laterCount}; with the day's record at its most: ${laterFull}`);
   // How a page was read, sent by one visitor in eight as they leave (lib/page-read.ts):
   // the route, with a block of a sales page counted before and one of the store's page.
   const readStore = (await storeForHandle("joy"))!;
@@ -353,9 +425,13 @@ async function main(): Promise<void> {
   await readRequest({ t: readToken(readStore.statsId, product.id), k: "d", p: product.id, b: "blok0001" });
   const depthCount = await counted(() => readRequest({ t: readToken(readStore.statsId, product.id), k: "d", p: product.id, b: "blok0001" }));
   const reachCount = await counted(() => readRequest({ t: readToken(readStore.statsId, STORE_SCOPE), k: "s", n: 2, b: `p:${product.id}`, c: "" }));
-  // Exactly one each: none would mean nothing was counted, which would pass the model for the wrong reason.
-  is("and how a page was read is too, without reading the store", [depthCount, reachCount], [COMMANDS.readBeacon, COMMANDS.readBeacon]);
-  is("the visit this is all worked out for is a heavy one", [PAGES_PER_VISIT, STATIC_FILES, visitCost() > 0.0002, visitCost() < 0.0003], [3, 13, true, true]);
+  // Billed, the count script with its one name inside (lib/capped-count.ts): never more than the model,
+  // and never one or none, which would mean the script's inside or the count itself went uncounted.
+  is("and how a page was read is too, without reading the store", [depthCount <= COMMANDS.readBeacon, reachCount <= COMMANDS.readBeacon, depthCount >= 3, reachCount >= 3], [true, true, true, true]);
+  is("every script a visit sends is billed in what is counted here", uncounted, []);
+  // Between $0.0002 and $0.0003 until October 31, 2026, when the count
+  // scripts were costed as Upstash bills them (313 [CV1]): $0.000304.
+  is("the visit this is all worked out for is a heavy one", [PAGES_PER_VISIT, STATIC_FILES, visitCost() > 0.0002, visitCost() < 0.00032], [3, 13, true, true]);
 
   part("Where it is counted, and where a store rests");
   const hit = read("app/api/store/hit/route.ts");

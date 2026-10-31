@@ -102,8 +102,21 @@ export const COMMANDS = {
    * gained who is on the store now (one command) and lost the all-time
    * record's count of views, which is now the sum of its sources (lib/stats.ts,
    * readLife): 12 measured, held at 12.
+   *
+   * Since October 31, 2026 (313 [CV1]) what is BILLED, not what is sent:
+   * Upstash bills a script as one command plus one for every redis.call it
+   * runs (https://upstash.com/docs/redis/overall/billing, read that day),
+   * and the count script (lib/capped-count.ts) was counted as one. Billed,
+   * a returning visitor's view was 18 commands, and 32 at its heaviest (a
+   * medium and a campaign beside its source, nine counts, with the day's
+   * record at its most fields). The script was rewritten the same day to
+   * read each hash's length once rather than before every count: 15, and 21
+   * at the heaviest, measured in tests/traffic.test.ts. The most one view
+   * can send is the store's first of the day, by somebody new, with both
+   * records at their most: 29 measured, which is this and firstOfDay.
+   * Held at 25.
    */
-  frontCount: 12,
+  frontCount: 25,
   /**
    * What a visitor new to the day adds, once: the visit, how long the day
    * is kept, and the store's all-time visitors. A month's first visit, and
@@ -119,15 +132,24 @@ export const COMMANDS = {
    * 8 October 2026): two commands more, measured, and a third once a day.
    */
   laterPage: 10,
-  laterCount: 8,
+  /**
+   * Saying another page was opened, billed (October 31, 2026, as frontCount):
+   * 10 measured on a product's page, and 11 with the day's record at its
+   * most. 8 before, counting the script as one command.
+   */
+  laterCount: 11,
   /**
    * How a page was read (lib/page-read.ts), sent as a visitor leaves it by
    * one visitor in READ_SAMPLE: one command, and an expiry the first time a
    * block of a sales page is counted at all, which is once per block and not
    * per visit. Until October 11, 2026 this went through the store's general
    * count at seven commands and was in none of these sums.
+   *
+   * Billed (October 31, 2026, as frontCount): its count is the count script
+   * with one name, its length read and its count, and the expiry the first
+   * time: 4 at the most, 3 and 4 measured. It was held at 1, the script alone.
    */
-  readBeacon: 1,
+  readBeacon: 4,
   /**
    * Handing a member's page ten minutes' leave to ask the room, at the
    * route that knows who is asking: the store, the community's settings,
