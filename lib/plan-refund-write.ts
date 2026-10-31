@@ -38,7 +38,7 @@ const REFUND_ID = /^re_[A-Za-z0-9]{6,128}$/;
 
 export type PlanRefundMade =
   | { ok: true; cents: number; currency: string; refundId: string; status: "succeeded" | "pending" }
-  | { ok: false; reason: "busy" | "no_lock" | "not_owed" | "pending" | "failed" };
+  | { ok: false; reason: "busy" | "no_lock" | "not_owed" | "unknown" | "pending" | "failed" };
 
 type Row = Record<string, unknown>;
 const rows = (page: Row): Row[] => (Array.isArray(page.data) ? (page.data as unknown[]).filter((r): r is Row => Boolean(r) && typeof r === "object") : []);
@@ -51,6 +51,8 @@ export async function refundPlanPayment(store: Store, nowSeconds = Math.floor(Da
   if (taken !== "OK") return { ok: false, reason: "busy" };
   try {
     const reading = await readPlanRefund(store, nowSeconds);
+    // Not decidable (a failed read, a list too long…): said so, for the page to send the creator to support.
+    if (reading.refund.kind === "unknown") return { ok: false, reason: "unknown" };
     if (!("chargeId" in reading)) return { ok: false, reason: "not_owed" };
     const { chargeId, paymentIntent, currency } = reading;
     const cents = reading.refund.cents;

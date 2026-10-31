@@ -161,6 +161,9 @@ async function main() {
   is("an open dispute: not owed", [await refundPlanPayment(await f.store(), NOW), f.refunds().length], [{ ok: false, reason: "not_owed" }, 0]);
   const g = await paidShop({ at: NOW - 31 * DAY });
   is("outside the 30 days: not owed", [await refundPlanPayment(await g.store(), NOW), g.refunds().length], [{ ok: false, reason: "not_owed" }, 0]);
+  const u = await paidShop();
+  world.charges.find((x) => x.id === u.id)!.amount_captured = 4_900;
+  is("not decidable (part paid by a balance): unknown, nothing made", [await refundPlanPayment(await u.store(), NOW), u.refunds().length], [{ ok: false, reason: "unknown" }, 0]);
   const h = await paidShop();
   await redisPipeline([["SET", `${LOCK_PREFIX}${(await h.store()).sid}`, "someone-else", "EX", 60]]);
   is("another request holds the lock: busy, and its lock is left alone", [await refundPlanPayment(await h.store(), NOW), await lockOf(await h.store())], [{ ok: false, reason: "busy" }, "someone-else"]);
