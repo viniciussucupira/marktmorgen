@@ -96,6 +96,11 @@ export type MetaAdsView = {
   /** When Meta's permission ends and it must be connected again, in seconds; 0 when unknown. */
   expires: number;
   by: string;
+  /**
+   * Set by a caller that holds the store: its reads wait while the plan's
+   * renewal is unpaid or its payment disputed (lib/integration-pause.ts).
+   */
+  readPaused?: boolean;
 };
 
 const STATE_SECONDS = 600;

@@ -28,4 +28,4 @@ export const INTEGRATION_PAUSED_WORDS: Record<"paused_unpaid" | "paused_disputed
 };
 
 /** Meta's own notice adds that its daily read waits too. */
-export const META_READ_PAUSED = "Reading your Meta ad spend also waits, and starts again on its own once everything starts again.";
+export const META_READ_PAUSED = "Reading your Meta ad spend also waits, and starts again on its own once the payment is recorded or the dispute is won.";

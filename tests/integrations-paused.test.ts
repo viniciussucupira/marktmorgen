@@ -6,6 +6,8 @@
  * picker's read wait, and disconnecting stays open. A paid store connects as
  * before, and everything starts again once paid (lib/integration-pause.ts).
  */
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { NextRequest } from "next/server";
 import { SESSION_COOKIE, openSession } from "@/lib/auth";
 import { finishConnect, startConnect, startHostConnect } from "@/lib/meet-routes";
@@ -13,10 +15,11 @@ import { beginConsent } from "@/lib/meet-connect";
 import { hostId } from "@/lib/host-claims";
 import { GOOGLE_HOST_SCOPES } from "@/lib/meet-providers";
 import { finishMetaConnect, startMeta, stopMeta } from "@/lib/meta-routes";
+import { POST as chooseMeta } from "@/app/api/store/meta-ads/route";
 import { beginMeta, finishMeta, metaView, readMetaDue, readMetaSpend } from "@/lib/meta-ads";
 import { claimHandle, ensureStatsId, recordPlanDispute, setSubscription, storeForEmail, storeForId, storeRef } from "@/lib/store";
 import { costsPaused } from "@/lib/plan-standing";
-import { INTEGRATION_PAUSED_WORDS, integrationPauseWord } from "@/lib/integration-pause";
+import { INTEGRATION_PAUSED_WORDS, META_READ_PAUSED, integrationPauseWord } from "@/lib/integration-pause";
 import { RENEWAL_PAUSED_WORDS } from "@/lib/renewal-unpaid-words";
 import { DISPUTE_PAUSED_WORDS } from "@/lib/plan-dispute-rules";
 import { paidPeriod } from "./billing-period-fixture";
@@ -116,6 +119,9 @@ async function main(): Promise<void> {
   is("nor Meta's", word(await metaReturn(), "metaads"), "paused_unpaid");
   is("canceling on the provider's page still says nothing was connected", [word(await googleReturn(""), "meet"), word(await metaReturn(true), "metaads")], ["declined", "declined"]);
   is("Meta's read waits", await readMetaSpend(statsId, store.currency), "paused");
+  const picked = await chooseMeta(new NextRequest(`${ORIGIN}/api/store/meta-ads?${pin}`, { method: "POST", headers: { host: HOST, origin: ORIGIN, cookie, "content-type": "application/json" }, body: JSON.stringify({ action: "account", id: "act_111" }) }));
+  const pickedBody = (await picked.json()) as { ok?: boolean; meta?: { readPaused?: boolean } };
+  is("the account picker saves the choice and says its read waits", [picked.status, pickedBody.ok, pickedBody.meta?.readPaused], [200, true, true]);
   await redis.pipeline([["DEL", `nl:metaads:read:${statsId}`]]);
   const due = await readMetaDue(Date.now() + 10_000, storeForId);
   is("the daily pass skips it", [due.read, due.skipped], [0, 1]);
@@ -149,6 +155,8 @@ async function main(): Promise<void> {
   is("and its return goes on to exchange the code with Meta", [String(word(back, "metaads")).startsWith("paused"), asked.slice(beforeReturn).some((a) => a.endsWith("/oauth/access_token")), (await metaView(statsId, store.currency))?.connected], [false, true, true]);
 
   part("Words");
+  const editor = readFileSync(join(process.cwd(), "components/ad-spend-editor.tsx"), "utf8");
+  is("the ad-spend card's sentence ends as META_READ_PAUSED does", editor.includes(META_READ_PAUSED.replace("Reading your Meta ad spend also waits, and starts again", "starts again")), true);
   is("each word has its sentence, naming what stays", [INTEGRATION_PAUSED_WORDS.paused_unpaid.includes("disconnect"), INTEGRATION_PAUSED_WORDS.paused_disputed.includes("disconnect")], [true, true]);
   is("the studio notice, the email and the Terms name the connections (renewal and dispute)", [RENEWAL_PAUSED_WORDS.includes("new connections to Zoom, Google Calendar and Meta"), DISPUTE_PAUSED_WORDS.includes("new connections to Zoom, Google Calendar and Meta")], [true, true]);
   done();

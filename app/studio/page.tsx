@@ -1,4 +1,5 @@
 import { SalesLevers } from "@/components/sales-levers";
+import { costsPaused } from "@/lib/plan-standing";
 import { INTEGRATION_PAUSED_WORDS, META_READ_PAUSED } from "@/lib/integration-pause";
 import { PlanDisputeNotice } from "@/components/plan-dispute-notice";
 import { planDisputed } from "@/lib/plan-dispute-rules";
@@ -1404,7 +1405,7 @@ export default async function StudioPage({
                   marks={autoMarks}
                   spends={adSpends}
                   beside={beside}
-                  meta={await metaView(store.statsId, store.currency).catch(() => null)}
+                  meta={await metaView(store.statsId, store.currency).then((view) => (view ? { ...view, readPaused: costsPaused(store) } : view)).catch(() => null)}
                   canConnectMeta={may("settings")}
                   pin={pin}
                   askHeard={!heardIsOff}
