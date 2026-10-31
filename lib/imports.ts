@@ -84,7 +84,8 @@ import { grantImported, importedFor } from "@/lib/imported-purchases";
 import { deliverableItems } from "@/lib/bundle-rules";
 import { NIMBUS_FROM, isSenderConfigured, sendBatch } from "@/lib/email";
 import { giveBackToMonth, monthlyAllowance, releaseDay, reserveDay, takeFromMonth } from "@/lib/mail";
-import { IMPORT_MIN_ROWS_PER_UPLOAD, IMPORT_ROW_BYTES, importAllowanceFor } from "@/lib/import-limits";
+import { IMPORT_MIN_ROWS_PER_UPLOAD, IMPORT_ROW_BYTES, importAllowanceFor, importRowsFor } from "@/lib/import-limits";
+import { costsPaused } from "@/lib/plan-standing";
 import { healthTags, noteSent, pausedFor, rampBack, rampRoom, startRamp } from "@/lib/mail-health";
 import { isPaidUp } from "@/lib/billing";
 import { storeBase } from "@/lib/purchase-email";
@@ -176,7 +177,10 @@ export async function releaseMoved(store: Store, n: number, now = Date.now()): P
  * that does not fit is refused whole, and nothing is taken for it.
  */
 export async function takeImportRows(store: Store, n: number, now = Date.now(), bytes = 0): Promise<{ ok: true } | { ok: false; reason: "rows_month" | "unavailable"; limit: number }> {
-  const limit = importAllowanceFor(store, now / 1000).rows;
+  // The plan's own rows even while its costs are paused: no import starts
+  // then (app/api/store/import), so these are the rows of an upload already
+  // under way, which is queued rather than lost (232 [CA1] unit 4b2).
+  const limit = importRowsFor(store, now / 1000);
   if (!Number.isSafeInteger(n) || n <= 0) return { ok: true };
   // A small upload still costs a request: each counts at least this many
   // rows; and a heavy one what it keeps until it is applied, a row for every
@@ -1241,6 +1245,19 @@ export async function runImport(id: string, deadline: number): Promise<ImportJob
       job.state = "failed";
       job.finishedAt = Date.now();
       await redisPipeline([saveJob(job), ["SREM", ACTIVE_KEY, id], ["DEL", rowsKey(id)]]);
+      return job;
+    }
+    // While the plan's renewal is unpaid or a payment for it is disputed
+    // (lib/plan-standing.ts costsPaused, 232 [CA1] unit 4b2), the work an
+    // import costs us waits: nothing is applied, nothing is emailed, and the
+    // job stays as it is, so it goes on where it stopped once that is settled.
+    // Rows not yet brought in are kept RAW_DAYS from their upload, as always;
+    // the job and the addresses still to be emailed are kept alive meanwhile
+    // (one write each, every five minutes), so a long pause loses neither.
+    if (costsPaused(store, Date.now() / 1000)) {
+      const [, , , holder] = await redisPipeline([saveJob(job), ["EXPIRE", mailKey(id), KEEP_SECONDS], ["EXPIRE", errorsKey(id), KEEP_SECONDS], ["GET", busyKey(job.sid)]]);
+      // The store's one-import slot only while this import holds it.
+      if (holder === id) await redisPipeline([["EXPIRE", busyKey(job.sid), KEEP_SECONDS]]);
       return job;
     }
     const [batches] = await redisPipeline([["LLEN", rowsKey(id)]]);
