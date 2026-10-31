@@ -55,10 +55,10 @@ export function refusalWords(reading: { refund: { kind: Refusal; reason: string 
     dispute_open: "This payment is in a dispute with your bank. The dispute decides what comes back to you, so we cannot refund it as well.",
     dispute_returned: "Your bank already returned this payment to you through a dispute.",
     already_refunded: "This payment has already been refunded.",
-    guarantee_used: "The money-back guarantee is for the first payment on your account, and it was used before.",
+    guarantee_used: "The money-back guarantee is given once per person, and it was used before.",
     outside_window: `The money-back guarantee is for requests made within ${REFUND_DAYS} days of your first payment, and that time has passed.`,
-    renewal: "A monthly renewal is not refunded. You can cancel your subscription in your studio, and it stops at the end of the month you paid for.",
-    switch_charge: "A charge for switching plans is not refunded. You can cancel your subscription in your studio, and it stops at the end of the period you paid for.",
+    renewal: `A monthly renewal made more than ${REFUND_DAYS} days after your first payment is not refunded. You can cancel your subscription in your studio, and it stops at the end of the month you paid for.`,
+    switch_charge: `A charge for switching plans made more than ${REFUND_DAYS} days after your first payment is not refunded. You can cancel your subscription in your studio, and it stops at the end of the period you paid for.`,
     months_used: "Every month of your yearly plan has started, so there are no months left to refund.",
     fee_kept: "What is left of your yearly payment is not more than the card fee we keep, so there is nothing to refund.",
   };

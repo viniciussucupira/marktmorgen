@@ -115,6 +115,8 @@ async function main() {
     const w = refusalWords({ refund: { kind: "none", reason } as never });
     return !w.body.startsWith("This payment cannot be refunded") && w.body.includes(SUPPORT_ADDRESS);
   }), true);
+  is("a renewal or a switch is refused only as one made after the guarantee's window (owner, 31/10/2026 15h41)", ["renewal", "switch_charge"].every((reason) => refusalWords({ refund: { kind: "none", reason } as never }).body.includes(`more than ${REFUND_DAYS} days after your first payment`)), true);
+  is("the guarantee is once per person", refusalWords({ refund: { kind: "none", reason: "guarantee_used" } as never }).body.includes("once per person"), true);
   is("the window is the policy's", refusalWords({ refund: { kind: "none", reason: "outside_window" } as never }).body.includes(`${REFUND_DAYS} days`), true);
   is("not decidable: support, never a no", ["customer_credit", "stripe_unread", "unreadable"].every((reason) => refusalWords({ refund: { kind: "unknown", reason } as never }).body.includes(SUPPORT_ADDRESS)), true);
   is("what happens to the store uses the closing rules' own days", refundEffects({ assistant: false }).some((line) => line.includes(`${CLOSING_DAYS} days`)), true);
