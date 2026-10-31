@@ -98,6 +98,20 @@ async function main() {
   const counts = "nl:test:capped";
   is("new names fill the hash to its most", await cappedCount(counts, 2, [{ field: "a", by: 1 }, { field: "b", by: 1 }, { field: "c", by: 4 }]), [1, 1, 0]);
   is("what does not fit is counted under ~, and a name there always counts", [await cappedCount(counts, 2, [{ field: "a", by: 1 }]), redis.run(["HGET", counts, "~"])], [[2], "4"]);
+  // What it runs inside, which Upstash bills one by one beside the EVAL
+  // (https://upstash.com/docs/redis/overall/billing, read 31 October 2026;
+  // 313 [CV1]): one HLEN a hash and one HINCRBY a count, and one HMGET more
+  // for a hash a new name may not fit in. Version 1 asked HEXISTS, and for a
+  // new name HLEN, before every count. scripts/test_capped_count_redis.py
+  // holds the same figures on a real server.
+  const inside = async (most: number, names: string[]) => {
+    const before = redis.scriptCalls;
+    await cappedCount("nl:test:capped-calls", most, names.map((field) => ({ field, by: 1 })));
+    return redis.scriptCalls - before;
+  };
+  is("counting names that all fit runs its length once and a count each", await inside(10, ["v", "r:a", "k:US", "d:mobile"]), 1 + 4);
+  is("near its most, one read more says which are there", await inside(5, ["v", "r:b", "k:BR"]), 1 + 1 + 3);
+  is("and the same names again, past it, as many", [await inside(5, ["v", "r:c", "k:DE"]), redis.run(["HLEN", "nl:test:capped-calls"]), Number(redis.run(["HGET", "nl:test:capped-calls", "~"]))], [1 + 1 + 3, 6, 3]);
   done();
 }
 

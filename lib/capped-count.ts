@@ -21,6 +21,21 @@
  * Answers each field's new value in order, or 0 for one left out. Nothing
  * is written when anything asked is not a count it can do.
  *
+ * What it costs (version 2, 31 October 2026). Upstash bills a script as one
+ * command plus one for every redis.call it runs
+ * (https://upstash.com/docs/redis/overall/billing, read 31 October 2026).
+ * Version 1 asked HEXISTS, and for a new name HLEN, before each HINCRBY: a
+ * view's nine counts (lib/stats.ts) were billed up to 28 commands (27
+ * inside and the EVAL). Version 2
+ * reads each hash's length once; when every name asked could be new and
+ * still fit, it only counts; otherwise one HMGET says which names (and "~")
+ * are there already, and the length is followed from that, exactly as
+ * re-reading it would. One HINCRBY a count, one HLEN a hash and one HMGET for
+ * a hash near its most: the same nine counts are billed 13 at the most. What it answers and keeps is the same as version 1's, which
+ * scripts/test_capped_count_redis.py checks against a re-reading reference
+ * on 400 random counts near and past their most, with the commands each run
+ * counted by the server itself.
+ *
  * scripts/test_capped_count_redis.py runs it on a real Redis.
  */
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
@@ -28,7 +43,7 @@ import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 /** The field what did not fit is counted under. */
 export const OVER_FIELD = "~";
 
-export const CAPPED_COUNT = `-- marktmorgen:capped-count:v1
+export const CAPPED_COUNT = `-- marktmorgen:capped-count:v2
 local n = #KEYS
 if n < 1 or #ARGV < n or (#ARGV - n) % 3 ~= 0 then return redis.error_reply('capped-count: arguments') end
 local caps = {}
@@ -37,19 +52,50 @@ for i = 1, n do
   if not cap or cap < 1 or cap ~= math.floor(cap) then return redis.error_reply('capped-count: most') end
   caps[i] = cap
 end
+local left = {}
 for i = n + 1, #ARGV, 3 do
   local k = tonumber(ARGV[i])
   local by = tonumber(ARGV[i + 2])
   if not k or k < 1 or k > n or k ~= math.floor(k) or not by or by ~= math.floor(by) or ARGV[i + 1] == '' or ARGV[i + 1] == '~' then return redis.error_reply('capped-count: count') end
+  left[k] = (left[k] or 0) + 1
+end
+local len, there = {}, {}
+for k = 1, n do
+  if left[k] then
+    len[k] = redis.call('HLEN', KEYS[k])
+    if len[k] + left[k] > caps[k] then
+      local names = {}
+      for i = n + 1, #ARGV, 3 do
+        if tonumber(ARGV[i]) == k then names[#names + 1] = ARGV[i + 1] end
+      end
+      names[#names + 1] = '~'
+      local held = redis.call('HMGET', KEYS[k], unpack(names))
+      there[k] = {}
+      for j = 1, #names do
+        if held[j] then there[k][names[j]] = true end
+      end
+    end
+  end
 end
 local out = {}
 for i = n + 1, #ARGV, 3 do
   local k = tonumber(ARGV[i])
   local field = ARGV[i + 1]
   local by = tonumber(ARGV[i + 2])
-  if redis.call('HEXISTS', KEYS[k], field) == 1 or redis.call('HLEN', KEYS[k]) < caps[k] then
+  local held = there[k]
+  if not held then
+    out[#out + 1] = redis.call('HINCRBY', KEYS[k], field, by)
+  elseif held[field] or len[k] < caps[k] then
+    if not held[field] then
+      held[field] = true
+      len[k] = len[k] + 1
+    end
     out[#out + 1] = redis.call('HINCRBY', KEYS[k], field, by)
   else
+    if not held['~'] then
+      held['~'] = true
+      len[k] = len[k] + 1
+    end
     redis.call('HINCRBY', KEYS[k], '~', by)
     out[#out + 1] = 0
   end

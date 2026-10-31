@@ -506,7 +506,7 @@ export class MemoryRedis {
           }
           return 1;
         }
-        if (key.startsWith("-- marktmorgen:capped-count:v1\n")) return this.cappedCount(args);
+        if (key.startsWith("-- marktmorgen:capped-count:v2\n")) return this.cappedCount(args);
         if (key.startsWith("-- marktmorgen:assistant-pool:v1\n")) return this.assistantPool(args);
         if (!key.startsWith("-- marktmorgen:form-opportunity:v1\n") || args[0] !== "1" || args.length !== 5) throw new Error("MemoryRedis: unsupported EVAL");
         const target = args[1];
@@ -1216,7 +1216,15 @@ export class MemoryRedis {
     return -1;
   }
 
-  /** lib/capped-count.ts: counts that never grow a hash past its most fields. */
+  /**
+   * Commands the scripts run here step by step sent inside them, which Upstash
+   * bills one by one beside the EVAL (https://upstash.com/docs/redis/overall/billing,
+   * read 31 October 2026): counted for lib/capped-count.ts, so a test can hold
+   * what a request is billed, not only what it sends (tests/traffic.test.ts).
+   */
+  scriptCalls = 0;
+
+  /** lib/capped-count.ts: counts that never grow a hash past its most fields, the way version 2 runs them. */
   private cappedCount(args: string[]): unknown {
     const n = Number(args[0]);
     const keys = args.slice(1, 1 + n);
@@ -1225,23 +1233,49 @@ export class MemoryRedis {
     const caps = argv.slice(0, n).map(Number);
     if (caps.some((cap) => !Number.isInteger(cap) || cap < 1)) throw new Error("ERR capped-count: most");
     const rest = argv.slice(n);
+    const left = new Map<number, number>();
     for (let i = 0; i < rest.length; i += 3) {
       const k = Number(rest[i]);
       const by = Number(rest[i + 2]);
       if (!Number.isInteger(k) || k < 1 || k > n || !Number.isInteger(by) || rest[i + 1] === "" || rest[i + 1] === "~") throw new Error("ERR capped-count: count");
+      left.set(k, (left.get(k) ?? 0) + 1);
+    }
+    // Each hash's length once (HLEN), and which names are there (one HMGET) only for a hash a new name may not fit in.
+    const len = new Map<number, number>();
+    const there = new Map<number, Set<string>>();
+    for (let k = 1; k <= n; k += 1) {
+      if (!left.has(k)) continue;
+      this.live(keys[k - 1]);
+      const hash = this.hash(keys[k - 1]);
+      this.scriptCalls += 1;
+      len.set(k, hash.size);
+      if (hash.size + left.get(k)! > caps[k - 1]) {
+        this.scriptCalls += 1;
+        const names = [...rest.filter((_, i) => i % 3 === 1 && Number(rest[i - 1]) === k), "~"];
+        there.set(k, new Set(names.filter((name) => hash.has(name))));
+      }
     }
     const out: number[] = [];
     for (let i = 0; i < rest.length; i += 3) {
-      const key = keys[Number(rest[i]) - 1];
-      this.live(key);
-      const hash = this.hash(key);
+      const k = Number(rest[i]);
+      const hash = this.hash(keys[k - 1]);
       const field = rest[i + 1];
       const by = Number(rest[i + 2]);
-      if (hash.has(field) || hash.size < caps[Number(rest[i]) - 1]) {
+      const held = there.get(k);
+      this.scriptCalls += 1;
+      if (!held || held.has(field) || len.get(k)! < caps[k - 1]) {
+        if (held && !held.has(field)) {
+          held.add(field);
+          len.set(k, len.get(k)! + 1);
+        }
         const next = (Number(hash.get(field)) || 0) + by;
         hash.set(field, String(next));
         out.push(next);
       } else {
+        if (!held.has("~")) {
+          held.add("~");
+          len.set(k, len.get(k)! + 1);
+        }
         hash.set("~", String((Number(hash.get("~")) || 0) + by));
         out.push(0);
       }

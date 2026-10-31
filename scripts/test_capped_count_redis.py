@@ -4,6 +4,7 @@ No application credentials or production host configuration are read.
 import concurrent.futures
 import os
 from pathlib import Path
+import random
 import re
 import uuid
 from test_form_opportunity_redis import Redis
@@ -15,6 +16,33 @@ def script(path, name):
     if not match or "${" in match.group(1):
         raise RuntimeError("Expected static application script " + name)
     return match.group(1)
+
+
+def reference(hashes, caps, counts):
+    """What the script answered before 31 October 2026, re-reading the hash for every count:
+    a name already there always counts, a new one only while the hash has fewer fields
+    than its most ("~" among them once it is there), the rest under "~"."""
+    out = []
+    for k, field, by in counts:
+        held = hashes[k - 1]
+        if field in held or len(held) < caps[k - 1]:
+            held[field] = held.get(field, 0) + by
+            out.append(held[field])
+        else:
+            held["~"] = held.get("~", 0) + by
+            out.append(0)
+    return out
+
+
+def inside_calls(redis):
+    """Commands the server ran, by name: Upstash bills an EVAL as one command plus one
+    for every redis.call it runs (upstash.com/docs/redis/overall/billing, read 31/10/2026)."""
+    stats = {}
+    for line in redis.command("INFO", "commandstats").split("\r\n"):
+        match = re.match(r"cmdstat_(\w+):calls=(\d+)", line)
+        if match:
+            stats[match.group(1)] = int(match.group(2))
+    return stats
 
 
 def main():
@@ -54,6 +82,41 @@ def main():
                 pass
             assert redis.command("HGETALL", day) == before
         print("PASS: a malformed count writes nothing")
+
+        rng = random.Random(20261031)
+        names = ["v", "r:a", "r:b", "k:US", "k:BR", "d:mobile", "m:x", "g:y", "pv:1"]
+        for trial in range(400):
+            redis.command("DEL", day, life)
+            caps = [rng.randint(1, 8), rng.randint(1, 8)]
+            hashes = [{}, {}]
+            for k, key in ((0, day), (1, life)):
+                for name in rng.sample(names + ["~"], rng.randint(0, 9)):
+                    value = rng.randint(1, 5)
+                    redis.command("HSET", key, name, value)
+                    hashes[k][name] = value
+            counts = [(rng.randint(1, 2), rng.choice(names), rng.randint(1, 3)) for _ in range(rng.randint(1, 9))]
+            expected = reference(hashes, caps, counts)
+            got = run(redis, caps, *counts)
+            assert got == expected, (trial, caps, counts, got, expected)
+            for k, key in ((0, day), (1, life)):
+                held = redis.command("HGETALL", key) or []
+                assert {held[i]: int(held[i + 1]) for i in range(0, len(held), 2)} == hashes[k], (trial, key)
+        print("PASS: 400 random counts, near and past their most, answer and keep exactly what re-reading the hash for every count did")
+
+        # What a store's view sends (lib/stats.ts): nine counts over the day's and the all-time record.
+        view = [(1, "v", 1), (1, "r:a", 1), (2, "r:a", 1), (1, "m:x", 1), (2, "m:x", 1), (1, "g:y", 1), (2, "g:y", 1), (1, "k:US", 1), (1, "d:mobile", 1)]
+        for label, fill in (("below its most", 0), ("at its most", 100)):
+            redis.command("DEL", day, life)
+            for i in range(fill):
+                redis.command("HSET", day, "f:%d" % i, 1)
+            before = inside_calls(redis)
+            run(redis, [100, 2100], *view)
+            after = inside_calls(redis)
+            ran = {name: after.get(name, 0) - before.get(name, 0) for name in ("hexists", "hlen", "hmget", "hincrby", "hget", "hset")}
+            # One HINCRBY a count, one HLEN a hash, and one HMGET for a hash a new name may not fit in.
+            most = len(view) + 2 + (1 if fill else 0)
+            assert sum(ran.values()) <= most and ran["hexists"] == 0, (label, ran)
+            print("PASS: a view's nine counts %s run %d commands inside the script (at most %d): %r" % (label, sum(ran.values()), most, ran))
 
         redis.command("DEL", day)
 
