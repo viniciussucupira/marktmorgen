@@ -310,8 +310,25 @@ export async function reserve(store: Store, n: number, listOnly = false): Promis
   if(!Number.isSafeInteger(allowance) || allowance<0 || n>allowance)return "month";
   if(store.period?.funded===true && !(await reservePaidResourceWindow(store)))return "unavailable";
   try {
-    if(!(await senderTakes(n, listOnly)))return "sender";
     const key=usedKey(store.listId,window),cap=dailyCap(),day=dayKey();
+    if(!listOnly) {
+      if(!(await senderTakes(n)))return "sender";
+      const results=await redisPipeline([["INCRBY",key,n],["EXPIRE",key,70*86400],["INCRBY",day,n],["EXPIRE",day,3*86400]]);
+      if(results.length!==4 || results[1]!==1 || results[3]!==1)return "unavailable";
+      const total=confirmedCount(results[0],n),today=confirmedCount(results[2],n);
+      if(total===null || today===null)return "unavailable";
+      const overMonth=total>allowance,overDay=cap>0 && today>cap;
+      if(!overMonth && !overDay)return "ok";
+      await redisPipeline([["DECRBY",key,n],["DECRBY",day,n]]);
+      return overMonth?"month":"day";
+    }
+    // No SES setup is a known sender wait and needs no temporary ledger work.
+    if(!isSesConfigured()) {
+      await senderTakes(n, true);
+      return "sender";
+    }
+    // For list delivery, reserve the local limits before reading provider
+    // capacity. A known month/day wait needs no SES 24-hour usage read.
     const results=await redisPipeline([["INCRBY",key,n],["EXPIRE",key,70*86400],["INCRBY",day,n],["EXPIRE",day,3*86400]]);
     // A missing acknowledgement may still have consumed capacity. Never
     // refund it or dispatch a provider call on an ambiguous response.
@@ -319,9 +336,16 @@ export async function reserve(store: Store, n: number, listOnly = false): Promis
     const total=confirmedCount(results[0],n),today=confirmedCount(results[2],n);
     if(total===null || today===null)return "unavailable";
     const overMonth=total>allowance,overDay=cap>0 && today>cap;
-    if(!overMonth && !overDay)return "ok";
-    await redisPipeline([["DECRBY",key,n],["DECRBY",day,n]]);
-    return overMonth?"month":"day";
+    if(overMonth || overDay) {
+      await redisPipeline([["DECRBY",key,n],["DECRBY",day,n]]);
+      return overMonth?"month":"day";
+    }
+    if(!(await senderTakes(n, true))) {
+      // No provider was attempted, so the confirmed reservation returns.
+      await redisPipeline([["DECRBY",key,n],["DECRBY",day,n]]);
+      return "sender";
+    }
+    return "ok";
   } catch { return "unavailable"; }
 }
 

@@ -129,14 +129,19 @@ test('list dispatch uses only SES and known no-send waits keep recipients and al
  assert.equal(recovered.stopped,null);assert.deepEqual(recovered.done,['reader@example.com']);
  assert.equal(dispatch.listCalls,2);assert.equal(await usedThisMonth(made.listId,windowId(made)),before+1);
 });
-test('missing SES or exhausted SES room cannot borrow Resend capacity or reserve a list attempt',async()=>{
+test('missing SES or exhausted SES room cannot borrow Resend capacity or retain a list attempt',async()=>{
  const made=await fullStore();
  for(const state of [{configured:false,room:100000},{configured:true,room:0}]){
   Object.assign(sesObservation,state);pipelines=[];
   const result=await sendTo(made,['reader@example.com'],'Synthetic','Test only','no-ses-room');
   assert.equal(result.stopped,'sender');assert.equal(result.uncertain,undefined);
   assert.deepEqual(result.rest,['reader@example.com']);assert.equal(dispatch.calls,0);
-  assert.equal(pipelines.some(commands=>commands.some(command=>command[0]==='INCRBY'||command[0]==='DECRBY')),false);
+  const ledger=pipelines.filter(commands=>commands.some(command=>command[0]==='INCRBY'||command[0]==='DECRBY'));
+  if(!state.configured)assert.equal(ledger.length,0,'missing SES waits before ledger work');
+  else {
+   assert.equal(ledger.filter(commands=>commands.some(command=>command[0]==='INCRBY')).length,1,'configured SES checks one bounded reservation');
+   assert.equal(ledger.filter(commands=>commands.some(command=>command[0]==='DECRBY')).length,1,'known no-room returns both counters once');
+  }
   assert.equal(await usedThisMonth(made.listId,windowId(made)),0);
  }
  assert.equal(dispatch.notices.length,1,'the existing monthly owner-notice claim is shared by both waits');
