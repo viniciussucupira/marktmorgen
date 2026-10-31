@@ -1,4 +1,5 @@
 import { SalesLevers } from "@/components/sales-levers";
+import { RenewalUnpaidNotice } from "@/components/renewal-unpaid-notice";
 import { funnelLaunchChecklist } from "@/lib/funnel-launch-checklist";
 import { activationTiming } from "@/lib/store-activation";
 import { PathStudioReminder } from "@/components/path-studio-reminder";
@@ -178,6 +179,7 @@ import {
   TRIAL_DAYS,
   isBillingConfigured,
   readSubscription,
+  renewalInvoicePage,
   trialOffered,
 } from "@/lib/billing";
 import { STORAGE_BRAKE_BYTES, storageBrakeFor, storageUsed, storageWords } from "@/lib/storage-quota";
@@ -792,20 +794,28 @@ export default async function StudioPage({
       : Boolean(store?.subscriptionActive);
   const plan =
     live?.state === "active"
-      ? { tier: live.tier, cycle: live.cycle, trialEnds: live.trialing ? live.until : 0, shared: live.shared, period: live.period }
+      ? { tier: live.tier, cycle: live.cycle, trialEnds: live.trialing ? live.until : 0, shared: live.shared, period: live.period, renewalUnpaid: live.renewalUnpaid === true }
       : null;
+  let written: Awaited<ReturnType<typeof setSubscription>> = null;
   if (
     store &&
     live &&
     live.state !== "unknown" &&
     (paid !== store.subscriptionActive ||
-      (plan && (plan.tier !== store.tier || plan.cycle !== store.cycle || plan.trialEnds !== store.trialEnds || plan.shared !== store.shared || !samePeriod(plan.period, store.period ?? null))))
+      (plan && (plan.tier !== store.tier || plan.cycle !== store.cycle || plan.trialEnds !== store.trialEnds || plan.shared !== store.shared || !samePeriod(plan.period, store.period ?? null) ||
+        plan.renewalUnpaid !== (store.renewalUnpaidSince ?? 0) > 0)))
   ) {
-    await setSubscription(ref, { active: paid, ...(plan ?? {}) });
+    written = await setSubscription(ref, { active: paid, ...(plan ?? {}) });
   }
   // Everything below reads this, not the record we loaded, so one page never
-  // shows two different answers to the same question.
-  const current = store ? { ...store, subscriptionActive: paid, ...(plan ?? {}) } : null;
+  // shows two different answers to the same question. A renewal Stripe could
+  // not collect is dated as the store's record dates it (lib/store.ts); on
+  // this page it is unpaid even if that write did not go through.
+  const recordedSince = (written ?? store)?.renewalUnpaidSince ?? 0;
+  const unpaidSince = plan ? (plan.renewalUnpaid ? Math.max(1, recordedSince) : 0) : paid ? recordedSince : 0;
+  const current = store ? { ...store, subscriptionActive: paid, ...(plan ?? {}), renewalUnpaidSince: unpaidSince } : null;
+  // Stripe's own page that pays an unpaid renewal, read fresh on each load (232 [CA1] unit 4).
+  const renewalPage = current && unpaidSince > 0 && store?.subscriptionId && isBillingConfigured() ? await renewalInvoicePage(store.subscriptionId) : null;
   const trialing = live?.state === "active" && live.trialing;
   // The trial is once per store. A store starting again is told, on every
   // button, that it pays from today — the same rule the checkout opens with.
@@ -1133,6 +1143,8 @@ export default async function StudioPage({
             </a>
           </div>
         ) : null}
+
+        {current && unpaidSince > 0 ? <RenewalUnpaidNotice payUrl={renewalPage} canPay={may("billing")} /> : null}
 
         {notice ? (
           <div className="notice notice-warn mt-6">

@@ -14,7 +14,7 @@ import {
   ownsPath,
 } from "@/lib/product-file";
 import { ITEM_ID_PATTERN, findLesson, readCourses } from "@/lib/course";
-import { storageRefusal, standingOf } from "@/lib/plan-standing";
+import { renewalUnpaid, storageRefusal, standingOf } from "@/lib/plan-standing";
 import { maximumUploadBytes, storageBrakeFor, storageUsed } from "@/lib/storage-quota";
 import { rememberFolderOwner } from "@/lib/delivery";
 import { isVaultConfigured } from "@/lib/vault";
@@ -96,6 +96,8 @@ export async function POST(request: NextRequest) {
           if (!isLesson) throw new Error("unknown");
         }
 
+        // Nothing new is stored while a renewal is unpaid (232 [CA1] unit 4).
+        if (renewalUnpaid(store)) throw new Error("renewal_unpaid");
         if (!(await reserveStoreUpload(store, MAX_FILE_BYTES, "blob"))) throw new Error("upload_budget_unavailable");
         const folder = await storeFolder(ref);
         if (!ownsPath(pathname, folder, productId)) throw new Error("invalid");

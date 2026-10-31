@@ -6,7 +6,7 @@ import { readKind } from "@/lib/catalog";
 import { ITEM_ID_PATTERN, VIDEO_TYPES, findLesson, readCourses } from "@/lib/course";
 import { rememberFolderOwner } from "@/lib/delivery";
 import { MAX_FILE_BYTES, safeFileName } from "@/lib/product-file";
-import { storageRefusal, standingOf } from "@/lib/plan-standing";
+import { renewalUnpaid, storageRefusal, standingOf } from "@/lib/plan-standing";
 import { fits, storageBrakeFor, storageUsed } from "@/lib/storage-quota";
 import { storeFolder, storeForEmail } from "@/lib/store";
 import { guardStoreWrite, text } from "@/lib/store-request";
@@ -59,6 +59,8 @@ export async function POST(request: NextRequest) {
 
     // An unbounded direct-provider grant is unavailable; the studio can use
     // its existing R2 file fallback instead, subject to that path's budget.
+    // Nothing new is stored while a renewal is unpaid (232 [CA1] unit 4).
+    if (renewalUnpaid(store)) return Response.json({ ok: false, error: "renewal_unpaid" }, { status: 409 });
     if (!(await reserveStoreUpload(store, bytes, "stream"))) return Response.json({ ok: false, error: "off" }, { status: 404 });
     const folder = await storeFolder(ref);
     if (!(await withinService("stream-door", folder, DOORS_PER_HOUR, 3600, store))) {

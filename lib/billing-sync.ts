@@ -70,10 +70,11 @@ export type SyncCounts = {
 export async function recordState(store: Store, state: SubscriptionState): Promise<boolean> {
   if (state.state === "unknown") return false;
   const active = state.state === "active";
-  const plan = active ? { tier: state.tier, cycle: state.cycle, trialEnds: state.trialing ? state.until : 0, shared: state.shared, period: state.period } : null;
+  const plan = active ? { tier: state.tier, cycle: state.cycle, trialEnds: state.trialing ? state.until : 0, shared: state.shared, period: state.period, renewalUnpaid: state.renewalUnpaid === true } : null;
   if (
     active === store.subscriptionActive &&
-    (!plan || (plan.tier === store.tier && plan.cycle === store.cycle && plan.trialEnds === store.trialEnds && plan.shared === store.shared && samePeriod(plan.period, store.period ?? null)))
+    (!plan || (plan.tier === store.tier && plan.cycle === store.cycle && plan.trialEnds === store.trialEnds && plan.shared === store.shared && samePeriod(plan.period, store.period ?? null) &&
+      plan.renewalUnpaid === (store.renewalUnpaidSince ?? 0) > 0))
   ) {
     return false;
   }
@@ -98,6 +99,29 @@ export async function refreshPeriod(store: Store): Promise<Store> {
     console.error("reading a store's billing month failed", error);
     return store;
   }
+}
+
+/**
+ * Writes down, the day the email about it goes, that a store's renewal is
+ * unpaid (lib/billing-reminders.ts, 232 [CA1] unit 4), so what the email
+ * says has stopped has stopped. Only for the subscription the store itself
+ * wrote down, and never for one with contract funding (its own observation,
+ * lib/contract-funding.ts). Answers whether the store now records it unpaid,
+ * or null when no store keeps this subscription; throws when it could not be
+ * written, so the email waits for the next run.
+ */
+export async function recordUnpaidRenewal(subscription: Record<string, unknown>): Promise<boolean | null> {
+  const id = typeof subscription.id === "string" ? subscription.id : "";
+  const handle = (subscription.metadata as Record<string, unknown> | null | undefined)?.store;
+  if (!id || typeof handle !== "string" || !handle || isAddOn(subscription)) return null;
+  const store = await storeForHandle(handle);
+  if (!store || store.subscriptionId !== id) return null;
+  const state = stateOf(subscription);
+  if (state.state !== "active" || !state.renewalUnpaid || hasContractFunding(subscription)) return (store.renewalUnpaidSince ?? 0) > 0;
+  await recordState(store, state);
+  const after = await storeForHandle(handle);
+  if (!after || !((after.renewalUnpaidSince ?? 0) > 0)) throw new Error("the unpaid renewal could not be written down");
+  return true;
 }
 
 /** Brings the store named by one listed subscription in line with it. */

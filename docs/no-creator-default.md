@@ -124,3 +124,26 @@ Scope item 2 of 232 [CA1]. Read from the code on main (31 October 2026, about 00
 ## No charge after use — CA232 unit 3 (31 October 2026)
 
 The usage line above is closed in code: the video meter (`lib/watch-billing.ts`) owes nothing, as visits and orders have since 17 October 2026, so `addToNextInvoice` is not reached; a line written down before this and left unfinished is dropped by `settleUsage` (`lib/usage-billing.ts`) instead of being finished (dropping the record here does not remove an invoice item that a timed-out request may already have created at Stripe; none can exist while sales are closed and no store has passed 400 hours); the "videos paused" email no longer mentions a charge. `tests/watch.test.ts` fails if a meter owes again at 50, 101 or 1,000 hours past, if Stripe is asked for an invoice item, if an old unfinished line is charged, or if any file other than `lib/usage-billing.ts` calls `addToNextInvoice`. The Terms never published this charge, so no published price changes. Charges after use that remain are the two renewals on a declined card (unit 4). Cost: lower (no Stripe write on this path); Store/Studio/Scale monthly/annual incremental 0/0.
+
+## A declined renewal stops what costs us to run — CA232 unit 4a (31 October 2026)
+
+Scope item 5 of 232 [CA1], first part. Stripe's "How subscriptions work" page (read 31 October 2026, [docs.stripe.com/docs/billing/subscriptions/creating](https://docs.stripe.com/docs/billing/subscriptions/creating)) says `past_due` means "Payment on the latest finalized invoice either failed or wasn't attempted", that the subscription keeps creating invoices, and that what happens after the last retry (`canceled`, `unpaid` or staying `past_due`) is a Dashboard setting. Until this unit, `past_due` counted as a plan in good standing with every feature on, so a declined renewal was a period used before it was paid.
+
+What the code does now:
+
+| Step | Where | What happens |
+| --- | --- | --- |
+| Read | `stateOf` (`lib/billing.ts`) | `past_due` in its grace is an active plan with `renewalUnpaid: true`; the first payment after a trial stays "inactive" as before |
+| Written down | `setSubscription` (`lib/store.ts`), from `recordState` (daily job, `lib/billing-sync.ts`), the studio page, and `recordUnpaidRenewal` before the failed-payment email (`lib/billing-reminders.ts`) | `renewalUnpaidSince` dated the first time, kept while unpaid, cleared when Stripe says it is paid, when the plan stops or for another subscription; the store leaves the list of stores that pay (`PAYING_INDEX`), so the shared ceiling for stores that pay nothing does not grow with it |
+| Stopped | `isPaidUp` (`lib/billing.ts`) | checkout and PayPal sales, free copies, list sign-ups, import emails and API purchase emails |
+| Stopped | `canUse(store, "email")` (`lib/plan.ts`) | emails to the list (`lib/mail.ts` gets an allowance of 0) |
+| Stopped | `costStandingOf` (`lib/plan-standing.ts`): "ended" for a paid plan with an unpaid renewal | AI drafts (`aiAvailableFor`, `aiBudgetScopeFor`), the upload budget's scope (`uploadScopeFor`), lesson video (`videoLimitFor`: a store with no plan's 15 minutes) |
+| Refused with its own words | the three upload doors (`app/api/store/file`, `vault`, `stream`) | `renewal_unpaid`, before any upload budget is reserved |
+| Kept | `standingOf` is unchanged | no closing, no closing notices, nothing deleted, the Store assistant add-on is not set to stop, export and deletion stay open, the studio keeps its plan's figure, buyers keep their access emails and what they bought (except lesson video), the store's page, domain and look stay |
+| Told | `components/renewal-unpaid-notice.tsx`, the failed-payment email, Terms `#renewal-unpaid` | the same three sentences (`lib/renewal-unpaid-words.ts`); the studio links to the open invoice's own Stripe page (`renewalInvoicePage`, read on each load; Stripe's "Hosted invoice page" guide, read 31 October 2026, says a URL retrieved through the API is valid for at least 10 days) |
+
+When it is seen: at the daily job (09:00 UTC), at the failed-payment email (10:00 UTC), or at once when the creator opens the studio. Between the failure and the first of these, the plan's features run for at most about a day; the renewal period's allowances are the same ones a paid period would have used, so that day is inside one period's figures, not on top of them. Paying the invoice is seen the same way, and everything starts again.
+
+Cost of this unit: lower, never higher. It adds one Stripe read per studio load only while a renewal is unpaid (no write), and removes the use of a period not paid for. Store, Studio and Scale, monthly and yearly: incremental cost 0 for a paying store; for a store with an unpaid renewal, the costly features above stop at the first sight.
+
+Not in this unit (recorded, not claimed as closed): pictures and other small uploads that do not go through the three doors above (community, events, saved blocks, review photos, list-email pictures, students' hand-ins) — unit 4b; the deadlines, set from the costs, to the studio's suspension and the store's closing when Stripe keeps the plan `past_due` or ends it — unit 4c; a renewal whose invoice is not yet finalized or whose card has not yet been tried is still `active` at Stripe, so it counts as paid until the first attempt fails.
