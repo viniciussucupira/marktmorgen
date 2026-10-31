@@ -23,8 +23,9 @@
  *     paid" is not this charge alone, so the answer is "unknown";
  *   - only the subscription's own charges (Stripe `billing_reason`
  *     `subscription_create` or `subscription_cycle`) get the yearly months;
- *     a switch or proration charge (`subscription_update`) gets nothing,
- *     section 5, unless it is the first charge on the account asked about
+ *     a switch charge (`subscription_update`) on a monthly plan gets nothing,
+ *     section 5, and on a yearly plan is "unknown" (it may be the yearly
+ *     payment itself), unless it is the first charge on the account asked about
  *     inside the window, which section 2 covers whatever it was for;
  *   - what was already refunded (`charge.amount_refunded`) is taken off, so
  *     the total ever given back for one charge never passes what the policy
@@ -95,7 +96,7 @@ export type PlanRefund =
   | { kind: "guarantee"; cents: number }
   | { kind: "unstarted_months"; cents: number; monthsKept: number }
   | { kind: "none"; reason: "not_paid" | "nothing_paid" | "dispute_open" | "dispute_returned" | "already_refunded" | "outside_window" | "renewal" | "switch_charge" | "months_used" | "fee_kept" }
-  | { kind: "unknown"; reason: "unreadable" | "split_payment" | "dispute_partial" | "billing_reason" | "fee_unread" | "monthly_price_unknown" | "currency" };
+  | { kind: "unknown"; reason: "unreadable" | "split_payment" | "switch_yearly" | "dispute_partial" | "billing_reason" | "fee_unread" | "monthly_price_unknown" | "currency" };
 
 const RETURNED = new Set(["lost", "prevented"]);
 const SETTLED = new Set(["won", "warning_closed"]);
@@ -156,7 +157,13 @@ export function planRefund(input: PlanRefundInput): PlanRefund {
   const inWindow = input.nowSeconds <= c.paidAtSeconds + REFUND_DAYS * DAY_SECONDS;
   if (input.firstPayment && inWindow) return { kind: "guarantee", cents: left };
 
-  if (SWITCH_CHARGE.has(c.billingReason)) return { kind: "none", reason: "switch_charge" };
+  if (SWITCH_CHARGE.has(c.billingReason)) {
+    // A switch onto (or within) a yearly plan may itself be the yearly
+    // payment, whose unstarted months section 5 says are always refunded;
+    // telling that apart from a proration-only charge needs the invoice's
+    // lines, so it is not decided here.
+    return input.cycle === "year" ? { kind: "unknown", reason: "switch_yearly" } : { kind: "none", reason: "switch_charge" };
+  }
   if (!OWN_CHARGE.has(c.billingReason)) return { kind: "unknown", reason: "billing_reason" };
   if (input.cycle !== "year") return { kind: "none", reason: input.firstPayment ? "outside_window" : "renewal" };
 

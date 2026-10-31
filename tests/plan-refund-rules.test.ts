@@ -99,7 +99,8 @@ part("Yearly: months not started, at the monthly price, less Stripe's fee");
   is("first yearly payment after 30 days: months", year({ firstPayment: true, nowSeconds: T0 + 45 * DAY }).kind, "unstarted_months");
   is("all twelve started: nothing", year({ nowSeconds: T0 + 340 * DAY }), { kind: "none", reason: "months_used" });
   is("a coupon so large the months kept cover it: nothing, never negative", year({ nowSeconds: T0 + 200 * DAY }, { amountCents: 20_000 }), { kind: "none", reason: "months_used" });
-  is("a proration charge on a yearly plan: nothing (section 5)", year({ nowSeconds: T0 + 101 * DAY, periodStartSeconds: T0 + 100 * DAY }, { amountCents: 30_000, billingReason: "subscription_update" }), { kind: "none", reason: "switch_charge" });
+  is("a switch charge on a yearly plan (maybe the yearly payment itself): cannot tell, never a silent no", year({ nowSeconds: T0 + 40 * DAY }, { amountCents: 76_400, billingReason: "subscription_update" }), { kind: "unknown", reason: "switch_yearly" });
+  is("a debit balance (charge above the invoice total): cannot tell", year({ nowSeconds: T0 + 31 * DAY }, { amountCents: 50_000, invoiceTotalCents: 49_000 }), { kind: "unknown", reason: "split_payment" });
   is("fee in another currency than the charge: cannot tell", year({ nowSeconds: T0 + 31 * DAY }, { feeCurrency: "brl", feeCents: 7_800 }), { kind: "unknown", reason: "currency" });
   is("month 9 with a fee larger than the month left: the fee, not the months", year({ nowSeconds: T0 + 250 * DAY }, { feeCents: 5_000 }), { kind: "none", reason: "fee_kept" });
   is("tax with a partial refund: the total never passes the policy", year({ nowSeconds: T0 + 31 * DAY }, { amountCents: 53_917, taxCents: 4_917, refundedCents: 5_000 }), { kind: "unstarted_months", cents: 39_200 + Math.floor((4_917 * 39_200) / 49_000) - 1_451 - 5_000, monthsKept: 2 });
@@ -126,7 +127,7 @@ part("Never more than was taken, whatever the input (10,000 random cases)");
     const amount = rnd(100_000);
     const input = base(
       { cycle: rnd(2) ? "year" : "month", firstPayment: rnd(2) === 1, monthlyCents: rnd(10) ? rnd(9_000) : null, nowSeconds: T0 + rnd(400 * DAY) },
-      { amountCents: amount, refundedCents: rnd(3) ? 0 : rnd(amount + 1), taxCents: rnd(Math.floor(amount / 5) + 1), feeCents: rnd(10) ? rnd(3_000) : null, disputeStatus: rnd(8) ? null : ["won", "lost", "needs_response"][rnd(3)] },
+      { billingReason: ["subscription_create", "subscription_cycle", "subscription_update", "manual"][rnd(4)], amountCents: amount, refundedCents: rnd(3) ? 0 : rnd(amount + 1), taxCents: rnd(Math.floor(amount / 5) + 1), feeCents: rnd(10) ? rnd(3_000) : null, disputeStatus: rnd(8) ? null : ["won", "lost", "needs_response"][rnd(3)] },
     );
     const out = planRefund(input);
     const c = input.charge;
