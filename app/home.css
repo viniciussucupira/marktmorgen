@@ -1,8 +1,9 @@
 /* =====================================================================
    Home page, VS1 (queue item 571; owner's approved mockup, 30 Oct 2026,
    19:40): the colors of the name, a market in the morning, with no dark
-   surface anywhere. Imported only by app/page.tsx and scoped to .hm, so no
-   other page changes.
+   surface anywhere. Scoped to .hm, so no other page changes. Imported by
+   app/page.tsx, and by /signin and /pricing, which add .hm-page (the
+   section at the end) to bring the shared components into the same look.
 
    All text is one deep blue, #1E3A8A, and it is set only on these grounds
    (WCAG contrast, measured):
@@ -1085,6 +1086,13 @@
   outline-offset: 3px;
   box-shadow: 0 0 0 6px #fff;
 }
+/* Every footer link at least 44px across, as tall ones already are (2.5.5). */
+.hm-foot footer a {
+  min-width: 44px;
+}
+.hm-foot .hm-logo-mark {
+  color: var(--hm-sun);
+}
 .hm-foot footer [class*="border-white"] {
   border-color: var(--hm-sky-line);
 }
@@ -1122,5 +1130,210 @@
   .hm-claim-field:focus-within {
     outline: 3px solid Highlight;
     box-shadow: none;
+  }
+}
+
+/* =====================================================================
+   The same morning on /signin and /pricing (VS1, unit 2). Those pages are
+   built from the site's shared parts (cards, buttons, fields, notices, the
+   monthly/yearly switch), which read the design tokens of app/globals.css.
+   Under .hm-page those tokens take this page's colors, so every shared part
+   turns light without a second set of components: text deep blue, grounds
+   white and sky, actions sun gold. Lines a control is told apart by are
+   #5577C4 (3.89:1 or more on every ground here, 1.4.11).
+   ===================================================================== */
+.hm-page {
+  --paper: var(--hm-ground);
+  --sand: var(--hm-sky-2);
+  --sand-deep: var(--hm-sky);
+  --line: var(--hm-sky);
+  --line-strong: #5577c4;
+  --ink: var(--hm-text);
+  --ink-soft: var(--hm-text);
+  --ink-mute: var(--hm-text);
+  --violet: var(--hm-text);
+  --violet-deep: var(--hm-text);
+  --violet-ink: var(--hm-text);
+  --lilac: var(--hm-sky);
+  --lilac-deep: var(--hm-sky-3);
+  --focus: var(--hm-text);
+  --background: var(--hm-ground);
+  --foreground: var(--hm-text);
+  display: flex;
+  flex-direction: column;
+}
+.hm-page :is(.t-h1, .t-h2, .t-h3, .t-section) {
+  font-family: var(--hm-display);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+.hm-page .t-h1 {
+  font-size: clamp(2rem, 1.4rem + 2.2vw, 3.25rem);
+  line-height: 1.12;
+}
+/* Every button: a pill, like the home page's. The main one is sun gold. */
+.hm-page .btn {
+  border-radius: 999px;
+}
+.hm-page .btn-primary,
+.hm-page .btn-primary:hover {
+  background: var(--hm-gold);
+  color: var(--hm-text);
+  font-weight: 800;
+  box-shadow: none;
+}
+.hm-page .btn-primary:hover {
+  background: var(--hm-gold-hover);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.hm-page .btn-secondary {
+  border: 2px solid var(--line-strong);
+}
+.hm-page .card,
+.hm-page .card-flat {
+  border-radius: 24px;
+  box-shadow: inset 0 0 0 2px var(--hm-sky), 0 18px 40px -24px rgb(var(--hm-shadow) / 0.35);
+}
+.hm-page .card-flat {
+  box-shadow: inset 0 0 0 2px var(--hm-sky);
+}
+.hm-page .notice {
+  border-radius: 18px;
+}
+.hm-page .notice:not(.notice-success, .notice-warn, .notice-error, .notice-info) {
+  background: var(--hm-sky-2);
+  border: 2px solid var(--hm-sky);
+}
+/* The monthly/yearly switch: the chosen one gold, with a check mark and a
+   deep-blue edge, so it never rests on the fill alone (1.4.1). */
+.hm-page .seg {
+  background: var(--hm-sky-2);
+  border: 2px solid var(--line-strong);
+}
+.hm-page .seg-item[aria-pressed="true"],
+.hm-page .seg-item[aria-pressed="true"]:hover {
+  background: var(--hm-gold);
+  color: var(--hm-text);
+  box-shadow: inset 0 0 0 2px var(--hm-text);
+}
+.hm-page .seg-item[aria-pressed="true"]::before {
+  content: "\2713";
+  font-weight: 800;
+}
+/* The note after logging out, drawn by the root layout's toast region
+   (outside .hm-page): white with a deep-blue edge, not violet. */
+:root:has(.hm-page) .nb-toast {
+  background: #fff;
+  color: #1e3a8a;
+  box-shadow: inset 0 0 0 2px #1e3a8a, 0 16px 36px -12px rgb(19 37 74 / 0.35);
+}
+:root:has(.hm-page) .nb-toast-icon {
+  background: #cfe3ff;
+}
+:root:has(.hm-page) .nb-toast-close {
+  width: 44px;
+  height: 44px;
+  margin-block: -6px;
+  color: #1e3a8a;
+}
+:root:has(.hm-page) .nb-toast-close:hover {
+  background: #eaf3ff;
+}
+:root:has(.hm-page) .nb-toast-close:focus-visible {
+  outline-color: #1e3a8a;
+}
+
+/* /signin: the panel beside the form, a morning sky with the sun rising. */
+.hm-signin-panel {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(180deg, #cfe3ff 0%, #eaf3ff 38%, #ffe3d3 76%, #ffd5bc 100%);
+}
+.hm-signin-panel > * {
+  position: relative;
+}
+.hm-signin-panel > .hm-sky-layer {
+  position: absolute;
+}
+.hm-sun-signin {
+  width: 26rem;
+  height: 26rem;
+  border-radius: 50%;
+  background: var(--hm-sun);
+  right: -6rem;
+  bottom: -18rem;
+}
+.hm-signin-title {
+  margin: 0;
+  font-family: var(--hm-display);
+  font-weight: 800;
+  font-size: clamp(2rem, 1rem + 2vw, 3rem);
+  line-height: 1.12;
+  letter-spacing: -0.03em;
+}
+.hm-signin-title span {
+  display: block;
+}
+/* On a phone the panel is not shown: the sky starts above the heading. */
+@media (max-width: 1023px) {
+  .hm-signin-main {
+    background: linear-gradient(180deg, #cfe3ff 0, #eaf3ff 9rem, var(--hm-ground) 20rem);
+  }
+}
+.hm-signin-facts {
+  margin: 2rem 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.875rem;
+  font-size: 1.125rem;
+  line-height: 1.5;
+}
+.hm-signin-facts li {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+.hm-signin-facts .icon-tile {
+  background: #fff;
+}
+.hm-step-dot {
+  background: var(--hm-gold);
+  color: var(--hm-text);
+  font-weight: 800;
+}
+
+/* /pricing: the first screen under the same sky as the home page. */
+.hm-page-hero {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(180deg, #cfe3ff 0%, #eaf3ff 45%, #ffe3d3 100%);
+}
+.hm-sun-page {
+  width: 22rem;
+  height: 22rem;
+  border-radius: 50%;
+  background: var(--hm-sun);
+  right: -4rem;
+  bottom: -15rem;
+}
+.hm-addon {
+  border-radius: 24px;
+}
+.hm-faq-card {
+  background: #fff;
+  border-radius: 24px;
+  padding: 0 clamp(1rem, 0.5rem + 2vw, 2rem);
+}
+
+@media (forced-colors: active) {
+  .hm-page :is(.card, .card-flat, .notice, .seg, .hm-addon, .hm-faq-card),
+  :root:has(.hm-page) .nb-toast,
+  .hm-page .btn {
+    border: 2px solid CanvasText;
+  }
+  .hm-page .seg-item[aria-pressed="true"] {
+    border: 4px double Highlight;
   }
 }

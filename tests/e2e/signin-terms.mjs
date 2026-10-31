@@ -1,3 +1,4 @@
+import { darkGrounds } from "./morning-grounds.mjs";
 export async function checkSigninTerms({browser,LOCAL,prices,axeSource,is}){
  for(const width of [390,1280]){
  const context=await browser.newContext({viewport:{width,height:1000}});try{
@@ -15,7 +16,13 @@ export async function checkSigninTerms({browser,LOCAL,prices,axeSource,is}){
  await page.addScriptTag({content:axeSource});const audit=await page.evaluate(async()=>await window.axe.run(document.querySelector("main"),{runOnly:{type:"tag",values:["wcag2a","wcag2aa","wcag21aa","wcag22aa"]}}));
  is("HT6 signup accessibility "+width,audit.violations.map(v=>v.id),[]);
  is("HT6 signup fits "+width,await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
+ // VS1 unit 2: the home page's morning look, with a line on ease instead of the ownership slogan.
+ is("VS1 signup has no dark surface "+width,await darkGrounds(page),[]);
+ is("VS1 signup has no ownership slogan "+width,/Your Stripe\. Your money|Your store\. Your Stripe|Your store · Your Stripe/.test(await page.locator("body").innerText()),false);
+ is("VS1 signup ease line "+width,await page.getByText("Simple to set up. Easy to run.",{exact:true}).isVisible(),width>=1024);
+ is("VS1 signup home link "+width,await page.getByRole("link",{name:"Marktmorgen, home",exact:true}).filter({visible:true}).count(),1);
  await page.goto(LOCAL+"/signin?to=login");is("HT6 returning title "+width,await page.locator("h1").innerText(),"Log in to your store");
+ is("VS1 returning has no dark surface "+width,await darkGrounds(page),[]);
  is("HT6 returning flow stays focused "+width,await page.locator("[data-signin-terms]").count(),0);
  is("HT6 no login request or submission "+width,posts,0);
  }finally{await context.close();}
