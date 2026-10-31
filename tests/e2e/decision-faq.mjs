@@ -1,3 +1,5 @@
+// VS1 (owner 31/10/2026): the home page has its own six short questions; the six decision questions stay whole on /pricing.
+const homeQuestions=[{"q":"How long does it take to open a store?","hrefs":["/demo"]},{"q":"How much does it cost?","hrefs":["/pricing"]},{"q":"Where does the money from my sales go?","hrefs":["/platform/your-stripe"]},{"q":"Can I move from Stan, Kajabi or another platform?","hrefs":["/platform/switching-to-marktmorgen"]},{"q":"Can I cancel anytime?","hrefs":["/terms#closing","/refunds"]},{"q":"Can I start selling today?","hrefs":["/mission"]}];
 const questions=[{"q":"How much does it cost?","hrefs":["/pricing"]},{"q":"Is there a contract? Can I cancel anytime?","hrefs":["/terms#closing","/refunds"]},{"q":"Can I move from Kajabi, Stan or another platform?","hrefs":["/platform/switching-to-marktmorgen"]},{"q":"Does it connect to my other tools?","hrefs":["/developers"]},{"q":"Is there support, and how?","hrefs":["/help","mailto:support@marktmorgen.com"]},{"q":"How long does it take to open a store?","hrefs":["/demo","/platform/path"]}];
 export async function checkDecisionFaq({browser,LOCAL,axeSource,is}){
  for(const width of [390,1280]){
@@ -9,7 +11,13 @@ export async function checkDecisionFaq({browser,LOCAL,axeSource,is}){
     await page.goto(LOCAL+path,{waitUntil:"domcontentloaded",timeout:60000});
     const section=path==="/"?page.locator("#faq"):page.locator('section[aria-labelledby="faq-heading"]');
     await section.scrollIntoViewIfNeeded();
-    for(const item of questions){
+    if(path==="/"){
+     is("home FAQ has six questions "+width,await section.locator("summary").count(),6);
+     is("home FAQ starts with every answer closed "+width,await section.locator("details[open]").count(),0);
+     is("home FAQ links to the help center "+width,await section.getByRole("link",{name:"More answers in the help center",exact:true}).getAttribute("href"),"/help");
+     is("home FAQ drops the removed questions "+width,/Who is behind this|What does Stan have/.test(await section.innerText()),false);
+    }
+    for(const item of path==="/"?homeQuestions:questions){
      const control=section.locator("summary").filter({hasText:item.q});
      const disclosure=control.locator("..");
      if(await disclosure.getAttribute("open")===null){await control.focus();await page.keyboard.press("Enter");}
