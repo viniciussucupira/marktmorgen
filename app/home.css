@@ -9,7 +9,7 @@
    (WCAG contrast, measured):
      #FFFFFF 10.36:1   #F4F8FF 9.73:1   #EAF3FF 9.25:1   #CFE3FF 7.93:1
      #BFD9FF  7.19:1   #FFE3D3 8.47:1   #FFD5BC 7.64:1   #BFEBD2 7.91:1
-     #FFD27A  7.28:1   #FFD4C8 7.65:1
+     #FFD27A  7.28:1   #FFD4C8 7.65:1   #FFDB8F 7.78:1 (button hover)
    The decorative sun (#FFB13B, 5.72:1) never has text on it. A selected
    example button is told apart by a check mark and a thicker border, not
    by its fill alone (1.4.1, 1.4.11).
@@ -25,7 +25,7 @@
   --hm-peach-2: #ffd5bc;
   --hm-rose: #ffd4c8;
   --hm-gold: #ffd27a;
-  --hm-gold-hover: #ffc95e;
+  --hm-gold-hover: #ffdb8f; /* 7.78:1 with the text; the hover is also underlined */
   --hm-sun: #ffb13b;
   --hm-green: #bfebd2;
   --hm-green-deep: #3bb273;
@@ -1256,13 +1256,15 @@
 .hm-signin-panel > .hm-sky-layer {
   position: absolute;
 }
+/* Small and low in the right corner, so it never sits behind the panel's
+   words at any width (tests/e2e/signin-terms.mjs measures it). */
 .hm-sun-signin {
-  width: 26rem;
-  height: 26rem;
+  width: 16rem;
+  height: 16rem;
   border-radius: 50%;
   background: var(--hm-sun);
-  right: -6rem;
-  bottom: -18rem;
+  right: -7rem;
+  bottom: -11rem;
 }
 .hm-signin-title {
   margin: 0;

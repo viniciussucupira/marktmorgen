@@ -27,4 +27,17 @@ export async function checkSigninTerms({browser,LOCAL,prices,axeSource,is}){
  is("HT6 no login request or submission "+width,posts,0);
  }finally{await context.close();}
  }
+ // VS1 unit 2: the panel's sun (5.72:1 with the text) never sits behind any of the panel's words,
+ // measured on the circle itself, at the widths where the panel shows (2048px is 1024px at 200% zoom).
+ for(const width of [1024,1100,1180,1280,1440,1920]){
+  const context=await browser.newContext({viewport:{width,height:800}});try{
+   const page=await context.newPage();await page.goto(LOCAL+"/signin");
+   const hits=await page.evaluate(()=>{
+    const sun=document.querySelector(".hm-sun-signin").getBoundingClientRect(),r=sun.width/2,cx=sun.left+r,cy=sun.top+r;
+    const words=[...document.querySelectorAll(".hm-signin-panel :is(p,li,a)")];
+    return words.filter(node=>[...node.getClientRects()].some(box=>{const x=Math.max(box.left,Math.min(cx,box.right)),y=Math.max(box.top,Math.min(cy,box.bottom));return Math.hypot(x-cx,y-cy)<r;})).map(node=>node.textContent.trim().slice(0,40));
+   });
+   is("VS1 sun behind no words "+width,hits,[]);
+  }finally{await context.close();}
+ }
 }

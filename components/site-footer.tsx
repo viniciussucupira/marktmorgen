@@ -111,7 +111,7 @@ export function SiteFooter({ variant = "full", morning = false }: { variant?: "f
               <li key={link.label}>
                 <FooterAnchor
                   link={link}
-                  className="inline-flex min-h-11 -my-2.5 items-center transition-colors hover:text-ink"
+                  className="inline-flex min-h-11 items-center transition-colors hover:text-ink"
                 />
               </li>
             ))}
