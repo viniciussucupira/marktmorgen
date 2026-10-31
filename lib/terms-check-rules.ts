@@ -43,7 +43,11 @@ const AROUND = 40;
 
 export type TermsWarningKind = "other_company" | "price_mismatch" | "no_refunds" | "earnings_claim" | "false_urgency" | "resale_rights";
 
-export type TermsWarning = { kind: TermsWarningKind; excerpt: string; why: string; fix: string };
+/**
+ * `at` and `length` place the words in the text read (the first MAX_TEXT characters), for the studio to offer the
+ * fix on the creator's approval (withoutSentence, replaceWords); `replacement` is the exact words a price fix puts in.
+ */
+export type TermsWarning = { kind: TermsWarningKind; excerpt: string; why: string; fix: string; at: number; length: number; replacement?: string };
 
 export type TermsCheckInput = {
   /** The terms, refund policy and description, as the creator wrote them. */
@@ -132,6 +136,15 @@ function negatedBefore(text: string, index: number): boolean {
   const clause = before.split(/[.!?;:,\n]/).pop() ?? "";
   return NEGATION.test(clause.trim().split(/\s+/).slice(-6).join(" "));
 }
+/**
+ * The creator's own page there, said right before the name: "my patreon.com/jane", "our Skool", "my community at
+ * skool.com/jane", "Support me at ko-fi.com/jane". A possessive elsewhere in the sentence ("Our refund policy
+ * follows Gumroad terms") is not one.
+ */
+function ownedNearby(text: string, index: number): boolean {
+  const before = text.slice(Math.max(0, index - 60), index).replace(/\u2019/g, "'");
+  return /\b(my|our)\s+$/i.test(before) || /\b(my|our)\s+(?:[a-z-]+\s+){0,2}(?:at|on)\s+$/i.test(before) || /\bme\s+(?:at|on)\s+$/i.test(before);
+}
 function negated(text: string, index: number, length: number): boolean {
   return negatedBefore(text, index) || NEGATED_AFTER.test(text.slice(index + length, index + length + 60).replace(/\u2019/g, "'"));
 }
@@ -162,11 +175,11 @@ export function checkCreatorTerms(input: TermsCheckInput): TermsWarning[] {
   const text = typeof input.text === "string" ? input.text.slice(0, MAX_TEXT) : "";
   const out: TermsWarning[] = [];
   const seen = new Set<string>();
-  const add = (kind: TermsWarningKind, index: number, length: number, why: string, fix: string) => {
+  const add = (kind: TermsWarningKind, index: number, length: number, why: string, fix: string, replacement?: string) => {
     const key = `${kind}:${text.slice(index, index + length).toLowerCase()}`;
     if (seen.has(key) || out.length >= MAX_WARNINGS) return;
     seen.add(key);
-    out.push({ kind, excerpt: excerptAt(text, index, length), why, fix });
+    out.push({ kind, excerpt: excerptAt(text, index, length), why, fix, at: index, length, ...(replacement ? { replacement } : {}) });
   };
   const own = new Set([...input.ownHosts.map(bareHost), ...OUR_HOSTS]);
 
@@ -179,6 +192,8 @@ export function checkCreatorTerms(input: TermsCheckInput): TermsWarning[] {
     const asAddress = /^https?:\/\//i.test(m[0]) || /^www\./i.test(m[1]) || text[at + m[0].length] === "/";
     if (SHORT_ENDINGS.has(ending) && !asAddress) continue;
     if (ownsHost(m[1], own) || ownsHost(m[1], new Set(TOOL_HOSTS))) continue;
+    // The creator's own page elsewhere ("my patreon.com/jane", "Support me at ko-fi.com/jane"): not copied terms.
+    if (ownedNearby(text, at)) continue;
     add("other_company", m.index ?? 0, m[0].length,
       `This names ${bareHost(m[1])}, which is not your site. Terms copied from another site may describe rules that do not apply to this store.`,
       "Remove the other site, or replace it with your store's own address.");
@@ -187,7 +202,7 @@ export function checkCreatorTerms(input: TermsCheckInput): TermsWarning[] {
     const m = pattern.exec(text);
     if (!m) continue;
     // The creator's own page there, or a line saying the store is not that company.
-    if (/\b(my|our)\s+$/i.test(text.slice(Math.max(0, m.index - 12), m.index)) || negatedBefore(text, m.index)) continue;
+    if (ownedNearby(text, m.index) || negatedBefore(text, m.index)) continue;
     add("other_company", m.index, m[0].length,
       `This names ${m[0]}, another company. Terms written for another platform may describe rules that do not apply here.`,
       "Remove the other company's name, and check that each rule describes how this store works.");
@@ -203,7 +218,7 @@ export function checkCreatorTerms(input: TermsCheckInput): TermsWarning[] {
       if (cents === input.priceCents) continue;
       add("price_mismatch", index, m[0].length,
         `This says ${m[0].replace(/\s/g, "")}, but the page and checkout show ${formatUsd(input.priceCents)}. A buyer may expect the price written here.`,
-        `Change it to ${formatUsd(input.priceCents)}, or remove the amount.`);
+        `Change it to ${formatUsd(input.priceCents)}, or remove the amount.`, formatUsd(input.priceCents));
     }
   }
 
@@ -232,7 +247,7 @@ export function checkCreatorTerms(input: TermsCheckInput): TermsWarning[] {
       if (negated(text, m.index ?? 0, m[0].length)) continue;
       add("false_urgency", m.index ?? 0, m[0].length,
         "This says time is running out, but no end date or sale deadline is set for this product.",
-        "Set a real end date in the studio, or remove this sentence.");
+        "Remove this sentence, or say the real date the offer ends.");
     }
   }
   if (!input.realStockLimit) {
@@ -240,7 +255,7 @@ export function checkCreatorTerms(input: TermsCheckInput): TermsWarning[] {
       if (negated(text, m.index ?? 0, m[0].length)) continue;
       add("false_urgency", m.index ?? 0, m[0].length,
         "This says few are left, but no stock or seat limit is set for this product.",
-        "Set a real limit in the studio, or remove this sentence.");
+        "Set \u201cHow many can be sold, in total\u201d on this product, or remove this sentence.");
     }
   }
 
@@ -249,7 +264,7 @@ export function checkCreatorTerms(input: TermsCheckInput): TermsWarning[] {
       if (negated(text, m.index ?? 0, m[0].length)) continue;
       add("resale_rights", m.index ?? 0, m[0].length,
         "This mentions resale or private label rights. Our Terms allow selling such content only under a license that lets you sell it this way, which you keep and show on request.",
-        "Confirm in the studio that you hold that license, or remove this sentence.");
+        "Remove this sentence, unless you hold a license that lets you sell this content this way.");
     }
   }
   return out;
@@ -259,4 +274,52 @@ function formatUsd(cents: number): string {
   const dollars = Math.floor(cents / 100);
   const rest = cents % 100;
   return `$${dollars.toLocaleString("en-US")}${rest ? `.${String(rest).padStart(2, "0")}` : ""}`;
+}
+
+/**
+ * Whether the character at `i` ends a sentence: "!", "?", a line break, or a "." followed by a space, the end of the
+ * text, or a closing quote or bracket and then a space. A dot inside an address ("othershop.com"), an amount
+ * ("$99.00") or a version ("2.0") does not.
+ */
+function endsSentence(text: string, i: number): boolean {
+  const c = text[i];
+  if (c === "!" || c === "?" || c === "\n") return true;
+  if (c !== ".") return false;
+  const next = text[i + 1];
+  if (next === undefined || /\s/.test(next)) return true;
+  return /["'\u201d\u2019)\]]/.test(next) && (i + 2 >= text.length || /\s/.test(text[i + 2]));
+}
+
+/** The sentence holding `at`: back to the end of the previous one, on to its own end (included). */
+function sentenceAt(text: string, at: number): [number, number] {
+  let start = at;
+  while (start > 0 && !endsSentence(text, start - 1)) start -= 1;
+  // The closing quote or bracket of the sentence before belongs to it ("no questions asked." Resale…).
+  while (start < at && /["'\u201d\u2019)\]]/.test(text[start])) start += 1;
+  let end = at;
+  while (end < text.length && !endsSentence(text, end)) end += 1;
+  if (end < text.length && text[end] !== "\n") end += 1;
+  while (end < text.length && /["'\u201d\u2019)\]]/.test(text[end])) end += 1;
+  return [start, end];
+}
+
+/**
+ * The text without the sentence holding `at` (a warning's place), its spacing tidied; the rest is left exactly as
+ * written. With `expected`, only while those words are still at `at` (the text may have changed since the warning).
+ */
+export function withoutSentence(text: string, at: number, expected?: string): string {
+  if (!Number.isSafeInteger(at) || at < 0 || at >= text.length) return text;
+  if (expected !== undefined && (!expected || text.slice(at, at + expected.length) !== expected)) return text;
+  const [start, end] = sentenceAt(text, at);
+  const before = text.slice(0, start).replace(/[ \t]+$/, "");
+  let after = text.slice(end).replace(/^[ \t]+/, "");
+  if (/\n$/.test(before) && /^\n/.test(after)) after = after.slice(1);
+  const joined = before && after && !/\n$/.test(before) && !/^\n/.test(after) ? `${before} ${after}` : `${before}${after}`;
+  return joined.replace(/\n{3,}/g, "\n\n");
+}
+
+/** The text with the words at `at` (`length` of them) replaced: only when they are still the same words. */
+export function replaceWords(text: string, at: number, length: number, expected: string, replacement: string): string {
+  if (text.slice(at, at + length) !== expected) return text;
+  return `${text.slice(0, at)}${replacement}${text.slice(at + length)}`;
 }
