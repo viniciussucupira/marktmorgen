@@ -8097,6 +8097,8 @@ REGRA DOS 60% (OBRIGATÓRIA): todo cliente pagante, considerado isoladamente e u
 
 309. [EM1] E-mails para a lista somente pela Amazon SES, com fila de espera, e limites de envio maiores
 
+Estado da unidade de evidência do mês do remetente: em andamento pelo Codex em31/10/2026, 02:46:21 Fortaleza, ramo codex/sender-month-evidence, antes do código. sentThisMonth transforma leitura perdida/malformada em0 e libera admissão de lista. Distinguir desconhecido de0 no GET já existente, impedir admissão nessa incerteza e tornar avisos honestos; sem IO/chave/TTLnovo. PR#1396 mantém head/CIválidos intactos.
+
 Estado da unidade de aceite incerto do lote SES: em andamento pelo Codex em31/10/2026, 02:16:12 Fortaleza, ramo codex/ses-batch-uncertain-stop, antes do código. sesBatch ignora uncertain e repete/troca para Resend um envio possivelmente aceito. Parar novas tentativas e fallback na mesma chamada; sem novos marcadores persistidos ou alegação de exatamente uma vez. PR#1395 segue CI completo válido e intacto em outro ramo.
 
 Estado da unidade de campanha com resultado incerto: em andamento pelo Codex em31/10/2026 02h07min16s Fortaleza, ramo codex/broadcast-uncertain-stop, antes do código. advanceBroadcast ignora result.uncertain e tenta de novo automaticamente; ao receber resultado incerto, usar o estado terminal existente failed com aviso honesto e preservar snapshot, sem novos campos/chaves/TTL. Não certifica crash entre envio e gravação, nova fila SES,72h ou entrega exatamente uma vez.
@@ -20537,3 +20539,14 @@ Custo: nenhum novo comando/chave/TTL, conta/provedor ou recurso pago; somente in
 
 
 Resultado implementado (não publicado): sesBatch propaga uncertain de sesSend, conserva os confirmados e o restante não resolvido, interrompe próximas ondas e segundo round; sendBatch retorna retry sem passar o restante ao Resend. Estado de conta recusado simultaneamente continua sendo registrado pelo caminho existente. Testes reais do sender: aceite sintético500/resposta perdida numa onda com outro aceite confirmado e destinatário ainda não tentado, sem segundoSES nem Resend; somente o confirmado recebe marca já existente. Controle429confirmado continua até o segundo round; testes prévios de fallbackessencial/contapausada/recusa individual e idempotência preservados. Não grava marca para aceite desconhecido e não afirma proteção entre invocações/crash; checkpoint de campanha no PR#1395 e dos fluxos permanece necessário. Nenhum campo persistido/IOextra ou configuração externa.
+
+
+### 309/EM1 — evidência do mês do remetente antes de admissão (31/10/2026)
+
+Estado da unidade de evidência do mês do remetente: em andamento pelo Codex em31/10/2026, 02:46:21 Fortaleza, ramo codex/sender-month-evidence, antes do código. sentThisMonth transforma leitura perdida/malformada em0 e libera admissão de lista. Distinguir desconhecido de0 no GET já existente, impedir admissão nessa incerteza e tornar avisos honestos; sem IO/chave/TTLnovo. PR#1396 mantém head/CIválidos intactos.
+
+Achado em lib/email.ts: sentThisMonth devolve0 semRedis, noerro, ou Number(raw)||0 sobre resposta incompleta/coercível. senderRoom soma capacidade não comprovada àSES. Unidade conserva1GETexistente e contratos conhecidos; ausência null explícita confirma0, número precisa stringdecimal canônica segura; desconhecido não libera reserva de lista nem é apresentado como consumo0. Serviço essencial conserva caminho existente. Não prova contagem de aceites incertos, reserva global atômica, ciclo vital idempotente ou fechamento integral309.
+
+Publicação funcional #1395 confirmada: merge936f3ad7d071f34b8151bebd8fedcb3cdb95ca8e,31/10/2026 02h42min13sFortaleza,head184a7715c678c3a903ec805466289405f2e59c4d,39/39sucessos+Vercel,READYdpl_9aiBvcvYstxbJ9T1Y5WCCkFbpSAG,7aliases5HTMLreais. error/fatal(limit10)05:42:13–05:45:04.694UTC semregistro,somenteessa janela. Campanha para retryapóscheckpointincerto,semprova contra crash/gravaçãonãoaplicada. CustosCI8runs39jobs11454segundosconhecidos,0intervalosdesconhecidos; tarifas/OS/arredondamento/créditos/cache/Vercelfaturados desconhecidos,nunca0. Contador254retido. Estado anterior da unidade de campanha fica como histórico; não publicação extra de documento.
+
+Custo desta unidade: nenhum novoGET/comando/chave/TTL/provedor/retenção, comparação finita de1posição; mesmosavisoslimitadosjáexistentes. Teto incremental de operações novas mensal/anual Store/Studio/Scale0/0; faturas reaisCI/Redis/hosting desconhecidas,nãozero. Não aumentar preço/limite, ativarvenda oucontatarterceiro. Testes com simulações somente; novaunião exige39+Vercel completos. Código/filaCA1/NC1doClaude preservados integralmente.
