@@ -29,12 +29,23 @@
  * Every write is create-only: PutObject with If-None-Match: *, which R2
  * evaluates atomically (https://developers.cloudflare.com/r2/api/s3/api/);
  * a picture's name is fresh at every upload and never reused, so a 412 means
- * the same picture is already there. No delete and no read here.
+ * an object under that name is already there (not checked to be this very
+ * picture: no other writer may use the bucket), and is billed as a Class A
+ * operation (https://developers.cloudflare.com/r2/pricing/). Storage is
+ * $0.015 a GB-month on the same page. No delete and no read here.
+ *
+ * The key check compares key ids only: the owner's token must be scoped to
+ * the pictures' bucket alone. A PutObject keeps Cache-Control and
+ * Content-Type, but not app/api/image's X-Content-Type-Options: nosniff,
+ * Content-Security-Policy: default-src 'none'; sandbox or
+ * Cross-Origin-Resource-Policy: so serving from the images' domain (a later
+ * unit) also needs a Cloudflare response-header rule adding those three.
  */
 import { hashOf, signV4, type AwsKey } from "@/lib/aws-sign";
 import { timed } from "@/lib/fetch-timeout";
 import { IMAGE_FILE_PATTERN, IMAGE_FOLDER_PATTERN, MAX_IMAGE_BYTES, imageType } from "@/lib/product-image";
 import { sniffPhotoType } from "@/lib/store-photo";
+import { SITE_URL } from "@/lib/site-url";
 
 /** The owner's request-limit rule on the images' domain, as reviewed. */
 export type PictureR2Ceiling = { rule: string; reviewedAt: string; source: string };
@@ -75,12 +86,27 @@ export function pictureR2Config(ceiling: PictureR2Ceiling | null = PICTURE_R2_CE
   } catch {
     return null;
   }
-  if (origin.protocol !== "https:" || origin.pathname !== "/" || origin.search || origin.hash || origin.username || origin.port) return null;
-  if (origin.hostname === "r2.dev" || origin.hostname.endsWith(".r2.dev")) return null;
+  if (origin.protocol !== "https:" || origin.pathname !== "/" || origin.search || origin.hash || origin.username || origin.password || origin.port) return null;
+  if (!publicImagesHost(origin.hostname)) return null;
   const jurisdiction = env("PICTURE_R2_JURISDICTION").toLowerCase();
   if (jurisdiction !== "" && jurisdiction !== "eu") return null;
   const host = jurisdiction === "eu" ? `${account}.eu.r2.cloudflarestorage.com` : `${account}.r2.cloudflarestorage.com`;
   return { endpoint: `https://${host}`, bucket, origin: origin.origin, key: { accessKeyId, secretAccessKey } };
+}
+
+/**
+ * A name that can be the images' own public domain: two labels or more of
+ * letters, digits and hyphens, no trailing dot, no IP literal; never an
+ * r2.dev address, the S3 API host (not public), or the site's own host.
+ */
+function publicImagesHost(host: string): boolean {
+  const labels = host.split(".");
+  if (labels.length < 2 || !labels.every((label) => /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/.test(label))) return false;
+  if (/^\d+$/.test(labels.at(-1)!)) return false;
+  const under = (suffix: string) => host === suffix || host.endsWith(`.${suffix}`);
+  const site = new URL(SITE_URL).hostname;
+  // A subdomain of the site (images.marktmorgen.com) is fine; the site itself is not.
+  return !under("r2.dev") && !under("r2.cloudflarestorage.com") && host !== site && host !== `www.${site}`;
 }
 
 /** "images/<folder>/<file>" split, or a refusal: only a name the picture folder can hold. */

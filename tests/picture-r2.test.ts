@@ -25,7 +25,7 @@ import { PICTURE_R2_CEILING, copyPictureToR2, pictureR2Config, pictureR2Url, typ
 import { done, is, part } from "./check";
 
 const objects = new Map<string, { body: Uint8Array; headers: Record<string, string> }>();
-const calls: { method: string; url: string; headers: Record<string, string> }[] = [];
+const calls: { method: string; url: string; headers: Record<string, string>; cache?: string }[] = [];
 let answer: number | null = null;
 let down = false;
 const badHashes: string[] = [];
@@ -33,7 +33,7 @@ globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) =>
   const url = String(input);
   const method = init?.method ?? "GET";
   const headers = Object.fromEntries(Object.entries((init?.headers ?? {}) as Record<string, string>).map(([k, v]) => [k.toLowerCase(), v]));
-  calls.push({ method, url, headers });
+  calls.push({ method, url, headers, cache: init?.cache });
   if (down) throw new TypeError("fetch failed");
   if (init?.redirect !== "error") return new Response("redirects must be refused", { status: 599 });
   if (answer) return new Response("", { status: answer });
@@ -64,7 +64,7 @@ const WEBP = new Uint8Array([0x52, 0x49, 0x46, 0x46, 8, 0, 0, 0, 0x57, 0x45, 0x4
 function sources(dir: string): string[] {
   return readdirSync(dir).flatMap((name) => {
     const path = join(dir, name);
-    return statSync(path).isDirectory() ? sources(path) : /\.(ts|tsx)$/.test(name) ? [path] : [];
+    return statSync(path).isDirectory() ? sources(path) : /\.(ts|tsx|mjs|js)$/.test(name) ? [path] : [];
   });
 }
 
@@ -86,6 +86,22 @@ async function main(): Promise<void> {
     ["an http origin", { PICTURE_R2_ORIGIN: "http://images.marktmorgen.example" }],
     ["an origin with a path", { PICTURE_R2_ORIGIN: "https://images.marktmorgen.example/pics" }],
     ["an r2.dev address, which Cloudflare limits and does not cache", { PICTURE_R2_ORIGIN: "https://pub-0123.r2.dev" }],
+    ["an r2.dev address with a trailing dot", { PICTURE_R2_ORIGIN: "https://pub-0123.r2.dev." }],
+    ["the bare r2.dev host", { PICTURE_R2_ORIGIN: "https://r2.dev" }],
+    ["any host with a trailing dot", { PICTURE_R2_ORIGIN: "https://images.marktmorgen.example." }],
+    ["an IP address", { PICTURE_R2_ORIGIN: "https://1.2.3.4" }],
+    ["an IPv6 address", { PICTURE_R2_ORIGIN: "https://[::1]" }],
+    ["a single-label host", { PICTURE_R2_ORIGIN: "https://localhost" }],
+    ["the S3 API host, which is not public", { PICTURE_R2_ORIGIN: "https://0123456789abcdef0123456789abcdef.r2.cloudflarestorage.com" }],
+    ["the site's own host", { PICTURE_R2_ORIGIN: "https://marktmorgen.com" }],
+    ["the site's www host", { PICTURE_R2_ORIGIN: "https://www.marktmorgen.com" }],
+    ["an origin with a port", { PICTURE_R2_ORIGIN: "https://images.marktmorgen.example:8443" }],
+    ["an origin with a query", { PICTURE_R2_ORIGIN: "https://images.marktmorgen.example/?a=1" }],
+    ["an origin with a fragment", { PICTURE_R2_ORIGIN: "https://images.marktmorgen.example/#a" }],
+    ["a malformed account id", { PICTURE_R2_ACCOUNT_ID: "0123" }],
+    ["a short key id", { PICTURE_R2_ACCESS_KEY_ID: "short" }],
+    ["a short secret", { PICTURE_R2_SECRET_ACCESS_KEY: "s".repeat(10) }],
+    ["a bucket name that is not one", { PICTURE_R2_BUCKET: "Bad_Bucket" }],
     ["an unknown jurisdiction", { PICTURE_R2_JURISDICTION: "us" }],
   ] as [string, Record<string, string>][]) {
     setEnv({ ...ENV, ...extra });
@@ -95,10 +111,15 @@ async function main(): Promise<void> {
     ["no rule", { ...ceiling, rule: " " }],
     ["no date", { ...ceiling, reviewedAt: "31/10/2026" }],
     ["no source", { ...ceiling, source: "" }],
+    ["a date that rolls over", { ...ceiling, reviewedAt: "2026-02-30" }],
   ] as [string, PictureR2Ceiling][]) {
     setEnv(ENV);
     is(`a ceiling with ${what}: off`, pictureR2Config(bad), null);
   }
+  setEnv({ ...ENV, PICTURE_R2_ORIGIN: "https://images.marktmorgen.com" });
+  is("a subdomain of the site is the natural images' domain: on", pictureR2Config(ceiling)?.origin, "https://images.marktmorgen.com");
+  setEnv({ ...ENV, PICTURE_R2_ORIGIN: "https://IMAGES.Marktmorgen.example:443/" });
+  is("case and the default port are only spelling", pictureR2Config(ceiling)?.origin, "https://images.marktmorgen.example");
   setEnv({ ...ENV, PICTURE_R2_JURISDICTION: "eu" });
   is("a bucket under the EU jurisdiction is reached at its own address", pictureR2Config(ceiling)?.endpoint, "https://0123456789abcdef0123456789abcdef.eu.r2.cloudflarestorage.com");
 
@@ -122,12 +143,18 @@ async function main(): Promise<void> {
     ["a name the picture folder could not hold", `images/${FOLDER}/../x.jpg`, JPEG],
     ["a name outside the picture folder", `files/${FOLDER}/${"d".repeat(32)}.jpg`, JPEG],
     ["bytes that are not the type the name says", `images/${FOLDER}/${"e".repeat(32)}.jpg`, WEBP],
-    ["a file larger than a picture may be", `images/${FOLDER}/${"f".repeat(32)}.jpg`, new Uint8Array(1_000_001).fill(0xff)],
+    ["a real JPEG larger than a picture may be", `images/${FOLDER}/${"f".repeat(32)}.jpg`, (() => { const big = new Uint8Array(1_000_001); big.set(JPEG); return big; })()],
+    ["an empty file", `images/${FOLDER}/${"7".repeat(32)}.jpg`, new Uint8Array(0)],
+    ["a JPEG under a WebP name", `images/${FOLDER}/${"6".repeat(32)}.webp`, JPEG],
+    ["a PNG under a JPEG name", `images/${FOLDER}/${"5".repeat(32)}.jpg`, new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 13])],
   ] as [string, string, Uint8Array][]) {
     is(`${what}: refused before anything is sent`, await copyPictureToR2(config, p, bytes).then(() => "sent", () => "refused"), "refused");
   }
   is("and nothing was sent for them", calls.length - before, 0);
-  for (const status of [301, 403, 500, 503]) {
+  const most = new Uint8Array(1_000_000);
+  most.set(JPEG);
+  is("a JPEG of exactly the most a picture may weigh is copied", await copyPictureToR2(config, `images/${FOLDER}/${"4".repeat(32)}.jpg`, most), "copied");
+  for (const status of [301, 403, 409, 500, 503]) {
     answer = status;
     is(`an answer of ${status} is a failure`, await copyPictureToR2(config, `images/${FOLDER}/${"9".repeat(32)}.jpg`, JPEG).then(() => "ok", () => "failed"), "failed");
   }
@@ -136,13 +163,14 @@ async function main(): Promise<void> {
   is("an unreachable store is a failure", await copyPictureToR2(config, `images/${FOLDER}/${"8".repeat(32)}.jpg`, JPEG).then(() => "ok", () => "failed"), "failed");
   down = false;
   is("never a delete, never a read", calls.filter((c) => c.method !== "PUT").length, 0);
+  is("never kept by the fetch cache", calls.length > 0 && calls.every((c) => c.cache === "no-store"), true);
 
   part("The address by the images' own domain");
   is("the same path under the images' origin", pictureR2Url(config, path), `https://images.marktmorgen.example/${path}`);
   is("a path that is not a picture's has none", (() => { try { return pictureR2Url(config, "images/../secret"); } catch { return "refused"; } })(), "refused");
 
   part("Nothing calls it yet");
-  const users = [...sources("app"), ...sources("lib"), ...sources("components")].filter((file) => file !== join("lib", "picture-r2.ts") && /@\/lib\/picture-r2/.test(readFileSync(file, "utf8")));
+  const users = [...sources("app"), ...sources("lib"), ...sources("components"), ...sources("scripts")].filter((file) => file !== join("lib", "picture-r2.ts") && /(?:@\/lib\/|\.\/|\.\.\/)picture-r2["']/.test(readFileSync(file, "utf8")));
   is("no file of the app imports it", users, []);
   done();
 }
