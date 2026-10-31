@@ -124,7 +124,7 @@ export async function filesHeld(folder: string): Promise<number> {
   let complete = false;
   for (let page = 0; page < 20; page += 1) {
     const answer = await blob.list({ prefix: `stores/${folder}/`, limit: 1000, cursor });
-    if (!answer || !Array.isArray(answer.blobs) || typeof answer.hasMore !== "boolean") throw new Error("invalid storage listing");
+    if (!answer || !Array.isArray(answer.blobs) || answer.blobs.length > 1000 || typeof answer.hasMore !== "boolean") throw new Error("invalid storage listing");
     for (const entry of answer.blobs) {
       if (!entry || typeof entry.pathname !== "string" || !entry.pathname.startsWith(`stores/${folder}/`) ||
           paths.has(entry.pathname) || !Number.isSafeInteger(entry.size) || entry.size < 0) throw new Error("invalid storage entry");
