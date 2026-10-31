@@ -47,6 +47,10 @@ import { syncAssistant } from "@/lib/assistant-billing";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { LockBusyError, releaseLock, takeLock } from "@/lib/redis-lock";
 import { SUBSCRIPTION_PATTERN, type Store, setSubscription, storeForId, storeRef } from "@/lib/store";
+import { EMAIL_PATTERN, normaliseEmail } from "@/lib/auth";
+import { NIMBUS_FROM, isSenderConfigured, sendEmail } from "@/lib/email";
+import { SUPPORT_EMAIL } from "@/lib/creator-research";
+import { planRefundNotMadeLetter } from "@/lib/plan-refund-words";
 
 const AT = "2024-06-20";
 /** The notes of plan refunds not finished yet: field a store's id, value a Note. */
@@ -203,6 +207,20 @@ export async function endPlanNow(store: Store, id: string): Promise<boolean> {
   }
 }
 
+/** One email to the store's own address, from the company's sending, under an idempotency key. Not sent only logs. */
+async function mail(store: Store, letter: { subject: string; text: string }, key: string): Promise<void> {
+  const to = normaliseEmail(store.email);
+  if (!EMAIL_PATTERN.test(to) || !isSenderConfigured()) {
+    console.error(`plan-refund: store ${store.sid}'s email was not sent (no address or no sender)`);
+    return;
+  }
+  const sent = await sendEmail({ meter: { by: "company" }, from: NIMBUS_FROM, to, replyTo: SUPPORT_EMAIL, subject: letter.subject, text: letter.text, idempotencyKey: key }).catch((error) => {
+    console.error("sending a plan refund email failed", error);
+    return false;
+  });
+  if (!sent) console.error(`plan-refund: store ${store.sid}'s email was not sent`);
+}
+
 const refundOf = (r: Row, earlier: boolean, ended: boolean): PlanRefundFlow => ({
   ok: true,
   cents: Number(r.amount) || 0,
@@ -341,6 +359,9 @@ export async function finishPlanRefunds(deadline: number, nowSeconds = Math.floo
         console.error(`plan-refund: the stop set for store ${sid}'s refund could not be taken back in ${GIVE_UP_DAYS} days; its note is dropped`);
       }
       await dropNote(sid);
+      // The creator asked for a refund and was told "we check within a day": that nothing was refunded, and that the
+      // plan goes on and renews as usual unless canceled, reaches them by email (once per request).
+      await mail(store, planRefundNotMadeLetter({ store: store.name || store.handle, undecided: found.kind === "unknown" }), `plan-refund-none:${sid}:${note.at}`);
       counts.dropped += 1;
     } catch (error) {
       console.error(`plan-refund: the note for store ${sid} is not decided yet; tried again tomorrow`, error);

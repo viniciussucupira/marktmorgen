@@ -49,6 +49,8 @@ const world = {
   /** Subscriptions whose updates answer 500. */
   postDownFor: new Set<string>(),
   slow: 0,
+  /** Emails sent through the stand-in Resend. */
+  emails: [] as { to: string; subject: string; text: string; key: string }[],
 };
 
 globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) => {
@@ -56,6 +58,11 @@ globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) =>
   const method = init?.method ?? "GET";
   const json = (data: unknown, status = 200) => new Response(JSON.stringify(data), { status, headers: { "content-type": "application/json" } });
   const fail = () => json({ error: { message: "down", type: "api_error" } }, 500);
+  if (url.hostname === "api.resend.com") {
+    const body = JSON.parse(String(init?.body)) as { to: string | string[]; subject: string; text: string };
+    world.emails.push({ to: [body.to].flat()[0], subject: body.subject, text: body.text, key: new Headers(init?.headers).get("idempotency-key") ?? "" });
+    return new Response(JSON.stringify({ id: `email_${world.emails.length}` }), { status: 200 });
+  }
   if (url.hostname !== "api.stripe.com") return new Response(null, { status: 404 });
   if (world.slow) await new Promise((r) => setTimeout(r, world.slow));
   const path = url.pathname.replace(/^\/v1/, "");
@@ -204,8 +211,12 @@ async function main() {
   is("Stripe failing at the refund: failed, and the stop KEPT while a refund may still turn up (no renewal meanwhile)", [down, d.sub().cancel_at_period_end, d.refunds().length], [{ ok: false, reason: "failed", stopLeft: true }, true, 0]);
   is("the note stays for the daily job", JSON.parse(String(await d.note())).m, 1);
   is("the daily job before SETTLE_SECONDS: left, stop still set", [(await finishPlanRefunds(Date.now() + 10_000, NOW + 60)).left >= 1, d.sub().cancel_at_period_end], [true, true]);
+  process.env.RESEND_API_KEY = "re_a_stand_in_key_for_tests_only";
+  world.emails = [];
   is("after it, none found: the stop taken back, the note dropped, the plan untouched", [await (async () => { await finishPlanRefunds(Date.now() + 10_000, NOW + SETTLE_SECONDS + 1); return d.note(); })(), d.sub().status, d.sub().cancel_at_period_end], [null, "active", false]);
 
+  is("and the creator is told by email that nothing was refunded and the plan goes on", world.emails.map((e) => [e.subject.endsWith("your refund was not made"), e.text.includes("Nothing was refunded and your plan goes on as before.")]), [[true, true]]);
+  delete process.env.RESEND_API_KEY;
   const t = await paidShop();
   world.loseAnswer = true;
   world.listDown = true;
@@ -265,9 +276,13 @@ async function main() {
   world.listDown = true;
   await finishPlanRefunds(Date.now() + 10_000, NOW + 60);
   is("refunds unreadable: kept for tomorrow", (await h.note()) !== null, true);
+  process.env.RESEND_API_KEY = "re_a_stand_in_key_for_tests_only";
+  world.emails = [];
   await finishPlanRefunds(Date.now() + 10_000, NOW + GIVE_UP_DAYS * DAY + 1);
   world.listDown = false;
-  is(`undecidable for ${GIVE_UP_DAYS} days: dropped`, await h.note(), null);
+  is(`undecidable for ${GIVE_UP_DAYS} days: dropped, the stop taken back`, [await h.note(), h.sub().cancel_at_period_end], [null, false]);
+  is("and the creator is told the refund could not be confirmed, the plan renews as usual, how to ask again", world.emails.map((e) => [e.text.includes("We could not confirm the refund"), e.text.includes("It renews as usual unless you cancel it"), e.text.includes("Refund my payment")]), [[true, true, true]]);
+  delete process.env.RESEND_API_KEY;
   await redisPipeline([["HSET", ENDING_KEY, "gone-store-id", JSON.stringify({ s: "sub_gonestore01", at: NOW, m: 1 })]]);
   await finishPlanRefunds(Date.now() + 10_000, NOW + 60);
   is("the note of a store that is gone is dropped", (await redisPipeline([["HGET", ENDING_KEY, "gone-store-id"]]))[0], null);
