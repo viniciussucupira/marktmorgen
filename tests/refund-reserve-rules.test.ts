@@ -12,21 +12,35 @@ import { DISPUTE_DAYS, disputeReserveCents, payoutAbove, refundReserve, reserveC
 
 const DAY = 86_400;
 const NOW = Date.UTC(2026, 11, 2) / 1000;
-const month = (o: Partial<ReserveCharge> = {}): ReserveCharge => ({ currency: "usd", chargedCents: 6_900, paidAtSeconds: NOW - 3 * DAY, periodEndSeconds: NOW + 27 * DAY, refund: { kind: "guarantee", cents: 6_900 }, ...o });
+const month = (o: Partial<ReserveCharge> = {}): ReserveCharge => ({ currency: "usd", chargedCents: 6_900, paidAtSeconds: NOW - 3 * DAY, periodEndSeconds: NOW + 27 * DAY, refund: { kind: "guarantee", cents: 6_900 }, pendingRefundCents: 0, ...o });
 
 part("What the policy would give back now, and the disputes");
 is("a dispute reserve is 1% of the charge and both fees, rounded up", [disputeReserveCents(6_900), disputeReserveCents(1)], [99, 31]);
 const one = refundReserve([month()], NOW);
-is("a first payment inside the guarantee: all of it, and its dispute reserve", one, { kind: "known", byCurrency: { usd: { refundCents: 6_900, disputeCents: 99, totalCents: 6_999 } } });
+is("a first payment inside the guarantee: all of it, and its dispute reserve", one, { kind: "known", byCurrency: { usd: { refundCents: 6_900, pendingCents: 0, disputeCents: 99, totalCents: 6_999 } } });
 const yearly = month({ chargedCents: 69_000, periodEndSeconds: NOW + 300 * DAY, refund: { kind: "unstarted_months", cents: 47_000, monthsKept: 3 } });
 const renewal = month({ refund: { kind: "none", reason: "renewal" } });
 const both = refundReserve([yearly, renewal], NOW);
-is("a yearly plan's months not started, and a renewal's dispute reserve only", both.kind === "known" && both.byCurrency.usd, { refundCents: 47_000, disputeCents: disputeReserveCents(69_000) + 99, totalCents: 47_000 + disputeReserveCents(69_000) + 99 });
+is("a yearly plan's months not started, and a renewal's dispute reserve only", both.kind === "known" && both.byCurrency.usd, { refundCents: 47_000, pendingCents: 0, disputeCents: disputeReserveCents(69_000) + 99, totalCents: 47_000 + disputeReserveCents(69_000) + 99 });
 
 part("The dispute window");
 const old = (end: number) => refundReserve([month({ paidAtSeconds: NOW - 400 * DAY, periodEndSeconds: end, refund: { kind: "none", reason: "outside_window" } })], NOW);
-is("past 120 days after its period ended: nothing kept", old(NOW - (DISPUTE_DAYS + 1) * DAY), { kind: "known", byCurrency: { usd: { refundCents: 0, disputeCents: 0, totalCents: 0 } } });
+is("past 120 days after its period ended: nothing kept", old(NOW - (DISPUTE_DAYS + 1) * DAY), { kind: "known", byCurrency: { usd: { refundCents: 0, pendingCents: 0, disputeCents: 0, totalCents: 0 } } });
 is("a period that ended less than 120 days ago: still kept", old(NOW - (DISPUTE_DAYS - 1) * DAY).kind === "known" && (old(NOW - (DISPUTE_DAYS - 1) * DAY) as { byCurrency: Record<string, { disputeCents: number }> }).byCurrency.usd.disputeCents, 99);
+
+part("Review findings");
+// A refund made for insufficient balance stays pending: Stripe already counts it in amount_refunded, so the rule owes nothing more,
+// but its money has not left the balance yet.
+const waiting = refundReserve([month({ refund: { kind: "none", reason: "already_refunded" }, pendingRefundCents: 6_900 })], NOW);
+is("a pending refund's money stays in the reserve", waiting.kind === "known" && waiting.byCurrency.usd, { refundCents: 0, pendingCents: 6_900, disputeCents: 99, totalCents: 6_999 });
+is("and is not paid out", payoutAbove(6_999, waiting, "usd"), 0);
+const partly = refundReserve([month({ refund: { kind: "guarantee", cents: 4_900 }, pendingRefundCents: 2_000 })], NOW);
+is("part refunded and pending, the rest owed: both kept", partly.kind === "known" && partly.byCurrency.usd.totalCents, 4_900 + 2_000 + 99);
+is("more pending and owed than was charged: unknown", refundReserve([month({ pendingRefundCents: 1 })], NOW).kind, "unknown");
+const disputedOpen = refundReserve([month({ refund: { kind: "none", reason: "dispute_open" } })], NOW);
+is("an open dispute: nothing owed by the policy, its dispute reserve kept", disputedOpen.kind === "known" && disputedOpen.byCurrency.usd, { refundCents: 0, pendingCents: 0, disputeCents: 99, totalCents: 99 });
+const exactly = refundReserve([month({ paidAtSeconds: NOW - 400 * DAY, periodEndSeconds: NOW - DISPUTE_DAYS * DAY, refund: { kind: "none", reason: "outside_window" } })], NOW);
+is("on the 120th day the window is still open", exactly.kind === "known" && exactly.byCurrency.usd.disputeCents, 99);
 
 part("Unknown is never a number");
 is("a refund the rule cannot decide", refundReserve([month(), month({ refund: { kind: "unknown", reason: "split_payment" } })], NOW), { kind: "unknown", reason: "refund_unknown", index: 1 });

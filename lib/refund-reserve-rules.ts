@@ -25,6 +25,14 @@
  *     disputes-work, "Dispute timing", read 31/10/2026): a charge counts
  *     until DISPUTE_DAYS after the later of its payment and the end of the
  *     period it paid for.
+ *   - and every refund already made on the charge but still pending or
+ *     waiting for an action: Stripe counts it in the charge's
+ *     `amount_refunded` (so the policy's rule no longer owes it) although a
+ *     pending refund "hasn't been initiated" and one pending for
+ *     insufficient balance waits on the balance (support.stripe.com/
+ *     questions/understanding-refund-statuses and /pending-refunds-due-to-
+ *     insufficient-stripe-balance, read 31/10/2026): its money is still
+ *     needed in the balance.
  * Whatever cannot be decided (a refund the rule calls unknown, an amount that
  * is not whole cents, a currency other than the dollar the dispute fees are
  * in) makes the whole reserve unknown: no payout is made on it and no sale
@@ -49,9 +57,11 @@ export type ReserveCharge = {
   periodEndSeconds: number;
   /** `planRefund` for this charge, now. */
   refund: PlanRefund;
+  /** The charge's refunds Stripe reports `pending` or `requires_action`, in cents: made, not yet out of the balance. */
+  pendingRefundCents: number;
 };
 
-export type ReserveTotal = { refundCents: number; disputeCents: number; totalCents: number };
+export type ReserveTotal = { refundCents: number; pendingCents: number; disputeCents: number; totalCents: number };
 export type Reserve =
   | { kind: "known"; byCurrency: Record<string, ReserveTotal> }
   | { kind: "unknown"; reason: "refund_unknown" | "unreadable" | "currency"; index: number };
@@ -70,13 +80,15 @@ export function refundReserve(charges: readonly ReserveCharge[], nowSeconds: num
     if (c.currency !== "usd") return { kind: "unknown", reason: "currency", index };
     if (c.refund.kind === "unknown") return { kind: "unknown", reason: "refund_unknown", index };
     const owed = c.refund.kind === "guarantee" || c.refund.kind === "unstarted_months" ? c.refund.cents : 0;
-    if (!whole(owed) || owed > c.chargedCents) return { kind: "unknown", reason: "unreadable", index };
-    const disputable = nowSeconds < Math.max(c.paidAtSeconds, c.periodEndSeconds) + DISPUTE_DAYS * DAY_SECONDS;
+    if (!whole(owed) || !whole(c.pendingRefundCents) || owed + c.pendingRefundCents > c.chargedCents) return { kind: "unknown", reason: "unreadable", index };
+    // On the 120th day the window is still open.
+    const disputable = nowSeconds <= Math.max(c.paidAtSeconds, c.periodEndSeconds) + DISPUTE_DAYS * DAY_SECONDS;
     const dispute = disputable ? disputeReserveCents(c.chargedCents) : 0;
-    const total = (byCurrency[c.currency] ??= { refundCents: 0, disputeCents: 0, totalCents: 0 });
+    const total = (byCurrency[c.currency] ??= { refundCents: 0, pendingCents: 0, disputeCents: 0, totalCents: 0 });
     total.refundCents += owed;
+    total.pendingCents += c.pendingRefundCents;
     total.disputeCents += dispute;
-    total.totalCents += owed + dispute;
+    total.totalCents += owed + c.pendingRefundCents + dispute;
   }
   return { kind: "known", byCurrency };
 }
