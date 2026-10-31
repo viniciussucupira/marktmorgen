@@ -224,6 +224,14 @@ async function main() {
   world.moreCharges = true;
   is("a full page of declined charges inside the 30 days, more after it: unknown, never the guarantee skipped", (await fp.read()).refund, { kind: "unknown", reason: "too_many" });
   world.moreCharges = false;
+  // One payment 20 days ago, then a long history of declined charges before it: the page ends outside the window,
+  // but the payment inside it may be the first one or not, and the rest is not read.
+  const dp = await shop();
+  pay(dp, { at: NOW - 20 * DAY });
+  for (let i = 0; i < 100; i += 1) world.charges.push({ id: `ch_olddecl${n}x${i}`, customer: dp.customer, created: NOW - 40 * DAY - i, status: "failed", paid: false, payment_method_details: { card: { fingerprint: "fpdeclined" } } });
+  world.moreCharges = true;
+  is("a payment inside the window with more pages after it: unknown, never a silent renewal", (await dp.read()).refund, { kind: "unknown", reason: "too_many" });
+  world.moreCharges = false;
   // A downgrade the day after leaves a credit on the customer's balance: refunding the whole payment would give back more than was paid.
   const cr = await shop();
   pay(cr, { at: NOW - 3 * DAY });
