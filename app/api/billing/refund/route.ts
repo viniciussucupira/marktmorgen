@@ -2,9 +2,15 @@ import type { NextRequest } from "next/server";
 import { away, creatorFrom, studioPath } from "@/lib/studio-route";
 import { limited, withinLimit } from "@/lib/request-guard";
 import { refundAndEndPlan, takeReview } from "@/lib/plan-refund-flow";
+import { refundUnderway } from "@/lib/plan-refund-underway";
 
-/** Up to the refund's reading, its write and the plan's ending; a request cut short is finished by the daily job. */
-export const maxDuration = 120;
+/**
+ * Up to the subscription's reading and stop, the refund's reading and write
+ * under its lock and the plan's ending, each Stripe call bounded by its own
+ * timeout (about 125 seconds before the plan's ending at the worst); a
+ * request cut short anyway is finished by the daily job.
+ */
+export const maxDuration = 300;
 
 /** Refund requests a store may send in a day: each one reads Stripe a bounded number of times. */
 const PER_DAY = 10;
@@ -34,16 +40,26 @@ export async function POST(request: NextRequest) {
   }
   if (!(await withinLimit("plan-refund", store.sid || store.handle, PER_DAY, 86_400))) return told("later");
   // The pass is taken before anything else: a second click or an old tab has none.
+  // A refund still being settled (a second press, a request that has not finished) is never told "nothing".
+  const underway = () => refundUnderway(store.sid).catch(() => true);
   const shown = await takeReview(store.sid, token);
-  if (shown === null) return told("review");
+  if (shown === null) return told((await underway()) ? "busy" : "review");
 
-  const done = await refundAndEndPlan(store, undefined, shown);
+  let done;
+  try {
+    done = await refundAndEndPlan(store, undefined, shown);
+  } catch (error) {
+    // The note is written before any money moves, so with none nothing was done; with one, the daily job decides.
+    console.error("plan-refund: the refund request failed part way", error);
+    return told((await underway()) ? "unsure" : "error");
+  }
   if (done.ok) return told(done.ended ? "refunded" : "ending");
   if (done.reason === "busy") return told("busy");
+  // A note left behind means a refund may have been made: the daily job decides it and emails the creator.
+  if (done.stopLeft) return told("error-stop");
+  if (await underway()) return told("unsure");
   if (done.reason === "changed") return told("changed");
-  if (done.reason === "failed" || done.reason === "stop_failed" || done.reason === "no_lock") {
-    return told(done.stopLeft ? "error-stop" : "error");
-  }
+  if (done.reason === "failed" || done.reason === "stop_failed" || done.reason === "no_lock") return told("error");
   // Not owed or not decidable now: the review page says why, with the way to support.
   return told("none");
 }

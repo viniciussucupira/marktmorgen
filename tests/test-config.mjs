@@ -17,6 +17,11 @@ export function testAliases(file,root,here){
  if(file==='host-calendar-removal.test.ts')aliases['@/lib/host-calendar']=join(here,'host-calendar-removal-world.ts');
  if(file==='plan-break-off-cron.test.ts')for(const name of ['request-guard','billing-reminders','trial-nudges','payment-requests'])aliases['@/lib/'+name]=join(here,'plan-break-off-cron-world.ts');
  if(file==='plan-refund-route.test.ts')aliases['@/lib/studio-route']=join(here,'plan-refund-route-world.ts');
+ if(file==='plan-refund-page.test.ts'){
+  aliases['@/lib/studio-route']=join(here,'plan-refund-route-world.ts');
+  for(const name of ['next/headers','next/navigation'])aliases[name]=join(here,'meeting-withdrawal-page-world.ts');
+  for(const name of ['studio-header','studio-store-pin'])aliases['@/components/'+name]=join(here,'meeting-withdrawal-page-world.ts');
+ }
  if(file==='billing-resume-unknown-route.test.ts')for(const name of ['studio-route','request-guard'])aliases['@/lib/'+name]=join(here,'billing-resume-route-world.ts');
  if(['ai-spend.test.ts','ai-spend-provider.test.ts','automatic-ai-spend.test.ts'].includes(file))aliases['@/lib/redis']=join(here,'ai-spend-redis.ts');
  else aliases['@/lib/ai-spend']=join(here,'ai-spend-regression-stub.ts');
