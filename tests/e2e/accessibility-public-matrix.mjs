@@ -118,7 +118,8 @@ try{
    if(report.violations.length||errors.length||writes)failed++;
    // After preserving the baseline audit, exercise a real mobile-to-desktop
    // change. A CSS-hidden drawer must not retain its scroll lock or focus.
-   if(path==="/pricing"&&width===390&&mode==="baseline"){ // VS1: the shared drawer is on every page but the home page, which has its own short menu.
+   if(path==="/pricing"&&width===390&&mode==="baseline"){ // VS1: the shared drawer is on every page but the home page and /pricing, which share the home page's short menu; it is exercised on a feature page, after the /pricing audit above.
+    await page.goto(origin+"/platform",{waitUntil:"networkidle",timeout:60000});
     const toggle=page.locator('button[aria-controls="mobile-drawer"]');
     await toggle.focus();await page.keyboard.press("Enter");
     await page.waitForFunction(()=>document.body.style.overflow==="hidden"&&document.querySelector("#mobile-drawer")?.contains(document.activeElement));
