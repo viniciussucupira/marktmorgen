@@ -20,7 +20,7 @@ import { setStripeAccount } from "@/lib/store";
 import { claimHandle, ensureStatsId, recordPlanDispute, setSubscription, storeForEmail, storeRef } from "@/lib/store";
 import { allowanceUsed, takeAllowance } from "@/lib/store-allowance";
 import { STORE_ALLOWANCES } from "@/lib/store-allowance-rules";
-import { WEBHOOK_ADD_PAUSED_WORDS, WEBHOOK_PAUSED_NOT_SENT_WORDS } from "@/lib/integration-pause";
+import { WEBHOOK_ADD_PAUSED_WORDS, WEBHOOK_PAUSED_COUNTED, WEBHOOK_PAUSED_NOT_SENT_WORDS } from "@/lib/integration-pause";
 import { readFileSync } from "node:fs";
 import { RENEWAL_PAUSED_WORDS } from "@/lib/renewal-unpaid-words";
 import { DISPUTE_PAUSED_WORDS } from "@/lib/plan-dispute-rules";
@@ -94,11 +94,12 @@ async function main(): Promise<void> {
   const before = await used();
   is("one delivery is made for the sale", await emitEvent(store, "sale.completed", "cs_wait_0001", { amount_cents: 4900 }), 1);
   d = await latest();
-  is("not sent, never tried, with the sentence in the log", [d.state, d.attempts, d.next, d.lastError, received.length], ["failed", 0, 0, WEBHOOK_PAUSED_NOT_SENT_WORDS.paused_unpaid, 1]);
+  is("not sent, never tried, with the sentence in the log", [d.state, d.attempts, d.next, d.lastError, received.length], ["failed", 0, 0, `${WEBHOOK_PAUSED_NOT_SENT_WORDS.paused_unpaid} ${WEBHOOK_PAUSED_COUNTED}`, 1]);
+  is("the log marks it as not sent for the pause", d.notSentPaused, true);
   is("it counts as one of the month's deliveries, once", (await used()) - before, 1);
   is("the retrying delivery from before the pause is stopped the same way, without a call", [await sweep(), received.length], [{ tried: 1, delivered: 0 }, 1]);
   const stopped = (await webhooksView(store)).log.find((x) => x.attempts === 1)!;
-  is("and says why", [stopped.state, stopped.lastError], ["failed", WEBHOOK_PAUSED_NOT_SENT_WORDS.paused_unpaid]);
+  is("and says why", [stopped.state, stopped.lastError, stopped.notSentPaused], ["failed", `${WEBHOOK_PAUSED_NOT_SENT_WORDS.paused_unpaid} ${WEBHOOK_PAUSED_COUNTED}`, true]);
   is("nothing is left to try", (await sweep()).tried, 0);
   is("two deliveries counted in all", (await used()) - before, 2);
 
@@ -108,7 +109,7 @@ async function main(): Promise<void> {
   is("nothing was added", (await webhooksView(store)).endpoints.length, 1);
   is("the API answers it 409, as a refusal and not a fault", /paused: 409/.test(readFileSync("app/api/v1/hooks/route.ts", "utf8")), true);
   is("the Terms count a delivery not sent while paused", readFileSync("app/terms/page.tsx", "utf8").includes("and each one not sent because your"), true);
-  is("the notices name webhooks among what pauses", [RENEWAL_PAUSED_WORDS, DISPUTE_PAUSED_WORDS].every((w) => w.includes("New webhook endpoints wait, and webhooks are not sent to your endpoints (nor later), except events from your Stripe account")), true);
+  is("the notices name webhooks among what pauses", [RENEWAL_PAUSED_WORDS, DISPUTE_PAUSED_WORDS].every((w) => w.includes("New webhook endpoints cannot be added, and webhooks are not sent to your endpoints, not even later, except events from your Stripe account")), true);
   const cookie = `${SESSION_COOKIE}=${await openSession(OWNER)}`;
   const viaStudio = await studioHooks(new NextRequest(`https://marktmorgen.com/api/store/webhooks?store=${store.sid}`, { method: "POST", headers: { host: "marktmorgen.com", origin: "https://marktmorgen.com", cookie, "content-type": "application/json" }, body: JSON.stringify({ action: "add", url: "https://hooks.example.com/route", events: ["sale.completed"] }) }));
   is("the studio's route answers 409 with the sentence", [viaStudio.status, ((await viaStudio.json()) as { message?: string }).message], [409, WEBHOOK_ADD_PAUSED_WORDS.paused_unpaid]);
@@ -129,6 +130,7 @@ async function main(): Promise<void> {
   await redis.pipeline([["SET", anchorKey, "evt_WaitAnchor01"]]);
   is("paused: no store read, no Stripe call", [await watchStripe(Date.now() + 10_000), stripeCalls.length], [{ stores: 0, events: 0 }, 0]);
   is("the anchor stays where it was", await redis.pipeline([["GET", anchorKey]]), ["evt_WaitAnchor01"]);
+  is("and is kept as long as Stripe keeps events", Number((await redis.pipeline([["TTL", anchorKey]]))[0]) > 29 * 86400, true);
 
   part("Disputed: the dispute's sentence");
   await setSubscription(OWNER, { active: true, tier: "pro", cycle: "month", period: paidPeriod(), renewalUnpaid: false });
@@ -138,7 +140,7 @@ async function main(): Promise<void> {
   store = (await storeForEmail(OWNER))!;
   await emitEvent(store, "sale.completed", "cs_wait_0002", { amount_cents: 1900 });
   d = await latest();
-  is("not sent, with the dispute's sentence", [d.state, d.lastError, received.length], ["failed", WEBHOOK_PAUSED_NOT_SENT_WORDS.paused_disputed, 1]);
+  is("not sent, with the dispute's sentence", [d.state, d.lastError, received.length], ["failed", `${WEBHOOK_PAUSED_NOT_SENT_WORDS.paused_disputed} ${WEBHOOK_PAUSED_COUNTED}`, 1]);
   const refusedDisputed = await addEndpoint(store, "https://hooks.example.com/more", ["sale.completed"]);
   is("adding is refused with the dispute's sentence", refusedDisputed.ok ? "added" : refusedDisputed.message, WEBHOOK_ADD_PAUSED_WORDS.paused_disputed);
 
@@ -159,6 +161,18 @@ async function main(): Promise<void> {
   await emitEvent(store, "sale.completed", "cs_wait_used", { amount_cents: 100 });
   d = await latest();
   is("failed, with the pause first and the month after", [d.state, d.next, d.lastError.startsWith(WEBHOOK_PAUSED_NOT_SENT_WORDS.paused_unpaid), d.lastError.length > WEBHOOK_PAUSED_NOT_SENT_WORDS.paused_unpaid.length, received.length], ["failed", 0, true, true, 2]);
+  is("the counted sentence is not claimed for a month already used", d.lastError.includes(WEBHOOK_PAUSED_COUNTED), false);
+
+  part("A count that cannot be made while paused: the pause sentence alone, never retried");
+  const counting = redis.pipeline;
+  redis.pipeline = async (commands: (string | number)[][]) => {
+    if (commands.some((c) => String(c[0]) === "INCRBY")) throw new Error("a store that does not answer");
+    return counting(commands);
+  };
+  await emitEvent(store, "sale.completed", "cs_wait_unknown", { amount_cents: 100 });
+  redis.pipeline = counting;
+  d = await latest();
+  is("failed at once, no claim that it was counted", [d.state, d.next, d.lastError, received.length], ["failed", 0, WEBHOOK_PAUSED_NOT_SENT_WORDS.paused_unpaid, 2]);
 
   server.close();
   done();

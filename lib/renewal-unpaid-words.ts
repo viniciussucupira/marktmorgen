@@ -21,7 +21,7 @@
  *     integrationPauseWord (lib/webhooks.ts, units 4b4b1 and 4b4b2).
  */
 export const RENEWAL_PAUSED_WORDS =
-  "Until it is paid, your checkout takes no new orders, free copies or sign-ups, and emails to your list, AI drafts, lesson video, imports from other platforms, new connections to Zoom, Google Calendar and Meta with Meta's daily ad-spend read, and new uploads, your buyers' review photos included, are paused. New webhook endpoints wait, and webhooks are not sent to your endpoints (nor later), except events from your Stripe account, which are sent once the payment is recorded.";
+  "Until it is paid, your checkout takes no new orders, free copies or sign-ups, and emails to your list, AI drafts, lesson video, imports from other platforms, new connections to Zoom, Google Calendar and Meta with Meta's daily ad-spend read, and new uploads, your buyers' review photos included, are paused. New webhook endpoints cannot be added, and webhooks are not sent to your endpoints, not even later, except events from your Stripe account, which are sent once the payment is recorded, as far back as Stripe keeps them (30 days).";
 
 export const RENEWAL_KEPT_WORDS =
   "Your store's page stays up, your buyers keep reaching what they already bought except lesson video, your studio stays open, and nothing is deleted.";

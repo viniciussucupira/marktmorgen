@@ -75,6 +75,9 @@ export const WEBHOOK_ADD_PAUSED_WORDS = pausedWords("new webhook endpoints canno
  * so they are sent once the plan is paid (watchStripe).
  */
 export const WEBHOOK_PAUSED_NOT_SENT_WORDS: Record<"paused_unpaid" | "paused_disputed", string> = {
-  paused_unpaid: "Not sent: your plan's renewal payment did not go through, so webhooks are not sent until it is paid. This one is not sent later, and it counts as one of this month's webhook deliveries. After the payment is recorded, events are sent as usual while the month's webhook deliveries last, and events from your Stripe account in the meantime are sent then.",
-  paused_disputed: "Not sent: a payment for your plan is disputed with your bank, so webhooks are not sent until the dispute is settled. This one is not sent later, and it counts as one of this month's webhook deliveries. After the dispute is settled, events are sent as usual while the month's webhook deliveries last, and events from your Stripe account in the meantime are sent then.",
+  paused_unpaid: "Not sent: your plan's renewal payment did not go through, so webhooks are not sent until it is paid, and this one is not sent later. After the payment is recorded, events are sent as usual while the month's webhook deliveries last, and events from your Stripe account in the meantime are sent then, as far back as Stripe keeps them (30 days).",
+  paused_disputed: "Not sent: a payment for your plan is disputed with your bank, so webhooks are not sent until the dispute is settled, and this one is not sent later. After the dispute is settled, events are sent as usual while the month's webhook deliveries last, and events from your Stripe account in the meantime are sent then, as far back as Stripe keeps them (30 days).",
 };
+
+/** Added when the refused delivery was counted against the month. */
+export const WEBHOOK_PAUSED_COUNTED = "It counts as one of this month's webhook deliveries.";

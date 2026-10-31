@@ -61,7 +61,7 @@ import { isSettled } from "@/lib/instant-pay";
 import { SafeFetchError, checkUrl, problemWords, safeFetch } from "@/lib/safe-fetch";
 import { type Store, storeForHandle, saleHandles } from "@/lib/store";
 import { takeAllowance } from "@/lib/store-allowance";
-import { WEBHOOK_ADD_PAUSED_WORDS, WEBHOOK_PAUSED_NOT_SENT_WORDS, integrationPauseWord } from "@/lib/integration-pause";
+import { WEBHOOK_ADD_PAUSED_WORDS, WEBHOOK_PAUSED_COUNTED, WEBHOOK_PAUSED_NOT_SENT_WORDS, integrationPauseWord } from "@/lib/integration-pause";
 import { reservePaidResourceWindow } from "@/lib/contract-resource-window";
 import { readListing } from "@/lib/catalog";
 import { SITE_URL } from "@/lib/site-url";
@@ -122,6 +122,8 @@ export type Delivery = {
   lastError: string;
   lastAt: number;
   createdAt: number;
+  /** Set when it was not sent because the plan's costs were paused (232 [CA1] 4b4b2). */
+  notSentPaused?: true;
 };
 
 const cfgKey = (statsId: string) => `nl:hooks:cfg:${statsId}`;
@@ -239,7 +241,10 @@ async function attempt(delivery: Delivery, endpoint: Endpoint | undefined, store
   // One of the store's webhook deliveries for its month, before the endpoint is called.
   const taken = store === "taken" ? ({ ok: true } as const) : await takeAllowance(store, "webhook", 1, now);
   // Paused: never retried, whatever the count answered; a month already used is said too.
-  if (paused) return { ...delivery, state: "failed", next: 0, lastAt: now, lastStatus: 0, lastError: taken.ok || taken.reason === "unknown" ? WEBHOOK_PAUSED_NOT_SENT_WORDS[paused] : `${WEBHOOK_PAUSED_NOT_SENT_WORDS[paused]} ${taken.message}` };
+  if (paused) {
+    const counted = taken.ok ? ` ${WEBHOOK_PAUSED_COUNTED}` : taken.reason === "unknown" ? "" : ` ${taken.message}`;
+    return { ...delivery, state: "failed", next: 0, lastAt: now, lastStatus: 0, lastError: `${WEBHOOK_PAUSED_NOT_SENT_WORDS[paused]}${counted}`, notSentPaused: true };
+  }
   if (!taken.ok) {
     const retryIn = delivery.type === "test" ? undefined : RETRY_MINUTES[delivery.attempts];
     // A count that could not be made is tried again on the schedule; a month whose deliveries are used is not.
@@ -429,7 +434,7 @@ export async function deliverDue(deadline: number, now = Date.now()): Promise<{ 
 // ---- The studio ---------------------------------------------------------------
 
 export type EndpointView = { id: string; where: string; events: WebhookEvent[]; addedAt: string };
-export type DeliveryView = Pick<Delivery, "id" | "eventId" | "type" | "state" | "attempts" | "next" | "lastStatus" | "lastError" | "lastAt" | "createdAt"> & {
+export type DeliveryView = Pick<Delivery, "id" | "eventId" | "type" | "state" | "attempts" | "next" | "lastStatus" | "lastError" | "lastAt" | "createdAt" | "notSentPaused"> & {
   endpoint: string;
 };
 export type WebhooksView = { endpoints: EndpointView[]; log: DeliveryView[] };
@@ -475,6 +480,7 @@ export async function webhooksView(store: Store): Promise<WebhooksView> {
         lastError: d.lastError,
         lastAt: d.lastAt,
         createdAt: d.createdAt,
+        ...(d.notSentPaused === true ? { notSentPaused: true as const } : {}),
         endpoint: names.get(d.endpoint) ?? "a removed endpoint",
       })),
   };
@@ -941,10 +947,15 @@ export async function watchStripe(deadline: number): Promise<{ stores: number; e
     if (!store || store.statsId !== statsId || !store.stripeAccountId) continue;
     // 232 [CA1] 4b4b2: while the plan's costs are paused, the store's Stripe
     // events are not read and its anchor stays where it is, so nothing is
-    // asked of Stripe and nothing is spent; once paid, the next run reads
-    // from the anchor and sends what happened meanwhile (Stripe keeps events
-    // thirty days, and so does the anchor).
-    if (integrationPauseWord(store)) continue;
+    // asked of Stripe; once paid, the next run reads from the anchor and
+    // sends what happened meanwhile, as far back as Stripe keeps events
+    // (thirty days). A first run with no anchor reads the bounded first pages.
+    if (integrationPauseWord(store)) {
+      // Keep the anchor as long as Stripe keeps events (thirty days from now);
+      // EXPIRE does nothing to an anchor that is not there.
+      await redisPipeline([["EXPIRE", anchorKey(statsId), 30 * 86400]]);
+      continue;
+    }
     counts.stores += 1;
     try {
       counts.events += await watchStore(store, statsId, config);
