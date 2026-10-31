@@ -169,3 +169,15 @@ Not in this unit (recorded, not claimed as closed): a buyer's review photo — c
 - **Test.** `tests/review-photo-paused.test.ts` drives the route with a synthetic Stripe session, for an unpaid renewal and for an open dispute.
 - **Recorded, not closed here:** a store whose plan has ended (`standingOf` "ended" or "none") still accepts a new review photo, inside the review limits; the creator's own page photo (`app/api/store/photo/route.ts`) has no paused check, unlike the other upload routes. Both are for the next part of unit 4b. The new notice uses the formal register while some older notices beside it on the same form do not (German, Spanish, Italian, Dutch); aligning those is outside this unit.
 
+
+## Imports while a plan is unpaid or disputed (232 [CA1] unit 4b2, 31 Oct 2026)
+
+While a plan's renewal is unpaid or a payment for it is disputed (`costsPaused`, `lib/plan-standing.ts`), moving a store from another platform is work nobody is paying for:
+
+- **Refused, with the reason:** starting an import, sending its rows, a dry run, finishing an upload and a step from the studio's page (`app/api/store/import/route.ts`), and every action of a ClickFunnels funnel migration (`app/api/store/import/funnel/route.ts`), answer 409 `renewal_unpaid` or `plan_disputed`; the studio says imports are paused, why, and what happens to an import already started (`IMPORTS_PAUSED`, `FUNNEL_PAUSED` in `lib/import-limits.ts`).
+- **Kept:** an import already started is not worked on (`runImport` in `lib/imports.ts` returns it unchanged, so neither the page nor the five-minute job applies rows or sends its emails) and goes on where it stopped once the plan is paid. What it already brought in stays.
+- **Open:** canceling, reading where an import stands and downloading the report of rows not brought in.
+- **Figures:** a paused plan shows Store's import figures, not its own (`importAllowanceFor` follows `costStandingOf`).
+- **Limit, said to the creator:** rows not brought in yet are kept `RAW_DAYS` (3) days from their upload, as always; past that, the import says the rest were let go and the creator starts again with the rows not brought in. Keeping them longer would be storage nobody is paying for.
+- **Recorded, not closed here:** a store whose plan has ended (`standingOf` "ended") still imports on Store's figures, as before; whether that should stop belongs with unit 4c.
+- **Cost:** none added; one more check of fields already read per request. The studio notice, the email and the Terms now name imports in `RENEWAL_PAUSED_WORDS` and `DISPUTE_PAUSED_WORDS`.

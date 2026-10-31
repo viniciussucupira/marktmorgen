@@ -85,6 +85,7 @@ import { deliverableItems } from "@/lib/bundle-rules";
 import { NIMBUS_FROM, isSenderConfigured, sendBatch } from "@/lib/email";
 import { giveBackToMonth, monthlyAllowance, releaseDay, reserveDay, takeFromMonth } from "@/lib/mail";
 import { IMPORT_MIN_ROWS_PER_UPLOAD, IMPORT_ROW_BYTES, importAllowanceFor } from "@/lib/import-limits";
+import { costsPaused } from "@/lib/plan-standing";
 import { healthTags, noteSent, pausedFor, rampBack, rampRoom, startRamp } from "@/lib/mail-health";
 import { isPaidUp } from "@/lib/billing";
 import { storeBase } from "@/lib/purchase-email";
@@ -1243,6 +1244,12 @@ export async function runImport(id: string, deadline: number): Promise<ImportJob
       await redisPipeline([saveJob(job), ["SREM", ACTIVE_KEY, id], ["DEL", rowsKey(id)]]);
       return job;
     }
+    // While the plan's renewal is unpaid or a payment for it is disputed
+    // (lib/plan-standing.ts costsPaused, 232 [CA1] unit 4b2), the work an
+    // import costs us waits: nothing is applied, nothing is emailed, and the
+    // job stays as it is, so it goes on where it stopped once that is settled.
+    // Rows not yet brought in are kept RAW_DAYS from their upload, as always.
+    if (costsPaused(store, Date.now() / 1000)) return job;
     const [batches] = await redisPipeline([["LLEN", rowsKey(id)]]);
     const count = Number(batches) || 0;
     while (Date.now() < deadline) {

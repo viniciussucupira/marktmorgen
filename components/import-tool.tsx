@@ -9,6 +9,7 @@ import { useStudioStore } from "@/components/studio-store-pin";
 import { type ParsedCsv, csvLine, guessColumn, parseCsv, readConsent } from "@/lib/csv";
 import { CLICKFUNNELS_EXAMPLES, CLICKFUNNELS_HEADERS, CLICKFUNNELS_LAST_NAME, readClickFunnelsStatus } from "@/lib/clickfunnels-csv";
 import { STUDIO_MESSAGES } from "@/lib/studio-messages";
+import { IMPORTS_PAUSED } from "@/lib/import-limits";
 import { type DateOrder, datesInFile, letteredDate, readRenewal } from "@/lib/move-rules";
 
 export type ImportKind = "contacts" | "products" | "purchases" | "members";
@@ -154,6 +155,9 @@ const MESSAGES: Record<string, string> = {
   unavailable: "Imports are not switched on yet.",
   server_error: "Something went wrong on our side. Nothing more was changed. Try again in a moment.",
   kind: "This import has no dry run.",
+  // 232 [CA1] unit 4b2: in place of the studio's words about uploads.
+  renewal_unpaid: IMPORTS_PAUSED.renewal_unpaid,
+  plan_disputed: IMPORTS_PAUSED.plan_disputed,
 };
 
 const WORDS: Record<ImportKind, { added: string; already: string; noun: string }> = {

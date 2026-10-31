@@ -4,6 +4,7 @@ import { guardStoreWrite, text } from "@/lib/store-request";
 import { jsonAccess } from "@/lib/studio-route";
 import { contentDisposition, withinLimit, withinMonth } from "@/lib/request-guard";
 import { importAllowanceFor } from "@/lib/import-limits";
+import { costPauseCode } from "@/lib/plan-standing";
 import {
   BATCH_BYTES,
   IMPORT_ID_PATTERN,
@@ -122,6 +123,13 @@ export async function POST(request: NextRequest) {
   const action = text(body.action, 10);
   const id = text(body.id, 24);
   const refuse = (error: string, status = 400, extra: Record<string, unknown> = {}) => Response.json({ ok: false, error, ...extra }, { status });
+  // While the plan's renewal is unpaid or a payment for it is disputed, an
+  // import does not start, take rows, check or move on (232 [CA1] unit 4b2,
+  // lib/plan-standing.ts costPauseCode); one already started keeps its place
+  // (lib/imports.ts runImport). Canceling, reading where one stands and the
+  // report of rows not brought in stay open.
+  const paused = action === "cancel" ? null : costPauseCode(store);
+  if (paused) return refuse(paused, 409);
 
   try {
     if (action === "start") {
