@@ -7,9 +7,10 @@
  */
 import { NextRequest } from "next/server";
 import { POST } from "@/app/api/store/review/route";
-import { addProduct, claimHandle, ensureStatsId, setStripeAccount, setSubscription, storeForEmail } from "@/lib/store";
-import { readReview, reviewId } from "@/lib/reviews";
+import { addProduct, claimHandle, ensureStatsId, recordPlanDispute, setStripeAccount, setSubscription, storeForEmail, storeRef } from "@/lib/store";
+import { readReview, reviewId, setReviewPhoto } from "@/lib/reviews";
 import { costsPaused } from "@/lib/plan-standing";
+import { reviewPhotoPath } from "@/lib/review-photo";
 import { REVIEW_NOTICES } from "@/components/review-form";
 import { GIVING_WORDS } from "@/lib/buyer-words/giving";
 import { paidPeriod } from "./billing-period-fixture";
@@ -83,6 +84,12 @@ async function main() {
   is("every buyer language says it", Object.values(GIVING_WORDS).every((w) => typeof (w.reviewNotices as Record<string, string>).photoPaused === "string"), true);
   is("German in the formal register", /\bIhre\b/.test((GIVING_WORDS.de.reviewNotices as Record<string, string>).photoPaused), true);
 
+  part("A photo already on the review stays while paused");
+  const earlier = { path: await reviewPhotoPath(storeRef(store), "image/jpeg"), width: 1200, height: 900 };
+  await setReviewPhoto(store.statsId as string, productId, id, earlier);
+  is("a new photo is not added", statusOf(await send({ photo: jpeg(1200, 900) })), "photoPaused");
+  is("and the earlier one is still there", (await readReview(store.statsId as string, productId, id))?.photo, earlier);
+
   part("No photo sent: the usual answer");
   const noPhoto = await send({ text: "Still great." });
   is("updated, not the photo notice", statusOf(noPhoto), "updated");
@@ -92,6 +99,14 @@ async function main() {
   store = (await storeForEmail(OWNER))!;
   is("costs no longer paused", costsPaused(store), false);
   is("an unreadable photo is checked again, and refused", statusOf(await send({ photo: "data:image/jpeg;base64,<not-a-photo>" })), "photo");
+
+  part("A plan payment disputed with the bank pauses it the same way");
+  const disputed = await recordPlanDispute(storeRef(store), { id: "du_ReviewPhotoPause1", status: "open", at: Math.floor(Date.now() / 1000), coversUntil: Math.floor(Date.now() / 1000) + 30 * 86_400 });
+  is("the dispute is written down", Boolean(disputed), true);
+  store = (await storeForEmail(OWNER))!;
+  is("costs paused by the dispute", costsPaused(store), true);
+  is("the photo is not read", statusOf(await send({ photo: "data:image/jpeg;base64,<not-a-photo>" })), "photoPaused");
+  is("the creator is told in the same words", (await import("@/lib/plan-dispute-rules")).DISPUTE_PAUSED_WORDS.includes("your buyers' review photos included"), true);
 
   done();
 }

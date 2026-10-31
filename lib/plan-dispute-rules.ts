@@ -118,7 +118,7 @@ export function coveredUntil(invoice: Record<string, unknown> | null | undefined
  * the same thing and say what the code does.
  */
 export const DISPUTE_PAUSED_WORDS =
-  "While your bank looks at it, your checkout takes no new orders, free copies or sign-ups, and emails to your list, AI drafts, lesson video and new uploads are paused.";
+  "While your bank looks at it, your checkout takes no new orders, free copies or sign-ups, and emails to your list, AI drafts, lesson video and new uploads, your buyers' review photos included, are paused.";
 export const DISPUTE_KEPT_WORDS =
   "Your store's page stays up, your buyers keep reaching what they already bought except lesson video, your studio stays open, and nothing is deleted.";
 export const DISPUTE_OUTCOME_WORDS =
