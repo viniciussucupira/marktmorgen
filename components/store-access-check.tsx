@@ -17,27 +17,34 @@ export function StoreAccessCheck({ check }: { check: AccessCheck | null }) {
         Can everyone use your store?
       </h2>
       <p className="mt-1 max-w-[80ch] text-sm text-ink-soft">
-        Some of your buyers use a screen reader, which reads your page aloud. This checks the products shown first on your store. It is not a full accessibility review.
+        Some of your buyers may use a screen reader, which reads your page aloud. This checks the products on the first page of your store. It is not a full accessibility review.
       </p>
+      {pictures.unchecked > 0 ? (
+        <p className="mt-5 max-w-[80ch] text-sm text-ink" data-access-unchecked={pictures.unchecked}>
+          {pictures.unchecked === 1
+            ? "1 product on your first page could not be checked here. Open it in Products to see its picture description."
+            : `${pictures.unchecked} products on your first page could not be checked here. Open them in Products to see their picture descriptions.`}
+        </p>
+      ) : null}
       {pictures.done ? (
         <p className="mt-5 flex items-center gap-2 text-sm text-ink" data-access-pictures="done">
           <Icon name="check" size={16} className="text-violet-deep" />
-          Every product picture shown first on your store has a description.
+          Every product picture on the first page of your store has a description.
         </p>
-      ) : (
+      ) : pictures.missing.length === 0 ? null : (
         <div className="mt-5 rounded-2xl bg-paper p-4 ring-1 ring-line" data-access-pictures={pictures.missing.length}>
           <h3 className="font-semibold text-ink">
-            {pictures.missing.length === 1 ? "Describe 1 product picture" : `Describe ${pictures.missing.length} product pictures`}
+            {pictures.missing.length === 1 ? "1 product picture has no description" : `${pictures.missing.length} product pictures have no description`}
           </h3>
           <p className="mt-1 max-w-[80ch] text-sm text-ink-soft">
-            {"A screen reader says the description instead of the picture. Open each product below, and under its picture fill in \"What the picture shows, for people who cannot see it\". If a picture is only decoration, you can leave it empty."}
+            {"A screen reader says the description instead of the picture. Check each of these products in Products: under its picture, fill in \"What the picture shows, for people who cannot see it\". If a picture only decorates the title, an empty description is right, and you can leave it."}
           </p>
           <ul className="mt-3 list-disc space-y-1 pl-6 text-sm text-ink">
             {pictures.missing.map((title, index) => <li key={`${index}-${title}`}>{title}</li>)}
           </ul>
           <p className="mt-4">
             <Link href="#products" className="btn btn-secondary btn-sm">
-              Go to your products to add descriptions
+              Go to your products to check descriptions
               <Icon name="arrow-right" size={16} />
             </Link>
           </p>
