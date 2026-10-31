@@ -31,6 +31,7 @@ import { STUDIO_MESSAGES } from "@/lib/studio-messages";
 import { AiAssist, AiOn } from "@/components/ai-assist";
 import { type StreamState, isStreamPath } from "@/lib/stream-rules";
 import { CAPTION_LANGUAGES, type CaptionTrack, MAX_CAPTION_BYTES, MAX_CAPTION_TRACKS } from "@/lib/captions";
+import { captionsAnchor } from "@/lib/course-access-check";
 import { CENTS_PER_MINUTE, GIVE_UP_HOURS, MAX_AUTO_LANGUAGES, MAX_AUTO_MINUTES, MIN_CENTS, autoCaptionCents, dollars } from "@/lib/auto-captions-rules";
 import { TusError, tusUpload } from "@/lib/tus-upload";
 
@@ -214,8 +215,11 @@ export function CourseEditor({
   captions = {},
   writing = {},
   auto = { can: false, spoken: "en" },
+  openFirst = null,
 }: {
   productId: string;
+  /** A lesson to show open when the page is drawn: the one "Can everyone follow your lessons?" linked to. */
+  openFirst?: string | null;
   initial: Course;
   folder: string;
   /** Where each lesson video kept by the video service stood when the page was drawn. */
@@ -236,7 +240,7 @@ export function CourseEditor({
   const [course, setCourse] = useState<Course>(initial);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [openLesson, setOpenLesson] = useState<string | null>(null);
+  const [openLesson, setOpenLesson] = useState<string | null>(openFirst);
   const [newModule, setNewModule] = useState("");
   // An outline the writing help proposed, waiting for the creator to add it or not.
   const [proposal, setProposal] = useState<Outline | null>(null);
@@ -1040,7 +1044,7 @@ function Captions({
 
   const selectId = `captions-${lessonId}`;
   return (
-    <div className="w-full">
+    <div className="w-full" id={captionsAnchor(lessonId)}>
       <p className="field-label">Captions</p>
       {tracks.length ? (
         <ul className="mt-2 space-y-1 text-sm">
