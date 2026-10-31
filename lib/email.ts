@@ -494,6 +494,10 @@ export async function sendBatch(
         await sesDown(result.down);
         await tellAmazonIsDown(result.down);
       }
+      // A lost SES reply is not a refusal. The unresolved batch must reach
+      // its caller without another SES wave or a switch to Resend. A durable
+      // caller checkpoint is still needed before a later invocation.
+      if (result.uncertain === true) return "retry";
       going = result.left.map((m) => m.original);
     }
     if (going.length === 0) return "sent";
