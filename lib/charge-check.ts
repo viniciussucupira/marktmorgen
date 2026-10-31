@@ -31,8 +31,8 @@ export type ChargeContext = {
   allowedUnitCents: (subscription: string, interval: "month" | "year") => readonly number[];
   /** Whether the subscription was still to be charged at this time (not ended, closed, paused or a lapsed trial); null when the records cannot say. */
   chargeableAt: (subscription: string, paidAt: number) => boolean | null;
-  /** The earliest OTHER paid invoice seen for this subscription and period start, or null. */
-  otherPaidInvoice: (subscription: string, periodStart: number, invoiceId: string) => { id: string; paidAt: number } | null;
+  /** The earliest OTHER paid invoice for this subscription and period start, with the cents it still keeps (paid less refunds and credit notes), or null. */
+  otherPaidInvoice: (subscription: string, periodStart: number, invoiceId: string) => { id: string; paidAt: number; keptCents: number } | null;
   /** Whether this proration line's amount is the one a plan switch on record makes; null when unknown. */
   prorationExplained: (invoiceId: string, line: Record<string, unknown>) => boolean | null;
   /** Whether a one-off line (captions, usage) carries a key and amount the store's record holds; null when unknown. */
@@ -82,10 +82,16 @@ export function decideCharge(invoiceInput: unknown, context: ChargeContext): Cha
   const invoice = record(invoiceInput);
   if (!invoice || typeof invoice.id !== "string") return { kind: "unread", reason: "not an invoice" };
   if (invoice.status !== "paid") return { kind: "not_charged" };
-  const paid = cents(invoice.amount_paid);
+  const paidRaw = cents(invoice.amount_paid);
   const subtotal = cents(invoice.subtotal);
-  const credited = cents(invoice.post_payment_credit_notes_amount ?? 0);
-  if (paid === null || subtotal === null || credited === null) return { kind: "unread", reason: "amounts unreadable" };
+  const credited = cents(invoice.post_payment_credit_notes_amount);
+  const overpaid = cents(invoice.amount_overpaid);
+  if (paidRaw === null || subtotal === null || credited === null || overpaid === null || overpaid > paidRaw) {
+    return { kind: "unread", reason: "amounts unreadable" };
+  }
+  // An amount paid above what was due is not ours to refund: Stripe credits it
+  // to the customer's balance (`amount_overpaid`, "The Invoice object").
+  const paid = paidRaw - overpaid;
   if (paid === 0) return { kind: "not_charged" };
   const paidAt = record(invoice.status_transitions)?.paid_at;
   if (typeof paidAt !== "number") return { kind: "unread", reason: "paid time unreadable" };
@@ -97,8 +103,6 @@ export function decideCharge(invoiceInput: unknown, context: ChargeContext): Cha
   if (context.disputed !== false) return { kind: "unread", reason: context.disputed ? "disputed" : "disputes unreadable" };
   // What is still with us: neither refunded nor already credited back by a credit note.
   const left = Math.max(0, paid - credited - context.refundedCents);
-  // An amount paid above what was due is not ours to refund: Stripe credits it
-  // to the customer's balance (`amount_overpaid`, "The Invoice object").
 
   const wrong: string[] = [];
   const unproven: string[] = [];
@@ -111,10 +115,9 @@ export function decideCharge(invoiceInput: unknown, context: ChargeContext): Cha
     whole = true;
   }
 
+  if (lines.data.length === 0) unproven.push("no lines");
   const subscription = subscriptionOf(invoice);
-  if (!subscription) {
-    if (lines.data.length === 0) unproven.push("no lines");
-  } else {
+  if (subscription) {
     const allowed = context.chargeableAt(subscription, paidAt);
     if (allowed === false) {
       wrong.push("charged after the plan was meant to stop");
@@ -138,6 +141,11 @@ export function decideCharge(invoiceInput: unknown, context: ChargeContext): Cha
       unproven.push("a line with no known parent");
       continue;
     }
+    const lineSubscription = typeof item.subscription === "string" ? item.subscription : null;
+    if (parent?.type === "subscription_item_details" && (!subscription || lineSubscription !== subscription)) {
+      unproven.push("a plan line that does not belong to the invoice's subscription");
+      continue;
+    }
     if (item.proration === true) {
       const explained = context.prorationExplained(invoice.id, line);
       if (explained !== true) unproven.push("a proration that no plan switch on record explains");
@@ -153,11 +161,12 @@ export function decideCharge(invoiceInput: unknown, context: ChargeContext): Cha
     const period = record(line.period);
     const interval = intervalOf(period);
     const one = typeof line.quantity_decimal === "string" ? /^1(\.0+)?$/.test(line.quantity_decimal) : line.quantity === 1;
-    if (pricing?.type !== "price_details" || unit === null || !one || !interval) {
+    // Its amount before discounts must be its unit amount: anything else is not a plain plan line.
+    if (pricing?.type !== "price_details" || unit === null || !one || !interval || line.subtotal !== unit) {
       unproven.push("a plan line that cannot be read");
       continue;
     }
-    if (!subscription || (typeof item.subscription === "string" && item.subscription !== subscription)) {
+    if (!subscription) {
       unproven.push("a plan line that does not belong to the invoice's subscription");
       continue;
     }
@@ -170,7 +179,7 @@ export function decideCharge(invoiceInput: unknown, context: ChargeContext): Cha
     periodsSeen.add(start);
     const other = context.otherPaidInvoice(subscription, start, invoice.id);
     // Of two paid invoices for one period the earlier is kept (ties: the lower id).
-    if (other && (other.paidAt < paidAt || (other.paidAt === paidAt && other.id < invoice.id))) {
+    if (other && other.keptCents > 0 && (other.paidAt < paidAt || (other.paidAt === paidAt && other.id < invoice.id))) {
       wrong.push("the same period was already paid");
       whole = true;
     }
