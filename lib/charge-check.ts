@@ -1,0 +1,178 @@
+/**
+ * 569 [NC1], unit 5 (first part): the decision the daily charge check makes
+ * about one paid invoice on Marktmorgen's own Stripe account.
+ *
+ * Pure: it reads only what it is handed and calls nothing. Nothing runs it
+ * yet; the cron that reads Stripe and the refunds of unit 6 come next
+ * (docs/billing-correctness.md, "Design of units 5 and 6").
+ *
+ * The invoice is read in the shape of Stripe API version 2025-03-31.basil and
+ * later (the caller must pin one): a line carries no `price`, its unit amount
+ * is `pricing.unit_amount_decimal` and its parent says whether it is a
+ * proration ("The Invoice Line Item object", read 30 Oct 2026). A shape this
+ * file does not recognize is never "ok": it is "unread" or "unproven".
+ */
+
+export type ChargeDecision =
+  | { kind: "not_charged" }
+  | { kind: "unread"; reason: string }
+  | { kind: "ok" }
+  | { kind: "wrong"; reasons: string[]; refundCents: number }
+  | { kind: "unproven"; reasons: string[]; refundCents: number };
+
+export type ChargeContext = {
+  /** The currency the plan was shown in. */
+  currency: string;
+  /** Unit amounts, in cents, this subscription may be charged for a full period of this length. */
+  allowedUnitCents: (interval: "month" | "year") => readonly number[];
+  /** Whether the subscription was still to be charged at this time (not ended, closed, paused or a lapsed trial); null when the records cannot say. */
+  chargeableAt: (subscription: string, paidAt: number) => boolean | null;
+  /** The id of another paid invoice already seen for this subscription and period start, or null. */
+  otherPaidInvoice: (subscription: string, periodStart: number, invoiceId: string) => string | null;
+  /** Whether a proration line matches a plan switch the store's record shows; null when unknown. */
+  prorationExplained: (invoiceId: string) => boolean | null;
+  /** Whether a one-off line (captions, usage) carries a key the store's record holds; null when unknown. */
+  oneOffExplained: (line: Record<string, unknown>) => boolean | null;
+  /** Cents already refunded on this invoice's payment; null when it could not be read. */
+  refundedCents: number | null;
+};
+
+const DAY = 24 * 60 * 60;
+
+function record(value: unknown): Record<string, unknown> | null {
+  return value && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : null;
+}
+
+function cents(value: unknown): number | null {
+  return typeof value === "number" && Number.isSafeInteger(value) && value >= 0 ? value : null;
+}
+
+/** A whole number of cents written as Stripe's decimal string, or null for anything else. */
+function wholeCents(value: unknown): number | null {
+  if (typeof value !== "string" || !/^\d+(\.0+)?$/.test(value)) return null;
+  const n = Number(value.split(".")[0]);
+  return Number.isSafeInteger(n) ? n : null;
+}
+
+/** The full period a subscription line covers, by its length; null for anything else. */
+function intervalOf(period: Record<string, unknown> | null): "month" | "year" | null {
+  const start = period?.start;
+  const end = period?.end;
+  if (typeof start !== "number" || typeof end !== "number" || end <= start) return null;
+  const days = (end - start) / DAY;
+  if (days >= 28 && days <= 31) return "month";
+  if (days >= 365 && days <= 366) return "year";
+  return null;
+}
+
+function subscriptionOf(invoice: Record<string, unknown>): string | null {
+  const details = record(record(invoice.parent)?.subscription_details);
+  const id = details?.subscription;
+  return typeof id === "string" && id.startsWith("sub_") ? id : null;
+}
+
+/** What one paid invoice should have been, against what it was. */
+export function decideCharge(invoiceInput: unknown, context: ChargeContext): ChargeDecision {
+  const invoice = record(invoiceInput);
+  if (!invoice || typeof invoice.id !== "string") return { kind: "unread", reason: "not an invoice" };
+  if (invoice.status !== "paid") return { kind: "not_charged" };
+  const paid = cents(invoice.amount_paid);
+  const due = cents(invoice.amount_due);
+  const subtotal = cents(invoice.subtotal);
+  if (paid === null || due === null || subtotal === null) return { kind: "unread", reason: "amounts unreadable" };
+  if (paid === 0) return { kind: "not_charged" };
+  const paidAt = record(invoice.status_transitions)?.paid_at;
+  if (typeof paidAt !== "number") return { kind: "unread", reason: "paid time unreadable" };
+  const lines = record(invoice.lines);
+  if (!lines || !Array.isArray(lines.data)) return { kind: "unread", reason: "lines unreadable" };
+  if (lines.has_more !== false) return { kind: "unread", reason: "lines not read whole" };
+  if (context.refundedCents === null) return { kind: "unread", reason: "refunds unreadable" };
+  const left = Math.max(0, paid - context.refundedCents);
+
+  const wrong: string[] = [];
+  const unproven: string[] = [];
+  let over = 0;
+  let whole = false;
+
+  if (String(invoice.currency) !== context.currency) {
+    wrong.push("charged in another currency than the one shown");
+    whole = true;
+  }
+  if (paid > due) {
+    wrong.push("paid more than was due");
+    over += paid - due;
+  }
+
+  const subscription = subscriptionOf(invoice);
+  if (!subscription) {
+    if (lines.data.length === 0) unproven.push("no lines");
+  } else {
+    const allowed = context.chargeableAt(subscription, paidAt);
+    if (allowed === false) {
+      wrong.push("charged after the plan was meant to stop");
+      whole = true;
+    } else if (allowed === null) {
+      unproven.push("cannot tell whether the plan was still to be charged");
+    }
+  }
+
+  for (const raw of lines.data) {
+    const line = record(raw);
+    if (!line) {
+      unproven.push("a line is unreadable");
+      continue;
+    }
+    if (line.currency !== invoice.currency) unproven.push("a line in another currency");
+    const parent = record(line.parent);
+    const item = record(parent?.subscription_item_details) ?? record(parent?.invoice_item_details);
+    if (!item) {
+      unproven.push("a line with no known parent");
+      continue;
+    }
+    if (item.proration === true) {
+      const explained = context.prorationExplained(invoice.id);
+      if (explained !== true) unproven.push("a proration with no plan switch on record");
+      continue;
+    }
+    if (parent?.type === "invoice_item_details") {
+      const explained = context.oneOffExplained(line);
+      if (explained !== true) unproven.push("a one-off line with no record");
+      continue;
+    }
+    const pricing = record(line.pricing);
+    const unit = wholeCents(pricing?.unit_amount_decimal);
+    const interval = intervalOf(record(line.period));
+    if (pricing?.type !== "price_details" || unit === null || line.quantity_decimal !== "1" || !interval) {
+      unproven.push("a plan line that cannot be read");
+      continue;
+    }
+    const prices = context.allowedUnitCents(interval);
+    if (prices.includes(unit)) {
+      if (subscription) {
+        const start = record(line.period)?.start as number;
+        const other = context.otherPaidInvoice(subscription, start, invoice.id);
+        if (other) {
+          wrong.push("the same period was already paid");
+          whole = true;
+        }
+      }
+      continue;
+    }
+    const highest = prices.length ? Math.max(...prices) : null;
+    if (highest !== null && unit > highest) {
+      wrong.push("charged above the published price");
+      // The share of what was paid that the excess is, tax added on top included.
+      over += subtotal > 0 ? Math.ceil(((unit - highest) * paid) / subtotal) : paid;
+    } else {
+      unproven.push("a plan price that is not published");
+    }
+  }
+
+  if (wrong.length) {
+    // A doubt alongside a proven error is still a doubt: the whole is refunded.
+    const refundCents = whole || unproven.length ? left : Math.min(left, over);
+    return { kind: "wrong", reasons: [...wrong, ...unproven], refundCents };
+  }
+  if (unproven.length) return { kind: "unproven", reasons: unproven, refundCents: left };
+  return { kind: "ok" };
+}
