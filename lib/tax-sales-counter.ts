@@ -54,7 +54,7 @@ function data(value: unknown, keys: readonly string[]): Record<string, unknown> 
     || ![Object.prototype, null].includes(Object.getPrototypeOf(value))) return null;
   if (Reflect.ownKeys(value).length !== keys.length) return null;
   const fields = Object.getOwnPropertyDescriptors(value);
-  const out: Record<string, unknown> = {};
+  const out: Record<string, unknown> = Object.create(null);
   for (const key of keys) {
     if (!Object.hasOwn(fields, key)) return null;
     const field = fields[key];

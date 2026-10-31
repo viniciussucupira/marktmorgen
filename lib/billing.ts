@@ -1457,10 +1457,13 @@ export async function findStoreSubscriptions(
 ): Promise<{ live: StartedSubscription | null; customerId: string | null; lapsed: string[] }> {
   // Stripe takes at most ten clauses in one query. An address the store let
   // go of is looked under too, and kept only for its own customer (ownedBy).
-  const handles = [...new Set([store.handle, ...store.previousHandles, ...store.releasedHandles])]
-    .filter((handle) => HANDLE_PATTERN.test(handle))
-    .slice(0, 10);
-  if (handles.length === 0) return { live: null, customerId: null, lapsed: [] };
+  const handles = [...new Set([store.handle, ...store.previousHandles, ...store.releasedHandles])];
+  // A complete result page proves nothing about a handle left out of its
+  // query. Refuse unknown or over-cap coverage instead of filtering it away.
+  if (handles.length === 0 || handles.length > 10 ||
+      handles.some((handle) => typeof handle !== "string" || !HANDLE_PATTERN.test(handle))) {
+    throw new Error("Subscription search handle coverage is unknown");
+  }
   const query = new URLSearchParams({
     query: handles.map((handle) => `metadata['store']:'${handle}'`).join(" OR "),
     limit: String(SEARCH_LIMIT),

@@ -141,6 +141,9 @@ export const MOST_CORRECT_READING: Readonly<Reading & { incomingExchangeIofBps: 
   incomingExchangeIofBps: 38,
 });
 
+/** Evidence-work bound only: larger annual books refuse, never truncate. */
+const MAX_INCOMING_EXCHANGE_ENTRIES = 10_000;
+
 export type MostCorrectTaxBases = {
   /** Both bases must already be expressed in BRL cents, never USD cents. */
   currency: "BRL";
@@ -180,7 +183,8 @@ export function mostCorrectTaxesOf(value: MostCorrectTaxBases | null): MostCorre
     if (currency !== "BRL" || typeof annualProfit !== "number" ||
         !Number.isSafeInteger(annualProfit) || !Array.isArray(entries)) return null;
     const length = own(entries, "length");
-    if (typeof length !== "number" || !Number.isSafeInteger(length) || length < 0) return null;
+    if (typeof length !== "number" || !Number.isSafeInteger(length) || length < 0 ||
+        length > MAX_INCOMING_EXCHANGE_ENTRIES) return null;
     const ceiling = (cents: bigint, bps: number) =>
       (cents * BigInt(bps) + BigInt(9_999)) / BigInt(10_000);
     const maximum = BigInt(Number.MAX_SAFE_INTEGER);

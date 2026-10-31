@@ -417,3 +417,35 @@ test('subscription search requires a complete bounded page before treating it as
   assert.equal(getterCalls,0,'page or array-member getters are not evidence');
  }finally{globalThis.fetch=old;}
 });
+
+test('subscription search refuses unknown or truncated handle coverage before the provider',async()=>{
+ const old=globalThis.fetch;
+ let reads=0,writes=0;
+ const handles=Array.from({length:11},(_,index)=>'harbor-'+index);
+ globalThis.fetch=async(input,init)=>{
+  reads++;if(init?.method!=='GET')writes++;
+  const url=new URL(String(input));
+  assert.equal(url.pathname,'/v1/subscriptions/search');
+  const expected=handles.slice(0,10).map(handle=>`metadata['store']:'${handle}'`).join(' OR ');
+  assert.equal(url.searchParams.get('query'),expected,'all ten unique handles are queried');
+  assert.equal(url.searchParams.get('limit'),'100');
+  return Response.json({data:[],has_more:false});
+ };
+ try{
+  for(const owner of [
+   {...store,handle:'',previousHandles:[],releasedHandles:[]},
+   {...store,previousHandles:['invalid handle'],releasedHandles:[]},
+   {...store,handle:handles[0],previousHandles:handles.slice(1,6),releasedHandles:handles.slice(6)},
+  ]){
+   await assert.rejects(findStoreSubscriptions(owner as Store),/Subscription search handle coverage/);
+   assert.equal(reads,0,'incomplete query coverage reaches no provider');
+   assert.equal(writes,0);
+  }
+  const owner={...store,handle:handles[0],previousHandles:handles.slice(1,6),releasedHandles:handles.slice(6,10)} as Store;
+  assert.deepEqual(await findStoreSubscriptions(owner),{live:null,customerId:null,lapsed:[]});
+  assert.equal(reads,1);
+  // Repeated historical handles do not make an otherwise complete query fail.
+  assert.deepEqual(await findStoreSubscriptions({...owner,releasedHandles:[...owner.releasedHandles,handles[0],handles[1]]}),{live:null,customerId:null,lapsed:[]});
+  assert.equal(reads,2);assert.equal(writes,0);
+ }finally{globalThis.fetch=old;}
+});
