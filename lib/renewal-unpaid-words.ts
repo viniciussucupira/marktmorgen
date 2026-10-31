@@ -10,10 +10,11 @@
  *   - AI drafts, uploads and lesson video follow costStandingOf
  *     (lib/plan-standing.ts: lib/ai.ts, lib/ai-spend.ts, lib/upload-budget.ts,
  *     videoLimitFor, picturesLimitFor, taskRoomFor, and the upload routes'
- *     own refusal).
+ *     own refusal); a buyer's new review photo follows costsPaused
+ *     (app/api/store/review/route.ts, unit 4b1).
  */
 export const RENEWAL_PAUSED_WORDS =
-  "Until it is paid, your checkout takes no new orders, free copies or sign-ups, and emails to your list, AI drafts, lesson video and new uploads are paused.";
+  "Until it is paid, your checkout takes no new orders, free copies or sign-ups, and emails to your list, AI drafts, lesson video and new uploads, your buyers' review photos included, are paused.";
 
 export const RENEWAL_KEPT_WORDS =
   "Your store's page stays up, your buyers keep reaching what they already bought except lesson video, your studio stays open, and nothing is deleted.";
