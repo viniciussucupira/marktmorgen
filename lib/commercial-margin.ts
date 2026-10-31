@@ -1,3 +1,4 @@
+import { assessPlanPaymentDisputeCosts, PLAN_PAYMENT_DISPUTE_COST_RULES, PLAN_PAYMENT_DISPUTE_KEYS, type PlanPaymentDisputeReview } from "@/lib/plan-payment-dispute-cost-rules";
 import { allocateEntireLlcFixedCosts, CURRENT_LLC_FIXED_COST_CEILINGS, LLC_FIXED_COST_IDS, LLC_FIXED_COST_ALLOCATION } from "@/lib/llc-fixed-costs";
 import {CONTRACT_FUNDING_RULES,contractLifecycleReady,CURRENT_CONTRACT_FUNDING_POLICY,contractFundingConfiguration,canonicalFinancialSnapshot} from '@/lib/contract-funding-rules';
 import { CURRENT_EXPOSURE_BUDGET_POLICY, exposureBudgetConfiguration, EXPOSURE_ADMISSION_RULES } from '@/lib/exposure-budget-policy';
@@ -70,7 +71,8 @@ function scenarioWithPlanRoom(key: MarginScenario, scenario: CustomerWorstCase |
 export const CURRENT_COMMERCIAL_TERMS = {
  // Since 18 October 2026 (schema 22): the price list of the owner's decision of 11:21, one list with no share of a sale, and the limits raised with it.
  // Schema24: a complete LLC inventory and its ceilings bind every financial review.
- schemaVersion: 25,
+ schemaVersion: 26,
+ planPaymentDisputes: PLAN_PAYMENT_DISPUTE_COST_RULES,
  marginPolicy: { decision: '2026-10-27T07:42:00-03:00', unit: 'strictly-positive-net-cents', minimumNetProfitCents: MINIMUM_NET_PROFIT_CENTS, company: 'nonnegative-at-computed-minimum-base', companyTargetBps: 6000, targetBasis: 'monthly-reconciled-actual-not-a-sales-gate', spendFloorRoom: COMMERCIAL_SPEND_FLOOR_ROOM_CENTS, assistantCostRoomCents: ADD_ON_ROOM_CENTS },
  usageAdmission: { schema: 1, paidVisits: "finite-plan-threshold", paidVideo: "finite-explicit-threshold", unknownTraffic: "pause", supplierByteCeilingProven: false },
  uploadAdmission: { rules: UPLOAD_BUDGET_RULES, policy: AUTOMATIC_UPLOAD_BUDGET_CEILINGS },
@@ -117,6 +119,7 @@ export const CURRENT_COMMERCIAL_TERMS = {
 } as const;
 export const CURRENT_PRICE_AND_RIGHTS_SNAPSHOT = JSON.stringify(CURRENT_COMMERCIAL_TERMS);
 export type CommercialMarginReview={
+ planPaymentDisputes?:PlanPaymentDisputeReview|null;
  priceAndRightsSnapshot:string;
  companyBase:CustomerBaseReview|null;
  fundedExposure:FundedExposureReview|null;
@@ -150,6 +153,15 @@ function commercialMarginDataReady(review:CommercialMarginReview):boolean{
  if(!review||review.priceAndRightsSnapshot!==CURRENT_PRICE_AND_RIGHTS_SNAPSHOT)return false;
  if(typeof review.taxEvidence!=="string"||!review.taxEvidence.trim()||typeof review.costAndLimitEvidence!=="string"||!review.costAndLimitEvidence.trim())return false;
  if(review.allocatedFixedCostsVerified!==true||review.prepaidUsageEnforced!==true||!review.scenarios)return false;
+ // A reserve for a lost plan payment must include the reviewed maximum paid
+ // principal and fees. The fees are already an expense category: require their
+ // complete ceiling there, without adding the same fee a second time.
+ const disputes=assessPlanPaymentDisputeCosts(review.planPaymentDisputes);
+ if(!disputes)return false;
+ for(const key of PLAN_PAYMENT_DISPUTE_KEYS){
+  const fee=review.scenarios[(key+"_full") as MarginScenario]?.costCeilings.refundAndDisputeFees;
+  if(typeof fee!=="number"||!Number.isSafeInteger(fee)||fee<disputes[key].feesCents)return false;
+ }
  // Aggregate flags cannot approve unknown or omitted lines in the actual LLC
  // inventory. Include the full cost/tax total once; never add it a second time
  // or borrow the separately earmarked acquisition/closing exposure budget.

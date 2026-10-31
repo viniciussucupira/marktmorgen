@@ -42,6 +42,7 @@ import { MAX_SECTION_BLOCKS } from "@/lib/saved-blocks";
 import { ERASE_STUDIO_UNITS } from "@/lib/erasure-rules";
 import { KEEP_DAYS as AGREEMENT_KEEP_DAYS, MAX_VERSIONS, SIGN_DAYS } from "@/lib/agreement-rules";
 import { KEEP_DAYS, MAX_AUTO_REMINDERS, MAX_LINES, MAX_PER_PERSON, MAX_SENDS, OPEN_DAYS, REMIND_EVERY_DAYS, REQUEST_LIMITS } from "@/lib/payment-request-rules";
+import { LEAVING_ANSWER, LEAVING_QUESTION, STAN_QUESTION, stanComparison } from "@/lib/home-faq";
 
 /** An anchor for one answer, from its question. */
 export function answerId(q: string): string {
@@ -130,6 +131,11 @@ export const HELP_SECTIONS: HelpSection[] = [
           "Bring products first, because the buyers' file names them by their title or their ID here, then add each product's file or lessons. A buyer brought over for a product that opens your community is let in. If you check “Email each buyer once,” each buyer gets one email from your store's name saying what moved and how to open it \u2014 on Studio and Scale those emails count in your plan's monthly emails, and on Store up to " + IMPORT_ALLOWANCES.creator.movedEmails + " go out a month \u2014 and nothing more is sent because of it. The studio reads the file in your browser, you say which column is which, and every row that is not brought in is listed with its row number and the reason, as a spreadsheet you download.",
           "What it does not do: files, pictures and lessons are not imported from the other platform (a course's videos can be made into lessons up to 50 at once, with \u201cAdd lessons from videos\u201d under each module); calls and products with several prices cannot be given to past buyers, and a membership is never given (members are invited to keep theirs instead, with “Your members,” first paying here on the day it would have renewed); buyers brought over get no license key here and are not counted as sales, sent to webhooks, credited to affiliates or able to review; and an import cannot be undone in one step. You and your Admins can import. Stan's help center, read on September 28, 2026, allows up to 5,000 imported contacts per store in all, has you send them an opt-in email, and grants a customer access to a product one at a time.",
         ],
+      },
+      // Moved from the home page (VS1, 31/10/2026); the same facts, nothing dropped.
+      {
+        q: STAN_QUESTION,
+        a: [stanComparison()],
       },
       {
         q: "Can I move from ClickFunnels?",
@@ -978,6 +984,11 @@ export const HELP_SECTIONS: HelpSection[] = [
     blurb: "What we keep, and how to have it removed.",
     tone: "bg-amber-brand/12",
     items: [
+      // Moved from the home page (VS1, 31/10/2026), unchanged.
+      {
+        q: LEAVING_QUESTION,
+        a: [LEAVING_ANSWER],
+      },
       {
         q: "What do you store about me?",
         a: [

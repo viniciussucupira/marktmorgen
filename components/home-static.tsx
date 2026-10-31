@@ -3,10 +3,11 @@ import { Icon } from "@/components/icons";
 import { HOME_QUESTIONS } from "@/lib/home-faq";
 
 // Native disclosures and a CSS-only marquee need no client component execution.
+// Every answer starts closed (VS1, owner 31/10/2026); opening one closes the others (name).
 export function Faq({ questions = HOME_QUESTIONS }: { questions?: typeof HOME_QUESTIONS } = {}) {
   return <ul className="divide-y divide-line border-y border-line">
     {questions.map((item,i)=><li key={item.q}>
-      <details name="home-faq" open={i===0} className="group">
+      <details name="home-faq" className="group">
         <summary id={`faq-q-${i}`} aria-controls={`faq-a-${i}`} className="cursor-pointer list-none py-5 text-left text-[1.0625rem] font-semibold text-ink hover:text-violet-deep sm:text-lg">
           <h3 className="flex w-full items-center justify-between gap-6">{item.q}
             <span aria-hidden="true" className="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-line text-ink-soft group-open:rotate-45 group-open:border-violet-brand group-open:text-violet-deep"><Icon name="plus" size={16}/></span>

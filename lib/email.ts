@@ -510,7 +510,18 @@ export async function sendBatch(
     }
     if (going.length === 0) return "sent";
     if (only === "amazon") return "retry";
-    if (!toResend) await redisPipeline([["SET", handed, "1", "EX", 2 * 86_400]]).catch(() => {});
+    if (!toResend) {
+      try {
+        const reply: unknown = await redisPipeline([["SET", handed, "1", "EX", 2 * 86_400]]);
+        if (!Array.isArray(reply)) return "retry";
+        const length = Object.getOwnPropertyDescriptor(reply, "length");
+        if (!length || !("value" in length) || length.value !== 1) return "retry";
+        const acknowledgement = Object.getOwnPropertyDescriptor(reply, "0");
+        // An unconfirmed handoff may already be stored. Keep it, and do not
+        // post to Resend until the existing marker proves the provider choice.
+        if (!acknowledgement || !("value" in acknowledgement) || acknowledgement.value !== "OK") return "retry";
+      } catch { return "retry"; }
+    }
     // Resend answers a key it has seen with what it answered then, so a
     // different set of people must not go under the same key.
     if (going.length !== all) {

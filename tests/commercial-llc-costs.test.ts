@@ -2,10 +2,10 @@ import {test} from "node:test";
 import assert from "node:assert/strict";
 import {commercialMarginReady,CURRENT_COMMERCIAL_TERMS,CURRENT_PRICE_AND_RIGHTS_SNAPSHOT,REQUIRED_MARGIN_SCENARIOS,BASE_PLAN_REVENUE_CEILINGS,type CommercialMarginReview} from "@/lib/commercial-margin";
 import {CURRENT_LLC_FIXED_COST_CEILINGS as lines,LLC_FIXED_COST_ALLOCATION,LLC_FIXED_COST_IDS} from "./llc-retention-approved-policy";
-import {zeroExposureFixture,fundedCustomerWithAi} from "./margin-test-fixtures";
+import {planPaymentDisputeFixture,zeroExposureFixture,fundedCustomerWithAi} from "./margin-test-fixtures";
 const review=(fixed=100):CommercialMarginReview=>({
  companyBase:{monthlyFixedCostsCeilingCents:fixed,monthlyFixedTaxesCeilingCents:0,allFixedCostsBounded:true,allFixedTaxesReviewed:true,fixedCostsEvidence:"TEST ONLY: complete full LLC ceilings",fixedTaxEvidence:"TEST ONLY: explicit hypothetical taxes",reviewedPayingCustomers:100},
- priceAndRightsSnapshot:CURRENT_PRICE_AND_RIGHTS_SNAPSHOT,taxEvidence:"TEST ONLY",costAndLimitEvidence:"TEST ONLY",
+ planPaymentDisputes:planPaymentDisputeFixture(),priceAndRightsSnapshot:CURRENT_PRICE_AND_RIGHTS_SNAPSHOT,taxEvidence:"TEST ONLY",costAndLimitEvidence:"TEST ONLY",
  allocatedFixedCostsVerified:true,fundedExposure:zeroExposureFixture(),prepaidUsageEnforced:true,
  scenarios:Object.fromEntries(REQUIRED_MARGIN_SCENARIOS.map(key=>{const gross=BASE_PLAN_REVENUE_CEILINGS[key]??10000;return[key,fundedCustomerWithAi(gross,Math.floor(gross*.7))];})),
 });
