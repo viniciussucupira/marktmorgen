@@ -32,12 +32,17 @@ function base(over: Partial<PlanRefundInput> = {}, charge: Partial<PlanRefundInp
     ...over,
     charge: {
       currency: "usd",
+      succeeded: true,
       amountCents: 4_900,
+      invoiceTotalCents: charge.amountCents ?? 4_900,
+      billingReason: "subscription_create",
       refundedCents: 0,
       taxCents: 0,
       feeCents: 172,
+      feeCurrency: "usd",
       paidAtSeconds: T0,
       disputeStatus: null,
+      disputedCents: null,
       ...charge,
     },
   };
@@ -55,12 +60,17 @@ part("First payment, within the window: the whole payment, never more than was t
   is("a partial refund already made: only the rest", planRefund(base({}, { refundedCents: 1_000 })), { kind: "guarantee", cents: 3_900 });
   is("fully refunded already: nothing", planRefund(base({}, { refundedCents: 4_900 })), { kind: "none", reason: "already_refunded" });
   is("over-refunded record: nothing, never negative", planRefund(base({}, { refundedCents: 5_000 })), { kind: "none", reason: "already_refunded" });
-  is("a zero charge (fully covered by credit): nothing to give back", planRefund(base({}, { amountCents: 0 })), { kind: "none", reason: "already_refunded" });
+  is("a zero charge: nothing was paid", planRefund(base({}, { amountCents: 0 })), { kind: "none", reason: "nothing_paid" });
+  is("a charge that did not succeed: nothing", planRefund(base({}, { succeeded: false })), { kind: "none", reason: "not_paid" });
+  is("a customer balance paid part of the invoice: cannot tell", planRefund(base({}, { amountCents: 1_900, invoiceTotalCents: 4_900 })), { kind: "unknown", reason: "split_payment" });
+  is("a first charge that was a switch, inside the window: still the guarantee", planRefund(base({}, { billingReason: "subscription_update" })), { kind: "guarantee", cents: 4_900 });
 }
 
 part("Not the first payment");
 {
   is("a monthly renewal: nothing", planRefund(base({ firstPayment: false })), { kind: "none", reason: "renewal" });
+  is("a switch charge: nothing (section 5)", planRefund(base({ firstPayment: false }, { billingReason: "subscription_update" })), { kind: "none", reason: "switch_charge" });
+  is("a billing reason this code does not know: cannot tell", planRefund(base({ firstPayment: false }, { billingReason: "manual" })), { kind: "unknown", reason: "billing_reason" });
   is("a monthly renewal inside 30 days: still nothing", planRefund(base({ firstPayment: false, nowSeconds: T0 + DAY })), { kind: "none", reason: "renewal" });
 }
 
@@ -69,7 +79,8 @@ part("Disputes: never a refund on top of what the bank returns");
   for (const status of ["warning_needs_response", "warning_under_review", "needs_response", "under_review", "something_new"]) {
     is(`open (${status}): nothing now`, planRefund(base({}, { disputeStatus: status })), { kind: "none", reason: "dispute_open" });
   }
-  is("lost: the bank already returned it", planRefund(base({}, { disputeStatus: "lost" })), { kind: "none", reason: "dispute_returned" });
+  is("lost for part of the charge: cannot tell", planRefund(base({}, { disputeStatus: "lost", disputedCents: 1_000 })), { kind: "unknown", reason: "dispute_partial" });
+  is("lost: the bank already returned it", planRefund(base({}, { disputeStatus: "lost", disputedCents: 4_900 })), { kind: "none", reason: "dispute_returned" });
   is("prevented: treated as already returned", planRefund(base({}, { disputeStatus: "prevented" })), { kind: "none", reason: "dispute_returned" });
   is("won: the policy applies again", planRefund(base({}, { disputeStatus: "won" })), { kind: "guarantee", cents: 4_900 });
   is("inquiry closed: the policy applies again", planRefund(base({}, { disputeStatus: "warning_closed" })), { kind: "guarantee", cents: 4_900 });
@@ -78,7 +89,7 @@ part("Disputes: never a refund on top of what the bank returns");
 part("Yearly: months not started, at the monthly price, less Stripe's fee");
 {
   const yin = (over: Partial<PlanRefundInput> = {}, charge: Partial<PlanRefundInput["charge"]> = {}) =>
-    base({ cycle: "year", firstPayment: false, ...over }, { amountCents: 49_000, feeCents: 1_451, ...charge });
+    base({ cycle: "year", firstPayment: false, ...over }, { amountCents: 49_000, feeCents: 1_451, billingReason: "subscription_cycle", ...charge });
   const year = (over: Partial<PlanRefundInput> = {}, charge: Partial<PlanRefundInput["charge"]> = {}) => planRefund(yin(over, charge));
   // Second month (refund page's own example): two months kept and the fee.
   const second = year({ nowSeconds: T0 + 31 * DAY });
@@ -88,6 +99,10 @@ part("Yearly: months not started, at the monthly price, less Stripe's fee");
   is("first yearly payment after 30 days: months", year({ firstPayment: true, nowSeconds: T0 + 45 * DAY }).kind, "unstarted_months");
   is("all twelve started: nothing", year({ nowSeconds: T0 + 340 * DAY }), { kind: "none", reason: "months_used" });
   is("a coupon so large the months kept cover it: nothing, never negative", year({ nowSeconds: T0 + 200 * DAY }, { amountCents: 20_000 }), { kind: "none", reason: "months_used" });
+  is("a proration charge on a yearly plan: nothing (section 5)", year({ nowSeconds: T0 + 101 * DAY, periodStartSeconds: T0 + 100 * DAY }, { amountCents: 30_000, billingReason: "subscription_update" }), { kind: "none", reason: "switch_charge" });
+  is("fee in another currency than the charge: cannot tell", year({ nowSeconds: T0 + 31 * DAY }, { feeCurrency: "brl", feeCents: 7_800 }), { kind: "unknown", reason: "currency" });
+  is("month 9 with a fee larger than the month left: the fee, not the months", year({ nowSeconds: T0 + 250 * DAY }, { feeCents: 5_000 }), { kind: "none", reason: "fee_kept" });
+  is("tax with a partial refund: the total never passes the policy", year({ nowSeconds: T0 + 31 * DAY }, { amountCents: 53_917, taxCents: 4_917, refundedCents: 5_000 }), { kind: "unstarted_months", cents: 39_200 + Math.floor((4_917 * 39_200) / 49_000) - 1_451 - 5_000, monthsKept: 2 });
   is("fee not read yet: cannot tell", year({ nowSeconds: T0 + 31 * DAY }, { feeCents: null }), { kind: "unknown", reason: "fee_unread" });
   is("monthly price unknown: cannot tell", year({ nowSeconds: T0 + 31 * DAY, monthlyCents: null }), { kind: "unknown", reason: "monthly_price_unknown" });
   is("charged in another currency: cannot tell", year({ nowSeconds: T0 + 31 * DAY }, { currency: "eur" }), { kind: "unknown", reason: "currency" });
@@ -114,9 +129,18 @@ part("Never more than was taken, whatever the input (10,000 random cases)");
       { amountCents: amount, refundedCents: rnd(3) ? 0 : rnd(amount + 1), taxCents: rnd(Math.floor(amount / 5) + 1), feeCents: rnd(10) ? rnd(3_000) : null, disputeStatus: rnd(8) ? null : ["won", "lost", "needs_response"][rnd(3)] },
     );
     const out = planRefund(input);
-    if ("cents" in out && (out.cents <= 0 || !Number.isSafeInteger(out.cents) || out.cents + input.charge.refundedCents > input.charge.amountCents)) bad += 1;
+    const c = input.charge;
+    if ("cents" in out && (out.cents <= 0 || !Number.isSafeInteger(out.cents) || out.cents + c.refundedCents > c.amountCents)) bad += 1;
+    if (out.kind === "unstarted_months") {
+      // Written apart from the rule: what section 3 gives back in total.
+      const started = monthsStarted(input.periodStartSeconds, input.nowSeconds);
+      const pre = c.amountCents - c.taxCents;
+      const back = Math.max(0, pre - started * (input.monthlyCents ?? 0));
+      const total = back + Math.floor((c.taxCents * back) / pre) - (c.feeCents ?? 0);
+      if (out.cents + c.refundedCents > total) bad += 1;
+    }
   }
-  is("no refund above what is left of the charge, none zero or fractional", bad, 0);
+  is("no refund above what is left of the charge or the policy's total, none zero or fractional", bad, 0);
 }
 
 part("Bad data is never read as money");
