@@ -24,7 +24,7 @@ async function main(): Promise<void> {
   process.env.VERCEL_OIDC_TOKEN = "header.payload.signature";
 
   part("The official rolling counter keeps its own snapshot");
-  let accountRequest: { method: string; authorization: string; token: string; cache: RequestCache | undefined } | null = null;
+  const accountRequests: { method: string; authorization: string; token: string; cache: RequestCache | undefined }[] = [];
   globalThis.fetch = async (input, init) => {
     const url = new URL(String(input));
     if (url.hostname === "sts.us-east-1.amazonaws.com") {
@@ -41,12 +41,12 @@ async function main(): Promise<void> {
         },
       });
     }
-    accountRequest = {
+    accountRequests.push({
       method: String(init?.method),
       authorization: String(new Headers(init?.headers).get("authorization")),
       token: String(new Headers(init?.headers).get("x-amz-security-token")),
       cache: init?.cache,
-    };
+    });
     return Response.json({
       ProductionAccessEnabled: true,
       SendingEnabled: true,
@@ -70,12 +70,13 @@ async function main(): Promise<void> {
   is("a backwards response clock is unknown",
     await sesProviderUsage(2_000, () => 1_999),
     { ok: false, reason: "unknown" });
+  const firstAccountRequest = accountRequests[0];
   is("the read is signed with only the temporary role identity and is not cached",
     [
-      accountRequest?.method,
-      accountRequest?.authorization.startsWith("AWS4-HMAC-SHA256 Credential=ASIASYNTHETICUSAGE01/"),
-      accountRequest?.token,
-      accountRequest?.cache,
+      firstAccountRequest?.method,
+      firstAccountRequest?.authorization.startsWith("AWS4-HMAC-SHA256 Credential=ASIASYNTHETICUSAGE01/"),
+      firstAccountRequest?.token,
+      firstAccountRequest?.cache,
     ],
     ["GET", true, "synthetic-provider-usage-session", "no-store"]);
 
