@@ -28,7 +28,7 @@
  * was played (lib/watch.ts): replays in one sitting, after a video has
  * reached its end.
  */
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { monthKey, rememberFolderOwner } from "@/lib/delivery";
 import { lessonVideo } from "@/lib/learn";
@@ -176,6 +176,8 @@ async function watched(folder: string, month: string, seconds: number): Promise<
 }
 
 const read = (path: string) => readFileSync(join(process.cwd(), path), "utf8");
+/** Every .ts and .tsx file under a folder, as paths from the repository's root. */
+const filesUnder = (dir: string): string[] => readdirSync(join(process.cwd(), dir), { withFileTypes: true }).flatMap((e) => e.isDirectory() ? filesUnder(`${dir}/${e.name}`) : /\.tsx?$/.test(e.name) ? [`${dir}/${e.name}`] : []);
 
 async function main(): Promise<void> {
   setUp();
@@ -266,6 +268,10 @@ async function main(): Promise<void> {
   await setSubscription("cal@example.com", { customerId: "cus_Cal0001", subscriptionId: "sub_Cal0001", active: true, cycle: "year", period: paidPeriod() });
   await watched(cal.folder, month, VIDEO_SECONDS_INCLUDED + 300 * HOUR);
   is("a yearly plan is not switched to billing added lines monthly", [(await settleAt(cal.folder, month, true, now)).added, monthly], [0, []]);
+  // A line begun before 31 October 2026 and left unfinished is dropped, never charged after use.
+  await redis.pipeline([["SET", `nl:watch:adding:${ana.folder}:${month}`, JSON.stringify({ from: 0, to: 150, at: now, amount: VIDEO_SECONDS_INCLUDED + 50 * HOUR, line: "old line", customerId: "cus_Ana0001", subscriptionId: "sub_Ana0001" })]]);
+  const stale = await settleAt(ana.folder, month, true, now);
+  is("an unfinished line from before is dropped, not finished", [stale.state, stale.added, lines.length, (await redis.pipeline([["GET", `nl:watch:adding:${ana.folder}:${month}`]]))[0]], ["nothing", 0, 0, null]);
   is("Stripe is never asked to add a line", [stripeAsked.filter((p) => p.includes("invoiceitems")).length, lines.length], [0, 0]);
   is("the legacy price is kept only as history: the meter does not use it", videoOwedCents(VIDEO_SECONDS_INCLUDED + HOUR) > 0, true);
 
@@ -327,6 +333,8 @@ async function main(): Promise<void> {
   is("a lesson's video is no longer counted by the page that opens it", /recordDelivery\(file\.pathname, viewingBytes/.test(read("lib/learn.ts")), false);
   is("the daily job still runs and is scheduled", [/settleAll/.test(read("app/api/cron/usage/route.ts")), /\/api\/cron\/usage/.test(read("vercel.json"))], [true, true]);
   is("the daily job never tells a creator of a charge after use", /videoOwedCents|canBeCharged/.test(read("app/api/cron/usage/route.ts")), false);
+  const callers = ["lib", "app", "components"].flatMap((dir) => filesUnder(dir)).filter((f) => /addToNextInvoice\s*\(/.test(read(f)) && f !== "lib/billing.ts");
+  is("nothing but the usage meters calls addToNextInvoice", callers, ["lib/usage-billing.ts"]);
   is("no meter owes anything after use", [/owed: \(\) => 0/.test(read("lib/watch-billing.ts")), /owed: \(\) => 0/.test(read("lib/traffic-billing.ts")), /owed: \(\) => 0/.test(read("lib/orders-billing.ts"))], [true, true, true]);
   is("and the five-minute job is the one that reads", /measureDue/.test(read("app/api/cron/stream/route.ts")), true);
 

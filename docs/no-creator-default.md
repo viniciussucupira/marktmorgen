@@ -120,3 +120,7 @@ Scope item 2 of 232 [CA1]. Read from the code on main (31 October 2026, about 00
 **For the pause (Codex's AV1 step-3 file, not edited here).** Stripe applies a pending plan change when a resumption moves a paused subscription to `active` or `past_due`, even if its invoice is not paid. If `restartPlan` or anything that resumes a subscription can meet a pending update (a plan change asked for and not yet paid within its 23 hours), the higher plan could start unpaid. Recorded for Codex in the queue item; not checked here.
 
 **Cost.** None: a document only. Incremental runtime monthly/annual Store 0/0, Studio 0/0, Scale 0/0.
+
+## No charge after use — CA232 unit 3 (31 October 2026)
+
+The usage line above is closed in code: the video meter (`lib/watch-billing.ts`) owes nothing, as visits and orders have since 17 October 2026, so `addToNextInvoice` is not reached; a line written down before this and left unfinished is dropped by `settleUsage` (`lib/usage-billing.ts`) instead of being finished; the "videos paused" email no longer mentions a charge. `tests/watch.test.ts` fails if a meter owes again at 50, 101 or 1,000 hours past, if Stripe is asked for an invoice item, if an old unfinished line is charged, or if any file other than `lib/usage-billing.ts` calls `addToNextInvoice`. The Terms never published this charge, so no published price changes. Charges after use that remain are the two renewals on a declined card (unit 4). Cost: lower (no Stripe write on this path); Store/Studio/Scale monthly/annual incremental 0/0.

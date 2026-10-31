@@ -118,7 +118,6 @@ async function videoRun(): Promise<VideoRun> {
       if (paused) out.paused += 1;
       if (!isSenderConfigured() || !(await firstWord(folder, month))) continue;
       const notice = videoUsageNotice({ seconds, limit, standing: standingOf(store),
-        legacyChargeCents: 0,
         studioUrl: `${SITE_URL}/studio`, supportEmail: SUPPORT_EMAIL });
       const sent = await sendEmail({ meter: { by: "company" },
         from: NIMBUS_FROM,

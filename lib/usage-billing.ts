@@ -196,6 +196,14 @@ export async function settleUsage(meter: Meter, folder: string, month: string, f
     await redisPipeline([["DEL", addingKey(meter, folder, month)]]);
     unfinished = null;
   }
+  if (unfinished && unfinished.to > owed) {
+    // Written down for more than the meter owes now: never finished, so
+    // nothing past what is owed reaches an invoice. Since 31 October 2026
+    // every meter owes nothing (232 [CA1] unit 3), so a line begun before
+    // then is dropped here instead of being charged after use.
+    await redisPipeline([["DEL", addingKey(meter, folder, month)]]);
+    unfinished = null;
+  }
   if (!unfinished) {
     if (owed - billed <= 0) return out;
     if (!final && owed - billed < SMALLEST_LINE_CENTS) return { ...out, state: "waiting" };
