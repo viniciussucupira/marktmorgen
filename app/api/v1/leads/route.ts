@@ -1,4 +1,4 @@
-import { apiError, apiOk, apiStore, apiWriter, readApiBody } from "@/lib/api-guard";
+import { apiAdder, apiError, apiOk, apiStore } from "@/lib/api-guard";
 import { leads } from "@/lib/api-read";
 import { WRITE_ERRORS, addLead, roomFor } from "@/lib/api-write";
 
@@ -25,10 +25,10 @@ export async function GET(request: Request) {
  * A key that may write only.
  */
 export async function POST(request: Request) {
-  const writer = await apiWriter(request);
+  // 232 [CA1] unit 4c: waits while the plan's renewal is unpaid or a payment for it is disputed.
+  const writer = await apiAdder(request);
   if (writer instanceof Response) return writer;
-  const body = await readApiBody(request);
-  if (body instanceof Response) return body;
+  const body = writer.body;
   try {
     const done = await roomFor(() => addLead(writer.store, body));
     if (!done.ok) return apiError(WRITE_ERRORS[done.error][0], done.error, WRITE_ERRORS[done.error][1]);
