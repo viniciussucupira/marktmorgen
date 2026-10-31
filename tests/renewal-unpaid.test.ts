@@ -172,7 +172,9 @@ async function main() {
       is(`${file} checks before reserving`, check > 0 && check < source.indexOf("reserveStoreUpload(store"), true);
       is(`${file} answers renewal_unpaid`, source.slice(check, check + 160).includes("renewal_unpaid"), true);
     }
-    is("the studio has the sentence", /renewal payment did not go through/.test(STUDIO_MESSAGES.renewal_unpaid ?? ""), true);
+    const usage = readFileSync("app/api/cron/usage/route.ts", "utf8");
+    is("the usage job does not send a 'video hours used' email for an unpaid renewal", usage.indexOf("if (renewalUnpaid(store)) continue;") > 0 && usage.indexOf("if (renewalUnpaid(store)) continue;") < usage.indexOf("videoUsageNotice({"), true);
+        is("the studio has the sentence", /renewal payment did not go through/.test(STUDIO_MESSAGES.renewal_unpaid ?? ""), true);
   }
 
   part("The reminders job writes it down before it says it");
