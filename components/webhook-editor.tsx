@@ -263,7 +263,7 @@ export function WebhookEditor({ view: initial }: { view: WebhooksView }) {
           <li>
             While your plan&apos;s renewal payment has not gone through, or a payment for it is disputed, new endpoints and
             test messages are refused, and other events are not sent: each is marked &ldquo;Not sent&rdquo; here with the
-            reason, is not sent later, and counts as one of the month&apos;s webhook deliveries. A delivery already being
+            reason, is not sent later, and counts as one of the month&apos;s webhook deliveries when it can be counted. A delivery already being
             retried is stopped the same way. Events from your Stripe account in that time are not read until the payment is
             recorded or the dispute settled, and are sent then, as far back as Stripe keeps them (30 days). After that, sending goes on as usual while the month&apos;s
             webhook deliveries last.
