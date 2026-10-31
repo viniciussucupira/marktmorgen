@@ -138,3 +138,25 @@ test("a missing own field cannot be forged by a getter on the descriptor map pro
     assert.equal(reads, 0);
   } finally { Reflect.deleteProperty(Object.prototype, "id"); }
 });
+
+test("detached own sales fields do not invoke inherited setters or replacement getters", () => {
+  for (const key of ["applicable", "amountMinor"] as const) {
+    const value = ledger([entry("real", { amountMinor: 500 })]);
+    let reads = 0, writes = 0;
+    let result: ReturnType<typeof countTaxSales> | undefined;
+    Object.defineProperty(Object.prototype, key, {
+      configurable: true,
+      get() { reads++; return key === "applicable" ? false : 0; },
+      set() { writes++; },
+    });
+    try {
+      result = countTaxSales(value);
+    } finally { Reflect.deleteProperty(Object.prototype, key); }
+    assert.deepEqual([reads, writes], [0, 0]);
+    assert.equal(result?.status, "known");
+    if (result?.status === "known") {
+      assert.equal(result.settledApplicableMinor, 500);
+      assert.equal(result.applicableEntries, 1);
+    }
+  }
+});

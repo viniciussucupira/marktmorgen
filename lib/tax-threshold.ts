@@ -59,7 +59,7 @@ export function assessTaxThreshold(value: unknown, now = Date.now()): TaxThresho
   try {
     const descriptors = Object.getOwnPropertyDescriptors(value);
     if (Object.keys(descriptors).length !== KEYS.length) return stop("unknown");
-    data = {};
+    data = Object.create(null);
     for (const key of KEYS) {
       if (!Object.hasOwn(descriptors, key)) return stop("unknown");
       const field = descriptors[key];
@@ -101,7 +101,7 @@ export function assessTaxSalesThreshold(value: unknown, now = Date.now()): TaxTh
     const keys = ["ruleId", "ledger", "completeRollingCoverage", "applicableScopeReviewed"] as const;
     if (Reflect.ownKeys(value).length !== keys.length) return stop("unknown");
     const fields = Object.getOwnPropertyDescriptors(value);
-    const evidence: Record<string, unknown> = {};
+    const evidence: Record<string, unknown> = Object.create(null);
     for (const key of keys) {
       if (!Object.hasOwn(fields, key)) return stop("unknown");
       const field = fields[key];

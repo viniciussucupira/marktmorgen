@@ -126,3 +126,41 @@ test("prototype descriptor defaults cannot forge a missing own threshold amount"
     assert.equal(reads, 0);
   } finally { Reflect.deleteProperty(Object.prototype, "settledApplicableMinor"); }
 });
+
+test("detached threshold amounts cannot be replaced through inherited setters", () => {
+  const value = row("ca-specified-supplies", 3_000_001);
+  let reads = 0, writes = 0;
+  let result: ReturnType<typeof assessTaxThreshold> | undefined;
+  Object.defineProperty(Object.prototype, "settledApplicableMinor", {
+    configurable: true,
+    get() { reads++; return 0; },
+    set() { writes++; },
+  });
+  try {
+    result = assessTaxThreshold(value, NOW);
+  } finally { Reflect.deleteProperty(Object.prototype, "settledApplicableMinor"); }
+  assert.deepEqual([reads, writes], [0, 0]);
+  assert.deepEqual(result, { status: "treatment-required", projectedApplicableMinor: 3_000_001 });
+});
+test("detached ledger evidence does not invoke an inherited ledger setter", async () => {
+  const { assessTaxSalesThreshold } = await import("@/lib/tax-threshold");
+  const ledger = {
+    place: { country: "NO", state: null }, currency: "NOK",
+    periodStart: "2025-10-28", periodEnd: "2026-10-27",
+    coverageFrom: "2025-10-28", coverageThrough: "2026-10-27", complete: true,
+    entries: [{ id: "remote", country: "NO", state: null, currency: "NOK", supplyOn: "2026-10-27", position: "proposed", amountMinor: 5_000_000, applicable: true }],
+  };
+  const evidence = { ruleId: "no-remote-services", ledger, completeRollingCoverage: true, applicableScopeReviewed: true };
+  let reads = 0, writes = 0;
+  let result: ReturnType<typeof assessTaxSalesThreshold> | undefined;
+  Object.defineProperty(Object.prototype, "ledger", {
+    configurable: true,
+    get() { reads++; return null; },
+    set() { writes++; },
+  });
+  try {
+    result = assessTaxSalesThreshold(evidence, NOW);
+  } finally { Reflect.deleteProperty(Object.prototype, "ledger"); }
+  assert.deepEqual([reads, writes], [0, 0]);
+  assert.deepEqual(result, { status: "treatment-required", projectedApplicableMinor: 5_000_000 });
+});
