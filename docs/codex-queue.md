@@ -5617,6 +5617,7 @@ Estado: na fila. Ao concluir, registre o commit, o resultado da suíte completa 
    - Em andamento pelo Claude: 30/10/2026 15h50 Fortaleza, ramo claude/ca1-caption-refund-owed (tarefa agendada; AV4).
    - Unidades: 1) reembolso de legendas não confirmado pela Stripe fica guardado e é conferido de novo, sem reembolso em dobro e sem apagar o registro; 2) inventário de toda cobrança ao criador, antes ou depois do uso, em docs/no-creator-default.md; 3) addToNextInvoice substituído por crédito pré-pago ou teto demonstrado; 4) parada automática no primeiro dia de renovação recusada; 5) contestação do criador suspende os recursos cobertos; 6) reembolso da garantia nunca acima do pago.
    - Unidade 1: pronta e desligada, aguardando a abertura (vendas fechadas): PR #1299, 30/10/2026 16h05 Fortaleza; reembolso de legendas não confirmado pela Stripe fica guardado, é conferido pela lista de reembolsos da própria Stripe, nunca em dobro, para após 40 conferências e aparece ao criador; CI completo no head exigido antes da fusão.
+   - Retomado pelo Claude: 30/10/2026 23h52 Fortaleza, unidade 2 (inventário de toda cobrança ao criador, paga antes ou depois do uso, em docs/no-creator-default.md), ramo claude/ca1-creator-charges (tarefa agendada; AV4).
 
 Pedido: dono, 21/10/2026, 01h26, 01h28 e 01h32 de Fortaleza: "eu vou querer ter modelo em que não tem como levar calote dos criadores" e "veja como faz Stan, Hotmart".
 
