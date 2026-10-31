@@ -127,3 +127,24 @@ test("missing fixed-cost fields never execute descriptor-map prototype getters",
  });
  assert.equal(allocateEntireLlcFixedCosts(CURRENT_LLC_FIXED_COST_CEILINGS),null);
 });
+
+test("detaching own fixed costs never invokes inherited setters or replacement zero getters",()=>{
+ for(const key of ["id","fullMonthlyUsdCents","fullAnnualUsdCents","evidence","reserveReviewed"] as const){
+  const original=Object.getOwnPropertyDescriptor(Object.prototype,key);
+  const lines=fixture(),expected=allocateEntireLlcFixedCosts(lines);
+  let reads=0,writes=0;
+  try{
+   Object.defineProperty(Object.prototype,key,{
+    configurable:true,
+    get(){reads++;return key==="evidence"?"inherited substitution":key==="reserveReviewed"?true:key==="id"?LLC_FIXED_COST_IDS[0]:0;},
+    set(){writes++;},
+   });
+   assert.deepEqual(allocateEntireLlcFixedCosts(lines),expected,key);
+   assert.deepEqual([reads,writes],[0,0],key);
+  }finally{
+   if(original)Object.defineProperty(Object.prototype,key,original);
+   else Reflect.deleteProperty(Object.prototype,key);
+  }
+ }
+ assert.equal(allocateEntireLlcFixedCosts(CURRENT_LLC_FIXED_COST_CEILINGS),null);
+});
