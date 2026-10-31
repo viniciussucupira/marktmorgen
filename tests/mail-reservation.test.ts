@@ -12,14 +12,20 @@ import { windowId } from '@/lib/allowance-window';
 import { ROOM } from "./data-room";
 const actual=memory.pipeline.bind(memory);
 let reply: unknown[]|undefined;
+let dayRead: {value:unknown}|undefined;
 let pipelines:(string|number)[][][]=[];
 (memory as unknown as {pipeline:typeof memory.pipeline}).pipeline=(async(commands:(string|number)[][])=>{
- pipelines.push(commands);const result=await actual(commands);
+ pipelines.push(commands);
+ if(dayRead && commands.length===1 && commands[0][0]==='GET' && String(commands[0][1]).startsWith('nl:mail:day:')){
+  if(dayRead.value instanceof Error)throw dayRead.value;
+  return dayRead.value as unknown[];
+ }
+ const result=await actual(commands);
  const key=String(commands[0]?.[1]??'');
  return commands[0]?.[0]==='INCRBY' && (key.startsWith('nl:mail:used:')||key.startsWith('nl:mail:day:')) && reply!==undefined?reply:result;
 }) as typeof memory.pipeline;
 const store={listId:'a'.repeat(32),tier:'pro',subscriptionActive:true,trialEnds:0} as Store;
-beforeEach(()=>{memory.clear();reply=undefined;pipelines=[];process.env.MARKETING_DAILY_CAP='100000';dispatch.calls=0;dispatch.outcome='retry';});
+beforeEach(()=>{memory.clear();reply=undefined;dayRead=undefined;pipelines=[];process.env.MARKETING_DAILY_CAP='100000';dispatch.calls=0;dispatch.outcome='retry';});
 test('paid list caps (raised 18 October 2026 with the new prices) are the actual runtime allowances',()=>{assert.equal(monthlyAllowance(store),7000);assert.equal(monthlyAllowance({...store,tier:'scale'}),10000);assert.equal(PRO_MONTHLY_EMAILS,7000);assert.equal(SCALE_MONTHLY_EMAILS,10000);});
 test('an acknowledged exact reservation consumes the monthly capacity',async()=>{assert.equal(await reserve(store,3),'ok');assert.equal(await usedThisMonth(store.listId),3);});
 test('missing, partial or corrupt counter acknowledgements cannot authorize',async()=>{
@@ -66,4 +72,40 @@ test('funded paid list dispatch stops before the provider when financial approva
  const result=await sendTo(marked,['reader@example.com'],'Synthetic','Test only','funded-cohort-required');
  assert.equal(result.stopped,'retry');assert.equal(dispatch.calls,0);
  assert.equal(await usedThisMonth(made.listId,windowId(made)),0);
+});
+
+test('unknown daily usage stops the real list loop before reservations and dispatch',async()=>{
+ const made=await fullStore();pipelines=[];
+ const inherited=new Array(1);Object.setPrototypeOf(inherited,{0:null});
+ let getterCalls=0;
+ const computed=new Array(1);Object.defineProperty(computed,'0',{get:()=>{getterCalls++;return null;}});
+ const malformed:unknown[]=[{},null,[],[null,null],new Array(1),inherited,computed,
+  [undefined],[false],[0],[{}],[''],[' 0'],['01'],['-1'],['0.5'],['1e2'],
+  ['9007199254740992'],new Error('synthetic daily read lost')];
+ for(let i=0;i<malformed.length;i++){
+  dayRead={value:malformed[i]};
+  const result=await sendTo(made,['reader@example.com'],'Synthetic','Test only','unknown-day-'+i);
+  assert.equal(result.stopped,'day');assert.deepEqual(result.done,[]);
+  assert.deepEqual(result.rest,['reader@example.com']);
+  assert.equal(result.uncertain,undefined);
+  assert.equal(dispatch.calls,0);
+  assert.equal(await usedThisMonth(made.listId,windowId(made)),0);
+ }
+ assert.equal(getterCalls,0);
+ assert.equal(pipelines.some(commands=>commands.some(command=>command[0]==='INCRBY'||command[0]==='DECRBY')),false);
+});
+test('explicit daily absence and canonical available counts admit; exhausted counts wait',async()=>{
+ const made=await fullStore();dispatch.outcome='sent';
+ for(const [index,value] of [null,'0','99999'].entries()){
+  dayRead={value:[value]};
+  const result=await sendTo(made,['reader@example.com'],'Synthetic','Test only','known-day-'+index);
+  assert.equal(result.stopped,null);assert.deepEqual(result.done,['reader@example.com']);
+ }
+ assert.equal(dispatch.calls,3);assert.equal(await usedThisMonth(made.listId,windowId(made)),3);
+ for(const value of ['100000','100001','9007199254740991']){
+  dayRead={value:[value]};
+  const result=await sendTo(made,['reader@example.com'],'Synthetic','Test only','full-day-'+value);
+  assert.equal(result.stopped,'day');assert.equal(dispatch.calls,3);
+  assert.equal(await usedThisMonth(made.listId,windowId(made)),3);
+ }
 });

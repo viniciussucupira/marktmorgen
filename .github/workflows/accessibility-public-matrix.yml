@@ -72,7 +72,7 @@ jobs:
       - name: Diagnose actual engine media state before app navigation
         if: env.AX2_PUBLIC_STANDARD == 'true'
         run: node tests/e2e/accessibility-media-diagnostic.mjs
-      - run: npm run build
+      - run: node scripts/ci-build.mjs
       - name: Public entry journeys at five widths with AAA and access modes
         run: node tests/e2e/accessibility-public-matrix.mjs
 
