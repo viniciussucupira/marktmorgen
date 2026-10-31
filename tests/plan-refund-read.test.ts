@@ -232,6 +232,14 @@ async function main() {
   world.moreCharges = true;
   is("a payment inside the window with more pages after it: unknown, never a silent renewal", (await dp.read()).refund, { kind: "unknown", reason: "too_many" });
   world.moreCharges = false;
+  // A long-time customer: a payment 40 days ago is on the page, so the renewal 5 days ago is certainly not the first.
+  const lt = await shop();
+  pay(lt, { at: NOW - 40 * DAY });
+  pay(lt, { at: NOW - 5 * DAY, reason: "subscription_cycle" });
+  for (let i = 0; i < 100; i += 1) world.charges.push({ id: `ch_ltdecl${n}x${i}`, customer: lt.customer, created: NOW - 60 * DAY - i, status: "failed", paid: false, payment_method_details: { card: { fingerprint: "fpdeclined" } } });
+  world.moreCharges = true;
+  is("more pages, but a payment before the window is listed: the renewal is a renewal", (await lt.read()).refund, { kind: "none", reason: "renewal" });
+  world.moreCharges = false;
   // A downgrade the day after leaves a credit on the customer's balance: refunding the whole payment would give back more than was paid.
   const cr = await shop();
   pay(cr, { at: NOW - 3 * DAY });

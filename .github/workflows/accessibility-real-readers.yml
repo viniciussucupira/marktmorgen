@@ -66,7 +66,7 @@ jobs:
           node-version: "24"
           package-manager-cache: false
       - run: npm ci
-      - run: npm run build
+      - run: node scripts/ci-build.mjs
       - name: Install isolated locked tooling without lifecycle scripts or optional recording
         working-directory: tooling/screen-reader
         run: npm ci --ignore-scripts --omit=optional --no-fund
