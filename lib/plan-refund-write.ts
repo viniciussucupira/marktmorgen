@@ -47,12 +47,16 @@ const REFUND_ID = /^re_[A-Za-z0-9]{6,128}$/;
 
 export type PlanRefundMade =
   | { ok: true; cents: number; currency: string; refundId: string; status: "succeeded" | "pending" }
-  | { ok: false; reason: "busy" | "no_lock" | "not_owed" | "unknown" | "pending" | "failed" };
+  | { ok: false; reason: "busy" | "no_lock" | "not_owed" | "unknown" | "pending" | "failed" | "changed" };
 
 type Row = Record<string, unknown>;
 const rows = (page: Row): Row[] => (Array.isArray(page.data) ? (page.data as unknown[]).filter((r): r is Row => Boolean(r) && typeof r === "object") : []);
 
-export async function refundPlanPayment(store: Store, nowSeconds = Math.floor(Date.now() / 1000)): Promise<PlanRefundMade> {
+/**
+ * `expectCents`: the amount the creator was shown and confirmed (the review page). When the policy gives another
+ * amount now (a month of a yearly plan started meanwhile), nothing is made ("changed"), for the page to show the new one.
+ */
+export async function refundPlanPayment(store: Store, nowSeconds = Math.floor(Date.now() / 1000), expectCents?: number): Promise<PlanRefundMade> {
   if (!isRedisConfigured()) return { ok: false, reason: "no_lock" };
   let held;
   const takenAt = Date.now();
@@ -69,6 +73,7 @@ export async function refundPlanPayment(store: Store, nowSeconds = Math.floor(Da
     if (!("chargeId" in reading)) return { ok: false, reason: "not_owed" };
     const { chargeId, paymentIntent, currency } = reading;
     const cents = reading.refund.cents;
+    if (expectCents !== undefined && cents !== expectCents) return { ok: false, reason: "changed" };
     let refunds: Row[];
     try {
       const page = await onPlatformAt(AT, "GET", `/refunds?${new URLSearchParams({ charge: chargeId, limit: "100" })}`);
