@@ -27,7 +27,11 @@ import { type PlanFields, standingOf } from "@/lib/plan-standing";
 /** Visits every plan covers, per store, per calendar month. */
 export const VISITS_INCLUDED: Record<Tier, number> = {
   creator: 3_400,
-  pro: 10_000,
+  // 10,000 until 31 October 2026 (313 [CV1]): with a visit costed as Upstash
+  // bills it, Studio kept more in its worst month than Scale; 12,000 puts
+  // Scale back above it (tests/plan-margin.test.ts), at about $0.61 more a
+  // month at the most, and a store on Studio gets 2,000 visits more.
+  pro: 12_000,
   // 50,000 until 17 October 2026, when the uses that had no monthly figure
   // were priced into each plan's worst month (tests/plan-cost-registry.ts):
   // visits are Scale's largest cost, and 40,000 keeps it at the owner's 60%.
@@ -61,8 +65,14 @@ export const PARTS_PER_VISIT = 100;
  * What those minutes of the room count as, in hundredths of a visit: with
  * people talking, when it asks every few seconds, and with the room quiet,
  * when it asks twice a minute.
+ *
+ * 260 with people talking until 31 October 2026, when a visit was costed as
+ * Upstash bills it (313 [CV1]): a visit costs more, so the same ten minutes
+ * are fewer hundredths of one. 230 is the least that still covers what they
+ * cost, held by tests/room.test.ts; the room counts less against the plan's
+ * visits than before. The quiet room's 60 still covers its own.
  */
-export const ROOM_LIVE_PARTS = 260;
+export const ROOM_LIVE_PARTS = 230;
 export const ROOM_IDLE_PARTS = 60;
 
 /** "2.6", "0.6": hundredths of a visit as a figure a page can print. */

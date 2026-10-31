@@ -74,19 +74,19 @@ The unchanged registered model now tests positive net with the existing spend-fl
 
 | Plan | Interval | Price | Full existing use | Zero usage, receiving still charged | Capacity precheck |
 | --- | --- | --- | --- | --- | --- |
-| Store | month | $69.00 | 12.09% | 13.14% | unreviewed; no approved maximum |
-| Store | year | $690.00 | 12.21% | 13.37% | unreviewed; no approved maximum |
-| Studio | month | $449.00 | 12.14% | 13.36% | unreviewed; no approved maximum |
-| Studio | year | $4490.00 | 12.02% | 13.40% | unreviewed; no approved maximum |
-| Scale | month | $999.00 | 12.17% | 13.38% | unreviewed; no approved maximum |
-| Scale | year | $9990.00 | 12.02% | 13.40% | unreviewed; no approved maximum |
+| Store | month | $69.00 | 12.03% | 13.14% | unreviewed; no approved maximum |
+| Store | year | $690.00 | 12.15% | 13.37% | unreviewed; no approved maximum |
+| Studio | month | $449.00 | 12.07% | 13.36% | unreviewed; no approved maximum |
+| Studio | year | $4490.00 | 11.93% | 13.40% | unreviewed; no approved maximum |
+| Scale | month | $999.00 | 12.12% | 13.38% | unreviewed; no approved maximum |
+| Scale | year | $9990.00 | 11.96% | 13.40% | unreviewed; no approved maximum |
 
 | Plan | Interval | Windows | List emails | Shared buyer actions | Visits | Orders | Concurrent GiB | GiB-months | Video hours |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | Store | month | 1 | 0 | 200 | 3400 | 200 | 5 | 5 | 4 |
 | Store | year | 12 | 0 | 2400 | 40800 | 2400 | 5 | 60 | 48 |
-| Studio | month | 1 | 7000 | 1000 | 10000 | 450 | 40 | 40 | 32 |
-| Studio | year | 12 | 84000 | 12000 | 120000 | 5400 | 40 | 480 | 384 |
+| Studio | month | 1 | 7000 | 1000 | 12000 | 450 | 40 | 40 | 32 |
+| Studio | year | 12 | 84000 | 12000 | 144000 | 5400 | 40 | 480 | 384 |
 | Scale | month | 1 | 10000 | 3000 | 40000 | 1500 | 80 | 80 | 64 |
 | Scale | year | 12 | 120000 | 36000 | 480000 | 18000 | 80 | 960 | 768 |
 
