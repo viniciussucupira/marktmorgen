@@ -1,6 +1,6 @@
 import { PendingSubmit } from "@/components/pending-submit";
 import Link from "next/link";
-import { Logo } from "@/components/logo";
+import { MorningLogo } from "@/components/morning-header";
 import type { Metadata } from "next";
 import { LOCK_DAYS } from "@/lib/recovery-address";
 
@@ -19,11 +19,9 @@ export default async function LostEmailPage({ searchParams }: { searchParams: Pr
   const params = await searchParams;
   const sent = params.status === "sent";
   return (
-    <div className="relative min-h-screen overflow-hidden bg-paper text-ink">
+    <div className="relative min-h-screen overflow-hidden">
       <main id="content" className="relative mx-auto max-w-xl px-4 py-16">
-        <Link href="/" className="inline-block w-fit rounded-[10px]" aria-label="Marktmorgen, home">
-          <Logo />
-        </Link>
+        <MorningLogo />
         <h1 className="t-h1 mt-6">Cannot open your email?</h1>
         <p className="mt-4 text-lg text-ink-soft">There are two ways back in, and neither needs that inbox.</p>
 

@@ -1,10 +1,11 @@
 /* eslint-disable @next/next/no-html-link-for-pages -- Static home navigation intentionally uses native anchors to avoid client link hydration; hrefs and browser/keyboard regressions remain checked. */
 import type { Metadata } from "next";
-import { Figtree, Unbounded } from "next/font/google";
 import { Suspense } from "react";
 import "./home.css";
 import { SITE_OG_IMAGE } from "@/lib/site-og";
 import { SiteFooter } from "@/components/site-footer";
+import { MORNING_FONTS } from "@/components/morning-fonts";
+import { MorningHeader } from "@/components/morning-header";
 import { Faq } from "@/components/home-static";
 import { ClaimForm, HeroClaim } from "@/components/home-claim";
 import { ExampleMembership, ExampleTimes } from "@/components/home-examples";
@@ -12,7 +13,7 @@ import { HomeData } from "@/components/structured-data";
 import { homeQuestions } from "@/lib/home-faq";
 import { paypalSalesConfigured } from "@/lib/paypal-sales";
 import { PLAN_TITLES, PUBLISHED_PRICE_CENTS as PRICE_CENTS, TRIAL_DAYS } from "@/lib/plan";
-import { PLANS_ON_SALE, PREVIEW_LINE, PREVIEW_LINK } from "@/lib/opening";
+import { PLANS_ON_SALE } from "@/lib/opening";
 import { feeWords } from "@/lib/fee-words";
 import { INVITE_PROGRAM_OPEN, INVITE_SHARE_PERCENT } from "@/lib/creator-invite-rules";
 import { DEMO_CALL, DEMO_PRODUCT } from "@/lib/demo-seed";
@@ -30,12 +31,6 @@ import { DEMO_CALL, DEMO_PRODUCT } from "@/lib/demo-seed";
  * INVITE_PROGRAM_OPEN is true, and the mockup's studio "Today" screen is left
  * out until the studio has one (queue item 484).
  */
-
-/* Both SIL Open Font License, served from our own domain by next/font.
-   Optional display: a cold phone keeps the fallback rather than shifting
-   the headline when a font arrives late. */
-const display = Unbounded({ variable: "--font-hm-display", subsets: ["latin"], weight: ["600", "800"], display: "optional" });
-const body = Figtree({ variable: "--font-hm-body", subsets: ["latin"], display: "optional" });
 
 const HOME_TITLE = "Marktmorgen — your link in bio, now a store";
 const HOME_DESCRIPTION =
@@ -105,35 +100,8 @@ function Invite() {
 export default function Home() {
   const questions = homeQuestions(paypalSalesConfigured());
   return (
-    <div className={`${display.variable} ${body.variable} hm`}>
-      <a href="#content" className="hm-skip">Skip to the page content</a>
-      {PLANS_ON_SALE ? null : (
-        <div className="hm-topbar" data-preview-bar="">
-          <p>
-            {PREVIEW_LINE}{" "}
-            <a href={PREVIEW_LINK.href}>{PREVIEW_LINK.label}</a>
-          </p>
-        </div>
-      )}
-
-      <header className="hm-top">
-        <div className="hm-wrap">
-          <nav aria-label="Main" className="hm-nav">
-            <a href="/" className="hm-logo" aria-label="Marktmorgen, home">
-              {/* The name's own picture: a sun coming up over a horizon, a market's morning. */}
-              <span aria-hidden="true" className="hm-logo-mark">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 17a7 7 0 0 1 14 0" /><path d="M2 20h20" /><path d="M12 4v3" /><path d="M4.9 8.9l2.1 2.1" /><path d="M19.1 8.9L17 11" /></svg>
-              </span>
-              <span aria-hidden="true" className="hm-logo-word">Marktmorgen</span>
-            </a>
-            <ul className="hm-nav-links">
-              <li><a href="/pricing" className="hm-nav-link">Pricing</a></li>
-              <li><a href="/signin?to=login" className="hm-nav-link">Log in</a></li>
-              <li><a href="/signin" className="hm-nav-cta">Start free</a></li>
-            </ul>
-          </nav>
-        </div>
-      </header>
+    <div className={`${MORNING_FONTS} hm`}>
+      <MorningHeader />
 
       <main id="content" data-static-reading data-home-page className="hm-body">
         <section aria-labelledby="home-hero-heading" className="hm-hero" data-home-hero>
@@ -274,7 +242,7 @@ export default function Home() {
         </section>
       </main>
 
-      <div className="hm-foot"><Suspense fallback={null}><SiteFooter /></Suspense></div>
+      <div className="hm-foot"><Suspense fallback={null}><SiteFooter morning /></Suspense></div>
       <HomeData questions={questions} />
     </div>
   );
