@@ -1826,45 +1826,55 @@
     {
       "area": "Semantic/action text contrast",
       "evidence": "Static palette pairs include danger5.11:1 on danger-soft,mint-deep5.89:1 on mint-soft,indigo5.54:1 on lilac-deep. Applicable rendered contexts and text sizes must be audited; no blanket AAA claim. Delivery22 adds a separate light-surface error-copy token used by actual sign-in inline validation and the existing notice-error,with enhanced contrast and validation-state browser tests at4 widths. Original danger token still used elsewhere;mint/indigo/other red contexts remain open.",
-      "status": "open"
+      "status": "open",
+      "publicWording": "Colored text for warnings, errors and buttons: some colors are checked at the enhanced contrast level, others are not checked yet."
     },
     {
       "area": "Dark/gradient/custom creator themes",
-      "status": "rendered and content-state audit still needed"
+      "status": "rendered and content-state audit still needed",
+      "publicWording": "Store themes, including dark themes, color blends and a creator's own colors: not yet checked on every page they can be used on."
     },
     {
       "area": "All page/process states and integration failures",
-      "status": "inventory made; complete AAA/manual evaluation pending"
+      "status": "inventory made; complete AAA/manual evaluation pending",
+      "publicWording": "Every state a page can be in, such as empty, loading or failed: we have listed them, but a person has not yet reviewed each one at level AAA."
     },
     {
       "area": "Keyboard,focus,zoom,reflow,text spacing,orientation,drag alternatives",
-      "status": "existing checks cover selected journeys; full cross-route/device evidence pending"
+      "status": "existing checks cover selected journeys; full cross-route/device evidence pending",
+      "publicWording": "Keyboard use, the focus outline, zoom, narrow screens, wider text spacing, turning the screen and other ways to do what dragging does: checked on some tasks, not yet on every page and device."
     },
     {
       "area": "Screen readers and platform/browser compatibility",
-      "status": "not validated with NVDA,JAWS,VoiceOver,TalkBack or all OS/browser combinations"
+      "status": "pilot only: CI entry trial with NVDA (Windows) and VoiceOver (macOS) on /signin and /signin?to=login; not validated with JAWS, TalkBack, other pages or all OS/browser combinations",
+      "publicWording": "Screen readers: a short trial with NVDA on Windows and VoiceOver on a Mac covers the sign-up and log-in pages only. Other screen readers, such as JAWS and TalkBack, and other devices and browsers are not checked yet."
     },
     {
       "area": "Real people with different access needs",
-      "status": "not conducted; no participant research or contact claimed"
+      "status": "not conducted; no participant research or contact claimed",
+      "publicWording": "Testing with people who have disabilities: not done yet."
     },
     {
       "area": "Cognitive usability,plain language,errors/help and media alternatives",
-      "status": "systematic human/content review pending"
+      "status": "systematic human/content review pending",
+      "publicWording": "Easy-to-understand words, error messages, help, and text versions of video and audio: a full review by a person is not done yet."
     },
     {
       "area": "Performance and comparative outcomes",
-      "status": "no matched competitor timing,percentile,assistive-task or superiority evidence; needs controlled measurement"
+      "status": "no matched competitor timing,percentile,assistive-task or superiority evidence; needs controlled measurement",
+      "publicWording": "Speed on simple phones and slow networks: not measured in a controlled way yet. We make no claim that we are faster or better than anyone else."
     },
     {
       "area": "Creator field placeholders",
       "evidence": "Shared .st-field placeholders now use --st-text at full opacity. Synthetic Chromium reads actual computed pseudo-element/background colours and opacity; normal text ratio>=7 for all4 themes x10 presets and textarea4 themes/custom yellow. Negative control rejects former faded Night text. No entire-page/assistive/user conformance claim.",
-      "status": "Partially addressed in delivery21; actual full journeys/custom background overrides remain open"
+      "status": "Partially addressed in delivery21; actual full journeys/custom background overrides remain open",
+      "publicWording": "The gray example text inside the studio's boxes: its contrast is checked in every built-in theme, but not yet on every page or with a creator's own background."
     },
     {
       "area": "Focus appearance for standard fields",
       "evidence": "Standard .field controls receive an opaque3px deep outline plus3px white inner band,with Highlight outline under forced colors. Actual Tab screenshot differences are measured for3:1 change area outside the original control,including invalid/readonly/select fixtures and real sign-in widths. Custom fields,clipping/occlusion across every journey,all browsers/OS/assistive users still need review. Delivery20 extends same-pixel checks to .st-field on actual production palettes;see docs/accessibility-store-field-focus.md.",
-      "status": "Partially addressed in deliveries19/20; whole-product focus evaluation remains open"
+      "status": "Partially addressed in deliveries19/20; whole-product focus evaluation remains open",
+      "publicWording": "The outline that shows which box has the keyboard: checked on the sign-in page and the studio's boxes, not yet across the whole product."
     }
   ],
   "currentEvidence": "Existing synthetic Chrome flows cover selected studio/campaign/Path/agreements states at390/1280 with AA automation and explicit keyboard cases. Added secondary-text tests are narrow evidence only; see docs/accessibility-programme.md.",

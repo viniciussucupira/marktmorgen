@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { LegalPage, LegalSection } from "@/components/legal-page";
-import { ACCESSIBILITY_CHECKS, accessibilityGaps, reviewCounts } from "@/lib/accessibility-statement";
+import { ACCESSIBILITY_CHECKS, STATEMENT_REVIEW, accessibilityGaps, reviewCounts } from "@/lib/accessibility-statement";
 
 export const metadata: Metadata = {
   title: "Accessibility — Marktmorgen",
@@ -20,7 +20,7 @@ export default function AccessibilityPage() {
   const gaps = accessibilityGaps();
   const { total, reviewed } = reviewCounts();
   return (
-    <LegalPage title="Accessibility" eyebrow="What we test, and what is still open" lastUpdated="October 31, 2026" effective="October 31, 2026" legalNav={false}>
+    <LegalPage title="Accessibility" eyebrow="What we test, and what is still open" lastUpdated={STATEMENT_REVIEW.date} effective={null} legalNav={false}>
       <p>
         We want everyone to be able to build a store with Marktmorgen and to buy from one, including people who use a
         screen reader, a keyboard, voice control, zoom or high contrast. This page says what we aim for, what we test,
@@ -29,9 +29,9 @@ export default function AccessibilityPage() {
 
       <LegalSection title="1. Our goal">
         <p>
-          Our goal is level AAA of {WCAG} 2.2 on every page we make. Level AA is the minimum the law asks for in many
-          places; we treat it as the floor, not the aim. This is a goal we work toward, not a claim that every page
-          already meets it: the open items below say where we are not there yet.
+          Our goal is level AAA, the highest level of {WCAG} 2.2, on every page we make. We treat level AA as the
+          floor, not the aim. This is a goal we work toward, not a claim that every page already meets it: the open
+          items below say where we are not there yet.
         </p>
       </LegalSection>
 
@@ -42,8 +42,11 @@ export default function AccessibilityPage() {
         </p>
       </LegalSection>
 
-      <LegalSection title="3. What we test on every change">
-        <p>Before a change goes live, these automated tests run on it. Automated tests catch many problems, not all of them.</p>
+      <LegalSection title="3. What we test on each change">
+        <p>
+          These automated tests run on each proposed change to the site before it is merged, and once every day.
+          Automated tests catch many problems, not all of them.
+        </p>
         <ul className="list-disc space-y-2 pl-6">
           {ACCESSIBILITY_CHECKS.map((check) => (
             <li key={check.name}>
@@ -58,12 +61,13 @@ export default function AccessibilityPage() {
         <p>These items are open in our records today:</p>
         <ul className="list-disc space-y-2 pl-6">
           {gaps.map((gap) => (
-            <li key={gap.area}>
-              <strong>{gap.area}</strong>: {gap.status}
-            </li>
+            <li key={gap.area}>{gap.words}</li>
           ))}
         </ul>
-        <p>We have not yet tested with people who have disabilities, and our screen reader tests cover only the entry pages above.</p>
+        <p>
+          If something on a page stops you, write to us (section 6) and tell us what you were trying to do. We will
+          look for another way to help you finish it, for example by email.
+        </p>
       </LegalSection>
 
       <LegalSection title="5. Creators' stores">
@@ -79,7 +83,7 @@ export default function AccessibilityPage() {
         <p>
           Write to <a href="mailto:support@marktmorgen.com" className={link}>support@marktmorgen.com</a>. It helps us
           to know the page, what you were trying to do, your device and browser, and any assistive technology you use,
-          such as a screen reader. We read every message and fix what we can.
+          such as a screen reader.
         </p>
       </LegalSection>
 
@@ -92,6 +96,18 @@ export default function AccessibilityPage() {
           <div>
             <dt className="font-semibold">Screen reader</dt>
             <dd>Software that reads what is on the screen aloud, or shows it in braille, for people who cannot see it.</dd>
+          </div>
+          <div>
+            <dt className="font-semibold">NVDA, VoiceOver, JAWS, TalkBack</dt>
+            <dd>Names of screen readers: NVDA (NonVisual Desktop Access) and JAWS (Job Access With Speech) run on Windows, VoiceOver on Apple devices and TalkBack on Android phones.</dd>
+          </div>
+          <div>
+            <dt className="font-semibold">Chromium, Firefox, WebKit</dt>
+            <dd>The engines inside the main web browsers: Chromium in Chrome and Edge, Firefox in Firefox, WebKit in Safari.</dd>
+          </div>
+          <div>
+            <dt className="font-semibold">Forced colors</dt>
+            <dd>A setting, such as Windows high contrast, that makes every page use a few colors the person chose.</dd>
           </div>
           <div>
             <dt className="font-semibold">Overlay</dt>
