@@ -59,6 +59,8 @@ export async function POST(request: NextRequest) {
   }
   if (done.ok) return told(done.ended ? "refunded" : "ending");
   if (done.reason === "busy") return told("busy");
+  // Some of the payments were refunded and some not: never told "we do not know whether it went through".
+  if (done.reason === "partial") return told("partial");
   // A note left behind means a refund may have been made: the daily job decides it and emails the creator.
   if (done.stopLeft) return told("error-stop");
   if (await underway()) return told("unsure");

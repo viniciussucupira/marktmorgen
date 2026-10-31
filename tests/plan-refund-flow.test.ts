@@ -155,6 +155,8 @@ async function main() {
   const cut = await refundAndEndPlan(await half.store(), NOW);
   world.refundsLeft = null;
   is("only the first of two refunds went through: failed, not ended, the stop kept", [cut.ok, half.allRefunds().length, half.sub().status, half.sub().cancel_at_period_end], [false, 1, "active", true]);
+  // Told as what it is: part of the money is on its way (never "we do not know whether it went through").
+  is("and it is answered as part of a refund", !cut.ok && cut.reason, "partial");
   await finishPlanRefunds(Date.now() + 10_000, NOW + 3_600);
   is("the daily job never ends the plan on part of a refund", [half.sub().status, (await half.note()) !== null], ["active", true]);
   // A second request that stops before it reads what is owed (the amount the page showed has changed, or one

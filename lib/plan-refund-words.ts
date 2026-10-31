@@ -141,6 +141,7 @@ export const REFUND_DONE: Record<string, { tone: "success" | "warn"; title: stri
   error: { tone: "warn", title: "Nothing was refunded", body: `We could not reach our payment provider, and your plan was not changed. Try again in a few minutes. If it happens again, email ${SUPPORT_ADDRESS}.` },
   unsure: { tone: "warn", title: "We could not confirm your refund yet", body: `We did not hear back from our payment provider, so we do not know yet whether the refund went through. ${DECIDED_LATER} Please do not ask again before then. Questions: ${SUPPORT_ADDRESS}.` },
   "error-stop": { tone: "warn", title: "We could not confirm your refund yet", body: `We did not hear back from our payment provider, so we do not know yet whether the refund went through. Until it is decided, your plan is set to stop at the end of the period you paid for; if no refund was made, we take that back. ${DECIDED_LATER} Questions: ${SUPPORT_ADDRESS}.` },
+  partial: { tone: "warn", title: "Part of your refund went through", body: `Part of your refund is on its way to the card or account you paid with, and the rest could not be made just now. Your plan is set to stop at the end of the period you paid for, so it does not renew. Email ${SUPPORT_ADDRESS} and we will finish your refund.` },
   none: { tone: "warn", title: "Nothing was refunded", body: "The reason is below." },
   owner: { tone: "warn", title: "Only the store's owner can ask for this refund", body: "Ask the owner of this store to open this page." },
 };
