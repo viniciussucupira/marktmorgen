@@ -744,6 +744,45 @@ async function main(): Promise<void> {
   askAgain();
   clear();
 
+  part("Cached SES authority needs a possible clock and no sending hold");
+  for (const [label, offset, sendingHold] of [
+    ["future minute", 60, 0],
+    ["future five minutes", 300, 0],
+    ["far future", 86_400, 0],
+    ["contradictory ready hold", 0, 600],
+  ] as const) {
+    const seconds = Math.floor(Date.now() / 1000);
+    redis.run(["SET", "nl:ses:state", JSON.stringify({
+      ready: true, why: "", rate: 14, max24: 50_000,
+      at: seconds + offset, hold: sendingHold ? seconds + sendingHold : 0,
+    })]);
+    account = 500;
+    clear();
+    const before = asked;
+    is(`${label}: essential delivery retains its existing fallback`,
+      await sendEmail(letter(`clock-${offset}-${sendingHold}@example.com`)), true);
+    is(`${label}: impossible cached authority never dispatches SES`,
+      [amazon.length, resend.length, asked], [0, 1, before + 1]);
+    const stopped = await sesState();
+    is(`${label}: failure remains unavailable with the existing backoff`,
+      [stopped?.ready, stopped?.why, asked], [false, "unreachable", before + 1]);
+    account = approved({ SendQuota: { Max24HourSend: 1_000, MaxSendRate: 2 } });
+    askAgain();
+    clear();
+    is(`${label}: a new confirmed answer can restore essential SES delivery`,
+      await sendEmail(letter("clock-restored@example.com")), true);
+    is(`${label}: only the newly confirmed capability authorizes sending`,
+      [amazon.length, resend.length, asked, (await sesState())?.max24], [1, 0, before + 2, 1_000]);
+  }
+  const beforeInvalidClock = asked;
+  for (const impossible of [Number.NaN, Number.POSITIVE_INFINITY, -1, Number.MAX_VALUE]) {
+    is("an impossible caller clock cannot authorize or query SES", await sesState(impossible), null);
+  }
+  is("invalid clock does not amplify account queries", asked, beforeInvalidClock);
+  account = approved();
+  askAgain();
+  clear();
+
   part("A batch, one email at a time");
   clear();
   const thirty = Array.from({ length: 30 }, (_, i) => ({ ...letter(`reader${i}@example.com`, "News"), tags: { [STORE_TAG]: "a".repeat(32), [LIST_TAG]: "b".repeat(32) } }));
