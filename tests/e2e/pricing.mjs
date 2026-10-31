@@ -17,7 +17,10 @@ export async function checkPricing({browser,LOCAL,axeSource,is}){
    check((await page.title()).includes("Pricing"),"pricing title "+width);
    check(await page.locator("main header").getByText("Paid plans and paid selling are not open yet.",{exact:false}).isVisible(),"pricing keeps paid selling closed "+width);
    const text=await page.locator("main").innerText();
-   for(const price of ["$69 a month","$449 a month","$999 a month","$690 a year","$4,490 a year","$9,990 a year"])check(text.includes(price),"pricing shows "+price+" "+width);
+   // VS1: the plan cards with the monthly/yearly switch (components/home-parts.tsx) show each
+   // monthly price with "a month" beside it and the annual price as "Or $690 once a year".
+   for(const price of ["$69","$449","$999"])check(await page.locator("[data-plan-prices] [data-pricing-card]").filter({hasText:price+"a month"}).count()+await page.locator("[data-plan-prices] [data-pricing-card]").filter({hasText:price+" a month"}).count()>=1,"pricing shows "+price+" a month "+width);
+   for(const price of ["$690","$4,490","$9,990"])check(text.includes("Or "+price+" once a year"),"pricing shows "+price+" a year "+width);
    check(await page.locator("main a[href='/proof/comparisons']").count()===1,"real comparison destination "+width);
    for(const summary of await page.locator("main summary").all()){
     await summary.focus();await page.keyboard.press("Enter");
