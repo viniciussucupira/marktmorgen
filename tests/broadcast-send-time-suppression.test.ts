@@ -65,7 +65,7 @@ async function main(): Promise<void> {
   const reached = messages.flatMap((m) => m.to).sort();
   is("only the two who still may be written to", reached, ["also@example.com", "stays@example.com"]);
   is("each with the one-click unsubscribe header and a working link", messages.every((m) => /^<https:\/\/[^>]+\/api\/mail\/unsubscribe\?t=[0-9a-f]{40}>$/.test(m.headers?.["List-Unsubscribe"] ?? "") && m.headers?.["List-Unsubscribe-Post"] === "List-Unsubscribe=One-Click"), true);
-  is("the broadcast completes", result?.status, "sent");
+  is("the broadcast completes through SES without Resend fallback", [result?.status, mail.resend.length], ["sent", 0]);
   is("advancing it again sends nothing more", [(await advanceBroadcast(id, storeForHandle, Date.now() + 10_000))?.status, messages.length], ["sent", 2]);
 
   part("Nobody who left is put back by the send");

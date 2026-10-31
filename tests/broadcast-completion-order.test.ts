@@ -58,10 +58,10 @@ async function main() {
       is("campaign remains queued", (await original.call(redis, [["SISMEMBER", "nl:mail:queue", id]]))[0], 1);
       const progress = JSON.parse(String((await original.call(redis, [["GET", key]]))[0]));
       is("last confirmed progress retains processed offset", [progress.status, progress.sent], ["sending", 2]);
-      is("only the original synthetic messages were sent", mail.ses.length, 2);
+      is("only the original synthetic SES messages were sent", [mail.ses.length, mail.resend.length], [2, 0]);
       finalReply = ["OK"]; applyFinal = true;
       is("retry completes from saved offset", (await advance())?.status, "sent");
-      is("retry does not resend the processed batch", mail.ses.length, 2);
+      is("retry does not resend or switch provider", [mail.ses.length, mail.resend.length], [2, 0]);
       is("confirmed completion precedes cleanup", events.slice(-2), ["terminal-save", "snapshot-delete"]);
       is("confirmed completion leaves queue", (await original.call(redis, [["SISMEMBER", "nl:mail:queue", id]]))[0], 0);
     }
@@ -73,7 +73,7 @@ async function main() {
     is("snapshot retained after lost acknowledgement", events, ["terminal-save"]);
     is("applied terminal status stays saved", JSON.parse(String((await original.call(redis, [["GET", key]]))[0])).status, "sent");
     is("next run recognizes saved completion", (await advance())?.status, "sent");
-    is("completed campaign is not sent twice", mail.ses.length, 2);
+    is("completed campaign is not sent twice or through Resend", [mail.ses.length, mail.resend.length], [2, 0]);
     is("next run removes completed campaign from queue", (await original.call(redis, [["SISMEMBER", "nl:mail:queue", id]]))[0], 0);
 
     part("An uncertain provider outcome stops automatic campaign retries");
@@ -93,12 +93,12 @@ async function main() {
       const remainingTtl = Number((await original.call(redis, [["TTL", toKey]]))[0]);
       is(`${loss}: existing recipient retention is neither removed nor extended`,
         remainingTtl <= originalTtl && remainingTtl >= originalTtl - 60, true);
-      is(`${loss}: one possible provider acceptance and no snapshot deletion`, [mail.calls.ses, mail.sesAttempts.length, mail.ses.length, events], [2, 2, 0, ["terminal-save"]]);
+      is(`${loss}: one possible provider acceptance and no snapshot deletion`, [mail.calls.ses, mail.sesAttempts.length, mail.ses.length, mail.resendAttempts.length, events], [2, 2, 0, 0, ["terminal-save"]]);
       is(`${loss}: confirmed terminal state precedes existing queue cleanup`,
         (await original.call(redis, [["SISMEMBER", "nl:mail:queue", id]]))[0], 0);
       await advance();
       await advance();
-      is(`${loss}: later workers do not repeat the possibly accepted batch`, [mail.calls.ses, mail.sesAttempts.length], [2, 2]);
+      is(`${loss}: later workers do not repeat the possibly accepted batch`, [mail.calls.ses, mail.sesAttempts.length, mail.resendAttempts.length], [2, 2, 0]);
     }
 
     part("An applied uncertain-state write with a lost reply stays terminal");
@@ -113,7 +113,7 @@ async function main() {
       (await original.call(redis, [["SISMEMBER", "nl:mail:queue", id]]))[0], 1);
     is("next reader recognizes terminal uncertainty", (await advance())?.status, "failed");
     is("next reader cleans the queue without another provider attempt",
-      [mail.calls.ses, mail.sesAttempts.length, (await original.call(redis, [["SISMEMBER", "nl:mail:queue", id]]))[0]], [2, 2, 0]);
+      [mail.calls.ses, mail.sesAttempts.length, mail.resendAttempts.length, (await original.call(redis, [["SISMEMBER", "nl:mail:queue", id]]))[0]], [2, 2, 0, 0]);
 
     part("Confirmed refusal keeps the existing bounded retry policy");
     await seed();
@@ -124,7 +124,7 @@ async function main() {
         [refused.status, refused.failures, refused.sent], [count === 5 ? "failed" : "sending", count, 0]);
     }
     is("known refusals still allow exactly the existing five tries and accept nobody",
-      [mail.calls.ses, mail.ses.length], [10, 0]);
+      [mail.calls.ses, mail.ses.length, mail.resendAttempts.length], [10, 0, 0]);
   } finally { redis.pipeline = original; mail.restore(); }
   done();
 }

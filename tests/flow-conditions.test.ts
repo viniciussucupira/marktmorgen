@@ -234,6 +234,7 @@ async function main(): Promise<void> {
   is("a buyer who checked both boxes at checkout", [withClicks, Boolean((await row("kai@example.com"))?.clicks)], ["done", true]);
 
   Date.now = realNow;
+  mail.restore();
   done();
 }
 

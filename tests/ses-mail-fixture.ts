@@ -92,7 +92,7 @@ function normalizeSes(raw: unknown): CapturedMail {
   const tags = normalizedTags(payload.EmailTags);
   return {
     provider: "ses",
-    batch: Boolean(tags?.length),
+    batch: false,
     from: text(payload.FromEmailAddress),
     to: stringArray(record(payload.Destination).ToAddresses),
     subject: text(record(simple.Subject).Data),
@@ -198,7 +198,7 @@ export function installSesMailFixture(options: SesMailFixtureOptions = {}) {
       calls.sts += 1;
       return json({ AssumeRoleWithWebIdentityResponse: { AssumeRoleWithWebIdentityResult: {
         Credentials: {
-          AccessKeyId: "ASIAFIXTURE00000001",
+          AccessKeyId: "ASIAFIXTURE000000001",
           SecretAccessKey: "fixture-secret-access-key-not-real-000000",
           SessionToken: "fixture-session-token-not-real",
           Expiration: Math.floor(Date.now() / 1000) + 3_600,
@@ -218,6 +218,14 @@ export function installSesMailFixture(options: SesMailFixtureOptions = {}) {
     if (/^email\.[a-z0-9-]+\.amazonaws\.com$/.test(url.hostname) &&
         url.pathname === "/v2/email/outbound-emails") {
       calls.ses += 1;
+      const headers = new Headers(init?.headers);
+      const authorization = headers.get("authorization") ?? "";
+      const signed = /^AWS4-HMAC-SHA256 Credential=ASIAFIXTURE000000001\/[0-9]{8}\/us-east-1\/ses\/aws4_request,/.test(authorization)
+        && /^[0-9]{8}T[0-9]{6}Z$/.test(headers.get("x-amz-date") ?? "")
+        && headers.get("x-amz-security-token") === "fixture-session-token-not-real";
+      if (init?.method !== "POST" || !signed) {
+        return json({ message: "synthetic request was not signed for SES" }, 403, { "x-amzn-errortype": "AccessDeniedException" });
+      }
       const message = normalizeSes(parseBody(init));
       attempts.push(message); sesAttempts.push(message);
       const outcome = queuedOutcomes.shift() ?? defaultOutcome;
@@ -237,9 +245,12 @@ export function installSesMailFixture(options: SesMailFixtureOptions = {}) {
       const messages = (Array.isArray(parsed) ? parsed : [parsed]).map((item) => normalizeResend(item, batch));
       attempts.push(...messages); resendAttempts.push(...messages);
       const controlled = await options.onResend?.(messages, input, init);
-      const response = controlled ?? json(batch
-        ? { data: messages.map((_, index) => ({ id: `resend_fixture_${index + 1}` })) }
-        : { id: "resend_fixture_1" });
+      const response = controlled
+        ?? (options.fallback
+          ? await options.fallback(input, init)
+          : json(batch
+            ? { data: messages.map((_, index) => ({ id: `resend_fixture_${index + 1}` })) }
+            : { id: "resend_fixture_1" }));
       if (response.ok) {
         sent.push(...messages); resend.push(...messages);
       }

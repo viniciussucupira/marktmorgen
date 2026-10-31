@@ -208,7 +208,7 @@ async function main(): Promise<void> {
   await upsertContact(list, "lia@example.com", { agreed: true, explicit: true, source: "free" }, ROOM);
   await enroll(store, "lia@example.com", { joined: false, tag: "once" });
   const lia = personOf("lia@example.com");
-  mail.setSesOutcome("server-error");
+  mail.setSesOutcome("lost");
   await run();
   is("a lost answer holds the run", (await readRun(flowId, lia))?.run.status, "held");
   const answers: string[] = [];
@@ -221,6 +221,7 @@ async function main(): Promise<void> {
   is("the run says how often it was tried again", (await readRun(flowId, lia))?.run.retries, MAX_RETRIES_BY_YOU);
   is("refused, it stays held for the creator's other choices", [(await readRun(flowId, lia))?.run.status, await resolveHeldRun(store, flowId, lia, "end")], ["held", "ok"]);
 
+  mail.restore();
   done();
 }
 

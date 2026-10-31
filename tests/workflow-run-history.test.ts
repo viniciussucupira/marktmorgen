@@ -112,7 +112,7 @@ async function main(): Promise<void> {
   await upsertContact(list, "jo@example.com", { agreed: true, explicit: true, source: "free" }, ROOM);
   await enroll(store, "jo@example.com", { joined: false, tag: "wait" });
   const jo = personOf("jo@example.com");
-  mail.setSesOutcome("server-error");
+  mail.setSesOutcome("lost");
   await run();
   is("a lost answer holds the run", (await readRun(flowId, jo))?.run.status, "held");
   is(`trying it again is taken ${MAX_RETRIES_BY_YOU} time${MAX_RETRIES_BY_YOU === 1 ? "" : "s"}, then refused`, [await resolveHeldRun(store, flowId, jo, "retry"), (await run(), await resolveHeldRun(store, flowId, jo, "retry"))], ["ok", "retry_limit"]);
@@ -127,6 +127,7 @@ async function main(): Promise<void> {
   is("the history says its earliest events were let go", counted.trimmed, true);
   is("its last event is the creator's choice, and nothing it kept counts as confirmed", [kept.at(-1)?.state, counted.counts.confirmed], ["resolved", 0]);
 
+  mail.restore();
   done();
 }
 

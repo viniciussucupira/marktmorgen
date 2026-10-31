@@ -123,6 +123,7 @@ async function main(): Promise<void> {
   await run();
   is("somebody who never agreed to hear from the creator is not written to", to("You finished it"), ["ana@example.com"]);
 
+  mail.restore();
   done();
 }
 

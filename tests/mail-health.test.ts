@@ -35,8 +35,16 @@ const mail = installSesMailFixture({
     ? new Response(JSON.stringify({ name: "validation_error" }), { status: 422 })
     : undefined,
 });
-const batches = () => mail.sent.filter((message) => message.batch).map((message) => [message]);
-const single = () => mail.sent.filter((message) => !message.batch);
+const listMessages = () => mail.sent.filter((message) =>
+  message.provider === "ses"
+    ? message.tags?.some((tag) => tag.name === STORE_TAG || tag.name === LIST_TAG)
+    : message.batch
+).map((message) => [message]);
+const serviceMessages = () => mail.sent.filter((message) =>
+  message.provider === "ses"
+    ? !message.tags?.some((tag) => tag.name === STORE_TAG || tag.name === LIST_TAG)
+    : !message.batch
+);
 
 let announced = 0;
 /** What the sender posts when an email bounced or was marked as spam, signed as it signs them. */
@@ -88,7 +96,7 @@ async function main(): Promise<void> {
 
   const first = await sendTo(store, ["reader0@example.com", "reader1@example.com"], "Hello", "It is ready.", "t:1");
   is("it went", [first.stopped, first.done.length], [null, 2]);
-  is("carrying the store and the list, as tags the reader never sees", batches()[0][0].tags, [{ name: STORE_TAG, value: id }, { name: LIST_TAG, value: list }]);
+  is("carrying the store and the list, as tags the reader never sees", listMessages()[0][0].tags, [{ name: STORE_TAG, value: id }, { name: LIST_TAG, value: list }]);
   is("and what was sent is counted for the store", (await listHealth(id)).sent, 2);
 
 
@@ -105,7 +113,13 @@ async function main(): Promise<void> {
   }], "t:plain", { by: "company" }, "resend");
   refuseTags = false;
   is("the Resend-specific retry goes all the same", plain, "sent");
-  is("once, and without tags", [batches().length, batches()[0][0].tags === undefined], [1, true]);
+  is("the tagged request is refused and one untagged retry is accepted", [
+    mail.resendAttempts.length,
+    mail.resendAttempts[0]?.tags,
+    mail.resendAttempts[1]?.tags,
+    mail.sent.length,
+    listMessages().length,
+  ], [2, [{ name: STORE_TAG, value: id }, { name: LIST_TAG, value: list }], undefined, 1, 1]);
 
   part("Only the sender is believed");
   const bounced = (to: string, extra: Record<string, unknown> = {}) => ({ email_id: "e1", to: [to], subject: "Hello", bounce: { type: "Permanent", subType: "General", message: "no such user" }, tags: { [STORE_TAG]: id, [LIST_TAG]: list }, ...extra });
@@ -162,14 +176,14 @@ async function main(): Promise<void> {
   const usedBefore = await usedThisMonth(list);
   mail.clearCaptured();
   const held = await sendTo(store, ["reader30@example.com", "reader31@example.com"], "Hello", "It is ready.", "t:3");
-  is("a list email is held, whole", [held.stopped, held.done, held.rest.length, batches().length], ["paused", [], 2, 0]);
+  is("a list email is held, whole", [held.stopped, held.done, held.rest.length, listMessages().length], ["paused", [], 2, 0]);
   is("and nothing is taken from the store's month for it", await usedThisMonth(list), usedBefore);
   const another = await heardFromSender({ kind: "bounced", permanent: true, to: "reader29@example.com", store: id, list });
   is("a bounce that arrives meanwhile is counted, and the pause keeps its own end", [another, (await pausedFor(id))?.until === pause?.until], ["counted", true]);
 
   part("What a store cannot run without still goes");
   mail.clearCaptured();
-  is("a login link is sent all the same", [await sendEmail({ meter: { by: "company" }, from: "Marktmorgen <hello@marktmorgen.com>", to: "buyer@example.com", subject: "Your login link", text: "Here." }), single().length], [true, 1]);
+  is("a login link is sent all the same", [await sendEmail({ meter: { by: "company" }, from: "Marktmorgen <hello@marktmorgen.com>", to: "buyer@example.com", subject: "Your login link", text: "Here." }), serviceMessages().length], [true, 1]);
 
   part("A broadcast waits, and goes on by itself");
   const created = await createBroadcast(store, { subject: "The plan is here", body: "It is ready.", productId: "", notProductId: "", sendAt: undefined });
@@ -178,14 +192,14 @@ async function main(): Promise<void> {
   mail.clearCaptured();
   let b = (await advanceBroadcast(created.broadcast.id, storeForHandle, Date.now() + 30_000))!;
   is("it waits, and says until when", [b.status, b.note.startsWith(`Paused until ${pauseEnds(pause!)}`)], ["waiting", true]);
-  is("nobody was written to, and nobody was dropped", [b.sent, b.total, batches().length], [0, total, 0]);
+  is("nobody was written to, and nobody was dropped", [b.sent, b.total, listMessages().length], [0, total, 0]);
   is("the bad addresses are not among those it will go to", total, (await listCounts(list)).mailable);
   // The week passes.
   advance((PAUSE_DAYS * 86_400 + 60) * 1000);
   is("after seven days the pause is over", await pausedFor(id), null);
   b = (await advanceBroadcast(created.broadcast.id, storeForHandle, Date.now() + 30_000))!;
   is("and it finishes without anyone pressing anything", [b.status, b.sent, b.note], ["sent", total, ""]);
-  const got = new Set(batches().flat().map((m) => m.to[0]));
+  const got = new Set(listMessages().flat().map((m) => m.to[0]));
   is("to everyone still on the list, once", [got.size, got.has("reader28@example.com"), got.has("reader30@example.com")], [total, false, true]);
 
   part("Too many spam reports do the same");
@@ -242,12 +256,12 @@ async function main(): Promise<void> {
   let n = (await advanceBroadcast(news.broadcast.id, storeForHandle, Date.now() + 30_000))!;
   is("the first hundred go, and the rest wait with the reason", [n.status, n.sent, n.total, n.note === PORTION_NOTE], ["waiting", 100, 450, true]);
   n = (await advanceBroadcast(news.broadcast.id, storeForHandle, Date.now() + 30_000))!;
-  is("pressing on before the quarter hour sends nobody else", [n.sent, batches().flat().length], [100, 100]);
+  is("pressing on before the quarter hour sends nobody else", [n.sent, listMessages().flat().length], [100, 100]);
   // Thirty of that first hundred turn out to be dead: 30%, over both the floor and the share.
-  const firstHundred = batches().flat().map((m) => m.to[0]);
+  const firstHundred = listMessages().flat().map((m) => m.to[0]);
   const said: string[] = [];
   for (const to of firstHundred.slice(0, 30)) said.push(await heardFromSender({ kind: "bounced", permanent: true, to, store: healthId(orchard), list: orchard.listId as string }));
-  is("the store is paused at the twenty-fifth, with a hundred written to and not four hundred and fifty", [said.indexOf("paused"), (await pausedFor(healthId(orchard)))?.count, batches().flat().length], [24, 25, 100]);
+  is("the store is paused at the twenty-fifth, with a hundred written to and not four hundred and fifty", [said.indexOf("paused"), (await pausedFor(healthId(orchard)))?.count, listMessages().flat().length], [24, 25, 100]);
   is("what comes in late from the same emails is not held against it when its week is over", (await listHealth(healthId(orchard), Date.now() + 86_400_000)).bounced, 0);
   ahead += quarter;
   n = (await advanceBroadcast(news.broadcast.id, storeForHandle, Date.now() + 30_000))!;
@@ -277,7 +291,7 @@ async function main(): Promise<void> {
     steps.push(h.sent);
   }
   is("100, then 200 more, then the rest: nobody pressed anything", [steps, h.status, h.note], [[100, 300, 450], "sent", ""]);
-  is("to everyone, once", new Set(batches().flat().map((m) => m.to[0])).size, 450);
+  is("to everyone, once", new Set(listMessages().flat().map((m) => m.to[0])).size, 450);
 
   part("Unconfirmed health-pause evidence cannot admit list email");
   const originalPipeline = redis.pipeline;
@@ -323,7 +337,7 @@ async function main(): Promise<void> {
       is(`${name}: no extra read, reservation, ramp change or provider work`,
         commandsSeen, [["GET", pauseKey], ["GET", pauseKey]]);
     }
-    is("unknown health evidence sent no list batch", batches().length, 0);
+    is("unknown health evidence sent no list batch", listMessages().length, 0);
     is("health evidence getters were never invoked", pauseGetterCalls, 0);
     for (const [name, raw, expected] of [
       ["confirmed absence", null, null],
@@ -338,7 +352,7 @@ async function main(): Promise<void> {
     is("the existing display wrapper keeps its nullable contract", await pausedFor(healthId(meadow)), null);
     mail.clearCaptured();
     is("an essential login link is still available while list health is unconfirmed",
-      [await sendEmail({ meter: { by: "company" }, from: "Marktmorgen <hello@marktmorgen.com>", to: "buyer@example.com", subject: "Your login link", text: "Hello." }), single().length], [true, 1]);
+      [await sendEmail({ meter: { by: "company" }, from: "Marktmorgen <hello@marktmorgen.com>", to: "buyer@example.com", subject: "Your login link", text: "Hello." }), serviceMessages().length], [true, 1]);
   } finally {
     redis.pipeline = originalPipeline;
   }
@@ -417,7 +431,7 @@ async function main(): Promise<void> {
       const applied = JSON.parse(String((await rampPipeline.call(redis, [["GET", checkedRampKey]]))[0]));
       is(`${name}: applied uncertain portion remains taken`, applied.left, RAMP_FIRST - 1);
     }
-    is("unconfirmed portion checkpoints sent no provider batch", batches().length, 0);
+    is("unconfirmed portion checkpoints sent no provider batch", listMessages().length, 0);
     is("no computed read or write acknowledgement was invoked", rampGetterCalls, 0);
 
     redis.pipeline = async commands => commands.length === 1 && commands[0][0] === "GET" && commands[0][1] === checkedRampKey ? [null] : rampPipeline.call(redis, commands);
@@ -429,7 +443,7 @@ async function main(): Promise<void> {
     is("existing 180-day portion retention is unchanged", kept <= 180 * 86_400 && kept >= 180 * 86_400 - 60, true);
     mail.clearCaptured();
     is("essential email still uses its existing path",
-      [await sendEmail({ meter: { by: "company" }, from: "Marktmorgen <hello@marktmorgen.com>", to: "buyer@example.com", subject: "Your login link", text: "Hello." }), single().length], [true, 1]);
+      [await sendEmail({ meter: { by: "company" }, from: "Marktmorgen <hello@marktmorgen.com>", to: "buyer@example.com", subject: "Your login link", text: "Hello." }), serviceMessages().length], [true, 1]);
   } finally {
     redis.pipeline = rampPipeline;
   }

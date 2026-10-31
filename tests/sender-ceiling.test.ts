@@ -112,7 +112,7 @@ async function main(): Promise<void> {
   await mail.setReady(true);
   b = (await advanceBroadcast(created.broadcast.id, storeForHandle, Date.now() + 30_000))!;
   is("with SES capacity confirmed, it finishes without anyone pressing anything", [b.status, b.sent, b.note], ["sent", 30, ""]);
-  is("to everyone through SES once, never through the Resend batch", [new Set(mail.ses.flatMap((m) => m.to)).size, batches.length], [30, 0]);
+  is("to everyone through SES once, never through Resend", [mail.ses.length, new Set(mail.ses.flatMap((m) => m.to)).size, mail.resend.length, batches.length], [30, 30, 0, 0]);
   mail.restore();
 
 

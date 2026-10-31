@@ -52,7 +52,7 @@ async function main() {
       const result = await advance();
       is("campaign waits for a complete batch", result?.status, "waiting");
       is("recipient offset does not advance", result?.sent, 0);
-      is("no provider messages for an invalid batch", messages.length, 0);
+      is("no provider messages for an invalid batch", mail.attempts.length, 0);
       is("campaign remains queued for retry", (await original.call(redis, [["SISMEMBER", "nl:mail:queue", id]]))[0], 1);
       const saved = JSON.parse(String((await original.call(redis, [["GET", key]]))[0]));
       is("waiting state and unchanged offset are persisted", [saved.status, saved.sent, Boolean(saved.note)], ["waiting", 0, true]);
@@ -62,13 +62,13 @@ async function main() {
     const restored = await advance();
     is("restored complete batch finishes", restored?.status, "sent");
     is("both recipients are processed", restored?.sent, 2);
-    is("each expected address receives one synthetic message", messages.flatMap(m => m.to).sort(), emails.slice(0, 2));
+    is("each expected address receives one SES message and no Resend fallback", [messages.flatMap(m => m.to).sort(), mail.resend.length], [emails.slice(0, 2), 0]);
     await seed({ sent: 1, total: 3 }, emails); reply = [[emails[1]]];
     is("partial batch preserves earlier progress", (await advance())?.sent, 1);
     is("partial batch sends nothing more", messages.length, 0);
     reply = normal;
     is("resumed campaign reaches its original total", (await advance())?.sent, 3);
-    is("resume does not repeat the earlier offset", messages.flatMap(m => m.to).sort(), emails.slice(1));
+    is("resume uses SES without repeating the earlier offset or switching provider", [messages.flatMap(m => m.to).sort(), mail.resend.length], [emails.slice(1), 0]);
     part("A batch cannot cross a subject-test boundary");
     await seed({ total: 3, test: { subjectB: "Other", share: 20, hours: 4, by: "visits", a: 1, b: 1, endsAt: 0, winner: "", visits: null, sales: null, why: "", skipped: false } }, emails);
     reply = [[emails[0], emails[1]]];

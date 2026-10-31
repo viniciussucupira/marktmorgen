@@ -175,7 +175,7 @@ async function main(): Promise<void> {
   is("only somebody on the list is started", (await listRuns(lostId, 10)).length, 0);
   await upsertContact(list, "cleo@example.com", { agreed: true, explicit: true, source: "free" }, ROOM);
   await enroll(store, "cleo@example.com", { joined: false, tag: "lost" });
-  mail.setSesOutcome("server-error");
+  mail.setSesOutcome("lost");
   await run();
   mail.setSesOutcome("ok");
   is("the provider got it once, but said nothing back", to("Maybe sent"), ["cleo@example.com"]);
@@ -275,6 +275,7 @@ async function main(): Promise<void> {
   is("deleting the store erases every workflow, run, start and hold", live().filter((k) => k.startsWith("nl:wf:run:") || k.startsWith("nl:wf:log:") || k.startsWith("nl:wf:runs:") || k.startsWith("nl:wf:held:") || k.startsWith("nl:mail:enr:") || k === `nl:mail:flows:${list}`), []);
   is("and no queued step of the store is left", ((await redisPipeline([["ZRANGEBYSCORE", "nl:mail:flowq", 0, "+inf"]]))[0] as string[]).filter((m) => m.startsWith(`${list}|`)), []);
 
+  mail.restore();
   done();
 }
 

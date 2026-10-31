@@ -161,6 +161,7 @@ async function main(): Promise<void> {
   const after = parseContact(redis.run(["HGET", key, "ana@example.com"]));
   is("the unsubscribe stays, and the label is written over the contact as it now is", [result.changed, after?.unsub, after?.tags.includes("late")], [["ana@example.com"], true, true]);
 
+  mail.restore();
   done();
 }
 

@@ -115,9 +115,12 @@ async function main(): Promise<void> {
 
   part("A sign-up asked from a form remembers it");
   mail.clearCaptured();
+  mail.disableSes();
   await askToJoin({ store, email: "cleo@example.com", ip: "10.0.0.9", origin: "https://marktmorgen.com", fromForm: true, formId: "applyform1" });
-  const token = /join\?token=([0-9a-f]{48})/.exec(mail.ses[0]?.text ?? "")?.[1] ?? "";
-  is("the confirmation link knows the form", (await readJoinToken(token))?.f, "applyform1");
+  const token = /join\?token=([0-9a-f]{48})/.exec(mail.resend[0]?.text ?? "")?.[1] ?? "";
+  is("the confirmation link uses the service route and knows the form", [mail.ses.length, mail.resend.length, (await readJoinToken(token))?.f], [0, 1, "applyform1"]);
+  mail.configure();
+  await mail.setReady(true, { max24: 50_000, rate: 100 });
 
   part("A workflow for one quiz result (added 17 October 2026)");
   await writeForm(statsId, parseForm({
@@ -138,11 +141,13 @@ async function main(): Promise<void> {
   for (let i = 0; i < 3; i += 1) await run();
   is("only the person who got that result starts it", mail.ses.filter((message) => message.subject === "You are ready").flatMap((message) => message.to), ["eve@example.com"]);
   mail.clearCaptured();
+  mail.disableSes();
   await askToJoin({ store, email: "fay@example.com", ip: "10.0.0.10", origin: "https://marktmorgen.com", fromForm: true, formId: "scorequiz1", formOutcome: "tierhi" });
-  const quizToken = /join\?token=([0-9a-f]{48})/.exec(mail.ses[0]?.text ?? "")?.[1] ?? "";
+  const quizToken = /join\?token=([0-9a-f]{48})/.exec(mail.resend[0]?.text ?? "")?.[1] ?? "";
   const grant = await readJoinToken(quizToken);
-  is("a sign-up asked from a quiz remembers the form and the result, for when they confirm", [grant?.f, grant?.r], ["scorequiz1", "tierhi"]);
+  is("a sign-up asked from a quiz keeps the service route, form and result", [mail.ses.length, mail.resend.length, grant?.f, grant?.r], [0, 1, "scorequiz1", "tierhi"]);
 
+  mail.restore();
   done();
 }
 
