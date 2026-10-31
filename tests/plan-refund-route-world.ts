@@ -11,3 +11,7 @@ export function studioPath(store: Pick<Store, "sid">, query = "", page = ""): st
   const parts = [store.sid ? `store=${store.sid}` : "", query].filter(Boolean);
   return `${page ? `/studio/${page}` : "/studio"}${parts.length ? `?${parts.join("&")}` : ""}`;
 }
+/** The review page's view of the same creator (tests/plan-refund-page.test.ts). */
+export async function studioView() {
+  return { ok: true as const, view: { store: who.store!, role: who.role, stores: [who.store!], owned: [who.store!] }, fellBack: false };
+}
