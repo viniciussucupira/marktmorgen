@@ -40,6 +40,28 @@ test("ceilings round each actual exchange entry up separately, with exact safe i
   assert.equal(calculate(bases(1, [0]))?.iofCents, 0);
 });
 
+test("annual exchange evidence is bounded before entry reads and is never truncated", () => {
+  // Every permitted operation contributes; the last entry is not omitted.
+  assert.equal(calculate(bases(0, Array(10_000).fill(1)))?.iofCents, 10_000);
+  assert.equal(calculate(bases(0, Array(10_001).fill(1))), null);
+
+  let entryReads = 0, enumerations = 0;
+  const huge = new Proxy(new Array(4_294_967_295), {
+    getOwnPropertyDescriptor(target, key) {
+      if (key === "length") return Reflect.getOwnPropertyDescriptor(target, key);
+      entryReads += 1;
+      throw new Error("oversized evidence must be refused before reading any entry");
+    },
+    ownKeys() {
+      enumerations += 1;
+      throw new Error("oversized evidence must not be enumerated");
+    },
+  });
+  assert.equal(calculate({ ...bases(0, []), incomingExchangeCents: huge }), null);
+  assert.equal(entryReads, 0);
+  assert.equal(enumerations, 0);
+});
+
 test("unknown profit, exchange coverage or currency refuses instead of becoming zero", () => {
   for (const value of [null, undefined, {}, [], { ...bases(1, []), currency: "USD" },
     { ...bases(1, []), currency: null }, { annualProfitCents: 1, incomingExchangeCents: [] },
