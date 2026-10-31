@@ -1,4 +1,6 @@
 import { SalesLevers } from "@/components/sales-levers";
+import { PlanDisputeNotice } from "@/components/plan-dispute-notice";
+import { planDisputed } from "@/lib/plan-dispute-rules";
 import { RenewalUnpaidNotice } from "@/components/renewal-unpaid-notice";
 import { funnelLaunchChecklist } from "@/lib/funnel-launch-checklist";
 import { activationTiming } from "@/lib/store-activation";
@@ -1145,6 +1147,7 @@ export default async function StudioPage({
         ) : null}
 
         {current && unpaidSince > 0 ? <RenewalUnpaidNotice payUrl={renewalPage} canPay={may("billing")} /> : null}
+        {current && current.subscriptionActive && planDisputed(current) ? <PlanDisputeNotice /> : null}
 
         {notice ? (
           <div className="notice notice-warn mt-6">

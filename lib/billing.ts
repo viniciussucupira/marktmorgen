@@ -42,7 +42,7 @@ import {
 } from "@/lib/store";
 import { feeWords } from "@/lib/fee-words";
 import { type BillingPeriod, isPeriod } from "@/lib/allowance-window";
-import { renewalUnpaid } from "@/lib/plan-standing";
+import { costsPaused } from "@/lib/plan-standing";
 
 /** Internal billing calls must keep their route-issued cash grant bound to the
  * published offer. This does not create or release a funding reservation. */
@@ -1740,5 +1740,6 @@ export function isPaidUp(store: Store): boolean {
   // A renewal Stripe could not collect is not paid up (232 [CA1] unit 4):
   // the checkout, sign-ups, free copies and emails that need a paid plan
   // stop until it is paid, while the plan itself goes on and nothing closes.
-  return store.subscriptionActive && !renewalUnpaid(store);
+  // A plan payment the creator disputed does the same (unit 5, lib/plan-dispute-rules.ts).
+  return store.subscriptionActive && !costsPaused(store);
 }

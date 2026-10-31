@@ -5,6 +5,7 @@ import { CENTS_PER_MINUTE, GIVE_UP_HOURS, MIN_CENTS, dollars } from "@/lib/auto-
 import type { Metadata } from "next";
 import Link from "next/link";
 import { LegalPage, LegalSection } from "@/components/legal-page";
+import { DISPUTE_KEPT_WORDS, DISPUTE_OUTCOME_WORDS, DISPUTE_PAUSED_WORDS } from "@/lib/plan-dispute-rules";
 import { RENEWAL_KEPT_WORDS, RENEWAL_PAUSED_WORDS, RENEWAL_RESUME_WORDS } from "@/lib/renewal-unpaid-words";
 import { isDomainsConfigured } from "@/lib/domains";
 import { formatMoney } from "@/lib/money";
@@ -771,6 +772,16 @@ export default function TermsPage() {
           that pays the open invoice. {RENEWAL_RESUME_WORDS} We see it at our
           next daily check, or at once when you open your studio. If Stripe
           ends the plan after its last try, section 8 applies.
+        </p>
+        <p id="plan-disputed" className="scroll-mt-24">
+          <strong className="text-black">If you dispute a payment for your plan.</strong>{" "}
+          When you dispute with your bank a payment you made to us for your
+          plan, we learn it from Stripe at our daily check. {DISPUTE_PAUSED_WORDS}{" "}
+          {DISPUTE_KEPT_WORDS} Your studio says so at the top.{" "}
+          {DISPUTE_OUTCOME_WORDS} We see the bank&apos;s decision at our daily
+          check. A dispute of a payment for the Store assistant ends the
+          assistant as soon as we see it, and it is not sold to that store
+          again.
         </p>
       </LegalSection>
 

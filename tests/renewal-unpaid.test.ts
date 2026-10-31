@@ -25,7 +25,7 @@ import { isPaidUp, renewalInvoicePage, stateOf } from "@/lib/billing";
 import { recordState, recordUnpaidRenewal } from "@/lib/billing-sync";
 import { failedPlan, failedPlanEmail, sendFailedPlanNotices } from "@/lib/billing-reminders";
 import { claimHandle, ensureStatsId, setSubscription, storeForEmail, storeRef } from "@/lib/store";
-import { SETUP_VIDEO_SECONDS, costStandingOf, renewalUnpaid, standingOf, videoLimitFor } from "@/lib/plan-standing";
+import { SETUP_VIDEO_SECONDS, costPauseCode, costStandingOf, renewalUnpaid, standingOf, videoLimitFor } from "@/lib/plan-standing";
 import { paidVideoSeconds } from "@/lib/video-admission-rules";
 import { canUse } from "@/lib/plan";
 import { uploadScopeFor } from "@/lib/upload-budget";
@@ -172,17 +172,19 @@ async function main() {
   {
     for (const file of ["app/api/store/file/route.ts", "app/api/store/vault/route.ts", "app/api/store/stream/route.ts"]) {
       const source = readFileSync(file, "utf8");
-      const check = source.indexOf("renewalUnpaid(store)");
+      // costPauseCode answers renewal_unpaid for an unpaid renewal (unit 5 shares the door; checked below).
+      const check = source.indexOf("costPauseCode(store)");
       is(`${file} checks before reserving`, check > 0 && check < source.indexOf("reserveStoreUpload(store"), true);
-      is(`${file} answers renewal_unpaid`, source.slice(check, check + 160).includes("renewal_unpaid"), true);
+      is(`${file} answers the code it is given`, /const paused = costPauseCode\(store\); if \(paused\) (throw new Error\(paused\)|return fail\(paused, 409\)|return Response\.json\(\{ ok: false, error: paused \}, \{ status: 409 \}\))/.test(source), true);
     }
     for (const [file, before] of [["app/api/store/image/upload/route.ts", "issueSignedToken("], ["app/api/store/mail/picture/route.ts", "keepMailPicture("]] as const) {
       const source = readFileSync(file, "utf8");
-      const check = source.indexOf("if (renewalUnpaid(store))");
-      is(`${file} refuses renewal_unpaid before storing`, check > 0 && check < source.indexOf(before) && source.slice(check, check + 120).includes("renewal_unpaid"), true);
+      const check = source.indexOf("const paused = costPauseCode(store); if (paused)");
+      is(`${file} refuses renewal_unpaid before storing`, check > 0 && check < source.indexOf(before), true);
     }
+    is("costPauseCode says renewal_unpaid for it", costPauseCode({ subscriptionActive: true, renewalUnpaidSince: 5 }), "renewal_unpaid");
     const usage = readFileSync("app/api/cron/usage/route.ts", "utf8");
-    is("the usage job does not send a 'video hours used' email for an unpaid renewal", usage.indexOf("if (renewalUnpaid(store)) continue;") > 0 && usage.indexOf("if (renewalUnpaid(store)) continue;") < usage.indexOf("videoUsageNotice({"), true);
+    is("the usage job does not send a 'video hours used' email for an unpaid renewal", usage.indexOf("if (costsPaused(store)) continue;") > 0 && usage.indexOf("if (costsPaused(store)) continue;") < usage.indexOf("videoUsageNotice({"), true);
         is("the studio has the sentence", /renewal payment did not go through/.test(STUDIO_MESSAGES.renewal_unpaid ?? ""), true);
   }
 

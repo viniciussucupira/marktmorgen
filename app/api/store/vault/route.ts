@@ -6,7 +6,7 @@ import { readKind } from "@/lib/catalog";
 import { ITEM_ID_PATTERN, findLesson, readCourses } from "@/lib/course";
 import { rememberFolderOwner } from "@/lib/delivery";
 import { ALLOWED_CONTENT_TYPES, MAX_FILE_BYTES, safeFileName } from "@/lib/product-file";
-import { renewalUnpaid, storageRefusal, standingOf } from "@/lib/plan-standing";
+import { costPauseCode, storageRefusal, standingOf } from "@/lib/plan-standing";
 import { storageBrakeFor } from "@/lib/storage-quota";
 import { ownsDeliveryId, storeFolder, storeForEmail } from "@/lib/store";
 import { guardStoreWrite, text } from "@/lib/store-request";
@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
       quotaRefusal = storageRefusal(standing);
       if (body.multipart !== true) return fail("upload_refresh", 409);
       // Nothing new is stored while a renewal is unpaid (232 [CA1] unit 4).
-      if (renewalUnpaid(store)) return fail("renewal_unpaid", 409);
+      { const paused = costPauseCode(store); if (paused) return fail(paused, 409); }
       if (!(await reserveStoreUpload(store, bytes, "r2"))) return fail("upload_budget_unavailable", 503);
       await rememberFolderOwner(folder, ref);
 
