@@ -297,7 +297,7 @@ function parseState(raw: unknown): SesState | null {
         typeof v.max24 !== "number" || !Number.isSafeInteger(v.max24) || v.max24 < -1 ||
         typeof v.at !== "number" || !Number.isSafeInteger(v.at) || v.at < 0 ||
         typeof v.hold !== "number" || !Number.isSafeInteger(v.hold) || v.hold < 0) return null;
-    if (v.ready && (v.why !== "" || accountRate(v.rate) === null || accountMax(v.max24) === null)) return null;
+    if (v.ready && (v.why !== "" || v.hold !== 0 || accountRate(v.rate) === null || accountMax(v.max24) === null)) return null;
     return { ready: v.ready, why: v.why, rate: v.rate, max24: v.max24, at: v.at, hold: v.hold };
   } catch {
     return null;
@@ -346,6 +346,7 @@ export async function sesState(now = Date.now()): Promise<SesState | null> {
   const config = sesConfig();
   if (!config || !isRedisConfigured()) return null;
   const seconds = Math.floor(now / 1000);
+  if (!Number.isFinite(now) || now < 0 || !Number.isSafeInteger(seconds)) return null;
   let known: SesState | null = null;
   try {
     const reply: unknown = await redisPipeline([["GET", STATE_KEY]]);
@@ -358,7 +359,8 @@ export async function sesState(now = Date.now()): Promise<SesState | null> {
   } catch {
     return null;
   }
-  if (known && (seconds < known.hold || seconds - known.at < BELIEVED_SECONDS)) return known;
+  // A future timestamp is not evidence that the account was checked recently.
+  if (known && known.at <= seconds && (seconds < known.hold || seconds - known.at < BELIEVED_SECONDS)) return known;
   const asked = await askAccount(config, seconds);
   if (asked) {
     await saveState(asked).catch(() => {});
