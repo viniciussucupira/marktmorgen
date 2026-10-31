@@ -136,6 +136,11 @@ function negatedBefore(text: string, index: number): boolean {
   const clause = before.split(/[.!?;:,\n]/).pop() ?? "";
   return NEGATION.test(clause.trim().split(/\s+/).slice(-6).join(" "));
 }
+/** "my", "our" or "me" in the clause just before the words (its last six words): the creator speaking of their own page. */
+function ownedNearby(text: string, index: number): boolean {
+  const clause = (text.slice(Math.max(0, index - 120), index).replace(/\u2019/g, "'").split(/[.!?;:,\n]/).pop() ?? "").trim();
+  return /\b(my|our|me)\b/i.test(clause.split(/\s+/).slice(-6).join(" "));
+}
 function negated(text: string, index: number, length: number): boolean {
   return negatedBefore(text, index) || NEGATED_AFTER.test(text.slice(index + length, index + length + 60).replace(/\u2019/g, "'"));
 }
@@ -183,6 +188,8 @@ export function checkCreatorTerms(input: TermsCheckInput): TermsWarning[] {
     const asAddress = /^https?:\/\//i.test(m[0]) || /^www\./i.test(m[1]) || text[at + m[0].length] === "/";
     if (SHORT_ENDINGS.has(ending) && !asAddress) continue;
     if (ownsHost(m[1], own) || ownsHost(m[1], new Set(TOOL_HOSTS))) continue;
+    // The creator's own page elsewhere ("my patreon.com/jane", "Support me at ko-fi.com/jane"): not copied terms.
+    if (ownedNearby(text, at)) continue;
     add("other_company", m.index ?? 0, m[0].length,
       `This names ${bareHost(m[1])}, which is not your site. Terms copied from another site may describe rules that do not apply to this store.`,
       "Remove the other site, or replace it with your store's own address.");
@@ -191,7 +198,7 @@ export function checkCreatorTerms(input: TermsCheckInput): TermsWarning[] {
     const m = pattern.exec(text);
     if (!m) continue;
     // The creator's own page there, or a line saying the store is not that company.
-    if (/\b(my|our)\s+$/i.test(text.slice(Math.max(0, m.index - 12), m.index)) || negatedBefore(text, m.index)) continue;
+    if (ownedNearby(text, m.index) || negatedBefore(text, m.index)) continue;
     add("other_company", m.index, m[0].length,
       `This names ${m[0]}, another company. Terms written for another platform may describe rules that do not apply here.`,
       "Remove the other company's name, and check that each rule describes how this store works.");
@@ -265,19 +272,38 @@ function formatUsd(cents: number): string {
   return `$${dollars.toLocaleString("en-US")}${rest ? `.${String(rest).padStart(2, "0")}` : ""}`;
 }
 
-/** The sentence holding `at`: back to the previous ". ! ?" or line break, on to the next one (included). */
+/**
+ * Whether the character at `i` ends a sentence: "!", "?", a line break, or a "." followed by a space, the end of the
+ * text, or a closing quote or bracket and then a space. A dot inside an address ("othershop.com"), an amount
+ * ("$99.00") or a version ("2.0") does not.
+ */
+function endsSentence(text: string, i: number): boolean {
+  const c = text[i];
+  if (c === "!" || c === "?" || c === "\n") return true;
+  if (c !== ".") return false;
+  const next = text[i + 1];
+  if (next === undefined || /\s/.test(next)) return true;
+  return /["'\u201d\u2019)\]]/.test(next) && (i + 2 >= text.length || /\s/.test(text[i + 2]));
+}
+
+/** The sentence holding `at`: back to the end of the previous one, on to its own end (included). */
 function sentenceAt(text: string, at: number): [number, number] {
   let start = at;
-  while (start > 0 && !/[.!?\n]/.test(text[start - 1])) start -= 1;
+  while (start > 0 && !endsSentence(text, start - 1)) start -= 1;
   let end = at;
-  while (end < text.length && !/[.!?\n]/.test(text[end])) end += 1;
+  while (end < text.length && !endsSentence(text, end)) end += 1;
   if (end < text.length && text[end] !== "\n") end += 1;
+  while (end < text.length && /["'\u201d\u2019)\]]/.test(text[end])) end += 1;
   return [start, end];
 }
 
-/** The text without the sentence holding `at` (a warning's place), its spacing tidied; the rest is left exactly as written. */
-export function withoutSentence(text: string, at: number): string {
+/**
+ * The text without the sentence holding `at` (a warning's place), its spacing tidied; the rest is left exactly as
+ * written. With `expected`, only while those words are still at `at` (the text may have changed since the warning).
+ */
+export function withoutSentence(text: string, at: number, expected?: string): string {
   if (!Number.isSafeInteger(at) || at < 0 || at >= text.length) return text;
+  if (expected !== undefined && (!expected || text.slice(at, at + expected.length) !== expected)) return text;
   const [start, end] = sentenceAt(text, at);
   const before = text.slice(0, start).replace(/[ \t]+$/, "");
   let after = text.slice(end).replace(/^[ \t]+/, "");

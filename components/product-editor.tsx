@@ -416,12 +416,17 @@ function ProductForm({
         {loadingAbout ? null : (
           <TermsCheckPanel
             id={id}
+            fieldId={`product-about-${id}`}
             input={{
               text: draft.about,
               ownHosts,
-              priceCents: !draft.every && !draft.pwyw ? readMoney(draft.price, currency) : null,
+              // The checkout's one price: none to compare for a membership, a choose-your-price, a product sold by its
+              // options (the single price is then not charged) or a free one.
+              priceCents: !draft.every && !draft.pwyw && !product?.options.length && !free ? readMoney(draft.price, currency) : null,
               currency,
-              immediateAccessConsent: Boolean(product && !draft.every && deliversDigitally(product)),
+              // The consent the checkout will ask for once this is saved: a new product is plain digital content until
+              // a call or shipping is set on it (lib/digital-consent.ts, deliversDigitally).
+              immediateAccessConsent: !draft.every && deliversDigitally(product ?? {}),
               // No end date exists on a product, so no deadline is ever real here.
               realDeadline: false,
               realStockLimit: product?.stock != null,

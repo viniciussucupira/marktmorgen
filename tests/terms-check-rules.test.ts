@@ -114,6 +114,21 @@ is("text changed since: nothing replaced", replaceWords("The course costs $89 no
 is("a place outside the text: unchanged", withoutSentence("Short.", 99), "Short.");
 is("no fix tells the creator to use a setting that does not exist", checkCreatorTerms({ ...base, immediateAccessConsent: false, text: "Visit othershop.com. Costs $99. No refunds. Get rich fast. Hurry! Only 3 left. Resale rights included." }).every((w) => !/in the studio/.test(w.fix)), true);
 
+part("Review findings: sentences, the creator's own pages, stale fixes");
+const cut = (t: string) => { const w = checkCreatorTerms({ ...base, immediateAccessConsent: false, text: t })[0]; return withoutSentence(t, w.at, t.slice(w.at, w.at + w.length)); };
+is("a dot in an address does not end the sentence", cut("Intro. Read the rules at othershop.com before buying. Thanks!"), "Intro. Thanks!");
+is("a dot in an amount does not end the sentence", cut("Ten lessons. The course costs $99.00 today. Enjoy."), "Ten lessons. Enjoy.");
+is("a dot in a version does not end the sentence", cut("Hello. Version 2.0 is non-refundable. Bye."), "Hello. Bye.");
+is("the creator's own patreon page", kinds("Check out my patreon.com/jane page."), []);
+is("the creator's own community link", kinds("Join my community at skool.com/jane."), []);
+is("the creator's own tip page", kinds("Support me at ko-fi.com/jane."), []);
+is("another site in terms still warned", kinds("These terms are those of othershop.com."), ["other_company"]);
+const two = "No refunds. Ten lessons. All sales are final.";
+const [r1, r2] = checkCreatorTerms({ ...base, immediateAccessConsent: false, text: two });
+const after1 = withoutSentence(two, r1.at, two.slice(r1.at, r1.at + r1.length));
+is("the first fix applied", after1, "Ten lessons. All sales are final.");
+is("an old warning's fix on the changed text changes nothing", withoutSentence(after1, r2.at, two.slice(r2.at, r2.at + r2.length)), after1);
+
 part("Bounds");
 const huge = "Hurry! Only 2 left. ".repeat(10_000) + " Visit othershop.com.";
 const capped = checkCreatorTerms({ ...base, text: huge });
