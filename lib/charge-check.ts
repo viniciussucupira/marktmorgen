@@ -23,18 +23,24 @@ export type ChargeDecision =
 export type ChargeContext = {
   /** The currency the plan was shown in. */
   currency: string;
-  /** Unit amounts, in cents, this subscription may be charged for a full period of this length. */
-  allowedUnitCents: (interval: "month" | "year") => readonly number[];
+  /**
+   * The unit amounts, in cents, THIS subscription may be charged for a full
+   * period of this length: the price it was sold at, or a later price it was
+   * told of in time. Never every published or legacy price at once.
+   */
+  allowedUnitCents: (subscription: string, interval: "month" | "year") => readonly number[];
   /** Whether the subscription was still to be charged at this time (not ended, closed, paused or a lapsed trial); null when the records cannot say. */
   chargeableAt: (subscription: string, paidAt: number) => boolean | null;
-  /** The id of another paid invoice already seen for this subscription and period start, or null. */
-  otherPaidInvoice: (subscription: string, periodStart: number, invoiceId: string) => string | null;
-  /** Whether a proration line matches a plan switch the store's record shows; null when unknown. */
-  prorationExplained: (invoiceId: string) => boolean | null;
-  /** Whether a one-off line (captions, usage) carries a key the store's record holds; null when unknown. */
+  /** The earliest OTHER paid invoice seen for this subscription and period start, or null. */
+  otherPaidInvoice: (subscription: string, periodStart: number, invoiceId: string) => { id: string; paidAt: number } | null;
+  /** Whether this proration line's amount is the one a plan switch on record makes; null when unknown. */
+  prorationExplained: (invoiceId: string, line: Record<string, unknown>) => boolean | null;
+  /** Whether a one-off line (captions, usage) carries a key and amount the store's record holds; null when unknown. */
   oneOffExplained: (line: Record<string, unknown>) => boolean | null;
-  /** Cents already refunded on this invoice's payment; null when it could not be read. */
+  /** Cents already refunded on this invoice's payments, all of them; null when they could not be read. */
   refundedCents: number | null;
+  /** Whether any payment of this invoice is or was disputed; null when it could not be read. */
+  disputed: boolean | null;
 };
 
 const DAY = 24 * 60 * 60;
@@ -77,9 +83,9 @@ export function decideCharge(invoiceInput: unknown, context: ChargeContext): Cha
   if (!invoice || typeof invoice.id !== "string") return { kind: "unread", reason: "not an invoice" };
   if (invoice.status !== "paid") return { kind: "not_charged" };
   const paid = cents(invoice.amount_paid);
-  const due = cents(invoice.amount_due);
   const subtotal = cents(invoice.subtotal);
-  if (paid === null || due === null || subtotal === null) return { kind: "unread", reason: "amounts unreadable" };
+  const credited = cents(invoice.post_payment_credit_notes_amount ?? 0);
+  if (paid === null || subtotal === null || credited === null) return { kind: "unread", reason: "amounts unreadable" };
   if (paid === 0) return { kind: "not_charged" };
   const paidAt = record(invoice.status_transitions)?.paid_at;
   if (typeof paidAt !== "number") return { kind: "unread", reason: "paid time unreadable" };
@@ -87,20 +93,22 @@ export function decideCharge(invoiceInput: unknown, context: ChargeContext): Cha
   if (!lines || !Array.isArray(lines.data)) return { kind: "unread", reason: "lines unreadable" };
   if (lines.has_more !== false) return { kind: "unread", reason: "lines not read whole" };
   if (context.refundedCents === null) return { kind: "unread", reason: "refunds unreadable" };
-  const left = Math.max(0, paid - context.refundedCents);
+  // A disputed charge is the card network's to settle; a refund on top of it pays twice.
+  if (context.disputed !== false) return { kind: "unread", reason: context.disputed ? "disputed" : "disputes unreadable" };
+  // What is still with us: neither refunded nor already credited back by a credit note.
+  const left = Math.max(0, paid - credited - context.refundedCents);
+  // An amount paid above what was due is not ours to refund: Stripe credits it
+  // to the customer's balance (`amount_overpaid`, "The Invoice object").
 
   const wrong: string[] = [];
   const unproven: string[] = [];
-  let over = 0;
+  let excess = 0;
   let whole = false;
+  let extraLines = 0;
 
   if (String(invoice.currency) !== context.currency) {
     wrong.push("charged in another currency than the one shown");
     whole = true;
-  }
-  if (paid > due) {
-    wrong.push("paid more than was due");
-    over += paid - due;
   }
 
   const subscription = subscriptionOf(invoice);
@@ -116,6 +124,7 @@ export function decideCharge(invoiceInput: unknown, context: ChargeContext): Cha
     }
   }
 
+  const periodsSeen = new Set<number>();
   for (const raw of lines.data) {
     const line = record(raw);
     if (!line) {
@@ -130,8 +139,8 @@ export function decideCharge(invoiceInput: unknown, context: ChargeContext): Cha
       continue;
     }
     if (item.proration === true) {
-      const explained = context.prorationExplained(invoice.id);
-      if (explained !== true) unproven.push("a proration with no plan switch on record");
+      const explained = context.prorationExplained(invoice.id, line);
+      if (explained !== true) unproven.push("a proration that no plan switch on record explains");
       continue;
     }
     if (parent?.type === "invoice_item_details") {
@@ -141,38 +150,50 @@ export function decideCharge(invoiceInput: unknown, context: ChargeContext): Cha
     }
     const pricing = record(line.pricing);
     const unit = wholeCents(pricing?.unit_amount_decimal);
-    const interval = intervalOf(record(line.period));
-    if (pricing?.type !== "price_details" || unit === null || line.quantity_decimal !== "1" || !interval) {
+    const period = record(line.period);
+    const interval = intervalOf(period);
+    const one = typeof line.quantity_decimal === "string" ? /^1(\.0+)?$/.test(line.quantity_decimal) : line.quantity === 1;
+    if (pricing?.type !== "price_details" || unit === null || !one || !interval) {
       unproven.push("a plan line that cannot be read");
       continue;
     }
-    const prices = context.allowedUnitCents(interval);
-    if (prices.includes(unit)) {
-      if (subscription) {
-        const start = record(line.period)?.start as number;
-        const other = context.otherPaidInvoice(subscription, start, invoice.id);
-        if (other) {
-          wrong.push("the same period was already paid");
-          whole = true;
-        }
-      }
+    if (!subscription || (typeof item.subscription === "string" && item.subscription !== subscription)) {
+      unproven.push("a plan line that does not belong to the invoice's subscription");
       continue;
     }
+    const start = period?.start as number;
+    if (periodsSeen.has(start)) {
+      wrong.push("the same period charged twice on one invoice");
+      extraLines += unit;
+      continue;
+    }
+    periodsSeen.add(start);
+    const other = context.otherPaidInvoice(subscription, start, invoice.id);
+    // Of two paid invoices for one period the earlier is kept (ties: the lower id).
+    if (other && (other.paidAt < paidAt || (other.paidAt === paidAt && other.id < invoice.id))) {
+      wrong.push("the same period was already paid");
+      whole = true;
+    }
+    const prices = context.allowedUnitCents(subscription, interval);
+    if (prices.includes(unit)) continue;
     const highest = prices.length ? Math.max(...prices) : null;
     if (highest !== null && unit > highest) {
-      wrong.push("charged above the published price");
-      // The share of what was paid that the excess is, tax added on top included.
-      over += subtotal > 0 ? Math.ceil(((unit - highest) * paid) / subtotal) : paid;
+      wrong.push("charged above the price this plan was sold at");
+      excess += unit - highest;
     } else {
-      unproven.push("a plan price that is not published");
+      unproven.push("a plan price this subscription was not sold at");
     }
   }
+
+  // The share of what was paid that the excess and extra lines are, tax added on top included, rounded once.
+  const share = (base: number) => (base === 0 ? 0 : subtotal > 0 ? Math.ceil((base * paid) / subtotal) : paid);
+  const over = share(excess + extraLines);
 
   if (wrong.length) {
     // A doubt alongside a proven error is still a doubt: the whole is refunded.
     const refundCents = whole || unproven.length ? left : Math.min(left, over);
-    return { kind: "wrong", reasons: [...wrong, ...unproven], refundCents };
+    return { kind: "wrong", reasons: [...new Set([...wrong, ...unproven])], refundCents };
   }
-  if (unproven.length) return { kind: "unproven", reasons: unproven, refundCents: left };
+  if (unproven.length) return { kind: "unproven", reasons: [...new Set(unproven)], refundCents: left };
   return { kind: "ok" };
 }
