@@ -96,7 +96,7 @@ export type PlanRefundFlow =
   /** Given back; `ended` false: the plan is ended by the daily job. `earlier`: given back by an earlier request. */
   | { ok: true; cents: number; currency: string; refundId: string; status: "succeeded" | "pending"; ended: boolean; earlier: boolean }
   /** Nothing given back. `stopLeft`: the stop set for it could not be taken back yet (the daily job does it). */
-  | { ok: false; reason: Exclude<PlanRefundMade, { ok: true }>["reason"] | "no_plan" | "stop_failed"; stopLeft: boolean };
+  | { ok: false; reason: Exclude<PlanRefundMade, { ok: true }>["reason"] | "no_plan" | "stop_failed" | "partial"; stopLeft: boolean };
 
 type Row = Record<string, unknown>;
 const rows = (page: Row): Row[] => (Array.isArray(page.data) ? (page.data as unknown[]).filter((r): r is Row => Boolean(r) && typeof r === "object") : []);
@@ -380,7 +380,9 @@ export async function refundAndEndPlan(store: Store, nowSeconds = Math.floor(Dat
       return result;
     }
     // "failed" may hide a refund Stripe makes after we stopped waiting, and an earlier note one we have not seen.
-    return notMade(made.reason, made.reason === "failed" || found.kind === "unknown" || found.kind === "partial" || Boolean(kept));
+    // Part of it given back (some charges refunded, some not): said as such, the note and the stop kept.
+    if (found.kind === "partial") return notMade("partial", true);
+    return notMade(made.reason, made.reason === "failed" || found.kind === "unknown" || Boolean(kept));
   } finally {
     await releaseLock(held);
   }

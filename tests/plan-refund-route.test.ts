@@ -20,7 +20,7 @@ import { POST } from "@/app/api/billing/refund/route";
 import { ENDING_KEY, issueReview } from "@/lib/plan-refund-flow";
 import { CLOSING_DAYS } from "@/lib/plan-closing-rules";
 import { REFUND_DAYS } from "@/lib/plan";
-import { SUPPORT_ADDRESS, planRefundLetter, refundEffects, refusalWords } from "@/lib/plan-refund-words";
+import { REFUND_DONE, SUPPORT_ADDRESS, planRefundLetter, refundEffects, refusalWords } from "@/lib/plan-refund-words";
 import { who } from "./plan-refund-route-world";
 import { paidShop, world } from "./plan-refund-stripe-world";
 
@@ -117,6 +117,8 @@ async function main() {
   }), true);
   // The same words reach a renewal inside the window whose first payment was not covered (the guarantee used
   // before, for another store), so they never say it was made after the window (independent review, 31/10/2026).
+  const partWords = REFUND_DONE.partial;
+  is("part of a refund made: said so, with the stop kept and the way to support", [partWords.title, /Part of your refund is on its way/.test(partWords.body), /set to stop at the end of the period you paid for/.test(partWords.body), partWords.body.includes("do not know")], ["Part of your refund went through", true, true, false]);
   is("a renewal or a switch is refused with words true inside the window too (owner, 31/10/2026 15h41)", ["renewal", "switch_charge"].map((reason) => {
     const body = refusalWords({ refund: { kind: "none", reason } as never }).body;
     return [body.includes(`within ${REFUND_DAYS} days of that payment`), body.includes("once per person"), /more than \d+ days after/.test(body)];
