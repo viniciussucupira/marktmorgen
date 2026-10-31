@@ -20693,3 +20693,5 @@ Resultado implementado: mantém todos os arquivos canônicos175b3a26, salvo as d
 ### 309 — União temporal SES com CA1webhooks já incorporado
 
 Estado: em andamento pelo Codex, 2026-10-31T14:53:15.232Z, ramo codex/ses-clock-webhook-union, antes do código. Fonte55ff2b30 inclui1442webhooksrecusadosquandopausados,semfila/novastentativas/custos,Termos/ajuda/editor/testes e1444VS1estado/1445–1447fila. MantercadaarquivoClaude,maisapenaslibses/testesdatemporalSES. CI1443válidoemexecuçãointacto; nãoeditarhead, nãocancelar e nãoaproveitarseuschecksparaafirmarvalidadaestaunião. Bateria39+Vercel inteira no novohead. Nãoabrirvendas,nãoalterarpreços/limites/idiomas/consentimentos/financiamento. Custos reais ainda desconhecidos,nãozero.
+
+Resultado implementado: todos os blobs canônicos55ff2b30mantidos,excetolib/ses.ts/testesessender da correçãotemporal e filaaditiva. FontesSES/testesidênticasàsvalidadas1410; novaconfiguração conjunta incluiwebhooksCA1 e VS1canônicos e exige39checks completosnovamente. NenhumcódigoClaude substituído,nemcritériofinanceirorelaxado. Publicação econtadornãoconfirmadosnesteestado.
