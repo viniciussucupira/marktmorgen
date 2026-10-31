@@ -1245,6 +1245,7 @@
     "components/contact-box-editor.tsx",
     "components/copy-link.tsx",
     "components/countdown.tsx",
+    "components/course-access-check.tsx",
     "components/course-comments-studio.tsx",
     "components/course-editor.tsx",
     "components/course-outline.tsx",
