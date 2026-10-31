@@ -397,6 +397,96 @@ async function main(): Promise<void> {
       [amazon.length, resend.length], handedBefore ? [0, 1] : [1, 0]);
   }
 
+  part("Unknown SES daily usage never grants a batch or changes provider");
+  let usageGetters = 0;
+  let usageOutside = 0;
+  const usageRow = (value: unknown) => {
+    const rows = Array<unknown>(24).fill(null);
+    rows[23] = value;
+    return rows;
+  };
+  const usageCases: [string, () => unknown][] = [
+    ["missing envelope", () => undefined],
+    ["not an array", () => ({ length: 24, 0: "10" })],
+    ["empty envelope", () => []],
+    ["short envelope", () => Array(23).fill(null)],
+    ["sparse envelope", () => new Array(24)],
+    ["inherited member", () => {
+      const rows = Array(24).fill(null);
+      delete rows[23];
+      return Object.setPrototypeOf(rows, { 23: "10" });
+    }],
+    ["getter", () => Object.defineProperty(Array(24).fill(null), "23", { get() { usageGetters += 1; return null; } })],
+    ["missing member", () => usageRow(undefined)],
+    ["empty string", () => usageRow("")],
+    ["boolean", () => usageRow(true)],
+    ["symbol", () => usageRow(Symbol("10"))],
+    ["numeric instead of stored text", () => usageRow(10)],
+    ["negative", () => usageRow("-1")],
+    ["fraction", () => usageRow("1.5")],
+    ["leading zero", () => usageRow("01")],
+    ["whitespace", () => usageRow(" 1")],
+    ["non-finite", () => usageRow("Infinity")],
+    ["unsafe integer", () => usageRow("9007199254740992")],
+    ["unsafe sum", () => {
+      const rows = usageRow("1");
+      rows[0] = String(Number.MAX_SAFE_INTEGER);
+      return rows;
+    }],
+    ["oversized", () => new Proxy(Array(25).fill(null), {
+      getOwnPropertyDescriptor(target, key) {
+        if (key !== "length") usageOutside += 1;
+        return Reflect.getOwnPropertyDescriptor(target, key);
+      },
+    })],
+    ["huge envelope", () => new Proxy(new Array(1_000_000), {
+      getOwnPropertyDescriptor(target, key) {
+        if (key !== "length") usageOutside += 1;
+        return Reflect.getOwnPropertyDescriptor(target, key);
+      },
+    })],
+    ["lost read reply", () => { throw new Error("synthetic existing daily usage read lost"); }],
+  ];
+  const usageKey = `nl:ses:h:${new Date().toISOString().slice(0, 13)}`;
+  const oldUsage = redis.run(["GET", usageKey]);
+  await originalPipeline([["SET", usageKey, "10", "EX", 26 * 3_600]]);
+  for (const [name, answer] of usageCases) {
+    account = approved();
+    askAgain();
+    clear();
+    const counted = await sentThisMonth();
+    let reads = 0;
+    redis.pipeline = async (commands) => {
+      const reply = await originalPipeline(commands);
+      if (commands.length === 24 && commands.every(command => command[0] === "GET" && String(command[1]).startsWith("nl:ses:h:"))) {
+        reads += 1;
+        return answer() as unknown[];
+      }
+      return reply;
+    };
+    try {
+      is(`${name}: missing daily usage remains unknown`, await sesSentLast24h(), null);
+      is(`${name}: the list admission grants no capacity`, await senderRoom(), 0);
+      is(`${name}: the actual batch waits before either sender`,
+        await sendBatch([letter("daily-evidence@example.com")], `bc:daily-evidence:${name}`, { by: "company" }), "retry");
+    } finally {
+      redis.pipeline = originalPipeline;
+    }
+    is(`${name}: each existing call reads exactly its original 24-position pipeline`, reads, 3);
+    is(`${name}: neither provider accepted and the stored usage remains`,
+      [amazon.length, resend.length, redis.run(["GET", usageKey]), await sentThisMonth()], [0, 0, "10", counted]);
+  }
+  is("usage getters and out-of-cardinality members were not evaluated", [usageGetters, usageOutside], [0, 0]);
+  if (oldUsage === null) await originalPipeline([["DEL", usageKey]]);
+  else await originalPipeline([["SET", usageKey, String(oldUsage), "EX", 26 * 3_600]]);
+  const usageAt = Date.UTC(2032, 0, 15, 12);
+  const usageKeys = Array.from({ length: 24 }, (_, i) => `nl:ses:h:${new Date(usageAt - i * 3_600_000).toISOString().slice(0, 13)}`);
+  is("24 explicitly absent hourly buckets are known zero", await sesSentLast24h(usageAt), 0);
+  await originalPipeline(usageKeys.map((key, i) => ["SET", key, String(i + 1), "EX", 26 * 3_600]));
+  is("all 24 explicit stored counters contribute, including the last", await sesSentLast24h(usageAt), 300);
+  await originalPipeline(usageKeys.map((key, i) => ["SET", key, i === 23 ? String(Number.MAX_SAFE_INTEGER) : "0", "EX", 26 * 3_600]));
+  is("the last position can hold the largest exactly represented safe total", await sesSentLast24h(usageAt), Number.MAX_SAFE_INTEGER);
+
   part("A batch, one email at a time");
   clear();
   const thirty = Array.from({ length: 30 }, (_, i) => ({ ...letter(`reader${i}@example.com`, "News"), tags: { [STORE_TAG]: "a".repeat(32), [LIST_TAG]: "b".repeat(32) } }));
