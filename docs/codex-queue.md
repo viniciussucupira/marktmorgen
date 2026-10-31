@@ -8097,6 +8097,8 @@ REGRA DOS 60% (OBRIGATÓRIA): todo cliente pagante, considerado isoladamente e u
 
 309. [EM1] E-mails para a lista somente pela Amazon SES, com fila de espera, e limites de envio maiores
 
+Estado da unidade de evidência da pausa por devoluções/reclamações da lista: em andamento pelo Codex em31/10/2026, 03:03:55 Fortaleza, ramo codex/list-health-pause-evidence, antes do código. Leitura perdida/malformada da pausa de saúde não pode liberar sendTo. Preservar contrato de leitura do estúdio e serviços essenciais; usar o mesmoGET antes da admissão, semIO/chave/TTLnovo. Não se refere à pausa opcional de plano, que continua desligada. PR#1397headválidointacto.
+
 Estado da unidade de evidência do mês do remetente: em andamento pelo Codex em31/10/2026, 02:46:21 Fortaleza, ramo codex/sender-month-evidence, antes do código. sentThisMonth transforma leitura perdida/malformada em0 e libera admissão de lista. Distinguir desconhecido de0 no GET já existente, impedir admissão nessa incerteza e tornar avisos honestos; sem IO/chave/TTLnovo. PR#1396 mantém head/CIválidos intactos.
 
 Estado da unidade de aceite incerto do lote SES: em andamento pelo Codex em31/10/2026, 02:16:12 Fortaleza, ramo codex/ses-batch-uncertain-stop, antes do código. sesBatch ignora uncertain e repete/troca para Resend um envio possivelmente aceito. Parar novas tentativas e fallback na mesma chamada; sem novos marcadores persistidos ou alegação de exatamente uma vez. PR#1395 segue CI completo válido e intacto em outro ramo.
@@ -20553,3 +20555,14 @@ Custo desta unidade: nenhum novoGET/comando/chave/TTL/provedor/retenção, compa
 
 
 Resultado implementado (não publicado): sentThisMonth retorna number|null, valida cardinalidade1/dado próprio semgetter/nullausência/decimalcanônico seguro; erro e ausência deRedis retornam desconhecido. senderRoom concede0deadmissão quando desconhecido, sem afirmar consumo0; aviso ao dono diz uso não confirmado, nota de espera do criador diz capacidade não confirmada.19casosnegativos no leitor+senderRoom+reserve reais,4controlespositivosincluindoausênciaconfirmada/MAX_SAFE; getter nãoinvocado, allowanceintacto, nenhumlotedelista, serviçoessencialsegue. MesmoGETjáexistente, mesmoavisolimitado; nenhum limite comercial/configuraçãoexternaalterado. CI39+Vercel completos no novohead pendentes. PR#1396head3089bf válido intacto; prova1395acima mantida.
+
+
+### 309/EM1 — evidência da pausa de saúde antes de enviar à lista (31/10/2026)
+
+Estado da unidade de evidência da pausa por devoluções/reclamações da lista: em andamento pelo Codex em31/10/2026, 03:03:55 Fortaleza, ramo codex/list-health-pause-evidence, antes do código. Leitura perdida/malformada da pausa de saúde não pode liberar sendTo. Preservar contrato de leitura do estúdio e serviços essenciais; usar o mesmoGET antes da admissão, semIO/chave/TTLnovo. Não se refere à pausa opcional de plano, que continua desligada. PR#1397headválidointacto.
+
+Achado confirmado por leitura: pausedFor transforma erro, ausência de posição e registro inválido emnull; sendTo entende isso como livre. Distinguir ausência explícita/pausa válida/resultado desconhecido no GET existente; desconhecido mantém resto intacto e retry antes de ramp/reserva/provedor. Wrapper do estúdio e chamadas fora da lista preservados; a leitura de rampRoom e agregados de saúde permanece remanescente. Sem alegar globalidade, capacidade atômica ou entrega exatamente uma vez.
+
+Publicação funcional #1396: mergea1a817333883481a4cbf8ba60c303a370c90f359,31/10/2026 02h48min24sFortaleza,head3089bf053d86ea7def1f8123ef21cc405f159240,39/39+Vercel,READYdpl_5rr3KTK99sW43P5BFQ8phTkammJi,7aliases5HTMLreais;error/fatal(limit10)05:48:24–05:51:59.815UTC semregistros,somentea janela. CI8runs39jobs10617segundosconhecidos,0intervalosdesconhecidos;faturamento/tarifas/OS/arredondamento/créditos/cache/Vercel desconhecidos,nunca0. Incerteza SES agora para ondas/rounds/fallbacknamesmachamada;limiteentreinvocações/crashcontinua. Contador254retido,provas1395preservadas,semavisoextra de documento.
+
+Custo desta unidade: comparação finita da única respostaGET já executada por sendTo; nenhum novo comando/chave/TTL/retenção/provedor. Teto incremental de novas operações Store/Studio/Scale mensal/anual0/0; custo total/CI/hosting/Redis desconhecido,não0. Sem alteração de preço,limitevisível,políticafiscal,permissões,conteúdo ouflags;nenhumtesteexternoreal. Novaárvoreexige39+Vercelcompletos;preservarClaudeCA1/NC1 e demaisheads válidos.
