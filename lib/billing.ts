@@ -1477,6 +1477,44 @@ function searchMember(value: unknown, handles: Set<string>): Record<string, unkn
   }
   member.metadata = metadata;
   member.customer = customer;
+
+  // A good-standing row can block checkout and be adopted as paid rights, so
+  // its one product, price, interval and paid/trial window must also be
+  // explicit provider data. Missing items must not silently become Creator.
+  if (GOOD.has(member.status as string)) {
+    const items = searchDataRecord(member.items, "member items");
+    if (!Array.isArray(items.data) || items.data.length !== 1) {
+      throw new Error("Subscription search member items are unknown");
+    }
+    const slot = Object.getOwnPropertyDescriptor(items.data, "0");
+    if (!slot || !("value" in slot)) throw new Error("Subscription search member item is unknown");
+    const item = searchDataRecord(slot.value, "member item");
+    const price = searchDataRecord(item.price, "member price");
+    const recurring = searchDataRecord(price.recurring, "member recurrence");
+    if (item.quantity !== 1 || price.currency !== "usd" ||
+        typeof price.unit_amount !== "number" || !Number.isSafeInteger(price.unit_amount) || price.unit_amount <= 0 ||
+        recurring.interval !== "month" && recurring.interval !== "year" ||
+        recurring.interval_count !== 1) {
+      throw new Error("Subscription search member price is unknown");
+    }
+    item.price = price;
+    price.recurring = recurring;
+    items.data = [item];
+    member.items = items;
+    if (member.status === "trialing") {
+      if (typeof member.trial_start !== "number" || !Number.isSafeInteger(member.trial_start) ||
+          typeof member.trial_end !== "number" || !Number.isSafeInteger(member.trial_end) ||
+          member.trial_start < 0 || member.trial_end <= member.trial_start) {
+        throw new Error("Subscription search member trial is unknown");
+      }
+    } else {
+      const start = periodStart(member);
+      const end = periodEnd(member, false);
+      if (!isPeriod({ start, end, renews: true })) {
+        throw new Error("Subscription search member period is unknown");
+      }
+    }
+  }
   return member;
 }
 

@@ -395,6 +395,7 @@ test('subscription search requires a complete bounded page before treating it as
   {data:inheritedMember,has_more:false},{data:memberGetter,has_more:false},
   {data:[idGetter],has_more:false},{data:[customerGetter],has_more:false},
   {data:[partialIncomplete],has_more:false},
+  {data:[{...partialIncomplete,status:'active',created:1}],has_more:false},
   {data:[{...partialIncomplete,created:1,customer:{id:'cus_Test000001'}}],has_more:false},
   {data:[{...partialIncomplete,created:1,metadata:{store:'unqueried'}}],has_more:false},
   {data:Array.from({length:101},()=>({})),has_more:false},
