@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Logo } from "@/components/logo";
+import { MorningLogo } from "@/components/morning-header";
 import { feeWords } from "@/lib/fee-words";
 
 const SUPPORT_EMAIL = "support@marktmorgen.com";
@@ -97,7 +98,7 @@ function FooterAnchor({ link, className }: { link: FooterLink; className: string
  * where the person is in the middle of a task (logging in), so nothing pulls
  * them away from it.
  */
-export function SiteFooter({ variant = "full" }: { variant?: "full" | "slim" }) {
+export function SiteFooter({ variant = "full", morning = false }: { variant?: "full" | "slim"; morning?: boolean }) {
   const year = new Date().getFullYear();
 
   if (variant === "slim") {
@@ -110,7 +111,7 @@ export function SiteFooter({ variant = "full" }: { variant?: "full" | "slim" }) 
               <li key={link.label}>
                 <FooterAnchor
                   link={link}
-                  className="inline-flex min-h-11 -my-2.5 items-center transition-colors hover:text-ink"
+                  className="inline-flex min-h-11 items-center transition-colors hover:text-ink"
                 />
               </li>
             ))}
@@ -124,9 +125,12 @@ export function SiteFooter({ variant = "full" }: { variant?: "full" | "slim" }) 
     <footer className="surface-night on-dark overflow-hidden">
       <div className="container-page grid gap-12 py-16 lg:grid-cols-[15rem_1fr] lg:gap-16 lg:py-20">
         <div className="max-w-xs">
-          <Link prefetch={false} href="/" className="inline-flex min-h-11 items-center rounded-[10px]" aria-label="Marktmorgen, home">
-            <Logo tone="light" />
-          </Link>
+          {/* On the pages in the morning look (VS1, app/home.css .hm-foot), their own light mark. */}
+          {morning ? <MorningLogo /> : (
+            <Link prefetch={false} href="/" className="inline-flex min-h-11 items-center rounded-[10px]" aria-label="Marktmorgen, home">
+              <Logo tone="light" />
+            </Link>
+          )}
           <p className="mt-4 text-[0.9375rem] leading-relaxed text-white/70">
             A store page for creators, built in public. Your buyers pay into your
             own Stripe account.
