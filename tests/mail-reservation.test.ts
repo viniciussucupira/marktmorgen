@@ -26,7 +26,7 @@ let pipelines:(string|number)[][][]=[];
  return commands[0]?.[0]==='INCRBY' && (key.startsWith('nl:mail:used:')||key.startsWith('nl:mail:day:')) && reply!==undefined?reply:result;
 }) as typeof memory.pipeline;
 const store={listId:'a'.repeat(32),tier:'pro',subscriptionActive:true,trialEnds:0} as Store;
-beforeEach(()=>{memory.clear();reply=undefined;dayRead=undefined;pipelines=[];process.env.MARKETING_DAILY_CAP='100000';dispatch.calls=0;dispatch.listCalls=0;dispatch.outcome='retry';sesObservation.configured=true;sesObservation.room=100000;});
+beforeEach(()=>{memory.clear();reply=undefined;dayRead=undefined;pipelines=[];process.env.MARKETING_DAILY_CAP='100000';dispatch.calls=0;dispatch.listCalls=0;dispatch.notices.length=0;dispatch.outcome='retry';sesObservation.configured=true;sesObservation.room=100000;});
 test('paid list caps (raised 18 October 2026 with the new prices) are the actual runtime allowances',()=>{assert.equal(monthlyAllowance(store),7000);assert.equal(monthlyAllowance({...store,tier:'scale'}),10000);assert.equal(PRO_MONTHLY_EMAILS,7000);assert.equal(SCALE_MONTHLY_EMAILS,10000);});
 test('an acknowledged exact reservation consumes the monthly capacity',async()=>{assert.equal(await reserve(store,3),'ok');assert.equal(await usedThisMonth(store.listId),3);});
 test('missing, partial or corrupt counter acknowledgements cannot authorize',async()=>{
@@ -139,6 +139,12 @@ test('missing SES or exhausted SES room cannot borrow Resend capacity or reserve
   assert.equal(pipelines.some(commands=>commands.some(command=>command[0]==='INCRBY'||command[0]==='DECRBY')),false);
   assert.equal(await usedThisMonth(made.listId,windowId(made)),0);
  }
+ assert.equal(dispatch.notices.length,1,'the existing monthly owner-notice claim is shared by both waits');
+ assert.equal(dispatch.notices[0].subject,'List email is waiting for Amazon SES');
+ assert.match(dispatch.notices[0].text,/Creator list email sends only through Amazon SES/);
+ assert.match(dispatch.notices[0].text,/Resend is not used for this list batch/);
+ assert.match(dispatch.notices[0].text,/This notice does not confirm delivery/);
+ assert.doesNotMatch(dispatch.notices[0].text,/larger plan|SENDER_MONTHLY_QUOTA|went out through Resend/);
 });
 test('unknown acceptance still holds capacity and stops automatic list retry',async()=>{
  const made=await fullStore();dispatch.outcome='retry';pipelines=[];

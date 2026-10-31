@@ -194,7 +194,7 @@ const toldKey = (now = new Date()) => `nl:sender:${now.toISOString().slice(0, 7)
  * is a payment, and nobody but the owner can make one. Everything else about
  * the limit looks after itself.
  */
-async function tellSenderIsFull(): Promise<void> {
+async function tellSenderIsFull(listOnly = false): Promise<void> {
   try {
     const claim: unknown = await redisPipeline([["SET", toldKey(), "1", "NX", "EX", 40 * 86_400]]);
     if (!Array.isArray(claim)) return;
@@ -204,6 +204,19 @@ async function tellSenderIsFull(): Promise<void> {
     // The existing claim may have applied before losing its acknowledgement.
     // Only a confirmed fresh claim authorizes this bounded owner email.
     if (!first || !("value" in first) || first.value !== "OK") return;
+    if (listOnly) {
+      await sendEmail({ meter: { by: "company" },
+        from: NIMBUS_FROM, to: SUPPORT_EMAIL,
+        subject: "List email is waiting for Amazon SES",
+        text: [
+          "Creator list email sends only through Amazon SES.",
+          "Its configuration or available sending capacity could not be confirmed for this batch. The saved recipients wait for the next automatic check.",
+          "Resend is not used for this list batch. This notice does not confirm delivery.",
+          "Sign-in links, receipts and deliveries keep their existing sending route.",
+        ].join("\n"),
+      });
+      return;
+    }
     const quota = senderQuota();
     const resendSent = await sentThisMonth();
     const amazon = isSesConfigured() ? await sesReady() : null;
@@ -240,7 +253,7 @@ async function tellSenderIsFull(): Promise<void> {
 /** Whether `n` more list emails fit under the sender's ceiling; says so once when they do not. */
 async function senderTakes(n: number, listOnly = false): Promise<boolean> {
   if ((await senderRoom(listOnly)) >= n) return true;
-  if (!listOnly) await tellSenderIsFull();
+  await tellSenderIsFull(listOnly);
   return false;
 }
 
