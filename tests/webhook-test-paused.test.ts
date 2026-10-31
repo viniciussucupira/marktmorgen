@@ -7,12 +7,16 @@
 import { NextRequest } from "next/server";
 import { SESSION_COOKIE, openSession } from "@/lib/auth";
 import { POST as webhooks } from "@/app/api/store/webhooks/route";
-import { addEndpoint, webhooksView } from "@/lib/webhooks";
+import { addEndpoint, setSendHooksForTests, webhooksView } from "@/lib/webhooks";
 import { claimHandle, ensureStatsId, recordPlanDispute, setSubscription, storeForEmail, storeRef } from "@/lib/store";
 import { WEBHOOK_TEST_PAUSED_WORDS, integrationPauseWord } from "@/lib/integration-pause";
 import { paidPeriod } from "./billing-period-fixture";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
+
+/** Every name lookup a delivery made: refused here, so nothing reaches the network. */
+const sent: string[] = [];
+setSendHooksForTests({ fetch: { resolve: async (host: string) => { sent.push(host); throw new Error("a stand-in that answers nothing"); } } as never });
 
 const OWNER = "webhook-test-paused@example.com";
 const HOST = "marktmorgen.com";
@@ -71,7 +75,7 @@ async function main(): Promise<void> {
   // The route's after() (the creator's notice) needs a request scope this test has not, so it
   // answers 500 here after removing; what counts is that the pause did not stop the removal.
   is("removing an endpoint while paused works", [String(removed.body.error).startsWith("paused"), (await webhooksView(store)).endpoints.length], [false, 0]);
-  is("the sentence names what stays open", ["change or remove any endpoint"].every((s) => WEBHOOK_TEST_PAUSED_WORDS.paused_unpaid.includes(s)), true);
+  is("no test message reached the endpoint while paused (two tried, both when paid)", sent.filter((h) => h === "hooks.example.com").length, 2);
   done();
 }
 
