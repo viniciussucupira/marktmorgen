@@ -147,7 +147,13 @@ async function main(): Promise<void> {
   process.env.AWS_SES_TOPIC_ARN = "arn:aws:sns:eu-west-1:123456789012:marktmorgen-email";
   is("a topic in another region than the one email leaves from is not believed", isSesConfigured(), false);
   process.env.AWS_SES_TOPIC_ARN = TOPIC;
-  is("all of them", [isSesConfigured(), sesConfig()?.region, sesConfig()?.roleArn], [true, REGION, null]);
+  is("a user access key alone cannot configure SES", [isSesConfigured(), sesConfig()], [false, null]);
+  process.env.AWS_SES_ROLE_ARN = "not-a-role";
+  is("an invalid role cannot fall back to the user key", [isSesConfigured(), sesConfig()], [false, null]);
+  process.env.AWS_SES_ROLE_ARN = "arn:aws:iam::123456789012:role/synthetic-baseline";
+  process.env.VERCEL_OIDC_TOKEN = "aGVhZGVy.cGF5bG9hZA.c2lnbmF0dXJl";
+  is("the complete role configuration ignores user access keys", [isSesConfigured(), sesConfig()?.region, sesConfig()?.roleArn, sesConfig()?.key],
+    [true, REGION, "arn:aws:iam::123456789012:role/synthetic-baseline", null]);
 
   part("An account Amazon is still looking at");
   account = { ProductionAccessEnabled: false, SendingEnabled: true, EnforcementStatus: "HEALTHY", SendQuota: { Max24HourSend: 200, MaxSendRate: 1 } };
@@ -166,7 +172,7 @@ async function main(): Promise<void> {
   is("the next sign-in link is sent", await sendEmail({ ...letter("buyer@example.com", "Your login link"), replyTo: "owner@example.com", headers: { "List-Unsubscribe": "<https://marktmorgen.com/u>" } }), true);
   is("through Amazon, and not through Resend as well", [amazon.length, resend.length], [1, 0]);
   const one = amazon[0];
-  is("signed for Amazon's email service in that region", [/^AWS4-HMAC-SHA256 Credential=AKIAEXAMPLEEXAMPLE00\/\d{8}\/us-east-1\/ses\/aws4_request, SignedHeaders=content-type;host;x-amz-date, Signature=[0-9a-f]{64}$/.test(one.headers.authorization), /^\d{8}T\d{6}Z$/.test(one.headers["x-amz-date"])], [true, true]);
+  is("signed for Amazon's email service in that region", [/^AWS4-HMAC-SHA256 Credential=ASIAEXAMPLELENT1\/\d{8}\/us-east-1\/ses\/aws4_request, SignedHeaders=content-type;host;x-amz-date;x-amz-security-token, Signature=[0-9a-f]{64}$/.test(one.headers.authorization), /^\d{8}T\d{6}Z$/.test(one.headers["x-amz-date"])], [true, true]);
   is("from, to, reply-to and subject as written", [one.body.FromEmailAddress, (one.body.Destination as { ToAddresses: string[] }).ToAddresses, one.body.ReplyToAddresses, one.subject], ["Marktmorgen <hello@marktmorgen.com>", ["buyer@example.com"], ["owner@example.com"], "Your login link"]);
   const simple = (one.body.Content as { Simple: { Body: { Text: { Data: string }; Html: { Data: string } }; Headers: unknown } }).Simple;
   is("the text and the page, and the header a mail app unsubscribes with", [simple.Body.Text.Data, simple.Body.Html.Data, simple.Headers], ["Hello.", "<p>Hello.</p>", [{ Name: "List-Unsubscribe", Value: "<https://marktmorgen.com/u>" }]]);
@@ -587,6 +593,9 @@ async function main(): Promise<void> {
   askAgain();
   is("a key Amazon does not believe is an answer: not usable", [(await sesState())?.ready, (await sesState())?.why], [false, "key"]);
 
+  delete process.env.AWS_SES_ROLE_ARN;
+  delete process.env.VERCEL_OIDC_TOKEN;
+  exchanges.length = 0;
   part("With a role, no key of Amazon's is kept anywhere");
   redis.clear();
   resendKeys.clear();
@@ -637,9 +646,8 @@ async function main(): Promise<void> {
   process.env.AWS_SES_ROLE_ARN = "arn:aws:iam::123456789012:role/marktmorgen-email";
   Date.now = realNow;
   delete (globalThis as Record<symbol, unknown>)[Symbol.for("@vercel/request-context")];
-  process.env.AWS_SES_ACCESS_KEY_ID = "AKIAEXAMPLEEXAMPLE00";
-  process.env.AWS_SES_SECRET_ACCESS_KEY = "a-stand-in-secret-for-tests-only-0000000";
-  delete process.env.AWS_SES_ROLE_ARN;
+  process.env.AWS_SES_ROLE_ARN = "arn:aws:iam::123456789012:role/synthetic-baseline";
+  process.env.VERCEL_OIDC_TOKEN = "aGVhZGVy.cGF5bG9hZA.c2lnbmF0dXJl";
 
   part("Amazon tells us an email bounced");
   redis.clear();
