@@ -264,7 +264,7 @@ async function viaAmazon(message: OneMessage, to: string): Promise<boolean | nul
     }
   }
   const headers = cleanHeaders(message.headers);
-  let last = { outcome: "busy" as string, why: "" };
+  let last: Awaited<ReturnType<typeof sesSend>> = { outcome: "busy", why: "" };
   for (let attempt = 0; attempt < 3; attempt += 1) {
     last = await sesSend(config, {
       from: fromLine(message.from),
@@ -276,6 +276,10 @@ async function viaAmazon(message: OneMessage, to: string): Promise<boolean | nul
       headers,
       attachments: message.attachments,
     });
+    // A timeout or server error may follow acceptance. Keep any existing
+    // claim, report unknown, and make no second SES attempt or Resend send.
+    // This does not prove delivery or provide lifetime idempotency.
+    if (last.uncertain === true) return null;
     if (last.outcome === "sent") {
       await countSesSent(1);
       return true;

@@ -41,6 +41,8 @@ let asked = 0;
 let account: Record<string, unknown> | number = 0;
 /** What Amazon answers to a send, by recipient; anything not named is taken. */
 let amazonSays: (to: string, nth: number) => { status: number; type?: string; message?: string } = () => ({ status: 200 });
+/** Synthetic only: SES accepted the message before its acknowledgement was lost. */
+let amazonLosesReply: (to: string) => number | "throw" | null = () => null;
 const fetched: string[] = [];
 const exchanges: { role: string; token: string; action: string }[] = [];
 let stsRefuses = false;
@@ -62,6 +64,9 @@ globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) =>
       const says = amazonSays(to, amazon.filter((a) => a.to === to).length);
       if (says.status !== 200) return json({ message: says.message ?? "" }, says.status, says.type ? { "x-amzn-errortype": says.type } : {});
       amazon.push({ to, subject: body.Content.Simple.Subject.Data, body: body as unknown as Record<string, unknown>, headers: init?.headers as Record<string, string> });
+      const lost = amazonLosesReply(to);
+      if (lost === "throw") throw new TypeError("synthetic response lost after SES acceptance");
+      if (typeof lost === "number") return json({ message: "synthetic server error after acceptance" }, lost);
       return json({ MessageId: `m-${amazon.length}` });
     }
     return json({}, 404);
@@ -240,6 +245,40 @@ async function main(): Promise<void> {
     redis.pipeline = originalPipeline;
   }
   is("the positive probe sees the sole member and one sender", [memberReads, amazon.length, resend.length], [1, 1, 0]);
+
+  part("An uncertain individual SES acknowledgement never triggers another sender");
+  for (const loss of ["throw", 500, 503] as const) {
+    for (const keyed of [true, false]) {
+      account = approved();
+      askAgain();
+      clear();
+      const name = `${loss}, ${keyed ? "keyed" : "without key"}`;
+      const key = `receipt:uncertain-ses:${loss}:${keyed}`;
+      const claim = `nl:ses:once:${createHash("sha256").update(key).digest("hex").slice(0, 40)}`;
+      const counted = [await sesSentLast24h(), await sentThisMonth()];
+      let deletes = 0;
+      redis.pipeline = async (commands) => {
+        if (commands.some((command) => command[0] === "DEL" && command[1] === claim)) deletes += 1;
+        return originalPipeline(commands);
+      };
+      amazonLosesReply = () => loss;
+      try {
+        is(`${name}: actual single sender reports no confirmed acceptance`,
+          await sendEmail({ ...letter("uncertain-ses@example.com"), ...(keyed ? { idempotencyKey: key } : {}) }), false);
+      } finally {
+        amazonLosesReply = () => null;
+        redis.pipeline = originalPipeline;
+      }
+      is(`${name}: one possible acceptance, no second SES attempt or Resend fallback`,
+        [amazon.length, resend.length, deletes], [1, 0, 0]);
+      is(`${name}: an existing once-only claim is retained`, redis.run(["GET", claim]), keyed ? "1" : null);
+      is(`${name}: unknown acceptance is not counted as a known send`,
+        [await sesSentLast24h(), await sentThisMonth()], counted);
+    }
+  }
+  // Existing normal sends, confirmed throttling retries and refusal fallback
+  // below remain controls; this unit does not certify later unkeyed retries
+  // or the separate batch sender's delivery/idempotency behavior.
 
   part("A batch, one email at a time");
   clear();

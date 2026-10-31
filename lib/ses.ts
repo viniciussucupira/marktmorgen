@@ -440,7 +440,7 @@ export type SesOutcome = "sent" | "busy" | "account" | "refused";
 
 const ACCOUNT_ERRORS = /AccountSuspended|SendingPaused|MailFromDomainNotVerified|LimitExceeded|AccessDenied|InvalidClientTokenId|SignatureDoesNotMatch|UnrecognizedClient|ExpiredToken|NotFound/i;
 
-export async function sesSend(config: SesConfig, message: SesMessage): Promise<{ outcome: SesOutcome; why: string }> {
+export async function sesSend(config: SesConfig, message: SesMessage): Promise<{ outcome: SesOutcome; why: string; uncertain?: true }> {
   const payload = JSON.stringify({
     FromEmailAddress: message.from,
     Destination: { ToAddresses: [message.to] },
@@ -467,6 +467,10 @@ export async function sesSend(config: SesConfig, message: SesMessage): Promise<{
   try {
     const response = await call(config, "POST", "/v2/email/outbound-emails", payload);
     if (response.ok) return { outcome: "sent", why: "" };
+    // SES can accept a message before returning a server error. This is not
+    // a confirmed refusal; individual sends must not retry or change sender.
+    // Read no error body before preserving that distinction.
+    if (response.status >= 500) return { outcome: "busy", why: `SES ${response.status}: acceptance unknown`, uncertain: true };
     const type = response.headers.get("x-amzn-errortype") ?? "";
     let said = "";
     try {
@@ -477,14 +481,15 @@ export async function sesSend(config: SesConfig, message: SesMessage): Promise<{
     }
     const why = `${response.status} ${type} ${said}`.replace(/\s+/g, " ").trim().slice(0, 300);
     if (response.status === 429 && !/quota/i.test(why)) return { outcome: "busy", why };
-    if (response.status >= 500) return { outcome: "busy", why };
+
     if (response.status === 401 || response.status === 403 || response.status === 404 || response.status === 429) return { outcome: "account", why };
     // An address not proved, in an account still in its sandbox or sending
     // from a domain it has not proved, comes back as the email's own fault.
     if (ACCOUNT_ERRORS.test(why) || /not verified|sandbox|quota/i.test(why)) return { outcome: "account", why };
     return { outcome: "refused", why };
   } catch (error) {
-    return { outcome: "busy", why: error instanceof Error ? error.message.slice(0, 200) : "no answer" };
+    // A lost response is not proof that SES did not accept the message.
+    return { outcome: "busy", why: error instanceof Error ? error.message.slice(0, 200) : "no answer", uncertain: true };
   }
 }
 
