@@ -128,3 +128,71 @@ export async function resendUsageSince(fromMs: number, throughMs = Date.now()): 
   }
   return { ok: false, reason: "too_many" };
 }
+
+
+export type ResendUsageWindow = {
+  used: number;
+  limit: number | null;
+  sent: number;
+  received: number;
+  resetsAt: string;
+};
+
+export type ResendAccountUsage =
+  | { ok: true; daily: ResendUsageWindow; monthly: ResendUsageWindow }
+  | { ok: false; reason: "not_configured" | "unauthorized" | "provider" | "unknown" };
+
+function whole(value: unknown): number | null {
+  return typeof value === "number" && Number.isSafeInteger(value) && value >= 0 ? value : null;
+}
+
+function usageWindow(value: unknown): ResendUsageWindow | null {
+  const row = dataRecord(value);
+  const used = whole(row?.used);
+  const sent = whole(row?.sent);
+  const received = whole(row?.received);
+  const limit = row?.limit === null ? null : whole(row?.limit);
+  const resetsAt = row?.resets_at;
+  if (!row || used === null || sent === null || received === null || limit === null && row.limit !== null ||
+      used !== sent + received || typeof resetsAt !== "string" || resetsAt.length > 64) return null;
+  const reset = Date.parse(resetsAt);
+  if (!Number.isSafeInteger(reset) || reset < 0 || new Date(reset).toISOString() !== resetsAt) return null;
+  return { used, limit, sent, received, resetsAt };
+}
+
+/**
+ * Reads Resend's authoritative daily and monthly account usage. This is a
+ * comparison signal only: it requires a full-access read key and never grants
+ * permission to send. The local atomic pre-send ceiling remains independent.
+ */
+export async function resendAccountUsage(): Promise<ResendAccountUsage> {
+  const key = process.env.RESEND_READ_API_KEY?.trim() || process.env.RESEND_API_KEY?.trim();
+  if (!key) return { ok: false, reason: "not_configured" };
+  let response: Response;
+  try {
+    response = await timed(RESEND_TIMEOUT_MS, (signal) => fetch(`${RESEND_BASE}/usage`, {
+      method: "GET",
+      headers: { Authorization: `Bearer ${key}`, Accept: "application/json" },
+      cache: "no-store",
+      signal,
+    }));
+  } catch {
+    return { ok: false, reason: "provider" };
+  }
+  if (response.status === 401 || response.status === 403) return { ok: false, reason: "unauthorized" };
+  if (!response.ok) return { ok: false, reason: "provider" };
+  let raw: unknown;
+  try {
+    raw = await response.json();
+  } catch {
+    return { ok: false, reason: "unknown" };
+  }
+  const account = dataRecord(raw);
+  const emails = dataRecord(account?.emails);
+  const daily = usageWindow(emails?.daily);
+  const monthly = usageWindow(emails?.monthly);
+  if (!account || account.object !== "usage" || !emails || !daily || !monthly) {
+    return { ok: false, reason: "unknown" };
+  }
+  return { ok: true, daily, monthly };
+}

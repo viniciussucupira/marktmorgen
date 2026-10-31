@@ -6,7 +6,7 @@ const uuid = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, "0
 const at = (seconds: number) => new Date(seconds * 1_000).toISOString();
 
 async function main(): Promise<void> {
-  const { resendUsageSince } = await import("@/lib/resend-usage");
+  const { resendAccountUsage, resendUsageSince } = await import("@/lib/resend-usage");
 
   part("A complete same-window count");
   const calls: string[] = [];
@@ -66,6 +66,58 @@ async function main(): Promise<void> {
   is("authorization is not retried", requests, 1);
   globalThis.fetch = async () => new Response("", { status: 429 });
   is("rate limiting is not absence", await resendUsageSince(100_000, 200_000), { ok: false, reason: "provider" });
+
+  part("The account usage endpoint is authoritative but never admission");
+  let accountRequest: { url: string; authorization: string; cache: RequestCache | undefined } | null = null;
+  process.env.RESEND_READ_API_KEY = "re_test_full_read_only";
+  globalThis.fetch = async (input, init) => {
+    accountRequest = {
+      url: String(input),
+      authorization: String(new Headers(init?.headers).get("authorization")),
+      cache: init?.cache,
+    };
+    return Response.json({
+      object: "usage",
+      emails: {
+        daily: { used: 11, limit: 100, sent: 8, received: 3, resets_at: "2026-11-01T00:00:00.000Z" },
+        monthly: { used: 104, limit: 50_000, sent: 80, received: 24, resets_at: "2026-12-01T00:00:00.000Z" },
+      },
+    });
+  };
+  is("official daily and monthly counters retain sent, received, limits and reset boundaries",
+    await resendAccountUsage(),
+    {
+      ok: true,
+      daily: { used: 11, limit: 100, sent: 8, received: 3, resetsAt: "2026-11-01T00:00:00.000Z" },
+      monthly: { used: 104, limit: 50_000, sent: 80, received: 24, resetsAt: "2026-12-01T00:00:00.000Z" },
+    });
+  is("usage uses the separate full-access read key without cache",
+    accountRequest,
+    { url: "https://api.resend.com/usage", authorization: "Bearer re_test_full_read_only", cache: "no-store" });
+
+  let usageGetterCalls = 0;
+  const usageGetter = Object.defineProperty({}, "daily", {
+    get() { usageGetterCalls += 1; return {}; },
+  });
+  for (const account of [
+    {},
+    { object: "usage", emails: usageGetter },
+    { object: "usage", emails: {
+      daily: { used: 12, limit: 100, sent: 8, received: 3, resets_at: "2026-11-01T00:00:00.000Z" },
+      monthly: { used: 104, limit: 50_000, sent: 80, received: 24, resets_at: "2026-12-01T00:00:00.000Z" },
+    } },
+    { object: "usage", emails: {
+      daily: { used: 11, limit: 100, sent: 8, received: 3, resets_at: "tomorrow" },
+      monthly: { used: 104, limit: 50_000, sent: 80, received: 24, resets_at: "2026-12-01T00:00:00.000Z" },
+    } },
+  ]) {
+    globalThis.fetch = async () => ({ ok: true, status: 200, json: async () => account }) as Response;
+    is("malformed authoritative usage is unknown", await resendAccountUsage(), { ok: false, reason: "unknown" });
+  }
+  is("usage evidence getters were not executed", usageGetterCalls, 0);
+  globalThis.fetch = async () => new Response("", { status: 401 });
+  is("a send-only key cannot fabricate usage", await resendAccountUsage(), { ok: false, reason: "unauthorized" });
+  delete process.env.RESEND_READ_API_KEY;
 
   globalThis.fetch = oldFetch;
   done();
