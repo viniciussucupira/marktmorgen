@@ -21,7 +21,7 @@ process.env.STRIPE_SECRET_KEY = "sk_test_review_photo_paused_only";
 
 const OWNER = "photo-paused@example.com";
 const HANDLE = "photo-paused-shop";
-const ACCOUNT = "acct_1ReviewPhotoPause";
+const ACCOUNT = "acct_1TestPhotoP001";
 const SESSION = "cs_test_reviewphotopaused0001";
 const BUYER = "buyer-photo@example.com";
 
