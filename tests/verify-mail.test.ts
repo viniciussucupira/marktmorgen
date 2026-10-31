@@ -56,6 +56,7 @@ async function amazonAnnounces(event: Record<string, unknown>): Promise<void> {
   await amazonPosts(new NextRequest("https://marktmorgen.com/api/mail/ses", { method: "POST", headers: { host: "marktmorgen.com", "content-length": String(Buffer.byteLength(body)) }, body }));
 }
 
+let assumedRoles = 0;
 globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) => {
   const url = new URL(String(input));
   const json = (data: unknown, status = 200) => new Response(JSON.stringify(data), { status });
@@ -72,6 +73,14 @@ globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) =>
     return json({ data: batch.map((_, i) => ({ id: `e${i}` })) });
   }
   if (url.hostname === "api.resend.com") return json({ id: "single" });
+  if (url.hostname === `sts.${REGION}.amazonaws.com`) {
+    const form = new URLSearchParams(String(init?.body));
+    if (form.get("Action") !== "AssumeRoleWithWebIdentity" ||
+        form.get("RoleArn") !== "arn:aws:iam::123456789012:role/synthetic-verify-mail" ||
+        !form.get("WebIdentityToken")) return json({ message: "synthetic role refused" }, 403);
+    assumedRoles += 1;
+    return json({ Credentials: { AccessKeyId: "ASIAEXAMPLEVERIFY001", SecretAccessKey: "synthetic-lent-secret-never-stored-000000", SessionToken: "synthetic-verify-session", Expiration: Math.floor(Date.now() / 1000) + 3_600 } });
+  }
   if (url.hostname === `email.${REGION}.amazonaws.com`) {
     if (url.pathname === "/v2/email/account") return json({ ProductionAccessEnabled: true, SendingEnabled: true, EnforcementStatus: "HEALTHY", SendQuota: { Max24HourSend: 50_000, MaxSendRate: 14 } });
     const body = JSON.parse(String(init?.body)) as { Destination: { ToAddresses: string[] }; EmailTags?: { Name: string; Value: string }[] };
@@ -150,17 +159,19 @@ async function main(): Promise<void> {
   resend = "faithful";
 
   part("Amazon SES, once it is sending");
-  process.env.AWS_SES_ACCESS_KEY_ID = "AKIAEXAMPLEEXAMPLE00";
-  process.env.AWS_SES_SECRET_ACCESS_KEY = "a-stand-in-secret-for-tests-only-0000000";
+  process.env.AWS_SES_ROLE_ARN = "arn:aws:iam::123456789012:role/synthetic-verify-mail";
+  process.env.VERCEL_OIDC_TOKEN = "synthetic-verify-host-token";
   process.env.AWS_SES_REGION = REGION;
   process.env.AWS_SES_CONFIGURATION_SET = "marktmorgen";
   process.env.AWS_SES_TOPIC_ARN = TOPIC;
   is("the account answers, and is said to be sending", (await verifyAmazonAccount()).map((c) => [c.ok, c.detail]), [[true, "sending through Amazon: 50,000 emails in 24 hours, 14 a second"]]);
+  is("SES account check borrows only a temporary role identity", assumedRoles, 1);
   resendTook.length = 0;
   const both = await verifyMailLoop(Date.now() + 20_000);
   is("both senders are checked, each through itself and its own address back", both.map((c) => [c.check.split(":")[0], c.ok]), [["Resend", true], ["Resend", true], ["Amazon SES", true], ["Amazon SES", true]]);
   is("Amazon's two went to Amazon's own test mailboxes, and Resend's to Resend's", [amazonTook.map((to) => to.replace(/\+[0-9a-f]{8}@/, "+label@")), resendTook.length], [["bounce+label@simulator.amazonses.com", "complaint+label@simulator.amazonses.com"], 2]);
   is("and nothing is left behind", leftBehind(), []);
+  is("the existing role session serves the complete synthetic sender check", assumedRoles, 1);
 
   done();
 }
