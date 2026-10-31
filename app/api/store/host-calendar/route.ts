@@ -13,6 +13,7 @@ import {
   setHostSource,
 } from "@/lib/host-calendar";
 import { isTimeZone } from "@/lib/call-setup";
+import { TOOLS_PAUSED_WORDS, integrationPauseWord } from "@/lib/integration-pause";
 
 /** Changes one person may make to their own calendar here in ten minutes: several reach Google or a calendar. */
 const PER_TEN_MINUTES = 30;
@@ -41,6 +42,11 @@ export async function POST(request: NextRequest) {
   // member admission already enforces the existing authenticated daily bound.
   // Removing access must not depend on the monthly figure for new service work.
   const removing = action === "disconnect" || action === "ics-remove";
+  // 232 [CA1] 4b4a: while the plan's costs are paused, nothing here reaches Google or a
+  // calendar address for the host; taking something away (and choosing no source) stays open.
+  const paused = integrationPauseWord(store);
+  const reaches = action === "check" || action === "calendars" || action === "ics-add" || (action === "source" && (body.source === "google" || body.source === "ics"));
+  if (paused && reaches) return Response.json({ ok: false, error: paused, message: TOOLS_PAUSED_WORDS[paused] }, { status: 409 });
   if (!removing && !(await withinService("host-calendar", `${store.statsId}|${email}`, PER_TEN_MINUTES, 600, store))) {
     return Response.json({ ok: false, error: "limited" }, { status: 429 });
   }

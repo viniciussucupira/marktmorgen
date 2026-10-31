@@ -33,6 +33,7 @@
  * Changing any of it takes a signed-in session of that very person on a
  * store they are on (app/api/store/host-calendar), never a store's owner.
  */
+import { CALENDAR_LIST_PAUSED, integrationPauseWord } from "@/lib/integration-pause";
 import { reservePaidResourceWindow } from "@/lib/contract-resource-window";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import type { Busy } from "@/lib/call-setup";
@@ -311,7 +312,10 @@ export async function hostCalendarView(store: Store, email: string, tz: string):
   let calendars: GoogleCalendar[] | null = null;
   let calendarsError = "";
   if (conn && !conn.broken && parts?.calendars && hostSyncOn()) {
-    if (store.period?.funded === true && !(await reservePaidResourceWindow(store))) {
+    // 232 [CA1] 4b4a: Google's list is not read while the plan's costs are paused.
+    if (integrationPauseWord(store)) {
+      calendarsError = CALENDAR_LIST_PAUSED;
+    } else if (store.period?.funded === true && !(await reservePaidResourceWindow(store))) {
       calendarsError = "Calendar choices are temporarily unavailable. Try again later.";
     } else {
       try {

@@ -6,6 +6,7 @@ import { ACCOUNT_NAMES, NotConnected, disconnect, logProblem, meetView } from "@
 import { ProviderError, isConfigured } from "@/lib/meet-providers";
 import { makeTest, moveTest, removeTest, TestMeetingUnavailable } from "@/lib/meet-test";
 import { guardStoreWrite } from "@/lib/store-request";
+import { MEETING_TEST_PAUSED_WORDS, integrationPauseWord } from "@/lib/integration-pause";
 
 /** Changes a store may make here in a minute: each one reaches Google or Zoom. */
 const PER_MINUTE = 20;
@@ -42,6 +43,10 @@ export async function POST(request: NextRequest) {
       ? Response.json({ ok: true, view: await meetView(null, store) })
       : Response.json({ ok: false, error: "not_connected" }, { status: 400 });
   }
+  // 232 [CA1] 4b4a: a test meeting made or moved at the provider waits while the plan's costs
+  // are paused; deleting one (untest) and disconnecting stay open.
+  const paused = action === "test" || action === "movetest" ? integrationPauseWord(store) : null;
+  if (paused) return Response.json({ ok: false, error: paused, message: MEETING_TEST_PAUSED_WORDS[paused] }, { status: 409 });
   if (!(await withinService("meet-manage", store.statsId, PER_MINUTE, 60, store))) {
     return Response.json({ ok: false, error: "limited" }, { status: 429 });
   }

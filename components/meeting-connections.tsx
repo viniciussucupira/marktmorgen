@@ -102,7 +102,7 @@ export function MeetingConnections({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: step, provider }),
       });
-      const data = (await response.json().catch(() => ({}))) as { ok?: boolean; error?: string; test?: TestMeeting | null };
+      const data = (await response.json().catch(() => ({}))) as { ok?: boolean; error?: string; message?: string; test?: TestMeeting | null };
       if (data.ok) {
         setTests((all) => ({ ...all, [provider]: data.test ?? undefined }));
         toast(
@@ -114,7 +114,7 @@ export function MeetingConnections({
         );
         return;
       }
-      setError(MESSAGES[data.error ?? ""] ?? MESSAGES.server_error);
+      setError(data.message ?? MESSAGES[data.error ?? ""] ?? MESSAGES.server_error);
       if (data.error === "meeting_failed") router.refresh();
     } catch {
       setError(MESSAGES.server_error);
