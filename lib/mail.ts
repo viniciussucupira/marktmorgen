@@ -15,7 +15,7 @@
  */
 import { bodyHtml, bodyText } from "@/lib/mail-body";
 import { lookColours } from "@/lib/store-look";
-import { NIMBUS_FROM, type BatchMessage, hasResend, sendBatch, sendEmail, sentThisMonth } from "@/lib/email";
+import { NIMBUS_FROM, type BatchMessage, hasResend, sendListBatch, sendEmail, sentThisMonth } from "@/lib/email";
 import { SES_BULK_SHARE, isSesConfigured, sesBulkRoom, sesReady, sesSentLast24h } from "@/lib/ses";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { TRIAL_MONTHLY_EMAILS, canUse, monthlyEmails } from "@/lib/plan";
@@ -171,7 +171,11 @@ export function listCeiling(): number {
  * hours that email sent many at a time may take (lib/ses.ts). Amazon's own
  * number is read from Amazon, and grows as the account proves itself.
  */
-export async function senderRoom(): Promise<number> {
+export async function senderRoom(listOnly = false): Promise<number> {
+  if (listOnly) {
+    const state = isSesConfigured() ? await sesReady() : null;
+    return state ? (await sesBulkRoom(state)) ?? 0 : 0;
+  }
   const resendUsed = hasResend() ? await sentThisMonth() : 0;
   // Zero admission when usage is unknown, not a claim of zero usage.
   if (resendUsed === null) return 0;
@@ -234,9 +238,9 @@ async function tellSenderIsFull(): Promise<void> {
 }
 
 /** Whether `n` more list emails fit under the sender's ceiling; says so once when they do not. */
-async function senderTakes(n: number): Promise<boolean> {
-  if ((await senderRoom()) >= n) return true;
-  await tellSenderIsFull();
+async function senderTakes(n: number, listOnly = false): Promise<boolean> {
+  if ((await senderRoom(listOnly)) >= n) return true;
+  if (!listOnly) await tellSenderIsFull();
   return false;
 }
 
@@ -280,7 +284,7 @@ export async function releaseDay(n: number): Promise<void> {
 }
 
 /** Takes `n` from the month (and the company's day), or nothing when that would pass either. */
-export async function reserve(store: Store, n: number): Promise<Reserved> {
+export async function reserve(store: Store, n: number, listOnly = false): Promise<Reserved> {
   if (!Number.isSafeInteger(n) || n<0) return "month";
   if(n===0)return "ok";
   if(!store.listId)return "month";
@@ -293,7 +297,7 @@ export async function reserve(store: Store, n: number): Promise<Reserved> {
   if(!Number.isSafeInteger(allowance) || allowance<0 || n>allowance)return "month";
   if(store.period?.funded===true && !(await reservePaidResourceWindow(store)))return "unavailable";
   try {
-    if(!(await senderTakes(n)))return "sender";
+    if(!(await senderTakes(n, listOnly)))return "sender";
     const key=usedKey(store.listId,window),cap=dailyCap(),day=dayKey();
     const results=await redisPipeline([["INCRBY",key,n],["EXPIRE",key,70*86400],["INCRBY",day,n],["EXPIRE",day,3*86400]]);
     // A missing acknowledgement may still have consumed capacity. Never
@@ -514,7 +518,7 @@ export async function sendTo(
     const portion = await rampRoom(watched, Math.min(BATCH_SIZE, room, emails.length - i));
     if (portion <= 0) return { done, rest: emails.slice(i), stopped: "portion" };
     const chunk = emails.slice(i, i + portion);
-    const reserved = await reserve(store, chunk.length);
+    const reserved = await reserve(store, chunk.length, true);
     if (reserved !== "ok") {
       await rampBack(watched, chunk.length);
       return { done, rest: emails.slice(i), stopped: reserved === "month" ? "allowance" : reserved === "unavailable" ? "retry" : reserved };
@@ -531,7 +535,14 @@ export async function sendTo(
         return { from: fromLine(store), to: email, subject: r.subject, text: r.text, html: r.html, replyTo: store.email, headers: r.headers, tags };
       });
     if (messages.length) await paced();
-    const outcome = await sendBatch(messages, `${keyBase}:${i}:${chunk.length}`, { by: "monthly" });
+    const outcome = await sendListBatch(messages, `${keyBase}:${i}:${chunk.length}`, { by: "monthly" });
+    if (outcome === "waiting") {
+      // This invocation made no provider send. Existing allowance/portion
+      // reservations may be returned; unknown acceptance never uses this path.
+      await release(store, chunk.length);
+      await rampBack(watched, chunk.length);
+      return { done, rest: emails.slice(i), stopped: "sender" };
+    }
     if (outcome !== "sent") {
       // Dispatch may have succeeded before its acknowledgement was lost.
       // Keep attempted capacity reserved; retries consume new capacity.

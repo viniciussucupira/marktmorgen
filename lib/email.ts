@@ -153,11 +153,9 @@ export function hasResend(): boolean {
 }
 
 /**
- * Says so, once a day, to the site's own inbox when Amazon refuses to send
- * for the account's own sake: nothing is lost by it, because Resend takes
- * over at once, but each of those emails costs nine times as much, and what
- * Amazon wants — a domain proved again, a review answered — is for the
- * owner to do.
+ * Tells the site's inbox once a day when Amazon refuses account sending.
+ * The notice describes the available routes without claiming that a
+ * recipient's email was delivered or that list mail used the fallback.
  */
 async function tellAmazonIsDown(why: string): Promise<void> {
   try {
@@ -168,14 +166,14 @@ async function tellAmazonIsDown(why: string): Promise<void> {
       meter: { by: "company" },
       from: NIMBUS_FROM,
       to: SUPPORT_EMAIL,
-      subject: "Amazon SES is not sending: email is going out through Resend",
+      subject: "Amazon SES is not sending: check the account",
       text: [
         "Amazon SES refused to send an email, for a reason that is the account's and not the email's:",
         "",
         why || "(no reason given)",
         "",
-        "Nothing was lost: that email, and every one since, went out through Resend instead, which costs about nine times as much for each.",
-        "Amazon is asked again every ten minutes, and sending moves back to it by itself as soon as it answers yes.",
+        "Service email may use Resend while SES is unavailable. List-only email waits for SES; this notice does not confirm delivery.",
+        "The account is checked again automatically. Sending resumes only when its current status allows it.",
         "",
         "What to look at: the Amazon SES console, under Account dashboard (is the account paused or under review?) and Identities (is the sending domain still verified?).",
       ].join("\n"),
@@ -438,7 +436,23 @@ export async function sendBatch(
    */
   only?: "resend" | "amazon",
 ): Promise<"sent" | "retry" | "refused"> {
-  if (!isSenderConfigured()) return "retry";
+  const result = await dispatchBatch(messages, batchKey, meter, only, false);
+  return result === "waiting" ? "retry" : result;
+}
+
+/** List mail waits for SES; a known no-send result is distinct from unknown acceptance. */
+export async function sendListBatch(
+  messages: BatchMessage[], batchKey: string, meter: EmailMeter,
+): Promise<"sent" | "waiting" | "retry" | "refused"> {
+  if (messages.length === 0) return "sent";
+  return dispatchBatch(messages, batchKey, meter, "amazon", true);
+}
+
+async function dispatchBatch(
+  messages: BatchMessage[], batchKey: string, meter: EmailMeter,
+  only: "resend" | "amazon" | undefined, listOnly: boolean,
+): Promise<"sent" | "waiting" | "retry" | "refused"> {
+  if (!isSenderConfigured()) return listOnly ? "waiting" : "retry";
   if (messages.length === 0) return "sent";
   // What actually goes: a message with no address that can be written to is
   // left out below, and is not counted as sent either.
@@ -446,7 +460,7 @@ export async function sendBatch(
   if (going.length && !(await metered(meter, going.length))) return "refused";
   let idempotencyKey = batchKey;
   const config = sesConfig();
-  if (only === "amazon" && !(config && isSesConfigured())) return "retry";
+  if (only === "amazon" && !(config && isSesConfigured())) return listOnly ? "waiting" : "retry";
   if (config && isSesConfigured() && only !== "resend") {
     const all = going.length;
     // Whoever Amazon already took under this key, in a batch that was then
@@ -474,13 +488,15 @@ export async function sendBatch(
     } catch {
       return "retry";
     }
+    if (listOnly && toResend && going.length) return "retry"; // A prior provider handoff needs reconciliation, not another sender.
     const state = going.length && !toResend ? await sesReady() : null;
     // Many at a time use Amazon's day only up to a share of it; past that
     // they go through Resend, and the rest of the day is kept for the
     // emails that go one at a time (lib/ses.ts).
     const room = state ? await sesBulkRoom(state) : null;
     // Unknown usage cannot authorize SES or a fallback provider attempt.
-    if (state && room === null) return "retry";
+    if (state && room === null) return listOnly ? "waiting" : "retry";
+    if (listOnly && going.length && (!state || room === null || room < going.length)) return "waiting";
     if (state && room !== null && room >= going.length) {
       const result = await sesBatch(
         config,
