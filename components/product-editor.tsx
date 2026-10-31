@@ -75,6 +75,8 @@ import { productSegment } from "@/lib/product-slug";
 import { feeWords } from "@/lib/fee-words";
 import { COMMISSION_LIVE } from "@/lib/plan";
 import { NewTab } from "@/components/new-tab";
+import { TermsCheckPanel } from "@/components/terms-check-panel";
+import { deliversDigitally } from "@/lib/digital-consent";
 
 /** The sentences about amounts, in the store's own currency (lib/money.ts). */
 const optionPrice = (currency: Currency) => `Type an amount ${rangeWords(currency)}, like ${priceExample(currency, 39)}.`;
@@ -278,6 +280,7 @@ function ProductForm({
   onCancel,
   product,
   loadingAbout = false,
+  ownHosts = [],
 }: {
   draft: Draft;
   setDraft: (draft: Draft) => void;
@@ -290,6 +293,8 @@ function ProductForm({
   product?: Product;
   /** Whether the long description is still being read. */
   loadingAbout?: boolean;
+  /** The store's own hosts besides its marktmorgen.com address (its own domain), not warned as "another site". */
+  ownHosts?: string[];
 }) {
   const id = product?.id ?? "new";
   const currency = useStoreCurrency();
@@ -408,6 +413,28 @@ function ProductForm({
             ? "Reading what you wrote…"
             : `On this product's own page, which the card links to. A blank line starts a new paragraph. ${(MAX_ABOUT_LENGTH - draft.about.length).toLocaleString("en-US")} characters left.`}
         </p>
+        {loadingAbout ? null : (
+          <TermsCheckPanel
+            id={id}
+            fieldId={`product-about-${id}`}
+            input={{
+              text: draft.about,
+              ownHosts,
+              // The checkout's one price: none to compare for a membership, a choose-your-price, a product sold by its
+              // options (the single price is then not charged) or a free one.
+              priceCents: !draft.every && !draft.pwyw && !product?.options.length && !free ? readMoney(draft.price, currency) : null,
+              currency,
+              // The consent the checkout will ask for once this is saved: a new product is plain digital content until
+              // a call or shipping is set on it (lib/digital-consent.ts, deliversDigitally).
+              immediateAccessConsent: !draft.every && deliversDigitally(product ?? {}),
+              // No end date exists on a product, so no deadline is ever real here.
+              realDeadline: false,
+              realStockLimit: product?.stock != null,
+              resaleLicense: false,
+            }}
+            onChange={(about) => setDraft({ ...draft, about })}
+          />
+        )}
       </div>
 
       <div>
@@ -1541,6 +1568,7 @@ export function ProductEditor({
   mailAddress = "",
   cover = null,
   pairChoices = [],
+  ownHosts = [],
 }: {
   /** The products shown: every one, or one page of a long list. */
   products: Product[];
@@ -1588,6 +1616,8 @@ export function ProductEditor({
   cover?: (CoverLook & { language: LanguageCode }) | null;
   /** The store's published products, by name: what a product's "Goes well with" can pick (lib/store-collections.ts). */
   pairChoices?: { id: string; title: string }[];
+  /** The store's own domain, if it has one: not warned as "another site" in what the creator writes (493 [DE2]). */
+  ownHosts?: string[];
 }) {
   const router = useRouter();
   const sid = useStudioStore();
@@ -1825,6 +1855,7 @@ export function ProductEditor({
       {adding ? (
         <div className="mt-5">
           <ProductForm
+            ownHosts={ownHosts}
             draft={draft}
             setDraft={setDraft}
             busy={busy}
@@ -1914,6 +1945,7 @@ export function ProductEditor({
           >
             {editingId === product.id ? (
               <ProductForm
+                ownHosts={ownHosts}
                 draft={draft}
                 setDraft={setDraft}
                 busy={busy}

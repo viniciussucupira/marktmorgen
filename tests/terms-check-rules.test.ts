@@ -11,7 +11,7 @@
  * work on a huge text.
  */
 import { done, is, part } from "./check";
-import { MAX_TEXT, MAX_WARNINGS, checkCreatorTerms, type TermsCheckInput } from "@/lib/terms-check-rules";
+import { MAX_TEXT, MAX_WARNINGS, checkCreatorTerms, replaceWords, type TermsCheckInput, withoutSentence } from "@/lib/terms-check-rules";
 
 const base: TermsCheckInput = {
   text: "",
@@ -97,6 +97,48 @@ is("one of each kind", all.map((w) => w.kind).sort(), ["earnings_claim", "false_
 is("each has its passage, reason and fix", all.every((w) => w.excerpt.length > 0 && w.why.length > 20 && w.fix.length > 10), true);
 is("the passage shows the words themselves", all.find((w) => w.kind === "no_refunds")!.excerpt.includes("No refunds"), true);
 is("the same words twice are warned once", kinds("No refunds. No refunds.", { immediateAccessConsent: false }), ["no_refunds"]);
+
+part("The fix, applied only when the creator approves it");
+const text1 = "Ten lessons with worksheets. No refunds. Enjoy the course!";
+const w1 = checkCreatorTerms({ ...base, immediateAccessConsent: false, text: text1 })[0];
+is("each warning says where its words are", text1.slice(w1.at, w1.at + w1.length), "No refunds");
+is("removing the sentence leaves the rest as written", withoutSentence(text1, w1.at), "Ten lessons with worksheets. Enjoy the course!");
+const text2 = "Line one.\nAll sales are final.\nLine three.";
+const w2 = checkCreatorTerms({ ...base, immediateAccessConsent: false, text: text2 })[0];
+is("a sentence on its own line goes with its line", withoutSentence(text2, w2.at), "Line one.\nLine three.");
+const text3 = "The course costs $99 and includes ten lessons.";
+const w3 = checkCreatorTerms({ ...base, text: text3 })[0];
+is("a price fix carries the checkout's price", w3.replacement, "$49");
+is("and puts it in place of the amount only", replaceWords(text3, w3.at, w3.length, "$99", w3.replacement!), "The course costs $49 and includes ten lessons.");
+is("text changed since: nothing replaced", replaceWords("The course costs $89 now.", w3.at, w3.length, "$99", "$49"), "The course costs $89 now.");
+is("a place outside the text: unchanged", withoutSentence("Short.", 99), "Short.");
+is("no fix tells the creator to use a setting that does not exist", checkCreatorTerms({ ...base, immediateAccessConsent: false, text: "Visit othershop.com. Costs $99. No refunds. Get rich fast. Hurry! Only 3 left. Resale rights included." }).every((w) => !/in the studio/.test(w.fix)), true);
+
+part("Review findings: sentences, the creator's own pages, stale fixes");
+const cut = (t: string) => { const w = checkCreatorTerms({ ...base, immediateAccessConsent: false, text: t })[0]; return withoutSentence(t, w.at, t.slice(w.at, w.at + w.length)); };
+is("a dot in an address does not end the sentence", cut("Intro. Read the rules at othershop.com before buying. Thanks!"), "Intro. Thanks!");
+is("a dot in an amount does not end the sentence", cut("Ten lessons. The course costs $99.00 today. Enjoy."), "Ten lessons. Enjoy.");
+is("a dot in a version does not end the sentence", cut("Hello. Version 2.0 is non-refundable. Bye."), "Hello. Bye.");
+is("the creator's own patreon page", kinds("Check out my patreon.com/jane page."), []);
+is("the creator's own community link", kinds("Join my community at skool.com/jane."), []);
+is("the creator's own tip page", kinds("Support me at ko-fi.com/jane."), []);
+is("another site in terms still warned", kinds("These terms are those of othershop.com."), ["other_company"]);
+const two = "No refunds. Ten lessons. All sales are final.";
+const [r1, r2] = checkCreatorTerms({ ...base, immediateAccessConsent: false, text: two });
+const after1 = withoutSentence(two, r1.at, two.slice(r1.at, r1.at + r1.length));
+is("the first fix applied", after1, "Ten lessons. All sales are final.");
+is("an old warning's fix on the changed text changes nothing", withoutSentence(after1, r2.at, two.slice(r2.at, r2.at + r2.length)), after1);
+
+part("Re-review: a possessive elsewhere is not the creator's own page; quotes stay with their sentence");
+is("our policy follows another platform's: warned", kinds("Our refund policy follows Gumroad terms."), ["other_company"]);
+is("our terms are another site's: warned", kinds("Our terms are the same as othershop.com/terms."), ["other_company"]);
+is("me, elsewhere in the sentence: warned", kinds("Email me about refunds under the Gumroad refund policy."), ["other_company"]);
+const quoted = 'Our promise is "no questions asked." Resale rights included. Thanks.';
+const q1 = checkCreatorTerms({ ...base, text: quoted })[0];
+is("the previous sentence keeps its closing quote", withoutSentence(quoted, q1.at, quoted.slice(q1.at, q1.at + q1.length)), 'Our promise is "no questions asked." Thanks.');
+const shout = '"Amazing!" Resale rights included. Thanks.';
+const q2 = checkCreatorTerms({ ...base, text: shout })[0];
+is("and after an exclamation", withoutSentence(shout, q2.at, shout.slice(q2.at, q2.at + q2.length)), '"Amazing!" Thanks.');
 
 part("Bounds");
 const huge = "Hurry! Only 2 left. ".repeat(10_000) + " Visit othershop.com.";
