@@ -1255,7 +1255,9 @@ export async function runImport(id: string, deadline: number): Promise<ImportJob
     // the job and the addresses still to be emailed are kept alive meanwhile
     // (one write each, every five minutes), so a long pause loses neither.
     if (costsPaused(store, Date.now() / 1000)) {
-      await redisPipeline([saveJob(job), ["EXPIRE", mailKey(id), KEEP_SECONDS], ["EXPIRE", errorsKey(id), KEEP_SECONDS], ["EXPIRE", busyKey(job.sid), KEEP_SECONDS]]);
+      const [, , , holder] = await redisPipeline([saveJob(job), ["EXPIRE", mailKey(id), KEEP_SECONDS], ["EXPIRE", errorsKey(id), KEEP_SECONDS], ["GET", busyKey(job.sid)]]);
+      // The store's one-import slot only while this import holds it.
+      if (holder === id) await redisPipeline([["EXPIRE", busyKey(job.sid), KEEP_SECONDS]]);
       return job;
     }
     const [batches] = await redisPipeline([["LLEN", rowsKey(id)]]);

@@ -69,7 +69,7 @@ async function main() {
 
   part("Renewal unpaid: the import waits where it is");
   is("Store's rows while paused, not Studio's", importAllowanceFor(store).rows, IMPORT_ALLOWANCES.creator.rows);
-  await redis.pipeline([["EXPIRE", `nl:import:${id}`, 60]]);
+  await redis.pipeline([["EXPIRE", `nl:import:${id}`, 60], ["EXPIRE", `nl:imports:busy:${store.sid}`, 60]]);
   const waited = await runImport(id, Date.now() + 30_000);
   const [ttl] = await redis.pipeline([["TTL", `nl:import:${id}`]]);
   is("a paused pass keeps the import's record alive for its 14 days", Number(ttl) > 13 * 86_400, true);

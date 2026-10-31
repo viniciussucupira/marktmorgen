@@ -33,9 +33,11 @@
  *
  * A store in its free trial, or with no plan, has Store's figures. So does a
  * paid plan whose renewal is unpaid or whose payment is disputed
- * (lib/plan-standing.ts costStandingOf, 232 [CA1] unit 4b2), although its
- * imports do not run at all until that is settled (lib/imports.ts runImport,
- * app/api/store/import and app/api/store/import/funnel).
+ * (lib/plan-standing.ts costStandingOf, 232 [CA1] unit 4b2), although no
+ * import starts, checks or runs until that is settled (lib/imports.ts
+ * runImport, app/api/store/import and app/api/store/import/funnel); the one
+ * exception is rows, where an upload already under way keeps its plan's
+ * own month (importRowsFor).
  */
 import type { Tier } from "@/lib/plan";
 import { type PlanFields, costStandingOf, standingOf } from "@/lib/plan-standing";
