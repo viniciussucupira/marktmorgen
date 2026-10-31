@@ -143,6 +143,7 @@ import { JoinBoxEditor } from "@/components/join-box-editor";
 import { ContactBoxEditor } from "@/components/contact-box-editor";
 import { FaqEditor } from "@/components/faq-editor";
 import { StoreCoach } from "@/components/store-coach";
+import { StoreAccessCheck } from "@/components/store-access-check";
 import { PageOrderEditor } from "@/components/page-order-editor";
 import { tipsOpen } from "@/lib/store-tip-checkout";
 import { TipsEditor } from "@/components/tips-editor";
@@ -153,6 +154,7 @@ import { joinOpen } from "@/lib/store-join";
 import { contactOpen } from "@/lib/store-contact";
 import { visibleCount } from "@/lib/catalog";
 import { storeChecks } from "@/lib/store-coach";
+import { accessCheck } from "@/lib/store-access-check";
 import { isPaidUp } from "@/lib/billing";
 import { allowanceWindow, calendarWindow, samePeriod } from "@/lib/allowance-window";
 import { ALLOWANCE_KINDS, API_WRITE_UNITS, KIND_WORDS, allowanceFor } from "@/lib/store-allowance-rules";
@@ -1222,6 +1224,8 @@ export default async function StudioPage({
             {may("page") ? (
               <StoreCoach checks={storeChecks(store, { path: (page) => studioPath(store, "", page) })} />
             ) : null}
+            {/* 98 [D2-COMPLIANCE-REVIEW] unit 1: pictures with no description, and what every store gets (lib/store-access-check.ts). */}
+            {may("products") ? <StoreAccessCheck check={accessCheck(store)} /> : null}
             <StudioTools
               tools={[
                 { href: studioPath(store, "", "growth")+"#template-library", title: "Template library", text: "Preview existing pages, funnels, email layouts and paused sequences.", icon: "layout" as const, prefetch: false },

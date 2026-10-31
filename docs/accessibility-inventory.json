@@ -1427,6 +1427,7 @@
     "components/socials-editor.tsx",
     "components/stats-panel.tsx",
     "components/sticky-buy.tsx",
+    "components/store-access-check.tsx",
     "components/store-app.tsx",
     "components/store-assistant-editor.tsx",
     "components/store-assistant.tsx",
