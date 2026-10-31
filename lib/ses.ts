@@ -384,15 +384,28 @@ export async function countSesSent(n: number, now = Date.now()): Promise<void> {
   ]).catch(() => {});
 }
 
-/** Emails Amazon took in the last 24 hours, this hour included. 0 when it cannot be read. */
-export async function sesSentLast24h(now = Date.now()): Promise<number> {
-  if (!isRedisConfigured()) return 0;
+/** Recorded SES acceptances in the existing 24 hourly buckets; null when unproved. */
+export async function sesSentLast24h(now = Date.now()): Promise<number | null> {
+  if (!isRedisConfigured()) return null;
   try {
     const keys = Array.from({ length: 24 }, (_, i) => hourKey(now - i * 3_600_000));
-    const rows = await redisPipeline(keys.map((key) => ["GET", key]));
-    return rows.reduce((sum: number, raw) => sum + (Number(raw) || 0), 0);
+    const rows: unknown = await redisPipeline(keys.map((key) => ["GET", key]));
+    if (!Array.isArray(rows)) return null;
+    const length = Object.getOwnPropertyDescriptor(rows, "length");
+    if (!length || !("value" in length) || length.value !== 24) return null;
+    let total = 0;
+    for (let i = 0; i < 24; i += 1) {
+      const item = Object.getOwnPropertyDescriptor(rows, String(i));
+      if (!item || !("value" in item)) return null;
+      if (item.value === null) continue; // Explicit absence is known zero.
+      if (typeof item.value !== "string" || !/^(0|[1-9][0-9]{0,15})$/.test(item.value)) return null;
+      const count = Number(item.value);
+      if (!Number.isSafeInteger(count) || count > Number.MAX_SAFE_INTEGER - total) return null;
+      total += count;
+    }
+    return total;
   } catch {
-    return 0;
+    return null;
   }
 }
 
@@ -403,10 +416,11 @@ export async function sesSentLast24h(now = Date.now()): Promise<number> {
  */
 export const SES_BULK_SHARE = 0.8;
 
-/** How many more emails sent many at a time Amazon's day has room for. Infinity for an account with no limit. */
-export async function sesBulkRoom(state: SesState, now = Date.now()): Promise<number> {
+/** Recorded bulk room; null when usage cannot be proved. Infinity for an account with no limit. */
+export async function sesBulkRoom(state: SesState, now = Date.now()): Promise<number | null> {
   if (state.max24 <= 0) return Number.POSITIVE_INFINITY;
-  return Math.max(0, Math.floor(state.max24 * SES_BULK_SHARE) - (await sesSentLast24h(now)));
+  const sent = await sesSentLast24h(now);
+  return sent === null ? null : Math.max(0, Math.floor(state.max24 * SES_BULK_SHARE) - sent);
 }
 
 /* ------------------------------------------------------------------ */

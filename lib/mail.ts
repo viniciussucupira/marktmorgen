@@ -163,7 +163,10 @@ export function listCeiling(): number {
 export async function senderRoom(): Promise<number> {
   const resend = hasResend() ? Math.max(0, listCeiling() - (await sentThisMonth())) : 0;
   const amazon = isSesConfigured() ? await sesReady() : null;
-  return amazon ? resend + (await sesBulkRoom(amazon)) : resend;
+  if (!amazon) return resend;
+  const room = await sesBulkRoom(amazon);
+  // Zero available admission is conservative, not a claim of zero usage.
+  return room === null ? 0 : resend + room;
 }
 
 const toldKey = (now = new Date()) => `nl:sender:${now.toISOString().slice(0, 7)}:told`;
@@ -179,6 +182,7 @@ async function tellSenderIsFull(): Promise<void> {
     if (first === null) return;
     const quota = senderQuota();
     const amazon = isSesConfigured() ? await sesReady() : null;
+    const amazonSent = amazon ? await sesSentLast24h() : null;
     await sendEmail({ meter: { by: "company" },
       from: NIMBUS_FROM,
       to: SUPPORT_EMAIL,
@@ -186,7 +190,7 @@ async function tellSenderIsFull(): Promise<void> {
       text: [
         ...(amazon
           ? [
-              `In the last 24 hours ${(await sesSentLast24h()).toLocaleString("en-US")} emails went out through Amazon SES, which allows this account ${amazon.max24.toLocaleString("en-US")} in any 24 hours; creators' list email uses up to ${Math.floor(amazon.max24 * SES_BULK_SHARE).toLocaleString("en-US")} of them. Amazon raises that number by itself as the account proves itself, and a higher one can be asked for in the Amazon SES console, under Account dashboard.`,
+              `${amazonSent === null ? "Amazon SES usage in the last 24 hours cannot currently be confirmed." : `In the last 24 hours ${amazonSent.toLocaleString("en-US")} emails went out through Amazon SES.`} This account allows ${amazon.max24.toLocaleString("en-US")} in any 24 hours; creators' list email uses up to ${Math.floor(amazon.max24 * SES_BULK_SHARE).toLocaleString("en-US")} of them. Amazon raises that number by itself as the account proves itself, and a higher one can be asked for in the Amazon SES console, under Account dashboard.`,
               "",
               "Past Amazon's day, list email goes through Resend, and that is used up too:",
               "",

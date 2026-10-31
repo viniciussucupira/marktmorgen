@@ -470,7 +470,10 @@ export async function sendBatch(
     // Many at a time use Amazon's day only up to a share of it; past that
     // they go through Resend, and the rest of the day is kept for the
     // emails that go one at a time (lib/ses.ts).
-    if (state && (await sesBulkRoom(state)) >= going.length) {
+    const room = state ? await sesBulkRoom(state) : null;
+    // Unknown usage cannot authorize SES or a fallback provider attempt.
+    if (state && room === null) return "retry";
+    if (state && room !== null && room >= going.length) {
       const result = await sesBatch(
         config,
         state,
