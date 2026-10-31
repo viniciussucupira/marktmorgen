@@ -112,3 +112,17 @@ test("Norwegian national ledger reaches its distinct threshold and propagates in
   assert.equal(assessTaxSalesThreshold(accessor, NOW).status, "unknown");
   assert.equal(reads, 0);
 });
+
+test("prototype descriptor defaults cannot forge a missing own threshold amount", () => {
+  let reads = 0;
+  const malformed: Record<string, unknown> = { ...row("ca-specified-supplies", 0) };
+  delete malformed.settledApplicableMinor;
+  malformed.extra = 0;
+  Object.defineProperty(Object.prototype, "settledApplicableMinor", {
+    configurable: true, get() { reads++; return { value: 0 }; },
+  });
+  try {
+    assert.equal(assessTaxThreshold(malformed, NOW).status, "unknown");
+    assert.equal(reads, 0);
+  } finally { Reflect.deleteProperty(Object.prototype, "settledApplicableMinor"); }
+});

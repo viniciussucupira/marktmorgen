@@ -56,6 +56,7 @@ function data(value: unknown, keys: readonly string[]): Record<string, unknown> 
   const fields = Object.getOwnPropertyDescriptors(value);
   const out: Record<string, unknown> = {};
   for (const key of keys) {
+    if (!Object.hasOwn(fields, key)) return null;
     const field = fields[key];
     if (!field || !Object.hasOwn(field, "value")) return null;
     out[key] = field.value;

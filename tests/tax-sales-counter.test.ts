@@ -124,3 +124,17 @@ test("oversized snapshots fail before enumerating or reading entries, with no tr
   assert.deepEqual(countTaxSales({ ...ledger(), entries }), { status: "unknown" });
   assert.deepEqual([enumerated, inspected], [0, 0]);
 });
+
+test("a missing own field cannot be forged by a getter on the descriptor map prototype", () => {
+  let reads = 0;
+  const malformed: Record<string, unknown> = { ...entry("missing") };
+  delete malformed.id;
+  malformed.extra = "not an id";
+  Object.defineProperty(Object.prototype, "id", {
+    configurable: true, get() { reads++; return { value: "forged" }; },
+  });
+  try {
+    assert.deepEqual(countTaxSales({ ...ledger(), entries: [malformed] }), { status: "unknown" });
+    assert.equal(reads, 0);
+  } finally { Reflect.deleteProperty(Object.prototype, "id"); }
+});
