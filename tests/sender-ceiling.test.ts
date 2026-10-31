@@ -1,13 +1,13 @@
 /**
- * List email is held back before the sender's own ceiling stops everything.
+ * The Resend ceiling still protects service and import email, while creator
+ * list delivery waits for confirmed Amazon SES capacity.
  *
- * The sender pauses a whole account at five times its plan's monthly emails
+ * Resend pauses a whole account at five times its plan's monthly emails
  * (resend.com/docs/knowledge-base/account-quotas-and-limits, read October 6,
- * 2026). The whole account is every creator's newsletter and also every
- * login link and every email that hands a buyer their file. So list email
- * waits at four fifths of that ceiling, and the rest is kept for the emails a
- * store cannot run without. These check that it waits, loses nothing, tells
- * the owner once, and goes on by itself.
+ * 2026). The account includes login links and emails that hand buyers their
+ * files. These checks preserve that ceiling and its service reserve, then
+ * prove that a saved list waits for SES, loses nothing and resumes by itself
+ * without falling through to Resend.
  */
 import { claimHandle, ensureListId, ensureStatsId, setMailSettings, setSubscription, storeForEmail, storeForHandle } from "@/lib/store";
 import { upsertContact } from "@/lib/contacts";
