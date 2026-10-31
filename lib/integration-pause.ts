@@ -38,12 +38,18 @@ export const META_READ_PAUSED = "Reading your Meta ad spend also waits, and star
  * stays open: disconnecting, removing a calendar address, choosing no source,
  * and deleting a test meeting.
  */
-const TOOLS_KEPT = "You can still disconnect any account, remove a calendar address, choose no calendar, or delete a test meeting.";
+const CALENDAR_KEPT = "You can still remove your calendar address, choose no calendar, or disconnect Google Calendar.";
+const MEETING_KEPT = "You can still delete a test meeting or disconnect the account.";
+const pausedWords = (what: string, kept: string): Record<"paused_unpaid" | "paused_disputed", string> => ({
+  paused_unpaid: `Nothing was changed: your plan's renewal payment did not go through, so ${what} wait until it is paid. Check the notice at the top of your studio to pay it. ${kept}`,
+  paused_disputed: `Nothing was changed: a payment for your plan is disputed with your bank, so ${what} wait until the dispute is settled. Check the notice at the top of your studio for what happens next. ${kept}`,
+});
 
-export const TOOLS_PAUSED_WORDS: Record<"paused_unpaid" | "paused_disputed", string> = {
-  paused_unpaid: `Nothing was changed: your plan's renewal payment did not go through, so test meetings and calendar checks and changes wait until it is paid. Check the notice at the top of your studio to pay it. ${TOOLS_KEPT}`,
-  paused_disputed: `Nothing was changed: a payment for your plan is disputed with your bank, so test meetings and calendar checks and changes wait until the dispute is settled. Check the notice at the top of your studio for what happens next. ${TOOLS_KEPT}`,
-};
+/** The host calendar page's refusals (app/api/store/host-calendar). */
+export const TOOLS_PAUSED_WORDS = pausedWords("calendar checks and changes", CALENDAR_KEPT);
+
+/** The video calls page's refusals for a test meeting (app/api/integrations/meetings). */
+export const MEETING_TEST_PAUSED_WORDS = pausedWords("test meetings", MEETING_KEPT);
 
 /** Shown where the host's Google calendar list would be, while it is not read. */
-export const CALENDAR_LIST_PAUSED = "Your Google calendar list is not read while your plan's payment is unpaid or disputed. It is read again on its own once the payment is recorded or the dispute is won.";
+export const CALENDAR_LIST_PAUSED = "Your Google calendar list is not read while your plan's payment is unpaid or disputed. It is read again on its own once the payment is recorded or the dispute is settled.";

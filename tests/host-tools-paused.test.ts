@@ -20,7 +20,7 @@ import { POST as hostCalendar } from "@/app/api/store/host-calendar/route";
 import { POST as meetings } from "@/app/api/integrations/meetings/route";
 import { hostCalendarView } from "@/lib/host-calendar";
 import { claimHandle, ensureStatsId, recordPlanDispute, setSubscription, storeForEmail, storeRef } from "@/lib/store";
-import { CALENDAR_LIST_PAUSED, TOOLS_PAUSED_WORDS, integrationPauseWord } from "@/lib/integration-pause";
+import { CALENDAR_LIST_PAUSED, MEETING_TEST_PAUSED_WORDS, TOOLS_PAUSED_WORDS, integrationPauseWord } from "@/lib/integration-pause";
 import { paidPeriod } from "./billing-period-fixture";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
@@ -104,6 +104,14 @@ async function main(): Promise<void> {
   is("picking Google as the source goes through", (await cal({ action: "source", source: "google" })).status, 200);
   const badIcs = await cal({ action: "ics-add", url: "not an address" });
   is("an iCal address is judged as before (not refused for a pause)", [badIcs.status, badIcs.body.error], [400, "ics"]);
+  // The store's own Google meetings account, so a test meeting really reaches Google when paid.
+  const storeUrl = await beginConsent("google", { statsId: store.statsId!, sid: store.sid!, sessionCookie: session, email: OWNER });
+  const storeTaken = await takeConsent("google", new URL(storeUrl).searchParams.get("state") ?? "", { sessionCookie: session, email: OWNER });
+  const storeConnected = storeTaken ? await finishConsent("google", { statsId: storeTaken.statsId, code: "good", verifier: storeTaken.verifier, by: OWNER, owner: { email: store.email, handle: store.handle } }) : { ok: false };
+  is("the store's Google meetings account is connected", storeConnected.ok, true);
+  from = asked.length;
+  await meet({ action: "test", provider: "google" });
+  is("a test meeting reaches Google when paid", leftForProvider(from).some((a) => a.includes("/calendars/")), true);
   const test = await meet({ action: "test", provider: "zoom" });
   is("a test meeting goes on to the provider's rules (Zoom is not connected here)", [test.status, test.body.error], [400, "not_connected"]);
 
@@ -121,8 +129,8 @@ async function main(): Promise<void> {
     is(`picking ${source} as the source is refused`, [r.status, r.body.error], [409, "paused_unpaid"]);
   }
   const testPaused = await meet({ action: "test", provider: "google" });
-  is("a test meeting is refused with the sentence", [testPaused.status, testPaused.body.error, testPaused.body.message], [409, "paused_unpaid", TOOLS_PAUSED_WORDS.paused_unpaid]);
-  is("moving it is refused", (await meet({ action: "movetest", provider: "zoom" })).status, 409);
+  is("a test meeting is refused with its sentence", [testPaused.status, testPaused.body.error, testPaused.body.message], [409, "paused_unpaid", MEETING_TEST_PAUSED_WORDS.paused_unpaid]);
+  is("moving it is refused", (await meet({ action: "movetest", provider: "google" })).status, 409);
   const view = await hostCalendarView(store, OWNER, "UTC");
   is("the page does not read Google's list and says why", [view.calendars, view.calendarsError], [null, CALENDAR_LIST_PAUSED]);
   is("no request left for any provider while paused", leftForProvider(from), []);
@@ -152,9 +160,18 @@ async function main(): Promise<void> {
   is("a test meeting goes on to the provider's rules again", (await meet({ action: "test", provider: "zoom" })).body.error, "not_connected");
   is("an iCal address is judged again", (await cal({ action: "ics-add", url: "not an address" })).body.error, "ics");
 
+  part("Unpaid, then paid with no dispute: the tools work again");
+  await setSubscription(OWNER, { active: true, tier: "pro", cycle: "month", period: paidPeriod(), renewalUnpaid: true });
+  await freshDay();
+  is("unpaid again refuses", (await cal({ action: "check" })).status, 409);
+  await setSubscription(OWNER, { active: true, tier: "pro", cycle: "month", period: paidPeriod(), renewalUnpaid: false });
+  await freshDay();
+  is("paid: an iCal address is judged again", (await cal({ action: "ics-add", url: "not an address" })).body.error, "ics");
+
   part("Words");
   for (const w of ["paused_unpaid", "paused_disputed"] as const) {
-    is(`${w} names what stays open`, ["disconnect", "remove a calendar address", "delete a test meeting"].every((s) => TOOLS_PAUSED_WORDS[w].includes(s)), true);
+    is(`the calendar's ${w} names what stays open on that page`, ["remove your calendar address", "choose no calendar", "disconnect Google Calendar"].every((s) => TOOLS_PAUSED_WORDS[w].includes(s)), true);
+    is(`the test meeting's ${w} names what stays open on that page`, ["delete a test meeting", "disconnect the account"].every((s) => MEETING_TEST_PAUSED_WORDS[w].includes(s)), true);
   }
   const card = readFileSync(join(process.cwd(), "components/meeting-connections.tsx"), "utf8");
   is("the meetings card shows the route's own sentence", card.includes("setError(data.message ?? MESSAGES"), true);
