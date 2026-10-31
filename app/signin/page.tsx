@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Icon } from "@/components/icons";
-import { Logo } from "@/components/logo";
+import { MorningLogo } from "@/components/morning-header";
 import { SignInForm } from "@/components/signin-form";
 import { PasskeySignIn } from "@/components/passkey-signin";
 import { ToastOnLoad } from "@/components/toast";
@@ -10,7 +10,6 @@ import { PLAN_TITLES as PLAN_NAMES, TIERS, TRIAL_DAYS, parseTier, publishedPrice
 import { PLANS_ON_SALE } from "@/lib/opening";
 import { formatMoney } from "@/lib/money";
 import { INVITE_PROGRAM_OPEN, INVITE_BONUS_CENTS, INVITE_HOLD_DAYS } from "@/lib/creator-invite-rules";
-import { feeWords } from "@/lib/fee-words";
 import { handleProblem, normaliseHandle } from "@/lib/store";
 
 /** Somebody who came back to a store they have: by Log in, or sent here to log in again. */
@@ -156,47 +155,46 @@ export default async function SignInPage({
   const askedProblem = asked ? handleProblem(asked) : null;
 
   return (
-    <div className="min-h-screen bg-paper text-ink lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
-      <aside className="surface-night nb-grid-lines on-dark hidden flex-col justify-between p-10 lg:flex xl:p-14">
-        <Link prefetch={false} href="/" className="w-fit rounded-[10px]" aria-label="Marktmorgen, home">
-          <Logo tone="light" />
-        </Link>
+    <div className="min-h-screen lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
+      {/* VS1: the home page's morning sky beside the form, no dark surface. */}
+      <aside className="hm-signin-panel hidden flex-col justify-between p-10 lg:flex xl:p-14">
+        <div aria-hidden="true" className="hm-sky-layer">
+          <div className="hm-blob hm-sun-signin" />
+        </div>
+        <MorningLogo />
         <div className="max-w-md">
-          <p className="t-h2 balance text-white">
-            Your store. Your <span className="serif font-normal text-[#cfc4ff]">Stripe.</span> Your money.
-          </p>
-          <ul className="mt-10 space-y-5 text-white/80">
+          <p className="hm-signin-title"><span>Simple to set up.</span> <span>Easy to run.</span></p>
+          <ul className="hm-signin-facts">
             {[
               { icon: "mail" as const, text: "No password. A link sent to your email logs you in." },
               { icon: "bank" as const, text: "Your buyers pay into your own Stripe account." },
-              { icon: "percent" as const, text: feeWords().takes },
             ].map((item) => (
-              <li key={item.text} className="flex gap-3">
-                <span className="icon-tile icon-tile-sm">
+              <li key={item.text}>
+                <span className="icon-tile icon-tile-sm" aria-hidden="true">
                   <Icon name={item.icon} size={18} />
                 </span>
-                <span className="pt-1.5">{item.text}</span>
+                <span className="pt-1">{item.text}</span>
               </li>
             ))}
           </ul>
         </div>
-        <Link prefetch={false} href="/demo" className="link-arrow on-dark w-fit text-[0.9375rem]">
+        <Link prefetch={false} href="/demo" className="link-arrow w-fit text-[1.0625rem]">
           See the live demo store first
           <Icon name="arrow-right" size={16} className="arrow" />
         </Link>
       </aside>
 
-      <main id="content" className="flex min-h-screen min-w-0 flex-col px-4 py-8 [overflow-wrap:anywhere] sm:px-8 lg:min-h-0 lg:justify-center lg:py-16">
-        <Link prefetch={false} href="/" className="inline-flex min-h-11 w-fit items-center rounded-[10px] lg:hidden" aria-label="Marktmorgen, home">
-          <Logo />
-        </Link>
+      <main id="content" className="hm-signin-main flex min-h-screen min-w-0 flex-col px-4 py-8 [overflow-wrap:anywhere] sm:px-8 lg:min-h-0 lg:justify-center lg:py-16">
+        <div className="lg:hidden">
+          <MorningLogo />
+        </div>
 
         <div className="mx-auto w-full min-w-0 max-w-md flex-1 pt-12 lg:flex-none lg:pt-0">
           <h1 className="t-h1">{returning ? "Log in to your store" : "Start your store"}</h1>
           <p className="mt-4 text-ink-soft">
             {returning
-              ? "Type the email your store is under and we'll send you a link that opens it. No password here, on purpose. New here? The same link starts a store."
-              : "Type your email and we'll send you a link. It opens your store if you already have one, and starts one if you do not. There is no password to create. After the link, you choose a store address and prepare your first offer."}
+              ? "Type the email your store is under. We'll send you a link that opens it. No password needed. New here? The same link starts a store."
+              : "Type your email. We'll send you a link that opens your store, or starts one if you don't have one yet. No password to create."}
           </p>
 
           {!returning ? <section aria-labelledby="signin-plan-title" className="notice mt-6" data-signin-terms>
@@ -274,7 +272,7 @@ export default async function SignInPage({
                 },
               ].map((step, i) => (
                 <li key={step.title} className="flex gap-4">
-                  <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-lilac text-sm font-semibold text-violet-deep">
+                  <span className="hm-step-dot grid h-8 w-8 shrink-0 place-items-center rounded-full text-sm">
                     {i + 1}
                   </span>
                   <span>

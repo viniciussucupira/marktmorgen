@@ -1,7 +1,7 @@
 import { PendingSubmit } from "@/components/pending-submit";
 import Link from "next/link";
 import { cookies } from "next/headers";
-import { Logo } from "@/components/logo";
+import { MorningLogo } from "@/components/morning-header";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { RESET_DAYS, TWO_STEP_COOKIE, heldFor, twoStepStatus } from "@/lib/two-step";
@@ -38,11 +38,9 @@ export default async function CodePage({ searchParams }: { searchParams: Promise
   const resetDay = reset ? new Date(reset).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric", timeZone: "UTC" }) : "";
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-paper text-ink">
+    <div className="relative min-h-screen overflow-hidden">
       <main id="content" className="relative mx-auto max-w-xl px-4 py-16">
-        <Link href="/" className="inline-block w-fit rounded-[10px]" aria-label="Marktmorgen, home">
-          <Logo />
-        </Link>
+        <MorningLogo />
 
         <h1 className="t-h1 mt-6">One more step</h1>
         <p className="mt-4 text-lg text-ink-soft">Your link was good. Now type the code your authenticator app shows for Marktmorgen.</p>
