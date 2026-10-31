@@ -31,6 +31,7 @@
  * person who owns them. Every function below that takes a store's key calls
  * it `email` for the first kind and works the same for the second.
  */
+import { type PlanDispute, parsePlanDispute, parsePlanDisputes, withPlanDispute } from "@/lib/plan-dispute-rules";
 import { MAX_NAME_LENGTH, MAX_BIO_LENGTH, MAX_ADDRESSES, isFree, type StoreJoin, MAX_JOIN_HEADING, MAX_JOIN_LINE, parseJoin } from "@/lib/store-field-rules";
 export { MAX_NAME_LENGTH, MAX_BIO_LENGTH, MAX_ADDRESSES, isFree, type StoreJoin, MAX_JOIN_HEADING, MAX_JOIN_LINE, parseJoin } from "@/lib/store-field-rules";
 import { MAX_LINKS, type NumbersLink, parseLinks } from "@/lib/numbers-links";
@@ -438,6 +439,14 @@ export type Store = {
    * Stripe says it is paid. Absent from records written before.
    */
   renewalUnpaidSince?: number;
+  /**
+   * Disputes of payments the creator made to us for the plan, as the daily
+   * job read them from Stripe (lib/plan-disputes.ts, 232 [CA1] unit 5). An
+   * open one, or one decided for the creator until the period it paid for
+   * ends, pauses what costs us to run (lib/plan-standing.ts, costsPaused).
+   * Absent from records written before.
+   */
+  planDisputes?: PlanDispute[];
   /** How the creator's emails to their list are signed. Null until set up. */
   mail: MailSettings | null;
   /** The creator's own domain for the store, when they added one. */
@@ -935,6 +944,8 @@ function parseStore(raw: unknown): Store | null {
       planEndedAt: typeof value.planEndedAt === "string" && !Number.isNaN(Date.parse(value.planEndedAt)) ? value.planEndedAt : "",
       // Records from before this was kept have none: read as paid up.
       renewalUnpaidSince: Number.isSafeInteger((value as { renewalUnpaidSince?: unknown }).renewalUnpaidSince) && ((value as { renewalUnpaidSince: number }).renewalUnpaidSince) > 0 ? (value as { renewalUnpaidSince: number }).renewalUnpaidSince : 0,
+      // Records from before this was kept have none.
+      planDisputes: parsePlanDisputes((value as { planDisputes?: unknown }).planDisputes),
       mail: parseMail(value.mail),
       domain: parseDomain(value.domain),
       // A record from before products had records of their own still
@@ -4205,6 +4216,21 @@ export async function setAssistantPlan(email: string, plan: AssistantPlan | null
     // A dispute, once written down, stays: the add-on is not sold to that store again.
     if (next && store.assistantPlan?.disputedAt && !next.disputedAt) next.disputedAt = store.assistantPlan.disputedAt;
     return { assistantPlan: next };
+  });
+}
+
+/**
+ * Writes one dispute of a plan payment on the store's record (232 [CA1]
+ * unit 5, lib/plan-disputes.ts): a new one is added, a known one takes its
+ * new status. Answers the store as it is now, or null when it is gone.
+ */
+export async function recordPlanDispute(email: string, entry: PlanDispute, nowSeconds = Date.now() / 1000): Promise<Store | null> {
+  const parsed = parsePlanDispute(entry);
+  if (!parsed) return null;
+  return patchStore(email, (store) => {
+    const before = store.planDisputes ?? [];
+    const next = withPlanDispute(before, parsed, nowSeconds);
+    return JSON.stringify(next) === JSON.stringify(before) ? null : { planDisputes: next };
   });
 }
 

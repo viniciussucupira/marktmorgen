@@ -12,7 +12,7 @@ import {
 import { SUPPORT_EMAIL } from "@/lib/creator-research";
 import { PLANS_ON_SALE } from "@/lib/opening";
 import { SITE_URL } from "@/lib/site-url";
-import { SETUP_VIDEO_SECONDS, renewalUnpaid, standingOf, videoLimitFor } from "@/lib/plan-standing";
+import { SETUP_VIDEO_SECONDS, costsPaused, standingOf, videoLimitFor } from "@/lib/plan-standing";
 import { watchedFolders, watchedIn } from "@/lib/watch";
 import { firstWord, settleAll, storeOf } from "@/lib/watch-billing";
 import { allowanceWindow, calendarWindow, resetWords } from "@/lib/allowance-window";
@@ -118,7 +118,7 @@ async function videoRun(): Promise<VideoRun> {
       if (paused) out.paused += 1;
       // A renewal Stripe could not collect pauses video for its own reason, and the
       // creator is told that one (232 [CA1] unit 4): not a plan's hours used up.
-      if (renewalUnpaid(store)) continue;
+      if (costsPaused(store)) continue;
       if (!isSenderConfigured() || !(await firstWord(folder, month))) continue;
       const notice = videoUsageNotice({ seconds, limit, standing: standingOf(store),
         studioUrl: `${SITE_URL}/studio`, supportEmail: SUPPORT_EMAIL });

@@ -6,6 +6,7 @@
  */
 import type { Tier } from "@/lib/plan";
 import { paidVideoSeconds, TRIAL_VIDEO_SECONDS } from "@/lib/video-admission-rules";
+import { type PlanDispute, planDisputed } from "@/lib/plan-dispute-rules";
 
 const GB = 1024 * 1024 * 1024;
 
@@ -22,6 +23,8 @@ export type PlanFields = {
    * absent when the plan is paid up (lib/store.ts, queue item 232 [CA1]).
    */
   renewalUnpaidSince?: number;
+  /** Disputes of payments made to us for the plan (lib/plan-dispute-rules.ts, 232 [CA1] unit 5). */
+  planDisputes?: PlanDispute[];
 };
 
 /** Where a store stands with its plan right now. */
@@ -50,7 +53,25 @@ export function renewalUnpaid(store: Pick<PlanFields, "subscriptionActive" | "re
  */
 export function costStandingOf(store: PlanFields, nowSeconds = Date.now() / 1000): Standing {
   const standing = standingOf(store, nowSeconds);
-  return standing === "paid" && renewalUnpaid(store) ? "ended" : standing;
+  if (standing === "ended" || standing === "none") return standing;
+  // A plan payment the creator disputed pauses a trial's costs too (unit 5).
+  if (standing === "trial") return planDisputed(store, nowSeconds) ? "ended" : standing;
+  return costsPaused(store, nowSeconds) ? "ended" : standing;
+}
+
+/**
+ * Whether what costs us to run is paused on a running plan: its renewal is
+ * unpaid (unit 4), or a payment for it is disputed (unit 5,
+ * lib/plan-dispute-rules.ts). The plan itself goes on; nothing closes.
+ */
+export function costsPaused(store: Pick<PlanFields, "subscriptionActive" | "renewalUnpaidSince" | "planDisputes">, nowSeconds = Date.now() / 1000): boolean {
+  return renewalUnpaid(store) || (store.subscriptionActive && planDisputed(store, nowSeconds));
+}
+
+/** The reason a route gives when it refuses for `costsPaused`, or null. */
+export function costPauseCode(store: Pick<PlanFields, "subscriptionActive" | "renewalUnpaidSince" | "planDisputes">, nowSeconds = Date.now() / 1000): "renewal_unpaid" | "plan_disputed" | null {
+  if (renewalUnpaid(store)) return "renewal_unpaid";
+  return store.subscriptionActive && planDisputed(store, nowSeconds) ? "plan_disputed" : null;
 }
 
 /** Historical trial storage threshold; all-cost review remains required. */

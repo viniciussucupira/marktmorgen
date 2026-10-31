@@ -24,6 +24,8 @@ export const STUDIO_MESSAGES: Record<string, string> = {
   // What the store keeps in the database is past its data room (lib/store-data-rules.ts).
   store_full: "Your store's record space is full. Review old posts, drafts, pages or contacts. Remove only what you no longer need, then try the change again.",
   // A renewal Stripe could not collect (232 [CA1] unit 4, lib/plan-standing.ts renewalUnpaid).
+  // A plan payment the creator disputed (232 [CA1] unit 5, lib/plan-dispute-rules.ts).
+  plan_disputed: "A payment for your plan is disputed with your bank, so new uploads are paused. The notice at the top of your studio says what happens next. Files already uploaded stay as they are.",
   renewal_unpaid: "Your plan's renewal payment did not go through, so new uploads are paused. Check the notice at the top of your studio to pay it; uploads start again once it is paid. Files already uploaded stay as they are.",
   upload_budget_unavailable: "New uploads are paused right now. Existing files and downloads are not changed by this pause.",
   uploads_pending: "Other uploads are using the remaining space. Finish or cancel them before trying again. If an earlier upload stopped, try again later.",
