@@ -6,6 +6,7 @@ import { closeEnded } from "@/lib/plan-closing";
 import { releaseRestarted } from "@/lib/closing-holds";
 import { tellStaysOpen } from "@/lib/closing-buyers";
 import { retryPlanUndos } from "@/lib/closing-plan-guard";
+import { finishPlanRefunds } from "@/lib/plan-refund-flow";
 
 export const maxDuration = 60;
 
@@ -51,6 +52,13 @@ async function run(request: NextRequest): Promise<Response> {
       return null;
     });
     if (undone?.left) console.error(`plan-closing: ${undone.left} plans paid for closing stores are not all returned yet; tried again on the next run`);
+    // Plan refunds a request did not finish (lib/plan-refund-flow.ts, 305 [SY1]): a refund found ends its plan, one
+    // never made takes back the stop set for it. Before the closing below, so a store ended here is looked at today.
+    const refunds = await finishPlanRefunds(start + 26_000).catch((error) => {
+      console.error("finishing plan refunds failed", error);
+      return null;
+    });
+    if (refunds?.left) console.error(`plan-refund: ${refunds.left} plan refunds are not finished yet; tried again on the next run`);
     const looked = await closeEnded(start + 52_000);
     const count = (state: string) => looked.filter((row) => row.state === state).length;
     const counts = { looked: looked.length, told: count("told"), waiting: count("waiting"), removed: count("removed"), held: count("held"), running: count("running") };
