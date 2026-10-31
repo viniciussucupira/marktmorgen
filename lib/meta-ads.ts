@@ -43,6 +43,7 @@
 import { createHash, createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { storeForId } from "@/lib/store";
+import { costsPaused } from "@/lib/plan-standing";
 import { reservePaidResourceWindow } from "@/lib/contract-resource-window";
 import { canSeal, seal, unseal } from "@/lib/secret-box";
 import { timed } from "@/lib/fetch-timeout";
@@ -95,6 +96,11 @@ export type MetaAdsView = {
   /** When Meta's permission ends and it must be connected again, in seconds; 0 when unknown. */
   expires: number;
   by: string;
+  /**
+   * Set by a caller that holds the store: its reads wait while the plan's
+   * renewal is unpaid or its payment disputed (lib/integration-pause.ts).
+   */
+  readPaused?: boolean;
 };
 
 const STATE_SECONDS = 600;
@@ -456,7 +462,7 @@ export async function forgetMetaUser(user: string): Promise<{ statsId: string; o
 // ---- Reading what was spent ------------------------------------------------------------
 
 /** What a read did: read, nothing to read yet, or why it stopped. */
-export type ReadResult = "read" | "none" | "currency" | "busy" | "error" | "broken";
+export type ReadResult = "read" | "none" | "currency" | "busy" | "error" | "broken" | "paused";
 
 /** Hook for telling the owner once that the connection broke. */
 export type MetaBrokenHook = (owner: { email: string; handle: string }) => Promise<void>;
@@ -483,6 +489,9 @@ export async function readMetaSpend(statsId: string, storeCurrency: string, now 
   // daily job or account picker, before a read lock or any provider request.
   const store = await storeForId(c.sid);
   if (!store || store.statsId !== statsId) return "none";
+  // 232 [CA1] 4b3: no read while the plan's renewal is unpaid or its payment disputed
+  // (lib/integration-pause.ts); the daily pass counts it skipped and tries the next day.
+  if (costsPaused(store)) return "paused";
   if (store.period?.funded === true && !(await reservePaidResourceWindow(store))) return "busy";
   const [got] = await redisPipeline([["SET", readingKey(statsId), "1", "NX", "EX", 90]]);
   if (got === null) return "busy";

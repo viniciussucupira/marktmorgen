@@ -181,3 +181,15 @@ While a plan's renewal is unpaid or a payment for it is disputed (`costsPaused`,
 - **Limit, said to the creator:** rows not brought in yet are kept `RAW_DAYS` (3) days from their upload, as always; past that, the import says the rest were let go and the creator starts again with the rows not brought in. Keeping them longer would be storage nobody is paying for.
 - **Recorded, not closed here:** a store whose plan has ended (`standingOf` "ended") still imports on Store's figures, as before; whether that should stop belongs with unit 4c.
 - **Cost:** a paused import costs one write of its record, two expiries and one read (and a third expiry while it holds the store's import slot) every five minutes, against the rows, emails and steps it no longer runs. The studio notice, the email and the Terms now name imports in `RENEWAL_PAUSED_WORDS` and `DISPUTE_PAUSED_WORDS`.
+
+## New Zoom, Google Calendar and Meta connections while a plan is unpaid or disputed (232 [CA1] unit 4b3, 31 Oct 2026)
+
+While a plan's renewal is unpaid or a payment for it is disputed (`costPauseCode`, `lib/plan-standing.ts`), a new connection is new work nobody is paying for: tokens to keep, meetings to make for each booking, and for Meta a daily read of the ad account (`lib/integration-pause.ts`).
+
+- **Refused before any provider call:** starting a Zoom, Google Calendar or Meta connection, a team host connecting their own Google Calendar, and finishing a connection on the provider's return (`lib/meet-routes.ts`, `lib/meta-routes.ts`). A consent started before the pause is not exchanged for a token. The studio says why and what stays (`INTEGRATION_PAUSED_WORDS`; the Meta notice adds `META_READ_PAUSED`).
+- **Waits:** Meta's daily ad-spend read and the read the account picker starts (`readMetaSpend` answers `paused`; the daily pass counts it skipped and tries again the next day).
+- **Open:** disconnecting any of them, and canceling on the provider's page. Accounts already connected stay connected, so meetings already made for bookings already sold stay with the provider.
+- **Starts again on its own** once Stripe records the payment or the dispute is won.
+- **Said on the card:** choosing which Meta ad account to read while paused is still saved (it is a setting); the picker and the ad-spend card say its read waits instead of "read again once a day" (`readPaused` on the view).
+- **Recorded, not closed here:** on connections already made, a team host's calendar tools (`app/api/store/host-calendar`: adding an iCal address, checking, listing calendars) and the test meeting (`lib/meet-test.ts`) still reach the provider; they serve accounts already connected and are left for unit 4b4's review. A store whose plan has ended (`standingOf` "ended") still connects as before; that belongs with unit 4c.
+- **Cost:** none new; the check reads fields already loaded. The daily pass loads a paused store once a day as before, and makes no provider request for it. The studio notice, the email and the Terms now name the new connections and Meta's read in `RENEWAL_PAUSED_WORDS` and `DISPUTE_PAUSED_WORDS`.
