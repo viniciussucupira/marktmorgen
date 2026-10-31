@@ -117,3 +117,69 @@ a path today; "a cron run twice, or two runs at once" is.
 Nothing here changes a price, a visible limit, the commission,
 `PLANS_ON_SALE`, `OPENING_REQUESTED`, the tax gate, Article 9a, the
 commercial review or `stripePlatformEligibilityReady`.
+
+## Design of units 5 and 6: the daily check, read from Stripe's own pages
+
+Written before any code, so the code can be tested against it. Stripe pages
+read on 30–31 Oct 2026 (about 21h10 Fortaleza): "The Invoice object",
+"The Invoice Line Item object", "List all invoices" (the page's own example
+sends `Stripe-Version: 2026-10-28.endive`) and the changelog "Replaces
+top-level price fields with improved price modeling on Invoice Items and
+Invoice Line Items" (2025-03-31.basil).
+
+**Pin the version.** `lib/billing.ts` sends no `Stripe-Version` on most calls,
+so it reads whatever the account's default returns (its own comment at
+`periodEnd` says so). The check must send one fixed version through
+`onPlatformAt` and be tested against that shape only, because the fields it
+reads moved in 2025: since 2025-03-31.basil a line has no `price` or `plan`;
+the price is `pricing.price_details.price` when `pricing.type` is
+`price_details`, and the unit amount is `pricing.unit_amount_decimal`.
+
+**What it reads.** `GET /v1/invoices` on the platform account with
+`created[gte]` = now − 48 hours, `status=paid`, `limit=100`, paginated with
+`starting_after` (newest first, per the page). Per invoice: `id`, `currency`,
+`amount_paid`, `total`, `subtotal`, `total_discount_amounts`, `billing_reason`
+(`subscription_create`, `subscription_cycle`, `subscription_update`,
+`manual`, …), `status_transitions.paid_at`, `parent` (the subscription), and
+`lines` (`has_more` means more lines must be read from `lines.url`, never
+assumed absent). Per line: `amount`, `currency`, `subtotal`,
+`discount_amounts`, `pricing`, `quantity_decimal`, `period`, and
+`parent.subscription_item_details.proration` /
+`parent.invoice_item_details.proration` (a proration line is never compared
+with a full published price; `discountable` is always false for one).
+
+**What it decides, per paid invoice** (a pure function, tested alone first):
+
+1. `ok` when every line is explained: a subscription line whose unit amount
+   is a published or legacy price of `lib/plan.ts` in USD for its cycle; a
+   proration line whose amount Stripe computed for a switch the store's
+   record shows; a captions or usage line whose key the store's record holds
+   (`nl-captions:…`, `nl-<meter>:…`); and `amount_paid` equals `total`, which
+   is `subtotal` less `total_discount_amounts` plus tax added on top.
+2. `wrong` with the exact difference when it can prove one: a second paid
+   invoice for the same subscription and the same period; a charge whose
+   `paid_at` is after the subscription ended, the store closed, a pause began
+   or a trial ended without conversion; a unit amount above every published
+   price for that cycle; another currency than the one shown.
+3. `unproven` when a line cannot be explained from the records. The item
+   treats it as wrong and refunds it (step 3, "Dúvida"), so unit 6 refunds
+   both, but the two are counted apart in the report.
+4. Nothing is decided for an invoice it could not read whole (Stripe did not
+   answer, lines unreadable): it waits for the next run, never `ok`, never
+   refunded.
+
+**Bounds.** Each run has a time budget and a page cap, keeps its place with a
+cursor (the last invoice id read and the window it belongs to), and one
+invoice that keeps failing is set aside after a fixed number of runs and
+reported, so it never blocks the rest. The 48-hour window overlaps the
+previous run on purpose; a decision is stored per invoice id, so an invoice
+seen twice is decided once.
+
+**Refunds (unit 6).** `POST /v1/refunds` with an idempotency key derived from
+the invoice id and the decision, for the difference only, never more than
+`amount_paid` less what was already refunded (a disputed or already refunded
+charge is read first and left alone), then one email per case, also under a
+stored mark, so a retry never refunds or writes twice. Store sales on
+creators' accounts are refunded only once the Terms carry the creator's
+authorization (step 3 of the item); until then their check runs read-only and
+reports. Neither unit is built yet.
