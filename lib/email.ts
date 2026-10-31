@@ -239,7 +239,7 @@ const onceKey = (key: string) => `nl:ses:once:${createHash("sha256").update(key)
 /**
  * One email through Amazon, when Amazon may be used. True when Amazon took
  * it (or an existing claim was confirmed under the same key); false when
- * fallback is allowed; null when claim ownership is unknown. A claim is
+ * fallback is allowed; null when claim ownership or SES acceptance is unknown. A claim is
  * not proof of delivery, nor a source-funded lifetime reservation.
  */
 async function viaAmazon(message: OneMessage, to: string): Promise<boolean | null> {

@@ -481,7 +481,6 @@ export async function sesSend(config: SesConfig, message: SesMessage): Promise<{
     }
     const why = `${response.status} ${type} ${said}`.replace(/\s+/g, " ").trim().slice(0, 300);
     if (response.status === 429 && !/quota/i.test(why)) return { outcome: "busy", why };
-
     if (response.status === 401 || response.status === 403 || response.status === 404 || response.status === 429) return { outcome: "account", why };
     // An address not proved, in an account still in its sandbox or sending
     // from a domain it has not proved, comes back as the email's own fault.
