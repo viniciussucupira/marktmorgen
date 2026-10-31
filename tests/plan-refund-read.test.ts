@@ -35,6 +35,8 @@ const world = {
   down: false,
   /** The customer's charge list says there is more. */
   moreCharges: false,
+  /** A customer's Stripe balance (negative: a credit), 0 when not set. */
+  balance: new Map<string, number>(),
   calls: 0,
   writes: 0,
 };
@@ -58,14 +60,14 @@ globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) =>
     const row = world.subs.get(sub[1]);
     if (!row) return json({ error: { message: "No such subscription" } }, 404);
     const customer = String(row.customer);
-    return json({ ...row, customer: q.getAll("expand[]").includes("customer") ? { id: customer, email: world.customers.get(customer) ?? "" } : customer });
+    return json({ ...row, customer: q.getAll("expand[]").includes("customer") ? { id: customer, email: world.customers.get(customer) ?? "", balance: world.balance.get(customer) ?? 0 } : customer });
   }
   if (path === "/invoices") {
     return page(world.invoices.filter((i) => i.subscription === q.get("subscription") && i.status === q.get("status")).sort((a, b) => Number(b.created) - Number(a.created)));
   }
   if (path === "/charges") {
     const lt = Number(q.get("created[lt]") ?? Infinity);
-    const rows = world.charges.filter((c) => c.customer === q.get("customer") && c.created < lt).sort((a, b) => b.created - a.created).map((c) => ({ ...c, balance_transaction: "txn_unexpanded" }));
+    const rows = world.charges.filter((c) => c.customer === q.get("customer") && c.created < lt).sort((a, b) => b.created - a.created).map((c) => ({ ...c, balance_transaction: "txn_unexpanded" })).slice(0, Number(q.get("limit") ?? 10));
     return page(rows, world.moreCharges);
   }
   const invoice = path.match(/^\/invoices\/(in_\w+)$/);
@@ -215,6 +217,22 @@ async function main() {
   world.moreCharges = true;
   is("more charges than one page, the oldest listed recent: unknown", (await m.read()).refund, { kind: "unknown", reason: "too_many" });
   world.moreCharges = false;
+  // The newest page holds only declined charges and more follow: the first payment may be on the next page.
+  const fp = await shop();
+  pay(fp, { at: NOW - 20 * DAY });
+  for (let i = 0; i < 100; i += 1) world.charges.push({ id: `ch_declined${n}x${i}`, customer: fp.customer, created: NOW - 2 * DAY + i, status: "failed", paid: false, payment_method_details: { card: { fingerprint: "fpdeclined" } } });
+  world.moreCharges = true;
+  is("a full page of declined charges inside the 30 days, more after it: unknown, never the guarantee skipped", (await fp.read()).refund, { kind: "unknown", reason: "too_many" });
+  world.moreCharges = false;
+  // A downgrade the day after leaves a credit on the customer's balance: refunding the whole payment would give back more than was paid.
+  const cr = await shop();
+  pay(cr, { at: NOW - 3 * DAY });
+  world.balance.set(cr.customer, -37_000);
+  is("a credit on the customer's balance: unknown, never the whole payment on top of it", (await cr.read()).refund, { kind: "unknown", reason: "customer_credit" });
+  world.balance.set(cr.customer, 500);
+  is("an amount owed on the balance (not a credit): the guarantee as before", (await cr.read()).refund, { kind: "guarantee", cents: 6_900 });
+  world.balance.set(cr.customer, Number.NaN);
+  is("a balance that cannot be read: unknown", (await cr.read()).refund, { kind: "unknown", reason: "unreadable" });
   world.down = true;
   is("Stripe failing: unknown", (await a.read()).refund, { kind: "unknown", reason: "stripe_unread" });
   world.down = false;
