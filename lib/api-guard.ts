@@ -17,7 +17,7 @@ import { storeForId, type Store } from "@/lib/store";
 import { BodyTooLarge, limited, withinLimit } from "@/lib/request-guard";
 import { takeAllowance } from "@/lib/store-allowance";
 import { reservePaidResourceWindow } from "@/lib/contract-resource-window";
-import { API_READ_PAUSED_WORDS, integrationPauseWord } from "@/lib/integration-pause";
+import { API_READ_PAUSED_WORDS, API_WRITE_PAUSED_WORDS, integrationPauseWord } from "@/lib/integration-pause";
 
 /** Requests one key may make in a minute. Generous for a sync, a wall for a runaway loop. */
 export const API_RATE = 120;
@@ -47,12 +47,53 @@ export async function apiWriter(request: Request): Promise<{ store: Store; keyId
   const found = await apiKeyed(request, "write");
   if (found instanceof Response) return found;
   if (!found.write) {
-    return apiError(403, "read_only", "This key reads only. Make a key that can also write, in your studio under API keys.");
+    return readOnly();
   }
   return { store: found.store, keyId: found.keyId };
 }
 
-async function apiKeyed(request: Request, purpose: "read" | "write"): Promise<{ store: Store; keyId: string; write: boolean } | Response> {
+/**
+ * 232 [CA1] unit 4c: the store a write that adds or changes may change, its
+ * key and the request's body, or the response that refuses it. While the
+ * plan's renewal is unpaid or a payment for it is disputed, the write is
+ * refused with its sentence before any of the month is taken; `adds` says
+ * whether this body adds anything (left out: every body does), so a body
+ * that only takes something away (labels removed) still goes through. The
+ * body is read only when `adds` needs it.
+ */
+export async function apiAdder(
+  request: Request,
+  adds?: (body: Record<string, unknown>) => boolean,
+): Promise<{ store: Store; keyId: string; body: Record<string, unknown> } | Response> {
+  let body: Record<string, unknown> | null = null;
+  const found = await apiKeyed(request, "write", async (store) => {
+    const paused = integrationPauseWord(store);
+    if (!paused) return null;
+    if (adds) {
+      const read = await readApiBody(request);
+      if (read instanceof Response) return read;
+      body = read;
+      if (!adds(read)) return null;
+    }
+    return apiError(409, paused, API_WRITE_PAUSED_WORDS[paused]);
+  });
+  if (found instanceof Response) return found;
+  if (!found.write) return readOnly();
+  if (!body) {
+    const read = await readApiBody(request);
+    if (read instanceof Response) return read;
+    body = read;
+  }
+  return { store: found.store, keyId: found.keyId, body };
+}
+
+const readOnly = () => apiError(403, "read_only", "This key reads only. Make a key that can also write, in your studio under API keys.");
+
+async function apiKeyed(
+  request: Request,
+  purpose: "read" | "write",
+  hold?: (store: Store) => Promise<Response | null>,
+): Promise<{ store: Store; keyId: string; write: boolean } | Response> {
   const presented = keyFromHeader(request.headers.get("authorization"));
   const unauthorized = () =>
     apiError(401, "unauthorized", "Send your API key as: Authorization: Bearer nl_live_…", {
@@ -73,6 +114,12 @@ async function apiKeyed(request: Request, purpose: "read" | "write"): Promise<{ 
   if (purpose === "read") {
     const paused = integrationPauseWord(store);
     if (paused) return apiError(409, paused, API_READ_PAUSED_WORDS[paused]);
+  }
+  // 232 [CA1] unit 4c: a write that adds or changes waits the same way, for a
+  // key that may write (a read-only key still hears it reads only).
+  if (hold && found.write) {
+    const held = await hold(store);
+    if (held) return held;
   }
   // Read-only API/MCP work needs its paid resource month. Writing includes
   // access revocation and needs its own retained-cleanup classification.
