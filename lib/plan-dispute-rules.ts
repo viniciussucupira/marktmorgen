@@ -118,7 +118,7 @@ export function coveredUntil(invoice: Record<string, unknown> | null | undefined
  * the same thing and say what the code does.
  */
 export const DISPUTE_PAUSED_WORDS =
-  "While your bank looks at it, your checkout takes no new orders, free copies or sign-ups, and emails to your list, AI drafts, lesson video, imports from other platforms, new connections to Zoom, Google Calendar and Meta with Meta's daily ad-spend read, and new uploads, your buyers' review photos included, are paused.";
+  "While your bank looks at it, your checkout takes no new orders, free copies or sign-ups, and emails to your list, AI drafts, lesson video, imports from other platforms, new connections to Zoom, Google Calendar and Meta with Meta's daily ad-spend read, and new uploads, your buyers' review photos included, are paused. New webhook endpoints cannot be added, and webhooks are not sent to your endpoints, not even later, except events from your Stripe account, which are sent once the dispute is settled, as far back as Stripe keeps them (30 days).";
 export const DISPUTE_KEPT_WORDS =
   "Your store's page stays up, your buyers keep reaching what they already bought except lesson video, your studio stays open, and nothing is deleted.";
 export const DISPUTE_OUTCOME_WORDS =

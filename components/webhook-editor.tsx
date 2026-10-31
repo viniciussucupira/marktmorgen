@@ -42,7 +42,7 @@ function outcome(d: DeliveryView): { text: string; tone: "ok" | "wait" | "bad" }
   if (d.state === "delivered") return { text: `Delivered${d.lastStatus ? ` (${d.lastStatus})` : ""}`, tone: "ok" };
   if (d.state === "queued") return { text: "Sending", tone: "wait" };
   if (d.state === "retrying") return { text: `Try ${d.attempts} failed; next ${when(d.next)}`, tone: "wait" };
-  if (d.attempts === 0) return { text: "Not sent", tone: "bad" };
+  if (d.attempts === 0 || d.notSentPaused) return { text: "Not sent", tone: "bad" };
   return { text: `Failed after ${d.attempts} ${d.attempts === 1 ? "try" : "tries"}`, tone: "bad" };
 }
 
@@ -259,6 +259,14 @@ export function WebhookEditor({ view: initial }: { view: WebhooksView }) {
           <li>
             An answer other than 2xx is tried again after 5 minutes, 15 minutes, 1 hour, 3, 12 and 24 hours: seven tries in
             all, then it is marked failed. Redirects are not followed.
+          </li>
+          <li>
+            While your plan&apos;s renewal payment has not gone through, or a payment for it is disputed, new endpoints and
+            test messages are refused, and other events are not sent: each is marked &ldquo;Not sent&rdquo; here with the
+            reason, is not sent later, and counts as one of the month&apos;s webhook deliveries when it can be counted. A delivery already being
+            retried is stopped the same way. Events from your Stripe account in that time are not read until the payment is
+            recorded or the dispute settled, and are sent then, as far back as Stripe keeps them (30 days). After that, sending goes on as usual while the month&apos;s
+            webhook deliveries last.
           </li>
           <li>The same event can arrive twice in rare cases; its id never changes, so a receiver can ignore a repeat.</li>
           <li>
