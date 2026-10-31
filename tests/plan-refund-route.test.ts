@@ -17,7 +17,7 @@ import { NextRequest } from "next/server";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
 import { POST } from "@/app/api/billing/refund/route";
-import { issueReview } from "@/lib/plan-refund-flow";
+import { ENDING_KEY, issueReview } from "@/lib/plan-refund-flow";
 import { CLOSING_DAYS } from "@/lib/plan-closing-rules";
 import { REFUND_DAYS } from "@/lib/plan";
 import { SUPPORT_ADDRESS, planRefundLetter, refundEffects, refusalWords } from "@/lib/plan-refund-words";
@@ -71,6 +71,44 @@ async function main() {
   who.store = await late.store();
   is("outside the window: told why on the review page, nothing changed", [(await post(await issueReview(who.store.sid, 6_900))).done, late.refunds().length, late.sub().cancel_at_period_end], ["none", 0, false]);
 
+  part("Pressed twice, or answered part way");
+  const c = await paidShop();
+  who.store = await c.store();
+  const twice = await issueReview(who.store.sid, 6_900);
+  world.slow = 30;
+  const both = (await Promise.all([post(twice), post(twice)])).map((r) => r.done).sort();
+  world.slow = 0;
+  is("two presses at once: one refund, and the second told it is being handled, never 'nothing'", [both, c.refunds().length], [["busy", "refunded"], 1]);
+
+  const d = await paidShop();
+  who.store = await d.store();
+  world.refundsDown = true;
+  is("the refund write fails after we set the stop: 'could not confirm', the stop kept", [(await post(await issueReview(who.store.sid, 6_900))).done, d.sub().cancel_at_period_end], ["error-stop", true]);
+  world.refundsDown = false;
+
+  const e = await paidShop({ stopSet: true });
+  who.store = await e.store();
+  world.refundsDown = true;
+  is("the refund write fails, the creator had set the stop: 'could not confirm', not 'nothing'", [(await post(await issueReview(who.store.sid, 6_900))).done, Boolean(await e.note())], ["unsure", true]);
+  world.refundsDown = false;
+
+  const f = await paidShop();
+  who.store = await f.store();
+  world.stopDown = true;
+  is("the stop cannot be set: nothing was done, told so", [(await post(await issueReview(who.store.sid, 6_900))).done, f.refunds().length, await f.note()], ["error", 0, null]);
+  world.stopDown = false;
+
+  const g = await paidShop();
+  who.store = await g.store();
+  const pipeline = redis.pipeline.bind(redis);
+  redis.pipeline = (async (commands: (string | number)[][]) => {
+    if (commands.some((cmd) => cmd[0] === "HSET" && cmd[1] === ENDING_KEY)) throw new Error("a stand-in store failure");
+    return pipeline(commands);
+  }) as typeof redis.pipeline;
+  const thrown = await post(await issueReview(who.store.sid, 6_900));
+  redis.pipeline = pipeline;
+  is("the store fails before any money moves: told nothing was done, never a raw error", [thrown.page, thrown.done, g.refunds().length], ["/studio/refund", "error", 0]);
+
   part("The words");
   const reasons = ["no_plan_payment", "not_paid", "nothing_paid", "dispute_open", "dispute_returned", "already_refunded", "guarantee_used", "outside_window", "renewal", "switch_charge", "months_used", "fee_kept"];
   is("every reason is said in plain words, with the way to support", reasons.every((reason) => {
@@ -81,7 +119,8 @@ async function main() {
   is("not decidable: support, never a no", ["customer_credit", "stripe_unread", "unreadable"].every((reason) => refusalWords({ refund: { kind: "unknown", reason } as never }).body.includes(SUPPORT_ADDRESS)), true);
   is("what happens to the store uses the closing rules' own days", refundEffects({ assistant: false }).some((line) => line.includes(`${CLOSING_DAYS} days`)), true);
   is("the add-on is mentioned only when the store has it", [refundEffects({ assistant: true }).length - refundEffects({ assistant: false }).length], [1]);
-  is("a pending refund is said to be on its way", planRefundLetter({ store: "Maya", cents: 6_900, currency: "usd", pending: true, assistant: false }).text.includes("still processing"), true);
+  is("the letter's pending wording", planRefundLetter({ store: "Maya", cents: 6_900, currency: "usd", pending: true, assistant: false }).text.includes("still processing"), true);
+  is("what happens says closing stops the renewals sold on the creator's own Stripe, never that it is untouched", [refundEffects({ assistant: false }).some((line) => line.includes("stopped at Stripe")), refundEffects({ assistant: false }).some((line) => /not touched/.test(line))], [true, false]);
   done();
 }
 

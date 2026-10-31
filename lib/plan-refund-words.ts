@@ -6,11 +6,13 @@
  * reading of lib/plan-refund.ts and is made by lib/plan-refund-flow.ts, which
  * ends the plan the same day; what happens to the store afterward is the
  * closing of lib/plan-closing-rules.ts, as the Help says
- * (lib/help-content.ts, "What happens when my plan ends?"). No reason is
- * asked: the policy says "No reason is required".
+ * (lib/help-content.ts, "What happens when my plan ends?": the closing day
+ * stops the renewals the creator sold on their own Stripe account, so the
+ * page never says that account is not touched). No reason is asked: the
+ * policy says "No reason is required".
  */
 import { formatMoney } from "@/lib/money";
-import { CLOSING_DAYS, WARN_MONTH_DAYS, WARN_WEEK_DAYS } from "@/lib/plan-closing-rules";
+import { CLOSING_DAYS, ENDED_STORE_EXPORTS, ERASE_WITHIN_DAYS, WARN_MONTH_DAYS, WARN_WEEK_DAYS } from "@/lib/plan-closing-rules";
 import { REFUND_DAYS } from "@/lib/plan";
 import type { PlanRefundReading } from "@/lib/plan-refund";
 
@@ -24,8 +26,10 @@ export function refundEffects(o: { assistant: boolean }): string[] {
     "Your plan ends today. Your checkout stops taking payments today, and the other paid features of your plan stop with it.",
     `Your store stays as it is for ${CLOSING_DAYS} days: its page, products, files, courses, community, contacts and orders, and your buyers go on reaching what they bought. Then it closes.`,
     `We email you when your plan ends, ${WARN_MONTH_DAYS} days before your store closes and ${WARN_WEEK_DAYS} days before it, each time with the date. Starting a plan again before then keeps your store.`,
+    "When it closes, its files are removed, and the renewals of the memberships and payment plans you sold through it are stopped at Stripe, each at the end of the period already paid.",
+    `Within ${ERASE_WITHIN_DAYS} days of closing, usually the same day, everything else it keeps with us is deleted, your buyers' access to what they bought from it included. Every sale, refund and payout stays on your own Stripe account.`,
+    `Before then, you can download your whole store as one file from the notice at the top of your studio, ${ENDED_STORE_EXPORTS === 1 ? "once" : `up to ${ENDED_STORE_EXPORTS} times`}.`,
     ...(o.assistant ? ["Your Store assistant add-on stops at the end of the month you already paid for, and nothing more is charged for it."] : []),
-    "Your own Stripe account, its customers and its payouts are not touched.",
   ];
 }
 
@@ -114,3 +118,27 @@ export function planRefundPartLetter(o: { store: string }): { subject: string; t
     ].join("\n"),
   };
 }
+
+/** Days the daily job keeps checking a refund it cannot decide (lib/plan-refund-flow.ts GIVE_UP_DAYS), said on the page. */
+const CHECK_DAYS = 7;
+export const REFUND_CHECK_DAYS = CHECK_DAYS;
+
+const DECIDED_LATER = `We check it again every day and email you once it is decided, at most ${CHECK_DAYS} days from now: either the refund and the end of your plan, or that nothing was refunded and your plan goes on.`;
+
+/**
+ * What the review page says about the refund route's answer (app/api/billing/refund) or a refund still being
+ * settled, in plain words. A title says "Nothing was refunded" only where the code knows no refund was made.
+ */
+export const REFUND_DONE: Record<string, { tone: "success" | "warn"; title: string; body: string }> = {
+  refunded: { tone: "success", title: "Your payment was refunded", body: "Your plan has ended. We sent you an email with the amount and what happens next. Your bank may take a few days to show the refund." },
+  ending: { tone: "success", title: "Your refund is on its way", body: "Our payment provider is still processing it. We end your plan once it goes through and email you then. If it does not go through, nothing is refunded, your plan goes on, and we email you to say so." },
+  busy: { tone: "warn", title: "Your refund is already being handled", body: `An earlier request for it has not finished yet, so there is nothing to confirm here now. ${DECIDED_LATER}` },
+  review: { tone: "warn", title: "This confirmation was not used", body: "It was used already, or a newer copy of this page was opened. Check the amount below and confirm again if you still want the refund." },
+  changed: { tone: "warn", title: "The amount changed", body: "The amount our refund policy gives changed since you opened this page, so nothing was refunded. The new amount is below; confirm again if you still want it." },
+  later: { tone: "warn", title: "Nothing was refunded", body: `You asked many times today. Try again tomorrow, or email ${SUPPORT_ADDRESS}.` },
+  error: { tone: "warn", title: "Nothing was refunded", body: `We could not reach our payment provider, and your plan was not changed. Try again in a few minutes. If it happens again, email ${SUPPORT_ADDRESS}.` },
+  unsure: { tone: "warn", title: "We could not confirm your refund yet", body: `We did not hear back from our payment provider, so we do not know yet whether the refund went through. ${DECIDED_LATER} Please do not ask again before then. Questions: ${SUPPORT_ADDRESS}.` },
+  "error-stop": { tone: "warn", title: "We could not confirm your refund yet", body: `We did not hear back from our payment provider, so we do not know yet whether the refund went through. Until it is decided, your plan is set to stop at the end of the period you paid for; if no refund was made, we take that back. ${DECIDED_LATER} Questions: ${SUPPORT_ADDRESS}.` },
+  none: { tone: "warn", title: "Nothing was refunded", body: "The reason is below." },
+  owner: { tone: "warn", title: "Only the store's owner can ask for this refund", body: "Ask the owner of this store to open this page." },
+};
