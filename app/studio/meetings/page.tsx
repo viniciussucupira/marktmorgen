@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { INTEGRATION_PAUSED_WORDS } from "@/lib/integration-pause";
 import { cookies } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 import { ensureStatsId } from "@/lib/store";
@@ -45,6 +46,9 @@ function outcome(word: string, provider: string): { tone: "ok" | "warn" | "error
       return { tone: "warn", text: "That connection attempt had expired or was started in another session. Start it again from this page." };
     case "limited":
       return { tone: "warn", text: "That is too many attempts in a few minutes. Wait a moment and try again." };
+    case "paused_unpaid":
+    case "paused_disputed":
+      return { tone: "warn", text: INTEGRATION_PAUSED_WORDS[word] };
     case "host":
       return { tone: "warn", text: "Zoom did not give us the host link for that meeting just now. Start it from the Zoom app, signed in to the connected account." };
     case "error":

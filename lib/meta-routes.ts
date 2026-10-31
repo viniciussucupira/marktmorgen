@@ -14,6 +14,7 @@ import { MetaError, beginMeta, disconnectMeta, finishMeta, isMetaConfigured, rea
 import { clientAddress, withinLimit } from "@/lib/request-guard";
 import { originFrom } from "@/lib/request-origin";
 import { ensureStatsId, type Store } from "@/lib/store";
+import { integrationPauseWord } from "@/lib/integration-pause";
 import { away, creatorFrom, resolveAccess, studioPath } from "@/lib/studio-route";
 import { logTeam } from "@/lib/team";
 import { PERMISSION_WORDS } from "@/lib/team-roles";
@@ -28,6 +29,9 @@ export async function startMeta(request: NextRequest): Promise<Response> {
   const creator = await creatorFrom(request, "settings");
   if (creator instanceof Response) return creator;
   const { store, ref, email, origin } = creator;
+  // 232 [CA1] 4b3: no new connection while the plan's costs are paused (lib/integration-pause.ts).
+  const paused = integrationPauseWord(store);
+  if (paused) return back(origin, store, paused);
   if (store.period?.funded === true && !await reservePaidResourceWindow(store)) return back(origin, store, "limited");
   const named = store.statsId ? store : await ensureStatsId(ref);
   if (!named?.statsId || !store.sid) return back(origin, store, "error");
@@ -65,6 +69,8 @@ export async function finishMetaConnect(request: NextRequest): Promise<Response>
   // They pressed Cancel on Meta's page.
   if (params.get("error") || !code) return back(origin, store, "declined");
   if (code.length > 2048 || !/^[A-Za-z0-9._~/+=#-]+$/.test(code)) return back(origin, store, "error");
+  const paused = integrationPauseWord(store);
+  if (paused) return back(origin, store, paused);
   if (store.period?.funded === true && !await reservePaidResourceWindow(store)) return back(origin, store, "limited");
   try {
     const result = await finishMeta({

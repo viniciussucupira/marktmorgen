@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { INTEGRATION_PAUSED_WORDS } from "@/lib/integration-pause";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { ensureStatsId } from "@/lib/store";
@@ -37,6 +38,9 @@ function outcome(word: string): { tone: "ok" | "warn" | "error"; text: string } 
       return { tone: "warn", text: "That connection attempt had expired or was started in another session. Start it again from this page." };
     case "limited":
       return { tone: "warn", text: "That is too many attempts in a few minutes. Wait a moment and try again." };
+    case "paused_unpaid":
+    case "paused_disputed":
+      return { tone: "warn", text: INTEGRATION_PAUSED_WORDS[word] };
     case "error":
       return { tone: "error", text: "Something went wrong on our side. Nothing was changed; try again in a moment." };
     default:

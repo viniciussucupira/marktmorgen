@@ -1,4 +1,5 @@
 import { SalesLevers } from "@/components/sales-levers";
+import { INTEGRATION_PAUSED_WORDS, META_READ_PAUSED } from "@/lib/integration-pause";
 import { PlanDisputeNotice } from "@/components/plan-dispute-notice";
 import { planDisputed } from "@/lib/plan-dispute-rules";
 import { RenewalUnpaidNotice } from "@/components/renewal-unpaid-notice";
@@ -321,6 +322,14 @@ const PAYPAL_NOTICES: Record<string, { title: string; body: string }> = {
 
 /** How connecting the store's Meta ad account went (lib/meta-routes.ts). */
 const META_NOTICES: Record<string, { title: string; body: string }> = {
+  paused_unpaid: {
+    title: "Nothing was connected",
+    body: `${INTEGRATION_PAUSED_WORDS.paused_unpaid} ${META_READ_PAUSED}`,
+  },
+  paused_disputed: {
+    title: "Nothing was connected",
+    body: `${INTEGRATION_PAUSED_WORDS.paused_disputed} ${META_READ_PAUSED}`,
+  },
   connected: {
     title: "Your Meta ad account is connected",
     body: "Your numbers read what each campaign spent over the last 30 days, and read it again once a day. It is at the bottom of your numbers, under what you spent on ads.",

@@ -14,10 +14,12 @@
  *     (app/api/store/review/route.ts, unit 4b1); imports and funnel
  *     migrations follow costPauseCode and costsPaused
  *     (app/api/store/import, app/api/store/import/funnel, lib/imports.ts
- *     runImport, unit 4b2).
+ *     runImport, unit 4b2); new Zoom, Google Calendar and Meta connections
+ *     and Meta's daily read follow costPauseCode (lib/integration-pause.ts,
+ *     lib/meet-routes.ts, lib/meta-routes.ts, lib/meta-ads.ts, unit 4b3).
  */
 export const RENEWAL_PAUSED_WORDS =
-  "Until it is paid, your checkout takes no new orders, free copies or sign-ups, and emails to your list, AI drafts, lesson video, imports from other platforms and new uploads, your buyers' review photos included, are paused.";
+  "Until it is paid, your checkout takes no new orders, free copies or sign-ups, and emails to your list, AI drafts, lesson video, imports from other platforms, new connections to Zoom, Google Calendar and Meta with Meta's daily ad-spend read, and new uploads, your buyers' review photos included, are paused.";
 
 export const RENEWAL_KEPT_WORDS =
   "Your store's page stays up, your buyers keep reaching what they already bought except lesson video, your studio stays open, and nothing is deleted.";

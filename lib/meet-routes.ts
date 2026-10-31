@@ -21,6 +21,7 @@ import { hostId } from "@/lib/host-claims";
 import { clientAddress, withinLimit } from "@/lib/request-guard";
 import { originFrom } from "@/lib/request-origin";
 import { ensureStatsId } from "@/lib/store";
+import { integrationPauseWord } from "@/lib/integration-pause";
 import { away, creatorFrom, resolveAccess, studioPath } from "@/lib/studio-route";
 import { logTeam } from "@/lib/team";
 import { PERMISSION_WORDS } from "@/lib/team-roles";
@@ -49,6 +50,9 @@ export async function startConnect(request: NextRequest, provider: MeetProvider)
   if (!offeredProviders(store, review).includes(provider)) return notFound();
   const kept = review && !offeredProviders(store).includes(provider) ? `&${ZOOM_REVIEW_QUERY}` : "";
   const back = (query: string) => away(origin, studioPath(store, `${query}${kept}`, "meetings"));
+  // 232 [CA1] 4b3: no new connection while the plan's costs are paused (lib/integration-pause.ts).
+  const paused = integrationPauseWord(store);
+  if (paused) return back(`meet=${paused}&p=${provider}`);
   if (store.period?.funded === true && !await reservePaidResourceWindow(store)) return back(`meet=limited&p=${provider}`);
   const named = store.statsId ? store : await ensureStatsId(ref);
   if (!named?.statsId || !store.sid) return back(`meet=error&p=${provider}`);
@@ -76,6 +80,8 @@ export async function startHostConnect(request: NextRequest): Promise<Response> 
   if (creator instanceof Response) return creator;
   const { store, ref, email, origin } = creator;
   const back = (query: string) => away(origin, studioPath(store, query, "calendar"));
+  const paused = integrationPauseWord(store);
+  if (paused) return back(`cal=${paused}`);
   if (store.period?.funded === true && !await reservePaidResourceWindow(store)) return back("cal=limited");
   const named = store.statsId ? store : await ensureStatsId(ref);
   if (!named?.statsId || !store.sid) return back("cal=error");
@@ -106,6 +112,8 @@ async function finishHostConnect(
   const code = params.get("code") ?? "";
   if (params.get("error") || !code) return back("cal=declined");
   if (code.length > 2048 || !/^[A-Za-z0-9._~/+=-]+$/.test(code)) return back("cal=error");
+  const paused = integrationPauseWord(store);
+  if (paused) return back(`cal=${paused}`);
   if (store.period?.funded === true && !await reservePaidResourceWindow(store)) return back("cal=limited");
   try {
     const result = await finishConsent("google", {
@@ -162,6 +170,9 @@ export async function finishConnect(request: NextRequest, provider: MeetProvider
   // "access_denied": they pressed Cancel on the provider's page.
   if (params.get("error") || !code) return back(`meet=declined&p=${provider}`);
   if (code.length > 2048 || !/^[A-Za-z0-9._~/+=-]+$/.test(code)) return back(`meet=error&p=${provider}`);
+  // Paused while the person was on the provider's page: the code is not exchanged.
+  const paused = integrationPauseWord(store);
+  if (paused) return back(`meet=${paused}&p=${provider}`);
   if (store.period?.funded === true && !await reservePaidResourceWindow(store)) return back(`meet=limited&p=${provider}`);
 
   try {
