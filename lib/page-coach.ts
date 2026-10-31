@@ -20,7 +20,7 @@ import { PAGE_TEST_PAID_WORDS, PAGE_TEST_RUNNING_WORDS } from "@/lib/headline-te
  *
  * Pure, so the studio's editor and the server ask the same function.
  */
-import type { BlockKind, PageBlock, SalesPage } from "@/lib/sales-page";
+import { type BlockKind, type PageBlock, type SalesPage, picturesOf } from "@/lib/sales-page";
 import type { PageFacts } from "@/lib/page-facts";
 
 export type CoachCheck = {
@@ -188,6 +188,20 @@ export function coachChecks(input: CoachInput): CoachCheck[] {
         add: "pictures",
       },
     );
+  }
+  // Every picture the page shows, the second version's too (98 [D2-COMPLIANCE-REVIEW] unit 3, AX274 Part A item 6): a
+  // screen reader says its description instead. Asked only when there is a picture; the creator writes each one,
+  // nothing is filled in for them.
+  const pictures = [...input.page.blocks, ...(input.page.variant?.blocks ?? [])].flatMap(picturesOf);
+  if (pictures.length > 0) {
+    const bare = pictures.filter((p) => !p.alt.trim()).length;
+    checks.push({
+      id: "described",
+      label: bare ? `Every picture described (${bare} ${bare === 1 ? "is" : "are"} not)` : "Every picture described",
+      why: "Some buyers use a screen reader, which reads the page aloud and says a picture's description in its place. Beside each picture, fill in \"What it shows, for someone who cannot see it\".",
+      done: bare === 0,
+      weight: 2,
+    });
   }
   checks.push({
     id: "bio",

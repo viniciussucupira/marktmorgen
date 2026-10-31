@@ -65,6 +65,18 @@ async function main(): Promise<void> {
   const late = parsePage({ ...FULL, blocks: FULL.blocks.filter((b) => b.id !== "cta00001") });
   is("a first button five blocks down is too far", coachChecks({ page: late, productTitle: "Knife Skills", free: false, picture: true, facts: LESSONS }).find((c) => c.id === "early-button")?.done, false);
 
+  part("Pictures a screen reader can say (98 [D2-COMPLIANCE-REVIEW] unit 3, AX274 Part A item 6)");
+  const pic = (n: number, alt: string) => ({ path: `images/${"a".repeat(24)}/${String(n).repeat(32)}.jpg`, width: 800, height: 600, alt, caption: "" });
+  const pictured = (alts: [string, string], feature = "") =>
+    parsePage({ ...FULL, blocks: [...FULL.blocks.slice(0, 5), { id: "pics0001", kind: "pictures", heading: "", items: [pic(1, alts[0]), pic(2, alts[1])] }, { id: "feat0001", kind: "feature", heading: "Inside", body: "Pages", picture: pic(3, feature), side: "left" }, ...FULL.blocks.slice(5)] });
+  const described = (page: ReturnType<typeof parsePage>) => coachChecks({ page, productTitle: "Knife Skills", free: false, picture: true, facts: LESSONS }).find((c) => c.id === "described");
+  is("no picture on the page: not asked", full.some((c) => c.id === "described"), false);
+  is("a picture with no description: asked, not done, and it says how many", [described(pictured(["A chef's knife on a board", ""], "A page of the book"))?.done, described(pictured(["A chef's knife on a board", ""], "A page of the book"))?.label], [false, "Every picture described (1 is not)"]);
+  is("a picture beside words counts too", described(pictured(["One", "Two"], ""))?.done, false);
+  is("every picture described: done, and the page can still score 100", [described(pictured(["One", "Two"], "Three"))?.done, coachScore(coachChecks({ page: pictured(["One", "Two"], "Three"), productTitle: "Knife Skills", free: false, picture: true, facts: LESSONS }))], [true, 100]);
+  is("spaces are not a description", described(pictured(["One", "   "], "Three"))?.done, false);
+  is("it never offers a block to add: the fix is the description, written by the creator", described(pictured(["", ""], ""))?.add, undefined);
+
   part("Never a reason to type a number");
   is("no number counted: the numbers check is not asked", empty.some((c) => c.id === "facts"), false);
   is("one counted: it is", full.some((c) => c.id === "facts"), true);
