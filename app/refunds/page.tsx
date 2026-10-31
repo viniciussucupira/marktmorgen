@@ -3,6 +3,7 @@ import Link from "next/link";
 import { LegalPage, LegalSection } from "@/components/legal-page";
 import { REFUND_DAYS, TRIAL_DAYS } from "@/lib/plan";
 import { PLANS_ON_SALE } from "@/lib/opening";
+import { CLOSING_DAYS } from "@/lib/plan-closing-rules";
 
 export const metadata: Metadata = {
   title: "Refund Policy — Marktmorgen",
@@ -12,7 +13,7 @@ export const metadata: Metadata = {
 
 export default function RefundsPage() {
   return (
-    <LegalPage title="Refund Policy" lastUpdated="October 30, 2026">
+    <LegalPage title="Refund Policy" lastUpdated="October 31, 2026">
       <p>
         This Refund Policy applies to what you pay Marktmorgen, a product of
         Solrenning, an independent software studio, for the creator store at
@@ -60,11 +61,16 @@ export default function RefundsPage() {
           first plan charge.
         </p>
         <p>
-          A refund closes the paid features of the store it was for — your
-          checkout, and on Pro the email sending — from the day it is made.
-          Everything you built stays where it is, and your own Stripe account,
-          its customers and its payout history are untouched: that money was
-          never ours to return.
+          A refund ends the plan of the store it was for on the day it is
+          made: its checkout stops taking payments, and the other paid
+          features of the plan stop with it. The store then stays as it is
+          for {CLOSING_DAYS} days and closes after that, as{" "}
+          <Link href="/terms#closing" className="text-black underline underline-offset-2 hover:no-underline">
+            section 8 of our Terms
+          </Link>{" "}
+          says; starting a plan again before then keeps it. Your own Stripe
+          account, its customers and its payout history are untouched: that
+          money was never ours to return.
         </p>
         {!PLANS_ON_SALE ? (
           <p>
@@ -82,7 +88,7 @@ export default function RefundsPage() {
           when a payment is refunded; the rest of what you paid comes back.
           So a yearly plan refunded in its second month costs you two months at
           the monthly price and that fee, and the other ten months come back.
-          Its paid features close from the day of the refund.
+          Its plan ends on the day of the refund, as section 2 says.
         </p>
         <p>
           If the yearly payment was your first payment to us and you ask within{" "}
@@ -92,7 +98,18 @@ export default function RefundsPage() {
       </LegalSection>
       <LegalSection title="4. How to request a cancellation or refund">
         <p>
-          Email{" "}
+          <strong className="text-black">In your studio.</strong> Under
+          &ldquo;What you pay us,&rdquo; choose &ldquo;Refund my
+          payment.&rdquo; A review page shows the exact amount this policy
+          gives you today and what happens to your store, before anything
+          changes; nothing is refunded until you confirm there, and you can go
+          back without changing anything. Only the store&apos;s owner can ask
+          for it. When you confirm, the payment is refunded, the plan ends, and
+          we email you the amount. If the page says it cannot work out your
+          refund, or you cannot use it, write to us as below.
+        </p>
+        <p>
+          <strong className="text-black">By email.</strong> Email{" "}
           <a
             href="mailto:support@marktmorgen.com"
             className="text-black underline underline-offset-2 hover:no-underline"
