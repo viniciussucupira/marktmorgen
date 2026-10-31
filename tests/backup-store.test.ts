@@ -54,7 +54,7 @@ globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) =>
       });
       return new Response(stream, { status: 200 });
     }
-    return new Response(held, { status: 200, headers: { "content-length": String(held.byteLength) } });
+    return new Response(held as BodyInit, { status: 200, headers: { "content-length": String(held.byteLength) } });
   }
   return new Response("", { status: 405 });
 }) as typeof fetch;
