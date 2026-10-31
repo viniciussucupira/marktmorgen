@@ -67,6 +67,30 @@ is("resale rights without a license", kinds("Comes with master resell rights."),
 is("PLR without a license", kinds("Includes PLR for every chapter."), ["resale_rights"]);
 is("with the license held, fine", kinds("Comes with master resell rights.", { resaleLicense: true }), []);
 
+part("Protective sentences are never warned (the fix would tell the creator to delete them)");
+is("no resale rights", kinds("Personal use only. No resale rights."), []);
+is("resale rights not included", kinds("Resale rights are not included."), []);
+is("does not include PLR", kinds("This product does not include PLR."), []);
+is("no guarantee of income or results", kinds("We do not guarantee any income or results."), []);
+is("there is no guarantee", kinds("There is no guarantee of income."), []);
+is("not a get-rich scheme", kinds("This is not a get rich quick scheme."), []);
+is("not a limited-time offer", kinds("Not a limited time offer: the price stays the same."), []);
+is("refunds closed only after the 14 days, with the 14 days granted", kinds("Refunds are not available after 14 days; you may cancel within 14 days.", { immediateAccessConsent: false }), []);
+is("no refunds after 30 days", kinds("No refunds after 30 days.", { immediateAccessConsent: false }), []);
+is("no refunds after 7 days still warned", kinds("No refunds after 7 days.", { immediateAccessConsent: false }), ["no_refunds"]);
+is("a negation in another clause does not hide a warning", kinds("No refunds, resale rights included.", { immediateAccessConsent: false }), ["no_refunds", "resale_rights"]);
+
+part("Ordinary creator text is not warned");
+is("tools the product is made with or delivered on", kinds("Made in Canva. Duplicate the template to your Notion workspace at notion.so, or open it at canva.com."), []);
+is("where the calls and replays are", kinds("We meet on zoom.us and the replays are on youtube.com and https://www.youtube.com/@maya."), []);
+is("a missing space is not a site", kinds("I love it.So does my sister."), []);
+is("shipping is not the price", kinds("Shipping costs $5."), []);
+is("a stated value is not the price", kinds("Only $49 today for the bundle (a $99 value)."), []);
+is("a countdown product", kinds("A wedding countdown planner with 52 weekly pages."), []);
+is("the creator's own community and tips", kinds("Join my Patreon for extra tutorials, or my Skool community. Tips on Ko-fi are welcome."), []);
+is("a plain price sentence still compared", kinds("Get it today for only $99."), ["price_mismatch"]);
+is("a selling platform in terms still warned", kinds("All purchases are subject to Gumroad's refund policy."), ["other_company"]);
+
 part("Every warning is complete");
 const all = checkCreatorTerms({ ...base, immediateAccessConsent: false, text: "Visit othershop.com. Costs $99. No refunds. Get rich fast. Hurry! Resale rights included." });
 is("one of each kind", all.map((w) => w.kind).sort(), ["earnings_claim", "false_urgency", "no_refunds", "other_company", "price_mismatch", "resale_rights"]);
