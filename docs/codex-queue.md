@@ -8097,6 +8097,8 @@ REGRA DOS 60% (OBRIGATÓRIA): todo cliente pagante, considerado isoladamente e u
 
 309. [EM1] E-mails para a lista somente pela Amazon SES, com fila de espera, e limites de envio maiores
 
+Estado da unidade de renovação da autoridade SES: em andamento pelo Codex em31/10/2026, 04:17:57 Fortaleza, ramo codex/ses-account-refresh-evidence, antes do código. Falha da nova consulta de conta renova cachepositivo antigo indefinidamente;retirar autoridadeSES quando renovação falha, preservando5mincachecomprovado,backoff1min e fallbackessencial existente. Mesmaschamadas/campos/chave/TTL;1401/1402headsválidosintactos.
+
 Estado da unidade de clareza do aviso de quota SES: em andamento pelo Codex em31/10/2026, 04:00:56 Fortaleza, ramo codex/ses-quota-notice, antes do código. O sentinelaAWS-1não pode aparecer como-1e-mails; usoResenddesconhecido não deve afirmar cotaesgotada nem pedirupgrade. Preservar avisoumapormês/rotaessencial,semIO/chave/TTLnovo. PR#1401headválidointacto;incorporação conjunta só apósnovohead39+Vercel,sempublicaravisoconhecidamenteincorreto.
 
 Estado da unidade de evidência da quota SES: em andamento pelo Codex em31/10/2026, 03:45:10 Fortaleza, ramo codex/ses-quota-evidence, antes do código. Quota ausente/inválida vira0 e sesBulkRoom interpreta0comoInfinity; somente-1équota ilimitada segundoAWS. Exigir tipos/status/cachecomprovados,semnovasoperações/chave/TTL e semativarvolumes. PR#1399headválidointacto.
@@ -20625,3 +20627,15 @@ Resultado implementado (não publicado): aviso trata-1apenascomoausênciadetetod
 
 
 Proteção do mesmo aviso limitado: SETNX existente só autoriza aviso com respostaúnicaprópriaOK;ackausente/malformado/computed/inherited não pode mandar e-mail,mantermarcatalvezaplicada semrollback.8casosnegativoscomSETaplicado testam reserveDayreal,nenhumprovedor/GETaccount/getter e marcaguardada;3controlespositivos de aviso continuam1por3tentativas. NenhumIO/chave/TTLnovo;apenasmenosautorização semprova. Escopo continuaavisodelimite/custo,semmudança noheadválido1401.
+
+
+### 309/EM1 — renovação não comprovada não renova autorização SES (31/10/2026)
+
+Estado da unidade de renovação da autoridade SES: em andamento pelo Codex em31/10/2026, 04:17:57 Fortaleza, ramo codex/ses-account-refresh-evidence, antes do código. Falha da nova consulta de conta renova cachepositivo antigo indefinidamente;retirar autoridadeSES quando renovação falha, preservando5mincachecomprovado,backoff1min e fallbackessencial existente. Mesmaschamadas/campos/chave/TTL;1401/1402headsválidosintactos.
+
+Achado real: sesState retorna known readytrue apósGETaccountfalhar e regrava at renovado/TTL3600;repetiçõesmantêm autoridadeantiga semfim. Na mesma gravaçãojáexistente salvarnotready/unreachable até nova resposta válida,mesmoatdebackoff60sjáusado. Cachepositivoaindadentro300scontinua;nenhumaoperaçãonova,nenhuma reduçãodeintervalo. ServiçoessencialmantémfallbackResendjáexistente;piorcasoResendjácompõeomodelo,não alegareconomia/margemcertificada. ClassificaçãolistaSES-only/fila/capacidadeatômica continuamremanescentes.
+
+Custo:mesmosGETcache/GETaccount/SETcache,piorcadênciaexistente1consultadecontaporminutocomwriteconfirmado,mesmoscampos/limites(chamadawhyjáaté300)/TTL3600. Tetoincrementaldeoperações/bytesmáximosnovos Store/Studio/Scale mensal/anual0/0;custostotaisreais/CI/Vercel/Redis/SES/Resenddesconhecidos,nunca0. Nenhumnovoprovédor/configuração/conta/operaçãoreal. Preços/limitesvisíveis/permissões/flags/fiscal/IDs/conteúdosiguais. Novocabeçocom39+Vercelinteiros;históriodepublicaçõesaté1399preservado;validaruniãocomClaudeantesdeincorporar.
+
+
+Resultado implementado (não publicado): falhadorefresh marca readyfalse/unreachable na mesmaSETcache,semrenovarreadytrue;preservaquota/taxaapenascomometadado nãoautorizante e âncora60sjáusada.2cenáriosreaisdosendercomcachepositivoexpirado+500/perdaresposta: e-mailindividual e lotedeserviço usamfallbackexistente,nãoamplificamroomdalista,nãonovaconsultaantes60s,recuperaçãocomquotaconfirmada1000/taxa2. Controledecacheválido299saindanãofazGETaccount;após301s falha nãoautorizases. Nenhumachamada/campo/chave/TTLnovo;cadênciaigual. Testes1401/1402 eessenciais mantidos;suíte39+Vercelinteirapendente. Não concluireserva global/listaSES-only/fila.

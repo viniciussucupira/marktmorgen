@@ -264,7 +264,7 @@ export type SesState = {
   /** Emails a second, and in any 24 hours; only max24 = -1 denotes unlimited quota. */
   rate: number;
   max24: number;
-  /** When Amazon was last asked, and until when it is not asked again after a refusal (seconds). */
+  /** Cache freshness/retry anchor, and the end of a sender-refusal hold (seconds). */
   at: number;
   hold: number;
 };
@@ -364,11 +364,15 @@ export async function sesState(now = Date.now()): Promise<SesState | null> {
     await saveState(asked).catch(() => {});
     return asked;
   }
-  // Amazon did not answer. What it said within the hour stands, and it is
-  // asked again in a minute rather than on every email.
-  const stale: SesState = known ?? { ready: false, why: "unreachable", rate: 0, max24: 0, at: 0, hold: 0 };
-  await saveState({ ...stale, at: seconds - BELIEVED_SECONDS + 60 }).catch(() => {});
-  return stale;
+  // A failed refresh is not renewed permission to send under an old answer.
+  // Reuse the existing one-minute retry anchor and cache write, without
+  // preserving ready=true indefinitely by extending its timestamp and TTL.
+  const unavailable: SesState = {
+    ready: false, why: "unreachable", rate: known?.rate ?? 0, max24: known?.max24 ?? 0,
+    at: seconds - BELIEVED_SECONDS + 60, hold: 0,
+  };
+  await saveState(unavailable).catch(() => {});
+  return unavailable;
 }
 
 /** The account's limits when Amazon may be used right now; null when it may not. */

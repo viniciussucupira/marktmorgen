@@ -39,6 +39,7 @@ const resend: ResendSent[] = [];
 const resendKeys = new Set<string>();
 let asked = 0;
 let account: Record<string, unknown> | number = 0;
+let accountLosesReply = false;
 /** What Amazon answers to a send, by recipient; anything not named is taken. */
 let amazonSays: (to: string, nth: number) => { status: number; type?: string; message?: string } = () => ({ status: 200 });
 /** Synthetic only: SES accepted the message before its acknowledgement was lost. */
@@ -56,6 +57,7 @@ globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) =>
   if (url.hostname === `email.${REGION}.amazonaws.com`) {
     if (url.pathname === "/v2/email/account") {
       asked += 1;
+      if (accountLosesReply) throw new TypeError("synthetic account refresh reply lost");
       return typeof account === "number" ? json({ message: "no" }, account || 500) : json(account);
     }
     if (url.pathname === "/v2/email/outbound-emails") {
@@ -678,6 +680,65 @@ async function main(): Promise<void> {
     }
   } finally {
     redis.pipeline = noticePipeline;
+  }
+  account = approved();
+  askAgain();
+  clear();
+
+
+  part("A failed account refresh never renews old SES permission");
+  const refreshRealNow = Date.now;
+  let refreshAhead = 0;
+  Date.now = () => refreshRealNow() + refreshAhead;
+  try {
+    for (const loss of ["server", "network"] as const) {
+      const cached = { ready: true, why: "", rate: 14, max24: 50_000, at: Math.floor(Date.now() / 1000) - 301, hold: 0 };
+      redis.run(["SET", "nl:ses:state", JSON.stringify(cached)]);
+      account = 500;
+      accountLosesReply = loss === "network";
+      clear();
+      const askedBefore = asked;
+      is(`${loss}: essential email uses its existing fallback`, await sendEmail(letter("refresh-service@example.com")), true);
+      is(`${loss}: an expired positive cache is not permission to dispatch`,
+        [amazon.length, resend.length, asked], [0, 1, askedBefore + 1]);
+      const stopped = await sesState();
+      is(`${loss}: the same existing cache records unavailable authority`,
+        [stopped?.ready, stopped?.why, stopped?.max24, stopped?.rate], [false, "unreachable", 50_000, 14]);
+      refreshAhead += 30_000;
+      is(`${loss}: a service batch also keeps its existing fallback`,
+        await sendBatch([letter("refresh-batch@example.com")], `service:refresh:${loss}`, { by: "company" }), "sent");
+      const used = await sentThisMonth();
+      if (used === null) throw new Error("synthetic sender usage unavailable");
+      is(`${loss}: old SES room is not added to list admission`, await senderRoom(), Math.max(0, listCeiling() - used));
+      is(`${loss}: the existing minute backoff makes no extra account query`,
+        [amazon.length, resend.length, asked], [0, 2, askedBefore + 1]);
+
+      refreshAhead += 31_000;
+      accountLosesReply = false;
+      account = approved({ SendQuota: { Max24HourSend: 1_000, MaxSendRate: 2 } });
+      is(`${loss}: fresh confirmed account evidence resumes SES automatically`,
+        await sendEmail(letter("refresh-restored@example.com")), true);
+      const restored = await sesState();
+      is(`${loss}: only the newly confirmed lower quota is used`,
+        [amazon.length, resend.length, asked, restored?.ready, restored?.max24, restored?.rate], [1, 2, askedBefore + 2, true, 1_000, 2]);
+    }
+
+    part("The existing five-minute confirmed cache interval is preserved");
+    account = 500;
+    accountLosesReply = false;
+    redis.run(["SET", "nl:ses:state", JSON.stringify({ ready: true, why: "", rate: 14, max24: 50_000, at: Math.floor(Date.now() / 1000) - 299, hold: 0 })]);
+    clear();
+    const beforeFreshCache = asked;
+    is("still-current confirmed capability does not query the account on every email",
+      await sendEmail(letter("current-cache@example.com")), true);
+    is("the existing freshness window is unchanged", [amazon.length, resend.length, asked], [1, 0, beforeFreshCache]);
+    refreshAhead += 2_000;
+    is("after that window a failed refresh holds SES and retains essential fallback",
+      await sendEmail(letter("expired-cache@example.com")), true);
+    is("no stale positive dispatch after failed refresh", [amazon.length, resend.length, asked], [1, 1, beforeFreshCache + 1]);
+  } finally {
+    Date.now = refreshRealNow;
+    accountLosesReply = false;
   }
   account = approved();
   askAgain();
