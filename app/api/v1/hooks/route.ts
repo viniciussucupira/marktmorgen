@@ -1,5 +1,5 @@
 import { after } from "next/server";
-import { apiError, apiOk, apiWriter, readApiBody } from "@/lib/api-guard";
+import { apiAdder, apiError, apiOk, apiWriter, readApiBody } from "@/lib/api-guard";
 import { noticeCreator } from "@/lib/account-notice";
 import { MAX_ENDPOINT_URL, addEndpoint, removeEndpoint, webhooksView } from "@/lib/webhooks";
 
@@ -29,10 +29,10 @@ function later(task: () => Promise<unknown>): void {
 }
 
 export async function POST(request: Request) {
-  const writer = await apiWriter(request);
+  // 232 [CA1] unit 4c: waits while the plan's renewal is unpaid or a payment for it is disputed, before it is counted.
+  const writer = await apiAdder(request);
   if (writer instanceof Response) return writer;
-  const body = await readApiBody(request);
-  if (body instanceof Response) return body;
+  const body = writer.body;
   const url = typeof body.url === "string" ? body.url.slice(0, MAX_ENDPOINT_URL + 1) : "";
   try {
     const result = await addEndpoint(writer.store, url, body.events);

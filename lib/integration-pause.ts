@@ -92,19 +92,20 @@ export const WEBHOOK_PAUSED_COUNTED = "It counts as one of this month's webhook 
  * requests. Writes that add or change wait too (API_WRITE_PAUSED_WORDS).
  */
 export const API_READ_PAUSED_WORDS: Record<"paused_unpaid" | "paused_disputed", string> = {
-  paused_unpaid: "Nothing was read: your plan's renewal payment did not go through, so reading your store through your API keys, AI assistants included, waits until it is paid; try again then. Check the notice at the top of your studio to pay it. Taking back access and removing webhook endpoints through the API are not paused.",
-  paused_disputed: "Nothing was read: a payment for your plan is disputed with your bank, so reading your store through your API keys, AI assistants included, waits until the dispute is decided for us or, if it is decided for you, at most until the period that payment covered ends. Check the notice at the top of your studio for what happens next. Taking back access and removing webhook endpoints through the API are not paused.",
+  paused_unpaid: "Nothing was read: your plan's renewal payment did not go through, so reading your store through your API keys, AI assistants included, waits until it is paid; try again then. Check the notice at the top of your studio to pay it. Removing labels, taking back access and removing webhook endpoints through the API are not paused.",
+  paused_disputed: "Nothing was read: a payment for your plan is disputed with your bank, so reading your store through your API keys, AI assistants included, waits until the dispute is decided for us or, if it is decided for you, at most until the period that payment covered ends. Check the notice at the top of your studio for what happens next. Removing labels, taking back access and removing webhook endpoints through the API are not paused.",
 };
 
 /**
- * 232 [CA1] unit 4c: adding or changing a store through a write key (a lead,
- * a lead's labels, a product given with no payment) waits too, before the
- * month's API requests are counted or the body is read. Each is our work and
- * may start more of it (a sequence a label starts, an email to a buyer), and
+ * 232 [CA1] unit 4c: adding to a store through a write key (a lead, a lead's
+ * labels, a product given with no payment, a webhook endpoint) waits too,
+ * before the month's API requests are counted (a labels request's body is
+ * read first, to see whether it adds). Each is our work and may start more
+ * of it (a sequence a label starts, an email to a buyer, deliveries), and
  * the checkout already takes no new orders or free copies. Taking something
  * away stays open (lib/api-guard.ts, apiAdder).
  */
 export const API_WRITE_PAUSED_WORDS: Record<"paused_unpaid" | "paused_disputed", string> = {
-  paused_unpaid: "Nothing was changed: your plan's renewal payment did not go through, so adding leads, adding labels and giving products through your API keys waits until it is paid; try again then. Check the notice at the top of your studio to pay it. Removing labels, taking back access and removing webhook endpoints through the API are not paused.",
-  paused_disputed: "Nothing was changed: a payment for your plan is disputed with your bank, so adding leads, adding labels and giving products through your API keys waits until the dispute is decided for us or, if it is decided for you, at most until the period that payment covered ends. Check the notice at the top of your studio for what happens next. Removing labels, taking back access and removing webhook endpoints through the API are not paused.",
+  paused_unpaid: "Nothing was changed: your plan's renewal payment did not go through, so adding leads, adding labels, giving products and adding webhook endpoints through your API keys waits until it is paid; try again then. Check the notice at the top of your studio to pay it. Removing labels, taking back access and removing webhook endpoints through the API are not paused.",
+  paused_disputed: "Nothing was changed: a payment for your plan is disputed with your bank, so adding leads, adding labels, giving products and adding webhook endpoints through your API keys waits until the dispute is decided for us or, if it is decided for you, at most until the period that payment covered ends. Check the notice at the top of your studio for what happens next. Removing labels, taking back access and removing webhook endpoints through the API are not paused.",
 };

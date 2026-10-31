@@ -9,6 +9,7 @@
 import { POST as leadAdd } from "@/app/api/v1/leads/route";
 import { POST as labelsChange } from "@/app/api/v1/leads/labels/route";
 import { POST as accessGive, DELETE as accessTake } from "@/app/api/v1/access/route";
+import { POST as hookAdd } from "@/app/api/v1/hooks/route";
 import { makeKey } from "@/lib/api-keys";
 import { allowanceUsed } from "@/lib/store-allowance";
 import { claimHandle, ensureStatsId, recordPlanDispute, setSubscription, storeForEmail, storeRef } from "@/lib/store";
@@ -65,6 +66,8 @@ async function main(): Promise<void> {
     is("an add that cannot be read is refused as an add", [odd.status, odd.body.error], [409, "paused_unpaid"]);
     const access = await send(accessGive, "/api/v1/access", { email: "buyer@example.com", product: "none-such", notify: false });
     is("giving a product is refused", [access.status, access.body.error], [409, "paused_unpaid"]);
+    const hook = await send(hookAdd, "/api/v1/hooks", { url: "https://hooks.example.com/paused", events: ["sale.completed"] });
+    is("adding a webhook endpoint is refused the same way, before it counts", [hook.status, hook.body.error, hook.body.message], [409, "paused_unpaid", API_WRITE_PAUSED_WORDS.paused_unpaid]);
     const malformed = await leadAdd(new Request("https://marktmorgen.com/api/v1/leads", { method: "POST", headers: { Authorization: `Bearer ${writer.key}`, "Content-Type": "application/json" }, body: "not json" }));
     is("refused before the body is read", malformed.status, 409);
     is("nothing was counted for the refused writes", await used(), paidCount);
@@ -80,9 +83,9 @@ async function main(): Promise<void> {
     is("taking back access is not refused by the pause", taken.body.error === "paused_unpaid", false);
 
     part("The sentences say it");
-    is("the write sentence names leads, labels and products and keeps the removals open", [/leads/.test(API_WRITE_PAUSED_WORDS.paused_unpaid), /labels/.test(API_WRITE_PAUSED_WORDS.paused_unpaid), /products/.test(API_WRITE_PAUSED_WORDS.paused_unpaid), Object.values(API_WRITE_PAUSED_WORDS).every((w) => w.endsWith("Removing labels, taking back access and removing webhook endpoints through the API are not paused."))], [true, true, true, true]);
-    is("the read sentence still keeps the removals open", Object.values(API_READ_PAUSED_WORDS).every((w) => /Taking back access and removing webhook endpoints through the API are not paused\./.test(w)), true);
-    is("the renewal and dispute notices say reading and changing through API keys wait", [RENEWAL_PAUSED_WORDS, DISPUTE_PAUSED_WORDS].every((w) => w.includes("Reading and changing your store through your API keys, AI assistants included, waits too, except taking back access and removing webhook endpoints.")), true);
+    is("the write sentence names leads, labels, products and webhook endpoints and keeps the removals open", [/leads/.test(API_WRITE_PAUSED_WORDS.paused_unpaid), /labels/.test(API_WRITE_PAUSED_WORDS.paused_unpaid), /products/.test(API_WRITE_PAUSED_WORDS.paused_unpaid) && /adding webhook endpoints/.test(API_WRITE_PAUSED_WORDS.paused_unpaid), Object.values(API_WRITE_PAUSED_WORDS).every((w) => w.endsWith("Removing labels, taking back access and removing webhook endpoints through the API are not paused."))], [true, true, true, true]);
+    is("the read sentence names the same removals", Object.values(API_READ_PAUSED_WORDS).every((w) => w.endsWith("Removing labels, taking back access and removing webhook endpoints through the API are not paused.")), true);
+    is("the renewal and dispute notices say adding through API keys waits, and which removals do not", [RENEWAL_PAUSED_WORDS, DISPUTE_PAUSED_WORDS].every((w) => w.endsWith("and so does adding to it through them; removing labels, taking back access and removing webhook endpoints do not.")), true);
 
     part("Disputed: the dispute's sentence");
     await setSubscription(OWNER, { active: true, tier: "pro", cycle: "month", period: paidPeriod(), renewalUnpaid: false });
@@ -98,6 +101,14 @@ async function main(): Promise<void> {
     const before = await used();
     is("adding a lead works again", (await send(leadAdd, "/api/v1/leads", { email: "second@example.com", agreed: true })).status, 200);
     is("and is counted", (await used()) > before, true);
+
+    part("A dispute decided for the store keeps adding paused for the period it covered");
+    store = (await storeForEmail(OWNER))!;
+    is("a second dispute is written down", Boolean(await recordPlanDispute(storeRef(store), { id: "du_ApiWritesPause2", status: "open", at: now, coversUntil: now + 30 * 86_400 })), true);
+    store = (await storeForEmail(OWNER))!;
+    is("and is lost", Boolean(await recordPlanDispute(storeRef(store), { id: "du_ApiWritesPause2", status: "lost", at: now, coversUntil: now + 30 * 86_400 })), true);
+    const lost = await send(leadAdd, "/api/v1/leads", { email: "fourth@example.com", agreed: true });
+    is("adding a lead still answers 409 with the dispute's sentence", [lost.status, lost.body.error, /until the period that payment covered ends/.test(lost.body.message ?? "")], [409, "paused_disputed", true]);
     is("nothing outside was reached", outside, 0);
   } finally {
     globalThis.fetch = previousFetch;

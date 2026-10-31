@@ -23,7 +23,7 @@
  *     (lib/api-guard.ts, unit 4b4c).
  */
 export const RENEWAL_PAUSED_WORDS =
-  "Until it is paid, your checkout takes no new orders, free copies or sign-ups, and emails to your list, AI drafts, lesson video, imports from other platforms, new connections to Zoom, Google Calendar and Meta with Meta's daily ad-spend read, and new uploads, your buyers' review photos included, are paused. New webhook endpoints cannot be added, and webhooks are not sent to your endpoints, not even later, except events from your Stripe account, which are sent once the payment is recorded, as far back as Stripe keeps them (30 days). Reading and changing your store through your API keys, AI assistants included, waits too, except taking back access and removing webhook endpoints.";
+  "Until it is paid, your checkout takes no new orders, free copies or sign-ups, and emails to your list, AI drafts, lesson video, imports from other platforms, new connections to Zoom, Google Calendar and Meta with Meta's daily ad-spend read, and new uploads, your buyers' review photos included, are paused. New webhook endpoints cannot be added, and webhooks are not sent to your endpoints, not even later, except events from your Stripe account, which are sent once the payment is recorded, as far back as Stripe keeps them (30 days). Reading your store through your API keys, AI assistants included, waits too, and so does adding to it through them; removing labels, taking back access and removing webhook endpoints do not.";
 
 export const RENEWAL_KEPT_WORDS =
   "Your store's page stays up, your buyers keep reaching what they already bought except lesson video, your studio stays open, and nothing is deleted.";

@@ -105,7 +105,7 @@ export default function DevelopersPage() {
           <code className="font-mono">paused_unpaid</code>
           {" (or "}
           <code className="font-mono">paused_disputed</code>
-          {" while a payment for the plan is disputed, and for the period that payment covered if the dispute is decided for the store, while the plan runs), before the request counts toward the month. Writes that add answer the same way, also before they count: adding a lead, adding labels and giving a product. Writes that take something away are not paused, so removing labels, taking back access and removing a webhook endpoint still work, counted as API requests as usual."}
+          {" while a payment for the plan is disputed, and for the period that payment covered if the dispute is decided for the store, while the plan runs), before the request counts toward the month. Adding a lead, adding labels, giving a product and adding a webhook endpoint get the same 409, also before they count; its message starts \"Nothing was changed\". Removing labels, taking back access and removing a webhook endpoint are not paused: they still work and count as API requests as usual."}
         </p>
       </LegalSection>
 

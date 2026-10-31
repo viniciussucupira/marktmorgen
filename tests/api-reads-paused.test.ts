@@ -85,7 +85,7 @@ async function main(): Promise<void> {
     is("removing an endpoint through the API works while paused", [removed.status, (await webhooksView(store)).endpoints.length], [200, 0]);
 
     part("The notices name it");
-    is("the renewal and dispute notices say API reads wait", [RENEWAL_PAUSED_WORDS, DISPUTE_PAUSED_WORDS].every((w) => w.includes("Reading and changing your store through your API keys, AI assistants included, waits too")), true);
+    is("the renewal and dispute notices say API reads wait", [RENEWAL_PAUSED_WORDS, DISPUTE_PAUSED_WORDS].every((w) => w.includes("Reading your store through your API keys, AI assistants included, waits too")), true);
 
     part("Disputed: the dispute's sentence");
     await setSubscription(OWNER, { active: true, tier: "pro", cycle: "month", period: paidPeriod(), renewalUnpaid: false });
