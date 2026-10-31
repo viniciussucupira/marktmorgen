@@ -443,7 +443,10 @@ export async function sendBatch(
     const all = going.length;
     // Whoever Amazon already took under this key, in a batch that was then
     // cut short and is being tried again, is not written to twice.
-    going = await notYetTaken(batchKey, going);
+    const pending = await notYetTaken(batchKey, going);
+    // Unreadable evidence must not release recipients to either provider.
+    if (pending === null) return "retry";
+    going = pending;
     // And a batch whose rest was once handed to Resend goes back to Resend,
     // under the same key: if Resend took it and the answer was lost on the
     // way, only Resend can tell, and Amazon would write to them all again.

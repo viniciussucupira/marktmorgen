@@ -501,13 +501,28 @@ const DID_SECONDS = 2 * 86_400;
  * tried again — after a timeout, after the rest of it failed — never writes
  * to the same person twice.
  */
-export async function notYetTaken<T extends { to: string }>(batchKey: string, messages: T[]): Promise<T[]> {
+/** null means marker evidence is unavailable, never permission to send. */
+export async function notYetTaken<T extends { to: string }>(batchKey: string, messages: T[]): Promise<T[] | null> {
   if (!messages.length) return messages;
+  // sendBatch already caps a request at 100; validate only that finite window.
+  if (messages.length > 100) return null;
   try {
-    const found = await redisPipeline(messages.map((m) => ["GET", didKey(batchKey, m.to)]));
-    return messages.filter((_, i) => found[i] === null || found[i] === undefined);
+    const found: unknown = await redisPipeline(messages.map((m) => ["GET", didKey(batchKey, m.to)]));
+    if (!Array.isArray(found)) return null;
+    const length = Object.getOwnPropertyDescriptor(found, "length");
+    if (!length || !("value" in length) || length.value !== messages.length) return null;
+    const pending: T[] = [];
+    for (let i = 0; i < messages.length; i += 1) {
+      const item = Object.getOwnPropertyDescriptor(found, String(i));
+      if (!item || !("value" in item)) return null;
+      // Only explicit absence permits sending. Missing, inherited, computed
+      // or unexpected evidence is not proof that SES never took the message.
+      if (item.value === null) pending.push(messages[i]);
+      else if (item.value !== "1") return null;
+    }
+    return pending;
   } catch {
-    return messages;
+    return null;
   }
 }
 

@@ -21,7 +21,7 @@ import { isMailable, upsertContact } from "@/lib/contacts";
 import { hasResend, isSenderConfigured, sendBatch, sendEmail, sentThisMonth } from "@/lib/email";
 import { listCeiling, senderRoom } from "@/lib/mail";
 import { LIST_TAG, STORE_TAG, healthId, listHealth } from "@/lib/mail-health";
-import { HOLD_SECONDS, isSesConfigured, sesConfig, sesSentLast24h, sesState } from "@/lib/ses";
+import { HOLD_SECONDS, isSesConfigured, notYetTaken, sesConfig, sesSentLast24h, sesState } from "@/lib/ses";
 import { stringToSign, type SnsMessage } from "@/lib/sns";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
@@ -279,6 +279,78 @@ async function main(): Promise<void> {
   // Existing normal sends, confirmed throttling retries and refusal fallback
   // below remain controls; this unit does not certify later unkeyed retries
   // or the separate batch sender's delivery/idempotency behavior.
+
+  part("Unreadable batch marker evidence releases nobody to either sender");
+  let markerGetters = 0;
+  let oversizedMembers = 0;
+  const markerCases: [string, () => unknown, number?][] = [
+    ["missing envelope", () => undefined],
+    ["not an array", () => ({ 0: "1", length: 1 })],
+    ["empty", () => []],
+    ["sparse", () => new Array(1)],
+    ["inherited", () => Object.setPrototypeOf(new Array(1), { 0: "1" })],
+    ["getter", () => Object.defineProperty(new Array(1), "0", { get() { markerGetters += 1; return null; } })],
+    ["undefined member", () => [undefined]],
+    ["empty marker", () => [""]],
+    ["unexpected marker", () => [true]],
+    ["symbol", () => [Symbol("1")]],
+    ["oversized", () => new Proxy(["1", null], {
+      getOwnPropertyDescriptor(target, key) {
+        if (key === "0") oversizedMembers += 1;
+        return Reflect.getOwnPropertyDescriptor(target, key);
+      },
+    })],
+    ["million positions", () => new Proxy(new Array(1_000_000), {
+      getOwnPropertyDescriptor(target, key) {
+        if (key === "0") oversizedMembers += 1;
+        return Reflect.getOwnPropertyDescriptor(target, key);
+      },
+    })],
+    ["lost reply", () => { throw new Error("synthetic marker read response lost"); }],
+    ["later unknown", () => [null, undefined], 2],
+  ];
+  for (const [name, answer, count = 1] of markerCases) {
+    account = approved();
+    askAgain();
+    clear();
+    const batchKey = `bc:unknown-markers:${name}`;
+    const messages = Array.from({ length: count }, (_, i) => letter(`marker${i}@example.com`));
+    const markers = messages.map(m => `nl:ses:did:${createHash("sha256").update(`${batchKey}\n${m.to}`).digest("hex").slice(0, 40)}`);
+    await originalPipeline(markers.map(key => ["SET", key, "1", "EX", 2 * 86_400]));
+    const counted = [await sesSentLast24h(), await sentThisMonth()];
+    let reads = 0;
+    let deletes = 0;
+    redis.pipeline = async (commands) => {
+      if (commands.some(command => command[0] === "DEL" && markers.includes(String(command[1])))) deletes += 1;
+      const reply = await originalPipeline(commands);
+      if (commands.length === messages.length && commands.every(command => command[0] === "GET" && markers.includes(String(command[1])))) {
+        reads += 1;
+        return answer() as unknown[];
+      }
+      return reply;
+    };
+    try {
+      is(`${name}: actual batch remains retryable without sending`,
+        await sendBatch(messages, batchKey, { by: "company" }), "retry");
+    } finally {
+      redis.pipeline = originalPipeline;
+    }
+    is(`${name}: one existing read, neither sender or marker deletion`,
+      [reads, amazon.length, resend.length, deletes], [1, 0, 0, 0]);
+    is(`${name}: committed marker evidence stays intact`, markers.map(key => redis.run(["GET", key])), markers.map(() => "1"));
+    is(`${name}: no known-send counter changes`, [await sesSentLast24h(), await sentThisMonth()], counted);
+  }
+  is("marker getters and members outside the requested cardinality are not read", [markerGetters, oversizedMembers], [0, 0]);
+  clear();
+  const markerControlKey = "bc:own-marker-control";
+  const existingMarker = `nl:ses:did:${createHash("sha256").update(`${markerControlKey}\nmarker-old@example.com`).digest("hex").slice(0, 40)}`;
+  await originalPipeline([["SET", existingMarker, "1", "EX", 2 * 86_400]]);
+  is("own marker and explicit absence keep only the unsent recipient eligible",
+    await sendBatch([letter("marker-old@example.com"), letter("marker-new@example.com")], markerControlKey, { by: "company" }), "sent");
+  is("the valid positive control sends only the absent recipient", [amazon.map(m => m.to), resend.length], [["marker-new@example.com"], 0]);
+  const fullWindow = Array.from({ length: 100 }, (_, i) => letter(`full-marker${i}@example.com`));
+  is("all 100 existing batch positions remain available with confirmed absence",
+    (await notYetTaken("bc:full-marker-window", fullWindow))?.length, 100);
 
   part("A batch, one email at a time");
   clear();
