@@ -246,7 +246,7 @@ function PlanCard({
         "only today", no crossed-out price that was never charged.
       */}
       {featured ? (
-        <span className="absolute -top-3 left-7 rounded-full bg-violet-brand px-3 py-1 text-[0.75rem] font-semibold text-white shadow-[var(--shadow-sm)] sm:left-9">
+        <span className="absolute -top-3 left-7 rounded-full bg-[var(--hm-gold,var(--violet))] px-3 py-1 text-[0.8125rem] font-extrabold text-[var(--hm-text,#fff)] shadow-[var(--shadow-sm)] sm:left-9">
           Where to start
         </span>
       ) : null}

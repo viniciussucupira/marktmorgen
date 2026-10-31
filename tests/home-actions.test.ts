@@ -18,9 +18,12 @@ test("home actions are native, self-service and lead to the existing start page"
   assert.match(claim, /name="handle"/);
   assert.equal((page.match(/<HeroClaim\b/g) ?? []).length, 1);
   assert.equal((page.match(/<ClaimForm\b/g) ?? []).length, 1);
-  // The menu: Pricing, Log in, one start button.
-  for (const href of ['href="/pricing"', 'href="/signin?to=login"', 'href="/signin"']) assert.ok(page.includes(href), href);
-  assert.doesNotMatch(page + claim, /<Link\b|Talk to an expert|Book a demo/);
+  // The menu: Pricing, Log in, one start button, in the morning header the
+  // home page shares with /pricing (components/morning-header.tsx).
+  const header = readFileSync("components/morning-header.tsx", "utf8");
+  assert.equal((page.match(/<MorningHeader \/>/g) ?? []).length, 1);
+  for (const href of ['href="/pricing"', 'href="/signin?to=login"', 'href="/signin"']) assert.ok(header.includes(href), href);
+  assert.doesNotMatch(page + claim + header, /<Link\b|Talk to an expert|Book a demo/);
   // The page itself starts nothing paid and calls nothing.
   assert.doesNotMatch(page + claim, /fetch\(|useEffect|localStorage|sessionStorage/);
 });
