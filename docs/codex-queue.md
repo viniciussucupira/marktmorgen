@@ -20821,3 +20821,18 @@ Proveniência: pedido do dono, 31/10/2026, 12h39 Fortaleza ("gosto do marketing,
 Testes: cada lição existe para cada passo; progresso salvo; nenhuma frase com alegação de renda ou urgência (lista de proibidas testada); matriz de acessibilidade AAA de "Learn" e do curso público; inscrição só com consentimento. Custo: só armazenamento e leituras já com teto por plano; nenhum fornecedor novo; pior caso conferido; desconhecido reprova.
 
 Proibido: mudar preços, limites visíveis, comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a, a revisão comercial ou stripePlatformEligibilityReady; afrouxar trava; copiar texto, imagem, modelo ou nome próprio da ClickFunnels ou de Russell Brunson; postar ou enviar mensagem em nome do criador; criar contas, aceitar termos, contratar, pagar ou contatar terceiros; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos.
+
+
+## CV — Custo da visita menor, sem perder qualidade (31/10/2026)
+
+**Proveniência/Pedidos repetidos:** pergunta do dono na conversa com o Claude, 31/10/2026, 16h51 Fortaleza ("tem como reduzir o custo ocorrendo zero redução na qualidade?"); recomendação do Claude aplicada pela regra DR (decisão do dono 31/10/2026 15h41). Conferido antes de gravar: nenhum item da fila trata do custo por visita da vitrine; etiqueta CV1 e número 579 livres. Prioridade: depois do que aproxima a abertura das vendas.
+
+579. [CV1] Vitrine guardada pronta no CDN e menos comandos por página, com qualidade igual ou melhor
+Base: o modelo de custos do próprio repositório (tests/traffic-cost.ts, preços oficiais lidos em 07/10/2026) dá US$ 0,26 a cada mil visitas no pior caso: comandos ao banco 42% (56 por visita), pedidos ao CDN 39% (52 por visita), funções 14%, bytes 3%. Fazer, só onde a qualidade fica igual ou melhor:
+1. Página pública da loja guardada pronta no CDN, renovada na hora em que o criador salva (revalidação sob demanda; ler a página da documentação do Next desta versão em node_modules/next/dist/docs/ antes); as partes que mudam por pessoa (preço por país, estoque limitado, carrinho, quem está na loja, consentimento) continuam vindo na hora.
+2. Contagem de visitas EXATA mantida, por um registro leve por página (sem amostra; o painel do criador não pode virar estimativa).
+3. Menos comandos ao banco por página: juntar leituras e contagens onde o fornecedor cobrar menos por isso, conferido na página oficial de preços do Upstash na data, sem perder nenhuma informação.
+4. Fotos fora da tela carregadas só quando aparecem (loading="lazy" com tamanho reservado, sem salto de layout), e cabeçalhos de cache longos nos arquivos estáticos.
+Estimativa só dos passos 1 e 2: cerca de 57% menos por visita (US$ 0,26 para US$ 0,11 a cada mil). Medir antes e depois com o mesmo modelo; atualizar tests/traffic-cost.ts somente com o que foi medido; nunca baixar um custo no modelo sem a medição correspondente; custo desconhecido continua reprovando.
+Testes: loja atualizada aparece logo depois de salvar; preço por país, estoque e carrinho corretos com a página guardada; contagem exata igual à de antes; sem salto de layout (CLS) nem perda de acessibilidade AAA; desempenho em celular simples e rede lenta igual ou melhor.
+Proibido: mudar preço, limite visível, comissão ou travas; afrouxar teto; contagem por amostra no painel; contas, termos, pagamentos ou contatos; apagar conteúdo. Somente testes sintéticos.
