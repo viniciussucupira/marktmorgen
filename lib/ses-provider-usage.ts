@@ -16,7 +16,8 @@ export type SesProviderUsage =
       production: boolean;
       sending: boolean;
       enforcement: "HEALTHY" | "PROBATION" | "SHUTDOWN";
-      snapshotAt: string;
+      requestedAt: string;
+      observedAt: string;
     }
   | { ok: false; reason: "not_configured" | "unauthorized" | "provider" | "unknown" };
 
@@ -47,11 +48,13 @@ const rate = (value: unknown) =>
     : null;
 
 /**
- * Takes one timestamp before the provider request and returns the exact SES
- * rolling-24-hour counter observed for that snapshot. Unknown shape,
+ * Bounds the provider observation between the request and response clocks and
+ * returns the SES rolling-24-hour counter observed inside that interval. Unknown shape,
  * credentials or transport never becomes zero.
  */
-export async function sesProviderUsage(now = Date.now()): Promise<SesProviderUsage> {
+export async function sesProviderUsage(
+  now = Date.now(), clock: () => number = Date.now,
+): Promise<SesProviderUsage> {
   if (!Number.isSafeInteger(now) || now < 0) return { ok: false, reason: "unknown" };
   const config = sesConfig();
   if (!config) return { ok: false, reason: "not_configured" };
@@ -106,6 +109,8 @@ export async function sesProviderUsage(now = Date.now()): Promise<SesProviderUsa
       enforcement !== "HEALTHY" && enforcement !== "PROBATION" && enforcement !== "SHUTDOWN") {
     return { ok: false, reason: "unknown" };
   }
+  const observed = clock();
+  if (!Number.isSafeInteger(observed) || observed < now) return { ok: false, reason: "unknown" };
   return {
     ok: true,
     sentLast24Hours: sent,
@@ -114,6 +119,7 @@ export async function sesProviderUsage(now = Date.now()): Promise<SesProviderUsa
     production: account.ProductionAccessEnabled,
     sending: account.SendingEnabled,
     enforcement,
-    snapshotAt: new Date(now).toISOString(),
+    requestedAt: new Date(now).toISOString(),
+    observedAt: new Date(observed).toISOString(),
   };
 }

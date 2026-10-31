@@ -55,7 +55,7 @@ async function main(): Promise<void> {
     });
   };
   is("SES count, limits, readiness and the pre-request instant stay together",
-    await sesProviderUsage(1_000),
+    await sesProviderUsage(1_000, () => 1_125),
     {
       ok: true,
       sentLast24Hours: 37,
@@ -64,8 +64,12 @@ async function main(): Promise<void> {
       production: true,
       sending: true,
       enforcement: "HEALTHY",
-      snapshotAt: "1970-01-01T00:00:01.000Z",
+      requestedAt: "1970-01-01T00:00:01.000Z",
+      observedAt: "1970-01-01T00:00:01.125Z",
     });
+  is("a backwards response clock is unknown",
+    await sesProviderUsage(2_000, () => 1_999),
+    { ok: false, reason: "unknown" });
   is("the read is signed with only the temporary role identity and is not cached",
     [
       accountRequest?.method,
