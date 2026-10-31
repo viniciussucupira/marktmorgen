@@ -1044,8 +1044,8 @@ function Captions({
 
   const selectId = `captions-${lessonId}`;
   return (
-    <div className="w-full" id={captionsAnchor(lessonId)}>
-      <p className="field-label">Captions</p>
+    <div className="w-full">
+      <p id={captionsAnchor(lessonId)} tabIndex={-1} className="field-label">Captions</p>
       {tracks.length ? (
         <ul className="mt-2 space-y-1 text-sm">
           {tracks.map((track) => (
