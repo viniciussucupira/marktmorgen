@@ -33,8 +33,16 @@ export async function checkPricing({browser,LOCAL,axeSource,is}){
    for(const price of ["$690","$4,490","$9,990"])check(text.includes("Or "+price+" once a year"),"pricing shows "+price+" a year "+width);
    check(await page.locator("main a[href='/proof/comparisons']").count()===1,"real comparison destination "+width);
    for(const summary of await page.locator("main summary").all()){
-    await summary.focus();await page.keyboard.press("Enter");
+    await summary.focus();
+    check(await summary.evaluate(node=>node===document.activeElement),"FAQ summary has keyboard focus "+width);
+    await page.keyboard.press("Enter");
+    // Native disclosure state settles in the browser; an immediate read can
+    // race the keyboard default action. A broken toggle must still time out.
+    await page.waitForFunction(node=>node.parentElement?.open===true,await summary.elementHandle(),{timeout:5000});
     check(await summary.evaluate(node=>node.parentElement.open),"FAQ opens by keyboard "+width);
+    await page.keyboard.press("Enter");
+    await page.waitForFunction(node=>node.parentElement?.open===false,await summary.elementHandle(),{timeout:5000});
+    check(await summary.evaluate(node=>node.parentElement.open===false),"FAQ closes by keyboard "+width);
    }
    check((await page.locator("main").innerText()).includes("Stripe charges its own processing fee"),"processing separate "+width);
    check(await page.locator("main").evaluate(node=>node.scrollWidth<=node.clientWidth+1),"pricing fits viewport "+width);

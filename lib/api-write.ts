@@ -78,6 +78,16 @@ function readLabels(raw: unknown): string[] | null {
   return readTags(raw as string[]);
 }
 
+/**
+ * Whether a labels request adds any label (232 [CA1] unit 4c): one that only
+ * removes labels creates no enrollment and stays open while a plan is unpaid
+ * or disputed; an `add` that cannot be read counts as adding.
+ */
+export function addsLabels(body: Record<string, unknown>): boolean {
+  const add = readLabels(body.add);
+  return add === null || add.length > 0;
+}
+
 /** Adds somebody who agreed to hear from the creator to the list; "already" when they are on it agreeing. */
 export async function addLead(store: Store, body: Record<string, unknown>): Promise<Done<{ email: string; status: "added" | "already" }>> {
   const email = readEmail(body.email);

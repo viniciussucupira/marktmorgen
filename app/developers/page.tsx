@@ -43,7 +43,7 @@ const BASE = "https://marktmorgen.com/api/v1";
 
 export default function DevelopersPage() {
   return (
-    <LegalPage title="Developers" eyebrow="For your own tools" effective={null} legalNav={false} lastUpdated="October 12, 2026">
+    <LegalPage title="Developers" eyebrow="For your own tools" effective={null} legalNav={false} lastUpdated="October 31, 2026">
       <p>
         Read your store from your own tools: your list, your community&apos;s members, a course&apos;s students, your
         affiliates and your bookings; and, with a key made to write, add people to your list, label them, and give or
@@ -97,6 +97,7 @@ export default function DevelopersPage() {
 429  {"error": "monthly_limit", "message": "Your store's API requests for this month are used: …"}
 409  {"error": "store_full", "message": "Your store's data room is full, so nothing was added. …"}
 409  {"error": "paused_unpaid", "message": "Nothing was read: your plan's renewal payment did not go through, …"}
+409  {"error": "paused_unpaid", "message": "Nothing was changed: your plan's renewal payment did not go through, …"}
 502  {"error": "unavailable", "message": "… could not be read just now. Try again in a moment."}`}</Code>
         <p>A missing, mistyped and revoked key all get the same 401.</p>
         <p>
@@ -104,7 +105,7 @@ export default function DevelopersPage() {
           <code className="font-mono">paused_unpaid</code>
           {" (or "}
           <code className="font-mono">paused_disputed</code>
-          {" while a payment for the plan is disputed, and for the period that payment covered if the dispute is decided for the store, while the plan runs), before the request counts toward the month. Writes are not paused this way, so taking back access and removing a webhook endpoint still work, counted as API requests as usual."}
+          {" while a payment for the plan is disputed, and for the period that payment covered if the dispute is decided for the store, while the plan runs), before the request counts toward the month. Adding a lead, adding labels, giving a product and adding a webhook endpoint get the same 409, also before they count; its message starts \"Nothing was changed\". Removing labels, taking back access and removing a webhook endpoint are not paused: they still work and count as API requests as usual."}
         </p>
       </LegalSection>
 

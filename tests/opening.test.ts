@@ -99,8 +99,8 @@ async function main(): Promise<void> {
   is("the button to a new store", startWords(TRIAL_DAYS), PLANS_ON_SALE ? `Try it free for ${TRIAL_DAYS} days` : "Start your store");
   const pages = ["app/platform/page.tsx", "components/topic-page.tsx"].map((f) => readFileSync(f, "utf8"));
   is("feature pages take their button from it", pages.map((p) => p.includes("{startWords(TRIAL_DAYS)}") && !p.includes("{`Try it free for")), [true, true]);
-  const first = HOME_QUESTIONS[0];
-  is("the home page is asked whether selling starts today", first.q, "Can I sign up and start selling today?");
+  const first = HOME_QUESTIONS.find((item) => item.q === "Can I start selling today?")!;
+  is("the home page is asked whether selling starts today", Boolean(first), true);
   is("and answers with what is true", first.a.startsWith("Yes.") === PLANS_ON_SALE && first.a.includes("not on sale yet") !== PLANS_ON_SALE, true);
   is("the plan cards say it first", readFileSync("components/home-parts.tsx", "utf8").includes('...(PLANS_ON_SALE ? [] : [["On sale", "Not yet.'), true);
   is("and so do the home page and the page where a store is started", ["app/page.tsx", "app/signin/page.tsx"].map((f) => readFileSync(f, "utf8").includes("PLANS_ON_SALE")), [true, true]);

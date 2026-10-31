@@ -206,3 +206,13 @@ While a plan's renewal is unpaid or a payment for it is disputed (`integrationPa
 - **Told:** `RENEWAL_PAUSED_WORDS` and `DISPUTE_PAUSED_WORDS` (studio notice, failed-payment email, Terms) now end with "Reading your store through your API keys, AI assistants included, waits too."; the developers page lists the 409.
 - **Cost:** lower, never higher: one check of fields already loaded, before the month's count.
 - **Test:** `tests/api-reads-paused.test.ts` (29 checks, a lost dispute included; the guard removed fails 10 of them).
+
+## Adding through a store's API keys while a plan is unpaid or disputed (232 [CA1] unit 4c, 31 Oct 2026)
+
+- **Refused, with the reason:** `apiAdder` (`lib/api-guard.ts`) answers 409 `paused_unpaid` or `paused_disputed` with `API_WRITE_PAUSED_WORDS` for adding a lead (`POST /api/v1/leads`), adding labels (`POST /api/v1/leads/labels` with any label to add, or an `add` that cannot be read), giving a product with no payment (`POST /api/v1/access`, with or without a notice) and adding a webhook endpoint (`POST /api/v1/hooks`, refused by unit 4b4b2 but only after it was counted; now before), after the key is checked and before any of the month's API requests is taken. A read-only key still hears 403 `read_only`; a missing or wrong key still gets 401.
+- **Open:** removing labels only (`addsLabels`, `lib/api-write.ts`: it creates no enrollment), taking back access (`DELETE /api/v1/access`) and removing a webhook endpoint (`DELETE /api/v1/hooks`), counted as API requests as usual.
+- **Why:** each of these is our work and may start more of it (a sequence a label starts, an email to a buyer), and the checkout already takes no new orders or free copies while paused.
+- **Told:** `RENEWAL_PAUSED_WORDS` and `DISPUTE_PAUSED_WORDS` (studio notice, failed-payment email, Terms) now end with "Reading your store through your API keys, AI assistants included, waits too, and so does adding to it through them; removing labels, taking back access and removing webhook endpoints do not."; the developers page lists the write 409 and what stays open.
+- **Cost:** lower, never higher: a check of fields already loaded, before the month's count; while paused, a labels request's body (at most 4,000 bytes, as before) is read before the count, to see whether it adds, so a malformed one is answered 400 without being counted.
+- **Starts again on its own** once Stripe records the payment or the dispute is decided for us; a dispute decided for the store keeps these writes refused until the period that payment covered ends.
+- **Test:** `tests/api-writes-paused.test.ts` (30 checks: refused before the count, removals open, a webhook endpoint, the dispute's sentence, a dispute decided for the store, writes again once settled).

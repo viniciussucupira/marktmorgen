@@ -1,4 +1,5 @@
 import "../home.css";
+import "./focus-scroll.css";
 import { SiteFooter } from "@/components/site-footer";
 import { MORNING_FONTS } from "@/components/morning-fonts";
 
