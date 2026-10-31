@@ -151,7 +151,7 @@ async function main(): Promise<void> {
   process.env.AWS_SES_ROLE_ARN = "not-a-role";
   is("an invalid role cannot fall back to the user key", [isSesConfigured(), sesConfig()], [false, null]);
   process.env.AWS_SES_ROLE_ARN = "arn:aws:iam::123456789012:role/synthetic-baseline";
-  process.env.VERCEL_OIDC_TOKEN = "synthetic-baseline-host-token";
+  process.env.VERCEL_OIDC_TOKEN = "aGVhZGVy.cGF5bG9hZA.c2lnbmF0dXJl";
   is("the complete role configuration ignores user access keys", [isSesConfigured(), sesConfig()?.region, sesConfig()?.roleArn, sesConfig()?.key],
     [true, REGION, "arn:aws:iam::123456789012:role/synthetic-baseline", null]);
 
@@ -647,7 +647,7 @@ async function main(): Promise<void> {
   Date.now = realNow;
   delete (globalThis as Record<symbol, unknown>)[Symbol.for("@vercel/request-context")];
   process.env.AWS_SES_ROLE_ARN = "arn:aws:iam::123456789012:role/synthetic-baseline";
-  process.env.VERCEL_OIDC_TOKEN = "synthetic-baseline-host-token";
+  process.env.VERCEL_OIDC_TOKEN = "aGVhZGVy.cGF5bG9hZA.c2lnbmF0dXJl";
 
   part("Amazon tells us an email bounced");
   redis.clear();

@@ -79,7 +79,7 @@ globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) =>
         form.get("RoleArn") !== "arn:aws:iam::123456789012:role/synthetic-verify-mail" ||
         !form.get("WebIdentityToken")) return json({ message: "synthetic role refused" }, 403);
     assumedRoles += 1;
-    return json({ Credentials: { AccessKeyId: "ASIAEXAMPLEVERIFY001", SecretAccessKey: "synthetic-lent-secret-never-stored-000000", SessionToken: "synthetic-verify-session", Expiration: Math.floor(Date.now() / 1000) + 3_600 } });
+    return json({ AssumeRoleWithWebIdentityResponse: { AssumeRoleWithWebIdentityResult: { Credentials: { AccessKeyId: "ASIAEXAMPLEVERIFY001", SecretAccessKey: "synthetic-lent-secret-never-stored-000000", SessionToken: "synthetic-verify-session", Expiration: Math.floor(Date.now() / 1000) + 3_600 } } } });
   }
   if (url.hostname === `email.${REGION}.amazonaws.com`) {
     if (url.pathname === "/v2/email/account") return json({ ProductionAccessEnabled: true, SendingEnabled: true, EnforcementStatus: "HEALTHY", SendQuota: { Max24HourSend: 50_000, MaxSendRate: 14 } });
@@ -160,7 +160,7 @@ async function main(): Promise<void> {
 
   part("Amazon SES, once it is sending");
   process.env.AWS_SES_ROLE_ARN = "arn:aws:iam::123456789012:role/synthetic-verify-mail";
-  process.env.VERCEL_OIDC_TOKEN = "synthetic-verify-host-token";
+  process.env.VERCEL_OIDC_TOKEN = "aGVhZGVy.cGF5bG9hZA.c2lnbmF0dXJl";
   process.env.AWS_SES_REGION = REGION;
   process.env.AWS_SES_CONFIGURATION_SET = "marktmorgen";
   process.env.AWS_SES_TOPIC_ARN = TOPIC;
