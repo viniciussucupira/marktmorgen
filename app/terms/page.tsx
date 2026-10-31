@@ -40,7 +40,7 @@ export const metadata: Metadata = {
 export default function TermsPage() {
   const domains = isDomainsConfigured();
   return (
-    <LegalPage title="Terms of Service" lastUpdated="October 30, 2026">
+    <LegalPage title="Terms of Service" lastUpdated="October 31, 2026">
       <p>
         These Terms of Service (“Terms”) govern your access to and use of the
         websites, products, and subscription services operated by Solrenning
@@ -451,7 +451,9 @@ export default function TermsPage() {
           marked done, a certificate; what you do there yourself counts as
           studio requests, and deleting what one wrote is not counted); a
           webhook delivery is each try to send one of your webhooks,
-          retries and tests included. When one is used, that use is refused with a plain
+          retries and tests included, and each one not sent because your
+          plan&apos;s renewal payment did not go through or a payment for it
+          is disputed. When one is used, that use is refused with a plain
           message until your next billing month or a larger plan; nothing is
           billed past it. Changing your plan, canceling it, deleting your
           store and downloading your sales are never refused for it. Your
