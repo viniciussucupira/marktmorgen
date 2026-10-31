@@ -193,3 +193,15 @@ While a plan's renewal is unpaid or a payment for it is disputed (`costPauseCode
 - **Said on the card:** choosing which Meta ad account to read while paused is still saved (it is a setting); the picker and the ad-spend card say its read waits instead of "read again once a day" (`readPaused` on the view).
 - **Recorded, not closed here:** on connections already made, a team host's calendar tools (`app/api/store/host-calendar`: adding an iCal address, checking, listing calendars) and the test meeting (`lib/meet-test.ts`) still reach the provider; they serve accounts already connected and are left for unit 4b4's review. A store whose plan has ended (`standingOf` "ended") still connects as before; that belongs with unit 4c.
 - **Cost:** none new; the check reads fields already loaded. The daily pass loads a paused store once a day as before, and makes no provider request for it. The studio notice, the email and the Terms now name the new connections and Meta's read in `RENEWAL_PAUSED_WORDS` and `DISPUTE_PAUSED_WORDS`.
+
+## Reading a store through its API keys while a plan is unpaid or disputed (232 [CA1] unit 4b4c, 31 Oct 2026)
+
+While a plan's renewal is unpaid or a payment for it is disputed (`integrationPauseWord`, `lib/integration-pause.ts`), a read through one of the store's API keys is work nobody is paying for: it is counted in the month the unpaid or disputed payment was for, and several reads (numbers, memberships) read the creator's Stripe account.
+
+- **Refused, with the reason:** every read through `apiStore` (`lib/api-guard.ts`: the REST API's GET routes and every MCP method after `initialize` and `ping`) answers 409 `paused_unpaid` or `paused_disputed` with `API_READ_PAUSED_WORDS`, after the key is checked and before any of the month's API requests is taken or anything outside is read. A missing or wrong key still gets the same 401.
+- **Open:** writes through a write key are not paused by this rule; taking back access (`DELETE /api/v1/access`) and removing a webhook endpoint (`DELETE /api/v1/hooks`) always work. Adding an endpoint stays refused by unit 4b4b2.
+- **MCP says the true reason.** The MCP server used to answer every refusal but the minute's limit with "Send your Marktmorgen API key", and the month's limit as "Too many requests this minute"; it now passes on the refusal's own sentence (a pause, the month used, the minute), keeping the key sentence for a 401.
+- **Starts again on its own** once Stripe records the payment or the dispute is settled.
+- **Told:** `RENEWAL_PAUSED_WORDS` and `DISPUTE_PAUSED_WORDS` (studio notice, failed-payment email, Terms) now end with "Reading your store through your API keys, AI assistants included, waits too."; the developers page lists the 409.
+- **Cost:** lower, never higher: one check of fields already loaded, before the month's count.
+- **Test:** `tests/api-reads-paused.test.ts` (25 checks; the guard removed fails 8 of them).

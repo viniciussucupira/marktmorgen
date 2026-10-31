@@ -134,7 +134,11 @@ export async function POST(request: Request) {
 
   const store = await apiStore(request);
   if (store instanceof Response) {
-    return failure(id, -32001, store.status === 429 ? "Too many requests this minute for this key." : "Send your Marktmorgen API key as: Authorization: Bearer nl_live_…");
+    // The refusal's own sentence (a pause, the month used, the minute), so an
+    // assistant never asks for a key that was already accepted (232 [CA1] 4b4c).
+    if (store.status === 401) return failure(id, -32001, "Send your Marktmorgen API key as: Authorization: Bearer nl_live_…");
+    const said = (await store.json().catch(() => null)) as { message?: unknown } | null;
+    return failure(id, -32001, typeof said?.message === "string" ? said.message : "That could not be read just now. Try again in a moment.");
   }
 
   if (method === "tools/list") return result(id, { tools: TOOLS });

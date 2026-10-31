@@ -81,3 +81,15 @@ export const WEBHOOK_PAUSED_NOT_SENT_WORDS: Record<"paused_unpaid" | "paused_dis
 
 /** Added when the refused delivery was counted against the month. */
 export const WEBHOOK_PAUSED_COUNTED = "It counts as one of this month's webhook deliveries.";
+
+/**
+ * 232 [CA1] unit 4b4c: reading a store through one of its API keys (the REST
+ * API's reads and every MCP tool) waits too. Each read is our work and may
+ * read the creator's Stripe account, and the month it would be counted in is
+ * the one the unpaid or disputed payment was for. Writes through a key stay
+ * as they are: taking access back and removing a webhook endpoint always work.
+ */
+export const API_READ_PAUSED_WORDS: Record<"paused_unpaid" | "paused_disputed", string> = {
+  paused_unpaid: "Nothing was read: your plan's renewal payment did not go through, so reading your store through your API keys, AI assistants included, waits until it is paid; try again then. Check the notice at the top of your studio to pay it. You can still take back access and remove webhook endpoints through the API.",
+  paused_disputed: "Nothing was read: a payment for your plan is disputed with your bank, so reading your store through your API keys, AI assistants included, waits until the dispute is settled; try again then. Check the notice at the top of your studio for what happens next. You can still take back access and remove webhook endpoints through the API.",
+};

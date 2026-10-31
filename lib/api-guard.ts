@@ -17,6 +17,7 @@ import { storeForId, type Store } from "@/lib/store";
 import { BodyTooLarge, limited, withinLimit } from "@/lib/request-guard";
 import { takeAllowance } from "@/lib/store-allowance";
 import { reservePaidResourceWindow } from "@/lib/contract-resource-window";
+import { API_READ_PAUSED_WORDS, integrationPauseWord } from "@/lib/integration-pause";
 
 /** Requests one key may make in a minute. Generous for a sync, a wall for a runaway loop. */
 export const API_RATE = 120;
@@ -67,6 +68,12 @@ async function apiKeyed(request: Request, purpose: "read" | "write"): Promise<{ 
   }
   const store = await storeForId(found.sid);
   if (!store) return unauthorized();
+  // 232 [CA1] unit 4b4c: while the plan's renewal is unpaid or a payment for it
+  // is disputed, reads wait, before any of the month is taken or Stripe is read.
+  if (purpose === "read") {
+    const paused = integrationPauseWord(store);
+    if (paused) return apiError(409, paused, API_READ_PAUSED_WORDS[paused]);
+  }
   // Read-only API/MCP work needs its paid resource month. Writing includes
   // access revocation and needs its own retained-cleanup classification.
   if (purpose === "read" && store.period?.funded === true && !(await reservePaidResourceWindow(store))) {

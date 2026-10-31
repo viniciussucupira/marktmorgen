@@ -96,8 +96,16 @@ export default function DevelopersPage() {
 429  {"error": "rate_limited", "message": "At most ${API_RATE} requests a minute per key. Try again in a minute."}
 429  {"error": "monthly_limit", "message": "Your store's API requests for this month are used: …"}
 409  {"error": "store_full", "message": "Your store's data room is full, so nothing was added. …"}
+409  {"error": "paused_unpaid", "message": "Nothing was read: your plan's renewal payment did not go through, …"}
 502  {"error": "unavailable", "message": "… could not be read just now. Try again in a moment."}`}</Code>
         <p>A missing, mistyped and revoked key all get the same 401.</p>
+        <p>
+          {"While the store's plan renewal is unpaid, reads answer 409 "}
+          <code className="font-mono">paused_unpaid</code>
+          {" (or "}
+          <code className="font-mono">paused_disputed</code>
+          {" while a payment for the plan is disputed), before anything is counted, until it is settled. Taking back access and removing a webhook endpoint always work."}
+        </p>
       </LegalSection>
 
       <LegalSection title="Store">
