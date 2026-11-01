@@ -28,7 +28,7 @@ const es: EmailTypoWords = {
 };
 
 const fr: EmailTypoWords = {
-  didYouMean: (address) => `Vouliez-vous dire ${address} ?`,
+  didYouMean: (address) => `Vouliez-vous dire ${address}\u00a0?`,
   use: (address) => `Utiliser ${address}`,
   keep: "Si ce que vous avez saisi est correct, gardez-le.",
 };

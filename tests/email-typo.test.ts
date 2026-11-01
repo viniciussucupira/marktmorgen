@@ -16,7 +16,7 @@
 import { readFileSync } from "node:fs";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { COMMON_PROVIDERS, ENDING_TYPOS, editsBetween, suggestEmail } from "@/lib/email-typo";
+import { COMMON_PROVIDERS, ENDING_TYPOS, editsBetween, holdForSuggestion, suggestEmail } from "@/lib/email-typo";
 import { EMAIL_TYPO_WORDS } from "@/lib/buyer-words/email-typo";
 import { EmailSuggestion } from "@/components/email-suggestion";
 import { LANGUAGE_CODES } from "@/lib/store-language";
@@ -43,7 +43,13 @@ function main(): void {
     ["maker@iclod.com", "maker@icloud.com"],
     ["maker@comcast.ner", "maker@comcast.net"],
     ["maker@btinternt.com", "maker@btinternet.com"],
-    ["maker@orange.fe", null],
+    ["maker@hotmail.co", "maker@hotmail.com"],
+    ["maker@yahoo.cm", "maker@yahoo.com"],
+    ["maker@outlook.om", "maker@outlook.com"],
+    ["maker@aol.co", "maker@aol.com"],
+    ["maker@hotmail.c0m", "maker@hotmail.com"],
+    ["maker@hotmail..com", "maker@hotmail.com"],
+    ["maker@gmail.com.", "maker@gmail.com"],
     ["maker@harborkitchen.con", "maker@harborkitchen.com"],
     ["maker@harborkitchen.ogr", "maker@harborkitchen.org"],
     ["Maker.Name+shop@GMIAL.COM", "Maker.Name+shop@gmail.com"],
@@ -71,6 +77,13 @@ function main(): void {
     "maker@mac.com",
     "maker@live.it",
     "maker@example.org",
+    "maker@orange.fe",
+    // Real domains one edit from a provider (independent review, 1 November 2026).
+    "maker@gm.com", "maker@ge.com", "maker@mt.com", "maker@my.com", "maker@aon.com", "maker@mtn.com", "maker@mmc.com",
+    "maker@skf.com", "maker@key.com", "maker@cloud.com", "maker@tim.it", "maker@vp.pl", "maker@go2.pl", "maker@hotmart.com",
+    "maker@outloud.com", "maker@pocketmail.com", "maker@earthling.net",
+    // Short names are never reached by closeness: none of these is questioned.
+    "maker@ab.com", "maker@mx.com", "maker@aox.com", "maker@abc.pl",
     "",
     "maker",
     "@gmial.com",
@@ -84,6 +97,12 @@ function main(): void {
   is("and the list has no repeats", COMMON_PROVIDERS.length, new Set(COMMON_PROVIDERS).size);
   is("no misspelled ending is a provider's own", Object.keys(ENDING_TYPOS).filter((typo) => COMMON_PROVIDERS.some((p) => p.endsWith(`.${typo}`))), []);
   is("edits: added, missing, changed, swapped", [editsBetween("gmail", "gmaill"), editsBetween("gmail", "gmal"), editsBetween("gmail", "gmaul"), editsBetween("gmail", "gmial"), editsBetween("gmail", "yahoo")], [1, 1, 1, 1, 5]);
+
+  part("Sending: held once, so the line is seen");
+  is("a likely slip waits the first time", holdForSuggestion("maker@gmial.com", ""), true);
+  is("the same address a second time goes as typed", holdForSuggestion("maker@gmial.com", "maker@gmial.com"), false);
+  is("a changed address waits again", holdForSuggestion("maker@hotmial.com", "maker@gmial.com"), true);
+  is("a right address never waits", holdForSuggestion("maker@gmail.com", ""), false);
 
   part("No request, ever");
   const realFetch = globalThis.fetch;
@@ -109,10 +128,12 @@ function main(): void {
   const shown = renderToStaticMarkup(createElement(EmailSuggestion, { id: "s", inputId: "e", value: "maker@gmial.com", show: true, onUse: (a: string) => (used = a) }));
   is("after: the question with the whole address", shown.includes("<p class=\"font-semibold\">Did you mean maker@gmail.com?</p>"), true);
   is("that what was typed can be kept", shown.includes("If what you typed is right, keep it."), true);
-  is("a real button, not a submit, named with the address", /<button type="button" class="btn btn-secondary btn-sm mt-2">Use maker@gmail.com<\/button>/.test(shown), true);
+  is("a real button, not a submit, named with the address", /<button type="button" class="btn btn-secondary btn-sm mt-2[^"]*">Use maker@gmail.com<\/button>/.test(shown), true);
   is("and nothing was changed by showing it", used, "");
   is("its button is at least 44 px tall (btn-sm)", /\.btn-sm \{\s*min-height: 44px;/.test(read("app/globals.css")), true);
-  is("nothing in it moves or blinks", /animate-|transition|@keyframes/.test(read("components/email-suggestion.tsx")), false);
+  is("it adds no animation of its own", /animate-|transition|@keyframes/.test(read("components/email-suggestion.tsx")), false);
+  is("a long address wraps at 320 px, in the line and in the button", (shown.match(/\[overflow-wrap:anywhere\]/g) ?? []).length, 2);
+  is("its box keeps an edge in forced colors", shown.includes("border border-transparent"), true);
   is("pressing it gives the focus back to the field", /onUse\(suggested\);\s*document\.getElementById\(inputId\)\?\.focus\(\);/.test(read("components/email-suggestion.tsx")), true);
 
   part("In every store language");
@@ -126,7 +147,9 @@ function main(): void {
   const signin = read("components/signin-form.tsx");
   is("the creator's login form: the line follows the field", /<EmailSuggestion\s+id="signin-suggestion"\s+inputId="signin-email"/.test(signin), true);
   is("and the field is described by it", signin.includes('aria-describedby={`${state.kind === "error" ? "signin-error " : shapeProblem ? "signin-hint " : ""}signin-suggestion`}'), true);
-  is("shown once the person has left the field or tried to send, and not over a shape problem", signin.includes("show={touched && !shapeProblem}"), true);
+  is("shown once the person has left the field or tried to send, never while sending", signin.includes('show={touched && state.kind !== "sending"}'), true);
+  is("the first send of a likely slip waits once", /if \(holdForSuggestion\(email, shownFor\)\) \{\s*setShownFor\(email\);\s*return;/.test(signin), true);
+  is("and the next screen names the address really sent", signin.includes("{sentTo || email}") && /setState\(\{ kind: "sending" \}\);\s*setSentTo\(email\);/.test(signin), true);
 }
 
 main();

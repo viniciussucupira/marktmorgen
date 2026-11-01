@@ -21,7 +21,8 @@
  *     by closeness, because many real endings are one letter apart (.co and
  *     .com, .cm, .om, .ne, .new, .cam, .ong);
  *   - closeness is one edit (a letter added, missing, changed or two
- *     neighbors swapped) for a short domain, two for a long one, and two
+ *     neighbors swapped), never to a provider of three letters or fewer,
+ *     never for a real domain known to sit one edit away, and two
  *     providers equally close mean nothing is said;
  *   - the right provider's name under another country's ending is left
  *     alone (outlook.pt is real), except for Gmail and iCloud, which have
@@ -93,14 +94,40 @@ export function editsBetween(a: string, b: string): number {
   return d[a.length][b.length];
 }
 
-/** The closest provider within reach, or null when none is, or when two are equally close. */
+/**
+ * Real domains, found one edit from a provider in the list, that must never
+ * be "corrected" (independent review of 1 November 2026). Extended whenever
+ * another turns up.
+ */
+const REAL_NEIGHBORS = new Set([
+  "cloud.com", "pocketmail.com", "earthling.net", "hotmart.com", "outloud.com", "my.com", "tim.it", "go2.pl", "vp.pl",
+  "gm.com", "ge.com", "mt.com", "aon.com", "mtn.com", "mmc.com", "skf.com", "key.com",
+]);
+
+/**
+ * A provider whose name before the dot has three letters or fewer (me, mac,
+ * aol, msn, sky, gmx, wp, o2…) is never reached by closeness: hundreds of
+ * real short domains are one letter from them. Only a misspelled ending
+ * leads to them.
+ */
+const NEAR_ENOUGH = COMMON_PROVIDERS.filter((provider) => nameOf(provider).length > 3);
+
+/**
+ * Endings a provider's own name is very often mistyped with, taken as .com
+ * when that provider has a .com address and the typed domain is not one of
+ * its own. Real endings elsewhere (.co, .cm, .om are countries) are left
+ * alone after any other name.
+ */
+const COM_SLIPS = new Set(["co", "cm", "om", "c0m", "comk", "coml", "xom", "vom"]);
+
+/** The closest provider one edit away, or null when none is, or when two are equally close. */
 function nearestProvider(domain: string): string | null {
-  const reach = domain.length >= 10 ? 2 : 1;
+  if (REAL_NEIGHBORS.has(domain)) return null;
   let best: string | null = null;
-  let bestEdits = reach + 1;
+  let bestEdits = 2;
   let tie = false;
-  for (const provider of COMMON_PROVIDERS) {
-    if (Math.abs(provider.length - domain.length) > reach) continue;
+  for (const provider of NEAR_ENOUGH) {
+    if (Math.abs(provider.length - domain.length) > 1) continue;
     const edits = editsBetween(domain, provider);
     if (edits < bestEdits) {
       best = provider;
@@ -110,7 +137,7 @@ function nearestProvider(domain: string): string | null {
       tie = true;
     }
   }
-  return best && !tie && bestEdits <= reach ? best : null;
+  return best && !tie && bestEdits <= 1 ? best : null;
 }
 
 /**
@@ -123,14 +150,22 @@ export function suggestEmail(typed: string): string | null {
   const at = value.lastIndexOf("@");
   if (at <= 0 || at !== value.indexOf("@") || /\s/.test(value)) return null;
   const name = value.slice(0, at);
-  const domain = value.slice(at + 1).toLowerCase().replace(/\.+$/, "");
-  if (!domain || PROVIDERS.has(domain)) return null;
+  const typedDomain = value.slice(at + 1).toLowerCase();
+  // Dots doubled, or left at either end, are slips of their own.
+  const domain = typedDomain.replace(/\.{2,}/g, ".").replace(/^\.+|\.+$/g, "");
+  if (!domain) return null;
+  if (PROVIDERS.has(domain)) return domain === typedDomain ? null : `${name}@${domain}`;
 
   // "gmail" with nothing after it: the provider's own name.
   if (!domain.includes(".")) {
     const named = COMMON_PROVIDERS.find((provider) => provider.endsWith(".com") && provider.slice(0, -4) === domain);
     return named ? `${name}@${named}` : null;
   }
+
+  // A provider's own name with .co, .cm and the like after it.
+  const own = nameOf(domain);
+  const ending = domain.slice(own.length + 1);
+  if (COM_SLIPS.has(ending) && PROVIDERS.has(`${own}.com`)) return `${name}@${own}.com`;
 
   // A misspelled ending first, then the provider it may now spell.
   let fixed = domain;
@@ -143,5 +178,14 @@ export function suggestEmail(typed: string): string | null {
   if (PROVIDERS.has(fixed)) return `${name}@${fixed}`;
   const near = nearestProvider(fixed);
   if (near && (nameOf(near) !== nameOf(fixed) || ONE_DOMAIN.has(nameOf(near)))) return `${name}@${near}`;
-  return fixed !== domain ? `${name}@${fixed}` : null;
+  return fixed !== domain ? `${name}@${fixed}` : domain !== typedDomain ? `${name}@${domain}` : null;
+}
+
+/**
+ * Whether a send should wait, once, so the person sees the suggestion: there
+ * is one, and it has not been shown for exactly this address yet. A second
+ * send of the same address goes through as typed.
+ */
+export function holdForSuggestion(typed: string, alreadyShownFor: string): boolean {
+  return suggestEmail(typed) !== null && typed !== alreadyShownFor;
 }

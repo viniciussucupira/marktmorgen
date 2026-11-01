@@ -34,12 +34,12 @@ export function EmailSuggestion({
   return (
     <div id={id} aria-live="polite" data-email-suggestion>
       {suggested ? (
-        <div className="mt-2 rounded-2xl bg-paper p-3 text-sm text-ink ring-1 ring-line">
+        <div className="mt-2 rounded-2xl border border-transparent bg-paper p-3 text-sm text-ink ring-1 ring-line [overflow-wrap:anywhere]">
           <p className="font-semibold">{words.didYouMean(suggested)}</p>
           <p className="mt-1 text-ink-soft">{words.keep}</p>
           <button
             type="button"
-            className="btn btn-secondary btn-sm mt-2"
+            className="btn btn-secondary btn-sm mt-2 max-w-full whitespace-normal [overflow-wrap:anywhere]"
             onClick={() => {
               onUse(suggested);
               document.getElementById(inputId)?.focus();
