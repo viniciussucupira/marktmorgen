@@ -33,11 +33,13 @@ const cards = html.split(/(?=<div[^>]*data-pricing-card)/).slice(1).map((chunk) 
 const shown = (card: string) => card.replace(/<details[\s\S]*?<\/details>/g, " ").replace(/<template[\s\S]*?<\/template>/g, " ").replace(/<[^>]+>/g, " ").replace(/&#x27;|&#39;/g, "'").replace(/\s+/g, " ");
 const itemized = (card: string) => (card.match(/<details[\s\S]*?<\/details>/)?.[0] ?? "").replace(/<[^>]+>/g, " ");
 /** How often a figure is said: the number, with or without the words it counts ("80 GB", "80 AI writing jobs"). */
+/** A piece of text as a regular expression that matches only itself, every special character escaped (backslash included). */
+const literal = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 const count = (text: string, figure: string) => {
   const [number, ...unit] = figure.split(" ");
-  const same = new RegExp(`(?<![\\d,.])${number.replace(/[,.]/g, "\\$&")}(?![\\d,])\\s+${unit.join(" ")}`, "g");
+  const same = new RegExp(`(?<![\\d,.])${literal(number)}(?![\\d,])\\s+${literal(unit.join(" "))}`, "g");
   // A figure is also repeated when its number comes back with a unit word of the same thing ("up to 7,000 sends").
-  const again = new RegExp(`(?<![\\d,.])${number.replace(/[,.]/g, "\\$&")}(?![\\d,])\\s+(?:${unit[0]}|sends|emails|jobs|answers)`, "g");
+  const again = new RegExp(`(?<![\\d,.])${literal(number)}(?![\\d,])\\s+(?:${literal(unit[0] ?? "")}|sends|emails|jobs|answers)`, "g");
   return Math.max((text.match(same) ?? []).length, (text.match(again) ?? []).length);
 };
 
