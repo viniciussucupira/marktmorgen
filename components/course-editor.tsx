@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { useLeaveGuard } from "@/components/leave-guard";
+import { UrlField } from "@/components/url-field";
 import { useRouter } from "next/navigation";
 import { uploadReason, uploadSoldFile } from "@/lib/sold-file-upload";
 import { toast } from "@/components/toast";
@@ -846,10 +847,10 @@ function LessonEditor({
           <span className="field-label">Lesson name</span>
           <input className="field mt-2" maxLength={MAX_ITEM_TITLE} value={title} onChange={(e) => setTitle(e.target.value)} />
         </label>
-        <label className="block">
-          <span className="field-label">A link for this lesson (optional)</span>
-          <input className="field mt-2" type="url" placeholder="https://" value={link} onChange={(e) => setLink(e.target.value)} />
-        </label>
+        <div>
+          <label htmlFor={`${prefix}-link`} className="field-label">A link for this lesson (optional)</label>
+          <UrlField id={`${prefix}-link`} className="field mt-2" value={link} onChange={setLink} />
+        </div>
         <label className="flex items-start gap-2 text-sm text-ink">
           <input type="checkbox" className="mt-1" checked={preview} onChange={(e) => setPreview(e.target.checked)} />
           <span>Free preview: anyone can open this lesson from your store before buying.</span>

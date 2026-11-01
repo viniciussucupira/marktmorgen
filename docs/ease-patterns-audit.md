@@ -79,10 +79,25 @@ The screen-by-screen audit that 487 [IT4] asks for: what was checked, what was f
 **Still to do.**
 - Saving by itself with "Saving…" and "Saved" shown. That writes to the server on its own, so it needs its own request ceiling per plan first.
 
+## Pattern 1: checked when the person leaves the field (1 November 2026, first pass)
+
+**Method.** Every `onBlur` in `components/` was read, and every `type="url"` field was listed.
+
+**Found.**
+- **Already checked on leaving:** email fields (`components/email-field.tsx`, the "Did you mean …?" line, 17 uses) and the sign-in field (`components/signin-form.tsx`). A custom field (`components/person-fields.tsx`) saves when it is left. A page's address (`components/site-pages-editor.tsx`) is tidied when it is left.
+- **Web addresses:** 13 files have `type="url"` fields. All of them are checked only when the form is sent, so a missing `https://` shows up only after pressing Save.
+
+**Fixed.**
+- `components/url-field.tsx` checks a web address when the person leaves the field, never while they are typing, using the server's own reading (`readLink` in `lib/product-link.ts`). If the address only lacks `https://`, or has `http://`, it offers the corrected address in one press. Anything else gets the server's own words. The message goes as soon as the address is right, and it is tied to the field for screen readers.
+- The lesson link in the course editor uses it, with its label now tied to the field by id.
+
+**Still to do.**
+- The same field in the other 12 files: host calendar, link editor, webhook editor, mark shipped, call editor, chat summary, report form, community events, product editor, page editor, calendar editor and review studio. Each is read first, because some accept other kinds of address than a product link does.
+
 ## Not audited yet
 
 These patterns of 487 [IT4] have not been audited:
-1. Validation when the person leaves the field.
+1. Validation when the person leaves the field: first pass done (see pattern 1).
 2. The most common value filled in: the "Recommended" price option waits on the owner (see pattern 3).
 3. Always-visible labels: the six fields not yet read in context, and the home page field (see pattern 4).
 4. Empty screens with an action and a ready example.
