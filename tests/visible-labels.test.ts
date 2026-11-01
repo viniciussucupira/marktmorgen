@@ -11,4 +11,16 @@ const podcast = readFileSync("components/podcast-editor.tsx", "utf8");
 is("the episode's title has a visible label tied to it", podcast.includes('<label htmlFor={`${id}-title`} className="field-label">Episode title</label>') && podcast.includes("<input id={`${id}-title`}"), true);
 is("and its notes", podcast.includes('<label htmlFor={`${id}-notes`} className="field-label">Episode notes</label>') && podcast.includes("<textarea id={`${id}-notes`}"), true);
 is("no aria-label stands in for them any more", /aria-label="(Title|Notes)"/.test(podcast), false);
+
+// Second pass: rows in a list keep a visible name of their own, not a placeholder that goes when typing starts.
+const quiz = readFileSync("components/quiz-scoring.tsx", "utf8");
+is("a quiz category's name is a visible label tied to its field", /<label className="flex min-w-0 flex-1 items-center gap-2">\s*<span className="shrink-0 text-sm text-ink-soft">\{`Category \$\{i \+ 1\}`\}<\/span>/.test(quiz) && !quiz.includes("aria-label={`Category ${i + 1}`}"), true);
+const forms = readFileSync("components/forms-editor.tsx", "utf8");
+is("a form option's name too", /<span className="shrink-0 text-sm text-ink-soft">\{`Option \$\{k \+ 1\}`\}<\/span>/.test(forms) && !forms.includes("aria-label={`Option ${k + 1}`}"), true);
+const deals = readFileSync("components/deals-board.tsx", "utf8");
+is("a pipeline stage's name too", /<span className="shrink-0 text-sm text-ink-soft">\{`Stage \$\{i \+ 1\}`\}<\/span>/.test(deals) && !deals.includes("aria-label={`Stage ${i + 1}`}"), true);
+is("a custom field's name too, and the list is named by its visible heading", /<span className="text-sm text-ink-soft">\{`Field \$\{i \+ 1\}`\}<\/span>/.test(deals) && deals.includes('aria-labelledby="crm-fields-title"') && !deals.includes('<legend className="sr-only">Custom fields</legend>'), true);
+const team = readFileSync("components/team-event-editor.tsx", "utf8");
+const call = readFileSync("components/call-editor.tsx", "utf8");
+is("a day's opening hours keep a spoken name that starts with the day and the word shown beside them", team.includes("aria-label={`${host.email}, ${name}, stretch ${index + 1}, from`}") && call.includes("aria-label={`${name}, stretch ${index + 1}, from`}"), true);
 done();

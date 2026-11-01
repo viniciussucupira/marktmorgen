@@ -298,14 +298,16 @@ export function FormsEditor({ saved, products, exportBase, dealStages = [], sid 
                   <div className="mt-3 space-y-2">
                     {field.options.map((option, k) => (
                       <div key={option.id} className="flex flex-wrap items-center gap-2">
-                        <input
-                          className="field min-w-0 flex-1"
-                          aria-label={`Option ${k + 1}`}
-                          value={option.label}
-                          maxLength={MAX_OPTION}
-                          placeholder={`Option ${k + 1}`}
-                          onChange={(e) => setField(i, { options: field.options.map((o, m) => (m === k ? { ...o, label: e.target.value } : o)) })}
-                        />
+                        {/* A visible name of its own, not a placeholder that goes when typing starts (487 [IT4], item 4). */}
+                        <label className="flex min-w-0 flex-1 items-center gap-2">
+                          <span className="shrink-0 text-sm text-ink-soft">{`Option ${k + 1}`}</span>
+                          <input
+                            className="field min-w-0 flex-1"
+                            value={option.label}
+                            maxLength={MAX_OPTION}
+                            onChange={(e) => setField(i, { options: field.options.map((o, m) => (m === k ? { ...o, label: e.target.value } : o)) })}
+                          />
+                        </label>
                         {scoredDraft ? (
                           <>
                             <label className="flex items-center gap-2 text-sm text-ink-soft">
