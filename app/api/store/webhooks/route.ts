@@ -3,7 +3,7 @@ import { noticeCreator } from "@/lib/account-notice";
 import { ensureStatsId, storeForEmail } from "@/lib/store";
 import { guardStoreWrite, text } from "@/lib/store-request";
 import { WEBHOOK_TEST_PAUSED_WORDS, integrationPauseWord } from "@/lib/integration-pause";
-import { MAX_ENDPOINT_URL, addEndpoint, removeEndpoint, rotateSecret, sendTest, setEndpointEvents, webhooksView } from "@/lib/webhooks";
+import { MAX_ENDPOINT_URL, addEndpoint, removeEndpoint, resendDelivery, rotateSecret, sendTest, setEndpointEvents, webhooksView } from "@/lib/webhooks";
 
 /**
  * The creator's webhook endpoints: add one (its signing secret comes back in
@@ -67,6 +67,20 @@ export async function POST(request: NextRequest) {
         message: result.delivery.lastError,
         view: result.view,
       });
+    }
+    if (action === "resend") {
+      // 378 [TB4] unit 3: a failed delivery sent again by hand, once. Paused like a test while the plan's costs are paused.
+      const paused = integrationPauseWord(store);
+      if (paused) return Response.json({ ok: false, error: paused, message: WEBHOOK_TEST_PAUSED_WORDS[paused] }, { status: 409 });
+      const result = await resendDelivery(store, text(guarded.body.delivery, 40));
+      if (!result.ok) {
+        if (result.reason === "unavailable") return Response.json({ ok: false, error: "unavailable", message: "It could not be sent again just now. Try again in a moment." }, { status: 503 });
+        if (result.reason === "used") return Response.json({ ok: false, error: "used", message: result.message }, { status: 429 });
+        if (result.reason === "paused") return Response.json({ ok: false, error: "paused", message: result.message }, { status: 409 });
+        if (result.reason === "limited") return Response.json({ ok: false, error: "limited" }, { status: 429 });
+        return Response.json({ ok: false, error: result.reason }, { status: result.reason === "missing" ? 404 : 409 });
+      }
+      return Response.json({ ok: true, delivered: result.delivery.state === "delivered", status: result.delivery.lastStatus, message: result.delivery.lastError, view: result.view });
     }
     return Response.json({ ok: false, error: "invalid" }, { status: 400 });
   } catch (error) {
