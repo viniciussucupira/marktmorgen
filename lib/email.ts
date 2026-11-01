@@ -17,7 +17,7 @@
  * each email, from what Amazon last said.
  */
 import { createHash, randomBytes } from "node:crypto";
-import { guardedResendPost, type ResendTransportRuntime } from "@/lib/resend-fallback-transport";
+import { currentResendFallbackProofIsMissing, guardedResendPost, type ResendTransportRuntime } from "@/lib/resend-fallback-transport";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { SUPPORT_EMAIL } from "@/lib/creator-research";
 import { atSiteAddress, creatorDomain, domainOf } from "@/lib/mail-from";
@@ -148,6 +148,15 @@ const notThisDomain = (status: number) => status === 401 || status === 403;
 
 export function isSenderConfigured(): boolean {
   return getKey() !== null || isSesConfigured();
+}
+
+/** A known global refusal, independent of any recipient or account lookup.
+ * No IO, reservation or readiness check: false means unknown, never proof of
+ * SES availability, a valid Resend review/binding or remaining fallback quota.
+ * The actual send must still pass the existing provider and budget guards.
+ */
+export function serviceMailKnownUnavailable(): boolean {
+  return !isSesConfigured() && (!getKey() || currentResendFallbackProofIsMissing());
 }
 
 /** Whether Resend is there to send what Amazon does not take. */

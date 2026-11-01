@@ -3,17 +3,20 @@
  * scripts/test_resend_fallback_budget_redis.py executes that exact Lua.
  */
 import { createHash } from "node:crypto";
-import { guardedResendPost as realPost, type ResendPost, type ResendTransportRuntime } from "../lib/resend-fallback-transport";
+import { currentResendFallbackProofIsMissing as realProofIsMissing, guardedResendPost as realPost, type ResendPost, type ResendTransportRuntime } from "../lib/resend-fallback-transport";
 import { initializeResendFallbackBudget, RESEND_FALLBACK_BUDGET_LUA, type ResendFallbackReview } from "../lib/resend-fallback-budget";
 import { store } from "./redis-stub";
 import { MemoryRedis } from "@/lib/redis-memory";
 
 const hash = (s: string) => createHash("sha256").update(s).digest("hex");
 type Claim = { token: string; n: number; fingerprint: string; dispatchToken: string; acceptedAt: number; expiresAt: number; state: "reserved" | "dispatched" | "unknown" | "accepted" | "confirmed_not_accepted" };
-export async function createResendFallbackFixture(options: {
+type FixtureOptions = {
   credential: string; usageCredential?: string; cap?: number; sent?: number; received?: number;
   accountId?: string; fetch?: typeof fetch;
-}) {
+};
+/** Prepare the exact finite review/binding synchronously for the no-IO
+ * proof predicate. Sending still awaits this fixture's initialization. */
+export function prepareResendFallbackFixture(options: FixtureOptions) {
   const now = Date.now(), start = now - 86_400_000, reset = now + 30 * 86_400_000;
   const cap = options.cap ?? 50_000, received = options.received ?? 0;
   const accountId = options.accountId ?? "SYNTHETIC_RESEND_TRANSPORT_ACCOUNT";
@@ -87,8 +90,6 @@ export async function createResendFallbackFixture(options: {
   const usage = () => ({ source: "resend_usage_api" as const, accountId, observedAtMs: Date.now(), monthly: {
     used: accepted + received, sent: accepted, received, limit: cap, resetsAt: new Date(reset).toISOString(),
   } });
-  const boot = await initializeResendFallbackBudget({ review, usage: usage() }, { pipeline });
-  if (boot.status !== "initialized") throw Error("Synthetic reviewed initialization failed");
   const runtime: ResendTransportRuntime = {
     review, pipeline,
     binding: { accountId, evidence: "SYNTHETIC credential/account proof only", checkedAtMs: now, validUntilMs: reset,
@@ -104,32 +105,45 @@ export async function createResendFallbackFixture(options: {
       return (options.fetch ?? fetch)(input, init);
     }) as typeof fetch,
   };
-  return { runtime, review, requests, commands, claims, usage, loseNext: (op: string) => { lost = op; }, held: () => held };
+  const ready = initializeResendFallbackBudget({ review, usage: usage() }, { pipeline }).then(boot => {
+    if (boot.status !== "initialized") throw Error("Synthetic reviewed initialization failed");
+  });
+  return { runtime, ready, review, requests, commands, claims, usage, loseNext: (op: string) => { lost = op; }, held: () => held };
+}
+export async function createResendFallbackFixture(options: FixtureOptions) {
+  const fixture = prepareResendFallbackFixture(options);
+  await fixture.ready;
+  return fixture;
 }
 
 // Application journeys use the same real guard with an explicitly synthetic
 // account, usage HTTP response and ACK adapter. Tests of the real defaults
 // and guard import the product module by relative path and are not aliased.
-const worlds = new Map<string, ReturnType<typeof createResendFallbackFixture>>();
+const worlds = new Map<string, ReturnType<typeof prepareResendFallbackFixture>>();
 const clearApplication = store.clear.bind(store);
 store.clear = () => { clearApplication(); worlds.clear(); };
-export async function guardedResendPost(input: ResendPost, runtime: ResendTransportRuntime = {}) {
-  if (Object.keys(runtime).length) return realPost(input, runtime);
-  const name = `${input.usageCredential}\n${Math.floor(Date.now() / 86_400_000)}`;
-  let pending = worlds.get(name);
-  if (!pending) {
-    pending = createResendFallbackFixture({ credential: input.credential, usageCredential: input.usageCredential, fetch: (request, init) => fetch(request, init) });
-    worlds.set(name, pending);
-  }
-  let world = await pending;
-  // Legacy journeys deliberately restore Date.now after a future-time case.
-  // That begins a new synthetic clock context, never a live ledger reset.
-  if (Date.now() < world.runtime.binding!.checkedAtMs) {
-    pending = createResendFallbackFixture({ credential: input.credential, usageCredential: input.usageCredential, fetch: (request, init) => fetch(request, init) });
-    worlds.set(name, pending);
-    world = await pending;
+function applicationWorld(credential: string, usageCredential: string) {
+  const name = `${usageCredential}\n${Math.floor(Date.now() / 86_400_000)}`;
+  let world = worlds.get(name);
+  // Restoring the clock after a future-time journey starts a new synthetic
+  // context, never a live ledger reset. Retain the existing finite epoch.
+  if (!world || Date.now() < world.runtime.binding!.checkedAtMs) {
+    world = prepareResendFallbackFixture({ credential, usageCredential, fetch: (request, init) => fetch(request, init) });
+    worlds.set(name, world);
   }
   const binding = world.runtime.binding!;
-  if (!binding.sendingCredentialSha256s.includes(hash(input.credential))) binding.sendingCredentialSha256s.push(hash(input.credential));
+  if (!binding.sendingCredentialSha256s.includes(hash(credential))) binding.sendingCredentialSha256s.push(hash(credential));
+  return world;
+}
+export function currentResendFallbackProofIsMissing(runtime: ResendTransportRuntime = {}) {
+  if (Object.keys(runtime).length) return realProofIsMissing(runtime);
+  const credential = process.env.RESEND_API_KEY?.trim() ?? "";
+  const usageCredential = process.env.RESEND_READ_API_KEY?.trim() || credential;
+  return realProofIsMissing(applicationWorld(credential, usageCredential).runtime);
+}
+export async function guardedResendPost(input: ResendPost, runtime: ResendTransportRuntime = {}) {
+  if (Object.keys(runtime).length) return realPost(input, runtime);
+  const world = applicationWorld(input.credential, input.usageCredential);
+  await world.ready;
   return realPost(input, world.runtime);
 }

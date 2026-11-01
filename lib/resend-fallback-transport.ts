@@ -21,6 +21,18 @@ export type ResendTransportRuntime = {
   review?: ResendFallbackReview | null; binding?: ResendCredentialBinding | null;
   pipeline?: ResendFallbackSdk["pipeline"]; fetch?: typeof fetch;
 };
+/** Only a missing current proof is known here. Synchronous and without IO;
+ * false does not validate the proof, credentials, remaining quota or sending
+ * permission. The real guarded POST still performs all those checks.
+ */
+export function currentResendFallbackProofIsMissing(runtime: Pick<ResendTransportRuntime, "review" | "binding"> = {}): boolean {
+  const proof = data(runtime);
+  if (!proof) return true;
+  const review = proof.review === undefined ? CURRENT_RESEND_FALLBACK_REVIEW : proof.review;
+  const binding = proof.binding === undefined ? CURRENT_RESEND_CREDENTIAL_BINDING : proof.binding;
+  return review === null || binding === null;
+}
+
 export type ResendPost = {
   base: string; path: "/emails" | "/emails/batch"; credential: string;
   usageCredential: string; body: string; idempotencyKey?: string; recipients: number;
