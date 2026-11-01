@@ -3,6 +3,7 @@ import { setHasDiscounts, storeForEmail } from "@/lib/store";
 import { priceInRange, readMoney } from "@/lib/money";
 import { canSell } from "@/lib/store-checkout";
 import {
+  type CodeMinimum,
   type Off,
   codeProblem,
   createCode,
@@ -89,7 +90,22 @@ export async function POST(request: NextRequest) {
         maxRedemptions = uses;
       }
 
-      const made = await createCode(account, code, off, maxRedemptions);
+      // The smallest order it comes off (554 [DS1]): optional, in the store's
+      // currency and within its price range, checked by Stripe at checkout.
+      const rawMinimum = text(body.minimum, 20);
+      let minimum: CodeMinimum | null = null;
+      if (rawMinimum) {
+        const cents = readMoney(rawMinimum, store.currency);
+        if (cents === null || !priceInRange(cents, store.currency)) {
+          return Response.json(
+            { ok: false, error: "code", reason: "minimum" },
+            { status: 400 },
+          );
+        }
+        minimum = { cents, currency: store.currency };
+      }
+
+      const made = await createCode(account, code, off, maxRedemptions, minimum);
       if (!made.ok) {
         return Response.json(
           { ok: false, error: made.reason },
