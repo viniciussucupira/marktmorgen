@@ -116,14 +116,15 @@ test("a valid reservation is only a hold; one exact dispatch acknowledgement is 
   if (held.status !== "reserved") return;
   const claim = held.claim;
   assert.equal(claim.recipients, 1); assert.equal(claim.periodStartMs, start); assert.equal(claim.resetsAtMs, reset);
-  const dispatchSdk: ResendFallbackSdk = { async pipeline(batch) { return [["dispatch", claim.token, "1", String(now + 1000), batch[0].at(-1)]]; } };
+  const dispatchSdk: ResendFallbackSdk = { async pipeline(batch) { return [["dispatch", claim.token, "1", String(now + 1000), batch[0].at(-1), String(now)]]; } };
   const dispatched = await markResendFallbackDispatched(claim, dispatchSdk);
   assert.equal(dispatched.status, "dispatch");
   if (dispatched.status !== "dispatch") return;
   assert.match(dispatched.claim.dispatchToken!, /^[a-f0-9]{32}$/);
   assert.equal(dispatched.sendBeforeMs, now + 1000);
+  assert.ok(Number.isFinite(dispatched.sendBeforeMonotonicMs));
   assert.equal(claim.dispatchToken, undefined);
-  assert.deepEqual(await markResendFallbackDispatched(claim, { async pipeline(batch) { return [["dispatch", claim.token, "1", String(now + 1001), batch[0].at(-1)]]; } }), { status: "unknown" });
+  assert.deepEqual(await markResendFallbackDispatched(claim, { async pipeline(batch) { return [["dispatch", claim.token, "1", String(now + 1001), batch[0].at(-1), String(now)]]; } }), { status: "unknown" });
   assert.deepEqual(await markResendFallbackDispatched(claim, { async pipeline() { throw new Error("synthetic applied write and lost response"); } }), { status: "unknown" });
   assert.deepEqual(await markResendFallbackDispatched(claim, { async pipeline() { return [["denied", "already_dispatched"]]; } }), { status: "denied", reason: "already_dispatched" });
   assert.deepEqual(await settleResendFallback(claim, "confirmed_not_accepted", noSdk), { status: "denied", reason: "unconfirmed_dispatch" });
@@ -138,13 +139,31 @@ test("local cancellation is a separate reserved-only CAS and dispatch tokens are
   const held = await reserveResendFallback(value, { async pipeline(batch) { const a = batch[0].slice(5); return [["reserved", a[2], String(a[3]), String(a[4]), String(a[5]), String(a[7])]]; } });
   assert.equal(held.status, "reserved"); if (held.status !== "reserved") return;
   const tokens: unknown[] = [];
-  const sdk: ResendFallbackSdk = { async pipeline(batch) { const a = batch[0].slice(5); tokens.push(a[21]); return [["dispatch", held.claim.token, "1", String(now + 1000), a[21]]]; } };
+  const sdk: ResendFallbackSdk = { async pipeline(batch) { const a = batch[0].slice(5); tokens.push(a[21]); return [["dispatch", held.claim.token, "1", String(now + 1000), a[21], String(now)]]; } };
   await markResendFallbackDispatched(held.claim, sdk); await markResendFallbackDispatched(held.claim, sdk);
   assert.notEqual(tokens[0], tokens[1]);
   assert.deepEqual(await cancelResendFallbackReserved(held.claim, { async pipeline(batch) { assert.equal(batch[0][5], "cancel"); return [["denied", "not_reserved"]]; } }), { status: "denied", reason: "not_reserved" });
   assert.deepEqual(await cancelResendFallbackReserved(held.claim, { async pipeline() { return [["released"]]; } }), { status: "released" });
   assert.deepEqual(await cancelResendFallbackReserved(held.claim, { async pipeline() { return [["already_released"]]; } }), { status: "already_released" });
   assert.deepEqual(await cancelResendFallbackReserved(held.claim, { async pipeline() { throw Error("Lost cancel ACK"); } }), { status: "unknown" });
+}));
+
+test("Redis remaining time is consumed from before RPC even with a frozen or offset worker clock", async () => withClock(async () => {
+  const held = await reserveResendFallback(request(), { async pipeline(batch) { const a = batch[0].slice(5); return [["reserved", a[2], String(a[3]), String(a[4]), String(a[5]), String(a[7])]]; } });
+  assert.equal(held.status, "reserved"); if (held.status !== "reserved") return;
+  for (const offset of [0, -400]) {
+    Date.now = () => now + offset;
+    const late: ResendFallbackSdk = { async pipeline(batch) {
+      await new Promise(resolve => setTimeout(resolve, 35));
+      return [["dispatch", held.claim.token, "1", String(now + 20), batch[0].at(-1), String(now)]];
+    } };
+    assert.deepEqual(await markResendFallbackDispatched(held.claim, late), { status: "unknown" });
+  }
+  Date.now = () => now;
+  for (const badTime of [undefined, null, now, String(now + 1000), "00", String(now - 1_001)]) {
+    const sdk: ResendFallbackSdk = { async pipeline(batch) { return [["dispatch", held.claim.token, "1", String(now + 1000), batch[0].at(-1), badTime]]; } };
+    assert.deepEqual(await markResendFallbackDispatched(held.claim, sdk), { status: "unknown" });
+  }
 }));
 
 test("accepted recovery requires an exact owned payload-bound receipt, never a denial reason", async () => withClock(async () => {

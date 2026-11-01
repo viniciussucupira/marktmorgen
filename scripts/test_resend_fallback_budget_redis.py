@@ -4,6 +4,8 @@ No provider/account credentials or real messages are used. In CI, use the
 existing dedicated Redis with MARKTMORGEN_REDIS_INTEGRATION=1. Locally pass
 --redis-server /path/to/reviewed/redis-server; only that subprocess is stopped.
 Observed commandstats counts are Redis commands, not a supplier invoice.
+The delayed-ACK case loads the exact TypeScript API with Node24's native
+type stripping, with no provider credentials or extra runtime dependency.
 """
 import argparse
 import concurrent.futures
@@ -62,6 +64,66 @@ class Redis:
             count = int(raw)
             return None if count == -1 else [self.read() for _ in range(count)]
         raise RuntimeError("Unknown Redis response")
+
+
+NATIVE_CLOCK_DRIVER = r'''
+import assert from 'node:assert/strict';
+import { createConnection } from 'node:net';
+import { createHash, randomBytes } from 'node:crypto';
+import { performance } from 'node:perf_hooks';
+import { pathToFileURL } from 'node:url';
+const cfg=JSON.parse(process.argv[2]);
+const budget=await import(pathToFileURL(cfg.module).href);
+async function pipeline(commands){
+ const encoded=commands.map(c=>`*${c.length}\r\n`+c.map(v=>{const s=String(v);return `$${Buffer.byteLength(s)}\r\n${s}\r\n`}).join('')).join('');
+ return new Promise((resolve,reject)=>{
+  const socket=createConnection({host:'127.0.0.1',port:cfg.port});let buffer=Buffer.alloc(0);
+  function parse(start){
+   const end=buffer.indexOf('\r\n',start);if(end<0)return null;const kind=String.fromCharCode(buffer[start]),v=buffer.toString('utf8',start+1,end),next=end+2;
+   if(kind==='+')return{value:v,end:next};if(kind==='-')throw Error(v);if(kind===':')return{value:Number(v),end:next};
+   if(kind==='$'){const n=Number(v);if(n===-1)return{value:null,end:next};if(buffer.length<next+n+2)return null;return{value:buffer.toString('utf8',next,next+n),end:next+n+2};}
+   if(kind==='*'){const n=Number(v);if(n===-1)return{value:null,end:next};let cursor=next;const out=[];for(let i=0;i<n;i++){const item=parse(cursor);if(!item)return null;out.push(item.value);cursor=item.end;}return{value:out,end:cursor};}throw Error('Invalid isolated Redis reply');
+  }
+  socket.setTimeout(5000,()=>socket.destroy(Error('Isolated Redis timeout')));socket.on('error',reject);socket.on('connect',()=>socket.write(encoded));
+  socket.on('data',chunk=>{buffer=Buffer.concat([buffer,chunk]);try{let cursor=0;const out=[];for(let i=0;i<commands.length;i++){const item=parse(cursor);if(!item)return;out.push(item.value);cursor=item.end;}socket.end();resolve(out);}catch(e){socket.destroy();reject(e);}});
+ });
+}
+const one=async c=>(await pipeline([c]))[0];
+const hash=s=>createHash('sha256').update(s).digest('hex');
+const accountId='synthetic:monotonic:'+randomBytes(8).toString('hex'),attemptId='synthetic:deadline:'+randomBytes(8).toString('hex');
+const keys=budget.resendFallbackBudgetKeys(accountId,attemptId),realNow=Date.now;
+let posts=0;
+try{
+ const clock=await one(['TIME']),anchor=Number(clock[0])*1000+Math.floor(Number(clock[1])/1000);
+ const reset=anchor+1500,start=reset-31*86400000;
+ Date.now=()=>anchor;
+ const review={schema:1,reviewId:'synthetic:deadline',accountId,paidPlan:'Pro',paidForPeriod:true,includedEmails:1,periodStartMs:start,resetsAtMs:reset,checkedAtMs:anchor-1,validUntilMs:reset,evidence:'Synthetic only, not financial approval',protection:{kind:'inclusive_provider_hard_cap',sentAndReceived:true,overagesDisabled:true,capEmails:1,evidence:'Synthetic only'},bootstrap:{noUnresolvedPriorAttempts:true,allPriorUsageIncluded:true,evidence:'Synthetic empty fixture'}};
+ const usage={source:'resend_usage_api',accountId,observedAtMs:anchor,monthly:{used:0,sent:0,received:0,limit:1,resetsAt:new Date(reset).toISOString()}};
+ assert.equal((await budget.initializeResendFallbackBudget({review,usage},{pipeline})).status,'initialized');
+ const held=await budget.reserveResendFallback({review,usage,attemptId,recipients:1,payloadFingerprint:hash('synthetic final body')},{pipeline});assert.equal(held.status,'reserved');
+ // Admission has setup slack. Approach its ORIGINAL reset without changing it.
+ if(cfg.case!=='healthy')await new Promise(resolve=>setTimeout(resolve,Math.max(0,reset-realNow()-500)));
+ const authorizationWall=realNow();
+ Date.now=cfg.case==='moving_offset'?()=>realNow()-400:cfg.case==='large_offset'?()=>authorizationWall-73*3600000:cfg.case==='healthy'?realNow:()=>authorizationWall;
+ const delay=cfg.case==='healthy'||cfg.case==='consumer_delay'?0:cfg.case==='moving_offset'?606:650;
+ const sdk={pipeline:async commands=>{const result=await pipeline(commands);if(commands[0][5]==='dispatch'&&delay)await new Promise(resolve=>setTimeout(resolve,delay));return result;}};
+ const began=performance.now(),permission=await budget.markResendFallbackDispatched(held.claim,sdk),elapsed=performance.now()-began;
+ if(cfg.case==='consumer_delay')await new Promise(resolve=>setTimeout(resolve,650));
+ // The consumer is deliberately minimal: the real transport has its own
+ // independent integration review. No await follows this final guard.
+ let postAt=null;
+ if(permission.status==='dispatch'&&Date.now()<permission.sendBeforeMs&&(cfg.unsafe||performance.now()<permission.sendBeforeMonotonicMs)){
+  const response=await fetch(cfg.base,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({syntheticCase:cfg.case,reset})});
+  assert.equal(response.status,200);postAt=(await response.json()).at;posts++;
+ }
+ const state=await one(['HMGET',keys[0],'held','spent']);assert.deepEqual(state,['1','0']);
+ if(cfg.case==='healthy'){assert.equal(posts,1);assert.ok(postAt<reset);}
+ else if(cfg.case==='large_offset'){assert.equal(posts,0);}
+ else if(cfg.unsafe){assert.equal(posts,1);assert.ok(postAt>=reset);}
+ else{assert.equal(posts,0);if(cfg.case!=='consumer_delay')assert.equal(permission.status,'unknown');}
+ console.log(JSON.stringify({case:cfg.case,unsafe:cfg.unsafe,posts,postAt,reset,permission:permission.status,dispatchRttMs:elapsed}));
+}finally{Date.now=realNow;await one(['DEL',...keys]);}
+'''
 
 
 def main():
@@ -228,6 +290,54 @@ def main():
         finally:
             finish.set()
             server.shutdown(); server.server_close(); worker.join(timeout=5)
+
+    def delayed_clock_authorization():
+        """Exact TS API + real Lua + delayed ACK + real loopback HTTP.
+
+        The red control removes only the API's elapsed guard and uses the
+        former wall-only consumer. A fixed one-second timeout cannot prevent
+        the moving-offset case: its ACK takes606ms across the final500ms before reset.
+        """
+        class Provider(BaseHTTPRequestHandler):
+            def log_message(self, *_args):
+                pass
+
+            def do_POST(self):
+                self.rfile.read(int(self.headers["Content-Length"]))
+                body = json.dumps({"at": int(time.time() * 1000)}).encode()
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+
+        server = ThreadingHTTPServer(("127.0.0.1", 0), Provider)
+        worker = threading.Thread(target=server.serve_forever, daemon=True)
+        worker.start()
+        try:
+            with tempfile.TemporaryDirectory(prefix="resend-deadline-native-") as tmp:
+                driver = Path(tmp) / "clock.mjs"
+                driver.write_text(NATIVE_CLOCK_DRIVER)
+                actual = root / "lib/resend-fallback-budget.ts"
+                unsafe = Path(tmp) / "unsafe-budget.ts"
+                source = actual.read_text()
+                guard = " || performance.now() >= sendBeforeMonotonicMs"
+                assert source.count(guard) == 1
+                unsafe.write_text(source.replace(guard, ""))
+                for red, cases in [(False, ["frozen", "moving_offset", "large_offset", "consumer_delay", "healthy"]),
+                                   (True, ["frozen", "moving_offset", "consumer_delay"])]:
+                    for case in cases:
+                        config = {"module": str(unsafe if red else actual), "port": port,
+                                  "base": "http://127.0.0.1:" + str(server.server_address[1]),
+                                  "unsafe": red, "case": case}
+                        result = subprocess.run(["node", "--experimental-strip-types", str(driver), json.dumps(config)],
+                                                cwd=root, capture_output=True, text=True, timeout=10)
+                        if result.returncode:
+                            raise AssertionError(result.stdout + result.stderr)
+                        print(result.stdout.strip())
+        finally:
+            server.shutdown(); server.server_close(); worker.join(timeout=5)
+        print("PASS: exact TS API consumes Redis-relative permission before RPC; frozen/moving400ms offset and delayed606/650ms ACK cannot POST after reset; healthy path posts")
 
     try:
         assert client.command("PING") == "PONG"
@@ -460,6 +570,8 @@ def main():
         assert call(wrong, "wrong") == ["denied", "ledger_shape"]
         assert client.command("GET", ledger) == "synthetic wrong type"
         print("PASS: malformed/expiring state, oversized caps and unlimited refusal tombstones cannot authorize fallback")
+
+        delayed_clock_authorization()
 
         measured = account()
         def measured_commands(work):
