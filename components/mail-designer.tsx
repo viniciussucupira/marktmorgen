@@ -69,6 +69,8 @@ export function MailBodyEditor({
   const [blocks, setBlocks] = useState<MailBlock[]>(() => parseMailBlocks(body));
   const [written, setWritten] = useState(body);
   const box = useRef<HTMLTextAreaElement | null>(null);
+  // The preview starts at a phone's width, where most emails are read (487 [IT4], pattern 7).
+  const [phone, setPhone] = useState(true);
 
   // A change made elsewhere (a picture added, a draft opened, the writing help) is read into the blocks again.
   if (mode === "design" && body !== written) {
@@ -101,6 +103,32 @@ export function MailBodyEditor({
     update([...blocks, ...template.blocks.map((b) => structuredClone(b))]);
   }
 
+  // "As it is sent", in both Write and Design, as the creator types: drawn by the same function that draws the email.
+  const toggle = (on: boolean) => `inline-flex min-h-11 items-center rounded-full px-4 text-sm font-semibold ${on ? "bg-white text-ink shadow-sm" : "text-ink-soft"}`;
+  const preview = (
+    <div className="min-w-0">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-sm text-ink-soft">As it is sent</p>
+        <div role="group" aria-label="Preview width" className="inline-flex rounded-full bg-sand p-1">
+          <button type="button" className={toggle(phone)} aria-pressed={phone} onClick={() => setPhone(true)}>
+            Phone
+          </button>
+          <button type="button" className={toggle(!phone)} aria-pressed={!phone} onClick={() => setPhone(false)}>
+            Wide
+          </button>
+        </div>
+      </div>
+      <div className="mt-1 rounded-2xl bg-[#f7f5f0] p-4">
+        <div
+          className="mx-auto rounded-2xl bg-white p-5 text-[16px] leading-[1.6] text-[#1c1917] [overflow-wrap:anywhere]"
+          style={phone ? { maxWidth: 390 } : undefined}
+          // Drawn by the same function that draws the email: everything in it is escaped (lib/mail-body.ts).
+          dangerouslySetInnerHTML={{ __html: bodyHtml(body, undefined, accent) || "<p style=\"color:#57534e\">Nothing yet.</p>" }}
+        />
+      </div>
+    </div>
+  );
+
   return (
     <div className="block">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -116,18 +144,21 @@ export function MailBodyEditor({
       </div>
 
       {mode === "write" ? (
-        <textarea
-          ref={(el) => {
-            box.current = el;
-            boxRef?.(el);
-          }}
-          className="field mt-2 min-h-56"
-          rows={rows}
-          maxLength={20000}
-          value={body}
-          aria-label={label}
-          onChange={(e) => onChange(e.target.value)}
-        />
+        <div className="mt-2 grid min-w-0 gap-4 xl:grid-cols-2">
+          <textarea
+            ref={(el) => {
+              box.current = el;
+              boxRef?.(el);
+            }}
+            className="field min-h-56"
+            rows={rows}
+            maxLength={20000}
+            value={body}
+            aria-label={label}
+            onChange={(e) => onChange(e.target.value)}
+          />
+          {preview}
+        </div>
       ) : (
         <div className="mt-3 grid min-w-0 gap-4 xl:grid-cols-2">
           <div className="min-w-0 space-y-3">
@@ -200,16 +231,7 @@ export function MailBodyEditor({
               </p>
             ) : null}
           </div>
-          <div className="min-w-0">
-            <p className="text-sm text-ink-soft">As it is sent</p>
-            <div className="mt-1 rounded-2xl bg-[#f7f5f0] p-4">
-              <div
-                className="rounded-2xl bg-white p-5 text-[16px] leading-[1.6] text-[#1c1917]"
-                // Drawn by the same function that draws the email: everything in it is escaped (lib/mail-body.ts).
-                dangerouslySetInnerHTML={{ __html: bodyHtml(body, undefined, accent) || "<p style=\"color:#78716c\">Nothing yet.</p>" }}
-              />
-            </div>
-          </div>
+          {preview}
         </div>
       )}
       <div className="mt-2">
