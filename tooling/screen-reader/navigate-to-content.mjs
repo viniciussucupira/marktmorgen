@@ -10,17 +10,22 @@ export async function navigateToContent(reader,page,kind){
   // The active Playwright tab does not prove NVDA's foreground application.
   const pageTitle=(await page.title()).replace(/\s+/g," ").trim().toLowerCase();
   if(!pageTitle)throw Error("NVDA browser focus requires a nonempty page title");
-  let browserFocused=false;
-  for(let attempt=0;attempt<=10;attempt++){
-   await reader.perform(NVDAKeyCodeCommands.reportTitle);
-   const windowTitle=(await reader.lastSpokenPhrase()).replace(/\s+/g," ").trim().toLowerCase();
-   console.log("AX2_NVDA_WINDOW_FOCUS:"+JSON.stringify({attempt,pageTitle,windowTitle}));
-   if(windowTitle.startsWith(pageTitle)){browserFocused=true;break;}
-   if(attempt===10)break;
-   await reader.perform({keyCode:[WindowsKeyCodes.Escape],modifiers:[WindowsModifiers.Alt]},{capture:false});
-   await new Promise(resolve=>setTimeout(resolve,500));
+  let switches=0;
+  async function confirmForeground(stage,canSwitch=true){
+   let changed=false;
+   for(;;){
+    await reader.perform(NVDAKeyCodeCommands.reportTitle);
+    const windowTitle=(await reader.lastSpokenPhrase()).replace(/\s+/g," ").trim().toLowerCase();
+    console.log("AX2_NVDA_WINDOW_FOCUS:"+JSON.stringify({attempt:switches,stage,pageTitle,windowTitle}));
+    if(windowTitle.startsWith(pageTitle))return changed;
+    if(!canSwitch||switches===10)throw Error("NVDA foreground window did not match the synthetic page title ("+stage+")");
+    switches++;
+    await reader.perform({keyCode:[WindowsKeyCodes.Escape],modifiers:[WindowsModifiers.Alt]},{capture:false});
+    await new Promise(resolve=>setTimeout(resolve,500));
+    changed=true;
+   }
   }
-  if(!browserFocused)throw Error("NVDA foreground window did not match the synthetic page title");
+  await confirmForeground("before preparation");
   await page.locator("body").focus();
   await page.locator("body").click({position:{x:1,y:1}});
   await page.locator("body").blur();
@@ -31,6 +36,12 @@ export async function navigateToContent(reader,page,kind){
   await reader.perform(NVDAKeyCodeCommands.toggleBetweenBrowseAndFocusMode,{capture:false});
   await reader.perform(NVDAKeyCodeCommands.exitFocusMode,{capture:false});
   await reader.perform({keyCode:[WindowsKeyCodes.Home],modifiers:[WindowsModifiers.Control]});
+  // Preparation can lose native focus after the initial title was proved.
+  // Reacquire it within the same ten-switch budget, never retry a heading assertion.
+  if(await confirmForeground("after preparation")){
+   await reader.perform({keyCode:[WindowsKeyCodes.Home],modifiers:[WindowsModifiers.Control]});
+   await confirmForeground("after final document reset",false);
+  }
   return;
  }
  await macOSActivateId("org.webkit.Playwright");
