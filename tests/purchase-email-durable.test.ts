@@ -54,6 +54,10 @@ async function fixture() {
             if (r.session) answer = ["bound", raw];
             else { const next = String(c[15]), n = JSON.parse(next); redis.run(["SET", k[0], next]); redis.run(["SET", k[1], n.sourceValue]); answer = ["bound", next]; }
           } else if (op === "cursor") answer = ["cursor", raw];
+          else if (op === "url" && r.session && r.phase === "awaiting_payment" && r.state === "queued" &&
+              redis.run(["GET", k[1]]) === r.sourceValue && redis.run(["EXISTS", k[8], k[9]]) === 0) {
+            answer = ["url", r.id, r.session, r.bindingFingerprint, String(now()), String(Math.min(now() + 1000, r.expiresAt))];
+          }
         }
         if (lose === op) { lose = null; throw Error("Synthetic lost ACK after durable source mutation"); }
         answers.push(answer);
@@ -178,4 +182,72 @@ test("the real creation caller checks its monotonic permission after the claim h
     if (prior) Object.defineProperty(performance, "now", prior);
     else Reflect.deleteProperty(performance, "now");
   }
+});
+
+
+test("a final source gate denies URLs when closure or erasure precedes exposure", async () => {
+  for (const kind of ["store", "person", "during-provider-read"] as const) {
+    const f = await fixture();
+    const checkout = await createCheckout(f.store, f.product, "https://example.test", undefined, {}, f.runtime);
+    const id = originId(), found = await readConfirmationOrigin(id, f.runtime); assert.ok(found);
+    const fence = kind === "person" ? `nl:order-confirmation:erased:${found.row.statsId}:${found.row.person}` : `nl:order-confirmation:closed:${found.row.statsId}`;
+    const provider = f.runtime.provider!;
+    if (kind === "during-provider-read") f.runtime.provider = async (...args) => {
+      const result = await provider(...args); redis.run(["SET", fence, "closed before final source gate"]); return result;
+    };
+    else redis.run(["SET", fence, "closed before open"]);
+    assert.equal(await openConfirmationOrigin(id, f.runtime), null, kind);
+    assert.equal(f.calls.filter(c => c.method === "POST").length, 1);
+    assert.equal((await readConfirmationOrigin(id, f.runtime))?.row.session, checkout.id);
+    assert.equal(redis.run(["TTL", confirmationOriginRowKey(id)]), -1);
+  }
+});
+
+test("the final gate refuses replaced or removed source evidence after the exact provider read", async () => {
+  for (const kind of ["source", "winner", "row-missing", "phase"] as const) {
+    const f = await fixture();
+    await createCheckout(f.store, f.product, "https://example.test", undefined, {}, f.runtime);
+    const id = originId(), found = await readConfirmationOrigin(id, f.runtime); assert.ok(found);
+    const provider = f.runtime.provider!;
+    f.runtime.provider = async (...args) => {
+      const result = await provider(...args);
+      if (kind === "source") redis.run(["SET", `nl:order-confirmation:source:${id}`, "changed source"]);
+      else if (kind === "row-missing") redis.run(["DEL", confirmationOriginRowKey(id)]);
+      else redis.run(["SET", confirmationOriginRowKey(id), JSON.stringify({ ...found.row, ...(kind === "winner" ? { session: "cs_test_otherWinningSession01" } : { phase: "refused" }) })]);
+      return result;
+    };
+    assert.equal(await openConfirmationOrigin(id, f.runtime), null, kind);
+    assert.equal(f.calls.filter(c => c.method === "POST").length, 1);
+  }
+});
+
+test("only exact timely final-gate acknowledgements expose the already verified winning URL", async () => {
+  for (const kind of ["lost", "malformed", "wrong-session", "stale", "nested-getter"] as const) {
+    const f = await fixture();
+    const checkout = await createCheckout(f.store, f.product, "https://example.test", undefined, {}, f.runtime);
+    const id = originId(), before = await readConfirmationOrigin(id, f.runtime); assert.ok(before);
+    const pipeline = f.runtime.pipeline!; let getters = 0;
+    f.runtime.pipeline = async commands => {
+      const answer = await pipeline(commands);
+      if (commands[0]?.[0] !== "EVAL" || commands[0]?.[13] !== "url") return answer;
+      if (kind === "lost") throw Error("Synthetic read-only permission ACK lost");
+      if (kind === "malformed") return [["url", id, checkout.id]];
+      if (kind === "wrong-session") return [["url", id, "cs_test_foreignSession00001", before.row.bindingFingerprint, String(Date.now()), String(Date.now()+1000)]];
+      if (kind === "stale") { f.advance(2000); return answer; }
+      const nested = ["url", id, checkout.id, before.row.bindingFingerprint, String(Date.now()), String(Date.now()+1000)];
+      Object.defineProperty(nested, "2", { get() { getters++; return checkout.id; } });
+      return [nested];
+    };
+    assert.equal(await openConfirmationOrigin(id, f.runtime), null, kind);
+    assert.equal(getters, 0);
+    assert.equal(f.calls.filter(c => c.method === "POST").length, 1);
+    const after = await readConfirmationOrigin(id, f.runtime); assert.ok(after);
+    assert.equal(after.raw, before.raw, "read-only permission cannot renew or release source capacity");
+  }
+  const f = await fixture();
+  const checkout = await createCheckout(f.store, f.product, "https://example.test", undefined, {}, f.runtime);
+  const before = await readConfirmationOrigin(originId(), f.runtime); assert.ok(before);
+  assert.deepEqual(await openConfirmationOrigin(originId(), f.runtime), checkout);
+  assert.equal((await readConfirmationOrigin(originId(), f.runtime))?.raw, before.raw);
+  assert.equal(f.calls.filter(c => c.method === "POST").length, 1);
 });
