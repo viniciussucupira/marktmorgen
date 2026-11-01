@@ -69,7 +69,7 @@ export function StoreSetupAi({ currency, left: startLeft, hasFaq, storeName }: {
     // 219 [OP5]: a price is the creator's. A product kept with an empty price box waits here for one, rather than being lost.
     const unpriced = rows.findIndex((r) => r.keep && !r.price.trim());
     if (unpriced >= 0) {
-      setNote(`Type a price for ${rows[unpriced].title.trim() || "each product you keep"}, or untick Keep it.`);
+      setNote(`Type a price for ${rows[unpriced].title.trim() || "each product you keep"}, or uncheck Keep it.`);
       document.getElementById(`setup-price-${unpriced}`)?.focus();
       return;
     }
