@@ -7,6 +7,7 @@ import { currentResendFallbackProofIsMissing as realProofIsMissing, guardedResen
 import { initializeResendFallbackBudget, RESEND_FALLBACK_BUDGET_LUA, type ResendFallbackReview } from "../lib/resend-fallback-budget";
 import { store } from "./redis-stub";
 import { MemoryRedis } from "@/lib/redis-memory";
+import { syntheticResendCredential, type SyntheticResendCredential } from "./resend-fixture-credentials";
 
 const hash = (s: string) => createHash("sha256").update(s).digest("hex");
 type Claim = { token: string; n: number; fingerprint: string; dispatchToken: string; acceptedAt: number; expiresAt: number; state: "reserved" | "dispatched" | "unknown" | "accepted" | "confirmed_not_accepted" };
@@ -17,10 +18,16 @@ type FixtureOptions = {
 /** Prepare the exact finite review/binding synchronously for the no-IO
  * proof predicate. Sending still awaits this fixture's initialization. */
 export function prepareResendFallbackFixture(options: FixtureOptions) {
+  const sending = Object.getOwnPropertyDescriptor(options, "credential");
+  const reading = Object.getOwnPropertyDescriptor(options, "usageCredential");
+  const credential = syntheticResendCredential(sending && Object.hasOwn(sending, "value") ? sending.value : null);
+  const usageCredential = syntheticResendCredential(reading
+    ? Object.hasOwn(reading, "value") ? reading.value === undefined ? credential : reading.value : null
+    : credential);
+  if (!credential || !usageCredential) throw Error("Unknown synthetic fixture credential");
   const now = Date.now(), start = now - 86_400_000, reset = now + 30 * 86_400_000;
   const cap = options.cap ?? 50_000, received = options.received ?? 0;
   const accountId = options.accountId ?? "SYNTHETIC_RESEND_TRANSPORT_ACCOUNT";
-  const usageCredential = options.usageCredential ?? options.credential;
   const review: ResendFallbackReview = {
     schema: 1, reviewId: "SYNTHETIC_TRANSPORT_REVIEW", accountId,
     paidPlan: "Pro", paidForPeriod: true, includedEmails: cap,
@@ -93,7 +100,7 @@ export function prepareResendFallbackFixture(options: FixtureOptions) {
   const runtime: ResendTransportRuntime = {
     review, pipeline,
     binding: { accountId, evidence: "SYNTHETIC credential/account proof only", checkedAtMs: now, validUntilMs: reset,
-      usageCredentialSha256: hash(usageCredential), sendingCredentialSha256s: [...new Set([hash(usageCredential), hash(options.credential)])] },
+      usageCredentialSha256: hash(usageCredential), sendingCredentialSha256s: [...new Set([hash(usageCredential), hash(credential)])] },
     fetch: (async (input, init) => {
       const url = String(input), method = init?.method ?? "GET";
       requests.push({ method, url, ...(typeof init?.body === "string" ? { body: init.body } : {}) });
@@ -122,7 +129,7 @@ export async function createResendFallbackFixture(options: FixtureOptions) {
 const worlds = new Map<string, ReturnType<typeof prepareResendFallbackFixture>>();
 const clearApplication = store.clear.bind(store);
 store.clear = () => { clearApplication(); worlds.clear(); };
-function applicationWorld(credential: string, usageCredential: string) {
+function applicationWorld(credential: SyntheticResendCredential, usageCredential: SyntheticResendCredential) {
   const name = `${usageCredential}\n${Math.floor(Date.now() / 86_400_000)}`;
   let world = worlds.get(name);
   // Restoring the clock after a future-time journey starts a new synthetic
@@ -137,13 +144,17 @@ function applicationWorld(credential: string, usageCredential: string) {
 }
 export function currentResendFallbackProofIsMissing(runtime: ResendTransportRuntime = {}) {
   if (Object.keys(runtime).length) return realProofIsMissing(runtime);
-  const credential = process.env.RESEND_API_KEY?.trim() ?? "";
-  const usageCredential = process.env.RESEND_READ_API_KEY?.trim() || credential;
+  const credential = syntheticResendCredential(process.env.RESEND_API_KEY?.trim());
+  const usageCredential = syntheticResendCredential(process.env.RESEND_READ_API_KEY?.trim() || credential);
+  if (!credential || !usageCredential) return true;
   return realProofIsMissing(applicationWorld(credential, usageCredential).runtime);
 }
 export async function guardedResendPost(input: ResendPost, runtime: ResendTransportRuntime = {}) {
   if (Object.keys(runtime).length) return realPost(input, runtime);
-  const world = applicationWorld(input.credential, input.usageCredential);
+  const credential = syntheticResendCredential(input.credential);
+  const usageCredential = syntheticResendCredential(input.usageCredential);
+  if (!credential || !usageCredential) return { kind: "blocked" as const };
+  const world = applicationWorld(credential, usageCredential);
   await world.ready;
   return realPost(input, world.runtime);
 }
