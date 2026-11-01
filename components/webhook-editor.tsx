@@ -1,5 +1,6 @@
 "use client";
 
+import { ConfirmAction } from "@/components/confirm-action";
 import { useState } from "react";
 import { toast } from "@/components/toast";
 import { Icon } from "@/components/icons";
@@ -180,19 +181,20 @@ export function WebhookEditor({ view: initial }: { view: WebhooksView }) {
                   >
                     Events
                   </button>
-                  <button
-                    type="button"
-                    onClick={async () => {
+                  <ConfirmAction
+                    className="btn btn-ghost btn-sm"
+                    disabled={busy !== null}
+                    busy={busy === `remove:${endpoint.id}`}
+                    label={`Remove ${endpoint.where}`}
+                    question="Remove this endpoint? It stops getting events at once, and cannot be brought back."
+                    yes="Yes, remove"
+                    onConfirm={async () => {
                       if (await send({ action: "remove", id: endpoint.id }, `remove:${endpoint.id}`)) toast("Endpoint removed.");
                     }}
-                    disabled={busy !== null}
-                    aria-busy={busy === `remove:${endpoint.id}`}
-                    aria-label={`Remove ${endpoint.where}`}
-                    className="btn btn-ghost btn-sm"
                   >
                     <Icon name="trash" size={16} />
                     Remove
-                  </button>
+                  </ConfirmAction>
                 </span>
               </div>
               {editing?.id === endpoint.id ? (

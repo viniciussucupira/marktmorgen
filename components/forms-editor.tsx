@@ -51,6 +51,7 @@ const MESSAGES: Record<string, string> = {
   invalid: "Something in the form could not be read. Reload the page and try again.",
   points: `Each option's points must be a whole number from 0 to ${MAX_POINTS}.`,
   tiers: "The score ranges do not cover every total exactly once yet:",
+  sensitive: "This form was not saved: a question asks for something a form never may.",
   server_error: "Saving could not be confirmed. Review the saved forms before trying again.",
   ...STUDIO_MESSAGES,
 };
@@ -124,7 +125,14 @@ export function FormsEditor({ saved, products, exportBase, dealStages = [], sid 
         return;
       }
       const said = MESSAGES[data.error ?? ""] ?? MESSAGES.server_error;
-      setError(data.error === "tiers" && Array.isArray(data.issues) ? `${said} ${data.issues.join(" ")}` : said);
+      const extra = data as { field?: unknown; why?: unknown };
+      setError(
+        data.error === "tiers" && Array.isArray(data.issues)
+          ? `${said} ${data.issues.join(" ")}`
+          : data.error === "sensitive" && typeof extra.field === "string"
+            ? `${said} The question \u201c${extra.field}\u201d: ${typeof extra.why === "string" ? extra.why : ""} Change or remove it, then save. Nothing you wrote was changed.`
+            : said,
+      );
     } catch {
       setError(MESSAGES.server_error);
     } finally {

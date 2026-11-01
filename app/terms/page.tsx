@@ -955,8 +955,9 @@ export default function TermsPage() {
           >
             Refund Policy
           </Link>
-          . In summary: your first payment to us is refunded in full on request
-          within {REFUND_DAYS} days of it, for any reason or none; a yearly
+          . In summary: within {REFUND_DAYS} days of your first payment to us,
+          that payment and every plan payment for the same store made since
+          are refunded in full on request, once, for any reason or none; a yearly
           plan is refunded at any time for the months not yet started, the
           months used being charged at the monthly price and the card
           processing fee Stripe charged on that payment being kept; and you may cancel
