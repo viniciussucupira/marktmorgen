@@ -67,6 +67,7 @@ import { hostCalendarKeys } from "@/lib/host-calendar";
 import { revokeAllKeys } from "@/lib/api-keys";
 import { forgetStoreWebhooks } from "@/lib/webhooks";
 import { forgetStoreSync } from "@/lib/email-sync";
+import { forgetShipmentMail } from "@/lib/shipment-mail-outbox";
 import { forgetStorePhones } from "@/lib/phone-alerts";
 import { claimsKey, hostId } from "@/lib/host-claims";
 import { MAX_PREVIEW_PAGES, previewKey } from "@/lib/pdf-preview";
@@ -227,6 +228,7 @@ export async function prepareStore(store: Store, now = Date.now()): Promise<Batc
   if (store.sid) await revokeAllKeys(store.sid);
   await forgetStoreWebhooks(store.statsId);
   await forgetStoreSync(store.statsId);
+  await forgetShipmentMail(store.statsId);
   await forgetStorePhones(store.statsId);
   // The owner's path: their answers and the days they showed up (lib/path.ts).
   await forgetPath(store);

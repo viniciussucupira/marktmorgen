@@ -177,7 +177,23 @@ export function closingBuyersCost(tier: Tier, paid = true): number {
   return buyerNoticeCap(tier, paid) * CLOSING_BUYER_COST;
 }
 
-/** What one order costs at the most: its confirmation, the email that says it shipped, its compute, and what it leaves for its store's closing. */
+/** The existing two-email order envelope: confirmation, shipment email,
+ * compute and its share of closure. It does NOT price the new durable
+ * shipment outbox's indefinite pending/source/fence storage, copies,
+ * reservation pools, provider retries or repeated reconciliation. Those
+ * remain unpriced, not zero: CURRENT_SHIPMENT_MAIL_POLICY is null. The
+ * CURRENT_SHIPMENT_MAIL_LIFECYCLE is never_activated: status returns
+ * not_recorded and cleanup returns0 without Redis, and the UI does no GET.
+ * New storage/dispatch require active AND a valid independent policy. A finite
+ * active-month/closing-days room is not funding for an unknown pending tail.
+ * In active/retired, status and erasure remain available even with policy
+ * null; retirement permits no new enqueue or dispatch. Cleanup may write
+ * fences for an empty index, with an indefinite failure tail. Funding for
+ * cleanup/failures/retention must precede first activation; lifecycle is not
+ * financial evidence. Never restore never_activated after any use while
+ * payloads or uncertain reserves remain. Future tails are unknown/rejected.
+ * No PER_EMAIL/ORDER_COST coefficient or production funding is changed here.
+ */
 export const ORDER_COST = 2 * PER_EMAIL + ORDER_COMPUTE + ORDER_LIBRARY + ORDER_RENEWAL_STOP;
 
 /** The shapes requests are costed at: wall seconds held at 2 GB, and CPU seconds. Review ceilings, not measurements. */
@@ -1010,7 +1026,9 @@ export const EMAIL_SITES: Record<string, string[]> = {
   "lib/imports.ts": MONTHLY, "lib/product-updates.ts": MONTHLY, "lib/review-requests.ts": MONTHLY,
   "lib/mail.ts": ["monthly", "company"],
   "lib/call-packages.ts": ORDER, "lib/call-reminders.ts": ORDER, "lib/free.ts": ORDER, "lib/gifts.ts": ORDER, "lib/group-buy.ts": ["order", "store"],
-  "lib/paypal-sales.ts": ORDER, "lib/preorders.ts": ORDER, "lib/shipments.ts": ORDER,
+  // Shipment delivery now passes through sendQueuedShipmentMail in lib/email.ts;
+  // shipments.ts prepares protected work and no longer sends a metered email.
+  "lib/paypal-sales.ts": ORDER, "lib/preorders.ts": ORDER,
   "lib/purchase-email.ts": ["order", "store"], "lib/calls.ts": ["order", "store"], "lib/licence-keys.ts": ["order", "store"],
   "lib/affiliate-hub.ts": STORE, "lib/affiliate-payday.ts": STORE, "lib/affiliates.ts": STORE, "lib/assignment-notify.ts": STORE,
   "lib/buyer-library.ts": STORE, "lib/erasure-request.ts": STORE, "lib/buyer-orders.ts": STORE, "lib/checkout-recovery.ts": STORE, "lib/checkout-trouble.ts": STORE,

@@ -26,6 +26,7 @@ import { atSiteAddress, creatorDomain, domainOf } from "@/lib/mail-from";
 import { countSesSent, isSesConfigured, notYetTaken, sesBatch, sesBulkRoom, sesConfig, sesDown, sesReady, sesSend } from "@/lib/ses";
 import { reservePaidResourceWindow } from "@/lib/contract-resource-window";
 import { type AllowanceStore, takeAllowance } from "@/lib/store-allowance";
+import type { ShipmentMailDispatch } from "@/lib/shipment-mail-outbox";
 
 /**
  * What an email is counted against (added 17 October 2026), said by every
@@ -317,6 +318,27 @@ export async function sendEmail(message: OneMessage): Promise<boolean> {
   }
   return viaResend(message);
 }
+
+/** Durable shipment work owns its lifetime claim in the outbox, not the
+ * legacy one-day SES marker. The confirmed barrier immediately precedes the
+ * one provider POST. Until fallback funding is verified this work waits for
+ * SES; it never opens another route after an uncertain response.
+ */
+export const sendQueuedShipmentMail: ShipmentMailDispatch = async (message, beforePost) => {
+  const to = oneAddress(message.to);
+  if (!to) return "refused";
+  const config = sesConfig();
+  if (!config || !(await sesReady())) return "waiting";
+  if (!(await beforePost())) return "unknown";
+  const result = await sesSend(config, {
+    from: fromLine(message.from), to, subject: headerText(message.subject),
+    text: message.text, replyTo: oneAddress(message.replyTo),
+  });
+  if (result.uncertain === true) return "unknown";
+  if (result.outcome === "sent") { await countSesSent(1); return "accepted"; }
+  if (result.outcome === "account") await sesDown(result.why);
+  return result.outcome === "refused" ? "refused" : "not_accepted";
+};
 
 /** One email through Resend: the first sender, and the floor under the other. */
 async function viaResend(message: OneMessage): Promise<boolean> {

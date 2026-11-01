@@ -8,11 +8,13 @@
  * marked, and the email goes to the address that paid, not one the studio
  * sends. Marking it twice sends nothing more.
  *
- *   nl:ship:done:<session>   when it was marked, and the tracking link (JSON), 400 days
+ *   nl:ship:done:<session>   mark+tracking JSON: no expiry with pending mail,
+ *                            400 days after a confirmed terminal outcome
  */
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { onAccount } from "@/lib/stripe-account";
-import { sendEmail } from "@/lib/email";
+import { oneAddress, sendQueuedShipmentMail } from "@/lib/email";
+import { CURRENT_SHIPMENT_MAIL_POLICY, enqueueShipmentMail, runShipmentMail, shipmentMailId, shipmentMailPolicy, shipmentMailStatus, type ShipmentMailRuntime, type ShipmentMailView } from "@/lib/shipment-mail-outbox";
 import { fromCreator } from "@/lib/purchase-email";
 import { saleHandles, type Store } from "@/lib/store";
 import { isSettled } from "@/lib/instant-pay";
@@ -55,10 +57,11 @@ export async function readShipped(sessions: string[]): Promise<Map<string, Shipp
   return out;
 }
 
-export type MarkResult = { ok: true; shipped: Shipped; emailed: boolean } | { ok: false; reason: "unknown" | "tracking" | "stripe" };
+export type MarkResult = { ok: true; shipped: Shipped; emailed: boolean; mail?: ShipmentMailView } | { ok: false; reason: "unknown" | "tracking" | "stripe" | "mail_unavailable" };
 
 /** Marks a shipped order as sent and tells its buyer, once. */
-export async function markShipped(store: Store, session: string, rawTracking: unknown, nowSeconds = Math.floor(Date.now() / 1000)): Promise<MarkResult> {
+export async function markShipped(store: Store, session: string, rawTracking: unknown, nowSeconds = Math.floor(Date.now() / 1000), runtime: ShipmentMailRuntime = {}): Promise<MarkResult> {
+  const authorizedAt = (runtime.now ?? Date.now)();
   if (!SESSION.test(session) || !store.stripeAccountId || !isRedisConfigured()) return { ok: false, reason: "unknown" };
   const tracking = readTracking(rawTracking);
   if (tracking === null) return { ok: false, reason: "tracking" };
@@ -71,28 +74,19 @@ export async function markShipped(store: Store, session: string, rawTracking: un
   const meta = (row.metadata ?? {}) as Record<string, string>;
   if (!saleHandles(store).has(meta.store ?? "") || !wasShipped(row) || !isSettled(row as never)) return { ok: false, reason: "unknown" };
   const shipped: Shipped = { at: nowSeconds, tracking };
-  // Taken first: two presses, two tabs, one email.
-  let claimed: unknown;
+  // Existing marks never authorize another message, including legacy marks
+  // whose earlier provider outcome was not recorded in the new outbox.
   try {
-    const receipt = await redisPipeline([["SET", doneKey(session), JSON.stringify(shipped), "NX", "EX", KEEP_SECONDS]]);
-    // Only one reply belongs to this one command. An extra result makes
-    // even an apparent OK or occupied claim unverified; never email or retry it.
-    if (!Array.isArray(receipt) || receipt.length !== 1) return { ok: false, reason: "unknown" };
-    claimed = receipt[0];
+    const prior = (await readShipped([session])).get(session);
+    if (prior) return { ok: true, shipped: prior, emailed: false,
+      mail: await shipmentMailStatus(store.statsId, session, runtime) ?? { state: "acceptance_unknown", delayed: false } };
   } catch { return { ok: false, reason: "unknown" }; }
-  if (claimed === null) {
-    try {
-      const kept = (await readShipped([session])).get(session);
-      return kept ? { ok: true, shipped: kept, emailed: false } : { ok: false, reason: "unknown" };
-    } catch {
-      // A claimed but unreadable record never grants another email.
-      return { ok: false, reason: "unknown" };
-    }
-  }
-  // Only an explicit storage acknowledgment grants the right to send.
-  if (claimed !== "OK") return { ok: false, reason: "unknown" };
   const email = (row.customer_details as { email?: unknown } | null | undefined)?.email;
-  if (typeof email !== "string" || !email.includes("@")) return { ok: true, shipped, emailed: false };
+  if (typeof email !== "string" || !oneAddress(email)) {
+    const [claimed] = await redisPipeline([["SET", doneKey(session), JSON.stringify(shipped), "NX", "EX", KEEP_SECONDS]]);
+    return claimed === "OK" ? { ok: true, shipped, emailed: false, mail: { state: "not_recorded", delayed: false } } : { ok: false, reason: "unknown" };
+  }
+  if (!shipmentMailPolicy(runtime.policy === undefined ? CURRENT_SHIPMENT_MAIL_POLICY : runtime.policy, (runtime.now ?? Date.now)())) return { ok: false, reason: "mail_unavailable" };
   const sw = shippingWords(store.language);
   const name = store.mail?.fromName || store.name;
   const title = (meta.title || "your order").slice(0, 200);
@@ -104,13 +98,22 @@ export async function markShipped(store: Store, session: string, rawTracking: un
     "",
     sw.shippedWhy(name),
   ].join("\n");
-  const emailed = await sendEmail({ meter: { by: "order" },
+  const queued = await enqueueShipmentMail({ statsId: store.statsId, session, authorizedAt, shipped, message: {
     from: fromCreator(store),
     to: email,
     subject: sw.shippedSubject(title).slice(0, 200),
     text,
     replyTo: store.email,
-    idempotencyKey: `nimbus-shipped:${session}`,
-  }).catch(() => false);
-  return { ok: true, shipped, emailed };
+  } }, runtime);
+  if (!queued.ok) return { ok: false, reason: queued.reason === "full" ? "mail_unavailable" : "unknown" };
+  // A simultaneous creator may have won with different tracking. Return the
+  // actual immutable shipment, never this losing caller's proposed values.
+  let kept: Shipped | undefined;
+  try { kept = (await readShipped([session])).get(session); }
+  catch { return { ok: false, reason: "unknown" }; }
+  if (!kept) return { ok: false, reason: "unknown" };
+  const current = (runtime.now ?? Date.now)();
+  const sent = await runShipmentMail(current + 20_000, sendQueuedShipmentMail, runtime, shipmentMailId(store.statsId!, session));
+  return { ok: true, shipped: kept, emailed: sent.accepted === 1,
+    mail: sent.accepted === 1 ? { state: "accepted", delayed: false } : await shipmentMailStatus(store.statsId, session, runtime) ?? { state: "acceptance_unknown", delayed: false } };
 }

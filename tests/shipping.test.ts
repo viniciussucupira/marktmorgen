@@ -22,6 +22,8 @@ import { parseOptions } from "@/lib/product-option";
 import { canSellProduct, createCheckout } from "@/lib/store-checkout";
 import { confirmationFor } from "@/lib/purchase-email";
 import { markShipped, readTracking } from "@/lib/shipments";
+import { shipmentOutboxFixture, shipmentPolicy } from "./shipment-mail-outbox-fixture";
+import { installSesMailFixture } from "./ses-mail-fixture";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
 import { paidPeriod } from "./billing-period-fixture";
@@ -192,65 +194,78 @@ async function main(): Promise<void> {
   is("a link that is not one is refused", (await markShipped(store, session.id as string, "javascript:alert(1)")).ok ? "marked" : "refused", "refused");
   is("tracking URLs cannot carry credentials", readTracking("https://user:secret@tools.usps.com/go"), null);
   const originalPipeline: typeof redis.pipeline = redis.pipeline.bind(redis);
-  try {
-    for (const acknowledgement of [undefined, false, 0, 1, "true", {}, []]) {
-      redis.pipeline = async (commands) => commands.some(command => command[0] === "SET" && String(command[1]).startsWith("nl:ship:done:"))
-        ? [acknowledgement] : originalPipeline(commands);
-      const refusedClaim = await markShipped(store, session.id as string, "");
-      is("unknown claim acknowledgment refuses before mail", [refusedClaim.ok, emails.length], [false, 0]);
-    }
-    redis.pipeline = async (commands) => {
-      if (commands.some(command => command[0] === "SET" && String(command[1]).startsWith("nl:ship:done:"))) throw new Error("synthetic storage outage");
-      return originalPipeline(commands);
-    };
-    is("claim transport failure refuses before mail", [(await markShipped(store, session.id as string, "")).ok, emails.length], [false, 0]);
-  } finally { redis.pipeline = originalPipeline; }
-  part("A single shipment claim requires exactly one reply");
+  const outbox = shipmentOutboxFixture();
+  const runtime = { lifecycle: "active" as const, policy: shipmentPolicy(), pipeline: outbox.pipeline };
+  const noFunding = await markShipped(store, session.id as string, "");
+  is("unreviewed pending storage is explicit unavailability before marking", noFunding, { ok: false, reason: "mail_unavailable" });
+  is("unreviewed storage never creates a physical shipment mark", redis.run(["GET", `nl:ship:done:${session.id}`]), null);
+  for (const acknowledgement of [undefined, false, 0, 1, "true", {}, []]) {
+    const refusedClaim = await markShipped(store, session.id as string, "", undefined, {
+      ...runtime, pipeline: async commands => commands.some(command => command[0] === "EVAL")
+        ? [acknowledgement] : outbox.pipeline(commands),
+    });
+    is("unknown durable claim acknowledgment refuses before mail", [refusedClaim.ok, emails.length], [false, 0]);
+  }
+  is("claim transport failure refuses before mail", [(await markShipped(store, session.id as string, "", undefined, {
+    ...runtime, pipeline: async () => { throw new Error("synthetic storage outage"); },
+  })).ok, emails.length], [false, 0]);
+
+  part("A single durable shipment claim requires exactly one reply");
   const malformedClaimReplies: unknown[] = [null,undefined,false,0,"OK",{},[],Array(1),["OK",null],[null,"OK"],{0:"OK",length:1}];
   for (const receipt of malformedClaimReplies) {
     const shipmentCommands: (string | number)[][] = [];
     const emailsBefore = emails.length;
-    try {
-      redis.pipeline = async (commands) => {
-        if (commands.some(command => String(command[1]).startsWith("nl:ship:done:"))) {
-          shipmentCommands.push(...commands);
-          return receipt as unknown[];
-        }
-        return originalPipeline(commands);
-      };
-      const result = await markShipped(store, session.id as string, "");
-      is("an unknown outer claim cannot grant success or email", [result.ok ? "marked" : result.reason,emails.length], ["unknown",emailsBefore]);
-      is("unknown claims are neither reread nor destructively removed",shipmentCommands.map(command => command[0]),["SET"]);
-    } finally { redis.pipeline = originalPipeline; }
+    const result = await markShipped(store, session.id as string, "", undefined, {
+      ...runtime, pipeline: async commands => {
+        shipmentCommands.push(...commands);
+        return receipt as unknown[];
+      },
+    });
+    is("an unknown outer claim cannot grant success or email", [result.ok ? "marked" : result.reason,emails.length], ["unknown",emailsBefore]);
+    is("unknown claims are neither retried nor destructively removed",shipmentCommands.map(command => command[0]),["EVAL"]);
   }
   part("An occupied shipment claim needs a readable existing record");
   const badRecords: unknown[] = [undefined, null, "broken", "null", "[]", JSON.stringify({ at: -1, tracking: "" }), JSON.stringify({ at: 1.5, tracking: "" }), JSON.stringify({ at: 1, tracking: "https://user:secret@example.com/track" }), JSON.stringify({ at: 1, tracking: 7 })];
   const beforeClaimEmails = emails.length;
   for (const badRecord of badRecords) {
+    let sourceReads = 0;
     try {
-      redis.pipeline = async (commands) => {
-        if (commands.some(command => String(command[1]).startsWith("nl:ship:done:"))) return commands.map(command => command[0] === "SET" ? null : badRecord);
+      redis.pipeline = async commands => {
+        if (commands.some(command => String(command[1]).startsWith("nl:ship:done:"))) {
+          sourceReads++;
+          return commands.map(() => sourceReads === 1 ? null : badRecord);
+        }
         return originalPipeline(commands);
       };
-      const refusedClaim: Awaited<ReturnType<typeof markShipped>> = await markShipped(store, session.id as string, "");
+      const refusedClaim = await markShipped(store, session.id as string, "", undefined, {
+        ...runtime, pipeline: async commands => commands.some(command => command[0] === "EVAL")
+          ? [["legacy", JSON.stringify({ at: 1_790_000_000, tracking: "" })]] : outbox.pipeline(commands),
+      });
       is("an unreadable occupied claim never fabricates shipment success", [refusedClaim.ok ? "marked" : refusedClaim.reason, emails.length], ["unknown", beforeClaimEmails]);
     } finally { redis.pipeline = originalPipeline; }
   }
   try {
     const keptShipment = { at: 1_790_000_000, tracking: "https://example.com/old-tracking" };
-    redis.pipeline = async (commands) => {
-      if (commands.some(command => String(command[1]).startsWith("nl:ship:done:"))) return commands.map(command => command[0] === "SET" ? null : JSON.stringify(keptShipment));
+    redis.pipeline = async commands => {
+      if (commands.some(command => String(command[1]).startsWith("nl:ship:done:"))) return commands.map(() => JSON.stringify(keptShipment));
       return originalPipeline(commands);
     };
     const keptClaim = await markShipped(store, session.id as string, "https://example.com/new-tracking");
     is("a readable occupied claim returns its original record without another email", [keptClaim.ok ? keptClaim.shipped : null, keptClaim.ok ? keptClaim.emailed : null, emails.length], [keptShipment, false, beforeClaimEmails]);
   } finally { redis.pipeline = originalPipeline; }
 
-  const marked = await markShipped(store, session.id as string, "https://tools.usps.com/go?x=1");
-  const mail = emails.at(-1)!;
-  is("the buyer gets one email, with the tracking link and the address", [marked.ok && marked.emailed, mail.to, mail.subject, mail.text.includes("https://tools.usps.com/go?x=1"), mail.text.includes("Austin, TX 78701")], [true, "ana@example.com", "The Supper Book is on its way", true, true]);
-  const again = await markShipped(store, session.id as string, "");
-  is("and never a second one", [again.ok && again.emailed, emails.length], [false, 1]);
+  // The route and the SES sender are real; only Redis ACKs and remote HTTP
+  // are synthetic. The Lua itself is separately verified on real Redis.
+  const sender = installSesMailFixture({ fallback: globalThis.fetch });
+  sender.configure();
+  try {
+    const marked = await markShipped(store, session.id as string, "https://tools.usps.com/go?x=1", undefined, runtime);
+    const mail = sender.sent.at(-1)!;
+    is("the buyer gets one email, with unchanged tracking and address", [marked.ok && marked.emailed, mail.to[0], mail.subject, mail.text.includes("https://tools.usps.com/go?x=1"), mail.text.includes("Austin, TX 78701")], [true, "ana@example.com", "The Supper Book is on its way", true, true]);
+    const again = await markShipped(store, session.id as string, "", undefined, runtime);
+    is("and never a second one", [again.ok && again.emailed, sender.sent.length], [false, 1]);
+    is("no unbudgeted Resend fallback was used", sender.resend.length, 0);
+  } finally { sender.restore(); }
   session = { ...session, id: `cs_test_${"t".repeat(24)}`, metadata: { store: "harbor", product: pdf.product.id } };
   is("an order that was not shipped cannot be marked", (await markShipped(store, session.id as string, "")).ok ? "marked" : "refused", "refused");
 

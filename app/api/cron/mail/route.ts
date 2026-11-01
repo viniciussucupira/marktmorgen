@@ -5,7 +5,8 @@ import { readListing } from "@/lib/catalog";
 import type { NextRequest } from "next/server";
 import { cronAllowed } from "@/lib/request-guard";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
-import { isSenderConfigured } from "@/lib/email";
+import { isSenderConfigured, sendQueuedShipmentMail } from "@/lib/email";
+import { runShipmentMail } from "@/lib/shipment-mail-outbox";
 import { storeForHandle } from "@/lib/store";
 import { advanceAll } from "@/lib/broadcasts";
 import { advanceAnnouncements } from "@/lib/community-mail";
@@ -105,6 +106,13 @@ async function run(request: NextRequest, started: number): Promise<Response> {
   const webhooksBy = started + 50_000;
   const meetingsCutoff = started + 55_000;
   try {
+    // Saved shipment messages have their own exact payload and lifetime
+    // barrier. They remain eligible after the checkout sweep's 24h window.
+    try {
+      await runShipmentMail(started + 5_000, sendQueuedShipmentMail);
+    } catch (error) {
+      console.error("saved shipment mail could not be checked", error);
+    }
     // First, and with a budget of its own: a buyer waiting for what they paid
     // for matters more than a newsletter going out a few minutes sooner, and
     // the budget keeps the newsletter from waiting on it for long. Without
