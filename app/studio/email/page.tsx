@@ -25,6 +25,7 @@ import { inTrial, monthlyAllowance, usedThisMonth } from "@/lib/mail";
 import { healthId, pauseWords, pausedFor } from "@/lib/mail-health";
 import { PRO_MONTHLY_EMAILS, PRO_ON_SALE, SCALE_MONTHLY_EMAILS, TRIAL_DAYS, TRIAL_MONTHLY_EMAILS, publishedPriceWords as priceWords, publishedYearSaving as yearSaving } from "@/lib/plan";
 import { EmailStudio } from "@/components/email-studio";
+import { emailEquivalence } from "@/lib/email-equivalence";
 import { readForms } from "@/lib/form-store";
 import { readFields, readPipelines } from "@/lib/crm";
 import { labeledStages } from "@/lib/crm-rules";
@@ -132,7 +133,7 @@ export default async function StudioEmailPage({ searchParams }: Params) {
               <li>Readers chosen by what they spent with you, where they first found you or when they last bought, saved as groups to use again.</li>
               <li>Emails scheduled for the day and time you choose.</li>
               <li>Sequences that go out by themselves, hours or days after someone joins or buys.</li>
-              <li>{`Up to ${PRO_MONTHLY_EMAILS.toLocaleString("en-US")} emails a month, sent from your name, with replies coming to you.`}</li>
+              <li>{`Up to ${PRO_MONTHLY_EMAILS.toLocaleString("en-US")} emails a month, sent from your name, with replies coming to you. ${emailEquivalence(PRO_MONTHLY_EMAILS)}`}</li>
               <li>Import the list you already have, and take it with you as a file whenever you like.</li>
             </ul>
             <p className="mt-4 text-sm text-ink-soft">
