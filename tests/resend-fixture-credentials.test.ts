@@ -38,7 +38,14 @@ test('literal canonicalization never coerces unknown values or executes accessor
  let reads=0;const hostile={get toString(){reads++;throw Error('must not execute');}};
  for(const value of [undefined,null,17,{},hostile,new String(known),'',known+' ',known.toUpperCase(),'re_test_not_in_the_literal_inventory','re_opaque_unrecognized_probe'])assert.equal(syntheticResendCredential(value),null);
  assert.equal(reads,0);assert.equal(syntheticResendCredential(known),known);
- for(const options of [Object.create({credential:known}),{get credential(){reads++;return known;}},{credential:known,get usageCredential(){reads++;return known;}}])assert.throws(()=>prepareResendFallbackFixture(options),/synthetic fixture credential/);
+ for(const options of [Object.create({credential:known}),Object.assign(Object.create({usageCredential:unknown}),{credential:known}),{get credential(){reads++;return known;}},{credential:known,get usageCredential(){reads++;return known;}}])assert.throws(()=>prepareResendFallbackFixture(options),/synthetic fixture credential/);
  assert.equal(reads,0);
  assert.throws(()=>prepareResendFallbackFixture({credential:known,usageCredential:unknown}),/synthetic fixture credential/);
+});
+
+test('plain and null-prototype explicit options retain their finite synthetic runtime',async()=>{
+ const options=Object.assign(Object.create(null),{credential:known,cap:1,fetch:async()=>Response.json({id:'synthetic'})});
+ const fixture=prepareResendFallbackFixture(options);await fixture.ready;
+ assert.equal((await guardedResendPost(input(known),fixture.runtime)).kind,'response');
+ assert.equal(fixture.requests.filter(r=>r.method==='POST').length,1);
 });

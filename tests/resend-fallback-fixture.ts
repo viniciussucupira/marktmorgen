@@ -18,6 +18,7 @@ type FixtureOptions = {
 /** Prepare the exact finite review/binding synchronously for the no-IO
  * proof predicate. Sending still awaits this fixture's initialization. */
 export function prepareResendFallbackFixture(options: FixtureOptions) {
+  if (!options || ![Object.prototype, null].includes(Object.getPrototypeOf(options))) throw Error("Unknown synthetic fixture credential");
   const sending = Object.getOwnPropertyDescriptor(options, "credential");
   const reading = Object.getOwnPropertyDescriptor(options, "usageCredential");
   const credential = syntheticResendCredential(sending && Object.hasOwn(sending, "value") ? sending.value : null);
