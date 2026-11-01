@@ -21,6 +21,9 @@ import type { Listing } from "@/lib/store";
 /** The most products one cart pays for: the product and the three an order can add to it. */
 export const MAX_CART = 4;
 
+/** The cart checkout's metadata field naming the product whose offers after paying follow it (lib/cart-offers.ts). */
+export const CART_OFFER_META = "offer_from";
+
 const SAFE_ID = /^[A-Za-z0-9_-]{1,64}$/;
 
 /** Whether a product can go in a cart. Its checkout questions and whether it is coming soon are checked where it is paid for. */
