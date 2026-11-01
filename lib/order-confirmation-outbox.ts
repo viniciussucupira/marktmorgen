@@ -424,15 +424,21 @@ async function confirmationUrlPermission(found: NonNullable<Awaited<ReturnType<t
   if (!policy) return false;
   try {
     const started = performance.now(), pipeline = runtime.pipeline ?? redisPipeline;
+    const requestedAt = (runtime.now ?? Date.now)();
+    if (!Number.isSafeInteger(requestedAt) || requestedAt < 0) return false;
     const reply = array(await pipeline([["EVAL", CONFIRMATION_ORIGIN_SCRIPT, 10, ...keys(found.row), "url", found.raw,
       JSON.stringify({ session: found.row.session, bindingFingerprint: found.row.bindingFingerprint }),
-      (runtime.now ?? Date.now)(), "", JSON.stringify(policy)]]), 1);
+      requestedAt, "", JSON.stringify(policy)]]), 1);
     const ack = reply?.length === 1 ? array(reply[0], 6) : null;
     if (!ack || ack.length !== 6 || ack[0] !== "url" || ack[1] !== found.row.id || ack[2] !== found.row.session || ack[3] !== found.row.bindingFingerprint ||
         typeof ack[4] !== "string" || typeof ack[5] !== "string" || !/^[1-9][0-9]*$/.test(ack[4]) || !/^[1-9][0-9]*$/.test(ack[5])) return false;
-    const server = Number(ack[4]), until = Number(ack[5]);
-    return Number.isSafeInteger(server) && Number.isSafeInteger(until) && until === Math.min(found.row.expiresAt, server + 1000) && until > server &&
-      performance.now() < started + until - server && (runtime.now ?? Date.now)() < until;
+    const server = Number(ack[4]), until = Number(ack[5]), receivedAt = (runtime.now ?? Date.now)();
+    // Mirror the existing Lua's clock tolerance; a fabricated future ACK must
+    // not look fresh merely because its duration is the expected1000ms.
+    return Number.isSafeInteger(server) && Number.isSafeInteger(until) && Number.isSafeInteger(receivedAt) && receivedAt >= 0 &&
+      Math.abs(server - requestedAt) <= 60_000 && Math.abs(server - receivedAt) <= 60_000 &&
+      until === Math.min(found.row.expiresAt, server + 1000) && until > server &&
+      performance.now() < started + until - server && receivedAt < until;
   } catch { return false; }
 }
 
