@@ -69,6 +69,7 @@ export default async function StudioReviewsPage({ searchParams }: Params) {
     date: DATE.format(new Date(r.createdAt)),
     edited: r.editedAt ? DATE.format(new Date(r.editedAt)) : "",
     hidden: r.hidden,
+    hiddenReason: r.hiddenReason ?? "",
     refunded: r.refunded,
     reply: r.reply?.text ?? "",
     unseen: r.unseen,
