@@ -1560,7 +1560,7 @@ const BASE_FEATURE_PAGES: TopicPage[] = [
     title: "Your Discord server,",
     highlight: "opened by what people buy",
     intro:
-      "Choose which products give which roles in your own Discord server. A buyer joins in two presses after paying, keeps the roles while they hold what they bought, and loses them by themselves when a membership ends or a purchase is refunded.",
+      "Choose which products give which roles in your own Discord server. A buyer joins in two presses after paying, keeps the roles while they hold what they bought, and loses them by themselves when a membership ends or a purchase is refunded in full.",
     badge: WORKING,
     accent: "from-violet-brand to-pink-brand",
     plan: "creator",
@@ -1581,7 +1581,7 @@ const BASE_FEATURE_PAGES: TopicPage[] = [
         kind: "features",
         title: "What it takes care of",
         items: [
-          { icon: "refresh", title: "Taken back by itself", body: "Everyone who joined is checked again every six hours against your own Stripe account. A membership that ended or a purchase refunded loses its roles, with nothing for you to do." },
+          { icon: "refresh", title: "Taken back by itself", body: "Everyone who joined is checked again about every six hours against your own Stripe account. A membership that ended or a purchase refunded in full loses its roles, with nothing for you to do." },
           { icon: "shield", title: "Never taken on a guess", body: "When Stripe cannot be reached, nobody loses anything; the check simply runs again later. Roles you gave by hand are never touched." },
           { icon: "lock", title: "One Discord account per purchase", body: "A buyer who joins with a second account moves the roles to it, so one purchase cannot open the server for a friend too." },
           { icon: "door", title: "Out of the server, if you want", body: "By default a buyer whose access ended keeps your public channels and loses the paid ones. Switch it on and they are removed from the server instead." },
@@ -1593,9 +1593,9 @@ const BASE_FEATURE_PAGES: TopicPage[] = [
         kind: "limits",
         title: "What it does not do",
         items: [
-          "Roles are taken back at the next check, within six hours of a membership ending or a refund, not in the same second.",
+          "Roles are taken back at the next check, which comes about every six hours, not in the same second. While Stripe or Discord cannot be reached, or Discord will not let the bot remove a role, nothing is taken until it can be.",
           "One Discord server per store.",
-          "The bot can only give roles below its own in your server's list of roles; move the Marktmorgen role up to give higher ones.",
+          "The bot can only give, and take back, roles below its own in your server's list of roles; keep the Marktmorgen role above the roles it gives.",
           "A buyer has to press the button and say yes on Discord's page: nobody is added to a server without agreeing.",
         ],
       },
