@@ -7,7 +7,7 @@
  * none.
  */
 import { claimHandle, ensureStatsId, setFaq, setSubscription, storeForEmail } from "@/lib/store";
-import { statedPrice, writeStoreSetup } from "@/lib/ai";
+import { SETUP_MONEY_OR_NUMBER, statedPrice, writeStoreSetup } from "@/lib/ai";
 import { keepStoreSetup } from "@/lib/store-setup";
 import { KIND } from "@/lib/catalog";
 import { store as redis } from "./redis-stub";
@@ -76,6 +76,45 @@ async function main(): Promise<void> {
     statedPrice("0", "$0", "usd"),
     statedPrice("4950", "€49,50", "eur"),
   ], ["", "", "", "", "", "", ""]);
+
+  part("At most three questions, to press, only when something is missing");
+  reply = JSON.stringify({
+    bios: [],
+    products: [],
+    faq: [],
+    questions: [
+      { q: "What do you mainly sell?", options: ["Recipes", "Courses", "Recipes", "Coaching calls"] },
+      { q: "Who is it for?", options: ["Busy parents", "Students"] },
+      { q: "What price do you charge?", options: ["$5", "$10"] },
+      { q: "How many recipes are there?", options: ["10", "20"] },
+      { q: "Only one answer?", options: ["Yes"] },
+      { q: "Fourth real question?", options: ["A", "B"] },
+      { q: "Fifth?", options: ["A", "B"] },
+    ],
+  });
+  const asking = await writeStoreSetup((await storeForEmail(owner))!, { about: "I cook.", selling: "" });
+  if (!asking.ok) throw new Error("no questions");
+  is("questions with two to four distinct answers, none about a price or a number, three at most", asking.value.questions, [
+    { q: "What do you mainly sell?", options: ["Recipes", "Courses", "Coaching calls"] },
+    { q: "Who is it for?", options: ["Busy parents", "Students"] },
+    { q: "Fourth real question?", options: ["A", "B"] },
+  ]);
+  is("never about money or a count", ["What price do you charge?", "How are you pricing it?", "What does it cost?", "Any fees?", "How do buyers pay?", "What is your budget?", "How long is it?", "How often do you post?"].map((q) => SETUP_MONEY_OR_NUMBER.test(q)), [true, true, true, true, true, true, true, true]);
+  is("but a question about who is in charge, or what it is, may be asked", ["Who is in charge of the club?", "What kind of product is it?", "Who is it for?"].map((q) => SETUP_MONEY_OR_NUMBER.test(q)), [false, false, false]);
+  is("told to ask only for what is indispensable, and never for a price", [/unless something indispensable is missing/.test(asked[asked.length - 1].system), /Never ask for a price/.test(asked[asked.length - 1].system)], [true, true]);
+  reply = JSON.stringify({ bios: ["Recipes for busy parents."], products: [], faq: [], questions: [] });
+  const answered = await writeStoreSetup((await storeForEmail(owner))!, { about: "I cook.", selling: "", answers: [{ q: "What do you mainly sell?", a: "Recipes" }, { q: "Who is it for?", a: "Busy parents" }, { q: "x", a: "" }, { q: "4", a: "a" }, { q: "5", a: "b" }] });
+  is("the answers go back into the next draft, three at most, empty ones dropped", [answered.ok, asked[asked.length - 1].messages[0].content.includes("- What do you mainly sell? Recipes"), asked[asked.length - 1].messages[0].content.includes("- 5 b")], [true, true, false]);
+  is("a draft with nothing to ask carries no questions", answered.ok ? answered.value.questions : "no", undefined);
+
+  part("Questions held to their shape");
+  reply = JSON.stringify({ bios: [], products: [], faq: [], questions: [
+    { q: "Which format?", options: ["10 recipes", "20 recipes"] },
+    { q: "Which format do you prefer for what you make and sell to your audience today, and for whom exactly, if you would say?", options: ["A very long answer that goes far past forty characters in all", "B", "C", "D", "E"] },
+  ] });
+  const shaped = await writeStoreSetup((await storeForEmail(owner))!, { about: "I cook.", selling: "" });
+  const held = shaped.ok ? shaped.value.questions ?? [] : [];
+  is("one answered with numbers is dropped; a long one is cut to 100 and 40, four answers at most", [held.length, held[0]?.q.length, held[0]?.options[0].length, held[0]?.options.length], [1, 100, 40, 4]);
 
   part("What the creator keeps");
   const kept = await keepStoreSetup(owner, (await storeForEmail(owner))!, {
