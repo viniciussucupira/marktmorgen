@@ -20,7 +20,7 @@ import { PAGE_TEST_PAID_WORDS, PAGE_TEST_RUNNING_WORDS } from "@/lib/headline-te
  *
  * Pure, so the studio's editor and the server ask the same function.
  */
-import type { BlockKind, PageBlock, SalesPage } from "@/lib/sales-page";
+import { type BlockKind, type PageBlock, type SalesPage, picturesOf } from "@/lib/sales-page";
 import type { PageFacts } from "@/lib/page-facts";
 
 export type CoachCheck = {
@@ -42,6 +42,8 @@ export type CoachInput = {
   free: boolean;
   /** The product has a picture of its own. */
   picture: boolean;
+  /** That picture's description (the product's own), shown at the top when the hero shows a picture. */
+  pictureAlt: string;
   /** The numbers the store has counted for it (lib/page-facts.ts). */
   facts: PageFacts;
 };
@@ -188,6 +190,23 @@ export function coachChecks(input: CoachInput): CoachCheck[] {
         add: "pictures",
       },
     );
+  }
+  // Every picture the page shows, the second version's too (98 [D2-COMPLIANCE-REVIEW] unit 3, AX274 Part A item 6): a
+  // screen reader says its description instead. Asked only when there is a picture; the creator writes each one,
+  // nothing is filled in for them.
+  // The picture at the top is the product's own, with the product's description; each version counted once (the
+  // editor sends the version not being edited as the variant).
+  const alts = [...input.page.blocks, ...(input.page.variant?.blocks ?? [])].flatMap(picturesOf).map((p) => p.alt);
+  if (hero && hero.media === "picture" && input.picture) alts.push(input.pictureAlt);
+  if (alts.length > 0) {
+    const bare = alts.filter((alt) => !alt.trim()).length;
+    checks.push({
+      id: "described",
+      label: bare ? `Every picture described (${bare === 1 ? "1 has no description" : `${bare} have none`})` : "Every picture described",
+      why: "Some buyers use a screen reader, which reads the page aloud and says a picture's description in its place. In the box beside each picture, say what it shows; the picture at the top uses the product's own description.",
+      done: bare === 0,
+      weight: 2,
+    });
   }
   checks.push({
     id: "bio",
