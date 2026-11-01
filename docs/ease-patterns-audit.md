@@ -45,11 +45,23 @@ The screen-by-screen audit that 487 [IT4] asks for: what was checked, what was f
 - The podcast episode's title and notes now have visible labels, "Episode title" and "Episode notes".
 - The home page field changes the hero's look, so it waits for the home page work under 571 [VS1].
 
+## Pattern 3: the common value filled in, never the dearest (1 November 2026)
+
+**Method.** Every pre-chosen control in `app/` and `components/` was read: `defaultChecked`, checked radios, and the first state of each choice.
+
+**Found.**
+- **Buyer's checkout choices:**
+  - "Pay in full" is chosen before a payment plan;
+  - monthly is chosen before yearly on a membership;
+  - no paid add-on box is checked before the buyer checks it.
+- **The pricing page:** it opens on monthly (`components/pricing-cycle-controls.tsx`).
+- **A product with several prices:** the option the creator marks "Recommended" is chosen first (`startingOption` in `lib/product-option.ts`), and otherwise the first option. When the creator marks the dearest one, the dearest is chosen first. It is labeled "Recommended" in plain sight, but the item's own words say never the dearest. Whether a creator's explicit recommendation is an exception is the owner's to decide. It is recorded under "Depende do dono" in the queue, and nothing was changed.
+
 ## Not audited yet
 
 These patterns of 487 [IT4] have not been audited:
 1. Validation when the person leaves the field.
-2. The most common value filled in, never the dearest.
+2. The most common value filled in: the "Recommended" price option waits on the owner (see pattern 3).
 3. Always-visible labels: the six fields not yet read in context, and the home page field (see pattern 4).
 4. Empty screens with an action and a ready example.
 5. Drafts saved by themselves.
