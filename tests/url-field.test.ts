@@ -51,4 +51,7 @@ is("no browser bubble in other words, and no silent cut of a long address", fiel
 is("the message is announced", field.includes('role="status"'), true);
 const course = readFileSync("components/course-editor.tsx", "utf8");
 is("the lesson link uses it, with a visible label tied by its id", course.includes("<UrlField") && /htmlFor=\{`\$\{prefix\}-link`\}/.test(course) && course.includes("id={`${prefix}-link`}"), true);
+const product = readFileSync("components/product-editor.tsx", "utf8");
+is("a product's link uses it too, with its help tied to it", product.includes("<UrlField") && product.includes("describedBy={`link-${target.id}-help`}") && product.includes('<p id={`link-${target.id}-help`}'), true);
+is("and its route refuses a long link rather than cutting it", readFileSync("app/api/store/product/route.ts", "utf8").includes("text(body.link, MAX_LINK_LENGTH + 1)"), true);
 done();

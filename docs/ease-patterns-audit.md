@@ -89,10 +89,10 @@ The screen-by-screen audit that 487 [IT4] asks for: what was checked, what was f
 
 **Fixed.**
 - `components/url-field.tsx` checks a web address when the person leaves the field, never while they are typing, using the server's own reading (`readLink` in `lib/product-link.ts`). If the address only lacks `https://`, or has `http://`, it offers the corrected address in one press. Anything else gets the server's own words. It is also said when the form is sent. While the person types, a message only goes away, once the address is right; a new one waits for the next leave, so nothing is announced at every key. After the one-press fix, the focus goes back to the field. An address too long is said, never cut. The message is tied to the field for screen readers.
-- The lesson link in the course editor uses it, with its label now tied to the field by id.
+- The lesson link in the course editor uses it, with its label now tied to the field by id, and so does the link a product sends its buyer to, with its help tied to it. Both routes now refuse a link that is too long instead of cutting it.
 
 **Still to do.**
-- The same field in the other 12 files: host calendar, link editor, webhook editor, mark shipped, call editor, chat summary, report form, community events, product editor, page editor, calendar editor and review studio. Each is read first, because some accept other kinds of address than a product link does.
+- The same field in the other 11 files: host calendar, link editor, webhook editor, mark shipped, call editor, chat summary, report form, community events, page editor, calendar editor and review studio. Each is read first, because some accept other kinds of address than a product link does.
 
 ## Not audited yet
 
