@@ -1836,7 +1836,7 @@ const BASE_FEATURE_PAGES: TopicPage[] = [
         title: "Where it helps",
         items: [
           { icon: "chat", title: "\"How do I…?\" answered in your studio", body: "Ask how to do anything in your own words — sell a course in payments, add your own domain, offer a refund — and get the answer from our help center's own answers, with links to read them in full. When the help center does not cover it, it says so and tells you where a person answers." },
-          { icon: "store", title: "Your whole store, drafted", body: "Say what you make and for whom: AI drafts the line under your name, up to three products with a summary and a suggested price, and the questions visitors ask, from your words only. You see it all first and keep what you choose; the products wait as drafts until you add what each one hands over." },
+          { icon: "store", title: "Your whole store, drafted", body: "Say what you make and for whom: AI drafts the line under your name, up to three products with a summary, and the questions visitors ask, from your words only. A price is filled in only from a price you wrote, and you check each one before keeping it. You see it all first and keep what you choose; the products wait as drafts until you add what each one hands over." },
           { icon: "file", title: "A product's description", body: "The short line and the long description, from a few words about it." },
           { icon: "layout", title: "A whole sales page", body: "Headline, what the buyer gets, what is inside, questions and buttons, laid out as blocks you can move and change.", href: "/platform/sales-pages" },
           { icon: "sparkle", title: "Any block, better", body: "An empty block of benefits, steps, who it is for or questions filled in; any block of words made clearer, shorter, more specific or warmer, with Undo beside it." },
@@ -2478,6 +2478,7 @@ const BASE_FEATURE_PAGES: TopicPage[] = [
           { q: "What if I get an email about a change I did not make?", a: "Log in, choose “Log out of all devices” at the bottom of your studio, put the setting back, and reply to that email so we can help." },
           { q: "Who handles a refund?", a: "You do, in your own Stripe dashboard. What a full refund closes here happens by itself, read from Stripe." },
           { q: "Can I sign in with a password?", a: "No. There is no password to set, and none kept here to be stolen. Each link we email works once, for 15 minutes." },
+          { q: "How do I report a security problem?", a: "Email support@marktmorgen.com with what you found and how to see it, and a person answers by email. Please test only your own store and your own data. The same address is in our security.txt file, at marktmorgen.com/.well-known/security.txt, the standard place security researchers look." },
         ],
       },
     ],

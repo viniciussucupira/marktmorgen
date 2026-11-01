@@ -5,6 +5,7 @@ import { assessCustomerWorstCase, CUSTOMER_COST_CATEGORIES, MINIMUM_NET_MARGIN_B
 import { commercialMarginReady, commercialPlansMayOpen, CURRENT_PRICE_AND_RIGHTS_SNAPSHOT, REQUIRED_MARGIN_SCENARIOS, BASE_PLAN_REVENUE_CEILINGS, type CommercialMarginReview } from "@/lib/commercial-margin";
 import { PLANS_ON_SALE } from "@/lib/opening";
 import { done, is } from "./check";
+import {txCustomerFixture} from './customer-tax-review-fixture';
 const zeroCosts=()=>Object.fromEntries(CUSTOMER_COST_CATEGORIES.map(key=>[key,0])) as Record<typeof CUSTOMER_COST_CATEGORIES[number],number>;
 const scenario=(changes:Partial<CustomerWorstCase>={}):CustomerWorstCase=>({...fundedCustomerScenario(),...changes});
 is("owner percentage floor is retired",MINIMUM_NET_MARGIN_BPS,0);
@@ -134,5 +135,65 @@ for(const key of Object.keys(BASE_PLAN_REVENUE_CEILINGS) as (keyof typeof BASE_P
  is("all existing room cannot consume the last positive cent "+key,commercialMarginReady(noSpare),false);
  const spare=review();spare.scenarios[key]=fundedCustomerWithAi(gross,room+1);
  is("full reviewed taxes and existing cost room retain a positive cent "+key,commercialMarginReady(spare),true);
+}
+{
+ const r=review();
+ for(const key of REQUIRED_MARGIN_SCENARIOS){
+  const prior=r.scenarios[key]!;
+  const gross=prior.collectedRevenueCents!;
+  const cost=CUSTOMER_COST_CATEGORIES.reduce((sum,k)=>sum+prior.costCeilings[k]!,0);
+  const months=key.includes('_year_')?12:1;
+  const tx=txCustomerFixture(gross,cost,{scenario:key,from:'2026-01-01',through:months===12?'2027-01-01':'2026-02-01',months});
+  tx.costCeilings={...prior.costCeilings};r.scenarios[key]=tx;
+ }
+ is('complete TX scenarios pass the real commercial review with every existing cost and room retained',commercialMarginReady(r),true);
+ const selected=r.scenarios.creator_month_full!,net=assessCustomerWorstCase(selected).netCents!;
+ const taxHeld=selected.taxesCeilingCents;
+ selected.costCeilings.other!+=net-25;
+ is('TX unit with only the existing 25-cent room remains positive alone',assessCustomerWorstCase(selected).netCents,25);
+ is('the actual commercial check adds all room without granting a speculative tax deduction',commercialMarginReady(r),false);
+ selected.costCeilings.other!--;
+ is('one cent beyond full TX room passes the actual commercial check',commercialMarginReady(r),true);
+ is('adding the full room never shrinks the reviewed TX tax ceiling',selected.taxesCeilingCents,taxHeld);
+ const current=r.priceAndRightsSnapshot;r.priceAndRightsSnapshot='schema26 historical review';
+ is('an older commercial snapshot cannot approve TX data',commercialMarginReady(r),false);r.priceAndRightsSnapshot=current;
+ r.scenarios.creator_month_full!.taxContext!.scenario='scale_month_full';
+ is('the commercial map binds each TX scenario to its actual key',commercialMarginReady(r),false);
+ is('TX synthetic data never fills the actual commercial review',commercialMarginReady(),false);
+}
+{
+ let getters=0;
+ for(const field of ['taxReview','taxContext'])for(const kind of ['hidden','getter','inherited','proxy']){
+  const r=review();is('baseline legacy review is healthy before hidden TX '+field+kind,commercialMarginReady(r),true);
+  const row=r.scenarios.creator_month_full!;
+  if(kind==='inherited')Object.setPrototypeOf(row,{[field]:null});
+  else Object.defineProperty(row,field,kind==='getter'?{enumerable:false,get(){getters++;return null;}}:{value:null,enumerable:false,configurable:true});
+  if(kind==='proxy')r.scenarios.creator_month_full=new Proxy(row,{has(){return false;}});
+  is('original TX presence cannot vanish in commercial snapshot '+field+kind,commercialMarginReady(r),false);
+  is('launch cannot discard original TX presence '+field+kind,commercialPlansMayOpen(true,r),false);
+ }
+ is('hidden fiscal accessors were never invoked',getters,0);
+ for(const field of ['taxReview','taxContext'] as const)for(const kind of ['hidden-data','hidden-getter']){
+  const r=review(),old=r.scenarios.creator_month_full!;
+  const gross=old.collectedRevenueCents!,cost=CUSTOMER_COST_CATEGORIES.reduce((sum,k)=>sum+old.costCeilings[k]!,0);
+  const tx=txCustomerFixture(gross,cost);tx.costCeilings={...old.costCeilings};r.scenarios.creator_month_full=tx;
+  is('deep TX baseline is assessable before lossiness '+field+kind,commercialMarginReady(r),true);
+  Object.defineProperty(tx[field]!,'extra',kind==='hidden-getter'?{enumerable:false,get(){getters++;throw Error('must not execute');}}:{enumerable:false,value:null});
+  is('deep nonenumerable fiscal data is rejected directly '+field+kind,assessCustomerWorstCase(tx).approved,false);
+  is('deep nonenumerable fiscal data cannot vanish in commercial clone '+field+kind,commercialMarginReady(r),false);
+ }
+ is('deep fiscal getters were never invoked',getters,0);
+ for(const field of ['taxReview','taxContext']){
+  const r=review();
+  is('legacy exposure baseline passes before unsupported TX '+field,commercialMarginReady(r),true);
+  Object.defineProperty(r.fundedExposure!.cases.trial.worstCase!,field,{value:null,enumerable:false});
+  is('unsupported hidden TX exposure cannot become legacy during commercial cloning '+field,commercialMarginReady(r),false);
+ }
+ {
+  const r=review(),row=r.scenarios.creator_month_full!;
+  Object.assign(row,{taxReview:null,taxContext:null});
+  r.scenarios.creator_month_full=new Proxy(row,{ownKeys(target){return Reflect.ownKeys(target).filter(key=>key!=='taxReview'&&key!=='taxContext');}});
+  is('an ownKeys trap cannot erase original fiscal presence during commercial serialization',commercialMarginReady(r),false);
+ }
 }
 done();
