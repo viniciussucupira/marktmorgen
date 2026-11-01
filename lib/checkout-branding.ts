@@ -13,8 +13,11 @@
  *   colors   the store's own computed palette (lib/store-look.ts,
  *            lookColours): the page's background and the buttons' fill. Each
  *            is sent only when black or white, whichever reads better, has
- *            at least 7:1 on it; a color that fails is left out and Stripe's
- *            own stays;
+ *            at least 7:1 on it; a color that fails is left out, and the
+ *            branding the creator set in their own Stripe dashboard stays
+ *            (Stripe picks the ink on these colors itself: which one, on the
+ *            Night theme's light-violet buttons above all, is to be seen in
+ *            Stripe's test mode before the wiring unit sends any color);
  *   border   the store's buttons have a small rounding (app/globals.css .btn,
  *            border-radius: var(--r-sm)), so rounded;
  *   font     only a family on Stripe's list that is the store's own: the
@@ -45,11 +48,16 @@ export function readableOn(color: string): boolean {
 
 /** The branding_settings fields for a Checkout Session, as form fields, from the store's look. */
 export function checkoutBranding(look: Pick<StoreLook, "theme" | "accent" | "font">): Record<string, string> {
-  const colours = lookColours(look);
+  return brandingFrom(lookColours(look), look.font);
+}
+
+/** The same from a palette already worked out: apart, so the 7:1 guard can be tested with one that fails. */
+export function brandingFrom(colours: { bg: string; accent: string }, font: StoreLook["font"]): Record<string, string> {
   const out: Record<string, string> = {};
   if (readableOn(colours.bg)) out["branding_settings[background_color]"] = colours.bg;
   if (readableOn(colours.accent)) out["branding_settings[button_color]"] = colours.accent;
   out["branding_settings[border_style]"] = "rounded";
-  out["branding_settings[font_family]"] = SAME_FONT[look.font] ?? "default";
+  // "default" when Stripe has no such family, as the owner's request says, which also sets aside a font chosen in the dashboard.
+  out["branding_settings[font_family]"] = SAME_FONT[font] ?? "default";
   return out;
 }
