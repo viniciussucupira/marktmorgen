@@ -2044,7 +2044,7 @@ try {
     await open(studio, `${LOCAL}/studio?store=${fresh}`);
     const setup = studio.locator("section#setup-ai");
     is("a store with nothing on it is offered a first draft", await setup.count(), 1);
-    await setup.getByLabel("What you do, and for whom").fill("I teach busy parents to cook a week of dinners in two hours on Sunday.");
+    await setup.getByLabel("What you do, and for whom").fill("I teach busy parents to cook a week of dinners in two hours on Sunday. My planner is $12 and the club is $7 a month.");
     await setup.getByRole("button", { name: "Draft my store" }).click();
     await setup.getByRole("radio", { name: "Cook once, eat all week." }).check();
     is("it shows the products to keep, each editable", [await setup.locator("#setup-title-0").inputValue(), await setup.locator("#setup-price-1").inputValue()], ["Sunday Meal Planner", "7"]);
