@@ -118,27 +118,37 @@ export async function exportSnapshot(limits: ExportLimits): Promise<ExportResult
  */
 export type RestoreTarget = {
   exists: (keys: string[]) => Promise<number[]>;
-  restore: (key: string, expiresAt: number | null, dump: string) => Promise<boolean>;
+  /** true when written; "skipped" for a key whose end passed while the restore ran (nothing written); false on any failure. */
+  restore: (key: string, expiresAt: number | null, dump: string) => Promise<boolean | "skipped">;
 };
 
-export type RestoreResult = { ok: true; keys: number } | { ok: false; reason: "exists" | "failed"; keys: number };
+export type RestoreResult = { ok: true; keys: number; skipped?: number } | { ok: false; reason: "exists" | "failed"; keys: number };
 
 /**
  * A snapshot written into an empty database: every row still alive at `now` (lib/backup-codec.ts, restoreRows),
  * each with its own end. Refused before writing anything when the target has any of the keys (`keys`: how many).
- * A write that fails stops it (`keys`: how many were written before it).
+ * A write that fails stops it (`keys`: how many were written before it); a target that cannot say which keys are
+ * there is a failure; a key whose end passed meanwhile is counted apart (`skipped`), never as written.
  */
 export async function restoreSnapshot(snapshot: BackupSnapshot, target: RestoreTarget, now: number): Promise<RestoreResult> {
   const rows = restoreRows(snapshot, now);
   if (rows.length === 0) return { ok: true, keys: 0 };
-  const there = await target.exists(rows.map((row) => row.key));
+  let there: number[];
+  try {
+    there = await target.exists(rows.map((row) => row.key));
+  } catch {
+    return { ok: false, reason: "failed", keys: 0 };
+  }
   if (there.length !== rows.length) return { ok: false, reason: "failed", keys: 0 };
   const taken = there.filter((n) => n > 0).length;
   if (taken > 0) return { ok: false, reason: "exists", keys: taken };
   let written = 0;
+  let skipped = 0;
   for (const row of rows) {
-    if (!(await target.restore(row.key, row.expiresAt, row.dump))) return { ok: false, reason: "failed", keys: written };
-    written += 1;
+    const done = await target.restore(row.key, row.expiresAt, row.dump);
+    if (done === "skipped") skipped += 1;
+    else if (!done) return { ok: false, reason: "failed", keys: written };
+    else written += 1;
   }
-  return { ok: true, keys: written };
+  return skipped ? { ok: true, keys: written, skipped } : { ok: true, keys: written };
 }
