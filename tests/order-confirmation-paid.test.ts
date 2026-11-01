@@ -1,10 +1,12 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { test } from "node:test";
-import { COMMIT_ORDER_CONFIRMATION } from "@/lib/orders";
+import { DEMO_CONNECTED_ACCOUNT } from "@/lib/demo-account";
+import { admitOrders } from "@/lib/order-admission";
+import { COMMIT_ORDER_CONFIRMATION, prepareOrderConfirmationPreintent } from "@/lib/orders";
 import { createCheckout } from "@/lib/store-checkout";
 import { confirmationFor, confirmPurchase, originalPhysicalConfirmation } from "@/lib/purchase-email";
-import { confirmationOriginRowKey, forgetOrderConfirmationMail, readConfirmationOrigin, runOrderConfirmationMail } from "@/lib/order-confirmation-outbox";
+import { confirmationOriginRowKey, forgetOrderConfirmationMail, readConfirmationOrigin, reserveConfirmationOrigin, runOrderConfirmationMail } from "@/lib/order-confirmation-outbox";
 import { enqueueShipmentMail, runShipmentMail } from "@/lib/shipment-mail-outbox";
 import { store as redis } from "./redis-stub";
 import { physicalPaidFixture, originId, confirmationLocalPipeline } from "./order-confirmation-paid-fixture";
@@ -260,4 +262,26 @@ if (process.env.MARKTMORGEN_REDIS_INTEGRATION === "1") test("production paid wor
     assert.ok(Number((await confirmationLocalPipeline([["TTL",keys[1]]]))[0])>399*86_400);
     await runOrderConfirmationMail(currentTime()+30_000,async()=>{posts++;return "accepted";},runtime,f.id);assert.equal(posts,1);
   } finally { await confirmationLocalPipeline([["DEL",...made]]); }
+});
+
+
+test("the demonstration account can neither reserve nor dispatch a physical confirmation", async () => {
+  const f=await paid(), found=await readConfirmationOrigin(f.id,f.runtime);assert.ok(found);assert.ok(DEMO_CONNECTED_ACCOUNT);
+  const demoStore={...f.store,stripeAccountId:DEMO_CONNECTED_ACCOUNT};
+  assert.equal(originalPhysicalConfirmation(demoStore,f.session,f.product),null);
+  const admission=await admitOrders(demoStore,1,Date.now(),1);assert.equal(admission.ok,true);
+  const preintent=await prepareOrderConfirmationPreintent(demoStore,admission,{nonce:found.row.nonce,accountId:DEMO_CONNECTED_ACCOUNT,bodyDigest:found.row.bodyDigest},{now:f.runtime.now});assert.ok(preintent);
+  let io=0;
+  assert.deepEqual(await reserveConfirmationOrigin({statsId:f.store.statsId,nonce:found.row.nonce,accountId:DEMO_CONNECTED_ACCOUNT,body:found.payload.body,preintent,
+    snapshot:{...found.payload.snapshot,store:{...found.payload.snapshot.store as object,stripeAccountId:DEMO_CONNECTED_ACCOUNT}}},
+    {...f.runtime,pipeline:async commands=>{io++;return f.runtime.pipeline!(commands);}}),{ok:false});
+  assert.equal(io,0,"a genuine demo-account admission cannot create a reservation");
+  // Defensive handling of an old/corrupt source must not even ask the demo
+  // provider, regardless of whether a payment-shaped reply could be supplied.
+  const row={...found.row,accountId:DEMO_CONNECTED_ACCOUNT,sourceValue:JSON.stringify({...JSON.parse(found.row.sourceValue),accountId:DEMO_CONNECTED_ACCOUNT})};
+  redis.run(["SET",confirmationOriginRowKey(f.id),JSON.stringify(row)]);redis.run(["SET",`nl:order-confirmation:source:${f.id}`,row.sourceValue]);
+  let providerReads=0,posts=0;
+  await runOrderConfirmationMail(f.runtime.now!()+30_000,async()=>{posts++;return "accepted";},
+    {...f.runtime,provider:async()=>{providerReads++;return f.session;}},f.id);
+  assert.equal(providerReads,0);assert.equal(posts,0);assert.ok(await readConfirmationOrigin(f.id,f.runtime));
 });

@@ -56,6 +56,7 @@ import { purchaseRefunded } from "@/lib/refunds";
 import { BUMP_KEYS, type BumpKey, MIN_BUNDLE_ITEMS, bumpsFromMeta, bundleFromMeta, bundleMeta, chosenItems, deliverableItems, picks } from "@/lib/bundle-rules";
 import { type BundleContents, contentsOf } from "@/lib/bundles";
 import { isHouseStore } from "@/lib/house-store";
+import { DEMO_CONNECTED_ACCOUNT } from "@/lib/demo-account";
 import { preorderProblem } from "@/lib/preorder-rules";
 import { type MayComeOff, applyShare, leastPaid, linesTotal, shareBps } from "@/lib/platform-share";
 import { CONSENT_META, type DigitalConsent, consentKind, consentMetaValue, deliversDigitally, keepConsentOn, requireDigitalConsent } from "@/lib/digital-consent";
@@ -731,7 +732,7 @@ export async function createCheckout(
   // First durable category: a single physical item without expiring access,
   // mutable checkout variants or coupled fulfillment. Other producers remain
   // explicit follow-up work; none are silently relabeled as durable here.
-  const simplePhysical = Boolean((confirmationRuntime.lifecycle ?? CURRENT_SHIPMENT_MAIL_LIFECYCLE) !== "never_activated" && shipping && !product.bundle && !product.course && !product.podcast && !product.keys && !product.note &&
+  const simplePhysical = Boolean(store.stripeAccountId !== DEMO_CONNECTED_ACCOUNT && (confirmationRuntime.lifecycle ?? CURRENT_SHIPMENT_MAIL_LIFECYCLE) !== "never_activated" && shipping && !product.bundle && !product.course && !product.podcast && !product.keys && !product.note &&
     !product.callPackage && !product.recurring && !product.plan && !product.pwyw && !product.file && !product.link && product.options.length === 0 &&
     product.fields.length === 0 && added.length === 0 && !extras.gift && !extras.group && !extras.preorder && !extras.email && !extras.buyerKey &&
     !extras.upsellKey && !extras.news && !extras.held && !extras.remind && !recovering && !named && !store.tax.ids && !store.tax.invoices &&

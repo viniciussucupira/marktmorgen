@@ -201,7 +201,7 @@ export function confirmationFor(
  * Payment and source binding must be independently checked by its worker.
  */
 export function originalPhysicalConfirmation(store: Store, session: SessionRecord, product: Listing): Confirmation | null {
-  if (session.metadata?.mm_order_origin !== "physical-v1" || !wasShipped(session) || !product.shipping ||
+  if (store.stripeAccountId === DEMO_CONNECTED_ACCOUNT || session.metadata?.mm_order_origin !== "physical-v1" || !wasShipped(session) || !product.shipping ||
       product.call || product.course || product.podcast || product.recurring || product.bundle || product.keys || product.note ||
       product.file || product.link || product.plan || product.pwyw || product.callPackage || product.options.length !== 0 ||
       !Number.isSafeInteger(session.amount_total) || Number(session.amount_total) < 0 ||

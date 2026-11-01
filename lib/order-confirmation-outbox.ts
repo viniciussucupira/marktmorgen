@@ -8,6 +8,7 @@ import { onAccount } from "@/lib/stripe-account";
 import { bindOrderConfirmationPreintent, commitOrderConfirmationSettlement } from "@/lib/orders";
 import { fromStore, originalPhysicalConfirmation, type SessionRecord } from "@/lib/purchase-email";
 import { refundedInFull } from "@/lib/refunds";
+import { DEMO_CONNECTED_ACCOUNT } from "@/lib/demo-account";
 import type { Listing, Store } from "@/lib/store";
 import { redisPipeline } from "@/lib/redis";
 import { canSeal, seal, unseal } from "@/lib/secret-box";
@@ -172,7 +173,7 @@ export async function reserveConfirmationOrigin(input: {
   try {
     const own = data(input), preintent = data(own?.preintent);
     if (!own || !preintent || typeof own.statsId !== "string" || !STORE.test(own.statsId) || typeof own.nonce !== "string" || !HASH.test(own.nonce) ||
-        typeof own.accountId !== "string" || !ACCOUNT.test(own.accountId) || typeof own.body !== "string" ||
+        typeof own.accountId !== "string" || !ACCOUNT.test(own.accountId) || own.accountId === DEMO_CONNECTED_ACCOUNT || typeof own.body !== "string" ||
         typeof preintent.token !== "string" || !preintent.token.startsWith("s1.") || typeof preintent.expiresAtMs !== "number" || !Number.isSafeInteger(preintent.expiresAtMs) ||
         hash(preintent.token) !== preintent.intentFingerprint || !data(own.snapshot)) return { ok: false };
     const statsId = own.statsId;
@@ -567,7 +568,7 @@ export async function runOrderConfirmationMail(deadline: number, dispatch: Shipm
   for (const id of ids) {
     if (expired()) break;
     let found = await readConfirmationOrigin(String(id), runtime);
-    if (!found) { counts.unknown++; continue; }
+    if (!found || found.row.accountId === DEMO_CONNECTED_ACCOUNT) { counts.unknown++; continue; }
     // A previous accepted outcome is never dispatched again. Its complete
     // protected source survives until original accounting is acknowledged.
     if (found.row.phase === "accepted") {
