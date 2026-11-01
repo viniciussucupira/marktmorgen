@@ -5,14 +5,17 @@
 import { createHash, randomBytes } from "node:crypto";
 import { performance } from "node:perf_hooks";
 import { onAccount } from "@/lib/stripe-account";
-import { bindOrderConfirmationPreintent } from "@/lib/orders";
-import type { Store } from "@/lib/store";
+import { bindOrderConfirmationPreintent, commitOrderConfirmationSettlement } from "@/lib/orders";
+import { fromStore, originalPhysicalConfirmation, type SessionRecord } from "@/lib/purchase-email";
+import { refundedInFull } from "@/lib/refunds";
+import type { Listing, Store } from "@/lib/store";
 import { redisPipeline } from "@/lib/redis";
 import { canSeal, seal, unseal } from "@/lib/secret-box";
 import {
   CURRENT_SHIPMENT_MAIL_LIFECYCLE, CURRENT_SHIPMENT_MAIL_POLICY,
   SHIPMENT_MAIL_SCRIPT, SHIPMENT_MAIL_MAX_ROW_BYTES, SHIPMENT_MAIL_MAX_INDEX_ITEMS,
-  shipmentMailPolicy, type ShipmentMailPipeline, type ShipmentMailPolicy, type ShipmentMailRuntime,
+  SHIPMENT_MAIL_ERASURE_FENCE_MS, shipmentMailPolicy, type ShipmentMailDispatch,
+  type ShipmentMailPipeline, type ShipmentMailPolicy, type ShipmentMailRuntime,
 } from "@/lib/shipment-mail-outbox";
 
 const hash = (value: string) => createHash("sha256").update(value).digest("hex");
@@ -23,7 +26,7 @@ const SESSION = /^cs_(?:test|live)_[A-Za-z0-9]{10,200}$/;
 export const CONFIRMATION_ORIGIN_DUE = "nl:order-confirmation:due";
 export const CONFIRMATION_CREATE_REPLAY_MS = 23 * 3_600_000;
 export const CONFIRMATION_CREATE_LEASE_MS = 120_000;
-export type ConfirmationPhase = "awaiting_creation" | "creating" | "creation_unknown" | "awaiting_payment" | "queued" | "dispatching" | "refused";
+export type ConfirmationPhase = "awaiting_creation" | "creating" | "creation_unknown" | "awaiting_payment" | "queued" | "dispatching" | "refused" | "accepted";
 export type ConfirmationOriginPayload = {
   body: string; preintentToken: string; intentFingerprint: string;
   /** Only the explicitly selected original product/store fields, never a
@@ -31,6 +34,7 @@ export type ConfirmationOriginPayload = {
   snapshot: Record<string, unknown>;
   settlementToken?: string;
   message?: { from: string; to: string; subject: string; text: string; replyTo: string };
+  paidCents?: number;
 };
 export type ConfirmationOrigin = {
   kind: "confirmation"; id: string; statsId: string; nonce: string; accountId: string;
@@ -114,7 +118,7 @@ function parse(raw: unknown): ConfirmationOrigin | null {
         typeof row.bindingFingerprint !== "string" || (row.session === "" ? row.bindingFingerprint !== "" : !HASH.test(row.bindingFingerprint)) ||
         typeof row.sourceValue !== "string" || Buffer.byteLength(row.sourceValue) > 8_192 || typeof row.sealed !== "string" || !row.sealed.startsWith("s1.") ||
         !["queued", "preparing", "dispatching", "refused"].includes(String(row.state)) ||
-        !["awaiting_creation", "creating", "creation_unknown", "awaiting_payment", "queued", "dispatching", "refused"].includes(String(row.phase)) ||
+        !["awaiting_creation", "creating", "creation_unknown", "awaiting_payment", "queued", "dispatching", "refused", "accepted"].includes(String(row.phase)) ||
         typeof row.recoveryCursor !== "string" || row.recoveryCursor !== "" && !SESSION.test(row.recoveryCursor) ||
         typeof row.owner !== "string" || !/^[a-f0-9]{0,48}$/.test(row.owner) || typeof row.reviewId !== "string" || !/^[A-Za-z0-9_-]{1,128}$/.test(row.reviewId) ||
         ![row.bytes, row.created, row.authorizedAt, row.next, row.expiresAt, row.leaseUntil, row.checks, row.createAttempts, row.recoveryUpper].every(v => typeof v === "number" && Number.isSafeInteger(v) && v >= 0) ||
@@ -328,10 +332,18 @@ function verifiedSession(found: NonNullable<Awaited<ReturnType<typeof readConfir
     const form = new URLSearchParams(found.payload.body);
     // Compare the full metadata of the original request, not only a request
     // parameter echo. The identity and original order contents travel together.
+    const originalMetadata: string[] = [];
     for (const [key, value] of form) {
       const match = /^metadata\[([^\]]+)\]$/.exec(key);
-      if (match && metadata[match[1]] !== value) return null;
+      if (match) {
+        originalMetadata.push(match[1]);
+        if (metadata[match[1]] !== value) return null;
+      }
     }
+    // Extra mutable fields can manufacture digital-consent or marketing
+    // statements despite a matching product/nonce. Only the exact original
+    // request may describe this physical purchase or its rights.
+    if (Object.keys(metadata).length !== originalMetadata.length) return null;
     const lineItems = data(session.line_items), lines = array(lineItems?.data, 1);
     if (!lineItems || lineItems.has_more !== false || !lines || lines.length !== 1) return null;
     const line = data(lines[0]), price = data(line?.price);
@@ -341,10 +353,10 @@ function verifiedSession(found: NonNullable<Awaited<ReturnType<typeof readConfir
     return { ...session, id: session.id, metadata };
   } catch { return null; }
 }
-async function readProviderSession(found: NonNullable<Awaited<ReturnType<typeof readConfirmationOrigin>>>, id: string, runtime: ConfirmationOriginRuntime): Promise<ProviderSession | null> {
+async function readProviderSession(found: NonNullable<Awaited<ReturnType<typeof readConfirmationOrigin>>>, id: string, runtime: ConfirmationOriginRuntime, payment = false): Promise<ProviderSession | null> {
   if (!SESSION.test(id)) return null;
   try {
-    return verifiedSession(found, await (runtime.provider ?? onAccount)("GET", found.row.accountId, `/checkout/sessions/${encodeURIComponent(id)}?expand[]=line_items`));
+    return verifiedSession(found, await (runtime.provider ?? onAccount)("GET", found.row.accountId, `/checkout/sessions/${encodeURIComponent(id)}?expand[]=line_items${payment ? "&expand[]=payment_intent.latest_charge" : ""}`));
   } catch { return null; }
 }
 async function bindVerifiedSession(found: NonNullable<Awaited<ReturnType<typeof readConfirmationOrigin>>>, session: ProviderSession, runtime: ConfirmationOriginRuntime): Promise<BoundConfirmationOrigin | null> {
@@ -431,4 +443,232 @@ export async function openConfirmationOrigin(id: string, runtime: ConfirmationOr
     return url.protocol === "https:" && url.hostname === "checkout.stripe.com" && !url.username && !url.password
       ? { url: url.href, id: bound.sessionId } : null;
   } catch { return null; }
+}
+
+/** Recipient binding and an accepted-but-unsettled receipt remain inside the
+ * envelope reserved before payment. No new slot is manufactured after paying.
+ * The new person index and its erasure fence are checked in the same CAS.
+ */
+export const CONFIRMATION_PAID_SCRIPT = `-- marktmorgen:confirmation-paid:v1
+local op,expected,supplied=ARGV[1],ARGV[2],ARGV[3]
+local clientNow=tonumber(ARGV[4])
+local clock=redis.call('TIME')
+local now=tonumber(clock[1])*1000+math.floor(tonumber(clock[2])/1000)
+if not clientNow or clientNow<0 or math.abs(clientNow-now)>60000 then return {'unknown'} end
+local types={'string','string','zset','set','set','hash','hash','set','string','string','set','string'}
+for i=1,12 do local t=redis.call('TYPE',KEYS[i]).ok; if t~='none' and t~=types[i] then return {'unknown'} end end
+local raw=redis.call('GETRANGE',KEYS[1],0,131072)
+if raw~=expected or #raw>131072 then return {'changed'} end
+local ok,r=pcall(cjson.decode,raw)
+local good,p=pcall(cjson.decode,ARGV[6])
+if not ok or not good or type(r)~='table' or type(p)~='table' or r.kind~='confirmation' or redis.call('GET',KEYS[2])~=r.sourceValue then return {'unknown'} end
+local supported=r.reviewId==p.reviewId
+if type(p.continuedReviewIds)=='table' then for _,id in ipairs(p.continuedReviewIds) do if id==r.reviewId then supported=true end end end
+if not supported or redis.call('EXISTS',KEYS[9],KEYS[10],KEYS[12])~=0 then return {'held'} end
+if op=='paid' then
+ local good,n=pcall(cjson.decode,supplied)
+ if not good or type(n)~='table' or r.session=='' or r.phase~='awaiting_payment' or r.state~='preparing' or r.owner~=ARGV[5] or r.leaseUntil<now then return {'held'} end
+ for _,field in ipairs({'kind','id','statsId','nonce','accountId','bodyDigest','intentFingerprint','bindingFingerprint','session','sourceValue','bytes','created','authorizedAt','expiresAt','owner','leaseUntil','checks','createAttempts','reviewId','recoveryCursor','recoveryUpper'}) do if n[field]~=r[field] then return {'unknown'} end end
+ if n.state~='preparing' or n.phase~='queued' or type(n.person)~='string' or #n.person~=64 or type(n.sealed)~='string' or type(n.fingerprint)~='string' or #supplied>131072 or #supplied>r.bytes then return {'unknown'} end
+ redis.call('SET',KEYS[1],supplied)
+ redis.call('SREM',KEYS[5],r.id); redis.call('SADD',KEYS[11],r.id)
+ return {'paid',supplied}
+elseif op=='accepted' then
+ if r.state~='dispatching' or r.owner~=ARGV[5] then return {'held'} end
+ r.phase='accepted'; r.state='refused'; r.next=now+p.retryMilliseconds
+ local encoded=cjson.encode(r)
+ if #encoded>131072 or #encoded>r.bytes then return {'unknown'} end
+ redis.call('SET',KEYS[1],encoded)
+ if r.checks<p.maximumChecks then redis.call('ZADD',KEYS[3],r.next,r.id) else redis.call('ZREM',KEYS[3],r.id) end
+ return {'accepted',encoded}
+elseif op=='settlement' then
+ if r.phase~='accepted' or r.state~='refused' or r.next>now then return {'held'} end
+ if r.checks>=p.maximumChecks then redis.call('ZREM',KEYS[3],r.id); return {'held'} end
+ r.checks=r.checks+1; r.next=now+p.retryMilliseconds
+ local encoded=cjson.encode(r)
+ if #encoded>131072 or #encoded>r.bytes then return {'unknown'} end
+ redis.call('SET',KEYS[1],encoded)
+ if r.checks<p.maximumChecks then redis.call('ZADD',KEYS[3],r.next,r.id) else redis.call('ZREM',KEYS[3],r.id) end
+ return {'settlement',encoded}
+else return {'unknown'} end`;
+
+type FoundOrigin = NonNullable<Awaited<ReturnType<typeof readConfirmationOrigin>>>;
+function knownPhysicalPayment(session: ProviderSession): boolean {
+  if (session.status !== "complete" || !Number.isSafeInteger(session.amount_total) || Number(session.amount_total) < 0) return false;
+  if (session.amount_total === 0) return session.payment_status === "no_payment_required";
+  const payment = data(session.payment_intent), charge = data(payment?.latest_charge);
+  // Missing or unexpanded refund evidence does not prove an unrefunded order.
+  return session.payment_status === "paid" && payment?.object === "payment_intent" && payment.status === "succeeded" &&
+    payment.amount_received === session.amount_total && payment.currency === session.currency && charge?.object === "charge" &&
+    charge.paid === true && charge.amount === session.amount_total && charge.currency === session.currency && charge.refunded === false &&
+    Number.isSafeInteger(charge.amount_refunded) && Number(charge.amount_refunded) >= 0 && Number(charge.amount_refunded) < Number(charge.amount) &&
+    !refundedInFull(payment);
+}
+function preparedMessage(found: FoundOrigin): ConfirmationOriginPayload["message"] | null {
+  const message = data(found.payload.message);
+  if (!message || Object.keys(message).length !== 5 || !["from", "to", "subject", "text", "replyTo"].every(key => typeof message[key] === "string") ||
+      hash(String(message.to).trim().toLowerCase()) !== found.row.person || !Number.isSafeInteger(found.payload.paidCents) || Number(found.payload.paidCents) < 0 ||
+      !found.row.session || !found.payload.settlementToken) return null;
+  return message as ConfirmationOriginPayload["message"];
+}
+async function confirmationMutation(op: string, found: FoundOrigin, p: ShipmentMailPolicy | null, runtime: ShipmentMailRuntime, owner = ""): Promise<unknown[] | null> {
+  try {
+    const reply = array(await (runtime.pipeline ?? redisPipeline)([["EVAL", SHIPMENT_MAIL_SCRIPT, 10, ...keys(found.row), op, found.raw, "",
+      (runtime.now ?? Date.now)(), SHIPMENT_MAIL_MAX_ROW_BYTES, JSON.stringify(p), owner]]));
+    return reply?.length === 1 ? array(reply[0]) : null;
+  } catch { return null; }
+}
+async function preparePaid(found: FoundOrigin, p: ShipmentMailPolicy, runtime: ConfirmationOriginRuntime, owner: string): Promise<FoundOrigin | null> {
+  const session = await readProviderSession(found, found.row.session, runtime, true);
+  if (!session || session.id !== found.row.session || !knownPhysicalPayment(session)) return null;
+  const store = data(found.payload.snapshot.store), product = data(found.payload.snapshot.product);
+  if (!store || !product || store.statsId !== found.row.statsId || store.stripeAccountId !== found.row.accountId) return null;
+  const letter = originalPhysicalConfirmation(store as unknown as Store, session as SessionRecord, product as unknown as Listing);
+  if (!letter || !/^[^\s<>@]+@[^\s<>@]+\.[^\s<>@]+$/.test(letter.to) || letter.to.length > 320 || typeof store.email !== "string") return null;
+  const payload = { ...found.payload, paidCents: Number(session.amount_total), message: { ...letter, from: fromStore(store as unknown as Store), replyTo: store.email } };
+  const plain = JSON.stringify(payload);
+  if (Buffer.byteLength(plain) > p.maxPayloadBytes) return null;
+  const row = { ...found.row, phase: "queued" as const, person: hash(letter.to.trim().toLowerCase()), sealed: seal(plain, context(found.row.id)), fingerprint: hash(plain) };
+  const raw = JSON.stringify(row);
+  if (!parse(raw)) return null;
+  try {
+    const reply = array(await (runtime.pipeline ?? redisPipeline)([["EVAL", CONFIRMATION_PAID_SCRIPT, 12, ...keys(found.row),
+      `nl:order-confirmation:person:${row.statsId}:${row.person}`, `nl:ship:mail:erased:${row.statsId}:${row.person}`,
+      "paid", found.raw, raw, (runtime.now ?? Date.now)(), owner, JSON.stringify(p)]]));
+    const receipt = reply?.length === 1 ? array(reply[0]) : null;
+    if (receipt?.[0] !== "paid") return null;
+    const saved = await readConfirmationOrigin(row.id, runtime);
+    return saved && saved.row.owner === owner && preparedMessage(saved) ? saved : null;
+  } catch { return null; }
+}
+
+/** This slice handles only original simple physical checkouts. It never
+ * creates a checkout in a cron pass, reads a current catalog, or treats a
+ * provider's missing answer as failure. All other producers remain legacy.
+ */
+export async function runOrderConfirmationMail(deadline: number, dispatch: ShipmentMailDispatch, runtime: ConfirmationOriginRuntime = {}, onlyId?: string): Promise<{ accepted: number; waiting: number; unknown: number }> {
+  const counts = { accepted: 0, waiting: 0, unknown: 0 }, now = runtime.now ?? Date.now;
+  const started = performance.now(), currentTime = now();
+  if (!Number.isSafeInteger(deadline) || !Number.isSafeInteger(currentTime) || deadline <= currentTime) return counts;
+  const monotonicDeadline = started + deadline - currentTime;
+  const expired = () => now() >= deadline || performance.now() >= monotonicDeadline;
+  const p = confirmationOutboxPolicy(runtime, false);
+  if (!p) return { ...counts, unknown: 1 };
+  const pipeline = runtime.pipeline ?? redisPipeline;
+  let ids: unknown[] | null;
+  try {
+    if (onlyId !== undefined) { if (!HASH.test(onlyId)) throw Error("Unknown confirmation"); ids = [onlyId]; }
+    else {
+      const got = array(await pipeline([["TYPE", CONFIRMATION_ORIGIN_DUE], ["ZRANGEBYSCORE", CONFIRMATION_ORIGIN_DUE, "-inf", now(), "LIMIT", 0, 25]]));
+      ids = got?.length === 2 && ["none", "zset"].includes(String(got[0])) ? array(got[1], 25) : null;
+    }
+    if (!ids || ids.some(id => typeof id !== "string" || !HASH.test(id)) || new Set(ids).size !== ids.length) throw Error("Unknown confirmation index");
+  } catch { return { ...counts, unknown: 1 }; }
+  for (const id of ids) {
+    if (expired()) break;
+    let found = await readConfirmationOrigin(String(id), runtime);
+    if (!found) { counts.unknown++; continue; }
+    // A previous accepted outcome is never dispatched again. Its complete
+    // protected source survives until original accounting is acknowledged.
+    if (found.row.phase === "accepted") {
+      let receipt: unknown[] | null = null;
+      try {
+        const reply = array(await pipeline([["EVAL", CONFIRMATION_PAID_SCRIPT, 12, ...keys(found.row), keys(found.row)[4], keys(found.row)[9],
+          "settlement", found.raw, "", now(), "", JSON.stringify(p)]]));
+        receipt = reply?.length === 1 ? array(reply[0]) : null;
+      } catch { /* No acknowledged retry, no financial mutation. */ }
+      if (receipt?.[0] !== "settlement") { counts.unknown++; continue; }
+      found = await readConfirmationOrigin(String(id), runtime);
+      if (!found || found.row.phase !== "accepted") { counts.unknown++; continue; }
+      const settled = preparedMessage(found) && await commitOrderConfirmationSettlement(found.payload.snapshot.store as Store,
+        `checkout:${found.row.session}`, found.payload.settlementToken!, found.payload.paidCents!, { now, pipeline });
+      if (settled === "committed" || settled === "already") await confirmationMutation("cancel", found, null, runtime);
+      counts.unknown++; continue;
+    }
+    const owner = randomBytes(24).toString("hex");
+    const claimed = await confirmationMutation("claim", found, p, runtime, owner);
+    if (claimed?.[0] !== "preparing") { counts.unknown++; continue; }
+    found = await readConfirmationOrigin(String(id), runtime);
+    if (expired() || !found || found.row.owner !== owner || found.row.state !== "preparing") { counts.unknown++; continue; }
+    if (!found.row.session) {
+      await recoverCreation(found, runtime); // Read-only even after a lost creation ACK.
+      const current = await readConfirmationOrigin(String(id), runtime);
+      if (current?.row.owner === owner) await confirmationMutation("defer", current, p, runtime, owner);
+      counts.waiting++; continue;
+    }
+    if (found.row.phase === "awaiting_payment") found = await preparePaid(found, p, runtime, owner);
+    if (!found || !preparedMessage(found)) {
+      const current = await readConfirmationOrigin(String(id), runtime);
+      if (current?.row.owner === owner) await confirmationMutation("defer", current, p, runtime, owner);
+      counts.waiting++; continue;
+    }
+    const message = preparedMessage(found)!;
+    const settled = await commitOrderConfirmationSettlement(found.payload.snapshot.store as Store,
+      `checkout:${found.row.session}`, found.payload.settlementToken!, found.payload.paidCents!, { now, pipeline });
+    let barrier = false;
+    const beforePost = async () => {
+      if (barrier || expired() || !confirmationOutboxPolicy(runtime, false)) return false;
+      // A queued email may have waited through a refund. Recheck the original
+      // account immediately before its permanent dispatch barrier; never use
+      // the old paid checkout status alone as present refund evidence.
+      const current = await readProviderSession(found!, found!.row.session, runtime, true);
+      if (!current || current.id !== found!.row.session || !knownPhysicalPayment(current) || current.amount_total !== found!.payload.paidCents || expired()) return false;
+      const changed = await confirmationMutation("dispatch", found!, p, runtime, owner);
+      if (changed?.[0] !== "dispatching") return false;
+      const row = parse(changed[1]);
+      if (!row || row.owner !== owner) return false;
+      found = { ...found!, row, raw: String(changed[1]) }; barrier = true; return true;
+    };
+    let outcome: Awaited<ReturnType<ShipmentMailDispatch>> = "unknown";
+    try { outcome = await dispatch(message, beforePost, { id: found.row.id }); } catch { /* Keep the permanent barrier. */ }
+    if (!barrier) {
+      await confirmationMutation("defer", found, p, runtime, owner);
+      counts.waiting++; continue;
+    }
+    if (outcome === "accepted" && settled !== "committed" && settled !== "already") {
+      try {
+        await pipeline([["EVAL", CONFIRMATION_PAID_SCRIPT, 12, ...keys(found.row), keys(found.row)[4], keys(found.row)[9],
+          "accepted", found.raw, "", now(), owner, JSON.stringify(p)]]);
+      } catch { /* Dispatch barrier and accounting evidence are still retained. */ }
+      counts.unknown++; continue;
+    }
+    if (outcome === "unknown" || outcome === "waiting") { counts.unknown++; continue; }
+    const changed = await confirmationMutation(outcome === "accepted" ? "accepted" : outcome === "not_accepted" ? "not-accepted" : "refused", found, p, runtime, owner);
+    if (outcome === "accepted" && changed?.[0] === "accepted") counts.accepted++;
+    else if (outcome === "not_accepted" && changed?.[0] === "queued") counts.waiting++;
+    else counts.unknown++;
+  }
+  return counts;
+}
+
+/** The origin's own indexes are erased; shipment indexes cannot stand in for
+ * them. A recipient fence also defeats a concurrent prepayment→paid bind.
+ * Never-activated deployments perform no new IO, including during erasure.
+ */
+export async function forgetOrderConfirmationMail(statsId: string | null | undefined, email?: string, runtime: ShipmentMailRuntime = {}): Promise<number> {
+  const lifecycle = runtime.lifecycle ?? CURRENT_SHIPMENT_MAIL_LIFECYCLE;
+  if (lifecycle === "never_activated") return 0;
+  if (!["active", "retired"].includes(lifecycle)) throw Error("Confirmation cleanup lifecycle is unknown");
+  if (!statsId) return 0;
+  if (!STORE.test(statsId)) throw Error("Confirmation cleanup owner is unknown");
+  const person = email === undefined ? null : hash(email.trim().toLowerCase());
+  const index = person === null ? `nl:order-confirmation:store:${statsId}` : `nl:order-confirmation:person:${statsId}:${person}`;
+  const fence = person === null ? `nl:ship:mail:closed:${statsId}` : `nl:ship:mail:erased:${statsId}:${person}`;
+  const pipeline = runtime.pipeline ?? redisPipeline;
+  const guarded = array(await pipeline([["SET", fence, randomBytes(24).toString("hex")]]));
+  if (guarded?.length !== 1 || guarded[0] !== "OK") throw Error("Confirmation erasure fence is unknown");
+  const got = array(await pipeline([["TYPE", index], ["SCARD", index]]));
+  if (!got || !["none", "set"].includes(String(got[0])) || typeof got[1] !== "number" || !Number.isSafeInteger(got[1]) || got[1] < 0 || got[1] > confirmationOriginIndexLimit) throw Error("Confirmation erasure index is unknown");
+  const members = got[1] === 0 ? [] : array((await pipeline([["SMEMBERS", index]]))[0], confirmationOriginIndexLimit);
+  if (!members || members.some(id => typeof id !== "string" || !HASH.test(id)) || new Set(members).size !== members.length) throw Error("Confirmation erasure index is incomplete");
+  let deleted = 0;
+  for (const id of members) {
+    const found = await readConfirmationOrigin(String(id), runtime);
+    if (!found || found.row.statsId !== statsId || person !== null && found.row.person !== person ||
+        (await confirmationMutation("cancel", found, null, runtime))?.[0] !== "canceled") throw Error("Confirmation erasure is unknown");
+    deleted++;
+  }
+  const finished = array(await pipeline([["PEXPIRE", fence, SHIPMENT_MAIL_ERASURE_FENCE_MS]]));
+  if (finished?.length !== 1 || finished[0] !== 1) throw Error("Confirmation erasure completion is unknown");
+  return deleted;
 }

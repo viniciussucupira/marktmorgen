@@ -8,6 +8,8 @@ import os
 from pathlib import Path
 import re
 import socket
+import subprocess
+import tempfile
 import uuid
 from test_form_opportunity_redis import Redis
 
@@ -31,6 +33,7 @@ def main():
         return match[1]
     shared = script("lib/shipment-mail-outbox.ts", "SHIPMENT_MAIL_SCRIPT")
     origin = script("lib/order-confirmation-outbox.ts", "CONFIRMATION_ORIGIN_SCRIPT")
+    paid_script = script("lib/order-confirmation-outbox.ts", "CONFIRMATION_PAID_SCRIPT")
     prefix = "marktmorgen:integration:confirmation-origin:" + uuid.uuid4().hex + ":"
     db = LocalRedis()
     made = set()
@@ -139,7 +142,101 @@ def main():
         assert db.command("EXISTS", fullkeys[0], fullkeys[1]) == 0
         print("PASS: closed-store fence wins before creation/binding, and full storage budget creates neither origin nor source")
         assert profiles == {"enqueue": 27, "create": 17, "bound_replay": 15, "cursor": 17, "bind": 18}, profiles
+        def shared_change(op, k, expected=None, owner="f" * 48):
+            return db.command("EVAL", shared, 10, *k, op,
+                db.command("GET", k[0]) if expected is None else expected, "", now, 131072, json.dumps(policy), owner)
+        newperson = prefix + "person:verified-buyer"
+        newfence = prefix + "erased:verified-buyer"
+        made.update([newperson, newfence])
+        def paid_change(op, k, supplied="", expected=None, at=now, owner="f" * 48):
+            return db.command("EVAL", paid_script, 12, *k, newperson, newfence, op,
+                db.command("GET", k[0]) if expected is None else expected, supplied, at, owner, json.dumps(policy))
+        ready = json.loads(db.command("GET", keys[0])); ready["next"] = now
+        db.command("SET", keys[0], json.dumps(ready))
+        assert shared_change("claim", keys)[0] == "preparing"
+        pre_paid = db.command("GET", keys[0]); preparing = json.loads(pre_paid)
+        next_paid = dict(preparing, person="e" * 64, phase="queued", sealed="s1.synthetic-paid-message", fingerprint="a" * 64)
+        payload = json.dumps(next_paid)
+        for field, value in [("accountId", "acct_Foreign"), ("bytes", 1), ("session", "cs_test_other"), ("bindingFingerprint", "x" * 64), ("intentFingerprint", "y" * 64)]:
+            n = dict(next_paid); n[field] = value
+            assert paid_change("paid", keys, json.dumps(n))[0] == "unknown"
+            assert db.command("GET", keys[0]) == pre_paid
+        assert paid_change("paid", keys, payload, owner="b" * 48)[0] == "held"
+        assert paid_change("paid", keys, payload, at=now - 73 * 3_600_000)[0] == "unknown"
+        db.command("SET", newfence, "person-deleted-before-recipient-known")
+        assert paid_change("paid", keys, payload)[0] == "held"
+        assert db.command("GET", keys[0]) == pre_paid and db.command("SCARD", newperson) == 0
+        db.command("DEL", newfence)
+        db.command("RPUSH", newperson, "wrong-type")
+        assert paid_change("paid", keys, payload)[0] == "unknown"
+        assert db.command("GET", keys[0]) == pre_paid
+        db.command("DEL", newperson)
+        paid_result, profiles["paid"] = measured(lambda: paid_change("paid", keys, payload, expected=pre_paid))
+        assert paid_result == ["paid", payload]
+        assert db.command("SISMEMBER", keys[4], preparing["id"]) == 0
+        assert db.command("SISMEMBER", newperson, preparing["id"]) == 1
+        assert db.command("TTL", keys[0]) == -1 and db.command("TTL", keys[1]) == -1
+        assert paid_change("paid", keys, payload, expected=pre_paid)[0] == "changed"
+        print("PASS:paid CAS preserves original account/session/token envelope, moves recipient index atomically, and refuses wrong owner, clock, type or erasure fence before any write")
+        paidkeys = list(keys); paidkeys[4] = newperson; paidkeys[9] = newfence
+        dispatch_raw = db.command("GET", keys[0])
+        dispatched, profiles["dispatch"] = measured(lambda: shared_change("dispatch", paidkeys, expected=dispatch_raw))
+        assert dispatched[0] == "dispatching"
+        assert shared_change("claim", paidkeys)[0] == "held"
+        assert db.command("EVAL", shared, 10, *paidkeys, "claim", db.command("GET", keys[0]), "", now + 73 * 3_600_000, 131072, json.dumps(policy), "d" * 48)[0] == "held"
+        print("PASS:permanent dispatch barrier cannot be reclaimed after73h or a lost ACK")
+        accepted_raw = db.command("GET", keys[0])
+        accepted, profiles["accepted_unsettled"] = measured(lambda: paid_change("accepted", paidkeys, expected=accepted_raw))
+        assert accepted[0] == "accepted"
+        held = json.loads(db.command("GET", keys[0])); assert held["phase"] == "accepted" and held["state"] == "refused"
+        assert db.command("TTL", keys[0]) == -1 and db.command("TTL", keys[1]) == -1
+        assert shared_change("claim", paidkeys)[0] == "held"
+        assert paid_change("settlement", paidkeys)[0] == "held"  # not due yet
+        held["next"] = 0
+        db.command("SET", keys[0], json.dumps(held))
+        settlement_raw = db.command("GET", keys[0])
+        retried, profiles["settlement_retry"] = measured(lambda: paid_change("settlement", paidkeys, expected=settlement_raw))
+        assert retried[0] == "settlement" and json.loads(retried[1])["checks"] == held["checks"] + 1
+        assert paid_change("settlement", paidkeys)[0] == "held"
+        held = json.loads(retried[1]); held["next"] = 0; held["checks"] = policy["maximumChecks"] - 1
+        db.command("SET", keys[0], json.dumps(held))
+        assert paid_change("settlement", paidkeys)[0] == "settlement"
+        assert db.command("ZSCORE", keys[2], held["id"]) is None
+        assert paid_change("settlement", paidkeys)[0] == "held"
+        assert db.command("EXISTS", keys[0], keys[1]) == 2
+        print("PASS:email acceptance with unknown accounting retains protected evidence and no TTL; financial retries are scheduled and capped without another POST")
+        final_check = json.loads(db.command("GET", keys[0])); final_check.update(state="dispatching", phase="queued", owner="f" * 48, next=0)
+        db.command("SET", keys[0], json.dumps(final_check)); db.command("ZADD", keys[2], now, final_check["id"])
+        assert paid_change("accepted", paidkeys)[0] == "accepted"
+        assert db.command("ZSCORE", keys[2], final_check["id"]) is None
+        assert db.command("TTL", keys[0]) == -1
+        print("PASS:acceptance on the last funded check parks evidence without leaving a hot polling member")
+        before_items = int(db.command("HGET", keys[5], "items"))
+        cancel_raw = db.command("GET", keys[0])
+        canceled, profiles["cancel_paid"] = measured(lambda: shared_change("cancel", paidkeys, expected=cancel_raw))
+        assert canceled == ["canceled"]
+        assert db.command("EXISTS", keys[0]) == 0 and db.command("TTL", keys[1]) > 399 * 86_400
+        assert db.command("SISMEMBER", newperson, held["id"]) == 0
+        assert int(db.command("HGET", keys[5], "items")) == before_items - 1
+        assert db.command("SISMEMBER", keys[7], held["id"]) == 0
+        print("PASS:origin cancellation erases its actual paid-person index and protected row, releases one shared reservation and retains only the400day matching source")
+        assert {k: profiles[k] for k in ["paid", "dispatch", "accepted_unsettled", "settlement_retry", "cancel_paid"]} == {"paid": 20, "dispatch": 16, "accepted_unsettled": 19, "settlement_retry": 19, "cancel_paid": 25}
+        print(json.dumps({"paid_worker_commands_including_eval_and_redis_call": {k: profiles[k] for k in ["paid", "dispatch", "accepted_unsettled", "settlement_retry", "cancel_paid"]}, "supplier_invoice": False}))
+
         print(json.dumps({"observed_commands_including_eval_and_redis_call": profiles, "supplier_invoice": False}))
+        # Exercise production TypeScript plus the exact shared/paid/accounting
+        # Lua together, under the same explicitly disposable loopback opt-in.
+        runner = """
+import {build} from 'esbuild';
+import {spawnSync} from 'node:child_process';
+import {testAliases,testEnvironment} from './tests/test-config.mjs';
+await build({entryPoints:['tests/order-confirmation-paid.test.ts'],bundle:true,platform:'node',format:'cjs',outfile:process.argv[1],logLevel:'error',alias:testAliases('order-confirmation-paid.test.ts',process.cwd(),process.cwd()+'/tests')});
+const result=spawnSync(process.execPath,[process.argv[1]],{env:testEnvironment(process.env),stdio:'inherit'});
+process.exitCode=result.status ?? 1;
+"""
+        with tempfile.TemporaryDirectory(prefix="confirmation-paid-ts-") as directory:
+            subprocess.run(["node", "--input-type=module", "-e", runner, str(Path(directory) / "paid.cjs")], cwd=root, check=True)
+
     finally:
         for key in made: db.command("DEL", key)
         db.sock.close()

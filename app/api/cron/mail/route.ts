@@ -7,6 +7,7 @@ import { cronAllowed } from "@/lib/request-guard";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { isSenderConfigured, sendQueuedShipmentMail } from "@/lib/email";
 import { runShipmentMail } from "@/lib/shipment-mail-outbox";
+import { runOrderConfirmationMail } from "@/lib/order-confirmation-outbox";
 import { storeForHandle } from "@/lib/store";
 import { advanceAll } from "@/lib/broadcasts";
 import { advanceAnnouncements } from "@/lib/community-mail";
@@ -108,10 +109,15 @@ async function run(request: NextRequest, started: number): Promise<Response> {
   try {
     // Saved shipment messages have their own exact payload and lifetime
     // barrier. They remain eligible after the checkout sweep's 24h window.
-    try {
-      await runShipmentMail(started + 5_000, sendQueuedShipmentMail);
-    } catch (error) {
-      console.error("saved shipment mail could not be checked", error);
+    // Start both independent queues inside the same existing five-second
+    // slice. A slow shipping acknowledgement cannot consume every pass
+    // before an already-paid confirmation is even allowed to start.
+    const saved = await Promise.allSettled([
+      runShipmentMail(started + 5_000, sendQueuedShipmentMail),
+      runOrderConfirmationMail(started + 5_000, sendQueuedShipmentMail),
+    ]);
+    for (const result of saved) {
+      if (result.status === "rejected") console.error("saved order mail could not be checked", result.reason);
     }
     // First, and with a budget of its own: a buyer waiting for what they paid
     // for matters more than a newsletter going out a few minutes sooner, and
