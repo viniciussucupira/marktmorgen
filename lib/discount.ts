@@ -140,6 +140,8 @@ export type DiscountCode = {
   firstOrder: boolean;
   /** How long it comes off a membership, when the coupon could be read. */
   duration: CodeDuration | null;
+  /** Stripe has a restriction on it that this page cannot read (a minimum per currency, or one in a shape not known here). */
+  otherRules: boolean;
 };
 
 /**
@@ -147,12 +149,14 @@ export type DiscountCode = {
  * has: its minimum, a first order only, and how long on a membership. Empty
  * when it is the plain code made here.
  */
-export function codeRules(entry: Pick<DiscountCode, "minimum" | "firstOrder" | "duration">): string[] {
+export function codeRules(entry: Pick<DiscountCode, "minimum" | "firstOrder" | "duration" | "otherRules">): string[] {
   const out: string[] = [];
-  if (entry.minimum) out.push(`On orders of ${formatMoney(entry.minimum.cents, entry.minimum.currency)} or more.`);
-  if (entry.firstOrder) out.push("First order only, as Stripe counts it: a buyer who checks out without an account counts as new each time.");
+  if (entry.minimum) out.push(`When the first payment is ${formatMoney(entry.minimum.cents, entry.minimum.currency)} or more.`);
+  // Stripe treats a checkout with no customer of its own as a first one, and this store's checkouts never name one.
+  if (entry.firstOrder) out.push("First order only, as Stripe counts it. Checkouts in this store are always new to Stripe, so this rule does not stop a buyer who has bought before.");
   if (entry.duration?.kind === "repeating") out.push(`On a membership: the first ${entry.duration.months} ${entry.duration.months === 1 ? "month" : "months"} of charges.`);
   if (entry.duration?.kind === "forever") out.push("On a membership: every charge, for as long as it lasts.");
+  if (entry.otherRules) out.push("It has other rules, set in your Stripe dashboard, that this page cannot show.");
   return out;
 }
 
@@ -201,14 +205,19 @@ function readDuration(row: Record<string, unknown>): CodeDuration | null {
 }
 
 /** The promotion code's `restrictions` that this studio shows. */
-function readRestrictions(row: Record<string, unknown>): { minimum: CodeMinimum | null; firstOrder: boolean } {
-  const raw = row.restrictions as { minimum_amount?: unknown; minimum_amount_currency?: unknown; first_time_transaction?: unknown } | null | undefined;
+function readRestrictions(row: Record<string, unknown>): { minimum: CodeMinimum | null; firstOrder: boolean; otherRules: boolean } {
+  const raw = row.restrictions as { minimum_amount?: unknown; minimum_amount_currency?: unknown; first_time_transaction?: unknown; currency_options?: unknown } | null | undefined;
   const cents = raw?.minimum_amount;
   const currency = raw?.minimum_amount_currency;
   const minimum = typeof cents === "number" && Number.isSafeInteger(cents) && cents > 0 && typeof currency === "string" && /^[a-z]{3}$/i.test(currency)
     ? { cents, currency: currency.toLowerCase() }
     : null;
-  return { minimum, firstOrder: raw?.first_time_transaction === true };
+  // A minimum per currency, or a minimum in a shape not read above, is still Stripe's rule: said, never dropped.
+  const options = raw?.currency_options;
+  const otherRules =
+    (options !== undefined && options !== null && !(typeof options === "object" && Object.keys(options as object).length === 0)) ||
+    (cents !== undefined && cents !== null && minimum === null);
+  return { minimum, firstOrder: raw?.first_time_transaction === true, otherRules };
 }
 
 function readRow(row: Record<string, unknown>): DiscountCode | null {

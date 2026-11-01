@@ -162,6 +162,11 @@ export function DiscountEditor({ selling, currency = "usd", address = "" }: { se
                       {`This code takes off ${entry.off.currency.toUpperCase()}, and your store now charges in ${currency.toUpperCase()}. Stripe only takes it off a checkout in ${entry.off.currency.toUpperCase()}, so buyers cannot use it now. Switch it off and make a new one.`}
                     </p>
                   ) : null}
+                  {entry.minimum && entry.minimum.currency !== currency ? (
+                    <p className="mt-2 rounded-xl bg-amber-brand/10 px-3 py-2 text-sm text-ink">
+                      {`This code's minimum is in ${entry.minimum.currency.toUpperCase()}, and your store now charges in ${currency.toUpperCase()}. Buyers may not be able to use it now. Switch it off and make a new one.`}
+                    </p>
+                  ) : null}
                   {codeRules(entry).map((rule) => (
                     <p key={rule} className="mt-1 text-sm text-ink">{rule}</p>
                   ))}
@@ -346,7 +351,7 @@ export function DiscountEditor({ selling, currency = "usd", address = "" }: { se
                 </div>
               </div>
               <p id="discount-minimum-help" className="text-sm text-ink-soft">
-                Optional. With a minimum, Stripe takes the code only when the order comes to that much or more.
+                Optional. With a minimum, Stripe takes the code only when the first payment comes to that much or more. On a membership with a free trial the first payment is zero, so the code does not come off; on a payment plan it is the first installment.
               </p>
 
               <p className="text-sm text-ink-soft">

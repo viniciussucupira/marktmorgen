@@ -71,7 +71,7 @@ async function main(): Promise<void> {
   );
   is("and nothing else is restricted by it: no first order, no products", [...promotion.body.keys()].filter((k) => k.startsWith("restrictions[") || k.includes("applies_to")).sort(), ["restrictions[minimum_amount]", "restrictions[minimum_amount_currency]"]);
   is("both at the pinned version", [coupon.version, promotion.version], ["2025-09-30.clover", "2025-09-30.clover"]);
-  is("the code made comes back with its minimum, read from Stripe's answer", made.ok ? [made.code.minimum, made.code.duration, made.code.firstOrder] : null, [{ cents: 5000, currency: "usd" }, { kind: "once" }, false]);
+  is("the code made comes back with its minimum, read from Stripe's answer", made.ok ? [made.code.minimum, made.code.duration, made.code.firstOrder, made.code.otherRules] : null, [{ cents: 5000, currency: "usd" }, { kind: "once" }, false, false]);
 
   sent.length = 0;
   await createCode("acct_synthetic_rules", "PLAIN", { kind: "amount", cents: 1000, currency: "usd" }, 5);
@@ -84,32 +84,35 @@ async function main(): Promise<void> {
     { ...base, id: "promo_a", code: "MIN50", promotion: { coupon: { percent_off: 10, duration: "once" } }, restrictions: { minimum_amount: 5000, minimum_amount_currency: "usd", first_time_transaction: false } },
     { ...base, id: "promo_b", code: "NEWBIE", promotion: { coupon: { amount_off: 500, currency: "eur", duration: "repeating", duration_in_months: 3 } }, restrictions: { first_time_transaction: true, minimum_amount: null, minimum_amount_currency: null } },
     { ...base, id: "promo_c", code: "ALWAYS", promotion: { coupon: { percent_off: 15, duration: "forever" } } },
+    { ...base, id: "promo_e", code: "PEREURO", promotion: { coupon: { percent_off: 5, duration: "once" } }, restrictions: { currency_options: { eur: { minimum_amount: 4000 } } } },
     { ...base, id: "promo_d", code: "ODD", promotion: { coupon: { percent_off: 5, duration: "repeating" } }, restrictions: { minimum_amount: -3, minimum_amount_currency: "usd" } },
   ];
   const list = await listCodes("acct_synthetic_rules");
   const codes = list.state === "ok" ? list.codes : [];
-  is("read: a minimum, a first order, a few months, every charge", codes.map((c) => [c.minimum, c.firstOrder, c.duration]), [
-    [{ cents: 5000, currency: "usd" }, false, { kind: "once" }],
-    [null, true, { kind: "repeating", months: 3 }],
-    [null, false, { kind: "forever" }],
-    [null, false, null],
+  is("read: a minimum, a first order, a few months, every charge, rules this page cannot read", codes.map((c) => [c.minimum, c.firstOrder, c.duration, c.otherRules]), [
+    [{ cents: 5000, currency: "usd" }, false, { kind: "once" }, false],
+    [null, true, { kind: "repeating", months: 3 }, false],
+    [null, false, { kind: "forever" }, false],
+    [null, false, { kind: "once" }, true],
+    [null, false, null, true],
   ]);
-  is("a minimum in words", codeRules(codes[0]), ["On orders of $50 or more."]);
+  is("a minimum per currency set in the dashboard is said, not dropped", codeRules(codes[3]), ["It has other rules, set in your Stripe dashboard, that this page cannot show."]);
+  is("a minimum in words", codeRules(codes[0]), ["When the first payment is $50 or more."]);
   is(
     "a first order only says how Stripe counts it, and the months on a membership",
     codeRules(codes[1]),
-    ["First order only, as Stripe counts it: a buyer who checks out without an account counts as new each time.", "On a membership: the first 3 months of charges."],
+    ["First order only, as Stripe counts it. Checkouts in this store are always new to Stripe, so this rule does not stop a buyer who has bought before.", "On a membership: the first 3 months of charges."],
   );
   is("every charge on a membership", codeRules(codes[2]), ["On a membership: every charge, for as long as it lasts."]);
-  is("what cannot be read is not invented", codeRules(codes[3]), []);
+  is("a minimum that cannot be read is not invented, and not dropped either", codeRules(codes[4]), ["It has other rules, set in your Stripe dashboard, that this page cannot show."]);
 
   part("The studio's confirmation reads them only when they are well formed");
   const row = { id: "promo_a", code: "MIN50", off: { kind: "percent", percent: 10 }, timesRedeemed: 0, maxRedemptions: null, expiresAt: null, active: true };
-  is("an answer from before, without them: still read, with none", readDiscountConfirmation({ ok: true, codes: [row] }, true)?.[0], { ...row, minimum: null, firstOrder: false, duration: null });
+  is("an answer from before, without them: still read, with none", readDiscountConfirmation({ ok: true, codes: [row] }, true)?.[0], { ...row, minimum: null, firstOrder: false, duration: null, otherRules: false });
   is(
     "with them: read",
     readDiscountConfirmation({ ok: true, codes: [{ ...row, minimum: { cents: 5000, currency: "USD" }, firstOrder: true, duration: { kind: "repeating", months: 2 } }] }, true)?.[0],
-    { ...row, minimum: { cents: 5000, currency: "usd" }, firstOrder: true, duration: { kind: "repeating", months: 2 } },
+    { ...row, minimum: { cents: 5000, currency: "usd" }, firstOrder: true, duration: { kind: "repeating", months: 2 }, otherRules: false },
   );
   for (const [what, bad] of [
     ["a minimum of nothing", { minimum: { cents: 0, currency: "usd" } }],
@@ -117,6 +120,7 @@ async function main(): Promise<void> {
     ["months without a number", { duration: { kind: "repeating" } }],
     ["a duration Stripe does not have", { duration: { kind: "weekly" } }],
     ["a first order that is not yes or no", { firstOrder: "yes" }],
+    ["other rules that are not yes or no", { otherRules: 1 }],
   ] as const) {
     is(`${what}: the whole answer is refused`, readDiscountConfirmation({ ok: true, codes: [{ ...row, ...bad }] }, true), null);
   }
@@ -128,6 +132,8 @@ async function main(): Promise<void> {
   is("a refused minimum is said in words, for every currency", [CODE_PROBLEMS.minimum.length > 20, minimumProblem("eur").includes("EUR"), minimumProblem("jpy").includes("no decimals")], [true, true, true]);
   const editor = read("components/discount-editor.tsx");
   is("the editor's field has a visible label and its help, and is optional", /htmlFor="discount-minimum"/.test(editor) && editor.includes('aria-describedby="discount-minimum-help"') && editor.includes('placeholder="No minimum"') && !/id="discount-minimum"[\s\S]{0,80}required/.test(editor), true);
+  is("the help says the minimum is checked on the first payment: a free trial's is zero, a payment plan's is one installment", editor.includes("On a membership with a free trial the first payment is zero, so the code does not come off; on a payment plan it is the first installment."), true);
+  is("a minimum in another currency than the store's is warned about", editor.includes("entry.minimum && entry.minimum.currency !== currency"), true);
   is("each code's rules are shown as text under it", editor.includes("codeRules(entry).map((rule) =>"), true);
   is("no product choice is offered, and the editor says why", editor.includes("your products are not saved as products in Stripe") && !editor.includes("applies_to") && !/first_time|firstOrder:/.test(editor), true);
   const lib = read("lib/discount.ts");

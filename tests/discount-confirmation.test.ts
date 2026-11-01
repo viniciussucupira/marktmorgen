@@ -2,7 +2,7 @@ import { readDiscountConfirmation } from "@/lib/discount-confirmation";
 import { done,is,part } from "./check";
 
 // An answer from before the optional rules (554 [DS1]) reads with none of them.
-const none={minimum:null,firstOrder:false,duration:null};
+const none={minimum:null,firstOrder:false,duration:null,otherRules:false};
 const code={id:"promo_kept",code:"Creator-Édition",off:{kind:"percent",percent:12.5},timesRedeemed:0,maxRedemptions:null,expiresAt:null,active:true};
 part("Discount confirmation requires exact readable evidence");
 for(const reply of [null,[],{}, {ok:"true",codes:[]},{ok:1,codes:[]},{ok:true},{ok:true,codes:null},{ok:true,codes:{}},{ok:true,codes:[null]},{ok:true,codes:[{}]},{ok:true,codes:[],error:"stripe"},Object.create({ok:true,codes:[]})]){

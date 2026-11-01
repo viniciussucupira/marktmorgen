@@ -37,9 +37,9 @@ export function readDiscountConfirmation(raw: unknown, httpOk: boolean): Discoun
   if(!record(row) || !own(row,["id","code","off","timesRedeemed","maxRedemptions","expiresAt","active"]) || typeof row.id !== "string" || !row.id || ids.has(row.id) || typeof row.code !== "string" || !row.code || typeof row.active !== "boolean" || !count(row.timesRedeemed) || !(row.maxRedemptions === null || (count(row.maxRedemptions) && row.maxRedemptions > 0)) || !date(row.expiresAt))return null;
   const off=readOff(row.off);if(off === false)return null;
   const minimum=readMinimum(row.minimum);const duration=readDuration(row.duration);
-  if(minimum === false || duration === false || (Object.hasOwn(row,"firstOrder") && typeof row.firstOrder !== "boolean"))return null;
+  if(minimum === false || duration === false || (Object.hasOwn(row,"firstOrder") && typeof row.firstOrder !== "boolean") || (Object.hasOwn(row,"otherRules") && typeof row.otherRules !== "boolean"))return null;
   ids.add(row.id);
-  result.push({id:row.id,code:row.code,off,timesRedeemed:row.timesRedeemed,maxRedemptions:row.maxRedemptions as number|null,expiresAt:row.expiresAt as number|null,active:row.active,minimum,firstOrder:row.firstOrder === true,duration});
+  result.push({id:row.id,code:row.code,off,timesRedeemed:row.timesRedeemed,maxRedemptions:row.maxRedemptions as number|null,expiresAt:row.expiresAt as number|null,active:row.active,minimum,firstOrder:row.firstOrder === true,duration,otherRules:row.otherRules === true});
  }
  return result;
 }
