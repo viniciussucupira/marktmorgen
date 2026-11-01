@@ -117,14 +117,38 @@ const EARNINGS: readonly RegExp[] = [
   /\b(?:six|seven)[- ]figures?\b/gi,
 ];
 
-/** Fast or easy money, or income for little effort: forbidden by the Terms, so it blocks publication. */
+/**
+ * A promise of fast or easy money, or income for little effort: forbidden by the Terms, so it blocks publication.
+ * Only a promise blocks: a verb that offers the money ("make easy money", "earn quick cash", "make money while you
+ * sleep", "get rich quick with…", "income with no effort"). The bare words ("Easy Money Habits", "quick cash register
+ * course", "avoid get-rich-quick schemes") are not stopped: see FAST_MONEY_MENTION and fastMoneyExcused.
+ */
 const FAST_MONEY: readonly RegExp[] = [
-  /\b(?:easy|quick|fast) (?:money|cash|income|profits?)\b/gi,
-  /\bmake money (?:fast|quickly|overnight|while you sleep|in your sleep|on autopilot)\b/gi,
-  /\bget[- ]rich[- ]quick\b/gi,
-  /\b(?:income|money|cash|profits?) (?:with|for) (?:no|little|zero|minimal) (?:effort|work)\b/gi,
-  /\b(?:effortless|overnight) (?:income|money|cash|riches|wealth|profits?)\b/gi,
+  /\b(?:make|makes|making|earn|earns|earning|get|gets|getting|generate|generates|generating|bring in|pull in)\s+(?:some\s+|real\s+|serious\s+|extra\s+|more\s+)?(?:easy|quick|fast)\s+(?:money|cash|income|profits?)\b/gi,
+  /\b(?:make|earn|making|earning)\s+(?:money|cash|income)\s+(?:fast|quickly|overnight|while you sleep|in your sleep|on autopilot)\b/gi,
+  /\bget[- ]rich[- ]quick\b(?=\s+(?:with|by|using|from|today|now|in)\b)/gi,
+  /\b(?:make|earn|making|earning|get|getting)\s+(?:money|cash|income|profits?)\s+(?:with|for)\s+(?:no|little|zero|minimal)\s+(?:effort|work)\b/gi,
+  /\b(?:income|money|cash|profits?)\s+(?:with|for)\s+(?:no|little|zero|minimal)\s+(?:effort|work)\b/gi,
+  /\beffortless\s+(?:income|money|cash|profits?)\b/gi,
 ];
+/** The words alone, without a verb that promises them: a warning to reread, never a block. */
+const FAST_MONEY_MENTION = /\b(?:easy|quick|fast)\s+(?:money|cash|income|profits?)\b|\bget[- ]rich[- ]quick\b|\b(?:overnight)\s+(?:income|riches|wealth)\b/gi;
+/** Words after the phrase that make it something else: cash flow, a cash register, income tax, money habits, a scheme to avoid. */
+const NOT_A_PROMISE_AFTER = /^[\s"'\u201d\u2019-]*(?:flows?|registers?|management|managing|habits?|tax(?:es)?|tips|mindset|schemes?|myths?|scams?|offers?|promises?|traps?|claims?|lies|ads?|sellers?|gurus?)\b/i;
+/** Words before it that warn against it: avoid, spot, beware, scam, fake, myth, why … fail. */
+const WARNS_AGAINST = /\b(?:avoid|avoiding|spot|spotting|beware|scams?|scammers?|fake|fraud|myths?|warning|truth about|why)\b/i;
+
+/** The phrase is quoted, followed by a word that makes it something else, asked as a question, or warned against. */
+function fastMoneyExcused(text: string, index: number, length: number): boolean {
+  const before = text.slice(Math.max(0, index - 80), index);
+  const after = text.slice(index + length, index + length + 40);
+  if (/["\u201c\u2018']\s*$/.test(before) && /^\s*["\u201d\u2019']/.test(after)) return true;
+  if (NOT_A_PROMISE_AFTER.test(after)) return true;
+  if (/^\s*\?/.test(after)) return true;
+  const clause = before.split(/[.!?;\n]/).pop() ?? "";
+  return WARNS_AGAINST.test(clause);
+}
+
 
 const URGENCY_TIME = /\b(limited time|ends (?:today|tonight|soon|at midnight)|today only|last chance|price (?:goes|will go) up|before the timer (?:runs out|ends)|act now|hurry)\b/gi;
 const URGENCY_STOCK = /\b(only \d+ (?:left|spots?|seats?|copies|places)|limited (?:spots|seats|copies|places)|selling fast|almost sold out)\b/gi;
@@ -258,11 +282,22 @@ export function checkCreatorTerms(input: TermsCheckInput): TermsWarning[] {
     }
   }
 
+  const promised: [number, number][] = [];
   for (const pattern of FAST_MONEY) {
     for (const m of text.matchAll(pattern)) {
-      if (negated(text, m.index ?? 0, m[0].length)) continue;
-      add("fast_money", m.index ?? 0, m[0].length, FAST_MONEY_WHY, FAST_MONEY_FIX);
+      const at = m.index ?? 0;
+      if (negated(text, at, m[0].length) || fastMoneyExcused(text, at, m[0].length)) continue;
+      promised.push([at, at + m[0].length]);
+      add("fast_money", at, m[0].length, FAST_MONEY_WHY, FAST_MONEY_FIX);
     }
+  }
+  for (const m of text.matchAll(FAST_MONEY_MENTION)) {
+    const at = m.index ?? 0;
+    if (promised.some(([from, to]) => at >= from && at < to)) continue;
+    if (negated(text, at, m[0].length) || fastMoneyExcused(text, at, m[0].length)) continue;
+    add("earnings_claim", at, m[0].length,
+      "This mentions fast or easy money. If it promises the buyer fast or easy money, the Terms do not allow it; if it only names the subject, it is fine.",
+      "Reread it: say what the product contains and teaches, without promising money for little effort.");
   }
 
   if (!input.realDeadline) {
@@ -352,7 +387,7 @@ const FAST_MONEY_WHY =
 const FAST_MONEY_FIX = "Remove this promise, and say what the product contains and teaches, and the work it takes.";
 
 /** Where a product is stopped: the field, the passage, why and the fix. */
-export type FastMoneyRefusal = { field: "title" | "summary" | "about"; excerpt: string; why: string; fix: string };
+export type FastMoneyRefusal = { field: "title" | "summary" | "about"; excerpt: string; why: string; fix: string; product?: string };
 
 /**
  * The first promise of fast or easy money in what a buyer reads of a product (its title, summary and description),

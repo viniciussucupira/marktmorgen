@@ -108,13 +108,16 @@ const OPTION_MESSAGES: Record<string, string> = {
  * server's own check (lib/terms-check-rules.ts, fastMoneyRefusal). Nothing the creator wrote was changed.
  */
 const FIELD_NAMES: Record<string, string> = { title: "the name", summary: "the short description", about: "the description" };
-export function fastMoneyMessage(passage: unknown): string {
+export function fastMoneyMessage(passage: unknown, mode: "add" | "save" | "publish" = "save"): string {
   const p = passage && typeof passage === "object" ? (passage as Record<string, unknown>) : {};
   const where = FIELD_NAMES[String(p.field)] ?? "the product's words";
-  const excerpt = typeof p.excerpt === "string" && p.excerpt ? ` \u201c${p.excerpt}\u201d` : "";
+  const words = typeof p.excerpt === "string" ? p.excerpt.trim().replace(/[.,;:!?]+$/, "") : "";
+  const quoted = words ? `: \u201c${words}\u201d` : "";
   const why = typeof p.why === "string" && p.why ? p.why : "The Terms do not allow selling anything that promises fast or easy money.";
   const fix = typeof p.fix === "string" && p.fix ? p.fix : "Remove the promise and say what the product contains.";
-  return `This product cannot be on your store with these words: in ${where},${excerpt}. ${why} ${fix} Nothing you wrote was changed.`;
+  const named = typeof p.product === "string" && p.product.trim() ? `\u201c${p.product.trim()}\u201d` : "This product";
+  const lead = mode === "publish" ? `${named} was not published` : mode === "add" ? "It was not added" : "Your changes were not saved";
+  return `${lead}. In ${where}${quoted}. ${why} ${fix} Nothing you wrote was changed.`;
 }
 
 /** Why a price the buyer chooses was refused, in words the creator can act on. */
@@ -277,7 +280,7 @@ async function send(
       return wrong(why === "suggested" || !PWYW_MESSAGES[why] ? pwywSuggested(currency) : PWYW_MESSAGES[why]);
     }
     if (data.error === "price") return wrong(productPrice(currency));
-    if (data.error === "fast_money") return wrong(fastMoneyMessage((data as { passage?: unknown }).passage));
+    if (data.error === "fast_money") return wrong(fastMoneyMessage((data as { passage?: unknown }).passage, payload.action === "visibility" ? "publish" : payload.action === "add" ? "add" : "save"));
     return wrong(MESSAGES[data.error ?? ""] ?? MESSAGES.server_error);
   } catch {
     return wrong(MESSAGES.server_error);

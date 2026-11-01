@@ -170,7 +170,8 @@ export async function POST(request: NextRequest) {
   // why and the fix. A draft may be saved with it; it is checked again when it
   // is published, below. The creator's words are never changed for them.
   if (action === "add" || action === "edit") {
-    const published = action === "add" || (await readListing(guarded.store, id).catch(() => null))?.hidden === false;
+    // A product that cannot be read is taken as published: a failed read never lets words through.
+    const published = action === "add" || (await readListing(guarded.store, id).catch(() => null))?.hidden !== true;
     const refused = published ? fastMoneyRefusal({ title, summary, about: about ?? "" }) : null;
     if (refused) return Response.json({ ok: false, error: "fast_money", passage: refused }, { status: 409 });
   }
@@ -334,7 +335,7 @@ export async function POST(request: NextRequest) {
         if (draft) {
           const words = draft.about && guarded.store.statsId ? await readAbout(guarded.store.statsId, draft.id) : "";
           const refused = fastMoneyRefusal({ title: draft.title, summary: draft.summary, about: words });
-          if (refused) return Response.json({ ok: false, error: "fast_money", passage: refused }, { status: 409 });
+          if (refused) return Response.json({ ok: false, error: "fast_money", passage: { ...refused, product: draft.title } }, { status: 409 });
         }
       }
       const done = await setProductHidden(ref, id, body.hidden);
