@@ -201,6 +201,16 @@ export function customerTaxCollectionState(review: unknown): 'legacy' | 'tx' | '
   } catch { return 'unknown'; }
 }
 
+/** Retain the original fiscal kind across outer snapshots; TX presence must
+ * never be downgraded into legacy absence while capturing policy/context. */
+export function customerTaxContractContextState(value: unknown): 'legacy' | 'tx' | 'unknown' {
+  try {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) return 'unknown';
+    const d = Object.getOwnPropertyDescriptor(value, 'review');
+    return d && Object.hasOwn(d, 'value') ? customerTaxCollectionState(d.value) : 'unknown';
+  } catch { return 'unknown'; }
+}
+
 /** Legacy reviews retain their existing protection until mandatory migration.
  * TX may fund a contract only when every present scope is bound to the exact
  * existing policy and covers the actual admission time and full liability range.

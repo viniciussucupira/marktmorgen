@@ -42,6 +42,20 @@ test('paid resources use the same fully bound TX contract rather than a test-onl
  const callsBefore=calls.length;f.policy.liabilitiesThrough=new Date(Date.parse(f.policy.liabilitiesThrough)+1).toISOString();
  assert.equal(await reservePaidResourceWindow(f.store,f.policy,f.context),false);assert.equal(calls.length,callsBefore);
 });
+test('paid resources reject a policy whose captured tail outlives its fiscal books before any ledger call',async()=>{
+ const f=await setup('year',{taxCoverage:true});f.policy.reservedFundsCents=1e12;
+ const last=Reflect.ownKeys(f.policy).at(-1);let copying=false;
+ const proxy=new Proxy(f.policy,{ownKeys(target){copying=true;return Reflect.ownKeys(target);},getOwnPropertyDescriptor(target,key){
+  const descriptor=Reflect.getOwnPropertyDescriptor(target,key);if(!descriptor)return descriptor;
+  const capture=copying;if(key===last)copying=false;
+  if(capture&&key==='reviewedLiabilityTailDays')return {...descriptor,value:descriptor.value+400};
+  if(capture&&key==='liabilitiesThrough')return {...descriptor,value:new Date(Date.parse(descriptor.value)+800*86400000).toISOString()};
+  return descriptor;
+ }});
+ const count=calls.length,before=[...f.h];
+ assert.equal(await reservePaidResourceWindow(f.store,proxy,f.context),false);
+ assert.equal(calls.length,count);assert.deepEqual([...f.h],before);assert.equal(f.h.has('resource:ctr_resources:0'),false);
+});
 test('64 resource observations share one paid monthly cohort and retain every cent, grant and slot',async()=>{
  const f=await setup(),before=new Map(f.h);
  assert.equal((await Promise.all(Array.from({length:64},()=>reservePaidResourceWindow(f.store,f.policy,f.context)))).every(Boolean),true);

@@ -34,6 +34,50 @@ test('explicit TX calendar coverage funds and activates the same production cont
  assert.equal(await activateCheckoutContract(activation(),f.policy,f.context),true);
  assert.equal(ledger.get(key)!.get('reserved'),String(more.grantCents.creator_month));
 });
+function expandedOnlyWhileCopying(policy:ReturnType<typeof contractTaxFixture>['policy']){
+ const last=Reflect.ownKeys(policy).at(-1);let copying=false;
+ return new Proxy(policy,{ownKeys(target){copying=true;return Reflect.ownKeys(target);},getOwnPropertyDescriptor(target,key){
+  const descriptor=Reflect.getOwnPropertyDescriptor(target,key);if(!descriptor)return descriptor;
+  const capture=copying;if(key===last)copying=false;
+  if(capture&&key==='reviewedLiabilityTailDays')return {...descriptor,value:descriptor.value+400};
+  if(capture&&key==='liabilitiesThrough')return {...descriptor,value:new Date(Date.parse(descriptor.value)+800*86400000).toISOString()};
+  return descriptor;
+ }});
+}
+test('contract configuration checks fiscal coverage against the policy actually captured, not an earlier Proxy view',()=>{
+ const f=contractTaxFixture();f.policy.reservedFundsCents=1e12;
+ assert.ok(contractFundingConfiguration(f.policy,f.context,f.now));
+ assert.equal(contractFundingConfiguration(expandedOnlyWhileCopying(f.policy),f.context,f.now),null);
+});
+test('a policy changing its effective tail during capture cannot reserve outside the tax books or perform Redis IO',async()=>{
+ const f=contractTaxFixture();f.policy.reservedFundsCents=1e12;const original=contractFundingConfiguration(f.policy,f.context,f.now)!;assert.ok(original);
+ const proxy=expandedOnlyWhileCopying(f.policy),candidate=contractFundingConfiguration(proxy,f.context,f.now);
+ reset();seed(candidate??original);const before=[...ledger.get(key)!];
+ assert.equal(await reserveContractFunding('tx-proxy-policy','creator','year','checkout',proxy,f.context,'ctr_tx_proxy_policy'),null);
+ assert.equal(calls.length,0);assert.deepEqual([...ledger.get(key)!],before);
+});
+test('a context cannot expose TX before capture and silently downgrade to legacy during an outer snapshot',async()=>{
+ const f=contractTaxFixture();f.policy.reservedFundsCents=1e12;
+ for(const row of Object.values(f.review.scenarios)){
+  const pretax=row!.collectedRevenueCents!-row!.refundableRevenueCents!-CUSTOMER_COST_CATEGORIES.reduce((sum,k)=>sum+row!.costCeilings[k]!,0);
+  row!.taxesCeilingCents=Math.ceil(pretax*.4);
+ }
+ f.policy.financialSnapshot=canonicalFinancialSnapshot(f.review)!;
+ assert.ok(contractFundingConfiguration(f.policy,f.context,f.now));
+ const legacy=structuredClone(f.review);for(const row of Object.values(legacy.scenarios)){delete row!.taxReview;delete row!.taxContext;}
+ const legacySnapshot=canonicalFinancialSnapshot(legacy)!;
+ function swapping<T extends object>(target:T,field:string,replacement:unknown):T{
+  const last=Reflect.ownKeys(target).at(-1);let copying=false;
+  return new Proxy(target,{ownKeys(value){copying=true;return Reflect.ownKeys(value);},getOwnPropertyDescriptor(value,key){
+   const d=Reflect.getOwnPropertyDescriptor(value,key);if(!d)return d;const capture=copying;if(key===last)copying=false;
+   return capture&&key===field?{...d,value:replacement}:d;
+  }});
+ }
+ const context=swapping(f.context,'review',legacy),policy=swapping(f.policy,'financialSnapshot',legacySnapshot);
+ assert.equal(canonicalFinancialSnapshot(context),null);
+ assert.equal(contractFundingConfiguration(policy,context,f.now),null);
+ reset();assert.equal(await reserveContractFunding('tx-downgrade','creator','year','checkout',policy,context,'ctr_tx_downgrade'),null);assert.equal(calls.length,0);
+});
 test('actual contract coverage includes every calendar book across a November admission and its existing liability horizon',t=>{
  t.mock.timers.enable({apis:['Date'],now:new Date('2026-11-01T12:00:00.000Z')});
  try{
