@@ -441,12 +441,20 @@ export function DealsBoard({ deals, stages: everyStage, pipelines: savedPipeline
               <ol className="mt-3 space-y-3">
                 {pipelineDraft.stages.map((stage, i) => (
                   <li key={stage.id} className="flex flex-wrap items-center gap-2">
-                    <input className="field min-w-0 flex-1" aria-label={`Stage ${i + 1}`} maxLength={MAX_STAGE_NAME} value={stage.name} onChange={(e) => setPipelineDraft({ ...pipelineDraft, stages: pipelineDraft.stages.map((s, j) => (j === i ? { ...s, name: e.target.value } : s)) })} />
-                    <select className="field w-auto" aria-label={`What stage ${i + 1} means`} value={stage.kind} onChange={(e) => setPipelineDraft({ ...pipelineDraft, stages: pipelineDraft.stages.map((s, j) => (j === i ? { ...s, kind: e.target.value as StageKind } : s)) })}>
-                      <option value="open">Open</option>
-                      <option value="won">Won</option>
-                      <option value="lost">Lost</option>
-                    </select>
+                    {/* A visible name of its own (487 [IT4], item 4). */}
+                    {/* The whole line on a phone, so its name and field are never squeezed by the controls beside them. */}
+                    <label className="flex min-w-0 basis-full items-center gap-2 sm:basis-0 sm:flex-1">
+                      <span className="shrink-0 text-sm text-ink-soft">{`Stage ${i + 1}`}</span>
+                      <input className="field min-w-0 flex-1" maxLength={MAX_STAGE_NAME} value={stage.name} onChange={(e) => setPipelineDraft({ ...pipelineDraft, stages: pipelineDraft.stages.map((s, j) => (j === i ? { ...s, name: e.target.value } : s)) })} />
+                    </label>
+                    <label className="flex items-center gap-2 text-sm text-ink-soft">
+                      Counts as
+                      <select className="field w-auto" aria-label={`Counts as, for stage ${i + 1}`} value={stage.kind} onChange={(e) => setPipelineDraft({ ...pipelineDraft, stages: pipelineDraft.stages.map((s, j) => (j === i ? { ...s, kind: e.target.value as StageKind } : s)) })}>
+                        <option value="open">Open</option>
+                        <option value="won">Won</option>
+                        <option value="lost">Lost</option>
+                      </select>
+                    </label>
                     <button type="button" className="btn btn-secondary btn-sm" disabled={i === 0} onClick={() => moveStage(i, i - 1)} aria-label={`Move stage ${i + 1} up`}>Up</button>
                     <button type="button" className="btn btn-secondary btn-sm" disabled={i === pipelineDraft.stages.length - 1} onClick={() => moveStage(i, i + 1)} aria-label={`Move stage ${i + 1} down`}>Down</button>
                     <button type="button" className="btn btn-secondary btn-sm" onClick={() => setPipelineDraft({ ...pipelineDraft, stages: pipelineDraft.stages.filter((_, j) => j !== i) })} aria-label={`Remove stage ${i + 1}`}>
@@ -528,30 +536,39 @@ export function DealsBoard({ deals, stages: everyStage, pipelines: savedPipeline
           {`Up to ${MAX_CRM_FIELDS} things you keep about each person: their company, a date, which offer interests them. Filled in on each person's page under Buyers, and written into your list's file as columns of their own. Removing a field removes every answer to it.`}
         </p>
         {fieldDraft ? (
-          <fieldset disabled={locked} aria-busy={locked} className="min-w-0 mt-6 rounded-2xl border border-line bg-white p-4 sm:p-6">
-            <legend className="sr-only">Custom fields</legend>
+          <fieldset disabled={locked} aria-busy={locked} aria-labelledby="crm-fields-title" className="min-w-0 mt-6 rounded-2xl border border-line bg-white p-4 sm:p-6">
+            {/* Named by its visible heading, "Your fields", rather than a name only a screen reader hears. */}
             <ol className="space-y-3">
               {fieldDraft.map((field, i) => (
-                <li key={field.id} className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_12rem_auto]">
-                  <input className="field" aria-label={`Field ${i + 1}`} maxLength={MAX_FIELD_NAME} placeholder="Company" value={field.name} onChange={(e) => setFieldDraft(fieldDraft.map((f, j) => (j === i ? { ...f, name: e.target.value } : f)))} />
-                  <select className="field" aria-label={`Kind of field ${i + 1}`} value={field.type} onChange={(e) => setFieldDraft(fieldDraft.map((f, j) => (j === i ? { ...f, type: e.target.value as FieldType } : f)))}>
-                    {FIELD_TYPES.map((t) => (
-                      <option key={t.type} value={t.type}>
-                        {t.label}
-                      </option>
-                    ))}
-                  </select>
+                <li key={field.id} className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_12rem_auto] sm:items-end">
+                  <label className="block min-w-0">
+                    <span className="text-sm text-ink-soft">{`Field ${i + 1}`}</span>
+                    <input className="field mt-1" maxLength={MAX_FIELD_NAME} placeholder="Company" value={field.name} onChange={(e) => setFieldDraft(fieldDraft.map((f, j) => (j === i ? { ...f, name: e.target.value } : f)))} />
+                  </label>
+                  <label className="block min-w-0">
+                    <span className="text-sm text-ink-soft">Kind</span>
+                    <select className="field mt-1" aria-label={`Kind of field ${i + 1}`} value={field.type} onChange={(e) => setFieldDraft(fieldDraft.map((f, j) => (j === i ? { ...f, type: e.target.value as FieldType } : f)))}>
+                      {FIELD_TYPES.map((t) => (
+                        <option key={t.type} value={t.type}>
+                          {t.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
                   <button type="button" className="btn btn-secondary btn-sm" onClick={() => setFieldDraft(fieldDraft.filter((_, j) => j !== i))} aria-label={`Remove field ${i + 1}`}>
                     <Icon name="minus" size={16} />
                   </button>
                   {field.type === "choice" ? (
-                    <input
-                      className="field sm:col-span-3"
-                      aria-label={`Choices for field ${i + 1}, separated by commas`}
-                      placeholder="Coaching, Course, Not sure yet"
-                      value={field.optionsText}
-                      onChange={(e) => setFieldDraft(fieldDraft.map((f, j) => (j === i ? { ...f, optionsText: e.target.value } : f)))}
-                    />
+                    <label className="block min-w-0 sm:col-span-3">
+                      <span className="text-sm text-ink-soft">Choices, separated by commas</span>
+                      <input
+                        className="field mt-1"
+                        aria-label={`Choices, separated by commas, for field ${i + 1}`}
+                        placeholder="Coaching, Course, Not sure yet"
+                        value={field.optionsText}
+                        onChange={(e) => setFieldDraft(fieldDraft.map((f, j) => (j === i ? { ...f, optionsText: e.target.value } : f)))}
+                      />
+                    </label>
                   ) : null}
                 </li>
               ))}

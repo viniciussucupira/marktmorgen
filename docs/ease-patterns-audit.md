@@ -33,17 +33,21 @@ The screen-by-screen audit that 487 [IT4] asks for: what was checked, what was f
 - **`aria-label` only: 21 fields.** Read so far:
   - **A field in a visibly named list,** with the list's name shown above it and the label giving its position: the deal stages ("Stages, in order"), the quiz answers ("Answers — check the right…"), the creator's own leaving reasons. The deal stages' "What stage N means" `<select>` also has only an `aria-label`. Its list name is a paragraph, not a legend, so it is counted with the six still to read.
   - **Read-only text to copy,** under its visible name or heading: the funnel's launch checklist, a short link, the campaign link, the store's share link.
-  - **Not yet read in context:**
-    - the quiz scoring categories;
-    - the deal custom fields (their legend is screen-reader only);
-    - the email designer's blocks;
-    - the team event hosts;
-    - the call editor's per-person fields;
-    - the form options.
+  - **Read in the second pass:**
+    - The email designer's blocks have a visible type ("Heading", "Text") above each field, and the spoken name starts with it.
+    - The opening hours of a call, and of a team event's hosts, are named by the day and the word "to" shown beside them, and the spoken name starts with them.
+    - Four lists were named only by a placeholder that goes when typing starts: the quiz scoring categories, the form options, the pipeline stages and the deal custom fields. The custom fields' list also had a legend only a screen reader hears.
 
 **Fixed.**
 - The podcast episode's title and notes now have visible labels, "Episode title" and "Episode notes".
 - The home page field changes the hero's look, so it waits for the home page work under 571 [VS1].
+- Second pass: each row of those four lists now has a visible name of its own, "Category 1", "Option 1", "Stage 1" or "Field 1", tied to its field. The custom fields' list is named by its visible heading, "Your fields".
+- The selects beside those rows now show a visible word that starts their spoken name, as "Points" already did:
+  - "Category", "Result" and "Next" beside a form option;
+  - "Counts as" beside a pipeline stage;
+  - "Kind" and "Choices, separated by commas" on a custom field.
+
+  On a phone, a long choice ("Then skip to question 12: …") now shrinks inside its row instead of making the page scroll sideways.
 
 ## Pattern 3: the common value filled in, never the dearest (1 November 2026)
 
@@ -202,12 +206,10 @@ The screen-by-screen audit that 487 [IT4] asks for: what was checked, what was f
 
 **Found on the way, not changed here.** The store's muted text on the "sand" theme is 6.51:1 (#5c5244 on #f3ece0, `lib/store-look.ts`), below the 7:1 AAA asks for small text. It is used on published store pages too, so it is the theme's to fix, in its own unit, with every page that uses it checked. The "light" (8.70:1) and "night" (10.14:1) themes pass.
 
-**Still to do, most used first:**
-- the product editor;
-- checkout settings;
-- the community composer.
-
-Each needs the buyer's page drawn from the unsaved draft by the page's own code, so each gets its own unit.
+**Still to do, most used first, each with what it needs:**
+- **The product editor.** The product page (`app/[handle]/p/[product]/page.tsx`, 717 lines) is drawn on the server, from dozens of server-only parts: recent sales, the cart, the headline test, sold counts. A faithful preview from the draft first needs its top, price and description pulled into a component that draws from plain data on both sides. That is its own unit, with the page's tests run before and after.
+- **Checkout settings.** The checkout is Stripe's own hosted page, so it cannot be drawn here faithfully. A preview there would be a guess, so none is shown. The honest way to see it is a test checkout in the creator's Stripe test mode.
+- **The community composer.** Its words are in the buyer's language, in seven languages, so a preview's sentences need writing in each of them under the rules for buyer languages.
 
 ## Where each pattern stands
 
@@ -215,7 +217,7 @@ Numbered as in 487 [IT4]:
 1. Checked when the field is left: first pass done for every web address field (see pattern 1), except the tracking link, held by an open PR. Other kinds of field not yet audited.
 2. The right keyboard on a phone: done (see pattern 2); "Move to" in its own PR, now that its file is free.
 3. The common value filled in, never the dearest: audited (see pattern 3). The "Recommended" price option waits on the owner.
-4. A label always visible: first pass done (see pattern 4). Six fields still to be read in context, and the home page field.
+4. A label always visible: two passes done (see pattern 4). The home page field remains.
 5. Empty screens with a sentence, a button and a ready example: first pass done (see pattern 5). Four screens fixed; ready examples for five screens still to write.
 6. Drafts never lost: done for the editors read (see pattern 6). Saving by itself, with "Saving…" and "Saved", is not built yet, because it needs its own ceiling on saves per plan first.
 7. A live phone preview beside each editor: first pass done (see pattern 7). The page, email, blog and lesson editors have it; three editors are listed.
