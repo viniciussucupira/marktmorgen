@@ -41,7 +41,14 @@ export const MAX_WARNINGS = 30;
 /** Characters shown on each side of a passage. */
 const AROUND = 40;
 
-export type TermsWarningKind = "other_company" | "price_mismatch" | "no_refunds" | "earnings_claim" | "false_urgency" | "resale_rights";
+export type TermsWarningKind = "other_company" | "price_mismatch" | "no_refunds" | "earnings_claim" | "fast_money" | "false_urgency" | "resale_rights";
+
+/**
+ * The kinds that stop a product from being published, not only warn (567 [GD1] (d)): what the Terms already forbid.
+ * "What you may not sell" (app/terms/page.tsx) includes "anything that promises fast or easy money, or income for
+ * little effort". Every other kind is a warning the creator may act on or not.
+ */
+export const BLOCKING_KINDS: ReadonlySet<TermsWarningKind> = new Set<TermsWarningKind>(["fast_money"]);
 
 /**
  * `at` and `length` place the words in the text read (the first MAX_TEXT characters), for the studio to offer the
@@ -108,6 +115,15 @@ const EARNINGS: readonly RegExp[] = [
   /\bfinancial freedom\b/gi,
   /\breplace your (?:job|income|salary)\b/gi,
   /\b(?:six|seven)[- ]figures?\b/gi,
+];
+
+/** Fast or easy money, or income for little effort: forbidden by the Terms, so it blocks publication. */
+const FAST_MONEY: readonly RegExp[] = [
+  /\b(?:easy|quick|fast) (?:money|cash|income|profits?)\b/gi,
+  /\bmake money (?:fast|quickly|overnight|while you sleep|in your sleep|on autopilot)\b/gi,
+  /\bget[- ]rich[- ]quick\b/gi,
+  /\b(?:income|money|cash|profits?) (?:with|for) (?:no|little|zero|minimal) (?:effort|work)\b/gi,
+  /\b(?:effortless|overnight) (?:income|money|cash|riches|wealth|profits?)\b/gi,
 ];
 
 const URGENCY_TIME = /\b(limited time|ends (?:today|tonight|soon|at midnight)|today only|last chance|price (?:goes|will go) up|before the timer (?:runs out|ends)|act now|hurry)\b/gi;
@@ -242,6 +258,13 @@ export function checkCreatorTerms(input: TermsCheckInput): TermsWarning[] {
     }
   }
 
+  for (const pattern of FAST_MONEY) {
+    for (const m of text.matchAll(pattern)) {
+      if (negated(text, m.index ?? 0, m[0].length)) continue;
+      add("fast_money", m.index ?? 0, m[0].length, FAST_MONEY_WHY, FAST_MONEY_FIX);
+    }
+  }
+
   if (!input.realDeadline) {
     for (const m of text.matchAll(URGENCY_TIME)) {
       if (negated(text, m.index ?? 0, m[0].length)) continue;
@@ -322,4 +345,25 @@ export function withoutSentence(text: string, at: number, expected?: string): st
 export function replaceWords(text: string, at: number, length: number, expected: string, replacement: string): string {
   if (text.slice(at, at + length) !== expected) return text;
   return `${text.slice(0, at)}${replacement}${text.slice(at + length)}`;
+}
+
+const FAST_MONEY_WHY =
+  "This promises fast or easy money, or income for little effort. The Terms do not allow selling anything that promises fast or easy money, so the product cannot be published with it.";
+const FAST_MONEY_FIX = "Remove this promise, and say what the product contains and teaches, and the work it takes.";
+
+/** Where a product is stopped: the field, the passage, why and the fix. */
+export type FastMoneyRefusal = { field: "title" | "summary" | "about"; excerpt: string; why: string; fix: string };
+
+/**
+ * The first promise of fast or easy money in what a buyer reads of a product (its title, summary and description),
+ * or null. The product route refuses to publish a product, or to save a published one, while there is one; the
+ * creator's words are never changed for them.
+ */
+export function fastMoneyRefusal(product: { title: string; summary: string; about: string }): FastMoneyRefusal | null {
+  for (const field of ["title", "summary", "about"] as const) {
+    const found = checkCreatorTerms({ text: product[field] ?? "", ownHosts: [], priceCents: null, currency: "usd", immediateAccessConsent: true, realDeadline: true, realStockLimit: true, resaleLicense: true })
+      .find((warning) => BLOCKING_KINDS.has(warning.kind));
+    if (found) return { field, excerpt: found.excerpt, why: found.why, fix: found.fix };
+  }
+  return null;
 }

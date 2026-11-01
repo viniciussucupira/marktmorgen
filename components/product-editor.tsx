@@ -103,6 +103,20 @@ const OPTION_MESSAGES: Record<string, string> = {
   store_full: "Your store has reached the most it can hold. Remove something, or shorten a long list of choices, to make room.",
 };
 
+/**
+ * Why a product was not published or saved (567 [GD1] (d)): the words, where they are, why and the fix, from the
+ * server's own check (lib/terms-check-rules.ts, fastMoneyRefusal). Nothing the creator wrote was changed.
+ */
+const FIELD_NAMES: Record<string, string> = { title: "the name", summary: "the short description", about: "the description" };
+export function fastMoneyMessage(passage: unknown): string {
+  const p = passage && typeof passage === "object" ? (passage as Record<string, unknown>) : {};
+  const where = FIELD_NAMES[String(p.field)] ?? "the product's words";
+  const excerpt = typeof p.excerpt === "string" && p.excerpt ? ` \u201c${p.excerpt}\u201d` : "";
+  const why = typeof p.why === "string" && p.why ? p.why : "The Terms do not allow selling anything that promises fast or easy money.";
+  const fix = typeof p.fix === "string" && p.fix ? p.fix : "Remove the promise and say what the product contains.";
+  return `This product cannot be on your store with these words: in ${where},${excerpt}. ${why} ${fix} Nothing you wrote was changed.`;
+}
+
 /** Why a price the buyer chooses was refused, in words the creator can act on. */
 const PWYW_MESSAGES: Record<string, string> = {
   recurring: "A membership charges the same amount each time, so its buyers cannot choose it. Stripe lets a buyer choose the amount of a one-off payment only.",
@@ -263,6 +277,7 @@ async function send(
       return wrong(why === "suggested" || !PWYW_MESSAGES[why] ? pwywSuggested(currency) : PWYW_MESSAGES[why]);
     }
     if (data.error === "price") return wrong(productPrice(currency));
+    if (data.error === "fast_money") return wrong(fastMoneyMessage((data as { passage?: unknown }).passage));
     return wrong(MESSAGES[data.error ?? ""] ?? MESSAGES.server_error);
   } catch {
     return wrong(MESSAGES.server_error);

@@ -9,6 +9,7 @@ const TITLES: Record<TermsWarningKind, string> = {
   price_mismatch: "A different price",
   no_refunds: "No refunds",
   earnings_claim: "A promise of earnings or results",
+  fast_money: "Fast or easy money: not allowed by the Terms",
   false_urgency: "Urgency with nothing real behind it",
   resale_rights: "Resale rights",
 };
