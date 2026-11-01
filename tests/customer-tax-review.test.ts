@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { CUSTOMER_TAX_REVIEW_POLICY, OTHER_CUSTOMER_TAX_COMPONENTS, customerTaxCeiling, customerTaxScenarioMatches } from '../lib/customer-tax-review';
+import { CUSTOMER_TAX_REVIEW_POLICY, OTHER_CUSTOMER_TAX_COMPONENTS, customerTaxCeiling, customerTaxScenarioMatches, captureCustomerTaxInput } from '../lib/customer-tax-review';
 import { assessCustomerWorstCase, type CustomerWorstCase } from '../lib/net-margin-rules';
 import { assessMinimumCustomerBase } from '../lib/customer-base-rules';
 import { txCustomerFixture, syntheticTaxEvidence } from './customer-tax-review-fixture';
@@ -123,4 +123,20 @@ test('the minimum company base uses the actual assessed net; positive net and fi
   assert.equal(assessMinimumCustomerBase([{ months: 1, scenario: invalid }], fixed).minimumCustomers, null);
   r.costCeilings.other = 8462; assert.equal(evaluate(r).reason, 'below_floor');
   r.costCeilings.other++; assert.equal(evaluate(r).approved, false);
+});
+
+test('oversize fiscal strings still refuse with exact commercial snapshot binding supported',()=>{
+ const r=txCustomerFixture();r.taxReview!.coverage.facts='x'.repeat(32769);
+ assert.equal(evaluate(r).reason,'tax_review_unknown');
+});
+
+test('the shared TX input capture detaches exactly the two own evidence fields without executing hooks',()=>{
+ const source=txCustomerFixture(),pair={taxReview:source.taxReview!,taxContext:source.taxContext!};
+ const captured=captureCustomerTaxInput(pair);assert.ok(captured);assert.notEqual(captured.taxReview,pair.taxReview);
+ const original=customerTaxCeiling(captured.taxReview,captured.taxContext,{revenueCents:10000,refundableCents:0,pretaxCents:BigInt(10000)});
+ assert.equal(original,1538);pair.taxReview.iof.facts='';
+ assert.equal(customerTaxCeiling(captured.taxReview,captured.taxContext,{revenueCents:10000,refundableCents:0,pretaxCents:BigInt(10000)}),original);
+ let reads=0;const hostile={taxContext:source.taxContext};Object.defineProperty(hostile,'taxReview',{enumerable:true,get(){reads++;throw Error('must not execute');}});
+ for(const value of [null,{},Object.create(pair),{...pair,extra:true},{taxReview:null,taxContext:null},hostile])assert.equal(captureCustomerTaxInput(value),null);
+ assert.equal(reads,0);
 });
