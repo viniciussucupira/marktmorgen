@@ -1,6 +1,7 @@
 import { COMMISSION_BPS, COMMISSION_PLANS_PUBLISHED } from "@/lib/plan";
 import { Icon, type IconName } from "@/components/icons";
 import { BumpDemo, OptionsDemo } from "@/components/feature-demos";
+import { FUNNEL_TYPES, choicesOf, pagesOf } from "@/lib/funnel-types";
 
 /**
  * The pictures at the top of each feature page.
@@ -21,7 +22,8 @@ export type VisualKey =
   | "checkout"
   | "email"
   | "domain"
-  | "insights";
+  | "insights"
+  | "funnels";
 
 /*
  * The frame every one of these mockups sits in.
@@ -381,6 +383,35 @@ function InsightsVisual() {
   );
 }
 
+/**
+ * The kinds of funnel the studio starts from (531 [VP1]), read from the same
+ * list the studio and the route that builds a funnel read
+ * (lib/funnel-types.ts), under the studio's own heading
+ * (components/funnel-type-picker.tsx): their names, in their order, and
+ * what each asks of the creator, counted from its own steps. Nothing here is
+ * made up.
+ */
+const plural = (n: number, one: string) => `${n} ${one}${n === 1 ? "" : "s"}`;
+function FunnelsVisual() {
+  const shown = FUNNEL_TYPES.slice(0, 5);
+  const more = FUNNEL_TYPES.length - shown.length;
+  return (
+    <Window bar="Start from a kind of funnel">
+      <div className="space-y-2 p-5">
+        {shown.map((type) => (
+          <Row
+            key={type.id}
+            icon="ladder"
+            title={type.label}
+            sub={`${plural(choicesOf(type).length, "product")} to choose · ${plural(pagesOf(type).length, "new page")}`}
+          />
+        ))}
+        {more > 0 ? <p className="pt-1 text-center text-[12px] font-semibold text-ink-soft">{`and ${plural(more, "more kind")}`}</p> : null}
+      </div>
+    </Window>
+  );
+}
+
 const CAPTIONS: Record<VisualKey, string> = {
   store: "A store page, drawn from the demo store you can open and buy from.",
   options: "The buyer is charged the price they picked, as the creator saved it.",
@@ -393,6 +424,7 @@ const CAPTIONS: Record<VisualKey, string> = {
   email: "Writing to your list from the studio. The subject and steps are an example.",
   domain: "A store on its own domain, with the one record to add.",
   insights: "The numbers screen in the studio. The bars are an example, not our figures.",
+  funnels: "The kinds of funnel the studio starts from, read from its own list.",
 };
 
 /**
@@ -413,6 +445,7 @@ export function FeatureVisual({ visual, tone = "dark" }: { visual: VisualKey; to
     email: <EmailVisual />,
     domain: <DomainVisual />,
     insights: <InsightsVisual />,
+    funnels: <FunnelsVisual />,
   }[visual];
   const interactive = visual === "options" || visual === "checkout";
   return (
