@@ -6,9 +6,12 @@
  * Read from the same two numbers the page already shows, the people the
  * email would reach (counted by the server for the choices made) and the
  * month's emails used and allowed (lib/mail.ts), so it adds no request.
- * Sequences use the same month, so the line says "right now". Nothing is
- * sent from here: the server still refuses an email that would go past the
- * month, and nothing goes without the creator pressing send.
+ * Sequences, tests and notices use the same month, so the line says "right
+ * now" and "up to". Nothing is sent from here: the server refuses an email
+ * that would go past the month before it starts (lib/broadcasts.ts, in the
+ * plan's own window), and nothing goes without the creator pressing send.
+ * The composer leaves the line out for an email scheduled for later and
+ * when the plan's month cannot be told.
  *
  * Browser-safe: a pure function.
  */
@@ -25,12 +28,13 @@ export function sendCount(reach: number, used: number, allowance: number): SendC
   if (reach > left) {
     return {
       over: true,
-      line: `This email needs ${emails(reach)}, and ${left === 0 ? "none are" : `${emails(left)} ${left === 1 ? "is" : "are"}`} left this month right now. Send it to a smaller group, or next month.`,
+      line: `This email needs ${emails(reach)}, and ${left === 0 ? "none are" : left === 1 ? "1 is" : `${n(left)} are`} left this month right now. Send it to a smaller group, or send it next month.`,
     };
   }
+  // Sequences, tests and notices use the same month, so the times are "up to", never a promise.
   const times = Math.floor(left / reach);
   return {
     over: false,
-    line: `This email uses ${n(reach)} of the ${emails(left)} left this month right now. ${times === 1 ? "That is enough for this one only." : `That is enough to write to these people ${n(times)} times this month, this one included.`}`,
+    line: `This email uses ${emails(reach)}; ${left === 1 ? "1 is" : `${n(left)} are`} left this month right now. ${times === 1 ? "That leaves room for this one only." : `If nothing else uses emails, that is enough to write to these people up to ${n(times)} times this month, this one included.`}`,
   };
 }

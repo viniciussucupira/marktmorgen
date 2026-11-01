@@ -194,6 +194,7 @@ export default async function StudioEmailPage({ searchParams }: Params) {
             counts={counts}
             used={used}
             allowance={allowance}
+            monthKnown={windowId(store) !== null}
             trial={trial}
             // The way up for a list that has outgrown Pro, offered beside the
             // month's count to whoever may change the plan (lib/plan.ts).
