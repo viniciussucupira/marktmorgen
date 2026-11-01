@@ -3,6 +3,7 @@
 import type { LibraryEmailDraft, LibrarySequenceDraft } from "@/lib/template-library-intents";
 import { AiAssist, AiOn } from "@/components/ai-assist";
 import { sendCount } from "@/lib/send-count";
+import { afterSwitch, emailName, setAsideCount, setAsideNote, takeNewest } from "@/lib/set-aside";
 import { EMAIL_GOALS, type EmailGoal } from "@/lib/ai-rules";
 import { appendSequenceDraft, sequenceDraftSlots, DEFAULT_SEQUENCE_DRAFT, type DraftedStep, SEQUENCE_DRAFT_COUNTS } from "@/lib/sequence-draft";
 import { PRO_MONTHLY_EMAILS, TRIAL_MONTHLY_EMAILS } from "@/lib/plan";
@@ -344,15 +345,20 @@ export function EmailStudio(props: {
   const [open, setOpen] = useState<DraftRow | null>(null);
   const [composeRevision, setComposeRevision] = useState(0);
   const composerState = useRef<ComposerHandle | null>(null);
-  // Unsaved changes set aside by opening another email, with the email they belonged to (485 [IT2]): kept in this page only, never sent or saved.
-  const [setAside, setSetAside] = useState<{ snapshot: ComposerSnapshot; from: DraftRow | null } | null>(null);
+  // Unsaved changes set aside by opening another email, with the email they belonged to (485 [IT2]): kept in this page only, never sent
+  // or saved. A list, newest last, so a second switch never drops what an earlier one set aside.
+  const [setAside, setSetAside] = useState<{ snapshot: ComposerSnapshot; from: DraftRow | null }[]>([]);
   const [restore, setRestore] = useState<ComposerSnapshot | undefined>(undefined);
+  // What the polite region says: a different sentence for each thing that happened, so each is read out.
+  const [asideNote, setAsideNoteText] = useState("");
   // Leaving the page would lose what was set aside, so it asks as for changes on screen (components/leave-guard.ts).
-  useLeaveGuard(setAside !== null);
-  const switchTo = (draft: DraftRow | null, restoring?: ComposerSnapshot) => {
+  useLeaveGuard(setAside.length > 0);
+  const switchTo = (draft: DraftRow | null, restoring?: ComposerSnapshot, rest = setAside) => {
     // Opening another email over unsaved changes no longer asks first: they are set aside, and one press brings them back.
     const current = composerState.current;
-    setSetAside(current?.dirty ? { snapshot: current.snapshot(), from: open } : null);
+    const kept = current?.dirty ? current.snapshot() : null;
+    setSetAside(afterSwitch(rest, kept, open));
+    setAsideNoteText(setAsideNote(kept, restoring ?? null));
     setLibraryEmail(undefined);
     setOpen(draft);
     setRestore(restoring);
@@ -367,8 +373,10 @@ export function EmailStudio(props: {
     switchTo(draft);
   };
   const bringBack = () => {
-    if (!setAside || composerState.current?.busy) return;
-    switchTo(setAside.from, setAside.snapshot);
+    if (composerState.current?.busy) return;
+    // The newest set aside; a draft deleted since comes back as a new email (lib/set-aside.ts).
+    const newest = takeNewest(setAside, props.drafts);
+    if (newest) switchTo(newest.from, newest.snapshot, newest.rest);
   };
   const [uncertainList, setUncertainList] = useState<FlowRow[] | null>(null);
   const writeUnconfirmed = uncertainList === props.flows;
@@ -381,12 +389,17 @@ export function EmailStudio(props: {
           <>
             {draftCleanupUnconfirmed ? <p role="status" className="mb-4 rounded-[var(--r-md)] bg-sand p-4 text-sm text-ink-soft">Your campaign was created, but clearing its saved draft could not be confirmed. Check Sent and scheduled before sending that draft again.</p> : null}
             <AiOn value={props.ai ?? { on: false, left: 0 }}>
-              {/* A polite live region always on the page, so setting changes aside is read out (485 [IT2]). */}
+              {/* A polite live region always on the page, so what is set aside and brought back is read out (485 [IT2]). */}
               <div aria-live="polite" className="mb-4">
-                {setAside ? (
+                {asideNote || setAside.length > 0 ? (
                   <p className="rounded-[var(--r-md)] bg-sand p-4 text-sm text-ink">
-                    Your unsaved changes to the other email were set aside.{" "}
-                    <button type="button" className="btn btn-secondary btn-sm ml-1" onClick={bringBack}>Bring them back</button>
+                    {asideNote || setAsideCount(setAside.length)}
+                    {setAside.length > 0 ? (
+                      <>
+                        {" "}
+                        <button type="button" className="btn btn-secondary btn-sm ml-1" onClick={bringBack}>{`Bring back ${emailName(setAside.at(-1)!.snapshot)}`}</button>
+                      </>
+                    ) : null}
                   </p>
                 ) : null}
               </div>
@@ -403,7 +416,7 @@ export function EmailStudio(props: {
                 onDraftCleanupUnconfirmed={() => setDraftCleanupUnconfirmed(true)}
                 draft={open}
                 initialTemplate={open ? undefined : libraryEmail}
-                onDone={() => { setLibraryEmail(undefined); setOpen(null); setComposeRevision((value) => value + 1); }}
+                onDone={() => { setLibraryEmail(undefined); setOpen(null); setRestore(undefined); setAsideNoteText(""); setComposeRevision((value) => value + 1); }}
                 onStartNew={() => openDraft(null)}
                 composerState={composerState}
                 restore={restore}
@@ -603,6 +616,8 @@ type ComposerSnapshot = {
   subject: string; body: string; productId: string; notProductId: string; who: Who; draftId: string; draftSavedAt: string;
   later: boolean; at: string; testing: boolean; subjectB: string; share: number; hours: number; by: TestBy;
   spentText: string; channel: string; quietDays: number; more: boolean; savedContent: string;
+  /** A draft save that could not be confirmed: saving stays blocked when brought back, so a draft is never made twice. */
+  uncertain: boolean;
 };
 type ComposerHandle = { dirty: boolean; busy: boolean; snapshot: () => ComposerSnapshot };
 
@@ -633,7 +648,7 @@ function Compose(props: {
 }) {
   const router = useRouter();
   const [refreshingDrafts, startDraftRefresh] = useTransition();
-  const [uncertainDrafts, setUncertainDrafts] = useState<DraftRow[] | null>(null);
+  const [uncertainDrafts, setUncertainDrafts] = useState<DraftRow[] | null>(props.restore?.uncertain ? props.savedDrafts : null);
   const draftSaveBlocked = uncertainDrafts !== null && (uncertainDrafts === props.savedDrafts || props.draftsReadFailed);
   const [subject, setSubject] = useState(props.restore ? props.restore.subject : props.draft?.subject ?? props.initialTemplate?.subject ?? "");
   const [body, setBody] = useState(props.restore ? props.restore.body : props.draft?.body ?? props.initialTemplate?.body ?? "");
@@ -705,7 +720,7 @@ function Compose(props: {
   const dirty = (!draftId && Boolean(props.draft)) || content !== savedContent || later || at !== "";
   useLeaveGuard(dirty || aiBusy);
   // What is set aside when another email is opened over unsaved changes, so they can be brought back (485 [IT2]).
-  const snapshot = (): ComposerSnapshot => ({ subject, body, productId, notProductId, who, draftId, draftSavedAt, later, at, testing, subjectB, share, hours, by, spentText, channel, quietDays, more, savedContent });
+  const snapshot = (): ComposerSnapshot => ({ subject, body, productId, notProductId, who, draftId, draftSavedAt, later, at, testing, subjectB, share, hours, by, spentText, channel, quietDays, more, savedContent, uncertain: draftSaveBlocked });
   useImperativeHandle(props.composerState, () => ({ dirty, busy: locked, snapshot }));
 
   useEffect(() => {
