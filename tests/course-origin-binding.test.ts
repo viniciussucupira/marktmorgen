@@ -63,8 +63,9 @@ test("boolean/clone/foreign admissions cannot produce a signed course binding",a
 
 test("the reader rejects changed token/context and expired or pre-capture time",async()=>{
  const f=await fixture(),token=await prepareCourseOriginBinding(f.input);assert.ok(token);
- const last=token.token.at(-1)==="A"?"B":"A";
- assert.equal(openCourseOriginBinding(token.token.slice(0,-1)+last,token.nonce),null);
+ // Change significant ciphertext bits, not a last base64url padding alias.
+ const start=token.token.lastIndexOf(".")+1,changed=token.token[start]==="A"?"B":"A";
+ assert.equal(openCourseOriginBinding(token.token.slice(0,start)+changed+token.token.slice(start+1),token.nonce),null);
  assert.equal(openCourseOriginBinding(token.token,"d".repeat(64)),null);
  assert.equal(openCourseOriginBinding(token.token,token.nonce,token.expiresAtMs),null);
  assert.equal(openCourseOriginBinding(token.token,token.nonce,f.at-1),null);

@@ -5,7 +5,7 @@
  * winner before creating/returning any URL. No caller is integrated here.
  */
 import {createHash} from "node:crypto";
-import {captureCourseConfirmationCandidate, type CourseConfirmationCandidate} from "@/lib/course-confirmation-origin";
+import {captureCourseConfirmationCandidate,resolveCourseDoorCandidate, type CourseConfirmationCandidate} from "@/lib/course-confirmation-origin";
 import {confirmationBodyDigest} from "@/lib/order-confirmation-outbox";
 import {prepareOrderConfirmationPreintent, type OrderConfirmationPreintent} from "@/lib/orders";
 import type {Admission} from "@/lib/order-admission";
@@ -95,6 +95,9 @@ function bodyMatches(body:string,candidate:CourseConfirmationCandidate,nonce:str
  return form.get("metadata[mm_order_hash]")===confirmationBodyDigest(body);
 }
 
+/** Minimal dependency on the v1 preintent identity/time shape. This does not
+ * reimplement the accounting snapshot parser or establish payment authority.
+ */
 function preintentMatches(preintent:OrderConfirmationPreintent,nonce:string,bodyDigest:string,candidate:CourseConfirmationCandidate,now:number):boolean{
  const opened=unseal(preintent.token,`order-confirmation-preintent|${nonce}`);
  if(!opened.ok||opened.value.length>2_500||preintent.intentFingerprint!==hash(preintent.token))return false;
@@ -137,6 +140,10 @@ export async function prepareCourseOriginBinding(input:unknown,runtime:{now?:()=
   const clock=(runtimeData.now??Date.now) as ()=>number,started=clock();if(!Number.isSafeInteger(started))return null;
   // Capture via a hook-free encoding now, never serialize caller objects.
   const captured=JSON.parse(encoded(candidate)) as CourseConfirmationCandidate;
+  // The reused legacy preintent helper serializes a plain proof object.
+  // Refuse a preexisting inherited hook without reading/invoking it. This is
+  // not isolation from arbitrary concurrent mutation of JavaScript globals.
+  if(Object.getOwnPropertyDescriptor(Object.prototype,"toJSON"))return null;
   const preintent=await prepareOrderConfirmationPreintent(store as unknown as Store,data.admission as Admission,
    {nonce,accountId:candidate.identity.accountId,bodyDigest},{now:()=>started});
   const finished=clock();
@@ -161,13 +168,13 @@ export function openCourseOriginBinding(tokenValue:unknown,nonceValue:unknown,no
   if(!value||!exact(value,["version","kind","nonce","bodyDigest","body","candidate","preintent","expiresAtMs"])||value.version!==1||value.kind!=="course-confirmation-binding"||value.nonce!==nonceValue||typeof value.body!=="string"||typeof value.bodyDigest!=="string"||!HASH.test(value.bodyDigest)||confirmationBodyDigest(value.body)!==value.bodyDigest)return null;
   const candidateData=own(value.candidate),identity=candidateData&&own(candidateData.identity),original=candidateData&&own(candidateData.original),consent=candidateData&&own(candidateData.consent),metadata=candidateData&&own(candidateData.metadata,4);
   if(!candidateData||!identity||!original||!consent||!metadata)return null;
-  // Reuse the real candidate capture to validate its complete historical
-  // shape/words, without pretending a current database read took place.
-  const candidate=captureCourseConfirmationCandidate({sid:identity.sid,statsId:identity.statsId,stripeAccountId:identity.accountId,
-   handle:original.handle,name:original.storeName,email:original.ownerEmail,currency:original.currency,language:original.language},
+  // Reuse the historical candidate validator, NOT the current issuer. A
+  // wording/version update cannot rewrite or invalidate already sealed text.
+  // These selected values are not a current database or provider read.
+  const candidate=candidateData as unknown as CourseConfirmationCandidate;
+  if(!resolveCourseDoorCandidate(candidate,{sid:identity.sid,statsId:identity.statsId,stripeAccountId:identity.accountId,handle:original.handle},
    {id:identity.productId,title:original.title,priceCents:original.priceCents,course:{id:identity.courseId,lessons:0},
-    call:null,podcast:null,recurring:null,bundle:null,keys:null,file:null,link:null,plan:null,pwyw:null,callPackage:null,shipping:null,note:false,options:[],fields:[]},metadata);
-  if(!candidate||encoded(candidate)!==encoded(candidateData)||!bodyMatches(value.body,candidate,nonceValue))return null;
+    call:null,podcast:null,recurring:null,bundle:null,keys:null,file:null,link:null,plan:null,pwyw:null,callPackage:null,shipping:null,note:false,options:[],fields:[]})||!bodyMatches(value.body,candidate,nonceValue))return null;
   const preintent=own(value.preintent,3);
   if(!preintent||!exact(preintent,["token","expiresAtMs","intentFingerprint"])||typeof preintent.token!=="string"||preintent.intentFingerprint!==hash(preintent.token)||preintent.expiresAtMs!==value.expiresAtMs||!Number.isSafeInteger(value.expiresAtMs)||now>=Number(value.expiresAtMs))return null;
   if(!preintentMatches(preintent as OrderConfirmationPreintent,nonceValue,value.bodyDigest,candidate,now))return null;
