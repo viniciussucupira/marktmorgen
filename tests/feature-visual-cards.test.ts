@@ -2,7 +2,7 @@
  * More feature-page cards (531 [VP1], units 2 and 3; added 1 November 2026):
  * bundles, quizzes and certificates, license keys, webhooks, calendar sync,
  * Discord access (units 2 and 3), the community and affiliates (unit 4),
- * live events (unit 5; the reviews page has none, since a drawn review would
+ * the team and email platforms (unit 6), live events (unit 5; the reviews page has none, since a drawn review would
  * be an invented one),
  * each a piece of the
  * studio's real screen in HTML, with its words and figures from the code.
@@ -27,12 +27,14 @@ import { MAX_DISCORD_PRODUCTS, MAX_PRODUCT_ROLES } from "@/lib/discord-rules";
 import { findPage } from "@/lib/site-pages";
 import { formatMoney } from "@/lib/money";
 import { JOIN_EARLY_MINUTES } from "@/lib/community-text";
+import { ROLE_NAMES } from "@/lib/team-roles";
+import { MAX_TEAM } from "@/lib/team";
 import { eventTime, lengthWords } from "@/lib/community-events";
 import { done, is, part } from "./check";
 
 const text = (html: string) => html.replace(/<[^>]+>/g, "\n").replace(/&#x27;/g, "'").replace(/&amp;/g, "&").split("\n").map((s) => s.trim()).filter(Boolean);
 const read = (file: string) => readFileSync(file, "utf8");
-const draw = (visual: "bundles" | "quizzes" | "keys" | "webhooks" | "calendar" | "discord" | "community" | "affiliates" | "events") => renderToStaticMarkup(createElement(FeatureVisual, { visual, tone: "light" }));
+const draw = (visual: "bundles" | "quizzes" | "keys" | "webhooks" | "calendar" | "discord" | "community" | "affiliates" | "events" | "team" | "emailPlatforms") => renderToStaticMarkup(createElement(FeatureVisual, { visual, tone: "light" }));
 const hidden = (html: string) => html.startsWith('<figure class="w-full min-w-0 max-w-[26rem]"><div aria-hidden="true">');
 
 function main(): void {
@@ -151,6 +153,32 @@ function main(): void {
   is("drawn, hidden, beside its caption", hidden(ev), true);
   is("no drawn review on the reviews page: a made-up one would be an invented testimonial", findPage("platform", "reviews")?.visual, undefined);
 
+  part("Teams");
+  is("the teams page shows its card", findPage("platform", "teams-and-stores")?.visual, "team");
+  const tm = draw("team");
+  const t = text(tm);
+  const teamUi = read("components/team-manager.tsx");
+  is("the owner as the studio says it", [t.includes("You. Everything, including the plan, payments and the team."), teamUi.includes("You. Everything, including the plan, payments and the team."), t.includes("Owner"), teamUi.includes(">Owner<")], [true, true, true, true]);
+  is("a member's role by the code's own name", [t.includes(ROLE_NAMES.editor), t.includes("Joined Oct 3, 2026"), teamUi.includes("`Joined ${day(m.joinedAt)}`")], [true, true, true]);
+  is("an invitation as the studio writes it", [t.includes(`Invited as ${ROLE_NAMES.support} · the link works until Nov 8`), teamUi.includes("`Invited as ${ROLE_NAMES[i.role]} · the link works until "), t.includes("Waiting"), teamUi.includes('<span className="tag tag-next">Waiting</span>')], [true, true, true, true]);
+  is("the places used, from the code's figure", [t.includes(`2 of ${MAX_TEAM} places used`), teamUi.includes("`${used} of ${max} places used`"), t.includes("People on this store"), teamUi.includes("People on this store")], [true, true, true, true]);
+  is("the invite form, filled in, with its button and its envelope", [t.includes("Invite someone"), t.includes("Their email"), t.includes("Send the invitation"), teamUi.includes("Send the invitation"), teamUi.includes('<Icon name="mail" size={16} />')], [true, true, true, true, true]);
+  is("a member's role as a list to choose from, and its Remove", [t.includes("Remove"), /Remove\s*<\/button>/.test(teamUi) || teamUi.includes("Remove\n")], [true, true]);
+  is("the people said to be made up", t.some((w) => /made up as an example/.test(w)), true);
+  is("drawn, hidden, beside its caption", hidden(tm), true);
+
+  part("Email platforms");
+  is("the email platforms page shows its card", findPage("platform", "email-platforms")?.visual, "emailPlatforms");
+  const ep = draw("emailPlatforms");
+  const pl = text(ep);
+  const sync = read("components/email-sync-editor.tsx");
+  is("the four platforms, by the studio's names, in its order", pl.filter((w) => ["Mailchimp", "Kit", "beehiiv", "MailerLite"].includes(w)), ["Mailchimp", "Kit", "beehiiv", "MailerLite"]);
+  is("each with what it adds to, from the studio's list", [["audience", "an"], ["form", "a"], ["publication", "a"], ["group", "a"]].every(([target, article]) => pl.includes(`Adds to ${article} ${target}`) && sync.includes(`target: "${target}"`)) && sync.includes('`Adds to ${p.target === "audience" ? "an" : "a"} ${p.target}`'), true);
+  is("one screen only, as it shows before anything is connected: platform, key, Connect", [["Connect your email platform", "Mailchimp API key", "Connect"].every((w) => pl.includes(w)), sync.includes("`${byKey(provider).name} API key`"), pl.includes("Your Mailchimp API key (ends in -us21 or similar)"), sync.includes('placeholder: "Your Mailchimp API key (ends in -us21 or similar)"')], [true, true, true, true]);
+  is("nothing from the connected screen drawn beside it", ["Who is sent", "Free sign-ups", "Buyers of every product"].some((w) => pl.includes(w)), false);
+  is("no figure but the key's own hint", pl.filter((w) => /\d/.test(w)), ["Your Mailchimp API key (ends in -us21 or similar)"]);
+  is("drawn, hidden, beside its caption", hidden(ep), true);
+
   part("Nothing that is not the code's or marked as an example");
   for (const [name, words, allowed] of [
     ["bundles", b, /^(In it: 3 of \d+|\$77 of products for \$49|\$\d+(\.\d\d)?|.*example.*)$/],
@@ -161,6 +189,7 @@ function main(): void {
     ["discord", d, /^(Up to \d+ roles for each product, on up to \d+ products\.|Gives \d roles?\.|.*example.*)$/],
     ["community", m, /^(48|112|31|.*example.*)$/],
     ["affiliates", a, /^(120|6|\$59\.40|\$30|\$29\.40|.*example.*)$/],
+    ["team", t, new RegExp(`^(2 of ${MAX_TEAM} places used|Joined Oct 3, 2026|Invited as ${ROLE_NAMES.support} · the link works until Nov 8|.*example.*)$`)],
     ["events", e, /^(2 coming up|\w+day, November (10|19)\b.* \(E[SD]T\) · (1 hour|45 minutes)|12 of 30 places taken|8 going|The way in shows \d+ minutes before the start, only to members who can come\.|.*example.*)$/],
   ] as const) {
     is(`${name}: every figure is the code's, or an example said as one`, words.filter((w) => /\d/.test(w) && !allowed.test(w)), []);

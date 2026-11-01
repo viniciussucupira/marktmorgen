@@ -2023,6 +2023,7 @@ const BASE_FEATURE_PAGES: TopicPage[] = [
     highlight: "the email tool you use",
     intro:
       `Connect Mailchimp, Kit, beehiiv or MailerLite, and the people who agree to hear from you are added there as they come in: free sign-ups once they confirm, buyers once they have paid, with the tags you choose. On the ${PLAN_AT.creator} plan, with no Zapier in between.`,
+    visual: "emailPlatforms",
     badge: WORKING,
     accent: "from-violet-brand to-sky-brand",
     plan: "creator",
@@ -2158,6 +2159,7 @@ const BASE_FEATURE_PAGES: TopicPage[] = [
     highlight: "without sharing your login",
     intro:
       "Up to five stores in one account, and up to five people on each store's team as Admin, Editor or Support, each signing in with their own email. What each role may do is checked on our server for every request.",
+    visual: "team",
     badge: WORKING,
     accent: "from-sky-brand to-violet-brand",
     plan: "creator",
