@@ -326,10 +326,10 @@ export function FormsEditor({ saved, products, exportBase, dealStages = [], sid 
                               />
                             </label>
                             {draft.categories?.length ? (
-                              <label className="flex items-center gap-2 text-sm text-ink-soft">
+                              <label className="flex min-w-0 max-w-full items-center gap-2 text-sm text-ink-soft">
                                 Category
                                 <select
-                                  className="field w-auto"
+                                  className="field w-auto min-w-0 max-w-full flex-1"
                                   aria-label={`Category of option ${k + 1}`}
                                   value={option.category ?? ""}
                                   onChange={(e) => setField(i, { options: field.options.map((o, m) => (m === k ? { ...o, category: e.target.value } : o)) })}
@@ -345,10 +345,10 @@ export function FormsEditor({ saved, products, exportBase, dealStages = [], sid 
                             ) : null}
                           </>
                         ) : draft.outcomes.length ? (
-                          <label className="flex items-center gap-2 text-sm text-ink-soft">
+                          <label className="flex min-w-0 max-w-full items-center gap-2 text-sm text-ink-soft">
                             Result
                             <select
-                              className="field w-auto"
+                              className="field w-auto min-w-0 max-w-full flex-1"
                               aria-label={`Result option ${k + 1} points at`}
                               value={option.outcome}
                               onChange={(e) => setField(i, { options: field.options.map((o, m) => (m === k ? { ...o, outcome: e.target.value } : o)) })}
@@ -363,10 +363,10 @@ export function FormsEditor({ saved, products, exportBase, dealStages = [], sid 
                           </label>
                         ) : null}
                         {field.type === "choice" ? (
-                          <label className="flex items-center gap-2 text-sm text-ink-soft">
+                          <label className="flex min-w-0 max-w-full items-center gap-2 text-sm text-ink-soft">
                             Next
                             <select
-                              className="field w-auto"
+                              className="field w-auto min-w-0 max-w-full flex-1"
                               aria-label={`Next, after option ${k + 1}`}
                               value={option.next ?? ""}
                               onChange={(e) => setField(i, { options: field.options.map((o, m) => (m === k ? { ...o, next: e.target.value } : o)) })}

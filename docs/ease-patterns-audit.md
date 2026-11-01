@@ -47,6 +47,8 @@ The screen-by-screen audit that 487 [IT4] asks for: what was checked, what was f
   - "Counts as" beside a pipeline stage;
   - "Kind" and "Choices, separated by commas" on a custom field.
 
+  On a phone, a long choice ("Then skip to question 12: …") now shrinks inside its row instead of making the page scroll sideways.
+
 ## Pattern 3: the common value filled in, never the dearest (1 November 2026)
 
 **Method.** Every pre-chosen control in `app/` and `components/` was read: `defaultChecked`, checked radios, and the first state of each choice.

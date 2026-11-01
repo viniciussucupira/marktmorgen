@@ -27,10 +27,11 @@ is("on a phone a stage's or an option's name and field take the whole line, neve
 is("a custom field's kind and button line up with its field, not with its name", deals.includes("sm:grid-cols-[minmax(0,1fr)_12rem_auto] sm:items-end"), true);
 
 // The selects beside a row show a visible word that starts their spoken name (WCAG 2.5.3), as "Points" already does.
-const labelled = (src: string, visible: string, aria: string) => new RegExp(`<label className="flex items-center gap-2 text-sm text-ink-soft">\\s*${visible}\\s*<select[\\s\\S]{0,120}?aria-label=\\{\`${aria}`).test(src);
+const labelled = (src: string, visible: string, aria: string) => new RegExp(`<label className="flex (?:min-w-0 max-w-full )?items-center gap-2 text-sm text-ink-soft">\\s*${visible}\\s*<select[\\s\\S]{0,120}?aria-label=\\{\`${aria}`).test(src);
 is("an option's category has a visible label that starts its name", labelled(forms, "Category", "Category of option"), true);
 is("an option's result too", labelled(forms, "Result", "Result option"), true);
 is("an option's next question too", labelled(forms, "Next", "Next, after option"), true);
 is("a stage's meaning too", labelled(deals, "Counts as", "Counts as, for stage"), true);
 is("a custom field's kind and choices too", /<span className="text-sm text-ink-soft">Kind<\/span>/.test(deals) && /<span className="text-sm text-ink-soft">Choices, separated by commas<\/span>/.test(deals), true);
+is("on a phone a long choice shrinks inside its row instead of making the page scroll sideways (1.4.10)", (forms.match(/flex min-w-0 max-w-full items-center gap-2 text-sm text-ink-soft/g) ?? []).length === 3 && (forms.match(/field w-auto min-w-0 max-w-full flex-1/g) ?? []).length === 3, true);
 done();
