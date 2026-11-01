@@ -18,12 +18,13 @@
  */
 import { createHash } from "node:crypto";
 import { NextRequest } from "next/server";
-import { emailForSession, endAllSessions } from "@/lib/auth";
-import { GOOGLE_SIGNIN_APPROVED, GOOGLE_SIGNIN_SCOPES, googleSignInOffered, refusalFor } from "@/lib/google-signin";
+import { emailForSession, endAllSessions, noteSignIn, openSession } from "@/lib/auth";
+import { GOOGLE_SIGNIN_APPROVED, GOOGLE_SIGNIN_SCOPES, googleSignInOffered, googleSignInShown, refusalFor } from "@/lib/google-signin";
 import { REDIRECT_URIS } from "@/lib/meet-providers";
 import { finishSetup, startSetup } from "@/lib/two-step";
 import { base32Decode, codeAt, STEP_SECONDS } from "@/lib/totp";
 import { POST as start } from "@/app/api/auth/google/route";
+import { POST as codeRoute } from "@/app/api/auth/code/route";
 import { GET as back } from "@/app/api/integrations/google/callback/route";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
@@ -57,9 +58,9 @@ let address = 0;
 /** Each run of the flow from a machine of its own, so the limit is only met where it is meant to be. */
 const machine = () => `203.0.113.${(address += 1)}`;
 
-async function begin(ip = machine(), handle = ""): Promise<{ response: Response; state: string; nonce: string; cookie: string; url: URL | null }> {
+async function begin(ip = machine(), handle = "", at = "https://marktmorgen.com"): Promise<{ response: Response; state: string; nonce: string; cookie: string; url: URL | null }> {
   const response = await start(
-    new NextRequest("https://marktmorgen.com/api/auth/google", {
+    new NextRequest(`${at}/api/auth/google`, {
       method: "POST",
       headers: { "content-type": "application/x-www-form-urlencoded", "x-forwarded-for": ip },
       body: new URLSearchParams(handle ? { handle } : {}),
@@ -70,11 +71,12 @@ async function begin(ip = machine(), handle = ""): Promise<{ response: Response;
   return { response, state: url?.searchParams.get("state") ?? "", nonce: url?.searchParams.get("nonce") ?? "", cookie: cookieOf(response, "nl_gsi"), url };
 }
 
-function answer(state: string, cookie: string, extra: Record<string, string> = { code: "4/stand-in-code" }, ip = machine()): Promise<Response> {
+function answer(state: string, cookie: string, extra: Record<string, string> = { code: "4/stand-in-code" }, ip = machine(), more = ""): Promise<Response> {
   const query = new URLSearchParams({ state, ...extra });
+  const cookies = [cookie ? `nl_gsi=${cookie}` : "", more].filter(Boolean).join("; ");
   return back(
     new NextRequest(`https://marktmorgen.com/api/integrations/google/callback?${query}`, {
-      headers: { "x-forwarded-for": ip, ...(cookie ? { cookie: `nl_gsi=${cookie}` } : {}) },
+      headers: { "x-forwarded-for": ip, "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Chrome/130.0", ...(cookies ? { cookie: cookies } : {}) },
     }),
   );
 }
@@ -116,6 +118,14 @@ async function main(): Promise<void> {
 
   process.env.GOOGLE_SIGNIN_LIVE = "1";
   is("on where it is set, with Google's keys", googleSignInOffered(), true);
+  is("before approval the button is shown only on the owner's try link, at the site's own address", [
+    googleSignInShown("marktmorgen.com"),
+    googleSignInShown("marktmorgen.com", "test"),
+    googleSignInShown("www.marktmorgen.com", "test"),
+    googleSignInShown("marktmorgen-git-branch.vercel.app", "test"),
+  ], [false, true, false, false]);
+  const fromWww = await begin(machine(), "", "https://www.marktmorgen.com");
+  is("a login started at another address is sent to the site's own first", [fromWww.response.headers.get("location"), fromWww.cookie, fromWww.url], ["https://marktmorgen.com/signin", "", null]);
 
   part("Google's page");
   const begun = await begin(machine(), "harborkitchen");
@@ -170,11 +180,32 @@ async function main(): Promise<void> {
     const tried = await loginWith((n) => good(n, over));
     is(`${what}: nothing opens`, [tried.location, tried.session], ["https://marktmorgen.com/signin?status=google-error", ""]);
   }
+  for (const [what, over] of [
+    ["issued in the future", { iat: Math.floor(Date.now() / 1000) + 3600 }],
+    ["for several audiences, without this site as the party it was given to", { aud: [CLIENT, "other"], azp: "other" }],
+    ["given to another party", { azp: "someone-else.apps.googleusercontent.com" }],
+  ] as const) {
+    const tried = await loginWith((n) => good(n, over));
+    is(`${what}: nothing opens`, [tried.location, tried.session], ["https://marktmorgen.com/signin?status=google-error", ""]);
+  }
+  is("several audiences, given to this site: accepted", (await loginWith((n) => good(n, { aud: [CLIENT, "other"], azp: CLIENT }))).location, "https://marktmorgen.com/studio");
+  is("the demo store's owner, whatever proves it", (await loginWith((n) => good(n, { email: "demo@marktmorgen.com", hd: "marktmorgen.com" }))).location, "https://marktmorgen.com/signin?status=google-elsewhere");
   const replayed = await loginWith(() => good("a-nonce-from-another-login"));
   is("a token for another login (its nonce): nothing opens", [replayed.location, replayed.session], ["https://marktmorgen.com/signin?status=google-error", ""]);
   is("the checks themselves, on a good token", refusalFor(good("n"), "n"), null);
 
   part("The same session as every other way in");
+  const old = await openSession("someone@gmail.com");
+  const over = await begin();
+  claims = good(over.nonce, { email: "next@gmail.com" });
+  const taken = await answer(over.state, over.cookie, undefined, machine(), `nl_session=${old}`);
+  is("a session this browser held before is closed", [await emailForSession(old), await emailForSession(cookieOf(taken, "nl_session"))], [null, "next@gmail.com"]);
+  await noteSignIn("seen@gmail.com", undefined, "link", "a browser");
+  const seen = await begin();
+  claims = good(seen.nonce, { email: "seen@gmail.com" });
+  mails.length = 0;
+  await answer(seen.state, seen.cookie);
+  is("from a browser the account has not used: the email says it was Google", mails.some((m) => m.to === "seen@gmail.com" && m.text.includes("How: with Google, which confirmed this address")), true);
   const outEverywhere = await loginWith((n) => good(n, { email: "out@gmail.com" }));
   is("opened", outEverywhere.email, "out@gmail.com");
   await endAllSessions("out@gmail.com");
@@ -189,6 +220,17 @@ async function main(): Promise<void> {
   claims = good(heldBegun.nonce, { email: "held@gmail.com" });
   const held = await answer(heldBegun.state, heldBegun.cookie);
   is("with two-step login on, it waits for the code, like the link", [held.headers.get("location"), cookieOf(held, "nl_session"), cookieOf(held, "nl_2fa").length], ["https://marktmorgen.com/signin/code", "", 64]);
+  await noteSignIn("held@gmail.com", undefined, "link", "a browser");
+  mails.length = 0;
+  const nextCode = codeAt(base32Decode(started.secret)!, Math.floor(Date.now() / 1000 / STEP_SECONDS) + 1);
+  const coded = await codeRoute(
+    new NextRequest("https://marktmorgen.com/api/auth/code", {
+      method: "POST",
+      headers: { "content-type": "application/x-www-form-urlencoded", cookie: `nl_2fa=${cookieOf(held, "nl_2fa")}` },
+      body: new URLSearchParams({ code: nextCode }),
+    }),
+  );
+  is("the right code opens it, and the new-browser email still says Google", [coded.headers.get("location"), mails.some((m) => m.to === "held@gmail.com" && m.text.includes("How: with Google"))], ["https://marktmorgen.com/studio", true]);
 
   part("Tries");
   const ip = machine();

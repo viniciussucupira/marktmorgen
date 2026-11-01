@@ -39,7 +39,7 @@ async function googleSignIn(request: NextRequest, state: string): Promise<Respon
     response.headers.append("Set-Cookie", clearGoogleStateCookie());
     return response;
   };
-  if (!(await withinLimit("google-signin", clientAddress(request), TRIES, 10 * 60))) return back("google-slow");
+  if (!(await withinLimit("google-signin-back", clientAddress(request), TRIES, 10 * 60))) return back("google-slow");
   const result = await finishGoogleSignIn(
     state,
     kept.state,

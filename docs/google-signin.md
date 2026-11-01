@@ -31,6 +31,12 @@ Registro de 01/11/2026 (Fortaleza). Estado (VR): **desligado pelas travas**, con
 - **Política de privacidade:** um parágrafo `#google-signin`, a linha do Google entre os fornecedores e o cookie `nl_gsi`, todos exibidos **somente enquanto o recurso estiver ligado**. Enquanto estiver desligado, a política não descreve algo que o cliente não pode usar (regra VR, item 2).
 - **Testes:** `tests/google-signin.test.ts`, com um Google simulado e sem nenhuma chamada real.
 
+## Lacunas conhecidas
+
+- **Pontos no Gmail:** a conta é ligada ao endereço exatamente como o Google o devolve. Quem se cadastrou pelo link como `johndoe@gmail.com` e tem a conta Google `john.doe@gmail.com` abriria, pelo Google, outra conta, vazia (o Gmail entrega nos dois, mas aqui são endereços diferentes). Também `@googlemail.com` e `@gmail.com` ficam separados. Um aviso ou a junção dos dois casos pede um desenho próprio e não está feito.
+- **Domínios secundários do Google Workspace:** o `hd` traz só o domínio principal. Um endereço válido num domínio secundário da mesma organização é recusado e mandado para o link. É o lado seguro: o erro possível é recusar, nunca abrir.
+- **O cookie `nl_gsi` não usa o prefixo `__Host-`,** como os outros cookies do site. Um subdomínio irmão que rodasse script poderia plantá-lo, risco que já existe para os demais cookies. Fica como defesa adicional futura.
+
 ## Custos
 
 - **Custos nossos (por login):** duas operações no Redis para o estado, a contagem de tentativas e uma chamada ao endpoint de tokens do Google. Estão classificados como guarda de conta, como a passkey (`tests/plan-cost-registry.ts`, `"google-signin": ACCOUNT`).
@@ -56,8 +62,9 @@ Nada disto foi feito por agente. Os nomes dos menus mudam com o tempo. Como a do
 6. **Cliente** ("Clients"): no cliente Web cujo ID é o `GOOGLE_OAUTH_CLIENT_ID` da Vercel, confira se `https://marktmorgen.com/api/integrations/google/callback` está em "Authorized redirect URIs". Já deve estar, porque o Calendar usa esse endereço. Não é preciso acrescentar nenhum outro.
 7. **Marca do botão:** confira, nas diretrizes de marca do Google para o login, se o botão de texto "Continue with Google" sem o logotipo é aceito. Se o logotipo for exigido, ele deve entrar como imagem com texto alternativo, nunca como imagem de texto (AX274, 1.4.9).
 8. **Ligar:**
-   - para um teste com o seu próprio Gmail, defina `GOOGLE_SIGNIN_LIVE=1` na Vercel. Isso só funciona em marktmorgen.com, porque o endereço de volta é fixo;
-   - depois do teste, peça a troca de `GOOGLE_SIGNIN_APPROVED` para `true` num PR revisado.
+   - para um teste com o seu próprio Gmail, defina `GOOGLE_SIGNIN_LIVE=1` na Vercel e abra https://marktmorgen.com/signin?google=test. Com essa variável, o botão aparece **somente** nesse endereço de teste, nunca na página normal de login, e a política de privacidade não muda. Assim nenhum criador encontra um botão que o Google ainda pode recusar;
+   - o teste só funciona em marktmorgen.com, porque o endereço de volta é fixo. Em www.marktmorgen.com ou num endereço de pré-visualização da Vercel, o botão não aparece, e um início vindo de lá é mandado para marktmorgen.com/signin;
+   - só depois de o passo 5 mostrar "In production", peça a troca de `GOOGLE_SIGNIN_APPROVED` para `true` num PR revisado. É essa troca que mostra o botão a todos e acrescenta os trechos da política de privacidade.
 9. **Conferir de ponta a ponta:**
    - entrar com um Gmail abre o estúdio;
    - entrar com uma conta Google de e-mail de outro provedor mostra "Use the emailed link for that address";

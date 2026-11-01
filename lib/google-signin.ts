@@ -41,12 +41,18 @@ import { isRedisConfigured } from "@/lib/redis";
 import { REDIRECT_URIS } from "@/lib/meet-providers";
 import { isHouseAddress } from "@/lib/house-store";
 import { prefillHandle } from "@/lib/handle-prefill";
+import { SITE_URL } from "@/lib/site-url";
 
 /**
- * Whether the owner has finished the Google Cloud steps (docs/google-signin.md).
- * Kept in the code, so turning it on is one reviewed change every deployment
- * carries; GOOGLE_SIGNIN_LIVE=1 also turns it on where it is set, as
- * ZOOM_LIVE does for Zoom. Turn to true only after those steps, never before.
+ * Whether the owner has finished the Google Cloud steps (docs/google-signin.md)
+ * and Google lets any account in. Kept in the code, so turning it on is one
+ * reviewed change every deployment carries. Turn to true only after those
+ * steps, never before.
+ *
+ * GOOGLE_SIGNIN_LIVE=1 is for the owner's own try before that: the routes
+ * answer, but the button is shown only on /signin?google=test, so no
+ * creator meets a button Google may still turn away (VR, item 2), and the
+ * privacy policy says nothing until it is approved.
  */
 export const GOOGLE_SIGNIN_APPROVED: boolean = false;
 
@@ -69,11 +75,30 @@ const env = (name: string) => process.env[name]?.trim() ?? "";
 
 export const isGoogleSignInState = (state: string) => STATE.test(state);
 
-/** Offered on the login page: approved, Google's keys set, and somewhere to keep the state. */
+/** The routes answer: approved or on for a try, Google's keys set, and somewhere to keep the state. */
 export function googleSignInOffered(): boolean {
   const open = GOOGLE_SIGNIN_APPROVED || env("GOOGLE_SIGNIN_LIVE") === "1";
   return open && Boolean(env("GOOGLE_OAUTH_CLIENT_ID") && env("GOOGLE_OAUTH_CLIENT_SECRET")) && isRedisConfigured();
 }
+
+/**
+ * The query that shows the button for the owner's try (GOOGLE_SIGNIN_LIVE).
+ */
+export const GOOGLE_SIGNIN_TRY_QUERY = "test";
+
+/**
+ * Whether the login page shows the button: switched on, and on the site's own
+ * address, the only one Google sends people back to (REDIRECT_URIS.google),
+ * because the cookie that finishes the login is set where it starts. Before
+ * approval, only on the owner's try link.
+ */
+export function googleSignInShown(host: string | null | undefined, tryQuery?: unknown): boolean {
+  if (!googleSignInOffered() || (host ?? "").toLowerCase() !== new URL(SITE_URL).host) return false;
+  return GOOGLE_SIGNIN_APPROVED || tryQuery === GOOGLE_SIGNIN_TRY_QUERY;
+}
+
+/** Whether a login started at this origin can finish: only at the site's own address. */
+export const startsAtSite = (origin: string) => origin === SITE_URL;
 
 const base64url = (bytes: Buffer) => bytes.toString("base64url");
 
@@ -131,7 +156,7 @@ export type GoogleClaims = Record<string, unknown>;
  */
 export function refusalFor(claims: GoogleClaims, nonce: string, now = Date.now()): "unverified" | "elsewhere" | "invalid" | null {
   const client = env("GOOGLE_OAUTH_CLIENT_ID");
-  const audience = Array.isArray(claims.aud) ? claims.aud.includes(client) && claims.azp === client : claims.aud === client;
+  const audience = Array.isArray(claims.aud) ? claims.aud.includes(client) && claims.azp === client : claims.aud === client && (claims.azp === undefined || claims.azp === client);
   const seconds = Math.floor(now / 1000);
   const fresh = typeof claims.exp === "number" && claims.exp + SKEW_SECONDS > seconds && typeof claims.iat === "number" && claims.iat - SKEW_SECONDS <= seconds;
   if (!client || typeof claims.iss !== "string" || !ISSUERS.has(claims.iss) || !audience || !fresh) return "invalid";
@@ -146,8 +171,13 @@ export function refusalFor(claims: GoogleClaims, nonce: string, now = Date.now()
   return null;
 }
 
-/** The claims of an ID token handed to this server by Google's token endpoint. */
-export function claimsOf(idToken: unknown): GoogleClaims | null {
+/**
+ * The claims of an ID token, read WITHOUT checking its signature. Right only
+ * for the token this server itself got from Google's token endpoint, over
+ * TLS and with the client secret (OpenID Connect Core 1.0, 3.1.3.7, item 6);
+ * never for a token that came from a browser.
+ */
+export function claimsFromTokenEndpoint(idToken: unknown): GoogleClaims | null {
   if (typeof idToken !== "string" || idToken.length > 8_000) return null;
   const parts = idToken.split(".");
   if (parts.length !== 3) return null;
@@ -196,7 +226,7 @@ export async function finishGoogleSignIn(state: string, browserState: string, co
     });
     const json = (await response.json().catch(() => ({}))) as Record<string, unknown>;
     if (!response.ok) return { ok: false, reason: "error" };
-    const claims = claimsOf(json.id_token);
+    const claims = claimsFromTokenEndpoint(json.id_token);
     if (!claims) return { ok: false, reason: "error" };
     const refused = refusalFor(claims, kept.n);
     if (refused === "invalid") return { ok: false, reason: "error" };

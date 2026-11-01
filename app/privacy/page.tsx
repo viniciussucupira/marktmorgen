@@ -10,7 +10,7 @@ import { LegalPage, LegalSection } from "@/components/legal-page";
 import { isSesConfigured } from "@/lib/ses";
 import { isStreamConfigured } from "@/lib/stream";
 import { isVaultConfigured } from "@/lib/vault";
-import { googleSignInOffered } from "@/lib/google-signin";
+import { GOOGLE_SIGNIN_APPROVED } from "@/lib/google-signin";
 
 export const metadata: Metadata = {
   title: "Privacy Policy — Marktmorgen",
@@ -1225,7 +1225,7 @@ export default function PrivacyPage() {
           <code>nl_2fa</code> holds a random code for that one login, for ten
           minutes.
         </p>
-        {googleSignInOffered() ? (
+        {GOOGLE_SIGNIN_APPROVED ? (
           <p id="google-signin">
             <strong className="text-black">Logging in with Google.</strong> A
             creator can log in with Google instead of the emailed link. We ask
@@ -1666,7 +1666,7 @@ export default function PrivacyPage() {
             maker of the browser a notification goes to, such as Apple, Google
             or Mozilla, which carry it encrypted;
           </li>
-          {googleSignInOffered() ? (
+          {GOOGLE_SIGNIN_APPROVED ? (
             <li>
               <strong className="text-black">Google</strong>, when a creator
               chooses to log in with Google, which tells us the account&apos;s
@@ -1871,7 +1871,7 @@ export default function PrivacyPage() {
           says so. A creator&apos;s own browser keeps <code>nl_device</code>{" "}
           for 400 days and <code>nl_store</code> for a year, and{" "}
           <code>nl_pk</code> for five minutes while signing in with a
-          passkey, as section 1 describes.{googleSignInOffered() ? (
+          passkey, as section 1 describes.{GOOGLE_SIGNIN_APPROVED ? (
             <>
               {" "}While logging in with Google it keeps <code>nl_gsi</code> for
               ten minutes, as section 1 describes.

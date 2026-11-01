@@ -31,7 +31,7 @@ export async function finishProvenSignIn(
   let sessionId: string | null = null;
   try {
     if (owner && (await twoStepOn(owner)) && !(await resetIfDue(owner))) {
-      const held = await holdSignIn(owner);
+      const held = await holdSignIn(owner, false, way === "google");
       const secure = process.env.NODE_ENV === "production" ? "; Secure" : "";
       const response = redirect("/signin/code");
       response.headers.append("Set-Cookie", `${TWO_STEP_COOKIE}=${held}; Path=/; Max-Age=${HOLD_SECONDS}; HttpOnly; SameSite=Lax${secure}`);

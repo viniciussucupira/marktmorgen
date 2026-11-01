@@ -5,7 +5,8 @@ import { MorningLogo } from "@/components/morning-header";
 import { SignInForm } from "@/components/signin-form";
 import { PasskeySignIn } from "@/components/passkey-signin";
 import { GoogleSignIn } from "@/components/google-signin";
-import { googleSignInOffered } from "@/lib/google-signin";
+import { googleSignInShown } from "@/lib/google-signin";
+import { headers } from "next/headers";
 import { ToastOnLoad } from "@/components/toast";
 import { isConnectConfigured } from "@/lib/stripe-connect";
 import { PLAN_TITLES as PLAN_NAMES, TIERS, TRIAL_DAYS, parseTier, publishedPriceWords as priceWords } from "@/lib/plan";
@@ -144,7 +145,10 @@ export default async function SignInPage({
 }) {
   const params = await searchParams;
   const status = typeof params.status === "string" ? params.status : "";
-  const notice = NOTICES[status];
+  // The button on the site's own address only (lib/google-signin.ts); its notices only where it can be.
+  const sent = await headers();
+  const google = googleSignInShown(sent.get("x-forwarded-host") ?? sent.get("host"), params.google);
+  const notice = status.startsWith("google-") && !google ? undefined : NOTICES[status];
   // Somebody who pressed Log in has a store already, or believes so: the page
   // greets them that way, rather than with "Start your store", which reads as
   // if they had pressed the wrong thing. The form, the link and what it opens
@@ -272,7 +276,7 @@ export default async function SignInPage({
           <div className="card mt-8 p-6 sm:p-8">
             <SignInForm handle={asked && !returning && askedProblem === null ? asked : ""} />
             <PasskeySignIn />
-            {googleSignInOffered() ? <GoogleSignIn handle={asked && !returning && askedProblem === null ? asked : ""} /> : null}
+            {google ? <GoogleSignIn handle={asked && !returning && askedProblem === null ? asked : ""} /> : null}
             {/* Lost the inbox this account logs in with (lib/recovery-address.ts). */}
             <p className="mt-4 text-sm text-ink-soft">
               <Link prefetch={false} href="/signin/lost" className="link inline-flex min-h-11 items-center">
