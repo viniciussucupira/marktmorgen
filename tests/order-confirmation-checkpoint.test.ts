@@ -15,11 +15,11 @@ const test=(name:string,run:()=>void|Promise<void>)=>restarting?undefined:nodeTe
 const at = Date.UTC(2026, 9, 31, 23, 30);
 const hour = Math.floor(at / 3_600_000);
 const reference = "checkout:cs_test_confirmationCheckpoint01";
-const store = () => ({ email: "checkpoint@example.test", sid: "", statsId: "synthetic_checkpoint", handle: "checkpoint", extra: false, shared: false,stripeAccountId:"acct_SyntheticPreintent01",
+const store = () => ({ email: "checkpoint@example.test", sid: "", statsId: "synthetic_checkpoint", handle: "checkpoint", extra: false, shared: false,stripeAccountId:"acct_TestIntent01",
   subscriptionActive: true, subscriptionId: "sub_SyntheticCheckpoint", trialEnds: 0, tier: "creator", planEndedAt: "", cycle: "month",
   period: { start: Date.UTC(2026,9,20)/1000, end: Date.UTC(2026,10,20)/1000, renews: true } }) as Store;
 const clock = { now: () => at };
-const identity=()=>({nonce:"a".repeat(64),accountId:"acct_SyntheticPreintent01",bodyDigest:"b".repeat(64)});
+const identity=()=>({nonce:"a".repeat(64),accountId:"acct_TestIntent01",bodyDigest:"b".repeat(64)});
 async function acknowledgedAdmission(s=store(), n=1, items=2, admissionAt=at) {
   const prior=redis.pipeline;redis.pipeline=async()=>[1];
   try{return await admitOrders(s,n,admissionAt,items);}finally{redis.pipeline=prior;}
@@ -148,7 +148,7 @@ test("preintent persists the actual admission before Stripe exists and recovers 
 test("foreign nonce/account/body, malformed session and computed identities cannot bind the preintent",async()=>{
   const source=store(),original=identity(),intent=await prepareOrderConfirmationPreintent(source,await acknowledgedAdmission(source),original,clock);assert.ok(intent);const token=intent.token;
   const sessionId=reference.slice("checkout:".length),match={...original,sessionId};
-  for(const wrong of [{...match,nonce:"c".repeat(64)},{...match,accountId:"acct_ForeignPreintent01"},{...match,bodyDigest:"c".repeat(64)},{...match,sessionId:"cs_unverified"}]) {
+  for(const wrong of [{...match,nonce:"c".repeat(64)},{...match,accountId:"acct_TestOther01"},{...match,bodyDigest:"c".repeat(64)},{...match,sessionId:"cs_unverified"}]) {
     assert.equal(await bindOrderConfirmationPreintent(source,token,wrong,clock),null);
   }
   let getters=0,coercions=0;
@@ -160,7 +160,7 @@ test("foreign nonce/account/body, malformed session and computed identities cann
   assert.equal(await bindOrderConfirmationPreintent({...source,email:"foreign@example.test"},token,match,clock),null);
   assert.equal(await bindOrderConfirmationPreintent(source,token,match,{now:()=>at-1}),null);
   assert.equal(await bindOrderConfirmationPreintent(source,token,match,{now:()=>at+800*86_400_000}),null);
-  const changed=store(),admitted=await acknowledgedAdmission(changed);changed.stripeAccountId="acct_ForeignPreintent01";
+  const changed=store(),admitted=await acknowledgedAdmission(changed);changed.stripeAccountId="acct_TestOther01";
   assert.equal(await prepareOrderConfirmationPreintent(changed,admitted,{...original,accountId:changed.stripeAccountId},clock),null);
   const a=await bindOrderConfirmationPreintent(source,token,match,clock);
   const b=await bindOrderConfirmationPreintent(source,token,{...match,sessionId:sessionId+"other"},clock);
