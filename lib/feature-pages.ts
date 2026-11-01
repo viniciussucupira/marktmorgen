@@ -1152,6 +1152,7 @@ const BASE_FEATURE_PAGES: TopicPage[] = [
     highlight: "then the next best offer",
     intro:
       "Up to 20 pages walked in order from one address — your own pages and your products' pages — and up to five offers after someone pays, each charged in one click to the card they just used. A yes and a no can lead to different next offers, so a no can meet something smaller.",
+    visual: "funnels",
     badge: WORKING,
     accent: "from-amber-brand to-violet-brand",
     plan: "creator",
