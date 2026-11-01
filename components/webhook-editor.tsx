@@ -1,7 +1,7 @@
 "use client";
 
 import { ConfirmAction } from "@/components/confirm-action";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "@/components/toast";
 import { Icon } from "@/components/icons";
 import type { DeliveryView, WebhookEvent, WebhooksView } from "@/lib/webhooks";
@@ -33,7 +33,7 @@ const MESSAGES: Record<string, string> = {
   limited: "A store can send ten tests a minute. Wait a moment and try again.",
   not_failed: "Only a delivery that failed can be sent again.",
   not_heard: "That endpoint no longer gets this event. Add it under Events to send it again.",
-  resent: "It was already sent again. Wait for that one before sending it once more.",
+  resent: "It was already sent again, or it is itself a copy sent again. Send the original again only if its last resend failed.",
   server_error: "Something went wrong on our side. Nothing was changed; try again in a moment.",
 };
 
@@ -59,6 +59,11 @@ export function WebhookEditor({ view: initial }: { view: WebhooksView }) {
   const [error, setError] = useState<string | null>(null);
   const [secret, setSecret] = useState<{ where: string; value: string; oldUntil?: string } | null>(null);
   const [copied, setCopied] = useState(false);
+  // After a new secret is confirmed, the eyes go to it (2.4.3): the confirming button is gone.
+  const secretField = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (secret) secretField.current?.focus();
+  }, [secret]);
   const [editing, setEditing] = useState<{ id: string; events: WebhookEvent[] } | null>(null);
 
   async function send(body: Record<string, unknown>, tag: string) {
@@ -125,7 +130,7 @@ export function WebhookEditor({ view: initial }: { view: WebhooksView }) {
     const data = await send({ action: "resend", delivery: id }, `resend:${id}`);
     if (!data) return;
     if (data.delivered) toast(`Sent again and delivered (${data.status}).`);
-    else setError(`It did not arrive this time either: ${(data.message || "no answer").replace(/\.?$/, ".")} It is not tried again by itself.`);
+    else setError(`It did not arrive this time either${data.status ? ` (${data.status})` : ""}: ${(data.message || "no answer").replace(/\.?$/, ".")} It is not tried again by itself.`);
   }
 
   async function copySecret() {
@@ -162,14 +167,14 @@ export function WebhookEditor({ view: initial }: { view: WebhooksView }) {
           <p className="mt-1 text-sm text-ink-soft">
             Shown this once. Keep it where your receiver can check signatures with it; Zapier does not need it.
           </p>
-          {secret.oldUntil ? (
+          {secret.oldUntil && Number.isFinite(Date.parse(secret.oldUntil)) ? (
             <p className="mt-1 text-sm text-ink-soft">{`Your old secret still signs every message beside this one until ${when(Date.parse(secret.oldUntil))}. Put this one in your receiver before then.`}</p>
           ) : null}
           <div className="mt-3 flex flex-col gap-2 sm:flex-row">
             <label htmlFor="webhook-secret" className="sr-only">
               Signing secret
             </label>
-            <input id="webhook-secret" readOnly value={secret.value} onFocus={(e) => e.currentTarget.select()} className="field min-w-0 flex-1 font-mono text-sm" />
+            <input id="webhook-secret" ref={secretField} readOnly value={secret.value} onFocus={(e) => e.currentTarget.select()} className="field min-w-0 flex-1 font-mono text-sm" />
             <button type="button" onClick={copySecret} className="btn btn-secondary shrink-0">
               <Icon name={copied ? "check" : "key"} size={16} />
               <span aria-live="polite">{copied ? "Copied" : "Copy secret"}</span>
@@ -191,7 +196,7 @@ export function WebhookEditor({ view: initial }: { view: WebhooksView }) {
                   <span className="mt-1 block text-sm text-ink-soft">
                     {endpoint.events.length === ALL.length ? "Every event" : endpoint.events.map((key) => EVENTS.find((e) => e.key === key)?.label ?? key).join(", ")}
                   </span>
-                  {endpoint.oldSecretUntil ? <span className="mt-1 block text-xs text-ink-soft">{`Old secret still signs until ${when(Date.parse(endpoint.oldSecretUntil))}`}</span> : null}
+                  {endpoint.oldSecretUntil && Number.isFinite(Date.parse(endpoint.oldSecretUntil)) ? <span className="mt-1 block text-xs text-ink-soft">{`Old secret still signs until ${when(Date.parse(endpoint.oldSecretUntil))}`}</span> : null}
                 </span>
                 <span className="flex flex-wrap gap-2">
                   <button type="button" onClick={() => test(endpoint.id)} disabled={busy !== null} aria-busy={busy === `test:${endpoint.id}`} className="btn btn-secondary btn-sm">
@@ -332,8 +337,8 @@ export function WebhookEditor({ view: initial }: { view: WebhooksView }) {
                     {d.lastError && d.state !== "delivered" ? <span className="block text-xs text-ink-soft">{d.lastError}</span> : null}
                     {d.resentFrom ? <span className="block text-xs text-ink-soft">Sent again by hand</span> : null}
                   </span>
-                  {d.state === "failed" && d.type !== "test" ? (
-                    <button type="button" onClick={() => resend(d.id)} disabled={busy !== null} aria-busy={busy === `resend:${d.id}`} aria-label={`Send the ${d.type} of ${when(d.createdAt)} to ${d.endpoint} again`} className="btn btn-secondary btn-sm shrink-0">
+                  {d.state === "failed" && d.type !== "test" && !d.resentFrom && (!d.resentAs || view.log.find((x) => x.id === d.resentAs)?.state === "failed") ? (
+                    <button type="button" onClick={() => resend(d.id)} disabled={busy !== null} aria-busy={busy === `resend:${d.id}`} aria-label={`Send again: ${EVENTS.find((e) => e.key === d.type)?.label ?? d.type}, ${when(d.createdAt)}, to ${d.endpoint}`} className="btn btn-secondary btn-sm shrink-0">
                       {busy === `resend:${d.id}` ? "Sending…" : "Send again"}
                     </button>
                   ) : null}

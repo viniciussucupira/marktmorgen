@@ -29,6 +29,9 @@ test("the buttons call the route's actions; a new secret asks first", () => {
   assert.match(editor, /<ConfirmAction[\s\S]{0,300}question="Make a new signing secret\?/);
   // Only a failed delivery, never a test, offers it; its name says which one (2.4.9).
   assert.match(editor, /d\.state === "failed" && d\.type !== "test"/);
-  assert.match(editor, /aria-label=\{`Send the \$\{d\.type\} of/);
+  // The accessible name starts with the visible words (2.5.3).
+  assert.match(editor, /aria-label=\{`Send again: /);
+  // Not on a copy, and not again while the last resend did not fail.
+  assert.match(editor, /!d\.resentFrom && \(!d\.resentAs \|\| view\.log\.find\(\(x\) => x\.id === d\.resentAs\)\?\.state === "failed"\)/);
   assert.match(editor, /accept a message when any/);
 });
