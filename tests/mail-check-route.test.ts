@@ -15,9 +15,9 @@ const request = () => new NextRequest("https://example.test/api/cron/mail-check"
 function reset(previous?: string): void {
   redis.clear();
   commands.length = 0;
-  control.allowed = true; control.sender = true; control.deliveryOk = true; control.throwLoop = false;
+  control.allowed = true; control.sender = true; control.deliveryOk = true; control.throwLoop = false; control.throwAccount = false;
   control.calls.length = 0; control.notices.length = 0; control.deadlines.length = 0; control.cutoffRoom.length = 0;
-  control.afterUsage = null;
+  control.afterUsage = null; control.afterAccount = null;
   if (previous !== undefined) redis.run(["SET", LAST, previous]);
 }
 
@@ -69,19 +69,39 @@ async function main(): Promise<void> {
   is("an orchestration error remains a delivery failure and releases its lock",
     [(await thrown.json()).ok, redis.run(["GET", LOCK])], [false, null]);
 
-  part("Collector time does not extend the loop past the run budget");
+  part("Account readiness precedes parallel collection and the full delivery window");
   reset();
   const anchor = realNow();
   let passed = 0;
+  let loopStartedBeforeUsageFinished = false;
   Date.now = () => anchor + passed;
-  control.afterUsage = () => { passed = 30_000; };
+  control.afterAccount = () => { passed = 10_000; };
+  control.afterUsage = () => {
+    loopStartedBeforeUsageFinished = control.deadlines.length === 1;
+    passed += 30_000;
+  };
   const budgeted = await GET(request());
   is("the platform allowance remains 180 seconds", maxDuration, 180);
-  is("a 30-second collection leaves the existing 100-second loop window",
-    [budgeted.status, control.deadlines, control.cutoffRoom], [200, [anchor + 130_000], [130_000]]);
-  is("one collection and one existing delivery run are invoked",
-    control.calls.filter(call => ["usage", "loop"].includes(call)), ["usage", "loop"]);
+  is("a slow account check still leaves the loop its full 100 seconds",
+    [budgeted.status, control.deadlines, control.cutoffRoom],
+    [200, [anchor + 110_000], [150_000]]);
+  is("the 30-second collector finishes after the loop has already started", loopStartedBeforeUsageFinished, true);
+  is("account readiness warms credentials before one collection and one existing delivery run",
+    control.calls.filter(call => ["account", "usage", "loop"].includes(call)), ["account", "usage", "loop"]);
   Date.now = realNow;
+
+  part("An account-check exception still collects independent usage without pretending delivery passed");
+  reset();
+  control.throwAccount = true;
+  const failedAccount = await GET(request());
+  const failedAccountBody = await failedAccount.json();
+  is("the account exception retains the failed delivery result and independent observations",
+    [failedAccountBody.ok, failedAccountBody.usage, failedAccountBody.checks.map((check: { check: string; ok: boolean }) => [check.check, check.ok])],
+    [false, control.usage, [["the run itself", false]]]);
+  is("usage is collected once after an account exception, without starting an extra probe loop",
+    control.calls.filter(call => ["account", "usage", "loop"].includes(call)), ["account", "usage"]);
+  is("the existing failure notice and lock cleanup remain intact",
+    [control.notices.length, redis.run(["GET", LOCK])], [1, null]);
 
   part("Authorization and the existing lock still prevent work");
   reset();

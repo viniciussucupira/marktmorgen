@@ -33,18 +33,30 @@ export async function GET(request: NextRequest) {
     const [got] = await redisPipeline([["SET", "nl:mail-check:lock", "1", "NX", "EX", 170]]);
     if (got === null) return Response.json({ ok: true, busy: true });
     try {
-      const usage = await verifyProviderUsage();
-      let checks: Check[];
+      let accountChecks: Check[];
+      let accountFailed = false;
       try {
-        const loopDeadline = Math.min(started + 130_000, Date.now() + WAIT_MS);
-        checks = [
-          ...verifyHostToken(),
-          ...(await timed(10_000, () => verifyAmazonAccount())),
-          ...(await timed(Math.max(0, loopDeadline - Date.now()), () => verifyMailLoop(loopDeadline))),
-        ];
+        // Warm the existing SES session before the independent usage reader.
+        accountChecks = [...verifyHostToken(), ...(await timed(10_000, () => verifyAmazonAccount()))];
       } catch (error) {
-        checks = [{ check: "the run itself", ok: false, detail: error instanceof Error ? error.message : "failed" }];
+        accountFailed = true;
+        accountChecks = [{ check: "the run itself", ok: false, detail: error instanceof Error ? error.message : "failed" }];
       }
+      const loopDeadline = Math.min(started + 130_000, Date.now() + WAIT_MS);
+      const [usage, checks] = await Promise.all([
+        verifyProviderUsage(),
+        (async (): Promise<Check[]> => {
+          if (accountFailed) return accountChecks;
+          try {
+            return [
+              ...accountChecks,
+              ...(await timed(Math.max(0, loopDeadline - Date.now()), () => verifyMailLoop(loopDeadline))),
+            ];
+          } catch (error) {
+            return [{ check: "the run itself", ok: false, detail: error instanceof Error ? error.message : "failed" }];
+          }
+        })(),
+      ]);
       const ok = checks.length > 0 && checks.every((c) => c.ok);
       // In Vercel's logs for every run, passing or not.
       console.log(`mail-check ${ok ? "pass" : "FAIL"}: ${checks.map((c) => `${c.ok ? "PASS" : "FAIL"} ${c.check} (${c.detail})`).join(" | ")}`);
