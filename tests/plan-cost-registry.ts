@@ -1058,9 +1058,9 @@ export const EMAIL_SITES: Record<string, string[]> = {
   "lib/imports.ts": MONTHLY, "lib/product-updates.ts": MONTHLY, "lib/review-requests.ts": MONTHLY,
   "lib/mail.ts": ["monthly", "company"],
   "lib/call-packages.ts": ORDER, "lib/call-reminders.ts": ORDER, "lib/free.ts": ORDER, "lib/gifts.ts": ORDER, "lib/group-buy.ts": ["order", "store"],
-  // Shipment delivery now passes through sendQueuedShipmentMail in lib/email.ts;
-  // shipments.ts prepares protected work and no longer sends a metered email.
-  "lib/paypal-sales.ts": ORDER, "lib/preorders.ts": ORDER,
+  // Active shipment delivery uses sendQueuedShipmentMail in lib/email.ts.
+  // The never-activated deployment retains its original one-shot ORDER sender.
+  "lib/paypal-sales.ts": ORDER, "lib/preorders.ts": ORDER, "lib/shipments.ts": ORDER,
   "lib/purchase-email.ts": ["order", "store"], "lib/calls.ts": ["order", "store"], "lib/licence-keys.ts": ["order", "store"],
   "lib/affiliate-hub.ts": STORE, "lib/affiliate-payday.ts": STORE, "lib/affiliates.ts": STORE, "lib/assignment-notify.ts": STORE,
   "lib/buyer-library.ts": STORE, "lib/erasure-request.ts": STORE, "lib/buyer-orders.ts": STORE, "lib/checkout-recovery.ts": STORE, "lib/checkout-trouble.ts": STORE,
