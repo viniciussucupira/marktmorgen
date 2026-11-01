@@ -135,6 +135,14 @@ def main():
         refused = dict(winning, phase="refused")
         db.command("SET", keys[0], json.dumps(refused))
         assert change("url", refused, keys, request_url) == ["held"]
+        preparing_url = dict(winning, state="preparing", owner="f"*48, leaseUntil=now+60_000)
+        preparing_raw = json.dumps(preparing_url)
+        db.command("SET", keys[0], preparing_raw)
+        assert change("url", preparing_url, keys, request_url)[:4] == ["url", winning["id"], winning["session"], winning["bindingFingerprint"]]
+        assert db.command("GET", keys[0]) == preparing_raw
+        db.command("SET", keys[8], "closure while worker prepares")
+        assert change("url", preparing_url, keys, request_url) == ["held"]
+        db.command("DEL", keys[8])
         db.command("SET", keys[0], before_url)
         assert change("url", winning, keys, request_url, at=now-73*3_600_000) == ["unknown"]
         print("PASS: final URL gate checks exact winner/source/store/person fences with read-only timely permission; no renewed source/TTL/pool")

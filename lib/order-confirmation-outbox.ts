@@ -243,7 +243,7 @@ if type(p.continuedReviewIds)=='table' then for _,id in ipairs(p.continuedReview
 if not supported then return {'unknown'} end
 if op=='url' then
  local good,n=pcall(cjson.decode,supplied)
- if not good or type(n)~='table' or r.state~='queued' or r.phase~='awaiting_payment' or r.session=='' or
+ if not good or type(n)~='table' or (r.state~='queued' and r.state~='preparing') or r.phase~='awaiting_payment' or r.session=='' or
     n.session~=r.session or n.bindingFingerprint~=r.bindingFingerprint then return {'held'} end
  -- Read-only final exposure permission: no renewed source, lease or capacity.
  return {'url',r.id,r.session,r.bindingFingerprint,tostring(serverNow),tostring(math.min(r.expiresAt,serverNow+1000))}

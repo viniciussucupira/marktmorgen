@@ -55,7 +55,7 @@ async function fixture() {
             if (r.session) answer = ["bound", raw];
             else { const next = String(c[15]), n = JSON.parse(next); redis.run(["SET", k[0], next]); redis.run(["SET", k[1], n.sourceValue]); answer = ["bound", next]; }
           } else if (op === "cursor") answer = ["cursor", raw];
-          else if (op === "url" && r.session && r.phase === "awaiting_payment" && r.state === "queued" &&
+          else if (op === "url" && r.session && r.phase === "awaiting_payment" && ["queued", "preparing"].includes(r.state) &&
               redis.run(["GET", k[1]]) === r.sourceValue && redis.run(["EXISTS", k[8]]) === 0 && redis.run(["EXISTS", k[9]]) === 0) {
             answer = ["url", r.id, r.session, r.bindingFingerprint, String(now()), String(Math.min(now() + 1000, r.expiresAt))];
           }
