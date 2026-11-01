@@ -24,7 +24,7 @@ is("the font is always on Stripe's list", all.every((b) => (STRIPE_FONTS as read
 part("Colors only at 7:1");
 is("every color sent has 7:1 for black or white on it", all.every((b) => ["branding_settings[background_color]", "branding_settings[button_color]"].every((k) => !(k in b) || readableOn(b[k]))), true);
 is("the readable test, both ways", [readableOn("#ffffff"), readableOn("#000000"), readableOn("#777777")], [true, true, false]);
-is("a color that would fail is left out, field by field (a palette that fails, given directly)", [brandingFrom({ bg: "#777777", accent: "#5a36ee" }, "modern"), brandingFrom({ bg: "#ffffff", accent: "#777777" }, "modern")].map((b) => ["branding_settings[background_color]" in b, "branding_settings[button_color]" in b]), [[false, true], [true, false]]);
+is("a color that would fail is left out, field by field (a palette that fails, given directly)", [brandingFrom({ bg: "#777777", accent: "#15112e" }, "modern"), brandingFrom({ bg: "#ffffff", accent: "#777777" }, "modern")].map((b) => ["branding_settings[background_color]" in b, "branding_settings[button_color]" in b]), [[false, true], [true, false]]);
 is("with every offered theme and color the store's palette already passes, so nothing is left out today", all.every((b) => "branding_settings[background_color]" in b && "branding_settings[button_color]" in b), true);
 is("the store's own pages' colors are what is sent", checkoutBranding({ theme: "night", accent: "#2f74f5", font: "modern" })["branding_settings[background_color]"], lookColours({ theme: "night", accent: "#2f74f5" }).bg);
 is("the night background reads with white", contrast(lookColours({ theme: "night", accent: "#5a36ee" }).bg, "#ffffff") >= 7, true);
