@@ -2234,6 +2234,7 @@ const BASE_FEATURE_PAGES: TopicPage[] = [
     highlight: "tells you",
     intro:
       "Turn notifications on in your studio, on your phone or your computer: every sale, every booking, a report in your community, a new affiliate application, a live event about to start, and a comment under a lesson.",
+    visual: "phone",
     badge: WORKING,
     accent: "from-pink-brand to-amber-brand",
     plan: "creator",

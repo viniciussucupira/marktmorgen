@@ -3,7 +3,7 @@
  * bundles, quizzes and certificates, license keys, webhooks, calendar sync,
  * Discord access (units 2 and 3), the community and affiliates (unit 4),
  * the team and email platforms (unit 6), PDF stamping and ways to pay
- * (unit 7), live events (unit 5; the reviews page has none, since a drawn review would
+ * (unit 7), phone notifications (unit 8), live events (unit 5; the reviews page has none, since a drawn review would
  * be an invented one),
  * each a piece of the
  * studio's real screen in HTML, with its words and figures from the code.
@@ -28,7 +28,7 @@ import { MAX_DISCORD_PRODUCTS, MAX_PRODUCT_ROLES } from "@/lib/discord-rules";
 import { findPage } from "@/lib/site-pages";
 import { formatMoney } from "@/lib/money";
 import { JOIN_EARLY_MINUTES } from "@/lib/community-text";
-import { ROLE_NAMES } from "@/lib/team-roles";
+import { ROLE_NAMES, can } from "@/lib/team-roles";
 import { MAX_TEAM } from "@/lib/team";
 import { stampLine } from "@/lib/pdf-stamp-line";
 import { stampLine as printedLine } from "@/lib/pdf-stamp";
@@ -38,7 +38,7 @@ import { done, is, part } from "./check";
 
 const text = (html: string) => html.replace(/<[^>]+>/g, "\n").replace(/&#x27;/g, "'").replace(/&amp;/g, "&").split("\n").map((s) => s.trim()).filter(Boolean);
 const read = (file: string) => readFileSync(file, "utf8");
-const draw = (visual: "bundles" | "quizzes" | "keys" | "webhooks" | "calendar" | "discord" | "community" | "affiliates" | "events" | "team" | "emailPlatforms" | "stamp" | "ways") => renderToStaticMarkup(createElement(FeatureVisual, { visual, tone: "light" }));
+const draw = (visual: "bundles" | "quizzes" | "keys" | "webhooks" | "calendar" | "discord" | "community" | "affiliates" | "events" | "team" | "emailPlatforms" | "stamp" | "ways" | "phone") => renderToStaticMarkup(createElement(FeatureVisual, { visual, tone: "light" }));
 const hidden = (html: string) => html.startsWith('<figure class="w-full min-w-0 max-w-[26rem]"><div aria-hidden="true">');
 
 function main(): void {
@@ -210,6 +210,16 @@ function main(): void {
   is("which ways show is said to depend on each creator's own Stripe", w.some((x) => /depends on what is switched on in each creator's own Stripe account/.test(x)), true);
   is("drawn, hidden, beside its caption", hidden(wy), true);
 
+  part("Phone notifications");
+  is("the phone notifications page shows its card", findPage("platform", "phone-notifications")?.visual, "phone");
+  const ph = draw("phone");
+  const pn = text(ph);
+  const alerts = read("components/phone-alerts-panel.tsx");
+  is("the device card's heading, tag, legend and test, in the panel's words", [["This device", "Notifications on", "Tell this device about", "Send a test", "Turn off on this device"].every((w) => pn.includes(w)) && alerts.includes('"Turn off on this device"'), alerts.includes("This device"), alerts.includes('"Notifications on"'), alerts.includes(">Tell this device about<"), alerts.includes('"Send a test"')], [true, true, true, true, true]);
+  is("each kind with the panel's own label and hint", [["Sales", "Every paid order: the amount and what was bought"], ["Bookings", "A call or a seat booked: what, when, and what was paid"], ["Community reports", "A member reported a post or a comment"], ["Live events", "A community live event starts in 15 minutes"]].every(([label, hint]) => pn.includes(label) && pn.includes(hint) && alerts.includes(`label: "${label}", hint: "${hint}"`)), true);
+  is("the four kinds a Support member may hear, and the caption says so", [can("support", "orders"), can("support", "community"), pn.some((x) => /as a Support team member sees them/.test(x))], [true, true, true]);
+  is("drawn, hidden, beside its caption", hidden(ph), true);
+
   part("Nothing that is not the code's or marked as an example");
   for (const [name, words, allowed] of [
     ["bundles", b, /^(In it: 3 of \d+|\$77 of products for \$49|\$\d+(\.\d\d)?|.*example.*)$/],
@@ -220,6 +230,7 @@ function main(): void {
     ["discord", d, /^(Up to \d+ roles for each product, on up to \d+ products\.|Gives \d roles?\.|.*example.*)$/],
     ["community", m, /^(48|112|31|.*example.*)$/],
     ["affiliates", a, /^(120|6|\$59\.40|\$30|\$29\.40|.*example.*)$/],
+    ["phone", pn, /^(A community live event starts in 15 minutes|.*example.*)$/],
     ["stamp", sp, /^(Week 1: the plan|Sold to maya@example\.com on Sep 26, 2026 · order …E54F2A · for personal use|.*example.*)$/],
     ["team", t, new RegExp(`^(2 of ${MAX_TEAM} places used|Joined Oct 3, 2026|Invited as ${ROLE_NAMES.support} · the link works until Nov 8|.*example.*)$`)],
     ["events", e, /^(2 coming up|\w+day, November (10|19)\b.* \(E[SD]T\) · (1 hour|45 minutes)|12 of 30 places taken|8 going|The way in shows \d+ minutes before the start, only to members who can come\.|.*example.*)$/],
