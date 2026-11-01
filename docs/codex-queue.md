@@ -5527,6 +5527,23 @@ Regras que valem para TODOS os itens desta seção (as mesmas da seção SH):
 7. Inglês americano e as exigências de acessibilidade em vigor (WCAG 2.2 AAA como ponto de partida). Nada de depoimento, número, resultado, escassez ou urgência inventados, nem promessa de ganho garantido; nenhuma afirmação sobre concorrente sem fonte oficial datada.
 8. Ao concluir cada item, registre o commit, o resultado da suíte completa e a publicação, e deixe o estado como "pronto e desligado, aguardando o dono" quando houver interruptor.
 
+
+### 219 — Complemento do dono: infinitamente e evidentemente melhor que o Kajabi Cofounder (31/10/2026, 23h42 Fortaleza; diferença de 23h44 aplicada no ponto 8)
+
+Solicitação do dono (31/10/2026, 23h42, horário de Fortaleza), sobre a loja montada inteira pela IA: "quero o meu infinitamente e evidentemente melhor" que o Cofounder do Kajabi. Complemento do 219 [OP5], sem número, seção ou posição nova. Antes de construir, reconferir o Cofounder na página oficial do Kajabi com data (kajabi.com/pricing lista hoje "Cofounder" em "AI & Agents"). Pelo levantamento já gravado neste item, o Cofounder conversa no painel, lê a presença on-line do criador a partir do e-mail e entrega rascunhos de cursos, ofertas, páginas e e-mails e um plano de 3 a 6 passos; não publica, não cria imagens e não monta automações, e o criador ainda constrói, configura e publica tudo.
+
+"Evidentemente melhor" significa que a diferença precisa ser vista na tela, lado a lado, em cada ponto abaixo, conferido com teste de ponta a ponta e com a régua de passos e decisões da VR 4:
+1. Pronto, não rascunho: a loja inteira sai montada como rascunho oculto e publicável com uma aprovação: produtos com preços e termos que o criador confirmou, páginas de venda, checkout, e-mail de boas-vindas e sequência, funil com a automação ligada ao produto, cupom e oferta depois da compra quando fizer sentido, e os fatos do assistente da loja. Nada vai ao ar sem o criador aprovar.
+2. A partir do que o criador já tem: lê o que ele indicar (link na bio, YouTube, Instagram, site, arquivos enviados) e reaproveita o conteúdo real dele; nunca inventa depoimento, número, resultado, escassez ou credencial.
+3. Menos trabalho medido: uma tela por passo, padrões que funcionam sem configurar, e a contagem de passos e decisões até a loja publicável menor que a do Kajabi com Cofounder, registrada no PR.
+4. Mostra o que fez e deixa desfazer: lista do que foi criado, com prévia de cada peça, troca de qualquer peça por outra versão e desfazer de tudo num clique.
+5. Continua depois do primeiro dia: o Marktmorgen Path e a tela Today sugerem o próximo passo com base nos números reais da loja, sem prometer resultado.
+6. Custo com teto: cada chamada de IA reservada antes do gasto, com teto por plano dentro da regra MR vigente; desconhecido reprova; nenhum preço, limite visível ou comissão muda por este item.
+7. Honestidade e acessibilidade: inglês americano simples, AAA (AX274), rótulo de IA desenhado pela página, regras VR 1 e 2.
+8. Qualidade e beleza, em primeiro lugar (diferença do pedido do dono de 31/10/2026, 23h44 Fortaleza: "infinitamente e evidentemente melhor em tudo, inclusive e especialmente qualidade e beleza"): cada peça que a IA monta (páginas, imagens, e-mails, checkout e a própria tela do assistente) usa o visual da manhã do Marktmorgen (571 [VS1]: paleta clara com 7:1, Unbounded e Figtree, formas e cores variadas, nenhuma imagem repetida, régua de beleza integritas, consonantia e claritas) e sai pronta para publicar sem retoque. A comparação lado a lado com o Kajabi Cofounder inclui capturas de tela das peças entregues pelos dois, e a do Marktmorgen precisa ser visivelmente mais bonita e mais bem acabada em cada uma; o texto produzido passa pela revisão de clareza do inglês americano simples antes de aparecer.
+
+Reaproveitar o que já existe (escrita com IA, assistente da página de vendas, funis com modelos, importador, Path, assistente da loja) e coordenar com 256 [KJ1], 260 [KJ5] e 261 [KJ6], sem refazê-los. Nenhuma conta, termo, pagamento ou contato externo; somente testes sintéticos.
+
 220. [HL1] Programa de afiliados do próprio Marktmorgen, com comissão recorrente
 
 Estado: OR: após o Bloco A, na ordem já existente entre 206 [SH3] e 272 [HM1]; 232 [CA1] foi antecipado e não se repete; antes do Bloco B. Registro de posição; os estados e provas históricos abaixo permanecem válidos.
