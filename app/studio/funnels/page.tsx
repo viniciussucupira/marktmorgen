@@ -257,7 +257,7 @@ export default async function StudioFunnelsPage({ searchParams }: Params) {
 
         <h2 className="mt-14 text-xl font-semibold tracking-[-0.02em] text-ink">Offers after they pay</h2>
         <p className="mt-3 max-w-2xl text-ink-soft">
-          {`Right after paying, the buyer sees one offer at a time on their thank-you page, up to ${MAX_FUNNEL_STEPS} per product. Each offer has a yes and a no thanks, and you choose where each one leads: another offer, a cheaper one after a no, or the end. Yes charges the card they just used, in one press, on your own Stripe account.`}
+          {`Right after paying, the buyer sees one offer at a time on their thank-you page, up to ${MAX_FUNNEL_STEPS} per product. Each offer has a yes and a no thanks, and you choose where each one leads: another offer, a cheaper one after a no, or the end. Yes charges the card they just used, in one press, on your own Stripe account. The offers also follow a purchase from the cart: those of the first product in the cart that has offers, never something already in the cart or bought before.`}
         </p>
 
         {store.tax.enabled ? (
