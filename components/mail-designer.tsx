@@ -118,8 +118,12 @@ export function MailBodyEditor({
           </button>
         </div>
       </div>
+      <p className="mt-1 text-xs text-ink-soft">The same words as in the editor, laid out as the email is sent. Nothing in it can be pressed here.</p>
       <div className="mt-1 rounded-2xl bg-[#f7f5f0] p-4">
         <div
+          // Inert: its headings stay out of the page's outline, its links and buttons out of the Tab order and out of reach
+          // of a click that would leave the page and the draft. What it shows is the editor's own text, read there.
+          inert
           className="mx-auto rounded-2xl bg-white p-5 text-[16px] leading-[1.6] text-[#1c1917] [overflow-wrap:anywhere]"
           style={phone ? { maxWidth: 390 } : undefined}
           // Drawn by the same function that draws the email: everything in it is escaped (lib/mail-body.ts).
@@ -157,7 +161,12 @@ export function MailBodyEditor({
             aria-label={label}
             onChange={(e) => onChange(e.target.value)}
           />
-          {preview}
+          {/* Beside the text on a wide screen; on a narrow one, folded, so a sequence of several emails is not one long scroll. */}
+          <div className="hidden xl:block">{preview}</div>
+          <details className="xl:hidden">
+            <summary className="inline-flex min-h-11 cursor-pointer items-center text-sm font-semibold text-ink underline underline-offset-4">See it as it is sent</summary>
+            <div className="mt-2">{preview}</div>
+          </details>
         </div>
       ) : (
         <div className="mt-3 grid min-w-0 gap-4 xl:grid-cols-2">

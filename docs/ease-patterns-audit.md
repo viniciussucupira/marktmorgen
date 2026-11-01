@@ -195,7 +195,7 @@ The screen-by-screen audit that 487 [IT4] asks for: what was checked, what was f
   - the funnel editors (their page steps get one through the page editor).
 
 **Fixed.**
-- The email editor now shows "As it is sent" in Write as well as in Design, as the creator types. The email composer and every sequence step get it, as both use this editor. It starts at phone width (390 px, as the page editor), with a Phone or Wide choice that says which is on. It is drawn by the same function that draws the email, so it cannot show something the email does not. An empty preview's words are now 7.6:1 on white, up from 4.8:1.
+- The email editor now shows "As it is sent" in Write as well as in Design, as the creator types. The email composer and every sequence step get it, as both use this editor. It starts at phone width (390 px, as the page editor), with a Phone or Wide choice that says which is on. It is drawn by the same function that draws the email, so it cannot show something the email does not. An empty preview's words are now 7.6:1 on white, up from 4.8:1. The preview is inert: its headings stay out of the page's outline, and its links and buttons stay out of the Tab order and out of reach of a click that would leave the page and the draft. It says that it shows the editor's own words. On a narrow screen, in Write, it is folded under "See it as it is sent", so a sequence of several emails is not one long scroll.
 
 **Still to do, most used first:**
 - the product editor;
