@@ -172,7 +172,10 @@ export function ReviewRow({ review }: { review: StudioReview }) {
   const [reply, setReply] = useState(review.reply);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [hiding, setHiding] = useState(false);
+  /** Which reason picker is open: to hide the review, or to take its photo off. */
+  const [picking, setPicking] = useState<"hide" | "photo" | null>(null);
+  const hiding = picking !== null;
+  const setHiding = (open: boolean) => setPicking(open ? "hide" : null);
   const [reason, setReason] = useState("");
   /** The button that opened the reasons, where focus goes back when they close. */
   const opener = useRef<HTMLButtonElement>(null);
@@ -229,7 +232,9 @@ export function ReviewRow({ review }: { review: StudioReview }) {
             type="button"
             className="btn btn-ghost btn-sm"
             disabled={busy !== null}
-            onClick={() => act("photo", { action: "photo" }, "Photo taken off the review.")}
+            aria-expanded={picking === "photo"}
+            aria-controls={picking === "photo" ? `${base}-hide` : undefined}
+            onClick={(event) => { opener.current = event.currentTarget; setPicking(picking === "photo" ? null : "photo"); setReason(""); }}
           >
             <Icon name="trash" size={15} />
             {busy === "photo" ? "Taking it off…" : "Take the photo off"}
@@ -356,11 +361,13 @@ export function ReviewRow({ review }: { review: StudioReview }) {
         </p>
       ) : null}
 
-      {hiding && (!review.hidden || noReason) ? (
+      {picking === "photo" || (picking === "hide" && (!review.hidden || noReason)) ? (
         <fieldset id={`${base}-hide`} className="mt-3 rounded-xl border border-line p-3">
-          <legend className="px-1 text-sm font-semibold text-ink">Which review rule does it break?</legend>
+          <legend className="px-1 text-sm font-semibold text-ink">{picking === "photo" ? "Which review rule does the photo break?" : "Which review rule does it break?"}</legend>
           <p className="text-sm text-ink-soft">
-            A review is hidden only for one of these rules, the same for every rating. A low star rating or criticism is not a reason to hide a review. Its stars stay in your average either way.
+            {picking === "photo"
+              ? "A buyer's photo is taken off only for one of these rules, the same for every rating. A photo that shows a problem with the product is not a reason to take it off."
+              : "A review is hidden only for one of these rules, the same for every rating. A low star rating or criticism is not a reason to hide a review. Its stars stay in your average either way."}
           </p>
           <div className="mt-2 space-y-2">
             {HIDE_REASONS.map((option, index) => (
@@ -386,9 +393,14 @@ export function ReviewRow({ review }: { review: StudioReview }) {
               type="button"
               className="btn btn-primary btn-sm"
               disabled={busy !== null || !reason}
-              onClick={() => { void act("hide", { action: "hide", hidden: true, reason }, "Review hidden.").then((ok) => { if (ok) closeReasons(); }); }}
+              onClick={() => {
+                const done = picking === "photo"
+                  ? act("photo", { action: "photo", reason }, "Photo taken off the review.")
+                  : act("hide", { action: "hide", hidden: true, reason }, "Review hidden.");
+                void done.then((ok) => { if (ok) closeReasons(); });
+              }}
             >
-              {busy === "hide" ? "Hiding…" : "Hide for this reason"}
+              {busy === "hide" ? "Hiding…" : busy === "photo" ? "Taking it off…" : picking === "photo" ? "Take the photo off for this reason" : "Hide for this reason"}
             </button>
             <button type="button" className="btn btn-ghost btn-sm" onClick={closeReasons}>
               Cancel
