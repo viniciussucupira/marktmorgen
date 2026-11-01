@@ -203,7 +203,7 @@ if op == 'enqueue' then
 end
 if not r then return {'missing'} end
 if raw ~= expected then return {'changed'} end
-if op == 'cancel' then drop(); return {'cancelled'} end
+if op == 'cancel' then drop(); return {'canceled'} end
 if source ~= r.sourceValue then return {'unknown'} end
 if redis.call('EXISTS',KEYS[9],KEYS[10])~=0 then return {'held',raw} end
 local good,p=pcall(cjson.decode,ARGV[6])
@@ -415,7 +415,7 @@ export async function forgetShipmentMail(statsId: string | null | undefined, ema
     const found = await read(String(id), pipeline);
     if (!found || found === "unknown" || found.row.statsId !== statsId || (email !== undefined && found.row.person !== person(email))) throw Error("Shipment mail deletion ownership is unknown");
     const changed = await mutate("cancel", found.row, found.raw, null, runtime);
-    if (changed?.[0] !== "cancelled") throw Error("Shipment mail deletion was not confirmed");
+    if (changed?.[0] !== "canceled") throw Error("Shipment mail deletion was not confirmed");
     deleted++;
   }
   const completed = ownArray(await pipeline([["PEXPIRE", fence, SHIPMENT_MAIL_ERASURE_FENCE_MS]]));

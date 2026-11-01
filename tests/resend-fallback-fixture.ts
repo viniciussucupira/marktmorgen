@@ -6,6 +6,7 @@ import { createHash } from "node:crypto";
 import { guardedResendPost as realPost, type ResendPost, type ResendTransportRuntime } from "../lib/resend-fallback-transport";
 import { initializeResendFallbackBudget, RESEND_FALLBACK_BUDGET_LUA, type ResendFallbackReview } from "../lib/resend-fallback-budget";
 import { store } from "./redis-stub";
+import { MemoryRedis } from "@/lib/redis-memory";
 
 const hash = (s: string) => createHash("sha256").update(s).digest("hex");
 type Claim = { token: string; n: number; fingerprint: string; dispatchToken: string; acceptedAt: number; expiresAt: number; state: "reserved" | "dispatched" | "unknown" | "accepted" | "confirmed_not_accepted" };
@@ -26,6 +27,7 @@ export async function createResendFallbackFixture(options: {
     bootstrap: { noUnresolvedPriorAttempts: true, allPriorUsageIncluded: true, evidence: "Explicit synthetic fixture initialization" },
   };
   const claims = new Map<string, Claim>();
+  const acknowledgements = new MemoryRedis();
   let initialized = false, held = 0, accepted = options.sent ?? 0, lost: string | null = null;
   const commands: (string | number)[][] = [], requests: { method: string; url: string; body?: string }[] = [];
   const pipeline: NonNullable<ResendTransportRuntime["pipeline"]> = async batch => {
@@ -57,7 +59,7 @@ export async function createResendFallbackFixture(options: {
         } else if (!claim || claim.token !== token || claim.n !== n || claim.fingerprint !== String(a[20])) reply = ["denied", "claim"];
         else if (op === "dispatch") {
           if (claim.state !== "reserved") reply = ["denied", "already_dispatched"];
-          else { claim.state = "dispatched"; claim.dispatchToken = String(a[21]); reply = ["dispatch", token, String(n), String(Math.min(Number(a[6]) + 1000, reset)), claim.dispatchToken]; }
+          else { claim.state = "dispatched"; claim.dispatchToken = String(a[21]); reply = ["dispatch", token, String(n), String(Math.min(Number(a[6]) + 1000, reset)), claim.dispatchToken, String(a[6])]; }
         } else if (op === "cancel") {
           if (claim.state === "confirmed_not_accepted") reply = ["already_released"];
           else if (claim.state !== "reserved") reply = ["denied", "already_dispatched"];
@@ -74,9 +76,9 @@ export async function createResendFallbackFixture(options: {
           }
         } else throw Error("Unexpected budget operation");
       }
-      // Store the observable fixture record in the shared Redis stand-in,
-      // without disguising this adapter as a Lua execution.
-      store.run(["SET", `synthetic:resend:ack:${claimKey}`, JSON.stringify(claims.get(claimKey) ?? { initialized })]);
+      // This account is a separate synthetic provider/ledger fixture. Its
+      // ACK records must not contaminate the application's erasure database.
+      acknowledgements.run(["SET", `synthetic:resend:ack:${claimKey}`, JSON.stringify(claims.get(claimKey) ?? { initialized })]);
       if (op === lost) { lost = null; throw Error("Synthetic committed ACK loss"); }
       results.push(reply);
     }
@@ -109,18 +111,24 @@ export async function createResendFallbackFixture(options: {
 // account, usage HTTP response and ACK adapter. Tests of the real defaults
 // and guard import the product module by relative path and are not aliased.
 const worlds = new Map<string, ReturnType<typeof createResendFallbackFixture>>();
+const clearApplication = store.clear.bind(store);
+store.clear = () => { clearApplication(); worlds.clear(); };
 export async function guardedResendPost(input: ResendPost, runtime: ResendTransportRuntime = {}) {
   if (Object.keys(runtime).length) return realPost(input, runtime);
   const name = `${input.usageCredential}\n${Math.floor(Date.now() / 86_400_000)}`;
-  const anchor = `synthetic:resend:fixture:${hash(name)}`;
   let pending = worlds.get(name);
-  if (!store.run(["GET", anchor])) pending = undefined;
   if (!pending) {
     pending = createResendFallbackFixture({ credential: input.credential, usageCredential: input.usageCredential, fetch: (request, init) => fetch(request, init) });
     worlds.set(name, pending);
-    store.run(["SET", anchor, "SYNTHETIC_FIXTURE_ONLY"]);
   }
-  const world = await pending;
+  let world = await pending;
+  // Legacy journeys deliberately restore Date.now after a future-time case.
+  // That begins a new synthetic clock context, never a live ledger reset.
+  if (Date.now() < world.runtime.binding!.checkedAtMs) {
+    pending = createResendFallbackFixture({ credential: input.credential, usageCredential: input.usageCredential, fetch: (request, init) => fetch(request, init) });
+    worlds.set(name, pending);
+    world = await pending;
+  }
   const binding = world.runtime.binding!;
   if (!binding.sendingCredentialSha256s.includes(hash(input.credential))) binding.sendingCredentialSha256s.push(hash(input.credential));
   return realPost(input, world.runtime);

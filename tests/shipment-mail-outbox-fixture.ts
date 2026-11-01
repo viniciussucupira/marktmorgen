@@ -49,7 +49,7 @@ export function shipmentOutboxFixture() {
           store.run(["DEL", k[0]]); store.run(["ZREM", k[2], value.id]);
           for (const index of [3, 4, 7]) store.run(["SREM", k[index], value.id]);
           store.run(["EXPIRE", k[1], 400 * 86_400]);
-          answer = [op === "accepted" ? "accepted" : "cancelled"];
+          answer = [op === "accepted" ? "accepted" : "canceled"];
         } else if (op === "claim" && value.state !== "queued" && !(value.state === "preparing" && value.leaseUntil <= now)) answer = ["held", raw];
         else if (op === "claim") {
           value.state = "preparing"; value.owner = owner; value.leaseUntil = now + 60_000;

@@ -107,6 +107,16 @@ async function main() {
   is("the next single service attempt cannot exceed the shared account", await sendEmail({ meter: { by: "company" }, from: message.from, to: message.to[0], subject: "Over quota", text: message.text }, entry.runtime), false);
   is("only the admitted single and batch were posted", entry.requests.filter(r => r.method === "POST").length, 2);
 
+  part("A dedicated full-access usage key is independent of the sending key");
+  const fullAccess = "re_SYNTHETIC_FULL_ACCESS_USAGE_ONLY";
+  process.env.RESEND_READ_API_KEY = fullAccess;
+  const dedicated = await createResendFallbackFixture({ credential, usageCredential: fullAccess, fetch: reply });
+  is("a restricted sending key uses the dedicated account usage credential", await sendEmail({ meter: { by: "company" }, from: message.from, to: message.to[0], subject: message.subject, text: message.text }, dedicated.runtime), true);
+  is("batch uses the same dedicated usage credential", await sendBatch([{ ...message, to: message.to[0], html: "<p>The original content</p>" }], "synthetic-dedicated-usage", { by: "company" }, "resend", dedicated.runtime), "sent");
+  is("durable shipment fallback uses the dedicated usage credential", await queuedShipmentMailSender(dedicated.runtime)({ ...message, to: message.to[0], replyTo: "owner@example.test" }, async () => true, { id: "synthetic_dedicated_usage_shipment" }), "accepted");
+  is("all three real entry points made reviewed usage reads and provider POSTs", [dedicated.requests.filter(r => r.method === "GET").length, dedicated.requests.filter(r => r.method === "POST").length], [3, 3]);
+  delete process.env.RESEND_READ_API_KEY;
+
   part("A real shipment waits durably above fallback quota");
   process.env.NIMBUS_DATA_KEY = "SYNTHETIC_SHIPMENT_DATA_KEY_1234567890";
   const now = Date.now(), queue = shipmentOutboxFixture();

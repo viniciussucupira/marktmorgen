@@ -3,6 +3,7 @@
  * is required; a successful GET alone never proves ownership or a hard cap.
  */
 import { createHash, randomBytes } from "node:crypto";
+import { performance } from "node:perf_hooks";
 import { RESEND_TIMEOUT_MS, timed } from "@/lib/fetch-timeout";
 import { redisPipeline } from "@/lib/redis";
 import {
@@ -162,7 +163,7 @@ export async function guardedResendPost(request: ResendPost, runtime: ResendTran
     const result = await timed(RESEND_TIMEOUT_MS, async signal => {
       // No await, user callback, serialization or mutable payload between this
       // clock check and invoking the exact single HTTP request.
-      if (Date.now() >= dispatch.sendBeforeMs) return null;
+      if (!Number.isFinite(dispatch.sendBeforeMonotonicMs) || Date.now() >= dispatch.sendBeforeMs || performance.now() >= dispatch.sendBeforeMonotonicMs) return null;
       const response = await fetcher(`${r.base}${r.path}`, {
         method: "POST", headers: { Authorization: `Bearer ${r.credential}`, "Content-Type": "application/json", ...(under ? { "Idempotency-Key": under } : {}) },
         body: r.body, cache: "no-store", signal,

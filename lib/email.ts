@@ -123,6 +123,11 @@ function getKey(): string | null {
   return key ? key : null;
 }
 
+/** The account usage API needs full access, which a domain-restricted send key need not have. */
+function usageKey(): string | null {
+  return process.env.RESEND_READ_API_KEY?.trim() || getKey();
+}
+
 /** Whether an email is from an address on the creators' domain (lib/mail-from.ts). */
 function isCreators(from: string): boolean {
   const creators = creatorDomain(NIMBUS_FROM);
@@ -323,12 +328,13 @@ export async function sendEmail(message: OneMessage, runtime: ResendTransportRun
  */
 export function queuedShipmentMailSender(runtime: ResendTransportRuntime = {}): ShipmentMailDispatch {
   return async (message, beforePost, context) => {
+    const usageCredential = usageKey() ?? "";
     const to = oneAddress(message.to);
     if (!to) return "refused";
     const config = sesConfig();
     if (!config || !(await sesReady())) {
       const result = await guardedResendPost({
-        base: BASE, path: "/emails", credential: keyFor(message.from) ?? "", usageCredential: getKey() ?? "",
+        base: BASE, path: "/emails", credential: keyFor(message.from) ?? "", usageCredential,
         body: JSON.stringify({ from: fromLine(message.from), to: [to], subject: headerText(message.subject), text: message.text,
           ...(oneAddress(message.replyTo) ? { reply_to: oneAddress(message.replyTo) } : {}) }),
         idempotencyKey: `shipment:${context.id}`, recipients: 1, beforePost,
@@ -354,6 +360,7 @@ export const sendQueuedShipmentMail: ShipmentMailDispatch = queuedShipmentMailSe
 
 /** One email through Resend: the first sender, and the floor under the other. */
 async function viaResend(message: OneMessage, runtime: ResendTransportRuntime = {}): Promise<boolean> {
+  const usageCredential = usageKey() ?? "";
   const key = keyFor(message.from);
   if (!key) return false;
   const to = oneAddress(message.to);
@@ -385,7 +392,7 @@ async function viaResend(message: OneMessage, runtime: ResendTransportRuntime = 
     try {
       const result = await guardedResendPost({
         base: BASE, path: "/emails", credential: auth,
-        usageCredential: getKey() ?? "", body: body(),
+        usageCredential, body: body(),
         ...(under ? { idempotencyKey: under } : {}), recipients: 1,
       }, runtime);
       if (result.kind === "accepted_receipt") return true;
@@ -581,12 +588,13 @@ async function dispatchBatch(
     }
   }
   // A batch is one store's, so one address it is all from.
+  const usageCredential = usageKey() ?? "";
   const key = going.length ? keyFor(going[0].from) : getKey();
   if (!key) return "retry";
   const tagged = going.some((m) => cleanTags(m.tags).length > 0);
   const post = async (withTags: boolean, under: string, auth: string = key, fromSite = false): Promise<Response | "accepted_receipt" | null> => {
     const result = await guardedResendPost({
-      base: BASE, path: "/emails/batch", credential: auth, usageCredential: getKey() ?? "",
+      base: BASE, path: "/emails/batch", credential: auth, usageCredential,
       idempotencyKey: under, recipients: going.length,
       body: JSON.stringify(going.map((m) => {
         const replyTo = oneAddress(m.replyTo);

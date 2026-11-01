@@ -120,8 +120,8 @@ def main():
         fresh = run("enqueue", r, k)
         c = run("claim", r, k, fresh[1], owner="c" * 48)
         preparing = json.loads(c[1])
-        cancelled = run("cancel", preparing, k, c[1], p=None)
-        assert cancelled == ["cancelled"]
+        canceled = run("cancel", preparing, k, c[1], p=None)
+        assert canceled == ["canceled"]
         assert run("dispatch", preparing, k, c[1], owner="c" * 48)[0] == "missing"
         assert redis.command("SMEMBERS", k[4]) == []
         print("PASS: erasure before dispatch destroys payload, removes indices and blocks a stale worker")
@@ -168,7 +168,7 @@ def main():
         prepared = run("claim", r, k, enqueued[1])
         redis.command("SET", k[8], "store-closing-generation")
         assert run("dispatch", json.loads(prepared[1]), k, prepared[1])[0] == "held"
-        assert run("cancel", json.loads(prepared[1]), k, prepared[1], p=None) == ["cancelled"]
+        assert run("cancel", json.loads(prepared[1]), k, prepared[1], p=None) == ["canceled"]
         print("PASS: store/person deletion that wins before the dispatch barrier prevents the provider POST")
 
         parallel, parallel_keys = fixture("parallel", store="two")
@@ -204,7 +204,7 @@ def main():
             before = redis.command("HGET", corrupt_keys[5], "items")
             before_bytes = redis.command("HGET", corrupt_keys[5], "bytes")
             redis.command("HSET", corrupt_keys[5], "bytes", malformed)
-            assert run("cancel", corrupt, corrupt_keys, current[1], p=None) == ["cancelled"]
+            assert run("cancel", corrupt, corrupt_keys, current[1], p=None) == ["canceled"]
             assert redis.command("HGET", corrupt_keys[5], "items") == before
             assert redis.command("HGET", corrupt_keys[5], "bytes") == malformed
             assert run("cancel", corrupt, corrupt_keys, current[1], p=None) == ["missing"]
@@ -216,7 +216,7 @@ def main():
         unknown, unknown_keys = fixture("unknown-pool", store="three")
         enrolled = run("enqueue", unknown, unknown_keys)
         redis.command("HSET", unknown_keys[5], "bytes", "not-a-number")
-        assert run("cancel", unknown, unknown_keys, enrolled[1], p=None) == ["cancelled"]
+        assert run("cancel", unknown, unknown_keys, enrolled[1], p=None) == ["canceled"]
         assert redis.command("EXISTS", unknown_keys[0]) == 0
         assert redis.command("HGET", unknown_keys[5], "bytes") == "not-a-number"
         print("PASS: privacy erasure removes payload even if financial evidence is corrupt; unknown reserve is never released")
