@@ -15,7 +15,10 @@
  *   - the lesson link in the course editor uses it, with a visible label.
  */
 import { readFileSync } from "node:fs";
-import { linkOnLeave, roomOnLeave } from "@/lib/url-check";
+import { checkWith, linkOnLeave, roomOnLeave } from "@/lib/url-check";
+import { MAX_CHAT_URL, chatKind } from "@/lib/chat-kind";
+import { MAX_REVIEW_URL, parseReviewElsewhere } from "@/lib/review-elsewhere";
+import { readReport } from "@/lib/takedown-rules";
 import { MAX_ROOM_LENGTH, cleanRoom } from "@/lib/call-setup";
 import { readLink, LINK_PROBLEMS } from "@/lib/product-link";
 import { done, is, part } from "./check";
@@ -50,6 +53,7 @@ is("the fix is a button at least 44 px tall that puts the address in, offered on
 is("after the fix the focus goes back to the field, never to the page", field.includes("input.current?.focus();"), true);
 is("no browser bubble in other words, and no silent cut of a long address", field.includes('type="text"') && field.includes('inputMode="url"') && !field.includes("maxLength"), true);
 is("the message is announced", field.includes('role="status"'), true);
+is("the message has an icon beside its words, so it is not told by color alone", field.includes('<Icon name="alert" size={18} className="mt-0.5 shrink-0" />'), true);
 const course = readFileSync("components/course-editor.tsx", "utf8");
 is("the lesson link uses it, with a visible label tied by its id", course.includes("<UrlField") && /htmlFor=\{`\$\{prefix\}-link`\}/.test(course) && course.includes("id={`${prefix}-link`}"), true);
 const product = readFileSync("components/product-editor.tsx", "utf8");
@@ -77,4 +81,29 @@ is("a call's meeting links use it, each with a visible label tied by id", (call.
 const events = readFileSync("components/community-events-studio.tsx", "utf8");
 is("a community event's link uses it", events.includes("<UrlField") && events.includes("check={LINK_CHECK}"), true);
 is("and an empty one is said there, since it is required", events.includes('const LINK_CHECK: LinkCheck = (raw) => (raw.trim() ? ROOM_CHECK(raw) : { problem: MESSAGES.link, fix: null });'), true);
+part("A notice's page address, by the reading the notice is held to");
+const reportForm = readFileSync("components/report-form.tsx", "utf8");
+is("the report form's page address uses it, required, with its help tied to it", reportForm.includes('<UrlField id="report-url"') && reportForm.includes("check={REPORT_URL_CHECK}") && reportForm.includes('describedBy="report-url-help"') && reportForm.includes('<p id="report-url-help"'), true);
+is("a notice whose address the field refuses is not sent, and the focus goes to the field", reportForm.includes('if (REPORT_URL_CHECK(fields.url).problem) {') && reportForm.includes('document.getElementById("report-url")?.focus();'), true);
+const longReport = readReport({ kind: "other", url: `https://marktmorgen.com/@x/${"a".repeat(600)}`, work: "x".repeat(40), name: "Jo Doe", email: "jo@example.org", contact: "Somewhere 1", signature: "Jo Doe", goodFaith: true, accurate: true });
+is("the server refuses an address longer than it keeps, never cuts it", longReport.ok ? "kept" : longReport.problem, "url");
+is("it is held to the same pattern as readReport", reportForm.includes("/^https?:\\/\\/\\S+$/i.test(raw)") && readFileSync("lib/takedown-rules.ts", "utf8").includes("if (!/^https?:\\/\\/\\S+$/i.test(report.url))"), true);
+part("A chat's webhook address, by the reading the server posts with");
+const chat = checkWith((raw) => (chatKind(raw) ? raw.trim() : null), "not a chat", MAX_CHAT_URL);
+is("a Slack address missing https:// is offered back", chat("hooks.slack.com/services/T0000/B0000/XXXXXXXXXXXX").fix, "https://hooks.slack.com/services/T0000/B0000/XXXXXXXXXXXX");
+is("another address is the editor's words, nothing offered", chat("https://example.com/hook"), { problem: "not a chat", fix: null });
+is("the longest address either chat takes fits", ["https://hooks.slack.com/services/" + "a".repeat(200), "https://discordapp.com/api/webhooks/" + "1".repeat(30) + "/" + "a".repeat(200)].every((u) => chatKind(u) !== null && u.length <= MAX_CHAT_URL), true);
+const chatEditor = readFileSync("components/chat-summary-editor.tsx", "utf8");
+is("the chat summary's address uses it, by chatKind, never kept by the browser", chatEditor.includes('<UrlField\n            id="chat-summary-url"') && chatEditor.includes("check={CHAT_CHECK}") && chatEditor.includes('autoComplete="off"') && chatEditor.includes("chatKind(raw) ? raw.trim() : null"), true);
+is("neither an empty address (it would stop the posting) nor one the server refuses is sent: each try counts in the hour", chatEditor.includes("if (url.trim() && !CHAT_CHECK(url).problem) save(url.trim());"), true);
+is("the chat is named by the same reading, never by a word in the address", chatEditor.includes('setKind(answer.result === "saved" ? chatKind(value) : null);') && !chatEditor.includes('value.includes("slack")'), true);
+is("its buttons line up with the field, not with the message under it", chatEditor.includes('className="mt-1 flex flex-wrap items-start gap-2 text-sm"') && chatEditor.includes('wrapClassName="min-w-0 flex-1"'), true);
+is("the server reads it with the same function", readFileSync("lib/chat-summary.ts", "utf8").includes('import { type ChatKind, chatKind } from "@/lib/chat-kind";'), true);
+part("A public review page, by the reading the server keeps");
+const elsewhere = checkWith((raw) => parseReviewElsewhere(raw)?.url ?? null, "not a review page", MAX_REVIEW_URL);
+is("a Trustpilot page missing https:// is offered back as the server keeps it", elsewhere("www.trustpilot.com/review/harborkitchen.com").fix, parseReviewElsewhere("https://www.trustpilot.com/review/harborkitchen.com")?.url ?? "none");
+is("a page elsewhere is the editor's words, nothing offered", elsewhere("https://example.com/reviews"), { problem: "not a review page", fix: null });
+const reviewStudio = readFileSync("components/review-studio.tsx", "utf8");
+is("a refused review page is said once, beside the field, with the focus taken there", reviewStudio.includes('const field = document.getElementById("ask-elsewhere");') && reviewStudio.includes("else setError(MESSAGES.elsewhere);"), true);
+is("the review page field uses it, optional, with its note tied to it", reviewStudio.includes('<UrlField\n            id="ask-elsewhere"') && reviewStudio.includes("check={ELSEWHERE_CHECK}") && reviewStudio.includes('describedBy="ask-elsewhere-note"'), true);
 done();
