@@ -181,6 +181,49 @@ def main():
         assert commit(code=unsafe) == 1
         assert state() == ["2", [], []]
         print("PASS: negative control without intent reproduces double counting and release of the other order")
+
+        server_time = redis.command("TIME")
+        server_now = int(server_time[0]) * 1000 + int(server_time[1]) // 1000
+        expired = server_now - 1000
+        worker_now = expired - 1000
+        worker_hour = worker_now // 3_600_000
+
+        def setup_clock():
+            redis.command("DEL", *keys)
+            redis.command("HSET", keys[2], str(worker_hour), 2)
+            redis.command("HSET", keys[3], str(worker_hour), 2 * 8960)
+
+        for expiry in (expired, server_now):
+            setup_clock()
+            before = state()
+            assert commit(at=worker_now, expiry=expiry, original_hour=str(worker_hour)) == -1
+            assert commit(at=worker_now, expiry=expiry, original_hour=str(worker_hour)) == -1
+            assert state() == before and redis.command("EXISTS", keys[0]) == 0
+        print("PASS: Redis-past and exact Redis-time expiry refuse despite a lagging worker, before every mutation")
+
+        # A healthy horizon still works when clocks differ; original hour and
+        # window keys stay the same instead of being reconstructed from TIME.
+        worker_now = server_now - 73 * 3_600_000
+        worker_hour = worker_now // 3_600_000
+        setup_clock()
+        assert commit(at=worker_now, expiry=until, original_hour=str(worker_hour)) == 1
+        before = state()
+        assert before == ["1", [str(worker_hour), "1"], [str(worker_hour), "8960"]]
+        assert commit(at=worker_now, expiry=until, original_hour=str(worker_hour)) == 2
+        assert state() == before
+        print("PASS: valid expiry with Redis ahead by 73h applies once and preserves the original admission hour")
+
+        # Red control retains the durable-intent protocol but removes only its
+        # server-time admission guard. Both PXAT writes disappear immediately.
+        clock_guard = "if untilAt<=serverNow then return -1 end"
+        assert script.count(clock_guard) == 1
+        unsafe_clock = script.replace(clock_guard, "")
+        setup_clock()
+        assert commit(at=worker_now, expiry=expired, original_hour=str(worker_hour), code=unsafe_clock) == 1
+        assert redis.command("GET", keys[0]) is None
+        assert commit(at=worker_now, expiry=expired, original_hour=str(worker_hour), code=unsafe_clock) == 1
+        assert state() == ["2", [], []]
+        print("PASS: negative control without Redis-time guard reproduces expiry-driven duplicate settlement")
     finally:
         redis.command("DEL", *keys)
         redis.close()

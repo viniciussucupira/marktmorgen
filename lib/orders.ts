@@ -140,6 +140,11 @@ local untilAt,now,keep = tonumber(ARGV[7]),tonumber(ARGV[8]),tonumber(ARGV[9])
 if not receipt or #receipt~=68 or string.sub(receipt,1,4)~='oc1:' or not bytes or bytes<1 or bytes%1~=0 or bytes>1000000000 or
  (n~=0 and n~=1) or not folder or #folder~=32 or not owner or #owner<1 or #owner>320 or
  not untilAt or not now or untilAt<=now or not keep or keep~=34560000 then return -1 end
+-- PXAT uses Redis's clock, not the worker's. A lagging worker must never
+-- create an already-expired intent/receipt and then apply the effects again.
+local serverTime=redis.call('TIME')
+local serverNow=tonumber(serverTime[1])*1000+math.floor(tonumber(serverTime[2])/1000)
+if untilAt<=serverNow then return -1 end
 local prior=redis.call('GETRANGE',KEYS[1],0,68)
 if prior~='' then if prior==receipt then return 2 else return -1 end end
 if present[1]~='none' then return -1 end
