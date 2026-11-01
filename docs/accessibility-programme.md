@@ -135,7 +135,9 @@ Muted words on store pages (dates, notes, hints, "Unsaved" and similar) are smal
 - **After:**
   - Sand's muted is `#4f4538`: 7.98:1 on the page, 9.22:1 on a card and 8.48:1 on an item.
   - A band must now give muted words 7:1. It only grows paler toward the card to pass, which always reaches it: the worst band is now 7.01:1.
-  - `tests/page-style.test.ts` checks 7:1 on the page, on cards, on items and on bands, in every theme and across every accent tested.
+  - The soft accent (behind chosen, selected and highlighted things) also gives muted words 7:1. On "night" it was 4.05–4.3:1.
+  - `tests/page-style.test.ts` checks 7:1 on the page, on cards, on items, on bands and on the soft accent, in every theme and across every accent tested.
 - **Not changed:**
   - Links on a band stay at 4.5:1. Asking 7:1 there has no solution for some accents the creator may pick, so it stays a recorded gap and needs a design choice.
   - Large text and non-text contrast were not changed.
+  - Some backgrounds are barely set apart from the card. The soft accent on "night" moved from 1.60:1 to 1.30:1 against the card. Bands were already as close as 1.06:1 for some accents, before and after this change. Text stays readable on them, which is what 1.4.6 asks. A background difference is never the only sign that something is chosen (1.4.1), so a minimum band-to-card difference is a design choice left open.

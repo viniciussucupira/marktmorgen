@@ -336,7 +336,8 @@ export function lookColours(look: LookPaint): LookColours {
   const accentSoft = nearestPassing(
     mix(fill, palette.card, palette.dark ? 0.72 : 0.86),
     palette.card,
-    (c) => contrast(c, palette.text) >= 7,
+    // Muted words sit on it too (a chosen or highlighted thing's note): 7:1, which the card always reaches.
+    (c) => contrast(c, palette.text) >= 7 && contrast(c, palette.muted) >= 7,
   );
 
   const band = nearestPassing(
