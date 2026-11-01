@@ -1,4 +1,5 @@
 import { remainingResourceCostCents } from './cost-envelope';
+import { customerTaxReviewFields, type CustomerTaxReview, type TaxContext } from './customer-tax-review';
 import { assessCustomerWorstCase, CUSTOMER_COST_CATEGORIES, MINIMUM_NET_PROFIT_CENTS, PLANNING_PROFIT_TAX_FLOOR_BPS, type CustomerWorstCase } from './net-margin-rules';
 
 export type ReviewedResourceEnvelope = { approved: boolean; reason: string; remainingMicroUsd: number | null; affordableUnits: number | null };
@@ -18,7 +19,9 @@ function ownData(record: unknown, key: string): unknown {
 function snapshot(review: unknown): CustomerWorstCase | null {
   if (!review || typeof review !== 'object' || Array.isArray(review)) return null;
   const costs = ownData(review, 'costCeilings');
+  const fiscal = customerTaxReviewFields(review);
   return {
+    ...(fiscal.present ? { taxReview: fiscal.taxReview as CustomerTaxReview, taxContext: fiscal.taxContext as TaxContext } : {}),
     collectedRevenueCents: ownData(review, 'collectedRevenueCents') as number | null,
     refundableRevenueCents: ownData(review, 'refundableRevenueCents') as number | null,
     taxesCeilingCents: ownData(review, 'taxesCeilingCents') as number | null,

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { assessFundedExposure, EXPOSURE_SCOPES } from '@/lib/funded-exposure-rules';
+import { assessFundedExposure, fundedExposureDetails, EXPOSURE_SCOPES } from '@/lib/funded-exposure-rules';
 import { assessCustomerWorstCase } from '@/lib/net-margin-rules';
 import { zeroExposureFixture } from './margin-test-fixtures';
 function loss(cents:number){const r=zeroExposureFixture();r.cases.trial.maximumMonthlyCases=3;r.cases.trial.worstCase!.costCeilings.ai=cents;r.monthlyBudgetCents=cents*3;return r;}
@@ -43,4 +43,25 @@ test('unknown waitlist operations, occurrence caps and taxes never become free',
   (r:ReturnType<typeof zeroExposureFixture>)=>{r.cases.platform_waitlist.worstCase!.costCeilings.email=null;},
   (r:ReturnType<typeof zeroExposureFixture>)=>{r.cases.platform_waitlist.worstCase!.taxesCeilingCents=null;},
  ]){const r=zeroExposureFixture();edit(r);assert.equal(assessFundedExposure(r).approved,false);}
+});
+
+test('both exposure readers refuse any raw fiscal presence before constructing legacy snapshots',()=>{
+ let reads=0;
+ for(const field of ['taxReview','taxContext'])for(const kind of ['enumerable','hidden','getter','inherited','proxy']){
+  const r=loss(100),row=r.cases.trial.worstCase!;
+  assert.equal(assessFundedExposure(r).approved,true);assert.ok(fundedExposureDetails(r));
+  if(kind==='inherited')Object.setPrototypeOf(row,{[field]:null});
+  else Object.defineProperty(row,field,kind==='getter'?{enumerable:false,get(){reads++;throw Error('must not execute');}}:{value:null,enumerable:kind==='enumerable',configurable:true});
+  if(kind==='proxy')r.cases.trial.worstCase=new Proxy(row,{has(){return false;}});
+  assert.equal(assessFundedExposure(r).approved,false);assert.equal(fundedExposureDetails(r),null);
+ }
+ assert.equal(reads,0);
+});
+
+test('exposure details checks and copies the same once-captured raw',()=>{
+ const r=loss(100),item=r.cases.trial,legacy=item.worstCase!,tx={...legacy};
+ Object.defineProperty(tx,'taxReview',{value:null,enumerable:false});let reads=0;
+ r.cases.trial=new Proxy(item,{getOwnPropertyDescriptor(target,key){const d=Reflect.getOwnPropertyDescriptor(target,key);return key==='worstCase'&&d?{...d,value:++reads%2?legacy:tx}:d;}});
+ const actual=fundedExposureDetails(r);assert.ok(actual);assert.equal(reads,1);
+ assert.equal(actual.snapshot,fundedExposureDetails(loss(100))!.snapshot);
 });
