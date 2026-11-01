@@ -5501,6 +5501,7 @@ Escopo:
 12. Interruptor no código, desligado, no mesmo padrão de ZOOM_APPROVED. É proibido criar contas, registrar aplicativo na Meta, aceitar termos, pedir aprovações ou ligar o interruptor: isso depende do dono.
 13. Inglês americano e as mesmas exigências de acessibilidade (WCAG 2.2 AAA como ponto de partida) das demais telas, incluindo uso completo por teclado e por leitor de tela. Testes somente com fornecedores e páginas simulados.
 
+Estado (Claude 2, 1/11/2026): em andamento, unidade 0 (desenho) num PR: docs/ai-store-builder.md (o que já existe e se reaproveita: writeStoreSetup, imports, modelos de funil e de e-mail, Path, filtros de honestidade, controle de custo de IA; 11 lacunas viram unidades; fatos dos concorrentes não reconferidos, porque a rede recusou as fontes; a parte do Instagram e a 571 [VS1] dependem de outros). Arquivo reservado: docs/ai-store-builder.md. Próxima: unidade 1, nenhum preço inventado (hoje writeStoreSetup sugere preço).
 Estado: na fila. Ao concluir, registre o commit, o resultado da suíte completa e a publicação, e altere o estado para "pronto e desligado, aguardando o dono". Posição vigente: OR: após o Bloco A, na ordem já existente entre 206 [SH3] e 272 [HM1]; 232 [CA1] foi antecipado e não se repete; antes do Bloco B.
    - Histórico OR — estado anterior à atualização documental: Estado: na fila. Ao concluir, registre o commit, o resultado da suíte completa e a publicação, e altere o estado para "pronto e desligado, aguardando o dono".
 
