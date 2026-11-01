@@ -20383,6 +20383,7 @@ Regra geral: tudo age sozinho, pelo código, sem o dono acompanhar painel nem de
 (j) Alguém se passando por outro: nomes de loja e endereços reservados (por exemplo: marktmorgen, support, help, admin, official, security, billing) não podem ser usados por criadores; a página de denúncia ganha o motivo "Impersonation"; as denúncias entram no mesmo mecanismo de advertências que já existe.
 
 (k) Vazamento de dados: um plano escrito de resposta a incidentes em docs/, com os prazos legais conferidos em fontes oficiais e datadas (por exemplo, 72 horas no art. 33 do RGPD e as leis estaduais dos EUA), os modelos de aviso aos criadores e compradores, e o que o código faz sozinho (por exemplo, trocar chaves e encerrar sessões); sem contratar serviço.
+   Estado de (k) (Claude 2, 1/11/2026): testado num PR, junto de 508 [SG4] parte 3, num só documento, docs/incident-response.md (ramo claude2/sg4-incident-response; arquivo reservado: docs/incident-response.md): proteções automáticas do código com arquivo, 8 lacunas reais, troca de chave por chave, parada de e-mails, modelos de aviso em inglês. Prazos legais não conferidos: as fontes oficiais foram recusadas pela política de rede em 1/11/2026; nenhum prazo afirmado. Decisões e configurações em "Depende do dono" no próprio documento (seção 6).
 
 (l) Proteção do dono: estudo, com fontes datadas e sem contratar, do custo de seguro empresarial para a LLC (seguro contra ataques digitais e de responsabilidade profissional), como possível custo fixo do 275 [FX1], registrado em "Depende do dono".
 
