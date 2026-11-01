@@ -38,6 +38,7 @@ import { funnelMark } from "@/lib/page-funnel";
 import { countFunnelDone, funnelHere, funnelVisitor } from "@/lib/page-funnel-store";
 import { funnelWords } from "@/lib/buyer-words/funnel";
 import { UPSELL_COOKIE, funnelView, settleUpsells } from "@/lib/upsell";
+import { cartOfferFrom } from "@/lib/cart-offers";
 import { imageUrl } from "@/lib/product-image";
 import { buyersJoin, noteSession } from "@/lib/affiliates";
 import { recordEnrollment } from "@/lib/learn";
@@ -548,6 +549,11 @@ export default async function ThanksPage({ params, searchParams }: Params) {
           created: order.created,
           secret: upsellSecret,
           upsellKey: order.upsellKey,
+          // Paid for from the cart: the offers of the product its checkout
+          // named, passing over what the buyer already has (lib/cart-offers.ts).
+          cart: (order.record.metadata as Record<string, string> | null)?.cart === "yes"
+            ? { offerFrom: cartOfferFrom(order.record.metadata as Record<string, string> | null), email: order.email }
+            : undefined,
         })
       : null;
   const offer = funnel?.offer ?? null;

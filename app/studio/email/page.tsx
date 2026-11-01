@@ -22,7 +22,8 @@ import { sellsSomething } from "@/lib/mail-starters";
 import { readFlowStatsStrict } from "@/lib/flow-stats";
 import { readFlowListStrict } from "@/lib/flow-list";
 import { inTrial, monthlyAllowance, usedThisMonth } from "@/lib/mail";
-import { healthId, pauseWords, pausedFor } from "@/lib/mail-health";
+import { healthId, listHealth, pauseForSending, pauseWords, pausedFor } from "@/lib/mail-health";
+import { HEALTH_NOTE, healthAdvice, healthLevels, healthLine } from "@/lib/mail-health-levels";
 import { PRO_MONTHLY_EMAILS, PRO_ON_SALE, SCALE_MONTHLY_EMAILS, TRIAL_DAYS, TRIAL_MONTHLY_EMAILS, publishedPriceWords as priceWords, publishedYearSaving as yearSaving } from "@/lib/plan";
 import { EmailStudio } from "@/components/email-studio";
 import { emailEquivalence } from "@/lib/email-equivalence";
@@ -57,7 +58,7 @@ export default async function StudioEmailPage({ searchParams }: Params) {
   const { store } = view;
 
   const allowance = monthlyAllowance(store);
-  const [counts, used, loadedBroadcasts, loadedFlows, listings, loadedDrafts, pause] = await Promise.all([
+  const [counts, used, loadedBroadcasts, loadedFlows, listings, loadedDrafts, pause, health, confirmedPause] = await Promise.all([
     listCounts(store.listId),
     usedThisMonth(store.listId, windowId(store)),
     listBroadcastsStrict(store.listId).catch(() => null),
@@ -69,7 +70,14 @@ export default async function StudioEmailPage({ searchParams }: Params) {
     // Whether this store's list email is waiting out a week because too many
     // of its addresses bounced or reported it (lib/mail-health.ts).
     pausedFor(healthId(store)),
+    // The same seven days the pause reads, said before it comes (599 [KB20], lib/mail-health-levels.ts).
+    listHealth(healthId(store)).catch(() => null),
+    // Whether no pause is confirmed (null), unlike pausedFor, which says null when it could not read: the
+    // health section is shown only then, so a failed read never says "no pause coming" during a pause.
+    pauseForSending(healthId(store)).catch(() => undefined),
   ]);
+  const levels = health ? healthLevels(health) : null;
+  const advice = levels ? healthAdvice(levels.worst, levels.measure) : null;
   const broadcasts = loadedBroadcasts ?? [];
   const flows = loadedFlows ?? [];
   const drafts = loadedDrafts ?? [];
@@ -178,6 +186,14 @@ export default async function StudioEmailPage({ searchParams }: Params) {
                   : "This usually means people on the list did not expect to hear from you. You can keep writing and scheduling, and the rest of your store is not affected."}
               </p>
             </div>
+          ) : null}
+          {confirmedPause === null && health && levels && advice ? (
+            <section aria-labelledby="mail-health-title" className="mt-8 rounded-[var(--r-md)] border border-line bg-white p-5 text-ink" data-mail-health={levels.worst}>
+              <h2 id="mail-health-title" className="text-lg font-semibold">{`Email health: ${advice.title}`}</h2>
+              <p className="mt-2 text-sm text-ink-soft">{healthLine(health)}</p>
+              <p className="mt-2 text-sm">{advice.text}</p>
+              <p className="mt-2 text-sm text-ink-soft">{HEALTH_NOTE}</p>
+            </section>
           ) : null}
           {(emailTemplate || query.sequenceTemplate) ? <p role="status" className="card mt-6 p-5 text-sm text-ink-soft">{emailTemplate ? "Library email opened as an unsaved draft. Replace every placeholder and review consent before saving or sending." : initialSequence ? "Library sequence opened as an unsaved paused draft. Review every step before saving; activation is a separate action." : "A new sequence could not be opened: its trigger may already be in use, your role may not allow it, or its records or products could not be confirmed. Existing sequences were preserved."}</p> : null}
           <EmailStudio
