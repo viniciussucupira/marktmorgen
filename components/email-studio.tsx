@@ -415,9 +415,9 @@ export function EmailStudio(props: {
           <p className="mt-1 text-sm text-ink-soft">
             {props.trial
               ? `emails sent. During the free trial a month holds ${TRIAL_MONTHLY_EMAILS.toLocaleString("en-US")}; the full ${PRO_MONTHLY_EMAILS.toLocaleString("en-US")} opens with your first payment.`
-              : "emails sent, one-off and sequences together. The count starts again on the first of the month."}
+              : "emails sent, one-off and sequences together. The count starts again on the day your plan's month renews."}
           </p>
-          {emailEquivalence(props.allowance) ? (
+          {!props.trial && emailEquivalence(props.allowance) ? (
             <p className="mt-2 text-sm text-ink-soft" data-email-equivalence>{emailEquivalence(props.allowance)}</p>
           ) : null}
           {props.moveUp ? (

@@ -28,11 +28,11 @@ test("a weekly email reaches the allowance divided by the longest month's five s
 });
 
 test("each plan's sentence follows its own limit, so a changed limit changes the sentence", () => {
-  assert.equal(emailEquivalence(PRO_MONTHLY_EMAILS), `Enough to email up to ${(PRO_MONTHLY_EMAILS / 5).toLocaleString("en-US")} people once a week, every week of the month.`);
-  assert.equal(emailEquivalence(7_000), "Enough to email up to 1,400 people once a week, every week of the month.");
-  assert.equal(emailEquivalence(10_000), "Enough to email up to 2,000 people once a week, every week of the month.");
-  assert.equal(emailEquivalence(300), "Enough to email up to 60 people once a week, every week of the month.");
-  assert.equal(emailEquivalence(5), "Enough to email up to 1 person once a week, every week of the month.");
+  assert.equal(emailEquivalence(PRO_MONTHLY_EMAILS), `That is one email a week to as many as ${Math.floor(PRO_MONTHLY_EMAILS / 5).toLocaleString("en-US")} people, in any month.`);
+  assert.equal(emailEquivalence(7_000), "That is one email a week to as many as 1,400 people, in any month.");
+  assert.equal(emailEquivalence(10_000), "That is one email a week to as many as 2,000 people, in any month.");
+  assert.equal(emailEquivalence(300), "That is one email a week to as many as 60 people, in any month.");
+  assert.equal(emailEquivalence(5), "That is one email a week to as many as 1 person, in any month.");
   assert.equal(emailEquivalence(4), "");
   for (const tier of TIERS) {
     const sentence = emailEquivalence(monthlyEmails(tier));
@@ -51,9 +51,10 @@ function files(dir: string): string[] {
 
 test("the studio shows the sentence from the code, and nobody types one by hand", () => {
   const studio = readFileSync("components/email-studio.tsx", "utf8");
-  assert.match(studio, /emailEquivalence\(props\.allowance\)/);
+  assert.match(studio, /!props\.trial && emailEquivalence\(props\.allowance\)/);
+  assert.doesNotMatch(studio, /starts again on the first of the month/);
   assert.match(studio, /emailEquivalence\(props\.moveUp\.emails\)/);
   assert.match(readFileSync("app/studio/email/page.tsx", "utf8"), /emailEquivalence\(PRO_MONTHLY_EMAILS\)/);
-  const typed = ["app", "components", "lib"].flatMap(files).filter((path) => path !== join("lib", "email-equivalence.ts") && /Enough to email/.test(readFileSync(path, "utf8")));
+  const typed = ["app", "components", "lib"].flatMap(files).filter((path) => path !== join("lib", "email-equivalence.ts") && /one email a week to as many as|Enough to email/.test(readFileSync(path, "utf8")));
   assert.deepEqual(typed, []);
 });
