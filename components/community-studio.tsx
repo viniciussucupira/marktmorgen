@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "@/components/toast";
+import { MemberPreview } from "@/components/community-member-preview";
 import type { CommunityConfig, Space } from "@/lib/community";
 import {
   MAX_COMMENTS_PER_POST,
@@ -933,6 +934,7 @@ function Spaces({
         ))}
       </ul>
       {config.spaces.map((s) => <div key={s.id}>{problem(`space-${s.id}`)}</div>)}
+      <MemberPreview spaces={config.spaces} access={config.access} open={open} />
 
       {!full ? (
         <form
