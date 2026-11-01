@@ -38,7 +38,7 @@ export async function auditMeterPreflight(){
 
  const positive=await createResendFallbackFixture({credential,cap:3,received:1,fetch:async()=>Response.json({id:'synthetic_positive'})});
  const single=await scenario('explicit_finite_runtime_positive',m=>sendEmail({...message,meter:m},positive.runtime));assert.equal(single.result,true);assert.equal(single.spent,1);
- const exhausted=await scenario('runtime_present_but_remaining_quota_insufficient',m=>sendBatch(batch,'SYNTHETIC_QUOTA_BATCH',m,undefined,positive.runtime));assert.equal(exhausted.result,'retry');assert.equal(exhausted.spent,2);
+ const exhausted=await scenario('runtime_present_but_remaining_quota_insufficient',m=>sendBatch(batch,'SYNTHETIC_QUOTA_BATCH',m,undefined,positive.runtime));assert.equal(exhausted.result,'retry');assert.equal(exhausted.spent,0);
  assert.equal(positive.requests.filter(r=>r.method==='POST').length,1);
  const positiveBatch=await createResendFallbackFixture({credential,cap:3,received:1,fetch:async()=>Response.json({data:[{id:'synthetic_a'},{id:'synthetic_b'}]})});
  const accepted=await scenario('explicit_finite_runtime_batch_positive',m=>sendBatch(batch,'SYNTHETIC_BATCH_POSITIVE',m,undefined,positiveBatch.runtime));assert.equal(accepted.result,'sent');assert.equal(accepted.spent,2);
