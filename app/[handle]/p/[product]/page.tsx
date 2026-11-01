@@ -1,3 +1,4 @@
+import { absoluteImageUrl, servedImageUrl, servedSrcSet } from "@/lib/picture-served";
 import { assistReminderShown } from "@/lib/assistant-reminder";
 import { StickyBuy } from "@/components/sticky-buy";
 import { RecentSales } from "@/components/recent-sales";
@@ -37,7 +38,7 @@ import { productIdFromAddress, readListing, readListings } from "@/lib/catalog";
 import { canSell, canSellProduct, sellableOptions } from "@/lib/store-checkout";
 import { lookStyle } from "@/lib/store-look";
 import { photoUrl } from "@/lib/photo-limits";
-import { imageUrl, IMAGE_SIZES, imageSrcSet } from "@/lib/product-image";
+import { IMAGE_SIZES } from "@/lib/product-image";
 import { type Block, type Piece, aboutBlocks, aboutExcerpt, readAbout } from "@/lib/product-about";
 import { activePlan, bumpTargets } from "@/lib/product-extras";
 import { activePwyw } from "@/lib/pay-what-you-want";
@@ -247,7 +248,7 @@ function productData(store: Store, product: Listing, description: string, soldOu
     description,
     url,
     brand: { "@type": "Brand", name: store.name },
-    ...(product.image ? { image: `${SITE_URL}${imageUrl(product.image)}` } : {}),
+    ...(product.image ? { image: absoluteImageUrl(servedImageUrl(product.image), SITE_URL) } : {}),
     ...(offers ? { offers } : {}),
     ...(rated
       ? {
@@ -578,8 +579,8 @@ export default async function ProductPage({ params, searchParams }: Params) {
             <div className="px-4 pt-4 sm:px-6 sm:pt-6">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={imageUrl(product.image)}
-                srcSet={imageSrcSet(product.image)}
+                src={servedImageUrl(product.image)}
+                srcSet={servedSrcSet(product.image)}
                 sizes={product.image.small ? IMAGE_SIZES.hero : undefined}
                 alt={product.image.alt}
                 width={product.image.width}
@@ -629,7 +630,7 @@ export default async function ProductPage({ params, searchParams }: Params) {
     storeName: store.name,
     productTitle: product.title,
     picture: product.image
-      ? { src: imageUrl(product.image), alt: product.image.alt, width: product.image.width, height: product.image.height }
+      ? { src: servedImageUrl(product.image), alt: product.image.alt, width: product.image.width, height: product.image.height }
       : null,
     photo: store.photoId ? photoUrl(store.photoId) : null,
     action,

@@ -10,7 +10,7 @@ import { PLAN_TITLES as PLAN_NAMES, TIERS, TRIAL_DAYS, parseTier, publishedPrice
 import { PLANS_ON_SALE } from "@/lib/opening";
 import { formatMoney } from "@/lib/money";
 import { INVITE_PROGRAM_OPEN, INVITE_BONUS_CENTS, INVITE_HOLD_DAYS } from "@/lib/creator-invite-rules";
-import { handleProblem, normaliseHandle } from "@/lib/store";
+import { newAddressProblem, normaliseHandle } from "@/lib/store";
 
 /** Somebody who came back to a store they have: by Log in, or sent here to log in again. */
 const RETURNING_STATUSES = new Set(["reauth", "out", "out-everywhere"]);
@@ -152,7 +152,7 @@ export default async function SignInPage({
    * address step after the emailed link, under the same rules as below.
    */
   const asked = typeof params.handle === "string" ? normaliseHandle(params.handle.slice(0, 64)) : "";
-  const askedProblem = asked ? handleProblem(asked) : null;
+  const askedProblem = asked ? newAddressProblem(asked) : null;
 
   return (
     <div className="min-h-screen lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
