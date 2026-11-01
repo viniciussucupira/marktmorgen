@@ -84,7 +84,8 @@ is("nothing unsaved", at({ dirty: false }), { act: "idle" });
 is("another save on its way", at({ saving: true }), { act: "idle" });
 is("a draft its route refused, until it changes", at({ refused: true }), { act: "off", why: "refused" });
 is("a draft that cannot be saved: said last, so it never promises a save something else stops", [at({ valid: false }), at({ valid: false, window: null })], [{ act: "off", why: "invalid" }, { act: "off", why: "unknown" }]);
-is("it writes nothing and asks nothing", /^import |fetch\(|redis|localStorage|sendBeacon|XMLHttpRequest/m.test(readFileSync("lib/autosave-rules.ts", "utf8").split("\n").filter((line) => !/^\s*(\/\/|\*|\/\*\*)/.test(line)).join("\n")), false);
+const code = readFileSync("lib/autosave-rules.ts", "utf8").split("\n").filter((line) => !/^\s*(\/\/|\*|\/\*\*)/.test(line)).join("\n");
+is("it imports nothing, writes nothing and asks nothing", [/^import /m.test(code), /fetch\(|redis|localStorage|sendBeacon|XMLHttpRequest/.test(code)], [false, false]);
 
 part("The words beside Save");
 is("saving", autosaveWords({ saving: true, savedAt: null, off: null, dirty: true }), "Saving…");
