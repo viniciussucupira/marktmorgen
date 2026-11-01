@@ -14,6 +14,7 @@
  * result into confirmed_not_accepted: false can conceal uncertain acceptance.
  */
 import { createHash, randomBytes } from "node:crypto";
+import { performance } from "node:perf_hooks";
 
 export const RESEND_FALLBACK_MAX_EMAILS = 50_000;
 export const RESEND_FALLBACK_USAGE_MAX_AGE_MS = 60_000;
@@ -62,7 +63,7 @@ export type ResendFallbackClaim = {
 };
 type Stopped = { status: "denied"; reason: string } | { status: "unknown" };
 export type ResendFallbackReservation = Stopped | { status: "reserved" | "already_reserved"; claim: ResendFallbackClaim };
-export type ResendFallbackDispatch = Stopped | { status: "dispatch"; claim: ResendFallbackClaim; sendBeforeMs: number };
+export type ResendFallbackDispatch = Stopped | { status: "dispatch"; claim: ResendFallbackClaim; sendBeforeMs: number; sendBeforeMonotonicMs: number };
 export type ResendFallbackOutcome = "accepted" | "confirmed_not_accepted" | "unknown";
 export type ResendFallbackSettlement = Stopped | { status: "settled" | "already_settled"; outcome: ResendFallbackOutcome };
 export type ResendFallbackCancellation = Stopped | { status: "released" | "already_released" };
@@ -198,7 +199,7 @@ if op=='dispatch' then
  local deadline=math.min(now+1000,serverNow+1000,untilAt,reset)
  if deadline<=math.max(now,serverNow) then return no('expired') end
  redis.call('HSET',KEYS[2],'state','dispatched','dispatchToken',dispatch,'dispatchAt',text(serverNow),'dispatchBefore',text(deadline))
- return {'dispatch',token,text(units),text(deadline),dispatch}
+ return {'dispatch',token,text(units),text(deadline),dispatch,text(serverNow)}
 end
 if op~='settle' then return no('operation') end
 if not hex(dispatch,32) or c[11]~=dispatch then return no('dispatch_conflict') end
@@ -343,10 +344,22 @@ export async function markResendFallbackDispatched(value: ResendFallbackClaim, s
   const claim = claimData(value), now = Date.now();
   if (!claim || !integer(now) || now < claim.periodStartMs || now >= claim.validUntilMs || now >= claim.resetsAtMs) return denied("expired");
   const dispatchToken = randomBytes(16).toString("hex");
+  // Start BEFORE the RPC: treating the complete RTT as elapsed consumes more
+  // of Redis's remaining authorization, never less. Worker UTC may be stale
+  // or frozen; it cannot supply the post-ACK lifetime of this permission.
+  const startedMonotonicMs = performance.now();
   const reply = await execute(sdk, claim.accountId, claim.attemptId, claimArgs("dispatch", { ...claim, dispatchToken }, now));
-  const deadline = reply?.length === 5 ? asInteger(reply[3]) : null;
-  if (reply?.[0] !== "dispatch" || reply[1] !== claim.token || reply[4] !== dispatchToken || asInteger(reply[2]) !== claim.recipients || deadline === null || deadline <= now || deadline > Math.min(now + RESEND_FALLBACK_DISPATCH_MS, claim.validUntilMs, claim.resetsAtMs)) return stoppedReply(reply);
-  return { status: "dispatch", claim: { ...claim, dispatchToken }, sendBeforeMs: deadline };
+  const deadline = reply?.length === 6 ? asInteger(reply[3]) : null;
+  const serverNow = reply?.length === 6 ? asInteger(reply[5]) : null;
+  if (reply?.[0] !== "dispatch" || reply[1] !== claim.token || reply[4] !== dispatchToken || asInteger(reply[2]) !== claim.recipients || deadline === null || serverNow === null
+    || serverNow < claim.periodStartMs || deadline <= Math.max(now, serverNow)
+    || deadline > Math.min(now + RESEND_FALLBACK_DISPATCH_MS, serverNow + RESEND_FALLBACK_DISPATCH_MS, claim.validUntilMs, claim.resetsAtMs)) return stoppedReply(reply);
+  const sendBeforeMonotonicMs = startedMonotonicMs + (deadline - serverNow);
+  // No permission is returned if a delayed ACK already consumed it. A caller
+  // must recheck BOTH this monotonic deadline and sendBeforeMs immediately
+  // before POST, with no intervening await or callback.
+  if (!Number.isFinite(startedMonotonicMs) || startedMonotonicMs < 0 || !Number.isFinite(sendBeforeMonotonicMs) || performance.now() >= sendBeforeMonotonicMs) return unknown();
+  return { status: "dispatch", claim: { ...claim, dispatchToken }, sendBeforeMs: deadline, sendBeforeMonotonicMs };
 }
 /** Local refusal before dispatch is not an HTTP outcome. This CAS cannot
  * release a shared reservation after another invocation won dispatch.
