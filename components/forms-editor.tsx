@@ -326,51 +326,60 @@ export function FormsEditor({ saved, products, exportBase, dealStages = [], sid 
                               />
                             </label>
                             {draft.categories?.length ? (
-                              <select
-                                className="field w-auto"
-                                aria-label={`Category of option ${k + 1}`}
-                                value={option.category ?? ""}
-                                onChange={(e) => setField(i, { options: field.options.map((o, m) => (m === k ? { ...o, category: e.target.value } : o)) })}
-                              >
-                                <option value="">In no category</option>
-                                {draft.categories.map((c, n) => (
-                                  <option key={c.id} value={c.id}>
-                                    {c.name || `Category ${n + 1}`}
-                                  </option>
-                                ))}
-                              </select>
+                              <label className="flex items-center gap-2 text-sm text-ink-soft">
+                                Category
+                                <select
+                                  className="field w-auto"
+                                  aria-label={`Category of option ${k + 1}`}
+                                  value={option.category ?? ""}
+                                  onChange={(e) => setField(i, { options: field.options.map((o, m) => (m === k ? { ...o, category: e.target.value } : o)) })}
+                                >
+                                  <option value="">In no category</option>
+                                  {draft.categories.map((c, n) => (
+                                    <option key={c.id} value={c.id}>
+                                      {c.name || `Category ${n + 1}`}
+                                    </option>
+                                  ))}
+                                </select>
+                              </label>
                             ) : null}
                           </>
                         ) : draft.outcomes.length ? (
-                          <select
-                            className="field w-auto"
-                            aria-label={`Result option ${k + 1} points at`}
-                            value={option.outcome}
-                            onChange={(e) => setField(i, { options: field.options.map((o, m) => (m === k ? { ...o, outcome: e.target.value } : o)) })}
-                          >
-                            <option value="">Points at no result</option>
-                            {draft.outcomes.map((o, n) => (
-                              <option key={o.id} value={o.id}>
-                                {o.title || `Result ${n + 1}`}
-                              </option>
-                            ))}
-                          </select>
+                          <label className="flex items-center gap-2 text-sm text-ink-soft">
+                            Result
+                            <select
+                              className="field w-auto"
+                              aria-label={`Result option ${k + 1} points at`}
+                              value={option.outcome}
+                              onChange={(e) => setField(i, { options: field.options.map((o, m) => (m === k ? { ...o, outcome: e.target.value } : o)) })}
+                            >
+                              <option value="">Points at no result</option>
+                              {draft.outcomes.map((o, n) => (
+                                <option key={o.id} value={o.id}>
+                                  {o.title || `Result ${n + 1}`}
+                                </option>
+                              ))}
+                            </select>
+                          </label>
                         ) : null}
                         {field.type === "choice" ? (
-                          <select
-                            className="field w-auto"
-                            aria-label={`After option ${k + 1}`}
-                            value={option.next ?? ""}
-                            onChange={(e) => setField(i, { options: field.options.map((o, m) => (m === k ? { ...o, next: e.target.value } : o)) })}
-                          >
-                            <option value="">Then the next question</option>
-                            {draft.fields.slice(i + 2).map((f, n) => (
-                              <option key={f.id} value={f.id}>
-                                {`Then skip to question ${i + 3 + n}${f.label ? `: ${f.label.slice(0, 40)}` : ""}`}
-                              </option>
-                            ))}
-                            <option value={END}>{scoredDraft ? "Then end, with the result for their score" : draft.outcomes.length ? "Then end, with its result" : "Then end the form"}</option>
-                          </select>
+                          <label className="flex items-center gap-2 text-sm text-ink-soft">
+                            Next
+                            <select
+                              className="field w-auto"
+                              aria-label={`Next, after option ${k + 1}`}
+                              value={option.next ?? ""}
+                              onChange={(e) => setField(i, { options: field.options.map((o, m) => (m === k ? { ...o, next: e.target.value } : o)) })}
+                            >
+                              <option value="">Then the next question</option>
+                              {draft.fields.slice(i + 2).map((f, n) => (
+                                <option key={f.id} value={f.id}>
+                                  {`Then skip to question ${i + 3 + n}${f.label ? `: ${f.label.slice(0, 40)}` : ""}`}
+                                </option>
+                              ))}
+                              <option value={END}>{scoredDraft ? "Then end, with the result for their score" : draft.outcomes.length ? "Then end, with its result" : "Then end the form"}</option>
+                            </select>
+                          </label>
                         ) : null}
                         <button
                           type="button"

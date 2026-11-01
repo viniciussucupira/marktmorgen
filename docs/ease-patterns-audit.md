@@ -42,7 +42,10 @@ The screen-by-screen audit that 487 [IT4] asks for: what was checked, what was f
 - The podcast episode's title and notes now have visible labels, "Episode title" and "Episode notes".
 - The home page field changes the hero's look, so it waits for the home page work under 571 [VS1].
 - Second pass: each row of those four lists now has a visible name of its own, "Category 1", "Option 1", "Stage 1" or "Field 1", tied to its field. The custom fields' list is named by its visible heading, "Your fields".
-- Still to do: the selects beside a form option and a pipeline stage (its category, result, next question or meaning) show only their chosen value. They are named for screen readers but have no visible label of their own.
+- The selects beside those rows now show a visible word that starts their spoken name, as "Points" already did:
+  - "Category", "Result" and "Next" beside a form option;
+  - "Counts as" beside a pipeline stage;
+  - "Kind" and "Choices, separated by commas" on a custom field.
 
 ## Pattern 3: the common value filled in, never the dearest (1 November 2026)
 
@@ -214,7 +217,7 @@ Numbered as in 487 [IT4]:
 1. Checked when the field is left: first pass done for every web address field (see pattern 1), except the tracking link, held by an open PR. Other kinds of field not yet audited.
 2. The right keyboard on a phone: done (see pattern 2); "Move to" in its own PR, now that its file is free.
 3. The common value filled in, never the dearest: audited (see pattern 3). The "Recommended" price option waits on the owner.
-4. A label always visible: two passes done (see pattern 4). The selects beside list rows and the home page field remain.
+4. A label always visible: two passes done (see pattern 4). The home page field remains.
 5. Empty screens with a sentence, a button and a ready example: first pass done (see pattern 5). Four screens fixed; ready examples for five screens still to write.
 6. Drafts never lost: done for the editors read (see pattern 6). Saving by itself, with "Saving…" and "Saved", is not built yet, because it needs its own ceiling on saves per plan first.
 7. A live phone preview beside each editor: first pass done (see pattern 7). The page, email, blog and lesson editors have it; three editors are listed.
