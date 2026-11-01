@@ -10,8 +10,11 @@
  *   - The address may be in a country every physical product in the cart
  *     ships to, and only there: the countries Stripe offers are the ones they
  *     all share.
- *   - When they share none, the cart says which products do not go where the
- *     others go, before anybody pays, so the buyer can take one out.
+ *   - When they share none, the cart names the fewest products to take out
+ *     (those that do not reach the one country most of them reach, the
+ *     buyer's own when it is one of those), before anybody pays.
+ *   - A physical product whose shipping cannot be read (or has no country,
+ *     or an amount out of its bounds) is refused, never taken as digital.
  *   - Shipping is each physical product's own amount, as its creator set it
  *     ("one amount per order" on each), added together, so no product ships
  *     for less than its creator asked. Shipping by quantity, and combining
@@ -20,35 +23,56 @@
  * Digital products in the cart ship nothing and change none of this.
  * Browser-safe: the cart shows the same answer the checkout acts on.
  */
-import type { Shipping } from "@/lib/shipping";
+import { MAX_SHIPPING_CENTS, type Shipping } from "@/lib/shipping";
 
-export type CartItem = { id: string; title: string; shipping: Pick<Shipping, "cents" | "countries"> | null };
+/**
+ * A product as the cart has it. `physical` comes from the product itself, so
+ * a physical product whose shipping cannot be read is refused, never taken
+ * for a digital one (unknown fails).
+ */
+export type CartItem = { id: string; title: string; physical: boolean; shipping: Pick<Shipping, "cents" | "countries"> | null };
 
 export type CartShipping =
   /** Nothing in the cart is shipped. */
   | { kind: "none" }
-  /** One address, in one of `countries`; `cents` is the shipping for the order. */
-  | { kind: "ships"; countries: string[]; cents: number }
-  /** No country is shared: `apart` are the products that ship to none of the countries most of the others share. */
-  | { kind: "apart"; apart: { id: string; title: string }[] };
+  /** One address, in one of `countries`; `cents` is the shipping for the order, made of each product's own `each`. */
+  | { kind: "ships"; countries: string[]; cents: number; each: { id: string; cents: number }[] }
+  /** No country is shared: take out `apart`, the fewest products, and the rest ship to `to`. */
+  | { kind: "apart"; to: string; apart: { id: string; title: string }[] }
+  /** A physical product whose shipping cannot be read or is out of its bounds: it cannot be bought in a cart. */
+  | { kind: "unreadable"; items: { id: string; title: string }[] };
 
-/** Where a cart can be sent and what shipping comes to, from its physical products. */
-export function cartShipping(items: CartItem[]): CartShipping {
-  const shipped = items.filter((item): item is CartItem & { shipping: NonNullable<CartItem["shipping"]> } => item.shipping !== null);
-  if (shipped.length === 0) return { kind: "none" };
-  let shared = new Set(shipped[0].shipping.countries);
-  for (const item of shipped.slice(1)) shared = new Set(item.shipping.countries.filter((code) => shared.has(code)));
+const readable = (cents: number) => Number.isSafeInteger(cents) && cents >= 0 && cents <= MAX_SHIPPING_CENTS;
+
+/**
+ * Where a cart can be sent and what shipping comes to, from its physical
+ * products. `buyerCountry`, when known, is preferred when nothing is shared,
+ * so the product the buyer can receive is never the one named.
+ */
+export function cartShipping(items: CartItem[], buyerCountry?: string): CartShipping {
+  const physical = items.filter((item) => item.physical || item.shipping !== null);
+  if (physical.length === 0) return { kind: "none" };
+  const bad = physical.filter((item) => !item.shipping || !readable(item.shipping.cents) || item.shipping.countries.length === 0);
+  if (bad.length > 0) return { kind: "unreadable", items: bad.map(({ id, title }) => ({ id, title })) };
+  const shipped = physical.map((item) => ({ id: item.id, title: item.title, cents: item.shipping!.cents, countries: [...new Set(item.shipping!.countries)] }));
+
+  let shared = new Set(shipped[0].countries);
+  for (const item of shipped.slice(1)) shared = new Set(item.countries.filter((code) => shared.has(code)));
   if (shared.size > 0) {
-    const order = shipped[0].shipping.countries.filter((code) => shared.has(code));
-    return { kind: "ships", countries: order, cents: shipped.reduce((sum, item) => sum + Math.max(0, Math.round(item.shipping.cents)), 0) };
+    return {
+      kind: "ships",
+      countries: shipped[0].countries.filter((code) => shared.has(code)),
+      cents: shipped.reduce((sum, item) => sum + item.cents, 0),
+      each: shipped.map(({ id, cents }) => ({ id, cents })),
+    };
   }
-  // The country most of them reach; the ones that do not reach it are the ones to name.
+  // One country: the one most of them reach (the buyer's first, on a tie or when reached at all by the most),
+  // then the first in the cart's own order. Taking out what does not reach it leaves the fewest to take out.
   const reach = new Map<string, number>();
-  for (const item of shipped) for (const code of new Set(item.shipping.countries)) reach.set(code, (reach.get(code) ?? 0) + 1);
-  const most = Math.max(0, ...reach.values());
-  const best = [...reach].filter(([, n]) => n === most).map(([code]) => code);
-  const apart = shipped.filter((item) => !best.some((code) => item.shipping.countries.includes(code)));
-  // Every product equally alone (nothing shared by two or more): name all but the first.
-  const named = apart.length > 0 && apart.length < shipped.length ? apart : shipped.slice(1);
-  return { kind: "apart", apart: named.map(({ id, title }) => ({ id, title })) };
+  for (const item of shipped) for (const code of item.countries) reach.set(code, (reach.get(code) ?? 0) + 1);
+  const most = Math.max(...reach.values());
+  const order = shipped.flatMap((item) => item.countries).filter((code, i, all) => all.indexOf(code) === i);
+  const best = order.filter((code) => reach.get(code) === most);
+  const to = buyerCountry && best.includes(buyerCountry) ? buyerCountry : best[0];
+  return { kind: "apart", to, apart: shipped.filter((item) => !item.countries.includes(to)).map(({ id, title }) => ({ id, title })) };
 }
