@@ -70,8 +70,12 @@ The screen-by-screen audit that 487 [IT4] asks for: what was checked, what was f
 - The blog editor asks before leaving with an unsaved post. A post can be long, and nothing else kept it. Once saved, its changes are guarded again.
 - The FAQ editor asks too, using its own measure of unsaved answers, which includes answers drafted by the writing help.
 
+- The quiz editor asks while a quiz is open and differs from what was opened. A quiz opened and left untouched never asks.
+- The product form asks the same way, when adding or editing. A long description that is read after the form opens counts as part of what was opened.
+- In the course editor, a module asks when its name or its days changed. A lesson asks when its name, link, preview or text changed, and while a video or file is still uploading. After a save, both take back what the server kept, so a name it tidied never reads as unsaved.
+- The email designer needed nothing of its own. Every change in it goes into the email it sits in, and both of those (the email composer and a sequence step) already ask before leaving.
+
 **Still to do.**
-- The same guard for the product, course, email designer and quiz editors. Each one is read first, since some save field by field.
 - Saving by itself with "Saving…" and "Saved" shown. That writes to the server on its own, so it needs its own request ceiling per plan first.
 
 ## Not audited yet
