@@ -1459,6 +1459,22 @@ function searchDataRecord(value: unknown, label: string): Record<string, unknown
 
 type SearchOwnership = { customerId: string | null; released: Set<string> };
 type SearchMember = { subscription: Record<string, unknown>; terminalOwn: boolean };
+/** Only plain dense own data can prove a released handle, without rereading accessors. */
+function releasedSearchEvidence(value: unknown): Set<string> {
+  const unknown = new Set<string>();
+  if (!Array.isArray(value) || Object.getPrototypeOf(value) !== Array.prototype) return unknown;
+  const descriptors = Object.getOwnPropertyDescriptors(value);
+  const length = descriptors.length;
+  if (!length || !Object.hasOwn(length, "value") || !Number.isSafeInteger(length.value) || length.value < 0 ||
+      Reflect.ownKeys(descriptors).length !== length.value + 1) return unknown;
+  const handles = new Set<string>();
+  for (let index = 0; index < length.value; index++) {
+    const slot = descriptors[String(index)];
+    if (!slot || !Object.hasOwn(slot, "value") || typeof slot.value !== "string" || !HANDLE_PATTERN.test(slot.value)) return unknown;
+    handles.add(slot.value);
+  }
+  return handles;
+}
 function searchMember(value: unknown, handles: Set<string>, ownership: SearchOwnership): SearchMember | null {
   const member = searchDataRecord(value, "member");
   if (typeof member.id !== "string" || !SUBSCRIPTION_PATTERN.test(member.id) ||
@@ -1575,7 +1591,7 @@ export async function findStoreSubscriptions(
     customerId: customerContext && Object.hasOwn(customerContext, "value") &&
       typeof customerContext.value === "string" && CUSTOMER_PATTERN.test(customerContext.value) ? customerContext.value : null,
     released: releasedContext && Object.hasOwn(releasedContext, "value") && releasedContext.value === releasedHandles
-      ? new Set(releasedHandles) : new Set(),
+      ? releasedSearchEvidence(releasedHandles) : new Set(),
   };
   const query = new URLSearchParams({
     query: handles.map((handle) => `metadata['store']:'${handle}'`).join(" OR "),

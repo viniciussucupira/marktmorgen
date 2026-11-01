@@ -499,6 +499,33 @@ test('DeletedCustomer ownership is captured before awaiting the provider, withou
   const foreign={...terminal,metadata:{store:'released-harbor'},customer:{...terminal.customer,id:'cus_Foreign001'}};
   globalThis.fetch=async(_input,init)=>{if(init?.method!=='GET')writes++;owner.stripeCustomerId='cus_Foreign001';owner.releasedHandles.length=0;return Response.json({data:[foreign],has_more:false});};
   assert.deepEqual(await findStoreSubscriptions(owner),{live:null,customerId:null,lapsed:[]});
+  owner.stripeCustomerId='cus_Test000001';owner.releasedHandles=[];
+  globalThis.fetch=async(_input,init)=>{if(init?.method!=='GET')writes++;owner.releasedHandles.push(owner.handle);return Response.json({data:[{...foreign,metadata:{store:owner.handle}}],has_more:false});};
+  await assert.rejects(findStoreSubscriptions(owner),/Subscription search/,'a current handle cannot become proven released during GET');
+  owner.releasedHandles=[];
+  globalThis.fetch=async(_input,init)=>{if(init?.method!=='GET')writes++;owner.releasedHandles=[owner.handle];return Response.json({data:[{...foreign,metadata:{store:owner.handle}}],has_more:false});};
+  await assert.rejects(findStoreSubscriptions(owner),/Subscription search/,'a replaced array cannot prove released ownership after GET');
+  assert.equal(writes,0);
+ }finally{globalThis.fetch=old;}
+});
+
+test('DeletedCustomer released evidence uses dense own data without extra accessor reads',async()=>{
+ const old=globalThis.fetch;
+ const owner={...store,stripeCustomerId:'cus_Test000001',previousHandles:[],releasedHandles:[]} as Store;
+ const foreign={id:'sub_Deleted001',created:1,status:'canceled',metadata:{store:'released-harbor'},customer:{id:'cus_Foreign001',object:'customer',deleted:true}};
+ let slotReads=0,propertyReads=0,writes=0;
+ try{
+  globalThis.fetch=async(_input,init)=>{if(init?.method!=='GET')writes++;return Response.json({data:[foreign],has_more:false});};
+  const accessor:string[]=[];Object.defineProperty(accessor,'0',{get(){slotReads++;return 'released-harbor';},enumerable:true,configurable:true});
+  owner.releasedHandles=accessor;
+  await assert.rejects(findStoreSubscriptions(owner),/Subscription search/);
+  assert.equal(slotReads,1,'only the existing query spread reads the accessor, never new ownership evidence');
+  const inherited:string[]=[];inherited.length=1;Object.setPrototypeOf(inherited,Object.assign(Object.create(Array.prototype),{0:'released-harbor'}));
+  const custom=['released-harbor'];Object.defineProperty(custom,Symbol.iterator,{value:function*(){yield 'released-harbor';}});
+  for(const releases of [inherited,custom]){owner.releasedHandles=releases;await assert.rejects(findStoreSubscriptions(owner),/Subscription search/);}
+  Object.defineProperty(owner,'releasedHandles',{get(){propertyReads++;return ['released-harbor'];},configurable:true});
+  await assert.rejects(findStoreSubscriptions(owner),/Subscription search/);
+  assert.equal(propertyReads,1,'new proof does not reread the store accessor');
   assert.equal(writes,0);
  }finally{globalThis.fetch=old;}
 });
