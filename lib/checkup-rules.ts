@@ -50,6 +50,16 @@ export function stripeCheck(connected: boolean, account: { chargesEnabled: boole
     return { id: "stripe", title, state: "problem", found: "Your store is not connected to a Stripe account.", ifLeft: "Nobody can buy anything from your store.", fix: STRIPE_FIX };
   }
   if (!account) return { id: "stripe", title, state: "not-checked", found: "We could not ask Stripe about your account just now. Try again in a few minutes." };
+  if (!account.detailsSubmitted && !account.chargesEnabled) {
+    return {
+      id: "stripe",
+      title,
+      state: "problem",
+      found: "Stripe has turned off card payments on your account, and the date to send details about you or your business has passed.",
+      ifLeft: "Buyers cannot pay by card in your store until Stripe has what it asks for.",
+      fix: { kind: "outside", where: "In your Stripe dashboard, look for the notice asking for information, and send what it asks for." },
+    };
+  }
   if (!account.detailsSubmitted) {
     return {
       id: "stripe",
@@ -57,7 +67,7 @@ export function stripeCheck(connected: boolean, account: { chargesEnabled: boole
       state: "problem",
       found: "Stripe is waiting for details about you or your business, and the date to send them has passed.",
       ifLeft: "Stripe can stop your payments or your payouts until it has them.",
-      fix: { kind: "outside", where: "In your Stripe dashboard, open the notice at the top of the home page and send what it asks for." },
+      fix: { kind: "outside", where: "In your Stripe dashboard, look for the notice asking for information, and send what it asks for." },
     };
   }
   if (!account.chargesEnabled) {
@@ -81,23 +91,28 @@ export function domainCheck(domain: string | null, status: { live: boolean; reco
   if (!domain) return null;
   const title = "Your domain";
   if (!status) return { id: "domain", title, state: "not-checked", found: `We could not check ${domain} just now. Try again in a few minutes.` };
-  if (status.live) return { id: "domain", title, state: "ok", found: `${domain} shows your store, with its security certificate.` };
+  // live is Vercel's own verdict on the records (lib/domains.ts); the certificate is not part of it, so it is not claimed.
+  if (status.live) return { id: "domain", title, state: "ok", found: `${domain} is set up to show your store.` };
   return {
     id: "domain",
     title,
     state: "problem",
-    found: `${domain} does not show your store yet: its DNS records are missing or wrong, or its certificate is not ready.`,
+    found: `${domain} does not show your store yet: its DNS records are missing or wrong.`,
     ifLeft: `People who type ${domain} do not reach your store. Your marktmorgen.com address still works.`,
     fix: { kind: "studio", href: "/studio#domain", label: "See the records to add" },
   };
 }
 
-/** Email to the creator's list: paused for bounces or spam reports, or not. Undefined when the pause could not be read. */
+/**
+ * Email to the creator's list: paused for bounces or spam reports, or not,
+ * as pauseForSending (lib/mail-health.ts) reads it; undefined when it could
+ * not be read. Its `until` is in seconds, as that file keeps it.
+ */
 export function emailCheck(pause: { reason: "bounces" | "complaints"; until: number } | null | undefined, now = Date.now()): Check {
   const title = "Email to your list";
   if (pause === undefined) return { id: "email", title, state: "not-checked", found: "We could not read whether your list's email is paused just now. Try again in a few minutes." };
-  if (pause === null || pause.until <= now) return { id: "email", title, state: "ok", found: "Email to your list is not paused." };
-  const day = new Date(pause.until).toLocaleDateString("en-US", { month: "long", day: "numeric", timeZone: "UTC" });
+  if (pause === null || pause.until * 1000 <= now) return { id: "email", title, state: "ok", found: "Email to your list is not paused." };
+  const day = new Date(pause.until * 1000).toLocaleDateString("en-US", { month: "long", day: "numeric", timeZone: "UTC" });
   return {
     id: "email",
     title,
@@ -111,7 +126,12 @@ export function emailCheck(pause: { reason: "bounces" | "complaints"; until: num
   };
 }
 
-/** Checkouts Stripe refused to open in the last 7 days; null when they could not be read. */
+/**
+ * Checkouts Stripe refused to open in the last 7 days; null when they could
+ * not be read. readTrouble (lib/checkout-trouble.ts) answers zero today when
+ * its store cannot be read, so the screen needs a strict reading of it before
+ * an "ok" from here can be shown (next unit).
+ */
 export function checkoutCheck(trouble: { week: number; last: { message: string } | null } | null): Check {
   const title = "Checkout";
   if (!trouble) return { id: "checkout", title, state: "not-checked", found: "We could not read whether Stripe refused any checkout just now." };
@@ -124,7 +144,7 @@ export function checkoutCheck(trouble: { week: number; last: { message: string }
     // Stripe's own words close the sentence as Stripe wrote them, with no full stop added after the quote.
     found: `Stripe refused to open a checkout ${times} in the last 7 days.${trouble.last ? ` The last time it said: "${trouble.last.message}"` : ""}`,
     ifLeft: "A buyer who presses buy gets an error instead of the payment page, and that sale is lost.",
-    fix: { kind: "outside", where: "In your Stripe dashboard, open the notice at the top of the home page; most refusals are the account needing something." },
+    fix: { kind: "outside", where: "In your Stripe dashboard, look for a notice asking for information and send what it asks for. If there is none, Stripe's words above say what it refused." },
   };
 }
 
@@ -155,6 +175,7 @@ export function checkupSummary(checks: Check[]): string {
   const parts: string[] = [];
   if (problems) parts.push(`${problems} ${problems === 1 ? "problem" : "problems"} found`);
   if (unchecked) parts.push(`${unchecked} not checked`);
+  if (checks.length === 0) return "Nothing was checked.";
   if (!problems && !unchecked) return "We checked everything listed here and found no problem.";
   if (!problems) return `No problem found in what we checked; ${unchecked} not checked.`;
   return `${parts.join(", ")}.`;

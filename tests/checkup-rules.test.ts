@@ -15,16 +15,20 @@
  */
 import { readFileSync } from "node:fs";
 import { checkoutCheck, checkupSummary, domainCheck, emailCheck, notCheckedYet, orderChecks, stripeCheck, type Check } from "@/lib/checkup-rules";
+import { pauseForSending } from "@/lib/mail-health";
+import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
 
 const NOW = Date.UTC(2026, 10, 1, 12);
+const SECONDS = Math.floor(NOW / 1000);
 
-function main(): void {
+async function main(): Promise<void> {
   part("Payments");
   is("not connected: a problem, with the way to connect", [stripeCheck(false, null).state, stripeCheck(false, null).fix], ["problem", { kind: "studio", href: "/studio#stripe", label: "Open your Stripe connection" }]);
   is("Stripe could not be asked: not checked, never fine", stripeCheck(true, null).state, "not-checked");
   is("details past due: a problem fixed in the creator's own Stripe dashboard", [stripeCheck(true, { chargesEnabled: true, detailsSubmitted: false }).state, stripeCheck(true, { chargesEnabled: true, detailsSubmitted: false }).fix?.kind], ["problem", "outside"]);
   is("card payments off: a problem", stripeCheck(true, { chargesEnabled: false, detailsSubmitted: true }).state, "problem");
+  is("both: payments already off is said, not only that they may stop", stripeCheck(true, { chargesEnabled: false, detailsSubmitted: false }).found.startsWith("Stripe has turned off card payments"), true);
   is("on: fine, saying what Stripe said", [stripeCheck(true, { chargesEnabled: true, detailsSubmitted: true }).state, stripeCheck(true, { chargesEnabled: true, detailsSubmitted: true }).found], ["ok", "Stripe says your account can take card payments."]);
 
   part("Your domain");
@@ -35,9 +39,16 @@ function main(): void {
 
   part("Email to your list");
   is("the pause could not be read: not checked", emailCheck(undefined, NOW).state, "not-checked");
-  is("no pause, or one already over: fine", [emailCheck(null, NOW).state, emailCheck({ reason: "bounces", until: NOW - 1 }, NOW).state], ["ok", "ok"]);
-  const paused = emailCheck({ reason: "complaints", until: Date.UTC(2026, 10, 8) }, NOW);
+  is("no pause, or one already over (its end in seconds, as lib/mail-health.ts keeps it): fine", [emailCheck(null, NOW).state, emailCheck({ reason: "bounces", until: SECONDS - 1 }, NOW).state], ["ok", "ok"]);
+  const paused = emailCheck({ reason: "complaints", until: Date.UTC(2026, 10, 8) / 1000 }, NOW);
   is("paused: a problem, saying why and until when, and that receipts still go", [paused.state, paused.found.includes("marked your emails as spam"), paused.ifLeft?.includes("November 8 (UTC)"), paused.ifLeft?.includes("Sign-in links and receipts still go out")], ["problem", true, true, true]);
+
+  // Read as the screen will read it: a real pause, kept by lib/mail-health.ts in seconds, through pauseForSending.
+  redis.clear();
+  await redis.pipeline([["SET", "nl:mail:paused:list01", JSON.stringify({ reason: "bounces", until: SECONDS + 7 * 86_400, sent: 400, count: 30 })]]);
+  const real = emailCheck(await pauseForSending("list01", NOW), NOW);
+  is("a pause read by pauseForSending is a problem, ending on the right day", [real.state, real.ifLeft?.includes("November 8 (UTC)")], ["problem", true]);
+  is("no pause kept: fine", emailCheck(await pauseForSending("list02", NOW), NOW).state, "ok");
 
   part("Checkout");
   is("the refusals could not be read: not checked", checkoutCheck(null).state, "not-checked");
@@ -55,7 +66,7 @@ function main(): void {
     stripeCheck(true, { chargesEnabled: true, detailsSubmitted: false }),
     stripeCheck(true, { chargesEnabled: false, detailsSubmitted: true }),
     domainCheck("harborkitchen.com", { live: false, records: [] })!,
-    emailCheck({ reason: "bounces", until: NOW + 86_400_000 }, NOW),
+    emailCheck({ reason: "bounces", until: SECONDS + 86_400 }, NOW),
     checkoutCheck({ week: 2, last: null }),
   ];
   is("each has a cause, a consequence and a fix", all.every((c) => c.state === "problem" && c.found.length > 10 && (c.ifLeft?.length ?? 0) > 10 && c.fix !== undefined), true);
@@ -67,6 +78,7 @@ function main(): void {
   is("problems first, then not checked, then fine; a part not used is gone", shown.map((c) => `${c.id}:${c.state}`), ["checkout:problem", "stripe:not-checked", "limits:not-checked", "email:ok"]);
   is("problems and unchecked are both counted", checkupSummary(shown), "1 problem found, 2 not checked.");
   is("never all well while something was not checked", checkupSummary(orderChecks([emailCheck(null), notCheckedYet("disputes")])), "No problem found in what we checked; 1 not checked.");
+  is("nothing at all is not \"no problem\"", checkupSummary([]), "Nothing was checked.");
   is("all checked and fine: said only then", checkupSummary([emailCheck(null), checkoutCheck({ week: 0, last: null })]), "We checked everything listed here and found no problem.");
 
   part("No model, no request");
@@ -75,4 +87,4 @@ function main(): void {
   done();
 }
 
-main();
+void main();
