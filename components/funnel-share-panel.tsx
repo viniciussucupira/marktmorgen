@@ -43,6 +43,7 @@ const MESSAGES: Record<string, string> = {
   bundle_kind: "The file has a block a store's own page cannot hold.",
   bundle_pictures: "The file names pictures, which are never shared between stores.",
   bundle_forms: "One of the file's forms would not be kept as it is written.",
+  bundle_forms_sensitive: "One of the file's forms asks for a password, a card number, a card's security code or an identity number, which a form never may. Nothing was imported.",
   bundle_products: "The file's products do not match where it uses them.",
   server_error: "We could not confirm the result. Reload and review your funnels before trying again.",
   owner_only: "Only the account's owner can copy a funnel into another of its stores.",
