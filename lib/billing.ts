@@ -1567,6 +1567,16 @@ export async function findStoreSubscriptions(
       handles.some((handle) => typeof handle !== "string" || !HANDLE_PATTERN.test(handle))) {
     throw new Error("Subscription search handle coverage is unknown");
   }
+  // Bind only the new DeletedCustomer exception to the identity and released
+  // handles captured for this query, before any awaited provider operation.
+  const customerContext = Object.getOwnPropertyDescriptor(store, "stripeCustomerId");
+  const releasedContext = Object.getOwnPropertyDescriptor(store, "releasedHandles");
+  const ownership: SearchOwnership = {
+    customerId: customerContext && Object.hasOwn(customerContext, "value") &&
+      typeof customerContext.value === "string" && CUSTOMER_PATTERN.test(customerContext.value) ? customerContext.value : null,
+    released: releasedContext && Object.hasOwn(releasedContext, "value") && releasedContext.value === releasedHandles
+      ? new Set(releasedHandles) : new Set(),
+  };
   const query = new URLSearchParams({
     query: handles.map((handle) => `metadata['store']:'${handle}'`).join(" OR "),
     limit: String(SEARCH_LIMIT),
@@ -1584,14 +1594,6 @@ export async function findStoreSubscriptions(
       !more || !("value" in more) || more.value !== false ||
       cursor && (!("value" in cursor) || cursor.value !== null && cursor.value !== undefined) ||
       data.value.length > SEARCH_LIMIT) throw new Error("Subscription search page is incomplete");
-  const customerContext = Object.getOwnPropertyDescriptor(store, "stripeCustomerId");
-  const releasedContext = Object.getOwnPropertyDescriptor(store, "releasedHandles");
-  const ownership: SearchOwnership = {
-    customerId: customerContext && Object.hasOwn(customerContext, "value") &&
-      typeof customerContext.value === "string" && CUSTOMER_PATTERN.test(customerContext.value) ? customerContext.value : null,
-    released: releasedContext && Object.hasOwn(releasedContext, "value") && releasedContext.value === releasedHandles
-      ? new Set(releasedHandles) : new Set(),
-  };
   const entries: SearchMember[] = [];
   const coveredHandles = new Set(handles);
   for (let index = 0; index < data.value.length; index++) {

@@ -487,6 +487,22 @@ test('DeletedCustomer exception cannot turn ambiguous, funded or active observat
  }finally{globalThis.fetch=old;}
 });
 
+test('DeletedCustomer ownership is captured before awaiting the provider, without renewing unknown identity',async()=>{
+ const old=globalThis.fetch;
+ const owner={...store,stripeCustomerId:null,previousHandles:[],releasedHandles:['released-harbor']} as Store;
+ const terminal={id:'sub_Deleted001',created:1,status:'canceled',metadata:{store:'harbor'},customer:{id:'cus_Test000001',object:'customer',deleted:true}};
+ let writes=0;
+ try{
+  globalThis.fetch=async(_input,init)=>{if(init?.method!=='GET')writes++;owner.stripeCustomerId='cus_Test000001';return Response.json({data:[terminal],has_more:false});};
+  await assert.rejects(findStoreSubscriptions(owner),/Subscription search/);
+  owner.stripeCustomerId='cus_Test000001';
+  const foreign={...terminal,metadata:{store:'released-harbor'},customer:{...terminal.customer,id:'cus_Foreign001'}};
+  globalThis.fetch=async(_input,init)=>{if(init?.method!=='GET')writes++;owner.stripeCustomerId='cus_Foreign001';owner.releasedHandles.length=0;return Response.json({data:[foreign],has_more:false});};
+  assert.deepEqual(await findStoreSubscriptions(owner),{live:null,customerId:null,lapsed:[]});
+  assert.equal(writes,0);
+ }finally{globalThis.fetch=old;}
+});
+
 test('subscription search refuses unknown or truncated handle coverage before the provider',async()=>{
  const old=globalThis.fetch;
  let reads=0,writes=0;
