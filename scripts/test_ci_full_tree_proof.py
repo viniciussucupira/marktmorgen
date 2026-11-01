@@ -1,8 +1,11 @@
 import copy
 import unittest
 import os
+import re
+from pathlib import Path
 from unittest.mock import patch
 from ci_full_tree_proof import WORKFLOWS, REPO, prove_full_tree, can_reuse_main
+from test_ci_all_checks import jobs_of
 A, T, M = "a"*40, "b"*40, "c"*40
 
 def fixture():
@@ -62,6 +65,39 @@ class FullTreeProofTests(unittest.TestCase):
         for event in ("schedule", "workflow_dispatch", "pull_request", ""):
             with patch.dict(os.environ, {"CI_EVENT":event, "CI_REF":"refs/heads/main", "CI_REPOSITORY":REPO}):
                 self.assertFalse(can_reuse_main())
+
+class WorkflowSourceAndOrderTests(unittest.TestCase):
+    def setUp(self):
+        path = Path(__file__).resolve().parents[1] / ".github/workflows/product-checks.yml"
+        self.jobs = jobs_of(path.read_text(encoding="utf-8"))
+
+    def test_mobile_driver_build_and_measurement_share_the_workflow_source(self):
+        body = "\n".join(self.jobs["mobile-render"])
+        matrix = body.split("        include:\n", 1)[1].split("    env:\n", 1)[0]
+        # A PR head and its merge can have different UI contracts. The default
+        # driver checkout is github.sha, so the built app must be that source too.
+        self.assertEqual(re.findall(r"^\s+ref: (.+)$", matrix, re.MULTILINE), ["${{ github.sha }}"])
+        self.assertNotIn("github.event.pull_request.head.sha", body)
+        checkouts = body.split("      - uses: actions/checkout@")
+        self.assertEqual(len(checkouts), 3)
+        self.assertNotRegex(checkouts[1], r"(?m)^\s+ref:")
+        self.assertIn("          ref: ${{ matrix.ref }}\n          path: measured-app", checkouts[2])
+        self.assertIn("MOBILE_RENDER_SHA: ${{ matrix.ref }}", body)
+        self.assertIn("run: node scripts/ci-build.mjs\n        working-directory: measured-app", body)
+        self.assertIn("run: node tests/e2e/mobile-render.mjs measured-app", body)
+
+    def test_actual_order_admission_waits_for_its_node_dependencies(self):
+        steps = re.split(r"(?m)^      - ", "\n".join(self.jobs["form-opportunity-redis"]))[1:]
+        order = [index for index, step in enumerate(steps) if step.startswith("name: Actual Redis order admission checks\n")]
+        install = [index for index, step in enumerate(steps) if step.startswith("run: npm ci\n")]
+        setup = [index for index, step in enumerate(steps) if step.startswith("uses: actions/setup-node@")]
+        self.assertEqual([len(order), len(install), len(setup)], [1, 1, 1])
+        self.assertLess(setup[0], install[0])
+        self.assertLess(install[0], order[0])
+        self.assertIn('MARKTMORGEN_REDIS_INTEGRATION: "1"', steps[order[0]])
+        self.assertIn("run: python3 scripts/test_order_admission_redis.py", steps[order[0]])
+        self.assertNotIn("\n        if:", steps[order[0]])
+        self.assertNotIn("continue-on-error", steps[order[0]])
 
 if __name__=="__main__":
     unittest.main()
