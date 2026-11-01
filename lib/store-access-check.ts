@@ -21,6 +21,7 @@
 import { KIND, STORE_PAGE_SIZE } from "@/lib/catalog";
 import type { Store } from "@/lib/store";
 import { isHeader } from "@/lib/store-link";
+import { vagueLinkTitle } from "@/lib/link-purpose";
 
 export type AccessCheck = {
   /**
@@ -38,17 +39,7 @@ export type AccessCheck = {
   links: { vague: { id: string; title: string }[] };
 };
 
-/** Words that say nothing about where a link goes, said alone. */
-const VAGUE = new Set(["click", "click here", "tap here", "here", "link", "this link", "this", "read more", "more", "learn more", "see more", "go", "open", "visit", "website", "details", "info"]);
-
-/** True when a link's words do not say where it goes: "Click here", "Read more", an address instead of words, no letters at all. */
-export function vagueLinkTitle(title: string): boolean {
-  const words = title.trim().toLowerCase().replace(/[\s.!?:…→>»-]+$/u, "").replace(/^[\s→>»-]+/u, "").replace(/\s+/g, " ");
-  if (!/\p{L}/u.test(words)) return true;
-  if (VAGUE.has(words)) return true;
-  // An address as its words: a screen reader spells it out, and it does not say what is there.
-  return /^(?:https?:\/\/|www\.)\S+$/.test(words) || /^[a-z0-9-]+(?:\.[a-z0-9-]+)+(?:\/\S*)?$/.test(words);
-}
+export { vagueLinkTitle } from "@/lib/link-purpose";
 
 /** The check for a store with products or links on it; null for an empty one, which has its first steps first. */
 export function accessCheck(store: Store): AccessCheck | null {
