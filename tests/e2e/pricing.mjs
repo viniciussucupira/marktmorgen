@@ -26,6 +26,10 @@ export async function checkPricing({browser,LOCAL,axeSource,is}){
    check(await cycle.getByRole("button",{name:/^Yearly/}).count()===1,"pricing yearly name "+width);
    check(!/Your Stripe\. Your money|Your store\. Your Stripe|Your store · Your Stripe/.test(await page.locator("body").innerText()),"pricing has no ownership slogan "+width);
    check(await page.locator("main header").getByText("Paid plans and paid selling are not open yet.",{exact:false}).isVisible(),"pricing keeps paid selling closed "+width);
+   // The page streams: React moves later parts into main from hidden holders
+   // after the heading shows, so read the cards only once every price sentence
+   // is inside main. A missing price still times out and fails below.
+   await page.waitForFunction(()=>{const main=document.querySelector("main");return !!main&&["$690","$4,490","$9,990"].every(price=>main.textContent.includes("Or "+price+" once a year"))},null,{timeout:10000}).catch(()=>{});
    const text=await page.locator("main").innerText();
    // VS1: the plan cards with the monthly/yearly switch (components/home-parts.tsx) show each
    // monthly price with "a month" beside it and the annual price as "Or $690 once a year".
