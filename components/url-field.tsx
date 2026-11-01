@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { Icon } from "@/components/icons";
 import { type LinkCheck, linkOnLeave } from "@/lib/url-check";
 
 /**
@@ -92,7 +93,10 @@ export function UrlField({
       />
       <div id={line} role="status" className="text-sm">
         {said ? (
-          <p className="mt-1 font-semibold text-danger">
+          <p className="mt-1 flex items-start gap-1.5 font-semibold text-danger">
+            {/* An icon beside the words, so the message is not told by its colour alone (1.4.1). */}
+            <Icon name="alert" size={18} className="mt-0.5 shrink-0" />
+            <span>
             {said.problem}
             {fix ? (
               <>
@@ -111,6 +115,7 @@ export function UrlField({
                 </button>
               </>
             ) : null}
+            </span>
           </p>
         ) : null}
       </div>

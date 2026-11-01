@@ -52,6 +52,7 @@ is("the fix is a button at least 44 px tall that puts the address in, offered on
 is("after the fix the focus goes back to the field, never to the page", field.includes("input.current?.focus();"), true);
 is("no browser bubble in other words, and no silent cut of a long address", field.includes('type="text"') && field.includes('inputMode="url"') && !field.includes("maxLength"), true);
 is("the message is announced", field.includes('role="status"'), true);
+is("the message has an icon beside its words, so it is not told by colour alone", field.includes('<Icon name="alert" size={18} className="mt-0.5 shrink-0" />'), true);
 const course = readFileSync("components/course-editor.tsx", "utf8");
 is("the lesson link uses it, with a visible label tied by its id", course.includes("<UrlField") && /htmlFor=\{`\$\{prefix\}-link`\}/.test(course) && course.includes("id={`${prefix}-link`}"), true);
 const product = readFileSync("components/product-editor.tsx", "utf8");
