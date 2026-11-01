@@ -606,6 +606,8 @@ export function TopicPageView({ page }: { page: TopicPage }) {
         </section>
 
         <div className={`${wide ? "container-page max-w-[64rem]!" : "container-narrow"} space-y-14 py-16 sm:space-y-16 sm:py-20`}>
+          {/* A card in the heading's place moves "On this page" here, just under the top: it never goes (531 [VP1]). */}
+          {page.visual ? <HeroContents blocks={blocks} light /> : null}
           {blocks.map((block, i) => (
             <BlockView key={i} block={block} />
           ))}

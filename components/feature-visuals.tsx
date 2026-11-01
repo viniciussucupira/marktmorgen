@@ -384,25 +384,29 @@ function InsightsVisual() {
 }
 
 /**
- * The funnel types the studio offers to start from (531 [VP1]), read from the
- * same list the studio and the route that builds a funnel read
- * (lib/funnel-types.ts): their names, in their order, and what each one
- * asks for, counted from its own steps. Nothing here is made up.
+ * The kinds of funnel the studio starts from (531 [VP1]), read from the same
+ * list the studio and the route that builds a funnel read
+ * (lib/funnel-types.ts), under the studio's own heading
+ * (components/funnel-type-picker.tsx): their names, in their order, and
+ * what each asks of the creator, counted from its own steps. Nothing here is
+ * made up.
  */
+const plural = (n: number, one: string) => `${n} ${one}${n === 1 ? "" : "s"}`;
 function FunnelsVisual() {
-  const plural = (n: number, one: string) => `${n} ${one}${n === 1 ? "" : "s"}`;
+  const shown = FUNNEL_TYPES.slice(0, 5);
+  const more = FUNNEL_TYPES.length - shown.length;
   return (
-    <Window bar="New funnel: start from a type">
+    <Window bar="Start from a kind of funnel">
       <div className="space-y-2 p-5">
-        {FUNNEL_TYPES.slice(0, 5).map((type) => (
+        {shown.map((type) => (
           <Row
             key={type.id}
             icon="ladder"
             title={type.label}
-            sub={`${plural(choicesOf(type).length, "product")}, ${plural(pagesOf(type).length, "page")}`}
+            sub={`${plural(choicesOf(type).length, "product")} to choose · ${plural(pagesOf(type).length, "new page")}`}
           />
         ))}
-        <p className="pt-1 text-center text-[12px] font-semibold text-ink-soft">{`and ${FUNNEL_TYPES.length - 5} more types`}</p>
+        {more > 0 ? <p className="pt-1 text-center text-[12px] font-semibold text-ink-soft">{`and ${plural(more, "more kind")}`}</p> : null}
       </div>
     </Window>
   );
@@ -420,7 +424,7 @@ const CAPTIONS: Record<VisualKey, string> = {
   email: "Writing to your list from the studio. The subject and steps are an example.",
   domain: "A store on its own domain, with the one record to add.",
   insights: "The numbers screen in the studio. The bars are an example, not our figures.",
-  funnels: "The funnel types in the studio, from its own list.",
+  funnels: "The kinds of funnel the studio starts from, read from its own list.",
 };
 
 /**
