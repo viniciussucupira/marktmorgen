@@ -1,3 +1,4 @@
+import { EmailField } from "@/components/email-field";
 import { isDiscordConfigured } from "@/lib/discord";
 import { discordFor } from "@/lib/discord-store";
 import { discordWords } from "@/lib/buyer-words/discord";
@@ -306,16 +307,7 @@ export default async function OrdersPage({ params, searchParams }: Params) {
       <label htmlFor="orders-email" className="st-label">
         {words.emailYouPaidWith}
       </label>
-      <input
-        id="orders-email"
-        type="email"
-        name="email"
-        required
-        maxLength={254}
-        autoComplete="email"
-        placeholder={said.w.emailPlaceholder}
-        className="st-field"
-      />
+      <EmailField id="orders-email" name="email" className="st-field" required autoComplete="email" placeholder={said.w.emailPlaceholder} language={store.language} />
       <button type="submit" className="btn st-btn btn-block">
         {words.emailMe}
       </button>
