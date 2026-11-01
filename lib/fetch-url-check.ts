@@ -45,22 +45,45 @@ export function fetchableShape(raw: string): { ok: true; url: string } | { ok: f
   return { ok: true, url: url.toString() };
 }
 
-/** On leaving the field: what is wrong, and https:// offered back when that is all it lacks. */
-export const fetchOnLeave: LinkCheck = (raw) => {
-  const typed = (raw ?? "").trim();
-  if (!typed) return { problem: null, fix: null };
-  if (typed.length > MAX_FETCH_URL) return { problem: "That address is too long.", fix: null };
-  const read = fetchableShape(typed);
-  if (read.ok) return { problem: null, fix: null };
-  const hasScheme = /^[a-z][a-z0-9+.-]*:(?!\d)/i.test(typed);
-  if (!hasScheme || /^http:\/\//i.test(typed)) {
-    const tried = `https://${typed.replace(/^http:\/\//i, "")}`;
-    const fixed = tried.length <= MAX_FETCH_URL ? fetchableShape(tried) : null;
-    if (fixed?.ok) return { problem: NEEDS_HTTPS, fix: fixed.url };
-    if (!hasScheme && fixed && !fixed.ok) return { problem: fixed.words, fix: null };
-  }
-  return { problem: read.words, fix: null };
+const LOCAL_OR_NUMBER = (url: string) => {
+  const host = new URL(url).hostname;
+  return host.startsWith("[") || IPV4.test(host);
 };
 
-/** The same, for a field that must be filled: empty is said in the server's words. */
-export const REQUIRED_FETCH_CHECK: LinkCheck = (raw) => ((raw ?? "").trim() ? fetchOnLeave(raw) : { problem: "That is not a web address.", fix: null });
+/**
+ * On leaving the field: what is wrong, and https:// offered back when that is
+ * all it lacks, and only when the server then keeps it (never an address
+ * written as a number, which the server alone may refuse as private, and
+ * never one that becomes too long once its letters are written out).
+ * `longWords` is the field's own server's words for too long; `required`
+ * says an empty field; `noWebcal` refuses webcal://, as the webhook server does.
+ */
+export function fetchCheck(options: { longWords?: string; required?: boolean; noWebcal?: boolean } = {}): LinkCheck {
+  const long = options.longWords ?? "That address is too long.";
+  return (raw) => {
+    const typed = (raw ?? "").trim();
+    if (!typed) return options.required ? { problem: "That is not a web address.", fix: null } : { problem: null, fix: null };
+    if (typed.length > MAX_FETCH_URL) return { problem: long, fix: null };
+    if (options.noWebcal && /^webcals?:/i.test(typed)) return { problem: "Only https:// addresses are accepted.", fix: null };
+    const read = fetchableShape(typed);
+    if (read.ok) return { problem: null, fix: null };
+    const hasScheme = /^[a-z][a-z0-9+.-]*:(?!\d)/i.test(typed);
+    if (!hasScheme || /^http:\/\//i.test(typed)) {
+      const tried = `https://${typed.replace(/^http:\/\//i, "")}`;
+      const fixed = tried.length <= MAX_FETCH_URL ? fetchableShape(tried) : null;
+      if (fixed?.ok && fixed.url.length <= MAX_FETCH_URL && !LOCAL_OR_NUMBER(fixed.url)) return { problem: NEEDS_HTTPS, fix: fixed.url };
+      if (!hasScheme && fixed && !fixed.ok) return { problem: fixed.words, fix: null };
+    }
+    return { problem: read.words, fix: null };
+  };
+}
+
+export const fetchOnLeave: LinkCheck = fetchCheck();
+
+const CALENDAR_LONG = "That address is longer than any calendar address we know of.";
+/** A webhook endpoint (lib/webhooks.ts addEndpoint): required, and never webcal://. */
+export const WEBHOOK_CHECK = fetchCheck({ required: true, noWebcal: true });
+/** A calendar a store reads (lib/calendar-sync.ts addFeed): required. */
+export const CALENDAR_CHECK = fetchCheck({ required: true, longWords: CALENDAR_LONG });
+/** A host's private iCal address (lib/host-calendar.ts addHostIcs). */
+export const HOST_ICS_CHECK = fetchCheck({ longWords: CALENDAR_LONG });

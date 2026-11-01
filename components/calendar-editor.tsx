@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { UrlField } from "@/components/url-field";
-import { REQUIRED_FETCH_CHECK } from "@/lib/fetch-url-check";
+import { CALENDAR_CHECK } from "@/lib/fetch-url-check";
 import { useRouter } from "next/navigation";
 import { useHydrated } from "@/components/use-hydrated";
 import { toast } from "@/components/toast";
@@ -175,13 +175,13 @@ export function CalendarEditor({ view: initial, weekly }: { view: CalendarView; 
           <label htmlFor="calendar-url" className="field-label">
             Private calendar address (iCal or .ics link)
           </label>
-          <div className="mt-2 flex flex-col gap-3 sm:flex-row">
+          <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:items-start">
             <UrlField
               id="calendar-url"
               autoComplete="off"
               value={url}
               onChange={setUrl}
-              check={REQUIRED_FETCH_CHECK}
+              check={CALENDAR_CHECK}
               placeholder="https://calendar.google.com/calendar/ical/…/basic.ics"
               describedBy="calendar-url-hint"
               wrapClassName="min-w-0 flex-1"

@@ -77,4 +77,8 @@ is("a call's meeting links use it, each with a visible label tied by id", (call.
 const events = readFileSync("components/community-events-studio.tsx", "utf8");
 is("a community event's link uses it", events.includes("<UrlField") && events.includes("check={LINK_CHECK}"), true);
 is("and an empty one is said there, since it is required", events.includes('const LINK_CHECK: LinkCheck = (raw) => (raw.trim() ? ROOM_CHECK(raw) : { problem: MESSAGES.link, fix: null });'), true);
+part("A notice's page address, by the reading the notice is held to");
+const reportForm = readFileSync("components/report-form.tsx", "utf8");
+is("the report form's page address uses it, required, with its help tied to it", reportForm.includes('<UrlField id="report-url"') && reportForm.includes("check={REPORT_URL_CHECK}") && reportForm.includes('describedBy="report-url-help"') && reportForm.includes('<p id="report-url-help"'), true);
+is("it is held to the same pattern as readReport", reportForm.includes("/^https?:\\/\\/\\S+$/i.test(raw)") && readFileSync("lib/takedown-rules.ts", "utf8").includes("if (!/^https?:\\/\\/\\S+$/i.test(report.url))"), true);
 done();

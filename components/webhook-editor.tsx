@@ -2,7 +2,7 @@
 
 import { ConfirmAction } from "@/components/confirm-action";
 import { UrlField } from "@/components/url-field";
-import { REQUIRED_FETCH_CHECK } from "@/lib/fetch-url-check";
+import { WEBHOOK_CHECK } from "@/lib/fetch-url-check";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "@/components/toast";
 import { Icon } from "@/components/icons";
@@ -272,7 +272,7 @@ export function WebhookEditor({ view: initial }: { view: WebhooksView }) {
             autoComplete="off"
             value={url}
             onChange={setUrl}
-            check={REQUIRED_FETCH_CHECK}
+            check={WEBHOOK_CHECK}
             placeholder="https://hooks.zapier.com/hooks/catch/…"
             className="field mt-2"
           />

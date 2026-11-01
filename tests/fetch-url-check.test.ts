@@ -14,7 +14,7 @@
  *   - the length is the one each server keeps (1,000).
  */
 import { readFileSync } from "node:fs";
-import { MAX_FETCH_URL, REQUIRED_FETCH_CHECK, fetchOnLeave, fetchableShape } from "@/lib/fetch-url-check";
+import { CALENDAR_CHECK, HOST_ICS_CHECK, MAX_FETCH_URL, WEBHOOK_CHECK, fetchOnLeave, fetchableShape } from "@/lib/fetch-url-check";
 import { SafeFetchError, checkUrl } from "@/lib/safe-fetch";
 import { MAX_ENDPOINT_URL } from "@/lib/webhooks";
 import { MAX_FEED_URL } from "@/lib/calendar-sync";
@@ -74,15 +74,21 @@ is("a local name: the server's words, nothing offered", fetchOnLeave("https://pr
 is("a port below 1024: the server's words", fetchOnLeave("https://example.com:22/a").problem, "Only port 443, or a port above 1023, is accepted.");
 is("too long: said, never cut", fetchOnLeave(`https://example.com/${"a".repeat(MAX_FETCH_URL)}`).problem, "That address is too long.");
 is("the length is each server's own", [MAX_FETCH_URL, MAX_ENDPOINT_URL, MAX_FEED_URL, MAX_ICS_URL], [1000, 1000, 1000, 1000]);
-is("a field that must be filled says so when empty, in the server's words", [REQUIRED_FETCH_CHECK("").problem, server("").ok ? "" : (server("") as { words: string }).words], ["That is not a web address.", "That is not a web address."]);
+is("a field that must be filled says so when empty, in the server's words", [WEBHOOK_CHECK("").problem, CALENDAR_CHECK("").problem, HOST_ICS_CHECK("").problem, (server("") as { words: string }).words], ["That is not a web address.", "That is not a web address.", null, "That is not a web address."]);
+for (const typed of ["http://10.0.0.1", "0x7f.1", "2130706433", "[::1]", "[::ffff:127.0.0.1]", "0", "http://8.8.8.8/x"]) {
+  is(`an address written as a number is never offered back, the server alone decides: ${typed}`, fetchOnLeave(typed).fix, null);
+}
+is("a fix that grows too long once its letters are written out is not offered", fetchOnLeave(`example.com/${"ü".repeat(980)}`).fix, null);
+is("a webhook refuses webcal://, in its server's words", WEBHOOK_CHECK("webcal://calendar.google.com/x.ics").problem, "Only https:// addresses are accepted.");
+is("a calendar's too long is in its server's words", [CALENDAR_CHECK(`https://example.com/${"a".repeat(MAX_FETCH_URL)}`).problem, HOST_ICS_CHECK(`https://example.com/${"a".repeat(MAX_FETCH_URL)}`).problem], ["That address is longer than any calendar address we know of.", "That address is longer than any calendar address we know of."]);
 
 part("The fields");
 const webhook = readFileSync("components/webhook-editor.tsx", "utf8");
 const calendar = readFileSync("components/calendar-editor.tsx", "utf8");
 const host = readFileSync("components/host-calendar.tsx", "utf8");
-is("a webhook endpoint uses it, never kept by the browser", webhook.includes('<UrlField\n            id="webhook-url"\n            autoComplete="off"') && webhook.includes("check={REQUIRED_FETCH_CHECK}"), true);
-is("a calendar to read uses it, with its hint, beside its button", calendar.includes('id="calendar-url"\n              autoComplete="off"') && calendar.includes('describedBy="calendar-url-hint"') && calendar.includes('wrapClassName="min-w-0 flex-1"'), true);
-is("a host's secret calendar address uses it, never kept by the browser", host.includes('<UrlField id="host-ics"') && host.includes('autoComplete="off" value={url} onChange={setUrl} check={fetchOnLeave}'), true);
+is("a webhook endpoint uses it, never kept by the browser", webhook.includes('<UrlField\n            id="webhook-url"\n            autoComplete="off"') && webhook.includes("check={WEBHOOK_CHECK}"), true);
+is("a calendar to read uses it, with its hint, beside its button, which keeps its height when a message shows", calendar.includes('id="calendar-url"\n              autoComplete="off"') && calendar.includes("check={CALENDAR_CHECK}") && calendar.includes('describedBy="calendar-url-hint"') && calendar.includes('wrapClassName="min-w-0 flex-1"') && calendar.includes("sm:flex-row sm:items-start"), true);
+is("a host's secret calendar address uses it, never kept by the browser", host.includes('<UrlField id="host-ics"') && host.includes('autoComplete="off" value={url} onChange={setUrl} check={HOST_ICS_CHECK}') && host.includes("{ url: url.trim() }"), true);
 const field = readFileSync("components/url-field.tsx", "utf8");
 is("the field takes what the browser may keep, and a size for its row", field.includes('autoComplete = "url"') && field.includes("autoComplete={autoComplete}") && field.includes("return wrapClassName ? <div className={wrapClassName}>{parts}</div> : parts;"), true);
 is("the server's guard is not touched", readFileSync("lib/safe-fetch.ts", "utf8").includes('const LOCAL_NAME = /(^|\\.)(localhost|local|localdomain|internal|intranet|lan|home|corp|private|test|invalid|example|arpa)$/i;'), true);
