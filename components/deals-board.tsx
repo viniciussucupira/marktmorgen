@@ -301,7 +301,7 @@ export function DealsBoard({ deals, stages: everyStage, pipelines: savedPipeline
               </label>
               <label className="block">
                 <span className="field-label">Their email (optional)</span>
-                <input className="field mt-2" type="email" autoComplete="off" spellCheck={false} value={draft.email} onChange={(e) => setDraft({ ...draft, email: e.target.value })} />
+                <input className="field mt-2" type="email" autoComplete="off" value={draft.email} onChange={(e) => setDraft({ ...draft, email: e.target.value })} />
               </label>
               <label className="block">
                 <span className="field-label">{`What it is worth, in ${currency.toUpperCase()} (optional)`}</span>
