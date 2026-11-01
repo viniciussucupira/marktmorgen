@@ -45,3 +45,27 @@ export function previewSpaces<S extends GatedSpace>(spaces: readonly S[], access
   const holdings = new Set(chosen.filter((id) => access.includes(id)));
   return spaces.filter((space) => seesSpace(space, access, holdings));
 }
+
+/** The line under "Which spaces a member sees": how many of the spaces; the list itself is drawn under it. */
+export function previewLine(chosenCount: number, shownCount: number, total: number): string {
+  // Nobody gets into the community without one of its products, so nothing checked is not a member.
+  if (chosenCount === 0) return "Check what a member bought to see which spaces they would see.";
+  if (shownCount === 0) return "A member with these products sees none of your spaces.";
+  if (total === 1) return "A member with these products sees your only space.";
+  if (shownCount === total) return `A member with these products sees all ${total} of your spaces:`;
+  return `A member with these products sees ${shownCount} of your ${total} spaces:`;
+}
+
+/** A space's name in the preview's list, with its place when another space has the same name. */
+export function previewName(spaces: readonly { id: string; name: string }[], id: string): string {
+  const index = spaces.findIndex((space) => space.id === id);
+  if (index < 0) return "";
+  const name = spaces[index].name;
+  return spaces.filter((space) => space.name === name).length > 1 ? `${name} (space ${index + 1})` : name;
+}
+
+/** What the preview does not show, said beside it so it never stands in for more than it is. */
+export const PREVIEW_LEAVES_OUT = "This shows which spaces they see, not the posts in them. Events have their own rule and are not shown here. Nothing is changed and nobody is told.";
+
+/** A product that still opens the community but is no longer in the store: still listed, since its buyers still get in. */
+export const GONE_PRODUCT = "A product no longer in your store";

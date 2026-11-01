@@ -19,7 +19,7 @@ The screen-by-screen audit that 487 [IT4] asks for: what was checked, what was f
 
 **Fixed.**
 - The three email fields in `components/` take `autoComplete="off"`, as the other fields for someone else's address already do (for example the gift recipient in `components/store-product.tsx`).
-- "Move to" in `app/studio/page.tsx` waits, because the file is held by an open PR. `tests/email-field-keyboards.test.ts` names it as waiting.
+- "Move to" in `app/studio/page.tsx` takes `autoComplete="off"` too, now that the file is no longer held by an open PR. Nothing waits any more.
 - The test fails if any email field in the app, `<input>` or `<EmailField>`, gives no `autocomplete`. It extracts whole tags and recognizes a type chosen in code.
 
 ## Pattern 4: a label always visible (1 November 2026, first pass)
