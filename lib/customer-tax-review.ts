@@ -19,6 +19,7 @@ export type ContractTaxCoverage = {
 /** months is the paid economic interval. A contractual scope instead covers
  * the explicitly bound calendar liability range, including pauses and tail. */
 export type TaxContext = { scenario: string; from: string; through: string; months: 1 | 12; contract?: ContractTaxCoverage };
+export type CustomerTaxInput = { taxReview: CustomerTaxReview | null; taxContext: TaxContext | null };
 type Rate = { numerator: number; denominator: number; evidence: TaxEvidence };
 export const OTHER_CUSTOMER_TAX_COMPONENTS = Object.freeze(['brazilOther', 'usFederal', 'usStates', 'consumption', 'otherJurisdictions'] as const);
 type Component = { status: 'ceiling' | 'not-applicable'; usdCents: number; evidence: TaxEvidence };
@@ -90,6 +91,20 @@ function detached(value: unknown): unknown {
     return out;
   }
   return copy(value, 0);
+}
+/** A detached evidence pair, never a fiscal approval. Both fields must be
+ * explicit own enumerable data; no getter, inherited default or extra field
+ * is carried into a later calculation. Semantic validation remains mandatory. */
+export function captureCustomerTaxInput(value: unknown): CustomerTaxInput | null {
+  try {
+    const copy = detached(value);
+    if (!copy || typeof copy !== 'object' || Array.isArray(copy) || Object.keys(copy).length !== 2 ||
+        !Object.hasOwn(copy, 'taxReview') || !Object.hasOwn(copy, 'taxContext')) return null;
+    const input = copy as CustomerTaxInput;
+    if (!input.taxReview || typeof input.taxReview !== 'object' || Array.isArray(input.taxReview) ||
+        !input.taxContext || typeof input.taxContext !== 'object' || Array.isArray(input.taxContext)) return null;
+    return input;
+  } catch { return null; }
 }
 const cents = (n: unknown): n is number => typeof n === 'number' && Number.isSafeInteger(n) && n >= 0;
 const day = (s: unknown): s is string => typeof s === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(s) &&
