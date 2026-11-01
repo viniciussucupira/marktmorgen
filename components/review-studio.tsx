@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { Icon } from "@/components/icons";
 import { Stars } from "@/components/review-stars";
 import { toast } from "@/components/toast";
-import { MAX_REPLY_TEXT } from "@/lib/review-summary";
+import { HIDE_REASONS, MAX_REPLY_TEXT, hideReasonLabel } from "@/lib/review-summary";
 import { AiOn } from "@/components/ai-assist";
 import { DEFAULT_ASK_DAYS, MAX_ASK_DAYS, MIN_ASK_DAYS } from "@/lib/review-ask";
 import { STUDIO_MESSAGES } from "@/lib/studio-messages";
@@ -129,6 +129,8 @@ export type StudioReview = {
   date: string;
   edited: string;
   hidden: boolean;
+  /** The review rule it was hidden for (HIDE_REASONS); empty when none was kept. */
+  hiddenReason: string;
   refunded: boolean;
   reply: string;
   unseen: boolean;
@@ -170,19 +172,22 @@ export function ReviewRow({ review }: { review: StudioReview }) {
   const [reply, setReply] = useState(review.reply);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [hiding, setHiding] = useState(false);
+  const [reason, setReason] = useState("");
 
-  async function act(kind: string, body: Record<string, unknown>, done: string) {
+  async function act(kind: string, body: Record<string, unknown>, done: string): Promise<boolean> {
     setBusy(kind);
     setError(null);
     const problem = await post({ product: review.productId, id: review.id, ...body });
     setBusy(null);
     if (problem) {
       setError(problem);
-      return;
+      return false;
     }
     toast(done);
     setReplying(false);
     router.refresh();
+    return true;
   }
 
   const base = `rv-${review.id}`;
@@ -194,7 +199,7 @@ export function ReviewRow({ review }: { review: StudioReview }) {
         </span>
         <span className="font-semibold text-ink">{review.name || "Verified buyer"}</span>
         {review.unseen ? <span className="tag tag-brand">New</span> : null}
-        {review.hidden ? <span className="tag">Hidden</span> : null}
+        {review.hidden ? <span className="tag">{hideReasonLabel(review.hiddenReason) ? `Hidden: ${hideReasonLabel(review.hiddenReason)}` : "Hidden"}</span> : null}
         {review.refunded ? <span className="tag">Refunded, not counted</span> : null}
       </div>
       <p className="mt-1 text-xs text-ink-soft">
@@ -271,6 +276,47 @@ export function ReviewRow({ review }: { review: StudioReview }) {
         </div>
       ) : null}
 
+      {hiding && !review.hidden ? (
+        <fieldset id={`${base}-hide`} className="mt-3 rounded-xl border border-line p-3">
+          <legend className="px-1 text-sm font-semibold text-ink">Which review rule does it break?</legend>
+          <p className="text-sm text-ink-soft">
+            A review is hidden only for one of these rules, the same for every rating. A low star rating or criticism is not a reason to hide a review. Its stars stay in your average either way.
+          </p>
+          <div className="mt-2 space-y-2">
+            {HIDE_REASONS.map((option) => (
+              <label key={option.id} className="flex min-h-11 cursor-pointer items-start gap-2 text-sm">
+                <input
+                  type="radio"
+                  name={`${base}-reason`}
+                  value={option.id}
+                  checked={reason === option.id}
+                  onChange={() => setReason(option.id)}
+                  className="mt-1 h-5 w-5 shrink-0"
+                  aria-describedby={`${base}-reason-${option.id}`}
+                />
+                <span>
+                  <span className="font-semibold text-ink">{option.label}</span>
+                  <span id={`${base}-reason-${option.id}`} className="block text-ink-soft">{option.hint}</span>
+                </span>
+              </label>
+            ))}
+          </div>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <button
+              type="button"
+              className="btn btn-primary btn-sm"
+              disabled={busy !== null || !reason}
+              onClick={() => { void act("hide", { action: "hide", hidden: true, reason }, "Review hidden.").then((ok) => { if (ok) setHiding(false); }); }}
+            >
+              {busy === "hide" ? "Hiding…" : "Hide for this reason"}
+            </button>
+            <button type="button" className="btn btn-ghost btn-sm" onClick={() => { setHiding(false); setReason(""); }}>
+              Cancel
+            </button>
+          </div>
+        </fieldset>
+      ) : null}
+
       {error ? (
         <p className="notice notice-error mt-3" role="alert">
           {error}
@@ -284,15 +330,29 @@ export function ReviewRow({ review }: { review: StudioReview }) {
             {review.reply ? "Edit your reply" : "Reply"}
           </button>
         ) : null}
-        <button
-          type="button"
-          className="btn btn-ghost btn-sm"
-          disabled={busy !== null}
-          onClick={() => act("hide", { action: "hide", hidden: !review.hidden }, review.hidden ? "Review shown again." : "Review hidden.")}
-        >
-          <Icon name={review.hidden ? "eye" : "ban"} size={15} />
-          {review.hidden ? "Show it again" : "Hide from the page"}
-        </button>
+        {review.hidden ? (
+          <button
+            type="button"
+            className="btn btn-ghost btn-sm"
+            disabled={busy !== null}
+            onClick={() => act("hide", { action: "hide", hidden: false }, "Review shown again.")}
+          >
+            <Icon name="eye" size={15} />
+            Show it again
+          </button>
+        ) : (
+          <button
+            type="button"
+            className="btn btn-ghost btn-sm"
+            disabled={busy !== null}
+            aria-expanded={hiding}
+            aria-controls={`${base}-hide`}
+            onClick={() => { setHiding(!hiding); setReason(""); }}
+          >
+            <Icon name="ban" size={15} />
+            Hide from the page
+          </button>
+        )}
         {review.unseen ? (
           <button
             type="button"
