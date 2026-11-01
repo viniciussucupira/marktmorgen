@@ -10,6 +10,7 @@ import { LegalPage, LegalSection } from "@/components/legal-page";
 import { isSesConfigured } from "@/lib/ses";
 import { isStreamConfigured } from "@/lib/stream";
 import { isVaultConfigured } from "@/lib/vault";
+import { GOOGLE_SIGNIN_APPROVED } from "@/lib/google-signin";
 
 export const metadata: Metadata = {
   title: "Privacy Policy — Marktmorgen",
@@ -1224,6 +1225,22 @@ export default function PrivacyPage() {
           <code>nl_2fa</code> holds a random code for that one login, for ten
           minutes.
         </p>
+        {GOOGLE_SIGNIN_APPROVED ? (
+          <p id="google-signin">
+            <strong className="text-black">Logging in with Google.</strong> A
+            creator can log in with Google instead of the emailed link. We ask
+            Google only for the account&apos;s email address and whether Google
+            has confirmed it (the <code>openid</code> and <code>email</code>{" "}
+            scopes), and nothing else from the Google account. We log in only a
+            Gmail address or an address on Google Workspace that Google has
+            confirmed, as the account with that address. We do not keep
+            anything Google sends: no token and no Google account number. While
+            Google&apos;s page is open, a cookie named <code>nl_gsi</code> holds
+            a random code for that one login, and the store address typed on
+            the home page if there was one, for ten minutes; we keep the matching
+            code for ten minutes and delete it when the login finishes.
+          </p>
+        ) : null}
         <p id="drafts">
           <strong className="text-black">Email drafts.</strong> For each draft
           of an email to a creator&apos;s list we keep its subject, its text,
@@ -1649,6 +1666,13 @@ export default function PrivacyPage() {
             maker of the browser a notification goes to, such as Apple, Google
             or Mozilla, which carry it encrypted;
           </li>
+          {GOOGLE_SIGNIN_APPROVED ? (
+            <li>
+              <strong className="text-black">Google</strong>, when a creator
+              chooses to log in with Google, which tells us the account&apos;s
+              email address and whether it confirmed it;
+            </li>
+          ) : null}
           <li>
             <strong className="text-black">Vercel</strong>, our host, which
             serves the site, stores the files, pictures and videos creators
@@ -1847,7 +1871,12 @@ export default function PrivacyPage() {
           says so. A creator&apos;s own browser keeps <code>nl_device</code>{" "}
           for 400 days and <code>nl_store</code> for a year, and{" "}
           <code>nl_pk</code> for five minutes while signing in with a
-          passkey, as section 1 describes. Opening the Video calls page from
+          passkey, as section 1 describes.{GOOGLE_SIGNIN_APPROVED ? (
+            <>
+              {" "}While logging in with Google it keeps <code>nl_gsi</code> for
+              ten minutes, as section 1 describes.
+            </>
+          ) : null} Opening the Video calls page from
           our listing in Zoom&apos;s Marketplace sets <code>nl_zoom</code>{" "}
           for 30 days: it remembers only that the browser came to connect
           Zoom, so the Zoom option is still there after logging in.

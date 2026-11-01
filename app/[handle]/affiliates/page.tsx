@@ -1,3 +1,4 @@
+import { EmailField } from "@/components/email-field";
 import { SITE_URL } from "@/lib/site-url";
 import type { Metadata } from "next";
 import { readListings, recordListings } from "@/lib/catalog";
@@ -151,16 +152,7 @@ export default async function AffiliatesPage({ params, searchParams }: Params) {
       <label htmlFor="aff-email" className="st-label">
         {w.yourEmail}
       </label>
-      <input
-        id="aff-email"
-        type="email"
-        name="email"
-        required
-        maxLength={254}
-        autoComplete="email"
-        placeholder={w.emailPlaceholder}
-        className="st-field"
-      />
+      <EmailField id="aff-email" name="email" className="st-field" required autoComplete="email" placeholder={w.emailPlaceholder} language={store.language} />
       <label htmlFor="aff-note" className="st-label pt-2">
         {a.whereShare} <span className="st-muted font-normal">{a.optional}</span>
       </label>
@@ -445,16 +437,7 @@ export default async function AffiliatesPage({ params, searchParams }: Params) {
                   <label htmlFor="aff-paypal" className="st-label">
                     {a.payPalLabel}
                   </label>
-                  <input
-                    id="aff-paypal"
-                    type="email"
-                    name="paypal"
-                    maxLength={254}
-                    autoComplete="email"
-                    defaultValue={affiliate.paypal}
-                    placeholder={affiliate.email}
-                    className="st-field"
-                  />
+                  <EmailField id="aff-paypal" name="paypal" className="st-field" autoComplete="email" placeholder={affiliate.email} defaultValue={affiliate.paypal} language={store.language} />
                   <p className="st-muted text-sm">
                     {a.payPalNote(store.name, affiliate.email)}
                   </p>
