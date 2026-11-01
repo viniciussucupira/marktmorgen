@@ -11,11 +11,11 @@ const safe = (value: bigint): number | null => value >= -BigInt(Number.MAX_SAFE_
  * not a real review, resource authorization or release gate.
  */
 export function reviewedUnitUnder(priceCents: number, usageCents: number, input: CustomerTaxInput | null, ownTransaction = true): UnitResult | null {
-  if (!cents(priceCents) || !cents(usageCents) || typeof ownTransaction !== 'boolean') return null;
+  if (!cents(priceCents) || priceCents <= 0 || !cents(usageCents) || typeof ownTransaction !== 'boolean') return null;
   const captured = captureCustomerTaxInput(input);
   if (!captured) return null;
   const received = receivingOf(priceCents, MOST_CORRECT_READING, ownTransaction);
-  if (!Object.values(received).every(cents)) return null;
+  if (!Object.values(received).every(cents) || received.revenueCents <= 0) return null;
   const cost = BigInt(received.totalCents) + BigInt(usageCents);
   const pretax = BigInt(received.revenueCents) - cost;
   const taxCents = customerTaxCeiling(captured.taxReview, captured.taxContext, {
@@ -29,7 +29,7 @@ export function reviewedUnitUnder(priceCents: number, usageCents: number, input:
   const usageRoomCents = safe(BigInt(received.revenueCents) - BigInt(taxCents) - floor - BigInt(received.totalCents));
   // BigInt division truncates toward zero; round a negative ratio down too.
   const scaled = net * BigInt(10_000), revenue = BigInt(received.revenueCents);
-  const ratio = revenue === BigInt(0) ? BigInt(0) : scaled >= BigInt(0) ? scaled / revenue : -((-scaled + revenue - BigInt(1)) / revenue);
+  const ratio = scaled >= BigInt(0) ? scaled / revenue : -((-scaled + revenue - BigInt(1)) / revenue);
   const netBps = safe(ratio);
   if (costCents === null || pretaxCents === null || netCents === null || gapCents === null || usageRoomCents === null || netBps === null) return null;
   return { ...received, usageCents, costCents, pretaxCents, taxCents, netCents, netBps,

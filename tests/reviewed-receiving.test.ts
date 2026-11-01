@@ -79,15 +79,15 @@ test('hidden, inherited, executable and extra evidence is refused without execut
   assert.equal(reads, 0);
 });
 
-test('an actual entry of already taxed profit has IOF even for a zero-revenue loss, without another IRPF', () => {
+test('unpaid units have no invented profit percentage while the primitive retains IOF without current profit', () => {
   const row = txCustomerFixture(0, 0), input = { taxReview: row.taxReview!, taxContext: row.taxContext! };
   input.taxReview.books[0].exchanges[0].brlCents = 1_000_000;
   const result = reviewedUnitUnder(0, 0, input);
-  assert.ok(result); assert.equal(result.taxCents, 760); assert.equal(result.meetsFloor, false);
-  assert.equal(result.netCents, -result.costCents - result.taxCents);
+  assert.equal(result,null,'paid unit adapter refuses revenue zero rather than inventing netBps0');
   assert.equal(mostCorrectTaxesOf({ currency: 'BRL', annualProfitCents: 0, incomingExchangeCents: [1_000_000] })?.iofCents, 3800);
   const noEntry = structuredClone(input); noEntry.taxReview.books[0].exchanges = [];
-  assert.equal(reviewedUnitUnder(0, 0, noEntry)?.taxCents, 0, 'explicit complete empty operation book differs from unknown');
+  assert.equal(reviewedUnitUnder(0,0,noEntry),null);
+  assert.equal(mostCorrectTaxesOf({currency:'BRL',annualProfitCents:0,incomingExchangeCents:[]})?.totalTaxCents,0,'explicit complete empty operations differ from unknown');
 });
 
 test('BRL primitive retains annual profit, operation rounding and bounded unknown refusal', () => {

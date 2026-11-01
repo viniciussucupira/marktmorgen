@@ -3,7 +3,7 @@ import { PUBLISHED_PLAN_PRICES, TRIAL_DAYS, REFUND_DAYS, type Tier, type Cycle }
 import { CLOSING_DAYS } from '@/lib/plan-closing-rules';
 import { LONGEST_PAUSE_MONTHS, PAUSE_EVERY_DAYS, PLAN_BREAKS_ENABLED } from '@/lib/plan-pause-rules';
 import { CUSTOMER_COST_CATEGORIES, assessCustomerWorstCase } from '@/lib/net-margin-rules';
-import { customerTaxContractContextState, customerTaxContractContextSupported } from './customer-tax-review';
+import { customerTaxCollectionState, customerTaxContractContextState, customerTaxContractContextSupported } from './customer-tax-review';
 import { assessMinimumCustomerBase } from '@/lib/customer-base-rules';
 import { fundedExposureDetails } from '@/lib/funded-exposure-rules';
 import type { CommercialMarginReview, MarginScenario } from '@/lib/commercial-margin';
@@ -43,7 +43,7 @@ export function canonicalFinancialSnapshot(value:unknown):string|null {
   // values, then verify the exact serialized result cannot downgrade TX.
   const reviewField=Object.getOwnPropertyDescriptor(v,'review');
   const hasScenarios=reviewField&&Object.hasOwn(reviewField,'value')&&reviewField.value&&typeof reviewField.value==='object'&&Object.getOwnPropertyDescriptor(reviewField.value,'scenarios');
-  const contextKind=hasScenarios?customerTaxContractContextState(v):null;
+  const contextKind=hasScenarios?customerTaxCollectionState(reviewField.value):null;
   if(contextKind==='unknown')return null;
   const keys=Reflect.ownKeys(v);if(keys.some(key=>typeof key!=='string'))return null;
   // A snapshot must not turn original fiscal presence into legacy absence.
@@ -54,7 +54,7 @@ export function canonicalFinancialSnapshot(value:unknown):string|null {
   }
   const descriptors=new Map<string,PropertyDescriptor>();
   for(const key of keys as string[]){
-   const d=Object.getOwnPropertyDescriptor(v,key);
+   const d=key==='review'?reviewField:Object.getOwnPropertyDescriptor(v,key);
    if(!d||!Object.hasOwn(d,'value')||(!d.enumerable&&!(Array.isArray(v)&&key==='length')))return null;
    descriptors.set(key,d);
   }

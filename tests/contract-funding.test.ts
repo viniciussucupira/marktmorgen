@@ -6,7 +6,7 @@ import {takeRestartRecovery,restartSubmissionOpenNow,recordRestartResult,armRest
 import {contractFixture} from './contract-funding-fixture';
 import {reset,seed,ledger,calls,settings} from './contract-funding-redis';
 import {txCustomerFixture} from './customer-tax-review-fixture';
-import {contractTaxFixture} from './contract-tax-fixture';
+import {contractTaxFixture,applyContractTaxCoverage} from './contract-tax-fixture';
 import {CUSTOMER_COST_CATEGORIES} from '@/lib/net-margin-rules';
 const key='nl:contract-reserve:v1';
 function start(){reset();const f=contractFixture(),config=contractFundingConfiguration(f.policy,f.context,f.now)!;assert.ok(config);seed(config);return {...f,config};}
@@ -74,9 +74,26 @@ test('a context cannot expose TX before capture and silently downgrade to legacy
   }});
  }
  const context=swapping(f.context,'review',legacy),policy=swapping(f.policy,'financialSnapshot',legacySnapshot);
- assert.equal(canonicalFinancialSnapshot(context),null);
+ const encoded=canonicalFinancialSnapshot(context);assert.ok(encoded);
+ assert.ok(JSON.parse(encoded).review.scenarios.creator_month_full.taxReview,'the first captured TX descriptor is preserved');
  assert.equal(contractFundingConfiguration(policy,context,f.now),null);
  reset();assert.equal(await reserveContractFunding('tx-downgrade','creator','year','checkout',policy,context,'ctr_tx_downgrade'),null);assert.equal(calls.length,0);
+});
+test('missing TX cannot authorize any paying contract, including descriptor switches after the first read',async()=>{
+ for(const txReads of [0,1,2,3]){
+  const f=contractTaxFixture();f.policy.reservedFundsCents=1e12;
+  for(const row of Object.values(f.review.scenarios)){
+   const pretax=row!.collectedRevenueCents!-row!.refundableRevenueCents!-CUSTOMER_COST_CATEGORIES.reduce((sum,k)=>sum+row!.costCeilings[k]!,0);
+   row!.taxesCeilingCents=Math.ceil(pretax*.5);
+  }
+  f.policy.financialSnapshot=canonicalFinancialSnapshot(f.review)!;const valid=contractFundingConfiguration(f.policy,f.context,f.now)!;assert.ok(valid);
+  const legacy=structuredClone(f.review);for(const row of Object.values(legacy.scenarios)){delete row!.taxReview;delete row!.taxContext;}
+  f.policy.financialSnapshot=canonicalFinancialSnapshot(legacy)!;let reads=0;
+  const context=new Proxy(f.context,{getOwnPropertyDescriptor(target,key){const d=Reflect.getOwnPropertyDescriptor(target,key);return key==='review'&&d?{...d,value:++reads<=txReads?f.review:legacy}:d;}});
+  reset();seed(valid);const before=[...ledger.get(key)!];
+  assert.equal(await reserveContractFunding('tx-descriptor','creator','year','checkout',f.policy,context,'ctr_tx_descriptor'),null);
+  assert.equal(calls.length,0);assert.deepEqual([...ledger.get(key)!],before);
+ }
 });
 test('actual contract coverage includes every calendar book across a November admission and its existing liability horizon',t=>{
  t.mock.timers.enable({apis:['Date'],now:new Date('2026-11-01T12:00:00.000Z')});
@@ -112,7 +129,7 @@ test('contract TX cannot authorize expired, future, mismatched or incompletely c
  }
  const f=contractTaxFixture();assert.equal(contractFundingConfiguration(f.policy,f.context,new Date(Date.parse(f.policy.admissionsUntil)+1)),null);
 });
-test('legacy contract cash still retains every reviewed tax cent',()=>{
+test('contract cash still retains every reviewed tax cent',()=>{
  const f=contractFixture();f.policy.reservedFundsCents=1e12;
  const before=contractFundingConfiguration(f.policy,f.context,f.now);assert.ok(before);
  f.review.scenarios.creator_month_full!.taxesCeilingCents!+=317;
@@ -157,12 +174,12 @@ test('last admitted monthly and annual obligations keep full coverage after the 
   f.policy.fundedGrants=Object.fromEntries(CONTRACT_KEYS.map(key=>[key,key===selected?2:0])) as typeof f.policy.fundedGrants;
   const days=contractCoverageDays(cycle,f.policy.reviewedLiabilityTailDays!);assert.ok(days);
   const admission=Date.parse(f.policy.admissionsUntil);
-  f.policy.liabilitiesThrough=new Date(admission+days*86400000).toISOString();
+  f.policy.liabilitiesThrough=new Date(admission+days*86400000).toISOString();applyContractTaxCoverage(f);
   assert.equal(contractFundingConfiguration(f.policy,f.context,f.now),null,'the old boundary omits the permitted activation delay');
   const through=admission+(days+CONTRACT_FUNDING_RULES.activationDelayDays)*86400000;
-  f.policy.liabilitiesThrough=new Date(through-1).toISOString();
+  f.policy.liabilitiesThrough=new Date(through-1).toISOString();applyContractTaxCoverage(f);
   assert.equal(contractFundingConfiguration(f.policy,f.context,f.now),null,'one millisecond short cannot approve');
-  f.policy.liabilitiesThrough=new Date(through).toISOString();
+  f.policy.liabilitiesThrough=new Date(through).toISOString();applyContractTaxCoverage(f);
   const approved=contractFundingConfiguration(f.policy,f.context,f.now);assert.ok(approved);
   assert.equal(approved.liabilitiesThroughMs,through);
   assert.equal(approved.coverageDays[cycle],days,'activation delay is additional to the complete reviewed tail');
@@ -385,7 +402,7 @@ test('switch activation rejects executable data and malformed acknowledgements',
 
 test('committed checkout observations survive the initial deadline only for the exact current period',async(t)=>{
  t.mock.timers.enable({apis:['Date'],now:new Date('2026-10-10T12:00:00.000Z')});
- reset();const f=contractFixture();f.policy.admissionsUntil=new Date(Date.now()+10*86400000).toISOString();
+ reset();const f=contractFixture();f.policy.admissionsUntil=new Date(Date.now()+10*86400000).toISOString();applyContractTaxCoverage(f);
  const config=contractFundingConfiguration(f.policy,f.context)!;seed(config);
  assert.ok(await reserveContractFunding('one','creator','month','checkout',f.policy,f.context,'ctr_activate'));
  const input=activation();assert.equal(await activateCheckoutContract(input,f.policy,f.context),true);
@@ -399,7 +416,7 @@ test('committed checkout observations survive the initial deadline only for the 
 });
 test('committed switch observations retain both principals after its initial deadline and cannot roll into renewal',async(t)=>{
  t.mock.timers.enable({apis:['Date'],now:new Date('2026-10-10T12:00:00.000Z')});
- reset();const f=contractFixture();f.policy.admissionsUntil=new Date(Date.now()+10*86400000).toISOString();
+ reset();const f=contractFixture();f.policy.admissionsUntil=new Date(Date.now()+10*86400000).toISOString();applyContractTaxCoverage(f);
  const config=contractFundingConfiguration(f.policy,f.context)!;seed(config);
  assert.ok(await reserveContractFunding('one','creator','month','checkout',f.policy,f.context,'ctr_source'));
  const source=activation('one','ctr_source');assert.equal(await activateCheckoutContract(source,f.policy,f.context),true);
@@ -430,7 +447,7 @@ test('a committed reservation acknowledgement cannot outlive admission, its expo
   t.mock.timers.setTime(new Date(mode==='month'?'2026-10-31T23:59:59.000Z':'2026-10-10T12:00:00.000Z').getTime());
   reset();const f=contractFixture();
   if(mode==='admission')f.policy.admissionsUntil=new Date(Date.now()+1000).toISOString();
-  const config=contractFundingConfiguration(f.policy,f.context)!;assert.ok(config);seed(config);
+  applyContractTaxCoverage(f);const config=contractFundingConfiguration(f.policy,f.context)!;assert.ok(config);seed(config);
   const pending=reserveContractFunding('one','creator','month','checkout',f.policy,f.context,'ctr_late_ack');
   const h=ledger.get(key)!;assert.equal(h.get('pending:one'),'ctr_late_ack');
   const committed=[...h];
@@ -453,7 +470,7 @@ test('checkout and switch acknowledgements revalidate admission, exposure, polic
    t.mock.timers.setTime(new Date(mode==='month'?'2026-10-31T23:59:59.000Z':'2026-10-10T12:00:00.000Z').getTime());
    reset();const f=contractFixture();
    if(mode==='admission')f.policy.admissionsUntil=new Date(Date.now()+1000).toISOString();
-   const config=contractFundingConfiguration(f.policy,f.context)!;assert.ok(config);seed(config);
+   applyContractTaxCoverage(f);const config=contractFundingConfiguration(f.policy,f.context)!;assert.ok(config);seed(config);
    assert.ok(await reserveContractFunding('one','creator','month','checkout',f.policy,f.context,'ctr_source'));
    let input=activation('one','ctr_source');
    if(action==='switch'){

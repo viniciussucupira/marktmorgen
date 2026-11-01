@@ -4,7 +4,7 @@ import { mostCorrectTaxesOf } from './receiving-costs';
  * review is supplied here. Legacy callers retain their historical protection. */
 export const CUSTOMER_TAX_REVIEW_POLICY = Object.freeze({
   schema: 1, id: 'TX-2026-10-27', basis: 'isolated-full-rights-worst-case',
-  unknown: 'deny', currency: 'USD', accountingCurrency: 'BRL',
+  unknown: 'deny', requirement: 'explicit-TX-evidence-required-no-legacy-profit-approval', currency: 'USD', accountingCurrency: 'BRL',
   allocation: 'whole-scoped-calendar-books-no-tax-credit-for-extra-cost-room',
   contractAdmission: 'explicit-review-snapshot-admission-and-liability-coverage',
   fundedExposure: 'legacy-only-no-TX-migration-in-this-unit',
@@ -226,7 +226,7 @@ export function customerTaxContractContextState(value: unknown): 'legacy' | 'tx'
   } catch { return 'unknown'; }
 }
 
-/** Legacy reviews retain their existing protection until mandatory migration.
+/** Explicit TX evidence is mandatory; an unreviewed legacy cannot fund a contract.
  * TX may fund a contract only when every present scope is bound to the exact
  * existing policy and covers the actual admission time and full liability range.
  * This shape/binding check runs on ORIGINAL data, never authenticates facts and
@@ -239,7 +239,7 @@ export function customerTaxContractContextSupported(context: unknown, policy: un
       return d && Object.hasOwn(d, 'value') ? d.value : undefined;
     };
     const review = own(context, 'review'), state = customerTaxCollectionState(review);
-    if (state !== 'tx') return state === 'legacy';
+    if (state !== 'tx') return false;
     const at = now.getTime();
     if (!Number.isFinite(at)) return false;
     const scenarios = own(review, 'scenarios');
@@ -248,7 +248,7 @@ export function customerTaxContractContextSupported(context: unknown, policy: un
       const raw = own(scenarios, String(key));
       if (!raw || typeof raw !== 'object') return false;
       const fields = customerTaxReviewFields(raw);
-      if (!fields.present) continue;
+      if (!fields.present) return false;
       const c = detached(fields.taxContext) as TaxContext, r = detached(fields.taxReview) as CustomerTaxReview;
       const bound = c?.contract;
       if (!c || !r || !contextValidForContract(c, String(key)) || !sameContext(c, r.scope) || !bound ||
@@ -316,7 +316,7 @@ export function customerTaxCeiling(value: unknown, suppliedContext: unknown,
 /** Bind a commercial map key to the scenario's explicit fiscal period. */
 export function customerTaxScenarioMatches(value: object, scenario: string): boolean {
   const fields = customerTaxReviewFields(value);
-  if (!fields.present) return true;
+  if (!fields.present) return false;
   try {
     const c = detached(fields.taxContext) as TaxContext;
     return !!c && context(c) && c.scenario === scenario && (!scenario.endsWith('_full') || c.months === (scenario.includes('_year_') ? 12 : 1));

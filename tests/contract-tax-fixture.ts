@@ -1,12 +1,13 @@
-import { canonicalFinancialSnapshot, contractFundingConfiguration, CONTRACT_KEYS } from '../lib/contract-funding-rules';
+import { canonicalFinancialSnapshot, type ContractFundingContext, type ContractFundingPolicy } from '../lib/contract-funding-rules';
 import { CUSTOMER_COST_CATEGORIES } from '../lib/net-margin-rules';
 import type { ContractTaxCoverage, TaxContext } from '../lib/customer-tax-review';
 import { contractFixture } from './contract-funding-fixture';
+import type {CommercialMarginReview} from '../lib/commercial-margin';
 import { txCustomerFixture, syntheticTaxEvidence } from './customer-tax-review-fixture';
 
 /** Synthetic dated coverage, supplied through the exact production contract.
  * No actual future profit, exchange quote, legal fact or bank reserve is proved. */
-export function applyContractTaxCoverage(f: ReturnType<typeof contractFixture>) {
+export function applyContractTaxCoverage<T extends {now:Date;review:CommercialMarginReview;context:ContractFundingContext;policy:ContractFundingPolicy}>(f:T):T {
   const contract: ContractTaxCoverage = {
     reviewId: f.policy.reviewId, termsSnapshot: f.context.termsSnapshot,
     admissionsFrom: f.now.toISOString(), admissionsUntil: f.policy.admissionsUntil,
@@ -24,10 +25,6 @@ export function applyContractTaxCoverage(f: ReturnType<typeof contractFixture>) 
     f.review.scenarios[key as keyof typeof f.review.scenarios] = tx;
   }
   f.policy.financialSnapshot = canonicalFinancialSnapshot(f.review)!;
-  f.policy.reservedFundsCents = 1e12;
-  const config = contractFundingConfiguration(f.policy, f.context, f.now);
-  if (!config) throw Error('Invalid synthetic actual-period TX contract coverage');
-  f.policy.reservedFundsCents = CONTRACT_KEYS.reduce((sum, key) => sum + config.grantCents[key] * f.policy.fundedGrants[key], 0);
   return f;
 }
-export const contractTaxFixture = () => applyContractTaxCoverage(contractFixture());
+export const contractTaxFixture = () => contractFixture();

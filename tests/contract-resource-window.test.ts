@@ -12,7 +12,7 @@ const ledgerKey='nl:contract-reserve:v1',statsId='a'.repeat(32);
 async function setup(cycle:'month'|'year'='month',options:{admissionMs?:number;durationSeconds?:number;taxCoverage?:boolean}={}){
  reset();resourceSettings({lost:false,failure:false,response:null,afterAck:null,acknowledge:null});const f=contractFixture();
  f.policy.admissionsUntil=new Date(Date.now()+(options.admissionMs??10*86400000)).toISOString();
- if(options.taxCoverage)applyContractTaxCoverage(f);
+ applyContractTaxCoverage(f);
  const config=contractFundingConfiguration(f.policy,f.context)!;assert.ok(config);seed(config);
  assert.ok(await reserveContractFunding(statsId,'creator',cycle,'checkout',f.policy,f.context,'ctr_resources'));
  const created=Math.floor(Date.now()/1000),end=created+(options.durationSeconds??(cycle==='year'?365:30)*86400);
