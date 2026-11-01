@@ -12,14 +12,16 @@
  *     at the next change;
  *   - replacing again within the day keeps only the newest two;
  *   - one store cannot replace another's secret; replacing counts no
- *     delivery from the plan's month.
+ *     delivery from the plan's month;
+ *   - two changes made at once never undo each other: a replacement that
+ *     lands while the events are being changed keeps both, either way round.
  */
 import { createHmac } from "node:crypto";
 import http from "node:http";
 import https from "node:https";
 import net from "node:net";
 import { readFileSync } from "node:fs";
-import { ROTATION_HOURS, RETRY_MINUTES, addEndpoint, deliverDue, emitEvent, rotateSecret, setSendHooksForTests, signatureFor, webhooksView } from "@/lib/webhooks";
+import { ROTATION_HOURS, RETRY_MINUTES, addEndpoint, deliverDue, emitEvent, removeEndpoint, rotateSecret, setEndpointEvents, setSendHooksForTests, signatureFor, webhooksView } from "@/lib/webhooks";
 import { claimHandle, ensureStatsId, setSubscription, storeForEmail } from "@/lib/store";
 import { allowanceUsed } from "@/lib/store-allowance";
 import { paidPeriod } from "./billing-period-fixture";
@@ -126,6 +128,9 @@ async function main(): Promise<void> {
   const retryHeader = String(retry?.headers["marktmorgen-signature"]);
   is("the waiting retry goes out signed with both", [Boolean(retry), accepts(second, retryHeader, retry?.body ?? ""), accepts(first, retryHeader, retry?.body ?? "")], [true, true, true]);
 
+  part("Exactly at the end");
+  is("at the very moment the day ends, only the new one", v1Count(signatureFor({ secret: second, previous: first, previousUntil: now + ROTATION_HOURS * 3_600_000 }, 1, "{}", now + ROTATION_HOURS * 3_600_000)), 1);
+
   part("After the day, only the new one");
   const later = now + ROTATION_HOURS * 3_600_000 + 1;
   const endpoint = { secret: second, previous: first, previousUntil: now + ROTATION_HOURS * 3_600_000 };
@@ -154,6 +159,45 @@ async function main(): Promise<void> {
   const [rawAfter] = await redis.pipeline([["GET", `nl:hooks:cfg:${statsId}`]]);
   const after = JSON.parse(String(rawAfter)) as { endpoints: { id: string; previous?: string }[] };
   is("the first endpoint's old secret is gone from storage", after.endpoints.find((e) => e.id === id)?.previous, undefined);
+
+  part("Two changes at once never undo each other");
+  // Runs `between` just before the next settings write, as if another request had written first.
+  let between: (() => Promise<unknown>) | null = null;
+  const direct = redis.pipeline;
+  redis.pipeline = async (commands: (string | number)[][]) => {
+    const [only] = commands;
+    if (between && commands.length === 1 && only[0] === "EVAL" && String(only[3]).startsWith("nl:hooks:cfg:")) {
+      const run = between;
+      between = null;
+      await run();
+    }
+    return direct(commands);
+  };
+  const raced = await addEndpoint(two, "https://hooks.example.com/raced", ["sale.completed"]);
+  if (!raced.ok) throw new Error("not added");
+  const racedId = raced.view.endpoints[0].id;
+  const storedEndpoint = async () => {
+    const [value] = await direct([["GET", `nl:hooks:cfg:${two.statsId}`]]);
+    return (JSON.parse(String(value)) as { endpoints: { id: string; secret: string; previous?: string; events: string[] }[] }).endpoints.find((e) => e.id === racedId)!;
+  };
+  let replaced = "";
+  between = async () => {
+    const r = await rotateSecret(two, racedId);
+    if (r.ok) replaced = r.secret;
+  };
+  await setEndpointEvents(two, racedId, ["sale.completed", "refund.issued"]);
+  let kept = await storedEndpoint();
+  is("events changed while the secret was replaced: both stay", [kept.secret === replaced && Boolean(replaced), kept.previous === raced.secret, kept.events], [true, true, ["sale.completed", "refund.issued"]]);
+  const heldSecret = kept.secret;
+  between = async () => setEndpointEvents(two, racedId, ["refund.issued"]);
+  const late = await rotateSecret(two, racedId);
+  if (!late.ok) throw new Error("not rotated");
+  kept = await storedEndpoint();
+  is("the secret replaced while the events changed: both stay, and the old one is the one in force then", [kept.secret === late.secret, kept.previous === heldSecret, kept.events], [true, true, ["refund.issued"]]);
+  between = async () => addEndpoint(two, "https://hooks.example.com/raced-two", ["call.moved"]);
+  await removeEndpoint(two, racedId);
+  is("an endpoint removed while another is added: the other stays, the removed one goes", (await webhooksView(two)).endpoints.map((e) => e.where), ["hooks.example.com/raced-two"]);
+  redis.pipeline = direct;
 
   part("The studio's route offers it");
   const route = readFileSync("app/api/store/webhooks/route.ts", "utf8");

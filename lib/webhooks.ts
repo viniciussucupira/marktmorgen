@@ -56,6 +56,8 @@
 import { createHash, createHmac, randomBytes } from "node:crypto";
 import { after } from "next/server";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
+// The repository's compare-and-set script (GET equals what was read, then SET), also modelled by lib/redis-memory.ts.
+import { SAVE_CRM_PIPELINES as COMPARE_AND_SET } from "@/lib/crm";
 import { StripeError, onAccount } from "@/lib/stripe-account";
 import { isSettled } from "@/lib/instant-pay";
 import { SafeFetchError, checkUrl, problemWords, safeFetch } from "@/lib/safe-fetch";
@@ -193,6 +195,30 @@ function parseDelivery(raw: unknown): Delivery | null {
 async function readConfig(statsId: string): Promise<Config | null> {
   const [raw] = await redisPipeline([["GET", cfgKey(statsId)]]);
   return parseConfig(raw);
+}
+
+/** How many times a change is tried again from a fresh read when another one landed first. */
+const CONFIG_WRITE_TRIES = 4;
+
+/**
+ * Changes a store's webhook settings over exactly what was read (378 [TB4]).
+ * Every writer reads the whole settings and writes them back; before this, two
+ * changes at once could undo each other in silence, and a replaced secret
+ * could come back as the old one while the creator was holding the new. Now
+ * the write lands only if the settings are still the text read
+ * (COMPARE_AND_SET); otherwise the change is made again on a fresh read, a
+ * few times, and then refused. `change` returns null to write nothing.
+ */
+async function changeConfig(statsId: string, change: (config: Config | null) => Config | null): Promise<{ before: Config | null; after: Config } | null> {
+  for (let tries = 0; tries < CONFIG_WRITE_TRIES; tries += 1) {
+    const [raw] = await redisPipeline([["GET", cfgKey(statsId)]]);
+    const before = parseConfig(raw);
+    const after = change(before);
+    if (!after) return null;
+    const [saved] = await redisPipeline([["EVAL", COMPARE_AND_SET, 1, cfgKey(statsId), typeof raw === "string" ? raw : "", JSON.stringify(after)]]);
+    if (Number(saved) === 1) return { before, after };
+  }
+  throw new Error("The webhook settings kept changing while being saved.");
 }
 
 /** The source fields of a sale.completed message, read off the order's metadata; null where it carries none. */
@@ -597,12 +623,20 @@ export async function addEndpoint(store: Store, rawUrl: string, events: unknown,
   const secret = `whsec_${randomBytes(24).toString("base64url")}`;
   const endpoint: Endpoint = { id: `we_${randomBytes(8).toString("hex")}`, url, secret, events: chosen, addedAt: new Date(now).toISOString() };
   // The Stripe pass starts from now for a store's first endpoint: nothing
-  // that happened before it was added is sent to it.
-  const next: Config = { handle: store.handle, endpoints: [...config.endpoints, endpoint], since: config.endpoints.length ? config.since : Math.floor(now / 1000) };
+  // that happened before it was added is sent to it. Checked again on the
+  // settings as they are when written, in case another change landed first.
+  let refused: AddEndpointResult | null = null;
+  const written = await changeConfig(store.statsId, (fresh) => {
+    const current = fresh ?? { handle: store.handle, endpoints: [], since: Math.floor(now / 1000) };
+    if (current.endpoints.length >= MAX_ENDPOINTS) refused = { ok: false, reason: "full", message: `A store can have ${MAX_ENDPOINTS} endpoints. Remove one first.` };
+    else if (current.endpoints.some((e) => e.url === url)) refused = { ok: false, reason: "duplicate", message: "That endpoint is already added." };
+    if (refused) return null;
+    return { handle: store.handle, endpoints: [...current.endpoints, endpoint], since: current.endpoints.length ? current.since : Math.floor(now / 1000) };
+  });
+  if (!written) return refused ?? { ok: false, reason: "unavailable", message: "The endpoint could not be added just now. Try again in a moment." };
   await redisPipeline([
-    ["SET", cfgKey(store.statsId), JSON.stringify(next)],
     ["SADD", STORES_KEY, store.statsId],
-    ...(config.endpoints.length ? [] : [["DEL", anchorKey(store.statsId)]]),
+    ...(written.before?.endpoints.length ? [] : [["DEL", anchorKey(store.statsId)]]),
   ]);
   return { ok: true, secret, view: await webhooksView(store) };
 }
@@ -618,8 +652,10 @@ export async function setEndpointEvents(store: Store, id: string, events: unknow
   // A subset removes future work; adding a new event creates a new obligation.
   // Keep retained event removal available without a fresh admission.
   if (chosen.some(event => !endpoint.events.includes(event)) && store.period?.funded === true && !(await reservePaidResourceWindow(store))) return "unavailable";
-  const next: Config = { ...config, handle: store.handle, endpoints: config.endpoints.map((e) => (e.id === id ? { ...e, events: chosen } : e)) };
-  await redisPipeline([["SET", cfgKey(store.statsId), JSON.stringify(next)]]);
+  const written = await changeConfig(store.statsId, (fresh) =>
+    fresh && fresh.endpoints.some((e) => e.id === id) ? { ...fresh, handle: store.handle, endpoints: fresh.endpoints.map((e) => (e.id === id ? { ...e, events: chosen } : e)) } : null,
+  );
+  if (!written) return "missing";
   return webhooksView(store);
 }
 
@@ -635,27 +671,25 @@ export type RotateSecretResult = { ok: true; secret: string; oldSecretUntil: str
  */
 export async function rotateSecret(store: Store, id: string, now = Date.now()): Promise<RotateSecretResult> {
   if (!store.statsId) return { ok: false, reason: "missing" };
-  const config = await readConfig(store.statsId);
-  const endpoint = config?.endpoints.find((e) => e.id === id);
-  if (!config || !endpoint) return { ok: false, reason: "missing" };
   const secret = `whsec_${randomBytes(24).toString("base64url")}`;
   const previousUntil = now + ROTATION_HOURS * 3_600_000;
-  const endpoints = config.endpoints.map((e) => (e.id === id ? { ...e, secret, previous: endpoint.secret, previousUntil } : withoutStalePrevious(e, now)));
-  await redisPipeline([["SET", cfgKey(store.statsId), JSON.stringify({ ...config, handle: store.handle, endpoints })]]);
+  // Over the settings as they are when written, so the secret replaced is the one in force then.
+  const written = await changeConfig(store.statsId, (fresh) => {
+    const endpoint = fresh?.endpoints.find((e) => e.id === id);
+    if (!fresh || !endpoint) return null;
+    return { ...fresh, handle: store.handle, endpoints: fresh.endpoints.map((e) => (e.id === id ? { ...e, secret, previous: endpoint.secret, previousUntil } : withoutStalePrevious(e, now))) };
+  });
+  if (!written) return { ok: false, reason: "missing" };
   return { ok: true, secret, oldSecretUntil: new Date(previousUntil).toISOString(), view: await webhooksView(store) };
 }
 
 /** Removes an endpoint. Anything still waiting to be sent to it is dropped at its next try. */
 export async function removeEndpoint(store: Store, id: string): Promise<WebhooksView> {
   if (!store.statsId) return { endpoints: [], log: [] };
-  const config = await readConfig(store.statsId);
-  if (config && config.endpoints.some((e) => e.id === id)) {
-    const endpoints = config.endpoints.filter((e) => e.id !== id);
-    await redisPipeline([
-      ["SET", cfgKey(store.statsId), JSON.stringify({ ...config, handle: store.handle, endpoints })],
-      ...(endpoints.length ? [] : [["SREM", STORES_KEY, store.statsId]]),
-    ]);
-  }
+  const written = await changeConfig(store.statsId, (fresh) =>
+    fresh && fresh.endpoints.some((e) => e.id === id) ? { ...fresh, handle: store.handle, endpoints: fresh.endpoints.filter((e) => e.id !== id) } : null,
+  );
+  if (written && !written.after.endpoints.length) await redisPipeline([["SREM", STORES_KEY, store.statsId]]);
   return webhooksView(store);
 }
 
@@ -1053,8 +1087,6 @@ export async function forgetStoreWebhooks(statsId: string | null): Promise<void>
 /** Keeps the handle the job looks a store up by current, from the studio. */
 export async function keepHandle(store: Store): Promise<void> {
   if (!store.statsId || !isRedisConfigured()) return;
-  const config = await readConfig(store.statsId);
-  if (config && config.handle !== store.handle) {
-    await redisPipeline([["SET", cfgKey(store.statsId), JSON.stringify({ ...config, handle: store.handle })]]);
-  }
+  // A handle kept in step is housekeeping: a write that keeps meeting other changes is left for the next one.
+  await changeConfig(store.statsId, (fresh) => (fresh && fresh.handle !== store.handle ? { ...fresh, handle: store.handle } : null)).catch((error) => console.error("keeping the webhook handle failed", error));
 }
