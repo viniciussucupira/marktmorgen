@@ -2,6 +2,8 @@
  * More feature-page cards (531 [VP1], units 2 and 3; added 1 November 2026):
  * bundles, quizzes and certificates, license keys, webhooks, calendar sync,
  * Discord access (units 2 and 3), the community and affiliates (unit 4),
+ * live events (unit 5; the reviews page has none, since a drawn review would
+ * be an invented one),
  * each a piece of the
  * studio's real screen in HTML, with its words and figures from the code.
  * Checked: each page shows its card; the studio's own labels; every figure
@@ -24,11 +26,13 @@ import { LOOKAHEAD_DAYS, MAX_FEEDS } from "@/lib/calendar-limits";
 import { MAX_DISCORD_PRODUCTS, MAX_PRODUCT_ROLES } from "@/lib/discord-rules";
 import { findPage } from "@/lib/site-pages";
 import { formatMoney } from "@/lib/money";
+import { JOIN_EARLY_MINUTES } from "@/lib/community-text";
+import { eventTime, lengthWords } from "@/lib/community-events";
 import { done, is, part } from "./check";
 
 const text = (html: string) => html.replace(/<[^>]+>/g, "\n").replace(/&#x27;/g, "'").replace(/&amp;/g, "&").split("\n").map((s) => s.trim()).filter(Boolean);
 const read = (file: string) => readFileSync(file, "utf8");
-const draw = (visual: "bundles" | "quizzes" | "keys" | "webhooks" | "calendar" | "discord" | "community" | "affiliates") => renderToStaticMarkup(createElement(FeatureVisual, { visual, tone: "light" }));
+const draw = (visual: "bundles" | "quizzes" | "keys" | "webhooks" | "calendar" | "discord" | "community" | "affiliates" | "events") => renderToStaticMarkup(createElement(FeatureVisual, { visual, tone: "light" }));
 const hidden = (html: string) => html.startsWith('<figure class="w-full min-w-0 max-w-[26rem]"><div aria-hidden="true">');
 
 function main(): void {
@@ -131,6 +135,22 @@ function main(): void {
   is("the person and every figure said to be made up, not anyone's real results", a.some((w) => /every figure are made up as an example, not anyone's real results/.test(w)), true);
   is("drawn, hidden, beside its caption", hidden(aff), true);
 
+  part("Live events");
+  is("the live events page shows its card", findPage("platform", "live-events")?.visual, "events");
+  const ev = draw("events");
+  const e = text(ev);
+  const evStudio = read("components/community-events-studio.tsx");
+  is("the studio's heading, count and section", [e.includes("Live events"), e.includes("2 coming up"), evStudio.includes("`${upcoming} coming up`"), e.includes("Coming up"), evStudio.includes(">Coming up<")], [true, true, true, true, true]);
+  const firstWhen = `${eventTime({ start: Date.UTC(2026, 10, 10, 23), tz: "America/New_York" })} · ${lengthWords(60)}`;
+  const secondWhen = `${eventTime({ start: Date.UTC(2026, 10, 19, 17), tz: "America/New_York" })} · ${lengthWords(45)}`;
+  is("when, in the studio's own eventTime and lengthWords", [e.includes(firstWhen), e.includes(secondWhen), lengthWords(45), read("app/studio/community/page.tsx").includes("when: eventTime(e),") && read("app/studio/community/page.tsx").includes("length: lengthWords(e.minutes),"), evStudio.includes("`${event.when} · ${event.length}`")], [true, true, "45 minutes", true, true]);
+  is("each row's place and who may come, in the row's own words", [e.includes("Private video room · every member"), evStudio.includes('"Private video room"'), evStudio.includes('" · every member"'), e.includes("Your meeting link · only for buyers of Batch Cooking Basics"), evStudio.includes('"Your meeting link"'), evStudio.includes("` · only for buyers of ${only.join(\", \")}`")], [true, true, true, true, true, true]);
+  is("places in the row's two formats", [e.includes("12 of 30 places taken"), e.includes("8 going"), evStudio.includes("`${event.going} of ${event.cap} ${event.cap === 1 ? \"place\" : \"places\"} taken`"), evStudio.includes("`${event.going} going`")], [true, true, true, true]);
+  is("the way in, from the code's own minutes", [e.includes(`The way in shows ${JOIN_EARLY_MINUTES} minutes before the start, only to members who can come.`), JOIN_EARLY_MINUTES], [true, 15]);
+  is("the events, dates and counts said to be made up", e.some((w) => /made up as an example/.test(w)), true);
+  is("drawn, hidden, beside its caption", hidden(ev), true);
+  is("no drawn review on the reviews page: a made-up one would be an invented testimonial", findPage("platform", "reviews")?.visual, undefined);
+
   part("Nothing that is not the code's or marked as an example");
   for (const [name, words, allowed] of [
     ["bundles", b, /^(In it: 3 of \d+|\$77 of products for \$49|\$\d+(\.\d\d)?|.*example.*)$/],
@@ -141,6 +161,7 @@ function main(): void {
     ["discord", d, /^(Up to \d+ roles for each product, on up to \d+ products\.|Gives \d roles?\.|.*example.*)$/],
     ["community", m, /^(48|112|31|.*example.*)$/],
     ["affiliates", a, /^(120|6|\$59\.40|\$30|\$29\.40|.*example.*)$/],
+    ["events", e, /^(2 coming up|\w+day, November (10|19)\b.* \(E[SD]T\) · (1 hour|45 minutes)|12 of 30 places taken|8 going|The way in shows \d+ minutes before the start, only to members who can come\.|.*example.*)$/],
   ] as const) {
     is(`${name}: every figure is the code's, or an example said as one`, words.filter((w) => /\d/.test(w) && !allowed.test(w)), []);
   }

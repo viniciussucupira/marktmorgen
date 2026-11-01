@@ -1079,6 +1079,7 @@ const BASE_FEATURE_PAGES: TopicPage[] = [
     highlight: "inside your community",
     intro:
       "A workshop, a Q&A or a coworking hour for your members. They RSVP in the community, get a reminder, and join from the event's page: in a private video room shown right in the page, at your own meeting link, or in a Google Meet made on your Google Calendar. The way in shows 15 minutes before the start, and only to members who may come.",
+    visual: "events",
     badge: WORKING,
     accent: "from-mint-brand to-violet-brand",
     plan: "creator",

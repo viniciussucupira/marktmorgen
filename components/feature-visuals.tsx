@@ -7,6 +7,8 @@ import { DEFAULT_ATTEMPTS, DEFAULT_PASS_PERCENT } from "@/lib/quiz";
 import { DEFAULT_KEYS } from "@/lib/key-setup";
 import { sampleKey } from "@/lib/licence-key-rules";
 import { formatMoney } from "@/lib/money";
+import { JOIN_EARLY_MINUTES } from "@/lib/community-text";
+import { eventTime, lengthWords } from "@/lib/community-events";
 import { MAX_ENDPOINTS, shortAddress } from "@/lib/webhook-limits";
 import { LOOKAHEAD_DAYS, MAX_FEEDS } from "@/lib/calendar-limits";
 import { MAX_DISCORD_PRODUCTS, MAX_PRODUCT_ROLES } from "@/lib/discord-rules";
@@ -39,7 +41,8 @@ export type VisualKey =
   | "calendar"
   | "discord"
   | "community"
-  | "affiliates";
+  | "affiliates"
+  | "events";
 
 /*
  * The frame every one of these mockups sits in.
@@ -691,6 +694,43 @@ function AffiliatesVisual() {
   );
 }
 
+/**
+ * The community's live events in the studio (components/community-events-studio.tsx,
+ * EventRow): what is coming up, its places beside its title, when (in the
+ * studio's own eventTime and lengthWords), where and for whom. Server only, as
+ * every card here: lib/community-events.ts reads the store.
+ */
+function EventsVisual() {
+  const events = [
+    { title: "Monthly cook-along", start: Date.UTC(2026, 10, 10, 23), minutes: 60, where: "Private video room · every member", places: "12 of 30 places taken" },
+    { title: "Q&A: your freezer questions", start: Date.UTC(2026, 10, 19, 17), minutes: 45, where: "Your meeting link · only for buyers of Batch Cooking Basics", places: "8 going" },
+  ];
+  return (
+    <Window bar="Live events">
+      <div className="space-y-3 p-5">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="text-[13px] font-bold text-ink">Live events</p>
+          <span className="tag tag-brand">{`${events.length} coming up`}</span>
+        </div>
+        <p className="text-[11.5px] font-bold uppercase tracking-[0.06em] text-ink-soft">Coming up</p>
+        <ul className="min-w-0 space-y-2">
+          {events.map((e) => (
+            <li key={e.title} className="rounded-[var(--r-md)] border border-line p-3">
+              <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-0.5">
+                <p className="min-w-0 break-words text-[13px] font-semibold text-ink">{e.title}</p>
+                <p className="text-[12px] font-semibold text-ink">{e.places}</p>
+              </div>
+              <p className="break-words text-[12px] text-ink-soft">{`${eventTime({ start: e.start, tz: "America/New_York" })} · ${lengthWords(e.minutes)}`}</p>
+              <p className="break-words text-[12px] text-ink-soft">{e.where}</p>
+            </li>
+          ))}
+        </ul>
+        <p className="break-words text-[12px] text-ink-soft">{`The way in shows ${JOIN_EARLY_MINUTES} minutes before the start, only to members who can come.`}</p>
+      </div>
+    </Window>
+  );
+}
+
 const CAPTIONS: Record<VisualKey, string> = {
   store: "A store page, drawn from the demo store you can open and buy from.",
   options: "The buyer is charged the price they picked, as the creator saved it.",
@@ -712,6 +752,7 @@ const CAPTIONS: Record<VisualKey, string> = {
   discord: "The Discord page in the studio. The products and roles are an example.",
   community: "Your community in the studio. The counts are made up as an example, not real figures.",
   affiliates: "One affiliate in the studio. The person and every figure are made up as an example, not anyone's real results.",
+  events: "Live events in the studio. The events, dates and counts are made up as an example.",
 };
 
 /**
@@ -741,6 +782,7 @@ export function FeatureVisual({ visual, tone = "dark" }: { visual: VisualKey; to
     discord: <DiscordVisual />,
     community: <CommunityVisual />,
     affiliates: <AffiliatesVisual />,
+    events: <EventsVisual />,
   }[visual];
   const interactive = visual === "options" || visual === "checkout";
   return (
