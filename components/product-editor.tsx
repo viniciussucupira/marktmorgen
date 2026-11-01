@@ -25,7 +25,7 @@ import { confirmsOptionWrite } from "@/lib/option-confirmation";
 import { CheckoutFieldsEditor } from "@/components/checkout-fields-editor";
 import { ProductImageEditor } from "@/components/product-image-editor";
 import type { CoverLook } from "@/components/cover-maker";
-import type { LanguageCode } from "@/lib/store-language";
+import { LANGUAGES, type LanguageCode } from "@/lib/store-language";
 import { LicenceKeyEditor } from "@/components/licence-key-editor";
 import { PdfStampToggle } from "@/components/pdf-stamp-toggle";
 import { PdfPreviewToggle } from "@/components/pdf-preview-toggle";
@@ -326,16 +326,19 @@ function ProductForm({
           </button>
         </div>
       </div>
-      <p className="mt-1 text-xs text-ink-soft">The same words as in the form, laid out as your product&apos;s page shows them. The price and the buy box are drawn on the page from what you save, so they are not shown here. Nothing in it can be pressed here.</p>
+      <p className="mt-1 text-xs text-ink-soft">The same words as in the form, laid out as your product&apos;s page shows them. The price and the Buy button aren&apos;t shown here: your page adds them from what you save. Nothing in it can be pressed here.</p>
       <div className="mt-1 overflow-hidden rounded-2xl ring-1 ring-line">
         <div
           // Inert: its links stay out of the Tab order and out of reach of a click that would leave the form.
           inert
+          // In the store's language, as the page is, so a screen reader would read its words in the right language (3.1.2).
+          lang={LANGUAGES[preview.language]?.locale ?? "en-US"}
           className={`st-page st-theme-${preview.look.theme} mx-auto px-4 pb-8 pt-6`}
-          style={{ ...(lookStyle(preview.look) as React.CSSProperties), maxWidth: phone ? 390 : "100%" }}
+          // Wide is the product page's own width (max-w-2xl, 672 px); the card and the title follow Phone or Wide, as the page does.
+          style={{ ...(lookStyle(preview.look) as React.CSSProperties), maxWidth: phone ? 390 : 672 }}
         >
-          <div className="st-card p-6 sm:p-8">
-            <p className="font-display text-2xl font-semibold leading-tight tracking-[-0.02em]">{draft.title.trim() || "Your product's name"}</p>
+          <div className={`st-card ${phone ? "p-6" : "p-8"}`}>
+            <p className={`font-display font-semibold leading-tight tracking-[-0.02em] ${phone ? "text-2xl" : "text-3xl"}`}>{draft.title.trim() || "Your product's name"}</p>
             {draft.summary.trim() ? <p className="st-muted mt-4 text-lg leading-relaxed">{draft.summary}</p> : null}
             {draft.about.trim() ? <ProductAbout blocks={aboutBlocks(draft.about)} language={preview.language} /> : null}
           </div>
@@ -438,7 +441,7 @@ function ProductForm({
         </p>
       </div>
 
-      <div className="grid min-w-0 gap-4 xl:grid-cols-2">
+      <div className={pagePreview ? "grid min-w-0 gap-4 xl:grid-cols-2" : "min-w-0"}>
       <div className="min-w-0">
         <label htmlFor={`product-about-${id}`} className="field-label">
           The full description <span className="font-normal text-ink-soft">(optional)</span>

@@ -51,4 +51,3 @@ export function ProductAbout({ blocks, language }: { blocks: Block[]; language: 
     </div>
   );
 }
-
