@@ -37,7 +37,7 @@ const gmail = (name: string) => [name, ["gmail", "com"].join(".")].join("@");
 
 /** What the stand-in for Google's token endpoint answers with, and what it was sent. */
 let claims: Record<string, unknown> = {};
-let tokenCalls: URLSearchParams[] = [];
+const tokenCalls: URLSearchParams[] = [];
 const mails: { to: string; text: string }[] = [];
 const idToken = (body: Record<string, unknown>) =>
   ["e30", Buffer.from(JSON.stringify(body)).toString("base64url"), "c2lnbmF0dXJl"].join(".");
