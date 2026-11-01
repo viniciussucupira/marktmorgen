@@ -155,8 +155,8 @@ export function isSenderConfigured(): boolean {
  * SES availability, a valid Resend review/binding or remaining fallback quota.
  * The actual send must still pass the existing provider and budget guards.
  */
-export function serviceMailKnownUnavailable(): boolean {
-  return !isSesConfigured() && (!getKey() || currentResendFallbackProofIsMissing());
+export function serviceMailKnownUnavailable(runtime: ResendTransportRuntime = {}): boolean {
+  return !isSesConfigured() && (!getKey() || currentResendFallbackProofIsMissing(runtime));
 }
 
 /** Whether Resend is there to send what Amazon does not take. */
@@ -321,7 +321,7 @@ async function viaAmazon(message: OneMessage, to: string): Promise<boolean | nul
 export async function sendEmail(message: OneMessage, runtime: ResendTransportRuntime = {}): Promise<boolean> {
   const to = oneAddress(message.to);
   if (!to) return false;
-  if (!isSenderConfigured() || !(await metered(message.meter, 1))) return false;
+  if (!isSenderConfigured() || serviceMailKnownUnavailable(runtime) || !(await metered(message.meter, 1))) return false;
   if (isSesConfigured()) {
     const amazon = await viaAmazon(message, to);
     if (amazon === true) return true;
@@ -502,10 +502,15 @@ async function dispatchBatch(
   // What actually goes: a message with no address that can be written to is
   // left out below, and is not counted as sent either.
   let going = messages.slice(0, 100).filter((m) => oneAddress(m.to) !== null);
+  const config = sesConfig();
+  // Decide only a known unavailable selected route before taking its figure.
+  // These synchronous observations grant no quota or provider permission.
+  if (only === "amazon" && !(config && isSesConfigured())) return listOnly ? "waiting" : "retry";
+  if (going.length && (only === "resend"
+    ? currentResendFallbackProofIsMissing(runtime)
+    : serviceMailKnownUnavailable(runtime))) return "retry";
   if (going.length && !(await metered(meter, going.length))) return "refused";
   let idempotencyKey = batchKey;
-  const config = sesConfig();
-  if (only === "amazon" && !(config && isSesConfigured())) return listOnly ? "waiting" : "retry";
   if (config && isSesConfigured() && only !== "resend") {
     const all = going.length;
     // Whoever Amazon already took under this key, in a batch that was then

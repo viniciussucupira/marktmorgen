@@ -31,6 +31,11 @@ export async function auditMeterPreflight(){
  await scenario('batch_NULL_default',m=>sendBatch(batch,'SYNTHETIC_NULL_BATCH',m));
  const list=await scenario('list_only_no_SES',m=>sendListBatch(batch,'SYNTHETIC_LIST_ONLY',m));assert.equal(list.result,'waiting');
  assert.equal((await scenario('funded_NULL_finance_before_meter',m=>sendEmail({...message,meter:m}),true)).spent,0);
+ const invalid=await scenario('invalid_single_before_meter',m=>sendEmail({...message,to:'invalid',meter:m}));assert.equal(invalid.result,false);
+ const empty=await scenario('empty_batch_keeps_sent',m=>sendBatch([],'SYNTHETIC_EMPTY',m));assert.equal(empty.result,'sent');
+ const emptyList=await scenario('empty_list_keeps_sent',m=>sendListBatch([],'SYNTHETIC_EMPTY_LIST',m));assert.equal(emptyList.result,'sent');
+ const invalidBatch=await scenario('invalid_batch_keeps_retry',m=>sendBatch([{...message,to:'invalid'}],'SYNTHETIC_INVALID_BATCH',m));assert.equal(invalidBatch.result,'retry');
+
  const positive=await createResendFallbackFixture({credential,cap:3,received:1,fetch:async()=>Response.json({id:'synthetic_positive'})});
  const single=await scenario('explicit_finite_runtime_positive',m=>sendEmail({...message,meter:m},positive.runtime));assert.equal(single.result,true);assert.equal(single.spent,1);
  const exhausted=await scenario('runtime_present_but_remaining_quota_insufficient',m=>sendBatch(batch,'SYNTHETIC_QUOTA_BATCH',m,undefined,positive.runtime));assert.equal(exhausted.result,'retry');assert.equal(exhausted.spent,2);
@@ -42,6 +47,15 @@ export async function auditMeterPreflight(){
   fixture.configure();await fixture.setReady(true);
   const onlyResend=await scenario('only_resend_with_configured_SES_but_NULL_fallback',m=>sendBatch(batch,'SYNTHETIC_ONLY_RESEND',m,'resend'));assert.equal(onlyResend.result,'retry');assert.equal(fixture.calls.ses,0);assert.equal(fixture.calls.resend,0);
   const ses=await scenario('configured_SES_positive_NULL_fallback',m=>sendEmail({...message,meter:m}));assert.equal(ses.result,true);assert.equal(ses.spent,1);assert.equal(fixture.calls.ses,1);
+  const creatorCredential='re_SYNTHETIC_CREATOR_DOMAIN_ONLY',readCredential='re_SYNTHETIC_CREATOR_USAGE_ONLY';
+  delete process.env.RESEND_API_KEY;process.env.RESEND_CREATORS_API_KEY=creatorCredential;process.env.RESEND_READ_API_KEY=readCredential;process.env.MARKETING_FROM_DOMAIN='creators.example.test';
+  try{
+   const creatorFixture=await createResendFallbackFixture({credential:creatorCredential,usageCredential:readCredential,cap:3,received:1,fetch:async()=>Response.json({data:[{id:'synthetic_creator_a'},{id:'synthetic_creator_b'}]})});
+   const creatorBatch=batch.map(m=>({...m,from:'Creator <shop@creators.example.test>'}));
+   const creator=await scenario('only_resend_creator_key_no_site_key_SES_configured',m=>sendBatch(creatorBatch,'SYNTHETIC_CREATOR_KEY',m,'resend',creatorFixture.runtime));
+   assert.equal(creator.result,'sent');assert.equal(creator.spent,2);assert.equal(creatorFixture.requests.filter(r=>r.method==='POST').length,1);assert.equal(fixture.calls.ses,1);
+  }finally{process.env.RESEND_API_KEY=credential;for(const k of ['RESEND_CREATORS_API_KEY','RESEND_READ_API_KEY','MARKETING_FROM_DOMAIN'])delete process.env[k];}
+
  }finally{fixture.restore();}
  for(const by of ['company','order','monthly'] as const){redis.clear();assert.equal(await sendEmail({...message,meter:{by}}),false);output.push({name:'external_meter_'+by,keys:redis.keys()});}
  assert.equal(forbidden,0);
