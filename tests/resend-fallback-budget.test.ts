@@ -1,9 +1,11 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import {
   CURRENT_RESEND_FALLBACK_REVIEW, RESEND_FALLBACK_BUDGET_LUA,
   initializeResendFallbackBudget, reserveResendFallback,
   markResendFallbackDispatched, settleResendFallback, resendFallbackBudgetKeys,
+  cancelResendFallbackReserved, readAcceptedResendFallbackReceipt, RESEND_FALLBACK_RECEIPT_MS,
   type ResendFallbackReview, type ResendFallbackSdk, type ResendFallbackUsage,
 } from "@/lib/resend-fallback-budget";
 
@@ -19,7 +21,7 @@ const review = (): ResendFallbackReview => ({
   bootstrap: { noUnresolvedPriorAttempts: true, allPriorUsageIncluded: true, evidence: "synthetic reviewed first initialization" },
 });
 const usage = (): ResendFallbackUsage => ({ source: "resend_usage_api", accountId: "synthetic:account:1", observedAtMs: now, monthly: { used: 13, sent: 11, received: 2, limit: 50_000, resetsAt: new Date(reset).toISOString() } });
-const request = () => ({ review: review(), usage: usage(), attemptId: "synthetic:message:1:canonical-payload-hash", recipients: 1 });
+const request = () => ({ review: review(), usage: usage(), attemptId: "synthetic:message:1:stable-intent", recipients: 1, payloadFingerprint: "f".repeat(64) });
 const noSdk: ResendFallbackSdk = { async pipeline() { throw new Error("No I/O belongs to unreviewed admission"); } };
 const withClock = async (work: () => Promise<void>) => { Date.now = () => now; try { await work(); } finally { Date.now = realNow; } };
 
@@ -114,15 +116,48 @@ test("a valid reservation is only a hold; one exact dispatch acknowledgement is 
   if (held.status !== "reserved") return;
   const claim = held.claim;
   assert.equal(claim.recipients, 1); assert.equal(claim.periodStartMs, start); assert.equal(claim.resetsAtMs, reset);
-  const dispatchSdk: ResendFallbackSdk = { async pipeline() { return [["dispatch", claim.token, "1", String(now + 1000)]]; } };
-  assert.deepEqual(await markResendFallbackDispatched(claim, dispatchSdk), { status: "dispatch", claim, sendBeforeMs: now + 1000 });
-  assert.deepEqual(await markResendFallbackDispatched(claim, { async pipeline() { return [["dispatch", claim.token, "1", String(now + 1001)]]; } }), { status: "unknown" });
+  const dispatchSdk: ResendFallbackSdk = { async pipeline(batch) { return [["dispatch", claim.token, "1", String(now + 1000), batch[0].at(-1)]]; } };
+  const dispatched = await markResendFallbackDispatched(claim, dispatchSdk);
+  assert.equal(dispatched.status, "dispatch");
+  if (dispatched.status !== "dispatch") return;
+  assert.match(dispatched.claim.dispatchToken!, /^[a-f0-9]{32}$/);
+  assert.equal(dispatched.sendBeforeMs, now + 1000);
+  assert.equal(claim.dispatchToken, undefined);
+  assert.deepEqual(await markResendFallbackDispatched(claim, { async pipeline(batch) { return [["dispatch", claim.token, "1", String(now + 1001), batch[0].at(-1)]]; } }), { status: "unknown" });
   assert.deepEqual(await markResendFallbackDispatched(claim, { async pipeline() { throw new Error("synthetic applied write and lost response"); } }), { status: "unknown" });
   assert.deepEqual(await markResendFallbackDispatched(claim, { async pipeline() { return [["denied", "already_dispatched"]]; } }), { status: "denied", reason: "already_dispatched" });
-  assert.deepEqual(await settleResendFallback(claim, "unknown", { async pipeline() { return [["settled", "unknown"]]; } }), { status: "settled", outcome: "unknown" });
-  assert.deepEqual(await settleResendFallback(claim, "accepted", { async pipeline() { return [["already_settled", "accepted"]]; } }), { status: "already_settled", outcome: "accepted" });
-  assert.deepEqual(await settleResendFallback(claim, "confirmed_not_accepted", { async pipeline() { return [["settled", "accepted"]]; } }), { status: "unknown" });
-  assert.deepEqual(await settleResendFallback(claim, "unknown", { async pipeline() { return [["already_settled", "unknown"]]; } }), { status: "unknown" });
+  assert.deepEqual(await settleResendFallback(claim, "confirmed_not_accepted", noSdk), { status: "denied", reason: "unconfirmed_dispatch" });
+  assert.deepEqual(await settleResendFallback(dispatched.claim, "unknown", { async pipeline() { return [["settled", "unknown"]]; } }), { status: "settled", outcome: "unknown" });
+  assert.deepEqual(await settleResendFallback(dispatched.claim, "accepted", { async pipeline() { return [["already_settled", "accepted"]]; } }), { status: "already_settled", outcome: "accepted" });
+  assert.deepEqual(await settleResendFallback(dispatched.claim, "confirmed_not_accepted", { async pipeline() { return [["settled", "accepted"]]; } }), { status: "unknown" });
+  assert.deepEqual(await settleResendFallback(dispatched.claim, "unknown", { async pipeline() { return [["already_settled", "unknown"]]; } }), { status: "unknown" });
+}));
+
+test("local cancellation is a separate reserved-only CAS and dispatch tokens are per invocation", async () => withClock(async () => {
+  const value = request();
+  const held = await reserveResendFallback(value, { async pipeline(batch) { const a = batch[0].slice(5); return [["reserved", a[2], String(a[3]), String(a[4]), String(a[5]), String(a[7])]]; } });
+  assert.equal(held.status, "reserved"); if (held.status !== "reserved") return;
+  const tokens: unknown[] = [];
+  const sdk: ResendFallbackSdk = { async pipeline(batch) { const a = batch[0].slice(5); tokens.push(a[21]); return [["dispatch", held.claim.token, "1", String(now + 1000), a[21]]]; } };
+  await markResendFallbackDispatched(held.claim, sdk); await markResendFallbackDispatched(held.claim, sdk);
+  assert.notEqual(tokens[0], tokens[1]);
+  assert.deepEqual(await cancelResendFallbackReserved(held.claim, { async pipeline(batch) { assert.equal(batch[0][5], "cancel"); return [["denied", "not_reserved"]]; } }), { status: "denied", reason: "not_reserved" });
+  assert.deepEqual(await cancelResendFallbackReserved(held.claim, { async pipeline() { return [["released"]]; } }), { status: "released" });
+  assert.deepEqual(await cancelResendFallbackReserved(held.claim, { async pipeline() { return [["already_released"]]; } }), { status: "already_released" });
+  assert.deepEqual(await cancelResendFallbackReserved(held.claim, { async pipeline() { throw Error("Lost cancel ACK"); } }), { status: "unknown" });
+}));
+
+test("accepted recovery requires an exact owned payload-bound receipt, never a denial reason", async () => withClock(async () => {
+  const value = request(), hash = (s: string) => createHash("sha256").update(s).digest("hex");
+  const input = { accountId: value.review.accountId, attemptId: value.attemptId, payloadFingerprint: value.payloadFingerprint, recipients: 1 };
+  const proof = ["accepted", hash(input.accountId), hash(input.attemptId), input.payloadFingerprint, "1", String(now - 500), String(now - 500 + RESEND_FALLBACK_RECEIPT_MS), String(now)];
+  const good = await readAcceptedResendFallbackReceipt(input, { async pipeline(batch) { assert.equal(batch.length, 1); assert.equal(batch[0][5], "receipt"); return [proof]; } });
+  assert.deepEqual(good, { status: "accepted", ...input, acceptedAtMs: now - 500, expiresAtMs: now - 500 + RESEND_FALLBACK_RECEIPT_MS });
+  const bad = [["denied", "completed"], ["accepted"], [...proof, "extra"], ...[1, 2, 3, 4, 5, 6, 7].map(i => { const p = [...proof]; p[i] = i < 4 ? "e".repeat(64) : "00"; return p; })];
+  for (const reply of bad) assert.equal((await readAcceptedResendFallbackReceipt(input, { async pipeline() { return [reply]; } })).status, "unknown");
+  let getters = 0;
+  const computed = Object.defineProperty({ ...input }, "payloadFingerprint", { get() { getters++; return input.payloadFingerprint; } });
+  assert.equal((await readAcceptedResendFallbackReceipt(computed, noSdk)).status, "denied"); assert.equal(getters, 0);
 }));
 
 test("a repeated reservation can recover its hold, but malformed ownership or bootstrap ACK is unknown", async () => withClock(async () => {
