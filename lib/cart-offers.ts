@@ -15,7 +15,8 @@
  *     from this store (their completed checkouts, the offers they took after
  *     paying and what the creator brought over or gave them: ownedHere in
  *     lib/next-offer.ts, the reading the next product after a purchase uses),
- *     and anything they turned down in this order. Each is passed over to
+ *     and anything they turned down in this order, even when the funnel offers it
+ *     again at a lower price after a "no thanks". Each is passed over to
  *     the funnel's next offer, as a "no" would be; when none is left, none is
  *     shown. What they own that cannot be read in full means nothing is
  *     offered: never on a guess;
@@ -27,7 +28,15 @@
  * open to this browser, and every reading counts CART_OFFER_REQUEST_UNITS of
  * the store's public requests before it is made (lib/buyer-actions.ts), so it
  * stays inside the figure each plan already has; past it, nothing is offered.
- * No new supplier, nothing written, no key of its own.
+ * No new supplier, nothing written, no key of its own. It is read again on
+ * each opening of the page and each answer, inside that count, rather than
+ * kept: keeping it needs a new kind of record, registered in
+ * tests/store-data-registry.ts (on the queue). Both readings fail closed, so
+ * the page and the answer can only disagree by showing nothing.
+ *
+ * Known gap: ownedHere gives up (nothing offered) for an address with more
+ * than three of the creator's customers, so a buyer's fourth checkout with
+ * offers is followed by none. Safe, not yet good.
  */
 import { activeFunnel, funnelPosition, funnelProductIds, type Funnel } from "@/lib/funnel";
 import { offerableAfterPaying } from "@/lib/bundles";

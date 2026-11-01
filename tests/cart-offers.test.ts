@@ -50,6 +50,8 @@ const made: Record<string, unknown>[] = [];
 let sessions: Record<string, Record<string, unknown>> = {};
 /** What each address bought here before, as Stripe lists its completed checkouts. */
 let before: Record<string, Record<string, unknown>[]> = {};
+/** How many times what a buyer owns was listed from Stripe. */
+let listCalls = 0;
 
 globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) => {
   const url = new URL(String(input));
@@ -62,6 +64,7 @@ globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) =>
     return answer({ id: "cs_test_cartopen000001", url: "https://checkout.stripe.com/c/pay/cs_test_cartopen000001" });
   }
   if (path === "/checkout/sessions" && method === "GET") {
+    listCalls += 1;
     const email = url.searchParams.get("customer_details[email]") ?? "";
     if (email === UNREADABLE) return answer({ object: "list", data: [], has_more: true });
     return answer({ object: "list", data: before[email] ?? [], has_more: false });
@@ -125,6 +128,16 @@ async function main(): Promise<void> {
   });
   is("the course's three offers are accepted", saved.ok, true);
   // The pastry course offers only the bread basics.
+  // The rye course offers the kit, and after a no the same kit for less.
+  const rye = await add("Rye Course", "45");
+  const cheaper = await setProductFunnel(OWNER, rye, {
+    steps: [
+      { id: "rkt001", productId: kit, priceCents: 1900, headline: "", text: "", imageFrom: null, yes: null, no: "rkt002" },
+      { id: "rkt002", productId: kit, priceCents: 1200, headline: "", text: "", imageFrom: null, yes: null, no: "rls001" },
+      { id: "rls001", productId: list, priceCents: 500, headline: "", text: "", imageFrom: null, yes: null, no: null },
+    ],
+  });
+  is("a funnel may offer the same product for less after a no", cheaper.ok, true);
   is("and the pastry course's one", (await setProductFunnel(OWNER, pastry, { steps: [{ id: "brd001", productId: bread, priceCents: 1500, headline: "", text: "", imageFrom: null, yes: null, no: null }] })).ok, true);
   // Buy more, save more: 10% off each line from two products.
   await setCartDeal(OWNER, { on: true, min: 2, percent: 10 });
@@ -176,8 +189,9 @@ async function main(): Promise<void> {
   const breadListing = (await readListing(store, bread))!;
   const take = (session: string, step: string, answer: "yes" | "no", secret: string | undefined = browser.secret) =>
     takeUpsell({ store, session, secret, origin, step, answer, consent: TEST_CONSENT });
-  const view = (session: string, email: string, offerFrom: string | null = course, secret: string | undefined = browser.secret) =>
-    funnelView({ store, session, product: breadListing, alsoOwned: [course], eligible: true, created: NOW - 60, secret, upsellKey: browser.fingerprint, cart: { offerFrom, email } });
+  // As the thanks page asks: the cart's first line, and every other line of the order (its "bumps").
+  const view = (session: string, email: string, offerFrom: string | null = course, secret: string | undefined = browser.secret, alsoOwned: string[] = [course]) =>
+    funnelView({ store, session, product: breadListing, alsoOwned, eligible: true, created: NOW - 60, secret, upsellKey: browser.fingerprint, cart: { offerFrom, email } });
 
   part("A cart with a product that has offers: the first offer not in it");
   sessions = { cs_test_cartpaid000001: paidCart("cs_test_cartpaid000001", BUYER) };
@@ -193,14 +207,14 @@ async function main(): Promise<void> {
 
   part("Passed over: in the cart, bought before, turned down");
   before = {
-    [RETURNING]: [{ id: "cs_test_earlier00001", status: "complete", payment_status: "paid", customer: "cus_TestBuyer01", metadata: { store: "harbor", product: prior } }],
+    [RETURNING]: [{ id: "cs_test_earlier00001", status: "complete", payment_status: "paid", customer: "cus_TestBuyer01", metadata: { store: "harbor", product: prior } }].map((row) => ({ ...row, customer: "cus_TestReturn01" })),
   };
   sessions.cs_test_cartpaid000002 = paidCart("cs_test_cartpaid000002", RETURNING, {}, { bump: course, bump2: kit });
-  const shown = await view("cs_test_cartpaid000002", RETURNING);
+  const shown = await view("cs_test_cartpaid000002", RETURNING, course, browser.secret, [course, kit]);
   is("the kit is in the cart and the notes were bought before: the checklist is the one shown", shown.offer?.step.id, "lst001");
   is("neither can be answered instead", [(await take("cs_test_cartpaid000002", "kit001", "yes")).kind, (await take("cs_test_cartpaid000002", "not001", "yes")).kind, charges.length], ["unavailable", "unavailable", 1]);
   is("no thanks to the checklist charges nothing", (await take("cs_test_cartpaid000002", "lst001", "no")).kind, "declined");
-  is("and nothing is left: none shown, and the checklist is never asked again", [(await view("cs_test_cartpaid000002", RETURNING)).offer, (await take("cs_test_cartpaid000002", "lst001", "yes")).kind, charges.length], [null, "declined", 1]);
+  is("and nothing is left: none shown, and the checklist is never asked again", [(await view("cs_test_cartpaid000002", RETURNING, course, browser.secret, [course, kit])).offer, (await take("cs_test_cartpaid000002", "lst001", "yes")).kind, charges.length], [null, "declined", 1]);
   is("the no is kept", (await readUpsell("cs_test_cartpaid000002", "lst001"))?.state, "declined");
   sessions.cs_test_cartpaid000003 = paidCart("cs_test_cartpaid000003", UNREADABLE);
   is("what the buyer owns cannot be read in full: nothing shown, nothing can be answered", [(await view("cs_test_cartpaid000003", UNREADABLE)).offer, (await take("cs_test_cartpaid000003", "kit001", "yes")).kind, charges.length], [null, "unavailable", 1]);
@@ -221,6 +235,28 @@ async function main(): Promise<void> {
   is("the bank asks to confirm: sent there, nothing delivered yet", [confirm.kind, (await readUpsell("cs_test_cartpaid000008"))?.state], ["confirm", "pending"]);
   is("and nothing more is offered meanwhile", (await view("cs_test_cartpaid000008", BUYER)).offer, null);
   nextCharge = "succeeded";
+
+  part("Turned down in this order: never again, not even for less");
+  // The bank's confirmation above was one charge asked for; nothing after it is.
+  const charged = charges.length;
+  sessions.cs_test_cartpaid000009 = paidCart("cs_test_cartpaid000009", BUYER, {}, { product: rye, bump: bread, offer_from: rye });
+  const ryeView = async (secret = browser.secret, eligible = true, created = NOW - 60) =>
+    funnelView({ store, session: "cs_test_cartpaid000009", product: (await readListing(store, rye))!, alsoOwned: [bread], eligible, created, secret, upsellKey: browser.fingerprint, cart: { offerFrom: rye, email: BUYER } });
+  is("the kit first", (await ryeView()).offer?.step.id, "rkt001");
+  is("no thanks to it", (await take("cs_test_cartpaid000009", "rkt001", "no")).kind, "declined");
+  is("the same kit for less is passed over: the checklist is next", (await ryeView()).offer?.step.id, "rls001");
+  is("and the cheaper kit cannot be answered instead", [(await take("cs_test_cartpaid000009", "rkt002", "yes")).kind, charges.length - charged], ["unavailable", 0]);
+
+  part("On the page too: the hour, and a method one click cannot charge again");
+  is("after the hour, the page shows nothing", (await ryeView(browser.secret, true, NOW - 2 * 3600)).offer, null);
+  is("paid with Klarna (the page's eligible is false), nothing", (await ryeView(browser.secret, false)).offer, null);
+
+  part("The store's month of requests used: nothing is read, nothing is offered");
+  for (const key of redis.keys().filter((k) => k.startsWith("nl:traffic:r:"))) await redis.pipeline([["INCRBY", key, 100_000_000]]);
+  sessions.cs_test_cartpaid000010 = paidCart("cs_test_cartpaid000010", BUYER);
+  const listsBefore = listCalls;
+  is("the page shows no offer, and the answer is refused", [(await view("cs_test_cartpaid000010", BUYER)).offer, (await take("cs_test_cartpaid000010", "kit001", "yes")).kind, charges.length - charged], [null, "unavailable", 0]);
+  is("and the buyer's purchases were never read from Stripe", listCalls, listsBefore);
 
   part("Its reads are counted, and the studio says it");
   is("what the buyer owns counts as many public requests as the next product after a purchase", CART_OFFER_REQUEST_UNITS, 6);

@@ -284,6 +284,9 @@ export async function takeUpsell(input: {
     before.forEach((id) => owned.add(id));
   }
   const records = await readAnswers(session);
+  // After a cart, a product turned down in this order is never offered again,
+  // not even at a lower price on a "no thanks" path (lib/cart-offers.ts).
+  if (cart) for (const record of records.values()) if (record.state === "declined" || record.state === "failed") owned.add(record.product);
   const position = funnelPosition(funnel, offered, toAnswers(records), owned);
   if (position.kind !== "offer" || position.step.id !== input.step) {
     const asked = funnel.steps.find((s) => s.id === input.step);
@@ -688,7 +691,8 @@ export async function funnelView(input: {
   const offered = full ? await offerableAfterPaying(store, await readListings(store, funnelProductIds(full.funnel))) : [];
   const funnel = full ? activeFunnel(offered, full) : null;
   if (!funnel) return { offer: null, taken, notes, declined };
-  const owned = new Set([product.id, ...input.alsoOwned]);
+  // After a cart, what was turned down in this order is passed over too, as on the server (takeUpsell).
+  const owned = new Set([product.id, ...input.alsoOwned, ...(input.cart ? declined : [])]);
   let position = funnelPosition(funnel, offered, toAnswers(records), owned);
   // After a cart, what the buyer already has from the store is passed over
   // too, read only when there is an offer to show (lib/cart-offers.ts).
