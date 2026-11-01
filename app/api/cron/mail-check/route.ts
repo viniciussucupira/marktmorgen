@@ -36,13 +36,14 @@ export async function GET(request: NextRequest) {
       let accountChecks: Check[];
       let accountFailed = false;
       try {
-        // Warm the existing SES session before the independent usage reader.
-        accountChecks = [...verifyHostToken(), ...(await timed(10_000, () => verifyAmazonAccount()))];
+        // A cold session may need Redis, STS and GetAccount in sequence.
+        // Warm it before collection without cutting the delivery loop short.
+        accountChecks = [...verifyHostToken(), ...(await timed(30_000, () => verifyAmazonAccount()))];
       } catch (error) {
         accountFailed = true;
         accountChecks = [{ check: "the run itself", ok: false, detail: error instanceof Error ? error.message : "failed" }];
       }
-      const loopDeadline = Math.min(started + 130_000, Date.now() + WAIT_MS);
+      const loopDeadline = Date.now() + WAIT_MS;
       const [usage, checks] = await Promise.all([
         verifyProviderUsage(),
         (async (): Promise<Check[]> => {

@@ -70,7 +70,7 @@ async function main(): Promise<void> {
     is("unproven same-window send usage is unknown", await resendUsageSince(100_000, 200_000), { ok: false, reason: "unknown" });
   }
   is("provider getters were not executed", getterCalls, 0);
-  globalThis.fetch = async () => ({ ok: true, status: 200, json: async () => { throw new SyntaxError("synthetic invalid JSON"); } }) as Response;
+  globalThis.fetch = async () => new Response("{broken");
   is("invalid JSON remains unknown", await resendUsageSince(100_000, 200_000), { ok: false, reason: "unknown" });
 
   part("Authorization, failure and a stalled body remain distinct");

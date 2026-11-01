@@ -14,7 +14,7 @@ export const control = {
   },
   calls: [] as string[], notices: [] as { subject: string; text: string }[],
   deadlines: [] as number[], cutoffRoom: [] as number[],
-  afterAccount: null as (() => void) | null,
+  afterAccount: null as (() => void | Promise<void>) | null,
   afterUsage: null as (() => void | Promise<void>) | null,
 };
 export async function cronAllowed() { control.calls.push("authorize"); return control.allowed; }
@@ -33,7 +33,7 @@ export function verifyHostToken(): Check[] {
 }
 export async function verifyAmazonAccount(): Promise<Check[]> {
   control.calls.push("account");
-  control.afterAccount?.();
+  await control.afterAccount?.();
   if (control.throwAccount) throw new Error("synthetic account failure");
   return [{ check: "synthetic account", ok: true, detail: "checked" }];
 }

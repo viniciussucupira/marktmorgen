@@ -236,9 +236,9 @@ async function main(): Promise<void> {
   is("an invalid anchor has no invented range or count",
     await verifyProviderUsage(Number.MAX_SAFE_INTEGER), {
       basis: "provider_reported_counters", window: null,
+      alignment: { anchor: "collector_start_utc", exactSameWindow: false, billingUnitsComparable: false },
       ses: { ok: false, reason: "unknown" }, resend: { ok: false, reason: "unknown" },
       resendAccount: { ok: false, reason: "unknown" },
-      alignment: { anchor: "collector_start_utc", exactSameWindow: false, billingUnitsComparable: false },
     });
   is("the invalid anchor made no request", readCalls.length, priorCalls);
 

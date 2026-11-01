@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { mock } from "node:test";
 import { GET, maxDuration } from "@/app/api/cron/mail-check/route";
 import { control } from "./mail-check-route-world";
 import { store as redis } from "./redis-stub";
@@ -10,6 +11,8 @@ const oldPipeline = redis.pipeline;
 const commands: (string | number)[][] = [];
 const LAST = "nl:mail-check:last";
 const LOCK = "nl:mail-check:lock";
+let rejectSave = false;
+let beforeLock: (() => Promise<void>) | null = null;
 const request = () => new NextRequest("https://example.test/api/cron/mail-check");
 
 function reset(previous?: string): void {
@@ -18,6 +21,8 @@ function reset(previous?: string): void {
   control.allowed = true; control.sender = true; control.deliveryOk = true; control.throwLoop = false; control.throwAccount = false;
   control.calls.length = 0; control.notices.length = 0; control.deadlines.length = 0; control.cutoffRoom.length = 0;
   control.afterUsage = null; control.afterAccount = null;
+  rejectSave = false;
+  beforeLock = null;
   if (previous !== undefined) redis.run(["SET", LAST, previous]);
 }
 
@@ -25,6 +30,10 @@ async function main(): Promise<void> {
   globalThis.fetch = async () => { throw new Error("No real network request belongs in a route orchestration test"); };
   redis.pipeline = async (batch) => {
     commands.push(...batch.map(command => [...command]));
+    if (batch.some(command => command[0] === "SET" && command[1] === LOCK)) await beforeLock?.();
+    if (rejectSave && batch.some(command => command[0] === "SET" && command[1] === LAST)) {
+      throw new Error("synthetic result persistence failure");
+    }
     return oldPipeline(batch);
   };
 
@@ -90,6 +99,73 @@ async function main(): Promise<void> {
     control.calls.filter(call => ["account", "usage", "loop"].includes(call)), ["account", "usage", "loop"]);
   Date.now = realNow;
 
+  part("A bounded cold account sequence keeps the full delivery window after a slow lock");
+  reset();
+  const coldAnchor = realNow();
+  mock.timers.enable({ apis: ["setTimeout", "Date"], now: coldAnchor });
+  let lockReached!: () => void;
+  let coldAccountReached!: () => void;
+  const lockStarted = new Promise<void>(resolve => { lockReached = resolve; });
+  const coldAccountStarted = new Promise<void>(resolve => { coldAccountReached = resolve; });
+  beforeLock = async () => { lockReached(); await new Promise<void>(resolve => setTimeout(resolve, 5_000)); };
+  control.afterAccount = async () => {
+    coldAccountReached();
+    // Redis read/write and the two AWS requests can take 26 seconds in total.
+    await new Promise<void>(resolve => setTimeout(resolve, 26_000));
+  };
+  const coldRun = GET(request());
+  await lockStarted;
+  mock.timers.tick(5_000);
+  await coldAccountStarted;
+  mock.timers.tick(26_000);
+  const coldResponse = await coldRun;
+  is("an account sequence within its own service limits does not create a false failure",
+    [coldResponse.status, (await coldResponse.json()).ok, control.notices.length], [200, true, 0]);
+  is("five seconds for the lock and 26 for the account still leave 100 seconds for delivery",
+    [control.deadlines, control.cutoffRoom], [[coldAnchor + 131_000], [129_000]]);
+  mock.timers.reset();
+
+  part("Account and usage barriers prove parallel work and complete result persistence");
+  const previousResult = JSON.stringify({ ok: true, at: 1 });
+  reset(previousResult);
+  let accountReached!: () => void;
+  let releaseAccount!: () => void;
+  let usageReached!: () => void;
+  let releaseUsage!: () => void;
+  const accountStarted = new Promise<void>(resolve => { accountReached = resolve; });
+  const accountWait = new Promise<void>(resolve => { releaseAccount = resolve; });
+  const usageStarted = new Promise<void>(resolve => { usageReached = resolve; });
+  const usageWait = new Promise<void>(resolve => { releaseUsage = resolve; });
+  control.afterAccount = async () => { accountReached(); await accountWait; };
+  control.afterUsage = async () => { usageReached(); await usageWait; };
+  const pending = GET(request());
+  await accountStarted;
+  is("usage and delivery wait for account verification to finish", control.calls, ["authorize", "token", "account"]);
+  releaseAccount();
+  await usageStarted;
+  is("delivery starts while the independent collector is still pending",
+    control.calls.filter(call => ["account", "usage", "loop"].includes(call)), ["account", "usage", "loop"]);
+  is("an unfinished observation does not replace the earlier result", redis.run(["GET", LAST]), previousResult);
+  releaseUsage();
+  const complete = await pending;
+  const completeBody = await complete.json();
+  const completeSaved = JSON.parse(String(redis.run(["GET", LAST])));
+  is("response and saved delivery checks and usage are identical after both finish",
+    [completeSaved.ok, completeSaved.checks, completeSaved.usage],
+    [completeBody.ok, completeBody.checks, completeBody.usage]);
+
+  part("A failed save never claims a recorded proof or sends a recovery notice");
+  const failedHistory = JSON.stringify({ ok: false, at: 2 });
+  reset(failedHistory);
+  rejectSave = true;
+  const unsaved = await GET(request());
+  is("the unavailable save fails the route instead of claiming success",
+    [unsaved.status, await unsaved.json(), unsaved.headers.get("cache-control")],
+    [503, { ok: false, error: "unavailable" }, "no-store"]);
+  is("failed persistence preserves history, sends no notice and releases the lock",
+    [redis.run(["GET", LAST]), control.notices.length, redis.run(["GET", LOCK])],
+    [failedHistory, 0, null]);
+
   part("An account-check exception still collects independent usage without pretending delivery passed");
   reset();
   control.throwAccount = true;
@@ -120,6 +196,7 @@ async function main(): Promise<void> {
   done();
 }
 main().catch(error => {
+  mock.timers.reset();
   globalThis.fetch = oldFetch; redis.pipeline = oldPipeline; Date.now = realNow;
   console.error(error); process.exit(1);
 });

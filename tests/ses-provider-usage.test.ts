@@ -139,7 +139,7 @@ async function main(): Promise<void> {
   const throwingProxy = new Proxy({}, { getPrototypeOf() { throw new Error("synthetic trap"); } });
   globalThis.fetch = async () => ({ ok: true, status: 200, json: async () => throwingProxy }) as Response;
   is("executable object traps are unknown", await sesProviderUsage(2_000), { ok: false, reason: "unknown" });
-  globalThis.fetch = async () => ({ ok: true, status: 200, json: async () => { throw new SyntaxError("synthetic invalid JSON"); } }) as Response;
+  globalThis.fetch = async () => new Response("{broken");
   is("invalid JSON is unknown", await sesProviderUsage(2_000), { ok: false, reason: "unknown" });
 
   part("The deadline includes a body that never finishes");
