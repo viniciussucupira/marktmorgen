@@ -423,7 +423,8 @@ function ModuleCard({
   const [newLesson, setNewLesson] = useState("");
   const changed = title !== unit.title || drip !== String(unit.dripDays);
   // A module's name or days changed and not saved: leaving asks first (487 [IT4], item 6).
-  useLeaveGuard(changed && !busy);
+  // Asked while a save is still going too: the course's busy is shared by every module and lesson.
+  useLeaveGuard(changed);
   const titleId = `module-${unit.id}-title`;
   const dripId = `module-${unit.id}-drip`;
 
@@ -439,8 +440,9 @@ function ModuleCard({
             // Taken as the server kept it, so a name it tidied never reads as unsaved.
             const kept = answer.course?.modules.find((m) => m.id === unit.id);
             if (kept) {
-              setTitle(kept.title);
-              setDrip(String(kept.dripDays));
+              // A field changed while it was saving keeps what was typed.
+              setTitle((now) => (now === title ? kept.title : now));
+              setDrip((now) => (now === drip ? String(kept.dripDays) : now));
             }
             toast("Module saved.");
           }
@@ -776,7 +778,7 @@ function LessonEditor({
   const [removing, setRemoving] = useState(false);
   // A lesson's name, link, preview or text changed and not saved, or a file still going up: leaving asks first (487 [IT4], item 6).
   const unsaved = title !== lesson.title || preview !== lesson.preview || link !== (lesson.link ?? "") || text !== savedText;
-  useLeaveGuard((unsaved && !busy) || uploading !== null);
+  useLeaveGuard(unsaved || uploading !== null);
   const streams = useContext(Streams);
 
   async function loadText() {
@@ -831,9 +833,10 @@ function LessonEditor({
             // Taken as the server kept it, so a name or link it tidied never reads as unsaved.
             const kept = answer.course?.modules.flatMap((m) => m.lessons).find((l) => l.id === lesson.id);
             if (kept) {
-              setTitle(kept.title);
-              setPreview(kept.preview);
-              setLink(kept.link ?? "");
+              // A field changed while it was saving keeps what was typed.
+              setTitle((now) => (now === title ? kept.title : now));
+              setPreview((now) => (now === preview ? kept.preview : now));
+              setLink((now) => (now === link ? kept.link ?? "" : now));
             }
             toast("Lesson saved.");
           }

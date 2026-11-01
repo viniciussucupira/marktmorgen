@@ -41,17 +41,22 @@ export function BlogEditor({ post, products, back }: { post: EditedPost; product
   const [error, setError] = useState<string | null>(null);
   // A post written and not saved is never lost to a click away (487 [IT4], item 6): leaving asks first, as the email studio does.
   const [done, setDone] = useState(false);
-  const dirty = title !== post.title || body !== post.body || product !== (post.product ?? "");
+  // What a confirmed save sent, until the saved post comes back: what is typed after it stays guarded, and is kept.
+  const [sent, setSent] = useState<{ title: string; body: string; product: string } | null>(null);
+  const base = sent ?? { title: post.title, body: post.body, product: post.product ?? "" };
+  const dirty = title !== base.title || body !== base.body || product !== base.product;
   useLeaveGuard(dirty && !done);
   // The saved post comes back as new props (router.refresh): from then on, changes to it are guarded again.
   const [seen, setSeen] = useState(post);
   if (seen !== post) {
     setSeen(post);
-    // Just saved: take the post as the server kept it (it tidies spaces and blank lines), so nothing reads as unsaved.
-    if (done) {
-      setTitle(post.title);
-      setBody(post.body);
-      setProduct(post.product ?? "");
+    // Just saved: take the post as the server kept it (it tidies spaces and blank lines), so nothing reads as unsaved;
+    // but a field changed since the save keeps what was typed, and stays unsaved.
+    if (sent) {
+      if (title === sent.title) setTitle(post.title);
+      if (body === sent.body) setBody(post.body);
+      if (product === sent.product) setProduct(post.product ?? "");
+      setSent(null);
     }
     setDone(false);
   }
@@ -78,7 +83,7 @@ export function BlogEditor({ post, products, back }: { post: EditedPost; product
   async function save(draft: boolean) {
     const data = await send({ action: "save", id: post.id, title, body, product: product || null, draft }, draft ? "draft" : "publish");
     if (!data) return;
-    setDone(true);
+    setSent({ title, body, product });
     toast(draft ? "Saved as a draft." : "Published on your blog.");
     router.push(`${back}${back.includes("?") ? "&" : "?"}edit=${data.post?.id ?? ""}`);
     router.refresh();
