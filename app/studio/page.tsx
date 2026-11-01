@@ -1722,7 +1722,7 @@ export default async function StudioPage({
 
             {calendar ? <CalendarEditor view={calendar} weekly={callProducts.some((p) => p.call?.kind === "weekly")} /> : null}
 
-            {may("page") ? <LinkEditor links={store.links} folder={pictures} /> : null}
+            {may("page") ? <div id="links" className="scroll-mt-32"><LinkEditor links={store.links} folder={pictures} /></div> : null}
 
             {may("page") ? <FaqEditor faq={store.faq} ai={ai} /> : null}
 
