@@ -50,18 +50,20 @@ TIERS.forEach((tier, i) => {
   for (const figure of figures) is(`${PLAN_TITLES[tier]}: ${figure} shown once`, count(text, figure), 1);
   is(`${PLAN_TITLES[tier]}: "0% of sales" once`, text.split("0% of sales").length - 1 + (text.split("0% of your sales").length - 1), 1);
   is(`${PLAN_TITLES[tier]}: no terms block, no "not open" line, no upload or data-room paragraph in the card`, [/First charge|Money back|Canceling/.test(text), /not open yet|not on sale yet|Not yet\./i.test(text), /upload starts|data room/i.test(text)], [false, false, false]);
-  is(`${PLAN_TITLES[tier]}: the upload, storage and data-room details are in its itemized list`, [/upload/i.test(itemized(cards[i])), /stored files and videos/.test(itemized(cards[i])), /data room/.test(itemized(cards[i]))], [true, true, true]);
+  is(`${PLAN_TITLES[tier]}: the upload, storage and data-room details are in its itemized list`, [/upload steps/i.test(itemized(cards[i])), /stored files and videos/.test(itemized(cards[i])), /data room/.test(itemized(cards[i]))], [true, true, true]);
 });
 
 part("Store marks as included only what it has");
 const store = cards[0];
 const checked = [...store.matchAll(/<li class="flex gap-2">([\s\S]*?)<\/li>/g)].map((m) => m[1].replace(/<[^>]+>/g, " ").trim());
 is("no check-marked line about Studio and Scale", checked.filter((line) => /Studio and Scale|on Studio/.test(line)), []);
-is("what Store does not have is said plainly, without a check mark", /data-not-on-plan[^>]*>Not on Store: Email to your list and AI writing\. Studio and Scale have them\./.test(store.replace(/&#x27;/g, "'")), true);
+is("what Store does not have is said plainly, without a check mark", /data-not-on-plan[^>]*>The Store plan does not include email to your list or AI writing\. Studio and Scale do\./.test(store.replace(/&#x27;/g, "'")), true);
+is("the upload allowance in plain words, in the same GB as storage", [/upload starts|newly authorized/.test(itemized(cards[0])), /up to \d[\d,]* files and 5 GB in all/.test(itemized(cards[0]))], [false, true]);
 
 part("The terms once, under the three cards; the plans first on the page");
 is("one terms block, after the cards", [(html.match(/data-plan-terms/g) ?? []).length, html.indexOf("data-plan-terms") > html.lastIndexOf("data-pricing-card")], [1, true]);
 const page = readFileSync("app/pricing/page.tsx", "utf8");
 is("the plans come before the tools and the comparison", page.indexOf('id="plans"') < page.indexOf('<PricingValue place="plans"'), true);
-is("the closed-selling line is said once on the page", (page.match(/not open yet/g) ?? []).length, 1);
+is("the closed-selling line is said once on the page, above the plans", (page.match(/not open yet/g) ?? []).length, 1);
+is("the live demo is linked whether or not plans are open", /PRICING_OPEN \? <> <Link className="underline" href="\/demo">/.test(page) && /not open yet[^<]*<Link className="underline" href="\/demo">/.test(page), true);
 done();

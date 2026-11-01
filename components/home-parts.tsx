@@ -6,7 +6,7 @@ import { Icon } from "@/components/icons";
 import { listSizeWords } from "@/lib/contact-rules";
 import { PAID_STORAGE_BYTES } from "@/lib/storage-rules";
 import { DATA_ROOM_BYTES, dataWords } from "@/lib/store-data-rules";
-import { uploadAllowanceWords } from "@/lib/upload-budget-policy";
+import { currentUploadBudgetPolicy, isUploadBudgetConfigured, uploadAllowanceWords } from "@/lib/upload-budget-policy";
 import { paidVideoWords } from "@/lib/video-admission-rules";
 import { VISITS_INCLUDED, publicVisitLimit } from "@/lib/traffic-rules";
 import { ORDERS_INCLUDED } from "@/lib/order-rules";
@@ -104,7 +104,7 @@ const CREATOR_GROUPS: PlanGroup[] = [
     icon: "bank",
     title: "Your own payment account",
     // The share of a sale is said once, under the price ("0% of sales"); not again here (243 [CF6], 31/10 complement).
-    body: "Buyers pay into your own Stripe account, in 15 currencies, and the money is theirs to refund or keep.",
+    body: "Buyers pay into your own Stripe account, in 15 currencies, and the money is yours.",
   },
   {
     icon: "users",
@@ -192,10 +192,24 @@ function planFigures(tier: Tier): { included: string[]; notOnPlan: string[] } {
 
 const PLAN_FIGURES = Object.fromEntries(TIERS.map(tier => [tier, planFigures(tier)])) as Record<Tier, { included: string[]; notOnPlan: string[] }>;
 
+/**
+ * The monthly upload allowance in plain words (243 [CF6], 31/10 complement), from the same policy as
+ * uploadAllowanceWords, and in the same GB as storage (1 GB = 1,024³ bytes, so its 5,368,709,120 bytes are 5 GB, as
+ * Store's storage is). Every figure stays written: files, size and upload steps. When the policy is not set, its own
+ * sentence says uploads are paused.
+ */
+function plainUploadWords(tier: Tier): string {
+  const policy = currentUploadBudgetPolicy();
+  if (!isUploadBudgetConfigured(policy) || policy.perStore[tier].opens === 0) return uploadAllowanceWords(tier, policy);
+  const cap = policy.perStore[tier];
+  const gb = Math.floor((cap.authorizedBytes / 1024 ** 3) * 10) / 10;
+  return `Each billing month, new product and lesson files: up to ${PLAN_NUMBER_FORMAT.format(cap.opens)} files and ${PLAN_NUMBER_FORMAT.format(gb)} GB in all, sent in up to ${PLAN_NUMBER_FORMAT.format(cap.controlRequests)} upload steps (a large file is sent in parts). Starting a file over counts again.`;
+}
+
 /** The upload, storage and data-room allowances, as lines of the itemized list. */
 function storageLines(tier: Tier): string[] {
   return [
-    uploadAllowanceWords(tier),
+    plainUploadWords(tier),
     `Up to ${PAID_STORAGE_BYTES[tier] / 1024 ** 3} GB of stored files and videos. New uploads must fit in the remaining space.`,
     `A data room of ${dataWords(DATA_ROOM_BYTES[tier])} for your store's words and records: products, pages, posts, contacts and what each order keeps.`,
   ];
@@ -304,7 +318,7 @@ function PlanCard({
       </ul>
       {PLAN_FIGURES[tier].notOnPlan.length ? (
         <p className="mt-3 text-[0.9375rem] text-ink-soft" data-not-on-plan>
-          {`Not on ${PLAN_TITLES[tier]}: ${PLAN_FIGURES[tier].notOnPlan.join(" and ").replace(/^./, (c) => c.toUpperCase())}. ${PLAN_TITLES.pro} and ${PLAN_TITLES.scale} ${PLAN_FIGURES[tier].notOnPlan.length > 1 ? "have them" : "have it"}.`}
+          {`The ${PLAN_TITLES[tier]} plan does not include ${PLAN_FIGURES[tier].notOnPlan.join(" or ")}. ${TIERS.filter((other) => planFigures(other).notOnPlan.length === 0).map((other) => PLAN_TITLES[other]).join(" and ")} do.`}
         </p>
       ) : null}
 
