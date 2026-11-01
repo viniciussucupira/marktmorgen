@@ -144,6 +144,8 @@ import { ContactBoxEditor } from "@/components/contact-box-editor";
 import { FaqEditor } from "@/components/faq-editor";
 import { StoreCoach } from "@/components/store-coach";
 import { StoreAccessCheck } from "@/components/store-access-check";
+import { StoreSearchCheck } from "@/components/store-search-check";
+import { searchCheck } from "@/lib/store-search-check";
 import { PageOrderEditor } from "@/components/page-order-editor";
 import { tipsOpen } from "@/lib/store-tip-checkout";
 import { TipsEditor } from "@/components/tips-editor";
@@ -1239,6 +1241,7 @@ export default async function StudioPage({
             ) : null}
             {/* 98 [D2-COMPLIANCE-REVIEW] unit 1: pictures with no description, and what every store gets (lib/store-access-check.ts). */}
             {may("products") ? <StoreAccessCheck check={accessCheck(store)} /> : null}
+            {may("products") && accessCheck(store) ? <StoreSearchCheck check={searchCheck(store)} /> : null}
             <StudioTools
               tools={[
                 { href: studioPath(store, "", "growth")+"#template-library", title: "Template library", text: "Preview existing pages, funnels, email layouts and paused sequences.", icon: "layout" as const, prefetch: false },
