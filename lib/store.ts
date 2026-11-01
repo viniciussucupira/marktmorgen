@@ -832,7 +832,7 @@ const IMPERSONATING = new Set([
 ]);
 
 /** What stops an address from being claimed or taken: its shape, the site's own names, or passing for ours. */
-export function claimProblem(handle: string): HandleProblem {
+export function newAddressProblem(handle: string): HandleProblem {
   const problem = handleProblem(handle);
   if (problem) return problem;
   if (IMPERSONATING.has(handle) || handle.includes("marktmorgen") || handle.includes("solrenning")) return "reserved";
@@ -1696,7 +1696,7 @@ export async function claimHandle(
   rawBio: string,
 ): Promise<ClaimResult> {
   const handle = normaliseHandle(rawHandle);
-  const problem = claimProblem(handle);
+  const problem = newAddressProblem(handle);
   if (problem) return { ok: false, reason: problem };
 
   const existing = await storeForEmail(email);
@@ -1743,7 +1743,7 @@ export async function createStore(
   rawBio: string,
 ): Promise<CreateResult> {
   const handle = normaliseHandle(rawHandle);
-  const problem = claimProblem(handle);
+  const problem = newAddressProblem(handle);
   if (problem) return { ok: false, reason: problem };
   if (!(await storeForEmail(email))) return { ok: false, reason: "first" };
 
@@ -1867,7 +1867,7 @@ export async function renameHandle(
   rawHandle: string,
 ): Promise<RenameResult> {
   const handle = normaliseHandle(rawHandle);
-  const problem = claimProblem(handle);
+  const problem = newAddressProblem(handle);
   if (problem) return { ok: false, reason: problem };
 
   const result = await withStore<RenameResult>(email, async (store, save) => {

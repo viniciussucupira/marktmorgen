@@ -14,7 +14,7 @@
  * handle rules; anything that is not a valid store address is dropped, and
  * the step simply opens empty, as it always did.
  */
-import { claimProblem, normaliseHandle } from "@/lib/store";
+import { newAddressProblem, normaliseHandle } from "@/lib/store";
 
 /** Longer input than this is never a handle and is not even looked at. */
 const MAX_RAW = 64;
@@ -23,7 +23,7 @@ const MAX_RAW = 64;
 export function prefillHandle(raw: unknown): string {
   if (typeof raw !== "string" || raw.length === 0 || raw.length > MAX_RAW) return "";
   const handle = normaliseHandle(raw);
-  return handle && claimProblem(handle) === null ? handle : "";
+  return handle && newAddressProblem(handle) === null ? handle : "";
 }
 
 /** `path` with `handle=` added when `raw` holds a valid store address; `path` unchanged otherwise. */
