@@ -1236,6 +1236,7 @@ const BASE_FEATURE_PAGES: TopicPage[] = [
     highlight: "one price",
     intro:
       "Put 2 to 20 of your products in one bundle, at a price you set. The buyer gets every one of them exactly as if they had bought each on its own: the downloads, the links, the courses and the license keys.",
+    visual: "bundles",
     badge: WORKING,
     accent: "from-amber-brand to-violet-brand",
     plan: "creator",
@@ -1379,6 +1380,7 @@ const BASE_FEATURE_PAGES: TopicPage[] = [
     highlight: "not bookable on your store",
     intro:
       "Paste the private address of up to three calendars, from Google, Outlook or iCloud, and the times you are busy there stop being offered as call times. Your bookings come back the other way, as a calendar you subscribe to.",
+    visual: "calendar",
     badge: WORKING,
     accent: "from-sky-brand to-violet-brand",
     plan: "creator",
@@ -1435,6 +1437,7 @@ const BASE_FEATURE_PAGES: TopicPage[] = [
     highlight: "what just happened",
     intro:
       "Up to five addresses of your own, such as a Zapier Catch Hook, a Make scenario or your own server, told about sales, members, leads, bookings and refunds as they happen, in signed JSON.",
+    visual: "webhooks",
     badge: WORKING,
     accent: "from-violet-brand to-sky-brand",
     plan: "creator",
@@ -1496,6 +1499,7 @@ const BASE_FEATURE_PAGES: TopicPage[] = [
     highlight: "a certificate that proves it",
     intro:
       "A quiz after any lesson, marked on our side, or an assignment students hand in and you read, and a certificate of completion with a page of its own that anyone can open to check it.",
+    visual: "quizzes",
     badge: WORKING,
     accent: "from-pink-brand to-violet-brand",
     plan: "creator",
@@ -1561,6 +1565,7 @@ const BASE_FEATURE_PAGES: TopicPage[] = [
     highlight: "opened by what people buy",
     intro:
       "Choose which products give which roles in your own Discord server. A buyer joins in two presses after paying, keeps the roles while they hold what they bought, and loses them by themselves when a membership ends or a purchase is refunded in full.",
+    visual: "discord",
     badge: WORKING,
     accent: "from-violet-brand to-pink-brand",
     plan: "creator",
@@ -1617,6 +1622,7 @@ const BASE_FEATURE_PAGES: TopicPage[] = [
     highlight: "with every sale",
     intro:
       "For software, plugins and anything that unlocks with a code. Upload the keys your own system made, or have them made here, and each buyer gets one nobody else has.",
+    visual: "keys",
     badge: WORKING,
     accent: "from-amber-brand to-mint-brand",
     plan: "creator",
