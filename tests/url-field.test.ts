@@ -17,6 +17,7 @@
 import { readFileSync } from "node:fs";
 import { checkWith, linkOnLeave, roomOnLeave } from "@/lib/url-check";
 import { MAX_CHAT_URL, chatKind } from "@/lib/chat-kind";
+import { MAX_REVIEW_URL, parseReviewElsewhere } from "@/lib/review-elsewhere";
 import { MAX_ROOM_LENGTH, cleanRoom } from "@/lib/call-setup";
 import { readLink, LINK_PROBLEMS } from "@/lib/product-link";
 import { done, is, part } from "./check";
@@ -91,4 +92,10 @@ const chatEditor = readFileSync("components/chat-summary-editor.tsx", "utf8");
 is("the chat summary's address uses it, by chatKind, never kept by the browser", chatEditor.includes('<UrlField\n            id="chat-summary-url"') && chatEditor.includes("check={CHAT_CHECK}") && chatEditor.includes('autoComplete="off"') && chatEditor.includes("chatKind(raw) ? raw.trim() : null"), true);
 is("an empty address is never sent from the form: it would stop the posting", chatEditor.includes("if (url.trim()) save(url.trim());"), true);
 is("the server reads it with the same function", readFileSync("lib/chat-summary.ts", "utf8").includes('import { type ChatKind, chatKind } from "@/lib/chat-kind";'), true);
+part("A public review page, by the reading the server keeps");
+const elsewhere = checkWith((raw) => parseReviewElsewhere(raw)?.url ?? null, "not a review page", MAX_REVIEW_URL);
+is("a Trustpilot page missing https:// is offered back as the server keeps it", elsewhere("www.trustpilot.com/review/harborkitchen.com").fix, parseReviewElsewhere("https://www.trustpilot.com/review/harborkitchen.com")?.url ?? "none");
+is("a page elsewhere is the editor's words, nothing offered", elsewhere("https://example.com/reviews"), { problem: "not a review page", fix: null });
+const reviewStudio = readFileSync("components/review-studio.tsx", "utf8");
+is("the review page field uses it, optional, with its note tied to it", reviewStudio.includes('<UrlField\n            id="ask-elsewhere"') && reviewStudio.includes("check={ELSEWHERE_CHECK}") && reviewStudio.includes('describedBy="ask-elsewhere-note"'), true);
 done();
