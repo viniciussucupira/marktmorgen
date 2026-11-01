@@ -5877,6 +5877,8 @@ Regras: valem para estes itens todas as regras da seção SH (itens 204 a 214), 
 
 ### 243 — Complemento do dono: repetições nos três planos e destino do link Pricing (31/10/2026, 23h14 Fortaleza)
 
+Em andamento pelo Claude 2: 31/10/2026 23h40 Fortaleza, este complemento inteiro, ramo claude2/cf6-pricing-first-screen. Arquivos reservados (AV5): app/pricing/page.tsx, components/home-parts.tsx (cartões de planos e bloco de condições), components/pricing-value.tsx (só a linha de vendas fechadas na página de preços), tests/approved-plan-pricing.test.ts e tests/opening.test.ts (só as conferências da estrutura antiga), tests/pricing-card-repeats.test.ts (novo), tests/e2e/pricing.mjs (só o bloco novo de 1280 x 720). Coordenado com 224 [HL5] e 269 [KT3] sem refazê-los.
+
 Solicitação do dono (31/10/2026, 23h14, horário de Fortaleza): conferir como está montada a tabela de preços do site e onde a página para ao clicar em "Pricing", porque os três planos repetem coisas já escritas em cima. Complemento do 243 [CF6], sem número, seção ou posição nova. Conferido pelo Claude 1 em marktmorgen.com/pricing no mesmo horário, tela de notebook com 640 px de altura útil:
 
 1. Destino do link: "Pricing" no topo abre /pricing no início do herói; os cartões dos planos só começam por volta de 1.860 px, depois do herói, da seção "What your store can do for your business" (10 cartões de ferramentas) e do bloco "A monthly plan and a percentage of sales are different costs", ou seja, uns três telas abaixo. Corrigir: os três planos, com preço e limites, logo abaixo do título do herói, já na primeira tela; ferramentas e comparação vão para baixo dos planos.

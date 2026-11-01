@@ -104,7 +104,8 @@ const CREATOR_GROUPS: PlanGroup[] = [
   {
     icon: "bank",
     title: "Your own payment account",
-    body: `Buyers pay into your own Stripe account, in 15 currencies. ${feeWords().takes}`,
+    // The share of a sale is said once, under the price ("0% of sales"); not again here (243 [CF6], 31/10 complement).
+    body: "Buyers pay into your own Stripe account, in 15 currencies, and the money is theirs to refund or keep.",
   },
   {
     icon: "users",
@@ -123,7 +124,8 @@ function proGroups(domains: boolean): PlanGroup[] {
     {
       icon: "mail",
       title: "Write to your own list from here",
-      body: `A list of up to ${listSizeWords()} people, and the price does not move as it fills. One-off emails and sequences that send themselves after someone joins or buys, up to ${PLAN_NUMBER_FORMAT.format(PRO_MONTHLY_EMAILS)} sends a month, from your name, with replies coming to you.`,
+      // The monthly emails are a figure under the price; this says what they are for, without the number again.
+      body: `A list of up to ${listSizeWords()} people, and the price does not move as it fills. One-off emails and sequences that send themselves after someone joins or buys, from your name, with replies coming to you.`,
     },
     domains
       ? {
@@ -175,42 +177,60 @@ function usdWhole(cents: number): string {
  * the leaders print contacts, emails a month, products and AI on the card
  * itself, so these are printed under the price rather than only in the list.
  */
-function planFigures(tier: Tier): string[] {
+function planFigures(tier: Tier): { included: string[]; notOnPlan: string[] } {
   const n = (x: number) => PLAN_NUMBER_FORMAT.format(x);
   const emails = monthlyEmails(tier);
+  const included = [`${n(VISITS_INCLUDED[tier])} visits a month`, `${n(ORDERS_INCLUDED[tier])} orders a month`];
+  // What a plan does not have is said plainly, without the check mark of what it has (243 [CF6], 31/10 complement).
+  const notOnPlan: string[] = [];
+  if (emails > 0) included.push(`${n(emails)} list emails a month`);
+  else notOnPlan.push("email to your list");
+  if (AI_MONTHLY[tier] > 0) included.push(`${n(AI_MONTHLY[tier])} AI writing jobs and ${n(ANSWERS_MONTHLY[tier])} visitor answers a month`);
+  else notOnPlan.push("AI writing");
+  included.push(`${n(PAID_STORAGE_BYTES[tier] / 1024 ** 3)} GB of storage`);
+  return { included, notOnPlan };
+}
+
+const PLAN_FIGURES = Object.fromEntries(TIERS.map(tier => [tier, planFigures(tier)])) as Record<Tier, { included: string[]; notOnPlan: string[] }>;
+
+/** The upload, storage and data-room allowances, as lines of the itemized list. */
+function storageLines(tier: Tier): string[] {
   return [
-    `${n(VISITS_INCLUDED[tier])} visits a month`,
-    `${n(ORDERS_INCLUDED[tier])} orders a month`,
-    emails > 0 ? `${n(emails)} list emails a month` : "Email to your list on Studio and Scale",
-    AI_MONTHLY[tier] > 0 ? `${n(AI_MONTHLY[tier])} AI writing jobs and ${n(ANSWERS_MONTHLY[tier])} visitor answers a month` : "AI writing on Studio and Scale",
-    `${n(PAID_STORAGE_BYTES[tier] / 1024 ** 3)} GB of storage`,
+    uploadAllowanceWords(tier),
+    `Up to ${PAID_STORAGE_BYTES[tier] / 1024 ** 3} GB of stored files and videos. New uploads must fit in the remaining space.`,
+    `A data room of ${dataWords(DATA_ROOM_BYTES[tier])} for your store's words and records: products, pages, posts, contacts and what each order keeps.`,
   ];
 }
 
-const PLAN_FIGURES = Object.fromEntries(TIERS.map(tier => [tier, planFigures(tier)])) as Record<Tier, string[]>;
-
-function PlanTerms({ tier }: { tier: Tier }) {
- const markup = (yearly: boolean) => {
-  const { month, year } = PLAN_PRICES[tier];
-  const charged = (yearly ? year : month) / 100;
-  const rows: [string, string][] = [
-    // Not open yet (lib/opening.ts): said first, in the card it is about.
-    ...(PLANS_ON_SALE ? [] : [["On sale", "Not yet. Marktmorgen is still being built, and these are the terms this plan opens with."] as [string, string]]),
-    ["Free trial", `${TRIAL_DAYS} days. Your card is taken when it starts, so you can sell before you decide.`],
-    [
-      "First charge",
-      `$${PLAN_NUMBER_FORMAT.format(charged)} ${yearly ? "for the year" : "for the month"}, on the day the trial ends. We email you a week before.`,
-    ],
-    [
-      "Money back",
-      `Ask within ${REFUND_DAYS} days of your first payment and it comes back in full, for any reason or none. A yearly plan is refunded for the months you have not started, at any time, less Stripe's card fee.`,
-    ],
-    ["Canceling", "Two clicks in your studio, any time. Inside the trial, the card is never charged."],
-    ["Fees", `${shareShown(tier) / 100}% of each sale. Stripe charges its own processing fee separately.`],
-  ];
-  return pricingTermsMarkup(rows);
- };
- return <CycleTerms month={markup(false)} year={markup(true)} />;
+/**
+ * The terms every plan shares, said once under the three cards (243 [CF6], 31/10 complement): the first charge of
+ * each plan in one line, and the rest as before. Whether paid plans are on sale is said once, above the plans.
+ */
+function PlanTermsOnce() {
+  const markup = (yearly: boolean) => {
+    const charges = TIERS.map((tier) => `${PLAN_TITLES[tier]} $${PLAN_NUMBER_FORMAT.format((yearly ? PLAN_PRICES[tier].year : PLAN_PRICES[tier].month) / 100)}`).join(", ");
+    const shares = TIERS.map((tier) => shareShown(tier));
+    const fees = shares.every((share) => share === shares[0])
+      ? `${shares[0] / 100}% of each sale on every plan. Stripe charges its own processing fee separately.`
+      : `${TIERS.map((tier) => `${PLAN_TITLES[tier]} ${shareShown(tier) / 100}%`).join(", ")} of each sale. Stripe charges its own processing fee separately.`;
+    const rows: [string, string][] = [
+      ["Free trial", `${TRIAL_DAYS} days. Your card is taken when it starts, so you can sell before you decide.`],
+      ["First charge", `${charges} ${yearly ? "for the year" : "for the month"}, on the day the trial ends. We email you a week before.`],
+      [
+        "Money back",
+        `Ask within ${REFUND_DAYS} days of your first payment and it comes back in full, for any reason or none. A yearly plan is refunded for the months you have not started, at any time, less Stripe's card fee.`,
+      ],
+      ["Canceling", "Two clicks in your studio, any time. Inside the trial, the card is never charged."],
+      ["Fees", fees],
+    ];
+    return pricingTermsMarkup(rows);
+  };
+  return (
+    <section aria-labelledby="plan-terms-heading" className="card-flat mt-6 p-6 sm:p-7" data-plan-terms>
+      <h3 id="plan-terms-heading" className="t-h3">The terms, for every plan</h3>
+      <CycleTerms month={markup(false)} year={markup(true)} />
+    </section>
+  );
 }
 
 function PlanCard({
@@ -276,13 +296,18 @@ function PlanCard({
         />
       </p>
       <ul className="mt-5 space-y-1.5 text-[0.9375rem] text-ink" aria-label={`What ${PLAN_TITLES[tier]} holds`}>
-        {PLAN_FIGURES[tier].map((line) => (
+        {PLAN_FIGURES[tier].included.map((line) => (
           <li key={line} className="flex gap-2">
             <Icon name="check" size={16} className="mt-1 shrink-0 text-mint-deep" />
             <span>{line}</span>
           </li>
         ))}
       </ul>
+      {PLAN_FIGURES[tier].notOnPlan.length ? (
+        <p className="mt-3 text-[0.9375rem] text-ink-soft" data-not-on-plan>
+          {`Not on ${PLAN_TITLES[tier]}: ${PLAN_FIGURES[tier].notOnPlan.join(" and ").replace(/^./, (c) => c.toUpperCase())}. ${PLAN_TITLES.pro} and ${PLAN_TITLES.scale} ${PLAN_FIGURES[tier].notOnPlan.length > 1 ? "have them" : "have it"}.`}
+        </p>
+      ) : null}
 
       {/*
         Three groups open, the whole list one press away.
@@ -311,12 +336,9 @@ function PlanCard({
       {/* A press can hydrate this native disclosure independently of the rest
           of the card, preserving its first response during page hydration. */}
       <Suspense fallback={null}>
-        <details className="group/perks mt-6" dangerouslySetInnerHTML={{ __html: pricingPerksMarkup(perks) }} />
+        {/* The upload, storage and data-room details are in the itemized list, not under it (243 [CF6], 31/10 complement). */}
+        <details className="group/perks mt-6" dangerouslySetInnerHTML={{ __html: pricingPerksMarkup([...perks, ...storageLines(tier)]) }} />
       </Suspense>
-
-      <p className="mt-5 text-sm text-ink-soft">{uploadAllowanceWords(tier)}</p>
-      <p className="mt-3 text-sm text-ink-soft">Up to {PAID_STORAGE_BYTES[tier] / (1024 ** 3)} GB of stored files and videos. New uploads must fit in the remaining space.</p>
-      <p className="mt-3 text-sm text-ink-soft">A data room of {dataWords(DATA_ROOM_BYTES[tier])} for your store&apos;s words and records: products, pages, posts, contacts and what each order keeps.</p>
 
       <div className="mt-auto pt-8">
         {/*
@@ -330,11 +352,8 @@ function PlanCard({
           and so a creator never has to wonder whether it was heard.
         */}
         <CycleLink tier={tier} cta={cta} featured={featured} />
-        <PlanTerms tier={tier} />
-        {/* Named here the way the receipt will name it. */}
-        <p className="mt-4 text-[0.8125rem] leading-relaxed text-ink-mute">
-          Pressing this sends a login link to your email. Paid plans are not on sale yet.
-        </p>
+        {/* The terms are the same for every plan: said once, under the three cards (PlanTermsOnce). */}
+        <p className="mt-4 text-[0.8125rem] leading-relaxed text-ink-mute">Pressing this sends a login link to your email.</p>
       </div>
     </div>
   );
@@ -382,8 +401,9 @@ export function Pricing({ domains = false }: { domains?: boolean }) {
           bestFor="For an established business with a larger list, more visits and more orders every month."
           groups={[
             { icon: "check", title: "Everything in Studio", body: "The same selling tools and email features, with larger allowances." },
-            { icon: "mail", title: "More room to grow", body: `Up to ${PLAN_NUMBER_FORMAT.format(SCALE_MONTHLY_EMAILS)} emails, ${PLAN_NUMBER_FORMAT.format(VISITS_INCLUDED.scale)} visits and ${PLAN_NUMBER_FORMAT.format(ORDERS_INCLUDED.scale)} orders a month.` },
-            { icon: "sparkle", title: "More AI and more room", body: `${PLAN_NUMBER_FORMAT.format(AI_MONTHLY.scale)} AI writing jobs and ${PLAN_NUMBER_FORMAT.format(ANSWERS_MONTHLY.scale)} visitor answers a month, and ${PAID_STORAGE_BYTES.scale / (1024 ** 3)} GB of storage.` },
+            // The figures are under the price, once; these say what the larger allowances are for.
+            { icon: "mail", title: "More room to grow", body: "Larger monthly allowances than Studio for emails, visits and orders, for a bigger list and more sales." },
+            { icon: "sparkle", title: "More AI and more room", body: "More AI writing, more answers to visitors and more storage than Studio, for a catalog that keeps growing." },
           ]}
           perks={[`Everything in ${PLAN_TITLES.pro}`, `${PLAN_NUMBER_FORMAT.format(SCALE_MONTHLY_EMAILS)} emails a month`, `${PLAN_NUMBER_FORMAT.format(VISITS_INCLUDED.scale)} visits a month`, `${PLAN_NUMBER_FORMAT.format(ORDERS_INCLUDED.scale)} orders a month`, `${PLAN_NUMBER_FORMAT.format(AI_MONTHLY.scale)} AI writing jobs and ${PLAN_NUMBER_FORMAT.format(ANSWERS_MONTHLY.scale)} visitor answers a month`, `Each billing month: ${allowanceListWords("scale")}`]}
           featured={false}
@@ -391,6 +411,7 @@ export function Pricing({ domains = false }: { domains?: boolean }) {
         />
         </Suspense>
       </div>
+      <PlanTermsOnce />
       {/*
         What is true of every plan, and belongs to neither card: the two
         edges of the trial, and the limit we publish rather than bury.
