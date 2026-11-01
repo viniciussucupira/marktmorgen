@@ -3,12 +3,20 @@
 import { useState } from "react";
 import { toast } from "@/components/toast";
 import type { ChatKind } from "@/lib/chat-summary";
+import { UrlField } from "@/components/url-field";
+import { MAX_CHAT_URL, chatKind } from "@/lib/chat-kind";
+import { type LinkCheck, checkWith } from "@/lib/url-check";
 
 const ANSWERS: Record<string, string> = {
   invalid: "That is not a Slack or Discord webhook address. It starts with https://hooks.slack.com/services/ or https://discord.com/api/webhooks/.",
   refused: "The channel did not take a first message at that address. Check it was copied whole and the webhook is still on.",
   rate_limited: "That is a lot of tries in an hour. Try again later.",
 };
+
+// The address, checked when its field is left by the same reading the server keeps (lib/chat-kind.ts), and required:
+// an empty one sent here would stop the posting, which only "Stop posting" does.
+const CHAT_SHAPE = checkWith((raw) => (chatKind(raw) ? raw.trim() : null), ANSWERS.invalid, MAX_CHAT_URL);
+const CHAT_CHECK: LinkCheck = (raw) => (raw.trim() ? CHAT_SHAPE(raw) : { problem: ANSWERS.invalid, fix: null });
 
 /** Where the weekly and monthly numbers are posted (lib/chat-summary.ts), for whoever may change settings. */
 export function ChatSummaryEditor({ kind: given, sales: salesGiven = false }: { kind: ChatKind | null; sales?: boolean }) {
@@ -64,21 +72,22 @@ export function ChatSummaryEditor({ kind: given, sales: salesGiven = false }: { 
         className="mt-3 flex flex-wrap items-end gap-2"
         onSubmit={(event) => {
           event.preventDefault();
-          save(url.trim());
+          // Empty is never sent from here: it would stop the posting. The field says what is missing.
+          if (url.trim()) save(url.trim());
         }}
       >
-        <label className="min-w-0 flex-1 text-sm">
-          <span className="field-label">{kind ? "A different webhook address" : "Webhook address"}</span>
-          <input
+        <div className="min-w-0 flex-1 text-sm">
+          <label htmlFor="chat-summary-url" className="field-label">{kind ? "A different webhook address" : "Webhook address"}</label>
+          <UrlField
+            id="chat-summary-url"
             className="field mt-1 py-2"
-            type="url"
             value={url}
-            onChange={(e) => setUrl(e.target.value)}
+            onChange={setUrl}
+            check={CHAT_CHECK}
             placeholder="https://hooks.slack.com/services/…"
             autoComplete="off"
-            required
           />
-        </label>
+        </div>
         <button type="submit" className="btn btn-primary btn-sm" disabled={busy}>
           Save
         </button>

@@ -15,7 +15,8 @@
  *   - the lesson link in the course editor uses it, with a visible label.
  */
 import { readFileSync } from "node:fs";
-import { linkOnLeave, roomOnLeave } from "@/lib/url-check";
+import { checkWith, linkOnLeave, roomOnLeave } from "@/lib/url-check";
+import { MAX_CHAT_URL, chatKind } from "@/lib/chat-kind";
 import { MAX_ROOM_LENGTH, cleanRoom } from "@/lib/call-setup";
 import { readLink, LINK_PROBLEMS } from "@/lib/product-link";
 import { done, is, part } from "./check";
@@ -81,4 +82,13 @@ part("A notice's page address, by the reading the notice is held to");
 const reportForm = readFileSync("components/report-form.tsx", "utf8");
 is("the report form's page address uses it, required, with its help tied to it", reportForm.includes('<UrlField id="report-url"') && reportForm.includes("check={REPORT_URL_CHECK}") && reportForm.includes('describedBy="report-url-help"') && reportForm.includes('<p id="report-url-help"'), true);
 is("it is held to the same pattern as readReport", reportForm.includes("/^https?:\\/\\/\\S+$/i.test(raw)") && readFileSync("lib/takedown-rules.ts", "utf8").includes("if (!/^https?:\\/\\/\\S+$/i.test(report.url))"), true);
+part("A chat's webhook address, by the reading the server posts with");
+const chat = checkWith((raw) => (chatKind(raw) ? raw.trim() : null), "not a chat", MAX_CHAT_URL);
+is("a Slack address missing https:// is offered back", chat("hooks.slack.com/services/T0000/B0000/XXXXXXXXXXXX").fix, "https://hooks.slack.com/services/T0000/B0000/XXXXXXXXXXXX");
+is("another address is the editor's words, nothing offered", chat("https://example.com/hook"), { problem: "not a chat", fix: null });
+is("the longest address either chat takes fits", ["https://hooks.slack.com/services/" + "a".repeat(200), "https://discordapp.com/api/webhooks/" + "1".repeat(30) + "/" + "a".repeat(200)].every((u) => chatKind(u) !== null && u.length <= MAX_CHAT_URL), true);
+const chatEditor = readFileSync("components/chat-summary-editor.tsx", "utf8");
+is("the chat summary's address uses it, by chatKind, never kept by the browser", chatEditor.includes('<UrlField\n            id="chat-summary-url"') && chatEditor.includes("check={CHAT_CHECK}") && chatEditor.includes('autoComplete="off"') && chatEditor.includes("chatKind(raw) ? raw.trim() : null"), true);
+is("an empty address is never sent from the form: it would stop the posting", chatEditor.includes("if (url.trim()) save(url.trim());"), true);
+is("the server reads it with the same function", readFileSync("lib/chat-summary.ts", "utf8").includes('import { type ChatKind, chatKind } from "@/lib/chat-kind";'), true);
 done();
