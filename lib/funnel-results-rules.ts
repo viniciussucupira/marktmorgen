@@ -16,6 +16,7 @@
  * are the next units. Browser-safe: plain data and pure functions.
  */
 import { formatMoney } from "@/lib/money";
+import { formatRevenuePerTraffic, revenuePerTraffic } from "@/lib/custom-range-efficiency";
 
 export type StepCounts = {
   /** People who opened the step's page. */
@@ -37,11 +38,11 @@ export type FunnelSummary = {
   /** Renewals of memberships that began in the funnel, in the period. */
   recurring: number | null;
   refunded: number | null;
-  /** oneTime + recurring - refunded. */
+  /** oneTime + recurring - refunded; below zero when refunds of earlier sales outweigh the period's revenue. */
   net: number | null;
-  /** oneTime / sales. */
+  /** oneTime / sales, rounded down to the smallest unit, never up. */
   averageOrder: number | null;
-  /** net / first step's visits. */
+  /** (oneTime - refunded) / first step's visits, kept as a fraction of the smallest unit (lib/custom-range-efficiency.ts); unknown below zero. */
   perVisit: number | null;
 };
 
@@ -50,11 +51,16 @@ const sum = (values: (number | null)[]): number | null => (values.every(known) ?
 
 /** The funnel's summary from its steps, in order (the first is where visits are counted). */
 export function funnelSummary(steps: StepCounts[], recurring: number | null, refunded: number | null): FunnelSummary {
+  // A funnel with no steps has nothing counted: every figure unknown, not 0.
+  if (!steps.length) return { visits: null, signups: null, sales: null, oneTime: null, recurring: null, refunded: null, net: null, averageOrder: null, perVisit: null };
   const visits = steps.length ? (known(steps[0].visits) ? steps[0].visits : null) : null;
   const signups = sum(steps.map((s) => s.signups));
   const sales = sum(steps.map((s) => s.sales));
   const oneTime = sum(steps.map((s) => s.revenue));
-  const net = known(oneTime) && known(recurring) && known(refunded) ? oneTime + recurring - refunded : null;
+  // "|| 0" turns a negative zero into zero, so it never reads as "-$0".
+  const net = known(oneTime) && known(recurring) && known(refunded) ? oneTime + recurring - refunded || 0 : null;
+  // Per visit: the funnel's own one-time sales less refunds, not renewals of people who came before the period.
+  const kept = known(oneTime) && known(refunded) ? oneTime - refunded : null;
   return {
     visits,
     signups,
@@ -63,14 +69,19 @@ export function funnelSummary(steps: StepCounts[], recurring: number | null, ref
     recurring: known(recurring) ? recurring : null,
     refunded: known(refunded) ? refunded : null,
     net,
-    averageOrder: known(oneTime) && known(sales) && sales > 0 ? Math.round(oneTime / sales) : null,
-    perVisit: net !== null && known(visits) && visits > 0 ? Math.round(net / visits) : null,
+    averageOrder: known(oneTime) && known(sales) && sales > 0 ? Math.floor(oneTime / sales) : null,
+    perVisit: kept !== null && kept >= 0 && known(visits) ? revenuePerTraffic(kept, visits, true) : null,
   };
 }
 
 /** A money figure as the panel shows it; unknown is said, never 0. */
 export function moneyWords(cents: number | null, currency: string): string {
   return cents === null ? "Unavailable" : formatMoney(cents, currency);
+}
+
+/** Revenue per visit as the panel shows it: a small amount stays visible, never rounded to $0 or up. */
+export function perVisitWords(value: number | null, currency: string): string {
+  return formatRevenuePerTraffic(value, currency);
 }
 
 /** A count as the panel shows it. */
@@ -86,12 +97,13 @@ export const SUMMARY_NOTES: Record<keyof FunnelSummary, string> = {
   oneTime: "What those payments brought, before refunds.",
   recurring: "Renewals of memberships that began in this funnel.",
   refunded: "Money given back on those sales and renewals.",
-  net: "One-time and recurring revenue, less refunds.",
+  net: "One-time and recurring revenue, less refunds. Below zero when refunds of earlier sales were more.",
   averageOrder: "One-time revenue divided by the number of sales.",
-  perVisit: "Net revenue divided by the first page's visitors.",
+  perVisit: "One-time revenue less refunds, divided by the first page's visitors. Not shown when refunds were more.",
 };
 
 export type PeriodChoice = { kind: "today" | "7" | "30" | "90" } | { kind: "range"; from: string; to: string };
+const DAYS_BACK: Record<string, number> = { "7": 7, "30": 30, "90": 90 };
 
 /** The offset of a time zone from UTC at a moment, in milliseconds. */
 function offsetMs(timeZone: string, at: number): number {
@@ -106,7 +118,12 @@ function startOfDay(day: string, timeZone: string): number {
   const guess = Date.UTC(y, m - 1, d);
   // Two passes: the offset at the guess, then at the result, so a change of clocks that day lands right.
   const first = guess - offsetMs(timeZone, guess);
-  return guess - offsetMs(timeZone, first);
+  let start = guess - offsetMs(timeZone, first);
+  // Where the clocks skip midnight itself (Santiago, Havana, Asunción), that instant is still the day before:
+  // the day starts at its first quarter hour that is in it, never more than a few hours on.
+  for (let step = 0; step < 16 && dayIn(timeZone, start) < day; step += 1) start += 15 * 60_000;
+  while (dayIn(timeZone, start - 15 * 60_000) === day) start -= 15 * 60_000;
+  return start;
 }
 
 /** Today's date in a time zone ("2026-11-01"). */
@@ -132,9 +149,14 @@ export function periodBounds(choice: PeriodChoice, timeZone: string, now = Date.
   }
   const end = startOfDay(addDays(today, 1), timeZone);
   if (choice.kind === "today") return { from: startOfDay(today, timeZone), to: end };
-  if (choice.kind !== "range") return { from: startOfDay(addDays(today, -(Number(choice.kind) - 1)), timeZone), to: end };
+  if (choice.kind !== "range") {
+    const back = DAYS_BACK[choice.kind];
+    if (!back) return null;
+    return { from: startOfDay(addDays(today, -(back - 1)), timeZone), to: end };
+  }
   const real = (d: string) => DAY.test(d) && addDays(d, 0) === d;
   if (!real(choice.from) || !real(choice.to) || choice.to < choice.from || choice.to > today) return null;
-  if (addDays(choice.from, 366) <= choice.to) return null;
+  // At most 365 days, the first and the last included.
+  if (addDays(choice.from, 365) <= choice.to) return null;
   return { from: startOfDay(choice.from, timeZone), to: startOfDay(addDays(choice.to, 1), timeZone) };
 }
