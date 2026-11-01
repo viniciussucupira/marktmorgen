@@ -34,5 +34,8 @@ for (const [file, question] of [
   const text = readFileSync(file, "utf8");
   is(`${file}: through ConfirmAction, saying what happens`, text.includes("<ConfirmAction") && text.includes(question), true);
 }
+const studio = readFileSync("app/studio/page.tsx", "utf8");
+is("disconnecting Stripe asks first, without scripts too", /<details[^>]*data-confirm-disconnect="stripe"[\s\S]{0,400}Disconnect Stripe\? Your store stops taking payments[\s\S]{0,200}Yes, disconnect/.test(studio), true);
+is("stopping PayPal asks first, without scripts too", /<details[^>]*data-confirm-disconnect="paypal"[\s\S]{0,400}Stop selling with PayPal\?[\s\S]{0,200}Yes, stop/.test(studio), true);
 is("the blog's delete no longer acts on its first press", /onClick=\{\(\) => void remove\(\)\}/.test(readFileSync("components/blog-editor.tsx", "utf8")), false);
 done();
