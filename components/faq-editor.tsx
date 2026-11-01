@@ -78,6 +78,9 @@ export function FaqEditor({ faq, ai }: { faq: FaqItem[]; ai: { on: boolean; left
           && item.q === expected[i].q && item.a === expected[i].a);
       if (response.ok && data.ok === true && data.error === undefined && matches) {
         toast(expected.length ? "Questions saved." : "Questions removed from your store page.");
+        // The rows as they were saved (tidied by the server's own reading), so nothing reads as unsaved after it.
+        setRows(expected.map((item, key) => ({ ...item, key })));
+        setNext(expected.length);
         router.refresh();
         return;
       }

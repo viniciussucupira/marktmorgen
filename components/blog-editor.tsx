@@ -47,6 +47,12 @@ export function BlogEditor({ post, products, back }: { post: EditedPost; product
   const [seen, setSeen] = useState(post);
   if (seen !== post) {
     setSeen(post);
+    // Just saved: take the post as the server kept it (it tidies spaces and blank lines), so nothing reads as unsaved.
+    if (done) {
+      setTitle(post.title);
+      setBody(post.body);
+      setProduct(post.product ?? "");
+    }
     setDone(false);
   }
 

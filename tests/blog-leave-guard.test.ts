@@ -11,5 +11,7 @@ is("unsaved means the title, the text or the product differ from the saved post"
 is("a save or a delete lets the page go without asking", (editor.match(/setDone\(true\);/g) ?? []).length, 2);
 is("and once the saved post comes back, its changes are guarded again", /if \(seen !== post\) \{\s*setSeen\(post\);\s*setDone\(false\);/.test(editor), true);
 const faq = readFileSync("components/faq-editor.tsx", "utf8");
+is("after a save, the editor takes the post as the server kept it, so a tidied space never reads as unsaved", /if \(done\) \{\s*setTitle\(post\.title\);\s*setBody\(post\.body\);\s*setProduct\(post\.product \?\? ""\);/.test(editor), true);
 is("the FAQ editor asks too, with its own measure of unsaved answers", faq.includes("useLeaveGuard(changed && !saving);") && faq.includes("const changed = JSON.stringify(rows.map"), true);
+is("and takes its rows as they were saved", faq.includes("setRows(expected.map((item, key) => ({ ...item, key })));"), true);
 done();
