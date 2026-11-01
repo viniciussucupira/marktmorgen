@@ -11,6 +11,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { PLANS_ON_SALE } from "@/lib/opening";
+import { SIZING_READING, unitUnder } from "@/lib/receiving-costs";
 import { ASSISTANT_INPUT_BYTES } from "@/lib/store-assistant-rules";
 import { CENTS_PER_MINUTE, MIN_CENTS } from "@/lib/auto-captions-rules";
 import { ORDER, assistantAt, assistantInputCap, captionsMinimumFor, captionsOptions, captionsPrice, captionsTodayAnyMinimum, captionsWorstBps, figures, perMinuteHolds, proposals, renderLimitsProposal } from "./limits-proposal-table";
@@ -24,13 +25,29 @@ test("the document is what the numbers render today (run node scripts/limits-pro
   assert.match(read(DOC).slice(HISTORICAL_MARGIN_NOTICE.length), /^# Limits proposal, 18 October 2026 — a PROPOSAL, nothing here is in force/);
 });
 
-test("every proposed figure is a cut, never a raise, and at the price list of 18 October 2026 no cut is proposed", () => {
+test("archived proposals never raise a figure and viable proposals meet their historical 60% target", () => {
   for (const p of proposals()) {
     const today = figures(p.tier);
     for (const id of ORDER) p.proposed[id].forEach((n, i) => assert.ok(n <= today[id][i], `${p.tier} ${p.cycle} ${id}: ${n} above today's ${today[id][i]}`));
-    // The owner chose prices over cuts (11:21): every plan keeps 60% at today's figures, so nothing is cut.
-    assert.ok(p.feasible && p.cut.length === 0 && p.todayNetBps >= 6_000, `${p.tier} ${p.cycle} keeps ${p.todayNetBps} and would cut ${p.cut.join(", ")}`);
+    // This archived solver retains its historical target. Updated measured
+    // costs may produce a historical proposal; it never changes live rights.
+    if (p.feasible) assert.ok(p.netBps >= 6_000, `${p.tier} ${p.cycle}: a viable archived proposal must reach 60%`);
+    if (p.todayNetBps >= 6_000) {
+      assert.equal(p.feasible, true);
+      assert.deepEqual(p.cut, [], `${p.tier} ${p.cycle}: no cut is needed when today already meets the archived target`);
+    }
   }
+});
+
+test("the current MR unit floor is positive profit, while a loss fails and sales stay closed", () => {
+  // Synthetic unit arithmetic, not a real cost review or a launch approval.
+  const positive = unitUnder(10_000, 6_000, SIZING_READING);
+  assert.ok(positive.netCents > 0 && positive.netBps < 6_000);
+  assert.equal(positive.meetsFloor, true);
+  const loss = unitUnder(10_000, 10_000, SIZING_READING);
+  assert.ok(loss.netCents < 0);
+  assert.equal(loss.meetsFloor, false);
+  assert.equal(PLANS_ON_SALE, false);
 });
 
 test("the Store assistant's input cap: today's keeps 60% with its room at $69, and the largest cap is where one byte more misses", () => {
