@@ -12,7 +12,8 @@
  *   fine     under half of the line on both counts
  *   watch    half of the line or more, in the number and in the share
  *   near     four fifths of the line or more, in the number and in the share
- *   over     at the line: the next send is paused (overTheLine)
+ *   over     at the line (overTheLine): the next bounce or spam report the
+ *            sender tells us about pauses the list's email
  *
  * Browser-safe: plain data and pure functions over the rules' own numbers.
  */
@@ -41,30 +42,42 @@ export function healthLevels(health: HealthCounts): { bounces: HealthLevel; comp
   return { bounces, complaints, worst, measure };
 }
 
-const share = (part: number, whole: number) => (whole > 0 ? `${((part / whole) * 100).toFixed(part / whole < 0.01 ? 2 : 1)}%` : "0%");
+/**
+ * A share as shown: rounded down at the place shown, so a rate just under a
+ * line never reads as the line itself, and "<0.01%" rather than 0% when
+ * there is one.
+ */
+export function shareWords(part: number, whole: number): string {
+  if (whole <= 0 || part <= 0) return "0%";
+  const percent = (part / whole) * 100;
+  const places = percent < 1 ? 2 : 1;
+  const floored = Math.floor(percent * 10 ** places) / 10 ** places;
+  return floored <= 0 ? "<0.01%" : `${floored.toFixed(places)}%`;
+}
 
-/** The last days' numbers, in a sentence. */
+/** The counted days' numbers, in a sentence that says what is counted. */
 export function healthLine(health: HealthCounts): string {
-  if (health.sent <= 0) return `No email went to your list in the last ${HEALTH_WINDOW_DAYS} days.`;
-  return `In the last ${HEALTH_WINDOW_DAYS} days: ${health.sent.toLocaleString("en-US")} sent, ${health.bounced.toLocaleString("en-US")} to addresses that do not exist (${share(health.bounced, health.sent)}), ${health.complained.toLocaleString("en-US")} reported as spam (${share(health.complained, health.sent)}).`;
+  const counted = `Email to your list, and the one email to buyers you brought over, in the last ${HEALTH_WINDOW_DAYS} days (counting starts again when a pause ends)`;
+  if (health.sent <= 0) return `${counted}: none sent.`;
+  return `${counted}: ${health.sent.toLocaleString("en-US")} sent, ${health.bounced.toLocaleString("en-US")} to addresses that do not exist (${shareWords(health.bounced, health.sent)}), ${health.complained.toLocaleString("en-US")} reported as spam (${shareWords(health.complained, health.sent)}).`;
 }
 
 /** What the level means and what to do, in plain words. */
 export function healthAdvice(level: HealthLevel, measure: HealthMeasure | null): { title: string; text: string } {
-  if (level === "fine" || !measure) return { title: "Your email is healthy", text: "Nothing to do. Keep writing to people who asked to hear from you." };
+  if (level === "fine" || !measure) return { title: "No pause coming", text: "Bounces and spam reports are well under the level that pauses email to your list." };
   const what =
     measure === "bounces"
       ? "Some of your emails go to addresses that do not exist. This usually comes from a list brought in from somewhere else."
       : "Some people mark your emails as spam. This usually means they did not expect to hear from you.";
   const fix =
     measure === "bounces"
-      ? "Before your next email, take off the list addresses you brought in long ago and never wrote to here."
+      ? "Before you bring in more addresses, check where they came from, and write only to people who asked to hear from you. An address that bounces for good is never written to again by itself."
       : "Write only to people who asked, say who you are at the top, and keep the unsubscribe link easy to find.";
-  if (level === "over") return { title: "Your next email to your list will pause", text: `${what} At this level, email to your list pauses for ${PAUSE_DAYS} days and then goes on by itself. ${fix}` };
+  if (level === "over") return { title: "At the level that pauses", text: `${what} The next bounce or spam report we hear about pauses email to your list for ${PAUSE_DAYS} days; it then goes on by itself. ${fix}` };
   if (level === "near") return { title: "Close to a pause", text: `${what} A little more and email to your list pauses for ${PAUSE_DAYS} days. ${fix}` };
-  return { title: "Worth a look", text: `${what} You are at half the level that pauses email to your list. ${fix}` };
+  return { title: "Worth a look", text: `${what} You are at half or more of the level that pauses email to your list. ${fix}` };
 }
 
-/** Said under the numbers: reports reach us only from providers that send them. */
+/** Said under the numbers: what reaches us, and what a pause does and does not stop. */
 export const HEALTH_NOTE =
-  "Spam reports reach us only from email providers that send them back to the sender, so a low number here is not a promise that nobody reported you. Login links, receipts and files are never paused.";
+  "Spam reports reach us only from email providers that send them back to the sender, so a low number here is not a promise that nobody reported you. Sign-in links and purchase receipts are never paused; while a pause lasts, email to your list, your sequences and the email to buyers you brought over wait.";

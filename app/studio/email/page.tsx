@@ -22,7 +22,7 @@ import { sellsSomething } from "@/lib/mail-starters";
 import { readFlowStatsStrict } from "@/lib/flow-stats";
 import { readFlowListStrict } from "@/lib/flow-list";
 import { inTrial, monthlyAllowance, usedThisMonth } from "@/lib/mail";
-import { healthId, listHealth, pauseWords, pausedFor } from "@/lib/mail-health";
+import { healthId, listHealth, pauseForSending, pauseWords, pausedFor } from "@/lib/mail-health";
 import { HEALTH_NOTE, healthAdvice, healthLevels, healthLine } from "@/lib/mail-health-levels";
 import { PRO_MONTHLY_EMAILS, PRO_ON_SALE, SCALE_MONTHLY_EMAILS, TRIAL_DAYS, TRIAL_MONTHLY_EMAILS, publishedPriceWords as priceWords, publishedYearSaving as yearSaving } from "@/lib/plan";
 import { EmailStudio } from "@/components/email-studio";
@@ -58,7 +58,7 @@ export default async function StudioEmailPage({ searchParams }: Params) {
   const { store } = view;
 
   const allowance = monthlyAllowance(store);
-  const [counts, used, loadedBroadcasts, loadedFlows, listings, loadedDrafts, pause, health] = await Promise.all([
+  const [counts, used, loadedBroadcasts, loadedFlows, listings, loadedDrafts, pause, health, confirmedPause] = await Promise.all([
     listCounts(store.listId),
     usedThisMonth(store.listId, windowId(store)),
     listBroadcastsStrict(store.listId).catch(() => null),
@@ -72,6 +72,9 @@ export default async function StudioEmailPage({ searchParams }: Params) {
     pausedFor(healthId(store)),
     // The same seven days the pause reads, said before it comes (599 [KB20], lib/mail-health-levels.ts).
     listHealth(healthId(store)).catch(() => null),
+    // Whether no pause is confirmed (null), unlike pausedFor, which says null when it could not read: the
+    // health section is shown only then, so a failed read never says "no pause coming" during a pause.
+    pauseForSending(healthId(store)).catch(() => undefined),
   ]);
   const levels = health ? healthLevels(health) : null;
   const advice = levels ? healthAdvice(levels.worst, levels.measure) : null;
@@ -184,9 +187,9 @@ export default async function StudioEmailPage({ searchParams }: Params) {
               </p>
             </div>
           ) : null}
-          {!pause && health && levels && advice ? (
+          {confirmedPause === null && health && levels && advice ? (
             <section aria-labelledby="mail-health-title" className="mt-8 rounded-[var(--r-md)] border border-line bg-white p-5 text-ink" data-mail-health={levels.worst}>
-              <h2 id="mail-health-title" className="font-semibold">{`Email health: ${advice.title}`}</h2>
+              <h2 id="mail-health-title" className="text-lg font-semibold">{`Email health: ${advice.title}`}</h2>
               <p className="mt-2 text-sm text-ink-soft">{healthLine(health)}</p>
               <p className="mt-2 text-sm">{advice.text}</p>
               <p className="mt-2 text-sm text-ink-soft">{HEALTH_NOTE}</p>
