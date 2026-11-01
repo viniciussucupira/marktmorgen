@@ -26,6 +26,8 @@ def main():
         # Unknown commands cannot silently disappear from the measured budget.
         result, counts = measured_command(client, lambda: client.command('EVAL', "return redis.call('DBSIZE')", 0))
         assert isinstance(result, int) and counts == {'eval': 1, 'dbsize': 1}, counts
+        result, counts = measured_command(client, lambda: client.command('EVAL', "return redis.call('INFO','commandstats')", 0))
+        assert isinstance(result, str) and counts == {'eval': 1, 'info': 1}, counts
         # A malformed probe is refused and never leaves this connection queued.
         refused = False
         try:
@@ -34,7 +36,7 @@ def main():
             refused = True
         assert refused, 'Missing application command must fail'
         assert client.command('PING') == 'PONG'
-        print('PASS: atomic INFO/EVAL/INFO excludes external PING, retains EVAL and every internal command; invalid probe leaves no transaction')
+        print('PASS: atomic INFO/EVAL/INFO excludes external PING, retains EVAL, internal PING/DBSIZE/INFO; invalid probe leaves no transaction')
     finally:
         client.close()
         noise.close()

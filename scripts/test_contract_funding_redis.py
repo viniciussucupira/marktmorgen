@@ -33,7 +33,12 @@ def measured_command(client, operation):
         assert isinstance(replies, list) and len(replies) == 3, 'Expected exactly one application command'
         before, after = counts(replies[0]), counts(replies[2])
         delta = {name: after.get(name, 0) - before.get(name, 0)
-                 for name in before.keys() | after.keys() if name != 'info'}
+                 for name in before.keys() | after.keys()}
+        # The first INFO completes after its snapshot, so exactly one
+        # observer INFO enters the delta; the final one completes afterward.
+        # Preserve any additional INFO executed by the application Lua.
+        assert delta.get('info', 0) >= 1, delta
+        delta['info'] -= 1
         assert all(value >= 0 for value in delta.values()), delta
         return replies[1], {name: value for name, value in delta.items() if value}
     finally:
