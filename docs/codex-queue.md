@@ -17377,6 +17377,7 @@ Contexto: o dono quer que os criadores possam vender qualquer produto físico l�
 
 513 [PF1] Produtos físicos no carrinho.
 Estado inicial: na fila.
+Andamento (Claude 2, 01/11/2026): unidade 1 **testada num PR** (ramo claude2/pf1-cart-shipping; arquivos reservados: lib/cart-shipping.ts, tests/cart-shipping.test.ts). A regra pura do carrinho com físicos: os países do endereço são os que todos os físicos atendem; quando nenhum é comum, o carrinho nomeia os produtos a tirar (nunca todos); o frete é a soma da tarifa de cada físico, como o criador definiu, para que nenhum seja enviado por menos (frete por quantidade e combinação são do 515 [PF3]). Próximas unidades: o carrinho aceitar físicos (lib/cart-rules.ts, cartable) e o checkout do carrinho usar esta regra, com o estoque reservado como em lib/stock.ts; variantes; e os físicos no estúdio para envio. O texto de lib/shipping.ts que diz que físicos não vão a carrinho muda junto com essa unidade.
 O que fazer: permita produtos físicos no carrinho existente, juntos entre si e com produtos digitais, numa única cobrança direta na conta Stripe do criador. A Stripe pede um único endereço, aceito só se estiver em país que todos os físicos do carrinho atendem; se um item não for enviado para lá, o carrinho diz qual é antes do pagamento. O estoque de cada variante é reservado como em lib/stock.ts; os digitais são entregues como hoje e os físicos aparecem no estúdio para envio.
 Testes automáticos, com Stripe simulado: carrinho misto, país não atendido, estoque reservado e devolvido.
 
