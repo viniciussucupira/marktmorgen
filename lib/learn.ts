@@ -30,7 +30,7 @@ import { saleHandles } from "@/lib/store";
 import { createHash, randomBytes } from "node:crypto";
 import { fileUrl } from "@/lib/file-store";
 import { EMAIL_PATTERN, MAX_EMAIL_LENGTH, SESSION_COOKIE, emailForSession, normaliseEmail } from "@/lib/auth";
-import { NIMBUS_FROM, sendEmail } from "@/lib/email";
+import { NIMBUS_FROM, sendEmail, serviceMailKnownUnavailable } from "@/lib/email";
 import { coursesWords } from "@/lib/buyer-words/courses";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { type DataStore, giveData, needData, noteData, takeData } from "@/lib/store-data";
@@ -708,6 +708,9 @@ export async function requestCourseLink(input: {
   const raw = input.email.trim();
   if (!raw || raw.length > MAX_EMAIL_LENGTH || !EMAIL_PATTERN.test(raw)) return "email";
   if (!isRedisConfigured() || !product.course) return "error";
+  // A global known refusal must not reveal course ownership or consume a link.
+  // False is unknown; the original rights and final sender checks still apply.
+  if (serviceMailKnownUnavailable()) return "error";
   if (!(await within(`nl:learn:rate:ip:${sha(`${ip}|${store.handle}`).slice(0, 32)}`, IP_LIMIT))) return "limited";
   if (!(await within(`nl:learn:rate:addr:${emailKey(raw)}`, ADDRESS_LIMIT))) return "limited";
 
@@ -718,6 +721,7 @@ export async function requestCourseLink(input: {
 
 /** Sends the link itself. Also used when a buyer pays in another browser. */
 export async function sendCourseLink(store: Store, product: Listing, email: string, origin: string): Promise<boolean> {
+  if (serviceMailKnownUnavailable()) return false;
   const token = randomBytes(32).toString("hex");
   const grant: LinkGrant = { e: normaliseEmail(email), k: storeKey(store), h: store.handle, p: product.id };
   await redisPipeline([["SET", linkKey(token), JSON.stringify(grant), "EX", LINK_SECONDS]]);
