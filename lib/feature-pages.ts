@@ -2478,6 +2478,7 @@ const BASE_FEATURE_PAGES: TopicPage[] = [
           { q: "What if I get an email about a change I did not make?", a: "Log in, choose “Log out of all devices” at the bottom of your studio, put the setting back, and reply to that email so we can help." },
           { q: "Who handles a refund?", a: "You do, in your own Stripe dashboard. What a full refund closes here happens by itself, read from Stripe." },
           { q: "Can I sign in with a password?", a: "No. There is no password to set, and none kept here to be stolen. Each link we email works once, for 15 minutes." },
+          { q: "How do I report a security problem?", a: "Email support@marktmorgen.com with what you found and how to see it, and a person answers by email. Please test only your own store and your own data. The same address is in our security.txt file, at marktmorgen.com/.well-known/security.txt, the standard place security researchers look." },
         ],
       },
     ],
