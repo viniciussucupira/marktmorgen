@@ -3,12 +3,13 @@ import { noticeCreator } from "@/lib/account-notice";
 import { ensureStatsId, storeForEmail } from "@/lib/store";
 import { guardStoreWrite, text } from "@/lib/store-request";
 import { WEBHOOK_TEST_PAUSED_WORDS, integrationPauseWord } from "@/lib/integration-pause";
-import { MAX_ENDPOINT_URL, addEndpoint, removeEndpoint, sendTest, setEndpointEvents, webhooksView } from "@/lib/webhooks";
+import { MAX_ENDPOINT_URL, addEndpoint, removeEndpoint, rotateSecret, sendTest, setEndpointEvents, webhooksView } from "@/lib/webhooks";
 
 /**
  * The creator's webhook endpoints: add one (its signing secret comes back in
- * this answer and never again), change which events it hears, remove it, or
- * send it a test message now.
+ * this answer and never again), change which events it hears, replace its
+ * secret (the old one keeps signing for a day), remove it, or send it a test
+ * message now.
  */
 export async function POST(request: NextRequest) {
   const guarded = await guardStoreWrite(request, "settings");
@@ -36,6 +37,12 @@ export async function POST(request: NextRequest) {
       if (result === "events") return Response.json({ ok: false, error: "events" }, { status: 400 });
       if (result === "missing") return Response.json({ ok: false, error: "missing" }, { status: 404 });
       return Response.json({ ok: true, view: result });
+    }
+    if (action === "rotate") {
+      // 378 [TB4]: a new secret, shown this once; the old one signs beside it for a day.
+      const result = await rotateSecret(store, id);
+      if (!result.ok) return Response.json({ ok: false, error: result.reason }, { status: 404 });
+      return Response.json({ ok: true, secret: result.secret, oldSecretUntil: result.oldSecretUntil, view: result.view });
     }
     if (action === "remove") {
       const before = (await webhooksView(store)).endpoints.find((e) => e.id === id);

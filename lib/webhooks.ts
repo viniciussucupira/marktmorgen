@@ -103,7 +103,16 @@ const MAX_RETRIES_PER_RUN = 100;
 const EVENT_SECONDS = 30 * 86400;
 const DELIVERY_SECONDS = 7 * 86400;
 
-type Endpoint = { id: string; url: string; secret: string; events: WebhookEvent[]; addedAt: string };
+/**
+ * An endpoint. `previous` is the secret it had before the creator replaced
+ * it (378 [TB4]), kept only until `previousUntil` (milliseconds): until then
+ * every message carries a signature under each, so a receiver still holding
+ * the old secret keeps accepting while the creator moves it to the new one.
+ */
+type Endpoint = { id: string; url: string; secret: string; events: WebhookEvent[]; addedAt: string; previous?: string; previousUntil?: number };
+
+/** How long the old secret still signs after it is replaced: one day, then it is gone. */
+export const ROTATION_HOURS = 24;
 type Config = { handle: string; endpoints: Endpoint[]; since: number };
 
 export type Delivery = {
@@ -143,6 +152,15 @@ function isEvent(value: unknown): value is WebhookEvent {
   return typeof value === "string" && (WEBHOOK_EVENTS as readonly string[]).includes(value);
 }
 
+/** An endpoint with its old secret dropped once its day is over, or when it was never well formed. */
+function withoutStalePrevious(endpoint: Endpoint, now = Date.now()): Endpoint {
+  const { previous, previousUntil, ...rest } = endpoint;
+  if (typeof previous === "string" && previous && typeof previousUntil === "number" && Number.isFinite(previousUntil) && previousUntil > now) {
+    return { ...rest, previous, previousUntil };
+  }
+  return rest;
+}
+
 function parseConfig(raw: unknown): Config | null {
   if (typeof raw !== "string" || !raw) return null;
   try {
@@ -150,7 +168,7 @@ function parseConfig(raw: unknown): Config | null {
     const endpoints = Array.isArray(value.endpoints)
       ? value.endpoints
           .filter((e): e is Endpoint => Boolean(e) && typeof e.id === "string" && ENDPOINT_ID_PATTERN.test(e.id) && typeof e.url === "string" && typeof e.secret === "string")
-          .map((e) => ({ ...e, events: Array.isArray(e.events) ? e.events.filter(isEvent) : [] }))
+          .map((e) => withoutStalePrevious({ ...e, events: Array.isArray(e.events) ? e.events.filter(isEvent) : [] }))
       : [];
     return {
       handle: typeof value.handle === "string" ? value.handle : "",
@@ -207,6 +225,20 @@ export function eventIdFor(statsId: string, type: string, seed: string): string 
 export function signature(secret: string, timestamp: number, body: string): string {
   const hex = createHmac("sha256", secret).update(`${timestamp}.${body}`).digest("hex");
   return `t=${timestamp},v1=${hex}`;
+}
+
+/**
+ * The header an endpoint's message carries: one v1 under its secret and,
+ * while a replaced secret's day lasts, a second v1 under the old one, as
+ * Stripe does during its own secret rolls. A receiver that accepts any v1 its
+ * secret matches works with either, so nothing is refused mid-change, and a
+ * retry still waiting when the secret is replaced goes out signed with both.
+ */
+export function signatureFor(endpoint: Pick<Endpoint, "secret" | "previous" | "previousUntil">, timestamp: number, body: string, now = Date.now()): string {
+  const header = signature(endpoint.secret, timestamp, body);
+  if (!endpoint.previous || typeof endpoint.previousUntil !== "number" || endpoint.previousUntil <= now) return header;
+  const old = createHmac("sha256", endpoint.previous).update(`${timestamp}.${body}`).digest("hex");
+  return `${header},v1=${old}`;
 }
 
 // ---- Sending ----------------------------------------------------------------
@@ -267,7 +299,7 @@ async function attempt(delivery: Delivery, endpoint: Endpoint | undefined, store
         "Marktmorgen-Event-Type": delivery.type,
         "Marktmorgen-Delivery-Id": delivery.id,
         "Marktmorgen-Timestamp": String(timestamp),
-        "Marktmorgen-Signature": signature(endpoint.secret, timestamp, delivery.body),
+        "Marktmorgen-Signature": signatureFor(endpoint, timestamp, delivery.body, now),
       },
       ...(hooksForTests.fetch ?? {}),
     });
@@ -433,7 +465,8 @@ export async function deliverDue(deadline: number, now = Date.now()): Promise<{ 
 
 // ---- The studio ---------------------------------------------------------------
 
-export type EndpointView = { id: string; where: string; events: WebhookEvent[]; addedAt: string };
+/** What the studio sees of an endpoint: never a secret, only until when the old one still signs. */
+export type EndpointView = { id: string; where: string; events: WebhookEvent[]; addedAt: string; oldSecretUntil?: string };
 export type DeliveryView = Pick<Delivery, "id" | "eventId" | "type" | "state" | "attempts" | "next" | "lastStatus" | "lastError" | "lastAt" | "createdAt" | "notSentPaused"> & {
   endpoint: string;
 };
@@ -465,7 +498,13 @@ export async function webhooksView(store: Store): Promise<WebhooksView> {
   const deliveries = ids.length ? await redisPipeline(ids.map((id) => ["GET", deliveryKey(id)])) : [];
   const names = new Map((config?.endpoints ?? []).map((e) => [e.id, shortAddress(e.url)]));
   return {
-    endpoints: (config?.endpoints ?? []).map((e) => ({ id: e.id, where: shortAddress(e.url), events: e.events, addedAt: e.addedAt })),
+    endpoints: (config?.endpoints ?? []).map((e) => ({
+      id: e.id,
+      where: shortAddress(e.url),
+      events: e.events,
+      addedAt: e.addedAt,
+      ...(e.previous && e.previousUntil ? { oldSecretUntil: new Date(e.previousUntil).toISOString() } : {}),
+    })),
     log: deliveries
       .map(parseDelivery)
       .filter((d): d is Delivery => d !== null)
@@ -582,6 +621,28 @@ export async function setEndpointEvents(store: Store, id: string, events: unknow
   const next: Config = { ...config, handle: store.handle, endpoints: config.endpoints.map((e) => (e.id === id ? { ...e, events: chosen } : e)) };
   await redisPipeline([["SET", cfgKey(store.statsId), JSON.stringify(next)]]);
   return webhooksView(store);
+}
+
+export type RotateSecretResult = { ok: true; secret: string; oldSecretUntil: string; view: WebhooksView } | { ok: false; reason: "missing" };
+
+/**
+ * Replaces an endpoint's signing secret (378 [TB4]). The new one is made here
+ * and returned this once, like the first; the one it replaces keeps signing
+ * beside it for ROTATION_HOURS, so the creator has a day to paste the new one
+ * into the receiver, and then is dropped. Replacing it again within that day
+ * keeps only the newest two: the oldest stops at once. No delivery is sent or
+ * counted, and no new work is made, so it never waits on a plan's allowance.
+ */
+export async function rotateSecret(store: Store, id: string, now = Date.now()): Promise<RotateSecretResult> {
+  if (!store.statsId) return { ok: false, reason: "missing" };
+  const config = await readConfig(store.statsId);
+  const endpoint = config?.endpoints.find((e) => e.id === id);
+  if (!config || !endpoint) return { ok: false, reason: "missing" };
+  const secret = `whsec_${randomBytes(24).toString("base64url")}`;
+  const previousUntil = now + ROTATION_HOURS * 3_600_000;
+  const endpoints = config.endpoints.map((e) => (e.id === id ? { ...e, secret, previous: endpoint.secret, previousUntil } : withoutStalePrevious(e, now)));
+  await redisPipeline([["SET", cfgKey(store.statsId), JSON.stringify({ ...config, handle: store.handle, endpoints })]]);
+  return { ok: true, secret, oldSecretUntil: new Date(previousUntil).toISOString(), view: await webhooksView(store) };
 }
 
 /** Removes an endpoint. Anything still waiting to be sent to it is dropped at its next try. */
