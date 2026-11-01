@@ -5,8 +5,29 @@ import {assessCustomerWorstCase} from '@/lib/net-margin-rules';
 import {takeRestartRecovery,restartSubmissionOpenNow,recordRestartResult,armRestartSubmission,ownedRestartIntentFromAcknowledgement,claimRestartIntent,activateCheckoutContract,activateSwitchContract,type CheckoutContractActivation,reserveContractFunding,reserveSwitchContractFunding,reserveRestartContractFunding} from '@/lib/contract-funding';
 import {contractFixture} from './contract-funding-fixture';
 import {reset,seed,ledger,calls,settings} from './contract-funding-redis';
+import {txCustomerFixture} from './customer-tax-review-fixture';
+import {CUSTOMER_COST_CATEGORIES} from '@/lib/net-margin-rules';
 const key='nl:contract-reserve:v1';
 function start(){reset();const f=contractFixture(),config=contractFundingConfiguration(f.policy,f.context,f.now)!;assert.ok(config);seed(config);return {...f,config};}
+test('contract cash retains the complete TX ceiling and invalid fiscal evidence cannot receive a grant',()=>{
+ const f=contractFixture();
+ for(const key of CONTRACT_KEYS){
+  const scenario=(key+'_full') as keyof typeof f.review.scenarios,old=f.review.scenarios[scenario]!;
+  const gross=old.collectedRevenueCents!,cost=CUSTOMER_COST_CATEGORIES.reduce((n,k)=>n+old.costCeilings[k]!,0);
+  const months=key.endsWith('_year')?12:1;
+  const tx=txCustomerFixture(gross,cost,{scenario,from:'2026-01-01',through:months===12?'2027-01-01':'2026-02-01',months});
+  tx.costCeilings={...old.costCeilings};f.review.scenarios[scenario]=tx;
+ }
+ f.policy.reservedFundsCents=1e12;f.policy.financialSnapshot=canonicalFinancialSnapshot(f.review)!;
+ const before=contractFundingConfiguration(f.policy,f.context,f.now);assert.ok(before);
+ f.review.scenarios.creator_month_full!.taxesCeilingCents!+=317;
+ f.policy.financialSnapshot=canonicalFinancialSnapshot(f.review)!;
+ const more=contractFundingConfiguration(f.policy,f.context,f.now);assert.ok(more);
+ assert.equal(more.grantCents.creator_month-before.grantCents.creator_month,317);
+ f.review.scenarios.creator_month_full!.taxReview!.coverage.source='';
+ f.policy.financialSnapshot=canonicalFinancialSnapshot(f.review)!;
+ assert.equal(contractFundingConfiguration(f.policy,f.context,f.now),null);
+});
 test('annual coverage funds twelve paid months plus the reviewed tail and repeated pause bounds',()=>{assert.equal(contractCoverageDays('month',60),167);assert.equal(contractCoverageDays('year',60),570);assert.equal(contractCoverageDays('year',null as unknown as number),null);assert.equal(contractCoverageDays('month',59),null);});
 test('last admitted monthly and annual obligations keep full coverage after the maximum activation delay',()=>{
  for(const cycle of ['month','year'] as const){
