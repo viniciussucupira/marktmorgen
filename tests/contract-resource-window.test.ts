@@ -18,6 +18,19 @@ async function setup(cycle:'month'|'year'='month',options:{admissionMs?:number;d
  const store={statsId,tier:'creator' as const,cycle,subscriptionId:'sub_ResourceWindow001',subscriptionActive:true,trialEnds:0,planEndedAt:'',period:{start:created,end,renews:true,funded:true as const}};
  return{...f,config,store,h:ledger.get(ledgerKey)!};
 }
+test('paid resource clones cannot discard original fiscal presence or hidden executable evidence',async()=>{
+ let reads=0;
+ for(const field of ['taxReview','taxContext'])for(const kind of ['hidden','getter','inherited','proxy']){
+  const f=await setup(),row=f.review.scenarios.creator_month_full!,before=[...f.h],count=calls.length;
+  if(kind==='inherited')Object.setPrototypeOf(row,{[field]:null});
+  else Object.defineProperty(row,field,kind==='getter'?{enumerable:false,get(){reads++;throw Error('must not execute');}}:{value:null,enumerable:false,configurable:true});
+  if(kind==='proxy')f.review.scenarios.creator_month_full=new Proxy(row,{has(){return false;}});
+  assert.equal(await reservePaidResourceWindow(f.store,f.policy,f.context),false);
+  assert.equal(calls.length,count);assert.deepEqual([...f.h],before);
+  assert.equal(f.h.has('resource:ctr_resources:0'),false);
+ }
+ assert.equal(reads,0);
+});
 test('64 resource observations share one paid monthly cohort and retain every cent, grant and slot',async()=>{
  const f=await setup(),before=new Map(f.h);
  assert.equal((await Promise.all(Array.from({length:64},()=>reservePaidResourceWindow(f.store,f.policy,f.context)))).every(Boolean),true);

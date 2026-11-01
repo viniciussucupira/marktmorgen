@@ -82,6 +82,22 @@ test('cash reserve includes the full published refund principal without reducing
 test('one cent under aggregate grants or a quote covering only the paid year cannot approve',()=>{let f=contractFixture();f.policy.reservedFundsCents--;assert.equal(contractFundingConfiguration(f.policy,f.context,f.now),null);f=contractFixture();f.policy.liabilitiesThrough=new Date(Date.parse(f.policy.admissionsUntil)+365*86400000).toISOString();assert.equal(contractFundingConfiguration(f.policy,f.context,f.now),null);f=contractFixture();f.policy.allTermCostsAndLiabilitiesBounded=false;assert.equal(contractFundingConfiguration(f.policy,f.context,f.now),null);});
 test('new trial obligations and missing fixed costs cannot disappear from the quote',()=>{let f=contractFixture();f.policy.fundedGrants.creator_month++;f.policy.reservedFundsCents+=100000;assert.equal(contractFundingConfiguration(f.policy,f.context,f.now),null);f=contractFixture();f.review.companyBase!.monthlyFixedCostsCeilingCents=null;f.policy.financialSnapshot=canonicalFinancialSnapshot(f.review)!;assert.equal(contractFundingConfiguration(f.policy,f.context,f.now),null);});
 test('canonical review binding refuses accessors, cycles, changed costs and expired admission',()=>{const f=contractFixture();let reads=0;Object.defineProperty(f.policy,'reservedFundsCents',{get(){reads++;return 1e12;}});assert.equal(contractFundingConfiguration(f.policy,f.context,f.now),null);assert.equal(reads,0);const cyclic:{self?:unknown}={};cyclic.self=cyclic;assert.equal(canonicalFinancialSnapshot(cyclic),null);const g=contractFixture();g.review.scenarios.creator_month_full!.costCeilings.other!++;assert.equal(contractFundingConfiguration(g.policy,g.context,g.now),null);const h=contractFixture();h.policy.admissionsUntil=new Date(h.now.getTime()-1).toISOString();assert.equal(contractFundingConfiguration(h.policy,h.context,h.now),null);});
+test('canonical snapshots preserve exact enumerable legacy bytes and refuse any information loss',()=>{
+ assert.equal(canonicalFinancialSnapshot({z:[3,true,null,{y:'two',a:1}],a:'first'}),'{"a":"first","z":[3,true,null,{"a":1,"y":"two"}]}');
+ let reads=0;
+ for(const kind of ['hidden-data','hidden-getter','array-extra']){
+  const value=kind==='array-extra'?[1,2]:{nested:{}};
+  const target=Array.isArray(value)?value:value.nested;
+  Object.defineProperty(target,'extra',kind==='hidden-getter'?{enumerable:false,get(){reads++;throw Error('must not execute');}}:{value:null,enumerable:kind==='array-extra'});
+  assert.equal(canonicalFinancialSnapshot(value),null);
+ }
+ for(const field of ['taxReview','taxContext']){
+  assert.equal(canonicalFinancialSnapshot(Object.create({[field]:null})),null);
+  const raw={safe:1,[field]:null};
+  assert.equal(canonicalFinancialSnapshot(new Proxy(raw,{ownKeys(t){return Reflect.ownKeys(t).filter(key=>key!==field);},has(){return false;}})),null);
+ }
+ assert.equal(reads,0);
+});
 test('64 concurrent stores cannot reuse two funded grant slots',async()=>{const f=start();const results=await Promise.all(Array.from({length:64},(_,i)=>reserveContractFunding('store'+i,'creator','month','checkout',f.policy,f.context,'ctr_'+i)));assert.equal(results.filter(Boolean).length,2);assert.equal(ledger.get(key)?.get('reserved'),String(f.config.grantCents.creator_month*2));assert.equal(ledger.get(key)?.get('slots:creator_month'),'0');});
 test('one pending store cannot open concurrent obligations under different grant IDs',async()=>{const f=start();const results=await Promise.all(Array.from({length:64},(_,i)=>reserveContractFunding('one','creator','month','checkout',f.policy,f.context,'ctr_'+i)));assert.equal(results.filter(Boolean).length,1);assert.equal(ledger.get(key)?.get('reserved'),String(f.config.grantCents.creator_month));assert.equal(await reserveContractFunding('one','creator','year','switch',f.policy,f.context,'ctr_other'),null);});
 test('lost acknowledgement retains cash, slot, nonce and pending store lock',async()=>{const f=start();settings({lostAck:true});assert.equal(await reserveContractFunding('one','creator','year','checkout',f.policy,f.context,'ctr_lost'),null);assert.equal(ledger.get(key)?.get('reserved'),String(f.config.grantCents.creator_year));settings({lostAck:false});assert.equal(await reserveContractFunding('one','creator','year','checkout',f.policy,f.context,'ctr_retry'),null);assert.equal(await reserveContractFunding('two','creator','year','checkout',f.policy,f.context,'ctr_lost'),null);assert.equal(ledger.get(key)?.get('slots:creator_year'),'1');});

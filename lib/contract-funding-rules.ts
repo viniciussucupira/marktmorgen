@@ -38,12 +38,25 @@ export function canonicalFinancialSnapshot(value:unknown):string|null {
   if(typeof v==='number')return Number.isSafeInteger(v)?String(v):null;
   if(!v||typeof v!=='object'||active.has(v))return null;
   const proto=Object.getPrototypeOf(v);if(!Array.isArray(v)&&proto!==Object.prototype&&proto!==null)return null;
-  if(Object.getOwnPropertySymbols(v).length)return null;
+  const keys=Reflect.ownKeys(v);if(keys.some(key=>typeof key!=='string'))return null;
+  // A snapshot must not turn original fiscal presence into legacy absence.
+  // Read known descriptors even when a Proxy omits them from ownKeys.
+  for(const name of ['taxReview','taxContext']){
+   const d=Object.getOwnPropertyDescriptor(v,name);
+   if(d?!keys.includes(name):name in v)return null;
+  }
+  const descriptors=new Map<string,PropertyDescriptor>();
+  for(const key of keys as string[]){
+   const d=Object.getOwnPropertyDescriptor(v,key);
+   if(!d||!Object.hasOwn(d,'value')||(!d.enumerable&&!(Array.isArray(v)&&key==='length')))return null;
+   descriptors.set(key,d);
+  }
   active.add(v);let result:string|null=null;
   if(Array.isArray(v)){
-   const parts:string[]=[];for(let i=0;i<v.length;i++){const d=Object.getOwnPropertyDescriptor(v,String(i));if(!d||!Object.hasOwn(d,'value')){active.delete(v);return null;}const part=encode(d.value,depth+1);if(part===null){active.delete(v);return null;}parts.push(part);}result='['+parts.join(',')+']';
+   const length=descriptors.get('length')?.value;if(!Number.isSafeInteger(length)||length<0||keys.length!==length+1){active.delete(v);return null;}
+   const parts:string[]=[];for(let i=0;i<length;i++){const d=descriptors.get(String(i));if(!d||!Object.hasOwn(d,'value')){active.delete(v);return null;}const part=encode(d.value,depth+1);if(part===null){active.delete(v);return null;}parts.push(part);}result='['+parts.join(',')+']';
   }else{
-   const parts:string[]=[];for(const key of Object.keys(v).sort()){const d=Object.getOwnPropertyDescriptor(v,key);if(!d||!Object.hasOwn(d,'value')){active.delete(v);return null;}const part=encode(d.value,depth+1);if(part===null){active.delete(v);return null;}parts.push(JSON.stringify(key)+':'+part);}result='{'+parts.join(',')+'}';
+   const parts:string[]=[];for(const key of (keys as string[]).sort()){const d=descriptors.get(key);if(!d||!Object.hasOwn(d,'value')){active.delete(v);return null;}const part=encode(d.value,depth+1);if(part===null){active.delete(v);return null;}parts.push(JSON.stringify(key)+':'+part);}result='{'+parts.join(',')+'}';
   }
   active.delete(v);return result;
  }
