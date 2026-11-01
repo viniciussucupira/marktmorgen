@@ -299,7 +299,8 @@ export function FormsEditor({ saved, products, exportBase, dealStages = [], sid 
                     {field.options.map((option, k) => (
                       <div key={option.id} className="flex flex-wrap items-center gap-2">
                         {/* A visible name of its own, not a placeholder that goes when typing starts (487 [IT4], item 4). */}
-                        <label className="flex min-w-0 flex-1 items-center gap-2">
+                        {/* The whole line on a phone, so its name and field are never squeezed by the controls beside them. */}
+                        <label className="flex min-w-0 basis-full items-center gap-2 sm:basis-0 sm:flex-1">
                           <span className="shrink-0 text-sm text-ink-soft">{`Option ${k + 1}`}</span>
                           <input
                             className="field min-w-0 flex-1"

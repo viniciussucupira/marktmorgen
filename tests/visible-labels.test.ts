@@ -23,4 +23,6 @@ is("a custom field's name too, and the list is named by its visible heading", /<
 const team = readFileSync("components/team-event-editor.tsx", "utf8");
 const call = readFileSync("components/call-editor.tsx", "utf8");
 is("a day's opening hours keep a spoken name that starts with the day and the word shown beside them", team.includes("aria-label={`${host.email}, ${name}, stretch ${index + 1}, from`}") && call.includes("aria-label={`${name}, stretch ${index + 1}, from`}"), true);
+is("on a phone a stage's or an option's name and field take the whole line, never squeezed by the controls beside them", (deals.match(/basis-full items-center gap-2 sm:basis-0 sm:flex-1/g) ?? []).length === 1 && (forms.match(/basis-full items-center gap-2 sm:basis-0 sm:flex-1/g) ?? []).length === 1, true);
+is("a custom field's kind and button line up with its field, not with its name", deals.includes("sm:grid-cols-[minmax(0,1fr)_12rem_auto] sm:items-end"), true);
 done();

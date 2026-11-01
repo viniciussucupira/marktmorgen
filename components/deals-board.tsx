@@ -442,7 +442,8 @@ export function DealsBoard({ deals, stages: everyStage, pipelines: savedPipeline
                 {pipelineDraft.stages.map((stage, i) => (
                   <li key={stage.id} className="flex flex-wrap items-center gap-2">
                     {/* A visible name of its own (487 [IT4], item 4). */}
-                    <label className="flex min-w-0 flex-1 items-center gap-2">
+                    {/* The whole line on a phone, so its name and field are never squeezed by the controls beside them. */}
+                    <label className="flex min-w-0 basis-full items-center gap-2 sm:basis-0 sm:flex-1">
                       <span className="shrink-0 text-sm text-ink-soft">{`Stage ${i + 1}`}</span>
                       <input className="field min-w-0 flex-1" maxLength={MAX_STAGE_NAME} value={stage.name} onChange={(e) => setPipelineDraft({ ...pipelineDraft, stages: pipelineDraft.stages.map((s, j) => (j === i ? { ...s, name: e.target.value } : s)) })} />
                     </label>
@@ -536,7 +537,7 @@ export function DealsBoard({ deals, stages: everyStage, pipelines: savedPipeline
             {/* Named by its visible heading, "Your fields", rather than a name only a screen reader hears. */}
             <ol className="space-y-3">
               {fieldDraft.map((field, i) => (
-                <li key={field.id} className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_12rem_auto]">
+                <li key={field.id} className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_12rem_auto] sm:items-end">
                   <label className="block min-w-0">
                     <span className="text-sm text-ink-soft">{`Field ${i + 1}`}</span>
                     <input className="field mt-1" maxLength={MAX_FIELD_NAME} placeholder="Company" value={field.name} onChange={(e) => setFieldDraft(fieldDraft.map((f, j) => (j === i ? { ...f, name: e.target.value } : f)))} />
