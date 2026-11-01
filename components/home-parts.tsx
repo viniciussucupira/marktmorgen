@@ -1,4 +1,5 @@
 import { AI_MONTHLY } from "@/lib/ai-rules";
+import { weeklyReachShort } from "@/lib/email-equivalence";
 import { ANSWERS_MONTHLY } from "@/lib/answers-rules";
 import { MAX_OPTIONS } from "@/lib/product-option";
 import { Suspense } from "react";
@@ -182,7 +183,8 @@ function planFigures(tier: Tier): { included: string[]; notOnPlan: string[] } {
   const included = [`${n(VISITS_INCLUDED[tier])} visits a month`, `${n(ORDERS_INCLUDED[tier])} orders a month`];
   // What a plan does not have is said plainly, without the check mark of what it has (243 [CF6], 31/10 complement).
   const notOnPlan: string[] = [];
-  if (emails > 0) included.push(`${n(emails)} list emails a month`);
+  // 459 [EL3]: what the number is enough for, worked out from it (lib/email-equivalence.ts), never typed.
+  if (emails > 0) included.push(`${n(emails)} list emails a month: ${weeklyReachShort(emails)}`);
   else notOnPlan.push("email to your list");
   if (AI_MONTHLY[tier] > 0) included.push(`${n(AI_MONTHLY[tier])} AI writing jobs and ${n(ANSWERS_MONTHLY[tier])} visitor answers a month`);
   else notOnPlan.push("AI writing");
