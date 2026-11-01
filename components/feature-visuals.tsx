@@ -50,7 +50,8 @@ export type VisualKey =
   | "team"
   | "emailPlatforms"
   | "stamp"
-  | "ways";
+  | "ways"
+  | "phone";
 
 /*
  * The frame every one of these mockups sits in.
@@ -892,6 +893,47 @@ function WaysVisual() {
   );
 }
 
+/** The studio's "This device" card (components/phone-alerts-panel.tsx): notifications on, what to tell this device about, and a test. */
+function PhoneVisual() {
+  const kinds = [
+    { label: "Sales", hint: "Every paid order: the amount and what was bought", on: true },
+    { label: "Bookings", hint: "A call or a seat booked: what, when, and what was paid", on: true },
+    { label: "Community reports", hint: "A member reported a post or a comment", on: true },
+    { label: "Live events", hint: "A community live event starts in 15 minutes", on: false },
+  ];
+  return (
+    <Window bar="Phone notifications">
+      <div className="space-y-3 p-5">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="text-[13px] font-bold text-ink">This device</p>
+          <span className="tag tag-live">Notifications on</span>
+        </div>
+        <p className="text-[12px] font-semibold text-ink-soft">Tell this device about</p>
+        <ul className="min-w-0 space-y-2">
+          {kinds.map((k) => (
+            <li key={k.label} className="flex items-start gap-2 text-[12.5px]">
+              <span className={`mt-0.5 grid h-3.5 w-3.5 shrink-0 place-items-center rounded-[3px] ${k.on ? "bg-violet-brand text-white" : "border border-line-strong"}`}>
+                {k.on ? <Icon name="check" size={10} strokeWidth={3} /> : null}
+              </span>
+              <span className="min-w-0">
+                <span className="block font-semibold text-ink">{k.label}</span>
+                <span className="block break-words text-[11.5px] text-ink-soft">{k.hint}</span>
+              </span>
+            </li>
+          ))}
+        </ul>
+        <div className="flex flex-wrap gap-2">
+          <span className="btn btn-primary btn-sm pointer-events-none">
+            <Icon name="phone" size={14} />
+            Send a test
+          </span>
+          <span className="btn btn-secondary btn-sm pointer-events-none">Turn off on this device</span>
+        </div>
+      </div>
+    </Window>
+  );
+}
+
 const CAPTIONS: Record<VisualKey, string> = {
   store: "A store page, drawn from the demo store you can open and buy from.",
   options: "The buyer is charged the price they picked, as the creator saved it.",
@@ -918,6 +960,7 @@ const CAPTIONS: Record<VisualKey, string> = {
   emailPlatforms: "Connecting an email platform in the studio, before anything is connected. The platform picked is an example.",
   stamp: "A page of a stamped PDF, with the line every page carries, and the product's switch in the studio. The workbook, the buyer and the order are made up as an example.",
   ways: "Ways to pay in the studio. Which ways show depends on what is switched on in each creator's own Stripe account; these are an example.",
+  phone: "Phone notifications in the studio, as a Support team member sees them: each person is offered only what their role may hear. The choices checked are an example.",
 };
 
 /**
@@ -952,6 +995,7 @@ export function FeatureVisual({ visual, tone = "dark" }: { visual: VisualKey; to
     emailPlatforms: <EmailPlatformsVisual />,
     stamp: <StampVisual />,
     ways: <WaysVisual />,
+    phone: <PhoneVisual />,
   }[visual];
   const interactive = visual === "options" || visual === "checkout";
   return (
