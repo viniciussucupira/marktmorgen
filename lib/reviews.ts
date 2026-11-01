@@ -16,9 +16,11 @@
  *     The buyer can change it or delete it, through the same doors.
  *   - Stars from 1 to 5 and up to 1,000 characters, with the name the buyer
  *     chooses to show (or "Verified buyer"). Their email is never shown.
- *   - The creator can answer in public, and can hide a review. They cannot
- *     change a word of it, and there is no field for anything given in
- *     return for writing one.
+ *   - The creator can answer in public, and can hide a review only for one of
+ *     the review rules (HIDE_REASONS: private information, abuse, not about
+ *     the product, clearly false, unlawful), the same for every rating; the
+ *     reason is kept with it. They cannot change a word of it, and there is
+ *     no field for anything given in return for writing one.
  *   - Hiding takes a review's words off the page, never its stars out of the
  *     average: the average and the count include hidden reviews, and the
  *     page says how many are hidden ("2 reviews hidden by the creator"). So
@@ -26,8 +28,7 @@
  *   - A refund in full marks the review "refunded" and takes its stars out of
  *     the average and the count, because it no longer comes from a buyer who
  *     kept what they paid for. Its words stay, marked as such.
- *   - Stars show only when at least one review is on the page and at least
- *     one counts. New reviews go live at once; the creator's queue in the
+ *   - Stars show when at least one review counts, hidden or not. New reviews go live at once; the creator's queue in the
  *     studio lists what arrived since they last looked.
  *
  * Records in Redis, all under the store's statsId:
@@ -58,6 +59,8 @@ import {
   type ReviewPhoto,
   type Summary,
   summarise,
+  type HideReason,
+  isHideReason,
 } from "@/lib/review-summary";
 import { parseProductImage } from "@/lib/product-image";
 
@@ -159,6 +162,7 @@ export function parseReview(raw: unknown): Review | null {
       createdAt: Number(value.createdAt) || 0,
       editedAt: Number(value.editedAt) || 0,
       hidden: value.hidden === true,
+      hiddenReason: value.hidden === true && isHideReason(value.hiddenReason) ? value.hiddenReason : null,
       refunded: value.refunded === true,
       reply: reply && reply.text ? reply : null,
       photo: parseReviewPhoto(value.photo),
@@ -343,6 +347,7 @@ export async function saveReview(statsId: string, input: SaveInput, room: DataSt
       createdAt: before?.createdAt || now,
       editedAt: before ? now : 0,
       hidden: before?.hidden ?? false,
+      hiddenReason: before?.hiddenReason ?? null,
       refunded: false,
       reply: before?.reply ?? null,
       // A photo stays through an edit; it is added or taken off by setReviewPhoto.
@@ -431,8 +436,15 @@ export async function setReviewPhoto(statsId: string, productId: string, id: str
   return typeof done === "string" ? done : { review: done, removed };
 }
 
-export function setHidden(statsId: string, productId: string, id: string, hidden: boolean) {
-  return creatorChange(statsId, productId, id, (review) => ({ ...review, hidden }), null);
+/**
+ * Hides a review for one of the review rules (HIDE_REASONS), or shows it again.
+ * Null, and nothing changed, when it is hidden without a listed reason. The
+ * rating is never read: the same rules for every review.
+ */
+export async function setHidden(statsId: string, productId: string, id: string, hidden: boolean, reason?: unknown) {
+  if (hidden && !isHideReason(reason)) return null;
+  const hiddenReason: HideReason | null = hidden && isHideReason(reason) ? reason : null;
+  return creatorChange(statsId, productId, id, (review) => ({ ...review, hidden, hiddenReason }), null);
 }
 
 /** The creator's public answer; empty text takes it away. */
