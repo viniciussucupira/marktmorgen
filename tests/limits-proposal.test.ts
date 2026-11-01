@@ -11,7 +11,9 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { PLANS_ON_SALE } from "@/lib/opening";
-import { SIZING_READING, unitUnder } from "@/lib/receiving-costs";
+import { receivingOf } from "@/lib/receiving-costs";
+import { reviewedUnitUnder } from "@/lib/reviewed-receiving";
+import { txCustomerFixture } from "./customer-tax-review-fixture";
 import { ASSISTANT_INPUT_BYTES } from "@/lib/store-assistant-rules";
 import { CENTS_PER_MINUTE, MIN_CENTS } from "@/lib/auto-captions-rules";
 import { ORDER, assistantAt, assistantInputCap, captionsMinimumFor, captionsOptions, captionsPrice, captionsTodayAnyMinimum, captionsWorstBps, figures, perMinuteHolds, proposals, renderLimitsProposal } from "./limits-proposal-table";
@@ -42,12 +44,19 @@ test("archived proposals never raise a figure and viable proposals meet their hi
 
 test("the current MR unit floor is positive profit, while a loss fails and sales stay closed", () => {
   // Synthetic unit arithmetic, not a real cost review or a launch approval.
-  const positive = unitUnder(10_000, 6_000, SIZING_READING);
+  const evaluate = (usageCents: number) => {
+    const row = txCustomerFixture(10_000, receivingOf(10_000).totalCents + usageCents);
+    return reviewedUnitUnder(10_000, usageCents, { taxReview: row.taxReview!, taxContext: row.taxContext! });
+  };
+  const positive = evaluate(6_000);
+  assert.ok(positive, "complete synthetic TX evidence is still required for current MR arithmetic");
   assert.ok(positive.netCents > 0 && positive.netBps < 6_000);
   assert.equal(positive.meetsFloor, true);
-  const loss = unitUnder(10_000, 10_000, SIZING_READING);
+  const loss = evaluate(10_000);
+  assert.ok(loss);
   assert.ok(loss.netCents < 0);
   assert.equal(loss.meetsFloor, false);
+  assert.equal(reviewedUnitUnder(10_000, 6_000, null), null, "missing tax evidence never becomes a sizing assumption");
   assert.equal(PLANS_ON_SALE, false);
 });
 
