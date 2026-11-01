@@ -130,11 +130,13 @@ The screen-by-screen audit that 487 [IT4] asks for: what was checked, what was f
 **Fixed.**
 - The email history says where the first email comes from: the editor above it.
 - Community events say what an event can be and where to start one.
-- With no review yet, the reviews page offers "Ask buyers for a review". It leads to the setting on the same page and moves the focus there.
+- With no review at all, on either tab, the reviews page offers "Ask buyers for a review" to a role that can switch the requests on. It leads to the setting's heading on the same page and moves the focus there.
+- An empty deals board says what it is for and names its "New deal" button.
+- Each sentence names a button only where that role sees it: a role that cannot send email or schedule events reads who does it instead.
 
 **Still to do.**
 - A ready example for products, blog posts, forms, after-purchase offers and community setup. Each is new content, written once, and gets its own unit: nothing a creator sees is made up.
-- The contacts page (an action for an empty list) and the deals board (a sentence for an empty board).
+- The contacts page: an action for an empty list of recent buyers.
 
 ## Where each pattern stands
 
@@ -143,7 +145,7 @@ Numbered as in 487 [IT4]:
 2. The right keyboard on a phone: done (see pattern 2); "Move to" in its own PR, now that its file is free.
 3. The common value filled in, never the dearest: audited (see pattern 3). The "Recommended" price option waits on the owner.
 4. A label always visible: first pass done (see pattern 4). Six fields still to be read in context, and the home page field.
-5. Empty screens with a sentence, a button and a ready example: first pass done (see pattern 5). Three screens fixed; ready examples for five screens still to write.
+5. Empty screens with a sentence, a button and a ready example: first pass done (see pattern 5). Four screens fixed; ready examples for five screens still to write.
 6. Drafts never lost: done for the editors read (see pattern 6). Saving by itself, with "Saving…" and "Saved", is not built yet, because it needs its own ceiling on saves per plan first.
 7. A live phone preview beside each editor: not audited yet.
 8. A "Check answers" summary with "Change" on each item before publishing or sending: not audited yet.

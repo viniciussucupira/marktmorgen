@@ -1412,7 +1412,7 @@ function History({
   if (!broadcasts.length) return (
     <section className="card mt-8 p-6 sm:p-8" aria-labelledby="history-title">
       <h2 id="history-title" className="text-lg font-semibold tracking-[-0.02em] text-ink">Sent and scheduled</h2>
-      <p className="mt-3 text-sm text-ink-soft">No campaigns are recorded in this history. Your first email shows here once you send or schedule it with the editor above. If an earlier attempt was unconfirmed, check before sending it again.</p>
+      <p className="mt-3 text-sm text-ink-soft">{`No campaigns are recorded in this history. ${canSend ? "Your first email shows here once you send or schedule it with the editor above." : "An email shows here once the owner or an Admin sends or schedules it."} If an earlier attempt was unconfirmed, check before sending it again.`}</p>
       <button type="button" className="btn btn-secondary mt-3" disabled={busy} aria-busy={refreshing} onClick={refreshHistory}>{refreshing ? "Reloading campaign history…" : "Reload campaign history"}</button>
     </section>
   );
