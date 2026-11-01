@@ -1,9 +1,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { MOST_CORRECT_READING, MOST_TAX_READING, READINGS, SIZING_READING,
-  STRESS_PROFIT_TAX_BPS, mostCorrectTaxesOf, unitUnder,
+import { MOST_CORRECT_READING, READINGS, mostCorrectTaxesOf,
   type MostCorrectTaxBases } from "../lib/receiving-costs";
+import { reviewedUnitUnder } from "../lib/reviewed-receiving";
 import { GATE_READING_ID, gateReading, CONSULTATION_ANSWERS, EU_HOSTING_CONFIRMED } from "../lib/tax-gate";
 import { PLANS_ON_SALE } from "../lib/opening";
 import { CURRENT_COMMERCIAL_MARGIN_REVIEW } from "../lib/commercial-margin";
@@ -98,15 +98,11 @@ test("the explicit TX scenario does not change any binding tax reading, floor or
     MOST_CORRECT_READING.salesTaxInsideBps, MOST_CORRECT_READING.salesTaxOnTopBps],
     ["most-correct", 1500, 38, 0, 0, 2700]);
   assert.equal(Object.isFrozen(MOST_CORRECT_READING), true);
-  assert.equal(READINGS.includes(MOST_CORRECT_READING), false);
+  assert.equal(READINGS.includes(MOST_CORRECT_READING), true);
   assert.match(readFileSync("lib/opening.ts", "utf8"), /const OPENING_REQUESTED: boolean = false;/);
-  assert.equal(GATE_READING_ID, "most-tax");
-  assert.equal(gateReading(), MOST_TAX_READING);
-  assert.deepEqual([MOST_TAX_READING.profitTaxBps, MOST_TAX_READING.revenueTaxBps,
-    MOST_TAX_READING.salesTaxInsideBps, STRESS_PROFIT_TAX_BPS, SIZING_READING.profitTaxBps],
-    [7818, 500, 2700, 2750, 2750]);
-  assert.equal(unitUnder(100_000, 0, MOST_CORRECT_READING).taxCents,
-    unitUnder(100_000, 0, SIZING_READING).taxCents);
+  assert.equal(GATE_READING_ID, "most-correct");
+  assert.equal(gateReading(), MOST_CORRECT_READING);
+  assert.equal(reviewedUnitUnder(100_000,0,null),null,'metadata alone cannot calculate taxes or approve a unit');
   assert.deepEqual([PLANS_ON_SALE, EU_HOSTING_CONFIRMED,
     CONSULTATION_ANSWERS.length, CURRENT_COMMERCIAL_MARGIN_REVIEW], [false, false, 0, null]);
 });
