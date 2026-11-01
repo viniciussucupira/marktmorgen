@@ -36,6 +36,7 @@ import { type Listing, type Store, isFree, normaliseHandle, storeForPage } from 
 import { moneyField } from "@/lib/money";
 import { productIdFromAddress, readListing, readListings } from "@/lib/catalog";
 import { canSell, canSellProduct, sellableOptions } from "@/lib/store-checkout";
+import { canGiveProduct } from "@/lib/free";
 import { lookStyle } from "@/lib/store-look";
 import { photoUrl } from "@/lib/photo-limits";
 import { IMAGE_SIZES } from "@/lib/product-image";
@@ -213,9 +214,11 @@ function About({ blocks, language }: { blocks: Block[]; language: unknown }) {
  * and described without an offer rather than with a wrong one. The rating is
  * there only when the page shows one, with the same average and count.
  *
- * No offer is told while the product cannot be bought here (248 [ST1]): with
+ * No offer is told while the product cannot be had here (248 [ST1]): with
  * paid selling closed, or this product not for sale, "InStock" at a price
- * would let a search result promise what the page does not do.
+ * would let a search result promise what the page does not do. "Can be had"
+ * is what the page itself offers: a free product while it can be given
+ * (canGiveProduct), a paid one while Stripe or the creator's PayPal takes it.
  */
 function productData(store: Store, product: Listing, description: string, soldOut: boolean, summary: Summary | null, soon = false, preorder = false, sellable = false) {
   const url = `${SITE_URL}${productPath(store, product)}`;
@@ -561,7 +564,7 @@ export default async function ProductPage({ params, searchParams }: Params) {
       className={`st-page st-theme-${store.look.theme} relative min-h-screen overflow-hidden`}
       style={lookStyle(store.look) as React.CSSProperties}
     >
-      <JsonLd data={productData(store, product, description, remaining === 0, summary, soon, Boolean(preorder), selling && canSellProduct(store, product))} />
+      <JsonLd data={productData(store, product, description, remaining === 0, summary, soon, Boolean(preorder), free ? canGiveProduct(store, product) : canSellProduct(store, product) || byPayPal)} />
       <JsonLd data={breadcrumbData({ name: store.name, url: `${SITE_URL}/@${store.handle}` }, { title: product.title, url: `${SITE_URL}${productPath(store, product)}` })} />
       {faq ? <JsonLd data={faq} /> : null}
       <ExitOfferSlot store={store} except={product.id} />
