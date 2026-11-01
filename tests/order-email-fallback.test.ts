@@ -1,3 +1,4 @@
+import { performance } from "node:perf_hooks";
 import { done, is, part } from "./check";
 import { createResendFallbackFixture } from "./resend-fallback-fixture";
 import { guardedResendPost, type ResendPost } from "../lib/resend-fallback-transport";
@@ -97,6 +98,25 @@ async function main() {
     is("a dispatch receipt which expired during an await cannot POST", (await guardedResendPost(request("expired-dispatch"), deadline.runtime)).kind, "unknown");
     is("the last clock check is immediately before the provider call", deadline.requests.filter(r => r.method === "POST").length, 0);
   } finally { Date.now = originalClock; }
+
+  part("The transport checks the monotonic deadline after the helper returns");
+  const monotonic = await createResendFallbackFixture({ credential, fetch: reply });
+  const performanceDescriptor = Object.getOwnPropertyDescriptor(performance, "now");
+  let clockReads = 0;
+  // Start before RPC, valid helper return, then scheduling work consumes the
+  // remaining window before the transport's own final check. UTC stays valid.
+  const samples = [100, 101, 1_101];
+  const utcAt = Date.now();
+  Date.now = () => utcAt;
+  try {
+    Object.defineProperty(performance, "now", { configurable: true, value: () => samples[Math.min(clockReads++, samples.length - 1)] });
+    is("consumer work after a valid budget helper cannot POST past its monotonic deadline", (await guardedResendPost(request("late-consumer"), monotonic.runtime)).kind, "unknown");
+    is("the final transport check preserved the hold without HTTP", [clockReads, monotonic.requests.filter(r => r.method === "POST").length, monotonic.held()], [3, 0, 1]);
+  } finally {
+    Date.now = originalClock;
+    if (performanceDescriptor) Object.defineProperty(performance, "now", performanceDescriptor);
+    else Reflect.deleteProperty(performance, "now");
+  }
 
   part("Real email entry points use the same reviewed transport");
   process.env.RESEND_API_KEY = credential;
