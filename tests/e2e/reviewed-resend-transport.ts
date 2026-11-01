@@ -11,9 +11,10 @@ export type { ResendTransportRuntime } from "../../lib/resend-fallback-transport
 const fixtures = new Map<string, ReturnType<typeof createResendFallbackFixture>>();
 export async function guardedResendPost(input: ResendPost, runtime: ResendTransportRuntime = {}) {
   if (Object.keys(runtime).length) return realPost(input, runtime);
-  // Only the two literal credentials in these disposable journeys are known.
+  // Only the four literal credentials in these disposable journeys are known.
   // Accidentally pointing this build at a real account never authorizes POST.
-  const keys = ["re_local_only_a_stand_in", "re_test_security_journey_only_a_stand_in"];
+  const keys = ["re_local_only_a_stand_in", "re_test_security_journey_only_a_stand_in",
+    "re_test_person_erasure_only_a_stand_in", "re_test_closed_store_only_a_stand_in"];
   if (!keys.includes(input.credential) || !keys.includes(input.usageCredential) ||
       !/^http:\/\/127\.0\.0\.1:\d+$|^https:\/\/api\.resend\.com$/.test(input.base)) return { kind: "blocked" as const };
   const identity = `${input.credential}\n${input.usageCredential}`;
