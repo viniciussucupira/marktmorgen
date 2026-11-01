@@ -54,4 +54,7 @@ is("the lesson link uses it, with a visible label tied by its id", course.includ
 const product = readFileSync("components/product-editor.tsx", "utf8");
 is("a product's link uses it too, with its help tied to it", product.includes("<UrlField") && product.includes("describedBy={`link-${target.id}-help`}") && product.includes('<p id={`link-${target.id}-help`}'), true);
 is("and its route refuses a long link rather than cutting it", readFileSync("app/api/store/product/route.ts", "utf8").includes("text(body.link, MAX_LINK_LENGTH + 1)"), true);
+const links = readFileSync("components/link-editor.tsx", "utf8");
+is("a store link uses it too, with its help tied to it", links.includes("<UrlField") && links.includes('describedBy="link-url-help"') && links.includes('<p id="link-url-help"'), true);
+is("and its route refuses a long link rather than cutting it", readFileSync("app/api/store/links/route.ts", "utf8").includes("text(body.url, MAX_LINK_LENGTH + 1)"), true);
 done();
