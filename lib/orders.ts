@@ -48,6 +48,35 @@ type ConfirmationSnapshot = {
 };
 const CHECKOUT_REFERENCE = /^checkout:cs_(?:test|live)_[A-Za-z0-9]{10,200}$/;
 const snapshotContext = (reference: string) => `order-confirmation-settlement|${reference}`;
+const SHA256 = /^[a-f0-9]{64}$/;
+const STRIPE_ACCOUNT = /^acct_[A-Za-z0-9]{6,128}$/;
+export type OrderConfirmationPreintentIdentity = { nonce: string; accountId: string; bodyDigest: string };
+export type OrderConfirmationSessionIdentity = OrderConfirmationPreintentIdentity & { sessionId: string };
+export type OrderConfirmationPreintent = { token: string; expiresAtMs: number; intentFingerprint: string };
+export type OrderConfirmationSettlementCandidate = {
+  sessionId: string; settlementToken: string; intentFingerprint: string; bindingFingerprint: string; expiresAtMs: number;
+};
+const preintentContext = (nonce: string) => `order-confirmation-preintent|${nonce}`;
+const preintentReference = (identity: OrderConfirmationPreintentIdentity) => `preintent:${identity.accountId}:${identity.nonce}:${identity.bodyDigest}`;
+const fingerprint = (value: string) => createHash("sha256").update(value).digest("hex");
+
+function preintentIdentity(value: unknown, session: boolean): OrderConfirmationSessionIdentity | OrderConfirmationPreintentIdentity | null {
+  try {
+    if (!value || typeof value!=="object" || ![Object.prototype,null].includes(Object.getPrototypeOf(value))) return null;
+    const names=session?["nonce","accountId","bodyDigest","sessionId"]:["nonce","accountId","bodyDigest"];
+    const keys=Reflect.ownKeys(value);
+    if(keys.length!==names.length || keys.some(key=>typeof key!=="string" || !names.includes(key))) return null;
+    const out:Record<string,string>=Object.create(null);
+    for(const name of names) {
+      const field=Object.getOwnPropertyDescriptor(value,name);
+      if(!field || !field.enumerable || !("value" in field) || typeof field.value!=="string") return null;
+      out[name]=field.value;
+    }
+    if(!SHA256.test(out.nonce) || !SHA256.test(out.bodyDigest) || !STRIPE_ACCOUNT.test(out.accountId) ||
+      (session && !CHECKOUT_REFERENCE.test(`checkout:${out.sessionId}`))) return null;
+    return out as OrderConfirmationPreintentIdentity;
+  } catch {return null;}
+}
 
 function confirmationOwner(store: Store): string | null {
   try {
@@ -92,27 +121,86 @@ function originalStore(store: Store): Store | null {
   } catch { return null; }
 }
 
-/** An integration hook, not a historical-data migration. Call immediately
- * after this checkout's acknowledged admission and before returning its payment
- * page. Save the sealed token with the durable confirmation's immutable source.
- * Missing original admission/window/share evidence must never be reconstructed
- * by calling this from a delayed worker with today's store or metadata hour.
- */
-export async function prepareOrderConfirmationSettlement(store: Store, reference: string, admission: Admission, runtime: Pick<OrderConfirmationRuntime, "now"> = {}): Promise<string | null> {
+async function captureConfirmationSnapshot(store: Store, reference: string, admission: Admission, now: number, accountId?:string): Promise<ConfirmationSnapshot | null> {
   try {
-    const now = (runtime.now ?? Date.now)();
-    if (!CHECKOUT_REFERENCE.test(reference) || !canSeal()) return null;
     const source = originalStore(store);
     if (!source) return null;
-    const original = orderConfirmationAdmission(source, admission, reference);
-    if (!original || !Number.isSafeInteger(now) || now < original.captured) return null;
+    const original = orderConfirmationAdmission(source, admission, reference,accountId);
+    if (!original || (accountId!==undefined && original.accountId!==accountId) || !Number.isSafeInteger(now) || now < original.captured) return null;
     const owner = storeRef(source).toLowerCase();
     const folder = await storeFolder(owner);
     if (!FOLDER_PATTERN.test(folder) || (original.folder!==null && original.folder!==folder)) return null;
     const snapshot: ConfirmationSnapshot = { version: 1, reference, folder, owner, window: original.window, month: calendarWindow(original.captured).id,
       hour: original.hour, bytes: original.bytes, share:original.share, captured: original.captured, until: original.windowEnd + KEEP_SECONDS * 1000 };
-    return seal(JSON.stringify(snapshot), snapshotContext(reference));
+    return now < snapshot.until ? snapshot : null;
   } catch { return null; }
+}
+
+/** Same-process compatibility only; it cannot recover a lost create-session
+ * response. New checkout integrations must prepare a preintent BEFORE POST.
+ */
+export async function prepareOrderConfirmationSettlement(store: Store, reference: string, admission: Admission, runtime: Pick<OrderConfirmationRuntime, "now"> = {}): Promise<string | null> {
+  try {
+    if (typeof reference!=="string" || !CHECKOUT_REFERENCE.test(reference) || !canSeal()) return null;
+    const snapshot=await captureConfirmationSnapshot(store,reference,admission,(runtime.now??Date.now)());
+    return snapshot ? seal(JSON.stringify(snapshot),snapshotContext(reference)) : null;
+  } catch {return null;}
+}
+
+/** BEFORE create-session POST: seal this actual admission, stable nonce,
+ * connected account and exact canonical original body digest. Persist this
+ * token with the protected, funded source BEFORE POST. The digest excludes
+ * only metadata[mm_order_hash], its own self-reference. Neither an unknown
+ * create ACK nor a new process may recreate admission/window/share from today.
+ * This hook writes no key and grants no Stripe attempt or URL by itself.
+ */
+export async function prepareOrderConfirmationPreintent(store: Store, admission: Admission, supplied: OrderConfirmationPreintentIdentity, runtime: Pick<OrderConfirmationRuntime,"now"> = {}): Promise<OrderConfirmationPreintent|null> {
+  try {
+    const identity=preintentIdentity(supplied,false);
+    if(!identity || !canSeal()) return null;
+    const account=Object.getOwnPropertyDescriptor(store,"stripeAccountId");
+    if(!account || !("value" in account) || account.value!==identity.accountId) return null;
+    const original=await captureConfirmationSnapshot(store,preintentReference(identity),admission,(runtime.now??Date.now)(),identity.accountId);
+    if(!original) return null;
+    const token=seal(JSON.stringify({version:1,...identity,original}),preintentContext(identity.nonce));
+    return {token,expiresAtMs:original.until,intentFingerprint:fingerprint(token)};
+  } catch {return null;}
+}
+
+/** Recover using ONLY the persisted original token and an independently
+ * verified Stripe session, read from its original connected account. nonce and
+ * bodyDigest must come from that session's mm_order_intent/mm_order_hash, not
+ * a caller echo. The account-specific lookup and exact body/rights comparison
+ * belong to the source integration, which must never repeat POST after the
+ * provider's idempotency window merely because no session was found yet.
+ *
+ * This is a CANDIDATE, not an immutable binding or an accounting authority.
+ * The protected source MUST atomically compare its original intent fingerprint,
+ * body/account/nonce and bind sessionId+bindingFingerprint+settlementToken once.
+ * Before URL or settlement, use the persisted winner returned by that CAS,
+ * never this losing candidate. Different sessions yield different candidates;
+ * only the source CAS can decide their immutable ownership. No parallel key or
+ * storage funding is invented here. Original time/window/share stay untouched.
+ */
+export async function bindOrderConfirmationPreintent(store: Store, intentToken: string, supplied: OrderConfirmationSessionIdentity, runtime: Pick<OrderConfirmationRuntime,"now"> = {}): Promise<OrderConfirmationSettlementCandidate|null> {
+  try {
+    const identity=preintentIdentity(supplied,true) as OrderConfirmationSessionIdentity|null;
+    const now=(runtime.now??Date.now)();
+    if(!identity || typeof intentToken!=="string" || intentToken.length>4_000 || !Number.isSafeInteger(now)) return null;
+    const opened=unseal(intentToken,preintentContext(identity.nonce));
+    if(!opened.ok || opened.value.length>2_500) return null;
+    const original=JSON.parse(opened.value);
+    if(!original || typeof original!=="object" || Array.isArray(original) || Object.keys(original).length!==5 ||
+      !["version","nonce","accountId","bodyDigest","original"].every(key=>Object.hasOwn(original,key)) || original.version!==1 ||
+      original.nonce!==identity.nonce || original.accountId!==identity.accountId || original.bodyDigest!==identity.bodyDigest) return null;
+    const snapshot=confirmationSnapshot(JSON.stringify(original.original),preintentReference(identity));
+    if(!snapshot || now<snapshot.captured || now>=snapshot.until || snapshot.owner!==confirmationOwner(store) ||
+      snapshot.folder!==await storeFolder(snapshot.owner)) return null;
+    const reference=`checkout:${identity.sessionId}`;
+    const bound={...snapshot,reference};
+    return {sessionId:identity.sessionId,settlementToken:seal(JSON.stringify(bound),snapshotContext(reference)),
+      intentFingerprint:fingerprint(intentToken),bindingFingerprint:fingerprint(`${opened.value}\n${reference}`),expiresAtMs:snapshot.until};
+  } catch {return null;}
 }
 
 /** One transaction owns BOTH the reference mark and its effects. A lost ACK
@@ -210,7 +298,7 @@ function confirmationSnapshot(raw: string, reference: string): ConfirmationSnaps
 export async function commitOrderConfirmationSettlement(store: Store, reference: string, token: string, paidCents: number, runtime: OrderConfirmationRuntime = {}): Promise<"committed" | "already" | "unknown"> {
   try {
     const now = (runtime.now ?? Date.now)();
-    if (!isRedisConfigured() || !CHECKOUT_REFERENCE.test(reference) || typeof token !== "string" || token.length > 4_000 ||
+    if (!isRedisConfigured() || typeof reference!=="string" || !CHECKOUT_REFERENCE.test(reference) || typeof token !== "string" || token.length > 4_000 ||
         !Number.isSafeInteger(paidCents) || paidCents < 0 || !Number.isSafeInteger(now)) return "unknown";
     const opened = unseal(token, snapshotContext(reference));
     const s = opened.ok ? confirmationSnapshot(opened.value, reference) : null;

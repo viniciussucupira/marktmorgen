@@ -130,7 +130,7 @@ export const ADMITTED_FIELD = "mm_admit";
 
 export type Admission = { ok: true; hour: number | null } | { ok: false; reason: "paused" | "unavailable" };
 
-type ConfirmationAdmission = { hour: number | null; bytes: number; window: string; windowEnd: number; captured: number; share: number; owner: string; folder: string | null; reference?: string };
+type ConfirmationAdmission = { hour: number | null; bytes: number; window: string; windowEnd: number; captured: number; share: number; owner: string; folder: string | null; accountId: string | null; reference?: string };
 const confirmationAdmissions = new WeakMap<object, ConfirmationAdmission>();
 
 function confirmationEvidence(store: Store, window: { id: string; start: number; end: number } | null, hour: number | null, folder: string | null, n: number, items: number, now: number): ConfirmationAdmission | null {
@@ -146,7 +146,9 @@ function confirmationEvidence(store: Store, window: { id: string; start: number;
         Number(source.trialEnds)<0 || typeof source.tier!=="string" || !["creator","pro","scale"].includes(source.tier)) return null;
     const share=shareBps(source as unknown as Store,now/1000),owner=storeRef(store).toLowerCase();
     if (!owner || owner.length>320 || !Number.isSafeInteger(share) || share<0 || share>10_000) return null;
-    return {hour,bytes:orderDataBytes(items),window:window.id,windowEnd:window.end,captured:now,share,owner,folder};
+    const account=Object.getOwnPropertyDescriptor(store,"stripeAccountId");
+    if(account && (!("value" in account) || (account.value!==null && (typeof account.value!=="string" || !/^acct_[A-Za-z0-9]{6,128}$/.test(account.value))))) return null;
+    return {hour,bytes:orderDataBytes(items),window:window.id,windowEnd:window.end,captured:now,share,owner,folder,accountId:account?.value??null};
   } catch { return null; }
 }
 
@@ -156,10 +158,11 @@ function confirmationEvidence(store: Store, window: { id: string; start: number;
  * One admission can bind only one checkout. Group-place admissions need their
  * own per-place protocol and are intentionally not admitted by this hook.
  */
-export function orderConfirmationAdmission(store: Store, admission: Admission, reference: string): ConfirmationAdmission | null {
+export function orderConfirmationAdmission(store: Store, admission: Admission, reference: string, accountId?: string): ConfirmationAdmission | null {
   try {
     const evidence=confirmationAdmissions.get(admission);
-    if (!evidence || evidence.owner!==storeRef(store).toLowerCase() || (evidence.reference!==undefined && evidence.reference!==reference)) return null;
+    if (!evidence || evidence.owner!==storeRef(store).toLowerCase() || (accountId!==undefined && evidence.accountId!==accountId) ||
+      (evidence.reference!==undefined && evidence.reference!==reference)) return null;
     evidence.reference=reference;
     return {...evidence};
   } catch { return null; }

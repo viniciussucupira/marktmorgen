@@ -1,25 +1,39 @@
 import assert from "node:assert/strict";
 import { createConnection } from "node:net";
-import { test } from "node:test";
-import { prepareOrderConfirmationSettlement, commitOrderConfirmationSettlement } from "@/lib/orders";
+import { spawnSync } from "node:child_process";
+import { test as nodeTest } from "node:test";
+import { prepareOrderConfirmationSettlement, prepareOrderConfirmationPreintent, bindOrderConfirmationPreintent, commitOrderConfirmationSettlement } from "@/lib/orders";
 import { unseal } from "@/lib/secret-box";
 import type { Store } from "@/lib/store";
 import { admitOrders } from "@/lib/order-admission";
 import { store as redis } from "./redis-stub";
 
 type Command = (string | number)[];
+process.env.NIMBUS_DATA_KEY="SYNTHETIC-ONLY-order-confirmation-key-2026";
+const restarting=process.env.MARKTMORGEN_PREINTENT_RECOVERY==="1";
+const test=(name:string,run:()=>void|Promise<void>)=>restarting?undefined:nodeTest(name,run);
 const at = Date.UTC(2026, 9, 31, 23, 30);
 const hour = Math.floor(at / 3_600_000);
 const reference = "checkout:cs_test_confirmationCheckpoint01";
-const store = () => ({ email: "checkpoint@example.test", sid: "", statsId: "synthetic_checkpoint", handle: "checkpoint", extra: false, shared: false,
+const store = () => ({ email: "checkpoint@example.test", sid: "", statsId: "synthetic_checkpoint", handle: "checkpoint", extra: false, shared: false,stripeAccountId:"acct_SyntheticPreintent01",
   subscriptionActive: true, subscriptionId: "sub_SyntheticCheckpoint", trialEnds: 0, tier: "creator", planEndedAt: "", cycle: "month",
   period: { start: Date.UTC(2026,9,20)/1000, end: Date.UTC(2026,10,20)/1000, renews: true } }) as Store;
 const clock = { now: () => at };
+const identity=()=>({nonce:"a".repeat(64),accountId:"acct_SyntheticPreintent01",bodyDigest:"b".repeat(64)});
 async function acknowledgedAdmission(s=store(), n=1, items=2, admissionAt=at) {
   const prior=redis.pipeline;redis.pipeline=async()=>[1];
   try{return await admitOrders(s,n,admissionAt,items);}finally{redis.pipeline=prior;}
 }
 const prepare = async (s=store(), ref=reference) => prepareOrderConfirmationSettlement(s,ref,await acknowledgedAdmission(s),clock);
+
+if(restarting) {
+  // A genuinely fresh process has no admission WeakMap entries. Only the
+  // protected token read back by the parent crosses this crash boundary.
+  const fixture=JSON.parse(process.env.MARKTMORGEN_PREINTENT_FIXTURE??"null");
+  void bindOrderConfirmationPreintent(fixture.store,fixture.token,fixture.identity,{now:()=>fixture.now})
+    .then(candidate=>process.stdout.write(`RECOVERED:${JSON.stringify(candidate)}\n`))
+    .catch(()=>{process.exitCode=1;});
+}
 
 test("snapshot captures the original hour, window and explicit share before payment",async()=>{
   const sourceStore=store(),admission=await acknowledgedAdmission(sourceStore);
@@ -107,6 +121,54 @@ test("unbound or expired source refuses without IO, even after the receipt expir
   assert.equal(calls,0);
 });
 
+test("preintent persists the actual admission before Stripe exists and recovers without a WeakMap reconstruction",async()=>{
+  const source=store(),admission=await acknowledgedAdmission(source),original=identity();
+  const intent=await prepareOrderConfirmationPreintent(source,admission,original,clock);assert.ok(intent);const token=intent.token;
+  const opened=unseal(token,`order-confirmation-preintent|${original.nonce}`);assert.equal(opened.ok,true);
+  if(!opened.ok) throw Error("Synthetic preintent did not open");
+  const before=JSON.parse(opened.value).original;
+  assert.equal(before.hour,hour);assert.equal(before.window,"2026-10-20");assert.equal(before.month,"2026-10");assert.equal(before.captured,at);
+  assert.equal(await prepareOrderConfirmationPreintent(source,{ok:true,hour},original,clock),null);
+  // Original request objects can disappear after POST; bind needs only the
+  // persisted token and provider evidence verified by the source integration.
+  const restarted={...store(),shared:true,tier:"scale",period:{start:Date.UTC(2027,0,1)/1000,end:Date.UTC(2027,1,1)/1000,renews:true}} as Store;
+  const sessionId=reference.slice("checkout:".length);
+  const recovered=await bindOrderConfirmationPreintent(restarted,token,{...original,sessionId},{now:()=>at+73*3_600_000});assert.ok(recovered);
+  const after=unseal(recovered.settlementToken,`order-confirmation-settlement|${reference}`);assert.equal(after.ok,true);
+  if(!after.ok) throw Error("Synthetic bound candidate did not open");
+  assert.deepEqual(JSON.parse(after.value),{...before,reference});
+  assert.equal(recovered.expiresAtMs,intent.expiresAtMs);assert.equal(recovered.intentFingerprint,intent.intentFingerprint);
+  const retry=await bindOrderConfirmationPreintent(restarted,token,{...original,sessionId},{now:()=>at+73*3_600_000});assert.ok(retry);
+  assert.equal(retry.bindingFingerprint,recovered.bindingFingerprint);assert.equal(retry.intentFingerprint,recovered.intentFingerprint);
+  assert.notEqual(retry.settlementToken,recovered.settlementToken); // Source CAS must return its persisted winner.
+  assert.equal(await prepareOrderConfirmationPreintent(source,admission,{...original,bodyDigest:"c".repeat(64)},clock),null);
+  assert.equal(await prepareOrderConfirmationSettlement(source,reference,admission,clock),null);
+});
+
+test("foreign nonce/account/body, malformed session and computed identities cannot bind the preintent",async()=>{
+  const source=store(),original=identity(),intent=await prepareOrderConfirmationPreintent(source,await acknowledgedAdmission(source),original,clock);assert.ok(intent);const token=intent.token;
+  const sessionId=reference.slice("checkout:".length),match={...original,sessionId};
+  for(const wrong of [{...match,nonce:"c".repeat(64)},{...match,accountId:"acct_ForeignPreintent01"},{...match,bodyDigest:"c".repeat(64)},{...match,sessionId:"cs_unverified"}]) {
+    assert.equal(await bindOrderConfirmationPreintent(source,token,wrong,clock),null);
+  }
+  let getters=0,coercions=0;
+  const accessor=Object.defineProperty({...match},"accountId",{get(){getters++;return match.accountId;}});
+  assert.equal(await bindOrderConfirmationPreintent(source,token,accessor,clock),null);
+  const computed={...match,nonce:{toString(){coercions++;return match.nonce;}}};
+  assert.equal(await bindOrderConfirmationPreintent(source,token,computed as never,clock),null);
+  assert.equal(getters,0);assert.equal(coercions,0);
+  assert.equal(await bindOrderConfirmationPreintent({...source,email:"foreign@example.test"},token,match,clock),null);
+  assert.equal(await bindOrderConfirmationPreintent(source,token,match,{now:()=>at-1}),null);
+  assert.equal(await bindOrderConfirmationPreintent(source,token,match,{now:()=>at+800*86_400_000}),null);
+  const changed=store(),admitted=await acknowledgedAdmission(changed);changed.stripeAccountId="acct_ForeignPreintent01";
+  assert.equal(await prepareOrderConfirmationPreintent(changed,admitted,{...original,accountId:changed.stripeAccountId},clock),null);
+  const a=await bindOrderConfirmationPreintent(source,token,match,clock);
+  const b=await bindOrderConfirmationPreintent(source,token,{...match,sessionId:sessionId+"other"},clock);
+  assert.ok(a);assert.ok(b);assert.notEqual(a.bindingFingerprint,b.bindingFingerprint);
+  // Valid-shaped different sessions are candidates, not permission to replace
+  // one another. Their immutable winner is enforced by the funded source CAS.
+});
+
 /** Disposable loopback only. This transport exercises the production TS
  * preparation/commit functions and actual Lua together; no account or sender.
  */
@@ -188,4 +250,38 @@ if(process.env.MARKTMORGEN_REDIS_INTEGRATION==="1") test("production TS plus rea
     assert.equal(await commitOrderConfirmationSettlement(source,secondRef,secondToken,1500,{now:()=>realAt+73*3_600_000,pipeline:localPipeline}),"unknown");
     assert.deepEqual(await localPipeline([["GET",keys[1]],["HGET",keys[2],String(realHour)],["HGET",keys[3],String(realHour)]]),partial);
   } finally {await localPipeline([["DEL",...keys,...admissionKeys,...secondKeys]]);}
+});
+
+if(process.env.MARKTMORGEN_REDIS_INTEGRATION==="1") test("persisted preintent survives process death before the create-session ACK",async()=>{
+  const serverTime=(await localPipeline([["TIME"]]))[0];assert.ok(Array.isArray(serverTime));
+  const created=Number(serverTime[0])*1000+Math.floor(Number(serverTime[1])/1000)-73*3_600_000;
+  const source={...store(),period:{start:Math.floor(created/1000)-10*86400,end:Math.floor(created/1000)+20*86400,renews:true}};
+  const previous=redis.pipeline;let admissionKeys:string[]=[];
+  const persistedKey=`marktmorgen:integration:preintent:${process.pid}`;
+  try {
+    redis.pipeline=async commands=>{
+      admissionKeys=commands[0].slice(3,7).map(String);await localPipeline([["DEL",...admissionKeys]]);
+      return localPipeline(commands);
+    };
+    const admission=await admitOrders(source,1,created,2);assert.equal(admission.ok,true);
+    redis.pipeline=previous;
+    const original=identity(),intent=await prepareOrderConfirmationPreintent(source,admission,original,{now:()=>created});assert.ok(intent);const token=intent.token;
+    // This isolated storage round trip represents persisted bytes, not the
+    // production source's funding/CAS protocol, which the integrator owns.
+    await localPipeline([["SET",persistedKey,token,"PX",60_000]]);
+    const stored=(await localPipeline([["GET",persistedKey]]))[0];assert.equal(stored,token);
+    const sessionId="cs_test_recoveredPreintent123",current={...source,shared:true,tier:"scale",period:{start:created/1000+86400,end:created/1000+30*86400,renews:true}};
+    const child=spawnSync(process.execPath,[__filename],{encoding:"utf8",env:{...process.env,MARKTMORGEN_REDIS_INTEGRATION:"0",MARKTMORGEN_PREINTENT_RECOVERY:"1",
+      MARKTMORGEN_PREINTENT_FIXTURE:JSON.stringify({store:current,token:stored,identity:{...original,sessionId},now:created+73*3_600_000})}});
+    assert.equal(child.status,0,child.stderr);
+    const line=child.stdout.split("\n").find(value=>value.startsWith("RECOVERED:"));assert.ok(line);
+    const candidate=JSON.parse(line.slice("RECOVERED:".length));assert.ok(candidate);
+    const opened=unseal(candidate.settlementToken,`order-confirmation-settlement|checkout:${sessionId}`);assert.equal(opened.ok,true);
+    if(!opened.ok)throw Error("Recovered candidate did not open");
+    const recovered=JSON.parse(opened.value);
+    assert.equal(recovered.captured,created);assert.equal(recovered.hour,Math.floor(created/3_600_000));assert.equal(recovered.share,0);
+    assert.equal(recovered.window,new Date(source.period.start*1000).toISOString().slice(0,10));
+    assert.equal((await localPipeline([["GET",admissionKeys[0]]]))[0],null); // No count before payment.
+    assert.equal((await localPipeline([["HGET",admissionKeys[1],String(recovered.hour)]]))[0],"1");
+  } finally {redis.pipeline=previous;await localPipeline([["DEL",persistedKey,...admissionKeys]]);}
 });
