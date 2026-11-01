@@ -196,9 +196,58 @@ async function main(): Promise<void> {
   const originalPipeline: typeof redis.pipeline = redis.pipeline.bind(redis);
   const outbox = shipmentOutboxFixture();
   const runtime = { lifecycle: "active" as const, policy: shipmentPolicy(), pipeline: outbox.pipeline };
-  const noFunding = await markShipped(store, session.id as string, "");
+  const noFunding = await markShipped(store, session.id as string, "", undefined, { lifecycle: "active", policy: null });
   is("unreviewed pending storage is explicit unavailability before marking", noFunding, { ok: false, reason: "mail_unavailable" });
   is("unreviewed storage never creates a physical shipment mark", redis.run(["GET", `nl:ship:done:${session.id}`]), null);
+  part("Never-activated deployments retain the original guarded one-shot action");
+  const originalSession = session;
+  const legacySender = installSesMailFixture({ fallback: globalThis.fetch, onResend: () => { throw new Error("synthetic unknown fallback outcome"); } });
+  legacySender.configure();
+  const observed: (string | number)[][] = [];
+  try {
+    session = { ...originalSession, id: "cs_test_legacycompat000001" };
+    redis.pipeline = async commands => { observed.push(...commands.filter(c => String(c[1]).startsWith("nl:ship:done:"))); return originalPipeline(commands); };
+    const first = await markShipped(store, String(session.id), "https://example.test/original");
+    is("the default action marks and uses the guarded SES sender", [first.ok, first.ok && first.emailed, legacySender.sent.length], [true,true,1]);
+    is("a new legacy mark keeps SET NX first without an extra GET", observed.map(c=>c[0]), ["SET"]);
+    is("the original claim retains its 400-day expiry", observed[0]?.slice(3), ["NX","EX",400*86400]);
+    is("legacy acceptance is truthful, never a pending source", first.ok && first.mail, {state:"accepted",delayed:false});
+    const again = await markShipped(store, String(session.id), "https://example.test/loser");
+    is("a second press reads the original winner and sends nothing more", [again.ok && again.shipped.tracking,again.ok && again.emailed,legacySender.sent.length], ["https://example.test/original",false,1]);
+    is("an occupied claim needs only the original SET and GET", observed.map(c=>c[0]), ["SET","SET","GET"]);
+    is("no queue or budget-pool is silently created", [redis.run(["EXISTS","nl:ship:mail:due"]),redis.run(["EXISTS","nl:ship:mail:all"]),redis.run(["EXISTS","nl:ship:mail:pool"])], [0,0,0]);
+    is("the legacy path does not bypass the Resend guard", legacySender.resend.length, 0);
+    session={...originalSession,id:"cs_test_legacycompat000002",customer_details:{email:"not an address"}};
+    const invalid=await markShipped(store,String(session.id),"");
+    is("an invalid recipient still permits the old shipment record without mail",[invalid.ok,invalid.ok&&invalid.emailed,legacySender.sent.length],[true,false,1]);
+    session={...originalSession,id:"cs_test_legacycompatrace01"};
+    const raced=await Promise.all([markShipped(store,String(session.id),"https://example.test/race-a"),markShipped(store,String(session.id),"https://example.test/race-b")]);
+    is("concurrent legacy presses return one stored winner and invoke only one accepted send",[raced.every(r=>r.ok),raced[0].ok&&raced[1].ok&&raced[0].shipped.tracking===raced[1].shipped.tracking,raced.filter(r=>r.ok&&r.emailed).length,legacySender.sent.length],[true,true,1,2]);
+    const before=legacySender.sent.length;
+    session={...originalSession,id:"cs_test_legacycompat000003"};
+    for(const reply of [undefined,false,0,1,"true",{},[],["OK",null],[null,"OK"]]){
+      redis.pipeline=async commands=>commands.some(c=>c[0]==="SET"&&String(c[1]).startsWith("nl:ship:done:")) ? (Array.isArray(reply)&&reply.length===2?reply:[reply]) : originalPipeline(commands);
+      const result=await markShipped(store,String(session.id),"");
+      is("legacy unknown claim ACK never authorizes email",[result.ok,legacySender.sent.length],[false,before]);
+    }
+    redis.pipeline=async commands=>{
+      if(commands.some(c=>c[0]==="SET"&&String(c[1]).startsWith("nl:ship:done:"))){await originalPipeline(commands);throw Error("synthetic lost claim ACK");}
+      return originalPipeline(commands);
+    };
+    is("a committed lost ACK never sends",[(await markShipped(store,String(session.id),"https://example.test/kept")).ok,legacySender.sent.length],[false,before]);
+    redis.pipeline=originalPipeline;
+    const recovered=await markShipped(store,String(session.id),"https://example.test/not-kept");
+    is("retry after a lost ACK returns its stored winner without sending",[recovered.ok&&recovered.shipped.tracking,recovered.ok&&recovered.emailed,legacySender.sent.length],["https://example.test/kept",false,before]);
+    session={...originalSession,id:"cs_test_legacycompat000004"};
+    const denied=await markShipped(store,String(session.id),"",undefined,{lifecycle:"retired",policy:null});
+    is("retired cannot fall back to a new legacy mark",[denied.ok,redis.run(["GET",`nl:ship:done:${session.id}`]),legacySender.sent.length],[false,null,before]);
+    const unknown=await markShipped(store,String(session.id),"",undefined,{lifecycle:"unknown" as never});
+    is("unknown lifecycle cannot become legacy",[unknown.ok,redis.run(["GET",`nl:ship:done:${session.id}`])],[false,null]);
+    session={...originalSession,id:"cs_test_legacycompat000005"};
+    legacySender.setSesOutcome("lost");
+    const uncertain=await markShipped(store,String(session.id),"");
+    is("provider uncertainty preserves the shipment without inventing a queue",[uncertain.ok,uncertain.ok&&uncertain.emailed,uncertain.ok&&uncertain.mail],[true,false,{state:"not_recorded",delayed:false}]);
+  } finally { legacySender.restore(); redis.pipeline=originalPipeline; session=originalSession; }
   for (const acknowledgement of [undefined, false, 0, 1, "true", {}, []]) {
     const refusedClaim = await markShipped(store, session.id as string, "", undefined, {
       ...runtime, pipeline: async commands => commands.some(command => command[0] === "EVAL")
@@ -250,10 +299,23 @@ async function main(): Promise<void> {
       if (commands.some(command => String(command[1]).startsWith("nl:ship:done:"))) return commands.map(() => JSON.stringify(keptShipment));
       return originalPipeline(commands);
     };
-    const keptClaim = await markShipped(store, session.id as string, "https://example.com/new-tracking");
+    const keptClaim = await markShipped(store, session.id as string, "https://example.com/new-tracking", undefined, runtime);
     is("a readable occupied claim returns its original record without another email", [keptClaim.ok ? keptClaim.shipped : null, keptClaim.ok ? keptClaim.emailed : null, emails.length], [keptShipment, false, beforeClaimEmails]);
   } finally { redis.pipeline = originalPipeline; }
 
+  part("The active producer deadline begins before the Stripe read");
+  const clockSession = session, priorFetch = globalThis.fetch;
+  const started = Date.now(); let clock = started, capturedAuthorization: number | null = null;
+  try {
+    session={...clockSession,id:"cs_test_activeclock000001"};
+    globalThis.fetch=(async(input,init)=>{ if(new URL(String(input)).pathname.includes("/checkout/sessions/"))clock=started+11*60_000; return priorFetch(input,init); }) as typeof fetch;
+    const result=await markShipped(store,String(session.id),"",undefined,{...runtime,now:()=>clock,pipeline:async commands=>{
+      for(const c of commands)if(c[0]==="EVAL"&&c[13]==="enqueue")capturedAuthorization=JSON.parse(String(c[15])).authorizedAt;
+      return [["unknown"]];
+    }});
+    is("the original pre-await timestamp is preserved in the real enqueue argument",[capturedAuthorization,clock],[started,started+11*60_000]);
+    is("an unknown durable ACK after the delayed read still authorizes no mark",result.ok,false);
+  }finally{globalThis.fetch=priorFetch;session=clockSession;}
   // The route and the SES sender are real; only Redis ACKs and remote HTTP
   // are synthetic. The Lua itself is separately verified on real Redis.
   const sender = installSesMailFixture({ fallback: globalThis.fetch });
