@@ -15,6 +15,7 @@ async function main(): Promise<void> {
   globalThis.fetch = async () => { requests += 1; return new Response(); };
   is("missing configuration is not zero", await sesProviderUsage(1_000), { ok: false, reason: "not_configured" });
   is("an invalid snapshot is unknown", await sesProviderUsage(Number.NaN), { ok: false, reason: "unknown" });
+  is("safe integers outside JavaScript Date range are unknown", await sesProviderUsage(Number.MAX_SAFE_INTEGER), { ok: false, reason: "unknown" });
   is("neither case reaches a provider", requests, 0);
 
   process.env.AWS_SES_ROLE_ARN = "arn:aws:iam::123456789012:role/synthetic-provider-usage";
@@ -70,6 +71,7 @@ async function main(): Promise<void> {
   is("a backwards response clock is unknown",
     await sesProviderUsage(2_000, () => 1_999),
     { ok: false, reason: "unknown" });
+  is("an impossible response clock is unknown", await sesProviderUsage(2_000, () => Number.MAX_SAFE_INTEGER), { ok: false, reason: "unknown" });
   const firstAccountRequest = accountRequests[0];
   is("the read is signed with only the temporary role identity and is not cached",
     [

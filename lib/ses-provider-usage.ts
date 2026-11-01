@@ -55,7 +55,7 @@ const rate = (value: unknown) =>
 export async function sesProviderUsage(
   now = Date.now(), clock: () => number = Date.now,
 ): Promise<SesProviderUsage> {
-  if (!Number.isSafeInteger(now) || now < 0) return { ok: false, reason: "unknown" };
+  if (!Number.isSafeInteger(now) || now < 0 || now > 8_640_000_000_000_000) return { ok: false, reason: "unknown" };
   const config = sesConfig();
   if (!config) return { ok: false, reason: "not_configured" };
 
@@ -110,7 +110,7 @@ export async function sesProviderUsage(
     return { ok: false, reason: "unknown" };
   }
   const observed = clock();
-  if (!Number.isSafeInteger(observed) || observed < now) return { ok: false, reason: "unknown" };
+  if (!Number.isSafeInteger(observed) || observed < now || observed > 8_640_000_000_000_000) return { ok: false, reason: "unknown" };
   return {
     ok: true,
     sentLast24Hours: sent,

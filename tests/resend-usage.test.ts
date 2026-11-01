@@ -8,6 +8,11 @@ const at = (seconds: number) => new Date(seconds * 1_000).toISOString();
 async function main(): Promise<void> {
   const { resendAccountUsage, resendUsageSince } = await import("@/lib/resend-usage");
 
+  let invalidRequests = 0;
+  globalThis.fetch = async () => { invalidRequests += 1; return Response.json({}); };
+  is("safe integers outside JavaScript Date range are unknown", await resendUsageSince(0, Number.MAX_SAFE_INTEGER), { ok: false, reason: "unknown" });
+  is("an impossible date makes no provider request", invalidRequests, 0);
+
   part("A complete same-window count");
   const calls: string[] = [];
   globalThis.fetch = async (input) => {

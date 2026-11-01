@@ -2,7 +2,7 @@
  * Provider-side Resend usage for an exact UTC window.
  *
  * This is evidence, not admission. The paid fallback ceiling is reserved in
- * Redis before sending; this reader compares that ledger with the provider.
+ * Redis before sending by a separate integration; this reader grants no send permission.
  * Resend's official List Sent Emails endpoint (read 31 October 2026) returns
  * at most 100 newest-first records and uses the last email id as `after`.
  */
@@ -50,7 +50,7 @@ export async function resendUsageSince(fromMs: number, throughMs = Date.now()): 
   const key = process.env.RESEND_READ_API_KEY?.trim() || process.env.RESEND_API_KEY?.trim();
   if (!key) return { ok: false, reason: "not_configured" };
   if (!Number.isSafeInteger(fromMs) || !Number.isSafeInteger(throughMs) ||
-      fromMs < 0 || throughMs < fromMs) return { ok: false, reason: "unknown" };
+      fromMs < 0 || throughMs < fromMs || throughMs > 8_640_000_000_000_000) return { ok: false, reason: "unknown" };
 
   let after = "";
   let previousTime = Number.POSITIVE_INFINITY;
