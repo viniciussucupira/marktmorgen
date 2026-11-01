@@ -23,7 +23,7 @@ test("production code cannot import the archived target or its price proposals",
       if (statSync(path).isDirectory()) visit(path);
       else if (/\.(ts|tsx|js|mjs)$/.test(name)) {
         const source = readFileSync(path, "utf8");
-        if (/from\s*["'][^"']*(?:historical-(?:margin|receiving)-model|tests\/(?:pricing-usage-proposal|pack-cost-decomposition|limits-proposal|per-use-resale|pricing-optimization))/.test(source)) failures.push(path);
+        if (/from\s*["'][^"']*(?:historical-(?:(?:margin|receiving)-model|worst-case-policy)|tests\/(?:pricing-usage-proposal|pack-cost-decomposition|limits-proposal|per-use-resale|pricing-optimization))/.test(source)) failures.push(path);
       }
     }
   };

@@ -10,12 +10,15 @@ const integer=(n:unknown):n is number=>typeof n==='number'&&Number.isSafeInteger
 function own(value:unknown,key:string):unknown {try {if(!value||typeof value!=='object'||Array.isArray(value))return undefined;const d=Object.getOwnPropertyDescriptor(value,key);return d&&Object.hasOwn(d,'value')?d.value:undefined;}catch{return undefined;}}
 /** Exposure is a known loss ceiling, never approval of a paying customer's
  * profit or a tax regime. Every legacy amount/flag remains mandatory, including
- * zero-count scopes; TX evidence stays refused before these manual snapshots. */
+ * zero-count scopes; TX evidence stays refused before these manual snapshots.
+ * Net collected income requires a scoped TX review, so it remains closed until
+ * the exposure migration. A legacy tax flag cannot certify a zero liability. */
 function knownLossNet(unit:CustomerWorstCase):{net:bigint|null;reason:'unknown'|'invalid'} {
  const values=[unit.collectedRevenueCents,unit.refundableRevenueCents,unit.taxesCeilingCents,...CUSTOMER_COST_CATEGORIES.map(key=>unit.costCeilings[key])];
  if(values.some(value=>value===null||value===undefined))return {net:null,reason:'unknown'};
  if(!values.every(integer)||unit.refundableRevenueCents!>unit.collectedRevenueCents!)return {net:null,reason:'invalid'};
  if(unit.allCostsBounded!==true||unit.allTaxesReviewed!==true||unit.revenueCollected!==true)return {net:null,reason:'unknown'};
+ if(unit.collectedRevenueCents!==unit.refundableRevenueCents)return {net:null,reason:'unknown'};
  const net=BigInt(unit.collectedRevenueCents!)-BigInt(unit.refundableRevenueCents!)-BigInt(unit.taxesCeilingCents!)-CUSTOMER_COST_CATEGORIES.reduce((sum,key)=>sum+BigInt(unit.costCeilings[key]!),BigInt(0));
  return net>BigInt(Number.MAX_SAFE_INTEGER)||net< -BigInt(Number.MAX_SAFE_INTEGER)?{net:null,reason:'invalid'}:{net,reason:'unknown'};
 }
