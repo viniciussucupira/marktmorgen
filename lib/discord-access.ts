@@ -20,7 +20,7 @@ import { redisPipeline } from "@/lib/redis";
 import { emailKey, storeKey } from "@/lib/learn";
 import { type Store, storeForId } from "@/lib/store";
 import { giveRole, putMember, removeMember, takeRole } from "@/lib/discord";
-import { rolesDiff, rolesFor } from "@/lib/discord-rules";
+import { KICK_TRIES, rolesDiff, rolesFor } from "@/lib/discord-rules";
 import { accountOf, checkSoon, dueMembers, forgetMember, keepMember, productRoles, readMember, readServer } from "@/lib/discord-store";
 
 const cacheKey = (store: Store, email: string, productId: string) => `nl:dc:ok:${storeKey(store)}:${emailKey(email)}:${productId}`;
@@ -118,7 +118,17 @@ export async function checkMember(sid: string, userId: string, now = Date.now())
       await keepMember(room, sid, userId, member, now);
       return "later";
     }
-    if (server.kick && !left) await removeMember(server.id, userId, reason);
+    if (server.kick && !left) {
+      // Discord refused or did not answer: kept, its roles already gone, so the next check tries the removal again
+      // instead of forgetting somebody who is still in the server.
+      // At most KICK_TRIES more checks, then forgotten as before, so a lasting refusal never keeps a check going.
+      const out = await removeMember(server.id, userId, reason);
+      const tried = (member.k ?? 0) + 1;
+      if (out === "failed" && tried <= KICK_TRIES) {
+        await keepMember(room, sid, userId, { ...member, p: held, r: [], checked: at, k: tried }, now);
+        return "later";
+      }
+    }
     await forgetMember(room, sid, userId, member.e);
     return "ended";
   }
