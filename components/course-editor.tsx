@@ -1,6 +1,8 @@
 "use client";
 
 import { createContext, useContext, useEffect, useRef, useState } from "react";
+import { useLeaveGuard } from "@/components/leave-guard";
+import { UrlField } from "@/components/url-field";
 import { useRouter } from "next/navigation";
 import { uploadReason, uploadSoldFile } from "@/lib/sold-file-upload";
 import { toast } from "@/components/toast";
@@ -421,6 +423,9 @@ function ModuleCard({
   const [drip, setDrip] = useState(String(unit.dripDays));
   const [newLesson, setNewLesson] = useState("");
   const changed = title !== unit.title || drip !== String(unit.dripDays);
+  // A module's name or days changed and not saved: leaving asks first (487 [IT4], item 6).
+  // Asked while a save is still going too: the course's busy is shared by every module and lesson.
+  useLeaveGuard(changed);
   const titleId = `module-${unit.id}-title`;
   const dripId = `module-${unit.id}-drip`;
 
@@ -432,7 +437,16 @@ function ModuleCard({
         onSubmit={async (event) => {
           event.preventDefault();
           const answer = await run({ action: "edit", op: "module-edit", moduleId: unit.id, title, dripDays: drip });
-          if (answer.ok) toast("Module saved.");
+          if (answer.ok) {
+            // Taken as the server kept it, so a name it tidied never reads as unsaved.
+            const kept = answer.course?.modules.find((m) => m.id === unit.id);
+            if (kept) {
+              // A field changed while it was saving keeps what was typed.
+              setTitle((now) => (now === title ? kept.title : now));
+              setDrip((now) => (now === drip ? String(kept.dripDays) : now));
+            }
+            toast("Module saved.");
+          }
         }}
       >
         <label className="block min-w-0">
@@ -758,9 +772,14 @@ function LessonEditor({
   const [preview, setPreview] = useState(lesson.preview);
   const [link, setLink] = useState(lesson.link ?? "");
   const [text, setText] = useState<string | null>(null);
+  // The text as it was read or last saved: only a change to it is unsaved.
+  const [savedText, setSavedText] = useState<string | null>(null);
   const [loadingText, setLoadingText] = useState(false);
   const [uploading, setUploading] = useState<{ kind: "video" | "file"; percent: number } | null>(null);
   const [removing, setRemoving] = useState(false);
+  // A lesson's name, link, preview or text changed and not saved, or a file still going up: leaving asks first (487 [IT4], item 6).
+  const unsaved = title !== lesson.title || preview !== lesson.preview || link !== (lesson.link ?? "") || text !== savedText;
+  useLeaveGuard(unsaved || uploading !== null);
   const streams = useContext(Streams);
 
   async function loadText() {
@@ -768,9 +787,12 @@ function LessonEditor({
     try {
       const response = await fetch(`/api/store/course?id=${productId}&lessonId=${lesson.id}`, { cache: "no-store" });
       const data = (await response.json()) as { ok?: boolean; text?: string };
-      setText(data.ok ? data.text ?? "" : "");
+      const read = data.ok ? data.text ?? "" : "";
+      setText(read);
+      setSavedText(read);
     } catch {
       setText("");
+      setSavedText("");
     } finally {
       setLoadingText(false);
     }
@@ -808,17 +830,27 @@ function LessonEditor({
         onSubmit={async (event) => {
           event.preventDefault();
           const answer = await run({ action: "edit", op: "lesson-edit", lessonId: lesson.id, title, preview, link });
-          if (answer.ok) toast("Lesson saved.");
+          if (answer.ok) {
+            // Taken as the server kept it, so a name or link it tidied never reads as unsaved.
+            const kept = answer.course?.modules.flatMap((m) => m.lessons).find((l) => l.id === lesson.id);
+            if (kept) {
+              // A field changed while it was saving keeps what was typed.
+              setTitle((now) => (now === title ? kept.title : now));
+              setPreview((now) => (now === preview ? kept.preview : now));
+              setLink((now) => (now === link ? kept.link ?? "" : now));
+            }
+            toast("Lesson saved.");
+          }
         }}
       >
         <label className="block">
           <span className="field-label">Lesson name</span>
           <input className="field mt-2" maxLength={MAX_ITEM_TITLE} value={title} onChange={(e) => setTitle(e.target.value)} />
         </label>
-        <label className="block">
-          <span className="field-label">A link for this lesson (optional)</span>
-          <input className="field mt-2" type="url" placeholder="https://" value={link} onChange={(e) => setLink(e.target.value)} />
-        </label>
+        <div>
+          <label htmlFor={`${prefix}-link`} className="field-label">A link for this lesson (optional)</label>
+          <UrlField id={`${prefix}-link`} className="field mt-2" value={link} onChange={setLink} />
+        </div>
         <label className="flex items-start gap-2 text-sm text-ink">
           <input type="checkbox" className="mt-1" checked={preview} onChange={(e) => setPreview(e.target.checked)} />
           <span>Free preview: anyone can open this lesson from your store before buying.</span>
@@ -889,7 +921,10 @@ function LessonEditor({
             onSubmit={async (event) => {
               event.preventDefault();
               const answer = await run({ action: "body", lessonId: lesson.id, text });
-              if (answer.ok) toast("Lesson text saved.");
+              if (answer.ok) {
+                setSavedText(text);
+                toast("Lesson text saved.");
+              }
             }}
           >
             <textarea

@@ -15,25 +15,25 @@ const steps = [
   { visits: 300, signups: 0, sales: 20, revenue: 98_000 },
   { visits: 20, signups: 0, sales: 5, revenue: 9_500 },
 ];
-const s = funnelSummary(steps, 4_900, 4_900);
+const s = funnelSummary(steps, 4_900, 4_900, 4_900);
 is("visits are the first step's; sign-ups, sales and revenue add up", [s.visits, s.signups, s.sales, s.oneTime], [1000, 40, 25, 107_500]);
 is("refunds apart, and taken off: net is one-time plus recurring less refunds", [s.recurring, s.refunded, s.net], [4_900, 4_900, 107_500]);
 is("average order: one-time over sales, rounded down; per visit: one-time less refunds over the first step's visits, as a fraction", [s.averageOrder, s.perVisit], [4_300, 102.6]);
-is("an average is rounded down, never up", funnelSummary([{ visits: 3, signups: 0, sales: 3, revenue: 1000 }], 0, 0).averageOrder, 333);
-is("a small revenue per visit stays visible, never $0 or rounded up", [perVisitWords(funnelSummary([{ visits: 1000, signups: 0, sales: 1, revenue: 500 }], 0, 0).perVisit, "usd"), perVisitWords(null, "usd")], ["$0.005", "Unavailable"]);
-const neg = funnelSummary([{ visits: 100, signups: 0, sales: 0, revenue: 0 }], 0, 1500);
+is("an average is rounded down, never up", funnelSummary([{ visits: 3, signups: 0, sales: 3, revenue: 1000 }], 0, 0, 0).averageOrder, 333);
+is("a small revenue per visit stays visible, never $0 or rounded up", [perVisitWords(funnelSummary([{ visits: 1000, signups: 0, sales: 1, revenue: 500 }], 0, 0, 0).perVisit, "usd"), perVisitWords(null, "usd")], ["$0.005", "Unavailable"]);
+const neg = funnelSummary([{ visits: 100, signups: 0, sales: 0, revenue: 0 }], 0, 1500, 1500);
 is("refunds of earlier sales outweigh the period: net below zero, said; no revenue per visit", [neg.net, moneyWords(neg.net, "usd"), neg.perVisit], [-1500, "-$15", null]);
-is("never a negative zero", Object.is(funnelSummary([{ visits: 1, signups: 0, sales: 1, revenue: 100 }], 0, 100).net, 0), true);
-is("a funnel with no steps: everything unknown, not 0", Object.values(funnelSummary([], 0, 0)).every((v) => v === null), true);
-is("no sales: no average, never a division by nothing", funnelSummary([{ visits: 10, signups: 1, sales: 0, revenue: 0 }], 0, 0).averageOrder, null);
-is("no visits: no revenue per visit", funnelSummary([{ visits: 0, signups: 0, sales: 0, revenue: 0 }], 0, 0).perVisit, null);
+is("never a negative zero", Object.is(funnelSummary([{ visits: 1, signups: 0, sales: 1, revenue: 100 }], 0, 100, 100).net, 0), true);
+is("a funnel with no steps: everything unknown, not 0", Object.values(funnelSummary([], 0, 0, 0)).every((v) => v === null), true);
+is("no sales: no average, never a division by nothing", funnelSummary([{ visits: 10, signups: 1, sales: 0, revenue: 0 }], 0, 0, 0).averageOrder, null);
+is("no visits: no revenue per visit", funnelSummary([{ visits: 0, signups: 0, sales: 0, revenue: 0 }], 0, 0, 0).perVisit, null);
 
 part("Unknown stays unknown");
-const gap = funnelSummary([{ visits: 1000, signups: 40, sales: null, revenue: 98_000 }, steps[1]], 0, 0);
+const gap = funnelSummary([{ visits: 1000, signups: 40, sales: null, revenue: 98_000 }, steps[1]], 0, 0, 0);
 is("one step's sales unread: the sales and the average are unknown, the rest still counts", [gap.sales, gap.averageOrder, gap.oneTime, gap.visits], [null, null, 196_000, 1000]);
-is("refunds unread: net and per visit unknown", [funnelSummary(steps, 0, null).net, funnelSummary(steps, 0, null).perVisit], [null, null]);
+is("refunds unread: net and per visit unknown", [funnelSummary(steps, 0, null, null).net, funnelSummary(steps, 0, null, null).perVisit], [null, null]);
 is("said as Unavailable, never 0", [moneyWords(null, "usd"), countWords(null), moneyWords(0, "usd"), countWords(0)], ["Unavailable", "Unavailable", "$0", "0"]);
-is("a negative or broken count is unknown", funnelSummary([{ visits: -1, signups: 1.5, sales: 2, revenue: 100 }], 0, 0).visits, null);
+is("a negative or broken count is unknown", funnelSummary([{ visits: -1, signups: 1.5, sales: 2, revenue: 100 }], 0, 0, 0).visits, null);
 is("every figure says how it is counted", Object.values(SUMMARY_NOTES).every((n) => n.length > 15), true);
 
 part("The period, in the creator's own days");

@@ -7,7 +7,7 @@
  * currencies apart; a loss said in words; the before-taxes sentence; an
  * export cell never runs as a formula.
  */
-import { BEFORE_TAXES, SOURCES, csvRow, orderProfit, periodProfit, profitWords, readCostPerSale } from "@/lib/creator-profit-rules";
+import { BEFORE_TAXES, SHARE_WORDS, SOURCES, csvRow, orderProfit, periodProfit, productKey, productProfit, profitWords, readCostPerSale } from "@/lib/creator-profit-rules";
 import { done, is, part } from "./check";
 
 part("The cost the creator enters");
@@ -35,6 +35,21 @@ is("one incomplete order makes its currency's total incomplete", periodProfit([o
 is("ads in a currency with no order are still taken off: a loss, never lost", periodProfit([order], { eur: 5000 }).get("eur"), { state: "complete", cents: -5000 });
 is("a currency written in capitals is the same currency", periodProfit([{ ...order, currency: "USD" }], { usd: 1000 }).get("usd"), { state: "complete", cents: 2928 });
 is("ads that could not be read make the total unavailable", periodProfit([order], { usd: null }).get("usd"), { state: "unavailable" });
+
+part("Per product and option");
+const two = { currency: "usd", paid: 6000, refunded: 0, fee: 300, otherCosts: 0, lines: [{ productId: "a", units: 1, costPerSale: 1000, charged: 4000 }, { productId: "b", optionId: "big", units: 1, costPerSale: 500, charged: 2000 }] };
+const per = productProfit([two, two]);
+is("the fee shared by each line's part of the payment, each line's own cost", [per.get(productKey("usd", "a", null)), per.get(productKey("usd", "b", "big"))], [{ state: "complete", cents: 2 * (3800 - 1000) }, { state: "complete", cents: 2 * (1900 - 500) }]);
+is("the parts add up to the order exactly, the rounding on the last line", (() => { const p = productProfit([{ ...two, fee: 301 }]); const a = p.get(productKey("usd", "a", null)), b = p.get(productKey("usd", "b", "big")); return a?.state === "complete" && b?.state === "complete" ? a.cents + b.cents + 1500 : null; })(), 6000 - 301);
+is("a line with no cost set is incomplete; the other still counts", [productProfit([{ ...two, lines: [two.lines[0], { ...two.lines[1], costPerSale: null }] }]).get(productKey("usd", "b", "big"))?.state, productProfit([{ ...two, lines: [two.lines[0], { ...two.lines[1], costPerSale: null }] }]).get(productKey("usd", "a", null))?.state], ["incomplete", "complete"]);
+is("an order not read: each of its products unavailable", productProfit([{ ...two, fee: null }]).get(productKey("usd", "a", null)), { state: "unavailable" });
+is("the rule said beside the figures, ads apart", [SHARE_WORDS.includes("by what each was charged"), SHARE_WORDS.includes("Ads are not included per product.")], [true, true]);
+is("the rounding goes on the last line", (() => { const p = productProfit([{ ...two, fee: 301, lines: [{ ...two.lines[0], costPerSale: 0 }, { ...two.lines[1], costPerSale: 0 }] }]); return [p.get(productKey("usd", "a", null)), p.get(productKey("usd", "b", "big"))]; })(), [{ state: "complete", cents: 3799 }, { state: "complete", cents: 1900 }]);
+is("a loss shared exactly, floored toward minus infinity", (() => { const p = productProfit([{ currency: "usd", paid: 0, refunded: 0, fee: 61, otherCosts: 0, lines: [1, 2, 3].map((n) => ({ productId: `p${n}`, units: 1, costPerSale: 0, charged: 100 })) }]); return [1, 2, 3].map((n) => (p.get(productKey("usd", `p${n}`, null)) as { cents: number }).cents); })(), [-21, -21, -19]);
+is("never two products under one key", productKey("usd", "a|b", null) === productKey("usd", "a", "b|") || productKey("usd", "a", "") === productKey("usd", "a", null), false);
+is("an order with no line, or lines charged nothing, cannot be shared: unavailable, never dropped", [productProfit([{ ...two, lines: [] }]).get(productKey("usd", "", null)), productProfit([{ ...two, lines: two.lines.map((l) => ({ ...l, charged: 0 })) }]).get(productKey("usd", "a", null))], [{ state: "unavailable" }, { state: "unavailable" }]);
+is("a charged amount that is not a whole amount: unavailable", productProfit([{ ...two, lines: [{ ...two.lines[0], charged: 10.5 }, two.lines[1]] }]).get(productKey("usd", "a", null)), { state: "unavailable" });
+is("large amounts, no cent lost", (() => { const big = { currency: "usd", paid: 900_000_000, refunded: 0, fee: 0, otherCosts: 0, lines: [{ productId: "a", units: 1, costPerSale: 0, charged: 899_999_999 }, { productId: "b", units: 1, costPerSale: 0, charged: 1 }] }; const p = productProfit([big]); return [p.get(productKey("usd", "a", null)), p.get(productKey("usd", "b", null))]; })(), [{ state: "complete", cents: 899_999_999 }, { state: "complete", cents: 1 }]);
 
 part("Said plainly");
 is("a loss in words, not only a color", profitWords({ state: "complete", cents: -972 }, "usd"), "$9.72 loss");

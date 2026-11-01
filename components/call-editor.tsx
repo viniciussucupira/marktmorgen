@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { UrlField } from "@/components/url-field";
+import { roomOnLeave } from "@/lib/url-check";
 import { useRouter } from "next/navigation";
 import { toast } from "@/components/toast";
 import type { Product } from "@/lib/store";
@@ -63,6 +65,10 @@ const MESSAGES: Record<string, string> = {
   unavailable: "Stores are not switched on yet, so nothing was saved.",
   server_error: "Something went wrong on our side. Try again in a moment.",
 };
+
+// A meeting link is checked when its field is left, by the reading the server keeps (487 [IT4], pattern 1).
+const ROOM_CHECK = roomOnLeave(MESSAGES.room);
+const SESSION_ROOM_CHECK = roomOnLeave(MESSAGES.session_room);
 
 function zones(): string[] {
   try {
@@ -624,17 +630,17 @@ export function CallEditor({ product, email, meetings = [] }: { product: Product
                     />
                   </label>
                   {draft.video ? null : (
-                    <label className="col-span-2 block sm:col-span-4">
-                      <span className="text-xs font-semibold text-ink-soft">{draft.meet ? "Your own link, if the meeting cannot be made (optional)" : "Meeting link"}</span>
-                      <input
-                        type="url"
-                        inputMode="url"
+                    <div className="col-span-2 block sm:col-span-4">
+                      <label htmlFor={`call-${product.id}-session-${index}-room`} className="text-xs font-semibold text-ink-soft">{draft.meet ? "Your own link, if the meeting cannot be made (optional)" : "Meeting link"}</label>
+                      <UrlField
+                        id={`call-${product.id}-session-${index}-room`}
                         placeholder="https://zoom.us/j/… or https://meet.google.com/…"
                         value={s.room}
-                        onChange={(e) => setSession(index, { room: e.target.value })}
+                        onChange={(room) => setSession(index, { room })}
+                        check={SESSION_ROOM_CHECK}
                         className="field mt-1 !min-h-0 !py-1.5"
                       />
-                    </label>
+                    </div>
                   )}
                 </div>
               </li>
@@ -857,22 +863,23 @@ export function CallEditor({ product, email, meetings = [] }: { product: Product
         meetings={meetings}
         onChange={(where) => setDraft({ ...draft, video: where === "video", meet: where === "google" || where === "zoom" ? where : null })}
       >
-        <label className="mt-3 block">
-          <span className="field-label">{draft.meet ? "Your own link, if the meeting cannot be made (optional)" : "Meeting link"}</span>
-          <input
-            type="url"
-            inputMode="url"
+        <div className="mt-3 block">
+          <label htmlFor={`call-${product.id}-room`} className="field-label">{draft.meet ? "Your own link, if the meeting cannot be made (optional)" : "Meeting link"}</label>
+          <UrlField
+            id={`call-${product.id}-room`}
             placeholder="https://zoom.us/j/… or https://meet.google.com/…"
             value={draft.room}
-            onChange={(e) => setDraft({ ...draft, room: e.target.value })}
+            onChange={(room) => setDraft({ ...draft, room })}
+            check={ROOM_CHECK}
+            describedBy={`call-${product.id}-room-help`}
             className="field mt-2"
           />
-          <span className="field-hint mt-1 block">
+          <span id={`call-${product.id}-room-help`} className="field-hint mt-1 block">
             {draft.meet
               ? "Given to a buyer only when the meeting cannot be made. Leave it empty to give them a private video room instead."
               : "Your Zoom, Google Meet or Whereby room. Each buyer gets it the moment they have paid. Leave it empty to send one yourself."}
           </span>
-        </label>
+        </div>
       </RoomChoice>
 
       <p className="rounded-[10px] bg-paper px-3 py-2 text-sm text-ink-soft">

@@ -1,8 +1,8 @@
 /**
  * The creator's own profit, before taxes (545 [LU1], unit 1; added
  * 1 November 2026): per order and per period, with where each number comes
- * from. Per product and per option, which needs the order's fee, refund and
- * other costs shared between its lines, is the next unit. Not Marktmorgen's own margin (lib/company-margin-report.ts), which
+ * from; per product and option (unit 2), the order's fee, refund and other
+ * costs shared between its lines by each one's part of what was paid. Not Marktmorgen's own margin (lib/company-margin-report.ts), which
  * is another thing entirely.
  *
  *   paid      the order's payments, from the creator's own Stripe account
@@ -94,6 +94,60 @@ export function periodProfit(orders: OrderMoney[], ads: Record<string, number | 
   for (const [currency, profit] of out) {
     const spent = spentIn.has(currency) ? spentIn.get(currency)! : 0;
     if (profit.state === "complete") out.set(currency, known(spent) ? { state: "complete", cents: profit.cents - spent || 0 } : { state: "unavailable" });
+  }
+  return out;
+}
+
+/** An order's line with what it was charged, for sharing the order's own figures between its products. */
+export type ChargedLine = OrderLine & { optionId?: string | null; charged: number };
+
+/** How a product's share of an order is worked out, said beside the per-product figures. */
+export const SHARE_WORDS = "Stripe's fee, refunds and other costs of an order are shared between its products by what each was charged. Ads are not included per product.";
+
+/** The key of one product or option in productProfit's answer: never two products under one key. */
+export function productKey(currency: string, productId: string, optionId: string | null | undefined): string {
+  return JSON.stringify([currency.toLowerCase(), productId, optionId ?? null]);
+}
+
+/**
+ * Each product's (and option's) profit before taxes over a period, per
+ * currency: an order's fee, refund and other costs shared between its lines
+ * by what each line was charged, the rounding left on the last line so the
+ * parts add up to the order exactly; each line's own cost. An order with no
+ * line, or whose lines were charged nothing, cannot be shared: it reads
+ * "Count unavailable" (an order with no line under an empty product key),
+ * so the products never add up to less than the period without saying so.
+ * Unknown stays unknown, a cost not set stays incomplete, line by line.
+ */
+export function productProfit(orders: (Omit<OrderMoney, "lines"> & { lines: ChargedLine[] })[]): Map<string, Profit> {
+  const out = new Map<string, Profit>();
+  const key = (currency: string, line: ChargedLine) => productKey(currency, line.productId, line.optionId);
+  const add = (k: string, p: Profit) => {
+    const so = out.get(k) ?? { state: "complete", cents: 0 };
+    if (so.state === "unavailable" || p.state === "unavailable") out.set(k, { state: "unavailable" });
+    else if (so.state === "incomplete" || p.state === "incomplete") out.set(k, { state: "incomplete", why: "cost not set" });
+    else out.set(k, { state: "complete", cents: so.cents + p.cents });
+  };
+  for (const order of orders) {
+    const total = order.lines.reduce((n, l) => n + (Number.isSafeInteger(l.charged) && l.charged >= 0 ? l.charged : Number.NaN), 0);
+    const whole = orderProfit(order);
+    // Nothing charged to share by (no line, or every line charged nothing while something was paid): no product can be given its part.
+    if (whole.state === "unavailable" || !Number.isSafeInteger(total) || !order.lines.length || total <= 0) {
+      for (const line of order.lines) add(key(order.currency, line), { state: "unavailable" });
+      if (!order.lines.length) add(productKey(order.currency, "", null), { state: "unavailable" });
+      continue;
+    }
+    const shared = (order.paid as number) - (order.refunded as number) - (order.fee as number) - (order.otherCosts as number);
+    let given = 0;
+    order.lines.forEach((line, i) => {
+      // The last line takes the rounding, so the parts add up to the order's own figure.
+      // In BigInt, so a large order's product of two amounts never loses a cent; floored, toward minus infinity for a loss.
+      const exact = (BigInt(shared) * BigInt(line.charged)) / BigInt(total);
+      const floored = exact * BigInt(total) > BigInt(shared) * BigInt(line.charged) ? exact - BigInt(1) : exact;
+      const part = i === order.lines.length - 1 ? shared - given : Number(floored);
+      given += part;
+      add(key(order.currency, line), line.costPerSale === null ? { state: "incomplete", why: "cost not set" } : { state: "complete", cents: part - line.costPerSale * line.units });
+    });
   }
   return out;
 }
