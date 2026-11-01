@@ -227,7 +227,14 @@ export function CommunityEventsStudio({
 
       <h3 className="mt-8 text-sm font-bold uppercase tracking-[0.06em] text-ink-soft">Coming up</h3>
       {events.length === 0 ? (
-        <p className="mt-3 rounded-[var(--r-md)] bg-sand p-4 text-sm text-ink-soft">Nothing scheduled.</p>
+        <p className="mt-3 rounded-[var(--r-md)] bg-sand p-4 text-sm text-ink-soft">
+          {/* The button is named only where it is on the screen: for a role that schedules, while the new event's form is closed. */}
+          {canManage && editing !== "new" ? (
+            <>Nothing scheduled yet. A live call, a workshop or a Q&amp;A: press &ldquo;Schedule an event&rdquo; to put one on your community&rsquo;s calendar.</>
+          ) : (
+            "Nothing scheduled yet."
+          )}
+        </p>
       ) : (
         <ul className="mt-3 space-y-3">
           {events.map((event) => (

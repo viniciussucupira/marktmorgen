@@ -25,7 +25,7 @@ import { confirmsOptionWrite } from "@/lib/option-confirmation";
 import { CheckoutFieldsEditor } from "@/components/checkout-fields-editor";
 import { ProductImageEditor } from "@/components/product-image-editor";
 import type { CoverLook } from "@/components/cover-maker";
-import type { LanguageCode } from "@/lib/store-language";
+import { LANGUAGES, type LanguageCode } from "@/lib/store-language";
 import { LicenceKeyEditor } from "@/components/licence-key-editor";
 import { PdfStampToggle } from "@/components/pdf-stamp-toggle";
 import { PdfPreviewToggle } from "@/components/pdf-preview-toggle";
@@ -69,7 +69,9 @@ import {
   membershipPrice,
 } from "@/lib/product-recurring";
 import { MAX_INTRO_COUNT, introLineEnglish } from "@/lib/intro-price";
-import { MAX_ABOUT_LENGTH } from "@/lib/product-about";
+import { MAX_ABOUT_LENGTH, aboutBlocks } from "@/lib/product-about";
+import { ProductAbout } from "@/components/product-about-view";
+import { type StoreLook, lookStyle } from "@/lib/store-look";
 import { imageUrl } from "@/lib/product-image";
 import { StoreField, useStudioHref, useStudioStore } from "@/components/studio-store-pin";
 import { STUDIO_MESSAGES } from "@/lib/studio-messages";
@@ -288,6 +290,7 @@ function ProductForm({
   product,
   loadingAbout = false,
   ownHosts = [],
+  preview = null,
 }: {
   draft: Draft;
   setDraft: (draft: Draft) => void;
@@ -302,8 +305,47 @@ function ProductForm({
   loadingAbout?: boolean;
   /** The store's own hosts besides its marktmorgen.com address (its own domain), not warned as "another site". */
   ownHosts?: string[];
+  /** The store's look and language, so the product's own words are previewed as buyers see them (487 [IT4], pattern 7). */
+  preview?: { look: StoreLook; language: LanguageCode } | null;
 }) {
   const id = product?.id ?? "new";
+  // The preview starts at a phone's width, where most product pages are read.
+  const [phone, setPhone] = useState(true);
+  const toggle = (on: boolean) => `inline-flex min-h-11 items-center rounded-full px-4 text-sm font-semibold ${on ? "bg-white text-ink shadow-sm" : "text-ink-soft"}`;
+  // The title, summary and description as the product page draws them (components/product-about-view.tsx), from what is typed now.
+  const pagePreview = preview ? (
+    <div className="min-w-0">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-sm text-ink-soft">As buyers see it</p>
+        <div role="group" aria-label="Preview width" className="inline-flex rounded-full bg-sand p-1">
+          <button type="button" className={toggle(phone)} aria-pressed={phone} onClick={() => setPhone(true)}>
+            Phone
+          </button>
+          <button type="button" className={toggle(!phone)} aria-pressed={!phone} onClick={() => setPhone(false)}>
+            Wide
+          </button>
+        </div>
+      </div>
+      <p className="mt-1 text-xs text-ink-soft">The same words as in the form, laid out as your product&apos;s page shows them. The price and the Buy button aren&apos;t shown here: your page adds them from what you save. Nothing in it can be pressed here.</p>
+      <div className="mt-1 overflow-hidden rounded-2xl ring-1 ring-line">
+        <div
+          // Inert: its links stay out of the Tab order and out of reach of a click that would leave the form.
+          inert
+          // In the store's language, as the page is, so a screen reader would read its words in the right language (3.1.2).
+          lang={LANGUAGES[preview.language]?.locale ?? "en-US"}
+          className={`st-page st-theme-${preview.look.theme} mx-auto px-4 pb-8 pt-6`}
+          // Wide is the product page's own width (max-w-2xl, 672 px); the card and the title follow Phone or Wide, as the page does.
+          style={{ ...(lookStyle(preview.look) as React.CSSProperties), maxWidth: phone ? 390 : 672 }}
+        >
+          <div className={`st-card ${phone ? "p-6" : "p-8"}`}>
+            <p className={`font-display font-semibold leading-tight tracking-[-0.02em] ${phone ? "text-2xl" : "text-3xl"}`}>{draft.title.trim() || "Your product's name"}</p>
+            {draft.summary.trim() ? <p className="st-muted mt-4 text-lg leading-relaxed">{draft.summary}</p> : null}
+            {draft.about.trim() ? <ProductAbout blocks={aboutBlocks(draft.about)} language={preview.language} /> : null}
+          </div>
+        </div>
+      </div>
+    </div>
+  ) : null;
   const currency = useStoreCurrency();
   const prefix = fieldPrefix(currency);
   const free = typedFree(draft.price);
@@ -399,7 +441,8 @@ function ProductForm({
         </p>
       </div>
 
-      <div>
+      <div className={pagePreview ? "grid min-w-0 gap-4 xl:grid-cols-2" : "min-w-0"}>
+      <div className="min-w-0">
         <label htmlFor={`product-about-${id}`} className="field-label">
           The full description <span className="font-normal text-ink-soft">(optional)</span>
         </label>
@@ -442,6 +485,17 @@ function ProductForm({
             onChange={(about) => setDraft({ ...draft, about })}
           />
         )}
+      </div>
+      {pagePreview ? (
+        <>
+          {/* Beside the description on a wide screen; on a narrow one, folded. */}
+          <div className="hidden xl:block">{pagePreview}</div>
+          <details className="xl:hidden">
+            <summary className="inline-flex min-h-11 cursor-pointer items-center text-sm font-semibold text-ink underline underline-offset-4">See it as buyers see it</summary>
+            <div className="mt-2">{pagePreview}</div>
+          </details>
+        </>
+      ) : null}
       </div>
 
       <div>
@@ -1575,6 +1629,7 @@ export function ProductEditor({
   preorders = {},
   mailAddress = "",
   cover = null,
+  look = null,
   pairChoices = [],
   ownHosts = [],
 }: {
@@ -1622,6 +1677,8 @@ export function ProductEditor({
   mailAddress?: string;
   /** The store's color, letters, name and language, for the cover maker (components/cover-maker.tsx). */
   cover?: (CoverLook & { language: LanguageCode }) | null;
+  /** The store's look, for the preview of a product's own words. */
+  look?: StoreLook | null;
   /** The store's published products, by name: what a product's "Goes well with" can pick (lib/store-collections.ts). */
   pairChoices?: { id: string; title: string }[];
   /** The store's own domain, if it has one: not warned as "another site" in what the creator writes (493 [DE2]). */
@@ -1639,6 +1696,12 @@ export function ProductEditor({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   useLeaveGuard((adding || editingId !== null) && JSON.stringify(draft) !== JSON.stringify(opened) && !busy);
+  // A new price on a product buyers can see is shown, old and new, before it is saved (487 [IT4], pattern 8): the id under review.
+  const [priceReview, setPriceReview] = useState<string | null>(null);
+  function changePrice(productId: string) {
+    setPriceReview(null);
+    requestAnimationFrame(() => document.getElementById(`product-price-${productId}`)?.focus());
+  }
   const [fileBusyId, setFileBusyId] = useState<string | null>(null);
   const [percent, setPercent] = useState(0);
   const [fileError, setFileError] = useState<{ id: string; message: string } | null>(
@@ -1819,6 +1882,7 @@ export function ProductEditor({
     };
     setDraft(form);
     setOpened(form);
+    setPriceReview(null);
     setError(null);
     setAdding(false);
     setEditingId(product.id);
@@ -1871,6 +1935,7 @@ export function ProductEditor({
         <div className="mt-5">
           <ProductForm
             ownHosts={ownHosts}
+            preview={look && cover ? { look, language: cover.language } : null}
             draft={draft}
             setDraft={setDraft}
             busy={busy}
@@ -1958,11 +2023,32 @@ export function ProductEditor({
             key={product.id}
             className="rounded-2xl border border-line bg-paper p-4"
           >
-            {editingId === product.id ? (
+            {editingId === product.id ? (() => {
+              // Only a product bought once, at one price, with no lowest price chosen by the buyer: there the field is what buyers pay.
+              const newPrice = readMoney(draft.price, currency);
+              const priceChanged = !product.hidden && !product.options.length && !draft.every && !draft.pwyw && newPrice !== null && newPrice !== product.priceCents;
+              const save = () => {
+                const payload = payloadOf(draft);
+                if (aboutUnread && !draft.about) delete payload.about;
+                run(
+                  { action: "edit", id: product.id, ...payload },
+                  () => {
+                    setEditingId(null);
+                    setPriceReview(null);
+                  },
+                  "Product saved.",
+                );
+              };
+              return (
+              <>
               <ProductForm
                 ownHosts={ownHosts}
+                preview={look && cover ? { look, language: cover.language } : null}
                 draft={draft}
-                setDraft={setDraft}
+                setDraft={(next) => {
+                  setDraft(next);
+                  if (next.price !== draft.price) setPriceReview(null);
+                }}
                 busy={busy}
                 error={error}
                 submitLabel="Save"
@@ -1970,20 +2056,40 @@ export function ProductEditor({
                 loadingAbout={loadingAbout}
                 onSubmit={() => {
                   if (loadingAbout) return;
-                  const payload = payloadOf(draft);
-                  if (aboutUnread && !draft.about) delete payload.about;
-                  run(
-                    { action: "edit", id: product.id, ...payload },
-                    () => setEditingId(null),
-                    "Product saved.",
-                  );
+                  if (priceChanged && priceReview !== product.id) {
+                    setPriceReview(product.id);
+                    requestAnimationFrame(() => document.getElementById(`product-${product.id}-price-review-title`)?.focus());
+                    return;
+                  }
+                  save();
                 }}
                 onCancel={() => {
                   setEditingId(null);
+                  setPriceReview(null);
                   setError(null);
                 }}
               />
-            ) : (
+              {priceReview === product.id && priceChanged && newPrice !== null ? (
+                <div className="mt-3 rounded-[var(--r-md)] bg-sand p-4 text-sm text-ink">
+                  <h3 id={`product-${product.id}-price-review-title`} tabIndex={-1} className="font-semibold">Check the new price</h3>
+                  {/* A summary list (GOV.UK "Check answers"): the price buyers see changes as soon as it is saved. */}
+                  <dl className="mt-2 divide-y divide-line">
+                    <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 py-2">
+                      <dt className="basis-full font-semibold sm:basis-28 sm:shrink-0">Price</dt>
+                      <dd className="min-w-0 basis-full break-words sm:basis-0 sm:flex-1">{`${formatMoney(product.priceCents, currency)} now, ${formatMoney(newPrice, currency)} once you save.`}</dd>
+                      <dd><button type="button" className="inline-flex min-h-11 items-center font-bold underline underline-offset-4" onClick={() => changePrice(product.id)}>Change<span className="sr-only"> price</span></button></dd>
+                    </div>
+                  </dl>
+                  <p className="mt-2">Your store shows the new price as soon as you save.</p>
+                  {/* The confirmation is here, after what it confirms, so the reading and the focus order end on it. */}
+                  <button type="button" className="btn btn-primary btn-sm mt-3" disabled={busy} aria-busy={busy} onClick={save}>
+                    Yes, save the new price
+                  </button>
+                </div>
+              ) : null}
+              </>
+              );
+            })() : (
               <>
                 <div className="flex items-start gap-3">
                   {product.image ? (
@@ -2196,6 +2302,7 @@ export function ProductEditor({
                     preorders={preorders[product.id] ?? null}
                     preorderBlocked={preorderProblem(product)}
                     hasContent={hasContent(product)}
+                    price={formatMoney(product.priceCents, currency)}
                   />
                 ) : null}
                 {product.call || product.course || product.shipping ? null : <BundleToggle product={product} />}

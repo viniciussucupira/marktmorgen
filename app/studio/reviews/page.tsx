@@ -137,6 +137,12 @@ export default async function StudioReviewsPage({ searchParams }: Params) {
                     ? "Every review has been seen. New ones, and reviews their buyers change, come back here."
                     : "When a buyer reviews something, it appears here and on the product's page at the same moment."}
                 </p>
+                {/* Only when the store has no review at all, on either tab, and only for a role that can switch the requests on. */}
+                {current.total === 0 && numbers.size === 0 && can(view.role, "settings") ? (
+                  <a href="#asking-for-reviews" className="mt-3 inline-flex min-h-11 items-center font-semibold text-ink underline underline-offset-4">
+                    Ask buyers for a review
+                  </a>
+                ) : null}
               </div>
             ) : (
               <AiOn value={ai}>
@@ -210,7 +216,7 @@ export default async function StudioReviewsPage({ searchParams }: Params) {
             </div>
 
             <div className="card p-5 sm:p-6">
-              <p className="font-semibold text-ink">Asking for reviews</p>
+              <h2 id="asking-for-reviews" tabIndex={-1} className="font-semibold text-ink">Asking for reviews</h2>
               <div className="mt-3">
                 {/* The email is a store setting (lib/team-roles.ts): the owner and Admins switch it. */}
                 {can(view.role, "settings") ? (
