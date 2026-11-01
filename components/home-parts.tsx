@@ -281,7 +281,7 @@ function PlanCard({
 
       {/* Wraps "a month" under the price, and a smaller price below 640px,
           so a 320px screen with WCAG 1.4.12 text spacing never scrolls sideways (1.4.10). */}
-      <p className="mt-7 flex flex-wrap items-baseline gap-x-2 gap-y-1">
+      <p className="mt-5 flex flex-wrap items-baseline gap-x-2 gap-y-1">
         <span className="text-[2.75rem] sm:text-[3.5rem] font-semibold leading-none tracking-[-0.05em] text-ink tabular-nums">
           <CycleText month={usdWhole(month)} year={usdWhole(year)} />
         </span>

@@ -29,7 +29,7 @@ export default function PricingPage() {
   {/* 243 [CF6], owner's complement of 31/10/2026 23h14: the three plans, with price and limits, start on the
       first screen, right under the title; the tools and the comparison follow them. Whether paid plans are open is
       said once, here, beside the plans (the top banner of the site says it too). */}
-  <div className="hm-page-hero"><div aria-hidden="true" className="hm-sky-layer"><div className="hm-blob hm-sun-page" /></div><div className="relative mx-auto max-w-6xl px-4 pb-6 pt-8 sm:px-8 sm:pt-10">
+  <div className="hm-page-hero"><div aria-hidden="true" className="hm-sky-layer"><div className="hm-blob hm-sun-page" /></div><div className="relative mx-auto max-w-6xl px-4 pb-4 pt-6 sm:px-8 sm:pt-6">
   <header className="max-w-3xl">
    <h1 className="t-h1">A clear price. Published limits.</h1>
    <p className="mt-3 text-lg">{feeWords().feesRow} All prices below are in USD.</p>
@@ -44,7 +44,7 @@ export default function PricingPage() {
     (/signin?plan=…&billing=…); prices come from lib/plan.ts. The home
     page's "Compare Store, Studio and Scale" link points at #plans.
   */}
-  <section id="plans" data-plan-prices aria-labelledby="plans-heading" className="mt-4 scroll-mt-24">
+  <section id="plans" data-plan-prices aria-labelledby="plans-heading" className="mt-2 scroll-mt-24">
    <h2 id="plans-heading" className="sr-only">Plan prices</h2>
    <Suspense fallback={null}>
     <Pricing domains={DOMAINS} />
