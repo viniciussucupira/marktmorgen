@@ -76,6 +76,7 @@ import { feeWords } from "@/lib/fee-words";
 import { COMMISSION_LIVE } from "@/lib/plan";
 import { NewTab } from "@/components/new-tab";
 import { TermsCheckPanel } from "@/components/terms-check-panel";
+import { fastMoneyMessage } from "@/lib/terms-check-rules";
 import { deliversDigitally } from "@/lib/digital-consent";
 
 /** The sentences about amounts, in the store's own currency (lib/money.ts). */
@@ -102,6 +103,9 @@ const OPTION_MESSAGES: Record<string, string> = {
   bundle: "A bundle has one price for everything in it, so it cannot have several.",
   store_full: "Your store has reached the most it can hold. Remove something, or shorten a long list of choices, to make room.",
 };
+
+export { fastMoneyMessage } from "@/lib/terms-check-rules";
+
 
 /** Why a price the buyer chooses was refused, in words the creator can act on. */
 const PWYW_MESSAGES: Record<string, string> = {
@@ -263,6 +267,7 @@ async function send(
       return wrong(why === "suggested" || !PWYW_MESSAGES[why] ? pwywSuggested(currency) : PWYW_MESSAGES[why]);
     }
     if (data.error === "price") return wrong(productPrice(currency));
+    if (data.error === "fast_money") return wrong(fastMoneyMessage((data as { passage?: unknown }).passage, payload.action === "visibility" ? "publish" : payload.action === "add" ? "add" : "save"));
     return wrong(MESSAGES[data.error ?? ""] ?? MESSAGES.server_error);
   } catch {
     return wrong(MESSAGES.server_error);
@@ -800,7 +805,9 @@ function OptionsBlock({
           && Object.hasOwn(data, "error") && typeof (data as { error?: unknown }).error === "string"
           ? (data as { error: string }).error : null;
         setError(
-          reason === "too_many"
+          reason === "fast_money"
+            ? fastMoneyMessage((data as { passage?: unknown }).passage, "save")
+            : reason === "too_many"
             ? `A product carries up to ${MAX_OPTIONS} prices.`
             : reason === "label"
               ? "Give this price a name the buyer will read, like “5 weeks.”"
