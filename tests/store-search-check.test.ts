@@ -38,13 +38,17 @@ async function main(): Promise<void> {
   is("a hidden product is not on the page, so not named", searchCheck(hidden).summaries.missing, []);
   const notCarried: Store = { ...stored, catalog: { ...stored.catalog, head: stored.catalog.head.filter((l) => l.id !== bread.product.id) } };
   is("a first-page product whose card is not carried is unchecked, never called fine", searchCheck(notCarried).summaries, { missing: [], unchecked: 1 });
-  is("a suspended store is not open to search engines", searchCheck({ ...stored, suspended: "2026-11-01" }).indexed, false);
+  is("a suspended store is not open to search engines, and says why", [searchCheck({ ...stored, suspended: "2026-11-01" }).indexed, searchCheck({ ...stored, suspended: "2026-11-01" }).suspended], [false, true]);
+  const withAbout: Store = { ...stored, catalog: { ...stored.catalog, head: stored.catalog.head.map((l) => (l.id === bread.product.id ? { ...l, about: true } : l)) } };
+  is("a product with an About text has a description, from it", searchCheck(withAbout).summaries.missing, []);
+  is("an own domain counts only when live and allowed by the plan", searchCheck({ ...stored, domain: null }).ownDomain, false);
 
   part("What the studio shows");
-  const shown = renderToStaticMarkup(StoreSearchCheck({ check: { description: false, indexed: true, summaries: { missing: ["Bread & Co"], unchecked: 0 }, ownDomain: false } }));
+  const shown = renderToStaticMarkup(StoreSearchCheck({ check: { description: false, indexed: true, suspended: false, summaries: { missing: ["Bread & Co"], unchecked: 0 }, ownDomain: false } }));
   is("a heading, the missing description with where to write it, the product named with where to fix it", [shown.includes("Can people find your store?"), shown.includes('href="#details"'), shown.includes("Bread &amp; Co"), shown.includes('href="#products"')], [true, true, true, true]);
   is("never a promise about results", [/rank|top of google|first page of google|guarantee/i.test(shown), shown.includes("nobody can promise that")], [false, true]);
-  const fine = renderToStaticMarkup(StoreSearchCheck({ check: { description: true, indexed: true, summaries: { missing: [], unchecked: 0 }, ownDomain: false } }));
+  const fine = renderToStaticMarkup(StoreSearchCheck({ check: { description: true, indexed: true, suspended: false, summaries: { missing: [], unchecked: 0 }, ownDomain: false } }));
+  is("a suspended store is told why, not told to add a product", renderToStaticMarkup(StoreSearchCheck({ check: { description: true, indexed: false, suspended: true, summaries: { missing: [], unchecked: 0 }, ownDomain: false } })).includes('data-search-indexed="suspended"'), true);
   is("all done: said so", [fine.includes('data-search-description="yes"'), fine.includes('data-search-summaries="done"')], [true, true]);
 
   part("What is done for every store is what the code does");
@@ -52,7 +56,7 @@ async function main(): Promise<void> {
   const storePage = readFileSync("app/[handle]/page.tsx", "utf8");
   is("each line is backed: a per-store sitemap, product data with the offer only when sellable, FAQ and blog data, the own domain as canonical", [
     readFileSync("app/[handle]/store-sitemap/route.ts", "utf8").length > 0,
-    /selling && canSellProduct\(store, product\)/.test(productPage),
+    /free \? canGiveProduct\(store, product\) : canSellProduct\(store, product\) \|\| byPayPal/.test(productPage),
     /faqData\(store\.faq\)/.test(storePage),
     readFileSync("app/[handle]/blog/[post]/page.tsx", "utf8").includes('"BlogPosting"'),
     /alternates: \{ canonical: ownDomain \}/.test(storePage),

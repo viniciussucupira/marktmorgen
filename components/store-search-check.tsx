@@ -25,6 +25,10 @@ export function StoreSearchCheck({ check }: { check: SearchCheck }) {
           <Icon name="check" size={16} className="text-violet-deep" />
           Your store is open to search engines.
         </p>
+      ) : check.suspended ? (
+        <p className="mt-5 max-w-[80ch] text-sm text-ink" data-search-indexed="suspended">
+          Your store is paused after notices about its content, so it is kept out of search results until it is back.
+        </p>
       ) : (
         <p className="mt-5 max-w-[80ch] text-sm text-ink" data-search-indexed="no">
           Your store is kept out of search results until it has a product or a link on it, so an empty page is never what people find.
@@ -54,10 +58,10 @@ export function StoreSearchCheck({ check }: { check: SearchCheck }) {
       {summaries.missing.length ? (
         <div className="mt-5 rounded-2xl bg-paper p-4 ring-1 ring-line" data-search-summaries={summaries.missing.length}>
           <h3 className="font-semibold text-ink">
-            {summaries.missing.length === 1 ? "1 product has no summary" : `${summaries.missing.length} products have no summary`}
+            {summaries.missing.length === 1 ? "1 product may have no description" : `${summaries.missing.length} products may have no description`}
           </h3>
           <p className="mt-1 max-w-[80ch] text-sm text-ink-soft">
-            {"A product's one-line summary is what search engines show under its name, unless its sales page has a search description of its own. Check each of these in Products."}
+            {"Search engines show a product's one-line summary under its name, unless its sales page has a search description of its own. These have neither a summary nor an About text, so they may get a general sentence. Check each of these in Products."}
           </p>
           <ul className="mt-3 list-disc space-y-1 pl-6 text-sm text-ink [overflow-wrap:anywhere]">
             {summaries.missing.map((title, index) => <li key={`${index}-${title}`}>{title}</li>)}
