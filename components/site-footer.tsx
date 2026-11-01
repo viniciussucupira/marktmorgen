@@ -60,7 +60,8 @@ const COLUMNS: { title: string; links: FooterLink[] }[] = [
     ],
   },
   {
-    // The same last column, with the same five links, on every Marktmorgen product.
+    // The same last column, with the same five links, on every Marktmorgen product (the home page's short footer
+    // keeps their jobs elsewhere: log in and pricing in its header, support, refunds and cancelling below).
     title: "Account & billing",
     links: [
       { label: "Log in", href: "/signin?to=login" },
@@ -80,7 +81,7 @@ const COLUMNS: { title: string; links: FooterLink[] }[] = [
  * in the footer of every other page, one tap away.
  */
 const HOME_COLUMN: { title: string; links: FooterLink[] } = {
-  title: "Marktmorgen",
+  title: "More from Marktmorgen",
   links: [
     { label: "Every feature", href: "/platform" },
     { label: "All comparisons", href: "/proof/comparisons" },

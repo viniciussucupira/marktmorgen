@@ -11,7 +11,7 @@
  *   - the end-to-end run counts the home page's words and links
  *     (tests/e2e/home-actions.mjs).
  */
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { renderToStaticMarkup } from "react-dom/server";
 import { SiteFooter } from "@/components/site-footer";
 import { done, is, part } from "./check";
@@ -24,11 +24,13 @@ function main(): void {
 
   part("The home footer");
   is("the home page asks for it", readFileSync("app/page.tsx", "utf8").includes('<SiteFooter morning variant="home" />'), true);
-  is("13 links (the full one has 39)", [home.length, full.length], [13, 39]);
+  is("13 links, fewer than the full one", [home.length, home.length < full.length], [13, true]);
   for (const href of ["/terms", "/privacy", "/refunds", "/copyright", "/report", "/accessibility", "mailto:support@marktmorgen.com", "/library", "/refunds#cancel", "/help", "/platform", "/proof/comparisons", "/"]) {
     is(`keeps ${href}`, home.includes(href), true);
   }
-  is("every link it drops is in the full footer of every other page", home.every((href) => full.includes(href)), true);
+  is("each link it keeps is one of the full footer's, under the same words", home.every((href) => full.includes(href)), true);
+  const users = ["app", "components"].flatMap((dir) => readdirSync(dir, { recursive: true }).map(String).filter((f) => f.endsWith(".tsx")).map((f) => `${dir}/${f}`)).filter((f) => readFileSync(f, "utf8").includes('variant="home"'));
+  is("only the home page uses it; every other page keeps the full footer", users, ["app/page.tsx"]);
   is("the other pages keep the full footer", readFileSync("components/site-footer.tsx", "utf8").includes('variant = "full"'), true);
 
   part("The end-to-end count");

@@ -6,9 +6,10 @@ export async function checkHomeActions({browser,LOCAL,axeSource,is}){
    const page=await context.newPage();let writes=0;
    await page.route("**/api/**",async route=>{if(route.request().method()!=="GET"){writes++;await route.abort();}else await route.continue();});
    await page.goto(LOCAL+"/",{waitUntil:"domcontentloaded",timeout:60000});
-   // 498 [ME3] (owner, 28/10/2026): at most 600 words and 30 links on the whole home page, header and footer included.
+   // 498 [ME3] (owner, 28/10/2026): at most 600 words and 30 links on the whole home page, header, footer and closed answers included.
    if(width===1280){
-    const size=await page.evaluate(()=>({words:document.body.innerText.split(/\s+/).filter(word=>/[A-Za-z0-9]/.test(word)).length,links:document.querySelectorAll("a[href]").length}));
+    // One measure for both: everything in the document, closed answers included, scripts and styles left out.
+    const size=await page.evaluate(()=>{const copy=document.body.cloneNode(true);copy.querySelectorAll("script,style,noscript,template").forEach(node=>node.remove());return {words:copy.textContent.split(/\s+/).filter(word=>/[A-Za-z0-9]/.test(word)).length,links:copy.querySelectorAll("a[href]").length};});
     is("ME3 home page at most 600 words and 30 links",[size.words<=600,size.links<=30,size],[true,true,size]);
    }
    const nav=page.getByRole("navigation",{name:"Main",exact:true});
