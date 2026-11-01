@@ -223,9 +223,13 @@ export default function TermsPage() {
         <p>
           <strong className="text-black">Reviews.</strong> Reviews on your
           store come only from buyers whose payment your Stripe account
-          confirms. You may answer a review and hide one. You may not offer
-          anything in return for a review, or present as a review anything a
-          buyer did not write. A hidden review still counts
+          confirms. You may answer a review, and hide one only for one of
+          the review rules: it shares private information, is abusive or
+          hateful, is not about the product, is clearly false, or breaks the
+          law. The rules are the same for every rating; you may not hide a
+          review because of its stars or because it criticizes you. You may
+          not offer anything in return for a review, or present as a review
+          anything a buyer did not write. A hidden review still counts
           in your average, and your page says how many are hidden.
         </p>
         <p>
@@ -951,8 +955,9 @@ export default function TermsPage() {
           >
             Refund Policy
           </Link>
-          . In summary: your first payment to us is refunded in full on request
-          within {REFUND_DAYS} days of it, for any reason or none; a yearly
+          . In summary: within {REFUND_DAYS} days of your first payment to us,
+          that payment and every plan payment for the same store made since
+          are refunded in full on request, once, for any reason or none; a yearly
           plan is refunded at any time for the months not yet started, the
           months used being charged at the monthly price and the card
           processing fee Stripe charged on that payment being kept; and you may cancel

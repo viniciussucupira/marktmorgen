@@ -1,5 +1,6 @@
 "use client";
 
+import { fastMoneyMessage } from "@/lib/terms-check-rules";
 import { TestCountsNotice } from "@/components/test-counts-notice";
 import { pasteExceedsLimit } from "@/lib/paste-limit";
 
@@ -866,7 +867,7 @@ export function PageEditor({
         if (versions !== null) void loadVersions();
         return;
       }
-      setError(MESSAGES[data.error ?? ""] ?? MESSAGES.server_error);
+      setError(data.error === "fast_money" ? fastMoneyMessage((data as { passage?: unknown }).passage, "save") : MESSAGES[data.error ?? ""] ?? MESSAGES.server_error);
     } catch {
       setError(MESSAGES.server_error);
     } finally {
@@ -1858,9 +1859,11 @@ export function PageEditor({
               productTitle={product.title}
               free={product.free}
               picture={Boolean(product.picture)}
+              pictureAlt={product.picture?.alt ?? ""}
               facts={facts}
-              // The version being edited: what the coach adds goes into it.
-              page={{ ...pageToSend(), blocks: drafts.map((d) => d.block) }}
+              // The version being edited: what the coach adds goes into it. The other version, never this one twice,
+              // is the second one, whose pictures are counted too (independent review, 31/10/2026).
+              page={{ ...pageToSend(), blocks: drafts.map((d) => d.block), variant: other ? { id: "", blocks: other.map((d) => d.block) } : null }}
               reach={reach}
               onAdd={(kind) => (kind === "fit" || kind === "facts" || kind === "steps" ? insertNear(emptyBlock(kind), kind === "facts" ? ["hero"] : ["benefits", "inside"]) : add(kind))}
               onHeadline={putHeadline}

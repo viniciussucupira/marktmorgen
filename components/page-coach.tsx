@@ -40,6 +40,7 @@ export function PageCoach({
   productTitle,
   free,
   picture,
+  pictureAlt,
   facts,
   page,
   reach,
@@ -55,6 +56,8 @@ export function PageCoach({
   productTitle: string;
   free: boolean;
   picture: boolean;
+  /** The product picture's own description, shown at the top when the hero shows a picture. */
+  pictureAlt: string;
   facts: PageFacts;
   /** The page as it stands in the editor, saved or not. */
   page: SalesPage;
@@ -78,7 +81,7 @@ export function PageCoach({
   const [left, setLeft] = useState(ai.left);
   const [used, setUsed] = useState<Set<string>>(new Set());
 
-  const checks = coachChecks({ page, productTitle, free, picture, facts });
+  const checks = coachChecks({ page, productTitle, free, picture, pictureAlt, facts });
   const score = coachScore(checks);
   const missing = checks.filter((c) => !c.done).sort((a, b) => b.weight - a.weight);
   const drop = steepestDrop(page.blocks, reach);
