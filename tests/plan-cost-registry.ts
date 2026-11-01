@@ -851,8 +851,8 @@ export type AddOnLine = {
   revenueUsd: number;
   /** Everything one payment of it can cost at full use, in dollars: its use, its payment's fees and its reserves. */
   monthlyUsd: () => number;
-  /** The most it may cost and keep 60% after the 27.5% tax. */
-  allowedUsd: number;
+  /** Maximum total cost after reviewed TX taxes and a positive net cent; null without evidence. */
+  allowedUsd: number | null;
   /** Whether it can be bought today: one that costs past its allowance may not be. */
   onSale: boolean;
   sources: Source[];
@@ -866,7 +866,7 @@ export const ADD_ON_LINES: AddOnLine[] = [
     feature: "The Store assistant add-on, $49 a month per store: the AI chat on a store's pages, its pool of replies, its conversations and its list of unanswered questions (17 October 2026); the next product after a purchase, from the same pool (function 2); one checkout reminder asked for at checkout, its AI line from the same pool (function 3)",
     revenueUsd: assistant.revenueCents / 100,
     monthlyUsd: () => assistant.totalCents / 100,
-    allowedUsd: assistant.allowedCents / 100,
+    allowedUsd: assistant.allowedCents === null ? null : assistant.allowedCents / 100,
     onSale: ASSISTANT_ON_SALE,
     sources: [
       { file: "lib/store-assistant-rules.ts", names: ["ASSISTANT_PRICE_CENTS", "ASSISTANT_MESSAGES_MONTHLY", "ASSISTANT_INPUT_BYTES", "ASSISTANT_OUTPUT_TOKENS", "ASSISTANT_MESSAGE_COMMANDS", "ASSISTANT_MESSAGE_DB_BYTES", "ASSISTANT_PER_TEN_MINUTES", "ASSISTANT_PER_DAY", "ASSISTANT_STORE_PER_MINUTE", "ADD_ON_FEES", "DISPUTE_RESERVE_BPS", "REFUND_RESERVE_BPS", "REMITTANCE_BPS", "assistantMonthWorst"] },
@@ -947,7 +947,7 @@ export const SCOPES: Record<string, ScopeClass> = {
   "<dynamic:scope: string>": guard("The definitions of withinLimit, withinMonth, withinStore and withinService themselves (lib/request-guard.ts, lib/metered-limits.ts)."),
   api: line("rest-api"), "studio-essential": line("studio"), "studio-paused": line("studio"), "bundle-picker": line("studio"),
   // Sign-in and account security.
-  join: ACCOUNT, passkey: ACCOUNT, "passkey-change": ACCOUNT, "two-step": ACCOUNT, "two-step-backup": ACCOUNT, "two-step-change": ACCOUNT,
+  join: ACCOUNT, passkey: ACCOUNT, "google-signin": ACCOUNT, "google-signin-back": ACCOUNT, "passkey-change": ACCOUNT, "two-step": ACCOUNT, "two-step-backup": ACCOUNT, "two-step-change": ACCOUNT,
   "two-step-rescue": ACCOUNT, "recovery-address": ACCOUNT, "recovery-address-change": ACCOUNT, "lost-email": ACCOUNT, "lost-email-ip": ACCOUNT,
   "discord-return": ACCOUNT, "metaads-return": ACCOUNT, "meet-return": ACCOUNT, report: guard("Takedown reports, per connection: a company cost."),
   "mail-ses": guard("The email provider's own notices: a company cost."), "mail-inbound": guard("The email provider's inbound notices, per connection: a company cost; what is sent on to a creator is one of their store's emails (lib/inbound-mail.ts)."),

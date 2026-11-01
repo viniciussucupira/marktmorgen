@@ -389,8 +389,10 @@ export function Pricing({ domains = false }: { domains?: boolean }) {
         four lines of terms, so the only difference a reader finds between
         them is the actual difference between them.
       */}
+      {/* No Suspense around the cards: React sends a large boundary after the rest of the page even when it is
+          ready, so the cards arrived after the first paint and pushed the terms under them down (1 November 2026).
+          Each card's own disclosure keeps its small boundary, for hydrating apart. */}
       <div className="grid gap-6 lg:grid-cols-3 lg:items-stretch">
-        <Suspense fallback={null}>
         <PlanCard
           tier="creator"
           bestFor={"For selling what you make to the audience you already reach — wherever you reach them now."}
@@ -399,8 +401,6 @@ export function Pricing({ domains = false }: { domains?: boolean }) {
           featured
           cta="Start on Store"
         />
-        </Suspense>
-        <Suspense fallback={null}>
         <PlanCard
           tier="pro"
           bestFor={"For selling and writing to your own list from the same place, so a buyer hears from you again."}
@@ -409,8 +409,6 @@ export function Pricing({ domains = false }: { domains?: boolean }) {
           featured={false}
           cta="Start on Studio"
         />
-        </Suspense>
-        <Suspense fallback={null}>
         <PlanCard
           tier="scale"
           bestFor="For an established business with a larger list, more visits and more orders every month."
@@ -424,7 +422,6 @@ export function Pricing({ domains = false }: { domains?: boolean }) {
           featured={false}
           cta="Start on Scale"
         />
-        </Suspense>
       </div>
       <PlanTermsOnce />
       {/*
