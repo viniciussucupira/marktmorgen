@@ -57,7 +57,10 @@ export function ReviewAskEditor({ days, canEmail, elsewhere = "" }: { days: numb
     setError(null);
     // The same rule the server holds (lib/review-elsewhere.ts), said before anything is sent.
     if (page.trim() && !parseReviewElsewhere(page)) {
-      setError(MESSAGES.elsewhere);
+      // The field says it beside itself (components/url-field.tsx); the focus goes there, so it is not said twice.
+      const field = document.getElementById("ask-elsewhere");
+      if (field) field.focus();
+      else setError(MESSAGES.elsewhere);
       return;
     }
     setBusy(true);

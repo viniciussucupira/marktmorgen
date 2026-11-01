@@ -28,6 +28,11 @@ export function ReportForm({ url: given }: { url: string }) {
   async function send(event: React.FormEvent) {
     event.preventDefault();
     if (state === "sending") return;
+    // An address the notice would refuse, or one too long to keep whole, is not sent: the field says why.
+    if (REPORT_URL_CHECK(fields.url).problem) {
+      document.getElementById("report-url")?.focus();
+      return;
+    }
     setState("sending");
     setError("");
     try {
