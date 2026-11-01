@@ -1,3 +1,4 @@
+import { EmailField } from "@/components/email-field";
 import { countDay } from "@/lib/day-visit";
 import { DigitalConsentBox } from "@/components/digital-consent-box";
 import { isResting } from "@/lib/traffic";
@@ -278,8 +279,8 @@ export default async function CoursePage({ params, searchParams }: Params) {
                 <input type="hidden" name="product" value={product.id} />
                 <label htmlFor="course-email" className="st-label">{w.alreadyBought}</label>
                 <p className="st-muted mt-1 text-sm">{w.alreadyBoughtNote}</p>
-                <div className="mt-3 flex flex-col gap-2 sm:flex-row">
-                  <input id="course-email" name="email" type="email" required autoComplete="email" placeholder={said.w.emailPlaceholder} className="st-field min-w-0 flex-1" />
+                <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-start">
+                  <EmailField id="course-email" name="email" className="st-field w-full" wrapClassName="min-w-0 flex-1" required autoComplete="email" placeholder={said.w.emailPlaceholder} language={store.language} />
                   <button type="submit" className="btn st-btn">{w.sendLink}</button>
                 </div>
               </form>
