@@ -851,8 +851,8 @@ export type AddOnLine = {
   revenueUsd: number;
   /** Everything one payment of it can cost at full use, in dollars: its use, its payment's fees and its reserves. */
   monthlyUsd: () => number;
-  /** The most it may cost and keep 60% after the 27.5% tax. */
-  allowedUsd: number;
+  /** Maximum total cost after reviewed TX taxes and a positive net cent; null without evidence. */
+  allowedUsd: number | null;
   /** Whether it can be bought today: one that costs past its allowance may not be. */
   onSale: boolean;
   sources: Source[];
@@ -866,7 +866,7 @@ export const ADD_ON_LINES: AddOnLine[] = [
     feature: "The Store assistant add-on, $49 a month per store: the AI chat on a store's pages, its pool of replies, its conversations and its list of unanswered questions (17 October 2026); the next product after a purchase, from the same pool (function 2); one checkout reminder asked for at checkout, its AI line from the same pool (function 3)",
     revenueUsd: assistant.revenueCents / 100,
     monthlyUsd: () => assistant.totalCents / 100,
-    allowedUsd: assistant.allowedCents / 100,
+    allowedUsd: assistant.allowedCents === null ? null : assistant.allowedCents / 100,
     onSale: ASSISTANT_ON_SALE,
     sources: [
       { file: "lib/store-assistant-rules.ts", names: ["ASSISTANT_PRICE_CENTS", "ASSISTANT_MESSAGES_MONTHLY", "ASSISTANT_INPUT_BYTES", "ASSISTANT_OUTPUT_TOKENS", "ASSISTANT_MESSAGE_COMMANDS", "ASSISTANT_MESSAGE_DB_BYTES", "ASSISTANT_PER_TEN_MINUTES", "ASSISTANT_PER_DAY", "ASSISTANT_STORE_PER_MINUTE", "ADD_ON_FEES", "DISPUTE_RESERVE_BPS", "REFUND_RESERVE_BPS", "REMITTANCE_BPS", "assistantMonthWorst"] },

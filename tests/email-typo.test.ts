@@ -149,8 +149,8 @@ function main(): void {
   part("Where it is used");
   const signin = read("components/signin-form.tsx");
   is("the creator's login form: the line follows the field", /<EmailSuggestion\s+id="signin-suggestion"\s+inputId="signin-email"/.test(signin), true);
-  is("and the field is described by it", signin.includes('aria-describedby={`${state.kind === "error" ? "signin-error " : shapeProblem ? "signin-hint " : ""}signin-suggestion`}'), true);
-  is("shown once the person has left the field or tried to send, never while sending", signin.includes('show={touched && state.kind !== "sending"}'), true);
+  is("and the field is described by it while it says something, its error or hint first", signin.includes('aria-describedby={[state.kind === "error" ? "signin-error" : shapeProblem ? "signin-hint" : "", suggesting ? "signin-suggestion" : ""].filter(Boolean).join(" ") || undefined}') && signin.includes("const suggesting = showSuggestion && suggestEmail(email) !== null;"), true);
+  is("shown once the person has left the field or tried to send, never while sending", signin.includes('const showSuggestion = touched && state.kind !== "sending";') && signin.includes("show={showSuggestion}"), true);
   is("the first send of a likely slip waits once", /if \(holdForSuggestion\(email, shownFor\)\) \{\s*setShownFor\(email\);\s*return;/.test(signin), true);
   is("and the next screen names the address really sent", signin.includes("{sentTo || email}") && /setState\(\{ kind: "sending" \}\);\s*setSentTo\(email\);/.test(signin), true);
 }
