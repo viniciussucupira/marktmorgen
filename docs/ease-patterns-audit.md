@@ -68,9 +68,10 @@ The screen-by-screen audit that 487 [IT4] asks for: what was checked, what was f
 
 **Fixed.**
 - The blog editor asks before leaving with an unsaved post. A post can be long, and nothing else kept it. Once saved, its changes are guarded again.
+- The FAQ editor asks too, using its own measure of unsaved answers, which includes answers drafted by the writing help.
 
 **Still to do.**
-- The same guard for the product, course, email designer, quiz and FAQ editors. Each one is read first, since some save field by field.
+- The same guard for the product, course, email designer and quiz editors. Each one is read first, since some save field by field.
 - Saving by itself with "Saving…" and "Saved" shown. That writes to the server on its own, so it needs its own request ceiling per plan first.
 
 ## Not audited yet

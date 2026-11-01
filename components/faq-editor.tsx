@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useLeaveGuard } from "@/components/leave-guard";
 import { useRouter } from "next/navigation";
 import { toast } from "@/components/toast";
 import { Icon } from "@/components/icons";
@@ -22,6 +23,8 @@ export function FaqEditor({ faq, ai }: { faq: FaqItem[]; ai: { on: boolean; left
   const [note, setNote] = useState("");
   const [left, setLeft] = useState(ai.left);
   const changed = JSON.stringify(rows.map(({ q, a }) => ({ q, a }))) !== JSON.stringify(faq);
+  // Answers written or drafted and not saved are never lost to a click away (487 [IT4], item 6).
+  useLeaveGuard(changed && !saving);
 
   const add = (items: FaqItem[], dropEmpty = true) => {
     let key = next;
