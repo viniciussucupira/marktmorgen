@@ -123,8 +123,11 @@ export async function markShipped(store: Store, session: string, rawTracking: un
   if (lifecycle !== "active" || !shipmentMailPolicy(runtime.policy === undefined ? CURRENT_SHIPMENT_MAIL_POLICY : runtime.policy, (runtime.now ?? Date.now)())) return { ok: false, reason: "mail_unavailable" };
   const email = (row.customer_details as { email?: unknown } | null | undefined)?.email;
   if (typeof email !== "string" || !oneAddress(email)) {
-    const [claimed] = await redisPipeline([["SET", doneKey(session), JSON.stringify(shipped), "NX", "EX", KEEP_SECONDS]]);
-    return claimed === "OK" ? { ok: true, shipped, emailed: false, mail: { state: "not_recorded", delayed: false } } : { ok: false, reason: "unknown" };
+    let receipt: unknown;
+    try { receipt = await redisPipeline([["SET", doneKey(session), JSON.stringify(shipped), "NX", "EX", KEEP_SECONDS]]); }
+    catch { return { ok: false, reason: "unknown" }; }
+    if (!Array.isArray(receipt) || receipt.length !== 1 || receipt[0] !== "OK") return { ok: false, reason: "unknown" };
+    return { ok: true, shipped, emailed: false, mail: { state: "not_recorded", delayed: false } };
   }
   const queued = await enqueueShipmentMail({ statsId: store.statsId, session, authorizedAt, shipped, message: shipmentMessage(store, row, tracking, email) }, runtime);
   if (!queued.ok) return { ok: false, reason: queued.reason === "full" ? "mail_unavailable" : "unknown" };

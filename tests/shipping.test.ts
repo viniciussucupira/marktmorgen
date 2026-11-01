@@ -303,6 +303,38 @@ async function main(): Promise<void> {
     is("a readable occupied claim returns its original record without another email", [keptClaim.ok ? keptClaim.shipped : null, keptClaim.ok ? keptClaim.emailed : null, emails.length], [keptShipment, false, beforeClaimEmails]);
   } finally { redis.pipeline = originalPipeline; }
 
+  part("An active funded shipment without a recipient still requires an exact claim ACK");
+  const noRecipientSession = session;
+  try {
+    session={...noRecipientSession,id:"cs_test_invalidrecipientack01",customer_details:{email:"not an address"}};
+    const malformedNoRecipient: unknown[] = [["OK","unexpected"],["OK",null],null,undefined,false,0,"OK",{},[],Array(1),[undefined],[null],[false],[0],["true"]];
+    for(const receipt of malformedNoRecipient){
+      const seen:(string|number)[][]=[];
+      redis.pipeline=async commands=>{seen.push(...commands.filter(c=>String(c[1]).startsWith("nl:ship:done:")));return commands.some(c=>c[0]==="SET"&&String(c[1]).startsWith("nl:ship:done:"))?receipt as unknown[]:originalPipeline(commands);};
+      const beforeEmails=emails.length,beforeOutbox=outbox.commands.length;
+      const result=await markShipped(store,String(session.id),"",undefined,runtime);
+      is("a malformed no-recipient claim cannot confirm a shipment",result.ok?"marked":result.reason,"unknown");
+      is("malformed no-recipient claims add no re-read, outbox work or email",[seen.map(c=>c[0]),outbox.commands.length-beforeOutbox,emails.length-beforeEmails],[["GET","SET"],0,0]);
+    }
+    redis.pipeline=async commands=>{
+      if(commands.some(c=>c[0]==="SET"&&String(c[1]).startsWith("nl:ship:done:")))throw Error("synthetic no-recipient SET outage");
+      return originalPipeline(commands);
+    };
+    const failed=await markShipped(store,String(session.id),"",undefined,runtime);
+    is("a no-recipient claim transport exception returns unknown",failed.ok?"marked":failed.reason,"unknown");
+    session={...session,id:"cs_test_invalidrecipientlost01"};
+    redis.pipeline=async commands=>{
+      const reply=await originalPipeline(commands);
+      return commands.some(c=>c[0]==="SET"&&String(c[1]).startsWith("nl:ship:done:"))?[...reply,"unexpected"]:reply;
+    };
+    const lost=await markShipped(store,String(session.id),"https://example.test/committed",undefined,runtime);
+    is("a committed mark with an extra reply remains unconfirmed and is never deleted",[lost.ok,JSON.parse(String(redis.run(["GET",`nl:ship:done:${session.id}`]))).tracking],[false,"https://example.test/committed"]);
+    redis.pipeline=originalPipeline;
+    session={...session,id:"cs_test_invalidrecipientvalid01"};
+    const accepted=await markShipped(store,String(session.id),"https://example.test/no-recipient",undefined,runtime);
+    is("one real OK still confirms the no-recipient mark without sending",[accepted.ok,accepted.ok&&accepted.emailed,accepted.ok&&accepted.mail,emails.length],[true,false,{state:"not_recorded",delayed:false},0]);
+    is("the no-recipient mark keeps its existing TTL",Number(redis.run(["TTL",`nl:ship:done:${session.id}`]))>399*86400,true);
+  }finally{redis.pipeline=originalPipeline;session=noRecipientSession;}
   part("The active producer deadline begins before the Stripe read");
   const clockSession = session, priorFetch = globalThis.fetch;
   const started = Date.now(); let clock = started, capturedAuthorization: number | null = null;
