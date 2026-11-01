@@ -1,8 +1,8 @@
 /**
  * The creator's own profit, before taxes (545 [LU1], unit 1; added
  * 1 November 2026): per order and per period, with where each number comes
- * from. Per product and per option, which needs the order's fee, refund and
- * other costs shared between its lines, is the next unit. Not Marktmorgen's own margin (lib/company-margin-report.ts), which
+ * from; per product and option (unit 2), the order's fee, refund and other
+ * costs shared between its lines by each one's part of what was paid. Not Marktmorgen's own margin (lib/company-margin-report.ts), which
  * is another thing entirely.
  *
  *   paid      the order's payments, from the creator's own Stripe account
@@ -94,6 +94,47 @@ export function periodProfit(orders: OrderMoney[], ads: Record<string, number | 
   for (const [currency, profit] of out) {
     const spent = spentIn.has(currency) ? spentIn.get(currency)! : 0;
     if (profit.state === "complete") out.set(currency, known(spent) ? { state: "complete", cents: profit.cents - spent || 0 } : { state: "unavailable" });
+  }
+  return out;
+}
+
+/** An order's line with what it was charged, for sharing the order's own figures between its products. */
+export type ChargedLine = OrderLine & { optionId?: string | null; charged: number };
+
+/** How a product's share of an order is worked out, said beside the per-product figures. */
+export const SHARE_WORDS = "Stripe's fee, refunds and other costs of an order are shared between its products by each one's part of what was paid.";
+
+/**
+ * Each product's (and option's) profit before taxes over a period, per
+ * currency: an order's fee, refund and other costs shared between its lines
+ * by each line's part of what it charged, the rounding left on the last
+ * line so the parts add up to the order exactly; each line's own cost.
+ * Unknown stays unknown, a cost not set stays incomplete, line by line.
+ */
+export function productProfit(orders: (Omit<OrderMoney, "lines"> & { lines: ChargedLine[] })[]): Map<string, Profit> {
+  const out = new Map<string, Profit>();
+  const key = (currency: string, line: ChargedLine) => `${currency.toLowerCase()}|${line.productId}|${line.optionId ?? ""}`;
+  const add = (k: string, p: Profit) => {
+    const so = out.get(k) ?? { state: "complete", cents: 0 };
+    if (so.state === "unavailable" || p.state === "unavailable") out.set(k, { state: "unavailable" });
+    else if (so.state === "incomplete" || p.state === "incomplete") out.set(k, { state: "incomplete", why: "cost not set" });
+    else out.set(k, { state: "complete", cents: so.cents + p.cents });
+  };
+  for (const order of orders) {
+    const total = order.lines.reduce((n, l) => n + (Number.isSafeInteger(l.charged) && l.charged >= 0 ? l.charged : Number.NaN), 0);
+    const whole = orderProfit(order);
+    if (whole.state === "unavailable" || !Number.isSafeInteger(total) || !order.lines.length) {
+      for (const line of order.lines) add(key(order.currency, line), { state: "unavailable" });
+      continue;
+    }
+    const shared = (order.paid as number) - (order.refunded as number) - (order.fee as number) - (order.otherCosts as number);
+    let given = 0;
+    order.lines.forEach((line, i) => {
+      // The last line takes the rounding, so the parts add up to the order's own figure.
+      const part = i === order.lines.length - 1 ? shared - given : total > 0 ? Math.floor((shared * line.charged) / total) : 0;
+      given += part;
+      add(key(order.currency, line), line.costPerSale === null ? { state: "incomplete", why: "cost not set" } : { state: "complete", cents: part - line.costPerSale * line.units });
+    });
   }
   return out;
 }

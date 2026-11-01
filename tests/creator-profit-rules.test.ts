@@ -7,7 +7,7 @@
  * currencies apart; a loss said in words; the before-taxes sentence; an
  * export cell never runs as a formula.
  */
-import { BEFORE_TAXES, SOURCES, csvRow, orderProfit, periodProfit, profitWords, readCostPerSale } from "@/lib/creator-profit-rules";
+import { BEFORE_TAXES, SHARE_WORDS, SOURCES, csvRow, orderProfit, periodProfit, productProfit, profitWords, readCostPerSale } from "@/lib/creator-profit-rules";
 import { done, is, part } from "./check";
 
 part("The cost the creator enters");
@@ -35,6 +35,15 @@ is("one incomplete order makes its currency's total incomplete", periodProfit([o
 is("ads in a currency with no order are still taken off: a loss, never lost", periodProfit([order], { eur: 5000 }).get("eur"), { state: "complete", cents: -5000 });
 is("a currency written in capitals is the same currency", periodProfit([{ ...order, currency: "USD" }], { usd: 1000 }).get("usd"), { state: "complete", cents: 2928 });
 is("ads that could not be read make the total unavailable", periodProfit([order], { usd: null }).get("usd"), { state: "unavailable" });
+
+part("Per product and option");
+const two = { currency: "usd", paid: 6000, refunded: 0, fee: 300, otherCosts: 0, lines: [{ productId: "a", units: 1, costPerSale: 1000, charged: 4000 }, { productId: "b", optionId: "big", units: 1, costPerSale: 500, charged: 2000 }] };
+const per = productProfit([two, two]);
+is("the fee shared by each line's part of the payment, each line's own cost", [per.get("usd|a|"), per.get("usd|b|big")], [{ state: "complete", cents: 2 * (3800 - 1000) }, { state: "complete", cents: 2 * (1900 - 500) }]);
+is("the parts add up to the order exactly, the rounding on the last line", (() => { const p = productProfit([{ ...two, fee: 301 }]); const a = p.get("usd|a|"), b = p.get("usd|b|big"); return a?.state === "complete" && b?.state === "complete" ? a.cents + b.cents + 1500 : null; })(), 6000 - 301);
+is("a line with no cost set is incomplete; the other still counts", [productProfit([{ ...two, lines: [two.lines[0], { ...two.lines[1], costPerSale: null }] }]).get("usd|b|big")?.state, productProfit([{ ...two, lines: [two.lines[0], { ...two.lines[1], costPerSale: null }] }]).get("usd|a|")?.state], ["incomplete", "complete"]);
+is("an order not read: each of its products unavailable", productProfit([{ ...two, fee: null }]).get("usd|a|"), { state: "unavailable" });
+is("the rule said beside the figures", SHARE_WORDS.includes("by each one's part of what was paid"), true);
 
 part("Said plainly");
 is("a loss in words, not only a color", profitWords({ state: "complete", cents: -972 }, "usd"), "$9.72 loss");
