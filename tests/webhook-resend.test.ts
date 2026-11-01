@@ -3,7 +3,9 @@
  * unit 3), delivered to a real local HTTP server through lib/safe-fetch.ts.
  * Checked: only a delivery that failed for good, of this store, to an
  * endpoint it still has; the same message and event id, signed afresh; tried
- * once and never put back on the schedule; one of the month's deliveries,
+ * once and never put back on the schedule, and not again while a resend is
+ * delivered; two presses at once send once; not to an endpoint that no longer
+ * hears that event; one of the month's deliveries,
  * taken before the call; the tests' limit a minute shared; another store
  * cannot resend it; the route offers it and pauses it like a test.
  */
@@ -12,7 +14,7 @@ import http from "node:http";
 import https from "node:https";
 import net from "node:net";
 import { readFileSync } from "node:fs";
-import { MAX_ATTEMPTS, RETRY_MINUTES, TESTS_PER_MINUTE, addEndpoint, deliverDue, emitEvent, resendDelivery, setSendHooksForTests, webhooksView } from "@/lib/webhooks";
+import { MAX_ATTEMPTS, RETRY_MINUTES, TESTS_PER_MINUTE, addEndpoint, deliverDue, emitEvent, removeEndpoint, resendDelivery, setEndpointEvents, setSendHooksForTests, webhooksView } from "@/lib/webhooks";
 import { claimHandle, ensureStatsId, setSubscription, storeForEmail } from "@/lib/store";
 import { allowanceUsed } from "@/lib/store-allowance";
 import { paidPeriod } from "./billing-period-fixture";
@@ -105,22 +107,58 @@ async function main(): Promise<void> {
   is("another store cannot resend it", await resendDelivery(two, failed.id), { ok: false, reason: "missing" });
   is("a made-up id is refused", await resendDelivery(one, "dlv_not_a_real_one"), { ok: false, reason: "missing" });
 
+  is("once delivered by hand, not again", await resendDelivery(one, failed.id), { ok: false, reason: "resent" });
+
+  // Another delivery that fails for good, for the rest.
+  const failAll = async (seed: string) => {
+    answers.push(...Array.from({ length: MAX_ATTEMPTS }, () => 500));
+    await emitEvent(one, "sale.completed", seed, { amount_cents: 200 });
+    let at = Date.now();
+    for (const minutes of RETRY_MINUTES) {
+      at += minutes * 60_000 + 1000;
+      await deliverDue(Date.now() + 10_000, at);
+    }
+    return (await webhooksView(one)).log.find((d) => d.state === "failed" && d.attempts === MAX_ATTEMPTS && !d.resentFrom && d.id !== failed.id && !seen.has(d.id))!;
+  };
+  const seen = new Set<string>();
+  const second = await failAll("cs_re_0002");
+  seen.add(second.id);
+
   part("Tried once, never put back on the schedule");
   answers.push(500);
-  const tryAgain = await resendDelivery(one, failed.id);
-  if (!tryAgain.ok) throw new Error("not resent");
+  const tryAgain = await resendDelivery(one, second.id);
+  if (!tryAgain.ok) throw new Error(`not resent: ${tryAgain.reason}`);
   is("a failed resend is shown failed, with nothing waiting", [tryAgain.delivery.state, tryAgain.delivery.next], ["failed", 0]);
   const sent = received.length;
   await deliverDue(Date.now() + 10_000, Date.now() + 25 * 3_600_000);
   is("the job does not try it again", received.length, sent);
+  is("after a failed resend it may be sent again", (await resendDelivery(one, second.id)).ok, true);
+
+  part("Two presses at once send once");
+  const third = await failAll("cs_re_0003");
+  seen.add(third.id);
+  const before = received.length;
+  const both = await Promise.all([resendDelivery(one, third.id), resendDelivery(one, third.id)]);
+  is("one goes, the other is told it was sent again", [both.filter((r) => r.ok).length, both.filter((r) => !r.ok && r.reason === "resent").length, received.length - before], [1, 1, 1]);
 
   part("The minute's limit, shared with tests");
+  const fifth = await failAll("cs_re_0005");
+  seen.add(fifth.id);
   let limited = false;
-  for (let i = 0; i < TESTS_PER_MINUTE + 1; i += 1) {
-    const r = await resendDelivery(one, failed.id);
+  for (let i = 0; i < TESTS_PER_MINUTE + 1 && !limited; i += 1) {
+    answers.push(500);
+    const r = await resendDelivery(one, fifth.id);
     if (!r.ok && r.reason === "limited") limited = true;
   }
   is("past the limit a minute, refused", limited, true);
+
+  part("Not to an endpoint that no longer hears it, nor to one removed");
+  const endpointId = (await webhooksView(one)).endpoints[0].id;
+  await setEndpointEvents(one, endpointId, ["refund.issued"]);
+  is("the event taken off the endpoint: refused", await resendDelivery(one, fifth.id), { ok: false, reason: "not_heard" });
+  await setEndpointEvents(one, endpointId, ["sale.completed"]);
+  await removeEndpoint(one, endpointId);
+  is("the endpoint removed: refused", await resendDelivery(one, fifth.id), { ok: false, reason: "missing" });
 
   part("The studio's route offers it");
   const route = readFileSync("app/api/store/webhooks/route.ts", "utf8");

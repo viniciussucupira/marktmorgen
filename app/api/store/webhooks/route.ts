@@ -76,8 +76,9 @@ export async function POST(request: NextRequest) {
       if (!result.ok) {
         if (result.reason === "unavailable") return Response.json({ ok: false, error: "unavailable", message: "It could not be sent again just now. Try again in a moment." }, { status: 503 });
         if (result.reason === "used") return Response.json({ ok: false, error: "used", message: result.message }, { status: 429 });
+        if (result.reason === "paused") return Response.json({ ok: false, error: "paused", message: result.message }, { status: 409 });
         if (result.reason === "limited") return Response.json({ ok: false, error: "limited" }, { status: 429 });
-        return Response.json({ ok: false, error: result.reason }, { status: result.reason === "not_failed" ? 409 : 404 });
+        return Response.json({ ok: false, error: result.reason }, { status: result.reason === "missing" ? 404 : 409 });
       }
       return Response.json({ ok: true, delivered: result.delivery.state === "delivered", status: result.delivery.lastStatus, message: result.delivery.lastError, view: result.view });
     }

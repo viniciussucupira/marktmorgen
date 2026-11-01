@@ -63,7 +63,7 @@ import { isSettled } from "@/lib/instant-pay";
 import { SafeFetchError, checkUrl, problemWords, safeFetch } from "@/lib/safe-fetch";
 import { type Store, storeForHandle, saleHandles } from "@/lib/store";
 import { takeAllowance } from "@/lib/store-allowance";
-import { WEBHOOK_ADD_PAUSED_WORDS, WEBHOOK_PAUSED_COUNTED, WEBHOOK_PAUSED_NOT_SENT_WORDS, integrationPauseWord } from "@/lib/integration-pause";
+import { WEBHOOK_ADD_PAUSED_WORDS, WEBHOOK_PAUSED_COUNTED, WEBHOOK_PAUSED_NOT_SENT_WORDS, WEBHOOK_TEST_PAUSED_WORDS, integrationPauseWord } from "@/lib/integration-pause";
 import { reservePaidResourceWindow } from "@/lib/contract-resource-window";
 import { readListing } from "@/lib/catalog";
 import { SITE_URL } from "@/lib/site-url";
@@ -137,6 +137,8 @@ export type Delivery = {
   notSentPaused?: true;
   /** The failed delivery this one sends again, by the creator's hand (378 [TB4] unit 3). */
   resentFrom?: string;
+  /** On a failed delivery: the last time it was sent again by hand, so it is sent again only while that one failed. */
+  resentAs?: string;
 };
 
 const cfgKey = (statsId: string) => `nl:hooks:cfg:${statsId}`;
@@ -696,7 +698,10 @@ export async function removeEndpoint(store: Store, id: string): Promise<Webhooks
   return webhooksView(store);
 }
 
-export type ResendResult = { ok: true; delivery: Delivery; view: WebhooksView } | { ok: false; reason: "missing" | "not_failed" | "limited" | "unavailable" } | { ok: false; reason: "used"; message: string };
+export type ResendResult =
+  | { ok: true; delivery: Delivery; view: WebhooksView }
+  | { ok: false; reason: "missing" | "not_failed" | "not_heard" | "resent" | "limited" | "unavailable" }
+  | { ok: false; reason: "used" | "paused"; message: string };
 
 /**
  * Sends a failed delivery again, once, now, because the creator asked from
@@ -713,13 +718,32 @@ export type ResendResult = { ok: true; delivery: Delivery; view: WebhooksView } 
 export async function resendDelivery(store: Store, deliveryId: string, now = Date.now()): Promise<ResendResult> {
   if (!store.statsId || !DELIVERY_ID_PATTERN.test(deliveryId)) return { ok: false, reason: "missing" };
   const statsId = store.statsId;
-  const [raw] = await redisPipeline([["GET", deliveryKey(deliveryId)]]);
+  // Paused like a test while the plan's costs are paused, whoever calls this.
+  const paused = integrationPauseWord(store, now / 1000);
+  if (paused) return { ok: false, reason: "paused", message: WEBHOOK_TEST_PAUSED_WORDS[paused] };
+  const [raw, ttl] = await redisPipeline([["GET", deliveryKey(deliveryId)], ["PTTL", deliveryKey(deliveryId)]]);
   const before = parseDelivery(raw);
-  if (!before || before.statsId !== statsId || before.type === "test") return { ok: false, reason: "missing" };
+  if (typeof raw !== "string" || !before || before.statsId !== statsId || before.type === "test") return { ok: false, reason: "missing" };
   if (before.state !== "failed") return { ok: false, reason: "not_failed" };
+  // Sent again once: while the last resend is delivered or still being tried, not again.
+  if (before.resentAs) {
+    const [rawLast] = await redisPipeline([["GET", deliveryKey(before.resentAs)]]);
+    const last = parseDelivery(rawLast);
+    if (last && last.state !== "failed") return { ok: false, reason: "resent" };
+  }
   const config = await readConfig(statsId);
   const endpoint = config?.endpoints.find((e) => e.id === before.endpoint);
   if (!endpoint) return { ok: false, reason: "missing" };
+  // An endpoint that no longer hears this kind of event is not sent it, by hand either.
+  if (!(endpoint.events as string[]).includes(before.type)) return { ok: false, reason: "not_heard" };
+  const againId = `dlv_${randomBytes(12).toString("hex")}`;
+  // Two presses at once: only the one that marks the original first goes on (COMPARE_AND_SET over the text read).
+  // A press refused below (the minute's limit, the month's deliveries) leaves a mark naming nothing, which allows the next.
+  const [marked] = await redisPipeline([["EVAL", COMPARE_AND_SET, 1, deliveryKey(deliveryId), raw, JSON.stringify({ ...before, resentAs: againId })]]);
+  if (Number(marked) !== 1) return { ok: false, reason: "resent" };
+  // The write cleared the original's expiry; it keeps the time it had left, never more.
+  const left = Number(ttl);
+  await redisPipeline([["PEXPIRE", deliveryKey(deliveryId), Number.isFinite(left) && left > 0 ? left : DELIVERY_SECONDS * 1000]]);
   const [, count] = await redisPipeline([
     ["SET", testsKey(statsId), "0", "EX", 60, "NX"],
     ["INCR", testsKey(statsId)],
@@ -729,7 +753,7 @@ export async function resendDelivery(store: Store, deliveryId: string, now = Dat
   const taken = await takeAllowance(store, "webhook", 1, now);
   if (!taken.ok) return { ok: false, reason: "used", message: taken.message };
   const again: Delivery = {
-    id: `dlv_${randomBytes(12).toString("hex")}`,
+    id: againId,
     statsId,
     endpoint: endpoint.id,
     eventId: before.eventId,
