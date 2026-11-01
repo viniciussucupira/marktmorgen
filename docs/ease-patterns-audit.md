@@ -138,6 +138,47 @@ The screen-by-screen audit that 487 [IT4] asks for: what was checked, what was f
 - A ready example for products, blog posts, forms, after-purchase offers and community setup. Each is new content, written once, and gets its own unit: nothing a creator sees is made up.
 - Not applicable, with the reason: the contacts page's empty "Your latest buyers" is a lookup of who bought, not a screen to make something. There is no buyer to "add", and its one next step, earlier purchases in the Stripe dashboard, is already said. A button there would be one that does nothing new.
 
+## Pattern 8: a "Check answers" summary before publishing or sending (1 November 2026, first pass)
+
+**Method.** Every studio action that publishes something to buyers or sends something to people was read for what the creator sees right before it takes effect.
+
+**Found.**
+- No action had a summary with "Change" on each item.
+- Three asked before acting:
+  - the email broadcast, whose review listed the facts in one paragraph;
+  - the waitlist's "Put it on sale and tell the waitlist", a second press with no price shown;
+  - switching a sequence on, a preview of one person's path.
+- Everything else happens on one press:
+  - adding or publishing a product, and changing a published price;
+  - emailing buyers about an update;
+  - a payment request;
+  - a signature request;
+  - a community announcement;
+  - a sale;
+  - a blog post;
+  - a page;
+  - the funnels;
+  - switching the community on;
+  - the podcast.
+
+**Fixed.**
+- The email broadcast, the one that cannot be taken back once sent, now reviews as a summary list: the subject, who gets it (the number and the audience's criteria), and when. Each row has a "Change" button that names what it changes, closes the review and puts the focus on that field. The send button still names how many people, and the audience is still checked again when sending starts. The review is not a live region (it would be read again at every key typed in the subject): its heading takes the focus when it opens, and on a phone each answer takes its own line.
+- The waitlist's "Put it on sale and tell the waitlist" now shows, before the second press, what will happen:
+  - when it goes on sale;
+  - the price the email carries;
+  - how many emails go out;
+  - the note;
+  - the postal address.
+
+  The note and the address each have a "Change". The price says it is changed in the product's details. Changing the note or the address closes the review, so nothing is sent unread. Without a postal address, the second press is not offered and the review says why.
+- "Tell buyers about an update" no longer sends on its first press, which now reads "Check before sending". It shows the product, who gets it and the note (with a "Change"), and only "Yes, email every buyer" sends. How many get it is not shown, because it is counted from the store's Stripe account when it is sent. Showing it sooner would need a new read from Stripe, with its own ceiling.
+- Saving a new price on a product buyers can see, bought once at one price, now asks first. It shows the old price and the new one, with a "Change" that goes back to the price field, and ends on its own "Yes, save the new price". Amounts are compared, not text, so "29" and "29.00" are not a change. Changing the price again closes the review. A price that cannot be read is not reviewed: the save says what is wrong with it. Memberships, pay what you want and products with several prices are not covered yet: their field is not simply what every buyer pays, so the review's words would need to say more.
+- A payment request and an agreement (or a new version of one) are reviewed before their email goes, each with a "Change" on every answer and its own "Yes, send …" button. The review opens only when the server's own reading (`readDraft`) takes the form, and shows what it read: the email as it will be kept, and each line with its quantity, amount and subtotal. Whatever the reading refuses is said, with the focus on that field. The review holds only while the form is what was reviewed: any edit closes it. A failed send is said beside its button, and nothing can be changed while it sends.
+
+**Still to do, in this order, since a mistake there is public or costs money:**
+- the prices of memberships, pay what you want and products with several options;
+- the community announcement email. Its composer is on the community page, in the buyer's language, with its words in `lib/buyer-words` in seven languages. A review there needs its new sentences written in each of them, so it gets a unit of its own, under the rules for buyer languages.
+
 ## Where each pattern stands
 
 Numbered as in 487 [IT4]:
@@ -148,4 +189,4 @@ Numbered as in 487 [IT4]:
 5. Empty screens with a sentence, a button and a ready example: first pass done (see pattern 5). Four screens fixed; ready examples for five screens still to write.
 6. Drafts never lost: done for the editors read (see pattern 6). Saving by itself, with "Saving…" and "Saved", is not built yet, because it needs its own ceiling on saves per plan first.
 7. A live phone preview beside each editor: not audited yet.
-8. A "Check answers" summary with "Change" on each item before publishing or sending: not audited yet.
+8. A "Check answers" summary with "Change" on each item before publishing or sending: first pass done (see pattern 8); the email broadcast, the waitlist's sale, the update email and a published price change have it; the rest listed.
