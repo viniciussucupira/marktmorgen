@@ -5,6 +5,7 @@ import { useLeaveGuard } from "@/components/leave-guard";
 import { UrlField } from "@/components/url-field";
 import { LessonText } from "@/components/lesson-text";
 import { type StoreLook, lookStyle } from "@/lib/store-look";
+import { LANGUAGES, type LanguageCode } from "@/lib/store-language";
 import { useRouter } from "next/navigation";
 import { uploadReason, uploadSoldFile } from "@/lib/sold-file-upload";
 import { toast } from "@/components/toast";
@@ -92,7 +93,7 @@ type Answer = { ok?: boolean; error?: string; reason?: string; course?: Course; 
  * page was drawn, and as this browser has learned since.
  */
 // The store's look, for the lesson text's preview (487 [IT4], pattern 7).
-const Look = createContext<StoreLook | null>(null);
+const Look = createContext<{ look: StoreLook; language: LanguageCode } | null>(null);
 
 const Streams = createContext<{
   states: Record<string, StreamState>;
@@ -224,10 +225,13 @@ export function CourseEditor({
   auto = { can: false, spoken: "en" },
   openFirst = null,
   look = null,
+  language = "en",
 }: {
   productId: string;
   /** The store's look, so a lesson's text is previewed as students see it. */
   look?: StoreLook | null;
+  /** The store's language, so the preview is marked as the lesson page is. */
+  language?: LanguageCode;
   /** A lesson to show open when the page is drawn: the one "Can everyone follow your lessons?" linked to. */
   openFirst?: string | null;
   initial: Course;
@@ -274,7 +278,7 @@ export function CourseEditor({
   const lessons = course.modules.reduce((n, m) => n + m.lessons.length, 0);
 
   return (
-    <Look.Provider value={look}>
+    <Look.Provider value={look ? { look, language } : null}>
     <Streams.Provider value={{ states: streamStates, learned, captions: captionTracks, captioned, writing: writingNow, wrote, auto }}>
     <div className="mt-8 space-y-6">
       {error ? (
@@ -789,7 +793,9 @@ function LessonEditor({
   const [removing, setRemoving] = useState(false);
   // The text's preview starts at a phone's width, where most lessons are read (487 [IT4], pattern 7).
   const [phone, setPhone] = useState(true);
-  const look = useContext(Look);
+  const shown = useContext(Look);
+  const look = shown?.look ?? null;
+  const locale = LANGUAGES[shown?.language ?? "en"]?.locale ?? "en-US";
   // A lesson's name, link, preview or text changed and not saved, or a file still going up: leaving asks first (487 [IT4], item 6).
   const unsaved = title !== lesson.title || preview !== lesson.preview || link !== (lesson.link ?? "") || text !== savedText;
   useLeaveGuard(unsaved || uploading !== null);
@@ -855,6 +861,8 @@ function LessonEditor({
         <div
           // Inert: its links stay out of the Tab order and out of reach of a click that would leave the draft.
           inert
+          // In the store's language, as the lesson page is (3.1.2).
+          lang={locale}
           className={`st-page st-theme-${storeLook.theme} mx-auto px-4 pb-8 pt-6`}
           // The words in the page's text color, as the lesson page sets it; Wide takes the room there is, as the lesson column does.
           style={{ ...(lookStyle(storeLook) as React.CSSProperties), color: "var(--st-text)", maxWidth: phone ? 390 : "100%" }}
