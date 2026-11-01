@@ -387,7 +387,7 @@ const FAST_MONEY_WHY =
 const FAST_MONEY_FIX = "Remove this promise, and say what the product contains and teaches, and the work it takes.";
 
 /** Where a product is stopped: the field, the passage, why and the fix. */
-export type FastMoneyRefusal = { field: "title" | "summary" | "about"; excerpt: string; why: string; fix: string; product?: string };
+export type FastMoneyRefusal = { field: "title" | "summary" | "about" | "page"; excerpt: string; why: string; fix: string; product?: string };
 
 /**
  * The first promise of fast or easy money in what a buyer reads of a product (its title, summary and description),
@@ -401,4 +401,34 @@ export function fastMoneyRefusal(product: { title: string; summary: string; abou
     if (found) return { field, excerpt: found.excerpt, why: found.why, fix: found.fix };
   }
   return null;
+}
+
+/**
+ * The same check over a product's sales page: every word a reader reads on it, its second version and its search
+ * title and description included (lib/page-translate.ts, pageWords). The page is on the store with its product, so
+ * it is refused the same way (567 [GD1] (d), unit 2).
+ */
+export function fastMoneyOnPage(words: readonly string[]): FastMoneyRefusal | null {
+  for (const text of words) {
+    const found = fastMoneyRefusal({ title: text, summary: "", about: "" });
+    if (found) return { ...found, field: "page" };
+  }
+  return null;
+}
+
+/**
+ * Why a product was not published or saved (567 [GD1] (d)): the words, where they are, why and the fix, from the
+ * server's own check (lib/terms-check-rules.ts, fastMoneyRefusal). Nothing the creator wrote was changed.
+ */
+const FIELD_NAMES: Record<string, string> = { title: "the name", summary: "the short description", about: "the description", page: "the sales page" };
+export function fastMoneyMessage(passage: unknown, mode: "add" | "save" | "publish" = "save"): string {
+  const p = passage && typeof passage === "object" ? (passage as Record<string, unknown>) : {};
+  const where = FIELD_NAMES[String(p.field)] ?? "the product's words";
+  const words = typeof p.excerpt === "string" ? p.excerpt.trim().replace(/[.,;:!?]+$/, "") : "";
+  const quoted = words ? `: \u201c${words}\u201d` : "";
+  const why = typeof p.why === "string" && p.why ? p.why : "The Terms do not allow selling anything that promises fast or easy money.";
+  const fix = typeof p.fix === "string" && p.fix ? p.fix : "Remove the promise and say what the product contains.";
+  const named = typeof p.product === "string" && p.product.trim() ? `\u201c${p.product.trim()}\u201d` : "This product";
+  const lead = mode === "publish" ? `${named} was not published` : mode === "add" ? "It was not added" : "Your changes were not saved";
+  return `${lead}. In ${where}${quoted}. ${why} ${fix} Nothing you wrote was changed.`;
 }

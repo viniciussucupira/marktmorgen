@@ -36,7 +36,9 @@ import { dropCourse, filesInCourse, readCourse } from "@/lib/course";
 import { dropStream } from "@/lib/stream";
 import { dropStamped } from "@/lib/pdf-stamp";
 import { idsOfKind, readAllListings, readListing, readProducts } from "@/lib/catalog";
-import { fastMoneyRefusal } from "@/lib/terms-check-rules";
+import { fastMoneyOnPage, fastMoneyRefusal } from "@/lib/terms-check-rules";
+import { pageWords } from "@/lib/page-translate";
+import { readPage } from "@/lib/sales-page-store";
 import { quietedBy } from "@/lib/extras-notes";
 
 const ACTIONS = new Set(["add", "edit", "remove", "move", "link", "unlink", "visibility"]);
@@ -334,7 +336,8 @@ export async function POST(request: NextRequest) {
         const draft = await readListing(guarded.store, id);
         if (draft) {
           const words = draft.about && guarded.store.statsId ? await readAbout(guarded.store.statsId, draft.id) : "";
-          const refused = fastMoneyRefusal({ title: draft.title, summary: draft.summary, about: words });
+          const shownPage = draft.page && guarded.store.statsId ? await readPage(guarded.store.statsId, draft.id) : null;
+          const refused = fastMoneyRefusal({ title: draft.title, summary: draft.summary, about: words }) ?? (shownPage ? fastMoneyOnPage(pageWords(shownPage)) : null);
           if (refused) return Response.json({ ok: false, error: "fast_money", passage: { ...refused, product: draft.title } }, { status: 409 });
         }
       }

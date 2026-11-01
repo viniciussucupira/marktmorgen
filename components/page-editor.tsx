@@ -1,5 +1,6 @@
 "use client";
 
+import { fastMoneyMessage } from "@/lib/terms-check-rules";
 import { TestCountsNotice } from "@/components/test-counts-notice";
 import { pasteExceedsLimit } from "@/lib/paste-limit";
 
@@ -866,7 +867,7 @@ export function PageEditor({
         if (versions !== null) void loadVersions();
         return;
       }
-      setError(MESSAGES[data.error ?? ""] ?? MESSAGES.server_error);
+      setError(data.error === "fast_money" ? fastMoneyMessage((data as { passage?: unknown }).passage, "save") : MESSAGES[data.error ?? ""] ?? MESSAGES.server_error);
     } catch {
       setError(MESSAGES.server_error);
     } finally {

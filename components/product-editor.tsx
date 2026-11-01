@@ -76,6 +76,7 @@ import { feeWords } from "@/lib/fee-words";
 import { COMMISSION_LIVE } from "@/lib/plan";
 import { NewTab } from "@/components/new-tab";
 import { TermsCheckPanel } from "@/components/terms-check-panel";
+import { fastMoneyMessage } from "@/lib/terms-check-rules";
 import { deliversDigitally } from "@/lib/digital-consent";
 
 /** The sentences about amounts, in the store's own currency (lib/money.ts). */
@@ -103,22 +104,8 @@ const OPTION_MESSAGES: Record<string, string> = {
   store_full: "Your store has reached the most it can hold. Remove something, or shorten a long list of choices, to make room.",
 };
 
-/**
- * Why a product was not published or saved (567 [GD1] (d)): the words, where they are, why and the fix, from the
- * server's own check (lib/terms-check-rules.ts, fastMoneyRefusal). Nothing the creator wrote was changed.
- */
-const FIELD_NAMES: Record<string, string> = { title: "the name", summary: "the short description", about: "the description" };
-export function fastMoneyMessage(passage: unknown, mode: "add" | "save" | "publish" = "save"): string {
-  const p = passage && typeof passage === "object" ? (passage as Record<string, unknown>) : {};
-  const where = FIELD_NAMES[String(p.field)] ?? "the product's words";
-  const words = typeof p.excerpt === "string" ? p.excerpt.trim().replace(/[.,;:!?]+$/, "") : "";
-  const quoted = words ? `: \u201c${words}\u201d` : "";
-  const why = typeof p.why === "string" && p.why ? p.why : "The Terms do not allow selling anything that promises fast or easy money.";
-  const fix = typeof p.fix === "string" && p.fix ? p.fix : "Remove the promise and say what the product contains.";
-  const named = typeof p.product === "string" && p.product.trim() ? `\u201c${p.product.trim()}\u201d` : "This product";
-  const lead = mode === "publish" ? `${named} was not published` : mode === "add" ? "It was not added" : "Your changes were not saved";
-  return `${lead}. In ${where}${quoted}. ${why} ${fix} Nothing you wrote was changed.`;
-}
+export { fastMoneyMessage } from "@/lib/terms-check-rules";
+
 
 /** Why a price the buyer chooses was refused, in words the creator can act on. */
 const PWYW_MESSAGES: Record<string, string> = {
