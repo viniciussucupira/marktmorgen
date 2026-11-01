@@ -1,4 +1,5 @@
 import { PAGE_TEST_WORDS } from "@/lib/headline-test-words";
+import { funnelBeginnerQuestions } from "@/lib/funnel-faq";
 import { NEW_CREATOR_PAGES } from "@/lib/creator-situations";
 import { withFeatureMechanisms } from "@/lib/feature-mechanisms";
 import { paidVideoWords, TRIAL_VIDEO_SECONDS } from "@/lib/video-admission-rules";
@@ -1152,6 +1153,7 @@ const BASE_FEATURE_PAGES: TopicPage[] = [
     highlight: "then the next best offer",
     intro:
       "Up to 20 pages walked in order from one address — your own pages and your products' pages — and up to five offers after someone pays, each charged in one click to the card they just used. A yes and a no can lead to different next offers, so a no can meet something smaller.",
+    visual: "funnels",
     badge: WORKING,
     accent: "from-amber-brand to-violet-brand",
     plan: "creator",
@@ -1216,6 +1218,8 @@ const BASE_FEATURE_PAGES: TopicPage[] = [
         kind: "faq",
         title: "Questions about funnels",
         items: [
+          // Questions from someone starting out, answered from the code (lib/funnel-faq.ts, 534 [FQ1]).
+          ...funnelBeginnerQuestions(),
           { q: "Can a buyer be charged without meaning to?", a: "No. An offer is charged only when the buyer presses to take it, in the browser that paid, within the hour, and once. If the bank asks them to confirm, they confirm it." },
           { q: "Where do I see what was taken?", a: "In your numbers and your sales export, marked as taken after paying, and in your own Stripe dashboard." },
           { q: "Does Marktmorgen take anything from an offer?", a: feeWords().fromAnOffer },
@@ -1476,7 +1480,8 @@ const BASE_FEATURE_PAGES: TopicPage[] = [
         kind: "faq",
         title: "Questions about webhooks",
         items: [
-          { q: "How do I know a message came from you?", a: "Check its Marktmorgen-Signature header against the secret you were shown when you added the address, and check that its time is recent." },
+          { q: "How do I know a message came from you?", a: "Check its Marktmorgen-Signature header against the secret you were shown when you added the address, and check that its time is recent. When you make a new secret, the old one keeps signing beside it for a day, as a second v1 in the same header: accept a message when any v1 matches." },
+          { q: "What if a message did not arrive?", a: "It is tried again by itself for about forty hours. If it still failed, press Send again beside it in your studio's log: the same message, with the same event id, is sent once more, so a receiver that already has it can ignore the repeat." },
           { q: "What if the same event arrives twice?", a: "Every event has an ID made from what it is about, and it is sent once however often it is noticed. Keep the IDs you have seen and ignore a repeat, in case a retry crosses a slow answer." },
           { q: "Does Stan have webhooks?", a: "Not according to its help center, read on September 17, 2026." },
         ],
