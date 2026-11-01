@@ -497,7 +497,7 @@ export async function deliverDue(deadline: number, now = Date.now()): Promise<{ 
 
 /** What the studio sees of an endpoint: never a secret, only until when the old one still signs. */
 export type EndpointView = { id: string; where: string; events: WebhookEvent[]; addedAt: string; oldSecretUntil?: string };
-export type DeliveryView = Pick<Delivery, "id" | "eventId" | "type" | "state" | "attempts" | "next" | "lastStatus" | "lastError" | "lastAt" | "createdAt" | "notSentPaused" | "resentFrom"> & {
+export type DeliveryView = Pick<Delivery, "id" | "eventId" | "type" | "state" | "attempts" | "next" | "lastStatus" | "lastError" | "lastAt" | "createdAt" | "notSentPaused" | "resentFrom" | "resentAs"> & {
   endpoint: string;
 };
 export type WebhooksView = { endpoints: EndpointView[]; log: DeliveryView[] };
@@ -551,6 +551,7 @@ export async function webhooksView(store: Store): Promise<WebhooksView> {
         createdAt: d.createdAt,
         ...(d.notSentPaused === true ? { notSentPaused: true as const } : {}),
         ...(typeof d.resentFrom === "string" && DELIVERY_ID_PATTERN.test(d.resentFrom) ? { resentFrom: d.resentFrom } : {}),
+        ...(typeof d.resentAs === "string" && DELIVERY_ID_PATTERN.test(d.resentAs) ? { resentAs: d.resentAs } : {}),
         endpoint: names.get(d.endpoint) ?? "a removed endpoint",
       })),
   };
@@ -725,6 +726,8 @@ export async function resendDelivery(store: Store, deliveryId: string, now = Dat
   const before = parseDelivery(raw);
   if (typeof raw !== "string" || !before || before.statsId !== statsId || before.type === "test") return { ok: false, reason: "missing" };
   if (before.state !== "failed") return { ok: false, reason: "not_failed" };
+  // A copy sent by hand is never sent again itself: the original is, so one event has one line of resends.
+  if (before.resentFrom) return { ok: false, reason: "resent" };
   // Sent again once: while the last resend is delivered or still being tried, not again.
   if (before.resentAs) {
     const [rawLast] = await redisPipeline([["GET", deliveryKey(before.resentAs)]]);

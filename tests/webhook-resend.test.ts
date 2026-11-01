@@ -108,6 +108,7 @@ async function main(): Promise<void> {
   is("a made-up id is refused", await resendDelivery(one, "dlv_not_a_real_one"), { ok: false, reason: "missing" });
 
   is("once delivered by hand, not again", await resendDelivery(one, failed.id), { ok: false, reason: "resent" });
+  is("the studio sees which resend an original has", (await webhooksView(one)).log.find((d) => d.id === failed.id)?.resentAs, again.delivery.id);
 
   // Another delivery that fails for good, for the rest.
   const failAll = async (seed: string) => {
@@ -132,6 +133,7 @@ async function main(): Promise<void> {
   const sent = received.length;
   await deliverDue(Date.now() + 10_000, Date.now() + 25 * 3_600_000);
   is("the job does not try it again", received.length, sent);
+  is("a copy that failed is not sent again itself; the original is", await resendDelivery(one, tryAgain.delivery.id), { ok: false, reason: "resent" });
   is("after a failed resend it may be sent again", (await resendDelivery(one, second.id)).ok, true);
 
   part("Two presses at once send once");
