@@ -3,7 +3,7 @@ import { PUBLISHED_PLAN_PRICES, TRIAL_DAYS, REFUND_DAYS, type Tier, type Cycle }
 import { CLOSING_DAYS } from '@/lib/plan-closing-rules';
 import { LONGEST_PAUSE_MONTHS, PAUSE_EVERY_DAYS, PLAN_BREAKS_ENABLED } from '@/lib/plan-pause-rules';
 import { CUSTOMER_COST_CATEGORIES, assessCustomerWorstCase } from '@/lib/net-margin-rules';
-import { customerTaxContractContextIsLegacy } from './customer-tax-review';
+import { customerTaxContractContextSupported } from './customer-tax-review';
 import { assessMinimumCustomerBase } from '@/lib/customer-base-rules';
 import { fundedExposureDetails } from '@/lib/funded-exposure-rules';
 import type { CommercialMarginReview, MarginScenario } from '@/lib/commercial-margin';
@@ -79,10 +79,10 @@ export type ContractFundingConfiguration={reviewId:string;binding:string;cashLim
 /** Pure reserve calculation. The caller must also enforce commercialMarginReady
  * and actual admission coverage before enabling real sales. */
 export function contractFundingConfiguration(policy:ContractFundingPolicy|null,context:ContractFundingContext,now=new Date()):ContractFundingConfiguration|null {
- // TX advances the margin assessor only. No scoped tax/FX review may fund a
- // new contract until it is bound to actual admission and liability periods.
+ // Scoped TX may fund a contract only when it is bound to this exact policy,
+ // the actual admission time and the complete existing liability horizon.
  // Inspect original data first: the canonical clone must not erase presence.
- if(!customerTaxContractContextIsLegacy(context))return null;
+ if(!customerTaxContractContextSupported(context,policy,now))return null;
  const contextEncoded=canonicalFinancialSnapshot(context);
  if(!contextEncoded)return null;
  context=JSON.parse(contextEncoded) as ContractFundingContext;

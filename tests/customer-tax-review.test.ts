@@ -124,3 +124,8 @@ test('the minimum company base uses the actual assessed net; positive net and fi
   r.costCeilings.other = 8462; assert.equal(evaluate(r).reason, 'below_floor');
   r.costCeilings.other++; assert.equal(evaluate(r).approved, false);
 });
+
+test('oversize fiscal strings still refuse with exact commercial snapshot binding supported',()=>{
+ const r=txCustomerFixture();r.taxReview!.coverage.facts='x'.repeat(32769);
+ assert.equal(evaluate(r).reason,'tax_review_unknown');
+});

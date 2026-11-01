@@ -6,12 +6,19 @@ export const CUSTOMER_TAX_REVIEW_POLICY = Object.freeze({
   schema: 1, id: 'TX-2026-10-27', basis: 'isolated-full-rights-worst-case',
   unknown: 'deny', currency: 'USD', accountingCurrency: 'BRL',
   allocation: 'whole-scoped-calendar-books-no-tax-credit-for-extra-cost-room',
-  contractAdmission: 'closed-until-admission-and-liability-period-binding',
+  contractAdmission: 'explicit-review-snapshot-admission-and-liability-coverage',
   fundedExposure: 'legacy-only-no-TX-migration-in-this-unit',
-  maxBooks: 2, maxExchangesPerBook: 1200,
+  maxBooks: 2, maxContractBooks: 12, maxExchangesPerBook: 1200,
 } as const);
 export type TaxEvidence = { date: string; source: string; facts: string };
-export type TaxContext = { scenario: string; from: string; through: string; months: 1 | 12 };
+export type ContractTaxCoverage = {
+  reviewId: string; termsSnapshot: string;
+  admissionsFrom: string; admissionsUntil: string; liabilitiesThrough: string;
+  evidence: TaxEvidence;
+};
+/** months is the paid economic interval. A contractual scope instead covers
+ * the explicitly bound calendar liability range, including pauses and tail. */
+export type TaxContext = { scenario: string; from: string; through: string; months: 1 | 12; contract?: ContractTaxCoverage };
 type Rate = { numerator: number; denominator: number; evidence: TaxEvidence };
 export const OTHER_CUSTOMER_TAX_COMPONENTS = Object.freeze(['brazilOther', 'usFederal', 'usStates', 'consumption', 'otherJurisdictions'] as const);
 type Component = { status: 'ceiling' | 'not-applicable'; usdCents: number; evidence: TaxEvidence };
@@ -43,7 +50,10 @@ function detached(value: unknown): unknown {
     if (v === null || typeof v === 'boolean' || typeof v === 'number') return v;
     if (typeof v === 'string') {
       bytes += v.length;
-      if (v.length > 16_384 || bytes > 512_000) throw Error('review bytes');
+      // The versioned commercial snapshot is 17.9k code units; retain its exact
+      // bytes rather than replacing it with a weaker fingerprint. Total work
+      // remains capped at 512k code units across this detached evidence.
+      if (v.length > 32_768 || bytes > 512_000) throw Error('review bytes');
       return v;
     }
     if (!v || typeof v !== 'object' || active.has(v)) throw Error('review data');
@@ -88,15 +98,35 @@ const text = (v: unknown): v is string => typeof v === 'string' && v.trim().leng
 function evidence(v: TaxEvidence): boolean {
   return !!v && typeof v === 'object' && !Array.isArray(v) && day(v.date) && text(v.source) && text(v.facts);
 }
+const timestamp = (s: unknown): number | null => {
+  if (typeof s !== 'string') return null;
+  const n = Date.parse(s);
+  return Number.isFinite(n) && new Date(n).toISOString() === s ? n : null;
+};
 function context(v: TaxContext): boolean {
-  if (!v || !text(v.scenario) || v.scenario.length > 128 || !day(v.from) || !day(v.through) || (v.months !== 1 && v.months !== 12)) return false;
+  if (!v || !text(v.scenario) || v.scenario.length > 128 || !day(v.from) || !day(v.through) || (v.months !== 1 && v.months !== 12) || v.from >= v.through) return false;
+  if (Object.hasOwn(v, 'contract')) {
+    const c = v.contract;
+    if (!c || !text(c.reviewId) || !/^[A-Za-z0-9_-]{1,128}$/.test(c.reviewId) || !text(c.termsSnapshot) || !evidence(c.evidence)) return false;
+    const from = timestamp(c.admissionsFrom), until = timestamp(c.admissionsUntil), through = timestamp(c.liabilitiesThrough);
+    if (from === null || until === null || through === null || from > until || until >= through) return false;
+    return v.from === c.admissionsFrom.slice(0, 10) &&
+      v.through === new Date(Math.ceil(through / 86_400_000) * 86_400_000).toISOString().slice(0, 10);
+  }
   // Monthly/yearly anniversary intervals, end exclusive. Refuse month-end
   // overflow instead of silently clipping or accepting a date in a later month.
   const from = new Date(v.from + 'T00:00:00Z'), until = new Date(from);
   until.setUTCMonth(until.getUTCMonth() + v.months);
   return until.getUTCDate() === from.getUTCDate() && until.toISOString().slice(0, 10) === v.through && v.from < v.through;
 }
-const sameContext = (a: TaxContext, b: TaxContext) => a.scenario === b.scenario && a.from === b.from && a.through === b.through && a.months === b.months;
+function sameContext(a: TaxContext, b: TaxContext): boolean {
+  if (a.scenario !== b.scenario || a.from !== b.from || a.through !== b.through || a.months !== b.months) return false;
+  if (!Object.hasOwn(a, 'contract') && !Object.hasOwn(b, 'contract')) return true;
+  const x = a.contract, y = b.contract;
+  return !!x && !!y && x.reviewId === y.reviewId && x.termsSnapshot === y.termsSnapshot &&
+    x.admissionsFrom === y.admissionsFrom && x.admissionsUntil === y.admissionsUntil && x.liabilitiesThrough === y.liabilitiesThrough &&
+    x.evidence.date === y.evidence.date && x.evidence.source === y.evidence.source && x.evidence.facts === y.evidence.facts;
+}
 function rate(v: Rate): boolean { return !!v && cents(v.numerator) && v.numerator > 0 && cents(v.denominator) && v.denominator > 0 && evidence(v.evidence); }
 const rounded = (amount: bigint, r: Rate) => (amount * BigInt(r.numerator) + BigInt(r.denominator) - BigInt(1)) / BigInt(r.denominator);
 
@@ -171,14 +201,43 @@ export function customerTaxCollectionState(review: unknown): 'legacy' | 'tx' | '
   } catch { return 'unknown'; }
 }
 
-/** New TX contract admission stays closed until actual admission and liability
- * periods are bound. Run on ORIGINAL data before any outer cloning. */
-export function customerTaxContractContextIsLegacy(context: unknown): boolean {
+/** Legacy reviews retain their existing protection until mandatory migration.
+ * TX may fund a contract only when every present scope is bound to the exact
+ * existing policy and covers the actual admission time and full liability range.
+ * This shape/binding check runs on ORIGINAL data, never authenticates facts and
+ * never replaces the complete fiscal assessment or financial snapshot binding. */
+export function customerTaxContractContextSupported(context: unknown, policy: unknown, now = new Date()): boolean {
   try {
-    if (!context || typeof context !== 'object' || Array.isArray(context)) return false;
-    const field = Object.getOwnPropertyDescriptor(context, 'review');
-    return !!field && Object.hasOwn(field, 'value') && customerTaxCollectionState(field.value) === 'legacy';
+    const own = (value: unknown, key: string): unknown => {
+      if (!value || typeof value !== 'object' || Array.isArray(value)) return undefined;
+      const d = Object.getOwnPropertyDescriptor(value, key);
+      return d && Object.hasOwn(d, 'value') ? d.value : undefined;
+    };
+    const review = own(context, 'review'), state = customerTaxCollectionState(review);
+    if (state !== 'tx') return state === 'legacy';
+    const at = now.getTime();
+    if (!Number.isFinite(at)) return false;
+    const scenarios = own(review, 'scenarios');
+    if (!scenarios || typeof scenarios !== 'object') return false;
+    for (const key of Reflect.ownKeys(scenarios)) {
+      const raw = own(scenarios, String(key));
+      if (!raw || typeof raw !== 'object') return false;
+      const fields = customerTaxReviewFields(raw);
+      if (!fields.present) continue;
+      const c = detached(fields.taxContext) as TaxContext, r = detached(fields.taxReview) as CustomerTaxReview;
+      const bound = c?.contract;
+      if (!c || !r || !contextValidForContract(c, String(key)) || !sameContext(c, r.scope) || !bound ||
+          bound.reviewId !== own(policy, 'reviewId') || bound.termsSnapshot !== own(context, 'termsSnapshot') ||
+          bound.admissionsUntil !== own(policy, 'admissionsUntil') || bound.liabilitiesThrough !== own(policy, 'liabilitiesThrough')) return false;
+      const from = timestamp(bound.admissionsFrom), until = timestamp(bound.admissionsUntil);
+      if (from === null || until === null || at < from || at > until) return false;
+    }
+    return true;
   } catch { return false; }
+}
+function contextValidForContract(c: TaxContext, scenario: string): boolean {
+  return context(c) && Object.hasOwn(c, 'contract') && c.scenario === scenario &&
+    (!scenario.endsWith('_full') || c.months === (scenario.includes('_year_') ? 12 : 1));
 }
 
 /** Reuse the annual BRL calculator, reserve whole scoped books (no guessed
@@ -199,7 +258,7 @@ export function customerTaxCeiling(value: unknown, suppliedContext: unknown,
     // Mutually impossible directional ceilings would understate the reserve.
     if (BigInt(fx.usdToBrl.numerator) * BigInt(fx.brlToUsd.numerator) < BigInt(fx.usdToBrl.denominator) * BigInt(fx.brlToUsd.denominator)) return null;
     const first = Number(c.from.slice(0, 4)), last = new Date(Date.parse(c.through + 'T00:00:00Z') - 1).getUTCFullYear();
-    if (!Array.isArray(r.books) || r.books.length !== last - first + 1 || r.books.length > 2) return null;
+    if (!Array.isArray(r.books) || r.books.length !== last - first + 1 || r.books.length > (Object.hasOwn(c, 'contract') ? CUSTOMER_TAX_REVIEW_POLICY.maxContractBooks : CUSTOMER_TAX_REVIEW_POLICY.maxBooks)) return null;
     let totalBrl = BigInt(0), profitBrl = BigInt(0);
     for (let i = 0; i < r.books.length; i++) {
       const book = r.books[i];

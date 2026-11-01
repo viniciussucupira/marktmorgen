@@ -6,6 +6,7 @@ import {takeRestartRecovery,restartSubmissionOpenNow,recordRestartResult,armRest
 import {contractFixture} from './contract-funding-fixture';
 import {reset,seed,ledger,calls,settings} from './contract-funding-redis';
 import {txCustomerFixture} from './customer-tax-review-fixture';
+import {contractTaxFixture} from './contract-tax-fixture';
 import {CUSTOMER_COST_CATEGORIES} from '@/lib/net-margin-rules';
 const key='nl:contract-reserve:v1';
 function start(){reset();const f=contractFixture(),config=contractFundingConfiguration(f.policy,f.context,f.now)!;assert.ok(config);seed(config);return {...f,config};}
@@ -21,6 +22,51 @@ test('TX assessment does not authorize a contract before admission and liability
  assert.equal(contractFundingConfiguration(f.policy,f.context,new Date('2026-11-01T12:00:00.000Z')),null);
  reset();assert.equal(await reserveContractFunding('tx-held','creator','month','checkout',f.policy,f.context,'ctr_tx_hold'),null);
  assert.equal(calls.length,0);
+});
+test('explicit TX calendar coverage funds and activates the same production contract with every tax cent held',async()=>{
+ const f=contractTaxFixture(),config=contractFundingConfiguration(f.policy,f.context,f.now);assert.ok(config);
+ const tx=f.review.scenarios.creator_month_full!;
+ assert.equal(assessCustomerWorstCase(tx).approved,true);assert.ok(tx.taxReview!.books.length>=2);
+ const before=config.grantCents.creator_month;tx.taxesCeilingCents!+=317;f.policy.financialSnapshot=canonicalFinancialSnapshot(f.review)!;f.policy.reservedFundsCents=1e12;
+ const more=contractFundingConfiguration(f.policy,f.context,f.now);assert.ok(more);assert.equal(more.grantCents.creator_month-before,317);
+ reset();seed(more);
+ const grant=await reserveContractFunding('one','creator','month','checkout',f.policy,f.context,'ctr_activate');assert.ok(grant);
+ assert.equal(await activateCheckoutContract(activation(),f.policy,f.context),true);
+ assert.equal(ledger.get(key)!.get('reserved'),String(more.grantCents.creator_month));
+});
+test('actual contract coverage includes every calendar book across a November admission and its existing liability horizon',t=>{
+ t.mock.timers.enable({apis:['Date'],now:new Date('2026-11-01T12:00:00.000Z')});
+ try{
+  const f=contractTaxFixture(),r=f.review.scenarios.creator_year_full!;
+  assert.deepEqual(r.taxReview!.books.map(book=>book.year),[2026,2027,2028]);
+  assert.equal(r.taxContext!.months,12);assert.equal(r.taxContext!.from,'2026-11-01');
+  assert.equal(r.taxContext!.contract!.liabilitiesThrough,f.policy.liabilitiesThrough);
+  assert.ok(r.taxReview!.fx.through>=f.policy.liabilitiesThrough.slice(0,10));
+  assert.ok(contractFundingConfiguration(f.policy,f.context,f.now));
+  for(const mutate of [
+   ()=>{r.taxContext!.through=r.taxReview!.scope.through='2027-11-01';},
+   ()=>{r.taxReview!.books.pop();},
+  ]){
+   const old=structuredClone(r);mutate();f.policy.financialSnapshot=canonicalFinancialSnapshot(f.review)!;
+   assert.equal(contractFundingConfiguration(f.policy,f.context,f.now),null);Object.assign(r,old);
+  }
+ }finally{t.mock.timers.reset();}
+});
+test('contract TX cannot authorize expired, future, mismatched or incompletely covered obligations',async()=>{
+ for(const mutate of [
+  (f:ReturnType<typeof contractTaxFixture>)=>{f.policy.reviewId='another';},
+  (f:ReturnType<typeof contractTaxFixture>)=>{f.policy.admissionsUntil=new Date(Date.parse(f.policy.admissionsUntil)+1).toISOString();},
+  (f:ReturnType<typeof contractTaxFixture>)=>{f.policy.liabilitiesThrough=new Date(Date.parse(f.policy.liabilitiesThrough)+1).toISOString();},
+  (f:ReturnType<typeof contractTaxFixture>)=>{f.review.scenarios.creator_month_full!.taxContext!.contract!.admissionsFrom=new Date(f.now.getTime()+1000).toISOString();},
+  (f:ReturnType<typeof contractTaxFixture>)=>{f.review.scenarios.creator_month_full!.taxReview!.fx.through=f.now.toISOString().slice(0,10);},
+  (f:ReturnType<typeof contractTaxFixture>)=>{f.review.scenarios.creator_month_full!.taxReview!.books.pop();},
+  (f:ReturnType<typeof contractTaxFixture>)=>{f.review.scenarios.creator_month_full!.taxReview!.scope={...f.review.scenarios.creator_month_full!.taxReview!.scope,contract:{...f.review.scenarios.creator_month_full!.taxContext!.contract!,reviewId:'another'}};},
+ ]){
+  const f=contractTaxFixture();mutate(f);f.policy.financialSnapshot=canonicalFinancialSnapshot(f.review)!;f.policy.reservedFundsCents=1e12;
+  assert.equal(contractFundingConfiguration(f.policy,f.context,f.now),null);
+  reset();assert.equal(await reserveContractFunding('tx-invalid-period','creator','month','checkout',f.policy,f.context,'ctr_tx_invalid_period'),null);assert.equal(calls.length,0);
+ }
+ const f=contractTaxFixture();assert.equal(contractFundingConfiguration(f.policy,f.context,new Date(Date.parse(f.policy.admissionsUntil)+1)),null);
 });
 test('legacy contract cash still retains every reviewed tax cent',()=>{
  const f=contractFixture();f.policy.reservedFundsCents=1e12;

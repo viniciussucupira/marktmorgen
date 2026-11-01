@@ -16,7 +16,7 @@ test('TX evidence replaces only the legacy assessment floor and never supplies a
  const r=txCustomerFixture();assert.equal(assessCustomerWorstCase(r).approved,true);
  const legacy={...r};delete legacy.taxReview;delete legacy.taxContext;
  assert.equal(assessCustomerWorstCase(legacy).reason,'tax_below_planning_floor');
- assert.equal(CURRENT_COMMERCIAL_TERMS.schemaVersion,27);
+ assert.equal(CURRENT_COMMERCIAL_TERMS.schemaVersion,28);
  assert.equal(CURRENT_COMMERCIAL_TERMS.customerTaxReview.id,'TX-2026-10-27');
  assert.equal(commercialMarginReady(),false);
 });

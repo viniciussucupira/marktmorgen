@@ -6,11 +6,13 @@ import {contractFundingConfiguration} from '@/lib/contract-funding-rules';
 import {allowanceWindow} from '@/lib/allowance-window';
 import {reserveStoreUpload,reserveUploadControl} from '@/lib/upload-budget';
 import {contractFixture} from './contract-funding-fixture';
+import {applyContractTaxCoverage} from './contract-tax-fixture';
 import {reset,seed,ledger,calls,resourceSettings} from './contract-resource-redis';
 const ledgerKey='nl:contract-reserve:v1',statsId='a'.repeat(32);
-async function setup(cycle:'month'|'year'='month',options:{admissionMs?:number;durationSeconds?:number}={}){
+async function setup(cycle:'month'|'year'='month',options:{admissionMs?:number;durationSeconds?:number;taxCoverage?:boolean}={}){
  reset();resourceSettings({lost:false,failure:false,response:null,afterAck:null,acknowledge:null});const f=contractFixture();
  f.policy.admissionsUntil=new Date(Date.now()+(options.admissionMs??10*86400000)).toISOString();
+ if(options.taxCoverage)applyContractTaxCoverage(f);
  const config=contractFundingConfiguration(f.policy,f.context)!;assert.ok(config);seed(config);
  assert.ok(await reserveContractFunding(statsId,'creator',cycle,'checkout',f.policy,f.context,'ctr_resources'));
  const created=Math.floor(Date.now()/1000),end=created+(options.durationSeconds??(cycle==='year'?365:30)*86400);
@@ -30,6 +32,15 @@ test('paid resource clones cannot discard original fiscal presence or hidden exe
   assert.equal(f.h.has('resource:ctr_resources:0'),false);
  }
  assert.equal(reads,0);
+});
+test('paid resources use the same fully bound TX contract rather than a test-only approval path',async()=>{
+ const f=await setup('year',{taxCoverage:true}),before=new Map(f.h);
+ assert.equal(await reservePaidResourceWindow(f.store,f.policy,f.context),true);
+ assert.ok(f.h.has('resource:ctr_resources:0'));
+ assert.ok(new TextEncoder().encode(JSON.stringify(calls.at(-1))).length<=12288);
+ for(const [key,value] of before)assert.equal(f.h.get(key),value);
+ const callsBefore=calls.length;f.policy.liabilitiesThrough=new Date(Date.parse(f.policy.liabilitiesThrough)+1).toISOString();
+ assert.equal(await reservePaidResourceWindow(f.store,f.policy,f.context),false);assert.equal(calls.length,callsBefore);
 });
 test('64 resource observations share one paid monthly cohort and retain every cent, grant and slot',async()=>{
  const f=await setup(),before=new Map(f.h);
