@@ -11,12 +11,16 @@ export async function navigateToContent(reader,page,kind){
   const pageTitle=(await page.title()).replace(/\s+/g," ").trim().toLowerCase();
   if(!pageTitle)throw Error("NVDA browser focus requires a nonempty page title");
   let switches=0;
+  async function observeForeground(stage){
+   await reader.perform(NVDAKeyCodeCommands.reportTitle);
+   const windowTitle=(await reader.lastSpokenPhrase()).replace(/\s+/g," ").trim().toLowerCase();
+   console.log("AX2_NVDA_WINDOW_FOCUS:"+JSON.stringify({attempt:switches,stage,pageTitle,windowTitle}));
+   return windowTitle;
+  }
   async function confirmForeground(stage,canSwitch=true){
    let changed=false;
    for(;;){
-    await reader.perform(NVDAKeyCodeCommands.reportTitle);
-    const windowTitle=(await reader.lastSpokenPhrase()).replace(/\s+/g," ").trim().toLowerCase();
-    console.log("AX2_NVDA_WINDOW_FOCUS:"+JSON.stringify({attempt:switches,stage,pageTitle,windowTitle}));
+    const windowTitle=await observeForeground(stage);
     if(windowTitle.startsWith(pageTitle))return changed;
     if(!canSwitch||switches===10)throw Error("NVDA foreground window did not match the synthetic page title ("+stage+")");
     switches++;
@@ -27,14 +31,21 @@ export async function navigateToContent(reader,page,kind){
   }
   await confirmForeground("before preparation");
   await page.locator("body").focus();
+  await observeForeground("after body focus");
   await page.locator("body").click({position:{x:1,y:1}});
+  await observeForeground("after body click");
   await page.locator("body").blur();
+  await observeForeground("after body blur");
   await reader.perform(NVDAKeyCodeCommands.readNextFocusableItem,{capture:false});
+  await observeForeground("after next focusable item");
   await pause();
   await reader.perform(NVDAKeyCodeCommands.toggleBetweenBrowseAndFocusMode,{capture:false});
+  await observeForeground("after first browse-focus toggle");
   await pause();
   await reader.perform(NVDAKeyCodeCommands.toggleBetweenBrowseAndFocusMode,{capture:false});
+  await observeForeground("after second browse-focus toggle");
   await reader.perform(NVDAKeyCodeCommands.exitFocusMode,{capture:false});
+  await observeForeground("after exit focus mode");
   await reader.perform({keyCode:[WindowsKeyCodes.Home],modifiers:[WindowsModifiers.Control]});
   // Preparation can lose native focus after the initial title was proved.
   // Reacquire it within the same ten-switch budget, never retry a heading assertion.

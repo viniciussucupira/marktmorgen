@@ -97,3 +97,23 @@ test("an empty page title cannot establish native browser identity",async()=>{
  assert.equal(state.documentResets,0);
  assert.equal(state.headingReads,0);
 });
+
+
+test("per-step observations locate the first observed loss without changing recovery or heading gates",async(t)=>{
+ const logs=[];
+ t.mock.method(console,"log",line=>logs.push(JSON.parse(line.slice(line.indexOf(":")+1))));
+ const {page,state,navigateThenRead}=fixture({afterPreparationSwitches:Infinity});
+ const locator=page.locator;
+ page.locator=selector=>({...locator(selector),async blur(){state.windowTitle="Search";state.switchesNeeded=Infinity;}});
+ await assert.rejects(navigateThenRead,/foreground window did not match/);
+ const observations=logs.filter(row=>row.stage!=="after preparation");
+ assert.deepEqual(observations.map(row=>row.stage),[
+  "before preparation","after body focus","after body click","after body blur",
+  "after next focusable item","after first browse-focus toggle",
+  "after second browse-focus toggle","after exit focus mode",
+ ]);
+ assert.equal(observations.find(row=>row.windowTitle==="search")?.stage,"after body blur");
+ assert.equal(state.switches,10,"Diagnostics grant no additional window switches");
+ assert.equal(state.documentResets,1,"Diagnostics do not repeat preparation");
+ assert.equal(state.headingReads,0,"A title observation cannot approve a heading");
+});
