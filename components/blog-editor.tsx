@@ -124,10 +124,11 @@ export function BlogEditor({ post, products, back, look }: { post: EditedPost; p
           // Inert: its headings stay out of the page's outline, its links out of the Tab order and out of reach of a click that would leave the draft.
           inert
           className={`st-page st-theme-${look.theme} mx-auto px-4 pb-8 pt-6`}
-          style={{ ...(lookStyle(look) as React.CSSProperties), maxWidth: phone ? 390 : "100%" }}
+          // Wide is the published page's own width (max-w-2xl, 672 px), so lines break where they will.
+          style={{ ...(lookStyle(look) as React.CSSProperties), maxWidth: phone ? 390 : 672 }}
         >
-          <p className="font-display text-2xl font-semibold leading-tight">{title.trim() || "Your title"}</p>
-          <div className="mt-4">{body.trim() ? <PostBody body={body} /> : <p className="st-muted text-sm">Your words appear here as you write.</p>}</div>
+          <p className={`font-display font-semibold leading-tight ${phone ? "text-3xl" : "text-4xl"}`}>{title.trim() || "Your title"}</p>
+          <div className="mt-4">{body.trim() ? <PostBody body={body} /> : <p className="text-sm">Your words appear here as you write.</p>}</div>
         </div>
       </div>
     </div>
