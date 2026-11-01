@@ -4,8 +4,10 @@
  *
  * It travels only in addresses: the home form's GET to /signin, the request
  * for the login link, the link in that email, the one-tap confirm page and
- * the redirect to the studio. Nothing here stores it, in the browser or on
- * the server, and nothing reserves it: the address is taken only by the
+ * the redirect to the studio. Logging in with Google carries it, for ten
+ * minutes, in that login's own cookie (lib/google-signin.ts), since Google's
+ * page takes nothing of ours along. Nothing here stores it, in the browser
+ * or on the server, and nothing reserves it: the address is taken only by the
  * address step's own form (components/handle-form.tsx) through
  * app/api/store/claim, under the same rules as any other address, and
  * somebody may have taken it in the meantime.
