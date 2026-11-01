@@ -3146,6 +3146,7 @@ export default async function StudioPage({
                   <input
                     type="email"
                     name="email"
+                    autoComplete="off"
                     required
                     maxLength={254}
                     placeholder="you@somewhere-else.com"
