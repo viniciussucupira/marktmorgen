@@ -24,6 +24,7 @@ import { atSiteAddress, creatorDomain, domainOf } from "@/lib/mail-from";
 import { countSesSent, isSesConfigured, notYetTaken, sesBatch, sesBulkRoom, sesConfig, sesDown, sesReady, sesSend } from "@/lib/ses";
 import { reservePaidResourceWindow } from "@/lib/contract-resource-window";
 import { type AllowanceStore, takeAllowance } from "@/lib/store-allowance";
+import { allowanceWindow } from "@/lib/allowance-window";
 import type { ShipmentMailDispatch } from "@/lib/shipment-mail-outbox";
 
 /**
@@ -52,13 +53,58 @@ export type EmailMeter =
   | { by: "monthly" }
   | { by: "store"; store: AllowanceStore; kind: "email" | "transactional"; asked?: boolean };
 
-/** Takes a store's figure for `n` emails before they go; true for the meters already counted elsewhere. */
-async function metered(meter: EmailMeter, n: number): Promise<boolean> {
+/** A funded cohort must be admitted even before a provider usage read. */
+async function meterCohortReady(meter: EmailMeter): Promise<boolean> {
   if (meter.by !== "store") return true;
   if (meter.store.period?.funded===true && (!meter.store.tier || !(await reservePaidResourceWindow({...meter.store,tier:meter.store.tier,statsId:meter.store.statsId??null})))) return false;
+  return true;
+}
+
+/** Takes a store's figure for `n` emails before they go; true for the meters already counted elsewhere. */
+async function metered(meter: EmailMeter, n: number): Promise<boolean> {
+  if (!(await meterCohortReady(meter))) return false;
+  return takeMeteredAllowance(meter, n);
+}
+async function takeMeteredAllowance(meter: EmailMeter, n: number): Promise<boolean> {
+  if (meter.by !== "store") return true;
   const taken = await takeAllowance(meter.store, meter.kind, n, Date.now(), meter.asked === true);
   if (!taken.ok) console.error(`an email was not sent: the store's ${meter.kind} figure (${taken.reason})`);
   return taken.ok;
+}
+
+type MeterAuthorization = { preflight: () => Promise<boolean>; beforePost: () => Promise<boolean> };
+/** Memoize only the debit of this invocation's original store/window. A
+ * later variant must still prove current funding and the SAME window.
+ * Refusal/throw/unknown stays sticky; this is not a durable retry receipt. */
+function lazyMeter(meter: EmailMeter, n: number): MeterAuthorization {
+  const selected: EmailMeter = meter.by === "store" ? { ...meter, store: { ...meter.store,
+    ...(meter.store.period ? { period: { ...meter.store.period } } : {}),
+  } } : { ...meter };
+  const original = selected.by === "store" ? allowanceWindow(selected.store) : null;
+  let debit: Promise<boolean> | undefined, refused = false;
+  const sameWindow = () => {
+    if (selected.by !== "store") return true;
+    const current = allowanceWindow(selected.store);
+    return Boolean(original && current && current.id === original.id && current.start === original.start &&
+      current.end === original.end && current.billing === original.billing);
+  };
+  const preflight = async () => {
+    if (refused) return false;
+    try {
+      if (sameWindow() && await meterCohortReady(selected) && sameWindow()) return true;
+    } catch { /* No new debit may follow unknown authorization. */ }
+    refused = true;
+    return false;
+  };
+  return { preflight, beforePost: async () => {
+    if (!(await preflight())) return false;
+    try {
+      debit ??= takeMeteredAllowance(selected, n);
+      if (await debit === true && sameWindow()) return true;
+    } catch { /* Keep the rejected debit promise and any committed effect. */ }
+    refused = true;
+    return false;
+  } };
 }
 
 // Local tests may point this at a mock server on 127.0.0.1; nothing else is
@@ -321,13 +367,15 @@ async function viaAmazon(message: OneMessage, to: string): Promise<boolean | nul
 export async function sendEmail(message: OneMessage, runtime: ResendTransportRuntime = {}): Promise<boolean> {
   const to = oneAddress(message.to);
   if (!to) return false;
-  if (!isSenderConfigured() || serviceMailKnownUnavailable(runtime) || !(await metered(message.meter, 1))) return false;
+  if (!isSenderConfigured() || serviceMailKnownUnavailable(runtime)) return false;
   if (isSesConfigured()) {
+    if (!(await metered(message.meter, 1))) return false;
     const amazon = await viaAmazon(message, to);
     if (amazon === true) return true;
     if (amazon === null) return false;
+    return viaResend(message, runtime); // The existing SES path already took its allowance.
   }
-  return viaResend(message, runtime);
+  return viaResend(message, runtime, lazyMeter(message.meter, 1));
 }
 
 /** Durable shipment work owns its lifetime claim in the outbox, not the
@@ -368,7 +416,7 @@ export function queuedShipmentMailSender(runtime: ResendTransportRuntime = {}): 
 export const sendQueuedShipmentMail: ShipmentMailDispatch = queuedShipmentMailSender();
 
 /** One email through Resend: the first sender, and the floor under the other. */
-async function viaResend(message: OneMessage, runtime: ResendTransportRuntime = {}): Promise<boolean> {
+async function viaResend(message: OneMessage, runtime: ResendTransportRuntime = {}, authorization?: MeterAuthorization): Promise<boolean> {
   const usageCredential = usageKey() ?? "";
   const key = keyFor(message.from);
   if (!key) return false;
@@ -383,26 +431,27 @@ async function viaResend(message: OneMessage, runtime: ResendTransportRuntime = 
   // Separate intentional service calls with identical text; retries within
   // this invocation keep one stable provider key and budget identity.
   let under = message.idempotencyKey?.trim() ? message.idempotencyKey : `nimbus-service:${randomBytes(16).toString("hex")}`;
-  const body = () => JSON.stringify({
-    from: fromLine(from),
+  const payload = {
     to: [to],
     subject: headerText(message.subject),
     text: message.text,
     ...(message.html ? { html: message.html } : {}),
-    ...(message.attachments?.length ? { attachments: message.attachments } : {}),
+    ...(message.attachments?.length ? { attachments: message.attachments.map(file => ({...file})) } : {}),
     ...(replyTo ? { reply_to: replyTo } : {}),
     ...(headers ? { headers } : {}),
-  });
+  };
+  const body = () => JSON.stringify({ from: fromLine(from), ...payload });
   let auth = key;
   // A sign-in link or a receipt must not be lost because the sender was busy
   // with a creator's newsletter a second earlier: asked to slow down, it
   // waits a moment and tries again.
   for (let attempt = 0; attempt < 3; attempt += 1) {
     try {
+      if (authorization && !(await authorization.preflight())) return false;
       const result = await guardedResendPost({
         base: BASE, path: "/emails", credential: auth,
         usageCredential, body: body(),
-        ...(under ? { idempotencyKey: under } : {}), recipients: 1,
+        ...(under ? { idempotencyKey: under } : {}), recipients: 1, ...(authorization ? { beforePost: authorization.beforePost } : {}),
       }, runtime);
       if (result.kind === "accepted_receipt") return true;
       if (result.kind !== "response") return false;
@@ -509,7 +558,20 @@ async function dispatchBatch(
   if (going.length && (only === "resend"
     ? currentResendFallbackProofIsMissing(runtime)
     : serviceMailKnownUnavailable(runtime))) return "retry";
-  if (going.length && !(await metered(meter, going.length))) return "refused";
+  const resendSelected = only === "resend" || !(config && isSesConfigured());
+  let authorization: MeterAuthorization | undefined;
+  if (going.length) {
+    if (resendSelected) {
+      // Keep the same recipients/content through tags/domain variants and
+      // bind the lazy debit to their filtered, bounded occurrence count.
+      going = going.map(message => ({ ...message,
+        ...(message.headers ? { headers: { ...message.headers } } : {}),
+        ...(message.tags ? { tags: { ...message.tags } } : {}),
+      }));
+      authorization = lazyMeter(meter, going.length);
+      if (!(await authorization.preflight())) return "refused";
+    } else if (!(await metered(meter, going.length))) return "refused";
+  }
   let idempotencyKey = batchKey;
   if (config && isSesConfigured() && only !== "resend") {
     const all = going.length;
@@ -606,10 +668,15 @@ async function dispatchBatch(
   const key = going.length ? keyFor(going[0].from) : getKey();
   if (!key) return "retry";
   const tagged = going.some((m) => cleanTags(m.tags).length > 0);
+  let firstPost = true;
   const post = async (withTags: boolean, under: string, auth: string = key, fromSite = false): Promise<Response | "accepted_receipt" | null> => {
+    // The first Resend-selected preflight immediately precedes this path;
+    // every known-refusal variant must independently precede its usage GET.
+    if (!firstPost && authorization && !(await authorization.preflight())) return null;
+    firstPost = false;
     const result = await guardedResendPost({
       base: BASE, path: "/emails/batch", credential: auth, usageCredential,
-      idempotencyKey: under, recipients: going.length,
+      idempotencyKey: under, recipients: going.length, ...(authorization ? { beforePost: authorization.beforePost } : {}),
       body: JSON.stringify(going.map((m) => {
         const replyTo = oneAddress(m.replyTo);
         const headers = cleanHeaders(m.headers);

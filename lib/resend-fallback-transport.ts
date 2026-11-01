@@ -8,7 +8,7 @@ import { RESEND_TIMEOUT_MS, timed } from "@/lib/fetch-timeout";
 import { redisPipeline } from "@/lib/redis";
 import {
   CURRENT_RESEND_FALLBACK_REVIEW, reserveResendFallback,
-  markResendFallbackDispatched, settleResendFallback, cancelResendFallbackReserved, readAcceptedResendFallbackReceipt,
+  markResendFallbackDispatched, settleResendFallback, readAcceptedResendFallbackReceipt,
   type ResendFallbackReview, type ResendFallbackSdk, type ResendFallbackUsage,
 } from "@/lib/resend-fallback-budget";
 
@@ -162,15 +162,18 @@ export async function guardedResendPost(request: ResendPost, runtime: ResendTran
     if (receipt.status === "accepted") return { kind: "accepted_receipt" };
     return { kind: reserve.status === "denied" ? "blocked" : "unknown" };
   }
+  // Only this invocation's acknowledged exclusive dispatch may debit a
+  // caller's allowance. A shared reserved claim is not that capability.
+  const dispatch = await markResendFallbackDispatched(reserve.claim, sdk);
+  if (dispatch.status !== "dispatch") return { kind: "unknown" };
   if (r.beforePost) {
     let ready = false;
     try { ready = await r.beforePost(); } catch { /* No HTTP POST is made. */ }
-    // The CAS can release only an undispatched reservation. Another caller's
-    // acknowledged dispatch capability is required to settle an HTTP result.
-    if (ready !== true) { await cancelResendFallbackReserved(reserve.claim, sdk); return { kind: "unknown" }; }
+    // The callback cannot have started this guard's provider request. Settle
+    // only our own dispatch, never cancel a shared reservation or refund an
+    // unknown caller debit. An unconfirmed settlement still reports unknown.
+    if (ready !== true) { await settleResendFallback(dispatch.claim, "confirmed_not_accepted", sdk); return { kind: "unknown" }; }
   }
-  const dispatch = await markResendFallbackDispatched(reserve.claim, sdk);
-  if (dispatch.status !== "dispatch") return { kind: "unknown" };
   try {
     const result = await timed(RESEND_TIMEOUT_MS, async signal => {
       // No await, user callback, serialization or mutable payload between this
