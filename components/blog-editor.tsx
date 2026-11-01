@@ -11,6 +11,7 @@ import { NewTab } from "@/components/new-tab";
 import { useLeaveGuard } from "@/components/leave-guard";
 import { PostBody } from "@/components/blog-body";
 import { type StoreLook, lookStyle } from "@/lib/store-look";
+import { LANGUAGES, type LanguageCode } from "@/lib/store-language";
 
 const MAX_TITLE = 120;
 const MAX_BODY = 20_000;
@@ -34,7 +35,7 @@ export type EditedPost = { id: string | null; title: string; body: string; produ
  * Published, kept as a draft, or deleted from here; a draft is seen by no
  * one but the studio.
  */
-export function BlogEditor({ post, products, back, look }: { post: EditedPost; products: { id: string; title: string }[]; back: string; /** The store's look, so the preview is drawn as the blog is. */ look: StoreLook }) {
+export function BlogEditor({ post, products, back, look, language = "en" }: { post: EditedPost; products: { id: string; title: string }[]; back: string; /** The store's look, so the preview is drawn as the blog is. */ look: StoreLook; /** The store's language, so the preview is marked as the blog is. */ language?: LanguageCode }) {
   const router = useRouter();
   const [title, setTitle] = useState(post.title);
   const [body, setBody] = useState(post.body);
@@ -123,6 +124,8 @@ export function BlogEditor({ post, products, back, look }: { post: EditedPost; p
         <div
           // Inert: its headings stay out of the page's outline, its links out of the Tab order and out of reach of a click that would leave the draft.
           inert
+          // In the store's language, as the blog is, so its words would be read in the right language (3.1.2).
+          lang={LANGUAGES[language]?.locale ?? "en-US"}
           className={`st-page st-theme-${look.theme} mx-auto px-4 pb-8 pt-6`}
           // Wide is the published page's own width (max-w-2xl, 672 px), so lines break where they will.
           style={{ ...(lookStyle(look) as React.CSSProperties), maxWidth: phone ? 390 : 672 }}

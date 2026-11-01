@@ -197,6 +197,7 @@ export default async function StudioCoursePage({
           title={product.title}
           ai={aiState}
           look={store.look}
+          language={parseLanguage(store.language)}
         />
 
         {hasTasks ? (

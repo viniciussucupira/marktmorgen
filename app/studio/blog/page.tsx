@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { parseLanguage } from "@/lib/store-language";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { studioPath, studioView } from "@/lib/studio-route";
@@ -91,6 +92,7 @@ export default async function StudioBlogPage({ searchParams }: Params) {
                     products={products}
                     back={back}
                     look={store.look}
+                    language={parseLanguage(store.language)}
                   />
                 </AiOn>
               ) : (

@@ -26,14 +26,14 @@ is("an empty preview says so in text at 7:1 or more on white (#57534e is 7.6:1)"
 
 const blog = readFileSync("components/blog-editor.tsx", "utf8");
 is("the blog post is previewed by the published page's own drawing, in the store's look", blog.includes("<PostBody body={body} />") && blog.includes("lookStyle(look)") && blog.includes("st-theme-${look.theme}"), true);
-is("it starts at phone width, with a Phone or Wide choice, and is inert", blog.includes("const [phone, setPhone] = useState(true);") && blog.includes('aria-label="Preview width"') && /inert\s+className=\{`st-page/.test(blog), true);
+is("it starts at phone width, with a Phone or Wide choice, and is inert", blog.includes("const [phone, setPhone] = useState(true);") && blog.includes('aria-label="Preview width"') && /inert[\s\S]{0,300}?className=\{`st-page/.test(blog), true);
 is("beside the text on a wide screen, folded on a narrow one", blog.includes('<div className="hidden xl:block">{preview}</div>') && blog.includes("See it as it is published</summary>"), true);
 is("the studio's blog page hands the editor its store's look", readFileSync("app/studio/blog/page.tsx", "utf8").includes("look={store.look}"), true);
 is("Wide is the published page's own width, and the title its size", blog.includes("maxWidth: phone ? 390 : 672") && blog.includes('${phone ? "text-3xl" : "text-4xl"}'), true);
 
 const course = readFileSync("components/course-editor.tsx", "utf8");
 is("a lesson's text is previewed by the lesson page's own drawing, in the store's look", course.includes("<LessonText text={now} />") && course.includes("lookStyle(storeLook)") && course.includes("st-theme-${storeLook.theme}") && course.includes('color: "var(--st-text)"'), true);
-is("it starts at phone width, with a Phone or Wide choice, is inert, and folds on a narrow screen", course.includes("const [phone, setPhone] = useState(true);") && course.includes('aria-label="Preview width"') && /inert\s+className=\{`st-page/.test(course) && course.includes("See it as students see it</summary>"), true);
+is("it starts at phone width, with a Phone or Wide choice, is inert, and folds on a narrow screen", course.includes("const [phone, setPhone] = useState(true);") && course.includes('aria-label="Preview width"') && /inert[\s\S]{0,300}?className=\{`st-page/.test(course) && course.includes("See it as students see it</summary>"), true);
 is("the studio's course page hands the editor its store's look", readFileSync("app/studio/course/[product]/page.tsx", "utf8").includes("look={store.look}"), true);
 is("the lesson's words sit in the same card the lesson page puts behind them", course.includes('<div className="st-card p-5 sm:p-8">') && readFileSync("app/[handle]/course/[product]/[lesson]/page.tsx", "utf8").includes("st-card min-w-0 p-5 sm:p-8"), true);
 
@@ -46,4 +46,5 @@ is("it says the price and the Buy button are not in it, rather than guessing the
 is("in the store's language, at the page's width, with the page's title size and card padding", productEditor.includes("lang={LANGUAGES[preview.language]?.locale") && productEditor.includes("maxWidth: phone ? 390 : 672") && productEditor.includes('${phone ? "text-2xl" : "text-3xl"}') && productEditor.includes('${phone ? "p-6" : "p-8"}'), true);
 is("the description keeps its whole width when there is no preview", productEditor.includes('pagePreview ? "grid min-w-0 gap-4 xl:grid-cols-2" : "min-w-0"'), true);
 is("it starts at phone width, with a Phone or Wide choice, is inert, and folds on a narrow screen", /inert[\s\S]{0,300}?className=\{`st-page/.test(productEditor) && productEditor.includes("See it as buyers see it</summary>"), true);
+is("the blog and lesson previews are marked in the store's language too, as their pages are (3.1.2)", blog.includes("lang={LANGUAGES[language]?.locale") && course.includes("lang={locale}") && readFileSync("app/studio/blog/page.tsx", "utf8").includes("language={parseLanguage(store.language)}") && readFileSync("app/studio/course/[product]/page.tsx", "utf8").includes("language={parseLanguage(store.language)}"), true);
 done();
