@@ -61,8 +61,14 @@ export const PARTS_PER_VISIT = 100;
  * What those minutes of the room count as, in hundredths of a visit: with
  * people talking, when it asks every few seconds, and with the room quiet,
  * when it asks twice a minute.
+ *
+ * 260 with people talking until 31 October 2026, when a visit was costed as
+ * Upstash bills it (313 [CV1]): a visit costs more, so the same ten minutes
+ * are fewer hundredths of one. 230 is the least that still covers what they
+ * cost, held by tests/room.test.ts; the room counts less against the plan's
+ * visits than before. The quiet room's 60 still covers its own.
  */
-export const ROOM_LIVE_PARTS = 260;
+export const ROOM_LIVE_PARTS = 230;
 export const ROOM_IDLE_PARTS = 60;
 
 /** "2.6", "0.6": hundredths of a visit as a figure a page can print. */

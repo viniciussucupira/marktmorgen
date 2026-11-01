@@ -146,7 +146,7 @@ async function main(): Promise<void> {
   await recordVisit(paid, "203.0.113.9", t1);
   is("beside the people who came", await trafficIn(folder, month), { people: 1, parts: counted, visits: 1 + Math.floor(counted / PARTS_PER_VISIT) });
   is("a store whose only visits are its room is known to the daily job", (await visitedFolders(calendar)).includes(folder), true);
-  is("what a page prints of it", [partsWords(ROOM_LIVE_PARTS), partsWords(ROOM_IDLE_PARTS), roomHourWords(ROOM_LIVE_PARTS), roomHourWords(ROOM_IDLE_PARTS)], ["2.6", "0.6", "16", "3.6"]);
+  is("what a page prints of it", [partsWords(ROOM_LIVE_PARTS), partsWords(ROOM_IDLE_PARTS), roomHourWords(ROOM_LIVE_PARTS), roomHourWords(ROOM_IDLE_PARTS)], ["2.3", "0.6", "14", "3.6"]);
   await recordParts(paid, (VISITS_INCLUDED.creator + 2_000) * PARTS_PER_VISIT, t1);
   // Since 17 October 2026 visits past a plan are not sold: the room past the figure rests, and nothing is billed.
   is("and past the plan's visits the room rests like the store's other buyer pages", await isResting(paid, t1, "buyer"), true);
