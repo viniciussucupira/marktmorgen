@@ -57,3 +57,11 @@ test('both exposure readers refuse any raw fiscal presence before constructing l
  }
  assert.equal(reads,0);
 });
+
+test('exposure details checks and copies the same once-captured raw',()=>{
+ const r=loss(100),item=r.cases.trial,legacy=item.worstCase!,tx={...legacy};
+ Object.defineProperty(tx,'taxReview',{value:null,enumerable:false});let reads=0;
+ r.cases.trial=new Proxy(item,{getOwnPropertyDescriptor(target,key){const d=Reflect.getOwnPropertyDescriptor(target,key);return key==='worstCase'&&d?{...d,value:++reads%2?legacy:tx}:d;}});
+ const actual=fundedExposureDetails(r);assert.ok(actual);assert.equal(reads,1);
+ assert.equal(actual.snapshot,fundedExposureDetails(loss(100))!.snapshot);
+});

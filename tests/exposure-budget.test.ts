@@ -130,3 +130,12 @@ test('exposure ACK must be an own numeric array entry without invoking accessors
  assert.equal(await reserveFundedExposure('one','trial',f.policy,f.context),true,'ordinary numeric own ACK still reuses allocation');
  assert.deepEqual([...ledger.get(f.key)!],before);
 });
+
+test('alternating exposure raws cannot pass one guard and populate the snapshot from another',async()=>{
+ const f=start(),item=f.context.review!.cases.trial,legacy=item.worstCase!,tx={...legacy},before=[...ledger.get(f.key)!];
+ Object.defineProperty(tx,'taxReview',{value:null,enumerable:false});let reads=0;
+ f.context.review!.cases.trial=new Proxy(item,{getOwnPropertyDescriptor(target,key){const d=Reflect.getOwnPropertyDescriptor(target,key);return key==='worstCase'&&d?{...d,value:++reads%2?legacy:tx}:d;}});
+ assert.equal(exposureBudgetConfiguration(f.policy,f.context),null);assert.equal(reads,2);
+ assert.equal(await reserveFundedExposure('swap_tx','trial',f.policy,f.context),false);
+ assert.equal(reads,4);assert.equal(calls.length,0);assert.deepEqual([...ledger.get(f.key)!],before);
+});
