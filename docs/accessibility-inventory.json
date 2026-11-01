@@ -1276,6 +1276,7 @@
     "components/dispute-purchase-review.tsx",
     "components/domain-editor.tsx",
     "components/dunning-editor.tsx",
+    "components/email-field.tsx",
     "components/email-studio.tsx",
     "components/email-suggestion.tsx",
     "components/email-sync-editor.tsx",

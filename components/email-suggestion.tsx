@@ -21,6 +21,7 @@ export function EmailSuggestion({
   show,
   onUse,
   language = "en",
+  store = false,
 }: {
   id: string;
   inputId: string;
@@ -28,18 +29,20 @@ export function EmailSuggestion({
   show: boolean;
   onUse: (address: string) => void;
   language?: string;
+  /** On a store's own pages: its look (st-*), not the site's. */
+  store?: boolean;
 }) {
   const suggested = show ? suggestEmail(value) : null;
   const words = emailTypoWords(language);
   return (
     <div id={id} aria-live="polite" data-email-suggestion>
       {suggested ? (
-        <div className="mt-2 rounded-2xl border border-transparent bg-paper p-3 text-sm text-ink ring-1 ring-line [overflow-wrap:anywhere]">
+        <div className={store ? "st-note mt-2 text-sm [overflow-wrap:anywhere]" : "mt-2 rounded-2xl border border-transparent bg-paper p-3 text-sm text-ink ring-1 ring-line [overflow-wrap:anywhere]"}>
           <p className="font-semibold">{words.didYouMean(suggested)}</p>
-          <p className="mt-1 text-ink-soft">{words.keep}</p>
+          <p className={store ? "st-muted mt-1" : "mt-1 text-ink-soft"}>{words.keep}</p>
           <button
             type="button"
-            className="btn btn-secondary btn-sm mt-2 max-w-full whitespace-normal [overflow-wrap:anywhere]"
+            className={`btn ${store ? "st-btn-ghost" : "btn-secondary"} btn-sm mt-2 max-w-full whitespace-normal [overflow-wrap:anywhere]`}
             onClick={() => {
               onUse(suggested);
               document.getElementById(inputId)?.focus();
