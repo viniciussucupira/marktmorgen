@@ -31,6 +31,13 @@ export function weeklyReach(monthlyEmails: number): number {
   return Math.floor(monthlyEmails / WEEKLY_SENDS_IN_LONGEST_MONTH);
 }
 
+/** The same, short, for a plan card: "one a week to as many as 1,400 people". Empty when there are no emails. */
+export function weeklyReachShort(monthlyEmails: number): string {
+  const people = weeklyReach(monthlyEmails);
+  if (people <= 0) return "";
+  return `one a week to as many as ${people === 1 ? "1 person" : `${people.toLocaleString("en-US")} people`}`;
+}
+
 /** The sentence, e.g. "That is one email a week to as many as 1,400 people, in any month." Empty when there are no emails. */
 export function emailEquivalence(monthlyEmails: number): string {
   const people = weeklyReach(monthlyEmails);
