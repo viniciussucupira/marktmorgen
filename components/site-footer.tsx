@@ -73,6 +73,23 @@ const COLUMNS: { title: string; links: FooterLink[] }[] = [
   },
 ];
 
+/**
+ * The home page's own column (498 [ME3]): the home page is held to 30 links
+ * (owner, 28 October 2026), so its footer keeps only what someone landing
+ * there may be looking for, beside the legal links. Every other link stays
+ * in the footer of every other page, one tap away.
+ */
+const HOME_COLUMN: { title: string; links: FooterLink[] } = {
+  title: "Marktmorgen",
+  links: [
+    { label: "Every feature", href: "/platform" },
+    { label: "All comparisons", href: "/proof/comparisons" },
+    { label: "Help center", href: "/help" },
+    { label: "Your library", href: "/library" },
+    { label: "Cancel subscription", href: "/refunds#cancel" },
+  ],
+};
+
 const LEGAL_LINKS: FooterLink[] = [
   { label: "Terms of Service", href: "/terms" },
   { label: "Privacy Policy", href: "/privacy" },
@@ -97,9 +114,9 @@ function FooterAnchor({ link, className }: { link: FooterLink; className: string
 /**
  * The site footer. `full` on marketing and content pages; `slim` on pages
  * where the person is in the middle of a task (logging in), so nothing pulls
- * them away from it.
+ * them away from it; `home` on the home page, with one short column (HOME_COLUMN).
  */
-export function SiteFooter({ variant = "full", morning = false }: { variant?: "full" | "slim"; morning?: boolean }) {
+export function SiteFooter({ variant = "full", morning = false }: { variant?: "full" | "slim" | "home"; morning?: boolean }) {
   const year = new Date().getFullYear();
 
   if (variant === "slim") {
@@ -143,13 +160,16 @@ export function SiteFooter({ variant = "full", morning = false }: { variant?: "f
             </a>
             .
           </p>
-          <Link prefetch={false} href="/signin" className="btn btn-light btn-sm mt-6">
-            Start your store
-          </Link>
+          {/* The home page starts a store from its own address fields, at the top and the end. */}
+          {variant === "home" ? null : (
+            <Link prefetch={false} href="/signin" className="btn btn-light btn-sm mt-6">
+              Start your store
+            </Link>
+          )}
         </div>
 
         <div className="grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-3 xl:grid-cols-[repeat(6,auto)] xl:justify-between">
-          {COLUMNS.map((column) => (
+          {(variant === "home" ? [HOME_COLUMN] : COLUMNS).map((column) => (
             <nav key={column.title} aria-label={column.title}>
               <p className="whitespace-nowrap text-[0.8125rem] font-semibold uppercase tracking-[0.14em] text-white/70">
                 {column.title}

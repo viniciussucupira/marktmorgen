@@ -6,6 +6,11 @@ export async function checkHomeActions({browser,LOCAL,axeSource,is}){
    const page=await context.newPage();let writes=0;
    await page.route("**/api/**",async route=>{if(route.request().method()!=="GET"){writes++;await route.abort();}else await route.continue();});
    await page.goto(LOCAL+"/",{waitUntil:"domcontentloaded",timeout:60000});
+   // 498 [ME3] (owner, 28/10/2026): at most 600 words and 30 links on the whole home page, header and footer included.
+   if(width===1280){
+    const size=await page.evaluate(()=>({words:document.body.innerText.split(/\s+/).filter(word=>/[A-Za-z0-9]/.test(word)).length,links:document.querySelectorAll("a[href]").length}));
+    is("ME3 home page at most 600 words and 30 links",[size.words<=600,size.links<=30,size],[true,true,size]);
+   }
    const nav=page.getByRole("navigation",{name:"Main",exact:true});
    is("menu has the home link, Pricing, Log in and Start free "+width,await nav.locator("a").evaluateAll(nodes=>nodes.map(node=>node.getAttribute("aria-label")??node.textContent.trim())),["Marktmorgen, home","Pricing","Log in","Start free"]);
    is("menu destinations "+width,await nav.locator("a").evaluateAll(nodes=>nodes.map(node=>node.getAttribute("href"))),["/","/pricing","/signin?to=login","/signin"]);
