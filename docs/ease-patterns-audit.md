@@ -138,6 +138,39 @@ The screen-by-screen audit that 487 [IT4] asks for: what was checked, what was f
 - A ready example for products, blog posts, forms, after-purchase offers and community setup. Each is new content, written once, and gets its own unit: nothing a creator sees is made up.
 - Not applicable, with the reason: the contacts page's empty "Your latest buyers" is a lookup of who bought, not a screen to make something. There is no buyer to "add", and its one next step, earlier purchases in the Stripe dashboard, is already said. A button there would be one that does nothing new.
 
+## Pattern 8: a "Check answers" summary before publishing or sending (1 November 2026, first pass)
+
+**Method.** Every studio action that publishes something to buyers or sends something to people was read for what the creator sees right before it takes effect.
+
+**Found.**
+- No action had a summary with "Change" on each item.
+- Three asked before acting:
+  - the email broadcast, whose review listed the facts in one paragraph;
+  - the waitlist's "Put it on sale and tell the waitlist", a second press with no price shown;
+  - switching a sequence on, a preview of one person's path.
+- Everything else happens on one press:
+  - adding or publishing a product, and changing a published price;
+  - emailing buyers about an update;
+  - a payment request;
+  - a signature request;
+  - a community announcement;
+  - a sale;
+  - a blog post;
+  - a page;
+  - the funnels;
+  - switching the community on;
+  - the podcast.
+
+**Fixed.**
+- The email broadcast, the one that cannot be taken back once sent, now reviews as a summary list: the subject, who gets it (the number and the audience's criteria), and when. Each row has a "Change" button that names what it changes, closes the review and puts the focus on that field. The send button still names how many people, and the audience is still checked again when sending starts.
+
+**Still to do, in this order, since a mistake there is public or costs money:**
+- the waitlist's sale and email (show the price and the note);
+- a published product's price change;
+- emailing buyers about an update (show how many);
+- payment and signature requests;
+- the community announcement email.
+
 ## Where each pattern stands
 
 Numbered as in 487 [IT4]:
@@ -148,4 +181,4 @@ Numbered as in 487 [IT4]:
 5. Empty screens with a sentence, a button and a ready example: first pass done (see pattern 5). Four screens fixed; ready examples for five screens still to write.
 6. Drafts never lost: done for the editors read (see pattern 6). Saving by itself, with "Saving…" and "Saved", is not built yet, because it needs its own ceiling on saves per plan first.
 7. A live phone preview beside each editor: not audited yet.
-8. A "Check answers" summary with "Change" on each item before publishing or sending: not audited yet.
+8. A "Check answers" summary with "Change" on each item before publishing or sending: first pass done (see pattern 8); the email broadcast has it, five more listed.

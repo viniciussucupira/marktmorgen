@@ -654,6 +654,11 @@ function Compose(props: {
   const [aiBusy, setAiBusy] = useState(false);
   const locked = busy || aiBusy || refreshingDrafts;
   const [confirming, setConfirming] = useState(false);
+  // "Change" on a row of the review: back to that field, the review closed, so nothing is sent from an old one (487 [IT4], pattern 8).
+  function changeAnswer(id: string) {
+    setConfirming(false);
+    requestAnimationFrame(() => document.getElementById(id)?.focus());
+  }
   const [error, setError] = useState<string | null>(null);
   // What the writing help is asked to write, and about which product.
   const [goal, setGoal] = useState<EmailGoal>("announce");
@@ -818,7 +823,7 @@ function Compose(props: {
         />
         <label className="block">
           <span className="field-label">Subject</span>
-          <input className="field mt-2" maxLength={150} value={subject} onChange={(e) => setSubject(e.target.value)} />
+          <input id="mail-subject" className="field mt-2" maxLength={150} value={subject} onChange={(e) => setSubject(e.target.value)} />
         </label>
         {/*
           A second subject line, tried against the first.
@@ -917,6 +922,7 @@ function Compose(props: {
         <label className="block">
           <span className="field-label">Send to</span>
           <select
+            id="mail-send-to"
             className="field mt-2"
             value={who === "all" ? productId : `@${who}`}
             onChange={(e) => {
@@ -1054,7 +1060,7 @@ function Compose(props: {
           <legend className="field-label">When</legend>
           <div className="mt-2 flex flex-wrap gap-4 text-sm">
             <label className="flex items-center gap-2">
-              <input type="radio" name="when" checked={!later} onChange={() => { setLater(false); setConfirming(false); setError(value => value === MESSAGES.when ? null : value); }} /> Now
+              <input id={later ? undefined : "mail-when"} type="radio" name="when" checked={!later} onChange={() => { setLater(false); setConfirming(false); setError(value => value === MESSAGES.when ? null : value); }} /> Now
             </label>
             <label className="flex items-center gap-2">
               <input type="radio" name="when" checked={later} onChange={() => { setLater(true); setScheduleNow(Date.now()); setConfirming(false); setError(value => value === MESSAGES.when ? null : value); }} /> At a time I choose
@@ -1063,7 +1069,7 @@ function Compose(props: {
           {later ? (
             <label className="mt-3 block">
               <span className="sr-only">Date and time, in your own time zone</span>
-              <input type="datetime-local" className="field" value={at} aria-invalid={at !== "" && invalidSchedule || undefined} aria-describedby="mail-schedule-hint" onChange={(e) => { setAt(e.target.value); setScheduleNow(Date.now()); setConfirming(false); setError(value => value === MESSAGES.when ? null : value); }} />
+              <input id="mail-when" type="datetime-local" className="field" value={at} aria-invalid={at !== "" && invalidSchedule || undefined} aria-describedby="mail-schedule-hint" onChange={(e) => { setAt(e.target.value); setScheduleNow(Date.now()); setConfirming(false); setError(value => value === MESSAGES.when ? null : value); }} />
               <span id="mail-schedule-hint" className="field-hint mt-1 block">{at !== "" && invalidSchedule ? "Choose a future date and time, within the next 365 days." : "In your device’s time zone. Choose a future time within the next 365 days; it is checked again before scheduling."}</span>
             </label>
           ) : null}
@@ -1071,11 +1077,32 @@ function Compose(props: {
         ) : null}
         {confirming && reach !== null ? (
           <div id="mail-send-review" role="status" className="rounded-[var(--r-md)] bg-sand p-4 text-sm text-ink">
-            <p>Review <strong>{subject.trim() || "this email"}</strong> for {n(reach)} {reach === 1 ? "person" : "people"}.{" "}
-            {later ? scheduledAt === null ? "Choose a valid future time before confirming." : (
-              <>Scheduled for <time dateTime={new Date(scheduledAt).toISOString()} className="font-semibold">{new Date(scheduledAt).toLocaleString(undefined, { year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit", timeZoneName: "short" })}</time> ({Intl.DateTimeFormat().resolvedOptions().timeZone}).</>
-            ) : "Sending starts after you confirm."}</p>
-            <AudienceSummary audience={{ who, productId: productId || null, notProductId, narrow }} products={props.products} currency={props.currency} />
+            <p className="font-semibold">Check before it goes out</p>
+            {/* A summary list, one answer a row, each with its own "Change" (GOV.UK "Check answers"). */}
+            <dl className="mt-2 divide-y divide-line">
+              <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 py-2">
+                <dt className="w-28 shrink-0 font-semibold">Subject</dt>
+                <dd className="min-w-0 flex-1 break-words">{subject.trim() || "No subject yet"}</dd>
+                <dd><button type="button" className="inline-flex min-h-11 items-center font-bold underline underline-offset-4" onClick={() => changeAnswer("mail-subject")}>Change<span className="sr-only"> subject</span></button></dd>
+              </div>
+              <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 py-2">
+                <dt className="w-28 shrink-0 font-semibold">Who gets it</dt>
+                <dd className="min-w-0 flex-1 break-words">
+                  {`${n(reach)} ${reach === 1 ? "person" : "people"}`}
+                  <AudienceSummary audience={{ who, productId: productId || null, notProductId, narrow }} products={props.products} currency={props.currency} />
+                </dd>
+                <dd><button type="button" className="inline-flex min-h-11 items-center font-bold underline underline-offset-4" onClick={() => changeAnswer("mail-send-to")}>Change<span className="sr-only"> who gets it</span></button></dd>
+              </div>
+              <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 py-2">
+                <dt className="w-28 shrink-0 font-semibold">When</dt>
+                <dd className="min-w-0 flex-1 break-words">
+                  {later ? scheduledAt === null ? "Choose a valid future time before confirming." : (
+                    <><time dateTime={new Date(scheduledAt).toISOString()} className="font-semibold">{new Date(scheduledAt).toLocaleString(undefined, { year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit", timeZoneName: "short" })}</time> ({Intl.DateTimeFormat().resolvedOptions().timeZone})</>
+                  ) : "Now: sending starts after you confirm."}
+                </dd>
+                <dd><button type="button" className="inline-flex min-h-11 items-center font-bold underline underline-offset-4" onClick={() => changeAnswer("mail-when")}>Change<span className="sr-only"> when</span></button></dd>
+              </div>
+            </dl>
             <SubjectTestReview preview={testPreview} />
             <p className="mt-2">Eligibility is checked again when sending starts.</p>
           </div>
