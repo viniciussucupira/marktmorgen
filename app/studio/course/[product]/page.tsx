@@ -196,6 +196,8 @@ export default async function StudioCoursePage({
           auto={{ can: autoCan, spoken: parseLanguage(store.language) }}
           title={product.title}
           ai={aiState}
+          look={store.look}
+          language={parseLanguage(store.language)}
         />
 
         {hasTasks ? (

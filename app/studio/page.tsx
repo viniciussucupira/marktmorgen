@@ -1558,6 +1558,7 @@ export default async function StudioPage({
                   preorders={await preorderViews(store, (shelf?.products ?? []).map((p) => p.id)).catch(() => ({}))}
                   mailAddress={store.mail?.address ?? store.winback?.address ?? ""}
                   cover={{ accent: store.look.accent, font: store.look.font, name: store.name, language: store.language }}
+                  look={store.look}
                   ownHosts={store.domain?.name ? [store.domain.name] : []}
                   pairChoices={await publishedChoices(store)}
                 />
