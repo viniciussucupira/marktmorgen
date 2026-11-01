@@ -955,6 +955,12 @@
       "parameters": []
     },
     {
+      "source": "app/studio/checkup/page.tsx",
+      "status": "AAA review not completed",
+      "routeTemplate": "/studio/checkup",
+      "parameters": []
+    },
+    {
       "source": "app/studio/closing-refunds/page.tsx",
       "status": "AAA review not completed",
       "routeTemplate": "/studio/closing-refunds",
@@ -1237,6 +1243,7 @@
     "components/checkout-extras.tsx",
     "components/checkout-fields-editor.tsx",
     "components/checkout-script-editor.tsx",
+    "components/checkup-list.tsx",
     "components/clickfunnels-funnel.tsx",
     "components/closing-refunds-confirm.tsx",
     "components/collections-editor.tsx",
@@ -1910,6 +1917,6 @@
   "routeInventory": {
     "generator": "scripts/accessibility-route-inventory.mjs",
     "scope": "Source templates and parameter shapes only. Existing review status is preserved; a route is not an exercised fixture or a passing accessibility test.",
-    "pageTemplates": 130
+    "pageTemplates": 131
   }
 }
