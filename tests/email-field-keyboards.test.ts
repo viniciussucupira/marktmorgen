@@ -41,21 +41,17 @@ function tags(source: string, name: string): { tag: string; line: number }[] {
 
 const isEmail = (tag: string) => /\btype=(?:"email"|'email'|\{[^}]*["']email["'][^}]*\})/.test(tag);
 
-// Held by another open PR (Codex, #1502) on 1 November 2026: only its "Move to" field (name="email") waits.
-const waiting = (file: string, tag: string) => file === "app/studio/page.tsx" && /name="email"/.test(tag);
 
 const missing: string[] = [];
 let inputs = 0;
 let components = 0;
-let waited = 0;
 for (const file of [...walk("app"), ...walk("components")]) {
   const source = readFileSync(file, "utf8");
   for (const { tag, line } of tags(source, "input")) {
     if (!isEmail(tag)) continue;
     inputs += 1;
     if (/\bautoComplete=/.test(tag)) continue;
-    if (waiting(file, tag)) waited += 1;
-    else missing.push(`${file}:${line}`);
+    missing.push(`${file}:${line}`);
   }
   if (file === "components/email-field.tsx") continue;
   for (const { tag, line } of tags(source, "EmailField")) {
@@ -65,6 +61,6 @@ for (const file of [...walk("app"), ...walk("components")]) {
 }
 is("the email fields the audit counted: 25 inputs (two with a type chosen in code) and 17 EmailFields", [inputs, components], [25, 17]);
 is("every one says whose address it is (autocomplete)", missing, []);
-is("only the one field held by the other PR waits", waited, 1);
 is("someone else's address is not offered the creator's own", ["components/form-response-deal.tsx", "components/deals-board.tsx", "components/workflow-tools.tsx"].every((f) => /type="email" autoComplete="off"/.test(readFileSync(f, "utf8"))), true);
+is("nor is the address a store moves to (\"Move to\")", /type="email"\s+name="email"\s+autoComplete="off"/.test(readFileSync("app/studio/page.tsx", "utf8")), true);
 done();
