@@ -16,7 +16,7 @@
  * readPaidSales), only when an email asks for one, and the answer is kept ten
  * minutes so a creator changing the boxes does not ask Stripe each time:
  *
- *   nl:stats:<statsId>:ledger   JSON [[address, cents, last ms, channel], …], ten minutes
+ *   nl:stats:<statsId>:ledger   JSON { c: currency, p: partial, v: 2, r: [[address, cents, last ms, channel, orders], …] }, ten minutes
  *   nl:mail:segs:<listId>       hash: <id> → JSON Segment, the store's saved groups
  *
  * A group is a name over the choices the composer already has: who, one
@@ -41,11 +41,17 @@ const SEGMENT_ID = /^[0-9a-f]{12}$/;
 const ledgerKey = (statsId: string) => `nl:stats:${statsId}:ledger`;
 const segmentsKey = (listId: string) => `nl:mail:segs:${listId}`;
 
-/** What one address has spent here, when it last bought, and where it first came from ("direct" when nowhere was named). */
-export type LedgerEntry = { cents: number; last: number; channel: string };
+/**
+ * What one address has spent here, when it last bought, where it first came
+ * from ("direct" when nowhere was named), and how many times it bought: each
+ * checkout once, an offer taken after paying not counted again (270 [GR1]).
+ */
+export type LedgerEntry = { cents: number; last: number; channel: string; orders: number };
 export type Ledger = { buyers: Map<string, LedgerEntry>; partial: boolean };
 
-type Row = [string, number, number, string];
+type Row = [string, number, number, string, number];
+/** The cached rows' shape; a reading kept in an older one is read again. */
+const LEDGER_SHAPE = 2;
 
 /**
  * Every buyer of this store, from its sales on the creator's Stripe account,
@@ -58,9 +64,9 @@ export async function buyerLedger(store: Store): Promise<Ledger> {
     const [cached] = await redisPipeline([["GET", ledgerKey(store.statsId)]]);
     if (typeof cached === "string" && cached) {
       try {
-        const kept = JSON.parse(cached) as { c?: string; p?: boolean; r?: Row[] };
-        if (kept.c === store.currency && Array.isArray(kept.r)) {
-          return { buyers: new Map(kept.r.map(([e, cents, last, channel]) => [e, { cents, last, channel }])), partial: kept.p === true };
+        const kept = JSON.parse(cached) as { c?: string; p?: boolean; r?: Row[]; v?: number };
+        if (kept.c === store.currency && kept.v === LEDGER_SHAPE && Array.isArray(kept.r)) {
+          return { buyers: new Map(kept.r.map(([e, cents, last, channel, orders]) => [e, { cents, last, channel, orders }])), partial: kept.p === true };
         }
       } catch {
         // Read again below.
@@ -76,8 +82,9 @@ export async function buyerLedger(store: Store): Promise<Ledger> {
     const raw = sale.upsell ? sale.row.receipt_email : details?.email;
     if (typeof raw !== "string" || !raw.trim()) continue;
     const email = normaliseEmail(raw);
-    const row = buyers.get(email) ?? { cents: 0, last: 0, channel: "direct", firstAt: Infinity };
+    const row = buyers.get(email) ?? { cents: 0, last: 0, channel: "direct", orders: 0, firstAt: Infinity };
     row.cents += sale.cents;
+    if (!sale.upsell) row.orders += 1;
     row.last = Math.max(row.last, sale.created);
     // Where they first came from: the channel on their earliest checkout.
     if (!sale.upsell && sale.created < row.firstAt) {
@@ -86,15 +93,15 @@ export async function buyerLedger(store: Store): Promise<Ledger> {
     }
     buyers.set(email, row);
   }
-  const out: Ledger = { buyers: new Map([...buyers].map(([e, r]) => [e, { cents: r.cents, last: r.last, channel: r.channel }])), partial };
+  const out: Ledger = { buyers: new Map([...buyers].map(([e, r]) => [e, { cents: r.cents, last: r.last, channel: r.channel, orders: r.orders }])), partial };
   // Buyers brought over from another platform (lib/imported-purchases.ts): history, never a sale.
   // Nothing spent here and no purchase date here; they first came "imported".
   for (const email of (await importedBuyers(store.statsId).catch(() => new Map<string, number>())).keys()) {
-    if (!out.buyers.has(email)) out.buyers.set(email, { cents: 0, last: 0, channel: IMPORTED_CHANNEL });
+    if (!out.buyers.has(email)) out.buyers.set(email, { cents: 0, last: 0, channel: IMPORTED_CHANNEL, orders: 0 });
   }
   if (store.statsId && isRedisConfigured()) {
-    const rows: Row[] = [...out.buyers].map(([e, r]) => [e, r.cents, r.last, r.channel]);
-    await redisPipeline([["SET", ledgerKey(store.statsId), JSON.stringify({ c: store.currency, p: partial, r: rows }), "EX", LEDGER_SECONDS]]).catch(() => {});
+    const rows: Row[] = [...out.buyers].map(([e, r]) => [e, r.cents, r.last, r.channel, r.orders]);
+    await redisPipeline([["SET", ledgerKey(store.statsId), JSON.stringify({ c: store.currency, p: partial, r: rows, v: LEDGER_SHAPE }), "EX", LEDGER_SECONDS]]).catch(() => {});
   }
   return out;
 }
