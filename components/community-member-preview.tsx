@@ -1,15 +1,18 @@
 "use client";
 
 import { useId, useState } from "react";
-import { PREVIEW_LEAVES_OUT, previewLine, previewSpaces } from "@/lib/community-gate";
+import { GONE_PRODUCT, PREVIEW_LEAVES_OUT, previewLine, previewName, previewSpaces } from "@/lib/community-gate";
 
 /**
  * "Which spaces a member sees" (399 [SL3], unit 2; added 1 November 2026):
- * the creator picks products, and the studio says which spaces a member
- * holding exactly those would see, by the rule the real gate uses
+ * the creator ticks what a member bought, and the studio says which spaces
+ * a member holding exactly those would see, by the rule the real gate uses
  * (lib/community-gate.ts). Worked out here from the community the studio
  * already has: no buyer is read, no route is called, nothing is changed and
  * nobody is told. Shown only when some space is kept for some products.
+ *
+ * What can be ticked is every product that opens the community, including
+ * one no longer in the store, whose buyers still get in.
  */
 export function MemberPreview({
   spaces,
@@ -22,8 +25,10 @@ export function MemberPreview({
 }) {
   const [chosen, setChosen] = useState<string[]>([]);
   const help = useId();
-  if (!open.length || !spaces.some((space) => space.only.length)) return null;
-  const shown = previewSpaces(spaces, access, chosen).map((space) => space.name);
+  if (!access.length || !spaces.some((space) => space.only.length)) return null;
+  const pick = access.map((id) => open.find((product) => product.id === id) ?? { id, title: GONE_PRODUCT });
+  const ticked = chosen.filter((id) => access.includes(id));
+  const shown = previewSpaces(spaces, access, ticked);
   return (
     <section className="mt-6 rounded-[var(--r-md)] bg-paper p-4" aria-labelledby={`${help}-title`}>
       <h3 id={`${help}-title`} className="font-semibold text-ink">Which spaces a member sees</h3>
@@ -31,7 +36,7 @@ export function MemberPreview({
       <fieldset className="mt-3" aria-describedby={help}>
         <legend className="field-label">A member who bought</legend>
         <div className="mt-2 space-y-1.5">
-          {open.map((product) => (
+          {pick.map((product) => (
             <label key={product.id} className="flex min-h-11 items-start gap-2 text-sm">
               <input
                 type="checkbox"
@@ -44,7 +49,16 @@ export function MemberPreview({
           ))}
         </div>
       </fieldset>
-      <p className="mt-3 text-sm text-ink" aria-live="polite">{previewLine(shown, spaces.length)}</p>
+      <div className="mt-3 text-sm text-ink" aria-live="polite">
+        <p>{previewLine(ticked.length, shown.length, spaces.length)}</p>
+        {ticked.length && shown.length ? (
+          <ul className="mt-1 list-disc pl-5">
+            {shown.map((space) => (
+              <li key={space.id} className="break-words">{previewName(spaces, space.id)}</li>
+            ))}
+          </ul>
+        ) : null}
+      </div>
     </section>
   );
 }
