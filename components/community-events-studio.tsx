@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "@/components/toast";
+import { UrlField } from "@/components/url-field";
+import { roomOnLeave } from "@/lib/url-check";
 import type { MeetAccount } from "@/components/call-editor";
 import { MEET_NAMES, type MeetProvider } from "@/lib/call-setup";
 import {
@@ -91,6 +93,9 @@ const MESSAGES: Record<string, string> = {
   invalid: "That could not be read. Nothing was changed.",
   server_error: "Something went wrong on our side. Try again in a moment.",
 };
+
+// The meeting link is checked when its field is left, by the reading the server keeps (487 [IT4], pattern 1).
+const LINK_CHECK = roomOnLeave(MESSAGES.link);
 
 type Answer = { ok?: boolean; error?: string; moved?: boolean };
 
@@ -627,7 +632,7 @@ function EventForm({
         {draft.where === "link" ? (
           <div className="mt-2 px-2">
             <label htmlFor={id("link")} className="sr-only">Your meeting link</label>
-            <input id={id("link")} className="field" type="url" inputMode="url" required value={draft.link} onChange={(e) => set({ link: e.target.value })} placeholder="https://zoom.us/j/… or https://meet.google.com/…" />
+            <UrlField id={id("link")} className="field" value={draft.link} onChange={(link) => set({ link })} check={LINK_CHECK} placeholder="https://zoom.us/j/… or https://meet.google.com/…" />
           </div>
         ) : null}
       </fieldset>

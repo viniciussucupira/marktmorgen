@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { linkOnLeave } from "@/lib/url-check";
+import { type LinkCheck, linkOnLeave } from "@/lib/url-check";
 
 /**
  * A web address field that says what is wrong when the person leaves it or
@@ -26,6 +26,7 @@ export function UrlField({
   placeholder = "https://",
   describedBy,
   autoFocus,
+  check: read = linkOnLeave,
 }: {
   id: string;
   value: string;
@@ -35,12 +36,19 @@ export function UrlField({
   /** Help under the field, tied to it as well. */
   describedBy?: string;
   autoFocus?: boolean;
+  /** The reading of the field's own server; a product link's by default. */
+  check?: LinkCheck;
 }) {
   const input = useRef<HTMLInputElement>(null);
   // What was said at the last leave, and for which address.
   const [said, setSaid] = useState<{ value: string; problem: string; fix: string | null } | null>(null);
+  // The reading in a ref, so the form's send listener always uses the current one.
+  const reading = useRef(read);
+  useEffect(() => {
+    reading.current = read;
+  }, [read]);
   const check = (now: string) => {
-    const found = linkOnLeave(now);
+    const found = reading.current(now);
     setSaid(found.problem ? { value: now, problem: found.problem, fix: found.fix } : null);
   };
   useEffect(() => {
@@ -70,7 +78,7 @@ export function UrlField({
         onChange={(e) => {
           const next = e.target.value;
           onChange(next);
-          if (said && !linkOnLeave(next).problem) setSaid(null);
+          if (said && !reading.current(next).problem) setSaid(null);
         }}
         onBlur={() => check(value)}
         aria-invalid={said ? true : undefined}

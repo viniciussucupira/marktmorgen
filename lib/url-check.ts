@@ -12,6 +12,7 @@
  * Browser-safe: plain functions.
  */
 import { LINK_PROBLEMS, readLink } from "@/lib/product-link";
+import { MAX_ROOM_LENGTH, cleanRoom } from "@/lib/call-setup";
 
 export const NEEDS_HTTPS = "This address needs https:// at the start.";
 
@@ -30,4 +31,36 @@ export function linkOnLeave(raw: string): { problem: string | null; fix: string 
     if (!hasScheme) return { problem: LINK_PROBLEMS[withHttps.reason], fix: null };
   }
   return { problem: LINK_PROBLEMS[read.reason], fix: null };
+}
+
+export type LinkCheck = (raw: string) => { problem: string | null; fix: string | null };
+
+/**
+ * The same check for a field whose server reads addresses its own way:
+ * `accept` is that reading (the stored address, or null when refused), and
+ * `refused` the words the editor already shows for it. https:// is offered
+ * back only when the server's reading then keeps it.
+ */
+export function checkWith(accept: (raw: string) => string | null, refused: string, maxLength: number): LinkCheck {
+  return (raw) => {
+    const typed = (raw ?? "").trim();
+    if (!typed) return { problem: null, fix: null };
+    if (typed.length > maxLength) return { problem: LINK_PROBLEMS.long, fix: null };
+    if (accept(typed) !== null) return { problem: null, fix: null };
+    const hasScheme = /^[a-z][a-z0-9+.-]*:(?!\d)/i.test(typed);
+    if (!hasScheme || /^http:\/\//i.test(typed)) {
+      const tried = `https://${typed.replace(/^http:\/\//i, "")}`;
+      const kept = tried.length <= maxLength ? accept(tried) : null;
+      if (kept !== null) return { problem: NEEDS_HTTPS, fix: kept };
+    }
+    return { problem: refused, fix: null };
+  };
+}
+
+/** A meeting link, as lib/call-setup.ts cleanRoom keeps it (calls and community events). */
+export function roomOnLeave(refused: string): LinkCheck {
+  return checkWith((raw) => {
+    const kept = cleanRoom(raw);
+    return typeof kept === "string" && kept !== "bad" ? kept : null;
+  }, refused, MAX_ROOM_LENGTH);
 }

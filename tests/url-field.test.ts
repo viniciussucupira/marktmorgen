@@ -15,7 +15,8 @@
  *   - the lesson link in the course editor uses it, with a visible label.
  */
 import { readFileSync } from "node:fs";
-import { linkOnLeave } from "@/lib/url-check";
+import { linkOnLeave, roomOnLeave } from "@/lib/url-check";
+import { MAX_ROOM_LENGTH, cleanRoom } from "@/lib/call-setup";
 import { readLink, LINK_PROBLEMS } from "@/lib/product-link";
 import { done, is, part } from "./check";
 
@@ -43,7 +44,7 @@ for (const typed of ["notion.so/x", "http://example.com", "https://example.com",
 part("The field");
 const field = readFileSync("components/url-field.tsx", "utf8");
 is("said when the field is left or its form is sent, never while typing", field.includes("onBlur={() => check(value)}") && field.includes('form.addEventListener("submit", onSubmit, true)') && !field.slice(field.indexOf("onChange={(e)"), field.indexOf("onBlur=")).includes("check("), true);
-is("while typing, a message only goes away, when the address is right; a new one waits for the next leave", field.includes("if (said && !linkOnLeave(next).problem) setSaid(null);"), true);
+is("while typing, a message only goes away, when the address is right; a new one waits for the next leave", field.includes("if (said && !reading.current(next).problem) setSaid(null);"), true);
 is("tied to the field, and marked invalid only while said", field.includes("aria-invalid={said ? true : undefined}") && field.includes("aria-describedby="), true);
 is("the fix is a button at least 44 px tall that puts the address in, offered only for the address it came from", field.includes('type="button"') && field.includes("min-h-11") && field.includes("onChange(fix)") && field.includes("said && said.value === value ? said.fix : null"), true);
 is("after the fix the focus goes back to the field, never to the page", field.includes("input.current?.focus();"), true);
@@ -57,4 +58,20 @@ is("and its route refuses a long link rather than cutting it", readFileSync("app
 const links = readFileSync("components/link-editor.tsx", "utf8");
 is("a store link uses it too, with its help tied to it", links.includes("<UrlField") && links.includes('describedBy="link-url-help"') && links.includes('<p id="link-url-help"'), true);
 is("and its route refuses a long link rather than cutting it", readFileSync("app/api/store/links/route.ts", "utf8").includes("text(body.url, MAX_LINK_LENGTH + 1)"), true);
+part("A meeting link, by the reading calls and events keep");
+const room = roomOnLeave("The meeting link has to be a full web address starting with https://.");
+is("a good room is fine, empty too", [room("https://zoom.us/j/123").problem, room("").problem], [null, null]);
+is("missing https://: offered back, as cleanRoom keeps it", room("meet.google.com/abc-defg-hij"), { problem: "This address needs https:// at the start.", fix: "https://meet.google.com/abc-defg-hij" });
+is("anything else: the editor's own words, no fix", room("my zoom"), { problem: "The meeting link has to be a full web address starting with https://.", fix: null });
+for (const typed of ["zoom.us/j/1", "http://whereby.com/me", "https://meet.google.com/x", "zoom", "ftp://x.com", `https://zoom.us/${"a".repeat(600)}`]) {
+  const kept = cleanRoom(typed);
+  is(`"${typed.slice(0, 30)}": passes here exactly when cleanRoom keeps it`, room(typed).problem === null, typeof kept === "string" && kept !== "bad");
+  const fix = room(typed).fix;
+  if (fix) is(`"${typed.slice(0, 30)}": what is offered, cleanRoom keeps`, cleanRoom(fix) === fix, true);
+}
+is("a room too long is refused, never cut", [cleanRoom(`https://zoom.us/${"a".repeat(MAX_ROOM_LENGTH)}`), room(`https://zoom.us/${"a".repeat(MAX_ROOM_LENGTH)}`).problem], ["bad", LINK_PROBLEMS.long]);
+const call = readFileSync("components/call-editor.tsx", "utf8");
+is("a call's meeting links use it, each with a visible label tied by id", (call.match(/<UrlField/g) ?? []).length === 2 && call.includes("check={ROOM_CHECK}") && call.includes("check={SESSION_ROOM_CHECK}") && call.includes("htmlFor={`call-${product.id}-room`}") && call.includes("htmlFor={`call-${product.id}-session-${index}-room`}"), true);
+const events = readFileSync("components/community-events-studio.tsx", "utf8");
+is("a community event's link uses it", events.includes("<UrlField") && events.includes("check={LINK_CHECK}"), true);
 done();
