@@ -32,6 +32,8 @@ is("the panel on the left and the link to every feature are there", nav.includes
 part("One short line each");
 is("no phrase longer than the longest measured on one line (34 characters)", items.filter((i) => i.description.length > 34).map((i) => i.description), []);
 is("no name longer than 27 characters", items.filter((i) => i.label.length > 27).map((i) => i.label), []);
+is("the phrases the review checked against the feature pages", ["Daily, weekly, monthly or yearly.", "Your photo, links and products.", "Contact fields and deal stages.", "Modules that open over time."].every((d) => items.some((i) => i.description === d)), true);
+is("the link to every feature sits in its own block, so the arrow link's negative margin cannot reach the demo card", nav.includes('<div className="mt-4">\n                        <Link href="/platform"'), true);
 is("each phrase ends as a sentence", items.filter((i) => !/[.]$/.test(i.description)).map((i) => i.label), []);
 
 part("Sizes and the window");

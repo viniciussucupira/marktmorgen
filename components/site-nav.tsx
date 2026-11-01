@@ -30,11 +30,11 @@ const PRODUCT_GROUPS: { label: string; items: MenuItem[] }[] = [
   {
     label: "Sell",
     items: [
-      item("Store page", "All your links and products.", "/platform/store-page", "store"),
+      item("Store page", "Your photo, links and products.", "/platform/store-page", "store"),
       item("Price options", "Several prices on one product.", "/platform/price-options", "tag"),
       item("Sales pages", "Built from blocks, with reviews.", "/platform/sales-pages", "layout"),
-      item("Courses", "Lessons that open over time.", "/platform/courses", "book"),
-      item("Memberships", "Charged daily, up to yearly.", "/platform/memberships", "repeat"),
+      item("Courses", "Modules that open over time.", "/platform/courses", "book"),
+      item("Memberships", "Daily, weekly, monthly or yearly.", "/platform/memberships", "repeat"),
       item("Paid calls", "Paid first, in their time zone.", "/platform/calls", "calendar"),
       item("Community", "Posts and comments for buyers.", "/platform/community", "chat"),
       item("Live events", "RSVPs, reminders and replays.", "/platform/live-events", "video"),
@@ -54,7 +54,7 @@ const PRODUCT_GROUPS: { label: string; items: MenuItem[] }[] = [
     label: "Deliver and grow",
     items: [
       item("Instant delivery", "On screen and by email.", "/platform/instant-delivery", "bolt"),
-      item("People, deals and pipelines", "Contacts, deals, pipelines.", "/platform/crm", "users"),
+      item("People, deals and pipelines", "Contact fields and deal stages.", "/platform/crm", "users"),
       item("Numbers and pixels", "Visits, sources, sales, ad pixels.", "/platform/insights", "chart"),
       item("Affiliates", "A link for each. You pay them.", "/platform/affiliates", "handshake"),
       item("Outreach", "A pitch to a sponsor or a partner.", "/platform/outreach", "target"),
@@ -432,10 +432,12 @@ export function SiteNav() {
                     </Link>
                     {menu.groups ? (
                       /* The long menu's last link, here so its columns fit the window without scrolling (524 [NV1]). */
-                      <Link href="/platform" onClick={closeAll} className="link-arrow on-dark mt-4 flex min-h-11 items-center text-sm font-semibold">
-                        Every feature on one page, with its plan
-                        <Icon name="arrow-right" size={16} className="arrow" />
-                      </Link>
+                      <div className="mt-4">
+                        <Link href="/platform" onClick={closeAll} className="link-arrow on-dark min-h-11 text-sm font-semibold">
+                          Every feature on one page, with its plan
+                          <Icon name="arrow-right" size={16} className="arrow" />
+                        </Link>
+                      </div>
                     ) : null}
                   </div>
                 </div>
