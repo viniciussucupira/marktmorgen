@@ -2196,6 +2196,7 @@ export function ProductEditor({
                     preorders={preorders[product.id] ?? null}
                     preorderBlocked={preorderProblem(product)}
                     hasContent={hasContent(product)}
+                    price={formatMoney(product.priceCents, currency)}
                   />
                 ) : null}
                 {product.call || product.course || product.shipping ? null : <BundleToggle product={product} />}

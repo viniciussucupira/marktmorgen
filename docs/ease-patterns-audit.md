@@ -162,10 +162,17 @@ The screen-by-screen audit that 487 [IT4] asks for: what was checked, what was f
   - the podcast.
 
 **Fixed.**
-- The email broadcast, the one that cannot be taken back once sent, now reviews as a summary list: the subject, who gets it (the number and the audience's criteria), and when. Each row has a "Change" button that names what it changes, closes the review and puts the focus on that field. The send button still names how many people, and the audience is still checked again when sending starts.
+- The email broadcast, the one that cannot be taken back once sent, now reviews as a summary list: the subject, who gets it (the number and the audience's criteria), and when. Each row has a "Change" button that names what it changes, closes the review and puts the focus on that field. The send button still names how many people, and the audience is still checked again when sending starts. The review is not a live region (it would be read again at every key typed in the subject): its heading takes the focus when it opens, and on a phone each answer takes its own line.
+- The waitlist's "Put it on sale and tell the waitlist" now shows, before the second press, what will happen:
+  - when it goes on sale;
+  - the price the email carries;
+  - how many emails go out;
+  - the note;
+  - the postal address.
+
+  The note and the address each have a "Change". The price says it is changed in the product's details.
 
 **Still to do, in this order, since a mistake there is public or costs money:**
-- the waitlist's sale and email (show the price and the note);
 - a published product's price change;
 - emailing buyers about an update (show how many);
 - payment and signature requests;
@@ -181,4 +188,4 @@ Numbered as in 487 [IT4]:
 5. Empty screens with a sentence, a button and a ready example: first pass done (see pattern 5). Four screens fixed; ready examples for five screens still to write.
 6. Drafts never lost: done for the editors read (see pattern 6). Saving by itself, with "Saving…" and "Saved", is not built yet, because it needs its own ceiling on saves per plan first.
 7. A live phone preview beside each editor: not audited yet.
-8. A "Check answers" summary with "Change" on each item before publishing or sending: first pass done (see pattern 8); the email broadcast has it, five more listed.
+8. A "Check answers" summary with "Change" on each item before publishing or sending: first pass done (see pattern 8); the email broadcast and the waitlist's sale have it; four more listed.

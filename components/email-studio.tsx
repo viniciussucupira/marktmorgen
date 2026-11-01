@@ -1076,26 +1076,27 @@ function Compose(props: {
         </fieldset>
         ) : null}
         {confirming && reach !== null ? (
-          <div id="mail-send-review" role="status" className="rounded-[var(--r-md)] bg-sand p-4 text-sm text-ink">
-            <p className="font-semibold">Check before it goes out</p>
+          // No live region: it would read the whole list again at every key typed in the subject. Its heading takes the focus when it opens.
+          <div id="mail-send-review" className="rounded-[var(--r-md)] bg-sand p-4 text-sm text-ink">
+            <h3 id="mail-send-review-title" tabIndex={-1} className="font-semibold">Check before it goes out</h3>
             {/* A summary list, one answer a row, each with its own "Change" (GOV.UK "Check answers"). */}
             <dl className="mt-2 divide-y divide-line">
               <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 py-2">
-                <dt className="w-28 shrink-0 font-semibold">Subject</dt>
-                <dd className="min-w-0 flex-1 break-words">{subject.trim() || "No subject yet"}</dd>
+                <dt className="basis-full font-semibold sm:basis-28 sm:shrink-0">Subject</dt>
+                <dd className="min-w-0 basis-full break-words sm:basis-0 sm:flex-1">{subject.trim() || "No subject yet"}</dd>
                 <dd><button type="button" className="inline-flex min-h-11 items-center font-bold underline underline-offset-4" onClick={() => changeAnswer("mail-subject")}>Change<span className="sr-only"> subject</span></button></dd>
               </div>
               <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 py-2">
-                <dt className="w-28 shrink-0 font-semibold">Who gets it</dt>
-                <dd className="min-w-0 flex-1 break-words">
+                <dt className="basis-full font-semibold sm:basis-28 sm:shrink-0">Who gets it</dt>
+                <dd className="min-w-0 basis-full break-words sm:basis-0 sm:flex-1">
                   {`${n(reach)} ${reach === 1 ? "person" : "people"}`}
                   <AudienceSummary audience={{ who, productId: productId || null, notProductId, narrow }} products={props.products} currency={props.currency} />
                 </dd>
                 <dd><button type="button" className="inline-flex min-h-11 items-center font-bold underline underline-offset-4" onClick={() => changeAnswer("mail-send-to")}>Change<span className="sr-only"> who gets it</span></button></dd>
               </div>
               <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 py-2">
-                <dt className="w-28 shrink-0 font-semibold">When</dt>
-                <dd className="min-w-0 flex-1 break-words">
+                <dt className="basis-full font-semibold sm:basis-28 sm:shrink-0">When</dt>
+                <dd className="min-w-0 basis-full break-words sm:basis-0 sm:flex-1">
                   {later ? scheduledAt === null ? "Choose a valid future time before confirming." : (
                     <><time dateTime={new Date(scheduledAt).toISOString()} className="font-semibold">{new Date(scheduledAt).toLocaleString(undefined, { year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit", timeZoneName: "short" })}</time> ({Intl.DateTimeFormat().resolvedOptions().timeZone})</>
                   ) : "Now: sending starts after you confirm."}
@@ -1104,7 +1105,7 @@ function Compose(props: {
               </div>
             </dl>
             <SubjectTestReview preview={testPreview} />
-            <p className="mt-2">Eligibility is checked again when sending starts.</p>
+            <p id="mail-send-note" className="mt-2">Eligibility is checked again when sending starts.</p>
           </div>
         ) : null}
         <div className="flex flex-wrap items-center gap-3">
@@ -1130,7 +1131,7 @@ function Compose(props: {
               <button
                 type="button"
                 aria-busy={busy} disabled={busy || props.broadcastUnconfirmed || invalidSchedule || invalidTest || !subject.trim() || !body.trim()}
-                aria-describedby="mail-send-review"
+                aria-describedby="mail-send-note"
                 className="btn btn-primary"
                 onClick={async () => {
                   const sendAt = later ? scheduledAt ?? undefined : undefined;
@@ -1176,6 +1177,8 @@ function Compose(props: {
                 if (props.broadcastUnconfirmed || invalidTest) return;
                 if (later && readMailSchedule(at, Date.now()) === null) { setScheduleNow(Date.now()); setError(MESSAGES.when); return; }
                 setConfirming(true);
+                // The review opens with the focus on its heading, so it is read once, in order.
+                requestAnimationFrame(() => document.getElementById("mail-send-review-title")?.focus());
               }}
             >
               {later ? "Schedule" : "Send"}
