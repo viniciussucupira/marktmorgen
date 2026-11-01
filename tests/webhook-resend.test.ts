@@ -14,7 +14,7 @@ import http from "node:http";
 import https from "node:https";
 import net from "node:net";
 import { readFileSync } from "node:fs";
-import { MAX_ATTEMPTS, RETRY_MINUTES, TESTS_PER_MINUTE, addEndpoint, deliverDue, emitEvent, removeEndpoint, resendDelivery, setEndpointEvents, setSendHooksForTests, webhooksView } from "@/lib/webhooks";
+import { MAX_ATTEMPTS, RETRY_MINUTES, addEndpoint, deliverDue, emitEvent, removeEndpoint, resendDelivery, setEndpointEvents, setSendHooksForTests, webhooksView } from "@/lib/webhooks";
 import { claimHandle, ensureStatsId, setSubscription, storeForEmail } from "@/lib/store";
 import { allowanceUsed } from "@/lib/store-allowance";
 import { paidPeriod } from "./billing-period-fixture";
@@ -147,7 +147,8 @@ async function main(): Promise<void> {
   const fifth = await failAll("cs_re_0005");
   seen.add(fifth.id);
   let limited = false;
-  for (let i = 0; i < TESTS_PER_MINUTE + 1 && !limited; i += 1) {
+  // The limit a minute is the tests' own (lib/webhooks.ts); thirty presses are well past it.
+  for (let i = 0; i < 30 && !limited; i += 1) {
     answers.push(500);
     const r = await resendDelivery(one, fifth.id);
     if (!r.ok && r.reason === "limited") limited = true;

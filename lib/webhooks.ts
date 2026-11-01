@@ -94,7 +94,7 @@ export const ATTEMPT_TIMEOUT_MS = 8_000;
 /** The longest address accepted for an endpoint. */
 export const MAX_ENDPOINT_URL = 1000;
 /** Test messages one store may send in a minute. */
-export const TESTS_PER_MINUTE = 10;
+const TESTS_PER_MINUTE = 10;
 /** Stripe events read per store per run, in pages of a hundred. */
 const MAX_EVENT_PAGES = 3;
 /** How far back a store's first run reads, in pages of a hundred events. */
