@@ -2,7 +2,8 @@
  * More feature-page cards (531 [VP1], units 2 and 3; added 1 November 2026):
  * bundles, quizzes and certificates, license keys, webhooks, calendar sync,
  * Discord access (units 2 and 3), the community and affiliates (unit 4),
- * the team and email platforms (unit 6), live events (unit 5; the reviews page has none, since a drawn review would
+ * the team and email platforms (unit 6), PDF stamping and ways to pay
+ * (unit 7), live events (unit 5; the reviews page has none, since a drawn review would
  * be an invented one),
  * each a piece of the
  * studio's real screen in HTML, with its words and figures from the code.
@@ -29,12 +30,15 @@ import { formatMoney } from "@/lib/money";
 import { JOIN_EARLY_MINUTES } from "@/lib/community-text";
 import { ROLE_NAMES } from "@/lib/team-roles";
 import { MAX_TEAM } from "@/lib/team";
+import { stampLine } from "@/lib/pdf-stamp-line";
+import { stampLine as printedLine } from "@/lib/pdf-stamp";
+import { waysFrom } from "@/lib/payment-methods";
 import { eventTime, lengthWords } from "@/lib/community-events";
 import { done, is, part } from "./check";
 
 const text = (html: string) => html.replace(/<[^>]+>/g, "\n").replace(/&#x27;/g, "'").replace(/&amp;/g, "&").split("\n").map((s) => s.trim()).filter(Boolean);
 const read = (file: string) => readFileSync(file, "utf8");
-const draw = (visual: "bundles" | "quizzes" | "keys" | "webhooks" | "calendar" | "discord" | "community" | "affiliates" | "events" | "team" | "emailPlatforms") => renderToStaticMarkup(createElement(FeatureVisual, { visual, tone: "light" }));
+const draw = (visual: "bundles" | "quizzes" | "keys" | "webhooks" | "calendar" | "discord" | "community" | "affiliates" | "events" | "team" | "emailPlatforms" | "stamp" | "ways") => renderToStaticMarkup(createElement(FeatureVisual, { visual, tone: "light" }));
 const hidden = (html: string) => html.startsWith('<figure class="w-full min-w-0 max-w-[26rem]"><div aria-hidden="true">');
 
 function main(): void {
@@ -179,6 +183,33 @@ function main(): void {
   is("no figure but the key's own hint", pl.filter((w) => /\d/.test(w)), ["Your Mailchimp API key (ends in -us21 or similar)"]);
   is("drawn, hidden, beside its caption", hidden(ep), true);
 
+  part("PDF stamping");
+  is("the PDF stamping page shows its card", findPage("platform", "pdf-stamping")?.visual, "stamp");
+  const st = draw("stamp");
+  const sp = text(st);
+  const toggle = read("components/pdf-stamp-toggle.tsx");
+  const stamped = stampLine("maya@example.com", "cs_test_a1E54F2A", new Date(Date.UTC(2026, 8, 26)));
+  is("the very line every page carries, made by the code that prints it", [sp.includes(stamped), stamped, toggle.includes(stamped), printedLine === stampLine], [true, "Sold to maya@example.com on Sep 26, 2026 · order …E54F2A · for personal use", true, true]);
+  is("on one line, shrunk to fit, in the plain font the PDF uses, with no rule above it", [st.includes("whitespace-nowrap font-sans"), /font-mono[^"]*">Sold to/.test(st), /border-t[^"]*">Sold to/.test(st)], [true, false, false]);
+  is("the switch apart, said to be in the studio: the buyer never sees it", [sp.includes("In the studio, on the product"), sp.indexOf("In the studio, on the product") > sp.indexOf(stamped)], [true, true]);
+  is("the card reads the line without the PDF library", [read("components/feature-visuals.tsx").includes('from "@/lib/pdf-stamp-line"'), read("components/feature-visuals.tsx").includes('from "@/lib/pdf-stamp"')], [true, false]);
+  is("the product's switch and its honest limit, in the editor's words", [sp.includes("Stamp each buyer's email on every page of the PDF"), toggle.includes("Stamp each buyer&apos;s email on every page of the PDF"), sp.includes("It makes a shared copy traceable to its buyer; it cannot stop anyone from sharing."), toggle.includes("It makes a shared copy traceable to its buyer; it cannot stop anyone from sharing.")], [true, true, true, true]);
+  is("drawn, hidden, beside its caption", hidden(st), true);
+
+  part("Ways to pay");
+  is("the currencies and ways to pay page shows its card", findPage("platform", "currencies-and-ways-to-pay")?.visual, "ways");
+  const wy = draw("ways");
+  const w = text(wy);
+  const panel = read("components/payments-panel.tsx");
+  is("the studio's groups and their own notes", [["Cards and wallets", "Apple Pay and Google Pay pay with a card; Link fills in Stripe's saved details."], ["Pay later", "The buyer pays in installments; you are paid in full."]].every(([title, note]) => w.includes(title) && w.includes(note) && panel.includes(`title: "${title}"`) && panel.includes(note)), true);
+  is("the heading and the currency field, in the panel's words and format", [w.includes("Ways to pay"), panel.includes("Ways to pay"), w.includes("Your store's currency"), panel.includes("Your store&apos;s currency"), w.includes("US dollar (USD)")], [true, true, true, true, true]);
+  const on = waysFrom({ card: { available: true }, apple_pay: { available: true }, google_pay: { available: true }, link: { available: true }, klarna: { available: true }, affirm: { available: true } } as never, "").on;
+  const drawn = ["Cards", "Apple Pay", "Google Pay", "Link", "Klarna", "Affirm"];
+  is("each way by the name, group and order the panel shows (waysFrom)", [on.map((x) => x.name), w.filter((x) => drawn.includes(x))], [drawn, drawn]);
+  is("cards and wallets, then pay later, as the panel groups them", [on.slice(0, 4).every((x) => x.group === "card" || x.group === "wallet"), on.slice(4).every((x) => x.group === "later")], [true, true]);
+  is("which ways show is said to depend on each creator's own Stripe", w.some((x) => /depends on what is switched on in each creator's own Stripe account/.test(x)), true);
+  is("drawn, hidden, beside its caption", hidden(wy), true);
+
   part("Nothing that is not the code's or marked as an example");
   for (const [name, words, allowed] of [
     ["bundles", b, /^(In it: 3 of \d+|\$77 of products for \$49|\$\d+(\.\d\d)?|.*example.*)$/],
@@ -189,6 +220,7 @@ function main(): void {
     ["discord", d, /^(Up to \d+ roles for each product, on up to \d+ products\.|Gives \d roles?\.|.*example.*)$/],
     ["community", m, /^(48|112|31|.*example.*)$/],
     ["affiliates", a, /^(120|6|\$59\.40|\$30|\$29\.40|.*example.*)$/],
+    ["stamp", sp, /^(Week 1: the plan|Sold to maya@example\.com on Sep 26, 2026 · order …E54F2A · for personal use|.*example.*)$/],
     ["team", t, new RegExp(`^(2 of ${MAX_TEAM} places used|Joined Oct 3, 2026|Invited as ${ROLE_NAMES.support} · the link works until Nov 8|.*example.*)$`)],
     ["events", e, /^(2 coming up|\w+day, November (10|19)\b.* \(E[SD]T\) · (1 hour|45 minutes)|12 of 30 places taken|8 going|The way in shows \d+ minutes before the start, only to members who can come\.|.*example.*)$/],
   ] as const) {

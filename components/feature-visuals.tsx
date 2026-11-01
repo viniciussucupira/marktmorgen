@@ -11,6 +11,8 @@ import { JOIN_EARLY_MINUTES } from "@/lib/community-text";
 import { eventTime, lengthWords } from "@/lib/community-events";
 import { ROLE_NAMES } from "@/lib/team-roles";
 import { MAX_TEAM } from "@/lib/team";
+import { stampLine } from "@/lib/pdf-stamp-line";
+import { currencyLabel } from "@/lib/money";
 import { MAX_ENDPOINTS, shortAddress } from "@/lib/webhook-limits";
 import { LOOKAHEAD_DAYS, MAX_FEEDS } from "@/lib/calendar-limits";
 import { MAX_DISCORD_PRODUCTS, MAX_PRODUCT_ROLES } from "@/lib/discord-rules";
@@ -46,7 +48,9 @@ export type VisualKey =
   | "affiliates"
   | "events"
   | "team"
-  | "emailPlatforms";
+  | "emailPlatforms"
+  | "stamp"
+  | "ways";
 
 /*
  * The frame every one of these mockups sits in.
@@ -819,6 +823,75 @@ function EmailPlatformsVisual() {
   );
 }
 
+/**
+ * A page of a stamped PDF as a buyer downloads it, with the one line
+ * lib/pdf-stamp.ts prints along its bottom (Helvetica, gray, shrunk to fit
+ * on one line), and, apart, the product's switch in the studio
+ * (components/pdf-stamp-toggle.tsx): the buyer never sees the switch.
+ */
+function StampVisual() {
+  const line = stampLine("maya@example.com", "cs_test_a1E54F2A", new Date(Date.UTC(2026, 8, 26)));
+  return (
+    <Window bar="Your workbook, as a buyer downloads it">
+      <div className="space-y-3 p-5">
+        <div className="rounded-[var(--r-sm)] border border-line bg-white p-4 shadow-sm" style={{ containerType: "inline-size" }}>
+          <p className="text-[13px] font-semibold text-ink">Week 1: the plan</p>
+          <div className="mt-2 space-y-1.5">
+            {[100, 92, 96, 70, 88, 60].map((w, i) => (
+              <span key={i} className="block h-1.5 rounded-full bg-sand" style={{ width: `${w}%` }} />
+            ))}
+          </div>
+          <p className="mt-4 whitespace-nowrap font-sans text-ink-soft" style={{ fontSize: "min(8px, 2.3cqi)" }}>{line}</p>
+        </div>
+        <div className="border-t border-line pt-3">
+          <p className="text-[11px] font-bold uppercase tracking-[0.06em] text-ink-mute">In the studio, on the product</p>
+          <p className="mt-1.5 flex items-start gap-2 text-[12.5px] font-semibold text-ink">
+            <span className="mt-0.5 grid h-3.5 w-3.5 shrink-0 place-items-center rounded-[3px] bg-violet-brand text-white"><Icon name="check" size={10} strokeWidth={3} /></span>
+            <span className="min-w-0 break-words">Stamp each buyer&apos;s email on every page of the PDF</span>
+          </p>
+          <p className="mt-1 break-words text-[12px] text-ink-soft">It makes a shared copy traceable to its buyer; it cannot stop anyone from sharing.</p>
+        </div>
+      </div>
+    </Window>
+  );
+}
+
+/** The studio's "Ways to pay" card (components/payments-panel.tsx): what the creator's own Stripe has switched on, by group, and the store's currency. */
+function WaysVisual() {
+  const groups = [
+    { title: "Cards and wallets", ways: ["Cards", "Apple Pay", "Google Pay", "Link"], note: "Apple Pay and Google Pay pay with a card; Link fills in Stripe's saved details." },
+    { title: "Pay later", ways: ["Klarna", "Affirm"], note: "The buyer pays in installments; you are paid in full." },
+  ];
+  return (
+    <Window bar="Ways to pay">
+      <div className="space-y-3 p-5">
+        <p className="text-[13px] font-bold text-ink">Ways to pay</p>
+        {groups.map((g) => (
+          <div key={g.title}>
+            <p className="text-[11px] font-bold uppercase tracking-[0.06em] text-ink-mute">{g.title}</p>
+            <div className="mt-1.5 flex flex-wrap gap-1.5">
+              {g.ways.map((w) => (
+                <span key={w} className="inline-flex items-center gap-1 rounded-full bg-mint-soft px-2.5 py-0.5 text-[12px] font-semibold text-mint-deep">
+                  <Icon name="check" size={12} />
+                  {w}
+                </span>
+              ))}
+            </div>
+            <p className="mt-1 break-words text-[11.5px] text-ink-soft">{g.note}</p>
+          </div>
+        ))}
+        <div className="border-t border-line pt-3">
+          <p className="text-[12px] font-semibold text-ink-soft">Your store&apos;s currency</p>
+          <p className="mt-0.5 flex items-center justify-between gap-2 rounded-[var(--r-sm)] border border-line-strong px-2.5 py-1.5 text-[12.5px] font-semibold text-ink">
+            {currencyLabel("usd")}
+            <Icon name="chevron-down" size={14} />
+          </p>
+        </div>
+      </div>
+    </Window>
+  );
+}
+
 const CAPTIONS: Record<VisualKey, string> = {
   store: "A store page, drawn from the demo store you can open and buy from.",
   options: "The buyer is charged the price they picked, as the creator saved it.",
@@ -843,6 +916,8 @@ const CAPTIONS: Record<VisualKey, string> = {
   events: "Live events in the studio. The events, dates and counts are made up as an example.",
   team: "The team page in the studio. The people and the dates are made up as an example.",
   emailPlatforms: "Connecting an email platform in the studio, before anything is connected. The platform picked is an example.",
+  stamp: "A page of a stamped PDF, with the line every page carries, and the product's switch in the studio. The workbook, the buyer and the order are made up as an example.",
+  ways: "Ways to pay in the studio. Which ways show depends on what is switched on in each creator's own Stripe account; these are an example.",
 };
 
 /**
@@ -875,6 +950,8 @@ export function FeatureVisual({ visual, tone = "dark" }: { visual: VisualKey; to
     events: <EventsVisual />,
     team: <TeamVisual />,
     emailPlatforms: <EmailPlatformsVisual />,
+    stamp: <StampVisual />,
+    ways: <WaysVisual />,
   }[visual];
   const interactive = visual === "options" || visual === "checkout";
   return (

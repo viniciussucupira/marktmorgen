@@ -1682,6 +1682,7 @@ const BASE_FEATURE_PAGES: TopicPage[] = [
     highlight: "whose copy it is",
     intro:
       "Switch it on for an ebook or a workbook, and each page of the PDF a buyer downloads carries their email, the date and their order along the bottom.",
+    visual: "stamp",
     badge: WORKING,
     accent: "from-pink-brand to-amber-brand",
     plan: "creator",
@@ -1963,6 +1964,7 @@ const BASE_FEATURE_PAGES: TopicPage[] = [
     highlight: "the ways your buyers pay",
     intro:
       "Each store charges in one of 15 currencies. At checkout, buyers meet the ways to pay you switched on in your own Stripe account: Apple Pay, Google Pay, Link, Klarna, Afterpay, Affirm, iDEAL, Bancontact and more, where they fit the buyer and the amount.",
+    visual: "ways",
     badge: WORKING,
     accent: "from-mint-brand to-sky-brand",
     plan: "creator",
