@@ -7,7 +7,7 @@
  * none.
  */
 import { claimHandle, ensureStatsId, setFaq, setSubscription, storeForEmail } from "@/lib/store";
-import { writeStoreSetup } from "@/lib/ai";
+import { statedPrice, writeStoreSetup } from "@/lib/ai";
 import { keepStoreSetup } from "@/lib/store-setup";
 import { KIND } from "@/lib/catalog";
 import { store as redis } from "./redis-stub";
@@ -45,10 +45,11 @@ async function main(): Promise<void> {
     ],
     faq: [{ q: "How do I get the planner?", a: "As a download after paying, see https://example.com." }, { q: "No answer", a: "" }],
   });
-  const drafted = await writeStoreSetup((await storeForEmail(owner))!, { about: "I teach busy parents to batch cook on Sundays.", selling: "A planner, a course, a club." });
+  const drafted = await writeStoreSetup((await storeForEmail(owner))!, { about: "I teach busy parents to batch cook on Sundays.", selling: "A planner for $12, a course at 49 dollars, a club." });
   if (!drafted.ok) throw new Error("no draft");
   is("lines once each", drafted.value.bios, ["Weeknight dinners for busy parents.", "Cook once, eat all week."]);
-  is("three products at most, prices as plain numbers", drafted.value.products.map((p) => [p.title, p.kind, p.price]), [["Sunday Meal Planner", "download", "12"], ["Batch Cooking Course", "course", "49"], ["Monthly Menu Club", "membership", "7"]]);
+  is("three products at most, prices only where the creator named them (the club's 7 was the model's guess)", drafted.value.products.map((p) => [p.title, p.kind, p.price]), [["Sunday Meal Planner", "download", "12"], ["Batch Cooking Course", "course", "49"], ["Monthly Menu Club", "membership", ""]]);
+  is("told never to guess a price", /Never guess, suggest or round a price/.test(asked[0].system), true);
   is("answers whole, with no links", drafted.value.faq, [{ q: "How do I get the planner?", a: "As a download after paying, see" }]);
   is("told to work from the creator's words only, and to invent nothing", [
     asked[0].messages[0].content.includes("batch cook on Sundays"),
@@ -56,6 +57,25 @@ async function main(): Promise<void> {
     /Never invent a credential/.test(asked[0].system),
   ], [true, true, true]);
   is("nothing to work from, nothing asked", (await writeStoreSetup((await storeForEmail(owner))!, { about: " ", selling: "" })).ok, false);
+
+  part("A price is the creator's, written as a price, or empty");
+  is("written as a price in the store's currency, kept", [
+    statedPrice("12", "a planner for $12", "usd"),
+    statedPrice("1200", "the course is 1,200 dollars", "usd"),
+    statedPrice("49.5", "49.50 USD a month", "usd"),
+    statedPrice("49.5", "nur €49,50 im Monat", "eur"),
+    statedPrice("1500", "1.500 kr", "dkk"),
+    statedPrice("1500", "¥1500", "jpy"),
+  ], ["12", "1200", "49.5", "49.5", "1500", "1500"]);
+  is("a bare number, another currency or nothing: empty", [
+    statedPrice("10", "10 lessons for ages 5-12", "usd"),
+    statedPrice("2026", "since 2026", "usd"),
+    statedPrice("49", "€49", "usd"),
+    statedPrice("7", "a planner for $12", "usd"),
+    statedPrice("", "$12", "usd"),
+    statedPrice("0", "$0", "usd"),
+    statedPrice("4950", "€49,50", "eur"),
+  ], ["", "", "", "", "", "", ""]);
 
   part("What the creator keeps");
   const kept = await keepStoreSetup(owner, (await storeForEmail(owner))!, {
