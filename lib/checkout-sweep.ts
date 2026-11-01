@@ -89,10 +89,12 @@ export type TaxObservationPolicy = {
   computeCeilingMicroUsdPerPass: number; ioCostCeilingMicroUsdPerPass: number;
 };
 export const CURRENT_TAX_OBSERVATION_POLICY: TaxObservationPolicy | null = null;
+/** Absolute diagnostic lifetime, not statutory retention or a customer entitlement. */
+export const TAX_OBSERVATION_KEEP_SECONDS = 86_400;
 /** Processing/diagnostic bounds, not statutory retention or customer rights. */
 export const TAX_OBSERVATION_LIMITS = Object.freeze({
   maxEntries: 300, maxRecordBytes: 512, maxDocumentBytes: 512 * 1024,
-  maxLifetimeMs: 86_400_000, maxBudgetMonths: 32,
+  maxLifetimeMs: TAX_OBSERVATION_KEEP_SECONDS * 1000, maxBudgetMonths: 32,
   chargedCommandsPerPass: 720, transferredBytesPerPass: 1024 * 1024,
 });
 export type TaxObservationResult = {

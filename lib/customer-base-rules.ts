@@ -68,7 +68,7 @@ export function assessMinimumCustomerBase(units: CustomerBaseUnit[], fixed: Cust
       const months = ownReviewData(unit, 'months');
       const scenario = ownReviewData(unit, 'scenario') as CustomerWorstCase | null;
       if (months !== 1 && months !== 12) return stopped('invalid');
-      const result = assessCustomerWorstCase(scenario);
+      const result = assessCustomerWorstCase(scenario, months);
       if (!result.approved) return stopped(result.reason === 'below_floor' || result.reason === 'no_revenue' ? 'below_unit_floor' : 'unknown');
       // MR's percentage floor is zero. Use only the assessor's detached net
       // result; never re-read a scenario after it has been assessed.
