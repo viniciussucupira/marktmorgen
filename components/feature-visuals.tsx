@@ -9,6 +9,8 @@ import { sampleKey } from "@/lib/licence-key-rules";
 import { formatMoney } from "@/lib/money";
 import { JOIN_EARLY_MINUTES } from "@/lib/community-text";
 import { eventTime, lengthWords } from "@/lib/community-events";
+import { ROLE_NAMES } from "@/lib/team-roles";
+import { MAX_TEAM } from "@/lib/team";
 import { MAX_ENDPOINTS, shortAddress } from "@/lib/webhook-limits";
 import { LOOKAHEAD_DAYS, MAX_FEEDS } from "@/lib/calendar-limits";
 import { MAX_DISCORD_PRODUCTS, MAX_PRODUCT_ROLES } from "@/lib/discord-rules";
@@ -42,7 +44,9 @@ export type VisualKey =
   | "discord"
   | "community"
   | "affiliates"
-  | "events";
+  | "events"
+  | "team"
+  | "emailPlatforms";
 
 /*
  * The frame every one of these mockups sits in.
@@ -731,6 +735,90 @@ function EventsVisual() {
   );
 }
 
+/** The studio's team page (components/team-manager.tsx): the places used, the owner, a member with a role, an invitation waiting, and the invite form. */
+function TeamVisual() {
+  return (
+    <Window bar="Team">
+      <div className="space-y-2 p-5">
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
+          <p className="text-[13px] font-bold text-ink">People on this store</p>
+          <span className="text-[12px] tabular-nums text-ink-soft">{`2 of ${MAX_TEAM} places used`}</span>
+        </div>
+        <div className="flex flex-wrap items-start justify-between gap-2 rounded-[var(--r-md)] border border-line p-3">
+          <span className="min-w-0">
+            <span className="block break-all text-[13px] font-semibold text-ink">you@example.com</span>
+            <span className="block text-[12px] text-ink-soft">You. Everything, including the plan, payments and the team.</span>
+          </span>
+          <span className="tag">Owner</span>
+        </div>
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-[var(--r-md)] border border-line p-3">
+          <span className="min-w-0">
+            <span className="block break-all text-[13px] font-semibold text-ink">sam@example.com</span>
+            <span className="block text-[12px] text-ink-soft">Joined Oct 3, 2026</span>
+          </span>
+          <span className="flex items-center gap-3">
+            <span className="inline-flex items-center gap-1 rounded-[var(--r-sm)] border border-line-strong px-2.5 py-1 text-[12px] font-semibold text-ink">
+              {ROLE_NAMES.editor}
+              <Icon name="chevron-down" size={14} />
+            </span>
+            <span className="text-[12px] font-bold text-ink-soft underline underline-offset-4">Remove</span>
+          </span>
+        </div>
+        <div className="flex flex-wrap items-start justify-between gap-2 rounded-[var(--r-md)] border border-line p-3">
+          <span className="min-w-0">
+            <span className="block break-all text-[13px] font-semibold text-ink-soft">lee@example.com</span>
+            <span className="block text-[12px] text-ink-soft">{`Invited as ${ROLE_NAMES.support} · the link works until Nov 8`}</span>
+          </span>
+          <span className="tag tag-next">Waiting</span>
+        </div>
+        <div className="rounded-[var(--r-md)] bg-paper p-3 ring-1 ring-line">
+          <p className="text-[13px] font-semibold text-ink">Invite someone</p>
+          <p className="mt-1 text-[11.5px] font-semibold text-ink-soft">Their email</p>
+          <p className="mt-0.5 break-all rounded-[var(--r-sm)] border border-line bg-white px-2.5 py-1.5 text-[12.5px] text-ink">kim@example.com</p>
+          <span className="btn btn-primary btn-sm pointer-events-none mt-2">
+            <Icon name="mail" size={16} />
+            Send the invitation
+          </span>
+        </div>
+      </div>
+    </Window>
+  );
+}
+
+/** Connecting an email platform in the studio (components/email-sync-editor.tsx), before anything is connected: the platform, its key, Connect. */
+function EmailPlatformsVisual() {
+  const platforms = [
+    { name: "Mailchimp", target: "an audience", on: true },
+    { name: "Kit", target: "a form", on: false },
+    { name: "beehiiv", target: "a publication", on: false },
+    { name: "MailerLite", target: "a group", on: false },
+  ];
+  return (
+    <Window bar="Email platforms">
+      <div className="space-y-3 p-5">
+        <p className="text-[13px] font-bold text-ink">Connect your email platform</p>
+        <p className="text-[12px] font-semibold text-ink-soft">Platform</p>
+        <div className="grid grid-cols-2 gap-2">
+          {platforms.map((p) => (
+            <div key={p.name} className={`flex min-w-0 items-start gap-2 rounded-[var(--r-sm)] border p-2.5 ${p.on ? "border-violet-brand bg-lilac" : "border-line"}`}>
+              <span className={`mt-0.5 h-3.5 w-3.5 shrink-0 rounded-full border ${p.on ? "border-[5px] border-violet-brand" : "border-line-strong"}`} />
+              <span className="min-w-0">
+                <span className="block text-[12.5px] font-semibold text-ink">{p.name}</span>
+                <span className="block break-words text-[11.5px] text-ink-soft">{`Adds to ${p.target}`}</span>
+              </span>
+            </div>
+          ))}
+        </div>
+        <div>
+          <p className="text-[12px] font-semibold text-ink-soft">Mailchimp API key</p>
+          <p className="mt-0.5 break-words rounded-[var(--r-sm)] border border-line bg-white px-2.5 py-1.5 text-[12px] text-ink-mute">Your Mailchimp API key (ends in -us21 or similar)</p>
+        </div>
+        <span className="btn btn-primary btn-sm pointer-events-none">Connect</span>
+      </div>
+    </Window>
+  );
+}
+
 const CAPTIONS: Record<VisualKey, string> = {
   store: "A store page, drawn from the demo store you can open and buy from.",
   options: "The buyer is charged the price they picked, as the creator saved it.",
@@ -753,6 +841,8 @@ const CAPTIONS: Record<VisualKey, string> = {
   community: "Your community in the studio. The counts are made up as an example, not real figures.",
   affiliates: "One affiliate in the studio. The person and every figure are made up as an example, not anyone's real results.",
   events: "Live events in the studio. The events, dates and counts are made up as an example.",
+  team: "The team page in the studio. The people and the dates are made up as an example.",
+  emailPlatforms: "Connecting an email platform in the studio, before anything is connected. The platform picked is an example.",
 };
 
 /**
@@ -783,6 +873,8 @@ export function FeatureVisual({ visual, tone = "dark" }: { visual: VisualKey; to
     community: <CommunityVisual />,
     affiliates: <AffiliatesVisual />,
     events: <EventsVisual />,
+    team: <TeamVisual />,
+    emailPlatforms: <EmailPlatformsVisual />,
   }[visual];
   const interactive = visual === "options" || visual === "checkout";
   return (
