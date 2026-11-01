@@ -6,6 +6,8 @@ import {
   type CodeProblem,
   type DiscountCode,
   amountProblem,
+  codeRules,
+  minimumProblem,
   offLabel,
 } from "@/lib/discount";
 import { type Currency, fieldPrefix } from "@/lib/money";
@@ -41,7 +43,7 @@ async function send(payload: Record<string, unknown>, currency: Currency): Promi
       const refusal = data as {error?: unknown;reason?: unknown};
       if (refusal.error === "code" && Object.hasOwn(data,"reason")) {
         const reason = refusal.reason;
-        return {problem: reason === "amount" ? amountProblem(currency) : typeof reason === "string" && Object.hasOwn(CODE_PROBLEMS,reason) ? CODE_PROBLEMS[reason as CodeProblem] : CODE_PROBLEMS.shape};
+        return {problem: reason === "amount" ? amountProblem(currency) : reason === "minimum" ? minimumProblem(currency) : typeof reason === "string" && Object.hasOwn(CODE_PROBLEMS,reason) ? CODE_PROBLEMS[reason as CodeProblem] : CODE_PROBLEMS.shape};
       }
       if (typeof refusal.error === "string" && Object.hasOwn(MESSAGES,refusal.error)) return {problem:MESSAGES[refusal.error]};
     }
@@ -82,6 +84,7 @@ export function DiscountEditor({ selling, currency = "usd", address = "" }: { se
   const [percent, setPercent] = useState("20");
   const [amount, setAmount] = useState("10");
   const [uses, setUses] = useState("");
+  const [minimum, setMinimum] = useState("");
 
   const loading = busy && codes === null && error === null;
 
@@ -159,6 +162,9 @@ export function DiscountEditor({ selling, currency = "usd", address = "" }: { se
                       {`This code takes off ${entry.off.currency.toUpperCase()}, and your store now charges in ${currency.toUpperCase()}. Stripe only takes it off a checkout in ${entry.off.currency.toUpperCase()}, so buyers cannot use it now. Switch it off and make a new one.`}
                     </p>
                   ) : null}
+                  {codeRules(entry).map((rule) => (
+                    <p key={rule} className="mt-1 text-sm text-ink">{rule}</p>
+                  ))}
                   <p className="mt-1 text-sm text-ink-soft">
                     {`Used ${entry.timesRedeemed} ${
                       entry.timesRedeemed === 1 ? "time" : "times"
@@ -225,11 +231,13 @@ export function DiscountEditor({ selling, currency = "usd", address = "" }: { se
                     percent,
                     amount,
                     uses,
+                    minimum,
                   },
                   () => {
                     setAdding(false);
                     setCode("");
                     setUses("");
+                    setMinimum("");
                   },
                   `${code} is live.`,
                 );
@@ -318,11 +326,34 @@ export function DiscountEditor({ selling, currency = "usd", address = "" }: { se
                     className="field mt-1"
                   />
                 </div>
+                <div className="w-44">
+                  <label
+                    htmlFor="discount-minimum"
+                    className="field-label"
+                  >
+                    {currency === "usd" ? "Minimum order, dollars" : `Minimum order, ${fieldPrefix(currency)}`}
+                  </label>
+                  <input
+                    id="discount-minimum"
+                    type="text"
+                    inputMode={currency === "jpy" ? "numeric" : "decimal"}
+                    value={minimum}
+                    onChange={(event) => setMinimum(event.target.value)}
+                    placeholder="No minimum"
+                    aria-describedby="discount-minimum-help"
+                    className="field mt-1"
+                  />
+                </div>
               </div>
+              <p id="discount-minimum-help" className="text-sm text-ink-soft">
+                Optional. With a minimum, Stripe takes the code only when the order comes to that much or more.
+              </p>
 
               <p className="text-sm text-ink-soft">
                 It comes off the payment it is typed into. On a membership that
-                is the first charge, not every renewal.
+                is the first charge, not every renewal. A code made here works on
+                every product: your products are not saved as products in Stripe,
+                so Stripe cannot limit a code to some of them.
               </p>
 
               {error ? (

@@ -63,7 +63,9 @@ export type CodeProblem =
   /** Not an amount of money we can charge. */
   | "amount"
   /** A cap on redemptions that is not a whole positive number. */
-  | "uses";
+  | "uses"
+  /** A minimum order that is not an amount the store can charge. */
+  | "minimum";
 
 export const CODE_PROBLEMS: Record<CodeProblem, string> = {
   empty: "Type the code a buyer will enter, like LAUNCH20.",
@@ -72,7 +74,27 @@ export const CODE_PROBLEMS: Record<CodeProblem, string> = {
   percent: "Type a percentage between 1 and 100.",
   amount: "Type an amount between 1 and 5000, like 10 or 7.50.",
   uses: "Leave the limit empty, or type a whole number of uses above zero.",
+  minimum: "Leave the minimum empty, or type an amount between 1 and 5000, like 50.",
 };
+
+/** The minimum sentence for a store in another currency than the dollar. */
+export function minimumProblem(currency: Currency): string {
+  return currency === "usd"
+    ? CODE_PROBLEMS.minimum
+    : `Leave the minimum empty, or type an amount ${rangeWords(currency)}, in ${currency.toUpperCase()}${currency === "jpy" ? ", with no decimals" : ""}.`;
+}
+
+/**
+ * How long a code keeps coming off a membership, as Stripe has it on the
+ * coupon (its `duration`): the first charge, the first months, or every
+ * charge. A code made here is always the first charge; the others are read
+ * back from a code the creator made in their own Stripe dashboard, so the
+ * studio says what Stripe will really do.
+ */
+export type CodeDuration = { kind: "once" } | { kind: "repeating"; months: number } | { kind: "forever" };
+
+/** A minimum order, as Stripe checks it before the code comes off: the amount and its currency. */
+export type CodeMinimum = { cents: number; currency: string };
 
 /** The amount sentence for a store in another currency than the dollar. */
 export function amountProblem(currency: Currency): string {
@@ -112,7 +134,27 @@ export type DiscountCode = {
   expiresAt: number | null;
   /** Whether Stripe will still take it. Stripe decides, not us. */
   active: boolean;
+  /** The smallest order it comes off, as Stripe checks it (`restrictions.minimum_amount`), or null for any. */
+  minimum: CodeMinimum | null;
+  /** Only for a buyer Stripe counts as new (`restrictions.first_time_transaction`): read back, never set here. */
+  firstOrder: boolean;
+  /** How long it comes off a membership, when the coupon could be read. */
+  duration: CodeDuration | null;
 };
+
+/**
+ * What else decides when a code comes off, in plain words, from what Stripe
+ * has: its minimum, a first order only, and how long on a membership. Empty
+ * when it is the plain code made here.
+ */
+export function codeRules(entry: Pick<DiscountCode, "minimum" | "firstOrder" | "duration">): string[] {
+  const out: string[] = [];
+  if (entry.minimum) out.push(`On orders of ${formatMoney(entry.minimum.cents, entry.minimum.currency)} or more.`);
+  if (entry.firstOrder) out.push("First order only, as Stripe counts it: a buyer who checks out without an account counts as new each time.");
+  if (entry.duration?.kind === "repeating") out.push(`On a membership: the first ${entry.duration.months} ${entry.duration.months === 1 ? "month" : "months"} of charges.`);
+  if (entry.duration?.kind === "forever") out.push("On a membership: every charge, for as long as it lasts.");
+  return out;
+}
 
 export type CodeList =
   | { state: "ok"; codes: DiscountCode[] }
@@ -145,10 +187,36 @@ function readOff(row: Record<string, unknown>): Off | null {
   return null;
 }
 
+/** The coupon's `duration`, when the coupon came expanded. */
+function readDuration(row: Record<string, unknown>): CodeDuration | null {
+  const promotion = row.promotion as { coupon?: unknown } | undefined;
+  const raw = (promotion?.coupon ?? row.coupon) as { duration?: unknown; duration_in_months?: unknown } | string | undefined;
+  if (!raw || typeof raw === "string") return null;
+  if (raw.duration === "once") return { kind: "once" };
+  if (raw.duration === "forever") return { kind: "forever" };
+  if (raw.duration === "repeating" && typeof raw.duration_in_months === "number" && Number.isSafeInteger(raw.duration_in_months) && raw.duration_in_months > 0) {
+    return { kind: "repeating", months: raw.duration_in_months };
+  }
+  return null;
+}
+
+/** The promotion code's `restrictions` that this studio shows. */
+function readRestrictions(row: Record<string, unknown>): { minimum: CodeMinimum | null; firstOrder: boolean } {
+  const raw = row.restrictions as { minimum_amount?: unknown; minimum_amount_currency?: unknown; first_time_transaction?: unknown } | null | undefined;
+  const cents = raw?.minimum_amount;
+  const currency = raw?.minimum_amount_currency;
+  const minimum = typeof cents === "number" && Number.isSafeInteger(cents) && cents > 0 && typeof currency === "string" && /^[a-z]{3}$/i.test(currency)
+    ? { cents, currency: currency.toLowerCase() }
+    : null;
+  return { minimum, firstOrder: raw?.first_time_transaction === true };
+}
+
 function readRow(row: Record<string, unknown>): DiscountCode | null {
   if (typeof row.id !== "string" || !row.id) return null;
   if (typeof row.code !== "string" || !row.code) return null;
   return {
+    ...readRestrictions(row),
+    duration: readDuration(row),
     id: row.id,
     code: row.code,
     off: readOff(row),
@@ -216,6 +284,12 @@ export async function createCode(
   code: string,
   off: Off,
   maxRedemptions: number | null,
+  /**
+   * The smallest order it comes off (554 [DS1]), in the store's currency,
+   * written as the promotion code's own restriction, so Stripe checks it
+   * when the code is typed and works out nothing else here.
+   */
+  minimum: CodeMinimum | null = null,
 ): Promise<MadeCode> {
   const coupon = new URLSearchParams({
     // Once: the discount applies to the payment it is typed into. On a
@@ -252,6 +326,10 @@ export async function createCode(
     if (maxRedemptions !== null) {
       promotion.set("max_redemptions", String(maxRedemptions));
     }
+    if (minimum) {
+      promotion.set("restrictions[minimum_amount]", String(minimum.cents));
+      promotion.set("restrictions[minimum_amount_currency]", minimum.currency);
+    }
 
     const row = await onAccount(
       "POST",
@@ -264,7 +342,7 @@ export async function createCode(
     // The response does not expand the coupon, so what it takes off is filled
     // in from what we just asked for — the same numbers, one call sooner.
     return read
-      ? { ok: true, code: { ...read, off: read.off ?? off } }
+      ? { ok: true, code: { ...read, off: read.off ?? off, duration: read.duration ?? { kind: "once" } } }
       : { ok: false, reason: "stripe" };
   } catch (error) {
     // Stripe refuses a second live code with the same word. That is the one
