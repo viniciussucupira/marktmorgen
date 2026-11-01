@@ -30,4 +30,9 @@ is("it starts at phone width, with a Phone or Wide choice, and is inert", blog.i
 is("beside the text on a wide screen, folded on a narrow one", blog.includes('<div className="hidden xl:block">{preview}</div>') && blog.includes("See it as it is published</summary>"), true);
 is("the studio's blog page hands the editor its store's look", readFileSync("app/studio/blog/page.tsx", "utf8").includes("look={store.look}"), true);
 is("Wide is the published page's own width, and the title its size", blog.includes("maxWidth: phone ? 390 : 672") && blog.includes('${phone ? "text-3xl" : "text-4xl"}'), true);
+
+const course = readFileSync("components/course-editor.tsx", "utf8");
+is("a lesson's text is previewed by the lesson page's own drawing, in the store's look", course.includes("<LessonText text={now} />") && course.includes("lookStyle(storeLook)") && course.includes("st-theme-${storeLook.theme}") && course.includes('color: "var(--st-text)"'), true);
+is("it starts at phone width, with a Phone or Wide choice, is inert, and folds on a narrow screen", course.includes("const [phone, setPhone] = useState(true);") && course.includes('aria-label="Preview width"') && /inert\s+className=\{`st-page/.test(course) && course.includes("See it as students see it</summary>"), true);
+is("the studio's course page hands the editor its store's look", readFileSync("app/studio/course/[product]/page.tsx", "utf8").includes("look={store.look}"), true);
 done();
