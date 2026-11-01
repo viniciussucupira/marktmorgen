@@ -6,7 +6,7 @@ import {currentResendFallbackProofIsMissing,guardedResendPost,prepareResendFallb
 import {currentResendFallbackProofIsMissing as browserMissing,guardedResendPost as browserPost} from './e2e/reviewed-resend-transport';
 import {store} from './redis-stub';
 const known='re_test_fixture1',unknown='re_unrecognized_test_probe_only';
-const input=(credential:string)=>({base:'https://api.resend.com',path:'/emails' as const,credential,usageCredential:credential,body:JSON.stringify({from:'owner@example.test',to:'buyer@example.test',subject:'Synthetic',text:'No real message'}),recipients:1});
+const input=(credential:string)=>({base:'https://api.resend.com',path:'/emails' as const,credential,usageCredential:credential,body:JSON.stringify({from:'owner@example.test',to:['buyer@example.test'],subject:'Synthetic',text:'No real message'}),recipients:1});
 test('unrecognized environment credentials never issue a synthetic proof or POST',async()=>{
  const previous=process.env.RESEND_API_KEY,read=process.env.RESEND_READ_API_KEY,fetcher=globalThis.fetch;let posts=0;
  try{store.clear();process.env.RESEND_API_KEY=unknown;delete process.env.RESEND_READ_API_KEY;
