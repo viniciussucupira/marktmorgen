@@ -2182,14 +2182,14 @@ export default async function StudioPage({
                         Ask Stripe again
                       </button>
                     </form>
-                    <form action={`/api/stripe/disconnect${pin}`} method="post">
-                      <button
-                        type="submit"
-                        className="btn btn-ghost"
-                      >
-                        Disconnect it here
-                      </button>
-                    </form>
+                    {/* 568 [GD2] (h): asked first, natively, so it works without scripts too. */}
+                    <details className="group" data-confirm-disconnect="stripe">
+                      <summary className="btn btn-ghost cursor-pointer list-none [&::-webkit-details-marker]:hidden">Disconnect it here</summary>
+                      <form action={`/api/stripe/disconnect${pin}`} method="post" className="mt-3 flex flex-wrap items-center gap-2 text-sm">
+                        <span className="font-semibold text-ink">Disconnect Stripe? Your store stops taking payments until you connect it again.</span>
+                        <button type="submit" className="btn btn-danger btn-sm">Yes, disconnect</button>
+                      </form>
+                    </details>
                   </div>
                 </>
               )}
@@ -2232,11 +2232,13 @@ export default async function StudioPage({
                       </p>
                     ) : null}
                   </div>
-                  <form action={`/api/store/paypal/disconnect${pin}`} method="post" className="mt-5">
-                    <button type="submit" className="btn btn-ghost">
-                      Stop selling with PayPal
-                    </button>
-                  </form>
+                  <details className="group mt-5" data-confirm-disconnect="paypal">
+                    <summary className="btn btn-ghost cursor-pointer list-none [&::-webkit-details-marker]:hidden">Stop selling with PayPal</summary>
+                    <form action={`/api/store/paypal/disconnect${pin}`} method="post" className="mt-3 flex flex-wrap items-center gap-2 text-sm">
+                      <span className="font-semibold text-ink">Stop selling with PayPal? Buyers can no longer pay you with PayPal until you connect it again.</span>
+                      <button type="submit" className="btn btn-danger btn-sm">Yes, stop</button>
+                    </form>
+                  </details>
                 </>
               ) : (
                 <form action={`/api/store/paypal/connect${pin}`} method="post" className="mt-5">
