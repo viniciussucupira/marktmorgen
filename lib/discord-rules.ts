@@ -34,6 +34,12 @@ export const MAX_ACCOUNTS_PER_ADDRESS = 1;
 /** How often everyone given roles is checked again, at most. */
 export const CHECK_HOURS = 6;
 /**
+ * Times a removal from the server is tried again after Discord refused it,
+ * one check apart, before the person is forgotten as before: the checks of
+ * a person kept are not priced on their own, so the retries stay few.
+ */
+export const KICK_TRIES = 3;
+/**
  * What the bot asks for when it is added to a server: Create Instant Invite
  * (1), which Discord needs to put a person in a server, Kick Members (2),
  * used only when the creator asks for people whose access ended to be taken

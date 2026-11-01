@@ -2,6 +2,16 @@ import { COMMISSION_BPS, COMMISSION_PLANS_PUBLISHED } from "@/lib/plan";
 import { Icon, type IconName } from "@/components/icons";
 import { BumpDemo, OptionsDemo } from "@/components/feature-demos";
 import { FUNNEL_TYPES, choicesOf, pagesOf } from "@/lib/funnel-types";
+import { MAX_BUNDLE_ITEMS, MIN_BUNDLE_ITEMS } from "@/lib/bundle-rules";
+import { DEFAULT_ATTEMPTS, DEFAULT_PASS_PERCENT } from "@/lib/quiz";
+import { DEFAULT_KEYS } from "@/lib/key-setup";
+import { sampleKey } from "@/lib/licence-key-rules";
+import { formatMoney } from "@/lib/money";
+import { JOIN_EARLY_MINUTES } from "@/lib/community-text";
+import { eventTime, lengthWords } from "@/lib/community-events";
+import { MAX_ENDPOINTS, shortAddress } from "@/lib/webhook-limits";
+import { LOOKAHEAD_DAYS, MAX_FEEDS } from "@/lib/calendar-limits";
+import { MAX_DISCORD_PRODUCTS, MAX_PRODUCT_ROLES } from "@/lib/discord-rules";
 
 /**
  * The pictures at the top of each feature page.
@@ -23,7 +33,16 @@ export type VisualKey =
   | "email"
   | "domain"
   | "insights"
-  | "funnels";
+  | "funnels"
+  | "bundles"
+  | "quizzes"
+  | "keys"
+  | "webhooks"
+  | "calendar"
+  | "discord"
+  | "community"
+  | "affiliates"
+  | "events";
 
 /*
  * The frame every one of these mockups sits in.
@@ -55,15 +74,15 @@ function Window({ bar, children }: { bar: string; children: React.ReactNode }) {
   );
 }
 
-function Row({ icon, title, sub, end }: { icon: IconName; title: string; sub?: string; end?: React.ReactNode }) {
+function Row({ icon, title, sub, end, wrap = false }: { icon: IconName; title: string; sub?: string; end?: React.ReactNode; wrap?: boolean }) {
   return (
     <div className="flex items-center gap-3 rounded-[var(--r-md)] border border-line bg-white px-3.5 py-3">
       <span className="icon-tile icon-tile-sm shrink-0">
         <Icon name={icon} size={16} />
       </span>
       <span className="min-w-0 flex-1">
-        <span className="block truncate text-[13px] font-semibold text-ink">{title}</span>
-        {sub ? <span className="block truncate text-[12px] text-ink-soft">{sub}</span> : null}
+        <span className={`block ${wrap ? "break-words" : "truncate"} text-[13px] font-semibold text-ink`}>{title}</span>
+        {sub ? <span className={`block ${wrap ? "break-words" : "truncate"} text-[12px] text-ink-soft`}>{sub}</span> : null}
       </span>
       {end}
     </div>
@@ -412,6 +431,306 @@ function FunnelsVisual() {
   );
 }
 
+/** The bundle editor (components/bundle-editor.tsx): its count, its rule and its choosing box. */
+function BundlesVisual() {
+  const items = [
+    { t: "Weeknight dinners, the guide", p: 19 },
+    { t: "Batch cooking, the course", p: 49 },
+    { t: "The freezer planner", p: 9 },
+  ];
+  const price = 49;
+  const worth = items.reduce((n, item) => n + item.p, 0);
+  return (
+    <Window bar="Bundle · Every guide, one price">
+      <div className="space-y-2 p-5">
+        <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+          <p className="text-[13px] font-bold text-ink">{`In it: ${items.length} of ${MAX_BUNDLE_ITEMS}`}</p>
+          {/* The editor's own line once a bundle has at least MIN_BUNDLE_ITEMS and a price. */}
+          {items.length >= MIN_BUNDLE_ITEMS ? <p className="text-[12.5px] font-semibold text-ink">{`$${worth} of products for $${price}`}</p> : null}
+        </div>
+        {items.map((item) => (
+          <Row key={item.t} icon="file" title={item.t} end={<Price>{`$${item.p}`}</Price>} />
+        ))}
+        <div className="flex items-start gap-3 rounded-[var(--r-md)] bg-sand px-3.5 py-3 text-[13px]">
+          <span className="mt-0.5 h-4 w-4 shrink-0 rounded-[4px] border border-line-strong bg-white" />
+          <span className="min-w-0 font-semibold text-ink">Let each buyer choose which ones they get</span>
+        </div>
+      </div>
+    </Window>
+  );
+}
+
+/** A lesson's quiz, open in the course editor (components/quiz-editor.tsx), and the certificate switch under the course. */
+function QuizzesVisual() {
+  const answers = [
+    { t: "Curl your fingertips under, like a claw", right: true },
+    { t: "Hold the food flat with your fingers spread", right: false },
+    { t: "Hold the food on the side you are cutting", right: false },
+  ];
+  return (
+    <Window bar="Lesson · Slicing safely">
+      <div className="space-y-3 p-5">
+        <p className="text-[12px] font-semibold text-ink-soft">Quiz</p>
+        <div className="grid grid-cols-2 gap-2">
+          <div className="rounded-[var(--r-sm)] border border-line px-3 py-2">
+            <p className="text-[11.5px] font-semibold text-ink-soft">Pass mark (%)</p>
+            <p className="text-[13px] font-semibold text-ink">{DEFAULT_PASS_PERCENT}</p>
+          </div>
+          <div className="rounded-[var(--r-sm)] border border-line px-3 py-2">
+            <p className="text-[11.5px] font-semibold text-ink-soft">Tries allowed</p>
+            <p className="text-[13px] font-semibold text-ink">{DEFAULT_ATTEMPTS}</p>
+          </div>
+        </div>
+        <div className="rounded-[var(--r-md)] border border-line p-3.5">
+          <p className="text-[13px] font-semibold text-ink">Which way keeps your fingers safe while you slice?</p>
+          <p className="mt-2 text-[12px] font-semibold text-ink">Answers — check the right one</p>
+          <ul className="mt-1.5 min-w-0 space-y-1.5">
+            {answers.map((a) => (
+              <li key={a.t} className="flex items-start gap-2 text-[12.5px] text-ink">
+                <span className={`mt-0.5 h-3.5 w-3.5 shrink-0 rounded-full border ${a.right ? "border-[5px] border-violet-brand" : "border-line-strong"}`} />
+                <span className="min-w-0 flex-1 break-words">{a.t}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+        <Row icon="scroll" title="Certificate of completion" sub="Its own page anyone can open" end={<span className="tag tag-live">On</span>} wrap />
+      </div>
+    </Window>
+  );
+}
+
+/** A key as one given looks: the default shape, drawn from the keys' own letters, fixed so the page never shows a key that works. */
+export const EXAMPLE_KEY = "K7QM-R4TX-9WHC-P2ND";
+
+/** The license key editor (components/licence-key-editor.tsx): where keys come from, and the keys given. */
+function KeysVisual() {
+  const sample = sampleKey(DEFAULT_KEYS);
+  return (
+    <Window bar="License keys">
+      <div className="space-y-3 p-5">
+        <div className="grid gap-2 sm:grid-cols-2">
+          {[
+            { t: "Made here, one per sale", on: true },
+            { t: "From a list you upload", on: false },
+          ].map((o) => (
+            <div key={o.t} className={`flex items-start gap-2 rounded-[var(--r-sm)] border p-3 text-[12.5px] ${o.on ? "border-violet-brand bg-lilac" : "border-line"}`}>
+              <span className={`mt-0.5 h-3.5 w-3.5 shrink-0 rounded-full border ${o.on ? "border-[5px] border-violet-brand" : "border-line-strong"}`} />
+              <span className="min-w-0 font-semibold text-ink">{o.t}</span>
+            </div>
+          ))}
+        </div>
+        <p className="text-[12.5px] text-ink-soft">{`Each buyer gets a new key made for them, like ${sample}. No key is ever given twice.`}</p>
+        <div>
+          <p className="text-[12px] font-semibold text-ink-soft">Keys given</p>
+          <div className="mt-1.5 rounded-[var(--r-sm)] border border-line px-3 py-2.5">
+            <p className="break-all font-mono text-[13px] font-semibold text-ink">{EXAMPLE_KEY}</p>
+            <p className="text-[12px] text-ink-soft">dana@example.com · an example order</p>
+          </div>
+        </div>
+      </div>
+    </Window>
+  );
+}
+
+/** The studio's webhooks card (components/webhook-editor.tsx): one endpoint, and its deliveries, newest first, by the code's event names. */
+function WebhooksVisual() {
+  const where = shortAddress("https://hooks.zapier.com/hooks/catch/1234567/abcdefg/");
+  const log = [
+    { type: "refund.issued", when: "Nov 1, 3:04 PM", result: "Sending", ok: false },
+    { type: "list.joined", when: "Nov 1, 2:51 PM", result: "Delivered (200)", ok: true },
+    { type: "sale.completed", when: "Nov 1, 2:40 PM", result: "Delivered (200)", ok: true },
+  ];
+  return (
+    <Window bar="Webhooks and Zapier">
+      <div className="space-y-3 p-5">
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-[13px] font-bold text-ink">Webhooks and Zapier</p>
+          <span className="tag tag-live">{`1 of ${MAX_ENDPOINTS}`}</span>
+        </div>
+        <div className="rounded-[var(--r-md)] bg-paper px-3.5 py-3 ring-1 ring-line">
+          <p className="break-all font-mono text-[12.5px] font-semibold text-ink">{where}</p>
+          <p className="text-[12px] text-ink-soft">Every event</p>
+        </div>
+        <div>
+          <p className="text-[12.5px] font-bold text-ink">{`Last ${log.length} deliveries`}</p>
+          <ul className="mt-1 min-w-0 divide-y divide-line text-[12.5px]">
+            {log.map((d) => (
+              <li key={d.type} className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5 py-2">
+                <span className="min-w-0">
+                  <span className="font-mono font-semibold text-ink">{d.type}</span>
+                  <span className="text-ink-soft">{` · ${d.when}`}</span>
+                </span>
+                <span className={`shrink-0 text-[12px] font-semibold ${d.ok ? "text-mint-deep" : "text-ink-soft"}`}>{d.result}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </Window>
+  );
+}
+
+/** The studio's calendars card (components/calendar-editor.tsx): a calendar read for busy times, and the bookings feed. */
+function CalendarVisual() {
+  return (
+    <Window bar="Your calendars">
+      <div className="space-y-3 p-5">
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-[13px] font-bold text-ink">Your calendars</p>
+          <span className="tag tag-live">{`1 of ${MAX_FEEDS} read`}</span>
+        </div>
+        <div className="flex items-center gap-2.5 rounded-[var(--r-md)] bg-paper px-3.5 py-3 ring-1 ring-line">
+          <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-mint-brand" />
+          <span className="min-w-0">
+            <span className="block text-[13px] font-semibold text-ink">Google Calendar</span>
+            <span className="block break-words text-[12px] text-ink-soft">{`Read 4 min ago · 12 busy times in the next ${LOOKAHEAD_DAYS} days · added Oct 20, 2026`}</span>
+          </span>
+        </div>
+        <div className="rounded-[var(--r-md)] border border-line px-3.5 py-3">
+          <p className="break-words text-[13px] font-semibold text-ink">Your bookings in your calendar</p>
+          <span className="btn btn-secondary btn-sm pointer-events-none mt-2">Copy address</span>
+        </div>
+      </div>
+    </Window>
+  );
+}
+
+/** The studio's Discord page (components/discord-studio.tsx): which products give which roles, each role a pill. */
+function DiscordVisual() {
+  const rows = [
+    { product: "Supper club", roles: [{ name: "Members", on: true }, { name: "Students", on: false }] },
+    { product: "Batch cooking, the course", roles: [{ name: "Members", on: true }, { name: "Students", on: true }] },
+  ];
+  return (
+    <Window bar="Discord">
+      <div className="space-y-3 p-5">
+        <p className="text-[13px] font-bold text-ink">Which products give which roles</p>
+        <p className="text-[12px] text-ink-soft">{`Up to ${MAX_PRODUCT_ROLES} roles for each product, on up to ${MAX_DISCORD_PRODUCTS} products.`}</p>
+        {rows.map((row) => {
+          const given = row.roles.filter((r) => r.on).length;
+          return (
+            <div key={row.product} className="rounded-[var(--r-sm)] border border-line p-3">
+              <p className="break-words text-[13px] font-semibold text-ink">{row.product}</p>
+              <p className="text-[12px] text-ink-soft">{`Gives ${given} ${given === 1 ? "role" : "roles"}.`}</p>
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {row.roles.map((role) => (
+                  <span key={role.name} className={`rounded-full border px-2.5 py-1 text-[12px] ${role.on ? "border-violet-brand bg-lilac text-ink" : "border-line text-ink-soft"}`}>
+                    {role.name}
+                  </span>
+                ))}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </Window>
+  );
+}
+
+/** The studio's community card (components/community-studio.tsx): switched on, its three counts, the way in. */
+function CommunityVisual() {
+  const tiles = [
+    { n: "48", label: "have come in" },
+    { n: "112", label: "posts" },
+    { n: "31", label: "want the community's emails" },
+  ];
+  return (
+    <Window bar="Community">
+      <div className="space-y-3 p-5">
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-[13px] font-bold text-ink">Your community</p>
+          <span className="tag tag-live">On</span>
+        </div>
+        <p className="break-words text-[12.5px] text-ink-soft">Open to everyone who holds one of the products you chose below. Your store page shows the way in.</p>
+        <div className="grid grid-cols-3 gap-1.5 text-center">
+          {tiles.map((t) => (
+            <div key={t.label} className="min-w-0 rounded-[var(--r-sm)] bg-sand px-1 py-2.5">
+              <p className="text-[16px] font-semibold tabular-nums text-ink">{t.n}</p>
+              <p className="break-words text-[10.5px] text-ink-soft">{t.label}</p>
+            </div>
+          ))}
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <span className="btn btn-secondary btn-sm pointer-events-none">Switch it off</span>
+          <span className="btn btn-ghost btn-sm pointer-events-none">Open it</span>
+        </div>
+      </div>
+    </Window>
+  );
+}
+
+/** One affiliate in the studio (components/affiliate-studio.tsx, Member): address, link code, status, and the five tiles. */
+function AffiliatesVisual() {
+  const tiles = [
+    { label: "Clicks", value: "120" },
+    { label: "Sales", value: "6" },
+    { label: "Earned", value: formatMoney(5_940, "usd") },
+    { label: "Paid", value: formatMoney(3_000, "usd") },
+    { label: "Owed", value: formatMoney(5_940 - 3_000, "usd"), strong: true },
+  ];
+  return (
+    <Window bar="Affiliates">
+      <div className="space-y-3 p-5">
+        <p className="text-[13px] font-bold text-ink">Your affiliates</p>
+        <div className="rounded-2xl border border-line p-3.5">
+          <div className="flex flex-wrap items-start justify-between gap-2">
+            <span className="min-w-0">
+              <span className="block break-all text-[13px] font-semibold text-ink">ana@example.com</span>
+              <span className="block font-mono text-[11.5px] text-ink-soft">?via=ana</span>
+            </span>
+            <span className="tag tag-live">Approved</span>
+          </div>
+          <div className="mt-2.5 grid grid-cols-3 gap-1.5 text-center sm:grid-cols-5">
+            {tiles.map((t) => (
+              <div key={t.label} className={`min-w-0 rounded-xl px-1.5 py-1.5 ${t.strong ? "bg-lilac" : "bg-paper"}`}>
+                <p className="text-[10px] font-bold uppercase tracking-[0.06em] text-ink-mute">{t.label}</p>
+                <p className={`text-[12.5px] font-semibold tabular-nums ${t.strong ? "text-violet-ink" : "text-ink"}`}>{t.value}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </Window>
+  );
+}
+
+/**
+ * The community's live events in the studio (components/community-events-studio.tsx,
+ * EventRow): what is coming up, its places beside its title, when (in the
+ * studio's own eventTime and lengthWords), where and for whom. Server only, as
+ * every card here: lib/community-events.ts reads the store.
+ */
+function EventsVisual() {
+  const events = [
+    { title: "Monthly cook-along", start: Date.UTC(2026, 10, 10, 23), minutes: 60, where: "Private video room · every member", places: "12 of 30 places taken" },
+    { title: "Q&A: your freezer questions", start: Date.UTC(2026, 10, 19, 17), minutes: 45, where: "Your meeting link · only for buyers of Batch Cooking Basics", places: "8 going" },
+  ];
+  return (
+    <Window bar="Live events">
+      <div className="space-y-3 p-5">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="text-[13px] font-bold text-ink">Live events</p>
+          <span className="tag tag-brand">{`${events.length} coming up`}</span>
+        </div>
+        <p className="text-[11.5px] font-bold uppercase tracking-[0.06em] text-ink-soft">Coming up</p>
+        <ul className="min-w-0 space-y-2">
+          {events.map((e) => (
+            <li key={e.title} className="rounded-[var(--r-md)] border border-line p-3">
+              <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-0.5">
+                <p className="min-w-0 break-words text-[13px] font-semibold text-ink">{e.title}</p>
+                <p className="text-[12px] font-semibold text-ink">{e.places}</p>
+              </div>
+              <p className="break-words text-[12px] text-ink-soft">{`${eventTime({ start: e.start, tz: "America/New_York" })} · ${lengthWords(e.minutes)}`}</p>
+              <p className="break-words text-[12px] text-ink-soft">{e.where}</p>
+            </li>
+          ))}
+        </ul>
+        <p className="break-words text-[12px] text-ink-soft">{`The way in shows ${JOIN_EARLY_MINUTES} minutes before the start, only to members who can come.`}</p>
+      </div>
+    </Window>
+  );
+}
+
 const CAPTIONS: Record<VisualKey, string> = {
   store: "A store page, drawn from the demo store you can open and buy from.",
   options: "The buyer is charged the price they picked, as the creator saved it.",
@@ -425,6 +744,15 @@ const CAPTIONS: Record<VisualKey, string> = {
   domain: "A store on its own domain, with the one record to add.",
   insights: "The numbers screen in the studio. The bars are an example, not our figures.",
   funnels: "The kinds of funnel the studio starts from, read from its own list.",
+  bundles: "The bundle editor in the studio. The products and their prices are an example.",
+  quizzes: "A lesson's quiz and the course's certificate. The lesson and its question are an example.",
+  keys: "The license key editor. The key, the buyer and the order are an example. Keys made here are new for each sale.",
+  webhooks: "Webhooks in the studio. The address, the times and the deliveries are an example.",
+  calendar: "Your calendars in the studio. The calendar and its busy times are an example.",
+  discord: "The Discord page in the studio. The products and roles are an example.",
+  community: "Your community in the studio. The counts are made up as an example, not real figures.",
+  affiliates: "One affiliate in the studio. The person and every figure are made up as an example, not anyone's real results.",
+  events: "Live events in the studio. The events, dates and counts are made up as an example.",
 };
 
 /**
@@ -446,6 +774,15 @@ export function FeatureVisual({ visual, tone = "dark" }: { visual: VisualKey; to
     domain: <DomainVisual />,
     insights: <InsightsVisual />,
     funnels: <FunnelsVisual />,
+    bundles: <BundlesVisual />,
+    quizzes: <QuizzesVisual />,
+    keys: <KeysVisual />,
+    webhooks: <WebhooksVisual />,
+    calendar: <CalendarVisual />,
+    discord: <DiscordVisual />,
+    community: <CommunityVisual />,
+    affiliates: <AffiliatesVisual />,
+    events: <EventsVisual />,
   }[visual];
   const interactive = visual === "options" || visual === "checkout";
   return (
