@@ -78,8 +78,7 @@ async function main(): Promise<void> {
   is("the way out: a larger plan when paying, a plan at all when not", [way(true), way(false)], ["See a larger plan", "Start a plan"]);
 
   part("Parts with no reader yet");
-  is("disputes, and limits where no reading is passed: not checked", [notCheckedYet("limits").state, notCheckedYet("disputes").state], ["not-checked", "not-checked"]);
-  is("disputes points to no studio page that does not list them (unit 2)", [notCheckedYet("disputes").fix, notCheckedYet("disputes").found.includes("Stripe dashboard")], [undefined, true]);
+  is("limits where no reading is passed: not checked", notCheckedYet("limits").state, "not-checked");
 
   part("Every problem says what happens and how to fix it");
   const all: Check[] = [
@@ -98,7 +97,7 @@ async function main(): Promise<void> {
   const shown = orderChecks([emailCheck(null), notCheckedYet("limits"), domainCheck(null, null), checkoutCheck({ week: 1, last: null }), stripeCheck(true, null)]);
   is("problems first, then not checked, then fine; a part not used is gone", shown.map((c) => `${c.id}:${c.state}`), ["checkout:problem", "stripe:not-checked", "limits:not-checked", "email:ok"]);
   is("problems and unchecked are both counted", checkupSummary(shown), "1 problem found, 2 not checked.");
-  is("never all well while something was not checked", checkupSummary(orderChecks([emailCheck(null), notCheckedYet("disputes")])), "No problem found in what we checked; 1 not checked.");
+  is("never all well while something was not checked", checkupSummary(orderChecks([emailCheck(null), notCheckedYet("limits")])), "No problem found in what we checked; 1 not checked.");
   is("nothing at all is not \"no problem\"", checkupSummary([]), "Nothing was checked.");
   is("all checked and fine: said only then", checkupSummary([emailCheck(null), checkoutCheck({ week: 0, last: null })]), "We checked everything listed here and found no problem.");
 

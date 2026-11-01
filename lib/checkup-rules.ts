@@ -272,12 +272,70 @@ export function limitsCheck(readings: { kind: AllowanceKind; used: number; figur
   };
 }
 
-/** A part with no reader yet: always "not checked", never fine. */
-export function notCheckedYet(id: "limits" | "disputes"): Check {
-  return id === "limits"
-    ? { id, title: "Your plan's limits", state: "not-checked", found: "Not checked here yet. Each limit is shown where you use it." }
-    : { id, title: "Disputes", state: "not-checked", found: "Not checked here yet. Your Stripe dashboard shows any dispute a buyer opened." };
+/** A dispute as the checkup reads it from the creator's Stripe account: its status, when its answer is due (seconds) and whether that is past. */
+export type OpenDispute = { status: string; dueBy: number | null; pastDue: boolean };
+
+/**
+ * Stripe's dispute statuses (docs.stripe.com/api/disputes/object, status, read
+ * 1 November 2026): those waiting for the creator's answer, those with the
+ * bank, and those closed. Any other is unknown, and stops the line from
+ * saying "fine".
+ */
+const NEEDS_ANSWER = new Set(["needs_response", "warning_needs_response", "appeal_needs_response"]);
+const WITH_THE_BANK = new Set(["under_review", "warning_under_review", "appeal_under_review"]);
+const CLOSED = new Set(["won", "lost", "warning_closed", "prevented"]);
+export const KNOWN_DISPUTE_STATUSES: ReadonlySet<string> = new Set([...NEEDS_ANSWER, ...WITH_THE_BANK, ...CLOSED]);
+
+/**
+ * Disputes on the creator's Stripe account (lib/checkup.ts, readDisputes;
+ * unit 4): a problem while one waits for an answer, with the first due date
+ * still ahead and how many are past theirs; fine when none does, saying how
+ * many are with the bank; not checked when they could not be read, when one
+ * has a status this does not know, or when not all of them were read
+ * (`complete` false) and none read needs an answer ("at least" when some do).
+ */
+export function disputesCheck(read: { disputes: OpenDispute[]; complete: boolean } | null, now = Date.now()): Check {
+  const title = "Disputes";
+  if (!read) return { id: "disputes", title, state: "not-checked", found: "We could not ask Stripe about disputes just now. Try again in a few minutes." };
+  if (read.disputes.some((d) => !KNOWN_DISPUTE_STATUSES.has(d.status))) {
+    return { id: "disputes", title, state: "not-checked", found: "Stripe answered with a dispute we cannot read. Your Stripe Dashboard lists them all." };
+  }
+  const waiting = read.disputes.filter((d) => NEEDS_ANSWER.has(d.status));
+  const withBank = read.disputes.filter((d) => WITH_THE_BANK.has(d.status)).length;
+  if (waiting.length) {
+    const late = waiting.filter((d) => d.pastDue || (d.dueBy !== null && d.dueBy * 1000 <= now)).length;
+    const due = waiting.filter((d) => !d.pastDue).map((d) => d.dueBy).filter((t): t is number => typeof t === "number" && Number.isFinite(t) && t * 1000 > now).sort((a, b) => a - b)[0];
+    const day = due ? new Date(due * 1000).toLocaleDateString("en-US", { month: "long", day: "numeric", timeZone: "UTC" }) : null;
+    const many = waiting.length === 1 ? "one dispute is waiting" : `${waiting.length.toLocaleString("en-US")} disputes are waiting`;
+    const count = read.complete ? many : `at least ${many}`;
+    const lateWords = late ? ` ${late === 1 ? "One is past its" : `${late.toLocaleString("en-US")} are past their`} due date.` : "";
+    return {
+      id: "disputes",
+      title,
+      state: "problem",
+      found: `${count.charAt(0).toUpperCase()}${count.slice(1)} for your answer on your Stripe account.${day ? ` The next is due on ${day} (UTC).` : ""}${lateWords}`,
+      // Stripe's own words (docs.stripe.com/disputes/responding, read 1 November 2026): "If you don't respond before
+      // the deadline, you automatically lose the dispute and can't retrieve the disputed funds."
+      ifLeft: "A dispute not answered by its due date is lost, and the disputed money cannot be won back.",
+      fix: { kind: "outside", where: "On the Disputes page of your Stripe Dashboard, answer each one before its due date. To look at the purchase first, use the \"Review one disputed purchase\" page in your studio." },
+    };
+  }
+  if (!read.complete) return { id: "disputes", title, state: "not-checked", found: "There are more disputes than we read here. Your Stripe Dashboard lists them all." };
+  return {
+    id: "disputes",
+    title,
+    state: "ok",
+    found: withBank
+      ? `No dispute is waiting for your answer. ${withBank === 1 ? "One is" : `${withBank} are`} with the buyer's bank for a decision.`
+      : "No dispute is waiting for your answer on your Stripe account.",
+  };
 }
+
+/** A part with no reader yet: always "not checked", never fine. */
+export function notCheckedYet(id: "limits"): Check {
+  return { id, title: "Your plan's limits", state: "not-checked", found: "Not checked here yet. Each limit is shown where you use it." };
+}
+
 
 /** The checks in the order shown: problems first, then what could not be checked, then what is fine; each group in a fixed order. */
 const ORDER: CheckId[] = ["stripe", "checkout", "domain", "email", "limits", "disputes"];
