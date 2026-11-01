@@ -1858,9 +1858,11 @@ export function PageEditor({
               productTitle={product.title}
               free={product.free}
               picture={Boolean(product.picture)}
+              pictureAlt={product.picture?.alt ?? ""}
               facts={facts}
-              // The version being edited: what the coach adds goes into it.
-              page={{ ...pageToSend(), blocks: drafts.map((d) => d.block) }}
+              // The version being edited: what the coach adds goes into it. The other version, never this one twice,
+              // is the second one, whose pictures are counted too (independent review, 31/10/2026).
+              page={{ ...pageToSend(), blocks: drafts.map((d) => d.block), variant: other ? { id: "", blocks: other.map((d) => d.block) } : null }}
               reach={reach}
               onAdd={(kind) => (kind === "fit" || kind === "facts" || kind === "steps" ? insertNear(emptyBlock(kind), kind === "facts" ? ["hero"] : ["benefits", "inside"]) : add(kind))}
               onHeadline={putHeadline}
