@@ -143,7 +143,7 @@ function confirmationEvidence(store: Store, window: { id: string; start: number;
       source[key]=d.value;
     }
     if (typeof source.shared!=="boolean" || typeof source.subscriptionActive!=="boolean" || !Number.isSafeInteger(source.trialEnds) ||
-        Number(source.trialEnds)<0 || !["creator","pro","scale"].includes(String(source.tier))) return null;
+        Number(source.trialEnds)<0 || typeof source.tier!=="string" || !["creator","pro","scale"].includes(source.tier)) return null;
     const share=shareBps(source as unknown as Store,now/1000),owner=storeRef(store).toLowerCase();
     if (!owner || owner.length>320 || !Number.isSafeInteger(share) || share<0 || share>10_000) return null;
     return {hour,bytes:orderDataBytes(items),window:window.id,windowEnd:window.end,captured:now,share,owner,folder};

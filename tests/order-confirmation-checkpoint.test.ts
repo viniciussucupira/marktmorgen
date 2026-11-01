@@ -63,6 +63,21 @@ test("missing original share/window/admission evidence does not manufacture a sn
     assert.deepEqual(uncertain,{ok:false,reason:"unavailable"});
     assert.equal(await prepareOrderConfirmationSettlement(store(),reference,uncertain,clock),null);
   } finally {redis.pipeline=previous;}
+  let coercions=0;
+  for(const key of ["tier","cycle"] as const) {
+    const s=store(),admitted=await acknowledgedAdmission(s);
+    Object.defineProperty(s,key,{value:{toString(){coercions++;return key==="tier"?"creator":"month";}}});
+    assert.equal(await prepareOrderConfirmationSettlement(s,reference,admitted,clock),null);
+  }
+  assert.equal(coercions,0);
+  // A malformed tier at admission cannot become a proof through coercion.
+  const malformed={...store(),tier:{toString(){coercions++;return "creator";}}} as unknown as Store;
+  const actual=await acknowledgedAdmission(malformed);
+  assert.equal(actual.ok,true); // Preserve the legacy admission's behavior.
+  const legacyCoercions=coercions;
+  malformed.tier="creator";
+  assert.equal(await prepareOrderConfirmationSettlement(malformed,reference,actual,clock),null);
+  assert.equal(coercions,legacyCoercions);
 });
 
 test("unknown ACK never claims settlement, and replay uses an identical receipt",async()=>{

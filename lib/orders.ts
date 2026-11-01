@@ -75,8 +75,8 @@ function originalStore(store: Store): Store | null {
     if (typeof out.email!=="string" || !out.email || typeof out.sid!=="string" ||
         (out.extra!==undefined && typeof out.extra!=="boolean") || typeof out.shared!=="boolean" ||
         typeof out.subscriptionActive!=="boolean" || (out.subscriptionId!==null && typeof out.subscriptionId!=="string") ||
-        !Number.isSafeInteger(out.trialEnds) || Number(out.trialEnds)<0 || !["creator","pro","scale"].includes(String(out.tier)) ||
-        typeof out.planEndedAt!=="string" || (out.cycle!==undefined && !["month","year"].includes(String(out.cycle)))) return null;
+        !Number.isSafeInteger(out.trialEnds) || Number(out.trialEnds)<0 || typeof out.tier!=="string" || !["creator","pro","scale"].includes(out.tier) ||
+        typeof out.planEndedAt!=="string" || (out.cycle!==undefined && (typeof out.cycle!=="string" || !["month","year"].includes(out.cycle)))) return null;
     if (out.period!==undefined && out.period!==null) {
       const value=out.period;
       if (!value || typeof value!=="object" || ![Object.prototype,null].includes(Object.getPrototypeOf(value))) return null;
