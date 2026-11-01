@@ -16,7 +16,7 @@
  * readPaidSales), only when an email asks for one, and the answer is kept ten
  * minutes so a creator changing the boxes does not ask Stripe each time:
  *
- *   nl:stats:<statsId>:ledger   JSON [[address, cents, last ms, channel], …], ten minutes
+ *   nl:stats:<statsId>:ledger   JSON { c: currency, p: partial, v: 2, r: [[address, cents, last ms, channel, orders], …] }, ten minutes
  *   nl:mail:segs:<listId>       hash: <id> → JSON Segment, the store's saved groups
  *
  * A group is a name over the choices the composer already has: who, one

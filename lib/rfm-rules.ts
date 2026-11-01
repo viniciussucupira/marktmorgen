@@ -9,15 +9,22 @@
  * here predicts what anybody will spend. A buyer brought over from another
  * platform has no purchase here, so is in none of them.
  *
+ * Not yet counted, so no group is shown or used until they are (unit 2,
+ * on the queue): a membership's or a payment plan's later payments (the
+ * ledger reads checkouts and offers after paying, not renewals), so a member
+ * who pays every month would read as quiet since joining; and refunds, so a
+ * purchase given back still counts. The ledger can also be partial (a
+ * reading reaches so far back); the panel says so when it is.
+ *
  * Browser-safe: plain data and pure functions.
  */
 
-export type RfmGroup = "best" | "loyal" | "new" | "once" | "at-risk" | "lapsed";
+export type RfmGroup = "best" | "loyal" | "new" | "once" | "quiet-often" | "quiet-once";
 
 const DAY = 86_400_000;
 /** "Recently": the last 90 days. */
 const RECENT_DAYS = 90;
-/** "Still around": the last 180 days. */
+/** "Still around": the last 180 days (the names say 6 months). */
 const AROUND_DAYS = 180;
 /** "Just now": the last 30 days. */
 const NEW_DAYS = 30;
@@ -27,11 +34,11 @@ const OFTEN = 3;
 /** The groups, in the order they are tested and shown, each with its rule in words. */
 export const RFM_GROUPS: readonly { id: RfmGroup; name: string; rule: string }[] = [
   { id: "best", name: "Best customers", rule: `Bought ${OFTEN} or more times, the last time in the last ${RECENT_DAYS} days.` },
-  { id: "loyal", name: "Loyal customers", rule: `Bought 2 or more times, the last time in the last ${AROUND_DAYS} days.` },
+  { id: "loyal", name: "Loyal customers", rule: `Bought 2 or more times, the last time in the last ${AROUND_DAYS} days, and not a best customer: 2 times, or ${OFTEN} or more with the last over ${RECENT_DAYS} days ago.` },
   { id: "new", name: "New customers", rule: `Bought once, in the last ${NEW_DAYS} days.` },
-  { id: "once", name: "Bought once", rule: `Bought once, between ${NEW_DAYS} and ${AROUND_DAYS} days ago.` },
-  { id: "at-risk", name: "At risk of not coming back", rule: `Bought 2 or more times, but not in the last ${AROUND_DAYS} days.` },
-  { id: "lapsed", name: "Have not bought in a long time", rule: `Bought once, more than ${AROUND_DAYS} days ago.` },
+  { id: "once", name: "Bought once", rule: `Bought once, more than ${NEW_DAYS} and up to ${AROUND_DAYS} days ago.` },
+  { id: "quiet-often", name: "Bought often, quiet for 6 months", rule: `Bought 2 or more times, none of them in the last ${AROUND_DAYS} days.` },
+  { id: "quiet-once", name: "Bought once, quiet for 6 months", rule: `Bought once, more than ${AROUND_DAYS} days ago.` },
 ];
 
 /** One buyer as the ledger has them: what they spent, when they last bought, how many times. */
@@ -39,14 +46,16 @@ export type RfmBuyer = { cents: number; last: number; orders: number };
 
 /** The one group a buyer is in, or null when they have no purchase here. */
 export function rfmGroup(buyer: RfmBuyer, now = Date.now()): RfmGroup | null {
-  if (buyer.orders <= 0 || buyer.last <= 0) return null;
+  if (buyer.last <= 0 || (buyer.orders <= 0 && buyer.cents <= 0)) return null;
+  // An offer taken after paying read without its checkout (a partial reading) is still a purchase.
+  buyer = { ...buyer, orders: Math.max(buyer.orders, 1) };
   const days = (now - buyer.last) / DAY;
   if (buyer.orders >= OFTEN && days <= RECENT_DAYS) return "best";
   if (buyer.orders >= 2 && days <= AROUND_DAYS) return "loyal";
   if (buyer.orders === 1 && days <= NEW_DAYS) return "new";
   if (buyer.orders === 1 && days <= AROUND_DAYS) return "once";
-  if (buyer.orders >= 2) return "at-risk";
-  return "lapsed";
+  if (buyer.orders >= 2) return "quiet-often";
+  return "quiet-once";
 }
 
 /** Each group's size and what its buyers spent in all, from the store's own figures. */
