@@ -2,7 +2,7 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import { EmailSuggestion } from "@/components/email-suggestion";
-import { holdForSuggestion } from "@/lib/email-typo";
+import { holdForSuggestion, suggestEmail } from "@/lib/email-typo";
 
 /**
  * An email field with the "Did you mean …?" line under it (308 [TC1],
@@ -94,7 +94,7 @@ export function EmailField({
         onInput={(event) => setValue(event.currentTarget.value)}
         onBlur={() => setLeft(true)}
         onInvalid={() => setLeft(true)}
-        aria-describedby={describedBy ? `${describedBy} ${line}` : line}
+        aria-describedby={[describedBy ?? "", left && suggestEmail(value) !== null ? line : ""].filter(Boolean).join(" ") || undefined}
         className={className}
       />
       <EmailSuggestion

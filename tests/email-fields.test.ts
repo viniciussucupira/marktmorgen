@@ -44,7 +44,8 @@ function main(): void {
 
   part("What it draws");
   const html = renderToStaticMarkup(createElement(EmailField, { id: "orders-email", name: "email", className: "st-field", required: true, placeholder: "you@example.com", language: "fr" }));
-  is("an email input with the same id, name and look, left to the browser (what is typed before the scripts load is kept)", /<input id="orders-email" type="email" required="" maxLength="254" autoComplete="email" placeholder="you@example.com" aria-describedby="orders-email-suggestion" class="st-field" name="email" value=""\/>/.test(html) && !/value=\{value\}/.test(/<input[\s\S]*?\/>/.exec(read("components/email-field.tsx"))?.[0] ?? "value={value}") && read("components/email-field.tsx").includes("defaultValue={defaultValue}"), true);
+  is("an email input with the same id, name and look, left to the browser (what is typed before the scripts load is kept)", /<input id="orders-email" type="email" required="" maxLength="254" autoComplete="email" placeholder="you@example.com" class="st-field" name="email" value=""\/>/.test(html) && !/value=\{value\}/.test(/<input[\s\S]*?\/>/.exec(read("components/email-field.tsx"))?.[0] ?? "value={value}") && read("components/email-field.tsx").includes("defaultValue={defaultValue}"), true);
+  is("no description while there is nothing to suggest (the line joins it only while it says something)", read("components/email-field.tsx").includes('aria-describedby={[describedBy ?? "", left && suggestEmail(value) !== null ? line : ""].filter(Boolean).join(" ") || undefined}'), true);
   is("then its line, an empty polite region", html.includes('<div id="orders-email-suggestion" aria-live="polite" data-email-suggestion="true"></div>'), true);
   const kept = renderToStaticMarkup(createElement(EmailField, { name: "paypal", className: "st-field", defaultValue: "pay@example.com" }));
   is("a field with a saved address starts with it", kept.includes('value="pay@example.com"'), true);
