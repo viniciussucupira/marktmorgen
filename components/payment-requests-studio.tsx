@@ -94,11 +94,14 @@ export function PaymentRequestsStudio({
   // The form as it was when its review opened (487 [IT4], pattern 8): the review holds only while nothing has changed since.
   const [reviewOf, setReviewOf] = useState<string | null>(null);
   // What the server's own reading (readDraft) makes of the form: the review shows this, so it shows what is billed.
+  // The form a send error was about: once it is edited, that error no longer applies and is not said again.
+  const [errorFor, setErrorFor] = useState<string | null>(null);
   const [reviewed, setReviewed] = useState<RequestDraft | null>(null);
   const snapshot = JSON.stringify({ email, name, lines, note, dueDate, reminders, consent });
   const reviewing = reviewOf !== null && reviewOf === snapshot && reviewed !== null;
   function changeAnswer(id: string) {
     setReviewOf(null);
+    setError("");
     requestAnimationFrame(() => document.getElementById(id)?.focus());
   }
   const money = (cents: number) => formatMoney(cents, currency);
@@ -151,11 +154,13 @@ export function PaymentRequestsStudio({
     if (!answer.ok) {
       setError(answer.message ?? "The result could not be confirmed. Reload to check the request before trying again.");
       // Said beside the button that was pressed, and read at once.
+      setErrorFor(snapshot);
       requestAnimationFrame(() => document.getElementById("pr-send-error")?.focus());
       return;
     }
     setReviewOf(null);
     setReviewed(null);
+    setErrorFor(null);
     requestAnimationFrame(() => document.getElementById("pr-email")?.focus());
     toast(answer.sent ? "Request sent." : "Request saved, but its email did not go. Send it again from the list.");
     setEmail("");
@@ -266,7 +271,7 @@ export function PaymentRequestsStudio({
             <input id="pr-consent" type="checkbox" className="mt-1" checked={consent} onChange={(e) => setConsent(e.target.checked)} />
             <span className="text-sm text-ink">This person agreed to pay me for what this request lists, and expects it.</span>
           </label>
-          {error && !reviewing ? <p className="notice notice-error mt-4" role="alert">{error}</p> : null}
+          {error && !reviewing && (errorFor === null || errorFor === snapshot) ? <p className="notice notice-error mt-4" role="alert">{error}</p> : null}
           <button type="submit" className={reviewing ? "btn btn-secondary mt-5" : "btn btn-primary mt-5"} disabled={!open || busy !== ""}>
             Check before sending
           </button>

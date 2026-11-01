@@ -70,4 +70,8 @@ is("the review opens only when the server's own reading takes the form, for a ne
 is("a refused draft or a failed send is said, with the focus on it; nothing changes while it sends", agreements.includes("setError(DRAFT_PROBLEMS[read.problem]);") && agreements.includes('id="ag-send-error" tabIndex={-1}') && agreements.includes('<fieldset disabled={busy !== ""}'), true);
 is("each answer has a Change that leads to its field", ["ag-kind", "ag-email", "ag-title", "ag-body", "ag-pay"].every((id) => agreements.includes(`changeAnswer("${id}")`) && agreements.includes(`id="${id}"`)), true);
 is("the first press opens the review, and only the review's own button sends", agreements.includes("Check before sending") && agreements.includes("if (busy || !reviewing) return;") && agreements.includes('editing ? "Yes, send the new version" : "Yes, send for signature"'), true);
+is("a send error is not said again once the form it was about is edited", [agreements, requests].every((f) => f.includes("(errorFor === null || errorFor === snapshot)") && f.includes("setErrorFor(snapshot);")), true);
+is("opening a version again or canceling never brings back an old review", /function reset\(\) \{\s*setReviewOf\(null\);\s*setReviewed\(null\);/.test(agreements) && /async function startEdit[\s\S]{0,80}?setReviewOf\(null\);\s*setReviewed\(null\);/.test(agreements), true);
+is("after an agreement is sent the focus goes back to the start of the form", agreements.includes('requestAnimationFrame(() => document.getElementById("ag-email")?.focus());'), true);
+is("the payment request row offers Change only when its field is there", agreements.includes("{payChoices.length ? <dd><button"), true);
 done();

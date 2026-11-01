@@ -86,11 +86,14 @@ export function AgreementsStudio({
   // The form as it was when its review opened (487 [IT4], pattern 8): the review holds only while nothing has changed since.
   const [reviewOf, setReviewOf] = useState<string | null>(null);
   // What the server's own reading (readDraft) makes of the form: the review shows this, so it shows what is sent.
+  // The form a send error was about: once it is edited, that error no longer applies and is not said again.
+  const [errorFor, setErrorFor] = useState<string | null>(null);
   const [reviewed, setReviewed] = useState<AgreementDraft | null>(null);
   const snapshot = JSON.stringify({ kind, email, name, title, body, lines, payRequest, consent, editing: editing?.id ?? null });
   const reviewing = reviewOf !== null && reviewOf === snapshot && reviewed !== null;
   function changeAnswer(id: string) {
     setReviewOf(null);
+    setError("");
     requestAnimationFrame(() => document.getElementById(id)?.focus());
   }
   const money = (cents: number) => formatMoney(cents, currency);
@@ -111,6 +114,8 @@ export function AgreementsStudio({
   }
 
   function reset() {
+    setReviewOf(null);
+    setReviewed(null);
     setEditing(null);
     setKind("agreement");
     setEmail("");
@@ -125,6 +130,8 @@ export function AgreementsStudio({
 
   async function startEdit(row: AgreementRow) {
     if (busy) return;
+    setReviewOf(null);
+    setReviewed(null);
     setBusy(`read:${row.id}`);
     const answer = await call({ action: "read", id: row.id });
     setBusy("");
@@ -179,13 +186,17 @@ export function AgreementsStudio({
     if (!answer.ok) {
       setError(answer.message ?? "We couldn't confirm whether the agreement was saved or emailed. Your text is still here. Reload to check before trying again.");
       // Said beside the button that was pressed, and read at once.
+      setErrorFor(snapshot);
       requestAnimationFrame(() => document.getElementById("ag-send-error")?.focus());
       return;
     }
     setReviewOf(null);
     setReviewed(null);
+    setErrorFor(null);
     toast(answer.sent ? (editing ? "New version sent. It needs a new signature." : "Sent for signature.") : "Saved, but its email did not go. Send it again from the list.");
     reset();
+    // The review is gone with the focus in it: the focus goes back to the start of the form.
+    requestAnimationFrame(() => document.getElementById("ag-email")?.focus());
     router.refresh();
   }
 
@@ -296,7 +307,7 @@ export function AgreementsStudio({
               <span className="text-sm text-ink">I deal with this person, and they expect this from me.</span>
             </label>
           ) : null}
-          {error && !reviewing ? <p className="notice notice-error mt-4" role="alert">{error}</p> : null}
+          {error && !reviewing && (errorFor === null || errorFor === snapshot) ? <p className="notice notice-error mt-4" role="alert">{error}</p> : null}
           <div className="mt-5 flex flex-wrap gap-3">
             <button type="submit" className={reviewing ? "btn btn-secondary" : "btn btn-primary"} disabled={!open || busy !== ""}>
               Check before sending
@@ -350,7 +361,8 @@ export function AgreementsStudio({
                 <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 py-2">
                   <dt className="basis-full font-semibold sm:basis-32 sm:shrink-0">Payment request</dt>
                   <dd className="min-w-0 basis-full whitespace-pre-line break-words sm:basis-0 sm:flex-1">{reviewed.payRequest ? payChoices.find((p) => p.id === reviewed.payRequest)?.label ?? "One of your requests" : "None"}</dd>
-                  <dd><button type="button" className="inline-flex min-h-11 items-center font-bold underline underline-offset-4" onClick={() => changeAnswer("ag-pay")}>Change<span className="sr-only"> payment request</span></button></dd>
+                  {/* Its field is there only when there are open requests to choose from. */}
+                  {payChoices.length ? <dd><button type="button" className="inline-flex min-h-11 items-center font-bold underline underline-offset-4" onClick={() => changeAnswer("ag-pay")}>Change<span className="sr-only"> payment request</span></button></dd> : null}
                 </div>
               </dl>
               {error ? <p id="ag-send-error" tabIndex={-1} className="notice notice-error mt-3" role="alert">{error}</p> : null}
