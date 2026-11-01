@@ -31,6 +31,9 @@ const MESSAGES: Record<string, string> = {
   events: "Choose at least one event to send.",
   missing: "That endpoint is no longer there. Reload the page.",
   limited: "A store can send ten tests a minute. Wait a moment and try again.",
+  not_failed: "Only a delivery that failed can be sent again.",
+  not_heard: "That endpoint no longer gets this event. Add it under Events to send it again.",
+  resent: "It was already sent again. Wait for that one before sending it once more.",
   server_error: "Something went wrong on our side. Nothing was changed; try again in a moment.",
 };
 
@@ -54,7 +57,7 @@ export function WebhookEditor({ view: initial }: { view: WebhooksView }) {
   const [chosen, setChosen] = useState<WebhookEvent[]>(ALL);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [secret, setSecret] = useState<{ where: string; value: string } | null>(null);
+  const [secret, setSecret] = useState<{ where: string; value: string; oldUntil?: string } | null>(null);
   const [copied, setCopied] = useState(false);
   const [editing, setEditing] = useState<{ id: string; events: WebhookEvent[] } | null>(null);
 
@@ -108,6 +111,23 @@ export function WebhookEditor({ view: initial }: { view: WebhooksView }) {
     else setError(`The test did not arrive: ${(data.message || "no answer").replace(/\.?$/, ".")} Nothing is retried for a test.`);
   }
 
+  // 378 [TB4] unit 2: a new secret, shown once; the old one signs beside it for a day (lib/webhooks.ts ROTATION_HOURS).
+  async function rotate(id: string, where: string) {
+    const data = (await send({ action: "rotate", id }, `rotate:${id}`)) as { secret?: string; oldSecretUntil?: string } | null;
+    if (data?.secret) {
+      setSecret({ where, value: data.secret, oldUntil: data.oldSecretUntil });
+      toast("New signing secret made.");
+    }
+  }
+
+  // 378 [TB4] unit 3: a failed delivery sent again, once, as the same message.
+  async function resend(id: string) {
+    const data = await send({ action: "resend", delivery: id }, `resend:${id}`);
+    if (!data) return;
+    if (data.delivered) toast(`Sent again and delivered (${data.status}).`);
+    else setError(`It did not arrive this time either: ${(data.message || "no answer").replace(/\.?$/, ".")} It is not tried again by itself.`);
+  }
+
   async function copySecret() {
     if (!secret) return;
     try {
@@ -142,6 +162,9 @@ export function WebhookEditor({ view: initial }: { view: WebhooksView }) {
           <p className="mt-1 text-sm text-ink-soft">
             Shown this once. Keep it where your receiver can check signatures with it; Zapier does not need it.
           </p>
+          {secret.oldUntil ? (
+            <p className="mt-1 text-sm text-ink-soft">{`Your old secret still signs every message beside this one until ${when(Date.parse(secret.oldUntil))}. Put this one in your receiver before then.`}</p>
+          ) : null}
           <div className="mt-3 flex flex-col gap-2 sm:flex-row">
             <label htmlFor="webhook-secret" className="sr-only">
               Signing secret
@@ -168,6 +191,7 @@ export function WebhookEditor({ view: initial }: { view: WebhooksView }) {
                   <span className="mt-1 block text-sm text-ink-soft">
                     {endpoint.events.length === ALL.length ? "Every event" : endpoint.events.map((key) => EVENTS.find((e) => e.key === key)?.label ?? key).join(", ")}
                   </span>
+                  {endpoint.oldSecretUntil ? <span className="mt-1 block text-xs text-ink-soft">{`Old secret still signs until ${when(Date.parse(endpoint.oldSecretUntil))}`}</span> : null}
                 </span>
                 <span className="flex flex-wrap gap-2">
                   <button type="button" onClick={() => test(endpoint.id)} disabled={busy !== null} aria-busy={busy === `test:${endpoint.id}`} className="btn btn-secondary btn-sm">
@@ -181,6 +205,18 @@ export function WebhookEditor({ view: initial }: { view: WebhooksView }) {
                   >
                     Events
                   </button>
+                  <ConfirmAction
+                    className="btn btn-ghost btn-sm"
+                    disabled={busy !== null}
+                    busy={busy === `rotate:${endpoint.id}`}
+                    label={`New secret for ${endpoint.where}`}
+                    question="Make a new signing secret? It is shown once. Your old one keeps signing beside it for a day, then stops."
+                    yes="Yes, make a new one"
+                    onConfirm={() => rotate(endpoint.id, endpoint.where)}
+                  >
+                    <Icon name="key" size={16} />
+                    New secret
+                  </ConfirmAction>
                   <ConfirmAction
                     className="btn btn-ghost btn-sm"
                     disabled={busy !== null}
@@ -274,7 +310,9 @@ export function WebhookEditor({ view: initial }: { view: WebhooksView }) {
           <li>
             Every message is signed. The header <span className="font-mono">Marktmorgen-Signature</span> reads{" "}
             <span className="font-mono">t=&lt;time&gt;,v1=&lt;signature&gt;</span>: the signature is HMAC-SHA256, in hex, of
-            the time, a dot and the raw body, with your endpoint&apos;s secret.
+            the time, a dot and the raw body, with your endpoint&apos;s secret. For a day after you make a new secret, a second{" "}
+            <span className="font-mono">v1=</span> is added, signed with the old one: accept a message when any{" "}
+            <span className="font-mono">v1</span> matches your secret.
           </li>
         </ul>
       </details>
@@ -292,7 +330,13 @@ export function WebhookEditor({ view: initial }: { view: WebhooksView }) {
                     <span className="text-ink-soft">{` · ${when(d.createdAt)} · `}</span>
                     <span className="break-all text-ink-soft">{d.endpoint}</span>
                     {d.lastError && d.state !== "delivered" ? <span className="block text-xs text-ink-soft">{d.lastError}</span> : null}
+                    {d.resentFrom ? <span className="block text-xs text-ink-soft">Sent again by hand</span> : null}
                   </span>
+                  {d.state === "failed" && d.type !== "test" ? (
+                    <button type="button" onClick={() => resend(d.id)} disabled={busy !== null} aria-busy={busy === `resend:${d.id}`} aria-label={`Send the ${d.type} of ${when(d.createdAt)} to ${d.endpoint} again`} className="btn btn-secondary btn-sm shrink-0">
+                      {busy === `resend:${d.id}` ? "Sending…" : "Send again"}
+                    </button>
+                  ) : null}
                   <span
                     className={`shrink-0 text-xs font-semibold ${result.tone === "ok" ? "text-mint-deep" : result.tone === "bad" ? "text-danger" : "text-ink-soft"}`}
                   >
