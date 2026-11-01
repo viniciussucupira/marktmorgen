@@ -1884,7 +1884,7 @@ const BASE_FEATURE_PAGES: TopicPage[] = [
     title: "Reviews only a buyer",
     highlight: "can write",
     intro:
-      "Stars and words from people your own Stripe account says paid. You can answer a review and hide one, but never change a word of it, and hiding one never lifts your average.",
+      "Stars and words from people your own Stripe account says paid. You can answer a review, and hide one only when it breaks a review rule (the same rules for every rating), but never change a word of it, and hiding one never lifts your average.",
     badge: WORKING,
     accent: "from-amber-brand to-pink-brand",
     plan: "creator",
@@ -1910,7 +1910,7 @@ const BASE_FEATURE_PAGES: TopicPage[] = [
         title: "The rules, and why they help you",
         items: [
           { icon: "check", title: "One voice per buyer", body: "One review per buyer and product, even if they bought it twice. They can change it or delete it." },
-          { icon: "eye", title: "Hiding is said out loud", body: "A hidden review's words leave the page, but its stars stay in the average and the count, and the page says how many are hidden." },
+          { icon: "eye", title: "Hiding is said out loud", body: "A review is hidden only for a review rule, such as private information or abuse, never for its stars. Its words leave the page, but its stars stay in the average and the count, and the page says how many are hidden." },
           { icon: "ban", title: "A refund takes its stars back", body: "A payment refunded in full takes that review's stars out of the average. Its words stay, marked as refunded." },
           { icon: "chat", title: "Your answer, in public", body: "Up to 1,000 characters under any review. On " + AI_PLANS_WORDS + ", AI can draft it from the review itself, in the buyer's language: thanking them, answering what they said, and for a low rating owning it without arguing or promising anything you did not. You read it, change it and post it." },
           { icon: "user", title: "Their email is never shown", body: "Only the name they chose. Each review keeps its order reference, so you can find the payment in your Stripe dashboard." },
