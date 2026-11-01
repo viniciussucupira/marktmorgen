@@ -821,6 +821,24 @@ export function handleProblem(handle: string): HandleProblem {
   return null;
 }
 
+/**
+ * Addresses that could pass for Marktmorgen's own (568 [GD2] (j)): never claimed, never taken in a rename. Only
+ * taking an address is refused here; a store that already holds one keeps working (storeForHandle reads
+ * handleProblem), so no creator's store goes dark.
+ */
+const IMPERSONATING = new Set([
+  "official", "security", "secure", "billing", "payments", "checkout", "staff", "team", "moderator", "verify",
+  "verified", "trust", "safety", "abuse", "press", "status", "noreply", "no-reply", "helpdesk",
+]);
+
+/** What stops an address from being claimed or taken: its shape, the site's own names, or passing for ours. */
+export function claimProblem(handle: string): HandleProblem {
+  const problem = handleProblem(handle);
+  if (problem) return problem;
+  if (IMPERSONATING.has(handle) || handle.includes("marktmorgen") || handle.includes("solrenning")) return "reserved";
+  return null;
+}
+
 async function sha256Hex(value: string): Promise<string> {
   const data = new TextEncoder().encode(value);
   const digest = await crypto.subtle.digest("SHA-256", data);
@@ -1678,7 +1696,7 @@ export async function claimHandle(
   rawBio: string,
 ): Promise<ClaimResult> {
   const handle = normaliseHandle(rawHandle);
-  const problem = handleProblem(handle);
+  const problem = claimProblem(handle);
   if (problem) return { ok: false, reason: problem };
 
   const existing = await storeForEmail(email);
@@ -1725,7 +1743,7 @@ export async function createStore(
   rawBio: string,
 ): Promise<CreateResult> {
   const handle = normaliseHandle(rawHandle);
-  const problem = handleProblem(handle);
+  const problem = claimProblem(handle);
   if (problem) return { ok: false, reason: problem };
   if (!(await storeForEmail(email))) return { ok: false, reason: "first" };
 
@@ -1849,7 +1867,7 @@ export async function renameHandle(
   rawHandle: string,
 ): Promise<RenameResult> {
   const handle = normaliseHandle(rawHandle);
-  const problem = handleProblem(handle);
+  const problem = claimProblem(handle);
   if (problem) return { ok: false, reason: problem };
 
   const result = await withStore<RenameResult>(email, async (store, save) => {
