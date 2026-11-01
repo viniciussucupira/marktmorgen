@@ -136,7 +136,7 @@ The screen-by-screen audit that 487 [IT4] asks for: what was checked, what was f
 
 **Still to do.**
 - A ready example for products, blog posts, forms, after-purchase offers and community setup. Each is new content, written once, and gets its own unit: nothing a creator sees is made up.
-- The contacts page: an action for an empty list of recent buyers.
+- Not applicable, with the reason: the contacts page's empty "Your latest buyers" is a lookup of who bought, not a screen to make something. There is no buyer to "add", and its one next step, earlier purchases in the Stripe dashboard, is already said. A button there would be one that does nothing new.
 
 ## Where each pattern stands
 
