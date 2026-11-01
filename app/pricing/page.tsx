@@ -2,7 +2,6 @@ import { TrustChecks } from "@/components/trust-checks";
 import { PricingValue } from "@/components/pricing-value";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Suspense } from "react";
 import { Pricing } from "@/components/home-parts";
 import { isDomainsConfigured } from "@/lib/domains";
 import { feeWords } from "@/lib/fee-words";
@@ -46,9 +45,10 @@ export default function PricingPage() {
   */}
   <section id="plans" data-plan-prices aria-labelledby="plans-heading" className="mt-2 scroll-mt-24">
    <h2 id="plans-heading" className="sr-only">Plan prices</h2>
-   <Suspense fallback={null}>
-    <Pricing domains={DOMAINS} />
-   </Suspense>
+   {/* No Suspense here: React streams a large boundary after the rest of the page even when it is ready,
+       so the plans arrived after the first paint and pushed everything under them down (layout shift 0.38
+       on a slow phone, 1 November 2026). The cards' own boundaries inside stay, for hydrating each apart. */}
+   <Pricing domains={DOMAINS} />
   </section>
   <div className="mt-20"><PricingValue place="plans" /></div>
   <section aria-labelledby="limits-heading" className="mt-20">
