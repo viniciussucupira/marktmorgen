@@ -47,7 +47,12 @@ import { IMAGE_FILE_PATTERN, IMAGE_FOLDER_PATTERN, MAX_IMAGE_BYTES, imageType } 
 import { sniffPhotoType } from "@/lib/store-photo";
 import { SITE_URL } from "@/lib/site-url";
 
-/** The owner's request-limit rule on the images' domain, as reviewed. */
+/**
+ * The owner's rules on the images' domain, as reviewed: the request limit, and (since public pages take marked
+ * pictures from there, unit 4c) the response-header rule adding X-Content-Type-Options: nosniff,
+ * Content-Security-Policy: default-src 'none'; sandbox and Cross-Origin-Resource-Policy: cross-origin, as
+ * app/api/image sends. Recorded only when both exist.
+ */
 export type PictureR2Ceiling = { rule: string; reviewedAt: string; source: string };
 
 /** No rule recorded yet: off. */

@@ -1,3 +1,4 @@
+import { servedImageUrl, servedSrcSet } from "@/lib/picture-served";
 import { packageSaving } from "@/lib/call-package-rules";
 import { saleClock, saleOff, salePrice } from "@/lib/store-sale";
 import { activeIntro } from "@/lib/intro-price";
@@ -12,7 +13,7 @@ import { activeBumps, activePlan, planFor } from "@/lib/product-extras";
 import { activeShipping, shipsToWords } from "@/lib/shipping";
 import { shippingWords } from "@/lib/buyer-words/shipping";
 import { activePwyw } from "@/lib/pay-what-you-want";
-import { imageUrl, IMAGE_SIZES, imageSrcSet } from "@/lib/product-image";
+import { IMAGE_SIZES } from "@/lib/product-image";
 import type { PageAction } from "@/components/sales-blocks";
 import { RatingLine } from "@/components/review-list";
 import type { Summary } from "@/lib/review-summary";
@@ -1149,8 +1150,8 @@ export function ProductCard({
     // and picks between the two itself (lib/product-image.ts, imageSrcSet).
     // eslint-disable-next-line @next/next/no-img-element
     <img
-      src={imageUrl(image)}
-      srcSet={imageSrcSet(image)}
+      src={servedImageUrl(image)}
+      srcSet={servedSrcSet(image)}
       sizes={image.small ? (style === "preview" ? IMAGE_SIZES.cover : IMAGE_SIZES.thumb) : undefined}
       alt={image.alt}
       width={image.width}
