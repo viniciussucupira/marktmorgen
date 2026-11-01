@@ -1999,6 +1999,7 @@ Proveniência AB: passou a fazer parte do Bloco de abertura, posição (h), por 
 
 94. **[D2-BUYER-TRUST] Cartão de confiança factual para o comprador**
    - Pedido: P4, atualização70946172-40e4-4720-9329-d64271855eb4;19/10/2026, hora original não fornecida.
+   - Estado (Claude 2, 1/11/2026): **em andamento**, unidade 0 (desenho) num PR: docs/buyer-trust-card.md (fato a fato: política de reembolso sem campo estruturado, só texto; entregas sem registro de entrega, só pedidos do Stripe; tempo de resposta não registrado; idade da loja em createdAt; ativação do Stripe por readAccount, nunca "identidade verificada"; unidades 1–5, com o tempo de resposta em Depende do dono). Arquivo reservado: docs/buyer-trust-card.md.
    - Estado: **a fazer**. Posição vigente: OR: Bloco B, posição 10/81, após 272 [HM1] e antes das Partes B e C de 274 [AX1]; antes de começar, conferir sobreposição no código, na fila 203–275 e no já publicado; absorção somente com prova, parcial somente pela diferença.
    - Histórico OR — estado anterior à atualização documental: - Estado: **a fazer**.
    - Escopo e prova: Sistema calcula política de reembolso, entregas recentes bem-sucedidas, tempo médio de resposta, idade da loja e identidade verificada pelo Stripe, somente quando comprováveis. Nada preenchido manualmente pelo criador como se fosse verificação; privacidade, períodos, amostra/indisponibilidade e custo de leitura precisam de definição.
