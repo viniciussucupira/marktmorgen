@@ -6,7 +6,7 @@ import { toast } from "@/components/toast";
 import { Icon } from "@/components/icons";
 
 type Kind = "download" | "course" | "call" | "membership";
-type Setup = { bios: string[]; products: { title: string; summary: string; kind: Kind; price: string }[]; faq: { q: string; a: string }[] };
+type Setup = { bios: string[]; products: { title: string; summary: string; kind: Kind; price: string }[]; faq: { q: string; a: string }[]; questions?: { q: string; options: string[] }[] };
 type Row = Setup["products"][number] & { keep: boolean };
 
 const KIND_WORDS: Record<Kind, string> = {
@@ -35,16 +35,22 @@ export function StoreSetupAi({ currency, left: startLeft, hasFaq, storeName }: {
   const [bio, setBio] = useState("");
   const [rows, setRows] = useState<Row[]>([]);
   const [keepFaq, setKeepFaq] = useState(!hasFaq);
+  // 219 [OP5] unit 3: the answers pressed for the draft's questions, by question.
+  const [picked, setPicked] = useState<Record<number, string>>({});
 
-  async function draft() {
+  async function draft(answered: { q: string; a: string }[] = []) {
     if (drafting) return;
     setDrafting(true);
     setNote("");
     try {
-      const response = await fetch("/api/store/ai", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ kind: "setup", about, notes: selling }) });
+      // The answers travel with what the creator sells, in their words, so the next draft starts from them.
+      const notes = [selling, ...answered.map((x) => `${x.q} ${x.a}`)].filter((x) => x.trim()).join("\n");
+      const response = await fetch("/api/store/ai", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ kind: "setup", about, notes }) });
       const data = (await response.json().catch(() => ({}))) as { ok?: boolean; value?: Setup; left?: number; error?: string };
       if (data.ok && data.value) {
         setSetup(data.value);
+        setPicked({});
+        if (answered.length) setSelling([selling, ...answered.map((x) => `${x.q} ${x.a}`)].filter((x) => x.trim()).join("\n"));
         setBio(data.value.bios[0] ?? "");
         setRows(data.value.products.map((p) => ({ ...p, keep: true })));
         if (typeof data.left === "number") setLeft(data.left);
@@ -122,14 +128,43 @@ export function StoreSetupAi({ currency, left: startLeft, hasFaq, storeName }: {
         </div>
       </div>
       <div className="mt-4 flex flex-wrap items-center gap-3">
-        <button type="button" onClick={draft} disabled={drafting || !about.trim()} aria-busy={drafting} className="btn btn-primary">
+        <button type="button" onClick={() => draft()} disabled={drafting || !about.trim()} aria-busy={drafting} className="btn btn-primary">
           <Icon name="sparkle" size={16} />
           {drafting ? "Drafting your store…" : setup ? "Draft it again" : "Draft my store"}
         </button>
         <span className="text-sm text-ink-soft">{`One draft counts once. ${left} left this month.`}</span>
       </div>
 
-      {setup ? (
+      {setup?.questions?.length ? (
+        <section aria-labelledby="setup-questions-title" className="mt-6 rounded-2xl bg-paper p-4 ring-1 ring-line">
+          <h3 id="setup-questions-title" className="text-base font-semibold text-ink">{setup.questions.length === 1 ? "One question first" : `${setup.questions.length} quick questions first`}</h3>
+          <p className="mt-1 text-sm text-ink-soft">Your words did not say this yet. Press an answer for each, then continue. The next draft counts once.</p>
+          {setup.questions.map((question, i) => (
+            <fieldset key={i} className="mt-4">
+              <legend className="text-sm font-semibold text-ink">{question.q}</legend>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {question.options.map((option) => (
+                  <label key={option} className={`btn btn-sm cursor-pointer focus-within:outline focus-within:outline-[3px] focus-within:outline-offset-2 focus-within:outline-[var(--ink)] ${picked[i] === option ? "btn-primary" : "btn-secondary"}`}>
+                    <input type="radio" name={`setup-question-${i}`} value={option} checked={picked[i] === option} onChange={() => setPicked({ ...picked, [i]: option })} className="sr-only" />
+                    {option}
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+          ))}
+          <button
+            type="button"
+            className="btn btn-primary mt-4"
+            disabled={drafting || setup.questions.some((_, i) => !picked[i])}
+            aria-busy={drafting}
+            onClick={() => draft((setup.questions ?? []).map((question, i) => ({ q: question.q, a: picked[i] ?? "" })))}
+          >
+            {drafting ? "Drafting your store…" : "Continue"}
+          </button>
+        </section>
+      ) : null}
+
+      {setup && (setup.bios.length || setup.products.length) ? (
         <div className="mt-6 space-y-6">
           {setup.bios.length ? (
             <fieldset>
