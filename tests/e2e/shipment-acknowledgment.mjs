@@ -56,7 +56,8 @@ export async function checkShipmentAcknowledgment({browser,LOCAL,fixture,shipmen
      is("confirmed shipment has truthful persistent status "+scenario.name+"/"+width,(await status.innerText()).includes("Marked as shipped on"),true);
      is("persistent shipment never asserts email delivery "+scenario.name+"/"+width,/told|emailed/.test(await status.innerText()),false);
      if(scenario.mail)is("durable shipment mail state stays explicit "+scenario.name+"/"+width,(await status.innerText()).includes(scenario.mail),true);
-     await page.locator('.nb-toast-region [role="status"]').getByText(scenario.emailed?"Marked as shipped. The email was accepted for sending.":"Marked as shipped. No new email was confirmed.",{exact:true}).waitFor();
+     const toast=scenario.emailed?"Marked as shipped. The email was accepted for sending.":scenario.body.mail?.state==="queued"?"Marked as shipped. The email is saved and waiting.":"Marked as shipped. No new email was confirmed.";
+     await page.locator('.nb-toast-region [role="status"]').getByText(toast,{exact:true}).waitFor();
      is("confirmed tracking remains safe "+scenario.name+"/"+width,await status.getByRole("link").getAttribute("href"),shipped.tracking);
     }else{
      const alert=form.getByRole("alert");await alert.waitFor();
