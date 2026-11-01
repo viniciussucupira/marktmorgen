@@ -1,4 +1,3 @@
-import { EmailField } from "@/components/email-field";
 import type { Metadata } from "next";
 import { connection } from "next/server";
 import { cache } from "react";
@@ -153,7 +152,8 @@ export default async function EmbedJoin({ params, searchParams }: Params) {
           {w.label}
         </label>
         <div className="flex flex-col gap-2">
-          <EmailField id="embed-join-email" name="email" className="st-field min-w-0" required autoComplete="email" placeholder={said.w.emailPlaceholder} language={store.language} />
+          {/* A plain field here: the frame on the creator's site has a fixed height, and the suggestion line would be cut off in it (308 [TC1]). */}
+          <input id="embed-join-email" type="email" name="email" required maxLength={254} autoComplete="email" placeholder={said.w.emailPlaceholder} className="st-field min-w-0" />
           <button type="submit" className="btn st-btn btn-block">
             {w.button}
           </button>

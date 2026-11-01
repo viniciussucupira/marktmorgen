@@ -90,10 +90,10 @@ export default async function PodcastPage({ params, searchParams }: Params) {
               <form action="/api/store/podcast/link" method="post" className="mt-6 space-y-3">
                 <input type="hidden" name="handle" value={store.handle} />
                 <input type="hidden" name="product" value={product.id} />
-                <label className="block">
-                  <span className="st-label">{said.w.yourEmail}</span>
-                  <EmailField name="email" className="st-field mt-2" required autoComplete="email" placeholder={said.w.emailPlaceholder} language={store.language} />
-                </label>
+                <div>
+                  <label htmlFor={`podcast-email-${product.id}`} className="st-label">{said.w.yourEmail}</label>
+                  <EmailField id={`podcast-email-${product.id}`} name="email" className="st-field mt-2" required autoComplete="email" placeholder={said.w.emailPlaceholder} language={store.language} />
+                </div>
                 <button type="submit" className="btn st-btn btn-block">{w.emailMyFeed}</button>
               </form>
             </>

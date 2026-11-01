@@ -31,7 +31,7 @@ export function StoreJoinBox({ store }: { store: Store }) {
         <label htmlFor="join-email" className="sr-only">
           {w.label}
         </label>
-        <div className="flex flex-col gap-2 sm:flex-row">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-start">
           <EmailField id="join-email" name="email" className="st-field w-full" wrapClassName="min-w-0 flex-1" required autoComplete="email" placeholder={said.w.emailPlaceholder} language={store.language} />
           <button type="submit" className="btn st-btn shrink-0">
             {w.button}

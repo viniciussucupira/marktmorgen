@@ -25,7 +25,6 @@ const FIELDS: [string, string[]][] = [
   ["app/[handle]/course/[product]/page.tsx", ["email"]],
   ["app/[handle]/podcast/[product]/page.tsx", ["email"]],
   ["app/[handle]/group/[group]/page.tsx", ["email"]],
-  ["app/embed/[handle]/join/page.tsx", ["email"]],
   ["components/community-parts.tsx", ["email"]],
   ["components/store-join-box.tsx", ["email"]],
   ["components/store-contact-box.tsx", ["email"]],
@@ -45,12 +44,17 @@ function main(): void {
 
   part("What it draws");
   const html = renderToStaticMarkup(createElement(EmailField, { id: "orders-email", name: "email", className: "st-field", required: true, placeholder: "you@example.com", language: "fr" }));
-  is("an email input with the same id, name and look, posting what is typed", html.includes('<input id="orders-email" type="email" required="" maxLength="254" autoComplete="email" placeholder="you@example.com" aria-describedby="orders-email-suggestion" class="st-field" name="email" value=""/>'), true);
+  is("an email input with the same id, name and look, left to the browser (what is typed before the scripts load is kept)", /<input id="orders-email" type="email" required="" maxLength="254" autoComplete="email" placeholder="you@example.com" aria-describedby="orders-email-suggestion" class="st-field" name="email" value=""\/>/.test(html) && !/value=\{value\}/.test(/<input[\s\S]*?\/>/.exec(read("components/email-field.tsx"))?.[0] ?? "value={value}") && read("components/email-field.tsx").includes("defaultValue={defaultValue}"), true);
   is("then its line, an empty polite region", html.includes('<div id="orders-email-suggestion" aria-live="polite" data-email-suggestion="true"></div>'), true);
   const kept = renderToStaticMarkup(createElement(EmailField, { name: "paypal", className: "st-field", defaultValue: "pay@example.com" }));
   is("a field with a saved address starts with it", kept.includes('value="pay@example.com"'), true);
   const field = read("components/email-field.tsx");
-  is("the first send of a likely slip waits once", /if \(!holdForSuggestion\(typed, shown\.current\)\) return;\s*event\.preventDefault\(\);\s*shown\.current = typed;/.test(field), true);
+  is("the first send of a likely slip waits once, before any other listener", /if \(!holdForSuggestion\(typed, shown\.current\)\) return;\s*event\.preventDefault\(\);\s*event\.stopImmediatePropagation\(\);\s*shown\.current = typed;/.test(field) && field.includes('window.addEventListener("submit", onSubmit, true)'), true);
+  is("a hidden field holds nothing back", field.includes("if (own.getClientRects().length === 0) return;"), true);
+  is("what was typed before the scripts loaded is read once they do", field.includes("setValue(own.value);"), true);
+  is("no email field sits inside a label that wraps it (its name would take the line in)", FIELDS.every(([file]) => !/<label[^>]*>\s*<span[^>]*>[^<]*<\/span>\s*<EmailField/.test(read(file))), true);
+  is("the embed's fixed-height frame keeps a plain field", /<input id="embed-join-email" type="email"/.test(read("app/embed/[handle]/join/page.tsx")), true);
+  is("a button beside a field is not stretched by the line", ["app/[handle]/course/[product]/page.tsx", "components/community-parts.tsx", "components/store-join-box.tsx"].every((file) => read(file).includes("sm:flex-row sm:items-start")), true);
   is("and a send the browser stops for a bad shape shows the line too", field.includes("onInvalid={() => setLeft(true)}"), true);
   is("the line in the store's own look", /store \? "st-note mt-2 text-sm/.test(read("components/email-suggestion.tsx")) && /store \? "st-btn-ghost"/.test(read("components/email-suggestion.tsx")), true);
 }

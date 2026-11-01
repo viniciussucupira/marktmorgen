@@ -301,10 +301,10 @@ export function GiftBox({ store, product, problem = "", consentAgain = false }: 
           <p className="st-note text-sm" role="alert">{problems[problem]}</p>
         ) : null}
         <GivenOptionPicker store={store} product={product} />
-        <label className="block">
-          <span className="st-label">{w.theirEmail}</span>
-          <EmailField name="gift_to" className="st-field mt-2" required autoComplete="off" placeholder={w.friendPlaceholder} language={store.language} />
-        </label>
+        <div>
+          <label htmlFor={`gift-to-${product.id}`} className="st-label">{w.theirEmail}</label>
+          <EmailField id={`gift-to-${product.id}`} name="gift_to" className="st-field mt-2" required autoComplete="off" placeholder={w.friendPlaceholder} language={store.language} />
+        </div>
         <label className="block">
           <span className="st-label">{w.yourNameShown}</span>
           <input className="st-field mt-2" name="gift_from" maxLength={60} autoComplete="name" placeholder={w.namePlaceholder} />
@@ -373,10 +373,10 @@ export function RemindBox({ store, product, asked = "", when = "hour" }: { store
               <input type="text" name="website" tabIndex={-1} autoComplete="off" />
             </label>
           </div>
-          <label className="block">
-            <span className="st-label">{w.yourEmail}</span>
-            <EmailField name="email" className="st-field mt-2" required autoComplete="email" placeholder={w.emailPlaceholder} language={store.language} />
-          </label>
+          <div>
+            <label htmlFor={`ask-email-${product.id}`} className="st-label">{w.yourEmail}</label>
+            <EmailField id={`ask-email-${product.id}`} name="email" className="st-field mt-2" required autoComplete="email" placeholder={w.emailPlaceholder} language={store.language} />
+          </div>
           <label className="block">
             <span className="st-label">{m.askWhen}</span>
             <select className="st-field mt-2" name="when" defaultValue={said}>

@@ -678,7 +678,7 @@ export function Gate({
           <input type="hidden" name="handle" value={store.handle} />
           <label htmlFor="community-email" className="st-label">{state === "closed" ? w.tryAnotherAddress : w.alreadyMember}</label>
           <p className="st-muted mt-1 text-sm">{w.linkExplain}</p>
-          <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+          <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-start">
             <EmailField id="community-email" name="email" className="st-field w-full" wrapClassName="min-w-0 flex-1" required autoComplete="email" placeholder={speech(store).w.emailPlaceholder} language={store.language} />
             <button type="submit" className="btn st-btn">{w.sendLink}</button>
           </div>
