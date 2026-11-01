@@ -8,6 +8,7 @@ import {unseal} from "@/lib/secret-box";
 import type {Store} from "@/lib/store";
 import {store as redis} from "./redis-stub";
 import {courseCandidateWorld} from "./order-confirmation-course-world";
+import {DIGITAL_CONSENT_WORDS} from "@/lib/buyer-words/digital-consent";
 
 process.env.NIMBUS_DATA_KEY="SYNTHETIC_ONLY_course_origin_binding_key_2026";
 globalThis.fetch=async()=>{throw Error("No provider may be called in course binding tests");};
@@ -132,4 +133,30 @@ test("a new issuer-selected identity is sealed, not a claim that caller data cam
  assert.equal(opened.candidate.identity.sid,"e".repeat(32));assert.equal(opened.candidate.identity.courseId,"f".repeat(32));closed(opened);
  // A producer must obtain these selected values from its trusted server reads.
  assert.ok(captureCourseConfirmationCandidate(f.input.store,f.input.product,f.input.metadata));
+});
+
+test("an authenticated historical consent snapshot survives later changes to current wording",async()=>{
+ const f=await fixture(),token=await prepareCourseOriginBinding(f.input);assert.ok(token);
+ const original=openCourseOriginBinding(token.token,token.nonce);assert.ok(original);
+ const words=DIGITAL_CONSENT_WORDS.en,box=words.box.digital,line=words.email.now;
+ try{
+  words.box.digital="New wording after this order was captured.";
+  words.email.now=()=>"A later confirmation template must not replace original text.";
+  const recovered=openCourseOriginBinding(token.token,token.nonce);assert.ok(recovered);
+  assert.deepEqual(recovered.candidate.consent,original.candidate.consent);
+  assert.equal(recovered.candidate.captureFingerprint,original.candidate.captureFingerprint);
+ }finally{words.box.digital=box;words.email.now=line;}
+});
+
+test("a preexisting inherited JSON hook neither executes nor issues a new binding",async()=>{
+ const f=await fixture(),token=await prepareCourseOriginBinding(f.input);assert.ok(token);
+ const descriptor=Object.getOwnPropertyDescriptor(Object.prototype,"toJSON");let hooks=0,issued,opened;
+ try{
+  Object.defineProperty(Object.prototype,"toJSON",{configurable:true,get(){hooks++;return undefined;}});
+  issued=await prepareCourseOriginBinding(f.input);
+  opened=openCourseOriginBinding(token.token,token.nonce);
+ }finally{
+  if(descriptor)Object.defineProperty(Object.prototype,"toJSON",descriptor);else Reflect.deleteProperty(Object.prototype,"toJSON");
+ }
+ assert.equal(hooks,0);assert.equal(issued,null);assert.ok(opened);
 });
