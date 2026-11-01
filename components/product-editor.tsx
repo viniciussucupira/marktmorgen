@@ -69,7 +69,9 @@ import {
   membershipPrice,
 } from "@/lib/product-recurring";
 import { MAX_INTRO_COUNT, introLineEnglish } from "@/lib/intro-price";
-import { MAX_ABOUT_LENGTH } from "@/lib/product-about";
+import { MAX_ABOUT_LENGTH, aboutBlocks } from "@/lib/product-about";
+import { ProductAbout } from "@/components/product-about-view";
+import { type StoreLook, lookStyle } from "@/lib/store-look";
 import { imageUrl } from "@/lib/product-image";
 import { StoreField, useStudioHref, useStudioStore } from "@/components/studio-store-pin";
 import { STUDIO_MESSAGES } from "@/lib/studio-messages";
@@ -288,6 +290,7 @@ function ProductForm({
   product,
   loadingAbout = false,
   ownHosts = [],
+  preview = null,
 }: {
   draft: Draft;
   setDraft: (draft: Draft) => void;
@@ -302,8 +305,44 @@ function ProductForm({
   loadingAbout?: boolean;
   /** The store's own hosts besides its marktmorgen.com address (its own domain), not warned as "another site". */
   ownHosts?: string[];
+  /** The store's look and language, so the product's own words are previewed as buyers see them (487 [IT4], pattern 7). */
+  preview?: { look: StoreLook; language: LanguageCode } | null;
 }) {
   const id = product?.id ?? "new";
+  // The preview starts at a phone's width, where most product pages are read.
+  const [phone, setPhone] = useState(true);
+  const toggle = (on: boolean) => `inline-flex min-h-11 items-center rounded-full px-4 text-sm font-semibold ${on ? "bg-white text-ink shadow-sm" : "text-ink-soft"}`;
+  // The title, summary and description as the product page draws them (components/product-about-view.tsx), from what is typed now.
+  const pagePreview = preview ? (
+    <div className="min-w-0">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-sm text-ink-soft">As buyers see it</p>
+        <div role="group" aria-label="Preview width" className="inline-flex rounded-full bg-sand p-1">
+          <button type="button" className={toggle(phone)} aria-pressed={phone} onClick={() => setPhone(true)}>
+            Phone
+          </button>
+          <button type="button" className={toggle(!phone)} aria-pressed={!phone} onClick={() => setPhone(false)}>
+            Wide
+          </button>
+        </div>
+      </div>
+      <p className="mt-1 text-xs text-ink-soft">The same words as in the form, laid out as your product&apos;s page shows them. The price and the buy box are drawn on the page from what you save, so they are not shown here. Nothing in it can be pressed here.</p>
+      <div className="mt-1 overflow-hidden rounded-2xl ring-1 ring-line">
+        <div
+          // Inert: its links stay out of the Tab order and out of reach of a click that would leave the form.
+          inert
+          className={`st-page st-theme-${preview.look.theme} mx-auto px-4 pb-8 pt-6`}
+          style={{ ...(lookStyle(preview.look) as React.CSSProperties), maxWidth: phone ? 390 : "100%" }}
+        >
+          <div className="st-card p-6 sm:p-8">
+            <p className="font-display text-2xl font-semibold leading-tight tracking-[-0.02em]">{draft.title.trim() || "Your product's name"}</p>
+            {draft.summary.trim() ? <p className="st-muted mt-4 text-lg leading-relaxed">{draft.summary}</p> : null}
+            {draft.about.trim() ? <ProductAbout blocks={aboutBlocks(draft.about)} language={preview.language} /> : null}
+          </div>
+        </div>
+      </div>
+    </div>
+  ) : null;
   const currency = useStoreCurrency();
   const prefix = fieldPrefix(currency);
   const free = typedFree(draft.price);
@@ -399,7 +438,8 @@ function ProductForm({
         </p>
       </div>
 
-      <div>
+      <div className="grid min-w-0 gap-4 xl:grid-cols-2">
+      <div className="min-w-0">
         <label htmlFor={`product-about-${id}`} className="field-label">
           The full description <span className="font-normal text-ink-soft">(optional)</span>
         </label>
@@ -442,6 +482,17 @@ function ProductForm({
             onChange={(about) => setDraft({ ...draft, about })}
           />
         )}
+      </div>
+      {pagePreview ? (
+        <>
+          {/* Beside the description on a wide screen; on a narrow one, folded. */}
+          <div className="hidden xl:block">{pagePreview}</div>
+          <details className="xl:hidden">
+            <summary className="inline-flex min-h-11 cursor-pointer items-center text-sm font-semibold text-ink underline underline-offset-4">See it as buyers see it</summary>
+            <div className="mt-2">{pagePreview}</div>
+          </details>
+        </>
+      ) : null}
       </div>
 
       <div>
@@ -1575,6 +1626,7 @@ export function ProductEditor({
   preorders = {},
   mailAddress = "",
   cover = null,
+  look = null,
   pairChoices = [],
   ownHosts = [],
 }: {
@@ -1622,6 +1674,8 @@ export function ProductEditor({
   mailAddress?: string;
   /** The store's color, letters, name and language, for the cover maker (components/cover-maker.tsx). */
   cover?: (CoverLook & { language: LanguageCode }) | null;
+  /** The store's look, for the preview of a product's own words. */
+  look?: StoreLook | null;
   /** The store's published products, by name: what a product's "Goes well with" can pick (lib/store-collections.ts). */
   pairChoices?: { id: string; title: string }[];
   /** The store's own domain, if it has one: not warned as "another site" in what the creator writes (493 [DE2]). */
@@ -1878,6 +1932,7 @@ export function ProductEditor({
         <div className="mt-5">
           <ProductForm
             ownHosts={ownHosts}
+            preview={look && cover ? { look, language: cover.language } : null}
             draft={draft}
             setDraft={setDraft}
             busy={busy}
@@ -1985,6 +2040,7 @@ export function ProductEditor({
               <>
               <ProductForm
                 ownHosts={ownHosts}
+                preview={look && cover ? { look, language: cover.language } : null}
                 draft={draft}
                 setDraft={(next) => {
                   setDraft(next);

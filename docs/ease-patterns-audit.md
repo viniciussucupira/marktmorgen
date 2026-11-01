@@ -207,7 +207,7 @@ The screen-by-screen audit that 487 [IT4] asks for: what was checked, what was f
 **Found on the way, not changed here.** The store's muted text on the "sand" theme is 6.51:1 (#5c5244 on #f3ece0, `lib/store-look.ts`), below the 7:1 AAA asks for small text. It is used on published store pages too, so it is the theme's to fix, in its own unit, with every page that uses it checked. The "light" (8.70:1) and "night" (10.14:1) themes pass.
 
 **Still to do, most used first, each with what it needs:**
-- **The product editor.** The product page (`app/[handle]/p/[product]/page.tsx`, 717 lines) is drawn on the server, from dozens of server-only parts: recent sales, the cart, the headline test, sold counts. A faithful preview from the draft first needs its top, price and description pulled into a component that draws from plain data on both sides. That is its own unit, with the page's tests run before and after.
+- **The product editor, its price and buy box.** The product form now previews the product's own words ("As buyers see it"): its name, its summary, and its full description. The description is drawn by `ProductAbout` (`components/product-about-view.tsx`), now shared with the product page, so the two cannot draw it differently. The preview is beside the description on a wide screen, folded on a narrow one, starts at phone width, and is inert. The price and the buy box are not in it: the page draws them from server-only code (`lib/store-checkout.ts`, the sale, the visitor's country), and a preview that guessed them could show a price the page does not. It says so.
 - **Checkout settings.** The checkout is Stripe's own hosted page, so it cannot be drawn here faithfully. A preview there would be a guess, so none is shown. The honest way to see it is a test checkout in the creator's Stripe test mode.
 - **The community composer.** Its words are in the buyer's language, in seven languages, so a preview's sentences need writing in each of them under the rules for buyer languages.
 
@@ -220,5 +220,5 @@ Numbered as in 487 [IT4]:
 4. A label always visible: two passes done (see pattern 4). The home page field remains.
 5. Empty screens with a sentence, a button and a ready example: first pass done (see pattern 5). Four screens fixed; ready examples for five screens still to write.
 6. Drafts never lost: done for the editors read (see pattern 6). Saving by itself, with "Saving…" and "Saved", is not built yet, because it needs its own ceiling on saves per plan first.
-7. A live phone preview beside each editor: first pass done (see pattern 7). The page, email, blog and lesson editors have it; three editors are listed.
+7. A live phone preview beside each editor: first pass done (see pattern 7). The page, email, blog and lesson editors have it, and the product form for its own words; checkout and community are listed.
 8. A "Check answers" summary with "Change" on each item before publishing or sending: first pass done (see pattern 8); the email broadcast, the waitlist's sale, the update email and a published price change have it; the rest listed.

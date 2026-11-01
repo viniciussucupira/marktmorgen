@@ -36,4 +36,12 @@ is("a lesson's text is previewed by the lesson page's own drawing, in the store'
 is("it starts at phone width, with a Phone or Wide choice, is inert, and folds on a narrow screen", course.includes("const [phone, setPhone] = useState(true);") && course.includes('aria-label="Preview width"') && /inert\s+className=\{`st-page/.test(course) && course.includes("See it as students see it</summary>"), true);
 is("the studio's course page hands the editor its store's look", readFileSync("app/studio/course/[product]/page.tsx", "utf8").includes("look={store.look}"), true);
 is("the lesson's words sit in the same card the lesson page puts behind them", course.includes('<div className="st-card p-5 sm:p-8">') && readFileSync("app/[handle]/course/[product]/[lesson]/page.tsx", "utf8").includes("st-card min-w-0 p-5 sm:p-8"), true);
+
+const productView = readFileSync("components/product-about-view.tsx", "utf8");
+const productPage = readFileSync("app/[handle]/p/[product]/page.tsx", "utf8");
+const productEditor = readFileSync("components/product-editor.tsx", "utf8");
+is("the product page draws its description with the shared component, and keeps no copy of its own", productPage.includes('import { ProductAbout } from "@/components/product-about-view";') && productPage.includes("<ProductAbout blocks={blocks} language={store.language} />") && !productPage.includes("function About("), true);
+is("the product form previews the title, summary and description with that same component, in the store's look", productEditor.includes("<ProductAbout blocks={aboutBlocks(draft.about)} language={preview.language} />") && productEditor.includes("lookStyle(preview.look)"), true);
+is("it says the price and the buy box are not in it, rather than guessing them", productEditor.includes("The price and the buy box are drawn on the page from what you save, so they are not shown here."), true);
+is("it starts at phone width, with a Phone or Wide choice, is inert, and folds on a narrow screen", /inert\s+className=\{`st-page/.test(productEditor) && productEditor.includes("See it as buyers see it</summary>"), true);
 done();
