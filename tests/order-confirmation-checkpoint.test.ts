@@ -118,7 +118,10 @@ async function localPipeline(commands:Command[]):Promise<unknown[]> {
 }
 
 if(process.env.MARKTMORGEN_REDIS_INTEGRATION==="1") test("production TS plus real Redis keeps the other order's hold after a lost ACK and 73h",async()=>{
-  const realAt=Date.now(), realClock={now:()=>realAt},realHour=Math.floor(realAt/3_600_000);
+  const serverTime=(await localPipeline([["TIME"]]))[0];assert.ok(Array.isArray(serverTime));
+  // Deliberately lag the worker without changing the admitted hour/window.
+  const realAt=Number(serverTime[0])*1000+Math.floor(Number(serverTime[1])/1000)-73*3_600_000;
+  const realClock={now:()=>realAt},realHour=Math.floor(realAt/3_600_000);
   const source={...store(),period:{start:Math.floor(realAt/1000)-10*86400,end:Math.floor(realAt/1000)+20*86400,renews:true}};
   const ref=`checkout:cs_test_realCheckpoint${process.pid}`;
   let admissionKeys:string[]=[];
