@@ -1,5 +1,6 @@
 "use client";
 
+import { ConfirmAction } from "@/components/confirm-action";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { AiAssist } from "@/components/ai-assist";
@@ -135,10 +136,12 @@ export function BlogEditor({ post, products, back }: { post: EditedPost; product
           <NewTab /></a>
         ) : null}
         {post.id ? (
-          <button type="button" className="btn btn-ghost ml-auto text-danger" disabled={busy !== null} onClick={() => void remove()}>
-            <Icon name="trash" size={15} />
-            {busy === "delete" ? "Deleting…" : "Delete"}
-          </button>
+          <span className="ml-auto">
+            <ConfirmAction className="btn btn-ghost text-danger" disabled={busy !== null} busy={busy === "delete"} question="Delete this post? It cannot be brought back." yes={busy === "delete" ? "Deleting…" : "Yes, delete"} onConfirm={remove}>
+              <Icon name="trash" size={15} />
+              Delete
+            </ConfirmAction>
+          </span>
         ) : null}
       </div>
     </div>
