@@ -1,6 +1,8 @@
 "use client";
 
 import { ConfirmAction } from "@/components/confirm-action";
+import { UrlField } from "@/components/url-field";
+import { REQUIRED_FETCH_CHECK } from "@/lib/fetch-url-check";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "@/components/toast";
 import { Icon } from "@/components/icons";
@@ -265,16 +267,13 @@ export function WebhookEditor({ view: initial }: { view: WebhooksView }) {
           <label htmlFor="webhook-url" className="field-label">
             Endpoint address (https)
           </label>
-          <input
+          <UrlField
             id="webhook-url"
-            type="url"
-            inputMode="url"
             autoComplete="off"
-            spellCheck={false}
             value={url}
-            onChange={(e) => setUrl(e.target.value)}
+            onChange={setUrl}
+            check={REQUIRED_FETCH_CHECK}
             placeholder="https://hooks.zapier.com/hooks/catch/…"
-            required
             className="field mt-2"
           />
           <fieldset className="mt-4">
