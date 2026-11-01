@@ -20,8 +20,13 @@
 export type FirstFormat = "guide" | "checklist" | "workbook" | "template";
 export const FIRST_FORMATS: readonly FirstFormat[] = ["guide", "checklist", "workbook", "template"];
 
-export type Choice = { id: string; label: string };
-export type Question = { id: string; ask: string; choices: Choice[] };
+export type FirstChoice = { id: string; label: string };
+/**
+ * A question asked by buttons. `forAi`: its answer only shapes how the AI
+ * writes (who it is for, how it sounds), so it is not asked where there is
+ * no AI draft (the Store plan): a button that changes nothing is not shown.
+ */
+export type FirstQuestion = { id: string; ask: string; choices: FirstChoice[]; forAi?: boolean };
 
 export type FormatInfo = {
   name: string;
@@ -29,14 +34,17 @@ export type FormatInfo = {
   what: string;
   /** The label of the one free field: what the creator knows about the subject. */
   know: string;
-  /** An example of an answer, shown inside the field so nobody faces a blank box. */
+  /**
+   * An example of an answer, shown as "For example: …" beside the field,
+   * never put in it, never sent to a model, never kept.
+   */
   example: string;
-  questions: Question[];
+  questions: FirstQuestion[];
 };
 
-const LENGTH = (unit: string, short: string, medium: string, long: string): Question => ({
+const LENGTH = (unit: string, short: string, medium: string, long: string): FirstQuestion => ({
   id: "length",
-  ask: `How long should it be?`,
+  ask: "How long should it be?",
   choices: [
     { id: "short", label: `Short: ${short} ${unit}` },
     { id: "medium", label: `Medium: ${medium} ${unit}` },
@@ -44,9 +52,10 @@ const LENGTH = (unit: string, short: string, medium: string, long: string): Ques
   ],
 });
 
-const READER: Question = {
+const READER: FirstQuestion = {
   id: "reader",
   ask: "Who is it for?",
+  forAi: true,
   choices: [
     { id: "new", label: "People just starting out" },
     { id: "some", label: "People with some experience" },
@@ -54,9 +63,10 @@ const READER: Question = {
   ],
 };
 
-const TONE: Question = {
+const TONE: FirstQuestion = {
   id: "tone",
   ask: "How should it sound?",
+  forAi: true,
   choices: [
     { id: "friendly", label: "Friendly and warm" },
     { id: "direct", label: "Short and direct" },
@@ -69,7 +79,7 @@ export const FORMAT_INFO: Readonly<Record<FirstFormat, FormatInfo>> = {
     name: "Guide",
     what: "A short book that walks the reader through something you know, step by step.",
     know: "What do you know about this, in your own words?",
-    example: "I plan a week of family dinners every Sunday in two hours. I shop once, cook three bases and mix them into five meals.",
+    example: "I plan our family dinners every Sunday. I shop once, cook a few bases and mix them into meals for the week.",
     questions: [
       READER,
       LENGTH("steps", "3", "5", "8"),
@@ -99,7 +109,7 @@ export const FORMAT_INFO: Readonly<Record<FirstFormat, FormatInfo>> = {
         choices: [
           { id: "one", label: "One list" },
           { id: "stages", label: "Grouped by stage: before, during, after" },
-          { id: "topics", label: "Grouped by topic" },
+          { id: "topics", label: "Grouped by topic, named by you" },
         ],
       },
     ],
@@ -108,7 +118,7 @@ export const FORMAT_INFO: Readonly<Record<FirstFormat, FormatInfo>> = {
     name: "Workbook",
     what: "Exercises the reader does on the page, with room to write their answers.",
     know: "What should the reader practice or think through, in your own words?",
-    example: "Finding your first ten clients: who you help, where they are, what you say in your first message.",
+    example: "Finding clients: who you help, where they spend their time, what you say in your first message.",
     questions: [
       READER,
       LENGTH("exercises", "3", "6", "10"),
@@ -146,16 +156,30 @@ export const FORMAT_INFO: Readonly<Record<FirstFormat, FormatInfo>> = {
 };
 
 /** At most five questions, all by buttons (the item's own limit). */
-export const MAX_QUESTIONS = 5;
+export const FIRST_MAX_QUESTIONS = 5;
 
-export type Answers = Partial<Record<string, string>>;
+export type FirstAnswers = Partial<Record<string, string>>;
 
-/** The answer to each question, or its first choice where none was tapped: never an answer the creator did not see. */
-export function answered(format: FirstFormat, answers: Answers): Record<string, string> {
-  const out: Record<string, string> = {};
+/** The questions asked: all of them with AI drafts, only those that change the outline without. */
+export function questionsFor(format: FirstFormat, ai: boolean): FirstQuestion[] {
+  return FORMAT_INFO[format].questions.filter((question) => ai || !question.forAi);
+}
+
+/**
+ * The buttons marked when the screen opens: the first of each question. The
+ * screen draws its starting state from this, so an answer the creator did
+ * not see marked is never used.
+ */
+export function defaultAnswers(format: FirstFormat): Record<string, string> {
+  return Object.fromEntries(FORMAT_INFO[format].questions.map((question) => [question.id, question.choices[0].id]));
+}
+
+/** The answer to each question, or its marked first button where none other was tapped. */
+export function answered(format: FirstFormat, answers: FirstAnswers): Record<string, string> {
+  const out = defaultAnswers(format);
   for (const question of FORMAT_INFO[format].questions) {
     const given = answers[question.id];
-    out[question.id] = question.choices.some((choice) => choice.id === given) ? (given as string) : question.choices[0].id;
+    if (question.choices.some((choice) => choice.id === given)) out[question.id] = given as string;
   }
   return out;
 }
@@ -168,57 +192,91 @@ const PARTS: Record<FirstFormat, Record<string, number>> = {
   template: { short: 3, medium: 5, long: 8 },
 };
 
-/** One part of the outline: a heading, and what the creator writes under it. */
-export type Part = { heading: string; ask: string; kind: "text" | "item" | "exercise" | "field" };
-export type Outline = { format: FirstFormat; title: string; parts: Part[] };
+/**
+ * One part of the outline: a heading, what the creator writes under it, and,
+ * for a checklist in groups, the group it is in (a heading of its own in
+ * the PDF, with its items as a list under it).
+ */
+export type FirstPart = { heading: string; ask: string; kind: "text" | "item" | "exercise" | "field"; group?: number };
+export type FirstOutline = {
+  format: FirstFormat;
+  title: string;
+  /** The creator's own words from the free field, kept as typed, for them to work from. */
+  notes: string;
+  /** The answers it was made from, so the screen and the PDF draw what was chosen. */
+  answers: Record<string, string>;
+  /** A checklist's groups, by name; the creator can rename them. Empty for one list. */
+  groups: string[];
+  parts: FirstPart[];
+};
 
-const GROUPS: Record<string, string[]> = { stages: ["Before", "During", "After"], topics: ["First topic", "Second topic", "Third topic"] };
+const GROUP_NAMES: Record<string, string[]> = { stages: ["Before", "During", "After"], topics: ["Topic one", "Topic two", "Topic three"] };
+const ANSWER_ROOM: Record<string, string> = {
+  lines: "The question or task, then lines for the reader's answer.",
+  boxes: "The question or task, then boxes for the reader to fill in.",
+  both: "The question or task, then lines and boxes for the reader's answer.",
+};
+const FIELD_USE: Record<string, string> = {
+  print: "Name the section and the lines that go in it, with room to write by hand.",
+  type: "Name the section and the fields that go in it, to type into.",
+  both: "Name the section and the lines that go in it, to print or to type into.",
+};
+
+/** The first characters of a text, never cutting a letter or an emoji in two. */
+const firstOf = (text: string, most: number) => Array.from(text.trim()).slice(0, most).join("");
 
 /**
- * The outline for a format and its answers. `title` is the creator's own,
- * or a plain placeholder they are asked to replace; it is never made up from
- * their subject.
+ * The outline for a format, its answers, the creator's title and what they
+ * typed in the free field. Only structure and the creator's own words: a
+ * missing title is a placeholder that asks for one, which publishing refuses.
  */
-export function outlineFor(format: FirstFormat, answers: Answers, title = ""): Outline {
+export function outlineFor(format: FirstFormat, answers: FirstAnswers, title = "", know = ""): FirstOutline {
   const a = answered(format, answers);
-  const count = PARTS[format][a.length] ?? PARTS[format].short;
-  const named = title.trim().slice(0, 120) || `Your ${FORMAT_INFO[format].name.toLowerCase()}'s title`;
-  const parts: Part[] = [];
+  const count = PARTS[format][a.length];
+  const named = firstOf(title, 120) || placeholderTitle(format);
+  const parts: FirstPart[] = [];
+  let groups: string[] = [];
   if (format === "guide") {
-    parts.push({ heading: "Who this is for", ask: "Say who this guide helps and what they will be able to do after reading it.", kind: "text" });
+    parts.push({ heading: "Who this is for", ask: "Say who this guide is for and what it covers. Say only what you can stand behind.", kind: "text" });
     for (let i = 1; i <= count; i += 1) parts.push({ heading: `Step ${i}`, ask: "Name the step, then say what to do and why, in your own words.", kind: "text" });
     if (a.ending === "summary") parts.push({ heading: "Summary", ask: "The steps again, one line each.", kind: "text" });
     if (a.ending === "next") parts.push({ heading: "What to do next", ask: "One thing the reader can do today.", kind: "text" });
   } else if (format === "checklist") {
-    const groups = GROUPS[a.groups] ?? [""];
-    const per = Math.ceil(count / groups.length);
-    let made = 0;
-    for (const group of groups) {
-      for (let i = 1; i <= per && made < count; i += 1, made += 1) {
-        parts.push({ heading: group ? `${group}: item ${i}` : `Item ${made + 1}`, ask: "One thing to do or check, starting with a verb.", kind: "item" });
-      }
-    }
+    groups = GROUP_NAMES[a.groups] ?? [];
+    const sizes = groups.length ? groups.map((_, g) => Math.floor(count / groups.length) + (g < count % groups.length ? 1 : 0)) : [count];
+    sizes.forEach((size, g) => {
+      for (let i = 1; i <= size; i += 1) parts.push({ heading: `Item ${i}`, ask: "One thing to do or check, starting with a verb.", kind: "item", ...(groups.length ? { group: g } : {}) });
+    });
   } else if (format === "workbook") {
     parts.push({ heading: "How to use this workbook", ask: "Say how long each exercise takes and what the reader needs.", kind: "text" });
-    for (let i = 1; i <= count; i += 1) parts.push({ heading: `Exercise ${i}`, ask: "The question or task, then room for the reader's answer.", kind: "exercise" });
+    for (let i = 1; i <= count; i += 1) parts.push({ heading: `Exercise ${i}`, ask: ANSWER_ROOM[a.answers], kind: "exercise" });
   } else {
     parts.push({ heading: "How to fill this in", ask: "One or two sentences on how to use the template.", kind: "text" });
-    for (let i = 1; i <= count; i += 1) parts.push({ heading: `Section ${i}`, ask: "Name the section and the lines that go in it.", kind: "field" });
+    for (let i = 1; i <= count; i += 1) parts.push({ heading: `Section ${i}`, ask: FIELD_USE[a.use], kind: "field" });
   }
-  return { format, title: named, parts };
+  return { format, title: named, notes: firstOf(know, 4000), answers: a, groups, parts };
 }
 
-/** The range the price is suggested in; the creator decides and may set any price their plan allows. */
-const SUGGESTED_FROM_CENTS = 400;
-const SUGGESTED_TO_CENTS = 3500;
-const STARTING_POINT_CENTS: Record<string, number> = { short: 900, medium: 1900, long: 2900 };
+/** The title an outline has until the creator writes theirs; publishing refuses it. */
+export function placeholderTitle(format: FirstFormat): string {
+  return `Your ${FORMAT_INFO[format].name.toLowerCase()}'s title`;
+}
 
 /**
- * A starting price inside the suggested range, by length only. It is a
- * starting point the creator is asked to change, not a market price: no
- * figure about other sellers stands behind it.
+ * Price, as the screen shows it. The field starts empty: the creator types
+ * the price. In US dollars only, the screen offers three starting points to
+ * tap, none marked, under words drawn by the code that say where they come
+ * from. In any other currency there are none, because no conversion is made
+ * up. Nothing is published until the creator has typed or tapped a price.
  */
-export function startingPrice(format: FirstFormat, answers: Answers): { cents: number; from: number; to: number } {
-  const cents = STARTING_POINT_CENTS[answered(format, answers).length] ?? STARTING_POINT_CENTS.short;
-  return { cents: Math.min(SUGGESTED_TO_CENTS, Math.max(SUGGESTED_FROM_CENTS, cents)), from: SUGGESTED_FROM_CENTS, to: SUGGESTED_TO_CENTS };
+export const PRICE_WORDS = {
+  range: "Suggested range: $4 to $35. You choose.",
+  points: "Starting points from Marktmorgen, not what other sellers charge",
+} as const;
+
+const STARTING_POINTS_USD_CENTS = [900, 1900, 2900];
+
+/** The starting points offered to tap for a store's currency: three in US dollars, none in any other. */
+export function startingPoints(currency: string): number[] {
+  return currency.toLowerCase() === "usd" ? [...STARTING_POINTS_USD_CENTS] : [];
 }
