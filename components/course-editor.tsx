@@ -3,6 +3,9 @@
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { useLeaveGuard } from "@/components/leave-guard";
 import { UrlField } from "@/components/url-field";
+import { LessonText } from "@/components/lesson-text";
+import { type StoreLook, lookStyle } from "@/lib/store-look";
+import { LANGUAGES, type LanguageCode } from "@/lib/store-language";
 import { useRouter } from "next/navigation";
 import { uploadReason, uploadSoldFile } from "@/lib/sold-file-upload";
 import { toast } from "@/components/toast";
@@ -30,6 +33,8 @@ import {
 import { LINK_PROBLEMS, type LinkProblem } from "@/lib/product-link";
 import { useStudioHref } from "@/components/studio-store-pin";
 import { STUDIO_MESSAGES } from "@/lib/studio-messages";
+import { CourseTemplatePicker } from "@/components/course-template-picker";
+import { FIT_WORDS, exampleTitlesLeft, exampleTitlesWords, quizLessonsWaiting, quizWaitingWords, templateFits } from "@/lib/course-templates";
 import { AiAssist, AiOn } from "@/components/ai-assist";
 import { type StreamState, isStreamPath } from "@/lib/stream-rules";
 import { CAPTION_LANGUAGES, type CaptionTrack, MAX_CAPTION_BYTES, MAX_CAPTION_TRACKS } from "@/lib/captions";
@@ -50,6 +55,7 @@ const MESSAGES: Record<string, string> = {
   wrong_type: "That kind of file cannot be uploaded here.",
   unknown: "That is not there anymore. Reload the page.",
   not_course: "This product is no longer a course. Reload the page.",
+  not_new: FIT_WORDS["not-new"],
   busy: "Another change to this course is still saving. Try again in a moment.",
   invalid: "That upload could not be checked. Try again.",
   storage_full: "This file does not fit within your store's remaining storage. Delete a file you no longer sell to make room — nothing already bought is affected.",
@@ -89,6 +95,9 @@ type Answer = { ok?: boolean; error?: string; reason?: string; course?: Course; 
  * its way to being playable, by the path the lesson keeps for it: as the
  * page was drawn, and as this browser has learned since.
  */
+// The store's look, for the lesson text's preview (487 [IT4], pattern 7).
+const Look = createContext<{ look: StoreLook; language: LanguageCode } | null>(null);
+
 const Streams = createContext<{
   states: Record<string, StreamState>;
   learned: (path: string, state: StreamState) => void;
@@ -218,8 +227,14 @@ export function CourseEditor({
   writing = {},
   auto = { can: false, spoken: "en" },
   openFirst = null,
+  look = null,
+  language = "en",
 }: {
   productId: string;
+  /** The store's look, so a lesson's text is previewed as students see it. */
+  look?: StoreLook | null;
+  /** The store's language, so the preview is marked as the lesson page is. */
+  language?: LanguageCode;
   /** A lesson to show open when the page is drawn: the one "Can everyone follow your lessons?" linked to. */
   openFirst?: string | null;
   initial: Course;
@@ -246,6 +261,11 @@ export function CourseEditor({
   const [newModule, setNewModule] = useState("");
   // An outline the writing help proposed, waiting for the creator to add it or not.
   const [proposal, setProposal] = useState<Outline | null>(null);
+  // The ready structures (540 [CU1]): put away for this visit by "Keep an empty course".
+  const [skipTemplates, setSkipTemplates] = useState(false);
+  // After a structure is used, the focus goes to the line that says which titles are still examples.
+  const [focusExamples, setFocusExamples] = useState(0);
+  const examplesLine = useRef<HTMLParagraphElement>(null);
   const [streamStates, setStreamStates] = useState<Record<string, StreamState>>(streams);
   const learned = (path: string, state: StreamState) => setStreamStates((known) => ({ ...known, [path]: state }));
   const [captionTracks, setCaptionTracks] = useState<Record<string, CaptionTrack[]>>(captions);
@@ -264,12 +284,55 @@ export function CourseEditor({
   }
 
   const lessons = course.modules.reduce((n, m) => n + m.lessons.length, 0);
+  const examples = exampleTitlesLeft(course);
+  const quizzesWaiting = quizLessonsWaiting(course).length;
+  useEffect(() => {
+    if (focusExamples) examplesLine.current?.focus();
+  }, [focusExamples]);
 
   return (
+    <Look.Provider value={look ? { look, language } : null}>
     <Streams.Provider value={{ states: streamStates, learned, captions: captionTracks, captioned, writing: writingNow, wrote, auto }}>
     <div className="mt-8 space-y-6">
       {error ? (
         <p className="notice notice-error" role="alert">{error}</p>
+      ) : null}
+
+      {/* Both the course as this page holds it and as the server last drew it: a certificate or a start date set further down changes only the second. */}
+      {!skipTemplates && templateFits(course).ok && templateFits(initial).ok ? (
+        <CourseTemplatePicker
+          course={course}
+          busy={busy}
+          save={async (payload) => {
+            const answer = await run(payload);
+            // The course already has the creator's changes: the structures go, with the course as kept.
+            if (answer.error === "not_new") {
+              setSkipTemplates(true);
+              router.refresh();
+            }
+            return answer;
+          }}
+          onSkip={() => {
+            setSkipTemplates(true);
+            // The picker goes away with the focus in it: the focus moves to the first module's name, where an empty course starts.
+            const first = course.modules[0];
+            requestAnimationFrame(() => document.querySelector<HTMLInputElement>(`section[aria-labelledby="module-${first?.id}-heading"] input`)?.focus());
+          }}
+          onApplied={(kept) => {
+            toast("The structure is added. The course stays hidden from your store until you replace the example titles.");
+            // A quiz lesson the structure made opens, with its "Add a quiz" button.
+            const quiz = quizLessonsWaiting(kept)[0];
+            if (quiz) setOpenLesson(quiz);
+            setFocusExamples((n) => n + 1);
+            // The certificate and the sale line further down the page are drawn by the server.
+            router.refresh();
+          }}
+        />
+      ) : null}
+      {examples > 0 || quizzesWaiting > 0 ? (
+        <p id="course-example-titles" ref={examplesLine} tabIndex={-1} className="notice notice-warn">
+          {[exampleTitlesWords(examples), quizWaitingWords(quizzesWaiting)].filter(Boolean).join(" ")}
+        </p>
       ) : null}
 
       <AiOn value={ai}>
@@ -388,6 +451,7 @@ export function CourseEditor({
       ) : null}
     </div>
     </Streams.Provider>
+    </Look.Provider>
   );
 }
 
@@ -777,6 +841,11 @@ function LessonEditor({
   const [loadingText, setLoadingText] = useState(false);
   const [uploading, setUploading] = useState<{ kind: "video" | "file"; percent: number } | null>(null);
   const [removing, setRemoving] = useState(false);
+  // The text's preview starts at a phone's width, where most lessons are read (487 [IT4], pattern 7).
+  const [phone, setPhone] = useState(true);
+  const shown = useContext(Look);
+  const look = shown?.look ?? null;
+  const locale = LANGUAGES[shown?.language ?? "en"]?.locale ?? "en-US";
   // A lesson's name, link, preview or text changed and not saved, or a file still going up: leaving asks first (487 [IT4], item 6).
   const unsaved = title !== lesson.title || preview !== lesson.preview || link !== (lesson.link ?? "") || text !== savedText;
   useLeaveGuard(unsaved || uploading !== null);
@@ -822,6 +891,40 @@ function LessonEditor({
   }
 
   const prefix = `lesson-${lesson.id}`;
+  // The lesson's text as its page draws it (components/lesson-text.tsx), from what is typed now, in the store's look.
+  const toggle = (on: boolean) => `inline-flex min-h-11 items-center rounded-full px-4 text-sm font-semibold ${on ? "bg-white text-ink shadow-sm" : "text-ink-soft"}`;
+  const lessonPreview = (now: string, storeLook: StoreLook) => (
+    <div className="min-w-0">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-sm text-ink-soft">As students see it</p>
+        <div role="group" aria-label="Preview width" className="inline-flex rounded-full bg-sand p-1">
+          <button type="button" className={toggle(phone)} aria-pressed={phone} onClick={() => setPhone(true)}>
+            Phone
+          </button>
+          <button type="button" className={toggle(!phone)} aria-pressed={!phone} onClick={() => setPhone(false)}>
+            Wide
+          </button>
+        </div>
+      </div>
+      <p className="mt-1 text-xs text-ink-soft">The same words as in the editor, laid out as the lesson shows them. Nothing in it can be pressed here.</p>
+      <div className="mt-1 overflow-hidden rounded-2xl ring-1 ring-line">
+        <div
+          // Inert: its links stay out of the Tab order and out of reach of a click that would leave the draft.
+          inert
+          // In the store's language, as the lesson page is (3.1.2).
+          lang={locale}
+          className={`st-page st-theme-${storeLook.theme} mx-auto px-4 pb-8 pt-6`}
+          // The words in the page's text color, as the lesson page sets it; Wide takes the room there is, as the lesson column does.
+          style={{ ...(lookStyle(storeLook) as React.CSSProperties), color: "var(--st-text)", maxWidth: phone ? 390 : "100%" }}
+        >
+          {/* In the same card the lesson page puts behind the words, so the color behind them and the line length match. */}
+          <div className="st-card p-5 sm:p-8">
+            {now.trim() ? <LessonText text={now} /> : <p className="text-sm">The lesson&apos;s words appear here as you write.</p>}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
   const streamed = lesson.video && isStreamPath(lesson.video.pathname) ? streams.states[lesson.video.pathname] ?? "working" : null;
   return (
     <div className="mt-4 space-y-5 border-t border-line pt-4">
@@ -927,17 +1030,31 @@ function LessonEditor({
               }
             }}
           >
-            <textarea
-              id={`${prefix}-text`}
-              rows={12}
-              className="field min-h-48"
-              maxLength={MAX_BODY_LENGTH}
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-            />
-            <p className="mt-1 text-sm text-ink-mute">
-              {`Blank lines make paragraphs, lines starting with "- " make a list, and web addresses become links. ${MAX_BODY_LENGTH - text.length} characters left.`}
-            </p>
+            <div className="grid min-w-0 gap-4 xl:grid-cols-2">
+              <div className="min-w-0">
+                <textarea
+                  id={`${prefix}-text`}
+                  rows={12}
+                  className="field min-h-48"
+                  maxLength={MAX_BODY_LENGTH}
+                  value={text}
+                  onChange={(e) => setText(e.target.value)}
+                />
+                <p className="mt-1 text-sm text-ink-mute">
+                  {`Blank lines make paragraphs, lines starting with "- " make a list, and web addresses become links. ${MAX_BODY_LENGTH - text.length} characters left.`}
+                </p>
+              </div>
+              {look ? (
+                <>
+                  {/* Beside the text on a wide screen; on a narrow one, folded. */}
+                  <div className="hidden xl:block">{lessonPreview(text, look)}</div>
+                  <details className="xl:hidden">
+                    <summary className="inline-flex min-h-11 cursor-pointer items-center text-sm font-semibold text-ink underline underline-offset-4">See it as students see it</summary>
+                    <div className="mt-2">{lessonPreview(text, look)}</div>
+                  </details>
+                </>
+              ) : null}
+            </div>
             <button type="submit" aria-busy={busy} disabled={busy} className="btn btn-secondary btn-sm mt-2">Save text</button>
           </form>
         )}
