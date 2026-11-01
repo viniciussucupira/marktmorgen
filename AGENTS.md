@@ -1,3 +1,7 @@
+## IDIOMA — Conversa em português do Brasil, site em inglês americano (dono, 31/10/2026 21h33 Fortaleza)
+
+Vale para todo agente deste repositório (Claude 1, Claude 2 e Codex), em toda sessão: toda mensagem, resumo, relatório, pergunta e status escrito para o dono é em português do Brasil, norma culta (por exemplo, "arquivo", "tela", "está rodando"), nunca em inglês nem em português de Portugal. Tudo o que vai para o site e para o cliente (páginas, textos da interface, e-mails, documentação pública, mensagens de erro) continua em inglês dos Estados Unidos, com grafia, pontuação e datas americanas. Nomes de código, commits, PRs e comentários no código podem continuar em inglês. Esta regra não muda nenhum preço, limite, comissão, trava, flag ou proibição deste arquivo.
+
 ## AV9 — Agentes nunca ficam parados (dono, 31/10/2026 18h08 Fortaleza)
 
 Vale para todo agente que trabalha neste repositório (Claude 1, Claude 2 e Codex), em toda sessão: nunca encerrar a vez só para esperar CI, revisão ou incorporação. Enquanto esperam, avançar outra unidade ou outro item da própria faixa da fila (docs/codex-queue.md, linhas AV5–AV9 e DR do topo). Só encerrar a vez quando não houver absolutamente nada que possa ser feito e, antes disso, agendar um aviso para a própria sessão em 10 minutos (Claude) ou manter a tarefa agendada de 10 minutos (Codex). Se a cota semanal estiver acabando, baixar o esforço para Médio em vez de parar. Esta regra não muda nenhum preço, limite, comissão, trava, flag ou proibição deste arquivo.
