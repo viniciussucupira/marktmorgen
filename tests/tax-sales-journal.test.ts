@@ -8,7 +8,7 @@ import { store as redis } from "./redis-stub";
 const now = Date.parse("2026-11-01T06:00:00Z");
 const owner = {
   sid: "synthetic-tax-store", statsId: "synthetic-tax-stats", handle: "tax-synthetic", tier: "creator",
-  stripeAccountId: "acct_SyntheticTax0001", subscriptionActive: true,
+  stripeAccountId: "acct_fixtureTax", subscriptionActive: true,
   subscriptionId: "sub_SyntheticTax0001", trialEnds: 0, planEndedAt: "",
 } as unknown as Store;
 const policy = (): TaxObservationPolicy => ({
@@ -132,7 +132,7 @@ test("the sweep continues handing a paid purchase to its list when observation I
   assert.ok((await claimHandle(email, "tax-sweep", "Synthetic", "")).ok);
   await ensureStatsId(email);
   await ensureListId(email);
-  await setStripeAccount(email, "acct_SyntheticTax0001", true);
+  await setStripeAccount(email, "acct_fixtureTax", true);
   await setSubscription(email, { customerId: "cus_SyntheticTax0001", subscriptionId: "sub_SyntheticTax0001", active: true, tier: "creator", period: paidPeriod() });
   const product = await addProduct(email, "Synthetic", "", "1", null);
   assert.ok(product.ok);

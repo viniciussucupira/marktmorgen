@@ -44,7 +44,7 @@ import { redisPipeline } from "@/lib/redis";
 import { dataKey } from "@/lib/store-data";
 async function main(){
 const now=Date.now(), expiry=now+120_000;
-const store={sid:process.env.TAX_FIXTURE_ID, statsId:"synthetic", handle:"synthetic-tax",tier:"creator",stripeAccountId:"acct_SyntheticTax0001",subscriptionActive:true,subscriptionId:"sub_SyntheticTax0001",trialEnds:0,planEndedAt:""} as any;
+const store={sid:process.env.TAX_FIXTURE_ID, statsId:"synthetic", handle:"synthetic-tax",tier:"creator",stripeAccountId:"acct_fixtureTax",subscriptionActive:true,subscriptionId:"sub_SyntheticTax0001",trialEnds:0,planEndedAt:""} as any;
 const policy={schema:1,purpose:"incomplete-checkout-observations",reviewId:"synthetic-not-approval",storeSid:store.sid,stripeAccountId:store.stripeAccountId,scopeEvidence:"Synthetic scope",retentionEvidence:"Synthetic two minutes",storageEvidence:"Synthetic bounded document",costEvidence:"Synthetic quotes, not real funding",reviewedAtMs:now,expiresAtMs:expiry,maxEntries:10,maxRecordBytes:512,maxDocumentBytes:16384,maxRetainedBytes:32768,storageMicroUsdPerGiBMonth:250000,retentionCostCeilingMicroUsd:100,commandMicroUsdPerMillion:2000000,transferMicroUsdPerGiB:1000000,maxChargedCommandsPerPass:720,maxTransferredBytesPerPass:1048576,computeCeilingMicroUsdPerPass:100,ioCostCeilingMicroUsdPerPass:10000};
 const row=(n:number,amount=100)=>({id:"cs_test_SyntheticTax"+String(n).padStart(8,"0"),payment_status:"paid",created:Math.floor(now/1000),currency:"usd",amount_total:amount,metadata:{store:store.handle},customer_details:{email:"never-kept@example.test",address:{country:"CA",state:"ON",line1:"never-kept"}}});
 const room=dataKey(store)!; const keys=new Set<string>([room]);
