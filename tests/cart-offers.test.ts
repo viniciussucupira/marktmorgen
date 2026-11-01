@@ -38,7 +38,7 @@ const OWNER = "baker@example.com";
 const BUYER = "buyer@example.com";
 const RETURNING = "again@example.com";
 const UNREADABLE = "many@example.com";
-const ACCOUNT = "acct_1TestCartOffer01";
+const ACCOUNT = "acct_1TestCartOff01";
 const NOW = Math.floor(Date.now() / 1000);
 const read = (file: string) => readFileSync(file, "utf8");
 
