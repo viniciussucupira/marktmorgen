@@ -20,7 +20,8 @@ export function linkOnLeave(raw: string): { problem: string | null; fix: string 
   if (!typed) return { problem: null, fix: null };
   const read = readLink(typed);
   if (read.ok) return { problem: null, fix: null };
-  const hasScheme = /^[a-z][a-z0-9+.-]*:\/\//i.test(typed);
+  // A scheme is a name and a colon not followed by a port number: "mailto:" is one, "example.com:8080" is not.
+  const hasScheme = /^[a-z][a-z0-9+.-]*:(?!\d)/i.test(typed);
   // Only an address with no scheme, or with http://, is tried with https://.
   if (!hasScheme || /^http:\/\//i.test(typed)) {
     const withHttps = readLink(`https://${typed.replace(/^http:\/\//i, "")}`);

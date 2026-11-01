@@ -88,7 +88,7 @@ The screen-by-screen audit that 487 [IT4] asks for: what was checked, what was f
 - **Web addresses:** 13 files have `type="url"` fields. All of them are checked only when the form is sent, so a missing `https://` shows up only after pressing Save.
 
 **Fixed.**
-- `components/url-field.tsx` checks a web address when the person leaves the field, never while they are typing, using the server's own reading (`readLink` in `lib/product-link.ts`). If the address only lacks `https://`, or has `http://`, it offers the corrected address in one press. Anything else gets the server's own words. The message goes as soon as the address is right, and it is tied to the field for screen readers.
+- `components/url-field.tsx` checks a web address when the person leaves the field, never while they are typing, using the server's own reading (`readLink` in `lib/product-link.ts`). If the address only lacks `https://`, or has `http://`, it offers the corrected address in one press. Anything else gets the server's own words. It is also said when the form is sent. While the person types, a message only goes away, once the address is right; a new one waits for the next leave, so nothing is announced at every key. After the one-press fix, the focus goes back to the field. An address too long is said, never cut. The message is tied to the field for screen readers.
 - The lesson link in the course editor uses it, with its label now tied to the field by id.
 
 **Still to do.**

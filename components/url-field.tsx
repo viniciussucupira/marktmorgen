@@ -1,14 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { linkOnLeave } from "@/lib/url-check";
 
 /**
- * A web address field that says what is wrong when the person leaves it
- * (487 [IT4], pattern 1; lib/url-check.ts), never while they are still
- * typing, and offers the address with https:// in one press when that is all
- * it lacks. The message goes as soon as the address is right. The save still
- * checks it on the server; this only says so sooner.
+ * A web address field that says what is wrong when the person leaves it or
+ * sends its form (487 [IT4], pattern 1; lib/url-check.ts), never while they
+ * are still typing, and offers the address with https:// in one press when
+ * that is all it lacks. Once said, the message stays as it is while they
+ * type, and goes as soon as the address is right; a new problem is said only
+ * at the next leave. The save still checks it on the server; this only says
+ * so sooner.
+ *
+ * A text field opening the address keyboard, not type="url": the browser's
+ * own bubble would stop the form in other words before this one is seen.
+ * No length cut either: an address too long is said, never silently cut.
  *
  * The label is the caller's, tied by `id`, so it stays visible.
  */
@@ -18,43 +24,75 @@ export function UrlField({
   onChange,
   className,
   placeholder = "https://",
-  maxLength = 2000,
+  describedBy,
+  autoFocus,
 }: {
   id: string;
   value: string;
   onChange: (next: string) => void;
   className: string;
   placeholder?: string;
-  maxLength?: number;
+  /** Help under the field, tied to it as well. */
+  describedBy?: string;
+  autoFocus?: boolean;
 }) {
-  const [left, setLeft] = useState(false);
-  const shown = left ? linkOnLeave(value) : { problem: null, fix: null };
+  const input = useRef<HTMLInputElement>(null);
+  // What was said at the last leave, and for which address.
+  const [said, setSaid] = useState<{ value: string; problem: string; fix: string | null } | null>(null);
+  const check = (now: string) => {
+    const found = linkOnLeave(now);
+    setSaid(found.problem ? { value: now, problem: found.problem, fix: found.fix } : null);
+  };
+  useEffect(() => {
+    const form = input.current?.form;
+    if (!form) return;
+    const onSubmit = () => check(input.current?.value ?? "");
+    form.addEventListener("submit", onSubmit, true);
+    return () => form.removeEventListener("submit", onSubmit, true);
+  }, []);
   const line = `${id}-check`;
-  const fix = shown.fix;
+  // The fix is offered only for the address it was worked out from.
+  const fix = said && said.value === value ? said.fix : null;
   return (
     <>
       <input
+        ref={input}
         id={id}
         className={className}
-        type="url"
+        type="text"
         inputMode="url"
         autoComplete="url"
+        spellCheck={false}
+        autoCapitalize="none"
+        autoFocus={autoFocus}
         placeholder={placeholder}
-        maxLength={maxLength}
         value={value}
-        onChange={(e) => onChange(e.target.value)}
-        onBlur={() => setLeft(true)}
-        aria-invalid={shown.problem ? true : undefined}
-        aria-describedby={shown.problem ? line : undefined}
+        onChange={(e) => {
+          const next = e.target.value;
+          onChange(next);
+          if (said && !linkOnLeave(next).problem) setSaid(null);
+        }}
+        onBlur={() => check(value)}
+        aria-invalid={said ? true : undefined}
+        aria-describedby={[describedBy ?? "", said ? line : ""].filter(Boolean).join(" ") || undefined}
       />
       <div id={line} role="status" className="text-sm">
-        {shown.problem ? (
+        {said ? (
           <p className="mt-1 font-semibold text-danger">
-            {shown.problem}
+            {said.problem}
             {fix ? (
               <>
                 {" "}
-                <button type="button" className="inline-flex min-h-11 items-center font-bold text-ink underline underline-offset-4" onClick={() => onChange(fix)}>
+                <button
+                  type="button"
+                  className="inline-flex min-h-11 items-center font-bold text-ink underline underline-offset-4"
+                  onClick={() => {
+                    onChange(fix);
+                    setSaid(null);
+                    // The button goes with the message: the focus goes back to the field, never to the page.
+                    input.current?.focus();
+                  }}
+                >
                   {`Use ${fix}`}
                 </button>
               </>
