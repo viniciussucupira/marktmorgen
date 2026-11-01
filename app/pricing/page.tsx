@@ -47,7 +47,8 @@ export default function PricingPage() {
    <h2 id="plans-heading" className="sr-only">Plan prices</h2>
    {/* No Suspense here: React streams a large boundary after the rest of the page even when it is ready,
        so the plans arrived after the first paint and pushed everything under them down (layout shift 0.38
-       on a slow phone, 1 November 2026). The cards' own boundaries inside stay, for hydrating each apart. */}
+       on a slow phone, 1 November 2026). The cards have none either; only each card's small perks disclosure keeps its own
+       boundary, for hydrating apart (components/home-parts.tsx). Do not wrap the cards again. */}
    <Pricing domains={DOMAINS} />
   </section>
   <div className="mt-20"><PricingValue place="plans" /></div>
