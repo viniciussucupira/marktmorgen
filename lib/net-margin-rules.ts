@@ -1,3 +1,4 @@
+import { customerTaxCeiling, customerTaxReviewFields, type CustomerTaxReview, type TaxContext } from './customer-tax-review';
 /** Platform fees only, never creator GMV. All amounts are USD cents for one customer's worst case.
  * This checks supplied ceilings, not the accuracy of tax advice, vendor quotes or usage enforcement.
  */
@@ -20,8 +21,11 @@ export type CustomerWorstCase={
  allCostsBounded:boolean;
  allTaxesReviewed:boolean;
  revenueCollected:boolean;
+ /** Present TX evidence is mandatory and fails closed; absence retains the legacy floor. */
+ taxReview?:CustomerTaxReview|null;
+ taxContext?:TaxContext|null;
 };
-export type MarginAssessment={approved:boolean;reason:"unknown"|"invalid"|"unbounded"|"uncollected"|"no_revenue"|"below_floor"|"tax_below_planning_floor"|"approved";netCents:number|null;marginBps:number|null};
+export type MarginAssessment={approved:boolean;reason:"unknown"|"invalid"|"unbounded"|"uncollected"|"no_revenue"|"below_floor"|"tax_below_planning_floor"|"tax_review_unknown"|"tax_below_reviewed_ceiling"|"approved";netCents:number|null;marginBps:number|null};
 const stopped=(reason:MarginAssessment["reason"]):MarginAssessment=>({approved:false,reason,netCents:null,marginBps:null});
 const money=(n:unknown):n is number=>typeof n==="number"&&Number.isSafeInteger(n)&&n>=0;
 /** Only explicit data belongs to a review. Inherited defaults and computed
@@ -35,6 +39,7 @@ const ownReviewData=(record:object,key:string)=>{
 /** Exact whole-cent comparison: zero profit or a rounded display never passes MR. */
 export function assessCustomerWorstCase(value:CustomerWorstCase|null):MarginAssessment{
  if(!value||typeof value!=="object"||Array.isArray(value))return stopped("unknown");
+ const fiscal=customerTaxReviewFields(value);
  const suppliedCosts=ownReviewData(value,"costCeilings");
  if(!suppliedCosts||typeof suppliedCosts!=="object"||Array.isArray(suppliedCosts))return stopped("unknown");
  // Read once into a plain snapshot. Validation and arithmetic use identical data.
@@ -56,8 +61,14 @@ export function assessCustomerWorstCase(value:CustomerWorstCase|null):MarginAsse
  if(gross===BigInt(0))return stopped("no_revenue");
  const costs=CUSTOMER_COST_CATEGORIES.reduce((total,key)=>total+BigInt(value.costCeilings[key]!),BigInt(0));
  const pretax=gross-BigInt(value.refundableRevenueCents!)-costs;
- const taxFloor=pretax>BigInt(0)?(pretax*BigInt(PLANNING_PROFIT_TAX_FLOOR_BPS)+BigInt(9_999))/BigInt(10_000):BigInt(0);
- if(BigInt(value.taxesCeilingCents!)<taxFloor)return stopped("tax_below_planning_floor");
+ if(fiscal.present){
+  const ceiling=customerTaxCeiling(fiscal.taxReview,fiscal.taxContext,{revenueCents:value.collectedRevenueCents!,refundableCents:value.refundableRevenueCents!,pretaxCents:pretax});
+  if(ceiling===null)return stopped("tax_review_unknown");
+  if(value.taxesCeilingCents!<ceiling)return stopped("tax_below_reviewed_ceiling");
+ }else{
+  const taxFloor=pretax>BigInt(0)?(pretax*BigInt(PLANNING_PROFIT_TAX_FLOOR_BPS)+BigInt(9_999))/BigInt(10_000):BigInt(0);
+  if(BigInt(value.taxesCeilingCents!)<taxFloor)return stopped("tax_below_planning_floor");
+ }
  const net=pretax-BigInt(value.taxesCeilingCents!);
  if(net>BigInt(Number.MAX_SAFE_INTEGER)||net< -BigInt(Number.MAX_SAFE_INTEGER))return stopped("invalid");
  const ratio=Number(net*BigInt(10_000)/gross);

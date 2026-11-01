@@ -12,6 +12,7 @@ import { assessMinimumCustomerBase, CUSTOMER_BASE_RULES, type CustomerBaseReview
 import { PLAN_PRICES, COMMISSION_BPS, COMMISSION_LIVE, COMMISSION_PLANS_PUBLISHED, PUBLISHED_PLAN_PRICES, TRIAL_DAYS, REFUND_DAYS, PRO_MONTHLY_EMAILS, SCALE_MONTHLY_EMAILS, TRIAL_MONTHLY_EMAILS } from "@/lib/plan";
 import { SHARE_PROVED_IN_TEST_MODE } from "@/lib/platform-share";
 import { assessCustomerWorstCase, CUSTOMER_COST_CATEGORIES, MINIMUM_NET_MARGIN_BPS, MINIMUM_NET_PROFIT_CENTS, PLANNING_PROFIT_TAX_FLOOR_BPS, type CustomerWorstCase } from "@/lib/net-margin-rules";
+import { CUSTOMER_TAX_REVIEW_POLICY, customerTaxScenarioMatches, customerTaxCollectionState } from './customer-tax-review';
 import { AI_SPEND_RULES, AUTOMATIC_AI_SPEND_CEILINGS, currentAiSpendPolicy, aiStoreCostCents, isAiSpendPolicyValid } from "@/lib/ai-spend-policy";
 import { AI_REQUEST_LIMITS, SUPPORTED_AI_MODELS } from "@/lib/ai-request-rules";
 import { AI_MONTHLY, AI_PER_MINUTE, MAX_AI_NOTES, READ_PDF_PAGES, READ_PDF_JOBS } from "@/lib/ai-rules";
@@ -71,7 +72,8 @@ function scenarioWithPlanRoom(key: MarginScenario, scenario: CustomerWorstCase |
 export const CURRENT_COMMERCIAL_TERMS = {
  // Since 18 October 2026 (schema 22): the price list of the owner's decision of 11:21, one list with no share of a sale, and the limits raised with it.
  // Schema24: a complete LLC inventory and its ceilings bind every financial review.
- schemaVersion: 26,
+ schemaVersion: 27,
+ customerTaxReview: CUSTOMER_TAX_REVIEW_POLICY,
  planPaymentDisputes: PLAN_PAYMENT_DISPUTE_COST_RULES,
  marginPolicy: { decision: '2026-10-27T07:42:00-03:00', unit: 'strictly-positive-net-cents', minimumNetProfitCents: MINIMUM_NET_PROFIT_CENTS, company: 'nonnegative-at-computed-minimum-base', companyTargetBps: 6000, targetBasis: 'monthly-reconciled-actual-not-a-sales-gate', spendFloorRoom: COMMERCIAL_SPEND_FLOOR_ROOM_CENTS, assistantCostRoomCents: ADD_ON_ROOM_CENTS },
  usageAdmission: { schema: 1, paidVisits: "finite-plan-threshold", paidVideo: "finite-explicit-threshold", unknownTraffic: "pause", supplierByteCeilingProven: false },
@@ -137,8 +139,12 @@ export const CURRENT_COMMERCIAL_MARGIN_REVIEW:CommercialMarginReview|null=null;
  */
 function commercialReviewData(review:CommercialMarginReview|null):CommercialMarginReview|null{
  if(!review||typeof review!=="object"||Array.isArray(review))return null;
+ const taxState=customerTaxCollectionState(review);
+ if(taxState==='unknown')return null;
  const encoded=canonicalFinancialSnapshot(review);
- return encoded===null?null:JSON.parse(encoded) as CommercialMarginReview;
+ if(encoded===null)return null;
+ const data=JSON.parse(encoded) as CommercialMarginReview;
+ return customerTaxCollectionState(data)===taxState?data:null;
 }
 export function commercialMarginReady(review:CommercialMarginReview|null=CURRENT_COMMERCIAL_MARGIN_REVIEW):boolean{
  const data=commercialReviewData(review);
@@ -153,6 +159,11 @@ function commercialMarginDataReady(review:CommercialMarginReview):boolean{
  if(!review||review.priceAndRightsSnapshot!==CURRENT_PRICE_AND_RIGHTS_SNAPSHOT)return false;
  if(typeof review.taxEvidence!=="string"||!review.taxEvidence.trim()||typeof review.costAndLimitEvidence!=="string"||!review.costAndLimitEvidence.trim())return false;
  if(review.allocatedFixedCostsVerified!==true||review.prepaidUsageEnforced!==true||!review.scenarios)return false;
+ // Every scoped TX record belongs to this exact scenario, not another plan or interval.
+ for(const key of REQUIRED_MARGIN_SCENARIOS){
+  const scenario=review.scenarios[key];
+  if(scenario&&!customerTaxScenarioMatches(scenario,key))return false;
+ }
  // A reserve for a lost plan payment must include the reviewed maximum paid
  // principal and fees. The fees are already an expense category: require their
  // complete ceiling there, without adding the same fee a second time.
