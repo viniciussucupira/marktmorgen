@@ -25,10 +25,10 @@ function main(): void {
   is("less room above it", page.includes('"pb-1 pt-6 sm:pt-8"') && page.includes('"pb-8 pt-8 sm:pt-10"'), true);
   is("the name a size down, close under the photo", page.includes('<h1 className="font-display mt-3 text-2xl font-semibold leading-tight tracking-[-0.02em] sm:text-3xl">'), true);
   is("the introduction at the body size, whole", page.includes('<p className="st-muted mx-auto mt-2 max-w-md leading-relaxed">{store.bio}</p>'), true);
-  is("nothing of the creator's cut or hidden: no clamp, no truncation", /line-clamp|truncate|text-ellipsis/.test(page.slice(page.indexOf('data-part="profile"'), page.indexOf("</section>", page.indexOf('data-part="profile"')))), false);
+  is("nothing of the creator's cut or hidden: no clamp, no truncation", /line-clamp|truncate|text-ellipsis/.test(page.slice(page.indexOf('data-store-profile'), page.indexOf("</section>", page.indexOf('data-store-profile')))), false);
   is("the social links closer", socials.includes('className="mx-auto mt-3 max-w-lg"'), true);
   is("the products start sooner", page.includes('<div className="mx-auto max-w-xl px-4 pb-16 pt-5">'), true);
-  is("the profile is named for the first-screen measure", page.includes('data-part="profile"'), true);
+  is("the profile is marked for the first-screen measure, apart from the reorderable parts", page.includes('data-store-profile=""') && !page.includes('data-part="profile"'), true);
 }
 
 main();

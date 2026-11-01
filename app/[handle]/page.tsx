@@ -308,7 +308,7 @@ export default async function StorePage({ params, searchParams }: Params) {
           </p>
         ) : null}
         <section className={bold ? "st-band" : undefined}>
-          <div className={`mx-auto max-w-xl px-4 text-center ${bold ? "pb-8 pt-8 sm:pt-10" : "pb-1 pt-6 sm:pt-8"}`} data-part="profile">
+          <div className={`mx-auto max-w-xl px-4 text-center ${bold ? "pb-8 pt-8 sm:pt-10" : "pb-1 pt-6 sm:pt-8"}`} data-store-profile="">
             {store.photoId ? (
               // A plain img: the picture is already cropped and sized, and its
               // address never changes, so there is nothing for an optimiser to add.
