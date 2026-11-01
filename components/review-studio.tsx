@@ -1,6 +1,8 @@
 "use client";
 
 import { ELSEWHERE_NOTE, MAX_REVIEW_URL, parseReviewElsewhere } from "@/lib/review-elsewhere";
+import { UrlField } from "@/components/url-field";
+import { checkWith } from "@/lib/url-check";
 import { useContext, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Icon } from "@/components/icons";
@@ -23,6 +25,9 @@ const MESSAGES: Record<string, string> = {
   unavailable: "Stores are not switched on yet, so nothing was saved.",
   server_error: "Something went wrong on our side. Try again in a moment.",
 };
+
+// The review page, checked when its field is left by the reading the server keeps (lib/review-elsewhere.ts). Optional.
+const ELSEWHERE_CHECK = checkWith((raw) => parseReviewElsewhere(raw)?.url ?? null, MESSAGES.elsewhere, MAX_REVIEW_URL);
 
 async function post(body: Record<string, unknown>): Promise<string | null> {
   try {
@@ -52,7 +57,10 @@ export function ReviewAskEditor({ days, canEmail, elsewhere = "" }: { days: numb
     setError(null);
     // The same rule the server holds (lib/review-elsewhere.ts), said before anything is sent.
     if (page.trim() && !parseReviewElsewhere(page)) {
-      setError(MESSAGES.elsewhere);
+      // The field says it beside itself (components/url-field.tsx); the focus goes there, so it is not said twice.
+      const field = document.getElementById("ask-elsewhere");
+      if (field) field.focus();
+      else setError(MESSAGES.elsewhere);
       return;
     }
     setBusy(true);
@@ -83,21 +91,19 @@ export function ReviewAskEditor({ days, canEmail, elsewhere = "" }: { days: numb
         </label>
       ) : null}
       {on ? (
-        <label htmlFor="ask-elsewhere" className="mt-3 block max-w-xl">
-          <span className="field-label">Your public review page (optional)</span>
-          <input
+        <div className="mt-3 block max-w-xl">
+          <label htmlFor="ask-elsewhere" className="field-label">Your public review page (optional)</label>
+          <UrlField
             id="ask-elsewhere"
-            type="url"
-            inputMode="url"
             className="field"
-            maxLength={MAX_REVIEW_URL}
             placeholder="https://g.page/r/…/review"
             value={page}
-            onChange={(e) => setPage(e.target.value)}
-            aria-describedby="ask-elsewhere-note"
+            onChange={setPage}
+            check={ELSEWHERE_CHECK}
+            describedBy="ask-elsewhere-note"
           />
           <span id="ask-elsewhere-note" className="mt-1 block text-xs text-ink-soft">{ELSEWHERE_NOTE}</span>
-        </label>
+        </div>
       ) : null}
       <p className="mt-2 text-sm text-ink-soft">
         {canEmail
