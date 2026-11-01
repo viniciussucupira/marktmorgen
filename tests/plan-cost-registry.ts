@@ -200,9 +200,22 @@ export function closingBuyersCost(tier: Tier, paid = true): number {
  * 4 initialize,11 reserve,11 dispatch,14 accepted,10 receipt read,13 cancel.
  * These are command observations, not an invoice or financial approval;
  * CURRENT_RESEND_FALLBACK_REVIEW remains null, never an automatic bootstrap.
- * The confirmation preintent/binding/accounting hooks are constructed and
- * unconnected, not a funded durable source or authorization for a Stripe
- * POST/URL. Their68-byte OCI/OC1 receipt horizon is ORIGINAL window end+400
+ * The restricted physical-item createCheckout caller now reserves a complete
+ * confirmation origin BEFORE its payment POST/URL, but remains never_activated
+ * with policy null. This is a constructed pre-URL slice, not completed durable
+ * confirmation: no payment/accounting/email worker or origin erasure exists.
+ * Its five own families and five shared pool/index/fence references are in
+ * store-data-registry, not a second allocation of the shipment pool. A full
+ * future row reservation is not evidence of lifetime storage/copy/cleanup
+ * funding. No TTL bounds pending/unknown origins;23h limits creation replay
+ * only. Original-account read-only recovery persists its pagination cursor.
+ * Observed EVAL+internal commands:27 shared enqueue,17 create,18 bind,
+ * 15 already-bound replay,17 cursor; TS read adds3 and reserve adds1 TIME.
+ * Open/recovery repeats Redis/provider reads, so these are NOT a full call or
+ * lifetime envelope. Activation remains blocked on missing lifecycle work
+ * and unknown/rejected full retention/failure/cleanup costs.
+ * Its accounting hooks remain unconnected to a payment worker. Their68-byte
+ * OCI/OC1 receipt horizon is ORIGINAL window end+400
  * days (at most767 from capture), first apply23 commands; the200-byte MEMORY
  * fixture is not universal storage coverage. The legacy45-day '1' marker's
  * priced part excludes this new path. Other effects can lose TTL after a

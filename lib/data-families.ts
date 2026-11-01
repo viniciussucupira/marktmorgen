@@ -73,6 +73,8 @@ export const ELSEWHERE_FAMILIES: readonly string[] = [
   "nl:meet:zoomseen:", "nl:member:status:", "nl:metaads:conn:", "nl:metaads:read:", "nl:metaads:reading:",
   "nl:metaads:state:", "nl:metaads:stores", "nl:metaads:user:", "nl:mnum:", "nl:monthly:lock",
   "nl:monthly:sent:", "nl:mv:due", "nl:next:", "nl:next:lock:", "nl:nlink:", "nl:nlink:opens:", "nl:none",
+  "nl:order-confirmation:due", "nl:order-confirmation:person:", "nl:order-confirmation:row:",
+  "nl:order-confirmation:source:", "nl:order-confirmation:store:",
   "nl:nudge:", "nl:nudge:count:", "nl:nudge:cursor", "nl:orders:folders:", "nl:orders:link:", "nl:orders:n:",
   "nl:orders:open:", "nl:orders:seen:", "nl:outreach:stop:all", "nl:pause:", "nl:pause:due",
   "nl:pause:last:", "nl:pay:currencies:", "nl:payreq:lock:", "nl:payreq:stores", "nl:payreq:w:", "nl:person:find:", "nl:phone:cfg:", "nl:phone:seen:",
@@ -288,6 +290,11 @@ export const CLOSING: Readonly<Record<string, Closing>> = {
   "nl:nlink:": E, "nl:nlink:opens:": E,
   "nl:none": C,
   "nl:nudge:": E, "nl:nudge:count:": E, "nl:nudge:cursor": C,
+  // Constructed pre-URL origins are never activated. Pending/unknown have no
+  // TTL and no eraser yet; this records an activation blocker, not permission
+  // to retain a closed store's payload without reviewed funding/cleanup.
+  "nl:order-confirmation:due": C, "nl:order-confirmation:person:": C, "nl:order-confirmation:row:": C,
+  "nl:order-confirmation:source:": C, "nl:order-confirmation:store:": C,
   "nl:orders:folders:": I, "nl:orders:link:": X(1), "nl:orders:n:": E, "nl:orders:open:": E,
   // Legacy marks expire in45days. The inactive original-window checkpoint
   // may retain its receipt for767days; this is not its legacy price envelope.

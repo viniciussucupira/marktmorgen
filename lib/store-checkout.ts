@@ -7,6 +7,10 @@
  * and leaves Marktmorgen with nothing to hold, skim or lose. The 0% on the home
  * page is this file.
  */
+import { randomBytes } from "node:crypto";
+import { prepareOrderConfirmationPreintent } from "@/lib/orders";
+import { CURRENT_SHIPMENT_MAIL_LIFECYCLE } from "@/lib/shipment-record";
+import { confirmationBodyDigest, openConfirmationOrigin, reserveConfirmationOrigin, type ConfirmationOriginRuntime } from "@/lib/order-confirmation-outbox";
 import { itemsHandedOver } from "@/lib/store-data-rules";
 import { ADMITTED_FIELD, OrdersPausedError, admitOrders } from "@/lib/order-admission";
 import { firstCharge } from "@/lib/move-rules";
@@ -284,6 +288,8 @@ export async function createCheckout(
      */
     digitalConsent?: DigitalConsent | null;
   } = {},
+  /** Internal integration dependency; never populated from HTTP or environment flags. */
+  confirmationRuntime: ConfirmationOriginRuntime = {},
 ): Promise<{ url: string; id: string }> {
   if (!store.stripeAccountId) throw new Error("This store has no account");
   if (extras.gift) extras = { ...extras, bumps: [], plan: false, upsellKey: undefined, group: undefined };
@@ -720,6 +726,38 @@ export async function createCheckout(
   // never be what stops a sale.
   if (extras.embedSite && /^https:\/\//.test(extras.embedSite) && [...body.keys()].filter((key) => key.startsWith("metadata[")).length < 49) {
     body.set("metadata[embed_site]", extras.embedSite.slice(0, 300));
+  }
+
+  // First durable category: a single physical item without expiring access,
+  // mutable checkout variants or coupled fulfillment. Other producers remain
+  // explicit follow-up work; none are silently relabeled as durable here.
+  const simplePhysical = Boolean((confirmationRuntime.lifecycle ?? CURRENT_SHIPMENT_MAIL_LIFECYCLE) !== "never_activated" && shipping && !product.bundle && !product.course && !product.podcast && !product.keys && !product.note &&
+    !product.callPackage && !product.recurring && !product.plan && !product.pwyw && !product.file && !product.link && product.options.length === 0 &&
+    product.fields.length === 0 && added.length === 0 && !extras.gift && !extras.group && !extras.preorder && !extras.email && !extras.buyerKey &&
+    !extras.upsellKey && !extras.news && !extras.held && !extras.remind && !recovering && !named && !store.tax.ids && !store.tax.invoices &&
+    !store.domain?.liveAt && !(store.affiliates.enabled && store.affiliates.buyers) && !body.has("discounts[0][promotion_code]") && !body.has("discounts[0][coupon]"));
+  if (simplePhysical) {
+    if ([...body.keys()].filter(key => key.startsWith("metadata[")).length > 47) throw new Error("The payment page could not be opened");
+    const nonce = randomBytes(32).toString("hex");
+    body.set("metadata[mm_order_intent]", nonce);
+    body.set("metadata[mm_order_origin]", "physical-v1");
+    const bodyDigest = confirmationBodyDigest(body.toString());
+    body.set("metadata[mm_order_hash]", bodyDigest);
+    const accountId = store.stripeAccountId;
+    const preintent = await prepareOrderConfirmationPreintent(store, admitted, { nonce, accountId, bodyDigest }, { now: confirmationRuntime.now });
+    if (!preintent) throw new Error("The payment page could not be opened");
+    const reserved = await reserveConfirmationOrigin({ statsId: store.statsId, nonce, accountId, body: body.toString(), preintent,
+      snapshot: { store: { handle: store.handle, name: store.name, email: store.email, sid: store.sid, extra: store.extra,
+        previousHandles: [...store.previousHandles], releasedHandles: [...store.releasedHandles], stripeAccountId: accountId,
+        statsId: store.statsId, currency: store.currency, language: store.language, domain: null,
+        affiliates: { enabled: false, buyers: false }, tax: { enabled: store.tax.enabled, included: store.tax.included } },
+        product: { id: product.id, title: product.title, priceCents: product.priceCents, options: [], call: null,
+          recurring: null, course: null, podcast: null, shipping: product.shipping, bundle: null, note: false, keys: null } },
+    }, confirmationRuntime);
+    if (!reserved.ok) throw new Error("The payment page could not be opened");
+    const ready = await openConfirmationOrigin(reserved.id, confirmationRuntime);
+    if (!ready) throw new Error("The payment page could not be confirmed");
+    return ready;
   }
 
   const open = async (fresh: boolean) => {
