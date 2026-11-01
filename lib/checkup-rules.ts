@@ -23,6 +23,9 @@
  * Browser-safe: plain data and pure functions.
  */
 
+import { API_WRITE_UNITS, type AllowanceKind, KIND_WORDS, askedCeiling } from "@/lib/store-allowance-rules";
+import { STUDIO_PAGE_UNITS } from "@/lib/studio-allowance-rules";
+
 export type CheckState = "ok" | "problem" | "not-checked";
 export type CheckId = "stripe" | "domain" | "email" | "checkout" | "limits" | "disputes";
 
@@ -204,6 +207,68 @@ export function checkoutCheck(trouble: { week: number; last: { message: string }
     found: `Stripe would not open a checkout ${times} in the last 7 days.${trouble.last ? ` The last time it said: "${trouble.last.message}"` : ""}`,
     ifLeft: "A buyer who presses buy gets an error instead of the payment page, and that sale is lost.",
     fix: { kind: "outside", where: "In your Stripe dashboard, look for a notice asking for information and send what it asks for. If there is none, it may have been Stripe failing for a moment, which passes by itself; if it keeps happening, Stripe's words above say what it would not do." },
+  };
+}
+
+/** The most one use takes of a figure: a studio page is STUDIO_PAGE_UNITS, an API write API_WRITE_UNITS; anything else one. */
+const LARGEST_TAKE: Partial<Record<AllowanceKind, number>> = { studio: STUDIO_PAGE_UNITS, api: API_WRITE_UNITS };
+
+/** What stops when a figure is used up, kind by kind. */
+function stopsWords(kind: AllowanceKind, reset: string): string {
+  if (kind === "studio") return `Your studio rests until it opens again; changing or canceling your plan, deleting the store and downloading your data still work. ${reset}`;
+  return `Until it opens again, what needs it does not run. ${reset}`;
+}
+
+/**
+ * The plan's figures in the store's window (lib/store-allowance.ts,
+ * allowancesUsedStrict; unit 3). A problem when one is used up, or has less
+ * left than its next use takes (a studio page takes four), said with its own
+ * words (KIND_WORDS) and when it opens again (`reset`, from resetWords); a
+ * problem too when confirmations to addresses nobody has shown yet are past
+ * their share of the access emails (askedCeiling), which stops only them.
+ * Fine otherwise, with the most used one; not checked when they could not be
+ * read. A figure of zero (not on this plan) is left out. `paying` says
+ * whether the store pays for a plan, so the way out is a larger plan or a
+ * plan at all.
+ */
+export function limitsCheck(readings: { kind: AllowanceKind; used: number; figure: number }[] | null, reset: string, paying: boolean): Check {
+  const title = "Your plan's limits";
+  if (!readings) return { id: "limits", title, state: "not-checked", found: "We could not read how much of your plan's figures is used just now. Try again in a few minutes." };
+  const fix: CheckFix = { kind: "studio", href: "/studio#billing", label: paying ? "See a larger plan" : "Start a plan" };
+  const counted = readings.filter((r) => r.figure > 0);
+  const share = (r: { used: number; figure: number }) => r.used / r.figure;
+  const out = (r: { kind: AllowanceKind; used: number; figure: number }) => r.figure - r.used < (LARGEST_TAKE[r.kind] ?? 1);
+  const full = counted.filter(out).sort((a, b) => share(b) - share(a));
+  const n = (x: number) => Math.floor(x).toLocaleString("en-US");
+  if (full.length) {
+    const [first, ...more] = full;
+    const words = KIND_WORDS[first.kind];
+    return {
+      id: "limits",
+      title,
+      state: "problem",
+      found: `${first.used >= first.figure ? `${words.what} in this period are used: ${n(first.figure)} ${words.many}.` : `${words.what} in this period are almost used: ${n(first.used)} of ${n(first.figure)} ${words.many}, less than the next use takes.`}${more.length ? ` ${more.length === 1 ? "One more figure is" : `${more.length} more figures are`} used up too.` : ""}`,
+      ifLeft: stopsWords(first.kind, reset),
+      fix,
+    };
+  }
+  const access = counted.find((r) => r.kind === "transactional");
+  if (access && access.used >= askedCeiling(access.figure)) {
+    return {
+      id: "limits",
+      title,
+      state: "problem",
+      found: "Confirmation emails to new addresses (sign-ups, a waitlist, the affiliate form) are paused: they have used their share of your buyers' access emails.",
+      ifLeft: `Nobody new can confirm an address until it opens again. Links your buyers ask for still go out. ${reset}`,
+      fix,
+    };
+  }
+  const top = [...counted].sort((a, b) => share(b) - share(a))[0];
+  return {
+    id: "limits",
+    title,
+    state: "ok",
+    found: top && top.used > 0 ? `Nothing is used up. The most used: ${n(top.used)} of ${n(top.figure)} ${KIND_WORDS[top.kind].many}.` : "Nothing is used up.",
   };
 }
 

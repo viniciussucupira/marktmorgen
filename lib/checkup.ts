@@ -7,6 +7,7 @@
  *   domain     domainCheckup (lib/domains.ts), two GETs at Vercel
  *   email      pauseForSending (lib/mail-health.ts), one Redis read
  *   checkout   readTroubleStrict (lib/checkout-trouble.ts), one Redis read
+ *   limits     allowancesUsedStrict (lib/store-allowance.ts), one Redis read for every figure (unit 3)
  *
  * Each has a ceiling of CHECK_WAIT_MS: a reader that has not answered by
  * then, or that failed, is "not checked", never fine. The readers run side
@@ -29,7 +30,11 @@ import { readAccount } from "@/lib/stripe-connect";
 import { domainCheckup } from "@/lib/domains";
 import { healthId, pauseForSending } from "@/lib/mail-health";
 import { readTroubleStrict } from "@/lib/checkout-trouble";
-import { type Check, checkoutCheck, domainCheck, emailCheck, emailStopped, notCheckedYet, orderChecks, stripeCheck } from "@/lib/checkup-rules";
+import { type Check, checkoutCheck, domainCheck, emailCheck, emailStopped, limitsCheck, notCheckedYet, orderChecks, stripeCheck } from "@/lib/checkup-rules";
+import { type AllowanceStore, allowancesUsedStrict } from "@/lib/store-allowance";
+import { ALLOWANCE_KINDS } from "@/lib/store-allowance-rules";
+import { resetWords } from "@/lib/allowance-window";
+import { standingOf } from "@/lib/plan-standing";
 
 /** The moment a checkup is read, said on the page with it. */
 export function checkupClock(): number {
@@ -52,7 +57,7 @@ export async function within<T, F>(read: () => Promise<T>, fallback: F, ms = CHE
   }
 }
 
-type CheckedStore = Pick<Store, "sid" | "listId" | "statsId" | "stripeAccountId" | "domain" | "subscriptionActive" | "tier" | "renewalUnpaidSince" | "planDisputes">;
+type CheckedStore = Pick<Store, "sid" | "listId" | "statsId" | "stripeAccountId" | "domain" | "subscriptionActive" | "tier" | "renewalUnpaidSince" | "planDisputes"> & AllowanceStore;
 
 /** The studio card each fix leads to, and the permission that draws it (app/studio/page.tsx). */
 const CARD_NEEDS: [string, Permission][] = [
@@ -71,25 +76,32 @@ export function forRole(check: Check, can: (permission: Permission) => boolean):
   return { ...check, fix: { kind: "outside", where: `This is fixed in a part of the studio your role cannot open ("${fix.label}"). Ask the store's owner.` } };
 }
 
-export async function runCheckup(store: CheckedStore, can: (permission: Permission) => boolean, now = Date.now(), ms = CHECK_WAIT_MS): Promise<Check[]> {
+/** Where billing is not set up here, the plan card (and its #billing anchor) is not drawn: the way to a plan is said, not linked. */
+export function forBilling(check: Check, billingReady: boolean): Check {
+  if (billingReady || check.fix?.kind !== "studio" || check.fix.href !== "/studio#billing") return check;
+  return { ...check, fix: { kind: "outside", where: "Plans cannot be started or changed on this site just now." } };
+}
+
+export async function runCheckup(store: CheckedStore, can: (permission: Permission) => boolean, now = Date.now(), ms = CHECK_WAIT_MS, billingReady = true): Promise<Check[]> {
   const account = store.stripeAccountId;
   const domain = store.domain?.name ?? null;
   const resting = domain !== null && !canUse(store, "domain");
   const stopped = emailStopped({ pro: store.subscriptionActive && hasPro(store.tier), renewalUnpaid: (store.renewalUnpaidSince ?? 0) > 0, disputed: store.subscriptionActive && planDisputed(store, now / 1000) });
-  const [stripe, site, pause, trouble] = await Promise.all([
+  const [stripe, site, pause, trouble, limits] = await Promise.all([
     account ? within(() => readAccount(account), null, ms) : Promise.resolve(null),
     domain && !resting ? within(() => domainCheckup(domain, store), null, ms) : Promise.resolve(null),
     stopped === null ? within(() => pauseForSending(healthId(store), now), undefined, ms) : Promise.resolve(undefined),
     // With no Stripe account no checkout can open at all; the payments line says so.
     account ? within(() => readTroubleStrict(store.statsId, now), null, ms) : Promise.resolve(null),
+    within(() => allowancesUsedStrict(store, ALLOWANCE_KINDS, now), null, ms),
   ]);
   const checks = orderChecks([
     stripeCheck(Boolean(account), stripe),
     domainCheck(domain, resting ? "resting" : site),
     stopped === "left-out" ? null : stopped ?? emailCheck(pause, now),
     account ? checkoutCheck(trouble) : null,
-    notCheckedYet("limits"),
+    limitsCheck(limits, resetWords(store, now), standingOf(store, now / 1000) === "paid"),
     notCheckedYet("disputes"),
   ]);
-  return checks.map((check) => forRole(check, can));
+  return checks.map((check) => forRole(forBilling(check, billingReady), can));
 }
