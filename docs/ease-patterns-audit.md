@@ -92,7 +92,7 @@ The screen-by-screen audit that 487 [IT4] asks for: what was checked, what was f
 - The lesson link in the course editor uses it, with its label now tied to the field by id, so does the link a product sends its buyer to, and so does a store link, each with its help tied to it. All three routes now refuse a link that is too long instead of cutting it.
 
 **Still to do.**
-- The same field in the other 10 files: host calendar, webhook editor, mark shipped, call editor, chat summary, report form, community events, page editor, calendar editor and review studio. Each is read first: their routes do not use the product-link reading, so each needs the reading its own server applies.
+- The same field in the other 10 files: host calendar, webhook editor, mark shipped, call editor, chat summary, report form, community events, page editor, calendar editor and review studio. Each is read first: their routes do not use the product-link reading, so each needs the reading its own server applies. The webhook editor and both calendar editors are read by `checkUrl` in `lib/safe-fetch.ts`, which also imports the server's DNS and network modules. Those fields can be checked in the browser only after the pure part of `checkUrl` is moved into a browser-safe module, and that module guards every request the server sends out, so it gets its own unit and review. The other fields (call, chat summary, mark shipped, report form, community events, page editor, review studio) are read next, one by one.
 
 ## Not audited yet
 
