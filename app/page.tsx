@@ -242,7 +242,7 @@ export default function Home() {
         </section>
       </main>
 
-      <div className="hm-foot"><Suspense fallback={null}><SiteFooter morning /></Suspense></div>
+      <div className="hm-foot"><Suspense fallback={null}><SiteFooter morning variant="home" /></Suspense></div>
       <HomeData questions={questions} />
     </div>
   );

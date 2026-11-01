@@ -1463,6 +1463,7 @@
     "components/store-quotes.tsx",
     "components/store-reach.tsx",
     "components/store-resting.tsx",
+    "components/store-search-check.tsx",
     "components/store-setup-ai.tsx",
     "components/store-share-button.tsx",
     "components/store-socials-row.tsx",
