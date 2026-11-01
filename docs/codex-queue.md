@@ -8467,6 +8467,24 @@ REGRA DE MARGEM (MR, 27/10/2026) e política TX vigentes: nenhuma unidade com pr
 
 Proibido: mudar preços, limites visíveis (inclusive a cota de e-mails), comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a, a revisão comercial ou stripePlatformEligibilityReady; afrouxar qualquer trava; usar pixel de rastreamento de abertura; apagar contatos; mostrar recurso que não funciona; criar contas, aceitar termos, contratar, pagar ou contatar terceiros sem "sim" do dono; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos. Aplicar a regra VR.
 
+### 309 — Complemento do dono: e-mails falsos em nosso nome e conta sequestrada (01/11/2026, 01h25 Fortaleza)
+
+Solicitação do dono (01/11/2026, 01h25, horário de Fortaleza). Complemento do 309 [EM1], sem item, número ou seção nova e sem mudar sua posição. Pedidos repetidos: conferidos o main, os PRs abertos e os complementos do 309 [EM1] (30/10, 31/10 e 01/11/2026, 01h21 e 01h23) e do 356 [ES2]; os dois pontos abaixo não estavam gravados. O complemento de 30/10 do 356 [ES2] já exige DMARC alinhado nos subdomínios; aqui se acrescenta só a política de bloqueio e a verificação automática. Passo 3(b): só a diferença.
+
+O que acrescentar:
+1. Bloqueio de e-mails falsos em nosso nome: em marktmorgen.com, no domínio de envio próprio e em cada subdomínio de envio, levar a política DMARC, em etapas, de monitoramento ("p=none") para quarentena e depois para recusa ("p=reject"), com "sp" para os subdomínios, só depois de o código confirmar que todo envio legítimo (SES, Resend, recibos, login) passa em SPF ou DKIM alinhado; o código confere sozinho, todo dia, os registros DMARC, SPF e DKIM publicados e bloqueia o envio de lista por um domínio cuja autenticação esteja quebrada. Relatórios DMARC agregados só se puderem ser lidos sem fornecedor pago novo e sem dados pessoais guardados; caso contrário, ficam desligados. Estado atual dos registros não conferido pelo Claude em 01/11/2026 (a consulta DNS não estava disponível no ambiente): conferir no início da implementação. Mudança no DNS que exija o acesso do dono só com "sim" dele.
+2. Conta sequestrada: depois de troca do e-mail de login da conta, ou de acesso por aparelho ou navegador não visto antes, uma campanha para lista acima de um tamanho mínimo (definido no código) espera algumas horas antes de sair, e um aviso vai para o e-mail anterior e para o atual, com um link que cancela a campanha e encerra as sessões em um clique. Envios pequenos, e-mails de serviço e de compra não esperam. Sem rastreamento além do necessário: guardar só um identificador do aparelho com prazo de retenção definido, apagado com a pessoa, e registrado em lib/person-data.ts, na Política de Privacidade e nos Termos.
+
+Testes automáticos: envio de lista bloqueado com DMARC/SPF/DKIM quebrado simulado; etapas da política só avançando com autenticação alinhada de todos os envios; espera da campanha grande após troca de e-mail de login e após aparelho novo; cancelamento e encerramento das sessões pelo link; envios pequenos e de serviço sem espera; retenção e exclusão do identificador do aparelho.
+
+Custo: consultas DNS e o e-mail de aviso (dentro dos e-mails de serviço), com teto automático antes do gasto, no pior caso mensal e anual. Custo desconhecido reprova, nunca é zero.
+
+Acessibilidade (AX274, Parte A, integral): máxima acessibilidade em tudo o que este complemento criar ou alterar — WCAG 2.2 nível AAA em todos os critérios aplicáveis, inclusive no e-mail de aviso (HTML acessível e versão em texto, inglês americano simples) e no aviso de campanha em espera no estúdio, sem limite de tempo imposto ao criador para agir (2.2.3). Passos e decisões do criador: hoje 0 → depois 0 no caso normal; só se a conta for invadida, 1 ação (cancelar pelo link).
+
+REGRA DE MARGEM (MR, 27/10/2026) e política TX vigentes: nenhuma unidade com prejuízo usando 100% dos direitos no pior mês, mensal e anual; custos fixos 100% do Marktmorgen (FX275); cálculo ao dono pela regra LC.
+
+Proibido: mudar preços, limites visíveis (inclusive a cota de e-mails), comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a, a revisão comercial ou stripePlatformEligibilityReady; afrouxar qualquer trava; usar pixel de rastreamento de abertura; apagar contatos; mostrar recurso que não funciona; criar contas, aceitar termos, contratar, pagar ou contatar terceiros sem "sim" do dono; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos. Aplicar a regra VR.
+
 310. [AX2] Prova de acessibilidade em 100% das páginas, com leitores de tela reais
 
 Estado: na fila, com prioridade logo após os pedidos já recebidos.
