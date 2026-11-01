@@ -13,9 +13,9 @@
  * no writing job; it takes the store's data room like any page, and a page
  * that does not fit is simply not made (the product is kept all the same).
  */
-import { MAX_BIO_LENGTH, type Store, addProduct, setFaq, updateDetails } from "@/lib/store";
+import { MAX_BIO_LENGTH, type Store, addProduct, setFaq, setProductPage, updateDetails } from "@/lib/store";
 import { parseFaq } from "@/lib/store-faq";
-import { EMPTY_PAGE, blocksFromTemplate } from "@/lib/sales-page";
+import { EMPTY_PAGE, blocksFromTemplate, parsePage } from "@/lib/sales-page";
 import { writePage } from "@/lib/sales-page-store";
 
 export type SetupKept = { bio: boolean; products: number; pages: number; faq: boolean; refused: string[] };
@@ -43,15 +43,18 @@ export async function keepStoreSetup(ref: string, store: Store, body: Record<str
       continue;
     }
     done.products += 1;
-    // Its sales page, from the template for its kind, in the store's data room; one that does not fit is left out.
-    const statsId = made.store.statsId;
-    if (statsId) {
-      const blocks = blocksFromTemplate(setupTemplate(p.kind, made.product.priceCents === 0), { title: made.product.title, summary: made.product.summary ?? "", picture: false });
+    // Its sales page, from the template for its kind, held to every rule a saved page is (parsePage), in the
+    // store's data room. As the page route does: the product is marked as having a page, then the page is
+    // written; a page that does not fit is left out and the mark taken back, so nothing is shown or kept half-made.
+    const page = parsePage({ ...EMPTY_PAGE, blocks: blocksFromTemplate(setupTemplate(p.kind, made.product.priceCents === 0), { title: made.product.title, summary: made.product.summary ?? "", picture: false }) });
+    const marked = await setProductPage(ref, made.product.id, true).catch(() => null);
+    if (marked?.ok && marked.store.statsId) {
       try {
-        await writePage(statsId, made.product.id, { ...EMPTY_PAGE, blocks }, made.store);
+        await writePage(marked.store.statsId, made.product.id, page, marked.store);
         done.pages += 1;
       } catch (error) {
         console.error("a drafted product's page was not made", error);
+        await setProductPage(ref, made.product.id, false).catch(() => null);
       }
     }
   }
