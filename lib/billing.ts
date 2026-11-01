@@ -1457,7 +1457,9 @@ function searchDataRecord(value: unknown, label: string): Record<string, unknown
   return copy;
 }
 
-function searchMember(value: unknown, handles: Set<string>): Record<string, unknown> {
+type SearchOwnership = { customerId: string | null; released: Set<string> };
+type SearchMember = { subscription: Record<string, unknown>; terminalOwn: boolean };
+function searchMember(value: unknown, handles: Set<string>, ownership: SearchOwnership): SearchMember | null {
   const member = searchDataRecord(value, "member");
   if (typeof member.id !== "string" || !SUBSCRIPTION_PATTERN.test(member.id) ||
       typeof member.status !== "string" || !SEARCH_STATUSES.has(member.status) ||
@@ -1470,6 +1472,23 @@ function searchMember(value: unknown, handles: Set<string>): Record<string, unkn
     throw new Error("Subscription search member ownership is unknown");
   }
   const customer = searchDataRecord(member.customer, "expanded customer");
+  // Stripe's DeletedCustomer has id/object/deleted, without an email. Only
+  // a known canceled legacy owner or a proved foreign released-handle row
+  // can use that partial shape. Unknown funding is never terminal absence.
+  if (customer.deleted === true) {
+    const valid = customer.object === "customer" && !Object.hasOwn(customer, "email") &&
+      typeof customer.id === "string" && CUSTOMER_PATTERN.test(customer.id) && member.status === "canceled";
+    if (valid && ownership.customerId) {
+      if (ownership.released.has(named) && customer.id !== ownership.customerId) return null;
+      const marked = [member, metadata].some(record => Object.keys(record).some(key => /^(funding_|restart_|cf_)/.test(key)));
+      if (customer.id === ownership.customerId && !marked) {
+        member.metadata = metadata;
+        member.customer = customer;
+        return { subscription: member, terminalOwn: true };
+      }
+    }
+    throw new Error("Subscription search deleted customer ownership is unknown");
+  }
   if (typeof customer.id !== "string" || !CUSTOMER_PATTERN.test(customer.id) ||
       !Object.prototype.hasOwnProperty.call(customer, "email") ||
       customer.email !== null && typeof customer.email !== "string") {
@@ -1515,7 +1534,7 @@ function searchMember(value: unknown, handles: Set<string>): Record<string, unkn
       }
     }
   }
-  return member;
+  return { subscription: member, terminalOwn: false };
 }
 
 /**
@@ -1540,7 +1559,8 @@ export async function findStoreSubscriptions(
 ): Promise<{ live: StartedSubscription | null; customerId: string | null; lapsed: string[] }> {
   // Stripe takes at most ten clauses in one query. An address the store let
   // go of is looked under too, and kept only for its own customer (ownedBy).
-  const handles = [...new Set([store.handle, ...store.previousHandles, ...store.releasedHandles])];
+  const releasedHandles = store.releasedHandles;
+  const handles = [...new Set([store.handle, ...store.previousHandles, ...releasedHandles])];
   // A complete result page proves nothing about a handle left out of its
   // query. Refuse unknown or over-cap coverage instead of filtering it away.
   if (handles.length === 0 || handles.length > 10 ||
@@ -1564,15 +1584,25 @@ export async function findStoreSubscriptions(
       !more || !("value" in more) || more.value !== false ||
       cursor && (!("value" in cursor) || cursor.value !== null && cursor.value !== undefined) ||
       data.value.length > SEARCH_LIMIT) throw new Error("Subscription search page is incomplete");
-  const entries: Record<string, unknown>[] = [];
+  const customerContext = Object.getOwnPropertyDescriptor(store, "stripeCustomerId");
+  const releasedContext = Object.getOwnPropertyDescriptor(store, "releasedHandles");
+  const ownership: SearchOwnership = {
+    customerId: customerContext && Object.hasOwn(customerContext, "value") &&
+      typeof customerContext.value === "string" && CUSTOMER_PATTERN.test(customerContext.value) ? customerContext.value : null,
+    released: releasedContext && Object.hasOwn(releasedContext, "value") && releasedContext.value === releasedHandles
+      ? new Set(releasedHandles) : new Set(),
+  };
+  const entries: SearchMember[] = [];
   const coveredHandles = new Set(handles);
   for (let index = 0; index < data.value.length; index++) {
     const entry = Object.getOwnPropertyDescriptor(data.value, String(index));
     if (!entry || !("value" in entry)) throw new Error("Subscription search member is unknown");
-    entries.push(searchMember(entry.value, coveredHandles));
+    const member = searchMember(entry.value, coveredHandles, ownership);
+    if (member) entries.push(member);
   }
   const rows = entries
-    .filter((subscription) => ownedBy(store, subscription))
+    .filter(({ subscription, terminalOwn }) => terminalOwn || ownedBy(store, subscription))
+    .map(({ subscription }) => subscription)
     .sort((a, b) => (b.created as number) - (a.created as number));
 
   let live: StartedSubscription | null = null;

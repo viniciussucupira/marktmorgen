@@ -443,7 +443,15 @@ test('documented canceled DeletedCustomer preserves only proven foreign exclusio
    page={data:[deleted(handle)],has_more:false};
    assert.deepEqual(await findStoreSubscriptions(owner),{live:null,customerId:owner.stripeCustomerId,lapsed:[]},handle);
   }
-  assert.equal(reads,5);assert.equal(writes,0);
+  let idReads=0,idDescriptors=0;
+  const captured=new Proxy(owner,{
+   get(target,key,receiver){if(key==='stripeCustomerId'){idReads++;throw Error('identity must not be reread');}return Reflect.get(target,key,receiver);},
+   getOwnPropertyDescriptor(target,key){if(key==='stripeCustomerId')idDescriptors++;return Reflect.getOwnPropertyDescriptor(target,key);},
+  });
+  page={data:[deleted('old-harbor')],has_more:false};
+  assert.deepEqual(await findStoreSubscriptions(captured),{live:null,customerId:owner.stripeCustomerId,lapsed:[]});
+  assert.equal(idDescriptors,1);assert.equal(idReads,0);
+  assert.equal(reads,6);assert.equal(writes,0);
  }finally{globalThis.fetch=old;}
 });
 
@@ -461,13 +469,15 @@ test('DeletedCustomer exception cannot turn ambiguous, funded or active observat
    {...terminal,customer:{id:'cus_Test000001',object:'customer'}},
    {...terminal,customer:{...terminal.customer,email:owner.email}},
    {...terminal,customer:{...terminal.customer,id:'unknown'}},
+   {...terminal,metadata:Object.assign(Object.create({funding_grant:'unknown'}),{store:'harbor'})},
+   {...terminal,customer:Object.defineProperty({...terminal.customer},'email',{get(){getters++;return owner.email;}})},
   ];
   for(const prefix of ['funding_','restart_','cf_']){
    malformed.push({...terminal,metadata:{...terminal.metadata,[prefix+'proof']:undefined}});
    malformed.push({...terminal,[prefix+'proof']:undefined});
   }
   for(const row of malformed){page={data:[row],has_more:false};await assert.rejects(findStoreSubscriptions(owner),/Subscription search/);}
-  for(const id of [null,'']){page={data:[terminal],has_more:false};await assert.rejects(findStoreSubscriptions({...owner,stripeCustomerId:id} as Store),/Subscription search/);}
+  for(const id of [null,'','invalid']){page={data:[terminal],has_more:false};await assert.rejects(findStoreSubscriptions({...owner,stripeCustomerId:id} as Store),/Subscription search/);}
   const accessor={...owner};Object.defineProperty(accessor,'stripeCustomerId',{get(){getters++;return owner.stripeCustomerId;}});
   const inherited={...owner};delete (inherited as Partial<Store>).stripeCustomerId;Object.setPrototypeOf(inherited,{stripeCustomerId:owner.stripeCustomerId});
   for(const context of [accessor,inherited]){page={data:[terminal],has_more:false};await assert.rejects(findStoreSubscriptions(context),/Subscription search/);}
