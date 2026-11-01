@@ -36,6 +36,7 @@ is("and the composer starts from it when brought back", ["subject", "body", "pro
 part("Said, and safe");
 is("in a polite live region always on the page, with a real button", studio.includes('<div aria-live="polite" className="mb-4">') && studio.includes('<button type="button" className="btn btn-secondary btn-sm ml-1" onClick={bringBack}>Bring them back</button>'), true);
 is("the line says what happened in plain words", studio.includes("Your unsaved changes to the other email were set aside."), true);
+is("brought back, the focus goes to the email's subject, as the button is gone", studio.includes("if (restored) subjectBox.current?.focus();") && studio.includes("<input ref={subjectBox}"), true);
 is("leaving the page with something set aside asks first", studio.includes("useLeaveGuard(setAside !== null);"), true);
 is("what is set aside stays in the page: not stored in the browser or sent", /localStorage|sessionStorage/.test(studio), false);
 done();

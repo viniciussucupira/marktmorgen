@@ -639,6 +639,12 @@ function Compose(props: {
   const [body, setBody] = useState(props.restore ? props.restore.body : props.draft?.body ?? props.initialTemplate?.body ?? "");
   // The email's box, so a picture goes where the cursor is.
   const bodyBox = useRef<HTMLTextAreaElement>(null);
+  // Brought back (485 [IT2]): the button that did it is gone, so the focus goes to the email it brought back.
+  const subjectBox = useRef<HTMLInputElement>(null);
+  const restored = Boolean(props.restore);
+  useEffect(() => {
+    if (restored) subjectBox.current?.focus();
+  }, [restored]);
   const [productId, setProductId] = useState(props.restore ? props.restore.productId : props.draft?.productId ?? "");
   const [notProductId, setNotProductId] = useState(props.restore ? props.restore.notProductId : props.draft?.notProductId ?? "");
   // Everybody, only people who have bought something, or only those who have not yet.
@@ -855,7 +861,7 @@ function Compose(props: {
         />
         <label className="block">
           <span className="field-label">Subject</span>
-          <input className="field mt-2" maxLength={150} value={subject} onChange={(e) => setSubject(e.target.value)} />
+          <input ref={subjectBox} className="field mt-2" maxLength={150} value={subject} onChange={(e) => setSubject(e.target.value)} />
         </label>
         {/*
           A second subject line, tried against the first.
