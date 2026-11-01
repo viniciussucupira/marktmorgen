@@ -2,6 +2,8 @@
 
 import type { LibraryEmailDraft, LibrarySequenceDraft } from "@/lib/template-library-intents";
 import { AiAssist, AiOn } from "@/components/ai-assist";
+import { sendCount } from "@/lib/send-count";
+import { afterSwitch, emailName, setAsideCount, setAsideNote, takeNewest } from "@/lib/set-aside";
 import { EMAIL_GOALS, type EmailGoal } from "@/lib/ai-rules";
 import { appendSequenceDraft, sequenceDraftSlots, DEFAULT_SEQUENCE_DRAFT, type DraftedStep, SEQUENCE_DRAFT_COUNTS } from "@/lib/sequence-draft";
 import { PRO_MONTHLY_EMAILS, TRIAL_MONTHLY_EMAILS } from "@/lib/plan";
@@ -295,6 +297,8 @@ export function EmailStudio(props: {
   counts: { total: number; agreed: number; left: number; mailable: number };
   used: number;
   allowance: number;
+  /** Whether the plan's month can be told (lib/allowance-window.ts windowId); without it no count before sending is shown. */
+  monthKnown?: boolean;
   trial: boolean;
   products: { id: string; title: string }[];
   broadcasts: BroadcastRow[];
@@ -340,17 +344,39 @@ export function EmailStudio(props: {
   // The draft open in the composer; a new key starts the composer afresh.
   const [open, setOpen] = useState<DraftRow | null>(null);
   const [composeRevision, setComposeRevision] = useState(0);
-  const composerState = useRef<{ dirty: boolean; busy: boolean } | null>(null);
+  const composerState = useRef<ComposerHandle | null>(null);
+  // Unsaved changes set aside by opening another email, with the email they belonged to (485 [IT2]): kept in this page only, never sent
+  // or saved. A list, newest last, so a second switch never drops what an earlier one set aside.
+  const [setAside, setSetAside] = useState<{ snapshot: ComposerSnapshot; from: DraftRow | null }[]>([]);
+  const [restore, setRestore] = useState<ComposerSnapshot | undefined>(undefined);
+  // What the polite region says: a different sentence for each thing that happened, so each is read out.
+  const [asideNote, setAsideNoteText] = useState("");
+  // Leaving the page would lose what was set aside, so it asks as for changes on screen (components/leave-guard.ts).
+  useLeaveGuard(setAside.length > 0);
+  const switchTo = (draft: DraftRow | null, restoring?: ComposerSnapshot, rest = setAside) => {
+    // Opening another email over unsaved changes no longer asks first: they are set aside, and one press brings them back.
+    const current = composerState.current;
+    const kept = current?.dirty ? current.snapshot() : null;
+    setSetAside(afterSwitch(rest, kept, open));
+    setAsideNoteText(setAsideNote(kept, restoring ?? null));
+    setLibraryEmail(undefined);
+    setOpen(draft);
+    setRestore(restoring);
+    setComposeRevision((value) => value + 1);
+  };
   const openDraft = (draft: DraftRow | null) => {
     if (draft && open?.id === draft.id && open.savedAt === draft.savedAt) return;
     if (composerState.current?.busy) {
       toast("Wait for the current email operation to finish before opening another email.");
       return;
     }
-    if (composerState.current?.dirty && !window.confirm("You have email changes that are not saved. Discard them and open another email?")) return;
-    setLibraryEmail(undefined);
-    setOpen(draft);
-    setComposeRevision((value) => value + 1);
+    switchTo(draft);
+  };
+  const bringBack = () => {
+    if (composerState.current?.busy) return;
+    // The newest set aside; a draft deleted since comes back as a new email (lib/set-aside.ts).
+    const newest = takeNewest(setAside, props.drafts);
+    if (newest) switchTo(newest.from, newest.snapshot, newest.rest);
   };
   const [uncertainList, setUncertainList] = useState<FlowRow[] | null>(null);
   const writeUnconfirmed = uncertainList === props.flows;
@@ -363,21 +389,37 @@ export function EmailStudio(props: {
           <>
             {draftCleanupUnconfirmed ? <p role="status" className="mb-4 rounded-[var(--r-md)] bg-sand p-4 text-sm text-ink-soft">Your campaign was created, but clearing its saved draft could not be confirmed. Check Sent and scheduled before sending that draft again.</p> : null}
             <AiOn value={props.ai ?? { on: false, left: 0 }}>
+              {/* A polite live region always on the page, so what is set aside and brought back is read out (485 [IT2]). */}
+              <div aria-live="polite" className="mb-4">
+                {asideNote || setAside.length > 0 ? (
+                  <p className="rounded-[var(--r-md)] bg-sand p-4 text-sm text-ink">
+                    {asideNote || setAsideCount(setAside.length)}
+                    {setAside.length > 0 ? (
+                      <>
+                        {" "}
+                        <button type="button" className="btn btn-secondary btn-sm ml-1" onClick={bringBack}>{`Bring back ${emailName(setAside.at(-1)!.snapshot)}`}</button>
+                      </>
+                    ) : null}
+                  </p>
+                ) : null}
+              </div>
               <Compose
                 key={`${composeRevision}-${open ? `${open.id}-${open.savedAt}` : "new"}`}
                 email={props.email}
                 products={props.products}
                 links={props.links ?? {}}
                 counts={props.counts}
+                month={props.monthKnown ? { used: props.used, allowance: props.allowance } : null}
                 canSend={props.canSend}
                 broadcastUnconfirmed={broadcastUnconfirmed}
                 onBroadcastUnconfirmed={() => setBroadcastUnconfirmed(true)}
                 onDraftCleanupUnconfirmed={() => setDraftCleanupUnconfirmed(true)}
                 draft={open}
                 initialTemplate={open ? undefined : libraryEmail}
-                onDone={() => { setLibraryEmail(undefined); setOpen(null); setComposeRevision((value) => value + 1); }}
+                onDone={() => { setLibraryEmail(undefined); setOpen(null); setRestore(undefined); setAsideNoteText(""); setComposeRevision((value) => value + 1); }}
                 onStartNew={() => openDraft(null)}
                 composerState={composerState}
+                restore={restore}
                 savedDrafts={props.drafts}
                 draftsReadFailed={props.draftsReadFailed ?? false}
                 currency={props.currency}
@@ -569,6 +611,16 @@ function ListCard({
   );
 }
 
+/** Everything the composer holds that is not saved, to set aside and bring back (485 [IT2]). */
+type ComposerSnapshot = {
+  subject: string; body: string; productId: string; notProductId: string; who: Who; draftId: string; draftSavedAt: string;
+  later: boolean; at: string; testing: boolean; subjectB: string; share: number; hours: number; by: TestBy;
+  spentText: string; channel: string; quietDays: number; more: boolean; savedContent: string;
+  /** A draft save that could not be confirmed: saving stays blocked when brought back, so a draft is never made twice. */
+  uncertain: boolean;
+};
+type ComposerHandle = { dirty: boolean; busy: boolean; snapshot: () => ComposerSnapshot };
+
 function Compose(props: {
   initialTemplate?: LibraryEmailDraft;
   broadcastUnconfirmed: boolean;
@@ -578,12 +630,16 @@ function Compose(props: {
   products: { id: string; title: string }[];
   links: Record<string, string>;
   counts: { mailable: number };
+  /** This month's emails used and allowed, as the "This month" card shows them (460 [EL4]); null when the plan's month cannot be told. */
+  month: { used: number; allowance: number } | null;
   canSend: boolean;
   /** A draft opened into the composer, or null for a new email. */
   draft: DraftRow | null;
   onDone: () => void;
   onStartNew: () => void;
-  composerState: { current: { dirty: boolean; busy: boolean } | null };
+  composerState: { current: ComposerHandle | null };
+  /** Unsaved changes set aside and brought back (485 [IT2]): the composer starts from them. */
+  restore?: ComposerSnapshot;
   savedDrafts: DraftRow[];
   draftsReadFailed: boolean;
   currency: string;
@@ -592,20 +648,26 @@ function Compose(props: {
 }) {
   const router = useRouter();
   const [refreshingDrafts, startDraftRefresh] = useTransition();
-  const [uncertainDrafts, setUncertainDrafts] = useState<DraftRow[] | null>(null);
+  const [uncertainDrafts, setUncertainDrafts] = useState<DraftRow[] | null>(props.restore?.uncertain ? props.savedDrafts : null);
   const draftSaveBlocked = uncertainDrafts !== null && (uncertainDrafts === props.savedDrafts || props.draftsReadFailed);
-  const [subject, setSubject] = useState(props.draft?.subject ?? props.initialTemplate?.subject ?? "");
-  const [body, setBody] = useState(props.draft?.body ?? props.initialTemplate?.body ?? "");
+  const [subject, setSubject] = useState(props.restore ? props.restore.subject : props.draft?.subject ?? props.initialTemplate?.subject ?? "");
+  const [body, setBody] = useState(props.restore ? props.restore.body : props.draft?.body ?? props.initialTemplate?.body ?? "");
   // The email's box, so a picture goes where the cursor is.
   const bodyBox = useRef<HTMLTextAreaElement>(null);
-  const [productId, setProductId] = useState(props.draft?.productId ?? "");
-  const [notProductId, setNotProductId] = useState(props.draft?.notProductId ?? "");
+  // Brought back (485 [IT2]): the button that did it is gone, so the focus goes to the email it brought back.
+  const subjectBox = useRef<HTMLInputElement>(null);
+  const restored = Boolean(props.restore);
+  useEffect(() => {
+    if (restored) subjectBox.current?.focus();
+  }, [restored]);
+  const [productId, setProductId] = useState(props.restore ? props.restore.productId : props.draft?.productId ?? "");
+  const [notProductId, setNotProductId] = useState(props.restore ? props.restore.notProductId : props.draft?.notProductId ?? "");
   // Everybody, only people who have bought something, or only those who have not yet.
-  const [who, setWho] = useState<Who>(props.draft?.who ?? props.preset?.who ?? "all");
-  const [draftId, setDraftId] = useState(props.draft?.id ?? "");
-  const [draftSavedAt, setDraftSavedAt] = useState(props.draft?.savedAt ?? "");
-  const [later, setLater] = useState(false);
-  const [at, setAt] = useState("");
+  const [who, setWho] = useState<Who>(props.restore ? props.restore.who : props.draft?.who ?? props.preset?.who ?? "all");
+  const [draftId, setDraftId] = useState(props.restore ? props.restore.draftId : props.draft?.id ?? "");
+  const [draftSavedAt, setDraftSavedAt] = useState(props.restore ? props.restore.draftSavedAt : props.draft?.savedAt ?? "");
+  const [later, setLater] = useState(props.restore?.later ?? false);
+  const [at, setAt] = useState(props.restore?.at ?? "");
   const [scheduleNow, setScheduleNow] = useState(() => Date.now());
   const scheduledAt = later ? readMailSchedule(at, scheduleNow) : null;
   const invalidSchedule = later && scheduledAt === null;
@@ -617,19 +679,19 @@ function Compose(props: {
     return () => { window.clearInterval(timer); window.removeEventListener("focus", tick); };
   }, [later]);
   // A second subject line tried on part of the list (lib/mail-test.ts).
-  const [testing, setTesting] = useState(Boolean(props.draft?.subjectTest));
-  const [subjectB, setSubjectB] = useState(props.draft?.subjectTest?.subjectB ?? "");
-  const [share, setShare] = useState<number>(props.draft?.subjectTest?.share ?? TEST_SHARES[0]);
-  const [hours, setHours] = useState<number>(props.draft?.subjectTest?.hours ?? TEST_HOURS[1]);
-  const [by, setBy] = useState<TestBy>(props.draft?.subjectTest?.by ?? "visits");
+  const [testing, setTesting] = useState(props.restore ? props.restore.testing : Boolean(props.draft?.subjectTest));
+  const [subjectB, setSubjectB] = useState(props.restore ? props.restore.subjectB : props.draft?.subjectTest?.subjectB ?? "");
+  const [share, setShare] = useState<number>(props.restore ? props.restore.share : props.draft?.subjectTest?.share ?? TEST_SHARES[0]);
+  const [hours, setHours] = useState<number>(props.restore ? props.restore.hours : props.draft?.subjectTest?.hours ?? TEST_HOURS[1]);
+  const [by, setBy] = useState<TestBy>(props.restore ? props.restore.by : props.draft?.subjectTest?.by ?? "visits");
   const [countRevision, setCountRevision] = useState(0);
   const [reachResult, setReachResult] = useState<{ key: string; count: number | null } | null>(null);
   // Spent at least, first found the store through, has not bought in these
   // days (lib/segments.ts), and the groups saved under a name.
-  const [spentText, setSpentText] = useState(props.draft?.narrow?.minSpent ? plainAmount(props.draft.narrow.minSpent, props.currency) : "");
-  const [channel, setChannel] = useState(props.draft?.narrow?.channel ?? "");
-  const [quietDays, setQuietDays] = useState(props.draft?.narrow?.quietDays ?? 0);
-  const [more, setMore] = useState(Boolean(props.draft?.narrow && (props.draft.narrow.minSpent || props.draft.narrow.channel || props.draft.narrow.quietDays)));
+  const [spentText, setSpentText] = useState(props.restore ? props.restore.spentText : props.draft?.narrow?.minSpent ? plainAmount(props.draft.narrow.minSpent, props.currency) : "");
+  const [channel, setChannel] = useState(props.restore ? props.restore.channel : props.draft?.narrow?.channel ?? "");
+  const [quietDays, setQuietDays] = useState(props.restore ? props.restore.quietDays : props.draft?.narrow?.quietDays ?? 0);
+  const [more, setMore] = useState(props.restore ? props.restore.more : Boolean(props.draft?.narrow && (props.draft.narrow.minSpent || props.draft.narrow.channel || props.draft.narrow.quietDays)));
   const [channels, setChannels] = useState<string[] | null>(null);
   const [partial, setPartial] = useState(false);
   const [segments, setSegments] = useState<Segment[]>(props.segments);
@@ -640,6 +702,7 @@ function Compose(props: {
   const narrow: Narrow = { minSpent, channel, quietDays };
   const countKey = JSON.stringify([productId, notProductId, who, minSpent, channel, quietDays, more, countRevision, invalidSpent]);
   const reach = !invalidSpent && reachResult?.key === countKey ? reachResult.count : null;
+  const monthCount = reach !== null && !later && props.month ? sendCount(reach, props.month.used, props.month.allowance) : null;
   const testPreview = testing ? subjectTestPreview(subject, { subjectB, share, hours, by }, reach) : null;
   const invalidTest = testing && testPreview?.state !== "ready";
   const reachPending = !invalidSpent && reachResult?.key !== countKey;
@@ -653,10 +716,12 @@ function Compose(props: {
   const [about, setAbout] = useState("");
   const draftSubjectTest: DraftSubjectTest | null = testing ? { subjectB, share, hours, by } : null;
   const content = JSON.stringify([subject, body, productId, who, notProductId, spentText, channel, quietDays, draftSubjectTest]);
-  const [savedContent, setSavedContent] = useState(!props.draft && props.initialTemplate ? "" : content);
+  const [savedContent, setSavedContent] = useState(props.restore ? props.restore.savedContent : !props.draft && props.initialTemplate ? "" : content);
   const dirty = (!draftId && Boolean(props.draft)) || content !== savedContent || later || at !== "";
   useLeaveGuard(dirty || aiBusy);
-  useImperativeHandle(props.composerState, () => ({ dirty, busy: locked }), [dirty, locked]);
+  // What is set aside when another email is opened over unsaved changes, so they can be brought back (485 [IT2]).
+  const snapshot = (): ComposerSnapshot => ({ subject, body, productId, notProductId, who, draftId, draftSavedAt, later, at, testing, subjectB, share, hours, by, spentText, channel, quietDays, more, savedContent, uncertain: draftSaveBlocked });
+  useImperativeHandle(props.composerState, () => ({ dirty, busy: locked, snapshot }));
 
   useEffect(() => {
     if (invalidSpent) return;
@@ -811,7 +876,7 @@ function Compose(props: {
         />
         <label className="block">
           <span className="field-label">Subject</span>
-          <input className="field mt-2" maxLength={150} value={subject} onChange={(e) => setSubject(e.target.value)} />
+          <input ref={subjectBox} className="field mt-2" maxLength={150} value={subject} onChange={(e) => setSubject(e.target.value)} />
         </label>
         {/*
           A second subject line, tried against the first.
@@ -1012,6 +1077,8 @@ function Compose(props: {
           </div>
         </details>
         <p className="text-sm font-semibold text-ink" role="status">{invalidSpent ? "Correct the spending amount before checking recipients." : reach === null ? (reachPending ? "Checking recipients…" : "The recipient count is unavailable. Check it again before sending or scheduling.") : `${n(reach)} ${reach === 1 ? "person" : "people"}`}</p>
+        {/* What this email is of the month's emails, from the two numbers already on the page (lib/send-count.ts), read out when it changes. */}
+        <p className={`text-sm ${monthCount?.over ? "font-semibold text-ink" : "text-ink-soft"}`} aria-live="polite" data-send-count>{monthCount?.line ?? ""}</p>
         {reach === null && !invalidSpent ? <button type="button" className="btn btn-secondary btn-sm" disabled={locked || reachPending} aria-busy={reachPending} onClick={() => setCountRevision(value => value + 1)}>{reachPending ? "Checking recipients…" : "Check recipients again"}</button> : null}
         <div className="flex flex-wrap items-end gap-2">
           <label className="min-w-0 flex-1">
