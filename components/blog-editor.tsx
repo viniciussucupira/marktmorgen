@@ -9,6 +9,8 @@ import { toast } from "@/components/toast";
 import { STUDIO_MESSAGES } from "@/lib/studio-messages";
 import { NewTab } from "@/components/new-tab";
 import { useLeaveGuard } from "@/components/leave-guard";
+import { PostBody } from "@/components/blog-body";
+import { type StoreLook, lookStyle } from "@/lib/store-look";
 
 const MAX_TITLE = 120;
 const MAX_BODY = 20_000;
@@ -32,12 +34,14 @@ export type EditedPost = { id: string | null; title: string; body: string; produ
  * Published, kept as a draft, or deleted from here; a draft is seen by no
  * one but the studio.
  */
-export function BlogEditor({ post, products, back }: { post: EditedPost; products: { id: string; title: string }[]; back: string }) {
+export function BlogEditor({ post, products, back, look }: { post: EditedPost; products: { id: string; title: string }[]; back: string; /** The store's look, so the preview is drawn as the blog is. */ look: StoreLook }) {
   const router = useRouter();
   const [title, setTitle] = useState(post.title);
   const [body, setBody] = useState(post.body);
   const [product, setProduct] = useState(post.product ?? "");
   const [busy, setBusy] = useState<string | null>(null);
+  // The preview starts at a phone's width, where most posts are read (487 [IT4], pattern 7).
+  const [phone, setPhone] = useState(true);
   const [error, setError] = useState<string | null>(null);
   // A post written and not saved is never lost to a click away (487 [IT4], item 6): leaving asks first, as the email studio does.
   const [done, setDone] = useState(false);
@@ -99,6 +103,37 @@ export function BlogEditor({ post, products, back }: { post: EditedPost; product
     router.refresh();
   }
 
+  // The post as the blog draws it (components/blog-body.tsx), from what is typed now, in the store's look.
+  const toggle = (on: boolean) => `inline-flex min-h-11 items-center rounded-full px-4 text-sm font-semibold ${on ? "bg-white text-ink shadow-sm" : "text-ink-soft"}`;
+  const preview = (
+    <div className="min-w-0">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-sm text-ink-soft">As it is published</p>
+        <div role="group" aria-label="Preview width" className="inline-flex rounded-full bg-sand p-1">
+          <button type="button" className={toggle(phone)} aria-pressed={phone} onClick={() => setPhone(true)}>
+            Phone
+          </button>
+          <button type="button" className={toggle(!phone)} aria-pressed={!phone} onClick={() => setPhone(false)}>
+            Wide
+          </button>
+        </div>
+      </div>
+      <p className="mt-1 text-xs text-ink-soft">The same words as in the editor, laid out as your blog shows them. Nothing in it can be pressed here.</p>
+      <div className="mt-1 overflow-hidden rounded-2xl ring-1 ring-line">
+        <div
+          // Inert: its headings stay out of the page's outline, its links out of the Tab order and out of reach of a click that would leave the draft.
+          inert
+          className={`st-page st-theme-${look.theme} mx-auto px-4 pb-8 pt-6`}
+          // Wide is the published page's own width (max-w-2xl, 672 px), so lines break where they will.
+          style={{ ...(lookStyle(look) as React.CSSProperties), maxWidth: phone ? 390 : 672 }}
+        >
+          <p className={`font-display font-semibold leading-tight ${phone ? "text-3xl" : "text-4xl"}`}>{title.trim() || "Your title"}</p>
+          <div className="mt-4">{body.trim() ? <PostBody body={body} /> : <p className="text-sm">Your words appear here as you write.</p>}</div>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="space-y-5">
       <AiAssist<{ title: string; body: string }>
@@ -122,10 +157,20 @@ export function BlogEditor({ post, products, back }: { post: EditedPost; product
         <label htmlFor="post-body" className="field-label">
           The post
         </label>
-        <textarea id="post-body" className="field font-[inherit]" rows={18} maxLength={MAX_BODY} value={body} onChange={(e) => setBody(e.target.value)} aria-describedby="post-body-hint" />
-        <p id="post-body-hint" className="field-hint mt-1">
-          {`A blank line starts a paragraph, a line starting with “## ” is a heading, one starting with “- ” is a point in a list, and a written-out https address becomes a link. ${(MAX_BODY - body.length).toLocaleString("en-US")} characters left.`}
-        </p>
+        <div className="grid min-w-0 gap-4 xl:grid-cols-2">
+          <div className="min-w-0">
+            <textarea id="post-body" className="field font-[inherit]" rows={18} maxLength={MAX_BODY} value={body} onChange={(e) => setBody(e.target.value)} aria-describedby="post-body-hint" />
+            <p id="post-body-hint" className="field-hint mt-1">
+              {`A blank line starts a paragraph, a line starting with “## ” is a heading, one starting with “- ” is a point in a list, and a written-out https address becomes a link. ${(MAX_BODY - body.length).toLocaleString("en-US")} characters left.`}
+            </p>
+          </div>
+          {/* Beside the text on a wide screen; on a narrow one, folded. */}
+          <div className="hidden xl:block">{preview}</div>
+          <details className="xl:hidden">
+            <summary className="inline-flex min-h-11 cursor-pointer items-center text-sm font-semibold text-ink underline underline-offset-4">See it as it is published</summary>
+            <div className="mt-2">{preview}</div>
+          </details>
+        </div>
       </div>
       <div>
         <label htmlFor="post-product" className="field-label">

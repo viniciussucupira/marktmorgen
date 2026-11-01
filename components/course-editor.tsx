@@ -3,6 +3,8 @@
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { useLeaveGuard } from "@/components/leave-guard";
 import { UrlField } from "@/components/url-field";
+import { LessonText } from "@/components/lesson-text";
+import { type StoreLook, lookStyle } from "@/lib/store-look";
 import { useRouter } from "next/navigation";
 import { uploadReason, uploadSoldFile } from "@/lib/sold-file-upload";
 import { toast } from "@/components/toast";
@@ -89,6 +91,9 @@ type Answer = { ok?: boolean; error?: string; reason?: string; course?: Course; 
  * its way to being playable, by the path the lesson keeps for it: as the
  * page was drawn, and as this browser has learned since.
  */
+// The store's look, for the lesson text's preview (487 [IT4], pattern 7).
+const Look = createContext<StoreLook | null>(null);
+
 const Streams = createContext<{
   states: Record<string, StreamState>;
   learned: (path: string, state: StreamState) => void;
@@ -218,8 +223,11 @@ export function CourseEditor({
   writing = {},
   auto = { can: false, spoken: "en" },
   openFirst = null,
+  look = null,
 }: {
   productId: string;
+  /** The store's look, so a lesson's text is previewed as students see it. */
+  look?: StoreLook | null;
   /** A lesson to show open when the page is drawn: the one "Can everyone follow your lessons?" linked to. */
   openFirst?: string | null;
   initial: Course;
@@ -266,6 +274,7 @@ export function CourseEditor({
   const lessons = course.modules.reduce((n, m) => n + m.lessons.length, 0);
 
   return (
+    <Look.Provider value={look}>
     <Streams.Provider value={{ states: streamStates, learned, captions: captionTracks, captioned, writing: writingNow, wrote, auto }}>
     <div className="mt-8 space-y-6">
       {error ? (
@@ -388,6 +397,7 @@ export function CourseEditor({
       ) : null}
     </div>
     </Streams.Provider>
+    </Look.Provider>
   );
 }
 
@@ -777,6 +787,9 @@ function LessonEditor({
   const [loadingText, setLoadingText] = useState(false);
   const [uploading, setUploading] = useState<{ kind: "video" | "file"; percent: number } | null>(null);
   const [removing, setRemoving] = useState(false);
+  // The text's preview starts at a phone's width, where most lessons are read (487 [IT4], pattern 7).
+  const [phone, setPhone] = useState(true);
+  const look = useContext(Look);
   // A lesson's name, link, preview or text changed and not saved, or a file still going up: leaving asks first (487 [IT4], item 6).
   const unsaved = title !== lesson.title || preview !== lesson.preview || link !== (lesson.link ?? "") || text !== savedText;
   useLeaveGuard(unsaved || uploading !== null);
@@ -822,6 +835,38 @@ function LessonEditor({
   }
 
   const prefix = `lesson-${lesson.id}`;
+  // The lesson's text as its page draws it (components/lesson-text.tsx), from what is typed now, in the store's look.
+  const toggle = (on: boolean) => `inline-flex min-h-11 items-center rounded-full px-4 text-sm font-semibold ${on ? "bg-white text-ink shadow-sm" : "text-ink-soft"}`;
+  const lessonPreview = (now: string, storeLook: StoreLook) => (
+    <div className="min-w-0">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-sm text-ink-soft">As students see it</p>
+        <div role="group" aria-label="Preview width" className="inline-flex rounded-full bg-sand p-1">
+          <button type="button" className={toggle(phone)} aria-pressed={phone} onClick={() => setPhone(true)}>
+            Phone
+          </button>
+          <button type="button" className={toggle(!phone)} aria-pressed={!phone} onClick={() => setPhone(false)}>
+            Wide
+          </button>
+        </div>
+      </div>
+      <p className="mt-1 text-xs text-ink-soft">The same words as in the editor, laid out as the lesson shows them. Nothing in it can be pressed here.</p>
+      <div className="mt-1 overflow-hidden rounded-2xl ring-1 ring-line">
+        <div
+          // Inert: its links stay out of the Tab order and out of reach of a click that would leave the draft.
+          inert
+          className={`st-page st-theme-${storeLook.theme} mx-auto px-4 pb-8 pt-6`}
+          // The words in the page's text color, as the lesson page sets it; Wide takes the room there is, as the lesson column does.
+          style={{ ...(lookStyle(storeLook) as React.CSSProperties), color: "var(--st-text)", maxWidth: phone ? 390 : "100%" }}
+        >
+          {/* In the same card the lesson page puts behind the words, so the color behind them and the line length match. */}
+          <div className="st-card p-5 sm:p-8">
+            {now.trim() ? <LessonText text={now} /> : <p className="text-sm">The lesson&apos;s words appear here as you write.</p>}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
   const streamed = lesson.video && isStreamPath(lesson.video.pathname) ? streams.states[lesson.video.pathname] ?? "working" : null;
   return (
     <div className="mt-4 space-y-5 border-t border-line pt-4">
@@ -927,17 +972,31 @@ function LessonEditor({
               }
             }}
           >
-            <textarea
-              id={`${prefix}-text`}
-              rows={12}
-              className="field min-h-48"
-              maxLength={MAX_BODY_LENGTH}
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-            />
-            <p className="mt-1 text-sm text-ink-mute">
-              {`Blank lines make paragraphs, lines starting with "- " make a list, and web addresses become links. ${MAX_BODY_LENGTH - text.length} characters left.`}
-            </p>
+            <div className="grid min-w-0 gap-4 xl:grid-cols-2">
+              <div className="min-w-0">
+                <textarea
+                  id={`${prefix}-text`}
+                  rows={12}
+                  className="field min-h-48"
+                  maxLength={MAX_BODY_LENGTH}
+                  value={text}
+                  onChange={(e) => setText(e.target.value)}
+                />
+                <p className="mt-1 text-sm text-ink-mute">
+                  {`Blank lines make paragraphs, lines starting with "- " make a list, and web addresses become links. ${MAX_BODY_LENGTH - text.length} characters left.`}
+                </p>
+              </div>
+              {look ? (
+                <>
+                  {/* Beside the text on a wide screen; on a narrow one, folded. */}
+                  <div className="hidden xl:block">{lessonPreview(text, look)}</div>
+                  <details className="xl:hidden">
+                    <summary className="inline-flex min-h-11 cursor-pointer items-center text-sm font-semibold text-ink underline underline-offset-4">See it as students see it</summary>
+                    <div className="mt-2">{lessonPreview(text, look)}</div>
+                  </details>
+                </>
+              ) : null}
+            </div>
             <button type="submit" aria-busy={busy} disabled={busy} className="btn btn-secondary btn-sm mt-2">Save text</button>
           </form>
         )}

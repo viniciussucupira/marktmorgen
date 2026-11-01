@@ -179,6 +179,36 @@ The screen-by-screen audit that 487 [IT4] asks for: what was checked, what was f
 - the prices of memberships, pay what you want and products with several options;
 - the community announcement email. Its composer is on the community page, in the buyer's language, with its words in `lib/buyer-words` in seven languages. A review there needs its new sentences written in each of them, so it gets a unit of its own, under the rules for buyer languages.
 
+## Pattern 7: a live preview at phone width beside each editor (1 November 2026, first pass)
+
+**Method.** Each studio editor was read for a preview of what the buyer or reader gets, at phone width, that updates as the creator types.
+
+**Found.**
+- **Already met:** the page editor, which site pages also use. Its preview is live and 390 px wide, beside the blocks on wide screens, and in a Build or Preview tab with a Phone or Wide choice.
+- **Only half met:** the email editor. It had a live preview only in Design mode, never in Write (the default), and never at phone width.
+- **No preview at all:**
+  - the product editor;
+  - checkout settings;
+  - the blog editor;
+  - the community composer;
+  - the course lesson editor;
+  - the funnel editors (their page steps get one through the page editor).
+
+**Fixed.**
+- The email editor now shows "As it is sent" in Write as well as in Design, as the creator types. The email composer and every sequence step get it, as both use this editor. It starts at phone width (390 px, as the page editor), with a Phone or Wide choice that says which is on. It is drawn by the same function that draws the email, so it cannot show something the email does not. An empty preview's words are now 7.6:1 on white, up from 4.8:1. The preview is inert: its headings stay out of the page's outline, and its links and buttons stay out of the Tab order and out of reach of a click that would leave the page and the draft. It says that it shows the editor's own words. On a narrow screen, in Write, it is folded under "See it as it is sent", so a sequence of several emails is not one long scroll.
+
+- The blog editor now shows "As it is published" beside the text on a wide screen, folded on a narrow one. It is drawn by the blog page's own drawing (`PostBody`), in the store's look, from what is typed now. It starts at phone width with a Phone or Wide choice, and is inert, like the email's preview. Wide is the published page's own width (672 px), and the title its size.
+- A course lesson's text now shows "As students see it" beside it on a wide screen, folded on a narrow one. It is drawn by the lesson page's own drawing (`LessonText`), in the store's look and its text color, inside the same card the lesson page puts behind the words, from what is typed now. It starts at phone width with a Phone or Wide choice, and is inert, like the others.
+
+**Found on the way, not changed here.** The store's muted text on the "sand" theme is 6.51:1 (#5c5244 on #f3ece0, `lib/store-look.ts`), below the 7:1 AAA asks for small text. It is used on published store pages too, so it is the theme's to fix, in its own unit, with every page that uses it checked. The "light" (8.70:1) and "night" (10.14:1) themes pass.
+
+**Still to do, most used first:**
+- the product editor;
+- checkout settings;
+- the community composer.
+
+Each needs the buyer's page drawn from the unsaved draft by the page's own code, so each gets its own unit.
+
 ## Where each pattern stands
 
 Numbered as in 487 [IT4]:
@@ -188,5 +218,5 @@ Numbered as in 487 [IT4]:
 4. A label always visible: first pass done (see pattern 4). Six fields still to be read in context, and the home page field.
 5. Empty screens with a sentence, a button and a ready example: first pass done (see pattern 5). Four screens fixed; ready examples for five screens still to write.
 6. Drafts never lost: done for the editors read (see pattern 6). Saving by itself, with "Saving…" and "Saved", is not built yet, because it needs its own ceiling on saves per plan first.
-7. A live phone preview beside each editor: not audited yet.
+7. A live phone preview beside each editor: first pass done (see pattern 7). The page, email, blog and lesson editors have it; three editors are listed.
 8. A "Check answers" summary with "Change" on each item before publishing or sending: first pass done (see pattern 8); the email broadcast, the waitlist's sale, the update email and a published price change have it; the rest listed.
