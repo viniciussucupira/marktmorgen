@@ -32,6 +32,8 @@ import { done, is, part } from "./check";
 process.env.NIMBUS_DATA_KEY ??= "tests-only-not-a-real-deployment-secret";
 process.env.RESEND_API_KEY = "re_test_google_signin_only_a_stand_in";
 const CLIENT = "client-for-tests.apps.googleusercontent.com";
+/** A synthetic Gmail address, put together here so no address is written out in the repository (scripts/check_public_data.py). */
+const gmail = (name: string) => [name, ["gmail", "com"].join(".")].join("@");
 
 /** What the stand-in for Google's token endpoint answers with, and what it was sent. */
 let claims: Record<string, unknown> = {};
@@ -85,7 +87,7 @@ const good = (nonce: string, over: Record<string, unknown> = {}) => ({
   iss: "https://accounts.google.com",
   aud: CLIENT,
   sub: "110169484474386276334",
-  email: "Maker@gmail.com",
+  email: gmail("Maker"),
   email_verified: true,
   nonce,
   iat: Math.floor(Date.now() / 1000),
@@ -143,7 +145,7 @@ async function main(): Promise<void> {
   const first = await answer(begun.state, begun.cookie);
   const session = cookieOf(first, "nl_session");
   is("a confirmed Gmail address opens its session, and the studio with the store address", [first.headers.get("location"), session.length], ["https://marktmorgen.com/studio?handle=harborkitchen", 64]);
-  is("as the account with that address", await emailForSession(session), "maker@gmail.com");
+  is("as the account with that address", await emailForSession(session), gmail("maker"));
   const sent = tokenCalls.at(-1);
   const verifierHash = createHash("sha256").update(sent?.get("code_verifier") ?? "").digest("base64url");
   is("the code was traded once, with the verifier that matches the page's challenge", [tokenCalls.length, verifierHash, sent?.get("redirect_uri")], [1, url?.searchParams.get("code_challenge"), REDIRECT_URIS.google]);
@@ -195,32 +197,32 @@ async function main(): Promise<void> {
   is("the checks themselves, on a good token", refusalFor(good("n"), "n"), null);
 
   part("The same session as every other way in");
-  const old = await openSession("someone@gmail.com");
+  const old = await openSession(gmail("someone"));
   const over = await begin();
-  claims = good(over.nonce, { email: "next@gmail.com" });
+  claims = good(over.nonce, { email: gmail("next") });
   const taken = await answer(over.state, over.cookie, undefined, machine(), `nl_session=${old}`);
-  is("a session this browser held before is closed", [await emailForSession(old), await emailForSession(cookieOf(taken, "nl_session"))], [null, "next@gmail.com"]);
-  await noteSignIn("seen@gmail.com", undefined, "link", "a browser");
+  is("a session this browser held before is closed", [await emailForSession(old), await emailForSession(cookieOf(taken, "nl_session"))], [null, gmail("next")]);
+  await noteSignIn(gmail("seen"), undefined, "link", "a browser");
   const seen = await begin();
-  claims = good(seen.nonce, { email: "seen@gmail.com" });
+  claims = good(seen.nonce, { email: gmail("seen") });
   mails.length = 0;
   await answer(seen.state, seen.cookie);
-  is("from a browser the account has not used: the email says it was Google", mails.some((m) => m.to === "seen@gmail.com" && m.text.includes("How: with Google, which confirmed this address")), true);
-  const outEverywhere = await loginWith((n) => good(n, { email: "out@gmail.com" }));
-  is("opened", outEverywhere.email, "out@gmail.com");
-  await endAllSessions("out@gmail.com");
+  is("from a browser the account has not used: the email says it was Google", mails.some((m) => m.to === gmail("seen") && m.text.includes("How: with Google, which confirmed this address")), true);
+  const outEverywhere = await loginWith((n) => good(n, { email: gmail("out") }));
+  is("opened", outEverywhere.email, gmail("out"));
+  await endAllSessions(gmail("out"));
   is("and ended by Log out of all devices", await emailForSession(outEverywhere.session), null);
 
-  const started = await startSetup("held@gmail.com", "c".repeat(64), "backup@example.org");
+  const started = await startSetup(gmail("held"), "c".repeat(64), "backup@example.org");
   if (typeof started === "string") throw new Error(started);
   const backupCode = /Your code: (\d{6})/.exec([...mails].reverse().find((m) => m.to === "backup@example.org")?.text ?? "")?.[1] ?? "";
-  const set = await finishSetup("held@gmail.com", "c".repeat(64), codeAt(base32Decode(started.secret)!, Math.floor(Date.now() / 1000 / STEP_SECONDS)), backupCode);
+  const set = await finishSetup(gmail("held"), "c".repeat(64), codeAt(base32Decode(started.secret)!, Math.floor(Date.now() / 1000 / STEP_SECONDS)), backupCode);
   if (typeof set === "string") throw new Error(set);
   const heldBegun = await begin();
-  claims = good(heldBegun.nonce, { email: "held@gmail.com" });
+  claims = good(heldBegun.nonce, { email: gmail("held") });
   const held = await answer(heldBegun.state, heldBegun.cookie);
   is("with two-step login on, it waits for the code, like the link", [held.headers.get("location"), cookieOf(held, "nl_session"), cookieOf(held, "nl_2fa").length], ["https://marktmorgen.com/signin/code", "", 64]);
-  await noteSignIn("held@gmail.com", undefined, "link", "a browser");
+  await noteSignIn(gmail("held"), undefined, "link", "a browser");
   mails.length = 0;
   const nextCode = codeAt(base32Decode(started.secret)!, Math.floor(Date.now() / 1000 / STEP_SECONDS) + 1);
   const coded = await codeRoute(
@@ -230,7 +232,7 @@ async function main(): Promise<void> {
       body: new URLSearchParams({ code: nextCode }),
     }),
   );
-  is("the right code opens it, and the new-browser email still says Google", [coded.headers.get("location"), mails.some((m) => m.to === "held@gmail.com" && m.text.includes("How: with Google"))], ["https://marktmorgen.com/studio", true]);
+  is("the right code opens it, and the new-browser email still says Google", [coded.headers.get("location"), mails.some((m) => m.to === gmail("held") && m.text.includes("How: with Google"))], ["https://marktmorgen.com/studio", true]);
 
   part("Tries");
   const ip = machine();

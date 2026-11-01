@@ -9,9 +9,9 @@ Registro de 01/11/2026 (Fortaleza). Estado (VR): **desligado pelas travas**, con
 - **Que conta é aberta:** a conta Marktmorgen do e-mail que o Google confirmou, exatamente como se a pessoa tivesse aberto o link enviado a esse endereço. Se ainda não houver conta, é o mesmo cadastro que o link faz.
 - **Quando abre sessão:** somente quando as duas condições valem.
   1. `email_verified` é `true` (verdadeiro booleano; ausente, `false` ou o texto `"true"` reprovam).
-  2. O Google responde por aquela caixa de e-mail: um endereço `@gmail.com` ou `@googlemail.com`, ou um endereço do domínio do Google Workspace que o próprio token nomeia (`hd`) e que é o mesmo domínio do e-mail.
+  2. O Google responde por aquela caixa de e-mail: um endereço dos domínios gmail.com ou googlemail.com, ou um endereço do domínio do Google Workspace que o próprio token nomeia (`hd`) e que é o mesmo domínio do e-mail.
 
-  Uma conta Google criada com um e-mail de outro provedor (por exemplo, `@yahoo.com`) não abre sessão. A pessoa recebe a orientação de usar o link por e-mail. O motivo é que o Google não é dono dessa caixa, e a conta Google pode continuar existindo depois que a pessoa perde o acesso àquele e-mail.
+  Uma conta Google criada com um e-mail de outro provedor (por exemplo, do domínio yahoo.com) não abre sessão. A pessoa recebe a orientação de usar o link por e-mail. O motivo é que o Google não é dono dessa caixa, e a conta Google pode continuar existindo depois que a pessoa perde o acesso àquele e-mail.
 
   Essa é a leitura mais segura. A página oficial do Google sobre OpenID Connect (developers.google.com) **não pôde ser lida nesta sessão**, porque o domínio está fora da rede permitida. O que se sabe dela vem só de um resumo de busca, que não serve como fonte. Por isso a regra não se apoia em nenhuma frase do Google: ela recusa tudo o que não seja comprovadamente do Google.
 - **Segurança do fluxo:**
@@ -33,7 +33,7 @@ Registro de 01/11/2026 (Fortaleza). Estado (VR): **desligado pelas travas**, con
 
 ## Lacunas conhecidas
 
-- **Pontos no Gmail:** a conta é ligada ao endereço exatamente como o Google o devolve. Quem se cadastrou pelo link como `johndoe@gmail.com` e tem a conta Google `john.doe@gmail.com` abriria, pelo Google, outra conta, vazia (o Gmail entrega nos dois, mas aqui são endereços diferentes). Também `@googlemail.com` e `@gmail.com` ficam separados. Um aviso ou a junção dos dois casos pede um desenho próprio e não está feito.
+- **Pontos no Gmail:** a conta é ligada ao endereço exatamente como o Google o devolve. Quem se cadastrou pelo link com o nome `johndoe` no Gmail e tem a conta Google com o nome `john.doe` abriria, pelo Google, outra conta, vazia (o Gmail entrega nos dois, mas aqui são endereços diferentes). Também os domínios googlemail.com e gmail.com ficam separados. Um aviso ou a junção dos dois casos pede um desenho próprio e não está feito.
 - **Domínios secundários do Google Workspace:** o `hd` traz só o domínio principal. Um endereço válido num domínio secundário da mesma organização é recusado e mandado para o link. É o lado seguro: o erro possível é recusar, nunca abrir.
 - **O cookie `nl_gsi` não usa o prefixo `__Host-`,** como os outros cookies do site. Um subdomínio irmão que rodasse script poderia plantá-lo, risco que já existe para os demais cookies. Fica como defesa adicional futura.
 
