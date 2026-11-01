@@ -235,7 +235,8 @@ const result=spawnSync(process.execPath,[process.argv[1]],{env:testEnvironment(p
 process.exitCode=result.status ?? 1;
 """
         with tempfile.TemporaryDirectory(prefix="confirmation-paid-ts-") as directory:
-            subprocess.run(["node", "--input-type=module", "-e", runner, str(Path(directory) / "paid.cjs")], cwd=root, check=True)
+            subprocess.run(["node", "--input-type=module", "-e", runner, str(Path(directory) / "paid.cjs")], cwd=root, check=True,
+                           env=dict(os.environ, CONFIRMATION_ORIGIN_REDIS_PORT=os.environ.get("CONFIRMATION_ORIGIN_REDIS_PORT", "16379")))
 
     finally:
         for key in made: db.command("DEL", key)
