@@ -56,4 +56,23 @@ export async function checkPricing({browser,LOCAL,axeSource,is}){
    check(errors.length===0,"pricing no browser errors "+width);check(writes===0,"pricing no API writes "+width);
   }finally{await context.close();}
  }
+ // 243 [CF6], the owner's complement of 31/10/2026 23h14: on a 1280 x 720 screen the three plans, with their price,
+ // start on the first screen, and no card shows a limit figure twice (its itemized list is closed until pressed).
+ {
+  const context=await browser.newContext({viewport:{width:1280,height:720}});
+  try{
+   const page=await context.newPage();
+   await page.goto(LOCAL+"/pricing",{waitUntil:"domcontentloaded"});
+   await page.locator("main h1").waitFor({state:"visible"});
+   await page.waitForFunction(()=>document.querySelectorAll("main [data-plan-prices] [data-pricing-card]").length===3,null,{timeout:10000}).catch(()=>{});
+   const cards=page.locator("main [data-plan-prices] [data-pricing-card]");
+   check(await cards.count()===3,"pricing three plan cards 1280x720");
+   const tops=await cards.evaluateAll(nodes=>nodes.map(node=>{const price=node.querySelector("[data-cycle-text]");return [node.getBoundingClientRect().top,price?price.getBoundingClientRect().bottom:Infinity];}));
+   check(tops.length===3&&tops.every(([top,price])=>top<720&&price<=720),"pricing plans and their prices on the first screen 1280x720 "+JSON.stringify(tops));
+   const texts=await cards.evaluateAll(nodes=>nodes.map(node=>node.innerText));
+   const repeated=texts.map(text=>{const seen=new Map();for(const m of text.matchAll(/(?<![\d,.])(\d{1,3}(?:,\d{3})+|\d+)(?![\d,])\s+(visits|orders|list emails|emails|sends|AI writing jobs|visitor answers|GB)/g)){const unit=m[2]==="emails"||m[2]==="sends"?"list emails":m[2];const key=m[1]+" "+unit;seen.set(key,(seen.get(key)??0)+1);}return [...seen].filter(([,n])=>n>1).map(([k])=>k);});
+   is("pricing no limit figure twice in a card 1280x720",repeated,[[],[],[]]);
+   check(await page.locator("main [data-plan-terms]").count()===1,"pricing terms said once under the plans 1280x720");
+  }finally{await context.close();}
+ }
 }

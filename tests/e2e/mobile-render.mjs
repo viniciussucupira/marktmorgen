@@ -94,15 +94,16 @@ try{
     const annual=["$690","$4,490","$9,990"],monthly=["$69","$449","$999"],tiers=["creator","pro","scale"];
     for(let i=0;i<3;i++){
      const card=cards.nth(i);
-     if((await card.locator("p.mt-7 > span").first().innerText()).trim()!==annual[i])throw Error("Annual card price mismatch");
-     if(!await card.locator("dl").innerText().then(text=>text.includes(annual[i]+" for the year")))throw Error("Annual first-charge terms mismatch");
+     if((await card.locator("[data-cycle-text]").first().innerText()).trim()!==annual[i])throw Error("Annual card price mismatch");
+     // 243 [CF6]: the terms are said once, under the three cards, with each plan's first charge.
+     if(!await page.locator("[data-plan-terms] dl").innerText().then(text=>text.includes(annual[i])&&text.includes("for the year")))throw Error("Annual first-charge terms mismatch");
      if(await card.getByRole("link",{name:/^Start on/}).getAttribute("href")!=="/signin?plan="+tiers[i]+"&billing=year")throw Error("Annual signup choice lost");
     }
     await month.click();
     for(let i=0;i<3;i++){
      const card=cards.nth(i);
-     if((await card.locator("p.mt-7 > span").first().innerText()).trim()!==monthly[i])throw Error("Monthly card price mismatch");
-     if(!await card.locator("dl").innerText().then(text=>text.includes(monthly[i]+" for the month")))throw Error("Monthly first-charge terms mismatch");
+     if((await card.locator("[data-cycle-text]").first().innerText()).trim()!==monthly[i])throw Error("Monthly card price mismatch");
+     if(!await page.locator("[data-plan-terms] dl").innerText().then(text=>text.includes(monthly[i]+",")||text.includes(monthly[i]+" for the month")))throw Error("Monthly first-charge terms mismatch");
      if(await card.getByRole("link",{name:/^Start on/}).getAttribute("href")!=="/signin?plan="+tiers[i]+"&billing=month")throw Error("Monthly signup choice lost");
      if(!(await card.innerText()).includes(annual[i]))throw Error("Pricing plan annual price missing "+i);
     }
