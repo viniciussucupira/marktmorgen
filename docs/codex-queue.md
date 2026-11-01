@@ -12396,6 +12396,7 @@ Na página de preços e no estúdio, mostre junto do número mensal de e-mails d
 
 460. [EL4] Conta antes de enviar.
 Estado inicial: na fila.
+Andamento (Claude 2, 01/11/2026): unidade 1 **testada num PR** (ramo claude2/el4-send-count; arquivos reservados: lib/send-count.ts, tests/send-count.test.ts, e o trecho da contagem de destinatários em components/email-studio.tsx). No compositor do e-mail para a lista, junto do número de pessoas, uma linha diz quantos dos e-mails do mês aquele envio usa e quantas vezes o mês ainda permite escrever às mesmas pessoas, a partir dos dois números que a página já tem (pessoas contadas pelo servidor e o cartão "This month"), sem pedido novo; passou do saldo, diz quantos faltam e oferece só o que existe hoje (um grupo menor ou o mês seguinte). Nada é enviado sem o criador apertar enviar, e o servidor continua recusando o que passa do mês. Próximas unidades: oferecer os contatos ativos quando o 461 [EL5] existir (lib/segments.ts está reservado pelo PR 1502 do Codex) e a forma de enviar mais do 357 [ES3] e do 344 [RN2] quando estiverem no ar; a contagem ao agendar um envio.
 No estúdio, antes de cada envio para a lista, mostre em linguagem simples quantos contatos receberão, quantos e-mails o plano ainda permite neste mês e quantas vezes isso dá para enviar a todos. Se passar do saldo, ofereça enviar só para os contatos ativos (EL5) ou, quando 357 [ES3] e 344 [RN2] estiverem no ar, a forma de enviar mais que eles definem. Nada é enviado sem o criador confirmar. Seguir AX274.
 
 461. [EL5] Segmento de contatos ativos.

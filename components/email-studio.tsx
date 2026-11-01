@@ -2,6 +2,7 @@
 
 import type { LibraryEmailDraft, LibrarySequenceDraft } from "@/lib/template-library-intents";
 import { AiAssist, AiOn } from "@/components/ai-assist";
+import { sendCount } from "@/lib/send-count";
 import { EMAIL_GOALS, type EmailGoal } from "@/lib/ai-rules";
 import { appendSequenceDraft, sequenceDraftSlots, DEFAULT_SEQUENCE_DRAFT, type DraftedStep, SEQUENCE_DRAFT_COUNTS } from "@/lib/sequence-draft";
 import { PRO_MONTHLY_EMAILS, TRIAL_MONTHLY_EMAILS } from "@/lib/plan";
@@ -369,6 +370,7 @@ export function EmailStudio(props: {
                 products={props.products}
                 links={props.links ?? {}}
                 counts={props.counts}
+                month={{ used: props.used, allowance: props.allowance }}
                 canSend={props.canSend}
                 broadcastUnconfirmed={broadcastUnconfirmed}
                 onBroadcastUnconfirmed={() => setBroadcastUnconfirmed(true)}
@@ -578,6 +580,8 @@ function Compose(props: {
   products: { id: string; title: string }[];
   links: Record<string, string>;
   counts: { mailable: number };
+  /** This month's emails used and allowed, as the "This month" card shows them (460 [EL4]). */
+  month: { used: number; allowance: number };
   canSend: boolean;
   /** A draft opened into the composer, or null for a new email. */
   draft: DraftRow | null;
@@ -640,6 +644,7 @@ function Compose(props: {
   const narrow: Narrow = { minSpent, channel, quietDays };
   const countKey = JSON.stringify([productId, notProductId, who, minSpent, channel, quietDays, more, countRevision, invalidSpent]);
   const reach = !invalidSpent && reachResult?.key === countKey ? reachResult.count : null;
+  const monthCount = reach !== null ? sendCount(reach, props.month.used, props.month.allowance) : null;
   const testPreview = testing ? subjectTestPreview(subject, { subjectB, share, hours, by }, reach) : null;
   const invalidTest = testing && testPreview?.state !== "ready";
   const reachPending = !invalidSpent && reachResult?.key !== countKey;
@@ -1012,6 +1017,10 @@ function Compose(props: {
           </div>
         </details>
         <p className="text-sm font-semibold text-ink" role="status">{invalidSpent ? "Correct the spending amount before checking recipients." : reach === null ? (reachPending ? "Checking recipients…" : "The recipient count is unavailable. Check it again before sending or scheduling.") : `${n(reach)} ${reach === 1 ? "person" : "people"}`}</p>
+        {monthCount ? (
+          // What this email is of the month's emails, from the two numbers already on the page (lib/send-count.ts).
+          <p className={`text-sm ${monthCount.over ? "font-semibold text-ink" : "text-ink-soft"}`} data-send-count>{monthCount.line}</p>
+        ) : null}
         {reach === null && !invalidSpent ? <button type="button" className="btn btn-secondary btn-sm" disabled={locked || reachPending} aria-busy={reachPending} onClick={() => setCountRevision(value => value + 1)}>{reachPending ? "Checking recipients…" : "Check recipients again"}</button> : null}
         <div className="flex flex-wrap items-end gap-2">
           <label className="min-w-0 flex-1">
