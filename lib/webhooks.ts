@@ -94,7 +94,7 @@ export const ATTEMPT_TIMEOUT_MS = 8_000;
 /** The longest address accepted for an endpoint. */
 export const MAX_ENDPOINT_URL = 1000;
 /** Test messages one store may send in a minute. */
-const TESTS_PER_MINUTE = 10;
+export const TESTS_PER_MINUTE = 10;
 /** Stripe events read per store per run, in pages of a hundred. */
 const MAX_EVENT_PAGES = 3;
 /** How far back a store's first run reads, in pages of a hundred events. */
@@ -135,6 +135,8 @@ export type Delivery = {
   createdAt: number;
   /** Set when it was not sent because the plan's costs were paused (232 [CA1] 4b4b2). */
   notSentPaused?: true;
+  /** The failed delivery this one sends again, by the creator's hand (378 [TB4] unit 3). */
+  resentFrom?: string;
 };
 
 const cfgKey = (statsId: string) => `nl:hooks:cfg:${statsId}`;
@@ -493,7 +495,7 @@ export async function deliverDue(deadline: number, now = Date.now()): Promise<{ 
 
 /** What the studio sees of an endpoint: never a secret, only until when the old one still signs. */
 export type EndpointView = { id: string; where: string; events: WebhookEvent[]; addedAt: string; oldSecretUntil?: string };
-export type DeliveryView = Pick<Delivery, "id" | "eventId" | "type" | "state" | "attempts" | "next" | "lastStatus" | "lastError" | "lastAt" | "createdAt" | "notSentPaused"> & {
+export type DeliveryView = Pick<Delivery, "id" | "eventId" | "type" | "state" | "attempts" | "next" | "lastStatus" | "lastError" | "lastAt" | "createdAt" | "notSentPaused" | "resentFrom"> & {
   endpoint: string;
 };
 export type WebhooksView = { endpoints: EndpointView[]; log: DeliveryView[] };
@@ -546,6 +548,7 @@ export async function webhooksView(store: Store): Promise<WebhooksView> {
         lastAt: d.lastAt,
         createdAt: d.createdAt,
         ...(d.notSentPaused === true ? { notSentPaused: true as const } : {}),
+        ...(typeof d.resentFrom === "string" && DELIVERY_ID_PATTERN.test(d.resentFrom) ? { resentFrom: d.resentFrom } : {}),
         endpoint: names.get(d.endpoint) ?? "a removed endpoint",
       })),
   };
@@ -691,6 +694,65 @@ export async function removeEndpoint(store: Store, id: string): Promise<Webhooks
   );
   if (written && !written.after.endpoints.length) await redisPipeline([["SREM", STORES_KEY, store.statsId]]);
   return webhooksView(store);
+}
+
+export type ResendResult = { ok: true; delivery: Delivery; view: WebhooksView } | { ok: false; reason: "missing" | "not_failed" | "limited" | "unavailable" } | { ok: false; reason: "used"; message: string };
+
+/**
+ * Sends a failed delivery again, once, now, because the creator asked from
+ * the log (378 [TB4] unit 3). Only a delivery that failed for good, of this
+ * store, to an endpoint it still has: a delivered one is never sent twice by
+ * hand. The message is the same message, with the same event id, so a
+ * receiver that already took it drops the repeat; it is signed afresh, with
+ * the endpoint's secrets as they are now. It is a new line in the log that
+ * names the one it sends again, tried once and not put back on the schedule.
+ * Like a test it is one of the store's webhook deliveries for its month,
+ * taken before the endpoint is called, and it shares the tests' limit a
+ * minute, so a press held down cannot hammer anybody.
+ */
+export async function resendDelivery(store: Store, deliveryId: string, now = Date.now()): Promise<ResendResult> {
+  if (!store.statsId || !DELIVERY_ID_PATTERN.test(deliveryId)) return { ok: false, reason: "missing" };
+  const statsId = store.statsId;
+  const [raw] = await redisPipeline([["GET", deliveryKey(deliveryId)]]);
+  const before = parseDelivery(raw);
+  if (!before || before.statsId !== statsId || before.type === "test") return { ok: false, reason: "missing" };
+  if (before.state !== "failed") return { ok: false, reason: "not_failed" };
+  const config = await readConfig(statsId);
+  const endpoint = config?.endpoints.find((e) => e.id === before.endpoint);
+  if (!endpoint) return { ok: false, reason: "missing" };
+  const [, count] = await redisPipeline([
+    ["SET", testsKey(statsId), "0", "EX", 60, "NX"],
+    ["INCR", testsKey(statsId)],
+  ]);
+  if (Number(count) > TESTS_PER_MINUTE) return { ok: false, reason: "limited" };
+  if (store.period?.funded === true && !(await reservePaidResourceWindow(store))) return { ok: false, reason: "unavailable" };
+  const taken = await takeAllowance(store, "webhook", 1, now);
+  if (!taken.ok) return { ok: false, reason: "used", message: taken.message };
+  const again: Delivery = {
+    id: `dlv_${randomBytes(12).toString("hex")}`,
+    statsId,
+    endpoint: endpoint.id,
+    eventId: before.eventId,
+    type: before.type,
+    body: before.body,
+    attempts: 0,
+    state: "queued",
+    next: 0,
+    lastStatus: 0,
+    lastError: "",
+    lastAt: 0,
+    createdAt: now,
+    resentFrom: before.id,
+  };
+  const tried = await attempt(again, endpoint, "taken", now);
+  // Tried once, by hand: a failure is shown, never put back on the schedule.
+  const done: Delivery = tried.state === "retrying" ? { ...tried, state: "failed", next: 0 } : tried;
+  await redisPipeline([
+    ["SET", deliveryKey(done.id), JSON.stringify(done), "EX", DELIVERY_SECONDS],
+    ["LPUSH", logKey(statsId), done.id],
+    ["LTRIM", logKey(statsId), 0, LOG_SIZE - 1],
+  ]);
+  return { ok: true, delivery: done, view: await webhooksView(store) };
 }
 
 /**
