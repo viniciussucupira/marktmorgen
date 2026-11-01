@@ -60,5 +60,6 @@ is("publishing a draft reads its description and is checked", /body\.hidden === 
 part("The studio says it in words the creator can act on");
 const said = fastMoneyMessage(refused);
 is("where, the words, why and the fix, and that nothing was changed", [/the short description/.test(said), said.includes("easy money"), /Terms do not allow/.test(said), /Nothing you wrote was changed/.test(said)], [true, true, true, true]);
+is("the warnings panel says this one keeps the product off the store", /BLOCKING_KINDS\.has\(w\.kind\)[\s\S]{0,200}keeps this product off your store/.test(readFileSync("components/terms-check-panel.tsx", "utf8")), true);
 is("an answer without its passage still says what to do", /Remove the promise/.test(fastMoneyMessage(undefined)), true);
 done();
