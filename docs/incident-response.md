@@ -13,7 +13,7 @@ Escrito pela Claude 2 em 1/11/2026 a partir do código do main (508 [SG4], parte
 | Verificação em duas etapas | 5 códigos errados encerram a tentativa; 10 códigos por hora por conta; sessão sem a segunda etapa não faz ações sensíveis | `lib/two-step.ts` |
 | Passkeys | Até 10 por conta | `lib/passkeys.ts` |
 | Sair de todos os aparelhos | O criador encerra todas as suas sessões de uma vez ("Log out of all devices", no estúdio) | `endAllSessions` em `lib/auth.ts`, `app/api/auth/signout-all` |
-| Chaves da API e do MCP | Guardadas só como hash (SHA-256); revogar uma ou todas vale na hora | `lib/api-keys.ts` |
+| Chaves da API e do MCP | Guardadas só como hash (SHA-256); o criador revoga uma por vez no estúdio, e vale na hora; todas são revogadas sozinhas quando a loja é apagada ou fechada | `lib/api-keys.ts`, `app/api/store/api-keys/route.ts` |
 | Limite da API | 120 pedidos por minuto por chave | `lib/api-guard.ts` |
 | Pausa automática de e-mails de uma loja | Em 7 dias, com pelo menos 25 devoluções e 2% devolvidos, ou pelo menos 5 queixas de spam e 0,08% de queixas, a lista daquela loja para por 7 dias e depois volta aos poucos, a partir de 100 destinatários | `lib/mail-health-rules.ts`, `lib/mail-health.ts` |
 | Avisos recebidos de provedores | Resend: assinatura HMAC conferida em tempo constante, recusada com mais de 5 minutos. Amazon SES (via SNS): tópico conferido, mensagem com menos de uma hora, assinatura RSA conferida no certificado do SNS. Zoom: HMAC, janela de 5 minutos | `lib/inbound-mail.ts`, `lib/sns.ts`, `lib/meet-providers.ts` |
@@ -29,14 +29,14 @@ Escrito pela Claude 2 em 1/11/2026 a partir do código do main (508 [SG4], parte
 
 Cada lacuna abaixo é um fato do código de 1/11/2026, não uma recomendação já feita.
 
-1. **Troca de chave sem interrupção.** Nenhum segredo aceita um valor anterior durante a troca (não há `*_PREVIOUS`, lista ou identificador de chave). Trocar uma chave é corte seco: o que dependia da antiga para de funcionar no mesmo instante.
-2. **Raiz dos segredos selados.** Se `NIMBUS_DATA_KEY` não estiver definida, a chave que sela os segredos dos criadores é derivada de `STRIPE_SECRET_KEY`. Nesse caso, trocar a chave do Stripe depois de um vazamento torna ilegível todo segredo selado (os criadores precisam colar de novo as chaves deles, e os telefones religam as notificações). O agente não pode ler se `NIMBUS_DATA_KEY` está definida em produção (não lê valores de ambiente).
+1. **Troca de chave sem interrupção.** Nenhuma chave de fornecedor nem segredo do ambiente aceita um valor anterior durante a troca (não há `*_PREVIOUS`, lista ou identificador de chave): trocar é corte seco. A única exceção é o cofre de segredos (`lib/secret-box.ts`): depois de definida `NIMBUS_DATA_KEY`, o que foi selado antes ainda abre com a chave derivada de `STRIPE_SECRET_KEY`, enquanto ela não mudar. Os webhooks dos criadores ganham troca sem interrupção em 378 [TB4] (PR aberto).
+2. **Raiz dos segredos selados.** Se `NIMBUS_DATA_KEY` não estiver definida, a chave que sela os segredos dos criadores é derivada de `STRIPE_SECRET_KEY`. Nesse caso, trocar a chave do Stripe depois de um vazamento torna ilegível tudo o que deriva da raiz: os segredos selados (os criadores colam de novo as chaves deles e os telefones religam as notificações), os códigos do app de verificação em duas etapas (os códigos de recuperação e as passkeys continuam entrando, `lib/two-step.ts`) e links e passes derivados da raiz (por exemplo `lib/review-requests.ts`, `lib/chat-pass.ts`, `lib/numbers-links.ts`). Definir `NIMBUS_DATA_KEY` hoje não protege na hora: o que já foi selado continua dependendo da chave do Stripe até ser salvo de novo. O agente não pode ler se `NIMBUS_DATA_KEY` está definida em produção (não lê valores de ambiente).
 3. **Encerrar as sessões de todos.** Existe "sair de todos os aparelhos" para uma conta, mas não um comando que encerre de uma vez as sessões de todos os criadores. As sessões são números aleatórios guardados no Redis, sem assinatura por segredo: trocar um segredo não as encerra.
-4. **Parar todos os envios da plataforma.** Existe a pausa automática por loja, mas não um interruptor único que pare os e-mails de lista de todas as lojas. Hoje isso só se consegue tirando as credenciais de envio do ambiente (`RESEND_API_KEY`/configuração do SES), o que para também os e-mails de serviço, como os links de entrada.
+4. **Parar todos os envios da plataforma.** Existe a pausa automática por loja, mas não um interruptor que pare de vez os e-mails de lista de todas as lojas. O mais próximo é `MARKETING_DAILY_CAP` (`lib/mail.ts`): com valor 1, a empresa inteira manda no máximo um e-mail de lista por dia, e os links de entrada e recibos continuam (0 quer dizer sem teto, não zero). Parar tudo de verdade exige tirar as credenciais de envio do ambiente, o que para também os links de entrada.
 5. **Retomar uma loja pausada antes do prazo.** A pausa automática termina sozinha em 7 dias; não há retomada manual.
 6. **Cópias de segurança.** A rotina diária existe, mas está desligada (`BACKUP_COST_REVIEW` é `null` em `lib/backup-run.ts`, sem agendamento). Num incidente que apague ou corrompa dados, hoje não há cópia para restaurar.
 7. **Registro de auditoria da plataforma.** Há o registro da equipe por loja, mas não um registro de todas as ações administrativas da plataforma.
-8. **Assinaturas de PayPal e Discord.** Não há conferência de assinatura de avisos recebidos desses dois (não foi encontrada no código).
+8. **PayPal e Discord.** Não recebem avisos assinados: o código não tem rota de avisos deles, só retornos de conexão; o retorno do PayPal é conferido perguntando ao próprio PayPal (`app/api/store/paypal/onboarded/route.ts`). Não é lacuna de assinatura; fica registrado para quem procurar.
 
 As lacunas 2, 3 e 4 viram itens de código em "Depende do dono" (ver seção 6); nenhuma é construída por este documento.
 
@@ -53,7 +53,8 @@ Regra geral: **troque primeiro, investigue depois.** Trocar uma chave é revers�
 | Chave (nome no ambiente) | Onde é lida | Efeito de trocar |
 | --- | --- | --- |
 | `STRIPE_SECRET_KEY` | `lib/billing.ts`, `lib/stripe-connect.ts`, `lib/stripe-account.ts`, `lib/payment-methods.ts`, `lib/secret-box.ts` | Assinaturas e leitura das contas conectadas voltam com a nova. **Se `NIMBUS_DATA_KEY` não estiver definida, todo segredo selado fica ilegível** (lacuna 2) |
-| `NIMBUS_DATA_KEY` | `lib/secret-box.ts` | Todo segredo selado sob ela fica ilegível: os criadores colam as chaves de novo; telefones religam notificações |
+| `NIMBUS_DATA_KEY` | `lib/secret-box.ts` | Tudo o que deriva dela fica ilegível ou inválido: segredos selados (os criadores colam as chaves de novo; telefones religam notificações), códigos do app de duas etapas (recuperação e passkeys continuam entrando) e links e passes derivados |
+| `STRIPE_DEMO_SECRET_KEY` | `lib/demo-account.ts` | Só a loja de demonstração |
 | `RESEND_API_KEY`, `RESEND_CREATORS_API_KEY`, `RESEND_INBOUND_API_KEY`, `RESEND_WEBHOOK_SECRET` | `lib/email.ts`, `lib/inbound-mail.ts` | Envio e recebimento pelo Resend voltam com a nova; avisos assinados com a antiga são recusados |
 | `AWS_SES_ROLE_ARN` (papel, sem segredo guardado; usa `VERCEL_OIDC_TOKEN`) | `lib/ses.ts` | Num vazamento, revogar as sessões do papel na AWS |
 | `UPSTASH_REDIS_REST_TOKEN` / `KV_REST_API_TOKEN` | `lib/redis.ts` | Todo o site depende do Redis: trocar e publicar logo, senão o site para |
@@ -70,7 +71,8 @@ Regra geral: **troque primeiro, investigue depois.** Trocar uma chave é revers�
 ## 4. Passo a passo: e-mails precisam parar
 
 - **Uma loja só:** a pausa automática já age pelas devoluções e queixas (seção 1). Uma loja com abuso comprovado é suspensa pelo processo de denúncia, o que fecha a entrada de contatos.
-- **Todas as lojas:** não há interruptor (lacuna 4). Hoje, o único jeito é o dono retirar as credenciais de envio do ambiente de produção e publicar de novo. Isso **também para os links de entrada**, então ninguém consegue entrar até as credenciais voltarem. Use só em vazamento grave das credenciais de envio ou envio em massa indevido.
+- **Todas as lojas, quase parado:** o dono define `MARKETING_DAILY_CAP=1` no ambiente de produção e publica de novo: no máximo um e-mail de lista por dia em toda a empresa, com links de entrada e recibos funcionando (lacuna 4).
+- **Tudo parado:** retirar as credenciais de envio do ambiente e publicar de novo. Isso **também para os links de entrada**, então ninguém entra até elas voltarem. Use só em vazamento grave das credenciais de envio.
 
 ## 5. Passo a passo: avisar os criadores (e, por eles, os compradores)
 
@@ -92,9 +94,9 @@ Modelo para criadores (inglês americano):
 
 Modelo de linha para o criador repassar aos compradores, se quiser:
 
-> On [date], a security problem at the platform that runs our store exposed [which data]. Your card details were not affected: payments are handled by Stripe and never stored by the store's platform. [What the buyer should do, if anything.]
+> On [date], a security problem at the platform that runs our store exposed [which data]. Your card details were not affected: card payments are handled by Stripe, and the store's platform never stores card details. [What the buyer should do, if anything.]
 
-(A frase sobre cartões só vale enquanto for verdade no código: pagamentos na conta Stripe do próprio criador, sem dado de cartão guardado.)
+(A frase sobre cartões só vale enquanto for verdade no código: pagamentos com cartão na conta Stripe do próprio criador, sem dado de cartão guardado. Se as vendas por PayPal, hoje desligadas, estiverem ligadas, acrescente que pagamentos por PayPal são feitos no próprio PayPal.)
 
 ## 6. Prazos legais e decisões do dono
 
@@ -109,7 +111,7 @@ Modelo de linha para o criador repassar aos compradores, se quiser:
 
 **Depende do dono (decisões e configurações que o agente não faz):**
 
-1. Confirmar se `NIMBUS_DATA_KEY` está definida em produção, sem mostrar o valor; se não estiver, defini-la, para que trocar a chave do Stripe não apague os segredos selados (lacuna 2).
+1. Confirmar se `NIMBUS_DATA_KEY` está definida em produção, sem mostrar o valor; se não estiver, defini-la, para que trocar a chave do Stripe deixe de apagar o que for selado dali em diante (o que já está selado só migra quando for salvo de novo, lacuna 2).
 2. Autorizar, como itens de código: um interruptor único para parar os e-mails de lista de todas as lojas sem parar os links de entrada (lacuna 4); um comando que encerre as sessões de todos os criadores (lacuna 3); e a troca de chave com dois valores aceitos durante a troca (lacuna 1). Cada um com teste sintético, sem custo novo de fornecedor.
 3. As cópias de segurança continuam desligadas até a revisão de custo de 273 [BK1] (lacuna 6).
 
