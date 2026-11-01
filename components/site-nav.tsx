@@ -433,7 +433,7 @@ export function SiteNav() {
                     {menu.groups ? (
                       /* The long menu's last link, here so its columns fit the window without scrolling (524 [NV1]). */
                       <div className="mt-4">
-                        <Link href="/platform" onClick={closeAll} className="link-arrow on-dark min-h-11 text-sm font-semibold">
+                        <Link href="/platform" onClick={closeAll} className="link-arrow on-dark text-sm font-semibold">
                           Every feature on one page, with its plan
                           <Icon name="arrow-right" size={16} className="arrow" />
                         </Link>
