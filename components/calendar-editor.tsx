@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { UrlField } from "@/components/url-field";
+import { CALENDAR_CHECK } from "@/lib/fetch-url-check";
 import { useRouter } from "next/navigation";
 import { useHydrated } from "@/components/use-hydrated";
 import { toast } from "@/components/toast";
@@ -173,19 +175,17 @@ export function CalendarEditor({ view: initial, weekly }: { view: CalendarView; 
           <label htmlFor="calendar-url" className="field-label">
             Private calendar address (iCal or .ics link)
           </label>
-          <div className="mt-2 flex flex-col gap-3 sm:flex-row">
-            <input
+          <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:items-start">
+            <UrlField
               id="calendar-url"
-              type="url"
-              inputMode="url"
               autoComplete="off"
-              spellCheck={false}
               value={url}
-              onChange={(e) => setUrl(e.target.value)}
+              onChange={setUrl}
+              check={CALENDAR_CHECK}
               placeholder="https://calendar.google.com/calendar/ical/…/basic.ics"
-              aria-describedby="calendar-url-hint"
-              className="field min-w-0 flex-1"
-              required
+              describedBy="calendar-url-hint"
+              wrapClassName="min-w-0 flex-1"
+              className="field w-full"
             />
             <button type="submit" disabled={busy !== null} aria-busy={busy === "add"} className="btn btn-primary shrink-0">
               {busy === "add" ? "Reading it…" : "Add calendar"}

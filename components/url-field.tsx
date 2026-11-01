@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { Icon } from "@/components/icons";
 import { type LinkCheck, linkOnLeave } from "@/lib/url-check";
 
 /**
@@ -27,6 +28,8 @@ export function UrlField({
   describedBy,
   autoFocus,
   check: read = linkOnLeave,
+  autoComplete = "url",
+  wrapClassName,
 }: {
   id: string;
   value: string;
@@ -38,6 +41,10 @@ export function UrlField({
   autoFocus?: boolean;
   /** The reading of the field's own server; a product link's by default. */
   check?: LinkCheck;
+  /** "off" for an address that is a secret (a private calendar, a webhook): the browser is not asked to keep it. */
+  autoComplete?: string;
+  /** Sizes the field and its message together, where the field sits in a row beside a button. */
+  wrapClassName?: string;
 }) {
   const input = useRef<HTMLInputElement>(null);
   // What was said at the last leave, and for which address.
@@ -61,7 +68,7 @@ export function UrlField({
   const line = `${id}-check`;
   // The fix is offered only for the address it was worked out from.
   const fix = said && said.value === value ? said.fix : null;
-  return (
+  const parts = (
     <>
       <input
         ref={input}
@@ -69,7 +76,7 @@ export function UrlField({
         className={className}
         type="text"
         inputMode="url"
-        autoComplete="url"
+        autoComplete={autoComplete}
         spellCheck={false}
         autoCapitalize="none"
         autoFocus={autoFocus}
@@ -86,7 +93,10 @@ export function UrlField({
       />
       <div id={line} role="status" className="text-sm">
         {said ? (
-          <p className="mt-1 font-semibold text-danger">
+          <p className="mt-1 flex items-start gap-1.5 font-semibold text-danger">
+            {/* An icon beside the words, so the message is not told by its color alone (1.4.1). */}
+            <Icon name="alert" size={18} className="mt-0.5 shrink-0" />
+            <span>
             {said.problem}
             {fix ? (
               <>
@@ -105,9 +115,11 @@ export function UrlField({
                 </button>
               </>
             ) : null}
+            </span>
           </p>
         ) : null}
       </div>
     </>
   );
+  return wrapClassName ? <div className={wrapClassName}>{parts}</div> : parts;
 }
