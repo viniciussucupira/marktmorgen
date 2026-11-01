@@ -3587,9 +3587,12 @@ try {
     await open(studio, `${LOCAL}/studio`);
     await studio.locator("button[aria-expanded]", { hasText: "Weeknight Dinners" }).first().click();
     await studio.getByRole("button", { name: "Tell buyers about an update" }).first().click();
-    const form = studio.locator("form", { has: studio.getByRole("button", { name: "Email every buyer" }) });
+    const form = studio.locator("form", { has: studio.getByRole("button", { name: "Check before sending" }) });
     await form.getByLabel("What changed (optional)").fill("Ten new recipes.");
-    await form.getByRole("button", { name: "Email every buyer" }).click();
+    // The first press shows what will go out (487 [IT4], pattern 8); only "Yes, email every buyer" sends.
+    await form.getByRole("button", { name: "Check before sending" }).click();
+    await form.getByRole("heading", { name: "Check before it goes out" }).waitFor({ timeout: 30_000 });
+    await form.getByRole("button", { name: "Yes, email every buyer" }).click();
     const said = form.getByRole("alert");
     await said.waitFor({ timeout: 30_000 });
     is("on a store without Pro, it says where it is, and sends nothing", await words(said), "Emails to your buyers are on Pro, with your store's email set up under Email.");
