@@ -45,3 +45,13 @@ export function previewSpaces<S extends GatedSpace>(spaces: readonly S[], access
   const holdings = new Set(chosen.filter((id) => access.includes(id)));
   return spaces.filter((space) => seesSpace(space, access, holdings));
 }
+
+/** The line under "Which spaces a member sees": how many of the spaces, and which. */
+export function previewLine(shown: readonly string[], total: number): string {
+  if (!shown.length) return "A member with these products sees none of your spaces.";
+  if (shown.length === total) return `A member with these products sees all ${total} of your spaces.`;
+  return `A member with these products sees ${shown.length} of your ${total} spaces: ${shown.join(", ")}.`;
+}
+
+/** What the preview does not show, said beside it so it never stands in for more than it is. */
+export const PREVIEW_LEAVES_OUT = "This shows which spaces they see, not their posts. Events have their own rule and are not shown here. Nothing is changed and nobody is told.";
