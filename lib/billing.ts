@@ -1463,7 +1463,7 @@ type SearchMember = { subscription: Record<string, unknown>; terminalOwn: boolea
 function releasedSearchEvidence(value: unknown): Set<string> {
   const unknown = new Set<string>();
   if (!Array.isArray(value) || Object.getPrototypeOf(value) !== Array.prototype) return unknown;
-  const descriptors = Object.getOwnPropertyDescriptors(value);
+  const descriptors = Object.getOwnPropertyDescriptors(value as object);
   const length = descriptors.length;
   if (!length || !Object.hasOwn(length, "value") || !Number.isSafeInteger(length.value) || length.value < 0 ||
       Reflect.ownKeys(descriptors).length !== length.value + 1) return unknown;
