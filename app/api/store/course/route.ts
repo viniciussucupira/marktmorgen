@@ -9,7 +9,7 @@ import { deleteFile as del, headFile as head } from "@/lib/file-store";
 import { setCourseLessons, setProductCourse, storeForEmail, storeFolder } from "@/lib/store";
 import { jsonAccess } from "@/lib/studio-route";
 import { guardStoreWrite, text } from "@/lib/store-request";
-import { readLink } from "@/lib/product-link";
+import { MAX_LINK_LENGTH, readLink } from "@/lib/product-link";
 import { ownsPath, safeFileName, type ProductFile } from "@/lib/product-file";
 import {
   type Course,
@@ -380,7 +380,8 @@ export async function POST(request: NextRequest) {
         if (!OPS.has(op)) return Response.json({ ok: false, error: "invalid" }, { status: 400 });
         const direction = body.direction === "up" ? "up" : "down";
         if (op === "lesson-edit") {
-          const rawLink = text(body.link, 2000).trim();
+          // One past the length kept, so a longer link is refused as too long rather than cut and kept broken.
+          const rawLink = text(body.link, MAX_LINK_LENGTH + 1).trim();
           let link: string | null = null;
           if (rawLink) {
             const read = readLink(rawLink);
