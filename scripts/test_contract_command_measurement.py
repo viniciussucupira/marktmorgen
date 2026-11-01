@@ -27,11 +27,12 @@ def main():
         result, counts = measured_command(client, lambda: client.command('EVAL', "return redis.call('DBSIZE')", 0))
         assert isinstance(result, int) and counts == {'eval': 1, 'dbsize': 1}, counts
         # A malformed probe is refused and never leaves this connection queued.
+        refused = False
         try:
             measured_command(client, lambda: None)
-            raise AssertionError('Missing application command must fail')
         except (AssertionError, RuntimeError):
-            pass
+            refused = True
+        assert refused, 'Missing application command must fail'
         assert client.command('PING') == 'PONG'
         print('PASS: atomic INFO/EVAL/INFO excludes external PING, retains EVAL and every internal command; invalid probe leaves no transaction')
     finally:
