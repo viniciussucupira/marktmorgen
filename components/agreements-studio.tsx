@@ -1,5 +1,6 @@
 "use client";
 
+import { ConfirmAction } from "@/components/confirm-action";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { agreementReply, type AgreementAction, type AgreementReply } from "@/lib/agreement-reply";
@@ -341,9 +342,9 @@ export function AgreementsStudio({
                     </button>
                   ) : null}
                   {canSend && status !== "open" ? (
-                    <button type="button" className="btn btn-secondary btn-sm" disabled={busy !== ""} onClick={() => void act("delete", r.id, "Deleted. Copies already emailed stay with whoever received them.")} aria-label={`Delete the agreement with ${r.email}`}>
+                    <ConfirmAction className="btn btn-secondary btn-sm" disabled={busy !== ""} label={`Delete the agreement with ${r.email}`} question="Delete this agreement? It cannot be brought back; copies already emailed stay with whoever received them." yes="Yes, delete" onConfirm={() => act("delete", r.id, "Deleted. Copies already emailed stay with whoever received them.")}>
                       <Icon name="trash" size={15} /> Delete
-                    </button>
+                    </ConfirmAction>
                   ) : null}
                 </div>
               </li>
