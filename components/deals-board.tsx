@@ -350,6 +350,12 @@ export function DealsBoard({ deals, stages: everyStage, pipelines: savedPipeline
           </fieldset>
         ) : null}
 
+        {/* An empty board says what it is for and how to start (487 [IT4], pattern 5). */}
+        {pipelineDeals.length === 0 && draft === null ? (
+          <p className="mt-6 rounded-[var(--r-md)] bg-sand p-4 text-sm text-ink-soft">
+            No deals yet. When someone asks about something you sell outside a checkout, press &ldquo;New deal&rdquo; and move it across the stages as the talk goes on.
+          </p>
+        ) : null}
         {view === "agenda" ? <DealAgenda deals={visibleDeals} stages={stages} currency={currency} today={today} disabled={locked || editing || writeUnconfirmed} onEdit={deal => { setError(null); setDraft(draftFromDeal(deal, currency)); }} /> : (
         <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {columns.map(({ stage, count, cents }) => (

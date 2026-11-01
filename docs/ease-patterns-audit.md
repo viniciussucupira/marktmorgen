@@ -88,20 +88,64 @@ The screen-by-screen audit that 487 [IT4] asks for: what was checked, what was f
 - **Web addresses:** 13 files have `type="url"` fields. All of them are checked only when the form is sent, so a missing `https://` shows up only after pressing Save.
 
 **Fixed.**
-- `components/url-field.tsx` checks a web address when the person leaves the field, never while they are typing, using the server's own reading (`readLink` in `lib/product-link.ts`). If the address only lacks `https://`, or has `http://`, it offers the corrected address in one press. Anything else gets the server's own words. It is also said when the form is sent. While the person types, a message only goes away, once the address is right; a new one waits for the next leave, so nothing is announced at every key. After the one-press fix, the focus goes back to the field. An address too long is said, never cut. The message is tied to the field for screen readers.
+- `components/url-field.tsx` checks a web address when the person leaves the field, never while they are typing, using the server's own reading (`readLink` in `lib/product-link.ts`). If the address only lacks `https://`, or has `http://`, it offers the corrected address in one press. Anything else gets the server's own words. It is also said when the form is sent. While the person types, a message only goes away, once the address is right; a new one waits for the next leave, so nothing is announced at every key. After the one-press fix, the focus goes back to the field. An address too long is said, never cut. The message carries an icon beside its words, so it is not told by color alone, and it is tied to the field for screen readers.
 - The lesson link in the course editor uses it, with its label now tied to the field by id, so does the link a product sends its buyer to, and so does a store link, each with its help tied to it. All three routes now refuse a link that is too long instead of cutting it.
 - The field takes the reading of its own server. A call's two meeting links and a community event's link use `cleanRoom` (`lib/call-setup.ts`). That reading cuts a link over 500 characters, and it also reads the links already stored, so it is left as it is; the field says a link is too long before the cut happens, measured as it would be stored. Found on the way, not changed: a link of 500 characters or fewer can be stored longer once its letters are written out (an é takes 6), and is then cut when it is read back. The field now warns about it before the save.
 
 **Still to do.**
-- The same field in the other 8 files: host calendar, webhook editor, mark shipped, chat summary, report form, page editor, calendar editor and review studio. Each is read first: their routes do not use the product-link reading, so each needs the reading its own server applies. The webhook editor and both calendar editors are read by `checkUrl` in `lib/safe-fetch.ts`, which also imports the server's DNS and network modules. Those fields can be checked in the browser only after the pure part of `checkUrl` is moved into a browser-safe module, and that module guards every request the server sends out, so it gets its own unit and review. The tracking link (mark shipped) waits: its files are held by an open PR. The chat summary, report form, page editor and review studio are read next, one by one.
+- The tracking link (mark shipped), whose files are held by an open PR. The page editor's quote link already had its own check tied to the field (`badLink`, `noLink`), so it is left as it is. Each is read first: their routes do not use the product-link reading, so each needs the reading its own server applies. The webhook editor and both calendar editors are read by `checkUrl` in `lib/safe-fetch.ts`, which guards every request the server sends out and uses the server's own address reading. It is left untouched. Their fields use `lib/fetch-url-check.ts`, a part of that guard written for the browser: it never refuses an address the server keeps, refuses only in the server's words, and leaves an address written as a number (an IP) to the server, which alone says whether it is private. The fields keep `autocomplete="off"`, because a calendar's private address and a webhook endpoint are secrets. A fix is never offered for an address written as a number, nor one that grows too long once its letters are written out; the webhook field refuses webcal:// as its server does; each field says "too long" in its own server's words. A host's calendar address is now sent trimmed, as the field checks it. The report form's page address uses the field too, by the pattern its notice is held to (`lib/takedown-rules.ts`), which takes http:// as well. The chat summary's webhook address uses it too, by the very function the server posts with (`chatKind`, now in the browser-safe `lib/chat-kind.ts`). Its form no longer sends an empty address, which would have stopped the posting: only "Stop posting" does that. The public review page (reviews) uses it, by the reading its server keeps (`parseReviewElsewhere`). A form whose address the field refuses is not sent (chat summary, report form), so a refused try never uses the hour's allowance, and a refused review page is said once, beside the field. The report notice now refuses an address longer than 500 characters instead of cutting it. The tracking link (mark shipped) waits: its files are held by an open PR. The chat summary, report form, page editor and review studio are read next, one by one.
 
-## Not audited yet
+## Pattern 5: no empty screen without a sentence, a button and a ready example (1 November 2026, first pass)
 
-These patterns of 487 [IT4] have not been audited:
-1. Validation when the person leaves the field: first pass done (see pattern 1).
-2. The most common value filled in: the "Recommended" price option waits on the owner (see pattern 3).
-3. Always-visible labels: the six fields not yet read in context, and the home page field (see pattern 4).
-4. Empty screens with an action and a ready example.
-5. Drafts saved by themselves: first pass done (see pattern 6); saving on its own not yet built.
-6. A live phone preview beside each editor.
-7. A "Check answers" summary before publishing or sending.
+**Method.** The empty states of 26 studio screens in `components/` and `app/studio/` were read. Each was checked for (a) a sentence saying what to do, (b) a button for the action, and (c) a ready template or example.
+
+**Found.**
+- **All three:**
+  - the email body (`MAIL_TEMPLATES`);
+  - sequences (two written for you);
+  - site pages (starter pages);
+  - course outlines (drafted by the writing help);
+  - course templates (540 [CU1]).
+- **A sentence and a button, no ready example:**
+  - products;
+  - after-purchase offers;
+  - blog posts;
+  - forms;
+  - community setup;
+  - discount codes;
+  - bundles;
+  - store links;
+  - podcast episodes;
+  - waitlist;
+  - affiliates;
+  - page funnels: an example in words only.
+- **Missing a sentence or a button:**
+  - the email history (its only button was "Reload");
+  - community events ("Nothing scheduled.");
+  - reviews (no action);
+  - contacts (no action);
+  - the deals board (empty columns with no sentence);
+  - short links, webhooks and calendar feeds: an introduction and a form, no empty line.
+
+**Fixed.**
+- The email history says where the first email comes from: the editor above it.
+- Community events say what an event can be and where to start one.
+- With no review at all, on either tab, the reviews page offers "Ask buyers for a review" to a role that can switch the requests on. It leads to the setting's heading on the same page and moves the focus there.
+- An empty deals board says what it is for and names its "New deal" button.
+- Each sentence names a button only where that role sees it: a role that cannot send email or schedule events reads who does it instead.
+
+**Still to do.**
+- A ready example for products, blog posts, forms, after-purchase offers and community setup. Each is new content, written once, and gets its own unit: nothing a creator sees is made up.
+- Not applicable, with the reason: the contacts page's empty "Your latest buyers" is a lookup of who bought, not a screen to make something. There is no buyer to "add", and its one next step, earlier purchases in the Stripe dashboard, is already said. A button there would be one that does nothing new.
+
+## Where each pattern stands
+
+Numbered as in 487 [IT4]:
+1. Checked when the field is left: first pass done for every web address field (see pattern 1), except the tracking link, held by an open PR. Other kinds of field not yet audited.
+2. The right keyboard on a phone: done (see pattern 2); "Move to" in its own PR, now that its file is free.
+3. The common value filled in, never the dearest: audited (see pattern 3). The "Recommended" price option waits on the owner.
+4. A label always visible: first pass done (see pattern 4). Six fields still to be read in context, and the home page field.
+5. Empty screens with a sentence, a button and a ready example: first pass done (see pattern 5). Four screens fixed; ready examples for five screens still to write.
+6. Drafts never lost: done for the editors read (see pattern 6). Saving by itself, with "Saving…" and "Saved", is not built yet, because it needs its own ceiling on saves per plan first.
+7. A live phone preview beside each editor: not audited yet.
+8. A "Check answers" summary with "Change" on each item before publishing or sending: not audited yet.
