@@ -241,7 +241,13 @@ if not good or type(p)~='table' then return {'unknown'} end
 local supported=r.reviewId==p.reviewId
 if type(p.continuedReviewIds)=='table' then for _,id in ipairs(p.continuedReviewIds) do if id==r.reviewId then supported=true end end end
 if not supported then return {'unknown'} end
-if op=='cursor' then
+if op=='url' then
+ local good,n=pcall(cjson.decode,supplied)
+ if not good or type(n)~='table' or r.state~='queued' or r.phase~='awaiting_payment' or r.session=='' or
+    n.session~=r.session or n.bindingFingerprint~=r.bindingFingerprint then return {'held'} end
+ -- Read-only final exposure permission: no renewed source, lease or capacity.
+ return {'url',r.id,r.session,r.bindingFingerprint,tostring(serverNow),tostring(math.min(r.expiresAt,serverNow+1000))}
+elseif op=='cursor' then
  local good,n=pcall(cjson.decode,supplied)
  if not good or type(n)~='table' or r.session~='' or type(n.recoveryCursor)~='string' or type(n.recoveryUpper)~='number' then return {'unknown'} end
  r.recoveryCursor=n.recoveryCursor; r.recoveryUpper=n.recoveryUpper; r.next=now+p.retryMilliseconds; r.phase='creation_unknown'
@@ -408,6 +414,28 @@ async function recoverCreation(found: NonNullable<Awaited<ReturnType<typeof read
   } catch { return null; }
 }
 
+/** Only an exact, timely read-only acknowledgement may expose a URL after
+ * provider verification. A closure/erasure that precedes this CAS denies it.
+ * It cannot revoke a URL already returned, reserve public read costs, create a
+ * Stripe attempt or renew the original source/creation deadline.
+ */
+async function confirmationUrlPermission(found: NonNullable<Awaited<ReturnType<typeof readConfirmationOrigin>>>, runtime: ConfirmationOriginRuntime): Promise<boolean> {
+  const policy = confirmationOutboxPolicy(runtime, false);
+  if (!policy) return false;
+  try {
+    const started = performance.now(), pipeline = runtime.pipeline ?? redisPipeline;
+    const reply = array(await pipeline([["EVAL", CONFIRMATION_ORIGIN_SCRIPT, 10, ...keys(found.row), "url", found.raw,
+      JSON.stringify({ session: found.row.session, bindingFingerprint: found.row.bindingFingerprint }),
+      (runtime.now ?? Date.now)(), "", JSON.stringify(policy)]]), 1);
+    const ack = reply?.length === 1 ? array(reply[0], 6) : null;
+    if (!ack || ack.length !== 6 || ack[0] !== "url" || ack[1] !== found.row.id || ack[2] !== found.row.session || ack[3] !== found.row.bindingFingerprint ||
+        typeof ack[4] !== "string" || typeof ack[5] !== "string" || !/^[1-9][0-9]*$/.test(ack[4]) || !/^[1-9][0-9]*$/.test(ack[5])) return false;
+    const server = Number(ack[4]), until = Number(ack[5]);
+    return Number.isSafeInteger(server) && Number.isSafeInteger(until) && until === Math.min(found.row.expiresAt, server + 1000) && until > server &&
+      performance.now() < started + until - server && (runtime.now ?? Date.now)() < until;
+  } catch { return false; }
+}
+
 /** A real checkout caller uses this only after the complete origin is durably
  * reserved. Creation is replayable solely with its original body/key and an
  * acknowledged Redis-relative deadline. There is no POST after23h; verified
@@ -444,8 +472,9 @@ export async function openConfirmationOrigin(id: string, runtime: ConfirmationOr
   if (!session || session.status !== "open" || typeof session.url !== "string") return null;
   try {
     const url = new URL(session.url);
-    return url.protocol === "https:" && url.hostname === "checkout.stripe.com" && !url.username && !url.password
-      ? { url: url.href, id: bound.sessionId } : null;
+    if (url.protocol !== "https:" || url.hostname !== "checkout.stripe.com" || url.username || url.password) return null;
+    if (!(await confirmationUrlPermission(found, runtime))) return null;
+    return { url: url.href, id: bound.sessionId };
   } catch { return null; }
 }
 

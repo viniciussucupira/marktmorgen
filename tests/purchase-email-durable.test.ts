@@ -55,7 +55,7 @@ async function fixture() {
             else { const next = String(c[15]), n = JSON.parse(next); redis.run(["SET", k[0], next]); redis.run(["SET", k[1], n.sourceValue]); answer = ["bound", next]; }
           } else if (op === "cursor") answer = ["cursor", raw];
           else if (op === "url" && r.session && r.phase === "awaiting_payment" && r.state === "queued" &&
-              redis.run(["GET", k[1]]) === r.sourceValue && redis.run(["EXISTS", k[8], k[9]]) === 0) {
+              redis.run(["GET", k[1]]) === r.sourceValue && redis.run(["EXISTS", k[8]]) === 0 && redis.run(["EXISTS", k[9]]) === 0) {
             answer = ["url", r.id, r.session, r.bindingFingerprint, String(now()), String(Math.min(now() + 1000, r.expiresAt))];
           }
         }
@@ -222,7 +222,7 @@ test("the final gate refuses replaced or removed source evidence after the exact
 });
 
 test("only exact timely final-gate acknowledgements expose the already verified winning URL", async () => {
-  for (const kind of ["lost", "malformed", "wrong-session", "stale", "nested-getter"] as const) {
+  for (const kind of ["lost", "malformed", "wrong-session", "wrong-deadline", "stale", "nested-getter"] as const) {
     const f = await fixture();
     const checkout = await createCheckout(f.store, f.product, "https://example.test", undefined, {}, f.runtime);
     const id = originId(), before = await readConfirmationOrigin(id, f.runtime); assert.ok(before);
@@ -233,6 +233,7 @@ test("only exact timely final-gate acknowledgements expose the already verified 
       if (kind === "lost") throw Error("Synthetic read-only permission ACK lost");
       if (kind === "malformed") return [["url", id, checkout.id]];
       if (kind === "wrong-session") return [["url", id, "cs_test_foreignSession00001", before.row.bindingFingerprint, String(Date.now()), String(Date.now()+1000)]];
+      if (kind === "wrong-deadline") return [["url", id, checkout.id, before.row.bindingFingerprint, String(Date.now()), String(Date.now()+2000)]];
       if (kind === "stale") { f.advance(2000); return answer; }
       const nested = ["url", id, checkout.id, before.row.bindingFingerprint, String(Date.now()), String(Date.now()+1000)];
       Object.defineProperty(nested, "2", { get() { getters++; return checkout.id; } });

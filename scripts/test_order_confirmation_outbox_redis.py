@@ -108,6 +108,36 @@ def main():
             n = dict(another); n[field] = value
             assert change("bind", winning, keys, json.dumps(n), expected=saved)[0] == "unknown"
         print("PASS: a candidate cannot replace original account/body/nonce/admission fingerprint")
+        # The same exact winning row is required immediately before URL exposure.
+        # This is read-only: original expiry, source, pools and pending TTL stay fixed.
+        before_url = db.command("GET", keys[0])
+        source_before_url = db.command("GET", keys[1])
+        pool_before_url = db.command("HGETALL", keys[5])
+        request_url = json.dumps(dict(session=winning["session"], bindingFingerprint=winning["bindingFingerprint"]))
+        allowed = change("url", winning, keys, request_url, expected=before_url)
+        assert allowed[:4] == ["url", winning["id"], winning["session"], winning["bindingFingerprint"]]
+        assert int(allowed[4]) < int(allowed[5]) == min(winning["expiresAt"], int(allowed[4]) + 1000)
+        assert db.command("GET", keys[0]) == before_url and db.command("GET", keys[1]) == source_before_url
+        assert db.command("HGETALL", keys[5]) == pool_before_url
+        assert db.command("TTL", keys[0]) == -1 and db.command("TTL", keys[1]) == -1
+        for fence in (keys[8], keys[9]):
+            db.command("SET", fence, "closed-before-final-url-gate")
+            assert change("url", winning, keys, request_url, expected=before_url) == ["held"]
+            db.command("DEL", fence)
+        db.command("SET", keys[1], "replaced-source")
+        assert change("url", winning, keys, request_url, expected=before_url) == ["unknown"]
+        db.command("SET", keys[1], source_before_url)
+        replaced = dict(winning, session="cs_test_otherWinner000001")
+        db.command("SET", keys[0], json.dumps(replaced))
+        assert change("url", winning, keys, request_url, expected=before_url) == ["changed"]
+        db.command("SET", keys[0], before_url)
+        assert change("url", winning, keys, json.dumps(dict(session="cs_test_wrong000001", bindingFingerprint=winning["bindingFingerprint"]))) == ["held"]
+        refused = dict(winning, phase="refused")
+        db.command("SET", keys[0], json.dumps(refused))
+        assert change("url", refused, keys, request_url) == ["held"]
+        db.command("SET", keys[0], before_url)
+        assert change("url", winning, keys, request_url, at=now-73*3_600_000) == ["unknown"]
+        print("PASS: final URL gate checks exact winner/source/store/person fences with read-only timely permission; no renewed source/TTL/pool")
         old, oldkeys = fixture("past-retention")
         old["created"] = now - 25 * 3_600_000
         assert enqueue(old, oldkeys)[0] == "queued"
