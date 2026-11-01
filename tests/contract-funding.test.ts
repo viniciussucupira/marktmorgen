@@ -9,24 +9,56 @@ import {txCustomerFixture} from './customer-tax-review-fixture';
 import {CUSTOMER_COST_CATEGORIES} from '@/lib/net-margin-rules';
 const key='nl:contract-reserve:v1';
 function start(){reset();const f=contractFixture(),config=contractFundingConfiguration(f.policy,f.context,f.now)!;assert.ok(config);seed(config);return {...f,config};}
-test('contract cash retains the complete TX ceiling and invalid fiscal evidence cannot receive a grant',()=>{
+test('TX assessment does not authorize a contract before admission and liability periods are bound',async()=>{
  const f=contractFixture();
- for(const key of CONTRACT_KEYS){
-  const scenario=(key+'_full') as keyof typeof f.review.scenarios,old=f.review.scenarios[scenario]!;
-  const gross=old.collectedRevenueCents!,cost=CUSTOMER_COST_CATEGORIES.reduce((n,k)=>n+old.costCeilings[k]!,0);
-  const months=key.endsWith('_year')?12:1;
-  const tx=txCustomerFixture(gross,cost,{scenario,from:'2026-01-01',through:months===12?'2027-01-01':'2026-02-01',months});
-  tx.costCeilings={...old.costCeilings};f.review.scenarios[scenario]=tx;
- }
- f.policy.reservedFundsCents=1e12;f.policy.financialSnapshot=canonicalFinancialSnapshot(f.review)!;
+ const old=f.review.scenarios.creator_month_full!;
+ const gross=old.collectedRevenueCents!,cost=CUSTOMER_COST_CATEGORIES.reduce((n,k)=>n+old.costCeilings[k]!,0);
+ const tx=txCustomerFixture(gross,cost,{scenario:'creator_month_full',from:'2026-01-01',through:'2026-02-01',months:1});
+ tx.costCeilings={...old.costCeilings};assert.equal(assessCustomerWorstCase(tx).approved,true);
+ f.review.scenarios.creator_month_full=tx;f.policy.reservedFundsCents=1e12;
+ f.policy.financialSnapshot=canonicalFinancialSnapshot(f.review)!;
+ assert.equal(contractFundingConfiguration(f.policy,f.context,f.now),null);
+ assert.equal(contractFundingConfiguration(f.policy,f.context,new Date('2026-11-01T12:00:00.000Z')),null);
+ reset();assert.equal(await reserveContractFunding('tx-held','creator','month','checkout',f.policy,f.context,'ctr_tx_hold'),null);
+ assert.equal(calls.length,0);
+});
+test('legacy contract cash still retains every reviewed tax cent',()=>{
+ const f=contractFixture();f.policy.reservedFundsCents=1e12;
  const before=contractFundingConfiguration(f.policy,f.context,f.now);assert.ok(before);
  f.review.scenarios.creator_month_full!.taxesCeilingCents!+=317;
  f.policy.financialSnapshot=canonicalFinancialSnapshot(f.review)!;
  const more=contractFundingConfiguration(f.policy,f.context,f.now);assert.ok(more);
  assert.equal(more.grantCents.creator_month-before.grantCents.creator_month,317);
- f.review.scenarios.creator_month_full!.taxReview!.coverage.source='';
- f.policy.financialSnapshot=canonicalFinancialSnapshot(f.review)!;
- assert.equal(contractFundingConfiguration(f.policy,f.context,f.now),null);
+});
+test('contract clone cannot discard hidden, inherited or computed TX presence into the legacy path',async()=>{
+ let getters=0;
+ for(const field of ['taxReview','taxContext'])for(const kind of ['hidden','getter','inherited','proxy']){
+  const f=contractFixture();assert.ok(contractFundingConfiguration(f.policy,f.context,f.now));
+  const row=f.review.scenarios.creator_month_full!;
+  if(kind==='inherited')Object.setPrototypeOf(row,{[field]:null});
+  else Object.defineProperty(row,field,kind==='getter'?{enumerable:false,get(){getters++;return null;}}:{value:null,enumerable:false,configurable:true});
+  if(kind==='proxy')f.review.scenarios.creator_month_full=new Proxy(row,{has(){return false;}});
+  // Even the old enumerable-only binding may have omitted the hidden field.
+  const encoded=canonicalFinancialSnapshot(f.review);if(encoded!==null)f.policy.financialSnapshot=encoded;
+  assert.equal(contractFundingConfiguration(f.policy,f.context,f.now),null);
+  reset();assert.equal(await reserveContractFunding('tx-hidden','creator','month','checkout',f.policy,f.context,'ctr_tx_hidden'),null);
+  assert.equal(calls.length,0);
+  assert.equal(await activateCheckoutContract(activation(),f.policy,f.context),false);
+  assert.equal(await activateSwitchContract(activation(),f.policy,f.context),false);
+  assert.equal(calls.length,0);
+ }
+ assert.equal(getters,0);
+});
+test('TX fields in funded exposures stay closed before the contract clone instead of becoming legacy',async()=>{
+ for(const field of ['taxReview','taxContext']){
+  const f=contractFixture();assert.ok(contractFundingConfiguration(f.policy,f.context,f.now));
+  Object.defineProperty(f.review.fundedExposure!.cases.trial.worstCase!,field,{value:null,enumerable:false});
+  assert.equal(contractFundingConfiguration(f.policy,f.context,f.now),null);
+  reset();assert.equal(await reserveContractFunding('tx-exposure','creator','month','checkout',f.policy,f.context,'ctr_tx_exposure'),null);
+  assert.equal(await activateCheckoutContract(activation(),f.policy,f.context),false);
+  assert.equal(await activateSwitchContract(activation(),f.policy,f.context),false);
+  assert.equal(calls.length,0);
+ }
 });
 test('annual coverage funds twelve paid months plus the reviewed tail and repeated pause bounds',()=>{assert.equal(contractCoverageDays('month',60),167);assert.equal(contractCoverageDays('year',60),570);assert.equal(contractCoverageDays('year',null as unknown as number),null);assert.equal(contractCoverageDays('month',59),null);});
 test('last admitted monthly and annual obligations keep full coverage after the maximum activation delay',()=>{

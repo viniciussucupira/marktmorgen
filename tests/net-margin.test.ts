@@ -161,4 +161,39 @@ for(const key of Object.keys(BASE_PLAN_REVENUE_CEILINGS) as (keyof typeof BASE_P
  is('the commercial map binds each TX scenario to its actual key',commercialMarginReady(r),false);
  is('TX synthetic data never fills the actual commercial review',commercialMarginReady(),false);
 }
+{
+ let getters=0;
+ for(const field of ['taxReview','taxContext'])for(const kind of ['hidden','getter','inherited','proxy']){
+  const r=review();is('baseline legacy review is healthy before hidden TX '+field+kind,commercialMarginReady(r),true);
+  const row=r.scenarios.creator_month_full!;
+  if(kind==='inherited')Object.setPrototypeOf(row,{[field]:null});
+  else Object.defineProperty(row,field,kind==='getter'?{enumerable:false,get(){getters++;return null;}}:{value:null,enumerable:false,configurable:true});
+  if(kind==='proxy')r.scenarios.creator_month_full=new Proxy(row,{has(){return false;}});
+  is('original TX presence cannot vanish in commercial snapshot '+field+kind,commercialMarginReady(r),false);
+  is('launch cannot discard original TX presence '+field+kind,commercialPlansMayOpen(true,r),false);
+ }
+ is('hidden fiscal accessors were never invoked',getters,0);
+ for(const field of ['taxReview','taxContext'] as const)for(const kind of ['hidden-data','hidden-getter']){
+  const r=review(),old=r.scenarios.creator_month_full!;
+  const gross=old.collectedRevenueCents!,cost=CUSTOMER_COST_CATEGORIES.reduce((sum,k)=>sum+old.costCeilings[k]!,0);
+  const tx=txCustomerFixture(gross,cost);tx.costCeilings={...old.costCeilings};r.scenarios.creator_month_full=tx;
+  is('deep TX baseline is assessable before lossiness '+field+kind,commercialMarginReady(r),true);
+  Object.defineProperty(tx[field]!,'extra',kind==='hidden-getter'?{enumerable:false,get(){getters++;throw Error('must not execute');}}:{enumerable:false,value:null});
+  is('deep nonenumerable fiscal data is rejected directly '+field+kind,assessCustomerWorstCase(tx).approved,false);
+  is('deep nonenumerable fiscal data cannot vanish in commercial clone '+field+kind,commercialMarginReady(r),false);
+ }
+ is('deep fiscal getters were never invoked',getters,0);
+ for(const field of ['taxReview','taxContext']){
+  const r=review();
+  is('legacy exposure baseline passes before unsupported TX '+field,commercialMarginReady(r),true);
+  Object.defineProperty(r.fundedExposure!.cases.trial.worstCase!,field,{value:null,enumerable:false});
+  is('unsupported hidden TX exposure cannot become legacy during commercial cloning '+field,commercialMarginReady(r),false);
+ }
+ {
+  const r=review(),row=r.scenarios.creator_month_full!;
+  Object.assign(row,{taxReview:null,taxContext:null});
+  r.scenarios.creator_month_full=new Proxy(row,{ownKeys(target){return Reflect.ownKeys(target).filter(key=>key!=='taxReview'&&key!=='taxContext');}});
+  is('an ownKeys trap cannot erase original fiscal presence during commercial serialization',commercialMarginReady(r),false);
+ }
+}
 done();

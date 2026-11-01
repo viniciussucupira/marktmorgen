@@ -6,6 +6,8 @@ export const CUSTOMER_TAX_REVIEW_POLICY = Object.freeze({
   schema: 1, id: 'TX-2026-10-27', basis: 'isolated-full-rights-worst-case',
   unknown: 'deny', currency: 'USD', accountingCurrency: 'BRL',
   allocation: 'whole-scoped-calendar-books-no-tax-credit-for-extra-cost-room',
+  contractAdmission: 'closed-until-admission-and-liability-period-binding',
+  fundedExposure: 'legacy-only-no-TX-migration-in-this-unit',
   maxBooks: 2, maxExchangesPerBook: 1200,
 } as const);
 export type TaxEvidence = { date: string; source: string; facts: string };
@@ -58,6 +60,7 @@ function detached(value: unknown): unknown {
     const own = (key: string) => {
       const d = Object.getOwnPropertyDescriptor(v, key);
       if (!d || !Object.hasOwn(d, 'value')) throw Error('accessor or missing');
+      if (!(array && key === 'length') && !d.enumerable) throw Error('non-enumerable fiscal data');
       return d.value;
     };
     let out: unknown;
@@ -108,6 +111,74 @@ export function customerTaxReviewFields(value: object): { present: boolean; taxR
       taxReview: review && Object.hasOwn(review, 'value') ? review.value : undefined,
       taxContext: context && Object.hasOwn(context, 'value') ? context.value : undefined };
   } catch { return { present: true }; }
+}
+
+/** Inspect the original review before an enumerable-only snapshot can erase
+ * TX presence. This is a bounded shape/presence check, not a fiscal approval.
+ * Non-enumerable, inherited and computed fiscal fields are never silently
+ * interpreted as legacy data; getters are not invoked. */
+export function customerTaxCollectionState(review: unknown): 'legacy' | 'tx' | 'unknown' {
+  try {
+    if (!review || typeof review !== 'object' || Array.isArray(review)) return 'unknown';
+    const descriptor = Object.getOwnPropertyDescriptor(review, 'scenarios');
+    if (!descriptor || !descriptor.enumerable || !Object.hasOwn(descriptor, 'value')) return 'unknown';
+    const scenarios = descriptor.value;
+    if (!scenarios || typeof scenarios !== 'object' || Array.isArray(scenarios)) return 'unknown';
+    const proto = Object.getPrototypeOf(scenarios);
+    if (proto !== Object.prototype && proto !== null) return 'unknown';
+    const keys = Reflect.ownKeys(scenarios);
+    if (keys.length > 32 || keys.some(key => typeof key !== 'string')) return 'unknown';
+    let tx = false;
+    for (const key of keys) {
+      const row = Object.getOwnPropertyDescriptor(scenarios, key);
+      if (!row || !row.enumerable || !Object.hasOwn(row, 'value')) return 'unknown';
+      const scenario = row.value;
+      if (!scenario || typeof scenario !== 'object' || Array.isArray(scenario)) continue;
+      const fields = customerTaxReviewFields(scenario);
+      if (!fields.present) continue;
+      for (const name of ['taxReview', 'taxContext']) {
+        const field = Object.getOwnPropertyDescriptor(scenario, name);
+        if (!field || !field.enumerable || !Object.hasOwn(field, 'value')) return 'unknown';
+        // Check deep shape before an outer clone can erase hidden executable
+        // data. The fiscal calculation still runs only in the real assessor.
+        detached(field.value);
+      }
+      tx = true;
+    }
+    // Exposure readers keep separate legacy snapshots. They are not migrated
+    // here: refuse TX before those snapshots could discard its presence.
+    const exposureField = Object.getOwnPropertyDescriptor(review, 'fundedExposure');
+    if (exposureField) {
+      if (!exposureField.enumerable || !Object.hasOwn(exposureField, 'value')) return 'unknown';
+      const exposure = exposureField.value;
+      if (exposure && typeof exposure === 'object') {
+        const casesField = Object.getOwnPropertyDescriptor(exposure, 'cases');
+        if (!casesField || !casesField.enumerable || !Object.hasOwn(casesField, 'value')) return 'unknown';
+        const cases = casesField.value;
+        if (!cases || typeof cases !== 'object' || Array.isArray(cases)) return 'unknown';
+        const exposureKeys = Reflect.ownKeys(cases);
+        if (exposureKeys.length > 32 || exposureKeys.some(key => typeof key !== 'string')) return 'unknown';
+        for (const key of exposureKeys) {
+          const item = Object.getOwnPropertyDescriptor(cases, key);
+          if (!item || !item.enumerable || !Object.hasOwn(item, 'value') || !item.value || typeof item.value !== 'object') return 'unknown';
+          const worst = Object.getOwnPropertyDescriptor(item.value, 'worstCase');
+          if (!worst || !worst.enumerable || !Object.hasOwn(worst, 'value')) return 'unknown';
+          if (worst.value && typeof worst.value === 'object' && customerTaxReviewFields(worst.value).present) return 'unknown';
+        }
+      }
+    }
+    return tx ? 'tx' : 'legacy';
+  } catch { return 'unknown'; }
+}
+
+/** New TX contract admission stays closed until actual admission and liability
+ * periods are bound. Run on ORIGINAL data before any outer cloning. */
+export function customerTaxContractContextIsLegacy(context: unknown): boolean {
+  try {
+    if (!context || typeof context !== 'object' || Array.isArray(context)) return false;
+    const field = Object.getOwnPropertyDescriptor(context, 'review');
+    return !!field && Object.hasOwn(field, 'value') && customerTaxCollectionState(field.value) === 'legacy';
+  } catch { return false; }
 }
 
 /** Reuse the annual BRL calculator, reserve whole scoped books (no guessed

@@ -12,7 +12,7 @@ import { assessMinimumCustomerBase, CUSTOMER_BASE_RULES, type CustomerBaseReview
 import { PLAN_PRICES, COMMISSION_BPS, COMMISSION_LIVE, COMMISSION_PLANS_PUBLISHED, PUBLISHED_PLAN_PRICES, TRIAL_DAYS, REFUND_DAYS, PRO_MONTHLY_EMAILS, SCALE_MONTHLY_EMAILS, TRIAL_MONTHLY_EMAILS } from "@/lib/plan";
 import { SHARE_PROVED_IN_TEST_MODE } from "@/lib/platform-share";
 import { assessCustomerWorstCase, CUSTOMER_COST_CATEGORIES, MINIMUM_NET_MARGIN_BPS, MINIMUM_NET_PROFIT_CENTS, PLANNING_PROFIT_TAX_FLOOR_BPS, type CustomerWorstCase } from "@/lib/net-margin-rules";
-import { CUSTOMER_TAX_REVIEW_POLICY, customerTaxScenarioMatches } from './customer-tax-review';
+import { CUSTOMER_TAX_REVIEW_POLICY, customerTaxScenarioMatches, customerTaxCollectionState } from './customer-tax-review';
 import { AI_SPEND_RULES, AUTOMATIC_AI_SPEND_CEILINGS, currentAiSpendPolicy, aiStoreCostCents, isAiSpendPolicyValid } from "@/lib/ai-spend-policy";
 import { AI_REQUEST_LIMITS, SUPPORTED_AI_MODELS } from "@/lib/ai-request-rules";
 import { AI_MONTHLY, AI_PER_MINUTE, MAX_AI_NOTES, READ_PDF_PAGES, READ_PDF_JOBS } from "@/lib/ai-rules";
@@ -139,8 +139,12 @@ export const CURRENT_COMMERCIAL_MARGIN_REVIEW:CommercialMarginReview|null=null;
  */
 function commercialReviewData(review:CommercialMarginReview|null):CommercialMarginReview|null{
  if(!review||typeof review!=="object"||Array.isArray(review))return null;
+ const taxState=customerTaxCollectionState(review);
+ if(taxState==='unknown')return null;
  const encoded=canonicalFinancialSnapshot(review);
- return encoded===null?null:JSON.parse(encoded) as CommercialMarginReview;
+ if(encoded===null)return null;
+ const data=JSON.parse(encoded) as CommercialMarginReview;
+ return customerTaxCollectionState(data)===taxState?data:null;
 }
 export function commercialMarginReady(review:CommercialMarginReview|null=CURRENT_COMMERCIAL_MARGIN_REVIEW):boolean{
  const data=commercialReviewData(review);
