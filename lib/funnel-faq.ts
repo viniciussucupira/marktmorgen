@@ -42,7 +42,7 @@ export function funnelBeginnerQuestions(onSale = PLANS_ON_SALE, trialDays = TRIA
     {
       q: "Can I try it before paying?",
       a: onSale
-        ? `Yes. An eligible first store can start a ${trialDays}-day trial when it picks a plan: your card is taken when the trial starts and first charged when it ends, and cancelling inside it means it is never charged. Funnels can be built during the trial, within the trial's own allowances, which are smaller than the plan's and leave out paid AI writing.`
+        ? `Yes. An eligible first store can start a ${trialDays}-day trial when it picks a plan: your card is taken when the trial starts and first charged when it ends, and canceling inside it means it is never charged. Funnels can be built during the trial, within the trial's own allowances, which are smaller than the plan's and leave out paid AI writing.`
         : "Yes. Paid plans are not on sale yet, so there is nothing to pay for now, and you can build a funnel in your own store's studio with no card. To see a store working, open the live demo store from the link at the end of this page: a made-up store, marked as a demo.",
     },
     {
