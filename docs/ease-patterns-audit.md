@@ -95,13 +95,14 @@ The screen-by-screen audit that 487 [IT4] asks for: what was checked, what was f
 **Still to do.**
 - The tracking link (mark shipped), whose files are held by an open PR. The page editor's quote link already had its own check tied to the field (`badLink`, `noLink`), so it is left as it is. Each is read first: their routes do not use the product-link reading, so each needs the reading its own server applies. The webhook editor and both calendar editors are read by `checkUrl` in `lib/safe-fetch.ts`, which guards every request the server sends out and uses the server's own address reading. It is left untouched. Their fields use `lib/fetch-url-check.ts`, a part of that guard written for the browser: it never refuses an address the server keeps, refuses only in the server's words, and leaves an address written as a number (an IP) to the server, which alone says whether it is private. The fields keep `autocomplete="off"`, because a calendar's private address and a webhook endpoint are secrets. A fix is never offered for an address written as a number, nor one that grows too long once its letters are written out; the webhook field refuses webcal:// as its server does; each field says "too long" in its own server's words. A host's calendar address is now sent trimmed, as the field checks it. The report form's page address uses the field too, by the pattern its notice is held to (`lib/takedown-rules.ts`), which takes http:// as well. The chat summary's webhook address uses it too, by the very function the server posts with (`chatKind`, now in the browser-safe `lib/chat-kind.ts`). Its form no longer sends an empty address, which would have stopped the posting: only "Stop posting" does that. The public review page (reviews) uses it, by the reading its server keeps (`parseReviewElsewhere`). The tracking link (mark shipped) waits: its files are held by an open PR. The chat summary, report form, page editor and review studio are read next, one by one.
 
-## Not audited yet
+## Where each pattern stands
 
-These patterns of 487 [IT4] have not been audited:
-1. Validation when the person leaves the field: first pass done (see pattern 1).
-2. The most common value filled in: the "Recommended" price option waits on the owner (see pattern 3).
-3. Always-visible labels: the six fields not yet read in context, and the home page field (see pattern 4).
-4. Empty screens with an action and a ready example.
-5. Drafts saved by themselves: first pass done (see pattern 6); saving on its own not yet built.
-6. A live phone preview beside each editor.
-7. A "Check answers" summary before publishing or sending.
+Numbered as in 487 [IT4]:
+1. Checked when the field is left: first pass done for every web address field (see pattern 1), except the tracking link, held by an open PR. Other kinds of field not yet audited.
+2. The right keyboard on a phone: done (see pattern 2), except "Move to", held by an open PR.
+3. The common value filled in, never the dearest: audited (see pattern 3). The "Recommended" price option waits on the owner.
+4. A label always visible: first pass done (see pattern 4). Six fields still to be read in context, and the home page field.
+5. Empty screens with a sentence, a button and a ready example: not audited yet.
+6. Drafts never lost: done for the editors read (see pattern 6). Saving by itself, with "Saving…" and "Saved", is not built yet, because it needs its own ceiling on saves per plan first.
+7. A live phone preview beside each editor: not audited yet.
+8. A "Check answers" summary with "Change" on each item before publishing or sending: not audited yet.
