@@ -85,7 +85,7 @@ export async function POST(request: NextRequest) {
 
     const done =
       action === "hide"
-        ? await setHidden(statsId, productId, id, body.hidden === true)
+        ? await setHidden(statsId, productId, id, body.hidden === true, body.reason)
         : action === "reply"
           ? await setReply(statsId, productId, id, text(body.text, MAX_REPLY_TEXT + 200), store)
           : null;
