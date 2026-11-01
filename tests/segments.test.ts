@@ -93,6 +93,7 @@ async function main(): Promise<void> {
     return r ? [r.cents, r.channel] : null;
   };
   is("each address once, all it paid, where it first came from", [row("ana@example.com"), row("ben@example.com"), row("cy@example.com")], [[25000, "instagram"], [7000, "tiktok"], [9000, "direct"]]);
+  is("how many times each bought: each checkout once, an offer taken after paying not again (270 [GR1])", ["ana@example.com", "ben@example.com", "cy@example.com"].map((e) => ledger.buyers.get(e)?.orders), [2, 1, 1]);
   is("support, euros and another store's sales are not buyers here", [row("dee@example.com"), row("eve@example.com"), row("fay@example.com")], [null, null, null]);
   is("the channels, the most buyers first", ledgerChannels(ledger).sort(), ["direct", "instagram", "tiktok"]);
   const asked = stripeCalls;
