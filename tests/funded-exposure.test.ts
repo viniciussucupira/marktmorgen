@@ -65,3 +65,25 @@ test('exposure details checks and copies the same once-captured raw',()=>{
  const actual=fundedExposureDetails(r);assert.ok(actual);assert.equal(reads,1);
  assert.equal(actual.snapshot,fundedExposureDetails(loss(100))!.snapshot);
 });
+
+test('zero counts still require every known loss cost and tax, and incoming-tax liabilities are not erased by zero revenue',()=>{
+ for(const count of [0,2])for(const revenue of [0,1000]){
+  const r=zeroExposureFixture(),item=r.cases.trial;item.maximumMonthlyCases=count;
+  item.worstCase!.collectedRevenueCents=revenue;item.worstCase!.refundableRevenueCents=revenue;
+  item.worstCase!.taxesCeilingCents=17;item.worstCase!.costCeilings.other=23;r.monthlyBudgetCents=count*40;
+  assert.equal(assessFundedExposure(r).requiredBudgetCents,count*40);
+  item.worstCase!.taxesCeilingCents=null;assert.equal(assessFundedExposure(r).approved,false);assert.equal(fundedExposureDetails(r),null);
+  item.worstCase!.taxesCeilingCents=17;item.worstCase!.costCeilings.other=null;assert.equal(assessFundedExposure(r).approved,false);
+ }
+});
+
+test('unmigrated exposure cannot use residual collected income to erase unknown TX liability',()=>{
+ for(const count of [0,1])for(const scope of ['trial','full_refund','legacy_credits'] as const){
+  const r=zeroExposureFixture(),item=r.cases[scope];item.maximumMonthlyCases=count;
+  item.worstCase!.collectedRevenueCents=1000;item.worstCase!.refundableRevenueCents=999;
+  item.worstCase!.taxesCeilingCents=0;item.worstCase!.costCeilings.other=0;
+  r.monthlyBudgetCents=0;
+  assert.equal(assessFundedExposure(r).approved,false,'a legacy flag is not scoped TX evidence');
+  assert.equal(assessFundedExposure(r).reason,'unknown');assert.equal(fundedExposureDetails(r),null);
+ }
+});
