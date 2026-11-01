@@ -1,4 +1,5 @@
 import { done, is, part } from "./check";
+import { withCutoff } from "@/lib/fetch-timeout";
 
 const oldFetch = globalThis.fetch;
 const names = [
@@ -24,7 +25,7 @@ async function main(): Promise<void> {
   process.env.AWS_SES_TOPIC_ARN = "arn:aws:sns:us-east-1:123456789012:marktmorgen-email";
   process.env.VERCEL_OIDC_TOKEN = "header.payload.signature";
 
-  part("The official rolling counter keeps its own snapshot");
+  part("The official rolling counter is observed within a latency interval");
   const accountRequests: { method: string; authorization: string; token: string; cache: RequestCache | undefined }[] = [];
   globalThis.fetch = async (input, init) => {
     const url = new URL(String(input));
@@ -55,7 +56,7 @@ async function main(): Promise<void> {
       SendQuota: { Max24HourSend: 50_000, MaxSendRate: 14, SentLast24Hours: 37 },
     });
   };
-  is("SES count, limits, readiness and the pre-request instant stay together",
+  is("SES count and readiness retain both bounding instants without claiming a shared snapshot",
     await sesProviderUsage(1_000, () => 1_125),
     {
       ok: true,
@@ -112,6 +113,45 @@ async function main(): Promise<void> {
   is("provider refusal is not absence", await sesProviderUsage(2_000), { ok: false, reason: "provider" });
   globalThis.fetch = async () => { throw new Error("synthetic network loss"); };
   is("transport loss is not absence", await sesProviderUsage(2_000), { ok: false, reason: "provider" });
+
+  part("Known quota edges stay distinct from malformed evidence");
+  globalThis.fetch = async () => Response.json({
+    ProductionAccessEnabled: false, SendingEnabled: false, EnforcementStatus: "SHUTDOWN",
+    SendQuota: { Max24HourSend: -1, MaxSendRate: 1.5, SentLast24Hours: Number.MAX_SAFE_INTEGER },
+  });
+  is("the documented unlimited quota preserves its sentinel and an exact safe counter",
+    await sesProviderUsage(2_000, () => 2_001), {
+      ok: true, sentLast24Hours: Number.MAX_SAFE_INTEGER, max24: -1, rate: 1.5,
+      production: false, sending: false, enforcement: "SHUTDOWN",
+      requestedAt: "1970-01-01T00:00:02.000Z", observedAt: "1970-01-01T00:00:02.001Z",
+    });
+  for (const SendQuota of [
+    { Max24HourSend: 0, MaxSendRate: 14, SentLast24Hours: 0 },
+    { Max24HourSend: 50_000, MaxSendRate: 0, SentLast24Hours: 0 },
+    { Max24HourSend: 50_000, MaxSendRate: 14, SentLast24Hours: Number.MAX_SAFE_INTEGER + 1 },
+    { Max24HourSend: 50_000, MaxSendRate: 14, SentLast24Hours: 1.5 },
+  ]) {
+    globalThis.fetch = async () => Response.json({
+      ProductionAccessEnabled: true, SendingEnabled: true, EnforcementStatus: "HEALTHY", SendQuota,
+    });
+    is("invalid quotas do not turn into zero", await sesProviderUsage(2_000), { ok: false, reason: "unknown" });
+  }
+  const throwingProxy = new Proxy({}, { getPrototypeOf() { throw new Error("synthetic trap"); } });
+  globalThis.fetch = async () => ({ ok: true, status: 200, json: async () => throwingProxy }) as Response;
+  is("executable object traps are unknown", await sesProviderUsage(2_000), { ok: false, reason: "unknown" });
+  globalThis.fetch = async () => ({ ok: true, status: 200, json: async () => { throw new SyntaxError("synthetic invalid JSON"); } }) as Response;
+  is("invalid JSON is unknown", await sesProviderUsage(2_000), { ok: false, reason: "unknown" });
+
+  part("The deadline includes a body that never finishes");
+  let bodySignal: AbortSignal | null = null;
+  globalThis.fetch = async (_input, init) => {
+    bodySignal = init?.signal as AbortSignal;
+    return { ok: true, status: 200, json: () => new Promise(() => {}) } as Response;
+  };
+  is("a stalled SES body fails at the caller cutoff",
+    await withCutoff(Date.now() + 250, () => sesProviderUsage(2_000)),
+    { ok: false, reason: "provider" });
+  is("the SES request is aborted while reading its body", (bodySignal as AbortSignal | null)?.aborted, true);
 
   globalThis.fetch = oldFetch;
   done();

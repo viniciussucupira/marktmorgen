@@ -1,6 +1,6 @@
 /**
- * Read-only SES account usage for the same rolling window compared with
- * Resend. This never authorizes sending; lib/ses.ts remains the only sender
+ * Read-only SES rolling account usage. Request and response timestamps bound
+ * latency; they do not establish an exact shared snapshot with Resend. This never authorizes sending; lib/ses.ts remains the only sender
  * admission source.
  */
 import { signV4 } from "@/lib/aws-sign";
@@ -79,47 +79,51 @@ export async function sesProviderUsage(
   const { host: _host, ...headers } = signed;
   void _host;
 
-  let response: Response;
+  let result: { status: number; ok: boolean; raw: unknown; malformed: boolean };
   try {
-    response = await timed(SES_TIMEOUT_MS, (signal) =>
-      fetch(url, { method: "GET", headers, cache: "no-store", signal }));
+    result = await timed(SES_TIMEOUT_MS, async (signal) => {
+      const response = await fetch(url, { method: "GET", headers, cache: "no-store", signal });
+      let raw: unknown = null;
+      let malformed = false;
+      if (response.ok) {
+        try { raw = await response.json(); } catch { malformed = true; }
+      }
+      return { status: response.status, ok: response.ok, raw, malformed };
+    });
   } catch {
     return { ok: false, reason: "provider" };
   }
-  if (response.status === 401 || response.status === 403) {
-    return { ok: false, reason: "unauthorized" };
-  }
-  if (!response.ok) return { ok: false, reason: "provider" };
+  if (result.status === 401 || result.status === 403) return { ok: false, reason: "unauthorized" };
+  if (!result.ok) return { ok: false, reason: "provider" };
+  if (result.malformed) return { ok: false, reason: "unknown" };
 
-  let raw: unknown;
   try {
-    raw = await response.json();
+    const account = dataRecord(result.raw);
+    const quota = dataRecord(account?.SendQuota);
+    const sent = whole(quota?.SentLast24Hours);
+    const maximum = max24(quota?.Max24HourSend);
+    const perSecond = rate(quota?.MaxSendRate);
+    const enforcement = account?.EnforcementStatus;
+    if (!account || !quota || sent === null || maximum === null || perSecond === null ||
+        typeof account.ProductionAccessEnabled !== "boolean" ||
+        typeof account.SendingEnabled !== "boolean" ||
+        enforcement !== "HEALTHY" && enforcement !== "PROBATION" && enforcement !== "SHUTDOWN") {
+      return { ok: false, reason: "unknown" };
+    }
+    const observed = clock();
+    if (!Number.isSafeInteger(observed) || observed < now || observed > 8_640_000_000_000_000) return { ok: false, reason: "unknown" };
+    return {
+      ok: true,
+      sentLast24Hours: sent,
+      max24: maximum,
+      rate: perSecond,
+      production: account.ProductionAccessEnabled,
+      sending: account.SendingEnabled,
+      enforcement,
+      requestedAt: new Date(now).toISOString(),
+      observedAt: new Date(observed).toISOString(),
+    };
   } catch {
     return { ok: false, reason: "unknown" };
   }
-  const account = dataRecord(raw);
-  const quota = dataRecord(account?.SendQuota);
-  const sent = whole(quota?.SentLast24Hours);
-  const maximum = max24(quota?.Max24HourSend);
-  const perSecond = rate(quota?.MaxSendRate);
-  const enforcement = account?.EnforcementStatus;
-  if (!account || !quota || sent === null || maximum === null || perSecond === null ||
-      typeof account.ProductionAccessEnabled !== "boolean" ||
-      typeof account.SendingEnabled !== "boolean" ||
-      enforcement !== "HEALTHY" && enforcement !== "PROBATION" && enforcement !== "SHUTDOWN") {
-    return { ok: false, reason: "unknown" };
-  }
-  const observed = clock();
-  if (!Number.isSafeInteger(observed) || observed < now || observed > 8_640_000_000_000_000) return { ok: false, reason: "unknown" };
-  return {
-    ok: true,
-    sentLast24Hours: sent,
-    max24: maximum,
-    rate: perSecond,
-    production: account.ProductionAccessEnabled,
-    sending: account.SendingEnabled,
-    enforcement,
-    requestedAt: new Date(now).toISOString(),
-    observedAt: new Date(observed).toISOString(),
-  };
 }
