@@ -8448,6 +8448,25 @@ REGRA DE MARGEM (MR, 27/10/2026) e política TX vigentes: nenhuma unidade com pr
 
 Proibido: mudar preços, limites visíveis (inclusive a cota de e-mails), comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a, a revisão comercial ou stripePlatformEligibilityReady; afrouxar qualquer trava; usar pixel de rastreamento de abertura; apagar contatos; mostrar recurso que não funciona; criar contas, aceitar termos, contratar, pagar ou contatar terceiros sem "sim" do dono; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos. Aplicar a regra VR.
 
+### 309 — Complemento do dono: últimas proteções contra bloqueio (01/11/2026, 01h23 Fortaleza)
+
+Solicitação do dono (01/11/2026, 01h23, horário de Fortaleza). Complemento do 309 [EM1], sem item, número ou seção nova e sem mudar sua posição. Pedidos repetidos: conferidos o main, os PRs abertos, os complementos do 309 [EM1] (30/10/2026, 16h43; 31/10/2026, 18h40; 01/11/2026, 01h21) e do 356 [ES2], e o código (lib/mail.ts já leva endereço postal do criador e descadastro em um clique com o cabeçalho; lib/plan.ts limita o teste grátis a 300 e-mails por mês para a lista: não refazer). Os três pontos abaixo não estavam gravados nem construídos. Passo 3(b): só a diferença.
+
+O que acrescentar:
+1. Ritmo por provedor de destino: quando o provedor do destinatário (Gmail, Outlook, Yahoo e outros, agrupados pelo domínio ou pelos servidores MX) responde com adiamento ou limitação temporária, o sistema reduz sozinho o ritmo de envio de e-mails para listas àquele provedor, com recuo progressivo e retomada gradual, em vez de insistir; os e-mails que esperam ficam na fila durável e saem sozinhos, sem se perder e sem duplicar. Usar os eventos da SES já recebidos (entrega adiada) e as orientações oficiais vigentes de cada provedor, conferidas no dia da implementação. E-mails de serviço e de compra não entram nesse recuo.
+2. Mais engajados primeiro, com parada no começo: cada campanha para lista sai primeiro para os contatos com clique ou compra recentes (lib/mail-clicks.ts, sem pixel de abertura) e depois para os demais; se a primeira porção já passar dos limites de devoluções definitivas ou de reclamações das travas existentes, o restante da campanha para sozinho, a loja fica pausada pela trava por loja, e o criador vê no estúdio o motivo em linguagem simples. Ninguém é cobrado por e-mail que não saiu.
+3. Regras de uso com assuntos proibidos: além das listas compradas, alugadas ou emprestadas (passo 3 do complemento de 30/10), os Termos e a página de regras proíbem nos e-mails para listas os assuntos mais denunciados como spam: promessa de enriquecimento rápido ou de ganho garantido, investimentos, criptomoedas ou câmbio com retorno prometido, jogos de azar, remédios e suplementos com promessa de cura ou sem receita, conteúdo adulto e captura de senhas ou dados bancários. Aplicação automática: pausa da loja pelas travas de denúncias, reincidência pelo passo 3 do complemento de 01/11/2026, 01h15, do 356 [ES2], e nenhuma leitura por IA do conteúdo sem teto e cálculo de custo. Redação dos Termos em inglês americano simples, honesta, conferida com as leis aplicáveis e com o que o código realmente faz.
+
+Testes automáticos: recuo e retomada por provedor com adiamentos simulados, sem perder nem duplicar e sem afetar e-mails de serviço; ordem de envio pelos mais engajados; parada da campanha quando a primeira porção passa dos limites; Termos e página de regras com a lista de assuntos proibidos e coerentes com o código.
+
+Custo: leituras e processamento dos eventos da SES e da fila, com teto automático antes do gasto, no pior caso mensal e anual. Custo desconhecido reprova, nunca é zero.
+
+Acessibilidade (AX274, Parte A, integral): máxima acessibilidade em tudo o que este complemento criar ou alterar — WCAG 2.2 nível AAA em todos os critérios aplicáveis, inclusive no aviso de campanha parada e na página de regras. Passos e decisões do criador: hoje 0 → depois 0 no caso normal.
+
+REGRA DE MARGEM (MR, 27/10/2026) e política TX vigentes: nenhuma unidade com prejuízo usando 100% dos direitos no pior mês, mensal e anual; custos fixos 100% do Marktmorgen (FX275); cálculo ao dono pela regra LC.
+
+Proibido: mudar preços, limites visíveis (inclusive a cota de e-mails), comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a, a revisão comercial ou stripePlatformEligibilityReady; afrouxar qualquer trava; usar pixel de rastreamento de abertura; apagar contatos; mostrar recurso que não funciona; criar contas, aceitar termos, contratar, pagar ou contatar terceiros sem "sim" do dono; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos. Aplicar a regra VR.
+
 310. [AX2] Prova de acessibilidade em 100% das páginas, com leitores de tela reais
 
 Estado: na fila, com prioridade logo após os pedidos já recebidos.
@@ -10044,6 +10063,8 @@ Acessibilidade (AX274, Parte A, integral): máxima acessibilidade em tudo o que 
 REGRA DE MARGEM (MR, 27/10/2026) e política TX vigentes: nenhuma unidade com prejuízo usando 100% dos direitos no pior mês, mensal e anual; custos fixos 100% do Marktmorgen (FX275); cálculo ao dono pela regra LC.
 
 Proibido: mudar preços, limites visíveis (inclusive a cota de e-mails), comissão, PLANS_ON_SALE, OPENING_REQUESTED, o tax gate, o art. 9a, a revisão comercial ou stripePlatformEligibilityReady; afrouxar qualquer trava; usar pixel de rastreamento de abertura; apagar contatos; mostrar recurso que não funciona; criar contas, comprar domínio, contratar IPs, aceitar termos, pagar ou contatar terceiros sem "sim" do dono; apagar conteúdo de criadores ou qualquer coisa da Hazelsong. Somente testes sintéticos. Aplicar a regra VR.
+
+Acréscimo ao complemento acima — Solicitação do dono (01/11/2026, 01h23, horário de Fortaleza): na fase de IPs dedicados (passo 4), cadastrar os IPs dedicados no Microsoft SNDS (Smart Network Data Services, o painel de reputação de IP do Outlook) e ler sozinho, pelo acesso automatizado oficial vigente, a reputação e as armadilhas de spam de cada IP, ligando o resultado às travas automáticas por subdomínio e da conta inteira. O SNDS só funciona por IP, então não se aplica enquanto o envio usar IPs compartilhados da Amazon. Cadastro que exija conta ou aceite de termos só com "sim" do dono. Fonte oficial conferida no dia da implementação; custo desconhecido reprova, nunca é zero. Testes sintéticos: leitura simulada do SNDS ligando e desligando a trava; nada lido nem cadastrado enquanto não houver IP dedicado.
 
 Medir pior caso por plano/mensal/anual: consultasDNS,verificaçõesSES,recursos pagos,frequência/retries/cache,bytes/processamento,estado de aquecimento e notificações. Impor teto automático antes do custo,reservar pior uso de todos os direitos no maior preço pago; desconhecido reprova. Nenhuma configuração realDNS/SES,conta,termo ou contratação autorizada por este registro.
 
