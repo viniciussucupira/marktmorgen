@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
-import { WEEKLY_SENDS_IN_LONGEST_MONTH, emailEquivalence, weeklyReach } from "@/lib/email-equivalence";
+import { WEEKLY_SENDS_IN_LONGEST_MONTH, emailEquivalence, weeklyReach, weeklyReachShort } from "@/lib/email-equivalence";
 import { PRO_MONTHLY_EMAILS, SCALE_MONTHLY_EMAILS, TIERS, TRIAL_MONTHLY_EMAILS, monthlyEmails } from "@/lib/plan";
 
 test("a weekly email reaches the allowance divided by the longest month's five sends, never more", () => {
@@ -55,6 +55,10 @@ test("the studio shows the sentence from the code, and nobody types one by hand"
   assert.doesNotMatch(studio, /starts again on the first of the month/);
   assert.match(studio, /emailEquivalence\(props\.moveUp\.emails\)/);
   assert.match(readFileSync("app/studio/email/page.tsx", "utf8"), /emailEquivalence\(PRO_MONTHLY_EMAILS\)/);
-  const typed = ["app", "components", "lib"].flatMap(files).filter((path) => path !== join("lib", "email-equivalence.ts") && /one email a week to as many as|Enough to email/.test(readFileSync(path, "utf8")));
+  // 459 [EL3] unit 2: the pricing cards carry the short form beside each plan's number.
+  assert.match(readFileSync("components/home-parts.tsx", "utf8"), /list emails a month: \$\{weeklyReachShort\(emails\)\}/);
+  assert.equal(weeklyReachShort(7_000), "one a week to as many as 1,400 people");
+  assert.equal(weeklyReachShort(0), "");
+  const typed = ["app", "components", "lib"].flatMap(files).filter((path) => path !== join("lib", "email-equivalence.ts") && /a week to as many as|Enough to email/.test(readFileSync(path, "utf8")));
   assert.deepEqual(typed, []);
 });
