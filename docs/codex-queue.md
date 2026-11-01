@@ -8159,6 +8159,8 @@ REGRA DOS 60% (OBRIGATÓRIA): todo cliente pagante, considerado isoladamente e u
 
 Estado: na fila.
 
+Andamento (Claude 2, 01/11/2026): unidade 1 **testada num PR** (ramo claude2/tc1-email-typo; arquivos reservados: lib/email-typo.ts, lib/buyer-words/email-typo.ts, components/email-suggestion.tsx, tests/email-typo.test.ts e, só no campo de e-mail, components/signin-form.tsx). A verificação no navegador, sem rede, com lista embutida de provedores dos EUA, Canadá, Reino Unido e UE e um mapa explícito de finais digitados errado (nunca corrige um final real como .co ou .cm), o aviso acessível em região polite e as frases nos 7 idiomas de comprador; aplicada ao login do criador. Próximas unidades: os campos de e-mail das lojas (formulários, produtos gratuitos, lista de espera, boletim, contato, afiliado, assinatura do membro, consulta de pedidos) e a caixa de lembrete do checkout.
+
 Objetivo: evitar que um comprador ou um criador perca o produto, o link de acesso ou o contato por ter digitado o e-mail com erro, como "buyer@exampel.test" ou "buyer@example.test".
 
 Situação atual: nenhum campo de e-mail das páginas do próprio Marktmorgen sugere correção.

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { initBotId } from "botid/client/core";
 import { Icon } from "@/components/icons";
+import { EmailSuggestion } from "@/components/email-suggestion";
 
 type State =
   | { kind: "idle" }
@@ -159,7 +160,7 @@ export function SignInForm({ handle = "" }: { handle?: string } = {}) {
           onBlur={() => setTouched(true)}
           placeholder="you@example.com"
           aria-invalid={state.kind === "error" || shapeProblem ? true : undefined}
-          aria-describedby={state.kind === "error" ? "signin-error" : shapeProblem ? "signin-hint" : undefined}
+          aria-describedby={`${state.kind === "error" ? "signin-error " : shapeProblem ? "signin-hint " : ""}signin-suggestion`}
           className="field mt-2"
         />
         {shapeProblem && state.kind !== "error" ? (
@@ -167,6 +168,17 @@ export function SignInForm({ handle = "" }: { handle?: string } = {}) {
             {shapeProblem}
           </p>
         ) : null}
+        {/* A likely slip in the address, offered and never applied by itself (lib/email-typo.ts). */}
+        <EmailSuggestion
+          id="signin-suggestion"
+          inputId="signin-email"
+          value={email}
+          show={touched && !shapeProblem}
+          onUse={(address) => {
+            setEmail(address);
+            if (state.kind === "error") setState({ kind: "idle" });
+          }}
+        />
       </div>
 
       {/* Honeypot: hidden from people, irresistible to robots. */}
