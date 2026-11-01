@@ -45,4 +45,10 @@ is("how many is not guessed: it is counted from the store's Stripe account when 
 is("the note has a Change that closes the review and goes back to it", update.includes("Change<span className=\"sr-only\"> note</span>") && update.includes("setReviewing(false)"), true);
 is("nothing is sent from the first press, which says so: only from the review's own button", update.includes("if (!reviewing) {") && update.includes("Yes, email every buyer") && update.includes('"Check before sending"'), true);
 is("changing the note closes the review, so nothing is sent from an old one", update.includes("setNote(event.target.value); setReviewing(false);"), true);
+
+const productEditor = readFileSync("components/product-editor.tsx", "utf8");
+is("saving a new price on a product buyers can see asks first, showing the old price and the new one", productEditor.includes("const priceChanged = !product.hidden && !product.options.length && draft.price.trim() !== moneyField(product.priceCents, currency);") && productEditor.includes(">Price</dt>") && productEditor.includes("`${formatMoney(product.priceCents, currency)} now, ${formatMoney(newPrice, currency)} once you save.`"), true);
+is("a price that cannot be read is not reviewed: the save says what is wrong with it", productEditor.includes("const newPrice = readMoney(draft.price, currency);") && productEditor.includes("priceChanged && newPrice !== null && priceReview !== product.id"), true);
+is("the price has a Change that leads to its field, and only the review's own button saves", productEditor.includes("changePrice(product.id)") && productEditor.includes('submitLabel={priceReview === product.id ? "Yes, save the new price" : "Save"}'), true);
+is("changing the price again closes the review", productEditor.includes("if (next.price !== draft.price) setPriceReview(null);"), true);
 done();

@@ -172,9 +172,10 @@ The screen-by-screen audit that 487 [IT4] asks for: what was checked, what was f
 
   The note and the address each have a "Change". The price says it is changed in the product's details. Changing the note or the address closes the review, so nothing is sent unread. Without a postal address, the second press is not offered and the review says why.
 - "Tell buyers about an update" no longer sends on its first press, which now reads "Check before sending". It shows the product, who gets it and the note (with a "Change"), and only "Yes, email every buyer" sends. How many get it is not shown, because it is counted from the store's Stripe account when it is sent. Showing it sooner would need a new read from Stripe, with its own ceiling.
+- Saving a new price on a product buyers can see now asks first. It shows the old price and the new one, with a "Change" that goes back to the price field, and only "Yes, save the new price" saves. Changing the price again closes the review. A price that cannot be read is not reviewed: the save says what is wrong with it. Products with several prices (options) are not covered yet.
 
 **Still to do, in this order, since a mistake there is public or costs money:**
-- a published product's price change;
+- the prices of a product with several options;
 - payment and signature requests;
 - the community announcement email.
 
@@ -188,4 +189,4 @@ Numbered as in 487 [IT4]:
 5. Empty screens with a sentence, a button and a ready example: first pass done (see pattern 5). Four screens fixed; ready examples for five screens still to write.
 6. Drafts never lost: done for the editors read (see pattern 6). Saving by itself, with "Saving…" and "Saved", is not built yet, because it needs its own ceiling on saves per plan first.
 7. A live phone preview beside each editor: not audited yet.
-8. A "Check answers" summary with "Change" on each item before publishing or sending: first pass done (see pattern 8); the email broadcast, the waitlist's sale and the update email have it; three more listed.
+8. A "Check answers" summary with "Change" on each item before publishing or sending: first pass done (see pattern 8); the email broadcast, the waitlist's sale, the update email and a published price change have it; the rest listed.

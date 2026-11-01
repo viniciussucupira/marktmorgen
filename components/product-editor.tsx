@@ -1639,6 +1639,12 @@ export function ProductEditor({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   useLeaveGuard((adding || editingId !== null) && JSON.stringify(draft) !== JSON.stringify(opened) && !busy);
+  // A new price on a product buyers can see is shown, old and new, before it is saved (487 [IT4], pattern 8): the id under review.
+  const [priceReview, setPriceReview] = useState<string | null>(null);
+  function changePrice(productId: string) {
+    setPriceReview(null);
+    requestAnimationFrame(() => document.getElementById(`product-price-${productId}`)?.focus());
+  }
   const [fileBusyId, setFileBusyId] = useState<string | null>(null);
   const [percent, setPercent] = useState(0);
   const [fileError, setFileError] = useState<{ id: string; message: string } | null>(
@@ -1819,6 +1825,7 @@ export function ProductEditor({
     };
     setDraft(form);
     setOpened(form);
+    setPriceReview(null);
     setError(null);
     setAdding(false);
     setEditingId(product.id);
@@ -1958,32 +1965,64 @@ export function ProductEditor({
             key={product.id}
             className="rounded-2xl border border-line bg-paper p-4"
           >
-            {editingId === product.id ? (
+            {editingId === product.id ? (() => {
+              const priceChanged = !product.hidden && !product.options.length && draft.price.trim() !== moneyField(product.priceCents, currency);
+              const newPrice = readMoney(draft.price, currency);
+              return (
+              <>
               <ProductForm
                 ownHosts={ownHosts}
                 draft={draft}
-                setDraft={setDraft}
+                setDraft={(next) => {
+                  setDraft(next);
+                  if (next.price !== draft.price) setPriceReview(null);
+                }}
                 busy={busy}
                 error={error}
-                submitLabel="Save"
+                submitLabel={priceReview === product.id ? "Yes, save the new price" : "Save"}
                 product={product}
                 loadingAbout={loadingAbout}
                 onSubmit={() => {
                   if (loadingAbout) return;
+                  if (priceChanged && newPrice !== null && priceReview !== product.id) {
+                    setPriceReview(product.id);
+                    requestAnimationFrame(() => document.getElementById(`product-${product.id}-price-review-title`)?.focus());
+                    return;
+                  }
                   const payload = payloadOf(draft);
                   if (aboutUnread && !draft.about) delete payload.about;
                   run(
                     { action: "edit", id: product.id, ...payload },
-                    () => setEditingId(null),
+                    () => {
+                      setEditingId(null);
+                      setPriceReview(null);
+                    },
                     "Product saved.",
                   );
                 }}
                 onCancel={() => {
                   setEditingId(null);
+                  setPriceReview(null);
                   setError(null);
                 }}
               />
-            ) : (
+              {priceReview === product.id && newPrice !== null ? (
+                <div className="mt-3 rounded-[var(--r-md)] bg-sand p-4 text-sm text-ink">
+                  <h3 id={`product-${product.id}-price-review-title`} tabIndex={-1} className="font-semibold">Check the new price</h3>
+                  {/* A summary list (GOV.UK "Check answers"): the price buyers see changes as soon as it is saved. */}
+                  <dl className="mt-2 divide-y divide-line">
+                    <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 py-2">
+                      <dt className="basis-full font-semibold sm:basis-28 sm:shrink-0">Price</dt>
+                      <dd className="min-w-0 basis-full break-words sm:basis-0 sm:flex-1">{`${formatMoney(product.priceCents, currency)} now, ${formatMoney(newPrice, currency)} once you save.`}</dd>
+                      <dd><button type="button" className="inline-flex min-h-11 items-center font-bold underline underline-offset-4" onClick={() => changePrice(product.id)}>Change<span className="sr-only"> price</span></button></dd>
+                    </div>
+                  </dl>
+                  <p className="mt-2">Your store shows the new price as soon as you save. Press &ldquo;Yes, save the new price&rdquo; above to save it.</p>
+                </div>
+              ) : null}
+              </>
+              );
+            })() : (
               <>
                 <div className="flex items-start gap-3">
                   {product.image ? (
