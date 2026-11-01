@@ -205,15 +205,29 @@ export function SiteNav() {
 
   // Arrow keys (lib/menu-keys.ts): a shortcut on top of Tab, never the only way.
   const focusOnOpen = useRef<"first" | "last" | null>(null);
+  // With Alt, Ctrl, Cmd or Shift the keys are the browser's (Alt+Left goes back), never the menu's.
+  const modified = (event: React.KeyboardEvent<HTMLElement>) => event.altKey || event.ctrlKey || event.metaKey || event.shiftKey;
   const onRowKey = (event: React.KeyboardEvent<HTMLElement>) => {
+    if (modified(event)) return;
     const items = [...event.currentTarget.querySelectorAll<HTMLElement>(":scope > a, :scope > button")];
     const at = items.indexOf(event.target as HTMLElement);
     if (at < 0) return;
     const control = (event.target as HTMLElement).getAttribute("aria-controls");
     if (control && (event.key === "ArrowDown" || event.key === "ArrowUp")) {
       event.preventDefault();
-      focusOnOpen.current = event.key === "ArrowDown" ? "first" : "last";
-      setOpenMenu(control.slice("menu-".length));
+      const id = control.slice("menu-".length);
+      const end = event.key === "ArrowDown" ? "first" : "last";
+      // Already open (by hover or a click): its links are there now, so the focus goes at once.
+      const links = [...(document.getElementById(control)?.querySelectorAll<HTMLElement>("a[href]") ?? [])];
+      if (openMenu === id && links.length) {
+        (end === "first" ? links[0] : links.at(-1))?.focus();
+        return;
+      }
+      focusOnOpen.current = end;
+      // Opened from the keyboard: no hover timer may close it under the focus, and Enter on its button closes it at once.
+      keepOpen();
+      openedByClick.current = true;
+      setOpenMenu(id);
       return;
     }
     const next = moveFocus(event.key, at, items.length, "row");
@@ -222,6 +236,7 @@ export function SiteNav() {
     items[next].focus();
   };
   const onListKey = (event: React.KeyboardEvent<HTMLElement>) => {
+    if (modified(event)) return;
     const links = [...event.currentTarget.querySelectorAll<HTMLElement>("a[href]")];
     const at = links.indexOf(event.target as HTMLElement);
     const next = moveFocus(event.key, at < 0 ? -1 : at, links.length, "list");
