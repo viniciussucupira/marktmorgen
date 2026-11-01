@@ -83,3 +83,23 @@ test('minimum-base arithmetic never re-reads an assessed scenario through a get 
   assert.equal(assessMinimumCustomerBase(bad as unknown as CustomerBaseUnit[],fixed()).minimumCustomers,null);
  }
 });
+
+test('minimum-base tax period uses the captured own months without a second supplied read',()=>{
+ let monthDescriptors=0,getReads=0;
+ const supplied=new Proxy(unit(),{
+  get(){getReads++;throw new Error('unreviewed read');},
+  getOwnPropertyDescriptor(target,key){
+   if(key==='months'){
+    monthDescriptors++;
+    return {value:monthDescriptors===1?1:12,enumerable:true,configurable:true,writable:true};
+   }
+   return Reflect.getOwnPropertyDescriptor(target,key);
+  },
+ });
+ assert.deepEqual(assessMinimumCustomerBase([supplied],fixed(10000,2)),
+  {status:'calculated',minimumCustomers:2,reviewedBaseSufficient:true});
+ assert.equal(monthDescriptors,1);
+ assert.equal(getReads,0);
+ const mismatch={months:12 as const,scenario:scenario(10000,7000,1)};
+ assert.equal(assessMinimumCustomerBase([mismatch],fixed()).minimumCustomers,null);
+});
