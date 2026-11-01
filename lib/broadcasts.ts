@@ -22,6 +22,7 @@ import { dataBytes } from "@/lib/store-data-rules";
 import { WHO, type Who, audience } from "@/lib/contacts";
 import { PORTION_NOTE, pauseNote } from "@/lib/mail-health";
 import { BATCH_SIZE, MAX_MAIL_BODY, MAX_SUBJECT, SENDER_WAIT_NOTE, monthlyAllowance, sendTo, usedThisMonth } from "@/lib/mail";
+import { windowId } from "@/lib/allowance-window";
 import type { Store } from "@/lib/store";
 import { hasProduct, idsOfKind } from "@/lib/catalog";
 import { broadcastCampaign, isOwnLink, variantCampaign } from "@/lib/mail-links";
@@ -265,7 +266,11 @@ export async function createBroadcast(
   if (test && reach < MIN_TEST_REACH) return { ok: false, reason: "test_small" };
   if (test && !linksToStore(body, store)) return { ok: false, reason: "test_links" };
   if (sendAt <= now + 60) {
-    const left = monthlyAllowance(store) - (await usedThisMonth(store.listId));
+    // The month as the plan counts it (lib/allowance-window.ts), the same window
+    // reserve takes from and the studio shows; a window that cannot be told
+    // leaves nothing, as reserve would refuse every batch of it.
+    const window = windowId(store);
+    const left = window ? monthlyAllowance(store) - (await usedThisMonth(store.listId, window)) : 0;
     if (reach > left) return { ok: false, reason: "allowance" };
   }
   const broadcast: Broadcast = {

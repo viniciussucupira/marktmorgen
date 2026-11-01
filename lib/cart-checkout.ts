@@ -27,12 +27,12 @@ import { type SaleCandidate, saleOff, salePrice } from "@/lib/store-sale";
 import { fairOff } from "@/lib/fair-price";
 import { commissionRate } from "@/lib/affiliate-setting";
 import { applyTax, applyTaxDocuments, refusedTaxDocuments, withoutTaxDocuments } from "@/lib/tax";
-import { inTheCurrencyShown, onlyInstantMethods } from "@/lib/instant-pay";
+import { inTheCurrencyShown, onlyInstantMethods, saveCardForOffers } from "@/lib/instant-pay";
 import { StripeError, onAccount } from "@/lib/stripe-account";
 import { LANGUAGES } from "@/lib/store-language";
 import { type CameFrom, hasSource } from "@/lib/came-from";
 import { isHouseStore } from "@/lib/house-store";
-import { MAX_CART, dealOff } from "@/lib/cart-rules";
+import { CART_OFFER_META, MAX_CART, dealOff } from "@/lib/cart-rules";
 import { RECOVERY_OPEN_SECONDS, applyRecovery, recoveryOn, refusedRecovery, withoutRecovery } from "@/lib/recovery-setting";
 import { applyShare, leastPaid, linesTotal, shareBps } from "@/lib/platform-share";
 import { codesMayTakeOff } from "@/lib/discount";
@@ -82,6 +82,11 @@ export async function createCartCheckout(
     remind?: boolean;
     /** The buyer's yes to access at once (lib/digital-consent.ts), needed when anything in the cart is handed over digitally. */
     digitalConsent?: DigitalConsent | null;
+    /**
+     * Offers follow paying (lib/cart-offers.ts): the fingerprint of the key
+     * set in this browser, and the cart product whose funnel they come from.
+     */
+    offers?: { upsellKey: string; from: string } | null;
   } = {},
 ): Promise<{ url: string; id: string }> {
   if (!store.stripeAccountId) throw new Error("This store has no account");
@@ -104,6 +109,18 @@ export async function createCartCheckout(
     success_url: `${origin}/@${store.handle}/thanks?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${origin}/@${store.handle}`,
   });
+
+  // Offers follow, exactly as after one product (lib/store-checkout.ts): the
+  // buyer becomes the creator's customer and a card is kept only for payments
+  // they make while present, the one-click offers on the thanks page. Only a
+  // card is asked to be kept, so every other way to pay stays on offer; a
+  // buyer who pays another way meets no offer (lib/instant-pay.ts).
+  if (extras.offers && products.some((p) => p.id === extras.offers?.from)) {
+    body.set("customer_creation", "always");
+    saveCardForOffers(body);
+    body.set("metadata[upsell_key]", extras.offers.upsellKey);
+    body.set(`metadata[${CART_OFFER_META}]`, extras.offers.from);
+  }
 
   // The store's deal for buying more (lib/cart-rules.ts): every line that much cheaper again.
   const deal = dealOff(store.cartDeal, products.length);

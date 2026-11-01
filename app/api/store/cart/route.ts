@@ -30,6 +30,8 @@ import { productSegment } from "@/lib/product-slug";
 import { noteCheckoutTrouble } from "@/lib/checkout-trouble";
 import { assistReminderShown, keepAssistReminder } from "@/lib/assistant-reminder";
 import { EMAIL_PATTERN, MAX_EMAIL_LENGTH, normaliseEmail } from "@/lib/auth";
+import { cartOfferOwner } from "@/lib/cart-offers";
+import { UPSELL_COOKIE, newUpsellKey } from "@/lib/upsell";
 
 /**
  * What a cart holds, as the store has it now (`GET ?handle=&ids=a,b`): each
@@ -234,6 +236,11 @@ export async function POST(request: NextRequest) {
       session: request.cookies.get(affiliateCookieName(store.handle))?.value,
     }).catch(() => null);
     const reminding = remind && remindEmail.length <= MAX_EMAIL_LENGTH && EMAIL_PATTERN.test(remindEmail) && assistReminderShown(store);
+    // Offers after paying, from the first product in the cart whose funnel is
+    // on (lib/cart-offers.ts): a secret for this browser, its fingerprint on
+    // the checkout, as for one product (app/api/store/checkout/route.ts).
+    const offerFrom = await cartOfferOwner(store, products).catch(() => null);
+    const upsell = offerFrom ? newUpsellKey() : null;
     const opened = await createCartCheckout(store, products, linkOrigin(request, store), {
       remind: reminding,
       country: readCountry(request.headers.get("x-vercel-ip-country")),
@@ -243,10 +250,14 @@ export async function POST(request: NextRequest) {
         channel: { ...channelOfRequest(request, store.handle, new URL(origin).hostname, Date.now() / 1000, store.attributionDays), ...(await adsCheckout(request, store)) },
       via,
       digitalConsent,
+      offers: upsell && offerFrom ? { upsellKey: upsell.fingerprint, from: offerFrom.id } : null,
     });
     if (reminding) await keepAssistReminder({ store, session: opened.id, email: remindEmail, version: remindVersion });
     for (const product of products) after(() => countHit(request, store, { kind: "checkout", id: product.id }));
-    return new Response(null, { status: 303, headers: { Location: opened.url, "Cache-Control": "no-store" } });
+    const headers = new Headers({ Location: opened.url, "Cache-Control": "no-store" });
+    // The secret only the browser that pays holds: without it no offer can be answered.
+    if (upsell) headers.append("Set-Cookie", `${UPSELL_COOKIE}=${upsell.secret}; Path=/; Max-Age=7200; HttpOnly; SameSite=Lax${origin.startsWith("https://") ? "; Secure" : ""}`);
+    return new Response(null, { status: 303, headers });
   } catch (error) {
     if (error instanceof OrdersPausedError) return away(`/@${store.handle}?status=${error.reason === "paused" ? "paused" : "error"}`);
     // The box was not checked (or the page was from before its words changed): back to the cart, nothing charged.
