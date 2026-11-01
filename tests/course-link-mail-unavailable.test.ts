@@ -9,4 +9,4 @@ test('known-unavailable public course-link replies cannot reveal entitlement',as
 
 test('configured SES preserves original links, imported rights, validation and rate guards',async()=>{await proof;await proveAvailableCourseMail();});
 
-test('known global refusal adds no token, allowance or rate command',async()=>{const r=await proof;assert.ok(r.direct.every(x=>x.commands===0));assert.equal(r.request.entitled.commands,0);assert.equal(r.request.unentitled.commands,0);});
+test('known global refusal preserves original rate limits before avoiding supplier work',async()=>{const r=await proof;assert.ok(r.direct.every(x=>x.commands===0));assert.ok(r.request.entitled.rateMutations>0);assert.ok(r.request.unentitled.rateMutations>0);assert.deepEqual(r.rate.address.map(x=>x.result),['error','error','error','error','error','limited']);assert.deepEqual(r.rate.ip.map(x=>x.result),[...Array(10).fill('error'),'limited']);assert.ok([...r.rate.address,...r.rate.ip].every(x=>x.entitlementLookups===0&&x.after.transactionalUsed===x.before.transactionalUsed&&x.after.tokens===x.before.tokens));assert.equal(r.rate.invalid.result,'email');assert.equal(r.rate.invalid.commands,0);});
