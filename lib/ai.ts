@@ -593,6 +593,9 @@ export function statedPrice(price: string, words: string, currency: string): str
   return "";
 }
 
+/** What a draft's question may not be about: a price, a payment or a count (219 [OP5] unit 3). */
+export const SETUP_MONEY_OR_NUMBER = /\b(prices?|priced|pricing|costs?|charge(?!\s+of)|charges|charging|fees?|pay|pays|paid|payment|budget|earn|earnings|how (much|many|long|often))\b/i;
+
 /** The most questions a draft may ask, and the answers each offers to press. */
 export const MAX_SETUP_QUESTIONS = 3;
 const MIN_SETUP_OPTIONS = 2;
@@ -660,8 +663,9 @@ export async function writeStoreSetup(store: Store, input: { about: string; sell
     const questions = (Array.isArray(json.questions) ? json.questions : [])
       .map((x: unknown) => (x && typeof x === "object" ? (x as Record<string, unknown>) : {}))
       .map((x) => ({ q: line(x.q, 100), options: [...new Set((Array.isArray(x.options) ? x.options : []).map((o: unknown) => line(o, 40)).filter(Boolean))].slice(0, MAX_SETUP_OPTIONS) as string[] }))
-      // A question about a price or a number is never asked: those stay empty for the creator to type (unit 1).
-      .filter((x) => x.q && x.options.length >= MIN_SETUP_OPTIONS && !/\b(price|prices|cost|charge|how much|how many)\b/i.test(x.q))
+      // A question about a price, a payment or a number is never asked, nor one answered with numbers: those stay empty
+      // for the creator to type (unit 1). "In charge of" is not about money.
+      .filter((x) => x.q && x.options.length >= MIN_SETUP_OPTIONS && !SETUP_MONEY_OR_NUMBER.test(x.q) && !x.options.some((o) => /[\d$€£¥]/.test(o)))
       .slice(0, MAX_SETUP_QUESTIONS);
     if (!bios.length && !products.length && !questions.length) return null;
     return { ...(page ? { sourceRead: true } : {}), bios, products, faq, ...(questions.length ? { questions } : {}) };

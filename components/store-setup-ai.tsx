@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "@/components/toast";
 import { Icon } from "@/components/icons";
@@ -35,22 +35,36 @@ export function StoreSetupAi({ currency, left: startLeft, hasFaq, storeName }: {
   const [bio, setBio] = useState("");
   const [rows, setRows] = useState<Row[]>([]);
   const [keepFaq, setKeepFaq] = useState(!hasFaq);
-  // 219 [OP5] unit 3: the answers pressed for the draft's questions, by question.
+  // 219 [OP5] unit 3: the answers pressed for the draft's questions, by question, and those already given,
+  // which go first into every later draft so a long "What you sell" never cuts them off.
   const [picked, setPicked] = useState<Record<number, string>>({});
+  const [given, setGiven] = useState<{ q: string; a: string }[]>([]);
+  const [announce, setAnnounce] = useState("");
+  const questionsHeading = useRef<HTMLHeadingElement>(null);
+  const draftHeading = useRef<HTMLHeadingElement>(null);
+  // Where the eyes go when something new arrives: the questions, or the draft (2.4.3), and it is said (4.1.3).
+  useEffect(() => {
+    if (!setup) return;
+    if (setup.questions?.length) questionsHeading.current?.focus();
+    else if (setup.bios.length || setup.products.length) draftHeading.current?.focus();
+  }, [setup]);
+  const asking = Boolean(setup?.questions?.length);
 
   async function draft(answered: { q: string; a: string }[] = []) {
     if (drafting) return;
     setDrafting(true);
     setNote("");
     try {
-      // The answers travel with what the creator sells, in their words, so the next draft starts from them.
-      const notes = [selling, ...answered.map((x) => `${x.q} ${x.a}`)].filter((x) => x.trim()).join("\n");
+      // The answers travel first, then what the creator sells, in their words, so the next draft starts from them.
+      const all = [...given, ...answered];
+      const notes = [...all.map((x) => `${x.q} ${x.a}`), selling].filter((x) => x.trim()).join("\n");
       const response = await fetch("/api/store/ai", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ kind: "setup", about, notes }) });
       const data = (await response.json().catch(() => ({}))) as { ok?: boolean; value?: Setup; left?: number; error?: string };
       if (data.ok && data.value) {
         setSetup(data.value);
         setPicked({});
-        if (answered.length) setSelling([selling, ...answered.map((x) => `${x.q} ${x.a}`)].filter((x) => x.trim()).join("\n"));
+        if (answered.length) setGiven(all);
+        setAnnounce(data.value.questions?.length ? "A few questions before the draft." : "Your draft is ready below.");
         setBio(data.value.bios[0] ?? "");
         setRows(data.value.products.map((p) => ({ ...p, keep: true })));
         if (typeof data.left === "number") setLeft(data.left);
@@ -128,7 +142,7 @@ export function StoreSetupAi({ currency, left: startLeft, hasFaq, storeName }: {
         </div>
       </div>
       <div className="mt-4 flex flex-wrap items-center gap-3">
-        <button type="button" onClick={() => draft()} disabled={drafting || !about.trim()} aria-busy={drafting} className="btn btn-primary">
+        <button type="button" onClick={() => draft()} disabled={drafting || !about.trim() || asking} aria-busy={drafting} className="btn btn-primary">
           <Icon name="sparkle" size={16} />
           {drafting ? "Drafting your store…" : setup ? "Draft it again" : "Draft my store"}
         </button>
@@ -137,15 +151,17 @@ export function StoreSetupAi({ currency, left: startLeft, hasFaq, storeName }: {
 
       {setup?.questions?.length ? (
         <section aria-labelledby="setup-questions-title" className="mt-6 rounded-2xl bg-paper p-4 ring-1 ring-line">
-          <h3 id="setup-questions-title" className="text-base font-semibold text-ink">{setup.questions.length === 1 ? "One question first" : `${setup.questions.length} quick questions first`}</h3>
-          <p className="mt-1 text-sm text-ink-soft">Your words did not say this yet. Press an answer for each, then continue. The next draft counts once.</p>
+          <h3 id="setup-questions-title" ref={questionsHeading} tabIndex={-1} className="text-base font-semibold text-ink">{setup.questions.length === 1 ? "One question first" : `${setup.questions.length} quick questions first`}</h3>
+          <p className="mt-1 text-sm text-ink-soft">You have not told us this yet. Choose one answer for each, then continue. The next draft counts once.</p>
           {setup.questions.map((question, i) => (
             <fieldset key={i} className="mt-4">
               <legend className="text-sm font-semibold text-ink">{question.q}</legend>
               <div className="mt-2 flex flex-wrap gap-2">
                 {question.options.map((option) => (
-                  <label key={option} className={`btn btn-sm cursor-pointer focus-within:outline focus-within:outline-[3px] focus-within:outline-offset-2 focus-within:outline-[var(--ink)] ${picked[i] === option ? "btn-primary" : "btn-secondary"}`}>
+                  <label key={option} className={`btn btn-sm cursor-pointer focus-within:outline focus-within:outline-[3px] focus-within:outline-offset-2 focus-within:outline-[var(--ink)] forced-colors:focus-within:outline-[CanvasText] ${picked[i] === option ? "btn-primary" : "btn-secondary"}`}>
                     <input type="radio" name={`setup-question-${i}`} value={option} checked={picked[i] === option} onChange={() => setPicked({ ...picked, [i]: option })} className="sr-only" />
+                    {/* Chosen is shown by a mark, not by color alone (1.4.1), and stays visible in forced colors. */}
+                    {picked[i] === option ? <Icon name="check" size={14} /> : null}
                     {option}
                   </label>
                 ))}
@@ -166,6 +182,7 @@ export function StoreSetupAi({ currency, left: startLeft, hasFaq, storeName }: {
 
       {setup && (setup.bios.length || setup.products.length) ? (
         <div className="mt-6 space-y-6">
+          <h3 ref={draftHeading} tabIndex={-1} className="text-base font-semibold text-ink">Your draft</h3>
           {setup.bios.length ? (
             <fieldset>
               <legend className="field-label">The line under your name</legend>
@@ -242,6 +259,7 @@ export function StoreSetupAi({ currency, left: startLeft, hasFaq, storeName }: {
         </div>
       ) : null}
       {note ? <p role="status" className="mt-4 text-sm font-semibold text-ink">{note}</p> : null}
+      <p role="status" className="sr-only">{announce}</p>
     </section>
   );
 }
