@@ -7,6 +7,7 @@ import type { PreorderView } from "@/lib/preorders";
 import { hasContent, preorderProblem } from "@/lib/preorder-rules";
 import type { WaitlistView } from "@/lib/waitlist";
 import { useRef, useState, useSyncExternalStore } from "react";
+import { useLeaveGuard } from "@/components/leave-guard";
 import { useRouter } from "next/navigation";
 import { TeamEventEditor } from "@/components/team-event-editor";
 import { CallEditor, type MeetAccount } from "@/components/call-editor";
@@ -1633,8 +1634,11 @@ export function ProductEditor({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [removingId, setRemovingId] = useState<string | null>(null);
   const [draft, setDraft] = useState<Draft>(EMPTY);
+  // The form as it was opened: leaving with changes to it asks first (487 [IT4], item 6), an untouched one never.
+  const [opened, setOpened] = useState<Draft>(EMPTY);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  useLeaveGuard((adding || editingId !== null) && JSON.stringify(draft) !== JSON.stringify(opened) && !busy);
   const [fileBusyId, setFileBusyId] = useState<string | null>(null);
   const [percent, setPercent] = useState(0);
   const [fileError, setFileError] = useState<{ id: string; message: string } | null>(
@@ -1792,13 +1796,14 @@ export function ProductEditor({
     setLoadingAbout(false);
     setAboutUnread(false);
     setDraft(EMPTY);
+    setOpened(EMPTY);
     setError(null);
     setEditingId(null);
     setAdding(true);
   }
 
   async function startEditing(product: Product) {
-    setDraft({
+    const form: Draft = {
       title: product.title,
       summary: product.summary,
       price: moneyField(product.priceCents, currency),
@@ -1811,7 +1816,9 @@ export function ProductEditor({
       pwyw: product.pwyw !== null,
       suggested: product.pwyw ? moneyField(product.pwyw.suggestedCents, currency) : "",
       about: "",
-    });
+    };
+    setDraft(form);
+    setOpened(form);
     setError(null);
     setAdding(false);
     setEditingId(product.id);
@@ -1837,6 +1844,7 @@ export function ProductEditor({
     if (about !== null) {
       const read = about;
       setDraft((current) => ({ ...current, about: read }));
+      setOpened((current) => ({ ...current, about: read }));
     } else {
       setAboutUnread(true);
       setError("Your description could not be read just now, so it is not shown. Anything else you change is saved and the description is kept as it is.");
