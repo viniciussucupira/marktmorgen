@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { reviewedResourceEnvelope } from '../lib/reviewed-resource-envelope';
 import { remainingResourceCostCents } from '../lib/cost-envelope';
 import { assessCustomerWorstCase, CUSTOMER_COST_CATEGORIES, type CustomerWorstCase } from '../lib/net-margin-rules';
+import {txCustomerFixture} from './customer-tax-review-fixture';
 const costs = Object.fromEntries(CUSTOMER_COST_CATEGORIES.map(key=>[key,0]));
 function review(): CustomerWorstCase { return { collectedRevenueCents:10000, refundableRevenueCents:0, taxesCeilingCents:3000, costCeilings:{...costs}, allCostsBounded:true, allTaxesReviewed:true, revenueCollected:true }; }
 test('reserves full reviewed taxes and admits only exact affordable units',()=>{ const r=reviewedResourceEnvelope(review(),23330000,3); assert.equal(r.approved,true); assert.equal(r.affordableUnits,3); assert.equal(r.remainingMicroUsd,69990000); assert.equal(reviewedResourceEnvelope(review(),23330000,4).approved,false); });
@@ -48,4 +49,18 @@ test('headroom agrees with lib/cost-envelope.ts and spending all of it preserves
   assert.equal(assessCustomerWorstCase(r).approved,false);
  }
  assert.ok(checked>1000);
+});
+test('TX evidence survives the resource snapshot and every reviewed tax cent stays reserved',()=>{
+ const r=txCustomerFixture();
+ const result=reviewedResourceEnvelope(r,10000,1);
+ assert.equal(result.remainingMicroUsd,(10000-r.taxesCeilingCents!-1)*10000);
+ r.costCeilings.other=result.affordableUnits!;
+ assert.equal(assessCustomerWorstCase(r).netCents,1);
+ r.costCeilings.other!++;assert.equal(assessCustomerWorstCase(r).approved,false);
+ const invalid=txCustomerFixture();invalid.taxesCeilingCents=9000;invalid.taxReview!.iof.facts='';
+ assert.equal(reviewedResourceEnvelope(invalid,1,1).reason,'tax_review_unknown');
+ for(const key of ['taxReview','taxContext']){
+  const explicit=txCustomerFixture();Object.assign(explicit,{[key]:undefined});explicit.taxesCeilingCents=9000;
+  assert.equal(reviewedResourceEnvelope(explicit,1,1).reason,'tax_review_unknown');
+ }
 });

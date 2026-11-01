@@ -4,6 +4,7 @@ import {assessCustomerWorstCase,PLANNING_PROFIT_TAX_FLOOR_BPS,CUSTOMER_COST_CATE
 import { maximumPretaxCostCents } from '../lib/cost-envelope';
 import {PUBLISHED_PLAN_PRICES} from '@/lib/plan';
 import {CURRENT_COMMERCIAL_TERMS,commercialMarginReady} from '@/lib/commercial-margin';
+import {txCustomerFixture} from './customer-tax-review-fixture';
 const row=(gross:number,cost:number,tax:number):CustomerWorstCase=>({collectedRevenueCents:gross,refundableRevenueCents:0,taxesCeilingCents:tax,costCeilings:Object.fromEntries(CUSTOMER_COST_CATEGORIES.map(k=>[k,k==='other'?cost:0])),allCostsBounded:true,allTaxesReviewed:true,revenueCollected:true});
 test('owner planning minimum is bound into the commercial review',()=>{assert.equal(PLANNING_PROFIT_TAX_FLOOR_BPS,2750);assert.equal(CURRENT_COMMERCIAL_TERMS.planningProfitTaxFloorBps,2750);assert.equal(commercialMarginReady(),false);});
 test('a reviewed flag cannot authorize zero or understated profit tax',()=>{for(const tax of [0,1000,2275]){const r=assessCustomerWorstCase(row(10000,1724,tax));assert.equal(r.approved,false);assert.equal(r.reason,'tax_below_planning_floor');}assert.equal(assessCustomerWorstCase(row(10000,1724,2276)).approved,true);});
@@ -11,3 +12,11 @@ test('planning tax is on profit after costs and refunds, rounded conservatively'
 test('higher combined tax burdens are retained and can defeat the net floor',()=>{assert.equal(assessCustomerWorstCase(row(10000,1000,3000)).netCents,6000);assert.equal(assessCustomerWorstCase(row(10000,0,4001)).netCents,5999);assert.equal(assessCustomerWorstCase(row(10000,0,4001)).approved,true);assert.equal(assessCustomerWorstCase(row(10000,0,10000)).reason,'below_floor');});
 test('all six locked prices have an exact pre-profit-tax cost boundary',()=>{for(const p of Object.values(PUBLISHED_PLAN_PRICES)){for(const gross of Object.values(p)){const maximum=maximumPretaxCostCents(gross,2750)!;const tax=(cost:number)=>Number((BigInt(gross-cost)*BigInt(2750)+BigInt(9999))/BigInt(10000));assert.equal(assessCustomerWorstCase(row(gross,maximum,tax(maximum))).approved,true);assert.equal(assessCustomerWorstCase(row(gross,maximum+1,tax(maximum+1))).approved,false);}}});
 test('absence of a profit does not approve a loss or a free period',()=>{assert.equal(assessCustomerWorstCase(row(10000,10001,0)).reason,'below_floor');assert.equal(assessCustomerWorstCase(row(0,1,0)).approved,false);});
+test('TX evidence replaces only the legacy assessment floor and never supplies a real review',()=>{
+ const r=txCustomerFixture();assert.equal(assessCustomerWorstCase(r).approved,true);
+ const legacy={...r};delete legacy.taxReview;delete legacy.taxContext;
+ assert.equal(assessCustomerWorstCase(legacy).reason,'tax_below_planning_floor');
+ assert.equal(CURRENT_COMMERCIAL_TERMS.schemaVersion,27);
+ assert.equal(CURRENT_COMMERCIAL_TERMS.customerTaxReview.id,'TX-2026-10-27');
+ assert.equal(commercialMarginReady(),false);
+});
