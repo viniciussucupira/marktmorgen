@@ -31,6 +31,7 @@ test("archived proposals never raise a figure and viable proposals meet their hi
     for (const id of ORDER) p.proposed[id].forEach((n, i) => assert.ok(n <= today[id][i], `${p.tier} ${p.cycle} ${id}: ${n} above today's ${today[id][i]}`));
     // This archived solver retains its historical target. Updated measured
     // costs may produce a historical proposal; it never changes live rights.
+    assert.equal(p.feasible, p.netBps >= 6_000, `${p.tier} ${p.cycle}: feasibility must agree with the archived result`);
     if (p.feasible) assert.ok(p.netBps >= 6_000, `${p.tier} ${p.cycle}: a viable archived proposal must reach 60%`);
     if (p.todayNetBps >= 6_000) {
       assert.equal(p.feasible, true);
