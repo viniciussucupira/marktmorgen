@@ -1,4 +1,5 @@
 import { PAGE_TEST_WORDS } from "@/lib/headline-test-words";
+import { funnelBeginnerQuestions } from "@/lib/funnel-faq";
 import { NEW_CREATOR_PAGES } from "@/lib/creator-situations";
 import { withFeatureMechanisms } from "@/lib/feature-mechanisms";
 import { paidVideoWords, TRIAL_VIDEO_SECONDS } from "@/lib/video-admission-rules";
@@ -1216,6 +1217,8 @@ const BASE_FEATURE_PAGES: TopicPage[] = [
         kind: "faq",
         title: "Questions about funnels",
         items: [
+          // Questions from someone starting out, answered from the code (lib/funnel-faq.ts, 534 [FQ1]).
+          ...funnelBeginnerQuestions(),
           { q: "Can a buyer be charged without meaning to?", a: "No. An offer is charged only when the buyer presses to take it, in the browser that paid, within the hour, and once. If the bank asks them to confirm, they confirm it." },
           { q: "Where do I see what was taken?", a: "In your numbers and your sales export, marked as taken after paying, and in your own Stripe dashboard." },
           { q: "Does Marktmorgen take anything from an offer?", a: feeWords().fromAnOffer },
