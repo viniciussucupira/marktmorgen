@@ -3,7 +3,7 @@ import { StoreFullError } from "@/lib/store-full";
 import { setReviewAsk } from "@/lib/store";
 import { refreshStoreQuotes } from "@/lib/store-quotes";
 import { guardStoreWrite, text } from "@/lib/store-request";
-import { MAX_REPLY_TEXT, REVIEW_ID_PATTERN, markSeen, setHidden, setReply, setReviewPhoto } from "@/lib/reviews";
+import { MAX_REPLY_TEXT, REVIEW_ID_PATTERN, isHideReason, markSeen, setHidden, setReply, setReviewPhoto } from "@/lib/reviews";
 import { dropReviewPhoto } from "@/lib/review-photo";
 import { MAX_ASK_DAYS, MIN_ASK_DAYS } from "@/lib/review-ask";
 import { parseReviewElsewhere } from "@/lib/review-elsewhere";
@@ -76,6 +76,8 @@ export async function POST(request: NextRequest) {
     if (!PRODUCT_ID.test(productId) || !REVIEW_ID_PATTERN.test(id)) return Response.json({ ok: false, error: "missing" }, { status: 400 });
 
     if (action === "photo") {
+      // A buyer's photo is taken off only for one of the review rules, as a review is hidden (567 [GD1] (e)).
+      if (!isHideReason(body.reason)) return Response.json({ ok: false, error: "invalid" }, { status: 400 });
       const taken = await setReviewPhoto(statsId, productId, id, null);
       if (taken === "busy") return Response.json({ ok: false, error: "busy" }, { status: 409 });
       if (taken === "missing") return Response.json({ ok: false, error: "missing" }, { status: 404 });
