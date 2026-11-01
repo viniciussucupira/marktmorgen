@@ -5501,6 +5501,7 @@ Escopo:
 12. Interruptor no código, desligado, no mesmo padrão de ZOOM_APPROVED. É proibido criar contas, registrar aplicativo na Meta, aceitar termos, pedir aprovações ou ligar o interruptor: isso depende do dono.
 13. Inglês americano e as mesmas exigências de acessibilidade (WCAG 2.2 AAA como ponto de partida) das demais telas, incluindo uso completo por teclado e por leitor de tela. Testes somente com fornecedores e páginas simulados.
 
+Estado (Claude 2, 1/11/2026): unidade 1 testada num PR (ramo claude2/op5-no-invented-price; arquivos reservados: lib/ai.ts só writeStoreSetup/statedPrice, components/store-setup-ai.tsx, tests/store-setup.test.ts, a linha "Your whole store, drafted" de lib/feature-pages.ts): nenhum preço inventado; o preço do rascunho só fica quando o número está nas palavras do criador (statedPrice, conferido no código, não só pedido ao modelo); sem preço, o campo fica vazio e o criador digita antes de guardar. Unidade 0 (desenho) no PR #1561.
 Estado: na fila. Ao concluir, registre o commit, o resultado da suíte completa e a publicação, e altere o estado para "pronto e desligado, aguardando o dono". Posição vigente: OR: após o Bloco A, na ordem já existente entre 206 [SH3] e 272 [HM1]; 232 [CA1] foi antecipado e não se repete; antes do Bloco B.
    - Histórico OR — estado anterior à atualização documental: Estado: na fila. Ao concluir, registre o commit, o resultado da suíte completa e a publicação, e altere o estado para "pronto e desligado, aguardando o dono".
 

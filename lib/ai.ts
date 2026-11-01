@@ -517,12 +517,25 @@ const SETUP_KINDS = new Set(["download", "course", "call", "membership"]);
 /**
  * A whole store's first draft from a few sentences (added 10 October 2026):
  * three lines to put under the name, up to three products the creator could
- * sell — named, summed up, priced as a suggestion and of a kind the store
+ * sell — named, summed up, priced only where the creator named a price (219 [OP5]: never an invented one) and of a kind the store
  * sells — and the questions a visitor would ask, answered only from what the
  * creator said. Nothing is saved here: the studio shows it all, the creator
  * changes or drops any of it, and what they keep is put up as drafts, never
  * on sale until they add what each one hands over. One of the month's jobs.
  */
+/**
+ * A drafted product's price, only when the creator's own words contain that
+ * number (219 [OP5]): "$12", "49 dollars", "1,200" all name one. Anything
+ * else, the model's guess included, comes back empty, and the creator types
+ * the price before keeping the product.
+ */
+export function statedPrice(price: string, words: string): string {
+  const wanted = Number(price);
+  if (!price || !Number.isFinite(wanted) || wanted <= 0) return "";
+  const named = (words.match(/\d[\d,]*(?:\.\d+)?/g) ?? []).map((raw) => Number(raw.replace(/,/g, "")));
+  return named.some((n) => Math.abs(n - wanted) < 0.000001) ? price : "";
+}
+
 export async function writeStoreSetup(store: Store, input: { about: string; selling: string }, now = Date.now()): Promise<AiResult<StoreSetup>> {
   const about = block(input.about, MAX_AI_NOTES);
   const selling = block(input.selling, MAX_AI_NOTES);
@@ -533,7 +546,7 @@ export async function writeStoreSetup(store: Store, input: { about: string; sell
       honesty(storeLanguage(store)),
       "Work ONLY from what the creator says. Never invent a credential, a number of followers, students or buyers, a result, a testimonial, a guarantee, a refund, a delivery time or a bonus.",
       `"bios": three different lines for under the store's name, each at most 140 characters, saying who it is for and what they find there; no hashtags, no "Welcome to".`,
-      `"products": up to three products this creator could sell, built from what they said they make or sell. Each: "title" (at most 70 characters), "summary" (one sentence, at most 140 characters, what the buyer gets), "kind" (one of "download", "course", "call", "membership"), "price" (a plain number in ${store.currency.toUpperCase()}, a fair price for what it is, no currency sign).`,
+      `"products": up to three products this creator could sell, built from what they said they make or sell. Each: "title" (at most 70 characters), "summary" (one sentence, at most 140 characters, what the buyer gets), "kind" (one of "download", "course", "call", "membership"), "price" (the price the creator stated for this product, as a plain number in ${store.currency.toUpperCase()} with no currency sign; "" when they stated none. Never guess, suggest or round a price).`,
       `"faq": four to six questions a visitor would ask before buying, each at most 120 characters, each answer at most 300 characters, answered only from what the creator said; leave out any question you cannot answer from it.`,
       'Return only a JSON object: {"bios": [string], "products": [{"title": string, "summary": string, "kind": string, "price": string}], "faq": [{"q": string, "a": string}]}.',
     ].join("\n\n");
@@ -548,7 +561,8 @@ export async function writeStoreSetup(store: Store, input: { about: string; sell
         title: line(p.title, 80),
         summary: line(p.summary, 160),
         kind: (SETUP_KINDS.has(String(p.kind)) ? String(p.kind) : "download") as StoreSetup["products"][number]["kind"],
-        price: line(p.price, 12).replace(/[^\d.]/g, ""),
+        // Kept only when the creator's own words name that number: a price is never the model's guess.
+        price: statedPrice(line(p.price, 12).replace(/[^\d.]/g, ""), `${about}\n${selling}`),
       }))
       .filter((p) => p.title)
       .slice(0, 3);

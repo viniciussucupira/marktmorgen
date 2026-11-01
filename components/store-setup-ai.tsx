@@ -78,7 +78,7 @@ export function StoreSetupAi({ currency, left: startLeft, hasFaq, storeName }: {
       if (data.ok && data.done) {
         const parts = [data.done.bio ? "the line under your name" : "", data.done.products ? `${data.done.products} draft product${data.done.products === 1 ? "" : "s"}` : "", data.done.faq ? "your questions and answers" : ""].filter(Boolean);
         toast(parts.length ? `Kept: ${parts.join(", ")}.` : "Nothing was kept.");
-        if (data.done.refused.length) setNote(`Not kept, because its price is not one this store can charge: ${data.done.refused.join(", ")}. Add it from Products.`);
+        if (data.done.refused.length) setNote(`Not kept, because it has no price this store can charge yet: ${data.done.refused.join(", ")}. Type its price above and keep it again, or add it from Products.`);
         else setSetup(null);
         router.refresh();
         return;
@@ -99,8 +99,8 @@ export function StoreSetupAi({ currency, left: startLeft, hasFaq, storeName }: {
       </h2>
       {storeName ? <p className="mt-2 font-semibold text-ink">Your store: {storeName}. Keep your name, or edit it in Store details.</p> : null}
       <p className="mt-2 text-ink-soft">
-        Say what you make and for whom. AI drafts the line under your name, up to three products with a summary and a suggested
-        price, and the questions visitors ask, from your words only. You see it all first, change what you like, and keep only what
+        Say what you make and for whom. AI drafts the line under your name, up to three products with a summary (and the price,
+        only where you give one), and the questions visitors ask, from your words only. You see it all first, change what you like, and keep only what
         you want: products stay hidden until you add what each one hands over and choose Publish yourself. Paid selling still follows the sales gates.
       </p>
       <p className="mt-3 text-sm text-ink-soft">One sentence is enough to start. This uses the existing writing allowance; no draft runs automatically. You can also add your first offer manually in Products.</p>
@@ -167,7 +167,7 @@ export function StoreSetupAi({ currency, left: startLeft, hasFaq, storeName }: {
                   </li>
                 ))}
               </ul>
-              <p className="mt-2 text-sm text-ink-soft">The prices are suggestions. You know your work and your audience; change them before you keep them.</p>
+              <p className="mt-2 text-sm text-ink-soft">A price is filled in only where you wrote one. Where the box is empty, type your price before you keep the product.</p>
             </fieldset>
           ) : null}
 
