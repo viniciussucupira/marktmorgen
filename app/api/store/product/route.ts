@@ -146,7 +146,8 @@ export async function POST(request: NextRequest) {
   const title = text(body.title, MAX_TITLE_LENGTH);
   const summary = text(body.summary, MAX_SUMMARY_LENGTH);
   const price = text(body.price, 20);
-  const link = text(body.link, MAX_LINK_LENGTH);
+  // One past the length kept, so a longer link is refused as too long rather than cut and kept broken.
+  const link = text(body.link, MAX_LINK_LENGTH + 1);
   // Absent or unrecognised means a single sale, which is what a product is
   // unless the creator says otherwise. A trial or a payment count that was
   // typed and is not a whole number in range is said, not dropped.

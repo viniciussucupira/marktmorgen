@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useLeaveGuard } from "@/components/leave-guard";
 import { toast } from "@/components/toast";
 import type { Course } from "@/lib/course";
 import {
@@ -80,11 +81,16 @@ export function QuizEditor({
   const [error, setError] = useState<string | null>(null);
   const [removing, setRemoving] = useState(false);
   const [draftCount, setDraftCount] = useState<number>(DEFAULT_QUIZ_DRAFT);
+  // The quiz as it was opened: leaving with changes to it asks first (487 [IT4], item 6), an untouched one never.
+  const [opened, setOpened] = useState("");
+  useLeaveGuard(draft !== null && JSON.stringify(draft) !== opened && !busy);
 
   async function open() {
     setError(null);
     if (!setup) {
-      setDraft({ passPercent: String(DEFAULT_PASS_PERCENT), attempts: String(DEFAULT_ATTEMPTS), required: false, questions: [blankQuestion()] });
+      const fresh = { passPercent: String(DEFAULT_PASS_PERCENT), attempts: String(DEFAULT_ATTEMPTS), required: false, questions: [blankQuestion()] };
+      setDraft(fresh);
+      setOpened(JSON.stringify(fresh));
       return;
     }
     setLoading(true);
@@ -96,12 +102,14 @@ export function QuizEditor({
         setError("The quiz could not be read just now. Close this and open it again before changing it.");
         return;
       }
-      setDraft({
+      const read = {
         passPercent: String(quiz.passPercent),
         attempts: String(quiz.attempts),
         required: quiz.required,
         questions: quiz.questions.map((q) => ({ ...q, choices: [...q.choices], correct: [...q.correct] })),
-      });
+      };
+      setDraft(read);
+      setOpened(JSON.stringify(read));
     } catch {
       setError("The quiz could not be read just now. Try again in a moment.");
     } finally {
