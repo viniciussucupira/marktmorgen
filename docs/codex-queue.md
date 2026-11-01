@@ -13703,6 +13703,7 @@ Em todas as telas do estúdio, um campo de busca de AÇÕES (não só de página
 
 487. [IT4] Padrões comprovados em cada formulário e tela.
 Estado inicial: na fila.
+Andamento (Claude 2, 01/11/2026): item 2 (teclado certo no celular) **testado num PR** (ramo claude2/it4-email-keyboards; arquivos reservados: docs/ease-patterns-audit.md, tests/email-field-keyboards.test.ts). Auditoria de todo <input> do app por script e à mão, registrada em docs/ease-patterns-audit.md: 23 campos de e-mail, 4 sem autocomplete, todos com o endereço de outra pessoa (o navegador oferecia o do próprio criador); 3 corrigidos com autoComplete="off" e o "Move to" de app/studio/page.tsx espera o PR 1502 do Codex; os campos numéricos são contagens e já abrem o teclado numérico; os valores já usam inputMode decimal. Teste que falha se um campo de e-mail não disser de quem é o endereço. Os itens 1 e 3 a 8 ficam listados como não auditados no mesmo documento.
 Confira e corrija, tela por tela, no estúdio, no checkout e na área do comprador:
 1. Validação de cada campo quando a pessoa sai dele, nunca enquanto digita; mensagem ao lado do campo, com texto e ícone, que some assim que o erro é corrigido (Baymard, 09/01/2024).
 2. Teclado certo no celular (inputmode e autocomplete para e-mail, telefone, número e valor).
