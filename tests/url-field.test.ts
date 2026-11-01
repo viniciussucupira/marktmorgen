@@ -63,15 +63,18 @@ const room = roomOnLeave("The meeting link has to be a full web address starting
 is("a good room is fine, empty too", [room("https://zoom.us/j/123").problem, room("").problem], [null, null]);
 is("missing https://: offered back, as cleanRoom keeps it", room("meet.google.com/abc-defg-hij"), { problem: "This address needs https:// at the start.", fix: "https://meet.google.com/abc-defg-hij" });
 is("anything else: the editor's own words, no fix", room("my zoom"), { problem: "The meeting link has to be a full web address starting with https://.", fix: null });
-for (const typed of ["zoom.us/j/1", "http://whereby.com/me", "https://meet.google.com/x", "zoom", "ftp://x.com", `https://zoom.us/${"a".repeat(600)}`]) {
+for (const typed of ["zoom.us/j/1", "http://whereby.com/me", "https://meet.google.com/x", "zoom", "ftp://x.com", "https://zoom.us/j/1?pwd=abc"]) {
   const kept = cleanRoom(typed);
   is(`"${typed.slice(0, 30)}": passes here exactly when cleanRoom keeps it`, room(typed).problem === null, typeof kept === "string" && kept !== "bad");
   const fix = room(typed).fix;
   if (fix) is(`"${typed.slice(0, 30)}": what is offered, cleanRoom keeps`, cleanRoom(fix) === fix, true);
 }
-is("a room too long is refused, never cut", [cleanRoom(`https://zoom.us/${"a".repeat(MAX_ROOM_LENGTH)}`), room(`https://zoom.us/${"a".repeat(MAX_ROOM_LENGTH)}`).problem], ["bad", LINK_PROBLEMS.long]);
+is("a room longer than the server keeps whole is said too long before it is cut", room(`https://zoom.us/${"a".repeat(MAX_ROOM_LENGTH)}`).problem, LINK_PROBLEMS.long);
+is("measured as stored too: letters written out longer can take it past the length", room(`https://zoom.us/j/${"é".repeat(200)}`).problem, LINK_PROBLEMS.long);
+is("the server's reading of stored links is left as it was", readFileSync("lib/call-setup.ts", "utf8").includes("const text = raw.trim().slice(0, MAX_ROOM_LENGTH);"), true);
 const call = readFileSync("components/call-editor.tsx", "utf8");
 is("a call's meeting links use it, each with a visible label tied by id", (call.match(/<UrlField/g) ?? []).length === 2 && call.includes("check={ROOM_CHECK}") && call.includes("check={SESSION_ROOM_CHECK}") && call.includes("htmlFor={`call-${product.id}-room`}") && call.includes("htmlFor={`call-${product.id}-session-${index}-room`}"), true);
 const events = readFileSync("components/community-events-studio.tsx", "utf8");
 is("a community event's link uses it", events.includes("<UrlField") && events.includes("check={LINK_CHECK}"), true);
+is("and an empty one is said there, since it is required", events.includes('const LINK_CHECK: LinkCheck = (raw) => (raw.trim() ? ROOM_CHECK(raw) : { problem: MESSAGES.link, fix: null });'), true);
 done();

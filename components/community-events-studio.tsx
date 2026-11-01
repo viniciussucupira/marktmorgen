@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "@/components/toast";
 import { UrlField } from "@/components/url-field";
-import { roomOnLeave } from "@/lib/url-check";
+import { type LinkCheck, roomOnLeave } from "@/lib/url-check";
 import type { MeetAccount } from "@/components/call-editor";
 import { MEET_NAMES, type MeetProvider } from "@/lib/call-setup";
 import {
@@ -95,7 +95,9 @@ const MESSAGES: Record<string, string> = {
 };
 
 // The meeting link is checked when its field is left, by the reading the server keeps (487 [IT4], pattern 1).
-const LINK_CHECK = roomOnLeave(MESSAGES.link);
+// The link is required here, so an empty one is said too.
+const ROOM_CHECK = roomOnLeave(MESSAGES.link);
+const LINK_CHECK: LinkCheck = (raw) => (raw.trim() ? ROOM_CHECK(raw) : { problem: MESSAGES.link, fix: null });
 
 type Answer = { ok?: boolean; error?: string; moved?: boolean };
 

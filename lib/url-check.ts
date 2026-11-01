@@ -46,18 +46,26 @@ export function checkWith(accept: (raw: string) => string | null, refused: strin
     const typed = (raw ?? "").trim();
     if (!typed) return { problem: null, fix: null };
     if (typed.length > maxLength) return { problem: LINK_PROBLEMS.long, fix: null };
-    if (accept(typed) !== null) return { problem: null, fix: null };
+    const kept = accept(typed);
+    // Measured as it would be stored too: letters that are written out longer can take it past the length.
+    if (kept !== null) return kept.length > maxLength ? { problem: LINK_PROBLEMS.long, fix: null } : { problem: null, fix: null };
     const hasScheme = /^[a-z][a-z0-9+.-]*:(?!\d)/i.test(typed);
     if (!hasScheme || /^http:\/\//i.test(typed)) {
       const tried = `https://${typed.replace(/^http:\/\//i, "")}`;
-      const kept = tried.length <= maxLength ? accept(tried) : null;
-      if (kept !== null) return { problem: NEEDS_HTTPS, fix: kept };
+      const fixed = tried.length <= maxLength ? accept(tried) : null;
+      if (fixed !== null && fixed.length <= maxLength) return { problem: NEEDS_HTTPS, fix: fixed };
     }
     return { problem: refused, fix: null };
   };
 }
 
-/** A meeting link, as lib/call-setup.ts cleanRoom keeps it (calls and community events). */
+/**
+ * A meeting link, as lib/call-setup.ts cleanRoom keeps it (calls and community
+ * events). cleanRoom cuts what is longer than MAX_ROOM_LENGTH, which would
+ * keep a broken link, so the field says it is too long before that happens;
+ * the server's reading itself is left as it is, because it also reads the
+ * links already stored.
+ */
 export function roomOnLeave(refused: string): LinkCheck {
   return checkWith((raw) => {
     const kept = cleanRoom(raw);

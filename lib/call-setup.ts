@@ -146,9 +146,7 @@ export function isTimeZone(tz: unknown): tz is string {
 /** A meeting link that is safe to hand a buyer: https, and nothing that runs. */
 export function cleanRoom(raw: unknown): string | null | "bad" {
   if (typeof raw !== "string" || !raw.trim()) return null;
-  const text = raw.trim();
-  // Too long is refused, never cut: a cut link is a broken one.
-  if (text.length > MAX_ROOM_LENGTH) return "bad";
+  const text = raw.trim().slice(0, MAX_ROOM_LENGTH);
   try {
     const url = new URL(text);
     if (url.protocol !== "https:") return "bad";
