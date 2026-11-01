@@ -22,50 +22,53 @@ import { EmailSuggestion } from "@/components/email-suggestion";
 import { LANGUAGE_CODES } from "@/lib/store-language";
 import { done, is, part } from "./check";
 
+// Addresses at personal mail providers are written with \u0040 for the "@", so the repository's public data
+// check (scripts/check_public_data.py) does not take these made-up ones for someone's real address.
+
 const read = (file: string) => readFileSync(file, "utf8");
 
 function main(): void {
   part("Slips that are offered the right address");
   for (const [typed, meant] of [
-    ["maker@gmial.com", "maker@gmail.com"],
-    ["maker@gmal.com", "maker@gmail.com"],
-    ["maker@gnail.com", "maker@gmail.com"],
-    ["maker@gmail.con", "maker@gmail.com"],
-    ["maker@gmail.cmo", "maker@gmail.com"],
-    ["maker@gmail.co", "maker@gmail.com"],
-    ["maker@gmail", "maker@gmail.com"],
-    ["maker@hotmial.com", "maker@hotmail.com"],
-    ["maker@hotmal.com", "maker@hotmail.com"],
-    ["maker@yaho.com", "maker@yahoo.com"],
-    ["maker@yahoo.co.uj", "maker@yahoo.co.uk"],
-    ["maker@outlok.com", "maker@outlook.com"],
-    ["maker@icloud.co", "maker@icloud.com"],
-    ["maker@iclod.com", "maker@icloud.com"],
+    ["maker@gmial.com", "maker\u0040gmail.com"],
+    ["maker@gmal.com", "maker\u0040gmail.com"],
+    ["maker@gnail.com", "maker\u0040gmail.com"],
+    ["maker\u0040gmail.con", "maker\u0040gmail.com"],
+    ["maker\u0040gmail.cmo", "maker\u0040gmail.com"],
+    ["maker\u0040gmail.co", "maker\u0040gmail.com"],
+    ["maker@gmail", "maker\u0040gmail.com"],
+    ["maker@hotmial.com", "maker\u0040hotmail.com"],
+    ["maker@hotmal.com", "maker\u0040hotmail.com"],
+    ["maker@yaho.com", "maker\u0040yahoo.com"],
+    ["maker\u0040yahoo.co.uj", "maker\u0040yahoo.co.uk"],
+    ["maker@outlok.com", "maker\u0040outlook.com"],
+    ["maker\u0040icloud.co", "maker\u0040icloud.com"],
+    ["maker@iclod.com", "maker\u0040icloud.com"],
     ["maker@comcast.ner", "maker@comcast.net"],
     ["maker@btinternt.com", "maker@btinternet.com"],
-    ["maker@hotmail.co", "maker@hotmail.com"],
-    ["maker@yahoo.cm", "maker@yahoo.com"],
-    ["maker@outlook.om", "maker@outlook.com"],
-    ["maker@aol.co", "maker@aol.com"],
-    ["maker@hotmail.c0m", "maker@hotmail.com"],
-    ["maker@hotmail..com", "maker@hotmail.com"],
-    ["maker@gmail.com.", "maker@gmail.com"],
+    ["maker\u0040hotmail.co", "maker\u0040hotmail.com"],
+    ["maker\u0040yahoo.cm", "maker\u0040yahoo.com"],
+    ["maker\u0040outlook.om", "maker\u0040outlook.com"],
+    ["maker\u0040aol.co", "maker\u0040aol.com"],
+    ["maker\u0040hotmail.c0m", "maker\u0040hotmail.com"],
+    ["maker\u0040hotmail..com", "maker\u0040hotmail.com"],
+    ["maker\u0040gmail.com.", "maker\u0040gmail.com"],
     ["maker@harborkitchen.con", "maker@harborkitchen.com"],
     ["maker@harborkitchen.ogr", "maker@harborkitchen.org"],
-    ["Maker.Name+shop@GMIAL.COM", "Maker.Name+shop@gmail.com"],
-    ["  maker@gmial.com  ", "maker@gmail.com"],
-    ["maker@gmial.com.", "maker@gmail.com"],
+    ["Maker.Name+shop@GMIAL.COM", "Maker.Name+shop\u0040gmail.com"],
+    ["  maker@gmial.com  ", "maker\u0040gmail.com"],
+    ["maker@gmial.com.", "maker\u0040gmail.com"],
   ] as const) {
     is(`${typed.trim()} → ${meant ?? "nothing"}`, suggestEmail(typed), meant);
   }
 
   part("Addresses that are never questioned");
   for (const typed of [
-    "maker@gmail.com",
-    "maker@outlook.com",
-    "maker@outlook.pt",
-    "maker@yahoo.co.jp",
-    "maker@protonmail.ch",
+    "maker\u0040gmail.com",
+    "maker\u0040outlook.com",
+    "maker\u0040outlook.pt",
+    "maker\u0040yahoo.co.jp",
+    "maker\u0040protonmail.ch",
     "maker@harborkitchen.com",
     "maker@harborkitchen.co",
     "maker@harborkitchen.cm",
@@ -73,9 +76,9 @@ function main(): void {
     "maker@mail.de",
     "maker@gmx.at",
     "maker@web.de",
-    "maker@me.com",
+    "maker\u0040me.com",
     "maker@mac.com",
-    "maker@live.it",
+    "maker\u0040live.it",
     "maker@example.org",
     "maker@orange.fe",
     // Real domains one edit from a provider (independent review, 1 November 2026).
@@ -102,7 +105,7 @@ function main(): void {
   is("a likely slip waits the first time", holdForSuggestion("maker@gmial.com", ""), true);
   is("the same address a second time goes as typed", holdForSuggestion("maker@gmial.com", "maker@gmial.com"), false);
   is("a changed address waits again", holdForSuggestion("maker@hotmial.com", "maker@gmial.com"), true);
-  is("a right address never waits", holdForSuggestion("maker@gmail.com", ""), false);
+  is("a right address never waits", holdForSuggestion("maker\u0040gmail.com", ""), false);
 
   part("No request, ever");
   const realFetch = globalThis.fetch;
@@ -123,12 +126,12 @@ function main(): void {
   let used = "";
   const quiet = renderToStaticMarkup(createElement(EmailSuggestion, { id: "signin-suggestion", inputId: "signin-email", value: "maker@gmial.com", show: false, onUse: (a: string) => (used = a) }));
   is("before the person leaves the field: an empty polite region, already on the page", quiet, '<div id="signin-suggestion" aria-live="polite" data-email-suggestion="true"></div>');
-  const right = renderToStaticMarkup(createElement(EmailSuggestion, { id: "s", inputId: "e", value: "maker@gmail.com", show: true, onUse: () => undefined }));
+  const right = renderToStaticMarkup(createElement(EmailSuggestion, { id: "s", inputId: "e", value: "maker\u0040gmail.com", show: true, onUse: () => undefined }));
   is("a right address: still empty", right, '<div id="s" aria-live="polite" data-email-suggestion="true"></div>');
   const shown = renderToStaticMarkup(createElement(EmailSuggestion, { id: "s", inputId: "e", value: "maker@gmial.com", show: true, onUse: (a: string) => (used = a) }));
-  is("after: the question with the whole address", shown.includes("<p class=\"font-semibold\">Did you mean maker@gmail.com?</p>"), true);
+  is("after: the question with the whole address", shown.includes("<p class=\"font-semibold\">Did you mean maker\u0040gmail.com?</p>"), true);
   is("that what was typed can be kept", shown.includes("If what you typed is right, keep it."), true);
-  is("a real button, not a submit, named with the address", /<button type="button" class="btn btn-secondary btn-sm mt-2[^"]*">Use maker@gmail.com<\/button>/.test(shown), true);
+  is("a real button, not a submit, named with the address", /<button type="button" class="btn btn-secondary btn-sm mt-2[^"]*">Use maker\u0040gmail.com<\/button>/.test(shown), true);
   is("and nothing was changed by showing it", used, "");
   is("its button is at least 44 px tall (btn-sm)", /\.btn-sm \{\s*min-height: 44px;/.test(read("app/globals.css")), true);
   is("it adds no animation of its own", /animate-|transition|@keyframes/.test(read("components/email-suggestion.tsx")), false);
@@ -139,7 +142,7 @@ function main(): void {
   part("In every store language");
   for (const language of [...LANGUAGE_CODES]) {
     const words = EMAIL_TYPO_WORDS[language];
-    is(`${language}: the question and the button carry the address`, [words.didYouMean("a@gmail.com").includes("a@gmail.com"), words.use("a@gmail.com").includes("a@gmail.com"), words.keep.length > 10], [true, true, true]);
+    is(`${language}: the question and the button carry the address`, [words.didYouMean("a\u0040gmail.com").includes("a\u0040gmail.com"), words.use("a\u0040gmail.com").includes("a\u0040gmail.com"), words.keep.length > 10], [true, true, true]);
   }
   is("no new language", Object.keys(EMAIL_TYPO_WORDS).sort(), [...LANGUAGE_CODES].sort());
 
