@@ -31,8 +31,8 @@ The screen-by-screen audit that 487 [IT4] asks for: what was checked, what was f
   - the store address field on the home page (`components/home-claim.tsx`): its label is screen-reader only, and the visible text is the `marktmorgen.com/@` prefix and the example;
   - the podcast episode's title and notes (`components/podcast-editor.tsx`): an `aria-label` only.
 - **`aria-label` only: 21 fields.** Read so far:
-  - **A field in a visibly named list,** with the list's name shown above it and the label giving its position: the deal stages ("Stages, in order"), the quiz answers ("Answers — check the right…"), the creator's own leaving reasons.
-  - **Read-only text to copy,** under a visible heading: the funnel's launch checklist, a short link, the campaign link, the store's share link.
+  - **A field in a visibly named list,** with the list's name shown above it and the label giving its position: the deal stages ("Stages, in order"), the quiz answers ("Answers — check the right…"), the creator's own leaving reasons. The deal stages' "What stage N means" `<select>` also has only an `aria-label`. Its list name is a paragraph, not a legend, so it is counted with the six still to read.
+  - **Read-only text to copy,** under its visible name or heading: the funnel's launch checklist, a short link, the campaign link, the store's share link.
   - **Not yet read in context:**
     - the quiz scoring categories;
     - the deal custom fields (their legend is screen-reader only);
