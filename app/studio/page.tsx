@@ -1244,6 +1244,10 @@ export default async function StudioPage({
             {may("products") && accessCheck(store) ? <StoreSearchCheck check={searchCheck(store)} /> : null}
             <StudioTools
               tools={[
+                // 491 [PP2]: payments, the domain, email and checkout, read now, each with where to fix it.
+                ...(may("settings")
+                  ? [{ href: studioPath(store, "", "checkup"), title: "Something not working?", text: "Check payments, your domain, email to your list and checkout, and see how to fix what is wrong.", icon: "target" as const, prefetch: false as const }]
+                  : []),
                 { href: studioPath(store, "", "growth")+"#template-library", title: "Template library", text: "Preview existing pages, funnels, email layouts and paused sequences.", icon: "layout" as const, prefetch: false },
                 { href: studioPath(store, "", "growth"), title: "Growth", text: "Choose a goal and connect the tools for your next action.", icon: "chart" as const, prefetch: false },
                 ...(may("products")
@@ -2018,7 +2022,7 @@ export default async function StudioPage({
             ) : null}
 
             {domainsOn && may("settings") ? (
-              <div className="card mt-8 p-6 sm:p-8">
+              <div id="domain" className="card mt-8 scroll-mt-32 p-6 sm:p-8">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <p className="text-lg font-semibold tracking-[-0.02em] text-ink">Your own domain</p>
                   <span className="tag tag-brand">Pro</span>

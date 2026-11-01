@@ -36,6 +36,8 @@ async function main(): Promise<void> {
   is("Vercel could not be asked: not checked", domainCheck("harborkitchen.com", null)?.state, "not-checked");
   is("not live: a problem, and the marktmorgen.com address still works", [domainCheck("harborkitchen.com", { live: false, records: [] })?.state, domainCheck("harborkitchen.com", { live: false, records: [] })?.ifLeft?.includes("marktmorgen.com address still works")], ["problem", true]);
   is("live: fine", domainCheck("harborkitchen.com", { live: true, records: [] })?.state, "ok");
+  const gone = domainCheck("harborkitchen.com", "gone");
+  is("no longer on the project: a problem, with the way to connect it again (unit 2)", [gone?.state, gone?.fix?.kind === "studio" && gone.fix.href, gone?.ifLeft?.includes("marktmorgen.com address still works")], ["problem", "/studio#domain", true]);
 
   part("Email to your list");
   is("the pause could not be read: not checked", emailCheck(undefined, NOW).state, "not-checked");
@@ -54,11 +56,12 @@ async function main(): Promise<void> {
   is("the refusals could not be read: not checked", checkoutCheck(null).state, "not-checked");
   is("none in 7 days: fine", checkoutCheck({ week: 0, last: null }).state, "ok");
   const refused = checkoutCheck({ week: 3, last: { message: "Your account cannot currently make live charges." } });
-  is("refused: a problem, with Stripe's own words", [refused.state, refused.found], ["problem", 'Stripe refused to open a checkout 3 times in the last 7 days. The last time it said: "Your account cannot currently make live charges."']);
-  is("once is said as once", checkoutCheck({ week: 1, last: null }).found, "Stripe refused to open a checkout once in the last 7 days.");
+  is("refused: a problem, with Stripe's own words", [refused.state, refused.found], ["problem", 'Stripe would not open a checkout 3 times in the last 7 days. The last time it said: "Your account cannot currently make live charges."']);
+  is("once is said as once", checkoutCheck({ week: 1, last: null }).found, "Stripe would not open a checkout once in the last 7 days.");
 
   part("Parts with no reader yet");
   is("the plan's limits and disputes: always not checked", [notCheckedYet("limits").state, notCheckedYet("disputes").state], ["not-checked", "not-checked"]);
+  is("disputes points to no studio page that does not list them (unit 2)", [notCheckedYet("disputes").fix, notCheckedYet("disputes").found.includes("Stripe dashboard")], [undefined, true]);
 
   part("Every problem says what happens and how to fix it");
   const all: Check[] = [
