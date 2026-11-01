@@ -994,6 +994,7 @@ const BASE_FEATURE_PAGES: TopicPage[] = [
     highlight: "who bought from you",
     intro:
       "One members' area on your store, with spaces, posts, comments, a live room, private messages, search and live events, open only to the buyers of the products you choose. Members come in with a link sent to their email: no account, no password.",
+    visual: "community",
     badge: WORKING,
     accent: "from-violet-brand to-mint-brand",
     plan: "creator",
@@ -1306,6 +1307,7 @@ const BASE_FEATURE_PAGES: TopicPage[] = [
     highlight: "sell it for you",
     intro:
       "People apply and you approve, or everyone who buys takes a link at once. Each affiliate gets a page of their own with their clicks, sales and what they are owed. You pay them from your own PayPal in one press, or by itself on your payday: every sale lands in full in your own Stripe account, and nothing is held.",
+    visual: "affiliates",
     badge: WORKING,
     accent: "from-mint-brand to-sky-brand",
     plan: "creator",

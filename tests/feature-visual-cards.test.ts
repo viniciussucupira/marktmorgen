@@ -1,7 +1,8 @@
 /**
  * More feature-page cards (531 [VP1], units 2 and 3; added 1 November 2026):
- * bundles, quizzes and certificates, license keys, webhooks, calendar sync
- * and Discord access, each a piece of the
+ * bundles, quizzes and certificates, license keys, webhooks, calendar sync,
+ * Discord access (units 2 and 3), the community and affiliates (unit 4),
+ * each a piece of the
  * studio's real screen in HTML, with its words and figures from the code.
  * Checked: each page shows its card; the studio's own labels; every figure
  * is one the code holds (the bundle's 2 to 20, the quiz's default pass mark
@@ -22,11 +23,12 @@ import { MAX_ENDPOINTS, shortAddress } from "@/lib/webhook-limits";
 import { LOOKAHEAD_DAYS, MAX_FEEDS } from "@/lib/calendar-limits";
 import { MAX_DISCORD_PRODUCTS, MAX_PRODUCT_ROLES } from "@/lib/discord-rules";
 import { findPage } from "@/lib/site-pages";
+import { formatMoney } from "@/lib/money";
 import { done, is, part } from "./check";
 
-const text = (html: string) => html.replace(/<[^>]+>/g, "\n").split("\n").map((s) => s.trim()).filter(Boolean);
+const text = (html: string) => html.replace(/<[^>]+>/g, "\n").replace(/&#x27;/g, "'").replace(/&amp;/g, "&").split("\n").map((s) => s.trim()).filter(Boolean);
 const read = (file: string) => readFileSync(file, "utf8");
-const draw = (visual: "bundles" | "quizzes" | "keys" | "webhooks" | "calendar" | "discord") => renderToStaticMarkup(createElement(FeatureVisual, { visual, tone: "light" }));
+const draw = (visual: "bundles" | "quizzes" | "keys" | "webhooks" | "calendar" | "discord" | "community" | "affiliates") => renderToStaticMarkup(createElement(FeatureVisual, { visual, tone: "light" }));
 const hidden = (html: string) => html.startsWith('<figure class="w-full min-w-0 max-w-[26rem]"><div aria-hidden="true">');
 
 function main(): void {
@@ -103,6 +105,32 @@ function main(): void {
   is("no promise of how soon roles are taken back", d.some((w) => /taken back|within \d+ hours/.test(w)), false);
   is("drawn, hidden, beside its caption", hidden(disc), true);
 
+  part("Community");
+  is("the community page shows its card", findPage("platform", "community")?.visual, "community");
+  const com = draw("community");
+  const m = text(com);
+  const comStudio = read("components/community-studio.tsx");
+  is("the studio card's heading, state and sentence", ["Your community", "On", "Open to everyone who holds one of the products you chose below. Your store page shows the way in."].every((w) => m.includes(w) && comStudio.includes(w)), true);
+  is("its three counts, under the studio's own labels", ["have come in", "posts"].every((w) => m.includes(w) && comStudio.includes(`>${w}<`)) && m.includes("want the community's emails") && comStudio.includes("want the community&apos;s emails"), true);
+  is("its buttons, in the studio's words", ["Switch it off", "Open it"].every((w) => m.includes(w) && comStudio.includes(w)), true);
+  is("the counts said to be an example", m.some((w) => /example/.test(w)), true);
+  is("drawn, hidden, beside its caption", hidden(com), true);
+
+  part("Affiliates");
+  is("the affiliates page shows its card", findPage("platform", "affiliates")?.visual, "affiliates");
+  const aff = draw("affiliates");
+  const a = text(aff);
+  const affStudio = read("components/affiliate-studio.tsx");
+  is("the studio's heading, link code and status", [a.includes("Your affiliates"), affStudio.includes("Your affiliates"), a.includes("?via=ana"), affStudio.includes("`?via=${affiliate.code}`"), a.includes("Approved"), affStudio.includes('approved: { label: "Approved", tone: "tag-live" }')], [true, true, true, true, true, true]);
+  is("the five tiles, in the studio's order", a.filter((w) => ["Clicks", "Sales", "Earned", "Paid", "Owed"].includes(w)), ["Clicks", "Sales", "Earned", "Paid", "Owed"]);
+  is("the tiles' labels are the studio's", ["Clicks", "Sales", "Earned", "Paid"].every((w) => affStudio.includes(`label: "${w}"`)) && affStudio.includes('label: row.owed < 0 ? "Paid ahead" : "Owed"'), true);
+  const after = (label: string) => a[a.indexOf(label) + 1] ?? "";
+  const cents = (money: string) => Math.round(Number(money.replace(/[$,]/g, "")) * 100);
+  is("each amount in the studio's own money format", [after("Earned"), after("Paid"), after("Owed")], [formatMoney(5_940, "usd"), formatMoney(3_000, "usd"), formatMoney(2_940, "usd")]);
+  is("owed, as drawn, is what was earned less what was paid", cents(after("Earned")) - cents(after("Paid")), cents(after("Owed")));
+  is("the person and every figure said to be made up, not anyone's real results", a.some((w) => /every figure are made up as an example, not anyone's real results/.test(w)), true);
+  is("drawn, hidden, beside its caption", hidden(aff), true);
+
   part("Nothing that is not the code's or marked as an example");
   for (const [name, words, allowed] of [
     ["bundles", b, /^(In it: 3 of \d+|\$77 of products for \$49|\$\d+(\.\d\d)?|.*example.*)$/],
@@ -111,6 +139,8 @@ function main(): void {
     ["webhooks", h, /^(1 of \d+|Last 3 deliveries|Delivered \(200\)|· Nov 1, \d+:\d\d PM|hooks\.zapier\.com\/hooks\/cat…bcdefg|.*example.*)$/],
     ["calendar", c, /^(1 of \d+ read|Read 4 min ago · 12 busy times in the next \d+ days · added Oct 20, 2026|.*example.*)$/],
     ["discord", d, /^(Up to \d+ roles for each product, on up to \d+ products\.|Gives \d roles?\.|.*example.*)$/],
+    ["community", m, /^(48|112|31|.*example.*)$/],
+    ["affiliates", a, /^(120|6|\$59\.40|\$30|\$29\.40|.*example.*)$/],
   ] as const) {
     is(`${name}: every figure is the code's, or an example said as one`, words.filter((w) => /\d/.test(w) && !allowed.test(w)), []);
   }
