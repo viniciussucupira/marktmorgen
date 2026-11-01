@@ -5,13 +5,13 @@ import { GONE_PRODUCT, PREVIEW_LEAVES_OUT, previewLine, previewName, previewSpac
 
 /**
  * "Which spaces a member sees" (399 [SL3], unit 2; added 1 November 2026):
- * the creator ticks what a member bought, and the studio says which spaces
+ * the creator checks what a member bought, and the studio says which spaces
  * a member holding exactly those would see, by the rule the real gate uses
  * (lib/community-gate.ts). Worked out here from the community the studio
  * already has: no buyer is read, no route is called, nothing is changed and
  * nobody is told. Shown only when some space is kept for some products.
  *
- * What can be ticked is every product that opens the community, including
+ * What can be checked is every product that opens the community, including
  * one no longer in the store, whose buyers still get in.
  */
 export function MemberPreview({
@@ -27,8 +27,8 @@ export function MemberPreview({
   const help = useId();
   if (!access.length || !spaces.some((space) => space.only.length)) return null;
   const pick = access.map((id) => open.find((product) => product.id === id) ?? { id, title: GONE_PRODUCT });
-  const ticked = chosen.filter((id) => access.includes(id));
-  const shown = previewSpaces(spaces, access, ticked);
+  const picked = chosen.filter((id) => access.includes(id));
+  const shown = previewSpaces(spaces, access, picked);
   return (
     <section className="mt-6 rounded-[var(--r-md)] bg-paper p-4" aria-labelledby={`${help}-title`}>
       <h3 id={`${help}-title`} className="font-semibold text-ink">Which spaces a member sees</h3>
@@ -50,8 +50,8 @@ export function MemberPreview({
         </div>
       </fieldset>
       <div className="mt-3 text-sm text-ink" aria-live="polite">
-        <p>{previewLine(ticked.length, shown.length, spaces.length)}</p>
-        {ticked.length && shown.length ? (
+        <p>{previewLine(picked.length, shown.length, spaces.length)}</p>
+        {picked.length && shown.length ? (
           <ul className="mt-1 list-disc pl-5">
             {shown.map((space) => (
               <li key={space.id} className="break-words">{previewName(spaces, space.id)}</li>

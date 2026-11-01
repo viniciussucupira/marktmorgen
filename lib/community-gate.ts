@@ -48,8 +48,8 @@ export function previewSpaces<S extends GatedSpace>(spaces: readonly S[], access
 
 /** The line under "Which spaces a member sees": how many of the spaces; the list itself is drawn under it. */
 export function previewLine(chosenCount: number, shownCount: number, total: number): string {
-  // Nobody gets into the community without one of its products, so nothing ticked is not a member.
-  if (chosenCount === 0) return "Tick what a member bought to see which spaces they would see.";
+  // Nobody gets into the community without one of its products, so nothing checked is not a member.
+  if (chosenCount === 0) return "Check what a member bought to see which spaces they would see.";
   if (shownCount === 0) return "A member with these products sees none of your spaces.";
   if (total === 1) return "A member with these products sees your only space.";
   if (shownCount === total) return `A member with these products sees all ${total} of your spaces:`;
