@@ -66,6 +66,13 @@ export function StoreSetupAi({ currency, left: startLeft, hasFaq, storeName }: {
 
   async function keep() {
     if (!setup || saving) return;
+    // 219 [OP5]: a price is the creator's. A product kept with an empty price box waits here for one, rather than being lost.
+    const unpriced = rows.findIndex((r) => r.keep && !r.price.trim());
+    if (unpriced >= 0) {
+      setNote(`Type a price for ${rows[unpriced].title.trim() || "each product you keep"}, or uncheck Keep it.`);
+      document.getElementById(`setup-price-${unpriced}`)?.focus();
+      return;
+    }
     setSaving(true);
     setNote("");
     try {
@@ -78,7 +85,7 @@ export function StoreSetupAi({ currency, left: startLeft, hasFaq, storeName }: {
       if (data.ok && data.done) {
         const parts = [data.done.bio ? "the line under your name" : "", data.done.products ? `${data.done.products} draft product${data.done.products === 1 ? "" : "s"}` : "", data.done.faq ? "your questions and answers" : ""].filter(Boolean);
         toast(parts.length ? `Kept: ${parts.join(", ")}.` : "Nothing was kept.");
-        if (data.done.refused.length) setNote(`Not kept, because its price is not one this store can charge: ${data.done.refused.join(", ")}. Add it from Products.`);
+        if (data.done.refused.length) setNote(`Not kept, because it has no price this store can charge yet: ${data.done.refused.join(", ")}. Type its price above and keep it again, or add it from Products.`);
         else setSetup(null);
         router.refresh();
         return;
@@ -99,8 +106,8 @@ export function StoreSetupAi({ currency, left: startLeft, hasFaq, storeName }: {
       </h2>
       {storeName ? <p className="mt-2 font-semibold text-ink">Your store: {storeName}. Keep your name, or edit it in Store details.</p> : null}
       <p className="mt-2 text-ink-soft">
-        Say what you make and for whom. AI drafts the line under your name, up to three products with a summary and a suggested
-        price, and the questions visitors ask, from your words only. You see it all first, change what you like, and keep only what
+        Say what you make and for whom. AI drafts the line under your name, up to three products with a summary (and the price,
+        only where you give one), and the questions visitors ask, from your words only. You see it all first, change what you like, and keep only what
         you want: products stay hidden until you add what each one hands over and choose Publish yourself. Paid selling still follows the sales gates.
       </p>
       <p className="mt-3 text-sm text-ink-soft">One sentence is enough to start. This uses the existing writing allowance; no draft runs automatically. You can also add your first offer manually in Products.</p>
@@ -159,7 +166,8 @@ export function StoreSetupAi({ currency, left: startLeft, hasFaq, storeName }: {
                       </div>
                       <div>
                         <label htmlFor={`setup-price-${i}`} className="text-xs font-semibold text-ink-soft">{`Price, ${currency.toUpperCase()}`}</label>
-                        <input id={`setup-price-${i}`} inputMode="decimal" value={row.price} onChange={(e) => setRows(rows.map((r, j) => (j === i ? { ...r, price: e.target.value } : r)))} className="field mt-1" />
+                        <input id={`setup-price-${i}`} inputMode="decimal" value={row.price} aria-invalid={row.keep && !row.price.trim() ? true : undefined} aria-describedby={row.keep && !row.price.trim() ? `setup-price-${i}-need` : undefined} onChange={(e) => setRows(rows.map((r, j) => (j === i ? { ...r, price: e.target.value } : r)))} className="field mt-1" />
+                        {row.keep && !row.price.trim() ? <p id={`setup-price-${i}-need`} className="mt-1 text-xs font-semibold text-ink">You did not give a price. Type yours.</p> : null}
                       </div>
                     </div>
                     <label htmlFor={`setup-summary-${i}`} className="mt-3 block text-xs font-semibold text-ink-soft">What the buyer gets</label>
@@ -167,7 +175,7 @@ export function StoreSetupAi({ currency, left: startLeft, hasFaq, storeName }: {
                   </li>
                 ))}
               </ul>
-              <p className="mt-2 text-sm text-ink-soft">The prices are suggestions. You know your work and your audience; change them before you keep them.</p>
+              <p className="mt-2 text-sm text-ink-soft">A price is filled in only from a price you wrote, in your store&apos;s currency; check that each sits on the right product. Where the box is empty, type your price.</p>
             </fieldset>
           ) : null}
 
