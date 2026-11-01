@@ -5,6 +5,7 @@ import { AiAssist, AiOn } from "@/components/ai-assist";
 import { EMAIL_GOALS, type EmailGoal } from "@/lib/ai-rules";
 import { appendSequenceDraft, sequenceDraftSlots, DEFAULT_SEQUENCE_DRAFT, type DraftedStep, SEQUENCE_DRAFT_COUNTS } from "@/lib/sequence-draft";
 import { PRO_MONTHLY_EMAILS, TRIAL_MONTHLY_EMAILS } from "@/lib/plan";
+import { emailEquivalence } from "@/lib/email-equivalence";
 
 import { useEffect, useImperativeHandle, useRef, useState, useSyncExternalStore, useTransition } from "react";
 import { useRouter } from "next/navigation";
@@ -414,15 +415,18 @@ export function EmailStudio(props: {
           <p className="mt-1 text-sm text-ink-soft">
             {props.trial
               ? `emails sent. During the free trial a month holds ${TRIAL_MONTHLY_EMAILS.toLocaleString("en-US")}; the full ${PRO_MONTHLY_EMAILS.toLocaleString("en-US")} opens with your first payment.`
-              : "emails sent, one-off and sequences together. The count starts again on the first of the month."}
+              : "emails sent, one-off and sequences together. The count starts again on the day your plan's month renews."}
           </p>
+          {!props.trial && emailEquivalence(props.allowance) ? (
+            <p className="mt-2 text-sm text-ink-soft" data-email-equivalence>{emailEquivalence(props.allowance)}</p>
+          ) : null}
           {props.moveUp ? (
             <details className="mt-4">
               <summary className="cursor-pointer text-sm font-bold text-ink underline underline-offset-2">
                 {`Need more? ${n(props.moveUp.emails)} a month on Scale`}
               </summary>
               <p className="mt-3 text-sm text-ink-soft">
-                {`Scale is the plan you have with room for a bigger list: up to ${n(props.moveUp.emails)} emails a month, at ${props.moveUp.price}. `}
+                {`Scale is the plan you have with room for a bigger list: up to ${n(props.moveUp.emails)} emails a month, at ${props.moveUp.price}. ${emailEquivalence(props.moveUp.emails)} `}
                 {props.moveUp.trial
                   ? "Nothing is charged now. When the trial ends you pay the Scale price instead."
                   : "Today you are charged only the difference for the rest of the period you already paid for. You can go back to Pro from your studio whenever you like."}
