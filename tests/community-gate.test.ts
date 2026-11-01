@@ -23,6 +23,7 @@ part("The gate");
 is("kept for nobody: open", spaceGate(spaces[0], access), { open: true });
 is("kept for a product: needs it", spaceGate(spaces[1], access), { open: false, needs: ["course"] });
 is("kept only for a product off the community's list: open, nobody shut out", spaceGate(spaces[3], access), { open: true });
+is("kept for one product on the list and one off it: needs the one on it", spaceGate({ id: "mixed", only: ["retired", "course"] }, access), { open: false, needs: ["course"] });
 is("one of several is enough", [seesSpace(spaces[4], access, new Set(["coaching"])), seesSpace(spaces[2], access, new Set(["course"]))], [true, false]);
 
 part("View as a member");
@@ -34,7 +35,7 @@ is("the creator's order is kept", previewSpaces([spaces[4], spaces[0]], access, 
 
 part("One rule for both");
 const gate = readFileSync("lib/community-access.ts", "utf8");
-is("the real gate uses the same rule", gate.includes("const gate = spaceGate(space, config.access);") && gate.includes("if (gate.open) return true;"), true);
+is("the real gate uses the same rule (a structural check of the source; the behavior is the gate tested above)", gate.includes("const gate = spaceGate(space, config.access);") && gate.includes("if (gate.open) return true;"), true);
 const pure = readFileSync("lib/community-gate.ts", "utf8").replace(/^\s*\*.*$/gm, "");
 is("the preview reads no buyer and asks nothing of anyone", /import |fetch\(|email|redis|stripe/i.test(pure), false);
 done();
