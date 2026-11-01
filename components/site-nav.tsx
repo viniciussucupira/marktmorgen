@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Icon, type IconName } from "@/components/icons";
 import { Logo } from "@/components/logo";
 import { PLANS_ON_SALE, PREVIEW_LINE, PREVIEW_LINK } from "@/lib/opening";
+import { moveFocus } from "@/lib/menu-keys";
 
 type MenuItem = {
   label: string;
@@ -202,10 +203,47 @@ export function SiteNav() {
     setDrawerOpen(false);
   }, []);
 
+  // Arrow keys (lib/menu-keys.ts): a shortcut on top of Tab, never the only way.
+  const focusOnOpen = useRef<"first" | "last" | null>(null);
+  const onRowKey = (event: React.KeyboardEvent<HTMLElement>) => {
+    const items = [...event.currentTarget.querySelectorAll<HTMLElement>(":scope > a, :scope > button")];
+    const at = items.indexOf(event.target as HTMLElement);
+    if (at < 0) return;
+    const control = (event.target as HTMLElement).getAttribute("aria-controls");
+    if (control && (event.key === "ArrowDown" || event.key === "ArrowUp")) {
+      event.preventDefault();
+      focusOnOpen.current = event.key === "ArrowDown" ? "first" : "last";
+      setOpenMenu(control.slice("menu-".length));
+      return;
+    }
+    const next = moveFocus(event.key, at, items.length, "row");
+    if (next === null) return;
+    event.preventDefault();
+    items[next].focus();
+  };
+  const onListKey = (event: React.KeyboardEvent<HTMLElement>) => {
+    const links = [...event.currentTarget.querySelectorAll<HTMLElement>("a[href]")];
+    const at = links.indexOf(event.target as HTMLElement);
+    const next = moveFocus(event.key, at < 0 ? -1 : at, links.length, "list");
+    if (next === null || at < 0) return;
+    event.preventDefault();
+    links[next].focus();
+  };
+  // A menu opened from the keyboard puts the focus on its first or last link once it is drawn.
+  useEffect(() => {
+    if (!openMenu || !focusOnOpen.current) return;
+    const links = [...(document.getElementById(`menu-${openMenu}`)?.querySelectorAll<HTMLElement>("a[href]") ?? [])];
+    (focusOnOpen.current === "first" ? links[0] : links.at(-1))?.focus();
+    focusOnOpen.current = null;
+  }, [openMenu]);
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         if (drawerOpen) toggleRef.current?.focus();
+        // From inside an open menu, the focus goes back to the button that opened it, never to the top of the page.
+        const panel = document.activeElement?.closest<HTMLElement>('[id^="menu-"]');
+        if (panel) headerRef.current?.querySelector<HTMLButtonElement>(`button[aria-controls="${panel.id}"]`)?.focus();
         closeAll();
       }
     };
@@ -331,7 +369,7 @@ export function SiteNav() {
             <Logo />
           </Link>
 
-          <nav aria-label="Main" className="hidden items-center gap-0.5 lg:flex" onMouseEnter={keepOpen}>
+          <nav aria-label="Main" className="hidden items-center gap-0.5 lg:flex" onMouseEnter={keepOpen} onKeyDown={onRowKey}>
             {MENUS.map((menu) => (
               <button
                 key={menu.id}
@@ -399,6 +437,7 @@ export function SiteNav() {
             key={menu.id}
             id={`menu-${menu.id}`}
             onMouseEnter={keepOpen}
+            onKeyDown={onListKey}
             className="absolute inset-x-0 top-full hidden lg:block"
           >
             <div className="container-page">
