@@ -99,7 +99,7 @@ The screen-by-screen audit that 487 [IT4] asks for: what was checked, what was f
 
 Numbered as in 487 [IT4]:
 1. Checked when the field is left: first pass done for every web address field (see pattern 1), except the tracking link, held by an open PR. Other kinds of field not yet audited.
-2. The right keyboard on a phone: done (see pattern 2), except "Move to", held by an open PR.
+2. The right keyboard on a phone: done (see pattern 2); "Move to" in its own PR, now that its file is free.
 3. The common value filled in, never the dearest: audited (see pattern 3). The "Recommended" price option waits on the owner.
 4. A label always visible: first pass done (see pattern 4). Six fields still to be read in context, and the home page field.
 5. Empty screens with a sentence, a button and a ready example: not audited yet.
