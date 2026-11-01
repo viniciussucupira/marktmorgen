@@ -252,3 +252,23 @@ test("only exact timely final-gate acknowledgements expose the already verified 
   assert.equal((await readConfirmationOrigin(originId(), f.runtime))?.raw, before.raw);
   assert.equal(f.calls.filter(c => c.method === "POST").length, 1);
 });
+
+
+test("final URL acknowledgement timestamps must be plausible under the existing Redis clock tolerance", async () => {
+  for (const [offset, allowed] of [[86_400_000, false], [-86_400_000, false], [59_000, true], [-100, true]] as const) {
+    const f = await fixture();
+    const checkout = await createCheckout(f.store, f.product, "https://example.test", undefined, {}, f.runtime);
+    const id = originId(), found = await readConfirmationOrigin(id, f.runtime); assert.ok(found);
+    const pipeline = f.runtime.pipeline!;
+    f.runtime.pipeline = async commands => {
+      const original = await pipeline(commands);
+      if (commands[0]?.[0] !== "EVAL" || commands[0]?.[13] !== "url") return original;
+      const server = f.runtime.now!() + offset;
+      return [["url", id, checkout.id, found.row.bindingFingerprint, String(server), String(Math.min(found.row.expiresAt, server + 1000))]];
+    };
+    const opened = await openConfirmationOrigin(id, f.runtime);
+    assert.equal(Boolean(opened), allowed, `synthetic ACK offset ${offset}; impossible ACK is not produced by honest Lua`);
+    assert.equal(f.calls.filter(c => c.method === "POST").length, 1);
+    assert.equal((await readConfirmationOrigin(id, f.runtime))?.raw, found.raw);
+  }
+});
