@@ -37,6 +37,7 @@ import { formatMoney } from "@/lib/money";
 import { INVITE_BONUS_CENTS, INVITE_HOLD_DAYS, INVITE_SHARE_PERCENT } from "@/lib/creator-invite-rules";
 import { EXPECTATION, MAX_PAGES_READ, OPEN_COUNTRIES_WORDS, PITCHES_PER_DAY, REPITCH_DAYS } from "@/lib/outreach-rules";
 import { PLAN_AT, feeWords, planPriceWords, yearSavingWords } from "@/lib/fee-words";
+import { paypalAtCheckout, paypalConnectionWords } from "@/lib/public-explanations";
 import { IMPORTS_PER_SHARE_MONTH, MAX_SHARE_DAYS, PREVIEWS_PER_SHARE_MONTH, SHARE_LIMITS, bytesWords } from "@/lib/funnel-share-rules";
 import { MAX_SECTION_BLOCKS } from "@/lib/saved-blocks";
 import { ERASE_STUDIO_UNITS } from "@/lib/erasure-rules";
@@ -284,8 +285,8 @@ export const HELP_SECTIONS: HelpSection[] = [
       {
         q: "Can my buyers pay with PayPal?",
         a: [
-          "Do not count on it. Marktmorgen runs on Stripe and only Stripe, and your buyers are offered the ways to pay you switch on in your own Stripe account. Every sale here is a direct charge on that account, and Stripe's documentation, read on September 28, 2026, lists PayPal as not supported for direct charges. Stripe also offers PayPal only to accounts in the EU (except Hungary), the UK, Switzerland, Norway and Liechtenstein. So even if your Stripe dashboard shows PayPal as on, your buyers should not expect it at checkout here.",
-          "Stan lets creators take PayPal, Beacons offers it too, and on this one we are behind them. The other road would be a second, separate integration with PayPal, which means a second checkout, a second refund path and a second dispute queue to keep working. We would rather have one that never breaks than two that sometimes do.",
+          "Not through Stripe. Your buyers are offered the ways to pay you switch on in your own Stripe account. Every sale here is a direct charge on that account, and Stripe's documentation, read on September 28, 2026, lists PayPal as not supported for direct charges. Stripe also offers PayPal only to accounts in the EU (except Hungary), the UK, Switzerland, Norway and Liechtenstein. So even if your Stripe dashboard shows PayPal as on, your buyers should not expect it at checkout here.",
+          `${paypalConnectionWords()}${paypalAtCheckout() ? "" : " Stan lets creators take PayPal, Beacons offers it too, and until then we are behind them on this one."}`,
           "Two things follow from that, and you should know them before you sign up. You need a Stripe account in one of the 42 countries the studio offers \u2014 the United States, Canada, the United Kingdom, Australia, Japan, Singapore, Mexico and most of Europe among them, but not everywhere. And a buyer who has only a PayPal balance and no card, wallet or other way to pay cannot buy from you here.",
         ],
       },
@@ -611,7 +612,7 @@ export const HELP_SECTIONS: HelpSection[] = [
         q: "Can I ask buyers something before they pay?",
         a: [
           "Yes. Up to three questions on any paid product, shown on Stripe's page under the card: a short answer, a number, or a list to choose from, each required or optional. Or the buyer's phone number, in Stripe's own phone box with their country, which is always required. The answers are in your list of sales and in your Stripe dashboard, and for a call they are in your booking email too.",
-          "There is no phone-number or checkbox question, and nothing is asked for a free product, which never reaches Stripe.",
+          "There is no checkbox question, and nothing is asked for a free product, which never reaches Stripe.",
         ],
       },
       {

@@ -8,10 +8,13 @@ import {
   STAN_AFFILIATES_AHEAD,
   checkoutQuestionWords,
   paypalAtCheckout,
+  paypalConnectionWords,
 } from "@/lib/public-explanations";
 import { FIELD_TYPES, MAX_CHECKOUT_FIELDS, readFields } from "@/lib/checkout-fields";
 import { postBySlug } from "@/lib/blog";
 import { findPage } from "@/lib/site-pages";
+import { FEATURE_PAGES } from "@/lib/feature-pages";
+import * as help from "@/lib/help-content";
 
 /** Every string a public page carries, deep. */
 function words(value: unknown): string[] {
@@ -61,12 +64,15 @@ test("the blog and the comparisons explain PayPal and affiliates the same way", 
     assert.doesNotMatch(page, /Stripe does not support it for the direct charges/);
     assert.doesNotMatch(page, /our affiliates are paid by you/);
   }
-  // PayPal is off in the test deployment, so every page says why in the same words.
-  assert.equal(paypalAtCheckout(), false);
-  assert.ok(stanPost.includes(PAYPAL_WAITS));
-  for (const page of [compare, everything, beacons]) assert.ok(page.includes(PAYPAL_WAITS));
+  // Whichever way PayPal is set on this run, every page says the same thing about it.
+  const on = paypalAtCheckout();
+  const connection = paypalConnectionWords(on);
+  assert.ok(stanPost.includes(connection));
+  if (!on) {
+    for (const page of [stanPost, compare, everything, beacons]) assert.ok(page.includes(PAYPAL_WAITS));
+    assert.ok(PAYPAL_NOT_YET.endsWith(PAYPAL_WAITS));
+  }
   for (const page of [stanPost, compare]) assert.ok(page.includes(STAN_AFFILIATES_AHEAD));
-  assert.ok(PAYPAL_NOT_YET.endsWith(PAYPAL_WAITS));
   assert.ok(stanPost.includes(AFFILIATES_PAID));
   assert.ok(stanPost.includes(STAN_AFFILIATES_AHEAD));
   // The list of what we lack no longer names automatic affiliate payouts, which lib/paypal-payouts.ts does.
@@ -88,4 +94,15 @@ test("the checkout questions row says what the checkout really asks", () => {
   const everything = words(findPage("proof", "everything")).join("\n");
   assert.ok(everything.includes(row));
   assert.doesNotMatch(everything, /No phone-number or checkbox question/);
+});
+
+test("no public page or help answer still contradicts the checkout or PayPal explanation", () => {
+  const all = [words(help), words(FEATURE_PAGES), words(findPage("proof", "everything")), words(postBySlug("how-marktmorgen-compares-with-stan"))].flat().join("\n");
+  assert.doesNotMatch(all, /no phone-number or checkbox question/i);
+  assert.doesNotMatch(all, /runs on Stripe and only Stripe/);
+  assert.doesNotMatch(all, /The other road would be a second, separate integration with PayPal/);
+  assert.doesNotMatch(all, /^Stripe only\./m);
+  assert.ok(all.includes(paypalConnectionWords()));
+  // Both states read as whole sentences.
+  for (const on of [true, false]) assert.match(paypalConnectionWords(on), /^A separate PayPal connection[^.]*\b(on|yet)\b.*\.$/);
 });

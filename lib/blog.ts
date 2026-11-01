@@ -9,7 +9,7 @@ import {EVERGREEN_GUIDES,DIGITAL_FILE_GUIDE_EXTRA,DIGITAL_FILE_GUIDE_FAQ} from "
  * from so a reader can check it.
  */
 import { PLAN_AT, feeWords, gumroadSums } from "@/lib/fee-words";
-import { AFFILIATES_PAID, PAYPAL_WAITS, STAN_AFFILIATES_AHEAD, paypalAtCheckout } from "@/lib/public-explanations";
+import { AFFILIATES_PAID, PAYPAL_WAITS, STAN_AFFILIATES_AHEAD, paypalAtCheckout, paypalConnectionWords } from "@/lib/public-explanations";
 
 /** Whether a buyer can pay with PayPal here, read from the deployment so the posts say what is true on the day (lib/public-explanations.ts). */
 const PAYPAL = paypalAtCheckout();
@@ -855,7 +855,7 @@ const BASE_BLOG_POSTS: BlogPost[] = [
       },
       {
         type: "note",
-        text: "Corrected on November 1, 2026: an earlier version said PayPal was missing because Stripe does not support it, and that affiliates are not paid automatically. Both were wrong. PayPal is a separate connection waiting on PayPal's approval, and affiliates can be paid automatically on your payday, from your own PayPal.",
+        text: `Corrected on November 1, 2026: an earlier version gave only half the PayPal story and said affiliates are not paid automatically. Stripe does not offer its own PayPal for the direct charges every sale here is made with; that part was right. ${paypalConnectionWords(PAYPAL)} And affiliates can be paid automatically on your payday, from your own PayPal.`,
       },
       { type: "h2", text: "What Stan is" },
       {

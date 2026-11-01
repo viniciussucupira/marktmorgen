@@ -40,7 +40,18 @@ export const PAYPAL_WAITS = "it is built and waits on PayPal approving us as a p
 export const PAYPAL_NOT_YET = `No PayPal yet: ${PAYPAL_WAITS}`;
 
 /** How a creator pays affiliates here (lib/paypal-payouts.ts: one press, or by itself on payday). */
-export const AFFILIATES_PAID = "paid from your own PayPal, in one press or by itself on your payday";
+export const AFFILIATES_PAID = "paid from your own PayPal, in one press or automatically on your payday";
+
+/**
+ * Our own PayPal connection (lib/paypal-sales.ts), apart from Stripe: on, what
+ * it sells; off, why not yet. Stripe's PayPal is a different thing, not
+ * offered for the direct charges every sale here is made with.
+ */
+export function paypalConnectionWords(on: boolean = paypalAtCheckout()): string {
+  return on
+    ? "A separate PayPal connection is on: the buyer pays straight into your own PayPal account, for one-time products at one price."
+    : `A separate PayPal connection, where the buyer pays straight into your own PayPal account, is not on yet: ${PAYPAL_WAITS}.`;
+}
 
 /** What Stan has that we do not, on affiliates: theirs need no PayPal account of the creator's. */
 export const STAN_AFFILIATES_AHEAD = "affiliates paid with no PayPal account of your own";
