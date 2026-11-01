@@ -321,7 +321,7 @@ export async function enqueueShipmentMail(input: { statsId: string | null; sessi
   } catch { return { ok: false, reason: "unknown" }; }
 }
 
-export type ShipmentMailDispatch = (message: ShipmentMailMessage, beforePost: () => Promise<boolean>) => Promise<"accepted" | "waiting" | "not_accepted" | "refused" | "unknown">;
+export type ShipmentMailDispatch = (message: ShipmentMailMessage, beforePost: () => Promise<boolean>, context: { id: string }) => Promise<"accepted" | "waiting" | "not_accepted" | "refused" | "unknown">;
 export async function runShipmentMail(deadline: number, dispatch: ShipmentMailDispatch, runtime: ShipmentMailRuntime = {}, onlyId?: string): Promise<{ accepted: number; waiting: number; unknown: number }> {
   if (lifecycle(runtime) !== "active") return { accepted: 0, waiting: 0, unknown: 1 };
   const counts = { accepted: 0, waiting: 0, unknown: 0 };
@@ -369,7 +369,7 @@ export async function runShipmentMail(deadline: number, dispatch: ShipmentMailDi
     };
     let outcome: Awaited<ReturnType<ShipmentMailDispatch>> = "waiting";
     if (message) {
-      try { outcome = await dispatch(message, beforePost); } catch { outcome = "unknown"; }
+      try { outcome = await dispatch(message, beforePost, { id: row.id }); } catch { outcome = "unknown"; }
     }
     // A provider result without this call's confirmed barrier is never proof.
     if (!barrier) {

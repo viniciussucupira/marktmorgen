@@ -75,12 +75,12 @@ globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) =>
   }
   if (url.hostname === "api.resend.com") {
     const key = (init?.headers as Record<string, string>)["Idempotency-Key"] ?? null;
-    // Resend answers a key it has seen without sending again.
-    if (key && resendKeys.has(key)) return json({ id: "again" });
-    if (key) resendKeys.add(key);
     const body = JSON.parse(String(init?.body)) as { to: string[]; subject: string } | { to: string[]; subject: string }[];
+    // Resend answers a key it has seen without sending again.
+    if (key && resendKeys.has(key)) return json(Array.isArray(body) ? { data: body.map((_, i) => ({ id: `again_${i}` })) } : { id: "again" });
+    if (key) resendKeys.add(key);
     for (const m of Array.isArray(body) ? body : [body]) resend.push({ to: m.to[0], subject: m.subject, key });
-    return json({ id: "email_1" });
+    return json(Array.isArray(body) ? { data: body.map((_, i) => ({ id: `email_${i + 1}` })) } : { id: "email_1" });
   }
   if (url.hostname === `sts.${REGION}.amazonaws.com`) {
     const form = new URLSearchParams(String(init?.body));

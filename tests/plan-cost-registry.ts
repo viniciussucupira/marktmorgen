@@ -192,7 +192,23 @@ export function closingBuyersCost(tier: Tier, paid = true): number {
  * cleanup/failures/retention must precede first activation; lifecycle is not
  * financial evidence. Never restore never_activated after any use while
  * payloads or uncertain reserves remain. Future tails are unknown/rejected.
- * No PER_EMAIL/ORDER_COST coefficient or production funding is changed here.
+ * The new account-wide Resend budget is also NOT funded by this order
+ * coefficient or by a paid provider quota alone. Its permanent schema1
+ * ledger, schema2 claims, pending/unknown holds without TTL, exact35-day
+ * terminal receipts and partial-error reconciliation need their full own
+ * retention/copies/command/cleanup envelope. Measured EVAL+internal paths:
+ * 4 initialize,11 reserve,11 dispatch,14 accepted,10 receipt read,13 cancel.
+ * These are command observations, not an invoice or financial approval;
+ * CURRENT_RESEND_FALLBACK_REVIEW remains null, never an automatic bootstrap.
+ * The confirmation preintent/binding/accounting hooks are constructed and
+ * unconnected, not a funded durable source or authorization for a Stripe
+ * POST/URL. Their68-byte OCI/OC1 receipt horizon is ORIGINAL window end+400
+ * days (at most767 from capture), first apply23 commands; the200-byte MEMORY
+ * fixture is not universal storage coverage. The legacy45-day '1' marker's
+ * priced part excludes this new path. Other effects can lose TTL after a
+ * partial Lua failure; the whole tail is unknown, not bounded by the receipt.
+ * No PER_EMAIL/ORDER_COST coefficient, real review, quota protection, paid
+ * financial envelope or retention approval is changed/certified here.
  */
 export const ORDER_COST = 2 * PER_EMAIL + ORDER_COMPUTE + ORDER_LIBRARY + ORDER_RENEWAL_STOP;
 

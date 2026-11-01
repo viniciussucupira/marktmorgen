@@ -10,8 +10,8 @@
  * The real review is deliberately absent. A send caller must bind accountId
  * to the authenticated provider read, reserve, then obtain the one-time
  * dispatch receipt before POST. Neither a repeated reservation nor an
- * unknown Redis response authorizes POST. Do not translate sendEmail(false)
- * into confirmed_not_accepted: false can conceal uncertain acceptance.
+ * unknown Redis response authorizes POST. Do not translate a false send
+ * result into confirmed_not_accepted: false can conceal uncertain acceptance.
  */
 import { createHash, randomBytes } from "node:crypto";
 

@@ -8,18 +8,16 @@
  * There are two senders. Amazon SES is the cheaper by nine times (lib/ses.ts
  * has the prices and the date they were read), and is used whenever Amazon
  * says the account may write to the public. Resend is the one this site
- * started on, and stays underneath as the floor: every email Amazon does not
- * take — the account is still being looked at, is paused, has used its day,
- * is not answering — can go through Resend. An uncertain once-only claim
+ * started on. Fallback requires a reviewed account-wide paid budget for both
+ * sent and received emails; missing proof reports unavailability. Durable
+ * order work waits for SES above that fallback quota. An uncertain once-only claim
  * holds both senders and reports failure instead of risking a second send.
- * With Amazon's settings absent,
- * everything goes through Resend exactly as before.
  *
  * Nobody chooses between them by hand. Which one sends is decided here, for
  * each email, from what Amazon last said.
  */
-import { createHash } from "node:crypto";
-import { RESEND_TIMEOUT_MS, timed } from "@/lib/fetch-timeout";
+import { createHash, randomBytes } from "node:crypto";
+import { guardedResendPost, type ResendTransportRuntime } from "@/lib/resend-fallback-transport";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { SUPPORT_EMAIL } from "@/lib/creator-research";
 import { atSiteAddress, creatorDomain, domainOf } from "@/lib/mail-from";
@@ -68,7 +66,6 @@ async function metered(meter: EmailMeter, n: number): Promise<boolean> {
 const BASE = /^http:\/\/127\.0\.0\.1:\d+$/.test(process.env.RESEND_API_BASE ?? "")
   ? `${process.env.RESEND_API_BASE}`
   : "https://api.resend.com";
-const API = `${BASE}/emails`;
 
 /** Where the sender's API is, for the one other file that reads from it (lib/inbound-mail.ts). */
 export const RESEND_BASE = BASE;
@@ -307,7 +304,7 @@ async function viaAmazon(message: OneMessage, to: string): Promise<boolean | nul
   return false;
 }
 
-export async function sendEmail(message: OneMessage): Promise<boolean> {
+export async function sendEmail(message: OneMessage, runtime: ResendTransportRuntime = {}): Promise<boolean> {
   const to = oneAddress(message.to);
   if (!to) return false;
   if (!isSenderConfigured() || !(await metered(message.meter, 1))) return false;
@@ -316,7 +313,7 @@ export async function sendEmail(message: OneMessage): Promise<boolean> {
     if (amazon === true) return true;
     if (amazon === null) return false;
   }
-  return viaResend(message);
+  return viaResend(message, runtime);
 }
 
 /** Durable shipment work owns its lifetime claim in the outbox, not the
@@ -324,24 +321,39 @@ export async function sendEmail(message: OneMessage): Promise<boolean> {
  * one provider POST. Until fallback funding is verified this work waits for
  * SES; it never opens another route after an uncertain response.
  */
-export const sendQueuedShipmentMail: ShipmentMailDispatch = async (message, beforePost) => {
-  const to = oneAddress(message.to);
-  if (!to) return "refused";
-  const config = sesConfig();
-  if (!config || !(await sesReady())) return "waiting";
-  if (!(await beforePost())) return "unknown";
-  const result = await sesSend(config, {
-    from: fromLine(message.from), to, subject: headerText(message.subject),
-    text: message.text, replyTo: oneAddress(message.replyTo),
-  });
-  if (result.uncertain === true) return "unknown";
-  if (result.outcome === "sent") { await countSesSent(1); return "accepted"; }
-  if (result.outcome === "account") await sesDown(result.why);
-  return result.outcome === "refused" ? "refused" : "not_accepted";
-};
+export function queuedShipmentMailSender(runtime: ResendTransportRuntime = {}): ShipmentMailDispatch {
+  return async (message, beforePost, context) => {
+    const to = oneAddress(message.to);
+    if (!to) return "refused";
+    const config = sesConfig();
+    if (!config || !(await sesReady())) {
+      const result = await guardedResendPost({
+        base: BASE, path: "/emails", credential: keyFor(message.from) ?? "", usageCredential: getKey() ?? "",
+        body: JSON.stringify({ from: fromLine(message.from), to: [to], subject: headerText(message.subject), text: message.text,
+          ...(oneAddress(message.replyTo) ? { reply_to: oneAddress(message.replyTo) } : {}) }),
+        idempotencyKey: `shipment:${context.id}`, recipients: 1, beforePost,
+      }, runtime);
+      if (result.kind === "accepted_receipt") return await beforePost() === true ? "accepted" : "unknown";
+      if (result.kind === "blocked") return "waiting";
+      if (result.kind !== "response") return "unknown";
+      if (result.response.ok) { await countSent(1); return "accepted"; }
+      return result.response.status === 429 ? "not_accepted" : "refused";
+    }
+    if (!(await beforePost())) return "unknown";
+    const result = await sesSend(config, {
+      from: fromLine(message.from), to, subject: headerText(message.subject),
+      text: message.text, replyTo: oneAddress(message.replyTo),
+    });
+    if (result.uncertain === true) return "unknown";
+    if (result.outcome === "sent") { await countSesSent(1); return "accepted"; }
+    if (result.outcome === "account") await sesDown(result.why);
+    return result.outcome === "refused" ? "refused" : "not_accepted";
+  };
+}
+export const sendQueuedShipmentMail: ShipmentMailDispatch = queuedShipmentMailSender();
 
 /** One email through Resend: the first sender, and the floor under the other. */
-async function viaResend(message: OneMessage): Promise<boolean> {
+async function viaResend(message: OneMessage, runtime: ResendTransportRuntime = {}): Promise<boolean> {
   const key = keyFor(message.from);
   if (!key) return false;
   const to = oneAddress(message.to);
@@ -352,7 +364,9 @@ async function viaResend(message: OneMessage): Promise<boolean> {
   // Sent again from the site's own address if Resend will not take the
   // creators' domain: see lib/mail-from.ts.
   let from = message.from;
-  let under = message.idempotencyKey;
+  // Separate intentional service calls with identical text; retries within
+  // this invocation keep one stable provider key and budget identity.
+  let under = message.idempotencyKey?.trim() ? message.idempotencyKey : `nimbus-service:${randomBytes(16).toString("hex")}`;
   const body = () => JSON.stringify({
     from: fromLine(from),
     to: [to],
@@ -369,22 +383,14 @@ async function viaResend(message: OneMessage): Promise<boolean> {
   // waits a moment and tries again.
   for (let attempt = 0; attempt < 3; attempt += 1) {
     try {
-      // Given up after RESEND_TIMEOUT_MS (lib/fetch-timeout.ts): not sent,
-      // as far as the caller knows. A message that must go out once carries
-      // an idempotency key, so trying it again later cannot send it twice.
-      const response = await timed(RESEND_TIMEOUT_MS, (signal) =>
-        fetch(API, {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${auth}`,
-            "Content-Type": "application/json",
-            ...(under ? { "Idempotency-Key": under.slice(0, 256) } : {}),
-          },
-          body: body(),
-          cache: "no-store",
-          signal,
-        }),
-      );
+      const result = await guardedResendPost({
+        base: BASE, path: "/emails", credential: auth,
+        usageCredential: getKey() ?? "", body: body(),
+        ...(under ? { idempotencyKey: under } : {}), recipients: 1,
+      }, runtime);
+      if (result.kind === "accepted_receipt") return true;
+      if (result.kind !== "response") return false;
+      const response = result.response;
       if (response.ok) {
         await countSent(1);
         return true;
@@ -457,8 +463,9 @@ export async function sendBatch(
    * the choice is made here.
    */
   only?: "resend" | "amazon",
+  runtime: ResendTransportRuntime = {},
 ): Promise<"sent" | "retry" | "refused"> {
-  const result = await dispatchBatch(messages, batchKey, meter, only, false);
+  const result = await dispatchBatch(messages, batchKey, meter, only, false, runtime);
   return result === "waiting" ? "retry" : result;
 }
 
@@ -472,7 +479,7 @@ export async function sendListBatch(
 
 async function dispatchBatch(
   messages: BatchMessage[], batchKey: string, meter: EmailMeter,
-  only: "resend" | "amazon" | undefined, listOnly: boolean,
+  only: "resend" | "amazon" | undefined, listOnly: boolean, runtime: ResendTransportRuntime = {},
 ): Promise<"sent" | "waiting" | "retry" | "refused"> {
   if (!isSenderConfigured()) return listOnly ? "waiting" : "retry";
   if (messages.length === 0) return "sent";
@@ -577,38 +584,29 @@ async function dispatchBatch(
   const key = going.length ? keyFor(going[0].from) : getKey();
   if (!key) return "retry";
   const tagged = going.some((m) => cleanTags(m.tags).length > 0);
-  const post = (withTags: boolean, under: string, auth: string = key, fromSite = false) =>
-    // Given up after RESEND_TIMEOUT_MS: "retry", with the same key next time.
-    timed(RESEND_TIMEOUT_MS, (signal) => fetch(`${BASE}/emails/batch`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${auth}`,
-        "Content-Type": "application/json",
-        "Idempotency-Key": under.slice(0, 256),
-      },
-      body: JSON.stringify(
-        going
-          .map((m) => {
-            const replyTo = oneAddress(m.replyTo);
-            const headers = cleanHeaders(m.headers);
-            const tags = withTags ? cleanTags(m.tags) : [];
-            return {
-              from: fromLine(fromSite ? atSiteAddress(m.from, NIMBUS_FROM) : m.from),
-              to: [oneAddress(m.to) as string],
-              subject: headerText(m.subject),
-              text: m.text,
-              html: m.html,
-              ...(replyTo ? { reply_to: replyTo } : {}),
-              ...(headers ? { headers } : {}),
-              ...(tags.length ? { tags } : {}),
-            };
-          }),
-      ),
-      cache: "no-store",
-      signal,
-    }));
+  const post = async (withTags: boolean, under: string, auth: string = key, fromSite = false): Promise<Response | "accepted_receipt" | null> => {
+    const result = await guardedResendPost({
+      base: BASE, path: "/emails/batch", credential: auth, usageCredential: getKey() ?? "",
+      idempotencyKey: under, recipients: going.length,
+      body: JSON.stringify(going.map((m) => {
+        const replyTo = oneAddress(m.replyTo);
+        const headers = cleanHeaders(m.headers);
+        const tags = withTags ? cleanTags(m.tags) : [];
+        return {
+          from: fromLine(fromSite ? atSiteAddress(m.from, NIMBUS_FROM) : m.from),
+          to: [oneAddress(m.to) as string], subject: headerText(m.subject),
+          text: m.text, html: m.html,
+          ...(replyTo ? { reply_to: replyTo } : {}), ...(headers ? { headers } : {}),
+          ...(tags.length ? { tags } : {}),
+        };
+      })),
+    }, runtime);
+    return result.kind === "accepted_receipt" ? "accepted_receipt" : result.kind === "response" ? result.response : null;
+  };
   try {
     let response = await post(true, idempotencyKey);
+    if (response === "accepted_receipt") return "sent";
+    if (!response) return "retry";
     if (!response.ok && tagged && (response.status === 400 || response.status === 422)) {
       // The tags are for us, not for the reader: they say whose email it was
       // on the day one bounces (lib/mail-health.ts). If the sender will not
@@ -617,6 +615,8 @@ async function dispatchBatch(
       // because it is no longer the same request.
       console.error("batch refused with its tags; sending it without them", response.status);
       response = await post(false, `${idempotencyKey}:plain`);
+      if (response === "accepted_receipt") return "sent";
+      if (!response) return "retry";
     }
     const site = getKey();
     if (!response.ok && notThisDomain(response.status) && site && going.some((m) => isCreators(m.from))) {
@@ -625,6 +625,8 @@ async function dispatchBatch(
       // under a key of their own because it is no longer the same request.
       console.error("Resend refused the creators' domain for a batch; sending it from the site's own address", response.status);
       response = await post(true, `${idempotencyKey}:site`, site, true);
+      if (response === "accepted_receipt") return "sent";
+      if (!response) return "retry";
     }
     if (response.ok) {
       await countSent(going.length);

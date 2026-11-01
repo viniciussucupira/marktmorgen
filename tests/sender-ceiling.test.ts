@@ -31,7 +31,11 @@ globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) =>
   const url = new URL(String(input));
   if (url.hostname !== "api.resend.com") return new Response("{}", { status: 404 });
   if (senderDown) return new Response("{}", { status: 500 });
-  if (url.pathname === "/emails/batch") batches.push(JSON.parse(String(init?.body)) as Message[]);
+  if (url.pathname === "/emails/batch") {
+    const batch = JSON.parse(String(init?.body)) as Message[];
+    batches.push(batch);
+    return Response.json({ data: batch.map((_, i) => ({ id: `synthetic_${i}` })) });
+  }
   else single.push(JSON.parse(String(init?.body)) as Message);
   return new Response(JSON.stringify({ id: "email_1" }));
 }) as typeof fetch;
