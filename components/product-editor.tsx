@@ -805,7 +805,9 @@ function OptionsBlock({
           && Object.hasOwn(data, "error") && typeof (data as { error?: unknown }).error === "string"
           ? (data as { error: string }).error : null;
         setError(
-          reason === "too_many"
+          reason === "fast_money"
+            ? fastMoneyMessage((data as { passage?: unknown }).passage, "save")
+            : reason === "too_many"
             ? `A product carries up to ${MAX_OPTIONS} prices.`
             : reason === "label"
               ? "Give this price a name the buyer will read, like “5 weeks.”"
