@@ -10,7 +10,8 @@ import { addProduct, claimHandle, ensureStatsId, ensureStoreId, setProductShippi
 import { readProduct } from "@/lib/catalog";
 import { createCheckout } from "@/lib/store-checkout";
 import { bindOrderConfirmationPreintent } from "@/lib/orders";
-import { CONFIRMATION_ORIGIN_SCRIPT, bindConfirmationOrigin, confirmationOriginRowKey, openConfirmationOrigin, readConfirmationOrigin, reserveConfirmationOrigin, type ConfirmationOriginRuntime } from "@/lib/order-confirmation-outbox";
+import { CONFIRMATION_ORIGIN_SCRIPT, bindConfirmationOrigin, confirmationOriginRowKey, runOrderConfirmationMail, openConfirmationOrigin, readConfirmationOrigin, reserveConfirmationOrigin, type ConfirmationOriginRuntime } from "@/lib/order-confirmation-outbox";
+import { physicalPaidFixture } from "./order-confirmation-paid-fixture";
 import { shipmentMailId } from "@/lib/shipment-mail-outbox";
 import { store as redis } from "./redis-stub";
 import { shipmentOutboxFixture, shipmentPolicy } from "./shipment-mail-outbox-fixture";
@@ -270,5 +271,33 @@ test("final URL acknowledgement timestamps must be plausible under the existing 
     assert.equal(Boolean(opened), allowed, `synthetic ACK offset ${offset}; impossible ACK is not produced by honest Lua`);
     assert.equal(f.calls.filter(c => c.method === "POST").length, 1);
     assert.equal((await readConfirmationOrigin(id, f.runtime))?.raw, found.raw);
+  }
+});
+
+
+test("an unpaid winner remains viewable while the real worker prepares it, unless a fence wins", async () => {
+  for (const closed of [false, true]) {
+    const f = await physicalPaidFixture();
+    const checkout = await createCheckout(f.store, f.product, "https://example.test", undefined, {}, f.runtime);
+    const id = originId(); f.advance(61_000);
+    const provider = f.runtime.provider!;
+    let announce!: () => void, release!: () => void;
+    const entered = new Promise<void>(resolve => { announce = resolve; });
+    const held = new Promise<void>(resolve => { release = resolve; });
+    f.runtime.provider = async (...args) => {
+      if (args[0] === "GET" && args[2].includes("payment_intent")) { announce(); await held; }
+      return provider(...args);
+    };
+    const worker = runOrderConfirmationMail(f.runtime.now!() + 5000, async () => { throw Error("An unpaid source cannot dispatch email"); }, f.runtime, id);
+    try {
+      await Promise.race([entered, worker.then(() => { throw Error("Worker did not enter its exact paid-session read"); })]);
+      const preparing = await readConfirmationOrigin(id, f.runtime); assert.ok(preparing);
+      assert.equal(preparing.row.state, "preparing"); assert.equal(preparing.row.phase, "awaiting_payment");
+      if (closed) redis.run(["SET", `nl:order-confirmation:closed:${f.store.statsId}`, "closure before URL gate"]);
+      const opened = await openConfirmationOrigin(id, f.runtime);
+      assert.deepEqual(opened, closed ? null : checkout);
+      assert.equal((await readConfirmationOrigin(id, f.runtime))?.raw, preparing.raw, "URL view never steals worker owner or renews its lease");
+      assert.equal(f.calls.filter(c => c.method === "POST").length, 1);
+    } finally { release(); await worker; }
   }
 });
