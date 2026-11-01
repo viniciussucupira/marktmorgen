@@ -1,3 +1,4 @@
+import { EmailField } from "@/components/email-field";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
@@ -91,7 +92,7 @@ export default async function PodcastPage({ params, searchParams }: Params) {
                 <input type="hidden" name="product" value={product.id} />
                 <label className="block">
                   <span className="st-label">{said.w.yourEmail}</span>
-                  <input className="st-field mt-2" type="email" name="email" required maxLength={254} autoComplete="email" placeholder={said.w.emailPlaceholder} />
+                  <EmailField name="email" className="st-field mt-2" required autoComplete="email" placeholder={said.w.emailPlaceholder} language={store.language} />
                 </label>
                 <button type="submit" className="btn st-btn btn-block">{w.emailMyFeed}</button>
               </form>

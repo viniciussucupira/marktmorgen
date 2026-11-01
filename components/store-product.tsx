@@ -1,3 +1,4 @@
+import { EmailField } from "@/components/email-field";
 import { servedImageUrl, servedSrcSet } from "@/lib/picture-served";
 import { packageSaving } from "@/lib/call-package-rules";
 import { saleClock, saleOff, salePrice } from "@/lib/store-sale";
@@ -302,7 +303,7 @@ export function GiftBox({ store, product, problem = "", consentAgain = false }: 
         <GivenOptionPicker store={store} product={product} />
         <label className="block">
           <span className="st-label">{w.theirEmail}</span>
-          <input className="st-field mt-2" type="email" name="gift_to" required maxLength={254} autoComplete="off" placeholder={w.friendPlaceholder} />
+          <EmailField name="gift_to" className="st-field mt-2" required autoComplete="off" placeholder={w.friendPlaceholder} language={store.language} />
         </label>
         <label className="block">
           <span className="st-label">{w.yourNameShown}</span>
@@ -374,7 +375,7 @@ export function RemindBox({ store, product, asked = "", when = "hour" }: { store
           </div>
           <label className="block">
             <span className="st-label">{w.yourEmail}</span>
-            <input className="st-field mt-2" type="email" name="email" required maxLength={254} autoComplete="email" placeholder={w.emailPlaceholder} />
+            <EmailField name="email" className="st-field mt-2" required autoComplete="email" placeholder={w.emailPlaceholder} language={store.language} />
           </label>
           <label className="block">
             <span className="st-label">{m.askWhen}</span>
@@ -459,16 +460,7 @@ export function WaitlistForm({ store, product, writes = false }: { store: Store;
       <label htmlFor={`w-${product.id}`} className="st-label">
         {w.yourEmail}
       </label>
-      <input
-        id={`w-${product.id}`}
-        type="email"
-        name="email"
-        required
-        maxLength={254}
-        autoComplete="email"
-        placeholder={w.emailPlaceholder}
-        className="st-field"
-      />
+      <EmailField id={`w-${product.id}`} name="email" className="st-field" required autoComplete="email" placeholder={w.emailPlaceholder} language={store.language} />
       <label htmlFor={`wc-${product.id}`} className="st-muted flex cursor-pointer items-start gap-3 text-sm">
         <input id={`wc-${product.id}`} type="checkbox" name="consent" value="yes" data-joins="" className="mt-0.5 h-4 w-4 shrink-0" />
         <span>{w.alsoOtherEmails(store.name)}</span>
@@ -635,16 +627,7 @@ export function BuyBox({
         <label htmlFor={`e-${place}${product.id}`} className="st-label">
           {w.yourEmail}
         </label>
-        <input
-          id={`e-${place}${product.id}`}
-          type="email"
-          name="email"
-          required
-          maxLength={254}
-          autoComplete="email"
-          placeholder={w.emailPlaceholder}
-          className="st-field"
-        />
+        <EmailField id={`e-${place}${product.id}`} name="email" className="st-field" required autoComplete="email" placeholder={w.emailPlaceholder} language={store.language} />
         <label htmlFor={`c-${place}${product.id}`} className="st-muted flex cursor-pointer items-start gap-3 text-sm">
           <input id={`c-${place}${product.id}`} type="checkbox" name="consent" value="yes" data-joins="" className="mt-0.5 h-4 w-4 shrink-0" />
           <span>{w.alsoEmails(store.name)}</span>
