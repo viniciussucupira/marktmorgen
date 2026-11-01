@@ -10,13 +10,16 @@
  *   - a reason about stars, criticism or how negative a review is;
  *   - a rule that treats a low-rated review differently from a high-rated one;
  *   - the reason lost when the review is read again, or kept after it is shown again;
- *   - the stars gone from a page whose reviews are all hidden;
+ *   - the stars or the sales page's rating fact gone when every review is hidden;
+ *   - the reason lost when the buyer edits, or a review hidden before reasons
+ *     were kept left with no way to name one;
  *   - the studio offering a hide without the reasons, or the API taking one.
  */
 import { readFileSync } from "node:fs";
 import { HIDE_REASONS, isHideReason, showsRating } from "@/lib/review-summary";
 import { parseReview, saveReview, setHidden, summaryOf } from "@/lib/reviews";
 import { addProduct, claimHandle, ensureStatsId } from "@/lib/store";
+import { pageFacts } from "@/lib/page-facts";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
 import { ROOM } from "./data-room";
@@ -56,6 +59,18 @@ async function main(): Promise<void> {
   await setHidden(statsId, product, high, false);
   is("shown again: no reason kept", [(await raw(high))?.hidden, (await raw(high))?.hiddenReason], [false, null]);
   is("a stored reason that is not on the list is read as none", parseReview(JSON.stringify({ ...(await raw(low)), hiddenReason: "low" }))?.hiddenReason, null);
+
+  part("A buyer's own edit, a review hidden before reasons were kept, and the page's rating fact");
+  const edited = await saveReview(statsId, { productId: product, email: "h1@example.com", reference: "cs_test_h1", pi: "pi_h1", rating: 2, text: "Changed my words, with enough of them to show.", name: "Reader 1" }, ROOM, Date.now());
+  is("the buyer changes their review: it stays hidden, for the same rule", [edited.state, (await raw(low))?.hidden, (await raw(low))?.hiddenReason], ["updated", true, "abusive"]);
+  const legacy = { ...(await raw(high))!, hidden: true } as Record<string, unknown>;
+  delete legacy.hiddenReason;
+  await redis.pipeline([["HSET", `nl:rev:${statsId}:${product}`, high, JSON.stringify(legacy)]]);
+  is("hidden before reasons were kept: read as hidden, with no reason", [(await raw(high))?.hidden, (await raw(high))?.hiddenReason], [true, null]);
+  is("the creator can name the rule without showing it first", [typeof (await setHidden(statsId, product, high, true, "private")), (await raw(high))?.hiddenReason, (await raw(high))?.hidden], ["object", "private", true]);
+  const facts = pageFacts({ language: "en", locale: "en-US", product: {}, bundleItems: null, sold: null, reviews: { count: 2, stars: 3, visible: 0 } });
+  is("every review hidden: the sales page's rating fact stays", facts.rating?.value, "1.5");
+  is("no review that counts: no rating fact", pageFacts({ language: "en", locale: "en-US", product: {}, bundleItems: null, sold: null, reviews: { count: 0, stars: 0, visible: 0 } }).rating, undefined);
 
   part("No reviews, or only refunded ones: no stars");
   is("nothing counted, nothing shown", showsRating({ count: 0, stars: 0, visible: 0, hidden: 0, refunded: 0, dist: [0, 0, 0, 0, 0] }), false);

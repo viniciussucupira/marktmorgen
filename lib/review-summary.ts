@@ -27,7 +27,7 @@ export const HIDE_REASONS = [
   { id: "private", label: "Shares private information", hint: "It shows someone's private details, such as a home address, a phone number or an email address." },
   { id: "abusive", label: "Abusive or hateful", hint: "It harasses or threatens someone, or is obscene, sexually explicit or hateful about a group of people." },
   { id: "unrelated", label: "Not about this product", hint: "It is about something else entirely, not this product or buying it." },
-  { id: "false", label: "Clearly false", hint: "It states something about the product that is plainly untrue, such as a feature it never claimed." },
+  { id: "false", label: "Clearly false", hint: "It states a fact about the product that is plainly untrue, such as saying it has, or lacks, something it plainly does or does not have." },
   { id: "unlawful", label: "Breaks the law", hint: "It breaks the law or someone else's rights, such as copied work or a link to something illegal." },
 ] as const;
 
