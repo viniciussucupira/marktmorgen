@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { initBotId } from "botid/client/core";
 import { Icon } from "@/components/icons";
 import { EmailSuggestion } from "@/components/email-suggestion";
-import { holdForSuggestion } from "@/lib/email-typo";
+import { holdForSuggestion, suggestEmail } from "@/lib/email-typo";
 
 type State =
   | { kind: "idle" }
@@ -73,6 +73,9 @@ export function SignInForm({ handle = "" }: { handle?: string } = {}) {
   }, [wait]);
 
   const trimmed = email.trim();
+  // The suggestion's line describes the field only while it says something (lib/email-typo.ts).
+  const showSuggestion = touched && state.kind !== "sending";
+  const suggesting = showSuggestion && suggestEmail(email) !== null;
   const shapeProblem =
     touched && trimmed.length > 0 && !LOOKS_LIKE_EMAIL.test(trimmed)
       ? "Check the address: it needs an @ and a domain, like you@example.com."
@@ -171,7 +174,7 @@ export function SignInForm({ handle = "" }: { handle?: string } = {}) {
           onBlur={() => setTouched(true)}
           placeholder="you@example.com"
           aria-invalid={state.kind === "error" || shapeProblem ? true : undefined}
-          aria-describedby={`${state.kind === "error" ? "signin-error " : shapeProblem ? "signin-hint " : ""}signin-suggestion`}
+          aria-describedby={[state.kind === "error" ? "signin-error" : shapeProblem ? "signin-hint" : "", suggesting ? "signin-suggestion" : ""].filter(Boolean).join(" ") || undefined}
           className="field mt-2"
         />
         {shapeProblem && state.kind !== "error" ? (
@@ -184,7 +187,7 @@ export function SignInForm({ handle = "" }: { handle?: string } = {}) {
           id="signin-suggestion"
           inputId="signin-email"
           value={email}
-          show={touched && state.kind !== "sending"}
+          show={showSuggestion}
           onUse={(address) => {
             setEmail(address);
             if (state.kind === "error") setState({ kind: "idle" });
