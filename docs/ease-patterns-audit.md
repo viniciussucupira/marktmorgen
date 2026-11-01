@@ -79,10 +79,26 @@ The screen-by-screen audit that 487 [IT4] asks for: what was checked, what was f
 **Still to do.**
 - Saving by itself with "Saving…" and "Saved" shown. That writes to the server on its own, so it needs its own request ceiling per plan first.
 
+## Pattern 1: checked when the person leaves the field (1 November 2026, first pass)
+
+**Method.** Every `onBlur` in `components/` was read, and every `type="url"` field was listed.
+
+**Found.**
+- **Already checked on leaving:** email fields (`components/email-field.tsx`, the "Did you mean …?" line, 17 uses) and the sign-in field (`components/signin-form.tsx`). A custom field (`components/person-fields.tsx`) saves when it is left. A page's address (`components/site-pages-editor.tsx`) is tidied when it is left.
+- **Web addresses:** 13 files have `type="url"` fields. All of them are checked only when the form is sent, so a missing `https://` shows up only after pressing Save.
+
+**Fixed.**
+- `components/url-field.tsx` checks a web address when the person leaves the field, never while they are typing, using the server's own reading (`readLink` in `lib/product-link.ts`). If the address only lacks `https://`, or has `http://`, it offers the corrected address in one press. Anything else gets the server's own words. It is also said when the form is sent. While the person types, a message only goes away, once the address is right; a new one waits for the next leave, so nothing is announced at every key. After the one-press fix, the focus goes back to the field. An address too long is said, never cut. The message is tied to the field for screen readers.
+- The lesson link in the course editor uses it, with its label now tied to the field by id, so does the link a product sends its buyer to, and so does a store link, each with its help tied to it. All three routes now refuse a link that is too long instead of cutting it.
+- The field takes the reading of its own server. A call's two meeting links and a community event's link use `cleanRoom` (`lib/call-setup.ts`). That reading cuts a link over 500 characters, and it also reads the links already stored, so it is left as it is; the field says a link is too long before the cut happens, measured as it would be stored. Found on the way, not changed: a link of 500 characters or fewer can be stored longer once its letters are written out (an é takes 6), and is then cut when it is read back. The field now warns about it before the save.
+
+**Still to do.**
+- The same field in the other 8 files: host calendar, webhook editor, mark shipped, chat summary, report form, page editor, calendar editor and review studio. Each is read first: their routes do not use the product-link reading, so each needs the reading its own server applies. The webhook editor and both calendar editors are read by `checkUrl` in `lib/safe-fetch.ts`, which also imports the server's DNS and network modules. Those fields can be checked in the browser only after the pure part of `checkUrl` is moved into a browser-safe module, and that module guards every request the server sends out, so it gets its own unit and review. The tracking link (mark shipped) waits: its files are held by an open PR. The chat summary, report form, page editor and review studio are read next, one by one.
+
 ## Not audited yet
 
 These patterns of 487 [IT4] have not been audited:
-1. Validation when the person leaves the field.
+1. Validation when the person leaves the field: first pass done (see pattern 1).
 2. The most common value filled in: the "Recommended" price option waits on the owner (see pattern 3).
 3. Always-visible labels: the six fields not yet read in context, and the home page field (see pattern 4).
 4. Empty screens with an action and a ready example.

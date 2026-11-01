@@ -1498,6 +1498,7 @@
     "components/translate-page.tsx",
     "components/trust-checks.tsx",
     "components/two-step-manager.tsx",
+    "components/url-field.tsx",
     "components/usage-meter.tsx",
     "components/video-embed.tsx",
     "components/waitlist-panel.tsx",

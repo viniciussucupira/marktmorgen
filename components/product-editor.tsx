@@ -8,6 +8,7 @@ import { hasContent, preorderProblem } from "@/lib/preorder-rules";
 import type { WaitlistView } from "@/lib/waitlist";
 import { useRef, useState, useSyncExternalStore } from "react";
 import { useLeaveGuard } from "@/components/leave-guard";
+import { UrlField } from "@/components/url-field";
 import { useRouter } from "next/navigation";
 import { TeamEventEditor } from "@/components/team-event-editor";
 import { CallEditor, type MeetAccount } from "@/components/call-editor";
@@ -1387,16 +1388,15 @@ function FileBlock({
           >
             Where the buyer should be sent
           </label>
-          <input
+          <UrlField
             id={`link-${target.id}`}
-            type="url"
             value={url}
             autoFocus
-            onChange={(event) => setUrl(event.target.value)}
-            placeholder="https://"
+            onChange={setUrl}
+            describedBy={`link-${target.id}-help`}
             className="field mt-1"
           />
-          <p className="mt-1 text-sm text-ink-soft">
+          <p id={`link-${target.id}-help`} className="mt-1 text-sm text-ink-soft">
             A Google Drive folder, a private video page, a Notion page — anything
             with an https address. Check that anyone with the link can open it.
             {membership
