@@ -28,6 +28,7 @@ import { DATA_ROOM_BYTES, dataWords } from "@/lib/store-data-rules";
 import { EXPECTATION, OPEN_COUNTRIES_WORDS, PITCHES_PER_DAY, REPITCH_DAYS } from "@/lib/outreach-rules";
 import type { TopicPage } from "@/lib/site-pages";
 import { PLAN_AT, feeWords } from "@/lib/fee-words";
+import { paypalAtCheckout, paypalConnectionWords } from "@/lib/public-explanations";
 import { TEAM_LIMITS, teamLimitWords } from "@/lib/team-scheduling-rules";
 import { STORE_ALLOWANCES } from "@/lib/store-allowance-rules";
 import { COMMUNITY_PICTURES } from "@/lib/community-picture-rules";
@@ -628,7 +629,7 @@ const BASE_FEATURE_PAGES: TopicPage[] = [
         kind: "limits",
         title: "The honest limits",
         items: [
-          "Stripe only. Buyers meet the ways to pay your Stripe account has on, and PayPal is not one to count on: Stripe offers it only to accounts in the EU (except Hungary), the UK, Switzerland, Norway and Liechtenstein, and its documentation lists it as not supported for direct charges, which is how every sale here is charged. Stan lets creators connect a PayPal Business account.",
+          `Card payments run on Stripe. Buyers meet the ways to pay your Stripe account has on, and Stripe's own PayPal is not one to count on: Stripe offers it only to accounts in the EU (except Hungary), the UK, Switzerland, Norway and Liechtenstein, and its documentation lists it as not supported for direct charges, which is how every sale here is charged. ${paypalConnectionWords()}${paypalAtCheckout() ? "" : " Stan lets creators connect a PayPal Business account."}`,
           "You need a Stripe account in one of the 42 countries the studio offers — the United States, Canada, the United Kingdom, Australia, Japan, Singapore, Mexico and most of Europe among them, but not everywhere.",
           "Because we never touch your money, we cannot advance it, split it with an affiliate automatically, or refund a buyer for you.",
         ],
@@ -1982,7 +1983,7 @@ const BASE_FEATURE_PAGES: TopicPage[] = [
         intro: "Said here so nobody signs up expecting it.",
         items: [
           "One language per store. A page does not change language with each visitor's browser, and what you write yourself, such as product names, descriptions and lessons, is shown as you wrote it, not translated.",
-          "Do not count on PayPal here. Stripe offers PayPal only to accounts in the EU (except Hungary), the UK, Switzerland, Norway and Liechtenstein, and its documentation, read on September 28, 2026, lists it as not supported for direct charges, which is how every sale here is charged. Stan lets creators connect a PayPal Business account, so on PayPal Stan is ahead.",
+          `Do not count on Stripe's own PayPal here. Stripe offers PayPal only to accounts in the EU (except Hungary), the UK, Switzerland, Norway and Liechtenstein, and its documentation, read on September 28, 2026, lists it as not supported for direct charges, which is how every sale here is charged. ${paypalConnectionWords()}${paypalAtCheckout() ? "" : " Stan lets creators connect a PayPal Business account, so on PayPal Stan is ahead for now."}`,
           "Slow bank debits and vouchers — ACH, SEPA and Bacs Direct Debit, bank transfers, Boleto, OXXO, Konbini, Multibanco — and stablecoins are left out on purpose, because they are not confirmed while the buyer waits.",
           "One-click offers after paying are shown only to buyers who paid by card, Apple Pay or Google Pay.",
           "One currency per store at a time. Changing it keeps every price's number — 49 dollars becomes 49 euros — so check your prices; it waits while a membership or payment plan is still running, and moving between the yen and a currency with cents is refused while the store has prices.",
