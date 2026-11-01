@@ -57,6 +57,22 @@ The screen-by-screen audit that 487 [IT4] asks for: what was checked, what was f
 - **The pricing page:** it opens on monthly (`components/pricing-cycle-controls.tsx`).
 - **A product with several prices:** the option the creator marks "Recommended" is chosen first (`startingOption` in `lib/product-option.ts`), and otherwise the first option. When the creator marks the dearest one, the dearest is chosen first. It is labeled "Recommended" in plain sight, but the item's own words say never the dearest. Whether a creator's explicit recommendation is an exception is the owner's to decide. It is recorded under "Depende do dono" in the queue, and nothing was changed.
 
+## Pattern 6: drafts saved by themselves, nothing lost (1 November 2026, first pass)
+
+**Method.** Each studio editor was searched for saving on its own (a timer or a save on leaving a field) and for the leave guard (`components/leave-guard.ts`), which asks before a page with unsaved changes is left.
+
+**Found.**
+- **Saves on its own:** none of the editors read.
+- **Asks before leaving with unsaved changes:** the page editor, the email studio, the funnel editors and the forms editor.
+- **Neither:** the product editor, the blog editor, the course editor, the email designer, the quiz editor and the FAQ editor. Unsaved text in them is lost to one click away.
+
+**Fixed.**
+- The blog editor asks before leaving with an unsaved post. A post can be long, and nothing else kept it. Once saved, its changes are guarded again.
+
+**Still to do.**
+- The same guard for the product, course, email designer, quiz and FAQ editors. Each one is read first, since some save field by field.
+- Saving by itself with "Saving…" and "Saved" shown. That writes to the server on its own, so it needs its own request ceiling per plan first.
+
 ## Not audited yet
 
 These patterns of 487 [IT4] have not been audited:
@@ -64,6 +80,6 @@ These patterns of 487 [IT4] have not been audited:
 2. The most common value filled in: the "Recommended" price option waits on the owner (see pattern 3).
 3. Always-visible labels: the six fields not yet read in context, and the home page field (see pattern 4).
 4. Empty screens with an action and a ready example.
-5. Drafts saved by themselves.
+5. Drafts saved by themselves: first pass done (see pattern 6); saving on its own not yet built.
 6. A live phone preview beside each editor.
 7. A "Check answers" summary before publishing or sending.

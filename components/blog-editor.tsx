@@ -8,6 +8,7 @@ import { Icon } from "@/components/icons";
 import { toast } from "@/components/toast";
 import { STUDIO_MESSAGES } from "@/lib/studio-messages";
 import { NewTab } from "@/components/new-tab";
+import { useLeaveGuard } from "@/components/leave-guard";
 
 const MAX_TITLE = 120;
 const MAX_BODY = 20_000;
@@ -38,6 +39,16 @@ export function BlogEditor({ post, products, back }: { post: EditedPost; product
   const [product, setProduct] = useState(post.product ?? "");
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // A post written and not saved is never lost to a click away (487 [IT4], item 6): leaving asks first, as the email studio does.
+  const [done, setDone] = useState(false);
+  const dirty = title !== post.title || body !== post.body || product !== (post.product ?? "");
+  useLeaveGuard(dirty && !done);
+  // The saved post comes back as new props (router.refresh): from then on, changes to it are guarded again.
+  const [seen, setSeen] = useState(post);
+  if (seen !== post) {
+    setSeen(post);
+    setDone(false);
+  }
 
   async function send(payload: Record<string, unknown>, kind: string) {
     setBusy(kind);
@@ -61,6 +72,7 @@ export function BlogEditor({ post, products, back }: { post: EditedPost; product
   async function save(draft: boolean) {
     const data = await send({ action: "save", id: post.id, title, body, product: product || null, draft }, draft ? "draft" : "publish");
     if (!data) return;
+    setDone(true);
     toast(draft ? "Saved as a draft." : "Published on your blog.");
     router.push(`${back}${back.includes("?") ? "&" : "?"}edit=${data.post?.id ?? ""}`);
     router.refresh();
@@ -70,6 +82,7 @@ export function BlogEditor({ post, products, back }: { post: EditedPost; product
     if (!post.id) return;
     const data = await send({ action: "delete", id: post.id }, "delete");
     if (!data) return;
+    setDone(true);
     toast("Post deleted.");
     router.push(back);
     router.refresh();
