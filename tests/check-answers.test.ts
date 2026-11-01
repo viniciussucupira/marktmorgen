@@ -28,11 +28,21 @@ is("the send button is described by one short sentence, not the whole list", stu
 is("on a phone each answer takes its own line under its term", (review.match(/basis-full break-words sm:basis-0 sm:flex-1/g) ?? []).length, 3);
 is("the audience is still checked again when sending starts, and the button still names how many", studio.includes("Eligibility is checked again when sending starts.") && studio.includes("`Yes, send it to ${n(reach)}`"), true);
 
+const update = readFileSync("components/product-update-box.tsx", "utf8");
 const waitlist = readFileSync("components/waitlist-panel.tsx", "utf8");
 const launchReview = waitlist.slice(waitlist.indexOf('id={`waitlist-${productId}-review`}'), waitlist.indexOf("Put it on sale and tell the waitlist\"\n"));
 is("before the waitlist's sale and email, a summary list: on sale, price, emails, note, postal address", launchReview.includes("<dl") && ["Goes on sale", "Price", "Emails", "Note", "Postal address"].every((term) => launchReview.includes(`>${term}</dt>`)), true);
 is("the price shown is the product's own, as the email carries it", waitlist.includes("price: string;") && readFileSync("components/product-editor.tsx", "utf8").includes("price={formatMoney(product.priceCents, currency)}"), true);
 is("the note and the address each have a Change that leads to their field", launchReview.includes("changeAnswer(`waitlist-${productId}-note`)") && launchReview.includes("changeAnswer(`waitlist-${productId}-address`)") && waitlist.includes("id={`waitlist-${productId}-note`}") && waitlist.includes("id={`waitlist-${productId}-address`}"), true);
 is("the price says where it is changed, since it is the product's", launchReview.includes("Change it in the product's details above."), true);
-is("the second press still names how many emails", waitlist.includes("`Press again: on sale now, ${view.confirmed.toLocaleString(\"en-US\")} emails`"), true);
+is("the second press still names how many emails, in the singular for one", waitlist.includes('`Press again: on sale now, ${view.confirmed.toLocaleString("en-US")} ${view.confirmed === 1 ? "email" : "emails"}`'), true);
+is("changing the note or the address closes the review, so nothing is sent unread", waitlist.includes("setNote(e.target.value); setConfirming(false);") && waitlist.includes("setAddress(e.target.value); setConfirming(false);"), true);
+is("without a postal address the second press is not offered, and the review says why", waitlist.includes("(confirming && view.confirmed > 0 && !address.trim())") && waitlist.includes("None yet. Add one before it can go out."), true);
+is("both reviews are a heading one level under their section", waitlist.includes("<h3 id={`waitlist-${productId}-review-title`}") && update.includes("<h3 id={`${id}-review-title`}"), true);
+
+is("emailing buyers about an update asks first, with a summary list: product, who gets it, note", update.includes("<dl") && ["Product", "Who gets it", "Note"].every((term) => update.includes(`>${term}</dt>`)), true);
+is("how many is not guessed: it is counted from the store's Stripe account when it is sent", update.includes("Everyone who bought it. They are counted from your Stripe account when it is sent."), true);
+is("the note has a Change that closes the review and goes back to it", update.includes("Change<span className=\"sr-only\"> note</span>") && update.includes("setReviewing(false)"), true);
+is("nothing is sent from the first press, which says so: only from the review's own button", update.includes("if (!reviewing) {") && update.includes("Yes, email every buyer") && update.includes('"Check before sending"'), true);
+is("changing the note closes the review, so nothing is sent from an old one", update.includes("setNote(event.target.value); setReviewing(false);"), true);
 done();

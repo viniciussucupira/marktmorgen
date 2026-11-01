@@ -221,7 +221,7 @@ export function WaitlistPanel({
           ) : null}
           <p className="text-sm text-ink-soft">
             {view.confirmed
-              ? `It goes on sale at once, and each of the ${view.confirmed.toLocaleString("en-US")} confirmed addresses gets one email with its link and price. Then the waitlist's addresses are deleted; whoever also asked to hear from you is on your list already.`
+              ? `It goes on sale at once, and ${view.confirmed === 1 ? "the confirmed address gets" : `each of the ${view.confirmed.toLocaleString("en-US")} confirmed addresses gets`} one email with its link and price. Then the waitlist's addresses are deleted; whoever also asked to hear from you is on your list already.`
               : "Nobody has confirmed yet, so no email goes out: it just goes on sale."}
           </p>
           {view.confirmed ? (
@@ -234,7 +234,7 @@ export function WaitlistPanel({
                   rows={3}
                   maxLength={MAX_LAUNCH_NOTE}
                   value={note}
-                  onChange={(e) => setNote(e.target.value)}
+                  onChange={(e) => { setNote(e.target.value); setConfirming(false); }}
                   placeholder="Thank you for waiting. Reply to this email if you have any questions."
                 />
               </label>
@@ -245,7 +245,7 @@ export function WaitlistPanel({
                   className="field mt-1"
                   maxLength={MAX_LAUNCH_ADDRESS}
                   value={address}
-                  onChange={(e) => setAddress(e.target.value)}
+                  onChange={(e) => { setAddress(e.target.value); setConfirming(false); }}
                   placeholder="123 Main St, Austin, TX 78701"
                   autoComplete="street-address"
                 />
@@ -255,7 +255,7 @@ export function WaitlistPanel({
           ) : null}
           {confirming && view.confirmed ? (
             <div id={`waitlist-${productId}-review`} className="rounded-[var(--r-md)] bg-sand p-4 text-sm text-ink">
-              <h4 id={`waitlist-${productId}-review-title`} tabIndex={-1} className="font-semibold">Check before it goes out</h4>
+              <h3 id={`waitlist-${productId}-review-title`} tabIndex={-1} className="font-semibold">Check before it goes out</h3>
               {/* A summary list, one answer a row (GOV.UK "Check answers"). */}
               <dl className="mt-2 divide-y divide-line">
                 <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 py-2">
@@ -268,7 +268,7 @@ export function WaitlistPanel({
                 </div>
                 <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 py-2">
                   <dt className="basis-full font-semibold sm:basis-28 sm:shrink-0">Emails</dt>
-                  <dd className="min-w-0 basis-full break-words sm:basis-0 sm:flex-1">{`One to each of the ${view.confirmed.toLocaleString("en-US")} confirmed addresses, with its link and price.`}</dd>
+                  <dd className="min-w-0 basis-full break-words sm:basis-0 sm:flex-1">{view.confirmed === 1 ? "One to the confirmed address, with its link and price." : `One to each of the ${view.confirmed.toLocaleString("en-US")} confirmed addresses, with its link and price.`}</dd>
                 </div>
                 <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 py-2">
                   <dt className="basis-full font-semibold sm:basis-28 sm:shrink-0">Note</dt>
@@ -277,7 +277,7 @@ export function WaitlistPanel({
                 </div>
                 <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 py-2">
                   <dt className="basis-full font-semibold sm:basis-28 sm:shrink-0">Postal address</dt>
-                  <dd className="min-w-0 basis-full break-words sm:basis-0 sm:flex-1">{address.trim() || "None yet"}</dd>
+                  <dd className="min-w-0 basis-full break-words sm:basis-0 sm:flex-1">{address.trim() || "None yet. Add one before it can go out."}</dd>
                   <dd><button type="button" className="inline-flex min-h-11 items-center font-bold underline underline-offset-4" onClick={() => changeAnswer(`waitlist-${productId}-address`)}>Change<span className="sr-only"> postal address</span></button></dd>
                 </div>
               </dl>
@@ -286,7 +286,8 @@ export function WaitlistPanel({
           <button
             type="button"
             className="btn btn-primary btn-sm"
-            disabled={busy || (pre.waiting > 0 && !hasContent)}
+            // An email about something for sale needs the postal address: without one, the second press is not offered.
+            disabled={busy || (pre.waiting > 0 && !hasContent) || (confirming && view.confirmed > 0 && !address.trim())}
             onClick={async () => {
               if (!confirming) {
                 setConfirming(true);
@@ -300,7 +301,7 @@ export function WaitlistPanel({
           >
             {confirming
               ? view.confirmed
-                ? `Press again: on sale now, ${view.confirmed.toLocaleString("en-US")} emails`
+                ? `Press again: on sale now, ${view.confirmed.toLocaleString("en-US")} ${view.confirmed === 1 ? "email" : "emails"}`
                 : "Press again to put it on sale"
               : view.confirmed
                 ? "Put it on sale and tell the waitlist"
