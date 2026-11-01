@@ -15,7 +15,7 @@ import { canSeal, seal, unseal } from "@/lib/secret-box";
 import {
   CURRENT_SHIPMENT_MAIL_LIFECYCLE, CURRENT_SHIPMENT_MAIL_POLICY,
   SHIPMENT_MAIL_SCRIPT, SHIPMENT_MAIL_MAX_ROW_BYTES, SHIPMENT_MAIL_MAX_INDEX_ITEMS,
-  SHIPMENT_MAIL_ERASURE_FENCE_MS, shipmentMailPolicy, type ShipmentMailDispatch,
+  shipmentMailPolicy, type ShipmentMailDispatch,
   type ShipmentMailPipeline, type ShipmentMailPolicy, type ShipmentMailRuntime,
 } from "@/lib/shipment-mail-outbox";
 
@@ -45,6 +45,8 @@ export type ConfirmationOrigin = {
   state: "queued" | "preparing" | "dispatching" | "refused";
   phase: ConfirmationPhase; owner: string; leaseUntil: number; checks: number;
   createAttempts: number; reviewId: string; recoveryCursor: string; recoveryUpper: number;
+  /** At most64 hashes, charged inside the original fixed row envelope. */
+  erasedPeople: string; erasureSaturated: boolean;
 };
 export const confirmationOriginId = (statsId: string, nonce: string) => hash(`confirmation\n${statsId}\n${nonce}`);
 export function confirmationBodyDigest(body: string): string {
@@ -110,7 +112,7 @@ function parse(raw: unknown): ConfirmationOrigin | null {
   try {
     if (typeof raw !== "string" || Buffer.byteLength(raw) > SHIPMENT_MAIL_MAX_ROW_BYTES) return null;
     const row = data(JSON.parse(raw));
-    const fields = ["kind", "id", "statsId", "nonce", "accountId", "bodyDigest", "intentFingerprint", "bindingFingerprint", "session", "person", "sourceValue", "sealed", "fingerprint", "bytes", "created", "authorizedAt", "next", "expiresAt", "state", "phase", "owner", "leaseUntil", "checks", "createAttempts", "reviewId", "recoveryCursor", "recoveryUpper"];
+    const fields = ["kind", "id", "statsId", "nonce", "accountId", "bodyDigest", "intentFingerprint", "bindingFingerprint", "session", "person", "sourceValue", "sealed", "fingerprint", "bytes", "created", "authorizedAt", "next", "expiresAt", "state", "phase", "owner", "leaseUntil", "checks", "createAttempts", "reviewId", "recoveryCursor", "recoveryUpper", "erasedPeople", "erasureSaturated"];
     if (!row || Object.keys(row).length !== fields.length || !fields.every(key => Object.hasOwn(row, key)) || row.kind !== "confirmation" || typeof row.id !== "string" || !HASH.test(row.id) ||
         typeof row.statsId !== "string" || !STORE.test(row.statsId) || typeof row.nonce !== "string" || !HASH.test(row.nonce) ||
         row.id !== confirmationOriginId(row.statsId, row.nonce) || typeof row.accountId !== "string" || !ACCOUNT.test(row.accountId) ||
@@ -123,7 +125,8 @@ function parse(raw: unknown): ConfirmationOrigin | null {
         typeof row.recoveryCursor !== "string" || row.recoveryCursor !== "" && !SESSION.test(row.recoveryCursor) ||
         typeof row.owner !== "string" || !/^[a-f0-9]{0,48}$/.test(row.owner) || typeof row.reviewId !== "string" || !/^[A-Za-z0-9_-]{1,128}$/.test(row.reviewId) ||
         ![row.bytes, row.created, row.authorizedAt, row.next, row.expiresAt, row.leaseUntil, row.checks, row.createAttempts, row.recoveryUpper].every(v => typeof v === "number" && Number.isSafeInteger(v) && v >= 0) ||
-        Number(row.bytes) < Buffer.byteLength(raw)) return null;
+        Number(row.bytes) < Buffer.byteLength(raw) || typeof row.erasedPeople !== "string" || !/^(?:[a-f0-9]{64}){0,64}$/.test(row.erasedPeople) ||
+        typeof row.erasureSaturated !== "boolean") return null;
     const source = data(JSON.parse(row.sourceValue));
     if (!source || Object.keys(source).length !== (row.session ? 6 : 5) || source.kind !== "confirmation" || source.nonce !== row.nonce ||
         source.accountId !== row.accountId || source.bodyDigest !== row.bodyDigest || source.session !== row.session ||
@@ -135,7 +138,7 @@ function keys(row: ConfirmationOrigin): string[] {
   return [confirmationOriginRowKey(row.id), sourceKey(row.id), CONFIRMATION_ORIGIN_DUE,
     `nl:order-confirmation:store:${row.statsId}`, `nl:order-confirmation:person:${row.statsId}:${row.person}`,
     "nl:ship:mail:pool", `nl:ship:mail:pool:${row.statsId}`, "nl:ship:mail:all",
-    `nl:ship:mail:closed:${row.statsId}`, `nl:ship:mail:erased:${row.statsId}:${row.person}`];
+    `nl:order-confirmation:closed:${row.statsId}`, `nl:order-confirmation:erased:${row.statsId}:${row.person}`];
 }
 export function confirmationOutboxPolicy(runtime: ShipmentMailRuntime = {}, admission = true): ShipmentMailPolicy | null {
   const lifecycle = runtime.lifecycle ?? CURRENT_SHIPMENT_MAIL_LIFECYCLE;
@@ -201,7 +204,7 @@ export async function reserveConfirmationOrigin(input: {
       sourceValue: JSON.stringify({ kind: "confirmation", nonce: input.nonce, accountId: input.accountId, bodyDigest, session: "" }),
       sealed: seal(plain, context(id)), fingerprint: hash(plain), bytes: 0,
       created: now, authorizedAt: now, next: now, expiresAt: input.preintent.expiresAtMs,
-      state: "queued", phase: "awaiting_creation", owner: "", leaseUntil: 0, checks: 0, createAttempts: 0, reviewId: p.reviewId, recoveryCursor: "", recoveryUpper: 0 };
+      state: "queued", phase: "awaiting_creation", owner: "", leaseUntil: 0, checks: 0, createAttempts: 0, reviewId: p.reviewId, recoveryCursor: "", recoveryUpper: 0, erasedPeople: "", erasureSaturated: false };
     row.bytes = SHIPMENT_MAIL_MAX_ROW_BYTES + keys(row).reduce((n, key) => n + Buffer.byteLength(key), 0) * 2 + 16_384;
     const raw = JSON.stringify(row);
     if (!parse(raw)) return { ok: false };
@@ -249,7 +252,7 @@ elseif op=='create' then
 elseif op=='bind' then
  local good,n=pcall(cjson.decode,supplied)
  if not good or type(n)~='table' or n.kind~='confirmation' then return {'unknown'} end
- for _,field in ipairs({'id','statsId','nonce','accountId','bodyDigest','intentFingerprint','created','expiresAt','bytes','person','reviewId'}) do if n[field]~=r[field] then return {'unknown'} end end
+ for _,field in ipairs({'id','statsId','nonce','accountId','bodyDigest','intentFingerprint','created','expiresAt','bytes','person','reviewId','erasedPeople','erasureSaturated'}) do if n[field]~=r[field] then return {'unknown'} end end
  if r.session~='' then return {'bound',raw} end
  if n.session=='' or n.phase~='awaiting_payment' or #supplied>131072 or #supplied>r.bytes then return {'unknown'} end
  redis.call('SET',KEYS[1],supplied); redis.call('SET',KEYS[2],n.sourceValue)
@@ -469,7 +472,10 @@ if not supported or redis.call('EXISTS',KEYS[9],KEYS[10],KEYS[12])~=0 then retur
 if op=='paid' then
  local good,n=pcall(cjson.decode,supplied)
  if not good or type(n)~='table' or r.session=='' or r.phase~='awaiting_payment' or r.state~='preparing' or r.owner~=ARGV[5] or r.leaseUntil<now then return {'held'} end
- for _,field in ipairs({'kind','id','statsId','nonce','accountId','bodyDigest','intentFingerprint','bindingFingerprint','session','sourceValue','bytes','created','authorizedAt','expiresAt','owner','leaseUntil','checks','createAttempts','reviewId','recoveryCursor','recoveryUpper'}) do if n[field]~=r[field] then return {'unknown'} end end
+ for _,field in ipairs({'kind','id','statsId','nonce','accountId','bodyDigest','intentFingerprint','bindingFingerprint','session','sourceValue','bytes','created','authorizedAt','expiresAt','owner','leaseUntil','checks','createAttempts','reviewId','recoveryCursor','recoveryUpper','erasedPeople','erasureSaturated'}) do if n[field]~=r[field] then return {'unknown'} end end
+ if type(r.erasedPeople)~='string' or #r.erasedPeople>4096 or #r.erasedPeople%64~=0 or type(r.erasureSaturated)~='boolean' then return {'held'} end
+ for i=1,#r.erasedPeople,64 do if string.sub(r.erasedPeople,i,i+63)==n.person then return {'erased'} end end
+ if r.erasureSaturated then return {'held'} end
  if n.state~='preparing' or n.phase~='queued' or type(n.person)~='string' or #n.person~=64 or type(n.sealed)~='string' or type(n.fingerprint)~='string' or #supplied>131072 or #supplied>r.bytes then return {'unknown'} end
  redis.call('SET',KEYS[1],supplied)
  redis.call('SREM',KEYS[5],r.id); redis.call('SADD',KEYS[11],r.id)
@@ -534,9 +540,17 @@ async function preparePaid(found: FoundOrigin, p: ShipmentMailPolicy, runtime: C
   if (!parse(raw)) return null;
   try {
     const reply = array(await (runtime.pipeline ?? redisPipeline)([["EVAL", CONFIRMATION_PAID_SCRIPT, 12, ...keys(found.row),
-      `nl:order-confirmation:person:${row.statsId}:${row.person}`, `nl:ship:mail:erased:${row.statsId}:${row.person}`,
+      `nl:order-confirmation:person:${row.statsId}:${row.person}`, `nl:order-confirmation:erased:${row.statsId}:${row.person}`,
       "paid", found.raw, raw, (runtime.now ?? Date.now)(), owner, JSON.stringify(p)]]));
     const receipt = reply?.length === 1 ? array(reply[0]) : null;
+    if (receipt?.[0] === "erased") {
+      // The exact original source has now identified this previously erased
+      // person. Remove its protected payload instead of retaining identified
+      // personal data just because no confirmation may be sent. Lost/changed
+      // cancellation ACK stays unknown and cannot authorize dispatch.
+      await confirmationMutation("cancel", found, null, runtime);
+      return null;
+    }
     if (receipt?.[0] !== "paid") return null;
     const saved = await readConfirmationOrigin(row.id, runtime);
     return saved && saved.row.owner === owner && preparedMessage(saved) ? saved : null;
@@ -642,8 +656,53 @@ export async function runOrderConfirmationMail(deadline: number, dispatch: Shipm
   return counts;
 }
 
-/** The origin's own indexes are erased; shipment indexes cannot stand in for
- * them. A recipient fence also defeats a concurrent prepayment→paid bind.
+/** A per-request snapshot owns only already-existing origins. Each unresolved
+ * origin carries at most64 recipient hashes inside its already-reserved fixed
+ * row envelope; no global indefinite recipient registry or extra unpaid slot.
+ * On saturation the source stays held, never discarded or dispatched.
+ */
+export const CONFIRMATION_ERASURE_SCRIPT = `-- marktmorgen:confirmation-erasure:v1
+local op,token,person,store=ARGV[1],ARGV[2],ARGV[3],ARGV[4]
+if type(token)~='string' or #token~=48 or string.find(token,'[^a-f0-9]') then return {'unknown'} end
+if op=='begin' then
+ local a,b=redis.call('TYPE',KEYS[1]).ok,redis.call('TYPE',KEYS[2]).ok
+ if b~='none' and b~='string' then return {'unknown'} end
+ -- Install protection before touching a possibly corrupt/incomplete index.
+ -- Unknown cleanup retains this dedicated fence without a fixed expiry.
+ redis.call('SET',KEYS[2],token)
+ if a~='none' and a~='set' then return {'unknown'} end
+ local count=redis.call('SCARD',KEYS[1])
+ if count>10000 then return {'unknown'} end
+ local ids=redis.call('SMEMBERS',KEYS[1])
+ if #ids~=count then return {'unknown'} end
+ for _,id in ipairs(ids) do if #id~=64 or string.find(id,'[^a-f0-9]') then return {'unknown'} end end
+ return {'begun',ids}
+elseif op=='finish' then
+ if redis.call('TYPE',KEYS[1]).ok~='string' or redis.call('GET',KEYS[1])~=token then return {'changed'} end
+ redis.call('PEXPIRE',KEYS[1],600000)
+ return {'finished'}
+elseif op~='mark' or #person~=64 or string.find(person,'[^a-f0-9]') then return {'unknown'} end
+if redis.call('TYPE',KEYS[3]).ok~='string' or redis.call('GET',KEYS[3])~=token then return {'changed'} end
+local rowType=redis.call('TYPE',KEYS[1]).ok
+if rowType=='none' then return {'absent'} end
+if rowType~='string' or redis.call('TYPE',KEYS[2]).ok~='string' then return {'unknown'} end
+local raw=redis.call('GETRANGE',KEYS[1],0,131072)
+local ok,r=pcall(cjson.decode,raw)
+if #raw>131072 or not ok or type(r)~='table' or r.kind~='confirmation' or r.statsId~=store or redis.call('GET',KEYS[2])~=r.sourceValue then return {'unknown'} end
+if r.person==person then return {'matched'} end
+-- A resolved different buyer needs no retained hash for this request.
+if r.phase~='awaiting_creation' and r.phase~='creating' and r.phase~='creation_unknown' and r.phase~='awaiting_payment' then return {'other'} end
+if type(r.erasedPeople)~='string' or #r.erasedPeople>4096 or #r.erasedPeople%64~=0 or string.find(r.erasedPeople,'[^a-f0-9]') or type(r.erasureSaturated)~='boolean' then return {'unknown'} end
+for i=1,#r.erasedPeople,64 do if string.sub(r.erasedPeople,i,i+63)==person then return {'marked'} end end
+if #r.erasedPeople==4096 then r.erasureSaturated=true else r.erasedPeople=r.erasedPeople..person end
+local encoded=cjson.encode(r)
+if #encoded>131072 or type(r.bytes)~='number' or #encoded>r.bytes then return {'unknown'} end
+redis.call('SET',KEYS[1],encoded)
+return {'marked'}`;
+
+/** A recipient fence defeats a concurrent bind/dispatch while every unresolved
+ * older origin is marked durably. Completing cleanup shortens only THIS
+ * request's fence; it cannot expire another concurrent request's protection.
  * Never-activated deployments perform no new IO, including during erasure.
  */
 export async function forgetOrderConfirmationMail(statsId: string | null | undefined, email?: string, runtime: ShipmentMailRuntime = {}): Promise<number> {
@@ -653,23 +712,30 @@ export async function forgetOrderConfirmationMail(statsId: string | null | undef
   if (!statsId) return 0;
   if (!STORE.test(statsId)) throw Error("Confirmation cleanup owner is unknown");
   const person = email === undefined ? null : hash(email.trim().toLowerCase());
-  const index = person === null ? `nl:order-confirmation:store:${statsId}` : `nl:order-confirmation:person:${statsId}:${person}`;
-  const fence = person === null ? `nl:ship:mail:closed:${statsId}` : `nl:ship:mail:erased:${statsId}:${person}`;
-  const pipeline = runtime.pipeline ?? redisPipeline;
-  const guarded = array(await pipeline([["SET", fence, randomBytes(24).toString("hex")]]));
-  if (guarded?.length !== 1 || guarded[0] !== "OK") throw Error("Confirmation erasure fence is unknown");
-  const got = array(await pipeline([["TYPE", index], ["SCARD", index]]));
-  if (!got || !["none", "set"].includes(String(got[0])) || typeof got[1] !== "number" || !Number.isSafeInteger(got[1]) || got[1] < 0 || got[1] > confirmationOriginIndexLimit) throw Error("Confirmation erasure index is unknown");
-  const members = got[1] === 0 ? [] : array((await pipeline([["SMEMBERS", index]]))[0], confirmationOriginIndexLimit);
-  if (!members || members.some(id => typeof id !== "string" || !HASH.test(id)) || new Set(members).size !== members.length) throw Error("Confirmation erasure index is incomplete");
+  const index = `nl:order-confirmation:store:${statsId}`;
+  const fence = person === null ? `nl:order-confirmation:closed:${statsId}` : `nl:order-confirmation:erased:${statsId}:${person}`;
+  const pipeline = runtime.pipeline ?? redisPipeline, token = randomBytes(24).toString("hex");
+  const begun = array(await pipeline([["EVAL", CONFIRMATION_ERASURE_SCRIPT, 2, index, fence, "begin", token, person ?? "", statsId]]));
+  const snapshot = begun?.length === 1 ? array(begun[0], 2) : null;
+  const members = snapshot?.length === 2 && snapshot[0] === "begun" ? array(snapshot[1], confirmationOriginIndexLimit) : null;
+  if (!members || members.some(id => typeof id !== "string" || !HASH.test(id)) || new Set(members).size !== members.length) throw Error("Confirmation erasure snapshot is unknown");
   let deleted = 0;
   for (const id of members) {
+    if (person !== null) {
+      const got = array(await pipeline([["EVAL", CONFIRMATION_ERASURE_SCRIPT, 3, confirmationOriginRowKey(String(id)), sourceKey(String(id)), fence, "mark", token, person, statsId]]));
+      const marked = got?.length === 1 ? array(got[0]) : null;
+      if (["marked", "other", "absent"].includes(String(marked?.[0]))) continue;
+      if (marked?.[0] !== "matched") throw Error("Confirmation unresolved-recipient erasure is unknown");
+    }
+    // Re-read after the atomic mark: a competing bind cannot substitute the
+    // recipient, and a concurrent removal needs no second release of capacity.
     const found = await readConfirmationOrigin(String(id), runtime);
     if (!found || found.row.statsId !== statsId || person !== null && found.row.person !== person ||
         (await confirmationMutation("cancel", found, null, runtime))?.[0] !== "canceled") throw Error("Confirmation erasure is unknown");
     deleted++;
   }
-  const finished = array(await pipeline([["PEXPIRE", fence, SHIPMENT_MAIL_ERASURE_FENCE_MS]]));
-  if (finished?.length !== 1 || finished[0] !== 1) throw Error("Confirmation erasure completion is unknown");
+  const finished = array(await pipeline([["EVAL", CONFIRMATION_ERASURE_SCRIPT, 1, fence, "finish", token, person ?? "", statsId]]));
+  const receipt = finished?.length === 1 ? array(finished[0]) : null;
+  if (receipt?.length !== 1 || receipt[0] !== "finished") throw Error("Confirmation erasure completion is unknown");
   return deleted;
 }

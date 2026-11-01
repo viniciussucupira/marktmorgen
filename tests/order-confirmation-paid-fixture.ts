@@ -7,7 +7,7 @@ import { createConnection } from "node:net";
 import { addProduct, claimHandle, ensureStatsId, ensureStoreId, setProductShipping, setStripeAccount, setSubscription, storeForEmail } from "@/lib/store";
 import { readProduct } from "@/lib/catalog";
 import { COMMIT_ORDER_CONFIRMATION } from "@/lib/orders";
-import { CONFIRMATION_ORIGIN_SCRIPT, CONFIRMATION_PAID_SCRIPT, type ConfirmationOriginRuntime } from "@/lib/order-confirmation-outbox";
+import { CONFIRMATION_ORIGIN_SCRIPT, CONFIRMATION_PAID_SCRIPT, CONFIRMATION_ERASURE_SCRIPT, type ConfirmationOriginRuntime } from "@/lib/order-confirmation-outbox";
 import { SHIPMENT_MAIL_SCRIPT } from "@/lib/shipment-mail-outbox";
 import { store as redis } from "./redis-stub";
 import { shipmentOutboxFixture, shipmentPolicy } from "./shipment-mail-outbox-fixture";
@@ -45,6 +45,37 @@ export async function physicalPaidFixture() {
           const r = raw ? JSON.parse(String(raw)) : null;
           if ([k[8], k[9]].some(key => redis.run(["EXISTS", key])) || c[13] === "claim" && r && (r.next > now() || r.checks >= runtime.policy!.maximumChecks)) { answers.push(["held"]); continue; }
         }
+        if (c[0] === "EVAL" && c[1] === CONFIRMATION_ERASURE_SCRIPT) {
+          const count=Number(c[2]),k=c.slice(3,3+count).map(String),[op,token,person,statsId]=c.slice(3+count).map(String);
+          let answer:unknown[]=["unknown"];
+          if(op==="begin") {
+            const type=redis.run(["TYPE",k[0]]);
+            redis.run(["SET",k[1],token]);
+            if(["none","set"].includes(String(type))) {
+              const members=type==="none"?[]:redis.run(["SMEMBERS",k[0]]) as string[];
+              if(members.length<=10_000 && members.every(id=>/^[a-f0-9]{64}$/.test(id)))answer=["begun",members];
+            }
+          } else if(op==="finish") {
+            if(redis.run(["GET",k[0]])===token){redis.run(["PEXPIRE",k[0],600_000]);answer=["finished"];}else answer=["changed"];
+          } else if(op==="mark") {
+            const raw=redis.run(["GET",k[0]]);
+            if(redis.run(["GET",k[2]])!==token)answer=["changed"];
+            else if(!raw)answer=["absent"];
+            else {
+              const row=JSON.parse(String(raw));
+              if(row.statsId!==statsId || redis.run(["GET",k[1]])!==row.sourceValue)answer=["unknown"];
+              else if(row.person===person)answer=["matched"];
+              else if(!["awaiting_creation","creating","creation_unknown","awaiting_payment"].includes(row.phase))answer=["other"];
+              else if(typeof row.erasedPeople==="string" && /^(?:[a-f0-9]{64}){0,64}$/.test(row.erasedPeople) && typeof row.erasureSaturated==="boolean") {
+                const markers=row.erasedPeople.match(/.{64}/g)??[];
+                if(!markers.includes(person)){if(markers.length===64)row.erasureSaturated=true;else row.erasedPeople+=person;redis.run(["SET",k[0],JSON.stringify(row)]);}
+                answer=["marked"];
+              }
+            }
+          }
+          if(lose===`erasure-${op}`){lose=null;throw Error("Synthetic erasure mutation committed; ACK lost");}
+          answers.push(answer);continue;
+        }
         if (c[0] === "EVAL" && c[1] === CONFIRMATION_PAID_SCRIPT) {
           const k = c.slice(3,15).map(String), op=String(c[15]), raw=redis.run(["GET", k[0]]);
           if (raw !== c[16]) { answers.push(["changed"]); continue; }
@@ -53,6 +84,9 @@ export async function physicalPaidFixture() {
           let next: string;
           if (op === "paid") {
             next=String(c[17]); const n=JSON.parse(next);
+            if((r.erasedPeople.match(/.{64}/g)??[]).includes(n.person)){answers.push(["erased"]);continue;}
+            if(r.erasureSaturated){answers.push(["held"]);continue;}
+            if(n.erasedPeople!==r.erasedPeople || n.erasureSaturated!==r.erasureSaturated){answers.push(["unknown"]);continue;}
             redis.run(["SREM",k[4],r.id]); redis.run(["SADD",k[10],n.id]);
           } else if (op === "settlement") {
             if (r.next>now()) { answers.push(["held"]); continue; }
@@ -95,8 +129,10 @@ export async function physicalPaidFixture() {
       if (method === "POST") {
         assert.equal(account, store.stripeAccountId);
         const protectedRows = [...redis.keys()].filter(k => k.startsWith("nl:order-confirmation:row:"));
-        assert.equal(protectedRows.length, 1, "a protected source and its admission precede Stripe");
-        const r = JSON.parse(String(redis.run(["GET", protectedRows[0]])));
+        const nonce=body!.get("metadata[mm_order_intent]");
+        const protectedRowsForRequest=protectedRows.map(k=>JSON.parse(String(redis.run(["GET",k])))).filter(r=>r.nonce===nonce);
+        assert.equal(protectedRowsForRequest.length, 1, "each original request has its own protected source and admission before Stripe");
+        const r = protectedRowsForRequest[0];
         assert.equal(r.phase, "creating", "POST requires the acknowledged creation checkpoint");
         const metadata = Object.fromEntries([...body!].flatMap(([k, v]) => /^metadata\[/.test(k) ? [[k.slice(9, -1), v]] : []));
         const id = `cs_test_physicalorigin${++sequence}00000001`;

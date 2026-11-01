@@ -34,6 +34,7 @@ def main():
     shared = script("lib/shipment-mail-outbox.ts", "SHIPMENT_MAIL_SCRIPT")
     origin = script("lib/order-confirmation-outbox.ts", "CONFIRMATION_ORIGIN_SCRIPT")
     paid_script = script("lib/order-confirmation-outbox.ts", "CONFIRMATION_PAID_SCRIPT")
+    erasure_script = script("lib/order-confirmation-outbox.ts", "CONFIRMATION_ERASURE_SCRIPT")
     prefix = "marktmorgen:integration:confirmation-origin:" + uuid.uuid4().hex + ":"
     db = LocalRedis()
     made = set()
@@ -53,7 +54,7 @@ def main():
                    sourceValue="source-" + ident, sealed="s1.synthetic.protected", fingerprint="d" * 64,
                    bytes=160_000, created=now, authorizedAt=now, next=now, expiresAt=now + 450 * 86_400_000,
                    state="queued", phase="awaiting_creation", owner="", leaseUntil=0, checks=0,
-                   createAttempts=0, reviewId="SYNTHETIC", recoveryCursor="", recoveryUpper=0)
+                   createAttempts=0, reviewId="SYNTHETIC", recoveryCursor="", recoveryUpper=0, erasedPeople="", erasureSaturated=False)
         return row, keys
     def enqueue(row, keys):
         return db.command("EVAL", shared, 10, *keys, "enqueue", "", json.dumps(row), now, 131072, json.dumps(policy), "")
@@ -223,6 +224,78 @@ def main():
         assert {k: profiles[k] for k in ["paid", "dispatch", "accepted_unsettled", "settlement_retry", "cancel_paid"]} == {"paid": 20, "dispatch": 16, "accepted_unsettled": 19, "settlement_retry": 19, "cancel_paid": 25}
         print(json.dumps({"paid_worker_commands_including_eval_and_redis_call": {k: profiles[k] for k in ["paid", "dispatch", "accepted_unsettled", "settlement_retry", "cancel_paid"]}, "supplier_invoice": False}))
 
+        # The actual production erasure Lua snapshots older origins and stores
+        # bounded markers in the already-funded envelope, never a new key/slot.
+        erased, erasedkeys = fixture("unresolved-erasure")
+        assert enqueue(erased, erasedkeys)[0] == "queued"
+        recipient = hashlib.sha256(b"buyer@example.test").hexdigest()
+        erasure_fence = prefix + "erasure:recipient"
+        made.add(erasure_fence)
+        request = "9" * 48
+        begun, profiles["erasure_begin"] = measured(lambda: db.command("EVAL", erasure_script, 2, erasedkeys[3], erasure_fence, "begin", request, recipient, "SYNTHETIC"))
+        assert begun[0] == "begun" and erased["id"] in begun[1]
+        for wrong_type in [False, True]:
+            bad_index, bad_fence = prefix+"bad-index:"+str(wrong_type), prefix+"bad-fence:"+str(wrong_type)
+            made.update([bad_index, bad_fence])
+            db.command("RPUSH" if wrong_type else "SADD", bad_index, "invalid-member")
+            assert db.command("EVAL", erasure_script, 2, bad_index, bad_fence, "begin", request, recipient, "SYNTHETIC") == ["unknown"]
+            assert db.command("TTL", bad_fence) == -1
+        excessive_index, excessive_fence = prefix+"excessive-index", prefix+"excessive-fence"
+        made.update([excessive_index, excessive_fence])
+        db.command("SADD", excessive_index, *[hashlib.sha256(str(i).encode()).hexdigest() for i in range(10001)])
+        assert db.command("EVAL", erasure_script, 2, excessive_index, excessive_fence, "begin", request, recipient, "SYNTHETIC") == ["unknown"]
+        assert db.command("TTL", excessive_fence) == -1
+        before_hold = db.command("HGETALL", erasedkeys[5])
+        before_marker = db.command("GET", erasedkeys[0])
+        def mark(who=recipient, token=request, client=None):
+            return (client or db).command("EVAL", erasure_script, 3, erasedkeys[0], erasedkeys[1], erasure_fence, "mark", token, who, "SYNTHETIC")
+        marked, profiles["erasure_mark"] = measured(mark)
+        assert marked == ["marked"]
+        stored = json.loads(db.command("GET", erasedkeys[0]))
+        assert stored["erasedPeople"] == recipient and stored["bytes"] == erased["bytes"]
+        assert db.command("TTL", erasedkeys[0]) == -1 and db.command("TTL", erasedkeys[1]) == -1
+        assert db.command("HGETALL", erasedkeys[5]) == before_hold
+        assert mark() == ["marked"] and json.loads(db.command("GET", erasedkeys[0]))["erasedPeople"] == recipient
+        # Simulated ACK loss: rerunning the exact marking operation cannot
+        # append another entry or expire the source or release its reservation.
+        assert db.command("EVAL", erasure_script, 1, erasure_fence, "finish", "8" * 48, recipient, "SYNTHETIC") == ["changed"]
+        assert db.command("TTL", erasure_fence) == -1
+        finished, profiles["erasure_finish"] = measured(lambda: db.command("EVAL", erasure_script, 1, erasure_fence, "finish", request, recipient, "SYNTHETIC"))
+        assert finished == ["finished"] and 0 < db.command("TTL", erasure_fence) <= 600
+        db.command("PEXPIREAT", erasure_fence, 1)
+        assert db.command("EXISTS", erasure_fence) == 0
+        # Preparing an old source after the short fence is actually gone still
+        # refuses the erased recipient before payload/index mutation.
+        stored.update(session="cs_test_erasurepaid00001", bindingFingerprint="a" * 64, phase="awaiting_payment", state="preparing", owner="f" * 48, leaseUntil=now+60_000)
+        db.command("SET", erasedkeys[0], json.dumps(stored))
+        erased_candidate = dict(stored, person=recipient, phase="queued", sealed="s1.no-erased-buyer-payload")
+        assert paid_change("paid", erasedkeys, json.dumps(erased_candidate))[0] == "erased"
+        assert db.command("GET", erasedkeys[0]) == json.dumps(stored)
+        # A different buyer is still eligible, and a candidate cannot strip
+        # previously acknowledged erasures even if all its other fields match.
+        other = dict(erased_candidate, person="7" * 64)
+        assert paid_change("paid", erasedkeys, json.dumps(dict(other, erasedPeople="")))[0] == "unknown"
+        assert paid_change("paid", erasedkeys, json.dumps(other))[0] == "paid"
+        # Race all additions on one unresolved row with real Redis. Exactly64
+        # hashes fit; later requests park only this row, not another/new order.
+        stored.update(phase="awaiting_payment", state="queued", owner="", leaseUntil=0, erasedPeople="", erasureSaturated=False)
+        db.command("SET", erasedkeys[0], json.dumps(stored)); db.command("SET", erasure_fence, request)
+        def concurrent_mark(i):
+            connection = LocalRedis()
+            try: return mark(hashlib.sha256(str(i).encode()).hexdigest(), client=connection)
+            finally: connection.sock.close()
+        with concurrent.futures.ThreadPoolExecutor(max_workers=16) as pool:
+            assert all(reply == ["marked"] for reply in pool.map(concurrent_mark, range(80)))
+        saturated = json.loads(db.command("GET", erasedkeys[0]))
+        assert len(saturated["erasedPeople"]) == 4096 and saturated["erasureSaturated"] is True
+        assert len(set(saturated["erasedPeople"][i:i+64] for i in range(0,4096,64))) == 64
+        assert saturated["bytes"] == erased["bytes"] and len(db.command("GET", erasedkeys[0]).encode()) < erased["bytes"]
+        assert db.command("HGETALL", erasedkeys[5]) == before_hold
+        saturated.update(state="preparing", owner="f" * 48, leaseUntil=now+60_000)
+        db.command("SET", erasedkeys[0], json.dumps(saturated))
+        assert paid_change("paid", erasedkeys, json.dumps(dict(saturated, person="6"*64, phase="queued")))[0] == "held"
+        print("PASS:atomic bounded origin snapshots, durable idempotent erasure, expired-fence suppression, other-buyer rights, stale-request CAS and80concurrent markers on official Redis")
+
         print(json.dumps({"observed_commands_including_eval_and_redis_call": profiles, "supplier_invoice": False}))
         # Exercise production TypeScript plus the exact shared/paid/accounting
         # Lua together, under the same explicitly disposable loopback opt-in.
@@ -230,9 +303,11 @@ def main():
 import {build} from 'esbuild';
 import {spawnSync} from 'node:child_process';
 import {testAliases,testEnvironment} from './tests/test-config.mjs';
-await build({entryPoints:['tests/order-confirmation-paid.test.ts'],bundle:true,platform:'node',format:'cjs',outfile:process.argv[1],logLevel:'error',alias:testAliases('order-confirmation-paid.test.ts',process.cwd(),process.cwd()+'/tests')});
+for(const file of ['order-confirmation-paid.test.ts','order-confirmation-paid-erasure.test.ts']) {
+await build({entryPoints:['tests/'+file],bundle:true,platform:'node',format:'cjs',outfile:process.argv[1],logLevel:'error',alias:testAliases(file,process.cwd(),process.cwd()+'/tests')});
 const result=spawnSync(process.execPath,[process.argv[1]],{env:testEnvironment(process.env),stdio:'inherit'});
-process.exitCode=result.status ?? 1;
+if(result.status!==0){process.exitCode=result.status ?? 1;break;}
+}
 """
         with tempfile.TemporaryDirectory(prefix="confirmation-paid-ts-") as directory:
             subprocess.run(["node", "--input-type=module", "-e", runner, str(Path(directory) / "paid.cjs")], cwd=root, check=True,
