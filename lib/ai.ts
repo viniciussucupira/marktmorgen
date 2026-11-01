@@ -523,17 +523,65 @@ const SETUP_KINDS = new Set(["download", "course", "call", "membership"]);
  * changes or drops any of it, and what they keep is put up as drafts, never
  * on sale until they add what each one hands over. One of the month's jobs.
  */
+/** How a price in each currency is written beside its number: symbols, codes and words, longest first. */
+const PRICE_MARKS: Record<string, string[]> = {
+  usd: ["US$", "USD", "dollars", "dollar", "$"],
+  eur: ["EUR", "euros", "euro", "€"],
+  gbp: ["GBP", "pounds", "pound", "£"],
+  cad: ["CA$", "CAD", "C$", "dollars", "dollar", "$"],
+  aud: ["AU$", "AUD", "A$", "dollars", "dollar", "$"],
+  nzd: ["NZ$", "NZD", "dollars", "dollar", "$"],
+  chf: ["CHF", "francs", "franc", "Fr."],
+  sek: ["SEK", "kronor", "krona", "kr"],
+  nok: ["NOK", "kroner", "krone", "kr"],
+  dkk: ["DKK", "kroner", "krone", "kr"],
+  pln: ["PLN", "złoty", "zloty", "zł"],
+  jpy: ["JPY", "yen", "円", "¥"],
+  sgd: ["SG$", "SGD", "S$", "dollars", "dollar", "$"],
+  hkd: ["HK$", "HKD", "dollars", "dollar", "$"],
+  mxn: ["MX$", "MXN", "pesos", "peso", "$"],
+};
+
+const escapeMark = (mark: string) => mark.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+/** Every value a written amount can mean: "49,50" and "49.50" are 49.5; "1,500" is 1500; "1.500" may be 1500 or 1.5. */
+function amountsOf(raw: string): number[] {
+  const text = raw.replace(/[\s\u00a0']/g, "");
+  const comma = text.lastIndexOf(","), dot = text.lastIndexOf(".");
+  const asNumber = (s: string) => (s && /^\d+(\.\d+)?$/.test(s) ? [Number(s)] : []);
+  if (comma >= 0 && dot >= 0) {
+    const decimal = comma > dot ? "," : ".";
+    const thousands = decimal === "," ? "." : ",";
+    return asNumber(text.split(thousands).join("").replace(decimal, "."));
+  }
+  const sep = comma >= 0 ? "," : dot >= 0 ? "." : "";
+  if (!sep) return asNumber(text);
+  const parts = text.split(sep);
+  const last = parts[parts.length - 1];
+  const grouped = parts.length > 1 && parts.slice(1).every((part) => part.length === 3) ? asNumber(parts.join("")) : [];
+  const decimal = parts.length === 2 && last.length >= 1 && last.length <= 2 ? asNumber(`${parts[0]}.${last}`) : [];
+  const dotDecimal = sep === "." && parts.length === 2 && last.length === 3 ? asNumber(`${parts[0]}.${last}`) : [];
+  return [...grouped, ...decimal, ...dotDecimal];
+}
+
 /**
- * A drafted product's price, only when the creator's own words contain that
- * number (219 [OP5]): "$12", "49 dollars", "1,200" all name one. Anything
- * else, the model's guess included, comes back empty, and the creator types
- * the price before keeping the product.
+ * A drafted product's price, only when the creator's own words state that
+ * amount as a price in the store's currency (219 [OP5]): "$12", "12 dollars",
+ * "USD 12", "€49,50" in a euro store. A bare number ("10 lessons", "2026") is
+ * not a price, and an amount in another currency is not this store's price.
+ * Anything else, the model's guess included, comes back empty, and the creator
+ * types the price before keeping the product.
  */
-export function statedPrice(price: string, words: string): string {
+export function statedPrice(price: string, words: string, currency: string): string {
   const wanted = Number(price);
   if (!price || !Number.isFinite(wanted) || wanted <= 0) return "";
-  const named = (words.match(/\d[\d,]*(?:\.\d+)?/g) ?? []).map((raw) => Number(raw.replace(/,/g, "")));
-  return named.some((n) => Math.abs(n - wanted) < 0.000001) ? price : "";
+  const marks = (PRICE_MARKS[currency] ?? [currency.toUpperCase()]).map(escapeMark).join("|");
+  const amount = "\\d[\\d.,\\s\u00a0']*\\d|\\d";
+  const stated = new RegExp(`(?:(?:${marks})\\s?(${amount}))|(?:(${amount})\\s?(?:${marks}))`, "giu");
+  for (const match of words.matchAll(stated)) {
+    for (const value of amountsOf(match[1] ?? match[2] ?? "")) if (Math.abs(value - wanted) < 0.000001) return price;
+  }
+  return "";
 }
 
 export async function writeStoreSetup(store: Store, input: { about: string; selling: string }, now = Date.now()): Promise<AiResult<StoreSetup>> {
@@ -562,7 +610,7 @@ export async function writeStoreSetup(store: Store, input: { about: string; sell
         summary: line(p.summary, 160),
         kind: (SETUP_KINDS.has(String(p.kind)) ? String(p.kind) : "download") as StoreSetup["products"][number]["kind"],
         // Kept only when the creator's own words name that number: a price is never the model's guess.
-        price: statedPrice(line(p.price, 12).replace(/[^\d.]/g, ""), `${about}\n${selling}`),
+        price: statedPrice(line(p.price, 12).replace(/[^\d.]/g, ""), `${about}\n${selling}`, store.currency),
       }))
       .filter((p) => p.title)
       .slice(0, 3);

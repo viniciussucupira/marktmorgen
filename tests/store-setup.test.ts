@@ -58,9 +58,24 @@ async function main(): Promise<void> {
   ], [true, true, true]);
   is("nothing to work from, nothing asked", (await writeStoreSetup((await storeForEmail(owner))!, { about: " ", selling: "" })).ok, false);
 
-  part("A price is the creator's, or empty");
-  is("named in the words, kept", [statedPrice("12", "a planner for $12"), statedPrice("1200", "the course is 1,200"), statedPrice("49.5", "49.50 a month")], ["12", "1200", "49.5"]);
-  is("not named, empty", [statedPrice("7", "a planner for $12"), statedPrice("", "12"), statedPrice("0", "0"), statedPrice("12", "no numbers here")], ["", "", "", ""]);
+  part("A price is the creator's, written as a price, or empty");
+  is("written as a price in the store's currency, kept", [
+    statedPrice("12", "a planner for $12", "usd"),
+    statedPrice("1200", "the course is 1,200 dollars", "usd"),
+    statedPrice("49.5", "49.50 USD a month", "usd"),
+    statedPrice("49.5", "nur €49,50 im Monat", "eur"),
+    statedPrice("1500", "1.500 kr", "dkk"),
+    statedPrice("1500", "¥1500", "jpy"),
+  ], ["12", "1200", "49.5", "49.5", "1500", "1500"]);
+  is("a bare number, another currency or nothing: empty", [
+    statedPrice("10", "10 lessons for ages 5-12", "usd"),
+    statedPrice("2026", "since 2026", "usd"),
+    statedPrice("49", "€49", "usd"),
+    statedPrice("7", "a planner for $12", "usd"),
+    statedPrice("", "$12", "usd"),
+    statedPrice("0", "$0", "usd"),
+    statedPrice("4950", "€49,50", "eur"),
+  ], ["", "", "", "", "", "", ""]);
 
   part("What the creator keeps");
   const kept = await keepStoreSetup(owner, (await storeForEmail(owner))!, {
