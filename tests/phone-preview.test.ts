@@ -23,4 +23,10 @@ is("a Phone or Wide choice that says which is on", designer.includes('aria-label
 const studio = readFileSync("components/email-studio.tsx", "utf8");
 is("the composer and every sequence step use this editor", (studio.match(/<MailBodyEditor/g) ?? []).length, 2);
 is("an empty preview says so in text at 7:1 or more on white (#57534e is 7.6:1)", designer.includes('color:#57534e\\">Nothing yet.') , true);
+
+const blog = readFileSync("components/blog-editor.tsx", "utf8");
+is("the blog post is previewed by the published page's own drawing, in the store's look", blog.includes("<PostBody body={body} />") && blog.includes("lookStyle(look)") && blog.includes("st-theme-${look.theme}"), true);
+is("it starts at phone width, with a Phone or Wide choice, and is inert", blog.includes("const [phone, setPhone] = useState(true);") && blog.includes('aria-label="Preview width"') && /inert\s+className=\{`st-page/.test(blog), true);
+is("beside the text on a wide screen, folded on a narrow one", blog.includes('<div className="hidden xl:block">{preview}</div>') && blog.includes("See it as it is published</summary>"), true);
+is("the studio's blog page hands the editor its store's look", readFileSync("app/studio/blog/page.tsx", "utf8").includes("look={store.look}"), true);
 done();
