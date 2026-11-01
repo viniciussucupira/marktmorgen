@@ -212,12 +212,16 @@ function About({ blocks, language }: { blocks: Block[]; language: unknown }) {
  * say. A membership's schedule does not fit the simple shape, so it is named
  * and described without an offer rather than with a wrong one. The rating is
  * there only when the page shows one, with the same average and count.
+ *
+ * No offer is told while the product cannot be bought here (248 [ST1]): with
+ * paid selling closed, or this product not for sale, "InStock" at a price
+ * would let a search result promise what the page does not do.
  */
-function productData(store: Store, product: Listing, description: string, soldOut: boolean, summary: Summary | null, soon = false, preorder = false) {
+function productData(store: Store, product: Listing, description: string, soldOut: boolean, summary: Summary | null, soon = false, preorder = false, sellable = false) {
   const url = `${SITE_URL}${productPath(store, product)}`;
   const options = sellableOptions(product);
   const availability = `https://schema.org/${preorder ? "PreOrder" : soon ? "OutOfStock" : soldOut ? "SoldOut" : "InStock"}`;
-  const offers = product.recurring
+  const offers = !sellable || product.recurring
     ? null
     : options.length > 1
       ? {
@@ -557,7 +561,7 @@ export default async function ProductPage({ params, searchParams }: Params) {
       className={`st-page st-theme-${store.look.theme} relative min-h-screen overflow-hidden`}
       style={lookStyle(store.look) as React.CSSProperties}
     >
-      <JsonLd data={productData(store, product, description, remaining === 0, summary, soon, Boolean(preorder))} />
+      <JsonLd data={productData(store, product, description, remaining === 0, summary, soon, Boolean(preorder), selling && canSellProduct(store, product))} />
       <JsonLd data={breadcrumbData({ name: store.name, url: `${SITE_URL}/@${store.handle}` }, { title: product.title, url: `${SITE_URL}${productPath(store, product)}` })} />
       {faq ? <JsonLd data={faq} /> : null}
       <ExitOfferSlot store={store} except={product.id} />
