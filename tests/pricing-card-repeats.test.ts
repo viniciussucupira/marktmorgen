@@ -65,5 +65,6 @@ is("one terms block, after the cards", [(html.match(/data-plan-terms/g) ?? []).l
 const page = readFileSync("app/pricing/page.tsx", "utf8");
 is("the plans come before the tools and the comparison", page.indexOf('id="plans"') < page.indexOf('<PricingValue place="plans"'), true);
 is("the closed-selling line is said once on the page, above the plans", (page.match(/not open yet/g) ?? []).length, 1);
-is("the live demo is linked whether or not plans are open", /PRICING_OPEN \? <> <Link className="underline" href="\/demo">/.test(page) && /not open yet[^<]*<Link className="underline" href="\/demo">/.test(page), true);
+// The link keeps the line's own color, which keeps 7:1 on the hero's sky (WebKit, 320 and 390, failed before).
+is("the live demo is linked whether or not plans are open, in the line's own color", /PRICING_OPEN \? <> <Link className="underline \[color:inherit\]" href="\/demo">/.test(page) && /not open yet[^<]*<Link className="underline \[color:inherit\]" href="\/demo">/.test(page), true);
 done();
