@@ -128,7 +128,7 @@ export function visitLimitFor(store: PlanFields & { tier?: Tier }, nowSeconds = 
 export const REQUESTS_PER_VISIT = 3;
 export const EXTRA_REQUESTS: Record<Tier, number> = {
   creator: 500,
-  pro: 12_000,
+  pro: 2_000,
   scale: 5_000,
 };
 /** A free trial's extra requests, and a store with no plan's. */

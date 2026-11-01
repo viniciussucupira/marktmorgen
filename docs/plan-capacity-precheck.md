@@ -76,8 +76,8 @@ The unchanged registered model now tests positive net with the existing spend-fl
 | --- | --- | --- | --- | --- | --- |
 | Store | month | $69.00 | 12.03% | 13.14% | unreviewed; no approved maximum |
 | Store | year | $690.00 | 12.15% | 13.37% | unreviewed; no approved maximum |
-| Studio | month | $449.00 | 12.07% | 13.36% | unreviewed; no approved maximum |
-| Studio | year | $4490.00 | 11.93% | 13.40% | unreviewed; no approved maximum |
+| Studio | month | $449.00 | 12.11% | 13.36% | unreviewed; no approved maximum |
+| Studio | year | $4490.00 | 11.98% | 13.40% | unreviewed; no approved maximum |
 | Scale | month | $999.00 | 12.12% | 13.38% | unreviewed; no approved maximum |
 | Scale | year | $9990.00 | 11.96% | 13.40% | unreviewed; no approved maximum |
 
