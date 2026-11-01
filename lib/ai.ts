@@ -517,12 +517,73 @@ const SETUP_KINDS = new Set(["download", "course", "call", "membership"]);
 /**
  * A whole store's first draft from a few sentences (added 10 October 2026):
  * three lines to put under the name, up to three products the creator could
- * sell — named, summed up, priced as a suggestion and of a kind the store
+ * sell — named, summed up, priced only where the creator named a price (219 [OP5]: never an invented one) and of a kind the store
  * sells — and the questions a visitor would ask, answered only from what the
  * creator said. Nothing is saved here: the studio shows it all, the creator
  * changes or drops any of it, and what they keep is put up as drafts, never
  * on sale until they add what each one hands over. One of the month's jobs.
  */
+/** How a price in each currency is written beside its number: symbols, codes and words, longest first. */
+const PRICE_MARKS: Record<string, string[]> = {
+  usd: ["US$", "USD", "dollars", "dollar", "$"],
+  eur: ["EUR", "euros", "euro", "€"],
+  gbp: ["GBP", "pounds", "pound", "£"],
+  cad: ["CA$", "CAD", "C$", "dollars", "dollar", "$"],
+  aud: ["AU$", "AUD", "A$", "dollars", "dollar", "$"],
+  nzd: ["NZ$", "NZD", "dollars", "dollar", "$"],
+  chf: ["CHF", "francs", "franc", "Fr."],
+  sek: ["SEK", "kronor", "krona", "kr"],
+  nok: ["NOK", "kroner", "krone", "kr"],
+  dkk: ["DKK", "kroner", "krone", "kr"],
+  pln: ["PLN", "złoty", "zloty", "zł"],
+  jpy: ["JPY", "yen", "円", "¥"],
+  sgd: ["SG$", "SGD", "S$", "dollars", "dollar", "$"],
+  hkd: ["HK$", "HKD", "dollars", "dollar", "$"],
+  mxn: ["MX$", "MXN", "pesos", "peso", "$"],
+};
+
+const escapeMark = (mark: string) => mark.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+/** Every value a written amount can mean: "49,50" and "49.50" are 49.5; "1,500" is 1500; "1.500" may be 1500 or 1.5. */
+function amountsOf(raw: string): number[] {
+  const text = raw.replace(/[\s\u00a0']/g, "");
+  const comma = text.lastIndexOf(","), dot = text.lastIndexOf(".");
+  const asNumber = (s: string) => (s && /^\d+(\.\d+)?$/.test(s) ? [Number(s)] : []);
+  if (comma >= 0 && dot >= 0) {
+    const decimal = comma > dot ? "," : ".";
+    const thousands = decimal === "," ? "." : ",";
+    return asNumber(text.split(thousands).join("").replace(decimal, "."));
+  }
+  const sep = comma >= 0 ? "," : dot >= 0 ? "." : "";
+  if (!sep) return asNumber(text);
+  const parts = text.split(sep);
+  const last = parts[parts.length - 1];
+  const grouped = parts.length > 1 && parts.slice(1).every((part) => part.length === 3) ? asNumber(parts.join("")) : [];
+  const decimal = parts.length === 2 && last.length >= 1 && last.length <= 2 ? asNumber(`${parts[0]}.${last}`) : [];
+  const dotDecimal = sep === "." && parts.length === 2 && last.length === 3 ? asNumber(`${parts[0]}.${last}`) : [];
+  return [...grouped, ...decimal, ...dotDecimal];
+}
+
+/**
+ * A drafted product's price, only when the creator's own words state that
+ * amount as a price in the store's currency (219 [OP5]): "$12", "12 dollars",
+ * "USD 12", "€49,50" in a euro store. A bare number ("10 lessons", "2026") is
+ * not a price, and an amount in another currency is not this store's price.
+ * Anything else, the model's guess included, comes back empty, and the creator
+ * types the price before keeping the product.
+ */
+export function statedPrice(price: string, words: string, currency: string): string {
+  const wanted = Number(price);
+  if (!price || !Number.isFinite(wanted) || wanted <= 0) return "";
+  const marks = (PRICE_MARKS[currency] ?? [currency.toUpperCase()]).map(escapeMark).join("|");
+  const amount = "\\d[\\d.,\\s\u00a0']*\\d|\\d";
+  const stated = new RegExp(`(?:(?:${marks})\\s?(${amount}))|(?:(${amount})\\s?(?:${marks}))`, "giu");
+  for (const match of words.matchAll(stated)) {
+    for (const value of amountsOf(match[1] ?? match[2] ?? "")) if (Math.abs(value - wanted) < 0.000001) return price;
+  }
+  return "";
+}
+
 export async function writeStoreSetup(store: Store, input: { about: string; selling: string }, now = Date.now()): Promise<AiResult<StoreSetup>> {
   const about = block(input.about, MAX_AI_NOTES);
   const selling = block(input.selling, MAX_AI_NOTES);
@@ -533,7 +594,7 @@ export async function writeStoreSetup(store: Store, input: { about: string; sell
       honesty(storeLanguage(store)),
       "Work ONLY from what the creator says. Never invent a credential, a number of followers, students or buyers, a result, a testimonial, a guarantee, a refund, a delivery time or a bonus.",
       `"bios": three different lines for under the store's name, each at most 140 characters, saying who it is for and what they find there; no hashtags, no "Welcome to".`,
-      `"products": up to three products this creator could sell, built from what they said they make or sell. Each: "title" (at most 70 characters), "summary" (one sentence, at most 140 characters, what the buyer gets), "kind" (one of "download", "course", "call", "membership"), "price" (a plain number in ${store.currency.toUpperCase()}, a fair price for what it is, no currency sign).`,
+      `"products": up to three products this creator could sell, built from what they said they make or sell. Each: "title" (at most 70 characters), "summary" (one sentence, at most 140 characters, what the buyer gets), "kind" (one of "download", "course", "call", "membership"), "price" (the price the creator stated for this product, as a plain number in ${store.currency.toUpperCase()} with no currency sign; "" when they stated none. Never guess, suggest or round a price).`,
       `"faq": four to six questions a visitor would ask before buying, each at most 120 characters, each answer at most 300 characters, answered only from what the creator said; leave out any question you cannot answer from it.`,
       'Return only a JSON object: {"bios": [string], "products": [{"title": string, "summary": string, "kind": string, "price": string}], "faq": [{"q": string, "a": string}]}.',
     ].join("\n\n");
@@ -548,7 +609,8 @@ export async function writeStoreSetup(store: Store, input: { about: string; sell
         title: line(p.title, 80),
         summary: line(p.summary, 160),
         kind: (SETUP_KINDS.has(String(p.kind)) ? String(p.kind) : "download") as StoreSetup["products"][number]["kind"],
-        price: line(p.price, 12).replace(/[^\d.]/g, ""),
+        // Kept only when the creator's own words name that number: a price is never the model's guess.
+        price: statedPrice(line(p.price, 12).replace(/[^\d.]/g, ""), `${about}\n${selling}`, store.currency),
       }))
       .filter((p) => p.title)
       .slice(0, 3);
