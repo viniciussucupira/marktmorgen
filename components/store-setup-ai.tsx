@@ -101,9 +101,9 @@ export function StoreSetupAi({ currency, left: startLeft, hasFaq, storeName }: {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ bio, products: rows.filter((r) => r.keep).map(({ title, summary, kind, price }) => ({ title, summary, kind, price })), faq: keepFaq ? setup.faq : [] }),
       });
-      const data = (await response.json().catch(() => ({}))) as { ok?: boolean; done?: { bio: boolean; products: number; faq: boolean; refused: string[] } };
+      const data = (await response.json().catch(() => ({}))) as { ok?: boolean; done?: { bio: boolean; products: number; pages?: number; faq: boolean; refused: string[] } };
       if (data.ok && data.done) {
-        const parts = [data.done.bio ? "the line under your name" : "", data.done.products ? `${data.done.products} draft product${data.done.products === 1 ? "" : "s"}` : "", data.done.faq ? "your questions and answers" : ""].filter(Boolean);
+        const parts = [data.done.bio ? "the line under your name" : "", data.done.products ? `${data.done.products} draft product${data.done.products === 1 ? "" : "s"}${data.done.pages ? `, ${data.done.pages === data.done.products ? (data.done.products === 1 ? "with its sales page" : "each with its sales page") : `${data.done.pages} with a sales page`}` : ""}` : "", data.done.faq ? "your questions and answers" : ""].filter(Boolean);
         toast(parts.length ? `Kept: ${parts.join(", ")}.` : "Nothing was kept.");
         if (data.done.refused.length) setNote(`Not kept, because it has no price this store can charge yet: ${data.done.refused.join(", ")}. Type its price above and keep it again, or add it from Products.`);
         else setSetup(null);
