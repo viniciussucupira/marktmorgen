@@ -387,7 +387,7 @@ const FAST_MONEY_WHY =
 const FAST_MONEY_FIX = "Remove this promise, and say what the product contains and teaches, and the work it takes.";
 
 /** Where a product is stopped: the field, the passage, why and the fix. */
-export type FastMoneyRefusal = { field: "title" | "summary" | "about" | "page"; excerpt: string; why: string; fix: string; product?: string };
+export type FastMoneyRefusal = { field: "title" | "summary" | "about" | "page" | "option"; excerpt: string; why: string; fix: string; product?: string };
 
 /**
  * The first promise of fast or easy money in what a buyer reads of a product (its title, summary and description),
@@ -420,7 +420,7 @@ export function fastMoneyOnPage(words: readonly string[]): FastMoneyRefusal | nu
  * Why a product was not published or saved (567 [GD1] (d)): the words, where they are, why and the fix, from the
  * server's own check (lib/terms-check-rules.ts, fastMoneyRefusal). Nothing the creator wrote was changed.
  */
-const FIELD_NAMES: Record<string, string> = { title: "the name", summary: "the short description", about: "the description", page: "the sales page" };
+const FIELD_NAMES: Record<string, string> = { title: "the name", summary: "the short description", about: "the description", page: "the sales page", option: "a price's name or its lines" };
 export function fastMoneyMessage(passage: unknown, mode: "add" | "save" | "publish" = "save"): string {
   const p = passage && typeof passage === "object" ? (passage as Record<string, unknown>) : {};
   const where = FIELD_NAMES[String(p.field)] ?? "the product's words";
