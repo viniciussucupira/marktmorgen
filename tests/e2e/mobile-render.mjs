@@ -31,7 +31,8 @@ try{
  const demo=await fetch(LOCAL+"/demo",{redirect:"follow"});
  if(!demo.ok||!new URL(demo.url).pathname.startsWith("/@"))throw Error("Demo store not seeded: "+demo.status+" "+demo.url);
  const storePath=new URL(demo.url).pathname;
- const productPath=(await demo.text()).match(new RegExp('href="('+storePath.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+'/p/[^"?#]+)"'))?.[1];
+ // The demo's main product (DEMO_PRODUCT in lib/demo-seed.ts, "Weekly Meal Planner"), not whichever product link comes first.
+ const productPath=(await demo.text()).match(new RegExp('href="('+storePath.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+'/p/weekly-meal-planner-[a-z0-9]+)"'))?.[1];
  if(!productPath)throw Error("No product link on the demo store page");
  const STORE_PATHS=new Set([storePath,productPath]);
  for(const path of ["/","/pricing","/platform/sales-pages",storePath,productPath])for(let sample=1;sample<=3;sample++){
@@ -40,7 +41,7 @@ try{
    const page=await context.newPage();const cdp=await context.newCDPSession(page);
    await cdp.send("Emulation.setCPUThrottlingRate",{rate:4});await cdp.send("Network.enable");await cdp.send("Network.setCacheDisabled",{cacheDisabled:true});
    await cdp.send("Network.emulateNetworkConditions",{offline:false,latency:150,downloadThroughput:1600000/8,uploadThroughput:750000/8});
-   let writes=0,visitBeacons=0;await page.route("**/*",route=>{const request=route.request(),url=new URL(request.url());if(!["GET","HEAD"].includes(request.method())){/* A creator's page counts its visit (components/store-beacon.tsx): aborted like every write, and said, not failed. */if(STORE_PATHS.has(path)&&request.method()==="POST"&&url.pathname==="/api/store/hit"){visitBeacons++;return route.abort();}writes++;return route.abort();}if(url.pathname.startsWith("/api/")||url.origin!==LOCAL)return route.abort();return route.continue();});
+   let writes=0,visitBeacons=0;await page.route("**/*",route=>{const request=route.request(),url=new URL(request.url());if(!["GET","HEAD"].includes(request.method())){/* A creator's page counts its visit (components/store-beacon.tsx): aborted like every write, and said, not failed. */if(STORE_PATHS.has(path)&&request.method()==="POST"&&url.pathname==="/api/store/hit"){visitBeacons++;return route.abort();}writes++;return route.abort();}/* A creator's pictures are read from the store's own API: reads, let through so they count in the page's time. */if(STORE_PATHS.has(path)&&url.origin===LOCAL&&(url.pathname.startsWith("/api/image/")||url.pathname.startsWith("/api/photo/")))return route.continue();if(url.pathname.startsWith("/api/")||url.origin!==LOCAL)return route.abort();return route.continue();});
    await page.addInitScript(()=>{
     window.__renderLab={lcp:null,lcpAttribution:null,cls:0,lastShift:0,windowStart:0,windowScore:0,paint:[],events:[],shifts:[],longTasks:[],animationFrames:[],inputTargets:[]};
     new PerformanceObserver(list=>{for(const entry of list.getEntries()){window.__renderLab.lcp=entry.startTime;window.__renderLab.lcpAttribution={tag:entry.element?.tagName,id:entry.element?.id,text:entry.element?.textContent?.trim().slice(0,120),url:entry.url,size:entry.size,loadTime:entry.loadTime,renderTime:entry.renderTime};}}).observe({type:"largest-contentful-paint",buffered:true});
@@ -79,12 +80,15 @@ try{
    const interaction=await page.evaluate(()=>{const state=window.__renderLab;return {paint:state.paint,event:state.events,longTasks:state.longTasks,animationFrames:state.animationFrames,inputTargets:state.inputTargets};});
    const interactionMs=interaction.paint.length?Math.max(...interaction.paint,...interaction.event.map(item=>item.duration)):null;
    const result={label,version,path,sample,viewport:390,cpuSlowdown:4,latencyMs:150,downloadMbps:1.6,cache:"cold",thirdPartyRequests:"blocked",apiWrites:writes,lcpMs:before.lcp,lcpAttribution:before.lcpAttribution,cls:before.cls,interactionToPaintMs:interactionMs,eventTiming:interaction.event,longTasks:interaction.longTasks,longAnimationFrames:interaction.animationFrames,inputTargets:interaction.inputTargets,fieldINP:null,browserWork,layoutShiftSources:before.shifts};
-   // A creator's page may have no disclosure to press; then no interaction is measured, and that is said, not passed.
-   const noControl=STORE_PATHS.has(path)&&interactionMs===null;
-   result.creatorPage=STORE_PATHS.has(path);if(result.creatorPage)result.visitBeaconsAborted=visitBeacons;if(noControl)result.interactionMeasured=false;
-   result.targets={lcp:typeof before.lcp==="number"&&before.lcp<2500,cls:before.cls<0.1,interaction:noControl||(interactionMs!==null&&interactionMs<200)};
+   result.creatorPage=STORE_PATHS.has(path);
+   if(result.creatorPage){
+    result.visitBeaconsAborted=visitBeacons;
+    // Pictures the page drew, and those that did not load: a page measured without its pictures is said so, never hidden.
+    Object.assign(result,await page.evaluate(()=>{const pictures=[...document.querySelectorAll("main img")];return {picturesShown:pictures.filter(img=>img.complete&&img.naturalWidth>0).length,picturesMissing:pictures.filter(img=>!(img.complete&&img.naturalWidth>0)).length};}));
+   }
+   result.targets={lcp:typeof before.lcp==="number"&&before.lcp<2500,cls:before.cls<0.1,interaction:interactionMs!==null&&interactionMs<200};
    console.log("MOBILE_RENDER_MEASUREMENT:"+JSON.stringify(result));results.push(result);
-   if(writes||!Number.isFinite(before.lcp)||!Number.isFinite(before.cls)||(interactionMs===null&&!noControl))failed=true;
+   if(writes||!Number.isFinite(before.lcp)||!Number.isFinite(before.cls)||interactionMs===null)failed=true;
    if(label==="candidate"&&Object.values(result.targets).some(value=>!value))failed=true;
    // After preserving every cold performance measurement, exercise the real
    // cycle slots and native disclosure. No warm-up or threshold changes.
@@ -140,5 +144,10 @@ try{
   }finally{await context.close();}
  }
  console.log("MOBILE_RENDER_SUMMARY:"+JSON.stringify({label,version,samples:results.length,scope:"Synthetic cold local Chromium lab. Interaction-to-paint is a lab proxy, not field INP; no p75 Core Web Vitals certification.",results}));
-}catch(error){failed=true;console.error(error);console.error(output);}finally{await browser?.close();app.kill("SIGTERM");await services?.close?.();}
+}catch(error){failed=true;console.error(error);console.error(output);}finally{
+ // Each step on its own, so a browser that fails to close never leaves the app or the stand-ins running until the job's timeout.
+ await browser?.close().catch(error=>console.error("browser close failed",error));
+ if(app.exitCode===null){const gone=new Promise(done=>app.once("exit",done));app.kill("SIGTERM");await Promise.race([gone,new Promise(done=>setTimeout(done,15000))]);if(app.exitCode===null)app.kill("SIGKILL");}
+ await services?.close?.().catch(error=>console.error("stand-ins close failed",error));
+}
 process.exitCode=failed?1:0;
