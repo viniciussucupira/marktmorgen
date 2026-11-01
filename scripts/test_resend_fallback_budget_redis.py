@@ -16,7 +16,10 @@ import socket
 import subprocess
 import tempfile
 import time
+import threading
+import urllib.request
 import uuid
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 
 class Redis:
@@ -102,7 +105,11 @@ def main():
         port = 16379
         client = Redis(port)
     touched = set()
-    anchor = 1_793_534_400_000
+    def redis_now(connection=None):
+        clock = (connection or client).command("TIME")
+        return int(clock[0]) * 1000 + int(clock[1]) // 1000
+
+    anchor = redis_now()
     start = anchor - 15 * 86_400_000
     reset = start + 31 * 86_400_000
     serial = 0
@@ -117,7 +124,14 @@ def main():
         touched.update(pair)
         return pair
 
-    def call(acc, attempt, op="reserve", *, token="a" * 32, units=1, cap=10, used=0, sent=None, now=anchor, period_start=start, period_reset=reset, until=None, observed=None, prior=None, outcome="", connection=None, lua_override=None):
+    dispatches = {}
+    fingerprint = hashlib.sha256(b"synthetic final body").hexdigest()
+
+    def call(acc, attempt, op="reserve", *, token="a" * 32, units=1, cap=10, used=0, sent=None, now=None, period_start=start, period_reset=reset, until=None, observed=None, prior=None, outcome="", connection=None, lua_override=None, dispatch=None, payload=fingerprint):
+        if now is None:
+            now = redis_now(connection)
+        if dispatch is None:
+            dispatch = uuid.uuid4().hex if op == "dispatch" else ""
         if until is None:
             until = min(now + 60_000, period_reset)
         if observed is None:
@@ -126,18 +140,94 @@ def main():
             sent = used
         prior = prior or [0, 0, 0, 0]
         flag = "bootstrap_reviewed" if op == "initialize" else "period_closed" if prior[1] else ""
-        argv = [op, acc, token, units, period_start, period_reset, now, until, cap, observed, used, sent, used - sent, hashlib.sha256(attempt.encode()).hexdigest(), *prior, outcome, flag]
+        argv = [op, acc, token, units, period_start, period_reset, now, until, cap, observed, used, sent, used - sent, hashlib.sha256(attempt.encode()).hexdigest(), *prior, outcome, flag, payload, dispatch]
         return (connection or client).command("EVAL", lua_override or script, 2, *keys(acc, attempt), *argv)
 
     def initialize(acc, **kwargs):
         assert call(acc, "bootstrap", "initialize", **kwargs) == ["initialized"]
 
-    def claim_call(acc, attempt, saved, op, outcome="", now=anchor):
-        return call(acc, attempt, op, token=saved[1], units=int(saved[2]), period_start=int(saved[3]), period_reset=int(saved[4]), until=int(saved[5]), outcome=outcome, now=now)
+    def claim_call(acc, attempt, saved, op, outcome="", now=None, dispatch=None, **kwargs):
+        identity = (acc, attempt, saved[1])
+        if dispatch is None:
+            dispatch = uuid.uuid4().hex if op == "dispatch" else dispatches.get(identity, "")
+        result = call(acc, attempt, op, token=saved[1], units=int(saved[2]), period_start=int(saved[3]), period_reset=int(saved[4]), until=int(saved[5]), outcome=outcome, now=now, dispatch=dispatch, **kwargs)
+        if op == "dispatch" and result[0] == "dispatch":
+            dispatches[identity] = result[4]
+        return result
 
     def stats():
         raw = client.command("INFO", "commandstats")
         return {name: int(calls) for name, calls in re.findall(r"^cmdstat_([^:]+):calls=(\d+)", raw, re.M)}
+
+    def in_flight_race(lua_override=None):
+        """Real local HTTP POST A stays in flight while B refuses locally.
+
+        This is a synthetic provider, not Resend. The real production Lua
+        supplies permissions; the red control weakens only cancel's CAS.
+        """
+        posts = []
+        began, finish = threading.Event(), threading.Event()
+
+        class Provider(BaseHTTPRequestHandler):
+            def log_message(self, *_args):
+                pass
+
+            def do_POST(self):
+                value = self.rfile.read(int(self.headers["Content-Length"])).decode()
+                posts.append(value)
+                if value == "synthetic A":
+                    began.set()
+                    if not finish.wait(5):
+                        self.close_connection = True
+                        return
+                body = b'{"id":"synthetic accepted"}'
+                self.send_response(200)
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+
+        server = ThreadingHTTPServer(("127.0.0.1", 0), Provider)
+        worker = threading.Thread(target=server.serve_forever, daemon=True)
+        worker.start()
+
+        def post(value):
+            request = urllib.request.Request("http://127.0.0.1:" + str(server.server_address[1]), data=value.encode(), method="POST")
+            with urllib.request.urlopen(request, timeout=5) as response:
+                return response.status
+
+        try:
+            acc = account(); initialize(acc, cap=1)
+            a = call(acc, "same-intent", cap=1)
+            b = call(acc, "same-intent", cap=1, token="b" * 32)
+            assert b == ["already_reserved", *a[1:]]
+            assert claim_call(acc, "same-intent", a, "dispatch")[0] == "dispatch"
+            with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:
+                pending_post = pool.submit(post, "synthetic A")
+                try:
+                    assert began.wait(5)
+                    # B has no dispatch capability, even though its hold token
+                    # equals A's. A generic not-accepted settlement is denied.
+                    assert claim_call(acc, "same-intent", b, "settle", "confirmed_not_accepted", dispatch="") == ["denied", "dispatch_conflict"]
+                    canceled = claim_call(acc, "same-intent", b, "cancel", lua_override=lua_override)
+                    c = call(acc, "independent-intent-C", cap=1)
+                    if lua_override is None:
+                        assert canceled == ["denied", "not_reserved"]
+                        assert c == ["denied", "exhausted"]
+                    else:
+                        assert canceled == ["released"] and c[0] == "reserved"
+                        assert claim_call(acc, "independent-intent-C", c, "dispatch")[0] == "dispatch"
+                        assert post("synthetic C") == 200
+                        assert claim_call(acc, "independent-intent-C", c, "settle", "accepted") == ["settled", "accepted"]
+                finally:
+                    finish.set()
+                assert pending_post.result(timeout=5) == 200
+            settled = claim_call(acc, "same-intent", a, "settle", "accepted")
+            assert settled == (["settled", "accepted"] if lua_override is None else ["already_settled", "confirmed_not_accepted"])
+            assert [int(x) for x in client.command("HMGET", keys(acc, "same-intent")[0], "spent", "held")] == [1, 0]
+            assert len(posts) == (1 if lua_override is None else 2), posts
+        finally:
+            finish.set()
+            server.shutdown(); server.server_close(); worker.join(timeout=5)
 
     try:
         assert client.command("PING") == "PONG"
@@ -151,11 +241,11 @@ def main():
         print("PASS: missing state is not zero; sent plus received consumes the paid cap")
 
         race_account = account()
-        initialize(race_account)
+        initialize(race_account, observed=anchor)
         def reserve_race(index):
             other = Redis(port)
             try:
-                return call(race_account, "race:" + str(index), token=format(index, "032x"), connection=other)
+                return call(race_account, "race:" + str(index), token=format(index, "032x"), connection=other, observed=anchor)
             finally:
                 other.close()
         with concurrent.futures.ThreadPoolExecutor(max_workers=16) as pool:
@@ -165,6 +255,13 @@ def main():
         assert int(client.command("HGET", keys(race_account, "race:0")[0], "held")) == 10
         print("PASS: 64 concurrent reservations cannot exceed ten remaining emails")
 
+        in_flight_race()
+        cancel_guard = "if c[10]~='reserved' then return no('not_reserved') end"
+        assert script.count(cancel_guard) == 1
+        unsafe_cancel = script.replace(cancel_guard, "if c[10]~='reserved' and c[10]~='dispatched' then return no('not_reserved') end")
+        in_flight_race(unsafe_cancel)
+        print("PASS: A POST in flight + B local refusal keeps its hold; C cannot POST at quota1 (red control reproduces2 POSTs)")
+
         acc = account(); initialize(acc)
         original = call(acc, "lost-reserve", units=2)
         # The first response is deliberately discarded, as after a committed SET.
@@ -173,12 +270,13 @@ def main():
         def dispatch_race(_):
             other = Redis(port)
             try:
-                return call(acc, "lost-reserve", "dispatch", token=original[1], units=2, connection=other)
+                return call(acc, "lost-reserve", "dispatch", token=original[1], units=2, connection=other, period_start=int(original[3]), period_reset=int(original[4]), until=int(original[5]))
             finally:
                 other.close()
         with concurrent.futures.ThreadPoolExecutor(max_workers=16) as pool:
             dispatched = list(pool.map(dispatch_race, range(64)))
         assert sum(row[0] == "dispatch" for row in dispatched) == 1
+        dispatches[(acc, "lost-reserve", original[1])] = next(row[4] for row in dispatched if row[0] == "dispatch")
         assert all(row[0] == "dispatch" or row == ["denied", "already_dispatched"] for row in dispatched)
         assert claim_call(acc, "lost-reserve", original, "dispatch") == ["denied", "already_dispatched"]
         assert claim_call(acc, "lost-reserve", original, "settle", "unknown") == ["settled", "unknown"]
@@ -192,52 +290,160 @@ def main():
 
         acc = account(); initialize(acc)
         reserved = call(acc, "not-sent", units=3)
-        assert claim_call(acc, "not-sent", reserved, "settle", "unknown") == ["denied", "not_dispatched"]
-        assert claim_call(acc, "not-sent", reserved, "settle", "confirmed_not_accepted") == ["settled", "confirmed_not_accepted"]
-        assert claim_call(acc, "not-sent", reserved, "settle", "confirmed_not_accepted") == ["already_settled", "confirmed_not_accepted"]
+        assert claim_call(acc, "not-sent", reserved, "settle", "unknown") == ["denied", "dispatch_conflict"]
+        assert claim_call(acc, "not-sent", reserved, "cancel") == ["released"]
+        assert claim_call(acc, "not-sent", reserved, "cancel") == ["already_released"]
         assert [int(x) for x in client.command("HMGET", keys(acc, "not-sent")[0], "held", "spent", "attempts")] == [0, 0, 1]
         rearmed = call(acc, "not-sent", token="c" * 32, units=3)
         assert rearmed[0] == "reserved" and rearmed[1] != reserved[1]
         assert client.command("TTL", keys(acc, "not-sent")[1]) == -1
-        assert claim_call(acc, "not-sent", reserved, "settle", "confirmed_not_accepted") == ["denied", "claim_conflict"]
-        assert claim_call(acc, "not-sent", rearmed, "settle", "confirmed_not_accepted") == ["settled", "confirmed_not_accepted"]
+        assert claim_call(acc, "not-sent", reserved, "cancel") == ["denied", "claim_conflict"]
+        assert claim_call(acc, "not-sent", rearmed, "cancel") == ["released"]
         assert int(client.command("HGET", keys(acc, "not-sent")[0], "attempts")) == 2
         assert call(acc, "next", units=10)[0] == "reserved"
         print("PASS: confirmed nonacceptance releases once, without resetting the attempts bound")
+
+        acc = account(); initialize(acc, cap=1)
+        old = call(acc, "rearmed-http", cap=1)
+        claim_call(acc, "rearmed-http", old, "dispatch")
+        old_dispatch = dispatches[(acc, "rearmed-http", old[1])]
+        assert claim_call(acc, "rearmed-http", old, "settle", "confirmed_not_accepted") == ["settled", "confirmed_not_accepted"]
+        fresh = call(acc, "rearmed-http", cap=1, token="b" * 32)
+        assert fresh[0] == "reserved" and fresh[1] != old[1]
+        claim_call(acc, "rearmed-http", fresh, "dispatch")
+        assert claim_call(acc, "rearmed-http", old, "settle", "confirmed_not_accepted") == ["denied", "claim_conflict"]
+        assert claim_call(acc, "rearmed-http", fresh, "settle", "confirmed_not_accepted", dispatch=old_dispatch) == ["denied", "dispatch_conflict"]
+        assert claim_call(acc, "rearmed-http", fresh, "cancel") == ["denied", "not_reserved"]
+        assert claim_call(acc, "rearmed-http", fresh, "settle", "unknown") == ["settled", "unknown"]
+        assert call(acc, "cannot-reuse-fresh-hold", cap=1) == ["denied", "exhausted"]
+        assert int(client.command("HGET", keys(acc, "rearmed-http")[0], "held")) == 1
+        print("PASS: stale reservation/dispatch tokens cannot settle a rearmed or another invocation's hold; unknown never releases")
+
+        for before_expiry in (True, False):
+            acc = account(); initialize(acc, cap=1)
+            saved = call(acc, "partial-cancel", cap=1)
+            tail = "redis.call('PEXPIREAT',KEYS[2],expiry)\n redis.call('HINCRBY',KEYS[1],'held',-units)\n return {'released'}"
+            assert script.count(tail) == 1
+            replacement = "error('synthetic cancel interruption'); " + tail if before_expiry else tail.replace("redis.call('HINCRBY'", "error('synthetic cancel interruption'); redis.call('HINCRBY'", 1)
+            try:
+                claim_call(acc, "partial-cancel", saved, "cancel", lua_override=script.replace(tail, replacement))
+                raise AssertionError("Cancel fault did not execute")
+            except RuntimeError as error:
+                assert "synthetic cancel interruption" in str(error)
+            expected = ["denied", "claim_shape"] if before_expiry else ["already_released"]
+            assert claim_call(acc, "partial-cancel", saved, "cancel") == expected
+            assert int(client.command("HGET", keys(acc, "partial-cancel")[0], "held")) == 1
+            assert call(acc, "no-free-after-partial-cancel", cap=1) == ["denied", "exhausted"]
+        acc = account(); initialize(acc, cap=1)
+        saved = call(acc, "lost-dispatch", cap=1)
+        response = claim_call(acc, "lost-dispatch", saved, "dispatch")
+        assert response[0] == "dispatch"  # Discarded: the caller did not observe the permission.
+        assert claim_call(acc, "lost-dispatch", saved, "dispatch") == ["denied", "already_dispatched"]
+        assert claim_call(acc, "lost-dispatch", saved, "cancel") == ["denied", "not_reserved"]
+        assert claim_call(acc, "lost-dispatch", saved, "settle", "confirmed_not_accepted", dispatch="") == ["denied", "dispatch_conflict"]
+        assert call(acc, "no-free-after-dispatch-ack", cap=1) == ["denied", "exhausted"]
+        print("PASS: partial cancel and lost dispatch acknowledgement retain quota and cannot open another POST")
+
+        # Acceptance is recovered only from one complete payload-bound receipt.
+        acc = account(); initialize(acc)
+        saved = call(acc, "accepted-receipt")
+        claim_call(acc, "accepted-receipt", saved, "dispatch")
+        assert claim_call(acc, "accepted-receipt", saved, "settle", "accepted") == ["settled", "accepted"]
+        ledger, receipt_key = keys(acc, "accepted-receipt")
+        absolute = client.command("PEXPIRETIME", receipt_key)
+        before_read = client.command("HGETALL", ledger)
+        proof = call(acc, "accepted-receipt", "receipt")
+        assert proof[:5] == ["accepted", acc, hashlib.sha256(b"accepted-receipt").hexdigest(), fingerprint, "1"]
+        assert int(proof[6]) - int(proof[5]) == 35 * 86_400_000
+        assert int(proof[5]) <= int(proof[7]) < int(proof[6])
+        assert client.command("PEXPIRETIME", receipt_key) == absolute
+        assert client.command("HGETALL", ledger) == before_read
+        assert call(acc, "accepted-receipt", "receipt", payload="e" * 64) == ["denied", "receipt_unknown"]
+        assert call(acc, "accepted-receipt", "receipt", units=2) == ["denied", "receipt_unknown"]
+        assert call(acc, "not-this-intent", "receipt") == ["denied", "receipt_unknown"]
+        fields = client.command("HGETALL", receipt_key)
+        restore = lambda: (client.command("DEL", receipt_key), client.command("HSET", receipt_key, *fields), client.command("PEXPIREAT", receipt_key, absolute))
+        for field, bad in [("schema", "1"), ("account", "e" * 64), ("attempt", "e" * 64), ("fingerprint", ""), ("state", "unknown"), ("dispatchToken", ""), ("units", "01"), ("acceptedAt", "0"), ("expiresAt", str(absolute + 1))]:
+            client.command("HSET", receipt_key, field, bad)
+            assert call(acc, "accepted-receipt", "receipt")[0] == "denied", field
+            restore()
+        client.command("HSET", receipt_key, "extra", "field")
+        assert call(acc, "accepted-receipt", "receipt")[0] == "denied"; restore()
+        client.command("PERSIST", receipt_key)
+        assert call(acc, "accepted-receipt", "receipt")[0] == "denied"; restore()
+        client.command("PEXPIREAT", receipt_key, absolute + 1)
+        assert call(acc, "accepted-receipt", "receipt")[0] == "denied"; restore()
+        future = redis_now() + 60_000
+        client.command("HSET", receipt_key, "acceptedAt", future, "expiresAt", future + 35 * 86_400_000)
+        client.command("PEXPIREAT", receipt_key, future + 35 * 86_400_000)
+        assert call(acc, "accepted-receipt", "receipt")[0] == "denied"; restore()
+        client.command("PEXPIREAT", receipt_key, redis_now())
+        assert call(acc, "accepted-receipt", "receipt")[0] == "denied"
+        print("PASS: read-only accepted receipt checks account/intent/payload/units/provenance/state/exact TTL/Redis TIME, without refreshing")
+
+        acc = account(); initialize(acc)
+        legacy = call(acc, "legacy-no-fingerprint", payload="")
+        claim_call(acc, "legacy-no-fingerprint", legacy, "dispatch", payload="")
+        assert claim_call(acc, "legacy-no-fingerprint", legacy, "settle", "accepted", payload="")[0] == "settled"
+        assert call(acc, "legacy-no-fingerprint", "receipt")[0] == "denied"
+        # Equal bodies with distinct intent nonces are independent permissions.
+        acc = account(); initialize(acc, cap=2)
+        one = call(acc, "nonce-one", cap=2); two = call(acc, "nonce-two", cap=2)
+        assert one[0] == two[0] == "reserved"
+        assert claim_call(acc, "nonce-one", one, "dispatch")[0] == "dispatch"
+        assert claim_call(acc, "nonce-two", two, "dispatch")[0] == "dispatch"
+        assert dispatches[(acc, "nonce-one", one[1])] != dispatches[(acc, "nonce-two", two[1])]
+        print("PASS: legacy claims have no accepted payload receipt; equal payloads with distinct intent nonces never merge permissions")
+
+        acc = account(); initialize(acc)
+        saved = call(acc, "server-clock")
+        assert claim_call(acc, "server-clock", saved, "dispatch", now=redis_now() - 2_000) == ["denied", "expired"]
+        assert client.command("HGET", keys(acc, "server-clock")[1], "state") == "reserved"
+        past = redis_now() - 1
+        assert call(acc, "expired-source", now=past - 1000, until=past, observed=past - 1000) == ["denied", "arguments"]
+        print("PASS: worker/Redis clock disagreement cannot create expired dispatch permission or a past-horizon reservation")
 
         for outcome, before_release, expected_spent in [("accepted", False, 0), ("accepted", True, 1), ("confirmed_not_accepted", True, 0)]:
             acc = account(); initialize(acc)
             saved = call(acc, "partial-settlement")
             claim_call(acc, "partial-settlement", saved, "dispatch")
-            needle = "redis.call('HINCRBY',KEYS[1],'held',-units)" if before_release else "redis.call('EXPIRE',KEYS[2],35*86400)"
+            needle = "redis.call('HINCRBY',KEYS[1],'held',-units)\nreturn {'settled',outcome}" if before_release else "redis.call('PEXPIREAT',KEYS[2],expiry)\nif outcome=='accepted'"
             assert script.count(needle) == 1
-            interrupted = script.replace(needle, "error('synthetic settlement interruption')", 1)
+            interrupted = script.replace(needle, "error('synthetic settlement interruption'); " + needle, 1)
             try:
-                call(acc, "partial-settlement", "settle", token=saved[1], outcome=outcome, lua_override=interrupted)
+                claim_call(acc, "partial-settlement", saved, "settle", outcome, lua_override=interrupted)
                 raise AssertionError("Expected injected Redis script error")
             except RuntimeError as error:
                 assert "synthetic settlement interruption" in str(error)
             assert [int(x) for x in client.command("HMGET", keys(acc, "partial-settlement")[0], "spent", "held")] == [expected_spent, 1]
-            assert claim_call(acc, "partial-settlement", saved, "settle", outcome) == ["already_settled", outcome]
+            again = claim_call(acc, "partial-settlement", saved, "settle", outcome)
+            assert again == (["already_settled", outcome] if before_release else ["denied", "claim_shape"]), again
             assert [int(x) for x in client.command("HMGET", keys(acc, "partial-settlement")[0], "spent", "held")] == [expected_spent, 1]
         print("PASS: interrupted Lua settlement can over-reserve but cannot free another attempt or erase accepted spend")
 
         acc = account(); initialize(acc, used=2)
         assert call(acc, "regressed-count", used=1) == ["denied", "usage_regressed"]
         assert call(acc, "regressed-clock", used=2, observed=anchor - 1) == ["denied", "usage_regressed"]
-        first = call(acc, "accepted-before-reset", used=2, units=2)
+        # Cross an actual short fixture boundary rather than forge Redis time.
+        acc = account()
+        old_reset = redis_now() + 500
+        old_start = old_reset - 31 * 86_400_000
+        initialize(acc, used=2, period_start=old_start, period_reset=old_reset)
+        first = call(acc, "accepted-before-reset", used=2, units=2, period_start=old_start, period_reset=old_reset)
         claim_call(acc, "accepted-before-reset", first, "dispatch")
         assert claim_call(acc, "accepted-before-reset", first, "settle", "accepted") == ["settled", "accepted"]
-        unknown = call(acc, "pending-reset", used=2, units=3)
-        claim_call(acc, "pending-reset", unknown, "dispatch")
-        claim_call(acc, "pending-reset", unknown, "settle", "unknown")
-        next_now = reset + 1_000
-        next_period = dict(now=next_now, period_start=reset, period_reset=reset + 30 * 86_400_000, used=4)
+        pending = call(acc, "pending-reset", used=2, units=3, period_start=old_start, period_reset=old_reset)
+        claim_call(acc, "pending-reset", pending, "dispatch")
+        claim_call(acc, "pending-reset", pending, "settle", "unknown")
+        while redis_now() <= old_reset:
+            time.sleep(0.01)
+        next_now = redis_now()
+        next_period = dict(now=next_now, period_start=old_reset, period_reset=old_reset + 30 * 86_400_000, used=4)
         assert call(acc, "new-no-proof", **next_period) == ["denied", "unreviewed_reset"]
         assert int(client.command("HGET", keys(acc, "new-no-proof")[0], "spent")) == 2
-        assert call(acc, "new-with-proof", prior=[start, reset, 5, reset], **next_period)[0] == "reserved"
+        assert call(acc, "new-with-proof", prior=[old_start, old_reset, 5, old_reset], **next_period)[0] == "reserved"
         assert [int(x) for x in client.command("HMGET", keys(acc, "new-with-proof")[0], "seenUsed", "spent", "held")] == [4, 0, 4]
-        assert claim_call(acc, "pending-reset", unknown, "settle", "accepted", now=next_now) == ["settled", "accepted"]
+        assert claim_call(acc, "pending-reset", pending, "settle", "accepted") == ["settled", "accepted"]
         assert [int(x) for x in client.command("HMGET", keys(acc, "new-with-proof")[0], "spent", "held")] == [3, 1]
         print("PASS: only a reviewed consecutive provider period resets settled spend; unresolved holds carry over")
 
@@ -256,26 +462,37 @@ def main():
         print("PASS: malformed/expiring state, oversized caps and unlimited refusal tombstones cannot authorize fallback")
 
         measured = account()
-        before = stats(); initialize(measured); after = stats()
-        counts = {"initialize": sum(after.get(key, 0) - before.get(key, 0) for key in set(before) | set(after) if key != "info")}
-        before = stats(); saved = call(measured, "measured"); after = stats()
-        counts["reserve"] = sum(after.get(key, 0) - before.get(key, 0) for key in set(before) | set(after) if key != "info")
-        before = stats(); claim_call(measured, "measured", saved, "dispatch"); after = stats()
-        counts["dispatch"] = sum(after.get(key, 0) - before.get(key, 0) for key in set(before) | set(after) if key != "info")
-        before = stats(); claim_call(measured, "measured", saved, "settle", "accepted"); after = stats()
-        counts["settle_accepted"] = sum(after.get(key, 0) - before.get(key, 0) for key in set(before) | set(after) if key != "info")
+        def measured_commands(work):
+            at = redis_now()  # Fixture clock read is outside the measured path.
+            before = stats(); work(at); after = stats()
+            return sum(after.get(key, 0) - before.get(key, 0) for key in set(before) | set(after) if key != "info")
+        counts = {"initialize": measured_commands(lambda at: initialize(measured, now=at))}
+        saved_box = []
+        counts["reserve"] = measured_commands(lambda at: saved_box.append(call(measured, "measured", now=at)))
+        saved = saved_box[0]
+        counts["dispatch"] = measured_commands(lambda at: claim_call(measured, "measured", saved, "dispatch", now=at))
+        counts["settle_accepted"] = measured_commands(lambda at: claim_call(measured, "measured", saved, "settle", "accepted", now=at))
+        counts["read_accepted"] = measured_commands(lambda at: call(measured, "measured", "receipt", now=at))
+        canceled = call(measured, "measured-cancel")
+        counts["cancel_reserved"] = measured_commands(lambda at: claim_call(measured, "measured-cancel", canceled, "cancel", now=at))
         print(json.dumps({"observed_redis_commands_including_eval_and_redis_call": counts, "supplier_invoice": False}))
-        assert counts == {"initialize": 3, "reserve": 9, "dispatch": 8, "settle_accepted": 11}, counts
+        assert counts == {"initialize": 4, "reserve": 11, "dispatch": 11, "settle_accepted": 14, "read_accepted": 10, "cancel_reserved": 13}, counts
         print("PASS: exact application Lua, atomicity and observed Redis command counts")
     finally:
-        for key in touched:
-            client.command("DEL", key)
-        client.close()
-        if owned:
-            owned.terminate()
-            owned.wait(timeout=10)
-        temp.cleanup()
-        print("CLEANUP: only synthetic keys removed; owned loopback Redis stopped without persistence")
+        try:
+            cleanup = Redis(port)
+            try:
+                for key in touched:
+                    cleanup.command("DEL", key)
+            finally:
+                cleanup.close()
+        finally:
+            client.close()
+            if owned:
+                owned.terminate()
+                owned.wait(timeout=10)
+            temp.cleanup()
+            print("CLEANUP: only synthetic keys removed; owned loopback Redis stopped without persistence")
 
 
 if __name__ == "__main__":
