@@ -169,9 +169,9 @@ async function main(): Promise<void> {
   is("the same path under the images' origin", pictureR2Url(config, path), `https://images.marktmorgen.example/${path}`);
   is("a path that is not a picture's has none", (() => { try { return pictureR2Url(config, "images/../secret"); } catch { return "refused"; } })(), "refused");
 
-  part("Nothing calls it yet");
-  const users = [...sources("app"), ...sources("lib"), ...sources("components"), ...sources("scripts")].filter((file) => file !== join("lib", "picture-r2.ts") && /(?:@\/lib\/|\.\/|\.\.\/)picture-r2["']/.test(readFileSync(file, "utf8")));
-  is("no file of the app imports it", users, []);
+  part("Only the copy on attach (unit 4b) and the served address (unit 4c) use it");
+  const users = [...sources("app"), ...sources("lib"), ...sources("components"), ...sources("scripts")].filter((file) => file !== join("lib", "picture-r2.ts") && file !== join("lib", "picture-r2-copy.ts") && file !== join("lib", "picture-served.ts") && /(?:@\/lib\/|\.\/|\.\.\/)picture-r2["']/.test(readFileSync(file, "utf8")));
+  is("no other file of the app imports it", users, []);
   done();
 }
 
