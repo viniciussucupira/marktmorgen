@@ -40,7 +40,7 @@ import { canGiveProduct } from "@/lib/free";
 import { lookStyle } from "@/lib/store-look";
 import { photoUrl } from "@/lib/photo-limits";
 import { IMAGE_SIZES } from "@/lib/product-image";
-import { type Block, type Piece, aboutBlocks, aboutExcerpt, readAbout } from "@/lib/product-about";
+import { aboutBlocks, aboutExcerpt, readAbout } from "@/lib/product-about";
 import { activePlan, bumpTargets } from "@/lib/product-extras";
 import { activePwyw } from "@/lib/pay-what-you-want";
 import { stockLeft } from "@/lib/stock";
@@ -75,7 +75,7 @@ import { productSegment } from "@/lib/product-slug";
 import { breadcrumbData, faqData } from "@/lib/page-structured-data";
 import { PictureViewer } from "@/components/picture-viewer";
 import { featuredCards } from "@/lib/featured-cards";
-import { NewTab } from "@/components/new-tab";
+import { ProductAbout } from "@/components/product-about-view";
 
 type Params = {
   params: Promise<{ handle: string; product: string }>;
@@ -162,50 +162,6 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
     openGraph: { type: "website", title, description, url: canonical },
     twitter: { card: "summary_large_image", title, description },
   };
-}
-
-/** One line of a description, with its links drawn as links. */
-function Line({ pieces, language }: { pieces: Piece[]; language: unknown }) {
-  return (
-    <>
-      {pieces.map((piece, i) =>
-        piece.href ? (
-          <a key={i} href={piece.href} target="_blank" rel="noopener noreferrer nofollow ugc">
-            {piece.text}
-          <NewTab language={language} /></a>
-        ) : (
-          <span key={i}>{piece.text}</span>
-        ),
-      )}
-    </>
-  );
-}
-
-function About({ blocks, language }: { blocks: Block[]; language: unknown }) {
-  return (
-    <div className="st-about mt-6 leading-relaxed">
-      {blocks.map((block, i) =>
-        block.kind === "list" ? (
-          <ul key={i}>
-            {block.items.map((item, j) => (
-              <li key={j}>
-                <Line pieces={item} language={language} />
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p key={i}>
-            {block.lines.map((line, j) => (
-              <span key={j}>
-                {j > 0 ? <br /> : null}
-                <Line pieces={line} language={language} />
-              </span>
-            ))}
-          </p>
-        ),
-      )}
-    </div>
-  );
 }
 
 /**
@@ -610,7 +566,7 @@ export default async function ProductPage({ params, searchParams }: Params) {
             {soldLine}
             <ProductFacts store={store} product={product} bundleItems={inside} linkCourse={false} />
             {product.summary ? <p className="st-muted mt-4 text-lg leading-relaxed">{product.summary}</p> : null}
-            {blocks.length > 0 ? <About blocks={blocks} language={store.language} /> : null}
+            {blocks.length > 0 ? <ProductAbout blocks={blocks} language={store.language} /> : null}
             {bundleList}
 
             <div id={free ? "get" : "buy"} className="mt-8 scroll-mt-6 border-t pt-6" style={{ borderColor: "var(--st-line)" }}>
