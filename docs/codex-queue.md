@@ -17581,6 +17581,7 @@ Testes automáticos, com Stripe simulado: reserva presencial, sinal, escolha do 
 
 521 [LB2] Página da loja para negócio com endereço, com vídeo próprio.
 Estado inicial: na fila.
+Andamento (Claude 2, 01/11/2026): os formatos oficiais dos links "Open in Apple Maps" e "Open in Google Maps" não puderam ser conferidos: a página da Apple (developer.apple.com, "Adopting unified Maps URLs") só carrega o título sem JavaScript, e developers.google.com está fora dos domínios permitidos desta sessão (Depende do dono: liberar o domínio nas configurações de rede do ambiente, ou mandar o texto das páginas). Sem fonte oficial datada, os links não foram construídos; o resto do bloco "Visit us" (endereço, horários e telefone escritos pelo criador) não depende disso.
 O que fazer:
 - um bloco opcional "Visit us" na loja: endereço, horários de funcionamento escritos pelo criador, telefone e botões "Open in Apple Maps" e "Open in Google Maps" (só links, sem mapa embutido, sem custo de fornecedor e sem rastreamento);
 - vídeo de boas-vindas enviado como arquivo, além dos links do YouTube, Vimeo e Loom, com o mesmo envio, armazenamento e horas de vídeo do plano já usados nas aulas (lib/course-videos.ts), legendas e transcrição conforme AX274 e carregado só quando a pessoa aperta o play.
