@@ -6,17 +6,18 @@
  *
  * It is applied through the course's own edits (lib/course.ts): the
  * "outline" edit the writing help already uses for the modules and lessons,
- * then "module-remove" for the course's own empty modules, "module-edit" for
- * each module's opening day and "certificate". So it meets every limit those
- * edits already enforce, and makes nothing a course could not have by hand.
- * It is offered only to a course with no lesson yet: an existing course is
- * never written over.
+ * then "module-remove" for the new course's own empty module, "module-edit"
+ * for each module's opening day and "certificate", chained in memory and
+ * saved once (applyTemplate). So it meets every limit those edits already
+ * enforce, and makes nothing a course could not have by hand. It is offered
+ * only to a course exactly as it is made: one the creator touched is never
+ * written over.
  *
  * Example titles are neutral: no result, promise, number of anything a
  * buyer gets, or testimonial (tests/course-templates.test.ts holds them to
  * that). Browser-safe: plain data and pure functions.
  */
-import { MAX_LESSONS, MAX_MODULES, lessonCount, type Course, type CourseEdit } from "@/lib/course";
+import { editCourse, type Course, type CourseEdit } from "@/lib/course";
 
 export type TemplateModule = { title: string; lessons: string[]; dripDays: number };
 export type CourseTemplate = {
@@ -68,45 +69,61 @@ export const COURSE_TEMPLATES: readonly CourseTemplate[] = [
   { id: "scratch", name: "Start from scratch", about: "An empty course, as today.", modules: [], certificate: false, funnel: null },
 ];
 
-export type TemplateFit = { ok: true } | { ok: false; why: "not-empty" | "too-many-modules" | "too-many-lessons" };
+export type TemplateFit = { ok: true } | { ok: false; why: "not-new" };
 
 /**
- * Whether a structure may be applied to this course: only one with no
- * lesson yet (a new course has one empty "Module 1"), and only within the
- * course's limits once its empty modules are taken away.
+ * Whether a structure may be applied: only to a course exactly as it is
+ * made (lib/course.ts, emptyCourse: one "Module 1" opening on the first day,
+ * no lesson, no certificate, no start date). A course the creator has
+ * touched at all, a module renamed or given an opening day, is never
+ * written over.
  */
-export function templateFits(template: CourseTemplate, course: Pick<Course, "modules">): TemplateFit {
-  if (lessonCount(course as Course) > 0) return { ok: false, why: "not-empty" };
-  if (course.modules.length + template.modules.length > MAX_MODULES) return { ok: false, why: "too-many-modules" };
-  if (template.modules.reduce((n, m) => n + m.lessons.length, 0) > MAX_LESSONS) return { ok: false, why: "too-many-lessons" };
-  return { ok: true };
+export function templateFits(course: Pick<Course, "modules" | "certificate" | "startsAt">): TemplateFit {
+  const [only, ...more] = course.modules;
+  const untouched = !more.length && only && only.title === "Module 1" && only.dripDays === 0 && only.lessons.length === 0 && !course.certificate && course.startsAt === null;
+  return untouched ? { ok: true } : { ok: false, why: "not-new" };
 }
 
-/** Said beside a structure that cannot be applied. */
+/** Said beside the structures when they cannot be applied. */
 export const FIT_WORDS: Record<Exclude<TemplateFit, { ok: true }>["why"], string> = {
-  "not-empty": "This course already has lessons, so a ready structure would write over them. Start from it as it is.",
-  "too-many-modules": "This structure has more modules than a course can hold.",
-  "too-many-lessons": "This structure has more lessons than a course can hold.",
+  "not-new": "Ready structures are for a new course. This one already has your changes, so it stays as it is.",
 };
 
-/** The first edit: the structure's modules and lessons, added after the course's own empty modules. */
-export function templateOutline(template: CourseTemplate): CourseEdit | null {
-  return template.modules.length ? { op: "outline", modules: template.modules.map((m) => ({ title: m.title, lessons: [...m.lessons] })) } : null;
-}
-
 /**
- * The edits after the outline, given the course as the outline left it: the
- * empty modules it had before taken away (only empty ones: the course's own
- * edit refuses any other), each new module's opening day where it is not
- * the first, and the certificate.
+ * The whole structure applied at once: the course's own edits chained on
+ * the course in memory (the outline, taking away the new course's own
+ * empty module only, each module's opening day, the certificate), so the
+ * result is shown as a draft and saved in one write, or not at all. Any
+ * edit refused leaves nothing done.
  */
-export function templateFinish(template: CourseTemplate, course: Pick<Course, "modules">): CourseEdit[] {
-  const added = course.modules.slice(course.modules.length - template.modules.length);
-  const before = course.modules.slice(0, course.modules.length - template.modules.length);
-  const edits: CourseEdit[] = before.filter((m) => m.lessons.length === 0).map((m) => ({ op: "module-remove", moduleId: m.id }));
+export function applyTemplate(course: Course, template: CourseTemplate): { ok: true; course: Course } | { ok: false } {
+  if (!templateFits(course).ok) return { ok: false };
+  if (!template.modules.length) return { ok: true, course };
+  const original = course.modules[0].id;
+  const outline: CourseEdit = { op: "outline", modules: template.modules.map((m) => ({ title: m.title, lessons: [...m.lessons] })) };
+  let draft = editCourse(course, outline);
+  if (!draft.ok) return { ok: false };
+  const added = draft.course.modules.filter((m) => m.id !== original);
+  const edits: CourseEdit[] = [{ op: "module-remove", moduleId: original }];
   template.modules.forEach((m, i) => {
-    if (m.dripDays > 0 && added[i]) edits.push({ op: "module-edit", moduleId: added[i].id, title: m.title, dripDays: m.dripDays });
+    if (m.dripDays > 0) edits.push({ op: "module-edit", moduleId: added[i].id, title: m.title, dripDays: m.dripDays });
   });
   if (template.certificate) edits.push({ op: "certificate", on: true });
-  return edits;
+  for (const edit of edits) {
+    draft = editCourse(draft.course, edit);
+    if (!draft.ok) return { ok: false };
+  }
+  return { ok: true, course: draft.course };
+}
+
+/** The marks an example title carries until the creator replaces it. */
+const EXAMPLE = /your title here|add your questions here/i;
+
+/**
+ * Titles still as the structure wrote them. Module titles go into the email
+ * a student gets when a module opens (lib/learn.ts, sendDripEmails), so the
+ * course is not published while any is left (the next unit, with the screen).
+ */
+export function exampleTitlesLeft(course: Pick<Course, "modules">): number {
+  return course.modules.reduce((n, m) => n + (EXAMPLE.test(m.title) ? 1 : 0) + m.lessons.filter((l) => EXAMPLE.test(l.title)).length, 0);
 }
