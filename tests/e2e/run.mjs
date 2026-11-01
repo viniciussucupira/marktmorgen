@@ -2050,7 +2050,7 @@ try {
     is("it shows the products to keep, each editable", [await setup.locator("#setup-title-0").inputValue(), await setup.locator("#setup-price-1").inputValue()], ["Sunday Meal Planner", "7"]);
     await setup.locator("#setup-price-0").fill("14");
     await setup.getByRole("button", { name: "Keep what I chose" }).click();
-    await studio.getByText("Kept: the line under your name, 2 draft products, your questions and answers.").first().waitFor({ timeout: 30_000 });
+    await studio.getByText("Kept: the line under your name, 2 draft products, each with its sales page, your questions and answers.").first().waitFor({ timeout: 30_000 });
     await open(page, `${LOCAL}/@freshshop`);
     const front = await words(page.locator("main"));
     is("the line is under the name, the questions are on the page, and the drafts are not for sale", [front.includes("Cook once, eat all week."), front.includes("How do I get the planner?"), front.includes("Sunday Meal Planner")], [true, true, false]);

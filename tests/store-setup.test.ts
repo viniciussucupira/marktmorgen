@@ -8,7 +8,9 @@
  */
 import { claimHandle, ensureStatsId, setFaq, setSubscription, storeForEmail } from "@/lib/store";
 import { SETUP_MONEY_OR_NUMBER, statedPrice, writeStoreSetup } from "@/lib/ai";
-import { keepStoreSetup } from "@/lib/store-setup";
+import { keepStoreSetup, setupTemplate } from "@/lib/store-setup";
+import { readPage } from "@/lib/sales-page-store";
+import { templateOutline } from "@/lib/sales-page";
 import { KIND } from "@/lib/catalog";
 import { store as redis } from "./redis-stub";
 import { done, is, part } from "./check";
@@ -127,10 +129,18 @@ async function main(): Promise<void> {
     faq: [{ q: "How do I get the planner?", a: "As a download after paying." }],
   });
   const store = (await storeForEmail(owner))!;
-  is("the line, two drafts, the questions, and the one with no price refused by name", kept, { bio: true, products: 2, faq: true, refused: ["Free?"] });
+  is("the line, two drafts each with its page, the questions, and the one with no price refused by name", kept, { bio: true, products: 2, pages: 2, faq: true, refused: ["Free?"] });
   is("the line is under the name", store.bio, "Cook once, eat all week.");
   is("every product a draft, not on sale", store.catalog.items.map((item) => (item.kind & KIND.hidden) !== 0), [true, true]);
   is("the club is monthly", (store.catalog.items[1].kind & KIND.recurring) !== 0, true);
+  part("Each draft product gets the sales page of its kind, with nothing invented");
+  const asksBefore = asked.length;
+  const [plannerPage, clubPage] = await Promise.all(store.catalog.items.map((item) => readPage(store.statsId, item.id)));
+  is("the planner's page opens on its own title and summary, then the download template", [plannerPage.blocks[0]?.kind, (plannerPage.blocks[0] as { headline?: string }).headline, (plannerPage.blocks[0] as { sub?: string }).sub, plannerPage.blocks.slice(1).map((b) => b.kind)], ["hero", "Sunday Meal Planner", "A week of dinners planned in one page.", templateOutline("guide")]);
+  is("the club's page is the membership template", clubPage.blocks.slice(1).map((b) => b.kind), templateOutline("membership"));
+  is("no sentence is written for the creator: answers stay empty", plannerPage.blocks.filter((b) => b.kind === "faq").flatMap((b) => (b as { items: { a: string }[] }).items.map((i) => i.a)).every((a) => a === ""), true);
+  is("and no AI was asked for it", asked.length, asksBefore);
+  is("the template follows the kind, and a free product gets the free one", [setupTemplate("download", false), setupTemplate("course", false), setupTemplate("call", false), setupTemplate("membership", false), setupTemplate("course", true), setupTemplate("odd", false)], ["guide", "course", "coaching", "membership", "free", "guide"]);
   await setFaq(owner, [{ q: "Mine", a: "My answer." }]);
   await keepStoreSetup(owner, (await storeForEmail(owner))!, { faq: [{ q: "Theirs", a: "Not kept." }] });
   is("questions already written are never replaced", (await storeForEmail(owner))!.faq, [{ q: "Mine", a: "My answer." }]);
