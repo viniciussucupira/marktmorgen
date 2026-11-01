@@ -97,7 +97,7 @@ export const FORMAT_INFO: Readonly<Record<FirstFormat, FormatInfo>> = {
   },
   checklist: {
     name: "Checklist",
-    what: "A list the reader ticks off, so nothing is forgotten.",
+    what: "A list the reader checks off, so nothing is forgotten.",
     know: "What has to be done, or checked, in your own words?",
     example: "Before a craft fair: pack the table cloth, price every item, charge the card reader, bring change and a sign.",
     questions: [
