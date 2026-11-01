@@ -206,12 +206,10 @@ The screen-by-screen audit that 487 [IT4] asks for: what was checked, what was f
 
 **Found on the way, not changed here.** The store's muted text on the "sand" theme is 6.51:1 (#5c5244 on #f3ece0, `lib/store-look.ts`), below the 7:1 AAA asks for small text. It is used on published store pages too, so it is the theme's to fix, in its own unit, with every page that uses it checked. The "light" (8.70:1) and "night" (10.14:1) themes pass.
 
-**Still to do, most used first:**
-- the product editor;
-- checkout settings;
-- the community composer.
-
-Each needs the buyer's page drawn from the unsaved draft by the page's own code, so each gets its own unit.
+**Still to do, most used first, each with what it needs:**
+- **The product editor.** The product page (`app/[handle]/p/[product]/page.tsx`, 717 lines) is drawn on the server, from dozens of server-only parts: recent sales, the cart, the headline test, sold counts. A faithful preview from the draft first needs its top, price and description pulled into a component that draws from plain data on both sides. That is its own unit, with the page's tests run before and after.
+- **Checkout settings.** The checkout is Stripe's own hosted page, so it cannot be drawn here faithfully. A preview there would be a guess, so none is shown. The honest way to see it is a test checkout in the creator's Stripe test mode.
+- **The community composer.** Its words are in the buyer's language, in seven languages, so a preview's sentences need writing in each of them under the rules for buyer languages.
 
 ## Where each pattern stands
 
