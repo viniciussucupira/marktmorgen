@@ -8450,6 +8450,7 @@ Nenhuma mudança de preço, limite visível, comissão, PLANS_ON_SALE, OPENING_R
 
 Estado: na fila, com prioridade logo após os pedidos já recebidos.
 
+Em andamento pelo Claude 2: 31/10/2026 20h20 Fortaleza, §6 (declaração honesta), junto com o DA1 do 274 [AX1] Parte B.2 (mesma página, sem duplicar), ramo claude2/ax2-accessibility-page. Arquivos reservados (AV5): app/accessibility/page.tsx (novo), lib/accessibility-statement.ts (novo), tests/accessibility-statement.test.ts (novo), components/site-footer.tsx (só LEGAL_LINKS), app/sitemap.ts (uma linha), docs/accessibility-inventory.json (gerado). Nada de §1–§5 nem dos outros passos do 310; os testes com leitor de tela real e pessoas seguem lacuna.
 Verifique primeiro o que os cinco fluxos de acessibilidade do CI já cobrem (accessibility-public-matrix, accessibility-studio-matrix, accessibility-signup-actions, accessibility-product-actions e accessibility-buyer-actions) e implemente apenas a diferença.
 
 1. Inventário completo das rotas, gerado pelo código:
