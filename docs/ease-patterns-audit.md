@@ -177,7 +177,7 @@ The screen-by-screen audit that 487 [IT4] asks for: what was checked, what was f
 
 **Still to do, in this order, since a mistake there is public or costs money:**
 - the prices of memberships, pay what you want and products with several options;
-- the community announcement email.
+- the community announcement email. Its composer is on the community page, in the buyer's language, with its words in `lib/buyer-words` in seven languages. A review there needs its new sentences written in each of them, so it gets a unit of its own, under the rules for buyer languages.
 
 ## Where each pattern stands
 
