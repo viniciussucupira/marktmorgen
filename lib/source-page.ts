@@ -47,9 +47,14 @@ export const SOURCE_TEXT_CHARS = 3_000;
 const READER = `MarktmorgenStoreSetup/1.0 (+${SITE_URL}/help)`;
 
 const EMAIL = /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi;
+// "ana [at] example [dot] com" and the like.
+const HIDDEN_EMAIL = /\S+\s*[[(]\s*at\s*[\])]\s*\S+(?:\s*[[(]\s*dot\s*[\])]\s*\S+)*/gi;
 const LINK = /\b(?:https?:\/\/|www\.)\S+/gi;
-// A run of 7+ digits, allowing spaces, dots, dashes and brackets between them, and a leading +.
-const PHONE = /\+?\(?\d[\d\s().-]{6,}\d/g;
+// A bare address: "linktr.ee/ana", "instagram.com/ana", "ana.example.com".
+const DOMAIN = /\b(?:[a-z0-9-]+\.)+[a-z]{2,}(?:\/\S*)?/gi;
+// A phone number as people write one: international with +, or (555) 010-2030 / 555-010-2030, or nine or more digits in a row.
+// Prices ("$12000.00", "€1 200 000"), years ("2019-2026") and dates ("10.12.2026") are left alone.
+const PHONE = /\+\d[\d\s().-]{7,}\d|\(?\b\d{3}\)?[\s.-]\d{3}[\s.-]\d{4}\b|(?<![\d$€£¥.,])\b\d{9,}\b(?![.,]\d)/g;
 
 /** A page's HTML as the words a visitor reads, without contact details or links, quoted for a model. */
 export function sourceText(html: string): { title: string; text: string } {
@@ -57,11 +62,14 @@ export function sourceText(html: string): { title: string; text: string } {
   const clean = (text: string) =>
     text
       .replace(EMAIL, " ")
+      .replace(HIDDEN_EMAIL, " ")
       .replace(LINK, " ")
-      // A price like "$1,200.00" is not a phone number: only long runs without a currency sign go.
-      .replace(PHONE, (run) => (run.replace(/\D/g, "").length >= 7 ? " " : run))
+      .replace(DOMAIN, " ")
+      .replace(PHONE, " ")
       .replace(/</g, "‹")
       .replace(/>/g, "›")
+      // The page's words go into the prompt between triple quotes: no quote mark of the page's may close them.
+      .replace(/"/g, "”")
       .replace(/\s+/g, " ")
       .trim();
   const title = clean(pageText(titleMatch?.[1] ?? "")).slice(0, 120);
@@ -79,6 +87,7 @@ export type SourceHooks = Pick<Parameters<typeof safeFetch>[1], "resolve" | "age
 export async function readSourcePage(raw: string, hooks: SourceHooks = {}): Promise<SourceRead> {
   if (!sourceReadingOn()) return { ok: false, reason: "off" };
   try {
+    if (!/^https:\/\//i.test(raw.trim())) return { ok: false, reason: "address" };
     checkUrl(raw.trim());
   } catch {
     return { ok: false, reason: "address" };
@@ -93,8 +102,15 @@ export async function readSourcePage(raw: string, hooks: SourceHooks = {}): Prom
     });
     if (answer.status !== 200) return { ok: false, reason: "unreadable" };
     const type = (answer.headers["content-type"] ?? "").toLowerCase();
-    if (type && !/text\/|html/.test(type)) return { ok: false, reason: "unreadable" };
-    const { title, text } = sourceText(answer.body.toString("utf8"));
+    if (!/^(?:text\/html|text\/plain|application\/xhtml\+xml)\b/.test(type)) return { ok: false, reason: "unreadable" };
+    const charset = /charset=["']?([\w-]+)/.exec(type)?.[1] ?? "utf-8";
+    let html: string;
+    try {
+      html = new TextDecoder(charset).decode(answer.body);
+    } catch {
+      html = answer.body.toString("utf8");
+    }
+    const { title, text } = sourceText(html);
     if (!text) return { ok: false, reason: "unreadable" };
     return { ok: true, title, text, url: answer.url };
   } catch (error) {
