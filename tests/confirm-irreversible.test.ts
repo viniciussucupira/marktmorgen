@@ -11,13 +11,15 @@
  */
 import { readFileSync } from "node:fs";
 import { renderToStaticMarkup } from "react-dom/server";
-import { createElement } from "react";
+import { createElement, type ComponentProps, type FunctionComponent } from "react";
 import { ConfirmAction } from "@/components/confirm-action";
 import { done, is, part } from "./check";
 
 part("The component asks before it acts");
 let acted = 0;
-const first = renderToStaticMarkup(createElement(ConfirmAction, { question: "Delete this post?", yes: "Yes, delete", onConfirm: () => { acted += 1; }, children: "Delete" }));
+// The button's words go in as children, the third argument, as JSX would put them.
+const Confirm = ConfirmAction as FunctionComponent<Omit<ComponentProps<typeof ConfirmAction>, "children">>;
+const first = renderToStaticMarkup(createElement(Confirm, { question: "Delete this post?", yes: "Yes, delete", onConfirm: () => { acted += 1; } }, "Delete"));
 is("first it is only the button, and nothing was done", [first.includes(">Delete</button>"), first.includes("Yes, delete"), acted], [true, false, 0]);
 const source = readFileSync("components/confirm-action.tsx", "utf8");
 is("the second press is the only one that acts, and the safe choice takes focus", [/onClick=\{\(\) => setAsking\(true\)\}/.test(source), /await onConfirm\(\)/.test(source), /autoFocus onClick=\{\(\) => setAsking\(false\)\}/.test(source)], [true, true, true]);
