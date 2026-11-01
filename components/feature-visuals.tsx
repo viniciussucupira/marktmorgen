@@ -6,6 +6,7 @@ import { MAX_BUNDLE_ITEMS, MIN_BUNDLE_ITEMS } from "@/lib/bundle-rules";
 import { DEFAULT_ATTEMPTS, DEFAULT_PASS_PERCENT } from "@/lib/quiz";
 import { DEFAULT_KEYS } from "@/lib/key-setup";
 import { sampleKey } from "@/lib/licence-key-rules";
+import { formatMoney } from "@/lib/money";
 import { MAX_ENDPOINTS, shortAddress } from "@/lib/webhook-limits";
 import { LOOKAHEAD_DAYS, MAX_FEEDS } from "@/lib/calendar-limits";
 import { MAX_DISCORD_PRODUCTS, MAX_PRODUCT_ROLES } from "@/lib/discord-rules";
@@ -36,7 +37,9 @@ export type VisualKey =
   | "keys"
   | "webhooks"
   | "calendar"
-  | "discord";
+  | "discord"
+  | "community"
+  | "affiliates";
 
 /*
  * The frame every one of these mockups sits in.
@@ -621,6 +624,73 @@ function DiscordVisual() {
   );
 }
 
+/** The studio's community card (components/community-studio.tsx): switched on, its three counts, the way in. */
+function CommunityVisual() {
+  const tiles = [
+    { n: "48", label: "have come in" },
+    { n: "112", label: "posts" },
+    { n: "31", label: "want the community's emails" },
+  ];
+  return (
+    <Window bar="Community">
+      <div className="space-y-3 p-5">
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-[13px] font-bold text-ink">Your community</p>
+          <span className="tag tag-live">On</span>
+        </div>
+        <p className="break-words text-[12.5px] text-ink-soft">Open to everyone who holds one of the products you chose below. Your store page shows the way in.</p>
+        <div className="grid grid-cols-3 gap-1.5 text-center">
+          {tiles.map((t) => (
+            <div key={t.label} className="min-w-0 rounded-[var(--r-sm)] bg-sand px-1 py-2.5">
+              <p className="text-[16px] font-semibold tabular-nums text-ink">{t.n}</p>
+              <p className="break-words text-[10.5px] text-ink-soft">{t.label}</p>
+            </div>
+          ))}
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <span className="btn btn-secondary btn-sm pointer-events-none">Switch it off</span>
+          <span className="btn btn-ghost btn-sm pointer-events-none">Open it</span>
+        </div>
+      </div>
+    </Window>
+  );
+}
+
+/** One affiliate in the studio (components/affiliate-studio.tsx, Member): address, link code, status, and the five tiles. */
+function AffiliatesVisual() {
+  const tiles = [
+    { label: "Clicks", value: "120" },
+    { label: "Sales", value: "6" },
+    { label: "Earned", value: formatMoney(5_940, "usd") },
+    { label: "Paid", value: formatMoney(3_000, "usd") },
+    { label: "Owed", value: formatMoney(5_940 - 3_000, "usd"), strong: true },
+  ];
+  return (
+    <Window bar="Affiliates">
+      <div className="space-y-3 p-5">
+        <p className="text-[13px] font-bold text-ink">Your affiliates</p>
+        <div className="rounded-2xl border border-line p-3.5">
+          <div className="flex flex-wrap items-start justify-between gap-2">
+            <span className="min-w-0">
+              <span className="block break-all text-[13px] font-semibold text-ink">ana@example.com</span>
+              <span className="block font-mono text-[11.5px] text-ink-soft">?via=ana</span>
+            </span>
+            <span className="tag tag-live">Approved</span>
+          </div>
+          <div className="mt-2.5 grid grid-cols-3 gap-1.5 text-center sm:grid-cols-5">
+            {tiles.map((t) => (
+              <div key={t.label} className={`min-w-0 rounded-xl px-1.5 py-1.5 ${t.strong ? "bg-lilac" : "bg-paper"}`}>
+                <p className="text-[10px] font-bold uppercase tracking-[0.06em] text-ink-mute">{t.label}</p>
+                <p className={`text-[12.5px] font-semibold tabular-nums ${t.strong ? "text-violet-ink" : "text-ink"}`}>{t.value}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </Window>
+  );
+}
+
 const CAPTIONS: Record<VisualKey, string> = {
   store: "A store page, drawn from the demo store you can open and buy from.",
   options: "The buyer is charged the price they picked, as the creator saved it.",
@@ -640,6 +710,8 @@ const CAPTIONS: Record<VisualKey, string> = {
   webhooks: "Webhooks in the studio. The address, the times and the deliveries are an example.",
   calendar: "Your calendars in the studio. The calendar and its busy times are an example.",
   discord: "The Discord page in the studio. The products and roles are an example.",
+  community: "Your community in the studio. The counts are made up as an example, not real figures.",
+  affiliates: "One affiliate in the studio. The person and every figure are made up as an example, not anyone's real results.",
 };
 
 /**
@@ -667,6 +739,8 @@ export function FeatureVisual({ visual, tone = "dark" }: { visual: VisualKey; to
     webhooks: <WebhooksVisual />,
     calendar: <CalendarVisual />,
     discord: <DiscordVisual />,
+    community: <CommunityVisual />,
+    affiliates: <AffiliatesVisual />,
   }[visual];
   const interactive = visual === "options" || visual === "checkout";
   return (
