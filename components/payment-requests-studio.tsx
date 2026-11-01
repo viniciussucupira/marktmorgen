@@ -87,6 +87,14 @@ export function PaymentRequestsStudio({
   const [consent, setConsent] = useState(false);
   const [busy, setBusy] = useState("");
   const [error, setError] = useState("");
+  // The form as it was when its review opened (487 [IT4], pattern 8): the review holds only while nothing has changed since.
+  const [reviewOf, setReviewOf] = useState<string | null>(null);
+  const snapshot = JSON.stringify({ email, name, lines, note, dueDate, reminders, consent });
+  const reviewing = reviewOf !== null && reviewOf === snapshot;
+  function changeAnswer(id: string) {
+    setReviewOf(null);
+    requestAnimationFrame(() => document.getElementById(id)?.focus());
+  }
   const money = (cents: number) => formatMoney(cents, currency);
   const { min, max } = requestBounds(currency);
 
@@ -106,9 +114,17 @@ export function PaymentRequestsStudio({
     }
   }
 
-  async function create(event: React.FormEvent) {
+  // The first press opens the review; only its own button sends.
+  function create(event: React.FormEvent) {
     event.preventDefault();
     if (busy) return;
+    setError("");
+    setReviewOf(snapshot);
+    requestAnimationFrame(() => document.getElementById("pr-review-title")?.focus());
+  }
+
+  async function send() {
+    if (busy || !reviewing) return;
     setBusy("create");
     setError("");
     const answer = await call({ action: "create", email, name, lines, note, dueDate, autoReminders: reminders, consent });
@@ -117,6 +133,7 @@ export function PaymentRequestsStudio({
       setError(answer.message ?? "The result could not be confirmed. Reload to check the request before trying again.");
       return;
     }
+    setReviewOf(null);
     toast(answer.sent ? "Request sent." : "Request saved, but its email did not go. Send it again from the list.");
     setEmail("");
     setName("");
@@ -156,7 +173,7 @@ export function PaymentRequestsStudio({
           <div className="mt-6 grid gap-4 sm:grid-cols-2">
             <label className="block">
               <span className="text-sm font-semibold text-ink">Their email</span>
-              <input className="field mt-1" type="email" autoComplete="off" required maxLength={254} value={email} onChange={(e) => setEmail(e.target.value)} />
+              <input id="pr-email" className="field mt-1" type="email" autoComplete="off" required maxLength={254} value={email} onChange={(e) => setEmail(e.target.value)} />
             </label>
             <label className="block">
               <span className="text-sm font-semibold text-ink">Their name (optional)</span>
@@ -170,7 +187,7 @@ export function PaymentRequestsStudio({
                 <div key={i} className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_5rem_9rem_auto] sm:items-end">
                   <label className="block min-w-0">
                     <span className="sr-only">{`Line ${i + 1}: what it is for`}</span>
-                    <input className="field" placeholder="Coaching, October (4 sessions)" maxLength={MAX_LINE_TEXT} value={line.text} onChange={(e) => setLine(i, { text: e.target.value })} />
+                    <input id={`pr-line-${i}`} className="field" placeholder="Coaching, October (4 sessions)" maxLength={MAX_LINE_TEXT} value={line.text} onChange={(e) => setLine(i, { text: e.target.value })} />
                   </label>
                   <label className="block">
                     <span className="text-xs text-ink-soft">Quantity</span>
@@ -198,17 +215,17 @@ export function PaymentRequestsStudio({
           </fieldset>
           <label className="mt-5 block">
             <span className="text-sm font-semibold text-ink">A note for them (optional)</span>
-            <textarea className="field mt-1 min-h-24" maxLength={MAX_NOTE} value={note} onChange={(e) => setNote(e.target.value)} />
+            <textarea id="pr-note" className="field mt-1 min-h-24" maxLength={MAX_NOTE} value={note} onChange={(e) => setNote(e.target.value)} />
           </label>
           <div className="mt-5 grid gap-4 sm:grid-cols-2">
             <label className="block">
               <span className="text-sm font-semibold text-ink">Due date (optional)</span>
-              <input className="field mt-1" type="date" min={dueFirst} max={dueLast} value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
+              <input id="pr-due" className="field mt-1" type="date" min={dueFirst} max={dueLast} value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
               <span className="mt-1 block text-xs text-ink-soft">{`Shown as a date, nothing more. The link takes payment for ${OPEN_DAYS} days.`}</span>
             </label>
             <label className="block">
               <span className="text-sm font-semibold text-ink">If it is not paid</span>
-              <select className="field mt-1" value={reminders} onChange={(e) => setReminders(Number(e.target.value))}>
+              <select id="pr-reminders" className="field mt-1" value={reminders} onChange={(e) => setReminders(Number(e.target.value))}>
                 <option value={0}>Send no reminder</option>
                 {Array.from({ length: MAX_AUTO_REMINDERS }, (_, i) => i + 1).map((n) => (
                   <option key={n} value={n}>{n === 1 ? `One reminder, ${REMIND_EVERY_DAYS} days later` : `Up to ${n} reminders, ${REMIND_EVERY_DAYS} days apart`}</option>
@@ -225,9 +242,51 @@ export function PaymentRequestsStudio({
             <span className="text-sm text-ink">This person agreed to pay me for what this request lists, and expects it.</span>
           </label>
           {error ? <p className="notice notice-error mt-4" role="alert">{error}</p> : null}
-          <button type="submit" className="btn btn-primary mt-5" disabled={!open || busy !== ""}>
-            {busy === "create" ? "Sending..." : "Send request"}
+          <button type="submit" className={reviewing ? "btn btn-secondary mt-5" : "btn btn-primary mt-5"} disabled={!open || busy !== ""}>
+            Check before sending
           </button>
+          {reviewing ? (
+            <div className="mt-5 rounded-[var(--r-md)] bg-sand p-4 text-sm text-ink">
+              <h3 id="pr-review-title" tabIndex={-1} className="font-semibold">Check before it goes out</h3>
+              {/* A summary list (GOV.UK "Check answers"): one email goes to this person as soon as it is sent. */}
+              <dl className="mt-2 divide-y divide-line">
+                <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 py-2">
+                  <dt className="basis-full font-semibold sm:basis-32 sm:shrink-0">To</dt>
+                  <dd className="min-w-0 basis-full whitespace-pre-line break-words sm:basis-0 sm:flex-1">{name.trim() ? `${name.trim()}, ${email.trim()}` : email.trim() || "No email yet"}</dd>
+                  <dd><button type="button" className="inline-flex min-h-11 items-center font-bold underline underline-offset-4" onClick={() => changeAnswer("pr-email")}>Change<span className="sr-only"> who it goes to</span></button></dd>
+                </div>
+                <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 py-2">
+                  <dt className="basis-full font-semibold sm:basis-32 sm:shrink-0">Total</dt>
+                  <dd className="min-w-0 basis-full whitespace-pre-line break-words sm:basis-0 sm:flex-1">{money(total)}</dd>
+                  <dd><button type="button" className="inline-flex min-h-11 items-center font-bold underline underline-offset-4" onClick={() => changeAnswer("pr-line-0")}>Change<span className="sr-only"> total</span></button></dd>
+                </div>
+                <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 py-2">
+                  <dt className="basis-full font-semibold sm:basis-32 sm:shrink-0">What it is for</dt>
+                  <dd className="min-w-0 basis-full whitespace-pre-line break-words sm:basis-0 sm:flex-1">{lines.filter((line) => line.text.trim()).map((line) => `${line.text.trim()} × ${line.quantity.trim() || "1"}`).join("\n") || "Nothing yet"}</dd>
+                  <dd><button type="button" className="inline-flex min-h-11 items-center font-bold underline underline-offset-4" onClick={() => changeAnswer("pr-line-0")}>Change<span className="sr-only"> what it is for</span></button></dd>
+                </div>
+                <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 py-2">
+                  <dt className="basis-full font-semibold sm:basis-32 sm:shrink-0">Due date</dt>
+                  <dd className="min-w-0 basis-full whitespace-pre-line break-words sm:basis-0 sm:flex-1">{dueDate ? new Date(`${dueDate}T12:00:00`).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }) : "None"}</dd>
+                  <dd><button type="button" className="inline-flex min-h-11 items-center font-bold underline underline-offset-4" onClick={() => changeAnswer("pr-due")}>Change<span className="sr-only"> due date</span></button></dd>
+                </div>
+                <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 py-2">
+                  <dt className="basis-full font-semibold sm:basis-32 sm:shrink-0">If it is not paid</dt>
+                  <dd className="min-w-0 basis-full whitespace-pre-line break-words sm:basis-0 sm:flex-1">{reminders === 0 ? "No reminder" : reminders === 1 ? `One reminder, ${REMIND_EVERY_DAYS} days later` : `Up to ${reminders} reminders, ${REMIND_EVERY_DAYS} days apart`}</dd>
+                  <dd><button type="button" className="inline-flex min-h-11 items-center font-bold underline underline-offset-4" onClick={() => changeAnswer("pr-reminders")}>Change<span className="sr-only"> reminders</span></button></dd>
+                </div>
+                <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 py-2">
+                  <dt className="basis-full font-semibold sm:basis-32 sm:shrink-0">Note</dt>
+                  <dd className="min-w-0 basis-full whitespace-pre-line break-words sm:basis-0 sm:flex-1">{note.trim() || "No note"}</dd>
+                  <dd><button type="button" className="inline-flex min-h-11 items-center font-bold underline underline-offset-4" onClick={() => changeAnswer("pr-note")}>Change<span className="sr-only"> note</span></button></dd>
+                </div>
+              </dl>
+              <button type="button" className="btn btn-primary mt-3" disabled={!open || busy !== ""} aria-busy={busy === "create"} onClick={() => void send()}>
+                {busy === "create" ? "Sending..." : "Yes, send the request"}
+              </button>
+            </div>
+          ) : null}
+
         </form>
       ) : (
         <p className="notice">Only the owner and admins can send payment requests. You can see them here.</p>

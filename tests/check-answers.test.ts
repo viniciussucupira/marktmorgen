@@ -53,4 +53,10 @@ is("the price has a Change that leads to its field, and the review ends on its o
 is("the same amount written another way (29 and 29.00) is not a change: amounts are compared, not text", productEditor.includes("newPrice !== product.priceCents"), true);
 is("only a single price paid once is reviewed, where the field is what buyers pay", productEditor.includes("!draft.every && !draft.pwyw"), true);
 is("changing the price again closes the review", productEditor.includes("if (next.price !== draft.price) setPriceReview(null);"), true);
+
+const requests = readFileSync("components/payment-requests-studio.tsx", "utf8");
+is("a payment request is reviewed before it is sent: who, the total, what it is for, the due date, reminders, the note", requests.includes("<dl") && ["To", "Total", "What it is for", "Due date", "If it is not paid", "Note"].every((term) => requests.includes(`>${term}</dt>`)), true);
+is("any edit after the review opens closes it: it holds only while the form is what was reviewed", requests.includes("const reviewing = reviewOf !== null && reviewOf === snapshot;"), true);
+is("each answer has a Change that leads to its field", ["pr-email", "pr-line-0", "pr-due", "pr-reminders", "pr-note"].every((id) => requests.includes(`changeAnswer("${id}")`)) && ["pr-email", "pr-due", "pr-reminders", "pr-note"].every((id) => requests.includes(`id="${id}"`)) && requests.includes("id={`pr-line-${i}`}"), true);
+is("the first press opens the review, and only the review's own button sends", /onClick=\{\(\) => void send\(\)\}>\s*\{busy === "create" \? "Sending\.\.\." : "Yes, send the request"\}/.test(requests) && requests.includes("Check before sending") && requests.includes("if (busy || !reviewing) return;"), true);
 done();
