@@ -47,7 +47,7 @@ const visibleHtml=html.replace(/<template\b[^>]*>[\s\S]*?<\/template>/g, "");
 // 243 [CF6], owner's complement of 31/10/2026: the terms every plan shares are said once, under the three cards.
 is("the shared terms keep both inert billing alternatives",templates.length,2);
 is("one visible definition list of terms",(visibleHtml.match(/<dl\b/g)??[]).length,1);
-for(const [i,cycle] of [[0,"month"],[1,"year"]] as const) is("the "+cycle+" first charge names every plan's price",TIERS.every(t=>templates[i].includes(PLAN_TITLES[t]+" $"+(PUBLISHED_PLAN_PRICES[t][cycle]/100).toLocaleString("en-US"))),true);
+for(const [i,cycle] of [[0,"month"],[1,"year"]] as const) is("the "+cycle+" first charge names every plan's price",TIERS.every(t=>(templates[i]??"").includes(PLAN_TITLES[t]+" $"+(PUBLISHED_PLAN_PRICES[t][cycle]/100).toLocaleString("en-US"))),true);
 for(const name of ["Store","Studio","Scale"]) is(name+" appears as a plan",html.includes(">"+name+"</h3>"),true);
 is("every card says 0% of sales",(html.match(/>0% of sales</g)??[]).length,3);
 for(const rate of ["6.25%","2.75%"]) is(rate+" is not shown",html.includes(rate),false);

@@ -7,7 +7,6 @@ import { listSizeWords } from "@/lib/contact-rules";
 import { PAID_STORAGE_BYTES } from "@/lib/storage-rules";
 import { DATA_ROOM_BYTES, dataWords } from "@/lib/store-data-rules";
 import { uploadAllowanceWords } from "@/lib/upload-budget-policy";
-import { PLANS_ON_SALE } from "@/lib/opening";
 import { paidVideoWords } from "@/lib/video-admission-rules";
 import { VISITS_INCLUDED, publicVisitLimit } from "@/lib/traffic-rules";
 import { ORDERS_INCLUDED } from "@/lib/order-rules";
