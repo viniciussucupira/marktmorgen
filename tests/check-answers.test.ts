@@ -47,8 +47,10 @@ is("nothing is sent from the first press, which says so: only from the review's 
 is("changing the note closes the review, so nothing is sent from an old one", update.includes("setNote(event.target.value); setReviewing(false);"), true);
 
 const productEditor = readFileSync("components/product-editor.tsx", "utf8");
-is("saving a new price on a product buyers can see asks first, showing the old price and the new one", productEditor.includes("const priceChanged = !product.hidden && !product.options.length && draft.price.trim() !== moneyField(product.priceCents, currency);") && productEditor.includes(">Price</dt>") && productEditor.includes("`${formatMoney(product.priceCents, currency)} now, ${formatMoney(newPrice, currency)} once you save.`"), true);
-is("a price that cannot be read is not reviewed: the save says what is wrong with it", productEditor.includes("const newPrice = readMoney(draft.price, currency);") && productEditor.includes("priceChanged && newPrice !== null && priceReview !== product.id"), true);
-is("the price has a Change that leads to its field, and only the review's own button saves", productEditor.includes("changePrice(product.id)") && productEditor.includes('submitLabel={priceReview === product.id ? "Yes, save the new price" : "Save"}'), true);
+is("saving a new price on a product buyers can see asks first, showing the old price and the new one", productEditor.includes("const priceChanged = !product.hidden && !product.options.length && !draft.every && !draft.pwyw && newPrice !== null && newPrice !== product.priceCents;") && productEditor.includes(">Price</dt>") && productEditor.includes("`${formatMoney(product.priceCents, currency)} now, ${formatMoney(newPrice, currency)} once you save.`"), true);
+is("a price that cannot be read is not reviewed: the save says what is wrong with it", productEditor.includes("const newPrice = readMoney(draft.price, currency);") && productEditor.includes("priceChanged && priceReview !== product.id"), true);
+is("the price has a Change that leads to its field, and the review ends on its own confirm button", productEditor.includes("changePrice(product.id)") && /onClick=\{save\}>\s*Yes, save the new price/.test(productEditor), true);
+is("the same amount written another way (29 and 29.00) is not a change: amounts are compared, not text", productEditor.includes("newPrice !== product.priceCents"), true);
+is("only a single price paid once is reviewed, where the field is what buyers pay", productEditor.includes("!draft.every && !draft.pwyw"), true);
 is("changing the price again closes the review", productEditor.includes("if (next.price !== draft.price) setPriceReview(null);"), true);
 done();

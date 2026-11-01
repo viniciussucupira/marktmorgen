@@ -172,10 +172,10 @@ The screen-by-screen audit that 487 [IT4] asks for: what was checked, what was f
 
   The note and the address each have a "Change". The price says it is changed in the product's details. Changing the note or the address closes the review, so nothing is sent unread. Without a postal address, the second press is not offered and the review says why.
 - "Tell buyers about an update" no longer sends on its first press, which now reads "Check before sending". It shows the product, who gets it and the note (with a "Change"), and only "Yes, email every buyer" sends. How many get it is not shown, because it is counted from the store's Stripe account when it is sent. Showing it sooner would need a new read from Stripe, with its own ceiling.
-- Saving a new price on a product buyers can see now asks first. It shows the old price and the new one, with a "Change" that goes back to the price field, and only "Yes, save the new price" saves. Changing the price again closes the review. A price that cannot be read is not reviewed: the save says what is wrong with it. Products with several prices (options) are not covered yet.
+- Saving a new price on a product buyers can see, bought once at one price, now asks first. It shows the old price and the new one, with a "Change" that goes back to the price field, and ends on its own "Yes, save the new price". Amounts are compared, not text, so "29" and "29.00" are not a change. Changing the price again closes the review. A price that cannot be read is not reviewed: the save says what is wrong with it. Memberships, pay what you want and products with several prices are not covered yet: their field is not simply what every buyer pays, so the review's words would need to say more.
 
 **Still to do, in this order, since a mistake there is public or costs money:**
-- the prices of a product with several options;
+- the prices of memberships, pay what you want and products with several options;
 - payment and signature requests;
 - the community announcement email.
 

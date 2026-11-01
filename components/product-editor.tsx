@@ -1966,8 +1966,21 @@ export function ProductEditor({
             className="rounded-2xl border border-line bg-paper p-4"
           >
             {editingId === product.id ? (() => {
-              const priceChanged = !product.hidden && !product.options.length && draft.price.trim() !== moneyField(product.priceCents, currency);
+              // Only a product bought once, at one price, with no lowest price chosen by the buyer: there the field is what buyers pay.
               const newPrice = readMoney(draft.price, currency);
+              const priceChanged = !product.hidden && !product.options.length && !draft.every && !draft.pwyw && newPrice !== null && newPrice !== product.priceCents;
+              const save = () => {
+                const payload = payloadOf(draft);
+                if (aboutUnread && !draft.about) delete payload.about;
+                run(
+                  { action: "edit", id: product.id, ...payload },
+                  () => {
+                    setEditingId(null);
+                    setPriceReview(null);
+                  },
+                  "Product saved.",
+                );
+              };
               return (
               <>
               <ProductForm
@@ -1979,26 +1992,17 @@ export function ProductEditor({
                 }}
                 busy={busy}
                 error={error}
-                submitLabel={priceReview === product.id ? "Yes, save the new price" : "Save"}
+                submitLabel="Save"
                 product={product}
                 loadingAbout={loadingAbout}
                 onSubmit={() => {
                   if (loadingAbout) return;
-                  if (priceChanged && newPrice !== null && priceReview !== product.id) {
+                  if (priceChanged && priceReview !== product.id) {
                     setPriceReview(product.id);
                     requestAnimationFrame(() => document.getElementById(`product-${product.id}-price-review-title`)?.focus());
                     return;
                   }
-                  const payload = payloadOf(draft);
-                  if (aboutUnread && !draft.about) delete payload.about;
-                  run(
-                    { action: "edit", id: product.id, ...payload },
-                    () => {
-                      setEditingId(null);
-                      setPriceReview(null);
-                    },
-                    "Product saved.",
-                  );
+                  save();
                 }}
                 onCancel={() => {
                   setEditingId(null);
@@ -2006,7 +2010,7 @@ export function ProductEditor({
                   setError(null);
                 }}
               />
-              {priceReview === product.id && newPrice !== null ? (
+              {priceReview === product.id && priceChanged && newPrice !== null ? (
                 <div className="mt-3 rounded-[var(--r-md)] bg-sand p-4 text-sm text-ink">
                   <h3 id={`product-${product.id}-price-review-title`} tabIndex={-1} className="font-semibold">Check the new price</h3>
                   {/* A summary list (GOV.UK "Check answers"): the price buyers see changes as soon as it is saved. */}
@@ -2017,7 +2021,11 @@ export function ProductEditor({
                       <dd><button type="button" className="inline-flex min-h-11 items-center font-bold underline underline-offset-4" onClick={() => changePrice(product.id)}>Change<span className="sr-only"> price</span></button></dd>
                     </div>
                   </dl>
-                  <p className="mt-2">Your store shows the new price as soon as you save. Press &ldquo;Yes, save the new price&rdquo; above to save it.</p>
+                  <p className="mt-2">Your store shows the new price as soon as you save.</p>
+                  {/* The confirmation is here, after what it confirms, so the reading and the focus order end on it. */}
+                  <button type="button" className="btn btn-primary btn-sm mt-3" disabled={busy} aria-busy={busy} onClick={save}>
+                    Yes, save the new price
+                  </button>
                 </div>
               ) : null}
               </>
