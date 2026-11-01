@@ -7,8 +7,8 @@
  * those roles. One Discord account per address: bringing in another moves
  * the roles to it, so a purchase cannot open the server for a friend too.
  *
- * Checking: everyone given roles is checked again every CHECK_HOURS, by the
- * job (app/api/cron/discord). Roles for products no longer held are taken
+ * Checking: everyone given roles is checked again about every CHECK_HOURS,
+ * at the job's next run after it is due (app/api/cron/discord). Roles for products no longer held are taken
  * back, roles a product gives since are added, and somebody who holds none
  * any more loses every role given and, when the creator asked for it, is
  * taken out of the server. Only roles this store gave are ever taken: a

@@ -15,9 +15,10 @@
  *                Never shown as fine.
  *
  * A part the store does not use (no domain of its own) is left out rather
- * than said to be fine. The page that shows these, and the readers for the
- * plan's limits and for open disputes, are the next unit; until then those
- * two are always "not checked".
+ * than said to be fine. The page that shows these is app/studio/checkup
+ * (unit 2), read by lib/checkup.ts; the readers for the plan's limits and
+ * for open disputes are still to come, and until then those two are always
+ * "not checked".
  *
  * Browser-safe: plain data and pure functions.
  */
@@ -83,14 +84,39 @@ export function stripeCheck(connected: boolean, account: { chargesEnabled: boole
   return { id: "stripe", title, state: "ok", found: "Stripe says your account can take card payments." };
 }
 
+const DOMAIN_FIX: CheckFix = { kind: "studio", href: "/studio#domain", label: "Open your domain settings" };
+
 /**
- * The store's own domain, as Vercel sees it. Left out (null) when the store
- * has none; not checked when Vercel could not be asked.
+ * The store's own domain, as Vercel sees it (lib/domains.ts, domainCheckup).
+ * Left out (null) when the store has none; not checked when Vercel could not
+ * be asked; "gone" when Vercel says it is no longer set to serve the store;
+ * "resting" when the store is not on Pro, so its pages send visitors to the
+ * marktmorgen.com address whatever the records say (Vercel is not asked).
  */
-export function domainCheck(domain: string | null, status: { live: boolean; records: unknown[] } | null | undefined): Check | null {
+export function domainCheck(domain: string | null, status: { live: boolean; records: unknown[] } | "gone" | "resting" | null | undefined): Check | null {
   if (!domain) return null;
   const title = "Your domain";
+  if (status === "resting") {
+    return {
+      id: "domain",
+      title,
+      state: "problem",
+      found: `${domain} is resting, because your store is not on Pro right now.`,
+      ifLeft: `People who type ${domain} are sent to your marktmorgen.com address instead.`,
+      fix: DOMAIN_FIX,
+    };
+  }
   if (!status) return { id: "domain", title, state: "not-checked", found: `We could not check ${domain} just now. Try again in a few minutes.` };
+  if (status === "gone") {
+    return {
+      id: "domain",
+      title,
+      state: "problem",
+      found: `${domain} is no longer set up to serve your store on our side. To use it again, remove it in your domain settings and add it again.`,
+      ifLeft: `People who type ${domain} do not reach your store. Your marktmorgen.com address still works.`,
+      fix: DOMAIN_FIX,
+    };
+  }
   // live is Vercel's own verdict on the records (lib/domains.ts); the certificate is not part of it, so it is not claimed.
   if (status.live) return { id: "domain", title, state: "ok", found: `${domain} is set up to show your store.` };
   return {
@@ -127,24 +153,57 @@ export function emailCheck(pause: { reason: "bounces" | "complaints"; until: num
 }
 
 /**
+ * Email to the list stopped by the plan itself (lib/plan.ts, canUse "email"):
+ * null when the plan lets it go out, so the pause is read instead.
+ */
+export function emailStopped(plan: { pro: boolean; renewalUnpaid: boolean; disputed: boolean }): Check | "left-out" | null {
+  // A store not on Pro sends no email to a list at all: nothing to check.
+  if (!plan.pro) return "left-out";
+  const title = "Email to your list";
+  if (plan.renewalUnpaid) {
+    return {
+      id: "email",
+      title,
+      state: "problem",
+      found: "Email to your list is stopped: your plan's last renewal is not paid.",
+      ifLeft: "Nothing goes to your list, and your sequences wait, until it is paid. Sign-in links and receipts still go out.",
+      fix: { kind: "studio", href: "/studio#billing", label: "Pay the renewal" },
+    };
+  }
+  if (plan.disputed) {
+    return {
+      id: "email",
+      title,
+      state: "problem",
+      found: "Email to your list is stopped while a payment for your plan is disputed.",
+      ifLeft: "Nothing goes to your list, and your sequences wait, until the dispute is closed. Sign-in links and receipts still go out.",
+      fix: { kind: "studio", href: "/studio#billing", label: "See your plan" },
+    };
+  }
+  return null;
+}
+
+/**
  * Checkouts Stripe refused to open in the last 7 days; null when they could
- * not be read. readTrouble (lib/checkout-trouble.ts) answers zero today when
+ * not be read. The count is what lib/checkout-trouble.ts recorded (any
+ * Stripe error when opening one, a refusal or Stripe being down), so "ok"
+ * says only that none was recorded. readTrouble (lib/checkout-trouble.ts) answers zero today when
  * its store cannot be read, so the screen needs a strict reading of it before
  * an "ok" from here can be shown (next unit).
  */
 export function checkoutCheck(trouble: { week: number; last: { message: string } | null } | null): Check {
   const title = "Checkout";
   if (!trouble) return { id: "checkout", title, state: "not-checked", found: "We could not read whether Stripe refused any checkout just now." };
-  if (trouble.week <= 0) return { id: "checkout", title, state: "ok", found: "Stripe opened every checkout in the last 7 days." };
+  if (trouble.week <= 0) return { id: "checkout", title, state: "ok", found: "We recorded no checkout that Stripe would not open in the last 7 days." };
   const times = trouble.week === 1 ? "once" : `${trouble.week.toLocaleString("en-US")} times`;
   return {
     id: "checkout",
     title,
     state: "problem",
     // Stripe's own words close the sentence as Stripe wrote them, with no full stop added after the quote.
-    found: `Stripe refused to open a checkout ${times} in the last 7 days.${trouble.last ? ` The last time it said: "${trouble.last.message}"` : ""}`,
+    found: `Stripe would not open a checkout ${times} in the last 7 days.${trouble.last ? ` The last time it said: "${trouble.last.message}"` : ""}`,
     ifLeft: "A buyer who presses buy gets an error instead of the payment page, and that sale is lost.",
-    fix: { kind: "outside", where: "In your Stripe dashboard, look for a notice asking for information and send what it asks for. If there is none, Stripe's words above say what it refused." },
+    fix: { kind: "outside", where: "In your Stripe dashboard, look for a notice asking for information and send what it asks for. If there is none, it may have been Stripe failing for a moment, which passes by itself; if it keeps happening, Stripe's words above say what it would not do." },
   };
 }
 
@@ -152,7 +211,7 @@ export function checkoutCheck(trouble: { week: number; last: { message: string }
 export function notCheckedYet(id: "limits" | "disputes"): Check {
   return id === "limits"
     ? { id, title: "Your plan's limits", state: "not-checked", found: "Not checked here yet. Each limit is shown where you use it." }
-    : { id, title: "Disputes", state: "not-checked", found: "Not checked here yet. Open disputes are on the Disputes page.", fix: { kind: "studio", href: "/studio/disputes", label: "Open disputes" } };
+    : { id, title: "Disputes", state: "not-checked", found: "Not checked here yet. Your Stripe dashboard shows any dispute a buyer opened." };
 }
 
 /** The checks in the order shown: problems first, then what could not be checked, then what is fine; each group in a fixed order. */
