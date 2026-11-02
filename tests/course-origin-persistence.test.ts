@@ -122,3 +122,14 @@ test("an enqueue-looking ACK with no persisted winner cannot report a durable co
  assert.deepEqual(await origin.reserveCourseConfirmationOrigin(f.input,runtime),{ok:false});
  assert.equal([...redis.keys()].some(k=>k.startsWith("nl:order-confirmation:row:")),false);
 });
+
+test("an unsigned replacement accounting or mixed product snapshot is not accepted as the selected source",async()=>{
+ for(const change of ["tier","period","mixed-course"]){
+  const f=await fixture();
+  if(change==="tier")f.input.snapshot.store.tier="scale";
+  if(change==="period")f.input.snapshot.store.period={...f.input.snapshot.store.period!,start:1,end:2};
+  if(change==="mixed-course")Object.assign(f.input.snapshot.product,{call:{minutes:30}});
+  assert.deepEqual(await origin.reserveCourseConfirmationOrigin(f.input,f.runtime),{ok:false},change);
+  assert.equal(f.commands.length,0);
+ }
+});
