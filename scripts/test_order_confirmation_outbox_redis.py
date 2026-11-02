@@ -339,7 +339,7 @@ def main():
         course_row, course_keys = fixture("course-reserve")
         course_keys = [k.replace(prefix, prefix + "course:") for k in course_keys]
         made.update(course_keys)
-        course_row.update(originKind="course", courseBindingFingerprint="f" * 64, phase="course_reserved")
+        course_row.update(originKind="course", courseBindingFingerprint="f" * 64, phase="course_reserved", next=0)
         course_row["sourceValue"] = json.dumps(dict(kind="confirmation", originKind="course", nonce=course_row["nonce"],
             accountId=course_row["accountId"], bodyDigest=course_row["bodyDigest"], session="", courseBindingFingerprint="f" * 64))
         def course_enqueue(row=course_row, p=policy, client=None):
@@ -362,7 +362,7 @@ def main():
         repeat_course, profiles["course_existing"] = measured(measured_enqueue)
         assert first_course[0] == "queued" and repeat_course[0] == "existing"
         assert db.command("ZSCORE", measured_keys[2], course_row["id"]) is None, "reserve-only course cannot become hot polling work"
-        assert profiles["course_enqueue"] == 27 and profiles["course_existing"] == 13
+        assert profiles["course_enqueue"] == 26 and profiles["course_existing"] == 13
         assert db.command("EVAL", shared, 10, *measured_keys, "cancel", db.command("GET", measured_keys[0]), "", now,
             131072, "null", "") == ["canceled"]
         def course_race(_):

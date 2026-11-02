@@ -198,7 +198,7 @@ if op == 'enqueue' then
  -- Courses are a reserve/readback construction only. Funding must explicitly
  -- cover this origin in the SAME policy; no physical funding inheritance.
  if n.originKind~=nil then
-  if n.originKind~='course' or n.phase~='course_reserved' or type(n.courseBindingFingerprint)~='string' or #n.courseBindingFingerprint~=64 or string.find(n.courseBindingFingerprint,'[^a-f0-9]') or
+  if n.originKind~='course' or n.phase~='course_reserved' or n.state~='queued' or n.next~=0 or type(n.courseBindingFingerprint)~='string' or #n.courseBindingFingerprint~=64 or string.find(n.courseBindingFingerprint,'[^a-f0-9]') or
      type(p.coveredOrigins)~='table' or #p.coveredOrigins~=1 or p.coveredOrigins[1]~='course-confirmation' then return {'unknown'} end
  end
  if redis.call('EXISTS',KEYS[9],KEYS[10])~=0 then return {'unknown'} end
@@ -214,7 +214,9 @@ if op == 'enqueue' then
  redis.call('HSET',KEYS[7],'items',b[1]+1,'bytes',b[2]+n.bytes)
  redis.call('SET',KEYS[1],supplied)
  redis.call('SET',KEYS[2],n.sourceValue)
- redis.call('ZADD',KEYS[3],now,n.id)
+ -- Reserve-only courses have no worker stage. Keep their protected source
+ -- in the existing ownership indices, without an unbounded polling member.
+ if n.originKind==nil then redis.call('ZADD',KEYS[3],now,n.id) end
  redis.call('SADD',KEYS[4],n.id); redis.call('SADD',KEYS[5],n.id); redis.call('SADD',KEYS[8],n.id)
  return {'queued',supplied}
 end

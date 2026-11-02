@@ -135,7 +135,7 @@ function parse(raw: unknown): ConfirmationOrigin | null {
         Number(row.bytes) < Buffer.byteLength(raw) || typeof row.erasedPeople !== "string" || !/^(?:[a-f0-9]{64}){0,64}$/.test(row.erasedPeople) ||
         typeof row.erasureSaturated !== "boolean") return null;
     if (course ? typeof row.courseBindingFingerprint !== "string" || !HASH.test(row.courseBindingFingerprint) ||
-        row.phase !== "course_reserved" || row.session !== "" || row.bindingFingerprint !== "" || row.state !== "queued" || row.owner !== "" || row.leaseUntil !== 0 || row.createAttempts !== 0 || row.checks !== 0
+        row.phase !== "course_reserved" || row.next !== 0 || row.session !== "" || row.bindingFingerprint !== "" || row.state !== "queued" || row.owner !== "" || row.leaseUntil !== 0 || row.createAttempts !== 0 || row.checks !== 0
         : row.phase === "course_reserved") return null;
     const source = data(JSON.parse(row.sourceValue));
     if (!source || Object.keys(source).length !== (row.session ? 6 : 5) + (course ? 2 : 0) || source.kind !== "confirmation" || source.nonce !== row.nonce ||
@@ -272,7 +272,7 @@ async function reserveOrigin(input: {
       session: "", person: hash(`unbound:${input.nonce}`),
       sourceValue: JSON.stringify({ kind: "confirmation", nonce: input.nonce, accountId: input.accountId, bodyDigest, session: "", ...(course ? { originKind: "course", courseBindingFingerprint: course.fingerprint } : {}) }),
       sealed: seal(plain, context(id)), fingerprint: hash(plain), bytes: 0,
-      created: now, authorizedAt: now, next: now, expiresAt: input.preintent.expiresAtMs,
+      created: now, authorizedAt: now, next: course ? 0 : now, expiresAt: input.preintent.expiresAtMs,
       state: "queued", phase: course ? "course_reserved" : "awaiting_creation", owner: "", leaseUntil: 0, checks: 0, createAttempts: 0, reviewId: p.reviewId, recoveryCursor: "", recoveryUpper: 0, erasedPeople: "", erasureSaturated: false };
     row.bytes = SHIPMENT_MAIL_MAX_ROW_BYTES + keys(row).reduce((n, key) => n + Buffer.byteLength(key), 0) * 2 + 16_384;
     const raw = JSON.stringify(row);
