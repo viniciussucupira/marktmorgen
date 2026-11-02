@@ -1,5 +1,6 @@
 import { PAGE_TEST_WORDS } from "@/lib/headline-test-words";
 import { funnelBeginnerQuestions } from "@/lib/funnel-faq";
+import { courseBeginnerQuestions } from "@/lib/course-faq";
 import { NEW_CREATOR_PAGES } from "@/lib/creator-situations";
 import { withFeatureMechanisms } from "@/lib/feature-mechanisms";
 import { paidVideoWords, TRIAL_VIDEO_SECONDS } from "@/lib/video-admission-rules";
@@ -334,6 +335,8 @@ const BASE_FEATURE_PAGES: TopicPage[] = [
         kind: "faq",
         title: "Questions about courses",
         items: [
+          // 534 [FQ1], unit 2: what someone starting out asks, answered by what the code does (lib/course-faq.ts).
+          ...courseBeginnerQuestions(),
           { q: "How long until a video I upload can be watched?", a: "It plays as soon as its first size is made, and the larger sizes follow by themselves. Your studio says when it is ready, and a student who opens the lesson before that is told the video is being prepared." },
           { q: "How does a student come back next week?", a: "On the device they paid on, the course simply opens. On any other, they ask for a link on the course page and it is emailed to the address they paid with. No account, no password." },
           { q: "Can I sell a course monthly?", a: "Yes. Sold as a membership, the course stays open while the member pays and closes when the membership ends." },
@@ -994,6 +997,7 @@ const BASE_FEATURE_PAGES: TopicPage[] = [
     highlight: "who bought from you",
     intro:
       "One members' area on your store, with spaces, posts, comments, a live room, private messages, search and live events, open only to the buyers of the products you choose. Members come in with a link sent to their email: no account, no password.",
+    visual: "community",
     badge: WORKING,
     accent: "from-violet-brand to-mint-brand",
     plan: "creator",
@@ -1078,6 +1082,7 @@ const BASE_FEATURE_PAGES: TopicPage[] = [
     highlight: "inside your community",
     intro:
       "A workshop, a Q&A or a coworking hour for your members. They RSVP in the community, get a reminder, and join from the event's page: in a private video room shown right in the page, at your own meeting link, or in a Google Meet made on your Google Calendar. The way in shows 15 minutes before the start, and only to members who may come.",
+    visual: "events",
     badge: WORKING,
     accent: "from-mint-brand to-violet-brand",
     plan: "creator",
@@ -1236,6 +1241,7 @@ const BASE_FEATURE_PAGES: TopicPage[] = [
     highlight: "one price",
     intro:
       "Put 2 to 20 of your products in one bundle, at a price you set. The buyer gets every one of them exactly as if they had bought each on its own: the downloads, the links, the courses and the license keys.",
+    visual: "bundles",
     badge: WORKING,
     accent: "from-amber-brand to-violet-brand",
     plan: "creator",
@@ -1305,6 +1311,7 @@ const BASE_FEATURE_PAGES: TopicPage[] = [
     highlight: "sell it for you",
     intro:
       "People apply and you approve, or everyone who buys takes a link at once. Each affiliate gets a page of their own with their clicks, sales and what they are owed. You pay them from your own PayPal in one press, or by itself on your payday: every sale lands in full in your own Stripe account, and nothing is held.",
+    visual: "affiliates",
     badge: WORKING,
     accent: "from-mint-brand to-sky-brand",
     plan: "creator",
@@ -1379,6 +1386,7 @@ const BASE_FEATURE_PAGES: TopicPage[] = [
     highlight: "not bookable on your store",
     intro:
       "Paste the private address of up to three calendars, from Google, Outlook or iCloud, and the times you are busy there stop being offered as call times. Your bookings come back the other way, as a calendar you subscribe to.",
+    visual: "calendar",
     badge: WORKING,
     accent: "from-sky-brand to-violet-brand",
     plan: "creator",
@@ -1435,6 +1443,7 @@ const BASE_FEATURE_PAGES: TopicPage[] = [
     highlight: "what just happened",
     intro:
       "Up to five addresses of your own, such as a Zapier Catch Hook, a Make scenario or your own server, told about sales, members, leads, bookings and refunds as they happen, in signed JSON.",
+    visual: "webhooks",
     badge: WORKING,
     accent: "from-violet-brand to-sky-brand",
     plan: "creator",
@@ -1496,6 +1505,7 @@ const BASE_FEATURE_PAGES: TopicPage[] = [
     highlight: "a certificate that proves it",
     intro:
       "A quiz after any lesson, marked on our side, or an assignment students hand in and you read, and a certificate of completion with a page of its own that anyone can open to check it.",
+    visual: "quizzes",
     badge: WORKING,
     accent: "from-pink-brand to-violet-brand",
     plan: "creator",
@@ -1560,7 +1570,8 @@ const BASE_FEATURE_PAGES: TopicPage[] = [
     title: "Your Discord server,",
     highlight: "opened by what people buy",
     intro:
-      "Choose which products give which roles in your own Discord server. A buyer joins in two presses after paying, keeps the roles while they hold what they bought, and loses them by themselves when a membership ends or a purchase is refunded.",
+      "Choose which products give which roles in your own Discord server. A buyer joins in two presses after paying, keeps the roles while they hold what they bought, and loses them by themselves when a membership ends or a purchase is refunded in full.",
+    visual: "discord",
     badge: WORKING,
     accent: "from-violet-brand to-pink-brand",
     plan: "creator",
@@ -1581,7 +1592,7 @@ const BASE_FEATURE_PAGES: TopicPage[] = [
         kind: "features",
         title: "What it takes care of",
         items: [
-          { icon: "refresh", title: "Taken back by itself", body: "Everyone who joined is checked again every six hours against your own Stripe account. A membership that ended or a purchase refunded loses its roles, with nothing for you to do." },
+          { icon: "refresh", title: "Taken back by itself", body: "Everyone who joined is checked again about every six hours against your own Stripe account. A membership that ended or a purchase refunded in full loses its roles, with nothing for you to do." },
           { icon: "shield", title: "Never taken on a guess", body: "When Stripe cannot be reached, nobody loses anything; the check simply runs again later. Roles you gave by hand are never touched." },
           { icon: "lock", title: "One Discord account per purchase", body: "A buyer who joins with a second account moves the roles to it, so one purchase cannot open the server for a friend too." },
           { icon: "door", title: "Out of the server, if you want", body: "By default a buyer whose access ended keeps your public channels and loses the paid ones. Switch it on and they are removed from the server instead." },
@@ -1593,9 +1604,9 @@ const BASE_FEATURE_PAGES: TopicPage[] = [
         kind: "limits",
         title: "What it does not do",
         items: [
-          "Roles are taken back at the next check, within six hours of a membership ending or a refund, not in the same second.",
+          "Roles are taken back at the next check, which comes about every six hours, not in the same second. While Stripe or Discord cannot be reached, or Discord will not let the bot remove a role, nothing is taken until it can be.",
           "One Discord server per store.",
-          "The bot can only give roles below its own in your server's list of roles; move the Marktmorgen role up to give higher ones.",
+          "The bot can only give, and take back, roles below its own in your server's list of roles; keep the Marktmorgen role above the roles it gives.",
           "A buyer has to press the button and say yes on Discord's page: nobody is added to a server without agreeing.",
         ],
       },
@@ -1617,6 +1628,7 @@ const BASE_FEATURE_PAGES: TopicPage[] = [
     highlight: "with every sale",
     intro:
       "For software, plugins and anything that unlocks with a code. Upload the keys your own system made, or have them made here, and each buyer gets one nobody else has.",
+    visual: "keys",
     badge: WORKING,
     accent: "from-amber-brand to-mint-brand",
     plan: "creator",
@@ -1673,6 +1685,7 @@ const BASE_FEATURE_PAGES: TopicPage[] = [
     highlight: "whose copy it is",
     intro:
       "Switch it on for an ebook or a workbook, and each page of the PDF a buyer downloads carries their email, the date and their order along the bottom.",
+    visual: "stamp",
     badge: WORKING,
     accent: "from-pink-brand to-amber-brand",
     plan: "creator",
@@ -1954,6 +1967,7 @@ const BASE_FEATURE_PAGES: TopicPage[] = [
     highlight: "the ways your buyers pay",
     intro:
       "Each store charges in one of 15 currencies. At checkout, buyers meet the ways to pay you switched on in your own Stripe account: Apple Pay, Google Pay, Link, Klarna, Afterpay, Affirm, iDEAL, Bancontact and more, where they fit the buyer and the amount.",
+    visual: "ways",
     badge: WORKING,
     accent: "from-mint-brand to-sky-brand",
     plan: "creator",
@@ -2014,6 +2028,7 @@ const BASE_FEATURE_PAGES: TopicPage[] = [
     highlight: "the email tool you use",
     intro:
       `Connect Mailchimp, Kit, beehiiv or MailerLite, and the people who agree to hear from you are added there as they come in: free sign-ups once they confirm, buyers once they have paid, with the tags you choose. On the ${PLAN_AT.creator} plan, with no Zapier in between.`,
+    visual: "emailPlatforms",
     badge: WORKING,
     accent: "from-violet-brand to-sky-brand",
     plan: "creator",
@@ -2149,6 +2164,7 @@ const BASE_FEATURE_PAGES: TopicPage[] = [
     highlight: "without sharing your login",
     intro:
       "Up to five stores in one account, and up to five people on each store's team as Admin, Editor or Support, each signing in with their own email. What each role may do is checked on our server for every request.",
+    visual: "team",
     badge: WORKING,
     accent: "from-sky-brand to-violet-brand",
     plan: "creator",
@@ -2221,6 +2237,7 @@ const BASE_FEATURE_PAGES: TopicPage[] = [
     highlight: "tells you",
     intro:
       "Turn notifications on in your studio, on your phone or your computer: every sale, every booking, a report in your community, a new affiliate application, a live event about to start, and a comment under a lesson.",
+    visual: "phone",
     badge: WORKING,
     accent: "from-pink-brand to-amber-brand",
     plan: "creator",
@@ -2416,6 +2433,7 @@ const BASE_FEATURE_PAGES: TopicPage[] = [
     highlight: "and your buyers are protected",
     intro:
       "What we do, written so you can check it: payments on your own Stripe account, sign-in without passwords, strict rules on what your pages may run, and a refund that closes what it paid for. And, at the end, what none of it does.",
+    visual: "security",
     badge: WORKING,
     accent: "from-violet-brand to-mint-brand",
     plan: "creator",
