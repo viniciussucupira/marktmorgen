@@ -56,7 +56,7 @@ test("the protected immutable course winner is recovered after lost ACK without 
  assert.equal(saved.binding.token,f.issued.token);assert.equal(saved.binding.fingerprint,createHash("sha256").update(f.issued.token).digest("hex"));
  assert.equal(saved.binding.candidate.identity.courseId,f.selected.product.course.id);
  assert.deepEqual(Object.keys(saved.payload.snapshot),["selected"]);
- assert.deepEqual(saved.payload.snapshot.selected,saved.binding.candidate);
+ assert.equal(JSON.stringify(saved.payload.snapshot.selected),JSON.stringify(saved.binding.candidate));
  assert.equal(saved.row.phase,"course_reserved");assert.equal(saved.row.created,f.runtime.now());
  assert.equal(redis.run(["TTL",origin.confirmationOriginRowKey(result.id)]),-1);
  assert.equal(redis.run(["TTL",`nl:order-confirmation:source:${result.id}`]),-1);
@@ -135,5 +135,33 @@ test("an unsigned replacement accounting or mixed product snapshot is not accept
   if(change==="mixed-course")Object.assign(snapshot.product,{call:{minutes:30}});
   assert.deepEqual(await origin.reserveCourseConfirmationOrigin({...f.input,snapshot},f.runtime),{ok:false},change);
   assert.equal(f.commands.length,0);
+ }
+});
+
+test("real Redis Lua stores and erases an issuer-authenticated reserve-only course",{skip:process.env.MARKTMORGEN_REDIS_INTEGRATION!=="1"},async()=>{
+ const {confirmationLocalPipeline}=await import("./order-confirmation-paid-fixture");
+ const f=await fixture(),commands:(string|number)[][]=[];
+ const runtime={...f.runtime,now:Date.now,pipeline:async(batch:(string|number)[][])=>{commands.push(...batch);return confirmationLocalPipeline(batch);}};
+ let id="";
+ try{
+  const result=await origin.reserveCourseConfirmationOrigin(f.input,runtime);assert.ok(result.ok);id=result.id;
+  const saved=await origin.readCourseConfirmationOrigin(id,runtime);assert.ok(saved);
+  assert.equal(saved.binding.token,f.issued.token);assert.equal(saved.payload.preintentToken,saved.binding.preintent.token);
+  assert.equal(saved.row.next,0);
+  assert.deepEqual(await confirmationLocalPipeline([["ZSCORE",origin.CONFIRMATION_ORIGIN_DUE,id]]),[null],"reserve-only course has no worker stage to poll");
+  assert.equal(JSON.stringify(saved.payload.snapshot),JSON.stringify({selected:saved.binding.candidate}));
+  assert.deepEqual(await confirmationLocalPipeline([["TTL",origin.confirmationOriginRowKey(id)],["TTL",`nl:order-confirmation:source:${id}`]]),[-1,-1]);
+  const before=commands.length;
+  assert.equal(await origin.claimConfirmationCreation(id,runtime),null);
+  assert.equal(commands.slice(before).some(c=>c[0]==="EVAL"),false);
+  assert.equal(await origin.forgetOrderConfirmationMail(f.selected.store.statsId,undefined,runtime),1);
+  assert.deepEqual(await confirmationLocalPipeline([["EXISTS",origin.confirmationOriginRowKey(id)]]),[0]);
+  const [ttl]=await confirmationLocalPipeline([["TTL",`nl:order-confirmation:source:${id}`]]);assert.ok(Number(ttl)>399*86400);
+ }finally{
+  if(id){
+   const localKeys=new Set<string>();
+   for(const c of commands)if(c[0]==="EVAL")for(const k of c.slice(3,3+Number(c[2])).map(String))if(k.includes(f.selected.store.statsId!)||k.includes(id))localKeys.add(k);
+   if(localKeys.size)await confirmationLocalPipeline([["DEL",...localKeys]]);
+  }
  }
 });

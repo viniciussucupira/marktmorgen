@@ -351,6 +351,20 @@ def main():
                     dict(course_row, courseBindingFingerprint="not-a-hash")]:
             assert course_enqueue(bad, course_policy) == ["unknown"]
         assert db.command("EXISTS", *course_keys) == 0
+        # Count the unchanged shared Lua footprint on an isolated course
+        # family; instrument only this proof, not a provider invoice.
+        measured_keys = [k.replace(prefix + "course:", prefix + "course-measure:") for k in course_keys]
+        made.update(measured_keys)
+        def measured_enqueue():
+            return db.command("EVAL", shared, 10, *measured_keys, "enqueue", "", json.dumps(course_row), now,
+                131072, json.dumps(course_policy), "")
+        first_course, profiles["course_enqueue"] = measured(measured_enqueue)
+        repeat_course, profiles["course_existing"] = measured(measured_enqueue)
+        assert first_course[0] == "queued" and repeat_course[0] == "existing"
+        assert db.command("ZSCORE", measured_keys[2], course_row["id"]) is None, "reserve-only course cannot become hot polling work"
+        assert profiles["course_enqueue"] == 27 and profiles["course_existing"] == 13
+        assert db.command("EVAL", shared, 10, *measured_keys, "cancel", db.command("GET", measured_keys[0]), "", now,
+            131072, "null", "") == ["canceled"]
         def course_race(_):
             conn = LocalRedis()
             try: return course_enqueue(p=course_policy, client=conn)
@@ -411,7 +425,7 @@ def main():
 import {build} from 'esbuild';
 import {spawnSync} from 'node:child_process';
 import {testAliases,testEnvironment} from './tests/test-config.mjs';
-for(const file of ['order-confirmation-paid.test.ts','order-confirmation-paid-erasure.test.ts']) {
+for(const file of ['order-confirmation-paid.test.ts','order-confirmation-paid-erasure.test.ts','course-origin-persistence.test.ts']) {
 await build({entryPoints:['tests/'+file],bundle:true,platform:'node',format:'cjs',outfile:process.argv[1],logLevel:'error',alias:testAliases(file,process.cwd(),process.cwd()+'/tests')});
 const result=spawnSync(process.execPath,[process.argv[1]],{env:testEnvironment(process.env),stdio:'inherit'});
 if(result.status!==0){process.exitCode=result.status ?? 1;break;}
