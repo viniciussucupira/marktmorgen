@@ -1,5 +1,6 @@
 import { PAGE_TEST_WORDS } from "@/lib/headline-test-words";
 import { funnelBeginnerQuestions } from "@/lib/funnel-faq";
+import { courseBeginnerQuestions } from "@/lib/course-faq";
 import { NEW_CREATOR_PAGES } from "@/lib/creator-situations";
 import { withFeatureMechanisms } from "@/lib/feature-mechanisms";
 import { paidVideoWords, TRIAL_VIDEO_SECONDS } from "@/lib/video-admission-rules";
@@ -334,6 +335,8 @@ const BASE_FEATURE_PAGES: TopicPage[] = [
         kind: "faq",
         title: "Questions about courses",
         items: [
+          // 534 [FQ1], unit 2: what someone starting out asks, answered by what the code does (lib/course-faq.ts).
+          ...courseBeginnerQuestions(),
           { q: "How long until a video I upload can be watched?", a: "It plays as soon as its first size is made, and the larger sizes follow by themselves. Your studio says when it is ready, and a student who opens the lesson before that is told the video is being prepared." },
           { q: "How does a student come back next week?", a: "On the device they paid on, the course simply opens. On any other, they ask for a link on the course page and it is emailed to the address they paid with. No account, no password." },
           { q: "Can I sell a course monthly?", a: "Yes. Sold as a membership, the course stays open while the member pays and closes when the membership ends." },
@@ -1682,6 +1685,7 @@ const BASE_FEATURE_PAGES: TopicPage[] = [
     highlight: "whose copy it is",
     intro:
       "Switch it on for an ebook or a workbook, and each page of the PDF a buyer downloads carries their email, the date and their order along the bottom.",
+    visual: "stamp",
     badge: WORKING,
     accent: "from-pink-brand to-amber-brand",
     plan: "creator",
@@ -1963,6 +1967,7 @@ const BASE_FEATURE_PAGES: TopicPage[] = [
     highlight: "the ways your buyers pay",
     intro:
       "Each store charges in one of 15 currencies. At checkout, buyers meet the ways to pay you switched on in your own Stripe account: Apple Pay, Google Pay, Link, Klarna, Afterpay, Affirm, iDEAL, Bancontact and more, where they fit the buyer and the amount.",
+    visual: "ways",
     badge: WORKING,
     accent: "from-mint-brand to-sky-brand",
     plan: "creator",
@@ -2023,6 +2028,7 @@ const BASE_FEATURE_PAGES: TopicPage[] = [
     highlight: "the email tool you use",
     intro:
       `Connect Mailchimp, Kit, beehiiv or MailerLite, and the people who agree to hear from you are added there as they come in: free sign-ups once they confirm, buyers once they have paid, with the tags you choose. On the ${PLAN_AT.creator} plan, with no Zapier in between.`,
+    visual: "emailPlatforms",
     badge: WORKING,
     accent: "from-violet-brand to-sky-brand",
     plan: "creator",
@@ -2158,6 +2164,7 @@ const BASE_FEATURE_PAGES: TopicPage[] = [
     highlight: "without sharing your login",
     intro:
       "Up to five stores in one account, and up to five people on each store's team as Admin, Editor or Support, each signing in with their own email. What each role may do is checked on our server for every request.",
+    visual: "team",
     badge: WORKING,
     accent: "from-sky-brand to-violet-brand",
     plan: "creator",
@@ -2230,6 +2237,7 @@ const BASE_FEATURE_PAGES: TopicPage[] = [
     highlight: "tells you",
     intro:
       "Turn notifications on in your studio, on your phone or your computer: every sale, every booking, a report in your community, a new affiliate application, a live event about to start, and a comment under a lesson.",
+    visual: "phone",
     badge: WORKING,
     accent: "from-pink-brand to-amber-brand",
     plan: "creator",
