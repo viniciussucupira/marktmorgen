@@ -1,4 +1,4 @@
-import { COMMISSION_BPS, COMMISSION_PLANS_PUBLISHED } from "@/lib/plan";
+import { COMMISSION_BPS, COMMISSION_PLANS_PUBLISHED, PLAN_TITLES } from "@/lib/plan";
 import { Icon, type IconName } from "@/components/icons";
 import { BumpDemo, OptionsDemo } from "@/components/feature-demos";
 import { FUNNEL_TYPES, choicesOf, pagesOf } from "@/lib/funnel-types";
@@ -19,6 +19,7 @@ import { MAX_DISCORD_PRODUCTS, MAX_PRODUCT_ROLES } from "@/lib/discord-rules";
 import { BLOCK_KINDS, MAX_BLOCKS, type BlockKind } from "@/lib/sales-page";
 import { AI_PLANS_WORDS } from "@/lib/ai-rules";
 import { KIND_ICONS } from "@/lib/sales-page-icons";
+import { DEFAULT_STAGES, FIRST_PIPELINE_NAME, pipelineLimit, type Deal } from "@/lib/crm-rules";
 
 /**
  * The pictures at the top of each feature page.
@@ -57,7 +58,8 @@ export type VisualKey =
   | "phone"
   | "security"
   | "salesPage"
-  | "aiWriting";
+  | "aiWriting"
+  | "crm";
 
 /*
  * The frame every one of these mockups sits in.
@@ -1105,6 +1107,95 @@ function AiWritingVisual() {
   );
 }
 
+/**
+ * Part of the deals board in the studio (components/deals-board.tsx), as the
+ * store's owner sees it on a paid Store plan, on the store's first pipeline
+ * with the stages it starts with (DEFAULT_STAGES): the heading and its
+ * sentence, summed from the deals drawn; the pipeline's button with its open
+ * count; New pipeline, since that plan keeps more than one (pipelineLimit);
+ * then, after a break where the board shows its totals and filters, the first
+ * two stages' columns, each with its count and total and its deals as the
+ * board writes them, Request payment on a deal with an email (the owner may
+ * send). Three more stages follow on the board. The deals, people and
+ * amounts are an example.
+ */
+export const CRM_EXAMPLE = [
+  { stage: "lead00", title: "A logo for a bakery", cents: 60_000, email: "sam@example.com" },
+  { stage: "talk00", title: "Six coaching sessions for Dana", cents: 120_000, nextAction: "Follow up on the proposal" },
+] satisfies (Pick<Deal, "stage" | "title" | "cents"> & Partial<Pick<Deal, "email" | "nextAction">>)[];
+
+/** The Store plan, paid and out of its trial, as the board's page counts its pipelines. */
+export const CRM_PIPELINES = pipelineLimit({ tier: "creator", subscriptionActive: true, trialEnds: 0 });
+
+function CrmVisual() {
+  const money = (cents: number) => formatMoney(cents, "usd");
+  const openIds = new Set(DEFAULT_STAGES.filter((s) => s.kind === "open").map((s) => s.id));
+  const wonIds = new Set(DEFAULT_STAGES.filter((s) => s.kind === "won").map((s) => s.id));
+  const open = CRM_EXAMPLE.filter((d) => openIds.has(d.stage));
+  const won = CRM_EXAMPLE.filter((d) => wonIds.has(d.stage));
+  const sum = (ds: readonly { cents: number }[]) => ds.reduce((n, d) => n + d.cents, 0);
+  return (
+    <Window bar="Studio · Deals">
+      <div className="space-y-3 p-5">
+        <div className="flex flex-wrap items-start justify-between gap-2">
+          <div className="min-w-0">
+            <p className="text-[13px] font-bold text-ink">Deals</p>
+            <p className="break-words text-[12px] text-ink-soft">{`People you are talking to about something sold outside a checkout: a coaching package, a custom project. ${open.length} open, worth ${money(sum(open))}; won so far, ${money(sum(won))}.`}</p>
+          </div>
+          <span className="btn btn-primary pointer-events-none">
+            <Icon name="plus" size={18} />
+            New deal
+          </span>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <span className="btn btn-primary btn-sm pointer-events-none">
+            {FIRST_PIPELINE_NAME}
+            <span className="tabular-nums opacity-80">{` · ${open.length} open`}</span>
+          </span>
+          {CRM_PIPELINES > 1 ? (
+            <span className="btn btn-ghost btn-sm pointer-events-none">
+              <Icon name="plus" size={14} />
+              New pipeline
+            </span>
+          ) : null}
+        </div>
+        <p className="border-t-2 border-dashed border-line pt-1 text-center text-[11px] text-ink-mute">⋯</p>
+        {DEFAULT_STAGES.slice(0, 2).map((stage) => {
+          const here = CRM_EXAMPLE.filter((d) => d.stage === stage.id);
+          return (
+            <div key={stage.id} className="min-w-0 rounded-2xl bg-paper p-3 ring-1 ring-line">
+              <div className="flex flex-wrap items-baseline justify-between gap-2">
+                <p className="text-[12.5px] font-semibold text-ink">{stage.name}</p>
+                <p className="text-[12px] tabular-nums text-ink-soft">{`${here.length} · ${money(sum(here))}`}</p>
+              </div>
+              {here.map((deal) => (
+                <div key={deal.title} className="mt-2 rounded-xl bg-white p-2.5 text-[12px] ring-1 ring-line">
+                  <p className="break-words font-semibold text-ink">{deal.title}</p>
+                  <p className="mt-0.5 tabular-nums text-ink-soft">{money(deal.cents)}</p>
+                  {"email" in deal ? <p className="mt-0.5 break-all text-ink-soft">{deal.email}</p> : null}
+                  {"nextAction" in deal ? <p className="mt-1.5 font-semibold text-ink">{`Next: ${deal.nextAction}`}</p> : null}
+                  <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                    <span className="min-w-0 flex-1 basis-24 rounded-[var(--r-sm)] px-2 py-1 text-[12px] text-ink ring-1 ring-line">{stage.name}</span>
+                    <span className="btn btn-secondary btn-sm pointer-events-none">Edit</span>
+                    <span className="btn btn-secondary btn-sm pointer-events-none">
+                      <Icon name="minus" size={14} />
+                    </span>
+                    {"email" in deal ? (
+                      <span className="btn btn-secondary btn-sm pointer-events-none">
+                        <Icon name="receipt" size={14} /> Request payment
+                      </span>
+                    ) : null}
+                  </div>
+                </div>
+              ))}
+            </div>
+          );
+        })}
+      </div>
+    </Window>
+  );
+}
+
 const CAPTIONS: Record<VisualKey, string> = {
   store: "A store page, drawn from the demo store you can open and buy from.",
   options: "The buyer is charged the price they picked, as the creator saved it.",
@@ -1134,6 +1225,7 @@ const CAPTIONS: Record<VisualKey, string> = {
   phone: "Phone notifications in the studio, as a Support team member sees them: each person is offered only what their role may hear. The choices checked are an example.",
   security: "Passkeys and two-step login in the studio's account card. The device, the dates and the recovery address are made up as an example.",
   salesPage: "Part of a product's sales page in the studio's editor; the page's score and its test sit at the break. The product and its blocks are made up as an example.",
+  crm: `Part of the deals board in the studio, as the store's owner sees it on the ${PLAN_TITLES.creator} plan, on the pipeline a store starts with; its totals and filters sit at the break, and three more stages follow. The deals, the people and the amounts are made up as an example: values recorded on deals, not revenue.`,
   aiWriting: `The writing help in the sales page editor, on ${AI_PLANS_WORDS}. The product and the jobs left are made up as an example.`,
 };
 
@@ -1173,6 +1265,7 @@ export function FeatureVisual({ visual, tone = "dark" }: { visual: VisualKey; to
     security: <SecurityVisual />,
     salesPage: <SalesPageVisual />,
     aiWriting: <AiWritingVisual />,
+    crm: <CrmVisual />,
   }[visual];
   const interactive = visual === "options" || visual === "checkout";
   return (
