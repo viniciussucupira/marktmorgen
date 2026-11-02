@@ -17,6 +17,8 @@
  *   - a fix on a card the person's role cannot open is a step for the owner;
  *   - a 404 while the project's own name is wrong, or an answer without its
  *     verdicts, is "not checked", never "gone" or "records wrong";
+ *   - the plan's limits (unit 3): a figure used up is a problem, otherwise
+ *     fine with the most used, and unreadable is "not checked";
  *   - nothing is written: Redis holds the same keys after a checkup;
  *   - the page reads only, names each state in words, links each fix in the
  *     studio, and is one press from the studio's home; the domain card has
@@ -25,6 +27,8 @@
 import { readFileSync } from "node:fs";
 import { CHECK_WAIT_MS, runCheckup, within } from "@/lib/checkup";
 import { checkupSummary } from "@/lib/checkup-rules";
+import { allowancesUsedStrict, takeAllowance } from "@/lib/store-allowance";
+import { ALLOWANCE_KINDS, STORE_ALLOWANCES } from "@/lib/store-allowance-rules";
 import { can } from "@/lib/team-roles";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -75,8 +79,8 @@ async function main(): Promise<void> {
   part("A healthy store");
   await redis.pipeline([["SET", domainKey("harborkitchen.com"), "harborkitchen"]]);
   const healthy = await run();
-  is("payments, domain, email and checkout fine; limits and disputes not checked", healthy.map((c) => `${c.id}:${c.state}`), ["limits:not-checked", "disputes:not-checked", "stripe:ok", "checkout:ok", "domain:ok", "email:ok"]);
-  is("the line at the top does not say all is well", checkupSummary(healthy), "No problem found in what we checked; 2 not checked.");
+  is("payments, domain, email, checkout and limits fine; disputes not checked", healthy.map((c) => `${c.id}:${c.state}`), ["disputes:not-checked", "stripe:ok", "checkout:ok", "domain:ok", "email:ok", "limits:ok"]);
+  is("the line at the top does not say all is well", checkupSummary(healthy), "No problem found in what we checked; 1 not checked.");
   is("only reads were asked of Stripe and Vercel", asked.every((a) => a.startsWith("GET ")), true);
 
   part("Stripe");
@@ -126,7 +130,7 @@ async function main(): Promise<void> {
   };
   const blind = await run();
   (redis as unknown as { pipeline: typeof pipeline }).pipeline = pipeline;
-  is("Redis failing: email and checkout not checked, never fine", [stateOf(blind, "email"), stateOf(blind, "checkout")], ["not-checked", "not-checked"]);
+  is("Redis failing: email, checkout and limits not checked, never fine", [stateOf(blind, "email"), stateOf(blind, "checkout"), stateOf(blind, "limits")], ["not-checked", "not-checked", "not-checked"]);
 
   part("What the plan decides");
   is("off Pro there is no list email: left out", stateOf(await run(with_({ tier: "creator" })), "email"), "left out");
@@ -147,6 +151,29 @@ async function main(): Promise<void> {
   is("the owner keeps the link", (await run()).find((c) => c.id === "stripe")?.fix?.kind, "studio");
   world = { ...world, stripe: "on" };
 
+  part("The plan's limits (unit 3)");
+  await takeAllowance(SHOP, "studio", STORE_ALLOWANCES.pro.studio, NOW);
+  const studioKey = redis.keys().find((k) => k.startsWith("nl:allow:studio:"))!;
+  const full = (await run()).find((c) => c.id === "limits");
+  is("a figure used up: a problem, in its own words, with when it opens again and a larger plan", [full?.state, full?.found.startsWith("Your studio's requests in this period are used: 5,000 studio requests."), full?.ifLeft?.includes("This opens again on "), full?.fix?.kind === "studio" && full.fix.href], ["problem", true, true, "/studio#billing"]);
+  await redis.pipeline([["SET", studioKey, "1200"]]);
+  is("not used up: fine, with the most used one", (await run()).find((c) => c.id === "limits")?.found, "Nothing is used up. The most used: 1,200 of 5,000 studio requests.");
+  await redis.pipeline([["SET", studioKey, "not a number"]]);
+  is("a count that is not a number: not checked, never nothing used", stateOf(await run(), "limits"), "not-checked");
+  await redis.pipeline([["DEL", studioKey]]);
+  is("strict reading: unreadable is null, never 0", [await allowancesUsedStrict({ ...(SHOP as object), sid: "", statsId: null, handle: "" } as never, ALLOWANCE_KINDS, NOW), (await allowancesUsedStrict(SHOP, ALLOWANCE_KINDS, NOW))?.every((r) => r.used === 0)], [null, true]);
+
+  await takeAllowance(SHOP, "studio", STORE_ALLOWANCES.pro.studio, NOW);
+  const noBilling = (await runCheckup(SHOP, OWNER, NOW, undefined, false)).find((c) => c.id === "limits");
+  is("billing not set up here: the plan card is not drawn, so the way is said, not linked", [noBilling?.fix?.kind, noBilling?.fix?.kind === "outside" && noBilling.fix.where], ["outside", "Plans cannot be started or changed on this site just now."]);
+  const editor = (permission: Parameters<typeof can>[1]) => can("editor", permission);
+  is("a role without billing: asked to tell the owner", (await run(SHOP, editor)).find((c) => c.id === "limits")?.fix?.kind, "outside");
+  await redis.pipeline([["DEL", redis.keys().find((k) => k.startsWith("nl:allow:studio:"))!]]);
+  const trialing = with_({ trialEnds: NOW / 1000 + 5 * 86_400, sid: "d".repeat(32) });
+  await takeAllowance(trialing, "studio", 7, NOW);
+  is("a trial's own window: what was taken is what is read", (await allowancesUsedStrict(trialing, ALLOWANCE_KINDS, NOW))?.find((r) => r.kind === "studio"), { kind: "studio", used: 7, figure: 1_000 });
+  is("a trial with room: fine", (await run(trialing)).find((c) => c.id === "limits")?.state, "ok");
+
   part("Nothing is written");
   const before = JSON.stringify(redis.keys().sort());
   await run();
@@ -155,7 +182,7 @@ async function main(): Promise<void> {
 
   part("The page");
   const page = read("app/studio/checkup/page.tsx");
-  is("read with the settings permission, the role's own permissions passed on", page.includes('studioView(await cookies(), typeof query.store === "string" ? query.store : undefined, "settings")') && page.includes("runCheckup(store, (permission) => can(view.role, permission), checkedAt)"), true);
+  is("read with the settings permission, the role's own permissions passed on", page.includes('studioView(await cookies(), typeof query.store === "string" ? query.store : undefined, "settings")') && page.includes("runCheckup(store, (permission) => can(view.role, permission), checkedAt, undefined, isBillingConfigured())"), true);
   is("where you are is shown", page.includes('<nav aria-label="Breadcrumb"') && page.includes('<li aria-current="page">'), true);
   is("the page changes nothing", /fetch\(|method: "POST"|<form/.test(page), false);
   world = { ...world, stripe: "off" };
