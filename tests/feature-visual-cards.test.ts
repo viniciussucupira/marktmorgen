@@ -3,7 +3,8 @@
  * bundles, quizzes and certificates, license keys, webhooks, calendar sync,
  * Discord access (units 2 and 3), the community and affiliates (unit 4),
  * the team and email platforms (unit 6), PDF stamping and ways to pay
- * (unit 7), phone notifications (unit 8), security (unit 9), live events (unit 5; the reviews page has none, since a drawn review would
+ * (unit 7), phone notifications (unit 8), security (unit 9), the sales page
+ * editor and its writing help (unit 10), live events (unit 5; the reviews page has none, since a drawn review would
  * be an invented one),
  * each a piece of the
  * studio's real screen in HTML, with its words and figures from the code.
@@ -16,7 +17,10 @@
 import { readFileSync } from "node:fs";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { EXAMPLE_KEY, FeatureVisual } from "@/components/feature-visuals";
+import { AI_LEFT_EXAMPLE, EXAMPLE_KEY, FeatureVisual, SALES_PAGE_EXAMPLE } from "@/components/feature-visuals";
+import { BLOCK_KINDS, MAX_BENEFITS, MAX_BLOCKS, MAX_CTA_LABEL, MAX_FAQ_ITEMS, MAX_FIT_ITEMS, MAX_HEADLINE, MAX_INSIDE_ITEMS } from "@/lib/sales-page";
+import { KIND_ICONS } from "@/lib/sales-page-icons";
+import { AI_MONTHLY, AI_PLANS_WORDS } from "@/lib/ai-rules";
 import { MAX_BUNDLE_ITEMS, MIN_BUNDLE_ITEMS } from "@/lib/bundle-rules";
 import { DEFAULT_ATTEMPTS, DEFAULT_PASS_PERCENT } from "@/lib/quiz";
 import { DEFAULT_KEYS } from "@/lib/key-setup";
@@ -40,7 +44,7 @@ import { done, is, part } from "./check";
 
 const text = (html: string) => html.replace(/<[^>]+>/g, "\n").replace(/&#x27;/g, "'").replace(/&amp;/g, "&").split("\n").map((s) => s.trim()).filter(Boolean);
 const read = (file: string) => readFileSync(file, "utf8");
-const draw = (visual: "bundles" | "quizzes" | "keys" | "webhooks" | "calendar" | "discord" | "community" | "affiliates" | "events" | "team" | "emailPlatforms" | "stamp" | "ways" | "phone" | "security") => renderToStaticMarkup(createElement(FeatureVisual, { visual, tone: "light" }));
+const draw = (visual: "bundles" | "quizzes" | "keys" | "webhooks" | "calendar" | "discord" | "community" | "affiliates" | "events" | "team" | "emailPlatforms" | "stamp" | "ways" | "phone" | "security" | "salesPage" | "aiWriting") => renderToStaticMarkup(createElement(FeatureVisual, { visual, tone: "light" }));
 const hidden = (html: string) => html.startsWith('<figure class="w-full min-w-0 max-w-[26rem]"><div aria-hidden="true">');
 
 function main(): void {
@@ -234,6 +238,47 @@ function main(): void {
   is("two-step login's own buttons when it is on", ["New recovery codes", "Turn it off"].every((w) => sec.includes(w) && twoStep.includes(w)), true);
   is("drawn, hidden, beside its caption", hidden(sc), true);
 
+  part("Sales pages");
+  is("the sales pages page shows its card", findPage("platform", "sales-pages")?.visual, "salesPage");
+  const spg = draw("salesPage");
+  const sg = text(spg);
+  const pageEditor = read("components/page-editor.tsx");
+  const { product, blocks } = SALES_PAGE_EXAMPLE;
+  is("the editor's heading and count, in its own words", [sg.includes(`Sales page for ${product}`), pageEditor.includes("`${kind} for ${product.title}`"), pageEditor.includes('product.free ? "Landing page" : "Sales page"'), sg.includes(`${blocks.length} blocks live on its page.`), pageEditor.includes('`${initial.blocks.length} ${initial.blocks.length === 1 ? "block" : "blocks"} ${site ? "on this page" : "live on its page"}.`')], [true, true, true, true, true]);
+  is("the Built tag and Build or Preview", [["Built", "Build", "Preview"].every((w) => sg.includes(w)), pageEditor.includes('!hiddenNow ? "Built"'), pageEditor.includes('v === "build" ? "Build" : "Preview"')], [true, true, true]);
+  is("each row as the editor numbers it, under BLOCK_KINDS' own label", blocks.every((bl, i) => sg.includes(`${i + 1}. ${BLOCK_KINDS.find((k) => k.kind === bl.kind)?.label}`)) && pageEditor.includes("{`${index + 1}. ${kindLabel(block.kind)}`}"), true);
+  is("the editor and the picture read one icon list", [pageEditor.includes('import { KIND_ICONS } from "@/lib/sales-page-icons";'), /const KIND_ICONS\b/.test(pageEditor), pageEditor.includes("<Icon name={KIND_ICONS[block.kind]} size={17} />"), read("components/feature-visuals.tsx").includes("<Icon name={KIND_ICONS[b.kind]} size={14} />"), KIND_ICONS.hero], [true, false, true, true, "sparkle"]);
+  const branch = (kinds: string[], body: string) => pageEditor.includes(kinds.map((k) => `      case "${k}":`).join("\n") + "\n        return " + body);
+  is("each summary line from the editor's own branch for its kind", [
+    branch(["hero"], "block.headline || product.title;"),
+    branch(["benefits", "inside", "faq"], '`${block.heading ? `${block.heading} · ` : ""}${block.items.length} ${block.items.length === 1 ? "item" : "items"}`;'),
+    branch(["fit"], '`${block.heading ? `${block.heading} · ` : ""}${block.yes.length} for, ${block.no.length} not for`;'),
+    branch(["cta"], "block.label || product.defaultLabel;"),
+    blocks[1].line === "What you get · 5 items" && blocks[2].line === "6 items" && blocks[4].line === "4 items" && blocks[3].line === "3 for, 2 not for",
+  ], [true, true, true, true, true]);
+  is("and each count inside the editor's own most", [5 <= MAX_BENEFITS, 6 <= MAX_INSIDE_ITEMS, 4 <= MAX_FAQ_ITEMS, 3 <= MAX_FIT_ITEMS, blocks[0].line.length <= MAX_HEADLINE, blocks[5].line.length <= MAX_CTA_LABEL], [true, true, true, true, true, true]);
+  is("the row's buttons as the editor draws them: up off for the first two under a hero, down off for the last, no copy of a hero", [pageEditor.includes("disabled={locked || index === 0 || (index === 1 && hasHero)}"), pageEditor.includes("disabled={locked || index === drafts.length - 1}"), pageEditor.includes('return block.kind !== "hero" && block.kind !== "reviews" && block.kind !== "pictures";'), (spg.match(/opacity-30/g) ?? []).length], [true, true, true, 3]);
+  is("Add here between two rows, never after the last", [sg.filter((w) => w === "Add here").length, pageEditor.includes("{index < drafts.length - 1 ? ("), pageEditor.includes("Add here")], [blocks.length - 1, true, true]);
+  is("Undo, Redo and the live page beside Build or Preview", [sg.includes("Open the live page"), pageEditor.includes("Open the live page"), pageEditor.includes('aria-label="Undo and redo"')], [true, true, true]);
+  is("the caption says it is part of the editor, with the break where the coach and test sit", [sg.some((w) => /^Part of a product's sales page/.test(w) && /score and its test sit at the break/.test(w)), pageEditor.includes("<PageCoach"), pageEditor.includes("Test a second version of the whole page")], [true, true, true]);
+  is("the add button's count, against the code's most", [sg.includes(`Add a block (${blocks.length} of ${MAX_BLOCKS})`), pageEditor.includes("{`Add a block (${drafts.length} of ${MAX_BLOCKS})`}"), MAX_BLOCKS, blocks.length < MAX_BLOCKS], [true, true, 30, true]);
+  is("no share of readers is drawn (a figure the page has not counted)", sg.some((w) => /reach it/.test(w)), false);
+  is("the product and its blocks are said to be an example", sg.some((w) => /example/.test(w) && /product/.test(w)), true);
+  is("drawn, hidden, beside its caption", hidden(spg), true);
+
+  part("Writing help with AI");
+  is("the writing help page shows its card", findPage("platform", "ai-writing")?.visual, "aiWriting");
+  const aw = draw("aiWriting");
+  const ai = text(aw);
+  const assist = read("components/ai-assist.tsx");
+  const hint = `A full draft — headline, what the buyer gets, what is inside, questions and buttons — from ${product}'s name, price and description. Add anything else it should know below, or leave the box empty. It replaces the blocks here; nothing is saved until you press Save.`;
+  is("the editor's title, hint and box words", [ai.includes("Write the whole page with AI"), pageEditor.includes('title="Write the whole page with AI"'), ai.includes(hint), pageEditor.includes(hint.replace(`${product}'s`, "${product.title}'s")), pageEditor.includes('placeholder="Who it is for, what makes it different, what buyers ask you most. Your refund promise, if you have one."'), ai.includes("Who it is for, what makes it different, what buyers ask you most. Your refund promise, if you have one.")], [true, true, true, true, true, true]);
+  is("the button and the jobs left, in the helper's own words", [ai.includes("Write a draft"), assist.includes('"Write a draft"'), ai.includes(`${AI_LEFT_EXAMPLE} left this month. Started attempts count, even if they fail.`), assist.includes("`${left} left this month. Started attempts count, even if they fail.`")], [true, true, true, true]);
+  is("never more left than Studio's month holds, and none on Store or in a trial", [AI_LEFT_EXAMPLE <= AI_MONTHLY.pro, AI_MONTHLY.scale > 0, AI_MONTHLY.creator, AI_MONTHLY.trial], [true, true, 0, 0]);
+  is("the line under it, word for word", [ai.includes("It uses only your own words, here and in your store, never invents reviews, numbers, results or deadlines, and saves nothing until you do. Read it before you publish: it is yours."), assist.replace(/\s+/g, " ").includes("It uses only your own words, here and in your store, never invents reviews, numbers, results or deadlines, and saves nothing until you do. Read it before you publish: it is yours.")], [true, true]);
+  is("the jobs left are said to be an example, on the plans that have it", ai.some((w) => /example/.test(w) && /jobs left/.test(w) && w.includes(`on ${AI_PLANS_WORDS}.`)), true);
+  is("drawn, hidden, beside its caption", hidden(aw), true);
+
   part("Nothing that is not the code's or marked as an example");
   for (const [name, words, allowed] of [
     ["bundles", b, /^(In it: 3 of \d+|\$77 of products for \$49|\$\d+(\.\d\d)?|.*example.*)$/],
@@ -248,6 +293,8 @@ function main(): void {
     ["phone", pn, /^(A community live event starts in 15 minutes|.*example.*)$/],
     ["stamp", sp, /^(Week 1: the plan|Sold to maya@example\.com on Sep 26, 2026 · order …E54F2A · for personal use|.*example.*)$/],
     ["team", t, new RegExp(`^(2 of ${MAX_TEAM} places used|Joined Oct 3, 2026|Invited as ${ROLE_NAMES.support} · the link works until Nov 8|.*example.*)$`)],
+    ["sales pages", sg, new RegExp(`^(\\d\\. (${BLOCK_KINDS.map((k) => k.label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})|${blocks.length} blocks live on its page\\.|What you get · 5 items|\\d items|3 for, 2 not for|Add a block \\(${blocks.length} of ${MAX_BLOCKS}\\)|.*example.*)$`)],
+    ["ai writing", ai, new RegExp(`^(${AI_LEFT_EXAMPLE} left this month\\. .*|.*example.*)$`)],
     ["events", e, /^(2 coming up|\w+day, November (10|19)\b.* \(E[SD]T\) · (1 hour|45 minutes)|12 of 30 places taken|8 going|The way in shows \d+ minutes before the start, only to members who can come\.|.*example.*)$/],
   ] as const) {
     is(`${name}: every figure is the code's, or an example said as one`, words.filter((w) => /\d/.test(w) && !allowed.test(w)), []);
