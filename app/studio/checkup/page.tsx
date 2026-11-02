@@ -9,6 +9,7 @@ import { StudioStorePin } from "@/components/studio-store-pin";
 import { checkupClock, runCheckup } from "@/lib/checkup";
 import { CheckupList } from "@/components/checkup-list";
 import { can } from "@/lib/team-roles";
+import { isBillingConfigured } from "@/lib/billing";
 
 export const metadata: Metadata = { title: "Something not working? — Marktmorgen", robots: { index: false, follow: false } };
 export const dynamic = "force-dynamic";
@@ -31,7 +32,8 @@ export default async function StudioCheckupPage({ searchParams }: Params) {
   if (found.fellBack) redirect(studioPath(found.view.store));
   const { view } = found, { store } = view;
   const checkedAt = checkupClock();
-  const checks = await runCheckup(store, (permission) => can(view.role, permission), checkedAt);
+  // The plan card, and its #billing anchor, is drawn only where billing is set up (app/studio/page.tsx).
+  const checks = await runCheckup(store, (permission) => can(view.role, permission), checkedAt, undefined, isBillingConfigured());
   // A fix in the studio, as a link for this store: "/studio#domain" becomes "/studio?store=…#domain".
   const hrefOf = (href: string) => {
     const [path, hash] = href.split("#");
